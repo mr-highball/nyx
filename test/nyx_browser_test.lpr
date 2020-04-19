@@ -28,8 +28,35 @@ uses
   JS,
   Classes,
   SysUtils,
-  Web;
+  Web,
+  nyx.types;
+
+procedure BuildUI;
+var
+  UI : INyxUI;
+  I: Integer;
+
+  procedure RecordIndex(const AUI : INyxUI; const AArgs : array of const);
+  begin
+    //provided index write the name to screen
+    WriteLn(AUI.Containers[AArgs[0].VInteger].Name);
+  end;
+
+  procedure AddButton(const AUI : INyxUI; const AArgs : array of const);
+  begin
+    //todo
+  end;
 
 begin
-  // Your code here
+  //setup the ui with the demo ui components
+  UI
+    .AddContainer(nil, I) //add a container
+    .TakeAction(@RecordIndex, [I]) //take an action (browser seems to require @?)
+    .TakeAction(@AddButton, [I]) //add a button to the container
+    .AddContainer(nil, I)
+    .Render(); //render the ui
+end;
+
+begin
+  BuildUI;
 end.

@@ -20,35 +20,18 @@
   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
   IN THE SOFTWARE.
 }
-unit ui.nyx_test;
+unit nyx.elements.browser;
 
-{$mode delphi}{$H+}
+{$mode delphi}
 
 interface
 
 uses
   Classes,
   SysUtils,
-  Forms,
-  Controls,
-  Graphics,
-  Dialogs,
   nyx.types;
 
-type
-  TNyxTest = class(TForm)
-  private
-
-  public
-
-  end;
-
-var
-  NyxTest: TNyxTest;
-
 implementation
-
-{$R *.lfm}
 
 end.
 

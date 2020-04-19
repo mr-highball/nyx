@@ -33,14 +33,12 @@ uses
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
   Forms,
-  ui.nyx_test
-  { you can add units after this };
+  ui.nyx_test;
 
 {$R *.res}
 
 begin
   RequireDerivedFormResource:=True;
-  Application.Title:='nyx test';
   Application.Scaled:=True;
   Application.Initialize;
   Application.CreateForm(TNyxTest, NyxTest);
