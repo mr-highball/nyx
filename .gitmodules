@@ -1,0 +1,3 @@
+[submodule "test/mvp"]
+	path = test/mvp
+	url = https://github.com/andybrewer/mvp

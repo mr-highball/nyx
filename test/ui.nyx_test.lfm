@@ -1,0 +1,8 @@
+object NyxTest: TNyxTest
+  Left = 511
+  Height = 240
+  Top = 134
+  Width = 320
+  Caption = 'nyx'
+  LCLVersion = '2.1.0.0'
+end
