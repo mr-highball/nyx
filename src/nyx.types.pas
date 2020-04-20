@@ -93,6 +93,11 @@ type
     constructor Create; virtual;
   end;
 
+  (*
+    metaclass for a nyx element
+  *)
+  TNyxElementClass = class of TNyxElementBaseImpl;
+
   TNyxElementCallback = procedure(const AElement : INyxElement);
   TNyxElementNestedCallback = procedure(const AElement : INyxElement) is nested;
   TNyxElementMethod = procedure(const AElement : INyxElement) of object;
@@ -171,6 +176,91 @@ type
     function Clear : INyxElements;
   end;
 
+  { TNyxElementsBaseImpl }
+  (*
+    base implementation for a collection of elements INyxElements
+  *)
+  TNyxElementsBaseImpl = class(TInterfacedObject, INyxElements)
+  strict private
+    procedure RaiseError(const AMethod, AError : String);
+  protected
+    function GetCount: Integer;
+    function GetItem(const AIndex : Integer): INyxElement;
+  strict protected
+    function DoGetCount : Integer; virtual; abstract;
+
+    function DoGetItem(const AIndex : Integer; out Item : INyxElement;
+      out Error : String) : Boolean; virtual; abstract;
+
+    function DoAddAtem(const AItem : INyxElement; out Index : Integer;
+      out Error : String) : Boolean; virtual; abstract;
+
+    function DoRemoveItem(const AIndex : Integer; out Item : INyxElement;
+      out Error : String) : Boolean; virtual; abstract;
+  public
+    (*
+      number of elements in the collection
+    *)
+    property Count : Integer read GetCount;
+
+    (*
+      returns the element at a given index, if the index doesn't exist
+      an exception will be thrown
+    *)
+    property Items[const AIndex : Integer] : INyxElement read GetItem; default;
+
+    //methods
+
+    (*
+      adds a new element to the collection and returns the index
+    *)
+    function Add(const AItem : INyxElement) : Integer;
+
+    (*
+      deletes an element at a given index, if the index doesn't exist
+      will simply return
+    *)
+    function Delete(const AIndex : Integer) : INyxElements;
+
+    (*
+      removes the element at a given index, but returns it to the caller
+    *)
+    function Extract(const AIndex : Integer) : INyxElement;
+
+    (*
+      provided a handler, will iterate all elements in the collection
+    *)
+    function ForEach(const AProc : TNyxElementCallback) : INyxElements; overload;
+    function ForEach(const AProc : TNyxElementNestedCallback) : INyxElements; overload;
+    function ForEach(const AProc : TNyxElementMethod) : INyxElements; overload;
+
+    (*
+      provided a handler, will iterate all elements in the collection until
+      the handler returns true (signalling a "found")
+    *)
+    function Find(const AProc : TNyxElementFindCallback) : INyxElement; overload;
+    function Find(const AProc : TNyxElementFindNestedCallback) : INyxElement; overload;
+    function Find(const AProc : TNyxElementFindMethod) : INyxElement; overload;
+
+    (*
+      provided a handler, will iterate all elements in the collection
+      and will add all "found" elements to the resulting collection
+    *)
+    function FindAll(const AProc : TNyxElementFindCallback; const ARecurse : Boolean = True) : INyxElements; overload;
+    function FindAll(const AProc : TNyxElementFindNestedCallback; const ARecurse : Boolean = True) : INyxElements; overload;
+    function FindAll(const AProc : TNyxElementFindMethod; const ARecurse : Boolean = True) : INyxElements; overload;
+
+    (*
+      clears the collection
+    *)
+    function Clear : INyxElements;
+  end;
+
+  (*
+    metaclass for concrete nyx elements
+  *)
+  TNyxElementsClass = class of TNyxElementsBaseImpl;
+
   { INyxContainer }
   (*
     the container holds elements but is also an element itself, allowing
@@ -213,6 +303,11 @@ type
     function Add(const AItem : INyxElement) : INyxContainer;
   end;
 
+  (*
+    metaclass for nyx containers
+  *)
+  TNyxContainerClass = class of TNyxContainerBaseImpl;
+
   //forward
   INyxUI = interface;
 
@@ -247,6 +342,11 @@ type
     //methods
 
     (*
+      pulls a container from the Containers property and casts it
+    *)
+    function ContainerByIndex(const AIndex : Integer) : INyxContainer;
+
+    (*
       updates the render settings for the nyx ui
     *)
     function UpdateSettings(const ASettings : INyxRenderSettings) : INyxUI;
@@ -269,6 +369,430 @@ type
   end;
 
 implementation
+
+var
+  DefaultNyxElements : TNyxElementsClass;
+
+{ TNyxElementsBaseImpl }
+
+procedure TNyxElementsBaseImpl.RaiseError(const AMethod, AError: String);
+begin
+  raise Exception.Create(Self.ClassName + '::' + AMethod + '::' + AError);
+end;
+
+function TNyxElementsBaseImpl.GetCount: Integer;
+begin
+  Result := DoGetCount;
+end;
+
+function TNyxElementsBaseImpl.GetItem(const AIndex: Integer): INyxElement;
+var
+  LError: String;
+begin
+  try
+    if not DoGetItem(AIndex, Result, LError) then
+      RaiseError('GetItem', LError);
+  except on E : Exception do
+    RaiseError('GetItem', E.Message);
+  end;
+end;
+
+function TNyxElementsBaseImpl.Add(const AItem: INyxElement): Integer;
+var
+  LError: String;
+begin
+  try
+    if not DoAddAtem(AItem, Result, LError) then
+      RaiseError('Add', LError);
+  except on E : Exception do
+    RaiseError('Add', E.Message);
+  end;
+end;
+
+function TNyxElementsBaseImpl.Delete(const AIndex: Integer): INyxElements;
+var
+  LError: String;
+  LItem: INyxElement;
+begin
+  try
+    Result := Self as INyxElements;
+
+    //remove but the throw away the item
+    if not DoRemoveItem(AIndex, LItem, LError) then
+      RaiseError('Delete', LError);
+  except on E : Exception do
+    RaiseError('Delete', E.Message);
+  end;
+end;
+
+function TNyxElementsBaseImpl.Extract(const AIndex: Integer): INyxElement;
+var
+  LError: String;
+begin
+  try
+    if not DoRemoveItem(AIndex, Result, LError) then
+      RaiseError('Extract', LError);
+  except on E : Exception do
+    RaiseError('Extract', E.Message);
+  end;
+end;
+
+function TNyxElementsBaseImpl.ForEach(const AProc: TNyxElementCallback): INyxElements;
+var
+  LCount, I: Integer;
+  LItem: INyxElement;
+begin
+  Result := Self as INyxElements;
+
+  if not Assigned(AProc) then
+    Exit;
+
+  //get the count of items
+  LCount := Count;
+
+  //iterate using the the items property
+  for I := 0 to Pred(LCount) do
+  begin
+    LItem := Items[I];
+
+    try
+      AProc(LItem);
+    except on E : Exception do
+      RaiseError('ForEach (callback)', E.Message);
+    end;
+  end;
+end;
+
+function TNyxElementsBaseImpl.ForEach(const AProc: TNyxElementNestedCallback): INyxElements;
+var
+  LCount, I: Integer;
+  LItem: INyxElement;
+begin
+  Result := Self as INyxElements;
+
+  if not Assigned(AProc) then
+    Exit;
+
+  //get the count of items
+  LCount := Count;
+
+  //iterate using the the items property
+  for I := 0 to Pred(LCount) do
+  begin
+    LItem := Items[I];
+
+    try
+      AProc(LItem);
+    except on E : Exception do
+      RaiseError('ForEach (nested)', E.Message);
+    end;
+  end;
+end;
+
+function TNyxElementsBaseImpl.ForEach(const AProc: TNyxElementMethod): INyxElements;
+var
+  LCount, I: Integer;
+  LItem: INyxElement;
+begin
+  Result := Self as INyxElements;
+
+  if not Assigned(AProc) then
+    Exit;
+
+  //get the count of items
+  LCount := Count;
+
+  //iterate using the the items property
+  for I := 0 to Pred(LCount) do
+  begin
+    LItem := Items[I];
+
+    try
+      AProc(LItem);
+    except on E : Exception do
+      RaiseError('ForEach (method)', E.Message);
+    end;
+  end;
+end;
+
+function TNyxElementsBaseImpl.Find(const AProc: TNyxElementFindCallback): INyxElement;
+var
+  LCount, I: Integer;
+  LItem: INyxElement;
+begin
+  Result := nil;
+
+  if not Assigned(AProc) then
+    Exit;
+
+  //get the count of items
+  LCount := Count;
+
+  //iterate using the the items property
+  for I := 0 to Pred(LCount) do
+  begin
+    LItem := Items[I];
+
+    try
+      //once we find the item, then exit
+      if AProc(LItem) then
+      begin
+        Result := LItem;
+        Exit;
+      end;
+    except on E : Exception do
+      RaiseError('Find (callback)', E.Message);
+    end;
+  end;
+end;
+
+function TNyxElementsBaseImpl.Find(const AProc: TNyxElementFindNestedCallback): INyxElement;
+var
+  LCount, I: Integer;
+  LItem: INyxElement;
+begin
+  Result := nil;
+
+  if not Assigned(AProc) then
+    Exit;
+
+  //get the count of items
+  LCount := Count;
+
+  //iterate using the the items property
+  for I := 0 to Pred(LCount) do
+  begin
+    LItem := Items[I];
+
+    try
+      //once we find the item, then exit
+      if AProc(LItem) then
+      begin
+        Result := LItem;
+        Exit;
+      end;
+    except on E : Exception do
+      RaiseError('Find (nested)', E.Message);
+    end;
+  end;
+end;
+
+function TNyxElementsBaseImpl.Find(const AProc: TNyxElementFindMethod): INyxElement;
+var
+  LCount, I: Integer;
+  LItem: INyxElement;
+begin
+  Result := nil;
+
+  if not Assigned(AProc) then
+    Exit;
+
+  //get the count of items
+  LCount := Count;
+
+  //iterate using the the items property
+  for I := 0 to Pred(LCount) do
+  begin
+    LItem := Items[I];
+
+    try
+      //once we find the item, then exit
+      if AProc(LItem) then
+      begin
+        Result := LItem;
+        Exit;
+      end;
+    except on E : Exception do
+      RaiseError('Find (method)', E.Message);
+    end;
+  end;
+end;
+
+function TNyxElementsBaseImpl.FindAll(const AProc: TNyxElementFindCallback;
+  const ARecurse: Boolean): INyxElements;
+var
+  LCount,
+  I, J, K,
+  LRecurseCount, LContainterCount: Integer;
+  LItem: INyxElement;
+  LContainer: INyxContainer;
+  LRecurseResult: INyxElements;
+begin
+  //create the result elements collection
+  Result := DefaultNyxElements.Create;
+
+  if not Assigned(AProc) then
+    Exit;
+
+  //get the count of items
+  LCount := Count;
+
+  //iterate using the the items property
+  for I := 0 to Pred(LCount) do
+  begin
+    //clear ref if exists
+    LItem := nil;
+
+    //get the item at the index
+    LItem := Items[I];
+
+    //if we are recusing check if the item is a container
+    if ARecurse then
+    begin
+      //iterate all items in container and call FindAll()
+      if LItem is INyxContainer then
+      begin
+        LContainer := nil;
+        LContainer := LItem as INyxContainer;
+        LContainterCount := LContainer.Elements.Count;
+
+        for J := 0 to Pred(LContainterCount) do
+        begin
+          LRecurseResult := LContainer.Elements.FindAll(AProc, ARecurse);
+          LRecurseCount := LRecurseResult.Count;
+
+          for K := 0 to Pred(LRecurseCount) do
+            Result.Add(LRecurseResult[K]);
+        end;
+      end;
+    end;
+
+    try
+      //once we find the item, then add it to the collection
+      if AProc(LItem) then
+        Result.Add(LItem);
+    except on E : Exception do
+      RaiseError('FindAll (callback)', E.Message);
+    end;
+  end;
+end;
+
+function TNyxElementsBaseImpl.FindAll(
+  const AProc: TNyxElementFindNestedCallback; const ARecurse: Boolean): INyxElements;
+var
+  LCount,
+  I, J, K,
+  LRecurseCount, LContainterCount: Integer;
+  LItem: INyxElement;
+  LContainer: INyxContainer;
+  LRecurseResult: INyxElements;
+begin
+  //create the result elements collection
+  Result := DefaultNyxElements.Create;
+
+  if not Assigned(AProc) then
+    Exit;
+
+  //get the count of items
+  LCount := Count;
+
+  //iterate using the the items property
+  for I := 0 to Pred(LCount) do
+  begin
+    //clear ref if exists
+    LItem := nil;
+
+    //get the item at the index
+    LItem := Items[I];
+
+    //if we are recusing check if the item is a container
+    if ARecurse then
+    begin
+      //iterate all items in container and call FindAll()
+      if LItem is INyxContainer then
+      begin
+        LContainer := nil;
+        LContainer := LItem as INyxContainer;
+        LContainterCount := LContainer.Elements.Count;
+
+        for J := 0 to Pred(LContainterCount) do
+        begin
+          LRecurseResult := LContainer.Elements.FindAll(AProc, ARecurse);
+          LRecurseCount := LRecurseResult.Count;
+
+          for K := 0 to Pred(LRecurseCount) do
+            Result.Add(LRecurseResult[K]);
+        end;
+      end;
+    end;
+
+    try
+      //once we find the item, then add it to the collection
+      if AProc(LItem) then
+        Result.Add(LItem);
+    except on E : Exception do
+      RaiseError('FindAll (nested)', E.Message);
+    end;
+  end;
+end;
+
+function TNyxElementsBaseImpl.FindAll(const AProc: TNyxElementFindMethod;
+  const ARecurse: Boolean): INyxElements;
+var
+  LCount,
+  I, J, K,
+  LRecurseCount, LContainterCount: Integer;
+  LItem: INyxElement;
+  LContainer: INyxContainer;
+  LRecurseResult: INyxElements;
+begin
+  //create the result elements collection
+  Result := DefaultNyxElements.Create;
+
+  if not Assigned(AProc) then
+    Exit;
+
+  //get the count of items
+  LCount := Count;
+
+  //iterate using the the items property
+  for I := 0 to Pred(LCount) do
+  begin
+    //clear ref if exists
+    LItem := nil;
+
+    //get the item at the index
+    LItem := Items[I];
+
+    //if we are recusing check if the item is a container
+    if ARecurse then
+    begin
+      //iterate all items in container and call FindAll()
+      if LItem is INyxContainer then
+      begin
+        LContainer := nil;
+        LContainer := LItem as INyxContainer;
+        LContainterCount := LContainer.Elements.Count;
+
+        for J := 0 to Pred(LContainterCount) do
+        begin
+          LRecurseResult := LContainer.Elements.FindAll(AProc, ARecurse);
+          LRecurseCount := LRecurseResult.Count;
+
+          for K := 0 to Pred(LRecurseCount) do
+            Result.Add(LRecurseResult[K]);
+        end;
+      end;
+    end;
+
+    try
+      //once we find the item, then add it to the collection
+      if AProc(LItem) then
+        Result.Add(LItem);
+    except on E : Exception do
+      RaiseError('FindAll (method)', E.Message);
+    end;
+  end;
+end;
+
+function TNyxElementsBaseImpl.Clear: INyxElements;
+begin
+  Result := Self as INyxElements;
+
+  //delete until no more items
+  while Count > 0 do
+    Delete(0);
+end;
 
 { TNyxContainerBaseImpl }
 
@@ -320,5 +844,11 @@ begin
   FID := DoGetID;
 end;
 
+initialization
+{$IFDEF BROWSER}
+//todo - set the default nyx elements class
+{$ELSE}
+//todo - set the default nyx elements class
+{$ENDIF}
 end.
 
