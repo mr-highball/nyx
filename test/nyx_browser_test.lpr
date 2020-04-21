@@ -47,6 +47,10 @@ var
     //todo
   end;
 
+  function FindAllTest(const AElement : INyxElement) : Boolean;
+  begin
+  end;
+
 begin
   //setup the ui with the demo ui components
   UI
@@ -54,7 +58,11 @@ begin
     .TakeAction(@RecordIndex, [I]) //take an action (browser seems to require @?)
     .TakeAction(@AddButton, [I]) //add a button to the container
     .AddContainer(nil, I)
-    .Render(); //render the ui
+    .ContainerByIndex(I).Elements.FindAll(@FindAllTest, True);
+
+  //render the ui
+  UI
+    .Render();
 end;
 
 begin

@@ -36,6 +36,9 @@ uses
 
 type
 
+  //forward
+  INyxContainer = interface;
+
   { INyxElement }
   (*
     smallest building block for a nyx UI, can be a control, graphic, etc...
@@ -46,6 +49,8 @@ type
     //property methods
     function GetID: String;
     function GetName: String;
+    function GetContainer: INyxContainer;
+    procedure SetContainer(const AValue: INyxContainer);
     procedure SetName(const AValue: String);
 
     //properties
@@ -59,6 +64,11 @@ type
       optional friendly name for the element
     *)
     property Name : String read GetName write SetName;
+
+    (*
+      parent container of this element, nil if none
+    *)
+    property Container : INyxContainer read GetContainer write SetContainer;
 
     //methods
 
@@ -76,10 +86,13 @@ type
   strict private
     FID,
     FName : String;
+    FContainer : INyxContainer;
   protected
     function GetID: String;
     function GetName: String;
     procedure SetName(const AValue: String);
+    function GetContainer: INyxContainer;
+    procedure SetContainer(const AValue: INyxContainer);
   strict protected
     (*
       children will override this method to generate a unique identifier
@@ -88,9 +101,12 @@ type
   public
     property ID : String read GetID;
     property Name : String read GetName write SetName;
+    property Container : INyxContainer read GetContainer write SetContainer;
 
     function UpdateName(const AName : String) : INyxElement;
+
     constructor Create; virtual;
+    destructor Destroy; override;
   end;
 
   (*
@@ -261,6 +277,9 @@ type
   *)
   TNyxElementsClass = class of TNyxElementsBaseImpl;
 
+  //forward
+  INyxUI = interface;
+
   { INyxContainer }
   (*
     the container holds elements but is also an element itself, allowing
@@ -271,6 +290,8 @@ type
 
     //property methods
     function GetElements: INyxElements;
+    function GetUI: INyxUI;
+    procedure SetUI(const AValue: INyxUI);
 
     //properties
 
@@ -279,10 +300,16 @@ type
     *)
     property Elements : INyxElements read GetElements;
 
+    (*
+      parent nyx ui, will be nil if none set
+    *)
+    property UI : INyxUI read GetUI write SetUI;
+
     //methods
 
     (*
-      adds an element to the elements collection and returns this container
+      adds an element to the elements collection and returns this container.
+      also sets the container property on the input element to this instance
     *)
     function Add(const AItem : INyxElement) : INyxContainer;
   end;
@@ -294,22 +321,26 @@ type
   TNyxContainerBaseImpl = class(TNyxElementBaseImpl, INyxContainer)
   strict private
     FElements : INyxElements;
+    FUI : INyxUI;
   protected
     function GetElements: INyxElements;
+    function GetUI: INyxUI;
+    procedure SetUI(const AValue: INyxUI);
   strict protected
   public
     property Elements : INyxElements read GetElements;
+    property UI : INyxUI read GetUI write SetUI;
 
     function Add(const AItem : INyxElement) : INyxContainer;
+
+    constructor Create; override;
+    destructor Destroy; override;
   end;
 
   (*
     metaclass for nyx containers
   *)
   TNyxContainerClass = class of TNyxContainerBaseImpl;
-
-  //forward
-  INyxUI = interface;
 
   TNyxActionCallback = procedure(const AUI : INyxUI; const AArgs : array of const);
   TNyxActionNestedCallback = procedure(const AUI : INyxUI; const AArgs : array of const) is nested;
@@ -333,7 +364,7 @@ type
     //property methods
     function GetContainers: INyxElements;
     function GetSettings: INyxRenderSettings;
-    procedure SetSettings(AValue: INyxRenderSettings);
+    procedure SetSettings(const AValue: INyxRenderSettings);
 
     //properties
     property Containers : INyxElements read GetContainers;
@@ -364,14 +395,134 @@ type
     function TakeAction(const AAction : TNyxActionNestedCallback; const AArgs : array of const) : INyxUI; overload;
     function TakeAction(const AAction : TNyxActionMethod; const AArgs : array of const) : INyxUI; overload;
 
+    (*
+      renders all containers to the screen
+    *)
     function Render() : INyxUI; overload;
     function Render(const ASettings : INyxRenderSettings) : INyxUI; overload;
+
+    (*
+      clears this UI and cleans up any resources held
+    *)
+    function Clear : INyxUI;
   end;
+
+  { TNyxUIBaseImpl }
+  (*
+    base implementation for all INyxUI
+  *)
+  TNyxUIBaseImpl = class(TInterfacedPersistent, INyxUI)
+  strict private
+  protected
+    function GetContainers: INyxElements;
+    function GetSettings: INyxRenderSettings;
+    procedure SetSettings(const AValue: INyxRenderSettings);
+  strict protected
+  public
+    property Containers : INyxElements read GetContainers;
+    property Settings : INyxRenderSettings read GetSettings write SetSettings;
+
+    function ContainerByIndex(const AIndex : Integer) : INyxContainer;
+    function UpdateSettings(const ASettings : INyxRenderSettings) : INyxUI;
+    function AddContainer(const AContainer : INyxContainer; out Index : Integer) : INyxUI;
+
+    function TakeAction(const AAction : TNyxActionCallback; const AArgs : array of const) : INyxUI; overload;
+    function TakeAction(const AAction : TNyxActionNestedCallback; const AArgs : array of const) : INyxUI; overload;
+    function TakeAction(const AAction : TNyxActionMethod; const AArgs : array of const) : INyxUI; overload;
+
+    function Render() : INyxUI; overload;
+    function Render(const ASettings : INyxRenderSettings) : INyxUI; overload;
+
+    function Clear : INyxUI;
+  end;
+
+  (*
+    metaclass for a nyx ui
+  *)
+  TNyxUIClass = class of TNyxUIBaseImpl;
+
+(*
+  helper function to return a nyx ui
+*)
+function NewNyxUI : INyxUI;
 
 implementation
 
 var
   DefaultNyxElements : TNyxElementsClass;
+  DefaultNyxUI : TNyxUIClass;
+
+function NewNyxUI: INyxUI;
+begin
+  Result := DefaultNyxUI.Create;
+end;
+
+{ TNyxUIBaseImpl }
+
+function TNyxUIBaseImpl.GetContainers: INyxElements;
+begin
+
+end;
+
+function TNyxUIBaseImpl.GetSettings: INyxRenderSettings;
+begin
+
+end;
+
+procedure TNyxUIBaseImpl.SetSettings(const AValue: INyxRenderSettings);
+begin
+
+end;
+
+function TNyxUIBaseImpl.ContainerByIndex(const AIndex: Integer): INyxContainer;
+begin
+
+end;
+
+function TNyxUIBaseImpl.UpdateSettings(const ASettings: INyxRenderSettings
+  ): INyxUI;
+begin
+
+end;
+
+function TNyxUIBaseImpl.AddContainer(const AContainer: INyxContainer; out
+  Index: Integer): INyxUI;
+begin
+
+end;
+
+function TNyxUIBaseImpl.TakeAction(const AAction: TNyxActionCallback;
+  const AArgs: array of const): INyxUI;
+begin
+
+end;
+
+function TNyxUIBaseImpl.TakeAction(const AAction: TNyxActionNestedCallback;
+  const AArgs: array of const): INyxUI;
+begin
+
+end;
+
+function TNyxUIBaseImpl.TakeAction(const AAction: TNyxActionMethod;
+  const AArgs: array of const): INyxUI;
+begin
+
+end;
+
+function TNyxUIBaseImpl.Render(): INyxUI;
+begin
+
+end;
+
+function TNyxUIBaseImpl.Render(const ASettings: INyxRenderSettings): INyxUI;
+begin
+
+end;
+
+function TNyxUIBaseImpl.Clear: INyxUI;
+begin
+
+end;
 
 { TNyxElementsBaseImpl }
 
@@ -801,10 +952,34 @@ begin
   Result := FElements;
 end;
 
+function TNyxContainerBaseImpl.GetUI: INyxUI;
+begin
+  Result := FUI;
+end;
+
+procedure TNyxContainerBaseImpl.SetUI(const AValue: INyxUI);
+begin
+  FUI := nil;
+  FUI := AValue;
+end;
+
 function TNyxContainerBaseImpl.Add(const AItem: INyxElement): INyxContainer;
 begin
   Result := Self as INyxContainer;
+  AItem.Container := Result;
   FElements.Add(AItem);
+end;
+
+constructor TNyxContainerBaseImpl.Create;
+begin
+  inherited Create;
+  FUI := nil
+end;
+
+destructor TNyxContainerBaseImpl.Destroy;
+begin
+  FUI := nil;
+  inherited Destroy;
 end;
 
 { TNyxElementBaseImpl }
@@ -824,6 +999,17 @@ begin
   FName := AValue;
 end;
 
+function TNyxElementBaseImpl.GetContainer: INyxContainer;
+begin
+  Result := FContainer;
+end;
+
+procedure TNyxElementBaseImpl.SetContainer(const AValue: INyxContainer);
+begin
+  FContainer := nil;
+  FContainer := AValue;
+end;
+
 function TNyxElementBaseImpl.DoGetID: String;
 var
   LGUID: TGUID;
@@ -840,15 +1026,23 @@ end;
 
 constructor TNyxElementBaseImpl.Create;
 begin
-  inherited;
+  FContainer := nil;
   FID := DoGetID;
+end;
+
+destructor TNyxElementBaseImpl.Destroy;
+begin
+  FContainer := nil;
+  inherited Destroy;
 end;
 
 initialization
 {$IFDEF BROWSER}
 //todo - set the default nyx elements class
+//todo - set the default nyx ui class
 {$ELSE}
 //todo - set the default nyx elements class
+//todo - set the default nyx ui class
 {$ENDIF}
 end.
 
