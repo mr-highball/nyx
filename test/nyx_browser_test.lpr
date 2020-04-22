@@ -31,9 +31,11 @@ uses
   Web,
   nyx.types;
 
-procedure BuildUI;
 var
   UI : INyxUI;
+
+procedure BuildUI;
+var
   I: Integer;
 
   procedure RecordIndex(const AUI : INyxUI; const AArgs : array of const);
@@ -52,6 +54,8 @@ var
   end;
 
 begin
+  UI := NewNyxUI;
+
   //setup the ui with the demo ui components
   UI
     .AddContainer(nil, I) //add a container

@@ -402,6 +402,11 @@ type
     function Render(const ASettings : INyxRenderSettings) : INyxUI; overload;
 
     (*
+      hides any rendered containers from the screen
+    *)
+    function Hide() : INyxUI;
+
+    (*
       clears this UI and cleans up any resources held
     *)
     function Clear : INyxUI;
@@ -413,11 +418,30 @@ type
   *)
   TNyxUIBaseImpl = class(TInterfacedPersistent, INyxUI)
   strict private
+    FSettings : INyxRenderSettings;
+    FContainers : INyxElements;
   protected
     function GetContainers: INyxElements;
     function GetSettings: INyxRenderSettings;
     procedure SetSettings(const AValue: INyxRenderSettings);
   strict protected
+    (*
+      children need to override this method render all containers and
+      their elements to the screen
+    *)
+    procedure DoRender; virtual; abstract;
+
+    (*
+      children need to override this method to "hide" any rendered
+      containers/elements on the screen
+    *)
+    procedure DoHide; virtual; abstract;
+
+    (*
+      children can override this to perform additional steps of a clear
+      default, will call Hide() then clear the containers collection
+    *)
+    procedure DoClear; virtual;
   public
     property Containers : INyxElements read GetContainers;
     property Settings : INyxRenderSettings read GetSettings write SetSettings;
@@ -433,7 +457,12 @@ type
     function Render() : INyxUI; overload;
     function Render(const ASettings : INyxRenderSettings) : INyxUI; overload;
 
+    function Hide() : INyxUI;
+
     function Clear : INyxUI;
+
+    constructor Create; virtual;
+    destructor Destroy; override;
   end;
 
   (*
@@ -461,67 +490,113 @@ end;
 
 function TNyxUIBaseImpl.GetContainers: INyxElements;
 begin
-
+  Result := FContainers;
 end;
 
 function TNyxUIBaseImpl.GetSettings: INyxRenderSettings;
 begin
-
+  Result := FSettings;
 end;
 
 procedure TNyxUIBaseImpl.SetSettings(const AValue: INyxRenderSettings);
 begin
+  FSettings := nil;
+  FSettings := AValue;
+end;
 
+procedure TNyxUIBaseImpl.DoClear;
+begin
+  Hide;
+  FContainers.Clear;
 end;
 
 function TNyxUIBaseImpl.ContainerByIndex(const AIndex: Integer): INyxContainer;
 begin
-
+  Result := FContainers[AIndex] as INyxContainer;
 end;
 
-function TNyxUIBaseImpl.UpdateSettings(const ASettings: INyxRenderSettings
-  ): INyxUI;
+function TNyxUIBaseImpl.UpdateSettings(const ASettings: INyxRenderSettings): INyxUI;
 begin
-
+  Result := Self as INyxUI;
+  Settings := ASettings;
 end;
 
 function TNyxUIBaseImpl.AddContainer(const AContainer: INyxContainer; out
   Index: Integer): INyxUI;
 begin
-
+  Result := Self as INyxUI;
+  Index := FContainers.Add(AContainer);
 end;
 
 function TNyxUIBaseImpl.TakeAction(const AAction: TNyxActionCallback;
   const AArgs: array of const): INyxUI;
 begin
+  Result := Self as INyxUI;
 
+  if not Assigned(AACtion) then
+    Exit;
+
+  AAction(Result, AArgs);
 end;
 
 function TNyxUIBaseImpl.TakeAction(const AAction: TNyxActionNestedCallback;
   const AArgs: array of const): INyxUI;
 begin
+  Result := Self as INyxUI;
 
+  if not Assigned(AACtion) then
+    Exit;
+
+  AAction(Result, AArgs);
 end;
 
 function TNyxUIBaseImpl.TakeAction(const AAction: TNyxActionMethod;
   const AArgs: array of const): INyxUI;
 begin
+  Result := Self as INyxUI;
 
+  if not Assigned(AACtion) then
+    Exit;
+
+  AAction(Result, AArgs);
 end;
 
 function TNyxUIBaseImpl.Render(): INyxUI;
 begin
-
+  Result := Self as INyxUI;
+  DoRender;
 end;
 
 function TNyxUIBaseImpl.Render(const ASettings: INyxRenderSettings): INyxUI;
 begin
+  FSettings := nil;
+  FSettings := ASettings;
+  Result := Render;
+end;
 
+function TNyxUIBaseImpl.Hide(): INyxUI;
+begin
+  Result := Self as INyxUI;
+  DoHide;
 end;
 
 function TNyxUIBaseImpl.Clear: INyxUI;
 begin
+  Result := Self as INyxUI;
+  DoClear;
+end;
 
+constructor TNyxUIBaseImpl.Create;
+begin
+  FSettings := nil;
+  FContainers := DefaultNyxElements.Create;
+end;
+
+destructor TNyxUIBaseImpl.Destroy;
+begin
+  FSettings := nil;
+  FContainers := nil;
+  inherited Destroy;
 end;
 
 { TNyxElementsBaseImpl }
