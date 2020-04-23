@@ -31,6 +31,9 @@ uses
   SysUtils,
   nyx.types;
 
+type
+
+
 implementation
 
 end.

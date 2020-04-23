@@ -29,9 +29,100 @@ interface
 uses
   Classes,
   SysUtils,
+  fgl,
   nyx.types;
 
+type
+
+  { TNyxElementsStdImpl }
+  (*
+    standard elements collection implementation
+  *)
+  TNyxElementsStdImpl = class(TNyxElementsBaseImpl)
+  strict private
+    FItems : TFPGInterfacedObjectList<INyxElement>;
+  strict protected
+    function DoGetCount : Integer; override;
+
+    function DoGetItem(const AIndex : Integer; out Item : INyxElement;
+      out Error : String) : Boolean; override;
+
+    function DoAddAtem(const AItem : INyxElement; out Index : Integer;
+      out Error : String) : Boolean; override;
+
+    function DoRemoveItem(const AIndex : Integer; out Item : INyxElement;
+      out Error : String) : Boolean; override;
+  public
+    constructor Create; override;
+    destructor Destroy; override;
+  end;
+
 implementation
+
+{ TNyxElementsStdImpl }
+
+function TNyxElementsStdImpl.DoGetCount: Integer;
+begin
+  Result := FItems.Count;
+end;
+
+function TNyxElementsStdImpl.DoGetItem(const AIndex: Integer; out
+  Item: INyxElement; out Error: String): Boolean;
+begin
+  Result := False;
+  Item := nil;
+  try
+    Item := FItems[AIndex];
+
+    //success
+    Result := True;
+  except on E : Exception do
+    Error := E.Message;
+  end;
+end;
+
+function TNyxElementsStdImpl.DoAddAtem(const AItem: INyxElement; out
+  Index: Integer; out Error: String): Boolean;
+begin
+  Result := False;
+  Index := -1;
+  try
+    Index := FItems.Add(AItem);
+
+    //success
+    Result := True;
+  except on E : Exception do
+    Error := E.Message;
+  end;
+end;
+
+function TNyxElementsStdImpl.DoRemoveItem(const AIndex: Integer; out
+  Item: INyxElement; out Error: String): Boolean;
+begin
+  Result := False;
+  Item := nil;
+  try
+    Item := FItems[AIndex];
+    FItems.Delete(AIndex);
+
+    //success
+    Result := True;
+  except on E : Exception do
+    Error := E.Message;
+  end;
+end;
+
+constructor TNyxElementsStdImpl.Create;
+begin
+  inherited Create;
+  FItems := TFPGInterfacedObjectList<INyxElement>.Create;
+end;
+
+destructor TNyxElementsStdImpl.Destroy;
+begin
+  FItems.Free;
+  inherited Destroy;
+end;
 
 end.
 

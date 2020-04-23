@@ -114,8 +114,10 @@ type
     function GetContainer: INyxContainer;
     procedure SetContainer(const AValue: INyxContainer);
   strict protected
+
     (*
-      children will override this method to generate a unique identifier
+      children can override this method to generate a unique identifier
+      if the default generation will not suffice
     *)
     function DoGetID : String; virtual;
   public
@@ -137,10 +139,6 @@ type
     metaclass for a nyx element
   *)
   TNyxElementClass = class of TNyxElementBaseImpl;
-
-
-
-
 
   { INyxElements }
   (*
@@ -234,62 +232,29 @@ type
     function DoRemoveItem(const AIndex : Integer; out Item : INyxElement;
       out Error : String) : Boolean; virtual; abstract;
   public
-    (*
-      number of elements in the collection
-    *)
     property Count : Integer read GetCount;
-
-    (*
-      returns the element at a given index, if the index doesn't exist
-      an exception will be thrown
-    *)
     property Items[const AIndex : Integer] : INyxElement read GetItem; default;
 
-    //methods
-
-    (*
-      adds a new element to the collection and returns the index
-    *)
     function Add(const AItem : INyxElement) : Integer;
-
-    (*
-      deletes an element at a given index, if the index doesn't exist
-      will simply return
-    *)
     function Delete(const AIndex : Integer) : INyxElements;
-
-    (*
-      removes the element at a given index, but returns it to the caller
-    *)
     function Extract(const AIndex : Integer) : INyxElement;
 
-    (*
-      provided a handler, will iterate all elements in the collection
-    *)
     function ForEach(const AProc : TNyxElementCallback) : INyxElements; overload;
     function ForEach(const AProc : TNyxElementNestedCallback) : INyxElements; overload;
     function ForEach(const AProc : TNyxElementMethod) : INyxElements; overload;
 
-    (*
-      provided a handler, will iterate all elements in the collection until
-      the handler returns true (signalling a "found")
-    *)
     function Find(const AProc : TNyxElementBoolCallback) : INyxElement; overload;
     function Find(const AProc : TNyxElementBoolNestedCallback) : INyxElement; overload;
     function Find(const AProc : TNyxElementBoolMethod) : INyxElement; overload;
 
-    (*
-      provided a handler, will iterate all elements in the collection
-      and will add all "found" elements to the resulting collection
-    *)
     function FindAll(const AProc : TNyxElementBoolCallback; const ARecurse : Boolean = True) : INyxElements; overload;
     function FindAll(const AProc : TNyxElementBoolNestedCallback; const ARecurse : Boolean = True) : INyxElements; overload;
     function FindAll(const AProc : TNyxElementBoolMethod; const ARecurse : Boolean = True) : INyxElements; overload;
 
-    (*
-      clears the collection
-    *)
     function Clear : INyxElements;
+
+    constructor Create; virtual;
+    destructor Destroy; override;
   end;
 
   (*
@@ -496,6 +461,12 @@ type
 function NewNyxUI : INyxUI;
 
 implementation
+uses
+{$IFDEF BROWSER}
+  nyx.elements.browser;
+{$ELSE}
+  nyx.elements.std;
+{$ENDIF}
 
 var
   DefaultNyxElements : TNyxElementsClass;
@@ -1040,6 +1011,18 @@ begin
     Delete(0);
 end;
 
+constructor TNyxElementsBaseImpl.Create;
+begin
+  //nothing in base
+end;
+
+destructor TNyxElementsBaseImpl.Destroy;
+begin
+  //clear the elements
+  Clear;
+  inherited Destroy;
+end;
+
 { TNyxContainerBaseImpl }
 
 function TNyxContainerBaseImpl.GetElements: INyxElements;
@@ -1207,10 +1190,10 @@ end;
 
 initialization
 {$IFDEF BROWSER}
-//todo - set the default nyx elements class
+DefaultNyxElements := TNyxElementsBrowserImpl;
 //todo - set the default nyx ui class
 {$ELSE}
-//todo - set the default nyx elements class
+DefaultNyxElements := TNyxElementsStdImpl;
 //todo - set the default nyx ui class
 {$ENDIF}
 end.
