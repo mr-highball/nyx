@@ -38,6 +38,19 @@ type
 
   //forward
   INyxContainer = interface;
+  INyxElement = interface;
+
+  TNyxElementCallback = procedure(const AElement : INyxElement);
+  TNyxElementNestedCallback = procedure(const AElement : INyxElement) is nested;
+  TNyxElementMethod = procedure(const AElement : INyxElement) of object;
+
+  TNyxElementBoolCallback = function(const AElement : INyxElement) : Boolean;
+  TNyxElementBoolNestedCallback = function(const AElement : INyxElement) : Boolean is nested;
+  TNyxElementBoolMethod = function(const AElement : INyxElement) : Boolean of object;
+
+  TNyxElementConditonCallback = function(const ACondition : TNyxElementBoolCallback;const ATrue, AFalse : TNyxElementCallback) : Boolean;
+  TNyxElementConditionNestedCallback = function(const ACondition : TNyxElementBoolNestedCallback;const ATrue, AFalse : TNyxElementNestedCallback) : Boolean is nested;
+  TNyxElementConditionMethod = function(const ACondition : TNyxElementBoolMethod;const ATrue, AFalse : TNyxElementMethod) : Boolean of object;
 
   { INyxElement }
   (*
@@ -76,6 +89,13 @@ type
       updates the name and returns this element
     *)
     function UpdateName(const AName : String) : INyxElement;
+
+    (*
+      allows for boolean conditions
+    *)
+    function Condition(const ACondition : TNyxElementBoolCallback; const ATrue, AFalse : TNyxElementCallback) : INyxElement; overload;
+    function Condition(const ACondition : TNyxElementBoolNestedCallback; const ATrue, AFalse : TNyxElementNestedCallback) : INyxElement; overload;
+    function Condition(const ACondition : TNyxElementBoolMethod; const ATrue, AFalse : TNyxElementMethod) : INyxElement; overload;
   end;
 
   { TNyxElementBaseImpl }
@@ -105,6 +125,10 @@ type
 
     function UpdateName(const AName : String) : INyxElement;
 
+    function Condition(const ACondition : TNyxElementBoolCallback; const ATrue, AFalse : TNyxElementCallback) : INyxElement; overload;
+    function Condition(const ACondition : TNyxElementBoolNestedCallback; const ATrue, AFalse : TNyxElementNestedCallback) : INyxElement; overload;
+    function Condition(const ACondition : TNyxElementBoolMethod; const ATrue, AFalse : TNyxElementMethod) : INyxElement; overload;
+
     constructor Create; virtual;
     destructor Destroy; override;
   end;
@@ -114,13 +138,9 @@ type
   *)
   TNyxElementClass = class of TNyxElementBaseImpl;
 
-  TNyxElementCallback = procedure(const AElement : INyxElement);
-  TNyxElementNestedCallback = procedure(const AElement : INyxElement) is nested;
-  TNyxElementMethod = procedure(const AElement : INyxElement) of object;
 
-  TNyxElementFindCallback = function(const AElement : INyxElement) : Boolean;
-  TNyxElementFindNestedCallback = function(const AElement : INyxElement) : Boolean is nested;
-  TNyxElementFindMethod = function(const AElement : INyxElement) : Boolean of object;
+
+
 
   { INyxElements }
   (*
@@ -174,17 +194,17 @@ type
       provided a handler, will iterate all elements in the collection until
       the handler returns true (signalling a "found")
     *)
-    function Find(const AProc : TNyxElementFindCallback) : INyxElement; overload;
-    function Find(const AProc : TNyxElementFindNestedCallback) : INyxElement; overload;
-    function Find(const AProc : TNyxElementFindMethod) : INyxElement; overload;
+    function Find(const AProc : TNyxElementBoolCallback) : INyxElement; overload;
+    function Find(const AProc : TNyxElementBoolNestedCallback) : INyxElement; overload;
+    function Find(const AProc : TNyxElementBoolMethod) : INyxElement; overload;
 
     (*
       provided a handler, will iterate all elements in the collection
       and will add all "found" elements to the resulting collection
     *)
-    function FindAll(const AProc : TNyxElementFindCallback; const ARecurse : Boolean = True) : INyxElements; overload;
-    function FindAll(const AProc : TNyxElementFindNestedCallback; const ARecurse : Boolean = True) : INyxElements; overload;
-    function FindAll(const AProc : TNyxElementFindMethod; const ARecurse : Boolean = True) : INyxElements; overload;
+    function FindAll(const AProc : TNyxElementBoolCallback; const ARecurse : Boolean = True) : INyxElements; overload;
+    function FindAll(const AProc : TNyxElementBoolNestedCallback; const ARecurse : Boolean = True) : INyxElements; overload;
+    function FindAll(const AProc : TNyxElementBoolMethod; const ARecurse : Boolean = True) : INyxElements; overload;
 
     (*
       clears the collection
@@ -254,17 +274,17 @@ type
       provided a handler, will iterate all elements in the collection until
       the handler returns true (signalling a "found")
     *)
-    function Find(const AProc : TNyxElementFindCallback) : INyxElement; overload;
-    function Find(const AProc : TNyxElementFindNestedCallback) : INyxElement; overload;
-    function Find(const AProc : TNyxElementFindMethod) : INyxElement; overload;
+    function Find(const AProc : TNyxElementBoolCallback) : INyxElement; overload;
+    function Find(const AProc : TNyxElementBoolNestedCallback) : INyxElement; overload;
+    function Find(const AProc : TNyxElementBoolMethod) : INyxElement; overload;
 
     (*
       provided a handler, will iterate all elements in the collection
       and will add all "found" elements to the resulting collection
     *)
-    function FindAll(const AProc : TNyxElementFindCallback; const ARecurse : Boolean = True) : INyxElements; overload;
-    function FindAll(const AProc : TNyxElementFindNestedCallback; const ARecurse : Boolean = True) : INyxElements; overload;
-    function FindAll(const AProc : TNyxElementFindMethod; const ARecurse : Boolean = True) : INyxElements; overload;
+    function FindAll(const AProc : TNyxElementBoolCallback; const ARecurse : Boolean = True) : INyxElements; overload;
+    function FindAll(const AProc : TNyxElementBoolNestedCallback; const ARecurse : Boolean = True) : INyxElements; overload;
+    function FindAll(const AProc : TNyxElementBoolMethod; const ARecurse : Boolean = True) : INyxElements; overload;
 
     (*
       clears the collection
@@ -741,7 +761,7 @@ begin
   end;
 end;
 
-function TNyxElementsBaseImpl.Find(const AProc: TNyxElementFindCallback): INyxElement;
+function TNyxElementsBaseImpl.Find(const AProc: TNyxElementBoolCallback): INyxElement;
 var
   LCount, I: Integer;
   LItem: INyxElement;
@@ -772,7 +792,7 @@ begin
   end;
 end;
 
-function TNyxElementsBaseImpl.Find(const AProc: TNyxElementFindNestedCallback): INyxElement;
+function TNyxElementsBaseImpl.Find(const AProc: TNyxElementBoolNestedCallback): INyxElement;
 var
   LCount, I: Integer;
   LItem: INyxElement;
@@ -803,7 +823,7 @@ begin
   end;
 end;
 
-function TNyxElementsBaseImpl.Find(const AProc: TNyxElementFindMethod): INyxElement;
+function TNyxElementsBaseImpl.Find(const AProc: TNyxElementBoolMethod): INyxElement;
 var
   LCount, I: Integer;
   LItem: INyxElement;
@@ -834,7 +854,7 @@ begin
   end;
 end;
 
-function TNyxElementsBaseImpl.FindAll(const AProc: TNyxElementFindCallback;
+function TNyxElementsBaseImpl.FindAll(const AProc: TNyxElementBoolCallback;
   const ARecurse: Boolean): INyxElements;
 var
   LCount,
@@ -894,7 +914,7 @@ begin
 end;
 
 function TNyxElementsBaseImpl.FindAll(
-  const AProc: TNyxElementFindNestedCallback; const ARecurse: Boolean): INyxElements;
+  const AProc: TNyxElementBoolNestedCallback; const ARecurse: Boolean): INyxElements;
 var
   LCount,
   I, J, K,
@@ -952,7 +972,7 @@ begin
   end;
 end;
 
-function TNyxElementsBaseImpl.FindAll(const AProc: TNyxElementFindMethod;
+function TNyxElementsBaseImpl.FindAll(const AProc: TNyxElementBoolMethod;
   const ARecurse: Boolean): INyxElements;
 var
   LCount,
@@ -1097,6 +1117,80 @@ function TNyxElementBaseImpl.UpdateName(const AName: String): INyxElement;
 begin
   SetName(AName);
   Result := Self as INyxElement;
+end;
+
+function TNyxElementBaseImpl.Condition(
+  const ACondition: TNyxElementBoolCallback; const ATrue,
+  AFalse: TNyxElementCallback): INyxElement;
+begin
+  Result := Self as INyxElement;
+
+  //no input to evaluate, so call false if assigned
+  if not Assigned(ACondition) then
+  begin
+    if Assigned(AFalse) then
+      AFalse(Result);
+
+    Exit;
+  end;
+
+  //evalue the condition and call the appropriate method
+  if ACondition(Result) then
+  begin
+    if Assigned(ATrue) then
+      ATrue(Result)
+  end
+  else if Assigned(AFalse) then
+    AFalse(Result);
+end;
+
+function TNyxElementBaseImpl.Condition(
+  const ACondition: TNyxElementBoolNestedCallback; const ATrue,
+  AFalse: TNyxElementNestedCallback): INyxElement;
+begin
+  Result := Self as INyxElement;
+
+  //no input to evaluate, so call false if assigned
+  if not Assigned(ACondition) then
+  begin
+    if Assigned(AFalse) then
+      AFalse(Result);
+
+    Exit;
+  end;
+
+  //evalue the condition and call the appropriate method
+  if ACondition(Result) then
+  begin
+    if Assigned(ATrue) then
+      ATrue(Result)
+  end
+  else if Assigned(AFalse) then
+    AFalse(Result);
+end;
+
+function TNyxElementBaseImpl.Condition(const ACondition: TNyxElementBoolMethod;
+  const ATrue, AFalse: TNyxElementMethod): INyxElement;
+begin
+  Result := Self as INyxElement;
+
+  //no input to evaluate, so call false if assigned
+  if not Assigned(ACondition) then
+  begin
+    if Assigned(AFalse) then
+      AFalse(Result);
+
+    Exit;
+  end;
+
+  //evalue the condition and call the appropriate method
+  if ACondition(Result) then
+  begin
+    if Assigned(ATrue) then
+      ATrue(Result)
+  end
+  else if Assigned(AFalse) then
+    AFalse(Result);
 end;
 
 constructor TNyxElementBaseImpl.Create;
