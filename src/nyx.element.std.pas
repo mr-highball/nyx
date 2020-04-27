@@ -33,6 +33,22 @@ uses
 
 type
 
+  { INyxElementStd }
+  (*
+    base standard element
+  *)
+  INyxElementStd = interface(INyxElement)
+    ['{EA6E32C9-1D17-4260-AC89-34769E067524}']
+  end;
+
+  (*
+    base implementation for all standard elements
+  *)
+  TNyxElementStdImpl = class(TNyxElementBaseImpl)
+  strict private
+  strict protected
+  public
+  end;
 
 implementation
 

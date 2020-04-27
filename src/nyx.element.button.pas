@@ -20,7 +20,7 @@
   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
   IN THE SOFTWARE.
 }
-unit nyx.element.browser;
+unit nyx.element.button;
 
 {$mode delphi}
 
@@ -29,64 +29,40 @@ interface
 uses
   Classes,
   SysUtils,
-  web,
   nyx.types;
 
 type
 
-  { INyxElementBrowser }
+  { INyxElementButton }
   (*
-    base browser element
+    base button element
   *)
-  INyxElementBrowser = interface(INyxElement)
-    ['{CC8886D4-5AA1-412B-8099-86F93C6870AA}']
-
-    //property methods
-    function GetJSElement: TJSElement;
-
-    //properties
-    property JSElement : TJSElement read GetJSElement;
+  INyxElementButton = interface(INyxElement)
+    ['{D93EBE55-E5A7-45A8-AEF0-5B04EB806A10}']
   end;
 
-  (*
-    base implementation for all browser elements
-  *)
-
-  { TNyxElementBrowserImpl }
-
-  TNyxElementBrowserImpl = class(TNyxElementBaseImpl, INyxElementBrowser)
-  strict private
-    FElement : TJSElement;
-  protected
-    function GetJSElement: TJSElement;
-  strict protected
-
-    (*
-      children need to override this method to have document create
-      the root JS element associated with this browser element
-    *)
-    function DoCreateElement : TJSElement; virtual; abstract;
-  public
-    property JSElement : TJSElement read GetJSElement;
-
-    constructor Create; override;
-  end;
+function NewNyxButton : INyxElementButton;
 
 implementation
+uses
+{$IFDEF BROWSER}
+  nyx.element.button.browser;
+{$ELSE}
+  nyx.element.button.std;
+{$ENDIF}
+var
+  DefaultNyxButton : TNyxElementClass;
 
-{ TNyxElementBrowserImpl }
-
-function TNyxElementBrowserImpl.GetJSElement: TJSElement;
+function NewNyxButton: INyxElementButton;
 begin
-  Result := FElement;
+  Result := DefaultNyxButton.Create as INyxElementButton;
 end;
 
-constructor TNyxElementBrowserImpl.Create;
-begin
-  inherited Create;
-  FElement :=  DoCreateElement;
-  FElement.id := ID;
-end;
-
+initialization
+{$IFDEF BROWSER}
+  DefaultNyxButton := TNyxElementButtonBrowserImpl;
+{$ELSE}
+  DefaultNyxButton := TNyxElementButtonStdImpl;
+{$ENDIF}
 end.
 

@@ -108,6 +108,7 @@ type
     FName : String;
     FContainer : INyxContainer;
   protected
+    procedure SetID(const AValue: String);
     function GetID: String;
     function GetName: String;
     procedure SetName(const AValue: String);
@@ -121,7 +122,7 @@ type
     *)
     function DoGetID : String; virtual;
   public
-    property ID : String read GetID;
+    property ID : String read GetID write SetID;
     property Name : String read GetName write SetName;
     property Container : INyxContainer read GetContainer write SetContainer;
 
@@ -139,6 +140,12 @@ type
     metaclass for a nyx element
   *)
   TNyxElementClass = class of TNyxElementBaseImpl;
+
+  (*
+    observer types for elements collection
+  *)
+  TElementsObserveEvent = (eoAdd, eoExtract);
+  TElementsObserveMethod = procedure(const AElement : INyxElement; const AEvent : TElementsObserveEvent) of object;
 
   { INyxElements }
   (*
@@ -208,6 +215,9 @@ type
       clears the collection
     *)
     function Clear : INyxElements;
+
+    procedure Observe(const AObserver : TElementsObserveMethod; out ID : String);
+    procedure RemoveObserver(const AID : String);
   end;
 
   { TNyxElementsBaseImpl }
@@ -216,7 +226,11 @@ type
   *)
   TNyxElementsBaseImpl = class(TInterfacedObject, INyxElements)
   strict private
+    FID : TStringList;
     procedure RaiseError(const AMethod, AError : String);
+    procedure ClearObservers;
+    procedure NotifyAdd(const AElement : INyxElement);
+    procedure NotifyExtract(const AElement : INyxElement);
   protected
     function GetCount: Integer;
     function GetItem(const AIndex : Integer): INyxElement;
@@ -253,6 +267,9 @@ type
 
     function Clear : INyxElements;
 
+    procedure Observe(const AObserver : TElementsObserveMethod; out ID : String);
+    procedure RemoveObserver(const AID : String);
+
     constructor Create; virtual;
     destructor Destroy; override;
   end;
@@ -261,6 +278,52 @@ type
     metaclass for concrete nyx elements
   *)
   TNyxElementsClass = class of TNyxElementsBaseImpl;
+
+  { INyxLayout }
+  (*
+    responsible for determining the visual placement/contstraints
+    of a INyxContainer
+  *)
+  INyxLayout = interface
+    ['{7A4611A4-6C0C-4D7A-845E-2232743CC8B3}']
+
+    //property methods
+    function GetContainer: INyxContainer;
+    procedure SetContainer(const AValue: INyxContainer);
+
+    //properties
+    property Container : INyxContainer read GetContainer write SetContainer;
+
+    //methods
+
+    (*
+      called to recalculate the parent container's placement/constraints
+    *)
+    function UpdatePlacement(out Error : String) : Boolean;
+  end;
+
+  { TNyxLayoutBaseImpl }
+  (*
+    base implementation for all INyxLayout
+  *)
+  TNyxLayoutBaseImpl = class(TInterfacedObject, INyxLayout)
+  strict private
+    FContainer : INyxContainer;
+  protected
+    function GetContainer: INyxContainer;
+    procedure SetContainer(const AValue: INyxContainer);
+  strict protected
+    function DoUpdatePlacement(out Error : String) : Boolean; virtual; abstract;
+  public
+    property Container : INyxContainer read GetContainer;
+
+    function UpdatePlacement(out Error : String) : Boolean;
+
+    constructor Create; virtual;
+  end;
+
+  //meta class for concrete nyx layouts
+  TNyxLayoutClass = class of TNyxLayoutBaseImpl;
 
   //forward
   INyxUI = interface;
@@ -275,7 +338,9 @@ type
 
     //property methods
     function GetElements: INyxElements;
+    function GetLayout: INyxLayout;
     function GetUI: INyxUI;
+    procedure SetLayout(const AValue: INyxLayout);
     procedure SetUI(const AValue: INyxUI);
 
     //properties
@@ -284,6 +349,11 @@ type
       collection of all children elements
     *)
     property Elements : INyxElements read GetElements;
+
+    (*
+      the current layout for this container
+    *)
+    property Layout : INyxLayout read GetLayout write SetLayout;
 
     (*
       parent nyx ui, will be nil if none set
@@ -297,6 +367,11 @@ type
       also sets the container property on the input element to this instance
     *)
     function Add(const AItem : INyxElement) : INyxContainer;
+
+    (*
+      sets the layout for this container
+    *)
+    function UpdateLayout(const ALayout : INyxLayout) : INyxContainer;
   end;
 
   { TNyxContainerBaseImpl }
@@ -306,17 +381,22 @@ type
   TNyxContainerBaseImpl = class(TNyxElementBaseImpl, INyxContainer)
   strict private
     FElements : INyxElements;
+    FLayout : INyxLayout;
     FUI : INyxUI;
   protected
+    function GetLayout: INyxLayout;
+    procedure SetLayout(const AValue: INyxLayout);
     function GetElements: INyxElements;
     function GetUI: INyxUI;
     procedure SetUI(const AValue: INyxUI);
   strict protected
   public
     property Elements : INyxElements read GetElements;
+    property Layout : INyxLayout read GetLayout write SetLayout;
     property UI : INyxUI read GetUI write SetUI;
 
     function Add(const AItem : INyxElement) : INyxContainer;
+    function UpdateLayout(const ALayout : INyxLayout) : INyxContainer;
 
     constructor Create; override;
     destructor Destroy; override;
@@ -337,6 +417,31 @@ type
   *)
   INyxRenderSettings = interface
     ['{91137F74-9500-4A55-98CB-C6924D1FB8F2}']
+
+    //property methods
+    function GetUI: INyxUI;
+    procedure SetUI(const AValue: INyxUI);
+
+    //properties
+    property UI : INyxUI read GetUI write SetUI;
+  end;
+
+  { TNyxRenderSettingsBaseImpl }
+  (*
+    base implementation for all ui settings
+  *)
+  TNyxRenderSettingsBaseImpl = class(TInterfacedObject, INyxRenderSettings)
+  strict private
+    FUI : INyxUI;
+  protected
+    function GetUI: INyxUI;
+    procedure SetUI(const AValue: INyxUI);
+  strict protected
+  public
+    property UI : INyxUI read GetUI write SetUI;
+
+    constructor Create; virtual;
+    destructor Destroy; override;
   end;
 
   { INyxUI }
@@ -423,6 +528,12 @@ type
     procedure DoHide; virtual; abstract;
 
     (*
+      children can override this method to take action when the settings
+      change
+    *)
+    procedure DoSettingsChange; virtual;
+
+    (*
       children can override this to perform additional steps of a clear
       default, will call Hide() then clear the containers collection
     *)
@@ -456,6 +567,11 @@ type
   TNyxUIClass = class of TNyxUIBaseImpl;
 
 (*
+  helper function to return a nyx container
+*)
+function NewNyxContainer : INyxContainer;
+
+(*
   helper function to return a nyx ui
 *)
 function NewNyxUI : INyxUI;
@@ -463,18 +579,78 @@ function NewNyxUI : INyxUI;
 implementation
 uses
 {$IFDEF BROWSER}
-  nyx.elements.browser;
+  nyx.element.browser,
+  nyx.elements.browser,
+  nyx.container.browser,
+  nyx.ui.browser;
 {$ELSE}
-  nyx.elements.std;
+  nyx.element.std,
+  nyx.elements.std,
+  nyx.container.std,
+  nyx.ui.std;
 {$ENDIF}
 
 var
   DefaultNyxElements : TNyxElementsClass;
   DefaultNyxUI : TNyxUIClass;
+  DefaultNyxLayout : TNyxLayoutClass;
+  DefaultNyxContainer : TNyxContainerClass;
+
+function NewNyxContainer: INyxContainer;
+begin
+  Result := DefaultNyxContainer.Create;
+end;
 
 function NewNyxUI: INyxUI;
 begin
   Result := DefaultNyxUI.Create;
+end;
+
+{ TNyxRenderSettingsBaseImpl }
+
+function TNyxRenderSettingsBaseImpl.GetUI: INyxUI;
+begin
+  Result := FUI;
+end;
+
+procedure TNyxRenderSettingsBaseImpl.SetUI(const AValue: INyxUI);
+begin
+  FUI := nil;
+  FUI := AValue;
+end;
+
+constructor TNyxRenderSettingsBaseImpl.Create;
+begin
+  FUI := nil;
+end;
+
+destructor TNyxRenderSettingsBaseImpl.Destroy;
+begin
+  FUI := nil;
+  inherited Destroy;
+end;
+
+{ TNyxLayoutBaseImpl }
+
+function TNyxLayoutBaseImpl.GetContainer: INyxContainer;
+begin
+  Result := FContainer;
+end;
+
+procedure TNyxLayoutBaseImpl.SetContainer(const AValue: INyxContainer);
+begin
+  FContainer := nil;
+  FContainer := AValue;
+end;
+
+function TNyxLayoutBaseImpl.UpdatePlacement(out Error: String): Boolean;
+begin
+  Result := DoUpdatePlacement(Error);
+end;
+
+constructor TNyxLayoutBaseImpl.Create;
+begin
+  FContainer := nil;
 end;
 
 { TNyxUIBaseImpl }
@@ -493,6 +669,16 @@ procedure TNyxUIBaseImpl.SetSettings(const AValue: INyxRenderSettings);
 begin
   FSettings := nil;
   FSettings := AValue;
+
+  if Assigned(AValue) then
+    AValue.UI := Self as INyxUI;
+
+  DoSettingsChange;
+end;
+
+procedure TNyxUIBaseImpl.DoSettingsChange;
+begin
+  //nothing in base
 end;
 
 procedure TNyxUIBaseImpl.DoClear;
@@ -517,6 +703,9 @@ function TNyxUIBaseImpl.AddContainer(const AContainer: INyxContainer; out
 begin
   Result := Self as INyxUI;
   Index := FContainers.Add(AContainer);
+
+  if Assigned(AContainer) then
+    AContainer.UI := Self as INyxUI;
 end;
 
 function TNyxUIBaseImpl.TakeAction(const AAction: TNyxActionCallback;
@@ -524,7 +713,7 @@ function TNyxUIBaseImpl.TakeAction(const AAction: TNyxActionCallback;
 begin
   Result := Self as INyxUI;
 
-  if not Assigned(AACtion) then
+  if not Assigned(AAction) then
     Exit;
 
   AAction(Result, AArgs);
@@ -553,9 +742,31 @@ begin
 end;
 
 function TNyxUIBaseImpl.Render(): INyxUI;
+
+  procedure PositionContainers(const AElement : INyxElement);
+  var
+    LContainer : INyxContainer;
+    LError : String;
+  begin
+    LContainer := AElement as INyxContainer;
+
+    if Assigned(LContainer) then
+      if Assigned(LContainer.Layout) then
+        if not LContainer.Layout.UpdatePlacement(LError) then
+          raise Exception.Create(Self.ClassName + '::Render::' + LError);
+  end;
+
 begin
   Result := Self as INyxUI;
+
+  //clear the current ui before rendering
+  Clear;
+
+  //render new ui
   DoRender;
+
+  //now for all containers, position them via there layouts
+  Containers.ForEach(@PositionContainers);
 end;
 
 function TNyxUIBaseImpl.Render(const ASettings: INyxRenderSettings): INyxUI;
@@ -597,6 +808,37 @@ begin
   raise Exception.Create(Self.ClassName + '::' + AMethod + '::' + AError);
 end;
 
+procedure TNyxElementsBaseImpl.ClearObservers;
+begin
+  FID.Clear;
+end;
+
+procedure TNyxElementsBaseImpl.NotifyAdd(const AElement: INyxElement);
+var
+  I: Integer;
+  LMethod : TElementsObserveMethod;
+begin
+  for I := 0 to Pred(FID.Count) do
+    try
+      LMethod := TElementsObserveMethod(Pointer(FID.Objects[I]));
+      LMethod(AElement, eoAdd);
+    finally
+    end;
+end;
+
+procedure TNyxElementsBaseImpl.NotifyExtract(const AElement: INyxElement);
+var
+  I: Integer;
+  LMethod : TElementsObserveMethod;
+begin
+  for I := 0 to Pred(FID.Count) do
+    try
+      LMethod := TElementsObserveMethod(Pointer(FID.Objects[I]));
+      LMethod(AElement, eoExtract);
+    finally
+    end;
+end;
+
 function TNyxElementsBaseImpl.GetCount: Integer;
 begin
   Result := DoGetCount;
@@ -621,6 +863,8 @@ begin
   try
     if not DoAddAtem(AItem, Result, LError) then
       RaiseError('Add', LError);
+
+    NotifyAdd(AItem);
   except on E : Exception do
     RaiseError('Add', E.Message);
   end;
@@ -649,6 +893,8 @@ begin
   try
     if not DoRemoveItem(AIndex, Result, LError) then
       RaiseError('Extract', LError);
+
+    NotifyExtract(Result);
   except on E : Exception do
     RaiseError('Extract', E.Message);
   end;
@@ -1011,19 +1257,59 @@ begin
     Delete(0);
 end;
 
+procedure TNyxElementsBaseImpl.Observe(const AObserver: TElementsObserveMethod;
+  out ID: String);
+var
+  LGUID : TGuid;
+begin
+  if not Assigned(AObserver) then
+    Exit;
+
+  //use a guid as the ID and add the observer as an "object"
+  CreateGUID(LGUID);
+  ID := GUIDToString(LGUID);
+  FID.AddObject(ID, TObject(Pointer(AObserver)));
+end;
+
+procedure TNyxElementsBaseImpl.RemoveObserver(const AID: String);
+var
+  I: Integer;
+begin
+  I := FID.IndexOf(AID);
+
+  //remove if we found the id
+  if I >= 0 then
+    FID.Delete(I);
+end;
+
 constructor TNyxElementsBaseImpl.Create;
 begin
-  //nothing in base
+  FID := TStringList.Create;
 end;
 
 destructor TNyxElementsBaseImpl.Destroy;
 begin
   //clear the elements
   Clear;
+  ClearObservers;
   inherited Destroy;
 end;
 
 { TNyxContainerBaseImpl }
+
+function TNyxContainerBaseImpl.GetLayout: INyxLayout;
+begin
+  Result := FLayout;
+end;
+
+procedure TNyxContainerBaseImpl.SetLayout(const AValue: INyxLayout);
+begin
+  FLayout := nil;
+  FLayout := AValue;
+
+  if Assigned(FLayout) then
+    FLayout.Container := Self as INyxContainer;
+end;
 
 function TNyxContainerBaseImpl.GetElements: INyxElements;
 begin
@@ -1048,9 +1334,16 @@ begin
   FElements.Add(AItem);
 end;
 
+function TNyxContainerBaseImpl.UpdateLayout(const ALayout: INyxLayout): INyxContainer;
+begin
+  Result := Self as INyxContainer;
+  SetLayout(ALayout);
+end;
+
 constructor TNyxContainerBaseImpl.Create;
 begin
   inherited Create;
+  FLayout := DefaultNyxLayout.Create;
   FUI := nil
 end;
 
@@ -1061,6 +1354,11 @@ begin
 end;
 
 { TNyxElementBaseImpl }
+
+procedure TNyxElementBaseImpl.SetID(const AValue: String);
+begin
+  FID := AValue;
+end;
 
 function TNyxElementBaseImpl.GetID: String;
 begin
@@ -1191,10 +1489,14 @@ end;
 initialization
 {$IFDEF BROWSER}
 DefaultNyxElements := TNyxElementsBrowserImpl;
-//todo - set the default nyx ui class
+DefaultNyxContainer := TNyxContainerBrowserImpl;
+DefaultNyxUI := TNyxUIBrowserImpl;
+//todo - set the default nyx layout class
 {$ELSE}
 DefaultNyxElements := TNyxElementsStdImpl;
+DefaultNyxContainer := TNyxContainerStdImpl;
 //todo - set the default nyx ui class
+//todo - set the default nyx layout class
 {$ENDIF}
 end.
 

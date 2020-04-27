@@ -20,7 +20,7 @@
   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
   IN THE SOFTWARE.
 }
-unit nyx.element.browser;
+unit nyx.layout;
 
 {$mode delphi}
 
@@ -29,64 +29,13 @@ interface
 uses
   Classes,
   SysUtils,
-  web,
   nyx.types;
 
 type
 
-  { INyxElementBrowser }
-  (*
-    base browser element
-  *)
-  INyxElementBrowser = interface(INyxElement)
-    ['{CC8886D4-5AA1-412B-8099-86F93C6870AA}']
-
-    //property methods
-    function GetJSElement: TJSElement;
-
-    //properties
-    property JSElement : TJSElement read GetJSElement;
-  end;
-
-  (*
-    base implementation for all browser elements
-  *)
-
-  { TNyxElementBrowserImpl }
-
-  TNyxElementBrowserImpl = class(TNyxElementBaseImpl, INyxElementBrowser)
-  strict private
-    FElement : TJSElement;
-  protected
-    function GetJSElement: TJSElement;
-  strict protected
-
-    (*
-      children need to override this method to have document create
-      the root JS element associated with this browser element
-    *)
-    function DoCreateElement : TJSElement; virtual; abstract;
-  public
-    property JSElement : TJSElement read GetJSElement;
-
-    constructor Create; override;
-  end;
+  //todo - put all "common" layout interfaces (percent, fixed, etc...)
 
 implementation
-
-{ TNyxElementBrowserImpl }
-
-function TNyxElementBrowserImpl.GetJSElement: TJSElement;
-begin
-  Result := FElement;
-end;
-
-constructor TNyxElementBrowserImpl.Create;
-begin
-  inherited Create;
-  FElement :=  DoCreateElement;
-  FElement.id := ID;
-end;
 
 end.
 

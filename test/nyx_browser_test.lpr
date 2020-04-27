@@ -29,43 +29,25 @@ uses
   Classes,
   SysUtils,
   Web,
-  nyx.types;
+  nyx.types,
+  nyx.element.button;
 
 var
   UI : INyxUI;
 
 procedure BuildUI;
 var
-  I: Integer;
-
-  procedure RecordIndex(const AUI : INyxUI; const AArgs : array of const);
-  begin
-    //provided index write the name to screen
-    WriteLn(AUI.Containers[AArgs[0].VInteger].Name);
-  end;
-
-  procedure AddButton(const AUI : INyxUI; const AArgs : array of const);
-  begin
-    //todo
-  end;
-
-  function FindAllTest(const AElement : INyxElement) : Boolean;
-  begin
-  end;
-
+  I : Integer;
 begin
   UI := NewNyxUI;
 
   //setup the ui with the demo ui components
   UI
-    .AddContainer(nil, I) //add a container
-    .TakeAction(@RecordIndex, [I]) //take an action (browser seems to require @?)
-    .TakeAction(@AddButton, [I]) //add a button to the container
-    .AddContainer(nil, I)
-    .ContainerByIndex(I).Elements.FindAll(@FindAllTest, True);
-
-  //render the ui
-  UI
+    .AddContainer(NewNyxContainer, I) //add a container
+    .ContainerByIndex(I)
+      .Add(NewNyxButton)
+      .Container
+    .UI
     .Render();
 end;
 
