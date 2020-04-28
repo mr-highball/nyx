@@ -33,12 +33,18 @@ uses
   Controls,
   Graphics,
   Dialogs,
-  nyx.types;
+  nyx.types,
+  nyx.element.button;
 
 type
-  TNyxTest = class(TForm)
-  private
 
+  { TNyxTest }
+
+  TNyxTest = class(TForm)
+    procedure FormCreate(Sender: TObject);
+  private
+    UI : INyxUI;
+    procedure BuildUI;
   public
 
   end;
@@ -49,6 +55,29 @@ var
 implementation
 
 {$R *.lfm}
+
+procedure TNyxTest.FormCreate(Sender: TObject);
+begin
+  BuildUI;
+end;
+
+procedure TNyxTest.BuildUI;
+var
+  I : Integer;
+  LContainer: INyxContainer;
+begin
+  UI := NewNyxUI;
+  LContainer := NewNyxContainer; //debug
+
+  //setup the ui with the demo ui components
+  UI
+    .AddContainer(LContainer, I) //add a container
+    .ContainerByIndex(I)
+      .Add(NewNyxButton)
+      .Container
+    .UI
+    .Render();
+end;
 
 end.
 

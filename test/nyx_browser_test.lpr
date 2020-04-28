@@ -25,10 +25,8 @@ program nyx_browser_test;
 {$mode delphi}
 
 uses
-  JS,
   Classes,
   SysUtils,
-  Web,
   nyx.types,
   nyx.element.button;
 
@@ -38,12 +36,14 @@ var
 procedure BuildUI;
 var
   I : Integer;
+  LContainer: INyxContainer;
 begin
   UI := NewNyxUI;
+  LContainer := NewNyxContainer;
 
   //setup the ui with the demo ui components
   UI
-    .AddContainer(NewNyxContainer, I) //add a container
+    .AddContainer(LContainer, I) //add a container
     .ContainerByIndex(I)
       .Add(NewNyxButton)
       .Container

@@ -4,5 +4,6 @@ object NyxTest: TNyxTest
   Top = 134
   Width = 320
   Caption = 'nyx'
+  OnCreate = FormCreate
   LCLVersion = '2.1.0.0'
 end
