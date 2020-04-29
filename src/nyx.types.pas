@@ -366,7 +366,8 @@ type
       adds an element to the elements collection and returns this container.
       also sets the container property on the input element to this instance
     *)
-    function Add(const AItem : INyxElement) : INyxContainer;
+    function Add(const AItem : INyxElement; out Index : Integer) : INyxContainer; overload;
+    function Add(const AItem : INyxElement) : INyxContainer; overload;
 
     (*
       sets the layout for this container
@@ -389,13 +390,16 @@ type
     function GetElements: INyxElements;
     function GetUI: INyxUI;
     procedure SetUI(const AValue: INyxUI);
+    function GetContainer: INyxContainer; reintroduce;
   strict protected
   public
     property Elements : INyxElements read GetElements;
     property Layout : INyxLayout read GetLayout write SetLayout;
     property UI : INyxUI read GetUI write SetUI;
 
-    function Add(const AItem : INyxElement) : INyxContainer;
+    function Add(const AItem : INyxElement; out Index : Integer) : INyxContainer; overload;
+    function Add(const AItem : INyxElement) : INyxContainer; overload;
+
     function UpdateLayout(const ALayout : INyxLayout) : INyxContainer;
 
     constructor Create; override;
@@ -759,8 +763,8 @@ function TNyxUIBaseImpl.Render(): INyxUI;
 begin
   Result := Self as INyxUI;
 
-  //clear the current ui before rendering
-  Clear;
+  //hide the current ui before rendering
+  Hide;
 
   //render new ui
   DoRender;
@@ -1327,11 +1331,23 @@ begin
   FUI := AValue;
 end;
 
-function TNyxContainerBaseImpl.Add(const AItem: INyxElement): INyxContainer;
+function TNyxContainerBaseImpl.GetContainer: INyxContainer;
+begin
+  Result := Self as INyxContainer;
+end;
+
+function TNyxContainerBaseImpl.Add(const AItem: INyxElement; out Index: Integer): INyxContainer;
 begin
   Result := Self as INyxContainer;
   AItem.Container := Result;
-  FElements.Add(AItem);
+  Index := FElements.Add(AItem);
+end;
+
+function TNyxContainerBaseImpl.Add(const AItem: INyxElement): INyxContainer;
+var
+  I : Integer;
+begin
+  Result := Add(AItem, I);
 end;
 
 function TNyxContainerBaseImpl.UpdateLayout(const ALayout: INyxLayout): INyxContainer;
@@ -1343,7 +1359,8 @@ end;
 constructor TNyxContainerBaseImpl.Create;
 begin
   inherited Create;
-  FLayout := DefaultNyxLayout.Create;
+  FElements := DefaultNyxElements.Create;
+  //FLayout := DefaultNyxLayout.Create; //todo - create layout once one is made
   FUI := nil
 end;
 

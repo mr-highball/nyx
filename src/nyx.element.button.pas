@@ -33,12 +33,88 @@ uses
 
 type
 
+  (*
+    enum for all observable events of a button
+  *)
+  TButtonObserveEvent = (
+    boClick
+  );
+
+  //forward
+  INyxElementButton = interface;
+
+  (*
+    observer method for all button events
+  *)
+  TButtonObserveMethod = procedure(const AButton : INyxElementButton;
+    const AEvent : TButtonObserveEvent) of object;
+
   { INyxElementButton }
   (*
     base button element
   *)
   INyxElementButton = interface(INyxElement)
     ['{D93EBE55-E5A7-45A8-AEF0-5B04EB806A10}']
+
+    //property methods
+    function GetText: String;
+    procedure SetText(const AValue: String);
+
+    //property
+
+    (*
+      visual text of the button
+    *)
+    property Text : String read GetText write SetText;
+
+    //methods
+
+    (*
+      fluent setter for the button text
+    *)
+    function UpdateText(const AText : String) : INyxElementButton;
+
+    (*
+      callers can attach an observe method with a particular event
+      and will get notified when that event occurs
+    *)
+    function Observe(const AEvent : TButtonObserveEvent; const AObserver : TButtonObserveMethod;
+      out ID : String) : INyxElementButton;
+
+    (*
+      removes an observer
+    *)
+    function RemoveObserver(const AID : String) : INyxElementButton;
+  end;
+
+  { TNyxElementButtonBaseImpl }
+  (*
+    base buttom implementation
+  *)
+  TNyxElementButtonBaseImpl = class(TNyxElementBaseImpl, INyxElementButton)
+  strict private
+    FObserve : TStringList;
+  protected
+    function GetText: String;
+    procedure SetText(const AValue: String);
+  strict protected
+    function DoGetText: String; virtual; abstract;
+    procedure DoSetText(const AValue: String); virtual; abstract;
+
+    procedure Notify(const AEvent : TButtonObserveEvent);
+  public
+    property Text : String read GetText write SetText;
+
+    function UpdateText(const AText : String) : INyxElementButton;
+
+    //todo - these two methods could use some sort of observe component which does all the logic
+    //      and returns the indexes of applicable observers (did this to test if works)
+    function Observe(const AEvent : TButtonObserveEvent; const AObserver : TButtonObserveMethod;
+      out ID : String) : INyxElementButton;
+    function RemoveObserver(const AID : String) : INyxElementButton;
+
+    constructor Create; override;
+    destructor Destroy; override;
   end;
 
 function NewNyxButton : INyxElementButton;
@@ -56,6 +132,86 @@ var
 function NewNyxButton: INyxElementButton;
 begin
   Result := DefaultNyxButton.Create as INyxElementButton;
+end;
+
+{ TNyxElementButtonBaseImpl }
+
+function TNyxElementButtonBaseImpl.GetText: String;
+begin
+  Result := DoGetText;
+end;
+
+procedure TNyxElementButtonBaseImpl.SetText(const AValue: String);
+begin
+  DoSetText(AValue);
+end;
+
+procedure TNyxElementButtonBaseImpl.Notify(const AEvent: TButtonObserveEvent);
+var
+  LMethod: TButtonObserveMethod;
+  I: Integer;
+  LButton: INyxElementButton;
+begin
+  LButton := Self as INyxElementButton;
+
+  for I := 0 to Pred(FObserve.Count) do
+    if TButtonObserveEvent(StrToInt(FObserve.ValueFromIndex[I])) = AEvent then
+      try
+        LMethod := TButtonObserveMethod(Pointer(FObserve.Objects[I]));
+        if Assigned(LMethod) then
+          LMethod(LButton, AEvent);
+      finally
+      end;
+end;
+
+function TNyxElementButtonBaseImpl.UpdateText(const AText: String): INyxElementButton;
+begin
+  Result := Self as INyxElementButton;
+  SetText(AText);
+end;
+
+function TNyxElementButtonBaseImpl.Observe(const AEvent: TButtonObserveEvent;
+  const AObserver: TButtonObserveMethod; out ID: String): INyxElementButton;
+var
+  LGUID : TGuid;
+begin
+  Result := Self as INyxElementButton;
+
+  if not Assigned(AObserver) then
+    Exit;
+
+  //use a guid as the ID
+  CreateGUID(LGUID);
+  ID := GUIDToString(LGUID);
+
+  //add the observer as an "object"
+  FObserve.AddObject(
+    ID + '=' + IntToStr(Ord(AEvent)), //name=value
+    TObject(Pointer(AObserver)) //cast to method->pointer->object
+  );
+end;
+
+function TNyxElementButtonBaseImpl.RemoveObserver(const AID: String): INyxElementButton;
+var
+  I: Integer;
+begin
+  I := FObserve.IndexOfName(AID);
+
+  //remove if found
+  if I >= 0 then
+    FObserve.Delete(I);
+end;
+
+constructor TNyxElementButtonBaseImpl.Create;
+begin
+  inherited Create;
+  FObserve := TStringList.Create;
+end;
+
+destructor TNyxElementButtonBaseImpl.Destroy;
+begin
+  FObserve.Free;
+  inherited Destroy;
 end;
 
 initialization

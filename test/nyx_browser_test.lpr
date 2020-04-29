@@ -27,30 +27,85 @@ program nyx_browser_test;
 uses
   Classes,
   SysUtils,
+  browserapp,
+  web,
+  js,
   nyx.types,
   nyx.element.button;
 
-var
-  UI : INyxUI;
+type
 
-procedure BuildUI;
+  { TBrowserTest }
+  (*
+    test application which demonstrates how to build a user interface for
+    the browser using the nyx framework and the pas2js compiler
+  *)
+  TBrowserTest = class(TBrowserApplication)
+  strict private
+    UI : INyxUI;
+
+    (*
+      handler for telling the world hello
+    *)
+    procedure HelloWorldClick(const AButton : INyxElementButton;
+      const AEvent : TButtonObserveEvent);
+
+  strict protected
+    procedure doRun; override; //calls BuildUI
+
+    (*
+      main method which constructs the user interface
+    *)
+    procedure BuildUI;
+  public
+    destructor Destroy; override;
+  end;
+
+procedure TBrowserTest.HelloWorldClick(const AButton: INyxElementButton;
+  const AEvent: TButtonObserveEvent);
+begin
+  window.alert('you clicked me!');
+end;
+
+procedure TBrowserTest.doRun;
+begin
+  inherited doRun;
+  BuildUI;
+end;
+
+procedure TBrowserTest.BuildUI;
 var
   I : Integer;
-  LContainer: INyxContainer;
+  LID: String;
 begin
+  //init the UI
   UI := NewNyxUI;
-  LContainer := NewNyxContainer;
 
   //setup the ui with the demo ui components
   UI
-    .AddContainer(LContainer, I) //add a container
-    .ContainerByIndex(I)
-      .Add(NewNyxButton)
-      .Container
-    .UI
-    .Render();
+    .AddContainer(NewNyxContainer, I) //add a container (holds elements)
+    .ContainerByIndex(I) //get the container we just added
+      .Add( //add a button to it
+        NewNyxButton
+          .UpdateText('Hello World') //sets our text for the display
+          .Observe(boClick, @HelloWorldClick, LID), //attaches a handler to the click event
+        I //optional recording of the index the button was added to in the container
+      )
+    .UI //scope to the UI property in order to call render
+    .Render(); //renders all containers and elements to the screen
 end;
 
+destructor TBrowserTest.Destroy;
 begin
-  BuildUI;
+  UI := nil;
+  inherited Destroy;
+end;
+
+var
+  Application : TBrowserTest;
+begin
+  Application:=TBrowserTest.Create(nil);
+  Application.Initialize;
+  Application.Run;
+  Application.Free;
 end.

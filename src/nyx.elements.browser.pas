@@ -146,7 +146,10 @@ begin
     end;
 
     //drop the end
-    SetLength(FItems, Pred(Length(FItems)))
+    SetLength(FItems, Pred(Length(FItems)));
+
+    //success
+    Result := True;
   except on E : Exception do
     Error := E.Message;
   end;
