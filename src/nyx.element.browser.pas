@@ -48,12 +48,11 @@ type
     property JSElement : TJSElement read GetJSElement;
   end;
 
+
+  { TNyxElementBrowserImpl }
   (*
     base implementation for all browser elements
   *)
-
-  { TNyxElementBrowserImpl }
-
   TNyxElementBrowserImpl = class(TNyxElementBaseImpl, INyxElementBrowser)
   strict private
     FElement : TJSElement;

@@ -29,7 +29,8 @@ interface
 uses
   Classes,
   SysUtils,
-  nyx.types;
+  nyx.types,
+  nyx.utils.observe;
 
 type
 
@@ -38,6 +39,7 @@ type
   *)
   TButtonObserveEvent = (
     boClick
+    //todo - add all event types for a button
   );
 
   //forward
@@ -93,7 +95,7 @@ type
   *)
   TNyxElementButtonBaseImpl = class(TNyxElementBaseImpl, INyxElementButton)
   strict private
-    FObserve : TStringList;
+    FObserve : TNyxObservationHelper;
   protected
     function GetText: String;
     procedure SetText(const AValue: String);
@@ -107,8 +109,6 @@ type
 
     function UpdateText(const AText : String) : INyxElementButton;
 
-    //todo - these two methods could use some sort of observe component which does all the logic
-    //      and returns the indexes of applicable observers (did this to test if works)
     function Observe(const AEvent : TButtonObserveEvent; const AObserver : TButtonObserveMethod;
       out ID : String) : INyxElementButton;
     function RemoveObserver(const AID : String) : INyxElementButton;
@@ -151,17 +151,19 @@ var
   LMethod: TButtonObserveMethod;
   I: Integer;
   LButton: INyxElementButton;
+  LObservers: TObserverArray;
 begin
   LButton := Self as INyxElementButton;
+  LObservers := FObserve.ObserversByEvent(Ord(AEvent));
 
-  for I := 0 to Pred(FObserve.Count) do
-    if TButtonObserveEvent(StrToInt(FObserve.ValueFromIndex[I])) = AEvent then
-      try
-        LMethod := TButtonObserveMethod(Pointer(FObserve.Objects[I]));
-        if Assigned(LMethod) then
-          LMethod(LButton, AEvent);
-      finally
-      end;
+  for I := 0 to High(LObservers) do
+    try
+      LMethod := TButtonObserveMethod(LObservers[I]);
+
+      //call the method
+      LMethod(LButton, AEvent);
+    finally
+    end;
 end;
 
 function TNyxElementButtonBaseImpl.UpdateText(const AText: String): INyxElementButton;
@@ -172,40 +174,25 @@ end;
 
 function TNyxElementButtonBaseImpl.Observe(const AEvent: TButtonObserveEvent;
   const AObserver: TButtonObserveMethod; out ID: String): INyxElementButton;
-var
-  LGUID : TGuid;
 begin
   Result := Self as INyxElementButton;
 
   if not Assigned(AObserver) then
     Exit;
 
-  //use a guid as the ID
-  CreateGUID(LGUID);
-  ID := GUIDToString(LGUID);
-
-  //add the observer as an "object"
-  FObserve.AddObject(
-    ID + '=' + IntToStr(Ord(AEvent)), //name=value
-    TObject(Pointer(AObserver)) //cast to method->pointer->object
-  );
+  ID := FObserve.Observe(Ord(AEvent), Pointer(AObserver));
 end;
 
 function TNyxElementButtonBaseImpl.RemoveObserver(const AID: String): INyxElementButton;
-var
-  I: Integer;
 begin
-  I := FObserve.IndexOfName(AID);
-
-  //remove if found
-  if I >= 0 then
-    FObserve.Delete(I);
+  Result := Self as INyxElementButton;
+  FObserve.RemoveByID(AID);
 end;
 
 constructor TNyxElementButtonBaseImpl.Create;
 begin
   inherited Create;
-  FObserve := TStringList.Create;
+  FObserve := TNyxObservationHelper.Create;
 end;
 
 destructor TNyxElementButtonBaseImpl.Destroy;
