@@ -91,6 +91,11 @@ begin
           .Observe(boClick, @HelloWorldClick, LID), //attaches a handler to the click event
         I //optional recording of the index the button was added to in the container
       )
+      .Add( //adds a new button but in this case, we will disable it
+        NewNyxButton
+          .UpdateText('a disabled button')
+          .UpdateEnabled(False)
+      )
     .UI //scope to the UI property in order to call render
     .Render(); //renders all containers and elements to the screen
 end;

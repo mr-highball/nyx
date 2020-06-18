@@ -64,6 +64,9 @@ type
   strict protected
     procedure DoSetText(const AValue: String); override;
     function DoGetText: String; override;
+
+    function DoGetEnabled: Boolean; override;
+    procedure DoSetEnabled(const AValue: Boolean); override;
   public
     property BrowserElementImpl : TNyxElementBrowserImpl read GetBrowser implements INyxElementBrowser;
 
@@ -93,6 +96,16 @@ end;
 function TNyxElementButtonBrowserImpl.DoGetText: String;
 begin
   Result := FBrowser.JSElement.textContent;
+end;
+
+function TNyxElementButtonBrowserImpl.DoGetEnabled: Boolean;
+begin
+  Result := not TJSHTMLButtonElement(FBrowser.JSElement).disabled;
+end;
+
+procedure TNyxElementButtonBrowserImpl.DoSetEnabled(const AValue: Boolean);
+begin
+  TJSHTMLButtonElement(FBrowser.JSElement).disabled := not AValue;
 end;
 
 function TNyxElementButtonBrowserImpl.TBrowserElementComponent.DoCreateElement: TJSElement;

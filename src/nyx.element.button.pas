@@ -38,8 +38,20 @@ type
     enum for all observable events of a button
   *)
   TButtonObserveEvent = (
-    boClick
+    boClick,
+    boMouseOver,
+    boMouseDown,
+    boMouseUp
     //todo - add all event types for a button
+  );
+
+  (*
+    enum for all properties of a button
+  *)
+  TButtonProperty = (
+    bpEnabled,
+    bpText
+    //todo - add all button properties
   );
 
   //forward
@@ -61,6 +73,8 @@ type
     //property methods
     function GetText: String;
     procedure SetText(const AValue: String);
+    procedure SetEnabled(const AValue: Boolean);
+    function GetEnabled: Boolean;
 
     //property
 
@@ -69,12 +83,22 @@ type
     *)
     property Text : String read GetText write SetText;
 
+    (*
+      determines if the button is enabled or not
+    *)
+    property Enabled : Boolean read GetEnabled write SetEnabled;
+
     //methods
 
     (*
       fluent setter for the button text
     *)
     function UpdateText(const AText : String) : INyxElementButton;
+
+    (*
+      fluent setter for the button's enabled property
+    *)
+    function UpdateEnabled(const AEnabled : Boolean) : INyxElementButton;
 
     (*
       callers can attach an observe method with a particular event
@@ -99,15 +123,22 @@ type
   protected
     function GetText: String;
     procedure SetText(const AValue: String);
+    procedure SetEnabled(const AValue: Boolean);
+    function GetEnabled: Boolean;
   strict protected
     function DoGetText: String; virtual; abstract;
     procedure DoSetText(const AValue: String); virtual; abstract;
 
+    function DoGetEnabled: Boolean; virtual; abstract;
+    procedure DoSetEnabled(const AValue: Boolean); virtual; abstract;
+
     procedure Notify(const AEvent : TButtonObserveEvent);
   public
     property Text : String read GetText write SetText;
+    property Enabled : Boolean read GetEnabled write SetEnabled;
 
     function UpdateText(const AText : String) : INyxElementButton;
+    function UpdateEnabled(const AEnabled : Boolean) : INyxElementButton;
 
     function Observe(const AEvent : TButtonObserveEvent; const AObserver : TButtonObserveMethod;
       out ID : String) : INyxElementButton;
@@ -146,6 +177,16 @@ begin
   DoSetText(AValue);
 end;
 
+procedure TNyxElementButtonBaseImpl.SetEnabled(const AValue: Boolean);
+begin
+  DoSetEnabled(AValue);
+end;
+
+function TNyxElementButtonBaseImpl.GetEnabled: Boolean;
+begin
+  Result := DoGetEnabled;
+end;
+
 procedure TNyxElementButtonBaseImpl.Notify(const AEvent: TButtonObserveEvent);
 var
   LMethod: TButtonObserveMethod;
@@ -170,6 +211,12 @@ function TNyxElementButtonBaseImpl.UpdateText(const AText: String): INyxElementB
 begin
   Result := Self as INyxElementButton;
   SetText(AText);
+end;
+
+function TNyxElementButtonBaseImpl.UpdateEnabled(const AEnabled: Boolean): INyxElementButton;
+begin
+  Result := Self as INyxElementButton;
+  SetEnabled(AEnabled);
 end;
 
 function TNyxElementButtonBaseImpl.Observe(const AEvent: TButtonObserveEvent;
