@@ -35,11 +35,22 @@ type
 
   (*
     an enum to control how an element should be aligned via a layout
+    in the horizontal direction
   *)
-  TElementAlignment = (
-    eaLeft,
-    eaCenter,
-    eaRight
+  TElementHorzAlignment = (
+    haLeft,
+    haCenter,
+    haRight
+  );
+
+  (*
+    an enum to control how an element should be aligned via a layout
+    in the vertical direction
+  *)
+  TElementVertAlignment = (
+    vaTop,
+    vaCenter,
+    vaBottom
   );
 
   { INyxFixedBounds }
@@ -51,22 +62,60 @@ type
     ['{89FD2A4F-1B32-43BB-BFA6-2E71BA9334C9}']
 
     //property methods
-    function GetAlign: TElementAlignment;
-    procedure SetAlign(const AValue: TElementAlignment);
+    function GetHAlign: TElementHorzAlignment;
+    function GetLeft: Integer;
+    function GetTop: Integer;
+    function GetVAlign: TElementVertAlignment;
+    procedure SetHAlign(const AValue: TElementHorzAlignment);
+    procedure SetLeft(const AValue: Integer);
+    procedure SetTop(const AValue: Integer);
+    procedure SetVAlign(const AValue: TElementVertAlignment);
 
     //properties
 
     (*
-      controls how the calculation should be performed to align an element
+      controls how the calculation should be performed to align an element horizontally
     *)
-    property Alignment : TElementAlignment read GetAlign write SetAlign;
+    property HorzAlignment : TElementHorzAlignment read GetHAlign write SetHAlign;
+
+    (*
+      controls how the calculation should be performed to align an element vertically
+    *)
+    property VertAlignment : TElementVertAlignment read GetVAlign write SetVAlign;
+
+    (*
+      controls horizontal position of the element, where 0 would be the
+      "farthest left" inside of the parent
+    *)
+    property Left : Integer read GetLeft write SetLeft;
+
+    (*
+      controls vertical position of the element, where 0 would be the
+      "farthest top" inside of the parent
+    *)
+    property Top : Integer read GetTop write SetTop;
 
     //methods
 
     (*
-      fluent method for updating the alignment
+      fluent method for updating the horz alignment
     *)
-    function UpdateAlignment(const AValue : TElementAlignment) : INyxFixedBounds;
+    function UpdateHorzAlignment(const AValue : TElementHorzAlignment) : INyxFixedBounds;
+
+    (*
+      fluent method for updating the vert alignment
+    *)
+    function UpdateHorzAlignment(const AValue : TElementHorzAlignment) : INyxFixedBounds;
+
+    (*
+      fluent method for updating the left position
+    *)
+    function UpdateLeft(const AValue : Integer) : INyxFixedBounds;
+
+    (*
+      fluent method for updating the top position
+    *)
+    function UpdateTop(const AValue : Integer) : INyxFixedBounds;
   end;
 
   { INyxLayoutFixed }
@@ -86,7 +135,13 @@ type
       adds an element to have it's placement inside of it's parent container
       using fixed set of bounds
     *)
-    function AddElement(const AElement : INyxElement) : INyxLayoutFixed;
+    function Add(const AElement : INyxElement;
+      const ABounds : INyxFixedBounds) : INyxLayoutFixed; overload;
+
+    (*
+      removes an element from this layout
+    *)
+    function RemoveElement(const AElement : INyxElement) : INyxLayoutFixed;
   end;
 
 implementation

@@ -178,10 +178,21 @@ type
     function Add(const AItem : INyxElement) : Integer;
 
     (*
+      will assign the index argument to the found element if it exists. if not
+      found the value be lower than zero
+    *)
+    function IndexOf(const AElement : INyxElement; out Index : Integer) : INyxElements;
+
+    (*
       deletes an element at a given index, if the index doesn't exist
       will simply return
     *)
-    function Delete(const AIndex : Integer) : INyxElements;
+    function Delete(const AIndex : Integer) : INyxElements; overload;
+
+    (*
+      deletes an element, if the index doesn't exist will simply return
+    *)
+    function Delete(const AElement : INyxElement) : INyxElements; overload;
 
     (*
       removes the element at a given index, but returns it to the caller
@@ -250,7 +261,9 @@ type
     property Items[const AIndex : Integer] : INyxElement read GetItem; default;
 
     function Add(const AItem : INyxElement) : Integer;
-    function Delete(const AIndex : Integer) : INyxElements;
+    function IndexOf(const AElement : INyxElement; out Index : Integer) : INyxElements;
+    function Delete(const AIndex : Integer) : INyxElements; overload;
+    function Delete(const AElement : INyxElement) : INyxElements; overload;
     function Extract(const AIndex : Integer) : INyxElement;
 
     function ForEach(const AProc : TNyxElementCallback) : INyxElements; overload;
@@ -279,43 +292,7 @@ type
   *)
   TNyxElementsClass = class of TNyxElementsBaseImpl;
 
-  { INyxLayout }
-  (*
-    responsible for determining the visual placement/contstraints
-    of a INyxContainer
-  *)
-  INyxLayout = interface
-    ['{7A4611A4-6C0C-4D7A-845E-2232743CC8B3}']
 
-    //property methods
-
-    //properties
-
-    //methods
-
-    (*
-      called to recalculate the parent container's placement/constraints
-    *)
-    function UpdatePlacement(out Error : String) : Boolean;
-  end;
-
-  { TNyxLayoutBaseImpl }
-  (*
-    base implementation for all INyxLayout
-  *)
-  TNyxLayoutBaseImpl = class(TInterfacedObject, INyxLayout)
-  strict private
-  protected
-  strict protected
-    function DoUpdatePlacement(out Error : String) : Boolean; virtual; abstract;
-  public
-    function UpdatePlacement(out Error : String) : Boolean;
-
-    constructor Create; virtual;
-  end;
-
-  //meta class for concrete nyx layouts
-  TNyxLayoutClass = class of TNyxLayoutBaseImpl;
 
   //forward
   INyxUI = interface;
@@ -362,7 +339,6 @@ type
   TNyxContainerBaseImpl = class(TNyxElementBaseImpl, INyxContainer)
   strict private
     FElements : INyxElements;
-    FLayout : INyxLayout;
     FUI : INyxUI;
   protected
     function GetElements: INyxElements;
@@ -385,6 +361,44 @@ type
     metaclass for nyx containers
   *)
   TNyxContainerClass = class of TNyxContainerBaseImpl;
+
+  { INyxLayout }
+  (*
+    responsible for determining the visual placement/contstraints
+    of a INyxContainer
+  *)
+  INyxLayout = interface(INyxContainer)
+    ['{7A4611A4-6C0C-4D7A-845E-2232743CC8B3}']
+
+    //property methods
+
+    //properties
+
+    //methods
+
+    (*
+      called to recalculate the parent container's placement/constraints
+    *)
+    function UpdatePlacement(out Error : String) : Boolean; overload;
+    function UpdatePlacement : Boolean; overload;
+  end;
+
+  { TNyxLayoutBaseImpl }
+  (*
+    base implementation for all INyxLayout
+  *)
+  TNyxLayoutBaseImpl = class(TNyxContainerBaseImpl, INyxLayout)
+  strict private
+  protected
+  strict protected
+    function DoUpdatePlacement(out Error : String) : Boolean; virtual; abstract;
+  public
+    function UpdatePlacement(out Error : String) : Boolean; overload;
+    function UpdatePlacement : Boolean; overload;
+  end;
+
+  //meta class for concrete nyx layouts
+  TNyxLayoutClass = class of TNyxLayoutBaseImpl;
 
   TNyxActionCallback = procedure(const AUI : INyxUI; const AArgs : array of const);
   TNyxActionNestedCallback = procedure(const AUI : INyxUI; const AArgs : array of const) is nested;
@@ -616,8 +630,11 @@ begin
   Result := DoUpdatePlacement(Error);
 end;
 
-constructor TNyxLayoutBaseImpl.Create;
+function TNyxLayoutBaseImpl.UpdatePlacement: Boolean;
+var
+  LError : String;
 begin
+  Result := UpdatePlacement(LError);
 end;
 
 { TNyxUIBaseImpl }
@@ -820,6 +837,48 @@ begin
   end;
 end;
 
+function TNyxElementsBaseImpl.IndexOf(const AElement: INyxElement; out
+  Index: Integer): INyxElements;
+var
+  I: Integer;
+  LElement: INyxElement;
+begin
+  try
+    Result := Self as INyxElements;
+    Index := -1;
+
+    //iterate the item list and check against the id as a form of comparison
+    for I := 0 to Pred(Count) do
+    begin
+      LElement := Items[I];
+
+      //special handling for nil elements (input or stored)
+      if not Assigned(LElement) then
+      begin
+        if not Assigned(AElement) then
+        begin
+          Index := I;
+          Exit;
+        end;
+      end
+      else
+      begin
+        //on nil move next
+        if not Assigned(AElement) then
+          Continue
+        //otherwise we found a match
+        else if LElement.ID = AElement.ID then
+        begin
+          Index := I;
+          Exit;
+        end;
+      end;
+    end;
+  except on E : Exception do
+    RaiseError('IndexOf', E.Message);
+  end;
+end;
+
 function TNyxElementsBaseImpl.Delete(const AIndex: Integer): INyxElements;
 var
   LError: String;
@@ -834,6 +893,14 @@ begin
   except on E : Exception do
     RaiseError('Delete', E.Message);
   end;
+end;
+
+function TNyxElementsBaseImpl.Delete(const AElement: INyxElement): INyxElements;
+var
+  I: Integer;
+begin
+  Result := IndexOf(AElement, I);
+  Delete(I);
 end;
 
 function TNyxElementsBaseImpl.Extract(const AIndex: Integer): INyxElement;
