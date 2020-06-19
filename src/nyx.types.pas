@@ -288,11 +288,8 @@ type
     ['{7A4611A4-6C0C-4D7A-845E-2232743CC8B3}']
 
     //property methods
-    function GetContainer: INyxContainer;
-    procedure SetContainer(const AValue: INyxContainer);
 
     //properties
-    property Container : INyxContainer read GetContainer write SetContainer;
 
     //methods
 
@@ -308,15 +305,10 @@ type
   *)
   TNyxLayoutBaseImpl = class(TInterfacedObject, INyxLayout)
   strict private
-    FContainer : INyxContainer;
   protected
-    function GetContainer: INyxContainer;
-    procedure SetContainer(const AValue: INyxContainer);
   strict protected
     function DoUpdatePlacement(out Error : String) : Boolean; virtual; abstract;
   public
-    property Container : INyxContainer read GetContainer;
-
     function UpdatePlacement(out Error : String) : Boolean;
 
     constructor Create; virtual;
@@ -338,9 +330,7 @@ type
 
     //property methods
     function GetElements: INyxElements;
-    function GetLayout: INyxLayout;
     function GetUI: INyxUI;
-    procedure SetLayout(const AValue: INyxLayout);
     procedure SetUI(const AValue: INyxUI);
 
     //properties
@@ -349,11 +339,6 @@ type
       collection of all children elements
     *)
     property Elements : INyxElements read GetElements;
-
-    (*
-      the current layout for this container
-    *)
-    property Layout : INyxLayout read GetLayout write SetLayout;
 
     (*
       parent nyx ui, will be nil if none set
@@ -368,11 +353,6 @@ type
     *)
     function Add(const AItem : INyxElement; out Index : Integer) : INyxContainer; overload;
     function Add(const AItem : INyxElement) : INyxContainer; overload;
-
-    (*
-      sets the layout for this container
-    *)
-    function UpdateLayout(const ALayout : INyxLayout) : INyxContainer;
   end;
 
   { TNyxContainerBaseImpl }
@@ -385,8 +365,6 @@ type
     FLayout : INyxLayout;
     FUI : INyxUI;
   protected
-    function GetLayout: INyxLayout;
-    procedure SetLayout(const AValue: INyxLayout);
     function GetElements: INyxElements;
     function GetUI: INyxUI;
     procedure SetUI(const AValue: INyxUI);
@@ -394,13 +372,10 @@ type
   strict protected
   public
     property Elements : INyxElements read GetElements;
-    property Layout : INyxLayout read GetLayout write SetLayout;
     property UI : INyxUI read GetUI write SetUI;
 
     function Add(const AItem : INyxElement; out Index : Integer) : INyxContainer; overload;
     function Add(const AItem : INyxElement) : INyxContainer; overload;
-
-    function UpdateLayout(const ALayout : INyxLayout) : INyxContainer;
 
     constructor Create; override;
     destructor Destroy; override;
@@ -636,17 +611,6 @@ end;
 
 { TNyxLayoutBaseImpl }
 
-function TNyxLayoutBaseImpl.GetContainer: INyxContainer;
-begin
-  Result := FContainer;
-end;
-
-procedure TNyxLayoutBaseImpl.SetContainer(const AValue: INyxContainer);
-begin
-  FContainer := nil;
-  FContainer := AValue;
-end;
-
 function TNyxLayoutBaseImpl.UpdatePlacement(out Error: String): Boolean;
 begin
   Result := DoUpdatePlacement(Error);
@@ -654,7 +618,6 @@ end;
 
 constructor TNyxLayoutBaseImpl.Create;
 begin
-  FContainer := nil;
 end;
 
 { TNyxUIBaseImpl }
@@ -746,20 +709,6 @@ begin
 end;
 
 function TNyxUIBaseImpl.Render(): INyxUI;
-
-  procedure PositionContainers(const AElement : INyxElement);
-  var
-    LContainer : INyxContainer;
-    LError : String;
-  begin
-    LContainer := AElement as INyxContainer;
-
-    if Assigned(LContainer) then
-      if Assigned(LContainer.Layout) then
-        if not LContainer.Layout.UpdatePlacement(LError) then
-          raise Exception.Create(Self.ClassName + '::Render::' + LError);
-  end;
-
 begin
   Result := Self as INyxUI;
 
@@ -768,9 +717,6 @@ begin
 
   //render new ui
   DoRender;
-
-  //now for all containers, position them via there layouts
-  Containers.ForEach(@PositionContainers);
 end;
 
 function TNyxUIBaseImpl.Render(const ASettings: INyxRenderSettings): INyxUI;
@@ -1301,20 +1247,6 @@ end;
 
 { TNyxContainerBaseImpl }
 
-function TNyxContainerBaseImpl.GetLayout: INyxLayout;
-begin
-  Result := FLayout;
-end;
-
-procedure TNyxContainerBaseImpl.SetLayout(const AValue: INyxLayout);
-begin
-  FLayout := nil;
-  FLayout := AValue;
-
-  if Assigned(FLayout) then
-    FLayout.Container := Self as INyxContainer;
-end;
-
 function TNyxContainerBaseImpl.GetElements: INyxElements;
 begin
   Result := FElements;
@@ -1350,17 +1282,10 @@ begin
   Result := Add(AItem, I);
 end;
 
-function TNyxContainerBaseImpl.UpdateLayout(const ALayout: INyxLayout): INyxContainer;
-begin
-  Result := Self as INyxContainer;
-  SetLayout(ALayout);
-end;
-
 constructor TNyxContainerBaseImpl.Create;
 begin
   inherited Create;
   FElements := DefaultNyxElements.Create;
-  //FLayout := DefaultNyxLayout.Create; //todo - create layout once one is made
   FUI := nil
 end;
 
