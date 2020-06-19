@@ -47,7 +47,7 @@ type
     (*
       notifies observers for click events
     *)
-    function ClickHandler(Event: TEventListenerEvent): Boolean;
+    procedure ClickHandler(Event: TEventListenerEvent);
   protected
     function GetBrowser: TNyxElementBrowserImpl;
 
@@ -78,7 +78,7 @@ implementation
 
 { TNyxElementButtonBrowserImpl }
 
-function TNyxElementButtonBrowserImpl.ClickHandler(Event: TEventListenerEvent): Boolean;
+procedure TNyxElementButtonBrowserImpl.ClickHandler(Event: TEventListenerEvent);
 begin
   Notify(boClick);
 end;
