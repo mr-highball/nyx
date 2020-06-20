@@ -58,7 +58,7 @@ type
     bounds controlling how an element should be position inside of
     a parent container with fixed units
   *)
-  INyxFixedBounds = interface
+  INyxFixedBounds = interface(INyxElement)
     ['{89FD2A4F-1B32-43BB-BFA6-2E71BA9334C9}']
 
     //property methods
@@ -126,8 +126,14 @@ type
     ['{7DA0F2BA-A95E-48A9-B3AF-C7D2DD49724A}']
 
     //property methods
+    function GetBounds(const AElement : INyxElement): INyxFixedBounds;
 
     //properties
+
+    (*
+      accessor for the bounds of a given element
+    *)
+    property Bounds[const AElement : INyxElement] : INyxFixedBounds read GetBounds; default;
 
     //methods
 
@@ -140,11 +146,88 @@ type
 
     (*
       removes an element from this layout
+      this method is the same as accessing the element collection and removing
+      from their, however this scopes back to the specialized fixed layout
     *)
-    function RemoveElement(const AElement : INyxElement) : INyxLayoutFixed;
+    function Remove(const AElement : INyxElement) : INyxLayoutFixed;
+  end;
+
+  { TNyxLayoutFixedImpl }
+  (*
+    base implementation for all fixed layouts
+  *)
+  TNyxLayoutFixedImpl = class(TNyxLayoutBaseImpl, INyxLayoutFixed)
+  strict private
+    FBounds : INyxElements;
+  strict protected
+    function DoUpdatePlacement(out Error: String): Boolean; override;
+
+    (*
+      children fixed layouts need to override this in order to place an
+      element within their parent container provided the bounds
+    *)
+    function DoPlaceElement(const AElement : INyxElement;
+      const ABounds : INyxFixedBounds; out Error : String) : Boolean; virtual; abstract;
+  protected
+    function GetBounds(const AElement : INyxElement): INyxFixedBounds;
+  public
+    property Bounds[const AElement : INyxElement] : INyxFixedBounds read GetBounds; default;
+
+    function Add(const AElement : INyxElement;
+      const ABounds : INyxFixedBounds) : INyxLayoutFixed; overload;
+
+    function Remove(const AElement : INyxElement) : INyxLayoutFixed;
+
+    constructor Create; override;
+    destructor Destroy; override;
   end;
 
 implementation
+
+{ TNyxLayoutFixedImpl }
+
+function TNyxLayoutFixedImpl.DoUpdatePlacement(out Error: String): Boolean;
+begin
+  //todo - iterate stored elements and make a call to DoPlaceElement()
+end;
+
+function TNyxLayoutFixedImpl.GetBounds(const AElement: INyxElement): INyxFixedBounds;
+begin
+  Result := nil;
+
+  //we use an element collection to store bounds with the same id as the element
+  //so we can use the input as lookup
+  if not FBounds.IndexOf(AElement) >= 0 then
+    Exit;
+
+  Result := FBounds[AElement] as INyxFixedBounds;
+end;
+
+function TNyxLayoutFixedImpl.Add(const AElement: INyxElement;
+  const ABounds: INyxFixedBounds): INyxLayoutFixed;
+begin
+
+end;
+
+function TNyxLayoutFixedImpl.Remove(const AElement: INyxElement): INyxLayoutFixed;
+begin
+
+end;
+
+constructor TNyxLayoutFixedImpl.Create;
+begin
+  inherited Create;
+  FBounds := NewNyxElements;
+
+  //todo - add a remove observer on the elements to remove bounds too
+end;
+
+destructor TNyxLayoutFixedImpl.Destroy;
+begin
+  FBounds.Clear;
+  FBounds := nil;
+  inherited Destroy;
+end;
 
 end.
 

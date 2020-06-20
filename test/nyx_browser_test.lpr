@@ -31,7 +31,7 @@ uses
   web,
   js,
   nyx.types,
-  nyx.element.button, nyx.utils.browser.css;
+  nyx.element.button;
 
 type
 

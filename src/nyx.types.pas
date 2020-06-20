@@ -64,6 +64,7 @@ type
     function GetName: String;
     function GetContainer: INyxContainer;
     procedure SetContainer(const AValue: INyxContainer);
+    procedure SetID(const AValue: String);
     procedure SetName(const AValue: String);
 
     //properties
@@ -71,7 +72,7 @@ type
     (*
       auto-generated identifier for this element
     *)
-    property ID : String read GetID;
+    property ID : String read GetID write SetID;
 
     (*
       optional friendly name for the element
@@ -569,6 +570,11 @@ function NewNyxContainer : INyxContainer;
 *)
 function NewNyxUI : INyxUI;
 
+(*
+  helper function to return a nyx elements collection
+*)
+function NewNyxElements : INyxElements;
+
 implementation
 uses
 {$IFDEF BROWSER}
@@ -597,6 +603,11 @@ end;
 function NewNyxUI: INyxUI;
 begin
   Result := DefaultNyxUI.Create;
+end;
+
+function NewNyxElements: INyxElements;
+begin
+  Result := DefaultNyxElements.Create;
 end;
 
 { TNyxRenderSettingsBaseImpl }
