@@ -105,7 +105,7 @@ type
     (*
       fluent method for updating the vert alignment
     *)
-    function UpdateHorzAlignment(const AValue : TElementHorzAlignment) : INyxFixedBounds;
+    function UpdateVertAlignment(const AValue : TElementHorzAlignment) : INyxFixedBounds;
 
     (*
       fluent method for updating the left position
@@ -159,6 +159,10 @@ type
   TNyxLayoutFixedImpl = class(TNyxLayoutBaseImpl, INyxLayoutFixed)
   strict private
     FBounds : INyxElements;
+    FRemoveBoundsID : String;
+
+    procedure RemoveBounds(const AElement : INyxElement;
+      const AEvent : TElementsObserveEvent);
   strict protected
     function DoUpdatePlacement(out Error: String): Boolean; override;
 
@@ -182,36 +186,121 @@ type
     destructor Destroy; override;
   end;
 
+  (*
+    metaclass for fixed layouts
+  *)
+  TNyxLayoutFixedClass = class of TNyxLayoutFixedImpl;
+
+(*
+  helper function to return a fixed layout
+*)
+function NewNyxLayoutFixed : INyxLayoutFixed;
+
+(*
+  helper function to return a fixed bounds
+*)
+function NewNyxFixedBounds : INyxFixedBounds;
+
 implementation
+uses
+{$IFDEF BROWSER}
+  nyx.layout.fixed.browser;
+{$ELSE}
+  nyx.layout.fixed.std;
+{$ENDIF}
+
+var
+  DefaultNyxLayoutFixed : TNyxLayoutFixedClass;
+
+function NewNyxLayoutFixed: INyxLayoutFixed;
+begin
+  Result := DefaultNyxLayoutFixed.Create;
+end;
 
 { TNyxLayoutFixedImpl }
 
-function TNyxLayoutFixedImpl.DoUpdatePlacement(out Error: String): Boolean;
+procedure TNyxLayoutFixedImpl.RemoveBounds(const AElement: INyxElement;
+  const AEvent: TElementsObserveEvent);
+var
+  I: Integer;
 begin
-  //todo - iterate stored elements and make a call to DoPlaceElement()
+  //use the element to find the bounds and remove if exists
+  FBounds.IndexOf(AElement, I);
+
+  if (AEvent = eoExtract) and (I >= 0) then
+    FBounds.Delete(AElement);
+end;
+
+function TNyxLayoutFixedImpl.DoUpdatePlacement(out Error: String): Boolean;
+var
+  I, J: Integer;
+  LElement: INyxElement;
+  LBound: INyxFixedBounds;
+begin
+  try
+    Result := False;
+
+    //iterate elements to call down and place each element
+    for I := 0 to Pred(Elements.Count) do
+    begin
+      LElement := Elements[I];
+      FBounds.IndexOf(LElement, J);
+
+      //only call the place method when there is a bounds provided, otherwise
+      //the caller wants the default placement
+      if J >= 0 then
+      begin
+        LBound := FBounds.Items[J] as INyxFixedBounds;
+
+        //if we can't place an element bail with the error
+        if not DoPlaceElement(LElement, LBound, Error) then
+          Exit;
+      end;
+    end;
+
+    //success
+    Result := True;
+  except on E : Exception do
+    Error := E.Message;
+  end;
 end;
 
 function TNyxLayoutFixedImpl.GetBounds(const AElement: INyxElement): INyxFixedBounds;
+var
+  I: Integer;
 begin
   Result := nil;
 
   //we use an element collection to store bounds with the same id as the element
   //so we can use the input as lookup
-  if not FBounds.IndexOf(AElement) >= 0 then
+  FBounds.IndexOf(AElement, I);
+
+  if not I >= 0 then
     Exit;
 
-  Result := FBounds[AElement] as INyxFixedBounds;
+  Result := FBounds[I] as INyxFixedBounds;
 end;
 
 function TNyxLayoutFixedImpl.Add(const AElement: INyxElement;
   const ABounds: INyxFixedBounds): INyxLayoutFixed;
 begin
+  Result := Self as INyxLayoutFixed;
 
+  //add the element normally
+  Add(AElement);
+
+  //when the element is valid, update the id and add
+  if Assigned(AElement) and Assigned(ABounds) then
+  begin
+    ABounds.ID := AElement.ID; //used for lookup
+    FBounds.Add(ABounds);
+  end;
 end;
 
 function TNyxLayoutFixedImpl.Remove(const AElement: INyxElement): INyxLayoutFixed;
 begin
-
+  Result := Self as INyxLayoutFixed;
+  Elements.Delete(AElement);
 end;
 
 constructor TNyxLayoutFixedImpl.Create;
@@ -219,15 +308,24 @@ begin
   inherited Create;
   FBounds := NewNyxElements;
 
-  //todo - add a remove observer on the elements to remove bounds too
+  //add an observer to remove the bounds when an element is removed
+  Elements.Observe(@RemoveBounds, FRemoveBoundsID);
 end;
 
 destructor TNyxLayoutFixedImpl.Destroy;
 begin
+  //remove the observer since we're about to clear the bounds
+  Elements.RemoveObserver(FRemoveBoundsID);
   FBounds.Clear;
   FBounds := nil;
   inherited Destroy;
 end;
 
+initialization
+{$IFDEF BROWSER}
+  DefaultNyxLayoutFixed := TNyxLayoutFixedBrowserImpl;
+{$ELSE}
+  DefaultNyxLayoutFixed := TNyxLayoutFixedStdImpl;
+{$ENDIF}
 end.
 
