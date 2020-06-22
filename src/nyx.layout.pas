@@ -105,7 +105,7 @@ type
     (*
       fluent method for updating the vert alignment
     *)
-    function UpdateVertAlignment(const AValue : TElementHorzAlignment) : INyxFixedBounds;
+    function UpdateVertAlignment(const AValue : TElementVertAlignment) : INyxFixedBounds;
 
     (*
       fluent method for updating the left position
@@ -116,6 +116,40 @@ type
       fluent method for updating the top position
     *)
     function UpdateTop(const AValue : Integer) : INyxFixedBounds;
+  end;
+
+  { TNyxFixedBoundsImpl }
+  (*
+    base fixed bounds implementation
+  *)
+  TNyxFixedBoundsImpl = class(TNyxElementBaseImpl, INyxFixedBounds)
+  strict private
+    FHAlign: TElementHorzAlignment;
+    FVAlign: TElementVertAlignment;
+    FLeft,
+    FTop: Integer;
+  strict protected
+  protected
+    function GetHAlign: TElementHorzAlignment;
+    function GetLeft: Integer;
+    function GetTop: Integer;
+    function GetVAlign: TElementVertAlignment;
+    procedure SetHAlign(const AValue: TElementHorzAlignment);
+    procedure SetLeft(const AValue: Integer);
+    procedure SetTop(const AValue: Integer);
+    procedure SetVAlign(const AValue: TElementVertAlignment);
+  public
+    property HorzAlignment : TElementHorzAlignment read GetHAlign write SetHAlign;
+    property VertAlignment : TElementVertAlignment read GetVAlign write SetVAlign;
+    property Left : Integer read GetLeft write SetLeft;
+    property Top : Integer read GetTop write SetTop;
+
+    function UpdateHorzAlignment(const AValue : TElementHorzAlignment) : INyxFixedBounds;
+    function UpdateVertAlignment(const AValue : TElementVertAlignment) : INyxFixedBounds;
+    function UpdateLeft(const AValue : Integer) : INyxFixedBounds;
+    function UpdateTop(const AValue : Integer) : INyxFixedBounds;
+
+    constructor Create; override;
   end;
 
   { INyxLayoutFixed }
@@ -215,6 +249,88 @@ var
 function NewNyxLayoutFixed: INyxLayoutFixed;
 begin
   Result := DefaultNyxLayoutFixed.Create;
+end;
+
+function NewNyxFixedBounds: INyxFixedBounds;
+begin
+  Result := TNyxFixedBoundsImpl.Create;
+end;
+
+{ TNyxFixedBoundsImpl }
+
+function TNyxFixedBoundsImpl.GetHAlign: TElementHorzAlignment;
+begin
+  Result := FHAlign;
+end;
+
+function TNyxFixedBoundsImpl.GetLeft: Integer;
+begin
+  Result := FLeft;
+end;
+
+function TNyxFixedBoundsImpl.GetTop: Integer;
+begin
+  Result := FTop;
+end;
+
+function TNyxFixedBoundsImpl.GetVAlign: TElementVertAlignment;
+begin
+  Result := FVAlign;
+end;
+
+procedure TNyxFixedBoundsImpl.SetHAlign(const AValue: TElementHorzAlignment);
+begin
+  FHAlign := AValue;
+end;
+
+procedure TNyxFixedBoundsImpl.SetLeft(const AValue: Integer);
+begin
+  FLeft := AValue;
+end;
+
+procedure TNyxFixedBoundsImpl.SetTop(const AValue: Integer);
+begin
+  FTop := AValue;
+end;
+
+procedure TNyxFixedBoundsImpl.SetVAlign(const AValue: TElementVertAlignment);
+begin
+  FVAlign := AValue;
+end;
+
+function TNyxFixedBoundsImpl.UpdateHorzAlignment(
+  const AValue: TElementHorzAlignment): INyxFixedBounds;
+begin
+  Result := Self as INyxFixedBounds;
+  HorzAlignment := AValue;
+end;
+
+function TNyxFixedBoundsImpl.UpdateVertAlignment(
+  const AValue: TElementVertAlignment): INyxFixedBounds;
+begin
+  Result := Self as INyxFixedBounds;
+  VertAlignment := AValue;
+end;
+
+function TNyxFixedBoundsImpl.UpdateLeft(const AValue: Integer): INyxFixedBounds;
+begin
+  Result := Self as INyxFixedBounds;
+  Left := AValue;
+end;
+
+function TNyxFixedBoundsImpl.UpdateTop(const AValue: Integer): INyxFixedBounds;
+begin
+  Result := Self as INyxFixedBounds;
+  Top := AValue;
+end;
+
+constructor TNyxFixedBoundsImpl.Create;
+begin
+  inherited Create;
+  FHAlign := haLeft;
+  FVAlign := vaTop;
+  FLeft := 0;
+  FTop := 0;
 end;
 
 { TNyxLayoutFixedImpl }

@@ -94,6 +94,10 @@ type
     (*
       allows for boolean conditions
     *)
+    function Condition(const ACondition : Boolean; const ATrue, AFalse : TNyxElementCallback) : INyxElement; overload;
+    function Condition(const ACondition : Boolean; const ATrue, AFalse : TNyxElementNestedCallback) : INyxElement; overload;
+    function Condition(const ACondition : Boolean; const ATrue, AFalse : TNyxElementMethod) : INyxElement; overload;
+
     function Condition(const ACondition : TNyxElementBoolCallback; const ATrue, AFalse : TNyxElementCallback) : INyxElement; overload;
     function Condition(const ACondition : TNyxElementBoolNestedCallback; const ATrue, AFalse : TNyxElementNestedCallback) : INyxElement; overload;
     function Condition(const ACondition : TNyxElementBoolMethod; const ATrue, AFalse : TNyxElementMethod) : INyxElement; overload;
@@ -128,6 +132,10 @@ type
     property Container : INyxContainer read GetContainer write SetContainer;
 
     function UpdateName(const AName : String) : INyxElement;
+
+    function Condition(const ACondition : Boolean; const ATrue, AFalse : TNyxElementCallback) : INyxElement; overload;
+    function Condition(const ACondition : Boolean; const ATrue, AFalse : TNyxElementNestedCallback) : INyxElement; overload;
+    function Condition(const ACondition : Boolean; const ATrue, AFalse : TNyxElementMethod) : INyxElement; overload;
 
     function Condition(const ACondition : TNyxElementBoolCallback; const ATrue, AFalse : TNyxElementCallback) : INyxElement; overload;
     function Condition(const ACondition : TNyxElementBoolNestedCallback; const ATrue, AFalse : TNyxElementNestedCallback) : INyxElement; overload;
@@ -447,11 +455,13 @@ type
 
     //property methods
     function GetContainers: INyxElements;
+    function GetLayouts: INyxElements;
     function GetSettings: INyxRenderSettings;
     procedure SetSettings(const AValue: INyxRenderSettings);
 
     //properties
     property Containers : INyxElements read GetContainers;
+    property Layouts : INyxElements read GetLayouts;
     property Settings : INyxRenderSettings read GetSettings write SetSettings;
 
     //methods
@@ -460,6 +470,11 @@ type
       pulls a container from the Containers property and casts it
     *)
     function ContainerByIndex(const AIndex : Integer) : INyxContainer;
+
+    (*
+      pulls a layout from the Layouts property and casts it
+    *)
+    function LayoutByIndex(const AIndex : Integer) : INyxLayout;
 
     (*
       updates the render settings for the nyx ui
@@ -471,6 +486,11 @@ type
       index
     *)
     function AddContainer(const AContainer : INyxContainer; out Index : Integer) : INyxUI;
+
+    (*
+      adds a layout to the layouts collection and outputs the index
+    *)
+    function AddLayout(const ALayout : INyxLayout; out Index : Integer) : INyxUI;
 
     (*
       in-between building a UI, an action can be taken
@@ -503,9 +523,11 @@ type
   TNyxUIBaseImpl = class(TInterfacedPersistent, INyxUI)
   strict private
     FSettings : INyxRenderSettings;
-    FContainers : INyxElements;
+    FContainers,
+    FLayouts : INyxElements;
   protected
     function GetContainers: INyxElements;
+    function GetLayouts: INyxElements;
     function GetSettings: INyxRenderSettings;
     procedure SetSettings(const AValue: INyxRenderSettings);
   strict protected
@@ -534,11 +556,14 @@ type
     procedure DoClear; virtual;
   public
     property Containers : INyxElements read GetContainers;
+    property Layouts : INyxElements read GetLayouts;
     property Settings : INyxRenderSettings read GetSettings write SetSettings;
 
     function ContainerByIndex(const AIndex : Integer) : INyxContainer;
+    function LayoutByIndex(const AIndex : Integer) : INyxLayout;
     function UpdateSettings(const ASettings : INyxRenderSettings) : INyxUI;
     function AddContainer(const AContainer : INyxContainer; out Index : Integer) : INyxUI;
+    function AddLayout(const ALayout : INyxLayout; out Index : Integer) : INyxUI;
 
     function TakeAction(const AAction : TNyxActionCallback; const AArgs : array of const) : INyxUI; overload;
     function TakeAction(const AAction : TNyxActionNestedCallback; const AArgs : array of const) : INyxUI; overload;
@@ -650,6 +675,11 @@ end;
 
 { TNyxUIBaseImpl }
 
+function TNyxUIBaseImpl.GetLayouts: INyxElements;
+begin
+  Result := FLayouts;
+end;
+
 function TNyxUIBaseImpl.GetContainers: INyxElements;
 begin
   Result := FContainers;
@@ -687,6 +717,11 @@ begin
   Result := FContainers[AIndex] as INyxContainer;
 end;
 
+function TNyxUIBaseImpl.LayoutByIndex(const AIndex: Integer): INyxLayout;
+begin
+  Result := FLayouts[AIndex] as INyxLayout;
+end;
+
 function TNyxUIBaseImpl.UpdateSettings(const ASettings: INyxRenderSettings): INyxUI;
 begin
   Result := Self as INyxUI;
@@ -699,8 +734,19 @@ begin
   Result := Self as INyxUI;
   Index := FContainers.Add(AContainer);
 
+  //set the parent UI
   if Assigned(AContainer) then
     AContainer.UI := Self as INyxUI;
+end;
+
+function TNyxUIBaseImpl.AddLayout(const ALayout: INyxLayout; out Index: Integer): INyxUI;
+begin
+  Result := Self as INyxUI;
+  Index := FLayouts.Add(ALayout);
+
+  //set the parent UI
+  if Assigned(ALayout) then
+    ALayout.UI := Self as INyxUI;
 end;
 
 function TNyxUIBaseImpl.TakeAction(const AAction: TNyxActionCallback;
@@ -737,11 +783,24 @@ begin
 end;
 
 function TNyxUIBaseImpl.Render(): INyxUI;
+var
+  I: Integer;
+  LLayout: INyxLayout;
+  LError: String;
 begin
   Result := Self as INyxUI;
 
-  //hide the current ui before rendering
-  Hide;
+  //handle positioning by calling each layout's place method
+  for I := 0 to Pred(FLayouts.Count) do
+  begin
+    LLayout := INyxLayout(FLayouts[I]); //cast without as to capture nils
+
+    if not Assigned(LLayout) then
+      Continue;
+
+    if not LLayout.UpdatePlacement(LError) then
+      raise Exception.Create(LError);
+  end;
 
   //render new ui
   DoRender;
@@ -770,12 +829,14 @@ constructor TNyxUIBaseImpl.Create;
 begin
   FSettings := nil;
   FContainers := DefaultNyxElements.Create;
+  FLayouts := DefaultNyxElements.Create;
 end;
 
 destructor TNyxUIBaseImpl.Destroy;
 begin
   FSettings := nil;
   FContainers := nil;
+  FLayouts := nil;
   inherited Destroy;
 end;
 
@@ -1420,6 +1481,51 @@ begin
   Result := Self as INyxElement;
 end;
 
+function TNyxElementBaseImpl.Condition(const ACondition: Boolean; const ATrue,
+  AFalse: TNyxElementCallback): INyxElement;
+begin
+  Result := Self as INyxElement;
+
+  //eval the condition and call the appropriate method
+  if ACondition then
+  begin
+    if Assigned(ATrue) then
+      ATrue(Result)
+  end
+  else if Assigned(AFalse) then
+    AFalse(Result);
+end;
+
+function TNyxElementBaseImpl.Condition(const ACondition: Boolean; const ATrue,
+  AFalse: TNyxElementNestedCallback): INyxElement;
+begin
+  Result := Self as INyxElement;
+
+  //eval the condition and call the appropriate method
+  if ACondition then
+  begin
+    if Assigned(ATrue) then
+      ATrue(Result)
+  end
+  else if Assigned(AFalse) then
+    AFalse(Result);
+end;
+
+function TNyxElementBaseImpl.Condition(const ACondition: Boolean; const ATrue,
+  AFalse: TNyxElementMethod): INyxElement;
+begin
+  Result := Self as INyxElement;
+
+  //eval the condition and call the appropriate method
+  if ACondition then
+  begin
+    if Assigned(ATrue) then
+      ATrue(Result)
+  end
+  else if Assigned(AFalse) then
+    AFalse(Result);
+end;
+
 function TNyxElementBaseImpl.Condition(
   const ACondition: TNyxElementBoolCallback; const ATrue,
   AFalse: TNyxElementCallback): INyxElement;
@@ -1435,7 +1541,7 @@ begin
     Exit;
   end;
 
-  //evalue the condition and call the appropriate method
+  //eval the condition and call the appropriate method
   if ACondition(Result) then
   begin
     if Assigned(ATrue) then
@@ -1460,7 +1566,7 @@ begin
     Exit;
   end;
 
-  //evalue the condition and call the appropriate method
+  //eval the condition and call the appropriate method
   if ACondition(Result) then
   begin
     if Assigned(ATrue) then
@@ -1484,7 +1590,7 @@ begin
     Exit;
   end;
 
-  //evalue the condition and call the appropriate method
+  //eval the condition and call the appropriate method
   if ACondition(Result) then
   begin
     if Assigned(ATrue) then

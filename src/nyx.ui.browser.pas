@@ -61,8 +61,7 @@ begin
   //iterate containers and add to the target js element
   for I := 0 to Pred(Containers.Count) do
   begin
-    LContainer := nil;
-    LContainer := Containers[I] as INyxContainerBrowser;;
+    LContainer := Containers[I] as INyxContainerBrowser;
     LTarget.appendChild(LContainer.BrowserElement.JSElement);
   end;
 end;

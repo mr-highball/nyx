@@ -52,16 +52,67 @@ type
   end;
 
 implementation
+uses
+  web,
+  nyx.element.browser;
 
 { TNyxLayoutFixedBrowserImpl }
 
 function TNyxLayoutFixedBrowserImpl.DoPlaceElement(const AElement: INyxElement;
   const ABounds: INyxFixedBounds; out Error: String): Boolean;
+var
+  LElement: INyxElementBrowser;
+  LRect: TJSDOMRect;
+  LLeftOff, LTopOff: Integer;
+  LStyle: String;
 begin
   try
     Result := False;
 
-    //todo - use css helper to adjust position / absolute based on bounds
+    //cast the element
+    LElement := AElement as INyxElementBrowser;
+
+    //copy the inline css of the element
+    LStyle := LElement.JSElement.getAttribute('style');
+
+    if Assigned(LStyle) then
+      FCSS.CSS := LStyle;
+
+    //we will use the position / attribute pair to force "fixed" positioning
+    FCSS.Upsert('position', 'absolute');
+
+    //get the bounding box of the element to calculate alignment
+    LRect := LElement.JSElement.getBoundingClientRect;
+
+    //normal computation based on the left most point of the element
+    if ABounds.HorzAlignment = haLeft then
+      LLeftOff := 0
+    //calculate the offset using the center of the element
+    else if ABounds.HorzAlignment = haCenter then
+      LLeftOff := Round(LRect.width / 2)
+    //otherwise we'll be using the right most point of the element
+    else
+      LLeftOff := Round(LRect.width);
+
+    //normal vertical alignment will use the top of element to position
+    if ABounds.VertAlignment = vaTop then
+      LTopOff := 0
+    //uses the center of the element to position vertically
+    else if ABounds.VertAlignment = vaCenter then
+      LTopOff := Round(LRect.height / 2)
+    //otherwise the bottom of the element will be used
+    else
+      LTopOff := Round(LRect.height);
+
+    //using the offsets calculated above we can set new left / top values in css
+    FCSS.Upsert('left', IntToStr(ABounds.Left + LLeftOff) + 'px');
+    FCSS.Upsert('top', IntToStr(ABounds.Top + LTopOff) + 'px');
+
+    //finally set the inline style with the new computed values
+    LElement.JSElement.setAttribute('style', FCSS.CSS);
+
+    //success
+    Result := True;
   except on E : Exception do
     Error := E.Message;
   end;
