@@ -116,8 +116,12 @@ var
   I , J,
   LHelloIndex,
   LDisabledIndex,
-  LRunIndex: Integer;
+  LRunIndex,
+  LCenterIndex, K: Integer;
   LID: String;
+  LElement : INyxElement;
+  LLayout: INyxLayoutProportional;
+  LBounds: INyxProportionalBounds;
 
   (*
     this is a helper method which positions buttons in a vertical stack
@@ -151,6 +155,7 @@ begin
   UI
     .AddContainer(NewNyxContainer, I) //add a container (holds elements)
     .AddLayout(NewNyxLayoutFixed, J) //add a fixed layout (positions elements)
+    .AddLayout(NewNyxLayoutProportional, K) //adds proportional layout
     .ContainerByIndex(I) //get the container we just added
       .Add( //add a button to it
         NewNyxButton
@@ -170,6 +175,11 @@ begin
           .Observe(boClick, @RunningButtonClick, LID),
         LRunIndex
       )
+      .Add( //adds a button that is center to the container using proportional layout
+        NewNyxButton
+          .UpdateText('centered'),
+        LCenterIndex
+      )
     .UI //scope to the UI property
       (*
         take action can be used to pass a variable number and type of arguments
@@ -183,8 +193,27 @@ begin
       *)
       .TakeAction(@PositionButton, [LHelloIndex, I, J, 100, 100])
       .TakeAction(@PositionButton, [LDisabledIndex, I, J, 100, 175])
-      .TakeAction(@PositionButton, [LRunIndex, I, J, 100, 250])
-    .Render(); //renders all containers and elements to the screen
+      .TakeAction(@PositionButton, [LRunIndex, I, J, 100, 250]);
+
+  //we could've done this via take action, but showing another way to
+  //get and cast the layout added, and add the centered button with a proportional layout
+  LElement := UI.ContainerByIndex(I).Elements[LCenterIndex];
+  LLayout := UI.LayoutByIndex(K) as INyxLayoutProportional;
+  LBounds := NewNyxProportionalBounds;
+  LBounds
+    .UpdateTop(0.5)
+    .UpdateLeft(0.5);
+
+  LLayout.Add(
+    LElement,
+    LBounds
+    //NewNyxProportionalBounds
+    //  .UpdateTop(0.5)
+    //  .UpdateLeft(0.5)
+  );
+
+  //renders all containers and elements to the screen
+  UI.Render();
 end;
 
 destructor TBrowserTest.Destroy;

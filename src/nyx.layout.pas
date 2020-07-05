@@ -402,7 +402,8 @@ function NewNyxLayoutProportional : INyxLayoutProportional;
 implementation
 uses
 {$IFDEF BROWSER}
-  nyx.layout.fixed.browser;
+  nyx.layout.fixed.browser,
+  nyx.layout.proportional.browser;
 {$ELSE}
   nyx.layout.fixed.std;
 {$ENDIF}
@@ -497,17 +498,20 @@ end;
 
 function TNyxLayoutProportionalImpl.Add(const AElement: INyxElement;
   const ABounds: INyxProportionalBounds): INyxLayoutProportional;
+var
+  LBounds : INyxProportionalBounds;
 begin
   Result := Self as INyxLayoutProportional;
+  LBounds := ABounds;
 
   //add the element normally
   Add(AElement);
 
   //when the element is valid, update the id and add
-  if Assigned(AElement) and Assigned(ABounds) then
+  if Assigned(AElement) and Assigned(LBounds) then
   begin
     ABounds.ID := AElement.ID; //used for lookup
-    FBounds.Add(ABounds);
+    FBounds.Add(LBounds);
   end;
 end;
 
@@ -722,8 +726,11 @@ end;
 
 function TNyxLayoutFixedImpl.Add(const AElement: INyxElement;
   const ABounds: INyxFixedBounds): INyxLayoutFixed;
+var
+  LBounds: INyxFixedBounds;
 begin
   Result := Self as INyxLayoutFixed;
+  LBounds := ABounds;
 
   //add the element normally
   Add(AElement);
@@ -763,8 +770,10 @@ end;
 initialization
 {$IFDEF BROWSER}
   DefaultNyxLayoutFixed := TNyxLayoutFixedBrowserImpl;
+  DefaultNyxLayoutProportional := TNyxLayoutProportionalBrowserImpl;
 {$ELSE}
   DefaultNyxLayoutFixed := TNyxLayoutFixedStdImpl;
+  DefaultNyxLayoutProportional := TNyxLayoutProportionalStdImpl;
 {$ENDIF}
 end.
 
