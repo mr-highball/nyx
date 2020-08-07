@@ -33,7 +33,8 @@ uses
   js,
   nyx.types,
   nyx.element.button,
-  nyx.layout;
+  nyx.layout,
+  nyx.layout.relational.browser;
 
 type
 

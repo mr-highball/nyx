@@ -379,6 +379,142 @@ type
   *)
   TNyxLayoutProportionalClass = class of TNyxLayoutProportionalImpl;
 
+  { INyxRelationalBounds }
+
+  INyxRelationalBounds = interface(INyxBounds)
+    ['{45315432-0E9F-47C6-A03F-6FBCE619A994}']
+
+    //property methods
+    function GetLeft: Single;
+    function GetTop: Single;
+    procedure SetLeft(const AValue: Single);
+    procedure SetTop(const AValue: Single);
+
+    //properties
+
+    (*
+      controls horizontal position of the element, where 0 (0%) would be the
+      "farthest left" inside of the parent and 1.0 (100%) would be the "farthest right"
+    *)
+    property Left : Single read GetLeft write SetLeft;
+
+    (*
+      controls vertical position of the element, where 0 (0%) would be the
+      "farthest top" inside of the parent and 1.0 (100%) would
+      be the "farthest bottom"
+    *)
+    property Top : Single read GetTop write SetTop;
+
+    //methods
+    function UpdateLeft(const AValue : Single) : INyxRelationalBounds;
+    function UpdateTop(const AValue : Single) : INyxRelationalBounds;
+  end;
+
+  { TNyxRelationalBoundsImpl }
+  (*
+    base Relational bounds implementation
+  *)
+  TNyxRelationalBoundsImpl = class(TNyxBoundsImpl, INyxRelationalBounds)
+  strict private
+    FLeft,
+    FTop: Single;
+  strict protected
+  protected
+    function GetLeft: Single;
+    function GetTop: Single;
+    procedure SetLeft(const AValue: Single);
+    procedure SetTop(const AValue: Single);
+  public
+    property Left : SIngle read GetLeft write SetLeft;
+    property Top : Single read GetTop write SetTop;
+
+    function UpdateLeft(const AValue : Single) : INyxRelationalBounds;
+    function UpdateTop(const AValue : Single) : INyxRelationalBounds;
+
+    constructor Create; override;
+  end;
+
+  { INyxLayoutRelational }
+  (*
+    a layout to control the placement of elements via percentages
+  *)
+  INyxLayoutRelational = interface(INyxLayout)
+    ['{9909AA2C-989B-499D-907D-25AD2BD6F1BD}']
+
+    //property methods
+    function GetBounds(const AElement : INyxElement): INyxRelationalBounds;
+
+    //properties
+
+    (*
+      accessor for the bounds of a given element
+    *)
+    property Bounds[const AElement : INyxElement] : INyxRelationalBounds read GetBounds; default;
+
+    //methods
+
+    (*
+      adds an element to have it's placement inside of it's parent container
+      using using an "anchor" element as the point of reference
+    *)
+    function Add(const AElement, AAnchor : INyxElement;
+      const ABounds : INyxRelationalBounds) : INyxLayoutRelational; overload;
+
+    (*
+      removes an element from this layout
+      this method is the same as accessing the element collection and removing
+      from their, however this scopes back to the specialized fixed layout
+    *)
+    function Remove(const AElement : INyxElement) : INyxLayoutRelational;
+  end;
+
+  { TNyxLayoutRelationalImpl }
+  (*
+    base class for relational layouts
+  *)
+  TNyxLayoutRelationalImpl = class(TNyxLayoutBaseImpl, INyxLayoutRelational)
+  strict private
+    FBounds,
+    FAnchors: INyxElements;
+    FAnchorMap : TStringList;
+    FRemoveBoundsID : String;
+
+    procedure RemoveBounds(const AElement : INyxElement;
+      const AEvent : TElementsObserveEvent);
+  strict protected
+    function DoUpdatePlacement(out Error: String): Boolean; override;
+
+    (*
+      children relational layouts need to override this in order to place an
+      element within their parent container provided the bounds
+    *)
+    function DoPlaceElement(const AElement : INyxElement;
+      const ABounds : INyxRelationalBounds; out Error : String) : Boolean; virtual; abstract;
+  protected
+    function GetBounds(const AElement : INyxElement): INyxRelationalBounds;
+
+    (*
+      children can call this method to retrieve the anchor element
+      associated with element. will return false if not found
+    *)
+    function GetAnchor(const AElement : INyxElement;
+      out AAnchor : INyxElement): Boolean;
+  public
+    property Bounds[const AElement : INyxElement] : INyxRelationalBounds read GetBounds; default;
+
+    function Add(const AElement, AAnchor : INyxElement;
+      const ABounds : INyxRelationalBounds) : INyxLayoutRelational; overload;
+    function Remove(const AElement : INyxElement) : INyxLayoutRelational;
+
+    constructor Create; override;
+    destructor Destroy; override;
+  end;
+
+  (*
+    metaclass for relational layouts
+  *)
+  TNyxLayoutRelationalClass = class of TNyxLayoutRelationalImpl;
+
 (*
   helper function to return a fixed layout
 *)
@@ -399,6 +535,16 @@ function NewNyxProportionalBounds : INyxProportionalBounds;
 *)
 function NewNyxLayoutProportional : INyxLayoutProportional;
 
+(*
+  helper function to return a relational bounds
+*)
+function NewNyxRelationalBounds : INyxRelationalBounds;
+
+(*
+  helper function to return a relational layout
+*)
+function NewNyxLayoutRelational : INyxLayoutRelational;
+
 implementation
 uses
 {$IFDEF BROWSER}
@@ -411,6 +557,7 @@ uses
 var
   DefaultNyxLayoutFixed : TNyxLayoutFixedClass;
   DefaultNyxLayoutProportional : TNyxLayoutProportionalClass;
+  DefaultNyxLayoutRelational : TNyxLayoutRelationalClass;
 
 function NewNyxLayoutFixed: INyxLayoutFixed;
 begin
@@ -430,6 +577,211 @@ end;
 function NewNyxLayoutProportional: INyxLayoutProportional;
 begin
   Result := DefaultNyxLayoutProportional.Create;
+end;
+
+function NewNyxRelationalBounds: INyxRelationalBounds;
+begin
+  Result := TNyxRelationalBoundsImpl.Create;
+end;
+
+function NewNyxLayoutRelational: INyxLayoutRelational;
+begin
+  Result := DefaultNyxLayoutRelational.Create;
+end;
+
+{ TNyxLayoutRelationalImpl }
+
+procedure TNyxLayoutRelationalImpl.RemoveBounds(const AElement: INyxElement;
+  const AEvent: TElementsObserveEvent);
+var
+  I: Integer;
+begin
+  //use the element to find the bounds and remove if exists
+  FBounds.IndexOf(AElement, I);
+
+  if (AEvent = eoExtract) and (I >= 0) then
+    FBounds.Delete(AElement);
+end;
+
+function TNyxLayoutRelationalImpl.DoUpdatePlacement(out Error: String): Boolean;
+var
+  I, J: Integer;
+  LElement: INyxElement;
+  LBound: INyxRelationalBounds;
+begin
+  try
+    Result := False;
+
+    //iterate elements to call down and place each element
+    for I := 0 to Pred(Elements.Count) do
+    begin
+      LElement := Elements[I];
+      FBounds.IndexOf(LElement, J);
+
+      //only call the place method when there is a bounds provided, otherwise
+      //the caller wants the default placement
+      if J >= 0 then
+      begin
+        LBound := FBounds.Items[J] as INyxRelationalBounds;
+
+        //if we can't place an element bail with the error
+        if not DoPlaceElement(LElement, LBound, Error) then
+          Exit;
+      end;
+    end;
+
+    //success
+    Result := True;
+  except on E : Exception do
+    Error := E.Message;
+  end;
+end;
+
+function TNyxLayoutRelationalImpl.GetBounds(const AElement: INyxElement): INyxRelationalBounds;
+var
+  I: Integer;
+begin
+  Result := nil;
+
+  //we use an element collection to store bounds with the same id as the element
+  //so we can use the input as lookup
+  FBounds.IndexOf(AElement, I);
+
+  if not I >= 0 then
+    Exit;
+
+  Result := FBounds[I] as  INyxRelationalBounds;
+end;
+
+function TNyxLayoutRelationalImpl.GetAnchor(const AElement: INyxElement; out
+  AAnchor: INyxElement): Boolean;
+var
+  I: Integer;
+  LID: String;
+
+  function FindAnchor(const AElement : INyxElement) : Boolean;
+  begin
+    if AElement.ID = LID then
+      Result := True
+    else
+      Exit(False);
+  end;
+
+begin
+  Result := False;
+
+  if not Assigned(AElement) then
+    Exit;
+
+  //find the index of the key
+  I := FAnchorMap.IndexOfName(AElement.ID);
+
+  if I < 0 then
+    Exit;
+
+  //now get the id of anchor for lookup in the anchor collection
+  LID := FAnchorMap.ValueFromIndex[I];
+
+  AAnchor := FAnchors.Find(@FindAnchor);
+end;
+
+function TNyxLayoutRelationalImpl.Add(const AElement, AAnchor: INyxElement;
+  const ABounds: INyxRelationalBounds): INyxLayoutRelational;
+var
+  LBounds: INyxRelationalBounds;
+begin
+  Result := Self as INyxLayoutRelational;
+  LBounds := ABounds;
+
+  //add the element normally
+  Add(AElement);
+
+  //when the element is valid, update the id and add
+  if Assigned(AElement) and Assigned(ABounds) then
+  begin
+    ABounds.ID := AElement.ID; //used for lookup
+    FBounds.Add(ABounds);
+  end;
+
+  //now for the anchors, we need to use a map instead of updating the id
+  //since we don't control the anchor element, just reference it
+  if Assigned(AElement) and Assigned(AAnchor) then
+  begin
+    FAnchors.Add(AAnchor);
+
+    //use the element as the "key" and the anchor as the "value"
+    FAnchorMap.AddPair(AElement.ID, AAnchor.ID);
+  end;
+end;
+
+function TNyxLayoutRelationalImpl.Remove(const AElement: INyxElement): INyxLayoutRelational;
+begin
+  Result := Self as INyxLayoutRelational;
+  Elements.Delete(AElement);
+end;
+
+constructor TNyxLayoutRelationalImpl.Create;
+begin
+  inherited Create;
+  FBounds := NewNyxElements;
+  FAnchors := NewNyxElements;
+  FAnchorMap := TStringList.Create;
+
+  //add an observer to remove the bounds when an element is removed
+  Elements.Observe(@RemoveBounds, FRemoveBoundsID);
+end;
+
+destructor TNyxLayoutRelationalImpl.Destroy;
+begin
+  //remove the observer since we're about to clear the bounds
+  Elements.RemoveObserver(FRemoveBoundsID);
+  FBounds.Clear;
+  FAnchors.Clear;
+  FAnchorMap.Free;
+  FBounds := nil;
+  FAnchors := nil;
+  inherited Destroy;
+end;
+
+{ TNyxRelationalBoundsImpl }
+
+function TNyxRelationalBoundsImpl.GetLeft: Single;
+begin
+  Result := FLeft;
+end;
+
+function TNyxRelationalBoundsImpl.GetTop: Single;
+begin
+  Result := FTop;
+end;
+
+procedure TNyxRelationalBoundsImpl.SetLeft(const AValue: Single);
+begin
+  FLeft := AValue;
+end;
+
+procedure TNyxRelationalBoundsImpl.SetTop(const AValue: Single);
+begin
+  FTop := AValue;
+end;
+
+function TNyxRelationalBoundsImpl.UpdateLeft(const AValue: Single): INyxRelationalBounds;
+begin
+  Result := Self as INyxRelationalBounds;
+  Left := AValue;
+end;
+
+function TNyxRelationalBoundsImpl.UpdateTop(const AValue: Single): INyxRelationalBounds;
+begin
+  Result := Self as INyxRelationalBounds;
+  Top := AValue;
+end;
+
+constructor TNyxRelationalBoundsImpl.Create;
+begin
+  inherited Create;
+  FLeft := 0;
+  FTop := 0;
 end;
 
 { TNyxLayoutProportionalImpl }

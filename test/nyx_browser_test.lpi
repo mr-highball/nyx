@@ -31,7 +31,7 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <Units Count="18">
+    <Units Count="19">
       <Unit0>
         <Filename Value="nyx_browser_test.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -107,6 +107,10 @@
         <Filename Value="..\src\nyx.layout.proportional.browser.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit17>
+      <Unit18>
+        <Filename Value="..\src\nyx.layout.relational.browser.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit18>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
