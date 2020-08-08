@@ -63,7 +63,7 @@ function TNyxLayoutFixedBrowserImpl.DoPlaceElement(const AElement: INyxElement;
 var
   LElement: INyxElementBrowser;
   LRect: TJSDOMRect;
-  LLeftOff, LTopOff: Integer;
+  LLeftOff, LTopOff: Double;
   LStyle: String;
 begin
   try
@@ -89,24 +89,25 @@ begin
       LLeftOff := 0
     //calculate the offset using the center of the element
     else if ABounds.HorzAlignment = haCenter then
-      LLeftOff := Round(LRect.width / 2)
+      LLeftOff := (LRect.width / 2)
     //otherwise we'll be using the right most point of the element
     else
-      LLeftOff := Round(LRect.width);
+      LLeftOff := LRect.width;
 
     //normal vertical alignment will use the top of element to position
     if ABounds.VertAlignment = vaTop then
       LTopOff := 0
     //uses the center of the element to position vertically
     else if ABounds.VertAlignment = vaCenter then
-      LTopOff := Round(LRect.height / 2)
+      LTopOff := LRect.height / 2
     //otherwise the bottom of the element will be used
     else
-      LTopOff := Round(LRect.height);
+      LTopOff := LRect.height;
 
-    //using the offsets calculated above we can set new left / top values in css
-    FCSS.Upsert('left', IntToStr(ABounds.Left + LLeftOff) + 'px');
-    FCSS.Upsert('top', IntToStr(ABounds.Top + LTopOff) + 'px');
+    //using the offsets calculated above we can set new left / top values
+    //in css. also round since no fractional pixels
+    FCSS.Upsert('left', IntToStr(Round(ABounds.Left + LLeftOff)) + 'px');
+    FCSS.Upsert('top', IntToStr(Round(ABounds.Top + LTopOff)) + 'px');
 
     //finally set the inline style with the new computed values
     LElement.JSElement.setAttribute('style', FCSS.CSS);

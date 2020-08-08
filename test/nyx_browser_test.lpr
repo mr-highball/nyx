@@ -114,15 +114,18 @@ end;
 
 procedure TBrowserTest.BuildUI;
 var
-  I , J,
+  I , J, K, L,
   LHelloIndex,
   LDisabledIndex,
   LRunIndex,
-  LCenterIndex, K: Integer;
+  LCenterIndex,
+  LFollowIndex: Integer;
   LID: String;
-  LElement : INyxElement;
+  LElement , LAnchor: INyxElement;
   LLayout: INyxLayoutProportional;
   LBounds: INyxProportionalBounds;
+  LRelLayout : INyxLayoutRelational;
+  LRelBound : INyxRelationalBounds;
 
   (*
     this is a helper method which positions buttons in a vertical stack
@@ -157,6 +160,7 @@ begin
     .AddContainer(NewNyxContainer, I) //add a container (holds elements)
     .AddLayout(NewNyxLayoutFixed, J) //add a fixed layout (positions elements)
     .AddLayout(NewNyxLayoutProportional, K) //adds proportional layout
+    .AddLayout(NewNyxLayoutRelational, L) //adds relational layout
     .ContainerByIndex(I) //get the container we just added
       .Add( //add a button to it
         NewNyxButton
@@ -180,6 +184,11 @@ begin
         NewNyxButton
           .UpdateText('centered'),
         LCenterIndex
+      )
+      .Add(
+        NewNyxButton
+          .UpdateText('following button'),
+        LFollowIndex
       )
     .UI //scope to the UI property
       (*
@@ -208,9 +217,23 @@ begin
   LLayout.Add(
     LElement,
     LBounds
-    //NewNyxProportionalBounds
-    //  .UpdateTop(0.5)
-    //  .UpdateLeft(0.5)
+  );
+
+  //now show how to use a relational layout & bounds to "follow" the running button
+  LElement := UI.ContainerByIndex(I).Elements[LFollowIndex];
+  LAnchor := UI.ContainerByIndex(I).Elements[LRunIndex];
+  LRelLayout := UI.LayoutByIndex(L) as INyxLayoutRelational;
+  LRelBound := NewNyxRelationalBounds;
+
+  LRelBound
+    .UpdateLeft(30) //30px distance
+    .UpdateVertAlignment(vaCenter)
+    .UpdateHorzAlignment(haRight); //relative to left of the "anchor" button
+
+  LRelLayout.Add(
+    LElement,
+    LAnchor,
+    LRelBound
   );
 
   //renders all containers and elements to the screen

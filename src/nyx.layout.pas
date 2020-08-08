@@ -549,7 +549,8 @@ implementation
 uses
 {$IFDEF BROWSER}
   nyx.layout.fixed.browser,
-  nyx.layout.proportional.browser;
+  nyx.layout.proportional.browser,
+nyx.layout.relational.browser;
 {$ELSE}
   nyx.layout.fixed.std;
 {$ENDIF}
@@ -595,12 +596,19 @@ procedure TNyxLayoutRelationalImpl.RemoveBounds(const AElement: INyxElement;
   const AEvent: TElementsObserveEvent);
 var
   I: Integer;
+  LAnchor: INyxElement;
 begin
   //use the element to find the bounds and remove if exists
   FBounds.IndexOf(AElement, I);
 
   if (AEvent = eoExtract) and (I >= 0) then
+  begin
+    //on element remove, also remove the anchor associated (if any)
+    if GetAnchor(AElement, LAnchor) then
+      FAnchors.Delete(LAnchor);
+
     FBounds.Delete(AElement);
+  end;
 end;
 
 function TNyxLayoutRelationalImpl.DoUpdatePlacement(out Error: String): Boolean;
@@ -683,6 +691,7 @@ begin
   LID := FAnchorMap.ValueFromIndex[I];
 
   AAnchor := FAnchors.Find(@FindAnchor);
+  Result := Assigned(AAnchor);
 end;
 
 function TNyxLayoutRelationalImpl.Add(const AElement, AAnchor: INyxElement;
@@ -1123,6 +1132,7 @@ initialization
 {$IFDEF BROWSER}
   DefaultNyxLayoutFixed := TNyxLayoutFixedBrowserImpl;
   DefaultNyxLayoutProportional := TNyxLayoutProportionalBrowserImpl;
+  DefaultNyxLayoutRelational := TNyxLayoutRelationalBrowserImpl;
 {$ELSE}
   DefaultNyxLayoutFixed := TNyxLayoutFixedStdImpl;
   DefaultNyxLayoutProportional := TNyxLayoutProportionalStdImpl;

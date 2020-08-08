@@ -28,7 +28,8 @@ interface
 
 uses
   Classes,
-  SysUtils;
+  SysUtils,
+  nyx.element.browser;
 
 type
 
@@ -38,7 +39,9 @@ type
   strict private
     FList : TStringList;
     function GetCSS: String;
+    function GetValue(const AAttribute : String): String;
     procedure SetCSS(const AValue: String);
+    procedure SetValue(const AAttribute : String; AValue: String);
   strict protected
   public
     (*
@@ -46,6 +49,11 @@ type
       when CRUD methods are called
     *)
     property CSS : String read GetCSS write SetCSS;
+
+    (*
+      gets the value of an attribute
+    *)
+    property Value[const AAttribute : String] : String read GetValue write SetValue; default;
 
     (*
       updates or inserts a new css attribute
@@ -62,6 +70,16 @@ type
     *)
     procedure Delete(const AAttribute : String);
 
+    (*
+      copies the inline css from a nyx browser element
+    *)
+    procedure CopyFromElement(const AElement : INyxElementBrowser);
+
+    (*
+      assigns this style to an elements inline style attribute
+    *)
+    procedure CopyToElement(const AElement : INyxElementBrowser);
+
     constructor Create; virtual;
     destructor Destroy; override;
   end;
@@ -75,9 +93,22 @@ begin
   Result := FList.DelimitedText;
 end;
 
+function TNyxCSSHelper.GetValue(const AAttribute : String): String;
+begin
+  if not Exists(AAttribute) then
+    Exit('')
+  else
+    Exit(FList.ValueFromIndex[FList.IndexOfName(AAttribute)]);
+end;
+
 procedure TNyxCSSHelper.SetCSS(const AValue: String);
 begin
   FList.DelimitedText := AValue;
+end;
+
+procedure TNyxCSSHelper.SetValue(const AAttribute : String; AValue: String);
+begin
+  Upsert(AAttribute, AValue);
 end;
 
 procedure TNyxCSSHelper.Upsert(const AAttribute, AValue: String);
@@ -111,6 +142,30 @@ begin
     Exit;
 
   FList.Delete(FList.IndexOfName(AAttribute));
+end;
+
+procedure TNyxCSSHelper.CopyFromElement(const AElement: INyxElementBrowser);
+var
+  LStyle: String;
+begin
+  //first clear css
+  CSS := '';
+
+  if Assigned(AElement) then
+  begin
+    LStyle := AElement.JSElement.getAttribute('style');
+
+    //can be nil apparently (different from regular compiler), so we check
+    if Assigned(LStyle) then
+      CSS := LStyle;
+  end;
+end;
+
+procedure TNyxCSSHelper.CopyToElement(const AElement: INyxElementBrowser);
+begin
+  if Assigned(AElement) then
+    if Assigned(AElement.JSElement) then
+      AElement.JSElement.setAttribute('style', CSS);
 end;
 
 constructor TNyxCSSHelper.Create;

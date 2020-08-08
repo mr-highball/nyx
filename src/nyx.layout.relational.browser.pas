@@ -1,3 +1,25 @@
+{ nyx
+
+  Copyright (c) 2020 mr-highball
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+}
 unit nyx.layout.relational.browser;
 
 {$mode delphi}
@@ -32,8 +54,7 @@ type
 implementation
 uses
   web,
-  nyx.element.browser,
-  nyx.container.browser;
+  nyx.element.browser;
 
 { TNyxLayoutRelationalBrowserImpl }
 
@@ -43,10 +64,46 @@ function TNyxLayoutRelationalBrowserImpl.DoPlaceElement(
 var
   LElement, LBrowserAnchor: INyxElementBrowser;
   LRect: TJSDOMRect;
-  LLeftOff, LTopOff: Double;
-  LStyle: String;
+  LLeftOff, LTopOff, LLeft, LRight, LTop, LWidth, LHeight, LBottom: Double;
   LAnchor: INyxElement;
   LHasAnchor: Boolean;
+  LLeftUnits: String = 'px';
+  LTopUnits: String = 'px';
+  LStyle : String;
+  LCSS : TNyxCSSHelper;
+  LHTMlElement: TJSHTMLElement;
+
+  (*
+    helper that handles fetching a floating point positional / size value
+    from an attribute
+    todo - maybe move this to css helper unit? and name it better...
+  *)
+  procedure GetStyleValue(const AStyle : String; var Value : Double;
+    var Units : String);
+  begin
+    if Trim(AStyle) = '' then
+      Exit;
+
+    //absolute measurement
+    if Pos('px', LowerCase(AStyle)) > 0 then
+    begin
+      Units := 'px';
+      Value := StrToFloat(Copy(AStyle, 1, Length(AStyle) - 2));
+    end
+    //percent measurement
+    else if Pos('%', LowerCase(AStyle)) > 0 then
+    begin
+      Units := '%';
+      Value := StrToFloat(Copy(AStyle, 1, Length(AStyle) - 1));
+    end
+    //relative 'weighted' measurement
+    else if Pos('em', LowerCase(AStyle)) > 0 then
+    begin
+      Units := 'em';
+      Value := StrToFloat(Copy(AStyle, 1, Length(AStyle) - 2));
+    end;
+  end;
+
 begin
   try
     Result := False;
@@ -63,70 +120,122 @@ begin
     LElement := AElement as INyxElementBrowser;
 
     //copy the inline css of the element
-    LStyle := LElement.JSElement.getAttribute('style');
-
-    if Assigned(LStyle) then
-      FCSS.CSS := LStyle;
+    FCSS.CopyFromElement(LElement);
 
     //we will use the position / attribute pair to force "Relational" positioning
     FCSS.Upsert('position', 'absolute');
 
-    //get the bounding box of the element to calculate alignment
-    LRect := LElement.JSElement.getBoundingClientRect;
-
-    //normal computation based on the left most point of the element
-    if ABounds.HorzAlignment = haLeft then
-      LLeftOff := 0
-    //calculate the offset using the center of the element
-    else if ABounds.HorzAlignment = haCenter then
-      LLeftOff := Round(LRect.width / 2)
-    //otherwise we'll be using the right most point of the element
-    else
-      LLeftOff := Round(LRect.width);
-
-    //normal vertical alignment will use the top of element to position
-    if ABounds.VertAlignment = vaTop then
-      LTopOff := 0
-    //uses the center of the element to position vertically
-    else if ABounds.VertAlignment = vaCenter then
-      LTopOff := LRect.height / 2
-    //otherwise the bottom of the element will be used
-    else
-      LTopOff := LRect.height;
-
-    //we need to find the parent container's rect in order to calculate a percentage
-    //todo - had to use input element, saw strange behavior where container was null
-    //       as well as ID was different... not sure if this is a pas2js bug, try this out later
-    if Assigned(AElement.Container)
-      and (AElement.Container is INyxContainerBrowser)
-    then
+    //as long as we have an anchor, we will use it as the point to offset this element
+    if LHasAnchor then
     begin
-      LRect := INyxContainerBrowser(AElement.Container).BrowserElement.JSElement.getBoundingClientRect;
+      (*
+        below we seemingly can't rely on just calling getBoundingClientRect()
+        because while testing it's returning (0, 0, 0, 0). this could be
+        due to the dom not being ready, 'display: none' or who knows what spice...
+        but the inline should be reliable as long as nyx is used to build the ui,
+        so this will be our fallback
+      *)
+      LRect := LBrowserAnchor.JSElement.getBoundingClientRect;
+      LLeft := LRect.left;
+      LRight := LRect.right;
+      LTop := LRect.top;
+      LWidth := LRect.width;
+      LHeight := LRect.height;
+      LBottom := LRect.bottom;
 
-      //find percentage of parent for width
-      if LRect.width > 0 then
-        LLeftOff := LLeftOff / LRect.width
-      else
-        LLeftOff := 0;
+      //check for an 'empty' rect, if so then use css
+      if (LLeft + LRight + LTop + LWidth + LHeight + LBottom) = 0 then
+      begin
+        LCSS := TNyxCSSHelper.Create;
+        try
+          LCSS.CopyFromElement(LBrowserAnchor);
 
-      //find percentage of parent for height
-      if LRect.height > 0 then
-        LTopOff := LTopOff / LRect.height
+          if Assigned(TJSHTMLElement(LBrowserAnchor.JSElement)) then
+            LHTMlElement := TJSHTMLElement(LBrowserAnchor.JSElement)
+          else
+            LHTMlElement := nil;
+
+          //first check for height set in style
+          if LCSS.Exists('height') then
+          begin
+            LStyle := LCSS['height'];
+            GetStyleValue(LStyle, LHeight, LTopUnits);
+          end
+          //otherwise we'll use the offset
+          else if Assigned(LHTMLElement)
+            and Assigned(LHTMLElement.offsetHeight)
+            and (LHTMLElement.offsetHeight <> 0)
+          then
+            LWidth := LHTMlElement.offsetHeight
+          //lastly, if no other checks pass, use the client width (doesn't account of borders)
+          else
+            LWidth := LBrowserAnchor.JSElement.clientWidth;
+
+          //first check for width set in style
+          if LCSS.Exists('width') then
+          begin
+            LStyle := LCSS['width'];
+            GetStyleValue(LStyle, LWidth, LLeftUnits);
+          end
+          //otherwise we'll use the offset
+          else if Assigned(LHTMLElement)
+            and Assigned(LHTMLElement.offsetWidth)
+            and (LHTMLElement.offsetWidth <> 0)
+          then
+            LWidth := LHTMlElement.offsetWidth
+          //lastly, if no other checks pass, use the client width (doesn't account of borders)
+          else
+            LWidth := LBrowserAnchor.JSElement.clientWidth;
+
+          //get the left attribute and check to see if we have a value
+          if LCSS.Exists('left') then
+          begin
+            LStyle := LCSS['left'];
+            GetStyleValue(LStyle, LLeft, LLeftUnits);
+          end;
+
+          if LCSS.Exists('top') then
+          begin
+            LStyle := LCSS['top'];
+            GetStyleValue(LStyle, LTop, LTopUnits);
+          end;
+
+          //now for the computed values
+          LRight := LLeft + LWidth;
+          LBottom := LTop + LHeight;
+        finally
+          LCSS.Free;
+        end;
+      end;
+
+      //normal computation based on the left most point of the anchor
+      if ABounds.HorzAlignment = haLeft then
+        LLeftOff := LLeft
+      //calculate the offset using the center of the anchor
+      else if ABounds.HorzAlignment = haCenter then
+        LLeftOff := LLeft + (LWidth / 2)
+      //otherwise we'll be using the right most point of the anchor
       else
-        LTopOff := 0;
-    end
-    else
-    begin
-      LLeftOff := 0;
-      LTopOff := 0;
+        LLeftOff := LRight;
+
+      //normal vertical alignment will use the top of anchor to position
+      if ABounds.VertAlignment = vaTop then
+        LTopOff := LTop
+      //uses the center of the anchor to position vertically
+      else if ABounds.VertAlignment = vaCenter then
+        LTopOff := LTop + (LHeight / 2)
+      //otherwise the bottom of the anchor will be used
+      else
+        LTopOff := LBottom;
     end;
 
-    //using the offsets calculated above we can set new left / top values in css
-    FCSS.Upsert('left', IntToStr(Round((ABounds.Left * 100) - LLeftOff)) + '%');
-    FCSS.Upsert('top', IntToStr(Round((ABounds.Top * 100) - LTopOff)) + '%');
+    //using the offsets calculated above we can set new left / top values
+    //in css. also round since no fractional pixels
+    FCSS.Upsert('left', IntToStr(Round(ABounds.Left + LLeftOff)) + LLeftUnits);
+    FCSS.Upsert('top', IntToStr(Round(ABounds.Top + LTopOff)) + LTopUnits);
 
     //finally set the inline style with the new computed values
-    LElement.JSElement.setAttribute('style', FCSS.CSS);
+    FCSS.CopyToElement(LElement);
 
     //success
     Result := True;
