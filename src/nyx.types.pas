@@ -530,6 +530,7 @@ type
     function GetLayouts: INyxElements;
     function GetSettings: INyxRenderSettings;
     procedure SetSettings(const AValue: INyxRenderSettings);
+    procedure AdjustLayouts;
   strict protected
     (*
       children need to override this method render all containers and
@@ -701,6 +702,25 @@ begin
   DoSettingsChange;
 end;
 
+procedure TNyxUIBaseImpl.AdjustLayouts;
+var
+  I : Integer;
+  LLayout: INyxLayout;
+  LError: String;
+begin
+  //handle positioning by calling each layout's place method
+  for I := 0 to Pred(FLayouts.Count) do
+  begin
+    LLayout := INyxLayout(FLayouts[I]); //cast without as to capture nils
+
+    if not Assigned(LLayout) then
+      Continue;
+
+    if not LLayout.UpdatePlacement(LError) then
+      raise Exception.Create(LError);
+  end;
+end;
+
 procedure TNyxUIBaseImpl.DoSettingsChange;
 begin
   //nothing in base
@@ -783,27 +803,14 @@ begin
 end;
 
 function TNyxUIBaseImpl.Render(): INyxUI;
-var
-  I: Integer;
-  LLayout: INyxLayout;
-  LError: String;
 begin
   Result := Self as INyxUI;
 
-  //handle positioning by calling each layout's place method
-  for I := 0 to Pred(FLayouts.Count) do
-  begin
-    LLayout := INyxLayout(FLayouts[I]); //cast without as to capture nils
-
-    if not Assigned(LLayout) then
-      Continue;
-
-    if not LLayout.UpdatePlacement(LError) then
-      raise Exception.Create(LError);
-  end;
-
   //render new ui
   DoRender;
+
+  //after rendering, adjust position of elements with layouts
+  AdjustLayouts;
 end;
 
 function TNyxUIBaseImpl.Render(const ASettings: INyxRenderSettings): INyxUI;
