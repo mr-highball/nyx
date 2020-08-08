@@ -805,12 +805,13 @@ end;
 function TNyxUIBaseImpl.Render(): INyxUI;
 begin
   Result := Self as INyxUI;
-
-  //render new ui
-  DoRender;
-
-  //after rendering, adjust position of elements with layouts
-  AdjustLayouts;
+  try
+    //render new ui
+    DoRender;
+  finally
+    //after rendering, adjust position of elements with layouts
+    AdjustLayouts;
+  end;
 end;
 
 function TNyxUIBaseImpl.Render(const ASettings: INyxRenderSettings): INyxUI;
