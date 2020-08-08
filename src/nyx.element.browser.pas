@@ -56,6 +56,8 @@ type
   TNyxElementBrowserImpl = class(TNyxElementBaseImpl, INyxElementBrowser)
   strict private
     FElement : TJSElement;
+
+    procedure InitializeCSS;
   protected
     function GetJSElement: TJSElement;
   strict protected
@@ -72,8 +74,34 @@ type
   end;
 
 implementation
+uses
+  nyx.utils.browser.css;
 
 { TNyxElementBrowserImpl }
+
+procedure TNyxElementBrowserImpl.InitializeCSS;
+var
+  LCSS : TNyxCSSHelper;
+  LStyle: String;
+begin
+  LCSS := TNyxCSSHelper.Create;
+  try
+    LStyle := FElement.getAttribute('style');
+
+    if not Assigned(LStyle) then
+      LStyle := '';
+
+    LCSS.CSS := LStyle;
+
+    //force setting a display if we don't have one to try and avoid size checks failing
+    if not LCSS.Exists('display') then
+      LCSS['display'] := 'initial';
+
+    FElement.setAttribute('style', LCSS.CSS);
+  finally
+    LCSS.Free;
+  end;
+end;
 
 function TNyxElementBrowserImpl.GetJSElement: TJSElement;
 begin
@@ -85,6 +113,7 @@ begin
   inherited Create;
   FElement :=  DoCreateElement;
   FElement.id := ID;
+  InitializeCSS;
 end;
 
 end.
