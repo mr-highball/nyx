@@ -52,6 +52,98 @@ type
   TNyxElementConditionNestedCallback = function(const ACondition : TNyxElementBoolNestedCallback;const ATrue, AFalse : TNyxElementNestedCallback) : Boolean is nested;
   TNyxElementConditionMethod = function(const ACondition : TNyxElementBoolMethod;const ATrue, AFalse : TNyxElementMethod) : Boolean of object;
 
+  (*
+    mode affects how size properties are interpreted
+  *)
+  TSizeMode = (
+    smFixed,
+    smPercent
+  );
+
+  (*
+    enum that represents properties for a INyxSize
+  *)
+  TSizeProperty = (
+    scHeight,
+    scWidth,
+    scMode
+  );
+
+  INyxSize = interface;
+
+  (*
+    observer method for properties
+  *)
+  TSizePropertyObserveMethod = procedure(const ASize : INyxSize;
+    const AProperty : TSizeProperty) of object;
+
+  { INyxSize }
+  (*
+    a sizing component with observable properties
+  *)
+  INyxSize = interface
+    ['{B07B148F-E301-43F3-95C5-7C8A9D3A9073}']
+
+    //property methods
+    function GetElement: INyxElement;
+    function GetHeight: Double;
+    function GetMode: TSizeMode;
+    function GetWidth: Double;
+    procedure SetHeight(const AValue: Double);
+    procedure SetMode(const AValue: TSizeMode);
+    procedure SetWidth(const AValue: Double);
+
+    //properties
+    (*
+      height for element (dependant upon mode)
+    *)
+    property Height : Double read GetHeight write SetHeight;
+
+    (*
+      width for element (dependant upon mode)
+    *)
+    property Width : Double read GetWidth write SetWidth;
+
+    (*
+      mode controls the behavior of height and width (ie. in percent mode
+      1.0 = 100%, but in fixed mode 1 = 1px (or whatever the fixed unit for the
+      platform is))
+    *)
+    property Mode : TSizeMode read GetMode write SetMode;
+
+    (*
+      parent element this size is associated with
+    *)
+    property Element : INyxElement read GetElement;
+
+    //methods
+    (*
+      observe property changes
+    *)
+    function Observe(const AEvent : TSizeProperty;
+      const AObserver : TSizePropertyObserveMethod; out ID : String) : INyxSize;
+
+    (*
+      removes an observer
+    *)
+    function RemoveObserver(const AID : String) : INyxSize;
+
+    (*
+      fluent method for updating the height
+    *)
+    function UpdateHeight(const AHeight : Double) : INyxSize;
+
+    (*
+      fluent method for updating the width
+    *)
+    function UpdateWidth(const AWidth : Double) : INyxSize;
+
+    (*
+      fluent method for updating the mode
+    *)
+    function UpdateMode(const AMode : TSizeMode) : INyxSize;
+  end;
+
   { INyxElement }
   (*
     smallest building block for a nyx UI, can be a control, graphic, etc...
