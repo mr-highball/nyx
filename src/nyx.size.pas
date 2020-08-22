@@ -52,6 +52,9 @@ type
     destructor Destroy; override;
   end;
 
+  //metaclass for nyx sizes
+  TNyxSizeClass = class of TNyxSizeImpl;
+
 implementation
 
 { TNyxSizeImpl }

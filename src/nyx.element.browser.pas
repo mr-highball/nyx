@@ -58,6 +58,7 @@ type
     FElement : TJSElement;
 
     procedure InitializeCSS;
+    procedure UpdateSize;
   protected
     function GetJSElement: TJSElement;
   strict protected
@@ -67,6 +68,10 @@ type
       the root JS element associated with this browser element
     *)
     function DoCreateElement : TJSElement; virtual; abstract;
+
+    procedure DoUpdateHeight; override;
+    procedure DoUpdateWidth; override;
+    procedure DoUpdateMode; override;
   public
     property JSElement : TJSElement read GetJSElement;
 
@@ -103,9 +108,57 @@ begin
   end;
 end;
 
+procedure TNyxElementBrowserImpl.UpdateSize;
+var
+  LCSS : TNyxCSSHelper;
+  LSelf: INyxElementBrowser;
+begin
+  LSelf := Self as INyxElementBrowser;
+  LCSS := TNyxCSSHelper.Create;
+  try
+    //copy the current style
+    LCSS.CopyFromElement(LSelf);
+
+    //depending on mode, update css differently
+    if Size.Mode = smFixed then
+    begin
+      LCSS['height'] := IntToStr(Round(Size.Height)) + 'px';
+      LCSS['width'] := IntToStr(Round(Size.Width)) + 'px';
+    end
+    else
+    begin
+      LCSS['height'] := IntToStr(Round(Size.Height)) + '%';
+      LCSS['width'] := IntToStr(Round(Size.Width)) + '%';
+    end;
+
+    //update the new style
+    LCSS.CopyToElement(LSelf);
+  finally
+    LCSS.Free;
+  end;
+end;
+
 function TNyxElementBrowserImpl.GetJSElement: TJSElement;
 begin
   Result := FElement;
+end;
+
+procedure TNyxElementBrowserImpl.DoUpdateHeight;
+begin
+  inherited DoUpdateHeight;
+  UpdateSize;
+end;
+
+procedure TNyxElementBrowserImpl.DoUpdateWidth;
+begin
+  inherited DoUpdateWidth;
+  UpdateSize;
+end;
+
+procedure TNyxElementBrowserImpl.DoUpdateMode;
+begin
+  inherited DoUpdateMode;
+  UpdateSize;
 end;
 
 constructor TNyxElementBrowserImpl.Create;

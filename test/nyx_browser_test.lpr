@@ -119,7 +119,8 @@ var
   LDisabledIndex,
   LRunIndex,
   LCenterIndex,
-  LFollowIndex: Integer;
+  LFollowIndex,
+  LBigIndex: Integer;
   LID: String;
   LElement , LAnchor: INyxElement;
   LLayout: INyxLayoutProportional;
@@ -190,6 +191,11 @@ begin
           .UpdateText('following button'),
         LFollowIndex
       )
+      .Add(
+        NewNyxButton
+          .UpdateText('big button'),
+        LBigIndex
+      )
     .UI //scope to the UI property
       (*
         take action can be used to pass a variable number and type of arguments
@@ -235,6 +241,25 @@ begin
     LAnchor,
     LRelBound
   );
+
+  //make a big button that is positioned at the far right of the screen
+  LElement := UI.ContainerByIndex(I).Elements[LBigIndex];
+  LLayout := UI.LayoutByIndex(K) as INyxLayoutProportional;
+
+  LBounds := NewNyxProportionalBounds;
+  LBounds
+    .UpdateTop(0)
+    .UpdateLeft(0.9);
+
+  LLayout.Add(
+    LElement,
+    LBounds
+  );
+
+  LElement.Size := NewNyxSize;
+  LElement.Size.UpdateHeight(100);
+  LElement.Size.UpdateWidth(10);
+  LElement.Size.UpdateMode(smPercent);
 
   //renders all containers and elements to the screen
   UI.Render();
