@@ -34,7 +34,7 @@ uses
   nyx.types,
   nyx.element.button,
   nyx.layout,
-  nyx.layout.relational.browser;
+  nyx.layout.relational.browser, nyx.size;
 
 type
 

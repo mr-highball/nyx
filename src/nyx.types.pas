@@ -53,6 +53,14 @@ type
   TNyxElementConditionMethod = function(const ACondition : TNyxElementBoolMethod;const ATrue, AFalse : TNyxElementMethod) : Boolean of object;
 
   (*
+    enum to identify stage of a property update
+  *)
+  TPropertyUpdateType = (
+    puBeforeUpdate,
+    puAfterUpdate
+  );
+
+  (*
     mode affects how size properties are interpreted
   *)
   TSizeMode = (
@@ -66,7 +74,8 @@ type
   TSizeProperty = (
     scHeight,
     scWidth,
-    scMode
+    scMode,
+    scElement
   );
 
   INyxSize = interface;
@@ -74,8 +83,8 @@ type
   (*
     observer method for properties
   *)
-  TSizePropertyObserveMethod = procedure(const ASize : INyxSize;
-    const AProperty : TSizeProperty) of object;
+  TSizePropertyObserveMethod = procedure(const AType : TPropertyUpdateType;
+    const ASize : INyxSize; const AProperty : TSizeProperty) of object;
 
   { INyxSize }
   (*
@@ -89,6 +98,7 @@ type
     function GetHeight: Double;
     function GetMode: TSizeMode;
     function GetWidth: Double;
+    procedure SetElement(const AValue: INyxElement);
     procedure SetHeight(const AValue: Double);
     procedure SetMode(const AValue: TSizeMode);
     procedure SetWidth(const AValue: Double);
@@ -114,7 +124,7 @@ type
     (*
       parent element this size is associated with
     *)
-    property Element : INyxElement read GetElement;
+    property Element : INyxElement read GetElement write SetElement;
 
     //methods
     (*
