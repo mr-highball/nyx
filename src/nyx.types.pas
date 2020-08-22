@@ -210,6 +210,9 @@ type
     function Condition(const ACondition : TNyxElementBoolCallback; const ATrue, AFalse : TNyxElementCallback) : INyxElement; overload;
     function Condition(const ACondition : TNyxElementBoolNestedCallback; const ATrue, AFalse : TNyxElementNestedCallback) : INyxElement; overload;
     function Condition(const ACondition : TNyxElementBoolMethod; const ATrue, AFalse : TNyxElementMethod) : INyxElement; overload;
+
+    function IsType<T : IInterface>(out IsType : Boolean) : INyxElement;
+    function AsType<T : IInterface>() : T;
   end;
 
   { TNyxElementBaseImpl }
@@ -285,6 +288,9 @@ type
     function Condition(const ACondition : TNyxElementBoolCallback; const ATrue, AFalse : TNyxElementCallback) : INyxElement; overload;
     function Condition(const ACondition : TNyxElementBoolNestedCallback; const ATrue, AFalse : TNyxElementNestedCallback) : INyxElement; overload;
     function Condition(const ACondition : TNyxElementBoolMethod; const ATrue, AFalse : TNyxElementMethod) : INyxElement; overload;
+
+    function IsType<T : IInterface>(out AResult : Boolean) : INyxElement;
+    function AsType<T : IInterface>() : T;
 
     constructor Create; virtual;
     destructor Destroy; override;
@@ -1859,6 +1865,17 @@ begin
   end
   else if Assigned(AFalse) then
     AFalse(Result);
+end;
+
+function TNyxElementBaseImpl.IsType<T: IInterface>(out AResult: Boolean): INyxElement;
+begin
+  Result := Self as INyxElement;
+  AResult := Self is T;
+end;
+
+function TNyxElementBaseImpl.AsType<T: IInterface>(): T;
+begin
+  Result := Self as T;
 end;
 
 constructor TNyxElementBaseImpl.Create;
