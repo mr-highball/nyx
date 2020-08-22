@@ -150,6 +150,11 @@ type
 
 function NewNyxButton : INyxElementButton;
 
+(*
+  helper to be used in a nyx condition method for determining if an element
+  is a INyxButton
+*)
+function IsNyxButton(const AElement : INyxElement) : Boolean;
 implementation
 uses
 {$IFDEF BROWSER}
@@ -163,6 +168,11 @@ var
 function NewNyxButton: INyxElementButton;
 begin
   Result := DefaultNyxButton.Create as INyxElementButton;
+end;
+
+function IsNyxButton(const AElement: INyxElement): Boolean;
+begin
+  Result := Assigned(AElement) and (AElement is INyxElementButton);
 end;
 
 { TNyxElementButtonBaseImpl }
