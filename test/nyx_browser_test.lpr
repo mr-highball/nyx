@@ -34,7 +34,7 @@ uses
   nyx.types,
   nyx.element.button,
   nyx.layout,
-  nyx.layout.relational.browser, nyx.size;
+  nyx.layout.relational.browser, nyx.size, nyx.element, nyx.container;
 
 type
 
@@ -256,7 +256,6 @@ begin
     LBounds
   );
 
-  LElement.Size := NewNyxSize;
   LElement.Size.UpdateHeight(100);
   LElement.Size.UpdateWidth(10);
   LElement.Size.UpdateMode(smPercent);

@@ -67,6 +67,15 @@ type
 
     function DoGetEnabled: Boolean; override;
     procedure DoSetEnabled(const AValue: Boolean); override;
+
+
+    (*
+      because we use composition, we need to redirect calls
+    *)
+    procedure DoUpdateHeight; override;
+    procedure DoUpdateWidth; override;
+    procedure DoUpdateMode; override;
+
   public
     property BrowserElementImpl : TNyxElementBrowserImpl read GetBrowser implements INyxElementBrowser;
 
@@ -106,6 +115,21 @@ end;
 procedure TNyxElementButtonBrowserImpl.DoSetEnabled(const AValue: Boolean);
 begin
   TJSHTMLButtonElement(FBrowser.JSElement).disabled := not AValue;
+end;
+
+procedure TNyxElementButtonBrowserImpl.DoUpdateHeight;
+begin
+  FBrowser.Size.UpdateHeight(Size.Height);
+end;
+
+procedure TNyxElementButtonBrowserImpl.DoUpdateWidth;
+begin
+  FBrowser.Size.UpdateWidth(Size.Width);
+end;
+
+procedure TNyxElementButtonBrowserImpl.DoUpdateMode;
+begin
+  FBrowser.Size.UpdateMode(Size.Mode);
 end;
 
 function TNyxElementButtonBrowserImpl.TBrowserElementComponent.DoCreateElement: TJSElement;

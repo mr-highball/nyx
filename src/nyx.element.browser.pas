@@ -30,7 +30,8 @@ uses
   Classes,
   SysUtils,
   web,
-  nyx.types;
+  nyx.types,
+  nyx.element;
 
 type
 
@@ -145,19 +146,16 @@ end;
 
 procedure TNyxElementBrowserImpl.DoUpdateHeight;
 begin
-  inherited DoUpdateHeight;
   UpdateSize;
 end;
 
 procedure TNyxElementBrowserImpl.DoUpdateWidth;
 begin
-  inherited DoUpdateWidth;
   UpdateSize;
 end;
 
 procedure TNyxElementBrowserImpl.DoUpdateMode;
 begin
-  inherited DoUpdateMode;
   UpdateSize;
 end;
 

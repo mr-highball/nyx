@@ -30,7 +30,8 @@ uses
   Classes,
   SysUtils,
   nyx.types,
-  nyx.utils.observe;
+  nyx.utils.observe,
+  nyx.element;
 
 type
 

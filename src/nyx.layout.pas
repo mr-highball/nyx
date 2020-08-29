@@ -29,7 +29,9 @@ interface
 uses
   Classes,
   SysUtils,
-  nyx.types;
+  nyx.types,
+  nyx.element,
+  nyx.container;
 
 type
 
@@ -213,6 +215,23 @@ type
     *)
     function Remove(const AElement : INyxElement) : INyxLayoutFixed;
   end;
+
+  { TNyxLayoutBaseImpl }
+  (*
+    base implementation for all INyxLayout
+  *)
+  TNyxLayoutBaseImpl = class(TNyxContainerBaseImpl, INyxLayout)
+  strict private
+  protected
+  strict protected
+    function DoUpdatePlacement(out Error : String) : Boolean; virtual; abstract;
+  public
+    function UpdatePlacement(out Error : String) : Boolean; overload;
+    function UpdatePlacement : Boolean; overload;
+  end;
+
+  //meta class for concrete nyx layouts
+  TNyxLayoutClass = class of TNyxLayoutBaseImpl;
 
   { TNyxLayoutFixedImpl }
   (*
@@ -588,6 +607,20 @@ end;
 function NewNyxLayoutRelational: INyxLayoutRelational;
 begin
   Result := DefaultNyxLayoutRelational.Create;
+end;
+
+{ TNyxLayoutBaseImpl }
+
+function TNyxLayoutBaseImpl.UpdatePlacement(out Error: String): Boolean;
+begin
+  Result := DoUpdatePlacement(Error);
+end;
+
+function TNyxLayoutBaseImpl.UpdatePlacement: Boolean;
+var
+  LError : String;
+begin
+  Result := UpdatePlacement(LError);
 end;
 
 { TNyxLayoutRelationalImpl }

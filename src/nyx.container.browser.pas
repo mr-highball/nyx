@@ -31,6 +31,7 @@ uses
   SysUtils,
   web,
   nyx.types,
+  nyx.container,
   nyx.element.browser;
 
 type

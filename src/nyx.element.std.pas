@@ -29,7 +29,8 @@ interface
 uses
   Classes,
   SysUtils,
-  nyx.types;
+  nyx.types,
+  nyx.element;
 
 type
 
