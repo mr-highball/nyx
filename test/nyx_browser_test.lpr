@@ -60,6 +60,9 @@ type
     procedure RunningButtonClick(const AButton : INyxElementButton;
       const AEvent : TButtonObserveEvent);
 
+    procedure EnterExitBigButton(const AButton : INyxElementButton;
+      const AEvent : TButtonObserveEvent);
+
   strict protected
     procedure doRun; override; //calls BuildUI
 
@@ -109,6 +112,15 @@ begin
 
   //lastly we need to render the UI for changes on the layout to take place
   UI.Render;
+end;
+
+procedure TBrowserTest.EnterExitBigButton(const AButton: INyxElementButton;
+  const AEvent: TButtonObserveEvent);
+begin
+  if AEvent = boMouseEnter then
+    window.alert('entered big button')
+  else
+    window.alert('exited big button');
 end;
 
 procedure TBrowserTest.doRun;
@@ -199,6 +211,8 @@ begin
       )
       .Add(
         NewNyxButton
+          .Observe(boMouseEnter, @EnterExitBigButton, LID)
+          .Observe(boMouseExit, @EnterExitBigButton, LID)
           .UpdateText('big button')
           .UpdateName('big button'),
         LBigIndex

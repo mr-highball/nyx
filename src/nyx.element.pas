@@ -103,6 +103,8 @@ type
       size method called when mode has been changed
     *)
     procedure DoUpdateMode; virtual;
+
+    procedure DoRemoveObserver(const AID : String); virtual;
   public
     property ID : String read GetID write SetID;
     property Name : String read GetName write SetName;
@@ -111,6 +113,8 @@ type
 
     function Observe(const AEvent : TSizeProperty;
       const AObserver : TSizePropertyObserveMethod; out ID : String) : INyxElement; overload;
+
+    function RemoveObserver(const AID : String) : INyxElement;
 
     function UpdateName(const AName : String) : INyxElement;
     function UpdateSize(const ASize : INyxSize) : INyxElement;
@@ -321,6 +325,11 @@ begin
   //nothing in base
 end;
 
+procedure TNyxElementBaseImpl.DoRemoveObserver(const AID: String);
+begin
+  FObserve.RemoveByID(AID);
+end;
+
 procedure TNyxElementBaseImpl.DoPropertyNotify(
   const AType: TPropertyUpdateType; const AProperty: TElementProperty);
 var
@@ -351,6 +360,12 @@ begin
     Exit;
 
   ID := FObserve.Observe(Ord(AEvent), Pointer(AObserver));
+end;
+
+function TNyxElementBaseImpl.RemoveObserver(const AID: String): INyxElement;
+begin
+  Result := Self as INyxElement;
+  DoRemoveObserver(AID);
 end;
 
 function TNyxElementBaseImpl.UpdateName(const AName: String): INyxElement;

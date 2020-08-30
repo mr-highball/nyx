@@ -218,6 +218,8 @@ type
     function Observe(const AEvent : TSizeProperty;
       const AObserver : TSizePropertyObserveMethod; out ID : String) : INyxElement; overload;
 
+    function RemoveObserver(const AID : String) : INyxElement;
+
     (*
       updates the name and returns this element
     *)

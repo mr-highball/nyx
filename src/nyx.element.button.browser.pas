@@ -46,6 +46,31 @@ type
       notifies observers for click events
     *)
     procedure ClickHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for double click events
+    *)
+    procedure DoubleClickHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for mouse enter events
+    *)
+    procedure MouseEnterHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for mouse exit events
+    *)
+    procedure MouseExitHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for mouse down events
+    *)
+    procedure MouseDownHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for mouse up enter events
+    *)
+    procedure MouseUpHandler(Event: TEventListenerEvent);
   protected
     function GetBrowser: TNyxElementBrowserImpl;
 
@@ -85,12 +110,43 @@ type
   end;
 
 implementation
+uses
+  webwidget;
 
 { TNyxElementButtonBrowserImpl }
 
 procedure TNyxElementButtonBrowserImpl.ClickHandler(Event: TEventListenerEvent);
 begin
   Notify(boClick);
+end;
+
+procedure TNyxElementButtonBrowserImpl.DoubleClickHandler(
+  Event: TEventListenerEvent);
+begin
+  Notify(boDoubleClick);
+end;
+
+procedure TNyxElementButtonBrowserImpl.MouseEnterHandler(
+  Event: TEventListenerEvent);
+begin
+  Notify(boMouseEnter);
+end;
+
+procedure TNyxElementButtonBrowserImpl.MouseExitHandler(
+  Event: TEventListenerEvent);
+begin
+  Notify(boMouseExit);
+end;
+
+procedure TNyxElementButtonBrowserImpl.MouseDownHandler(
+  Event: TEventListenerEvent);
+begin
+  Notify(boMouseDown);
+end;
+
+procedure TNyxElementButtonBrowserImpl.MouseUpHandler(Event: TEventListenerEvent);
+begin
+  Notify(boMouseUp);
 end;
 
 function TNyxElementButtonBrowserImpl.GetBrowser: TNyxElementBrowserImpl;
@@ -153,7 +209,12 @@ constructor TNyxElementButtonBrowserImpl.Create;
 begin
   inherited Create;
   FBrowser := TBrowserElementComponent.Create;
-  FBrowser.JSElement.addEventListener('click', @ClickHandler);
+  FBrowser.JSElement.addEventListener(sEventClick, @ClickHandler);
+  FBrowser.JSElement.addEventListener(sEventDblClick, @DoubleClickHandler);
+  FBrowser.JSElement.addEventListener(sEventMouseEnter, @MouseEnterHandler);
+  FBrowser.JSElement.addEventListener(sEventMouseLeave, @MouseExitHandler);
+  FBrowser.JSElement.addEventListener(sEventMouseDown, @MouseDownHandler);
+  FBrowser.JSElement.addEventListener(sEventMouseUp, @MouseUpHandler);
 end;
 
 destructor TNyxElementButtonBrowserImpl.Destroy;
