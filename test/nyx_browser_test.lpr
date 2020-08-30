@@ -63,6 +63,9 @@ type
     procedure EnterExitBigButton(const AButton : INyxElementButton;
       const AEvent : TButtonObserveEvent);
 
+    procedure HideBigButton(const AButton : INyxElementButton;
+      const AEvent : TButtonObserveEvent);
+
   strict protected
     procedure doRun; override; //calls BuildUI
 
@@ -121,6 +124,12 @@ begin
     window.alert('entered big button')
   else
     window.alert('exited big button');
+end;
+
+procedure TBrowserTest.HideBigButton(const AButton: INyxElementButton;
+  const AEvent: TButtonObserveEvent);
+begin
+  AButton.Visible := False;
 end;
 
 procedure TBrowserTest.doRun;
@@ -213,6 +222,7 @@ begin
         NewNyxButton
           .Observe(boMouseEnter, @EnterExitBigButton, LID)
           .Observe(boMouseExit, @EnterExitBigButton, LID)
+          .Observe(boClick, @HideBigButton, LID)
           .UpdateText('big button')
           .UpdateName('big button'),
         LBigIndex

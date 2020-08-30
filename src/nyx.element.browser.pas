@@ -43,9 +43,16 @@ type
 
     //property methods
     function GetJSElement: TJSElement;
+    function GetVisible: Boolean;
+    procedure SetVisible(const AValue: Boolean);
 
     //properties
     property JSElement : TJSElement read GetJSElement;
+
+    (*
+      uses display: none to determine element visibility
+    *)
+    property Visible : Boolean read GetVisible write SetVisible;
   end;
 
 
@@ -61,6 +68,8 @@ type
     procedure UpdateSize;
   protected
     function GetJSElement: TJSElement;
+    function GetVisible: Boolean;
+    procedure SetVisible(const AValue: Boolean);
   strict protected
 
     (*
@@ -74,6 +83,7 @@ type
     procedure DoUpdateMode; override;
   public
     property JSElement : TJSElement read GetJSElement;
+    property Visible : Boolean read GetVisible write SetVisible;
 
     constructor Create; override;
   end;
@@ -137,6 +147,61 @@ end;
 function TNyxElementBrowserImpl.GetJSElement: TJSElement;
 begin
   Result := FElement;
+end;
+
+function TNyxElementBrowserImpl.GetVisible: Boolean;
+var
+  LCSS: TNyxCSSHelper;
+  LStyle: String;
+begin
+  if not Assigned(FElement) then
+    Exit(False);
+
+  LCSS := TNyxCSSHelper.Create;
+  try
+    LStyle := FElement.getAttribute('style');
+
+    //when no style, then visibility hasn't been set (so we are visible)
+    if not Assigned(LStyle) then
+      Exit(True);
+
+    LCSS.CSS := LStyle;
+
+    //we use display none
+    Result := not (LCSS.Exists('display') and (LowerCase(LCSS['display']) = 'none'));
+  finally
+    LCSS.Free;
+  end;
+end;
+
+procedure TNyxElementBrowserImpl.SetVisible(const AValue: Boolean);
+var
+  LCSS: TNyxCSSHelper;
+  LStyle: String;
+begin
+  if not Assigned(FElement) then
+    Exit;
+
+  LCSS := TNyxCSSHelper.Create;
+  try
+    LStyle := FElement.getAttribute('style');
+
+    if not Assigned(LStyle) then
+      LStyle := '';
+
+    LCSS.CSS := LStyle;
+
+    //we use display none
+    if AValue then
+      LCSS.Delete('display')
+    else
+      LCSS.Upsert('display', 'none');
+
+    //set the css
+    FElement.setAttribute('style', LCSS.CSS);
+  finally
+    LCSS.Free;
+  end;
 end;
 
 procedure TNyxElementBrowserImpl.DoUpdateHeight;

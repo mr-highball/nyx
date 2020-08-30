@@ -91,6 +91,8 @@ type
     function DoGetEnabled: Boolean; override;
     procedure DoSetEnabled(const AValue: Boolean); override;
 
+    function DoGetVisible: Boolean; override;
+    procedure DoSetVisible(const AValue: Boolean); override;
 
     (*
       because we use composition, we need to redirect calls
@@ -111,7 +113,8 @@ type
 
 implementation
 uses
-  webwidget;
+  webwidget,
+  nyx.utils.browser.css;
 
 { TNyxElementButtonBrowserImpl }
 
@@ -172,6 +175,16 @@ end;
 procedure TNyxElementButtonBrowserImpl.DoSetEnabled(const AValue: Boolean);
 begin
   TJSHTMLButtonElement(FBrowser.JSElement).disabled := not AValue;
+end;
+
+function TNyxElementButtonBrowserImpl.DoGetVisible: Boolean;
+begin
+  Result := FBrowser.Visible;
+end;
+
+procedure TNyxElementButtonBrowserImpl.DoSetVisible(const AValue: Boolean);
+begin
+  FBrowser.Visible := AValue;
 end;
 
 procedure TNyxElementButtonBrowserImpl.DoUpdateHeight;
