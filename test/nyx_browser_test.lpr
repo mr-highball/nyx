@@ -114,8 +114,8 @@ end;
 procedure TBrowserTest.doRun;
 begin
   inherited doRun;
-  TestContainerIsBrowser;
-  //BuildUI;
+  //TestContainerIsBrowser;
+  BuildUI;
 end;
 
 procedure TBrowserTest.BuildUI;

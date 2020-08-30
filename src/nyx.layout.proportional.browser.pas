@@ -112,12 +112,9 @@ begin
     LContainer := LElement.Container;
     if Assigned(LContainer)
       and (LContainer is INyxContainerBrowser)
-      //and (Assigned(LContainer.Size) and (LContainer.Size.Mode <> smPercent))
     then
     begin
-      //todo - div with percent doesn't seem to get right rect...
-      //       need a reliable way of doing this, but can't just look at size
-      //       because if parent of parent of parent... you get it, need recursive true calculation, put in utility somehwere
+      //get the bounding rect
       LBrowserContainer := LContainer as INyxContainerBrowser;
       LRect := LBrowserContainer.BrowserElement.JSElement.getBoundingClientRect;
 
@@ -140,8 +137,8 @@ begin
     end;
 
     //using the offsets calculated above we can set new left / top values in css
-    FCSS.Upsert('left', IntToStr(Round((ABounds.Left * 100) - LLeftOff)) + '%');
-    FCSS.Upsert('top', IntToStr(Round((ABounds.Top * 100) - LTopOff)) + '%');
+    FCSS.Upsert('left', IntToStr(Round((ABounds.Left - LLeftOff) * 100)) + '%');
+    FCSS.Upsert('top', IntToStr(Round((ABounds.Top - LTopOff) * 100)) + '%');
 
     //finally set the inline style with the new computed values
     LElement.JSElement.setAttribute('style', FCSS.CSS);

@@ -98,10 +98,6 @@ begin
 
     LCSS.CSS := LStyle;
 
-    //force setting a display if we don't have one to try and avoid size checks failing
-    if not LCSS.Exists('display') then
-      LCSS['display'] := 'initial';
-
     FElement.setAttribute('style', LCSS.CSS);
   finally
     LCSS.Free;
