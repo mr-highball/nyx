@@ -34,7 +34,11 @@ uses
   nyx.types,
   nyx.element.button,
   nyx.layout,
-  nyx.layout.relational.browser, nyx.size, nyx.element, nyx.container;
+  nyx.layout.relational.browser,
+  nyx.size,
+  nyx.element,
+  nyx.container,
+  nyx.container.browser;
 
 type
 
@@ -63,6 +67,7 @@ type
       main method which constructs the user interface
     *)
     procedure BuildUI;
+    procedure TestContainerIsBrowser;
   public
     destructor Destroy; override;
   end;
@@ -109,7 +114,8 @@ end;
 procedure TBrowserTest.doRun;
 begin
   inherited doRun;
-  BuildUI;
+  TestContainerIsBrowser;
+  //BuildUI;
 end;
 
 procedure TBrowserTest.BuildUI;
@@ -193,7 +199,8 @@ begin
       )
       .Add(
         NewNyxButton
-          .UpdateText('big button'),
+          .UpdateText('big button')
+          .UpdateName('big button'),
         LBigIndex
       )
     .UI //scope to the UI property
@@ -210,6 +217,16 @@ begin
       .TakeAction(@PositionButton, [LHelloIndex, I, J, 100, 100])
       .TakeAction(@PositionButton, [LDisabledIndex, I, J, 100, 175])
       .TakeAction(@PositionButton, [LRunIndex, I, J, 100, 250]);
+
+  //make the container 100% of screen
+  UI
+    .ContainerByIndex(I)
+      .Size
+        .UpdateHeight(1.0)
+        .UpdateWidth(1.0)
+        .UpdateMode(smPercent)
+      .Element
+        .UpdateName('container');
 
   //we could've done this via take action, but showing another way to
   //get and cast the layout added, and add the centered button with a proportional layout
@@ -248,20 +265,59 @@ begin
 
   LBounds := NewNyxProportionalBounds;
   LBounds
-    .UpdateTop(0)
-    .UpdateLeft(0.9);
+    .UpdateLeft(1)
+    .UpdateHorzAlignment(haRight);
 
   LLayout.Add(
     LElement,
     LBounds
   );
 
-  LElement.Size.UpdateHeight(100);
-  LElement.Size.UpdateWidth(10);
+  LElement.Size.UpdateHeight(1);
+  LElement.Size.UpdateWidth(0.10);
   LElement.Size.UpdateMode(smPercent);
 
   //renders all containers and elements to the screen
   UI.Render();
+end;
+
+procedure TBrowserTest.TestContainerIsBrowser;
+var
+  LContainer: INyxContainer;
+  LUI: INyxUI;
+  I, J: Integer;
+  LLayout: INyxLayoutProportional;
+begin
+  LUI := NewNyxUI;
+
+  //100% sized container
+  LContainer := NewNyxContainer;
+  LContainer
+    .Size
+      .UpdateHeight(1)
+      .UpdateWidth(1)
+      .UpdateMode(smPercent)
+    .Element
+      .UpdateName('container');
+
+  LLayout := NewNyxLayoutProportional;
+
+  //add the container/layout/button to the ui
+  LUI
+    .AddContainer(LContainer, I)
+    .AddLayout(LLayout, J)
+    .ContainerByIndex(I)
+      .Add(NewNyxButton);
+
+  //right align the button to the container
+  LLayout.Add(
+    LUI.ContainerByIndex(I).Elements[0],
+    INyxProportionalBounds(NewNyxProportionalBounds
+      .UpdateLeft(1)
+      .UpdateHorzAlignment(haRight))
+  );
+
+  LUI.Render();
 end;
 
 destructor TBrowserTest.Destroy;

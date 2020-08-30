@@ -28,7 +28,6 @@ unit nyx.layout.proportional.browser;
 interface
 
 uses
-  Classes,
   SysUtils,
   nyx.types,
   nyx.layout,
@@ -68,6 +67,8 @@ var
   LRect: TJSDOMRect;
   LLeftOff, LTopOff: Double;
   LStyle: String;
+  LContainer: INyxContainer;
+  LBrowserContainer: INyxContainerBrowser;
 begin
   try
     Result := False;
@@ -108,13 +109,17 @@ begin
       LTopOff := LRect.height;
 
     //we need to find the parent container's rect in order to calculate a percentage
-    //todo - had to use input element, saw strange behavior where container was null
-    //       as well as ID was different... not sure if this is a pas2js bug, try this out later
-    if Assigned(AElement.Container)
-      and (AElement.Container is INyxContainerBrowser)
+    LContainer := LElement.Container;
+    if Assigned(LContainer)
+      and (LContainer is INyxContainerBrowser)
+      //and (Assigned(LContainer.Size) and (LContainer.Size.Mode <> smPercent))
     then
     begin
-      LRect := INyxContainerBrowser(AElement.Container).BrowserElement.JSElement.getBoundingClientRect;
+      //todo - div with percent doesn't seem to get right rect...
+      //       need a reliable way of doing this, but can't just look at size
+      //       because if parent of parent of parent... you get it, need recursive true calculation, put in utility somehwere
+      LBrowserContainer := LContainer as INyxContainerBrowser;
+      LRect := LBrowserContainer.BrowserElement.JSElement.getBoundingClientRect;
 
       //find percentage of parent for width
       if LRect.width > 0 then

@@ -27,7 +27,6 @@ unit nyx.elements.browser;
 interface
 
 uses
-  Classes,
   SysUtils,
   nyx.types;
 

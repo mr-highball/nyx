@@ -5,8 +5,6 @@ unit nyx.size;
 interface
 
 uses
-  Classes,
-  SysUtils,
   nyx.types,
   nyx.utils.observe;
 

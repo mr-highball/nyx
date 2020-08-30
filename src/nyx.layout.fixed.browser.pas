@@ -27,7 +27,6 @@ unit nyx.layout.fixed.browser;
 interface
 
 uses
-  Classes,
   SysUtils,
   nyx.types,
   nyx.layout,

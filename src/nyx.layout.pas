@@ -225,6 +225,8 @@ type
   protected
   strict protected
     function DoUpdatePlacement(out Error : String) : Boolean; virtual; abstract;
+
+    procedure DoUpdateElementParent(const AElement: INyxElement); override;
   public
     function UpdatePlacement(out Error : String) : Boolean; overload;
     function UpdatePlacement : Boolean; overload;
@@ -278,10 +280,10 @@ type
     ['{B0A4EDF1-6580-4CD5-AABC-F7CB808904DD}']
 
     //property methods
-    function GetLeft: Single;
-    function GetTop: Single;
-    procedure SetLeft(const AValue: Single);
-    procedure SetTop(const AValue: Single);
+    function GetLeft: Double;
+    function GetTop: Double;
+    procedure SetLeft(const AValue: Double);
+    procedure SetTop(const AValue: Double);
 
     //properties
 
@@ -289,18 +291,18 @@ type
       controls horizontal position of the element, where 0 (0%) would be the
       "farthest left" inside of the parent and 1.0 (100%) would be the "farthest right"
     *)
-    property Left : Single read GetLeft write SetLeft;
+    property Left : Double read GetLeft write SetLeft;
 
     (*
       controls vertical position of the element, where 0 (0%) would be the
       "farthest top" inside of the parent and 1.0 (100%) would
       be the "farthest bottom"
     *)
-    property Top : Single read GetTop write SetTop;
+    property Top : Double read GetTop write SetTop;
 
     //methods
-    function UpdateLeft(const AValue : Single) : INyxProportionalBounds;
-    function UpdateTop(const AValue : Single) : INyxProportionalBounds;
+    function UpdateLeft(const AValue : Double) : INyxProportionalBounds;
+    function UpdateTop(const AValue : Double) : INyxProportionalBounds;
   end;
 
   { TNyxProportionalBoundsImpl }
@@ -310,19 +312,19 @@ type
   TNyxProportionalBoundsImpl = class(TNyxBoundsImpl, INyxProportionalBounds)
   strict private
     FLeft,
-    FTop: Single;
+    FTop: Double;
   strict protected
   protected
-    function GetLeft: Single;
-    function GetTop: Single;
-    procedure SetLeft(const AValue: Single);
-    procedure SetTop(const AValue: Single);
+    function GetLeft: Double;
+    function GetTop: Double;
+    procedure SetLeft(const AValue: Double);
+    procedure SetTop(const AValue: Double);
   public
-    property Left : SIngle read GetLeft write SetLeft;
-    property Top : Single read GetTop write SetTop;
+    property Left : Double read GetLeft write SetLeft;
+    property Top : Double read GetTop write SetTop;
 
-    function UpdateLeft(const AValue : Single) : INyxProportionalBounds;
-    function UpdateTop(const AValue : Single) : INyxProportionalBounds;
+    function UpdateLeft(const AValue : Double) : INyxProportionalBounds;
+    function UpdateTop(const AValue : Double) : INyxProportionalBounds;
 
     constructor Create; override;
   end;
@@ -404,10 +406,10 @@ type
     ['{45315432-0E9F-47C6-A03F-6FBCE619A994}']
 
     //property methods
-    function GetLeft: Single;
-    function GetTop: Single;
-    procedure SetLeft(const AValue: Single);
-    procedure SetTop(const AValue: Single);
+    function GetLeft: Double;
+    function GetTop: Double;
+    procedure SetLeft(const AValue: Double);
+    procedure SetTop(const AValue: Double);
 
     //properties
 
@@ -415,18 +417,18 @@ type
       controls horizontal position of the element, where 0 (0%) would be the
       "farthest left" inside of the parent and 1.0 (100%) would be the "farthest right"
     *)
-    property Left : Single read GetLeft write SetLeft;
+    property Left : Double read GetLeft write SetLeft;
 
     (*
       controls vertical position of the element, where 0 (0%) would be the
       "farthest top" inside of the parent and 1.0 (100%) would
       be the "farthest bottom"
     *)
-    property Top : Single read GetTop write SetTop;
+    property Top : Double read GetTop write SetTop;
 
     //methods
-    function UpdateLeft(const AValue : Single) : INyxRelationalBounds;
-    function UpdateTop(const AValue : Single) : INyxRelationalBounds;
+    function UpdateLeft(const AValue : Double) : INyxRelationalBounds;
+    function UpdateTop(const AValue : Double) : INyxRelationalBounds;
   end;
 
   { TNyxRelationalBoundsImpl }
@@ -436,19 +438,19 @@ type
   TNyxRelationalBoundsImpl = class(TNyxBoundsImpl, INyxRelationalBounds)
   strict private
     FLeft,
-    FTop: Single;
+    FTop: Double;
   strict protected
   protected
-    function GetLeft: Single;
-    function GetTop: Single;
-    procedure SetLeft(const AValue: Single);
-    procedure SetTop(const AValue: Single);
+    function GetLeft: Double;
+    function GetTop: Double;
+    procedure SetLeft(const AValue: Double);
+    procedure SetTop(const AValue: Double);
   public
-    property Left : SIngle read GetLeft write SetLeft;
-    property Top : Single read GetTop write SetTop;
+    property Left : Double read GetLeft write SetLeft;
+    property Top : Double read GetTop write SetTop;
 
-    function UpdateLeft(const AValue : Single) : INyxRelationalBounds;
-    function UpdateTop(const AValue : Single) : INyxRelationalBounds;
+    function UpdateLeft(const AValue : Double) : INyxRelationalBounds;
+    function UpdateTop(const AValue : Double) : INyxRelationalBounds;
 
     constructor Create; override;
   end;
@@ -611,6 +613,12 @@ end;
 
 { TNyxLayoutBaseImpl }
 
+procedure TNyxLayoutBaseImpl.DoUpdateElementParent(const AElement: INyxElement);
+begin
+  //since we hijacked the container impl we need to not parent here
+  //so this is an empty method on purpose
+end;
+
 function TNyxLayoutBaseImpl.UpdatePlacement(out Error: String): Boolean;
 begin
   Result := DoUpdatePlacement(Error);
@@ -729,11 +737,8 @@ end;
 
 function TNyxLayoutRelationalImpl.Add(const AElement, AAnchor: INyxElement;
   const ABounds: INyxRelationalBounds): INyxLayoutRelational;
-var
-  LBounds: INyxRelationalBounds;
 begin
   Result := Self as INyxLayoutRelational;
-  LBounds := ABounds;
 
   //add the element normally
   Add(AElement);
@@ -787,33 +792,33 @@ end;
 
 { TNyxRelationalBoundsImpl }
 
-function TNyxRelationalBoundsImpl.GetLeft: Single;
+function TNyxRelationalBoundsImpl.GetLeft: Double;
 begin
   Result := FLeft;
 end;
 
-function TNyxRelationalBoundsImpl.GetTop: Single;
+function TNyxRelationalBoundsImpl.GetTop: Double;
 begin
   Result := FTop;
 end;
 
-procedure TNyxRelationalBoundsImpl.SetLeft(const AValue: Single);
+procedure TNyxRelationalBoundsImpl.SetLeft(const AValue: Double);
 begin
   FLeft := AValue;
 end;
 
-procedure TNyxRelationalBoundsImpl.SetTop(const AValue: Single);
+procedure TNyxRelationalBoundsImpl.SetTop(const AValue: Double);
 begin
   FTop := AValue;
 end;
 
-function TNyxRelationalBoundsImpl.UpdateLeft(const AValue: Single): INyxRelationalBounds;
+function TNyxRelationalBoundsImpl.UpdateLeft(const AValue: Double): INyxRelationalBounds;
 begin
   Result := Self as INyxRelationalBounds;
   Left := AValue;
 end;
 
-function TNyxRelationalBoundsImpl.UpdateTop(const AValue: Single): INyxRelationalBounds;
+function TNyxRelationalBoundsImpl.UpdateTop(const AValue: Double): INyxRelationalBounds;
 begin
   Result := Self as INyxRelationalBounds;
   Top := AValue;
@@ -935,33 +940,33 @@ end;
 
 { TNyxProportionalBoundsImpl }
 
-function TNyxProportionalBoundsImpl.GetLeft: Single;
+function TNyxProportionalBoundsImpl.GetLeft: Double;
 begin
   Result := FLeft;
 end;
 
-function TNyxProportionalBoundsImpl.GetTop: Single;
+function TNyxProportionalBoundsImpl.GetTop: Double;
 begin
   Result := FTop;
 end;
 
-procedure TNyxProportionalBoundsImpl.SetLeft(const AValue: Single);
+procedure TNyxProportionalBoundsImpl.SetLeft(const AValue: Double);
 begin
   FLeft := AValue;
 end;
 
-procedure TNyxProportionalBoundsImpl.SetTop(const AValue: Single);
+procedure TNyxProportionalBoundsImpl.SetTop(const AValue: Double);
 begin
   FTop := AValue;
 end;
 
-function TNyxProportionalBoundsImpl.UpdateLeft(const AValue: Single): INyxProportionalBounds;
+function TNyxProportionalBoundsImpl.UpdateLeft(const AValue: Double): INyxProportionalBounds;
 begin
   Result := Self as INyxProportionalBounds;
   Left := AValue;
 end;
 
-function TNyxProportionalBoundsImpl.UpdateTop(const AValue: Single): INyxProportionalBounds;
+function TNyxProportionalBoundsImpl.UpdateTop(const AValue: Double): INyxProportionalBounds;
 begin
   Result := Self as INyxProportionalBounds;
   Top := AValue;

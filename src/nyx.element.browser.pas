@@ -27,7 +27,6 @@ unit nyx.element.browser;
 interface
 
 uses
-  Classes,
   SysUtils,
   web,
   nyx.types,
@@ -128,8 +127,8 @@ begin
     end
     else
     begin
-      LCSS['height'] := IntToStr(Round(Size.Height)) + '%';
-      LCSS['width'] := IntToStr(Round(Size.Width)) + '%';
+      LCSS['height'] := IntToStr(Round(Size.Height * 100)) + '%';
+      LCSS['width'] := IntToStr(Round(Size.Width * 100)) + '%';
     end;
 
     //update the new style

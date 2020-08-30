@@ -27,8 +27,6 @@ unit nyx.container.browser;
 interface
 
 uses
-  Classes,
-  SysUtils,
   web,
   nyx.types,
   nyx.container,
@@ -84,6 +82,13 @@ type
       JS element as the container
     *)
     function GetImpl : TContainerJSElement; virtual;
+
+    (*
+      because we use composition, we need to redirect calls
+    *)
+    procedure DoUpdateHeight; override;
+    procedure DoUpdateWidth; override;
+    procedure DoUpdateMode; override;
   public
     (*
       delegate component which handles the JS element implementation
@@ -133,6 +138,21 @@ end;
 function TNyxContainerBrowserImpl.GetImpl: TContainerJSElement;
 begin
   Result := TContainerJSElement(FBrowserElement);
+end;
+
+procedure TNyxContainerBrowserImpl.DoUpdateHeight;
+begin
+  FBrowserElement.Size.UpdateHeight(Size.Height);
+end;
+
+procedure TNyxContainerBrowserImpl.DoUpdateWidth;
+begin
+  FBrowserElement.Size.UpdateWidth(Size.Width);
+end;
+
+procedure TNyxContainerBrowserImpl.DoUpdateMode;
+begin
+  FBrowserElement.Size.UpdateMode(Size.Mode);
 end;
 
 constructor TNyxContainerBrowserImpl.Create;

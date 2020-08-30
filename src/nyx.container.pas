@@ -5,8 +5,6 @@ unit nyx.container;
 interface
 
 uses
-  Classes,
-  SysUtils,
   nyx.types,
   nyx.element;
 
@@ -24,8 +22,17 @@ type
     function GetElements: INyxElements;
     function GetUI: INyxUI;
     procedure SetUI(const AValue: INyxUI);
-    function GetContainer: INyxContainer; reintroduce;
   strict protected
+    (*
+      override container get since we are a container
+    *)
+    function DoGetContainer: INyxContainer; override;
+
+    (*
+      called when an element has been added to the container
+      and is for "parenting" purposes
+    *)
+    procedure DoUpdateElementParent(const AElement : INyxElement); virtual;
   public
     property Elements : INyxElements read GetElements;
     property UI : INyxUI read GetUI write SetUI;
@@ -62,15 +69,21 @@ begin
   FUI := AValue;
 end;
 
-function TNyxContainerBaseImpl.GetContainer: INyxContainer;
+function TNyxContainerBaseImpl.DoGetContainer: INyxContainer;
 begin
   Result := Self as INyxContainer;
+end;
+
+procedure TNyxContainerBaseImpl.DoUpdateElementParent(
+  const AElement: INyxElement);
+begin
+  AElement.Container := Self as INyxContainer;
 end;
 
 function TNyxContainerBaseImpl.Add(const AItem: INyxElement; out Index: Integer): INyxContainer;
 begin
   Result := Self as INyxContainer;
-  AItem.Container := Result;
+  DoUpdateElementParent(AItem);
   Index := FElements.Add(AItem);
 end;
 

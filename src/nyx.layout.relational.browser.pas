@@ -27,7 +27,6 @@ unit nyx.layout.relational.browser;
 interface
 
 uses
-  Classes,
   SysUtils,
   nyx.types,
   nyx.layout,

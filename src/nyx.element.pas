@@ -43,11 +43,18 @@ type
     procedure SetContainer(const AValue: INyxContainer);
   strict protected
 
+    procedure DoSetID(const AValue: String); virtual;
+    function DoGetID: String; virtual;
+    function DoGetName: String; virtual;
+    procedure DoSetName(const AValue: String); virtual;
+    function DoGetContainer: INyxContainer; virtual;
+    procedure DoSetContainer(const AValue: INyxContainer); virtual;
+
     (*
       children can override this method to generate a unique identifier
       if the default generation will not suffice
     *)
-    function DoGetID : String; virtual;
+    function DoGenerateID : String; virtual;
 
     (*
       when a valid size is assigned to this element, this method
@@ -159,36 +166,66 @@ end;
 
 procedure TNyxElementBaseImpl.SetID(const AValue: String);
 begin
-  FID := AValue;
+  DoSetID(AValue);
 end;
 
 function TNyxElementBaseImpl.GetID: String;
 begin
-  Result := FID;
+  Result := DoGetID;
 end;
 
 function TNyxElementBaseImpl.GetName: String;
 begin
-  Result := FName;
+  Result := DoGetName;
 end;
 
 procedure TNyxElementBaseImpl.SetName(const AValue: String);
 begin
-  FName := AValue;
+  DoSetName(AValue);
 end;
 
 function TNyxElementBaseImpl.GetContainer: INyxContainer;
 begin
-  Result := FContainer;
+  Result := DoGetContainer;
 end;
 
 procedure TNyxElementBaseImpl.SetContainer(const AValue: INyxContainer);
+begin
+  DoSetContainer(AValue);
+end;
+
+procedure TNyxElementBaseImpl.DoSetID(const AValue: String);
+begin
+  FID := AValue;
+end;
+
+function TNyxElementBaseImpl.DoGetID: String;
+begin
+  Result := FID;
+end;
+
+function TNyxElementBaseImpl.DoGetName: String;
+begin
+  Result := FName;
+end;
+
+procedure TNyxElementBaseImpl.DoSetName(const AValue: String);
+begin
+  FName := AValue;
+end;
+
+function TNyxElementBaseImpl.DoGetContainer: INyxContainer;
+begin
+  Result := FContainer;
+end;
+
+procedure TNyxElementBaseImpl.DoSetContainer(const AValue: INyxContainer);
 begin
   FContainer := nil;
   FContainer := AValue;
 end;
 
-function TNyxElementBaseImpl.DoGetID: String;
+function TNyxElementBaseImpl.DoGenerateID: String;
 var
   LGUID: TGUID;
 begin
@@ -363,7 +400,7 @@ begin
   FContainer := nil;
   FSizeIDs := TStringList.Create;
   Size := NewNyxSize; //use property here to properly parent/setup
-  FID := DoGetID;
+  FID := DoGenerateID;
 end;
 
 destructor TNyxElementBaseImpl.Destroy;

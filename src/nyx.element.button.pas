@@ -27,8 +27,6 @@ unit nyx.element.button;
 interface
 
 uses
-  Classes,
-  SysUtils,
   nyx.types,
   nyx.utils.observe,
   nyx.element;

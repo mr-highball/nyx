@@ -5,8 +5,6 @@ unit nyx.settings.browser;
 interface
 
 uses
-  Classes,
-  SysUtils,
   web,
   nyx.types;
 

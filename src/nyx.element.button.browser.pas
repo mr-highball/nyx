@@ -27,8 +27,6 @@ unit nyx.element.button.browser;
 interface
 
 uses
-  Classes,
-  SysUtils,
   web,
   nyx.types,
   nyx.element.browser,
@@ -75,6 +73,9 @@ type
     procedure DoUpdateHeight; override;
     procedure DoUpdateWidth; override;
     procedure DoUpdateMode; override;
+
+    function DoGetContainer: INyxContainer; override;
+    procedure DoSetContainer(const AValue: INyxContainer); override;
 
   public
     property BrowserElementImpl : TNyxElementBrowserImpl read GetBrowser implements INyxElementBrowser;
@@ -130,6 +131,17 @@ end;
 procedure TNyxElementButtonBrowserImpl.DoUpdateMode;
 begin
   FBrowser.Size.UpdateMode(Size.Mode);
+end;
+
+function TNyxElementButtonBrowserImpl.DoGetContainer: INyxContainer;
+begin
+  Result := FBrowser.Container;
+end;
+
+procedure TNyxElementButtonBrowserImpl.DoSetContainer(
+  const AValue: INyxContainer);
+begin
+  FBrowser.Container := AValue;
 end;
 
 function TNyxElementButtonBrowserImpl.TBrowserElementComponent.DoCreateElement: TJSElement;
