@@ -1,3 +1,25 @@
+{ nyx
+
+  Copyright (c) 2020 mr-highball
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+}
 unit nyx.element;
 
 {$mode delphi}
@@ -7,7 +29,8 @@ interface
 uses
   Classes,
   SysUtils,
-  nyx.types;
+  nyx.types,
+  nyx.utils.observe;
 
 type
 
@@ -22,6 +45,7 @@ type
     FContainer : INyxContainer;
     FSizeIDs : TStringList;
     FSize : INyxSize;
+    FObserve : TNyxObservationHelper;
     function GetSize: INyxSize;
     procedure SetSize(const AValue: INyxSize);
     procedure RemoveSizeObservers;
@@ -34,6 +58,9 @@ type
       const ASize : INyxSize; const AProperty : TSizeProperty);
     procedure NotifyElement(const AType : TPropertyUpdateType;
       const ASize : INyxSize; const AProperty : TSizeProperty);
+
+    procedure DoPropertyNotify(const AType : TPropertyUpdateType;
+      const AProperty : TElementProperty);
   protected
     procedure SetID(const AValue: String);
     function GetID: String;
@@ -82,7 +109,13 @@ type
     property Container : INyxContainer read GetContainer write SetContainer;
     property Size : INyxSize read GetSize write SetSize;
 
+    function Observe(const AEvent : TSizeProperty;
+      const AObserver : TSizePropertyObserveMethod; out ID : String) : INyxElement; overload;
+
     function UpdateName(const AName : String) : INyxElement;
+    function UpdateSize(const ASize : INyxSize) : INyxElement;
+    function UpdateContainer(const AContainer : INyxContainer) : INyxElement;
+    function UpdateID(const AID : String) : INyxElement;
 
     function Condition(const ACondition : Boolean; const ATrue, AFalse : TNyxElementCallback) : INyxElement; overload;
     function Condition(const ACondition : Boolean; const ATrue, AFalse : TNyxElementNestedCallback) : INyxElement; overload;
@@ -166,7 +199,13 @@ end;
 
 procedure TNyxElementBaseImpl.SetID(const AValue: String);
 begin
+  //before notifty
+  DoPropertyNotify(puBeforeUpdate, epID);
+
   DoSetID(AValue);
+
+  //after notifty
+  DoPropertyNotify(puAfterUpdate, epID);
 end;
 
 function TNyxElementBaseImpl.GetID: String;
@@ -181,7 +220,13 @@ end;
 
 procedure TNyxElementBaseImpl.SetName(const AValue: String);
 begin
+  //before notifty
+  DoPropertyNotify(puBeforeUpdate, epName);
+
   DoSetName(AValue);
+
+  //after notifty
+  DoPropertyNotify(puAfterUpdate, epName);
 end;
 
 function TNyxElementBaseImpl.GetContainer: INyxContainer;
@@ -191,7 +236,13 @@ end;
 
 procedure TNyxElementBaseImpl.SetContainer(const AValue: INyxContainer);
 begin
+  //before notifty
+  DoPropertyNotify(puBeforeUpdate, epContainer);
+
   DoSetContainer(AValue);
+
+  //after notifty
+  DoPropertyNotify(puAfterUpdate, epContainer);
 end;
 
 procedure TNyxElementBaseImpl.DoSetID(const AValue: String);
@@ -270,10 +321,60 @@ begin
   //nothing in base
 end;
 
+procedure TNyxElementBaseImpl.DoPropertyNotify(
+  const AType: TPropertyUpdateType; const AProperty: TElementProperty);
+var
+  LMethod: TElementPropertyObserveMethod;
+  I: Integer;
+  LElement: INyxElement;
+  LObservers: TObserverArray;
+begin
+  LElement := Self as INyxElement;
+  LObservers := FObserve.ObserversByEvent(Ord(AProperty));
+
+  for I := 0 to High(LObservers) do
+    try
+      LMethod := TElementPropertyObserveMethod(LObservers[I]);
+
+      //call the method
+      LMethod(AType, LElement, AProperty);
+    finally
+    end;
+end;
+
+function TNyxElementBaseImpl.Observe(const AEvent: TSizeProperty;
+  const AObserver: TSizePropertyObserveMethod; out ID: String): INyxElement;
+begin
+  Result := Self as INyxElement;
+
+  if not Assigned(AObserver) then
+    Exit;
+
+  ID := FObserve.Observe(Ord(AEvent), Pointer(AObserver));
+end;
+
 function TNyxElementBaseImpl.UpdateName(const AName: String): INyxElement;
 begin
-  SetName(AName);
   Result := Self as INyxElement;
+  SetName(AName);
+end;
+
+function TNyxElementBaseImpl.UpdateSize(const ASize: INyxSize): INyxElement;
+begin
+  Result := Self as INyxElement;
+  SetSize(ASize);
+end;
+
+function TNyxElementBaseImpl.UpdateContainer(const AContainer: INyxContainer): INyxElement;
+begin
+  Result := Self as INyxElement;
+  SetContainer(AContainer);
+end;
+
+function TNyxElementBaseImpl.UpdateID(const AID: String): INyxElement;
+begin
+  Result := Self as INyxElement;
+  SetID(AID);
 end;
 
 function TNyxElementBaseImpl.Condition(const ACondition: Boolean; const ATrue,
@@ -397,6 +498,7 @@ end;
 
 constructor TNyxElementBaseImpl.Create;
 begin
+  FObserve := TNyxObservationHelper.Create;
   FContainer := nil;
   FSizeIDs := TStringList.Create;
   Size := NewNyxSize; //use property here to properly parent/setup
@@ -405,6 +507,7 @@ end;
 
 destructor TNyxElementBaseImpl.Destroy;
 begin
+  FObserve.Free;
   FContainer := nil;
   FSizeIDs.Free;
   RemoveSizeObservers;

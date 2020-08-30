@@ -78,6 +78,8 @@ type
     scElement
   );
 
+  TSizeProperties = set of TSizeProperty;
+
   INyxSize = interface;
 
   (*
@@ -131,7 +133,7 @@ type
       observe property changes
     *)
     function Observe(const AEvent : TSizeProperty;
-      const AObserver : TSizePropertyObserveMethod; out ID : String) : INyxSize;
+      const AObserver : TSizePropertyObserveMethod; out ID : String) : INyxSize; overload;
 
     (*
       removes an observer
@@ -153,6 +155,24 @@ type
     *)
     function UpdateMode(const AMode : TSizeMode) : INyxSize;
   end;
+
+  (*
+    properties of a INyxElement
+  *)
+  TElementProperty = (
+    epID,
+    epName,
+    epContainer,
+    epSize
+  );
+
+  TElementProperties = set of TElementProperty;
+
+  (*
+    observer method for element properties
+  *)
+  TElementPropertyObserveMethod = procedure(const AType : TPropertyUpdateType;
+    const AElement : INyxElement; const AProperty : TElementProperty) of object;
 
   { INyxElement }
   (*
@@ -195,10 +215,28 @@ type
 
     //methods
 
+    function Observe(const AEvent : TSizeProperty;
+      const AObserver : TSizePropertyObserveMethod; out ID : String) : INyxElement; overload;
+
     (*
       updates the name and returns this element
     *)
     function UpdateName(const AName : String) : INyxElement;
+
+    (*
+      updates the size and returns this element
+    *)
+    function UpdateSize(const ASize : INyxSize) : INyxElement;
+
+    (*
+      updates the container and returns this element
+    *)
+    function UpdateContainer(const AContainer : INyxContainer) : INyxElement;
+
+    (*
+      updates the ID and returns this element
+    *)
+    function UpdateID(const AID : String) : INyxElement;
 
     (*
       allows for boolean conditions
