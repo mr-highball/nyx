@@ -38,7 +38,8 @@ uses
   nyx.size,
   nyx.element,
   nyx.container,
-  nyx.container.browser, nyx.element.input, nyx.element.input.browser;
+  nyx.container.browser, nyx.element.input, nyx.element.input.browser,
+nyx.element.checkbox, nyx.element.checkbox.browser;
 
 type
 
@@ -66,6 +67,9 @@ type
     procedure HideBigButton(const AElement : INyxElement;
       const AEvent : TElementEvent);
 
+    procedure CheckChanged(const AType : TPropertyUpdateType;
+      const ACheckbox : INyxElementCheckbox; const AProperty : TCheckboxProperty);
+
   strict protected
     procedure doRun; override; //calls BuildUI
 
@@ -76,6 +80,7 @@ type
     procedure TestContainerIsBrowser;
     procedure TestAddClickHandlerToButton;
     procedure TestSimpleInput;
+    procedure TestSimpleCheckbox;
   public
     destructor Destroy; override;
   end;
@@ -137,13 +142,26 @@ begin
   (AElement as INyxElementButton).Visible := False;
 end;
 
+procedure TBrowserTest.CheckChanged(const AType: TPropertyUpdateType;
+  const ACheckbox: INyxElementCheckbox; const AProperty: TCheckboxProperty);
+var
+  LVal: Boolean;
+begin
+  if AType = puAfterUpdate then
+  begin
+    LVal := ACheckbox.Checked;
+    window.alert('checkbox has changed to ' + BoolToStr(LVal, True));
+  end;
+end;
+
 procedure TBrowserTest.doRun;
 begin
   inherited doRun;
-  //TestContainerIsBrowser;
   //BuildUI;
+  //TestContainerIsBrowser;
   //TestAddClickHandlerToButton;
-  TestSimpleInput;
+  //TestSimpleInput;
+  TestSimpleCheckbox;
 end;
 
 procedure TBrowserTest.BuildUI;
@@ -384,6 +402,25 @@ begin
         NewNyxInput
           .UpdateText('Hello World')
           .UpdateTextPrompt('type something...')
+      )
+    .UI
+      .Render();
+end;
+
+procedure TBrowserTest.TestSimpleCheckbox;
+var
+  LUI: INyxUI;
+  I: Integer;
+  LID: String;
+begin
+  LUI := NewNyxUI;
+  LUI
+    .AddContainer(NewNyxContainer, I)
+    .ContainerByIndex(I)
+      .Add(
+        NewNyxCheckbox
+          .UpdateText('Hello World')
+          .Observe(cpChecked, @CheckChanged, LID)
       )
     .UI
       .Render();

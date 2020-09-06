@@ -42,8 +42,6 @@ type
   strict private
     FBrowser : TNyxElementBrowserImpl;
   protected
-    function DoGetTextPrompt: String; override;
-    procedure DoSetTextPrompt(const AValue: String); override;
     function GetBrowser: TNyxElementBrowserImpl;
 
     type
@@ -65,6 +63,9 @@ type
   strict protected
     procedure DoSetText(const AValue: String); override;
     function DoGetText: String; override;
+
+    function DoGetTextPrompt: String; override;
+    procedure DoSetTextPrompt(const AValue: String); override;
 
     function DoGetEnabled: Boolean; override;
     procedure DoSetEnabled(const AValue: Boolean); override;

@@ -49,7 +49,7 @@ type
     observer method for element properties
   *)
   TButtonPropertyObserveMethod = procedure(const AType : TPropertyUpdateType;
-    const AElement : INyxElement; const AProperty : TButtonProperty) of object;
+    const AButton : INyxElementButton; const AProperty : TButtonProperty) of object;
 
   { INyxElementButton }
   (*
@@ -99,6 +99,9 @@ type
       fluent setter for the button's visible property
     *)
     function UpdateVisible(const AVisible : Boolean) : INyxElementButton;
+
+    function Observe(const AProperty : TButtonProperty;
+      const AObserver : TButtonPropertyObserveMethod; out ID : String) : INyxElementButton; overload;
   end;
 
   { TNyxElementButtonBaseImpl }
@@ -137,6 +140,9 @@ type
     function UpdateText(const AText : String) : INyxElementButton;
     function UpdateEnabled(const AEnabled : Boolean) : INyxElementButton;
     function UpdateVisible(const AVisible : Boolean) : INyxElementButton;
+
+    function Observe(const AProperty : TButtonProperty;
+      const AObserver : TButtonPropertyObserveMethod; out ID : String) : INyxElementButton; overload;
 
     constructor Create; override;
     destructor Destroy; override;
@@ -247,6 +253,18 @@ function TNyxElementButtonBaseImpl.UpdateVisible(const AVisible: Boolean): INyxE
 begin
   Result := DoGetSelf as INyxElementButton;
   SetVisible(AVisible);
+end;
+
+function TNyxElementButtonBaseImpl.Observe(const AProperty: TButtonProperty;
+  const AObserver: TButtonPropertyObserveMethod; out ID: String
+  ): INyxElementButton;
+begin
+  Result := DoGetSelf as INyxElementButton;
+
+  if not Assigned(AObserver) then
+    Exit;
+
+  ID := FPropertyObserve.Observe(Ord(AProperty), Pointer(AObserver));
 end;
 
 constructor TNyxElementButtonBaseImpl.Create;

@@ -132,6 +132,8 @@ type
     function GetEnabled: Boolean;
     function GetVisible: Boolean;
     procedure SetVisible(const AValue: Boolean);
+    function GetTextPrompt: String;
+    procedure SetTextPrompt(const AValue: String);
 
 
     procedure DoPropertyNotify(const AType : TPropertyUpdateType;
@@ -151,8 +153,6 @@ type
 
     procedure DoRemoveObserver(const AID: String); override;
   public
-    function GetTextPrompt: String;
-    procedure SetTextPrompt(const AValue: String);
     property Text : String read GetText write SetText;
     property Enabled : Boolean read GetEnabled write SetEnabled;
     property Visible : Boolean read GetVisible write SetVisible;
@@ -265,7 +265,9 @@ end;
 
 procedure TNyxElementInputBaseImpl.SetTextPrompt(const AValue: String);
 begin
+  DoPropertyNotify(puBeforeUpdate, ipTextPrompt);
   DoSetTextPrompt(AValue);
+  DoPropertyNotify(puAfterUpdate, ipTextPrompt);
 end;
 
 function TNyxElementInputBaseImpl.UpdateText(const AText: String): INyxElementInput;
