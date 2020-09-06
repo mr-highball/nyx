@@ -213,7 +213,7 @@ var
   LCSS : TNyxCSSHelper;
   LSelf: INyxElementBrowser;
 begin
-  LSelf := Self as INyxElementBrowser;
+  LSelf := DoGetSelf as INyxElementBrowser;
   LCSS := TNyxCSSHelper.Create;
   try
     //copy the current style
@@ -319,6 +319,7 @@ begin
   FElement :=  DoCreateElement;
   FElement.id := ID;
   InitializeCSS;
+  InitializeEvents;
 end;
 
 end.

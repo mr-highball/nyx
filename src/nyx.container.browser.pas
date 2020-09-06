@@ -132,7 +132,7 @@ end;
 
 function TNyxContainerBrowserImpl.GetBrowserElement: INyxElementBrowser;
 begin
-  Result := Self as INyxElementBrowser;
+  Result := DoGetSelf as INyxElementBrowser;
 end;
 
 function TNyxContainerBrowserImpl.GetImpl: TContainerJSElement;

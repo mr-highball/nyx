@@ -62,6 +62,9 @@ type
 
     procedure PropertyNotify(const AType : TPropertyUpdateType;
       const AProperty : TElementProperty);
+
+    procedure RedirectEvent(const AElement : INyxElement;
+      const AEvent : TElementEvent);
   protected
     procedure SetID(const AValue: String);
     function GetID: String;
@@ -120,6 +123,15 @@ type
       and event notifications
     *)
     function DoGetSelf : INyxElement; virtual;
+
+    (*
+      binds events triggered on one element to trigger the same events on
+      "us". this is mainly put in place to ease composition of
+      elements
+        ex. AFrom.Click() will trigger all events AFrom has specified, then
+            cause Self.Click() to occur.
+    *)
+    procedure BindEvents(const AFrom : TNyxElementBaseImpl);
   public
     property ID : String read GetID write SetID;
     property Name : String read GetName write SetName;
@@ -368,7 +380,7 @@ var
   LObservers: TObserverArray;
 begin
   LElement := DoGetSelf;
-  LObservers := FObserve.ObserversByEvent(Ord(AProperty));
+  LObservers := FPropObserve.ObserversByEvent(Ord(AProperty));
 
   for I := 0 to High(LObservers) do
     try
@@ -378,6 +390,12 @@ begin
       LMethod(AType, LElement, AProperty);
     finally
     end;
+end;
+
+procedure TNyxElementBaseImpl.RedirectEvent(const AElement: INyxElement;
+  const AEvent: TElementEvent);
+begin
+  Notify(AEvent);
 end;
 
 procedure TNyxElementBaseImpl.Notify(const AEvent: TElementEvent);
@@ -403,6 +421,20 @@ end;
 function TNyxElementBaseImpl.DoGetSelf: INyxElement;
 begin
   Result := Self as INyxElement;
+end;
+
+procedure TNyxElementBaseImpl.BindEvents(const AFrom: TNyxElementBaseImpl);
+var
+  LID: String;
+begin
+  AFrom.Observe(evClick, @RedirectEvent, LID);
+  AFrom.Observe(evDoubleClick, @RedirectEvent, LID);
+  AFrom.Observe(evMouseEnter, @RedirectEvent, LID);
+  AFrom.Observe(evMouseExit, @RedirectEvent, LID);
+  AFrom.Observe(evMouseDown, @RedirectEvent, LID);
+  AFrom.Observe(evMouseUp, @RedirectEvent, LID);
+  AFrom.Observe(evKeyDown, @RedirectEvent, LID);
+  AFrom.Observe(evKeyUp, @RedirectEvent, LID);
 end;
 
 function TNyxElementBaseImpl.Observe(const AProperty: TElementProperty;

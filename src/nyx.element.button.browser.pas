@@ -49,9 +49,15 @@ type
       (*
         component which handles the INyxElement contract
       *)
+
+      { TBrowserElementComponent }
+
       TBrowserElementComponent = class(TNyxElementBrowserImpl)
       strict protected
         function DoCreateElement: TJSElement; override;
+        function DoGetSelf: INyxElement; override;
+      public
+        Parent : TNyxElementButtonBrowserImpl;
       end;
 
   strict protected
@@ -154,10 +160,17 @@ begin
   Result := document.createElement('button');
 end;
 
+function TNyxElementButtonBrowserImpl.TBrowserElementComponent.DoGetSelf: INyxElement;
+begin
+  Result := Parent as INyxElement;
+end;
+
 constructor TNyxElementButtonBrowserImpl.Create;
 begin
   inherited Create;
   FBrowser := TBrowserElementComponent.Create;
+  TBrowserElementComponent(FBrowser).Parent := Self;
+  BindEvents(FBrowser);
 end;
 
 destructor TNyxElementButtonBrowserImpl.Destroy;

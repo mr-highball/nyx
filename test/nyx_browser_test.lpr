@@ -54,16 +54,16 @@ type
     (*
       handler for telling the world hello
     *)
-    procedure HelloWorldClick(const AButton : INyxElement;
+    procedure HelloWorldClick(const AElement : INyxElement;
       const AEvent : TElementEvent);
 
-    procedure RunningButtonClick(const AButton : INyxElement;
+    procedure RunningButtonClick(const AElement : INyxElement;
       const AEvent : TElementEvent);
 
-    procedure EnterExitBigButton(const AButton : INyxElement;
+    procedure EnterExitBigButton(const AElement : INyxElement;
       const AEvent : TElementEvent);
 
-    procedure HideBigButton(const AButton : INyxElement;
+    procedure HideBigButton(const AElement : INyxElement;
       const AEvent : TElementEvent);
 
   strict protected
@@ -74,21 +74,23 @@ type
     *)
     procedure BuildUI;
     procedure TestContainerIsBrowser;
+    procedure TestAddClickHandlerToButton;
   public
     destructor Destroy; override;
   end;
 
-procedure TBrowserTest.HelloWorldClick(const AButton: INyxElement;
+procedure TBrowserTest.HelloWorldClick(const AElement: INyxElement;
   const AEvent: TElementEvent);
 begin
   window.alert('you clicked me!');
 end;
 
-procedure TBrowserTest.RunningButtonClick(const AButton: INyxElement;
+procedure TBrowserTest.RunningButtonClick(const AElement: INyxElement;
   const AEvent: TElementEvent);
 var
   LLayout: INyxLayoutFixed;
   LBounds: INyxFixedBounds;
+  LButton: INyxElementButton;
 
 const
   BUTTON_TEXT : array[0 .. 4] of String = (
@@ -99,25 +101,27 @@ const
     'be gentle senpai <3'
   );
 begin
+  LButton := AElement as INyxElementButton;
+
   //using the UI we fetch the fixed layout (this assumes it's in the first index)
   LLayout := UI.LayoutByIndex(0) as INyxLayoutFixed;
 
   //we also assume our button was properly added to the layout (which it was)
   //in order to obtain the bounds for the button
-  LBounds := LLayout.Bounds[AButton];
+  LBounds := LLayout.Bounds[LButton];
 
   //lastly we'll increment the left position to make the button look
   //like it's running away from the user clicking it
   LBounds.UpdateLeft(LBounds.Left + 50);
 
   //now for some fun, just update the text of the button
-  INyxElementButton(AButton).UpdateText(BUTTON_TEXT[RandomRange(0, 4)]);
+  LButton.UpdateText(BUTTON_TEXT[RandomRange(0, 4)]);
 
   //lastly we need to render the UI for changes on the layout to take place
   UI.Render;
 end;
 
-procedure TBrowserTest.EnterExitBigButton(const AButton: INyxElement;
+procedure TBrowserTest.EnterExitBigButton(const AElement: INyxElement;
   const AEvent: TElementEvent);
 begin
   if AEvent = evMouseEnter then
@@ -126,10 +130,10 @@ begin
     window.alert('exited big button');
 end;
 
-procedure TBrowserTest.HideBigButton(const AButton: INyxElement;
+procedure TBrowserTest.HideBigButton(const AElement: INyxElement;
   const AEvent: TElementEvent);
 begin
-  INyxElementButton(AButton).Visible := False;
+  (AElement as INyxElementButton).Visible := False;
 end;
 
 procedure TBrowserTest.doRun;
@@ -137,6 +141,7 @@ begin
   inherited doRun;
   //TestContainerIsBrowser;
   BuildUI;
+  //TestAddClickHandlerToButton;
 end;
 
 procedure TBrowserTest.BuildUI;
@@ -342,6 +347,25 @@ begin
   );
 
   LUI.Render();
+end;
+
+procedure TBrowserTest.TestAddClickHandlerToButton;
+var
+  LUI: INyxUI;
+  I: Integer;
+  LID: String;
+begin
+  LUI := NewNyxUI;
+  LUI
+    .AddContainer(NewNyxContainer, I)
+    .ContainerByIndex(I)
+      .Add(
+        NewNyxButton
+          .UpdateText('Hello World')
+          .Observe(evClick, @HelloWorldClick, LID)
+      )
+    .UI
+      .Render();
 end;
 
 destructor TBrowserTest.Destroy;

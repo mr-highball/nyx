@@ -212,7 +212,7 @@ var
   LButton: INyxElementButton;
   LObservers: TObserverArray;
 begin
-  LButton := Self as INyxElementButton;
+  LButton := DoGetSelf as INyxElementButton;
   LObservers := FPropertyObserve.ObserversByEvent(Ord(AProperty));
 
   for I := 0 to High(LObservers) do
@@ -233,19 +233,19 @@ end;
 
 function TNyxElementButtonBaseImpl.UpdateText(const AText: String): INyxElementButton;
 begin
-  Result := Self as INyxElementButton;
+  Result := DoGetSelf as INyxElementButton;
   SetText(AText);
 end;
 
 function TNyxElementButtonBaseImpl.UpdateEnabled(const AEnabled: Boolean): INyxElementButton;
 begin
-  Result := Self as INyxElementButton;
+  Result := DoGetSelf as INyxElementButton;
   SetEnabled(AEnabled);
 end;
 
 function TNyxElementButtonBaseImpl.UpdateVisible(const AVisible: Boolean): INyxElementButton;
 begin
-  Result := Self as INyxElementButton;
+  Result := DoGetSelf as INyxElementButton;
   SetVisible(AVisible);
 end;
 

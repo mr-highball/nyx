@@ -93,18 +93,18 @@ end;
 
 function TNyxContainerBaseImpl.DoGetContainer: INyxContainer;
 begin
-  Result := Self as INyxContainer;
+  Result := DoGetSelf as INyxContainer;
 end;
 
 procedure TNyxContainerBaseImpl.DoUpdateElementParent(
   const AElement: INyxElement);
 begin
-  AElement.Container := Self as INyxContainer;
+  AElement.Container := DoGetSelf as INyxContainer;
 end;
 
 function TNyxContainerBaseImpl.Add(const AItem: INyxElement; out Index: Integer): INyxContainer;
 begin
-  Result := Self as INyxContainer;
+  Result := DoGetSelf as INyxContainer;
   DoUpdateElementParent(AItem);
   Index := FElements.Add(AItem);
 end;
