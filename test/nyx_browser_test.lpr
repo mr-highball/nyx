@@ -38,7 +38,7 @@ uses
   nyx.size,
   nyx.element,
   nyx.container,
-  nyx.container.browser;
+  nyx.container.browser, nyx.element.input, nyx.element.input.browser;
 
 type
 
@@ -54,17 +54,17 @@ type
     (*
       handler for telling the world hello
     *)
-    procedure HelloWorldClick(const AButton : INyxElementButton;
-      const AEvent : TButtonObserveEvent);
+    procedure HelloWorldClick(const AButton : INyxElement;
+      const AEvent : TElementEvent);
 
-    procedure RunningButtonClick(const AButton : INyxElementButton;
-      const AEvent : TButtonObserveEvent);
+    procedure RunningButtonClick(const AButton : INyxElement;
+      const AEvent : TElementEvent);
 
-    procedure EnterExitBigButton(const AButton : INyxElementButton;
-      const AEvent : TButtonObserveEvent);
+    procedure EnterExitBigButton(const AButton : INyxElement;
+      const AEvent : TElementEvent);
 
-    procedure HideBigButton(const AButton : INyxElementButton;
-      const AEvent : TButtonObserveEvent);
+    procedure HideBigButton(const AButton : INyxElement;
+      const AEvent : TElementEvent);
 
   strict protected
     procedure doRun; override; //calls BuildUI
@@ -78,14 +78,14 @@ type
     destructor Destroy; override;
   end;
 
-procedure TBrowserTest.HelloWorldClick(const AButton: INyxElementButton;
-  const AEvent: TButtonObserveEvent);
+procedure TBrowserTest.HelloWorldClick(const AButton: INyxElement;
+  const AEvent: TElementEvent);
 begin
   window.alert('you clicked me!');
 end;
 
-procedure TBrowserTest.RunningButtonClick(const AButton: INyxElementButton;
-  const AEvent: TButtonObserveEvent);
+procedure TBrowserTest.RunningButtonClick(const AButton: INyxElement;
+  const AEvent: TElementEvent);
 var
   LLayout: INyxLayoutFixed;
   LBounds: INyxFixedBounds;
@@ -111,25 +111,25 @@ begin
   LBounds.UpdateLeft(LBounds.Left + 50);
 
   //now for some fun, just update the text of the button
-  AButton.UpdateText(BUTTON_TEXT[RandomRange(0, 4)]);
+  INyxElementButton(AButton).UpdateText(BUTTON_TEXT[RandomRange(0, 4)]);
 
   //lastly we need to render the UI for changes on the layout to take place
   UI.Render;
 end;
 
-procedure TBrowserTest.EnterExitBigButton(const AButton: INyxElementButton;
-  const AEvent: TButtonObserveEvent);
+procedure TBrowserTest.EnterExitBigButton(const AButton: INyxElement;
+  const AEvent: TElementEvent);
 begin
-  if AEvent = boMouseEnter then
+  if AEvent = evMouseEnter then
     window.alert('entered big button')
   else
     window.alert('exited big button');
 end;
 
-procedure TBrowserTest.HideBigButton(const AButton: INyxElementButton;
-  const AEvent: TButtonObserveEvent);
+procedure TBrowserTest.HideBigButton(const AButton: INyxElement;
+  const AEvent: TElementEvent);
 begin
-  AButton.Visible := False;
+  INyxElementButton(AButton).Visible := False;
 end;
 
 procedure TBrowserTest.doRun;
@@ -193,7 +193,7 @@ begin
       .Add( //add a button to it
         NewNyxButton
           .UpdateText('Hello World') //sets our text for the display
-          .Observe(boClick, @HelloWorldClick, LID), //attaches a handler to the click event
+          .Observe(evClick, @HelloWorldClick, LID), //attaches a handler to the click event
         LHelloIndex //optional recording of the index the button was added to in the container
       )
       .Add( //adds a new button but in this case, we will disable it
@@ -205,7 +205,7 @@ begin
       .Add( //adds a "running" button demonstrating dynamic positioning
         NewNyxButton
           .UpdateText('click and I run!')
-          .Observe(boClick, @RunningButtonClick, LID),
+          .Observe(evClick, @RunningButtonClick, LID),
         LRunIndex
       )
       .Add( //adds a button that is center to the container using proportional layout
@@ -220,10 +220,10 @@ begin
       )
       .Add(
         NewNyxButton
-          .Observe(boMouseEnter, @EnterExitBigButton, LID)
-          .Observe(boMouseExit, @EnterExitBigButton, LID)
-          .Observe(boClick, @HideBigButton, LID)
           .UpdateText('big button')
+          .Observe(evMouseEnter, @EnterExitBigButton, LID)
+          .Observe(evMouseExit, @EnterExitBigButton, LID)
+          .Observe(evClick, @HideBigButton, LID)
           .UpdateName('big button'),
         LBigIndex
       )

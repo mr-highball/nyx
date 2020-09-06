@@ -45,7 +45,8 @@ type
     FContainer : INyxContainer;
     FSizeIDs : TStringList;
     FSize : INyxSize;
-    FObserve : TNyxObservationHelper;
+    FObserve,
+    FPropObserve: TNyxObservationHelper;
     function GetSize: INyxSize;
     procedure SetSize(const AValue: INyxSize);
     procedure RemoveSizeObservers;
@@ -59,7 +60,7 @@ type
     procedure NotifyElement(const AType : TPropertyUpdateType;
       const ASize : INyxSize; const AProperty : TSizeProperty);
 
-    procedure DoPropertyNotify(const AType : TPropertyUpdateType;
+    procedure PropertyNotify(const AType : TPropertyUpdateType;
       const AProperty : TElementProperty);
   protected
     procedure SetID(const AValue: String);
@@ -104,15 +105,31 @@ type
     *)
     procedure DoUpdateMode; virtual;
 
+    (*
+      remove an observer for a given id
+    *)
     procedure DoRemoveObserver(const AID : String); virtual;
+
+    (*
+      called by children to notify on an event
+    *)
+    procedure Notify(const AEvent : TElementEvent);
+
+    (*
+      can be overridden to change the return for fluent method, property
+      and event notifications
+    *)
+    function DoGetSelf : INyxElement; virtual;
   public
     property ID : String read GetID write SetID;
     property Name : String read GetName write SetName;
     property Container : INyxContainer read GetContainer write SetContainer;
     property Size : INyxSize read GetSize write SetSize;
 
-    function Observe(const AEvent : TSizeProperty;
-      const AObserver : TSizePropertyObserveMethod; out ID : String) : INyxElement; overload;
+    function Observe(const AEvent : TElementEvent; const AObserver : TElementObserveMethod;
+      out ID : String) : INyxElement; overload;
+    function Observe(const AProperty : TElementProperty;
+      const AObserver : TElementPropertyObserveMethod; out ID : String) : INyxElement; overload;
 
     function RemoveObserver(const AID : String) : INyxElement;
 
@@ -204,12 +221,12 @@ end;
 procedure TNyxElementBaseImpl.SetID(const AValue: String);
 begin
   //before notifty
-  DoPropertyNotify(puBeforeUpdate, epID);
+  PropertyNotify(puBeforeUpdate, epID);
 
   DoSetID(AValue);
 
   //after notifty
-  DoPropertyNotify(puAfterUpdate, epID);
+  PropertyNotify(puAfterUpdate, epID);
 end;
 
 function TNyxElementBaseImpl.GetID: String;
@@ -225,12 +242,12 @@ end;
 procedure TNyxElementBaseImpl.SetName(const AValue: String);
 begin
   //before notifty
-  DoPropertyNotify(puBeforeUpdate, epName);
+  PropertyNotify(puBeforeUpdate, epName);
 
   DoSetName(AValue);
 
   //after notifty
-  DoPropertyNotify(puAfterUpdate, epName);
+  PropertyNotify(puAfterUpdate, epName);
 end;
 
 function TNyxElementBaseImpl.GetContainer: INyxContainer;
@@ -241,12 +258,12 @@ end;
 procedure TNyxElementBaseImpl.SetContainer(const AValue: INyxContainer);
 begin
   //before notifty
-  DoPropertyNotify(puBeforeUpdate, epContainer);
+  PropertyNotify(puBeforeUpdate, epContainer);
 
   DoSetContainer(AValue);
 
   //after notifty
-  DoPropertyNotify(puAfterUpdate, epContainer);
+  PropertyNotify(puAfterUpdate, epContainer);
 end;
 
 procedure TNyxElementBaseImpl.DoSetID(const AValue: String);
@@ -293,7 +310,7 @@ var
   LSelf: INyxElement;
   LID: String;
 begin
-  LSelf := Self as INyxElement;
+  LSelf := DoGetSelf;
   ASize.Element := LSelf;
 
   //now attach handlers for property updates
@@ -328,9 +345,21 @@ end;
 procedure TNyxElementBaseImpl.DoRemoveObserver(const AID: String);
 begin
   FObserve.RemoveByID(AID);
+  FPropObserve.RemoveByID(AID);
 end;
 
-procedure TNyxElementBaseImpl.DoPropertyNotify(
+function TNyxElementBaseImpl.Observe(const AEvent: TElementEvent;
+  const AObserver: TElementObserveMethod; out ID: String): INyxElement;
+begin
+  Result := DoGetSelf;
+
+  if not Assigned(AObserver) then
+    Exit;
+
+  ID := FObserve.Observe(Ord(AEvent), Pointer(AObserver));
+end;
+
+procedure TNyxElementBaseImpl.PropertyNotify(
   const AType: TPropertyUpdateType; const AProperty: TElementProperty);
 var
   LMethod: TElementPropertyObserveMethod;
@@ -338,7 +367,7 @@ var
   LElement: INyxElement;
   LObservers: TObserverArray;
 begin
-  LElement := Self as INyxElement;
+  LElement := DoGetSelf;
   LObservers := FObserve.ObserversByEvent(Ord(AProperty));
 
   for I := 0 to High(LObservers) do
@@ -351,51 +380,76 @@ begin
     end;
 end;
 
-function TNyxElementBaseImpl.Observe(const AEvent: TSizeProperty;
-  const AObserver: TSizePropertyObserveMethod; out ID: String): INyxElement;
+procedure TNyxElementBaseImpl.Notify(const AEvent: TElementEvent);
+var
+  LMethod: TElementObserveMethod;
+  I: Integer;
+  LElement: INyxElement;
+  LObservers: TObserverArray;
+begin
+  LElement := DoGetSelf;
+  LObservers := FObserve.ObserversByEvent(Ord(AEvent));
+
+  for I := 0 to High(LObservers) do
+    try
+      LMethod := TElementObserveMethod(LObservers[I]);
+
+      //call the method
+      LMethod(LElement, AEvent);
+    finally
+    end;
+end;
+
+function TNyxElementBaseImpl.DoGetSelf: INyxElement;
 begin
   Result := Self as INyxElement;
+end;
+
+function TNyxElementBaseImpl.Observe(const AProperty: TElementProperty;
+  const AObserver: TElementPropertyObserveMethod; out ID: String): INyxElement;
+begin
+  Result := DoGetSelf;
 
   if not Assigned(AObserver) then
     Exit;
 
-  ID := FObserve.Observe(Ord(AEvent), Pointer(AObserver));
+  ID := FPropObserve.Observe(Ord(AProperty), Pointer(AObserver));
 end;
 
 function TNyxElementBaseImpl.RemoveObserver(const AID: String): INyxElement;
 begin
-  Result := Self as INyxElement;
+  Result := DoGetSelf;
   DoRemoveObserver(AID);
 end;
 
 function TNyxElementBaseImpl.UpdateName(const AName: String): INyxElement;
 begin
-  Result := Self as INyxElement;
+  Result := DoGetSelf;
   SetName(AName);
 end;
 
 function TNyxElementBaseImpl.UpdateSize(const ASize: INyxSize): INyxElement;
 begin
-  Result := Self as INyxElement;
+  Result := DoGetSelf;
   SetSize(ASize);
 end;
 
 function TNyxElementBaseImpl.UpdateContainer(const AContainer: INyxContainer): INyxElement;
 begin
-  Result := Self as INyxElement;
+  Result := DoGetSelf;
   SetContainer(AContainer);
 end;
 
 function TNyxElementBaseImpl.UpdateID(const AID: String): INyxElement;
 begin
-  Result := Self as INyxElement;
+  Result := DoGetSelf;
   SetID(AID);
 end;
 
 function TNyxElementBaseImpl.Condition(const ACondition: Boolean; const ATrue,
   AFalse: TNyxElementCallback): INyxElement;
 begin
-  Result := Self as INyxElement;
+  Result := DoGetSelf;
 
   //eval the condition and call the appropriate method
   if ACondition then
@@ -410,7 +464,7 @@ end;
 function TNyxElementBaseImpl.Condition(const ACondition: Boolean; const ATrue,
   AFalse: TNyxElementNestedCallback): INyxElement;
 begin
-  Result := Self as INyxElement;
+  Result := DoGetSelf;
 
   //eval the condition and call the appropriate method
   if ACondition then
@@ -425,7 +479,7 @@ end;
 function TNyxElementBaseImpl.Condition(const ACondition: Boolean; const ATrue,
   AFalse: TNyxElementMethod): INyxElement;
 begin
-  Result := Self as INyxElement;
+  Result := DoGetSelf;
 
   //eval the condition and call the appropriate method
   if ACondition then
@@ -441,7 +495,7 @@ function TNyxElementBaseImpl.Condition(
   const ACondition: TNyxElementBoolCallback; const ATrue,
   AFalse: TNyxElementCallback): INyxElement;
 begin
-  Result := Self as INyxElement;
+  Result := DoGetSelf;
 
   //no input to evaluate, so call false if assigned
   if not Assigned(ACondition) then
@@ -466,7 +520,7 @@ function TNyxElementBaseImpl.Condition(
   const ACondition: TNyxElementBoolNestedCallback; const ATrue,
   AFalse: TNyxElementNestedCallback): INyxElement;
 begin
-  Result := Self as INyxElement;
+  Result := DoGetSelf;
 
   //no input to evaluate, so call false if assigned
   if not Assigned(ACondition) then
@@ -490,7 +544,7 @@ end;
 function TNyxElementBaseImpl.Condition(const ACondition: TNyxElementBoolMethod;
   const ATrue, AFalse: TNyxElementMethod): INyxElement;
 begin
-  Result := Self as INyxElement;
+  Result := DoGetSelf;
 
   //no input to evaluate, so call false if assigned
   if not Assigned(ACondition) then
@@ -514,6 +568,7 @@ end;
 constructor TNyxElementBaseImpl.Create;
 begin
   FObserve := TNyxObservationHelper.Create;
+  FPropObserve := TNyxObservationHelper.Create;
   FContainer := nil;
   FSizeIDs := TStringList.Create;
   Size := NewNyxSize; //use property here to properly parent/setup
@@ -523,6 +578,7 @@ end;
 destructor TNyxElementBaseImpl.Destroy;
 begin
   FObserve.Free;
+  FPropObserve.Free;
   FContainer := nil;
   FSizeIDs.Free;
   RemoveSizeObservers;

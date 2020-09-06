@@ -31,7 +31,7 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <Units Count="22">
+    <Units Count="24">
       <Unit0>
         <Filename Value="nyx_browser_test.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -123,6 +123,14 @@
         <Filename Value="..\src\nyx.container.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit21>
+      <Unit22>
+        <Filename Value="..\src\nyx.element.input.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit22>
+      <Unit23>
+        <Filename Value="..\src\nyx.element.input.browser.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit23>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

@@ -64,7 +64,48 @@ type
   strict private
     FElement : TJSElement;
 
+    (*
+      notifies observers for click events
+    *)
+    procedure ClickHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for double click events
+    *)
+    procedure DoubleClickHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for mouse enter events
+    *)
+    procedure MouseEnterHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for mouse exit events
+    *)
+    procedure MouseExitHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for mouse down events
+    *)
+    procedure MouseDownHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for mouse up events
+    *)
+    procedure MouseUpHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for key up events
+    *)
+    procedure KeyUpHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for key down events
+    *)
+    procedure KeyDownHandler(Event: TEventListenerEvent);
+
     procedure InitializeCSS;
+    procedure InitializeEvents;
     procedure UpdateSize;
   protected
     function GetJSElement: TJSElement;
@@ -90,9 +131,50 @@ type
 
 implementation
 uses
+  webwidget,
   nyx.utils.browser.css;
 
 { TNyxElementBrowserImpl }
+
+procedure TNyxElementBrowserImpl.ClickHandler(Event: TEventListenerEvent);
+begin
+  Notify(evClick);
+end;
+
+procedure TNyxElementBrowserImpl.DoubleClickHandler(Event: TEventListenerEvent);
+begin
+  Notify(evDoubleClick);
+end;
+
+procedure TNyxElementBrowserImpl.MouseEnterHandler(Event: TEventListenerEvent);
+begin
+  Notify(evMouseEnter);
+end;
+
+procedure TNyxElementBrowserImpl.MouseExitHandler(Event: TEventListenerEvent);
+begin
+  Notify(evMouseExit);
+end;
+
+procedure TNyxElementBrowserImpl.MouseDownHandler(Event: TEventListenerEvent);
+begin
+  Notify(evMouseDown);
+end;
+
+procedure TNyxElementBrowserImpl.MouseUpHandler(Event: TEventListenerEvent);
+begin
+  Notify(evMouseUp);
+end;
+
+procedure TNyxElementBrowserImpl.KeyUpHandler(Event: TEventListenerEvent);
+begin
+  Notify(evKeyUp);
+end;
+
+procedure TNyxElementBrowserImpl.KeyDownHandler(Event: TEventListenerEvent);
+begin
+  Notify(evKeyDown);
+end;
 
 procedure TNyxElementBrowserImpl.InitializeCSS;
 var
@@ -112,6 +194,18 @@ begin
   finally
     LCSS.Free;
   end;
+end;
+
+procedure TNyxElementBrowserImpl.InitializeEvents;
+begin
+  JSElement.addEventListener(sEventClick, @ClickHandler);
+  JSElement.addEventListener(sEventDblClick, @DoubleClickHandler);
+  JSElement.addEventListener(sEventMouseEnter, @MouseEnterHandler);
+  JSElement.addEventListener(sEventMouseLeave, @MouseExitHandler);
+  JSElement.addEventListener(sEventMouseDown, @MouseDownHandler);
+  JSElement.addEventListener(sEventMouseUp, @MouseUpHandler);
+  JSElement.addEventListener(sEventKeyUp, @KeyUpHandler);
+  JSElement.addEventListener(sEventKeyDown, @KeyDownHandler);
 end;
 
 procedure TNyxElementBrowserImpl.UpdateSize;

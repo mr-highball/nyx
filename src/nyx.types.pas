@@ -157,6 +157,25 @@ type
   end;
 
   (*
+    enum for all observable events of a button
+  *)
+  TElementEvent = (
+    evClick,
+    evDoubleClick,
+    evMouseEnter,
+    evMouseExit,
+    evMouseDown,
+    evMouseUp,
+    evKeyDown,
+    evKeyUp
+  );
+
+  TElementEvents = set of TElementEvent;
+
+  TElementObserveMethod = procedure(const AElement : INyxElement;
+    const AEvent : TElementEvent) of object;
+
+  (*
     properties of a INyxElement
   *)
   TElementProperty = (
@@ -215,8 +234,19 @@ type
 
     //methods
 
-    function Observe(const AEvent : TSizeProperty;
-      const AObserver : TSizePropertyObserveMethod; out ID : String) : INyxElement; overload;
+    (*
+      callers can attach an observe method with a particular event
+      and will get notified when that event occurs
+    *)
+    function Observe(const AEvent : TElementEvent; const AObserver : TElementObserveMethod;
+      out ID : String) : INyxElement; overload;
+
+    (*
+      callers can attach an observe method with a particular property
+      and will get notified when that property changes
+    *)
+    function Observe(const AProperty : TElementProperty;
+      const AObserver : TElementPropertyObserveMethod; out ID : String) : INyxElement; overload;
 
     function RemoveObserver(const AID : String) : INyxElement;
 
