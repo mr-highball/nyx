@@ -167,7 +167,9 @@ type
     evMouseDown,
     evMouseUp,
     evKeyDown,
-    evKeyUp
+    evKeyUp,
+    evFocus,
+    evLoseFocus
   );
 
   TElementEvents = set of TElementEvent;

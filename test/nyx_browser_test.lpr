@@ -75,6 +75,7 @@ type
     procedure BuildUI;
     procedure TestContainerIsBrowser;
     procedure TestAddClickHandlerToButton;
+    procedure TestSimpleInput;
   public
     destructor Destroy; override;
   end;
@@ -140,8 +141,9 @@ procedure TBrowserTest.doRun;
 begin
   inherited doRun;
   //TestContainerIsBrowser;
-  BuildUI;
+  //BuildUI;
   //TestAddClickHandlerToButton;
+  TestSimpleInput;
 end;
 
 procedure TBrowserTest.BuildUI;
@@ -363,6 +365,25 @@ begin
         NewNyxButton
           .UpdateText('Hello World')
           .Observe(evClick, @HelloWorldClick, LID)
+      )
+    .UI
+      .Render();
+end;
+
+procedure TBrowserTest.TestSimpleInput;
+var
+  LUI: INyxUI;
+  I: Integer;
+  LID: String;
+begin
+  LUI := NewNyxUI;
+  LUI
+    .AddContainer(NewNyxContainer, I)
+    .ContainerByIndex(I)
+      .Add(
+        NewNyxInput
+          .UpdateText('Hello World')
+          .UpdateTextPrompt('type something...')
       )
     .UI
       .Render();

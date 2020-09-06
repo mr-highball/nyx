@@ -42,6 +42,8 @@ type
   strict private
     FBrowser : TNyxElementBrowserImpl;
   protected
+    function DoGetTextPrompt: String; override;
+    procedure DoSetTextPrompt(const AValue: String); override;
     function GetBrowser: TNyxElementBrowserImpl;
 
     type
@@ -64,6 +66,8 @@ type
     function DoGetVisible: Boolean; override;
     procedure DoSetVisible(const AValue: Boolean); override;
 
+
+
     (*
       because we use composition, we need to redirect calls
     *)
@@ -83,10 +87,19 @@ type
 
 implementation
 uses
-  webwidget,
   nyx.utils.browser.css;
 
 { TNyxElementInputBrowserImpl }
+
+function TNyxElementInputBrowserImpl.DoGetTextPrompt: String;
+begin
+  Result := TJSHTMLInputElement(FBrowser.JSElement).placeholder;
+end;
+
+procedure TNyxElementInputBrowserImpl.DoSetTextPrompt(const AValue: String);
+begin
+  TJSHTMLInputElement(FBrowser.JSElement).placeholder := AValue;
+end;
 
 function TNyxElementInputBrowserImpl.GetBrowser: TNyxElementBrowserImpl;
 begin
@@ -95,12 +108,12 @@ end;
 
 procedure TNyxElementInputBrowserImpl.DoSetText(const AValue: String);
 begin
-  FBrowser.JSElement.textContent := AValue;
+  TJSHTMLInputElement(FBrowser.JSElement).value := AValue;
 end;
 
 function TNyxElementInputBrowserImpl.DoGetText: String;
 begin
-  Result := FBrowser.JSElement.textContent;
+  Result := TJSHTMLInputElement(FBrowser.JSElement).value;
 end;
 
 function TNyxElementInputBrowserImpl.DoGetEnabled: Boolean;

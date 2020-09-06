@@ -39,7 +39,8 @@ type
   TInputProperty = (
     ipEnabled,
     ipText,
-    ipVisible
+    ipVisible,
+    ipTextPrompt
   );
 
   //forward
@@ -60,10 +61,12 @@ type
 
     //property methods
     function GetText: String;
+    function GetTextPrompt: String;
     procedure SetText(const AValue: String);
     procedure SetEnabled(const AValue: Boolean);
     function GetEnabled: Boolean;
     function GetVisible: Boolean;
+    procedure SetTextPrompt(const AValue: String);
     procedure SetVisible(const AValue: Boolean);
 
     //property
@@ -72,6 +75,8 @@ type
       visual text of the Input
     *)
     property Text : String read GetText write SetText;
+
+    property TextPrompt : String read GetTextPrompt write SetTextPrompt;
 
     (*
       determines if the Input is enabled or not
@@ -89,6 +94,11 @@ type
       fluent setter for the Input text
     *)
     function UpdateText(const AText : String) : INyxElementInput;
+
+    (*
+      fluent setter for the Input text prompt
+    *)
+    function UpdateTextPrompt(const AText : String) : INyxElementInput;
 
     (*
       fluent setter for the Input's enabled property
@@ -123,11 +133,15 @@ type
     function GetVisible: Boolean;
     procedure SetVisible(const AValue: Boolean);
 
+
     procedure DoPropertyNotify(const AType : TPropertyUpdateType;
       const AProperty : TInputProperty);
   strict protected
     function DoGetText: String; virtual; abstract;
     procedure DoSetText(const AValue: String); virtual; abstract;
+
+    function DoGetTextPrompt: String; virtual; abstract;
+    procedure DoSetTextPrompt(const AValue: String); virtual; abstract;
 
     function DoGetEnabled: Boolean; virtual; abstract;
     procedure DoSetEnabled(const AValue: Boolean); virtual; abstract;
@@ -137,11 +151,14 @@ type
 
     procedure DoRemoveObserver(const AID: String); override;
   public
+    function GetTextPrompt: String;
+    procedure SetTextPrompt(const AValue: String);
     property Text : String read GetText write SetText;
     property Enabled : Boolean read GetEnabled write SetEnabled;
     property Visible : Boolean read GetVisible write SetVisible;
 
     function UpdateText(const AText : String) : INyxElementInput;
+    function UpdateTextPrompt(const AText : String) : INyxElementInput;
     function UpdateEnabled(const AEnabled : Boolean) : INyxElementInput;
     function UpdateVisible(const AVisible : Boolean) : INyxElementInput;
 
@@ -241,10 +258,26 @@ begin
   FPropertyObserve.RemoveByID(AID);
 end;
 
+function TNyxElementInputBaseImpl.GetTextPrompt: String;
+begin
+  Result := DoGetTextPrompt;
+end;
+
+procedure TNyxElementInputBaseImpl.SetTextPrompt(const AValue: String);
+begin
+  DoSetTextPrompt(AValue);
+end;
+
 function TNyxElementInputBaseImpl.UpdateText(const AText: String): INyxElementInput;
 begin
   Result := DoGetSelf as INyxElementInput;
   SetText(AText);
+end;
+
+function TNyxElementInputBaseImpl.UpdateTextPrompt(const AText: String): INyxElementInput;
+begin
+  Result := DoGetSelf as INyxElementInput;
+  SetTextPrompt(AText);
 end;
 
 function TNyxElementInputBaseImpl.UpdateEnabled(const AEnabled: Boolean): INyxElementInput;

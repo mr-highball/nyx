@@ -104,6 +104,16 @@ type
     *)
     procedure KeyDownHandler(Event: TEventListenerEvent);
 
+    (*
+      notifies observers for focus events
+    *)
+    procedure FocusHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for lose focus events
+    *)
+    procedure LoseFocusHandler(Event: TEventListenerEvent);
+
     procedure InitializeCSS;
     procedure InitializeEvents;
     procedure UpdateSize;
@@ -176,6 +186,16 @@ begin
   Notify(evKeyDown);
 end;
 
+procedure TNyxElementBrowserImpl.FocusHandler(Event: TEventListenerEvent);
+begin
+  Notify(evFocus)
+end;
+
+procedure TNyxElementBrowserImpl.LoseFocusHandler(Event: TEventListenerEvent);
+begin
+  Notify(evLoseFocus);
+end;
+
 procedure TNyxElementBrowserImpl.InitializeCSS;
 var
   LCSS : TNyxCSSHelper;
@@ -206,6 +226,8 @@ begin
   JSElement.addEventListener(sEventMouseUp, @MouseUpHandler);
   JSElement.addEventListener(sEventKeyUp, @KeyUpHandler);
   JSElement.addEventListener(sEventKeyDown, @KeyDownHandler);
+  JSElement.addEventListener(sEventFocus, @FocusHandler);
+  JSElement.addEventListener(sEventBlur, @LoseFocusHandler);
 end;
 
 procedure TNyxElementBrowserImpl.UpdateSize;
