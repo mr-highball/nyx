@@ -41,26 +41,32 @@ uses
 
 procedure TNyxUIBrowserImpl.DoRender;
 var
-  LSettings : INyxRenderSettingsBrowser;
+  LBrowserSettings: INyxRenderSettingsBrowser;
   I: Integer;
   LTarget: TJSElement;
   LContainer: INyxContainerBrowser;
+  LSettings: INyxRenderSettings;
+  LContainers: INyxElements;
 begin
+  LSettings := Settings;
 
   //if we have settings assigned, use that target
-  if Assigned(Settings) then
+  if Assigned(LSettings) then
   begin
-    LSettings := Settings as INyxRenderSettingsBrowser;
-    LTarget := LSettings.Target;
-  end
+    LBrowserSettings := LSettings as INyxRenderSettingsBrowser;
+    LTarget := LBrowserSettings.Target;
+  end;
+
   //otherwise, we'll add to the dom's body directly
-  else
+  if not Assigned(LTarget) then
     LTarget := document.body;
 
+  LContainers := Containers;
+
   //iterate containers and add to the target js element
-  for I := 0 to Pred(Containers.Count) do
+  for I := 0 to Pred(LContainers.Count) do
   begin
-    LContainer := Containers[I] as INyxContainerBrowser;
+    LContainer := LContainers[I] as INyxContainerBrowser;
     LTarget.appendChild(LContainer.BrowserElement.JSElement);
   end;
 end;

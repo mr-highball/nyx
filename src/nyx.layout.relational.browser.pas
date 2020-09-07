@@ -122,7 +122,8 @@ begin
     FCSS.CopyFromElement(LElement);
 
     //we will use the position / attribute pair to force "Relational" positioning
-    FCSS.Upsert('position', 'absolute');
+    //using screen coords
+    FCSS.Upsert('position', 'fixed');
 
     //as long as we have an anchor, we will use it as the point to offset this element
     if LHasAnchor then
@@ -145,6 +146,9 @@ begin
       //check for an 'empty' rect, if so then use css
       if (LLeft + LRight + LTop + LWidth + LHeight + LBottom) = 0 then
       begin
+        //when using css, the safer bet is to use ancestor positioning
+        FCSS.Upsert('position', 'absolute');
+
         LCSS := TNyxCSSHelper.Create;
         try
           LCSS.CopyFromElement(LBrowserAnchor);
