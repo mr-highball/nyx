@@ -106,7 +106,7 @@ type
     (*
       fluent setter for the Checkbox's checked property
     *)
-    function UpdateChecked(const AEnabled : Boolean) : INyxElementCheckbox;
+    function UpdateChecked(const AChecked : Boolean) : INyxElementCheckbox;
 
     (*
       fluent setter for the Checkbox's visible property

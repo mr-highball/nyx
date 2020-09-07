@@ -1050,16 +1050,12 @@ begin
 end;
 
 function TNyxElementsBaseImpl.Delete(const AIndex: Integer): INyxElements;
-var
-  LError: String;
-  LItem: INyxElement;
 begin
   try
     Result := Self as INyxElements;
 
-    //remove but the throw away the item
-    if not DoRemoveItem(AIndex, LItem, LError) then
-      RaiseError('Delete', LError);
+    //extract but the throw away the item
+    Extract(AIndex);
   except on E : Exception do
     RaiseError('Delete', E.Message);
   end;
@@ -1070,7 +1066,9 @@ var
   I: Integer;
 begin
   Result := IndexOf(AElement, I);
-  Delete(I);
+
+  if I >= 0 then
+    Delete(I);
 end;
 
 function TNyxElementsBaseImpl.Extract(const AIndex: Integer): INyxElement;

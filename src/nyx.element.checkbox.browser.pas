@@ -211,6 +211,9 @@ begin
   Check.setAttribute('type', 'checkbox');
   Lbl := TJSHTMLLabelElement(document.createElement('label'));
   Lbl.setAttribute('for', Check.id);
+
+  //have the label take up the entire portion of the span
+  Lbl.setAttribute('style', 'height:100%;width:100%;');
 end;
 
 function TNyxElementCheckboxBrowserImpl.TBrowserElementComponent.DoGetSelf: INyxElement;

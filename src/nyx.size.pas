@@ -202,6 +202,8 @@ end;
 constructor TNyxSizeImpl.Create;
 begin
   inherited Create;
+  FHeight := -1;
+  FWidth := -1;
   FObserve := TNyxObservationHelper.Create;
 end;
 

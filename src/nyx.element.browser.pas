@@ -244,13 +244,27 @@ begin
     //depending on mode, update css differently
     if Size.Mode = smFixed then
     begin
-      LCSS['height'] := IntToStr(Round(Size.Height)) + 'px';
-      LCSS['width'] := IntToStr(Round(Size.Width)) + 'px';
+      if Size.Height >= 0 then
+        LCSS['height'] := IntToStr(Round(Size.Height)) + 'px'
+      else
+        LCSS.Delete('height');
+
+      if Size.Width >= 0 then
+        LCSS['width'] := IntToStr(Round(Size.Width)) + 'px'
+      else
+        LCSS.Delete('width');
     end
     else
     begin
-      LCSS['height'] := IntToStr(Round(Size.Height * 100)) + '%';
-      LCSS['width'] := IntToStr(Round(Size.Width * 100)) + '%';
+      if Size.Height >= 0 then
+        LCSS['height'] := IntToStr(Round(Size.Height * 100)) + '%'
+      else
+        LCSS.Delete('height');
+
+      if Size.Width >= 0 then
+        LCSS['width'] := IntToStr(Round(Size.Width * 100)) + '%'
+      else
+        LCSS.Delete('width');
     end;
 
     //update the new style
