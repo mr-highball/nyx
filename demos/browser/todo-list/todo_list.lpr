@@ -88,7 +88,7 @@ begin
     INyxProportionalBounds(NewNyxProportionalBounds
       .UpdateLeft(0.50) //todo - not working...
       .UpdateTop(0.05)
-      .UpdateHorzAlignment(haLeft))
+      .UpdateHorzAlignment(haCenter))
   );
 
   //put the item container below the control container
@@ -101,8 +101,9 @@ begin
   //center the input box
   FPropLayout.Add(
     FInputItem,
-    NewNyxProportionalBounds
+    INyxProportionalBounds(NewNyxProportionalBounds
       .UpdateLeft(0.5)
+      .UpdateHorzAlignment(haCenter))
   );
 
   //put the add button to the right of the input

@@ -69,6 +69,24 @@ var
   LStyle: String;
   LContainer: INyxContainer;
   LBrowserContainer: INyxContainerBrowser;
+
+  procedure AdjustOffsets(const AParent : TJSElement);
+  begin
+    LRect := AParent.getBoundingClientRect;
+
+    //find percentage of parent for width
+    if LRect.width > 0 then
+      LLeftOff := LLeftOff / LRect.width
+    else
+      LLeftOff := 0;
+
+    //find percentage of parent for height
+    if LRect.height > 0 then
+      LTopOff := LTopOff / LRect.height
+    else
+      LTopOff := 0;
+  end;
+
 begin
   try
     Result := False;
@@ -116,20 +134,12 @@ begin
     begin
       //get the bounding rect
       LBrowserContainer := LContainer as INyxContainerBrowser;
-      LRect := LBrowserContainer.BrowserElement.JSElement.getBoundingClientRect;
-
-      //find percentage of parent for width
-      if LRect.width > 0 then
-        LLeftOff := LLeftOff / LRect.width
-      else
-        LLeftOff := 0;
-
-      //find percentage of parent for height
-      if LRect.height > 0 then
-        LTopOff := LTopOff / LRect.height
-      else
-        LTopOff := 0;
+      AdjustOffsets(LBrowserContainer.BrowserElement.JSElement);
     end
+    //otherwise we'll use the parent dom element
+    else if Assigned(LElement.JSElement.parentElement) then
+      AdjustOffsets(LElement.JSElement.parentElement)
+    //when no parent, no offset
     else
     begin
       LLeftOff := 0;
