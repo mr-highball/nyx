@@ -23,6 +23,7 @@
 unit nyx.layout;
 
 {$mode delphi}
+{$modeswitch nestedprocvars}
 
 interface
 
@@ -657,14 +658,16 @@ var
   I, J: Integer;
   LElement: INyxElement;
   LBound: INyxRelationalBounds;
+  LElements: INyxElements;
 begin
   try
     Result := False;
+    LElements := Elements;
 
     //iterate elements to call down and place each element
-    for I := 0 to Pred(Elements.Count) do
+    for I := 0 to Pred(LElements.Count) do
     begin
-      LElement := Elements[I];
+      LElement := LElements[I];
       FBounds.IndexOf(LElement, J);
 
       //only call the place method when there is a bounds provided, otherwise
@@ -707,6 +710,7 @@ function TNyxLayoutRelationalImpl.GetAnchor(const AElement: INyxElement; out
 var
   I: Integer;
   LID: String;
+  LAnchor: INyxElement;
 
   function FindAnchor(const AElement : INyxElement) : Boolean;
   begin
@@ -731,8 +735,9 @@ begin
   //now get the id of anchor for lookup in the anchor collection
   LID := FAnchorMap.ValueFromIndex[I];
 
-  AAnchor := FAnchors.Find(@FindAnchor);
-  Result := Assigned(AAnchor);
+  LAnchor := FAnchors.Find(@FindAnchor);
+  AAnchor := LAnchor;
+  Result := Assigned(LAnchor);
 end;
 
 function TNyxLayoutRelationalImpl.Add(const AElement, AAnchor: INyxElement;
@@ -850,14 +855,16 @@ var
   I, J: Integer;
   LElement: INyxElement;
   LBound: INyxProportionalBounds;
+  LElements: INyxElements;
 begin
   try
     Result := False;
+    LElements := Elements;
 
     //iterate elements to call down and place each element
-    for I := 0 to Pred(Elements.Count) do
+    for I := 0 to Pred(LElements.Count) do
     begin
-      LElement := Elements[I];
+      LElement := LElements[I];
       FBounds.IndexOf(LElement, J);
 
       //only call the place method when there is a bounds provided, otherwise
@@ -1078,14 +1085,16 @@ var
   I, J: Integer;
   LElement: INyxElement;
   LBound: INyxFixedBounds;
+  LElements: INyxElements;
 begin
   try
     Result := False;
+    LElements := Elements;
 
     //iterate elements to call down and place each element
-    for I := 0 to Pred(Elements.Count) do
+    for I := 0 to Pred(LElements.Count) do
     begin
-      LElement := Elements[I];
+      LElement := LElements[I];
       FBounds.IndexOf(LElement, J);
 
       //only call the place method when there is a bounds provided, otherwise

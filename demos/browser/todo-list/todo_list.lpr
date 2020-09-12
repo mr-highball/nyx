@@ -139,7 +139,10 @@ end;
 
 procedure TTodoList.RemoveTodo(const ATodo: INyxElementCheckbox);
 begin
+  //noting that a delete is not guaranteed to keep the oridinal
+  //positions the same, so elements will be out of order in this demo
   FItemContainer.Elements.Delete(ATodo).ForEach(@PositionItem);
+  FUI.Render();
 end;
 
 procedure TTodoList.PositionItem(const AElement: INyxElement);

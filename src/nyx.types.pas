@@ -797,14 +797,17 @@ var
   I : Integer;
   LLayout: INyxLayout;
   LError: String;
+  LElement: INyxElement;
 begin
   //handle positioning by calling each layout's place method
   for I := 0 to Pred(FLayouts.Count) do
   begin
-    LLayout := INyxLayout(FLayouts[I]); //cast without as to capture nils
+    LElement := FLayouts[I];
 
-    if not Assigned(LLayout) then
+    if not Assigned(LElement) then
       Continue;
+
+    LLayout := LElement as INyxLayout;
 
     if not LLayout.UpdatePlacement(LError) then
       raise Exception.Create(LError);
