@@ -46,12 +46,10 @@ type
 
     type
 
+      { TBrowserElementComponent }
       (*
         component which handles the INyxElement contract
       *)
-
-      { TBrowserElementComponent }
-
       TBrowserElementComponent = class(TNyxElementBrowserImpl)
       strict protected
         function DoCreateElement: TJSElement; override;

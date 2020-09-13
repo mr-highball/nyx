@@ -31,7 +31,7 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <Units Count="26">
+    <Units Count="28">
       <Unit0>
         <Filename Value="nyx_browser_test.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -139,6 +139,14 @@
         <Filename Value="..\src\nyx.element.checkbox.browser.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit25>
+      <Unit26>
+        <Filename Value="..\src\nyx.element.inputmulti.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit26>
+      <Unit27>
+        <Filename Value="..\src\nyx.element.inputmulti.browser.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit27>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

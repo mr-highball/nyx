@@ -25,21 +25,11 @@ program nyx_browser_test;
 {$mode delphi}
 
 uses
-  Classes,
-  SysUtils,
-  browserapp,
-  web,
-  math,
-  js,
-  nyx.types,
-  nyx.element.button,
-  nyx.layout,
-  nyx.layout.relational.browser,
-  nyx.size,
-  nyx.element,
-  nyx.container,
-  nyx.container.browser, nyx.element.input, nyx.element.input.browser,
-nyx.element.checkbox, nyx.element.checkbox.browser;
+  Classes, SysUtils, browserapp, web, math, js, nyx.types, nyx.element.button,
+  nyx.layout, nyx.layout.relational.browser, nyx.size, nyx.element,
+  nyx.container, nyx.container.browser, nyx.element.input,
+  nyx.element.input.browser, nyx.element.checkbox, nyx.element.checkbox.browser,
+  nyx.element.inputmulti, nyx.element.inputmulti.browser;
 
 type
 
@@ -70,6 +60,8 @@ type
     procedure CheckChanged(const AType : TPropertyUpdateType;
       const ACheckbox : INyxElementCheckbox; const AProperty : TCheckboxProperty);
 
+    procedure LinesChanged(const AType : TPropertyUpdateType;
+      const AInput : INyxElementInputMulti; const AProperty : TInputMultiProperty);
   strict protected
     procedure doRun; override; //calls BuildUI
 
@@ -81,6 +73,7 @@ type
     procedure TestAddClickHandlerToButton;
     procedure TestSimpleInput;
     procedure TestSimpleCheckbox;
+    procedure TestSimpleInputMulti;
   public
     destructor Destroy; override;
   end;
@@ -154,6 +147,12 @@ begin
   end;
 end;
 
+procedure TBrowserTest.LinesChanged(const AType: TPropertyUpdateType;
+  const AInput: INyxElementInputMulti; const AProperty: TInputMultiProperty);
+begin
+  WriteLn(AType, AInput.Text)
+end;
+
 procedure TBrowserTest.doRun;
 begin
   inherited doRun;
@@ -161,7 +160,8 @@ begin
   //TestContainerIsBrowser;
   //TestAddClickHandlerToButton;
   //TestSimpleInput;
-  TestSimpleCheckbox;
+  //TestSimpleCheckbox;
+  TestSimpleInputMulti;
 end;
 
 procedure TBrowserTest.BuildUI;
@@ -421,6 +421,30 @@ begin
         NewNyxCheckbox
           .UpdateText('Hello World')
           .Observe(cpChecked, @CheckChanged, LID)
+      )
+    .UI
+      .Render();
+end;
+
+procedure TBrowserTest.TestSimpleInputMulti;
+var
+  LUI: INyxUI;
+  I: Integer;
+  LID: String;
+begin
+  LUI := NewNyxUI;
+  LUI
+    .AddContainer(NewNyxContainer, I)
+    .ContainerByIndex(I)
+      .Add(
+        NewNyxInputMulti
+          .UpdateText('Hello World')
+          .Observe(imLines, @LinesChanged, LID)
+          .Size
+            .UpdateWidth(1)
+            .UpdateHeight(1)
+            .UpdateMode(smPercent)
+          .Element
       )
     .UI
       .Render();

@@ -129,6 +129,17 @@ type
     *)
     function DoCreateElement : TJSElement; virtual; abstract;
 
+    (*
+      children can override this method to add custom default
+      inline css
+
+      @ACSSHelper:
+        will be of type nyx.utils.browser.css.TNyxCSSHelper but
+        using TObject because of circular dependencies, so children
+        will need to cast before using
+    *)
+    procedure DoInitializeCSS(const ACSSHelper : TObject); virtual;
+
     procedure DoUpdateHeight; override;
     procedure DoUpdateWidth; override;
     procedure DoUpdateMode; override;
@@ -209,6 +220,9 @@ begin
       LStyle := '';
 
     LCSS.CSS := LStyle;
+
+    //pass helper to children
+    DoInitializeCSS(LCSS);
 
     FElement.setAttribute('style', LCSS.CSS);
   finally
@@ -332,6 +346,11 @@ begin
   finally
     LCSS.Free;
   end;
+end;
+
+procedure TNyxElementBrowserImpl.DoInitializeCSS(const ACSSHelper: TObject);
+begin
+  //nothing in base
 end;
 
 procedure TNyxElementBrowserImpl.DoUpdateHeight;
