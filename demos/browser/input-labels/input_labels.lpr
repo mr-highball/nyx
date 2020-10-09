@@ -68,7 +68,7 @@ var
     //setup a bounds that anchors this text element to the input element
     LBounds := NewNyxRelationalBounds;
     LBounds
-      .UpdateTop(-40)
+      .UpdateTop(-40) //give the label some room above the input
       .UpdateVertAlignment(vaTop); //anchor to top
 
     //add the text to be managed by the relational layout
