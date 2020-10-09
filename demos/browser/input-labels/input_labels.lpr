@@ -98,7 +98,15 @@ begin
   FUI := NewNyxUI;
   LLayout := NewNyxLayoutRelational;
   LPropLayout := NewNyxLayoutProportional;
+
   LContainer := NewNyxContainer;
+  LContainer
+    .UpdateSize( //make the container take up 100% of the screen
+      NewNyxSize
+        .UpdateHeight(1)
+        .UpdateWidth(1)
+        .UpdateMode(smPercent) //use percent mode
+    );
 
   //add inputs based on the strings and update the "name" property.
   //we'll use this in the AddLabelToElements method as the label text
@@ -111,16 +119,8 @@ begin
     .AddLayout(LPropLayout, I) //this layout controls the input positioning
     .AddContainer(LContainer, I)
     .ContainerByIndex(I)
-      .UpdateSize( //make the container take up 100% of the screen
-        NewNyxSize
-          .UpdateHeight(1)
-          .UpdateWidth(1)
-          .UpdateMode(smPercent) //use percent mode
-      )
-    .Container
       .Elements
         .ForEach(@PositionInputsByIndex);
-
 
   //now that we've added all the inputs render to the screen so they have
   //positions, then we need to add the labels and render again (we do this
