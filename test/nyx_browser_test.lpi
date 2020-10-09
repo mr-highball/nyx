@@ -31,7 +31,7 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <Units Count="28">
+    <Units Count="30">
       <Unit0>
         <Filename Value="nyx_browser_test.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -147,6 +147,14 @@
         <Filename Value="..\src\nyx.element.inputmulti.browser.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit27>
+      <Unit28>
+        <Filename Value="..\src\nyx.element.statictext.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit28>
+      <Unit29>
+        <Filename Value="..\src\nyx.element.statictext.browser.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit29>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -181,11 +189,7 @@
       <CustomOptions Value="-Jeutf-8
 -Jirtl.js
 -Jc
--Jminclude
--dSkipAsync"/>
-      <OtherDefines Count="1">
-        <Define0 Value="SkipAsync"/>
-      </OtherDefines>
+-Jminclude"/>
       <CompilerPath Value="$(pas2js)"/>
     </Other>
   </CompilerOptions>

@@ -187,12 +187,16 @@ end;
 
 procedure TNyxElementButtonBaseImpl.SetText(const AValue: String);
 begin
+  DoPropertyNotify(puBeforeUpdate, bpText);
   DoSetText(AValue);
+  DoPropertyNotify(puAfterUpdate, bpText);
 end;
 
 procedure TNyxElementButtonBaseImpl.SetEnabled(const AValue: Boolean);
 begin
+  DoPropertyNotify(puBeforeUpdate, bpEnabled);
   DoSetEnabled(AValue);
+  DoPropertyNotify(puAfterUpdate, bpEnabled);
 end;
 
 function TNyxElementButtonBaseImpl.GetEnabled: Boolean;
@@ -207,7 +211,9 @@ end;
 
 procedure TNyxElementButtonBaseImpl.SetVisible(const AValue: Boolean);
 begin
+  DoPropertyNotify(puBeforeUpdate, bpVisible);
   DoSetVisible(AValue);
+  DoPropertyNotify(puAfterUpdate, bpVisible);
 end;
 
 procedure TNyxElementButtonBaseImpl.DoPropertyNotify(

@@ -29,7 +29,7 @@ uses
   nyx.layout, nyx.layout.relational.browser, nyx.size, nyx.element,
   nyx.container, nyx.container.browser, nyx.element.input,
   nyx.element.input.browser, nyx.element.checkbox, nyx.element.checkbox.browser,
-  nyx.element.inputmulti, nyx.element.inputmulti.browser;
+  nyx.element.inputmulti, nyx.element.inputmulti.browser, nyx.element.statictext;
 
 type
 
@@ -63,7 +63,7 @@ type
     procedure LinesChanged(const AType : TPropertyUpdateType;
       const AInput : INyxElementInputMulti; const AProperty : TInputMultiProperty);
   strict protected
-    procedure doRun; override; //calls BuildUI
+    procedure doRun; override;
 
     (*
       main method which constructs the user interface
@@ -74,6 +74,7 @@ type
     procedure TestSimpleInput;
     procedure TestSimpleCheckbox;
     procedure TestSimpleInputMulti;
+    procedure TestSimpleStaticText;
   public
     destructor Destroy; override;
   end;
@@ -161,7 +162,8 @@ begin
   //TestAddClickHandlerToButton;
   //TestSimpleInput;
   //TestSimpleCheckbox;
-  TestSimpleInputMulti;
+  //TestSimpleInputMulti;
+  TestSimpleStaticText;
 end;
 
 procedure TBrowserTest.BuildUI;
@@ -445,6 +447,38 @@ begin
             .UpdateHeight(1)
             .UpdateMode(smPercent)
           .Element
+      )
+    .UI
+      .Render();
+end;
+
+procedure TBrowserTest.TestSimpleStaticText;
+var
+  LUI: INyxUI;
+  I: Integer;
+  LID: String;
+begin
+  LUI := NewNyxUI;
+  LUI
+    .AddContainer(NewNyxContainer, I)
+    .ContainerByIndex(I)
+      .Add(
+        NewNyxStaticText.UpdateText('Normal Text')
+      )
+      .Add(
+        NewNyxStaticText.UpdateText('Bold Text').UpdateFormat([sfBold])
+      )
+      .Add(
+        NewNyxStaticText.UpdateText('Strike Text').UpdateFormat([sfStrikeThrough])
+      )
+      .Add(
+        NewNyxStaticText.UpdateText('Underline Text').UpdateFormat([sfUnderline])
+      )
+      .Add(
+        NewNyxStaticText.UpdateText('Italic Text').UpdateFormat([sfItalic])
+      )
+      .Add(
+        NewNyxStaticText.UpdateText('All Format Text').UpdateFormat([sfBold, sfStrikeThrough, sfUnderline, sfItalic])
       )
     .UI
       .Render();
