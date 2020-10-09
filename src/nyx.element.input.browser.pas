@@ -20,7 +20,7 @@
   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
   IN THE SOFTWARE.
 }
-unit nyx.element.button.browser;
+unit nyx.element.input.browser;
 
 {$mode delphi}
 
@@ -30,15 +30,15 @@ uses
   web,
   nyx.types,
   nyx.element.browser,
-  nyx.element.button;
+  nyx.element.input;
 
 type
 
-  { TNyxElementButtonBrowserImpl }
+  { TNyxElementInputBrowserImpl }
   (*
-    base implementation for all browser nyx buttons
+    base implementation for all browser nyx Inputs
   *)
-  TNyxElementButtonBrowserImpl = class(TNyxElementButtonBaseImpl, INyxElementBrowser, INyxElementButton)
+  TNyxElementInputBrowserImpl = class(TNyxElementInputBaseImpl, INyxElementBrowser, INyxElementInput)
   strict private
     FBrowser : TNyxElementBrowserImpl;
   protected
@@ -46,27 +46,34 @@ type
 
     type
 
-      { TBrowserElementComponent }
       (*
         component which handles the INyxElement contract
       *)
+
+      { TBrowserElementComponent }
+
       TBrowserElementComponent = class(TNyxElementBrowserImpl)
       strict protected
         function DoCreateElement: TJSElement; override;
         function DoGetSelf: INyxElement; override;
       public
-        Parent : TNyxElementButtonBrowserImpl;
+        Parent : TNyxElementInputBrowserImpl;
       end;
 
   strict protected
     procedure DoSetText(const AValue: String); override;
     function DoGetText: String; override;
 
+    function DoGetTextPrompt: String; override;
+    procedure DoSetTextPrompt(const AValue: String); override;
+
     function DoGetEnabled: Boolean; override;
     procedure DoSetEnabled(const AValue: Boolean); override;
 
     function DoGetVisible: Boolean; override;
     procedure DoSetVisible(const AValue: Boolean); override;
+
+
 
     (*
       because we use composition, we need to redirect calls
@@ -87,91 +94,99 @@ type
 
 implementation
 uses
-  webwidget,
   nyx.utils.browser.css;
 
-{ TNyxElementButtonBrowserImpl }
+{ TNyxElementInputBrowserImpl }
 
-function TNyxElementButtonBrowserImpl.GetBrowser: TNyxElementBrowserImpl;
+function TNyxElementInputBrowserImpl.DoGetTextPrompt: String;
+begin
+  Result := TJSHTMLInputElement(FBrowser.JSElement).placeholder;
+end;
+
+procedure TNyxElementInputBrowserImpl.DoSetTextPrompt(const AValue: String);
+begin
+  TJSHTMLInputElement(FBrowser.JSElement).placeholder := AValue;
+end;
+
+function TNyxElementInputBrowserImpl.GetBrowser: TNyxElementBrowserImpl;
 begin
   Result := FBrowser;
 end;
 
-procedure TNyxElementButtonBrowserImpl.DoSetText(const AValue: String);
+procedure TNyxElementInputBrowserImpl.DoSetText(const AValue: String);
 begin
-  FBrowser.JSElement.textContent := AValue;
+  TJSHTMLInputElement(FBrowser.JSElement).value := AValue;
 end;
 
-function TNyxElementButtonBrowserImpl.DoGetText: String;
+function TNyxElementInputBrowserImpl.DoGetText: String;
 begin
-  Result := FBrowser.JSElement.textContent;
+  Result := TJSHTMLInputElement(FBrowser.JSElement).value;
 end;
 
-function TNyxElementButtonBrowserImpl.DoGetEnabled: Boolean;
+function TNyxElementInputBrowserImpl.DoGetEnabled: Boolean;
 begin
-  Result := not TJSHTMLButtonElement(FBrowser.JSElement).disabled;
+  Result := not TJSHTMLInputElement(FBrowser.JSElement).disabled;
 end;
 
-procedure TNyxElementButtonBrowserImpl.DoSetEnabled(const AValue: Boolean);
+procedure TNyxElementInputBrowserImpl.DoSetEnabled(const AValue: Boolean);
 begin
-  TJSHTMLButtonElement(FBrowser.JSElement).disabled := not AValue;
+  TJSHTMLInputElement(FBrowser.JSElement).disabled := not AValue;
 end;
 
-function TNyxElementButtonBrowserImpl.DoGetVisible: Boolean;
+function TNyxElementInputBrowserImpl.DoGetVisible: Boolean;
 begin
   Result := FBrowser.Visible;
 end;
 
-procedure TNyxElementButtonBrowserImpl.DoSetVisible(const AValue: Boolean);
+procedure TNyxElementInputBrowserImpl.DoSetVisible(const AValue: Boolean);
 begin
   FBrowser.Visible := AValue;
 end;
 
-procedure TNyxElementButtonBrowserImpl.DoUpdateHeight;
+procedure TNyxElementInputBrowserImpl.DoUpdateHeight;
 begin
   FBrowser.Size.UpdateHeight(Size.Height);
 end;
 
-procedure TNyxElementButtonBrowserImpl.DoUpdateWidth;
+procedure TNyxElementInputBrowserImpl.DoUpdateWidth;
 begin
   FBrowser.Size.UpdateWidth(Size.Width);
 end;
 
-procedure TNyxElementButtonBrowserImpl.DoUpdateMode;
+procedure TNyxElementInputBrowserImpl.DoUpdateMode;
 begin
   FBrowser.Size.UpdateMode(Size.Mode);
 end;
 
-function TNyxElementButtonBrowserImpl.DoGetContainer: INyxContainer;
+function TNyxElementInputBrowserImpl.DoGetContainer: INyxContainer;
 begin
   Result := FBrowser.Container;
 end;
 
-procedure TNyxElementButtonBrowserImpl.DoSetContainer(
+procedure TNyxElementInputBrowserImpl.DoSetContainer(
   const AValue: INyxContainer);
 begin
   FBrowser.Container := AValue;
 end;
 
-function TNyxElementButtonBrowserImpl.TBrowserElementComponent.DoCreateElement: TJSElement;
+function TNyxElementInputBrowserImpl.TBrowserElementComponent.DoCreateElement: TJSElement;
 begin
-  Result := document.createElement('button');
+  Result := document.createElement('input');
 end;
 
-function TNyxElementButtonBrowserImpl.TBrowserElementComponent.DoGetSelf: INyxElement;
+function TNyxElementInputBrowserImpl.TBrowserElementComponent.DoGetSelf: INyxElement;
 begin
   Result := Parent as INyxElement;
 end;
 
-constructor TNyxElementButtonBrowserImpl.Create;
+constructor TNyxElementInputBrowserImpl.Create;
 begin
   inherited Create;
   FBrowser := TBrowserElementComponent.Create;
   TBrowserElementComponent(FBrowser).Parent := Self;
-  BindEvents(FBrowser);
 end;
 
-destructor TNyxElementButtonBrowserImpl.Destroy;
+destructor TNyxElementInputBrowserImpl.Destroy;
 begin
   FBrowser.Free;
   inherited Destroy;

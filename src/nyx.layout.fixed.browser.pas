@@ -27,7 +27,6 @@ unit nyx.layout.fixed.browser;
 interface
 
 uses
-  Classes,
   SysUtils,
   nyx.types,
   nyx.layout,
@@ -79,6 +78,7 @@ begin
       FCSS.CSS := LStyle;
 
     //we will use the position / attribute pair to force "fixed" positioning
+    //within ancestor control (container)
     FCSS.Upsert('position', 'absolute');
 
     //get the bounding box of the element to calculate alignment

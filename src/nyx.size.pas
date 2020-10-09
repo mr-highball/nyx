@@ -1,3 +1,25 @@
+{ nyx
+
+  Copyright (c) 2020 mr-highball
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to
+  deal in the Software without restriction, including without limitation the
+  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+  sell copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
+}
 unit nyx.size;
 
 {$mode delphi}
@@ -5,8 +27,6 @@ unit nyx.size;
 interface
 
 uses
-  Classes,
-  SysUtils,
   nyx.types,
   nyx.utils.observe;
 
@@ -23,6 +43,8 @@ type
     FWidth : Double;
     FMode : TSizeMode;
     FElement : INyxElement;
+    procedure DoPropertyNotify(const AType : TPropertyUpdateType;
+      const AProperty : TSizeProperty);
   protected
     function GetElement: INyxElement;
     function GetHeight: Double;
@@ -33,8 +55,6 @@ type
     procedure SetWidth(const AValue: Double);
     procedure SetElement(const AValue: INyxElement);
   strict protected
-    procedure DoPropertyNotify(const AType : TPropertyUpdateType;
-      const AProperty : TSizeProperty);
   public
     property Height : Double read GetHeight write SetHeight;
     property Width : Double read GetWidth write SetWidth;
@@ -182,6 +202,8 @@ end;
 constructor TNyxSizeImpl.Create;
 begin
   inherited Create;
+  FHeight := -1;
+  FWidth := -1;
   FObserve := TNyxObservationHelper.Create;
 end;
 

@@ -25,16 +25,11 @@ program nyx_browser_test;
 {$mode delphi}
 
 uses
-  Classes,
-  SysUtils,
-  browserapp,
-  web,
-  math,
-  js,
-  nyx.types,
-  nyx.element.button,
-  nyx.layout,
-  nyx.layout.relational.browser, nyx.size;
+  Classes, SysUtils, browserapp, web, math, js, nyx.types, nyx.element.button,
+  nyx.layout, nyx.layout.relational.browser, nyx.size, nyx.element,
+  nyx.container, nyx.container.browser, nyx.element.input,
+  nyx.element.input.browser, nyx.element.checkbox, nyx.element.checkbox.browser,
+  nyx.element.inputmulti, nyx.element.inputmulti.browser, nyx.element.statictext;
 
 type
 
@@ -50,34 +45,52 @@ type
     (*
       handler for telling the world hello
     *)
-    procedure HelloWorldClick(const AButton : INyxElementButton;
-      const AEvent : TButtonObserveEvent);
+    procedure HelloWorldClick(const AElement : INyxElement;
+      const AEvent : TElementEvent);
 
-    procedure RunningButtonClick(const AButton : INyxElementButton;
-      const AEvent : TButtonObserveEvent);
+    procedure RunningButtonClick(const AElement : INyxElement;
+      const AEvent : TElementEvent);
 
+    procedure EnterExitBigButton(const AElement : INyxElement;
+      const AEvent : TElementEvent);
+
+    procedure HideBigButton(const AElement : INyxElement;
+      const AEvent : TElementEvent);
+
+    procedure CheckChanged(const AType : TPropertyUpdateType;
+      const ACheckbox : INyxElementCheckbox; const AProperty : TCheckboxProperty);
+
+    procedure LinesChanged(const AType : TPropertyUpdateType;
+      const AInput : INyxElementInputMulti; const AProperty : TInputMultiProperty);
   strict protected
-    procedure doRun; override; //calls BuildUI
+    procedure doRun; override;
 
     (*
       main method which constructs the user interface
     *)
     procedure BuildUI;
+    procedure TestContainerIsBrowser;
+    procedure TestAddClickHandlerToButton;
+    procedure TestSimpleInput;
+    procedure TestSimpleCheckbox;
+    procedure TestSimpleInputMulti;
+    procedure TestSimpleStaticText;
   public
     destructor Destroy; override;
   end;
 
-procedure TBrowserTest.HelloWorldClick(const AButton: INyxElementButton;
-  const AEvent: TButtonObserveEvent);
+procedure TBrowserTest.HelloWorldClick(const AElement: INyxElement;
+  const AEvent: TElementEvent);
 begin
   window.alert('you clicked me!');
 end;
 
-procedure TBrowserTest.RunningButtonClick(const AButton: INyxElementButton;
-  const AEvent: TButtonObserveEvent);
+procedure TBrowserTest.RunningButtonClick(const AElement: INyxElement;
+  const AEvent: TElementEvent);
 var
   LLayout: INyxLayoutFixed;
   LBounds: INyxFixedBounds;
+  LButton: INyxElementButton;
 
 const
   BUTTON_TEXT : array[0 .. 4] of String = (
@@ -88,28 +101,69 @@ const
     'be gentle senpai <3'
   );
 begin
+  LButton := AElement as INyxElementButton;
+
   //using the UI we fetch the fixed layout (this assumes it's in the first index)
   LLayout := UI.LayoutByIndex(0) as INyxLayoutFixed;
 
   //we also assume our button was properly added to the layout (which it was)
   //in order to obtain the bounds for the button
-  LBounds := LLayout.Bounds[AButton];
+  LBounds := LLayout.Bounds[LButton];
 
   //lastly we'll increment the left position to make the button look
   //like it's running away from the user clicking it
   LBounds.UpdateLeft(LBounds.Left + 50);
 
   //now for some fun, just update the text of the button
-  AButton.UpdateText(BUTTON_TEXT[RandomRange(0, 4)]);
+  LButton.UpdateText(BUTTON_TEXT[RandomRange(0, 4)]);
 
   //lastly we need to render the UI for changes on the layout to take place
   UI.Render;
 end;
 
+procedure TBrowserTest.EnterExitBigButton(const AElement: INyxElement;
+  const AEvent: TElementEvent);
+begin
+  if AEvent = evMouseEnter then
+    window.alert('entered big button')
+  else
+    window.alert('exited big button');
+end;
+
+procedure TBrowserTest.HideBigButton(const AElement: INyxElement;
+  const AEvent: TElementEvent);
+begin
+  (AElement as INyxElementButton).Visible := False;
+end;
+
+procedure TBrowserTest.CheckChanged(const AType: TPropertyUpdateType;
+  const ACheckbox: INyxElementCheckbox; const AProperty: TCheckboxProperty);
+var
+  LVal: Boolean;
+begin
+  if AType = puAfterUpdate then
+  begin
+    LVal := ACheckbox.Checked;
+    window.alert('checkbox has changed to ' + BoolToStr(LVal, True));
+  end;
+end;
+
+procedure TBrowserTest.LinesChanged(const AType: TPropertyUpdateType;
+  const AInput: INyxElementInputMulti; const AProperty: TInputMultiProperty);
+begin
+  WriteLn(AType, AInput.Text)
+end;
+
 procedure TBrowserTest.doRun;
 begin
   inherited doRun;
-  BuildUI;
+  //BuildUI;
+  //TestContainerIsBrowser;
+  //TestAddClickHandlerToButton;
+  //TestSimpleInput;
+  //TestSimpleCheckbox;
+  //TestSimpleInputMulti;
+  TestSimpleStaticText;
 end;
 
 procedure TBrowserTest.BuildUI;
@@ -166,7 +220,7 @@ begin
       .Add( //add a button to it
         NewNyxButton
           .UpdateText('Hello World') //sets our text for the display
-          .Observe(boClick, @HelloWorldClick, LID), //attaches a handler to the click event
+          .Observe(evClick, @HelloWorldClick, LID), //attaches a handler to the click event
         LHelloIndex //optional recording of the index the button was added to in the container
       )
       .Add( //adds a new button but in this case, we will disable it
@@ -178,7 +232,7 @@ begin
       .Add( //adds a "running" button demonstrating dynamic positioning
         NewNyxButton
           .UpdateText('click and I run!')
-          .Observe(boClick, @RunningButtonClick, LID),
+          .Observe(evClick, @RunningButtonClick, LID),
         LRunIndex
       )
       .Add( //adds a button that is center to the container using proportional layout
@@ -193,7 +247,11 @@ begin
       )
       .Add(
         NewNyxButton
-          .UpdateText('big button'),
+          .UpdateText('big button')
+          .Observe(evMouseEnter, @EnterExitBigButton, LID)
+          .Observe(evMouseExit, @EnterExitBigButton, LID)
+          .Observe(evClick, @HideBigButton, LID)
+          .UpdateName('big button'),
         LBigIndex
       )
     .UI //scope to the UI property
@@ -210,6 +268,16 @@ begin
       .TakeAction(@PositionButton, [LHelloIndex, I, J, 100, 100])
       .TakeAction(@PositionButton, [LDisabledIndex, I, J, 100, 175])
       .TakeAction(@PositionButton, [LRunIndex, I, J, 100, 250]);
+
+  //make the container 100% of screen
+  UI
+    .ContainerByIndex(I)
+      .Size
+        .UpdateHeight(1.0)
+        .UpdateWidth(1.0)
+        .UpdateMode(smPercent)
+      .Element
+        .UpdateName('container');
 
   //we could've done this via take action, but showing another way to
   //get and cast the layout added, and add the centered button with a proportional layout
@@ -248,21 +316,172 @@ begin
 
   LBounds := NewNyxProportionalBounds;
   LBounds
-    .UpdateTop(0)
-    .UpdateLeft(0.9);
+    .UpdateLeft(1)
+    .UpdateHorzAlignment(haRight);
 
   LLayout.Add(
     LElement,
     LBounds
   );
 
-  LElement.Size := NewNyxSize;
-  LElement.Size.UpdateHeight(100);
-  LElement.Size.UpdateWidth(10);
+  LElement.Size.UpdateHeight(1);
+  LElement.Size.UpdateWidth(0.10);
   LElement.Size.UpdateMode(smPercent);
 
   //renders all containers and elements to the screen
   UI.Render();
+end;
+
+procedure TBrowserTest.TestContainerIsBrowser;
+var
+  LContainer: INyxContainer;
+  LUI: INyxUI;
+  I, J: Integer;
+  LLayout: INyxLayoutProportional;
+begin
+  LUI := NewNyxUI;
+
+  //100% sized container
+  LContainer := NewNyxContainer;
+  LContainer
+    .Size
+      .UpdateHeight(1)
+      .UpdateWidth(1)
+      .UpdateMode(smPercent)
+    .Element
+      .UpdateName('container');
+
+  LLayout := NewNyxLayoutProportional;
+
+  //add the container/layout/button to the ui
+  LUI
+    .AddContainer(LContainer, I)
+    .AddLayout(LLayout, J)
+    .ContainerByIndex(I)
+      .Add(NewNyxButton);
+
+  //right align the button to the container
+  LLayout.Add(
+    LUI.ContainerByIndex(I).Elements[0],
+    INyxProportionalBounds(NewNyxProportionalBounds
+      .UpdateLeft(1)
+      .UpdateHorzAlignment(haRight))
+  );
+
+  LUI.Render();
+end;
+
+procedure TBrowserTest.TestAddClickHandlerToButton;
+var
+  LUI: INyxUI;
+  I: Integer;
+  LID: String;
+begin
+  LUI := NewNyxUI;
+  LUI
+    .AddContainer(NewNyxContainer, I)
+    .ContainerByIndex(I)
+      .Add(
+        NewNyxButton
+          .UpdateText('Hello World')
+          .Observe(evClick, @HelloWorldClick, LID)
+      )
+    .UI
+      .Render();
+end;
+
+procedure TBrowserTest.TestSimpleInput;
+var
+  LUI: INyxUI;
+  I: Integer;
+  LID: String;
+begin
+  LUI := NewNyxUI;
+  LUI
+    .AddContainer(NewNyxContainer, I)
+    .ContainerByIndex(I)
+      .Add(
+        NewNyxInput
+          .UpdateText('Hello World')
+          .UpdateTextPrompt('type something...')
+      )
+    .UI
+      .Render();
+end;
+
+procedure TBrowserTest.TestSimpleCheckbox;
+var
+  LUI: INyxUI;
+  I: Integer;
+  LID: String;
+begin
+  LUI := NewNyxUI;
+  LUI
+    .AddContainer(NewNyxContainer, I)
+    .ContainerByIndex(I)
+      .Add(
+        NewNyxCheckbox
+          .UpdateText('Hello World')
+          .Observe(cpChecked, @CheckChanged, LID)
+      )
+    .UI
+      .Render();
+end;
+
+procedure TBrowserTest.TestSimpleInputMulti;
+var
+  LUI: INyxUI;
+  I: Integer;
+  LID: String;
+begin
+  LUI := NewNyxUI;
+  LUI
+    .AddContainer(NewNyxContainer, I)
+    .ContainerByIndex(I)
+      .Add(
+        NewNyxInputMulti
+          .UpdateText('Hello World')
+          .Observe(imLines, @LinesChanged, LID)
+          .Size
+            .UpdateWidth(1)
+            .UpdateHeight(1)
+            .UpdateMode(smPercent)
+          .Element
+      )
+    .UI
+      .Render();
+end;
+
+procedure TBrowserTest.TestSimpleStaticText;
+var
+  LUI: INyxUI;
+  I: Integer;
+  LID: String;
+begin
+  LUI := NewNyxUI;
+  LUI
+    .AddContainer(NewNyxContainer, I)
+    .ContainerByIndex(I)
+      .Add(
+        NewNyxStaticText.UpdateText('Normal Text')
+      )
+      .Add(
+        NewNyxStaticText.UpdateText('Bold Text').UpdateFormat([sfBold])
+      )
+      .Add(
+        NewNyxStaticText.UpdateText('Strike Text').UpdateFormat([sfStrikeThrough])
+      )
+      .Add(
+        NewNyxStaticText.UpdateText('Underline Text').UpdateFormat([sfUnderline])
+      )
+      .Add(
+        NewNyxStaticText.UpdateText('Italic Text').UpdateFormat([sfItalic])
+      )
+      .Add(
+        NewNyxStaticText.UpdateText('All Format Text').UpdateFormat([sfBold, sfStrikeThrough, sfUnderline, sfItalic])
+      )
+    .UI
+      .Render();
 end;
 
 destructor TBrowserTest.Destroy;

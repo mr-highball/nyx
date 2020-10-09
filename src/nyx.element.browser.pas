@@ -27,10 +27,10 @@ unit nyx.element.browser;
 interface
 
 uses
-  Classes,
   SysUtils,
   web,
-  nyx.types;
+  nyx.types,
+  nyx.element;
 
 type
 
@@ -43,9 +43,16 @@ type
 
     //property methods
     function GetJSElement: TJSElement;
+    function GetVisible: Boolean;
+    procedure SetVisible(const AValue: Boolean);
 
     //properties
     property JSElement : TJSElement read GetJSElement;
+
+    (*
+      uses display: none to determine element visibility
+    *)
+    property Visible : Boolean read GetVisible write SetVisible;
   end;
 
 
@@ -57,10 +64,63 @@ type
   strict private
     FElement : TJSElement;
 
+    (*
+      notifies observers for click events
+    *)
+    procedure ClickHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for double click events
+    *)
+    procedure DoubleClickHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for mouse enter events
+    *)
+    procedure MouseEnterHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for mouse exit events
+    *)
+    procedure MouseExitHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for mouse down events
+    *)
+    procedure MouseDownHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for mouse up events
+    *)
+    procedure MouseUpHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for key up events
+    *)
+    procedure KeyUpHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for key down events
+    *)
+    procedure KeyDownHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for focus events
+    *)
+    procedure FocusHandler(Event: TEventListenerEvent);
+
+    (*
+      notifies observers for lose focus events
+    *)
+    procedure LoseFocusHandler(Event: TEventListenerEvent);
+
     procedure InitializeCSS;
+    procedure InitializeEvents;
     procedure UpdateSize;
   protected
     function GetJSElement: TJSElement;
+    function GetVisible: Boolean;
+    procedure SetVisible(const AValue: Boolean);
   strict protected
 
     (*
@@ -69,20 +129,83 @@ type
     *)
     function DoCreateElement : TJSElement; virtual; abstract;
 
+    (*
+      children can override this method to add custom default
+      inline css
+
+      @ACSSHelper:
+        will be of type nyx.utils.browser.css.TNyxCSSHelper but
+        using TObject because of circular dependencies, so children
+        will need to cast before using
+    *)
+    procedure DoInitializeCSS(const ACSSHelper : TObject); virtual;
+
     procedure DoUpdateHeight; override;
     procedure DoUpdateWidth; override;
     procedure DoUpdateMode; override;
   public
     property JSElement : TJSElement read GetJSElement;
+    property Visible : Boolean read GetVisible write SetVisible;
 
     constructor Create; override;
   end;
 
 implementation
 uses
+  webwidget,
   nyx.utils.browser.css;
 
 { TNyxElementBrowserImpl }
+
+procedure TNyxElementBrowserImpl.ClickHandler(Event: TEventListenerEvent);
+begin
+  Notify(evClick);
+end;
+
+procedure TNyxElementBrowserImpl.DoubleClickHandler(Event: TEventListenerEvent);
+begin
+  Notify(evDoubleClick);
+end;
+
+procedure TNyxElementBrowserImpl.MouseEnterHandler(Event: TEventListenerEvent);
+begin
+  Notify(evMouseEnter);
+end;
+
+procedure TNyxElementBrowserImpl.MouseExitHandler(Event: TEventListenerEvent);
+begin
+  Notify(evMouseExit);
+end;
+
+procedure TNyxElementBrowserImpl.MouseDownHandler(Event: TEventListenerEvent);
+begin
+  Notify(evMouseDown);
+end;
+
+procedure TNyxElementBrowserImpl.MouseUpHandler(Event: TEventListenerEvent);
+begin
+  Notify(evMouseUp);
+end;
+
+procedure TNyxElementBrowserImpl.KeyUpHandler(Event: TEventListenerEvent);
+begin
+  Notify(evKeyUp);
+end;
+
+procedure TNyxElementBrowserImpl.KeyDownHandler(Event: TEventListenerEvent);
+begin
+  Notify(evKeyDown);
+end;
+
+procedure TNyxElementBrowserImpl.FocusHandler(Event: TEventListenerEvent);
+begin
+  Notify(evFocus)
+end;
+
+procedure TNyxElementBrowserImpl.LoseFocusHandler(Event: TEventListenerEvent);
+begin
+  Notify(evLoseFocus);
+end;
 
 procedure TNyxElementBrowserImpl.InitializeCSS;
 var
@@ -98,9 +221,8 @@ begin
 
     LCSS.CSS := LStyle;
 
-    //force setting a display if we don't have one to try and avoid size checks failing
-    if not LCSS.Exists('display') then
-      LCSS['display'] := 'initial';
+    //pass helper to children
+    DoInitializeCSS(LCSS);
 
     FElement.setAttribute('style', LCSS.CSS);
   finally
@@ -108,12 +230,26 @@ begin
   end;
 end;
 
+procedure TNyxElementBrowserImpl.InitializeEvents;
+begin
+  JSElement.addEventListener(sEventClick, @ClickHandler);
+  JSElement.addEventListener(sEventDblClick, @DoubleClickHandler);
+  JSElement.addEventListener(sEventMouseEnter, @MouseEnterHandler);
+  JSElement.addEventListener(sEventMouseLeave, @MouseExitHandler);
+  JSElement.addEventListener(sEventMouseDown, @MouseDownHandler);
+  JSElement.addEventListener(sEventMouseUp, @MouseUpHandler);
+  JSElement.addEventListener(sEventKeyUp, @KeyUpHandler);
+  JSElement.addEventListener(sEventKeyDown, @KeyDownHandler);
+  JSElement.addEventListener(sEventFocus, @FocusHandler);
+  JSElement.addEventListener(sEventBlur, @LoseFocusHandler);
+end;
+
 procedure TNyxElementBrowserImpl.UpdateSize;
 var
   LCSS : TNyxCSSHelper;
   LSelf: INyxElementBrowser;
 begin
-  LSelf := Self as INyxElementBrowser;
+  LSelf := DoGetSelf as INyxElementBrowser;
   LCSS := TNyxCSSHelper.Create;
   try
     //copy the current style
@@ -122,13 +258,27 @@ begin
     //depending on mode, update css differently
     if Size.Mode = smFixed then
     begin
-      LCSS['height'] := IntToStr(Round(Size.Height)) + 'px';
-      LCSS['width'] := IntToStr(Round(Size.Width)) + 'px';
+      if Size.Height >= 0 then
+        LCSS['height'] := IntToStr(Round(Size.Height)) + 'px'
+      else
+        LCSS.Delete('height');
+
+      if Size.Width >= 0 then
+        LCSS['width'] := IntToStr(Round(Size.Width)) + 'px'
+      else
+        LCSS.Delete('width');
     end
     else
     begin
-      LCSS['height'] := IntToStr(Round(Size.Height)) + '%';
-      LCSS['width'] := IntToStr(Round(Size.Width)) + '%';
+      if Size.Height >= 0 then
+        LCSS['height'] := IntToStr(Round(Size.Height * 100)) + '%'
+      else
+        LCSS.Delete('height');
+
+      if Size.Width >= 0 then
+        LCSS['width'] := IntToStr(Round(Size.Width * 100)) + '%'
+      else
+        LCSS.Delete('width');
     end;
 
     //update the new style
@@ -143,21 +293,78 @@ begin
   Result := FElement;
 end;
 
+function TNyxElementBrowserImpl.GetVisible: Boolean;
+var
+  LCSS: TNyxCSSHelper;
+  LStyle: String;
+begin
+  if not Assigned(FElement) then
+    Exit(False);
+
+  LCSS := TNyxCSSHelper.Create;
+  try
+    LStyle := FElement.getAttribute('style');
+
+    //when no style, then visibility hasn't been set (so we are visible)
+    if not Assigned(LStyle) then
+      Exit(True);
+
+    LCSS.CSS := LStyle;
+
+    //we use display none
+    Result := not (LCSS.Exists('display') and (LowerCase(LCSS['display']) = 'none'));
+  finally
+    LCSS.Free;
+  end;
+end;
+
+procedure TNyxElementBrowserImpl.SetVisible(const AValue: Boolean);
+var
+  LCSS: TNyxCSSHelper;
+  LStyle: String;
+begin
+  if not Assigned(FElement) then
+    Exit;
+
+  LCSS := TNyxCSSHelper.Create;
+  try
+    LStyle := FElement.getAttribute('style');
+
+    if not Assigned(LStyle) then
+      LStyle := '';
+
+    LCSS.CSS := LStyle;
+
+    //we use display none
+    if AValue then
+      LCSS.Delete('display')
+    else
+      LCSS.Upsert('display', 'none');
+
+    //set the css
+    FElement.setAttribute('style', LCSS.CSS);
+  finally
+    LCSS.Free;
+  end;
+end;
+
+procedure TNyxElementBrowserImpl.DoInitializeCSS(const ACSSHelper: TObject);
+begin
+  //nothing in base
+end;
+
 procedure TNyxElementBrowserImpl.DoUpdateHeight;
 begin
-  inherited DoUpdateHeight;
   UpdateSize;
 end;
 
 procedure TNyxElementBrowserImpl.DoUpdateWidth;
 begin
-  inherited DoUpdateWidth;
   UpdateSize;
 end;
 
 procedure TNyxElementBrowserImpl.DoUpdateMode;
 begin
-  inherited DoUpdateMode;
   UpdateSize;
 end;
 
@@ -167,6 +374,7 @@ begin
   FElement :=  DoCreateElement;
   FElement.id := ID;
   InitializeCSS;
+  InitializeEvents;
 end;
 
 end.

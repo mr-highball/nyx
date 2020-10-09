@@ -27,41 +27,29 @@ unit nyx.element.button;
 interface
 
 uses
-  Classes,
-  SysUtils,
   nyx.types,
-  nyx.utils.observe;
+  nyx.utils.observe,
+  nyx.element;
 
 type
-
-  (*
-    enum for all observable events of a button
-  *)
-  TButtonObserveEvent = (
-    boClick,
-    boMouseOver,
-    boMouseDown,
-    boMouseUp
-    //todo - add all event types for a button
-  );
 
   (*
     enum for all properties of a button
   *)
   TButtonProperty = (
     bpEnabled,
-    bpText
-    //todo - add all button properties
+    bpText,
+    bpVisible
   );
 
   //forward
   INyxElementButton = interface;
 
   (*
-    observer method for all button events
+    observer method for element properties
   *)
-  TButtonObserveMethod = procedure(const AButton : INyxElementButton;
-    const AEvent : TButtonObserveEvent) of object;
+  TButtonPropertyObserveMethod = procedure(const AType : TPropertyUpdateType;
+    const AButton : INyxElementButton; const AProperty : TButtonProperty) of object;
 
   { INyxElementButton }
   (*
@@ -75,6 +63,8 @@ type
     procedure SetText(const AValue: String);
     procedure SetEnabled(const AValue: Boolean);
     function GetEnabled: Boolean;
+    function GetVisible: Boolean;
+    procedure SetVisible(const AValue: Boolean);
 
     //property
 
@@ -87,6 +77,11 @@ type
       determines if the button is enabled or not
     *)
     property Enabled : Boolean read GetEnabled write SetEnabled;
+
+    (*
+      determines if the button is visible or not
+    *)
+    property Visible : Boolean read GetVisible write SetVisible;
 
     //methods
 
@@ -101,30 +96,31 @@ type
     function UpdateEnabled(const AEnabled : Boolean) : INyxElementButton;
 
     (*
-      callers can attach an observe method with a particular event
-      and will get notified when that event occurs
+      fluent setter for the button's visible property
     *)
-    function Observe(const AEvent : TButtonObserveEvent; const AObserver : TButtonObserveMethod;
-      out ID : String) : INyxElementButton;
+    function UpdateVisible(const AVisible : Boolean) : INyxElementButton;
 
-    (*
-      removes an observer
-    *)
-    function RemoveObserver(const AID : String) : INyxElementButton;
+    function Observe(const AProperty : TButtonProperty;
+      const AObserver : TButtonPropertyObserveMethod; out ID : String) : INyxElementButton; overload;
   end;
 
   { TNyxElementButtonBaseImpl }
   (*
-    base buttom implementation
+    base button implementation
   *)
   TNyxElementButtonBaseImpl = class(TNyxElementBaseImpl, INyxElementButton)
   strict private
-    FObserve : TNyxObservationHelper;
+    FPropertyObserve: TNyxObservationHelper;
   protected
     function GetText: String;
     procedure SetText(const AValue: String);
     procedure SetEnabled(const AValue: Boolean);
     function GetEnabled: Boolean;
+    function GetVisible: Boolean;
+    procedure SetVisible(const AValue: Boolean);
+
+    procedure DoPropertyNotify(const AType : TPropertyUpdateType;
+      const AProperty : TButtonProperty);
   strict protected
     function DoGetText: String; virtual; abstract;
     procedure DoSetText(const AValue: String); virtual; abstract;
@@ -132,24 +128,36 @@ type
     function DoGetEnabled: Boolean; virtual; abstract;
     procedure DoSetEnabled(const AValue: Boolean); virtual; abstract;
 
-    procedure Notify(const AEvent : TButtonObserveEvent);
+    function DoGetVisible: Boolean; virtual; abstract;
+    procedure DoSetVisible(const AValue: Boolean); virtual; abstract;
+
+    procedure DoRemoveObserver(const AID: String); override;
   public
     property Text : String read GetText write SetText;
     property Enabled : Boolean read GetEnabled write SetEnabled;
+    property Visible : Boolean read GetVisible write SetVisible;
 
     function UpdateText(const AText : String) : INyxElementButton;
     function UpdateEnabled(const AEnabled : Boolean) : INyxElementButton;
+    function UpdateVisible(const AVisible : Boolean) : INyxElementButton;
 
-    function Observe(const AEvent : TButtonObserveEvent; const AObserver : TButtonObserveMethod;
-      out ID : String) : INyxElementButton;
-    function RemoveObserver(const AID : String) : INyxElementButton;
+    function Observe(const AProperty : TButtonProperty;
+      const AObserver : TButtonPropertyObserveMethod; out ID : String) : INyxElementButton; overload;
 
     constructor Create; override;
     destructor Destroy; override;
   end;
 
+(*
+  helper to return a new nyx button
+*)
 function NewNyxButton : INyxElementButton;
 
+(*
+  helper to be used in a nyx condition method for determining if an element
+  is a INyxButton
+*)
+function IsNyxButton(const AElement : INyxElement) : Boolean;
 implementation
 uses
 {$IFDEF BROWSER}
@@ -165,6 +173,11 @@ begin
   Result := DefaultNyxButton.Create as INyxElementButton;
 end;
 
+function IsNyxButton(const AElement: INyxElement): Boolean;
+begin
+  Result := Assigned(AElement) and (AElement is INyxElementButton);
+end;
+
 { TNyxElementButtonBaseImpl }
 
 function TNyxElementButtonBaseImpl.GetText: String;
@@ -174,12 +187,16 @@ end;
 
 procedure TNyxElementButtonBaseImpl.SetText(const AValue: String);
 begin
+  DoPropertyNotify(puBeforeUpdate, bpText);
   DoSetText(AValue);
+  DoPropertyNotify(puAfterUpdate, bpText);
 end;
 
 procedure TNyxElementButtonBaseImpl.SetEnabled(const AValue: Boolean);
 begin
+  DoPropertyNotify(puBeforeUpdate, bpEnabled);
   DoSetEnabled(AValue);
+  DoPropertyNotify(puAfterUpdate, bpEnabled);
 end;
 
 function TNyxElementButtonBaseImpl.GetEnabled: Boolean;
@@ -187,64 +204,84 @@ begin
   Result := DoGetEnabled;
 end;
 
-procedure TNyxElementButtonBaseImpl.Notify(const AEvent: TButtonObserveEvent);
+function TNyxElementButtonBaseImpl.GetVisible: Boolean;
+begin
+  Result := DoGetVisible;
+end;
+
+procedure TNyxElementButtonBaseImpl.SetVisible(const AValue: Boolean);
+begin
+  DoPropertyNotify(puBeforeUpdate, bpVisible);
+  DoSetVisible(AValue);
+  DoPropertyNotify(puAfterUpdate, bpVisible);
+end;
+
+procedure TNyxElementButtonBaseImpl.DoPropertyNotify(
+  const AType: TPropertyUpdateType; const AProperty: TButtonProperty);
 var
-  LMethod: TButtonObserveMethod;
+  LMethod: TButtonPropertyObserveMethod;
   I: Integer;
   LButton: INyxElementButton;
   LObservers: TObserverArray;
 begin
-  LButton := Self as INyxElementButton;
-  LObservers := FObserve.ObserversByEvent(Ord(AEvent));
+  LButton := DoGetSelf as INyxElementButton;
+  LObservers := FPropertyObserve.ObserversByEvent(Ord(AProperty));
 
   for I := 0 to High(LObservers) do
     try
-      LMethod := TButtonObserveMethod(LObservers[I]);
+      LMethod := TButtonPropertyObserveMethod(LObservers[I]);
 
       //call the method
-      LMethod(LButton, AEvent);
+      LMethod(AType, LButton, AProperty);
     finally
     end;
 end;
 
+procedure TNyxElementButtonBaseImpl.DoRemoveObserver(const AID: String);
+begin
+  inherited DoRemoveObserver(AID);
+  FPropertyObserve.RemoveByID(AID);
+end;
+
 function TNyxElementButtonBaseImpl.UpdateText(const AText: String): INyxElementButton;
 begin
-  Result := Self as INyxElementButton;
+  Result := DoGetSelf as INyxElementButton;
   SetText(AText);
 end;
 
 function TNyxElementButtonBaseImpl.UpdateEnabled(const AEnabled: Boolean): INyxElementButton;
 begin
-  Result := Self as INyxElementButton;
+  Result := DoGetSelf as INyxElementButton;
   SetEnabled(AEnabled);
 end;
 
-function TNyxElementButtonBaseImpl.Observe(const AEvent: TButtonObserveEvent;
-  const AObserver: TButtonObserveMethod; out ID: String): INyxElementButton;
+function TNyxElementButtonBaseImpl.UpdateVisible(const AVisible: Boolean): INyxElementButton;
 begin
-  Result := Self as INyxElementButton;
+  Result := DoGetSelf as INyxElementButton;
+  SetVisible(AVisible);
+end;
+
+function TNyxElementButtonBaseImpl.Observe(const AProperty: TButtonProperty;
+  const AObserver: TButtonPropertyObserveMethod; out ID: String
+  ): INyxElementButton;
+begin
+  Result := DoGetSelf as INyxElementButton;
 
   if not Assigned(AObserver) then
     Exit;
 
-  ID := FObserve.Observe(Ord(AEvent), Pointer(AObserver));
-end;
-
-function TNyxElementButtonBaseImpl.RemoveObserver(const AID: String): INyxElementButton;
-begin
-  Result := Self as INyxElementButton;
-  FObserve.RemoveByID(AID);
+  ID := FPropertyObserve.Observe(Ord(AProperty), Pointer(AObserver));
 end;
 
 constructor TNyxElementButtonBaseImpl.Create;
 begin
   inherited Create;
-  FObserve := TNyxObservationHelper.Create;
+  FPropertyObserve := TNyxObservationHelper.Create;
 end;
 
 destructor TNyxElementButtonBaseImpl.Destroy;
 begin
-  FObserve.Free;
+  FPropertyObserve.Free;
   inherited Destroy;
 end;
 

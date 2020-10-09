@@ -28,7 +28,6 @@ unit nyx.layout.proportional.browser;
 interface
 
 uses
-  Classes,
   SysUtils,
   nyx.types,
   nyx.layout,
@@ -68,6 +67,26 @@ var
   LRect: TJSDOMRect;
   LLeftOff, LTopOff: Double;
   LStyle: String;
+  LContainer: INyxContainer;
+  LBrowserContainer: INyxContainerBrowser;
+
+  procedure AdjustOffsets(const AParent : TJSElement);
+  begin
+    LRect := AParent.getBoundingClientRect;
+
+    //find percentage of parent for width
+    if LRect.width > 0 then
+      LLeftOff := LLeftOff / LRect.width
+    else
+      LLeftOff := 0;
+
+    //find percentage of parent for height
+    if LRect.height > 0 then
+      LTopOff := LTopOff / LRect.height
+    else
+      LTopOff := 0;
+  end;
+
 begin
   try
     Result := False;
@@ -108,26 +127,19 @@ begin
       LTopOff := LRect.height;
 
     //we need to find the parent container's rect in order to calculate a percentage
-    //todo - had to use input element, saw strange behavior where container was null
-    //       as well as ID was different... not sure if this is a pas2js bug, try this out later
-    if Assigned(AElement.Container)
-      and (AElement.Container is INyxContainerBrowser)
+    LContainer := LElement.Container;
+    if Assigned(LContainer)
+      and (LContainer is INyxContainerBrowser)
     then
     begin
-      LRect := INyxContainerBrowser(AElement.Container).BrowserElement.JSElement.getBoundingClientRect;
-
-      //find percentage of parent for width
-      if LRect.width > 0 then
-        LLeftOff := LLeftOff / LRect.width
-      else
-        LLeftOff := 0;
-
-      //find percentage of parent for height
-      if LRect.height > 0 then
-        LTopOff := LTopOff / LRect.height
-      else
-        LTopOff := 0;
+      //get the bounding rect
+      LBrowserContainer := LContainer as INyxContainerBrowser;
+      AdjustOffsets(LBrowserContainer.BrowserElement.JSElement);
     end
+    //otherwise we'll use the parent dom element
+    else if Assigned(LElement.JSElement.parentElement) then
+      AdjustOffsets(LElement.JSElement.parentElement)
+    //when no parent, no offset
     else
     begin
       LLeftOff := 0;
@@ -135,8 +147,8 @@ begin
     end;
 
     //using the offsets calculated above we can set new left / top values in css
-    FCSS.Upsert('left', IntToStr(Round((ABounds.Left * 100) - LLeftOff)) + '%');
-    FCSS.Upsert('top', IntToStr(Round((ABounds.Top * 100) - LTopOff)) + '%');
+    FCSS.Upsert('left', IntToStr(Round((ABounds.Left - LLeftOff) * 100)) + '%');
+    FCSS.Upsert('top', IntToStr(Round((ABounds.Top - LTopOff) * 100)) + '%');
 
     //finally set the inline style with the new computed values
     LElement.JSElement.setAttribute('style', FCSS.CSS);

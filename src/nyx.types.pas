@@ -78,6 +78,8 @@ type
     scElement
   );
 
+  TSizeProperties = set of TSizeProperty;
+
   INyxSize = interface;
 
   (*
@@ -131,7 +133,7 @@ type
       observe property changes
     *)
     function Observe(const AEvent : TSizeProperty;
-      const AObserver : TSizePropertyObserveMethod; out ID : String) : INyxSize;
+      const AObserver : TSizePropertyObserveMethod; out ID : String) : INyxSize; overload;
 
     (*
       removes an observer
@@ -153,6 +155,45 @@ type
     *)
     function UpdateMode(const AMode : TSizeMode) : INyxSize;
   end;
+
+  (*
+    enum for all observable events of a button
+  *)
+  TElementEvent = (
+    evClick,
+    evDoubleClick,
+    evMouseEnter,
+    evMouseExit,
+    evMouseDown,
+    evMouseUp,
+    evKeyDown,
+    evKeyUp,
+    evFocus,
+    evLoseFocus
+  );
+
+  TElementEvents = set of TElementEvent;
+
+  TElementObserveMethod = procedure(const AElement : INyxElement;
+    const AEvent : TElementEvent) of object;
+
+  (*
+    properties of a INyxElement
+  *)
+  TElementProperty = (
+    epID,
+    epName,
+    epContainer,
+    epSize
+  );
+
+  TElementProperties = set of TElementProperty;
+
+  (*
+    observer method for element properties
+  *)
+  TElementPropertyObserveMethod = procedure(const AType : TPropertyUpdateType;
+    const AElement : INyxElement; const AProperty : TElementProperty) of object;
 
   { INyxElement }
   (*
@@ -196,9 +237,43 @@ type
     //methods
 
     (*
+      callers can attach an observe method with a particular event
+      and will get notified when that event occurs
+    *)
+    function Observe(const AEvent : TElementEvent; const AObserver : TElementObserveMethod;
+      out ID : String) : INyxElement; overload;
+
+    function IsType<T : IInterface>(out IsType : Boolean) : INyxElement;
+    function AsType<T : IInterface>() : T;
+
+    (*
+      callers can attach an observe method with a particular property
+      and will get notified when that property changes
+    *)
+    function Observe(const AProperty : TElementProperty;
+      const AObserver : TElementPropertyObserveMethod; out ID : String) : INyxElement; overload;
+
+    function RemoveObserver(const AID : String) : INyxElement;
+
+    (*
       updates the name and returns this element
     *)
     function UpdateName(const AName : String) : INyxElement;
+
+    (*
+      updates the size and returns this element
+    *)
+    function UpdateSize(const ASize : INyxSize) : INyxElement;
+
+    (*
+      updates the container and returns this element
+    *)
+    function UpdateContainer(const AContainer : INyxContainer) : INyxElement;
+
+    (*
+      updates the ID and returns this element
+    *)
+    function UpdateID(const AID : String) : INyxElement;
 
     (*
       allows for boolean conditions
@@ -210,96 +285,11 @@ type
     function Condition(const ACondition : TNyxElementBoolCallback; const ATrue, AFalse : TNyxElementCallback) : INyxElement; overload;
     function Condition(const ACondition : TNyxElementBoolNestedCallback; const ATrue, AFalse : TNyxElementNestedCallback) : INyxElement; overload;
     function Condition(const ACondition : TNyxElementBoolMethod; const ATrue, AFalse : TNyxElementMethod) : INyxElement; overload;
-
-    function IsType<T : IInterface>(out IsType : Boolean) : INyxElement;
-    function AsType<T : IInterface>() : T;
-  end;
-
-  { TNyxElementBaseImpl }
-  (*
-    base implementation class for all INyxElement
-  *)
-  TNyxElementBaseImpl = class(TInterfacedObject, INyxElement)
-  strict private
-    FID,
-    FName : String;
-    FContainer : INyxContainer;
-    FSizeIDs : TStringList;
-    FSize : INyxSize;
-    function GetSize: INyxSize;
-    procedure SetSize(const AValue: INyxSize);
-    procedure RemoveSizeObservers;
-
-    procedure NotifyHeight(const AType : TPropertyUpdateType;
-      const ASize : INyxSize; const AProperty : TSizeProperty);
-    procedure NotifyWidth(const AType : TPropertyUpdateType;
-      const ASize : INyxSize; const AProperty : TSizeProperty);
-    procedure NotifyMode(const AType : TPropertyUpdateType;
-      const ASize : INyxSize; const AProperty : TSizeProperty);
-    procedure NotifyElement(const AType : TPropertyUpdateType;
-      const ASize : INyxSize; const AProperty : TSizeProperty);
-  protected
-    procedure SetID(const AValue: String);
-    function GetID: String;
-    function GetName: String;
-    procedure SetName(const AValue: String);
-    function GetContainer: INyxContainer;
-    procedure SetContainer(const AValue: INyxContainer);
-  strict protected
-
-    (*
-      children can override this method to generate a unique identifier
-      if the default generation will not suffice
-    *)
-    function DoGetID : String; virtual;
-
-    (*
-      when a valid size is assigned to this element, this method
-      is called afterwards for parenting and any other setup involved
-    *)
-    procedure DoParentSize(const ASize : INyxSize); virtual;
-
-    (*
-      size method called when height has been changed
-    *)
-    procedure DoUpdateHeight; virtual;
-
-    (*
-      size method called when width has been changed
-    *)
-    procedure DoUpdateWidth; virtual;
-
-    (*
-      size method called when mode has been changed
-    *)
-    procedure DoUpdateMode; virtual;
-  public
-    property ID : String read GetID write SetID;
-    property Name : String read GetName write SetName;
-    property Container : INyxContainer read GetContainer write SetContainer;
-    property Size : INyxSize read GetSize write SetSize;
-
-    function UpdateName(const AName : String) : INyxElement;
-
-    function Condition(const ACondition : Boolean; const ATrue, AFalse : TNyxElementCallback) : INyxElement; overload;
-    function Condition(const ACondition : Boolean; const ATrue, AFalse : TNyxElementNestedCallback) : INyxElement; overload;
-    function Condition(const ACondition : Boolean; const ATrue, AFalse : TNyxElementMethod) : INyxElement; overload;
-
-    function Condition(const ACondition : TNyxElementBoolCallback; const ATrue, AFalse : TNyxElementCallback) : INyxElement; overload;
-    function Condition(const ACondition : TNyxElementBoolNestedCallback; const ATrue, AFalse : TNyxElementNestedCallback) : INyxElement; overload;
-    function Condition(const ACondition : TNyxElementBoolMethod; const ATrue, AFalse : TNyxElementMethod) : INyxElement; overload;
-
     function IsType<T : IInterface>(out AResult : Boolean) : INyxElement;
     function AsType<T : IInterface>() : T;
 
-    constructor Create; virtual;
-    destructor Destroy; override;
   end;
 
-  (*
-    metaclass for a nyx element
-  *)
-  TNyxElementClass = class of TNyxElementBaseImpl;
 
   (*
     observer types for elements collection
@@ -492,35 +482,6 @@ type
     function Add(const AItem : INyxElement) : INyxContainer; overload;
   end;
 
-  { TNyxContainerBaseImpl }
-  (*
-    base implementation class for all INyxContainer
-  *)
-  TNyxContainerBaseImpl = class(TNyxElementBaseImpl, INyxContainer)
-  strict private
-    FElements : INyxElements;
-    FUI : INyxUI;
-  protected
-    function GetElements: INyxElements;
-    function GetUI: INyxUI;
-    procedure SetUI(const AValue: INyxUI);
-    function GetContainer: INyxContainer; reintroduce;
-  strict protected
-  public
-    property Elements : INyxElements read GetElements;
-    property UI : INyxUI read GetUI write SetUI;
-
-    function Add(const AItem : INyxElement; out Index : Integer) : INyxContainer; overload;
-    function Add(const AItem : INyxElement) : INyxContainer; overload;
-
-    constructor Create; override;
-    destructor Destroy; override;
-  end;
-
-  (*
-    metaclass for nyx containers
-  *)
-  TNyxContainerClass = class of TNyxContainerBaseImpl;
 
   { INyxLayout }
   (*
@@ -542,23 +503,6 @@ type
     function UpdatePlacement(out Error : String) : Boolean; overload;
     function UpdatePlacement : Boolean; overload;
   end;
-
-  { TNyxLayoutBaseImpl }
-  (*
-    base implementation for all INyxLayout
-  *)
-  TNyxLayoutBaseImpl = class(TNyxContainerBaseImpl, INyxLayout)
-  strict private
-  protected
-  strict protected
-    function DoUpdatePlacement(out Error : String) : Boolean; virtual; abstract;
-  public
-    function UpdatePlacement(out Error : String) : Boolean; overload;
-    function UpdatePlacement : Boolean; overload;
-  end;
-
-  //meta class for concrete nyx layouts
-  TNyxLayoutClass = class of TNyxLayoutBaseImpl;
 
   TNyxActionCallback = procedure(const AUI : INyxUI; const AArgs : array of const);
   TNyxActionNestedCallback = procedure(const AUI : INyxUI; const AArgs : array of const) is nested;
@@ -760,6 +704,9 @@ function NewNyxSize : INyxSize;
 implementation
 uses
   nyx.size,
+  nyx.layout,
+  nyx.container,
+  nyx.element,
 {$IFDEF BROWSER}
   nyx.element.browser,
   nyx.elements.browser,
@@ -823,20 +770,6 @@ begin
   inherited Destroy;
 end;
 
-{ TNyxLayoutBaseImpl }
-
-function TNyxLayoutBaseImpl.UpdatePlacement(out Error: String): Boolean;
-begin
-  Result := DoUpdatePlacement(Error);
-end;
-
-function TNyxLayoutBaseImpl.UpdatePlacement: Boolean;
-var
-  LError : String;
-begin
-  Result := UpdatePlacement(LError);
-end;
-
 { TNyxUIBaseImpl }
 
 function TNyxUIBaseImpl.GetLayouts: INyxElements;
@@ -870,14 +803,17 @@ var
   I : Integer;
   LLayout: INyxLayout;
   LError: String;
+  LElement: INyxElement;
 begin
   //handle positioning by calling each layout's place method
   for I := 0 to Pred(FLayouts.Count) do
   begin
-    LLayout := INyxLayout(FLayouts[I]); //cast without as to capture nils
+    LElement := FLayouts[I];
 
-    if not Assigned(LLayout) then
+    if not Assigned(LElement) then
       Continue;
+
+    LLayout := LElement as INyxLayout;
 
     if not LLayout.UpdatePlacement(LError) then
       raise Exception.Create(LError);
@@ -1123,16 +1059,12 @@ begin
 end;
 
 function TNyxElementsBaseImpl.Delete(const AIndex: Integer): INyxElements;
-var
-  LError: String;
-  LItem: INyxElement;
 begin
   try
     Result := Self as INyxElements;
 
-    //remove but the throw away the item
-    if not DoRemoveItem(AIndex, LItem, LError) then
-      RaiseError('Delete', LError);
+    //extract but the throw away the item
+    Extract(AIndex);
   except on E : Exception do
     RaiseError('Delete', E.Message);
   end;
@@ -1143,7 +1075,9 @@ var
   I: Integer;
 begin
   Result := IndexOf(AElement, I);
-  Delete(I);
+
+  if I >= 0 then
+    Delete(I);
 end;
 
 function TNyxElementsBaseImpl.Extract(const AIndex: Integer): INyxElement;
@@ -1555,316 +1489,6 @@ begin
   inherited Destroy;
 end;
 
-{ TNyxContainerBaseImpl }
-
-function TNyxContainerBaseImpl.GetElements: INyxElements;
-begin
-  Result := FElements;
-end;
-
-function TNyxContainerBaseImpl.GetUI: INyxUI;
-begin
-  Result := FUI;
-end;
-
-procedure TNyxContainerBaseImpl.SetUI(const AValue: INyxUI);
-begin
-  FUI := nil;
-  FUI := AValue;
-end;
-
-function TNyxContainerBaseImpl.GetContainer: INyxContainer;
-begin
-  Result := Self as INyxContainer;
-end;
-
-function TNyxContainerBaseImpl.Add(const AItem: INyxElement; out Index: Integer): INyxContainer;
-begin
-  Result := Self as INyxContainer;
-  AItem.Container := Result;
-  Index := FElements.Add(AItem);
-end;
-
-function TNyxContainerBaseImpl.Add(const AItem: INyxElement): INyxContainer;
-var
-  I : Integer;
-begin
-  Result := Add(AItem, I);
-end;
-
-constructor TNyxContainerBaseImpl.Create;
-begin
-  inherited Create;
-  FElements := DefaultNyxElements.Create;
-  FUI := nil
-end;
-
-destructor TNyxContainerBaseImpl.Destroy;
-begin
-  FUI := nil;
-  inherited Destroy;
-end;
-
-{ TNyxElementBaseImpl }
-
-function TNyxElementBaseImpl.GetSize: INyxSize;
-begin
-  Result := FSize;
-end;
-
-procedure TNyxElementBaseImpl.SetSize(const AValue: INyxSize);
-begin
-  //first remove observers if we have any
-  RemoveSizeObservers;
-
-  FSize := AValue;
-
-  if Assigned(AValue) then
-    DoParentSize(AValue);
-end;
-
-procedure TNyxElementBaseImpl.RemoveSizeObservers;
-var
-  I: Integer;
-begin
-  if not Assigned(FSize) then
-    Exit;
-
-  for I := 0 to Pred(FSizeIDs.Count) do
-    FSize.RemoveObserver(FSizeIDs[I]);
-end;
-
-procedure TNyxElementBaseImpl.NotifyHeight(const AType: TPropertyUpdateType;
-  const ASize: INyxSize; const AProperty: TSizeProperty);
-begin
-  if AType = puAfterUpdate then
-    DoUpdateHeight;
-end;
-
-procedure TNyxElementBaseImpl.NotifyWidth(const AType: TPropertyUpdateType;
-  const ASize: INyxSize; const AProperty: TSizeProperty);
-begin
-  if AType = puAfterUpdate then
-    DoUpdateWidth;
-end;
-
-procedure TNyxElementBaseImpl.NotifyMode(const AType: TPropertyUpdateType;
-  const ASize: INyxSize; const AProperty: TSizeProperty);
-begin
-  if AType = puAfterUpdate then
-    DoUpdateMode;
-end;
-
-procedure TNyxElementBaseImpl.NotifyElement(const AType: TPropertyUpdateType;
-  const ASize: INyxSize; const AProperty: TSizeProperty);
-begin
-  //just remove observers and clear ref
-  if AType = puAfterUpdate then
-  begin
-    RemoveSizeObservers;
-    FSize := nil;
-  end;
-end;
-
-procedure TNyxElementBaseImpl.SetID(const AValue: String);
-begin
-  FID := AValue;
-end;
-
-function TNyxElementBaseImpl.GetID: String;
-begin
-  Result := FID;
-end;
-
-function TNyxElementBaseImpl.GetName: String;
-begin
-  Result := FName;
-end;
-
-procedure TNyxElementBaseImpl.SetName(const AValue: String);
-begin
-  FName := AValue;
-end;
-
-function TNyxElementBaseImpl.GetContainer: INyxContainer;
-begin
-  Result := FContainer;
-end;
-
-procedure TNyxElementBaseImpl.SetContainer(const AValue: INyxContainer);
-begin
-  FContainer := nil;
-  FContainer := AValue;
-end;
-
-function TNyxElementBaseImpl.DoGetID: String;
-var
-  LGUID: TGUID;
-begin
-  CreateGUID(LGUID);
-  Result := GUIDToString(LGUID);
-end;
-
-procedure TNyxElementBaseImpl.DoParentSize(const ASize: INyxSize);
-var
-  LSelf: INyxElement;
-  LID: String;
-begin
-  LSelf := Self as INyxElement;
-  ASize.Element := LSelf;
-
-  //now attach handlers for property updates
-  ASize.Observe(scHeight, @NotifyHeight, LID);
-  FSizeIDs.Add(LID);
-
-  ASize.Observe(scWidth, @NotifyWidth, LID);
-  FSizeIDs.Add(LID);
-
-  ASize.Observe(scMode, @NotifyMode, LID);
-  FSizeIDs.Add(LID);
-
-  ASize.Observe(scElement, @NotifyElement, LID);
-  FSizeIDs.Add(LID);
-end;
-
-procedure TNyxElementBaseImpl.DoUpdateHeight;
-begin
-  //nothing in base
-end;
-
-procedure TNyxElementBaseImpl.DoUpdateWidth;
-begin
-  //nothing in base
-end;
-
-procedure TNyxElementBaseImpl.DoUpdateMode;
-begin
-  //nothing in base
-end;
-
-function TNyxElementBaseImpl.UpdateName(const AName: String): INyxElement;
-begin
-  SetName(AName);
-  Result := Self as INyxElement;
-end;
-
-function TNyxElementBaseImpl.Condition(const ACondition: Boolean; const ATrue,
-  AFalse: TNyxElementCallback): INyxElement;
-begin
-  Result := Self as INyxElement;
-
-  //eval the condition and call the appropriate method
-  if ACondition then
-  begin
-    if Assigned(ATrue) then
-      ATrue(Result)
-  end
-  else if Assigned(AFalse) then
-    AFalse(Result);
-end;
-
-function TNyxElementBaseImpl.Condition(const ACondition: Boolean; const ATrue,
-  AFalse: TNyxElementNestedCallback): INyxElement;
-begin
-  Result := Self as INyxElement;
-
-  //eval the condition and call the appropriate method
-  if ACondition then
-  begin
-    if Assigned(ATrue) then
-      ATrue(Result)
-  end
-  else if Assigned(AFalse) then
-    AFalse(Result);
-end;
-
-function TNyxElementBaseImpl.Condition(const ACondition: Boolean; const ATrue,
-  AFalse: TNyxElementMethod): INyxElement;
-begin
-  Result := Self as INyxElement;
-
-  //eval the condition and call the appropriate method
-  if ACondition then
-  begin
-    if Assigned(ATrue) then
-      ATrue(Result)
-  end
-  else if Assigned(AFalse) then
-    AFalse(Result);
-end;
-
-function TNyxElementBaseImpl.Condition(
-  const ACondition: TNyxElementBoolCallback; const ATrue,
-  AFalse: TNyxElementCallback): INyxElement;
-begin
-  Result := Self as INyxElement;
-
-  //no input to evaluate, so call false if assigned
-  if not Assigned(ACondition) then
-  begin
-    if Assigned(AFalse) then
-      AFalse(Result);
-
-    Exit;
-  end;
-
-  //eval the condition and call the appropriate method
-  if ACondition(Result) then
-  begin
-    if Assigned(ATrue) then
-      ATrue(Result)
-  end
-  else if Assigned(AFalse) then
-    AFalse(Result);
-end;
-
-function TNyxElementBaseImpl.Condition(
-  const ACondition: TNyxElementBoolNestedCallback; const ATrue,
-  AFalse: TNyxElementNestedCallback): INyxElement;
-begin
-  Result := Self as INyxElement;
-
-  //no input to evaluate, so call false if assigned
-  if not Assigned(ACondition) then
-  begin
-    if Assigned(AFalse) then
-      AFalse(Result);
-
-    Exit;
-  end;
-
-  //eval the condition and call the appropriate method
-  if ACondition(Result) then
-  begin
-    if Assigned(ATrue) then
-      ATrue(Result)
-  end
-  else if Assigned(AFalse) then
-    AFalse(Result);
-end;
-
-function TNyxElementBaseImpl.Condition(const ACondition: TNyxElementBoolMethod;
-  const ATrue, AFalse: TNyxElementMethod): INyxElement;
-begin
-  Result := Self as INyxElement;
-
-  //no input to evaluate, so call false if assigned
-  if not Assigned(ACondition) then
-  begin
-    if Assigned(AFalse) then
-      AFalse(Result);
-
-    Exit;
-  end;
-
-  //eval the condition and call the appropriate method
-  if ACondition(Result) then
-  begin
-    if Assigned(ATrue) then
-      ATrue(Result)
-  end
-  else if Assigned(AFalse) then
-    AFalse(Result);
 end;
 
 function TNyxElementBaseImpl.IsType<T: IInterface>(out AResult: Boolean): INyxElement;
@@ -1876,25 +1500,6 @@ end;
 function TNyxElementBaseImpl.AsType<T: IInterface>(): T;
 begin
   Result := Self as T;
-end;
-
-constructor TNyxElementBaseImpl.Create;
-begin
-  FContainer := nil;
-  FSize := nil;
-  FSizeIDs := TStringList.Create;
-  FID := DoGetID;
-end;
-
-destructor TNyxElementBaseImpl.Destroy;
-begin
-  FContainer := nil;
-  FSizeIDs.Free;
-  RemoveSizeObservers;
-  FSize := nil;
-  inherited Destroy;
-end;
-
 initialization
 DefaultNyxSize := TNyxSizeImpl;
 {$IFDEF BROWSER}
