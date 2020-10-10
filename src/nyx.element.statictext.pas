@@ -66,7 +66,7 @@ type
     base StaticText element
   *)
   INyxElementStaticText = interface(INyxElement)
-    ['{D93EBE55-E5A7-45A8-AEF0-5B04EB806A10}']
+    ['{4F43A951-3E56-474E-8141-32E81C253BF0}']
 
     //property methods
     function GetText: String;
