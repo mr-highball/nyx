@@ -27,7 +27,7 @@ type
     FUI : INyxUI;
 
     procedure GetAllTextContent(const AType : TPropertyUpdateType;
-      const AElement : INyxElement; const AProperty : TInputProperty);
+      const AInput : INyxElementInput; const AProperty : TInputProperty);
   strict protected
     (*
       dynamically builds a list of input elements with
@@ -64,7 +64,7 @@ type
   end;
 
 procedure TInputLabels.GetAllTextContent(const AType: TPropertyUpdateType;
-  const AElement: INyxElement; const AProperty: TInputProperty);
+  const AInput: INyxElementInput; const AProperty: TInputProperty);
 begin
   //when any input has it's text changed (after update) then just display
   //a message box to the user with all of the text content
