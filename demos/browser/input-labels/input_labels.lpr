@@ -13,7 +13,8 @@ uses
   nyx.layout,
   nyx.element.browser,
   nyx.element.input,
-  nyx.element.statictext;
+  nyx.element.statictext,
+  nyx.element.inputmulti;
 
 type
 
@@ -25,6 +26,7 @@ type
   TInputLabels = class(TBrowserApplication)
   strict private
     FUI : INyxUI;
+    FDebug : INyxElementInputMulti;
 
     procedure GetAllTextContent(const AType : TPropertyUpdateType;
       const AInput : INyxElementInput; const AProperty : TInputProperty);
@@ -69,7 +71,7 @@ begin
   //when any input has it's text changed (after update) then just display
   //a message box to the user with all of the text content
   if AType = puAfterUpdate then
-    window.alert(AllInputTextToString());
+    FDebug.Text := AllInputTextToString();
 end;
 
 procedure TInputLabels.BuildUI(const AInputs: TStrings);
@@ -149,12 +151,26 @@ begin
 
   LContainer := NewNyxContainer;
   LContainer
-    .UpdateSize( //make the container take up 100% of the screen
-      NewNyxSize
-        .UpdateHeight(1)
-        .UpdateWidth(1)
-        .UpdateMode(smPercent) //use percent mode
-    );
+    .Size //make the container take up 100% of the screen
+      .UpdateHeight(1)
+      .UpdateWidth(1)
+      .UpdateMode(smPercent); //use percent mode
+
+  //we'll setup a debug input to show all the text when it changes
+  FDebug := NewNyxInputMulti;
+  FDebug
+    .UpdateName('Debug Responses')
+    .Size
+      .UpdateWidth(0.2)
+      .UpdateHeight(0.9)
+      .UpdateMode(smPercent);
+  LPropLayout.Add(
+    FDebug,
+    NewNyxProportionalBounds
+      .UpdateLeft(0.03)
+      .UpdateTop(0.10)
+  );
+  LContainer.Add(FDebug);
 
   //add inputs based on the strings and update the "name" property.
   //we'll use this in the AddLabelToElements method as the label text
@@ -186,8 +202,8 @@ procedure TInputLabels.AllInputTextToStrings(const AContent: TStrings);
   var
     LInput: INyxElementInput;
   begin
-    //we want to skip all of the labels
-    if AElement is INyxElementStaticText then
+    //we want to everything that isn't an input
+    if not (AElement is INyxElementInput) then
       Exit;
 
     LInput := AElement as INyxElementInput;
