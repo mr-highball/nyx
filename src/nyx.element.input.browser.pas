@@ -184,6 +184,7 @@ begin
   inherited Create;
   FBrowser := TBrowserElementComponent.Create;
   TBrowserElementComponent(FBrowser).Parent := Self;
+  BindEvents(FBrowser);
 end;
 
 destructor TNyxElementInputBrowserImpl.Destroy;
