@@ -25,12 +25,35 @@ type
   TInputLabels = class(TBrowserApplication)
   strict private
     FUI : INyxUI;
+
+    procedure GetAllTextContent(const AType : TPropertyUpdateType;
+      const AElement : INyxElement; const AProperty : TInputProperty);
   strict protected
     (*
       dynamically builds a list of input elements with
       labels for each string in the @AInputs parameter
     *)
     procedure BuildUI(const AInputs : TStrings);
+
+    (*
+      this method will take TStrings (TStringList or other) and fill
+      it up with "question" and "answer". The "question" will be stored
+      in the "name" and the "answer" will be stored as a value
+    *)
+    procedure AllInputTextToStrings(const AContent : TStrings);
+
+    (*
+      this method will return a single string with the question following
+      by an answer. an optional question separator string can be used
+      but will default to separate with a hyphen
+    *)
+    function AllInputTextToString(const AQuestionSeparator  : String = '-') : String;
+
+    (*
+      returns all of the inputs content without including the question as
+      a single string
+    *)
+    function AllInputContentOnlyToString : String;
   public
     procedure doRun; override;
 
@@ -39,6 +62,15 @@ type
     *)
     procedure RenderOnSize(Event : TEventListenerEvent);
   end;
+
+procedure TInputLabels.GetAllTextContent(const AType: TPropertyUpdateType;
+  const AElement: INyxElement; const AProperty: TInputProperty);
+begin
+  //when any input has it's text changed (after update) then just display
+  //a message box to the user with all of the text content
+  if AType = puAfterUpdate then
+    window.alert(AllInputTextToString());
+end;
 
 procedure TInputLabels.BuildUI(const AInputs: TStrings);
 var
@@ -94,6 +126,22 @@ var
     );
   end;
 
+  (*
+    adds the GetAllTextContent observer method to each input so that
+    whenever the text changes, we'll popup a message box
+  *)
+  procedure AddTextChangeObserverToInputs(const AElement : INyxElement);
+  var
+    LID: String;
+    LInput: INyxElementInput;
+  begin
+    if AElement is INyxElementInput then
+    begin
+      LInput := AElement as INyxElementInput;
+      LInput.Observe(ipText, @GetAllTextContent, LID);
+    end;
+  end;
+
 begin
   FUI := NewNyxUI;
   LLayout := NewNyxLayoutRelational;
@@ -120,7 +168,8 @@ begin
     .AddContainer(LContainer, I)
     .ContainerByIndex(I)
       .Elements
-        .ForEach(@PositionInputsByIndex);
+        .ForEach(@PositionInputsByIndex)
+        .ForEach(@AddTextChangeObserverToInputs);
 
   //now that we've added all the inputs render to the screen so they have
   //positions, then we need to add the labels and render again (we do this
@@ -128,6 +177,67 @@ begin
   FUI.Render();
   LContainer.Elements.ForEach(@AddLabelToElements);
   FUI.Render();
+end;
+
+procedure TInputLabels.AllInputTextToStrings(const AContent: TStrings);
+
+  //fills the content as "name" : :"value" pair
+  procedure FillContent(const AElement : INyxElement);
+  begin
+    //we want to skip all of the labels
+    if AElement is INyxElementStaticText then
+      Exit;
+
+    //the element name is the "question" and the element text is the "answer"
+    AContent.AddPair(AElement.Name, INyxElementInput(AElement).Text);
+  end;
+
+begin
+  if not Assigned(AContent) then
+    raise Exception.Create('AllInputTextToStrings::AContent must not be nil');
+
+  //use a "foreach" to fill the content
+  FUI.ContainerByIndex(0).Elements.ForEach(@FillContent);
+end;
+
+function TInputLabels.AllInputTextToString(const AQuestionSeparator: String): String;
+var
+  I: Integer;
+  LContent: TStringList;
+begin
+  Result := '';
+
+  LContent := TStringList.Create;
+  try
+    //use our other method to fill up the content string list
+    AllInputTextToStrings(LContent);
+
+    //now loop through the content we just collected and separate the question/answer
+    for I := 0 to Pred(LContent.Count) do
+      Result := Result + LContent.Names[I] + AQuestionSeparator + LContent.ValueFromIndex[I] + sLineBreak;
+  finally
+    LContent.Free;
+  end;
+end;
+
+function TInputLabels.AllInputContentOnlyToString: String;
+var
+  I: Integer;
+  LContent: TStringList;
+begin
+  Result := '';
+
+  LContent := TStringList.Create;
+  try
+    //use our other method to fill up the content string list
+    AllInputTextToStrings(LContent);
+
+    //now loop through the content we just collected append all the values
+    for I := 0 to Pred(LContent.Count) do
+      Result := Result + LContent.ValueFromIndex[I] + sLineBreak;
+  finally
+    LContent.Free;
+  end;
 end;
 
 procedure TInputLabels.doRun;
