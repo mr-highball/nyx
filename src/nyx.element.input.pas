@@ -47,10 +47,10 @@ type
   INyxElementInput = interface;
 
   (*
-    observer method for element properties
+    observer method for input properties
   *)
   TInputPropertyObserveMethod = procedure(const AType : TPropertyUpdateType;
-    const AElement : INyxElement; const AProperty : TInputProperty) of object;
+    const AInput : INyxElementInput; const AProperty : TInputProperty) of object;
 
   { INyxElementInput }
   (*
@@ -208,12 +208,16 @@ end;
 
 procedure TNyxElementInputBaseImpl.SetText(const AValue: String);
 begin
+  DoPropertyNotify(puBeforeUpdate, ipText);
   DoSetText(AValue);
+  DoPropertyNotify(puAfterUpdate, ipText);
 end;
 
 procedure TNyxElementInputBaseImpl.SetEnabled(const AValue: Boolean);
 begin
+  DoPropertyNotify(puBeforeUpdate, ipEnabled);
   DoSetEnabled(AValue);
+  DoPropertyNotify(puAfterUpdate, ipEnabled);
 end;
 
 function TNyxElementInputBaseImpl.GetEnabled: Boolean;
@@ -228,7 +232,9 @@ end;
 
 procedure TNyxElementInputBaseImpl.SetVisible(const AValue: Boolean);
 begin
+  DoPropertyNotify(puBeforeUpdate, ipVisible);
   DoSetVisible(AValue);
+  DoPropertyNotify(puAfterUpdate, ipVisible);
 end;
 
 procedure TNyxElementInputBaseImpl.DoPropertyNotify(
