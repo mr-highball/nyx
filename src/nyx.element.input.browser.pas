@@ -41,6 +41,17 @@ type
   TNyxElementInputBrowserImpl = class(TNyxElementInputBaseImpl, INyxElementBrowser, INyxElementInput)
   strict private
     FBrowser : TNyxElementBrowserImpl;
+    FIgnoreKeyDown : Boolean;
+
+    (*
+      js handler for key down inside the input
+    *)
+    procedure BeforeChangeHandler(Event : TEventListenerEvent);
+
+    (*
+      js handler for when the text changes
+    *)
+    procedure ChangeHandler(Event : TEventListenerEvent);
   protected
     function GetBrowser: TNyxElementBrowserImpl;
 
@@ -94,6 +105,7 @@ type
 
 implementation
 uses
+  webwidget,
   nyx.utils.browser.css;
 
 { TNyxElementInputBrowserImpl }
@@ -106,6 +118,22 @@ end;
 procedure TNyxElementInputBrowserImpl.DoSetTextPrompt(const AValue: String);
 begin
   TJSHTMLInputElement(FBrowser.JSElement).placeholder := AValue;
+end;
+
+procedure TNyxElementInputBrowserImpl.BeforeChangeHandler(
+  Event: TEventListenerEvent);
+begin
+  if not FIgnoreKeyDown then
+  begin
+    FIgnoreKeyDown := True;
+    DoPropertyNotify(puBeforeUpdate, ipText);
+  end;
+end;
+
+procedure TNyxElementInputBrowserImpl.ChangeHandler(Event: TEventListenerEvent);
+begin
+  DoPropertyNotify(puAfterUpdate, ipText);
+  FIgnoreKeyDown := False;
 end;
 
 function TNyxElementInputBrowserImpl.GetBrowser: TNyxElementBrowserImpl;
@@ -182,8 +210,13 @@ end;
 constructor TNyxElementInputBrowserImpl.Create;
 begin
   inherited Create;
+  FIgnoreKeyDown := False; //init to false to capture the first key down
   FBrowser := TBrowserElementComponent.Create;
   TBrowserElementComponent(FBrowser).Parent := Self;
+
+  FBrowser.JSElement.addEventListener(sEventKeyDown, @BeforeChangeHandler);
+  FBrowser.JSElement.addEventListener(sEventKeyUp, @ChangeHandler);
+
   BindEvents(FBrowser);
 end;
 
