@@ -57,7 +57,7 @@ type
     base Input element
   *)
   INyxElementInput = interface(INyxElement)
-    ['{D93EBE55-E5A7-45A8-AEF0-5B04EB806A10}']
+    ['{40711D73-3021-4536-A699-AA2FDDF98EE5}']
 
     //property methods
     function GetText: String;

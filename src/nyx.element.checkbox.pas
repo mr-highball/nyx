@@ -57,10 +57,10 @@ type
     base Checkbox element
   *)
   INyxElementCheckbox = interface(INyxElement)
-    ['{D93EBE55-E5A7-45A8-AEF0-5B04EB806A10}']
-    function GetChecked: Boolean;
+    ['{5DC6382A-70C8-4C3F-B601-A462BEFC748A}']
 
     //property methods
+    function GetChecked: Boolean;
     function GetText: String;
     procedure SetChecked(const AValue: Boolean);
     procedure SetText(const AValue: String);

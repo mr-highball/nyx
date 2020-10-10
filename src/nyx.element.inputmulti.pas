@@ -58,7 +58,7 @@ type
     base InputMulti element
   *)
   INyxElementInputMulti = interface(INyxElement)
-    ['{D93EBE55-E5A7-45A8-AEF0-5B04EB806A10}']
+    ['{EC6C0304-725D-407C-B50F-52C22ACE5739}']
 
     //property methods
     function GetLines: TStrings;
