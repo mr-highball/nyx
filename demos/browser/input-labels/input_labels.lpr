@@ -183,13 +183,17 @@ procedure TInputLabels.AllInputTextToStrings(const AContent: TStrings);
 
   //fills the content as "name" : :"value" pair
   procedure FillContent(const AElement : INyxElement);
+  var
+    LInput: INyxElementInput;
   begin
     //we want to skip all of the labels
     if AElement is INyxElementStaticText then
       Exit;
 
+    LInput := AElement as INyxElementInput;
+
     //the element name is the "question" and the element text is the "answer"
-    AContent.AddPair(AElement.Name, INyxElementInput(AElement).Text);
+    AContent.AddPair(AElement.Name, LInput.Text);
   end;
 
 begin
