@@ -243,6 +243,9 @@ type
     function Observe(const AEvent : TElementEvent; const AObserver : TElementObserveMethod;
       out ID : String) : INyxElement; overload;
 
+    function IsType<T : IInterface>(out IsType : Boolean) : INyxElement;
+    function AsType<T : IInterface>() : T;
+
     (*
       callers can attach an observe method with a particular property
       and will get notified when that property changes
@@ -282,6 +285,9 @@ type
     function Condition(const ACondition : TNyxElementBoolCallback; const ATrue, AFalse : TNyxElementCallback) : INyxElement; overload;
     function Condition(const ACondition : TNyxElementBoolNestedCallback; const ATrue, AFalse : TNyxElementNestedCallback) : INyxElement; overload;
     function Condition(const ACondition : TNyxElementBoolMethod; const ATrue, AFalse : TNyxElementMethod) : INyxElement; overload;
+    function IsType<T : IInterface>(out AResult : Boolean) : INyxElement;
+    function AsType<T : IInterface>() : T;
+
   end;
 
 
@@ -1483,6 +1489,17 @@ begin
   inherited Destroy;
 end;
 
+end;
+
+function TNyxElementBaseImpl.IsType<T: IInterface>(out AResult: Boolean): INyxElement;
+begin
+  Result := Self as INyxElement;
+  AResult := Self is T;
+end;
+
+function TNyxElementBaseImpl.AsType<T: IInterface>(): T;
+begin
+  Result := Self as T;
 initialization
 DefaultNyxSize := TNyxSizeImpl;
 {$IFDEF BROWSER}
