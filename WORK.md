@@ -28,9 +28,9 @@ Project/enrolled configuration refresh remains automatic. This existing chat
 needs the documented MCP client reconnect for native named handles; the Pascal
 semantic client is active and primary. No user design received a test fixture.
 
-The preceding checkpoint c2c6f81001aa99bb1ac70334daa0d3b70449553e is on
-origin/hello-nyx. The current qualified source checkpoint and exact remote proof
-are recorded below after publication. No unqualified product deployment is claimed.
+Qualified source checkpoint dd5a95a8e81693024e0defcc0133af250601c659 is pushed
+to origin/hello-nyx and independently equals git ls-remote. The handoff record
+follows that implementation; no unqualified product deployment is claimed.
 
 Completed integrated batch (declared 2026-10-04): NS-1_event-scheduler_01
 criterion 1, at consecutive no-closure counter 6. Prior keyboard evidence
@@ -3699,3 +3699,9 @@ including retained focused inputs and collection/split descendants. The native
 adapter's column-only flex and retained hidden space are concrete current gaps.
 Keep portable resources, complete accessibility, hardware/IME, other widgetsets,
 production component depth and native Studio on their original acceptance paths.
+
+Remote source checkpoint dd5a95a8e81693024e0defcc0133af250601c659 is committed
+and pushed to origin/hello-nyx; exact remote branch identity was checked with
+git ls-remote after publication. All 21 owned changed files are tracked; private
+records/build artifacts remain ignored. The current handoff records that verified
+implementation without claiming the refused production install.
