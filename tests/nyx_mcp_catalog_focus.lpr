@@ -1,0 +1,372 @@
+{ nyx
+  Copyright (c) 2020 mr-highball
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+}
+program nyx_mcp_catalog_focus;
+
+{$mode delphi}{$H+}{$codepage utf8}
+
+uses
+  Classes, SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.catalog,
+  nyx.test.mcp.client;
+
+var
+  GClient: TNyxMCPTestClient;
+  GRevision: Integer;
+  GDirectory: TNyxText;
+
+{ TNyxText is UTF-8 on this native boundary. Write its bytes directly, avoiding
+  ANSI TStringList conversion of the generated companion or catalog metadata. }
+procedure Save(const AName: TNyxText; const AText: TNyxText);
+var
+  LFile: TFileStream;
+begin
+  LFile := TFileStream.Create(GDirectory + AName, fmCreate);
+  try
+
+    if AText <> '' then
+    begin
+      LFile.WriteBuffer(AText[1], Length(AText));
+    end;
+  finally
+    LFile.Free;
+  end;
+end;
+
+{ Requests are explicit protocol data. One persistent initialized client authors
+  only the supplied disposable service; this program never claims/replaces a
+  project through the operator API or discovers credentials from a remote URL. }
+function Call(const ATool: TNyxText; const AArguments: TNyxDataValue): TNyxDataValue;
+var
+  LResponse: TNyxDataValue;
+  LIndex: Integer;
+begin
+  LResponse := GClient.Tool(ATool, AArguments);
+
+  if LResponse.Field('isError').AsBoolean then
+  begin
+    raise Exception.Create('Semantic catalog request refused: ' + LResponse.ToJSON);
+  end;
+  Result := LResponse.Field('structuredContent');
+  for LIndex := 0 to Result.Count - 1 do
+  begin
+
+    if Result.Key(LIndex) = 'revision' then
+    begin
+      GRevision := Result.Field('revision').AsInteger;
+    end;
+  end;
+end;
+
+function CreateControl(const AKind, AID, AParent: TNyxText;
+  const AProperties: TNyxDataValue; APage: Boolean = False): TNyxDataValue;
+begin
+
+  if APage then
+  begin
+    Exit(NyxObject([NyxField('op', NyxData('create')),
+      NyxField('kind', NyxData(AKind)), NyxField('id', NyxData(AID)),
+      NyxField('root', NyxData('page')), NyxField('properties', AProperties)]));
+  end;
+  Result := NyxObject([NyxField('op', NyxData('create')),
+    NyxField('kind', NyxData(AKind)), NyxField('id', NyxData(AID)),
+    NyxField('parent', NyxData(AParent)), NyxField('properties', AProperties)]);
+end;
+
+{ Export only bounded accepted-source windows at one revision. The consumer
+  compiles these unchanged bytes; it does not reconstruct the design locally. }
+procedure ExportSource;
+var
+  LLines: TNyxStrings;
+  LValue: TNyxDataValue;
+  LLine: Integer;
+  LIndex: Integer;
+  LRevision: Integer;
+begin
+  LLines := TNyxStrings.Create;
+  try
+    LLine := 1;
+    LRevision := GRevision;
+    repeat
+      LValue := Call('nyx_source', NyxObject([
+        NyxField('line', NyxData(LLine)), NyxField('count', NyxData(80))]));
+
+      if (GRevision <> LRevision) or (LValue.Field('lines').Count = 0) then
+      begin
+        raise Exception.Create('Catalog companion changed during bounded export');
+      end;
+      for LIndex := 0 to LValue.Field('lines').Count - 1 do
+      begin
+        LLines.Add(LValue.Field('lines').Item(LIndex).AsText);
+      end;
+      Inc(LLine, LValue.Field('lines').Count);
+    until LLine > LValue.Field('totalLines').AsInteger;
+    Save('nyx.generated.view.pas', LLines.Text);
+  finally
+    LLines.Free;
+  end;
+end;
+
+procedure Compile(const ATarget, AOutput: TNyxText);
+var
+  LReceipt: TNyxDataValue;
+  LStatus: TNyxDataValue;
+  LStarted: QWord;
+begin
+  LReceipt := Call('nyx_build', NyxObject([
+    NyxField('mode', NyxData('request')),
+    NyxField('expectedRevision', NyxData(GRevision)),
+    NyxField('operationId', NyxData('catalog-focus-build-' + ATarget)),
+    NyxField('outputID', NyxData(AOutput)), NyxField('target', NyxData(ATarget)),
+    NyxField('scope', NyxData('application'))]));
+  LStarted := GetTickCount64;
+  repeat
+    LStatus := Call('nyx_build', NyxObject([
+      NyxField('mode', NyxData('status')), NyxField('job', LReceipt.Field('job')),
+      NyxField('limit', NyxData(2)), NyxField('severity', NyxData('error'))]));
+
+    if LStatus.Field('state').AsText <> 'running' then
+    begin
+      Break;
+    end;
+
+    if GetTickCount64 - LStarted > 180000 then
+    begin
+      raise Exception.Create('Catalog compiler remains running; retain its receipt');
+    end;
+    Sleep(100);
+  until False;
+  Save(ATarget + '-build.json', LStatus.ToJSON);
+
+  if (LStatus.Field('state').AsText <> 'succeeded') or
+    not LStatus.Field('currentSource').AsBoolean then
+  begin
+    raise Exception.Create('Catalog compiler did not qualify the current pair: ' +
+      LStatus.ToJSON);
+  end;
+  WriteLn('PASS actual MCP ', ATarget, ' application compiler');
+end;
+
+{ Compare bounded live-service publication with the catalog recipe independently
+  compiled into this consumer. Compound metadata is the union of its parts;
+  the target harness later checks each of those real physical faces separately. }
+procedure CheckPublished(const AKind: TNyxText; const AMetadata: TNyxDataValue;
+  ACatalog: TNyxCatalog);
+var
+  LNode: TNyxNode;
+  LExpected: TNyxEventSchemas;
+  LTrigger: TNyxTrigger;
+  LIndex: Integer;
+  LExpectedPresent: Boolean;
+  LPublished: set of TNyxTrigger;
+  LActualTrigger: TNyxTrigger;
+  LEvents: TNyxDataValue;
+  LEvent: TNyxDataValue;
+begin
+  LNode := ACatalog.NewNode(AKind, 'metadata-sample');
+  try
+    LExpected := NyxEventsMetadata(LNode);
+    LPublished := [];
+    LEvents := AMetadata.Field('events');
+    { Data values own copies. Read the bounded array once, rather than copying
+      the entire response inside every trigger/member comparison. }
+    for LIndex := 0 to LEvents.Count - 1 do
+    begin
+      LEvent := LEvents.Item(LIndex);
+
+      if TryNyxTrigger(LEvent.Field('trigger').AsText, LActualTrigger) and
+        (NyxIsKeyboardTrigger(LActualTrigger) or
+        (LActualTrigger in [ntAfterEnter, ntAfterExit])) then
+      begin
+        Include(LPublished, LActualTrigger);
+
+        if (LEvent.Field('browser').AsText = 'Unavailable') or
+          (LEvent.Field('native').AsText = 'Unavailable') then
+        begin
+          raise Exception.Create('Published focus/key bridge is unavailable: ' + AKind);
+        end;
+      end;
+    end;
+    for LTrigger := Low(TNyxTrigger) to High(TNyxTrigger) do
+    begin
+
+      if not NyxIsKeyboardTrigger(LTrigger) and
+        not (LTrigger in [ntAfterEnter, ntAfterExit]) then
+      begin
+        Continue;
+      end;
+      LExpectedPresent := False;
+      for LIndex := 0 to High(LExpected) do
+      begin
+        LExpectedPresent := LExpectedPresent or (LExpected[LIndex].Trigger = LTrigger);
+      end;
+
+      if LExpectedPresent <> (LTrigger in LPublished) then
+      begin
+        raise Exception.Create('Live metadata differs from the compiled catalog: ' +
+          AKind + ' / ' + NyxTriggerName(LTrigger));
+      end;
+    end;
+  finally
+    LNode.Free;
+  end;
+end;
+
+var
+  LCatalog: TNyxCatalog;
+  LEntries: array of TNyxDataValue;
+  LOps: array of TNyxDataValue;
+  LMetadata: array of TNyxDataValue;
+  LValue: TNyxDataValue;
+  LProperties: TNyxDataValue;
+  LKind: TNyxText;
+  LPage: TNyxText;
+  LOffset: Integer;
+  LTotal: Integer;
+  LIndex: Integer;
+  LBatch: Integer;
+  LCount: Integer;
+begin
+  GClient := nil;
+  LCatalog := nil;
+  SetLength(LEntries, 0);
+  SetLength(LOps, 0);
+  try
+
+    if (ParamCount <> 2) and not ((ParamCount = 3) and (ParamStr(3) = 'inspect')) then
+    begin
+      raise Exception.Create('Supply disposable MCP config, owned source directory and optional inspect');
+    end;
+    GDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
+    ForceDirectories(GDirectory);
+    GClient := TNyxMCPTestClient.Create(ParamStr(1), 'Scooty catalog focus qualification');
+    LValue := Call('nyx_session', NyxObject([]));
+    LCatalog := TNyxCatalog.Create;
+    LOffset := 0;
+    repeat
+      LValue := Call('nyx_components', NyxObject([
+        NyxField('offset', NyxData(LOffset)), NyxField('limit', NyxData(50))]));
+      LTotal := LValue.Field('total').AsInteger;
+      for LIndex := 0 to LValue.Field('items').Count - 1 do
+      begin
+        SetLength(LEntries, Length(LEntries) + 1);
+        LEntries[High(LEntries)] := LValue.Field('items').Item(LIndex);
+      end;
+      Inc(LOffset, LValue.Field('items').Count);
+    until LOffset >= LTotal;
+
+    if Length(LEntries) <> LCatalog.Count then
+    begin
+      raise Exception.Create('Service and qualification catalog scopes differ');
+    end;
+    LBatch := 0;
+    { Inspect is read-only and never retries composition on an existing service. }
+
+    if ParamCount = 2 then
+    begin
+      for LIndex := 0 to High(LEntries) do
+      begin
+        LKind := LEntries[LIndex].Field('kind').AsText;
+        LPage := 'catalog-' + LKind;
+        LProperties := NyxObject([]);
+
+        if LKind = 'component' then
+        begin
+          LProperties := NyxObject([NyxField('component', NyxData('welcome-card'))]);
+        end;
+        LCount := Length(LOps);
+        SetLength(LOps, LCount + 4);
+        LOps[LCount] := CreateControl('page', LPage, '',
+          NyxObject([NyxField('padding', NyxData(24))]), True);
+        LOps[LCount + 1] := CreateControl('button', LPage + '-before', LPage,
+          NyxObject([NyxField('text', NyxData('Before the sample'))]));
+        LOps[LCount + 2] := CreateControl(LKind, LPage + '-sample', LPage, LProperties);
+        LOps[LCount + 3] := CreateControl('button', LPage + '-after', LPage,
+          NyxObject([NyxField('text', NyxData('After the sample'))]));
+
+        if (Length(LOps) = 64) or (LIndex = High(LEntries)) then
+        begin
+          Inc(LBatch);
+          Call('nyx_transaction', NyxObject([
+            NyxField('expectedRevision', NyxData(GRevision)),
+            NyxField('operationId', NyxData('catalog-focus-compose-' + IntToStr(LBatch))),
+            NyxField('operations', NyxArray(LOps))]));
+          SetLength(LOps, 0);
+        end;
+      end;
+      { A separate semantic page qualifies radio peer entry without pretending
+        that every member of a group owns an independent Tab stop. The ordinary
+        catalog cases still inspect each radio's complete callback family. }
+      Call('nyx_transaction', NyxObject([
+        NyxField('expectedRevision', NyxData(GRevision)),
+        NyxField('operationId', NyxData('catalog-focus-radio-peers')),
+        NyxField('operations', NyxArray([
+          CreateControl('page', 'catalog-radio-peers', '', NyxObject([]), True),
+          CreateControl('button', 'radio-before', 'catalog-radio-peers', NyxObject([])),
+          CreateControl('column', 'radio-peers', 'catalog-radio-peers', NyxObject([])),
+          CreateControl('radio', 'radio-first', 'radio-peers', NyxObject([])),
+          CreateControl('radio', 'radio-middle', 'radio-peers', NyxObject([])),
+          CreateControl('radio', 'radio-last', 'radio-peers', NyxObject([])),
+          CreateControl('button', 'radio-after', 'catalog-radio-peers', NyxObject([]))]))]));
+      Inc(LBatch);
+    end;
+    SetLength(LMetadata, Length(LEntries));
+    for LIndex := 0 to High(LEntries) do
+    begin
+      LKind := LEntries[LIndex].Field('kind').AsText;
+      LMetadata[LIndex] := Call('nyx_node', NyxObject([
+        NyxField('id', NyxData('catalog-' + LKind + '-sample')),
+        NyxField('keys', NyxArray([NyxData('enabled')])),
+        NyxField('limit', NyxData(1)), NyxField('events', NyxData(True)),
+        NyxField('eventLimit', NyxData(50))]));
+      CheckPublished(LKind, LMetadata[LIndex], LCatalog);
+    end;
+    Save('catalog.json', NyxArray(LEntries).ToJSON);
+    Save('metadata.json', NyxArray(LMetadata).ToJSON);
+    ExportSource;
+
+    if ParamCount = 2 then
+    begin
+      LValue := Call('nyx_build', NyxObject([NyxField('mode', NyxData('outputs'))]));
+      Compile('browser', LValue.Field('outputID').AsText);
+      Compile('lcl', LValue.Field('outputID').AsText);
+    end;
+    GClient.Close;
+
+    if ParamCount = 2 then
+    begin
+      WriteLn('PASS semantic composition, bounded metadata/source and both compilers / ',
+        Length(LEntries), ' catalog kinds / ', LBatch, ' paired transactions');
+    end
+    else
+    begin
+      WriteLn('PASS read-only live metadata concordance and exact source export / ',
+        Length(LEntries), ' catalog kinds / revision ', GRevision);
+    end;
+  except
+    on LException: Exception do
+    begin
+      WriteLn(StdErr, 'FAIL ', LException.Message);
+      ExitCode := 1;
+    end;
+  end;
+  GClient.Free;
+  LCatalog.Free;
+end.

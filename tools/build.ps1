@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -36,6 +36,8 @@ param(
   # The keyboard review source is exported through MCP, never handwritten by
   # this orchestration script. Its generated unit must live in this directory.
   [string]$KeyboardSourceDirectory = 'build/keyboard/mcp',
+  # Full-catalog source is composed/exported by the Pascal semantic MCP consumer.
+  [string]$CatalogFocusSourceDirectory = 'build/catalog-focus/source',
   # The maintained semantic callback journey exports two accepted source pairs.
   [string]$CallbackSourceDirectory = 'build/agent-callbacks/mcp',
   # Exact companion exported by the semantic handler/compilation journey.
@@ -291,6 +293,44 @@ try {
       "-Fu$nyxRootSource", "-FE$nyxBrowserDir", 'tests/nyx_root_consumer_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/root-consumers.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'catalog-focus') {
+    $nyxFocusSource = [IO.Path]::GetFullPath($CatalogFocusSourceDirectory)
+
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxFocusSource 'nyx.generated.view.pas'))) {
+      throw 'Compose/export the catalog focus companion through nyx_mcp_catalog_focus first'
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxFocusNative = Join-Path $nyxRoot 'build/catalog-focus/native'
+    $nyxFocusDriver = Join-Path $nyxRoot 'build/catalog-focus/driver'
+    $nyxFocusAuthor = Join-Path $nyxRoot 'build/catalog-focus/author'
+    New-Item -ItemType Directory -Force $nyxFocusNative, $nyxFocusDriver, $nyxFocusAuthor | Out-Null
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxFocusAuthor", "-FE$nyxFocusAuthor", 'tests/nyx_mcp_catalog_focus.lpr')
+    $nyxFocusPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-Fu$nyxFocusSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxFocusPlatform", "-Fu$nyxLazarus/lcl/units/$nyxFocusPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxFocusPlatform", "-Fu$nyxLazarus/packager/units/$nyxFocusPlatform",
+      "-FU$nyxFocusNative", "-FE$nyxFocusNative", 'tests/nyx_catalog_focus_tests.lpr')
+    & (Join-Path $nyxFocusNative 'nyx_catalog_focus_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Native full-catalog focus qualification failed' }
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl',
+      '-Fusrc', '-Futests', "-FU$nyxFocusDriver", "-FE$nyxFocusDriver", 'tests/nyx_catalog_focus_cdp_tests.lpr')
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxFocusBrowser = Join-Path $nyxRoot 'build/browser'
+
+    if ($BrowserOutput) { $nyxFocusBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxFocusBrowser | Out-Null
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Fusrc', '-Futests',
+      "-Fu$nyxFocusSource", "-FE$nyxFocusBrowser", 'tests/nyx_catalog_focus_tests.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxFocusBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/catalog-focus.html') -Destination $nyxFocusBrowser
     exit 0
   }
 

@@ -115,6 +115,14 @@ type
     function Change(AEvent: TEventListenerEvent): Boolean;
     function Enter(AEvent: TEventListenerEvent): Boolean;
     function Leave(AEvent: TEventListenerEvent): Boolean;
+    { The scalar input, separator grip or ordinary leaf; borrowed from this
+      mount. Collection descendants are admitted separately by their owner. }
+    function FocusElement: TJSHTMLElement;
+    function IsFocusBoundary(AEvent: TEventListenerEvent): Boolean;
+    { A checked but disabled/hidden HTML radio can suppress every peer's native
+      Tab entry. A temporary label entry forwards focus to the same real input
+      without scroll, value changes, synthetic activation or extra callbacks. }
+    function ForwardRadioFocus(AEvent: TEventListenerEvent): Boolean;
     function KeyDown(AEvent: TJSKeyboardEvent): Boolean;
     function KeyUp(AEvent: TJSKeyboardEvent): Boolean;
     function Keyboard(AEvent: TJSKeyboardEvent; ATrigger: TNyxTrigger): Boolean;
@@ -198,6 +206,9 @@ type
     function FactoryIndex(ANode: TNyxNode): Integer;
     function CreateElement(ANode: TNyxNode; out AInput: TJSHTMLElement): TJSHTMLElement;
     function Build(ANode: TNyxNode): TJSHTMLElement;
+    { Retain one eligible entry when a checked radio becomes disabled/hidden.
+      Grouping follows the physical HTML name/form boundary, not display rows. }
+    procedure SyncRadioFocus;
   public
     constructor Create(ATheme: TNyxTheme = nil);
     destructor Destroy; override;
@@ -227,6 +238,12 @@ type
       face. Mirrors the LCL adapter: missing identity raises; a component with
       no scalar input returns nil. Valid only until the mounted view ends. }
     function InputFor(const AID: TNyxText;
+      AIdentity: TNyxIdentityKind = niAutomatic): TJSHTMLElement;
+    { Borrow the declared focus face, including the split separator's divider.
+      No declared face returns nil; missing identity raises. Bound collections
+      return their logical host and manage their own descendant Tab entry.
+      Never retain the element beyond this mounted view's lifetime. }
+    function FocusFor(const AID: TNyxText;
       AIdentity: TNyxIdentityKind = niAutomatic): TJSHTMLElement;
     { Owned runtime text range, independent of document/design selection.
       SetTextSelection changes only the mounted input; no focus/scroll is forced. }
@@ -297,6 +314,12 @@ type
   TNyxWheelElement = class external name 'HTMLElement' (TJSHTMLElement)
     procedure Listen(const AName: String; AHandler: TJSMouseWheelEventHandler;
       AOptions: TJSObject); external name 'addEventListener';
+  end;
+  { Older Web declarations omit removeEventListener's capture argument. The
+    standard DOM requires the same capture bit to revoke a key producer. }
+  TNyxKeyboardElement = class external name 'HTMLElement' (TJSHTMLElement)
+    procedure Unlisten(const AName: String; AHandler: TJSKeyEventHandler;
+      ACapture: Boolean); external name 'removeEventListener';
   end;
 
 function CaptureBrowserViewport(AElement: TJSHTMLElement): TNyxViewportSnapshot;
@@ -478,7 +501,6 @@ begin
     { Detached nodes may still be held by caller code. Clear callbacks before
       releasing their Pascal bindings so those references cannot dispatch into
       a disposed tree. }
-    FBindings[LIndex].FSplit.Free;
     FBindings[LIndex].FElement.onclick := nil;
 
     if FBindings[LIndex].FInput <> nil then
@@ -858,10 +880,11 @@ begin
       LItems.Text := ANode.Prop('items');
       for LIndex := 0 to LItems.Count - 1 do
       begin
-        LChild := Element('details', '');
-        LCaption := Element('summary', '');
-        LCaption.textContent := LItems[LIndex];
-        LChild.appendChild(LCaption);
+        { Literal Items are flat leaves, matching the native fallback tree.
+          Empty disclosure widgets invent expansion and extra unbridged Tab
+          stops. A bound collection supplies actual hierarchy/selection/ARIA. }
+        LChild := Element('div', '');
+        LChild.textContent := LItems[LIndex];
         Result.appendChild(LChild);
       end;
     finally
@@ -1051,6 +1074,10 @@ begin
       LBinding.FCaption := TJSHTMLElement(Result.querySelector('legend'));
     end;
   end;
+  if not LBinding.FCustom and (ANode.ProjectionKind = 'radio') then
+  begin
+    Result.addEventListener('focus', @LBinding.ForwardRadioFocus);
+  end;
   Result.onclick := @LBinding.Click;
   Result.addEventListener('dblclick', @LBinding.DoubleClick);
   Result.addEventListener('pointerdown', @LBinding.PointerDown);
@@ -1098,22 +1125,20 @@ begin
       end;
     end;
   end;
-  { A code block is selectable/read-only rather than an input. Give its own
-    face keyboard focus; do not manufacture a mutable value or change event. }
+  { Standard non-input focus policy is applied in Sync, including disabled
+    transitions. Bound collection mounts retain their own roving Tab entry. }
+  { Delegated focus observes collection rows/editors without adding a second
+    Tab stop. Ordinary leaves still admit only their exact physical face.
+    Capture keys before a collection's default row navigation so sequential
+    Nyx hooks can consume it. Creator factories keep their existing ordering. }
 
-  if ANode.ProjectionKind = 'code' then
+  if (LInput = nil) and (LBinding.FCustom or
+    (ANode.ProjectionKind <> 'split-view')) then
   begin
-    Result.setAttribute('tabindex', '0');
-  end;
-  { Separate listeners preserve a custom element's own focus handlers. Focus
-    does not bubble; listen on the actual input or a focusable leaf only. }
-
-  if LInput = nil then
-  begin
-    Result.addEventListener('focus', @LBinding.Enter);
-    Result.addEventListener('blur', @LBinding.Leave);
-    Result.addEventListener('keydown', @LBinding.KeyDown);
-    Result.addEventListener('keyup', @LBinding.KeyUp);
+    Result.addEventListener('focusin', @LBinding.Enter);
+    Result.addEventListener('focusout', @LBinding.Leave);
+    Result.addEventListener('keydown', @LBinding.KeyDown, not LBinding.FCustom);
+    Result.addEventListener('keyup', @LBinding.KeyUp, not LBinding.FCustom);
   end;
 
   if LInput <> nil then
@@ -1162,6 +1187,10 @@ begin
     end;
     LBinding.FSplit := TNyxBrowserSplit.Create(ANode, Result, LFirst, LSecond, FDesignMode);
     LBinding.FSplit.OnChanged := @LBinding.SplitChanged;
+    LBinding.FSplit.Divider.addEventListener('focus', @LBinding.Enter);
+    LBinding.FSplit.Divider.addEventListener('blur', @LBinding.Leave);
+    LBinding.FSplit.Divider.addEventListener('keydown', @LBinding.KeyDown, True);
+    LBinding.FSplit.Divider.addEventListener('keyup', @LBinding.KeyUp, True);
   end;
 end;
 
@@ -1419,6 +1448,28 @@ begin
     if FBindings[LIndex].FElement = LElement then
     begin
       Exit(FBindings[LIndex].FInput);
+    end;
+  end;
+end;
+
+function TNyxBrowserRenderer.FocusFor(const AID: TNyxText;
+  AIdentity: TNyxIdentityKind): TJSHTMLElement;
+var
+  LElement: TJSHTMLElement;
+  LBinding: TNyxBrowserBinding;
+  LIndex: Integer;
+begin
+  LElement := ElementFor(AID, AIdentity);
+  Result := nil;
+  for LIndex := 0 to High(FBindings) do
+  begin
+    LBinding := FBindings[LIndex];
+
+    if (LBinding.FElement = LElement) and ((LBinding.FInput <> nil) or
+      NyxSupportsKeyboard(LBinding.FNode) or
+      (LBinding.FCustom and (LElement.tabIndex >= 0))) then
+    begin
+      Exit(LBinding.FocusElement);
     end;
   end;
 end;
@@ -2479,14 +2530,34 @@ end;
 destructor TNyxBrowserBinding.Destroy;
 var
   LViewportElement: TJSHTMLElement;
+  LFocus: TJSHTMLElement;
   LIndex: Integer;
   LPointerID: Integer;
 begin
+  { Detach the exact focus surface before disposing a split behavior. A caller
+    may still hold its old DOM element after navigation; it must have no live
+    Pascal event sink. Remove both capture modes used by default/custom faces. }
+  LFocus := FocusElement;
+
+  if LFocus <> nil then
+  begin
+    LFocus.removeEventListener('focus', @Enter);
+    LFocus.removeEventListener('blur', @Leave);
+    LFocus.removeEventListener('focusin', @Enter);
+    LFocus.removeEventListener('focusout', @Leave);
+    LFocus.removeEventListener('keydown', @KeyDown);
+    LFocus.removeEventListener('keyup', @KeyUp);
+    TNyxKeyboardElement(LFocus).Unlisten('keydown', @KeyDown, True);
+    TNyxKeyboardElement(LFocus).Unlisten('keyup', @KeyUp, True);
+  end;
+  FSplit.Free;
+  FSplit := nil;
   { Queued DOM scroll notifications can outlive removal from the document.
     Revoke these producers before releasing their borrowed renderer/node. }
 
   if FElement <> nil then
   begin
+    FElement.removeEventListener('focus', @ForwardRadioFocus);
     FElement.removeEventListener('pointerdown', @PointerDown);
     FElement.removeEventListener('pointerup', @PointerUp);
     FElement.removeEventListener('pointermove', @PointerMove);
@@ -2658,11 +2729,72 @@ begin
   FRenderer.Emit(FNode, LDispatch);
 end;
 
+function TNyxBrowserBinding.FocusElement: TJSHTMLElement;
+begin
+  Result := FInput;
+
+  if Result = nil then
+  begin
+    Result := FElement;
+
+    if FSplit <> nil then
+    begin
+      Result := FSplit.Divider;
+    end;
+  end;
+end;
+
+function TNyxBrowserBinding.ForwardRadioFocus(AEvent: TEventListenerEvent): Boolean;
+var
+  LPolicy: TNyxInteractionPolicy;
+begin
+  Result := True;
+
+  if (FRenderer.FEvents.ViewRevision <> FViewRevision) or FRenderer.FUpdating or
+    FRenderer.FDesignMode or (AEvent.target <> FElement) then
+  begin
+    Exit;
+  end;
+  LPolicy := NyxInteractionPolicy(FNode);
+
+  if LPolicy.CanIssueCommand and (FInput <> nil) then
+  begin
+    { The input's existing focus listener owns the one Nyx notification. }
+    NyxFocusWithoutScroll(FInput);
+  end;
+end;
+
+function TNyxBrowserBinding.IsFocusBoundary(AEvent: TEventListenerEvent): Boolean;
+var
+  LRelated: TJSNode;
+begin
+  Result := False;
+
+  if (FRenderer.FEvents.ViewRevision <> FViewRevision) or FRenderer.FUpdating or
+    FRenderer.FDesignMode then
+  begin
+    Exit;
+  end;
+
+  if (FCollectionMount <> nil) and FCollectionMount.Connected then
+  begin
+    { Moving between a row and its editor stays in the same logical control.
+      Only crossing the owning collection boundary emits enter/exit. }
+    LRelated := TJSNode(TJSFocusEvent(AEvent).relatedTarget);
+    Result := FElement.contains(TJSNode(AEvent.target)) and
+      ((LRelated = nil) or not FElement.contains(LRelated));
+  end
+  else
+  begin
+    Result := AEvent.target = FocusElement;
+  end;
+end;
+
 function TNyxBrowserBinding.Enter(AEvent: TEventListenerEvent): Boolean;
 begin
   Result := True;
 
-  if not FRenderer.FUpdating and not FRenderer.FDesignMode and
+  if IsFocusBoundary(AEvent) and
     FRenderer.FEvents.HasSubscribers(ntAfterEnter) then
   begin
     FRenderer.Emit(FNode, FRenderer.FLiveBindings.Focus(FNode, ntAfterEnter));
@@ -2673,7 +2805,7 @@ function TNyxBrowserBinding.Leave(AEvent: TEventListenerEvent): Boolean;
 begin
   Result := True;
 
-  if not FRenderer.FUpdating and not FRenderer.FDesignMode and
+  if IsFocusBoundary(AEvent) and
     FRenderer.FEvents.HasSubscribers(ntAfterExit) then
   begin
     FRenderer.Emit(FNode, FRenderer.FLiveBindings.Focus(FNode, ntAfterExit));
@@ -2718,12 +2850,7 @@ begin
   begin
     Exit;
   end;
-  LInput := FInput;
-
-  if LInput = nil then
-  begin
-    LInput := FElement;
-  end;
+  LInput := FocusElement;
   { Keyboard events bubble. Ordinary controls route their actual input/leaf.
     A collection attachment owns its row/edit descendants, so their keys route
     through the owning data control before its default selection action.
@@ -2827,6 +2954,91 @@ begin
   end;
 end;
 
+procedure TNyxBrowserRenderer.SyncRadioFocus;
+type
+  TRadioScope = record
+    Name: TNyxText;
+    Form: TJSHTMLFormElement;
+    Entry: TNyxBrowserBinding;
+    Checked: Boolean;
+    BlockedChecked: Boolean;
+  end;
+var
+  LScopes: array of TRadioScope;
+  LIndex: Integer;
+  LScope: Integer;
+  LRadio: TJSHTMLInputElement;
+  LPolicy: TNyxInteractionPolicy;
+begin
+  SetLength(LScopes, 0);
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if not FBindings[LIndex].FCustom and
+      (FBindings[LIndex].FNode.ProjectionKind = 'radio') then
+    begin
+      LRadio := TJSHTMLInputElement(FBindings[LIndex].FInput);
+      LRadio.tabIndex := -1;
+      FBindings[LIndex].FElement.removeAttribute('tabindex');
+      LPolicy := NyxInteractionPolicy(FBindings[LIndex].FNode);
+      LScope := 0;
+      while (LScope < Length(LScopes)) and
+        ((LRadio.name = '') or (LScopes[LScope].Name <> LRadio.name) or
+        (LScopes[LScope].Form <> LRadio.form)) do
+      begin
+        Inc(LScope);
+      end;
+
+      if LScope = Length(LScopes) then
+      begin
+        SetLength(LScopes, LScope + 1);
+        LScopes[LScope].Name := LRadio.name;
+        LScopes[LScope].Form := LRadio.form;
+        LScopes[LScope].Entry := nil;
+        LScopes[LScope].Checked := False;
+        LScopes[LScope].BlockedChecked := False;
+      end;
+
+      if not LPolicy.CanIssueCommand then
+      begin
+        LScopes[LScope].BlockedChecked := LScopes[LScope].BlockedChecked or LRadio.checked;
+        Continue;
+      end;
+
+      if LScopes[LScope].Entry = nil then
+      begin
+        LScopes[LScope].Entry := FBindings[LIndex];
+      end;
+
+      if LRadio.checked and not LScopes[LScope].Checked then
+      begin
+        LScopes[LScope].Entry := FBindings[LIndex];
+        LScopes[LScope].Checked := True;
+      end;
+    end;
+  end;
+  for LScope := 0 to High(LScopes) do
+  begin
+
+    if LScopes[LScope].Entry = nil then
+    begin
+      Continue;
+    end;
+
+    if LScopes[LScope].BlockedChecked then
+    begin
+      { Explicit input tabindex cannot override Chromium's checked-peer group
+        exclusion. Keep that value intact and enter through its existing label;
+        ForwardRadioFocus immediately delegates to the same enabled input. }
+      LScopes[LScope].Entry.FElement.tabIndex := 0;
+    end
+    else
+    begin
+      LScopes[LScope].Entry.FInput.tabIndex := 0;
+    end;
+  end;
+end;
+
 procedure TNyxBrowserRenderer.Sync;
 const
   CMetricKeys: array[0..5] of TNyxText = ('width', 'height', 'gap', 'padding', 'left', 'top');
@@ -2839,6 +3051,7 @@ var
   LControl: TJSHTMLElement;
   LEnabled: Boolean;
   LReadOnly: Boolean;
+  LKeyboardKind: TNyxKind;
   LValue: TNyxText;
 
   procedure AttributeFlag(AElement: TJSHTMLElement; const AName: TNyxText; ASet: Boolean);
@@ -2948,6 +3161,56 @@ begin
       AttributeFlag(LControl, 'disabled', not LEnabled);
       LControl.setAttribute('aria-disabled', LowerCase(BoolToStr(not LEnabled, True)));
 
+      if not LBinding.FCustom and (LBinding.FInput = nil) and
+        NyxSupportsKeyboard(LNode) and TryNyxKind(LNode.ProjectionKind, LKeyboardKind) then
+      begin
+        case LKeyboardKind of
+          nkCode, nkList, nkTable, nkTree:
+            begin
+              { These standard faces have no intrinsic HTML Tab entry. A
+                disabled static face loses tabindex altogether; a negative
+                tabindex would still allow programmatic/click focus. Read-only
+                retains inspection. The managed collection owns its own entry. }
+
+              if LBinding.FCollectionMount = nil then
+              begin
+
+                if LEnabled then
+                begin
+                  LControl.setAttribute('tabindex', '0');
+                end
+                else
+                begin
+                  LControl.removeAttribute('tabindex');
+                end;
+              end;
+            end;
+          nkLink:
+            begin
+              { An anchor ignores HTML disabled. Retain its accessible link
+                identity while withdrawing navigation/focus, then restore the
+                authored URL on re-enable. Do not hide disabled content with
+                inert or manufacture a positive focus order. }
+              LControl.setAttribute('role', 'link');
+
+              if LEnabled then
+              begin
+                LValue := LNode.Prop('href', '#');
+
+                if not SafeURL(LValue, False) then
+                begin
+                  raise ENyxModel.Create('Unsupported link URL');
+                end;
+                LControl.setAttribute('href', LValue);
+              end
+              else
+              begin
+                LControl.removeAttribute('href');
+              end;
+            end;
+        end;
+      end;
+
       if LBinding.FCollectionMount <> nil then
       begin
         LBinding.FCollectionMount.SetInteraction(LEnabled and not FDesignMode,
@@ -2976,6 +3239,14 @@ begin
       if LNode.Prop('aria-label') <> '' then
       begin
         LControl.setAttribute('aria-label', LNode.Prop('aria-label'));
+      end
+      else if not LBinding.FCustom and (LBinding.FInput = nil) and
+        (LBinding.FCollectionMount = nil) and
+        TryNyxKind(LNode.ProjectionKind, LKeyboardKind) and
+        (LKeyboardKind in [nkCode, nkList, nkTable, nkTree]) then
+      begin
+        { The same authored caption names native static inspection faces. }
+        LControl.setAttribute('aria-label', LNode.Prop('text', LNode.ID));
       end
       else
       begin
@@ -3070,6 +3341,7 @@ begin
         end;
       end;
     end;
+    SyncRadioFocus;
     { Generic metrics never override an adapter-owned split layout. Do this
       after all child bindings so their ordinary root styles cannot undo it. }
     for LIndex := 0 to Length(FBindings) - 1 do

@@ -27,7 +27,7 @@ program nyx_split_controls_tests;
 
 uses
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.codec, nyx.behavior, nyx.split,
-  nyx.test.split,
+  nyx.test.split, nyx.events, nyx.scheduler,
   {$ifdef PAS2JS}
   JS, Web, nyx.render.browser, nyx.test.keyboard.browser;
   {$else}
@@ -41,6 +41,16 @@ type
     Navigate: Boolean;
     {$ifdef PAS2JS}Renderer: TNyxBrowserRenderer;{$else}Renderer: TNyxLCLRenderer;{$endif}
     procedure Event(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+  end;
+  { Independent typed registration observes the separator before its default.
+    Its renderer is borrowed only during this synchronous fixture. }
+  TKeyProbe = class(TNyxEventCallback)
+    Renderer: {$ifdef PAS2JS}TNyxBrowserRenderer{$else}TNyxLCLRenderer{$endif};
+    Count: Integer;
+    ExpectedPosition: Integer;
+    Consume: Boolean;
+    procedure Invoke(const AEvent: TNyxEventInfo;
+      const AExecution: INyxExecution); override;
   end;
   {$ifdef PAS2JS}
   TPointer = class external name 'PointerEvent' (TJSPointerEvent)
@@ -78,6 +88,22 @@ begin
   end;
 end;
 
+procedure TKeyProbe.Invoke(const AEvent: TNyxEventInfo;
+  const AExecution: INyxExecution);
+begin
+  Check(AEvent.HasKeyboard and (AEvent.Keyboard.Key = nkHomeKey),
+    'separator hook carries the typed key');
+  Check(StrToInt(Renderer.Root.Find('work-split').Prop('split-position')) = ExpectedPosition,
+    'separator hook executes before the resizing default');
+  Inc(Count);
+
+  if Consume then
+  begin
+    NyxEventResponse(AExecution).Consume;
+    Check(NyxEventResponse(AExecution).Consumed, 'separator default can be consumed');
+  end;
+end;
+
 {$ifdef PAS2JS}
 procedure Pointer(AHost: TJSHTMLElement; const AType: String;
   AX, AY: Double; AID: Integer = 1);
@@ -103,6 +129,9 @@ var
   LSink: TSink;
   LWire: TNyxText;
   LBefore: Integer;
+  LProbe: TKeyProbe;
+  LOwner: INyxEventCallback;
+  LToken: INyxEventSubscription;
   {$ifdef PAS2JS}
   LHost: TJSHTMLElement;
   LSplit: TJSHTMLElement;
@@ -148,8 +177,9 @@ begin
     {$else}
     Application.ProcessMessages;
     LSplit := TNyxLCLSplitView(LSink.Renderer.ControlFor('work-split'));
-    Check((LSplit.State.Orientation = nsoSideBySide) and not LSplit.Grip.Enabled,
-      'actual native rule disables resizing');
+    Check((LSplit.State.Orientation = nsoSideBySide) and not LSplit.State.Resizable and
+      LSplit.Grip.Enabled and LSplit.Grip.TabStop,
+      'fixed native separator remains inspectable without enabling resizing');
     LDocument.Find('work-split').Configure.ForPlatform(npfNativeLCL).SplitResizable(True);
     LSink.Renderer.Render(LDocument, LDocument.Pages[0], LHost);
     Application.ProcessMessages;
@@ -237,20 +267,43 @@ begin
     Check(LSink.Last.HasValue and (LSink.Last.Value.AsInteger = 90),
       'actual change contains typed percent snapshot');
     Check(TNyxCodec.Encode(LDocument) = LWire, 'widget interaction leaves authored rules unchanged');
+    LProbe := TKeyProbe.Create;
+    LProbe.Renderer := LSink.Renderer;
+    LProbe.ExpectedPosition := 90;
+    LOwner := LProbe;
+    LToken := LSink.Renderer.Events.On(NyxControlEvents('work-split'),
+      ntBeforeKeyDown).Subscribe(LOwner);
     LSink.Renderer.Root.Configure.ReadOnly(True);
     LSink.Renderer.Sync;
     {$ifdef PAS2JS}
     LGrip.dispatchEvent(NyxTestKeyboard(ntKeyDown, 'Home'));
     Check(LGrip.getAttribute('aria-valuenow') = '90',
       'inherited browser read-only refuses keyboard resizing');
+    Check((LGrip.tabIndex = 0) and (LSink.Renderer.FocusFor('work-split') = LGrip),
+      'read-only browser separator retains its public focus face');
     {$else}
     LKey := $24;
     LGrip.KeyDown(LKey, []);
-    Check((LSplit.State.Position = 90) and not LGrip.Enabled,
+    Check((LSplit.State.Position = 90) and LGrip.Enabled and LGrip.TabStop,
       'inherited native read-only refuses keyboard resizing');
+    Check(LSink.Renderer.FocusFor('work-split') = LGrip,
+      'read-only native separator retains its public focus face');
     {$endif}
+    Check(LProbe.Count = 1, 'read-only separator still emits its key notification');
     LSink.Renderer.Root.Configure.ReadOnly(False);
     LSink.Renderer.Sync;
+    LProbe.Consume := True;
+    {$ifdef PAS2JS}
+    LGrip.dispatchEvent(NyxTestKeyboard(ntKeyDown, 'Home'));
+    Check(LGrip.getAttribute('aria-valuenow') = '90', 'consumed browser key preserves proportion');
+    {$else}
+    LKey := $24;
+    LGrip.KeyDown(LKey, []);
+    Check((LKey = 0) and (LSplit.State.Position = 90), 'consumed native key preserves proportion');
+    {$endif}
+    Check((LProbe.Count = 2) and (LSink.Count = 4), 'consumption emits no completed resize');
+    LToken.Cancel;
+    Check(not LToken.Active, 'separator key registration is independently cancellable');
     {$ifdef PAS2JS}
     Pointer(LGrip, 'pointerdown', LX, LY);
     Pointer(LGrip, 'pointermove', LX, LY - 96);
@@ -281,6 +334,8 @@ begin
     Check(LSink.Renderer.Root = nil, 'resize callback may dispose mounted view');
     Check(LSink.Last.Value.AsInteger = 10, 'callback snapshot survives disposal');
   finally
+    LToken := nil;
+    LOwner := nil;
     LSink.Renderer.Free;
     LSink.Free;
     LDocument.Free;

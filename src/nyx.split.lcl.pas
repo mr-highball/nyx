@@ -67,6 +67,9 @@ type
     FOnChanged: TNotifyEvent;
     FReady: Boolean;
     FArranging: Boolean;
+    { Focus remains available for inspection when resizing is read-only. This
+      separate gate covers inherited policy and cancels an in-flight gesture. }
+    FResizeAllowed: Boolean;
     procedure Publish;
     procedure Notify;
     function GetPane(AIndex: Integer): TScrollBox;
@@ -151,7 +154,7 @@ var
   LExtent: Integer;
 begin
 
-  if (AButton <> mbLeft) or not IsEnabled or not FSplit.State.Resizable then
+  if (AButton <> mbLeft) or not IsEnabled or not FSplit.FResizeAllowed then
   begin
     Exit;
   end;
@@ -203,8 +206,17 @@ procedure TNyxLCLSplitGrip.KeyDown(var AKey: Word; AShift: TShiftState);
 var
   LKey: TNyxKey;
 begin
+  { Notify the installed Nyx/creator key slot before the separator's default.
+    Consumption or navigation seals AKey to zero; after that the borrowed split
+    may have been disposed, so return without reading it. }
+  inherited KeyDown(AKey, AShift);
 
-  if not IsEnabled or not FSplit.State.Resizable then
+  if AKey = 0 then
+  begin
+    Exit;
+  end;
+
+  if not IsEnabled or not FSplit.FResizeAllowed then
   begin
     Exit;
   end;
@@ -223,7 +235,6 @@ begin
     not ((FSplit.State.Orientation = nsoStacked) and (LKey in [nkUpKey, nkDownKey])) and
     not ((FSplit.State.Orientation = nsoSideBySide) and (LKey in [nkLeftKey, nkRightKey])) then
   begin
-    inherited KeyDown(AKey, AShift);
     Exit;
   end;
   AKey := 0;
@@ -268,6 +279,7 @@ var
   LAllowed: Boolean;
 begin
   LAllowed := AEnabled and not AReadOnly and FState.Resizable;
+  FResizeAllowed := LAllowed;
 
   if not LAllowed and FState.Dragging then
   begin
@@ -275,16 +287,18 @@ begin
     FGrip.MouseCapture := False;
     Publish;
   end;
-  FGrip.Enabled := LAllowed;
-  FGrip.TabStop := LAllowed;
+  { Read-only and fixed separators still expose their values and key hooks.
+    Disabled ancestors remove the entry without permitting a resize command. }
+  FGrip.Enabled := AEnabled;
+  FGrip.TabStop := AEnabled;
 end;
 
 procedure TNyxLCLSplitView.Initialize(ANode: TNyxNode);
 begin
   FNode := ANode;
   FState := TNyxSplitState.Create(ANode);
-  FGrip.Enabled := FState.Resizable and (ANode.Prop('readonly') <> 'true');
-  FGrip.TabStop := FGrip.Enabled;
+  SetInteraction(ANode.Prop('enabled', 'true') <> 'false',
+    ANode.Prop('readonly') = 'true');
 
   if FState.Orientation = nsoStacked then
   begin

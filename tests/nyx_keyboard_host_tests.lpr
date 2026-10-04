@@ -43,6 +43,8 @@ type
     Decremented: Integer;
     Incremented: Integer;
     Removed: Integer;
+    Entered: Integer;
+    Exited: Integer;
     procedure Invoke(const AEvent: TNyxEventInfo;
       const AExecution: INyxExecution); override;
   end;
@@ -114,6 +116,8 @@ begin
   document.body.setAttribute('data-keyboard-decremented', IntToStr(GProbe.Decremented));
   document.body.setAttribute('data-keyboard-incremented', IntToStr(GProbe.Incremented));
   document.body.setAttribute('data-keyboard-removed', IntToStr(GProbe.Removed));
+  document.body.setAttribute('data-keyboard-entered', IntToStr(GProbe.Entered));
+  document.body.setAttribute('data-keyboard-exited', IntToStr(GProbe.Exited));
   document.body.setAttribute('data-keyboard-items', IntToStr(GView.Store.Snapshot.Count));
 end;
 
@@ -131,7 +135,15 @@ begin
   Require(AEvent.SourceID <> 'keyboard-review-disabled-actions',
     'A disabled compound must never publish an action');
 
-  if AEvent.HasKeyboard and (AEvent.Keyboard.Key = nkDeleteKey) and
+  if AEvent.Trigger = ntAfterEnter then
+  begin
+    Inc(Entered);
+  end
+  else if AEvent.Trigger = ntAfterExit then
+  begin
+    Inc(Exited);
+  end
+  else if AEvent.HasKeyboard and (AEvent.Keyboard.Key = nkDeleteKey) and
     GView.Selection.Focus.Defined then
   begin
     { Delete is a test consumer command, admitted through the ordinary typed
@@ -203,7 +215,7 @@ begin
   GView := GRenderer.CollectionView('keyboard-table');
   GProbe := TKeyboardProbe.Create;
   GOwner := GProbe;
-  SetLength(GTokens, 7);
+  SetLength(GTokens, 9);
   GTokens[0] := GRenderer.Events.OnNamed(NyxCompoundEvents('keyboard-review-action'),
     NyxSemantic(nseActivate)).Subscribe(GOwner);
   GTokens[1] := GRenderer.Events.OnNamed(NyxCompoundEvents('keyboard-review-search'),
@@ -218,6 +230,10 @@ begin
     ntKeyDown).Subscribe(GOwner);
   GTokens[6] := GRenderer.Events.OnNamed(NyxCompoundEvents('keyboard-review-disabled-actions'),
     NyxSemantic(nsePrimary)).Subscribe(GOwner);
+  GTokens[7] := GRenderer.Events.On(NyxControlEvents('keyboard-table'),
+    ntAfterEnter).Subscribe(GOwner);
+  GTokens[8] := GRenderer.Events.On(NyxControlEvents('keyboard-table'),
+    ntAfterExit).Subscribe(GOwner);
 end;
 
 {$ifdef PAS2JS}
@@ -251,6 +267,14 @@ begin
   LControl.SetFocus;
   Require(LControl.Focused and TCustomMemo(LControl).ReadOnly,
     'Read-only native memo retains inspection and selection');
+  LControl := GRenderer.FocusFor('keyboard-table');
+  Require((LControl <> nil) and LControl.CanFocus, 'Native collection focus host is reachable');
+  LControl.SetFocus;
+  Require((GProbe.Entered = 1) and (GProbe.Exited = 0),
+    'Native bound collection enters its logical control once');
+  GRenderer.FocusFor('keyboard-after').SetFocus;
+  Require((GProbe.Entered = 1) and (GProbe.Exited = 1),
+    'Native bound collection exits its logical control once');
   WriteLn('PASS native MCP-authored compound focus, activation, disabled and read-only controls');
 end;
 {$endif}
@@ -278,6 +302,7 @@ begin
     finally
       for LIndex := 0 to High(GTokens) do
       begin
+        GTokens[LIndex].Cancel;
         GTokens[LIndex] := nil;
       end;
       GRenderer.Free;

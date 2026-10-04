@@ -27,7 +27,7 @@ unit nyx.split.browser;
 interface
 
 uses
-  SysUtils, JS, Web, nyx.text, nyx.types, nyx.model, nyx.split;
+  SysUtils, JS, Web, nyx.text, nyx.types, nyx.model, nyx.split, nyx.interaction;
 
 type
   TNyxBrowserSplit = class;
@@ -174,6 +174,7 @@ procedure TNyxBrowserSplit.Update;
 var
   LTracks: TNyxText;
   LIndex: Integer;
+  LPolicy: TNyxInteractionPolicy;
 begin
   { Runtime state may change enablement during a captured gesture. Cancel that
     gesture immediately during in-place synchronization, preserving its baseline. }
@@ -233,14 +234,25 @@ begin
   FDivider.setAttribute('aria-valuemax', IntToStr(FState.Maximum));
   FDivider.setAttribute('aria-valuenow', IntToStr(FState.Position));
 
-  if CanResize then
+  { Inspecting a read-only/fixed separator must not require a pointer. Its
+    focused hooks remain available, while CanResize alone owns default sizing. }
+  LPolicy := NyxInteractionPolicy(FNode);
+
+  if LPolicy.Enabled and not FDesignMode then
   begin
     FDivider.tabIndex := 0;
-    FDivider.setAttribute('aria-disabled', 'false');
   end
   else
   begin
     FDivider.tabIndex := -1;
+  end;
+
+  if CanResize then
+  begin
+    FDivider.setAttribute('aria-disabled', 'false');
+  end
+  else
+  begin
     FDivider.setAttribute('aria-disabled', 'true');
     FDivider.style.setProperty('cursor', 'default');
   end;

@@ -521,6 +521,28 @@ chosen session; preserve the active user's service.
 
 ## Build and verification
 
+`nyx_mcp_catalog_focus` composes every current catalog kind and a radio-peer
+page through bounded, revision-aware MCP groups in a disposable service. It
+queries small node/event responses, exports accepted source in 80-line windows
+and requests both actual application compilers. Supply its private Codex config
+and an owned export directory. Optional third argument `inspect` only rechecks
+live publication and exports the same revision; it never repeats composition.
+
+`tools/build.ps1 -Target catalog-focus -CatalogFocusSourceDirectory <export>`
+compiles that unchanged companion for native and browser consumers. The native
+consumer qualifies actual LCL focus/key slots and reports heap ownership. Run
+`nyx_catalog_focus_cdp_tests <loopback>/catalog-focus.html <artifacts>` for real
+browser Tab/F8, or add `phone` for exact 390-by-844 CSS-pixel emulation. It uses
+the owned Pascal host transport to read bounded fixture attributes and never
+injects browser source or edits Studio. All kinds and expanded compound parts
+must agree with their published event families through read-only, disabled,
+re-enable and independent-registration cancellation transitions. Date/time
+inputs retain their bounded native shadow-segment Tab traversal. The separate
+radio peer journey checks one entry through checked, disabled and hidden peers.
+These fixtures mutate only their chosen disposable design session. They do not
+establish hardware/IME, assistive technology, another widgetset or full grid
+interaction support; those remain explicit qualification work.
+
 The maintained native semantic/configuration tool is built with
 `tools/build.ps1 -Target mcp-client`. Its configuration fixture uses disposable
 files under `build/mcp-client/`, never the real Codex user file. Actual MCP HTTP

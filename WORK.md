@@ -7,6 +7,45 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+Latest delivery (2026-10-04): full-catalog focus/keyboard concordance is
+qualified and deployed. Semantic MCP authored all 76 kinds plus a radio-peer
+page in six paired transactions. Bounded live metadata agrees with the compiled
+catalog; exported source is byte-identical to both actual compiler jobs.
+Windows LCL qualifies 103 faces / 30,637 checks with zero unfreed blocks;
+browser host input passes 23,434 checks at desktop and exact 390-by-844 each.
+Splitter consumption/read-only, logical collection focus and radio peer policies
+have focused evidence. The complete packet follows below. Original event
+criterion 1 remains open at no-closure counter 7; 2/3/4 stay accepted, codegen
+criterion 3 stays at 11 and the full goal stays active. No scope or counter reset.
+
+Only production PID 39004 / persistent exec 65653 remains at the existing
+firewall-authorized executable path and LAN binding. The exact user pair,
+selection/view and permission were restored; no draft/history existed at restart.
+All six installed/served release hashes match the manifest. Fresh installed
+Codex authenticates fifteen tools from another project after connection rotation.
+Project/enrolled configuration refresh remains automatic. This existing chat
+needs the documented MCP client reconnect for native named handles; the Pascal
+semantic client is active and primary. No user design received a test fixture.
+
+Completed integrated batch (declared 2026-10-04): NS-1_event-scheduler_01
+criterion 1, at consecutive no-closure counter 6. Prior keyboard evidence
+qualified a selected review page; it did not establish agreement between every
+default control's published focus/keyboard events and its actual adapter face.
+Reassessment changes the decision path to a complete catalog concordance journey,
+MCP-authored and compiled unchanged on browser/LCL. Centralize the typed physical
+keyboard classification, repair unreachable standard faces and disabled-policy
+transitions, and exercise all catalog kinds and expanded reusable/compound parts
+with ordered multiple callbacks and actual focus/key consumers. Retain bound
+collection focus ownership and creator adapters. Evidence must identify every
+kind and compare metadata with real target behavior; no unavailable grade may be
+invented to make the check pass. Budget: one integrated implementation,
+qualification and deployment checkpoint. Stop publication on unreachable
+advertised faces, duplicate/stale events, lost bound focus or damaged user pairs.
+Reuse applicable editing/gesture/extension/source evidence. Full keyboard/grid,
+assistive technology, hardware/IME, other widgetsets, native Studio and production
+performance retain their original owners; no original criterion or counter is
+reset or narrowed. Codegen criterion 3 remains at counter 11; full goal active.
+
 Requested setup check (2026-10-04): the accepted
 NS-4_agent-workflows_01 installation criterion is reverified against the current
 production service and installed Codex. Project/enrolled user blocks match;
@@ -32,7 +71,7 @@ client is active and primary now. Original event criterion 1 remains at counter
 6 and codegen criterion 3 at counter 11. Return to the declared supported-control
 work after this requested check; the full goal stays active.
 
-Latest integrated delivery (2026-10-04): NS-4_agent-workflows_01 criterion 5's
+Previous integrated delivery (2026-10-04): NS-4_agent-workflows_01 criterion 5's
 root-cleanup prerequisite is qualified, accepted and deployed. The ordinary
 Nyx UI and fifteenth MCP tool share one reviewed paired removal command.
 Contracts pass 45 native/executed-browser checks each; real semantic composition,
@@ -3377,3 +3416,105 @@ refresh after credential rotation. All disposable services and qualification
 pipelines are terminal. Implementation a5bad51b8d080f8f11fc44af1c798c3e67e8c091
 is pushed on origin/hello-nyx, with exact git ls-remote identity verified. The
 handoff record follows this protected delivery. Full goal remains active.
+
+## Full-catalog focus/keyboard concordance — 2026-10-04
+
+Owner: original NS-1_event-scheduler_01 criterion 1. The declared complete-catalog
+journey is implemented, qualified and deployed; full original criterion 1 remains
+open at no-closure counter 7. Criteria 2/3/4 stay accepted, codegen criterion 3
+stays at 11 and the full goal stays active. Focus evidence does not establish
+every property's target behavior, complete cell-grid/typeahead, assistive
+technology, hardware/IME, another widgetset, native Studio or production
+performance. All original owners, criteria and counters remain intact.
+
+`NyxSupportsKeyboard` centralizes the closed physical classification. Both
+adapters expose borrowed `FocusFor` surfaces without redefining scalar `InputFor`.
+Default literal code/list/table/tree faces are reachable, labeled and synchronized
+through disabled/re-enable transitions; literal trees are flat leaves rather than
+empty disclosure widgets. Disabled links lose their active href and regain only
+validated authored destinations. Collection attachments retain their own entry.
+Browser collection focus events cross the logical owner boundary once, and keys
+arrive before default row actions. Split grips publish the complete focus/key
+family, run hooks before resizing, remain inspectable when fixed/read-only, and
+detach producers before disposal. Native radio peers retain one eligible entry.
+An HTML checked-but-disabled/hidden peer requires label entry with immediate,
+scroll-free delegation to the same real input; its checked value stays intact.
+Creator adapters/hooks remain supported.
+
+The primary workflow actually uses MCP: two bounded catalog pages, six paired
+transactions for all 76 kinds and a peer page, small node/event queries, 80-line
+source windows and actual immutable compiler jobs. Live service metadata agrees
+with the independently compiled catalog at revision 7. Read-only re-export leaves
+the accepted companion unchanged, and its SHA256 matches the actual source file
+in each final compiler job. A separate five-control visual page is composed and
+refined through grouped semantic operations; a bounded property-help query
+establishes the literal-row newline format. Revision-9 MCP PNG at 390-by-844 was
+inspected. No screenshot-driven Studio authoring or injected browser source is
+used. Missing semantic state/binding/general-source/review operations retain the
+existing NS-4 workflow owner; the bound-table physical consumer declares its
+local binding extension explicitly.
+
+Evidence under ignored build/catalog-focus/:
+
+| Boundary | Accepted evidence |
+| --- | --- |
+| Semantic author/build | semantic-current.log: 76 kinds, six paired transactions, both actual application compilers, zero unfreed blocks |
+| Live metadata/source | semantic-inspect.log: 76-kind concordance at revision 7, exact re-export, zero unfreed blocks |
+| Final immutable compiler jobs | browser-release-build.json / lcl-release-build.json: succeeded/current, revision 7; exported companion bytes match both compiled files |
+| Native catalog | qualification-current.log: 76 kinds, 103 faces, 30,637 checks, 6,405,014 allocations/frees, zero unfreed blocks |
+| Browser desktop / exact phone | browser-qualified-final/ and phone-qualified-final/: 76 kinds, 103 faces, 23,434 checks each; inspected code focus PNG |
+| Radio policies / HTML interop | radio-interoperability/: eight group policies and host Tab through three independently named-empty HTML inputs; the latter is an explicit browser boundary, not portable grouping authoring |
+| Split defaults/consumption | split-build.log: 141 shared checks, compiled companion, 32 native real-control checks; split-browser/: 32 executed browser checks |
+| Logical bound focus / keyboard | keyboard-build.log: unchanged MCP companion, actual native collection enter/exit, zero leaks; keyboard-browser/: host row/editor/internal transition and exit assertions |
+| Collection lifetime/selection | selection-build.log: 154 preparation and 154 compiled native checks, zero leaks; selection-browser-qualified/: 181 executed browser checks |
+| Shared contracts | core-build.log: 30/1537, scheduler 55 and paired-project 60; shared-browser-final/: 30/1537 |
+| Nyx Studio | studio-desktop/ and studio-phone/: 52 each; exact phone CSS width 390 |
+| Protocol/compiler service | mcp-gate.log: 65; http-gate.log: 177, including actual compiled companions |
+| Semantic rendering | mcp-preview-final.json and dedicated preview PNG: revision 9, 390-by-844, inspected |
+| Configured Codex | codex-production.log: fresh installed initialization from another project, bearer authentication, all fifteen tools |
+
+Native catalog input uses real focus surfaces and LCL CN key messages; browser
+uses owned host Tab/F8 and bounded native date/time shadow-segment traversal.
+Neither establishes physical keyboard/IME or assistive technology behavior.
+Every expanded interactive part has two independent ordered registrations;
+disabled, inherited read-only, re-enable and explicit sibling cancellation cycles
+must agree with publication. No unavailable grade or unreachable advertised face
+is hidden to pass. Existing editing/gesture/extension/source packets remain
+applicable; broader unrelated suites were not repeated without a changed boundary.
+
+Failures exposed disabled link entry, unchecked native radio entry and unbridged
+split focus/key defaults. Browser input tabindex alone also fails when a checked
+radio is disabled; its retained failure PNG/JSON precedes the qualified delegated
+entry. Initial fixture errors (component runtime identity, typed value method,
+native date/time segmentation and one incorrect capture marker) were corrected
+without lowering assertions or restarting running jobs. A read-only metadata
+inspection was stopped after repeated deep-copy overhead; reading its bounded
+array once fixes the test consumer, and the final inspect is leak-free. This is
+no production performance claim. Existing compiler/scheduler capacity and client
+lost-response qualification remain with their original owners.
+
+Deployment: six prior artifacts remain in release-backup/; release-manifest.json
+records both hashes. The private observation immediately before restart confirms
+revision 2, editing permission, no draft, no Undo/Redo and no compiler jobs. Old
+production 35152 was identity-checked, stopped and awaited for file release.
+Every replacement hash was verified before launch. The new service restores the
+exact user paired project, selection/view and permission; final observation
+confirms it remains unchanged. All installed and served hashes match; LAN health
+is 200. No user fixture/history/configuration override was introduced. Current
+sole production PID 39004 / persistent exec 65653 retains the existing executable,
+LAN bind and loopback MCP. All disposable services and qualification pipelines
+are terminal. Managed enrolled Codex blocks refresh correctly after rotation;
+fresh real installed discovery authenticates fifteen tools. This existing chat
+still needs the documented native-client reconnect; Pascal semantic MCP stays
+primary now. Existing Studio tabs need a refresh after credential rotation.
+
+Server SHA256: 8A64F04282B61793606C93ED297D8084178360B8C35AFA63504532CEEE6D7FA6.
+Main JS: 26E1566D31477A147E8AF1D299B15BDBE92C4F51F3D34BC3BF507D1A22C5A222.
+Preview JS: 7ECA33774C8777ACF419B3B73E9CC0AE5D2BAC40E482561EB8964C2C9DDE4EB5.
+Private observations, snapshots, credentials and machine paths remain ignored.
+
+Next reassessment must compare all of original criterion 1 against existing
+property/extension and event producer evidence, then declare a finite
+property/projection conformance matrix and repair concrete false published
+claims. Do not substitute another isolated hook-list batch or transfer remaining
+requirements to obtain closure. The full goal remains active.

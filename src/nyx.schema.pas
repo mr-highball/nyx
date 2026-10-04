@@ -190,6 +190,10 @@ function NyxEventsMetadata(ANode: TNyxNode;
 { Default scrollable faces share this metadata/adapter admission boundary.
   Framed editors observe their actual input; containers observe their own face. }
 function NyxSupportsViewport(ANode: TNyxNode): Boolean;
+{ Closed physical classification shared by metadata and adapters. Compound
+  schemas aggregate their descendants separately; this does not turn a layout
+  host into a focusable widget. Creator factories retain their own focus bridge. }
+function NyxSupportsKeyboard(ANode: TNyxNode): Boolean;
 { Publish a creator's named event alongside its physical schema. The declaration
   describes support and payload admission; the supplied adapter provides the
   actual producer. A no-payload overload declares an explicit signal. }
@@ -1499,6 +1503,21 @@ begin
     'scroll|memo|code|code-editor|list|table|tree');
 end;
 
+function NyxSupportsKeyboard(ANode: TNyxNode): Boolean;
+var
+  LKind: TNyxKind;
+begin
+  Result := False;
+
+  if (ANode = nil) or not TryNyxKind(ANode.ProjectionKind, LKind) then
+  begin
+    Exit;
+  end;
+  Result := LKind in [nkButton, nkLink, nkInput, nkMemo, nkCheckbox, nkSwitch,
+    nkRadio, nkSelect, nkSpin, nkSlider, nkDate, nkTime, nkColor, nkCode,
+    nkCodeEditor, nkList, nkTable, nkTree, nkSplitView];
+end;
+
 function NyxEventsMetadata(ANode: TNyxNode; ADocument: TNyxDocument): TNyxEventSchemas;
 var
   LRoot: TNyxNode;
@@ -1746,7 +1765,7 @@ var
       Include(LBridgedTriggers, ntChange);
     end;
 
-    if KindIn(LKind, 'button|link|input|memo|checkbox|switch|radio|select|spin|slider|date|time|color|code|code-editor|list|table|tree') then
+    if NyxSupportsKeyboard(AControl) then
     begin
       Include(LTriggers, ntAfterEnter);
       Include(LTriggers, ntAfterExit);

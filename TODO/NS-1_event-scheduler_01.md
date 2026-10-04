@@ -453,3 +453,50 @@ user-prioritized semantic callback workflow is now the concrete prerequisite:
 the review's binding and deletion handler cannot yet be authored through MCP.
 Follow its existing owner, then return to the complete supported-control outcome.
 Codegen criterion 3 remains open at counter 11; the full goal remains active.
+
+## Full-catalog focus/keyboard concordance — declared 2026-10-04
+
+Counter-6 reassessment changes the qualification from a selected review page to
+every default catalog kind and its expanded reusable/compound parts. The current
+schema advertises keyboard/focus events on literal list/table/tree faces whose
+browser projections lack the same entry point as LCL. A code block's disabled
+property also leaves its browser Tab entry intact. These concrete findings require
+an integrated adapter repair and catalog-wide consumer, not another hook list.
+One MCP-authored companion must compile unchanged for both targets; typed
+classification, ordered independent callbacks, actual focus/keys, disabled and
+read-only transitions, inherited policy, and existing bound-focus ownership must
+agree with published metadata. Budget and publication stops are in WORK.md.
+Original criterion 1 and counter 6 remain open until the intended scope is proven;
+criteria 2/3/4 retain their accepted evidence. Broader accessibility, physical
+devices, widgetsets and performance retain their owners and requirements.
+
+## Full-catalog focus/keyboard delivery — 2026-10-04
+
+The declared catalog journey is qualified and deployed. A closed typed
+classification now agrees with actual focus surfaces, including literal
+inspection controls and the split divider. Borrowed `FocusFor` contracts retain
+the separate meaning of scalar `InputFor`. Split key hooks precede defaults,
+read-only/fixed grips remain inspectable, disabled faces lose entry, and bound
+browser collection focus crosses the logical owner boundary once. Native radios
+retain one eligible peer entry. Browser checked-but-disabled/hidden groups use
+their existing label to delegate to the real input without changing its value.
+Creator hooks and attachment-owned entry remain intact.
+
+Actual MCP composes 76 catalog kinds and a peer page in six paired groups;
+bounded service metadata agrees with the compiled catalog at revision 7. Exact
+exported companion bytes match both actual compiler jobs. Windows LCL checks
+103 physical faces / 30,637 assertions, with zero unfreed blocks. Host Tab/F8
+passes 23,434 assertions at desktop and exact 390-by-844 each, including ordered
+independent registrations and read-only/disabled/re-enable/cancellation cycles.
+Focused splitter, bound collection and radio policy consumers pass too. Original
+editing/gesture/extension/source evidence remains applicable. See
+[the packet](../WORK.md#full-catalog-focuskeyboard-concordance--2026-10-04).
+
+Criterion 1 remains open at consecutive no-closure counter 7. Focus/keyboard
+concordance does not establish complete property/target capability concordance,
+full cell-grid/typeahead, assistive technology, hardware/IME or another widgetset.
+Criteria 2/3/4 retain accepted status; codegen criterion 3 stays at 11. No original
+criterion, scope, counter or credit transfers or resets. Next reassessment must
+compare the complete criterion with existing property/extension/event evidence
+and produce a finite property/projection conformance matrix before more adapter
+work; avoid another isolated hook-list batch. Full goal remains active.

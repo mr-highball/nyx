@@ -416,6 +416,28 @@ Built-in display controls have pointer/menu hooks. Focusable controls, including
 read-only code blocks, also have key/focus hooks. Text inputs have text-admission
 hooks; number/choice drafts retain their editing-complete value contract.
 
+`NyxSupportsKeyboard(Node)` is the typed classification shared by default event
+metadata and adapters. Literal lists, tables, trees and code blocks each expose
+one inspection face; bound collections keep their attachment-owned row/editor
+entry. A literal tree is a flat item presentation. Use a collection tree for
+hierarchy, expansion and selection rather than inventing empty disclosure parts.
+
+Both renderers expose `FocusFor(ID, Identity)` alongside `InputFor`. The former
+borrows the actual focus face, including a split divider; the latter retains its
+scalar-editing meaning. Missing identities raise, unsupported faces return nil,
+and borrowed widgets/elements expire when their view unmounts. A bound collection
+returns its logical host; its attachment manages descendant entry. Browser
+collection enter/exit notifications observe crossings of that logical boundary,
+so moving from a row into its cell editor does not manufacture another entry.
+
+Read-only inspection faces remain focusable. Disabled links lose their live
+href, and disabled static faces lose their Tab entry; synchronization restores
+these when re-enabled. Native radio peers retain one eligible entry, preferring
+the checked peer. HTML groups retain their physical name/form boundary. When a
+checked HTML peer is disabled or hidden, the eligible entry's existing label
+forwards focus without scrolling to its real input; checked values and native
+input keyboard behavior remain intact. Creator factories retain their hooks.
+
 | Family | Fluent registration methods |
 | --- | --- |
 | Commands | `OnClick`, `OnChange`, `OnDoubleClick` |

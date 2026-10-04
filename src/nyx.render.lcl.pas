@@ -243,6 +243,10 @@ type
     function IdentityBinding(const AID: TNyxText;
       AIdentity: TNyxIdentityKind): TNyxLCLBinding;
     procedure Resize(ASender: TObject);
+    { LCL removes an unchecked radio's TabStop. Restore one entry per native
+      peer parent after all value/policy setters, preferring an enabled checked
+      item or the first enabled visible item. Creator widgets retain ownership. }
+    procedure SyncRadioFocus;
   public
     constructor Create(ATheme: TNyxTheme = nil);
     destructor Destroy; override;
@@ -269,6 +273,12 @@ type
       unmounted identities raise the same error as ControlFor. Never free it. }
     function InputFor(const AID: TNyxText;
       AIdentity: TNyxIdentityKind = niAutomatic): TControl;
+    { Borrow the actual keyboard/focus face, including a split separator's grip.
+      A component without a declared face returns nil; a missing identity raises.
+      Collection attachments manage entry within their returned host. The caller
+      must not free this control or retain it beyond the mounted view. }
+    function FocusFor(const AID: TNyxText;
+      AIdentity: TNyxIdentityKind = niAutomatic): TWinControl;
     { Runtime text selection uses Unicode scalar offsets against physical text,
       retaining native line endings. Neither method forces focus or scrolling. }
     function TextSelectionFor(const AID: TNyxText): TNyxTextSelection;
@@ -493,6 +503,12 @@ begin
     if FBindings[LIndex].FInput <> FBindings[LIndex].FControl then
     begin
       FBindings[LIndex].DisconnectControl(FBindings[LIndex].FInput);
+    end;
+
+    if FBindings[LIndex].FControl is TNyxLCLSplitView then
+    begin
+      FBindings[LIndex].DisconnectControl(
+        TNyxLCLSplitView(FBindings[LIndex].FControl).Grip);
     end;
 
     if FBindings[LIndex].FCollectionMount <> nil then
@@ -1004,6 +1020,7 @@ end;
 function TNyxLCLRenderer.Build(ANode: TNyxNode; AParent: TWinControl): TControl;
 var
   LInput: TControl;
+  LFocus: TWinControl;
   LCaption: TLabel;
   LBinding: TNyxLCLBinding;
   LIndex: Integer;
@@ -1066,30 +1083,36 @@ begin
       LBinding.AttachPointer(LInput, 1);
     end;
 
-    LBinding.FPreviousEnter := TNyxWinControlAccess(LInput).OnEnter;
-    LBinding.FPreviousExit := TNyxWinControlAccess(LInput).OnExit;
-    TNyxWinControlAccess(LInput).OnEnter := LBinding.Enter;
-    TNyxWinControlAccess(LInput).OnExit := LBinding.Leave;
-    LBinding.FPreviousKeyDown := TNyxWinControlAccess(LInput).OnKeyDown;
-    LBinding.FPreviousKeyUp := TNyxWinControlAccess(LInput).OnKeyUp;
-    TNyxWinControlAccess(LInput).OnKeyDown := LBinding.KeyDown;
-    TNyxWinControlAccess(LInput).OnKeyUp := LBinding.KeyUp;
   end;
+  { Frames and split hosts are not their inner focus surface. Attach once on
+    that surface and preserve the creator's own hooks before installing ours. }
+  LFocus := nil;
 
-  if (LInput = nil) and (Result is TWinControl) and
-    ((Result is TNyxLCLButton) or (Result is TButton) or
-    (Result is TListBox) or (Result is TStringGrid) or (Result is TTreeView) or
-    (ANode.ProjectionKind = 'code') or (ANode.ProjectionKind = 'link') or
+  if LInput is TWinControl then
+  begin
+    LFocus := TWinControl(LInput);
+  end
+  else if Result is TNyxLCLSplitView then
+  begin
+    LFocus := TNyxLCLSplitView(Result).Grip;
+  end
+  else if (Result is TWinControl) and
+    (NyxSupportsKeyboard(ANode) or
     (LBinding.FCustom and TWinControl(Result).TabStop)) then
   begin
-    LBinding.FPreviousEnter := TNyxWinControlAccess(Result).OnEnter;
-    LBinding.FPreviousExit := TNyxWinControlAccess(Result).OnExit;
-    TNyxWinControlAccess(Result).OnEnter := LBinding.Enter;
-    TNyxWinControlAccess(Result).OnExit := LBinding.Leave;
-    LBinding.FPreviousKeyDown := TNyxWinControlAccess(Result).OnKeyDown;
-    LBinding.FPreviousKeyUp := TNyxWinControlAccess(Result).OnKeyUp;
-    TNyxWinControlAccess(Result).OnKeyDown := LBinding.KeyDown;
-    TNyxWinControlAccess(Result).OnKeyUp := LBinding.KeyUp;
+    LFocus := TWinControl(Result);
+  end;
+
+  if LFocus <> nil then
+  begin
+    LBinding.FPreviousEnter := TNyxWinControlAccess(LFocus).OnEnter;
+    LBinding.FPreviousExit := TNyxWinControlAccess(LFocus).OnExit;
+    TNyxWinControlAccess(LFocus).OnEnter := LBinding.Enter;
+    TNyxWinControlAccess(LFocus).OnExit := LBinding.Leave;
+    LBinding.FPreviousKeyDown := TNyxWinControlAccess(LFocus).OnKeyDown;
+    LBinding.FPreviousKeyUp := TNyxWinControlAccess(LFocus).OnKeyUp;
+    TNyxWinControlAccess(LFocus).OnKeyDown := LBinding.KeyDown;
+    TNyxWinControlAccess(LFocus).OnKeyUp := LBinding.KeyUp;
   end;
 
   if LInput is TCustomEdit then
@@ -1755,6 +1778,32 @@ function TNyxLCLRenderer.InputFor(const AID: TNyxText;
   AIdentity: TNyxIdentityKind): TControl;
 begin
   Result := IdentityBinding(AID, AIdentity).FInput;
+end;
+
+function TNyxLCLRenderer.FocusFor(const AID: TNyxText;
+  AIdentity: TNyxIdentityKind): TWinControl;
+var
+  LBinding: TNyxLCLBinding;
+begin
+  LBinding := IdentityBinding(AID, AIdentity);
+  Result := nil;
+
+  if LBinding.FInput is TWinControl then
+  begin
+    Exit(TWinControl(LBinding.FInput));
+  end;
+
+  if LBinding.FControl is TNyxLCLSplitView then
+  begin
+    Exit(TNyxLCLSplitView(LBinding.FControl).Grip);
+  end;
+
+  if (LBinding.FControl is TWinControl) and
+    (NyxSupportsKeyboard(LBinding.FNode) or
+    (LBinding.FCustom and TWinControl(LBinding.FControl).TabStop)) then
+  begin
+    Result := TWinControl(LBinding.FControl);
+  end;
 end;
 
 function TNyxLCLRenderer.ViewportFor(const AID: TNyxText): TNyxViewportSnapshot;
@@ -3307,6 +3356,63 @@ begin
   end;
 end;
 
+procedure TNyxLCLRenderer.SyncRadioFocus;
+type
+  { Borrowed only during synchronous projection; no scope survives Sync or
+    retains a widget/model. Grouping follows LCL's actual peer-parent boundary. }
+  TRadioScope = record
+    Parent: TWinControl;
+    Entry: TRadioButton;
+    Checked: Boolean;
+  end;
+var
+  LScopes: array of TRadioScope;
+  LIndex: Integer;
+  LScope: Integer;
+  LRadio: TRadioButton;
+  LPolicy: TNyxInteractionPolicy;
+begin
+  SetLength(LScopes, 0);
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if not FBindings[LIndex].FCustom and (FBindings[LIndex].FInput is TRadioButton) then
+    begin
+      LRadio := TRadioButton(FBindings[LIndex].FInput);
+      LRadio.TabStop := False;
+      LPolicy := NyxInteractionPolicy(FBindings[LIndex].FNode);
+
+      if not LPolicy.Enabled or not LPolicy.Visible then
+      begin
+        Continue;
+      end;
+      LScope := 0;
+      while (LScope < Length(LScopes)) and (LScopes[LScope].Parent <> LRadio.Parent) do
+      begin
+        Inc(LScope);
+      end;
+
+      if LScope = Length(LScopes) then
+      begin
+        SetLength(LScopes, LScope + 1);
+        LScopes[LScope].Parent := LRadio.Parent;
+        LScopes[LScope].Entry := LRadio;
+        LScopes[LScope].Checked := False;
+      end;
+
+      if LRadio.Checked and not LScopes[LScope].Checked then
+      begin
+        LScopes[LScope].Entry := LRadio;
+        LScopes[LScope].Checked := True;
+      end;
+    end;
+  end;
+  for LScope := 0 to High(LScopes) do
+  begin
+    LScopes[LScope].Entry.TabStop := True;
+  end;
+end;
+
 procedure TNyxLCLRenderer.Sync;
 var
   LIndex: Integer;
@@ -3497,6 +3603,7 @@ begin
         LBinding.FUpdater(LNode, LBinding.FControl);
       end;
     end;
+    SyncRadioFocus;
     Resize(FPanel);
   finally
     FUpdating := False;

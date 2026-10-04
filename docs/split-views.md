@@ -41,6 +41,14 @@ Disabled, read-only or non-resizable splits reject resize gestures. A completed
 change emits `OnChange` with an owned integer percentage; normal multiple
 registrations and execution policies apply.
 
+The divider also publishes the complete typed focus and keyboard family.
+Sequential before/main key hooks run before the platform resizing default and
+may consume it; after hooks observe Nyx dispatch. `FocusFor` borrows the grip
+without declaring it a scalar input. Fixed and read-only dividers remain
+keyboard-inspectable and deliver notifications while refusing resize commands.
+Disabled dividers leave the Tab order. Navigation detaches their producers before
+the borrowed view is released.
+
 `Configure.ForPlatform` returns an independent configuration scope. `npfAny`
 addresses portable defaults; `npfBrowser` and `npfNativeLCL` address overrides.
 Retaining an override scope does not change a previously retained default scope.
