@@ -42,7 +42,8 @@ begin
       disclosure state is authoritative for tree navigation/ranges; rectangles
       alone would admit visually hidden descendants after a synchronous collapse. }
 
-    if (Length(LElement.getClientRects) > 0) and
+    if ((Length(LElement.getClientRects) > 0) or
+      not document.documentElement.contains(FHost)) and
       ((FView.Projection <> cpTree) or
         (LElement.parentElement.closest('details[data-nyx-item]:not([open])') = nil)) then
     begin
@@ -87,6 +88,11 @@ var
   LOptions: TFocusOptions;
   LControl: Boolean;
   LKey: String;
+  LColumn: Integer;
+  LNextColumn: Integer;
+  LInput: TJSHTMLInputElement;
+  LItem: TNyxItemRef;
+  LRowElement: TJSHTMLElement;
 begin
   Result := True;
 
@@ -96,6 +102,7 @@ begin
     Exit;
   end;
   LElement := TJSHTMLElement(AEvent.target);
+  LKeepAlive := Self as INyxCollectionMount;
   { A cell editor owns its text navigation and selection. A list option cannot
     contain interactive children; tables use grid/row/gridcell semantics. }
 
@@ -103,9 +110,79 @@ begin
     (LowerCase(LElement.tagName) = 'textarea') or
     (LowerCase(LElement.tagName) = 'select') then
   begin
+    { Editors own caret navigation. Escape discards only their uncommitted
+      physical draft, then returns to the row; Tab traverses eligible columns
+      within that row. Native LCL retains its standard cell-editor behavior. }
+
+    if (AEvent.key = 'Escape') or (AEvent.key = 'Tab') then
+    begin
+      LRowElement := TJSHTMLElement(LElement.closest('[data-nyx-item]'));
+
+      if LRowElement = nil then
+      begin
+        Exit;
+      end;
+      LItem := NyxItem(FView.Spec.Key, LRowElement.getAttribute('data-nyx-item'));
+      LRow := FView.Snapshot.IndexOf(LItem);
+      LColumn := StrToIntDef(LElement.getAttribute('data-nyx-column'), -1);
+
+      if (LRow < 0) or (LColumn < 0) or (LColumn >= Length(FRows[LRow].FInputs)) or
+        (FRows[LRow].FInputs[LColumn] <> LElement) then
+      begin
+        Exit;
+      end;
+      LInput := FRows[LRow].FInputs[LColumn];
+
+      if AEvent.key = 'Escape' then
+      begin
+        AEvent.preventDefault;
+
+        if LInput._type = 'checkbox' then
+        begin
+          LInput.checked := FView.CellText(LItem, LColumn) = 'true';
+        end
+        else
+        begin
+          LInput.value := FView.CellText(LItem, LColumn);
+        end;
+        LOptions := TFocusOptions.new;
+        LOptions.preventScroll := True;
+        TFocusable(LRowElement).focus(LOptions);
+        Exit;
+      end;
+      LNextColumn := LColumn + 1;
+
+      if AEvent.shiftKey then
+      begin
+        LNextColumn := LColumn - 1;
+      end;
+      while (LNextColumn >= 0) and (LNextColumn < Length(FRows[LRow].FInputs)) do
+      begin
+        LInput := FRows[LRow].FInputs[LNextColumn];
+
+        if (LInput <> nil) and not LInput.disabled then
+        begin
+          AEvent.preventDefault;
+          LOptions := TFocusOptions.new;
+          LOptions.preventScroll := True;
+          TFocusable(LInput).focus(LOptions);
+          Exit;
+        end;
+
+        if AEvent.shiftKey then
+        begin
+          Dec(LNextColumn);
+        end
+        else
+        begin
+          Inc(LNextColumn);
+        end;
+      end;
+      { At either boundary, ordinary browser Tab leaves editing rather than
+        creating a keyboard trap. It must retain its native default action. }
+    end;
     Exit;
   end;
-  LKeepAlive := Self as INyxCollectionMount;
   LControl := AEvent.ctrlKey or AEvent.metaKey;
 
   if LControl and (LowerCase(AEvent.key) = 'a') and
@@ -139,6 +216,32 @@ begin
     Exit;
   end;
   LKey := AEvent.key;
+
+  if (LKey = 'F2') or (LKey = 'Enter') then
+  begin
+    LRow := FView.Snapshot.IndexOf(LOrder[LTarget]);
+    for LColumn := 0 to Length(FRows[LRow].FInputs) - 1 do
+    begin
+      LInput := FRows[LRow].FInputs[LColumn];
+
+      if (LInput <> nil) and not LInput.disabled then
+      begin
+        AEvent.preventDefault;
+        LItem := LOrder[LTarget];
+        Select(LItem, nsaFocus);
+
+        if GetConnected and FHost.contains(LInput) then
+        begin
+          { Selection callbacks can remove a row or navigate away. Capture the
+            DOM editor first and recheck ownership before changing its focus. }
+          LOptions := TFocusOptions.new;
+          LOptions.preventScroll := True;
+          TFocusable(LInput).focus(LOptions);
+        end;
+        Exit;
+      end;
+    end;
+  end;
 
   if (FView.Projection = cpTree) and
     ((LKey = 'ArrowLeft') or (LKey = 'ArrowRight')) then

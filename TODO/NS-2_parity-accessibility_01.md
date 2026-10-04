@@ -31,6 +31,25 @@ ancestor read-only behavior for that family remains under this task's original
 interaction criterion. No criterion is weakened or accepted from collection-only
 coverage. See [WORK](../WORK.md#authored-collection-bindings-and-studio--2026-10-03).
 
+## Integrated keyboard focus — 2026-10-04
+
+Bound collections now restore actual browser focus after a removed row, keep an
+empty composite reachable and remove disabled entries from the Tab order.
+Read-only text-cell inputs stay enabled and focusable; read-only checkboxes use
+disabled host behavior. Browser grid editors support F2/Enter, in-row Tab,
+Escape and ordinary Tab exit. Host-generated keyboard input qualifies ordered
+compound actions and disabled descendants. Actual LCL controls and compiled
+MCP-authored source retain native focus, standard editing and semantic activation.
+Studio and agents display the same verified intent/help metadata.
+
+The [packet](../WORK.md#mcp-authored-keyboard-review--2026-10-04) passes 154/154
+native selection checks with zero leaks, 181 executed browser checks, host
+keyboard and retained gesture journeys, 52/52 Studio, 177 HTTP and 55 MCP.
+Row-oriented navigation is the documented scope. Full cell-grid patterns,
+typeahead, assistive technology, physical hardware/IME and other widgetsets
+retain criterion 2; visual/scaling breadth retains criterion 3. No original
+criterion or renderer prerequisite is weakened or marked accepted by this packet.
+
 ## Property capabilities and inherited input policy — 2026-10-04
 
 Criterion 1's publication deliverable now has a generated control/property/event

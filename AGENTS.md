@@ -71,3 +71,19 @@ standards.
   committed files.
 - Use [WORK.md](WORK.md) for concise evidence and handoff state. Do not claim a
   task, milestone, target, or product complete from partial implementation.
+
+Standards include the current Pointer Events Level 3 Recommendation and HTML
+Living Standard drag model, linked in docs/events.md, plus WAI keyboard/grid
+practice in docs/collection-views.md (checked 2026-10-04). Host input qualifies
+browser defaults, not hardware/IME/assistive technology or another widgetset.
+The generated reference covers 76 kinds. Bound browser tables currently use
+row-oriented navigation and explicitly documented cell-editor entry/exit.
+
+Codex project and explicitly enrolled user configuration refresh on each Studio
+launch. Actual installed Codex initialization authenticates all eleven Nyx tools.
+This existing desktop chat needs one reconnect for native named handles; use the
+Pascal semantic client now and keep semantic MCP primary afterward. Missing
+callback/build/state/binding/review operations belong to the existing workflow
+task, not silent browser automation. No sub-agents. WORK.md owns current process,
+qualification, deployment, preservation and remote-checkpoint state; verify
+process identity before stopping a service and preserve the active user pair.

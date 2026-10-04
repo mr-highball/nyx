@@ -50,3 +50,28 @@ would reduce interpretation by agents. Exact schemas are discoverable through
 the native semantic client; an unknown source `limit` was correctly rejected,
 then the advertised `line`/`count` window succeeded. Keep these gaps visible
 instead of substituting screenshot-driven authoring.
+
+## Maintained keyboard review — 2026-10-04
+
+One real revision-aware transaction now composes the maintained keyboard review
+page. Bounded seven-child outline and typed property queries inspect it; five
+80-line-or-smaller source windows export the exact revision for both compilers.
+A selective MCP PNG renders the immutable page. Actual Nyx browser host keys and
+LCL controls qualify the resulting compounds; user production work is preserved
+outside the disposable review service. The operations fixture and reproduction
+guide are maintained, with a `keyboard` build target. See
+[evidence](../WORK.md#mcp-authored-keyboard-review--2026-10-04).
+
+The collection binding and deletion callback still require a Pascal consumer:
+their authoring operations are absent from MCP. A preview capture exceeded its
+20-second budget during concurrent browser captures; one sequential retry passed.
+Record that resource-contention boundary rather than increase the budget or
+claim reliable parallel previews. The transport client also prints structured
+preview metadata without forwarding the image block; the server's actual PNG
+artifact supplies the selective visual check here.
+
+Next deliverable is semantic callback authoring on the inspector's admitted
+paired-source/history boundary, including exact owner/event identities, ordered
+registrations, policy, TODO source navigation, draft refusal and warned removal.
+Require a real observable editor journey and compiled callback, not tool schemas
+alone. The remaining build/state/reusable/review operations retain their criteria.

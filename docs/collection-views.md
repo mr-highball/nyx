@@ -250,6 +250,28 @@ uses actual `TListBox`,
 `TStringGrid` and `TTreeView` widgets. Tree nodes retain identity across edits and
 relocation; existing widget selection/edit handlers are restored at disconnect.
 
+Bound browser collections offer one Tab entry. Arrow keys, Home and End move
+among visible rows; selection and keyboard focus are separate. Removing the
+focused row transfers physical focus to the surviving model cursor. An empty
+collection remains reachable, while a disabled collection has no Tab entry.
+Restoring focus uses `preventScroll` and never takes focus from another control.
+Collapsed tree descendants stay outside the visible navigation order; leaf
+nodes do not advertise a collapsed parent.
+
+For a browser table, F2 or Enter moves from a row into its first available cell
+editor. Tab and Shift+Tab visit eligible editors in that row. Tab at an editing
+boundary leaves the table. Escape restores the uncommitted cell draft and returns
+to row navigation. Text editors keep their ordinary caret keys; read-only text
+remains focusable for inspection, selection and copying. A read-only checkbox
+uses disabled HTML behavior because that input type has no read-only mode.
+Native tables retain the standard LCL cell editor and widget navigation.
+
+This row-oriented contract is qualified below. Complete cell-oriented grid
+navigation, typeahead, assistive technology and other widgetsets remain open.
+The [WAI keyboard guidance](https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/)
+and [grid pattern](https://www.w3.org/WAI/ARIA/apg/patterns/grid/) guide further
+work; this packet does not claim full APG conformance.
+
 All rows are currently materialized. Native lists rebuild their item text, tables
 visit all visible-model cells, and tree structure changes relocate nodes.
 Selection and scalar tree changes preserve the existing hierarchy. A refresh

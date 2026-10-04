@@ -281,7 +281,8 @@ begin
     nkButton: Result.Description := 'Let a user invoke a command or registered callback.';
     nkLink: Result.Description := 'Offer a text action or link to another location.';
     nkInput: Result.Description := 'Collect a single line of text, with optional placeholder and input type.';
-    nkMemo: Result.Description := 'Collect or edit multiline text, such as a description or reply.';
+    nkMemo: Result.Description := 'Collect or edit multiline text, such as a description or reply. ' +
+      'Read-only text remains focusable for selection and copying.';
     nkCheckbox: Result.Description := 'Let a user turn an independent Boolean option on or off.';
     nkSwitch: Result.Description := 'Present an on/off setting as a toggle.';
     nkRadio: Result.Description := 'Present a selectable option alongside related choices.';
@@ -291,9 +292,13 @@ begin
     nkDate: Result.Description := 'Collect a calendar date.';
     nkTime: Result.Description := 'Collect a time of day.';
     nkColor: Result.Description := 'Let a user choose a color value.';
-    nkList: Result.Description := 'Display a collection of items for selection.';
-    nkTable: Result.Description := 'Display records in rows and columns.';
-    nkTree: Result.Description := 'Display nested items in a hierarchy.';
+    nkList: Result.Description := 'Display a collection of items for selection. ' +
+      'Bound collections have one Tab entry, row navigation and focus recovery when an item is removed.';
+    nkTable: Result.Description := 'Display records in rows and columns. ' +
+      'Bound browser tables use one Tab entry; F2 or Enter enters a cell editor, ' +
+      'Tab traverses editors and Escape returns to row navigation. Native tables use LCL cell editing.';
+    nkTree: Result.Description := 'Display nested items in a hierarchy. ' +
+      'Bound collections navigate visible rows and restore focus after removal; disabled rows leave the Tab sequence.';
     nkImage: Result.Description := 'Display an image with an accessible text alternative.';
     nkAvatar: Result.Description := 'Represent a person or account with compact initials or imagery.';
     nkProgress: Result.Description := 'Show progress toward completion of a bounded task.';
@@ -305,9 +310,12 @@ begin
     nkCodeEditor: Result.Description := 'Edit source text with selection and source-line navigation.';
     nkDesignSurface: Result.Description := 'Host an editable or interactive Nyx view inside an authoring tool.';
     nkComponent: Result.Description := 'Instantiate a reusable component definition with independent overrides.';
-    nkLabeledButton: Result.Description := 'Pair a descriptive label with a button as one reusable action.';
-    nkSplitButton: Result.Description := 'Pair a primary action with a separate secondary action.';
-    nkSearchField: Result.Description := 'Collect a search query with explicit search and clear actions.';
+    nkLabeledButton: Result.Description := 'Pair a descriptive label with a button as one reusable action. ' +
+      'The button supports Tab focus and standard Enter or Space activation.';
+    nkSplitButton: Result.Description := 'Pair a primary action with a separate secondary action. ' +
+      'Each action is independently keyboard reachable; disabling an ancestor disables both.';
+    nkSearchField: Result.Description := 'Collect a search query with explicit search and clear actions. ' +
+      'Tab follows the query, search and clear controls in that order.';
     nkFormField: Result.Description := 'Combine a text field with nearby guidance and validation feedback.';
     nkLoginForm: Result.Description := 'Compose account sign-in fields, a remember option and a submit action.';
     nkSettingsPanel: Result.Description := 'Compose related preference controls and a save action.';

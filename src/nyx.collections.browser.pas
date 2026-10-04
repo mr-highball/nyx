@@ -228,6 +228,10 @@ begin
     if (LColumn.Mode = cmEditable) and (FOwner.FView.Projection <> cpList) then
     begin
       FInputs[LIndex] := TJSHTMLInputElement(document.createElement('input'));
+      { The composite has one Tab entry in navigation mode. F2/Enter enters an
+        owned editor; its Tab/Escape handling then preserves keyboard access to
+        columns without putting every field in the surrounding page's Tab order. }
+      FInputs[LIndex].setAttribute('tabindex', '-1');
       FInputs[LIndex].setAttribute('aria-label', LColumn.Title);
       FInputs[LIndex].setAttribute('data-nyx-column', IntToStr(LIndex));
       FInputs[LIndex].onchange := Change;
@@ -317,7 +321,11 @@ begin
 
     if FInputs[LIndex] <> nil then
     begin
-      FInputs[LIndex].disabled := not FOwner.FEnabled or FOwner.FReadOnly;
+      { Read-only text remains inspectable, selectable and copyable. Checkboxes
+        have no native readOnly behavior, so their editing authority is disabled
+        explicitly while row selection stays available. }
+      FInputs[LIndex].disabled := not FOwner.FEnabled or
+        (FOwner.FReadOnly and (FInputs[LIndex]._type = 'checkbox'));
       FInputs[LIndex].readOnly := FOwner.FReadOnly;
 
       if LApplyValues then
@@ -348,14 +356,6 @@ begin
   end;
   FElement.setAttribute('tabindex', '-1');
 
-  if (FOwner.FView.Selection.Focus.Defined and
-    (FOwner.FView.Selection.Focus.ID = FRef.ID)) or
-    (not FOwner.FView.Selection.Focus.Defined and
-      (FOwner.FView.Snapshot.IndexOf(FRef) = 0)) then
-  begin
-    FElement.setAttribute('tabindex', '0');
-  end;
-
   if FOwner.FView.Projection = cpTree then
   begin
     Toggle(nil);
@@ -365,6 +365,14 @@ end;
 function TBrowserRow.Toggle(AEvent: TEventListenerEvent): Boolean;
 begin
   Result := True;
+
+  if FChildren.children.length = 0 then
+  begin
+    { A leaf is not a collapsed parent. Exposing aria-expanded on it would
+      advertise disclosure that has no corresponding tree children. }
+    FElement.removeAttribute('aria-expanded');
+    Exit;
+  end;
   FElement.setAttribute('aria-expanded', 'false');
 
   if TNyxDetails(FElement).open then
@@ -388,6 +396,14 @@ begin
 
   if AEvent.defaultPrevented then
   begin
+    Exit(True);
+  end;
+
+  if not FOwner.FEnabled then
+  begin
+    { aria-disabled alone does not remove a custom row's mouse default. Refuse
+      disclosure, selection and focus before consulting the admitted view. }
+    AEvent.preventDefault;
     Exit(True);
   end;
   { Selecting can notify an application observer that unmounts this whole view.
@@ -470,14 +486,35 @@ var
   LAnchor: TJSNode;
   LHierarchyChanged: Boolean;
   LVisible: TNyxItemRefs;
-  LHasTabStop: Boolean;
+  LTabStop: TJSHTMLElement;
+  LFocusID: TNyxText;
+  LFocusVisible: Boolean;
+  LFocusRow: TJSHTMLElement;
+  LNextFocus: TJSHTMLElement;
 begin
   LData := FView.Snapshot;
+  FHost.setAttribute('aria-disabled', LowerCase(BoolToStr(not FEnabled, True)));
+
+  if FView.Projection = cpTable then
+  begin
+    FHost.setAttribute('aria-readonly', LowerCase(BoolToStr(FReadOnly, True)));
+  end;
   LFocused := TJSHTMLElement(document.activeElement);
 
   if not FHost.contains(LFocused) then
   begin
     LFocused := nil;
+  end;
+  LFocusID := '';
+
+  if LFocused <> nil then
+  begin
+    LFocusRow := TJSHTMLElement(LFocused.closest('[data-nyx-item]'));
+
+    if LFocusRow <> nil then
+    begin
+      LFocusID := LFocusRow.getAttribute('data-nyx-item');
+    end;
   end;
   SetLength(LNext, LData.Count);
   LHierarchyChanged := False;
@@ -564,34 +601,80 @@ begin
   end;
   FRows := LNext;
   FRendered := LData;
+  { Parent relationships are now final. Disclosure metadata must use those
+    relationships, rather than children borrowed from the previous dataset. }
+
+  if FView.Projection = cpTree then
+  begin
+    for LIndex := 0 to Length(FRows) - 1 do
+    begin
+      FRows[LIndex].Toggle(nil);
+    end;
+  end;
   { Dataset order can put a child before its parent. A collapsed child must not
     become the only keyboard entry point. Retain a visible focused row when one
     exists, otherwise admit the first row in the actual rendered hierarchy. }
   LVisible := VisibleOrder;
-  LHasTabStop := False;
+  LTabStop := nil;
+  LFocusVisible := False;
   for LIndex := 0 to Length(LVisible) - 1 do
   begin
     LPrevious := LData.IndexOf(LVisible[LIndex]);
-    LHasTabStop := LHasTabStop or
-      (FRows[LPrevious].FElement.getAttribute('tabindex') = '0');
-  end;
 
-  if not LHasTabStop and (Length(LVisible) > 0) then
-  begin
-    for LIndex := 0 to Length(FRows) - 1 do
+    if LVisible[LIndex].ID = LFocusID then
     begin
-      FRows[LIndex].FElement.setAttribute('tabindex', '-1');
+      LFocusVisible := True;
     end;
-    LPrevious := LData.IndexOf(LVisible[0]);
-    FRows[LPrevious].FElement.setAttribute('tabindex', '0');
+
+    if (LTabStop = nil) or (FView.Selection.Focus.Defined and
+      (LVisible[LIndex].ID = FView.Selection.Focus.ID)) then
+    begin
+      LTabStop := FRows[LPrevious].FElement;
+    end;
+  end;
+  FHost.setAttribute('tabindex', '-1');
+
+  if FEnabled then
+  begin
+
+    if LTabStop <> nil then
+    begin
+      LTabStop.setAttribute('tabindex', '0');
+    end
+    else
+    begin
+      { Empty composites retain one focusable host. They do not invent a
+        selected item, and users can still reach their label and leave by Tab. }
+      FHost.setAttribute('tabindex', '0');
+    end;
+  end;
+  LNextFocus := nil;
+
+  if (LFocused <> nil) and FEnabled then
+  begin
+    LNextFocus := LTabStop;
+
+    if LNextFocus = nil then
+    begin
+      LNextFocus := FHost;
+    end;
+
+    if LFocusVisible and FHost.contains(LFocused) and
+      not ((LFocused is TJSHTMLInputElement) and TJSHTMLInputElement(LFocused).disabled) then
+    begin
+      LNextFocus := LFocused;
+    end;
   end;
 
-  if (LFocused <> nil) and FHost.contains(LFocused) and
-    (document.activeElement <> LFocused) then
+  if (LNextFocus <> nil) and (document.activeElement <> LNextFocus) then
   begin
+    { Recover only focus that belonged to this composite. Surviving editors keep
+      their caret/draft; removed or hidden rows move to the admitted fallback.
+      The focus call may navigate/disconnect the mount: no borrowed target is
+      read afterward, and Refresh retains the interface call frame. }
     LOptions := TFocusOptions.new;
     LOptions.preventScroll := True;
-    TFocusable(LFocused).focus(LOptions);
+    TFocusable(LNextFocus).focus(LOptions);
   end;
 end;
 

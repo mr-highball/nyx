@@ -4,58 +4,62 @@
 
 The full user outcome remains in MILESTONES.md. Execution is solo. Product and
 substantive tools are Pascal in Delphi dialect, with thorough comments and blank
-lines above if blocks.
+lines above if blocks. Semantic MCP is the primary demo/design workflow; actual
+browser/LCL consumers qualify physical behavior selectively.
 
-Current delivery (2026-10-04): [typed gestures](TODO/NS-1_event-scheduler_01.md)
-is deployed. Ten appended fluent events carry actual capture/cancellation and
-owned protected/readable drag transfers, with typed source/target/touch settings.
-Physical responses are limited to active sequential registrations; navigation
-revokes authority and native construction can finish safely after its host closes.
-Native preparation/compiled journeys pass 83/84 with zero leaks; the executed
-compiled browser companion passes 78. Host-generated browser mouse/touch capture,
-cancellation and drag negotiation pass. Actual Nyx-built Studio passes 52 each at
-desktop/exact-390; shared source/history passes 30 core / 1537 designer, with 59
-wrong-type refusals per compiler. Delegated HTTP passes 177 and real MCP passes 55,
-including PNG rendering. Earlier editing, recipe, selection and viewport evidence
-remains applicable. Exact artifacts: [gesture record](#typed-gestures--2026-10-04).
+Current delivery (2026-10-04): the MCP-authored keyboard review is compiled on
+both targets and qualified through actual Nyx controls. Bound browser collections
+retain one Tab entry, recover physical focus after removal, keep an empty host
+reachable and exclude disabled controls. Read-only text remains focusable.
+F2/Enter, cell Tab/Escape and exit are qualified; compound Enter/Space actions
+arrive once and skip disabled descendants. Component intent/help appears in
+Studio and bounded agent queries. Native selection preparation/compiled journeys
+pass 154 each with zero leaks; executed browser passes 181. Native MCP-authored
+controls are also leak-free. Host keyboard and the retained host gesture sequence
+pass. Studio passes 52 each at desktop/exact-390, HTTP 177 and real MCP 55.
+A selective revision-aware MCP PNG is inspected. Exact six-artifact bytes are
+installed on the LAN service with the user's paired design/source preserved.
+See [the packet](#mcp-authored-keyboard-review--2026-10-04).
 
-Event criteria 2/3/4 remain accepted; full criterion 1 stays open at consecutive
-no-closure counter 5. Reassessment: editing and gesture outcomes are integrated;
-complete supported-control and keyboard/accessibility qualification still prevents
-original closure. Stop further isolated event-family experiments. The next usable
-delivery is keyboard-operable rich selection and compound actions with retained
-focus, honest accessibility metadata and both-target actual-control consumers.
-Require coherent disabled/read-only/focus/selection behavior, Studio and bounded
-agent help; stop on inaccessible primary actions, duplicate delivery, lost focus
-or damaged accepted pairs. Reuse qualified editing/gesture/semantic consumers.
-Preserve complete physical keyboard/accessibility,
-physical IME, other widgetsets, native completion, workers and full native Studio.
-No original criterion, credit or counter is weakened, transferred or reset.
-Codegen criterion 3 remains at counter 11; large-project source/performance and
-the full product remain open.
+Event criteria 2/3/4 remain accepted; original criterion 1 stays open at consecutive
+no-closure counter 6. The selected counter-5 integrated deliverable is finished;
+no counter, scope or completion credit resets. Row-oriented navigation does not
+establish full cell-grid patterns, typeahead, assistive technology, hardware/IME
+or another native widgetset. Native external transfers, workers, full native
+Studio and broad production quality keep their owners. Codegen criterion 3
+remains open at counter 11 and retains its large-project source/performance scope.
 
-Batch handoff: implementation, actual target evidence and the LAN product changed.
-The integrated gesture deliverable is finished; no Pascal build/test/capture
-pipeline remains active. Only production PID 37076 / exec 20570 remains, bound to
-0.0.0.0:8088 with MCP on loopback:8089. The full goal remains active. Next work
-must follow the counter-5 reassessment above rather than another isolated event
-or timing experiment. Solo execution and user-staged dependency files are preserved.
+Reassessment changes the next action to the user's primary semantic callback
+workflow, with its existing [owner](TODO/NS-4_agent-workflows_01.md). The review's
+collection binding and deletion handler still need a Pascal consumer because
+those semantic operations are missing. Deliver add/inspect/ordered policy/warned
+removal on the same admitted paired source/history boundary as the inspector,
+with exact identities, TODO navigation, draft/refusal protection, observable
+editor changes and compiled execution. Stop on pair loss, draft replacement,
+stale-revision mutation, duplicate callback delivery or unsafe removal. Tool
+schema publication alone does not finish this outcome. Follow the concrete
+prerequisite and then return to complete supported-control qualification.
 
-Active batch is delivered. Typed gestures, actual controls, both compiler targets,
-Studio/source/history, semantic MCP and exact LAN deployment changed authoritative
-state. Original criterion 1 stays open at counter 5; its next integrated outcome
-and stop conditions are above. The remote hello-nyx checkpoint is published at
-51bb982 with the existing Athena pin unchanged and private/build files excluded.
-The user's MCP setup is installed: project and enrolled Codex user entries rotate
-on Studio launch; actual initialized Codex discovery authenticates all 11 tools
-from another project. A native Pascal semantic client supplies immediate bounded
-queries while this running chat awaits one client reconnect for native handles.
-Semantic MCP is the primary demo/design workflow. Missing callback/build/state/
-review-session operations have an open [workflow owner](TODO/NS-4_agent-workflows_01.md).
-Configuration checks pass 22 with zero leaks; the revised server passes 55 real
-MCP checks. Accepted paired user work, selection and view survive deployment
-exactly. See [connection evidence](#codex-mcp-registration--2026-10-04).
-Keep the full original goal intact and continue solo along the counter-5 outcome.
+Batch handoff: this integrated implementation/evidence/deployment batch is
+finished. No Pascal build/test/capture pipeline or review service remains active.
+Only production PID 37264 / persistent exec 45363 remains, using the existing
+firewall-authorized executable path, editor 0.0.0.0:8088 and MCP loopback:8089.
+Executable SHA256: 239BEDAD184252000C2D19A56E8DA449AE190F438F42FDD51D507EB3A16D334A.
+The exact packet and previous bytes are under ignored build/focus/. Deployment
+rechecked the current revision, no draft/history and editing permission before
+stopping old 37076/20570; the paired design/source, selection and view were
+restored byte for byte. Local/LAN health and all six artifact hashes pass. New
+Studio credentials refreshed both registered Codex entries; actual installed
+Codex initialization from another project authenticates all eleven tools.
+The running desktop chat still needs one reconnect for native named handles;
+the Pascal semantic client is active now. Existing Studio tabs need refresh
+after this credential rotation. No dependency source or firewall was changed.
+
+Remote protection: checkpoints 51bb982 and b65288a are published on
+origin/hello-nyx with the existing Athena pin unchanged. The current authorized
+keyboard/help/maintained-review packet is prepared for publication; verify the
+remote commit identity after pushing. Keep private config, credentials, user
+pairs, generated artifacts and machine profiles excluded. Full goal active.
 
 ## Previous checkpoint before compiler and MCP delivery
 
@@ -2884,3 +2888,88 @@ capabilities, fixture artifacts and generated binaries/JavaScript remain exclude
 The configuration/tool/docs follow-up is also authorized for remote publication;
 verify its remote identity after pushing. Full goal remains active, solo, and the
 supported-control keyboard/accessibility outcome remains the return path.
+
+## MCP-authored keyboard review — 2026-10-04
+
+Owner: original event/scheduler criterion 1, returning from the explicitly
+prioritized Codex registration prerequisite. The counter-5 usable outcome is
+implemented, integrated, qualified and deployed. Full original scope remains
+open; criteria 2/3/4 retain accepted evidence and no-closure counter is 6.
+
+The browser delegates physical focus to the portable view's admitted surviving
+cursor after removal. It retains surviving editor drafts/carets, never steals
+another control's focus, uses preventScroll and keeps empty collections reachable.
+One visible row has the Tab entry; disabled hosts/rows have none. Read-only text
+cells remain selectable and focusable, while HTML read-only checkboxes use
+explicit disabled behavior. Leaf tree nodes no longer expose aria-expanded.
+Grid F2/Enter enters an eligible editor, Tab/Shift+Tab traverses columns, boundary
+Tab leaves, and Escape resets only the physical draft and returns to the row.
+Native LCL retains its standard cell editor and focus behavior.
+
+The primary semantic workflow actually composed the page through one ten-operation
+revision-aware MCP transaction in a disposable review service. A seven-child
+outline and typed read-only node query supplied bounded context. Five source
+windows exported the unchanged revision's 376 accepted Pascal lines without
+printing the whole source into model context. Both compilers consumed that exact
+managed source. A revision-aware MCP PNG renders the page; inspected native/Nyx
+browser consumers qualify compound actions, disabled descendants and read-only
+memo focus. The operations fixture, agent guide and keyboard build target make
+this journey reproducible. No fixture was loaded into user production work.
+
+The physical keyboard driver shares the existing bounded Pascal-owned CDP
+transport with the gesture driver. It issues DOM/host Input commands and never
+injects JavaScript. Initial focus positioning is explicit; subsequent Tab,
+Enter/Space, F2, Escape, row navigation, removal and boundary exit are host input.
+Pascal-published attributes decide assertions; screenshots are selective evidence.
+The initial driver omitted Enter's text phase and correctly failed activation;
+Chromium's primary protocol mapping corrected it without weakening the assertion.
+Existing mouse/touch/drag host assertions and sequence remain intact and pass.
+
+Evidence under ignored build/focus/ and build/focus-*.log:
+
+| Boundary | Accepted bounded evidence |
+| --- | --- |
+| Regression | baseline-browser fails removed-row physical focus; retained as reproduced failure |
+| Native selection preparation/compiled companion | build/focus-integrated-build.log: 154 each, zero unfreed blocks |
+| Executed browser selection/editor/lifetime | editor-qualified-browser/: 181 checks |
+| Exact MCP-authored native companion | build/focus-keyboard-integrated.log: actual action focus/activation, disabled refusal, read-only memo; zero unfreed blocks |
+| Host-generated keyboard | host-browser-final/result.json: two activations, one search/clear/decrement/increment, three removals, final focus keyboard-after; inspected PNG |
+| Retained host gesture behavior | gesture-host-qualified/result.json: two capture/loss, outside movement, touch/cancel and real drag offer/hover/drop/end; all passes |
+| Actual Nyx Studio/help/source/history | studio-desktop/ and studio-phone/: 52 each, exact phone CSS width 390; inspected captures |
+| Revised server and actual MCP | build/focus-mcp-qualified.log: all 55 real HTTP/MCP checks |
+| Compiler service/paired files | build/focus-http-qualified.log: all 177 generation/build/Unicode checks |
+| Bounded agent intent/help | mcp-help-qualified.json: exact F2 query returns one table with current navigation/cell-edit help |
+| Selective semantic preview | mcp-preview-qualified.json: revision-2 MCP PNG; inspected actual artifact |
+| Live configured Codex | codex-discovery-after-rotation.log: real installed initialization, bearerToken authentication, all 11 tools from another project |
+
+Setup failures are retained as limitations rather than product regressions: the
+first HTTP run lacked the isolated machine profile, and the next ran from the
+wrong repository for executing server-produced native artifacts. The existing
+machine profile and correct review root resolve both; the final 177 gates pass.
+A selective preview hit its fixed 20-second budget during competing browser
+captures; one sequential retry succeeds. Do not assume reliable parallel PNG
+capture or retry mutations. The native transport client prints structured preview
+metadata but does not forward the image block; the saved server PNG was inspected.
+MCP collection/binding/callback/build/review-lifecycle gaps keep their existing
+workflow owner. No screenshot-driven designer authoring substitutes for them.
+
+Delivery: six artifacts were hashed together in release-manifest.json; exact prior
+server/web bytes remain in previous-server.exe and previous-web/. The user's
+current paired project, selection/view and revision were saved privately and
+rechecked immediately before stopping old production 37076/20570. No pending
+draft, undo/redo or restrictive operator permission existed. The new service
+restores the pair byte for byte and rotates only managed connection credentials.
+Current production 37264/45363 serves the exact six hashes; loopback/LAN health
+returns 200. Main JS SHA256:
+6EC4C0175D3D51CEC751B578B3194882BD1B7EF9D6F62D8C7CB770819E2110C5.
+Preview JS SHA256:
+259E105DA2C8A87C8B2C29097EB8EEABA11CAC802740B0E8225E7FFC63AE70E6.
+The revised executable hash is recorded at the top. Disposable services
+40588/66324 and 15420/20486 were identity checked, stopped and termination
+observed. All pipelines are terminal. Only production remains.
+
+No full event, parity, accessibility, component or product criterion closes here.
+The next concrete prerequisite is semantic callback authoring with real Studio,
+paired-source/history and compiled consumers; original event counter 6 and
+codegen counter 11 are retained. Do not start another isolated input-family
+experiment or move requirements to manufacture closure. Full goal active, solo.

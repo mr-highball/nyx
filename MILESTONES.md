@@ -14,9 +14,14 @@ shared core/designer passes 30/1537 and 59 wrong-type cases per compiler.
 HTTP passes 177 and real MCP 55, including PNG rendering. Exact tested bytes are
 deployed. Prior editing, recipe, selection, viewport and producer evidence remains
 applicable. Criteria 2/3/4 remain accepted; complete control/event breadth stays
-open at no-closure counter 5. Reassessment selects keyboard-operable rich
-selection and compound actions with retained focus and honest accessibility
-metadata, exercised through actual controls and Studio/agent consumers.
+open at no-closure counter 6. The MCP-authored keyboard review compiles on both
+targets; native selection preparation/compiled checks pass 154 each with zero
+leaks and executed browser passes 181. Host Tab/Enter/Space, grid editor entry/
+exit, removal/empty focus and compound actions pass. Studio and bounded MCP
+consume the same intent help. This row-oriented outcome is deployed with the
+user's exact paired work preserved. The next concrete prerequisite is semantic
+callback authoring on the inspector's paired source/history boundary. Complete
+supported-control qualification retains the original event owner.
 Preserve physical IME, full keyboard/accessibility qualification, other widgetsets,
 native completion, workers and native Studio. No original criterion or
 full-product acceptance is weakened or claimed.

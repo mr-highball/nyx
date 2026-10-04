@@ -76,9 +76,14 @@ shared core/designer passes 30/1537, with 59 intended type refusals per compiler
 Delegated HTTP passes 177 and real MCP passes 55, including PNG rendering. The
 LAN product serves the exact qualified bytes. Native internal mouse transfers
 have basic support; continuous source progress and external native file drops
-are explicitly unavailable. Event criterion 1 remains open at counter 5;
-criteria 2/3/4 remain accepted. Next work integrates keyboard-operable selection
-and compound actions with retained focus and honest accessibility metadata.
+are explicitly unavailable. The MCP-authored keyboard review now compiles on
+both targets and qualifies rich-selection focus, cell-editor access and compound
+actions with actual browser host keys and LCL controls. Native selection passes
+154 preparation/compiled checks each with zero leaks; executed browser passes
+181. Studio passes 52/52, HTTP 177 and MCP 55, with selective PNG validation.
+Component help reaches Studio and bounded agent search. Event criterion 1 remains
+open at counter 6; criteria 2/3/4 remain accepted. The next concrete prerequisite
+is semantic callback authoring, which the current tools do not expose.
 Physical IME, complete accessibility, other widgetsets and native Studio remain
 open; existing editing/semantic evidence remains applicable.
 

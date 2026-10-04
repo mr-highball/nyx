@@ -424,6 +424,13 @@ var
         end;
     end;
     LElement := TJSHTMLElement(LControl.querySelector('[tabindex="0"][data-nyx-item]'));
+
+    if LElement = nil then
+    begin
+      { A disabled composite deliberately has no Tab entry. Deliver a forced
+        key to its existing row to verify refusal independently of reachability. }
+      LElement := TJSHTMLElement(LControl.querySelector('[data-nyx-item]'));
+    end;
     LOptions := TJSObject.new;
     LOptions['key'] := LKey;
     LOptions['shiftKey'] := AShift;
@@ -745,6 +752,205 @@ begin
   end;
 end;
 
+{ Physical focus belongs to the mounted control, while focus identity and
+  membership belong to the portable view. Dataset replacement must reconcile
+  both without selecting an unintended item or publishing duplicate callbacks. }
+procedure FocusChecks;
+const
+  CIDs: array[0..2] of TNyxText = ('tasks-list', 'tasks-table', 'tasks-tree');
+var
+  LDocument: TNyxDocument;
+  LView: INyxCollectionView;
+  LProbe: TSelectionProbe;
+  LFactory: INyxCallbackFactory;
+  LRows: INyxCollectionSnapshot;
+  LIndex: Integer;
+  LRow: Integer;
+  LBefore: Integer;
+  {$ifdef PAS2JS}
+  LRenderer: TNyxBrowserRenderer;
+  LHost: TJSHTMLElement;
+  LControl: TJSHTMLElement;
+  LFocus: TJSHTMLElement;
+  LInput: TJSHTMLInputElement;
+  LEditor: TJSHTMLInputElement;
+  LVersion: Integer;
+  {$else}
+  LRenderer: TNyxLCLRenderer;
+  LHost: TForm;
+  LControl: TWinControl;
+  {$endif}
+
+  {$ifdef PAS2JS}
+  function EditorPress(AElement: TJSHTMLElement; AKey: TNyxKey;
+    AShift: Boolean = False): Boolean;
+  var
+    LOptions: TJSObject;
+    LKey: String;
+    LEvent: TJSKeyboardEvent;
+  begin
+    case AKey of
+      nkF2Key:
+        begin
+          LKey := 'F2';
+        end;
+      nkEscapeKey:
+        begin
+          LKey := 'Escape';
+        end;
+      nkTabKey:
+        begin
+          LKey := 'Tab';
+        end;
+      else
+        begin
+          raise ENyxModel.Create('This editor fixture requires F2, Escape or Tab');
+        end;
+    end;
+    LOptions := TJSObject.new;
+    LOptions['key'] := LKey;
+    LOptions['shiftKey'] := AShift;
+    LOptions['bubbles'] := True;
+    LOptions['cancelable'] := True;
+    LEvent := TSelectionKeyEvent.new('keydown', LOptions);
+    AElement.dispatchEvent(LEvent);
+    Result := LEvent.defaultPrevented;
+  end;
+  {$endif}
+begin
+  {$ifdef NYX_COMPILED_SELECTION}
+  LDocument := nyx.selection.fixture.BuildNyxDocument;
+  {$else}
+  LDocument := Fixture;
+  {$endif}
+  LProbe := TSelectionProbe.Create;
+  LFactory := LProbe;
+  LRows := Store.Snapshot;
+  {$ifdef PAS2JS}
+  LHost := TJSHTMLElement(document.createElement('section'));
+  document.body.appendChild(LHost);
+  LRenderer := TNyxBrowserRenderer.Create;
+  {$else}
+  LHost := TForm.Create(nil);
+  LHost.SetBounds(0, 0, 700, 700);
+  LHost.Show;
+  LRenderer := TNyxLCLRenderer.Create;
+  {$endif}
+  try
+    LRenderer.Render(LDocument, LDocument.Pages[0], LHost);
+    LProbe.Renderer := LRenderer;
+    BindNyxCallbacks(LDocument, LRenderer.Events, LFactory);
+    for LIndex := 0 to High(CIDs) do
+    begin
+      LView := LRenderer.CollectionView(CIDs[LIndex]);
+      {$ifdef PAS2JS}
+      LControl := LRenderer.ElementFor(CIDs[LIndex]);
+      Check(LControl.getAttribute('aria-label') <> '', 'rich collection has its accessible name');
+      LFocus := TJSHTMLElement(LControl.querySelector('[data-nyx-item="sketch"]'));
+      LFocus.focus;
+      {$else}
+      LControl := TWinControl(LRenderer.ControlFor(CIDs[LIndex]));
+      Check(LControl.AccessibleName <> '', 'native rich collection has its accessible name');
+      LControl.SetFocus;
+      {$endif}
+      LView.Select(Row(1));
+      LBefore := LProbe.Calls;
+      LView.Store.Remove(Row(1));
+      Check((LView.Selection.Focus.ID = Row(2).ID) and (LView.Selection.Count = 0),
+        'removal retains next focus identity without selecting a replacement');
+      Check(LProbe.Calls = LBefore + 1, 'removal publishes exactly one selection callback');
+      {$ifdef PAS2JS}
+      LFocus := TJSHTMLElement(LControl.querySelector('[data-nyx-item="build"]'));
+      Check(document.activeElement = LFocus, 'removed focused row transfers physical browser focus');
+      Check(LControl.querySelectorAll('[data-nyx-item][tabindex="0"]').length = 1,
+        'rich collection has exactly one row tab stop');
+
+      if LIndex = 1 then
+      begin
+        Check(LControl.querySelector('input:not([tabindex="-1"])') = nil,
+          'grid editors do not create extra page Tab entries');
+      end;
+      {$else}
+      Check(LControl.Focused, 'row removal retains native control focus');
+      {$endif}
+      LView.Store.Apply([NyxRemove(Row(0)), NyxRemove(Row(2)), NyxRemove(Row(3))]);
+      Check((LView.Snapshot.Count = 0) and not LView.Selection.Focus.Defined,
+        'empty dataset has no manufactured selection focus');
+      {$ifdef PAS2JS}
+      Check((document.activeElement = LControl) and (LControl.getAttribute('tabindex') = '0'),
+        'empty composite retains a keyboard entry and physical focus');
+      {$else}
+      Check(LControl.Focused, 'empty native composite retains physical focus');
+      {$endif}
+      for LRow := 0 to LRows.Count - 1 do
+      begin
+        LView.Store.Insert(LRow, LRows.ItemAt(LRow));
+      end;
+      LView.ClearSelection;
+      LRenderer.Root.Find(CIDs[LIndex]).Configure.Enabled(False).Done;
+      LRenderer.Sync;
+      {$ifdef PAS2JS}
+      Check((LControl.querySelectorAll('[tabindex="0"]').length = 0) and
+        (LControl.getAttribute('tabindex') <> '0'), 'disabled collection has no tab stops');
+      {$else}
+      Check(not LControl.CanFocus, 'disabled native collection cannot receive focus');
+      {$endif}
+      LRenderer.Root.Find(CIDs[LIndex]).Configure.Enabled(True).ReadOnly(True).Done;
+      LRenderer.Sync;
+      {$ifdef PAS2JS}
+
+      if LIndex = 1 then
+      begin
+        LInput := TJSHTMLInputElement(LControl.querySelector('input'));
+        Check(LInput.readOnly and not LInput.disabled,
+          'read-only text cell remains focusable for selection and copying');
+        LInput.focus;
+        Check(document.activeElement = LInput, 'read-only text cell accepts actual focus');
+        LFocus := TJSHTMLElement(LControl.querySelector('[data-nyx-item][tabindex="0"]'));
+        LFocus.focus;
+        LVersion := LView.Store.Snapshot.Revision;
+        Check(EditorPress(LFocus, nkF2Key) and (document.activeElement = LInput),
+          'F2 enters the read-only browser text editor for keyboard inspection');
+        LEditor := TJSHTMLInputElement(LControl.querySelector('input[data-nyx-column="1"]'));
+        Check(EditorPress(LInput, nkTabKey) and (document.activeElement = LEditor),
+          'editing Tab reaches the next owned column');
+        Check(EditorPress(LEditor, nkTabKey, True) and (document.activeElement = LInput),
+          'editing Shift-Tab reaches the previous owned column');
+        Check(EditorPress(LInput, nkEscapeKey) and (document.activeElement = LFocus),
+          'Escape returns to row navigation without changing read-only data');
+        Check(LView.Store.Snapshot.Revision = LVersion,
+          'keyboard inspection changes no admitted collection values');
+        LRenderer.Root.Find(CIDs[LIndex]).Configure.ReadOnly(False).Done;
+        LRenderer.Sync;
+        EditorPress(LFocus, nkF2Key);
+        LInput.value := 'A draft that should not be admitted';
+        Check(EditorPress(LInput, nkEscapeKey) and (document.activeElement = LFocus) and
+          (LInput.value = LView.CellText(Row(0), 0)),
+          'Escape discards the pending cell draft and retains physical row focus');
+        Check(LView.Store.Snapshot.Revision = LVersion,
+          'discarding a physical draft leaves the accepted store revision intact');
+      end;
+      {$else}
+      Check(LControl.CanFocus, 'read-only native collection remains focusable');
+      {$endif}
+      LRenderer.Root.Find(CIDs[LIndex]).Configure.ReadOnly(False).Done;
+      LRenderer.Sync;
+    end;
+  finally
+    LProbe.Renderer := nil;
+    LRenderer.Free;
+    {$ifdef PAS2JS}
+    LHost.remove;
+    {$else}
+    LHost.Free;
+    {$endif}
+    LFactory := nil;
+    LView := nil;
+    LRows := nil;
+    LDocument.Free;
+  end;
+end;
+
 {$ifndef PAS2JS}
 procedure ExportFixture;
 var
@@ -777,6 +983,7 @@ begin
     {$ifndef PAS2JS}Application.Initialize;{$endif}
     ModelChecks;
     ControlChecks;
+    FocusChecks;
     {$ifdef PAS2JS}
     document.body.textContent := 'PASS ' + IntToStr(GChecks) + ' selection checks';
     document.body.setAttribute('data-selection-tests', 'passed');

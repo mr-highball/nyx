@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'semantic-events', 'source-workspace', 'agents', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'semantic-events', 'source-workspace', 'agents', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -32,7 +32,10 @@ param(
   [string]$Widgetset = 'win32',
   [string]$HttpURL = 'http://127.0.0.1:8088',
   # Stage browser artifacts independently while an older LAN instance is live.
-  [string]$BrowserOutput
+  [string]$BrowserOutput,
+  # The keyboard review source is exported through MCP, never handwritten by
+  # this orchestration script. Its generated unit must live in this directory.
+  [string]$KeyboardSourceDirectory = 'build/keyboard/mcp'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -181,6 +184,41 @@ try {
     if ($LASTEXITCODE -ne 0) {
       throw 'MCP configuration preservation checks failed'
     }
+    exit 0
+  }
+
+  if ($Target -eq 'keyboard') {
+    $nyxKeyboardSource = [IO.Path]::GetFullPath($KeyboardSourceDirectory)
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxKeyboardSource 'nyx.generated.view.pas'))) {
+      throw 'Export the MCP-authored keyboard review source first; see docs/studio-agents.md'
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxKeyboardNative = Join-Path $nyxRoot 'build/keyboard/lcl'
+    $nyxKeyboardDriver = Join-Path $nyxRoot 'build/keyboard/driver'
+    New-Item -ItemType Directory -Force $nyxKeyboardNative, $nyxKeyboardDriver | Out-Null
+    $nyxKeyboardPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxKeyboardFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-Fu$nyxKeyboardSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxKeyboardPlatform", "-Fu$nyxLazarus/lcl/units/$nyxKeyboardPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxKeyboardPlatform", "-Fu$nyxLazarus/packager/units/$nyxKeyboardPlatform",
+      "-FU$nyxKeyboardNative", "-FE$nyxKeyboardNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxKeyboardFlags + @('tests/nyx_keyboard_host_tests.lpr'))
+    & (Join-Path $nyxKeyboardNative 'nyx_keyboard_host_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Native MCP-authored keyboard review failed' }
+    # fpwebsocket belongs to the matched FPC toolchain used by the existing host
+    # gesture driver. This program owns an isolated browser, not the editor tab.
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl',
+      '-Fusrc', '-Futests', "-FU$nyxKeyboardDriver", "-FE$nyxKeyboardDriver", 'tests/nyx_keyboard_cdp_tests.lpr')
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxBrowserDir = Join-Path $nyxRoot 'build/browser'
+    if ($BrowserOutput) { $nyxBrowserDir = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxBrowserDir | Out-Null
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Fusrc', '-Futests',
+      "-Fu$nyxKeyboardSource", "-FE$nyxBrowserDir", 'tests/nyx_keyboard_host_tests.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/keyboard-host.html') -Destination $nyxBrowserDir
     exit 0
   }
 

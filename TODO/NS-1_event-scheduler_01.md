@@ -430,3 +430,26 @@ weakened/transferred and no counter resets. Codegen criterion 3 stays at 11.
 The user's subsequent request gives immediate priority to enabling direct Codex
 MCP use and making semantic tools the normal demo/design workflow; retain the
 supported-control return path after that connection prerequisite.
+
+## Integrated keyboard review — 2026-10-04
+
+The selected counter-5 outcome is qualified and deployed. Bound browser
+collections now retain one Tab entry, transfer physical focus after removal,
+keep an empty host reachable and exclude disabled controls. Read-only text cells
+remain inspectable. F2/Enter, cell Tab traversal, Escape and boundary exit have
+actual host-key evidence. Standard compound buttons deliver one semantic action
+through Enter/Space; disabled descendants are skipped. Both-target consumers,
+Studio and bounded MCP intent help share the public contracts. Native selection
+preparation/compiled journeys pass 154 each with zero leaks; executed browser
+passes 181; the MCP-authored native companion is also leak-free. Studio passes
+52 each at desktop/exact-390, HTTP 177 and MCP 55. See the
+[work record](../WORK.md#mcp-authored-keyboard-review--2026-10-04).
+
+Original criteria 2/3/4 remain accepted; criterion 1 stays open at consecutive
+no-closure counter 6. This is row-oriented navigation, not complete cell-grid
+navigation, typeahead, assistive technology, hardware/IME or other-widgetset
+qualification. No original requirement or credit transfers or resets. The
+user-prioritized semantic callback workflow is now the concrete prerequisite:
+the review's binding and deletion handler cannot yet be authored through MCP.
+Follow its existing owner, then return to the complete supported-control outcome.
+Codegen criterion 3 remains open at counter 11; the full goal remains active.

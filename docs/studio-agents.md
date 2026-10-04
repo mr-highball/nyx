@@ -202,6 +202,45 @@ Rendering is optional; semantic queries remain the primary context mechanism.
 Sixteen snapshot packets are retained in memory. Capture artifacts remain under
 ignored `build/agent-previews/`; disk artifact housekeeping is still manual.
 
+## MCP-authored keyboard review
+
+The maintained operations in
+[keyboard-review.operations.json](../tests/fixtures/keyboard-review.operations.json)
+compose a page with search, number-stepper and labeled-button compounds, a
+disabled action group and a read-only memo. Use an isolated review service;
+these fixed demo IDs must not overwrite an existing design. Inspect `nyx_session`,
+then submit the operations through one `nyx_transaction` with its current
+`expectedRevision` and a new operation ID. Preserve the exact ID/payload for
+resolving ambiguous delivery. The resulting page is one undoable edit.
+
+Inspect only its seven children with `nyx_outline`, and the needed properties
+with `nyx_node`. Export accepted Pascal with consecutive `nyx_source` windows of
+at most 80 lines. Require the same revision and total line count throughout, then
+join the returned lines as UTF-8 into `nyx.generated.view.pas` under an ignored
+build directory. Do not substitute handwritten demo source. For a selective
+visual check, use `nyx_preview` with the exact revision and `keyboard-review` view.
+
+Compile that exact source with FPC/LCL and pas2js:
+
+```powershell
+./tools/build.ps1 -Target keyboard `
+  -KeyboardSourceDirectory build/keyboard/mcp `
+  -BrowserOutput build/keyboard/browser
+```
+
+Serve `keyboard-host.html` from the isolated service, then run
+`build/keyboard/driver/nyx_keyboard_cdp_tests.exe <loopback-URL> <artifact-directory>`.
+The native Pascal driver sends host keys, queries DOM identities and reads small
+Pascal-published assertions. It injects no application script. This qualifies
+browser defaults that semantic document tools and synthetic events cannot prove.
+
+The harness adds one typed collection binding after consuming the MCP-created
+page. Collection/state/binding authoring is a confirmed missing semantic tool,
+owned by the [workflow task](../TODO/NS-4_agent-workflows_01.md). It must become
+an ordinary MCP operation before agents can build the full bound demo directly.
+After exporting or reviewing, undo the owned transaction only if its revision
+and history still identify that edit; preserve intervening user work.
+
 ## Build and verification
 
 The maintained native semantic/configuration tool is built with

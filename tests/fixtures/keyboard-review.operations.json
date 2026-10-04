@@ -1,0 +1,85 @@
+[
+  {
+    "properties": {
+      "gap": 18,
+      "padding": 24,
+      "text": "Keyboard review"
+    },
+    "id": "keyboard-review",
+    "kind": "page",
+    "op": "create",
+    "root": "page"
+  },
+  {
+    "parent": "keyboard-review",
+    "properties": {
+      "text": "Make every action reachable"
+    },
+    "id": "keyboard-review-title",
+    "kind": "heading",
+    "op": "create"
+  },
+  {
+    "parent": "keyboard-review",
+    "properties": {
+      "text": "Use Tab to move between controls, then Enter or Space to act."
+    },
+    "id": "keyboard-review-help",
+    "kind": "label",
+    "op": "create"
+  },
+  {
+    "parent": "keyboard-review",
+    "id": "keyboard-review-search",
+    "kind": "search-field",
+    "op": "create"
+  },
+  {
+    "parent": "keyboard-review",
+    "id": "keyboard-review-stepper",
+    "kind": "number-stepper",
+    "op": "create"
+  },
+  {
+    "parent": "keyboard-review",
+    "id": "keyboard-review-action",
+    "kind": "labeled-button",
+    "op": "create"
+  },
+  {
+    "parent": "keyboard-review",
+    "properties": {
+      "gap": 10,
+      "enabled": false
+    },
+    "id": "keyboard-review-disabled",
+    "kind": "column",
+    "op": "create"
+  },
+  {
+    "parent": "keyboard-review-disabled",
+    "properties": {
+      "text": "Disabled group"
+    },
+    "id": "keyboard-review-disabled-note",
+    "kind": "label",
+    "op": "create"
+  },
+  {
+    "parent": "keyboard-review-disabled",
+    "id": "keyboard-review-disabled-actions",
+    "kind": "split-button",
+    "op": "create"
+  },
+  {
+    "parent": "keyboard-review",
+    "properties": {
+      "value": "You can still focus, select, and copy this text.",
+      "readonly": true,
+      "text": "Read-only text"
+    },
+    "id": "keyboard-review-readonly",
+    "kind": "memo",
+    "op": "create"
+  }
+]
