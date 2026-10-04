@@ -33,6 +33,10 @@ stays open at counter 11. Workflow criterion 5 still owns independent review
 workspaces, semantic state/bindings and richer reusable authoring; general
 imports/helpers remain open. No full criterion/goal completion is inferred.
 
+Remote protection: implementation a5bad51b8d080f8f11fc44af1c798c3e67e8c091 is
+pushed on origin/hello-nyx; independent git ls-remote verifies exact identity.
+The final handoff record follows that protected implementation. Full goal active.
+
 The integrated root batch was declared before implementation (2026-10-04):
 NS-4_agent-workflows_01 criterion 5's
 missing root-cleanup prerequisite. Deliver a strongly typed shared root removal
@@ -66,8 +70,8 @@ and event criteria 2/3/4 remain accepted. Original event criterion 1 stays open 
 counter 6; codegen criterion 3 stays open at counter 11. No completion credit
 transfers from those owners. Full goal active.
 
-Next concrete prerequisite: declare one integrated protected review-lifecycle /
-root-cleanup batch under the existing workflow owner, criterion 5. State/bindings,
+The handler delivery's then-next prerequisite was the integrated root-cleanup
+batch now delivered above under the existing workflow owner, criterion 5. State/bindings,
 rich reusable operations and general source/import/helper authoring remain open.
 Then return to supported-control qualification under the original event owner.
 Compiler cancellation/caching/global scheduling retain NS-5 ownership.
@@ -3345,4 +3349,6 @@ Main JS: 27A1052F46FBCE95F605B92F7D4361657A30FE0F07D33EC7C84822132A264EB0.
 Preview JS: 259E105DA2C8A87C8B2C29097EB8EEABA11CAC802740B0E8225E7FFC63AE70E6.
 Enrolled Codex blocks refresh and match with no warning. Existing tabs need a
 refresh after credential rotation. All disposable services and qualification
-pipelines are terminal. Remote checkpoint identity follows after publication.
+pipelines are terminal. Implementation a5bad51b8d080f8f11fc44af1c798c3e67e8c091
+is pushed on origin/hello-nyx, with exact git ls-remote identity verified. The
+handoff record follows this protected delivery. Full goal remains active.
