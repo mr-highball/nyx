@@ -51,6 +51,10 @@ type
     FReceiptKeys: array of TNyxText;
     FReceiptRequests: array of TNyxText;
     FReceiptResults: array of TNyxDataValue;
+    { Review tickets are bounded session state, never document content. Exact
+      actor/revision/change bytes bind consent; accepted retries use receipts. }
+    FCallbackReviews: array of TNyxDataValue;
+    FCallbackReviewSerial: Integer;
     procedure Changed;
     procedure RequireRevision(const AArguments: TNyxDataValue);
     procedure Log(const AActor, AOperation, AOutcome: TNyxText);
@@ -61,6 +65,8 @@ type
     function Components(const AArguments: TNyxDataValue): TNyxDataValue;
     function Diagnostics(const AArguments: TNyxDataValue): TNyxDataValue;
     function SourceLines(const AArguments: TNyxDataValue): TNyxDataValue;
+    function EditCallbacks(const AArguments: TNyxDataValue;
+      const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
   public
     constructor Create;
     destructor Destroy; override;
@@ -95,7 +101,7 @@ implementation
 
 uses
   nyx.catalog, nyx.catalog.labels, nyx.callbacks, nyx.codec, nyx.composition,
-  nyx.design.tokens, nyx.studio.edits;
+  nyx.design.tokens, nyx.studio.edits, nyx.studio.callbackedits;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
 var
@@ -875,6 +881,145 @@ begin
   end;
 end;
 
+function WithCallbacks(const ASummary, ACallbacks: TNyxDataValue;
+  ABudgetCheck: Boolean = False): TNyxDataValue;
+var
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+begin
+  SetLength(LFields, ASummary.Count + 1);
+  for LIndex := 0 to ASummary.Count - 1 do
+  begin
+    LFields[LIndex] := NyxField(ASummary.Key(LIndex), ASummary.Field(ASummary.Key(LIndex)));
+
+    if ABudgetCheck then
+    begin
+      { Reserve the largest serialized post-publication revision/history values
+        before committing. A successful edit cannot outgrow this preflight. }
+
+      if LFields[LIndex].Name = 'revision' then
+      begin
+        LFields[LIndex].Value := NyxData(High(Integer));
+      end
+      else if (LFields[LIndex].Name = 'canUndo') or (LFields[LIndex].Name = 'canRedo') then
+      begin
+        LFields[LIndex].Value := NyxData(False);
+      end;
+    end;
+  end;
+  { High avoids a pas2js record-method-as-array-index ambiguity. }
+  LFields[High(LFields)] := NyxField('callbacks', ACallbacks);
+  Result := NyxObject(LFields);
+end;
+
+function TNyxAgentSession.EditCallbacks(const AArguments: TNyxDataValue;
+  const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
+var
+  LPatch: INyxCallbackPatch;
+  LPair: TNyxProjectPair;
+  LResults: TNyxCallbackEditResults;
+  LCallbacks: TNyxDataValue;
+  LChanges: TNyxDataValue;
+  LReview: TNyxDataValue;
+  LReviewID: TNyxText;
+  LIndex: Integer;
+  LReviewIndex: Integer;
+  LRemoves: Boolean;
+begin
+  NyxAgentFields(AArguments, '|expectedRevision|operationId|mode|changes|reviewID|');
+  RequireRevision(AArguments);
+  LChanges := AArguments.Field('changes');
+  LPatch := ReadNyxCallbackPatch(LChanges);
+  LRemoves := False;
+  for LIndex := 0 to LChanges.Count - 1 do
+  begin
+    LRemoves := LRemoves or (LChanges.Item(LIndex).Field('op').AsText = 'remove');
+  end;
+  LReviewIndex := -1;
+
+  if AApply and LRemoves then
+  begin
+    LReviewID := TextArgument(AArguments, 'reviewID');
+    for LIndex := 0 to High(FCallbackReviews) do
+    begin
+      LReview := FCallbackReviews[LIndex];
+
+      if (LReview.Field('id').AsText = LReviewID) and
+        (LReview.Field('actor').AsText = AActor) and
+        (LReview.Field('revision').AsInteger = FRevision) and
+        (LReview.Field('changes').ToJSON = LChanges.ToJSON) then
+      begin
+        LReviewIndex := LIndex;
+        Break;
+      end;
+    end;
+
+    if LReviewIndex < 0 then
+    begin
+      raise ENyxModel.Create('Removal requires a current reviewID for this actor and exact changes; call nyx_callbacks in review mode first');
+    end;
+  end
+  else if NyxAgentHas(AArguments, 'reviewID') then
+  begin
+    raise ENyxModel.Create('reviewID applies only to a removal batch in apply mode');
+  end;
+
+  if not AApply then
+  begin
+
+    if not LRemoves or NyxAgentHas(AArguments, 'operationId') then
+    begin
+      raise ENyxModel.Create('Review requires a removal batch and has no mutation operationId');
+    end;
+
+    if FCallbackReviewSerial = High(Integer) then
+    begin
+      raise ENyxModel.Create('Callback review budget exhausted');
+    end;
+  end;
+
+  { All commands run on a detached session, including code generation and
+    exact event admission. Failure preserves live pair, draft, selection and
+    history. Size refusal also precedes the sole live AdoptProject operation. }
+  LPair := LPatch.Candidate(FSession, LResults);
+  LCallbacks := EncodeNyxCallbackResults(LResults);
+  BoundContext(WithCallbacks(Summary, LCallbacks, True));
+
+  if AApply then
+  begin
+    FSession.AdoptProject(LPair);
+
+    if LReviewIndex >= 0 then
+    begin
+      for LIndex := LReviewIndex + 1 to High(FCallbackReviews) do
+      begin
+        FCallbackReviews[LIndex - 1] := FCallbackReviews[LIndex];
+      end;
+      SetLength(FCallbackReviews, Length(FCallbackReviews) - 1);
+    end;
+    Exit(LCallbacks);
+  end;
+
+  LReviewID := 'callback-review-' + IntToStr(FCallbackReviewSerial + 1);
+  Result := NyxObject([NyxField('revision', NyxData(FRevision)),
+    NyxField('reviewID', NyxData(LReviewID)), NyxField('callbacks', LCallbacks)]);
+  BoundContext(Result);
+  Inc(FCallbackReviewSerial);
+
+  if Length(FCallbackReviews) = 16 then
+  begin
+    for LIndex := 1 to High(FCallbackReviews) do
+    begin
+      FCallbackReviews[LIndex - 1] := FCallbackReviews[LIndex];
+    end;
+    SetLength(FCallbackReviews, 15);
+  end;
+  SetLength(FCallbackReviews, Length(FCallbackReviews) + 1);
+  FCallbackReviews[High(FCallbackReviews)] := NyxObject([
+    NyxField('id', NyxData(LReviewID)), NyxField('actor', NyxData(AActor)),
+    NyxField('revision', NyxData(FRevision)), NyxField('changes', LChanges)]);
+end;
+
 function TNyxAgentSession.Call(const ATool, AActor: TNyxText;
   const AArguments: TNyxDataValue): TNyxDataValue;
 var
@@ -885,15 +1030,25 @@ var
   LIndex: Integer;
   LNode: TNyxNode;
   LMutation: Boolean;
+  LCallbackApply: Boolean;
+  LCallbackResults: TNyxDataValue;
 begin
-  LMutation := (ATool = 'nyx_transaction') or (ATool = 'nyx_select') or
-    (ATool = 'nyx_history');
+  LCallbackApply := False;
+  LCallbackResults := NyxNull;
+
   try
 
     if FPermission = apDisabled then
     begin
       raise ENyxModel.Create('Agent access is disabled in Studio');
     end;
+
+    if ATool = 'nyx_callbacks' then
+    begin
+      LCallbackApply := TextArgument(AArguments, 'mode') = 'apply';
+    end;
+    LMutation := (ATool = 'nyx_transaction') or (ATool = 'nyx_select') or
+      (ATool = 'nyx_history') or LCallbackApply;
 
     if LMutation and (FPermission <> apEdit) then
     begin
@@ -966,6 +1121,16 @@ begin
       NyxAgentFields(AArguments, '|expectedRevision|operationId|operations|');
       FSession.ApplyPatch(ReadNyxDesignPatch(AArguments.Field('operations')));
     end
+    else if ATool = 'nyx_callbacks' then
+    begin
+
+      if not LCallbackApply and (TextArgument(AArguments, 'mode') <> 'review') then
+      begin
+        raise ENyxModel.Create('Callback mode must be review or apply');
+      end;
+      Result := EditCallbacks(AArguments, AActor, LCallbackApply);
+      LCallbackResults := Result;
+    end
     else if ATool = 'nyx_select' then
     begin
       NyxAgentFields(AArguments, '|expectedRevision|operationId|id|activate|');
@@ -1028,6 +1193,11 @@ begin
       end;
       Result := Summary;
 
+      if LCallbackApply then
+      begin
+        Result := WithCallbacks(Result, LCallbackResults);
+      end;
+
       if Length(FReceiptKeys) = 64 then
       begin
         for LIndex := 1 to High(FReceiptKeys) do
@@ -1048,8 +1218,9 @@ begin
       FReceiptRequests[LIndex] := LRequest;
       FReceiptResults[LIndex] := Result;
     end;
-    { Check read responses before returning/logging; mutation receipts have a
-      fixed small summary. No whole-document data is sent through agent queries. }
+    { Read responses are bounded before returning. Callback results were
+      preflighted before publication; ordinary receipts have a small summary.
+      No whole-document data is sent through agent queries. }
 
     if not LMutation then
     begin

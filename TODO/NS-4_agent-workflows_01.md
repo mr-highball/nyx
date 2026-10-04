@@ -40,9 +40,10 @@ the present Windows installation; the Pascal semantic client is usable immediate
 - Underlying callback/state/source/build behavior remains with its existing owners;
   expose only qualified operations and retain their original acceptance criteria.
 
-**Confirmed gaps — 2026-10-04:** The advertised transaction vocabulary contains
-create/update/move/delete/title/tokens. There are no callback authoring or build
-tools. State/binding commands and reusable authoring are not advertised. Root
+**Confirmed gaps — 2026-10-04:** The design transaction vocabulary contains
+create/update/move/delete/title/tokens. Callback authoring now has a focused tool;
+semantic source/body editing and build requests remain absent. State/binding
+commands and reusable authoring are not advertised. Root
 creation is supported, while root move/deletion and isolated review-session
 lifecycle are absent. Property values preserve their JSON scalar types, but
 numeric/Boolean schema defaults still use metadata text; typed effective defaults
@@ -75,3 +76,25 @@ paired-source/history boundary, including exact owner/event identities, ordered
 registrations, policy, TODO source navigation, draft refusal and warned removal.
 Require a real observable editor journey and compiled callback, not tool schemas
 alone. The remaining build/state/reusable/review operations retain their criteria.
+
+## Semantic callback delivery — 2026-10-04
+
+Criterion 3 now has integrated evidence: typed detached callback batches reuse
+the inspector's commands and publish one paired Undo step. The twelfth tool
+adds TODO classes, orders exact registrations, sets event policy and reviews
+removal before apply. Tickets bind actor/revision/exact changes; code survives
+removal. Drafts, unsupported or ambiguous events, invalid positions, altered
+reviews and failed grouped edits retain user work and selection.
+
+Portable native and executed-browser checks pass 45 each, with zero native
+unfreed blocks. Real MCP plus an already-open Nyx editor passes 20 native and
+7 browser checks; actual editor Undo and semantic Redo restore exact source.
+Bounded MCP windows export unchanged ordered/removed units. Native/LCL consumers
+execute their registered generated TODO callbacks with zero leaks, and both
+browser companions pass. Fresh installed Codex authenticates all twelve tools.
+The remaining criteria and original event/codegen scope retain their owners.
+Final gates pass: 56 real MCP, 177 compiler service and 52/52 Studio checks.
+Six qualified artifacts are deployed with the live pair/selection/view retained
+byte for byte; enrolled credentials rotate and fresh Codex sees twelve tools.
+See [the packet](../WORK.md#semantic-callback-authoring--2026-10-04).
+Criterion 3 is accepted; the task stays open for builds and protected workflows.

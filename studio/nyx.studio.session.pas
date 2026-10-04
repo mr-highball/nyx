@@ -170,6 +170,13 @@ type
     procedure SetCallbackPolicy(const AName: TNyxEventRef; APolicy: TNyxExecutionPolicy); overload;
     procedure RemoveCallback(ATrigger: TNyxTrigger; const AID: TNyxCallbackRef); overload;
     procedure RemoveCallback(const AName: TNyxEventRef; const AID: TNyxCallbackRef); overload;
+    { Reorder an exact selected-owner registration through the same detached,
+      source-preserving command as inspector policy/removal. Positions are
+      zero-based final order; inherited metadata is materialized independently. }
+    procedure MoveCallback(ATrigger: TNyxTrigger;
+      const AID: TNyxCallbackRef; AIndex: Integer); overload;
+    procedure MoveCallback(const AName: TNyxEventRef;
+      const AID: TNyxCallbackRef; AIndex: Integer); overload;
     function CallbackLine(const AHandler: TNyxHandlerRef): Integer;
     { Caller owns this independent realized selection (or customized part),
       projected against saved defaults. Removed part rules return nil. }
@@ -910,6 +917,34 @@ procedure TNyxStudioSession.RemoveCallback(const AName: TNyxEventRef;
   const AID: TNyxCallbackRef);
 begin
   DoRemoveCallback(ntNamed, AName, AID);
+end;
+
+procedure TNyxStudioSession.MoveCallback(ATrigger: TNyxTrigger;
+  const AID: TNyxCallbackRef; AIndex: Integer);
+var
+  LCandidate: TNyxDocument;
+begin
+  LCandidate := CallbackCandidate;
+  try
+    NyxCallbacks(LCandidate.Find(FSelectedID)).On(ATrigger).Move(AID, AIndex);
+    PublishCandidate(LCandidate);
+  finally
+    LCandidate.Free;
+  end;
+end;
+
+procedure TNyxStudioSession.MoveCallback(const AName: TNyxEventRef;
+  const AID: TNyxCallbackRef; AIndex: Integer);
+var
+  LCandidate: TNyxDocument;
+begin
+  LCandidate := CallbackCandidate;
+  try
+    NyxCallbacks(LCandidate.Find(FSelectedID)).OnNamed(AName).Move(AID, AIndex);
+    PublishCandidate(LCandidate);
+  finally
+    LCandidate.Free;
+  end;
 end;
 
 function TNyxStudioSession.CallbackLine(const AHandler: TNyxHandlerRef): Integer;

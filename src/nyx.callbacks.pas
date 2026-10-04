@@ -78,6 +78,10 @@ type
     function Add(const AHandler: TNyxHandlerRef;
       const AID: TNyxCallbackRef): INyxAuthoredEvent;
     function Remove(const AID: TNyxCallbackRef): INyxAuthoredEvent;
+    { Move one exact registration to a zero-based final position. All siblings,
+      handlers and policy are retained. Invalid identities/positions reject
+      before publication; moving to the current position is an exact no-op. }
+    function Move(const AID: TNyxCallbackRef; AIndex: Integer): INyxAuthoredEvent;
   end;
   INyxAuthoredEvents = interface(IInterface)
     ['{739BC309-7893-48E3-9600-001003000002}']
@@ -247,6 +251,7 @@ type
     function Add(const AHandler: TNyxHandlerRef;
       const AID: TNyxCallbackRef): INyxAuthoredEvent;
     function Remove(const AID: TNyxCallbackRef): INyxAuthoredEvent;
+    function Move(const AID: TNyxCallbackRef; AIndex: Integer): INyxAuthoredEvent;
   end;
   TNyxCallbackType = record
     Name: TNyxText;
@@ -910,6 +915,58 @@ begin
     end;
   end;
   raise ENyxModel.Create('Callback registration is missing');
+end;
+
+function TNyxAuthoredEvent.Move(const AID: TNyxCallbackRef;
+  AIndex: Integer): INyxAuthoredEvent;
+var
+  LEvents: TNyxAuthoredEventInfos;
+  LEventIndex: Integer;
+  LCurrent: Integer;
+  LNext: Integer;
+  LCallback: TNyxCallbackInfo;
+begin
+  LEvents := ReadEvents(LEventIndex);
+
+  if (AIndex < 0) or (AIndex >= Length(LEvents[LEventIndex].Callbacks)) then
+  begin
+    raise ENyxModel.Create('Callback position is outside this event');
+  end;
+  LCurrent := -1;
+  for LNext := 0 to High(LEvents[LEventIndex].Callbacks) do
+  begin
+
+    if LEvents[LEventIndex].Callbacks[LNext].ID.Name = AID.Name then
+    begin
+      LCurrent := LNext;
+      Break;
+    end;
+  end;
+
+  if LCurrent < 0 then
+  begin
+    raise ENyxModel.Create('Callback registration is missing');
+  end;
+  Result := Self as INyxAuthoredEvent;
+
+  if LCurrent = AIndex then
+  begin
+    Exit;
+  end;
+  LCallback := LEvents[LEventIndex].Callbacks[LCurrent];
+  LNext := LCurrent;
+  while LNext < AIndex do
+  begin
+    LEvents[LEventIndex].Callbacks[LNext] := LEvents[LEventIndex].Callbacks[LNext + 1];
+    Inc(LNext);
+  end;
+  while LNext > AIndex do
+  begin
+    LEvents[LEventIndex].Callbacks[LNext] := LEvents[LEventIndex].Callbacks[LNext - 1];
+    Dec(LNext);
+  end;
+  LEvents[LEventIndex].Callbacks[AIndex] := LCallback;
+  FOwner.Metadata(EncodeNyxAuthoredEvents(LEvents));
 end;
 
 procedure RegisterNyxCallback(const AHandler: TNyxHandlerRef; AClass: TNyxCallbackClass);

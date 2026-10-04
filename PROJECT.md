@@ -82,8 +82,11 @@ actions with actual browser host keys and LCL controls. Native selection passes
 154 preparation/compiled checks each with zero leaks; executed browser passes
 181. Studio passes 52/52, HTTP 177 and MCP 55, with selective PNG validation.
 Component help reaches Studio and bounded agent search. Event criterion 1 remains
-open at counter 6; criteria 2/3/4 remain accepted. The next concrete prerequisite
-is semantic callback authoring, which the current tools do not expose.
+open at counter 6; criteria 2/3/4 remain accepted. Semantic callback authoring now
+has a focused twelfth tool: additions, policy, exact ordering and reviewed
+removal publish one source/design Undo step while retaining drafts and selection.
+Portable tests, an observing Nyx editor and unchanged compiled TODO consumers
+qualify this boundary. Semantic source/body and build operations remain open.
 Physical IME, complete accessibility, other widgetsets and native Studio remain
 open; existing editing/semantic evidence remains applicable.
 

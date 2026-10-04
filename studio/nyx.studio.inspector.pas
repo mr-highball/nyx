@@ -75,7 +75,7 @@ function RouteNyxStudioEvents(ASession: TNyxStudioSession; ANode: TNyxNode;
 implementation
 
 uses
-  nyx.schema;
+  nyx.schema, nyx.studio.callbackedits;
 
 type
   TInspectorCommand = (icAdd, icPolicy, icNavigate, icRequest, icConfirm, icCancel);
@@ -282,8 +282,7 @@ begin
     LCard.Add(TNyxNode.Create(nkHeading, 'event-removal-title')
       .Configure.Text('Remove this registration?').Done);
     LCard.Add(TNyxNode.Create(nkLabel, 'event-removal-text').Configure.Text(
-      ARemoval.Handler.Name + ' will stop receiving this event. ' +
-      'Its Pascal implementation is retained. Inherited changes apply only to this instance.').Done);
+      NyxCallbackRemovalWarning(ASession.Document, ARemoval.OwnerID, ARemoval.Handler)).Done);
     LButton := EventCommand(nkButton, 'event-removal-confirm', 'Remove registration',
       icConfirm, ARemoval.OwnerID, ARemoval.Trigger, ARemoval.Name);
     LButton.Configure.Variant(nvDanger).Done;

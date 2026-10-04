@@ -103,6 +103,7 @@ GET is explicitly unsupported (405); DELETE closes a client session. See the
 | `nyx_select` | Select a component, optionally activate a root view |
 | `nyx_history` | Undo or redo one ordinary content command |
 | `nyx_preview` | An immutable, revision-specific rendered view and optional PNG |
+| `nyx_callbacks` | Grouped callback addition, policy, ordering and reviewed removal on the inspector's paired history |
 
 Tool schemas advertise required fields and limits. Unknown arguments and
 unpublished properties are refused. Queries never return the full document.
@@ -170,6 +171,48 @@ history. Revisions remain monotonic through Undo/Redo. Stale revisions and pendi
 Pascal drafts refuse mutation. Exact successful retries return their original
 receipt; changing arguments under the same operation identity is refused. The
 last 64 successful mutation receipts are retained for that session.
+
+## Author callbacks semantically
+
+Read the owner's published events and ordered registrations with `nyx_node`.
+Physical events use an exact `{"trigger":"after-key-press"}` identity; semantic
+events use `{"name":"search"}`. Supply exactly one, preserving its spelling.
+Unsupported events, unknown fields and wrong scalar types refuse the batch.
+
+`nyx_callbacks` accepts 1..32 ordered changes. `add` creates the inspector's
+crafted handler class, initialization registration and commented TODO; `policy`
+sets a closed execution policy; `move` places an exact registration at a
+zero-based position within its event; `remove` removes its descriptor while
+retaining Pascal code. For example:
+
+```json
+{"expectedRevision":7,"operationId":"reply-events-1","mode":"apply","changes":[
+  {"op":"add","id":"reply-memo","event":{"trigger":"after-key-press"}},
+  {"op":"policy","id":"reply-memo","event":{"trigger":"after-key-press"},"policy":"ui-queue"}
+]}
+```
+
+Results identify owner/event, handler/registration, policy and position after
+each operation. The one-based `line` points into the final accepted source;
+zero means an external implementation without a local location. Read the needed
+`nyx_source` window there. Add returns a template; it does not invent business
+logic. Semantic source/body editing remains an explicit workflow gap.
+
+The batch prepares a detached candidate through the inspector's commands,
+admits response size, then publishes once: one ordinary paired Undo step, with
+operator selection/view retained. Failed changes retain design, source, draft
+and history. Pending drafts refuse authoring. Inherited instance edits create
+local overrides; definition edits affect inheriting instances. Runtime changes
+require rebuilding/mounting.
+
+Before any removal batch, call `mode:"review"` at the current revision with
+exact `changes`, omitting `operationId`. Validation returns warnings and a
+`reviewID` without editing. Inspect the warnings, then apply the unchanged batch
+at that revision with a new operation ID and the review ID. Tickets bind exact
+actor, revision and change bytes; altered identities or stale reviews refuse.
+Sixteen tickets are retained. Successful apply consumes its ticket; exact retry
+still returns the original mutation receipt. Read-only permission allows review;
+disabled access refuses it. A Boolean confirmation cannot bypass review.
 
 ## Observe and resolve
 
@@ -241,6 +284,33 @@ an ordinary MCP operation before agents can build the full bound demo directly.
 After exporting or reviewing, undo the owned transaction only if its revision
 and history still identify that edit; preserve intervening user work.
 
+## Maintained callback review
+
+Build `agents`, then run the Pascal journey against a disposable service with
+isolated project/user configuration. It composes a page through MCP and authors
+physical and semantic callbacks while an already-open Nyx Studio verifies
+visible order, policy, source and editor Undo. It reviews removal and uses
+semantic Redo. The native browser owner reads small published attributes and
+captures the final UI; it injects no scripts and performs no designer authoring.
+Supply isolated paths:
+
+```powershell
+nyx_mcp_callback_tests <loopback-editor-base> <isolated-config.toml> `
+  <artifact-directory> <source-export-directory>
+./tools/build.ps1 -Target agent-callback-consumers `
+  -CallbackSourceDirectory <source-export-directory> `
+  -BrowserOutput <isolated-web-root>
+```
+
+The journey exports exact `ordered/` and `removed/` units through bounded MCP
+source windows at one revision each. Both compilers consume them unchanged.
+The native consumer runs; load each generated browser consumer host as well,
+using `?ordered` for the two-registration case. Actual control clicks execute
+generated TODO classes through the UI queue. This proves compiled callback
+construction/execution, not authored business behavior. The portable fixture
+independently qualifies draft/refusal/receipt, inheritance, history and batch
+limits on both Pascal targets. These fixtures alter their chosen service.
+
 ## Build and verification
 
 The maintained native semantic/configuration tool is built with
@@ -248,7 +318,7 @@ The maintained native semantic/configuration tool is built with
 files under `build/mcp-client/`, never the real Codex user file. Actual MCP HTTP
 fixtures likewise run against an isolated service because they deliberately
 replace and mutate their selected session. See the open
-[primary semantic workflow task](../TODO/NS-4_agent-workflows_01.md) for callback,
+[primary semantic workflow task](../TODO/NS-4_agent-workflows_01.md) for source/body,
 build, state/binding and review-session capabilities still missing from tools.
 
 `tools/build.ps1 -Target agents` builds the portable fixture, real HTTP consumers,

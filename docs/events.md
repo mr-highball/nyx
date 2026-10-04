@@ -249,6 +249,17 @@ NyxCallbacks(LReplyMemo).OnAfterEnter
   .Add(NyxHandler('TReplyAudit'), NyxCallbackID('reply.audit'));
 ```
 
+Move an existing authored registration without changing its ID, handler or policy:
+
+```pascal
+NyxCallbacks(LReplyMemo).OnAfterEnter
+  .Move(NyxCallbackID('reply.audit'), 0);
+```
+
+The index is its zero-based destination within that exact event. A missing ID or
+out-of-range index refuses before metadata changes; an unchanged position is a
+no-op. Runtime subscriptions take the new order at the next bind/mount.
+
 Handler class names and registration identities remain independent. IDs retain
 exact authored Unicode, are unique within the component, and survive persistence,
 history and generated execution. Every registration resolves a fresh callback.

@@ -19,8 +19,9 @@ targets; native selection preparation/compiled checks pass 154 each with zero
 leaks and executed browser passes 181. Host Tab/Enter/Space, grid editor entry/
 exit, removal/empty focus and compound actions pass. Studio and bounded MCP
 consume the same intent help. This row-oriented outcome is deployed with the
-user's exact paired work preserved. The next concrete prerequisite is semantic
-callback authoring on the inspector's paired source/history boundary. Complete
+user's exact paired work preserved. Semantic callback authoring now crosses the
+inspector's paired source/history boundary with an observing Nyx editor and
+compiled TODO consumers. Complete
 supported-control qualification retains the original event owner.
 Preserve physical IME, full keyboard/accessibility qualification, other widgetsets,
 native completion, workers and native Studio. No original criterion or
@@ -31,10 +32,13 @@ Typed compiler navigation advances codegen criterion 3 to counter 11 without
 closing source UX/performance. The full product and native Studio remain open.
 
 Explicit Codex user registration now refreshes alongside project configuration.
-Initialized Codex discovery authenticates all eleven semantic tools; 22 native
+Initialized Codex discovery authenticates all twelve semantic tools; 22 native
 configuration checks preserve operator files and refuse invalid ownership, with
-zero leaks. Semantic MCP is the default demo/design workflow. Additional callback,
-build and protected review-session operations retain an open
+zero leaks. Semantic MCP is the default demo/design workflow. Callback batches
+add templates, set policy, reorder and review removal as one content Undo step;
+45 portable native/browser checks, an actual editor/MCP journey and unchanged
+compiled consumers qualify the boundary. Source/body editing, builds and
+protected review-session operations retain an open
 [primary workflow owner](TODO/NS-4_agent-workflows_01.md). The running desktop chat
 needs one reconnect for native handles; a Pascal semantic client works immediately.
 

@@ -7,19 +7,18 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design workflow; actual
 browser/LCL consumers qualify physical behavior selectively.
 
-Current delivery (2026-10-04): the MCP-authored keyboard review is compiled on
-both targets and qualified through actual Nyx controls. Bound browser collections
-retain one Tab entry, recover physical focus after removal, keep an empty host
-reachable and exclude disabled controls. Read-only text remains focusable.
-F2/Enter, cell Tab/Escape and exit are qualified; compound Enter/Space actions
-arrive once and skip disabled descendants. Component intent/help appears in
-Studio and bounded agent queries. Native selection preparation/compiled journeys
-pass 154 each with zero leaks; executed browser passes 181. Native MCP-authored
-controls are also leak-free. Host keyboard and the retained host gesture sequence
-pass. Studio passes 52 each at desktop/exact-390, HTTP 177 and real MCP 55.
-A selective revision-aware MCP PNG is inspected. Exact six-artifact bytes are
-installed on the LAN service with the user's paired design/source preserved.
-See [the packet](#mcp-authored-keyboard-review--2026-10-04).
+Current delivery (2026-10-04): semantic callback authoring is implemented,
+integrated, qualified and deployed. NS-4_agent-workflows_01 criterion 3 has
+accepted evidence. The twelfth MCP tool uses typed detached inspector commands
+for grouped TODO additions, policy, exact order and reviewed removal, publishing
+one paired Undo step and retaining user selection. Warning tickets bind exact
+actor/revision/change bytes; failed edits and pending drafts retain user work.
+An already-open Nyx Studio verifies visible source/order/policy and ordinary Undo;
+MCP Redo restores the exact removal. Both compilers consume bounded MCP-exported
+source unchanged, and actual LCL/browser clicks execute the generated TODO classes.
+Portable checks pass 45 each with zero native leaks, real MCP 56, compiler service
+177 and Studio 52 each at desktop/exact-390. Fresh installed Codex authenticates
+all twelve tools. See [the packet](#semantic-callback-authoring--2026-10-04).
 
 Event criteria 2/3/4 remain accepted; original criterion 1 stays open at consecutive
 no-closure counter 6. The selected counter-5 integrated deliverable is finished;
@@ -29,37 +28,36 @@ or another native widgetset. Native external transfers, workers, full native
 Studio and broad production quality keep their owners. Codegen criterion 3
 remains open at counter 11 and retains its large-project source/performance scope.
 
-Reassessment changes the next action to the user's primary semantic callback
-workflow, with its existing [owner](TODO/NS-4_agent-workflows_01.md). The review's
-collection binding and deletion handler still need a Pascal consumer because
-those semantic operations are missing. Deliver add/inspect/ordered policy/warned
-removal on the same admitted paired source/history boundary as the inspector,
-with exact identities, TODO navigation, draft/refusal protection, observable
-editor changes and compiled execution. Stop on pair loss, draft replacement,
-stale-revision mutation, duplicate callback delivery or unsafe removal. Tool
-schema publication alone does not finish this outcome. Follow the concrete
-prerequisite and then return to complete supported-control qualification.
+Next concrete prerequisite: NS-4_agent-workflows_01 criterion 4, structured
+revision/source/output-aware view/reusable/application builds and bounded job
+diagnostics. Declare its integrated batch before implementation. Semantic body
+editing, state/bindings and protected review lifecycle also remain open. The
+keyboard review's collection binding/deletion business logic still requires a
+Pascal consumer. Then return to complete supported-control qualification under
+the original event owner. No original scope, counter or credit transfers.
 
-Batch handoff: this integrated implementation/evidence/deployment batch is
-finished. No Pascal build/test/capture pipeline or review service remains active.
-Only production PID 37264 / persistent exec 45363 remains, using the existing
+Batch handoff: criterion 3's bounded implementation/evidence/deployment batch is
+finished. No verification pipeline or review service remains. Original event
+counter 6 and codegen counter 11 are unchanged. Full goal remains active, solo.
+
+Only production PID 34780 / persistent exec 68106 remains, using the existing
 firewall-authorized executable path, editor 0.0.0.0:8088 and MCP loopback:8089.
-Executable SHA256: 239BEDAD184252000C2D19A56E8DA449AE190F438F42FDD51D507EB3A16D334A.
-The exact packet and previous bytes are under ignored build/focus/. Deployment
+Executable SHA256: B7ED671C9CAC076CACA5801403A8B66448729CFF9A3E6C77453DA1AF1A828029.
+The exact packet and previous bytes are under ignored build/callbacks/. Deployment
 rechecked the current revision, no draft/history and editing permission before
-stopping old 37076/20570; the paired design/source, selection and view were
+stopping old 37264/45363; the paired design/source, selection and view were
 restored byte for byte. Local/LAN health and all six artifact hashes pass. New
 Studio credentials refreshed both registered Codex entries; actual installed
-Codex initialization from another project authenticates all eleven tools.
+Codex initialization from another project authenticates all twelve tools.
 The running desktop chat still needs one reconnect for native named handles;
 the Pascal semantic client is active now. Existing Studio tabs need refresh
 after this credential rotation. No dependency source or firewall was changed.
 
-Remote protection: checkpoints 51bb982 and b65288a are published on
-origin/hello-nyx with the existing Athena pin unchanged. The authorized keyboard/help/maintained-review
-implementation packet is published at 8b7ff37; git ls-remote verified the exact
-commit identity. This handoff update follows that protected implementation. Keep private config, credentials, user
-pairs, generated artifacts and machine profiles excluded. Full goal active.
+Remote protection: preceding checkpoint 0764014 is published on origin/hello-nyx
+with the existing Athena pin unchanged. This coherent callback/tool/evidence
+packet is authorized for publication; verify its exact remote identity. Keep
+private config, credentials, user pairs, generated artifacts and machine profiles
+excluded. Full goal active.
 
 ## Previous checkpoint before compiler and MCP delivery
 
@@ -2973,3 +2971,81 @@ The next concrete prerequisite is semantic callback authoring with real Studio,
 paired-source/history and compiled consumers; original event counter 6 and
 codegen counter 11 are retained. Do not start another isolated input-family
 experiment or move requirements to manufacture closure. Full goal active, solo.
+
+## Semantic callback authoring — 2026-10-04
+
+Owner: NS-4_agent-workflows_01 criterion 3. The bounded implementation,
+integration, qualification and delivery batch is finished; that criterion is
+accepted. The full task/product remains open. Original event criterion 1's
+counter 6 and codegen criterion 3's counter 11 remain unchanged.
+
+Typed callback patches own 1..32 changes and prepare independent sessions through
+the inspector's existing commands. Add creates crafted classes/initialization/
+TODOs; policy and exact registration order retain siblings and identities.
+Removal keeps implementations and shares an accurate reusable-definition/local
+override warning with the inspector. One final adoption publishes a paired Undo
+step while retaining operator selection/view. Response admission precedes live
+publication. Reviewed removals bind actor, revision and exact change bytes in a
+bounded sixteen-ticket cache; successful mutation receipts preserve exact retry
+after ticket consumption. Unsupported/ambiguous events, invalid positions,
+changed actors/reviews, drafts and refused grouped edits retain user work.
+
+The real semantic journey composes a review page and adds physical, input-phase
+and semantic callbacks through MCP while an already-open Nyx Studio observes.
+Its Events/source panes show ordered registrations and policy. Warning review
+precedes removal; the ordinary editor Undo restores the exact ordered source,
+and semantic Redo restores the exact removal. Small Pascal-published attributes
+coordinate the browser consumer; CDP reads them and captures the final UI without
+injected scripts or designer authoring. The captured editor is inspected.
+Bounded source windows export two accepted revisions unchanged for both compilers.
+Actual LCL/browser button clicks invoke the generated registered TODO classes.
+This proves template construction/execution, not authored business logic.
+
+Evidence under ignored build/callbacks/:
+
+| Boundary | Accepted evidence |
+| --- | --- |
+| Portable candidate/refusal/order/history | portable-native-final.log and portable-browser-qualified-final/: 45 each, including forward/no-op order; zero native unfreed blocks |
+| Maintained tooling | agents-maintained-build.log: 29 existing plus 44 then-current callback checks; the later final order case raises the dedicated fixture to 45 |
+| Real MCP + observing Nyx Studio | observed-qualified.log and observed-qualified/: 20 native / 7 browser checks, exact Undo/Redo and inspected final capture |
+| Exact exported compiled consumers | consumers-maintained-build.log: native ordered/removed 10/9, zero leaks; consumer-ordered-final/ and consumer-removed-final/: browser 10/9 |
+| Shared contract/type boundaries | core-regression.log and shared-browser/: 30/1537 on each target; 59 intended wrong-type refusals per compiler |
+| Actual Studio Events/source/history | studio-desktop-qualified/ and studio-phone-qualified/: 52 each, exact phone width 390; inspected captures |
+| Real authenticated protocol/rendering | mcp-http-qualified.log: 56 checks including actual PNG |
+| Delegated compiler/source/artifacts | http-qualified-final.log: 177 checks |
+| Actual installed Codex discovery | codex-discovery-staged.log and codex-discovery-after-rotation.log: bearerToken authentication, all twelve tools, including global discovery from another project |
+
+Executed browser checks caught a pas2js method-as-array-index ambiguity in the
+new result builder; High(LFields) fixes it in Pascal. A fixture's overlong owner
+was corrected to the real 128-scalar limit. Native compiled-consumer selectors
+were corrected to exact realized identities through RealizeNyxContext. An initial
+Studio capture lacked its staged host HTML; copying the known host resolves it.
+The first HTTP run used an old executable with obsolete generated-source bytes;
+recompiling the current harness gives all 177 passes. A final candidate link
+attempt encountered the running disposable executable; the release compiled to
+a separate path. No product assertion was weakened. The maximum-batch test's
+aggregate allocations remain substantial; this packet does not establish large
+project source/performance acceptance or reset its existing owner/counter.
+
+Delivery: release-manifest.json hashes all six artifacts together. Prior exact
+bytes are previous-server.exe and previous-web/. Immediately before restart,
+private editor observation rechecked the exact paired project, revision 2,
+selection/view, no draft/history and editing permission. Old production
+37264/45363 stopped with identity verification and observed termination. New
+34780/68106 restores the pair byte for byte, rotates both managed Codex entries
+and serves all six exact hashes. Loopback/LAN health is 200. Server SHA256:
+B7ED671C9CAC076CACA5801403A8B66448729CFF9A3E6C77453DA1AF1A828029.
+Main JS: 6C7AA86D4D413AC9478726242CC4FB3C1209D2BC520E4C992AF499BEDC5132A2.
+Preview JS: 259E105DA2C8A87C8B2C29097EB8EEABA11CAC802740B0E8225E7FFC63AE70E6.
+Private preservation packets are .local/callback-production-before/restore/after.json.
+Disposable services 33212/1951 and 40284/38846 are identity checked, stopped and
+termination observed. All pipelines are terminal; only production remains.
+
+The running desktop chat still has no native Nyx handles and needs one reconnect;
+the Pascal semantic client remains primary immediately and named MCP handles
+remain primary after reconnection. Existing Studio tabs need refresh after
+credential rotation. No dependency source, toolchain or firewall was changed.
+Next declare criterion 4's structured build/job/diagnostic batch. Source/body,
+state/binding, root cleanup and protected review-session gaps retain their owner.
+Preview contention and client image forwarding remain recorded limitations.
+The full goal remains active, solo; no broad source/event/product criterion closes.

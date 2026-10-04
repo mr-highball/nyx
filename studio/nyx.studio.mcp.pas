@@ -83,7 +83,7 @@ type
 implementation
 
 uses
-  nyx.studio.mcpconfig;
+  nyx.studio.mcpconfig, nyx.types;
 
 function NewCapability: TNyxText;
 var
@@ -356,6 +356,91 @@ begin
       NyxField('idempotentHint', NyxData(True)), NyxField('openWorldHint', NyxData(False))]))]);
 end;
 
+function CallbackSchema: TNyxDataValue;
+var
+  LTriggers: array of TNyxDataValue;
+  LTrigger: TNyxTrigger;
+  LEvent: TNyxDataValue;
+  LChanges: TNyxDataValue;
+  LBase: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LVariants: array[0..3] of TNyxDataValue;
+  LIndex: Integer;
+const
+  COperations: array[0..3] of TNyxText = ('add', 'policy', 'move', 'remove');
+begin
+  { Closed wire choices are derived from the public Pascal runtime contract.
+    Named semantic events remain distinct open references, never a fake trigger. }
+  LTriggers := nil;
+  for LTrigger := Low(TNyxTrigger) to High(TNyxTrigger) do
+  begin
+
+    if NyxIsRuntimeTrigger(LTrigger) then
+    begin
+      SetLength(LTriggers, Length(LTriggers) + 1);
+      LTriggers[High(LTriggers)] := NyxData(NyxTriggerName(LTrigger));
+    end;
+  end;
+  LEvent := NyxObject([NyxField('oneOf', NyxArray([
+    Schema(NyxObject([NyxField('trigger', NyxObject([NyxField('enum', NyxArray(LTriggers))]))]), [NyxData('trigger')]),
+    Schema(NyxObject([NyxField('name', TextSchema('Exact published semantic event name'))]), [NyxData('name')])]))]);
+  for LIndex := 0 to 3 do
+  begin
+    SetLength(LFields, 3);
+    LFields[0] := NyxField('op', NyxObject([NyxField('const', NyxData(COperations[LIndex]))]));
+    LFields[1] := NyxField('id', TextSchema('Exact authored owner, including a reusable definition or instance part'));
+    LFields[2] := NyxField('event', LEvent);
+    case LIndex of
+      0: LVariants[LIndex] := Schema(NyxObject(LFields), [NyxData('op'), NyxData('id'), NyxData('event')]);
+      1:
+        begin
+          SetLength(LFields, 4);
+          LFields[3] := NyxField('policy', NyxObject([NyxField('enum', NyxArray([
+            NyxData('sequential'), NyxData('asynchronous'), NyxData('ui-queue'), NyxData('threaded')]))]));
+          LVariants[LIndex] := Schema(NyxObject(LFields), [NyxData('op'), NyxData('id'), NyxData('event'), NyxData('policy')]);
+        end;
+      2, 3:
+        begin
+          SetLength(LFields, 4);
+          LFields[3] := NyxField('registration', TextSchema('Exact registration ID returned by add or nyx_node'));
+
+          if LIndex = 2 then
+          begin
+            SetLength(LFields, 5);
+            LFields[4] := NyxField('index', IntSchema(0, 127));
+            LVariants[LIndex] := Schema(NyxObject(LFields), [NyxData('op'), NyxData('id'), NyxData('event'), NyxData('registration'), NyxData('index')]);
+          end
+          else
+          begin
+            LVariants[LIndex] := Schema(NyxObject(LFields), [NyxData('op'), NyxData('id'), NyxData('event'), NyxData('registration')]);
+          end;
+        end;
+    end;
+  end;
+  LChanges := NyxObject([NyxField('type', NyxData('array')),
+    NyxField('minItems', NyxData(1)), NyxField('maxItems', NyxData(32)),
+    NyxField('items', NyxObject([NyxField('oneOf', NyxArray(LVariants))]))]);
+  LBase := Schema(NyxObject([NyxField('expectedRevision', IntSchema(1, High(Integer))),
+    NyxField('mode', NyxObject([NyxField('enum', NyxArray([NyxData('review'), NyxData('apply')]))])),
+    NyxField('changes', LChanges), NyxField('operationId', TextSchema('Required only in apply mode; unique retry identity, 1..120 characters')),
+    NyxField('reviewID', TextSchema('Required for apply with removals; returned by nonediting review for the exact actor/revision/changes'))]),
+    [NyxData('expectedRevision'), NyxData('mode'), NyxData('changes')]);
+  SetLength(LFields, LBase.Count + 1);
+  for LIndex := 0 to LBase.Count - 1 do
+  begin
+    LFields[LIndex] := NyxField(LBase.Key(LIndex), LBase.Field(LBase.Key(LIndex)));
+  end;
+  LFields[High(LFields)] := NyxField('oneOf', NyxArray([
+    NyxObject([NyxField('properties', NyxObject([NyxField('mode', NyxObject([NyxField('const', NyxData('apply'))]))])),
+      NyxField('required', NyxArray([NyxData('operationId')]))]),
+    NyxObject([NyxField('properties', NyxObject([NyxField('mode', NyxObject([NyxField('const', NyxData('review'))]))])),
+      NyxField('not', NyxObject([NyxField('anyOf', NyxArray([
+        NyxObject([NyxField('required', NyxArray([NyxData('operationId')]))]),
+        NyxObject([NyxField('required', NyxArray([NyxData('reviewID')]))])]))]))])
+  ]));
+  Result := NyxObject(LFields);
+end;
+
 function TNyxStudioMCP.Tools: TNyxDataValue;
 var
   LPage: TNyxDataValue;
@@ -418,7 +503,9 @@ begin
       Schema(NyxObject([NyxField('expectedRevision', IntSchema(1, High(Integer))),
         NyxField('view', TextSchema('Exact page or reusable root ID')),
         NyxField('width', IntSchema(320, 1600)), NyxField('height', IntSchema(240, 1200)),
-        NyxField('capture', LBoolean)]), [NyxData('expectedRevision'), NyxData('view')]), True)
+        NyxField('capture', LBoolean)]), [NyxData('expectedRevision'), NyxData('view')]), True),
+    Tool('nyx_callbacks', 'Author 1..32 ordered add/policy/move/remove changes as ONE undoable paired source edit. Add returns crafted handler/registration names and final-source TODO lines. Inspect registrations with nyx_node. Results describe each operation in order. Apply requires expectedRevision and operationId; drafts reject. Before removal, review the exact batch for warnings and reviewID, then apply unchanged at that revision/actor. Review does not edit or add history; removal retains Pascal implementations.',
+      CallbackSchema, False)
   ]))]);
 end;
 

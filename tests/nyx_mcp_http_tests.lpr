@@ -76,7 +76,10 @@ begin
     LClient := TNyxMCPTestClient.Create(ParamStr(2));
     Check(True, 'Real MCP initialize and initialized notification');
     LValue := LClient.RPC('tools/list', NyxObject([])).Field('result');
-    Check(LValue.Field('tools').Count = 11, 'Focused semantic capabilities advertised');
+    Check(LValue.Field('tools').Count = 12, 'Focused semantic capabilities advertised');
+    Check((LValue.Field('tools').Item(11).Field('name').AsText = 'nyx_callbacks') and
+      (LValue.Field('tools').Item(11).Field('inputSchema').Field('properties').Field('changes').Field('maxItems').AsInteger = 32),
+      'Semantic callback tool advertises bounded batches');
     Check(LValue.Field('tools').Item(7).Field('inputSchema').Field('required').Count = 3,
       'Transaction input schema publishes required guards');
     LClient.Exchange('GET', NyxObject([]), 405);
