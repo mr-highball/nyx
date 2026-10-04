@@ -49,8 +49,9 @@ Pascal semantic client is active now. Actual fresh Codex initialization from
 another project sees all fourteen tools. Existing Studio tabs need refresh after
 credential rotation. No dependency source, compiler setup or firewall was changed.
 Private configuration, tokens, user pairs and machine profiles remain excluded.
-Remote checkpoint verification follows the delivery commit. Previous protected
-delivery remains on origin/hello-nyx. Full goal active.
+Remote protection: delivery 0f454d4ab0507663fddd5e3a91afb8d7cb777629 is
+pushed on origin/hello-nyx; independent git ls-remote verifies exact identity.
+This handoff update follows the protected implementation. Full goal active.
 
 ## Previous checkpoint before compiler and MCP delivery
 
@@ -3214,3 +3215,10 @@ match, enrolled credentials refresh and actual Codex authenticates fourteen tool
 All qualification pipelines and owned review services are terminal; only production
 lives. No dependency source, compiler setup or firewall changed. Six new Pascal
 files satisfy the requested blank-above-if style. Full goal active.
+
+Remote delivery: implementation/evidence/deployment commit
+0f454d4ab0507663fddd5e3a91afb8d7cb777629 is pushed on origin/hello-nyx
+and independently verified. Its working tree was clean. This handoff-only update
+records that protected checkpoint; production and all qualification state above
+are unchanged, and no new experiment or pipeline was started after acceptance.
+Full goal active; next declare the criterion-5 protected review/root-cleanup batch.
