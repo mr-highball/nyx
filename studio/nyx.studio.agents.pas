@@ -28,7 +28,7 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema,
-  nyx.studio.session, nyx.studio.projects, nyx.studio.compiler;
+  nyx.studio.session, nyx.studio.projects, nyx.studio.compiler, nyx.studio.builds;
 
 type
   { Operator permissions are closed, session-local and never part of a design.
@@ -48,6 +48,7 @@ type
     FActivity: array of TNyxDataValue;
     FActivitySerial: Integer;
     FReport: INyxCompilerReport;
+    FCompilerSequence: Integer;
     FReceiptKeys: array of TNyxText;
     FReceiptRequests: array of TNyxText;
     FReceiptResults: array of TNyxDataValue;
@@ -65,6 +66,7 @@ type
     function Components(const AArguments: TNyxDataValue): TNyxDataValue;
     function Diagnostics(const AArguments: TNyxDataValue): TNyxDataValue;
     function SourceLines(const AArguments: TNyxDataValue): TNyxDataValue;
+    function CompilerSnapshot: TNyxDataValue;
     function EditCallbacks(const AArguments: TNyxDataValue;
       const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
   public
@@ -87,6 +89,15 @@ type
     { Transport-owned work, such as rendering outside the model lock, reports
       completion/refusal through the same bounded operator-visible activity. }
     procedure RecordActivity(const AActor, AOperation, AOutcome: TNyxText);
+    { Native job admission captures immutable text, never the mutable session.
+      Edit permission, exact revision and absence of a pending draft are required.
+      Scope/root agreement is checked before any compiler can be launched. }
+    function BuildPair(AExpected: Integer; AScope: TNyxBuildScope;
+      const AView: TNyxText): TNyxProjectPair;
+    { Exact accepted pair comparison, independent of revision/selection changes.
+      Pending drafts make diagnostics stale even if the accepted source matches. }
+    function CurrentPair(const APair: TNyxProjectPair): Boolean;
+    procedure PublishCompilerReport(const AReport: INyxCompilerReport);
     property Revision: Integer read FRevision;
     property Permission: TNyxAgentPermission read FPermission;
   end;
@@ -365,14 +376,15 @@ function TNyxAgentSession.EditorState(AAfter: Integer): TNyxDataValue;
 var
   LFields: array of TNyxDataField;
 begin
-  SetLength(LFields, 2);
+  SetLength(LFields, 3);
   LFields[0] := NyxField('session', Summary);
   LFields[1] := NyxField('activity', NyxArray(FActivity));
+  LFields[2] := NyxField('compiler', CompilerSnapshot);
 
   if AAfter <> FRevision then
   begin
-    SetLength(LFields, 3);
-    LFields[2] := NyxField('project', NyxData(EncodeNyxProject(FSession.ProjectSnapshot)));
+    SetLength(LFields, 4);
+    LFields[3] := NyxField('project', NyxData(EncodeNyxProject(FSession.ProjectSnapshot)));
   end;
   Result := NyxObject(LFields);
 end;
@@ -807,6 +819,7 @@ var
   LTotal: Integer;
   LItem: TNyxCompilerDiagnostic;
   LCurrent: Boolean;
+  LOrder: TNyxCompilerDiagnosticIndices;
 begin
   NyxAgentFields(AArguments, '|offset|limit|');
   LOffset := IntegerArgument(AArguments, 'offset', 0, 0, 100000);
@@ -820,6 +833,7 @@ begin
     LCurrent := (FReport.Source = FSession.Source) and (FSession.DraftSource = FSession.Source);
   end;
   SetLength(LItems, LLimit);
+  LOrder := NyxCompilerDiagnosticOrder(FReport);
   LCount := 0;
   for LIndex := LOffset to LTotal - 1 do
   begin
@@ -828,7 +842,7 @@ begin
     begin
       Break;
     end;
-    LItem := FReport.Item(LIndex);
+    LItem := FReport.Item(LOrder[LIndex]);
     LItems[LCount] := NyxObject([
       NyxField('file', NyxData(LItem.FileName)),
       NyxField('severity', NyxData(Ord(LItem.Severity))),
@@ -841,7 +855,8 @@ begin
   SetLength(LItems, LCount);
   Result := NyxObject([NyxField('revision', NyxData(FRevision)),
     NyxField('total', NyxData(LTotal)), NyxField('offset', NyxData(LOffset)),
-    NyxField('currentSource', NyxData(LCurrent)), NyxField('items', NyxArray(LItems))]);
+    NyxField('currentSource', NyxData(LCurrent)), NyxField('order', NyxData('severity')),
+    NyxField('items', NyxArray(LItems))]);
 end;
 
 function TNyxAgentSession.SourceLines(const AArguments: TNyxDataValue): TNyxDataValue;
@@ -1284,7 +1299,7 @@ begin
   if LOperation = 'report' then
   begin
     NyxAgentFields(ARequest, '|op|after|report|');
-    FReport := DecodeNyxCompilerReport(ARequest.Field('report').AsText);
+    PublishCompilerReport(DecodeNyxCompilerReport(ARequest.Field('report').AsText));
     Exit(EditorState(LAfter));
   end;
 
@@ -1386,6 +1401,124 @@ procedure TNyxAgentSession.RecordActivity(const AActor, AOperation,
   AOutcome: TNyxText);
 begin
   Log(AActor, AOperation, AOutcome);
+end;
+
+function TNyxAgentSession.BuildPair(AExpected: Integer; AScope: TNyxBuildScope;
+  const AView: TNyxText): TNyxProjectPair;
+var
+  LNode: TNyxNode;
+  LIndex: Integer;
+  LFound: Boolean;
+begin
+
+  if FPermission <> apEdit then
+  begin
+    raise ENyxModel.Create('Agent builds require Allow edits in Studio');
+  end;
+
+  if AExpected <> FRevision then
+  begin
+    raise ENyxModel.Create('Build revision conflict');
+  end;
+
+  if FSession.DraftSource <> FSession.Source then
+  begin
+    raise ENyxModel.Create('Resolve the pending draft before building');
+  end;
+
+  if AScope = bsApplication then
+  begin
+
+    if AView <> '' then
+    begin
+      raise ENyxModel.Create('Application builds omit view');
+    end;
+  end
+  else
+  begin
+    LNode := FSession.Document.Find(AView);
+    LFound := False;
+
+    if AScope = bsView then
+    begin
+      for LIndex := 0 to FSession.Document.Count - 1 do
+      begin
+        LFound := LFound or (FSession.Document.Pages[LIndex] = LNode);
+      end;
+    end
+    else
+    begin
+      for LIndex := 0 to FSession.Document.ComponentCount - 1 do
+      begin
+        LFound := LFound or (FSession.Document.Components[LIndex] = LNode);
+      end;
+    end;
+
+    if (LNode = nil) or not LFound then
+    begin
+      raise ENyxModel.Create('Build view must match the exact requested page/reusable scope');
+    end;
+  end;
+  Result := FSession.ProjectSnapshot;
+end;
+
+function TNyxAgentSession.CurrentPair(const APair: TNyxProjectPair): Boolean;
+var
+  LCurrent: TNyxProjectPair;
+begin
+  LCurrent := FSession.ProjectSnapshot;
+  Result := not LCurrent.Pending and (LCurrent.Design = APair.Design) and
+    (LCurrent.Source = APair.Source);
+end;
+
+procedure TNyxAgentSession.PublishCompilerReport(const AReport: INyxCompilerReport);
+begin
+  FReport := AReport;
+  Inc(FCompilerSequence);
+end;
+
+function TNyxAgentSession.CompilerSnapshot: TNyxDataValue;
+var
+  LItems: array of TNyxDataValue;
+  LItem: TNyxCompilerDiagnostic;
+  LIndex: Integer;
+  LTotal: Integer;
+  LCount: Integer;
+  LAccepted: Boolean;
+  LOrder: TNyxCompilerDiagnosticIndices;
+begin
+  LTotal := 0;
+  LAccepted := False;
+
+  if FReport <> nil then
+  begin
+    LTotal := FReport.Count;
+    LAccepted := FReport.Source = FSession.Source;
+  end;
+  LCount := LTotal;
+
+  if LCount > 20 then
+  begin
+    LCount := 20;
+  end;
+  SetLength(LItems, LCount);
+  LOrder := NyxCompilerDiagnosticOrder(FReport);
+  for LIndex := 0 to High(LItems) do
+  begin
+    LItem := FReport.Item(LOrder[LIndex]);
+    LItems[LIndex] := NyxObject([
+      NyxField('file', NyxData(CaptionText(LItem.FileName, 512))),
+      NyxField('severity', NyxData(Ord(LItem.Severity))),
+      NyxField('message', NyxData(CaptionText(LItem.Message, 1024))),
+      NyxField('line', NyxData(LItem.Line)), NyxField('column', NyxData(LItem.Column)),
+      NyxField('sourceLine', NyxData(LItem.SourceLine)),
+      NyxField('sourceColumn', NyxData(LItem.SourceColumn))]);
+  end;
+  { Observers already own accepted source. Send bounded diagnostics and exact
+    source-match admission instead of duplicating a potentially large unit. }
+  Result := NyxObject([NyxField('sequence', NyxData(FCompilerSequence)),
+    NyxField('total', NyxData(LTotal)), NyxField('acceptedSource', NyxData(LAccepted)),
+    NyxField('items', NyxArray(LItems))]);
 end;
 
 function TNyxAgentSession.PreviewPair(AExpected: Integer;

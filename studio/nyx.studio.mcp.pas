@@ -28,7 +28,7 @@ interface
 
 uses
   Classes, SysUtils, SyncObjs, fphttpserver, httpdefs, Process, base64,
-  nyx.text, nyx.data, nyx.studio.agents, nyx.studio.projects;
+  nyx.text, nyx.data, nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs;
 
 type
   TNyxMCPHTTP = class(TFPHTTPServer)
@@ -46,6 +46,7 @@ type
     FHTTP: TNyxMCPHTTP;
     FGuard: TCriticalSection;
     FCore: TNyxAgentSession;
+    FBuilds: TNyxBuildJobs;
     FID: TNyxText;
     FToken: TNyxText;
     FEditorToken: TNyxText;
@@ -64,10 +65,14 @@ type
       const AActor: TNyxText): TNyxDataValue;
     function CapturePreview(const APreview: TNyxDataValue): TNyxDataValue;
     function ClientIndex(const AID: TNyxText): Integer;
+    function BuildTool(const AArguments: TNyxDataValue;
+      const AActor: TNyxText): TNyxDataValue;
+    procedure PollBuilds;
   protected
     procedure Execute; override;
   public
-    constructor Create(const ARepository: TNyxText; AStudioPort, AMCPPort: Integer);
+    constructor Create(const ARepository: TNyxText; AStudioPort, AMCPPort: Integer;
+      const AOutputProfile: TNyxText);
     destructor Destroy; override;
     { Only trusted same-origin editor requests receive this independent token.
       MCP bearer credentials cannot call the operator exchange or raise access. }
@@ -76,6 +81,9 @@ type
       const ARequest: TNyxDataValue): TNyxDataValue;
     function PreviewData(const AToken: TNyxText): TNyxText;
     function Endpoint: TNyxText;
+    { Trusted operator route changes future job profiles. Running jobs retain
+      their captured configuration and output identity. MCP cannot set paths. }
+    procedure ConfigureOutputs(const AProfile: TNyxText);
     procedure Stop;
     property Failure: TNyxText read FFailure;
   end;
@@ -83,7 +91,7 @@ type
 implementation
 
 uses
-  nyx.studio.mcpconfig, nyx.types;
+  nyx.studio.mcpconfig, nyx.types, nyx.studio.builds, nyx.studio.compiler;
 
 function NewCapability: TNyxText;
 var
@@ -181,7 +189,7 @@ begin
 end;
 
 constructor TNyxStudioMCP.Create(const ARepository: TNyxText;
-  AStudioPort, AMCPPort: Integer);
+  AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText);
 begin
   inherited Create(True);
   FreeOnTerminate := False;
@@ -198,6 +206,7 @@ begin
   FEditorToken := NewCapability + NewCapability;
   FGuard := SyncObjs.TCriticalSection.Create;
   FCore := TNyxAgentSession.Create;
+  FBuilds := TNyxBuildJobs.Create(FRepository, AOutputProfile);
   FHTTP := TNyxMCPHTTP.Create(nil);
   FHTTP.Address := '127.0.0.1';
   FHTTP.Port := FPort;
@@ -219,6 +228,7 @@ destructor TNyxStudioMCP.Destroy;
 begin
   Stop;
   FHTTP.Free;
+  FBuilds.Free;
   FCore.Free;
   FGuard.Free;
   inherited Destroy;
@@ -285,6 +295,7 @@ begin
   end;
   FGuard.Acquire;
   try
+    PollBuilds;
     Result := NyxObject([NyxField('token', NyxData(FEditorToken)),
       NyxField('endpoint', NyxData(Endpoint)),
       NyxField('warning', NyxData(FConfigurationIssue + FFailure)),
@@ -304,6 +315,7 @@ begin
   end;
   FGuard.Acquire;
   try
+    PollBuilds;
     Result := FCore.Exchange(ARequest);
   finally
     FGuard.Release;
@@ -323,6 +335,148 @@ begin
       Exit(LIndex);
     end;
   end;
+end;
+
+procedure TNyxStudioMCP.ConfigureOutputs(const AProfile: TNyxText);
+begin
+  FGuard.Acquire;
+  try
+    FBuilds.Configure(AProfile);
+  finally
+    FGuard.Release;
+  end;
+end;
+
+procedure TNyxStudioMCP.PollBuilds;
+const
+  CEarlierDesign: TNyxText = ' · earlier design';
+var
+  LActor: TNyxText;
+  LOutcome: TNyxText;
+  LPair: TNyxProjectPair;
+  LReport: INyxCompilerReport;
+begin
+  while FBuilds.TakeCompletion(LActor, LOutcome, LPair, LReport) do
+  begin
+
+    if FCore.CurrentPair(LPair) then
+    begin
+      FCore.PublishCompilerReport(LReport);
+    end
+    else
+    begin
+      LOutcome := LOutcome + CEarlierDesign;
+    end;
+    FCore.RecordActivity(LActor, 'nyx_build', LOutcome);
+  end;
+end;
+
+function TNyxStudioMCP.BuildTool(const AArguments: TNyxDataValue;
+  const AActor: TNyxText): TNyxDataValue;
+const
+  CRunning: TNyxText = 'running · ';
+  CSeparator: TNyxText = ' · ';
+var
+  LMode: TNyxText;
+  LPair: TNyxProjectPair;
+  LScope: TNyxBuildScope;
+  LView: TNyxText;
+  LCurrent: Boolean;
+  LCurrentOutput: Boolean;
+  LFields: array of TNyxDataField;
+  LItems: array of TNyxDataValue;
+  LItem: TNyxDataValue;
+  LDiagnostics: TNyxDataValue;
+  LIndex: Integer;
+begin
+
+  if FCore.Permission = apDisabled then
+  begin
+    raise ENyxProjectConflict.Create('Agent access is disabled in Studio');
+  end;
+  LMode := AArguments.Field('mode').AsText;
+
+  if LMode = 'outputs' then
+  begin
+    NyxAgentFields(AArguments, '|mode|');
+    Exit(FBuilds.Outputs);
+  end;
+
+  if LMode = 'status' then
+  begin
+    Result := FBuilds.Status(AArguments, LPair, LCurrentOutput);
+    LCurrent := FCore.CurrentPair(LPair);
+    LDiagnostics := Result.Field('diagnostics');
+    SetLength(LItems, LDiagnostics.Field('items').Count);
+    for LIndex := 0 to High(LItems) do
+    begin
+      LItem := LDiagnostics.Field('items').Item(LIndex);
+      LItems[LIndex] := NyxObject([
+        NyxField('file', LItem.Field('file')), NyxField('severity', LItem.Field('severity')),
+        NyxField('message', LItem.Field('message')), NyxField('line', LItem.Field('line')),
+        NyxField('column', LItem.Field('column')),
+        NyxField('navigable', NyxData(LCurrent and LItem.Field('mapped').AsBoolean))]);
+    end;
+    SetLength(LFields, Result.Count + 3);
+    for LIndex := 0 to Result.Count - 1 do
+    begin
+      LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+    end;
+    { Immutable bounded response: overwrite the diagnostic member as a copy,
+      then append currentness without altering the worker's cached value. }
+    for LIndex := 0 to Result.Count - 1 do
+    begin
+
+      if Result.Key(LIndex) = 'diagnostics' then
+      begin
+        LFields[LIndex] := NyxField('diagnostics', NyxObject([
+          NyxField('offset', LDiagnostics.Field('offset')),
+          NyxField('order', LDiagnostics.Field('order')),
+          NyxField('severity', LDiagnostics.Field('severity')),
+          NyxField('available', LDiagnostics.Field('available')),
+          NyxField('total', LDiagnostics.Field('total')), NyxField('items', NyxArray(LItems))]));
+      end;
+    end;
+    LIndex := Result.Count;
+    LFields[LIndex] := NyxField('currentSource', NyxData(LCurrent));
+    LFields[LIndex + 1] := NyxField('currentRevision', NyxData(FCore.Revision));
+    LFields[LIndex + 2] := NyxField('currentOutput', NyxData(LCurrentOutput));
+    Result := NyxObject(LFields);
+
+    if Length(Result.ToJSON) > 48 * 1024 then
+    begin
+      raise ENyxProjectConflict.Create('Build status exceeds response budget; use a smaller window');
+    end;
+    Exit;
+  end;
+
+  if LMode <> 'request' then
+  begin
+    raise ENyxProjectConflict.Create('Build mode must be outputs, request or status');
+  end;
+  FBuilds.AdmitRequest(AArguments);
+
+  if FCore.Permission <> apEdit then
+  begin
+    raise ENyxProjectConflict.Create('Agent builds require Allow edits in Studio');
+  end;
+
+  if FBuilds.Retry(AActor, AArguments, Result) then
+  begin
+    FCore.RecordActivity(AActor, 'nyx_build', 'retry returned original job receipt');
+    Exit;
+  end;
+  LScope := ParseNyxBuildScope(AArguments.Field('scope').AsText);
+  LView := '';
+
+  if NyxAgentHas(AArguments, 'view') then
+  begin
+    LView := AArguments.Field('view').AsText;
+  end;
+  LPair := FCore.BuildPair(AArguments.Field('expectedRevision').AsInteger, LScope, LView);
+  Result := FBuilds.Submit(AActor, AArguments, LPair);
+  FCore.RecordActivity(AActor, 'nyx_build', CRunning +
+    NyxBuildScopeName(LScope) + CSeparator + AArguments.Field('target').AsText);
 end;
 
 function Schema(const AProperties: TNyxDataValue;
@@ -505,7 +659,12 @@ begin
         NyxField('width', IntSchema(320, 1600)), NyxField('height', IntSchema(240, 1200)),
         NyxField('capture', LBoolean)]), [NyxData('expectedRevision'), NyxData('view')]), True),
     Tool('nyx_callbacks', 'Author 1..32 ordered add/policy/move/remove changes as ONE undoable paired source edit. Add returns crafted handler/registration names and final-source TODO lines. Inspect registrations with nyx_node. Results describe each operation in order. Apply requires expectedRevision and operationId; drafts reject. Before removal, review the exact batch for warnings and reviewID, then apply unchanged at that revision/actor. Review does not edit or add history; removal retains Pascal implementations.',
-      CallbackSchema, False)
+      CallbackSchema, False),
+    Tool('nyx_build', 'Inspect output readiness, request an immutable accepted view/reusable/application compiler job, or page through its status/diagnostics. Request requires Allow edits, exact revision/outputID and operationId. Returns immediately; no document history changes. At most two jobs run and sixteen handles remain. Exact retries return the original receipt without rebuilding; changing arguments refuses. Compiler commands, options, paths and source overrides are forbidden. Successful status includes exact source/design/output fingerprints and artifact manifest; stale diagnostics cannot navigate.',
+      TNyxDataValue.ParseJSON('{"type":"object","oneOf":[' +
+        '{"type":"object","properties":{"mode":{"const":"outputs"}},"required":["mode"],"additionalProperties":false},' +
+        '{"type":"object","properties":{"mode":{"const":"status"},"job":{"type":"string"},"offset":{"type":"integer","minimum":0,"maximum":512},"limit":{"type":"integer","minimum":1,"maximum":20},"severity":{"enum":["all","error","fatal","warning","hint","note","info"]}},"required":["mode","job"],"additionalProperties":false},' +
+        '{"type":"object","properties":{"mode":{"const":"request"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"outputID":{"type":"string","minLength":32,"maxLength":32},"target":{"enum":["browser","lcl"]},"scope":{"enum":["view","reusable","application"]},"view":{"type":"string","minLength":1}},"required":["mode","expectedRevision","operationId","outputID","target","scope"],"allOf":[{"if":{"properties":{"scope":{"const":"application"}}},"then":{"not":{"required":["view"]}},"else":{"required":["view"]}}],"additionalProperties":false}]}'), False)
   ]))]);
 end;
 
@@ -926,7 +1085,18 @@ begin
       end;
       try
 
-        if LTool = 'nyx_preview' then
+        if LTool = 'nyx_build' then
+        begin
+          FGuard.Acquire;
+          try
+            PollBuilds;
+            LResult := BuildTool(LArguments, FClients[LIndex].Field('actor').AsText);
+            LResult := ToolResult(LResult);
+          finally
+            FGuard.Release;
+          end;
+        end
+        else if LTool = 'nyx_preview' then
         begin
           LResult := Preview(LArguments, FClients[LIndex].Field('actor').AsText);
           SetLength(LPreviewContent, 2);
@@ -954,6 +1124,7 @@ begin
         begin
           FGuard.Acquire;
           try
+            PollBuilds;
             LResult := FCore.Call(LTool, FClients[LIndex].Field('actor').AsText, LArguments);
             LResult := ToolResult(LResult);
           finally
@@ -965,7 +1136,7 @@ begin
         begin
           FGuard.Acquire;
           try
-            if LTool = 'nyx_preview' then
+            if (LTool = 'nyx_preview') or (LTool = 'nyx_build') then
             begin
               FCore.RecordActivity(FClients[LIndex].Field('actor').AsText, LTool,
                 'refused: ' + LException.Message);

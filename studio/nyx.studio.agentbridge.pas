@@ -78,11 +78,21 @@ type
     procedure Pause;
     procedure AcceptRemote;
     function State: TNyxStudioAgentView;
+    { Exact locally retained pair/frame must match the acknowledged service
+      frame before server diagnostics can borrow this observer's source text.
+      Pending local publications and protected conflicts cannot grant navigation. }
+    function SourceSynchronized: Boolean;
     property Applying: Boolean read FApplying;
     property Enabled: Boolean read FEnabled;
   end;
 
 implementation
+
+function TNyxStudioAgentBridge.SourceSynchronized: Boolean;
+begin
+  Result := FView.Connected and not FView.Conflict and
+    (Length(FQueue) = 0) and (Frame = FKnownFrame);
+end;
 
 constructor TNyxStudioAgentBridge.Create(ASession: TNyxStudioSession;
   ARefresh: TNyxAgentRefresh);
@@ -461,6 +471,11 @@ begin
         raise Exception.Create('Invalid agent permission response');
       end;
       FView.Activity := LState.Field('activity').Copy;
+
+      if NyxAgentHas(LState, 'compiler') then
+      begin
+        FView.Compiler := LState.Field('compiler').Copy;
+      end;
 
       if (LOperation <> 'observe') and (LOperation <> 'claim') and (Length(FQueue) > 0) then
       begin

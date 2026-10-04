@@ -41,6 +41,8 @@ type
     Endpoint: TNyxText;
     Status: TNyxText;
     Activity: TNyxDataValue;
+    { Bounded compiler observer metadata, with no duplicated Pascal source. }
+    Compiler: TNyxDataValue;
   end;
 
 function DefaultNyxStudioAgentView: TNyxStudioAgentView;
@@ -60,6 +62,7 @@ begin
   Result.Endpoint := '';
   Result.Status := 'Connecting agent session';
   Result.Activity := NyxArray([]);
+  Result.Compiler := NyxNull;
 end;
 
 function LabelNode(const AID, AText: TNyxText): TNyxNode;
@@ -84,6 +87,15 @@ begin
     Result.Add(LabelNode('studio-agents-status', AState.Status));
     Result.Add(LabelNode('studio-agents-revision', 'Shared revision ' + IntToStr(AState.Revision)));
     Result.Add(LabelNode('studio-agents-endpoint', AState.Endpoint));
+
+    if (AState.Compiler.Kind = ndObject) and
+      (AState.Compiler.Field('total').AsInteger > 0) then
+    begin
+      Result.Add(LabelNode('studio-agents-compiler-summary',
+        'Build diagnostics: ' + IntToStr(AState.Compiler.Field('items').Count) +
+        ' shown of ' + IntToStr(AState.Compiler.Field('total').AsInteger) +
+        '. Errors are shown first.'));
+    end;
     Result.Add(LabelNode('studio-agents-explanation',
       'Agents use semantic tools against this design. You control access here. ' +
       'Codex configuration is updated locally; a client already running may need to reconnect.'));

@@ -76,6 +76,14 @@ type
   end;
 
 function NyxCompilerSeverityName(ASeverity: TNyxCompilerSeverity): TNyxText;
+type
+  TNyxCompilerDiagnosticIndices = array of Integer;
+
+{ Stable presentation order: errors/fatals, warnings, then hints/notes/info.
+  The immutable report retains its original compiler order and item identities.
+  Bounded queries should expose actionable errors before dependency chatter. }
+function NyxCompilerDiagnosticOrder(const AReport: INyxCompilerReport):
+  TNyxCompilerDiagnosticIndices;
 { Both installed FPC and native pas2js compilers report UTF-8 byte columns.
   ACompanionFile is the admitted job's complete source path. The service requests
   full native paths with -vb; a different or shortened path is not guessed.
@@ -134,6 +142,43 @@ type
 function NyxCompilerSeverityName(ASeverity: TNyxCompilerSeverity): TNyxText;
 begin
   Result := SeverityNames[ASeverity];
+end;
+
+function NyxCompilerDiagnosticOrder(const AReport: INyxCompilerReport):
+  TNyxCompilerDiagnosticIndices;
+var
+  LGroup: Integer;
+  LIndex: Integer;
+  LCount: Integer;
+  LSeverity: TNyxCompilerSeverity;
+  LMatches: Boolean;
+begin
+  Result := nil;
+
+  if AReport = nil then
+  begin
+    Exit;
+  end;
+  SetLength(Result, AReport.Count);
+  LCount := 0;
+  for LGroup := 0 to 2 do
+  begin
+    for LIndex := 0 to AReport.Count - 1 do
+    begin
+      LSeverity := AReport.Item(LIndex).Severity;
+      case LGroup of
+        0: LMatches := LSeverity in [csError, csFatal];
+        1: LMatches := LSeverity = csWarning;
+        2: LMatches := LSeverity in [csHint, csNote, csInfo];
+      end;
+
+      if LMatches then
+      begin
+        Result[LCount] := LIndex;
+        Inc(LCount);
+      end;
+    end;
+  end;
 end;
 
 function TNyxCompilerDiagnostic.GetNavigable: Boolean;

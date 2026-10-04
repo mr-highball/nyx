@@ -32,15 +32,22 @@ Typed compiler navigation advances codegen criterion 3 to counter 11 without
 closing source UX/performance. The full product and native Studio remain open.
 
 Explicit Codex user registration now refreshes alongside project configuration.
-Initialized Codex discovery authenticates all twelve semantic tools; 22 native
+Initialized Codex discovery authenticates all thirteen semantic tools; 22 native
 configuration checks preserve operator files and refuse invalid ownership, with
 zero leaks. Semantic MCP is the default demo/design workflow. Callback batches
 add templates, set policy, reorder and review removal as one content Undo step;
 45 portable native/browser checks, an actual editor/MCP journey and unchanged
-compiled consumers qualify the boundary. Source/body editing, builds and
+compiled consumers qualify the boundary. Immutable semantic compiler jobs now
+qualify view/reusable/application scopes on both compilers, exact source/profile
+currentness, retry identity, served manifests and ordinary observer diagnostics.
+The desktop/exact-390 journeys pass 107 checks each; 33 portable admission checks
+pass per target and 45 native ownership checks free every allocation. Final
+gates pass 61 real MCP, 177 compiler service and 52/52 Studio checks. Qualified
+bytes are deployed with the live pair retained. Source/body editing and
 protected review-session operations retain an open
 [primary workflow owner](TODO/NS-4_agent-workflows_01.md). The running desktop chat
 needs one reconnect for native handles; a Pascal semantic client works immediately.
+See [the compiler-job packet](WORK.md#semantic-compiler-jobs--2026-10-04).
 
 ## Intended destination
 
@@ -71,7 +78,7 @@ broader product outcomes remain open.
 | NS-2 — Beautiful parity renderers | Supported controls, layouts, input, focus, accessibility, responsive behavior, and themes have equivalent documented semantics in pas2js/DOM and LCL | Browser/LCL projections and representative actions evaluated | Capability parity, responsive/theming depth, accessibility and visuals |
 | NS-3 — Exhaustive extensible component system | A broad production catalog is coherent, virtualized where needed, composable, themeable, and extendable without forking Nyx internals | 41 primitive/layout/authoring kinds and 35 compound recipes defined | Advanced behavior, virtualization, extension SDK and performance |
 | NS-4 — Nyx Studio | WYSIWYG and split-code workflows support applications, pages, reusable components, selection, layout, properties, history, preview, optional output configuration and deterministic generation; Studio itself is built with Nyx | Shared Nyx shell, 49 DOM journeys, Properties/Events tabs, typed source edits and handler workflows evaluated | Complete custom/inherited event UI coverage, drag/drop, constraints, broader source synchronization, responsive project UX and complete native controller |
-| NS-5 — Pascal build and reload service | A hardened Pascal HTTP service builds views and complete apps, streams structured diagnostics, and reloads admitted artifacts | Local view/reusable/application builds evaluated | Workers, caching, cancellation, persistence, reload and diagnostics |
+| NS-5 — Pascal build and reload service | A hardened Pascal HTTP service builds views and complete apps, streams structured diagnostics, and reloads admitted artifacts | Local HTTP builds and bounded immutable MCP jobs evaluated | Global scheduling, caching, cancellation, persistence, reload and diagnostics |
 | NS-6 — Independent delivery quality | Clean setup, checks, examples, documentation, packaging, compatibility policy, and real-user evaluation support independent adoption | Repeatable Windows build entry point evaluated | CI/release matrix, compatibility, packaging and independent evaluation |
 
 ## Remaining scope and task ownership

@@ -42,7 +42,8 @@ the present Windows installation; the Pascal semantic client is usable immediate
 
 **Confirmed gaps — 2026-10-04:** The design transaction vocabulary contains
 create/update/move/delete/title/tokens. Callback authoring now has a focused tool;
-semantic source/body editing and build requests remain absent. State/binding
+immutable build requests and bounded status are now qualified. Semantic
+source/body editing remains absent. State/binding
 commands and reusable authoring are not advertised. Root
 creation is supported, while root move/deletion and isolated review-session
 lifecycle are absent. Property values preserve their JSON scalar types, but
@@ -71,11 +72,10 @@ claim reliable parallel previews. The transport client also prints structured
 preview metadata without forwarding the image block; the server's actual PNG
 artifact supplies the selective visual check here.
 
-Next deliverable is semantic callback authoring on the inspector's admitted
-paired-source/history boundary, including exact owner/event identities, ordered
-registrations, policy, TODO source navigation, draft refusal and warned removal.
-Require a real observable editor journey and compiled callback, not tool schemas
-alone. The remaining build/state/reusable/review operations retain their criteria.
+Callback authoring and structured compiler requests now have qualified deliveries
+below. State/binding, richer reusable authoring and protected review lifecycle
+retain their criteria. Source/body editing is a prerequisite for authoring the
+keyboard review's business behavior entirely through MCP.
 
 ## Semantic callback delivery — 2026-10-04
 
@@ -97,4 +97,34 @@ Final gates pass: 56 real MCP, 177 compiler service and 52/52 Studio checks.
 Six qualified artifacts are deployed with the live pair/selection/view retained
 byte for byte; enrolled credentials rotate and fresh Codex sees twelve tools.
 See [the packet](../WORK.md#semantic-callback-authoring--2026-10-04).
-Criterion 3 is accepted; the task stays open for builds and protected workflows.
+Criterion 3 is accepted; the task stays open for protected workflows.
+
+## Semantic compiler delivery — 2026-10-04
+
+Criterion 4 is accepted. The thirteenth tool captures the admitted source/design
+pair and private output profile, submits a view/reusable/application job without
+holding the editor lock, and returns bounded status/diagnostics plus served byte
+manifests. Revision, draft, permission, root/scope and closed argument guards
+precede submission. Exact actor/argument retries retain their original receipt;
+editing and Undo retain user history. Changed pairs disable diagnostic navigation.
+Two workers, sixteen retained handles and sixty-four retry receipts bound the
+session. Owned shutdown joins workers before releasing immutable inputs.
+
+Portable native/executed-browser admission passes 33 each. Native resource
+qualification passes 45 with zero leaks. Real MCP builds all three scopes on
+both actual compilers, validates complete served manifests, mounts a browser
+artifact and qualifies observing Studio activity, mapped Unicode helper failure
+and stale navigation: 107 checks each at desktop/exact-390. Observer assertions
+pass five each; bridge safeguards pass thirteen. Final gates pass 61 real MCP,
+177 HTTP/compiler and 52/52 Studio checks. Six qualified artifacts are deployed
+with the exact live pair/selection/view preserved. Fresh installed Codex from
+another project authenticates all thirteen tools. See
+[the packet](../WORK.md#semantic-compiler-jobs--2026-10-04).
+
+The intentional helper failure uses an explicit private substrate fixture while
+semantic body editing remains absent; demos and all builds use MCP. Resource
+checks use a Pascal compiler substitute and do not establish target compilation.
+Global scheduling across the legacy HTTP route, cancellation, caching and locked
+toolchain snapshots remain with NS-5. This task stays open for criterion 5 and
+remaining primary source/state/reusable workflows; event/codegen credit does not
+transfer.

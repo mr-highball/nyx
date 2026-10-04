@@ -86,7 +86,13 @@ open at counter 6; criteria 2/3/4 remain accepted. Semantic callback authoring n
 has a focused twelfth tool: additions, policy, exact ordering and reviewed
 removal publish one source/design Undo step while retaining drafts and selection.
 Portable tests, an observing Nyx editor and unchanged compiled TODO consumers
-qualify this boundary. Semantic source/body and build operations remain open.
+qualify this boundary. A thirteenth tool now submits immutable accepted
+view/reusable/application compiler jobs and queries bounded status, severity
+filtered diagnostics and served artifact manifests. Real MCP/compilers plus an
+observing Studio pass 107 checks each at desktop and exact-390 widths; resource
+ownership passes 45 native checks with zero leaks. Fresh Codex authenticates all
+thirteen tools. Semantic source/body, state/binding and protected review workflows
+remain open. See [the current packet](WORK.md#semantic-compiler-jobs--2026-10-04).
 Physical IME, complete accessibility, other widgetsets and native Studio remain
 open; existing editing/semantic evidence remains applicable.
 

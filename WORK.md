@@ -4,62 +4,54 @@
 
 The full user outcome remains in MILESTONES.md. Execution is solo. Product and
 substantive tools are Pascal in Delphi dialect, with thorough comments and blank
-lines above if blocks. Semantic MCP is the primary demo/design workflow; actual
-browser/LCL consumers qualify physical behavior selectively.
+lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
+actual browser/LCL consumers qualify physical behavior selectively.
 
-Current delivery (2026-10-04): semantic callback authoring is implemented,
-integrated, qualified and deployed. NS-4_agent-workflows_01 criterion 3 has
-accepted evidence. The twelfth MCP tool uses typed detached inspector commands
-for grouped TODO additions, policy, exact order and reviewed removal, publishing
-one paired Undo step and retaining user selection. Warning tickets bind exact
-actor/revision/change bytes; failed edits and pending drafts retain user work.
-An already-open Nyx Studio verifies visible source/order/policy and ordinary Undo;
-MCP Redo restores the exact removal. Both compilers consume bounded MCP-exported
-source unchanged, and actual LCL/browser clicks execute the generated TODO classes.
-Portable checks pass 45 each with zero native leaks, real MCP 56, compiler service
-177 and Studio 52 each at desktop/exact-390. Fresh installed Codex authenticates
-all twelve tools. See [the packet](#semantic-callback-authoring--2026-10-04).
+Latest integrated delivery (2026-10-04): NS-4_agent-workflows_01 criterion 4 is
+implemented, qualified, accepted and deployed. Immutable view/reusable/application
+jobs reuse the fixed-argument compiler, release the document lock and expose
+bounded status, severity-filtered diagnostics and served artifact manifests.
+Observing Studio shows agent activity and source-guarded diagnostics. Real MCP
+plus both actual compilers passes 107 checks each at desktop and exact-390 widths.
+Portable admission passes 33 per target; native resource ownership passes 45 with
+zero leaks. Final gates pass 61 real MCP, 177 compiler service, shared 30/1537 per
+target and Studio 52/52. Fresh installed Codex authenticates all thirteen tools.
+See [the packet](#semantic-compiler-jobs--2026-10-04).
 
-Event criteria 2/3/4 remain accepted; original criterion 1 stays open at consecutive
-no-closure counter 6. The selected counter-5 integrated deliverable is finished;
-no counter, scope or completion credit resets. Row-oriented navigation does not
-establish full cell-grid patterns, typeahead, assistive technology, hardware/IME
-or another native widgetset. Native external transfers, workers, full native
-Studio and broad production quality keep their owners. Codegen criterion 3
-remains open at counter 11 and retains its large-project source/performance scope.
+This bounded integrated batch was declared before implementation against criterion
+4, with one delivery budget and a publication stop on wrong-source diagnostics or
+accepted-pair corruption. No gate was weakened. Compiler caching/cancellation and
+global scheduling retain NS-5 ownership. Event criteria 2/3/4 and agent workflow
+criterion 3 remain accepted. Original event criterion 1 stays open at consecutive
+no-closure counter 6; codegen criterion 3 stays open at counter 11. Full goal active.
 
-Next concrete prerequisite: NS-4_agent-workflows_01 criterion 4, structured
-revision/source/output-aware view/reusable/application builds and bounded job
-diagnostics. Declare its integrated batch before implementation. Semantic body
-editing, state/bindings and protected review lifecycle also remain open. The
-keyboard review's collection binding/deletion business logic still requires a
-Pascal consumer. Then return to complete supported-control qualification under
-the original event owner. No original scope, counter or credit transfers.
+Next concrete prerequisite: declare one integrated semantic source/body or
+protected review-lifecycle batch under the existing workflow owner. Body authoring
+must preserve accepted Pascal/helper ownership, exact revisions, drafts and one
+paired Undo step before the keyboard review's business behavior can be MCP-only.
+State/bindings, root cleanup, rich reusable operations and protected review cleanup
+remain open. Then return to supported-control qualification under the original
+event owner. No original scope, counter or completion credit transfers.
 
-Batch handoff: criterion 3's bounded implementation/evidence/deployment batch is
-finished. No verification pipeline or review service remains. Original event
-counter 6 and codegen counter 11 are unchanged. Full goal remains active, solo.
+Batch handoff: criterion 4's implementation/evidence/deployment batch is finished.
+All qualification pipelines and disposable services are terminal. Only production
+PID 28012 / persistent exec 71510 remains on the existing firewall-authorized
+executable path, editor 0.0.0.0:8088 and MCP loopback:8089. Server SHA256:
+B2D2FD02D65C6D244A51836B739EEE2D693D6EC72591D804C10A5DCD126EDADC.
+Main JS: 65C9729506B2C7B68CDEA03D2DBC698844D304D6EA2DB6F3E865AF559533C863.
+Preview JS: 259E105DA2C8A87C8B2C29097EB8EEABA11CAC802740B0E8225E7FFC63AE70E6.
+The exact six-artifact manifest and backups are under ignored build/agent-builds/.
+Immediate private observation rechecked revision, full pair, selection/view,
+permission and no draft/history before restart. The live paired design/source,
+selection and view were restored byte for byte. Local/LAN health and installed/
+served artifact hashes pass; enrolled Codex credentials refresh with no warning.
 
-Only production PID 34780 / persistent exec 68106 remains, using the existing
-firewall-authorized executable path, editor 0.0.0.0:8088 and MCP loopback:8089.
-Executable SHA256: B7ED671C9CAC076CACA5801403A8B66448729CFF9A3E6C77453DA1AF1A828029.
-The exact packet and previous bytes are under ignored build/callbacks/. Deployment
-rechecked the current revision, no draft/history and editing permission before
-stopping old 37264/45363; the paired design/source, selection and view were
-restored byte for byte. Local/LAN health and all six artifact hashes pass. New
-Studio credentials refreshed both registered Codex entries; actual installed
-Codex initialization from another project authenticates all twelve tools.
-The running desktop chat still needs one reconnect for native named handles;
-the Pascal semantic client is active now. Existing Studio tabs need refresh
-after this credential rotation. No dependency source or firewall was changed.
-
-Remote protection: the callback/tool/evidence packet is published at
-ac4c9fd2f2a239b656b2d50cde13b5fff0326ff4 on origin/hello-nyx; git ls-remote
-verified its exact identity. The preceding 0764014 checkpoint and Athena pin
-remain unchanged. This handoff update follows the protected implementation. Keep
-private config, credentials, user pairs, generated artifacts and machine profiles
-excluded. Full goal active.
-
+The running desktop chat needs one MCP reconnect for native named handles; the
+Pascal semantic client is active now. Actual fresh Codex initialization from
+another project sees all thirteen tools. Existing Studio tabs need refresh after
+credential rotation. No dependency source, compiler setup or firewall was changed.
+Private configuration, tokens, user pairs and machine profiles remain excluded.
+Remote checkpoint verification follows this delivery's commit; full goal active.
 ## Previous checkpoint before compiler and MCP delivery
 
 Previous checkpoint: complete-command profiling removed workspace JSON encoding/
@@ -3057,3 +3049,84 @@ commit. Final live semantic inspection advertises nyx_callbacks with 32 changes
 and retains revision 2, home selection and no draft. This handoff-only update is
 also authorized for publication. All qualified service/credential/hash state above
 remains current; no new experiment or pipeline was started after acceptance.
+
+## Semantic compiler jobs — 2026-10-04
+
+Owner: NS-4_agent-workflows_01 criterion 4, declared before implementation as one
+integrated build/status/observer delivery. Underlying event/codegen/service/native
+Studio criteria retain their scope and counters. Criterion 4 is now accepted;
+the broader workflow task remains open.
+
+The thirteenth authenticated tool, nyx_build, has three closed shapes: outputs,
+request and status. Admission captures exact accepted design/source and a private
+output profile. View/reusable roots are exact admitted page/definition roots;
+applications omit a root. Requests require current revision/output, edit permission
+and no draft, forbid command/options/path/source injection and return immediately.
+Workers own detached inputs and per-job results, with no borrowed widgets/model.
+Both transports use the extracted fixed compiler pipeline and GUID artifact paths.
+Only two semantic jobs run, sixteen handles persist, and sixty-four actor/exact
+argument receipts prevent implicit resubmission. Shutdown joins workers; failed
+start/list publication retains correct ownership. Stale pairs cannot navigate;
+Undo may restore an exact pair at a newer revision. Current profile comparison
+uses complete text. MD5 identities are optimistic fingerprints, not authentication.
+
+Status windows contain at most twenty diagnostics with stable error/fatal-first
+ordering and a closed severity filter. Successful browser manifests cover HTML,
+JavaScript, runtime, compiled companion and scoped design; native manifests cover
+executable, companion and design. Every served byte is checked by the real journey.
+Failed builds expose no successful artifact. Observer diagnostics carry no repeated
+source; ordinary Studio navigation additionally requires an acknowledged exact
+local frame, with queue/conflict guards. User selection/history remain untouched.
+
+Evidence under ignored build/agent-builds/:
+
+| Boundary | Accepted evidence |
+| --- | --- |
+| Portable admission/currentness | admission-final/native.log and admission-browser-final/: 33 each; zero native leaks |
+| Bounded workers/profile/retention/retry/shutdown | resource-final-owner-qualified.log: 45 native, all 4815579 allocations / 392185743 requested bytes freed; zero leaks |
+| Maintained orchestration | agents-qualified-build.log: 29 agent, 45 callback, 33 admission, 45 resource checks plus actual browser compilation |
+| Real semantic authoring/builds/observer | journey-accepted.log and journey-phone.log: 107 each, all six actual scopes/targets, immutable application source and complete served manifests; five observer assertions each |
+| Actual rendered artifact and Studio | journey-accepted/ and journey-phone/: inspected compiled-browser and observer PNGs; exact phone observer 390 by 844 |
+| Bridge source acknowledgement | bridge-qualified.log and bridge-qualified/: thirteen browser guard assertions |
+| Shared contract/generated native consumers | core-final.log: 30 core, 1537 designer, 55 scheduler, 60 paired admission/recovery, compiled consumers and intended type refusals |
+| Executed shared browser | shared-browser-final.log and shared-browser-final/: 30 core / 1537 designer |
+| Studio Events/source/history | studio-desktop-final.log and studio-phone-final.log: 52 each, exact phone width 390 |
+| Legacy HTTP/source/compiler/artifacts | http-extraction.log and http-final.log: 177 each |
+| Final authenticated protocol and permissions | mcp-release.log: 61 real MCP against the release server; read-only readiness/request and disabled readiness/status guards |
+| Fresh installed Codex after deployment | codex-release.log: bearerToken authentication and all thirteen tools discovered from another project |
+| Exact delivery bytes | release-manifest.json: six installed artifacts match qualified bytes; all five served web hashes match |
+
+Resource qualification caught a real first-use FPC recursive-parent creation race;
+the serialized owner prepares the shared artifact parent before workers start.
+Real compiler errors were initially hidden behind warnings; stable severity order
+and closed filtering now expose actionable errors without mutating the report.
+Case-normalizing severity wire names fixes the focused error query. Observer
+fixtures now require actual running-job activity and explicitly open the ordinary
+Pascal pane before checking diagnostics. Final bridge checks guard unsent local
+source and queued publications. These failures are retained in their original logs;
+no product assertion was weakened. An operator attempt compiled the native-only
+core entrypoint with pas2js; the correct browser entrypoint was subsequently
+compiled and executed. A resource invocation omitted its required runtime and
+refused before setup; the complete final invocation passes. These invocation
+failures are not counted as target evidence.
+
+The real journeys compose the demo and reusable definition, export bounded source
+and request every build through MCP. Intentional invalid-helper source uses the
+existing explicit private editor fixture while semantic body editing is absent.
+The resource fixture is an owned Pascal compiler substitute; actual target proof
+comes from the separate real compiler journeys. Global HTTP/MCP scheduling,
+caching, cancellation, persistent job lifecycle, toolchain binary snapshots and
+large-project performance remain open with their existing owners.
+
+Delivery preserves ignored .local/agent-build-production-before/restore/after.json.
+Immediate observation rechecked the exact pair/revision 2, selection/view, no
+pending draft/history and edit permission. Old production 34780/68106 was identity
+checked, stopped and terminal. New 28012/71510 restores the exact pair, refreshes
+both registered managed MCP entries without changing unrelated configuration and
+serves all qualified hashes. Health is 200 on loopback and LAN. A final source-only
+formatting edit recompiles to the exact installed JavaScript SHA256. Review
+38416/67305 and 40260/69335 were identity checked, stopped and terminal; earlier
+review services and every check pipeline are terminal too. Only production lives.
+Final live semantic inspection returns thirteen tools, revision 2, home selection
+and no draft without mutating the user document. Native chat handles still require
+one client reconnect, while the Pascal semantic client remains primary now.

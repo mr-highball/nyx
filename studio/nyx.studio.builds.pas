@@ -30,6 +30,18 @@ uses
   nyx.text,
   nyx.model;
 
+type
+  { Closed compiler choices. A reusable build requires an exact definition
+    root; a view requires an exact page root. Application builds omit a root.
+    Machine profile paths and arguments never belong to this portable contract. }
+  TNyxBuildTarget = (btBrowser, btNativeLCL);
+  TNyxBuildScope = (bsView, bsReusable, bsApplication);
+
+function NyxBuildTargetName(AValue: TNyxBuildTarget): TNyxText;
+function NyxBuildScopeName(AValue: TNyxBuildScope): TNyxText;
+function ParseNyxBuildTarget(const AValue: TNyxText): TNyxBuildTarget;
+function ParseNyxBuildScope(const AValue: TNyxText): TNyxBuildScope;
+
 { Versioned compiler request pairs an admitted portable design with its accepted
   companion. Compiler paths/options belong to the service profile, never this
   message. The caller borrows the design on Encode; Decode transfers a newly
@@ -45,6 +57,50 @@ implementation
 uses
   nyx.data,
   nyx.codec;
+
+function NyxBuildTargetName(AValue: TNyxBuildTarget): TNyxText;
+const
+  CNames: array[TNyxBuildTarget] of TNyxText = ('browser', 'lcl');
+begin
+  Result := CNames[AValue];
+end;
+
+function NyxBuildScopeName(AValue: TNyxBuildScope): TNyxText;
+const
+  CNames: array[TNyxBuildScope] of TNyxText = ('view', 'reusable', 'application');
+begin
+  Result := CNames[AValue];
+end;
+
+function ParseNyxBuildTarget(const AValue: TNyxText): TNyxBuildTarget;
+var
+  LValue: TNyxBuildTarget;
+begin
+  for LValue := Low(TNyxBuildTarget) to High(TNyxBuildTarget) do
+  begin
+
+    if AValue = NyxBuildTargetName(LValue) then
+    begin
+      Exit(LValue);
+    end;
+  end;
+  raise ENyxModel.Create('Build target must be browser or lcl');
+end;
+
+function ParseNyxBuildScope(const AValue: TNyxText): TNyxBuildScope;
+var
+  LValue: TNyxBuildScope;
+begin
+  for LValue := Low(TNyxBuildScope) to High(TNyxBuildScope) do
+  begin
+
+    if AValue = NyxBuildScopeName(LValue) then
+    begin
+      Exit(LValue);
+    end;
+  end;
+  raise ENyxModel.Create('Build scope must be view, reusable or application');
+end;
 
 function EncodeNyxBuildRequest(ADocument: TNyxDocument;
   const ASource: TNyxText): TNyxText;
@@ -91,4 +147,3 @@ begin
 end;
 
 end.
-

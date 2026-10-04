@@ -77,6 +77,7 @@ type
     FStatus: TNyxText;
     FLog: TNyxText;
     FCompilerReport: INyxCompilerReport;
+    FAgentCompilerSequence: Integer;
     FCompiledURL: TNyxText;
     FPendingDesign: TNyxText;
     FPendingSource: TNyxText;
@@ -644,6 +645,28 @@ var
   LActivity: TNyxDataValue;
 begin
   LState := FAgents.State;
+
+  if (LState.Compiler.Kind = ndObject) and
+    (LState.Compiler.Field('sequence').AsInteger <> FAgentCompilerSequence) and
+    FAgents.SourceSynchronized then
+  begin
+
+    if LState.Compiler.Field('total').AsInteger = 0 then
+    begin
+      FAgentCompilerSequence := LState.Compiler.Field('sequence').AsInteger;
+      FCompilerReport := nil;
+    end
+    else if LState.Compiler.Field('acceptedSource').AsBoolean then
+    begin
+      FAgentCompilerSequence := LState.Compiler.Field('sequence').AsInteger;
+      { Reuse this observer's exact accepted unit only after service admission.
+        The ordinary diagnostic panel retains its draft/source navigation guards.
+        The MCP job exposes additional pages when the report exceeds twenty. }
+      FCompilerReport := DecodeNyxCompilerReport(NyxObject([
+        NyxField('version', NyxData(1)), NyxField('source', NyxData(FSession.Source)),
+        NyxField('items', LState.Compiler.Field('items'))]).ToJSON);
+    end;
+  end;
 
   if AContentChanged then
   begin

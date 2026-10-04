@@ -76,10 +76,13 @@ begin
     LClient := TNyxMCPTestClient.Create(ParamStr(2));
     Check(True, 'Real MCP initialize and initialized notification');
     LValue := LClient.RPC('tools/list', NyxObject([])).Field('result');
-    Check(LValue.Field('tools').Count = 12, 'Focused semantic capabilities advertised');
+    Check(LValue.Field('tools').Count = 13, 'Focused semantic capabilities advertised');
     Check((LValue.Field('tools').Item(11).Field('name').AsText = 'nyx_callbacks') and
       (LValue.Field('tools').Item(11).Field('inputSchema').Field('properties').Field('changes').Field('maxItems').AsInteger = 32),
       'Semantic callback tool advertises bounded batches');
+    Check((LValue.Field('tools').Item(12).Field('name').AsText = 'nyx_build') and
+      (LValue.Field('tools').Item(12).Field('inputSchema').Field('oneOf').Count = 3),
+      'Semantic build advertises three closed operation shapes');
     Check(LValue.Field('tools').Item(7).Field('inputSchema').Field('required').Count = 3,
       'Transaction input schema publishes required guards');
     LClient.Exchange('GET', NyxObject([]), 405);
@@ -228,10 +231,35 @@ begin
     LValue := LClient.Tool('nyx_components', NyxObject([NyxField('query', NyxData('reply')),
       NyxField('limit', NyxData(2))]));
     Check(LValue.Field('structuredContent').Field('items').Count > 0, 'Intent descriptions searchable under read-only');
+    { Compiler requests consume resources and require the operator's edit grant.
+      Readiness remains inspectable without disclosing the private profile. }
+    LValue := LClient.Tool('nyx_build', NyxObject([NyxField('mode', NyxData('outputs'))]));
+    Check(not LValue.Field('isError').AsBoolean and
+      (LValue.Field('structuredContent').Field('outputs').Count = 2),
+      'Read-only operator grant permits bounded output readiness');
+    LArguments := NyxObject([NyxField('mode', NyxData('request')),
+      NyxField('operationId', NyxData('read-only-build-refused')),
+      NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('outputID', LValue.Field('structuredContent').Field('outputID')),
+      NyxField('target', NyxData('browser')), NyxField('scope', NyxData('view')),
+      NyxField('view', NyxData('home'))]);
+    LValue := LClient.Tool('nyx_build', LArguments);
+    Check(LValue.Field('isError').AsBoolean and
+      (Pos('Allow edits', LValue.Field('content').Item(0).Field('text').AsText) > 0),
+      'Read-only grant refuses compilation before creating a job');
     NyxTestEditorExchange(LBase, '/api/agents', LToken, NyxObject([NyxField('op', NyxData('configure')),
       NyxField('permission', NyxData('disabled'))]));
     LValue := LClient.Tool('nyx_session', NyxObject([]));
     Check(LValue.Field('isError').AsBoolean, 'Disabled access refuses inspection');
+    LValue := LClient.Tool('nyx_build', NyxObject([NyxField('mode', NyxData('outputs'))]));
+    Check(LValue.Field('isError').AsBoolean and
+      (Pos('disabled', LValue.Field('content').Item(0).Field('text').AsText) > 0),
+      'Disabled access refuses build readiness');
+    LValue := LClient.Tool('nyx_build', NyxObject([
+      NyxField('mode', NyxData('status')), NyxField('job', NyxData('unknown'))]));
+    Check(LValue.Field('isError').AsBoolean and
+      (Pos('disabled', LValue.Field('content').Item(0).Field('text').AsText) > 0),
+      'Disabled access refuses job inspection before handle lookup');
     NyxTestEditorExchange(LBase, '/api/agents', LToken, NyxObject([NyxField('op', NyxData('configure')),
       NyxField('permission', NyxData('edit'))]));
     LValue := LClient.Tool('nyx_preview', NyxObject([NyxField('expectedRevision', NyxData(LRevision)),

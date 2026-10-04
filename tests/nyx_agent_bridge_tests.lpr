@@ -67,6 +67,8 @@ begin
 
           if LState.Conflict then
           begin
+            Check(not GBridge.SourceSynchronized,
+              'Protected local conflict cannot borrow source for server diagnostic navigation');
             Check(EncodeNyxProject(GSession.ProjectSnapshot) = GLocal,
               'Connecting to another active design retains recovered pair and draft');
             Check(Pos('retained', LState.Status) > 0, 'Conflict tells operator local work is retained');
@@ -96,6 +98,8 @@ begin
             Check((GSession.Document.Title <> 'Recovered local workshop') and
               (GSession.DraftSource = GSession.Source), 'Explicit operator resolution adopts shared pair');
             GRevision := LState.Revision;
+            Check(GBridge.SourceSynchronized,
+              'Exact resolved observer frame admits its locally retained source');
             { Synchronous typing cannot receive an XHR acknowledgement between
               these calls. Keep the in-flight head and coalesce unsent draft
               updates; preserve the exact final Unicode draft, with two commits. }
@@ -103,6 +107,12 @@ begin
             begin
               GDraft := GSession.Source + #10 + '// Draft ' + IntToStr(LIndex) + TNyxText(' 🌙漢字');
               GSession.SetSourceDraft(GDraft);
+
+              if (LIndex = 1) or (LIndex = 80) then
+              begin
+                Check(not GBridge.SourceSynchronized,
+                  'Unsynchronized local source cannot be substituted into a compiler report');
+              end;
               GBridge.RecordLocal;
             end;
             GPhase := 3;
@@ -116,6 +126,8 @@ begin
             Check(not LState.Conflict and (LState.Revision = GRevision + 2),
               'Unsent draft coalescing preserves in-flight acknowledgement and bounds revisions');
             Check(GSession.DraftSource = GDraft, 'Coalesced draft retains exact last supplementary Unicode text');
+            Check(GBridge.SourceSynchronized,
+              'Acknowledged exact pair restores source identity without replacing the draft');
             GBridge.Pause;
             GBridge.Free;
             GBridge := nil;

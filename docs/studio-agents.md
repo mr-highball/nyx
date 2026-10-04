@@ -97,13 +97,14 @@ GET is explicitly unsupported (405); DELETE closes a client session. See the
 | `nyx_node` | Published typed properties, defaults, choices and optional supported events/registrations |
 | `nyx_components` | Searchable catalog descriptions, intent groups, labels and component kinds |
 | `nyx_tokens` | Effective colors and metrics for the design |
-| `nyx_diagnostics` | Paged compiler diagnostics from the last editor build, with current-source navigation guards |
+| `nyx_diagnostics` | Severity-ordered compiler diagnostics from the last current editor/agent build, with source navigation guards |
 | `nyx_source` | A bounded range of accepted companion source lines |
 | `nyx_transaction` | Atomic semantic operations against the accepted pair |
 | `nyx_select` | Select a component, optionally activate a root view |
 | `nyx_history` | Undo or redo one ordinary content command |
 | `nyx_preview` | An immutable, revision-specific rendered view and optional PNG |
 | `nyx_callbacks` | Grouped callback addition, policy, ordering and reviewed removal on the inspector's paired history |
+| `nyx_build` | Output readiness, immutable accepted builds and bounded job/artifact/diagnostic inspection |
 
 Tool schemas advertise required fields and limits. Unknown arguments and
 unpublished properties are refused. Queries never return the full document.
@@ -112,6 +113,7 @@ can specify up to 20 exact property `keys`; `textOffset` and `textLimit` retriev
 Unicode scalar slices (up to 2048 scalars), with a total and truncation flag.
 Source queries return up to 80 lines. Structured context is capped at 48 KiB;
 request fewer items, properties or lines when that budget is exceeded.
+
 Structured results also have a serialized text representation for compatible
 clients. See [MCP tools](https://modelcontextprotocol.io/specification/2025-11-25/server/tools).
 
@@ -135,6 +137,85 @@ The property values retain their JSON scalar types. Human text and open authored
 identifiers remain strings at this explicit wire boundary; Boolean/integer/number
 properties are not accepted as string spellings. The Pascal implementation
 admits these requests into a typed operation enum and an immutable patch object.
+
+## Semantic compiler jobs
+
+Inspect `nyx_build` with `{"mode":"outputs"}` first. It returns the current
+`outputID` and readiness for browser/LCL, with useful configuration issues and
+without machine paths. Missing compilers never prevent designing or connecting.
+Only the ordinary Studio output section can configure compiler profiles; MCP
+cannot supply executable paths, commands, flags, environments or source overrides.
+
+Submit an accepted page, reusable definition or application:
+
+```json
+{
+  "mode": "request",
+  "expectedRevision": 7,
+  "operationId": "compile-settings-review",
+  "outputID": "<exact identity from outputs>",
+  "target": "browser",
+  "scope": "view",
+  "view": "settings"
+}
+```
+
+The closed scopes are `view`, `reusable` and `application`. View/reusable
+requests require an exact page/definition root respectively. Applications omit
+`view`. Browser and `lcl` outputs use the same fixed-argument compiler as
+Studio's existing HTTP build route. Request requires Allow edits, exact revision
+and output identity, and no pending draft. It captures an independently owned
+accepted pair/profile and immediately returns a running job receipt. Compilation
+does not hold the document lock, replace source, change selection or create Undo
+history. Editing can continue while the captured pair compiles.
+
+Query `{"mode":"status","job":"<returned job>","limit":5}`. States are
+`running`, `succeeded` and `failed`. Diagnostics page by `offset`/ `limit`
+(at most twenty) with stable error/fatal, warning, then informational order.
+Add `"severity":"error"` to retrieve only errors; other closed filters are
+`all`, `fatal`, `warning`, `hint`, `note` and `info`.
+`diagnostics.total` is the filtered total, `available` the whole report.
+Locations use Unicode scalar coordinates in the exact submitted companion.
+`navigable` is false if a later edit/draft changed that pair. Successful jobs
+include served artifact paths plus byte lengths/fingerprints covering runtime,
+compiled companion and saved scoped design. Failures expose no successful artifact.
+
+The original revision, source/design fingerprints, `outputID`, target and scope
+remain attached to the job. `currentRevision`, `currentSource` and
+`currentOutput` distinguish the present editor/profile. Undo may restore the
+exact pair despite a newer monotonic revision. Fingerprints are explicitly MD5
+optimistic byte identities, consistent with existing project revisions; they
+are not authentication credentials. Current-pair/profile and retry checks compare
+complete exact text. Profiles retain configured fields, not locked compiler binary
+snapshots; toolchain pinning/caching/cancellation keep their service owners.
+
+Exact actor/operation/argument retries return the initial receipt without another
+compiler invocation, including after the editor revision or profile changes.
+Different arguments with an accepted operation identity refuse. Sixty-four build
+receipts and sixteen job handles are retained per server session; oldest terminal
+handles expire first. An expired handle is reported explicitly and never silently
+resubmitted. At most two semantic jobs run; a third submission refuses. Server
+shutdown joins owned workers. The legacy HTTP route retains its synchronous
+behavior; a global compiler scheduler remains separate service work.
+
+An observing Studio shows start/completion/refusal activity and the first twenty
+severity-ordered diagnostics, with the displayed/total counts. Its ordinary source
+actions reuse the existing draft/source guards and additionally require an exact
+acknowledged local editor frame. Additional report pages remain queryable through
+the job. Semantic jobs are session-local, while existing artifacts keep the
+service's disk lifecycle.
+
+The maintained isolated journey is `nyx_mcp_build_tests`, compiled by
+`tools/build.ps1 -Target agents`. Supply a disposable loopback editor URL,
+its private generated MCP config, and an ignored artifact directory. It composes
+through MCP, builds all three scopes on both compilers, verifies served manifest
+bytes and exact application source, mounts an actual browser artifact, and checks
+an observing Nyx Studio's mapped failure and stale navigation. The intentional
+invalid-helper substrate uses a private editor commit because semantic body editing
+remains an advertised gap. Add a fourth argument `phone` for the actual 390-by-844
+observer. Both maintained journeys pass 107 checks against the real compilers.
+Resource/lifetime checks use an explicitly owned Pascal
+compiler substitute; they do not establish target compilation or rendering.
 
 ## Edits and history
 
@@ -319,7 +400,7 @@ files under `build/mcp-client/`, never the real Codex user file. Actual MCP HTTP
 fixtures likewise run against an isolated service because they deliberately
 replace and mutate their selected session. See the open
 [primary semantic workflow task](../TODO/NS-4_agent-workflows_01.md) for source/body,
-build, state/binding and review-session capabilities still missing from tools.
+state/binding and review-session capabilities still missing from tools.
 
 `tools/build.ps1 -Target agents` builds the portable fixture, real HTTP consumers,
 browser observer/safeguard fixtures, Studio and preview program. `-BrowserOutput`
@@ -330,7 +411,8 @@ use a review session rather than an unsaved working design.
 
 The shared command boundary executes under native FPC and pas2js. LCL projects
 the same token values and Nyx agent panel controls. The complete native Studio
-controller remains an open product outcome. The current main editor HTTP service
-serializes delegated builds, so an in-progress compilation can delay browser
-observations even though the MCP listener is separate. This delivery is not a
-claim of full native Studio, threaded compilation, or production-scale rendering.
+controller remains an open product outcome. Semantic builds run in independently
+owned compiler workers and release the document lock. The legacy main editor
+HTTP route still serializes its own delegated builds, which can delay browser
+observations; a global scheduler remains separate service work. Full native
+Studio and production-scale rendering retain their product owners.

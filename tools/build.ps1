@@ -546,7 +546,7 @@ try {
     # Pascal owns protocol, atomic-edit and observer assertions. HTTP consumers
     # are compiled here and run explicitly against the selected live service;
     # the portable fixture needs neither a browser nor a running MCP endpoint.
-    foreach ($nyxAgentProgram in @('nyx_agent_tests', 'nyx_agent_callback_tests', 'nyx_mcp_http_tests', 'nyx_mcp_observer_tests', 'nyx_mcp_diagnostic_tests', 'nyx_browser_capture')) {
+    foreach ($nyxAgentProgram in @('nyx_agent_tests', 'nyx_agent_callback_tests', 'nyx_agent_build_tests', 'nyx_build_compiler_fixture', 'nyx_build_job_tests', 'nyx_mcp_http_tests', 'nyx_mcp_observer_tests', 'nyx_mcp_diagnostic_tests', 'nyx_browser_capture')) {
       Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @("tests/$nyxAgentProgram.lpr"))
     }
     & (Join-Path $nyxNativeDir 'nyx_agent_tests.exe')
@@ -559,15 +559,28 @@ try {
     if ($LASTEXITCODE -ne 0) {
       throw 'Semantic callback model checks failed'
     }
+    & (Join-Path $nyxNativeDir 'nyx_agent_build_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Semantic build admission checks failed'
+    }
     # The maintained observing-editor journey uses the shared Pascal CDP owner.
     # Its FPC WebSocket units come from the matched Lazarus toolchain.
     $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
     $nyxAgentHostUnits = Join-Path $nyxRoot 'build/agent-host-units'
     New-Item -ItemType Directory -Force $nyxAgentHostUnits | Out-Null
-    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl',
-      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxAgentHostUnits", "-FE$nyxNativeDir", 'tests/nyx_mcp_callback_tests.lpr')
+    foreach ($nyxAgentDriver in @('nyx_mcp_callback_tests', 'nyx_mcp_build_tests')) {
+      Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl',
+        '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxAgentHostUnits", "-FE$nyxNativeDir", "tests/$nyxAgentDriver.lpr")
+    }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxResourceRoot = Join-Path $nyxRoot 'build/agent-build-jobs'
+    & (Join-Path $nyxNativeDir 'nyx_build_job_tests.exe') $nyxResourceRoot (Join-Path $nyxNativeDir 'nyx_build_compiler_fixture.exe') $nyxRuntime
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Compiler job resource checks failed'
+    }
     $nyxBrowserDir = Join-Path $nyxRoot 'build/browser'
 
     if ($BrowserOutput) {
@@ -575,12 +588,12 @@ try {
     }
     New-Item -ItemType Directory -Force $nyxBrowserDir | Out-Null
     $nyxAgentFlags = @('-B', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxBrowserDir")
-    foreach ($nyxAgentProgram in @('tests/nyx_agent_tests.lpr', 'tests/nyx_agent_callback_tests.lpr', 'tests/nyx_agent_callback_observer_tests.lpr', 'tests/nyx_agent_observer_tests.lpr', 'tests/nyx_agent_bridge_tests.lpr',
+    foreach ($nyxAgentProgram in @('tests/nyx_agent_tests.lpr', 'tests/nyx_agent_callback_tests.lpr', 'tests/nyx_agent_build_tests.lpr', 'tests/nyx_agent_build_observer_tests.lpr', 'tests/nyx_agent_callback_observer_tests.lpr', 'tests/nyx_agent_observer_tests.lpr', 'tests/nyx_agent_bridge_tests.lpr',
       'tests/nyx_studio_compiler_tests.lpr', 'studio/nyx_studio_preview.lpr', 'studio/nyx_studio.lpr')) {
       Invoke-NyxCompiler $nyxPas2js ($nyxAgentFlags + @($nyxAgentProgram))
     }
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
-    foreach ($nyxAgentHost in @('index.html', 'agents.html', 'agent-callbacks.html', 'agent-callback-observer.html', 'agent-observer.html', 'agent-preview.html', 'agent-bridge.html', 'studio-compiler.html')) {
+    foreach ($nyxAgentHost in @('index.html', 'agents.html', 'agent-callbacks.html', 'agent-builds.html', 'agent-build-observer.html', 'agent-callback-observer.html', 'agent-observer.html', 'agent-preview.html', 'agent-bridge.html', 'studio-compiler.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxAgentHost") -Destination $nyxBrowserDir
     }
     exit 0

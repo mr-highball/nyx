@@ -1,0 +1,480 @@
+{ nyx
+  Copyright (c) 2020 mr-highball
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+}
+
+unit nyx.studio.buildexecutor;
+
+{$mode delphi}{$H+}{$codepage utf8}
+
+interface
+
+uses
+  Classes, SysUtils, Process, fpjson, nyx.text, nyx.model, nyx.studio.outputs;
+
+type
+  { One independent compiler invocation. Owns an immutable machine profile and
+    borrows the caller's detached document only during Build. Both HTTP and MCP
+    use this fixed-argument implementation; requests cannot supply shell commands,
+    compiler options, paths or environment overrides. Artifacts are confined to
+    the repository's build/studio/jobs root. No editor/model lock is held here. }
+  TNyxBuildExecutor = class
+  private
+    FRepository: TNyxText;
+    FJobRoot: TNyxText;
+    FOutputs: TNyxOutputConfiguration;
+    procedure CheckOutput(const ATarget: TNyxText);
+    function RunCompiler(const AExecutable, ADirectory: TNyxText;
+      AArguments: TStrings; out ALog: TNyxText): Boolean;
+  public
+    constructor Create(const ARepository, AProfile: TNyxText);
+    destructor Destroy; override;
+    { Readiness is diagnostic only; absent compilers never prevent authoring.
+      Empty means ready. Contains no machine path values. }
+    function Readiness(const ATarget: TNyxText): TNyxText;
+    function Build(ADocument: TNyxDocument;
+      const ATarget, AScope, APage, ACompanion: TNyxText): TJSONObject;
+  end;
+
+implementation
+
+uses
+  nyx.json, nyx.schema, nyx.codec, nyx.codegen, nyx.source, nyx.callbacks,
+  nyx.scheduler, nyx.composition, nyx.studio.compiler;
+
+function ReadFile(const APath: TNyxText): TNyxText;
+var
+  LStream: TFileStream;
+begin
+  LStream := TFileStream.Create(APath, fmOpenRead or fmShareDenyNone);
+  try
+    SetLength(Result, LStream.Size);
+    SetCodePage(RawByteString(Result), CP_UTF8, False);
+
+    if LStream.Size > 0 then
+    begin
+      LStream.ReadBuffer(Result[1], LStream.Size);
+    end;
+  finally
+    LStream.Free;
+  end;
+end;
+
+procedure WriteFile(const APath, AText: TNyxText);
+var
+  LStream: TFileStream;
+begin
+  LStream := TFileStream.Create(APath, fmCreate);
+  try
+
+    if AText <> '' then
+    begin
+      LStream.WriteBuffer(AText[1], Length(AText));
+    end;
+  finally
+    LStream.Free;
+  end;
+end;
+
+function HostHTML(const AProgram: TNyxText): TNyxText;
+begin
+  { Runtime and compiled Pascal are served from the same admitted artifact root.
+    The tiny bootstrap is the only handwritten target glue: all product behavior
+    is compiled Pascal. Relative URLs work under both / and /builds/job-N/. }
+  Result := '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>Nyx</title></head><body style="margin:0">' +
+    '<script src="rtl.js"></script><script src="' + AProgram + '.js"></script>' +
+    '<script>rtl.run();</script></body></html>';
+end;
+
+constructor TNyxBuildExecutor.Create(const ARepository, AProfile: TNyxText);
+begin
+  inherited Create;
+  FRepository := IncludeTrailingPathDelimiter(ExpandFileName(ARepository));
+  FJobRoot := FRepository + 'build' + PathDelim + 'studio' + PathDelim + 'jobs' + PathDelim;
+  FOutputs := TNyxOutputConfiguration.Decode(AProfile);
+end;
+
+destructor TNyxBuildExecutor.Destroy;
+begin
+  FOutputs.Free;
+  inherited Destroy;
+end;
+
+function TNyxBuildExecutor.Readiness(const ATarget: TNyxText): TNyxText;
+begin
+  Result := '';
+  try
+    CheckOutput(ATarget);
+  except
+    on LException: ENyxModel do
+    begin
+      Result := LException.Message;
+    end;
+  end;
+end;
+
+function IsOutputIdentifier(const AText: TNyxText): Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := (AText <> '') and (Length(AText) <= 80);
+  for LIndex := 1 to Length(AText) do
+  begin
+
+    if not (AText[LIndex] in ['a'..'z', 'A'..'Z', '0'..'9', '-', '_']) then
+    begin
+      Exit(False);
+    end;
+  end;
+end;
+
+procedure TNyxBuildExecutor.CheckOutput(const ATarget: TNyxText);
+var
+  LRoot: TNyxText;
+  LPlatform: TNyxText;
+  LWidgetset: TNyxText;
+begin
+  ValidateNyxOutputTarget(ATarget);
+
+  if ATarget = '' then
+  begin
+    raise ENyxModel.Create('Choose an output in Studio Target / output before building');
+  end;
+
+  if ATarget = 'browser' then
+  begin
+
+    if not FileExists(FOutputs.Field('pas2js')) then
+    begin
+      raise ENyxModel.Create('Browser output: configure the pas2js compiler in Target / output');
+    end;
+
+    if not FileExists(FOutputs.Field('runtime')) then
+    begin
+      raise ENyxModel.Create('Browser output: configure matching rtl.js in Target / output');
+    end;
+  end
+  else
+  begin
+
+    if not FileExists(FOutputs.Field('fpc')) then
+    begin
+      raise ENyxModel.Create('Native LCL output: configure the FPC compiler in Target / output');
+    end;
+    LRoot := IncludeTrailingPathDelimiter(FOutputs.Field('lazarus'));
+    LPlatform := FOutputs.Field('platform');
+    LWidgetset := FOutputs.Field('widgetset');
+
+    if not DirectoryExists(LRoot + 'lcl') then
+    begin
+      raise ENyxModel.Create('Native LCL output: configure the Lazarus root in Target / output');
+    end;
+
+    if not IsOutputIdentifier(LPlatform) or not IsOutputIdentifier(LWidgetset) then
+    begin
+      raise ENyxModel.Create('Native LCL output: configure platform and widgetset in Target / output');
+    end;
+
+    if not DirectoryExists(LRoot + 'lcl/units/' + LPlatform + '/' + LWidgetset) then
+    begin
+      raise ENyxModel.Create('Native LCL output: matching Lazarus platform/widgetset units are missing');
+    end;
+  end;
+end;
+
+function TNyxBuildExecutor.RunCompiler(const AExecutable, ADirectory: TNyxText;
+  AArguments: TStrings; out ALog: TNyxText): Boolean;
+var
+  LProcess: TProcess;
+  LBuffer: array[0..4095] of Byte;
+  LRead: Integer;
+  LChunk: TNyxText;
+  LStarted: QWord;
+begin
+
+  if (AExecutable = '') or not FileExists(AExecutable) then
+  begin
+    ALog := 'Compiler executable is missing; configure NYX_PAS2JS or NYX_FPC.';
+    Exit(False);
+  end;
+  LProcess := TProcess.Create(nil);
+  try
+    LProcess.Executable := AExecutable;
+    LProcess.CurrentDirectory := ADirectory;
+    LProcess.Parameters.Assign(AArguments);
+    LProcess.Options := [poUsePipes, poStderrToOutPut, poNoConsole];
+    ALog := '';
+    LProcess.Execute;
+    LStarted := GetTickCount64;
+    repeat
+      { Drain pipes while the compiler runs. Waiting for exit before reading can
+        deadlock a compiler that fills its pipe with warnings/diagnostics. }
+      while LProcess.Output.NumBytesAvailable > 0 do
+      begin
+        LRead := LProcess.Output.Read(LBuffer, SizeOf(LBuffer));
+        SetLength(LChunk, LRead);
+
+        if LRead > 0 then
+        begin
+          Move(LBuffer[0], LChunk[1], LRead);
+          ALog := ALog + LChunk;
+        end;
+
+        if Length(ALog) > 1024 * 1024 then
+        begin
+          LProcess.Terminate(1);
+          ALog := Copy(ALog, 1, 1024 * 1024) + #10 + 'Compiler log budget exceeded.';
+          Exit(False);
+        end;
+      end;
+
+      if GetTickCount64 - LStarted > 60000 then
+      begin
+        LProcess.Terminate(1);
+        ALog := ALog + #10 + 'Compiler exceeded 60-second time budget.';
+        Exit(False);
+      end;
+
+      if LProcess.Running then
+      begin
+        Sleep(10);
+      end;
+    until not LProcess.Running and (LProcess.Output.NumBytesAvailable = 0);
+    Result := LProcess.ExitStatus = 0;
+  finally
+    LProcess.Free;
+  end;
+end;
+
+function TNyxBuildExecutor.Build(ADocument: TNyxDocument;
+  const ATarget, AScope, APage, ACompanion: TNyxText): TJSONObject;
+var
+  LDocument: TNyxDocument;
+  LRoot: TNyxNode;
+  LIndex: Integer;
+  LJob: TNyxText;
+  LDirectory: TNyxText;
+  LArguments: TStringList;
+  LSource: TNyxText;
+  LUnitName: TNyxText;
+  LCompanionSource: TNyxText;
+  LLog: TNyxText;
+  LExecutable: TNyxText;
+  LRuntime: TNyxText;
+  LLazarus: TNyxText;
+  LPlatform: TNyxText;
+  LWidgetset: TNyxText;
+  LOK: Boolean;
+  LReport: INyxCompilerReport;
+  LSubmittedSource: TNyxText;
+  LID: TGUID;
+
+  procedure AdmitBrowserPolicies(ANode: TNyxNode);
+  var
+    LEvents: TNyxAuthoredEventInfos;
+    LEventIndex: Integer;
+    LChildIndex: Integer;
+  begin
+    LEvents := NyxAuthoredEvents(ANode);
+    for LEventIndex := 0 to High(LEvents) do
+    begin
+
+      if LEvents[LEventIndex].Policy = neThreaded then
+      begin
+        raise ENyxModel.Create('Browser output cannot execute threaded callbacks on ' +
+          ANode.ID + '; choose asynchronous or a native output');
+      end;
+    end;
+    for LChildIndex := 0 to ANode.Count - 1 do
+    begin
+      AdmitBrowserPolicies(ANode.Children[LChildIndex]);
+    end;
+  end;
+
+begin
+
+  ValidateNyxOutputTarget(ATarget);
+
+  if (AScope <> 'view') and (AScope <> 'application') then
+  begin
+    raise ENyxModel.Create('Scope must be view or application');
+  end;
+  ValidateNyxDocumentProperties(ADocument);
+  CheckOutput(ATarget);
+  LDocument := nil;
+  LArguments := TStringList.Create;
+  try
+
+    if AScope = 'view' then
+    begin
+      LRoot := ADocument.Find(APage);
+
+      if LRoot = nil then
+      begin
+        raise ENyxModel.Create('Requested view is missing');
+      end;
+      { The public view-cloning contract preserves authored identity and takes
+        only reachable definitions. A maximum-length or definition-root preview
+        therefore needs neither a prefix nor a duplicate definition root. }
+      LDocument := CloneNyxViewDocument(ADocument, LRoot);
+    end
+    else
+    begin
+      { Use the complete ownership contract. Copying trees/state manually lost
+        collection defaults and produced a saved job design differing from its
+        companion. Clone carries every admitted document feature independently. }
+      LDocument := ADocument.Clone;
+    end;
+
+    if LDocument.Count = 0 then
+    begin
+      raise ENyxModel.Create('Add a page before building an application');
+    end;
+
+    if ATarget = 'browser' then
+    begin
+      for LIndex := 0 to LDocument.Count - 1 do
+      begin
+        AdmitBrowserPolicies(LDocument.Pages[LIndex]);
+      end;
+      for LIndex := 0 to LDocument.ComponentCount - 1 do
+      begin
+        AdmitBrowserPolicies(LDocument.Components[LIndex]);
+      end;
+    end;
+    { Companion admission precedes job allocation and compilation. Application
+      builds retain the exact accepted source; view builds replace only the
+      managed builder and preserve real imports, helpers and handwritten code. }
+    LUnitName := 'nyx.generated.view';
+    LCompanionSource := TNyxCodegen.Generate(LDocument);
+
+    if ACompanion <> '' then
+    begin
+      LUnitName := NyxCompanionUnitName(ACompanion);
+      LCompanionSource := PrepareNyxCompanion(ADocument, LDocument, ACompanion,
+        AScope = 'view');
+    end;
+    LSubmittedSource := ACompanion;
+
+    if LSubmittedSource = '' then
+    begin
+      LSubmittedSource := LCompanionSource;
+    end;
+    CreateGUID(LID);
+    { A per-invocation identity also separates concurrent HTTP/MCP workers. }
+    LJob := 'job-' + Copy(GUIDToString(LID), 2, 36);
+    LDirectory := FJobRoot + LJob + PathDelim;
+
+    if not ForceDirectories(LDirectory + 'units') then
+    begin
+      raise ENyxModel.Create('Cannot prepare the admitted compiler job directory');
+    end;
+    WriteFile(LDirectory + LUnitName + '.pas', LCompanionSource);
+    WriteFile(LDirectory + 'design.nyx', TNyxCodec.Encode(LDocument));
+    LArguments.Add('-Mdelphi');
+    LArguments.Add('-B');
+    { Both providers support full diagnostic paths. Bare filenames cannot
+      establish that an error belongs to this admitted companion rather than
+      a same-named dependency, so navigation requires this fixed option. }
+    LArguments.Add('-vb');
+    LArguments.Add('-Fu' + FRepository + 'src');
+    LArguments.Add('-Fu' + LDirectory);
+    LArguments.Add('-FE' + LDirectory);
+
+    if ATarget = 'browser' then
+    begin
+      LExecutable := FOutputs.Field('pas2js');
+      LRuntime := FOutputs.Field('runtime');
+
+      LSource := 'program nyx_preview;' + #10 + '{$mode delphi}{$H+}' + #10 +
+        '{$codepage utf8}' + #10 +
+        'uses Web, nyx.model, nyx.application.browser, ' + LUnitName + ';' + #10 +
+        'var LDocument: TNyxDocument; LApplication: TNyxBrowserApplication;' + #10 +
+        'begin' + #10 +
+        '  LDocument := BuildNyxDocument;' + #10 +
+        '  LApplication := TNyxBrowserApplication.Create;' + #10 +
+        '  LApplication.Run(LDocument, TJSHTMLElement(document.body));' + #10 +
+        '  document.body.setAttribute(''data-nyx-ready'', ''true'');' + #10 +
+        'end.' + #10;
+      WriteFile(LDirectory + 'nyx_preview.lpr', LSource);
+      LArguments.Add(LDirectory + 'nyx_preview.lpr');
+      LOK := RunCompiler(LExecutable, LDirectory, LArguments, LLog);
+      WriteFile(LDirectory + 'rtl.js', ReadFile(LRuntime));
+      WriteFile(LDirectory + 'index.html', HostHTML('nyx_preview'));
+    end
+    else
+    begin
+      LExecutable := FOutputs.Field('fpc');
+      LLazarus := IncludeTrailingPathDelimiter(FOutputs.Field('lazarus'));
+
+      LArguments.Add('-FU' + LDirectory + 'units');
+      LPlatform := FOutputs.Field('platform');
+      LWidgetset := FOutputs.Field('widgetset');
+
+      LArguments.Add('-Fu' + LLazarus + 'lcl/units/' + LPlatform);
+      LArguments.Add('-Fu' + LLazarus + 'lcl/units/' + LPlatform + '/' + LWidgetset);
+      LArguments.Add('-Fu' + LLazarus + 'components/lazutils/lib/' + LPlatform);
+      LArguments.Add('-Fu' + LLazarus + 'packager/units/' + LPlatform);
+      LSource := 'program nyx_native;' + #10 + '{$mode delphi}{$H+}' + #10 +
+        '{$codepage utf8}' + #10 +
+        'uses Interfaces, Forms, nyx.model, nyx.application.lcl, ' + LUnitName + ';' + #10 +
+        'var LDocument: TNyxDocument; LApplication: TNyxLCLApplication;' + #10 +
+        'begin' + #10 + '  Application.Initialize;' + #10 +
+        '  LDocument := BuildNyxDocument;' + #10 +
+        '  LApplication := TNyxLCLApplication.Create;' + #10 +
+        '  try' + #10 +
+        '    LApplication.Run(LDocument);' + #10 +
+        '  finally' + #10 + '    LApplication.Free;' + #10 +
+        '    LDocument.Free;' + #10 +
+        '  end;' + #10 + 'end.' + #10;
+      WriteFile(LDirectory + 'nyx_native.lpr', LSource);
+      LArguments.Add(LDirectory + 'nyx_native.lpr');
+      LOK := RunCompiler(LExecutable, LDirectory, LArguments, LLog);
+    end;
+    WriteFile(LDirectory + 'compiler.log', LLog);
+    LReport := ReadNyxCompilerReport(LSubmittedSource, LCompanionSource,
+      LDirectory + LUnitName + '.pas', LLog);
+    Result := TJSONObject.Create;
+    Result.Add('ok', LOK);
+    Result.Add('build', LJob);
+    Result.Add('target', ATarget);
+    Result.Add('scope', AScope);
+    Result.Add('log', LLog);
+    Result.Add('diagnostics', DecodeNyxJSON(LReport.Encode));
+
+    if ATarget = 'browser' then
+    begin
+      Result.Add('artifact', 'builds/' + LJob + '/index.html');
+    end
+    else
+    begin
+      Result.Add('artifact', 'builds/' + LJob + '/nyx_native.exe');
+    end;
+    Result.Add('source', 'builds/' + LJob + '/' + LUnitName + '.pas');
+    Result.Add('companion', ACompanion <> '');
+  finally
+    LArguments.Free;
+    LDocument.Free;
+  end;
+end;
+
+end.
