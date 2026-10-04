@@ -64,6 +64,21 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The latest property/projection candidate qualifies all 76 catalog kinds / 262
+expanded faces: 14,127 native checks with zero leaks and 14,269 desktop / 14,270
+exact-390 browser checks. Contextual typed MCP edits pass 39 native/browser
+checks each; the real protocol gate passes 75, including measured preview
+viewports. Both application compiler files match the unchanged MCP export.
+Studio passes 52/52, editing 117/118 native and 121 browser, and HTTP 177.
+Deployment was refused by automatic approval review; the prior LAN release and
+user pair remain intact. The verified candidate and its six-file manifest remain
+staged. Original event criterion 1 stays open at counter 8; criteria 2/3/4 retain
+accepted status and codegen criterion 3 stays at 11. Native proportional layouts,
+portable resources, complete accessibility and native Studio still require their
+original acceptance paths. See [the property matrix](docs/property-concordance.md)
+and [current process/delivery state](WORK.md). Earlier packets below retain their
+bounded evidence; they do not establish this candidate's production deployment.
+
 Typed gesture contracts now add capture/cancellation and seven drag phases to
 the existing editing/semantic families. Transfers own protected/readable formats
 and bounded metadata; only active sequential callbacks negotiate physical
@@ -82,7 +97,7 @@ actions with actual browser host keys and LCL controls. Native selection passes
 154 preparation/compiled checks each with zero leaks; executed browser passes
 181. Studio passes 52/52, HTTP 177 and MCP 55, with selective PNG validation.
 Component help reaches Studio and bounded agent search. Event criterion 1 remains
-open at counter 6; criteria 2/3/4 remain accepted. Semantic callback authoring now
+open at counter 8; criteria 2/3/4 remain accepted. Semantic callback authoring now
 has a focused twelfth tool: additions, policy, exact ordering and reviewed
 removal publish one source/design Undo step while retaining drafts and selection.
 Portable tests, an observing Nyx editor and unchanged compiled TODO consumers

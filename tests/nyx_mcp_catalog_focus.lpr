@@ -31,6 +31,7 @@ var
   GClient: TNyxMCPTestClient;
   GRevision: Integer;
   GDirectory: TNyxText;
+  GProperties: Boolean;
 
 { TNyxText is UTF-8 on this native boundary. Write its bytes directly, avoiding
   ANSI TStringList conversion of the generated companion or catalog metadata. }
@@ -88,6 +89,38 @@ begin
   Result := NyxObject([NyxField('op', NyxData('create')),
     NyxField('kind', NyxData(AKind)), NyxField('id', NyxData(AID)),
     NyxField('parent', NyxData(AParent)), NyxField('properties', AProperties)]);
+end;
+
+procedure CreatePropertyReview;
+begin
+  { The property consumer uses the same semantic path as catalog composition.
+    Geometry is numeric protocol data, never a behavioral string workaround.
+    This adds one complete review as one undoable revision-aware operation. }
+  Call('nyx_transaction', NyxObject([
+    NyxField('expectedRevision', NyxData(GRevision)),
+    NyxField('operationId', NyxData('catalog-property-review')),
+    NyxField('operations', NyxArray([
+      CreateControl('page', 'property-review', '', NyxObject([
+        NyxField('padding', NyxData(24)), NyxField('gap', NyxData(16))]), True),
+      CreateControl('row', 'property-layout', 'property-review', NyxObject([
+        NyxField('width', NyxData(320)), NyxField('height', NyxData(140)),
+        NyxField('padding', NyxData(16)), NyxField('gap', NyxData(12))])),
+      CreateControl('label', 'property-left', 'property-layout', NyxObject([
+        NyxField('text', NyxData('Left')), NyxField('width', NyxData(100)),
+        NyxField('height', NyxData(28))])),
+      CreateControl('label', 'property-right', 'property-layout', NyxObject([
+        NyxField('text', NyxData('Right')), NyxField('width', NyxData(100)),
+        NyxField('height', NyxData(28))])),
+      CreateControl('heading', 'property-title', 'property-review', NyxObject([
+        NyxField('text', NyxData('Everything stays in sync.'))])),
+      CreateControl('code', 'property-code', 'property-review', NyxObject([
+        NyxField('text', NyxData('procedure CreateSomething;'))])),
+      CreateControl('progress', 'property-progress', 'property-review', NyxObject([
+        NyxField('min', NyxData(20)), NyxField('max', NyxData(80)),
+        NyxField('value', NyxData(50))])),
+      CreateControl('input', 'property-numeric', 'property-review', NyxObject([
+        NyxField('text', NyxData('A format can change')),
+        NyxField('input-type', NyxData('number')), NyxField('value', NyxData(12))]))]))]));
 end;
 
 { Export only bounded accepted-source windows at one revision. The consumer
@@ -250,11 +283,13 @@ begin
   SetLength(LOps, 0);
   try
 
-    if (ParamCount <> 2) and not ((ParamCount = 3) and (ParamStr(3) = 'inspect')) then
+    if (ParamCount <> 2) and not ((ParamCount = 3) and
+      ((ParamStr(3) = 'inspect') or (ParamStr(3) = 'properties'))) then
     begin
-      raise Exception.Create('Supply disposable MCP config, owned source directory and optional inspect');
+      raise Exception.Create('Supply disposable MCP config, owned source directory and optional inspect/properties');
     end;
     GDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
+    GProperties := (ParamCount = 3) and (ParamStr(3) = 'properties');
     ForceDirectories(GDirectory);
     GClient := TNyxMCPTestClient.Create(ParamStr(1), 'Scooty catalog focus qualification');
     LValue := Call('nyx_session', NyxObject([]));
@@ -279,7 +314,7 @@ begin
     LBatch := 0;
     { Inspect is read-only and never retries composition on an existing service. }
 
-    if ParamCount = 2 then
+    if (ParamCount = 2) or GProperties then
     begin
       for LIndex := 0 to High(LEntries) do
       begin
@@ -326,6 +361,12 @@ begin
           CreateControl('radio', 'radio-last', 'radio-peers', NyxObject([])),
           CreateControl('button', 'radio-after', 'catalog-radio-peers', NyxObject([]))]))]));
       Inc(LBatch);
+
+      if GProperties then
+      begin
+        CreatePropertyReview;
+        Inc(LBatch);
+      end;
     end;
     SetLength(LMetadata, Length(LEntries));
     for LIndex := 0 to High(LEntries) do
@@ -342,7 +383,7 @@ begin
     Save('metadata.json', NyxArray(LMetadata).ToJSON);
     ExportSource;
 
-    if ParamCount = 2 then
+    if (ParamCount = 2) or GProperties then
     begin
       LValue := Call('nyx_build', NyxObject([NyxField('mode', NyxData('outputs'))]));
       Compile('browser', LValue.Field('outputID').AsText);
@@ -350,7 +391,7 @@ begin
     end;
     GClient.Close;
 
-    if ParamCount = 2 then
+    if (ParamCount = 2) or GProperties then
     begin
       WriteLn('PASS semantic composition, bounded metadata/source and both compilers / ',
         Length(LEntries), ' catalog kinds / ', LBatch, ' paired transactions');

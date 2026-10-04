@@ -68,6 +68,19 @@ its evidence; this check adds no completion credit. Native named handles in this
 running chat still require client reconnection. The Pascal MCP client is primary
 and usable immediately. See [the work record](../WORK.md).
 
+## Contextual admission and rendered viewports — 2026-10-04
+
+The subsequent catalog property journey exposed and repaired contextual scalar
+admission: selectors and values now resolve against their complete detached
+candidate, independent of member order, while wrong JSON types retain paired
+history and selection. Native/executed-browser admission pass 39 each; real MCP
+passes 75, including exact decimal/Unicode values and complete rejected-pair
+preservation. Selective preview validation also repaired requested CSS dimensions:
+immutable packets retain them, and capture requires measured viewport/revision
+agreement. This corrects the existing preview boundary; it does not close the
+remaining general source, state/binding, reusable or protected workspace criteria.
+See the property/projection delivery in WORK.md.
+
 ## Maintained keyboard review — 2026-10-04
 
 One real revision-aware transaction now composes the maintained keyboard review

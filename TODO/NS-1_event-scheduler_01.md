@@ -500,3 +500,27 @@ criterion, scope, counter or credit transfers or resets. Next reassessment must
 compare the complete criterion with existing property/extension/event evidence
 and produce a finite property/projection conformance matrix before more adapter
 work; avoid another isolated hook-list batch. Full goal remains active.
+
+## Property/projection qualification — 2026-10-04
+
+The declared finite matrix now covers all 47 typed attributes, with the affected
+nine physical families and layout/surface transitions exercised across 76 kinds
+and 262 expanded faces. Native passes 14,127 checks with zero leaks; browser
+passes 14,269 desktop and 14,270 inside an actual 390-pixel viewport. The unchanged
+MCP export equals both actual application compiler files. Mutable literal rows,
+Unicode/quoted/ragged cells, attachment ownership, native code/group captions,
+images, intrinsic input format/policy changes and ranged browser progress have
+integrated evidence. Contextual MCP scalar admission and actual preview viewports
+were repaired at their existing workflow owner. Studio and editing regressions,
+real MCP and delegated compilers pass. See WORK.md and docs/property-concordance.md.
+
+Automatic approval review refused production replacement before execution;
+the prior LAN service/artifacts/user pair remain intact. The qualified candidate
+is staged with its complete six-file manifest and backups. No deployment is
+claimed. Original criterion 1 stays open at consecutive no-closure counter 8;
+criteria 2/3/4 remain accepted and codegen criterion 3 stays at 11. Native flex /
+hidden-space semantics, portable asset resolution, complete accessibility,
+hardware/IME, other widgetsets and native Studio retain their original criteria.
+Next independent action is integrated proportional/hidden layout qualification
+under the existing LCL/parity owners, using the shared contract on both targets.
+Do not expand another isolated event/property hook batch or lower support grades.

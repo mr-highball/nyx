@@ -123,6 +123,11 @@ Unicode scalar slices (up to 2048 scalars), with a total and truncation flag.
 Source queries return up to 80 lines. Structured context is capped at 48 KiB;
 request fewer items, properties or lines when that budget is exceeded.
 
+Preview dimensions specify an actual CSS viewport, including narrow layouts;
+they are retained in the immutable snapshot. PNG capture checks the measured
+viewport and revision before returning an image. Use captures sequentially:
+competing browser processes can exceed the existing twenty-second capture budget.
+
 Structured results also have a serialized text representation for compatible
 clients. See [MCP tools](https://modelcontextprotocol.io/specification/2025-11-25/server/tools).
 
@@ -146,6 +151,12 @@ The property values retain their JSON scalar types. Human text and open authored
 identifiers remain strings at this explicit wire boundary; Boolean/integer/number
 properties are not accepted as string spellings. The Pascal implementation
 admits these requests into a typed operation enum and an immutable patch object.
+
+Related contextual properties belong in the same operation. For example,
+`{"input-type":"number","value":0.1250}` creates/configures a numeric input;
+reversing member order has the same meaning. Admission checks the complete
+candidate's domain against the original JSON types. Numeric strings still refuse,
+and a failed group preserves the accepted source/design, selection and history.
 
 ## Semantic compiler jobs
 

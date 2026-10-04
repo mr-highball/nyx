@@ -31,6 +31,53 @@ var
   GRequest: TJSXMLHttpRequest;
   GDocument: TNyxDocument;
   GRenderer: TNyxBrowserRenderer;
+  GFrame: TJSHTMLIFrameElement;
+  GPacket: TNyxDataValue;
+
+{ A headless browser's minimum outer-window width is not a CSS viewport promise.
+  The independently admitted preview lives in an exact-size child viewport;
+  its real dimensions and revision must agree before the outer page is ready. }
+procedure CheckFrame;
+var
+  LBody: TJSHTMLElement;
+  LReady: String;
+begin
+
+  if (GFrame.contentDocument = nil) or (GFrame.contentDocument.body = nil) then
+  begin
+    window.setTimeout(@CheckFrame, 25);
+    Exit;
+  end;
+  LBody := TJSHTMLElement(GFrame.contentDocument.body);
+  LReady := LBody.getAttribute('data-nyx-preview-ready');
+
+  if LReady = 'true' then
+  begin
+
+    if (LBody.getAttribute('data-nyx-preview-width') <>
+      IntToStr(GPacket.Field('width').AsInteger)) or
+      (LBody.getAttribute('data-nyx-preview-height') <>
+      IntToStr(GPacket.Field('height').AsInteger)) or
+      (LBody.getAttribute('data-nyx-preview-revision') <>
+      IntToStr(GPacket.Field('revision').AsInteger)) then
+    begin
+      document.body.setAttribute('data-nyx-preview-ready', 'failed');
+      Exit;
+    end;
+    document.body.setAttribute('data-nyx-preview-width', LBody.getAttribute('data-nyx-preview-width'));
+    document.body.setAttribute('data-nyx-preview-height', LBody.getAttribute('data-nyx-preview-height'));
+    document.body.setAttribute('data-nyx-preview-revision', LBody.getAttribute('data-nyx-preview-revision'));
+    document.body.setAttribute('data-nyx-preview-ready', 'true');
+  end
+  else if LReady = 'failed' then
+  begin
+    document.body.setAttribute('data-nyx-preview-ready', 'failed');
+  end
+  else
+  begin
+    window.setTimeout(@CheckFrame, 25);
+  end;
+end;
 
 procedure Ready;
 var
@@ -50,6 +97,24 @@ begin
       raise Exception.Create('The preview snapshot expired; request a new revision');
     end;
     LPacket := TNyxDataValue.ParseJSON(GRequest.responseText);
+
+    if Pos('&frame=1', window.location.search) = 0 then
+    begin
+      { Same-origin child navigation retains the opaque snapshot capability.
+        CSS/media queries and viewport units see the admitted dimensions even
+        if the host window is larger. Only Pascal controls this presentation. }
+      GPacket := LPacket;
+      GFrame := TJSHTMLIFrameElement(document.createElement('iframe'));
+      GFrame.setAttribute('title', 'Nyx rendered preview');
+      GFrame.style.setProperty('display', 'block');
+      GFrame.style.setProperty('width', IntToStr(LPacket.Field('width').AsInteger) + 'px');
+      GFrame.style.setProperty('height', IntToStr(LPacket.Field('height').AsInteger) + 'px');
+      GFrame.style.setProperty('border', '0');
+      GFrame.src := window.location.pathname + window.location.search + '&frame=1';
+      document.body.appendChild(GFrame);
+      window.setTimeout(@CheckFrame, 25);
+      Exit;
+    end;
     GDocument := TNyxCodec.Decode(LPacket.Field('design').AsText);
     LRoot := GDocument.Find(LPacket.Field('view').AsText);
 
@@ -62,6 +127,8 @@ begin
     document.body.appendChild(LHost);
     GRenderer := TNyxBrowserRenderer.Create;
     GRenderer.Render(GDocument, LRoot, LHost, False);
+    document.body.setAttribute('data-nyx-preview-width', IntToStr(window.innerWidth));
+    document.body.setAttribute('data-nyx-preview-height', IntToStr(window.innerHeight));
     document.body.setAttribute('data-nyx-preview-ready', 'true');
     document.body.setAttribute('data-nyx-preview-revision', IntToStr(LPacket.Field('revision').AsInteger));
   except

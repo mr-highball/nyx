@@ -881,9 +881,18 @@ begin
 
         if LKind = 'image' then
         begin
-          LNative := ncText;
-          LDescription := 'Browser image source/alternative text. ' +
-            'The current LCL image projection is a text fallback.';
+
+          if AAttribute = atSource then
+          begin
+            LNative := ncBasic;
+            LDescription := 'Browser image URL; standard LCL pictures resolve local ' +
+              'files. Native network/portable asset resolution requires a supplied adapter.';
+          end
+          else
+          begin
+            LDescription := 'Browser alternative text and native accessible ' +
+              'description. Empty text deliberately describes a decorative image.';
+          end;
         end
         else
         begin

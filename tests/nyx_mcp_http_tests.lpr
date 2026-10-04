@@ -25,7 +25,7 @@ program nyx_mcp_http_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, nyx.text, nyx.types, nyx.data, nyx.studio.session, nyx.studio.projects,
+  Classes, SysUtils, fphttpclient, nyx.text, nyx.types, nyx.data, nyx.studio.session, nyx.studio.projects,
   nyx.test.mcp.client;
 
 var
@@ -44,6 +44,8 @@ var
   LCaptureEvents: Integer;
   LTrigger: TNyxTrigger;
   LEvent: TNyxDataValue;
+  LBeforeContext: TNyxDataValue;
+  LAfterContext: TNyxDataValue;
 
 procedure Check(ACondition: Boolean; const AMessage: TNyxText);
 begin
@@ -53,6 +55,34 @@ begin
     raise Exception.Create(AMessage);
   end;
   Inc(LCount);
+end;
+
+{ Read only the already-issued immutable preview capability in this native
+  transport fixture. Keep UTF-8 body bytes intact; nothing is logged or edited. }
+function PreviewPacket(const AURL: TNyxText): TNyxDataValue;
+var
+  LHTTP: TFPHTTPClient;
+  LBytes: TMemoryStream;
+  LText: TNyxText;
+begin
+  LHTTP := TFPHTTPClient.Create(nil);
+  LBytes := TMemoryStream.Create;
+  try
+    LHTTP.IOTimeout := 15000;
+    LHTTP.Get(StringReplace(AURL, '/agent-preview.html?', '/api/agents/preview?', []), LBytes);
+    Check(LBytes.Size <= 4 * 1024 * 1024, 'Preview packet retains its bounded fixture budget');
+    SetLength(LText, LBytes.Size);
+    LBytes.Position := 0;
+
+    if LBytes.Size > 0 then
+    begin
+      LBytes.ReadBuffer(LText[1], LBytes.Size);
+    end;
+    Result := TNyxDataValue.ParseJSON(LText);
+  finally
+    LBytes.Free;
+    LHTTP.Free;
+  end;
 end;
 
 function Transaction(const AID, AOperations: TNyxText; ARevision: Integer): TNyxDataValue;
@@ -230,6 +260,54 @@ begin
     Inc(LRevision);
     LValue := LClient.Tool('nyx_node', NyxObject([NyxField('id', NyxData('mcp-button'))]));
     Check(not LValue.Field('isError').AsBoolean, 'Undo restores deleted control');
+    { Real transport qualification of the contextual admission found by the
+      catalog author. Both wire member orders retain exact numeric values. }
+    LValue := LClient.Tool('nyx_transaction', Transaction('http-context-create',
+      '[{"op":"create","kind":"input","id":"http-number-first","parent":"mcp-row",' +
+      '"properties":{"value":0.1250,"input-type":"number"}},' +
+      '{"op":"create","kind":"input","id":"http-selector-first","parent":"mcp-row",' +
+      '"properties":{"input-type":"number","value":0.1250}}]', LRevision));
+    Check(not LValue.Field('isError').AsBoolean, 'HTTP admits both numeric creation member orders');
+    Inc(LRevision);
+    LValue := LClient.Tool('nyx_node', NyxObject([NyxField('id', NyxData('http-number-first')),
+      NyxField('keys', NyxArray([NyxData('value')]))]));
+    Check(LValue.Field('structuredContent').Field('properties').Item(0).Field('value').ToJSON = '0.1250',
+      'HTTP value-before-selector retains exact decimal');
+    LValue := LClient.Tool('nyx_node', NyxObject([NyxField('id', NyxData('http-selector-first')),
+      NyxField('keys', NyxArray([NyxData('value')]))]));
+    Check(LValue.Field('structuredContent').Field('properties').Item(0).Field('value').ToJSON = '0.1250',
+      'HTTP selector-before-value retains exact decimal');
+    LBeforeContext := NyxTestEditorExchange(LBase, '/api/agents', LToken,
+      NyxObject([NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]));
+    LValue := LClient.Tool('nyx_transaction', Transaction('http-context-refused',
+      '[{"op":"title","value":"must roll back"},' +
+      '{"op":"update","id":"http-number-first","properties":{"value":"12","input-type":"number"}}]',
+      LRevision));
+    Check(LValue.Field('isError').AsBoolean, 'HTTP still refuses numeric strings after selector staging');
+    LAfterContext := NyxTestEditorExchange(LBase, '/api/agents', LToken,
+      NyxObject([NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]));
+    Check(LBeforeContext.Field('project').AsText = LAfterContext.Field('project').AsText,
+      'Refused contextual HTTP group retains complete exact paired source/design');
+    Check((LBeforeContext.Field('session').Field('revision').AsInteger = LRevision) and
+      (LAfterContext.Field('session').Field('revision').AsInteger = LRevision) and
+      (LBeforeContext.Field('session').Field('selection').AsText =
+        LAfterContext.Field('session').Field('selection').AsText) and
+      (LBeforeContext.Field('session').Field('view').AsText =
+        LAfterContext.Field('session').Field('view').AsText) and
+      (LBeforeContext.Field('session').Field('canUndo').AsBoolean =
+        LAfterContext.Field('session').Field('canUndo').AsBoolean) and
+      (LBeforeContext.Field('session').Field('canRedo').AsBoolean =
+        LAfterContext.Field('session').Field('canRedo').AsBoolean),
+      'Refused contextual HTTP group retains revision, selection, view and history');
+    LValue := LClient.Tool('nyx_transaction', Transaction('http-context-text',
+      '[{"op":"update","id":"http-number-first","properties":{"value":"🌙 text","input-type":"text"}}]',
+      LRevision));
+    Check(not LValue.Field('isError').AsBoolean, 'HTTP admits a numeric-to-text format and value together');
+    Inc(LRevision);
+    LValue := LClient.Tool('nyx_node', NyxObject([NyxField('id', NyxData('http-number-first')),
+      NyxField('keys', NyxArray([NyxData('value')]))]));
+    Check(LValue.Field('structuredContent').Field('properties').Item(0).Field('value').AsText = '🌙 text',
+      'HTTP contextual text retains supplementary Unicode');
     NyxTestEditorExchange(LBase, '/api/agents', LToken, NyxObject([NyxField('op', NyxData('configure')),
       NyxField('permission', NyxData('readOnly'))]));
     LValue := LClient.Tool('nyx_transaction', Transaction('http-denied', '[{"op":"title","value":"denied"}]', LRevision));
@@ -292,6 +370,15 @@ begin
     Check((LValue.Field('content').Count = 3) and
       (LValue.Field('content').Item(2).Field('mimeType').AsText = 'image/png'), 'MCP image content is PNG');
     Check(Pos('iVBOR', LValue.Field('content').Item(2).Field('data').AsText) = 1, 'PNG stream encodes exact binary bytes');
+    { The public snapshot route gives this already-issued capability its exact
+      admitted viewport. Capture additionally requires measured child dimensions,
+      rather than accepting the requested PNG dimensions as layout evidence. }
+    LArguments := LValue.Field('structuredContent');
+    LEditor := PreviewPacket(LArguments.Field('url').AsText);
+    Check((LEditor.Field('width').AsInteger = 390) and
+      (LEditor.Field('height').AsInteger = 844) and
+      (LEditor.Field('revision').AsInteger = LRevision),
+      'Immutable preview packet carries the admitted CSS viewport and revision');
     LClient.Close;
     Check(True, 'Transport termination accepted');
     LClient.Free;

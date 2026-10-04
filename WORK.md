@@ -7,29 +7,30 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest delivery (2026-10-04): full-catalog focus/keyboard concordance is
-qualified and deployed. Semantic MCP authored all 76 kinds plus a radio-peer
-page in six paired transactions. Bounded live metadata agrees with the compiled
-catalog; exported source is byte-identical to both actual compiler jobs.
-Windows LCL qualifies 103 faces / 30,637 checks with zero unfreed blocks;
-browser host input passes 23,434 checks at desktop and exact 390-by-844 each.
-Splitter consumption/read-only, logical collection focus and radio peer policies
-have focused evidence. The complete packet follows below. Original event
-criterion 1 remains open at no-closure counter 7; 2/3/4 stay accepted, codegen
+Latest qualification (2026-10-04): integrated property/projection concordance.
+Semantic MCP authors all 76 kinds and a property review in seven paired groups;
+exported source equals both actual compiler job files. Native qualifies 262
+expanded faces / 14,127 checks with zero leaks; browser passes 14,269 desktop and
+14,270 exact-390. Contextual typed admission passes 39 native/browser each,
+real MCP 75, HTTP 177 and Studio 52/52. Measured preview viewport validation is
+also repaired. The complete packet follows below. Original event
+criterion 1 remains open at no-closure counter 8; 2/3/4 stay accepted, codegen
 criterion 3 stays at 11 and the full goal stays active. No scope or counter reset.
 
-Only production PID 39004 / persistent exec 65653 remains at the existing
-firewall-authorized executable path and LAN binding. The exact user pair,
-selection/view and permission were restored; no draft/history existed at restart.
-All six installed/served release hashes match the manifest. Fresh installed
+Production PID 29656 remains at the existing firewall-authorized executable path
+and LAN binding, serving the preceding focus/keyboard release. Automatic approval
+review rejected the combined stop/install/restart action before execution, with
+only "blocked by policy" as its reason. All six production artifacts and the exact
+user pair remain unchanged; health is 200. The new candidate is qualified and
+staged with backups and release-manifest.json, but is not installed. Fresh installed
 Codex authenticates fifteen tools from another project after connection rotation.
 Project/enrolled configuration refresh remains automatic. This existing chat
 needs the documented MCP client reconnect for native named handles; the Pascal
 semantic client is active and primary. No user design received a test fixture.
 
-Remote checkpoint: implementation 9b2d07355a1abbad761de29c787eb14d34b785e1
-is pushed to origin/hello-nyx and independently matched with git ls-remote.
-This handoff record follows that protected implementation.
+The preceding checkpoint c2c6f81001aa99bb1ac70334daa0d3b70449553e is on
+origin/hello-nyx. The current qualified source checkpoint and exact remote proof
+are recorded below after publication. No unqualified product deployment is claimed.
 
 Completed integrated batch (declared 2026-10-04): NS-1_event-scheduler_01
 criterion 1, at consecutive no-closure counter 6. Prior keyboard evidence
@@ -3522,3 +3523,179 @@ property/extension and event producer evidence, then declare a finite
 property/projection conformance matrix and repair concrete false published
 claims. Do not substitute another isolated hook-list batch or transfer remaining
 requirements to obtain closure. The full goal remains active.
+
+## Property/projection reassessment — declared 2026-10-04
+
+Previous configuration follow-up verified the live pair and authenticated fifteen
+tools without changing product state; it does not close another goal criterion.
+The next available independent action is original event criterion 1's property
+concordance, at counter 7. The finite matrix in docs/property-concordance.md maps
+all 47 typed attributes to rendered or shared-contract acceptance and existing
+evidence. This materially changes the decision path from hook-list expansion.
+Criteria 2/3/4 remain accepted; codegen criterion 3 remains open at counter 11.
+
+Concrete product deliverable: repair mutable literal content, input formats,
+native code/group captions, image attributes/local pictures, browser progress
+range presentation and layout/surface transitions. Use one disposable MCP-authored
+76-kind companion and both real target consumers. Check Unicode/quoted/empty and
+ragged rows, no-op identity/selection/drafts, attachment ownership and absence of
+programmatic callback dispatch. Existing interaction/split/focus/source packets
+are reused where unchanged. Do not replace or claim the LAN user's design.
+
+Budget: one integrated repair and its focused target/Studio/protocol gates in
+this batch; do not expand into a new resource loader, virtualization, hardware,
+widgetset or native Studio project. Stop publication on failed lifetime, stale
+focus, bound-row replacement, unwanted callback, source mismatch or preservation
+checks. Record a concrete remaining gap with its existing owner and switch to
+that acceptance path rather than repeated isolated property patches. General
+native flex/hidden-space and resource-provider parity remain required; no support
+grade or original criterion is weakened to earn closure.
+
+## Updated Codex connection check — 2026-10-04
+
+The user updated/restarted Codex and asked for live connection verification.
+Authoritative process and listener checks found both prior Studio services gone;
+the refreshed chat also exposes no native Nyx named handles. This changes the
+next action: recover the qualified product service before testing authentication.
+No replacement product artifacts or dependency changes were installed.
+
+The qualified production server SHA256 remains
+8A64F04282B61793606C93ED297D8084178360B8C35AFA63504532CEEE6D7FA6.
+It now runs as hidden independent process 29656, with identity checked at the
+original executable/root and editor 0.0.0.0:8088 / MCP 127.0.0.1:8089.
+Both loopback and existing LAN health return 200. The last verified saved pair
+from .local/catalog-production-final-observe.json was recovered through guarded
+first-claim admission; exact ordinal project equality, selection/view, no draft
+and empty history are verified at revision 2. No already-claimed user pair was
+overwritten. Current private operator credentials/state and startup logs are in
+ignored .local/codex-restart-check/; older connection credentials are expired.
+
+Project/enrolled user managed blocks match the new session endpoint, without
+configuration warning. The newly installed Codex executable authenticates all
+fifteen tools through actual initialized discovery from another project;
+the Pascal semantic MCP client also discovers fifteen and reads the live session.
+This chat's native inventory still lacks Nyx handles. The user was told the
+remaining desktop Settings > MCP servers > Restart step; primary semantic access
+continues through the Pascal client. Do not confuse fresh initialized discovery
+with the current chat's tool inventory. Evidence: codex-discovery.log,
+tools.jsonl and connection.json in the private check directory. No setup criterion
+or overall goal is newly closed by this recheck.
+
+Return path: the property/projection batch above remains uncommitted and not
+deployed. Native property consumers last passed 14,124 checks across 76 kinds / 262
+faces with zero leaks; browser's preceding executed packet passed 14,259.
+Subsequent dynamic numeric/text event-policy changes still require execution on
+both targets. Real MCP creation exposed stale property metadata in ConfigureNode:
+one input-type=number plus numeric value operation is refused against the
+initial text domain. Repair shared detached admission without numeric-to-string
+coercion, then qualify order-independent contextual properties and exact rejected
+pair preservation. The disposable property server is no longer live after the
+app restart; launch a fresh isolated service with its output profile before the
+maintained properties author/build journey. Preserve the live production user
+pair. Original event criterion 1 remains open at counter 7, codegen criterion 3
+at 11; no original acceptance scope changes.
+
+## Property/projection qualification — 2026-10-04
+
+The declared integrated repair is implemented and qualified. Literal Items now
+have independent content baselines on both targets: no-op publications retain
+row handles/selection/scroll, changes retain the face, and managed collection
+attachments keep their dataset ownership. A shared UTF-8 literal tab splitter
+retains quotes and empty/ragged cells. Native group legends and code captions
+synchronize. Detached local pictures decode before publication, expose alt text
+and clear safely; portable network/resource providers remain open. Browser
+images update validated attributes, progress maps the authored minimum/range,
+layout clearing restores natural flow/local absolute positioning, and additional
+surfaces toggle without replacing controls.
+
+All seven input formats update in place; native masking clears correctly.
+Intrinsic text/numeric editing policies change with format, including faces
+initially mounted as numeric. Unrelated Sync retains drafts and emits no user
+callbacks. Explicit declared recipe domains retain authority. Shared detached
+edit admission stages complete scalar configurations before resolving their
+final metadata, then checks original JSON types. Ownership transfers into the
+detached tree before lookup so ancestor contracts participate. Member order
+cannot turn numeric creation or numeric-to-text updates into a false refusal;
+strings never gain numeric/Boolean authorization. Wrong types/unknown fields
+retain exact paired source/design, selection/view, revision and Undo/Redo.
+
+MCP remains primary: bounded catalog discovery, seven paired composition groups,
+small metadata queries, 80-line export windows and both actual immutable
+application compiler jobs. Companion SHA256
+2ACA84384B8DD0C716294F75BD4CF686B1641635D871546FFFCDE228BE3B2E1D
+equals both compiler-produced source files at revision 8. Physical fixtures
+consume that unchanged source; their local binding extension remains explicit
+because semantic collection binding authoring still has its existing workflow gap.
+
+Selective rendering exposed that the old immutable packet omitted requested
+dimensions: PNG width alone did not prove CSS viewport width. The packet now
+carries dimensions, and the Pascal preview renders inside an exact-size child
+viewport. Capture requires measured width, height and revision to agree. A
+revision-10 MCP-authored view was inspected at 390-by-844; input/code/progress
+fit the width, with the progress value correctly centered in its authored range.
+This corrects the original preview boundary without claiming complete accessibility.
+
+Evidence under ignored build/property-concordance/qualified/:
+
+| Boundary | Qualified evidence |
+| --- | --- |
+| Semantic author / real compilers | semantic-author.log: 76 kinds, seven paired groups, browser/LCL applications succeeded, 33,401,158 allocations/frees, zero leaks |
+| Immutable source equality | source/browser-build.json and lcl-build.json: revision 8/current; both actual files equal the export SHA256 above |
+| Native control consumer | controls-final-build.log: 76 kinds, 262 faces, 14,127 checks; 6,045,799 allocations/frees, zero leaks |
+| Executed browser / exact phone | controls-browser/ and controls-phone/: 14,269 and 14,270; the latter asserts actual inner width 390 |
+| Typed detached admission | ../admission-run.log and agents-browser/: 39 each; native 3,718,036 allocations/frees, zero leaks |
+| Existing shared agent boundaries | ../agents-build.log: callback 45, handler 72, roots 45, build admission 33, compiler resource/lifetime 45 |
+| Real final MCP / CSS viewport | mcp-qualified-gate.log: 75; 3,553,430 allocations/frees, zero leaks |
+| Delegated HTTP / actual execution | http-qualified-gate.log: 177 |
+| Editing / ownership regression | editing-build.log: native preparation/compiled 117/118, zero leaks; editing-browser/: 121 executed checks |
+| Nyx Studio | studio-desktop/ and studio-phone/: 52 each; phone asserts actual width 390 |
+| Selective semantic rendering | viewport-preview-response.json and viewport-stage/build/agent-previews/: inspected revision-10 390-by-844 PNG |
+
+Earlier core/designer, scheduler, focus, selection and gesture evidence remains
+applicable where unchanged. No broad suite was repeated without a changed
+boundary. Fixture failures are retained honestly: initial missing output profiles
+and numeric metric strings were corrected; picture preparation had cached the
+first encoded BMP; an input fixture inferred domain from family instead of its
+declared contract. Native checkpoints exposed these rather than weakening
+assertions. One preview overlapped another capture and timed out; a deliberate
+sequential capture passed without restarting the live server. The first HTTP run
+used an old executable and the wrong artifact working directory; the current
+checked consumer, run under its owned server root, passes 177. Its retained
+failed log is http-gate.log. No failed run is counted as qualification.
+
+Delivery state: release-manifest.json records all six candidate/previous hashes;
+release-backup/ retains prior files. Automatic approval review rejected the
+combined production stop/install/restart command before execution, reporting
+only "blocked by policy". Verification afterward confirms production PID 29656
+is still live, all six installed files retain their previous hashes, health is
+200 and the full user pair/selection/view/history/permission remains unchanged.
+Private before/after/operator records stay under ignored .local/codex-restart-check/.
+Do not retry the refused command in a disguised form or claim installation.
+Native named handles still await the already-explained desktop reconnect;
+the authenticated Pascal semantic client remains primary.
+
+Candidate server SHA256:
+F20118F5C39156C69183CF58741784B6948B10C6CC4E81ACC4FB1FEFB96090CD.
+Candidate main JS:
+FD083D1D2F6EF6E6EB5A37F88A92958B13BA36481BADF113B318F6F8CF4222E4.
+Candidate preview JS:
+10C942FEE9CD9C3B68A7948438CA70A47784BA68D9ABDF89C2B6386D817E99DC.
+
+All qualification jobs/consumers are terminal. Three owned loopback services
+remain idle: catalog/property PID 2580 (8218/8219), protocol PID 29628
+(8228/8229), final viewport/protocol PID 7312 (8238/8239). Their exact executable
+and root identities are recorded in qualified/service/launch.json,
+qualified/protocol/launch.json and qualified/viewport-server/launch.json. The
+first two use qualified/server/; the third qualified/viewport-server/. Production
+uses the original executable. Do not confuse idle services with active compiler
+jobs or stop another identity; the refused stop/install boundary stays visible.
+
+Original event criterion 1 remains open at consecutive no-closure counter 8;
+criteria 2/3/4 stay accepted, codegen criterion 3 stays at 11, and full goal active.
+No scope/credit/support grade was lowered or transferred. Next independent path:
+use the existing LCL/parity owners to qualify proportional and hidden layouts
+across row/column nesting, authored dimensions/padding/gaps, resizing and toggles,
+including retained focused inputs and collection/split descendants. The native
+adapter's column-only flex and retained hidden space are concrete current gaps.
+Keep portable resources, complete accessibility, hardware/IME, other widgetsets,
+production component depth and native Studio on their original acceptance paths.

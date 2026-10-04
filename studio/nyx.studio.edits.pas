@@ -227,6 +227,48 @@ var
   LValue: TNyxDataValue;
   LText: TNyxText;
 begin
+  { This node belongs exclusively to a detached candidate. Stage the complete
+    scalar payload before resolving metadata: selectors such as input type,
+    projection and reusable definition can change the value domain or available
+    properties in the same operation. JSON member order has no semantic meaning.
+    Keep the original typed values for admission below; staging a spelling never
+    authorizes a string as a number/Boolean or publishes an unknown property. }
+  for LIndex := 0 to AProperties.Count - 1 do
+  begin
+    LKey := AProperties.Key(LIndex);
+    LValue := AProperties.Field(LKey);
+    case LValue.Kind of
+      ndNull:
+        begin
+          LText := '';
+        end;
+      ndText:
+        begin
+          LText := LValue.AsText;
+        end;
+      ndBoolean:
+        begin
+
+          if LValue.AsBoolean then
+          begin
+            LText := 'true';
+          end
+          else
+          begin
+            LText := 'false';
+          end;
+        end;
+      ndNumber:
+        begin
+          LText := LValue.AsDecimal.Text;
+        end;
+      else
+      begin
+        raise ENyxModel.Create('Component properties require scalar JSON values');
+      end;
+    end;
+    ANode.SetProp(LKey, LText);
+  end;
   LInfos := NyxProperties(ANode, ADocument);
   for LIndex := 0 to AProperties.Count - 1 do
   begin
@@ -312,8 +354,6 @@ begin
             end;
             LNode := ACatalog.NewNode(LOperation.Kind, LOperation.ID);
             try
-              ConfigureNode(LNode, Result, LOperation.Properties);
-
               if LOperation.Root = 'page' then
               begin
                 Result.AddPage(LNode);
@@ -334,6 +374,11 @@ begin
                 LParent.Insert(LInsert, LNode);
               end;
               LNode := nil;
+              { Ownership transfers before metadata lookup so declared ancestor
+                field domains and reusable-part context participate in admission.
+                Failure releases the entire candidate, never the accepted tree. }
+              ConfigureNode(RequireNode(Result, LOperation.ID), Result,
+                LOperation.Properties);
             finally
               LNode.Free;
             end;

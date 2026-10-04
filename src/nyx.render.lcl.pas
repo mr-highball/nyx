@@ -71,6 +71,7 @@ uses
   nyx.collections.view.types,
   nyx.collections.mount,
   nyx.collections.lcl,
+  nyx.literal.items,
   nyx.composition;
 
 type
@@ -116,6 +117,13 @@ type
     FCaption: TLabel;
     FLastValue: TNyxText;
     FHasValueBaseline: Boolean;
+    { Separate baselines protect literal selection and local picture identity
+      during unrelated state/layout publications. Managed collections and
+      creator updaters retain exclusive ownership of their own contents. }
+    FLastItems: TNyxText;
+    FHasItemsBaseline: Boolean;
+    FLastSource: TNyxText;
+    FHasSourceBaseline: Boolean;
     FCustom: Boolean;
     FUpdater: TNyxLCLUpdater;
     FDeferredValue: Boolean;
@@ -136,6 +144,8 @@ type
     { Borrowed LCL-owned drag object. Clear before callbacks or view retirement;
       it never owns this binding or its realized node. }
     FActiveDrag: TDragObject;
+    procedure SyncLiteralItems;
+    procedure SyncPicture;
     procedure AttachPointer(AControl: TControl; ASlot: Integer);
     { Revoke all Nyx-installed physical slots before deferred destruction. The
       LCL control may finish its current message, but cannot enter this binding. }
@@ -681,10 +691,6 @@ var
   LLabel: TLabel;
   LPanel: TPanel;
   LInputSurface: TNyxLCLSurface;
-  LItems: TStringList;
-  LCells: TStringList;
-  LGrid: TStringGrid;
-  LCellIndex: Integer;
   LInfo: TNyxPrimitiveInfo;
   LFactoryIndex: Integer;
 begin
@@ -789,8 +795,7 @@ begin
     begin
       AInput := TComboBox.Create(FPanel);
       TComboBox(AInput).Style := csDropDownList;
-      TComboBox(AInput).Items.Text := ANode.Prop('items');
-      TComboBox(AInput).ItemIndex := TComboBox(AInput).Items.IndexOf(ANode.Prop('value'));
+      { SyncLiteralItems supplies the admitted initial choices once. }
     end
     else if LKind = 'spin' then
     begin
@@ -876,51 +881,14 @@ begin
   else if LKind = 'list' then
   begin
     Result := TListBox.Create(FPanel);
-    TListBox(Result).Items.Text := ANode.Prop('items');
   end
   else if LKind = 'tree' then
   begin
     Result := TTreeView.Create(FPanel);
-    LItems := TStringList.Create;
-    try
-      LItems.Text := ANode.Prop('items');
-      for LIndex := 0 to LItems.Count - 1 do
-      begin
-        TTreeView(Result).Items.Add(nil, LItems[LIndex]);
-      end;
-    finally
-      LItems.Free;
-    end;
   end
   else if LKind = 'table' then
   begin
-    LGrid := TStringGrid.Create(FPanel);
-    Result := LGrid;
-    LItems := TStringList.Create;
-    LCells := TStringList.Create;
-    try
-      LItems.Text := ANode.Prop('items');
-      LGrid.RowCount := LItems.Count + 1;
-      LGrid.FixedCols := 0;
-      LCells.StrictDelimiter := True;
-      LCells.Delimiter := #9;
-      for LIndex := 0 to LItems.Count - 1 do
-      begin
-        LCells.DelimitedText := LItems[LIndex];
-
-        if LCells.Count > LGrid.ColCount then
-        begin
-          LGrid.ColCount := LCells.Count;
-        end;
-        for LCellIndex := 0 to LCells.Count - 1 do
-        begin
-          LGrid.Cells[LCellIndex, LIndex] := LCells[LCellIndex];
-        end;
-      end;
-    finally
-      LCells.Free;
-      LItems.Free;
-    end;
+    Result := TStringGrid.Create(FPanel);
   end
   else if LKind = 'image' then
   begin
@@ -928,10 +896,14 @@ begin
     TImage(Result).Proportional := True;
     TImage(Result).Center := True;
 
-    if FileExists(ANode.Prop('src')) then
-    begin
-      TImage(Result).Picture.LoadFromFile(ANode.Prop('src'));
-    end;
+    { SyncPicture admits a detached picture before updating this face. }
+  end
+  else if LKind = 'group' then
+  begin
+    { Reuse LCL's real labeled group rather than painting an unlabeled panel.
+      Its caption and accessibility stay part of the native widget contract. }
+    Result := TGroupBox.Create(FPanel);
+    TGroupBox(Result).Caption := ANode.Prop('text');
   end
   else if (LKind = 'heading') or (LKind = 'label') or (LKind = 'badge') or
     (LKind = 'alert') or (LKind = 'avatar') then
@@ -1661,7 +1633,8 @@ begin
     for LIndex := 0 to High(FBindings) do
     begin
 
-      if NyxSupportsTextInput(FBindings[LIndex].FNode) and
+      if (NyxSupportsTextInput(FBindings[LIndex].FNode) or
+        (FBindings[LIndex].FNode.ProjectionKind = 'input')) and
         (FBindings[LIndex].FInput is TCustomEdit) then
       begin
         FEditingObserver.Add(FBindings[LIndex].FNode.ID,
@@ -2906,7 +2879,8 @@ begin
     end;
   end;
 
-  if (LBinding = nil) or not NyxInteractionPolicy(LBinding.FNode).CanIssueCommand then
+  if (LBinding = nil) or not NyxSupportsTextInput(LBinding.FNode) or
+    not NyxInteractionPolicy(LBinding.FNode).CanIssueCommand then
   begin
     Exit;
   end;
@@ -3356,6 +3330,219 @@ begin
   end;
 end;
 
+procedure TNyxLCLBinding.SyncLiteralItems;
+var
+  LKind: TNyxKind;
+  LText: TNyxText;
+  LSelected: TNyxText;
+  LRows: TNyxStrings;
+  LCells: TNyxStrings;
+  LList: TListBox;
+  LChoice: TComboBox;
+  LTree: TTreeView;
+  LGrid: TStringGrid;
+  LIndex: Integer;
+  LColumn: Integer;
+  LColumns: Integer;
+  LOldRow: Integer;
+  LOldColumn: Integer;
+  LOldTop: Integer;
+begin
+
+  if FCustom or (FCollectionMount <> nil) or
+    not TryNyxKind(FNode.ProjectionKind, LKind) or
+    not (LKind in [nkSelect, nkList, nkTable, nkTree]) then
+  begin
+    Exit;
+  end;
+  LText := FNode.Prop('items');
+
+  if FHasItemsBaseline and (FLastItems = LText) then
+  begin
+    Exit;
+  end;
+  LRows := TNyxStrings.Create;
+  try
+    LRows.Text := LText;
+    case LKind of
+      nkSelect:
+        begin
+          LChoice := TComboBox(FInput);
+          LSelected := FNode.Prop('value');
+
+          if FHasValueBaseline and (FLastValue = LSelected) then
+          begin
+            LSelected := LChoice.Text;
+          end;
+          LChoice.Items.BeginUpdate;
+          try
+            LChoice.Items.Clear;
+            for LIndex := 0 to LRows.Count - 1 do
+            begin
+              LChoice.Items.Add(LRows[LIndex]);
+            end;
+            LChoice.ItemIndex := LChoice.Items.IndexOf(LSelected);
+
+            if (LChoice.ItemIndex < 0) and FHasValueBaseline and
+              (FLastValue = FNode.Prop('value')) and
+              (LChoice.Style <> csDropDownList) then
+            begin
+              { The existing editable native choice can have an unfinished
+                draft. A row publication does not replace that physical text. }
+              LChoice.Text := LSelected;
+            end;
+          finally
+            LChoice.Items.EndUpdate;
+          end;
+        end;
+      nkList:
+        begin
+          LList := TListBox(FControl);
+          LSelected := '';
+          LOldTop := LList.TopIndex;
+
+          if LList.ItemIndex >= 0 then
+          begin
+            LSelected := LList.Items[LList.ItemIndex];
+          end;
+          LList.Items.BeginUpdate;
+          try
+            LList.Items.Clear;
+            for LIndex := 0 to LRows.Count - 1 do
+            begin
+              LList.Items.Add(LRows[LIndex]);
+            end;
+            LList.ItemIndex := LList.Items.IndexOf(LSelected);
+
+            if LRows.Count > 0 then
+            begin
+              LList.TopIndex := Min(LOldTop, LRows.Count - 1);
+            end;
+          finally
+            LList.Items.EndUpdate;
+          end;
+        end;
+      nkTree:
+        begin
+          LTree := TTreeView(FControl);
+          LSelected := '';
+
+          if LTree.Selected <> nil then
+          begin
+            LSelected := LTree.Selected.Text;
+          end;
+          LTree.Items.BeginUpdate;
+          try
+            LTree.Items.Clear;
+            for LIndex := 0 to LRows.Count - 1 do
+            begin
+              LTree.Items.Add(nil, LRows[LIndex]);
+            end;
+
+            if LSelected <> '' then
+            begin
+              LTree.Selected := LTree.Items.FindNodeWithText(LSelected);
+            end;
+          finally
+            LTree.Items.EndUpdate;
+          end;
+        end;
+      nkTable:
+        begin
+          LGrid := TStringGrid(FControl);
+          LOldRow := LGrid.Row;
+          LOldColumn := LGrid.Col;
+          LColumns := 1;
+          for LIndex := 0 to LRows.Count - 1 do
+          begin
+            LCells := NyxLiteralCells(LRows[LIndex]);
+            try
+              LColumns := Max(LColumns, LCells.Count);
+            finally
+              LCells.Free;
+            end;
+          end;
+          LGrid.BeginUpdate;
+          try
+            LGrid.FixedRows := 0;
+            LGrid.FixedCols := 0;
+            LGrid.RowCount := Max(1, LRows.Count);
+            LGrid.ColCount := LColumns;
+            { A widget needs one physical row even for empty Items. It contains
+              no authored data. Clear retained cells when ragged rows shrink. }
+            for LIndex := 0 to LGrid.RowCount - 1 do
+            begin
+              for LColumn := 0 to LGrid.ColCount - 1 do
+              begin
+                LGrid.Cells[LColumn, LIndex] := '';
+              end;
+            end;
+            for LIndex := 0 to LRows.Count - 1 do
+            begin
+              LCells := NyxLiteralCells(LRows[LIndex]);
+              try
+                for LColumn := 0 to LCells.Count - 1 do
+                begin
+                  LGrid.Cells[LColumn, LIndex] := LCells[LColumn];
+                end;
+              finally
+                LCells.Free;
+              end;
+            end;
+
+            if LRows.Count > 1 then
+            begin
+              LGrid.FixedRows := 1;
+            end;
+            LGrid.Row := EnsureRange(LOldRow, LGrid.FixedRows, LGrid.RowCount - 1);
+            LGrid.Col := EnsureRange(LOldColumn, 0, LGrid.ColCount - 1);
+          finally
+            LGrid.EndUpdate;
+          end;
+        end;
+    end;
+    FLastItems := LText;
+    FHasItemsBaseline := True;
+  finally
+    LRows.Free;
+  end;
+end;
+
+procedure TNyxLCLBinding.SyncPicture;
+var
+  LSource: TNyxText;
+  LPicture: TPicture;
+begin
+
+  if FCustom or not (FControl is TImage) then
+  begin
+    Exit;
+  end;
+  FControl.AccessibleDescription := FNode.Prop('alt');
+  LSource := FNode.Prop('src');
+
+  if FHasSourceBaseline and (FLastSource = LSource) then
+  begin
+    Exit;
+  end;
+  LPicture := TPicture.Create;
+  try
+    { Standard native images resolve local files. Network/portable asset
+      providers remain a separate required adapter boundary. A missing file
+      clears the old picture; a decoding failure preserves the admitted one. }
+
+    if FileExists(LSource) then
+    begin
+      LPicture.LoadFromFile(LSource);
+    end;
+    TImage(FControl).Picture.Assign(LPicture);
+    FLastSource := LSource;
+    FHasSourceBaseline := True;
+  finally
+    LPicture.Free;
+  end;
+end;
+
 procedure TNyxLCLRenderer.SyncRadioFocus;
 type
   { Borrowed only during synchronous projection; no scope survives Sync or
@@ -3426,6 +3613,7 @@ var
   LMinimum: Integer;
   LMaximum: Integer;
   LWriteValue: Boolean;
+  LValueDomain: TNyxValueDomain;
 begin
   { Native setters can fire change events. One guard covers every control kind,
     including Boolean/range widgets and layout side effects. Skip unchanged edit
@@ -3478,6 +3666,8 @@ begin
       begin
         LBinding.FCollectionMount.SetInteraction(LEnabled, LReadOnly);
       end;
+      LBinding.SyncLiteralItems;
+      LBinding.SyncPicture;
       LBinding.FControl.AccessibleValue := LNode.Prop('pressed');
 
       if LBinding.FCaption <> nil then
@@ -3493,6 +3683,15 @@ begin
         begin
           TNyxControlAccess(LBinding.FControl).Caption := LNode.Prop('text');
         end;
+      end;
+
+      if not LBinding.FCustom and (LNode.ProjectionKind = 'code') and
+        (StringReplace(TNyxText(TMemo(LBinding.FControl).Text), #13#10, #10,
+        [rfReplaceAll]) <> LNode.Prop('text')) then
+      begin
+        { A code block's content is Text, not the editable scalar Value. Skip
+          unchanged text to preserve its inspection caret/selection and scroll. }
+        TMemo(LBinding.FControl).Text := LNode.Prop('text');
       end;
 
       if LBinding.FControl is TNyxLCLButton then
@@ -3542,6 +3741,35 @@ begin
       begin
         TEdit(LInput).ReadOnly := LReadOnly;
         TEdit(LInput).TextHint := LNode.Prop('placeholder');
+
+        if not LBinding.FCustom and (LNode.ProjectionKind = 'input') then
+        begin
+          { Formatting can change after mounting. Re-resolve its actual scalar
+            domain so a newly numeric face keeps unfinished drafts until commit,
+            and returning to Text restores ordinary per-change admission. An
+            explicit recipe domain remains authoritative over the format hint. }
+          LValueDomain := NyxNodeValueDomain(LNode);
+          LBinding.FDeferredValue := LValueDomain.Defined and
+            (LValueDomain.Kind in [nskInteger, nskNumber]);
+
+          if LBinding.FDeferredValue then
+          begin
+            TEdit(LInput).OnEditingDone := LBinding.CommitValue;
+          end
+          else
+          begin
+            TEdit(LInput).OnEditingDone := nil;
+          end;
+
+          if LNode.Prop('input-type') = 'password' then
+          begin
+            TEdit(LInput).PasswordChar := '*';
+          end
+          else
+          begin
+            TEdit(LInput).PasswordChar := #0;
+          end;
+        end;
 
         if LWriteValue and
           (StringReplace(TNyxText(TEdit(LInput).Text), #13#10, #10, [rfReplaceAll]) <> LValue) then

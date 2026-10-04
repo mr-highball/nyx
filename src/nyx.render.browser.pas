@@ -33,6 +33,7 @@ uses
   nyx.text,
   Classes,
   SysUtils,
+  Math,
   JS,
   Web,
   nyx.model,
@@ -62,6 +63,7 @@ uses
   nyx.collections.view.types,
   nyx.collections.mount,
   nyx.collections.browser,
+  nyx.literal.items,
   nyx.composition;
 
 type
@@ -93,6 +95,11 @@ type
     FCaption: TJSHTMLElement;
     FLastValue: TNyxText;
     FHasValueBaseline: Boolean;
+    { Literal rows have their own baseline. An unrelated state publication must
+      not destroy option/row handles, selection or scroll. Bound collections and
+      creator factories own their content independently of this fallback. }
+    FLastItems: TNyxText;
+    FHasItemsBaseline: Boolean;
     FCustom: Boolean;
     FUpdater: TNyxBrowserUpdater;
     FViewRevision: Integer;
@@ -101,6 +108,7 @@ type
     { Capture IDs are host observations/requests for this exact mounted face.
       Teardown removes listeners before releasing any outstanding capture. }
     FCapturedPointers: array of Integer;
+    procedure SyncLiteralItems;
     function BeforeEdit(AEvent: TEventListenerEvent): Boolean;
     function CompositionStart(AEvent: TEventListenerEvent): Boolean;
     function CompositionUpdate(AEvent: TEventListenerEvent): Boolean;
@@ -639,12 +647,7 @@ var
   LKind: TNyxText;
   LInput: TJSHTMLInputElement;
   LCaption: TJSHTMLElement;
-  LItems: TStringList;
-  LCells: TStringList;
   LIndex: Integer;
-  LCellIndex: Integer;
-  LChild: TJSHTMLElement;
-  LRow: TJSHTMLElement;
   LURL: TNyxText;
   LInfo: TNyxPrimitiveInfo;
   LFactoryIndex: Integer;
@@ -722,21 +725,7 @@ begin
     else if LKind = 'select' then
     begin
       AInput := Element('select', 'nyx-select-control');
-      LItems := TStringList.Create;
-      try
-        LItems.Text := ANode.Prop('items');
-        for LIndex := 0 to LItems.Count - 1 do
-        begin
-          LChild := Element('option', '');
-          LChild.textContent := LItems[LIndex];
-          LChild.setAttribute('value', LItems[LIndex]);
-          AInput.appendChild(LChild);
-        end;
-      finally
-        LItems.Free;
-      end;
-      TJSHTMLSelectElement(AInput).value := ANode.Prop('value',
-        TJSHTMLSelectElement(AInput).value);
+      { SyncLiteralItems supplies the admitted initial rows once. }
     end
     else
     begin
@@ -825,71 +814,15 @@ begin
   else if LKind = 'list' then
   begin
     Result := Element('ul', '');
-    LItems := TStringList.Create;
-    try
-      LItems.Text := ANode.Prop('items');
-      for LIndex := 0 to LItems.Count - 1 do
-      begin
-        LChild := Element('li', '');
-        LChild.textContent := LItems[LIndex];
-        Result.appendChild(LChild);
-      end;
-    finally
-      LItems.Free;
-    end;
   end
   else if LKind = 'table' then
   begin
     Result := Element('table', '');
-    LItems := TStringList.Create;
-    LCells := TStringList.Create;
-    try
-      LItems.Text := ANode.Prop('items');
-      LCells.Delimiter := #9;
-      LCells.StrictDelimiter := True;
-      for LIndex := 0 to LItems.Count - 1 do
-      begin
-        LRow := Element('tr', '');
-        LCells.DelimitedText := LItems[LIndex];
-        for LCellIndex := 0 to LCells.Count - 1 do
-        begin
-
-          if LIndex = 0 then
-          begin
-            LChild := Element('th', '');
-          end
-          else
-          begin
-            LChild := Element('td', '');
-          end;
-          LChild.textContent := LCells[LCellIndex];
-          LRow.appendChild(LChild);
-        end;
-        Result.appendChild(LRow);
-      end;
-    finally
-      LCells.Free;
-      LItems.Free;
-    end;
   end
   else if LKind = 'tree' then
   begin
+    { Literal Items are flat leaves; bound views supply actual hierarchy. }
     Result := Element('div', '');
-    LItems := TStringList.Create;
-    try
-      LItems.Text := ANode.Prop('items');
-      for LIndex := 0 to LItems.Count - 1 do
-      begin
-        { Literal Items are flat leaves, matching the native fallback tree.
-          Empty disclosure widgets invent expansion and extra unbridged Tab
-          stops. A bound collection supplies actual hierarchy/selection/ARIA. }
-        LChild := Element('div', '');
-        LChild.textContent := LItems[LIndex];
-        Result.appendChild(LChild);
-      end;
-    finally
-      LItems.Free;
-    end;
   end
   else
   begin
@@ -1148,8 +1081,11 @@ begin
       paste, deletion, composition and virtual keyboards without keydown. Scalar
       number/choice controls retain their explicit editing-complete boundary. }
 
-    if NyxSupportsTextInput(ANode) then
+    if NyxSupportsTextInput(ANode) or (ANode.ProjectionKind = 'input') then
     begin
+      { The input's scalar domain/format can change while it stays mounted.
+        Install once; each producer checks the current typed domain before
+        admission. Numeric drafts still wait for the physical change boundary. }
       LInput.addEventListener('input', @LBinding.Change);
       LInput.addEventListener('beforeinput', @LBinding.BeforeEdit);
       LInput.addEventListener('compositionstart', @LBinding.CompositionStart);
@@ -1652,7 +1588,8 @@ begin
   LRevision := FViewRevision;
 
   if (LEvents.ViewRevision <> LRevision) or FRenderer.FUpdating or
-    FRenderer.FDesignMode or not NyxInteractionPolicy(FNode).CanIssueCommand then
+    FRenderer.FDesignMode or not NyxSupportsTextInput(FNode) or
+    not NyxInteractionPolicy(FNode).CanIssueCommand then
   begin
     Exit;
   end;
@@ -1677,7 +1614,8 @@ begin
   LRevision := FViewRevision;
 
   if (LEvents.ViewRevision <> LRevision) or FRenderer.FUpdating or
-    FRenderer.FDesignMode or not NyxInteractionPolicy(FNode).CanEditValue or
+    FRenderer.FDesignMode or not NyxSupportsTextInput(FNode) or
+    not NyxInteractionPolicy(FNode).CanEditValue or
     AEvent.defaultPrevented or not LEvents.HasSubscribers(ntBeforeEdit) then
   begin
     Exit;
@@ -1702,7 +1640,7 @@ begin
   Result := True;
 
   if FRenderer.FUpdating or FRenderer.FDesignMode or
-    not NyxInteractionPolicy(FNode).CanEditValue then
+    not NyxSupportsTextInput(FNode) or not NyxInteractionPolicy(FNode).CanEditValue then
   begin
     Exit;
   end;
@@ -1760,7 +1698,7 @@ var
 begin
   Result := True;
 
-  if FRenderer.FUpdating or FRenderer.FDesignMode then
+  if FRenderer.FUpdating or FRenderer.FDesignMode or not NyxSupportsTextInput(FNode) then
   begin
     Exit;
   end;
@@ -1788,6 +1726,14 @@ begin
 
   if FRenderer.FUpdating then
   begin
+    Exit;
+  end;
+
+  if (AEvent <> nil) and (AEvent._type = 'input') and
+    not NyxSupportsTextInput(FNode) then
+  begin
+    { A format/domain transition must not turn an existing input listener into
+      per-keystroke numeric admission. Physical change retains commit semantics. }
     Exit;
   end;
 
@@ -2954,6 +2900,115 @@ begin
   end;
 end;
 
+procedure TNyxBrowserBinding.SyncLiteralItems;
+var
+  LKind: TNyxKind;
+  LText: TNyxText;
+  LSelected: TNyxText;
+  LRows: TNyxStrings;
+  LCells: TNyxStrings;
+  LHost: TJSHTMLElement;
+  LRow: TJSHTMLElement;
+  LCell: TJSHTMLElement;
+  LIndex: Integer;
+  LColumn: Integer;
+  LScrollTop: NativeInt;
+  LScrollLeft: NativeInt;
+begin
+
+  if FCustom or (FCollectionMount <> nil) or
+    not TryNyxKind(FNode.ProjectionKind, LKind) or
+    not (LKind in [nkSelect, nkList, nkTable, nkTree]) then
+  begin
+    Exit;
+  end;
+  LText := FNode.Prop('items');
+
+  if FHasItemsBaseline and (FLastItems = LText) then
+  begin
+    Exit;
+  end;
+  LHost := FElement;
+  LSelected := '';
+
+  if LKind = nkSelect then
+  begin
+    LHost := FInput;
+    LSelected := FNode.Prop('value');
+
+    if FHasValueBaseline and (FLastValue = LSelected) then
+    begin
+      { A changed option set preserves the physical draft when its accepted
+        value has not changed. Assigning a missing choice yields no selection;
+        it never writes an invented first item back into the portable model. }
+      LSelected := TJSHTMLSelectElement(LHost).value;
+    end;
+  end;
+  LScrollTop := LHost.scrollTop;
+  LScrollLeft := LHost.scrollLeft;
+  LRows := TNyxStrings.Create;
+  try
+    LRows.Text := LText;
+    { Only these fallback-owned children are replaced. The logical host, its
+      focus, callbacks and viewport remain mounted; identical Items is a no-op. }
+    LHost.textContent := '';
+    for LIndex := 0 to LRows.Count - 1 do
+    begin
+
+      if LKind = nkTable then
+      begin
+        LRow := Element('tr', '');
+        LCells := NyxLiteralCells(LRows[LIndex]);
+        try
+          for LColumn := 0 to LCells.Count - 1 do
+          begin
+
+            if LIndex = 0 then
+            begin
+              LCell := Element('th', '');
+            end
+            else
+            begin
+              LCell := Element('td', '');
+            end;
+            LCell.textContent := LCells[LColumn];
+            LRow.appendChild(LCell);
+          end;
+        finally
+          LCells.Free;
+        end;
+      end
+      else
+      begin
+        case LKind of
+          nkSelect: LRow := Element('option', '');
+          nkList: LRow := Element('li', '');
+        else
+          LRow := Element('div', '');
+        end;
+        LRow.textContent := LRows[LIndex];
+
+        if LKind = nkSelect then
+        begin
+          LRow.setAttribute('value', LRows[LIndex]);
+        end;
+      end;
+      LHost.appendChild(LRow);
+    end;
+
+    if LKind = nkSelect then
+    begin
+      TJSHTMLSelectElement(LHost).value := LSelected;
+    end;
+    LHost.scrollTop := LScrollTop;
+    LHost.scrollLeft := LScrollLeft;
+    FLastItems := LText;
+    FHasItemsBaseline := True;
+  finally
+    LRows.Free;
+  end;
+end;
+
 procedure TNyxBrowserRenderer.SyncRadioFocus;
 type
   TRadioScope = record
@@ -3053,6 +3108,10 @@ var
   LReadOnly: Boolean;
   LKeyboardKind: TNyxKind;
   LValue: TNyxText;
+  LInfo: TNyxPrimitiveInfo;
+  LLayout: TNyxText;
+  LMinimum: Integer;
+  LMaximum: Integer;
 
   procedure AttributeFlag(AElement: TJSHTMLElement; const AName: TNyxText; ASet: Boolean);
   begin
@@ -3094,18 +3153,49 @@ begin
         LControl.removeAttribute('aria-pressed');
       end;
       LControl.style.removeProperty('display');
+      LControl.style.removeProperty('flex-direction');
+      LControl.style.removeProperty('position');
+      LLayout := LNode.Prop('layout');
 
-      if LNode.Prop('layout') = 'grid' then
+      if (LLayout = '') and not LBinding.FCustom and
+        FindNyxPrimitive(LNode.ProjectionKind, LInfo) and LInfo.Container and
+        (LNode.ProjectionKind <> 'split-view') then
+      begin
+        LLayout := NyxLayout(LNode);
+      end;
+
+      if LLayout = 'grid' then
       begin
         LControl.style.setProperty('display', 'grid');
       end
-      else if (LNode.Prop('layout') = 'row') or (LNode.Prop('layout') = 'column') then
+      else if (LLayout = 'row') or (LLayout = 'column') then
       begin
         LControl.style.setProperty('display', 'flex');
+        LControl.style.setProperty('flex-direction', LLayout);
       end
-      else if LNode.Prop('layout') = 'absolute' then
+      else if LLayout = 'absolute' then
       begin
         LControl.style.setProperty('display', 'block');
+        { Coordinates belong to this host's content box, not the page body. }
+        LControl.style.setProperty('position', 'relative');
+      end;
+
+      if (LNode.Parent <> nil) and (NyxLayout(LNode.Parent) = 'absolute') then
+      begin
+        LControl.style.setProperty('position', 'absolute');
+      end;
+
+      if not LBinding.FCustom and (LNode.ProjectionKind <> 'card') then
+      begin
+
+        if LNode.Prop('surface') = 'true' then
+        begin
+          LControl.classList.add('nyx-card');
+        end
+        else
+        begin
+          LControl.classList.remove('nyx-card');
+        end;
       end;
 
       if NyxSupportsViewport(LNode) and (LBinding.FInput = nil) then
@@ -3216,6 +3306,7 @@ begin
         LBinding.FCollectionMount.SetInteraction(LEnabled and not FDesignMode,
           LReadOnly or FDesignMode);
       end;
+      LBinding.SyncLiteralItems;
 
       if LBinding.FCaption <> nil then
       begin
@@ -3232,8 +3323,43 @@ begin
 
       if LControl is TJSHTMLProgressElement then
       begin
-        TJSHTMLProgressElement(LControl).max := StrToIntDef(LNode.Prop('max'), 100);
-        TJSHTMLProgressElement(LControl).value := StrToIntDef(LNode.Prop('value'), 0);
+        { HTML progress has an intrinsic minimum of zero. Project the declared
+          interval while retaining its actual scalar bounds in accessibility. }
+        LMinimum := StrToIntDef(LNode.Prop('min'), 0);
+        LMaximum := StrToIntDef(LNode.Prop('max'), 100);
+        TJSHTMLProgressElement(LControl).max := Max(1, LMaximum - LMinimum);
+        TJSHTMLProgressElement(LControl).value :=
+          StrToIntDef(LNode.Prop('value'), 0) - LMinimum;
+
+        if LMaximum = LMinimum then
+        begin
+          TJSHTMLProgressElement(LControl).value := 1;
+        end;
+        LControl.setAttribute('aria-valuemin', IntToStr(LMinimum));
+        LControl.setAttribute('aria-valuemax', IntToStr(LMaximum));
+        LControl.setAttribute('aria-valuenow', LNode.Prop('value', '0'));
+      end;
+
+      if not LBinding.FCustom and (LControl is TJSHTMLImageElement) then
+      begin
+        LValue := LNode.Prop('src');
+
+        if not SafeURL(LValue, True) then
+        begin
+          raise ENyxModel.Create('Unsupported image URL');
+        end;
+
+        if LValue = '' then
+        begin
+          { src="" requests the current page on some hosts. Clearing a source
+            withdraws the attribute rather than issuing a meaningless request. }
+          LControl.removeAttribute('src');
+        end
+        else if LControl.getAttribute('src') <> LValue then
+        begin
+          LControl.setAttribute('src', LValue);
+        end;
+        TJSHTMLImageElement(LControl).alt := LNode.Prop('alt', LNode.Prop('text'));
       end;
 
       if LNode.Prop('aria-label') <> '' then
@@ -3267,6 +3393,31 @@ begin
         LControl.title := LNode.Prop('hint');
         LControl.setAttribute('placeholder', LNode.Prop('placeholder'));
         LControl.setAttribute('aria-label', LNode.Prop('aria-label', LNode.Prop('text', LNode.ID)));
+
+        if not LBinding.FCustom and not LBinding.FComposing and
+          (LNode.ProjectionKind = 'input') then
+        begin
+          LValue := LNode.Prop('input-type', 'text');
+
+          if LValue = '' then
+          begin
+            LValue := 'text';
+          end;
+
+          if TJSHTMLInputElement(LControl)._type <> LValue then
+          begin
+            TJSHTMLInputElement(LControl)._type := LValue;
+          end;
+
+          if LValue = 'number' then
+          begin
+            LControl.setAttribute('step', 'any');
+          end
+          else
+          begin
+            LControl.removeAttribute('step');
+          end;
+        end;
 
         if (LNode.ProjectionKind = 'spin') or (LNode.ProjectionKind = 'slider') then
         begin

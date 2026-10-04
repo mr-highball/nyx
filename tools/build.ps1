@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -38,6 +38,8 @@ param(
   [string]$KeyboardSourceDirectory = 'build/keyboard/mcp',
   # Full-catalog source is composed/exported by the Pascal semantic MCP consumer.
   [string]$CatalogFocusSourceDirectory = 'build/catalog-focus/source',
+  # Property mutations consume an unchanged MCP-authored catalog/review pair.
+  [string]$PropertySourceDirectory = 'build/property-concordance/source',
   # The maintained semantic callback journey exports two accepted source pairs.
   [string]$CallbackSourceDirectory = 'build/agent-callbacks/mcp',
   # Exact companion exported by the semantic handler/compilation journey.
@@ -293,6 +295,42 @@ try {
       "-Fu$nyxRootSource", "-FE$nyxBrowserDir", 'tests/nyx_root_consumer_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/root-consumers.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'properties') {
+    $nyxPropertySource = [IO.Path]::GetFullPath($PropertySourceDirectory)
+
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxPropertySource 'nyx.generated.view.pas'))) {
+      throw 'Export the MCP-authored catalog and property-review page first'
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxPropertyNative = Join-Path $nyxRoot 'build/property-concordance/native'
+    $nyxPropertyAuthor = Join-Path $nyxRoot 'build/property-concordance/author'
+    New-Item -ItemType Directory -Force $nyxPropertyNative | Out-Null
+    New-Item -ItemType Directory -Force $nyxPropertyAuthor | Out-Null
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxPropertyAuthor", "-FE$nyxPropertyAuthor", 'tests/nyx_mcp_catalog_focus.lpr')
+    $nyxPropertyPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-Fu$nyxPropertySource",
+      "-Fu$nyxLazarus/lcl/units/$nyxPropertyPlatform", "-Fu$nyxLazarus/lcl/units/$nyxPropertyPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxPropertyPlatform", "-Fu$nyxLazarus/packager/units/$nyxPropertyPlatform",
+      "-FU$nyxPropertyNative", "-FE$nyxPropertyNative", 'tests/nyx_property_controls_tests.lpr')
+    & (Join-Path $nyxPropertyNative 'nyx_property_controls_tests.exe') (Join-Path $nyxPropertyNative 'pictures')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Native property concordance failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxPropertyBrowser = Join-Path $nyxRoot 'build/browser'
+
+    if ($BrowserOutput) { $nyxPropertyBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxPropertyBrowser | Out-Null
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Fusrc', '-Futests',
+      "-Fu$nyxPropertySource", "-FE$nyxPropertyBrowser", 'tests/nyx_property_controls_tests.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxPropertyBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/properties.html') -Destination $nyxPropertyBrowser
     exit 0
   }
 

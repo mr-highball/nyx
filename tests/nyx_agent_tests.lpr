@@ -77,6 +77,70 @@ begin
     (EncodeNyxProject(LSession.PreviewPair(LRevision, 'home')) = LBefore), AReason);
 end;
 
+{ Selectors and dependent values are one atomic property configuration, regardless
+  of wire member order. Real HTTP composition separately qualifies this path. }
+procedure ContextualProperties;
+var
+  LAccepted: TNyxText;
+begin
+  LAccepted := EncodeNyxProject(LSession.PreviewPair(LRevision, 'home'));
+  LSession.Call('nyx_transaction', 'Scooty', Transaction('context-create',
+    '[{"op":"create","kind":"input","id":"number-first","parent":"agent-column",' +
+    '"properties":{"value":0.1250,"input-type":"number"}},' +
+    '{"op":"create","kind":"input","id":"selector-first","parent":"agent-column",' +
+    '"properties":{"input-type":"number","value":0.1250}},' +
+    '{"op":"create","kind":"label","id":"projected-number","parent":"agent-column",' +
+    '"properties":{"value":12,"input-type":"number","projection-kind":"input"}}]'));
+  Inc(LRevision);
+  LValue := LSession.Call('nyx_node', 'Scooty', NyxObject([
+    NyxField('id', NyxData('number-first')), NyxField('keys', NyxArray([NyxData('value')]))]));
+  Check(LValue.Field('properties').Item(0).Field('value').ToJSON = '0.1250',
+    'Value-before-selector numeric creation retains exact decimal spelling');
+  LValue := LSession.Call('nyx_node', 'Scooty', NyxObject([
+    NyxField('id', NyxData('selector-first')), NyxField('keys', NyxArray([NyxData('value')]))]));
+  Check(LValue.Field('properties').Item(0).Field('value').ToJSON = '0.1250',
+    'Selector-before-value creation has the same numeric meaning');
+  LValue := LSession.Call('nyx_node', 'Scooty', NyxObject([
+    NyxField('id', NyxData('projected-number')), NyxField('keys', NyxArray([NyxData('value')]))]));
+  Check(LValue.Field('properties').Item(0).Field('value').AsDecimal.Text = '12',
+    'Projection and input format jointly determine the final value type');
+  LSession.Call('nyx_history', 'Scooty', NyxObject([
+    NyxField('expectedRevision', NyxData(LRevision)),
+    NyxField('operationId', NyxData('context-undo')), NyxField('direction', NyxData('undo'))]));
+  Inc(LRevision);
+  Check(EncodeNyxProject(LSession.PreviewPair(LRevision, 'home')) = LAccepted,
+    'One Undo restores the exact pair before all contextual creations');
+  Refuses('nyx_transaction', Transaction('context-wrong-scalar',
+    '[{"op":"title","value":"must roll back"},' +
+    '{"op":"create","kind":"input","id":"bad-number","parent":"agent-column",' +
+    '"properties":{"value":"12","input-type":"number"}}]'),
+    'Numeric strings still refuse without clearing Redo or creating partial nodes');
+  Check(LSession.Call('nyx_session', 'Scooty', NyxObject([])).Field('canRedo').AsBoolean,
+    'Rejected contextual configuration retains existing Redo');
+  Refuses('nyx_transaction', Transaction('context-unknown',
+    '[{"op":"update","id":"agent-badge","properties":{"invented":true}}]'),
+    'Staging a scalar does not admit an unpublished property');
+  LSession.Call('nyx_history', 'Scooty', NyxObject([
+    NyxField('expectedRevision', NyxData(LRevision)),
+    NyxField('operationId', NyxData('context-redo')), NyxField('direction', NyxData('redo'))]));
+  Inc(LRevision);
+  LSession.Call('nyx_transaction', 'Scooty', Transaction('context-text',
+    '[{"op":"update","id":"number-first","properties":{"value":"🌙 text","input-type":"text"}},' +
+    '{"op":"update","id":"selector-first","properties":{"input-type":null,"value":"🌙 text"}}]'));
+  Inc(LRevision);
+  LValue := LSession.Call('nyx_node', 'Scooty', NyxObject([
+    NyxField('id', NyxData('number-first')), NyxField('keys', NyxArray([NyxData('value')]))]));
+  Check(LValue.Field('properties').Item(0).Field('value').AsText = '🌙 text',
+    'Numeric-to-text configuration admits exact Unicode in the same operation');
+  LValue := LSession.Call('nyx_node', 'Scooty', NyxObject([
+    NyxField('id', NyxData('selector-first')), NyxField('keys', NyxArray([NyxData('value')]))]));
+  Check(LValue.Field('properties').Item(0).Field('value').AsText = '🌙 text',
+    'Clearing an input format restores its text value domain');
+  Refuses('nyx_transaction', Transaction('context-text-number',
+    '[{"op":"update","id":"number-first","properties":{"value":12,"input-type":"text"}}]'),
+    'Text format still refuses a numeric JSON value');
+end;
+
 procedure ExtraCases;
 var
   LQuery: TNyxDataValue;
@@ -267,6 +331,7 @@ begin
     LValue := LSession.Exchange(NyxObject([NyxField('op', NyxData('observe')), NyxField('after', NyxData(LRevision))]));
     Check(not NyxAgentHas(LValue, 'project'), 'Unchanged observer omits paired document');
     Check(LValue.Field('activity').Count > 0, 'Operator sees agent successes and refusals');
+    ContextualProperties;
     ExtraCases;
     LSession.Free;
     LSession := nil;

@@ -786,6 +786,8 @@ begin
 
     if (LProcess.ExitStatus <> 0) or not FileExists(LPNG) or
       (Pos('data-nyx-preview-ready="true"', LOutput) = 0) or
+      (Pos('data-nyx-preview-width="' + IntToStr(APreview.Field('width').AsInteger) + '"', LOutput) = 0) or
+      (Pos('data-nyx-preview-height="' + IntToStr(APreview.Field('height').AsInteger) + '"', LOutput) = 0) or
       (Pos('data-nyx-preview-revision="' + IntToStr(APreview.Field('revision').AsInteger) + '"', LOutput) = 0) then
     begin
       raise ENyxProjectConflict.Create('Preview did not render its admitted Nyx revision');
@@ -862,7 +864,8 @@ begin
     SetLength(FPreviews, Length(FPreviews) + 1);
     FPreviews[High(FPreviews)] := NyxObject([NyxField('token', NyxData(LToken)),
       NyxField('packet', NyxData(NyxObject([NyxField('design', NyxData(LPair.Design)),
-        NyxField('view', NyxData(LView)), NyxField('revision', NyxData(LRevision))]).ToJSON))]);
+        NyxField('view', NyxData(LView)), NyxField('revision', NyxData(LRevision)),
+        NyxField('width', NyxData(LWidth)), NyxField('height', NyxData(LHeight))]).ToJSON))]);
   finally
     FGuard.Release;
   end;

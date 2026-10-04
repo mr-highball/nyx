@@ -1411,7 +1411,7 @@ Root projection — Browser: Available. LCL: Available.
 
 Family: Inputs. Base projection: `memo`.
 
-Collect or edit multiline text, such as a description or reply.
+Collect or edit multiline text, such as a description or reply. Read-only text remains focusable for selection and copying.
 
 Palette group: Inputs.
 Search labels: Text, Multiline.
@@ -2391,7 +2391,7 @@ Root projection — Browser: Available. LCL: Text fallback.
 
 Family: Data. Base projection: `list`.
 
-Display a collection of items for selection.
+Display a collection of items for selection. Bound collections have one Tab entry, row navigation and focus recovery when an item is removed.
 
 Palette group: Data.
 Search labels: Records.
@@ -2489,7 +2489,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 
 Family: Data. Base projection: `table`.
 
-Display records in rows and columns.
+Display records in rows and columns. Bound browser tables use one Tab entry; F2 or Enter enters a cell editor, Tab traverses editors and Escape returns to row navigation. Native tables use LCL cell editing.
 
 Palette group: Data.
 Search labels: Records.
@@ -2587,7 +2587,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 
 Family: Data. Base projection: `tree`.
 
-Display nested items in a hierarchy.
+Display nested items in a hierarchy. Bound collections navigate visible rows and restore focus after removal; disabled rows leave the Tab sequence.
 
 Palette group: Data.
 Search labels: Records, Hierarchy.
@@ -2693,8 +2693,8 @@ Root projection — Browser: Basic support. LCL: Basic support.
 
 | Property | Type | Factory default | Constraint | Meaning | Browser | LCL | Effect/help |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| src | Text |  |  | Presentation | Available | Text fallback | Browser image source/alternative text. The current LCL image projection is a text fallback. |
-| alt | Text |  |  | Presentation | Available | Text fallback | Browser image source/alternative text. The current LCL image projection is a text fallback. |
+| src | Text |  |  | Presentation | Available | Basic support | Browser image URL; standard LCL pictures resolve local files. Native network/portable asset resolution requires a supplied adapter. |
+| alt | Text |  |  | Presentation | Available | Available | Browser alternative text and native accessible description. Empty text deliberately describes a decorative image. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
@@ -3712,6 +3712,17 @@ Root projection — Browser: Available. LCL: Available.
 | --- | --- | --- | --- |
 | OnClick | Available | Available | Multiple ordered callbacks |
 | OnChange | Available | Available | Completed resize; integer first-pane percentage; multiple ordered callbacks |
+| OnAfterEnter | Available | Available | Multiple ordered callbacks |
+| OnAfterExit | Available | Available | Multiple ordered callbacks |
+| OnKeyDown | Available | Available | Typed keys/modifiers; emitted before platform default; sequential hooks may consume |
+| OnKeyUp | Available | Available | Typed keys/modifiers; emitted before platform default; sequential hooks may consume |
+| OnBeforeKeyDown | Available | Available | Typed keys/modifiers; emitted before platform default; sequential hooks may consume |
+| OnAfterKeyDown | Available | Available | After Nyx key dispatch; observes synchronous cancellation; cannot consume |
+| OnKeyPress | Available | Available | Typed keys/modifiers; emitted before platform default; sequential hooks may consume |
+| OnBeforeKeyPress | Available | Available | Typed keys/modifiers; emitted before platform default; sequential hooks may consume |
+| OnAfterKeyPress | Available | Available | After Nyx key dispatch; observes synchronous cancellation; cannot consume |
+| OnBeforeKeyUp | Available | Available | Typed keys/modifiers; emitted before platform default; sequential hooks may consume |
+| OnAfterKeyUp | Available | Available | After Nyx key dispatch; observes synchronous cancellation; cannot consume |
 | OnDoubleClick | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
 | OnPointerDown | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
 | OnPointerUp | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
@@ -3737,7 +3748,7 @@ Root projection — Browser: Available. LCL: Available.
 
 Family: Compound actions. Base projection: `row`.
 
-Pair a descriptive label with a button as one reusable action.
+Pair a descriptive label with a button as one reusable action. The button supports Tab focus and standard Enter or Space activation.
 
 Palette group: Actions.
 Search labels: Compound.
@@ -3847,7 +3858,7 @@ Self value contract: No self value.
 
 Family: Compound actions. Base projection: `row`.
 
-Pair a primary action with a separate secondary action.
+Pair a primary action with a separate secondary action. Each action is independently keyboard reachable; disabling an ancestor disables both.
 
 Palette group: Actions.
 Search labels: Compound.
@@ -3964,7 +3975,7 @@ Self value contract: No self value.
 
 Family: Compound inputs. Base projection: `row`.
 
-Collect a search query with explicit search and clear actions.
+Collect a search query with explicit search and clear actions. Tab follows the query, search and clear controls in that order.
 
 Palette group: Inputs.
 Search labels: Text, Search, Compound.

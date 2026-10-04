@@ -92,9 +92,18 @@ continue to use the same document model.
 The generated matrix covers all default catalog kinds and typed properties and
 their advertised runtime events. It describes implementation support, rather
 than individual visual approval or hardware qualification of every combination.
-The current LCL image uses a text fallback; a standard native link requires a
-handler for navigation. Native multiline placeholders depend on the widgetset.
+The current LCL image resolves local picture files and exposes alternative text
+as its accessible description; native network/portable asset resolution requires
+a supplied adapter. A standard native link requires a handler for navigation.
+Native multiline placeholders depend on the widgetset.
 Numeric browser input hints do not replace an exact declared numeric domain.
+
+Literal `Items` uses one row per line and table cells separated by tabs. Quotes
+are literal text; leading/trailing empty cells are retained. Changed rows update
+the existing face, while unchanged rows retain physical selection/scroll. Typed
+collection attachments own their dataset independently of literal `Items`.
+See the [property/projection reassessment](property-concordance.md) for the finite
+attribute matrix and the remaining target gaps.
 
 `tests/nyx.test.interactions.pas` checks support completeness, immutable creator
 snapshots, scoped metadata and inherited input admission on native and executed
