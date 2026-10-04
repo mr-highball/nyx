@@ -53,9 +53,10 @@ The running desktop chat still needs one reconnect for native named handles;
 the Pascal semantic client is active now. Existing Studio tabs need refresh
 after this credential rotation. No dependency source or firewall was changed.
 
-Remote protection: preceding checkpoint 0764014 is published on origin/hello-nyx
-with the existing Athena pin unchanged. This coherent callback/tool/evidence
-packet is authorized for publication; verify its exact remote identity. Keep
+Remote protection: the callback/tool/evidence packet is published at
+ac4c9fd2f2a239b656b2d50cde13b5fff0326ff4 on origin/hello-nyx; git ls-remote
+verified its exact identity. The preceding 0764014 checkpoint and Athena pin
+remain unchanged. This handoff update follows the protected implementation. Keep
 private config, credentials, user pairs, generated artifacts and machine profiles
 excluded. Full goal active.
 
@@ -3049,3 +3050,10 @@ Next declare criterion 4's structured build/job/diagnostic batch. Source/body,
 state/binding, root cleanup and protected review-session gaps retain their owner.
 Preview contention and client image forwarding remain recorded limitations.
 The full goal remains active, solo; no broad source/event/product criterion closes.
+
+Remote delivery: ac4c9fd2f2a239b656b2d50cde13b5fff0326ff4 is pushed and independently
+verified on origin/hello-nyx. The working tree was clean after that implementation
+commit. Final live semantic inspection advertises nyx_callbacks with 32 changes
+and retains revision 2, home selection and no draft. This handoff-only update is
+also authorized for publication. All qualified service/credential/hash state above
+remains current; no new experiment or pipeline was started after acceptance.
