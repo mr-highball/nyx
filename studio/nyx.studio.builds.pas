@@ -1,0 +1,94 @@
+{ nyx
+  Copyright (c) 2020 mr-highball
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+}
+unit nyx.studio.builds;
+
+{$mode delphi}{$H+}
+{$codepage utf8}
+
+interface
+
+uses
+  nyx.text,
+  nyx.model;
+
+{ Versioned compiler request pairs an admitted portable design with its accepted
+  companion. Compiler paths/options belong to the service profile, never this
+  message. The caller borrows the design on Encode; Decode transfers a newly
+  owned document only after the complete envelope is admitted. Failure returns
+  nil/empty outputs. Source is exact UTF-8/Unicode text, including comments. }
+function EncodeNyxBuildRequest(ADocument: TNyxDocument;
+  const ASource: TNyxText): TNyxText;
+procedure DecodeNyxBuildRequest(const AMessage: TNyxText;
+  out ADocument: TNyxDocument; out ASource: TNyxText);
+
+implementation
+
+uses
+  nyx.data,
+  nyx.codec;
+
+function EncodeNyxBuildRequest(ADocument: TNyxDocument;
+  const ASource: TNyxText): TNyxText;
+begin
+
+  if (ADocument = nil) or (ASource = '') then
+  begin
+    raise ENyxModel.Create('A companion build requires its design and accepted Pascal');
+  end;
+  Result := NyxObject([
+    NyxField('version', NyxData(1)),
+    NyxField('design', TNyxDataValue.ParseJSON(TNyxCodec.Encode(ADocument))),
+    NyxField('source', NyxData(ASource))
+  ]).ToJSON;
+end;
+
+procedure DecodeNyxBuildRequest(const AMessage: TNyxText;
+  out ADocument: TNyxDocument; out ASource: TNyxText);
+var
+  LMessage: TNyxDataValue;
+  LSource: TNyxText;
+begin
+  ADocument := nil;
+  ASource := '';
+  LMessage := TNyxDataValue.ParseJSON(AMessage);
+
+  if (LMessage.Kind <> ndObject) or (LMessage.Count <> 3) then
+  begin
+    raise ENyxModel.Create('A companion request contains version, design and source');
+  end;
+
+  if LMessage.Field('version').AsInteger <> 1 then
+  begin
+    raise ENyxModel.Create('Unsupported companion request version');
+  end;
+  LSource := LMessage.Field('source').AsText;
+
+  if LSource = '' then
+  begin
+    raise ENyxModel.Create('A companion request must retain its accepted Pascal');
+  end;
+  ADocument := TNyxCodec.Decode(LMessage.Field('design').ToJSON);
+  ASource := LSource;
+end;
+
+end.
+

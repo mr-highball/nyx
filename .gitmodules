@@ -1,3 +1,6 @@
 [submodule "test/mvp"]
 	path = test/mvp
 	url = https://github.com/andybrewer/mvp
+[submodule "athena"]
+	path = athena
+	url = https://github.com/mr-highball/athena

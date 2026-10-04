@@ -80,3 +80,9 @@ lib/
 
 #web
 *.js
+
+# Target-specific generated output and private toolchain records
+/build/
+/.local/
+/.codex/
+/.codex-remote-attachments/

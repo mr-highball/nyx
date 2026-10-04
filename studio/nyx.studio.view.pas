@@ -1,0 +1,1023 @@
+{ nyx
+  Copyright (c) 2020 mr-highball
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+}
+
+unit nyx.studio.view;
+
+{$mode delphi}{$H+}
+{$codepage utf8}
+
+interface
+
+uses
+  SysUtils,
+  nyx.text,
+  nyx.model,
+  nyx.contract,
+  nyx.schema,
+  nyx.types,
+  nyx.state,
+  nyx.binding.types,
+  nyx.studio.authoring,
+  nyx.studio.collections,
+  nyx.studio.inspector,
+  nyx.studio.palette,
+  nyx.studio.session,
+  nyx.studio.source,
+  nyx.studio.compiler,
+  nyx.studio.diagnostics,
+  nyx.studio.agentview,
+  nyx.studio.outputs;
+
+type
+  { Compact hosts show one ordinary Nyx workspace panel at a time. The choice
+    belongs to editor presentation and never changes project data/history. }
+  TNyxStudioPanel = (nspDesign, nspProject, nspInspector);
+
+  { Target-independent Studio chrome and state. Both adapters consume this same
+    Nyx document, including the public designer host and source editor. Platform
+    controllers only route events, file/storage access and compiler transport.
+    This record borrows no widgets or document nodes. Outputs is an optional
+    borrowed configuration, read only while the view is built; nil means empty
+    profiles. Copying the record never transfers profile ownership. }
+  TNyxStudioViewState = record
+    CodeVisible: Boolean;
+    { Editor presentation, never project content/history. Proportional sizing
+      survives panel switches and host viewport changes on both targets. }
+    CanvasPercent: Integer;
+    Phone: Boolean;
+    Palette: TNyxStudioPaletteState;
+    Log: TNyxText;
+    Status: TNyxText;
+    OutputVisible: Boolean;
+    OutputTarget: TNyxText;
+    Outputs: TNyxOutputConfiguration;
+    { File UI state is independent of output readiness. Conflicts are presented
+      as explicit choices; no accepted session is replaced while one is pending. }
+    FilesVisible: Boolean;
+    ProjectName: TNyxText;
+    ProjectConflict: Boolean;
+    ImportConflict: Boolean;
+    ProjectBusy: Boolean;
+    AdvancedProperties: Boolean;
+    InspectorTab: TNyxInspectorTab;
+    CallbackRemoval: TNyxCallbackRemoval;
+    StateVisible: Boolean;
+    BindingsVisible: Boolean;
+    BindingTarget: TNyxBindingProperty;
+    BindingDirection: TNyxBindingDirection;
+    { New-default drafts are editor presentation, retained across shell/viewport
+      refreshes. Only the explicit Add command admits them into project history. }
+    NewStateName: TNyxText;
+    NewStateInput: TNyxStudioStateInput;
+    NewStateValue: TNyxText;
+    { Compact uses one full-width panel. Panel is editor presentation state;
+      neither field changes the application's designed phone/desktop output. }
+    Compact: Boolean;
+    Panel: TNyxStudioPanel;
+    AgentsVisible: Boolean;
+    Agents: TNyxStudioAgentView;
+  end;
+
+{ Initializes every field deliberately, including borrowed optional profiles. }
+function DefaultNyxStudioViewState: TNyxStudioViewState;
+
+{ Returns an owned Nyx UI document; session is borrowed and remains unmodified.
+  The shell expresses application meaning through public Nyx component kinds.
+  Native/browser styling and physical host lifetime belong to their adapters. }
+function BuildNyxStudioView(ASession: TNyxStudioSession;
+  const AState: TNyxStudioViewState): TNyxDocument; overload;
+{ Report is borrowed during composition. Passing it directly keeps interface
+  ownership explicit and works on pas2js, which forbids COM interfaces in records. }
+function BuildNyxStudioView(ASession: TNyxStudioSession;
+  const AState: TNyxStudioViewState; const AReport: INyxCompilerReport): TNyxDocument; overload;
+
+implementation
+
+uses
+  nyx.binding,
+  nyx.composition;
+
+function DefaultNyxStudioViewState: TNyxStudioViewState;
+begin
+  Result.CodeVisible := False;
+  Result.CanvasPercent := 65;
+  Result.Phone := False;
+  Result.Palette := DefaultNyxStudioPaletteState;
+  Result.Log := '';
+  Result.Status := 'Ready to design';
+  Result.OutputVisible := False;
+  Result.OutputTarget := '';
+  Result.Outputs := nil;
+  Result.FilesVisible := False;
+  Result.ProjectName := '';
+  Result.ProjectConflict := False;
+  Result.ImportConflict := False;
+  Result.ProjectBusy := False;
+  Result.AdvancedProperties := False;
+  Result.InspectorTab := nitProperties;
+  Result.CallbackRemoval.Pending := False;
+  Result.StateVisible := False;
+  Result.BindingsVisible := False;
+  Result.BindingTarget := bpValue;
+  Result.BindingDirection := bdTwoWay;
+  Result.NewStateName := '';
+  Result.NewStateInput := ssiText;
+  Result.NewStateValue := '';
+  Result.Compact := False;
+  Result.Panel := nspDesign;
+  Result.AgentsVisible := False;
+  Result.Agents := DefaultNyxStudioAgentView;
+end;
+
+function Button(const AID, AText: TNyxText): TNyxNode;
+begin
+  Result := TNyxNode.Create(nkButton, AID).Configure.Text(AText).Done;
+end;
+
+function Caption(const AID, AText: TNyxText): TNyxNode;
+begin
+  Result := TNyxNode.Create(nkLabel, AID).Configure.Text(AText).Done;
+end;
+
+function StateEditor(const AID, ATitle, AValue: TNyxText;
+  AInput: TNyxStudioStateInput): TNyxNode;
+var
+  LKind: TNyxKind;
+begin
+  LKind := nkInput;
+
+  if AInput in [ssiText, ssiEscapedText] then
+  begin
+    LKind := nkMemo;
+  end
+  else if AInput = ssiBoolean then
+  begin
+    LKind := nkSelect;
+  end;
+  Result := TNyxNode.Create(LKind, AID);
+  try
+    Result.Configure.Text(ATitle).Value(AValue).Done;
+
+    if AInput = ssiBoolean then
+    begin
+      Result.Configure.Items('false' + #10 + 'true').Done;
+    end
+    else if AInput = ssiEscapedText then
+    begin
+      Result.Configure.Hint('One quoted text literal; escapes preserve control characters.').Done;
+    end;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+procedure AddStatePanel(AParent: TNyxNode; ASession: TNyxStudioSession;
+  const AState: TNyxStudioViewState);
+var
+  LPanel: TNyxNode;
+  LRow: TNyxNode;
+  LField: TNyxNode;
+  LIndex: Integer;
+  LInput: TNyxStudioStateInput;
+  LValue: TNyxStateValue;
+  LKey: TNyxText;
+  LItems: TNyxText;
+begin
+  AParent.Add(Button(NyxStudioStateToggleID, 'Data (' +
+    IntToStr(ASession.Document.State.Count + ASession.Document.Collections.Count) + ')'));
+
+  if not AState.StateVisible then
+  begin
+    Exit;
+  end;
+  LPanel := TNyxNode.Create(nkColumn, 'studio-state');
+  AParent.Add(LPanel);
+  LPanel.Configure.Gap(12).Done;
+  LPanel.Add(Caption('state-help',
+    'Saved defaults initialize each application. Bind controls in the inspector.'));
+  for LIndex := 0 to ASession.Document.State.Count - 1 do
+  begin
+    LKey := ASession.Document.State.Key(LIndex);
+    LValue := ASession.Document.State.Value(LKey);
+    LInput := NyxStudioStateInputFor(LValue);
+    LRow := TNyxNode.Create(nkPanel, 'state-row-' + IntToStr(LIndex));
+    LPanel.Add(LRow);
+    LRow.Configure.Surface(True).Padding(12).Gap(8).Done;
+    LField := TNyxNode.Create(nkInput, 'state-name-' + IntToStr(LIndex));
+    LRow.Add(LField);
+    LField.Configure.Text('Name').Value(LKey)
+      .Extension(NyxStudioStateKey, LKey)
+      .Extension(NyxStudioStateCommandKey, NyxStudioStateCommandName(sscRename)).Done;
+    LField := StateEditor('state-default-' + IntToStr(LIndex),
+      NyxStudioStateInputName(LInput) + ' default', NyxStudioStateEditorText(LValue), LInput);
+    LRow.Add(LField);
+    LField.Configure.Extension(NyxStudioStateKey, LKey)
+      .Extension(NyxStudioStateInputKey, NyxStudioStateInputName(LInput))
+      .Extension(NyxStudioStateCommandKey, NyxStudioStateCommandName(sscDefault)).Done;
+    LRow.Add(Button('state-remove-' + IntToStr(LIndex), 'Remove default').Configure
+      .Extension(NyxStudioStateKey, LKey)
+      .Extension(NyxStudioStateCommandKey, NyxStudioStateCommandName(sscRemove)).Done);
+  end;
+  LRow := TNyxNode.Create(nkPanel, 'state-new');
+  LPanel.Add(LRow);
+  LRow.Configure.Surface(True).Padding(12).Gap(8).Done;
+  LRow.Add(Caption('state-new-title', 'NEW DEFAULT'));
+  LRow.Add(TNyxNode.Create(nkInput, NyxStudioNewStateNameID).Configure
+    .Text('Name').Placeholder('replyText').Value(AState.NewStateName).Done);
+  LItems := '';
+  for LInput := Low(TNyxStudioStateInput) to High(TNyxStudioStateInput) do
+  begin
+
+    if LItems <> '' then
+    begin
+      LItems := LItems + #10;
+    end;
+    LItems := LItems + NyxStudioStateInputName(LInput);
+  end;
+  LRow.Add(TNyxNode.Create(nkSelect, NyxStudioNewStateInputID).Configure.Text('Type')
+    .Items(LItems).Value(NyxStudioStateInputName(AState.NewStateInput)).Done);
+  LRow.Add(StateEditor(NyxStudioNewStateValueID, 'Default', AState.NewStateValue, AState.NewStateInput));
+  LRow.Add(Button(NyxStudioAddStateID, 'Add default').Configure.Variant(nvPrimary).Done);
+end;
+
+procedure AddBindingsPanel(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode; const AState: TNyxStudioViewState);
+var
+  LPanel: TNyxNode;
+  LChoices: TNyxBindingTargetInfos;
+  LTarget: TNyxBindingProperty;
+  LSpec: TNyxBindingSpec;
+  LHasBinding: Boolean;
+  LLocal: Boolean;
+  LFound: Boolean;
+  LIndex: Integer;
+  LCount: Integer;
+  LKey: TNyxText;
+  LItems: TNyxText;
+  LDirection: TNyxBindingDirection;
+  LValue: TNyxStateValue;
+  LAllowedKinds: TNyxStateKinds;
+begin
+  AParent.Add(Button(NyxStudioBindingsToggleID, 'Bindings'));
+
+  if not AState.BindingsVisible then
+  begin
+    Exit;
+  end;
+  LPanel := TNyxNode.Create(nkPanel, 'studio-bindings');
+  AParent.Add(LPanel);
+  LPanel.Configure.Surface(True).Padding(12).Gap(8).Done;
+
+  if AProjection = nil then
+  begin
+    LPanel.Add(Caption('binding-help', 'This selection has no control projection.'));
+    Exit;
+  end;
+  LChoices := NyxBindingTargets(AProjection);
+
+  if Length(LChoices) = 0 then
+  begin
+    LPanel.Add(Caption('binding-help', 'This control exposes no portable binding targets.'));
+    Exit;
+  end;
+  LTarget := AState.BindingTarget;
+  LFound := False;
+  LItems := '';
+  for LIndex := 0 to Length(LChoices) - 1 do
+  begin
+    LFound := LFound or (LChoices[LIndex].Target = LTarget);
+
+    if LItems <> '' then
+    begin
+      LItems := LItems + #10;
+    end;
+    LItems := LItems + LChoices[LIndex].Title;
+  end;
+
+  if not LFound then
+  begin
+    LTarget := LChoices[0].Target;
+  end;
+  LPanel.Add(TNyxNode.Create(nkSelect, NyxStudioBindingTargetID).Configure.Text('Control property')
+    .Items(LItems).Value(NyxBindingPropertyTitle(LTarget)).Done);
+  LHasBinding := AProjection.FindBinding(LTarget, LSpec);
+  LKey := 'Unbound';
+  LDirection := AState.BindingDirection;
+
+  if LHasBinding then
+  begin
+    LKey := LSpec.StateName;
+    LDirection := LSpec.Direction;
+  end;
+  LPanel.Add(Caption('binding-current', 'Current: ' + LKey));
+
+  if LTarget = bpValue then
+  begin
+    LPanel.Add(TNyxNode.Create(nkSelect, NyxStudioBindingFlowID).Configure.Text('Flow')
+      .Items(NyxStudioBindingDirectionTitle(bdTwoWay) + #10 +
+        NyxStudioBindingDirectionTitle(bdFromState))
+      .Value(NyxStudioBindingDirectionTitle(LDirection))
+      .Extension(NyxStudioBindingOwnerKey, ASession.SelectedID)
+      .Extension(NyxStudioBindingTargetKey, NyxBindingPropertyName(LTarget)).Done);
+  end;
+  LPanel.Add(Caption('binding-choices-title', 'COMPATIBLE STATE TYPES'));
+  LCount := 0;
+  LAllowedKinds := NyxBindingKinds(AProjection, LTarget);
+  for LIndex := 0 to ASession.Document.State.Count - 1 do
+  begin
+    LKey := ASession.Document.State.Key(LIndex);
+    LValue := ASession.Document.State.Value(LKey);
+
+    if LValue.Kind in LAllowedKinds then
+    begin
+      Inc(LCount);
+      LPanel.Add(Button('binding-state-' + IntToStr(LIndex), LKey).Configure
+        .Extension(NyxStudioBindingOwnerKey, ASession.SelectedID)
+        .Extension(NyxStudioStateKey, LKey)
+        .Extension(NyxStudioBindingTargetKey, NyxBindingPropertyName(LTarget))
+        .Extension(NyxStudioBindingCommandKey, NyxStudioBindingCommandName(sbcChoose)).Done);
+    end;
+  end;
+
+  if LCount = 0 then
+  begin
+    LPanel.Add(Caption('binding-empty', 'Add a compatible default in Project > State.'));
+  end;
+  LPanel.Add(Button('binding-clear', 'Unbind property').Configure.Enabled(LHasBinding)
+    .Extension(NyxStudioBindingOwnerKey, ASession.SelectedID)
+    .Extension(NyxStudioBindingTargetKey, NyxBindingPropertyName(LTarget))
+    .Extension(NyxStudioBindingCommandKey, NyxStudioBindingCommandName(sbcClear)).Done);
+
+  if (ASession.Selected.Kind = 'slot-override') or
+    (ASession.Selected.ProjectionKind = 'component') then
+  begin
+    LLocal := False;
+    for LIndex := 0 to ASession.Selected.BindingCount - 1 do
+    begin
+      LLocal := LLocal or (ASession.Selected.Bindings[LIndex].Target = LTarget);
+    end;
+    LPanel.Add(Button('binding-inherit', 'Use inherited binding').Configure.Enabled(LLocal)
+      .Extension(NyxStudioBindingOwnerKey, ASession.SelectedID)
+      .Extension(NyxStudioBindingTargetKey, NyxBindingPropertyName(LTarget))
+      .Extension(NyxStudioBindingCommandKey, NyxStudioBindingCommandName(sbcInherit)).Done);
+  end;
+end;
+
+procedure AddOutputPanel(AParent: TNyxNode; const AState: TNyxStudioViewState);
+const
+  CLabels: array[0..5] of TNyxText = ('pas2js compiler', 'Matching rtl.js',
+    'FPC compiler', 'Lazarus root', 'Platform (CPU-OS)', 'Widgetset');
+var
+  LPanel: TNyxNode;
+  LTargets: TNyxNode;
+  LButton: TNyxNode;
+  LField: TNyxNode;
+  LIndex: Integer;
+begin
+  { Output selection has no dependency on profile readiness. These ordinary
+    Nyx fields edit local tool settings; no machine paths enter project nodes. }
+  LPanel := TNyxNode.Create('column', 'studio-outputs');
+  AParent.Add(LPanel);
+  LPanel.Add(TNyxNode.Create('heading', 'outputs-title').SetProp('text', 'Target / output'));
+  LPanel.Add(Caption('outputs-help',
+    'Design freely. Choose and configure an output whenever you are ready to build.'));
+  LTargets := TNyxNode.Create('row', 'output-targets');
+  LPanel.Add(LTargets);
+  for LIndex := 0 to 2 do
+  begin
+    case LIndex of
+      0:
+        begin
+          LButton := Button('output-none', 'Choose later').SetProp('output-target', '');
+        end;
+      1:
+        begin
+          LButton := Button('output-browser', 'Browser').SetProp('output-target', 'browser');
+        end;
+      2:
+        begin
+          LButton := Button('output-lcl', 'Native LCL').SetProp('output-target', 'lcl');
+        end;
+    end;
+
+    if LButton.Prop('output-target') = AState.OutputTarget then
+    begin
+      LButton.SetProp('variant', 'primary');
+    end;
+    LTargets.Add(LButton);
+  end;
+  for LIndex := 0 to High(NyxOutputFields) do
+  begin
+
+    if ((AState.OutputTarget = 'browser') and (LIndex < 2)) or
+      ((AState.OutputTarget = 'lcl') and (LIndex >= 2)) then
+    begin
+      LField := TNyxNode.Create('input', 'output-' + NyxOutputFields[LIndex])
+        .SetProp('text', CLabels[LIndex]).SetProp('output-field', NyxOutputFields[LIndex])
+        .SetProp('placeholder', 'Optional until this output is built');
+
+      if AState.Outputs <> nil then
+      begin
+        LField.SetProp('value', AState.Outputs.Field(NyxOutputFields[LIndex]));
+      end;
+      LPanel.Add(LField);
+    end;
+  end;
+  LPanel.Add(Caption('outputs-privacy', 'Compiler paths are saved only on this machine.'));
+  LPanel.Add(Button('action-save-outputs', 'Apply configuration'));
+  LPanel.Add(Button('action-reload-outputs', 'Reload saved configuration'));
+end;
+
+procedure AddTree(ASession: TNyxStudioSession; AParent: TNyxNode;
+  ANode: TNyxNode; ADepth: Integer; var ACount: Integer);
+var
+  LButton: TNyxNode;
+  LIndex: Integer;
+begin
+  { Chrome IDs use bounded ordinal keys; the complete authored identity travels
+    as command data. Prefixing a maximum-length ID would overflow its contract. }
+  Inc(ACount);
+  LButton := Button('tree-node-' + IntToStr(ACount), ANode.Kind + ' / ' + ANode.ID)
+    .SetProp('select-id', ANode.ID).SetProp('padding', IntToStr(ADepth * 10 + 6));
+  LButton.Configure.Height(36).Hint(ANode.Kind + ' / ' + ANode.ID).Done;
+
+  if ASession.SelectedID = ANode.ID then
+  begin
+    LButton.SetProp('variant', 'primary');
+  end;
+  AParent.Add(LButton);
+  for LIndex := 0 to ANode.Count - 1 do
+  begin
+    AddTree(ASession, AParent, ANode.Children[LIndex], ADepth + 1, ACount);
+  end;
+end;
+
+procedure AddPartChoices(AParent, ARuntime: TNyxNode;
+  const APath: TNyxText; var ACount: Integer);
+var
+  LIndex: Integer;
+  LPart: TNyxNode;
+  LPath: TNyxText;
+begin
+  { A named path follows the same direct-part contract as TNyxNode.Part.
+    Buttons carry the path as data; integer chrome IDs avoid user text becoming
+    a command identity. Expanded nested reusable parts are ordinary choices. }
+  for LIndex := 0 to ARuntime.Count - 1 do
+  begin
+    LPart := ARuntime.Children[LIndex];
+
+    if LPart.Prop('part') <> '' then
+    begin
+      LPath := LPart.Prop('part');
+
+      if APath <> '' then
+      begin
+        LPath := APath + '/' + LPath;
+      end;
+      Inc(ACount);
+      AParent.Add(Button('customize-part-' + IntToStr(ACount), 'Customize ' + LPath)
+        .SetProp('override-path', LPath));
+      AddPartChoices(AParent, LPart, LPath, ACount);
+    end;
+  end;
+end;
+
+function BuildNyxStudioView(ASession: TNyxStudioSession;
+  const AState: TNyxStudioViewState): TNyxDocument;
+begin
+  Result := BuildNyxStudioView(ASession, AState, nil);
+end;
+
+function BuildNyxStudioView(ASession: TNyxStudioSession;
+  const AState: TNyxStudioViewState; const AReport: INyxCompilerReport): TNyxDocument;
+var
+  LRoot: TNyxNode;
+  LHeader: TNyxNode;
+  LWorkspace: TNyxNode;
+  LSplit: TNyxNode;
+  LCodePane: TNyxNode;
+  LLeft: TNyxNode;
+  LCenter: TNyxNode;
+  LRight: TNyxNode;
+  LViews: TNyxNode;
+  LTree: TNyxNode;
+  LViewbar: TNyxNode;
+  LCanvas: TNyxNode;
+  LFooter: TNyxNode;
+  LButton: TNyxNode;
+  LField: TNyxNode;
+  LSelected: TNyxNode;
+  LHelpIndex: Integer;
+  LIndex: Integer;
+  LKind: TNyxText;
+  LName: TNyxText;
+  LProperties: TNyxPropertyInfos;
+  LPrimitive: TNyxPrimitiveInfo;
+  LPropertyIndex: Integer;
+  LKnown: Boolean;
+  LMetadataSource: TNyxNode;
+  LPartView: TNyxNode;
+  LPartCount: Integer;
+  LTreeCount: Integer;
+  LPanelbar: TNyxNode;
+  LInspectorTabs: TNyxNode;
+  LSelectedProjection: TNyxNode;
+  LBindingTarget: TNyxBindingProperty;
+  LBinding: TNyxBindingSpec;
+begin
+  { Reject a missing controller before allocating any owned shell nodes. }
+
+  if ASession = nil then
+  begin
+    raise ENyxModel.Create('Studio session is required');
+  end;
+  Result := TNyxDocument.Create;
+  Result.Title := 'Nyx Studio';
+  LRoot := TNyxNode.Create('page', 'studio-shell');
+  Result.AddPage(LRoot);
+  { Stable node IDs are command identities shared by platform controllers.
+    Building chrome as ordinary nodes makes it inspectable and renderable by
+    the same public adapters used for the applications Studio designs. }
+  LHeader := TNyxNode.Create('row', 'studio-header');
+  LRoot.Add(LHeader);
+  LHeader.Add(Caption('studio-logo', 'nyx'));
+  LHeader.Add(Caption('studio-subtitle', 'STUDIO  /  ' + ASession.Document.Title));
+  LHeader.Add(Button('action-undo', 'Undo'));
+  LHeader.Add(Button('action-redo', 'Redo'));
+  LHeader.Add(Button('action-code', 'Pascal'));
+  LHeader.Add(Button('action-import', 'Open'));
+  LHeader.Add(Button('action-save', 'Save'));
+  LHeader.Add(Button('action-outputs', 'Outputs'));
+  LHeader.Add(Button('action-agents', 'Agents'));
+  LHeader.Add(Button('action-build-view', 'Build view').SetProp('variant', 'primary'));
+  LHeader.Add(Button('action-build-app', 'Build app'));
+
+  if AState.Compact then
+  begin
+    LPanelbar := TNyxNode.Create('row', 'studio-panelbar');
+    LRoot.Add(LPanelbar);
+    LPanelbar.Add(Button('action-panel-project', 'Project'));
+    LPanelbar.Add(Button('action-panel-design', 'Design'));
+    LPanelbar.Add(Button('action-panel-inspector', 'Inspector'));
+    case AState.Panel of
+      nspProject:
+        begin
+          LPanelbar.Children[0].SetProp('variant', 'primary');
+        end;
+      nspDesign:
+        begin
+          LPanelbar.Children[1].SetProp('variant', 'primary');
+        end;
+      nspInspector:
+        begin
+          LPanelbar.Children[2].SetProp('variant', 'primary');
+        end;
+    end;
+  end;
+  LWorkspace := TNyxNode.Create('row', 'studio-workspace');
+  LRoot.Add(LWorkspace);
+  LLeft := TNyxNode.Create('column', 'studio-left');
+  { Pages and definitions remain separate document roots. Palette buttons carry
+    semantic add-kind metadata instead of retaining widget-specific callbacks. }
+  LWorkspace.Add(LLeft);
+  LLeft.Add(TNyxNode.Create('heading', 'views-title').SetProp('text', 'PROJECT'));
+  LLeft.Add(TNyxNode.Create('input', 'project-title').SetProp('text', 'Project title')
+    .SetProp('value', ASession.Document.Title));
+
+  if AState.FilesVisible then
+  begin
+    LViews := TNyxNode.Create(nkColumn, 'studio-project-files');
+    LLeft.Add(LViews);
+    LViews.Add(TNyxNode.Create(nkInput, 'project-file-name').Configure
+      .Text('Saved project name').Placeholder('my-project').Value(AState.ProjectName).Done);
+    LViews.Add(Caption('project-file-hint',
+      'Save keeps the design, Pascal and any draft together on this computer.'));
+    LViews.Add(Button('action-project-open', 'Open saved project').Configure
+      .Enabled(not AState.ProjectBusy).Done);
+    LViews.Add(Button('action-project-save', 'Save paired files').Configure
+      .Enabled(not AState.ProjectBusy).Done);
+    LViews.Add(Button('action-project-export', 'Download project backup'));
+    LViews.Add(Button('action-project-import', 'Import project or paired files'));
+    LViews.Add(Button('action-project-export-files', 'Download design + Pascal'));
+
+    if AState.ProjectConflict then
+    begin
+      LViews.Add(Caption('project-conflict-warning',
+        'The saved files changed. Your work is retained. Open the saved version ' +
+        'after downloading your work, or change the name to save a separate copy.'));
+      LViews.Add(Button('action-project-use-remote', 'Back up mine and open saved'));
+      LViews.Add(Button('action-project-copy', 'Save mine as a new project'));
+    end;
+
+    if AState.ImportConflict then
+    begin
+      LViews.Add(Caption('project-import-warning',
+        'The files disagree or Pascal is unsupported. Export the input before ' +
+        'merging. Your current project is unchanged.'));
+      LViews.Add(Button('action-project-input-backup', 'Download imported backup'));
+      LViews.Add(Button('action-project-use-pascal', 'Open using Pascal values'));
+      LViews.Add(Button('action-project-use-design', 'Open design; keep Pascal as draft'));
+      LViews.Add(Button('action-project-cancel-import', 'Cancel import'));
+    end;
+  end;
+  LViews := TNyxNode.Create('column', 'studio-views').SetProp('gap', '2');
+  LLeft.Add(LViews);
+  for LIndex := 0 to ASession.Document.Count - 1 do
+  begin
+    LName := ASession.Document.Pages[LIndex].ID;
+    LButton := Button('view-page-' + IntToStr(LIndex), 'Page / ' + LName)
+      .SetProp('view-id', LName);
+
+    if LName = ASession.ActiveViewID then
+    begin
+      LButton.SetProp('variant', 'primary');
+    end;
+    LViews.Add(LButton);
+  end;
+  LViews.Add(Button('action-add-page', '+ New page'));
+  for LIndex := 0 to ASession.Document.ComponentCount - 1 do
+  begin
+    LName := ASession.Document.Components[LIndex].ID;
+    LViews.Add(Button('view-component-' + IntToStr(LIndex), 'Component / ' + LName)
+      .SetProp('view-id', LName));
+    LViews.Add(Button('instance-component-' + IntToStr(LIndex), '+ Use ' + LName)
+      .SetProp('component-id', LName));
+  end;
+  AddStatePanel(LLeft, ASession, AState);
+  AddNyxCollectionDefaultsPanel(LLeft, ASession, AState.StateVisible);
+  AddNyxStudioPalette(LLeft, ASession.Catalog, AState.Palette);
+  LCenter := TNyxNode.Create('column', 'studio-center');
+  { The authoring area is itself Nyx: a public nested-view surface and an
+    optional public source editor. This avoids a second Studio-only widget API. }
+  LWorkspace.Add(LCenter);
+
+  if AState.AgentsVisible then
+  begin
+    LCenter.Add(BuildNyxStudioAgents(AState.Agents));
+  end;
+
+  if AState.OutputVisible then
+  begin
+    AddOutputPanel(LCenter, AState);
+  end;
+  LViewbar := TNyxNode.Create('row', 'studio-viewbar');
+  LCenter.Add(LViewbar);
+  LViewbar.Add(Caption('active-view-label', ASession.ActiveViewID).SetProp('flex', '1'));
+  LViewbar.Add(Button('action-desktop', 'Desktop'));
+  LViewbar.Add(Button('action-phone', 'Phone'));
+  LViewbar.Add(Button('action-preview', 'Interact'));
+  LViewbar.Add(Caption('output-summary', 'Output: ' + AState.OutputTarget));
+
+  if AState.OutputTarget = '' then
+  begin
+    LViewbar.Children[LViewbar.Count - 1].SetProp('text', 'Output: choose anytime');
+  end;
+  LCanvas := TNyxNode.Create('column', 'studio-canvas-wrap');
+
+  if AState.CodeVisible then
+  begin
+    LSplit := TNyxNode.Create(nkSplitView, 'studio-split')
+      .Configure.SplitOrientation(nsoStacked).SplitPosition(AState.CanvasPercent)
+      .SplitMinimum(10).SplitMaximum(90).SplitResizable(True)
+      .Height(520).ForPlatform(npfBrowser).Clear(atHeight).Flex(1).Done;
+    LCenter.Add(LSplit);
+    LSplit.Add(LCanvas);
+  end
+  else
+  begin
+    LCenter.Add(LCanvas);
+  end;
+  LField := TNyxNode.Create('design-surface', 'studio-canvas')
+    .SetProp('aria-label', 'Visual design canvas');
+  LCanvas.Add(LField);
+
+  if AState.Phone then
+  begin
+    LField.SetProp('width', '390');
+  end;
+
+  if AState.CodeVisible then
+  begin
+    LCodePane := TNyxNode.Create(nkColumn, 'studio-source-pane')
+      .Configure.Gap(0).Padding(0).Done;
+    LSplit.Add(LCodePane);
+    LCodePane.Add(TNyxNode.Create(nkRow, 'studio-code-actions')
+      .Configure.Gap(8).Done
+      .Add(Button('action-apply-source', 'Apply Pascal'))
+      .Add(Button('action-reset-source', 'Restore accepted'))
+      .Add(Button('action-export-source-draft', 'Save draft')));
+    LField := BuildNyxSourceDiagnostic(ASession);
+
+    if LField <> nil then
+    begin
+      LCodePane.Add(LField);
+    end;
+    LField := BuildNyxCompilerDiagnostics(ASession, AReport);
+
+    if LField <> nil then
+    begin
+      LCodePane.Add(LField);
+    end;
+    LCodePane.Add(TNyxNode.Create('code-editor', 'studio-code')
+      .Configure.Text('Pascal source').ReadOnly(False).Flex(1)
+      .Hint('Edit typed configuration, defaults, bindings, contracts and data, then Apply Pascal. Keep application helpers outside nyx:views.')
+      .Value(ASession.DraftSource).Done);
+  end;
+  LRight := TNyxNode.Create('column', 'studio-right');
+  { Inspector fields describe model properties. A controller sends their changes
+    through the session's undoable command boundary, then rebuilds this view. }
+  LWorkspace.Add(LRight);
+  LRight.Add(TNyxNode.Create('heading', 'inspector-title').SetProp('text', 'INSPECTOR'));
+  LSelected := ASession.Selected;
+
+  if LSelected <> nil then
+  begin
+    LRight.Add(Caption('selected-label', LSelected.Kind + ' / ' + LSelected.ID));
+    LMetadataSource := NyxProjectionSource(LSelected, ASession.Document);
+    { Show the creator's explanation where the control is being edited, including
+      the Events tab. A registered recipe keeps its own intent rather than the
+      description of its layout root. Unregistered projections may use their
+      primitive's help; no guessed description is saved into the user's design. }
+    LHelpIndex := ASession.Catalog.IndexOf(LMetadataSource.Kind);
+
+    if LHelpIndex < 0 then
+    begin
+      LHelpIndex := ASession.Catalog.IndexOf(LMetadataSource.ProjectionKind);
+    end;
+
+    if (LHelpIndex >= 0) and
+      (ASession.Catalog[LHelpIndex].Discovery.Description <> '') then
+    begin
+      LRight.Add(Caption('selected-component-help',
+        ASession.Catalog[LHelpIndex].Discovery.Description));
+    end;
+    LInspectorTabs := TNyxNode.Create(nkRow, 'inspector-tabs');
+    LInspectorTabs.Configure.Gap(6).Done;
+    LRight.Add(LInspectorTabs);
+    LButton := Button(NyxInspectorPropertiesID, 'Properties');
+
+    if AState.InspectorTab = nitProperties then
+    begin
+      LButton.Configure.Variant(nvPrimary).Done;
+    end;
+    LInspectorTabs.Add(LButton);
+    LButton := Button(NyxInspectorEventsID, 'Events');
+
+    if AState.InspectorTab = nitEvents then
+    begin
+      LButton.Configure.Variant(nvPrimary).Done;
+    end;
+    LInspectorTabs.Add(LButton);
+    { Relevant typed fields replace the generic list formerly shown for every
+      kind. Read metadata without inserting defaults into the user's document. }
+
+    if FindNyxPrimitive(LMetadataSource.ProjectionKind, LPrimitive) then
+    begin
+      LRight.Add(Caption('selected-capabilities', 'Browser: ' +
+        NyxCapabilityText(LPrimitive.Browser) + ' / LCL: ' + NyxCapabilityText(LPrimitive.Native)));
+    end;
+
+    if LSelected.ProjectionKind = 'component' then
+    begin
+      LRight.Add(Caption('instance-parts-title', 'INSTANCE PARTS'));
+      LRight.Add(Button('customize-part-root', 'Customize content').SetProp('override-path', '.'));
+      LPartView := RealizeNyxView(ASession.Document, LSelected);
+      try
+        LPartCount := 0;
+        AddPartChoices(LRight, LPartView, '', LPartCount);
+      finally
+        LPartView.Free;
+      end;
+    end;
+
+    if LSelected.Kind = 'slot-override' then
+    begin
+      LRight.Add(Caption('instance-part-help',
+        'Edit this instance part. For layout parts, add content through the palette.'));
+    end;
+    LSelectedProjection := ASession.SelectedProjection;
+    try
+
+      if AState.InspectorTab = nitEvents then
+      begin
+
+        if LSelectedProjection <> nil then
+        begin
+          AddNyxEventsInspector(LRight, ASession, LSelectedProjection, AState.CallbackRemoval);
+        end;
+      end
+      else
+      begin
+        AddBindingsPanel(LRight, ASession, LSelectedProjection, AState);
+
+        if AState.BindingsVisible then
+        begin
+          AddNyxCollectionBindingPanel(LRight, ASession, LSelectedProjection);
+        end;
+        LProperties := NyxProperties(LSelected, ASession.Document);
+        for LIndex := 0 to Length(LProperties) - 1 do
+        begin
+
+          if LProperties[LIndex].Advanced and not AState.AdvancedProperties then
+          begin
+            Continue;
+          end;
+          LKind := 'input';
+          case LProperties[LIndex].ValueType of
+            npText, npNumber, npReference:
+              begin
+                LKind := 'input';
+              end;
+            npLines:
+              begin
+                LKind := 'memo';
+              end;
+            npBoolean, npChoice:
+              begin
+                LKind := 'select';
+              end;
+            npInteger:
+              begin
+                LKind := 'spin';
+
+                if (LProperties[LIndex].Minimum < -1000000) or
+                  (LProperties[LIndex].Maximum > 1000000) then
+                begin
+                  LKind := 'input';
+                end;
+              end;
+          end;
+          LField := TNyxNode.Create(LKind, 'inspector-' + LProperties[LIndex].Key)
+            .SetProp('text', LProperties[LIndex].Title)
+            .SetProp('prop-key', LProperties[LIndex].Key)
+            .SetProp('value', LSelected.Prop(LProperties[LIndex].Key,
+              LProperties[LIndex].DefaultValue));
+          LField.Configure.Hint(LProperties[LIndex].Support.Description + #10 +
+            'Browser: ' + NyxCapabilityText(LProperties[LIndex].Support.Browser) +
+            ' / LCL: ' + NyxCapabilityText(LProperties[LIndex].Support.Native)).Done;
+
+          if LProperties[LIndex].ValueType = npBoolean then
+          begin
+            LField.SetProp('items', 'true' + #10 + 'false');
+          end
+          else if LProperties[LIndex].ValueType = npChoice then
+          begin
+            LField.SetProp('items', #10 + LProperties[LIndex].Choices);
+          end
+          else if LProperties[LIndex].ValueType = npNumber then
+          begin
+            LField.Configure.InputType(niNumber).Done;
+          end
+          else if LProperties[LIndex].ValueType = npInteger then
+          begin
+
+            if LKind = 'input' then
+            begin
+              { Logical signed-32-bit values can exceed the primitive spin
+                projection's bounds. Keep a numeric draft input with an exact
+                integer contract instead of silently narrowing its range. }
+              LField.Configure.InputType(niNumber).Done;
+              LField.Contract.Value(NyxIntegerDomain.Range(LProperties[LIndex].Minimum,
+                LProperties[LIndex].Maximum));
+            end
+            else
+            begin
+              LField.SetProp('min', IntToStr(LProperties[LIndex].Minimum))
+                .SetProp('max', IntToStr(LProperties[LIndex].Maximum));
+            end;
+          end;
+          { Bound properties show the effective default. Editing their raw fallback
+            would have no visible result, so direct the user to State/Bindings. }
+
+          if (LSelectedProjection <> nil) and
+            TryNyxBindingProperty(LProperties[LIndex].Key, LBindingTarget) and
+            LSelectedProjection.FindBinding(LBindingTarget, LBinding) then
+          begin
+            { This inspector holds wire drafts. The admitted model remains strongly
+              typed; initial draft text is deliberately copied at this UI boundary. }
+            LField.SetProp('value', LSelectedProjection.Prop(LProperties[LIndex].Key,
+              LProperties[LIndex].DefaultValue)).Configure.Enabled(False)
+              .Hint('Bound to ' + LBinding.StateName + '; edit State or Bindings.').Done;
+          end;
+          LRight.Add(LField);
+
+          if (LProperties[LIndex].Support.Browser = ncMissing) or
+            (LProperties[LIndex].Support.Native = ncMissing) then
+          begin
+            { A missing target effect changes an output/customization decision.
+              Keep it visible for touch users; ordinary help remains a hint. }
+            LRight.Add(Caption('property-support-' + IntToStr(LIndex),
+              LProperties[LIndex].Support.Description));
+          end;
+        end;
+      end;
+    finally
+      LSelectedProjection.Free;
+    end;
+
+    if AState.InspectorTab = nitProperties then
+    begin
+      LRight.Add(Button('action-advanced-properties', 'More properties'));
+    end;
+
+    if AState.AdvancedProperties and (AState.InspectorTab = nitProperties) then
+    begin
+      { Preserve the open string contract. Extra/recipe metadata remains editable
+        without misrepresenting it as a built-in typed property or target feature. }
+      for LIndex := 0 to LSelected.Props.Count - 1 do
+      begin
+        LName := LSelected.Props.Names[LIndex];
+        LKnown := False;
+        for LPropertyIndex := 0 to Length(LProperties) - 1 do
+        begin
+
+          if LProperties[LPropertyIndex].Key = LName then
+          begin
+            LKnown := True;
+            Break;
+          end;
+        end;
+
+        if not LKnown then
+        begin
+          LKind := 'input';
+
+          if Pos(#10, LSelected.Prop(LName)) > 0 then
+          begin
+            LKind := 'memo';
+          end;
+          LRight.Add(TNyxNode.Create(LKind, 'inspector-extra-' + IntToStr(LIndex))
+            .SetProp('text', LName).SetProp('prop-key', LName)
+            .SetProp('value', LSelected.Prop(LName)));
+        end;
+      end;
+    end;
+  end;
+  LRight.Add(Button('action-duplicate', 'Duplicate'));
+  LRight.Add(Button('action-up', 'Move up'));
+  LRight.Add(Button('action-down', 'Move down'));
+  LRight.Add(Button('action-component', 'Make reusable'));
+  LRight.Add(Button('action-delete', 'Delete'));
+  LRight.Add(Button('action-export-source', 'Export Pascal'));
+  LRight.Add(TNyxNode.Create('heading', 'hierarchy-title').SetProp('text', 'HIERARCHY'));
+  LTree := TNyxNode.Create('column', 'studio-hierarchy').SetProp('gap', '0');
+  LRight.Add(LTree);
+
+  if ASession.ActiveView <> nil then
+  begin
+    LTreeCount := 0;
+    AddTree(ASession, LTree, ASession.ActiveView, 0, LTreeCount);
+  end;
+
+  if AState.Log <> '' then
+  begin
+    LRight.Add(TNyxNode.Create('code', 'studio-log').SetProp('text', AState.Log));
+  end;
+  LFooter := TNyxNode.Create('row', 'studio-footer');
+  LRoot.Add(LFooter);
+  LFooter.Add(Caption('studio-status', AState.Status));
+  { Each compact panel remains the same public Nyx composition as its desktop
+    counterpart. Omit inactive roots so both adapters give the active panel its
+    full host width rather than reserving space for invisible siblings. }
+
+  if AState.Compact then
+  begin
+
+    if AState.Panel <> nspProject then
+    begin
+      LWorkspace.Remove(LLeft);
+    end;
+
+    if AState.Panel <> nspDesign then
+    begin
+      LWorkspace.Remove(LCenter);
+    end;
+
+    if AState.Panel <> nspInspector then
+    begin
+      LWorkspace.Remove(LRight);
+    end;
+  end;
+end;
+
+end.
