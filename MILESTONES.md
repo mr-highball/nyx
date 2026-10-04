@@ -4,20 +4,19 @@
 [Current work](WORK.md)
 
 Latest delivery (2026-10-04): the [event/scheduler owner](TODO/NS-1_event-scheduler_01.md)
-now supplies typed editing sessions through actual text controls, crafted
-callbacks, Studio/source/history and bounded MCP queries. Five new fluent
-families expose owned edit intent, physical text, optional data, scalar selection
-and composition lifecycle. Draft preservation, physical cancelability and model
-admission stay distinct; native target gaps receive explicit grades/refusals.
-Native preparation/compiled checks pass 117/118 with zero leaks; the compiled
-browser companion passes 121. Desktop/exact-390 Events journeys pass 29 each,
-HTTP 173 and real MCP 44 on the final executable, including PNG rendering.
-The exact tested bytes are deployed. Prior 35-recipe/55-route, selection,
-viewport and producer evidence remains applicable. The 34 runtime families
-are independent of semantic identities. Criteria 2/3/4 remain accepted;
-complete control/event breadth stays open at no-closure counter 4. Reassessment
-selects integrated pointer-gesture ownership and typed drag/drop with capture
-loss/cancellation, owned transfers, safe disposal and Studio/source/agent consumers.
+now supplies typed editing and gesture sessions through actual controls, crafted
+callbacks, Studio/source/history and bounded MCP queries. Ten new fluent gesture
+families qualify owned capture/cancellation and protected/readable drag transfers,
+with typed source/target/touch settings. Native gesture journeys pass 83/84 with
+zero leaks; the compiled browser companion passes 78, with host-generated mouse,
+touch and drag negotiation. Actual Studio passes 52 each at desktop/exact-390;
+shared core/designer passes 30/1537 and 59 wrong-type cases per compiler.
+HTTP passes 177 and real MCP 55, including PNG rendering. Exact tested bytes are
+deployed. Prior editing, recipe, selection, viewport and producer evidence remains
+applicable. Criteria 2/3/4 remain accepted; complete control/event breadth stays
+open at no-closure counter 5. Reassessment selects keyboard-operable rich
+selection and compound actions with retained focus and honest accessibility
+metadata, exercised through actual controls and Studio/agent consumers.
 Preserve physical IME, full keyboard/accessibility qualification, other widgetsets,
 native completion, workers and native Studio. No original criterion or
 full-product acceptance is weakened or claimed.
@@ -25,6 +24,14 @@ full-product acceptance is weakened or claimed.
 and semantic agent operation retain their accepted evidence.
 Typed compiler navigation advances codegen criterion 3 to counter 11 without
 closing source UX/performance. The full product and native Studio remain open.
+
+Explicit Codex user registration now refreshes alongside project configuration.
+Initialized Codex discovery authenticates all eleven semantic tools; 22 native
+configuration checks preserve operator files and refuse invalid ownership, with
+zero leaks. Semantic MCP is the default demo/design workflow. Additional callback,
+build and protected review-session operations retain an open
+[primary workflow owner](TODO/NS-4_agent-workflows_01.md). The running desktop chat
+needs one reconnect for native handles; a Pascal semantic client works immediately.
 
 ## Intended destination
 

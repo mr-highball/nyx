@@ -190,7 +190,13 @@ the [capability guide](docs/capabilities.md).
 Local MCP exposes eleven bounded semantic tools, atomic revision-aware edits,
 shared history, rendered previews and visible operator-controlled agent activity.
 Native/pas2js commands, live desktop/390-pixel observers, recovery safeguards and
-Codex configuration discovery have executed evidence. See the
+Codex configuration discovery have executed evidence. Explicit user-scope
+enrollment refreshes credentials on launch, with 22 configuration checks and
+zero native leaks. Fresh Codex initialization authenticates all eleven tools from
+another project. Semantic MCP is the primary demo/design workflow; a Pascal
+semantic client works while this chat awaits one client reconnect. Additional
+callback/build/review operations retain an open
+[workflow owner](TODO/NS-4_agent-workflows_01.md). See the
 [agent guide](docs/studio-agents.md). Checked native source visual edits at
 128/512/2048 controls take 125/531/2375 ms after owned indexed lookup,
 unchanged-section reuse, shared parsed contexts and immutable paired history.

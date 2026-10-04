@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'semantic-events', 'source-workspace', 'agents', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'semantic-events', 'source-workspace', 'agents', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -170,6 +170,19 @@ try {
   Write-Host "FPC: $nyxFpc / $nyxVersion / $nyxCPU-$nyxOS"
   $nyxNativeFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl',
     '-Fusrc', '-Futests', '-Fustudio', "-FU$nyxNativeDir", "-FE$nyxNativeDir")
+
+  if ($Target -eq 'mcp-client') {
+    # Native Pascal configuration/client tooling needs neither an application
+    # output compiler nor a browser. No live document mutation is implicit.
+    Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tools/nyx_studio_mcp.lpr'))
+    Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tests/nyx_mcp_config_tests.lpr'))
+    & (Join-Path $nyxNativeDir 'nyx_mcp_config_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'MCP configuration preservation checks failed'
+    }
+    exit 0
+  }
 
   if ($Target -in @('selection', 'all')) {
     # The Pascal journey admits immutable selection state, exercises real widgets

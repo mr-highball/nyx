@@ -39,7 +39,8 @@ type
     FSession: TNyxText;
     FSerial: Integer;
   public
-    constructor Create(const AConfiguration: TNyxText);
+    constructor Create(const AConfiguration: TNyxText;
+      const AClientName: TNyxText = 'Scooty protocol fixture');
     function Exchange(const AMethod: TNyxText; const APacket: TNyxDataValue;
       AExpectedStatus: Integer = 200; const AOrigin: TNyxText = ''): TNyxDataValue;
     function RPC(const AMethod: TNyxText; const AParams: TNyxDataValue): TNyxDataValue;
@@ -68,6 +69,7 @@ begin
   LReply := TMemoryStream.Create;
   try
     LClient.IOTimeout := 30000;
+    LClient.AllowRedirect := False;
     LClient.AddHeader('Content-Type', 'application/json');
     LClient.AddHeader('Accept', 'application/json, text/event-stream');
 
@@ -123,7 +125,8 @@ begin
   end;
 end;
 
-constructor TNyxMCPTestClient.Create(const AConfiguration: TNyxText);
+constructor TNyxMCPTestClient.Create(const AConfiguration: TNyxText;
+  const AClientName: TNyxText);
 var
   LFile: TFileStream;
   LText: TNyxText;
@@ -132,6 +135,8 @@ var
   LLine: TNyxText;
   LStart: Integer;
   LResponse: TNyxDataValue;
+  LPortEnd: Integer;
+  LPort: Integer;
 begin
   inherited Create;
   LFile := TFileStream.Create(AConfiguration, fmOpenRead or fmShareDenyNone);
@@ -175,10 +180,22 @@ begin
   begin
     raise Exception.Create('Local Nyx Codex entry is missing');
   end;
+  { This consumer is deliberately local. Never forward a private generated
+    credential to a URL changed to a remote host or a redirect by configuration. }
+  LPortEnd := Pos('/mcp/', FEndpoint);
+
+  if (Pos('http://127.0.0.1:', FEndpoint) <> 1) or (LPortEnd < 19) or
+    not TryStrToInt(Copy(FEndpoint, 18, LPortEnd - 18), LPort) or
+    (LPort < 1024) or (LPort > 65535) or
+    (Pos('Bearer ', FAuthorization) <> 1) or
+    (Pos(#13, FAuthorization) > 0) or (Pos(#10, FAuthorization) > 0) then
+  begin
+    raise Exception.Create('Nyx MCP requires its generated authenticated loopback endpoint');
+  end;
   LResponse := RPC('initialize', NyxObject([
     NyxField('protocolVersion', NyxData('2025-11-25')),
     NyxField('capabilities', NyxObject([])),
-    NyxField('clientInfo', NyxObject([NyxField('name', NyxData('Scooty protocol fixture')),
+    NyxField('clientInfo', NyxObject([NyxField('name', NyxData(AClientName)),
       NyxField('version', NyxData('1'))]))]));
 
   if LResponse.Field('result').Field('protocolVersion').AsText <> '2025-11-25' then

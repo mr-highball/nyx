@@ -36,7 +36,7 @@ the full product remain open.
 
 Batch handoff: implementation, actual target evidence and the LAN product changed.
 The integrated gesture deliverable is finished; no Pascal build/test/capture
-pipeline remains active. Only production PID 25544 / exec 37288 remains, bound to
+pipeline remains active. Only production PID 37076 / exec 20570 remains, bound to
 0.0.0.0:8088 with MCP on loopback:8089. The full goal remains active. Next work
 must follow the counter-5 reassessment above rather than another isolated event
 or timing experiment. Solo execution and user-staged dependency files are preserved.
@@ -44,13 +44,18 @@ or timing experiment. Solo execution and user-staged dependency files are preser
 Active batch is delivered. Typed gestures, actual controls, both compiler targets,
 Studio/source/history, semantic MCP and exact LAN deployment changed authoritative
 state. Original criterion 1 stays open at counter 5; its next integrated outcome
-and stop conditions are above. The user additionally authorized committing and
-pushing hello-nyx to protect progress. Include the existing staged Athena pin
-unchanged, exclude private configuration/build artifacts, and verify the remote
-branch identity. Direct Nyx tool handles are absent from this running chat;
-Pascal clients perform real MCP testing, and Codex lists the local server enabled.
-The app connection must refresh before newly configured handles appear. Keep the
-full original goal intact and continue solo.
+and stop conditions are above. The remote hello-nyx checkpoint is published at
+51bb982 with the existing Athena pin unchanged and private/build files excluded.
+The user's MCP setup is installed: project and enrolled Codex user entries rotate
+on Studio launch; actual initialized Codex discovery authenticates all 11 tools
+from another project. A native Pascal semantic client supplies immediate bounded
+queries while this running chat awaits one client reconnect for native handles.
+Semantic MCP is the primary demo/design workflow. Missing callback/build/state/
+review-session operations have an open [workflow owner](TODO/NS-4_agent-workflows_01.md).
+Configuration checks pass 22 with zero leaks; the revised server passes 55 real
+MCP checks. Accepted paired user work, selection and view survive deployment
+exactly. See [connection evidence](#codex-mcp-registration--2026-10-04).
+Keep the full original goal intact and continue solo along the counter-5 outcome.
 
 ## Previous checkpoint before compiler and MCP delivery
 
@@ -2815,3 +2820,67 @@ physical browser/LCL harnesses remain selective behavior evidence. Configuration
 is enabled, but this chat currently has no direct Nyx handles. Finish supported
 Codex connection reload/tool discovery, exercise small real semantic calls, and
 record tool gaps before returning to the criterion-5 outcome. No sub-agents.
+
+## Codex MCP registration — 2026-10-04
+
+The user's immediate request is delivered: Nyx is registered in the selected
+Codex user configuration as well as the trusted project. Per-session endpoint and
+bearer credentials refresh on each Studio launch through one protected block
+publisher. Explicit enrollment records only an absolute config path in ignored
+local configuration. Unrelated bytes and exact backups are retained; unmanaged,
+duplicate/malformed markers, invalid enrollment and remote transport are refused.
+The native developer client negotiates real MCP, prints bounded structured
+results, discovers an exact tool schema, identifies its actor and closes its
+session. It never claims/replaces a design or retries a mutation implicitly.
+Mutations retain the existing server revision and operationId contract.
+
+Evidence under ignored `build/mcp-client/`:
+
+- `mcp-client-build.log`: maintained build target and 22 configuration checks.
+- `config-heap.log`: 1879 allocations/frees, zero unfreed blocks; exact Unicode
+  unrelated bytes, backup/rotation, unmanaged/quoted/inline ownership, malformed
+  marker/referral and remote-endpoint refusal checks.
+- `mcp-qualified.log`: all 55 real HTTP/MCP checks against the revised executable,
+  authenticated through an enrolled user configuration; actual PNG rendering.
+  Fixture-only staging service 23892/99206 is stopped and termination observed.
+- `codex-discovery.log` and `codex-discovery-after-rotation.log`: fresh installed
+  Codex app-server initialization from another project authenticates `bearerToken`
+  and all 11 tool schemas, before and after real production credential rotation.
+  This diagnostic starts no model turn, agent or thread and closes its owned
+  process. It does not replace or restart the desktop's existing app-server.
+- Live session, bounded five-child outline, three-item catalog, two-key/two-event
+  node context and eight-line source window succeed through the semantic client.
+  A guessed source `limit` was correctly refused; its advertised `line`/`count`
+  schema corrected the request. No live demo fixture was loaded or existing
+  design content changed by these queries.
+
+The Windows desktop control socket is unavailable here (the proxy reports socket
+connection failure and no control socket is published). Official Codex docs
+provide configuration reload/restart, but native Nyx handles are absent from this
+running chat. Reconnect Codex once to load them. The Pascal semantic client is
+usable immediately and is the primary inspection/edit route until then. Semantic
+MCP remains primary afterward; physical browser/LCL consumers qualify input and
+accessibility that the document API cannot prove. `AGENTS.md` and the agent guide
+retain this operating rule. Confirmed callback/build/state/binding/root-cleanup/
+review-session gaps have the open NS-4_agent-workflows_01 owner. No acceptance
+credit or original event/codegen counter was changed by this follow-up.
+
+The qualified server is installed at the LAN instance. Before restart, MCP
+confirmed there was no pending draft, undo/redo history or restrictive permission.
+The active paired design/source, selection and view were backed up privately,
+revision rechecked and restored byte for byte. Old production 25544/37288 stopped
+with identity verification and observed termination. Current production is
+37076/20570; only this service remains. Local/LAN health is 200, and all five
+served web assets match the qualified gesture hashes exactly. New executable
+SHA256: `BD697581DCB7ABF6C0045506C4722093EB03AC7285ACEAF839C91829C24B908D`.
+The exact six-artifact packet is `release-manifest.json`; the prior executable is
+`previous-server.exe`. The live launch automatically refreshed both configuration
+entries, privately checked equal. Existing Studio tabs may need a refresh because
+editor capabilities rotate on restart. There are no active verification pipelines.
+
+Remote protection: checkpoint 51bb982 is published on origin/hello-nyx, with the
+existing Athena registration/pin unchanged. Private local config, bearer/editor
+capabilities, fixture artifacts and generated binaries/JavaScript remain excluded.
+The configuration/tool/docs follow-up is also authorized for remote publication;
+verify its remote identity after pushing. Full goal remains active, solo, and the
+supported-control keyboard/accessibility outcome remains the return path.

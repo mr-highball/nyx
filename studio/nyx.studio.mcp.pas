@@ -82,15 +82,8 @@ type
 
 implementation
 
-{$ifdef WINDOWS}
-{ Keep the tiny file-publication boundary explicit. Importing all of Windows
-  would shadow FPC's reference-counted critical section and UTF-8 RTL helpers. }
-function NyxMoveFileExW(AExisting, AReplacement: PWideChar;
-  AFlags: LongWord): LongBool; stdcall; external 'kernel32.dll' name 'MoveFileExW';
-const
-  NyxMoveReplaceExisting = $00000001;
-  NyxMoveWriteThrough = $00000008;
-{$endif}
+uses
+  nyx.studio.mcpconfig;
 
 function NewCapability: TNyxText;
 var
@@ -268,86 +261,20 @@ begin
 end;
 
 procedure TNyxStudioMCP.WriteCodexConfiguration;
-const
-  CBegin = '# BEGIN NYX STUDIO MCP (managed locally)';
-  CEnd = '# END NYX STUDIO MCP (managed locally)';
 var
   LPath: TNyxText;
-  LText: TNyxText;
-  LBegin: Integer;
-  LEnd: Integer;
   LBlock: TNyxText;
-  LTemp: TNyxText;
-  LOriginal: TNyxText;
-  LPublished: Boolean;
 begin
   LPath := FRepository + '.codex' + PathDelim + 'config.toml';
-  LText := '';
-
-  if FileExists(LPath) then
-  begin
-    LText := ReadBytes(LPath);
-  end;
-  LOriginal := LText;
-  LBegin := Pos(CBegin, LText);
-  LEnd := Pos(CEnd, LText);
-
-  if (LBegin > 0) <> (LEnd > 0) then
-  begin
-    raise ENyxProjectConflict.Create('Incomplete Nyx-managed Codex configuration; existing file retained');
-  end;
-
-  if LBegin > 0 then
-  begin
-
-    if (LEnd <= LBegin) or (Pos(CBegin, Copy(LText, LBegin + Length(CBegin), MaxInt)) > 0) then
-    begin
-      raise ENyxProjectConflict.Create('Ambiguous Nyx-managed Codex configuration; existing file retained');
-    end;
-  end
-  else if Pos('[mcp_servers.nyx_studio]', LText) > 0 then
-  begin
-    raise ENyxProjectConflict.Create('An unmanaged nyx_studio MCP entry exists; existing file retained');
-  end;
-  LBlock := CBegin + LineEnding + '[mcp_servers.nyx_studio]' + LineEnding +
+  LBlock := NyxMCPConfigBegin + LineEnding + '[mcp_servers.nyx_studio]' + LineEnding +
     'url = "' + Endpoint + '"' + LineEnding +
     'http_headers = { Authorization = "Bearer ' + FToken + '" }' + LineEnding +
     'startup_timeout_sec = 15' + LineEnding + 'tool_timeout_sec = 30' + LineEnding +
-    CEnd;
-  ForceDirectories(ExtractFileDir(LPath));
-  LTemp := LPath + '.nyx-new';
-  if LBegin > 0 then
-  begin
-    LText := Copy(LText, 1, LBegin - 1) + LBlock +
-      Copy(LText, LEnd + Length(CEnd), MaxInt);
-  end
-  else
-  begin
-    LText := LText + LineEnding + LineEnding + LBlock + LineEnding;
-  end;
-  WriteBytes(LTemp, LText);
-  { Backup exact existing bytes and replace only after the complete new file has
-    been written. Never print private credentials into compiler/server logs. }
-
-  if FileExists(LPath) then
-  begin
-    if ReadBytes(LPath) <> LOriginal then
-    begin
-      raise ENyxProjectConflict.Create('Codex configuration changed during registration; existing file retained');
-    end;
-    WriteBytes(LPath + '.nyx-backup', LOriginal);
-  end;
-  {$ifdef WINDOWS}
-  LPublished := NyxMoveFileExW(PWideChar(UTF8Decode(LTemp)), PWideChar(UTF8Decode(LPath)),
-    NyxMoveReplaceExisting or NyxMoveWriteThrough);
-  {$else}
-  LPublished := RenameFile(LTemp, LPath);
-  {$endif}
-
-  if not LPublished then
-  begin
-    raise ENyxProjectConflict.Create('Could not publish local Codex MCP configuration');
-  end;
+    NyxMCPConfigEnd;
+  NyxMCPPublishBlock(LPath, LBlock);
+  { The user chooses global enrollment explicitly. Thereafter new per-session
+    credentials refresh that same managed entry without touching other servers. }
+  NyxMCPRefreshRegistration(FRepository, LBlock);
 end;
 
 function TNyxStudioMCP.ConnectEditor(const ARequest: TNyxDataValue): TNyxDataValue;

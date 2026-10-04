@@ -49,3 +49,14 @@ bytes are preserved. An already-open client may need to reconnect. Capture
 housekeeping, serialized compiler delays and the full native Studio controller
 remain documented limits. See [agent guide](../../docs/studio-agents.md) and
 [evidence](../../WORK.md#semantic-agent-operation-and-compiler-navigation--2026-10-04).
+
+**Configuration maintenance — 2026-10-04:** Explicit user-scope enrollment now
+refreshes the same protected managed block on each Studio launch. Twenty-two
+configuration checks preserve unrelated/backup bytes and refuse malformed,
+ambiguous, unmanaged or remote transport entries; zero native leaks. The revised
+server passes all 55 real MCP checks using its enrolled user file. A fresh Codex
+app-server initializes the bearer-authenticated connection and advertises all
+eleven tools from outside the Nyx repository. A Pascal semantic client supplies
+immediate bounded queries while the running desktop inventory awaits reconnect.
+The user's additional primary-workflow requirement and discovered callback/build/
+review-session gaps belong to [primary semantic workflows](../NS-4_agent-workflows_01.md).

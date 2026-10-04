@@ -29,12 +29,60 @@ its CLI, desktop and IDE clients. A client already running may need to reconnect
 or restart before newly registered tools appear; Studio does not promise client
 configuration hot reload. See [Codex MCP configuration](https://learn.chatgpt.com/docs/extend/mcp?surface=cli).
 
+For a desktop chat attached to another project, explicitly register Studio in
+the Codex user's configuration too. Build `tools/build.ps1 -Target mcp-client`,
+then run the resulting `nyx_studio_mcp` program:
+
+```text
+nyx_studio_mcp register <nyx-repository> <Codex-user-config.toml>
+```
+
+This changes the same `nyx_studio` managed block in the chosen file and stores
+its absolute path in ignored `.local/codex-mcp-registration.json`. Subsequent
+Studio launches refresh project and enrolled user entries with fresh session
+credentials. Unrelated configuration is retained byte for byte, with local
+backups; ambiguous markers or unmanaged Nyx entries are refused. Enrollment is
+explicit and does not affect editor permissions. Remove the local enrollment
+record to stop automatic refresh; remove the managed block from the selected
+Codex file to disconnect its global registration. Neither action changes a
+design. Keep files and backups private.
+
+Reconnect the desktop MCP client once after installing the entry. A successful
+`codex mcp list` confirms configuration; initialized tool discovery confirms
+connectivity. The installed app-server supports configuration reload, but a
+running desktop connection may not expose its control socket on every platform.
+See [Codex app-server methods](https://learn.chatgpt.com/docs/app-server).
+
+While a chat's inventory awaits reconnection, the same Pascal program provides
+real semantic MCP access without another agent or browser automation:
+
+```text
+nyx_studio_mcp tools <nyx-repository> nyx_node
+nyx_studio_mcp call <nyx-repository> nyx_session <empty-object.json>
+nyx_studio_mcp call <nyx-repository> nyx_source <source-window.json>
+```
+
+Use `{}` for session arguments and `{"line":1,"count":8}` for a source window.
+Argument files are explicit JSON wire data. Calls negotiate an authenticated
+loopback session, identify the developer client in Studio activity and close
+the transport afterward. Results print bounded structured context; refused
+semantic operations exit with status 2. No design is claimed, loaded, replaced
+or mutated implicitly. Mutations use the same revision/operation identity rules
+below. Timed-out mutations are never retried automatically.
+
 Other MCP clients can use the URL and Authorization header from that same local
 configuration. No Node process, package manager or JavaScript service is needed.
 The backend, model, tool implementation, browser controller and preview program
 are all Pascal; browser JavaScript is compiler output.
 
 ## Semantic context
+
+Semantic tools are the primary way agents inspect, compose and modify demos and
+active designs. Read the session first, query only needed nodes/properties/events,
+then group related edits into one undoable transaction. Preserve existing user
+work and use an isolated review session for destructive protocol fixtures.
+Use previews for visual validation. Actual browser/LCL input harnesses still
+qualify behavior that semantic document changes cannot demonstrate.
 
 The transport implements authenticated Streamable HTTP with JSON responses,
 initialization, session IDs and protocol negotiation for 2025-11-25, 2025-06-18
@@ -155,6 +203,14 @@ Sixteen snapshot packets are retained in memory. Capture artifacts remain under
 ignored `build/agent-previews/`; disk artifact housekeeping is still manual.
 
 ## Build and verification
+
+The maintained native semantic/configuration tool is built with
+`tools/build.ps1 -Target mcp-client`. Its configuration fixture uses disposable
+files under `build/mcp-client/`, never the real Codex user file. Actual MCP HTTP
+fixtures likewise run against an isolated service because they deliberately
+replace and mutate their selected session. See the open
+[primary semantic workflow task](../TODO/NS-4_agent-workflows_01.md) for callback,
+build, state/binding and review-session capabilities still missing from tools.
 
 `tools/build.ps1 -Target agents` builds the portable fixture, real HTTP consumers,
 browser observer/safeguard fixtures, Studio and preview program. `-BrowserOutput`

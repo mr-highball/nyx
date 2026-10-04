@@ -25,6 +25,7 @@ blockers rather than filename order.
 | NS-4 | [Studio vertical slice](NS-4_studio-slice_01.md) | Canvas, tree, inspector and split generated code | Pending assessment |
 | NS-4 | [Studio authoring system](NS-4_studio-authoring_01.md) | Multi-page/reusable workflows, history and project UX | Pending assessment |
 | NS-4 | [Semantic agent operation](DONE/NS-4_agent-tools_01.md) | Accepted local MCP tools, revision-aware transactions and observing Studio views | Pending assessment |
+| NS-4 | [Primary semantic workflows](NS-4_agent-workflows_01.md) | Codex registration, callback/build tools and protected agent demo journeys | Pending assessment |
 | NS-2 | [Resizable views and platform configuration](DONE/NS-2_split-platform_01.md) | Accepted public split panes, mobile Studio resizing and typed platform overrides | Pending assessment |
 | NS-5 | [Compiler service slice](NS-5_compile-service_01.md) | Pascal HTTP view/application builds | Pending assessment |
 | NS-5 | [Service hardening and reload](NS-5_service-reload_01.md) | Isolation, caching, cancellation and reload | Pending assessment |
