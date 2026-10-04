@@ -79,6 +79,16 @@ for isolated qualification services. Prior reconnect-pending observations above
 are superseded. No configuration change, service restart, document mutation or
 new acceptance credit was required. See the current work record.
 
+The subsequent layout journey uses native named tools for one additive 27-node
+page, bounded queries/export, actual browser/LCL view and application jobs, an
+actual selective PNG, reviewed root cleanup and paired Undo. Design removal keeps
+imports as advertised; exact full-source restoration therefore uses the two
+ordinary history entries. The original paired project is byte-identical at
+revision 6, while those test entries remain on Redo. This is evidence of working
+native semantic operations and also demonstrates why protected review-session
+lifecycle remains an open criterion 5 requirement. No browser editor automation
+or operator project replacement substitutes for that missing capability.
+
 ## Contextual admission and rendered viewports — 2026-10-04
 
 The subsequent catalog property journey exposed and repaired contextual scalar

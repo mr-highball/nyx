@@ -953,7 +953,18 @@ begin
 
   if ANode.Prop('flex') <> '' then
   begin
-    Result.style.setProperty('flex', ANode.Prop('flex'));
+
+    if StrToIntDef(ANode.Prop('flex'), 0) > 0 then
+    begin
+      Result.style.setProperty('flex', ANode.Prop('flex'));
+      Result.classList.add('nyx-flex');
+    end
+    else
+    begin
+      { CSS's bare zero also sets a zero basis. The Pascal zero-weight contract
+        restores the authored/natural size instead of collapsing that item. }
+      Result.style.setProperty('flex', '0 0 auto');
+    end;
   end;
 
   if ANode.Prop('visible', 'true') = 'false' then
@@ -3233,11 +3244,21 @@ begin
         end;
       end;
       LControl.style.removeProperty('flex');
+      LControl.classList.remove('nyx-flex');
       LControl.style.removeProperty('grid-template-columns');
 
       if LNode.Prop('flex') <> '' then
       begin
-        LControl.style.setProperty('flex', LNode.Prop('flex'));
+
+        if StrToIntDef(LNode.Prop('flex'), 0) > 0 then
+        begin
+          LControl.style.setProperty('flex', LNode.Prop('flex'));
+          LControl.classList.add('nyx-flex');
+        end
+        else
+        begin
+          LControl.style.setProperty('flex', '0 0 auto');
+        end;
       end;
 
       if LNode.Prop('columns') <> '' then

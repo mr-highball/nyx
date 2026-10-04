@@ -44,6 +44,7 @@ uses
   Graphics,
   nyx.widgets.lcl,
   nyx.model,
+  nyx.layout.flow,
   nyx.interaction,
   nyx.editing,
   nyx.editing.lcl,
@@ -247,8 +248,14 @@ type
       out ACaption: TLabel): TControl;
     function Build(ANode: TNyxNode; AParent: TWinControl): TControl;
     function Measure(ANode: TNyxNode; AWidth: Integer): Integer;
+    { Visible flow entries only; hidden controls remain owned and mounted. }
+    function VisibleChildren(ANode: TNyxNode): Integer;
+    { Row widths reserve authored fixed widths before distributing weighted
+      space. Unspecified nonflex widths retain the existing equal-cell policy. }
+    function RowWidths(ANode: TNyxNode; AWidth: Integer): TNyxFlowSizes;
     function LayoutColumns(ANode: TNyxNode; AWidth: Integer): Integer;
-    procedure Layout(ANode: TNyxNode; AX, AY, AWidth: Integer; AHeight: Integer = -1);
+    procedure Layout(ANode: TNyxNode; AX, AY, AWidth: Integer; AHeight: Integer = -1;
+      AAllocatedWidth: Boolean = False);
     function Binding(ANode: TNyxNode): TNyxLCLBinding;
     function IdentityBinding(const AID: TNyxText;
       AIdentity: TNyxIdentityKind): TNyxLCLBinding;
@@ -1154,10 +1161,49 @@ begin
   raise ENyxModel.Create('Native projection is missing a node');
 end;
 
+function TNyxLCLRenderer.VisibleChildren(ANode: TNyxNode): Integer;
+var
+  LIndex: Integer;
+begin
+  Result := 0;
+  for LIndex := 0 to ANode.Count - 1 do
+  begin
+
+    if ANode.Children[LIndex].Prop('visible', 'true') <> 'false' then
+    begin
+      Inc(Result);
+    end;
+  end;
+end;
+
+function TNyxLCLRenderer.RowWidths(ANode: TNyxNode; AWidth: Integer): TNyxFlowSizes;
+var
+  LItems: TNyxFlowItems;
+  LIndex: Integer;
+  LCount: Integer;
+  LDefault: Integer;
+  LInner: Integer;
+  LGap: Integer;
+begin
+  LCount := VisibleChildren(ANode);
+  LInner := Max(0, AWidth - 2 * Metric(ANode, 'padding', 0));
+  LGap := Metric(ANode, 'gap', 12);
+  LDefault := Max(0, LInner - Max(0, LCount - 1) * LGap) div Max(1, LCount);
+  SetLength(LItems, ANode.Count);
+  for LIndex := 0 to ANode.Count - 1 do
+  begin
+    LItems[LIndex].Visible := ANode.Children[LIndex].Prop('visible', 'true') <> 'false';
+    LItems[LIndex].Weight := Metric(ANode.Children[LIndex], 'flex', 0);
+    LItems[LIndex].NaturalSize := Min(LInner,
+      Max(0, Metric(ANode.Children[LIndex], 'width', LDefault)));
+  end;
+  Result := NyxFlowSizes(LInner, LGap, LItems);
+end;
+
 function TNyxLCLRenderer.LayoutColumns(ANode: TNyxNode; AWidth: Integer): Integer;
 var
   LIndex: Integer;
-  LCellWidth: Integer;
+  LWidths: TNyxFlowSizes;
   LPreferredWidth: Integer;
   LPreferredHeight: Integer;
   LControl: TControl;
@@ -1170,7 +1216,7 @@ begin
   end
   else if NyxLayout(ANode) = 'row' then
   begin
-    Result := ANode.Count;
+    Result := VisibleChildren(ANode);
   end;
 
   if Result < 1 then
@@ -1182,10 +1228,15 @@ begin
   begin
     Exit;
   end;
-  LCellWidth := (AWidth - 2 * Metric(ANode, 'padding', 0) -
-    Metric(ANode, 'gap', 12) * (Result - 1)) div Result;
+  LWidths := RowWidths(ANode, AWidth);
   for LIndex := 0 to ANode.Count - 1 do
   begin
+
+    if (ANode.Children[LIndex].Prop('visible', 'true') = 'false') or
+      (Metric(ANode.Children[LIndex], 'flex', 0) > 0) then
+    begin
+      Continue;
+    end;
     LControl := Binding(ANode.Children[LIndex]).FControl;
     { Native caption controls cannot wrap like DOM text. Let LCL measure their
       actual font/caption and stack a row when equal cells would clip one. This
@@ -1200,7 +1251,8 @@ begin
       LPreferredHeight := 0;
       LControl.GetPreferredSize(LPreferredWidth, LPreferredHeight, True, False);
 
-      if LPreferredWidth > LCellWidth then
+      if (ANode.Children[LIndex].Prop('width') = '') and
+        (LPreferredWidth > LWidths[LIndex]) then
       begin
         Exit(1);
       end;
@@ -1220,7 +1272,15 @@ var
   LTextWidth: Integer;
   LTextHeight: Integer;
   LLabel: TLabel;
+  LVisible: Integer;
+  LPosition: Integer;
+  LWidths: TNyxFlowSizes;
 begin
+
+  if ANode.Prop('visible', 'true') = 'false' then
+  begin
+    Exit(0);
+  end;
 
   if ANode.Prop('height') <> '' then
   begin
@@ -1301,28 +1361,42 @@ begin
   end;
   LPadding := Metric(ANode, 'padding', 0);
   LGap := Metric(ANode, 'gap', 12);
+  LVisible := VisibleChildren(ANode);
   Result := 0;
 
   if (NyxLayout(ANode) = 'row') or (NyxLayout(ANode) = 'grid') then
   begin
     LColumns := LayoutColumns(ANode, AWidth);
-    LCellWidth := (AWidth - 2 * LPadding - LGap * (LColumns - 1)) div LColumns;
+    LCellWidth := Max(0, AWidth - 2 * LPadding - LGap * (LColumns - 1)) div LColumns;
+    LWidths := RowWidths(ANode, AWidth);
     LRowHeight := 0;
+    LPosition := 0;
     for LIndex := 0 to ANode.Count - 1 do
     begin
+
+      if ANode.Children[LIndex].Prop('visible', 'true') = 'false' then
+      begin
+        Continue;
+      end;
+
+      if (NyxLayout(ANode) = 'row') and (LColumns = Max(1, LVisible)) then
+      begin
+        LCellWidth := LWidths[LIndex];
+      end;
       LHeight := Measure(ANode.Children[LIndex], LCellWidth);
+      Inc(LPosition);
 
       if LHeight > LRowHeight then
       begin
         LRowHeight := LHeight;
       end;
 
-      if ((LIndex + 1) mod LColumns = 0) or (LIndex = ANode.Count - 1) then
+      if (LPosition mod LColumns = 0) or (LPosition = LVisible) then
       begin
         Inc(Result, LRowHeight);
         LRowHeight := 0;
 
-        if LIndex < ANode.Count - 1 then
+        if LPosition < LVisible then
         begin
           Inc(Result, LGap);
         end;
@@ -1333,15 +1407,19 @@ begin
   begin
     for LIndex := 0 to ANode.Count - 1 do
     begin
-      Inc(Result, Measure(ANode.Children[LIndex], AWidth - 2 * LPadding));
+
+      if ANode.Children[LIndex].Prop('visible', 'true') <> 'false' then
+      begin
+        Inc(Result, Measure(ANode.Children[LIndex], Max(0, AWidth - 2 * LPadding)));
+      end;
     end;
-    Inc(Result, LGap * (ANode.Count - 1));
+    Inc(Result, LGap * Max(0, LVisible - 1));
   end;
   Inc(Result, 2 * LPadding);
 end;
 
 procedure TNyxLCLRenderer.Layout(ANode: TNyxNode; AX, AY, AWidth: Integer;
-  AHeight: Integer);
+  AHeight: Integer; AAllocatedWidth: Boolean);
 var
   LBinding: TNyxLCLBinding;
   LIndex: Integer;
@@ -1356,13 +1434,25 @@ var
   LInputWidth: Integer;
   LInputHeight: Integer;
   LFrameHeight: Integer;
-  LFixedHeight: Integer;
-  LFlex: Integer;
-  LWeight: Integer;
   LFitHeight: Integer;
+  LFitWidth: Integer;
+  LChildY: Integer;
+  LVisible: Integer;
+  LPosition: Integer;
+  LRow: Boolean;
+  LDefiniteColumn: Boolean;
+  LItems: TNyxFlowItems;
+  LSizes: TNyxFlowSizes;
 begin
   LBinding := Binding(ANode);
-  LWidth := Metric(ANode, 'width', AWidth);
+  { The browser theme caps every node at its containing block's available
+    width. Apply that same cap before measuring native wrapping/descendants. }
+  LWidth := Min(Max(0, AWidth), Max(0, Metric(ANode, 'width', AWidth)));
+
+  if AAllocatedWidth then
+  begin
+    LWidth := Max(0, AWidth);
+  end;
   LHeight := Measure(ANode, LWidth);
 
   if AHeight >= 0 then
@@ -1407,7 +1497,7 @@ begin
     end
     else
     begin
-      LBinding.FInput.SetBounds(0, 24, LWidth, LHeight - 24);
+      LBinding.FInput.SetBounds(0, 24, LWidth, Max(0, LHeight - 24));
     end;
   end;
   LPadding := Metric(ANode, 'padding', 0);
@@ -1415,27 +1505,40 @@ begin
   AY := LPadding;
   AX := LPadding;
   LColumns := LayoutColumns(ANode, LWidth);
-  LFlex := 0;
-  LFixedHeight := 2 * LPadding + Max(0, ANode.Count - 1) * LGap;
+  LVisible := VisibleChildren(ANode);
+  LPosition := 0;
+  LRow := (NyxLayout(ANode) = 'row') and (LColumns = Max(1, LVisible));
+  LDefiniteColumn := (NyxLayout(ANode) = 'column') and
+    ((AHeight >= 0) or (ANode.Prop('height') <> ''));
 
-  if (AHeight >= 0) and (NyxLayout(ANode) = 'column') then
+  if LRow then
   begin
+    LSizes := RowWidths(ANode, LWidth);
+  end
+  else if LDefiniteColumn then
+  begin
+    SetLength(LItems, ANode.Count);
     for LIndex := 0 to ANode.Count - 1 do
     begin
-      LWeight := Metric(ANode.Children[LIndex], 'flex', 0);
-      Inc(LFlex, LWeight);
-
-      if LWeight = 0 then
-      begin
-        Inc(LFixedHeight, Measure(ANode.Children[LIndex], LWidth - 2 * LPadding));
-      end;
+      LItems[LIndex].Visible := ANode.Children[LIndex].Prop('visible', 'true') <> 'false';
+      LItems[LIndex].Weight := Metric(ANode.Children[LIndex], 'flex', 0);
+      LItems[LIndex].NaturalSize := Measure(ANode.Children[LIndex], Max(0, LWidth - 2 * LPadding));
     end;
+    LSizes := NyxFlowSizes(Max(0, LHeight - 2 * LPadding), LGap, LItems);
   end;
-  LCellWidth := (LWidth - 2 * LPadding - LGap * (LColumns - 1)) div LColumns;
+  LCellWidth := Max(0, LWidth - 2 * LPadding - LGap * (LColumns - 1)) div LColumns;
   LCellHeight := 0;
   for LIndex := 0 to ANode.Count - 1 do
   begin
     LChild := ANode.Children[LIndex];
+
+    if LChild.Prop('visible', 'true') = 'false' then
+    begin
+      { Keep the mounted control and draft, but never reserve a flow slot/gap.
+        Its next visible layout recomputes descendants at the current size. }
+      Continue;
+    end;
+    Inc(LPosition);
 
     if ANode.Prop('layout') = 'absolute' then
     begin
@@ -1444,27 +1547,45 @@ begin
     else
     begin
       LFitHeight := -1;
-      LWeight := Metric(LChild, 'flex', 0);
+      LFitWidth := LCellWidth;
+      LChildY := AY;
 
-      if (LFlex > 0) and (LWeight > 0) then
+      if LDefiniteColumn and (Metric(LChild, 'flex', 0) > 0) then
       begin
-        LFitHeight := Max(0, AHeight - LFixedHeight) * LWeight div LFlex;
+        LFitHeight := LSizes[LIndex];
       end;
-      Layout(LChild, AX, AY, LCellWidth, LFitHeight);
-      LHeight := Measure(LChild, LCellWidth);
+
+      if LRow then
+      begin
+        LFitWidth := LSizes[LIndex];
+        { Standard row/toolbar theme centers on the cross axis. Explicit
+          main-axis weights do not imply stretching the other dimension. }
+        LChildY := AY + Max(0, (LHeight - 2 * LPadding - Measure(LChild, LFitWidth)) div 2);
+      end;
+      Layout(LChild, AX, LChildY, LFitWidth, LFitHeight, LRow);
+      LInputHeight := Measure(LChild, LFitWidth);
 
       if LFitHeight >= 0 then
       begin
-        LHeight := LFitHeight;
+        LInputHeight := LFitHeight;
       end;
 
-      if LHeight > LCellHeight then
+      if LInputHeight > LCellHeight then
       begin
-        LCellHeight := LHeight;
+        LCellHeight := LInputHeight;
       end;
-      Inc(AX, LCellWidth + LGap);
+      { Advance by the actual authored/allocated width, never by an equal slot
+        beneath a wider child. This prevents overlapping fixed-width siblings. }
+      if LRow then
+      begin
+        Inc(AX, Binding(LChild).FControl.Width + LGap);
+      end
+      else
+      begin
+        Inc(AX, LCellWidth + LGap);
+      end;
 
-      if ((LIndex + 1) mod LColumns) = 0 then
+      if (LPosition mod LColumns) = 0 then
       begin
         AX := LPadding;
         Inc(AY, LCellHeight + LGap);
@@ -1479,7 +1600,16 @@ begin
 
   if (FRoot <> nil) and (FPanel <> nil) then
   begin
-    Layout(FRoot, 0, 0, FPanel.ClientWidth);
+    { LCL's automatic anchor/layout pass must see the complete new geometry.
+      Otherwise showing a previously unplaced label can reapply its stale base
+      position in the middle of SetBounds. Keep widgetset layout atomic while
+      retaining the same controls and their focus/editing state. }
+    FPanel.DisableAutoSizing;
+    try
+      Layout(FRoot, 0, 0, FPanel.ClientWidth);
+    finally
+      FPanel.EnableAutoSizing;
+    end;
   end;
 end;
 

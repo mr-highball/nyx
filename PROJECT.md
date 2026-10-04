@@ -64,6 +64,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The latest layout batch qualifies weighted rows, explicitly sized/nested columns,
+hidden flow entries, resizing and retained memo/list/split controls. Actual native
+checks pass 2,084 with zero leaks; browser passes 2,094 desktop and 2,095 at an
+actual 390-pixel viewport. Native named MCP authors the review, requests both
+compilers and performs reviewed cleanup/paired Undo. The original project bytes
+are restored exactly, with ordinary test Redo retained. The [layout guide](docs/layout.md)
+records remaining intrinsic sizing, root height, wrapping, scaling and visual
+outcomes under the original owners. Source qualification does not establish a new
+LAN deployment; the earlier automatic replacement refusal remains in WORK.md.
+
 The latest property/projection candidate qualifies all 76 catalog kinds / 262
 expanded faces: 14,127 native checks with zero leaks and 14,269 desktop / 14,270
 exact-390 browser checks. Contextual typed MCP edits pass 39 native/browser

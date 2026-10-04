@@ -75,6 +75,7 @@ __recovery/
 backup/
 lib/
 *.json
+!tests/layout-review.operations.json
 *.txt
 *.log
 

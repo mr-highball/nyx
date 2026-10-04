@@ -20,6 +20,17 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Proportional and hidden flow — 2026-10-04
+
+The later proportional/hidden-flow packet is documented in
+[layout](../docs/layout.md) and WORK.md. It qualifies one shared semantic review
+on actual LCL and desktop/390 browser controls, including retained editing focus,
+collection/split descendants and width capping. It also corrects browser zero
+weight and minimum-height behavior. Original renderer prerequisites and all three
+criteria remain open for their full intended scope; natural sizing, richer
+responsive policies, hardware/widgetsets, scaling and accessibility are not
+inferred from this bounded geometry evidence.
+
 ## Collection interaction boundary — 2026-10-03
 
 Automatically generated collection editors now inherit enabled/read-only policy

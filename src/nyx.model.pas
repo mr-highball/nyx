@@ -298,6 +298,9 @@ type
     function Height(AValue: Integer): TNyxNodeConfig;
     function Left(AValue: Integer): TNyxNodeConfig;
     function Top(AValue: Integer): TNyxNodeConfig;
+    { Positive main-axis weight in a row or a column with a definite height.
+      Hidden children consume no weight or gap. Zero restores natural/fixed
+      sizing. Allocated space can be smaller than a control's contents. }
     function Flex(AValue: Integer): TNyxNodeConfig;
     function Minimum(AValue: Integer): TNyxNodeConfig;
     function Maximum(AValue: Integer): TNyxNodeConfig;

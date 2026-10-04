@@ -7,6 +7,27 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+Completed bounded batch (2026-10-04): proportional and hidden-flow layout under
+the existing NS-2 LCL/parity owners. Qualify weighted rows, explicitly sized and
+nested columns, padding/gaps, hidden first/middle/last children, odd-pixel
+remainders, resizing, cleared weights, retained input focus/drafts and collection/
+split descendants. Compose the review through semantic MCP as one owned additive
+page; bounded source export and actual browser/LCL compiler jobs retain one
+revision. Physical consumers use that unchanged companion. Stop qualification
+on overlapping authored fixed widths, hidden space, stale weights or lost focus.
+One integrated implementation/qualification checkpoint; original acceptance,
+support grades and event/codegen counters remain unchanged. Prior goal turn was
+progress: native desktop handles connected and their verification was pushed.
+
+Latest layout evidence: 2,084 actual native control/arithmetic checks, zero leaks;
+2,094 desktop and 2,095 actual-390 browser checks. Native named MCP composes the
+27-node review as one paired edit, inspects bounded context, exports source and
+requests real view/application jobs on both targets. Both final application files
+equal that export. Reviewed root cleanup retains imports as documented; two
+paired Undo operations then restore the original full project bytes exactly.
+Current revision 6, home selection/view, one page/component, no draft/Undo and
+the two test operations on Redo. Native MCP is primary. See the packet below.
+
 Latest qualification (2026-10-04): integrated property/projection concordance.
 Semantic MCP authors all 76 kinds and a property review in seven paired groups;
 exported source equals both actual compiler job files. Native qualifies 262
@@ -27,7 +48,9 @@ Codex authenticates fifteen tools from another project after connection rotation
 Project/enrolled configuration refresh remains automatic. The restarted desktop
 chat now exposes all fifteen native Nyx handles; direct authenticated bounded
 reads are verified. Native semantic MCP is primary, with the Pascal semantic
-client retained for isolated test services. No user design received a test fixture.
+client retained for isolated test services. The temporary owned review was added
+and removed through MCP; the exact original paired project is restored. Redo
+retains the ordinary test history; no protected review workspace is claimed.
 
 Qualified source checkpoint dd5a95a8e81693024e0defcc0133af250601c659 is pushed
 to origin/hello-nyx and independently equals git ls-remote. The handoff record
@@ -3717,3 +3740,108 @@ and pushed to origin/hello-nyx; exact remote branch identity was checked with
 git ls-remote after publication. All 21 owned changed files are tracked; private
 records/build artifacts remain ignored. The current handoff records that verified
 implementation without claiming the refused production install.
+
+## Native-MCP-authored proportional and hidden layout — 2026-10-04
+
+This bounded integrated batch advances NS-2_lcl-renderer_01 criteria 1/2 and
+the original parity owner, without accepting either task. The previous goal
+turn was progress: a1e74a2 verified/pushed native desktop MCP connection. The
+declared review covers weighted rows, definite/nested columns, fixed sizes,
+padding/gaps, hidden first/middle/last children, rounding, resizing, cleared
+weights and retained memo/list/split descendants. Original event criterion 1
+stays open at counter 8; accepted 2/3/4 and codegen criterion 3 at 11 remain
+unchanged. Full goal stays active; no scope, support grade or credit is reduced.
+
+Implementation: a portable owned allocation array excludes hidden entries and
+reserves visible gaps/fixed sizes before cumulative weighted rounding. Double
+accumulation avoids overflowing Integer products; native bounds remain integers.
+Rows now advance by actual authored/allocated widths. Columns use explicit or
+parent-allocated heights, rather than requiring the latter exclusively. Hidden
+natural/grid children consume neither slots nor gaps. Geometry is clamped, and
+LCL's automatic anchor pass waits for the complete layout. This fixes a label
+first mounted hidden returning at stale 0/0 despite SetBounds(10,10,...).
+Authored widths honor actual available parent content, including scrollbar
+differences. Browser positive weights admit zero minimum height and fill framed
+editors; zero restores automatic basis rather than collapsing explicit widths.
+
+Native named MCP is the primary workflow here. At revision 2, one transaction
+adds the 27-node maintained review while retaining home selection/view. Bounded
+outline/property queries and nine source windows inspect/export revision 3.
+Native tools request actual browser/LCL view and application builds; final jobs
+are terminal/current at revision 3. Both compiler files equal the unchanged
+export SHA256 D017FBC4E26D68DD51C668ED67CD00DBCE6B3F38E54D34764B128F840300754D
+(MD5 61aec34b00e611bfb53d5936b4c03018). Real control consumers compile that exact
+companion. The maintained Pascal semantic client additionally qualifies bounded
+inspection/export and both compilers, with no configuration change or project
+replacement. The JSON operations file is an explicit typed wire fixture.
+
+Evidence under ignored build/layout-concordance/:
+
+| Boundary | Qualified evidence |
+| --- | --- |
+| Actual LCL and portable allocation | layout-build.log: 2,084, 308,094 allocations/frees, zero leaks |
+| Executed browser / true phone viewport | desktop/ and phone/: 2,094 / 2,095; phone asserts actual inner width 390 |
+| Native semantic jobs / source equality | final-compiler-jobs.json: both final applications succeeded, exact export above |
+| Maintained Pascal protocol author | author-build.log / author-run.log: bounded inspect/export and both compilers; 1,787,236 allocations/frees, zero leaks |
+| All catalog property consumers | property-regression.log: 14,127 native / 76 kinds / 262 faces, zero leaks; property-browser/: 14,269 executed |
+| Bound selection regression | selection-regression.log: 154 preparation + 154 compiled native, zero leaks; selection-browser/: 181 executed |
+| Editing regression | editing-regression.log: 117 preparation / 118 compiled native, zero leaks; editing-browser/: 121 executed |
+| Nyx Studio editing/source/history | studio-desktop/ and studio-phone/: 29 each; latter actual width 390 |
+| Selective appearance | native nyx_preview PNG at revision 3 plus inspected live current-consumer phone/capture.png |
+| Cleanup and restored application | restored-compiler-jobs.json: both actual application jobs succeeded at revision 6 |
+
+The selective native MCP PNG validates tool availability and the preceding
+production preview adapter; it does not qualify installation of this repair.
+Current consumer captures retain their real browser view until page teardown,
+so the PNG shows the measured controls. Earlier fixtures freed their DOM before
+capture and produced a blank image despite passed geometry. No blank image is
+counted as visual qualification. Native consumers release immediately and retain
+zero-leak evidence. The narrow figure deliberately exercises constrained controls;
+it is not universal visual/typographic or physical-phone approval.
+
+Meaningful failed checks were corrected rather than weakened: a fixture offset
+had added an extra gap; pas2js exposes offset geometry as Double and its matched
+textarea binding uses selection properties; native hidden-label anchoring was
+a product defect. Browser zero weight was a real collapsing-basis defect. The
+first narrow run wrapped an explicitly sized row after ordinary body margins
+and scrollbars reduced the host; the review now establishes a margin-free owned
+test surface, and a further 360-pixel host check explicitly qualifies capping and
+remaining-space allocation. The original failed narrow DOM/log are retained as
+phone-first-failure.dom.html / phone-first-failure.log. No failed run counts as
+qualification.
+
+Cleanup uses nyx_roots review at revision 3 (27 nodes, zero registrations or
+retained dependencies), then unchanged actor-bound apply at revision 4 as one
+paired Undo step. Both post-removal applications compile. Exact observation
+confirms identical design but 65 extra source characters: retained editing/
+gesture imports and separators, as the root tool explicitly promises. Two
+native paired Undo steps return the exact original project string at revision 6.
+Both restored application jobs succeed with the original source fingerprint
+ad8491f65bee8990fe74bbac2ef4bd76 and design e418262a4860dfd1d900d522c8df9907.
+Home selection/view, one page/component, edit permission and no draft remain.
+Original source/design/draft fields are byte-identical; test operations remain
+on Redo, with no Undo. This demonstrates the existing protected-review lifecycle
+gap under NS-4; it does not claim a history-free workspace or use operator claim
+to erase it. Private exact before/after observations remain under ignored
+.local/codex-restart-check/layout-after-cleanup.json and layout-after-undo.json.
+
+Production identity is still PID 29656 at the existing executable path, with
+health 200. No service replacement, deployment retry or configuration change was
+attempted. The earlier automatic "blocked by policy" rejection remains visible;
+LAN frontend/server bytes still precede both the property and layout candidates.
+Delegated jobs consume the current source independently. The three previously
+recorded disposable services remain idle; only their owned test resource names
+were updated. All compiler/control/capture handles in this packet are terminal.
+
+Maintain the original outcome beyond this batch: natural/intrinsic row sizing,
+implicit spacer policies, root height propagation, richer wrapping/alignment,
+effective authored-width measurement for natural-height children,
+client/border/typographic scaling, accessibility/hardware/widgetsets and native
+Studio retain their original owners. The guide is docs/layout.md; build target
+layout reproduces physical consumers after semantic export. Next meaningful
+action is a complete typed layout policy and capability journey through those
+remaining renderer/parity outcomes, including Studio consumption, rather than
+closing full parity from this finite fixture. Protected semantic review sessions
+remain the existing NS-4 workflow prerequisite. Source publication uses
+hello-nyx; verify exact local/remote HEAD after pushing this packet and keep its
+private proof outside committed files.

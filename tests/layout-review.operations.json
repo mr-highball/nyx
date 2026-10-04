@@ -1,0 +1,285 @@
+[
+  {
+    "op": "create",
+    "kind": "page",
+    "id": "layout-review",
+    "root": "page",
+    "properties": {
+      "padding": 24,
+      "gap": 16
+    }
+  },
+  {
+    "op": "create",
+    "kind": "heading",
+    "id": "layout-review-title",
+    "parent": "layout-review",
+    "properties": {
+      "text": "Room to grow"
+    }
+  },
+  {
+    "op": "create",
+    "kind": "label",
+    "id": "layout-review-intro",
+    "parent": "layout-review",
+    "properties": {
+      "text": "Proportional layouts keep their rhythm as space changes."
+    }
+  },
+  {
+    "op": "create",
+    "kind": "row",
+    "id": "layout-weighted-row",
+    "parent": "layout-review",
+    "properties": {
+      "width": 320,
+      "height": 200,
+      "padding": 10,
+      "gap": 10
+    }
+  },
+  {
+    "op": "create",
+    "kind": "label",
+    "id": "layout-fixed-label",
+    "parent": "layout-weighted-row",
+    "properties": {
+      "text": "Fixed",
+      "width": 60,
+      "height": 28
+    }
+  },
+  {
+    "op": "create",
+    "kind": "column",
+    "id": "layout-first-column",
+    "parent": "layout-weighted-row",
+    "properties": {
+      "flex": 1,
+      "height": 180,
+      "padding": 0,
+      "gap": 8
+    }
+  },
+  {
+    "op": "create",
+    "kind": "label",
+    "id": "layout-column-caption",
+    "parent": "layout-first-column",
+    "properties": {
+      "text": "One",
+      "height": 28
+    }
+  },
+  {
+    "op": "create",
+    "kind": "memo",
+    "id": "layout-focused-memo",
+    "parent": "layout-first-column",
+    "properties": {
+      "text": "Draft",
+      "value": "A little room",
+      "flex": 1
+    }
+  },
+  {
+    "op": "create",
+    "kind": "column",
+    "id": "layout-second-column",
+    "parent": "layout-weighted-row",
+    "properties": {
+      "flex": 2,
+      "height": 180,
+      "padding": 0,
+      "gap": 8
+    }
+  },
+  {
+    "op": "create",
+    "kind": "label",
+    "id": "layout-second-caption",
+    "parent": "layout-second-column",
+    "properties": {
+      "text": "Two",
+      "height": 28
+    }
+  },
+  {
+    "op": "create",
+    "kind": "list",
+    "id": "layout-retained-list",
+    "parent": "layout-second-column",
+    "properties": {
+      "items": "First\nSecond\nThird",
+      "flex": 1
+    }
+  },
+  {
+    "op": "create",
+    "kind": "column",
+    "id": "layout-weighted-column",
+    "parent": "layout-review",
+    "properties": {
+      "width": 320,
+      "height": 260,
+      "padding": 10,
+      "gap": 10
+    }
+  },
+  {
+    "op": "create",
+    "kind": "label",
+    "id": "layout-column-fixed",
+    "parent": "layout-weighted-column",
+    "properties": {
+      "text": "A fixed header",
+      "height": 40
+    }
+  },
+  {
+    "op": "create",
+    "kind": "row",
+    "id": "layout-column-first",
+    "parent": "layout-weighted-column",
+    "properties": {
+      "flex": 1,
+      "padding": 0,
+      "gap": 10
+    }
+  },
+  {
+    "op": "create",
+    "kind": "label",
+    "id": "layout-nested-first",
+    "parent": "layout-column-first",
+    "properties": {
+      "text": "One",
+      "flex": 1,
+      "height": 28
+    }
+  },
+  {
+    "op": "create",
+    "kind": "label",
+    "id": "layout-nested-second",
+    "parent": "layout-column-first",
+    "properties": {
+      "text": "Two",
+      "flex": 2,
+      "height": 28
+    }
+  },
+  {
+    "op": "create",
+    "kind": "split-view",
+    "id": "layout-column-second",
+    "parent": "layout-weighted-column",
+    "properties": {
+      "flex": 2
+    }
+  },
+  {
+    "op": "create",
+    "kind": "label",
+    "id": "layout-split-first",
+    "parent": "layout-column-second",
+    "properties": {
+      "text": "First pane"
+    }
+  },
+  {
+    "op": "create",
+    "kind": "label",
+    "id": "layout-split-second",
+    "parent": "layout-column-second",
+    "properties": {
+      "text": "Second pane"
+    }
+  },
+  {
+    "op": "create",
+    "kind": "column",
+    "id": "layout-natural-column",
+    "parent": "layout-review",
+    "properties": {
+      "width": 320,
+      "padding": 10,
+      "gap": 10
+    }
+  },
+  {
+    "op": "create",
+    "kind": "label",
+    "id": "layout-natural-first",
+    "parent": "layout-natural-column",
+    "properties": {
+      "text": "First",
+      "height": 28
+    }
+  },
+  {
+    "op": "create",
+    "kind": "label",
+    "id": "layout-natural-hidden",
+    "parent": "layout-natural-column",
+    "properties": {
+      "text": "Hidden",
+      "height": 90,
+      "visible": false
+    }
+  },
+  {
+    "op": "create",
+    "kind": "label",
+    "id": "layout-natural-last",
+    "parent": "layout-natural-column",
+    "properties": {
+      "text": "Last",
+      "height": 36
+    }
+  },
+  {
+    "op": "create",
+    "kind": "grid",
+    "id": "layout-hidden-grid",
+    "parent": "layout-review",
+    "properties": {
+      "width": 320,
+      "padding": 10,
+      "gap": 10,
+      "columns": 2
+    }
+  },
+  {
+    "op": "create",
+    "kind": "label",
+    "id": "layout-grid-first",
+    "parent": "layout-hidden-grid",
+    "properties": {
+      "text": "First",
+      "height": 28
+    }
+  },
+  {
+    "op": "create",
+    "kind": "label",
+    "id": "layout-grid-hidden",
+    "parent": "layout-hidden-grid",
+    "properties": {
+      "text": "Hidden",
+      "height": 90,
+      "visible": false
+    }
+  },
+  {
+    "op": "create",
+    "kind": "label",
+    "id": "layout-grid-last",
+    "parent": "layout-hidden-grid",
+    "properties": {
+      "text": "Last",
+      "height": 36
+    }
+  }
+]

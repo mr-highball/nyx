@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -40,6 +40,8 @@ param(
   [string]$CatalogFocusSourceDirectory = 'build/catalog-focus/source',
   # Property mutations consume an unchanged MCP-authored catalog/review pair.
   [string]$PropertySourceDirectory = 'build/property-concordance/source',
+  # Proportional/hidden layout consumes bounded MCP-exported accepted source.
+  [string]$LayoutSourceDirectory = 'build/layout-concordance/source',
   # The maintained semantic callback journey exports two accepted source pairs.
   [string]$CallbackSourceDirectory = 'build/agent-callbacks/mcp',
   # Exact companion exported by the semantic handler/compilation journey.
@@ -295,6 +297,42 @@ try {
       "-Fu$nyxRootSource", "-FE$nyxBrowserDir", 'tests/nyx_root_consumer_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/root-consumers.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'layout') {
+    $nyxLayoutSource = [IO.Path]::GetFullPath($LayoutSourceDirectory)
+
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxLayoutSource 'nyx.generated.view.pas'))) {
+      throw 'Export the MCP-authored layout-review companion first'
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLayoutNative = Join-Path $nyxRoot 'build/layout-concordance/native'
+    $nyxLayoutAuthor = Join-Path $nyxRoot 'build/layout-concordance/author'
+    New-Item -ItemType Directory -Force $nyxLayoutNative | Out-Null
+    New-Item -ItemType Directory -Force $nyxLayoutAuthor | Out-Null
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxLayoutAuthor", "-FE$nyxLayoutAuthor", 'tests/nyx_mcp_layout_review.lpr')
+    $nyxLayoutPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-Fu$nyxLayoutSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxLayoutPlatform", "-Fu$nyxLazarus/lcl/units/$nyxLayoutPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxLayoutPlatform", "-Fu$nyxLazarus/packager/units/$nyxLayoutPlatform",
+      "-FU$nyxLayoutNative", "-FE$nyxLayoutNative", 'tests/nyx_layout_controls_tests.lpr')
+    & (Join-Path $nyxLayoutNative 'nyx_layout_controls_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Native proportional layout consumer failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxLayoutBrowser = Join-Path $nyxRoot 'build/layout-concordance/web'
+
+    if ($BrowserOutput) { $nyxLayoutBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxLayoutBrowser | Out-Null
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Fusrc', '-Futests',
+      "-Fu$nyxLayoutSource", "-FE$nyxLayoutBrowser", 'tests/nyx_layout_controls_tests.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxLayoutBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/layout.html') -Destination $nyxLayoutBrowser
     exit 0
   }
 

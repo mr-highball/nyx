@@ -186,6 +186,13 @@ begin
     '.nyx-button:hover{filter:brightness(.96);}.nyx-button:active{transform:translateY(1px);}' +
     '.nyx-link{color:var(--nyx-accent);text-decoration:underline;background:none;border:0;}' +
     '.nyx-field{display:flex;flex-direction:column;gap:6px;}' +
+    { A declared main-axis weight admits smaller allocations than intrinsic
+      content. The field's actual editor fills that allocation while its caption
+      retains ordinary text height. Removing the class restores natural sizing. }
+    '.nyx-root .nyx-flex{min-height:0;}' +
+    '.nyx-flex.nyx-field>.nyx-input-control,' +
+    '.nyx-flex.nyx-field>.nyx-select-control,' +
+    '.nyx-flex.nyx-field>.nyx-memo-control{flex:1;min-height:0;}' +
     '.nyx-field-caption{font-size:12px;font-weight:600;color:var(--nyx-muted);}' +
     '.nyx-input-control,.nyx-memo-control,.nyx-select-control{font:inherit;width:100%;' +
     'padding:10px 12px;color:var(--nyx-text);background:var(--nyx-surface);' +
