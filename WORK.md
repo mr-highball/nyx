@@ -56,9 +56,9 @@ the Pascal semantic client is active now. Existing Studio tabs need refresh
 after this credential rotation. No dependency source or firewall was changed.
 
 Remote protection: checkpoints 51bb982 and b65288a are published on
-origin/hello-nyx with the existing Athena pin unchanged. The current authorized
-keyboard/help/maintained-review packet is prepared for publication; verify the
-remote commit identity after pushing. Keep private config, credentials, user
+origin/hello-nyx with the existing Athena pin unchanged. The authorized keyboard/help/maintained-review
+implementation packet is published at 8b7ff37; git ls-remote verified the exact
+commit identity. This handoff update follows that protected implementation. Keep private config, credentials, user
 pairs, generated artifacts and machine profiles excluded. Full goal active.
 
 ## Previous checkpoint before compiler and MCP delivery
