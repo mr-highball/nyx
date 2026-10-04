@@ -55,7 +55,7 @@ uses
   nyx.studio.view,
   nyx.studio.builds,
   nyx.studio.outputs,
-  nyx.studio.projects;
+  nyx.studio.projects, nyx.studio.rootedits, nyx.studio.rootview;
 
 type
   { Transport operation is closed and independent of application build targets. }
@@ -89,6 +89,7 @@ type
     FAdvancedProperties: Boolean;
     FInspectorTab: TNyxInspectorTab;
     FCallbackRemoval: TNyxCallbackRemoval;
+    FRootRemoval: INyxRootRemoval;
     FSourceLine: Integer;
     FSourceColumn: Integer;
     FStateVisible: Boolean;
@@ -365,6 +366,11 @@ begin
   LState.AdvancedProperties := FAdvancedProperties;
   LState.InspectorTab := FInspectorTab;
   LState.CallbackRemoval := FCallbackRemoval;
+
+  if FRootRemoval <> nil then
+  begin
+    LState.RootRemoval := FRootRemoval.Inspect;
+  end;
   LState.StateVisible := FStateVisible;
   LState.BindingsVisible := FBindingsVisible;
   LState.BindingTarget := FBindingTarget;
@@ -982,6 +988,27 @@ begin
 
               if FAgents.Enabled then FAgents.History('undo')
               else FSession.Undo;
+            end;
+          NyxStudioReviewRootID, NyxStudioCancelRootID, NyxStudioRemoveRootID:
+            begin
+              case RouteNyxRootRemoval(FSession, ANode.ID, AEvent.Trigger, FRootRemoval) of
+                nreReview:
+                  begin
+                    FPanel := nspDesign;
+                    FStatus := 'Review view removal';
+                    LRetainCanvas := True;
+                  end;
+                nreCancel:
+                  begin
+                    FStatus := 'View retained';
+                    LRetainCanvas := True;
+                  end;
+                nreRemoved:
+                  begin
+                    FCompiledURL := '';
+                    FStatus := 'View removed / one Undo restores it';
+                  end;
+              end;
             end;
           'action-redo':
             begin

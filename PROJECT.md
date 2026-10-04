@@ -91,12 +91,19 @@ view/reusable/application compiler jobs and queries bounded status, severity
 filtered diagnostics and served artifact manifests. Real MCP/compilers plus an
 observing Studio pass 107 checks each at desktop and exact-390 widths; resource
 ownership passes 45 native checks with zero leaks. Fresh Codex authenticates all
-fourteen tools. Local callback implementations now have bounded semantic reads
+fifteen tools. Local callback implementations now have bounded semantic reads
 and grouped exact-text/revision guarded edits, preserving signatures, helpers,
 drafts and paired history. MCP-authored validation compiles and executes on both
 targets while an observing Studio qualifies Undo/Redo and activity. General
 source/import, state/binding and protected review workflows remain open. See
-[the current packet](WORK.md#semantic-handler-implementations--2026-10-04).
+[the handler packet](WORK.md#semantic-handler-implementations--2026-10-04).
+Reviewed root cleanup now shares an immutable typed command between Studio and
+MCP, with retained-reference guards and one paired Undo step. Contracts pass
+45 native/executed-browser checks each; real MCP/observing Studio/both compilers
+pass 26 desktop and 26 exact-390. Unchanged compiled browser/LCL consumers pass
+five each, preserving the whole unrelated design, with zero native leaks. This
+qualifies active-document cleanup; independent review workspaces remain open.
+See [the root packet](WORK.md#reviewed-root-cleanup--2026-10-04).
 Physical IME, complete accessibility, other widgetsets and native Studio remain
 open; existing editing/semantic evidence remains applicable.
 

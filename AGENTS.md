@@ -80,7 +80,7 @@ The generated reference covers 76 kinds. Bound browser tables currently use
 row-oriented navigation and explicitly documented cell-editor entry/exit.
 
 Codex project and explicitly enrolled user configuration refresh on each Studio
-launch. Actual installed Codex initialization authenticates all fourteen Nyx tools.
+launch. Actual installed Codex initialization authenticates all fifteen Nyx tools.
 This existing desktop chat needs one reconnect for native named handles; use the
 Pascal semantic client now and keep semantic MCP primary afterward. Missing
 general source/import/state/binding/review operations belong to the existing workflow
@@ -95,3 +95,9 @@ owned; ambiguous/conditional methods and pending drafts refuse. Use `nyx_build`
 for ordinary Pascal compiler diagnostics, never infer successful execution from
 source admission. The maintained input review qualifies actual browser/LCL
 callbacks and observing Studio; richer source and review lifecycle remain open.
+
+Root cleanup is semantic through `nyx_roots`: inspect exact roots/dependencies,
+review at the current revision, then apply the unchanged group with its actor-
+bound ticket as one paired Undo step. Never substitute a descendant delete or
+replace the user's project to remove demo roots. Pascal helpers and document
+defaults remain retained; compile to check application references afterward.

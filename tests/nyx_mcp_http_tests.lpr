@@ -76,7 +76,7 @@ begin
     LClient := TNyxMCPTestClient.Create(ParamStr(2));
     Check(True, 'Real MCP initialize and initialized notification');
     LValue := LClient.RPC('tools/list', NyxObject([])).Field('result');
-    Check(LValue.Field('tools').Count = 14, 'Focused semantic capabilities advertised');
+    Check(LValue.Field('tools').Count = 15, 'Focused semantic capabilities advertised');
     Check((LValue.Field('tools').Item(11).Field('name').AsText = 'nyx_callbacks') and
       (LValue.Field('tools').Item(11).Field('inputSchema').Field('properties').Field('changes').Field('maxItems').AsInteger = 32),
       'Semantic callback tool advertises bounded batches');
@@ -86,6 +86,9 @@ begin
     Check((LValue.Field('tools').Item(13).Field('name').AsText = 'nyx_pascal') and
       (LValue.Field('tools').Item(13).Field('inputSchema').Field('oneOf').Count = 2),
       'Semantic Pascal tool advertises closed inspect/apply operation shapes');
+    Check((LValue.Field('tools').Item(14).Field('name').AsText = 'nyx_roots') and
+      (LValue.Field('tools').Item(14).Field('inputSchema').Field('properties').Field('roots')
+        .Field('maxItems').AsInteger = 16), 'Reviewed root tool advertises a bounded exact group');
     Check(LValue.Field('tools').Item(7).Field('inputSchema').Field('required').Count = 3,
       'Transaction input schema publishes required guards');
     LClient.Exchange('GET', NyxObject([]), 405);

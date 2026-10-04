@@ -46,8 +46,8 @@ immutable build requests and bounded status are now qualified. Local callback
 implementation editing now has a focused bounded tool. General
 source/import editing remains absent. State/binding
 commands and reusable authoring are not advertised. Root
-creation is supported, while root move/deletion and isolated review-session
-lifecycle are absent. Property values preserve their JSON scalar types, but
+creation and reviewed root deletion are supported; root ordering and isolated
+review-session lifecycle remain absent. Property values preserve their JSON scalar types, but
 numeric/Boolean schema defaults still use metadata text; typed effective defaults
 would reduce interpretation by agents. Exact schemas are discoverable through
 the native semantic client; an unknown source `limit` was correctly rejected,
@@ -157,3 +157,30 @@ source editing. General imports/helpers, state/bindings, rich reusable authoring
 root cleanup and protected review lifecycle retain this workflow owner. Lexical
 admission leaves syntax/type checking to `nyx_build`; it does not execute code.
 Original event/codegen criteria and counters remain unchanged. The task stays open.
+
+## Reviewed root-cleanup prerequisite — 2026-10-04
+
+Criterion 5's root-cleanup prerequisite now shares a strongly typed root reference
+and immutable reviewed removal command between the ordinary Nyx Studio UI and
+the fifteenth semantic tool. Exact root partitions, retained reusable references,
+pending drafts, actor/revision/group tickets and failed batches refuse without
+editing. References within a complete removal group are allowed. The sole
+publication is one ordinary paired Undo step; imports, helpers, callback classes
+and state defaults retain their bytes. Missing view/selection falls back through
+remaining pages, reusable definitions and an empty workspace. Tickets and retry
+receipts are bounded session state, independent of documents/widgets.
+
+The native and executed-browser contract passes 45 checks each, including
+alternative specialized-interface/raw ownership and valid empty documents; the
+checked native run frees every allocation. Actual semantic composition, cleanup,
+ordinary observing Studio confirmation/activity/Undo, semantic Redo and both real
+compilers pass 26 checks each at desktop and exact-390 widths. Unchanged compiled
+browser/LCL consumers pass five each, preserving the entire unrelated design;
+the checked native consumer has zero leaks. See the deployment and final gates
+in [the packet](../WORK.md#reviewed-root-cleanup--2026-10-04).
+
+This accepts active-document root cleanup, not independent protected review
+workspaces or criterion 5 in full. Semantic state/binding, rich reusable and
+general import/helper workflows retain this owner. Retained application code
+that mentions removed IDs requires compiler validation. Original event/codegen
+criteria and counters stay unchanged; the full user outcome remains open.

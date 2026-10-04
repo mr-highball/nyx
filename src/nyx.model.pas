@@ -30,6 +30,7 @@ interface
 uses
   Classes,
   nyx.text,
+  nyx.root.types,
   nyx.data,
   nyx.contract,
   nyx.types,
@@ -414,6 +415,15 @@ type
     function AddPage(const ANode: INyxNode): TNyxDocument; overload;
     function AddComponent(ANode: TNyxNode): TNyxDocument; overload;
     function AddComponent(const ANode: INyxNode): TNyxDocument; overload;
+    { Exact borrowed lookup in the specified root partition; descendants never
+      match. Missing roots return nil, absent references raise ENyxRoot. }
+    function FindRoot(const ARoot: TNyxRootRef): TNyxNode;
+    { Structural primitive: detach the exact root and release document ownership
+      and its implementation anchor. Retained interfaces remain independently
+      alive; raw pointers may expire. Missing/wrong-partition roots refuse before
+      mutation. Call Validate after a complete structural group; Studio performs
+      this operation only on detached, fully admitted candidates. }
+    function RemoveRoot(const ARoot: TNyxRootRef): TNyxDocument;
     function Find(const AID: TNyxText): TNyxNode;
     function FindComponent(const AID: TNyxText): TNyxNode;
     function Clone: TNyxDocument;
@@ -1992,6 +2002,90 @@ begin
       Exit;
   end;
   Result := nil;
+end;
+
+function TNyxDocument.FindRoot(const ARoot: TNyxRootRef): TNyxNode;
+var
+  LIndex: Integer;
+begin
+  Result := nil;
+  case ARoot.Kind of
+    nrPage:
+      begin
+        for LIndex := 0 to Count - 1 do
+        begin
+
+          if FPages[LIndex].ID = ARoot.Name then
+          begin
+            Exit(FPages[LIndex]);
+          end;
+        end;
+      end;
+    nrReusable:
+      begin
+        for LIndex := 0 to ComponentCount - 1 do
+        begin
+
+          if FComponents[LIndex].ID = ARoot.Name then
+          begin
+            Exit(FComponents[LIndex]);
+          end;
+        end;
+      end;
+  end;
+end;
+
+function TNyxDocument.RemoveRoot(const ARoot: TNyxRootRef): TNyxDocument;
+var
+  LRoot: TNyxNode;
+  LIndex: Integer;
+  LPosition: Integer;
+begin
+  LRoot := FindRoot(ARoot);
+
+  if LRoot = nil then
+  begin
+    raise ENyxModel.Create('The specified document root is missing');
+  end;
+  { Acquire the temporary raw token before dropping an interface anchor. Its
+    destructor may release the descriptor's final managed reference. Release
+    the raw token only after the root is absent from both document arrays. }
+  LRoot.FOwner := nil;
+  LRoot.FRawOwnership := True;
+  case ARoot.Kind of
+    nrPage:
+      begin
+        LPosition := 0;
+        while FPages[LPosition] <> LRoot do
+        begin
+          Inc(LPosition);
+        end;
+        for LIndex := LPosition to Count - 2 do
+        begin
+          FPages[LIndex] := FPages[LIndex + 1];
+          FPageReferences[LIndex] := FPageReferences[LIndex + 1];
+        end;
+        SetLength(FPageReferences, Count - 1);
+        SetLength(FPages, Count - 1);
+      end;
+    nrReusable:
+      begin
+        LPosition := 0;
+        while FComponents[LPosition] <> LRoot do
+        begin
+          Inc(LPosition);
+        end;
+        for LIndex := LPosition to ComponentCount - 2 do
+        begin
+          FComponents[LIndex] := FComponents[LIndex + 1];
+          FComponentReferences[LIndex] := FComponentReferences[LIndex + 1];
+        end;
+        SetLength(FComponentReferences, ComponentCount - 1);
+        SetLength(FComponents, ComponentCount - 1);
+      end;
+  end;
+  LRoot.ReleaseOwnership;
+  Result := Self;
 end;
 
 function TNyxDocument.FindComponent(const AID: TNyxText): TNyxNode;

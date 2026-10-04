@@ -46,6 +46,7 @@ uses
   nyx.studio.history,
   nyx.studio.projects,
   nyx.studio.edits,
+  nyx.studio.rootedits,
   nyx.callbacks,
   nyx.scheduler,
   nyx.sample;
@@ -206,6 +207,10 @@ type
       related edits stage a complete candidate and publish once with one paired
       undo checkpoint. Pending source drafts block external design mutation. }
     procedure ApplyPatch(const APatch: INyxDesignPatch);
+    { Apply an immutable reviewed root group through one paired Undo command.
+      Stale reviews, dangling reusable references and pending drafts retain all
+      owners/history. Imports/helpers and document state remain deliberate. }
+    procedure RemoveRoots(const AReview: INyxRootRemoval);
     { Admit an editor's exact paired files through ordinary history. Used by the
       collaboration service; draft-only changes do not add content undo entries.
       Unlike LoadProject, this never resets an existing session's history. }
@@ -355,6 +360,10 @@ begin
     if FDocument.Count > 0 then
     begin
       FActiveViewID := FDocument.Pages[0].ID;
+    end
+    else if FDocument.ComponentCount > 0 then
+    begin
+      FActiveViewID := FDocument.Components[0].ID;
     end;
   end;
 
@@ -414,6 +423,10 @@ begin
       if FDocument.Count > 0 then
       begin
         FActiveViewID := FDocument.Pages[0].ID;
+      end
+      else if FDocument.ComponentCount > 0 then
+      begin
+        FActiveViewID := FDocument.Components[0].ID;
       end;
     end;
 
@@ -1657,6 +1670,19 @@ begin
   end;
 end;
 
+procedure TNyxStudioSession.RemoveRoots(const AReview: INyxRootRemoval);
+var
+  LPair: TNyxProjectPair;
+begin
+
+  if AReview = nil then
+  begin
+    raise ENyxModel.Create('Review the exact root group before removing it');
+  end;
+  LPair := AReview.Candidate(ProjectSnapshot);
+  AdoptProject(LPair);
+end;
+
 procedure TNyxStudioSession.AdoptProject(const APair: TNyxProjectPair);
 var
   LDocument: TNyxDocument;
@@ -1686,6 +1712,10 @@ begin
       if FDocument.Count > 0 then
       begin
         FActiveViewID := FDocument.Pages[0].ID;
+      end
+      else if FDocument.ComponentCount > 0 then
+      begin
+        FActiveViewID := FDocument.Components[0].ID;
       end;
     end;
 

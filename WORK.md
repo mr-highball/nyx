@@ -7,7 +7,48 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest integrated delivery (2026-10-04): NS-4_agent-workflows_01 criterion 2's
+Latest integrated delivery (2026-10-04): NS-4_agent-workflows_01 criterion 5's
+root-cleanup prerequisite is qualified, accepted and deployed. The ordinary
+Nyx UI and fifteenth MCP tool share one reviewed paired removal command.
+Contracts pass 45 native/executed-browser checks each; real semantic composition,
+observer/Undo and both compilers pass 26 desktop and 26 exact-390. Unchanged
+compiled consumers pass five per target, with zero native leaks. Final MCP/HTTP
+gates pass 65/177; Studio passes 52/52 and shared contracts 30/1537 on both
+targets. Fresh installed Codex authenticates fifteen tools from another project.
+See [the packet](#reviewed-root-cleanup--2026-10-04).
+
+Only production PID 35152 / persistent exec 74922 remains, on the existing
+firewall-authorized executable path, editor 0.0.0.0:8088 and loopback MCP:8089.
+All disposable qualification pipelines/services are terminal. The exact user
+pair, selection/view and permission were preserved; the private observation
+confirmed no draft/history before restart. Installed and served bytes match the
+six-artifact manifest. Enrolled project/global Codex blocks match; configuration
+and credentials remain ignored. This live chat still needs one reconnect for
+native named handles; the Pascal semantic client is active and primary now.
+
+Next authorized action: return to NS-1_event-scheduler_01 criterion 1 at counter
+6, with standards-based supported-control qualification on browser/LCL using
+semantic authoring/builds and selective physical consumers. Codegen criterion 3
+stays open at counter 11. Workflow criterion 5 still owns independent review
+workspaces, semantic state/bindings and richer reusable authoring; general
+imports/helpers remain open. No full criterion/goal completion is inferred.
+
+The integrated root batch was declared before implementation (2026-10-04):
+NS-4_agent-workflows_01 criterion 5's
+missing root-cleanup prerequisite. Deliver a strongly typed shared root removal
+contract and reviewed semantic groups on the same Studio paired history, with
+dependency refusals and explicit warnings that Pascal helpers are retained.
+Qualify interface/raw ownership, empty documents, dependent reusable roots,
+exact unrelated-root/source preservation, failed groups/drafts/revisions/retries,
+ordinary observing Studio Undo and unchanged compiled browser/LCL consumers.
+Budget: one integrated implementation/evidence/deployment checkpoint. Stop
+publication on dangling references, wrong-root deletion or unrelated work loss.
+This is a prerequisite for protected review lifecycle, not its completion;
+independent review workspaces, state/bindings and rich reusable workflows remain
+with the same owner. Return to the original event owner afterward. Event counter
+6 and codegen counter 11 stay unchanged; full goal active.
+
+Previous integrated delivery (2026-10-04): NS-4_agent-workflows_01 criterion 2's
 bounded local callback-implementation prerequisite is implemented, qualified,
 accepted and deployed. Typed immutable edits and bounded Unicode reads retain
 signature/helper/managed-view ownership and exact paired history. Native and
@@ -31,7 +72,7 @@ rich reusable operations and general source/import/helper authoring remain open.
 Then return to supported-control qualification under the original event owner.
 Compiler cancellation/caching/global scheduling retain NS-5 ownership.
 
-Batch handoff: qualification pipelines and disposable services are terminal.
+Historical handler-batch handoff: qualification pipelines and disposable services were terminal.
 Only production PID 36172 / persistent exec 79421 remains on the existing
 firewall-authorized executable path, editor 0.0.0.0:8088 and MCP loopback:8089.
 Server SHA256:
@@ -3222,3 +3263,86 @@ and independently verified. Its working tree was clean. This handoff-only update
 records that protected checkpoint; production and all qualification state above
 are unchanged, and no new experiment or pipeline was started after acceptance.
 Full goal active; next declare the criterion-5 protected review/root-cleanup batch.
+
+## Reviewed root cleanup — 2026-10-04
+
+The declared single integrated batch delivers criterion 5's root-cleanup
+prerequisite under NS-4_agent-workflows_01. It is implemented, integrated,
+qualified, accepted and deployed; criterion 5 and the full goal remain open.
+No event/codegen completion credit or counter reset transfers here.
+
+Public `TNyxRootRef` distinguishes exact page/reusable partitions. The structural
+model primitive retires the actual supplier-interface anchor under a temporary
+raw token; retained specialized suppliers remain independently usable and may
+be reattached. Immutable `INyxRootRemoval` owns copied paired text/root references,
+counts authored descendants/registrations and retained reusable dependencies,
+and admits a detached complete group. External references refuse; internal
+references in the group are allowed. The sole live adoption uses ordinary paired
+history. Pascal prefix/suffix, imports/helpers/callback classes and state defaults
+remain. A missing view/selection falls back through pages, reusable roots, then
+an empty workspace. Retained application references need compiler validation.
+
+Studio's public Nyx confirmation and typed route use that command, show counts
+and warning, allow cancellation and visibly disable referenced removal. MCP's
+fifteenth tool reviews and applies exact groups of 1..16 roots with closed wire
+fields, draft/refusal guards, actor/revision/group tickets and original retry
+receipts. Eight review snapshots and 64 receipts bound session state. Response
+admission precedes publication, including the actual surviving selection/view
+names. Generic descendant deletion stays protected against root deletion.
+
+Evidence under ignored build/root-cleanup/:
+
+- Checked native contract: 45 passes; 3675219 allocations and frees, zero unfreed
+  blocks (cumulative allocation bytes are not a performance measurement).
+  Executed pas2js contract: 45 passes. Alternative supplier/raw ownership,
+  exact root partitions, groups, dependencies, empty documents, source-frame
+  retention, pending draft/stale review, permissions, eviction, retries and
+  ordinary paired history are covered.
+- Maintained real MCP journey: 26 desktop and 26 exact-390 passes. It authors
+  two roots, a reusable instance and callback through semantic tools, checks an
+  ordinary observing Nyx Studio's actual confirmation/activity/Undo, performs
+  semantic Redo and compiles the cleaned full application with pas2js and FPC/LCL.
+  Source is exported through bounded windows at one revision.
+- Unchanged independent compiled browser/LCL consumers: five passes each. The
+  entire unrelated design equals the original canonical design, retired roots
+  and callback registrations stay absent, and surviving page/reusable views
+  render through actual adapters. Native consumer frees all 53166 allocations.
+- Final gates: 65 real MCP HTTP (including the fifteenth schema), 177 actual
+  delegated HTTP/compilation; 29 agent, 45 callback, 72 handler and 33 build
+  portable checks; 45 native compiler-job lifetime/resource checks; native
+  shared 30/1537, 55 scheduler and 60 paired project cases. Executed browser
+  shared 30/1537 and ordinary Studio Events/source/history 52 desktop/52 exact-390
+  pass. Existing 59 intended native type refusals pass. No dependency changed.
+- Fresh actual installed Codex initializes from another project and authenticates
+  all fifteen tools. Native named tools in this existing desktop chat still need
+  one client reconnect; real Pascal MCP calls are active now. Configuration,
+  connection and current-chat discovery remain distinct in the guide.
+
+Fixture/invocation corrections are retained honestly. The sample already had a
+reusable instance, so adding one produces two retained references, not one.
+Desktop has no compact panel switch; the observer clicks it only when present.
+The consumer needed the runtime nyx.callbacks import, not a generated binder.
+Two capture invocations supplied wrong success-marker names; corrected Studio
+runs pass, and the shared recorded artifact is explicitly validated against its
+actual data-tests marker and complete 30/1537 result. No semantic assertion or
+acceptance criterion was weakened.
+
+Production preservation/install details: immediate private observations retain
+full pair/revision/selection/view/permission and confirm no pending draft/history
+or owned child before stopping. The first copy was refused because Windows had
+not released the stopped executable; an old service was mistakenly launched
+before verifying install completion. Its exact saved pair was restored and
+checked, then the correction reobserved it, waited for verified process exit,
+installed all six hashes before launch and restored the pair again. Original
+artifacts remain backed up. Private before/interim/restore/after records are
+ignored; no user pair or credential is committed.
+
+Final sole production PID 35152 / persistent exec 74922 serves the same LAN/editor
+binding and loopback MCP. Both local and LAN health return 200. All six installed
+and five served artifact hashes match release-manifest.json. Server SHA256:
+892D77CF6827B23B6DF8A88D40604E065BA13EED62E6971D8B7BDCADAB0DD2B1.
+Main JS: 27A1052F46FBCE95F605B92F7D4361657A30FE0F07D33EC7C84822132A264EB0.
+Preview JS: 259E105DA2C8A87C8B2C29097EB8EEABA11CAC802740B0E8225E7FFC63AE70E6.
+Enrolled Codex blocks refresh and match with no warning. Existing tabs need a
+refresh after credential rotation. All disposable services and qualification
+pipelines are terminal. Remote checkpoint identity follows after publication.

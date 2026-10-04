@@ -28,7 +28,8 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema,
-  nyx.studio.session, nyx.studio.projects, nyx.studio.compiler, nyx.studio.builds;
+  nyx.studio.session, nyx.studio.projects, nyx.studio.compiler, nyx.studio.builds,
+  nyx.studio.rootedits;
 
 type
   { Operator permissions are closed, session-local and never part of a design.
@@ -56,6 +57,11 @@ type
       actor/revision/change bytes bind consent; accepted retries use receipts. }
     FCallbackReviews: array of TNyxDataValue;
     FCallbackReviewSerial: Integer;
+    { Eight exact paired-text snapshots bound root-review memory. Metadata and
+      immutable commands are retained together; no node/session is borrowed. }
+    FRootReviews: array of TNyxDataValue;
+    FRootRemovals: array of INyxRootRemoval;
+    FRootReviewSerial: Integer;
     procedure Changed;
     procedure RequireRevision(const AArguments: TNyxDataValue);
     procedure Log(const AActor, AOperation, AOutcome: TNyxText);
@@ -70,6 +76,8 @@ type
     function HandlerSource(const AArguments: TNyxDataValue;
       AApply: Boolean): TNyxDataValue;
     function EditCallbacks(const AArguments: TNyxDataValue;
+      const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
+    function RemoveRoots(const AArguments: TNyxDataValue;
       const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
   public
     constructor Create;
@@ -1041,6 +1049,144 @@ begin
     NyxField('revision', NyxData(FRevision)), NyxField('changes', LChanges)]);
 end;
 
+function TNyxAgentSession.RemoveRoots(const AArguments: TNyxDataValue;
+  const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
+var
+  LRoots: TNyxDataValue;
+  LReview: TNyxDataValue;
+  LRemoval: INyxRootRemoval;
+  LPair: TNyxProjectPair;
+  LReviewID: TNyxText;
+  LIndex: Integer;
+  LFound: Integer;
+  LDocument: TNyxDocument;
+  LSummary: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LView: TNyxText;
+  LSelection: TNyxText;
+begin
+  NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|roots|reviewID|');
+  RequireRevision(AArguments);
+  LRoots := AArguments.Field('roots');
+
+  if AApply then
+  begin
+    LReviewID := TextArgument(AArguments, 'reviewID');
+    LFound := -1;
+    for LIndex := 0 to High(FRootReviews) do
+    begin
+      LReview := FRootReviews[LIndex];
+
+      if (LReview.Field('id').AsText = LReviewID) and
+        (LReview.Field('actor').AsText = AActor) and
+        (LReview.Field('revision').AsInteger = FRevision) and
+        (LReview.Field('roots').ToJSON = LRoots.ToJSON) then
+      begin
+        LFound := LIndex;
+        Break;
+      end;
+    end;
+
+    if LFound < 0 then
+    begin
+      raise ENyxModel.Create('Root removal requires a current reviewID for this actor and exact roots');
+    end;
+    LRemoval := FRootRemovals[LFound];
+    LPair := LRemoval.Candidate(FSession.ProjectSnapshot);
+    Result := LRemoval.Inspect;
+    { Response size, dependencies, draft and exact paired text are admitted
+      before the only publication. Consume the review only after success. }
+    { The surviving view/selection can have longer names than the removed ones.
+      Preflight their actual fallback, rather than assume the old summary is an
+      upper bound. Match ordinary AdoptProject's page/component/empty order. }
+    LDocument := TNyxCodec.Decode(LPair.Design);
+    try
+      LView := FSession.ActiveViewID;
+      LSelection := FSession.SelectedID;
+
+      if LDocument.Find(LView) = nil then
+      begin
+        LView := '';
+
+        if LDocument.Count > 0 then
+        begin
+          LView := LDocument.Pages[0].ID;
+        end
+        else if LDocument.ComponentCount > 0 then
+        begin
+          LView := LDocument.Components[0].ID;
+        end;
+      end;
+
+      if LDocument.Find(LSelection) = nil then
+      begin
+        LSelection := LView;
+      end;
+      LSummary := Summary;
+      SetLength(LFields, LSummary.Count);
+      for LIndex := 0 to LSummary.Count - 1 do
+      begin
+        LFields[LIndex] := NyxField(LSummary.Key(LIndex), LSummary.Field(LSummary.Key(LIndex)));
+
+        if LFields[LIndex].Name = 'view' then
+        begin
+          LFields[LIndex].Value := NyxData(LView);
+        end
+        else if LFields[LIndex].Name = 'selection' then
+        begin
+          LFields[LIndex].Value := NyxData(LSelection);
+        end;
+      end;
+      BoundContext(WithResults(NyxObject(LFields), Result, 'removedRoots', True));
+    finally
+      LDocument.Free;
+    end;
+    FSession.AdoptProject(LPair);
+    for LIndex := LFound + 1 to High(FRootReviews) do
+    begin
+      FRootReviews[LIndex - 1] := FRootReviews[LIndex];
+      FRootRemovals[LIndex - 1] := FRootRemovals[LIndex];
+    end;
+    SetLength(FRootReviews, Length(FRootReviews) - 1);
+    SetLength(FRootRemovals, Length(FRootRemovals) - 1);
+    Exit;
+  end;
+
+  if NyxAgentHas(AArguments, 'operationId') or NyxAgentHas(AArguments, 'reviewID') then
+  begin
+    raise ENyxModel.Create('Root review has no mutation operationId or prior reviewID');
+  end;
+
+  if FRootReviewSerial = High(Integer) then
+  begin
+    raise ENyxModel.Create('Root review budget exhausted');
+  end;
+  LRemoval := ReadNyxRootRemoval(FSession.ProjectSnapshot, LRoots);
+  LReviewID := 'root-review-' + IntToStr(FRootReviewSerial + 1);
+  Result := NyxObject([NyxField('revision', NyxData(FRevision)),
+    NyxField('reviewID', NyxData(LReviewID)), NyxField('removal', LRemoval.Inspect)]);
+  BoundContext(Result);
+  Inc(FRootReviewSerial);
+
+  if Length(FRootReviews) = 8 then
+  begin
+    for LIndex := 1 to High(FRootReviews) do
+    begin
+      FRootReviews[LIndex - 1] := FRootReviews[LIndex];
+      FRootRemovals[LIndex - 1] := FRootRemovals[LIndex];
+    end;
+    SetLength(FRootReviews, 7);
+    SetLength(FRootRemovals, 7);
+  end;
+  LIndex := Length(FRootReviews);
+  SetLength(FRootReviews, LIndex + 1);
+  SetLength(FRootRemovals, LIndex + 1);
+  FRootReviews[LIndex] := NyxObject([NyxField('id', NyxData(LReviewID)),
+    NyxField('actor', NyxData(AActor)), NyxField('revision', NyxData(FRevision)),
+    NyxField('roots', LRoots)]);
+  FRootRemovals[LIndex] := LRemoval;
+end;
+
 function TNyxAgentSession.HandlerSource(const AArguments: TNyxDataValue;
   AApply: Boolean): TNyxDataValue;
 var
@@ -1104,11 +1250,15 @@ var
   LCallbackResults: TNyxDataValue;
   LHandlerApply: Boolean;
   LHandlerResults: TNyxDataValue;
+  LRootApply: Boolean;
+  LRootResults: TNyxDataValue;
 begin
   LCallbackApply := False;
   LCallbackResults := NyxNull;
   LHandlerApply := False;
   LHandlerResults := NyxNull;
+  LRootApply := False;
+  LRootResults := NyxNull;
 
   try
 
@@ -1126,8 +1276,12 @@ begin
     begin
       LHandlerApply := TextArgument(AArguments, 'mode') = 'apply';
     end;
+    if ATool = 'nyx_roots' then
+    begin
+      LRootApply := TextArgument(AArguments, 'mode') = 'apply';
+    end;
     LMutation := (ATool = 'nyx_transaction') or (ATool = 'nyx_select') or
-      (ATool = 'nyx_history') or LCallbackApply or LHandlerApply;
+      (ATool = 'nyx_history') or LCallbackApply or LHandlerApply or LRootApply;
 
     if LMutation and (FPermission <> apEdit) then
     begin
@@ -1220,6 +1374,16 @@ begin
       Result := HandlerSource(AArguments, LHandlerApply);
       LHandlerResults := Result;
     end
+    else if ATool = 'nyx_roots' then
+    begin
+
+      if not LRootApply and (TextArgument(AArguments, 'mode') <> 'review') then
+      begin
+        raise ENyxModel.Create('Root mode must be review or apply');
+      end;
+      Result := RemoveRoots(AArguments, AActor, LRootApply);
+      LRootResults := Result;
+    end
     else if ATool = 'nyx_select' then
     begin
       NyxAgentFields(AArguments, '|expectedRevision|operationId|id|activate|');
@@ -1290,6 +1454,11 @@ begin
       if LHandlerApply then
       begin
         Result := WithResults(Result, LHandlerResults, 'handlers');
+      end;
+
+      if LRootApply then
+      begin
+        Result := WithResults(Result, LRootResults, 'removedRoots');
       end;
 
       if Length(FReceiptKeys) = 64 then

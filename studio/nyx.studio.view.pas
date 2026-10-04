@@ -30,6 +30,7 @@ interface
 uses
   SysUtils,
   nyx.text,
+  nyx.data,
   nyx.model,
   nyx.contract,
   nyx.schema,
@@ -80,6 +81,8 @@ type
     AdvancedProperties: Boolean;
     InspectorTab: TNyxInspectorTab;
     CallbackRemoval: TNyxCallbackRemoval;
+    { Copied confirmation metadata, not an interface or borrowed model. }
+    RootRemoval: TNyxDataValue;
     StateVisible: Boolean;
     BindingsVisible: Boolean;
     BindingTarget: TNyxBindingProperty;
@@ -114,7 +117,7 @@ implementation
 
 uses
   nyx.binding,
-  nyx.composition;
+  nyx.composition, nyx.studio.rootview;
 
 function DefaultNyxStudioViewState: TNyxStudioViewState;
 begin
@@ -135,6 +138,7 @@ begin
   Result.AdvancedProperties := False;
   Result.InspectorTab := nitProperties;
   Result.CallbackRemoval.Pending := False;
+  Result.RootRemoval := NyxNull;
   Result.StateVisible := False;
   Result.BindingsVisible := False;
   Result.BindingTarget := bpValue;
@@ -663,6 +667,8 @@ begin
     LViews.Add(Button('instance-component-' + IntToStr(LIndex), '+ Use ' + LName)
       .SetProp('component-id', LName));
   end;
+  LViews.Add(Button(NyxStudioReviewRootID, 'Remove active view').Configure
+    .Enabled(ASession.ActiveViewID <> '').Done);
   AddStatePanel(LLeft, ASession, AState);
   AddNyxCollectionDefaultsPanel(LLeft, ASession, AState.StateVisible);
   AddNyxStudioPalette(LLeft, ASession.Catalog, AState.Palette);
@@ -679,6 +685,11 @@ begin
   if AState.OutputVisible then
   begin
     AddOutputPanel(LCenter, AState);
+  end;
+
+  if AState.RootRemoval.Kind = ndObject then
+  begin
+    LCenter.Add(BuildNyxRootRemovalCard(AState.RootRemoval));
   end;
   LViewbar := TNyxNode.Create('row', 'studio-viewbar');
   LCenter.Add(LViewbar);

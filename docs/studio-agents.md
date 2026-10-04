@@ -106,6 +106,7 @@ GET is explicitly unsupported (405); DELETE closes a client session. See the
 | `nyx_callbacks` | Grouped callback addition, policy, ordering and reviewed removal on the inspector's paired history |
 | `nyx_build` | Output readiness, immutable accepted builds and bounded job/artifact/diagnostic inspection |
 | `nyx_pascal` | Bounded accepted callback implementations and grouped exact-text guarded edits |
+| `nyx_roots` | Reviewed removal of exact page/reusable groups on paired Undo history |
 
 Tool schemas advertise required fields and limits. Unknown arguments and
 unpublished properties are refused. Queries never return the full document.
@@ -457,6 +458,59 @@ generated TODO classes through the UI queue. This proves compiled callback
 construction/execution, not authored business behavior. The portable fixture
 independently qualifies draft/refusal/receipt, inheritance, history and batch
 limits on both Pascal targets. These fixtures alter their chosen service.
+
+## Reviewed root cleanup
+
+Inspect the active selection/view and paged roots first. Create owned demo pages
+and definitions beside existing work using `nyx_transaction`; its ordinary delete
+operation remains descendant-only. `nyx_roots` removes an explicit group of up to
+sixteen page/reusable roots. It never cascades into roots omitted from the group.
+
+```json
+{"mode":"review","expectedRevision":7,"roots":[{"root":"page","id":"demo"},{"root":"component","id":"demo-card"}]}
+```
+
+Review returns an opaque `reviewID`, descendant and callback-registration counts,
+retained reusable-reference counts and a warning. References from roots that
+will remain block removal. References within the complete removal group are
+allowed. Review changes neither revision nor Undo history, and is available in
+read-only mode. Only eight immutable paired reviews are retained.
+
+Apply the same roots, in the same order, at the same revision and actor, adding
+`"mode":"apply"`, `"operationId":"unique-cleanup"` and the returned `reviewID`.
+Apply requires editing permission and no pending draft. A changed project,
+missing/wrong root, altered group, expired ticket or retained dependency refuses
+without editing. Exact retries return the original receipt. The group publishes
+one ordinary paired Undo step. Missing selection/view falls back to the first
+surviving page, then reusable root, then an empty workspace.
+
+Pascal imports, helpers, callback classes and document state defaults are
+retained. Only their managed root/binding registrations are regenerated. Compile
+after cleanup to check application code that mentions removed IDs. Independent
+review workspaces, general helper/import editing and semantic state/binding
+operations remain open; root cleanup alone does not provide those workflows.
+
+Studio's Project panel offers **Remove active view**. Its Nyx confirmation shows
+the same counts and warning, disables removal for retained references, and offers
+**Keep view**. Confirmation rechecks the reviewed pair; normal Undo restores it.
+
+Pascal controllers use `ReviewNyxRootRemoval(Session.ProjectSnapshot,
+[NyxPageRoot('demo'), NyxReusableRoot('demo-card')])` from
+`nyx.studio.rootedits`/`nyx.root.types`, then `Session.RemoveRoots(Review)`.
+The immutable `INyxRootRemoval` owns its copied pair and roots, with no supplier
+session or widget dependency. `TNyxDocument.RemoveRoot` is the structural primitive
+for detached groups; its caller must validate the complete group before adopting
+it. Studio controllers use the reviewed command for paired source/history.
+
+The maintained `nyx_mcp_root_tests` coordinator takes editor URL, private Codex
+configuration and export directory, plus optional `phone`. Run it against a
+disposable service with `root-observer.html` available. It composes only through
+MCP, checks an ordinary observing Studio's confirmation/activity/Undo, restores
+through semantic Redo, and builds the cleaned application on both targets.
+`tools/build.ps1 -Target agent-root-consumers -RootSourceDirectory <export>/source`
+compiles that unchanged companion for independent browser/LCL consumers. Execute
+the generated browser `root-consumers.html` too. These fixtures mutate their
+chosen session; preserve the active user's service.
 
 ## Build and verification
 
