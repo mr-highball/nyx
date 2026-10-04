@@ -51,7 +51,9 @@ Pascal semantic client is active now. Actual fresh Codex initialization from
 another project sees all thirteen tools. Existing Studio tabs need refresh after
 credential rotation. No dependency source, compiler setup or firewall was changed.
 Private configuration, tokens, user pairs and machine profiles remain excluded.
-Remote checkpoint verification follows this delivery's commit; full goal active.
+Remote protection: 6505d1e12746f0ad8f05669608ff16adfa7f2f34 is pushed on
+origin/hello-nyx; independent git ls-remote verifies the exact identity. This
+handoff update follows the protected implementation. Full goal active.
 ## Previous checkpoint before compiler and MCP delivery
 
 Previous checkpoint: complete-command profiling removed workspace JSON encoding/
@@ -3130,3 +3132,10 @@ review services and every check pipeline are terminal too. Only production lives
 Final live semantic inspection returns thirteen tools, revision 2, home selection
 and no draft without mutating the user document. Native chat handles still require
 one client reconnect, while the Pascal semantic client remains primary now.
+
+Remote delivery: implementation/evidence/deployment commit
+6505d1e12746f0ad8f05669608ff16adfa7f2f34 is pushed and independently verified
+on origin/hello-nyx. The working tree was clean after that commit. This
+handoff-only update is also authorized for publication. All live preservation,
+credential and artifact state above remains current; no experiment or pipeline
+was started after acceptance. Full goal active, original counters unchanged.
