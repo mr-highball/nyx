@@ -7,6 +7,31 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+Requested setup check (2026-10-04): the accepted
+NS-4_agent-workflows_01 installation criterion is reverified against the current
+production service and installed Codex. Project/enrolled user blocks match;
+explicit enrollment preserves both existing files byte for byte. Actual Codex
+initialization from another project authenticates all fifteen tools. An isolated
+MCP transaction composes a page/heading/memo/button, bounded queries inspect its
+children/source and Boolean properties, and semantic jobs compile the same pair
+with actual pas2js and FPC/LCL. One grouped update and one paired Undo restore
+the exact submitted pair, confirmed by both job records at monotonic revision 4.
+Evidence remains in ignored build/mcp-setup-check-20261004/. No production
+document/history/configuration change or service restart occurred; the disposable
+service was stopped only after both jobs completed. Production remains PID 35152.
+
+The setup batch was declared before enrollment: one configuration/qualification
+checkpoint, stopping on connection, revision or ownership mismatch, without new
+product scope or acceptance credit. One fresh client call lost its socket
+response while requesting the second compiler job. The service remained healthy;
+after querying the first job, one deliberate exact-actor/operation/payload retry
+resolved the native request and compilation succeeded. No automatic mutation
+retry was added. The cause remains unqualified under the existing workflow owner.
+This chat still needs a client reconnect for native tool handles; the Pascal MCP
+client is active and primary now. Original event criterion 1 remains at counter
+6 and codegen criterion 3 at counter 11. Return to the declared supported-control
+work after this requested check; the full goal stays active.
+
 Latest integrated delivery (2026-10-04): NS-4_agent-workflows_01 criterion 5's
 root-cleanup prerequisite is qualified, accepted and deployed. The ordinary
 Nyx UI and fifteenth MCP tool share one reviewed paired removal command.

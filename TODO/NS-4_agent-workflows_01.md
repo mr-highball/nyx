@@ -54,6 +54,20 @@ the native semantic client; an unknown source `limit` was correctly rejected,
 then the advertised `line`/`count` window succeeded. Keep these gaps visible
 instead of substituting screenshot-driven authoring.
 
+**Setup recheck — 2026-10-04:** Existing project/enrolled configuration matches;
+idempotent enrollment preserves its bytes. The installed Codex client again
+authenticates all fifteen tools from another project. A disposable MCP-authored
+page passes bounded typed inspection, actual browser/LCL builds and grouped
+paired Undo; both jobs confirm the restored exact source/design pair. Production
+work and history remain unchanged. One fresh client call lost its socket response
+while requesting the second job; the service remained healthy and a deliberate
+exact-actor/operation/payload retry resolved delivery. Preserve this observation
+as an unresolved transport qualification gap; do not infer its cause or add
+automatic mutation retries. The already accepted installation criterion retains
+its evidence; this check adds no completion credit. Native named handles in this
+running chat still require client reconnection. The Pascal MCP client is primary
+and usable immediately. See [the work record](../WORK.md).
+
 ## Maintained keyboard review — 2026-10-04
 
 One real revision-aware transaction now composes the maintained keyboard review

@@ -53,6 +53,13 @@ connectivity. The installed app-server supports configuration reload, but a
 running desktop connection may not expose its control socket on every platform.
 See [Codex app-server methods](https://learn.chatgpt.com/docs/app-server).
 
+The official desktop setup finishes with **Settings → MCP servers → Restart**.
+Use that reconnect step when the current chat still lacks Nyx tools after the
+entry is installed. These are separate checks: `codex mcp list` establishes
+configuration, authenticated initialized discovery establishes the connection,
+and the chat's tool inventory establishes that its native handles are available.
+Keep using the semantic client below while the current inventory awaits refresh.
+
 While a chat's inventory awaits reconnection, the same Pascal program provides
 real semantic MCP access without another agent or browser automation:
 
