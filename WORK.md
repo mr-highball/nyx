@@ -27,6 +27,10 @@ Project/enrolled configuration refresh remains automatic. This existing chat
 needs the documented MCP client reconnect for native named handles; the Pascal
 semantic client is active and primary. No user design received a test fixture.
 
+Remote checkpoint: implementation 9b2d07355a1abbad761de29c787eb14d34b785e1
+is pushed to origin/hello-nyx and independently matched with git ls-remote.
+This handoff record follows that protected implementation.
+
 Completed integrated batch (declared 2026-10-04): NS-1_event-scheduler_01
 criterion 1, at consecutive no-closure counter 6. Prior keyboard evidence
 qualified a selected review page; it did not establish agreement between every
