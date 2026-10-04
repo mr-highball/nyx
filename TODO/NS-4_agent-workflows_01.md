@@ -68,6 +68,17 @@ its evidence; this check adds no completion credit. Native named handles in this
 running chat still require client reconnection. The Pascal MCP client is primary
 and usable immediately. See [the work record](../WORK.md).
 
+## Active desktop connection — 2026-10-04
+
+The user's update/restart now exposes all fifteen native Nyx MCP handles in this
+chat. Seven direct authenticated calls pass: two session reads, component search,
+page outline, typed node properties/events, bounded Pascal source and diagnostics.
+Responses agree at revision 2; selection/view, draft/history and permission are
+unchanged. Native semantic MCP is now primary, with the Pascal client retained
+for isolated qualification services. Prior reconnect-pending observations above
+are superseded. No configuration change, service restart, document mutation or
+new acceptance credit was required. See the current work record.
+
 ## Contextual admission and rendered viewports — 2026-10-04
 
 The subsequent catalog property journey exposed and repaired contextual scalar

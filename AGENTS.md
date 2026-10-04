@@ -81,8 +81,9 @@ row-oriented navigation and explicitly documented cell-editor entry/exit.
 
 Codex project and explicitly enrolled user configuration refresh on each Studio
 launch. Actual installed Codex initialization authenticates all fifteen Nyx tools.
-This existing desktop chat needs one reconnect for native named handles; use the
-Pascal semantic client now and keep semantic MCP primary afterward. Missing
+The restarted desktop chat exposes all fifteen native named handles; direct
+authenticated bounded reads are verified. Use native semantic MCP as primary;
+the Pascal semantic client remains available for isolated test services. Missing
 general source/import/state/binding/review operations belong to the existing workflow
 task, not silent browser automation. No sub-agents. WORK.md owns current process,
 qualification, deployment, preservation and remote-checkpoint state; verify

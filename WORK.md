@@ -24,13 +24,25 @@ only "blocked by policy" as its reason. All six production artifacts and the exa
 user pair remain unchanged; health is 200. The new candidate is qualified and
 staged with backups and release-manifest.json, but is not installed. Fresh installed
 Codex authenticates fifteen tools from another project after connection rotation.
-Project/enrolled configuration refresh remains automatic. This existing chat
-needs the documented MCP client reconnect for native named handles; the Pascal
-semantic client is active and primary. No user design received a test fixture.
+Project/enrolled configuration refresh remains automatic. The restarted desktop
+chat now exposes all fifteen native Nyx handles; direct authenticated bounded
+reads are verified. Native semantic MCP is primary, with the Pascal semantic
+client retained for isolated test services. No user design received a test fixture.
 
 Qualified source checkpoint dd5a95a8e81693024e0defcc0133af250601c659 is pushed
 to origin/hello-nyx and independently equals git ls-remote. The handoff record
 follows that implementation; no unqualified product deployment is claimed.
+
+Requested desktop reconnect check (2026-10-04): the active chat exposes all
+fifteen `mcp__nyx_studio__nyx_*` tools. Seven native named calls succeed:
+session before/after, bounded component search, page outline, typed selected-node
+properties/events, eight accepted source lines and bounded diagnostics.
+All document-bearing responses agree at revision 2. Selection/view, page and
+component counts, draft/Undo/Redo state and permission remain unchanged; only
+observable agent activity advances. No mutation, build, preview, configuration
+change or service restart was needed. Earlier reconnect-pending observations
+below are historical and superseded. This verifies the connection without
+claiming execution of every mutation tool or new acceptance credit.
 
 Completed integrated batch (declared 2026-10-04): NS-1_event-scheduler_01
 criterion 1, at consecutive no-closure counter 6. Prior keyboard evidence
