@@ -56,6 +56,28 @@ type
     NewName: TNyxText;
   end;
 
+  { An immutable lexical view of one ordinary Pascal Invoke implementation.
+    Signature retains the exact procedure declaration through its semicolon;
+    Code retains the following whitespace, local declarations and
+    complete body through end;. Positions are private native/target offsets and
+    never used as client identities. Line is a one-based source navigation site.
+    Text survives source/workspace disposal and borrows no document or lexer. }
+  TNyxHandlerSource = record
+  private
+    FHandler: TNyxHandlerRef;
+    FSignature: TNyxText;
+    FImplementation: TNyxText;
+    FLine: Integer;
+    FStart: Integer;
+    FHeaderFinish: Integer;
+    FFinish: Integer;
+  public
+    property Handler: TNyxHandlerRef read FHandler;
+    property Signature: TNyxText read FSignature;
+    property Code: TNyxText read FImplementation;
+    property Line: Integer read FLine;
+  end;
+
   {$ifdef NYX_SOURCE_PROFILE}
   { Opt-in benchmark instrumentation only: production builds contain no clock,
     counters or observer. The single-threaded harness supplies a monotonic clock;
@@ -185,6 +207,19 @@ function AddNyxHandlerStub(const ASource: TNyxText; const AHandler: TNyxHandlerR
   procedure line; missing/malformed source raises an owned source diagnostic. }
 function NyxHandlerSourceLine(const ASource: TNyxText;
   const AHandler: TNyxHandlerRef): Integer;
+
+{ Read/replace one uniquely qualified local callback, outside managed views.
+  Replacement retains its exact signature and every surrounding byte. Expected
+  is the complete implementation returned by Read, including local declarations
+  and whitespace; mismatch refuses. Nested routines and ordinary Pascal blocks
+  are balanced lexically, ignoring strings/comments. Conditional/directive bodies,
+  duplicates and ambiguous boundaries refuse rather than guessing ownership.
+  This locates a region, not a Pascal type checker: the normal compiler diagnoses
+  helper syntax/type errors. The caller must still admit the complete candidate. }
+function ReadNyxHandlerSource(const ASource: TNyxText;
+  const AHandler: TNyxHandlerRef): TNyxHandlerSource;
+function ReplaceNyxHandlerImplementation(const ASource: TNyxText;
+  const AHandler: TNyxHandlerRef; const AExpected, AImplementation: TNyxText): TNyxText;
 
 { Return independently retained exact source regions through the same lexical
   boundary admission as the workspace. Position mapping may reuse unchanged
@@ -3265,6 +3300,8 @@ begin
     end;
   end;
 end;
+
+{$I nyx.source.handlers.inc}
 
 function WithNyxControlImport(const AFrame: TNyxText): TNyxText;
 begin

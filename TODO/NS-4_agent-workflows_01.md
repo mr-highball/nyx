@@ -42,8 +42,9 @@ the present Windows installation; the Pascal semantic client is usable immediate
 
 **Confirmed gaps — 2026-10-04:** The design transaction vocabulary contains
 create/update/move/delete/title/tokens. Callback authoring now has a focused tool;
-immutable build requests and bounded status are now qualified. Semantic
-source/body editing remains absent. State/binding
+immutable build requests and bounded status are now qualified. Local callback
+implementation editing now has a focused bounded tool. General
+source/import editing remains absent. State/binding
 commands and reusable authoring are not advertised. Root
 creation is supported, while root move/deletion and isolated review-session
 lifecycle are absent. Property values preserve their JSON scalar types, but
@@ -128,3 +129,31 @@ Global scheduling across the legacy HTTP route, cancellation, caching and locked
 toolchain snapshots remain with NS-5. This task stays open for criterion 5 and
 remaining primary source/state/reusable workflows; event/codegen credit does not
 transfer.
+
+## Semantic handler implementation prerequisite — 2026-10-04
+
+The bounded body-authoring prerequisite for criterion 2 is accepted. A fourteenth
+tool inspects Unicode-scalar windows of one exact accepted local method and
+applies typed immutable edits as one revision/expected-text guarded paired Undo
+step. Signature, imports, surrounding helpers and managed views retain their
+bytes. Duplicate/conditional/ambiguous methods, inline type blocks, trailing
+comments, unknown or joined field names, wrong types, pending drafts and failed
+groups refuse. No-op/Redo, exact retries and independent ownership are qualified.
+
+Native and executed-browser admission passes 72 each; all 6335844 checked native
+allocations are freed. Actual MCP creates the demo, adds and implements both
+callbacks, compiles browser/LCL views, diagnoses an authored helper failure and
+guards stale navigation: 21 checks at desktop and 21 exact-390. Ordinary Nyx
+Studio shows code/activity and undoes both implementations; semantic Redo
+restores exact source. Browser host typing and unchanged independent compiled
+control consumers qualify executable input validation on both targets, nine
+checks each with zero native leaks. Final gates pass 64 real MCP, 177 compiler
+service and 52/52 Studio Events/source/history. Exact artifacts are deployed with
+the user pair/selection/view retained; fresh installed Codex authenticates all
+fourteen tools. See [the packet](../WORK.md#semantic-handler-implementations--2026-10-04).
+
+This accepts the local body prerequisite, not criterion 5 or arbitrary Pascal
+source editing. General imports/helpers, state/bindings, rich reusable authoring,
+root cleanup and protected review lifecycle retain this workflow owner. Lexical
+admission leaves syntax/type checking to `nyx_build`; it does not execute code.
+Original event/codegen criteria and counters remain unchanged. The task stays open.

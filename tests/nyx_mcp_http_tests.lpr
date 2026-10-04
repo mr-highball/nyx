@@ -76,13 +76,16 @@ begin
     LClient := TNyxMCPTestClient.Create(ParamStr(2));
     Check(True, 'Real MCP initialize and initialized notification');
     LValue := LClient.RPC('tools/list', NyxObject([])).Field('result');
-    Check(LValue.Field('tools').Count = 13, 'Focused semantic capabilities advertised');
+    Check(LValue.Field('tools').Count = 14, 'Focused semantic capabilities advertised');
     Check((LValue.Field('tools').Item(11).Field('name').AsText = 'nyx_callbacks') and
       (LValue.Field('tools').Item(11).Field('inputSchema').Field('properties').Field('changes').Field('maxItems').AsInteger = 32),
       'Semantic callback tool advertises bounded batches');
     Check((LValue.Field('tools').Item(12).Field('name').AsText = 'nyx_build') and
       (LValue.Field('tools').Item(12).Field('inputSchema').Field('oneOf').Count = 3),
       'Semantic build advertises three closed operation shapes');
+    Check((LValue.Field('tools').Item(13).Field('name').AsText = 'nyx_pascal') and
+      (LValue.Field('tools').Item(13).Field('inputSchema').Field('oneOf').Count = 2),
+      'Semantic Pascal tool advertises closed inspect/apply operation shapes');
     Check(LValue.Field('tools').Item(7).Field('inputSchema').Field('required').Count = 3,
       'Transaction input schema publishes required guards');
     LClient.Exchange('GET', NyxObject([]), 405);
@@ -231,6 +234,12 @@ begin
     LValue := LClient.Tool('nyx_components', NyxObject([NyxField('query', NyxData('reply')),
       NyxField('limit', NyxData(2))]));
     Check(LValue.Field('structuredContent').Field('items').Count > 0, 'Intent descriptions searchable under read-only');
+    LValue := LClient.Tool('nyx_pascal', NyxObject([
+      NyxField('mode', NyxData('apply')), NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('operationId', NyxData('read-only-handler-refused')), NyxField('changes', NyxArray([]))]));
+    Check(LValue.Field('isError').AsBoolean and
+      (Pos('Allow edits', LValue.Field('content').Item(0).Field('text').AsText) > 0),
+      'Read-only grant refuses Pascal mutation before inspecting its batch');
     { Compiler requests consume resources and require the operator's edit grant.
       Readiness remains inspectable without disclosing the private profile. }
     LValue := LClient.Tool('nyx_build', NyxObject([NyxField('mode', NyxData('outputs'))]));
@@ -251,6 +260,11 @@ begin
       NyxField('permission', NyxData('disabled'))]));
     LValue := LClient.Tool('nyx_session', NyxObject([]));
     Check(LValue.Field('isError').AsBoolean, 'Disabled access refuses inspection');
+    LValue := LClient.Tool('nyx_pascal', NyxObject([
+      NyxField('mode', NyxData('inspect')), NyxField('handler', NyxData('UnknownHandler'))]));
+    Check(LValue.Field('isError').AsBoolean and
+      (Pos('disabled', LValue.Field('content').Item(0).Field('text').AsText) > 0),
+      'Disabled access refuses Pascal inspection before method lookup');
     LValue := LClient.Tool('nyx_build', NyxObject([NyxField('mode', NyxData('outputs'))]));
     Check(LValue.Field('isError').AsBoolean and
       (Pos('disabled', LValue.Field('content').Item(0).Field('text').AsText) > 0),

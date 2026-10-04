@@ -67,6 +67,8 @@ type
     function Diagnostics(const AArguments: TNyxDataValue): TNyxDataValue;
     function SourceLines(const AArguments: TNyxDataValue): TNyxDataValue;
     function CompilerSnapshot: TNyxDataValue;
+    function HandlerSource(const AArguments: TNyxDataValue;
+      AApply: Boolean): TNyxDataValue;
     function EditCallbacks(const AArguments: TNyxDataValue;
       const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
   public
@@ -112,7 +114,8 @@ implementation
 
 uses
   nyx.catalog, nyx.catalog.labels, nyx.callbacks, nyx.codec, nyx.composition,
-  nyx.design.tokens, nyx.studio.edits, nyx.studio.callbackedits;
+  Math, nyx.source, nyx.design.tokens, nyx.studio.edits, nyx.studio.callbackedits,
+  nyx.studio.handleredits;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
 var
@@ -146,7 +149,10 @@ begin
   for LIndex := 0 to AValue.Count - 1 do
   begin
 
-    if Pos('|' + AValue.Key(LIndex) + '|', AAllowed) = 0 then
+    { Pipe delimits this internal closed-key list; it is never part of a key.
+      Refuse joined names instead of accepting a substring across two entries. }
+    if (Pos('|', AValue.Key(LIndex)) > 0) or
+      (Pos('|' + AValue.Key(LIndex) + '|', AAllowed) = 0) then
     begin
       raise ENyxModel.Create('Unknown argument: ' + AValue.Key(LIndex));
     end;
@@ -896,8 +902,8 @@ begin
   end;
 end;
 
-function WithCallbacks(const ASummary, ACallbacks: TNyxDataValue;
-  ABudgetCheck: Boolean = False): TNyxDataValue;
+function WithResults(const ASummary, AResults: TNyxDataValue;
+  const AMember: TNyxText; ABudgetCheck: Boolean = False): TNyxDataValue;
 var
   LFields: array of TNyxDataField;
   LIndex: Integer;
@@ -923,7 +929,7 @@ begin
     end;
   end;
   { High avoids a pas2js record-method-as-array-index ambiguity. }
-  LFields[High(LFields)] := NyxField('callbacks', ACallbacks);
+  LFields[High(LFields)] := NyxField(AMember, AResults);
   Result := NyxObject(LFields);
 end;
 
@@ -998,7 +1004,7 @@ begin
     history. Size refusal also precedes the sole live AdoptProject operation. }
   LPair := LPatch.Candidate(FSession, LResults);
   LCallbacks := EncodeNyxCallbackResults(LResults);
-  BoundContext(WithCallbacks(Summary, LCallbacks, True));
+  BoundContext(WithResults(Summary, LCallbacks, 'callbacks', True));
 
   if AApply then
   begin
@@ -1035,6 +1041,55 @@ begin
     NyxField('revision', NyxData(FRevision)), NyxField('changes', LChanges)]);
 end;
 
+function TNyxAgentSession.HandlerSource(const AArguments: TNyxDataValue;
+  AApply: Boolean): TNyxDataValue;
+var
+  LPatch: INyxHandlerPatch;
+  LPair: TNyxProjectPair;
+  LResults: TNyxHandlerEditResults;
+  LHandler: TNyxHandlerSource;
+  LOffset: Integer;
+  LCount: Integer;
+  LTotal: Integer;
+  LSignatureTotal: Integer;
+  LSignature: TNyxText;
+  LText: TNyxText;
+begin
+
+  if AApply then
+  begin
+    NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|changes|');
+    RequireRevision(AArguments);
+    LPatch := ReadNyxHandlerPatch(AArguments.Field('changes'));
+    LPair := LPatch.Candidate(FSession, LResults);
+    Result := EncodeNyxHandlerResults(LResults);
+    { Admit the final response before the only active-session publication. The
+      detached patch preserves source/design/selection/history on every refusal. }
+    BoundContext(WithResults(Summary, Result, 'handlers', True));
+    FSession.AdoptProject(LPair);
+    Exit;
+  end;
+  NyxAgentFields(AArguments, '|mode|handler|offset|count|');
+  LHandler := ReadNyxHandlerSource(FSession.Source, NyxHandler(TextArgument(AArguments, 'handler')));
+  LOffset := IntegerArgument(AArguments, 'offset', 0, 0, 4 * 1024 * 1024);
+  LCount := IntegerArgument(AArguments, 'count', 2048, 1, 4096);
+  LText := TextSpan(LHandler.Code, LOffset, LCount, LTotal);
+
+  if LOffset > LTotal then
+  begin
+    raise ENyxModel.Create('Callback text offset is beyond the accepted implementation');
+  end;
+  LSignature := TextSpan(LHandler.Signature, 0, 1024, LSignatureTotal);
+  Result := NyxObject([
+    NyxField('revision', NyxData(FRevision)), NyxField('handler', NyxData(LHandler.Handler.Name)),
+    NyxField('line', NyxData(LHandler.Line)), NyxField('signature', NyxData(LSignature)),
+    NyxField('signatureCharacters', NyxData(LSignatureTotal)),
+    NyxField('offset', NyxData(LOffset)), NyxField('total', NyxData(LTotal)),
+    NyxField('nextOffset', NyxData(Min(LOffset + LCount, LTotal))),
+    NyxField('text', NyxData(LText)),
+    NyxField('pendingDraft', NyxData(FSession.DraftSource <> FSession.Source))]);
+end;
+
 function TNyxAgentSession.Call(const ATool, AActor: TNyxText;
   const AArguments: TNyxDataValue): TNyxDataValue;
 var
@@ -1047,9 +1102,13 @@ var
   LMutation: Boolean;
   LCallbackApply: Boolean;
   LCallbackResults: TNyxDataValue;
+  LHandlerApply: Boolean;
+  LHandlerResults: TNyxDataValue;
 begin
   LCallbackApply := False;
   LCallbackResults := NyxNull;
+  LHandlerApply := False;
+  LHandlerResults := NyxNull;
 
   try
 
@@ -1062,8 +1121,13 @@ begin
     begin
       LCallbackApply := TextArgument(AArguments, 'mode') = 'apply';
     end;
+
+    if ATool = 'nyx_pascal' then
+    begin
+      LHandlerApply := TextArgument(AArguments, 'mode') = 'apply';
+    end;
     LMutation := (ATool = 'nyx_transaction') or (ATool = 'nyx_select') or
-      (ATool = 'nyx_history') or LCallbackApply;
+      (ATool = 'nyx_history') or LCallbackApply or LHandlerApply;
 
     if LMutation and (FPermission <> apEdit) then
     begin
@@ -1146,6 +1210,16 @@ begin
       Result := EditCallbacks(AArguments, AActor, LCallbackApply);
       LCallbackResults := Result;
     end
+    else if ATool = 'nyx_pascal' then
+    begin
+
+      if not LHandlerApply and (TextArgument(AArguments, 'mode') <> 'inspect') then
+      begin
+        raise ENyxModel.Create('Pascal mode must be inspect or apply');
+      end;
+      Result := HandlerSource(AArguments, LHandlerApply);
+      LHandlerResults := Result;
+    end
     else if ATool = 'nyx_select' then
     begin
       NyxAgentFields(AArguments, '|expectedRevision|operationId|id|activate|');
@@ -1210,7 +1284,12 @@ begin
 
       if LCallbackApply then
       begin
-        Result := WithCallbacks(Result, LCallbackResults);
+        Result := WithResults(Result, LCallbackResults, 'callbacks');
+      end;
+
+      if LHandlerApply then
+      begin
+        Result := WithResults(Result, LHandlerResults, 'handlers');
       end;
 
       if Length(FReceiptKeys) = 64 then

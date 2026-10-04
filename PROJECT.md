@@ -91,8 +91,12 @@ view/reusable/application compiler jobs and queries bounded status, severity
 filtered diagnostics and served artifact manifests. Real MCP/compilers plus an
 observing Studio pass 107 checks each at desktop and exact-390 widths; resource
 ownership passes 45 native checks with zero leaks. Fresh Codex authenticates all
-thirteen tools. Semantic source/body, state/binding and protected review workflows
-remain open. See [the current packet](WORK.md#semantic-compiler-jobs--2026-10-04).
+fourteen tools. Local callback implementations now have bounded semantic reads
+and grouped exact-text/revision guarded edits, preserving signatures, helpers,
+drafts and paired history. MCP-authored validation compiles and executes on both
+targets while an observing Studio qualifies Undo/Redo and activity. General
+source/import, state/binding and protected review workflows remain open. See
+[the current packet](WORK.md#semantic-handler-implementations--2026-10-04).
 Physical IME, complete accessibility, other widgetsets and native Studio remain
 open; existing editing/semantic evidence remains applicable.
 

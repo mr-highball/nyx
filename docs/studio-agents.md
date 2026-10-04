@@ -105,6 +105,7 @@ GET is explicitly unsupported (405); DELETE closes a client session. See the
 | `nyx_preview` | An immutable, revision-specific rendered view and optional PNG |
 | `nyx_callbacks` | Grouped callback addition, policy, ordering and reviewed removal on the inspector's paired history |
 | `nyx_build` | Output readiness, immutable accepted builds and bounded job/artifact/diagnostic inspection |
+| `nyx_pascal` | Bounded accepted callback implementations and grouped exact-text guarded edits |
 
 Tool schemas advertise required fields and limits. Unknown arguments and
 unpublished properties are refused. Queries never return the full document.
@@ -240,8 +241,8 @@ tokens. Creation supports child placement or a new page/reusable root; these
 placements are mutually exclusive. Move/delete currently operate on descendants,
 not page/reusable roots. Updating a published property to null clears its explicit
 override. Tokens cover the seven built-in palette colors and radius,
-controlRadius and fontSize; null restores a default. Custom token families and
-callback authoring operations remain future extensions to the focused tool set.
+controlRadius and fontSize; null restores a default. Custom token families remain
+future extensions; callback operations use the focused tool below.
 
 The ordinary Studio command pipeline clones, applies, validates and verifies
 the complete design/Pascal candidate before publishing either owner. A group is
@@ -277,7 +278,7 @@ Results identify owner/event, handler/registration, policy and position after
 each operation. The one-based `line` points into the final accepted source;
 zero means an external implementation without a local location. Read the needed
 `nyx_source` window there. Add returns a template; it does not invent business
-logic. Semantic source/body editing remains an explicit workflow gap.
+logic. Use `nyx_pascal` below to implement the local callback.
 
 The batch prepares a detached candidate through the inspector's commands,
 admits response size, then publishes once: one ordinary paired Undo step, with
@@ -365,6 +366,71 @@ an ordinary MCP operation before agents can build the full bound demo directly.
 After exporting or reviewing, undo the owned transaction only if its revision
 and history still identify that edit; preserve intervening user work.
 
+## Implement callbacks semantically
+
+`nyx_pascal` inspects the accepted implementation of an exact Pascal handler
+class; it does not read a pending draft. Start with
+`{"mode":"inspect","handler":"TReplyBeforeTextInput","offset":0,"count":256}`.
+The response contains revision, source line, immutable signature, text window,
+total character count and next offset. Offsets count Unicode scalars on both
+targets. Continue from `nextOffset` until `total`, requiring the same revision
+throughout. Join the windows exactly, including whitespace and local declarations.
+The signature is limited to 1024 characters with its full count reported; each
+implementation window contains at most 4096 characters.
+
+Apply a related set through one revision-aware operation:
+
+```json
+{"mode":"apply","expectedRevision":12,"operationId":"reply-validation-1","changes":[
+  {"handler":"TReplyBeforeTextInput","expected":"<exact inspected implementation>",
+   "implementation":"\nbegin\n\n  if AExecution.Cancelled or not AEvent.HasTextEdit then\n  begin\n    Exit;\n  end;\n\n  if NyxTextScalarCount(AEvent.TextEdit.After) > 40 then\n  begin\n    NyxEventResponse(AExecution).Consume;\n  end;\nend;"}
+]}
+```
+
+There are 1..16 changes, at most 32768 Unicode scalars per expected/new text and
+131072 across the group. Duplicate handlers, unknown fields, wrong types, stale
+revisions, mismatched expected text and pending drafts refuse the entire group.
+The full detached companion is admitted before one publication and ordinary
+paired Undo step. A no-op retains history and Redo. Retries follow the same exact
+actor/argument identity rules as other mutations. Results return handler names
+and final source lines, rather than the whole source.
+
+The typed Pascal boundary is `TNyxHandlerEdit` / `INyxHandlerPatch`; source
+inspection returns an immutable `TNyxHandlerSource`. It owns text and borrows
+no document or lexer. This operation retains the method signature, imports,
+sibling helpers and managed view bytes exactly. Nested local routines and
+declaration types are supported; ambiguous boundaries, duplicate implementations,
+conditional directives and inline type blocks refuse. This is a bounded region
+editor, not a Pascal type checker. Submit `nyx_build` to diagnose ordinary helper
+syntax/type errors; the authored code remains available for correction or Undo.
+End replacement text at the method's `end;`, with only optional trailing
+whitespace. Keep comments inside the body so they cannot swallow a sibling helper.
+Arbitrary imports, helper/class creation and full-unit edits remain separate
+source workflow gaps. Read-only allows inspection; Disabled refuses both modes.
+
+## Maintained authored-input review
+
+Build `agents`, then run the Pascal coordinator against a disposable service:
+
+```powershell
+nyx_mcp_handler_tests <loopback-editor-base> <isolated-config.toml> <artifact-directory>
+./tools/build.ps1 -Target agent-handler-consumers `
+  -HandlerSourceDirectory <artifact-directory>/source `
+  -BrowserOutput <isolated-web-root>
+```
+
+Append `phone` to the coordinator command for an exact 390-by-844 observer.
+MCP composes the page, adds two callbacks, implements digit/Unicode-length
+validation, requests actual browser/LCL builds and diagnoses an authored helper
+error. The observing Nyx editor displays the code and activity; editor Undo and
+semantic Redo restore both exact implementations together. The coordinator
+selectively validates real browser host typing and accessibility values. It
+never injects scripts or authors through the designer. Both independent control
+consumers compile the exported companion unchanged; run the native consumer and
+load `handler-consumers.html` for executed-browser evidence. The portable fixture
+separately qualifies ownership, exact Unicode windows, failed groups and drafts.
+These journeys mutate their chosen service; keep them separate from user work.
+
 ## Maintained callback review
 
 Build `agents`, then run the Pascal journey against a disposable service with
@@ -399,7 +465,7 @@ The maintained native semantic/configuration tool is built with
 files under `build/mcp-client/`, never the real Codex user file. Actual MCP HTTP
 fixtures likewise run against an isolated service because they deliberately
 replace and mutate their selected session. See the open
-[primary semantic workflow task](../TODO/NS-4_agent-workflows_01.md) for source/body,
+[primary semantic workflow task](../TODO/NS-4_agent-workflows_01.md) for richer source,
 state/binding and review-session capabilities still missing from tools.
 
 `tools/build.ps1 -Target agents` builds the portable fixture, real HTTP consumers,

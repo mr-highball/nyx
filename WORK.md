@@ -7,40 +7,38 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest integrated delivery (2026-10-04): NS-4_agent-workflows_01 criterion 4 is
-implemented, qualified, accepted and deployed. Immutable view/reusable/application
-jobs reuse the fixed-argument compiler, release the document lock and expose
-bounded status, severity-filtered diagnostics and served artifact manifests.
-Observing Studio shows agent activity and source-guarded diagnostics. Real MCP
-plus both actual compilers passes 107 checks each at desktop and exact-390 widths.
-Portable admission passes 33 per target; native resource ownership passes 45 with
-zero leaks. Final gates pass 61 real MCP, 177 compiler service, shared 30/1537 per
-target and Studio 52/52. Fresh installed Codex authenticates all thirteen tools.
-See [the packet](#semantic-compiler-jobs--2026-10-04).
+Latest integrated delivery (2026-10-04): NS-4_agent-workflows_01 criterion 2's
+bounded local callback-implementation prerequisite is implemented, qualified,
+accepted and deployed. Typed immutable edits and bounded Unicode reads retain
+signature/helper/managed-view ownership and exact paired history. Native and
+executed-browser admission pass 72 each; all checked allocations are freed.
+Real MCP/observer/compiler/host-input journeys pass 21 desktop and 21 exact-390.
+Unchanged compiled browser/LCL consumers pass nine each, with zero native leaks.
+Final gates pass 64 real MCP, 177 compiler service, shared 30/1537 per target and
+Studio Events/source/history 52/52. Fresh installed Codex authenticates fourteen
+tools. See [the packet](#semantic-handler-implementations--2026-10-04).
 
-This bounded integrated batch was declared before implementation against criterion
-4, with one delivery budget and a publication stop on wrong-source diagnostics or
-accepted-pair corruption. No gate was weakened. Compiler caching/cancellation and
-global scheduling retain NS-5 ownership. Event criteria 2/3/4 and agent workflow
-criterion 3 remain accepted. Original event criterion 1 stays open at consecutive
-no-closure counter 6; codegen criterion 3 stays open at counter 11. Full goal active.
+The integrated body batch was declared before implementation, with one delivery
+budget and a publication stop on ambiguous ownership, wrong-source edits or pair
+corruption. No gate was weakened. Existing semantic callback/build criteria 3/4
+and event criteria 2/3/4 remain accepted. Original event criterion 1 stays open at
+counter 6; codegen criterion 3 stays open at counter 11. No completion credit
+transfers from those owners. Full goal active.
 
-Next concrete prerequisite: declare one integrated semantic source/body or
-protected review-lifecycle batch under the existing workflow owner. Body authoring
-must preserve accepted Pascal/helper ownership, exact revisions, drafts and one
-paired Undo step before the keyboard review's business behavior can be MCP-only.
-State/bindings, root cleanup, rich reusable operations and protected review cleanup
-remain open. Then return to supported-control qualification under the original
-event owner. No original scope, counter or completion credit transfers.
+Next concrete prerequisite: declare one integrated protected review-lifecycle /
+root-cleanup batch under the existing workflow owner, criterion 5. State/bindings,
+rich reusable operations and general source/import/helper authoring remain open.
+Then return to supported-control qualification under the original event owner.
+Compiler cancellation/caching/global scheduling retain NS-5 ownership.
 
-Batch handoff: criterion 4's implementation/evidence/deployment batch is finished.
-All qualification pipelines and disposable services are terminal. Only production
-PID 28012 / persistent exec 71510 remains on the existing firewall-authorized
-executable path, editor 0.0.0.0:8088 and MCP loopback:8089. Server SHA256:
-B2D2FD02D65C6D244A51836B739EEE2D693D6EC72591D804C10A5DCD126EDADC.
-Main JS: 65C9729506B2C7B68CDEA03D2DBC698844D304D6EA2DB6F3E865AF559533C863.
+Batch handoff: qualification pipelines and disposable services are terminal.
+Only production PID 36172 / persistent exec 79421 remains on the existing
+firewall-authorized executable path, editor 0.0.0.0:8088 and MCP loopback:8089.
+Server SHA256:
+D86D0F6528A3B7653A95861E3426D19A90672DB525CA2F98AE0F5C1588253B94.
+Main JS: 4BD7F187E4536BC57EFBD3765503DAB5D6C63C9AFD461DBEF3D6BC208B468076.
 Preview JS: 259E105DA2C8A87C8B2C29097EB8EEABA11CAC802740B0E8225E7FFC63AE70E6.
-The exact six-artifact manifest and backups are under ignored build/agent-builds/.
+The exact six-artifact manifest and backups are under ignored build/handler-edits/.
 Immediate private observation rechecked revision, full pair, selection/view,
 permission and no draft/history before restart. The live paired design/source,
 selection and view were restored byte for byte. Local/LAN health and installed/
@@ -48,12 +46,12 @@ served artifact hashes pass; enrolled Codex credentials refresh with no warning.
 
 The running desktop chat needs one MCP reconnect for native named handles; the
 Pascal semantic client is active now. Actual fresh Codex initialization from
-another project sees all thirteen tools. Existing Studio tabs need refresh after
+another project sees all fourteen tools. Existing Studio tabs need refresh after
 credential rotation. No dependency source, compiler setup or firewall was changed.
 Private configuration, tokens, user pairs and machine profiles remain excluded.
-Remote protection: 6505d1e12746f0ad8f05669608ff16adfa7f2f34 is pushed on
-origin/hello-nyx; independent git ls-remote verifies the exact identity. This
-handoff update follows the protected implementation. Full goal active.
+Remote checkpoint verification follows the delivery commit. Previous protected
+delivery remains on origin/hello-nyx. Full goal active.
+
 ## Previous checkpoint before compiler and MCP delivery
 
 Previous checkpoint: complete-command profiling removed workspace JSON encoding/
@@ -3139,3 +3137,80 @@ on origin/hello-nyx. The working tree was clean after that commit. This
 handoff-only update is also authorized for publication. All live preservation,
 credential and artifact state above remains current; no experiment or pipeline
 was started after acceptance. Full goal active, original counters unchanged.
+
+## Semantic handler implementations — 2026-10-04
+
+NS-4_agent-workflows_01 criterion 2's bounded body-authoring prerequisite is
+accepted; the overall task and goal remain active. This integrated batch was
+declared at the top before implementation, returning to criterion 5 and the
+original event owner. It supplies a fourteenth focused tool rather than falling
+back to designer automation or a private source-injection fixture.
+
+`nyx_pascal` reads accepted local Invoke implementations through bounded Unicode
+scalar windows, with an immutable signature and source line. Typed immutable
+`TNyxHandlerEdit` / `INyxHandlerPatch` commands replace 1..16 exact implementations
+on a detached full candidate. Expected text and revision guard one paired Undo
+publication. The model, managed views, signature, imports and sibling helpers
+retain their bytes; response size is admitted before publication. Grouped limits
+are 32768 scalars per expected/new text and 131072 total. Drafts, failed groups,
+duplicate/conditional/ambiguous methods, inline type blocks, sibling injection,
+trailing comments, wrong types and unknown/joined fields refuse. No-op/Redo,
+exact retry identity, selection and ownership remain intact. The scanner locates
+a region; ordinary Pascal syntax/type errors remain compiler-owned.
+
+The maintained real MCP journey composes a thoughtful-input page, adds two
+callbacks, authors digit and Unicode-length validation, requests actual browser
+and LCL view jobs, and authors a deliberate missing-helper compiler error.
+An already-open Nyx Studio displays code/activity and undoes both bodies together;
+semantic Redo restores exact text. Host typing rejects an invalid digit through
+the actual compiled callback. Error navigation is current-source guarded and
+becomes stale after recovery. The exported companion is compiled unchanged by
+independent browser/LCL control consumers; its hash equals the final MCP build
+source. This now proves authored business behavior, beyond compiled TODO stubs.
+
+Evidence under ignored `build/handler-edits/`:
+
+| Boundary | Qualified evidence |
+| --- | --- |
+| Portable source/admission/history/ownership | `checked-admitted.log`: 72 native; `portable-admitted/`: 72 executed browser. All 6335844 native blocks freed, zero leaks |
+| Actual MCP/observer/compiler/host typing | `journey-current.log`: 21 desktop; `phone-admitted.log`: 21 exact-390 using the final guarded API; selective inspected PNGs and exact source exports |
+| Independent compiled controls | `consumers-qualified-build.log`: nine LCL, zero leaks; `consumers-browser/`: nine executed browser. Exact final companion byte identity verified |
+| Actual Studio Events/source/history | `gesture-studio-desktop/` and `gesture-studio-phone/`: 52 each, verified width 390; semantic Studio also passes 15 each |
+| Existing callback/build/resource boundary | `agents-final.log`: 29 model, 45 callbacks, 67 pre-final handler checks, 33 build admission, 45 native job resources with zero leaks; executed callback/build gates retain 45/33 |
+| Shared regression | `core-final.log`: 30 core, 1537 designer, 55 scheduler, 60 project and compiled reconstruction; `shared-browser-final/`: 30/1537 executed browser; 59 intended type refusals retained |
+| Real protocol/service | `mcp-http-admitted.log`: 64 real MCP including PNG; `http-qualified.log`: 177 generation/build/Unicode; `bridge-admitted/`: 13 draft-conflict safeguards |
+| Installed Codex/live semantics | `codex-production.log`: actual bearer authentication and fourteen tools from another project; `production-tools.jsonl` / `production-session.json`: fourteen tools and protected live context |
+| Deployment | `release-manifest.json`, `release-backup/`, `served/`: six installed hashes and five LAN-served hashes match qualified bytes |
+
+Native checked cumulative allocation is about 2.65 GB across repeated tiny-window
+queries and detached admissions; every block is freed. This is correctness and
+ownership evidence, not large-project responsiveness acceptance. Original
+codegen criterion 3 remains open at counter 11; event criterion 1 remains open
+at counter 6. Existing event criteria 2/3/4 and agent workflow criteria 3/4 retain
+accepted evidence. General imports/helpers, state/bindings, rich reusable
+operations, root cleanup and protected review lifecycle remain open. Compiler
+caching/cancellation/global scheduling retain NS-5 ownership.
+
+Failures were retained and resolved without weakening gates: duplicate-method
+detection after a unit terminator was fixed; a fixture's Windows ANSI string
+replacement was changed to Nyx text storage; pending draft setup now marks its
+actual Pending contract; the coordinator uses enumerated keys because Field
+refuses absent members; independent consumers bind generated callback classes
+through the public startup contract and query runtime identity. The legacy HTTP
+fixture first ran from the wrong repository, so native artifact execution could
+not find the staged job; rerunning unchanged from the actual service root passes
+177. Further ownership review added outer-conditional and trailing-comment
+refusals, with final 72/72 evidence. No observation timeout caused a service reset.
+
+Deployment's first private check used an incorrect capability header; production
+was not stopped, and the attempted copy was blocked by its open executable.
+The old server/main hashes were verified unchanged. The corrected check uses
+`X-Nyx-Editor`, reobserves exact revision/pair/selection/view, requires no draft
+or history and no active child processes, then stops the verified owner. Old
+28012/71510 is terminal; new 36172/79421 restores the exact paired design/source,
+selection and view. Private before/restore/after records remain excluded under
+`.local/handler-production-*.json`. Local/LAN health is 200, all artifact hashes
+match, enrolled credentials refresh and actual Codex authenticates fourteen tools.
+All qualification pipelines and owned review services are terminal; only production
+lives. No dependency source, compiler setup or firewall changed. Six new Pascal
+files satisfy the requested blank-above-if style. Full goal active.

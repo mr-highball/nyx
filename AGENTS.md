@@ -80,10 +80,18 @@ The generated reference covers 76 kinds. Bound browser tables currently use
 row-oriented navigation and explicitly documented cell-editor entry/exit.
 
 Codex project and explicitly enrolled user configuration refresh on each Studio
-launch. Actual installed Codex initialization authenticates all thirteen Nyx tools.
+launch. Actual installed Codex initialization authenticates all fourteen Nyx tools.
 This existing desktop chat needs one reconnect for native named handles; use the
 Pascal semantic client now and keep semantic MCP primary afterward. Missing
-source/body/state/binding/review operations belong to the existing workflow
+general source/import/state/binding/review operations belong to the existing workflow
 task, not silent browser automation. No sub-agents. WORK.md owns current process,
 qualification, deployment, preservation and remote-checkpoint state; verify
 process identity before stopping a service and preserve the active user pair.
+
+Local callback implementation editing is now semantic: inspect bounded
+`nyx_pascal` windows at one revision, then apply exact expected text as one
+grouped paired Undo step. Signatures, surrounding helpers and managed views stay
+owned; ambiguous/conditional methods and pending drafts refuse. Use `nyx_build`
+for ordinary Pascal compiler diagnostics, never infer successful execution from
+source admission. The maintained input review qualifies actual browser/LCL
+callbacks and observing Studio; richer source and review lifecycle remain open.

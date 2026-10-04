@@ -32,7 +32,7 @@ Typed compiler navigation advances codegen criterion 3 to counter 11 without
 closing source UX/performance. The full product and native Studio remain open.
 
 Explicit Codex user registration now refreshes alongside project configuration.
-Initialized Codex discovery authenticates all thirteen semantic tools; 22 native
+Initialized Codex discovery authenticates all fourteen semantic tools; 22 native
 configuration checks preserve operator files and refuse invalid ownership, with
 zero leaks. Semantic MCP is the default demo/design workflow. Callback batches
 add templates, set policy, reorder and review removal as one content Undo step;
@@ -43,11 +43,18 @@ currentness, retry identity, served manifests and ordinary observer diagnostics.
 The desktop/exact-390 journeys pass 107 checks each; 33 portable admission checks
 pass per target and 45 native ownership checks free every allocation. Final
 gates pass 61 real MCP, 177 compiler service and 52/52 Studio checks. Qualified
-bytes are deployed with the live pair retained. Source/body editing and
-protected review-session operations retain an open
+bytes are deployed with the live pair retained. The bounded callback implementation
+prerequisite now has typed immutable edits, exact Unicode source windows and
+grouped paired Undo. Native/executed-browser qualification passes 72 each; actual
+MCP/observer/compiler/host-input journeys pass 21 desktop and 21 exact-390 checks.
+Unchanged compiled control consumers pass nine each, with zero native leaks.
+Final MCP passes 64 and Studio Events/source/history passes 52/52. General
+source/import editing, state/bindings and protected review-session operations retain an open
 [primary workflow owner](TODO/NS-4_agent-workflows_01.md). The running desktop chat
 needs one reconnect for native handles; a Pascal semantic client works immediately.
 See [the compiler-job packet](WORK.md#semantic-compiler-jobs--2026-10-04).
+The [handler packet](WORK.md#semantic-handler-implementations--2026-10-04)
+records the new delivery without transferring event/codegen acceptance credit.
 
 ## Intended destination
 

@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -37,7 +37,9 @@ param(
   # this orchestration script. Its generated unit must live in this directory.
   [string]$KeyboardSourceDirectory = 'build/keyboard/mcp',
   # The maintained semantic callback journey exports two accepted source pairs.
-  [string]$CallbackSourceDirectory = 'build/agent-callbacks/mcp'
+  [string]$CallbackSourceDirectory = 'build/agent-callbacks/mcp',
+  # Exact companion exported by the semantic handler/compilation journey.
+  [string]$HandlerSourceDirectory = 'build/handler-edits/journey/source'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -223,6 +225,38 @@ try {
       Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxCallbackBrowser 'rtl.js')
       Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/agent-callback-consumer.html') -Destination $nyxCallbackBrowser
     }
+    exit 0
+  }
+
+  if ($Target -eq 'agent-handler-consumers') {
+    $nyxHandlerSource = [IO.Path]::GetFullPath($HandlerSourceDirectory)
+
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxHandlerSource 'nyx.generated.view.pas'))) {
+      throw 'Run the isolated semantic handler journey first; see docs/studio-agents.md'
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxHandlerPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxHandlerNative = Join-Path $nyxRoot 'build/handler-edits/consumers-native'
+    $nyxBrowserDir = Join-Path $nyxRoot 'build/browser'
+
+    if ($BrowserOutput) { $nyxBrowserDir = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxHandlerNative, $nyxBrowserDir | Out-Null
+    $nyxHandlerFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-Fu$nyxHandlerSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxHandlerPlatform", "-Fu$nyxLazarus/lcl/units/$nyxHandlerPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxHandlerPlatform", "-Fu$nyxLazarus/packager/units/$nyxHandlerPlatform",
+      "-FU$nyxHandlerNative", "-FE$nyxHandlerNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxHandlerFlags + @('tests/nyx_handler_consumer_tests.lpr'))
+    & (Join-Path $nyxHandlerNative 'nyx_handler_consumer_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Compiled native semantic handlers failed' }
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Fusrc', '-Futests',
+      "-Fu$nyxHandlerSource", "-FE$nyxBrowserDir", 'tests/nyx_handler_consumer_tests.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/handler-consumers.html') -Destination $nyxBrowserDir
     exit 0
   }
 
@@ -546,7 +580,7 @@ try {
     # Pascal owns protocol, atomic-edit and observer assertions. HTTP consumers
     # are compiled here and run explicitly against the selected live service;
     # the portable fixture needs neither a browser nor a running MCP endpoint.
-    foreach ($nyxAgentProgram in @('nyx_agent_tests', 'nyx_agent_callback_tests', 'nyx_agent_build_tests', 'nyx_build_compiler_fixture', 'nyx_build_job_tests', 'nyx_mcp_http_tests', 'nyx_mcp_observer_tests', 'nyx_mcp_diagnostic_tests', 'nyx_browser_capture')) {
+    foreach ($nyxAgentProgram in @('nyx_agent_tests', 'nyx_agent_callback_tests', 'nyx_handler_edit_tests', 'nyx_agent_build_tests', 'nyx_build_compiler_fixture', 'nyx_build_job_tests', 'nyx_mcp_http_tests', 'nyx_mcp_observer_tests', 'nyx_mcp_diagnostic_tests', 'nyx_browser_capture')) {
       Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @("tests/$nyxAgentProgram.lpr"))
     }
     & (Join-Path $nyxNativeDir 'nyx_agent_tests.exe')
@@ -559,6 +593,11 @@ try {
     if ($LASTEXITCODE -ne 0) {
       throw 'Semantic callback model checks failed'
     }
+    & (Join-Path $nyxNativeDir 'nyx_handler_edit_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Semantic Pascal implementation checks failed'
+    }
     & (Join-Path $nyxNativeDir 'nyx_agent_build_tests.exe')
 
     if ($LASTEXITCODE -ne 0) {
@@ -569,7 +608,7 @@ try {
     $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
     $nyxAgentHostUnits = Join-Path $nyxRoot 'build/agent-host-units'
     New-Item -ItemType Directory -Force $nyxAgentHostUnits | Out-Null
-    foreach ($nyxAgentDriver in @('nyx_mcp_callback_tests', 'nyx_mcp_build_tests')) {
+    foreach ($nyxAgentDriver in @('nyx_mcp_callback_tests', 'nyx_mcp_build_tests', 'nyx_mcp_handler_tests')) {
       Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl',
         '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxAgentHostUnits", "-FE$nyxNativeDir", "tests/$nyxAgentDriver.lpr")
     }
@@ -588,12 +627,12 @@ try {
     }
     New-Item -ItemType Directory -Force $nyxBrowserDir | Out-Null
     $nyxAgentFlags = @('-B', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxBrowserDir")
-    foreach ($nyxAgentProgram in @('tests/nyx_agent_tests.lpr', 'tests/nyx_agent_callback_tests.lpr', 'tests/nyx_agent_build_tests.lpr', 'tests/nyx_agent_build_observer_tests.lpr', 'tests/nyx_agent_callback_observer_tests.lpr', 'tests/nyx_agent_observer_tests.lpr', 'tests/nyx_agent_bridge_tests.lpr',
+    foreach ($nyxAgentProgram in @('tests/nyx_agent_tests.lpr', 'tests/nyx_agent_callback_tests.lpr', 'tests/nyx_handler_edit_tests.lpr', 'tests/nyx_handler_observer_tests.lpr', 'tests/nyx_agent_build_tests.lpr', 'tests/nyx_agent_build_observer_tests.lpr', 'tests/nyx_agent_callback_observer_tests.lpr', 'tests/nyx_agent_observer_tests.lpr', 'tests/nyx_agent_bridge_tests.lpr',
       'tests/nyx_studio_compiler_tests.lpr', 'studio/nyx_studio_preview.lpr', 'studio/nyx_studio.lpr')) {
       Invoke-NyxCompiler $nyxPas2js ($nyxAgentFlags + @($nyxAgentProgram))
     }
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
-    foreach ($nyxAgentHost in @('index.html', 'agents.html', 'agent-callbacks.html', 'agent-builds.html', 'agent-build-observer.html', 'agent-callback-observer.html', 'agent-observer.html', 'agent-preview.html', 'agent-bridge.html', 'studio-compiler.html')) {
+    foreach ($nyxAgentHost in @('index.html', 'agents.html', 'agent-callbacks.html', 'handler-edits.html', 'handler-observer.html', 'agent-builds.html', 'agent-build-observer.html', 'agent-callback-observer.html', 'agent-observer.html', 'agent-preview.html', 'agent-bridge.html', 'studio-compiler.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxAgentHost") -Destination $nyxBrowserDir
     }
     exit 0
