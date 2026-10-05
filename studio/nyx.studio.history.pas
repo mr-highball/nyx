@@ -27,7 +27,7 @@ unit nyx.studio.history;
 interface
 
 uses
-  nyx.source;
+  nyx.source, nyx.text;
 
 type
   { One entry carries the complete immutable design/source checkpoint. This
@@ -39,7 +39,7 @@ type
   TNyxStudioHistory = class
   private
     FEntries: array of TNyxSourceCheckpoint;
-    FStorageBytes: Int64;
+    FStorageBytes: TNyxTextBytes;
     function GetCount: Integer;
     function GetLast: TNyxSourceCheckpoint;
   public
@@ -51,7 +51,7 @@ type
     procedure Clear;
     property Count: Integer read GetCount;
     property Last: TNyxSourceCheckpoint read GetLast;
-    property StorageBytes: Int64 read FStorageBytes;
+    property StorageBytes: TNyxTextBytes read FStorageBytes;
   end;
 
 implementation
@@ -77,7 +77,7 @@ end;
 procedure TNyxStudioHistory.Add(const ACheckpoint: TNyxSourceCheckpoint);
 var
   LIndex: Integer;
-  LSize: Int64;
+  LSize: TNyxTextBytes;
 begin
   LIndex := Count;
   LSize := ACheckpoint.StorageBytes;

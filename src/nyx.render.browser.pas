@@ -3394,6 +3394,11 @@ begin
                 LControl.removeAttribute('href');
               end;
             end;
+          else
+            begin
+              { Other standard faces already supply their intrinsic focus and
+                accessibility behavior; this branch makes no additional change. }
+            end;
         end;
       end;
 

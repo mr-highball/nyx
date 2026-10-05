@@ -244,7 +244,7 @@ begin
       (LMemo.selectionEnd = 7), 'resize/visibility retain browser draft and selection');
     {$else}
     Check(GHost.ActiveControl = LMemo, 'unrelated visibility retains native focus');
-    Check((TNyxText(LMemo.Text) = 'A retained draft 🌙') and (LMemo.SelStart = 3) and
+    Check((TNyxText(LMemo.Text) = TNyxText('A retained draft 🌙')) and (LMemo.SelStart = 3) and
       (LMemo.SelLength = 4), 'resize/visibility retain native draft and selection');
     {$endif}
   end;
@@ -481,6 +481,10 @@ begin
     LExpectedFirst := 0;
     LExpectedSecond := 90;
     case LJustification of
+      njStart:
+        begin
+          { The initial expected bounds already describe start justification. }
+        end;
       njCenter:
         begin
           LExpectedFirst := LFree div 2;
@@ -575,7 +579,8 @@ begin
   Check(Face('policy-retained-memo') = LMemoFace, 'all policy updates retain the mounted editor');
   {$ifdef PAS2JS}Check((document.activeElement = LMemo) and (LMemo.value = 'Keep this draft 🌙') and
     (LMemo.selectionStart = 5) and (LMemo.selectionEnd = 9), 'layout policies retain browser draft/focus/selection');
-  {$else}Check((GHost.ActiveControl = LMemo) and (LMemo.Text = 'Keep this draft 🌙') and
+  {$else}Check((GHost.ActiveControl = LMemo) and
+    (TNyxText(LMemo.Text) = TNyxText('Keep this draft 🌙')) and
     (LMemo.SelStart = 5) and (LMemo.SelLength = 4), 'layout policies retain native draft/focus/selection');{$endif}
 end;
 {$endif}

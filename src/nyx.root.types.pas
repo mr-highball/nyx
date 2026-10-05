@@ -112,9 +112,11 @@ end;
 
 function NyxRootKindName(AKind: TNyxRootKind): TNyxText;
 begin
-  case AKind of
-    nrPage: Result := 'page';
-    nrReusable: Result := 'component';
+  { Validate the ordinal at this boundary as well as declared enum members:
+    explicit casts/foreign bridges must still reach the rejection branch. }
+  case Ord(AKind) of
+    Ord(nrPage): Result := 'page';
+    Ord(nrReusable): Result := 'component';
     else
       raise ENyxRoot.Create('Unknown root kind');
   end;

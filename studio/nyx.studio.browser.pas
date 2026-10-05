@@ -1074,6 +1074,10 @@ begin
             FCallbackRemoval.Pending := False;
             FStatus := 'Callback registrations updated';
           end;
+        nieNone:
+          begin
+            { A routed policy/edit can retain the current source position. }
+          end;
       end;
       FCompiledURL := '';
       LRetainCanvas := True;
@@ -1260,6 +1264,10 @@ begin
           NyxStudioReviewRootID, NyxStudioCancelRootID, NyxStudioRemoveRootID:
             begin
               case RouteNyxRootRemoval(FSession, ANode.ID, AEvent.Trigger, FRootRemoval) of
+                nreNone:
+                  begin
+                    { No removal command was published for this trigger. }
+                  end;
                 nreReview:
                   begin
                     FPanel := nspDesign;

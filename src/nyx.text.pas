@@ -39,6 +39,16 @@ type
   TNyxText = UTF8String;
   {$ENDIF}
 
+  { Retained text accounting needs wider intermediates than native 32-bit
+    lengths. pas2js NativeInt uses number arithmetic; admitted source/history
+    budgets keep these integral counts within JavaScript's exact range. Int64
+    is not implemented by pas2js, so keep it solely on native targets. }
+  {$IFDEF PAS2JS}
+  TNyxTextBytes = NativeInt;
+  {$ELSE}
+  TNyxTextBytes = Int64;
+  {$ENDIF}
+
   { Ordered portable text storage. The native RTL's TStringList accepts the
     system ANSI String type; on Windows that can convert UTF-8 captions into
     question marks before they reach JSON or a renderer. This collection keeps

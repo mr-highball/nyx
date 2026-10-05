@@ -130,7 +130,7 @@ begin
       (Pos('second wording / 漢字', LSecondSession.Source) > 0),
       'second visual edit retains its independent declared types and expression');
     Check((LFirstSession.Document.State.GetValue(NyxTextState('caption')) =
-      'First state / 🌙') and
+      TNyxText('First state / 🌙')) and
       LSecondSession.Document.State.GetValue(NyxBooleanState('caption')),
       'lexical comparison does not mutate either typed default');
     LFirstSession.Select('home');
@@ -166,7 +166,7 @@ begin
     LFirstSession.Redo;
     Check((LFirstSession.Source = LFirstSource) and
       (LSecondSession.Source = LOtherBefore) and
-      (LFirstSession.Document.State.GetValue(NyxTextState('caption')) = 'First state / 🌙'),
+      (LFirstSession.Document.State.GetValue(NyxTextState('caption')) = TNyxText('First state / 🌙')),
       'post-failure edits and paired history retain independent source/state meaning');
   finally
     LSecondSession.Free;

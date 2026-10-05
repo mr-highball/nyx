@@ -68,6 +68,8 @@ var
   LNextRevision: TNyxText;
   LRemote: TNyxText;
   LCurrent: TNyxText;
+  LLinkedStore: TNyxProjectStore;
+  LLinkRoot: TNyxText;
   {$ENDIF}
 
 procedure Check(ACondition: Boolean; const AMessage: TNyxText);
@@ -170,7 +172,7 @@ begin
       Check(LSession.Save = LPair.Design, 'paired load preserves admitted design');
       Check(LSession.Source = LSource, 'paired load preserves helpers/imports/comments/locals');
       LBaseline := EncodeNyxProject(LSession.ProjectSnapshot);
-      LSession.SetSourceDraft('unsupported draft / 🌙' + NyxScalarText(0));
+      LSession.SetSourceDraft(TNyxText('unsupported draft / 🌙') + NyxScalarText(0));
       LSession.SetTitle('New design / 漢字 🌙');
       LPair := LSession.ProjectSnapshot;
       Check(LPair.Pending and (LPair.DraftBase = LSource), 'stale draft retains its old baseline');
@@ -201,11 +203,11 @@ begin
       LSession.Redo;
       Check(LSession.Document.Title = 'History before bad import', 'rejection retains redo history');
       LSession.LoadProject(LConflict, nprUsePascal);
-      Check(LSession.Document.Find('eyebrow').Prop('text') = 'Changed / 🌙',
+      Check(LSession.Document.Find('eyebrow').Prop('text') = TNyxText('Changed / 🌙'),
         'explicit Pascal resolution updates the design');
       Check(LSession.Source = LConflict.Source, 'Pascal resolution retains crafted source exactly');
       LSession.LoadProject(LConflict, nprUseDesign);
-      Check(LSession.Document.Find('eyebrow').Prop('text') = 'CRAFTED / 🌙',
+      Check(LSession.Document.Find('eyebrow').Prop('text') = TNyxText('CRAFTED / 🌙'),
         'explicit design resolution retains design values');
       Check(LSession.ProjectSnapshot.Pending and
         (LSession.DraftSource = LConflict.Source), 'design resolution retains conflicting Pascal as draft');
@@ -300,12 +302,12 @@ begin
         Check(DecodeNyxProject(LRemote).DraftBase = LConflict.DraftBase, 'disk recovery keeps stale draft base');
         Check(ReadFile(LRoot + '/craft/previous.nyxproject') = LCurrent, 'save retains previous complete project');
 
-        WriteFile(LRoot + '/craft/nyx.edited.view.pas', LSource + #10 + '// External editor / 🌙');
+        WriteFile(LRoot + '/craft/nyx.edited.view.pas', LSource + #10 + TNyxText('// External editor / 🌙'));
         LCurrent := LStore.ReadProject('craft', LRevision);
         Check(LRevision <> LNextRevision, 'external Pascal edit changes revision without timestamp guessing');
         Check(not LStore.SaveProject('craft', LNextRevision, LPair, LNextRevision, LRemote),
           'stale client cannot overwrite an external edit');
-        Check(DecodeNyxProject(LRemote).Source = LSource + #10 + '// External editor / 🌙',
+        Check(DecodeNyxProject(LRemote).Source = LSource + #10 + TNyxText('// External editor / 🌙'),
           'conflict retains exact external source');
         { Simulate process interruption after the journal commit and after only
           one member replacement. Recovery must finish the committed whole pair. }
@@ -330,6 +332,48 @@ begin
           'complete pair admission precedes every disk write');
       finally
         LStore.Free;
+      end;
+      { Optional second argument is an explicitly prepared, owned host fixture:
+        redirected is a real directory link to target, whose sentinel is UTF-8
+        text. Pascal qualifies public read/save refusal; platform orchestration
+        prepares the link without changing a user project or dependency. }
+
+      if ParamCount > 1 then
+      begin
+        LLinkRoot := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
+        Check(DirectoryExists(LLinkRoot + 'redirected'),
+          'redirect fixture contains a real host directory link');
+        LBaseline := ReadFile(LLinkRoot + 'target/sentinel.txt');
+        LLinkedStore := TNyxProjectStore.Create(LLinkRoot);
+        try
+          LRejected := False;
+          try
+            LLinkedStore.ReadProject('redirected', LRevision);
+          except
+            on LException: ENyxModel do
+            begin
+              LRejected := Pos('symbolic links', LException.Message) > 0;
+            end;
+          end;
+          Check(LRejected, 'project reads refuse a redirected host directory');
+          LRejected := False;
+          try
+            LLinkedStore.SaveProject('redirected', '', LPair, LRevision, LRemote);
+          except
+            on LException: ENyxModel do
+            begin
+              LRejected := Pos('symbolic links', LException.Message) > 0;
+            end;
+          end;
+          Check(LRejected, 'project saves refuse a redirected host directory');
+          Check((ReadFile(LLinkRoot + 'target/sentinel.txt') = LBaseline) and
+            not FileExists(LLinkRoot + 'target/pending.nyxproject') and
+            not FileExists(LLinkRoot + 'target/design.nyx') and
+            not FileExists(LLinkRoot + 'target/project.nyxproject'),
+            'refusal retains the real target bytes and creates no project files');
+        finally
+          LLinkedStore.Free;
+        end;
       end;
       {$ENDIF}
     finally

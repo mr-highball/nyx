@@ -83,7 +83,7 @@ begin
   try
     Result := ReadNyxCompilerReport(ASource, ACompiled, AFile,
       AFile + '(' + IntToStr(LError.Line) + ',' + IntToStr(AColumn) +
-      ') Error: Unknown helper / 🌙 漢字');
+      TNyxText(') Error: Unknown helper / 🌙 漢字'));
   finally
     LError.Free;
   end;
@@ -108,7 +108,7 @@ end;
 
 function RunNyxCompilerDiagnosticTests: Integer;
 const
-  KnownFile = 'D:/compiled/🌙漢字/nyx.views.pas';
+  KnownFile: TNyxText = 'D:/compiled/🌙漢字/nyx.views.pas';
 var
   LDocument: TNyxDocument;
   LView: TNyxDocument;

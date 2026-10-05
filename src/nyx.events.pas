@@ -454,7 +454,7 @@ type
     function OnSelectionChange(const ATarget: TNyxEventTarget): INyxEventStream;
     function HasSubscribers(ATrigger: TNyxTrigger): Boolean;
     function Dispatch(const AEvent: TNyxEventInfo;
-      const AOriginDesignID, ASourceDesignID: TNyxText): TNyxExecutions;
+      const AOriginDesignID, ASourceDesignID: TNyxText): TNyxExecutions; reintroduce;
     function DispatchInput(const AEvent: TNyxEventInfo;
       const AOriginDesignID, ASourceDesignID: TNyxText;
       out AConsumed: Boolean): TNyxExecutions;

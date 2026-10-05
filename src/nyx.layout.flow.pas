@@ -86,6 +86,7 @@ var
   LAllocated: Integer;
   LEnd: Integer;
 begin
+  Result := nil;
   SetLength(Result, Length(AItems));
   LVisible := 0;
   LFixed := 0;
@@ -134,7 +135,7 @@ var
   LSize: Integer;
   LUsed: Double;
 begin
-  SetLength(Result, 0);
+  Result := nil;
   LUsed := 0;
   LLine := -1;
   for LIndex := 0 to High(AItems) do
@@ -180,6 +181,7 @@ var
   LSpacing: Double;
   LThrough: Double;
 begin
+  Result := nil;
 
   if Length(ASizes) <> Length(AItems) then
   begin
@@ -202,6 +204,10 @@ begin
   LOffset := 0;
   LSpacing := 0;
   case AJustification of
+    njStart:
+      begin
+        { Defaults above already place the line at its leading edge. }
+      end;
     njCenter: LOffset := LFree / 2;
     njEnd: LOffset := LFree;
     njSpaceBetween:

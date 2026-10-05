@@ -90,7 +90,7 @@ begin
     LPage := nil;
     LSource := EditNyxManagedFixture(TNyxCodegen.Generate(LDocument),
       'LMessageLabel', 'LAuthoredCaption');
-    LSource := '{ Handwritten frame / 🌙 }' + #10 + LSource;
+    LSource := TNyxText('{ Handwritten frame / 🌙 }') + #10 + LSource;
     LOriginal.Accept(LDocument, LSource);
     LCheckpoint := LOriginal.Capture(LDocument);
     LWire := LOriginal.Snapshot;

@@ -126,20 +126,21 @@ end;
 
 function TNyxCollectionColumn.Read(const AItem: TNyxCollectionItem): TNyxStateValue;
 begin
-  case FKind of
-    nskText:
+  { Revalidate stored ordinals at the typed projection boundary. }
+  case Ord(FKind) of
+    Ord(nskText):
       begin
         Result := TNyxStateValue.FromText(AItem.GetValue(NyxTextField(FField)));
       end;
-    nskBoolean:
+    Ord(nskBoolean):
       begin
         Result := TNyxStateValue.FromBoolean(AItem.GetValue(NyxBooleanField(FField)));
       end;
-    nskInteger:
+    Ord(nskInteger):
       begin
         Result := TNyxStateValue.FromInteger(AItem.GetValue(NyxIntegerField(FField)));
       end;
-    nskNumber:
+    Ord(nskNumber):
       begin
         Result := TNyxStateValue.FromNumber(AItem.GetValue(NyxNumberField(FField)));
       end;

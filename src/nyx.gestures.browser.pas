@@ -110,7 +110,7 @@ begin
     begin
       LFile := ATransfer.files[LIndex];
       LFiles[LIndex].Name := LFile.name;
-      LFiles[LIndex].MediaType := LFile._type;
+      LFiles[LIndex].MediaType := LFile.type_;
       LFiles[LIndex].Size := LFile.size;
       LFiles[LIndex].Modified := LFile.lastModified;
     end;

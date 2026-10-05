@@ -266,7 +266,7 @@ begin
     try
       LProjection.Configure.Value('Canvas default / 🌙').Done;
       LSession.SetCanvasValue(LProjection);
-      Check(LSession.Document.State.Value(LNewName).TextValue = 'Canvas default / 🌙',
+      Check(LSession.Document.State.Value(LNewName).TextValue = TNyxText('Canvas default / 🌙'),
         'two-way canvas edits become one authored-default command', Result);
     finally
       LProjection.Free;
@@ -281,7 +281,7 @@ begin
       'opaque NUL defaults use a lossless ordinary Nyx text editor', Result);
     LNode.Configure.Value('"Changed 🌙\u0000exact"').Done;
     Check(RouteNyxStudioAuthoring(LSession, LNode, ntChange, LShell.Pages[0]) and
-      (LSession.Document.State.Value('opaque').TextValue = 'Changed 🌙' + #0 + 'exact'),
+      (LSession.Document.State.Value('opaque').TextValue = TNyxText('Changed 🌙') + #0 + 'exact'),
       'escaped editor route retains exact data without lossy control text', Result);
     LSession.Select('remember-checkbox');
     Rebuild;

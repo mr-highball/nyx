@@ -117,6 +117,8 @@ begin
 end;
 
 function BuildNyxStudioAgents(const AState: TNyxStudioAgentView): TNyxNode;
+const
+  CActivitySeparator: TNyxText = ' · ';
 var
   LButtons: TNyxNode;
   LButton: TNyxNode;
@@ -299,8 +301,8 @@ begin
     begin
       LItem := AState.Activity.Item(LIndex);
       LActivity.Add(LabelNode('studio-agent-activity-' + IntToStr(LIndex),
-        LItem.Field('actor').AsText + ' · ' + LItem.Field('operation').AsText +
-        ' · ' + LItem.Field('outcome').AsText + ' · r' +
+        LItem.Field('actor').AsText + CActivitySeparator + LItem.Field('operation').AsText +
+        CActivitySeparator + LItem.Field('outcome').AsText + CActivitySeparator + 'r' +
         IntToStr(LItem.Field('revision').AsInteger)));
     end;
   except

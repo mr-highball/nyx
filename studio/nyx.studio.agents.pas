@@ -253,6 +253,8 @@ begin
 end;
 
 function CaptionText(const AText: TNyxText; ALimit: Integer = 256): TNyxText;
+const
+  CEllipsis: TNyxText = '…';
 var
   LTotal: Integer;
 begin
@@ -260,7 +262,7 @@ begin
 
   if LTotal > ALimit then
   begin
-    Result := Result + '…';
+    Result := Result + CEllipsis;
   end;
 end;
 

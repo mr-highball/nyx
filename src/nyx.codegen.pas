@@ -325,6 +325,10 @@ begin
     atHref: LMethod := 'LinkTo';
     atSource: LMethod := 'Source';
     atAlt: LMethod := 'AlternativeText';
+    else
+      begin
+        { Other attributes continue through their typed families below. }
+      end;
   end;
 
   if LMethod <> '' then
@@ -415,6 +419,10 @@ begin
                 end;
                 Exit(LMethod + '(' + LNumberText + ')');
               end;
+            nskText:
+              begin
+                { The shared PascalString path below retains exact text. }
+              end;
           end;
         end;
         Exit(LMethod + '(' + PascalString(AValue) + ')');
@@ -429,6 +437,10 @@ begin
     atFlex: LMethod := 'Flex';
     atMinimum: LMethod := 'Minimum';
     atMaximum: LMethod := 'Maximum';
+    else
+      begin
+        { This attribute does not use a numeric configuration method. }
+      end;
   end;
 
   if LMethod <> '' then
@@ -447,6 +459,10 @@ begin
     atSurface: LMethod := 'Surface';
     atCompound: LMethod := 'Compound';
     atPressed: LMethod := 'Pressed';
+    else
+      begin
+        { This attribute does not use a Boolean configuration method. }
+      end;
   end;
 
   if LMethod <> '' then
@@ -584,6 +600,10 @@ begin
     atComponent: Exit('Component(NyxComponent(' + PascalString(AValue) + '))');
     atEmit: Exit('OnClick(' + PascalEventReference(AValue) + ')');
     atEmitChange: Exit('OnChange(' + PascalEventReference(AValue) + ')');
+    else
+      begin
+        { Preserve legacy metadata through the explicit enum boundary below. }
+      end;
   end;
   { Legacy noncanonical values stay byte-for-byte portable at an explicit key
     enum boundary. The normal built-in configuration path above emits typed

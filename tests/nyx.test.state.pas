@@ -111,7 +111,7 @@ begin
 
   if Mode = pmAtomic then
   begin
-    Check((ACandidate.GetValue(NyxTextState('name')) = 'After / 🌙') and
+    Check((ACandidate.GetValue(NyxTextState('name')) = TNyxText('After / 🌙')) and
       (ACandidate.GetValue(NyxIntegerState('count')) = 42) and
       (Store.GetValue(NyxTextState('name')) = 'Before') and
       (Store.GetValue(NyxIntegerState('count')) = 1) and
@@ -156,12 +156,12 @@ begin
 
   if Mode = pmAtomic then
   begin
-    Check((AState.GetValue(NyxTextState('name')) = 'After / 🌙') and
+    Check((AState.GetValue(NyxTextState('name')) = TNyxText('After / 🌙')) and
       (AState.GetValue(NyxIntegerState('count')) = 42) and not AState.ReadOnly,
       'observer sees whole committed batch', Checks);
     Check((AChanges.Key(0) = 'name') and
       (AChanges.BeforeValue(0).TextValue = 'Before') and
-      (AChanges.AfterValue(0).TextValue = 'After / 🌙') and
+      (AChanges.AfterValue(0).TextValue = TNyxText('After / 🌙')) and
       (AChanges.Key(1) = 'count') and (AChanges.BeforeValue(1).IntegerValue = 1) and
       (AChanges.AfterValue(1).IntegerValue = 42),
       'change data retains typed before/after values and request order', Checks);
@@ -398,7 +398,7 @@ begin
       NyxStateValue(NyxBooleanState('enabled'), False)]);
     LAccepted := LSession.Save;
     Check((LAccepted <> LBefore) and
-      (LSession.Document.State.GetValue(NyxTextState('🌙/reply')) = 'Edited / 🌙') and
+      (LSession.Document.State.GetValue(NyxTextState('🌙/reply')) = TNyxText('Edited / 🌙')) and
       not LSession.Document.State.GetValue(NyxBooleanState('enabled')),
       'Studio publishes one typed default command', ACount);
     LSession.Undo;
@@ -428,7 +428,7 @@ begin
       RejectImport(CInvalidObjects[LIndex]);
     end;
     LSession.Redo;
-    Check(LSession.Document.State.GetValue(NyxTextState('🌙/reply')) = 'Edited / 🌙',
+    Check(LSession.Document.State.GetValue(NyxTextState('🌙/reply')) = TNyxText('Edited / 🌙'),
       'no-op/invalid commands/imports preserve redo history', ACount);
     LDecoded := TNyxCodec.Decode('{"version":1,"title":"","pages":[],"components":[]}');
     try
@@ -507,14 +507,14 @@ begin
 
     LCopy := LState.Clone;
     LCopy.SetValue(NyxTextState('name'), 'Clone / 🌙');
-    Check((LState.GetValue(NyxTextState('name')) = 'After / 🌙') and
+    Check((LState.GetValue(NyxTextState('name')) = TNyxText('After / 🌙')) and
       (LFirst.Calls = LCalls), 'clone owns independent data and no listeners', Result);
     SetLength(LAssignments, 1);
     LAssignments[0] := NyxStateValue(NyxTextState('name'), 'Owned / 🌙');
     LState.Apply(LAssignments);
     LAssignments[0].Key := 'changed input';
     LAssignments[0].Value := TNyxStateValue.FromText('changed input');
-    Check(LState.GetValue(NyxTextState('name')) = 'Owned / 🌙',
+    Check(LState.GetValue(NyxTextState('name')) = TNyxText('Owned / 🌙'),
       'caller record/array mutation cannot alter accepted values', Result);
     LRevision := LState.Revision;
     LRejected := False;
@@ -529,7 +529,7 @@ begin
       end;
     end;
     Check(LRejected and (LState.Revision = LRevision) and
-      (LState.GetValue(NyxTextState('name')) = 'Owned / 🌙') and
+      (LState.GetValue(NyxTextState('name')) = TNyxText('Owned / 🌙')) and
       LState.GetValue(NyxBooleanState('enabled')),
       'wrong-kind batch preserves all accepted values and revision', Result);
     LRejected := False;
@@ -579,7 +579,7 @@ begin
       end;
     end;
     Check(LRejected and (LState.Revision = LRevision) and
-      (LState.GetValue(NyxTextState('name')) = 'Owned / 🌙') and
+      (LState.GetValue(NyxTextState('name')) = TNyxText('Owned / 🌙')) and
       (LState.GetValue(NyxIntegerState('count')) = 42),
       'domain validator preserves baseline with Unicode diagnostic', Result);
     LFirst.Mode := pmReadOnly;
@@ -672,7 +672,7 @@ begin
   LState := TNyxState.Create;
   try
     LState.SetValue(NyxTextState('🌙/設定'), 'Café / 🌙 / 漢字' + #10 + #0);
-    Check(LState.GetValue(NyxTextState('🌙/設定')) = 'Café / 🌙 / 漢字' + #10 + #0,
+    Check(LState.GetValue(NyxTextState('🌙/設定')) = TNyxText('Café / 🌙 / 漢字') + #10 + #0,
       'Unicode keys and text/control payload remain exact', Result);
     LRevision := LState.Revision;
     {$IFDEF PAS2JS}

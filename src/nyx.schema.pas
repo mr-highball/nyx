@@ -1392,6 +1392,10 @@ begin
           LAttributeType := npChoice;
           LChoiceNames := 'auto' + #10 + 'none' + #10 + 'pan-x' + #10 + 'pan-y' + #10 + 'manipulation';
         end;
+      else
+        begin
+          { Other attributes retain their initialized text metadata. }
+        end;
     end;
     { The expanded group must retain the same closed argument families as the
       concise inspector. Enum choices derive from their public wire helpers. }
@@ -1420,6 +1424,10 @@ begin
         begin
           Result[High(Result)].Minimum := -1000000;
           Result[High(Result)].Maximum := 1000000;
+        end;
+      else
+        begin
+          { Other attributes retain the descriptor's standard bounds/default. }
         end;
     end;
     Result[High(Result)].Advanced := LAttribute <> atText;

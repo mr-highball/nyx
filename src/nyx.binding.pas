@@ -279,6 +279,11 @@ begin
           begin
             Result := [nskText];
           end;
+        else
+          begin
+            { Choice/reference metadata does not infer a scalar binding family.
+              Keep the explicit domain or existing target default. }
+          end;
       end;
       Break;
     end;

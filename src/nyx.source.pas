@@ -126,10 +126,10 @@ type
     FSuffix: TNyxText;
     FDesign: TNyxText;
     FCustomFrame: Boolean;
-    function GetStorageBytes: Int64;
+    function GetStorageBytes: TNyxTextBytes;
   public
     property Design: TNyxText read FDesign;
-    property StorageBytes: Int64 read GetStorageBytes;
+    property StorageBytes: TNyxTextBytes read GetStorageBytes;
   end;
 
   { An owned companion to the design, independent of a target compiler.
@@ -3816,9 +3816,9 @@ begin
   FCustomFrame := (LPrefix <> LGeneratedPrefix) or (LSuffix <> LGeneratedSuffix);
 end;
 
-function TNyxSourceCheckpoint.GetStorageBytes: Int64;
+function TNyxSourceCheckpoint.GetStorageBytes: TNyxTextBytes;
 begin
-  Result := Int64(Length(FPrefix)) + Length(FBody) + Length(FSuffix) + Length(FDesign);
+  Result := TNyxTextBytes(Length(FPrefix)) + Length(FBody) + Length(FSuffix) + Length(FDesign);
   {$ifdef PAS2JS}
   Result := Result * 2;
   {$endif}

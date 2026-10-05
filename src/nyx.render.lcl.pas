@@ -2871,6 +2871,10 @@ begin
       end;
       try
         case LResult.PointerRequest of
+          nprUnchanged:
+            begin
+              { This dispatch requests no change to native pointer capture. }
+            end;
           nprCapture:
             begin
               CaptureNyxLCLPointer(LControl);
@@ -3876,6 +3880,10 @@ begin
           finally
             LGrid.EndUpdate;
           end;
+        end;
+      else
+        begin
+          { Non-collection faces have no literal rows to realize here. }
         end;
     end;
     FLastItems := LText;

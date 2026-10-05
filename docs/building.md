@@ -13,6 +13,22 @@ its matching `rtl.js`. These are observed capabilities, not a promise that every
 development revision is supported. The older Lazarus installation's precompiled
 units did not match its FPC compiler; use a matched pair.
 
+Owned builds keep compiler warnings enabled. The current warning-cleanup packet
+qualifies the core/generated consumers, Studio/server and actual layout/Agents
+consumers on the installed native, LCL and pas2js pair; its commands, executed
+results and remaining matrix limits are recorded in [WORK](../WORK.md).
+The installed pas2js RTL still reports seven incomplete-case warnings in
+`classes.pas`. They remain visible and are dependency diagnostics; Nyx does not
+patch the installed RTL or suppress them globally.
+
+Two node-owned fluent facades intentionally have private constructors. Their
+declarations alone scope FPC advisory 3018 off, with the ownership reason beside
+the code. This preserves the node's lifetime contract. Defensive enum admission
+still rejects invalid cast/bridge ordinals, intentional partial dispatch is
+explicit, and retained byte accounting uses the portable `TNyxTextBytes` type.
+Native accounting uses `Int64`; pas2js uses number arithmetic within admitted
+history/source budgets. These decisions do not replace execution on both targets.
+
 For source builds, configure the tools needed by that build through explicit
 parameters, `NYX_*` environment variables, or an ignored
 `.local/toolchain.json` containing paths under these keys:

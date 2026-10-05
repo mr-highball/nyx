@@ -97,7 +97,7 @@ begin
     LDesign := LSession.Save;
     { A lexer failure after supplementary Unicode has a precise complete-file
       coordinate without relying on any generated local/property spelling. }
-    LDraft := '// 🌙漢字' + #10 + LBefore + #10 + '{ unfinished';
+    LDraft := TNyxText('// 🌙漢字') + #10 + LBefore + #10 + '{ unfinished';
     LSession.SetSourceDraft(LDraft);
     LRejected := False;
     try

@@ -47,7 +47,11 @@ type
 
 function TSourceIndex.Slot(const AKey: TNyxText): Integer;
 var
+  {$IFDEF PAS2JS}
+  LHash: NativeInt;
+  {$ELSE}
   LHash: Int64;
+  {$ENDIF}
   LIndex: Integer;
 begin
   LHash := 0;

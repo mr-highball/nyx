@@ -91,6 +91,7 @@ var
   LIndex: Integer;
   LCount: Integer;
 begin
+  Result := nil;
   SetLength(Result, Length(AAllTokens));
   LCount := 0;
   for LIndex := 0 to Length(AAllTokens) - 1 do
@@ -611,6 +612,11 @@ begin
         end;
         LPayload := LDomain.ToData.ToJSON;
       end;
+    else
+      begin
+        { Names/text and remaining structured families retain their owned
+          lexical payload. This fallback is intentional, not missing dispatch. }
+      end;
   end;
   Result := JoinSourceFrame(['value:', IntToStr(Ord(AValue.Kind)), ':',
     IntToStr(Length(LPayload)), ':', LPayload]);
@@ -628,6 +634,7 @@ var
   LKey: TNyxText;
   LExpression: Boolean;
 begin
+  Result := nil;
   LTokens := AContexts.ForSource(ABody).Tokens;
   LReader := AContexts.ForSource(ABody).NewReader;
   try

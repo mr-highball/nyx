@@ -118,7 +118,7 @@ begin
     LSession.Select('notes:configure/🌙');
     LSession.SetProperty('placeholder', 'Write a note / 漢字');
     Check(LSession.Document.Find('notes:configure/🌙').Prop('placeholder') =
-      'Write a note / 漢字', 'Unicode and section-like identities stay independent');
+      TNyxText('Write a note / 漢字'), 'Unicode and section-like identities stay independent');
     LSession.RenameState('Aa', 'First/state/🌙');
     Check((LSession.Document.State.GetValue(NyxTextState('First/state/🌙')) = 'First state') and
       (LSession.Document.State.GetValue(NyxTextState('BB')) = 'Second state') and
@@ -160,4 +160,3 @@ begin
 end;
 
 end.
-

@@ -162,6 +162,8 @@ begin
 end;
 
 function TNyxProjectStore.DirectoryFor(const AName: TNyxText): TNyxText;
+var
+  LLink: TRawbyteSymLinkRec;
 begin
   ValidateNyxProjectName(AName);
   Result := IncludeTrailingPathDelimiter(ExpandFileName(FRoot + AName));
@@ -171,10 +173,12 @@ begin
     raise ENyxModel.Create('Project escaped its storage root');
   end;
   { Host-owned roots must not contain links/junctions to another directory.
-    Refuse them instead of following a syntactically confined redirected path. }
+    Refuse them instead of following a syntactically confined redirected path.
+    The RTL's link query handles target details on each native platform; its
+    platform-marked attribute bit does not belong in the portable store. }
 
   if DirectoryExists(Result) and
-    ((FileGetAttr(ExcludeTrailingPathDelimiter(Result)) and faSymLink) <> 0) then
+    FileGetSymLinkTarget(ExcludeTrailingPathDelimiter(Result), LLink) then
   begin
     raise ENyxModel.Create('Project directories cannot be symbolic links');
   end;

@@ -196,50 +196,96 @@ begin
   begin
     Include(Result.Labels, clCompound);
   end;
-  case AKind of
-    nkHeading, nkLabel, nkCode, nkInput, nkMemo, nkSearchField, nkFormField,
-      nkCodeEditor, nkCommentThread:
-      Include(Result.Labels, clText);
+  { Facets deliberately select subsets of the catalog. Membership predicates
+    express that intent without suggesting an incomplete enum dispatch. }
+
+  if AKind in [nkHeading, nkLabel, nkCode, nkInput, nkMemo, nkSearchField,
+    nkFormField, nkCodeEditor, nkCommentThread] then
+  begin
+    Include(Result.Labels, clText);
   end;
-  case AKind of
-    nkMemo, nkCode, nkCodeEditor, nkCommentThread:
-      Include(Result.Labels, clMultiline);
+
+  if AKind in [nkMemo, nkCode, nkCodeEditor, nkCommentThread] then
+  begin
+    Include(Result.Labels, clMultiline);
   end;
-  case AKind of
-    nkCheckbox, nkSwitch, nkRadio, nkSelect, nkColor, nkSegmentedControl, nkRating:
-      Include(Result.Labels, clChoice);
+
+  if AKind in [nkCheckbox, nkSwitch, nkRadio, nkSelect, nkColor,
+    nkSegmentedControl, nkRating] then
+  begin
+    Include(Result.Labels, clChoice);
   end;
-  case AKind of
-    nkSpin, nkSlider, nkNumberStepper, nkRating, nkStatCard, nkMetricGrid:
-      Include(Result.Labels, clNumeric);
-    nkDate, nkTime, nkDateRange: Include(Result.Labels, clDateTime);
-    nkColor: Include(Result.Labels, clColor);
+
+  if AKind in [nkSpin, nkSlider, nkNumberStepper, nkRating, nkStatCard, nkMetricGrid] then
+  begin
+    Include(Result.Labels, clNumeric);
   end;
-  case AKind of
-    nkSearchField, nkDataToolbar: Include(Result.Labels, clSearch);
-    nkFilterBar: Include(Result.Labels, clFilter);
+
+  if AKind in [nkDate, nkTime, nkDateRange] then
+  begin
+    Include(Result.Labels, clDateTime);
   end;
-  case AKind of
-    nkDataToolbar, nkFilterBar, nkList, nkTable, nkTree, nkMasterDetail,
-      nkListCard, nkDataCard, nkKanbanBoard, nkTimeline, nkPagination,
-      nkStatCard, nkMetricGrid, nkFloatingActionPanel:
-      Include(Result.Labels, clRecords);
+
+  if AKind = nkColor then
+  begin
+    Include(Result.Labels, clColor);
   end;
-  case AKind of
-    nkLoginForm, nkProfileCard, nkAvatar, nkAvatarGroup:
-      Include(Result.Labels, clAccount);
-    nkCommentThread: Include(Result.Labels, clMessaging);
+
+  if AKind in [nkSearchField, nkDataToolbar] then
+  begin
+    Include(Result.Labels, clSearch);
   end;
-  case AKind of
-    nkTree, nkBreadcrumbs, nkSidebarNav: Include(Result.Labels, clHierarchy);
-    nkProgress, nkStepper, nkWizardStep: Include(Result.Labels, clProgress);
+
+  if AKind = nkFilterBar then
+  begin
+    Include(Result.Labels, clFilter);
   end;
-  case AKind of
-    nkProgress, nkBadge, nkAlert, nkEmptyState, nkNotificationCard, nkToast:
-      Include(Result.Labels, clStatus);
-    nkConfirmationDialog: Include(Result.Labels, clConfirmation);
-    nkCodeEditor, nkDesignSurface, nkPropertyGrid: Include(Result.Labels, clEditor);
-    nkComponent, nkSlotOverride: Include(Result.Labels, clReusable);
+
+  if AKind in [nkDataToolbar, nkFilterBar, nkList, nkTable, nkTree, nkMasterDetail,
+    nkListCard, nkDataCard, nkKanbanBoard, nkTimeline, nkPagination,
+    nkStatCard, nkMetricGrid, nkFloatingActionPanel] then
+  begin
+    Include(Result.Labels, clRecords);
+  end;
+
+  if AKind in [nkLoginForm, nkProfileCard, nkAvatar, nkAvatarGroup] then
+  begin
+    Include(Result.Labels, clAccount);
+  end;
+
+  if AKind = nkCommentThread then
+  begin
+    Include(Result.Labels, clMessaging);
+  end;
+
+  if AKind in [nkTree, nkBreadcrumbs, nkSidebarNav] then
+  begin
+    Include(Result.Labels, clHierarchy);
+  end;
+
+  if AKind in [nkProgress, nkStepper, nkWizardStep] then
+  begin
+    Include(Result.Labels, clProgress);
+  end;
+
+  if AKind in [nkProgress, nkBadge, nkAlert, nkEmptyState, nkNotificationCard, nkToast] then
+  begin
+    Include(Result.Labels, clStatus);
+  end;
+
+  if AKind = nkConfirmationDialog then
+  begin
+    Include(Result.Labels, clConfirmation);
+  end;
+
+  if AKind in [nkCodeEditor, nkDesignSurface, nkPropertyGrid] then
+  begin
+    Include(Result.Labels, clEditor);
+  end;
+
+  if AKind in [nkComponent, nkSlotOverride] then
+  begin
+    Include(Result.Labels, clReusable);
   end;
   case AKind of
     nkMemo: Result.Aliases := 'memo text area';
@@ -259,6 +305,10 @@ begin
     nkLoginForm: Result.Aliases := 'login sign in password email';
     nkSettingsPanel: Result.Aliases := 'preferences configuration';
     nkFloatingActionPanel: Result.Aliases := 'floating action button';
+    else
+      begin
+        { The title/kind remains searchable without an additional alias. }
+      end;
   end;
   { Descriptions explain intent without promising unsupported target features.
     They are shared catalog data, so search, tooltips and future help surfaces

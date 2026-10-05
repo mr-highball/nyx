@@ -301,13 +301,13 @@ begin
     'schema retains the exact portable Double default', Result);
   LValue := LSchema.FieldAt(0).DefaultValue;
   LValue := TNyxStateValue.FromText('Changed locally');
-  Check(LSchema.FieldAt(0).DefaultValue.TextValue = 'Unnamed / 🌙',
+  Check(LSchema.FieldAt(0).DefaultValue.TextValue = TNyxText('Unnamed / 🌙'),
     'a copied default cannot mutate its schema', Result);
 
   LRow := NyxCollectionItem(LA).WithValue(CaptionField, 'Alpha / 🌙 漢字' + #0 + 'tail')
     .WithValue(CountField, 1).WithValue(NyxBooleanField('enabled'), True);
   LChangedRow := LRow.WithValue(CaptionField, 'Independent');
-  Check((LRow.GetValue(CaptionField) = 'Alpha / 🌙 漢字' + #0 + 'tail') and
+  Check((LRow.GetValue(CaptionField) = TNyxText('Alpha / 🌙 漢字') + #0 + 'tail') and
     (LChangedRow.GetValue(CaptionField) = 'Independent'),
     'immutable row builders preserve supplementary Unicode/NUL and previous values', Result);
   LStore := NewNyxCollection(LKey, LSchema);

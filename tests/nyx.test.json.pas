@@ -88,7 +88,7 @@ begin
     '"quote\" slash\/ path\\ tab\t line\n null\u0000 moon\ud83c\udf19"');
   try
     LExpected := TNyxText('quote" slash/ path\ tab') + TNyxText(#9) +
-      TNyxText(' line') + TNyxText(#10) + ' null' + NyxScalarText(0) + ' moon🌙';
+      TNyxText(' line') + TNyxText(#10) + ' null' + NyxScalarText(0) + TNyxText(' moon🌙');
     Check((LData.JSONType = jtString) and (LData.AsString = LExpected),
       'every escaped run retains Unicode/NUL meaning', Result);
   finally
@@ -96,7 +96,7 @@ begin
   end;
   LData := DecodeNyxJSON('"controls\b\f\r \u0041\u20ac"');
   try
-    Check(LData.AsString = TNyxText('controls') + TNyxText(#8#12#13) + ' A€',
+    Check(LData.AsString = TNyxText('controls') + TNyxText(#8#12#13) + TNyxText(' A€'),
       'remaining JSON controls and BMP scalars decode exactly', Result);
   finally
     LData.Free;
@@ -157,4 +157,3 @@ begin
 end;
 
 end.
-

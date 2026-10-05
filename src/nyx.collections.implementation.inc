@@ -1522,6 +1522,12 @@ begin
       LSteps[LStep].AfterIndex := LIndex;
       LSteps[LStep].AfterItem := LItem;
       case AEdits[LEdit].FKind of
+        nceInsert:
+          begin
+            { Insertions are published in the separate branch above. Reaching
+              an existing-item branch with one is a broken admission invariant. }
+            raise ENyxCollection.Create('Insert edit reached existing-item dispatch');
+          end;
         nceRemove:
           begin
             LSteps[LStep].AfterIndex := -1;

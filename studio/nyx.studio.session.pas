@@ -678,12 +678,13 @@ var
 begin
   LCandidate := FDocument.Clone;
   try
-    case AOwner of
-      seoDocument:
+    { A foreign/cast owner must retain the detached candidate's refusal path. }
+    case Ord(AOwner) of
+      Ord(seoDocument):
         begin
           LStore := LCandidate.Extensions;
         end;
-      seoSelection:
+      Ord(seoSelection):
         begin
           LNode := LCandidate.Find(FSelectedID);
 
@@ -989,12 +990,13 @@ var
 begin
   LCandidate := FDocument.Clone;
   try
-    case AOwner of
-      seoDocument:
+    { Validate the same explicit owner boundary used when setting extensions. }
+    case Ord(AOwner) of
+      Ord(seoDocument):
         begin
           LStore := LCandidate.Extensions;
         end;
-      seoSelection:
+      Ord(seoSelection):
         begin
           LNode := LCandidate.Find(FSelectedID);
 

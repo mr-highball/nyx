@@ -275,7 +275,7 @@ begin
     LRetained := LDocument.Collections.Snapshot(TaskKey);
     Check((LRetained.Revision = 0) and (LRetained.Count = 2),
       'whole defaults seed revision zero', Result);
-    Check(LRetained.ItemAt(0).GetValue(CaptionField) = 'Craft this / 🌙 漢字' + #0 + 'tail',
+    Check(LRetained.ItemAt(0).GetValue(CaptionField) = TNyxText('Craft this / 🌙 漢字') + #0 + 'tail',
       'owned Unicode/NUL defaults', Result);
     LCloned := LDocument.Clone;
     LCloned.Collections.Remove(NyxCollection('notes'));
@@ -409,7 +409,7 @@ begin
     LOld := '{"version":1,"title":"Legacy","pages":[],"components":[],"collections":{"custom":"🌙"}}';
     LPlain := TNyxCodec.Decode(LOld);
     Check((LPlain.Collections.Count = 0) and
-      (LPlain.Extensions.Value(NyxExtension('collections')).Field('custom').AsText = '🌙'),
+      (LPlain.Extensions.Value(NyxExtension('collections')).Field('custom').AsText = TNyxText('🌙')),
       'version-1 collection-named extension remains opaque', Result);
     LOld := TNyxCodec.Encode(LPlain);
     LPlain.Collections.Define(TaskKey, LRetained.Schema, []);
@@ -557,7 +557,7 @@ begin
     RejectWire('{"version":1,"definitions":[{"key":"a","schema":[{"name":"value","default":{"type":"boolean","value":true},"domain":{"kind":"text"}}],"items":[]}]}', Result);
     LRetained := LDocument.Collections.Snapshot(TaskKey);
     FreeAndNil(LDocument);
-    Check(LRetained.Item(DesignTask).GetValue(CaptionField) = 'Craft this / 🌙 漢字' + #0 + 'tail',
+    Check(LRetained.Item(DesignTask).GetValue(CaptionField) = TNyxText('Craft this / 🌙 漢字') + #0 + 'tail',
       'retained authored snapshot outlives document', Result);
   finally
 

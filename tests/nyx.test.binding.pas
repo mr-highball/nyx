@@ -360,7 +360,7 @@ begin
       Check((LStore.GetValue(NyxTextState('🌙/reply')) = 'Accepted inherited edit') and
         (LFirst.Prop('value') = 'Unbound edit') and (LSecond.Prop('value') = 'Independent reply'),
         'inherited edit respects independent instance bindings', Result);
-      Check((LDefinitionMemo.Bindings[0].StateName = '🌙/reply') and
+      Check((LDefinitionMemo.Bindings[0].StateName = TNyxText('🌙/reply')) and
         (LDefinitionMemo.Prop('value') = 'Authored fallback') and
         (LDocument.State.GetValue(NyxTextState('🌙/reply')) = 'Inherited reply'),
         'runtime customization never mutates definition or defaults', Result);
@@ -524,7 +524,7 @@ begin
       Check(TNyxCodec.Encode(LCopy) = TNyxCodec.Encode(LDocument),
         'typed binding wire round trip', Result);
       LCopy.Find('reply-memo').Binds.Clear(bpValue).Done;
-      Check(LDocument.Find('reply-memo').Bindings[0].StateName = '🌙/reply',
+      Check(LDocument.Find('reply-memo').Bindings[0].StateName = TNyxText('🌙/reply'),
         'clearing a copied binding preserves the authored baseline', Result);
       LSource := TNyxCodegen.Generate(LCopy);
       Check((Pos('.Clear(bpValue)', LSource) > 0) and

@@ -200,6 +200,10 @@ begin
           Result := SetPosition(FPosition + LStep);
         end;
       end;
+    else
+      begin
+        { Other keys leave the split untouched and remain available to the host. }
+      end;
   end;
 end;
 

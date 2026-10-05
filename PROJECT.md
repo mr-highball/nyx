@@ -74,6 +74,12 @@ native editor navigation remain open. The seventeen-tool candidate is staged;
 the LAN release still has fifteen. See [WORK.md](WORK.md) for the deployment
 refusal, original acceptance owners and the user's warning-cleanup priority.
 
+The warning-cleanup packet now reports zero owned warnings on the qualified
+native/LCL/pas2js builds and current MCP application jobs. Shared execution,
+actual layout controls and Studio resize/split checks pass. Seven installed
+pas2js RTL warnings remain visible. This does not establish the full CI/platform
+matrix or a new Studio deployment; see [building](docs/building.md) and WORK.md.
+
 The typed layout policy now crosses managed authoring, persistence, Studio source
 admission/generation, bounded MCP metadata and both adapters. Two semantic review
 pages exercise natural widths, wrap/align/justify, shared spacer defaults and

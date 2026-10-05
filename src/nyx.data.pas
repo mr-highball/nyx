@@ -485,13 +485,15 @@ end;
 
 function NyxReservedField(AScope: TNyxExtensionScope; const AName: TNyxText): Boolean;
 begin
-  case AScope of
-    nesDocument:
+  { Preserve refusal of invalid cast/bridge ordinals, including on compilers
+    that otherwise discard an exhaustive enum case's defensive fallback. }
+  case Ord(AScope) of
+    Ord(nesDocument):
       begin
         Result := (AName = 'version') or (AName = 'title') or (AName = 'state') or
           (AName = 'pages') or (AName = 'components');
       end;
-    nesNode:
+    Ord(nesNode):
       begin
         Result := (AName = 'kind') or (AName = 'id') or (AName = 'props') or
           (AName = 'children') or (AName = 'bindings');

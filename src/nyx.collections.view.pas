@@ -162,8 +162,6 @@ type
     FTokens: array of TViewSubscription;
     FNextSerial: Integer;
     FNotifying: Boolean;
-    constructor CreateValidator(const ASpec: TNyxCollectionViewSpec;
-      AProjection: TNyxCollectionProjection);
     procedure Writable;
     procedure ValidateDataset(const AData: INyxCollectionSnapshot;
       out AParents: TParentIndexes);
@@ -174,6 +172,10 @@ type
     procedure Notify(const AChanges: INyxCollectionChanges);
     procedure Disconnect(AToken: TViewSubscription);
   public
+    { TView is an implementation-only type. The temporary validator has no
+      subscriptions and remains owned solely by its unit-local caller. }
+    constructor CreateValidator(const ASpec: TNyxCollectionViewSpec;
+      AProjection: TNyxCollectionProjection);
     constructor Create(const AStore: INyxCollection;
       const ASpec: TNyxCollectionViewSpec; AProjection: TNyxCollectionProjection);
     destructor Destroy; override;
@@ -771,6 +773,10 @@ begin
     LItem := FSnapshot.ItemAt(LIndex).Ref;
     LSelected := FSelection.Contains(LItem);
     case AAction of
+      nsaFocus:
+        begin
+          { Focus changes the anchor below without changing selected members. }
+        end;
       nsaReplace:
         begin
           LSelected := LItem.ID = AItem.ID;

@@ -190,14 +190,14 @@ begin
     finally
       LRuntime.Free;
     end;
-    Check((LSession.Document.Find('project-description').Prop('value') = 'Edited memo / 🌙') and
+    Check((LSession.Document.Find('project-description').Prop('value') = TNyxText('Edited memo / 🌙')) and
       (Pos('Edited memo / 🌙', LSession.Source) > 0),
       'canvas value commits through persistence and generated source', Result);
     LSession.Undo;
     Check(LSession.Document.Find('project-description').Prop('value') = '',
       'canvas value is undoable', Result);
     LSession.Redo;
-    Check(LSession.Document.Find('project-description').Prop('value') = 'Edited memo / 🌙',
+    Check(LSession.Document.Find('project-description').Prop('value') = TNyxText('Edited memo / 🌙'),
       'canvas value is redoable', Result);
 
     { Editing an inherited memo produces one instance descriptor, never a change
@@ -224,7 +224,7 @@ begin
     end;
     LRuntime := RealizeNyxView(LSession.Document, LSession.Document.Find('reply-a'));
     try
-      Check(LRuntime.Part('reply').Prop('value') = 'Instance draft / 🌙',
+      Check(LRuntime.Part('reply').Prop('value') = TNyxText('Instance draft / 🌙'),
         'reusable canvas field persists an independent named-part override', Result);
     finally
       LRuntime.Free;

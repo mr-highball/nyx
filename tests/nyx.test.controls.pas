@@ -390,7 +390,7 @@ begin
   ObservedConfiguration(LConfig);
   Check((GNodesDestroyed = 0) and (GControlsDestroyed = 0),
     'retained configuration owns the implementation and descriptor', Result);
-  Check(ConfiguredBadgeText(LConfig) = 'Ready / 🌙',
+  Check(ConfiguredBadgeText(LConfig) = TNyxText('Ready / 🌙'),
     'Done preserves specialized QueryInterface', Result);
   LConfig := nil;
   Check((GNodesDestroyed = 1) and (GControlsDestroyed = 1),
@@ -450,7 +450,7 @@ begin
     'bindings/contracts/extensions independently retain the same live control', Result);
   LBindings := nil;
   LContract := nil;
-  Check(LExtensions.Value(NyxExtension('application.note')).AsText = '🌙',
+  Check(LExtensions.Value(NyxExtension('application.note')).AsText = TNyxText('🌙'),
     'the last retained authoring facade remains valid', Result);
   LExtensions := nil;
 
@@ -458,7 +458,7 @@ begin
   LMemo.Value := 'A crafted reply / 🌙';
   LMemo.Placeholder := 'Your words';
   LMemo.ReadOnly := True;
-  Check((LMemo.Text = 'Write a reply') and (LMemo.Value = 'A crafted reply / 🌙') and
+  Check((LMemo.Text = 'Write a reply') and (LMemo.Value = TNyxText('A crafted reply / 🌙')) and
     (LMemo.Placeholder = 'Your words') and LMemo.ReadOnly,
     'specialized memo keeps caption, text value and typed field properties', Result);
   LCheck := NewNyxCheckbox('agree');

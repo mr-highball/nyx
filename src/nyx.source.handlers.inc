@@ -103,13 +103,17 @@ function HandlerBlockEnd(const ASource: TNyxText;
   const ATokens: TTokens; AStart: Integer): Integer;
 type
   TBlock = (hbEnd, hbRepeat, hbAssembly);
+  TBlockStack = array[0..255] of TBlock;
 var
-  LStack: array[0..255] of TBlock;
+  LStack: TBlockStack;
   LDepth: Integer;
   LIndex: Integer;
   LOpen: Boolean;
   LKind: TBlock;
 begin
+  { Every opening block publishes a slot before LDepth advances. Initializing
+    the fixed stack also makes that invariant explicit to checked compilers. }
+  LStack := Default(TBlockStack);
   LDepth := 0;
   LIndex := AStart;
   while LIndex < Length(ATokens) do

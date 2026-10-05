@@ -240,7 +240,7 @@ begin
         'specialized factories and fluent captions retain their exact kind');
       Check(LCandidate.Find('code-notes').Children[0].ID = 'code-instance',
         'typed Insert preserves source-defined child order');
-      Check(LCandidate.State.GetValue(NyxTextState('code/reply')) = 'From crafted source / 🌙',
+      Check(LCandidate.State.GetValue(NyxTextState('code/reply')) = TNyxText('From crafted source / 🌙'),
         'new declared state and binding travel with the source-created control');
       Check((LCandidate.Find('code-action').Count > 0) and
         (LCandidate.Find('code-action').Part(NyxPart('button')) <> nil),
@@ -343,7 +343,7 @@ begin
   try
     Check((LDocument.Find('obsolete') = nil) and (LDocument.Find('intro').Parent.ID = 'code-notes'),
       'source omission and reparenting leave no old owned residue');
-    Check((LDocument.Find('code-reply').Prop('hint') = 'Keep a thoughtful reply / 🌙') and
+    Check((LDocument.Find('code-reply').Prop('hint') = TNyxText('Keep a thoughtful reply / 🌙')) and
       (Pos('LReplyEditor: INyxMemo;', LSource) > 0) and
       (Pos('A page written by hand / 🌙 漢字.', LSource) > 0),
       'subsequent visual edits retain source-created names and notes');

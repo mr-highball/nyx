@@ -489,10 +489,12 @@ end;
 
 procedure TNyxStateValue.Validate;
 begin
-  case FKind of
-    nskText: TextBytes(FText, False);
-    nskBoolean: ;
-    nskInteger:
+  { Validate cast/bridge ordinals explicitly; a defensive rejection must remain
+    reachable even when all declared enum members are handled below. }
+  case Ord(FKind) of
+    Ord(nskText): TextBytes(FText, False);
+    Ord(nskBoolean): ;
+    Ord(nskInteger):
       begin
         { These explicit checks also protect a pas2js value received across a
           JavaScript bridge; native Integer already has signed 32-bit storage. }
@@ -508,7 +510,7 @@ begin
           raise ENyxState.Create('State integer must be integral');
         end;
       end;
-    nskNumber:
+    Ord(nskNumber):
       begin
 
         if IsNaN(FNumber) or IsInfinite(FNumber) then

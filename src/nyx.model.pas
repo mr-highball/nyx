@@ -249,10 +249,13 @@ type
     original. Values are typed here; strings are serialized only at SetProp.
     Individual numeric bounds fail before mutation. Cross-property/reference
     constraints are admitted by the document/Studio command boundary. }
+  {$IFNDEF PAS2JS}{$PUSH}{$WARN 3018 OFF}{$ENDIF}
   TNyxNodeConfig = class
   private
     FNode: TNyxNode;
     FPlatform: TNyxPlatform;
+    { Deliberately unit-private: only a node creates/owns this borrowed facade.
+      FPC's public-constructor advice conflicts with that lifetime contract. }
     constructor Create(ANode: TNyxNode);
     function Put(AKey: TNyxAttribute; const AValue: TNyxText): TNyxNodeConfig;
     function PutInteger(AKey: TNyxAttribute; AValue: Integer): TNyxNodeConfig;
@@ -350,14 +353,18 @@ type
     function Extension(const AKey, AValue: TNyxText): TNyxNodeConfig;
     function Done: TNyxNode;
   end;
+  {$IFNDEF PAS2JS}{$POP}{$ENDIF}
 
   { Lazy node-owned binding facade. References keep their scalar type; getters
     and live admission refuse a different store kind. Text explicitly projects
     scalar captions; other targets retain Boolean/integer/text property types.
     Done returns the node for composition. Clone lazily owns a new facade. }
+  {$IFNDEF PAS2JS}{$PUSH}{$WARN 3018 OFF}{$ENDIF}
   TNyxNodeBindings = class
   private
     FNode: TNyxNode;
+    { The node owns this facade; exposing construction would permit an
+      unattached borrower. Scope the visibility advisory to this declaration. }
     constructor Create(ANode: TNyxNode);
     function Put(ATarget: TNyxBindingProperty; const AKey: TNyxText;
       AKind: TNyxStateKind; ADirection: TNyxBindingDirection): TNyxNodeBindings;
@@ -401,6 +408,7 @@ type
     function InheritCollection: TNyxNodeBindings;
     function Done: TNyxNode;
   end;
+  {$IFNDEF PAS2JS}{$POP}{$ENDIF}
 
   { A design/application owns page roots and reusable component definitions.
     A component instance is a node of kind 'component' whose 'component' property
