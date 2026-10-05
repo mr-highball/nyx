@@ -6247,3 +6247,14 @@ semantic integration with the existing owners, while ordinary both-target
 editor/observing outcomes retain their host and acceptance gates. Another
 timing/lookup variant, scope reset or weaker admission/DONE gate cannot substitute
 the full user outcome.
+
+Product checkpoint **4b753e9** is pushed and verified against the exact remote
+`hello-nyx` head, with a clean worktree after both complete maintained native
+matrices. All nine checked consumers report zero leaks, both companion pairs
+match between configurations, all eight protected processes match and no fixture
+remains running. The private proof at
+`.local/codex-restart-check/canvas-input-remote-proof.json` records the final
+handoff head separately, hashes, timings, compiler/runtime scope and current
+semantic session. Logs, binaries, captures and private configuration remain
+ignored. This checkpoint changes no live deployment or active user pair; the
+broader integration and original full-goal gates remain above.
