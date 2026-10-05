@@ -5985,6 +5985,12 @@ eight protected process identities match the prior checkpoint. No active
 pair/history mutation, application profile,
 enrollment, server replacement or equivalent refused launch occurred. Browser
 execution retains the earlier automatic approval rejection of qualification
-listeners; its stated reason was only “blocked by policy”. Source progress and
-the private remote proof will be recorded after the final editor regression and
-authorized branch push.
+listeners; its stated reason was only “blocked by policy”.
+
+Product checkpoint **ae27c9e** is pushed and verified against the exact remote
+`hello-nyx` head, with a clean worktree after all final regressions. The private
+proof at `.local/codex-restart-check/retained-projection-remote-proof.json` records
+the final handoff head separately, exact counts/timings and protected identities.
+No qualification fixture remains running. Logs, captures and local configuration
+remain ignored. This checkpoint changes no live deployment or acceptance gate;
+the next ordinary-build original-workload qualification remains above.
