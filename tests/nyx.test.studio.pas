@@ -111,7 +111,8 @@ begin
     RunNyxSourceContractTests + RunNyxControlTests + RunNyxPaletteTests + RunNyxManagedSourceTests +
     RunNyxStructuralSourceTests + RunNyxCollectionTests + RunNyxCollectionRegistryTests +
     RunNyxCollectionViewTests + RunNyxSourceDiagnosticTests + RunNyxIndexedSourceTests +
-    RunNyxSourceContextTests + RunNyxSourceHistoryTests + RunNyxCompilerDiagnosticTests;
+    RunNyxSourceContextTests + RunNyxSourceHistoryTests +
+    RunNyxSourceAdmissionTests + RunNyxCompilerDiagnosticTests;
   LCatalog := TNyxCatalog.Create;
   LDocument := TNyxDocument.Create;
   try

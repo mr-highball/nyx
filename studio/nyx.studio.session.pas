@@ -1815,10 +1815,9 @@ begin
       'accepted Pascal and merge your edits before applying', LSource, 1);
   end;
   LCandidate := nil;
-  LWorkspace := TNyxSourceWorkspace.Create;
+  LWorkspace := nil;
   try
-    LCandidate := FSourceWorkspace.Candidate(FDocument, LSource);
-    LWorkspace.Accept(LCandidate, LSource);
+    LCandidate := FSourceWorkspace.PrepareCandidate(FDocument, LSource, LWorkspace);
     { Comment/helper-only edits and changed designs publish their exact admitted
       pair through one source/design checkpoint. }
     PublishPair(LCandidate, LWorkspace);

@@ -250,6 +250,11 @@ begin
   try
     LApplication.View.OnEvent := LProbe.Event;
     LApplication.Mount(LDocument);
+    { Native alignment is deferred until the mounted window is realized. Width
+      bindings must be checked in an actual admitted viewport, not against the
+      temporary 150-pixel default of an unrealized child panel. }
+    LApplication.Window.Show;
+    Application.ProcessMessages;
     LToken := LApplication.State.Subscribe(nil, LProbe.Validate);
     LMemo := TMemo(LApplication.View.InputFor('reply-memo'));
     LMirror := TMemo(LApplication.View.InputFor('reply-mirror'));
@@ -365,7 +370,10 @@ begin
       'visibility true restores native caption');
     LApplication.State.SetValue(NyxIntegerState('width'), 420);
     Check(LApplication.View.ControlFor('reply-memo').Width = 420,
-      'layout state updates native field geometry');
+      'layout state updates native field geometry: actual=' +
+      IntToStr(LApplication.View.ControlFor('reply-memo').Width) + ', model=' +
+      LApplication.View.Root.Find('reply-memo').Prop('width') + ', parent=' +
+      IntToStr(LApplication.View.ControlFor('reply-memo').Parent.ClientWidth));
     LApplication.ShowPage('review');
     Check(TNyxText(TLabel(LApplication.View.ControlFor('review-caption')).Caption) =
       'Unfinished focused draft', 'native navigation keeps application state');

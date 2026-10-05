@@ -323,7 +323,9 @@ begin
     {$IFDEF PAS2JS}
     TJSHTMLTextAreaElement(LInput).value := 'Fresh keyboard draft / 🌙';
     {$ELSE}
-    TMemo(LInput).Text := UTF8Decode(TNyxText('Fresh keyboard draft / 🌙'));
+    { LCL accepts its native UTF-8 text directly. A UnicodeString intermediate
+      would introduce an unnecessary implicit conversion back to native text. }
+    TMemo(LInput).Text := TNyxText('Fresh keyboard draft / 🌙');
     {$ENDIF}
     Check(not SendKey(ntKeyUp) and (LRelease.Count = 1) and
       not LRelease.Last.Keyboard.Repeating,
@@ -529,7 +531,7 @@ begin
     LInput.value := 'Accepted control edit / 🌙';
     LInput.dispatchEvent(TJSEvent.new('change'));
     {$ELSE}
-    LInput.Text := UTF8Decode(TNyxText('Accepted control edit / 🌙'));
+    LInput.Text := TNyxText('Accepted control edit / 🌙');
     Application.ProcessMessages;
     {$ENDIF}
     Check((LExit.Last.Trigger = ntChange) and

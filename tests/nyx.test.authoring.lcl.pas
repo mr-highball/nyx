@@ -115,8 +115,19 @@ begin
       LEffect, SourceLine, LRemoval) then
     begin
       case LEffect of
-        nieRequestRemoval: Removal := LRemoval;
-        nieRemoved, nieCancelRemoval: Removal.Pending := False;
+        nieRequestRemoval:
+          begin
+            Removal := LRemoval;
+          end;
+        nieRemoved, nieCancelRemoval:
+          begin
+            Removal.Pending := False;
+          end;
+        nieNone, nieSource:
+          begin
+            { Source navigation already uses the router's returned SourceLine;
+              neither effect changes this fixture's removal confirmation. }
+          end;
       end;
       Inc(Routed);
     end
@@ -234,7 +245,7 @@ begin
     LInput := TEdit(LRenderer.InputFor('state-name-0'));
     LInput.Text := 'reply / 漢字';
     Check(LSession.Document.State.Has('reply / 漢字') and
-      (LSession.Document.Find('reply-memo').Bindings[0].StateName = 'reply / 漢字'),
+      (LSession.Document.Find('reply-memo').Bindings[0].StateName = TNyxText('reply / 漢字')),
       'native name editor migrates default and references');
     Rebuild;
     TNyxLCLButton(LRenderer.ControlFor('binding-clear')).Click;
@@ -552,7 +563,7 @@ begin
     try
       LPreviewHost := TForm.Create(nil);
       LPreview.Render(LSession.Document, LSession.Document.Find('code-notes'), LPreviewHost);
-      Check(TNyxText(TMemo(LPreview.InputFor('code-reply')).Text) = 'From crafted source / 🌙',
+      Check(TNyxText(TMemo(LPreview.InputFor('code-reply')).Text) = TNyxText('From crafted source / 🌙'),
         'source-created native memo consumes the new typed state default');
       Check((LPreview.ControlFor('code-send') <> nil) and
         (LPreview.ControlFor('code-instance/code-badge') <> nil),

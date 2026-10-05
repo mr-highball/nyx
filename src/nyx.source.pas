@@ -140,8 +140,10 @@ type
     bindings, scalar domains and structured extension construction. Unsupported
     executable builder syntax fails explicitly instead of guessing at Pascal.
 
-    Candidate returns an independently owned document and never mutates the
-    accepted design/workspace. Accept follows successful session publication.
+    Candidate returns an independently owned document. Candidate/PrepareCandidate
+    synchronize any direct public edits to the current baseline first; a rejected
+    draft never replaces that pair. Accept stages a companion for a tree already
+    admitted by its caller. PrepareCandidate stages both owners before publication.
     Render reconciles generated changes against the accepted builder. Deliberate
     control/state locals, comments and unchanged typed expressions are retained;
     removed declarations leave their notes as comments. An authored result must
@@ -157,6 +159,12 @@ type
     FSuffix: TNyxText;
     FDesign: TNyxText;
     FCustomFrame: Boolean;
+    { Derived canonical builder for FDesign only. It owns text, never a model or
+      reader. Recovery/history deliberately omit this disposable workspace cache;
+      Restore clears it, and every Render still freshly encodes the public tree. }
+    FGeneratedBody: TNyxText;
+    procedure StageAccepted(ADocument: TNyxDocument; const APrefix, ABody,
+      ASuffix, ADesign: TNyxText);
   public
     function Render(ADocument: TNyxDocument): TNyxText; overload;
     function Render(ADocument: TNyxDocument;
@@ -169,6 +177,14 @@ type
       same reconstruction rules, including named versus inline references. }
     function Candidate(ADocument: TNyxDocument; const ADraft: TNyxText;
       ACompanionComparison: Boolean = False): TNyxDocument;
+    { Admit one exact draft and return its independently owned document and
+      companion together. Parses/reconstructs/validates the complete draft once;
+      no accepted owner changes. On failure both outputs are released and the
+      companion is nil. The caller owns both successful outputs and must publish
+      them together without intervening model mutation. This is the session's
+      source Apply path, not permission to skip ordinary compiler diagnostics. }
+    function PrepareCandidate(ADocument: TNyxDocument; const ADraft: TNyxText;
+      out AWorkspace: TNyxSourceWorkspace): TNyxDocument;
     procedure Accept(ADocument: TNyxDocument; const ASource: TNyxText);
     procedure Reset;
     { Capture without a document copies the accepted frame only. The document
@@ -467,6 +483,11 @@ var
   GKindClasses: array[TNyxKind] of TNyxText;
   GKindInterfaces: array[TNyxKind] of TNyxText;
   GKindEnums: array[TNyxKind] of TNyxText;
+  { Finite specialized Pascal names are indexed once, then read only. These
+    tables contain no application identities or parsed document/source state. }
+  GFactoryKinds: TSourceIndex;
+  GClassKinds: TSourceIndex;
+  GInterfaceKinds: TSourceIndex;
 
 constructor ENyxSource.CreateAt(const AMessage: TNyxText;
   const ASource: TNyxText; APosition: Integer);
@@ -3096,10 +3117,10 @@ begin
       SameText(ATokens[LIndex + 4].Text, 'Create') and
       (ATokens[LIndex + 5].Text = '(');
     LConstructor := LLegacy or
-      (SpecializedKind(ATokens[LIndex + 2].Text, 'TNyx', LKind) and
-      (ATokens[LIndex + 3].Text = '.') and
+      ((ATokens[LIndex + 3].Text = '.') and
       SameText(ATokens[LIndex + 4].Text, 'Create') and
-      (ATokens[LIndex + 5].Text = '('));
+      (ATokens[LIndex + 5].Text = '(') and
+      SpecializedKind(ATokens[LIndex + 2].Text, 'TNyx', LKind));
     LFactory := IsNyxControlFactory(ATokens[LIndex + 2].Text) and
       (ATokens[LIndex + 3].Text = '(');
 
@@ -3633,6 +3654,47 @@ begin
   end;
 end;
 
+{ Complete fresh admission shared by source Apply and visual verification.
+  Split validates the entire exact source and yields one strict builder token
+  sequence. Nothing is cached between admissions: every constructor, ownership
+  statement, property, default and persistence budget is checked on a new tree.
+  The returned canonical encoding is the encoding actually admitted here. }
+function ReconstructNyxDraft(const ADraft: TNyxText;
+  out APrefix, ABody, ASuffix, ADesign: TNyxText): TNyxDocument;
+var
+  LDraftTokens: TTokens;
+  LDraftReader: TConfigurationReader;
+  {$ifdef NYX_SOURCE_PROFILE}
+  LStarted: Double;
+  LCandidateStarted: Double;
+  {$endif}
+begin
+  {$ifdef NYX_SOURCE_PROFILE}LCandidateStarted := SourceProfileStart;{$endif}
+  Split(ADraft, APrefix, ABody, ASuffix, LDraftTokens);
+  Result := TNyxDocument.Create;
+  LDraftReader := nil;
+  try
+    try
+      LDraftReader := TConfigurationReader.Create(ADraft, LDraftTokens, nil,
+        Result, True, True);
+      LDraftReader.Reconstruct;
+      {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
+      ValidateNyxDocumentProperties(Result);
+      {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spCandidateValidate, LStarted);{$endif}
+      {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
+      ADesign := TNyxCodec.Encode(Result);
+      {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spCandidateEncode, LStarted);{$endif}
+    except
+      Result.Free;
+      Result := nil;
+      raise;
+    end;
+  finally
+    LDraftReader.Free;
+  end;
+  {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spCandidate, LCandidateStarted);{$endif}
+end;
+
 procedure TNyxSourceWorkspace.Reset;
 begin
   FPrefix := '';
@@ -3640,6 +3702,7 @@ begin
   FSuffix := '';
   FDesign := '';
   FCustomFrame := False;
+  FGeneratedBody := '';
 end;
 
 procedure SplitNyxSourceFrame(const ASource: TNyxText;
@@ -3666,13 +3729,18 @@ function TNyxSourceWorkspace.Render(ADocument: TNyxDocument;
 var
   LDesign: TNyxText;
   LGenerated: TNyxText;
+  LGeneratedBody: TNyxText;
+  LBefore: TNyxText;
   LPrefix: TNyxText;
   LBody: TNyxText;
   LSuffix: TNyxText;
   LTokens: TTokens;
   LPrevious: TNyxDocument;
   LCandidate: TNyxDocument;
-  LVerifier: TNyxSourceWorkspace;
+  LVerifiedDesign: TNyxText;
+  LVerifiedPrefix: TNyxText;
+  LVerifiedBody: TNyxText;
+  LVerifiedSuffix: TNyxText;
   LAuthored: Boolean;
   {$ifdef NYX_SOURCE_PROFILE}
   LStarted: Double;
@@ -3690,6 +3758,7 @@ begin
   begin
     LGenerated := TNyxCodegen.Generate(ADocument);
     Split(LGenerated, LPrefix, LBody, LSuffix, LTokens);
+    LGeneratedBody := LBody;
 
     if FCustomFrame then
     begin
@@ -3711,20 +3780,34 @@ begin
 
     if FDesign <> '' then
     begin
-      LPrevious := TNyxCodec.Decode(FDesign);
-      LVerifier := nil;
+      LBefore := FGeneratedBody;
+      LPrevious := nil;
       LCandidate := nil;
       try
-        LBody := ReconcileNyxBuilder(LPrevious, FBody, LBody, ARenames, LAuthored);
+
+        if LBefore = '' then
+        begin
+          { Restored history/recovery carries only the accepted pair. Rebuild
+            this derived value once, using its exact accepted canonical design;
+            never borrow the possibly changed current public document. }
+          {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
+          LPrevious := TNyxCodec.Decode(FDesign);
+          Split(TNyxCodegen.Generate(LPrevious), LVerifiedPrefix, LBefore,
+            LVerifiedSuffix, LTokens);
+          {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spOldGeneration, LStarted);{$endif}
+        end;
+        LBody := ReconcileNyxBuilderFrames(LBefore, FBody, LBody, ARenames, LAuthored);
 
         if LAuthored then
         begin
           {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
-          LVerifier := TNyxSourceWorkspace.Create;
-          LCandidate := LVerifier.Candidate(ADocument,
-            JoinSourceFrame([LPrefix, LBody, LSuffix]), True);
+          { Verification needs a fresh reconstructed candidate, not another
+            generated workspace baseline. Reuse this admission's encoding for
+            exact comparison rather than serializing the same candidate twice. }
+          LCandidate := ReconstructNyxDraft(JoinSourceFrame([LPrefix, LBody, LSuffix]),
+            LVerifiedPrefix, LVerifiedBody, LVerifiedSuffix, LVerifiedDesign);
 
-          if TNyxCodec.Encode(LCandidate) <> LDesign then
+          if LVerifiedDesign <> LDesign then
           begin
             raise ENyxSource.CreateAt('Reconciled Pascal differs from the visual design; the accepted pair is retained',
               JoinSourceFrame([LPrefix, LBody, LSuffix]), 1);
@@ -3733,7 +3816,6 @@ begin
         end;
       finally
         LCandidate.Free;
-        LVerifier.Free;
         LPrevious.Free;
       end;
     end;
@@ -3743,6 +3825,7 @@ begin
     FBody := LBody;
     FSuffix := LSuffix;
     FDesign := LDesign;
+    FGeneratedBody := LGeneratedBody;
   end;
   Result := JoinSourceFrame([FPrefix, FBody, FSuffix]);
   {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spRender, LRenderStarted);{$endif}
@@ -3754,41 +3837,34 @@ var
   LPrefix: TNyxText;
   LBody: TNyxText;
   LSuffix: TNyxText;
-  LDraftTokens: TTokens;
-  LDraftReader: TConfigurationReader;
-  {$ifdef NYX_SOURCE_PROFILE}
-  LStarted: Double;
-  LCandidateStarted: Double;
-  {$endif}
+  LDesign: TNyxText;
 begin
-  {$ifdef NYX_SOURCE_PROFILE}LCandidateStarted := SourceProfileStart;{$endif}
   { Retain the established accepted workspace baseline, but never borrow its
     tree as the candidate. A source omission must remove its design meaning. }
   Render(ADocument);
-  Split(ADraft, LPrefix, LBody, LSuffix, LDraftTokens);
-  Result := TNyxDocument.Create;
-  LDraftReader := nil;
+  Result := ReconstructNyxDraft(ADraft, LPrefix, LBody, LSuffix, LDesign);
+end;
+
+function TNyxSourceWorkspace.PrepareCandidate(ADocument: TNyxDocument;
+  const ADraft: TNyxText; out AWorkspace: TNyxSourceWorkspace): TNyxDocument;
+var
+  LPrefix: TNyxText;
+  LBody: TNyxText;
+  LSuffix: TNyxText;
+  LDesign: TNyxText;
+begin
+  AWorkspace := nil;
+  Render(ADocument);
+  Result := ReconstructNyxDraft(ADraft, LPrefix, LBody, LSuffix, LDesign);
   try
-    try
-      LDraftReader := TConfigurationReader.Create(ADraft, LDraftTokens, nil,
-        Result, True, True);
-      LDraftReader.Reconstruct;
-      {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
-      ValidateNyxDocumentProperties(Result);
-      {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spCandidateValidate, LStarted);{$endif}
-      { Whole-project persistence budgets also guard source-driven edits. }
-      {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
-      TNyxCodec.Encode(Result);
-      {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spCandidateEncode, LStarted);{$endif}
-    except
-      Result.Free;
-      Result := nil;
-      raise;
-    end;
-  finally
-    LDraftReader.Free;
+    AWorkspace := TNyxSourceWorkspace.Create;
+    AWorkspace.StageAccepted(Result, LPrefix, LBody, LSuffix, LDesign);
+  except
+    FreeAndNil(AWorkspace);
+    Result.Free;
+    Result := nil;
+    raise;
   end;
-  {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spCandidate, LCandidateStarted);{$endif}
 end;
 
 procedure TNyxSourceWorkspace.Accept(ADocument: TNyxDocument;
@@ -3797,6 +3873,19 @@ var
   LPrefix: TNyxText;
   LBody: TNyxText;
   LSuffix: TNyxText;
+  LDesign: TNyxText;
+  LTokens: TTokens;
+begin
+  { Ordinary Accept retains its external caller's explicit admission contract.
+    Stage the complete source and fresh canonical document before publication. }
+  Split(ASource, LPrefix, LBody, LSuffix, LTokens);
+  LDesign := TNyxCodec.Encode(ADocument);
+  StageAccepted(ADocument, LPrefix, LBody, LSuffix, LDesign);
+end;
+
+procedure TNyxSourceWorkspace.StageAccepted(ADocument: TNyxDocument;
+  const APrefix, ABody, ASuffix, ADesign: TNyxText);
+var
   LGeneratedPrefix: TNyxText;
   LGeneratedBody: TNyxText;
   LGeneratedSuffix: TNyxText;
@@ -3804,16 +3893,14 @@ var
 begin
   { Stage complete frames before publication. The session calls this only after
     candidate admission; an invalid source cannot partially replace a frame. }
-  Split(ASource, LPrefix, LBody, LSuffix, LTokens);
   Split(TNyxCodegen.Generate(ADocument), LGeneratedPrefix, LGeneratedBody,
     LGeneratedSuffix, LTokens);
-  { Encode before publishing any accepted source fields. }
-  LGeneratedBody := TNyxCodec.Encode(ADocument);
-  FPrefix := LPrefix;
-  FBody := LBody;
-  FSuffix := LSuffix;
-  FDesign := LGeneratedBody;
-  FCustomFrame := (LPrefix <> LGeneratedPrefix) or (LSuffix <> LGeneratedSuffix);
+  FPrefix := APrefix;
+  FBody := ABody;
+  FSuffix := ASuffix;
+  FDesign := ADesign;
+  FCustomFrame := (APrefix <> LGeneratedPrefix) or (ASuffix <> LGeneratedSuffix);
+  FGeneratedBody := LGeneratedBody;
 end;
 
 function TNyxSourceCheckpoint.GetStorageBytes: TNyxTextBytes;
@@ -3851,6 +3938,7 @@ begin
   FSuffix := ACheckpoint.FSuffix;
   FDesign := ACheckpoint.FDesign;
   FCustomFrame := ACheckpoint.FCustomFrame;
+  FGeneratedBody := '';
   {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spRestoreWorkspace, LStarted);{$endif}
 end;
 
@@ -3895,6 +3983,7 @@ begin
   FSuffix := LSuffix;
   FDesign := LDesign;
   FCustomFrame := LCustom;
+  FGeneratedBody := '';
   {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spRestoreWorkspace, LStarted);{$endif}
 end;
 
@@ -3902,6 +3991,9 @@ procedure InitializeSourceSymbols;
 var
   LKind: TNyxKind;
 begin
+  GFactoryKinds := TSourceIndex.Create;
+  GClassKinds := TSourceIndex.Create;
+  GInterfaceKinds := TSourceIndex.Create;
   for LKind := Low(TNyxKind) to High(TNyxKind) do
   begin
     GKindStems[LKind] := SymbolStem(NyxKindName(LKind));
@@ -3909,10 +4001,23 @@ begin
     GKindClasses[LKind] := 'TNyx' + GKindStems[LKind];
     GKindInterfaces[LKind] := 'INyx' + GKindStems[LKind];
     GKindEnums[LKind] := 'nk' + GKindStems[LKind];
+    GFactoryKinds.AddFirst(LowerCase(GKindFactories[LKind]), Ord(LKind));
+    GClassKinds.AddFirst(LowerCase(GKindClasses[LKind]), Ord(LKind));
+    GInterfaceKinds.AddFirst(LowerCase(GKindInterfaces[LKind]), Ord(LKind));
   end;
 end;
 
 initialization
   InitializeSourceSymbols;
+
+{$ifndef PAS2JS}
+{ Native unit finalization releases this process-lifetime immutable vocabulary.
+  Browser unit finalization is unsupported; its three closed tables live with
+  their owning module and are collected with that module's execution context. }
+finalization
+  GInterfaceKinds.Free;
+  GClassKinds.Free;
+  GFactoryKinds.Free;
+{$endif}
 
 end.

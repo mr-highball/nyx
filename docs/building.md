@@ -115,8 +115,8 @@ design, companion-envelope and source checks. Compilation alone does not execute
 them.
 
 `source-workspace` runs the native retained-draft/Unicode diagnostic, indexed
-identity/preservation, independent source-context and immutable history checks
-(48 total), and
+identity/preservation, independent source-context, compiler-location, immutable
+history and paired candidate/cache-restoration checks (83 total), and
 compiles their browser counterpart plus the portable source benchmark. Execute
 `source-diagnostics.html` after compilation. Benchmark timing is deliberately a
 separate run: native `nyx_source_benchmark.exe` accepts an optional size of 128,
@@ -127,6 +127,15 @@ crafted locals/comments/unchanged expressions, structural changes, exact paired
 history and rejected-draft recovery before publishing its timings. These measure
 portable source/document work, not painting, trusted input or compiler latency.
 Current costs and remaining large-project work are recorded in WORK.md.
+
+The Pascal `nyx_browser_capture` helper accepts `--real-clock` as its optional
+fourth argument for synchronous benchmarks. That mode removes the virtual-time
+budget; asynchronous functional captures retain their ordinary budget. The mode
+compiles and refuses unknown options before starting a browser. The current
+source-performance packet has native execution and browser compilation only:
+automatic approval review rejected launching its separate static fixture listener
+("blocked by policy"). Do not infer current browser timing or runtime qualification
+from compilation, historical captures, or the helper's new option.
 
 Compile the same benchmark with `-dNYX_SOURCE_PROFILE` to append per-stage
 `profile,controls,operation,stage,milliseconds,calls` records. Use a separate
@@ -143,6 +152,15 @@ Apply and history, checkpoint/commit, document Save/restore, workspace snapshot/
 restore, Render/encoding and fresh candidate validation/encoding. In-memory
 history uses immutable typed checkpoints rather than JSON workspace snapshots;
 JSON snapshot work remains at explicit recovery/interchange boundaries.
+
+Current source Apply prepares the independently owned document and exact
+companion together from one complete draft admission. Visual verification also
+reconstructs the complete candidate, without generating an unused verifier
+baseline or encoding that same candidate twice. A workspace retains derived
+canonical builder text for its last accepted design; history/recovery omit it,
+restore clears it, and every public Render still freshly encodes the document
+to observe direct mutations. Rejected candidates cannot replace either owner.
+The same 128/512/2048 workload and all its original preservation gates remain.
 
 Studio defaults to [the local service](http://127.0.0.1:8088/). The server runs
 in the foreground. `-Port` selects another local port; `-SkipBuild` reuses a

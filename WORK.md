@@ -4923,3 +4923,132 @@ staged PID 4972 retain their exact prior executables. No active pair, profile or
 enrollment is replaced. Source delivery is separate from production deployment;
 the remote checkpoint proof is kept privately under
 .local/codex-restart-check/transport-deadline-remote-proof.json.
+
+## Paired source admission and canonical builder reuse — 2026-10-05
+
+Previous goal turn classification: progress. Typed transport checkpoint b786c71
+matched the remote branch and qualified its bounded deadline/retirement consumers.
+This continuation follows the recorded return to NS-1_codegen_01 criterion 3,
+retaining its counter 11 and full large-project source synchronization outcome.
+The bounded implementation removes duplicate whole-command preparation, not
+another isolated lexer study. Stop on lost authored frames, stale public model
+mutations, invalid candidate publication, broken paired history or ownership.
+
+Source Apply now prepares independently owned document/companion outputs together
+from one complete draft admission. The portable reconstruction helper parses the
+exact full source, replays a fresh document, validates all properties/ownership
+and admits its canonical encoding. Visual verification calls this helper without
+generating an unused verifier baseline; exact comparison uses the encoding just
+admitted instead of encoding the same candidate twice. The session publishes
+only the prepared pair through its ordinary paired checkpoint.
+
+Each workspace retains derived canonical builder text for its accepted design.
+Every public Render still freshly encodes the current tree; a direct model edit
+cannot disappear behind the cache. Proposed frames/cache publish only after
+verification. Reset and both Restore paths clear the derived text; the first
+subsequent edit reconstructs it from the exact accepted canonical design.
+Immutable history, recovery JSON, fifty-command retention and the 16 MiB history
+text budget are unchanged. No document, reader, renderer or parse array is
+retained. Three finite specialized Pascal-name indexes initialize before worker
+reads and contain no application identities. Native finalization releases them;
+pas2js owns them with the module's execution context.
+
+Evidence is retained under ignored build/source-responsive/:
+
+- focused-build.log / focused-run.log: 83 checked native source/diagnostic cases,
+  including eighteen new paired admission/cache-restoration cases. Exact accepted
+  pair/draft retention, wrong types/boundaries, direct mutation repair, independent
+  prepared ownership, reset and typed/wire restoration pass. Heap tracing reports
+  zero unfreed blocks. These cases overlap the complete suite below.
+- core-build.log / core-run.log: 30 core + 1560 composition/designer checks pass.
+  emitted companions remain under core/. generated-build.log / generated-run.log
+  execute eight native compiled outcomes: persistence, Unicode identity/event
+  ownership, structural creation/reuse, crafted names/comments/expressions,
+  legacy migration/helper, handwritten helper and live runtime defaults/bindings.
+  This execution also reports zero unfreed blocks.
+- native-studio-build.log: maintained `tools/build.ps1 -Target native-studio`
+  compiles the current standalone product consumer, without launching a service
+  or requiring application output compilers. Owned warnings are zero.
+- browser-focused-build.log, browser-authoring-build.log, browser-studio-build.log,
+  browser-shared-corrected-build.log, browser-controls-final-build.log,
+  browser-events-final-build.log and generated-browser-build.log compile the
+  changed focused/shared, real editor/control/event, complete Studio and emitted
+  companion consumers with pas2js/matched installed RTL. Seven dependency RTL
+  warnings remain visible; zero owned warnings. Compilation is not execution.
+
+The current and exact b786c71 archived ordinary LCL fixture initially fail the
+same strict width-binding assertion. lcl-run.log / before/lcl-run.log retain it;
+lcl-diagnostic-run.log establishes model width 420, actual width 126 and parent
+width 150. The hidden mounted application's child host still has its provisional
+unrealized size. The fixture now shows its owned window and pumps native alignment
+before checking bindings; the assertion still requires exactly 420. The first
+realized run qualifies 42 managed controls, 35 event registrations, 50 runtime
+bindings and 71 actual Studio source/state/binding authoring checks, plus native
+theme, Unicode recovery, 75 projections, reusable customization and desktop/
+compact public shell controls. It reports zero unfreed blocks. Hardware/physical
+input and browser pixel behavior are not claimed.
+
+The ordinary LCL harness also exposed nine pre-existing owned warnings outside
+the earlier bounded warning inventory. Explicit portable text comparisons,
+direct native UTF-8 widget input and exhaustive inspector effects remove them,
+without suppressions or dependency edits. Its failure path now lets exception/unit
+owners unwind before heap reporting. lcl-final-build.log reports zero warnings;
+lcl-final-run.log owns the repeated actual-consumer result after these fixture
+changes. NS-6 delivery remains open with its original count and full CI/platform
+requirements; this incidental repair does not restart the inventory task.
+
+Before/after ordinary timing uses the exact archived b786c71 sources and current
+sources, checked FPC 3.2.0, identical flags/workload, sequential execution and idle
+compiler/other native control fixtures. All original crafted name/comment/Unicode/
+expression, structural, exact paired history and rejected-draft gates pass. UTF-8
+source sizes remain 25094/98822/400022 for both versions; fixture sizes/gates are
+unchanged. These measure portable complete commands, not paint, trusted input,
+network or compilation. before/native.csv / after/native.csv retain full rows.
+
+| Controls | Apply before/after ms | Visual before/after ms | Structural before/after ms | Three history operations before/after ms |
+| ---: | ---: | ---: | ---: | ---: |
+| 128 | 78 / 78 | 250 / 188 | 312 / 265 | 78 / 93 |
+| 512 | 328 / 328 | 1031 / 797 | 1312 / 1063 | 359 / 359 |
+| 2048 | 1594 / 1485 | 4421 / 3297 | 5484 / 4390 | 1625 / 1656 |
+
+Largest native visual editing improves about 25% and structural editing about
+20%. History/rejection show no material gain; small timer-resolution differences
+are not improvements. Opt-in before/native-profile-512.csv and after/native-
+profile-index-512.csv retain the whole-command decision: unused old-generation
+work is absent on the warmed edit; fresh complete candidate verification remains.
+Largest commands still take seconds, so comfortable large-project authoring is
+not accepted. Historical browser timings are not compared with these native rows.
+
+Automatic approval review rejected launching the separate installed Pascal static
+fixture listener as "blocked by policy", with no further reason. The combined
+baseline-browser compile/capture/launch command did not execute. No listener,
+profile, frontend or configuration was published, and no equivalent launch route
+was retried. Current browser execution/timing and observing Studio qualification
+remain pending. The real-clock capture option compiles and rejects unknown modes
+before starting a browser (capture-invalid-mode.log); it does not establish a
+current browser run. Keep the independent previous updated-Studio listener
+refusal and protected production/stage services intact.
+
+Retained corrected failures: browser-build.log first rejects an unsupported
+pas2js finalization section; native-only finalization with documented browser
+module lifetime fixes it (after/browser-build-corrected.log). An attempted native
+file-writing core entry point is unsuitable for pas2js (browser-shared-final-
+build.log); the maintained browser shared entry point compiles instead. No source
+admission/ownership test was weakened and no dependency or compiler was reinstalled.
+
+Criteria 1/2 stay accepted; original codegen criterion 3 stays open, counter 11→12.
+No parent task, north-star credit, target/product completion or new deployment is
+claimed. Reassessment ends this duplicate-preparation cleanup. First qualify the
+unchanged browser candidate when a permitted fixture host is available, without
+an equivalent rejected launch. The next safe implementation targets complete
+candidate/property-metadata admission plus ordinary Studio interaction costs,
+using operation-owned immutable facts. Preserve fresh complete admission, public
+mutation visibility, exact authored frames, original workload and paired history;
+stop on corruption or failed ownership/preservation. No isolated lexer report,
+grammar expansion, counter reset or transfer to a narrower owner substitutes it.
+
+Production/stage process identity and named semantic session are rechecked before
+publication; the operator's accepted pair, view/selection, draft and Undo/Redo
+remain untouched. The exact checkpoint/remote proof is private at
+.local/codex-restart-check/source-responsive-remote-proof.json after push. Machine
+paths, accounts, endpoint configuration and test outputs stay outside the commit.

@@ -56,9 +56,9 @@ uses
   nyx.test.scheduler.targets;
 
 type
-  { Exercise the actual LCL event bridge using native controls. This harness runs
-    without opening an interactive window and reports programmatic widget tests;
-    desktop screenshots/physical input remain separate evidence. }
+  { Exercise the actual LCL event bridge using native controls. Owned windows
+    are realized where geometry/focus requires a real viewport. Widget events
+    are programmatic; desktop screenshots/hardware input remain separate evidence. }
   TNativeJourney = class
   private
     FForm: TForm;
@@ -111,7 +111,7 @@ begin
 
     if not (LInput is TEdit) or (LInput.Height < LTheme.FontSize) or
       (LRenderer.ControlFor('theme-button').Height < LTheme.FontSize) or
-      (TNyxText(LInput.AccessibleName) <> 'Project / 🌙') or
+      (TNyxText(LInput.AccessibleName) <> TNyxText('Project / 🌙')) or
       (LRenderer.InputFor('theme-button') <> nil) then
     begin
       raise ENyxModel.Create('Native input identity, accessible name or auto typography failed');
@@ -131,7 +131,7 @@ begin
 
     if not LRejected or (LRenderer.Root <> LAccepted) or
       (LRenderer.InputFor('theme-input') <> LInput) or
-      (TNyxText(TEdit(LInput).Text) <> 'Unsaved edit / 🌙') then
+      (TNyxText(TEdit(LInput).Text) <> TNyxText('Unsaved edit / 🌙')) then
     begin
       raise ENyxModel.Create('Invalid native palette destroyed the accepted editing state');
     end;
@@ -644,7 +644,9 @@ begin
       { Native fixture failures must fail the build, not wait on a GUI dialog. }
       WriteLn('FAIL native: ', LException.Message);
       DumpExceptionBackTrace(StdErr);
-      Halt(1);
+      { Let the exception and unit owners unwind before heap tracing; Halt
+        would retain the diagnostic object itself and hide the real leak count. }
+      ExitCode := 1;
     end;
   end;
 end.

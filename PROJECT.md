@@ -89,7 +89,11 @@ queued expiry and detached retirement: 66 actual Win32 checks, 20 actual
 real-clock browser checks and ten current compiled-preview/input checks, with
 zero native leaks. New editor HTTP deployment, compiler-job cancellation and
 complete service reliability retain their original gates. The next prerequisite
-is source synchronization's large-project responsiveness; see WORK.md.
+is source synchronization's large-project responsiveness; see WORK.md. Its
+current whole-command source candidate removes duplicate generation/encoding
+and prepares admitted pairs together. Native preservation/actual LCL consumers
+qualify it; browser execution remains pending after the separate static listener
+launch was refused. Large-project editing is still too slow for acceptance.
 The preceding designer prerequisite retains its 34 native / 32 desktop / 33
 actual-390 browser checks, including painted selection and focused view movement.
 

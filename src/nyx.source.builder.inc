@@ -30,35 +30,45 @@ function SpecializedKind(const AName, APrefix: TNyxText;
   out AKind: TNyxKind): Boolean;
 var
   LKind: TNyxKind;
-  LExpected: TNyxText;
+  LOrdinal: Integer;
 begin
-  for LKind := Low(TNyxKind) to High(TNyxKind) do
+  { Ordinary declaration/construction reads use the closed immutable vocabulary
+    rather than walking the complete catalog for each local in each merge frame.
+    The fallback preserves the private helper's former alternate-prefix meaning. }
+  LOrdinal := -1;
+
+  if APrefix = 'NewNyx' then
   begin
+    LOrdinal := GFactoryKinds.IndexOf(LowerCase(AName));
+  end
+  else if APrefix = 'TNyx' then
+  begin
+    LOrdinal := GClassKinds.IndexOf(LowerCase(AName));
+  end
+  else if APrefix = 'INyx' then
+  begin
+    LOrdinal := GInterfaceKinds.IndexOf(LowerCase(AName));
+  end
+  else
+  begin
+    for LKind := Low(TNyxKind) to High(TNyxKind) do
+    begin
 
-    if APrefix = 'NewNyx' then
-    begin
-      LExpected := GKindFactories[LKind];
-    end
-    else if APrefix = 'TNyx' then
-    begin
-      LExpected := GKindClasses[LKind];
-    end
-    else if APrefix = 'INyx' then
-    begin
-      LExpected := GKindInterfaces[LKind];
-    end
-    else
-    begin
-      LExpected := APrefix + GKindStems[LKind];
+      if SameText(AName, APrefix + GKindStems[LKind]) then
+      begin
+        AKind := LKind;
+        Exit(True);
+      end;
     end;
-
-    if SameText(AName, LExpected) then
-    begin
-      AKind := LKind;
-      Exit(True);
-    end;
+    Exit(False);
   end;
-  Result := False;
+
+  if LOrdinal < 0 then
+  begin
+    Exit(False);
+  end;
+  AKind := TNyxKind(LOrdinal);
+  Result := True;
 end;
 
 function ControlDeclaration(const AName: TNyxText): Boolean;

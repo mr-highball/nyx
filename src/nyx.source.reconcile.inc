@@ -1793,17 +1793,16 @@ begin
   end;
 end;
 
-function ReconcileNyxBuilder(AOldDocument: TNyxDocument;
-  const ABody, AGenerated: TNyxText;
+{ Reconcile exact canonical/authored/proposed builders. A workspace supplies
+  its own canonical text for the previously accepted design; this operation
+  still owns all lexical contexts and never retains a parsed tree afterward. }
+function ReconcileNyxBuilderFrames(const ABefore, ABody, AGenerated: TNyxText;
   const ARenames: array of TNyxSourceStateRename;
   out AAuthored: Boolean): TNyxText;
 var
   LBefore: TNyxText;
   LAfter: TNyxText;
   LAuthoredBody: TNyxText;
-  LPrefix: TNyxText;
-  LSuffix: TNyxText;
-  LTokens: TTokens;
   LAuthored: TSourceSymbols;
   LRetained: TSourceSymbols;
   LContexts: TBuilderContexts;
@@ -1811,9 +1810,7 @@ var
   LStarted: Double;
   {$endif}
 begin
-  {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
-  Split(TNyxCodegen.Generate(AOldDocument), LPrefix, LBefore, LSuffix, LTokens);
-  {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spOldGeneration, LStarted);{$endif}
+  LBefore := ABefore;
   AAuthored := (ABody <> LBefore) or (Length(ARenames) > 0);
 
   if not AAuthored then
@@ -1867,4 +1864,25 @@ begin
   finally
     LContexts.Free;
   end;
+end;
+
+{ Compiler-companion reduction has an explicit previous document rather than a
+  live workspace. Keep its original full-generation admission boundary. }
+function ReconcileNyxBuilder(AOldDocument: TNyxDocument;
+  const ABody, AGenerated: TNyxText;
+  const ARenames: array of TNyxSourceStateRename;
+  out AAuthored: Boolean): TNyxText;
+var
+  LPrefix: TNyxText;
+  LBefore: TNyxText;
+  LSuffix: TNyxText;
+  LTokens: TTokens;
+  {$ifdef NYX_SOURCE_PROFILE}
+  LStarted: Double;
+  {$endif}
+begin
+  {$ifdef NYX_SOURCE_PROFILE}LStarted := SourceProfileStart;{$endif}
+  Split(TNyxCodegen.Generate(AOldDocument), LPrefix, LBefore, LSuffix, LTokens);
+  {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spOldGeneration, LStarted);{$endif}
+  Result := ReconcileNyxBuilderFrames(LBefore, ABody, AGenerated, ARenames, AAuthored);
 end;

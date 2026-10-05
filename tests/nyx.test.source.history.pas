@@ -30,12 +30,17 @@ interface
   mutated document synchronization, paired rollback/redo and bounded session
   history through public APIs. Both target runtimes execute these cases. }
 function RunNyxSourceHistoryTests: Integer;
+{ Qualify paired candidate ownership and derived workspace text across failed
+  admission, direct mutations, reset and both recovery paths. These cases use
+  only public behavior; they never treat a cache hit as correctness evidence. }
+function RunNyxSourceAdmissionTests: Integer;
 
 implementation
 
 uses
   SysUtils,
   nyx.text,
+  nyx.types,
   nyx.model,
   nyx.controls,
   nyx.codec,
@@ -190,6 +195,188 @@ begin
     LOriginal.Free;
     LPage := nil;
     LRestored.Free;
+    LDocument.Free;
+  end;
+end;
+
+function RunNyxSourceAdmissionTests: Integer;
+var
+  LDocument: TNyxDocument;
+  LCandidate: TNyxDocument;
+  LSecond: TNyxDocument;
+  LPage: INyxPage;
+  LWorkspace: TNyxSourceWorkspace;
+  LPrepared: TNyxSourceWorkspace;
+  LRestored: TNyxSourceWorkspace;
+  LCheckpoint: TNyxSourceCheckpoint;
+  LSource: TNyxText;
+  LDraft: TNyxText;
+  LWire: TNyxText;
+  LDesign: TNyxText;
+  LChanged: TNyxText;
+  LRejected: Boolean;
+
+  procedure Check(ACondition: Boolean; const AReason: TNyxText);
+  begin
+
+    if not ACondition then
+    begin
+      raise Exception.Create('Paired source admission: ' + AReason);
+    end;
+    Inc(Result);
+  end;
+
+begin
+  Result := 0;
+  LDocument := TNyxDocument.Create;
+  LSecond := TNyxDocument.Create;
+  LCandidate := nil;
+  LWorkspace := TNyxSourceWorkspace.Create;
+  LPrepared := nil;
+  LRestored := TNyxSourceWorkspace.Create;
+  try
+    LDocument.Title := 'Paired admission';
+    LPage := NewNyxPage('home');
+    LPage.Add(NewNyxLabel('message').WithText('Original caption'));
+    LDocument.AddPage(LPage);
+    LPage := nil;
+    LSource := EditNyxManagedFixture(TNyxCodegen.Generate(LDocument),
+      'LMessageLabel', 'LAuthoredCaption');
+    LSource := EditNyxManagedFixture(LSource, '''Original caption''',
+      '''Original '' + { Retain / 🌙 / 漢字 } ''caption''');
+    LWorkspace.Accept(LDocument, LSource);
+    LWire := LWorkspace.Snapshot;
+    LDesign := TNyxCodec.Encode(LDocument);
+    LDraft := EditNyxManagedFixture(LSource, '''Original ''', '''Changed ''');
+    LCandidate := LWorkspace.PrepareCandidate(LDocument, LDraft, LPrepared);
+    Check((LCandidate <> LDocument) and (LPrepared <> LWorkspace),
+      'preparation returns independently owned document and companion');
+    Check((LPrepared.Render(LCandidate) = LDraft) and
+      (LCandidate.Find('message').Prop('text') = 'Changed caption'),
+      'one exact draft reconstructs the complete prepared pair');
+    Check((LWorkspace.Snapshot = LWire) and (TNyxCodec.Encode(LDocument) = LDesign),
+      'successful preparation leaves the accepted pair unchanged');
+    LCandidate.Title := 'Prepared later';
+    LChanged := LPrepared.Render(LCandidate);
+    Check((Pos('Prepared later', LChanged) > 0) and
+      (Pos('LAuthoredCaption', LChanged) > 0) and
+      (Pos('Retain / 🌙 / 漢字', LChanged) > 0),
+      'later prepared edits preserve names and exact Unicode expression comments');
+    Check((LWorkspace.Snapshot = LWire) and (TNyxCodec.Encode(LDocument) = LDesign),
+      'editing the prepared pair cannot mutate its former accepted owners');
+    FreeAndNil(LCandidate);
+    FreeAndNil(LPrepared);
+
+    LDraft := EditNyxManagedFixture(LSource,
+      '''Original '' + { Retain / 🌙 / 漢字 } ''caption''', 'False');
+    LRejected := False;
+    try
+      LCandidate := LWorkspace.PrepareCandidate(LDocument, LDraft, LPrepared);
+    except
+      on ENyxSource do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (LCandidate = nil) and (LPrepared = nil),
+      'wrong-typed admission publishes neither owner');
+    Check((LWorkspace.Snapshot = LWire) and (TNyxCodec.Encode(LDocument) = LDesign),
+      'wrong-typed admission retains exact accepted source and design');
+    LRejected := False;
+    try
+      LCandidate := LWorkspace.PrepareCandidate(LDocument,
+        NyxViewsBegin + #10 + LSource, LPrepared);
+    except
+      on ENyxSource do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (LPrepared = nil) and (LWorkspace.Snapshot = LWire),
+      'whole-source boundary rejection cannot publish a partial frame');
+
+    LDocument.Find('message').SetProp('enabled', 'invalid');
+    LRejected := False;
+    try
+      LWorkspace.Render(LDocument);
+    except
+      on ENyxModel do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (LWorkspace.Snapshot = LWire),
+      'invalid direct model mutation cannot update accepted or derived text');
+    LDocument.Find('message').SetProp('enabled', 'true');
+    LChanged := LWorkspace.Render(LDocument);
+    Check((Pos('Enabled(True)', LChanged) > 0) and
+      (Pos('Retain / 🌙 / 漢字', LChanged) > 0),
+      'repaired direct mutation still receives fresh full visual admission');
+    LDocument.Title := 'Changed directly';
+    LChanged := LWorkspace.Render(LDocument);
+    Check((Pos('Changed directly', LChanged) > 0) and
+      (Pos('LAuthoredCaption', LChanged) > 0),
+      'a warmed workspace observes subsequent public document mutation');
+    LCheckpoint := LWorkspace.Capture(LDocument);
+    LWire := LWorkspace.Snapshot;
+    LRestored.Restore(LCheckpoint);
+    Check((LRestored.Render(LDocument) = LChanged) and (LRestored.Snapshot = LWire),
+      'typed recovery preserves exact wire and source without derived history text');
+    LDocument.Find('message').SetProp('hint', 'After typed restore');
+    LChanged := LRestored.Render(LDocument);
+    Check((Pos('After typed restore', LChanged) > 0) and
+      (Pos('Retain / 🌙 / 漢字', LChanged) > 0),
+      'first edit after typed restore reconstructs the exact prior design baseline');
+    LRestored.Restore(LWire);
+    LChanged := LRestored.Render(LDocument);
+    Check((Pos('After typed restore', LChanged) > 0) and
+      (Pos('LAuthoredCaption', LChanged) > 0),
+      'wire recovery independently reconstructs the prior baseline for direct edits');
+
+    LSecond.Title := 'Independent second design';
+    LPage := NewNyxPage('home');
+    LPage.Add(NewNyxButton('message').WithText('Second action'));
+    LSecond.AddPage(LPage);
+    LPage := nil;
+    LDraft := EditNyxManagedFixture(TNyxCodegen.Generate(LSecond),
+      'LMessageButton', 'LAuthoredCaption');
+    LDraft := EditNyxManagedFixture(LDraft, 'INyxButton', 'INYXBUTTON');
+    LDraft := EditNyxManagedFixture(LDraft, 'NewNyxButton', 'newnyxbutton');
+    LCandidate := LWorkspace.PrepareCandidate(LSecond, LDraft, LPrepared);
+    Check((LPrepared.Render(LCandidate) = LDraft) and
+      (LCandidate.Find('message').Kind = 'button'),
+      'case-insensitive specialized types and factories retain exact authored spelling');
+    LCandidate.Find('message').SetProp('hint', 'Independent button hint');
+    LChanged := LPrepared.Render(LCandidate);
+    Check((Pos('INYXBUTTON', LChanged) > 0) and
+      (Pos('Independent button hint', LChanged) > 0),
+      'same authored local can describe a different type in an independent prepared pair');
+    FreeAndNil(LCandidate);
+    FreeAndNil(LPrepared);
+    LWorkspace.Reset;
+    LChanged := LWorkspace.Render(LSecond);
+    Check((Pos('LMessageButton: INyxButton', LChanged) > 0) and
+      (Pos('Retain /', LChanged) = 0),
+      'Reset cannot retain former authored names or derived baseline text');
+    LDraft := EditNyxManagedFixture(LChanged, 'INyxButton', 'INyxLabel');
+    LRejected := False;
+    try
+      LCandidate := LWorkspace.PrepareCandidate(LSecond, LDraft, LPrepared);
+    except
+      on ENyxSource do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (LPrepared = nil) and (LWorkspace.Render(LSecond) = LChanged),
+      'specialized factory assignment remains strongly typed after reset');
+  finally
+    LPage := nil;
+    LPrepared.Free;
+    LCandidate.Free;
+    LRestored.Free;
+    LWorkspace.Free;
+    LSecond.Free;
     LDocument.Free;
   end;
 end;

@@ -172,12 +172,12 @@ begin
     LDocument.Free;
     GRejectedRoot := nil;
   end;
-  Check((LMemo.Value = 'Updated through INyxMemo / 🌙') and
+  Check((LMemo.Value = TNyxText('Updated through INyxMemo / 🌙')) and
     (LBadge.Text = 'Updated badge'), 'retained interfaces remain valid after target/document disposal', Result);
   LMemo.Value := 'After disposal';
   Check(LMemo.Value = 'After disposal', 'surviving typed control still admits an authored edit', Result);
   Check((LRuntimeRoot.Node.IsRealized) and
-    (LRuntimeMemo.Value = 'Updated through INyxMemo / 🌙'),
+    (LRuntimeMemo.Value = TNyxText('Updated through INyxMemo / 🌙')),
     'managed runtime interfaces survive renderer-owned root disposal', Result);
   Inc(Result, RunNyxCollectionApplicationJourney);
   Inc(Result, RunNyxCollectionControlJourney);

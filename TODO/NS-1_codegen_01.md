@@ -480,3 +480,45 @@ Budget one implementation/consumer packet, then reassess. Stop on lost pairs,
 draft/history corruption, stale mutation visibility or failed preservation. Do
 not substitute another isolated lexer report, reset the counter, weaken the
 original criterion or move this task to DONE from transport evidence.
+
+## Paired admission and derived canonical builders — 2026-10-05
+
+The bounded whole-command candidate removes an unused generated verifier
+baseline, repeated candidate encoding and repeated reconstruction of the previous
+canonical builder. Source Apply prepares an independently owned tree/companion
+together from one complete draft admission. Every candidate still reconstructs
+fresh, validates the entire project and admits its canonical encoding before
+publication. Every public Render freshly encodes direct model mutations. Derived
+canonical text belongs only to its workspace, is omitted from immutable history
+and wire recovery, and is cleared on both restoration paths. Finite specialized
+Pascal vocabulary is initialized once and read only; no application parse cache
+or document/reader lifetime is introduced.
+
+Eighteen additional public behavior cases bring the focused native packet to 83,
+with zero leaks. Current core/designer checks pass 30/1560; eight native compiled
+companion outcomes and both source compilers pass. The actual Win32 LCL packet
+qualifies Studio source authoring and bindings; exact results and retained
+viewport-prerequisite failures are recorded in WORK.md. Owned fixture warnings
+are corrected without suppressions. Browser focused/shared/authoring/Studio and
+compiled companions compile with seven installed RTL warnings. The requested
+separate static fixture listener launch was refused by automatic approval review
+("blocked by policy"); it was not retried. Browser execution/timing of this
+candidate remains pending, and compilation does not earn that gate.
+
+The unchanged correctness-gated native benchmark improves 2048-control visual
+editing 4421→3297 ms and structural editing 5484→4390 ms. Apply improves
+1594→1485 ms; history/rejection show no material gain. These observations cover
+portable complete commands, not painting/OS input/compilation, and remain too
+slow for comfortable large-project editing. Criteria 1/2 stay accepted; criterion
+3 remains open. Consecutive no-closure count advances 11 to 12, without resetting
+or transferring the original outcome.
+
+Reassessment: stop the bounded generation/encoding cleanup. Qualify the same
+candidate through browser execution when the permitted fixture host is available;
+do not retry an equivalent rejected listener launch. The next safe implementation
+must address complete candidate/property-metadata admission and ordinary Studio
+interaction costs together, using operation-owned immutable facts rather than a
+stale document cache. Keep complete fresh admission, direct mutation visibility,
+exact authored frames, original benchmark sizes and paired history. Stop on a
+failed preservation/ownership gate. No isolated lexer report, grammar expansion,
+weakened browser requirement, DONE move or completion credit replaces this scope.

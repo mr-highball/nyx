@@ -37,14 +37,22 @@ var
   LStarted: QWord;
   LFile: TFileStream;
   LExpected: RawByteString;
+  LRealClock: Boolean;
 
 begin
   LProcess := nil;
   try
 
-    if (ParamCount <> 3) or (Pos('http://127.0.0.1:', ParamStr(1)) <> 1) then
+    if ((ParamCount <> 3) and (ParamCount <> 4)) or
+      (Pos('http://127.0.0.1:', ParamStr(1)) <> 1) then
     begin
       raise Exception.Create('Supply localhost fixture URL, build artifact directory and expected passed attribute');
+    end;
+    LRealClock := ParamCount = 4;
+
+    if LRealClock and (ParamStr(4) <> '--real-clock') then
+    begin
+      raise Exception.Create('The optional capture mode is --real-clock');
     end;
     LDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
     ForceDirectories(LDirectory);
@@ -60,7 +68,14 @@ begin
     LProcess.Parameters.Add('--disable-extensions');
     LProcess.Parameters.Add('--user-data-dir=' + LDirectory + 'profile');
     LProcess.Parameters.Add('--window-size=1100,1000');
-    LProcess.Parameters.Add('--virtual-time-budget=90000');
+    { Synchronous Pascal benchmarks finish during ordinary page load. Their
+      measured performance clock must never run under accelerated virtual time.
+      Asynchronous functional captures retain the existing explicit budget. }
+
+    if not LRealClock then
+    begin
+      LProcess.Parameters.Add('--virtual-time-budget=90000');
+    end;
     LProcess.Parameters.Add('--dump-dom');
     LProcess.Parameters.Add('--screenshot=' + LDirectory + 'capture.png');
     LProcess.Parameters.Add(ParamStr(1));

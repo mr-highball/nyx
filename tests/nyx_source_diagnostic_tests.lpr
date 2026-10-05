@@ -40,7 +40,8 @@ var
 begin
   try
     LCount := RunNyxSourceDiagnosticTests + RunNyxIndexedSourceTests +
-      RunNyxSourceContextTests + RunNyxSourceHistoryTests + RunNyxCompilerDiagnosticTests;
+      RunNyxSourceContextTests + RunNyxSourceHistoryTests +
+      RunNyxSourceAdmissionTests + RunNyxCompilerDiagnosticTests;
     {$ifdef PAS2JS}
     document.body.textContent := 'PASS ' + IntToStr(LCount) + ' source diagnostic checks';
     document.body.setAttribute('data-source-diagnostics', 'passed');

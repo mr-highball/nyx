@@ -37,6 +37,14 @@ has closed no complete delivery criterion (count 1). End this inventory/repair
 batch and return to the existing concurrent-project acceptance gates; their
 recorded reassessment and no-closure count 2 are unchanged.
 
+The 2026-10-05 source-responsiveness qualification also rebuilds the ordinary
+Win32 LCL fixture, which retained nine warnings outside that earlier bounded
+inventory. Explicit portable text comparisons, direct UTF-8 widget input and
+complete inspector-effect handling remove them without warning suppressions.
+The source packet owns the actual execution results in WORK.md. This incidental
+fixture repair does not accept the full compiler/platform matrix, reopen the
+ended inventory batch or reset this task's existing no-closure count of 1.
+
 **Blockers**
 
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
