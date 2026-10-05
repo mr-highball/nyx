@@ -852,3 +852,25 @@ qualification retain their original owners and acceptance gates. Next follow
 that broader integration rather than another timing/lookup variant; preserve
 fresh admission, source meaning, independent ownership and exact paired history.
 This accepts no full task, product readiness or complete parity.
+
+## Semantic scalar state and binding commands — 2026-10-05
+
+The existing workflow owner's missing semantic vocabulary now consumes ordinary
+typed state/binding commands on an independent session and publishes its final
+source/design pair once. Both native compilers pass 55 checks covering source
+helpers, scalar/Unicode preservation, failed groups, pending drafts, exact retry
+authority, paired Undo and explicit concurrent/review contexts. The exact emitted
+companion reconstructs and drives actual LCL controls in 15 checks, including
+independent runtime stores, inherited reusable bindings and rejected numeric
+input. Offline discovery passes 14 and agent/callback regressions pass 39/45,
+with zero native leaks. Shared and compiled browser consumers are staged only;
+authenticated new-tool discovery and observing execution retain their host gate.
+
+Criteria 1/2 remain accepted; criterion 3 remains open. The no-closure count
+advances 22→23 once for this batch, with renderer 3, native authoring 7 and delivery
+1 unchanged. Reassessment changes the next action to ordinary state/default and
+binding inspectors consuming isolated typed admission, including explicit rename
+commit semantics that preserve consecutive input. Broader event/source routes,
+large-project comfortable editing and full both-target ordinary-editor outcomes
+retain their original gates. No stable-fixture repetition or narrower parity
+claim substitutes completion. See WORK.md and the workflow task's criterion 5.

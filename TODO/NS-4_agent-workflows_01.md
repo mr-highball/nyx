@@ -52,8 +52,9 @@ the present Windows installation; the Pascal semantic client is usable immediate
 create/update/move/delete/title/tokens. Callback authoring now has a focused tool;
 immutable build requests and bounded status are now qualified. Local callback
 implementation editing now has a focused bounded tool. General
-source/import editing remains absent. State/binding
-commands and reusable authoring are not advertised. Root
+source/import editing remains absent. Scalar state/binding commands now have a
+source/staged qualification packet below; richer reusable and structured-state
+authoring remain unadvertised. Root
 creation and reviewed root deletion are supported; root ordering remains absent.
 Protected review lifecycle and explicit concurrent project contexts now have
 source/staged qualification packets below, distinct from production deployment.
@@ -329,3 +330,34 @@ repeat stable registry/jump fixtures or relabel a preview as full authoring.
 The user's new warning-cleanup priority follows NS-6 delivery; return here
 after that bounded source/build cleanup. Criteria 2/3/4 retain accepted evidence;
 criteria 5/6 and the full task remain open.
+
+## Semantic scalar defaults and bindings — 2026-10-05
+
+Criterion 5's missing scalar vocabulary now has one immutable typed grouped
+command and a focused `nyx_state` tool: bounded default/text/binding context and
+ordered create/set/rename/remove/bind/clear/inherit edits. Fresh ordinary Studio
+candidate admission preserves source helpers, pending drafts, typed reference
+families, explicit reusable override inheritance, operator navigation and one
+paired Undo step. Both native compilers pass 55 shared semantic/refusal/context
+checks; actual tools/list metadata passes 14 offline checks. The unchanged
+semantic companion passes 15 actual native control checks with independent
+runtime stores and zero leaks. Existing agent/callback regression passes 39/45.
+The maintained `state-bindings` target stages shared and exact compiled browser
+consumers with matched RTL. No listener or configuration is replaced.
+
+The discovery check exposed a pre-existing staged callback schema duplicating
+`not` when adding context exclusivity. Composition now retains the callback's
+original prohibited fields and both-context refusal in one constraint; the whole
+eighteen-tool catalog executes offline. Runtime publication remains protected by
+the original permission/revision/authority/receipt and paired-history guards.
+
+This closes no full criterion. Updated authenticated MCP/observing-browser
+execution retains its recorded host gate; structured collection operations,
+richer reusable authoring and general source/import workflows remain required.
+Criterion 5's bounded no-closure sequence advances 2→3. Reassessment ends schema/
+fixture expansion: checkpoint this usable command, then connect ordinary state
+and binding inspectors to isolated admission with deliberate rename commit
+boundaries. Do not drop or retarget consecutive rename input. Original codegen
+criterion 3 consumes this source/history integration and advances 22→23; renderer
+3, native authoring 7 and delivery 1 stay unchanged. No acceptance/DONE gate or
+scope is weakened. WORK.md owns exact artifacts, deployment and remote evidence.

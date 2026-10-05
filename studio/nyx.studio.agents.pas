@@ -75,6 +75,9 @@ type
     function CompilerSnapshot: TNyxDataValue;
     function HandlerSource(const AArguments: TNyxDataValue;
       AApply: Boolean): TNyxDataValue;
+    { Bounded accepted-default/binding context and one typed grouped mutation.
+      The same revision, permission, receipt and paired Undo guards apply. }
+    function StateBindings(const AArguments: TNyxDataValue): TNyxDataValue;
     function EditCallbacks(const AArguments: TNyxDataValue;
       const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
     function RemoveRoots(const AArguments: TNyxDataValue;
@@ -141,7 +144,8 @@ implementation
 uses
   nyx.catalog, nyx.catalog.labels, nyx.callbacks, nyx.codec, nyx.composition,
   Math, nyx.source, nyx.design.tokens, nyx.studio.edits, nyx.studio.callbackedits,
-  nyx.studio.handleredits;
+  nyx.studio.handleredits, nyx.studio.stateedits, nyx.state, nyx.binding,
+  nyx.binding.types;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
 var
@@ -1265,6 +1269,8 @@ begin
     NyxField('pendingDraft', NyxData(FSession.DraftSource <> FSession.Source))]);
 end;
 
+{$I nyx.studio.agents.state.inc}
+
 function TNyxAgentSession.Call(const ATool, AActor: TNyxText;
   const AArguments: TNyxDataValue; const ARequestOwner: TNyxText): TNyxDataValue;
 var
@@ -1281,6 +1287,8 @@ var
   LHandlerResults: TNyxDataValue;
   LRootApply: Boolean;
   LRootResults: TNyxDataValue;
+  LStateApply: Boolean;
+  LStateResults: TNyxDataValue;
   LAuthority: TNyxText;
 begin
   LAuthority := ARequestOwner;
@@ -1295,6 +1303,8 @@ begin
   LHandlerResults := NyxNull;
   LRootApply := False;
   LRootResults := NyxNull;
+  LStateApply := False;
+  LStateResults := NyxNull;
 
   try
 
@@ -1316,8 +1326,13 @@ begin
     begin
       LRootApply := TextArgument(AArguments, 'mode') = 'apply';
     end;
+
+    if ATool = 'nyx_state' then
+    begin
+      LStateApply := TextArgument(AArguments, 'mode') = 'apply';
+    end;
     LMutation := (ATool = 'nyx_transaction') or (ATool = 'nyx_select') or
-      (ATool = 'nyx_history') or LCallbackApply or LHandlerApply or LRootApply;
+      (ATool = 'nyx_history') or LCallbackApply or LHandlerApply or LRootApply or LStateApply;
 
     if LMutation and (FPermission <> apEdit) then
     begin
@@ -1389,6 +1404,11 @@ begin
     begin
       NyxAgentFields(AArguments, '|expectedRevision|operationId|operations|');
       FSession.ApplyPatch(ReadNyxDesignPatch(AArguments.Field('operations')));
+    end
+    else if ATool = 'nyx_state' then
+    begin
+      Result := StateBindings(AArguments);
+      LStateResults := Result;
     end
     else if ATool = 'nyx_callbacks' then
     begin
@@ -1495,6 +1515,11 @@ begin
       if LRootApply then
       begin
         Result := WithResults(Result, LRootResults, 'removedRoots');
+      end;
+
+      if LStateApply then
+      begin
+        Result := WithResults(Result, LStateResults, 'stateBindings');
       end;
 
       if Length(FReceiptKeys) = 64 then

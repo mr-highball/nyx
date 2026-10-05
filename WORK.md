@@ -7,7 +7,17 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest bounded source packet: [canvas proposals](#isolated-canvas-input-and-exact-field-reconciliation--2026-10-05)
+Latest bounded packet: [semantic scalar state and bindings](#semantic-scalar-state-and-binding-commands--2026-10-05)
+adds bounded context and one typed grouped paired edit. Shared checks pass 55 on
+each native compiler, actual offline tools/list discovery 14 and exact compiled
+native controls 15; native teardown has zero leaks. Browser consumers compile
+with matched RTL, while updated authenticated discovery/observing execution keep
+the recorded host gate. Workflow criterion 5 stays open at count 3; codegen
+criterion 3 stays open at count 23. Renderer 3, native authoring 7 and delivery 1
+remain unchanged. Broader asynchronous inspector integration, reusable/structured
+state semantics, source/import and full both-target editor qualification remain.
+
+Preceding bounded source packet: [canvas proposals](#isolated-canvas-input-and-exact-field-reconciliation--2026-10-05)
 now share isolated paired admission. Owned view/runtime/owner/platform and mounted-load identities replace
 worker access to live realized nodes. Fresh replay preserves typed state defaults
 and instance-only named parts. Exact field restoration fixes the actual rejected
@@ -34,6 +44,22 @@ still require the recorded permitted host without an equivalent refused launch.
 Stop or switch on accepted-tree worker access, lost/reordered input, stale meaning,
 retargeted ownership or weakened admission. No scope/count reset, another
 timing/lookup variant or weaker DONE gate substitutes the full intended outcome.
+
+Completed current batch follows workflow criterion 5 and original codegen
+criterion 3. Typed state/default and binding edits now use bounded queries,
+revision/authority-bound receipts and one paired Undo step. Callback authoring
+retains its existing qualified semantic path. Native source/history/reference/
+reusable/refusal and compiled-control evidence is assessed below; updated
+browser/listener qualification retains the existing automatic-review gate.
+The previous goal turn was progress: 4b753e9/1354fc3 are an exact clean/pushed
+canvas checkpoint. This turn changes usable semantic vocabulary and fixes actual
+staged discovery; no full criterion closes. Counts advance once as stated above.
+Next connect ordinary state/default and binding inspectors to isolated typed
+admission with explicit rename commit semantics. Naively replaying every rename
+keystroke against its previous name would lose or retarget later input; do not
+implement that shortcut. Stop on partial admission, reference retargeting, lost
+source/history/input or weakened fresh guards. No repeated fixture expansion,
+scope/count reset or narrower DONE/parity claim substitutes the remaining outcome.
 
 Completed bounded packet under original codegen criterion 3 extends the existing
 isolated source-command processor to ordinary visual property and structural
@@ -6258,3 +6284,100 @@ handoff head separately, hashes, timings, compiler/runtime scope and current
 semantic session. Logs, binaries, captures and private configuration remain
 ignored. This checkpoint changes no live deployment or active user pair; the
 broader integration and original full-goal gates remain above.
+
+## Semantic scalar state and binding commands — 2026-10-05
+
+This bounded batch follows NS-4_agent-workflows criterion 5 and consumes original
+NS-1_codegen criterion 3. `NyxStateBindingPatch` owns 1..32 typed copied commands;
+its independent ordinary session admits ordered create/set/rename/remove/bind/
+clear/inherit work, then the active session publishes its final pair once.
+Typed reference overloads derive binding families without raw behavior strings.
+Failed groups preserve accepted/draft/base bytes, source helpers, navigation and
+history. Rename migrates authored references across pages/definitions; existing
+explicit reusable override IDs preserve deliberate clearing versus inheritance.
+Commands still use ordinary per-operation generation on their temporary session;
+this packet makes no batching-throughput or comfortable-editing claim.
+
+`nyx_state` exposes bounded default rows (80-scalar text previews), exact text
+windows (4096 scalars), local/effective binding context and one grouped apply.
+Permission, exact revision, private authority, bounded receipts and pending-draft
+refusal use the existing shared agent boundary. Context wrappers retain explicit
+project/review ownership and do not follow observing-user navigation. Activity
+records completion/refusal through the ordinary operator observation. The current
+source tools/list catalog contains eighteen tools; the protected LAN/current
+native desktop inventory remains fifteen. No listener, service configuration,
+Codex enrollment or active user pair was replaced.
+
+Meaningful qualification exposed two product defects. Local `FindBinding` reports
+usable bindings only, so discovery initially lost cleared descriptors; authored
+local discovery now reads exact owned descriptors while effective discovery keeps
+usable bindings. Actual whole-catalog construction then exposed a pre-existing
+staged callback schema adding duplicate `not` keys. Composition now preserves
+its original callback-review prohibitions and both-context refusal with one
+combined constraint. The offline catalog consumer qualifies that exact boundary.
+Early fixture errors (wrong override enum, disabled-agent preservation snapshot,
+qualified reusable runtime IDs and native numeric commit timing) were corrected
+to use the public contracts; they do not represent successful product behavior.
+
+Maintained evidence is ignored under `build/state-binding-semantic/` and
+`build/state-bindings/`:
+
+- `tools/build.ps1 -Target state-bindings` / `maintained-build.log` passes **55**
+  semantic checks on checked FPC 3.2.0, **14** actual offline tools/list schema
+  checks and **15** actual Win32 controls from the unchanged admitted companion.
+  All three traced processes report zero unfreed blocks.
+- `native-3.3/build.log` / `run.log` passes the same **55** shared checks on checked
+  FPC 3.3.1, with zero leaks. Tests include all four families, supplementary/NUL
+  values, bounded pagination, wrong primitive/domain/reference refusal, failed
+  later operations, actor-bound exact retries, pending draft/disabled/read-only,
+  rename propagation, clear/inherit and one exact paired Undo/Redo.
+- `regression/nyx_agent_tests-run.log` / `nyx_agent_callback_tests-run.log` passes
+  **39 / 45** existing checks with zero leaks. These counts retain their original
+  scope and are not newly delivered features.
+- Native compiled controls prove actual memo/checkbox/numeric input, inherited
+  reusable projections, invalid-number restoration, parent-disabled write refusal
+  and independent application stores. Authored design/defaults remain byte-exact.
+  This is actual control behavior, not store-only evidence or full Studio painting.
+- `server/build.log` builds the current server to a separate staged directory.
+  `NyxStudioMCPTools` executes pure discovery without any service constructor,
+  credential refresh or listener. This proves catalog construction, not current
+  authenticated new-tool availability.
+- The maintained target compiles shared semantic and unchanged compiled browser
+  control consumers, copies matched RTL and stages English hosts. Browser
+  execution, physical input and observing updated Studio remain unqualified here.
+  Owned warnings are zero; seven distinct installed Classes RTL warnings remain.
+  Dependencies and warning policy were not altered.
+
+The exact semantic export under `build/state-bindings/export` has SHA-256:
+source `D8E40EB424F4A5BF54315EFFAACD0DFABB5EC5A2D8F650E1ECF5F3CE159563B5`,
+design `375665ED5E4655C69A603420A444211394DB4006297A95C3AEACFCCC3C18C57E`,
+paired project `3E6C90F0C3C1CA489CA52680830A030339CF6FF8054435F3E5C329F4853BEEFB`.
+Native execution of that exact source reconstructs the design. English demo
+controls and dedicated supplementary/NUL qualification defaults remain separate.
+
+This goal turn is progress toward the full outcome: a confirmed missing semantic
+operation is usable in source and qualified natively, with the actual staged
+catalog repaired. No full criterion closes. Workflow criterion 5's no-closure
+sequence advances **2→3**, codegen criterion 3 **22→23** once, renderer **3**, native
+authoring **7** and delivery **1** unchanged. Reassessment stops schema/fixture
+expansion and changes the next deliverable to ordinary state/binding inspectors
+consuming isolated typed admission. Rename needs an explicit commit contract or
+stable identity before queued replay; consecutive keystrokes cannot safely use
+stale names. Broader event/source routing, structured collection/reusable/general
+source/import semantics, comfortable large-project editing and ordinary both-
+target editor outcomes retain their original owners and acceptance gates.
+
+Automatic approval review previously rejected qualification-listener launch
+("blocked by policy", no further reason). This packet does not repeat or replace
+that action. Updated authenticated tools, observing Studio and browser execution
+still need that permitted host; successful compilation/offline metadata is not a
+substitute. Final protected-process/session and remote-checkpoint proof follows.
+
+Final preservation check: all eight protected process IDs match their recorded
+executable paths and exact creation timestamps; zero state/schema/control fixture
+processes remain. Native named `nyx_session` still authenticates revision 6,
+Untitled project / home, one page/reusable, no pending draft, Undo unavailable,
+Redo available, activity sequence 189. Only read-only session inspection occurred
+on that primary project in this packet. The Windows proof is private under
+`.local/codex-restart-check/state-binding-processes.json`; date comparison uses
+the deserialized DateTime directly so its subsecond identity is retained.

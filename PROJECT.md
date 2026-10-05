@@ -154,6 +154,16 @@ compile; changed browser runtime behavior still requires its permitted host.
 The preceding designer prerequisite retains its 34 native / 32 desktop / 33
 actual-390 browser checks, including painted selection and focused view movement.
 
+Scalar state/default and existing authored binding operations now have a focused
+semantic tool and immutable typed grouped command. Current offline qualification
+passes 55 shared checks on each native compiler, 14 actual discovery-schema checks
+and 15 exact compiled native control checks, with zero leaks. Browser consumers
+compile; updated authenticated discovery and observing runtime remain at the
+existing host gate. The source catalog has eighteen tools, while the protected
+LAN release and current desktop chat retain fifteen. General source/import,
+structured-state/richer reusable semantics and asynchronous inspector integration
+remain open; WORK.md owns exact evidence and the next acceptance path.
+
 Concurrent project sessions now have a qualified portable foundation and
 ordinary browser jump/return workflow: 215 shared checks per target, ten actual
 Agents-control checks per target and 202 desktop / 203 exact-390 real MCP/editor

@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'agents', 'state-bindings', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1165,6 +1165,55 @@ try {
     foreach ($nyxHost in @('interactions.html', 'interaction-controls.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxHost") -Destination $nyxBrowserDir
     }
+    exit 0
+  }
+
+  if ($Target -eq 'state-bindings') {
+    # Pascal owns bounded semantic/retry/history assertions and exports the exact
+    # admitted companion. This target starts no Studio/MCP/HTTP listener and
+    # changes no user project, enrollment or existing service artifact.
+    $nyxStateRoot = Join-Path $nyxRoot 'build/state-bindings'
+    $nyxStateNative = Join-Path $nyxStateRoot 'native'
+    $nyxStateExport = Join-Path $nyxStateRoot 'export'
+    $nyxStateLcl = Join-Path $nyxStateRoot 'lcl'
+    $nyxStateBrowser = Join-Path $nyxStateRoot 'browser'
+
+    if ($BrowserOutput) { $nyxStateBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxStateNative, $nyxStateExport, $nyxStateLcl, $nyxStateBrowser | Out-Null
+    $nyxStateFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxStateNative", "-FE$nyxStateNative")
+    Invoke-NyxCompiler $nyxFpc ($nyxStateFlags + @('tests/nyx_agent_state_tests.lpr'))
+    & (Join-Path $nyxStateNative 'nyx_agent_state_tests.exe') $nyxStateExport
+
+    if ($LASTEXITCODE -ne 0) { throw 'Semantic state/default/binding checks failed' }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxStatePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxStateControlFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxStateExport",
+      "-Fu$nyxLazarus/lcl/units/$nyxStatePlatform", "-Fu$nyxLazarus/lcl/units/$nyxStatePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxStatePlatform", "-Fu$nyxLazarus/packager/units/$nyxStatePlatform",
+      "-FU$nyxStateLcl", "-FE$nyxStateLcl")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxStateControlFlags + @('tests/nyx_agent_state_schema.lpr'))
+    & (Join-Path $nyxStateLcl 'nyx_agent_state_schema.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Offline semantic state MCP discovery failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxStateControlFlags + @('tests/nyx_agent_state_controls.lpr'))
+    & (Join-Path $nyxStateLcl 'nyx_agent_state_controls.exe') (Join-Path $nyxStateExport 'design.nyx')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Compiled semantic native controls failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxStateBrowserFlags = @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests',
+      "-Fu$nyxStateExport", "-FE$nyxStateBrowser")
+    foreach ($nyxStateProgram in @('nyx_agent_state_tests', 'nyx_agent_state_browser')) {
+      Invoke-NyxCompiler $nyxPas2js ($nyxStateBrowserFlags + @("tests/$nyxStateProgram.lpr"))
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxStateBrowser 'rtl.js')
+    foreach ($nyxStateHost in @('agent-state.html', 'agent-state-controls.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxStateHost") -Destination $nyxStateBrowser
+    }
+    Write-Host 'Browser semantic and exact compiled-control consumers staged; execution requires an admitted HTTP host.'
     exit 0
   }
 

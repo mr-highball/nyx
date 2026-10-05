@@ -122,11 +122,16 @@ type
       read FOnOperatorProfileChange write FOnOperatorProfileChange;
   end;
 
+{ Pure discovery snapshot, shared with tools/list. It creates no service/thread,
+  configuration, credentials or document. Useful for offline schema qualification
+  while the runtime listener is deliberately kept at its protected checkpoint. }
+function NyxStudioMCPTools: TNyxDataValue;
+
 implementation
 
 uses
   nyx.studio.mcpconfig, nyx.types, nyx.studio.builds, nyx.studio.compiler,
-  nyx.model, nyx.codec, nyx.studio.outputs;
+  nyx.model, nyx.codec, nyx.studio.outputs, nyx.studio.stateedits;
 
 function NewCapability: TNyxText;
 var
@@ -970,10 +975,20 @@ var
   LProperties: array of TNyxDataField;
   LVariants: array of TNyxDataValue;
   LValue: TNyxDataValue;
+  LExclusive: TNyxDataValue;
+  LHasNot: Boolean;
   LIndex: Integer;
   LProperty: Integer;
 begin
-  SetLength(LFields, ASchema.Count + 1);
+  LHasNot := NyxAgentHas(ASchema, 'not');
+  LExclusive := NyxObject([
+    NyxField('required', NyxArray([NyxData('review'), NyxData('workspace')]))]);
+  SetLength(LFields, ASchema.Count);
+
+  if not LHasNot then
+  begin
+    SetLength(LFields, Length(LFields) + 1);
+  end;
   for LIndex := 0 to ASchema.Count - 1 do
   begin
     LValue := ASchema.Field(ASchema.Key(LIndex));
@@ -1004,13 +1019,22 @@ begin
         LVariants[LProperty] := ReviewSchema(LValue.Item(LProperty));
       end;
       LValue := NyxArray(LVariants);
+    end
+    else if ASchema.Key(LIndex) = 'not' then
+    begin
+      { A callback review alternative already excludes operation/review IDs.
+        not(A or B) retains that prohibition and adds context exclusivity without
+        duplicating a JSON key or weakening the original schema condition. }
+      LValue := NyxObject([NyxField('anyOf', NyxArray([LValue, LExclusive]))]);
     end;
     LFields[LIndex] := NyxField(ASchema.Key(LIndex), LValue);
   end;
   { Context exclusivity is discoverable as well as enforced by routing. Nested
     operation schemas retain their original closed fields and alternatives. }
-  LFields[ASchema.Count] := NyxField('not', NyxObject([
-    NyxField('required', NyxArray([NyxData('review'), NyxData('workspace')]))]));
+  if not LHasNot then
+  begin
+    LFields[ASchema.Count] := NyxField('not', LExclusive);
+  end;
   Result := NyxObject(LFields);
 end;
 
@@ -1118,7 +1142,7 @@ begin
   Result := NyxObject(LFields);
 end;
 
-function TNyxStudioMCP.Tools: TNyxDataValue;
+function NyxStudioMCPTools: TNyxDataValue;
 var
   LPage: TNyxDataValue;
   LTransaction: TNyxDataValue;
@@ -1159,6 +1183,8 @@ begin
         NyxField('group', TextSchema('Intent group key, e.g. inputs, feedback, composition, all')),
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit'))]), []), True),
     Tool('nyx_tokens', 'Read effective semantic theme colors and typed logical-pixel metrics. Change through a grouped tokens operation.', Schema(NyxObject([]), []), True),
+    Tool('nyx_state', 'Inspect paged authored defaults (case-sensitive name substring filter), exact text windows in Unicode scalars, or supported/local/effective bindings for an exact authored owner. Defaults previews contain at most 80 scalars; value windows at most 4096. Apply 1..32 ordered create/set/rename/remove/bind/clear-binding/inherit-binding changes as ONE paired Undo step. Primitive types and scalar families are exact. Rename updates authored references across pages and reusable definitions. Clear deliberately masks inheritance; inherit removes a local descriptor. Existing named-part override IDs are supported; this tool does not create overrides. Clear dependent bindings before removing a default. Apply requires Allow edits, current expectedRevision, unique operationId and no draft. Queries do not change selection or history; operator activity shows success and refusal.',
+      NyxStateAgentSchema, False),
     Tool('nyx_diagnostics', 'Page through compiler diagnostics. Locations are Unicode scalar coordinates in submitted source; stale locations cannot navigate.', Schema(LPage, []), True),
     Tool('nyx_source', 'Read only the needed accepted Pascal lines, e.g. around a compiler diagnostic. Does not return pending drafts.',
       Schema(NyxObject([NyxField('line', IntSchema(1, 100000)), NyxField('count', IntSchema(1, 80))]), []), True),
@@ -1210,6 +1236,11 @@ begin
         '{"type":"object","properties":{"mode":{"const":"inspect"},"workspace":{"type":"string","minLength":1,"maxLength":120}},"required":["mode","workspace"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"create"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"label":{"type":"string","minLength":1,"maxLength":256},"base":{"enum":["empty","accepted"]}},"required":["mode","expectedRevision","operationId","label","base"],"additionalProperties":false}]}'), False)
   ]))]);
+end;
+
+function TNyxStudioMCP.Tools: TNyxDataValue;
+begin
+  Result := NyxStudioMCPTools;
 end;
 
 function TNyxStudioMCP.PreviewData(const AToken: TNyxText): TNyxText;

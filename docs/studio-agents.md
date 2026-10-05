@@ -1,9 +1,11 @@
 # Agents in Nyx Studio
 
-The protected-review source candidate advertises a sixteenth tool,
-`nyx_reviews`. The current LAN release and this chat's connected native inventory
-still expose fifteen tools. The qualification service demonstrates the new
-capability; its source packet does not establish deployment or project switching.
+The source candidate advertises eighteen tools, including protected reviews,
+project workspaces and `nyx_state`. The current LAN release and this chat's
+connected native inventory still expose fifteen tools. Current offline state
+qualification proves the semantic command, discovery schema and native compiled
+controls; updated authenticated discovery and observing browser execution remain
+at the recorded listener/host gate in WORK.md.
 
 Studio starts with agent access enabled and editing allowed. Open **Agents** to
 see the shared revision, connected endpoint and recent operations. **Read only**
@@ -119,6 +121,7 @@ GET is explicitly unsupported (405); DELETE closes a client session. See the
 | `nyx_build` | Output readiness, immutable accepted builds and bounded job/artifact/diagnostic inspection |
 | `nyx_pascal` | Bounded accepted callback implementations and grouped exact-text guarded edits |
 | `nyx_roots` | Reviewed removal of exact page/reusable groups on paired Undo history |
+| `nyx_state` (staged) | Bounded scalar defaults, exact text windows and contextual bindings; grouped typed state/binding changes |
 
 Tool schemas advertise required fields and limits. Unknown arguments and
 unpublished properties are refused. Queries never return the full document.
@@ -127,6 +130,55 @@ can specify up to 20 exact property `keys`; `textOffset` and `textLimit` retriev
 Unicode scalar slices (up to 2048 scalars), with a total and truncation flag.
 Source queries return up to 80 lines. Structured context is capped at 48 KiB;
 request fewer items, properties or lines when that budget is exceeded.
+
+`nyx_state` has four focused modes. `defaults` pages at most 50 authored scalar
+defaults, optionally filtered by an exact case-sensitive name substring. Text
+previews contain at most 80 Unicode scalars. `value` reads one scalar; text uses
+`offset` / `count` windows of at most 4096 scalars, preserving supplementary text
+and embedded NUL. Nontext values retain their Boolean, signed Integer or finite
+Double type and refuse text-window arguments.
+
+`bindings` takes one exact authored `owner`, including an existing named-part
+override, and pages supported targets and scalar kinds. Each row distinguishes
+the local descriptor, effective inherited binding and deliberate local clearing.
+These queries leave operator selection, view, source and history unchanged.
+
+`apply` accepts 1..32 ordered `changes`, current `expectedRevision` and a unique
+`operationId`. Supported changes are `create`, `set`, `rename`, `remove`, `bind`,
+`clear-binding` and `inherit-binding`. Every scalar operation carries its exact
+`kind`; create/set primitive types must match it. Rename migrates authored
+references across pages and reusable definitions. Clear masks inheritance;
+inherit removes a local descriptor. Clear dependent bindings before removing a
+used default. Wrong families, missing owners/references, unsupported targets,
+unknown fields and pending drafts refuse the whole group. One admitted group
+publishes one ordinary paired source/design Undo step, retains unrelated helpers
+and records activity. Exact authority/operation/argument retries return the
+original receipt. Optional workspace/review routing follows the existing context
+contracts; it never follows the observing user's navigation.
+
+The typed Pascal command is `NyxStateBindingPatch`, using `NyxCreateDefault`,
+`NyxSetDefault`, `NyxRenameDefault`, `NyxRemoveDefault`, `NyxBindControl` and
+`NyxInheritBinding`. Assignments use the four typed `NyxStateValue` overloads;
+open state names and binding owners are distinct references. Binding overloads
+derive their scalar family from the typed reference, for example:
+
+```pascal
+NyxStateBindingPatch([
+  NyxCreateDefault(NyxStateValue(NyxTextState('reply'), 'Ready to compose.')),
+  NyxBindControl(NyxBindingOwner('reply-memo'), bpValue,
+    NyxTextState('reply'), bdTwoWay)
+]);
+```
+
+This packet covers
+scalar defaults and existing authored owners. Structured collection authoring,
+creation of reusable overrides, general source/import editing and asynchronous
+state/binding/event inspector routing retain their original workflow owners.
+
+Run `tools/build.ps1 -Target state-bindings` for the maintained offline semantic,
+discovery and exact compiled native-control checks. Browser semantic/control
+consumers and matching RTL are staged under `build/state-bindings/browser`;
+their compilation does not establish execution or authenticated new-tool access.
 
 Preview dimensions specify an actual CSS viewport, including narrow layouts;
 they are retained in the immutable snapshot. PNG capture checks the measured

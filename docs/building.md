@@ -80,7 +80,7 @@ From the repository, run:
 ```
 
 Individual build targets are `core`, `generated`, `collections`, `collection-views`,
-`collection-authoring`, `source-workspace`, `agents`, `split`, `interactions`,
+`collection-authoring`, `source-workspace`, `agents`, `state-bindings`, `split`, `interactions`,
 `named-events`, `viewport`, `catalog`, `browser`, `studio`, `lcl`, `http`,
 `visual` and `all`.
 The native unit cache includes compiler version and CPU/OS. LCL and pas2js

@@ -15,6 +15,15 @@ open at count 22; broader source/state/binding/event and semantic integration,
 ordinary both-target editor qualification and full depth remain required.
 Earlier mounted-host timings and packets retain their original scope.
 
+Following semantic packet: scalar defaults and existing authored bindings now
+have bounded context and one typed, undoable grouped command. Shared checks pass
+55 on both native compilers; offline discovery passes 14 and the exact compiled
+native controls pass 15 with zero leaks. Browser consumers compile but retain
+their runtime/deployment gate. Workflow criterion 5 remains open at count 3 and
+codegen criterion 3 at count 23. Next connect ordinary state/binding inspectors to
+isolated admission, preserving consecutive rename input; broader event/source,
+reusable/structured-state semantics and full ordinary-editor acceptance remain.
+
 Current native editor candidate (2026-10-05): the runnable standalone controller
 consumes the shared Nyx shell/session/routers and paired local store. Actual
 Win32 authoring passes 74 checks with zero leaks; browser shared-shell regression
