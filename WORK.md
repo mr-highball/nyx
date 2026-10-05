@@ -6381,3 +6381,12 @@ Redo available, activity sequence 189. Only read-only session inspection occurre
 on that primary project in this packet. The Windows proof is private under
 `.local/codex-restart-check/state-binding-processes.json`; date comparison uses
 the deserialized DateTime directly so its subsecond identity is retained.
+
+Remote checkpoint: product commit `79e8b59` contains this packet and is pushed to
+`origin/hello-nyx`; exact remote equality is verified. The maintained state target
+passes 55 / 14 / 15, native 3.3 passes 55, existing agent/callback regression 39/45,
+all with zero leaks. Browser compilation is staged only. Final connected primary
+revision/history and all eight protected process identities remain unchanged.
+No state/schema/control fixtures remain. This handoff updates the work record;
+its exact clean/remote proof is stored privately after its own push. Goal remains
+active/incomplete, with the next acceptance deliverable and counts above.
