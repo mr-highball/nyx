@@ -7,6 +7,65 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+User steering (2026-10-04): extend the protected workspace foundation toward
+concurrent project sessions in one Studio service. The Agents view should show
+which sessions/projects are working and let the user jump into their full editor
+and return with each project's draft/history/view retained. Temporary test
+workspaces and user project sessions require explicit, different lifetimes;
+agent requests and compiler completions retain their own context when the
+observing user switches projects. Existing NS-4 workflow and authoring owners
+now retain these acceptance criteria. Preview links alone do not satisfy them.
+The independent server remains a qualification fixture, not the intended way
+to achieve concurrent project authoring. No multi-project workflow is accepted.
+
+Interrupted review checkpoint: production remains revision 6, home selection/
+view, no pending draft/Undo and ordinary test Redo retained; native MCP reads
+authenticate. Owned stage PID 37008 (launch.json under build/review-workspaces/
+server) serves editor 8258 / MCP 8259. Verify that identity before stopping it.
+Portable review tests passed 200 native checks with zero leaks; the executed
+browser fixture passes after restoring its missing rtl.run startup call. The
+long-lived lifecycle receipt test reserves cleanup slots and retains old create
+receipts rather than silently resurrecting retired work. Direct seed constructors
+avoid the sample/claim replacement and empty reviews skip active pair export.
+Qualification remains in progress: the real MCP/ordinary Studio fixture reaches
+the pending Unicode draft and review composition, then refuses its nyx_select
+call because the fixture omitted the advertised operationId. The fixture now
+supplies that guard. Its error also reported the main revision for a review
+refusal; candidate rejection metadata now resolves only the exact owned context
+and omits a substitute revision for foreign/retired handles. The independently
+compiled context-candidate server passes checked native compilation, but this
+repair has not yet run through the real protocol journey. Client teardown retired
+its reviews; the owned stage's user draft is
+retained. No compiler jobs were requested by that failed journey. The source,
+viewer, build routing and new lifecycle tool remain in progress and undeployed.
+The branch checkpoint preserves this candidate and the new project-concurrency
+requirements; it does not accept the review prerequisite or project switching.
+
+Desktop reconnect recheck (2026-10-04): all fifteen native Nyx MCP handles are
+available in this chat. Seven direct named reads succeed: session before/after,
+bounded catalog search, page outline, selected-node properties/events, eight
+accepted Pascal lines and three diagnostics. All responses agree at revision 6;
+selection/view, page/component counts, pending draft and Undo/Redo state remain
+unchanged. Agent activity advances from 89 to 95. No setup change, service restart
+or document mutation is required. Semantic MCP remains primary; this connection
+check neither qualifies every mutation tool nor accepts the review work below.
+
+Current batch (2026-10-04): NS-4 workflow criterion 5's protected-review
+prerequisite, following the required two-batch NS-2 reassessment. The previous
+goal turn was progress: typed layout source/evidence was implemented, qualified,
+published and independently verified at implementation 20b00f3 / handoff fbded37.
+Deliver explicit owner-bound review contexts with independent ordinary Nyx Studio
+documents/source/history, bounded semantic lifecycle and routing, immutable
+context-correct compiler/preview work and an observing Nyx-built Studio view.
+Acceptance evidence must preserve the active user's exact accepted pair, pending
+draft/baseline, selection/view, revision and Undo/Redo; qualify foreign and retired
+handles, permission reduction, exact retry receipts and grouped review history
+on native/browser, real MCP, actual compilers and ordinary Studio. Stop and repair
+on any active-work mutation or workspace/job fallback. No source qualification
+claims deployment; keep production and the previous refusal boundary intact.
+This batch is in progress, not accepted. Original criterion 5/state/binding/
+reusable/general-source scope and the NS-2 return path remain unchanged.
+
 Completed bounded batch (2026-10-04): typed layout policies under the existing
 NS-2 LCL/parity owners. Public value/managed authoring, source admission and
 generation, persistence, bounded MCP metadata and both actual adapters qualify

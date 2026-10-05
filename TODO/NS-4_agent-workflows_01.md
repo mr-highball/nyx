@@ -33,6 +33,14 @@ the present Windows installation; the Pascal semantic client is usable immediate
 - Owned demo/review work can be created and cleaned up without replacing an active
   user design. Root cleanup, state/bindings and reusable workflows expose supported
   semantic operations with explicit ownership, revision and refusal behavior.
+- Agents explicitly target a project workspace and its revision. Several
+  project sessions can share the Studio service while retaining independent
+  source/drafts/history, builds, diagnostics and previews. An observing user's
+  project switch must never implicitly retarget an agent or an already admitted
+  compiler job. The Agents view shows project/session activity and opens the
+  full editor for the selected workspace; temporary reviews have an explicit
+  lifetime, distinct from user project sessions. Foreign or retired contexts
+  refuse without falling back to another project.
 
 **Blockers:**
 

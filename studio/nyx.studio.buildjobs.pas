@@ -28,7 +28,7 @@ interface
 
 uses
   Classes, SysUtils, SyncObjs, nyx.text, nyx.data, nyx.studio.projects,
-  nyx.studio.builds, nyx.studio.compiler;
+  nyx.studio.builds, nyx.studio.compiler, nyx.studio.reviews;
 
 type
   { Native compiler jobs own immutable accepted text and a private machine
@@ -55,7 +55,14 @@ type
     function Retry(const AActor: TNyxText; const AArguments: TNyxDataValue;
       out AReceipt: TNyxDataValue): Boolean;
     function Submit(const AActor: TNyxText; const AArguments: TNyxDataValue;
-      const APair: TNyxProjectPair): TNyxDataValue;
+      const APair: TNyxProjectPair): TNyxDataValue; overload;
+    { Reviews share the original two-worker/sixteen-handle budget. Their retry
+      owner is transport/context scoped; the display actor remains readable.
+      Context is an immutable reference, never a pointer into a review session. }
+    function Submit(const AActor: TNyxText; const AArguments: TNyxDataValue;
+      const APair: TNyxProjectPair; const AReview: TNyxReviewRef;
+      const ARetryOwner: TNyxText): TNyxDataValue; overload;
+    function Context(const AJob: TNyxText): TNyxReviewRef;
     { Bounded immutable results; no source, compiler log or machine profile dump.
       Current-source and navigation flags are added by the model-owning transport. }
     function Status(const AArguments: TNyxDataValue;
@@ -63,7 +70,10 @@ type
     { Drains terminal notifications once. Caller publishes under its document
       lock only if Pair is still exact. Stale jobs remain queryable independently. }
     function TakeCompletion(out AActor, AOutcome: TNyxText;
-      out APair: TNyxProjectPair; out AReport: INyxCompilerReport): Boolean;
+      out APair: TNyxProjectPair; out AReport: INyxCompilerReport): Boolean; overload;
+    function TakeCompletion(out AActor, AOutcome: TNyxText;
+      out APair: TNyxProjectPair; out AReport: INyxCompilerReport;
+      out AReview: TNyxReviewRef): Boolean; overload;
   end;
 
 { Optimistic byte fingerprint, explicitly MD5 rather than an authentication
@@ -93,6 +103,7 @@ type
   public
     ID: TNyxText;
     Actor: TNyxText;
+    Review: TNyxReviewRef;
     Repository: TNyxText;
     Profile: TNyxText;
     Pair: TNyxProjectPair;
@@ -564,6 +575,28 @@ end;
 
 function TNyxBuildJobs.Submit(const AActor: TNyxText;
   const AArguments: TNyxDataValue; const APair: TNyxProjectPair): TNyxDataValue;
+begin
+  Result := Submit(AActor, AArguments, APair, NyxActiveWorkspace, AActor);
+end;
+
+function TNyxBuildJobs.Context(const AJob: TNyxText): TNyxReviewRef;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to FJobs.Count - 1 do
+  begin
+
+    if TBuildJob(FJobs[LIndex]).ID = AJob then
+    begin
+      Exit(TBuildJob(FJobs[LIndex]).Review);
+    end;
+  end;
+  raise ENyxModel.Create('Unknown or expired build job; no context fallback');
+end;
+
+function TNyxBuildJobs.Submit(const AActor: TNyxText;
+  const AArguments: TNyxDataValue; const APair: TNyxProjectPair;
+  const AReview: TNyxReviewRef; const ARetryOwner: TNyxText): TNyxDataValue;
 var
   LExecutor: TNyxBuildExecutor;
   LIssue: TNyxText;
@@ -619,6 +652,7 @@ begin
     CreateGUID(LID);
     LJob.ID := Copy(GUIDToString(LID), 2, 36);
     LJob.Actor := AActor;
+    LJob.Review := AReview;
     LJob.Repository := FRepository;
     LJob.Profile := FProfile;
     LJob.Arguments := AArguments.Copy;
@@ -653,7 +687,7 @@ begin
     SetLength(FReceiptRequests, LIndex + 1);
     SetLength(FReceipts, LIndex + 1);
   end;
-  FReceiptKeys[LIndex] := ReceiptKey(AActor, AArguments);
+  FReceiptKeys[LIndex] := ReceiptKey(ARetryOwner, AArguments);
   FReceiptRequests[LIndex] := AArguments.ToJSON;
   FReceipts[LIndex] := Result;
 end;
@@ -719,6 +753,15 @@ end;
 
 function TNyxBuildJobs.TakeCompletion(out AActor, AOutcome: TNyxText;
   out APair: TNyxProjectPair; out AReport: INyxCompilerReport): Boolean;
+var
+  LReview: TNyxReviewRef;
+begin
+  Result := TakeCompletion(AActor, AOutcome, APair, AReport, LReview);
+end;
+
+function TNyxBuildJobs.TakeCompletion(out AActor, AOutcome: TNyxText;
+  out APair: TNyxProjectPair; out AReport: INyxCompilerReport;
+  out AReview: TNyxReviewRef): Boolean;
 const
   CSeparator: TNyxText = ' · ';
 var
@@ -727,6 +770,7 @@ var
 begin
   Result := False;
   AReport := nil;
+  AReview := NyxActiveWorkspace;
   for LIndex := 0 to FJobs.Count - 1 do
   begin
     LJob := TBuildJob(FJobs[LIndex]);
@@ -745,6 +789,7 @@ begin
           AOutcome := AOutcome + CSeparator + BoundedText(LJob.Error, 200);
         end;
         APair := LJob.Pair;
+        AReview := LJob.Review;
         AReport := LJob.Report;
         Exit(True);
       end;

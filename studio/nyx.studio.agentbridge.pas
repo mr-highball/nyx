@@ -472,6 +472,11 @@ begin
       end;
       FView.Activity := LState.Field('activity').Copy;
 
+      if NyxAgentHas(LState, 'reviews') then
+      begin
+        FView.Reviews := LState.Field('reviews').Copy;
+      end;
+
       if NyxAgentHas(LState, 'compiler') then
       begin
         FView.Compiler := LState.Field('compiler').Copy;

@@ -216,8 +216,8 @@ begin
   try
     GBase := ParamStr(1);
     GClient := TNyxMCPTestClient.Create(ParamStr(2));
-    Check(GClient.RPC('tools/list', NyxObject([])).Field('result').Field('tools').Count = 15,
-      'Actual Codex-compatible MCP advertises fifteen tools');
+    Check(GClient.RPC('tools/list', NyxObject([])).Field('result').Field('tools').Count = 16,
+      'Actual Codex-compatible MCP advertises sixteen tools');
     GObserver := TRootBrowser.Create(GBase + '/root-observer.html', ParamStr(3) + '/observer');
 
     if (ParamCount = 4) and (ParamStr(4) = 'phone') then

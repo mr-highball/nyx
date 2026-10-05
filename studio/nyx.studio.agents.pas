@@ -80,7 +80,10 @@ type
     function RemoveRoots(const AArguments: TNyxDataValue;
       const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
   public
-    constructor Create;
+    constructor Create; overload;
+    { Trusted independent review seed; accepts an owned pair through ordinary
+      Studio admission and empty history, without a sample/claim replacement. }
+    constructor Create(const APair: TNyxProjectPair); overload;
     destructor Destroy; override;
     { Arguments are admitted JSON data at this explicit semantic boundary.
       Results are bounded immutable copies. Rejected operations retain accepted
@@ -108,6 +111,13 @@ type
       Pending drafts make diagnostics stale even if the accepted source matches. }
     function CurrentPair(const APair: TNyxProjectPair): Boolean;
     procedure PublishCompilerReport(const AReport: INyxCompilerReport);
+    { Trusted workspace-owner boundary. Returns independent accepted text at an
+      exact revision, excluding any pending editor draft. It never changes the
+      source baseline, selection or either history stack. }
+    function ReviewSeed(AExpected: Integer): TNyxProjectPair;
+    { Only an owning controller may inherit the operator's current permission.
+      This is not a semantic tool or editor command and creates no revision/history. }
+    procedure InheritPermission(AValue: TNyxAgentPermission);
     property Revision: Integer read FRevision;
     property Permission: TNyxAgentPermission read FPermission;
   end;
@@ -316,6 +326,15 @@ begin
   { The product owner explicitly requested enabled editing by default. Operator
     controls can reduce or disable access without changing project data. }
   FPermission := apEdit;
+end;
+
+constructor TNyxAgentSession.Create(const APair: TNyxProjectPair);
+begin
+  inherited Create;
+  FSession := TNyxStudioSession.Create(APair);
+  FRevision := 1;
+  FPermission := apEdit;
+  FClaimed := True;
 end;
 
 destructor TNyxAgentSession.Destroy;
@@ -1708,6 +1727,29 @@ begin
     end;
   end;
   Result := FSession.ProjectSnapshot;
+end;
+
+procedure TNyxAgentSession.InheritPermission(AValue: TNyxAgentPermission);
+begin
+  FPermission := AValue;
+end;
+
+function TNyxAgentSession.ReviewSeed(AExpected: Integer): TNyxProjectPair;
+var
+  LPair: TNyxProjectPair;
+begin
+
+  if FPermission <> apEdit then
+  begin
+    raise ENyxProjectConflict.Create('Review creation requires Allow edits in Studio');
+  end;
+
+  if AExpected <> FRevision then
+  begin
+    raise ENyxProjectConflict.Create('Review seed revision conflict; inspect the active session');
+  end;
+  LPair := FSession.ProjectSnapshot;
+  Result := NyxProjectPair(LPair.Design, LPair.Source);
 end;
 
 function TNyxAgentSession.CurrentPair(const APair: TNyxProjectPair): Boolean;

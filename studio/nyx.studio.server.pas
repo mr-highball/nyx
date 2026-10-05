@@ -390,6 +390,7 @@ var
   LPair: TNyxProjectPair;
   LRevision: TNyxText;
   LRemote: TNyxText;
+  LAfter: Integer;
 begin
   AResponse.CustomHeaders.Values['Cache-Control'] := 'no-store';
   AResponse.CustomHeaders.Values['X-Content-Type-Options'] := 'nosniff';
@@ -435,7 +436,7 @@ begin
       Exit;
     end;
 
-    if LPath = '/api/agents/preview' then
+    if (LPath = '/api/agents/preview') or (LPath = '/api/agents/review') then
     begin
 
       if ARequest.Method <> 'GET' then
@@ -443,7 +444,21 @@ begin
         AResponse.Code := 405;
         Exit;
       end;
-      LRemote := FMCP.PreviewData(QueryText(ARequest, 'token'));
+      if LPath = '/api/agents/review' then
+      begin
+        LAfter := 0;
+
+        if (QueryText(ARequest, 'after') <> '') and
+          not TryStrToInt(QueryText(ARequest, 'after'), LAfter) then
+        begin
+          raise ENyxProjectConflict.Create('Review observation requires an integer revision');
+        end;
+        LRemote := FMCP.ReviewData(QueryText(ARequest, 'token'), LAfter);
+      end
+      else
+      begin
+        LRemote := FMCP.PreviewData(QueryText(ARequest, 'token'));
+      end;
 
       if LRemote = '' then
       begin

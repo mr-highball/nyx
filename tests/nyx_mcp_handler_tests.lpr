@@ -293,7 +293,7 @@ begin
     GBase := ParamStr(1);
     GClient := TNyxMCPTestClient.Create(ParamStr(2));
     LValue := GClient.RPC('tools/list', NyxObject([])).Field('result');
-    Check(LValue.Field('tools').Count = 15, 'Actual MCP initializes all fifteen focused tools');
+    Check(LValue.Field('tools').Count = 16, 'Actual MCP initializes all sixteen focused tools');
     GObserver := THandlerBrowser.Create(GBase + '/handler-observer.html', ParamStr(3) + '/observer');
 
     if (ParamCount = 4) and (ParamStr(4) = 'phone') then

@@ -28,7 +28,8 @@ interface
 
 uses
   Classes, SysUtils, SyncObjs, fphttpserver, httpdefs, Process, base64,
-  nyx.text, nyx.data, nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs;
+  nyx.text, nyx.data, nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs,
+  nyx.studio.reviews;
 
 type
   TNyxMCPHTTP = class(TFPHTTPServer)
@@ -46,6 +47,7 @@ type
     FHTTP: TNyxMCPHTTP;
     FGuard: TCriticalSection;
     FCore: TNyxAgentSession;
+    FReviews: TNyxReviewWorkspaces;
     FBuilds: TNyxBuildJobs;
     FID: TNyxText;
     FToken: TNyxText;
@@ -55,19 +57,31 @@ type
     FStudioPort: Integer;
     FClients: array of TNyxDataValue;
     FPreviews: array of TNyxDataValue;
+    { Operator-only live views have separate capabilities from immutable MCP
+      snapshots. At most eight tokens survive; retirement invalidates them. }
+    FReviewPreviews: array of record
+      Reference: TNyxReviewRef;
+      Token: TNyxText;
+    end;
     FFailure: TNyxText;
     FConfigurationIssue: TNyxText;
     procedure Request(ASender: TObject; var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
     procedure WriteCodexConfiguration;
     function Tools: TNyxDataValue;
-    function Preview(const AArguments: TNyxDataValue;
-      const AActor: TNyxText): TNyxDataValue;
+    function Preview(const AWireArguments: TNyxDataValue;
+      const AActor, AOwner: TNyxText): TNyxDataValue;
     function CapturePreview(const APreview: TNyxDataValue): TNyxDataValue;
     function ClientIndex(const AID: TNyxText): Integer;
-    function BuildTool(const AArguments: TNyxDataValue;
-      const AActor: TNyxText): TNyxDataValue;
+    function BuildTool(const AWireArguments: TNyxDataValue;
+      const AActor, AOwner: TNyxText): TNyxDataValue;
     procedure PollBuilds;
+    function EditorState(const ARequest: TNyxDataValue): TNyxDataValue;
+    function ReviewViews: TNyxDataValue;
+    { Caller holds the session guard. Refusal metadata belongs to the admitted
+      context; unknown/foreign/retired reviews receive no substitute revision. }
+    function Rejection(const AArguments: TNyxDataValue;
+      const AOwner, AMessage: TNyxText): TNyxDataValue;
   protected
     procedure Execute; override;
   public
@@ -80,6 +94,10 @@ type
     function EditorExchange(const AToken: TNyxText;
       const ARequest: TNyxDataValue): TNyxDataValue;
     function PreviewData(const AToken: TNyxText): TNyxText;
+    { Read-only operator observation of accepted review design. Unchanged
+      revisions return metadata only. Retired capabilities return empty text;
+      neither Pascal source nor pending editor drafts are exposed here. }
+    function ReviewData(const AToken: TNyxText; AAfter: Integer): TNyxText;
     function Endpoint: TNyxText;
     { Trusted operator route changes future job profiles. Running jobs retain
       their captured configuration and output identity. MCP cannot set paths. }
@@ -91,7 +109,8 @@ type
 implementation
 
 uses
-  nyx.studio.mcpconfig, nyx.types, nyx.studio.builds, nyx.studio.compiler;
+  nyx.studio.mcpconfig, nyx.types, nyx.studio.builds, nyx.studio.compiler,
+  nyx.model, nyx.codec;
 
 function NewCapability: TNyxText;
 var
@@ -207,6 +226,7 @@ begin
   FGuard := SyncObjs.TCriticalSection.Create;
   FCore := TNyxAgentSession.Create;
   FBuilds := TNyxBuildJobs.Create(FRepository, AOutputProfile);
+  FReviews := TNyxReviewWorkspaces.Create(FCore);
   FHTTP := TNyxMCPHTTP.Create(nil);
   FHTTP.Address := '127.0.0.1';
   FHTTP.Port := FPort;
@@ -229,6 +249,7 @@ begin
   Stop;
   FHTTP.Free;
   FBuilds.Free;
+  FReviews.Free;
   FCore.Free;
   FGuard.Free;
   inherited Destroy;
@@ -299,7 +320,7 @@ begin
     Result := NyxObject([NyxField('token', NyxData(FEditorToken)),
       NyxField('endpoint', NyxData(Endpoint)),
       NyxField('warning', NyxData(FConfigurationIssue + FFailure)),
-      NyxField('state', FCore.Exchange(ARequest))]);
+      NyxField('state', EditorState(ARequest))]);
   finally
     FGuard.Release;
   end;
@@ -316,10 +337,199 @@ begin
   FGuard.Acquire;
   try
     PollBuilds;
-    Result := FCore.Exchange(ARequest);
+    Result := EditorState(ARequest);
   finally
     FGuard.Release;
   end;
+end;
+
+function TNyxStudioMCP.EditorState(const ARequest: TNyxDataValue): TNyxDataValue;
+var
+  LState: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+begin
+  LState := FCore.Exchange(ARequest);
+  SetLength(LFields, LState.Count + 1);
+  for LIndex := 0 to LState.Count - 1 do
+  begin
+    LFields[LIndex] := NyxField(LState.Key(LIndex), LState.Field(LState.Key(LIndex)));
+  end;
+  LFields[High(LFields)] := NyxField('reviews', ReviewViews);
+  Result := NyxObject(LFields);
+end;
+
+function TNyxStudioMCP.ReviewViews: TNyxDataValue;
+var
+  LMetadata: TNyxDataValue;
+  LItems: array of TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LToken: Integer;
+  LMove: Integer;
+  LField: Integer;
+  LRef: TNyxReviewRef;
+begin
+  { Caller holds FGuard. Prune retired capabilities before minting replacements;
+    the live workspace budget also bounds this presentation cache. }
+  for LIndex := High(FReviewPreviews) downto 0 do
+  begin
+
+    if FReviews.Find(FReviewPreviews[LIndex].Reference) = nil then
+    begin
+      for LMove := LIndex + 1 to High(FReviewPreviews) do
+      begin
+        FReviewPreviews[LMove - 1] := FReviewPreviews[LMove];
+      end;
+      SetLength(FReviewPreviews, Length(FReviewPreviews) - 1);
+    end;
+  end;
+  LMetadata := FReviews.Observe;
+  SetLength(LItems, LMetadata.Count);
+  for LIndex := 0 to LMetadata.Count - 1 do
+  begin
+    LRef := NyxReview(LMetadata.Item(LIndex).Field('review').AsText);
+    LToken := 0;
+    while (LToken < Length(FReviewPreviews)) and
+      (FReviewPreviews[LToken].Reference.ID <> LRef.ID) do
+    begin
+      Inc(LToken);
+    end;
+
+    if LToken = Length(FReviewPreviews) then
+    begin
+      SetLength(FReviewPreviews, LToken + 1);
+      FReviewPreviews[LToken].Reference := LRef;
+      FReviewPreviews[LToken].Token := NewCapability + NewCapability;
+    end;
+    SetLength(LFields, LMetadata.Item(LIndex).Count + 1);
+    for LField := 0 to LMetadata.Item(LIndex).Count - 1 do
+    begin
+      LFields[LField] := NyxField(LMetadata.Item(LIndex).Key(LField),
+        LMetadata.Item(LIndex).Field(LMetadata.Item(LIndex).Key(LField)));
+    end;
+    LFields[High(LFields)] := NyxField('preview', NyxData('agent-review.html?token=' +
+      FReviewPreviews[LToken].Token));
+    LItems[LIndex] := NyxObject(LFields);
+  end;
+  Result := NyxArray(LItems);
+end;
+
+function TNyxStudioMCP.ReviewData(const AToken: TNyxText; AAfter: Integer): TNyxText;
+var
+  LIndex: Integer;
+  LSession: TNyxAgentSession;
+  LState: TNyxDataValue;
+  LPair: TNyxProjectPair;
+  LView: TNyxText;
+  LDocument: TNyxDocument;
+begin
+  Result := '';
+
+  if AAfter < 0 then
+  begin
+    raise ENyxProjectConflict.Create('Review observation revision must be nonnegative');
+  end;
+  FGuard.Acquire;
+  try
+    for LIndex := 0 to High(FReviewPreviews) do
+    begin
+
+      if FReviewPreviews[LIndex].Token = AToken then
+      begin
+        LSession := FReviews.Find(FReviewPreviews[LIndex].Reference);
+
+        if LSession = nil then
+        begin
+          Exit;
+        end;
+        LState := LSession.Exchange(NyxObject([NyxField('op', NyxData('observe')),
+          NyxField('after', NyxData(AAfter))]));
+
+        if not NyxAgentHas(LState, 'project') then
+        begin
+          Exit(NyxObject([NyxField('revision', NyxData(LSession.Revision)),
+            NyxField('review', NyxData(FReviewPreviews[LIndex].Reference.ID))]).ToJSON);
+        end;
+        LPair := DecodeNyxProject(LState.Field('project').AsText);
+        LView := LState.Field('session').Field('view').AsText;
+        LDocument := TNyxCodec.Decode(LPair.Design);
+        try
+
+          if LDocument.Find(LView) = nil then
+          begin
+            LView := '';
+
+            if LDocument.Count > 0 then
+            begin
+              LView := LDocument.Pages[0].ID;
+            end
+            else if LDocument.ComponentCount > 0 then
+            begin
+              LView := LDocument.Components[0].ID;
+            end;
+          end;
+        finally
+          LDocument.Free;
+        end;
+        Exit(NyxObject([NyxField('revision', NyxData(LSession.Revision)),
+          NyxField('review', NyxData(FReviewPreviews[LIndex].Reference.ID)),
+          NyxField('design', NyxData(LPair.Design)), NyxField('view', NyxData(LView))]).ToJSON);
+      end;
+    end;
+  finally
+    FGuard.Release;
+  end;
+end;
+
+function TNyxStudioMCP.Rejection(const AArguments: TNyxDataValue;
+  const AOwner, AMessage: TNyxText): TNyxDataValue;
+var
+  LFields: array of TNyxDataField;
+  LRef: TNyxReviewRef;
+  LSession: TNyxAgentSession;
+begin
+  SetLength(LFields, 2);
+  LFields[0] := NyxField('code', NyxData('operation_rejected'));
+  LFields[1] := NyxField('message', NyxData(AMessage));
+  LSession := nil;
+  LRef := NyxActiveWorkspace;
+
+  if AArguments.Kind = ndObject then
+  begin
+    try
+      LRef := NyxReviewArgument(AArguments);
+
+      if LRef.ID = '' then
+      begin
+        LSession := FCore;
+      end
+      else
+      begin
+        LSession := FReviews.Resolve(AOwner, LRef);
+      end;
+    except
+      on Exception do
+      begin
+        { Context admission already refused. Do not disclose another owner's
+          revision or label the user's active revision as this review's value. }
+        LSession := nil;
+      end;
+    end;
+  end;
+
+  if LSession <> nil then
+  begin
+    SetLength(LFields, Length(LFields) + 1);
+    LFields[High(LFields)] := NyxField('currentRevision', NyxData(LSession.Revision));
+
+    if LRef.ID <> '' then
+    begin
+      SetLength(LFields, Length(LFields) + 1);
+      LFields[High(LFields)] := NyxField('review', NyxData(LRef.ID));
+    end;
+  end;
+  Result := NyxObject(LFields);
 end;
 
 function TNyxStudioMCP.ClientIndex(const AID: TNyxText): Integer;
@@ -355,24 +565,32 @@ var
   LOutcome: TNyxText;
   LPair: TNyxProjectPair;
   LReport: INyxCompilerReport;
+  LReview: TNyxReviewRef;
+  LSession: TNyxAgentSession;
 begin
-  while FBuilds.TakeCompletion(LActor, LOutcome, LPair, LReport) do
+  while FBuilds.TakeCompletion(LActor, LOutcome, LPair, LReport, LReview) do
   begin
+    LSession := FReviews.Find(LReview);
 
-    if FCore.CurrentPair(LPair) then
+    if (LSession <> nil) and LSession.CurrentPair(LPair) then
     begin
-      FCore.PublishCompilerReport(LReport);
+      LSession.PublishCompilerReport(LReport);
     end
     else
     begin
       LOutcome := LOutcome + CEarlierDesign;
     end;
+
+    if LReview.ID <> '' then
+    begin
+      LOutcome := LReview.ID + ' / ' + LOutcome;
+    end;
     FCore.RecordActivity(LActor, 'nyx_build', LOutcome);
   end;
 end;
 
-function TNyxStudioMCP.BuildTool(const AArguments: TNyxDataValue;
-  const AActor: TNyxText): TNyxDataValue;
+function TNyxStudioMCP.BuildTool(const AWireArguments: TNyxDataValue;
+  const AActor, AOwner: TNyxText): TNyxDataValue;
 const
   CRunning: TNyxText = 'running · ';
   CSeparator: TNyxText = ' · ';
@@ -388,7 +606,21 @@ var
   LItem: TNyxDataValue;
   LDiagnostics: TNyxDataValue;
   LIndex: Integer;
+  AArguments: TNyxDataValue;
+  LReview: TNyxReviewRef;
+  LSession: TNyxAgentSession;
+  LRetryOwner: TNyxText;
 begin
+  LReview := NyxReviewArgument(AWireArguments);
+  LSession := FReviews.Resolve(AOwner, LReview);
+  AArguments := NyxReviewArguments(AWireArguments);
+  LRetryOwner := AActor;
+
+  if LReview.ID <> '' then
+  begin
+    LRetryOwner := NyxObject([NyxField('owner', NyxData(AOwner)),
+      NyxField('review', NyxData(LReview.ID))]).ToJSON;
+  end;
 
   if FCore.Permission = apDisabled then
   begin
@@ -399,13 +631,18 @@ begin
   if LMode = 'outputs' then
   begin
     NyxAgentFields(AArguments, '|mode|');
-    Exit(FBuilds.Outputs);
+    Exit(NyxWithReview(FBuilds.Outputs, LReview));
   end;
 
   if LMode = 'status' then
   begin
+
+    if FBuilds.Context(AArguments.Field('job').AsText).ID <> LReview.ID then
+    begin
+      raise ENyxProjectConflict.Create('Build job belongs to a different workspace');
+    end;
     Result := FBuilds.Status(AArguments, LPair, LCurrentOutput);
-    LCurrent := FCore.CurrentPair(LPair);
+    LCurrent := LSession.CurrentPair(LPair);
     LDiagnostics := Result.Field('diagnostics');
     SetLength(LItems, LDiagnostics.Field('items').Count);
     for LIndex := 0 to High(LItems) do
@@ -439,9 +676,10 @@ begin
     end;
     LIndex := Result.Count;
     LFields[LIndex] := NyxField('currentSource', NyxData(LCurrent));
-    LFields[LIndex + 1] := NyxField('currentRevision', NyxData(FCore.Revision));
+    LFields[LIndex + 1] := NyxField('currentRevision', NyxData(LSession.Revision));
     LFields[LIndex + 2] := NyxField('currentOutput', NyxData(LCurrentOutput));
     Result := NyxObject(LFields);
+    Result := NyxWithReview(Result, LReview);
 
     if Length(Result.ToJSON) > 48 * 1024 then
     begin
@@ -461,9 +699,10 @@ begin
     raise ENyxProjectConflict.Create('Agent builds require Allow edits in Studio');
   end;
 
-  if FBuilds.Retry(AActor, AArguments, Result) then
+  if FBuilds.Retry(LRetryOwner, AArguments, Result) then
   begin
     FCore.RecordActivity(AActor, 'nyx_build', 'retry returned original job receipt');
+    Result := NyxWithReview(Result, LReview);
     Exit;
   end;
   LScope := ParseNyxBuildScope(AArguments.Field('scope').AsText);
@@ -473,8 +712,8 @@ begin
   begin
     LView := AArguments.Field('view').AsText;
   end;
-  LPair := FCore.BuildPair(AArguments.Field('expectedRevision').AsInteger, LScope, LView);
-  Result := FBuilds.Submit(AActor, AArguments, LPair);
+  LPair := LSession.BuildPair(AArguments.Field('expectedRevision').AsInteger, LScope, LView);
+  Result := NyxWithReview(FBuilds.Submit(AActor, AArguments, LPair, LReview, LRetryOwner), LReview);
   FCore.RecordActivity(AActor, 'nyx_build', CRunning +
     NyxBuildScopeName(LScope) + CSeparator + AArguments.Field('target').AsText);
 end;
@@ -499,11 +738,64 @@ begin
     NyxField('minimum', NyxData(AMinimum)), NyxField('maximum', NyxData(AMaximum))]);
 end;
 
+{ Add routing only to each tool's outer argument object/alternative. Nested
+  callback changes, property patches and conditions retain their exact closed
+  schemas. Omitting review always denotes the user's active workspace. }
+function ReviewSchema(const ASchema: TNyxDataValue): TNyxDataValue;
+var
+  LFields: array of TNyxDataField;
+  LProperties: array of TNyxDataField;
+  LVariants: array of TNyxDataValue;
+  LValue: TNyxDataValue;
+  LIndex: Integer;
+  LProperty: Integer;
+begin
+  SetLength(LFields, ASchema.Count);
+  for LIndex := 0 to ASchema.Count - 1 do
+  begin
+    LValue := ASchema.Field(ASchema.Key(LIndex));
+
+    if ASchema.Key(LIndex) = 'properties' then
+    begin
+      SetLength(LProperties, LValue.Count + 1);
+      for LProperty := 0 to LValue.Count - 1 do
+      begin
+        LProperties[LProperty] := NyxField(LValue.Key(LProperty),
+          LValue.Field(LValue.Key(LProperty)));
+      end;
+      LProperties[High(LProperties)] := NyxField('review', NyxObject([
+        NyxField('type', NyxData('string')), NyxField('minLength', NyxData(1)),
+        NyxField('maxLength', NyxData(120)),
+        NyxField('description', NyxData('Exact owned nyx_reviews handle; omitted uses the active user design. Never infer it from a root ID.'))]));
+      LValue := NyxObject(LProperties);
+    end
+    else if ASchema.Key(LIndex) = 'oneOf' then
+    begin
+      SetLength(LVariants, LValue.Count);
+      for LProperty := 0 to LValue.Count - 1 do
+      begin
+        LVariants[LProperty] := ReviewSchema(LValue.Item(LProperty));
+      end;
+      LValue := NyxArray(LVariants);
+    end;
+    LFields[LIndex] := NyxField(ASchema.Key(LIndex), LValue);
+  end;
+  Result := NyxObject(LFields);
+end;
+
 function Tool(const AName, ADescription: TNyxText; const ASchema: TNyxDataValue;
   AReadOnly: Boolean): TNyxDataValue;
+var
+  LSchema: TNyxDataValue;
 begin
+  LSchema := ASchema;
+
+  if AName <> 'nyx_reviews' then
+  begin
+    LSchema := ReviewSchema(ASchema);
+  end;
   Result := NyxObject([NyxField('name', NyxData(AName)),
-    NyxField('description', NyxData(ADescription)), NyxField('inputSchema', ASchema),
+    NyxField('description', NyxData(ADescription)), NyxField('inputSchema', LSchema),
     NyxField('annotations', NyxObject([
       NyxField('readOnlyHint', NyxData(AReadOnly)),
       NyxField('destructiveHint', NyxData(not AReadOnly)),
@@ -674,7 +966,13 @@ begin
         '"mode":{"enum":["review","apply"]},"expectedRevision":{"type":"integer","minimum":1},' +
         '"operationId":{"type":"string","minLength":1,"maxLength":120},"reviewID":{"type":"string","minLength":1},' +
         '"roots":{"type":"array","minItems":1,"maxItems":16,"items":{"type":"object","properties":{"root":{"enum":["page","component"]},"id":{"type":"string","minLength":1}},"required":["root","id"],"additionalProperties":false}}},' +
-        '"required":["mode","expectedRevision","roots"],"additionalProperties":false,"allOf":[{"if":{"properties":{"mode":{"const":"apply"}}},"then":{"required":["operationId","reviewID"]},"else":{"not":{"anyOf":[{"required":["operationId"]},{"required":["reviewID"]}]}}}]}'), False)
+        '"required":["mode","expectedRevision","roots"],"additionalProperties":false,"allOf":[{"if":{"properties":{"mode":{"const":"apply"}}},"then":{"required":["operationId","reviewID"]},"else":{"not":{"anyOf":[{"required":["operationId"]},{"required":["reviewID"]}]}}}]}'), False),
+    Tool('nyx_reviews', 'Create, inspect, list or discard an independent review workspace. Use its explicit review handle on every semantic query/edit/build/preview. Its document, accepted Pascal, selection and Undo/Redo are independent; an accepted seed excludes the user pending draft. Owner is the authenticated MCP transport session, not its display name. Eight reviews and 64 exact lifecycle receipts are bounded. Create checks the active revision; discard checks the review revision. Studio operator permissions apply immediately. Disposal never changes the user project or publishes a review into it.',
+      TNyxDataValue.ParseJSON('{"type":"object","oneOf":[' +
+        '{"type":"object","properties":{"mode":{"const":"list"}},"required":["mode"],"additionalProperties":false},' +
+        '{"type":"object","properties":{"mode":{"const":"inspect"},"review":{"type":"string","minLength":1,"maxLength":120}},"required":["mode","review"],"additionalProperties":false},' +
+        '{"type":"object","properties":{"mode":{"const":"create"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"label":{"type":"string","minLength":1,"maxLength":256},"base":{"enum":["empty","accepted"]}},"required":["mode","expectedRevision","operationId","label","base"],"additionalProperties":false},' +
+        '{"type":"object","properties":{"mode":{"const":"discard"},"review":{"type":"string","minLength":1,"maxLength":120},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120}},"required":["mode","review","expectedRevision","operationId"],"additionalProperties":false}]}'), False)
   ]))]);
 end;
 
@@ -817,8 +1115,8 @@ begin
   end;
 end;
 
-function TNyxStudioMCP.Preview(const AArguments: TNyxDataValue;
-  const AActor: TNyxText): TNyxDataValue;
+function TNyxStudioMCP.Preview(const AWireArguments: TNyxDataValue;
+  const AActor, AOwner: TNyxText): TNyxDataValue;
 var
   LPair: TNyxProjectPair;
   LToken: TNyxText;
@@ -827,7 +1125,11 @@ var
   LWidth: Integer;
   LHeight: Integer;
   LIndex: Integer;
+  AArguments: TNyxDataValue;
+  LReview: TNyxReviewRef;
 begin
+  LReview := NyxReviewArgument(AWireArguments);
+  AArguments := NyxReviewArguments(AWireArguments);
   NyxAgentFields(AArguments, '|expectedRevision|view|width|height|capture|');
   LRevision := AArguments.Field('expectedRevision').AsInteger;
   LView := AArguments.Field('view').AsText;
@@ -851,7 +1153,7 @@ begin
   LToken := NewCapability;
   FGuard.Acquire;
   try
-    LPair := FCore.PreviewPair(LRevision, LView, AActor);
+    LPair := FReviews.Resolve(AOwner, LReview).PreviewPair(LRevision, LView, AActor);
 
     if Length(FPreviews) = 16 then
     begin
@@ -874,6 +1176,7 @@ begin
     NyxField('height', NyxData(LHeight)),
     NyxField('url', NyxData('http://127.0.0.1:' + IntToStr(FStudioPort) +
       '/agent-preview.html?token=' + LToken))]);
+  Result := NyxWithReview(Result, LReview);
 end;
 
 procedure TNyxStudioMCP.Request(ASender: TObject;
@@ -932,6 +1235,12 @@ begin
       end
       else
       begin
+        FGuard.Acquire;
+        try
+          FReviews.ReleaseOwner(LClientID);
+        finally
+          FGuard.Release;
+        end;
         FClients[LIndex] := FClients[High(FClients)];
         SetLength(FClients, Length(FClients) - 1);
         AResponse.Code := 200;
@@ -1103,7 +1412,7 @@ begin
           FGuard.Acquire;
           try
             PollBuilds;
-            LResult := BuildTool(LArguments, FClients[LIndex].Field('actor').AsText);
+            LResult := BuildTool(LArguments, FClients[LIndex].Field('actor').AsText, LClientID);
             LResult := ToolResult(LResult);
           finally
             FGuard.Release;
@@ -1111,7 +1420,7 @@ begin
         end
         else if LTool = 'nyx_preview' then
         begin
-          LResult := Preview(LArguments, FClients[LIndex].Field('actor').AsText);
+          LResult := Preview(LArguments, FClients[LIndex].Field('actor').AsText, LClientID);
           SetLength(LPreviewContent, 2);
           LPreviewContent[0] := NyxObject([
             NyxField('type', NyxData('resource_link')), NyxField('uri', LResult.Field('url')),
@@ -1138,7 +1447,8 @@ begin
           FGuard.Acquire;
           try
             PollBuilds;
-            LResult := FCore.Call(LTool, FClients[LIndex].Field('actor').AsText, LArguments);
+            LResult := FReviews.Call(LTool, LClientID,
+              FClients[LIndex].Field('actor').AsText, LArguments);
             LResult := ToolResult(LResult);
           finally
             FGuard.Release;
@@ -1154,9 +1464,8 @@ begin
               FCore.RecordActivity(FClients[LIndex].Field('actor').AsText, LTool,
                 'refused: ' + LException.Message);
             end;
-            LResult := ToolResult(NyxObject([NyxField('code', NyxData('operation_rejected')),
-              NyxField('message', NyxData(LException.Message)),
-              NyxField('currentRevision', NyxData(FCore.Revision))]), True);
+            LResult := ToolResult(Rejection(LArguments, LClientID,
+              TNyxText(LException.Message)), True);
           finally
             FGuard.Release;
           end;

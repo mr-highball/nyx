@@ -24,6 +24,7 @@ unit nyx.studio.browser;
 
 {$mode delphi}{$H+}
 {$codepage utf8}
+{$modeswitch externalclass}
 
 interface
 
@@ -179,6 +180,15 @@ uses
   nyx.codec,
   nyx.json,
   nyx.source;
+
+type
+  { The installed Web declarations type the third open argument as an object.
+    The browser contract accepts a feature string; keep this bridge confined
+    to the browser controller and retain the editor through noopener. }
+  TNyxReviewWindow = class external name 'Window' (TJSWindow)
+    function OpenReview(const AURL, ATarget, AFeatures: String): TJSWindow;
+      external name 'open';
+  end;
 
 function StudioCSS: TNyxText;
 begin
@@ -946,7 +956,15 @@ begin
     else if AEvent.Trigger = ntClick then
     begin
 
-      if (ANode.ID = 'output-none') or (ANode.ID = 'output-browser') or
+      if ANode.Extensions.Has(NyxStudioReviewPreviewKey) then
+      begin
+        { A new observation tab retains this editor's unsent/local draft and
+          input focus. The URL is operator metadata, never an application edit. }
+        TNyxReviewWindow(window).OpenReview(ANode.Extensions.Value(NyxStudioReviewPreviewKey).AsText,
+          '_blank', 'noopener');
+        LRetainCanvas := True;
+      end
+      else if (ANode.ID = 'output-none') or (ANode.ID = 'output-browser') or
         (ANode.ID = 'output-lcl') then
       begin
         FOutputTarget := ANode.Prop('output-target');

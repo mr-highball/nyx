@@ -43,14 +43,25 @@ type
     Activity: TNyxDataValue;
     { Bounded compiler observer metadata, with no duplicated Pascal source. }
     Compiler: TNyxDataValue;
+    { Operator-only bounded review summaries; no transport owner credentials or
+      user document buffers. Preview links show independent, live review views. }
+    Reviews: TNyxDataValue;
   end;
 
 function DefaultNyxStudioAgentView: TNyxStudioAgentView;
+{ Typed editor-only URL metadata. Target controllers decide how to show this
+  independent view; it never routes a document mutation or a control property. }
+function NyxStudioReviewPreviewKey: TNyxExtensionRef;
 { Owned ordinary Nyx controls; both adapters can mount the same permission and
   activity UI. Controllers route explicit operator actions to their service. }
 function BuildNyxStudioAgents(const AState: TNyxStudioAgentView): TNyxNode;
 
 implementation
+
+function NyxStudioReviewPreviewKey: TNyxExtensionRef;
+begin
+  Result := NyxExtension('studio.review-preview');
+end;
 
 function DefaultNyxStudioAgentView: TNyxStudioAgentView;
 begin
@@ -63,6 +74,7 @@ begin
   Result.Status := 'Connecting agent session';
   Result.Activity := NyxArray([]);
   Result.Compiler := NyxNull;
+  Result.Reviews := NyxArray([]);
 end;
 
 function LabelNode(const AID, AText: TNyxText): TNyxNode;
@@ -79,6 +91,8 @@ var
   LIndex: Integer;
   LItem: TNyxDataValue;
   LCaption: TNyxText;
+  LReview: TNyxNode;
+  LSummary: TNyxDataValue;
 begin
   Result := TNyxNode.Create(nkCard, 'studio-agents');
   try
@@ -132,6 +146,32 @@ begin
         .Configure.Text('Keep local and pause sync').Done);
       Result.Add(TNyxNode.Create(nkButton, 'action-agent-accept')
         .Configure.Text('Download local backup and use shared design').Done);
+    end;
+    if AState.Reviews.Defined then
+    begin
+      for LIndex := 0 to AState.Reviews.Count - 1 do
+      begin
+        LItem := AState.Reviews.Item(LIndex);
+        LSummary := LItem.Field('session');
+        LReview := TNyxNode.Create(nkCard, 'studio-agent-review-' + IntToStr(LIndex))
+          .Configure.Gap(6).Padding(12).Done;
+        Result.Add(LReview);
+        LReview.Add(LabelNode('studio-agent-review-label-' + IntToStr(LIndex),
+          LItem.Field('label').AsText));
+        LReview.Add(LabelNode('studio-agent-review-owner-' + IntToStr(LIndex),
+          LItem.Field('actor').AsText + ' / revision ' +
+          IntToStr(LSummary.Field('revision').AsInteger)));
+        LReview.Add(LabelNode('studio-agent-review-explanation-' + IntToStr(LIndex),
+          'Independent review. Your project and Undo history are retained.'));
+
+        if NyxAgentHas(LItem, 'preview') then
+        begin
+          LButton := TNyxNode.Create(nkButton, 'studio-agent-review-preview-' + IntToStr(LIndex))
+            .Configure.Text('Watch live review').Done;
+          LButton.Extensions.SetValue(NyxStudioReviewPreviewKey, LItem.Field('preview'));
+          LReview.Add(LButton);
+        end;
+      end;
     end;
     Result.Add(LabelNode('studio-agents-activity-title', 'Recent agent activity'));
     LActivity := TNyxNode.Create(nkScroll, 'studio-agents-activity')

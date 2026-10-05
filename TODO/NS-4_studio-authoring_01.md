@@ -26,6 +26,13 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   each event's execution policy are visible/editable; removal requires a warning
   and explicit confirmation. Both-target journeys retain drafts/history and
   navigate inherited/custom component events correctly.
+- Multiple project workspaces can remain open concurrently. Each retains its
+  document, accepted Pascal, pending draft/base, selection/view, Undo/Redo and
+  editor presentation when the user switches projects. The Nyx-built Agents
+  view identifies working sessions and their project/activity, supports jumping
+  into the full editor and returning, and visibly distinguishes temporary test
+  workspaces. Closing or retiring a workspace must retain other projects and
+  warn about unsaved work; preview-only navigation does not accept this workflow.
 
 **Blockers**
 

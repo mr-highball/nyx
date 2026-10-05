@@ -113,7 +113,11 @@ type
     procedure DoRemoveCallback(ATrigger: TNyxTrigger; const AName: TNyxEventRef;
       const AID: TNyxCallbackRef);
   public
-    constructor Create;
+    constructor Create; overload;
+    { Admit an independently owned paired seed directly, without constructing
+      the demonstration project first. History starts empty. Failed admission
+      frees all candidate/session owners; no caller's document is borrowed. }
+    constructor Create(const APair: TNyxProjectPair); overload;
     destructor Destroy; override;
     function Selected: TNyxNode;
     function ActiveView: TNyxNode;
@@ -258,6 +262,17 @@ begin
   FSourceWorkspace := TNyxSourceWorkspace.Create;
   FActiveViewID := FDocument.Pages[0].ID;
   FSelectedID := FActiveViewID;
+end;
+
+constructor TNyxStudioSession.Create(const APair: TNyxProjectPair);
+begin
+  inherited Create;
+  FDocument := TNyxDocument.Create;
+  FCatalog := TNyxCatalog.Create;
+  FUndo := TNyxStudioHistory.Create;
+  FRedo := TNyxStudioHistory.Create;
+  FSourceWorkspace := TNyxSourceWorkspace.Create;
+  LoadProject(APair);
 end;
 
 destructor TNyxStudioSession.Destroy;
