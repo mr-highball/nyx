@@ -7173,3 +7173,19 @@ policy", with no further stated reason. No equivalent listener, service replacem
 live artifact deployment or configuration refresh was attempted. Updated authenticated
 discovery and observing/browser execution remain required. The full goal stays
 active/incomplete; authorized hello-nyx remote checkpoint follows.
+
+Remote checkpoint: product commit
+`9ddbb1455b4574d9a960684667c5d89cfd031544` is pushed to
+`origin/hello-nyx`; exact remote/local references match and its worktree is clean.
+Final authenticated inspection retains revision 6, home, no draft, Undo unavailable
+and Redo available; only read activity advances to 211. All eight protected process
+paths/exact creation timestamps match and zero focused fixture processes remain.
+The final qualified audit retains 21/31 lexical/semantic checks on both native
+compilers, 31 discovery checks, nine actual unchanged compiled-control checks and
+72/31 callback/import regressions, with zero owned native warnings/leaks. Current
+browser compilation retains seven visible installed RTL warnings and zero owned
+warnings; execution/deployment remain unqualified. Source nineteen/release fifteen,
+workflow no-closure 6 and the guarded helper declaration return path are preserved.
+The full goal stays active/incomplete. Exact handoff remote/clean/protected-process
+proof is stored privately after pushing at
+`.local/codex-restart-check/routine-remote-proof.json`.
