@@ -98,8 +98,10 @@ begin
 
     if Pos('parts', window.location.search) > 0 then
     begin
+      { Presentation examples start in English. Dedicated override/control
+        journeys retain multilingual input coverage independently of this view. }
       LDocument.Find('welcome-instance').OverridePart('title')
-        .SetProp('text', 'My activity / 🌙 漢字');
+        .SetProp('text', 'My activity');
       LDocument.Find('welcome-instance').OverridePart('.', 'append')
         .Add(TNyxNode.Create('button', 'custom-view-action')
           .SetProp('text', '+ Add to this view').SetProp('emit', 'add'));

@@ -4674,3 +4674,31 @@ visuals/overflow and measured performance retain their original owners. Full
 Nyx/Studio remains the active goal. This source packet is checkpointed/pushed on
 hello-nyx; exact remote proof is retained privately in
 .local/codex-restart-check/native-service-remote-proof.json.
+
+## English presentation follow-through — 2026-10-05
+
+The user's English starter/demo preference remains the current steering. Bounded
+named MCP reads confirm the published welcome badge and root at revision 6;
+the starter, browser demos and initial designer/keyboard/layout review operations
+contain English copy. Two composition screenshot fixtures still displayed a
+multilingual qualification suffix. Both now show `My activity`, with comments
+preserving the distinction between presentation defaults and dedicated Unicode
+qualification. No application text contract or multilingual input fixture changes.
+
+Native visual qualification rebuilds with zero owned warnings, captures all five
+maintained light/dark/narrow/composition/custom-theme views, passes their actual
+theme-pixel checks and reports zero leaks. The browser composition view executes
+15 computed-style/geometry checks through the identity-verified existing staged
+listener. Its PNG and native composition PNG were inspected; both show English
+copy. Evidence is under build/english-visual/. Browser compilation retains the
+seven installed RTL warnings, with zero owned warnings. No listener, profile,
+project pair, selection or history is replaced; only this standalone browser
+visual artifact and its host are staged into the existing qualification web root.
+
+This bounded preference correction accepts no original product criterion and
+does not reset the native authoring no-closure count of 5. Native compiler
+integration remains the selected next deliverable. Its uncommitted typed private
+build/profile protocol and incomplete controller draft are not qualified or
+included in this presentation checkpoint. Finish that controller and exercise
+currentness, profile admission and diagnostics before claiming native builds;
+compiled execution/reload and the recorded updated-listener gate remain open.

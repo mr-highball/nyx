@@ -106,8 +106,10 @@ begin
 
     if ACustomize then
     begin
+      { Keep the companion screenshot's initial copy in English, matching the
+        browser view. Dedicated control journeys still exercise Unicode edits. }
       LDocument.Find('welcome-instance').OverridePart('title')
-        .SetProp('text', 'My activity / 🌙 漢字');
+        .SetProp('text', 'My activity');
       LDocument.Find('welcome-instance').OverridePart('.', 'append')
         .Add(TNyxNode.Create('button', 'custom-view-action')
           .SetProp('text', '+ Add to this view').SetProp('emit', 'add'));
