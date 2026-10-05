@@ -119,7 +119,7 @@ GET is explicitly unsupported (405); DELETE closes a client session. See the
 | `nyx_preview` | An immutable, revision-specific rendered view and optional PNG |
 | `nyx_callbacks` | Grouped callback addition, policy, ordering and reviewed removal on the inspector's paired history |
 | `nyx_build` | Output readiness, immutable accepted builds and bounded job/artifact/diagnostic inspection |
-| `nyx_pascal` | Bounded accepted callback implementations and grouped exact-text guarded edits |
+| `nyx_pascal` | Bounded callback/import context, exact guarded callback edits and grouped typed import changes |
 | `nyx_roots` | Reviewed removal of exact page/reusable groups on paired Undo history |
 | `nyx_state` (staged) | Bounded scalar defaults, exact text windows and contextual bindings; grouped typed state/binding changes |
 | `nyx_collections` (staged) | Paged collection/schema/row/domain/view context and grouped typed collection commands |
@@ -482,8 +482,50 @@ editor, not a Pascal type checker. Submit `nyx_build` to diagnose ordinary helpe
 syntax/type errors; the authored code remains available for correction or Undo.
 End replacement text at the method's `end;`, with only optional trailing
 whitespace. Keep comments inside the body so they cannot swallow a sibling helper.
-Arbitrary imports, helper/class creation and full-unit edits remain separate
-source workflow gaps. Read-only allows inspection; Disabled refuses both modes.
+Unconditional namespace imports now have the semantic modes below. Helper/class
+creation and full-unit edits remain source workflow gaps. Read-only allows
+inspection; Disabled refuses every mode.
+
+### Pascal imports
+
+Use `nyx_pascal` with `mode: imports`, an explicit `section: interface` or
+`implementation`, and optional `offset`/`limit`. It returns the current revision,
+total/next offset and at most 50 namespaces with their actual one-based source
+lines. The default page contains 20. Accepted imports remain inspectable while a
+draft is pending; the response reports that draft. No source/comments or complete
+unit text are returned. The existing 48 KiB response budget still applies.
+
+`mode: edit-imports` takes current `expectedRevision`, unique `operationId` and
+1..32 ordered `changes`. Each change contains exactly `op: add/remove`,
+`section: interface/implementation` and `unit`, an ordinary Pascal namespace of
+at most 120 ASCII characters. Unit identity is case insensitive. Add requires
+absence and appends without reordering existing imports; Remove requires presence.
+Removing the final namespace retires its uses clause. Ordinary comments, including
+comments between namespace parts, retain their exact bytes. Separator indentation
+can retire with a removed final import so the remaining line stays readable.
+An absent clause can receive its first unit. File clauses, compiler options,
+source payloads, conditional/directive clauses and duplicate namespaces refuse.
+
+The public Pascal contract is `TNyxPascalUnitRef`, `TNyxImportSection`,
+`TNyxImportAction`, `TNyxImportEdit` and managed `INyxImportPatch`:
+
+```pascal
+LPatch := NyxImportPatch([
+  NyxImportEdit(nisImplementation, niaAdd, NyxPascalUnit('Math')),
+  NyxImportEdit(nisImplementation, niaAdd, NyxPascalUnit('SysUtils'))
+]);
+```
+
+The immutable group borrows no editor, node or lexer. It applies through the
+ordinary source reader on an independent session and retains the exact design,
+helper bodies, callback signatures and managed builder. A late refusal discards
+the whole group; successful publication adds one paired Undo step. Pending drafts,
+revision/permission/transport authority and exact retry receipts reuse the existing
+Pascal boundary. Workspace/review references stay on the outer request only.
+Import resolution and helper syntax/types require ordinary `nyx_build` diagnostics;
+source admission does not establish compilation or execution. This mode changes
+no target profile or unit search path. General helper/class/full-unit editing and
+authenticated updated observing deployment remain unqualified.
 
 ## Maintained authored-input review
 

@@ -40,6 +40,52 @@ const
   NyxViewsEnd = '// </nyx:views>';
 
 type
+  { Import sections are Pascal visibility choices, independent of output target. }
+  TNyxImportSection = (nisInterface, nisImplementation);
+  TNyxImportAction = (niaAdd, niaRemove);
+
+  { Distinct open Pascal namespace reference. Construction validates ASCII
+    namespace syntax; identity is case insensitive, like the compiler. }
+  TNyxPascalUnitRef = record
+  private
+    FName: TNyxText;
+  public
+    property Name: TNyxText read FName;
+  end;
+
+  { Private lexical offsets belong only to their exact source snapshot. They
+    are never wire coordinates or mutable editor identities. }
+  TNyxImportSpan = record
+  private
+    FStart: Integer;
+    FFinish: Integer;
+  end;
+  TNyxImportSource = record
+  private
+    FUnit: TNyxPascalUnitRef;
+    FLine: Integer;
+    FParts: array of TNyxImportSpan;
+  end;
+
+  { Owned immutable lexical clause. Ordinary comments/order survive editing;
+    conditional/directive clauses and duplicate names refuse. An absent uses
+    clause is a defined empty section and can receive its first import. }
+  TNyxImportClause = record
+  private
+    FEntries: array of TNyxImportSource;
+    FCommas: array of TNyxImportSpan;
+    FUses: TNyxImportSpan;
+    FEnd: TNyxImportSpan;
+    FAnchor: Integer;
+    function GetCount: Integer;
+  public
+    { Zero-based access returns owned names; out-of-range indices refuse.
+      LineAt is a one-based navigation site in the exact accepted source. }
+    function UnitAt(AIndex: Integer): TNyxPascalUnitRef;
+    function LineAt(AIndex: Integer): Integer;
+    property Count: Integer read GetCount;
+  end;
+
   { Detached diagnostic for one exact editable source snapshot. Line/column are
     one-based Unicode-scalar coordinates; zero means the admission error has no
     trustworthy source site. UI code must never invent a location for it. }
@@ -210,6 +256,14 @@ type
   before a service derives its confined filename. Helpers remain ordinary Pascal;
   their syntax/type errors belong to compiler diagnostics, not the design reader. }
 function NyxCompanionUnitName(const ASource: TNyxText): TNyxText;
+{ Typed semantic import editing borrows no session/model. All surrounding source
+  and ordinary comments retain their exact bytes. Add requires absence; Remove
+  requires presence in the exact section. File clauses and ambiguous ownership
+  refuse. This is lexical admission, not unit resolution or compiler success. }
+function NyxPascalUnit(const AName: TNyxText): TNyxPascalUnitRef;
+function ReadNyxImports(const ASource: TNyxText; ASection: TNyxImportSection): TNyxImportClause;
+function EditNyxImport(const ASource: TNyxText; ASection: TNyxImportSection;
+  AAction: TNyxImportAction; const AUnit: TNyxPascalUnitRef): TNyxText;
 function NyxSourceStateRename(const AOldName, ANewName: TNyxText): TNyxSourceStateRename;
 { Returns independently owned text, never mutates either design/workspace. The
   builder must reproduce ADocument through supported typed admission. Full builds
@@ -3523,6 +3577,7 @@ begin
 end;
 
 {$I nyx.source.handlers.inc}
+{$I nyx.source.imports.inc}
 
 function WithNyxControlImport(const AFrame: TNyxText): TNyxText;
 begin

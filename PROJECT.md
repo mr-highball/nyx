@@ -224,6 +224,18 @@ observing deployment retain their existing gate. General source/import, richer
 reusable semantics, full presentation/accessibility and comfortable large-project
 editing remain open. WORK.md records evidence and performance limitations.
 
+The existing `nyx_pascal` tool now also exposes bounded interface/implementation
+import context and grouped typed add/remove commands, preserving comments,
+authored order, helpers, callback signatures and the exact design. Both native
+compilers pass 17 lexical and 31 semantic checks; actual offline discovery passes
+22, the unchanged compiled companion with real native memo input nine and existing
+callback source regression 72, with zero leaks. The maintained `pascal-imports`
+target executes successfully. Browser consumers, Studio and its module worker
+compile with zero owned warnings; current browser execution and authenticated
+updated deployment remain unqualified. General helper/class/full-unit authoring,
+richer reusable workflows and complete editor performance/presentation retain
+their original acceptance requirements.
+
 The warning-cleanup packet now reports zero owned warnings on the qualified
 native/LCL/pas2js builds and current MCP application jobs. Shared execution,
 actual layout controls and Studio resize/split checks pass. Seven installed

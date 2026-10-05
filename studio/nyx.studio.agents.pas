@@ -81,6 +81,8 @@ type
     { Paged document collection/schema/row/domain and exact authored view context;
       one typed grouped candidate uses the same guarded paired publication. }
     function Collections(const AArguments: TNyxDataValue): TNyxDataValue;
+    { Bounded exact-section import context and one typed paired source edit. }
+    function Imports(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
     function EditCallbacks(const AArguments: TNyxDataValue;
       const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
     function RemoveRoots(const AArguments: TNyxDataValue;
@@ -149,7 +151,7 @@ uses
   Math, nyx.source, nyx.design.tokens, nyx.studio.edits, nyx.studio.callbackedits,
   nyx.studio.handleredits, nyx.studio.stateedits, nyx.state, nyx.binding,
   nyx.binding.types, nyx.contract, nyx.collections, nyx.collections.view.types,
-  nyx.collections.selection, nyx.studio.collectionedits;
+  nyx.collections.selection, nyx.studio.collectionedits, nyx.studio.importedits;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
 var
@@ -1273,6 +1275,50 @@ begin
     NyxField('pendingDraft', NyxData(FSession.DraftSource <> FSession.Source))]);
 end;
 
+function TNyxAgentSession.Imports(const AArguments: TNyxDataValue;
+  AApply: Boolean): TNyxDataValue;
+var
+  LPatch: INyxImportPatch;
+  LPair: TNyxProjectPair;
+  LClause: TNyxImportClause;
+  LSection: TNyxImportSection;
+  LItems: array of TNyxDataValue;
+  LOffset: Integer;
+  LLimit: Integer;
+  LIndex: Integer;
+begin
+
+  if AApply then
+  begin
+    NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|changes|');
+    RequireRevision(AArguments);
+    LPatch := ReadNyxImportPatch(AArguments.Field('changes'));
+    LPair := LPatch.Candidate(FSession.ProjectSnapshot);
+    Result := NyxObject([NyxField('changes', NyxData(LPatch.Count))]);
+    BoundContext(WithResults(Summary, Result, 'imports', True));
+    FSession.AdoptProject(LPair);
+    Exit;
+  end;
+  NyxAgentFields(AArguments, '|mode|section|offset|limit|');
+  LSection := ReadNyxImportSection(AArguments.Field('section').AsText);
+  LClause := ReadNyxImports(FSession.Source, LSection);
+  LOffset := IntegerArgument(AArguments, 'offset', 0, 0, 256);
+  LLimit := IntegerArgument(AArguments, 'limit', 20, 1, 50);
+  SetLength(LItems, Max(0, Min(LLimit, LClause.Count - LOffset)));
+  for LIndex := 0 to High(LItems) do
+  begin
+    LItems[LIndex] := NyxObject([
+      NyxField('unit', NyxData(LClause.UnitAt(LOffset + LIndex).Name)),
+      NyxField('line', NyxData(LClause.LineAt(LOffset + LIndex)))]);
+  end;
+  Result := NyxObject([NyxField('revision', NyxData(FRevision)),
+    NyxField('section', NyxData(NyxImportSectionName(LSection))),
+    NyxField('offset', NyxData(LOffset)), NyxField('total', NyxData(LClause.Count)),
+    NyxField('nextOffset', NyxData(Min(LOffset + Length(LItems), LClause.Count))),
+    NyxField('units', NyxArray(LItems)),
+    NyxField('pendingDraft', NyxData(FSession.DraftSource <> FSession.Source))]);
+end;
+
 {$I nyx.studio.agents.state.inc}
 {$I nyx.studio.agents.collections.inc}
 
@@ -1290,6 +1336,8 @@ var
   LCallbackResults: TNyxDataValue;
   LHandlerApply: Boolean;
   LHandlerResults: TNyxDataValue;
+  LImportApply: Boolean;
+  LImportResults: TNyxDataValue;
   LRootApply: Boolean;
   LRootResults: TNyxDataValue;
   LStateApply: Boolean;
@@ -1308,6 +1356,8 @@ begin
   LCallbackResults := NyxNull;
   LHandlerApply := False;
   LHandlerResults := NyxNull;
+  LImportApply := False;
+  LImportResults := NyxNull;
   LRootApply := False;
   LRootResults := NyxNull;
   LStateApply := False;
@@ -1330,6 +1380,7 @@ begin
     if ATool = 'nyx_pascal' then
     begin
       LHandlerApply := TextArgument(AArguments, 'mode') = 'apply';
+      LImportApply := TextArgument(AArguments, 'mode') = 'edit-imports';
     end;
     if ATool = 'nyx_roots' then
     begin
@@ -1347,7 +1398,7 @@ begin
     end;
     LMutation := (ATool = 'nyx_transaction') or (ATool = 'nyx_select') or
       (ATool = 'nyx_history') or LCallbackApply or LHandlerApply or LRootApply or
-      LStateApply or LCollectionApply;
+      LStateApply or LCollectionApply or LImportApply;
 
     if LMutation and (FPermission <> apEdit) then
     begin
@@ -1443,12 +1494,21 @@ begin
     else if ATool = 'nyx_pascal' then
     begin
 
-      if not LHandlerApply and (TextArgument(AArguments, 'mode') <> 'inspect') then
+      if LImportApply or (TextArgument(AArguments, 'mode') = 'imports') then
       begin
-        raise ENyxModel.Create('Pascal mode must be inspect or apply');
+        Result := Imports(AArguments, LImportApply);
+        LImportResults := Result;
+      end
+      else
+      begin
+
+        if not LHandlerApply and (TextArgument(AArguments, 'mode') <> 'inspect') then
+        begin
+          raise ENyxModel.Create('Pascal mode must be inspect, apply, imports or edit-imports');
+        end;
+        Result := HandlerSource(AArguments, LHandlerApply);
+        LHandlerResults := Result;
       end;
-      Result := HandlerSource(AArguments, LHandlerApply);
-      LHandlerResults := Result;
     end
     else if ATool = 'nyx_roots' then
     begin
@@ -1530,6 +1590,11 @@ begin
       if LHandlerApply then
       begin
         Result := WithResults(Result, LHandlerResults, 'handlers');
+      end;
+
+      if LImportApply then
+      begin
+        Result := WithResults(Result, LImportResults, 'imports');
       end;
 
       if LRootApply then

@@ -81,7 +81,7 @@ From the repository, run:
 
 Individual build targets are `core`, `generated`, `collections`, `collection-views`,
 `collection-authoring`, `collection-inspectors`, `collection-bindings`,
-`source-workspace`, `agents`, `state-bindings`, `split`, `interactions`,
+`source-workspace`, `pascal-imports`, `agents`, `state-bindings`, `split`, `interactions`,
 `named-events`, `viewport`, `catalog`, `browser`, `studio`, `lcl`, `http`,
 `visual` and `all`.
 The native unit cache includes compiler version and CPU/OS. LCL and pas2js
@@ -701,3 +701,24 @@ parser evidence and was not repeated after those individual consumers. Heap-trac
 large-domain checks establish semantics, not release latency. Browser execution
 and updated authenticated observing deployment remain unqualified; seven installed
 pas2js RTL warnings stay visible.
+
+The maintained semantic Pascal import workflow is:
+
+```powershell
+./tools/build.ps1 -Target pascal-imports
+```
+
+It runs Pascal lexical and semantic query/group/refusal checks, the actual offline
+MCP discovery builder and an unchanged exported companion with actual native memo
+input. The helper requires the newly authored Math/SysUtils imports, so execution
+checks unit resolution as well as source admission. Supplementary Unicode and
+rejected input preserve exact physical/model values. Browser lexical/semantic/
+control consumers and matched RTL stage with English `import-lexical.html`,
+`import-edits.html` and `import-controls.html` hosts. Default output is ignored
+`build/pascal-imports/`; `-BrowserOutput` selects a separate staging directory.
+The command launches no listener or configuration refresh. Current execution
+passes 17 lexical, 31 semantic, 22 discovery and nine compiled native checks, with
+zero native leaks/owned warnings. Browser compilation retains seven installed
+RTL warnings. Serve the staged hosts only through an admitted HTTP host to qualify
+browser execution; that and authenticated updated observing deployment remain
+at the recorded gate. See [evidence](../WORK.md#semantic-pascal-imports--2026-10-05).

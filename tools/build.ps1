@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'pascal-imports', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1452,6 +1452,58 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxCollectionAgentHost") -Destination $nyxCollectionAgentBrowser
     }
     Write-Host 'Semantic collection consumers staged; browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'pascal-imports') {
+    # Pascal owns lexical/semantic/refusal assertions and the exact companion.
+    # This target starts no listener and touches no observing project/config.
+    $nyxImportRoot = Join-Path $nyxRoot 'build/pascal-imports'
+    $nyxImportNative = Join-Path $nyxImportRoot 'native'
+    $nyxImportExport = Join-Path $nyxImportRoot 'export'
+    $nyxImportLcl = Join-Path $nyxImportRoot 'lcl'
+    $nyxImportBrowser = Join-Path $nyxImportRoot 'browser'
+
+    if ($BrowserOutput) { $nyxImportBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxImportNative, $nyxImportExport,
+      $nyxImportLcl, $nyxImportBrowser | Out-Null
+    $nyxImportFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxImportNative", "-FE$nyxImportNative")
+    foreach ($nyxImportProgram in @('nyx_import_lexical_tests', 'nyx_import_tests')) {
+      Invoke-NyxCompiler $nyxFpc ($nyxImportFlags + @("tests/$nyxImportProgram.lpr"))
+      & (Join-Path $nyxImportNative "$nyxImportProgram.exe") $nyxImportExport
+
+      if ($LASTEXITCODE -ne 0) { throw 'Pascal import qualification failed' }
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxImportPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxImportControlFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxImportExport",
+      "-Fu$nyxLazarus/lcl/units/$nyxImportPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxImportPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxImportPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxImportPlatform",
+      "-FU$nyxImportLcl", "-FE$nyxImportLcl")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxImportControlFlags + @('tests/nyx_import_schema.lpr'))
+    & (Join-Path $nyxImportLcl 'nyx_import_schema.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Actual Pascal import discovery failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxImportControlFlags + @('tests/nyx_import_controls.lpr'))
+    & (Join-Path $nyxImportLcl 'nyx_import_controls.exe') (Join-Path $nyxImportExport 'design.nyx')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Exact compiled import controls failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxImportProgram in @('nyx_import_lexical_tests', 'nyx_import_tests', 'nyx_import_controls')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests',
+        '-Jirtl.js', "-Fu$nyxImportExport", "-FE$nyxImportBrowser", "tests/$nyxImportProgram.lpr")
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxImportBrowser 'rtl.js')
+    foreach ($nyxImportHost in @('import-lexical.html', 'import-edits.html', 'import-controls.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxImportHost") -Destination $nyxImportBrowser
+    }
+    Write-Host 'Pascal import consumers staged; browser execution requires an admitted HTTP host.'
     exit 0
   }
 

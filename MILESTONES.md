@@ -602,3 +602,15 @@ Current task and return path are maintained in [WORK.md](WORK.md).
   bounded general import semantics through the paired boundary; richer reusable/
   source outcomes and complete parity/presentation retain their acceptance paths.
   See [evidence](WORK.md#semantic-structured-collection-commands--2026-10-05).
+
+- Semantic Pascal imports now share the existing guarded source/history boundary:
+  bounded exact-section context and typed grouped add/remove, preserving comments,
+  helpers and exact design. Both native compilers pass 17 lexical/31 semantic
+  checks, actual discovery 22 and unchanged compiled native input nine, with zero
+  leaks/owned warnings. The maintained command passes; browser consumers compile
+  but retain execution/deployment gates. No full criterion or percentage advances;
+  workflow criterion 5 stays open at no-closure 5, with codegen 26, renderer 3,
+  authoring 7 and delivery 1 unchanged. Next finish general helper source semantics
+  and actual compiled consumers under the same owner, keeping richer reusable/
+  source and full parity/presentation requirements. See
+  [evidence](WORK.md#semantic-pascal-imports--2026-10-05).

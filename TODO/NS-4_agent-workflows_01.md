@@ -52,9 +52,10 @@ the present Windows installation; the Pascal semantic client is usable immediate
 create/update/move/delete/title/tokens. Callback authoring now has a focused tool;
 immutable build requests and bounded status are now qualified. Local callback
 implementation editing now has a focused bounded tool. General
-source/import editing remains absent. Scalar state/binding commands now have a
-source/staged qualification packet below; richer reusable and structured-state
-authoring remain unadvertised. Root
+helper/class/full-unit editing remains absent. Unconditional import commands now
+have the source qualification packet below. Scalar state/binding commands have a
+source/staged qualification packet below; richer reusable workflows remain
+required, while structured collection authoring has its staged packet below. Root
 creation and reviewed root deletion are supported; root ordering remains absent.
 Protected review lifecycle and explicit concurrent project contexts now have
 source/staged qualification packets below, distinct from production deployment.
@@ -411,3 +412,31 @@ root ordering, review lifecycle and updated authenticated/observing browser
 deployment remain open with their original gates. Comfortable editing,
 presentation and full accessibility retain their source/renderer owners. See
 [evidence and preservation](../WORK.md#semantic-structured-collection-commands--2026-10-05).
+
+## Semantic Pascal imports — 2026-10-05
+
+Criterion 5's general import gap now has typed interface/implementation context
+and ordered add/remove proposals through the existing `nyx_pascal` tool. Small
+queries expose exact namespaces/source lines; immutable managed groups preserve
+comments/order, helpers/signatures, managed views and the exact design through
+ordinary source admission and one paired Undo step. Conditional/directive clauses,
+file paths, duplicate/missing namespaces, drafts and stale/foreign authority refuse.
+No target configuration or search path is embedded in the portable source model.
+
+Both native compilers pass 17 lexical and 31 semantic checks. Actual offline
+nineteen-tool discovery passes 22; the exact compiled companion/native input
+passes nine; existing callback source regression passes 72, with zero leaks and
+owned warnings. The maintained `pascal-imports` command passes its actual consumers
+and stages current browser programs/RTL/English hosts. Browser Studio/module
+worker compile; execution and authenticated updated observation retain their gate.
+
+No full criterion closes: no-closure advances **4→5** once; codegen **26**,
+renderer **3**, native authoring **7** and delivery **1** remain unchanged.
+Reassessment ends import/schema/fixture expansion. Next finish general helper
+source inspection and exact guarded grouped editing through this same owned
+source boundary, with signature/overload/conditional ambiguity refusal and actual
+compiled consumer evidence. Preserve the full general-source outcome rather than
+claiming callback/import-only completion. Richer reusable semantics, root ordering,
+review lifecycle, updated authenticated/browser deployment, comfortable editing
+and complete presentation/accessibility retain original owners and criteria.
+See [evidence](../WORK.md#semantic-pascal-imports--2026-10-05).

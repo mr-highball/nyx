@@ -7,19 +7,20 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest bounded packet: [semantic structured collections](#semantic-structured-collection-commands--2026-10-05)
-adds paged collection/schema/row/domain/view context and one immutable typed
-grouped paired edit. Both native compilers pass 96 semantic checks and 14 exact
-masked-inheritance context checks; actual offline discovery passes 57, ordinary
-native controls 76 and the exact compiled companion 11, with zero leaks.
-Collection queue regression passes 123 per native compiler. A real cleared
-reusable binding now keeps its Restore control and restores the exact inherited
-contract. Current browser consumers compile with zero owned warnings, but
-execution and authenticated updated observing deployment retain their host gate.
-The source catalog has nineteen tools; the protected release/chat has fifteen.
-Workflow criterion 5 remains open at no-closure count 4; codegen 26, renderer 3,
-native authoring 7 and delivery 1 remain unchanged. General source/import, richer
-reusable workflows and complete both-target editor qualification remain required.
+Latest bounded packet: [semantic Pascal imports](#semantic-pascal-imports--2026-10-05)
+extends `nyx_pascal` with bounded interface/implementation namespace context and
+typed grouped add/remove through one paired source Undo step. Both native compilers
+pass 17 lexical and 31 semantic checks; actual discovery passes 22, unchanged
+compiled native input nine and existing callback source regression 72, with zero
+leaks/owned warnings. The maintained `pascal-imports` command executes successfully.
+Current browser consumers/Studio/module worker compile; execution and authenticated
+updated observation retain their host gate. Source catalog nineteen/protected
+release fifteen remains explicit. Workflow criterion 5 stays open at no-closure
+5; codegen 26, renderer 3, native authoring 7 and delivery 1 remain unchanged.
+General helper/class/full-unit editing, richer reusable workflows and complete
+editor performance/presentation remain required. The preceding
+[collection packet](#semantic-structured-collection-commands--2026-10-05) retains
+its exact evidence and the repaired reusable Restore consumer.
 
 Earlier bounded source packet: [canvas proposals](#isolated-canvas-input-and-exact-field-reconciliation--2026-10-05)
 now share isolated paired admission. Owned view/runtime/owner/platform and mounted-load identities replace
@@ -6948,3 +6949,111 @@ This handoff preserves workflow count 4, codegen 26 and the concrete general
 import return path; the full goal remains active/incomplete. Its own exact remote,
 clean-worktree and protected-process proof is stored privately after pushing at
 `.local/codex-restart-check/collection-mcp-remote-proof.json`.
+
+Current continuation: the previous goal turn is progress, with product 629b2de /
+handoff 9acbe4c exact, clean and pushed. Workflow criterion 5 now follows its
+general-import deliverable: typed interface/implementation import inspection and
+grouped add/remove proposals through the existing `nyx_pascal` boundary. Preserve
+authored order/comments, managed builder, callback signatures/helpers, navigation,
+draft refusal and one paired Undo. Qualify lexical boundaries on both native
+compilers, real semantic revision/actor/receipt refusal and an unchanged companion
+whose actual controls execute its imported helper. Compile current browser
+consumers; execution/authenticated updated observation retains the host gate.
+Stop on guessed conditional ownership, file-path clauses, partial publication,
+lost comments/source/history or document mutation. No repeated collection/schema
+expansion, count reset or narrower full-criterion claim follows. Workflow 4,
+codegen 26, renderer 3, native authoring 7 and delivery 1 remain until handoff.
+Protected services and the revision-6 user pair stay independent; solo execution.
+
+## Semantic Pascal imports — 2026-10-05
+
+Workflow criterion 5's general import deliverable now has two additional modes in
+the existing `nyx_pascal` tool. `imports` pages exact interface/implementation
+namespaces and one-based source lines at a revision, with 20 default / 50 maximum
+entries. `edit-imports` admits 1..32 ordered add/remove commands through a managed
+typed `INyxImportPatch`, distinct `TNyxPascalUnitRef` and closed section/action
+enums. The portable reader reuses the existing Unicode lexer, never DOM/LCL types.
+ASCII Pascal namespace identity is case insensitive. Private token offsets do not
+escape into wire identities or survive source replacement.
+
+Append preserves authored order; removing the final unit retires its uses clause.
+Every ordinary comment retains exact bytes, including comments between namespace
+parts. Separator indentation may retire with a removed final import so remaining
+source reads naturally. File clauses, code/options/path payloads, duplicates,
+missing removals and conditional/directive ownership refuse. Whole groups replay
+ordinary source Apply on one independent session and must preserve exact design,
+helper/callback bodies, signatures and the managed builder. One final publication
+adds one paired Undo step. Fresh revision, operator permission, transport authority,
+exact receipts, outer workspace/review routing, draft refusal and response
+preflight reuse the existing guarded boundary. Queries preserve selection/history
+and expose accepted imports plus pending-draft status, not complete source text.
+
+The maintained command was actually executed:
+`tools/build.ps1 -Target pascal-imports`. It starts no listener, deployment or
+configuration refresh. Native checks use Delphi mode, assertions, range/overflow/
+I/O checks, debug lines and heap tracing. Exact current evidence:
+
+| Consumer | Actual result | Ignored artifact |
+| --- | --- | --- |
+| Lexical namespace/comment/section/conditional/file-clause checks, FPC 3.2.0 / matched 3.3.1 | 17 / 17 | `build/imports/maintained/run.log`, `build/imports/lexical-matched-final/` |
+| Typed semantic query/group/draft/authority/receipt/history checks, both native compilers | 31 / 31 | `build/imports/semantic-stable-qualified/`, `semantic-matched-qualified/` |
+| Actual offline MCP discovery builder | 22; nineteen tools, four Pascal modes, strict nested changes and outer context exclusivity | `build/imports/maintained/run.log` |
+| Exact companion compiled unchanged with real Win32 memo input | Nine; newly imported Math/SysUtils helpers, actual callback execution, Unicode scalar limits and rejected-value preservation | `build/imports/controls-final/`, `build/imports/maintained/run.log` |
+| Existing local callback source/transaction regression | 72 | `build/imports/handler-regression/` |
+| Maintained full target | 17 / 31 / 22 / nine consumers pass, matched RTL and three English browser hosts staged | `build/imports/maintained/run.log`, `build/pascal-imports/` |
+| Current pas2js lexical/semantic/exact control consumers | Compile; unexecuted | `build/pascal-imports/browser/` |
+| Current browser Studio / Pascal module worker | Compile; unexecuted | `build/imports/browser-studio/` |
+
+All successful native consumers report zero unfreed blocks and zero owned
+warnings. Current browser compilation reports zero owned warnings; the same seven
+distinct installed `Classes` RTL warnings stay visible. Stable/matched exports
+agree exactly: design SHA-256
+`C3335E4E10F4ADDBC528FCB690AEE41A332A68B57CEFA1FE646F6F29D9E63580`,
+companion `B048C2AFFFA0E4D9B5603ABE9DD371D3BFF9A4F0D8FFAF212BE660A282305850`.
+The actual compiled consumer reconstructs those saved design bytes. Successful
+source admission is deliberately distinguished from compiler resolution/execution.
+Import edits can leave helper type/unit errors for ordinary `nyx_build`; they
+never supply compiler paths/search options or execute source themselves.
+
+Initial fixture failures remain in `build/imports/controls/` and
+`controls-qualified/`: the first harness lacked a mounted native memo handle,
+then selected the generic pre-edit family while expecting a proposed-text payload.
+The corrected consumer mounts its actual widget and authors the existing typed
+`OnBeforeTextInput` contract, rather than claiming that a setter simulates a real
+before-input notification. It now qualifies physical control/model retention and
+actual compiled execution. Initial fixture Unicode promotions and an enum-case
+warning were corrected with exact portable text and explicit ordinal fallback;
+warnings were not suppressed and dependencies were not patched. Native control
+notifications qualify this Win32 input path, not other widgetsets or hardware/IME.
+Browser hosts are staged only; no visual/runtime/deployment acceptance follows.
+The fully traced semantic fixtures are correctness evidence, not release latency.
+
+This continuation is progress: it changes maintained public source semantics and
+qualifies actual compiler/control consumers. It closes no full criterion; workflow
+criterion 5 remains open and no-closure advances **4→5** once. Codegen **26**,
+renderer **3**, native authoring **7** and delivery **1** remain unchanged. No
+completion credit or DONE movement follows. Reassessment ends import/schema/
+fixture expansion. Next deliver bounded general helper source inspection and
+exact guarded grouped edits through this same owned source boundary, preserving
+signatures/overloads/helpers/managed views and refusing conditional or ambiguous
+ownership. Require an unchanged compiled companion and actual consumer. General
+helper/class/full-unit authoring, richer reusable workflows, root ordering,
+review lifecycle, complete source synchronization/performance, presentation and
+accessibility retain their original owners and full acceptance requirements.
+
+Connected native MCP inspection remains primary and reports revision **6**,
+Untitled project / home, one page/reusable root, no pending draft, Undo unavailable,
+Redo available, activity sequence **207**. Independent semantic/compiler/input
+consumers qualified the new source modes absent from the protected deployed
+catalog. All **eight** protected paths/exact process creation timestamps match;
+**zero** focused fixture processes remain. Private process proof is
+`.local/codex-restart-check/import-processes.json`. User files/history, live
+services/artifacts and personal configuration stay untouched. Source inventory is
+still nineteen; the authenticated protected release/current chat inventory is
+fifteen and retains its older Pascal schema.
+
+The prior automatic approval rejection of listener launch remains "blocked by
+policy", with no further stated reason. No equivalent listener, service
+replacement, live artifact deployment or configuration refresh was attempted.
+Updated authenticated discovery and observing/browser execution remain required.
+The full Nyx/Nyx Studio goal stays active/incomplete; remote checkpoint follows.
