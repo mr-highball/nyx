@@ -46,6 +46,7 @@ implementation
 
 uses
   nyx.test.schema,
+  nyx.test.schema.admission,
   nyx.test.fluent,
   nyx.test.state,
   nyx.test.collections,
@@ -104,7 +105,7 @@ var
   LShell: TNyxDocument;
   LPanel: TNyxStudioPanel;
 begin
-  Result := RunNyxSchemaTests + RunNyxOverrideTests + RunNyxThemeTests +
+  Result := RunNyxSchemaTests + RunNyxSchemaAdmissionTests + RunNyxOverrideTests + RunNyxThemeTests +
     RunNyxIdentityTests + RunNyxFluentTests + RunNyxStateTests + RunNyxJSONTests +
     RunNyxBindingTests + RunNyxAuthoringTests + RunNyxDataTests + RunNyxEventTests +
     RunNyxContractTests + RunNyxCallbackAuthoringTests + RunNyxSourceTests + RunNyxSourceStateTests +

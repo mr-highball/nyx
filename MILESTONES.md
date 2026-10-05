@@ -30,14 +30,19 @@ editor HTTP qualification still requires resolution of the recorded launch gate.
 No full criterion closes from this packet.
 See [native Studio](docs/native-studio.md) and WORK.md for bounded evidence.
 
-Current source-responsiveness candidate (2026-10-05) removes duplicate admission
-work and retains disposable canonical builder text within each workspace. The
-unchanged native 2048-control workload improves visual editing from 4421 to
-3297 ms and structural editing from 5484 to 4390 ms, preserving all original
-gates. Native shared/focused/compiled and actual LCL consumers qualify ownership
-and source behavior. Browser consumers compile; execution is pending after the
-separate static listener launch was refused. Original codegen criterion 3 stays
-open at counter 12; no complete criterion or north-star credit is earned.
+Current source-responsiveness candidate (2026-10-05) prepares admitted pairs
+together, reuses derived canonical text and constructs fresh validation metadata
+without inspector-only help work. Operation-owned descriptor/projection facts
+also serve ordinary authoring queries. All 4104 catalog metadata rows remain
+exactly equal to the previous checkpoint. The unchanged native 2048-control
+workload now measures Apply 1485→984 ms, visual editing 3281→2547 ms and structural
+editing 4297→3563 ms against the exact prior commit; paired history and original
+preservation gates pass. Shared shell composition remains 156 ms in this sample,
+so this does not establish faster full editor painting. Native shared/focused/
+compiled and actual LCL consumers qualify ownership/source behavior. Browser
+consumers compile; execution is pending after the separate static listener launch
+was refused. Original codegen criterion 3 stays open at counter 13; no complete
+criterion or north-star credit is earned.
 
 Earlier source delivery (2026-10-04): typed layout policies advance the original
 [LCL](TODO/NS-2_lcl-renderer_01.md) and

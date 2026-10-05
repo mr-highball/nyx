@@ -1083,7 +1083,7 @@ try {
   }
 
   if ($Target -eq 'source-workspace') {
-    Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tests/nyx_source_diagnostic_tests.lpr'))
+    Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('-gh', 'tests/nyx_source_diagnostic_tests.lpr'))
     & (Join-Path $nyxNativeDir 'nyx_source_diagnostic_tests.exe')
 
     if ($LASTEXITCODE -ne 0) {
@@ -1091,7 +1091,9 @@ try {
     }
     # Timing is a separate, explicitly selected run; compile the same public
     # fixture for both targets without hiding a slow large case in verification.
+    # Heap tracing remains on functional checks, outside ordinary timing runs.
     Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tools/nyx_source_benchmark.lpr'))
+    Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tools/nyx_property_benchmark.lpr'))
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     $nyxBrowserDir = Join-Path $nyxRoot 'build/browser'
@@ -1103,8 +1105,9 @@ try {
     $nyxSourceFlags = @('-B', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxBrowserDir")
     Invoke-NyxCompiler $nyxPas2js ($nyxSourceFlags + @('tests/nyx_source_diagnostic_tests.lpr'))
     Invoke-NyxCompiler $nyxPas2js ($nyxSourceFlags + @('tools/nyx_source_benchmark.lpr'))
+    Invoke-NyxCompiler $nyxPas2js ($nyxSourceFlags + @('tools/nyx_property_benchmark.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
-    foreach ($nyxSourceHost in @('source-diagnostics.html', 'source-benchmark.html')) {
+    foreach ($nyxSourceHost in @('source-diagnostics.html', 'source-benchmark.html', 'property-benchmark.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxSourceHost") -Destination $nyxBrowserDir
     }
     exit 0

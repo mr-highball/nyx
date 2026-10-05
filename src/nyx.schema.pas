@@ -182,8 +182,11 @@ function NyxLayout(ANode: TNyxNode): TNyxText;
   or cleared weight restores the primitive default. Other controls default zero. }
 function NyxFlexWeight(ANode: TNyxNode): Integer;
 
-{ Returns relevant editable properties for the node's base projection. Known
-  extension properties already on a node can be presented separately by Studio. }
+{ Returns a fresh owned snapshot for the current projection, declared domain,
+  creator schema, inherited defaults and present platform overrides. Titles and
+  support descriptions are always complete. No document facts are cached across
+  calls; editing the returned array cannot change the model or registry. Unknown
+  extension properties can be presented separately by Studio. }
 function NyxProperties(ANode: TNyxNode; ADocument: TNyxDocument = nil): TNyxPropertyInfos;
 { Supported adapter callbacks, including declared/compound events. Returned
   arrays are independent snapshots. Extensions publish schema against their open
@@ -235,7 +238,9 @@ function TryNyxInteger(const AValue: TNyxText; out AValueNumber: Integer): Boole
 
 { Validate recognized portable property types before accepting a command or
   mounting a target. Unknown property keys survive. Child admission is separate:
-  target factories may intentionally supply a host for a custom kind. }
+  target factories may intentionally supply a host for a custom kind. Admission
+  shares the inspector's exact descriptor rules without constructing editor
+  help/capability descriptions. Every call reads the current borrowed model. }
 procedure ValidateNyxProperties(ANode: TNyxNode; ADocument: TNyxDocument = nil);
 procedure ValidateNyxPropertyTree(ARoot: TNyxNode; ADocument: TNyxDocument = nil);
 { Validate all portable properties, including inherited reusable overrides.
@@ -253,6 +258,12 @@ uses
   nyx.composition;
 
 type
+  { Admission and authoring share one descriptor construction path. Admission
+    needs the exact keys, types, defaults, choices and bounds; editor help and
+    target capability descriptions cannot affect those checks. This choice is
+    private so public metadata always remains a complete owned snapshot. }
+  TNyxPropertyDetail = (npdAdmission, npdAuthoring);
+
   TNyxPublishedSchema = record
     Kind: TNyxText;
     Properties: TNyxPropertyInfos;
@@ -764,30 +775,25 @@ begin
   end;
 end;
 
-function NyxPropertySupport(ANode: TNyxNode; AAttribute: TNyxAttribute;
-  ADocument: TNyxDocument): TNyxPropertySupport;
+{ Borrow the projection already resolved by this operation. The primitive
+  descriptor is an immutable value, not a cached document fact; support queries
+  neither call application code nor retain model/registry references. }
+function BuildNyxPropertySupport(ABase: TNyxNode; const AInfo: TNyxPrimitiveInfo;
+  const AKind: TNyxText; AKnown: Boolean;
+  AAttribute: TNyxAttribute): TNyxPropertySupport;
 var
-  LBase: TNyxNode;
-  LInfo: TNyxPrimitiveInfo;
-  LKind: TNyxText;
   LMeaning: TNyxPropertyMeaning;
   LBrowser: TNyxCapability;
   LNative: TNyxCapability;
   LDescription: TNyxText;
 begin
 
-  if ANode = nil then
-  begin
-    raise ENyxModel.Create('Property support requires a component');
-  end;
-  LBase := NyxProjectionSource(ANode, ADocument);
-  LKind := LBase.ProjectionKind;
   LMeaning := npmPresentation;
   LBrowser := ncAvailable;
   LNative := ncAvailable;
   LDescription := 'Applies to the selected standard projection.';
 
-  if not FindNyxPrimitive(LKind, LInfo) then
+  if not AKnown then
   begin
     Exit(NyxPropertySupport(npmCustom, ncCustom, ncCustom,
       'The supplied component adapters define this property effect.'));
@@ -810,7 +816,7 @@ begin
         LDescription := 'Refuses user value changes; focus, notifications and ' +
           'programmatic state updates remain available.';
 
-        if KindIn(LKind, 'select|checkbox|switch|radio|slider') then
+        if KindIn(AKind, 'select|checkbox|switch|radio|slider') then
         begin
           LBrowser := ncBasic;
           LNative := ncBasic;
@@ -821,7 +827,7 @@ begin
     atText:
       begin
 
-        if not KindIn(LKind, 'heading|label|button|link|input|memo|select|spin|date|time|color|' +
+        if not KindIn(AKind, 'heading|label|button|link|input|memo|select|spin|date|time|color|' +
           'checkbox|switch|radio|avatar|badge|alert|code|code-editor|group') then
         begin
           LBrowser := ncMissing;
@@ -829,7 +835,7 @@ begin
           LDescription := 'This standard projection has no text caption; ' +
             'compose a label or heading inside it.';
         end
-        else if LKind = 'code-editor' then
+        else if AKind = 'code-editor' then
         begin
           LMeaning := npmInteraction;
           LDescription := 'The source editor uses text as its accessible name; ' +
@@ -839,14 +845,14 @@ begin
     atValue:
       begin
 
-        if not NyxNodeValueDomain(LBase).Defined then
+        if not NyxNodeValueDomain(ABase).Defined then
         begin
           LBrowser := ncCustom;
           LNative := ncCustom;
           LMeaning := npmCustom;
           LDescription := 'No intrinsic scalar value; declare a domain and supply its application meaning.';
         end
-        else if not KindIn(LKind, 'input|memo|select|spin|slider|progress|date|time|' +
+        else if not KindIn(AKind, 'input|memo|select|spin|slider|progress|date|time|' +
           'color|checkbox|switch|radio|code-editor') then
         begin
           LMeaning := npmContract;
@@ -856,13 +862,13 @@ begin
     atPlaceholder:
       begin
 
-        if not KindIn(LKind, 'input|memo|code-editor') then
+        if not KindIn(AKind, 'input|memo|code-editor') then
         begin
           LBrowser := ncMissing;
           LNative := ncMissing;
           LDescription := 'Placeholder belongs to a text-entry projection.';
         end
-        else if KindIn(LKind, 'memo|code-editor') then
+        else if KindIn(AKind, 'memo|code-editor') then
         begin
           LNative := ncBasic;
           LDescription := 'Native multiline placeholder display depends on the widgetset; ' +
@@ -872,7 +878,7 @@ begin
     atItems:
       begin
 
-        if KindIn(LKind, 'select|list|table|tree') then
+        if KindIn(AKind, 'select|list|table|tree') then
         begin
           LBrowser := ncBasic;
           LNative := ncBasic;
@@ -891,7 +897,7 @@ begin
         LDescription := 'Browser link destination. Standard LCL link is a focusable ' +
           'command face; a handler supplies native navigation.';
 
-        if LKind <> 'link' then
+        if AKind <> 'link' then
         begin
           LBrowser := ncMissing;
           LDescription := 'A link destination requires a link projection.';
@@ -900,7 +906,7 @@ begin
     atSource, atAlt:
       begin
 
-        if LKind = 'image' then
+        if AKind = 'image' then
         begin
 
           if AAttribute = atSource then
@@ -925,7 +931,7 @@ begin
     atLayout, atGap, atColumns, atFlowWrap, atCrossAlignment, atJustification:
       begin
 
-        if not LInfo.Container or (LKind = 'split-view') then
+        if not AInfo.Container or (AKind = 'split-view') then
         begin
           LBrowser := ncMissing;
           LNative := ncMissing;
@@ -950,7 +956,7 @@ begin
     atPadding:
       begin
 
-        if not LInfo.Container or (LKind = 'split-view') then
+        if not AInfo.Container or (AKind = 'split-view') then
         begin
           LNative := ncMissing;
           LDescription := 'Browser CSS padding is available; standard LCL leaf/split ' +
@@ -960,14 +966,14 @@ begin
     atMinimum, atMaximum:
       begin
 
-        if LKind = 'input' then
+        if AKind = 'input' then
         begin
           LBrowser := ncBasic;
           LNative := ncMissing;
           LDescription := 'Browser numeric inputs use min/max hints. Declare a bounded ' +
             'numeric domain for exact model admission on both targets.';
         end
-        else if not KindIn(LKind, 'spin|slider|progress') then
+        else if not KindIn(AKind, 'spin|slider|progress') then
         begin
           LBrowser := ncMissing;
           LNative := ncMissing;
@@ -978,7 +984,7 @@ begin
     atPressed:
       begin
 
-        if KindIn(LKind, 'button|link') then
+        if KindIn(AKind, 'button|link') then
         begin
           LNative := ncBasic;
           LDescription := 'Semantic pressed/accessibility state; ' +
@@ -1001,7 +1007,7 @@ begin
     atInputType:
       begin
 
-        if LKind = 'input' then
+        if AKind = 'input' then
         begin
           LNative := ncBasic;
           LDescription := 'Browser input semantics; native edit supports password masking ' +
@@ -1018,7 +1024,7 @@ begin
     atSplitOrientation, atSplitPosition, atSplitMinimum, atSplitMaximum, atSplitResizable:
       begin
 
-        if LKind <> 'split-view' then
+        if AKind <> 'split-view' then
         begin
           LBrowser := ncMissing;
           LNative := ncMissing;
@@ -1051,10 +1057,31 @@ begin
   Result := NyxPropertySupport(LMeaning, LBrowser, LNative, LDescription);
 end;
 
-function NyxProperties(ANode: TNyxNode; ADocument: TNyxDocument): TNyxPropertyInfos;
+function NyxPropertySupport(ANode: TNyxNode; AAttribute: TNyxAttribute;
+  ADocument: TNyxDocument): TNyxPropertySupport;
+var
+  LBase: TNyxNode;
+  LInfo: TNyxPrimitiveInfo;
+  LKind: TNyxText;
+  LKnown: Boolean;
+begin
+
+  if ANode = nil then
+  begin
+    raise ENyxModel.Create('Property support requires a component');
+  end;
+  LBase := NyxProjectionSource(ANode, ADocument);
+  LKind := LBase.ProjectionKind;
+  LKnown := FindNyxPrimitive(LKind, LInfo);
+  Result := BuildNyxPropertySupport(LBase, LInfo, LKind, LKnown, AAttribute);
+end;
+
+function BuildNyxProperties(ANode: TNyxNode; ADocument: TNyxDocument;
+  ADetail: TNyxPropertyDetail): TNyxPropertyInfos;
 var
   LKind: TNyxText;
   LInfo: TNyxPrimitiveInfo;
+  LPrimitiveKnown: Boolean;
   LBase: TNyxNode;
   LIndex: Integer;
   LRuntime: TNyxNode;
@@ -1077,6 +1104,50 @@ var
   LPlatform: TNyxPlatform;
   LPlatformCount: Integer;
   LScopedKey: TNyxText;
+  LProperties: TNyxPropertyInfos;
+  LCount: Integer;
+  LCapacity: Integer;
+  LAttributePositions: array[TNyxAttribute] of Integer;
+  LKnownAttributes: array of TNyxAttribute;
+  LHasAttribute: array of Boolean;
+  LScopedPlatforms: set of TNyxPlatform;
+
+  { All bookkeeping belongs to this call. No node, document, registry snapshot
+    or caller array is retained. Geometric growth avoids copying managed fields
+    on every append; only the initialized prefix is exposed to the caller. }
+  function Append: Integer;
+  begin
+
+    if LCount = LCapacity then
+    begin
+      LCapacity := LCapacity * 2;
+
+      if LCapacity < 64 then
+      begin
+        LCapacity := 64;
+      end;
+      SetLength(LProperties, LCapacity);
+      SetLength(LKnownAttributes, LCapacity);
+      SetLength(LHasAttribute, LCapacity);
+    end;
+    Result := LCount;
+    Inc(LCount);
+  end;
+
+  { Resolve each property's closed identity once. Open creator keys still keep
+    their exact text; published replacements update the same local map. }
+  procedure TrackAttribute(AIndex: Integer);
+  var
+    LResolved: TNyxAttribute;
+  begin
+    LHasAttribute[AIndex] := TryNyxAttribute(LProperties[AIndex].Key, LResolved);
+
+    if LHasAttribute[AIndex] then
+    begin
+      LKnownAttributes[AIndex] := LResolved;
+      LAttributePositions[LResolved] := AIndex;
+    end;
+  end;
 
   procedure Add(const AKey, ATitle: TNyxText; AType: TNyxPropertyType;
     const ADefault: TNyxText = ''; const AChoices: TNyxText = '';
@@ -1084,16 +1155,20 @@ var
   var
     LIndex: Integer;
   begin
-    LIndex := Length(Result);
-    SetLength(Result, LIndex + 1);
-    Result[LIndex].Key := AKey;
-    Result[LIndex].Title := ATitle;
-    Result[LIndex].ValueType := AType;
-    Result[LIndex].DefaultValue := ADefault;
-    Result[LIndex].Choices := AChoices;
-    Result[LIndex].Minimum := AMinimum;
-    Result[LIndex].Maximum := AMaximum;
-    Result[LIndex].Advanced := False;
+    LIndex := Append;
+    LProperties[LIndex].Key := AKey;
+
+    if ADetail = npdAuthoring then
+    begin
+      LProperties[LIndex].Title := ATitle;
+    end;
+    LProperties[LIndex].ValueType := AType;
+    LProperties[LIndex].DefaultValue := ADefault;
+    LProperties[LIndex].Choices := AChoices;
+    LProperties[LIndex].Minimum := AMinimum;
+    LProperties[LIndex].Maximum := AMaximum;
+    LProperties[LIndex].Advanced := False;
+    TrackAttribute(LIndex);
   end;
 
   function InheritedValue(const AKey, ADefault: TNyxText): TNyxText;
@@ -1125,6 +1200,14 @@ var
   end;
 begin
   Result := nil;
+  LProperties := nil;
+  LCount := 0;
+  LCapacity := 0;
+  LScopedPlatforms := [];
+  for LAttribute := Low(TNyxAttribute) to High(TNyxAttribute) do
+  begin
+    LAttributePositions[LAttribute] := -1;
+  end;
 
   if ANode = nil then
   begin
@@ -1142,28 +1225,46 @@ begin
       LRuntime := RealizeNyxView(ADocument, ANode.Parent);
       try
         LBase := LRuntime.Part(ANode.Prop('path'));
-        Result := NyxProperties(LBase);
-        for LIndex := 0 to Length(Result) - 1 do
+        LProperties := BuildNyxProperties(LBase, nil, ADetail);
+        LCount := Length(LProperties);
+        LCapacity := LCount;
+        SetLength(LKnownAttributes, LCapacity);
+        SetLength(LHasAttribute, LCapacity);
+        for LIndex := 0 to LCount - 1 do
         begin
-          Result[LIndex].DefaultValue := LBase.Prop(Result[LIndex].Key,
-            Result[LIndex].DefaultValue);
+          TrackAttribute(LIndex);
+        end;
+        for LIndex := 0 to LCount - 1 do
+        begin
+          LProperties[LIndex].DefaultValue := LBase.Prop(LProperties[LIndex].Key,
+            LProperties[LIndex].DefaultValue);
         end;
       finally
         LRuntime.Free;
       end;
     end;
     Add('path', 'Part path', npText);
-    Result[High(Result)].Support := NyxPropertySupport(npmContract,
-      ncAvailable, ncAvailable, 'Named reusable part addressed by this override descriptor.');
+
+    if ADetail = npdAuthoring then
+    begin
+      LProperties[LCount - 1].Support := NyxPropertySupport(npmContract,
+        ncAvailable, ncAvailable, 'Named reusable part addressed by this override descriptor.');
+    end;
     Add('mode', 'Override mode', npChoice, 'properties',
       'properties' + #10 + 'append' + #10 + 'prepend' + #10 + 'replace' + #10 + 'remove');
-    Result[High(Result)].Support := NyxPropertySupport(npmContract,
-      ncAvailable, ncAvailable, 'Shared reusable override operation; realized parts supply presentation.');
+
+    if ADetail = npdAuthoring then
+    begin
+      LProperties[LCount - 1].Support := NyxPropertySupport(npmContract,
+        ncAvailable, ncAvailable, 'Shared reusable override operation; realized parts supply presentation.');
+    end;
+    SetLength(LProperties, LCount);
+    Result := LProperties;
     Exit;
   end;
   LBase := NyxProjectionSource(ANode, ADocument);
   LKind := LBase.ProjectionKind;
-  FindNyxPrimitive(LKind, LInfo);
+  LPrimitiveKnown := FindNyxPrimitive(LKind, LInfo);
 
   if KindIn(LKind, 'heading|label|button|link|input|memo|select|spin|date|time|color|' +
     'checkbox|switch|radio|avatar|badge|alert|code|code-editor|group') then
@@ -1199,16 +1300,16 @@ begin
     container projection or lose a declared Number to an integer editor. }
   LDomain := NyxNodeValueDomain(LBase);
   LHasValue := False;
-  for LIndex := 0 to Length(Result) - 1 do
+  for LIndex := 0 to LCount - 1 do
   begin
 
-    if Result[LIndex].Key = 'value' then
+    if LProperties[LIndex].Key = 'value' then
     begin
       LHasValue := True;
 
       if LDomain.Defined and (LDomain.Kind = nskNumber) then
       begin
-        Result[LIndex].ValueType := npNumber;
+        LProperties[LIndex].ValueType := npNumber;
       end;
     end;
   end;
@@ -1320,16 +1421,7 @@ begin
     Open custom variants/projections remain references/text, not closed choices. }
   for LAttribute := Low(TNyxAttribute) to High(TNyxAttribute) do
   begin
-    LFoundIndex := -1;
-    for LPropertyIndex := 0 to High(Result) do
-    begin
-
-      if Result[LPropertyIndex].Key = NyxAttributeName(LAttribute) then
-      begin
-        LFoundIndex := LPropertyIndex;
-        Break;
-      end;
-    end;
+    LFoundIndex := LAttributePositions[LAttribute];
 
     if LFoundIndex >= 0 then
     begin
@@ -1404,33 +1496,33 @@ begin
     case LAttribute of
       atFlex:
         begin
-          Result[High(Result)].DefaultValue := '0';
+          LProperties[LCount - 1].DefaultValue := '0';
 
           if LBase.ProjectionKind = 'spacer' then
           begin
-            Result[High(Result)].DefaultValue := '1';
+            LProperties[LCount - 1].DefaultValue := '1';
           end;
         end;
       atSplitPosition, atSplitMinimum, atSplitMaximum:
         begin
-          Result[High(Result)].Maximum := 100;
+          LProperties[LCount - 1].Maximum := 100;
         end;
       atColumns:
         begin
-          Result[High(Result)].Minimum := 1;
-          Result[High(Result)].Maximum := 64;
+          LProperties[LCount - 1].Minimum := 1;
+          LProperties[LCount - 1].Maximum := 64;
         end;
       atMinimum, atMaximum:
         begin
-          Result[High(Result)].Minimum := -1000000;
-          Result[High(Result)].Maximum := 1000000;
+          LProperties[LCount - 1].Minimum := -1000000;
+          LProperties[LCount - 1].Maximum := 1000000;
         end;
       else
         begin
           { Other attributes retain the descriptor's standard bounds/default. }
         end;
     end;
-    Result[High(Result)].Advanced := LAttribute <> atText;
+    LProperties[LCount - 1].Advanced := LAttribute <> atText;
   end;
 
 
@@ -1445,10 +1537,10 @@ begin
     for LPropertyIndex := 0 to High(GPublishedSchemas[LPublishedIndex].Properties) do
     begin
       LFoundIndex := -1;
-      for LIndex := 0 to High(Result) do
+      for LIndex := 0 to LCount - 1 do
       begin
 
-        if Result[LIndex].Key = GPublishedSchemas[LPublishedIndex].Properties[LPropertyIndex].Key then
+        if LProperties[LIndex].Key = GPublishedSchemas[LPublishedIndex].Properties[LPropertyIndex].Key then
         begin
           LFoundIndex := LIndex;
           Break;
@@ -1457,59 +1549,90 @@ begin
 
       if LFoundIndex < 0 then
       begin
-        LFoundIndex := Length(Result);
-        SetLength(Result, LFoundIndex + 1);
+        LFoundIndex := Append;
       end;
-      Result[LFoundIndex] := GPublishedSchemas[LPublishedIndex].Properties[LPropertyIndex];
+      LProperties[LFoundIndex] := GPublishedSchemas[LPublishedIndex].Properties[LPropertyIndex];
+      TrackAttribute(LFoundIndex);
     end;
   end;
 
   { Explicit creator support wins. Older schemas inherit ordinary attribute
     metadata; open custom keys remain custom instead of advertising a bridge
     that the standard adapters never implemented. }
-  for LPropertyIndex := 0 to High(Result) do
+
+  if ADetail = npdAuthoring then
   begin
+    for LPropertyIndex := 0 to LCount - 1 do
+    begin
 
-    if Result[LPropertyIndex].Support.Defined then
-    begin
-      Continue;
-    end;
+      if LProperties[LPropertyIndex].Support.Defined then
+      begin
+        Continue;
+      end;
 
-    if TryNyxAttribute(Result[LPropertyIndex].Key, LAttribute) then
-    begin
-      Result[LPropertyIndex].Support := NyxPropertySupport(LBase, LAttribute);
-    end
-    else
-    begin
-      Result[LPropertyIndex].Support := NyxPropertySupport(npmCustom, ncCustom,
-        ncCustom, 'Creator-defined property; its supplied adapters define the effect.');
+      if LHasAttribute[LPropertyIndex] then
+      begin
+        LProperties[LPropertyIndex].Support := BuildNyxPropertySupport(LBase,
+          LInfo, LKind, LPrimitiveKnown, LKnownAttributes[LPropertyIndex]);
+      end
+      else
+      begin
+        LProperties[LPropertyIndex].Support := NyxPropertySupport(npmCustom, ncCustom,
+          ncCustom, 'Creator-defined property; its supplied adapters define the effect.');
+      end;
     end;
   end;
 
   { Present platform overrides are discoverable typed inspector/MCP properties.
     Defaults are supplied by the ordinary property; no absent override is
     manufactured. The reserved wire prefix never enters authored Pascal. }
-  LPlatformCount := Length(Result);
+  { Ordinary nodes have no scoped overrides. Inspect their actual property
+    names once before walking descriptors, retaining the established platform/
+    descriptor ordering whenever an override really is present. }
+  for LIndex := 0 to ANode.Props.Count - 1 do
+  begin
+    LScopedKey := ANode.Props.Names[LIndex];
+
+    if (Copy(LScopedKey, 1, 5) = '@nyx.') and
+      TryNyxPlatformKey(LScopedKey, LPlatform, LAttribute) then
+    begin
+      Include(LScopedPlatforms, LPlatform);
+    end;
+  end;
+  LPlatformCount := LCount;
   for LPlatform := npfBrowser to npfNativeLCL do
   begin
+
+    if not (LPlatform in LScopedPlatforms) then
+    begin
+      Continue;
+    end;
     for LPropertyIndex := 0 to LPlatformCount - 1 do
     begin
 
-      if TryNyxAttribute(Result[LPropertyIndex].Key, LAttribute) and
-        NyxPlatformAttribute(LAttribute) then
+      if LHasAttribute[LPropertyIndex] and
+        NyxPlatformAttribute(LKnownAttributes[LPropertyIndex]) then
       begin
-        LScopedKey := NyxPlatformKey(LPlatform, LAttribute);
+        LScopedKey := NyxPlatformKey(LPlatform, LKnownAttributes[LPropertyIndex]);
 
         if ANode.Props.IndexOfName(LScopedKey) >= 0 then
         begin
-          LFoundIndex := Length(Result);
-          SetLength(Result, LFoundIndex + 1);
-          Result[LFoundIndex] := Result[LPropertyIndex];
-          Result[LFoundIndex].Key := LScopedKey;
-          Result[LFoundIndex].Title := NyxPlatformName(LPlatform) + ' / ' + Result[LPropertyIndex].Title;
-          Result[LFoundIndex].DefaultValue := '';
-          Result[LFoundIndex].Advanced := True;
-          Result[LFoundIndex].Support := Result[LPropertyIndex].Support.ForPlatform(LPlatform);
+          LFoundIndex := Append;
+          LProperties[LFoundIndex] := LProperties[LPropertyIndex];
+          LProperties[LFoundIndex].Key := LScopedKey;
+
+          if ADetail = npdAuthoring then
+          begin
+            LProperties[LFoundIndex].Title := NyxPlatformName(LPlatform) + ' / ' +
+              LProperties[LPropertyIndex].Title;
+          end;
+          LProperties[LFoundIndex].DefaultValue := '';
+          LProperties[LFoundIndex].Advanced := True;
+
+          if ADetail = npdAuthoring then
+          begin
+            LProperties[LFoundIndex].Support := LProperties[LPropertyIndex].Support.ForPlatform(LPlatform);
+          end;
         end;
       end;
     end;
@@ -1519,16 +1642,23 @@ begin
   begin
     { Instances inherit actual definition values as authoring defaults;
       explicit instance overrides remain separate persisted properties. }
-    for LIndex := 0 to Length(Result) - 1 do
+    for LIndex := 0 to LCount - 1 do
     begin
 
-      if Result[LIndex].Key <> 'component' then
+      if LProperties[LIndex].Key <> 'component' then
       begin
-        Result[LIndex].DefaultValue := InheritedValue(Result[LIndex].Key,
-          Result[LIndex].DefaultValue);
+        LProperties[LIndex].DefaultValue := InheritedValue(LProperties[LIndex].Key,
+          LProperties[LIndex].DefaultValue);
       end;
     end;
   end;
+  SetLength(LProperties, LCount);
+  Result := LProperties;
+end;
+
+function NyxProperties(ANode: TNyxNode; ADocument: TNyxDocument): TNyxPropertyInfos;
+begin
+  Result := BuildNyxProperties(ANode, ADocument, npdAuthoring);
 end;
 
 function NyxEventContextsData(AContexts: TNyxEventContexts): TNyxDataValue;
@@ -2381,7 +2511,7 @@ begin
       end;
     end;
   end;
-  LProperties := NyxProperties(ANode, ADocument);
+  LProperties := BuildNyxProperties(ANode, ADocument, npdAdmission);
   for LIndex := 0 to ANode.Props.Count - 1 do
   begin
     LValue := ANode.Props.Names[LIndex];

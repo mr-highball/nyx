@@ -522,3 +522,38 @@ stale document cache. Keep complete fresh admission, direct mutation visibility,
 exact authored frames, original benchmark sizes and paired history. Stop on a
 failed preservation/ownership gate. No isolated lexer report, grammar expansion,
 weakened browser requirement, DONE move or completion credit replaces this scope.
+
+## Fresh admission and ordinary inspector queries — 2026-10-05
+
+The bounded metadata delivery shares descriptor construction between complete
+admission and authoring, omitting only presentation titles/help/capability work
+from validation. Query-owned geometric storage, enum positions and a single
+resolved projection avoid repeated metadata copying/lookups. Creator schemas,
+domain bounds, inherited defaults and actual scoped overrides are read freshly;
+no document facts are cached. Public authoring/MCP metadata remains complete.
+All 4104 catalog/scoped metadata rows match the exact 9d564b9 checkpoint.
+
+Twenty public admission/snapshot cases bring the focused packet to 103 native
+checks; the current shared suite passes 30/1580, eight compiled companion
+outcomes execute and actual LCL authoring/binding/inspector consumers pass.
+Heap-traced execution reports zero leaks and owned warnings are zero. Browser
+focused/shared/Studio/benchmarks/companions compile; current execution remains
+pending at the unchanged recorded fixture-host launch gate. See WORK.md.
+
+The same ordinary native benchmark measures 2048-control Apply 1485→984 ms,
+visual editing 3281→2547 ms, structural editing 4297→3563 ms and three paired
+history operations 1625→891 ms. Full fresh property admission measures
+406→156 ms; complete shared shell composition stays 156 ms. Metadata-query
+measurements near the native timer resolution do not establish zero cost or
+target rendering performance. Crafted source, Unicode, structural ownership,
+direct mutation visibility and exact paired history gates are unchanged.
+
+Criterion 3 remains open; the original no-closure count advances 12→13. Stop
+this bounded metadata optimization. The next source deliverable must address
+complete reconciliation/structural-command responsiveness and its ordinary
+editor consumer, with the same fresh admission, exact preservation and history
+gates. Use the operation-owned source context already available; do not expand
+grammar, replace the correctness workload or return an isolated lexer report.
+Browser execution/observing qualification still requires a permitted fixture
+host, without retrying an equivalent refused listener. No counter reset, scope
+transfer, DONE move, weakened parity requirement or completion credit is earned.

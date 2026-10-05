@@ -5052,3 +5052,113 @@ publication; the operator's accepted pair, view/selection, draft and Undo/Redo
 remain untouched. The exact checkpoint/remote proof is private at
 .local/codex-restart-check/source-responsive-remote-proof.json after push. Machine
 paths, accounts, endpoint configuration and test outputs stay outside the commit.
+
+## Fresh property admission and inspector metadata — 2026-10-05
+
+Progress: the current bounded NS-1_codegen_01 criterion-3 delivery changes the
+shared descriptor builder and its ordinary Studio/source consumers. It does not
+close the complete source/performance outcome. Solo execution continues; running
+production/stage services and the user's revision-6 pair remain preserved.
+
+Admission now shares all inspector descriptor rules while omitting presentation
+titles/help/capability construction. Every call reads current domains, creator
+schemas, inherited defaults and actual platform overrides. Complete contract,
+callback, structural, realization and persistence gates remain fresh. Public
+metadata still returns every presentation field. Query-owned geometric arrays,
+closed attribute positions and one resolved projection/primitive value remove
+repeated copying/lookup work. These facts live only for the current operation:
+there is no document cache, registry alias or retained node/view reference.
+
+The new Pascal property benchmark consumes public selection, metadata and
+BuildNyxStudioView with expanded properties and code visible. It asserts selected
+values, typed support and unchanged accepted source/draft state. Its snapshot mode
+emits every public metadata field with both present platform scopes. The maintained
+source-workspace target compiles both benchmarks without heap tracing, runs
+functional checks with tracing and stages browser artifacts to the explicit
+private output. Its source workload and preservation assertions are unchanged.
+
+Evidence is under ignored build/property-responsive/:
+
+- focused-final-build.log / focused-final-run.log: 103 checked FPC 3.2.0 cases,
+  including 20 new public behavior cases. Independently returned arrays, changed
+  reusable domain/defaults, large creator schemas, builtin/scoped replacements,
+  Unicode multiline defaults, invalid recognized values and removed scopes pass.
+  Native ownership reports zero unfreed blocks; these cases overlap the core suite.
+- core-latest-build.log / core-latest-run.log: current final source passes 30 core
+  and 1580 composition/designer checks with zero unfreed blocks. Earlier
+  core-final logs retain the same counts before shared projection resolution.
+- generated-build.log / generated-run.log: newly emitted companions execute eight
+  native outcomes, including crafted source/history, structural/reusable creation,
+  Unicode identity/event ownership, handwritten helpers and live state/bindings.
+  Zero unfreed blocks. generated-browser-build.log compiles their pas2js counterpart.
+- lcl-final-build.log / lcl-final-run.log: actual Win32 LCL controls qualify 42
+  managed, 35 event, 50 binding and 71 Studio source/state/binding authoring checks,
+  ordinary/expanded inspector help, compact shell, optional outputs, themes,
+  reusable customization, 75 catalog projections and Unicode recovery. All
+  151797781 allocated blocks are freed. Programmatic actual controls do not
+  establish hardware input, another widgetset, browser pixels or full-editor UX.
+- native-studio-final-build.log compiles the current standalone product consumer,
+  without launch/configuration/service changes. maintained-build.log executes
+  source-workspace with isolated BrowserOutput: 103 native checks/zero leaks,
+  both Pascal benchmarks and browser counterparts compile, three static hosts
+  and the matching RTL stage outside the live frontend. No server is launched.
+- browser-focused-final-build.log, browser-property-final-build.log,
+  browser-shared-final-build.log, browser-studio-final-build.log and
+  browser-source-build.log compile current focused/shared/Studio/benchmark consumers.
+  All checked native/owned builds have zero warnings; seven installed pas2js RTL
+  warnings remain visible. Dependency source/toolchains are untouched.
+- before/metadata.jsonl and after/metadata-final.jsonl contain 4104 equal rows for
+  all 76 catalog kinds and both present scopes. Exact SHA-256 equality establishes
+  unchanged keys/order/types/defaults/choices/bounds/titles/advanced/support fields,
+  not browser execution. Snapshot and all timed commands exit zero.
+
+Before/after timing uses the exact archived 9d564b9 source, current source and the
+same checked FPC 3.2.0 flags without tracing/profiling. Both native fixtures run
+serially after compilers and other native fixture processes finish. All original
+crafted name/comment/Unicode/expression, structural, rejected-draft and paired
+history assertions pass. Source UTF-8 sizes stay 25094/98822/400022. Full rows
+remain in before/source.csv / after/source.csv and before/property.csv /
+after/property.csv; these are whole portable commands, excluding rendering,
+physical input, HTTP latency and compilation.
+
+| Controls | Apply before/after ms | Visual before/after ms | Structural before/after ms | Three history operations before/after ms |
+| ---: | ---: | ---: | ---: | ---: |
+| 128 | 63 / 47 | 188 / 140 | 265 / 203 | 93 / 47 |
+| 512 | 328 / 188 | 781 / 593 | 1047 / 860 | 359 / 172 |
+| 2048 | 1485 / 984 | 3281 / 2547 | 4297 / 3563 | 1625 / 891 |
+
+Largest full property admission measures 406→156 ms. Sixty-four ordinary
+selection/metadata queries measure 32→0 ms in that timer sample; zero indicates
+native timer resolution, not free computation. Full shared Studio shell
+composition remains 156 ms, so its wider cost/target painting are not improved
+by this evidence. Large source commands still take seconds and are not accepted
+as comfortable large-project authoring. Historical browser timings are not
+substituted for this packet.
+
+Retained construction failures: focused-build.log catches an accidentally copied
+unit declaration in the new fixture; corrected files compile/run in the final
+logs. after/property-build.log catches a nonexistent draft-query member; the
+benchmark uses the public draft-base contract and its unchanged-source assertion.
+No product admission/ownership gate or workload was weakened to pass either fix.
+
+Current browser execution/observing qualification remains pending: automatic
+approval review previously rejected the separate static fixture listener launch
+as "blocked by policy", with no further reason. No equivalent launch was retried;
+no frontend, listener, machine profile, enrollment or configuration was published.
+The previous updated-Studio launch gate and all protected services remain intact.
+Named semantic session/node reads verify bounded revision-6 context; they query
+the existing production build, not execution of this new source candidate.
+
+Criterion 3 remains open and its original no-closure count advances 12→13.
+Native authoring's count 7 and delivery's count 1 remain unchanged. Stop this
+bounded metadata optimization; next address complete reconciliation/structural
+command responsiveness together with ordinary editor use, using existing owned
+source contexts and the same exact preservation/history/admission workload.
+Browser/observing evidence still needs a permitted host without an equivalent
+refused launch. Do not expand grammar, return an isolated lexer report, reset
+counters, transfer scope, weaken parity or claim DONE/north-star completion.
+
+Production/stage process identity and named session are rechecked before push.
+The private exact remote proof is
+.local/codex-restart-check/property-responsive-remote-proof.json. Machine paths,
+accounts, personal configuration and generated evidence stay outside the commit.

@@ -91,9 +91,13 @@ zero native leaks. New editor HTTP deployment, compiler-job cancellation and
 complete service reliability retain their original gates. The next prerequisite
 is source synchronization's large-project responsiveness; see WORK.md. Its
 current whole-command source candidate removes duplicate generation/encoding
-and prepares admitted pairs together. Native preservation/actual LCL consumers
-qualify it; browser execution remains pending after the separate static listener
-launch was refused. Large-project editing is still too slow for acceptance.
+and prepares admitted pairs together. Fresh admission now omits inspector-only
+help work, while shared metadata uses operation-owned lookup/projection facts.
+All 4104 catalog metadata rows match the previous checkpoint exactly. Native
+preservation/actual LCL consumers qualify it; browser execution remains pending
+after the separate static listener launch was refused. The unchanged 2048-control
+native workload measures Apply at 984 ms, visual editing at 2547 ms and structural
+editing at 3563 ms. Large-project editing is still too slow for acceptance.
 The preceding designer prerequisite retains its 34 native / 32 desktop / 33
 actual-390 browser checks, including painted selection and focused view movement.
 

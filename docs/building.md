@@ -116,7 +116,8 @@ them.
 
 `source-workspace` runs the native retained-draft/Unicode diagnostic, indexed
 identity/preservation, independent source-context, compiler-location, immutable
-history and paired candidate/cache-restoration checks (83 total), and
+history, paired candidate/cache-restoration and fresh property-admission checks
+(103 total), and
 compiles their browser counterpart plus the portable source benchmark. Execute
 `source-diagnostics.html` after compilation. Benchmark timing is deliberately a
 separate run: native `nyx_source_benchmark.exe` accepts an optional size of 128,
@@ -127,6 +128,18 @@ crafted locals/comments/unchanged expressions, structural changes, exact paired
 history and rejected-draft recovery before publishing its timings. These measure
 portable source/document work, not painting, trusted input or compiler latency.
 Current costs and remaining large-project work are recorded in WORK.md.
+
+The same target also compiles `nyx_property_benchmark` and stages
+`property-benchmark.html`. Run it separately on an idle host, using the real
+browser clock. It measures full document property admission, 64 ordinary
+selection/metadata queries and composition of the public Nyx Studio shell with
+its expanded inspector and source editor at the same three project sizes.
+Every row verifies typed help, selected values and unchanged source/draft state.
+These composition times exclude target rendering and physical input. Native
+`--snapshot` / browser `?snapshot` emits all public metadata fields in stable
+catalog/descriptor order, with present browser/native overrides, for exact
+comparison. Benchmark binaries omit heap tracing; functional checks retain it.
+Native timer-resolution values do not establish sub-millisecond responsiveness.
 
 The Pascal `nyx_browser_capture` helper accepts `--real-clock` as its optional
 fourth argument for synchronous benchmarks. That mode removes the virtual-time
