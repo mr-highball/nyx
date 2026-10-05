@@ -7,7 +7,7 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest source candidate: [logical native viewport](#logical-native-viewport-and-original-size-controls--2026-10-05)
+Latest source checkpoint: [logical native viewport](#logical-native-viewport-and-original-size-controls--2026-10-05)
 retains full content extent and every control through safe physical geometry and
 standard LCL scrollbars. Mixed controls pass 4118; the unchanged original-size
 128/512/2048 Studio journey passes 45, with zero leaks. The recorded 81963-pixel
@@ -5724,3 +5724,10 @@ active user pair replacement occurred. Missing general source/status workflows
 retain their NS-4 owner; physical input/rendering uses its explicit Pascal
 harness. No equivalent refused listener or alternate route is retried. The
 unbounded original goal remains active and incomplete.
+
+Source checkpoint **9e1498c** is pushed and verified against the exact remote
+`hello-nyx` branch with a clean worktree. The private proof at
+`.local/codex-restart-check/logical-viewport-remote-proof.json` records the final
+handoff head separately from this product source checkpoint. Logs, captures,
+toolchain paths and personal configuration remain ignored. The next source
+reconciliation action and all original acceptance gates above remain unchanged.
