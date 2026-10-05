@@ -7457,3 +7457,24 @@ live artifact deployment or configuration refresh was attempted. The phone retai
 the protected earlier release. Current browser/authenticated observation and the
 full Nyx/Nyx Studio goal remain open; the goal is active/incomplete. The authorized
 hello-nyx remote checkpoint follows after final qualification.
+
+Remote checkpoint: product commit
+`41793ef1ec30e85e79b7291528ae71c8c984c7d2` is pushed to
+`origin/hello-nyx`; exact remote/local product references match and the product
+worktree is clean. Final current native source/modal/editor/scheduling consumers
+pass **30/74/39**, with zero leaks and owned warnings. Shared presentation passes
+**225** on each native compiler; signature evidence remains **20/59/50/9**,
+three intended compiler rejections and **31/72** regressions. Native Studio and
+all four adapted fixture programs compile; browser Studio/module worker compile
+with zero owned warnings and seven visible installed RTL warnings each.
+Final English desktop/narrow captures were inspected. Current browser/phone
+execution and observing deployment retain the existing policy gate.
+
+Read-only authenticated MCP retains revision **8**, home, no pending draft,
+Undo unavailable/Redo available and the user's rating-part selection; no agent
+mutation was made. All eight exact protected process identities match; zero
+focused fixture processes remain. Workflow **8**, codegen **27**, renderer **3**,
+native authoring **7** and delivery **1** remain explicit. No full criterion
+closes and the full goal stays active/incomplete. Final exact handoff/remote/
+clean/process/session proof is stored privately after pushing at
+`.local/codex-restart-check/source-editor-remote-proof.json`.
