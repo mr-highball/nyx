@@ -48,6 +48,9 @@ type
     Name: TNyxEventRef;
     ID: TNyxCallbackRef;
     Handler: TNyxHandlerRef;
+    { Review belongs to this session/load, even if another project uses the same
+      owner and registration IDs. Reloading identical files invalidates it. }
+    Context: TNyxStudioCommandContext;
   end;
 
 const
@@ -63,7 +66,20 @@ const
 { Public Nyx composition only: event cards, selects, buttons and the warning
   work on both target adapters. Projections/session remain borrowed and unmutated. }
 procedure AddNyxEventsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
-  AProjection: TNyxNode; const ARemoval: TNyxCallbackRemoval);
+  AProjection: TNyxNode; const ARemoval: TNyxCallbackRemoval); overload;
+{ Queue presentation overlays exact policies and disables an event whose removal
+  is pending. It contains no candidate document or mutable callback collection. }
+procedure AddNyxEventsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode; const ARemoval: TNyxCallbackRemoval;
+  const APending: TNyxStudioPendingDesign); overload;
+{ Capture immutable typed mutation or a presentation-only warning/navigation.
+  This function never generates source or publishes a pair on the UI thread.
+  The out edit is sdaEvent only for add, policy or an exact confirmed removal. }
+function CaptureNyxStudioEvents(ASession: TNyxStudioSession; ANode: TNyxNode;
+  ATrigger: TNyxTrigger; const ARemovalReview: TNyxCallbackRemoval;
+  const APending: TNyxStudioPendingDesign; out AEdit: TNyxStudioDesignEdit;
+  out AEffect: TNyxInspectorEffect; out ALine: Integer;
+  out ARemoval: TNyxCallbackRemoval): Boolean;
 { Portable controller boundary. Only the explicit Confirm command mutates removal;
   Request exposes an owned warning snapshot. Add returns its TODO line; Navigate
   returns the existing implementation line. Rejection retains design and history. }
@@ -98,6 +114,14 @@ end;
 
 procedure AddNyxEventsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
   AProjection: TNyxNode; const ARemoval: TNyxCallbackRemoval);
+begin
+  AddNyxEventsInspector(AParent, ASession, AProjection, ARemoval,
+    Default(TNyxStudioPendingDesign));
+end;
+
+procedure AddNyxEventsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode; const ARemoval: TNyxCallbackRemoval;
+  const APending: TNyxStudioPendingDesign);
 var
   LMetadata: TNyxEventSchemas;
   LEvents: TNyxAuthoredEventInfos;
@@ -118,6 +142,8 @@ var
   LOrder: array of Integer;
   LDisplayIndex: Integer;
   LOrderCount: Integer;
+  LLocked: Boolean;
+  LPendingPolicy: TNyxExecutionPolicy;
 begin
 
   if (AParent = nil) or (ASession = nil) or (AProjection = nil) then
@@ -241,7 +267,14 @@ begin
       end;
       LPolicy := EventCommand(nkSelect, LKey + '-policy', 'Execution policy',
         icPolicy, ASession.SelectedID, LInfo.Trigger, LInfo.Name);
-      LPolicy.Configure.Items(LChoices.Text).Value(NyxPolicyName(LInfo.Policy)).Done;
+      LLocked := APending.EventLocked(ASession.SelectedID, LInfo.Trigger, LInfo.Name);
+
+      if APending.EventPolicy(ASession.SelectedID, LInfo.Trigger, LInfo.Name, LPendingPolicy) then
+      begin
+        LInfo.Policy := LPendingPolicy;
+      end;
+      LPolicy.Configure.Items(LChoices.Text).Value(NyxPolicyName(LInfo.Policy))
+        .Enabled(not LLocked).Done;
       LCard.Add(LPolicy);
       for LCallbackIndex := 0 to High(LInfo.Callbacks) do
       begin
@@ -258,14 +291,15 @@ begin
         LRow.Add(LButton);
         LButton := EventCommand(nkButton, LRow.ID + '-remove', 'Remove',
           icRequest, ASession.SelectedID, LInfo.Trigger, LInfo.Name);
-        LButton.Configure.Width(112)
+        LButton.Configure.Width(112).Enabled(not LLocked)
           .AccessibleName('Remove ' + LInfo.Callbacks[LCallbackIndex].Handler.Name).Done;
         LButton.SetProp(NyxStudioEventIDKey, LInfo.Callbacks[LCallbackIndex].ID.Name)
           .SetProp(NyxStudioEventHandlerKey, LInfo.Callbacks[LCallbackIndex].Handler.Name);
         LRow.Add(LButton);
       end;
       LCard.Add(EventCommand(nkButton, LKey + '-add', '+ Add callback',
-        icAdd, ASession.SelectedID, LInfo.Trigger, LInfo.Name));
+        icAdd, ASession.SelectedID, LInfo.Trigger, LInfo.Name)
+        .Configure.Enabled(not LLocked).Done);
     end;
   finally
     LChoices.Free;
@@ -274,7 +308,8 @@ begin
     'Asynchronous uses native workers or the browser event loop. Threaded requires native workers. ' +
     'UI queue defers to the UI thread.').Done);
 
-  if ARemoval.Pending and (ARemoval.OwnerID = ASession.SelectedID) then
+  if ARemoval.Pending and (ARemoval.OwnerID = ASession.SelectedID) and
+    ASession.MatchesCommandContext(ARemoval.Context) then
   begin
     LCard := TNyxNode.Create(nkCard, 'event-removal-warning');
     LCard.Configure.Padding(12).Surface(True).Done;
@@ -285,7 +320,8 @@ begin
       NyxCallbackRemovalWarning(ASession.Document, ARemoval.OwnerID, ARemoval.Handler)).Done);
     LButton := EventCommand(nkButton, 'event-removal-confirm', 'Remove registration',
       icConfirm, ARemoval.OwnerID, ARemoval.Trigger, ARemoval.Name);
-    LButton.Configure.Variant(nvDanger).Done;
+    LButton.Configure.Variant(nvDanger).Enabled(not APending.EventLocked(
+      ARemoval.OwnerID, ARemoval.Trigger, ARemoval.Name)).Done;
     LButton.SetProp(NyxStudioEventIDKey, ARemoval.ID.Name);
     LCard.Add(LButton);
     LCard.Add(EventCommand(nkButton, 'event-removal-cancel', 'Keep registration',
@@ -293,8 +329,9 @@ begin
   end;
 end;
 
-function RouteNyxStudioEvents(ASession: TNyxStudioSession; ANode: TNyxNode;
-  ATrigger: TNyxTrigger; const APending: TNyxCallbackRemoval;
+function CaptureNyxStudioEvents(ASession: TNyxStudioSession; ANode: TNyxNode;
+  ATrigger: TNyxTrigger; const ARemovalReview: TNyxCallbackRemoval;
+  const APending: TNyxStudioPendingDesign; out AEdit: TNyxStudioDesignEdit;
   out AEffect: TNyxInspectorEffect; out ALine: Integer;
   out ARemoval: TNyxCallbackRemoval): Boolean;
 var
@@ -304,7 +341,6 @@ var
   LCommandFound: Boolean;
   LEventFound: Boolean;
   LPolicy: TNyxExecutionPolicy;
-  LHandler: TNyxHandlerRef;
   LProjection: TNyxNode;
   LInfos: TNyxAuthoredEventInfos;
   LIndex: Integer;
@@ -314,7 +350,8 @@ begin
   Result := False;
   AEffect := nieNone;
   ALine := 0;
-  ARemoval.Pending := False;
+  ARemoval := Default(TNyxCallbackRemoval);
+  AEdit := Default(TNyxStudioDesignEdit);
 
   if (ANode = nil) or (ANode.Prop(NyxStudioEventCommandKey) = '') then
   begin
@@ -359,19 +396,22 @@ begin
   begin
     Exit;
   end;
+  AEdit.Selection := ASession.SelectedID;
+  AEdit.View := ASession.ActiveViewID;
+  AEdit.Event.Trigger := LEvent;
+  AEdit.Event.Name := LName;
+
+  if (LCommand in [icAdd, icPolicy, icConfirm]) and
+    APending.EventLocked(AEdit.Selection, LEvent, LName) then
+  begin
+    raise ENyxModel.Create('Wait for this callback removal before editing its event');
+  end;
   case LCommand of
     icAdd:
       begin
 
-        if LEvent = ntNamed then
-        begin
-          LHandler := ASession.AddCallback(LName, ALine);
-        end
-        else
-        begin
-          LHandler := ASession.AddCallback(LEvent, ALine);
-        end;
-        AEffect := nieSource;
+        AEdit.Action := sdaEvent;
+        AEdit.Event.Action := seaAdd;
       end;
     icPolicy:
       begin
@@ -381,14 +421,9 @@ begin
           raise ENyxModel.Create('Choose a supported execution policy');
         end;
 
-        if LEvent = ntNamed then
-        begin
-          ASession.SetCallbackPolicy(LName, LPolicy);
-        end
-        else
-        begin
-          ASession.SetCallbackPolicy(LEvent, LPolicy);
-        end;
+        AEdit.Action := sdaEvent;
+        AEdit.Event.Action := seaPolicy;
+        AEdit.Event.Policy := LPolicy;
       end;
     icNavigate:
       begin
@@ -421,6 +456,7 @@ begin
                 ARemoval.Name := LName;
                 ARemoval.ID := LInfos[LIndex].Callbacks[LCallbackIndex].ID;
                 ARemoval.Handler := LInfos[LIndex].Callbacks[LCallbackIndex].Handler;
+                ARemoval.Context := ASession.CommandContext;
                 LFound := True;
               end;
             end;
@@ -438,10 +474,12 @@ begin
     icConfirm:
       begin
 
-        if not APending.Pending or (APending.OwnerID <> ASession.SelectedID) or
-          (APending.Trigger <> LEvent) or
-          (APending.Name.Name <> LName.Name) or
-          (APending.ID.Name <> ANode.Prop(NyxStudioEventIDKey)) then
+        if not ARemovalReview.Pending or
+          not ASession.MatchesCommandContext(ARemovalReview.Context) or
+          (ARemovalReview.OwnerID <> ASession.SelectedID) or
+          (ARemovalReview.Trigger <> LEvent) or
+          (ARemovalReview.Name.Name <> LName.Name) or
+          (ARemovalReview.ID.Name <> ANode.Prop(NyxStudioEventIDKey)) then
         begin
           raise ENyxModel.Create('Review the current removal warning before confirming');
         end;
@@ -458,8 +496,8 @@ begin
               for LCallbackIndex := 0 to High(LInfos[LIndex].Callbacks) do
               begin
                 LFound := LFound or
-                  ((LInfos[LIndex].Callbacks[LCallbackIndex].ID.Name = APending.ID.Name) and
-                  (LInfos[LIndex].Callbacks[LCallbackIndex].Handler.Name = APending.Handler.Name));
+                  ((LInfos[LIndex].Callbacks[LCallbackIndex].ID.Name = ARemovalReview.ID.Name) and
+                  (LInfos[LIndex].Callbacks[LCallbackIndex].Handler.Name = ARemovalReview.Handler.Name));
               end;
             end;
           end;
@@ -472,19 +510,45 @@ begin
           raise ENyxModel.Create('This registration changed; review its new removal warning');
         end;
 
-        if LEvent = ntNamed then
-        begin
-          ASession.RemoveCallback(LName, APending.ID);
-        end
-        else
-        begin
-          ASession.RemoveCallback(LEvent, APending.ID);
-        end;
-        AEffect := nieRemoved;
+        AEdit.Action := sdaEvent;
+        AEdit.Event.Action := seaRemove;
+        AEdit.Event.ID := ARemovalReview.ID;
+        AEdit.Event.Handler := ARemovalReview.Handler;
       end;
     icCancel: AEffect := nieCancelRemoval;
   end;
   Result := True;
+end;
+
+function RouteNyxStudioEvents(ASession: TNyxStudioSession; ANode: TNyxNode;
+  ATrigger: TNyxTrigger; const APending: TNyxCallbackRemoval;
+  out AEffect: TNyxInspectorEffect; out ALine: Integer;
+  out ARemoval: TNyxCallbackRemoval): Boolean;
+var
+  LEdit: TNyxStudioDesignEdit;
+  LHandler: TNyxHandlerRef;
+begin
+  Result := CaptureNyxStudioEvents(ASession, ANode, ATrigger, APending,
+    Default(TNyxStudioPendingDesign), LEdit, AEffect, ALine, ARemoval);
+
+  if Result and (LEdit.Action = sdaEvent) then
+  begin
+    ASession.ApplyEventIntent(LEdit.Event, LHandler, ALine);
+    case LEdit.Event.Action of
+      seaAdd:
+        begin
+          AEffect := nieSource;
+        end;
+      seaRemove:
+        begin
+          AEffect := nieRemoved;
+        end;
+      seaPolicy:
+        begin
+          AEffect := nieNone;
+        end;
+    end;
+  end;
 end;
 
 end.

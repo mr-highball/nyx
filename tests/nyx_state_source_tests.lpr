@@ -101,7 +101,7 @@ var
     LRequest := LSession.PrepareDesignRequest(LEdit, LSchemas.Revision);
     LWire := LRequest.ToData;
     LRead := ReadNyxStudioDesignRequest(LWire);
-    Check(LRequest.SameRequest(LRead), 'Private version-three ticket keeps exact typed intent');
+    Check(LRequest.SameRequest(LRead), 'Versioned private ticket keeps exact typed intent');
     LPrepared := PrepareNyxStudioDesign(LRead, LSchemas);
     LReceived := ReceiveNyxPreparedDesign(LPrepared.ToData, LRequest, LSchemas);
   end;

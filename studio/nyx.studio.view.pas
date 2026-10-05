@@ -951,7 +951,8 @@ begin
 
         if LSelectedProjection <> nil then
         begin
-          AddNyxEventsInspector(LRight, ASession, LSelectedProjection, AState.CallbackRemoval);
+          AddNyxEventsInspector(LRight, ASession, LSelectedProjection,
+            AState.CallbackRemoval, AState.PendingDesign);
         end;
       end
       else

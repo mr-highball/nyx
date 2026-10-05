@@ -37,6 +37,7 @@ type
     FSelection: TNyxText;
     FView: TNyxText;
     FNextID: Integer;
+    FAddedHandler: TNyxHandlerRef;
   public
     destructor Destroy; override;
     procedure Execute;
@@ -48,9 +49,199 @@ type
     function GetSelection: TNyxText;
     function GetView: TNyxText;
     function GetNextID: Integer;
+    function GetAddedHandler: TNyxHandlerRef;
     function ToData: TNyxDataValue;
     procedure Take(var ADocument: TNyxDocument; var AWorkspace: TNyxSourceWorkspace);
   end;
+
+procedure ValidateEventIntent(const AIntent: TNyxStudioEventIntent);
+begin
+
+  if (Ord(AIntent.Action) < Ord(Low(TNyxStudioEventAction))) or
+    (Ord(AIntent.Action) > Ord(High(TNyxStudioEventAction))) or
+    (Ord(AIntent.Policy) < Ord(Low(TNyxExecutionPolicy))) or
+    (Ord(AIntent.Policy) > Ord(High(TNyxExecutionPolicy))) then
+  begin
+    raise ENyxModel.Create('Callback intent contains an unknown closed choice');
+  end;
+
+  if (AIntent.Trigger = ntNamed) <> (AIntent.Name.Name <> '') then
+  begin
+    raise ENyxModel.Create('Named callback intent requires its exact event reference');
+  end;
+
+  if not NyxIsRuntimeTrigger(AIntent.Trigger) and (AIntent.Trigger <> ntNamed) then
+  begin
+    raise ENyxModel.Create('Callback intent requires a published runtime event');
+  end;
+
+  if AIntent.Action = seaRemove then
+  begin
+
+    if (AIntent.ID.Name = '') or (AIntent.Handler.Name = '') then
+    begin
+      raise ENyxModel.Create('Removal requires the exact reviewed registration and handler');
+    end;
+  end
+  else if (AIntent.ID.Name <> '') or (AIntent.Handler.Name <> '') then
+  begin
+    raise ENyxModel.Create('Only removal intent names an existing registration');
+  end;
+
+  if (AIntent.Action <> seaPolicy) and (AIntent.Policy <> neSequential) then
+  begin
+    raise ENyxModel.Create('Only policy intent selects an execution policy');
+  end;
+end;
+
+function HasEventRegistration(ANode: TNyxNode; const AIntent: TNyxStudioEventIntent): Boolean;
+var
+  LEvents: TNyxAuthoredEventInfos;
+  LIndex: Integer;
+  LCallback: Integer;
+begin
+  Result := False;
+
+  if ANode = nil then
+  begin
+    Exit;
+  end;
+  LEvents := NyxAuthoredEvents(ANode);
+  for LIndex := 0 to High(LEvents) do
+  begin
+
+    if (LEvents[LIndex].Trigger <> AIntent.Trigger) or
+      (LEvents[LIndex].Name.Name <> AIntent.Name.Name) then
+    begin
+      Continue;
+    end;
+    for LCallback := 0 to High(LEvents[LIndex].Callbacks) do
+    begin
+
+      if (LEvents[LIndex].Callbacks[LCallback].ID.Name = AIntent.ID.Name) and
+        (LEvents[LIndex].Callbacks[LCallback].Handler.Name = AIntent.Handler.Name) then
+      begin
+        Exit(True);
+      end;
+    end;
+  end;
+end;
+
+procedure TNyxStudioSession.ApplyEventIntent(const AIntent: TNyxStudioEventIntent;
+  out AHandler: TNyxHandlerRef; out ALine: Integer);
+var
+  LMetadata: TNyxEventSchemas;
+  LIndex: Integer;
+  LSupported: Boolean;
+  LProjection: TNyxNode;
+begin
+  AHandler := Default(TNyxHandlerRef);
+  ALine := 0;
+  ValidateEventIntent(AIntent);
+  LMetadata := NyxEventsMetadata(Selected, Document);
+  LSupported := False;
+  for LIndex := 0 to High(LMetadata) do
+  begin
+    LSupported := LSupported or ((LMetadata[LIndex].Trigger = AIntent.Trigger) and
+      (LMetadata[LIndex].Name.Name = AIntent.Name.Name));
+  end;
+
+  if not LSupported then
+  begin
+    raise ENyxModel.Create('The selected component no longer publishes this callback');
+  end;
+
+  if AIntent.Action = seaRemove then
+  begin
+    LProjection := SelectedProjection;
+    try
+
+      if not HasEventRegistration(LProjection, AIntent) then
+      begin
+        raise ENyxModel.Create('This registration changed; review its new removal warning');
+      end;
+    finally
+      LProjection.Free;
+    end;
+  end;
+  case AIntent.Action of
+    seaAdd:
+      begin
+
+        if AIntent.Trigger = ntNamed then
+        begin
+          AHandler := AddCallback(AIntent.Name, ALine);
+        end
+        else
+        begin
+          AHandler := AddCallback(AIntent.Trigger, ALine);
+        end;
+      end;
+    seaPolicy:
+      begin
+
+        if AIntent.Trigger = ntNamed then
+        begin
+          SetCallbackPolicy(AIntent.Name, AIntent.Policy);
+        end
+        else
+        begin
+          SetCallbackPolicy(AIntent.Trigger, AIntent.Policy);
+        end;
+      end;
+    seaRemove:
+      begin
+
+        if AIntent.Trigger = ntNamed then
+        begin
+          RemoveCallback(AIntent.Name, AIntent.ID);
+        end
+        else
+        begin
+          RemoveCallback(AIntent.Trigger, AIntent.ID);
+        end;
+      end;
+  end;
+end;
+
+function TNyxStudioPendingDesign.EventPolicy(const AOwner: TNyxText;
+  ATrigger: TNyxTrigger; const AName: TNyxEventRef;
+  out APolicy: TNyxExecutionPolicy): Boolean;
+var
+  LIndex: Integer;
+begin
+  APolicy := neSequential;
+  for LIndex := High(Events) downto 0 do
+  begin
+
+    if (Events[LIndex].Owner = AOwner) and (Events[LIndex].Intent.Trigger = ATrigger) and
+      (Events[LIndex].Intent.Name.Name = AName.Name) and
+      (Events[LIndex].Intent.Action = seaPolicy) then
+    begin
+      APolicy := Events[LIndex].Intent.Policy;
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
+function TNyxStudioPendingDesign.EventLocked(const AOwner: TNyxText;
+  ATrigger: TNyxTrigger; const AName: TNyxEventRef): Boolean;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(Events) do
+  begin
+
+    if (Events[LIndex].Owner = AOwner) and (Events[LIndex].Intent.Trigger = ATrigger) and
+      (Events[LIndex].Intent.Name.Name = AName.Name) and
+      (Events[LIndex].Intent.Action = seaRemove) then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
 
 function TNyxStudioPendingDesign.PropertyValue(const ASelection, AKey: TNyxText;
   out AValue: TNyxText): Boolean;
@@ -209,10 +400,27 @@ begin
   end;
 end;
 
+function DesignEventData(const AEdit: TNyxStudioDesignEdit): TNyxDataValue;
+begin
+  Result := NyxNull;
+
+  if AEdit.Action = sdaEvent then
+  begin
+    ValidateEventIntent(AEdit.Event);
+    Result := NyxObject([
+      NyxField('action', NyxData(Ord(AEdit.Event.Action))),
+      NyxField('trigger', NyxData(Ord(AEdit.Event.Trigger))),
+      NyxField('name', NyxData(AEdit.Event.Name.Name)),
+      NyxField('policy', NyxData(Ord(AEdit.Event.Policy))),
+      NyxField('id', NyxData(AEdit.Event.ID.Name)),
+      NyxField('handler', NyxData(AEdit.Event.Handler.Name))]);
+  end;
+end;
+
 function TNyxStudioDesignRequest.ToData: TNyxDataValue;
 begin
   Result := NyxObject([
-    NyxField('version', NyxData(3)), NyxField('owner', NyxData(FOwner)),
+    NyxField('version', NyxData(4)), NyxField('owner', NyxData(FOwner)),
     NyxField('generation', NyxData(FGeneration)), NyxField('nextId', NyxData(FNextID)),
     NyxField('schemaRevision', NyxData(FSchemaRevision)),
     NyxField('pair', NyxData(EncodeNyxProject(FPair))),
@@ -223,7 +431,8 @@ begin
       NyxField('direction', NyxData(Ord(FEdit.Direction))),
       NyxField('platform', NyxData(Ord(FEdit.Platform))),
       NyxField('stateInput', NyxData(Ord(FEdit.StateInput))),
-      NyxField('binding', DesignBindingData(FEdit))]))]);
+      NyxField('binding', DesignBindingData(FEdit)),
+      NyxField('event', DesignEventData(FEdit))]))]);
 end;
 
 function TNyxStudioDesignRequest.SameRequest(const AOther: TNyxStudioDesignRequest): Boolean;
@@ -243,7 +452,13 @@ begin
     (FEdit.Binding.StateName = AOther.FEdit.Binding.StateName) and
     (FEdit.Binding.ValueKind = AOther.FEdit.Binding.ValueKind) and
     (FEdit.Binding.Direction = AOther.FEdit.Binding.Direction) and
-    (FEdit.Binding.Cleared = AOther.FEdit.Binding.Cleared);
+    (FEdit.Binding.Cleared = AOther.FEdit.Binding.Cleared) and
+    (FEdit.Event.Action = AOther.FEdit.Event.Action) and
+    (FEdit.Event.Trigger = AOther.FEdit.Event.Trigger) and
+    (FEdit.Event.Name.Name = AOther.FEdit.Event.Name.Name) and
+    (FEdit.Event.Policy = AOther.FEdit.Event.Policy) and
+    (FEdit.Event.ID.Name = AOther.FEdit.Event.ID.Name) and
+    (FEdit.Event.Handler.Name = AOther.FEdit.Event.Handler.Name);
 end;
 
 function ReadNyxStudioDesignRequest(const AData: TNyxDataValue): TNyxStudioDesignRequest;
@@ -257,10 +472,14 @@ var
   LTarget: Integer;
   LKind: Integer;
   LFlow: Integer;
+  LEvent: TNyxDataValue;
+  LTrigger: Integer;
+  LEventAction: Integer;
+  LPolicy: Integer;
 begin
 
   if (AData.Kind <> ndObject) or (AData.Count <> 7) or
-    (AData.Field('version').AsInteger <> 3) then
+    (AData.Field('version').AsInteger <> 4) then
   begin
     raise ENyxModel.Create('Design processor requires its exact versioned ticket');
   end;
@@ -273,7 +492,7 @@ begin
   LEdit := AData.Field('edit');
 
   if (Result.FOwner = '') or (Result.FGeneration < 0) or (Result.FNextID < 0) or
-    (Result.FSchemaRevision < 0) or (LEdit.Kind <> ndObject) or (LEdit.Count <> 9) then
+    (Result.FSchemaRevision < 0) or (LEdit.Kind <> ndObject) or (LEdit.Count <> 10) then
   begin
     raise ENyxModel.Create('Design processor ticket has invalid identity or intent');
   end;
@@ -359,6 +578,50 @@ begin
   end;
   Result.FEdit.FCanvasContext.FOwner := Result.FOwner;
   Result.FEdit.FCanvasContext.FGeneration := Result.FGeneration;
+  LEvent := LEdit.Field('event');
+
+  if Result.FEdit.Action = sdaEvent then
+  begin
+
+    if (LEvent.Kind <> ndObject) or (LEvent.Count <> 6) then
+    begin
+      raise ENyxModel.Create('Callback intent requires its exact typed descriptor');
+    end;
+    LEventAction := LEvent.Field('action').AsInteger;
+    LTrigger := LEvent.Field('trigger').AsInteger;
+    LPolicy := LEvent.Field('policy').AsInteger;
+
+    if (LEventAction < Ord(Low(TNyxStudioEventAction))) or
+      (LEventAction > Ord(High(TNyxStudioEventAction))) or
+      (LTrigger < Ord(Low(TNyxTrigger))) or (LTrigger > Ord(High(TNyxTrigger))) or
+      (LPolicy < Ord(Low(TNyxExecutionPolicy))) or (LPolicy > Ord(High(TNyxExecutionPolicy))) then
+    begin
+      raise ENyxModel.Create('Callback intent contains an unknown enum choice');
+    end;
+    Result.FEdit.Event.Action := TNyxStudioEventAction(LEventAction);
+    Result.FEdit.Event.Trigger := TNyxTrigger(LTrigger);
+    Result.FEdit.Event.Policy := TNyxExecutionPolicy(LPolicy);
+
+    if LEvent.Field('name').AsText <> '' then
+    begin
+      Result.FEdit.Event.Name := NyxEvent(LEvent.Field('name').AsText);
+    end;
+
+    if LEvent.Field('id').AsText <> '' then
+    begin
+      Result.FEdit.Event.ID := NyxCallbackID(LEvent.Field('id').AsText);
+    end;
+
+    if LEvent.Field('handler').AsText <> '' then
+    begin
+      Result.FEdit.Event.Handler := NyxHandler(LEvent.Field('handler').AsText);
+    end;
+    ValidateEventIntent(Result.FEdit.Event);
+  end
+  else if LEvent.Kind <> ndNull then
+  begin
+    raise ENyxModel.Create('Only callback intent contains an event descriptor');
+  end;
 
   if not (Result.FEdit.Action in [sdaSetStateDefault, sdaCreateStateDefault,
     sdaRenameStateDefault, sdaRemoveStateDefault]) and (Result.FEdit.StateInput <> ssiText) then
@@ -384,6 +647,7 @@ procedure TPreparedDesign.Execute;
 var
   LSession: TNyxStudioSession;
   LStateValue: TNyxStateValue;
+  LLine: Integer;
 begin
   { Strict paired admission also verifies handwritten frame ownership. It runs
     entirely on the isolated processor, under its captured creator environment.
@@ -447,6 +711,7 @@ begin
       sdaRemoveStateDefault: LSession.RemoveState(FRequest.FEdit.Name);
       sdaSetBinding: LSession.SetBinding(FRequest.FEdit.Binding);
       sdaInheritBinding: LSession.InheritBinding(FRequest.FEdit.Binding.Target);
+      sdaEvent: LSession.ApplyEventIntent(FRequest.FEdit.Event, FAddedHandler, LLine);
     end;
     FSource := LSession.Source;
     FDesign := LSession.FSourceWorkspace.Capture.Design;
@@ -503,12 +768,18 @@ begin
   Result := FNextID;
 end;
 
+function TPreparedDesign.GetAddedHandler: TNyxHandlerRef;
+begin
+  Result := FAddedHandler;
+end;
+
 function TPreparedDesign.ToData: TNyxDataValue;
 begin
   Result := NyxObject([
-    NyxField('version', NyxData(1)), NyxField('request', FRequest.ToData),
+    NyxField('version', NyxData(2)), NyxField('request', FRequest.ToData),
     NyxField('selection', NyxData(FSelection)), NyxField('view', NyxData(FView)),
     NyxField('nextId', NyxData(FNextID)),
+    NyxField('addedHandler', NyxData(FAddedHandler.Name)),
     NyxField('pair', NyxObject([
       NyxField('version', NyxData(1)), NyxField('source', NyxData(FSource)),
       NyxField('design', NyxData(FDesign)), NyxField('workspace', NyxData(FSnapshot)),
@@ -569,6 +840,7 @@ begin
       LOwner.FSource := '';
       LOwner.FDesign := '';
       LOwner.FSnapshot := '';
+      LOwner.FAddedHandler := Default(TNyxHandlerRef);
     end;
   end;
 end;
@@ -580,10 +852,11 @@ var
   LOwner: TPreparedDesign;
   LPair: TNyxDataValue;
   LPrepared: INyxPreparedSource;
+  LEvent: TNyxStudioEventIntent;
 begin
 
-  if (AData.Kind <> ndObject) or (AData.Count <> 6) or
-    (AData.Field('version').AsInteger <> 1) or
+  if (AData.Kind <> ndObject) or (AData.Count <> 7) or
+    (AData.Field('version').AsInteger <> 2) or
     not ReadNyxStudioDesignRequest(AData.Field('request')).SameRequest(ARequest) then
   begin
     raise ENyxModel.Create('Design worker reply differs from its dispatched ticket');
@@ -601,9 +874,46 @@ begin
   LOwner.FView := AData.Field('view').AsText;
   LOwner.FNextID := AData.Field('nextId').AsInteger;
 
+  if AData.Field('addedHandler').AsText <> '' then
+  begin
+    LOwner.FAddedHandler := NyxHandler(AData.Field('addedHandler').AsText);
+  end;
+
+  if ((ARequest.FEdit.Action <> sdaEvent) or
+    (ARequest.FEdit.Event.Action <> seaAdd) or LPrepared.Diagnostic.Defined) and
+    (LOwner.FAddedHandler.Name <> '') then
+  begin
+    raise ENyxModel.Create('Only an admitted callback addition returns a handler');
+  end;
+
   if not LPrepared.Diagnostic.Defined then
   begin
     LPrepared.Take(LOwner.FDocument, LOwner.FWorkspace);
+
+    if (ARequest.FEdit.Action = sdaEvent) and (ARequest.FEdit.Event.Action = seaAdd) then
+    begin
+      LEvent := ARequest.FEdit.Event;
+      LEvent.Handler := LOwner.FAddedHandler;
+      LEvent.ID := Default(TNyxCallbackRef);
+
+      if LEvent.Handler.Name <> '' then
+      begin
+        LEvent.ID := NyxCallbackID(LEvent.Handler.Name);
+      end;
+      { A receipt cannot name an older helper or a callback on another owner.
+        Paired source admission already qualifies the implementation boundary. }
+
+      if (LEvent.Handler.Name = '') or
+        (Pos(LowerCase(LEvent.Handler.Name), LowerCase(ARequest.FPair.Source)) > 0) then
+      begin
+        raise ENyxModel.Create('Callback addition receipt cannot reuse an existing helper');
+      end;
+
+      if not HasEventRegistration(LOwner.FDocument.Find(ARequest.FEdit.Selection), LEvent) then
+      begin
+        raise ENyxModel.Create('Callback addition receipt differs from its admitted registration');
+      end;
+    end;
 
     if (LOwner.FNextID < ARequest.FNextID) or
       ((LOwner.FSelection <> '') and (LOwner.FDocument.Find(LOwner.FSelection) = nil)) or

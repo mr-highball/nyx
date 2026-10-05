@@ -384,7 +384,9 @@ type
     function ViewportFor(const AID: TNyxText): TNyxViewportSnapshot;
     { Shared one-based source navigation for the public code-editor component. }
     { One-based Unicode-scalar column, translated to the widgetset's caret units.
-      Win32 memo columns use UTF-16 units, including both units of a surrogate. }
+      Win32 memo columns use UTF-16 units, including both units of a surrogate.
+      A hidden/inactive host retains the caret without requesting unavailable
+      focus; visible focusable editors take ordinary keyboard focus. }
     procedure NavigateCodeLine(const AID: TNyxText; ALine: Integer; AColumn: Integer = 1);
     { Release a view before freeing a containing native host. LCL parenting
       destroys child controls, so the host must outlive the mounted renderer. }
@@ -466,7 +468,16 @@ begin
     {$endif}
   end;
   TMemo(LInput).CaretPos := Point(LUnits, LLine);
-  TMemo(LInput).SetFocus;
+  { Embedded or inactive project hosts can be hidden. The requested caret still
+    belongs to their owned editor; focus is available only after its host can
+    receive it. Hidden navigation must not turn an admitted pair into a native
+    form exception. LCL CanFocus excludes the form; CanSetFocus also qualifies
+    that containing host. Visible Studio navigation takes normal focus. }
+
+  if TMemo(LInput).CanSetFocus then
+  begin
+    TMemo(LInput).SetFocus;
+  end;
 end;
 
 type

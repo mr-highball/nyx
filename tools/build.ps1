@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'agents', 'state-bindings', 'state-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1165,6 +1165,69 @@ try {
     foreach ($nyxHost in @('interactions.html', 'interaction-controls.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxHost") -Destination $nyxBrowserDir
     }
+    exit 0
+  }
+
+  if ($Target -eq 'event-inspectors') {
+    # Independent typed callback preparation and actual ordinary controls.
+    # Pascal owns the assertions, paired export and reconstruction. This target
+    # never launches a listener or replaces a running service or user project.
+    $nyxEventRoot = Join-Path $nyxRoot 'build/event-inspectors'
+    $nyxEventNative = Join-Path $nyxEventRoot 'native'
+    $nyxEventLcl = Join-Path $nyxEventRoot 'lcl'
+    $nyxEventBrowser = Join-Path $nyxEventRoot 'browser'
+    $nyxEventExport = Join-Path $nyxEventRoot 'export'
+    $nyxEventControls = Join-Path $nyxEventRoot 'controls'
+
+    if ($BrowserOutput) { $nyxEventBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxEventNative, $nyxEventLcl,
+      $nyxEventBrowser, $nyxEventExport, $nyxEventControls | Out-Null
+    $nyxEventFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxEventNative", "-FE$nyxEventNative")
+    foreach ($nyxEventProgram in @('nyx_event_queue_tests', 'nyx_state_source_tests',
+        'nyx_design_queue_tests', 'nyx_design_source_tests')) {
+      Invoke-NyxCompiler $nyxFpc ($nyxEventFlags + @("tests/$nyxEventProgram.lpr"))
+      & (Join-Path $nyxEventNative "$nyxEventProgram.exe") $nyxEventExport
+
+      if ($LASTEXITCODE -ne 0) { throw "Callback shared fixture failed: $nyxEventProgram" }
+    }
+    Invoke-NyxCompiler $nyxFpc ($nyxEventFlags + @("-Fu$nyxEventExport",
+      'tests/nyx_event_queue_generated.lpr'))
+    & (Join-Path $nyxEventNative 'nyx_event_queue_generated.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Compiled callback companion reconstruction failed' }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxEventPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxEventControlFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests',
+      "-Fu$nyxLazarus/lcl/units/$nyxEventPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxEventPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxEventPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxEventPlatform",
+      "-FU$nyxEventLcl", "-FE$nyxEventLcl")
+    foreach ($nyxEventProgram in @('nyx_event_queue_controls', 'nyx_state_authoring_controls')) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxEventControlFlags + @("tests/$nyxEventProgram.lpr"))
+      & (Join-Path $nyxEventLcl "$nyxEventProgram.exe") $nyxEventControls
+
+      if ($LASTEXITCODE -ne 0) { throw "Actual callback fixture failed: $nyxEventProgram" }
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxEventProgram in @('nyx_event_queue_tests', 'nyx_event_queue_browser',
+        'nyx_event_queue_generated')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxEventExport", "-FE$nyxEventBrowser",
+        "tests/$nyxEventProgram.lpr")
+    }
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxEventBrowser", 'studio/nyx_studio.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxEventBrowser 'rtl.js') -Force
+    foreach ($nyxEventHost in @('index.html', 'event-inspectors.html',
+        'event-inspector-controls.html', 'event-inspector-generated.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxEventHost") -Destination $nyxEventBrowser
+    }
+    Write-Host 'Callback consumers and Studio staged; browser execution needs its permitted host.'
     exit 0
   }
 

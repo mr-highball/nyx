@@ -318,6 +318,23 @@ registration and retains the implementation. The warning names the exact owner,
 event, registration and handler; an intervening change invalidates it. Addition,
 policy changes and removal share paired source/design undo and redo.
 
+Ordinary browser/native Studio now captures these mutations as typed commands
+for independent source preparation. Accepted files stay in place while preparing;
+waiting policies remain visible, with focus restored only to the exact owner and
+event. A confirmed removal disables that event's editing controls until it
+retires. Its warning stays owned until successful publication; a rejection keeps
+the warning available for correction. Reloading a project retires its warning,
+even when the same registration IDs reappear. Keep registration only dismisses
+the presentation and does not cancel an already submitted confirmation.
+
+Adding a handler returns an admitted handler reference. Studio opens its TODO
+line only if that command's owner/view is still selected. Later navigation stays
+independent. Policies and removals retain an independent Pascal draft and its
+original base; additions still require Apply or Restore before generating a new
+implementation. The legacy synchronous router uses the same typed intent and
+registration checks. Changed browser execution remains pending at the existing
+host gate; current native evidence is recorded in [WORK.md](../WORK.md).
+
 **Properties** exposes text and the relevant typed fields; **More properties**
 expands the complete shared fluent configuration. `NyxProperties` and
 `NyxEventsMetadata` return independent snapshots. Extensions publish typed
@@ -325,12 +342,12 @@ properties, constraints and event capabilities with `RegisterNyxSchema` against
 a `TNyxKindRef`; custom factories remain responsible for their advertised hooks.
 Declaring a signal alone does not manufacture an adapter bridge.
 
-The current application triggers are **OnClick**, **OnChange**, **OnAfterEnter**,
+Common application triggers include **OnClick**, **OnChange**, **OnAfterEnter**,
 **OnAfterExit**, **OnKeyDown** and **OnKeyUp**. Both adapters wire clicks for common controls, including
 labels and framed fields. Focus/change callbacks appear for focusable/editable
 controls and compound descendants. Keyboard hooks use the actual editable input
-or button and route to its nearest semantic compound. Pointer/drag and additional named event
-families, complete property capability coverage and production control behavior
+or button and route to its nearest semantic compound. Complete property/event
+capability coverage, production control behavior and remaining physical input/accessibility
 retain their open [event](../TODO/NS-1_event-scheduler_01.md) and
 [parity](../TODO/NS-2_parity-accessibility_01.md) owners.
 

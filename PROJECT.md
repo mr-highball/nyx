@@ -183,6 +183,18 @@ remain open. The seventeen-tool candidate is staged;
 the LAN release still has fifteen. See [WORK.md](WORK.md) for the deployment
 refusal, original acceptance owners and the user's warning-cleanup priority.
 
+Ordinary callback add/policy/confirmed-removal controls now have typed isolated
+intent, pending policy presentation and guarded admitted-handler navigation.
+Exact registration/handler checks and session/load-owned warnings protect
+removal; independent drafts and paired history retain their existing contracts.
+Private request/reply checks pass 49 on each native compiler, and the admitted
+companion compiles and reconstructs its callbacks. Actual standalone native
+controls pass 57 checks with zero leaks, including paired history, independent
+drafts/navigation, reusable ownership and retired loads/workers. English
+desktop/390 captures qualify this focused inspector; existing visual gaps and
+remaining browser/observing qualification are recorded in WORK.md. This packet
+does not accept full source synchronization or native/browser parity.
+
 The warning-cleanup packet now reports zero owned warnings on the qualified
 native/LCL/pas2js builds and current MCP application jobs. Shared execution,
 actual layout controls and Studio resize/split checks pass. Seven installed

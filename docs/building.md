@@ -610,6 +610,23 @@ listener, changes no enrollment/profile/user project and replaces no live servic
 Full responsiveness, browser/native parity and wider layout/accessibility remain
 with their original task owners.
 
+The focused callback inspector qualification is available as:
+
+```powershell
+./tools/build.ps1 -Target event-inspectors
+```
+
+Pascal fixtures qualify typed event requests/replies, reviewed removal, pending
+policy presentation, guarded handler navigation, independent drafts and paired
+history. It runs the shared regressions, actual standalone native callback
+controls and the legacy authoring consumer, and compiles/executes the exported
+companion's reconstruction. English desktop/390 captures belong to its `controls/`
+directory. Current browser Studio, the matched Pascal worker, portable checks,
+an asynchronous DOM journey and compiled reconstruction stage under `browser/`.
+These staged browser consumers still need execution through a permitted host.
+The command starts no listener and changes no enrollment, profile or live project.
+Exact current execution evidence and remaining scope are in [WORK.md](../WORK.md).
+
 The optional Win32 transport consumer needs no Studio server, project, enrollment
 or application compiler profile:
 

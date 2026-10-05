@@ -27,8 +27,9 @@ unit nyx.studio.sourcejobs;
 interface
 
 uses
-  nyx.text, nyx.types, nyx.model, nyx.scheduler, nyx.schema,
-  nyx.source.preparation, nyx.studio.session, nyx.projection.refresh
+  nyx.text, nyx.types, nyx.model, nyx.scheduler, nyx.schema, nyx.callbacks,
+  nyx.source.preparation, nyx.studio.session, nyx.projection.refresh,
+  nyx.studio.inspector
   {$ifdef PAS2JS}, JS, Web{$endif};
 
 type
@@ -102,6 +103,7 @@ type
     FCanvasCompletion: Boolean;
     FCompletedEdit: TNyxStudioDesignEdit;
     FCompletedContext: TNyxStudioCommandContext;
+    FCompletedHandler: TNyxHandlerRef;
     { Project-owned presentation drafts never enter the design/source pair.
       Exact load and scalar-family checks retire them before a later project
       can reuse the same names. Failed rename admission retains the draft. }
@@ -154,6 +156,16 @@ type
     { Only this notification's successful default creation. Hosts may clear the
       same form name after checking exact text; later user input stays owned. }
     function NewDefaultCreated(out AName: TNyxText): Boolean;
+    { Successful callback notification only. The host follows an added stub only
+      while its captured owner/view is still selected; removal warnings clear
+      only for the exact reviewed registration. False clears every output. }
+    function CompletedEvent(out AIntent: TNyxStudioEventIntent;
+      out AOwner, AView: TNyxText; out AAddedHandler: TNyxHandlerRef): Boolean;
+    { Presentation-only event commands stay immediate; mutations enqueue copied
+      typed intent. Neither source generation nor publication occurs inline. }
+    function RouteEvents(ANode: TNyxNode; ATrigger: TNyxTrigger;
+      const AReview: TNyxCallbackRemoval; out AEffect: TNyxInspectorEffect;
+      out ALine: Integer; out ARemoval: TNyxCallbackRemoval): Boolean;
     { Copy pending field/title values for observing chrome. No queued intent,
       accepted document or mutable processor owner is exposed or modified. }
     function PendingDesign: TNyxStudioPendingDesign;
@@ -163,7 +175,7 @@ type
     procedure Detach;
     { Consume Nyx Apply/Restore, scalar state/binding, inspector and structural
       events. Current shell form fields are borrowed only during typed capture.
-      Collections/events retain their existing ordinary command routers. }
+      Collections retain their existing ordinary command router. }
     function Route(ANode: TNyxNode; ATrigger: TNyxTrigger;
       AShellRoot: TNyxNode = nil): Boolean;
     property State: TNyxSourceCommandState read FState;
@@ -473,6 +485,12 @@ begin
     raise ENyxState.Create('Wait for default creation before submitting this form again');
   end;
 
+  if (AEdit.Action = sdaEvent) and LPending.EventLocked(AEdit.Selection,
+    AEdit.Event.Trigger, AEdit.Event.Name) then
+  begin
+    raise ENyxModel.Create('Wait for this callback removal before editing its event');
+  end;
+
   if (AEdit.Action = sdaSetBinding) and not AEdit.Binding.Cleared and
     LPending.StateLocked(AEdit.Binding.StateName) then
   begin
@@ -501,13 +519,18 @@ begin
     if (LLast >= 0) and (FQueue[LLast].Kind = eskDesign) and
       FSession.MatchesCommandContext(FQueue[LLast].Context) and
       (AEdit.Action in [sdaProperty, sdaTitle, sdaCanvasValue, sdaSetStateDefault,
-        sdaSetBinding]) and
+        sdaSetBinding, sdaEvent]) and
       (FQueue[LLast].Edit.Action = AEdit.Action) and
       (FQueue[LLast].Edit.Selection = AEdit.Selection) and
       (FQueue[LLast].Edit.View = AEdit.View) and (FQueue[LLast].Edit.Name = AEdit.Name) and
       (FQueue[LLast].Edit.Platform = AEdit.Platform) and
       (FQueue[LLast].Edit.StateInput = AEdit.StateInput) and
-      (FQueue[LLast].Edit.Binding.Target = AEdit.Binding.Target) then
+      (FQueue[LLast].Edit.Binding.Target = AEdit.Binding.Target) and
+      ((AEdit.Action <> sdaEvent) or
+        ((AEdit.Event.Action = seaPolicy) and
+        (FQueue[LLast].Edit.Event.Action = seaPolicy) and
+        (FQueue[LLast].Edit.Event.Trigger = AEdit.Event.Trigger) and
+        (FQueue[LLast].Edit.Event.Name.Name = AEdit.Event.Name.Name))) then
     begin
       FQueue[LLast].Schemas.Free;
       FQueue[LLast] := LJob;
@@ -692,6 +715,13 @@ var
       Result.Bindings[LCount].Owner := AEdit.Selection;
       Result.Bindings[LCount].Spec := AEdit.Binding.Copy;
       Result.Bindings[LCount].Inherit := AEdit.Action = sdaInheritBinding;
+    end
+    else if AEdit.Action = sdaEvent then
+    begin
+      LCount := Length(Result.Events);
+      SetLength(Result.Events, LCount + 1);
+      Result.Events[LCount].Owner := AEdit.Selection;
+      Result.Events[LCount].Intent := AEdit.Event;
     end;
   end;
 
@@ -931,6 +961,12 @@ begin
     LAction := FActive.Edit.Action;
     FCompletedEdit := FActive.Edit;
     FCompletedContext := FActive.Context;
+    FCompletedHandler := Default(TNyxHandlerRef);
+
+    if (LState = nssApplied) and LDesign and (LAction = sdaEvent) then
+    begin
+      FCompletedHandler := ADesign.AddedHandler;
+    end;
 
     if (LState = nssApplied) and LDesign then
     begin
@@ -984,6 +1020,46 @@ begin
   if FPort <> nil then
   begin
     FPort.Detach;
+  end;
+end;
+
+function TNyxSourceCommands.CompletedEvent(out AIntent: TNyxStudioEventIntent;
+  out AOwner, AView: TNyxText; out AAddedHandler: TNyxHandlerRef): Boolean;
+begin
+  AIntent := Default(TNyxStudioEventIntent);
+  AOwner := '';
+  AView := '';
+  AAddedHandler := Default(TNyxHandlerRef);
+  Result := FPublishedDesign and (FPublishedAction = sdaEvent) and
+    FSession.MatchesCommandContext(FCompletedContext);
+
+  if Result then
+  begin
+    AIntent := FCompletedEdit.Event;
+    AOwner := FCompletedEdit.Selection;
+    AView := FCompletedEdit.View;
+    AAddedHandler := FCompletedHandler;
+  end;
+end;
+
+function TNyxSourceCommands.RouteEvents(ANode: TNyxNode; ATrigger: TNyxTrigger;
+  const AReview: TNyxCallbackRemoval; out AEffect: TNyxInspectorEffect;
+  out ALine: Integer; out ARemoval: TNyxCallbackRemoval): Boolean;
+var
+  LEdit: TNyxStudioDesignEdit;
+begin
+  FScheduler.RequireUI;
+
+  if FDetached then
+  begin
+    raise ENyxModel.Create('This event-command context has retired');
+  end;
+  Result := CaptureNyxStudioEvents(FSession, ANode, ATrigger, AReview,
+    PendingDesign, LEdit, AEffect, ALine, ARemoval);
+
+  if Result and (LEdit.Action = sdaEvent) then
+  begin
+    Edit(LEdit);
   end;
 end;
 

@@ -6505,3 +6505,155 @@ active and incomplete. Resume with ordinary event/structured-collection routes
 through isolated admission, not more scalar fixture expansion. Preserve the
 active user pair and all protected services; browser execution, observing
 deployment and updated authenticated discovery retain the existing host gate.
+
+Current continuation batch: original codegen criterion 3, consumed by the
+ordinary event inspector. The previous turn was progress: queued scalar controls
+and exact remote checkpoint are authoritative at ad45f55/a6f344d. Deliver typed
+isolated add/policy/confirmed-removal intent, copied pending policies and a
+guarded admitted-handler navigation receipt. Qualify private request/reply
+admission, real native controls, drafts/history/navigation/load retirement and
+current browser compilation. Stop on partial pairs, stale warning removal,
+retargeted navigation or lost pending policy input. Collection routing follows
+this source-producing callback boundary; current browser execution and observing
+deployment retain their existing host gate. Counts remain 24 / workflow 3 /
+renderer 3 / native authoring 7 / delivery 1 until handoff assessment.
+
+Event-consumer reassessment: full ordinary journeys exposed fixture assumptions
+about absence versus the renderer's raising lookup API, worker delivery occurring
+before a preparing paint, and standalone CodeView versus ShellView ownership.
+Audit all lookup sites, use the exact pending snapshot through a real independent
+LCL inspector for disabled-control proof, and qualify source input through its
+actual CodeView. The final journey records bounded phase progress; no passing
+subset substitutes its remaining steps. The legacy consumer separately exposed
+hidden-host source navigation requesting unavailable native focus. The adapter
+now retains the caret and gates focus by CanFocus; deliberate admitted-source
+navigation also takes priority over restoring an earlier policy field. Rebuild
+and qualify these actual consumers sequentially; native focus tests share desktop
+state and are not independent parallel operations. Stop for another unresolved
+product/fixture condition rather than silently weakening history/focus evidence.
+
+The remaining named-navigation trial exposed an observation gap: source work can
+retire before its queued chrome paint. Waiting only for SourceCommands.Busy does
+not establish that a Pascal toggle has painted. Native Studio now exposes its
+queued/active presentation flag to embedded hosts; the maintained journey waits
+for both source retirement and presentation drainage, then checks both shell
+host absence and actual source-control visibility. This preserves the original
+visible-navigation assertion rather than replacing it with an elapsed delay.
+
+The bounded toggle probe resolved the repeated failure: the shell host does
+disappear and the editor is parked under its hidden, non-focusable parent, but
+LCL retains the memo's cached `Showing` flag. The probe records the complete
+parent chain and reopening under the visible host in
+`build/event-inspector-queue/toggle-probe/run.log`, with zero leaks. The fixture
+now checks public `IsVisible` (which includes parents) as well as `Showing`;
+the exact shell-host absence and later-navigation requirements remain. This is
+an observation correction, not a demonstrated source-pane product defect.
+The presentation fence remains necessary to distinguish queued painting from
+completed source preparation. Run the full corrected journey and hidden-host
+regression sequentially once; a new failure ends this focused investigation.
+
+## Queued ordinary callback authoring — 2026-10-05
+
+The ordinary Events inspector now submits copied typed add/policy/confirmed-
+removal intent to independent source preparation. Private request version 4 and
+reply version 2 strictly admit event choices and the successful added-handler
+receipt; portable project persistence remains version 1. Exact supported-event,
+registration/handler and session/load checks precede publication. Related source
+and design changes still publish one paired Undo entry. Pending policies remain
+visible and confirmed removal locks its exact event before the deferred paint.
+Warnings clear only for the successful reviewed removal. Handwritten methods
+remain after removal; policy/removal preserve an independent draft and its base,
+while Add requires accepted Pascal. A completed Add navigates only while its
+captured owner/view is still selected. Native deliberate source navigation takes
+focus ahead of an older policy field; hidden hosts retain their caret without
+requesting unavailable focus. Browser focus restoration uses exact owner/event
+identity and the admitted/pending policy instead of overwriting it with old DOM
+input. These are source integrations, not complete browser runtime acceptance.
+
+Ignored evidence is under `build/event-inspector-queue/`:
+
+- `shared-final/` and `shared-3.3-final/` each pass **49** checked typed event
+  request/reply/admission checks on native FPC 3.2.0 and 3.3.1, respectively.
+  The final case qualifies stale removal presentation after same-ID reload.
+  Earlier 48-check trials are superseded, not extra features.
+- `generated/` passes **4** checks after compiling the exact exported companion.
+  This reconstructs accepted callbacks/policies and independent reusable
+  instances; it does not establish executing the callback bodies.
+- `shared/state-run.log`, `design/`, and `queue/` pass existing **56 / 140 / 10**
+  typed state/binding, detached design/source and real scheduler/presentation
+  regressions. All these native processes report zero unfreed blocks.
+- `visible-controls/` passes the full **57** actual standalone Win32 callback
+  checks, with zero leaks. This includes pending policy/focus, guarded TODO
+  navigation, exact confirmed removal/native disabled snapshot, paired history,
+  independent draft refusal/preservation, named reusable ownership, later
+  navigation, old mounted controls after same-ID reload and detached retirement.
+  Its English `controls/events-desktop.png` and `events-390.png` were inspected.
+  Narrow controls paint/read correctly; existing desktop sidebar horizontal
+  overflow and broader visual/widget metrics remain with their original owners.
+- `browser/` compiles Studio, its matched Pascal module worker, the shared ticket
+  checks, asynchronous DOM journey and compiled companion reconstruction.
+  Matched RTL and English HTML hosts are staged, not served or executed. Owned
+  warnings are zero; seven distinct installed Classes RTL warnings remain
+  visible. No dependency source, profile, enrollment or live artifact changed.
+
+The maintained `tools/build.ps1 -Target event-inspectors` orchestrates these
+consumers without a listener. Its parser check passes; the full composite target
+was not repeated after its separately qualified consumers. Earlier full control
+trials and their corrected observation/ownership assumptions remain above;
+passing shared subsets did not substitute the final actual journey. The existing
+native authoring regression and final preservation/checkpoint results follow.
+
+The sequential `visible-legacy/run.log` exposed the same hidden-form refusal
+despite the first guard, with zero leaks. This ends the earlier paint/visibility
+investigation; the 57-check ordinary journey remains evidence, but the whole
+maintained target is not yet qualified. Inspecting the installed LCL contract
+established the missing prerequisite: `CanFocus` deliberately excludes the form,
+whereas documented `CanSetFocus` checks the complete containing chain. The
+adapter now uses that native contract. Finish this bounded correction with one
+direct hidden/visible/parked caret consumer and one final existing authoring
+regression, sequentially; another failure stops the retry sequence. No weaker
+caret/history assertion or additional event fixture expansion is authorized by
+this reassessment. The original codegen criterion 3 and no-closure count 25 stay
+open/unchanged, with collection integration as the return path after this guard.
+
+The bounded correction is qualified: `focus-probe/run.log` passes **6** exact
+native hidden-form/visible/parked/reopened caret and focus checks, including
+supplementary Unicode; `form-qualified-legacy/run.log` passes the complete
+existing **73** actual native shared authoring checks. Both report zero leaks.
+The direct test establishes the final CanSetFocus guard; the earlier 57-check
+ordinary journey remains applicable to its unchanged visible-form event flow.
+`native-studio-final/build.log`, `browser/studio-qualified-build.log` and
+`browser/worker-qualified-build.log` compile the final owned source after the
+comment/layout corrections. Owned warnings remain zero, with the same installed
+Classes warnings visible on pas2js. Validation stays scoped to these changed
+consumers and their existing preservation regressions.
+
+This goal turn is progress, not complete source synchronization or parity.
+Codegen criteria 1/2 remain accepted and criterion 3 remains open; its no-closure
+sequence advances **24→25** once for this packet. Workflow **3**, renderer **3**,
+native authoring **7** and delivery **1** stay unchanged. Reassessment ends this
+event/focus investigation. The next deliverable is the existing **17** structured
+collection authoring operations through typed isolated intent, preserving exact
+schema/row/field/view ownership, pending input, independent drafts/navigation and
+paired history through ordinary controls. Comfortable large-document editing,
+current browser execution, authenticated updated tools/observing deployment and
+complete editor/accessibility outcomes retain their original owners and gates.
+No task moves to DONE; the overall Nyx/Nyx Studio goal remains active/incomplete.
+
+Automatic approval review previously rejected qualification-listener launch as
+"blocked by policy" without further reason. No equivalent listener or service
+replacement was attempted. The current protected desktop/LAN release remains
+unchanged; source catalog eighteen/current authenticated fifteen is not updated
+deployment evidence. Semantic MCP remains primary; this packet used read-only
+session inspection and independent native input consumers for actual widget
+behavior the document API cannot establish. Preservation/checkpoint follows.
+
+Final preservation: all **eight** protected process IDs match their original
+executable paths and exact creation timestamps; **zero** focused fixtures remain.
+Connected native MCP `nyx_session` reports revision **6**, Untitled project /
+home, one page/reusable component, no pending draft, Undo unavailable and Redo
+available, activity sequence **196**. Only read-only MCP session inspection
+occurred on that primary pair. Private identity proof is in
+`.local/codex-restart-check/event-inspector-processes.json`. Existing live
+artifacts, services, projects and personal compiler/configuration paths remain
+untouched by this packet. Remote checkpoint follows.

@@ -80,7 +80,20 @@ type
   TNyxStudioDesignAction = (sdaProperty, sdaAddKind, sdaDelete, sdaDuplicate,
     sdaMove, sdaTitle, sdaAddPage, sdaCreateComponent, sdaAddInstance, sdaCustomizePart,
     sdaCanvasValue, sdaSetStateDefault, sdaCreateStateDefault,
-    sdaRenameStateDefault, sdaRemoveStateDefault, sdaSetBinding, sdaInheritBinding);
+    sdaRenameStateDefault, sdaRemoveStateDefault, sdaSetBinding, sdaInheritBinding,
+    sdaEvent);
+  { Callback operations carry exact typed event/registration references. Removal
+    includes the handler the user reviewed; IDs alone cannot authorize replacing
+    a registration. Empty references belong only to add/policy intent. }
+  TNyxStudioEventAction = (seaAdd, seaPolicy, seaRemove);
+  TNyxStudioEventIntent = record
+    Action: TNyxStudioEventAction;
+    Trigger: TNyxTrigger;
+    Name: TNyxEventRef;
+    Policy: TNyxExecutionPolicy;
+    ID: TNyxCallbackRef;
+    Handler: TNyxHandlerRef;
+  end;
   { A structural move is one sibling step. Arbitrary integer offsets are not
     accepted by the queued editor contract. }
   TNyxStudioMoveDirection = (nmdPrevious, nmdNext);
@@ -117,6 +130,8 @@ type
       Binding descriptors own copied values and contain no runtime references. }
     StateInput: TNyxStudioStateInput;
     Binding: TNyxBindingSpec;
+    { Value-only callback intent, with no source pointer or executable closure. }
+    Event: TNyxStudioEventIntent;
     { Immutable origin of a canvas capture. Queue admission uses this mounted
       session/load identity even when the caller retains intent before enqueue. }
     property CanvasContext: TNyxStudioCommandContext read FCanvasContext;
@@ -148,6 +163,11 @@ type
     Spec: TNyxBindingSpec;
     Inherit: Boolean;
   end;
+  { Presentation-only callback intent qualified by its exact authored owner. }
+  TNyxStudioPendingEvent = record
+    Owner: TNyxText;
+    Intent: TNyxStudioEventIntent;
+  end;
   TNyxStudioPendingDesign = record
     TitleDefined: Boolean;
     Title: TNyxText;
@@ -160,6 +180,14 @@ type
     RenamingStates: array of TNyxText;
     NewDefaultPending: Boolean;
     Bindings: array of TNyxStudioPendingBinding;
+    Events: array of TNyxStudioPendingEvent;
+    { Latest waiting policy wins without changing the accepted event contract. }
+    function EventPolicy(const AOwner: TNyxText; ATrigger: TNyxTrigger;
+      const AName: TNyxEventRef; out APolicy: TNyxExecutionPolicy): Boolean;
+    { Confirmed removal locks its exact event until admission retires. This also
+      guards pre-paint clicks, independently of physical disabled controls. }
+    function EventLocked(const AOwner: TNyxText; ATrigger: TNyxTrigger;
+      const AName: TNyxEventRef): Boolean;
     { Copy the latest exact authored owner/target. False returns a cleared
       descriptor and False inheritance flag; no effective binding is invented. }
     function Binding(const AOwner: TNyxText; ATarget: TNyxBindingProperty;
@@ -208,14 +236,18 @@ type
   { Trusted private processor result. Mutable paired owners are never exposed
     until the receiving UI consumes Take once; diagnostics own no partial pair. }
   INyxPreparedDesign = interface(INyxPreparedSource)
-    ['{8B6CF439-AE07-4C41-A6D8-79C501B85405}']
+    ['{95241E55-7889-4B38-8686-08D249352B98}']
     function Matches(const ARequest: TNyxStudioDesignRequest): Boolean;
     function GetSelection: TNyxText;
     function GetView: TNyxText;
     function GetNextID: Integer;
+    { Nonempty only after successful independent add preparation. Consumers use
+      it only after publication, at the captured owner/view, to locate the stub. }
+    function GetAddedHandler: TNyxHandlerRef;
     property Selection: TNyxText read GetSelection;
     property View: TNyxText read GetView;
     property NextID: Integer read GetNextID;
+    property AddedHandler: TNyxHandlerRef read GetAddedHandler;
   end;
 
   { Closed command destination; extension names and values remain typed data. }
@@ -344,6 +376,12 @@ type
     procedure RemoveCollection(const AKey: TNyxCollectionRef);
     procedure SetCollectionView(const ASpec: TNyxCollectionViewSpec);
     procedure InheritCollectionView;
+    { Execute one closed event command against this session's current selection.
+      All supported-event and reviewed-registration checks precede mutation.
+      Add requires accepted Pascal and returns its owned TODO stub reference/line;
+      policy/removal retain independent drafts and handwritten implementations. }
+    procedure ApplyEventIntent(const AIntent: TNyxStudioEventIntent;
+      out AHandler: TNyxHandlerRef; out ALine: Integer);
     { Event edits preserve exact registration identity/order and inheritance on
       detached candidates. Adding a handler is one paired design/source history
       command and returns its TODO line. Removal retains application code. }

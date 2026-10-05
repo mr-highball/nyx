@@ -45,6 +45,7 @@ uses
   nyx.studio.authoring,
   nyx.studio.commands,
   nyx.studio.inspector,
+  nyx.callbacks,
   nyx.studio.palette,
   nyx.studio.hierarchy,
   nyx.theme,
@@ -594,6 +595,9 @@ var
   LFocusID: TNyxText;
   LFocusValue: TNyxText;
   LFocusStateKey: TNyxText;
+  LFocusEventOwner: TNyxText;
+  LFocusEventTrigger: TNyxText;
+  LFocusEventName: TNyxText;
   LFocusNode: TNyxNode;
   LField: TJSHTMLElement;
   LReplacement: TJSHTMLElement;
@@ -641,6 +645,9 @@ begin
   LFocusID := '';
   LFocusValue := '';
   LFocusStateKey := '';
+  LFocusEventOwner := '';
+  LFocusEventTrigger := '';
+  LFocusEventName := '';
   LActive := TJSHTMLElement(document.activeElement);
 
   if APreserveDraft and (LActive <> nil) and
@@ -659,6 +666,9 @@ begin
       if LFocusNode <> nil then
       begin
         LFocusStateKey := LFocusNode.Prop(NyxStudioStateKey);
+        LFocusEventOwner := LFocusNode.Prop(NyxStudioEventOwnerKey);
+        LFocusEventTrigger := LFocusNode.Prop(NyxStudioEventTriggerKey);
+        LFocusEventName := LFocusNode.Prop(NyxStudioEventNameKey);
       end;
 
       if LFocusID = 'studio-code' then
@@ -868,6 +878,26 @@ begin
     end;
   end;
 
+  if (LFocusID <> '') and (LFocusEventOwner <> '') then
+  begin
+    LFocusNode := FShell.Find(LFocusID);
+
+    if (LFocusNode = nil) or
+      (LFocusNode.Prop(NyxStudioEventOwnerKey) <> LFocusEventOwner) or
+      (LFocusNode.Prop(NyxStudioEventTriggerKey) <> LFocusEventTrigger) or
+      (LFocusNode.Prop(NyxStudioEventNameKey) <> LFocusEventName) then
+    begin
+      LFocusID := '';
+    end
+    else
+    begin
+      { Pending policies already overlay the new Nyx shell. Rejected or retired
+        values regain the accepted policy, retaining focus only at the exact
+        owner/event rather than writing old DOM input over that presentation. }
+      LFocusValue := LFocusNode.Prop('value');
+    end;
+  end;
+
   if (LFocusID <> '') and ((FShell.Find(LFocusID) <> nil) or
     ((LFocusID = 'studio-code') and (FCodeRenderer.Root <> nil))) then
   begin
@@ -1035,8 +1065,35 @@ var
   LCreatedName: TNyxText;
   LNameField: TNyxNode;
   LNameInput: TJSHTMLElement;
+  LEvent: TNyxStudioEventIntent;
+  LOwner: TNyxText;
+  LView: TNyxText;
+  LHandler: TNyxHandlerRef;
 begin
   FStatus := AMessage;
+
+  if FSourceCommands.CompletedEvent(LEvent, LOwner, LView, LHandler) then
+  begin
+
+    if (LEvent.Action = seaAdd) and (LHandler.Name <> '') and
+      (FSession.SelectedID = LOwner) and (FSession.ActiveViewID = LView) then
+    begin
+      FSourceLine := FSession.CallbackLine(LHandler);
+      FSourceColumn := 1;
+      FCodeVisible := True;
+      FPanel := nspDesign;
+    end;
+
+    if (LEvent.Action = seaRemove) and FCallbackRemoval.Pending and
+      (FCallbackRemoval.OwnerID = LOwner) and
+      (FCallbackRemoval.Trigger = LEvent.Trigger) and
+      (FCallbackRemoval.Name.Name = LEvent.Name.Name) and
+      (FCallbackRemoval.ID.Name = LEvent.ID.Name) and
+      (FCallbackRemoval.Handler.Name = LEvent.Handler.Name) then
+    begin
+      FCallbackRemoval.Pending := False;
+    end;
+  end;
 
   if FSourceCommands.NewDefaultCreated(LCreatedName) and (FShellRenderer.Root <> nil) then
   begin
@@ -1290,6 +1347,36 @@ begin
     begin
       Exit;
     end;
+
+    if FSourceCommands.RouteEvents(ANode, AEvent.Trigger, FCallbackRemoval,
+      LInspectorEffect, LSourceLine, LRemoval) then
+    begin
+      case LInspectorEffect of
+        nieSource:
+          begin
+            FSourceLine := LSourceLine;
+            FSourceColumn := 1;
+            FCodeVisible := True;
+            FPanel := nspDesign;
+            FStatus := 'Pascal callback / line ' + IntToStr(LSourceLine);
+          end;
+        nieRequestRemoval:
+          begin
+            FCallbackRemoval := LRemoval;
+            FStatus := 'Review callback removal';
+          end;
+        nieCancelRemoval, nieRemoved:
+          begin
+            FCallbackRemoval.Pending := False;
+          end;
+        nieNone:
+          begin
+            { The admitted receipt, rather than an early click, owns navigation. }
+          end;
+      end;
+      Refresh(True, True);
+      Exit;
+    end;
   except
     on LException: Exception do
     begin
@@ -1363,35 +1450,6 @@ begin
       FPanel := nspDesign;
       FSourceLine := LDiagnostic.Line;
       FSourceColumn := LDiagnostic.Column;
-      LRetainCanvas := True;
-    end
-    else if RouteNyxStudioEvents(FSession, ANode, AEvent.Trigger, FCallbackRemoval,
-      LInspectorEffect, LSourceLine, LRemoval) then
-    begin
-      case LInspectorEffect of
-        nieSource:
-          begin
-            FSourceLine := LSourceLine;
-            FCodeVisible := True;
-            FPanel := nspDesign;
-            FStatus := 'Pascal callback / line ' + IntToStr(LSourceLine);
-          end;
-        nieRequestRemoval:
-          begin
-            FCallbackRemoval := LRemoval;
-            FStatus := 'Review callback removal';
-          end;
-        nieCancelRemoval, nieRemoved:
-          begin
-            FCallbackRemoval.Pending := False;
-            FStatus := 'Callback registrations updated';
-          end;
-        nieNone:
-          begin
-            { A routed policy/edit can retain the current source position. }
-          end;
-      end;
-      FCompiledURL := '';
       LRetainCanvas := True;
     end
     else if RouteNyxStudioAuthoring(FSession, ANode, AEvent.Trigger, FShellRenderer.Root) then

@@ -29,7 +29,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, ExtCtrls,
   nyx.text, nyx.types, nyx.behavior, nyx.data, nyx.model, nyx.theme, nyx.render.lcl,
-  nyx.events, nyx.viewport, nyx.projection.refresh,
+  nyx.events, nyx.viewport, nyx.projection.refresh, nyx.callbacks,
   nyx.studio.session, nyx.studio.view, nyx.studio.projects,
   nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.rootedits,
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
@@ -190,6 +190,7 @@ type
     function CurrentBridge: TNyxStudioAgentBridge;
     function GetAgentState: TNyxStudioAgentView;
     function ComposeShell: TNyxDocument;
+    function GetPresentationPending: Boolean;
   protected
     { Owned adapter factory for embedded hosts with another private transport.
       Default uses asynchronous loopback HTTP. No receiver runs inside Post. }
@@ -224,6 +225,10 @@ type
     property CanvasView: TNyxLCLRenderer read FCanvasView;
     property CodeView: TNyxLCLRenderer read FCodeView;
     property PaintCount: Integer read FPaintCount;
+    { UI-thread observation of queued/active presentation work. Source completion
+      can precede its visible paint. False means no paint is pending, not that a
+      renderer error or visual-quality gate has been resolved. }
+    property PresentationPending: Boolean read GetPresentationPending;
     property Status: TNyxText read FState.Status;
     property Agents: TNyxStudioAgentView read GetAgentState;
     { Zero for stopped previews or browser windows that this host does not own. }
@@ -1355,6 +1360,11 @@ begin
   RequestRefresh(True);
 end;
 
+function TNyxNativeStudio.GetPresentationPending: Boolean;
+begin
+  Result := FQueued or FPainting;
+end;
+
 procedure TNyxNativeStudio.RequestRefresh(AReplaceCanvas: Boolean);
 begin
   FReplaceCanvas := FReplaceCanvas or AReplaceCanvas;
@@ -1460,6 +1470,9 @@ var
   LChromeID: TNyxText;
   LCanvasFocusID: TNyxText;
   LChromeStateKey: TNyxText;
+  LChromeEventOwner: TNyxText;
+  LChromeEventTrigger: TNyxText;
+  LChromeEventName: TNyxText;
   {$ifdef NYX_STUDIO_PROFILE}
   LPhaseStarted: QWord;
 
@@ -1483,6 +1496,8 @@ var
 
     if (ANode.ID = 'project-title') or (ANode.Prop('prop-key') <> '') or
       (ANode.Prop(NyxStudioStateCommandKey) <> '') or
+      ((ANode.Kind = NyxKindName(nkSelect)) and
+        (ANode.Prop(NyxStudioEventCommandKey) <> '')) or
       (ANode.ID = NyxStudioNewStateNameID) or (ANode.ID = NyxStudioNewStateValueID) then
     begin
 
@@ -1529,6 +1544,9 @@ begin
     LSelection := Default(TNyxTextSelection);
     LChromeID := '';
     LChromeStateKey := '';
+    LChromeEventOwner := '';
+    LChromeEventTrigger := '';
+    LChromeEventName := '';
 
     if (LFocus <> nil) and (FShellView.Root <> nil) and
       InsideControl(LFocus, FShellView.ControlFor(FShellView.Root.ID)) then
@@ -1538,6 +1556,9 @@ begin
       if LChromeID <> '' then
       begin
         LChromeStateKey := FShellView.Root.Find(LChromeID).Prop(NyxStudioStateKey);
+        LChromeEventOwner := FShellView.Root.Find(LChromeID).Prop(NyxStudioEventOwnerKey);
+        LChromeEventTrigger := FShellView.Root.Find(LChromeID).Prop(NyxStudioEventTriggerKey);
+        LChromeEventName := FShellView.Root.Find(LChromeID).Prop(NyxStudioEventNameKey);
       end;
     end;
 
@@ -1701,6 +1722,9 @@ begin
       if FSourceLine > 0 then
       begin
         FCodeView.NavigateCodeLine('studio-code', FSourceLine, FSourceColumn);
+        { A deliberate admitted-handler/diagnostic navigation owns focus. An
+          earlier policy field must not reclaim it after the source caret moves. }
+        LChromeID := '';
       end
       else if LRetainFocus and LFocus.CanFocus then
       begin
@@ -1727,6 +1751,20 @@ begin
       { Removing a state can reuse its positional chrome ID for a different
         row. Restore only the original exact identity, never that replacement. }
       LChromeID := '';
+    end;
+
+    if (LChromeID <> '') and (FShell.Find(LChromeID) <> nil) then
+    begin
+
+      if (LChromeEventOwner <> '') and
+        ((FShell.Find(LChromeID).Prop(NyxStudioEventOwnerKey) <> LChromeEventOwner) or
+        (FShell.Find(LChromeID).Prop(NyxStudioEventTriggerKey) <> LChromeEventTrigger) or
+        (FShell.Find(LChromeID).Prop(NyxStudioEventNameKey) <> LChromeEventName)) then
+      begin
+        { Named event metadata can reuse a positional card ID. Owner, trigger
+          and exact open event name must all match before restoring focus. }
+        LChromeID := '';
+      end;
     end;
 
     if (LChromeID <> '') and (FShell.Find(LChromeID) <> nil) then
@@ -1763,9 +1801,36 @@ var
   LRestoreCanvas: Boolean;
   LCreatedName: TNyxText;
   LNameField: TNyxNode;
+  LEvent: TNyxStudioEventIntent;
+  LOwner: TNyxText;
+  LView: TNyxText;
+  LHandler: TNyxHandlerRef;
 begin
   FState.Status := AMessage;
   FState.SourceStatus := AMessage;
+
+  if FSourceCommands.CompletedEvent(LEvent, LOwner, LView, LHandler) then
+  begin
+
+    if (LEvent.Action = seaAdd) and (LHandler.Name <> '') and
+      (FSession.SelectedID = LOwner) and (FSession.ActiveViewID = LView) then
+    begin
+      FSourceLine := FSession.CallbackLine(LHandler);
+      FSourceColumn := 1;
+      FState.CodeVisible := True;
+      FState.Panel := nspDesign;
+    end;
+
+    if (LEvent.Action = seaRemove) and FState.CallbackRemoval.Pending and
+      (FState.CallbackRemoval.OwnerID = LOwner) and
+      (FState.CallbackRemoval.Trigger = LEvent.Trigger) and
+      (FState.CallbackRemoval.Name.Name = LEvent.Name.Name) and
+      (FState.CallbackRemoval.ID.Name = LEvent.ID.Name) and
+      (FState.CallbackRemoval.Handler.Name = LEvent.Handler.Name) then
+    begin
+      FState.CallbackRemoval.Pending := False;
+    end;
+  end;
 
   if FSourceCommands.NewDefaultCreated(LCreatedName) and (FShellView.Root <> nil) then
   begin
@@ -2070,6 +2135,37 @@ begin
     begin
       Exit;
     end;
+    { Event presentation is immediate; only copied add/policy/confirmed-removal
+      intent enters independent preparation. No full pair snapshot is needed
+      merely to show a warning or navigate an existing implementation. }
+
+    if FSourceCommands.RouteEvents(ANode, AEvent.Trigger,
+      FState.CallbackRemoval, LEffect, LLine, LRemoval) then
+    begin
+      case LEffect of
+        nieSource:
+          begin
+            FSourceLine := LLine;
+            FSourceColumn := 1;
+            FState.CodeVisible := True;
+            FState.Panel := nspDesign;
+          end;
+        nieRequestRemoval:
+          begin
+            FState.CallbackRemoval := LRemoval;
+          end;
+        nieCancelRemoval, nieRemoved:
+          begin
+            FState.CallbackRemoval.Pending := False;
+          end;
+        nieNone:
+          begin
+            { Mutation completion owns any later source-navigation effect. }
+          end;
+      end;
+      RequestRefresh;
+      Exit;
+    end;
   except
     on LException: Exception do
     begin
@@ -2095,31 +2191,6 @@ begin
       FSourceColumn := LDiagnostic.Column;
       FState.CodeVisible := True;
       FState.Panel := nspDesign;
-    end
-    else if RouteNyxStudioEvents(FSession, ANode, AEvent.Trigger,
-      FState.CallbackRemoval, LEffect, LLine, LRemoval) then
-    begin
-      case LEffect of
-        nieSource:
-          begin
-            FSourceLine := LLine;
-            FSourceColumn := 1;
-            FState.CodeVisible := True;
-            FState.Panel := nspDesign;
-          end;
-        nieRequestRemoval:
-          begin
-            FState.CallbackRemoval := LRemoval;
-          end;
-        nieCancelRemoval, nieRemoved:
-          begin
-            FState.CallbackRemoval.Pending := False;
-          end;
-        nieNone:
-          begin
-            { Policy changes do not replace the designer projection. }
-          end;
-      end;
     end
     else if RouteNyxStudioSource(FSession, ANode, AEvent.Trigger) or
       RouteNyxStudioProperty(FSession, ANode, AEvent.Trigger) or

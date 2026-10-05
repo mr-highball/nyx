@@ -92,6 +92,10 @@ harness rebuilds after callbacks return. The current standalone native controlle
 also exercises queued state/binding edits through its real Project and Inspector
 controls. Changed browser consumers compile and are staged; their execution and
 updated observing Studio retain the permitted-host gate recorded in WORK.md.
+The Events inspector now sends typed add/policy/confirmed-removal commands through
+the same independent processor. Pending policies retain their exact owner/event,
+and source navigation follows only an admitted handler while that owner/view is
+still selected. Reload invalidates removal reviews. See [events](events.md#studio-properties-and-events).
 Broader Pascal synchronization, structured collections, extension/event contracts,
 large-document performance and complete native Studio remain open work.
 

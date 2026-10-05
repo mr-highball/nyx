@@ -898,3 +898,28 @@ is remaining event/structured-collection authoring through the same isolated
 source boundary, with draft/navigation/history preservation and real controls.
 Comfortable large-project editing and complete both-target/source/editor outcomes
 retain their original acceptance; no task or target closes from this packet.
+
+## Ordinary callback source boundary — 2026-10-05
+
+Add/policy/confirmed-removal now enter independent typed design preparation.
+Exact event/registration/handler values and session/load-owned reviews retain
+fresh publication guards. A successful addition returns an admitted handler
+receipt; later navigation cannot be retargeted. Pending policies retain exact
+owner/event focus. Policies/removals retain independent drafts/base, while Add
+requires accepted source. Hidden native navigation retains the caret without
+requesting unavailable focus; deliberate source navigation wins over old chrome.
+
+Private request/reply admission passes 49 on each native compiler. Exported
+companion reconstruction passes four checks and actual standalone native event
+controls pass 57, with zero leaks. English desktop/390 captures show the focused
+inspector. Browser counterparts compile but retain the execution/observing host
+gate. WORK.md owns the regression results, retained failures and current scope.
+
+Criteria 1/2 remain accepted and criterion 3 remains open. Its consecutive
+no-closure count advances 24→25 once; workflow 3, renderer 3, native authoring 7
+and delivery 1 are unchanged. Reassessment ends event fixture expansion. Next
+deliverable: the existing seventeen collection authoring operations consume
+typed isolated intent with exact schema/row/field/view ownership, pending input
+and ordinary controls. Complete source synchronization, comfortable large-project
+editing, both-target ordinary editor outcomes and observing deployment retain
+their original acceptance and gates; no task moves to DONE.
