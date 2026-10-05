@@ -26,7 +26,8 @@ follows these bounded timings. Earlier evidence retains its original scope.
 The previous goal turn was progress: guarded controls and moved metadata changed
 product/evidence state; ae27c9e/3042635 are the preceding pushed checkpoint. This
 turn also changes product/evidence state through the concrete mounted-host fix
-and complete original-size ordinary qualification. Next integrate ordinary
+and complete original-size ordinary qualification; product ddc67b3 is pushed
+and verified against the exact remote head. Next integrate ordinary
 canvas value proposals with the isolated design-command queue, preserving typed
 state/default and named reusable-part semantics without worker access to live
 realized nodes. Qualify actual input, invalid/read-only bindings, same-ID load
@@ -6109,3 +6110,13 @@ State/binding/event breadth, general semantic source/import/review operations,
 ordinary browser/observing editor outcomes and full-product depth retain their
 original owners. Another timing/lookup variant does not substitute that functional
 integration or permit weaker admission/DONE gates.
+
+Product checkpoint **ddc67b3** is pushed and verified against the exact remote
+`hello-nyx` head, with a clean worktree after both maintained qualification
+configurations. No qualification fixture remains running and all eight protected
+processes still match. The private proof at
+`.local/codex-restart-check/native-stable-host-remote-proof.json` records the final
+handoff head separately, both timing sets, exact companion equality and scoped
+ownership/compile evidence. Logs, binaries, captures and local configuration stay
+ignored. This checkpoint changes no deployment, active user pair or acceptance
+gate; the next functional canvas-input integration remains above.
