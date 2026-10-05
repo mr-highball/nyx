@@ -7304,3 +7304,19 @@ policy", with no further stated reason. No equivalent listener, service replacem
 live artifact deployment or configuration refresh was attempted. Updated authenticated
 discovery and observing/browser execution remain required. The full Nyx/Nyx Studio
 goal stays active/incomplete; authorized hello-nyx remote checkpoint follows.
+
+Remote checkpoint: product commit
+`845c69810f82db85de2899190d9e7b6a2220e954` is pushed to
+`origin/hello-nyx`; exact remote/local references match and its worktree is clean.
+Final authenticated inspection retains revision 6, home, no pending draft, Undo
+unavailable and Redo available. All eight protected process paths/exact creation
+timestamps match; zero focused declaration fixture processes remain. Final
+qualified evidence retains 16/36 lexical/semantic checks on both native compilers,
+46 actual discovery checks, nine unchanged compiled-control checks and 31/72
+routine/callback regressions, with zero owned native warnings/leaks. Browser
+consumers/Studio/module worker compile; runtime/deployment retain the host gate.
+Source nineteen/release fifteen, workflow no-closure 7 and the guarded paired
+signature return path remain explicit. No full criterion closes; the full goal
+remains active/incomplete. Exact handoff remote/clean/protected-process and final
+read-only activity proof is stored privately after pushing at
+`.local/codex-restart-check/declaration-remote-proof.json`.
