@@ -81,12 +81,18 @@ From the repository, run:
 
 Individual build targets are `core`, `generated`, `collections`, `collection-views`,
 `collection-authoring`, `collection-inspectors`, `collection-bindings`,
+`reusables`, `placement`,
 `source-workspace`, `source-editor`, `pascal-imports`, `pascal-routines`, `pascal-declarations`,
 `agents`, `state-bindings`, `split`, `interactions`,
 `named-events`, `viewport`, `catalog`, `browser`, `studio`, `lcl`, `http`,
 `visual` and `all`.
 The native unit cache includes compiler version and CPU/OS. LCL and pas2js
 artifacts have separate output directories. Build failure propagates immediately.
+`placement` executes typed/semantic relative placement on both native compilers,
+compares their exact exported files, runs actual native Studio input and unchanged
+compiled controls, checks transaction discovery, then stages browser consumers,
+Studio and its module worker. Its isolated artifacts do not start a listener or
+refresh MCP configuration. Browser compilation retains its host execution gate.
 `generated` emits a fixture through native Pascal, compiles/executes its native
 reconstruction and compiles its browser reconstruction. Serve `generated.html`
 to execute the latter. `all` includes these checks. Ordinary browser builds do

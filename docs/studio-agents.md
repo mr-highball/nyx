@@ -1076,6 +1076,37 @@ events, and controller retirement cancels the borrowed receiver subscription.
 Compact panels restore selection only when their hierarchy is mounted. Current
 native large-canvas and browser execution limits remain recorded in WORK.md.
 
+## Relative control placement
+
+`nyx_transaction` also accepts `place` and `place-new` in an ordinary grouped,
+revision-aware paired Undo operation. Inspect exact authored IDs through bounded
+`nyx_outline` / `nyx_node` queries, then submit `expectedRevision` and a retry
+`operationId` with the related operations:
+
+```json
+{
+  "expectedRevision": 12,
+  "operationId": "arrange-reply-controls",
+  "operations": [
+    {"op":"place","id":"reply-editor","target":"reply-layout","placement":"inside"},
+    {"op":"place-new","kind":"badge","id":"reply-status","target":"send-button","placement":"before"}
+  ]
+}
+```
+
+The closed positions are `inside`, `before` and `after`. Inside appends to the
+exact editable target; sibling positions resolve after detaching a moved
+control. Root order, inherited instance children, self-placement, cycles,
+occupied identities and leaf containers refuse. Customize a named layout part
+before placing reusable-instance content. The same candidate engine serves
+ordinary Studio's [two-step placement controls](designer-views.md#place-a-control-in-another-layout).
+No new tool or document dump is needed. Source helpers, defaults and drafts keep
+their existing admission/ownership contracts. `tools/build.ps1 -Target placement`
+qualifies the semantic journey and actual native Studio input, compiles its
+unchanged companion for both targets, and stages browser consumers/Studio/worker
+without launching a host or refreshing enrolled configuration. Current browser
+execution and updated authenticated observation retain their deployment gate.
+
 ## Structured collection context and authoring
 
 `nyx_collections` inspects **document defaults**, not a running application's

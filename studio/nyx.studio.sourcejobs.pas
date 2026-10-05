@@ -28,7 +28,7 @@ interface
 
 uses
   nyx.text, nyx.types, nyx.model, nyx.scheduler, nyx.schema, nyx.callbacks,
-  nyx.source.preparation, nyx.studio.session, nyx.projection.refresh,
+  nyx.source.preparation, nyx.studio.session, nyx.studio.edits, nyx.projection.refresh,
   nyx.studio.inspector, nyx.studio.collectionintent, nyx.studio.collections
   {$ifdef PAS2JS}, JS, Web{$endif};
 
@@ -517,7 +517,7 @@ begin
   LJob.Kind := eskDesign;
   LJob.Context := FSession.CommandContext;
 
-  if AEdit.Action = sdaCanvasValue then
+  if AEdit.Action in [sdaCanvasValue, sdaPlacement] then
   begin
     LJob.Context := AEdit.CanvasContext;
   end;
@@ -1107,6 +1107,11 @@ const
   CDuplicate = 'action-duplicate';
   CUp = 'action-up';
   CDown = 'action-down';
+  CPlaceStart = 'action-place-start';
+  CPlaceCancel = 'action-place-cancel';
+  CPlaceInside = 'action-place-inside';
+  CPlaceBefore = 'action-place-before';
+  CPlaceAfter = 'action-place-after';
   CPage = 'action-add-page';
   CComponent = 'action-component';
   CTitle = 'project-title';
@@ -1124,6 +1129,7 @@ const
 var
   LEdit: TNyxStudioDesignEdit;
   LCapture: TNyxStudioAuthoringCapture;
+  LPlacement: TNyxPlacement;
 begin
   Result := False;
 
@@ -1135,6 +1141,55 @@ begin
   if FDetached then
   begin
     raise ENyxModel.Create('This source-command context has retired');
+  end;
+
+  if ATrigger = ntClick then
+  begin
+
+    if (ANode.ID = CPlaceStart) or (ANode.ID = CPlaceCancel) then
+    begin
+
+      if ANode.ID = CPlaceStart then
+      begin
+
+        if Busy then
+        begin
+          raise ENyxModel.Create('Wait for pending editor work before choosing a move source');
+        end;
+        FSession.BeginPlacement;
+        Notify(nssIdle, 'Choose a destination on the canvas or in the hierarchy');
+      end
+      else
+      begin
+        FSession.CancelPlacement;
+        Notify(nssIdle, 'Placement canceled');
+      end;
+      Exit(True);
+    end;
+
+    if (ANode.ID = CPlaceInside) or (ANode.ID = CPlaceBefore) or
+      (ANode.ID = CPlaceAfter) then
+    begin
+
+      if FSession.PlacementSource.ID = '' then
+      begin
+        raise ENyxModel.Create('The pending move changed; choose the source control again');
+      end;
+      LPlacement := nplInside;
+
+      if ANode.ID = CPlaceBefore then
+      begin
+        LPlacement := nplBefore;
+      end
+      else if ANode.ID = CPlaceAfter then
+      begin
+        LPlacement := nplAfter;
+      end;
+      LEdit := FSession.CapturePlacement(NyxPlaceControl(FSession.PlacementSource,
+        NyxControl(FSession.SelectedID), LPlacement), FSession.CommandContext);
+      Edit(LEdit);
+      Exit(True);
+    end;
   end;
   { Collection data is document-scoped, while view intent captures its exact
     selected owner. Capture never generates source or borrows a runtime store. }

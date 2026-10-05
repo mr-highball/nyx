@@ -718,6 +718,7 @@ var
   LPartCount: Integer;
   LPanelbar: TNyxNode;
   LInspectorTabs: TNyxNode;
+  LPlacementActions: TNyxNode;
   LSelectedProjection: TNyxNode;
   LBindingTarget: TNyxBindingProperty;
   LBinding: TNyxBindingSpec;
@@ -963,6 +964,27 @@ begin
   if LSelected <> nil then
   begin
     LRight.Add(Caption('selected-label', LSelected.Kind + ' / ' + LSelected.ID));
+    { Placement stays beside selection, ahead of potentially long property/event
+      lists. Ordinary canvas/hierarchy selection supplies the destination; the
+      project session owns only copied pending identity and accepted-pair data. }
+
+    if ASession.PlacementSource.ID <> '' then
+    begin
+      LRight.Add(Caption('placement-source', 'Moving ' + ASession.PlacementSource.ID));
+      LRight.Add(Caption('placement-help',
+        'Select a destination on the canvas or in the hierarchy, then choose its position.'));
+      LPlacementActions := TNyxNode.Create(nkRow, 'placement-actions')
+        .Configure.Wrap(nfwWrap).Gap(6).Done;
+      LRight.Add(LPlacementActions);
+      LPlacementActions.Add(Button('action-place-inside', 'Place inside'));
+      LPlacementActions.Add(Button('action-place-before', 'Place before'));
+      LPlacementActions.Add(Button('action-place-after', 'Place after'));
+      LPlacementActions.Add(Button('action-place-cancel', 'Cancel move'));
+    end
+    else if (LSelected.Parent <> nil) and (LSelected.Kind <> 'slot-override') then
+    begin
+      LRight.Add(Button('action-place-start', 'Move to another layout'));
+    end;
     LMetadataSource := NyxProjectionSource(LSelected, ASession.Document);
     { Show the creator's explanation where the control is being edited, including
       the Events tab. A registered recipe keeps its own intent rather than the

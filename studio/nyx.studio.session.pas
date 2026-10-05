@@ -82,7 +82,7 @@ type
     sdaMove, sdaTitle, sdaAddPage, sdaCreateComponent, sdaAddInstance, sdaCustomizePart,
     sdaCanvasValue, sdaSetStateDefault, sdaCreateStateDefault,
     sdaRenameStateDefault, sdaRemoveStateDefault, sdaSetBinding, sdaInheritBinding,
-    sdaEvent, sdaCollection);
+    sdaEvent, sdaCollection, sdaPlacement);
   { Callback operations carry exact typed event/registration references. Removal
     includes the handler the user reviewed; IDs alone cannot authorize replacing
     a registration. Empty references belong only to add/policy intent. }
@@ -136,6 +136,8 @@ type
     { Collection-scoped values and family-qualified field/item references.
       Data operations have no selected owner; view operations capture one. }
     Collection: TNyxStudioCollectionIntent;
+    { Exact relative placement, copied before independent preparation. }
+    Placement: TNyxPlacementChange;
     { Immutable origin of a canvas capture. Queue admission uses this mounted
       session/load identity even when the caller retains intent before enqueue. }
     property CanvasContext: TNyxStudioCommandContext read FCanvasContext;
@@ -281,6 +283,13 @@ type
     SelectedID and ActiveViewID are stable identities, not borrowed node pointers,
     because undo/load can replace the entire tree. }
   TNyxStudioSession = class
+  private
+    { Transient two-step placement belongs to this project session. It retains
+      copied identities/pair only, never a selected node or another view. }
+    FPlacementSource: TNyxControlRef;
+    FPlacementContext: TNyxStudioCommandContext;
+    FPlacementPair: TNyxProjectPair;
+    function GetPlacementSource: TNyxControlRef;
   private
     FDocument: TNyxDocument;
     FCatalog: TNyxCatalog;
@@ -459,6 +468,19 @@ type
       related edits stage a complete candidate and publish once with one paired
       undo checkpoint. Pending source drafts block external design mutation. }
     procedure ApplyPatch(const APatch: INyxDesignPatch);
+    { One ordinary candidate/paired Undo, then activate the moved control's
+      owning view. Callers borrow no accepted nodes across publication. }
+    procedure Place(const AChange: TNyxPlacementChange);
+    { Arm the selected authored control, then choose a destination through the
+      ordinary canvas/hierarchy. Arming/canceling are presentation, not Undo.
+      A changed pair, draft or project load invalidates this pending move. }
+    procedure BeginPlacement;
+    procedure CancelPlacement;
+    property PlacementSource: TNyxControlRef read GetPlacementSource;
+    { Capture value-only intent from a still-mounted editor. Retired session/
+      load contexts refuse before enqueue, even when identities match. }
+    function CapturePlacement(const AChange: TNyxPlacementChange;
+      const AMountContext: TNyxStudioCommandContext): TNyxStudioDesignEdit;
     { Apply an immutable reviewed root group through one paired Undo command.
       Stale reviews, dangling reusable references and pending drafts retain all
       owners/history. Imports/helpers and document state remain deliberate. }
@@ -656,6 +678,7 @@ begin
   end;
   FRedo.Clear;
   TrimUndoHistory;
+  CancelPlacement;
   {$ifdef NYX_SOURCE_PROFILE}SourceProfileFinish(spCommit, LStarted);{$endif}
 end;
 
@@ -1057,6 +1080,7 @@ begin
   LPreviousSource.Free;
   FRedo.Clear;
   TrimUndoHistory;
+  CancelPlacement;
 end;
 
 procedure TNyxStudioSession.SetExtension(AOwner: TNyxStudioExtensionOwner;
@@ -1967,6 +1991,7 @@ begin
   end;
   RestorePair(FUndo.Last, FRedo);
   FUndo.Delete(FUndo.Count - 1);
+  CancelPlacement;
 end;
 
 procedure TNyxStudioSession.Redo;
@@ -1978,6 +2003,7 @@ begin
   end;
   RestorePair(FRedo.Last, FUndo);
   FRedo.Delete(FRedo.Count - 1);
+  CancelPlacement;
 end;
 
 procedure TNyxStudioSession.Load(const ASource: TNyxText);
@@ -1991,6 +2017,7 @@ begin
     starts a new history; an invalid import preserves both document and history. }
   Restore(ASource);
   Inc(FSourceGeneration);
+  CancelPlacement;
   FSourceWorkspace.Reset;
   DiscardSourceDraft;
   FUndo.Clear;
@@ -2045,6 +2072,7 @@ begin
   FDocument := LDocument;
   FSourceWorkspace := LWorkspace;
   Inc(FSourceGeneration);
+  CancelPlacement;
   FActiveViewID := '';
 
   if FDocument.Count > 0 then
@@ -2099,6 +2127,77 @@ begin
   finally
     LCandidate.Free;
   end;
+end;
+
+function TNyxStudioSession.GetPlacementSource: TNyxControlRef;
+begin
+  Result := Default(TNyxControlRef);
+
+  if MatchesCommandContext(FPlacementContext) and (FPlacementSource.ID <> '') and
+    (DraftSource = Source) and (FPlacementPair.Source = Source) and
+    (FPlacementPair.Design = FSourceWorkspace.Capture.Design) then
+  begin
+    Result := FPlacementSource;
+  end;
+end;
+
+procedure TNyxStudioSession.BeginPlacement;
+var
+  LNode: TNyxNode;
+begin
+
+  if DraftSource <> Source then
+  begin
+    raise ENyxModel.Create('Resolve the Pascal draft before moving a control');
+  end;
+  LNode := Selected;
+
+  if (LNode = nil) or (LNode.Parent = nil) or (LNode.Kind = 'slot-override') then
+  begin
+    raise ENyxModel.Create('Select an authored control to move');
+  end;
+  FPlacementPair := ProjectSnapshot;
+  FPlacementContext := CommandContext;
+  FPlacementSource := NyxControl(LNode.ID);
+end;
+
+procedure TNyxStudioSession.CancelPlacement;
+begin
+  FPlacementSource := Default(TNyxControlRef);
+  FPlacementContext := Default(TNyxStudioCommandContext);
+  FPlacementPair := Default(TNyxProjectPair);
+end;
+
+procedure TNyxStudioSession.Place(const AChange: TNyxPlacementChange);
+var
+  LRoot: TNyxNode;
+begin
+  ApplyPatch(NyxPlacementPatch([AChange]));
+  LRoot := FDocument.Find(AChange.Control.ID);
+  while LRoot.Parent <> nil do
+  begin
+    LRoot := LRoot.Parent;
+  end;
+  Activate(LRoot.ID);
+  Select(AChange.Control.ID);
+end;
+
+function TNyxStudioSession.CapturePlacement(const AChange: TNyxPlacementChange;
+  const AMountContext: TNyxStudioCommandContext): TNyxStudioDesignEdit;
+begin
+
+  if not MatchesCommandContext(AMountContext) then
+  begin
+    raise ENyxModel.Create('Placement belongs to an earlier session or project load');
+  end;
+  { Validate construction without encoding the project or retaining a node. }
+  AChange.ToData;
+  Result := Default(TNyxStudioDesignEdit);
+  Result.Action := sdaPlacement;
+  Result.Selection := SelectedID;
+  Result.View := ActiveViewID;
+  Result.Placement := AChange;
+  Result.FCanvasContext := AMountContext;
 end;
 
 procedure TNyxStudioSession.RemoveRoots(const AReview: INyxRootRemoval);
@@ -2190,6 +2289,11 @@ begin
     Exit;
   end;
   LAccepted := Source;
+
+  if ASource <> LAccepted then
+  begin
+    CancelPlacement;
+  end;
 
   if ASource <> DraftSource then
   begin

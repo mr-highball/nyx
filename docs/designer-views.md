@@ -9,6 +9,48 @@ existing callers that supply a runtime state store as their fourth argument.
 This is a renderer capability consumed by the new [native Studio controller](native-studio.md).
 Full native Studio integration and parity remain open product requirements.
 
+## Place a control in another layout
+
+Select a control, then choose **Move to another layout** in the inspector.
+Select its destination on the canvas or in the hierarchy. **Place inside**
+appends to that exact container; **Place before** and **Place after** use the
+destination's owner. **Cancel move** clears the pending choice. This two-step
+workflow uses ordinary Nyx controls and supplies a keyboard/touch alternative
+for nested placement. Arming, selecting a destination and canceling do not add
+project history. The accepted move updates design and Pascal together with one
+paired Undo step; a changed pair, pending draft or project load retires the
+pending source permanently, including after Undo.
+
+The same admission is available through typed commands:
+
+```pascal
+Session.Place(NyxPlaceControl(NyxControl('reply-editor'),
+  NyxControl('reply-layout'), nplInside));
+
+Session.ApplyPatch(NyxPlacementPatch([
+  NyxPlaceControl(NyxControl('send-button'), NyxControl('cancel-button'), nplBefore),
+  NyxPlaceNewControl(nkBadge, NyxControl('reply-status'),
+    NyxControl('reply-layout'), nplInside)
+]));
+```
+
+Use `nyx.studio.edits` for these value-only commands. Exact control references
+and the closed `TNyxPlacement` enum keep behavior typed. Custom catalog kinds
+use the `TNyxKindRef` overload. Positions resolve after extracting the source,
+so movement within one owner does not depend on a stale sibling index. Roots,
+self-placement, cycles, leaf containers and foreign/occupied identities refuse
+without publishing a partial result. Reusable instances require a customized
+named layout part; inherited content is not silently copied or changed.
+Placing content into its properties-only descriptor promotes that descriptor
+to append mode. Final document/property admission still rejects incomplete
+payload rules. The isolated processor uses strict version-6 tickets and also
+reads the exact prior version-5 shape.
+
+This is the shared placement and keyboard prerequisite. Physical designer
+drag/drop adapters, resizing, constraints, snapping, responsive variants and
+complete browser/native editor qualification remain with the original
+[Studio authoring task](../TODO/NS-4_studio-authoring_01.md).
+
 Designer clicks report `ntDesignSelect`. Editable controls keep their normal
 focus/text behavior and report `ntDesignValue` with the actual realized field.
 Nyx application actions, routed runtime subscribers and captured native creator

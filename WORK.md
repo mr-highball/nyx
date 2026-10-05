@@ -22,7 +22,25 @@ codegen 27, renderer 3, native authoring 7 and delivery 1. Stop on lost editor
 identity/input, disabled-owner return, guessed source ownership or weakened
 publication; preserve failed evidence and the protected observing release.
 
-Current bounded packet: [semantic reusable authoring](#semantic-reusable-authoring--2026-10-05)
+Current packet: [nested placement prerequisite](#nested-placement-prerequisite--2026-10-05)
+serves original Studio authoring criterion 1 through typed inside/before/after
+commands, the existing semantic transaction and isolated paired processor, and
+ordinary Nyx-built two-step placement controls beside selection. Both native
+compilers pass 44 semantic/worker checks with byte-identical exports; actual
+Win32 Studio/unchanged compiled controls pass 18, discovery 24 and retained
+source/queue/reusable regressions 140/10/52 on both compilers, with zero leaks or
+owned warnings. Final inspector rendering is inspected; browser consumers,
+Studio and worker compile with execution still gated. Native authoring
+no-closure is now 8; workflow 9, codegen 27, renderer 3 and delivery 1 remain.
+End placement codec/fixture expansion after these relevant checks. Next connect
+public Nyx physical drag/drop on both targets to this same operation and
+keyboard alternative; source/load/pair/creator/lease guards remain required.
+This prerequisite alone cannot accept drag/drop, resizing, constraints,
+snapping, responsive variants or complete both-target editor parity. Preserve
+the observing release and existing listener/deployment gate. Stop on a second
+authoring engine, inferred ownership or weakened paired publication.
+
+Preceding bounded packet: [semantic reusable authoring](#semantic-reusable-authoring--2026-10-05)
 serves original workflow criterion 5 through the existing transaction/query
 tools: typed derivation/instantiation/part overrides/restored inheritance, exact
 descendant identities and bounded effective named-part discovery. Related edits
@@ -7586,3 +7604,85 @@ policy,” with no further stated reason; no equivalent deployment was attempted
 The phone retains the older observing release. Exact remote/clean/process/session
 proof is stored privately after the authorized push at
 `.local/codex-restart-check/reusable-remote-proof.json`.
+
+## Nested placement prerequisite — 2026-10-05
+
+Original Studio authoring criterion 1 now has immutable typed control/target
+references and closed inside/before/after positions. `NyxPlaceControl`,
+`NyxPlaceNewControl` (built-in/custom kind) and `NyxPlacementPatch` use the
+existing independent candidate engine. Same-owner positions resolve after
+source extraction. Exact container and reusable-part admission refuses roots,
+cycles, self-placement, leaf targets, inherited instance children, moved part
+descriptors and foreign/occupied identities. An editable properties-only layout
+descriptor promotes to append when content arrives; final whole-document and
+property admission still refuses incomplete payloads. No second authoring
+implementation or platform tree enters this contract.
+
+The existing `nyx_transaction` shares it through `place` and `place-new` and can
+group placement with property/reusable operations as one revision-aware paired
+Undo. Tool count remains nineteen in source/fifteen in the protected release.
+Strict version-6 private worker tickets also read exact prior version-5 intent;
+new placement cannot enter the older vocabulary. The ordinary isolated queue
+retains project/load and exact pair/schema admission. Source helpers, defaults,
+drafts and identities remain owned. The shared Nyx-built inspector offers
+**Move to another layout**, followed by ordinary canvas/hierarchy destination
+selection and wrapped **Place inside/before/after / Cancel move** controls beside
+selection. Arming/canceling create no project history. A changed accepted pair,
+draft, Undo/Redo or load permanently retires the armed move, rather than
+resurrecting it when a prior pair returns. Actual accepted placement retains the
+source widget and selects the moved control's owning view when navigation has
+not changed independently.
+
+Maintained qualification: `tools/build.ps1 -Target placement -BrowserOutput
+build/placement/staged`. `build/placement/final/promotion-final.log` records 44
+semantic/isolated checks on FPC 3.2 and matched 3.3, byte-identical design/Pascal/
+paired exports, actual Win32 input/unchanged compiled controls 18 and actual
+discovery 24, including all twelve transaction shapes. The final selection-
+adjacent wrapped inspector is recompiled and requalified in
+`build/placement/lcl-final/controls-run.log`: 18 actual controls, zero leaks and
+zero owned warnings; its selective `build/placement/input-final/placement.png`
+is inspected. The maintained native journey also qualifies cross-container/
+cross-page movement, catalog compound ownership, reusable payload admission,
+atomic grouped refusal, deduplication, exact paired Undo/Redo, stale publication,
+load retirement, draft/cancel behavior and legacy worker compatibility. Native
+regressions in `build/placement/regression-fpc` and `regression-lcl_fpc` pass
+140 design/source, ten actual worker/queue and 52 reusable checks on each
+compiler, all zero leaks/owned warnings. Ordinary native Studio compiles in
+`build/placement/native-studio-final`; final browser Studio compiles in
+`build/placement/browser-final`. Browser semantic/unchanged-control consumers
+and module worker compile with matched RTL; seven installed Classes warnings
+per compilation remain visible, with no dependency edits or suppressions.
+
+Earlier native builds remain in `native-first`; failed/interrupted LCL evidence
+is retained in `lcl-first` and the initial promotion logs. Traced debug heap
+builds showed slow synchronous editor refresh rather than stranded work; three
+focused fixture processes alone were
+stopped after exact executable/PID verification, preserving services. A fixture
+initially supplied memo label text rather than editable value, then a shell
+argument continuation omitted its expected-design path. Both were corrected;
+the unchanged compiled control now compares exact design and actual memo value.
+The matched compiler's unreachable enum rejection warning was removed using
+ordinal dispatch while retaining foreign-choice refusal. Do not infer ordinary
+performance, physical hardware, browser execution, phone layout, accessibility
+or complete editor quality from these checks/renderings. Broader native chrome
+and long-help sizing remain with the existing presentation/parity owner.
+
+This is progress, not full criterion closure. Native authoring no-closure
+advances **7→8** once; workflow **9**, codegen **27**, renderer **3** and delivery
+**1** remain unchanged. No DONE/percentage credit follows. End local placement
+codec/fixture expansion. Next connect public Nyx physical drag/drop on both
+targets to this same candidate/keyboard workflow, preserving exact local leases,
+pair/project/load/creator barriers and borrowed receiver retirement. Resizing,
+constraints, snapping, responsive variants and complete multi-page/reusable
+editor presentation, accessibility, performance, parity and delivery remain
+required under the original authoring/renderer/source/event owners.
+
+The live semantic MCP is connected and read-only at revision 8, home, retained
+rating-part selection, no draft and unchanged Undo/Redo. All eight protected
+server executable/start identities are verified; no protected service stop,
+listener launch, live deployment, compiler reinstall or private configuration
+refresh occurred. The earlier automatic approval rejection remains “blocked
+by policy,” with no further reason; no equivalent deployment was attempted.
+The phone retains its earlier observing release. Private remote/process/session/
+artifact proof follows the authorized checkpoint in
+`.local/codex-restart-check/placement-remote-proof.json`.

@@ -40,6 +40,31 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Nested placement prerequisite — 2026-10-05
+
+Original criterion 1 now has typed inside/before/after placement and an ordinary
+Nyx-built two-step keyboard/touch alternative beside the inspector selection.
+Exact authored source/target references enter the existing candidate engine,
+isolated worker and one paired Undo. A changed pair/draft/load permanently
+retires the armed source. The existing MCP transaction shares the same admission
+through `place`/`place-new`, without a new tool or full document dump.
+
+Both native compilers pass 44 semantic/worker checks with identical exports;
+actual Win32 Studio/unchanged compiled controls pass 18, transaction discovery
+24, and retained source/queue/reusable regressions 140/10/52 on both compilers.
+Native heap tracing reports zero leaks and owned builds zero warnings. Final
+native inspector rendering is inspected; browser consumers, Studio and worker
+compile, with physical execution and updated observation still gated. See
+[the packet](../WORK.md#nested-placement-prerequisite--2026-10-05).
+
+This prerequisite does not close criterion 1 or complete native authoring:
+no-closure advances **7→8** once. End local placement codec/fixture expansion.
+Next connect public Nyx physical drag/drop on both targets to these same
+operations and keyboard alternative, guarding exact leases, pairs, creator
+epochs and project/load identity. Resizing, constraints, snapping, responsive
+variants, complete editor presentation/accessibility/performance and delivery
+remain required; preserve every original acceptance criterion and blocker.
+
 ## Native service integration — 2026-10-05
 
 Transport follow-through qualifies typed whole-request deadlines and stalled

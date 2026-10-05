@@ -34,7 +34,33 @@ type
     transport boundary; internal behavior never dispatches arbitrary properties
     or method names. A whole immutable patch builds one detached candidate. }
   TNyxDesignOperation = (doCreate, doUpdate, doMove, doDelete, doTitle, doTokens,
-    doDerive, doInstance, doOverride, doInherit);
+    doDerive, doInstance, doOverride, doInherit, doPlace, doPlaceNew);
+
+  { Relative placement avoids fragile sibling indices. Inside appends to the
+    exact target container; before/after refer to the target's current owner.
+    The candidate resolves positions after detaching a moved control. }
+  TNyxPlacement = (nplInside, nplBefore, nplAfter);
+
+  { An immutable, value-only placement command. A blank kind means move; a
+    constructed kind means create from the catalog. Neither intent retains a
+    node, widget, renderer or document. Default records are refused. }
+  TNyxPlacementChange = record
+  private
+    FDefined: Boolean;
+    FControl: TNyxControlRef;
+    FTarget: TNyxControlRef;
+    FKind: TNyxKindRef;
+    FPlacement: TNyxPlacement;
+  public
+    { Strict persistence/worker boundary, not a default authoring API. }
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxPlacementChange; static;
+    function SameChange(const AOther: TNyxPlacementChange): Boolean;
+    property Control: TNyxControlRef read FControl;
+    property Target: TNyxControlRef read FTarget;
+    property Kind: TNyxKindRef read FKind;
+    property Placement: TNyxPlacement read FPlacement;
+  end;
 
   { Copied typed reusable intents. IDs, definition references and named paths
     have separate families; override behavior is a closed Pascal enum. Mutable
@@ -82,6 +108,22 @@ function NyxInheritComponentPart(const AInstance, ADescriptor: TNyxControlRef;
 { Copy 1..64 typed commands into the existing design transaction engine. Source,
   drafts, revision and paired Undo remain owned by the ordinary Studio session. }
 function NyxReusablePatch(const AChanges: array of TNyxReusableChange): INyxDesignPatch;
+{ Move the exact authored control. Roots, cycles, self-placement, leaf targets
+  and inherited instance content refuse without changing the accepted pair. }
+function NyxPlaceControl(const AControl, ATarget: TNyxControlRef;
+  APlacement: TNyxPlacement): TNyxPlacementChange;
+{ Create an independently owned catalog control/recipe at an exact location.
+  AControl must be unused. Root creation remains a separate editor operation. }
+function NyxPlaceNewControl(AKind: TNyxKind; const AControl, ATarget: TNyxControlRef;
+  APlacement: TNyxPlacement): TNyxPlacementChange; overload;
+function NyxPlaceNewControl(const AKind: TNyxKindRef;
+  const AControl, ATarget: TNyxControlRef;
+  APlacement: TNyxPlacement): TNyxPlacementChange; overload;
+{ Copy 1..64 placement intents into the ordinary grouped candidate engine. }
+function NyxPlacementPatch(const AChanges: array of TNyxPlacementChange): INyxDesignPatch;
+{ Stable closed names at persistence and inspector boundaries only. }
+function NyxPlacementName(APlacement: TNyxPlacement): TNyxText;
+function ReadNyxPlacement(const AName: TNyxText): TNyxPlacement;
 
 implementation
 
@@ -102,6 +144,7 @@ type
     Path: TNyxPartRef;
     Mode: TNyxOverrideMode;
     Identities: array of TNyxIdentityAssignment;
+    Placement: TNyxPlacement;
   end;
 
   TDesignPatch = class(TInterfacedObject, INyxDesignPatch)
@@ -110,6 +153,167 @@ type
   public
     function Candidate(ADocument: TNyxDocument; ACatalog: TNyxCatalog): TNyxDocument;
   end;
+
+function NyxPlacementName(APlacement: TNyxPlacement): TNyxText;
+begin
+  { Ordinal dispatch preserves explicit foreign-cast refusal and avoids treating
+    the rejection path as unreachable under the matched compiler's enum range. }
+  case Ord(APlacement) of
+    Ord(nplInside): Result := 'inside';
+    Ord(nplBefore): Result := 'before';
+    Ord(nplAfter): Result := 'after';
+    else
+    begin
+      raise ENyxModel.Create('Placement requires inside, before or after');
+    end;
+  end;
+end;
+
+function ReadNyxPlacement(const AName: TNyxText): TNyxPlacement;
+var
+  LPlacement: TNyxPlacement;
+begin
+  for LPlacement := Low(TNyxPlacement) to High(TNyxPlacement) do
+  begin
+
+    if AName = NyxPlacementName(LPlacement) then
+    begin
+      Exit(LPlacement);
+    end;
+  end;
+  raise ENyxModel.Create('Placement requires inside, before or after');
+end;
+
+function NyxPlaceControl(const AControl, ATarget: TNyxControlRef;
+  APlacement: TNyxPlacement): TNyxPlacementChange;
+begin
+
+  if (AControl.ID = '') or (ATarget.ID = '') or
+    (Ord(APlacement) < Ord(Low(TNyxPlacement))) or
+    (Ord(APlacement) > Ord(High(TNyxPlacement))) then
+  begin
+    raise ENyxModel.Create('Placement requires exact identities and a closed location');
+  end;
+  Result := Default(TNyxPlacementChange);
+  Result.FDefined := True;
+  Result.FControl := AControl;
+  Result.FTarget := ATarget;
+  Result.FPlacement := APlacement;
+end;
+
+function NyxPlaceNewControl(AKind: TNyxKind; const AControl, ATarget: TNyxControlRef;
+  APlacement: TNyxPlacement): TNyxPlacementChange;
+begin
+  Result := NyxPlaceNewControl(NyxCustomKind(NyxKindName(AKind)), AControl, ATarget,
+    APlacement);
+end;
+
+function NyxPlaceNewControl(const AKind: TNyxKindRef;
+  const AControl, ATarget: TNyxControlRef;
+  APlacement: TNyxPlacement): TNyxPlacementChange;
+begin
+
+  if AKind.Name = '' then
+  begin
+    raise ENyxModel.Create('New placement requires a catalog kind');
+  end;
+  Result := NyxPlaceControl(AControl, ATarget, APlacement);
+  Result.FKind := AKind;
+end;
+
+function TNyxPlacementChange.ToData: TNyxDataValue;
+var
+  LOperation: TNyxText;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxModel.Create('Placement command was not constructed');
+  end;
+  LOperation := 'place';
+
+  if FKind.Name <> '' then
+  begin
+    LOperation := 'place-new';
+  end;
+  Result := NyxObject([NyxField('op', NyxData(LOperation)),
+    NyxField('id', NyxData(FControl.ID)), NyxField('target', NyxData(FTarget.ID)),
+    NyxField('placement', NyxData(NyxPlacementName(FPlacement)))]);
+
+  if FKind.Name <> '' then
+  begin
+    Result := NyxObject([NyxField('op', NyxData(LOperation)),
+      NyxField('id', NyxData(FControl.ID)), NyxField('target', NyxData(FTarget.ID)),
+      NyxField('placement', NyxData(NyxPlacementName(FPlacement))),
+      NyxField('kind', NyxData(FKind.Name))]);
+  end;
+end;
+
+class function TNyxPlacementChange.FromData(const AData: TNyxDataValue): TNyxPlacementChange;
+var
+  LOperation: TNyxText;
+begin
+
+  if AData.Kind <> ndObject then
+  begin
+    raise ENyxModel.Create('Placement requires an exact object');
+  end;
+  LOperation := AData.Field('op').AsText;
+
+  if (LOperation = 'place') and (AData.Count = 4) then
+  begin
+    Exit(NyxPlaceControl(NyxControl(AData.Field('id').AsText),
+      NyxControl(AData.Field('target').AsText), ReadNyxPlacement(AData.Field('placement').AsText)));
+  end;
+
+  if (LOperation = 'place-new') and (AData.Count = 5) then
+  begin
+    Exit(NyxPlaceNewControl(NyxCustomKind(AData.Field('kind').AsText),
+      NyxControl(AData.Field('id').AsText), NyxControl(AData.Field('target').AsText),
+      ReadNyxPlacement(AData.Field('placement').AsText)));
+  end;
+  raise ENyxModel.Create('Placement requires its exact closed shape');
+end;
+
+function TNyxPlacementChange.SameChange(const AOther: TNyxPlacementChange): Boolean;
+begin
+  Result := (FDefined = AOther.FDefined) and (FControl.ID = AOther.FControl.ID) and
+    (FTarget.ID = AOther.FTarget.ID) and (FKind.Name = AOther.FKind.Name) and
+    (FPlacement = AOther.FPlacement);
+end;
+
+function NyxPlacementPatch(const AChanges: array of TNyxPlacementChange): INyxDesignPatch;
+var
+  LOwner: TDesignPatch;
+  LIndex: Integer;
+begin
+
+  if (Length(AChanges) < 1) or (Length(AChanges) > 64) then
+  begin
+    raise ENyxModel.Create('A transaction requires 1..64 operations');
+  end;
+  LOwner := TDesignPatch.Create;
+  Result := LOwner;
+  SetLength(LOwner.FOperations, Length(AChanges));
+  for LIndex := 0 to High(AChanges) do
+  begin
+
+    if not AChanges[LIndex].FDefined then
+    begin
+      raise ENyxModel.Create('Placement command was not constructed');
+    end;
+    LOwner.FOperations[LIndex].Operation := doPlace;
+
+    if AChanges[LIndex].Kind.Name <> '' then
+    begin
+      LOwner.FOperations[LIndex].Operation := doPlaceNew;
+    end;
+    LOwner.FOperations[LIndex].ID := AChanges[LIndex].Control.ID;
+    LOwner.FOperations[LIndex].Parent := AChanges[LIndex].Target.ID;
+    LOwner.FOperations[LIndex].Kind := AChanges[LIndex].Kind.Name;
+    LOwner.FOperations[LIndex].Placement := AChanges[LIndex].Placement;
+  end;
+end;
 
 function NyxDeriveComponent(const ASource: TNyxControlRef;
   const ADefinition: TNyxComponentRef;
@@ -252,6 +456,7 @@ var
   LMapIndex: Integer;
   LMode: TNyxOverrideMode;
   LFound: Boolean;
+  LPlacement: TNyxPlacementChange;
 begin
 
   if (AOperations.Kind <> ndArray) or (AOperations.Count < 1) or
@@ -270,7 +475,21 @@ begin
     LOperation.Properties := NyxObject([]);
     LName := LWire.Field('op').AsText;
 
-    if LName = 'create' then
+    if (LName = 'place') or (LName = 'place-new') then
+    begin
+      LPlacement := TNyxPlacementChange.FromData(LWire);
+      LOperation.Operation := doPlace;
+
+      if LName = 'place-new' then
+      begin
+        LOperation.Operation := doPlaceNew;
+      end;
+      LOperation.ID := LPlacement.Control.ID;
+      LOperation.Parent := LPlacement.Target.ID;
+      LOperation.Kind := LPlacement.Kind.Name;
+      LOperation.Placement := LPlacement.Placement;
+    end
+    else if LName = 'create' then
     begin
       LOperation.Operation := doCreate;
       CheckFields(LWire, '|op|id|kind|parent|index|root|properties|');
@@ -529,6 +748,54 @@ begin
   end;
 end;
 
+{ Exact container admission for relative placement. Reusable references own
+  override descriptors rather than ordinary children. A customized layout part
+  accepts content; a properties-only descriptor becomes an append rule when
+  content arrives, matching ordinary inspector insertion behavior. }
+procedure RequirePlacementContainer(ADocument: TNyxDocument; ACatalog: TNyxCatalog;
+  AParent: TNyxNode);
+var
+  LIndex: Integer;
+  LRuntime: TNyxNode;
+  LInfo: TNyxPrimitiveInfo;
+begin
+
+  if (AParent.ProjectionKind = NyxKindName(nkComponent)) and
+    (AParent.Prop('component') <> '') then
+  begin
+    raise ENyxModel.Create('Customize a named layout part before placing instance content');
+  end;
+
+  if AParent.Kind = 'slot-override' then
+  begin
+
+    if (AParent.Parent = nil) or
+      ((AParent.Prop('mode') <> 'properties') and
+       (AParent.Prop('mode') <> 'append') and (AParent.Prop('mode') <> 'prepend')) then
+    begin
+      raise ENyxModel.Create('Placement requires an editable appended layout part');
+    end;
+    LRuntime := RealizeNyxView(ADocument, AParent.Parent);
+    try
+
+      if not FindNyxPrimitive(LRuntime.Part(AParent.Prop('path')).ProjectionKind, LInfo) or
+        not LInfo.Container then
+      begin
+        raise ENyxModel.Create('This named part is a leaf and cannot contain controls');
+      end;
+    finally
+      LRuntime.Free;
+    end;
+    Exit;
+  end;
+  LIndex := ACatalog.IndexOf(AParent.Kind);
+
+  if (LIndex < 0) or not ACatalog[LIndex].Container then
+  begin
+    raise ENyxModel.Create('Inside placement requires an exact editable container');
+  end;
+end;
+
 function TDesignPatch.Candidate(ADocument: TNyxDocument;
   ACatalog: TNyxCatalog): TNyxDocument;
 var
@@ -540,6 +807,7 @@ var
   LParent: TNyxNode;
   LAncestor: TNyxNode;
   LRule: TNyxNode;
+  LTarget: TNyxNode;
 begin
   Result := ADocument.Clone;
   try
@@ -547,6 +815,98 @@ begin
     begin
       LOperation := FOperations[LIndex];
       case LOperation.Operation of
+        doPlace, doPlaceNew:
+          begin
+            LTarget := RequireNode(Result, LOperation.Parent);
+            LParent := LTarget;
+
+            if LOperation.Placement <> nplInside then
+            begin
+              LParent := LTarget.Parent;
+            end;
+
+            if LParent = nil then
+            begin
+              raise ENyxModel.Create('Relative placement cannot reorder document roots');
+            end;
+            RequirePlacementContainer(Result, ACatalog, LParent);
+
+            if LOperation.Operation = doPlace then
+            begin
+              LNode := RequireNode(Result, LOperation.ID);
+
+              if (LNode.Parent = nil) or (LNode.Kind = 'slot-override') then
+              begin
+                raise ENyxModel.Create('Placement moves authored controls, not roots or part descriptors');
+              end;
+
+              if LNode = LTarget then
+              begin
+                raise ENyxModel.Create('A control cannot be placed relative to itself');
+              end;
+              LAncestor := LParent;
+              while LAncestor <> nil do
+              begin
+
+                if LAncestor = LNode then
+                begin
+                  raise ENyxModel.Create('Placement would create an ownership cycle');
+                end;
+                LAncestor := LAncestor.Parent;
+              end;
+              LChildIndex := 0;
+              while LNode.Parent.Children[LChildIndex] <> LNode do
+              begin
+                Inc(LChildIndex);
+              end;
+              LNode.Parent.Extract(LChildIndex);
+            end
+            else
+            begin
+
+              if Result.Find(LOperation.ID) <> nil then
+              begin
+                raise ENyxModel.Create('New placement identity is already occupied');
+              end;
+
+              if (LOperation.Kind = NyxKindName(nkPage)) or
+                (LOperation.Kind = NyxKindName(nkComponent)) or
+                (LOperation.Kind = 'slot-override') then
+              begin
+                raise ENyxModel.Create('Placement creates palette controls; use dedicated root/instance operations');
+              end;
+              LNode := ACatalog.NewNode(LOperation.Kind, LOperation.ID);
+            end;
+            try
+              { Resolve after extraction so a same-parent move cannot shift the
+                target accidentally. Both the target and parent are still owned
+                by the independent candidate; no accepted node is borrowed. }
+              LInsert := LParent.Count;
+
+              if LOperation.Placement <> nplInside then
+              begin
+                LInsert := 0;
+                while LParent.Children[LInsert] <> LTarget do
+                begin
+                  Inc(LInsert);
+                end;
+
+                if LOperation.Placement = nplAfter then
+                begin
+                  Inc(LInsert);
+                end;
+              end;
+              LParent.Insert(LInsert, LNode);
+              LNode := nil;
+
+              if (LParent.Kind = 'slot-override') and (LParent.Prop('mode') = 'properties') then
+              begin
+                LParent.SetProp('mode', NyxOverrideName(noAppend));
+              end;
+            finally
+              LNode.Free;
+            end;
+          end;
         doDerive:
           begin
             LNode := CloneNyxReusableDefinition(Result,

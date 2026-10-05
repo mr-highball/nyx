@@ -71,7 +71,7 @@ begin
       NyxAgentHas(LProperties, 'workspace') and NyxAgentHas(LProperties, 'review'),
       'mutation retains revision/receipt/project/review routing');
     LVariants := LProperties.Field('operations').Field('items').Field('oneOf');
-    Check(LVariants.Count = 10, 'six ordinary and four reusable operations');
+    Check(LVariants.Count = 12, 'ordinary, reusable and relative placement operations');
     for LIndex := 0 to LVariants.Count - 1 do
     begin
       Check(not LVariants.Item(LIndex).Field('additionalProperties').AsBoolean,
@@ -85,6 +85,10 @@ begin
       'all five typed part operations are discoverable');
     Check(not NyxAgentHas(LVariants.Item(9).Field('properties'), 'mode'),
       'restoring inheritance cannot smuggle an override mode');
+    Check(LVariants.Item(10).Field('properties').Field('placement').Field('enum').Count = 3,
+      'relative placement exposes three closed positions');
+    Check(LVariants.Item(11).Field('required').Count = 5,
+      'new placement requires an exact kind, identity and relative target');
     WriteLn('PASS ', LChecks, ' actual reusable discovery checks');
   except
     on LException: Exception do

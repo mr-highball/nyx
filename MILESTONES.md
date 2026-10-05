@@ -676,3 +676,20 @@ Current task and return path are maintained in [WORK.md](WORK.md).
   No full criterion/percentage advances. Return to the ordinary editor/creator
   and broader source/parity/presentation outcomes, preserving their owners.
   See [evidence](WORK.md#semantic-reusable-authoring--2026-10-05).
+
+- Original Studio authoring criterion 1 now has typed nested relative placement
+  and a Nyx-built two-step keyboard/touch alternative beside selection. The
+  semantic transaction and isolated paired worker share exact target/container/
+  cycle/reusable admission and one Undo; pending sources retire permanently on
+  changed pairs, drafts, history or loads. Both native compilers pass 44 checks
+  with identical exports, actual Win32 Studio/unchanged compiled controls 18,
+  discovery 24 and source/queue/reusable regressions 140/10/52 on each compiler,
+  with zero native leaks/owned warnings. Final native rendering is inspected;
+  browser consumers, Studio and worker compile with execution still gated.
+  Authoring no-closure advances **7→8** once; workflow **9**, codegen **27**,
+  renderer **3** and delivery **1** remain. No full criterion/percentage credit.
+  End placement codec/fixture expansion and connect public Nyx physical
+  drag/drop on both targets to this same operation and keyboard alternative;
+  resizing, constraints, snapping, responsive variants and complete editor
+  quality/parity/delivery retain their original owners. See
+  [evidence](WORK.md#nested-placement-prerequisite--2026-10-05).

@@ -420,15 +420,22 @@ end;
 function TNyxStudioDesignRequest.ToData: TNyxDataValue;
 var
   LCollection: TNyxDataValue;
+  LPlacement: TNyxDataValue;
 begin
   LCollection := NyxNull;
+  LPlacement := NyxNull;
 
   if FEdit.Action = sdaCollection then
   begin
     LCollection := FEdit.Collection.ToData;
   end;
+
+  if FEdit.Action = sdaPlacement then
+  begin
+    LPlacement := FEdit.Placement.ToData;
+  end;
   Result := NyxObject([
-    NyxField('version', NyxData(5)), NyxField('owner', NyxData(FOwner)),
+    NyxField('version', NyxData(6)), NyxField('owner', NyxData(FOwner)),
     NyxField('generation', NyxData(FGeneration)), NyxField('nextId', NyxData(FNextID)),
     NyxField('schemaRevision', NyxData(FSchemaRevision)),
     NyxField('pair', NyxData(EncodeNyxProject(FPair))),
@@ -441,7 +448,7 @@ begin
       NyxField('stateInput', NyxData(Ord(FEdit.StateInput))),
       NyxField('binding', DesignBindingData(FEdit)),
       NyxField('event', DesignEventData(FEdit)),
-      NyxField('collection', LCollection)]))]);
+      NyxField('collection', LCollection), NyxField('placement', LPlacement)]))]);
 end;
 
 function TNyxStudioDesignRequest.SameRequest(const AOther: TNyxStudioDesignRequest): Boolean;
@@ -473,6 +480,11 @@ begin
   begin
     Result := FEdit.Collection.SameIntent(AOther.FEdit.Collection);
   end;
+
+  if Result and (FEdit.Action = sdaPlacement) then
+  begin
+    Result := FEdit.Placement.SameChange(AOther.FEdit.Placement);
+  end;
 end;
 
 function ReadNyxStudioDesignRequest(const AData: TNyxDataValue): TNyxStudioDesignRequest;
@@ -490,10 +502,12 @@ var
   LTrigger: Integer;
   LEventAction: Integer;
   LPolicy: Integer;
+  LVersion: Integer;
 begin
+  LVersion := AData.Field('version').AsInteger;
 
   if (AData.Kind <> ndObject) or (AData.Count <> 7) or
-    (AData.Field('version').AsInteger <> 5) then
+    ((LVersion <> 5) and (LVersion <> 6)) then
   begin
     raise ENyxModel.Create('Design processor requires its exact versioned ticket');
   end;
@@ -506,14 +520,17 @@ begin
   LEdit := AData.Field('edit');
 
   if (Result.FOwner = '') or (Result.FGeneration < 0) or (Result.FNextID < 0) or
-    (Result.FSchemaRevision < 0) or (LEdit.Kind <> ndObject) or (LEdit.Count <> 11) then
+    (Result.FSchemaRevision < 0) or (LEdit.Kind <> ndObject) or
+    ((LVersion = 5) and (LEdit.Count <> 11)) or
+    ((LVersion = 6) and (LEdit.Count <> 12)) then
   begin
     raise ENyxModel.Create('Design processor ticket has invalid identity or intent');
   end;
   LAction := LEdit.Field('action').AsInteger;
 
   if (LAction < Ord(Low(TNyxStudioDesignAction))) or
-    (LAction > Ord(High(TNyxStudioDesignAction))) then
+    (LAction > Ord(High(TNyxStudioDesignAction))) or
+    ((LVersion = 5) and (LAction > Ord(sdaCollection))) then
   begin
     raise ENyxModel.Create('Design processor action is outside its closed contract');
   end;
@@ -669,6 +686,15 @@ begin
   begin
     raise ENyxCollection.Create('Only collection intent carries collection payload');
   end;
+
+  if Result.FEdit.Action = sdaPlacement then
+  begin
+    Result.FEdit.Placement := TNyxPlacementChange.FromData(LEdit.Field('placement'));
+  end
+  else if (LVersion = 6) and (LEdit.Field('placement').Kind <> ndNull) then
+  begin
+    raise ENyxModel.Create('Only placement intent carries a placement command');
+  end;
 end;
 
 destructor TPreparedDesign.Destroy;
@@ -734,6 +760,7 @@ begin
       sdaCreateComponent: LSession.CreateComponent;
       sdaAddInstance: LSession.AddComponentInstance(FRequest.FEdit.Name);
       sdaCustomizePart: LSession.CustomizePart(FRequest.FEdit.Name);
+      sdaPlacement: LSession.Place(FRequest.FEdit.Placement);
       sdaCanvasValue: LSession.SetCapturedCanvasValue(FRequest.FEdit);
       sdaSetStateDefault:
         LSession.SetStateValues([NyxStateAssign(FRequest.FEdit.Name,
@@ -981,7 +1008,8 @@ function TNyxStudioSession.PrepareDesignRequest(const AEdit: TNyxStudioDesignEdi
   ASchemaRevision: Integer): TNyxStudioDesignRequest;
 begin
 
-  if (AEdit.Action = sdaCanvasValue) and not MatchesCommandContext(AEdit.CanvasContext) then
+  if (AEdit.Action in [sdaCanvasValue, sdaPlacement]) and
+    not MatchesCommandContext(AEdit.CanvasContext) then
   begin
     raise ENyxModel.Create('Captured canvas intent belongs to an earlier session or project load');
   end;
