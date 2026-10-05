@@ -773,11 +773,12 @@ begin
       .Configure.Gap(0).Padding(0).Done;
     LSplit.Add(LCodePane);
 
-    if AState.SourceStatus <> '' then
-    begin
-      LCodePane.Add(NewNyxLabel('studio-source-status').Configure
-        .Text(AState.SourceStatus).Hint('Current Pascal source operation').Done);
-    end;
+    { Keep source status as a stable public control. Beginning preparation must
+      change visibility/text rather than replace every inspector widget merely
+      to insert one label. Hidden status consumes no layout extent or Tab entry. }
+    LCodePane.Add(NewNyxLabel('studio-source-status').Configure
+      .Text(AState.SourceStatus).Hint('Current Pascal source operation')
+      .Visible(AState.SourceStatus <> '').Done);
     LCodePane.Add(TNyxNode.Create(nkRow, 'studio-code-actions')
       .Configure.Gap(8).Done
       .Add(Button('action-apply-source', 'Apply Pascal'))

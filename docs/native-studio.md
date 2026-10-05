@@ -77,11 +77,26 @@ mutable recipes. See WORK.md for 39 actual Win32 controls, desktop/390 captures,
 original-size timings and the still-pending browser execution/deployment gate.
 Ordinary canvas value proposals, state/binding/event authoring and broader
 source/import/review operations retain their existing owners. Preparation on a
-worker does not establish comfortable editing: fresh publication and full native
-projection still consume the UI thread. A moved deliberately handwritten
-Configure slot can currently fail source-order admission; the exact accepted
-pair/history is retained with a diagnostic. That structural merge remains under
-the original source-synchronization criterion.
+worker does not establish comfortable editing: fresh admission, publication and
+projection still consume the UI thread. Supported handwritten metadata displaced
+by a move now follows the control's ownership call, preserving later extension
+values, comments and exact compiled design meaning. Broader structural/source
+synchronization remains under the original criterion.
+
+Both public renderers expose `TryRefresh`. Each independently realizes and
+validates the requested current view, compares exact document context, creator
+generation, effective theme and ordered structure, then retains existing controls
+for supported scalar presentation changes. An independent authored baseline
+distinguishes changed defaults from live input: an unrelated caption update must
+retain an independently edited value. Native checks exercise control identity,
+draft/caret preservation, callbacks and failure paths; browser consumers compile,
+with execution still gated. Scalar bindings, custom factories, structural/style
+changes and context changes refuse reuse and request the normal staged `Render`.
+Neither renderer retains the caller's document or mutable authored nodes. Native
+candidate construction balances LCL's host sizing lock, including factory failure;
+retirement disconnects resize before freeing bindings. Studio consumes this public
+contract for its shell and native canvas. The stable public source-status label
+changes text/visibility without inserting a new child during preparation.
 
 ```powershell
 ./tools/build.ps1 -Target native-studio -VerifySourceScheduling

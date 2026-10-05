@@ -399,6 +399,9 @@ var
   LAction: INyxSchemaAction;
   LFollowSelection: Boolean;
   LFollowView: Boolean;
+  {$ifdef NYX_STUDIO_PROFILE}
+  LPhaseStarted: QWord;
+  {$endif}
 begin
   Result := nscStale;
 
@@ -408,8 +411,16 @@ begin
   begin
     Exit;
   end;
+  {$ifdef NYX_STUDIO_PROFILE}LPhaseStarted := GetTickCount64;{$endif}
   LCurrent := ProjectSnapshot;
+  {$ifdef NYX_STUDIO_PROFILE}
+  WriteLn('studio-ui,command-current-snapshot,', GetTickCount64 - LPhaseStarted);
+  LPhaseStarted := GetTickCount64;
+  {$endif}
   LCheckpoint := FSourceWorkspace.Capture;
+  {$ifdef NYX_STUDIO_PROFILE}
+  WriteLn('studio-ui,command-capture,', GetTickCount64 - LPhaseStarted);
+  {$endif}
 
   if (LCurrent.Design <> ARequest.FPair.Design) or
     (LCurrent.Source <> ARequest.FPair.Source) or
@@ -450,10 +461,14 @@ begin
     LCandidate := nil;
     LWorkspace := nil;
 
+    {$ifdef NYX_STUDIO_PROFILE}LPhaseStarted := GetTickCount64;{$endif}
     if not CommitNyxSchemaRevision(ARequest.SchemaRevision, LAction) then
     begin
       Exit;
     end;
+    {$ifdef NYX_STUDIO_PROFILE}
+    WriteLn('studio-ui,command-publish,', GetTickCount64 - LPhaseStarted);
+    {$endif}
 
     if APrepared.NextID > FNextID then
     begin

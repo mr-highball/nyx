@@ -694,7 +694,11 @@ begin
   end;
   FShell.Free;
   FShell := CreateShell;
-  FShellRenderer.Render(FShell, FShell.Pages[0], TJSHTMLElement(document.body));
+
+  if not FShellRenderer.TryRefresh(FShell, FShell.Pages[0], False) then
+  begin
+    FShellRenderer.Render(FShell, FShell.Pages[0], TJSHTMLElement(document.body));
+  end;
   { Compact Project/Design panels do not mount the Inspector hierarchy. Restore
     selection only when this shell actually owns the public tree binding. }
 

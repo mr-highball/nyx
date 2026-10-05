@@ -64,7 +64,8 @@ uses
   nyx.collections.mount,
   nyx.collections.browser,
   nyx.literal.items,
-  nyx.composition;
+  nyx.composition,
+  nyx.projection.refresh;
 
 type
   TNyxBrowserRenderer = class;
@@ -185,6 +186,9 @@ type
     FRoot: TNyxNode;
     FHost: TJSHTMLElement;
     FDesignMode: Boolean;
+    FProjectionContext: TNyxText;
+    FProjectionSchemaRevision: Integer;
+    FProjectionBaseline: TNyxNode;
     FBindings: array of TNyxBrowserBinding;
     FFactoryKinds: array of TNyxText;
     FFactories: array of TNyxBrowserFactory;
@@ -232,6 +236,14 @@ type
     procedure Render(ADocument: TNyxDocument; ARoot: TNyxNode;
       AHost: TJSHTMLElement; ADesignMode: Boolean = False; AState: TNyxState = nil;
       const ACollections: INyxCollectionBindings = nil);
+    { Same portable retained-projection guard as LCL. Stage independent current
+      context/root/theme; only supported scalar presentation may reuse DOM,
+      bindings and event scopes. False changes nothing and requests Render.
+      Custom factories, scalar bindings, structure or context changes refuse
+      reuse. No caller document/node is retained. Sync failures restore the
+      previous owned properties before reporting the failure. }
+    function TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
+      ADesignMode: Boolean): Boolean;
     { A supplied runtime store is borrowed and must outlive this mounted view.
       Otherwise the renderer owns a fresh copy of document defaults. Design mode
       projects that copy but does not subscribe or write application state.
@@ -532,6 +544,9 @@ begin
     FEmitterScope := nil;
   end;
   FUpdating := True;
+  FProjectionContext := '';
+  FProjectionSchemaRevision := 0;
+  ReleaseNyxNode(FProjectionBaseline);
 
   if FEvents <> nil then
   begin
@@ -1228,8 +1243,11 @@ begin
     { Use the final owner's scheduler, never the candidate's temporary router. }
     LCandidate.FEmitterScope := NewNyxEventEmitterScope(FEvents.Scheduler);
     LCandidate.FUpdaters := Copy(FUpdaters, 0, Length(FUpdaters));
+    LCandidate.FProjectionContext := NyxProjectionContext(ADocument);
+    LCandidate.FProjectionSchemaRevision := NyxSchemaRevision;
     LCandidate.FRoot := RealizeNyxView(ADocument, ARoot);
     ApplyNyxPlatform(LCandidate.FRoot, npfBrowser);
+    LCandidate.FProjectionBaseline := LCandidate.FRoot.Clone;
     LCandidate.FCollectionBindings := ACollections;
 
     if ACollections <> nil then
@@ -1308,6 +1326,10 @@ begin
     LCandidate.FBindings := nil;
     FHost := AHost;
     FDesignMode := ADesignMode;
+    FProjectionContext := LCandidate.FProjectionContext;
+    FProjectionSchemaRevision := LCandidate.FProjectionSchemaRevision;
+    FProjectionBaseline := LCandidate.FProjectionBaseline;
+    LCandidate.FProjectionBaseline := nil;
     FHost.classList.add('nyx-root');
     FHost.setAttribute('data-nyx-theme', FThemeScope);
 
@@ -1331,6 +1353,84 @@ begin
     FEmitterScope.Activate(@EmitNamed);
   finally
     LCandidate.Free;
+  end;
+end;
+
+function TNyxBrowserRenderer.TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
+  ADesignMode: Boolean): Boolean;
+var
+  LCandidate: TNyxNode;
+  LPrevious: TNyxNode;
+  LTheme: TNyxTheme;
+  LIndex: Integer;
+begin
+  FEvents.Scheduler.RequireUI;
+  Result := False;
+
+  if (FRoot = nil) or (FHost = nil) or FUpdating or
+    (FDesignMode <> ADesignMode) or
+    (FProjectionSchemaRevision <> NyxSchemaRevision) then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if FBindings[LIndex].FCustom or (FactoryIndex(FBindings[LIndex].FNode) >= 0) then
+    begin
+      Exit;
+    end;
+  end;
+  ValidateNyxDocumentProperties(ADocument);
+
+  if NyxProjectionContext(ADocument) <> FProjectionContext then
+  begin
+    Exit;
+  end;
+  LCandidate := nil;
+  LPrevious := nil;
+  LTheme := nil;
+  try
+
+    if FBorrowedTheme <> nil then
+    begin
+      LTheme := NewNyxDocumentTheme(ADocument, FBorrowedTheme);
+    end
+    else
+    begin
+      LTheme := NewNyxDocumentTheme(ADocument, FBaseTheme);
+    end;
+
+    if LTheme.CSS <> FTheme.CSS then
+    begin
+      Exit;
+    end;
+    LCandidate := RealizeNyxView(ADocument, ARoot);
+    ApplyNyxPlatform(LCandidate, npfBrowser);
+
+    if not CanRefreshNyxProjection(FRoot, LCandidate) or
+      not CanRefreshNyxProjection(FProjectionBaseline, LCandidate) or
+      (FProjectionSchemaRevision <> NyxSchemaRevision) then
+    begin
+      Exit;
+    end;
+    LPrevious := FRoot.Clone;
+    RefreshNyxProjectionProperties(FRoot, LCandidate, FProjectionBaseline);
+    try
+      Sync;
+    except
+      RefreshNyxProjectionProperties(FRoot, LPrevious);
+      Sync;
+      raise;
+    end;
+    ReleaseNyxNode(FProjectionBaseline);
+    FProjectionBaseline := LCandidate;
+    LCandidate := nil;
+    Result := True;
+  finally
+    LTheme.Free;
+    ReleaseNyxNode(LPrevious);
+    ReleaseNyxNode(LCandidate);
   end;
 end;
 

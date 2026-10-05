@@ -201,6 +201,8 @@ var
   LFinal: TNyxProjectPair;
   LField: TCustomEdit;
   LCode: TControl;
+  LCaption: TControl;
+  LInspector: TControl;
   LTimer: TTimer;
   LStarted: QWord;
   LDispatchMS: QWord;
@@ -230,6 +232,8 @@ begin
     Pump;
     LCode := GStudio.CodeView.InputFor('studio-code');
     LField := TCustomEdit(GStudio.ShellView.InputFor('inspector-text'));
+    LInspector := LField;
+    LCaption := GStudio.CanvasView.ControlFor('message');
     GStudio.ShellView.Reveal('inspector-text');
     LField.SetFocus;
     LTicks := GObservation.Ticks;
@@ -262,6 +266,11 @@ begin
     LField := TCustomEdit(GStudio.ShellView.InputFor('inspector-text'));
     Check((LField.Text = 'Final queued caption!') and LField.Focused and (LField.SelStart = 4),
       'Completion preserves inspector input selection');
+    Check(GStudio.ShellView.InputFor('inspector-text') = LInspector,
+      'Scalar source preparation/publication retains the actual inspector control');
+    Check((GStudio.CanvasView.ControlFor('message') = LCaption) and
+      (TLabel(LCaption).Caption = 'Final queued caption!'),
+      'Retained canvas control paints the exact newly admitted caption');
     Check((GStudio.SourceCommands.State = nssApplied) and
       (GStudio.Session.Document.Find('message').Prop('text') = 'Final queued caption!'),
       'FIFO first/latest property candidates publish their final exact meaning');
@@ -369,7 +378,7 @@ begin
   try
     try
 
-      if ParamCount <> 1 then
+      if (ParamCount < 1) or (ParamCount > 2) then
       begin
         raise ENyxModel.Create('Supply an owned artifact directory');
       end;
@@ -377,9 +386,27 @@ begin
       Application.Initialize;
       Application.OnException := GObservation.Failed;
       WriteLn('controls,source-bytes,three-input-ms,completion-ms,ui-ticks');
-      Journey(128, 25094);
-      Journey(512, 98822);
-      Journey(2048, 400022);
+      { A bounded original-size diagnostic may select one existing workload.
+        Default qualification still executes ALL sizes, unchanged. A selected
+        diagnostic is never evidence for omitted sizes or complete parity. }
+      if ParamCount > 1 then
+      begin
+        case StrToInt(ParamStr(2)) of
+          128: Journey(128, 25094);
+          512: Journey(512, 98822);
+          2048: Journey(2048, 400022);
+        else
+          begin
+            raise ENyxModel.Create('Diagnostic size must be 128, 512 or 2048');
+          end;
+        end;
+      end
+      else
+      begin
+        Journey(128, 25094);
+        Journey(512, 98822);
+        Journey(2048, 400022);
+      end;
       WriteLn('PASS ', GChecks, ' actual native design/source checks');
     except
       on LException: Exception do

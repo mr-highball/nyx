@@ -1182,6 +1182,9 @@ end;
 type
   TBuilderMetadataGroup = record
     Identity: TNyxText;
+    { Exact admitted local used only to find its moved ownership statement.
+      Document metadata uses Result; this never replaces semantic identity. }
+    OwnerName: TNyxText;
     Text: TNyxText;
     FirstSlot: Integer;
   end;
@@ -1325,6 +1328,7 @@ begin
           LGroup := Length(AGroups);
           SetLength(AGroups, LGroup + 1);
           AGroups[LGroup].Identity := LIdentity;
+          AGroups[LGroup].OwnerName := LName;
           AGroups[LGroup].Text := '';
           AGroups[LGroup].FirstSlot := LSlot;
           LGroups.AddFirst(LIdentity, LGroup);
@@ -1377,6 +1381,59 @@ begin
   end;
 end;
 
+function BuilderAdmissionSites(AContexts: TBuilderContexts;
+  const AFrame: TNyxText): TSourceIndex;
+var
+  LTokens: TTokens;
+  LIndex: Integer;
+  LFinish: Integer;
+begin
+  { Structural comparison keeps ownership calls, but moves can leave private
+    metadata markers at their former source sites. Locate each child's exact
+    new admission boundary before reinserting those statements. This is lexical
+    placement only: complete reconstruction still validates constructors, one
+    owner, parent order, types and exact resulting document meaning. }
+  Result := TSourceIndex.Create;
+  try
+    LTokens := AContexts.ForSource(AFrame).Tokens;
+    for LIndex := 0 to Length(LTokens) - 7 do
+    begin
+
+      if (LTokens[LIndex].Kind <> tkWord) or (LTokens[LIndex + 1].Text <> '.') or
+        (LTokens[LIndex + 3].Text <> '(') then
+      begin
+        Continue;
+      end;
+
+      if not SameText(LTokens[LIndex + 2].Text, 'Add') and
+        not SameText(LTokens[LIndex + 2].Text, 'Insert') and
+        not SameText(LTokens[LIndex + 2].Text, 'AddPage') and
+        not SameText(LTokens[LIndex + 2].Text, 'AddComponent') then
+      begin
+        Continue;
+      end;
+      LFinish := LIndex + 4;
+      while (LFinish < Length(LTokens)) and
+        ((LTokens[LFinish].Kind <> tkSymbol) or (LTokens[LFinish].Text <> ';')) do
+      begin
+        Inc(LFinish);
+      end;
+
+      if (LFinish < Length(LTokens)) and (LTokens[LFinish - 1].Text = ')') and
+        (LTokens[LFinish - 2].Kind = tkWord) then
+      begin
+        { The admitted ownership grammar's final argument is a control local,
+          including Insert(index, local). Comments were filtered independently;
+          source positions still identify the original exact semicolon. }
+        Result.AddFirst(LowerCase(LTokens[LFinish - 2].Text), LTokens[LFinish].Finish);
+      end;
+    end;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
 function ExpandBuilderMetadata(AContexts: TBuilderContexts; const AFrame, APrefix: TNyxText;
   const ASlots: TBuilderMetadataSlots; const AUpdates: TBuilderMetadataGroups;
   const AOriginals: TBuilderMetadataGroups): TNyxText;
@@ -1388,11 +1445,36 @@ var
   LGroup: Integer;
   LCursor: Integer;
   LReplacement: TNyxText;
+  LAdmissions: TSourceIndex;
+  LEnds: TSourceIndex;
+  LAdmission: Integer;
+  LAdmissionToken: Integer;
+  LReplacements: array of TNyxText;
+  LDeferred: array of TNyxText;
+  LMarkers: array of Boolean;
 begin
   LTokens := AContexts.ForSource(AFrame).AllTokens;
   LParts := TNyxStrings.Create;
+  LAdmissions := nil;
+  LEnds := nil;
   try
-    LCursor := 1;
+    LAdmissions := BuilderAdmissionSites(AContexts, AFrame);
+    LEnds := TSourceIndex.Create;
+    SetLength(LReplacements, Length(LTokens));
+    SetLength(LDeferred, Length(LTokens));
+    SetLength(LMarkers, Length(LTokens));
+    for LIndex := 0 to Length(LTokens) - 1 do
+    begin
+
+      if (LTokens[LIndex].Kind = tkSymbol) and (LTokens[LIndex].Text = ';') then
+      begin
+        LEnds.AddFirst(IntToStr(LTokens[LIndex].Finish), LIndex);
+      end;
+    end;
+    { Plan replacements before emission. A displaced statement is inserted
+      immediately AFTER its new ownership call, before later configuration.
+      Appending it at the cleanup boundary would reverse authored metadata
+      statements and could overwrite their later final values. }
     for LIndex := 0 to Length(LTokens) - 1 do
     begin
 
@@ -1409,6 +1491,7 @@ begin
         raise ENyxSource.CreateAt('Invalid private reconciliation slot', AFrame,
           LTokens[LIndex].Position);
       end;
+      LMarkers[LIndex] := True;
       LGroup := ASlots[LSlot].Group;
       LReplacement := '';
 
@@ -1430,13 +1513,48 @@ begin
           LReplacement := Copy(LReplacement, 1, Length(LReplacement) - 1);
         end;
       end;
-      LParts.Add(Copy(AFrame, LCursor, LTokens[LIndex].Position - LCursor));
-      LParts.Add(LReplacement);
-      LCursor := LTokens[LIndex].Finish;
+      LAdmission := LAdmissions.IndexOf(LowerCase(AOriginals[LGroup].OwnerName));
+
+      if (LReplacement <> '') and (LAdmission > LTokens[LIndex].Position) then
+      begin
+        LAdmissionToken := LEnds.IndexOf(IntToStr(LAdmission));
+
+        if LAdmissionToken < 0 then
+        begin
+          raise ENyxSource.CreateAt('Missing moved ownership boundary', AFrame,
+            LTokens[LIndex].Position);
+        end;
+        LDeferred[LAdmissionToken] := JoinSourceFrame([
+          LDeferred[LAdmissionToken], #10, '    ', LReplacement]);
+      end
+      else
+      begin
+        LReplacements[LIndex] := LReplacement;
+      end;
+    end;
+    LCursor := 1;
+    for LIndex := 0 to Length(LTokens) - 1 do
+    begin
+
+      if LMarkers[LIndex] then
+      begin
+        LParts.Add(Copy(AFrame, LCursor, LTokens[LIndex].Position - LCursor));
+        LParts.Add(LReplacements[LIndex]);
+        LCursor := LTokens[LIndex].Finish;
+      end;
+
+      if LDeferred[LIndex] <> '' then
+      begin
+        LParts.Add(Copy(AFrame, LCursor, LTokens[LIndex].Finish - LCursor));
+        LParts.Add(LDeferred[LIndex]);
+        LCursor := LTokens[LIndex].Finish;
+      end;
     end;
     LParts.Add(Copy(AFrame, LCursor, MaxInt));
     Result := LParts.Join;
   finally
+    LEnds.Free;
+    LAdmissions.Free;
     LParts.Free;
   end;
 end;
@@ -1523,6 +1641,7 @@ begin
     for LIndex := 0 to Length(LAuthoredGroups) - 1 do
     begin
       LUpdates[LIndex].Identity := LAuthoredGroups[LIndex].Identity;
+      LUpdates[LIndex].OwnerName := LAuthoredGroups[LIndex].OwnerName;
       LUpdates[LIndex].FirstSlot := LAuthoredGroups[LIndex].FirstSlot;
       LOldText := '';
       LNewText := '';

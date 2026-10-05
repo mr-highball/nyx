@@ -546,6 +546,9 @@ draft/load/creator/navigation guards and every supported structural command. The
 actual native scheduler fixture also qualifies presentation exceptions, retired
 project loads with matching IDs, current pending fields and save/export guards. An
 exported admitted companion is compiled and executed against its exact design.
+Moved handwritten configuration/extension statements retain their ownership and
+execution order. The actual retained-projection consumer exercises native control
+identity, independent input, caret, callbacks, fresh refusal and balanced sizing.
 Actual native inspector/title/palette controls exercise FIFO/coalescing, paired
 Undo/Redo, field focus/caret, cancellation/staleness and detached retirement at
 the unchanged 128/512/2048-control source sizes. English desktop/390 captures stay
@@ -554,8 +557,16 @@ fixture durations do not establish comfortable release latency. Browser Studio,
 the Pascal worker and portable checks are compiled/staged under
 `build/design-source/maintained/browser/`; execution retains its permitted-host
 gate. The option launches no listener and changes no application profile or
-enrollment. Current evidence and unsupported authored structural moves belong
-to WORK.md and the original source-synchronization owner.
+enrollment. Current evidence and broader source-synchronization gaps belong to
+WORK.md and the original source-synchronization owner.
+
+For bounded native profiling, compile with `-dNYX_STUDIO_PROFILE`. It emits only
+fixed UI/native stage names and elapsed milliseconds on the owning UI thread;
+ordinary builds contain no profiling clocks or output. The compiled
+`nyx_design_source_controls` fixture optionally accepts a second argument of
+`128`, `512` or `2048` after its owned artifact directory. This selects one
+unchanged original workload for diagnosis. Omitting it still qualifies all three
+sizes; a selected run cannot establish omitted-size or complete-target acceptance.
 
 The optional Win32 transport consumer needs no Studio server, project, enrollment
 or application compiler profile:

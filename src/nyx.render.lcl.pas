@@ -75,7 +75,8 @@ uses
   nyx.collections.mount,
   nyx.collections.lcl,
   nyx.literal.items,
-  nyx.composition;
+  nyx.composition,
+  nyx.projection.refresh;
 
 type
   TNyxLCLRenderer = class;
@@ -239,6 +240,13 @@ type
     FCollectionBindings: INyxCollectionBindings;
     FUpdating: Boolean;
     FDesignMode: Boolean;
+    { Immutable fresh document context, not a retained document or a source
+      admission cache. Creator changes force a full candidate mount. }
+    FProjectionContext: TNyxText;
+    FProjectionSchemaRevision: Integer;
+    { Independent last authored projection, never live input or a document
+      reference. It distinguishes new defaults from retained runtime edits. }
+    FProjectionBaseline: TNyxNode;
     FSelectedDesignID: TNyxText;
     FSelectionEdges: array[0..3] of TShape;
     FForceValues: Boolean;
@@ -315,6 +323,15 @@ type
     procedure Render(ADocument: TNyxDocument; ARoot: TNyxNode; AHost: TWinControl;
       ADesignMode: Boolean; AState: TNyxState = nil;
       const ACollections: INyxCollectionBindings = nil); overload;
+    { Stage/validate an independent realized view, then retain native controls
+      when only shared supported scalar presentation differs. False changes
+      nothing and asks the caller to Render normally. Structure, metadata,
+      scalar bindings, defaults, collections, theme or custom factories refuse
+      reuse. No accepted document/node is borrowed after return. Ordinary Sync
+      updates values/layout; widget failures restore the previous properties.
+      Call on the owning UI thread with the mounted host alive. }
+    function TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
+      ADesignMode: Boolean): Boolean;
     { Move the same mounted view to a different borrowed host, retaining control
       objects, state/subscriptions, focused text range and containing scroll.
       Both hosts must outlive their respective parentage; after successful move
@@ -541,9 +558,15 @@ begin
 
   if FPanel <> nil then
   begin
+    { Retirement must not enter layout through native resize messages while
+      bindings and controls are being disconnected or destroyed. }
+    FPanel.OnResize := nil;
     FPanel.Detach;
   end;
   FDesignMode := False;
+  FProjectionContext := '';
+  FProjectionSchemaRevision := 0;
+  ReleaseNyxNode(FProjectionBaseline);
   FSelectedDesignID := '';
   for LIndex := Low(FSelectionEdges) to High(FSelectionEdges) do
   begin
@@ -2250,6 +2273,20 @@ var
   LCandidate: TNyxLCLRenderer;
   LIndex: Integer;
   LTransferState: Boolean;
+  {$ifdef NYX_STUDIO_PROFILE}
+  LPhaseStarted: QWord;
+
+  procedure RecordPhase(const AName: TNyxText);
+  var
+    LNow: QWord;
+  begin
+    { Main-thread-only opt-in measurement. Production has no instrumentation;
+      output identifies only fixed stages, mode and elapsed milliseconds. }
+    LNow := GetTickCount64;
+    WriteLn('native-view,', AName, ',', ADesignMode, ',', LNow - LPhaseStarted);
+    LPhaseStarted := LNow;
+  end;
+  {$endif}
 begin
   { Stage a hidden owned control tree beside the accepted view. A factory or
     layout exception destroys that candidate while retaining the live controls,
@@ -2261,6 +2298,13 @@ begin
   end;
   LCandidate := TNyxLCLRenderer.Create(FTheme);
   LTransferState := (AState <> nil) and FOwnState and (AState = FState);
+  {$ifdef NYX_STUDIO_PROFILE}LPhaseStarted := GetTickCount64;{$endif}
+  { LCL propagates this balanced sizing lock through the host's parents and
+    descendants. Stage the whole candidate before one final native alignment;
+    per-child parenting/font/bounds changes must not relayout the accepted shell
+    and every partly constructed sibling. Explicit Nyx layout still runs while
+    locked. The host remains borrowed and the failure path releases the lock. }
+  AHost.DisableAutoSizing;
   try
 
     if FBorrowedTheme <> nil then
@@ -2281,8 +2325,11 @@ begin
     LCandidate.FEditingObserver := NewNyxLCLEditingObserver;
     LCandidate.FUpdaters := Copy(FUpdaters, 0, Length(FUpdaters));
     LCandidate.FDesignMode := ADesignMode;
+    LCandidate.FProjectionContext := NyxProjectionContext(ADocument);
+    LCandidate.FProjectionSchemaRevision := NyxSchemaRevision;
     LCandidate.FRoot := RealizeNyxView(ADocument, ARoot);
     ApplyNyxPlatform(LCandidate.FRoot, npfNativeLCL);
+    LCandidate.FProjectionBaseline := LCandidate.FRoot.Clone;
     LCandidate.FCollectionBindings := ACollections;
 
     if ACollections <> nil then
@@ -2307,19 +2354,28 @@ begin
     LCandidate.FPanel.Visible := False;
     LCandidate.FPanel.Parent := AHost;
     LCandidate.FPanel.Align := alClient;
+    { Alignment is deliberately deferred. Supply the host's current client
+      frame for provisional measurements; final LCL alignment and OnResize
+      settle the actual frame after publication, including existing siblings. }
+    LCandidate.FPanel.SetBounds(AHost.ClientRect.Left, AHost.ClientRect.Top,
+      AHost.ClientWidth, AHost.ClientHeight);
     LCandidate.FPanel.BorderStyle := bsNone;
     LCandidate.FPanel.Color := ThemeColor(LCandidate.FTheme.Background);
     LCandidate.FPanel.Font.Assign(AHost.Font);
     LCandidate.FPanel.Font.Height := -LCandidate.FTheme.FontSize;
     LCandidate.FPanel.Font.Color := ThemeColor(LCandidate.FTheme.Text);
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('realize');{$endif}
     LCandidate.Build(LCandidate.FRoot, LCandidate.FPanel);
     for LIndex := 0 to LCandidate.FCollectionBindings.Count - 1 do
     begin
       LCandidate.BindCollection(LCandidate.FCollectionBindings.ID(LIndex),
         LCandidate.FCollectionBindings.View(LIndex));
     end;
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('build');{$endif}
     LCandidate.Resize(LCandidate.FPanel);
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('first-layout');{$endif}
     LCandidate.Sync;
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('first-sync');{$endif}
 
     if not ADesignMode then
     begin
@@ -2334,6 +2390,7 @@ begin
       FOwnState := False;
     end;
     Clear;
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('retire');{$endif}
     { Publish effective tokens with the successfully staged native controls. }
 
     if FOwnTheme then
@@ -2358,6 +2415,10 @@ begin
     FRoot := LCandidate.FRoot;
     LCandidate.FRoot := nil;
     FDesignMode := ADesignMode;
+    FProjectionContext := LCandidate.FProjectionContext;
+    FProjectionSchemaRevision := LCandidate.FProjectionSchemaRevision;
+    FProjectionBaseline := LCandidate.FProjectionBaseline;
+    LCandidate.FProjectionBaseline := nil;
     FVirtualLayout := LCandidate.FVirtualLayout;
     FPanel := LCandidate.FPanel;
     LCandidate.FPanel := nil;
@@ -2379,6 +2440,7 @@ begin
     FEmitterScope.Activate(EmitNamed);
     FPanel.Visible := True;
     Resize(FPanel);
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('publish');{$endif}
     for LIndex := 0 to High(FBindings) do
     begin
 
@@ -2423,8 +2485,97 @@ begin
       end;
     end;
     FCaptureObserver.Activate(FEvents, CaptureChanged);
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('observe');{$endif}
   finally
-    LCandidate.Free;
+    try
+      LCandidate.Free;
+    finally
+      AHost.EnableAutoSizing;
+    end;
+  end;
+  {$ifdef NYX_STUDIO_PROFILE}RecordPhase('settle');{$endif}
+end;
+
+function TNyxLCLRenderer.TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
+  ADesignMode: Boolean): Boolean;
+var
+  LCandidate: TNyxNode;
+  LPrevious: TNyxNode;
+  LTheme: TNyxTheme;
+  LIndex: Integer;
+begin
+  FEvents.Scheduler.RequireUI;
+  Result := False;
+
+  if (FRoot = nil) or (FPanel = nil) or FUpdating or
+    (FDesignMode <> ADesignMode) or
+    (FProjectionSchemaRevision <> NyxSchemaRevision) then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if FBindings[LIndex].FCustom or (FactoryIndex(FBindings[LIndex].FNode) >= 0) then
+    begin
+      Exit;
+    end;
+  end;
+  { Validate fresh public data before comparing the immutable context. Retaining
+    controls never implies a stale document cache or skipped source admission. }
+  ValidateNyxDocumentProperties(ADocument);
+
+  if NyxProjectionContext(ADocument) <> FProjectionContext then
+  begin
+    Exit;
+  end;
+  LCandidate := nil;
+  LPrevious := nil;
+  LTheme := nil;
+  try
+
+    if FBorrowedTheme <> nil then
+    begin
+      LTheme := NewNyxDocumentTheme(ADocument, FBorrowedTheme);
+    end
+    else
+    begin
+      LTheme := NewNyxDocumentTheme(ADocument, FBaseTheme);
+    end;
+
+    if LTheme.CSS <> FTheme.CSS then
+    begin
+      Exit;
+    end;
+    LCandidate := RealizeNyxView(ADocument, ARoot);
+    ApplyNyxPlatform(LCandidate, npfNativeLCL);
+
+    if not CanRefreshNyxProjection(FRoot, LCandidate) or
+      not CanRefreshNyxProjection(FProjectionBaseline, LCandidate) or
+      (FProjectionSchemaRevision <> NyxSchemaRevision) then
+    begin
+      Exit;
+    end;
+    LPrevious := FRoot.Clone;
+    RefreshNyxProjectionProperties(FRoot, LCandidate, FProjectionBaseline);
+    try
+      Sync;
+    except
+      { No custom updater or ownership change entered this path. Restore model
+        properties before normal synchronization; retained callbacks still
+        refer to the same independently owned realized nodes and controls. }
+      RefreshNyxProjectionProperties(FRoot, LPrevious);
+      Sync;
+      raise;
+    end;
+    ReleaseNyxNode(FProjectionBaseline);
+    FProjectionBaseline := LCandidate;
+    LCandidate := nil;
+    Result := True;
+  finally
+    LTheme.Free;
+    ReleaseNyxNode(LPrevious);
+    ReleaseNyxNode(LCandidate);
   end;
 end;
 

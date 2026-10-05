@@ -3,6 +3,15 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Latest bounded source packet (2026-10-05): guarded retained projection preserves
+ordinary native controls, independent input and callback registrations; supported
+moved handwritten metadata retains exact execution order and compiled meaning.
+Original-size controls pass 101, detached checks 75 and actual projection 20,
+with zero leaks. Browser compilation retains its execution gate. Codegen
+criterion 3 remains open at count 20; release responsiveness and full both-target
+ordinary-editor qualification remain required. WORK.md owns the current packet
+and next action; the earlier evidence below retains its original scope.
+
 Current native editor candidate (2026-10-05): the runnable standalone controller
 consumes the shared Nyx shell/session/routers and paired local store. Actual
 Win32 authoring passes 74 checks with zero leaks; browser shared-shell regression
@@ -531,3 +540,16 @@ Current task and return path are maintained in [WORK.md](WORK.md).
   delivery 1 remain unchanged. Next profile UI publication/projection and resolve
   that concrete source-order failure without weakened admission or full-product
   credit. See [evidence](WORK.md#detached-designsource-commands--2026-10-05).
+
+- Guarded scalar projection now retains ordinary controls and independently
+  edited input through Studio refresh. Source-order reconciliation preserves
+  supported moved handwritten metadata, including repeated extension values and
+  exact compiled reconstruction. Current detached checks pass 75, actual native
+  projection 20, original-size controls 101 and Apply/Restore 39, with zero leaks.
+  The traced 2048-control completion improves from 98422 to 56234 ms; this accepts
+  no comfortable release latency. Browser consumers compile but remain execution
+  gated. Original codegen criterion 3 stays open at no-closure count 20; renderer
+  3, authoring 7 and delivery 1 remain unchanged. Next qualify the unchanged
+  original workloads in ordinary native builds to distinguish release editing
+  from heap-tracing overhead, preserving current ownership/source/history gates.
+  See [evidence](WORK.md#guarded-retained-projection-and-authored-ownership-ordering--2026-10-05).

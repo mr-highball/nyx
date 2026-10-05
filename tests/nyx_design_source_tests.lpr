@@ -41,7 +41,7 @@ begin
   Inc(GChecks);
 end;
 
-function Fixture(ACrafted: Boolean = True): TNyxProjectPair;
+function Fixture(ACrafted: Boolean = True; ARepeated: Boolean = False): TNyxProjectPair;
 var
   LDocument: TNyxDocument;
   LPage: INyxPage;
@@ -56,6 +56,11 @@ begin
     LPage.Add(NewNyxLabel('greeting').WithText('Hello'));
     LPage.Add(NewNyxMemo('notes').WithText('Notes'));
     LDocument.AddPage(LPage);
+
+    if ARepeated then
+    begin
+      LDocument.Find('greeting').Extensions.SetValue(NyxExtension('review'), NyxData('Last'));
+    end;
     LSource := TNyxCodegen.Generate(LDocument);
 
     if not ACrafted then
@@ -64,6 +69,18 @@ begin
     end;
     LSource := StringReplace(LSource, 'LGreetingLabel', 'LWelcomeCaption', [rfReplaceAll]);
     LSource := StringReplace(LSource, '''Hello''', '''Hel'' + ''lo''', [rfReplaceAll]);
+
+    if ARepeated then
+    begin
+      { Two supported extension slots set different values. Their order matters:
+        the second restores the admitted final value. Configure deliberately
+        remains one block per control. Perform ASCII fixture replacements BEFORE
+        adding its owned Unicode helper prefix. }
+      LSource := StringReplace(LSource, '''Last''', '''First''', []);
+      LSource := StringReplace(LSource, '    LNotesMemo :=',
+        '    LWelcomeCaption.Extensions.SetValue(NyxExtension(''review''), NyxData(''Last''));' + #10 + #10 +
+        '    LNotesMemo :=', []);
+    end;
     { Plain generation has no explicit workspace markers yet. Prefix comments
       are a real handwritten extension boundary; assemble exact owned text
       rather than replacing a marker that does not exist or passing Unicode
@@ -141,6 +158,7 @@ var
   LKind: TNyxText;
   LRefused: Boolean;
   LNoUndo: Boolean;
+  LVariant: Integer;
   LTransferred: TNyxDocument;
   LWorkspace: TNyxSourceWorkspace;
   LProperty: TNyxPropertyInfo;
@@ -168,7 +186,7 @@ begin
     Check(LReceived.Source = LPrepared.Source, 'Private reply retains the complete exact companion');
     Check(LSession.CompleteDesignRequest(LRequest, LReceived) = nscApplied,
       'Fresh paired publication admits the reconstructed worker result');
-    Check(LSession.Document.Find('greeting').Prop('text') = 'A new caption / 🌙',
+    Check(LSession.Document.Find('greeting').Prop('text') = TNyxText('A new caption / 🌙'),
       'Published document keeps exact supplementary text');
     Check((Pos('LWelcomeCaption', LSession.Source) > 0) and
       (Pos(TNyxText('Application helper remains handwritten / 🌙 / 漢字'), LSession.Source) > 0),
@@ -254,25 +272,58 @@ begin
       'Rejected visual command changes neither member of the pair');
     LPrepared := nil;
 
-    { Moving a deliberately authored Configure slot currently exceeds the
-      reconciler's supported structural merge. The worker must expose the same
-      refusal and retain BOTH accepted files/history; never publish malformed
-      Pascal just to finish a queued command. Ordinary generated moves below
-      retain their separate positive qualification. This gap belongs to the
-      original source-synchronization criterion. }
-    LSession.LoadProject(Fixture);
-    LSession.Select('greeting');
-    LBefore := LSession.ProjectSnapshot;
-    LEdit := Intent(LSession, sdaMove);
-    LEdit.Direction := nmdNext;
-    LRequest := LSession.PrepareDesignRequest(LEdit, LSchemas.Revision);
-    LPrepared := PrepareNyxStudioDesign(LRequest, LSchemas);
-    Check(LPrepared.Diagnostic.Defined and
-      (LSession.CompleteDesignRequest(LRequest, LPrepared) = nscRejected),
-      'Unsupported authored move is an explicit refusal, never a partial publication');
-    Check((LSession.Source = LBefore.Source) and (LSession.Save = LBefore.Design) and
-      not LSession.CanUndo, 'Refused authored move retains exact pair and history');
-    LPrepared := nil;
+    { A structural move must carry admitted authored configuration AFTER the
+      new ownership call. Multiple original slots retain their execution order;
+      comments, specialized names and unchanged expressions remain exact. }
+    for LVariant := 0 to 1 do
+    begin
+      LSession.LoadProject(Fixture(True, LVariant = 1));
+      LSession.Select('greeting');
+      LBefore := LSession.ProjectSnapshot;
+      LEdit := Intent(LSession, sdaMove);
+      LEdit.Direction := nmdNext;
+      LRequest := LSession.PrepareDesignRequest(LEdit, LSchemas.Revision);
+      LPrepared := PrepareNyxStudioDesign(LRequest, LSchemas);
+      Check(not LPrepared.Diagnostic.Defined,
+        'Authored move admits its reordered slots / ' + LPrepared.Diagnostic.Message);
+      LReceived := ReceiveNyxPreparedDesign(TNyxDataValue.ParseJSON(LPrepared.ToData.ToJSON),
+        LRequest, LSchemas);
+      Check(LSession.CompleteDesignRequest(LRequest, LReceived) = nscApplied,
+        'Authored move publishes its independently reconstructed exact pair');
+      Check((LSession.Document.Pages[0].Children[0].ID = 'notes') and
+        (LSession.Document.Pages[0].Children[1].ID = 'greeting') and
+        (LSession.Document.Find('greeting').Prop('text') = 'Hello'),
+        'Moved ownership and ordered configuration preserve exact final meaning');
+
+      if LVariant = 1 then
+      begin
+        Check(LSession.Document.Find('greeting').Extensions.Value(NyxExtension('review')).AsText = 'Last',
+          'Relocated supported extension slots retain their authored execution order');
+      end;
+      Check((Pos('LWelcomeCaption', LSession.Source) > 0) and
+        (Pos('''Hel'' + ''lo''', LSession.Source) > 0) and
+        (Pos(TNyxText('Application helper remains handwritten / 🌙 / 漢字'),
+          LSession.Source) > 0), 'Authored move preserves local, expression and Unicode helper');
+      LAfter := LSession.ProjectSnapshot;
+      {$ifndef PAS2JS}ExportPair(LAfter);{$endif}
+      LSession.Undo;
+      Check((LSession.Source = LBefore.Source) and (LSession.Save = LBefore.Design) and
+        not LSession.CanUndo, 'One Undo restores the exact original authored move pair');
+      LSession.Redo;
+      Check((LSession.Source = LAfter.Source) and (LSession.Save = LAfter.Design),
+        'Authored move Redo restores the exact admitted pair');
+      LPrepared := nil;
+      LReceived := nil;
+      LEdit.Direction := nmdPrevious;
+      LRequest := LSession.PrepareDesignRequest(LEdit, LSchemas.Revision);
+      LPrepared := PrepareNyxStudioDesign(LRequest, LSchemas);
+      Check(not LPrepared.Diagnostic.Defined and
+        (LSession.CompleteDesignRequest(LRequest, LPrepared) = nscApplied) and
+        (LSession.Document.Pages[0].Children[0].ID = 'greeting') and
+        (LSession.Document.Find('greeting').Prop('text') = 'Hello'),
+        'Reverse authored move keeps its specialized configuration and final value');
+      LPrepared := nil;
+    end;
 
     { Every structural command uses its existing session implementation.
       Runtime selection results and paired history are qualified independently. }
@@ -283,7 +334,7 @@ begin
       begin
         Continue;
       end;
-      LSession.LoadProject(Fixture(LAction <> sdaMove));
+      LSession.LoadProject(Fixture);
       LSession.Select('greeting');
       LEdit := Intent(LSession, LAction);
 
@@ -340,7 +391,7 @@ begin
     LRequest := LSession.PrepareDesignRequest(
       Intent(LSession, sdaTitle, '', 'Candidate before typing'), LSchemas.Revision);
     LPrepared := PrepareNyxStudioDesign(LRequest, LSchemas);
-    LSession.SetSourceDraft(LSession.Source + #10 + '// Fresh application typing / 🌙');
+    LSession.SetSourceDraft(LSession.Source + TNyxText(#10 + '// Fresh application typing / 🌙'));
     LAfter := LSession.ProjectSnapshot;
     Check((LSession.CompleteDesignRequest(LRequest, LPrepared) = nscStale) and
       (LSession.DraftSource = LAfter.Draft),

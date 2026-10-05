@@ -1449,6 +1449,20 @@ var
   LCanvasFocus: Boolean;
   LSameView: Boolean;
   LChromeID: TNyxText;
+  {$ifdef NYX_STUDIO_PROFILE}
+  LPhaseStarted: QWord;
+
+  procedure RecordPhase(const AName: TNyxText);
+  var
+    LNow: QWord;
+  begin
+    { Opt-in UI-thread evidence only. Emit static phase names and elapsed
+      milliseconds; production contains no clock/output or authored values. }
+    LNow := GetTickCount64;
+    WriteLn('studio-ui,', AName, ',', LNow - LPhaseStarted);
+    LPhaseStarted := LNow;
+  end;
+  {$endif}
 
   function EditingChromeIdentity(ANode: TNyxNode): TNyxText;
   var
@@ -1483,6 +1497,7 @@ begin
   end;
   FPainting := True;
   LShell := nil;
+  {$ifdef NYX_STUDIO_PROFILE}LPhaseStarted := GetTickCount64;{$endif}
   try
     CapturePresentation;
     LFocus := Screen.ActiveControl;
@@ -1519,9 +1534,14 @@ begin
       LOldCodeHost := FCodeView.ControlFor('studio-code').Parent.Parent;
       FCodeView.MoveHost(FCodeParking);
     end;
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-park');{$endif}
     LShell := ComposeShell;
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-compose');{$endif}
     try
-      FShellView.Render(LShell, LShell.Pages[0], FHost);
+      if not FShellView.TryRefresh(LShell, LShell.Pages[0], False) then
+      begin
+        FShellView.Render(LShell, LShell.Pages[0], FHost);
+      end;
     except
       { Candidate shell admission retains old chrome. Put its borrowed views
         back before surfacing the refusal; do not leave accepted inputs parked. }
@@ -1537,6 +1557,7 @@ begin
       end;
       raise;
     end;
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-shell-render');{$endif}
     FShell.Free;
     FShell := LShell;
     LShell := nil;
@@ -1558,9 +1579,15 @@ begin
     if (LCanvasHost <> nil) and (FSession.ActiveView <> nil) then
     begin
 
-      if (FCanvasView.Root <> nil) and LSameView and not FReplaceCanvas then
+      if (FCanvasView.Root <> nil) and LSameView then
       begin
         FCanvasView.MoveHost(LCanvasHost);
+
+        if FReplaceCanvas and
+          not FCanvasView.TryRefresh(FSession.Document, FSession.ActiveView, not FPreview) then
+        begin
+          FCanvasView.Render(FSession.Document, FSession.ActiveView, LCanvasHost, not FPreview);
+        end;
       end
       else
       begin
@@ -1575,6 +1602,7 @@ begin
         that stale controls represent the accepted document on the next switch. }
       FCanvasView.Unmount;
     end;
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-canvas');{$endif}
 
     if LCanvasFocus and (LCanvasHost <> nil) and LFocus.CanFocus then
     begin
@@ -1625,6 +1653,7 @@ begin
     end;
     FSourceLine := 0;
     FSourceColumn := 0;
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-source');{$endif}
     { Chrome is independently regenerated while a worker prepares edits. Restore
       the same inspector/title field by identity and Unicode selection, never
       retain its destroyed widget pointer across shell replacement. Pending
@@ -1648,6 +1677,7 @@ begin
     RestoreProjectControls;
     FChangingProject := False;
     Inc(FPaintCount);
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-finish');{$endif}
   finally
     LShell.Free;
     FPainting := False;

@@ -290,7 +290,8 @@ try {
       $nyxDesignPair = Join-Path $nyxDesignArtifacts 'pair'
       $nyxDesignBrowser = Join-Path $nyxDesignArtifacts 'browser'
       New-Item -ItemType Directory -Force $nyxDesignPair, $nyxDesignBrowser | Out-Null
-      foreach ($nyxDesignProgram in @('nyx_design_source_tests', 'nyx_design_queue_tests', 'nyx_design_source_controls')) {
+      foreach ($nyxDesignProgram in @('nyx_design_source_tests', 'nyx_design_queue_tests',
+          'nyx_projection_refresh_tests', 'nyx_design_source_controls')) {
         Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @("tests/$nyxDesignProgram.lpr"))
       }
       & (Join-Path $nyxStudioNative 'nyx_design_source_tests.exe') $nyxDesignPair
@@ -299,6 +300,9 @@ try {
       & (Join-Path $nyxStudioNative 'nyx_design_queue_tests.exe')
 
       if ($LASTEXITCODE -ne 0) { throw 'Native queued intent/load/presentation qualification failed' }
+      & (Join-Path $nyxStudioNative 'nyx_projection_refresh_tests.exe')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Actual retained native projection qualification failed' }
       Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @("-Fu$nyxDesignPair",
         'tests/nyx_design_source_consumer.lpr'))
       & (Join-Path $nyxStudioNative 'nyx_design_source_consumer.exe') (Join-Path $nyxDesignPair 'expected.nyx')
@@ -306,7 +310,8 @@ try {
       if ($LASTEXITCODE -ne 0) { throw 'Exact compiled design/source consumer failed' }
       $nyxDesignPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
       $nyxDesignRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
-      foreach ($nyxDesignProgram in @('tests/nyx_design_source_tests.lpr', 'studio/nyx_studio.lpr')) {
+      foreach ($nyxDesignProgram in @('tests/nyx_design_source_tests.lpr',
+          'tests/nyx_projection_refresh_tests.lpr', 'studio/nyx_studio.lpr')) {
         Invoke-NyxCompiler $nyxDesignPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
           '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxDesignBrowser", $nyxDesignProgram)
       }

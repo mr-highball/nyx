@@ -128,11 +128,15 @@ and common structural intent through independent session replay, bounded FIFO
 and adjacent field coalescing. Exact load/content/draft/creator guards publish
 one paired Undo step, retain independent navigation and refuse retired intents
 even when a new project has matching IDs. Current native queue checks pass 10,
-original-size controls 95 and the full English editor 74, with zero leaks.
-Detached source checks pass 62 and an exact admitted companion compiles and
+original-size controls 101 and the full English editor 74, with zero leaks.
+Detached source checks pass 75 and an exact admitted companion compiles and
 reconstructs its design. Browser Studio/worker compile but remain unexecuted.
-Fresh UI publication/projection is still expensive; deliberately authored
-Configure moves can fail source-order admission. Comfortable editing, complete
+The following guarded retained-projection packet preserves existing native
+controls, independent drafts/caret and callbacks across compatible scalar
+updates. Supported moved handwritten metadata now follows exact ownership,
+retaining later extension values and compiled design meaning. Fresh admission
+remains required; structure/style/context/custom factories still request full
+projection. Comfortable editing, complete
 structural synchronization and wider widget metrics remain open; WORK.md owns
 the original acceptance gates, measurements and preserved failures.
 The preceding designer prerequisite retains its 34 native / 32 desktop / 33

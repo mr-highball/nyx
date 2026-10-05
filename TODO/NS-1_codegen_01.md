@@ -763,3 +763,32 @@ original-size controls, complete fresh admission, crafted source, input, drafts
 and exact paired history. Accepted trees must stay off workers. No isolated
 lookup variant, counter/scope reset, weakened parity, DONE move or full-goal
 completion substitutes the remaining criterion.
+
+## Guarded projection and authored move ordering — 2026-10-05
+
+The shared refresh boundary independently realizes and validates current data,
+requiring exact identity, structure, creator generation, document context and
+effective theme. Compatible scalar updates preserve actual native controls,
+callbacks, independently edited input and caret. An independent authored baseline
+applies only changed defaults. Structure/style/context changes, scalar bindings
+and custom factories retain full staged rendering. Source metadata displaced by
+an ownership move is inserted immediately after its new admission call, before
+later metadata; supported repeated extension values keep execution order.
+
+Detached checks pass 75, actual native projection 20, original 128/512/2048-control
+journeys 101 and Apply/Restore 39, with zero leaks. An exact moved companion
+compiles and reconstructs its full design. Browser Studio/worker/shared consumers
+compile; actual execution remains gated. The original sizes and exact source
+byte counts are unchanged. Checked/heap-traced completion improves from
+98422 to 56234 ms at 2048 controls; it does not establish comfortable editing.
+
+Criteria 1/2 stay accepted; criterion 3 remains open. Its no-closure count advances
+19→20; renderer 3, authoring 7 and delivery 1 remain unchanged. This is bounded
+progress, with no task closure or full-product credit. WORK.md owns exact current
+artifacts, retained failures, deployment limits and private remote checkpoints.
+Next qualify the same native workloads with ordinary application build settings,
+separate from the checked ownership suite, to assess real editing costs before
+choosing another optimization. Preserve complete fresh admission, exact authored
+meaning, current source/history, input and worker ownership. General canvas/state/
+binding/event routes and both-target ordinary-editor outcomes remain required;
+no scope/count reset or weakened parity gate substitutes them.

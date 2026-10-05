@@ -7,28 +7,31 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest bounded source packet: [detached design/source commands](#detached-designsource-commands--2026-10-05)
-adds immutable queued intent, isolated replay, exact paired publication and
-session/load/creator/draft guards. Portable checks pass 62, real native queue
-failure/load/save checks 10, original 128/512/2048 controls 95 and the complete
-English native editor 74, with zero leaks. Native Apply/Restore retains 39.
-The exact admitted companion also compiles and reconstructs its full design.
-Browser Studio/worker/shared consumers compile; execution retains the host gate.
-English presentation stays separate from technical Unicode inputs. Criterion 3
-remains open at no-closure count 19; native renderer's 3, authoring's 7 and
-delivery's 1 remain unchanged. This accepts no full criterion or comfortable
-editing. The preceding viewport checkpoint retains its accepted bounded evidence.
+Latest bounded source packet: [guarded retained projection and authored ordering](#guarded-retained-projection-and-authored-ownership-ordering--2026-10-05)
+consumes the detached worker boundary without replacing compatible native
+controls or independent input. Supported moved handwritten metadata retains
+exact execution order, source and compiled design meaning. Detached checks pass
+75, actual native projection 20, queue/load/save 10, original 128/512/2048 controls
+101, Apply/Restore 39 and the full English native editor 74, with zero leaks.
+Browser Studio/worker/shared consumers
+compile; execution retains the host gate. English starters/review captures stay
+separate from technical Unicode fixtures. Criterion 3 remains open at no-closure
+count 20; renderer 3, authoring 7 and delivery 1 remain unchanged. This accepts no
+full criterion or comfortable editing. Earlier bounded evidence remains scoped.
 
-Reassessment follows concrete remaining failures under original codegen criterion
-3: fresh UI publication/projection is still expensive, and moved deliberately
-authored Configure slots can fail ownership ordering. Next consume the reliable
-worker boundary through guarded retained projection and supported structural
-source ordering, preserving the original-size descendants, crafted text, drafts,
-input and exact paired history. Profile the actual UI stage before changing it;
-do not weaken fresh admission or move accepted trees onto workers.
-Browser Apply/worker and observing editor acceptance still need a permitted host
-without an equivalent refused launch. No further lookup experiment, scope/count
-reset, weakened parity/DONE gate or full-goal completion substitutes these checks.
+The integrated packet resolves its concrete moved-metadata failure and reduces
+traced native completion, preserving all original descendants/source sizes,
+comments/expressions, drafts, focus/caret and paired Undo/Redo. The measured
+2048-control completion is still 56234 ms under checks/heap tracing. Next qualify
+the same original workloads with ordinary application build settings, separately
+from checked ownership evidence, before choosing another optimization. Budget
+one integrated actual-control/reconstruction packet; preserve complete fresh
+admission, exact source/history and accepted-tree worker separation. Stop or
+switch on lost/reordered input, stale meaning, weakened admission or unsafe
+ownership. General canvas/state/binding/event routes retain their original
+owners. Browser Apply/worker and observing acceptance still need a permitted host
+without an equivalent refused launch. No scope/count reset, lookup experiment,
+weakened parity/DONE gate or full-goal completion substitutes those outcomes.
 
 Completed bounded packet under original codegen criterion 3 extends the existing
 isolated source-command processor to ordinary visual property and structural
@@ -5869,3 +5872,119 @@ handoff head separately from this product checkpoint. Logs, captures and local
 toolchain/configuration stay ignored. This remote checkpoint changes no live
 service, active user pair or acceptance gate; the next UI-stage/source-order
 action remains above.
+
+## Guarded retained projection and authored ownership ordering — 2026-10-05
+
+This integrated packet follows original codegen criterion 3. Opt-in native
+`NYX_STUDIO_PROFILE` isolates UI composition, mounting, layout, retirement and
+publication without authored values or production instrumentation. In the
+unchanged 128-control checked/heap-traced probe, repeated shell mounting takes
+about 4.7 seconds; guarded reuse takes roughly 0.4 seconds. The probe diagnoses
+one original size and never substitutes the full three-size qualification.
+Native staging now balances LCL's host sizing lock through success/factory
+failure; retirement disconnects resize before destroying bindings. Installed
+LCL behavior was inspected read-only; no dependency source was changed.
+
+`nyx.projection.refresh` owns no document, node or target handle. Both renderers
+validate fresh public data/context, independently realize/platform-apply the
+requested view and compare ordered identities, metadata, creator generation and
+effective theme. Reuse permits only the closed scalar presentation attributes;
+structural/style/context changes, custom factories and scalar live-binding
+coordinators request the full staged mount. An independent last-authored
+projection applies only authored deltas, retaining runtime-edited values for
+unchanged defaults. Renderer-owned rollback properties and existing Sync retain
+event scopes/control identities. These bounded checks do not qualify every
+component, injected Sync failure or assistive-technology behavior. Studio
+consumes the public contract; its always-present public status label changes
+visibility/text instead of inserting a child at preparation.
+
+Source reconciliation indexes exact moved ownership semicolons, then places
+displaced handwritten metadata immediately after that admission call, before
+later statements. Surrounding comments, crafted names, unchanged expressions
+and supported repeated extension values retain order. Complete reconstruction
+still validates constructors, ownership, types and exact meaning; the lexical
+placement index is not source admission or a shared mutable cache. Tests cover
+both move directions, positive exact paired Undo/Redo and compiler execution.
+The supported one-Configure-block grammar was not weakened.
+
+Current ignored qualification artifacts:
+
+- `build/ui-projection/maintained-run.log` runs the maintained native command
+  with `-VerifyDesignSource -VerifySourceScheduling -VerifyNativeStudio` and the
+  existing exact English semantic export. It passes detached **75**, real
+  scheduler queue/load/presentation **10**, actual retained controls **20**, exact
+  compiled companion, original-size controls **101**, Apply/Restore **39** and
+  full English standalone editor **74**.
+  These consumers report zero unfreed blocks; the large control run reports
+  **210974972** allocations/frees. It retains every descendant, exact source byte
+  sizes, handwritten content, pending input/caret, independent source control,
+  actual inspector/canvas identity, complete logical extents and paired history.
+  The full editor consumer reports **129361097** allocations/frees and zero
+  leaks, including page/reusable operations, source/drafts/caret, optional outputs,
+  ordered callbacks, warned removal/history and paired saved-file conflicts.
+- `build/ui-projection/portable-regressions/` passes core **30**, composition/
+  designer **1769** and structural source **84**, with zero leaks. These are
+  current portable regressions, not additional UI/parity acceptance.
+- `final-source/` and `final-lcl-source/` under `build/ui-projection/` rerun
+  detached **75** on stable FPC and the native Studio compiler after explicit
+  `TNyxText` casts remove three fixture conversion warnings. Both have zero
+  warnings/leaks. Their exported pair equals the maintained compiled pair;
+  stable FPC reports **14479111** allocations/frees and the Studio compiler
+  **12543178**. The exact maintained companion execution reports **779**.
+- `build/design-source/maintained/browser/` compiles current browser Studio,
+  the separate Pascal worker and shared/actual-control consumers, staging the
+  matched RTL. `build/ui-projection/final-browser-source/` rebuilds the final
+  typed source fixture. Each has zero owned warnings; each browser compilation
+  retains seven installed Classes RTL warnings. No browser execution, new
+  listener, deployment, physical-device or full-parity claim follows compilation.
+- `build/design-source/maintained/controls/` contains inspected desktop/390
+  native captures with English review text. Dedicated supplementary/CJK inputs
+  remain in technical source/codec qualification, separate from visible demos.
+
+| Original controls | Exact source bytes | Three input submissions, ms | Completion, ms | Busy timer ticks |
+| --- | --- | --- | --- | --- |
+| 128 | 25094 | 1141 | 3969 | 2 |
+| 512 | 98822 | 1985 | 10921 | 2 |
+| 2048 | 400022 | 2203 | 56234 | 3 |
+
+These are the same original checked/heap-traced concurrent-host workloads.
+Earlier completion was 16594/25563/98422 ms. Current reduction does not establish
+comfortable release typing/painting, network latency or another widgetset.
+No smaller fixture, truncated hierarchy, dimension clamp or weakened admission
+was substituted. Next qualify the unchanged workloads under ordinary native
+application build settings, separate from current checked ownership evidence,
+before choosing another optimization. Budget one actual-control/reconstruction
+packet and stop on stale meaning, dropped/reordered input, weakened admission,
+accepted-tree worker access or unsafe lifetime.
+
+Preserved failures under `build/ui-projection/`: `profile-before/failed-argument-run.log`
+records the original single-argument fixture gate, now expanded only for optional
+diagnostic selection; all-size qualification remains default. The earlier
+`source-order/failed-repeated-configure-run.log` used an unsupported repeated
+Configure fixture; correction uses supported repeated Extensions, retaining
+later final values instead of widening grammar. `controls/failed-withvalue-build.log`
+records a nonexistent convenience method corrected to the existing fluent
+Configure.Value contract. `failed-initial-status-shape-run.log` catches genuine
+inspector replacement when status inserted a new child, with zero leaks. The
+stable public status control resolves that actual identity failure; identity
+assertions were retained. The initial `retained/` probe predates final authored
+baseline/status refinements and is not the final acceptance run.
+
+Criteria 1/2 stay accepted; original criterion 3 stays open at no-closure count
+**19→20**. Renderer **3**, authoring **7** and delivery **1** remain unchanged.
+Canvas/state/binding/event routes, broader handwritten synchronization, ordinary
+browser/observing editor outcomes and full-product depth retain their existing
+owners. No task/DONE move, counter/scope reset or blanket performance/parity
+acceptance is earned. The unbounded original goal remains active and incomplete.
+
+Connected semantic MCP read the bounded current session at revision **6**, home
+selection/view, one page/component, no pending draft, empty Undo and existing
+Redo, activity sequence **181**. Bounded node reads confirm English starter
+heading/description, badge and code-block caption at that same revision. All
+eight protected process identities match the prior checkpoint. No active
+pair/history mutation, application profile,
+enrollment, server replacement or equivalent refused launch occurred. Browser
+execution retains the earlier automatic approval rejection of qualification
+listeners; its stated reason was only “blocked by policy”. Source progress and
+the private remote proof will be recorded after the final editor regression and
+authorized branch push.
