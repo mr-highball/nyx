@@ -85,6 +85,8 @@ type
     function Imports(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
     { Bounded helper discovery/text and guarded grouped implementation editing. }
     function Routines(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
+    { Exact interface counterpart context and one grouped declaration edit. }
+    function Declarations(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
     function EditCallbacks(const AArguments: TNyxDataValue;
       const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
     function RemoveRoots(const AArguments: TNyxDataValue;
@@ -154,7 +156,7 @@ uses
   nyx.studio.handleredits, nyx.studio.stateedits, nyx.state, nyx.binding,
   nyx.binding.types, nyx.contract, nyx.collections, nyx.collections.view.types,
   nyx.collections.selection, nyx.studio.collectionedits, nyx.studio.importedits,
-  nyx.studio.routineedits;
+  nyx.studio.routineedits, nyx.studio.declarationedits;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
 var
@@ -1403,6 +1405,75 @@ begin
     NyxField('pendingDraft', NyxData(FSession.DraftSource <> FSession.Source))]);
 end;
 
+function TNyxAgentSession.Declarations(const AArguments: TNyxDataValue;
+  AApply: Boolean): TNyxDataValue;
+var
+  LPatch: INyxDeclarationPatch;
+  LPair: TNyxProjectPair;
+  LSite: TNyxRoutineDeclarationSource;
+  LReference: TNyxRoutineRef;
+  LOffset: Integer;
+  LCount: Integer;
+  LTotal: Integer;
+  LText: TNyxText;
+  LVisibility: TNyxText;
+  LPart: TNyxDeclarationPart;
+  LPartName: TNyxText;
+begin
+
+  if AApply then
+  begin
+    NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|changes|');
+    RequireRevision(AArguments);
+    LPatch := ReadNyxDeclarationPatch(AArguments.Field('changes'));
+    LPair := LPatch.Candidate(FSession.ProjectSnapshot);
+    Result := NyxObject([NyxField('changes', NyxData(LPatch.Count))]);
+    BoundContext(WithResults(Summary, Result, 'declarations', True));
+    FSession.AdoptProject(LPair);
+    Exit;
+  end;
+  NyxAgentFields(AArguments, '|mode|routine|part|offset|count|');
+  LPart := dspInterface;
+  LPartName := 'interface';
+
+  if NyxAgentHas(AArguments, 'part') then
+  begin
+    LPartName := AArguments.Field('part').AsText;
+
+    if LPartName = 'implementation' then
+    begin
+      LPart := dspImplementation;
+    end
+    else if LPartName <> 'interface' then
+    begin
+      raise ENyxModel.Create('Declaration part must be interface or implementation');
+    end;
+  end;
+  LReference := NyxRoutine(AArguments.Field('routine').AsText);
+  LSite := ReadNyxRoutineDeclaration(FSession.Source, LReference);
+  LOffset := IntegerArgument(AArguments, 'offset', 0, 0, 4 * 1024 * 1024);
+  LCount := IntegerArgument(AArguments, 'count', 2048, 1, 4096);
+  LText := TextSpan(LSite.Text(LPart), LOffset, LCount, LTotal);
+
+  if LOffset > LTotal then
+  begin
+    raise ENyxModel.Create('Declaration offset exceeds its exact accepted counterpart');
+  end;
+  LVisibility := 'implementation';
+
+  if LSite.Visibility = rvInterface then
+  begin
+    LVisibility := 'interface';
+  end;
+  Result := NyxObject([
+    NyxField('revision', NyxData(FRevision)), NyxField('routine', NyxData(LReference.Name)),
+    NyxField('visibility', NyxData(LVisibility)), NyxField('part', NyxData(LPartName)),
+    NyxField('line', NyxData(LSite.SourceLine(LPart))),
+    NyxField('offset', NyxData(LOffset)), NyxField('total', NyxData(LTotal)),
+    NyxField('nextOffset', NyxData(Min(LOffset + LCount, LTotal))), NyxField('text', NyxData(LText)),
+    NyxField('pendingDraft', NyxData(FSession.DraftSource <> FSession.Source))]);
+end;
+
 {$I nyx.studio.agents.state.inc}
 {$I nyx.studio.agents.collections.inc}
 
@@ -1424,6 +1495,8 @@ var
   LImportResults: TNyxDataValue;
   LRoutineApply: Boolean;
   LRoutineResults: TNyxDataValue;
+  LDeclarationApply: Boolean;
+  LDeclarationResults: TNyxDataValue;
   LRootApply: Boolean;
   LRootResults: TNyxDataValue;
   LStateApply: Boolean;
@@ -1446,6 +1519,8 @@ begin
   LImportResults := NyxNull;
   LRoutineApply := False;
   LRoutineResults := NyxNull;
+  LDeclarationApply := False;
+  LDeclarationResults := NyxNull;
   LRootApply := False;
   LRootResults := NyxNull;
   LStateApply := False;
@@ -1470,6 +1545,7 @@ begin
       LHandlerApply := TextArgument(AArguments, 'mode') = 'apply';
       LImportApply := TextArgument(AArguments, 'mode') = 'edit-imports';
       LRoutineApply := TextArgument(AArguments, 'mode') = 'edit-routines';
+      LDeclarationApply := TextArgument(AArguments, 'mode') = 'edit-declarations';
     end;
     if ATool = 'nyx_roots' then
     begin
@@ -1487,7 +1563,7 @@ begin
     end;
     LMutation := (ATool = 'nyx_transaction') or (ATool = 'nyx_select') or
       (ATool = 'nyx_history') or LCallbackApply or LHandlerApply or LRootApply or
-      LStateApply or LCollectionApply or LImportApply or LRoutineApply;
+      LStateApply or LCollectionApply or LImportApply or LRoutineApply or LDeclarationApply;
 
     if LMutation and (FPermission <> apEdit) then
     begin
@@ -1583,7 +1659,12 @@ begin
     else if ATool = 'nyx_pascal' then
     begin
 
-      if LRoutineApply or (TextArgument(AArguments, 'mode') = 'routines') or
+      if LDeclarationApply or (TextArgument(AArguments, 'mode') = 'declaration') then
+      begin
+        Result := Declarations(AArguments, LDeclarationApply);
+        LDeclarationResults := Result;
+      end
+      else if LRoutineApply or (TextArgument(AArguments, 'mode') = 'routines') or
         (TextArgument(AArguments, 'mode') = 'routine') then
       begin
         Result := Routines(AArguments, LRoutineApply);
@@ -1695,6 +1776,11 @@ begin
       if LRoutineApply then
       begin
         Result := WithResults(Result, LRoutineResults, 'routines');
+      end;
+
+      if LDeclarationApply then
+      begin
+        Result := WithResults(Result, LDeclarationResults, 'declarations');
       end;
 
       if LRootApply then

@@ -81,7 +81,8 @@ From the repository, run:
 
 Individual build targets are `core`, `generated`, `collections`, `collection-views`,
 `collection-authoring`, `collection-inspectors`, `collection-bindings`,
-`source-workspace`, `pascal-imports`, `pascal-routines`, `agents`, `state-bindings`, `split`, `interactions`,
+`source-workspace`, `pascal-imports`, `pascal-routines`, `pascal-declarations`,
+`agents`, `state-bindings`, `split`, `interactions`,
 `named-events`, `viewport`, `catalog`, `browser`, `studio`, `lcl`, `http`,
 `visual` and `all`.
 The native unit cache includes compiler version and CPU/OS. LCL and pas2js
@@ -745,3 +746,24 @@ Current browser execution and updated authenticated observation keep their
 recorded host gate. General declaration/class/full-unit authoring and complete
 source synchronization retain original acceptance requirements.
 See [evidence](../WORK.md#semantic-pascal-helpers--2026-10-05).
+
+## Semantic helper declaration qualification
+
+```powershell
+./tools/build.ps1 -Target pascal-declarations
+```
+
+The maintained command executes native lexical/semantic checks, actual offline
+MCP discovery and an unchanged emitted companion with mounted Win32 memo input.
+One semantic group creates private/public helpers, updates a retained class
+method and removes an obsolete public helper. Actual compilation/execution
+qualifies the new six-character policy and English caption; dedicated Unicode
+input verifies scalar limits and exact rejected-value retention.
+
+Native/export/LCL/browser artifacts live under `build/pascal-declarations/`;
+`-BrowserOutput` chooses separate staging. Matching pas2js consumers, RTL and
+three English hosts are staged. No listener, deployment, configuration refresh
+or active-project edit occurs. Browser runtime/updated authenticated observation,
+wider signature/class/full-unit authoring and full source synchronization retain
+their existing gates. External callers/type correctness need ordinary compiler
+diagnostics. See [evidence](../WORK.md#semantic-helper-declarations--2026-10-05).

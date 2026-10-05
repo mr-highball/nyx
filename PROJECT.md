@@ -248,6 +248,18 @@ updated observation keep their gate. Helper creation/removal and signature/class
 full-unit authoring, richer reusable semantics and full editor quality remain
 open; [WORK.md](WORK.md#semantic-pascal-helpers--2026-10-05) owns exact evidence.
 
+Unit-helper creation/removal now share that same semantic boundary, with exact
+interface/implementation signature windows and ordered create/edit/remove groups.
+Typed kind/visibility and immutable declarations preserve existing class signatures,
+callbacks and managed views. Retained possible identifier/directive references
+block removal; broader type/external-caller resolution stays with the compiler.
+Both native compilers pass 16 lexical/36 semantic checks; actual discovery passes
+46 and unchanged compiled native memo input nine, with zero owned warnings/leaks.
+Existing routine/callback regressions pass 31/72. Browser consumers/Studio/worker
+compile; current browser execution and updated authenticated observation remain
+unqualified at the existing gate. Signature/class/full-unit authoring and complete
+editor quality remain open; WORK.md records evidence and the next deliverable.
+
 The warning-cleanup packet now reports zero owned warnings on the qualified
 native/LCL/pas2js builds and current MCP application jobs. Shared execution,
 actual layout controls and Studio resize/split checks pass. Seven installed

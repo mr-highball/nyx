@@ -20,7 +20,7 @@
   SOFTWARE.
 }
 
-program nyx_routine_schema;
+program nyx_declaration_schema;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
@@ -93,7 +93,29 @@ begin
       (LChange.Field('properties').Field('expected').Field('maxLength').AsInteger = 32768) and
       (LChange.Field('properties').Field('implementation').Field('maxLength').AsInteger = 32768),
       'Exact expected and proposed text have declared per-field budgets');
-    WriteLn('PASS ', LChecks, ' actual Pascal routine discovery checks');
+
+    LMode := LModes.Item(7).Field('properties');
+    Check((LMode.Field('mode').Field('const').AsText = 'declaration') and
+      (LMode.Field('count').Field('maximum').AsInteger = 4096), 'Bounded exact counterpart query');
+    Check(LMode.Field('part').Field('enum').Count = 2, 'Signature counterpart is a closed choice');
+    LMode := LModes.Item(8).Field('properties');
+    Check(LMode.Field('mode').Field('const').AsText = 'edit-declarations', 'Grouped declaration authoring');
+    LChange := LMode.Field('changes');
+    Check((LChange.Field('maxItems').AsInteger = 16) and
+      (LChange.Field('items').Field('oneOf').Count = 3), 'Sixteen typed create/edit/remove operations');
+    for LIndex := 0 to 2 do
+    begin
+      LMode := LChange.Field('items').Field('oneOf').Item(LIndex);
+      Check(not LMode.Field('additionalProperties').AsBoolean and
+        not NyxAgentHas(LMode.Field('properties'), 'workspace') and
+        not NyxAgentHas(LMode.Field('properties'), 'review'), 'Action-specific strict nested schema');
+    end;
+    LMode := LChange.Field('items').Field('oneOf').Item(0).Field('properties');
+    Check((LMode.Field('kind').Field('enum').Count = 2) and
+      (LMode.Field('visibility').Field('enum').Count = 2), 'Creation choices are closed Pascal domains');
+    LMode := LChange.Field('items').Field('oneOf').Item(2);
+    Check(LMode.Field('required').Count = 5, 'Removal acknowledges both exact source counterparts');
+    WriteLn('PASS ', LChecks, ' actual Pascal declaration discovery checks');
   except
     on LException: Exception do
     begin

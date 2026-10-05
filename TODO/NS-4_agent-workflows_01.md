@@ -53,7 +53,8 @@ create/update/move/delete/title/tokens. Callback authoring now has a focused too
 immutable build requests and bounded status are now qualified. Local callback
 implementation editing now has a focused bounded tool. General
 helper implementation editing now has the bounded source packet below; helper
-creation/removal and signature/class/full-unit editing remain absent. Unconditional import commands now
+creation/removal now have the source packet below, while signature/class/full-unit
+editing remains absent. Unconditional import commands now
 have the source qualification packet below. Scalar state/binding commands have a
 source/staged qualification packet below; richer reusable workflows remain
 required, while structured collection authoring has its staged packet below. Root
@@ -474,3 +475,35 @@ source authoring. Root ordering, richer reusable workflows, review lifecycle,
 updated observing deployment and complete presentation/accessibility/performance
 remain open with their original owners.
 See [evidence](../WORK.md#semantic-pascal-helpers--2026-10-05).
+
+## Semantic helper declarations — 2026-10-05
+
+Criterion 5 now has bounded exact interface/implementation signature windows and
+immutable typed ordered create/edit/remove groups through `nyx_pascal`. Public
+unit helpers acquire both counterparts; private helpers acquire implementation
+only. Existing qualified method bodies remain editable while class signatures,
+callbacks and managed views stay protected. Exact removal acknowledgement and
+retained possible identifier references, including compiler directives, guard
+ownership. Conditional/overload ambiguity, stale authority, pending drafts and
+late group failures refuse without publication. One independently admitted
+source/design pair publishes as one paired Undo step. External callers and type
+correctness still require ordinary compiler diagnostics.
+
+Both native compilers pass 16 lexical/36 semantic checks. Final actual offline
+nineteen-tool/nine-mode discovery passes 46; the unchanged emitted companion
+passes nine actual Win32 memo checks, including its compiled six-character
+policy and exact Unicode rejection. Existing routine/callback regressions pass
+31/72, with zero owned warnings/leaks. The maintained `pascal-declarations`
+command executes; browser consumers/Studio/module worker compile, with updated
+authenticated observation and browser execution still at their host gate.
+
+No full criterion closes: no-closure advances **6→7** once; codegen **26**,
+renderer **3**, native authoring **7** and delivery **1** remain unchanged.
+Reassessment ends declaration/schema/fixture expansion. Next deliver guarded
+paired routine signature authoring, preserving parameter/result counterparts,
+retained callers and ordinary compiler diagnostics through the same owned
+boundary. Class/full-unit authoring, richer reusable semantics, root ordering,
+review lifecycle and complete presentation/accessibility/performance retain
+their original owners and acceptance gates. Do not substitute unit-helper-only
+completion for the full general-source outcome.
+See [evidence](../WORK.md#semantic-helper-declarations--2026-10-05).

@@ -49,6 +49,50 @@ type
     property Name: TNyxText read FName;
   end;
   TNyxRoutineKind = (nrProcedure, nrFunction, nrConstructor, nrDestructor);
+  { Unit helper visibility is independent of target and class-member access. }
+  TNyxRoutineVisibility = (rvInterface, rvImplementation);
+  TNyxDeclarationPart = (dspInterface, dspImplementation);
+
+  { An admitted standalone procedure/function definition. Signature and body
+    are explicit Pascal source boundaries; kind/identity/visibility are typed.
+    Creation never modifies an existing class or compiler-managed signature. }
+  TNyxRoutineDeclaration = record
+  private
+    FRoutine: TNyxRoutineRef;
+    FKind: TNyxRoutineKind;
+    FVisibility: TNyxRoutineVisibility;
+    FSignature: TNyxText;
+    FImplementation: TNyxText;
+  public
+    property Routine: TNyxRoutineRef read FRoutine;
+    property Kind: TNyxRoutineKind read FKind;
+    property Visibility: TNyxRoutineVisibility read FVisibility;
+    property Signature: TNyxText read FSignature;
+    property Code: TNyxText read FImplementation;
+  end;
+
+  { Immutable counterpart inspection for one unit helper. Declaration is exact
+    interface text through its semicolon, or empty for an implementation-only
+    helper. Line is one-based; zero means there is no interface declaration.
+    Private spans only belong to the inspected source snapshot. }
+  TNyxRoutineDeclarationSource = record
+  private
+    FVisibility: TNyxRoutineVisibility;
+    FSignature: TNyxText;
+    FLine: Integer;
+    FImplementationSignature: TNyxText;
+    FImplementationLine: Integer;
+    FStart: Integer;
+    FFinish: Integer;
+  public
+    property Visibility: TNyxRoutineVisibility read FVisibility;
+    { Typed counterpart access supports bounded signature windows independently
+      of body size; an unknown part refuses instead of selecting a default. }
+    function Text(APart: TNyxDeclarationPart): TNyxText;
+    function SourceLine(APart: TNyxDeclarationPart): Integer;
+    property Declaration: TNyxText read FSignature;
+    property Line: Integer read FLine;
+  end;
 
   { An immutable lexical implementation and its exact signature. Code begins
     after the signature semicolon and ends at the implementation semicolon.
@@ -320,6 +364,19 @@ function ReadNyxRoutineSource(const ASource: TNyxText;
   const ARoutine: TNyxRoutineRef): TNyxRoutineSource;
 function ReplaceNyxRoutineImplementation(const ASource: TNyxText;
   const ARoutine: TNyxRoutineRef; const AExpected, AImplementation: TNyxText): TNyxText;
+{ Create/remove ordinary unit helpers with exact paired visibility ownership.
+  Removal requires exact implementation signature/body and interface counterpart
+  (empty for private). Any possible retained lexical reference blocks removal;
+  external-unit references and type correctness remain compiler diagnostics. }
+function NyxRoutineDeclaration(AKind: TNyxRoutineKind; const ARoutine: TNyxRoutineRef;
+  AVisibility: TNyxRoutineVisibility; const ASignature, AImplementation: TNyxText): TNyxRoutineDeclaration;
+function ReadNyxRoutineDeclaration(const ASource: TNyxText;
+  const ARoutine: TNyxRoutineRef): TNyxRoutineDeclarationSource;
+function AddNyxRoutineDeclaration(const ASource: TNyxText;
+  const ADeclaration: TNyxRoutineDeclaration): TNyxText;
+function RemoveNyxRoutineDeclaration(const ASource: TNyxText;
+  const ARoutine: TNyxRoutineRef;
+  const AExpectedSignature, AExpectedImplementation, AExpectedDeclaration: TNyxText): TNyxText;
 
 function ReadNyxImports(const ASource: TNyxText; ASection: TNyxImportSection): TNyxImportClause;
 function EditNyxImport(const ASource: TNyxText; ASection: TNyxImportSection;
@@ -3639,6 +3696,7 @@ end;
 {$I nyx.source.handlers.inc}
 {$I nyx.source.imports.inc}
 {$I nyx.source.routines.inc}
+{$I nyx.source.declarations.inc}
 
 function WithNyxControlImport(const AFrame: TNyxText): TNyxText;
 begin

@@ -581,9 +581,82 @@ receipt and outer workspace/review routing guards apply. Read-only permits
 bounded inspection; Disabled refuses access. These three modes extend the same
 nineteen-tool source catalog; the protected release/current chat still has fifteen
 tools and its older Pascal schema. Compilation/type correctness and actual helper
-execution require `nyx_build` and target controls, not source admission. Helper
-creation/removal, signature/class/full-unit changes and updated authenticated
-observing deployment retain their open workflow owner.
+execution require `nyx_build` and target controls, not source admission. The
+declaration boundary below supplies helper creation/removal. Signature/class/
+full-unit changes and updated authenticated observing deployment retain their
+open workflow owner.
+
+### Helper declarations and grouped source composition
+
+`nyx_pascal` now also has `mode: declaration` and `mode: edit-declarations`.
+They extend the existing nineteen-tool source catalog to nine Pascal modes;
+the protected release/current chat still has fifteen tools and its older schema.
+
+`declaration` takes an exact unit-helper `routine`, optional `part` (interface
+by default, or implementation), and Unicode-scalar `offset`/`count` windows of
+at most 4096. It returns the accepted revision, visibility, part, actual source
+line, total/next offset, exact signature text and pending-draft status. Private
+helpers have an empty interface counterpart and line zero. Implementation
+signature windows are independent of the older 1024-character routine preview,
+so every exact removal field can be inspected without a whole-unit dump.
+Concatenate windows only at the same revision. Interface and implementation
+signatures must match lexically, ignoring ordinary comments/case/whitespace;
+ambiguous overloads, conditional ownership and additional interface modifiers
+require the broader source workflow.
+
+`edit-declarations` takes current `expectedRevision`, unique `operationId` and
+1..16 ordered action-specific changes:
+
+- `create`: `routine`, closed `kind: procedure/function`, closed
+  `visibility: interface/implementation`, exact `signature` and `implementation`.
+  Public helpers create both counterparts; private helpers create only the
+  implementation. Signatures are explicit Pascal fragments ending at their
+  first semicolon, with no surrounding code. Created bodies contain one complete
+  implementation. Existing routine identities, mismatched names/kinds, directives
+  and sibling injections refuse.
+- `edit`: `routine`, exact `expectedImplementation` and new `implementation`.
+  This reuses guarded routine replacement, including qualified method bodies,
+  while keeping existing signatures.
+- `remove`: `routine`, exact `expectedSignature`, `expectedImplementation` and
+  `expectedDeclaration` (empty for a private helper). Removal retires its owned
+  implementation and interface together. Possible retained identifier references,
+  including compiler directives, block removal. Comments/literals are otherwise
+  not treated as callers. Lexical shadows/member names can be ambiguous and
+  conservatively refuse; this does not claim Pascal type resolution.
+
+Creation/removal concern ordinary unit helpers. Class-member signatures and
+compiler-managed BuildNyxDocument/BindNyxCallbacks remain protected. Definition
+ordering retains successive helpers before class/managed consumers and can
+choose an earlier safe site for a possible existing caller. Attached inline
+comments and leading comments of the following declaration stay beside their
+original source. Conditional insertion gaps refuse. Removed comments inside
+explicitly acknowledged signature/body ownership retire with that code;
+surrounding comments remain.
+
+The public contract uses `TNyxRoutineDeclaration`, `TNyxRoutineVisibility`,
+typed `TNyxDeclarationPart`, immutable `TNyxRoutineDeclarationSource`,
+`TNyxDeclarationEdit` and managed `INyxDeclarationPatch`:
+
+```pascal
+LPatch := NyxDeclarationPatch([
+  NyxCreateDeclaration(NyxRoutineDeclaration(nrFunction,
+    NyxRoutine('TextBudget'), rvImplementation,
+    LSignature, LImplementation)),
+  NyxEditDeclaration(LPolicy.Routine, LPolicy.Code, LNewPolicyCode)
+]);
+```
+
+One independent session admits the final complete source/design pair before
+response preflight and one live publication/paired Undo step. A late refusal
+preserves all files, drafts, navigation and history. Permission/revision/transport
+authority/receipt and outer workspace/review guards apply. Each fragment permits
+32768 Unicode scalars; the group permits 131072. No-op groups refuse. The native
+qualification creates private/public helpers, updates a class method, removes
+an obsolete public helper and executes the unchanged compiled companion's actual
+memo callback. External-unit callers and expression/type correctness still need
+ordinary `nyx_build` diagnostics. Signature/class/full-unit authoring, updated
+authenticated observing deployment and complete source quality retain their
+original open owners.
 
 ## Maintained authored-input review
 

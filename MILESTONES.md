@@ -627,3 +627,17 @@ Current task and return path are maintained in [WORK.md](WORK.md).
   creation/removal, preserving the original full general-source outcome and
   richer reusable/parity/presentation owners. See
   [evidence](WORK.md#semantic-pascal-helpers--2026-10-05).
+
+- Semantic helper declarations now extend that same paired source boundary:
+  bounded exact signature counterparts and typed ordered create/edit/remove
+  groups, preserving class signatures, callbacks and managed views. Retained
+  possible identifiers/directives guard removal; external callers/type meaning
+  require ordinary compiler diagnostics. Both native compilers pass 16 lexical/
+  36 semantic checks, final actual discovery 46 and unchanged compiled native
+  input nine, with zero owned warnings/leaks. Routine/callback regressions pass
+  31/72. Browser consumers/Studio/worker compile but retain execution/deployment
+  gates. No full criterion or percentage advances; workflow criterion 5 remains
+  open at no-closure 7, with codegen 26, renderer 3, authoring 7 and delivery 1
+  unchanged. Next deliver guarded paired routine signature authoring, preserving
+  the original full general-source/reusable/parity/presentation requirements.
+  See [evidence](WORK.md#semantic-helper-declarations--2026-10-05).

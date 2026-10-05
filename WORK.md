@@ -7,19 +7,21 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest bounded packet: [semantic Pascal helpers](#semantic-pascal-helpers--2026-10-05)
-extends `nyx_pascal` with bounded routine discovery, exact Unicode windows and
-typed grouped implementation editing through one paired Undo step. Both native
-compilers pass 21 lexical and 31 semantic checks; actual discovery passes 31,
-unchanged compiled native input nine and callback/import regressions 72/31, with
-zero leaks/owned warnings. The maintained `pascal-routines` command executes.
+Latest bounded packet: [semantic helper declarations](#semantic-helper-declarations--2026-10-05)
+extends `nyx_pascal` with exact signature windows and typed grouped helper
+creation, implementation editing and removal through one paired Undo step.
+Both native compilers pass 16 lexical and 36 semantic checks; final actual
+discovery passes 46, unchanged compiled native input nine and routine/callback
+regressions 31/72, with zero leaks/owned warnings. The maintained
+`pascal-declarations` command executes its actual consumers.
 Current browser consumers/Studio/module worker compile; execution and authenticated
 updated observation retain their host gate. Source catalog nineteen/protected
 release fifteen remains explicit. Workflow criterion 5 stays open at no-closure
-6; codegen 26, renderer 3, native authoring 7 and delivery 1 remain unchanged.
-Helper creation/removal, signature/class/full-unit authoring, richer reusable
+7; codegen 26, renderer 3, native authoring 7 and delivery 1 remain unchanged.
+Signature/class/full-unit authoring, richer reusable
 workflows and complete editor performance/presentation remain required. The
-preceding [imports](#semantic-pascal-imports--2026-10-05) and
+preceding [helpers](#semantic-pascal-helpers--2026-10-05),
+[imports](#semantic-pascal-imports--2026-10-05) and
 [collections](#semantic-structured-collection-commands--2026-10-05) retain their
 original evidence and acceptance limits.
 
@@ -7189,3 +7191,116 @@ workflow no-closure 6 and the guarded helper declaration return path are preserv
 The full goal stays active/incomplete. Exact handoff remote/clean/protected-process
 proof is stored privately after pushing at
 `.local/codex-restart-check/routine-remote-proof.json`.
+
+## Semantic helper declarations — 2026-10-05
+
+Previous goal turn was progress: product 9ddbb14 / handoff 6ca4197 are an exact
+clean/pushed helper-editing checkpoint. This continuation delivers criterion 5's
+unit-helper declaration boundary. Portable immutable `TNyxRoutineDeclaration`
+uses closed kind/visibility choices; `TNyxRoutineDeclarationSource` exposes typed
+interface/implementation parts with exact text and source lines. It shares the
+existing Unicode lexer and routine ownership rules. Public functions/procedures
+create both counterparts; private helpers create implementation only. Signature
+matching ignores ordinary comments/case/whitespace while retaining literal and
+symbol meaning. Duplicate identities, extra prototype modifiers, directives,
+conditional ownership, sibling injection and guessed overloads refuse.
+
+The existing `nyx_pascal` now has nine modes. `declaration` provides bounded
+4096-scalar windows of either signature counterpart, including complete private
+implementation signatures beyond the older 1024-character preview. Private
+interface queries return empty text/line zero. `edit-declarations` consumes
+1..16 ordered immutable create/edit/remove proposals through managed
+`INyxDeclarationPatch`; each fragment permits 32768 scalars and the group 131072.
+Its strict action-specific schema excludes nested context/compiler/source-unit
+options. Bodies may be edited through existing qualified routine semantics;
+creation/removal concern ordinary free unit helpers. Class-member signatures and
+managed BuildNyxDocument/BindNyxCallbacks stay protected.
+
+Definitions retain successive helper ordering before class/managed consumers;
+a possible earlier caller can choose an earlier safe site. Attached inline
+comments and leading comments of following declarations retain adjacency.
+Conditional state is checked at the actual insertion gap. Removal acknowledges
+exact interface/signature/body ownership and conservatively refuses retained
+possible identifier references, including compiler directives. Comments/literals
+otherwise do not count as callers. Lexical shadows/member names can refuse;
+external-unit callers and expression/type resolution are not established.
+Acknowledged comments inside removed spans retire with them; surrounding comments
+remain. Ordinary `nyx_build` diagnostics and target consumers remain required.
+
+One private ordinary source-admission session checks the final exact design/
+source pair before response preflight and the only live publication. Related
+operations yield one paired Undo step; late refusal retains source, design,
+draft, navigation and history. Fresh permission/revision/transport authority,
+actor-bound receipts, outer workspace/review routing and pending-draft refusal
+remain unchanged. Source admission does not execute code or prove compilation.
+
+Maintained command actually executed: `tools/build.ps1 -Target pascal-declarations`.
+It starts no listener, changes no configuration and stages only ignored output.
+Successful evidence uses Delphi mode, assertions, range/overflow/I/O checks,
+debug lines and native heap tracing:
+
+| Consumer | Actual result | Ignored artifact |
+| --- | --- | --- |
+| Declaration lexical boundaries, FPC 3.2.0 / matched 3.3.1 | 16 / 16; counterpart ownership, comments, duplicates, retained/directive callers, class/managed refusal and actual conditional gaps | `build/declarations/maintained-qualified/run.log`, `build/declarations/matched/nyx_declaration_lexical_tests-run.log` |
+| Typed semantic query/group/authority/draft/history/refusals, both native compilers | 36 / 36 | `build/declarations/maintained-qualified/run.log`, `build/declarations/matched-qualified/` |
+| Actual offline MCP discovery builder | Final 46; nineteen tools/nine modes, bounded counterpart parts and three strict mutation actions | `build/pascal-declarations/lcl/schema-qualified-run.log` |
+| Unchanged emitted companion and mounted Win32 memo | Nine; compiled six-character policy/English caption, actual callback execution and exact supplementary-Unicode rejection | `build/declarations/maintained-qualified/run.log`, `build/pascal-declarations/lcl/` |
+| Existing routine / callback source regressions | 31 / 72 | `build/declarations/regression/` |
+| Maintained full command | 16 / 36 / 45 / nine pass; the final additional declaration-part schema assertion passes in the separate 46-check run above | `build/declarations/maintained-qualified/run.log` |
+| Current pas2js lexical/semantic/exact control consumers | Compile; matching RTL and three English hosts staged, unexecuted | `build/pascal-declarations/browser/` |
+| Browser Studio / Pascal module worker | Compile; unexecuted | `build/declarations/browser-studio/` |
+
+The semantic group creates private TextBudget and public EnglishCaption, edits
+retained TNotePolicy.Limit and removes obsolete HelperCaption. Actual unchanged
+companion compilation/execution qualifies the resulting six-character policy,
+English caption and saved-design reconstruction through the mounted memo's
+compiled OnBeforeTextInput callback. Six scalars including a supplementary moon
+are accepted; seven are rejected with exact physical/model retention. Read-only
+and pending-draft tests propose an otherwise valid changed implementation, so
+they qualify those guards independently of no-op refusal.
+
+All successful native consumers have zero owned warnings and zero unfreed
+blocks. Browser compilation has zero owned warnings; seven distinct installed
+Classes RTL warnings remain visible and unsuppressed. Stable/matched exports
+agree exactly: design SHA-256
+`46DA063DD8EC5CFE83E674C001EB7A24483F6431ED14A7120BD4D00B3F12FF9D`,
+companion `89E1F8DE2951FC37DBEF076A4578C931B9B929DA054671A97DC0A71D313253F2`.
+Native notifications qualify the exercised Win32 input path, not other widgetsets
+or hardware/IME. No UI structure changed; no visual/accessibility or release-
+latency acceptance follows. English review text and dedicated Unicode inputs
+remain separate. Fully traced fixtures establish correctness, not release speed.
+
+Initial lexical failure in `build/declarations/lexical-first/` expected refusal
+at a safely preceding insertion gap. The corrected fixture actually conditions
+the implementation section; final checks qualify gap ownership without weakening
+the algorithm. Initial compilation in `build/declarations/native-first/` used
+a scalar-count helper not exported by nyx.text. The implementation now counts
+through existing NyxNextScalar, avoiding an unnecessary runtime/event dependency.
+Initial logs remain. No compiler reinstall, dependency patch or suppression was
+used. Current browser consumers were compiled but not executed.
+
+This packet is progress and closes no full criterion. Workflow criterion 5 stays
+open; no-closure advances **6→7** once. Codegen **26**, renderer **3**, native
+authoring **7** and delivery **1** remain unchanged; no DONE/percentage credit.
+Reassessment ends declaration/schema/fixture expansion. Next deliver guarded
+paired routine signature authoring, retaining parameter/result counterparts,
+caller meaning and ordinary compiler diagnostics through this same boundary.
+Class/full-unit authoring, richer reusable semantics, root ordering, review
+lifecycle and complete source synchronization/performance/presentation/
+accessibility retain their original owners and acceptance gates.
+
+Connected native MCP remains primary and reports revision **6**, Untitled project/
+home, one page/reusable root, no pending draft, Undo unavailable and Redo available;
+only read activity advances to **213**. Independent Pascal semantic/compiled
+consumers qualify modes absent from the protected deployed schema. All **eight**
+protected paths/exact process creation timestamps match; **zero** focused fixture
+processes remain. Private process proof is
+`.local/codex-restart-check/declaration-processes.json`. Live user work/history,
+services/artifacts and personal configuration stay untouched. Source catalog
+nineteen/current authenticated release fifteen remains explicit.
+
+The earlier automatic approval rejection of listener launch remains "blocked by
+policy", with no further stated reason. No equivalent listener, service replacement,
+live artifact deployment or configuration refresh was attempted. Updated authenticated
+discovery and observing/browser execution remain required. The full Nyx/Nyx Studio
+goal stays active/incomplete; authorized hello-nyx remote checkpoint follows.

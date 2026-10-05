@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'pascal-imports', 'pascal-routines', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1556,6 +1556,58 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxRoutineHost") -Destination $nyxRoutineBrowser
     }
     Write-Host 'Pascal routine consumers staged; browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'pascal-declarations') {
+    # Pascal owns lexical/semantic/refusal assertions and the exact companion.
+    # This target starts no listener and touches no observing project/config.
+    $nyxDeclarationRoot = Join-Path $nyxRoot 'build/pascal-declarations'
+    $nyxDeclarationNative = Join-Path $nyxDeclarationRoot 'native'
+    $nyxDeclarationExport = Join-Path $nyxDeclarationRoot 'export'
+    $nyxDeclarationLcl = Join-Path $nyxDeclarationRoot 'lcl'
+    $nyxDeclarationBrowser = Join-Path $nyxDeclarationRoot 'browser'
+
+    if ($BrowserOutput) { $nyxDeclarationBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxDeclarationNative, $nyxDeclarationExport,
+      $nyxDeclarationLcl, $nyxDeclarationBrowser | Out-Null
+    $nyxDeclarationFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxDeclarationNative", "-FE$nyxDeclarationNative")
+    foreach ($nyxDeclarationProgram in @('nyx_declaration_lexical_tests', 'nyx_declaration_tests')) {
+      Invoke-NyxCompiler $nyxFpc ($nyxDeclarationFlags + @("tests/$nyxDeclarationProgram.lpr"))
+      & (Join-Path $nyxDeclarationNative "$nyxDeclarationProgram.exe") $nyxDeclarationExport
+
+      if ($LASTEXITCODE -ne 0) { throw 'Pascal declaration qualification failed' }
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxDeclarationPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxDeclarationControlFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxDeclarationExport",
+      "-Fu$nyxLazarus/lcl/units/$nyxDeclarationPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxDeclarationPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxDeclarationPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxDeclarationPlatform",
+      "-FU$nyxDeclarationLcl", "-FE$nyxDeclarationLcl")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxDeclarationControlFlags + @('tests/nyx_declaration_schema.lpr'))
+    & (Join-Path $nyxDeclarationLcl 'nyx_declaration_schema.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Actual Pascal declaration discovery failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxDeclarationControlFlags + @('tests/nyx_declaration_controls.lpr'))
+    & (Join-Path $nyxDeclarationLcl 'nyx_declaration_controls.exe') (Join-Path $nyxDeclarationExport 'design.nyx')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Exact compiled declaration controls failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxDeclarationProgram in @('nyx_declaration_lexical_tests', 'nyx_declaration_tests', 'nyx_declaration_controls')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests',
+        '-Jirtl.js', "-Fu$nyxDeclarationExport", "-FE$nyxDeclarationBrowser", "tests/$nyxDeclarationProgram.lpr")
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxDeclarationBrowser 'rtl.js')
+    foreach ($nyxDeclarationHost in @('declaration-lexical.html', 'declaration-edits.html', 'declaration-controls.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxDeclarationHost") -Destination $nyxDeclarationBrowser
+    }
+    Write-Host 'Pascal declaration consumers staged; browser execution requires an admitted HTTP host.'
     exit 0
   }
 
