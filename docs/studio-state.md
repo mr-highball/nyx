@@ -2,7 +2,7 @@
 
 [Typed state](state.md) · [Live bindings](bindings.md) · [Current evidence](../WORK.md)
 
-Open **State** in the Project panel to create, rename, edit or remove saved
+Open **Data** in the Project panel to create, rename, edit or remove saved
 defaults. Choose Text, Boolean, Integer or Number explicitly. Defaults initialize
 each application runtime; changing a running control does not silently rewrite
 the design. No output target or compiler is required for this authoring workflow.
@@ -41,6 +41,24 @@ design, including defaults, descriptors and generated reference meaning. No-op
 and rejected authoring commands retain the accepted document and redo history.
 Browser rejection also retains mounted canvas controls when the design is unchanged.
 
+The current source candidate keeps **Name** as a project-owned draft. Type the
+complete name, then choose **Rename**. Typing and panel navigation create no
+document history. A failed rename keeps the draft for correction; a successful
+rename owns one paired Undo entry. Its exact row is briefly unavailable while
+admission runs, including a guard for a second command before the next paint.
+Creation similarly guards its pending form and clears only the submitted name
+after successful admission.
+
+Scalar defaults and binding choices now use the existing isolated design queue.
+Adjacent waiting changes to the same field coalesce; an active command retains
+its own history. Newer editor text and binding flow stay visible while earlier
+work completes or refuses. The queue retains notation as well as scalar family,
+so quoted escaped text does not become plain text midway through a typing burst.
+Selection cannot retarget a captured binding; a project load retires old input.
+Ordinary visual edits preserve a handwritten Pascal draft and its original base;
+later draft changes prevent an older result from publishing. Grouped semantic
+mutation retains its stricter pending-draft refusal.
+
 The optional Pascal split updates from the same public fluent contract after
 accepted edits. State locals describe purpose and type, initialize once and are
 reused by defaults and controls. Keys such as `replyText` and `replyTextState`
@@ -63,14 +81,17 @@ built from public controls and fluent configuration. `nyx.studio.commands` route
 their events into the portable session; adapters decode transport metadata into
 closed enums before any model mutation. Full state keys travel as data, with
 bounded ordinal widget IDs. Stale binding controls cannot act on a different
-current selection. Drafts remain presentation data until Add, and focused new
+current selection. Name/form drafts remain presentation data until Rename/Add, and focused new
 defaults survive panel/viewport changes without creating history.
 
 Shared source/history fixtures, compiled companions and actual browser/Lazarus
 authoring journeys exercise these boundaries; exact counts/artifacts are in
 [WORK.md](../WORK.md). Native preview labels/memos consume edited defaults,
 bindings and source-declared domains. These are programmatic events; the native
-harness rebuilds after callbacks return and does not yet provide a complete native Studio controller.
+harness rebuilds after callbacks return. The current standalone native controller
+also exercises queued state/binding edits through its real Project and Inspector
+controls. Changed browser consumers compile and are staged; their execution and
+updated observing Studio retain the permitted-host gate recorded in WORK.md.
 Broader Pascal synchronization, structured collections, extension/event contracts,
 large-document performance and complete native Studio remain open work.
 

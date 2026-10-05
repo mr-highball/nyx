@@ -102,6 +102,11 @@ type
     FCanvasCompletion: Boolean;
     FCompletedEdit: TNyxStudioDesignEdit;
     FCompletedContext: TNyxStudioCommandContext;
+    { Project-owned presentation drafts never enter the design/source pair.
+      Exact load and scalar-family checks retire them before a later project
+      can reuse the same names. Failed rename admission retains the draft. }
+    FNameDrafts: array of TNyxStudioPendingField;
+    FNameDraftContext: TNyxStudioCommandContext;
     {$ifndef PAS2JS}
     FExecutions: array of INyxExecution;
     {$else}
@@ -115,6 +120,8 @@ type
     procedure WorkerTimeout;
     procedure RetireWorker;
     {$endif}
+    procedure RetainNameDraft(const AEdit: TNyxStudioDesignEdit);
+    procedure RetirePublishedNameDraft;
     function GetBusy: Boolean;
     function NextSequence: Integer;
     procedure Notify(AState: TNyxSourceCommandState; const AMessage: TNyxText;
@@ -144,6 +151,9 @@ type
       active view. The adapter copies this value until its deferred paint;
       no tree is exposed and no failed command is reported as published. }
     function CanvasRestore(out ARestore: TNyxProjectionValueRestore): Boolean;
+    { Only this notification's successful default creation. Hosts may clear the
+      same form name after checking exact text; later user input stays owned. }
+    function NewDefaultCreated(out AName: TNyxText): Boolean;
     { Copy pending field/title values for observing chrome. No queued intent,
       accepted document or mutable processor owner is exposed or modified. }
     function PendingDesign: TNyxStudioPendingDesign;
@@ -151,9 +161,11 @@ type
       work may finish but a cancelled result cannot publish. }
     procedure Cancel;
     procedure Detach;
-    { Consume Nyx Apply/Restore, inspector and structural toolbar/palette events.
-      Other authoring event contracts retain their ordinary command routers. }
-    function Route(ANode: TNyxNode; ATrigger: TNyxTrigger): Boolean;
+    { Consume Nyx Apply/Restore, scalar state/binding, inspector and structural
+      events. Current shell form fields are borrowed only during typed capture.
+      Collections/events retain their existing ordinary command routers. }
+    function Route(ANode: TNyxNode; ATrigger: TNyxTrigger;
+      AShellRoot: TNyxNode = nil): Boolean;
     property State: TNyxSourceCommandState read FState;
     property Message: TNyxText read FMessage;
     property Busy: Boolean read GetBusy;
@@ -168,7 +180,8 @@ type
 implementation
 
 uses
-  SysUtils, nyx.data
+  SysUtils, nyx.data, nyx.state, nyx.binding.types, nyx.studio.authoring,
+  nyx.studio.commands
   {$ifndef PAS2JS}, Classes{$endif};
 
 type
@@ -444,8 +457,27 @@ procedure TNyxSourceCommands.Edit(const AEdit: TNyxStudioDesignEdit);
 var
   LJob: TNyxEditorSourceJob;
   LLast: Integer;
+  LPending: TNyxStudioPendingDesign;
 begin
   FScheduler.RequireUI;
+  LPending := PendingDesign;
+
+  if (AEdit.Action in [sdaSetStateDefault, sdaRenameStateDefault, sdaRemoveStateDefault]) and
+    LPending.StateLocked(AEdit.Name) then
+  begin
+    raise ENyxState.Create('Wait for this state rename before editing its row');
+  end;
+
+  if (AEdit.Action = sdaCreateStateDefault) and LPending.NewDefaultPending then
+  begin
+    raise ENyxState.Create('Wait for default creation before submitting this form again');
+  end;
+
+  if (AEdit.Action = sdaSetBinding) and not AEdit.Binding.Cleared and
+    LPending.StateLocked(AEdit.Binding.StateName) then
+  begin
+    raise ENyxState.Create('Wait for this state rename before binding its old name');
+  end;
   LJob := Default(TNyxEditorSourceJob);
   LJob.Kind := eskDesign;
   LJob.Context := FSession.CommandContext;
@@ -460,6 +492,7 @@ begin
     raise ENyxModel.Create('Captured editor intent belongs to an earlier project load');
   end;
   LJob.Edit := AEdit;
+  LJob.Edit.Binding := AEdit.Binding.Copy;
   LJob.Sequence := NextSequence;
   LJob.Schemas := TNyxEditorSchemaLease.Create(CaptureNyxSchemas);
   try
@@ -467,11 +500,14 @@ begin
 
     if (LLast >= 0) and (FQueue[LLast].Kind = eskDesign) and
       FSession.MatchesCommandContext(FQueue[LLast].Context) and
-      (AEdit.Action in [sdaProperty, sdaTitle, sdaCanvasValue]) and
+      (AEdit.Action in [sdaProperty, sdaTitle, sdaCanvasValue, sdaSetStateDefault,
+        sdaSetBinding]) and
       (FQueue[LLast].Edit.Action = AEdit.Action) and
       (FQueue[LLast].Edit.Selection = AEdit.Selection) and
       (FQueue[LLast].Edit.View = AEdit.View) and (FQueue[LLast].Edit.Name = AEdit.Name) and
-      (FQueue[LLast].Edit.Platform = AEdit.Platform) then
+      (FQueue[LLast].Edit.Platform = AEdit.Platform) and
+      (FQueue[LLast].Edit.StateInput = AEdit.StateInput) and
+      (FQueue[LLast].Edit.Binding.Target = AEdit.Binding.Target) then
     begin
       FQueue[LLast].Schemas.Free;
       FQueue[LLast] := LJob;
@@ -514,9 +550,88 @@ begin
   end;
 end;
 
+function TNyxSourceCommands.NewDefaultCreated(out AName: TNyxText): Boolean;
+begin
+  AName := '';
+  Result := FPublishedDesign and (FPublishedAction = sdaCreateStateDefault) and
+    FSession.MatchesCommandContext(FCompletedContext);
+
+  if Result then
+  begin
+    AName := FCompletedEdit.Name;
+  end;
+end;
+
+procedure TNyxSourceCommands.RetainNameDraft(const AEdit: TNyxStudioDesignEdit);
+var
+  LIndex: Integer;
+  LCount: Integer;
+  LKey: TNyxText;
+begin
+
+  if not FSession.MatchesCommandContext(FNameDraftContext) then
+  begin
+    FNameDrafts := nil;
+    FNameDraftContext := FSession.CommandContext;
+  end;
+
+  if PendingDesign.StateLocked(AEdit.Name) then
+  begin
+    raise ENyxState.Create('Wait for this state rename before editing its name');
+  end;
+  LKey := NyxStateKindName(NyxStudioStateInputKind(AEdit.StateInput));
+
+  if FSession.Document.State.Value(AEdit.Name).Kind <> NyxStudioStateInputKind(AEdit.StateInput) then
+  begin
+    raise ENyxState.Create('State name draft belongs to another scalar family');
+  end;
+  LCount := Length(FNameDrafts);
+  for LIndex := 0 to LCount - 1 do
+  begin
+
+    if (FNameDrafts[LIndex].Selection = AEdit.Name) and (FNameDrafts[LIndex].Key = LKey) then
+    begin
+      FNameDrafts[LIndex].Value := AEdit.Value;
+      Exit;
+    end;
+  end;
+  SetLength(FNameDrafts, LCount + 1);
+  FNameDrafts[LCount].Selection := AEdit.Name;
+  FNameDrafts[LCount].Key := LKey;
+  FNameDrafts[LCount].Value := AEdit.Value;
+  FNameDrafts[LCount].StateInput := AEdit.StateInput;
+end;
+
+procedure TNyxSourceCommands.RetirePublishedNameDraft;
+var
+  LIndex: Integer;
+  LCount: Integer;
+begin
+
+  if not FSession.MatchesCommandContext(FNameDraftContext) or
+    (FCompletedEdit.Action <> sdaRenameStateDefault) then
+  begin
+    Exit;
+  end;
+  LCount := 0;
+  for LIndex := 0 to High(FNameDrafts) do
+  begin
+
+    if (FNameDrafts[LIndex].Selection <> FCompletedEdit.Name) or
+      (FNameDrafts[LIndex].Key <> NyxStateKindName(NyxStudioStateInputKind(FCompletedEdit.StateInput))) or
+      (FNameDrafts[LIndex].Value <> FCompletedEdit.Value) then
+    begin
+      FNameDrafts[LCount] := FNameDrafts[LIndex];
+      Inc(LCount);
+    end;
+  end;
+  SetLength(FNameDrafts, LCount);
+end;
+
 function TNyxSourceCommands.PendingDesign: TNyxStudioPendingDesign;
 var
   LIndex: Integer;
+  LDraftCount: Integer;
 
   procedure Include(const AEdit: TNyxStudioDesignEdit);
   var
@@ -544,12 +659,71 @@ var
       Result.CanvasValues[LCount].Owner := AEdit.Selection;
       Result.CanvasValues[LCount].RuntimeID := AEdit.Name;
       Result.CanvasValues[LCount].Value := AEdit.Value;
+    end
+    else if AEdit.Action = sdaSetStateDefault then
+    begin
+      LCount := Length(Result.StateValues);
+      SetLength(Result.StateValues, LCount + 1);
+      Result.StateValues[LCount].Selection := AEdit.Name;
+      Result.StateValues[LCount].Key := NyxStateKindName(NyxStudioStateInputKind(AEdit.StateInput));
+      Result.StateValues[LCount].Value := AEdit.Value;
+      Result.StateValues[LCount].StateInput := AEdit.StateInput;
+    end
+    else if AEdit.Action = sdaRenameStateDefault then
+    begin
+      LCount := Length(Result.RenamingStates);
+      SetLength(Result.RenamingStates, LCount + 1);
+      Result.RenamingStates[LCount] := AEdit.Name;
+      LCount := Length(Result.StateNames);
+      SetLength(Result.StateNames, LCount + 1);
+      Result.StateNames[LCount].Selection := AEdit.Name;
+      Result.StateNames[LCount].Key := NyxStateKindName(NyxStudioStateInputKind(AEdit.StateInput));
+      Result.StateNames[LCount].Value := AEdit.Value;
+      Result.StateNames[LCount].StateInput := AEdit.StateInput;
+    end
+    else if AEdit.Action = sdaCreateStateDefault then
+    begin
+      Result.NewDefaultPending := True;
+    end
+    else if AEdit.Action in [sdaSetBinding, sdaInheritBinding] then
+    begin
+      LCount := Length(Result.Bindings);
+      SetLength(Result.Bindings, LCount + 1);
+      Result.Bindings[LCount].Owner := AEdit.Selection;
+      Result.Bindings[LCount].Spec := AEdit.Binding.Copy;
+      Result.Bindings[LCount].Inherit := AEdit.Action = sdaInheritBinding;
     end;
   end;
 
 begin
   FScheduler.RequireUI;
   Result := Default(TNyxStudioPendingDesign);
+
+  if not FSession.MatchesCommandContext(FNameDraftContext) then
+  begin
+    FNameDrafts := nil;
+  end;
+  { Copy each record explicitly: pas2js arrays/records must not share mutable
+    presentation storage with this project's retained draft owner. }
+  for LIndex := 0 to High(FNameDrafts) do
+  begin
+
+    if FSession.Document.State.Has(FNameDrafts[LIndex].Selection) and
+      (NyxStateKindName(FSession.Document.State.Value(FNameDrafts[LIndex].Selection).Kind) =
+        FNameDrafts[LIndex].Key) then
+    begin
+      SetLength(Result.StateNames, Length(Result.StateNames) + 1);
+      Result.StateNames[High(Result.StateNames)] := FNameDrafts[LIndex];
+    end;
+  end;
+  { Once an exact row disappears, retire its draft rather than attaching it to
+    a subsequently created default with the same spelling and scalar family. }
+  LDraftCount := Length(Result.StateNames);
+  SetLength(FNameDrafts, LDraftCount);
+  for LIndex := 0 to LDraftCount - 1 do
+  begin
+    FNameDrafts[LIndex] := Result.StateNames[LIndex];
+  end;
 
   if FRunning and not FDiscardActive and (FActive.Kind = eskDesign) and
     FSession.MatchesCommandContext(FActive.Context) then
@@ -757,6 +931,11 @@ begin
     LAction := FActive.Edit.Action;
     FCompletedEdit := FActive.Edit;
     FCompletedContext := FActive.Context;
+
+    if (LState = nssApplied) and LDesign then
+    begin
+      RetirePublishedNameDraft;
+    end;
     RetireJob(FActive);
     try
       Notify(LState, LMessage, LDesign, LAction);
@@ -808,7 +987,8 @@ begin
   end;
 end;
 
-function TNyxSourceCommands.Route(ANode: TNyxNode; ATrigger: TNyxTrigger): Boolean;
+function TNyxSourceCommands.Route(ANode: TNyxNode; ATrigger: TNyxTrigger;
+  AShellRoot: TNyxNode): Boolean;
 const
   CApply = 'action-apply-source';
   CRestore = 'action-reset-source';
@@ -832,6 +1012,7 @@ const
   CSaveCopy = 'action-project-copy';
 var
   LEdit: TNyxStudioDesignEdit;
+  LCapture: TNyxStudioAuthoringCapture;
 begin
   Result := False;
 
@@ -843,6 +1024,28 @@ begin
   if FDetached then
   begin
     raise ENyxModel.Create('This source-command context has retired');
+  end;
+  LCapture := CaptureNyxStudioAuthoring(FSession, ANode, ATrigger, AShellRoot,
+    PendingDesign, LEdit);
+  case LCapture of
+    sacNameDraft:
+      begin
+        RetainNameDraft(LEdit);
+        Exit(True);
+      end;
+    sacPresentation:
+      begin
+        Exit(True);
+      end;
+    sacEdit:
+      begin
+        Edit(LEdit);
+        Exit(True);
+      end;
+    sacNone:
+      begin
+        { Other editor events continue through the existing typed routes. }
+      end;
   end;
   { A save/export must not announce success for an earlier accepted pair while
     the visible fields still describe queued edits. A deliberate source-draft

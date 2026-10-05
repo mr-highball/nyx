@@ -33,6 +33,18 @@ uses
   nyx.model,
   nyx.studio.session;
 
+type
+  { Capture never admits a pair or retains a node. Presentation-only flow and
+    name events are consumed separately from immutable queued document intent. }
+  TNyxStudioAuthoringCapture = (sacNone, sacNameDraft, sacPresentation, sacEdit);
+
+{ Decode the shared Project/Bindings controls into copied, typed intent.
+  Pending descriptors qualify rapid consecutive flow edits before publication.
+  Partial scalar input remains text until the independent processor parses it. }
+function CaptureNyxStudioAuthoring(ASession: TNyxStudioSession; ANode: TNyxNode;
+  AEvent: TNyxTrigger; AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
+  out AEdit: TNyxStudioDesignEdit): TNyxStudioAuthoringCapture;
+
 { Portable routing of Nyx shell events into undoable typed authoring commands.
   Nodes/session are borrowed; keys are exact transport data and closed metadata
   is decoded into enums before mutation. False means the event belongs to
@@ -119,8 +131,9 @@ begin
   end;
 end;
 
-function RouteNyxStudioAuthoring(ASession: TNyxStudioSession; ANode: TNyxNode;
-  AEvent: TNyxTrigger; AShellRoot: TNyxNode): Boolean;
+function CaptureNyxStudioAuthoring(ASession: TNyxStudioSession; ANode: TNyxNode;
+  AEvent: TNyxTrigger; AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
+  out AEdit: TNyxStudioDesignEdit): TNyxStudioAuthoringCapture;
 var
   LStateCommand: TNyxStudioStateCommand;
   LBindingCommand: TNyxStudioBindingCommand;
@@ -131,18 +144,18 @@ var
   LFlow: TNyxNode;
   LProjection: TNyxNode;
   LSpec: TNyxBindingSpec;
+  LInherit: Boolean;
 begin
-  Result := False;
+  Result := sacNone;
+  AEdit := Default(TNyxStudioDesignEdit);
 
   if (ASession = nil) or (ANode = nil) then
   begin
     raise ENyxModel.Create('Authoring requires a session and event source');
   end;
 
-  if RouteNyxStudioCollection(ASession, ANode, AEvent) then
-  begin
-    Exit(True);
-  end;
+  AEdit.Selection := ASession.SelectedID;
+  AEdit.View := ASession.ActiveViewID;
 
   if ANode.Prop(NyxStudioStateCommandKey) <> '' then
   begin
@@ -151,6 +164,14 @@ begin
     begin
       raise ENyxState.Create('Unknown state authoring command');
     end;
+
+    if not TryNyxStudioStateInput(ANode.Prop(NyxStudioStateInputKey), LInput) then
+    begin
+      raise ENyxState.Create('Unknown state input type');
+    end;
+    AEdit.Name := ANode.Prop(NyxStudioStateKey);
+    AEdit.StateInput := LInput;
+    AEdit.Value := ANode.Prop('value');
     case LStateCommand of
       sscDefault:
         begin
@@ -160,27 +181,28 @@ begin
             Exit;
           end;
 
-          if not TryNyxStudioStateInput(ANode.Prop(NyxStudioStateInputKey), LInput) then
-          begin
-            raise ENyxState.Create('Unknown state input type');
-          end;
-          LValue := ASession.Document.State.Value(ANode.Prop(NyxStudioStateKey));
-
-          if NyxStudioStateInputKind(LInput) <> LValue.Kind then
-          begin
-            raise ENyxState.Create('State default editor cannot change its declared type');
-          end;
-          LValue := ParseNyxStudioStateInput(LInput, ANode.Prop('value'));
-          ASession.SetStateValues([NyxStateAssign(ANode.Prop(NyxStudioStateKey), LValue)]);
+          AEdit.Action := sdaSetStateDefault;
         end;
       sscRename:
         begin
 
-          if AEvent <> ntChange then
+          if AEvent <> ntClick then
           begin
             Exit;
           end;
-          ASession.RenameState(ANode.Prop(NyxStudioStateKey), ANode.Prop('value'));
+          LFlow := nil;
+
+          if AShellRoot <> nil then
+          begin
+            LFlow := AShellRoot.Find(ANode.Prop(NyxStudioStateNameInputKey));
+          end;
+
+          if (LFlow = nil) or (LFlow.Prop(NyxStudioStateKey) <> AEdit.Name) then
+          begin
+            raise ENyxState.Create('Rename requires its current exact state name field');
+          end;
+          AEdit.Action := sdaRenameStateDefault;
+          AEdit.Value := LFlow.Prop('value');
         end;
       sscRemove:
         begin
@@ -189,10 +211,19 @@ begin
           begin
             Exit;
           end;
-          ASession.RemoveState(ANode.Prop(NyxStudioStateKey));
+          AEdit.Action := sdaRemoveStateDefault;
+        end;
+      sscRenameDraft:
+        begin
+
+          if AEvent = ntChange then
+          begin
+            Exit(sacNameDraft);
+          end;
+          Exit;
         end;
     end;
-    Exit(True);
+    Exit(sacEdit);
   end;
 
   if (AEvent = ntClick) and (ANode.ID = NyxStudioAddStateID) then
@@ -209,10 +240,11 @@ begin
     begin
       raise ENyxState.Create('Unknown new default type');
     end;
-    LValue := ParseNyxStudioStateInput(LInput,
-      AShellRoot.Find(NyxStudioNewStateValueID).Prop('value'));
-    ASession.CreateState(AShellRoot.Find(NyxStudioNewStateNameID).Prop('value'), LValue);
-    Exit(True);
+    AEdit.Action := sdaCreateStateDefault;
+    AEdit.StateInput := LInput;
+    AEdit.Name := AShellRoot.Find(NyxStudioNewStateNameID).Prop('value');
+    AEdit.Value := AShellRoot.Find(NyxStudioNewStateValueID).Prop('value');
+    Exit(sacEdit);
   end;
 
   if (AEvent = ntChange) and (ANode.ID = NyxStudioBindingFlowID) then
@@ -227,19 +259,37 @@ begin
     begin
       raise ENyxState.Create('Unknown binding flow');
     end;
-    LProjection := ASession.SelectedProjection;
-    try
+    if APending.Binding(AEdit.Selection, bpValue, LSpec, LInherit) then
+    begin
 
-      if (LProjection <> nil) and LProjection.FindBinding(bpValue, LSpec) then
+      if LInherit then
       begin
-        ASession.SetBinding(TNyxBindingSpec.Bound(bpValue, LSpec.StateName,
-          LSpec.ValueKind, LDirection));
-        Result := True;
+        raise ENyxState.Create('Wait for inherited binding admission before changing its flow');
       end;
-    finally
-      LProjection.Free;
+    end
+    else
+    begin
+      LSpec := TNyxBindingSpec.Clear(bpValue);
+      LProjection := ASession.SelectedProjection;
+      try
+
+        if LProjection <> nil then
+        begin
+          LProjection.FindBinding(bpValue, LSpec);
+        end;
+      finally
+        LProjection.Free;
+      end;
     end;
-    Exit;
+
+    if LSpec.Cleared then
+    begin
+      Exit(sacPresentation);
+    end;
+    AEdit.Action := sdaSetBinding;
+    AEdit.Binding := TNyxBindingSpec.Bound(bpValue, LSpec.StateName,
+      LSpec.ValueKind, LDirection);
+    Exit(sacEdit);
   end;
 
   if (AEvent <> ntClick) or (ANode.Prop(NyxStudioBindingCommandKey) = '') then
@@ -278,19 +328,85 @@ begin
             raise ENyxState.Create('Value binding requires an admitted flow choice');
           end;
         end;
-        ASession.SetBinding(TNyxBindingSpec.Bound(LTarget, ANode.Prop(NyxStudioStateKey),
-          LValue.Kind, LDirection));
+        AEdit.Action := sdaSetBinding;
+        AEdit.Binding := TNyxBindingSpec.Bound(LTarget, ANode.Prop(NyxStudioStateKey),
+          LValue.Kind, LDirection);
       end;
     sbcClear:
       begin
-        ASession.SetBinding(TNyxBindingSpec.Clear(LTarget));
+        AEdit.Action := sdaSetBinding;
+        AEdit.Binding := TNyxBindingSpec.Clear(LTarget);
       end;
     sbcInherit:
       begin
-        ASession.InheritBinding(LTarget);
+        AEdit.Action := sdaInheritBinding;
+        AEdit.Binding := TNyxBindingSpec.Clear(LTarget);
       end;
   end;
-  Result := True;
+  Result := sacEdit;
+end;
+
+function RouteNyxStudioAuthoring(ASession: TNyxStudioSession; ANode: TNyxNode;
+  AEvent: TNyxTrigger; AShellRoot: TNyxNode): Boolean;
+var
+  LEdit: TNyxStudioDesignEdit;
+  LCapture: TNyxStudioAuthoringCapture;
+  LValue: TNyxStateValue;
+begin
+
+  if RouteNyxStudioCollection(ASession, ANode, AEvent) then
+  begin
+    Exit(True);
+  end;
+  LCapture := CaptureNyxStudioAuthoring(ASession, ANode, AEvent, AShellRoot,
+    Default(TNyxStudioPendingDesign), LEdit);
+  Result := LCapture <> sacNone;
+
+  if LCapture <> sacEdit then
+  begin
+    Exit;
+  end;
+
+  if LEdit.Action in [sdaSetStateDefault, sdaRenameStateDefault, sdaRemoveStateDefault] then
+  begin
+    LValue := ASession.Document.State.Value(LEdit.Name);
+
+    if LValue.Kind <> NyxStudioStateInputKind(LEdit.StateInput) then
+    begin
+      raise ENyxState.Create('State editor cannot change its declared type');
+    end;
+  end;
+  case LEdit.Action of
+    sdaSetStateDefault:
+      begin
+        ASession.SetStateValues([NyxStateAssign(LEdit.Name,
+          ParseNyxStudioStateInput(LEdit.StateInput, LEdit.Value))]);
+      end;
+    sdaCreateStateDefault:
+      begin
+        ASession.CreateState(LEdit.Name, ParseNyxStudioStateInput(LEdit.StateInput, LEdit.Value));
+      end;
+    sdaRenameStateDefault:
+      begin
+        ASession.RenameState(LEdit.Name, LEdit.Value);
+      end;
+    sdaRemoveStateDefault:
+      begin
+        ASession.RemoveState(LEdit.Name);
+      end;
+    sdaSetBinding:
+      begin
+        ASession.SetBinding(LEdit.Binding);
+      end;
+    sdaInheritBinding:
+      begin
+        ASession.InheritBinding(LEdit.Binding.Target);
+      end;
+  else
+    begin
+      raise ENyxModel.Create('Captured authoring intent is outside its typed contract');
+    end;
+  end;
 end;
 
 end.

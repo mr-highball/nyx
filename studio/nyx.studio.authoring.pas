@@ -37,7 +37,9 @@ type
     Escaped text uses one JSON string literal so even NUL can be edited exactly
     through ordinary browser and native text widgets. }
   TNyxStudioStateInput = (ssiText, ssiEscapedText, ssiBoolean, ssiInteger, ssiNumber);
-  TNyxStudioStateCommand = (sscDefault, sscRename, sscRemove);
+  { Name text is a retained presentation draft. Only the Rename button emits
+    document intent, preventing partial names from becoming queued identities. }
+  TNyxStudioStateCommand = (sscDefault, sscRename, sscRemove, sscRenameDraft);
   TNyxStudioBindingCommand = (sbcChoose, sbcClear, sbcInherit);
 
 const
@@ -46,6 +48,7 @@ const
   NyxStudioStateKey = 'studio-state-key';
   NyxStudioStateInputKey = 'studio-state-input';
   NyxStudioStateCommandKey = 'studio-state-command';
+  NyxStudioStateNameInputKey = 'studio-state-name-input';
   NyxStudioBindingTargetKey = 'studio-binding-target';
   NyxStudioBindingCommandKey = 'studio-binding-command';
   NyxStudioBindingOwnerKey = 'studio-binding-owner';
@@ -92,7 +95,8 @@ uses
 const
   CInputs: array[TNyxStudioStateInput] of TNyxText = (
     'Text', 'Text (escaped)', 'Boolean', 'Integer', 'Number');
-  CStateCommands: array[TNyxStudioStateCommand] of TNyxText = ('default', 'rename', 'remove');
+  CStateCommands: array[TNyxStudioStateCommand] of TNyxText = (
+    'default', 'rename', 'remove', 'rename-draft');
   CBindingCommands: array[TNyxStudioBindingCommand] of TNyxText = ('choose', 'clear', 'inherit');
 
 function NyxStudioStateInputName(AInput: TNyxStudioStateInput): TNyxText;

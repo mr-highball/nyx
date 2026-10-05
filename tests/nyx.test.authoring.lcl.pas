@@ -244,6 +244,10 @@ begin
     Rebuild;
     LInput := TEdit(LRenderer.InputFor('state-name-0'));
     LInput.Text := 'reply / 漢字';
+    Check(LSession.Document.State.Has('🌙/reply') and
+      not LSession.Document.State.Has('reply / 漢字'),
+      'native name typing remains presentation until deliberate Rename');
+    TNyxLCLButton(LRenderer.ControlFor('state-rename-0')).Click;
     Check(LSession.Document.State.Has('reply / 漢字') and
       (LSession.Document.Find('reply-memo').Bindings[0].StateName = TNyxText('reply / 漢字')),
       'native name editor migrates default and references');
@@ -257,6 +261,9 @@ begin
     TNyxLCLButton(LRenderer.ControlFor('state-remove-0')).Click;
     Check((LProbe.Error <> '') and (LSession.Save = LBefore),
       'native used-default removal preserves accepted history');
+    Check(LSession.Document.State.Has('reply / 漢字'),
+      'used-default refusal retains the exact accepted Unicode state key');
+    LSession.Document.Validate;
     LInput := TEdit(LRenderer.InputFor(NyxStudioNewStateNameID));
     LInput.Text := 'counter / 🌙';
     TEdit(LRenderer.InputFor(NyxStudioNewStateValueID)).Text := '42';
@@ -264,7 +271,7 @@ begin
     TNyxLCLButton(LRenderer.ControlFor(NyxStudioAddStateID)).Click;
     Check((LProbe.Error = '') and (LSession.Document.State.Count = LCount + 1) and
       (LSession.Document.State.Value('counter / 🌙').IntegerValue = 42),
-      'native Add command reads actual Nyx fields into integer state');
+      'native Add command reads actual Nyx fields into integer state / ' + LProbe.Error);
     Rebuild;
     LBefore := LSession.Save;
     LInput := TEdit(LRenderer.InputFor('state-default-' + IntToStr(LCount)));

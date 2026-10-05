@@ -874,3 +874,27 @@ commit semantics that preserve consecutive input. Broader event/source routes,
 large-project comfortable editing and full both-target ordinary-editor outcomes
 retain their original gates. No stable-fixture repetition or narrower parity
 claim substitutes completion. See WORK.md and the workflow task's criterion 5.
+
+## Queued scalar inspector consumption — 2026-10-05
+
+Ordinary Project/Bindings controls now use isolated typed design admission.
+Names remain retained drafts until explicit Rename; pending rows/forms guard
+stale replay. Copied notation/owner/flow values retain newer input across earlier
+completion/refusal. Exact pair/draft/load/creator guards still publish one paired
+Undo step. Whole-record view-state initialization fixes undefined native pending
+flags discovered by the older authoring consumer.
+
+Private admission passes 56 on each native compiler. Actual standalone native
+controls pass 82, shared native authoring 73 and existing canvas regression 47,
+with zero leaks. English desktop/390 controls were inspected. Current browser
+Studio, matched worker and asynchronous control journey compile; execution and
+observing deployment retain the existing host gate. See WORK.md for distinct
+regression counts, corrected fixture assumptions and exact evidence scope.
+
+Criteria 1/2 remain accepted; criterion 3 remains open. Its no-closure count
+advances 23→24 once; workflow 3, renderer 3, native authoring 7 and delivery 1
+remain unchanged. Stop scalar fixture expansion. The next ordinary integration
+is remaining event/structured-collection authoring through the same isolated
+source boundary, with draft/navigation/history preservation and real controls.
+Comfortable large-project editing and complete both-target/source/editor outcomes
+retain their original acceptance; no task or target closes from this packet.

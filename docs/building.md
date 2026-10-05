@@ -590,6 +590,26 @@ ordinary builds contain no profiling clocks or output. The compiled
 unchanged original workload for diagnosis. Omitting it still qualifies all three
 sizes; a selected run cannot establish omitted-size or complete-target acceptance.
 
+The focused scalar Project/Bindings inspector qualification is available as:
+
+```powershell
+./tools/build.ps1 -Target state-inspectors
+```
+
+It runs typed private-wire/admission checks, queue presentation/retirement
+regressions, real standalone native state/binding controls, the maintained
+synchronous authoring consumer and queued canvas controls. The native journey
+covers retained explicit Rename drafts, rapid/coalesced scalar input, rejection,
+escaped supplementary/NUL values, exact paired history, captured binding owners,
+inherit/clear, independent Pascal drafts and project replacement. English desktop
+and 390-pixel captures live under `build/state-inspectors/controls/`.
+Current browser Studio, the matched compiled Pascal worker, portable checks and
+an asynchronous DOM control journey are staged under its `browser/` directory.
+Compilation is not browser execution or visual acceptance. The command starts no
+listener, changes no enrollment/profile/user project and replaces no live service.
+Full responsiveness, browser/native parity and wider layout/accessibility remain
+with their original task owners.
+
 The optional Win32 transport consumer needs no Studio server, project, enrollment
 or application compiler profile:
 

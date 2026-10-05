@@ -107,10 +107,112 @@ begin
   end;
 end;
 
+function PendingStateField(const AFields: array of TNyxStudioPendingField;
+  const AName: TNyxText; AKind: TNyxStateKind; out AValue: TNyxText): Boolean;
+var
+  LIndex: Integer;
+begin
+  AValue := '';
+  for LIndex := High(AFields) downto 0 do
+  begin
+
+    if (AFields[LIndex].Selection = AName) and
+      (AFields[LIndex].Key = NyxStateKindName(AKind)) then
+    begin
+      AValue := AFields[LIndex].Value;
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
+function TNyxStudioPendingDesign.StateValue(const AName: TNyxText;
+  AKind: TNyxStateKind; out AValue: TNyxText): Boolean;
+begin
+  Result := PendingStateField(StateValues, AName, AKind, AValue);
+end;
+
+function TNyxStudioPendingDesign.StateName(const AName: TNyxText;
+  AKind: TNyxStateKind; out AValue: TNyxText): Boolean;
+begin
+  Result := PendingStateField(StateNames, AName, AKind, AValue);
+end;
+
+function TNyxStudioPendingDesign.StateEditorInput(const AName: TNyxText;
+  AKind: TNyxStateKind; out AInput: TNyxStudioStateInput): Boolean;
+var
+  LIndex: Integer;
+begin
+  AInput := ssiText;
+  for LIndex := High(StateValues) downto 0 do
+  begin
+
+    if (StateValues[LIndex].Selection = AName) and
+      (StateValues[LIndex].Key = NyxStateKindName(AKind)) then
+    begin
+      AInput := StateValues[LIndex].StateInput;
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
+function TNyxStudioPendingDesign.StateLocked(const AName: TNyxText): Boolean;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(RenamingStates) do
+  begin
+
+    if RenamingStates[LIndex] = AName then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
+function TNyxStudioPendingDesign.Binding(const AOwner: TNyxText;
+  ATarget: TNyxBindingProperty; out ASpec: TNyxBindingSpec;
+  out AInherit: Boolean): Boolean;
+var
+  LIndex: Integer;
+begin
+  ASpec := TNyxBindingSpec.Clear(ATarget);
+  AInherit := False;
+  for LIndex := High(Bindings) downto 0 do
+  begin
+
+    if (Bindings[LIndex].Owner = AOwner) and (Bindings[LIndex].Spec.Target = ATarget) then
+    begin
+      ASpec := Bindings[LIndex].Spec.Copy;
+      AInherit := Bindings[LIndex].Inherit;
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
+function DesignBindingData(const AEdit: TNyxStudioDesignEdit): TNyxDataValue;
+begin
+  Result := NyxNull;
+
+  if AEdit.Action in [sdaSetBinding, sdaInheritBinding] then
+  begin
+    AEdit.Binding.Validate;
+    Result := NyxObject([
+      NyxField('target', NyxData(Ord(AEdit.Binding.Target))),
+      NyxField('name', NyxData(AEdit.Binding.StateName)),
+      NyxField('kind', NyxData(Ord(AEdit.Binding.ValueKind))),
+      NyxField('direction', NyxData(Ord(AEdit.Binding.Direction))),
+      NyxField('cleared', NyxData(AEdit.Binding.Cleared))]);
+  end;
+end;
+
 function TNyxStudioDesignRequest.ToData: TNyxDataValue;
 begin
   Result := NyxObject([
-    NyxField('version', NyxData(2)), NyxField('owner', NyxData(FOwner)),
+    NyxField('version', NyxData(3)), NyxField('owner', NyxData(FOwner)),
     NyxField('generation', NyxData(FGeneration)), NyxField('nextId', NyxData(FNextID)),
     NyxField('schemaRevision', NyxData(FSchemaRevision)),
     NyxField('pair', NyxData(EncodeNyxProject(FPair))),
@@ -119,7 +221,9 @@ begin
       NyxField('selection', NyxData(FEdit.Selection)), NyxField('view', NyxData(FEdit.View)),
       NyxField('name', NyxData(FEdit.Name)), NyxField('value', NyxData(FEdit.Value)),
       NyxField('direction', NyxData(Ord(FEdit.Direction))),
-      NyxField('platform', NyxData(Ord(FEdit.Platform)))]))]);
+      NyxField('platform', NyxData(Ord(FEdit.Platform))),
+      NyxField('stateInput', NyxData(Ord(FEdit.StateInput))),
+      NyxField('binding', DesignBindingData(FEdit))]))]);
 end;
 
 function TNyxStudioDesignRequest.SameRequest(const AOther: TNyxStudioDesignRequest): Boolean;
@@ -133,7 +237,13 @@ begin
     (FPair.DraftBase = AOther.FPair.DraftBase) and (FEdit.Action = AOther.FEdit.Action) and
     (FEdit.Selection = AOther.FEdit.Selection) and (FEdit.View = AOther.FEdit.View) and
     (FEdit.Name = AOther.FEdit.Name) and (FEdit.Value = AOther.FEdit.Value) and
-    (FEdit.Direction = AOther.FEdit.Direction) and (FEdit.Platform = AOther.FEdit.Platform);
+    (FEdit.Direction = AOther.FEdit.Direction) and (FEdit.Platform = AOther.FEdit.Platform) and
+    (FEdit.StateInput = AOther.FEdit.StateInput) and
+    (FEdit.Binding.Target = AOther.FEdit.Binding.Target) and
+    (FEdit.Binding.StateName = AOther.FEdit.Binding.StateName) and
+    (FEdit.Binding.ValueKind = AOther.FEdit.Binding.ValueKind) and
+    (FEdit.Binding.Direction = AOther.FEdit.Binding.Direction) and
+    (FEdit.Binding.Cleared = AOther.FEdit.Binding.Cleared);
 end;
 
 function ReadNyxStudioDesignRequest(const AData: TNyxDataValue): TNyxStudioDesignRequest;
@@ -142,10 +252,15 @@ var
   LAction: Integer;
   LDirection: Integer;
   LPlatform: Integer;
+  LInput: Integer;
+  LBinding: TNyxDataValue;
+  LTarget: Integer;
+  LKind: Integer;
+  LFlow: Integer;
 begin
 
   if (AData.Kind <> ndObject) or (AData.Count <> 7) or
-    (AData.Field('version').AsInteger <> 2) then
+    (AData.Field('version').AsInteger <> 3) then
   begin
     raise ENyxModel.Create('Design processor requires its exact versioned ticket');
   end;
@@ -158,7 +273,7 @@ begin
   LEdit := AData.Field('edit');
 
   if (Result.FOwner = '') or (Result.FGeneration < 0) or (Result.FNextID < 0) or
-    (Result.FSchemaRevision < 0) or (LEdit.Kind <> ndObject) or (LEdit.Count <> 7) then
+    (Result.FSchemaRevision < 0) or (LEdit.Kind <> ndObject) or (LEdit.Count <> 9) then
   begin
     raise ENyxModel.Create('Design processor ticket has invalid identity or intent');
   end;
@@ -189,8 +304,67 @@ begin
     raise ENyxModel.Create('Design processor platform is outside its closed contract');
   end;
   Result.FEdit.Platform := TNyxPlatform(LPlatform);
+  LInput := LEdit.Field('stateInput').AsInteger;
+
+  if (LInput < Ord(Low(TNyxStudioStateInput))) or
+    (LInput > Ord(High(TNyxStudioStateInput))) then
+  begin
+    raise ENyxModel.Create('Design processor state notation is outside its closed contract');
+  end;
+  Result.FEdit.StateInput := TNyxStudioStateInput(LInput);
+  LBinding := LEdit.Field('binding');
+
+  if Result.FEdit.Action in [sdaSetBinding, sdaInheritBinding] then
+  begin
+
+    if (LBinding.Kind <> ndObject) or (LBinding.Count <> 5) then
+    begin
+      raise ENyxModel.Create('Binding intent requires its exact typed descriptor');
+    end;
+    LTarget := LBinding.Field('target').AsInteger;
+    LKind := LBinding.Field('kind').AsInteger;
+    LFlow := LBinding.Field('direction').AsInteger;
+
+    if (LTarget < Ord(Low(TNyxBindingProperty))) or (LTarget > Ord(High(TNyxBindingProperty))) or
+      (LKind < Ord(Low(TNyxStateKind))) or (LKind > Ord(High(TNyxStateKind))) or
+      (LFlow < Ord(Low(TNyxBindingDirection))) or (LFlow > Ord(High(TNyxBindingDirection))) then
+    begin
+      raise ENyxModel.Create('Binding intent contains an unknown enum choice');
+    end;
+
+    if LBinding.Field('cleared').AsBoolean then
+    begin
+
+      if (LBinding.Field('name').AsText <> '') or (LKind <> Ord(nskText)) or
+        (LFlow <> Ord(bdFromState)) then
+      begin
+        raise ENyxModel.Create('Cleared binding intent cannot contain a state reference');
+      end;
+      Result.FEdit.Binding := TNyxBindingSpec.Clear(TNyxBindingProperty(LTarget));
+    end
+    else
+    begin
+      Result.FEdit.Binding := TNyxBindingSpec.Bound(TNyxBindingProperty(LTarget),
+        LBinding.Field('name').AsText, TNyxStateKind(LKind), TNyxBindingDirection(LFlow));
+    end;
+
+    if (Result.FEdit.Action = sdaInheritBinding) and not Result.FEdit.Binding.Cleared then
+    begin
+      raise ENyxModel.Create('Inherit intent requires a target without a state reference');
+    end;
+  end
+  else if LBinding.Kind <> ndNull then
+  begin
+    raise ENyxModel.Create('Only binding intent contains a binding descriptor');
+  end;
   Result.FEdit.FCanvasContext.FOwner := Result.FOwner;
   Result.FEdit.FCanvasContext.FGeneration := Result.FGeneration;
+
+  if not (Result.FEdit.Action in [sdaSetStateDefault, sdaCreateStateDefault,
+    sdaRenameStateDefault, sdaRemoveStateDefault]) and (Result.FEdit.StateInput <> ssiText) then
+  begin
+    raise ENyxModel.Create('Only state intent selects scalar editor notation');
+  end;
 
   if ((Result.FEdit.Action = sdaCanvasValue) and (Result.FEdit.Platform = npfAny)) or
     ((Result.FEdit.Action <> sdaCanvasValue) and (Result.FEdit.Platform <> npfAny)) then
@@ -209,6 +383,7 @@ end;
 procedure TPreparedDesign.Execute;
 var
   LSession: TNyxStudioSession;
+  LStateValue: TNyxStateValue;
 begin
   { Strict paired admission also verifies handwritten frame ownership. It runs
     entirely on the isolated processor, under its captured creator environment.
@@ -226,6 +401,17 @@ begin
     if FRequest.FEdit.Selection <> '' then
     begin
       LSession.Select(FRequest.FEdit.Selection);
+    end;
+
+    if FRequest.FEdit.Action in [sdaSetStateDefault, sdaRenameStateDefault,
+      sdaRemoveStateDefault] then
+    begin
+      LStateValue := LSession.Document.State.Value(FRequest.FEdit.Name);
+
+      if LStateValue.Kind <> NyxStudioStateInputKind(FRequest.FEdit.StateInput) then
+      begin
+        raise ENyxState.Create('Captured state identity changed its scalar family');
+      end;
     end;
     case FRequest.FEdit.Action of
       sdaProperty: LSession.SetProperty(FRequest.FEdit.Name, FRequest.FEdit.Value);
@@ -250,6 +436,17 @@ begin
       sdaAddInstance: LSession.AddComponentInstance(FRequest.FEdit.Name);
       sdaCustomizePart: LSession.CustomizePart(FRequest.FEdit.Name);
       sdaCanvasValue: LSession.SetCapturedCanvasValue(FRequest.FEdit);
+      sdaSetStateDefault:
+        LSession.SetStateValues([NyxStateAssign(FRequest.FEdit.Name,
+          ParseNyxStudioStateInput(FRequest.FEdit.StateInput, FRequest.FEdit.Value))]);
+      sdaCreateStateDefault:
+        LSession.CreateState(FRequest.FEdit.Name,
+          ParseNyxStudioStateInput(FRequest.FEdit.StateInput, FRequest.FEdit.Value));
+      sdaRenameStateDefault:
+        LSession.RenameState(FRequest.FEdit.Name, FRequest.FEdit.Value);
+      sdaRemoveStateDefault: LSession.RemoveState(FRequest.FEdit.Name);
+      sdaSetBinding: LSession.SetBinding(FRequest.FEdit.Binding);
+      sdaInheritBinding: LSession.InheritBinding(FRequest.FEdit.Binding.Target);
     end;
     FSource := LSession.Source;
     FDesign := LSession.FSourceWorkspace.Capture.Design;
@@ -446,6 +643,7 @@ begin
   Result.FSchemaRevision := ASchemaRevision;
   Result.FPair := ProjectSnapshot;
   Result.FEdit := AEdit;
+  Result.FEdit.Binding := AEdit.Binding.Copy;
 end;
 
 function TNyxStudioSession.CompleteDesignRequest(const ARequest: TNyxStudioDesignRequest;

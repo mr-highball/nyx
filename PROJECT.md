@@ -161,8 +161,16 @@ and 15 exact compiled native control checks, with zero leaks. Browser consumers
 compile; updated authenticated discovery and observing runtime remain at the
 existing host gate. The source catalog has eighteen tools, while the protected
 LAN release and current desktop chat retain fifteen. General source/import,
-structured-state/richer reusable semantics and asynchronous inspector integration
-remain open; WORK.md owns exact evidence and the next acceptance path.
+structured-state/richer reusable semantics and broader asynchronous authoring
+remain open; WORK.md owns exact evidence and the next acceptance path. Ordinary
+scalar Project/Bindings controls now consume the isolated typed command queue.
+Name drafts use explicit Rename, pending rows/forms guard stale replay and newer
+field/flow input stays visible. Checked private admission passes 56 on each native
+compiler; actual standalone native state/binding controls pass 82, the shared
+authoring consumer 73 and canvas regression 47, with zero leaks. Browser Studio,
+the matched worker and an asynchronous control journey compile; current browser
+execution and observing deployment remain unqualified at the existing host gate.
+This does not accept complete source synchronization or large-project usability.
 
 Concurrent project sessions now have a qualified portable foundation and
 ordinary browser jump/return workflow: 215 shared checks per target, ten actual

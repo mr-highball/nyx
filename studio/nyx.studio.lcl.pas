@@ -138,6 +138,9 @@ type
     FCanvasRestores: TNyxProjectionValueRestores;
     FCanvasRestoreContext: TNyxStudioCommandContext;
     FCanvasCommandContext: TNyxStudioCommandContext;
+    { Shell controls remain mounted until deferred painting after a project load.
+      Their old identities must not submit intent into the newly accepted load. }
+    FShellCommandContext: TNyxStudioCommandContext;
     FSourceLine: Integer;
     FSourceColumn: Integer;
     FPaintCount: Integer;
@@ -1456,6 +1459,7 @@ var
   LSameView: Boolean;
   LChromeID: TNyxText;
   LCanvasFocusID: TNyxText;
+  LChromeStateKey: TNyxText;
   {$ifdef NYX_STUDIO_PROFILE}
   LPhaseStarted: QWord;
 
@@ -1477,7 +1481,9 @@ var
   begin
     Result := '';
 
-    if (ANode.ID = 'project-title') or (ANode.Prop('prop-key') <> '') then
+    if (ANode.ID = 'project-title') or (ANode.Prop('prop-key') <> '') or
+      (ANode.Prop(NyxStudioStateCommandKey) <> '') or
+      (ANode.ID = NyxStudioNewStateNameID) or (ANode.ID = NyxStudioNewStateValueID) then
     begin
 
       if FShellView.InputFor(ANode.ID) = LFocus then
@@ -1522,11 +1528,17 @@ begin
     end;
     LSelection := Default(TNyxTextSelection);
     LChromeID := '';
+    LChromeStateKey := '';
 
     if (LFocus <> nil) and (FShellView.Root <> nil) and
       InsideControl(LFocus, FShellView.ControlFor(FShellView.Root.ID)) then
     begin
       LChromeID := EditingChromeIdentity(FShellView.Root);
+
+      if LChromeID <> '' then
+      begin
+        LChromeStateKey := FShellView.Root.Find(LChromeID).Prop(NyxStudioStateKey);
+      end;
     end;
 
     if LRetainFocus or LCanvasFocus or (LChromeID <> '') then
@@ -1708,6 +1720,15 @@ begin
       retain its destroyed widget pointer across shell replacement. Pending
       values are already present in ComposeShell's immutable presentation. }
 
+    if (LChromeID <> '') and (LChromeStateKey <> '') and
+      ((FShell.Find(LChromeID) = nil) or
+        (FShell.Find(LChromeID).Prop(NyxStudioStateKey) <> LChromeStateKey)) then
+    begin
+      { Removing a state can reuse its positional chrome ID for a different
+        row. Restore only the original exact identity, never that replacement. }
+      LChromeID := '';
+    end;
+
     if (LChromeID <> '') and (FShell.Find(LChromeID) <> nil) then
     begin
       LFocus := FShellView.FocusFor(LChromeID);
@@ -1725,6 +1746,7 @@ begin
     FReplaceCanvas := False;
     FCanvasRestores := nil;
     RestoreProjectControls;
+    FShellCommandContext := FSession.CommandContext;
     FChangingProject := False;
     Inc(FPaintCount);
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-finish');{$endif}
@@ -1739,9 +1761,24 @@ procedure TNyxNativeStudio.SourceCommandChanged(AState: TNyxSourceCommandState;
 var
   LRestore: TNyxProjectionValueRestore;
   LRestoreCanvas: Boolean;
+  LCreatedName: TNyxText;
+  LNameField: TNyxNode;
 begin
   FState.Status := AMessage;
   FState.SourceStatus := AMessage;
+
+  if FSourceCommands.NewDefaultCreated(LCreatedName) and (FShellView.Root <> nil) then
+  begin
+    LNameField := FShellView.Root.Find(NyxStudioNewStateNameID);
+
+    if (LNameField <> nil) and (LNameField.Prop('value') = LCreatedName) then
+    begin
+      { CapturePresentation reads this owned node before the deferred paint.
+        Clear only the exact submitted name; a later value remains untouched. }
+      LNameField.Configure.Value('').Done;
+      FState.NewStateName := '';
+    end;
+  end;
   { Palette/page completion follows its owning project's structural result.
     Status-only and inspector callbacks retain the user's chosen panel. }
 
@@ -1999,7 +2036,8 @@ var
   LHierarchyChanged: Boolean;
 begin
 
-  if FPainting or FChangingProject then
+  if FPainting or FChangingProject or
+    not FSession.MatchesCommandContext(FShellCommandContext) then
   begin
     Exit;
   end;
@@ -2017,7 +2055,18 @@ begin
       Exit;
     end;
 
-    if FSourceCommands.Route(ANode, AEvent.Trigger) then
+    if (ANode.ID = NyxStudioBindingFlowID) and (AEvent.Trigger = ntChange) then
+    begin
+      { An unbound flow choice is presentation only. Retain it even when the
+        queue consumes that event; bound choices additionally submit intent. }
+
+      if not TryNyxStudioBindingDirection(ANode.Prop('value'), FState.BindingDirection) then
+      begin
+        raise ENyxModel.Create('Unknown binding flow');
+      end;
+    end;
+
+    if FSourceCommands.Route(ANode, AEvent.Trigger, FShellView.Root) then
     begin
       Exit;
     end;

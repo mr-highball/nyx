@@ -6390,3 +6390,110 @@ revision/history and all eight protected process identities remain unchanged.
 No state/schema/control fixtures remain. This handoff updates the work record;
 its exact clean/remote proof is stored privately after its own push. Goal remains
 active/incomplete, with the next acceptance deliverable and counts above.
+
+Current continuation batch (original codegen criterion 3; authoring/workflow
+consumers): route ordinary scalar default creation/edit/removal and bindings
+through isolated design admission, with typed wire intent and pending-field
+presentation. State names become retained drafts applied by an explicit Rename
+control; pending rename locks its exact row to avoid stale-name replay. Preserve
+partial/newer values, source/draft/history, independent navigation and load
+retirement. Qualify the private wire, failed/stale replay, real native Project /
+Bindings controls, English desktop/390 presentation and both compiler consumers.
+The previous goal turn was progress: 79e8b59/a823a9e are exact clean/pushed state
+semantic/discovery/control evidence. Counts remain 23 / workflow 3 / renderer 3 /
+native authoring 7 / delivery 1 until assessed. Stop on dropped/retargeted typing,
+partial publication or weaker admission; broader event/collection/source routes
+and browser/observing host gates retain their original owners.
+
+## Queued scalar Project/Bindings authoring — 2026-10-05
+
+The continuation deliverable now routes ordinary default creation/edit/removal,
+explicit rename, binding choice/flow/clear/inherit through the existing independent
+design processor. Six closed intents carry copied scalar notation/binding values;
+private tickets advance to version 3 with strict enum/descriptor admission. The
+project persistence format remains version 1. Both adapters consume the same
+Nyx-built controls and capture function; neither worker retains an accepted node.
+Fresh pair/draft/load/creator guards and one paired Undo publication remain owned
+by the existing session. No throughput or comfortable-editing acceptance follows.
+
+Names are retained project-owned drafts until Rename. A queued rename guards its
+exact row before paint; successful publication retires only its matching draft,
+and rejection keeps correction text. Removed/load-retired identities cannot
+inherit old drafts. Pending creation guards duplicate submission and clears only
+the exact successful form name. Pending defaults retain notation as well as
+family across earlier publication; pending bindings retain owner/target/flow.
+Native/browser focus restoration qualifies the exact state identity rather than
+reusing a positional row ID. The shell also carries its actual mounted-load guard.
+Ordinary visual edits preserve an independent handwritten draft and original base;
+grouped semantic mutations retain their stricter pending-draft refusal.
+
+Actual qualification found an owned product defect: `DefaultNyxStudioViewState`
+initialized individual fields but left pending-record scalar flags undefined on
+native FPC. The older authoring consumer could therefore receive a disabled Add
+form. Whole-record default initialization fixes that boundary; its complete
+consumer now passes. A fixture initially compared a Double to an extended literal,
+and another assumed semantic pending-draft refusal applied to ordinary visual
+editing. Both assertions were corrected to the public contracts, not weakened to
+claim successful behavior. Failed trials remain described here; their earlier
+composite command did stop rather than continuing after failure.
+
+Ignored evidence is under `build/state-inspector-queue/`:
+
+- `shared/build.log` / `run.log`: **56** checked FPC 3.2.0 typed ticket/admission
+  checks. `shared-3.3/` passes the same **56** on checked FPC 3.3.1. Cases include
+  all four families, exact supplementary/NUL values, signed bounds/precision,
+  wrong notation/reference/domain/enum refusal, rename migration, inheritance,
+  paired Undo and stale owner/draft/load refusal.
+- `native/shared-run.log`: existing **140** detached design/source checks pass
+  after the private wire change. `queue/run.log`: existing **10** real scheduler
+  presentation/retirement checks pass. These are regressions, not new features.
+- `final-lcl/build.log` / `run.log`: **82** actual standalone Win32 state/binding
+  checks pass, including rapid input/coalescing, failed renames, exact paired
+  history, numeric rejection/focus, escaping across later queued values,
+  captured binding selection, reusable clear/inherit, independent source drafts,
+  same-ID replacement and detached retirement.
+- `legacy/run.log`: **73** actual shared native authoring checks pass after the
+  complete-record initializer fix. `canvas/run.log`: existing **47** actual
+  queued canvas checks pass with the current consumers. All seven distinct
+  successful behavior fixture processes report zero unfreed blocks.
+- `final-lcl/capture-run.log` is painting only, with zero leaks. Its English
+  desktop/390 captures in `visual-controls/` were inspected and show the new
+  name/Rename/default controls. Captures use the real nested Project scrollbar;
+  root Reveal alone did not scroll that sidebar. Existing broader sidebar/widget
+  metric and visual-quality gaps remain with the renderer/authoring owners.
+- `browser/` compiles current Studio, its matched compiled Pascal worker, shared
+  checks and an asynchronous DOM control journey; matched RTL and English hosts
+  are staged. These consumers were **not executed** here. Owned warnings are
+  zero; the seven distinct installed Classes RTL warnings remain visible.
+  Dependencies, profiles, enrollment and live artifacts were not changed.
+
+`tools/build.ps1 -Target state-inspectors` now orchestrates the focused consumers
+without launching a listener. Its initial composite run stopped at the native
+initializer defect. Current corrected consumers were qualified explicitly as
+above; the whole composite command was not needlessly repeated after those passes.
+No claim of a new service deployment or authenticated eighteen-tool inventory is
+made. The current desktop/LAN server still exposes fifteen tools; source discovery
+remains eighteen, as qualified by the preceding semantic packet.
+
+This goal turn is progress. Codegen criteria 1/2 remain accepted, criterion 3 stays
+open and its consecutive no-closure count advances **23→24** once. Workflow **3**,
+renderer **3**, native authoring **7** and delivery **1** are unchanged. Reassessment
+ends scalar fixture expansion: remaining event/structured-collection authoring
+routes must consume the same isolated source boundary, with actual ordinary
+controls and draft/navigation/history preservation. Full source synchronization,
+comfortable large-document editing, current browser execution and complete
+both-target/editor/accessibility outcomes retain their original gates. No task
+moves to DONE. Final process/session and remote-checkpoint proof follows.
+
+Automatic approval review previously rejected qualification-listener launch as
+"blocked by policy" without further reason. No equivalent listener or service
+replacement was attempted. Changed browser behavior, authenticated updated tools
+and observing Studio still need that permitted host; compilation and native
+controls do not substitute those outcomes.
+
+Final preservation check: all eight protected processes match their original
+executable paths and exact creation times; no focused fixture remains running.
+Native named MCP `nyx_session` remains connected at revision 6, home selection,
+one page/one reusable component, no pending draft, Undo unavailable/Redo available
+and activity sequence 192. This packet made no semantic mutation of that active
+user pair. Private process proof remains in `.local/codex-restart-check/`.

@@ -51,6 +51,7 @@ uses
   nyx.studio.rootedits,
   nyx.callbacks,
   nyx.scheduler,
+  nyx.studio.authoring,
   nyx.sample;
 
 type
@@ -78,7 +79,8 @@ type
     processing invokes existing typed commands, never arbitrary Pascal methods. }
   TNyxStudioDesignAction = (sdaProperty, sdaAddKind, sdaDelete, sdaDuplicate,
     sdaMove, sdaTitle, sdaAddPage, sdaCreateComponent, sdaAddInstance, sdaCustomizePart,
-    sdaCanvasValue);
+    sdaCanvasValue, sdaSetStateDefault, sdaCreateStateDefault,
+    sdaRenameStateDefault, sdaRemoveStateDefault, sdaSetBinding, sdaInheritBinding);
   { A structural move is one sibling step. Arbitrary integer offsets are not
     accepted by the queued editor contract. }
   TNyxStudioMoveDirection = (nmdPrevious, nmdNext);
@@ -110,6 +112,11 @@ type
     { Canvas replay projects the same concrete platform's typed overrides.
       Other actions use npfAny. Neither DOM nor LCL handles cross this boundary. }
     Platform: TNyxPlatform;
+    { State editor notation retains its declared scalar family. Parsing runs on
+      the independent processor so incomplete input never mutates accepted data.
+      Binding descriptors own copied values and contain no runtime references. }
+    StateInput: TNyxStudioStateInput;
+    Binding: TNyxBindingSpec;
     { Immutable origin of a canvas capture. Queue admission uses this mounted
       session/load identity even when the caller retains intent before enqueue. }
     property CanvasContext: TNyxStudioCommandContext read FCanvasContext;
@@ -121,6 +128,9 @@ type
     Selection: TNyxText;
     Key: TNyxText;
     Value: TNyxText;
+    { State fields retain their editor notation while an earlier value publishes.
+      Other presentation fields leave this at its default text notation. }
+    StateInput: TNyxStudioStateInput;
   end;
   { Copied presentation of an uncommitted field proposal. The exact view,
     editable owner and runtime field distinguish separate reusable instances. }
@@ -130,11 +140,44 @@ type
     RuntimeID: TNyxText;
     Value: TNyxText;
   end;
+  { The latest exact owner/target descriptor is presentation only. Inherit means
+    its effective descriptor must be realized after admission, not guessed from
+    the currently accepted local override. }
+  TNyxStudioPendingBinding = record
+    Owner: TNyxText;
+    Spec: TNyxBindingSpec;
+    Inherit: Boolean;
+  end;
   TNyxStudioPendingDesign = record
     TitleDefined: Boolean;
     Title: TNyxText;
     Fields: array of TNyxStudioPendingField;
     CanvasValues: array of TNyxStudioPendingCanvasValue;
+    { Pending state rows use exact names/families rather than positional widget
+      IDs. Rename drafts are presentation only, applied by explicit user intent. }
+    StateValues: array of TNyxStudioPendingField;
+    StateNames: array of TNyxStudioPendingField;
+    RenamingStates: array of TNyxText;
+    NewDefaultPending: Boolean;
+    Bindings: array of TNyxStudioPendingBinding;
+    { Copy the latest exact authored owner/target. False returns a cleared
+      descriptor and False inheritance flag; no effective binding is invented. }
+    function Binding(const AOwner: TNyxText; ATarget: TNyxBindingProperty;
+      out ASpec: TNyxBindingSpec; out AInherit: Boolean): Boolean;
+    { Latest editor text for this exact name/family. False clears the output;
+      empty text can still be a defined pending value. }
+    function StateValue(const AName: TNyxText; AKind: TNyxStateKind;
+      out AValue: TNyxText): Boolean;
+    { Preserve the latest queued notation while earlier values publish. False
+      supplies text notation; callers then use the accepted value's notation. }
+    function StateEditorInput(const AName: TNyxText; AKind: TNyxStateKind;
+      out AInput: TNyxStudioStateInput): Boolean;
+    { Latest retained/queued name draft. It never changes accepted identity.
+      False clears the output; the caller displays the accepted name instead. }
+    function StateName(const AName: TNyxText; AKind: TNyxStateKind;
+      out AValue: TNyxText): Boolean;
+    { True only while an exact rename is active/waiting in this load. }
+    function StateLocked(const AName: TNyxText): Boolean;
     { Last pending value wins for the exact owner/key. False clears AValue;
       empty text can still be a defined value. The snapshot owns its array. }
     function PropertyValue(const ASelection, AKey: TNyxText;
@@ -411,7 +454,6 @@ implementation
 
 uses
   nyx.binding,
-  nyx.studio.authoring,
   nyx.composition,
   nyx.platform,
   nyx.interaction;

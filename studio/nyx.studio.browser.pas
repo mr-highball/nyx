@@ -81,6 +81,8 @@ type
     FCanvasRestores: TNyxProjectionValueRestores;
     FCanvasRestoreContext: TNyxStudioCommandContext;
     FCanvasCommandContext: TNyxStudioCommandContext;
+    { A shell control is qualified by the load it actually presents. }
+    FShellCommandContext: TNyxStudioCommandContext;
     FShell: TNyxDocument;
     FShellRenderer: TNyxBrowserRenderer;
     { Borrowed receiver registration; cancelled before any controller teardown. }
@@ -591,6 +593,8 @@ var
   LSameView: Boolean;
   LFocusID: TNyxText;
   LFocusValue: TNyxText;
+  LFocusStateKey: TNyxText;
+  LFocusNode: TNyxNode;
   LField: TJSHTMLElement;
   LReplacement: TJSHTMLElement;
   LCodeStart: NativeInt;
@@ -636,6 +640,7 @@ begin
     Admission/rollback refreshes deliberately retain their default reset policy. }
   LFocusID := '';
   LFocusValue := '';
+  LFocusStateKey := '';
   LActive := TJSHTMLElement(document.activeElement);
 
   if APreserveDraft and (LActive <> nil) and
@@ -649,6 +654,12 @@ begin
     begin
       LFocusID := LField.getAttribute('data-node');
       LFocusValue := TJSHTMLInputElement(LActive).value;
+      LFocusNode := FShellRenderer.Root.Find(LFocusID);
+
+      if LFocusNode <> nil then
+      begin
+        LFocusStateKey := LFocusNode.Prop(NyxStudioStateKey);
+      end;
 
       if LFocusID = 'studio-code' then
       begin
@@ -838,6 +849,25 @@ begin
     FCanvasViewID := FSession.ActiveViewID;
   end;
 
+  if (LFocusID <> '') and (LFocusStateKey <> '') then
+  begin
+    LFocusNode := FShell.Find(LFocusID);
+
+    if (LFocusNode = nil) or (LFocusNode.Prop(NyxStudioStateKey) <> LFocusStateKey) then
+    begin
+      { Positional row IDs can move after removal. Never focus or overwrite the
+        different exact state row that now happens to use the same widget ID. }
+      LFocusID := '';
+    end
+    else
+    begin
+      { The shared shell already contains the latest pending value/name draft,
+        or the accepted reset after rejection. Retaining old DOM text here would
+        undo that reset and could erase a newer queued editor value. }
+      LFocusValue := LFocusNode.Prop('value');
+    end;
+  end;
+
   if (LFocusID <> '') and ((FShell.Find(LFocusID) <> nil) or
     ((LFocusID = 'studio-code') and (FCodeRenderer.Root <> nil))) then
   begin
@@ -894,6 +924,7 @@ begin
     LPrevious.scrollTop := FAgentsScroll;
   end;
   document.body.setAttribute('data-nyx-studio-ready', 'true');
+  FShellCommandContext := FSession.CommandContext;
   document.title := FSession.Document.Title + ' / Nyx Studio';
   try
 
@@ -1001,8 +1032,26 @@ procedure TNyxStudio.SourceCommandChanged(AState: TNyxSourceCommandState;
   const AMessage: TNyxText);
 var
   LRestore: TNyxProjectionValueRestore;
+  LCreatedName: TNyxText;
+  LNameField: TNyxNode;
+  LNameInput: TJSHTMLElement;
 begin
   FStatus := AMessage;
+
+  if FSourceCommands.NewDefaultCreated(LCreatedName) and (FShellRenderer.Root <> nil) then
+  begin
+    LNameField := FShellRenderer.Root.Find(NyxStudioNewStateNameID);
+    LNameInput := FShellRenderer.InputFor(NyxStudioNewStateNameID);
+
+    if (LNameField <> nil) and (LNameInput <> nil) and
+      (LNameField.Prop('value') = LCreatedName) and
+      (TJSHTMLInputElement(LNameInput).value = LCreatedName) then
+    begin
+      LNameField.Configure.Value('').Done;
+      TJSHTMLInputElement(LNameInput).value := '';
+      FNewStateName := '';
+    end;
+  end;
 
   if FSourceCommands.PublishedDesign and
     (FSourceCommands.PublishedAction in [sdaAddKind, sdaAddInstance, sdaAddPage,
@@ -1026,7 +1075,7 @@ begin
     Completed proposals reconcile accepted values, including exact field resets
     after rejection. Reuse remains subject to the public projection guards. }
   try
-    Refresh(True);
+    Refresh(True, True);
   except
     on LException: Exception do
     begin
@@ -1208,6 +1257,11 @@ var
   LCompilerIndex: Integer;
   LHierarchyChanged: Boolean;
 begin
+
+  if not FSession.MatchesCommandContext(FShellCommandContext) then
+  begin
+    Exit;
+  end;
   LRetainCanvas := False;
   CaptureNewStateDraft;
   LAcceptedDesign := '';
@@ -1223,7 +1277,16 @@ begin
       Exit;
     end;
 
-    if FSourceCommands.Route(ANode, AEvent.Trigger) then
+    if (ANode.ID = NyxStudioBindingFlowID) and (AEvent.Trigger = ntChange) then
+    begin
+
+      if not TryNyxStudioBindingDirection(ANode.Prop('value'), FBindingDirection) then
+      begin
+        raise ENyxModel.Create('Unknown binding flow');
+      end;
+    end;
+
+    if FSourceCommands.Route(ANode, AEvent.Trigger, FShellRenderer.Root) then
     begin
       Exit;
     end;

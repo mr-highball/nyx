@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'agents', 'state-bindings', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'agents', 'state-bindings', 'state-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1165,6 +1165,59 @@ try {
     foreach ($nyxHost in @('interactions.html', 'interaction-controls.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxHost") -Destination $nyxBrowserDir
     }
+    exit 0
+  }
+
+  if ($Target -eq 'state-inspectors') {
+    # Pascal fixtures own typed admission, real controls, source/history and
+    # retirement assertions. This bounded target starts no listener and never
+    # relinks a running Studio service or changes its project/enrollment.
+    $nyxInspectorRoot = Join-Path $nyxRoot 'build/state-inspectors'
+    $nyxInspectorNative = Join-Path $nyxInspectorRoot 'native'
+    $nyxInspectorLcl = Join-Path $nyxInspectorRoot 'lcl'
+    $nyxInspectorBrowser = Join-Path $nyxInspectorRoot 'browser'
+    $nyxInspectorControls = Join-Path $nyxInspectorRoot 'controls'
+
+    if ($BrowserOutput) { $nyxInspectorBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxInspectorNative, $nyxInspectorLcl,
+      $nyxInspectorBrowser, $nyxInspectorControls | Out-Null
+    $nyxInspectorFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxInspectorNative", "-FE$nyxInspectorNative")
+    foreach ($nyxInspectorProgram in @('nyx_state_source_tests', 'nyx_design_queue_tests')) {
+      Invoke-NyxCompiler $nyxFpc ($nyxInspectorFlags + @("tests/$nyxInspectorProgram.lpr"))
+      & (Join-Path $nyxInspectorNative "$nyxInspectorProgram.exe")
+
+      if ($LASTEXITCODE -ne 0) { throw "State inspector shared fixture failed: $nyxInspectorProgram" }
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxInspectorPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxInspectorControlFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests',
+      "-Fu$nyxLazarus/lcl/units/$nyxInspectorPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxInspectorPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxInspectorPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxInspectorPlatform",
+      "-FU$nyxInspectorLcl", "-FE$nyxInspectorLcl")
+    foreach ($nyxInspectorProgram in @('nyx_state_source_controls',
+        'nyx_state_authoring_controls', 'nyx_canvas_queue_controls')) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxInspectorControlFlags + @("tests/$nyxInspectorProgram.lpr"))
+      & (Join-Path $nyxInspectorLcl "$nyxInspectorProgram.exe") $nyxInspectorControls
+
+      if ($LASTEXITCODE -ne 0) { throw "Actual state inspector fixture failed: $nyxInspectorProgram" }
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxInspectorProgram in @('tests/nyx_state_source_tests.lpr',
+        'tests/nyx_state_source_browser.lpr', 'studio/nyx_studio.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxInspectorBrowser", $nyxInspectorProgram)
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxInspectorBrowser 'rtl.js') -Force
+    foreach ($nyxInspectorHost in @('index.html', 'state-inspectors.html', 'state-inspector-controls.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxInspectorHost") -Destination $nyxInspectorBrowser
+    }
+    Write-Host 'Browser Studio, matched worker and portable state checks staged; runtime needs its permitted host.'
     exit 0
   }
 

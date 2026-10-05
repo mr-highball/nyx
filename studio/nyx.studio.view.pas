@@ -149,6 +149,10 @@ end;
 
 function DefaultNyxStudioViewState: TNyxStudioViewState;
 begin
+  { Managed strings/arrays do not initialize every native record scalar. Start
+    the complete presentation record deliberately, including pending row/form
+    flags, before supplying its nonzero editor defaults. }
+  Result := Default(TNyxStudioViewState);
   Result.CodeVisible := False;
   Result.CodePresentation := ncpInline;
   Result.CanvasPercent := 65;
@@ -237,6 +241,9 @@ var
   LValue: TNyxStateValue;
   LKey: TNyxText;
   LItems: TNyxText;
+  LEditorText: TNyxText;
+  LNameText: TNyxText;
+  LPendingInput: TNyxStudioStateInput;
 begin
   AParent.Add(Button(NyxStudioStateToggleID, 'Data (' +
     IntToStr(ASession.Document.State.Count + ASession.Document.Collections.Count) + ')'));
@@ -255,27 +262,52 @@ begin
     LKey := ASession.Document.State.Key(LIndex);
     LValue := ASession.Document.State.Value(LKey);
     LInput := NyxStudioStateInputFor(LValue);
+
+    if AState.PendingDesign.StateEditorInput(LKey, LValue.Kind, LPendingInput) then
+    begin
+      LInput := LPendingInput;
+    end;
+
+    if not AState.PendingDesign.StateName(LKey, LValue.Kind, LNameText) then
+    begin
+      LNameText := LKey;
+    end;
+    LEditorText := NyxStudioStateEditorText(LValue);
+
+    if not AState.PendingDesign.StateValue(LKey, LValue.Kind, LEditorText) then
+    begin
+      LEditorText := NyxStudioStateEditorText(LValue);
+    end;
     LRow := TNyxNode.Create(nkPanel, 'state-row-' + IntToStr(LIndex));
     LPanel.Add(LRow);
-    LRow.Configure.Surface(True).Padding(12).Gap(8).Done;
+    LRow.Configure.Surface(True).Padding(12).Gap(8)
+      .Enabled(not AState.PendingDesign.StateLocked(LKey)).Done;
     LField := TNyxNode.Create(nkInput, 'state-name-' + IntToStr(LIndex));
     LRow.Add(LField);
-    LField.Configure.Text('Name').Value(LKey)
+    LField.Configure.Text('Name').Value(LNameText)
       .Extension(NyxStudioStateKey, LKey)
-      .Extension(NyxStudioStateCommandKey, NyxStudioStateCommandName(sscRename)).Done;
+      .Extension(NyxStudioStateInputKey, NyxStudioStateInputName(LInput))
+      .Extension(NyxStudioStateCommandKey, NyxStudioStateCommandName(sscRenameDraft)).Done;
+    LRow.Add(Button('state-rename-' + IntToStr(LIndex), 'Rename').Configure
+      .Extension(NyxStudioStateKey, LKey)
+      .Extension(NyxStudioStateInputKey, NyxStudioStateInputName(LInput))
+      .Extension(NyxStudioStateNameInputKey, LField.ID)
+      .Extension(NyxStudioStateCommandKey, NyxStudioStateCommandName(sscRename)).Done);
     LField := StateEditor('state-default-' + IntToStr(LIndex),
-      NyxStudioStateInputName(LInput) + ' default', NyxStudioStateEditorText(LValue), LInput);
+      NyxStudioStateInputName(LInput) + ' default', LEditorText, LInput);
     LRow.Add(LField);
     LField.Configure.Extension(NyxStudioStateKey, LKey)
       .Extension(NyxStudioStateInputKey, NyxStudioStateInputName(LInput))
       .Extension(NyxStudioStateCommandKey, NyxStudioStateCommandName(sscDefault)).Done;
     LRow.Add(Button('state-remove-' + IntToStr(LIndex), 'Remove default').Configure
       .Extension(NyxStudioStateKey, LKey)
+      .Extension(NyxStudioStateInputKey, NyxStudioStateInputName(LInput))
       .Extension(NyxStudioStateCommandKey, NyxStudioStateCommandName(sscRemove)).Done);
   end;
   LRow := TNyxNode.Create(nkPanel, 'state-new');
   LPanel.Add(LRow);
-  LRow.Configure.Surface(True).Padding(12).Gap(8).Done;
+  LRow.Configure.Surface(True).Padding(12).Gap(8)
+    .Enabled(not AState.PendingDesign.NewDefaultPending).Done;
   LRow.Add(Caption('state-new-title', 'NEW DEFAULT'));
   LRow.Add(TNyxNode.Create(nkInput, NyxStudioNewStateNameID).Configure
     .Text('Name').Placeholder('replyText').Value(AState.NewStateName).Done);
@@ -312,6 +344,8 @@ var
   LDirection: TNyxBindingDirection;
   LValue: TNyxStateValue;
   LAllowedKinds: TNyxStateKinds;
+  LPendingBinding: Boolean;
+  LInheritPending: Boolean;
 begin
   AParent.Add(Button(NyxStudioBindingsToggleID, 'Bindings'));
 
@@ -356,6 +390,19 @@ begin
   LPanel.Add(TNyxNode.Create(nkSelect, NyxStudioBindingTargetID).Configure.Text('Control property')
     .Items(LItems).Value(NyxBindingPropertyTitle(LTarget)).Done);
   LHasBinding := AProjection.FindBinding(LTarget, LSpec);
+  LPendingBinding := AState.PendingDesign.Binding(ASession.SelectedID, LTarget,
+    LSpec, LInheritPending);
+
+  if LPendingBinding then
+  begin
+    LHasBinding := not LSpec.Cleared and not LInheritPending;
+  end
+  else
+  begin
+    { An absent pending descriptor clears its out value; retain the accepted
+      effective projection rather than letting discovery change presentation. }
+    LHasBinding := AProjection.FindBinding(LTarget, LSpec);
+  end;
   LKey := 'Unbound';
   LDirection := AState.BindingDirection;
 
@@ -363,6 +410,11 @@ begin
   begin
     LKey := LSpec.StateName;
     LDirection := LSpec.Direction;
+  end;
+
+  if LInheritPending then
+  begin
+    LKey := 'Inherited binding pending';
   end;
   LPanel.Add(Caption('binding-current', 'Current: ' + LKey));
 
@@ -372,6 +424,7 @@ begin
       .Items(NyxStudioBindingDirectionTitle(bdTwoWay) + #10 +
         NyxStudioBindingDirectionTitle(bdFromState))
       .Value(NyxStudioBindingDirectionTitle(LDirection))
+      .Enabled(not LInheritPending)
       .Extension(NyxStudioBindingOwnerKey, ASession.SelectedID)
       .Extension(NyxStudioBindingTargetKey, NyxBindingPropertyName(LTarget)).Done);
   end;
@@ -387,6 +440,7 @@ begin
     begin
       Inc(LCount);
       LPanel.Add(Button('binding-state-' + IntToStr(LIndex), LKey).Configure
+        .Enabled(not AState.PendingDesign.StateLocked(LKey))
         .Extension(NyxStudioBindingOwnerKey, ASession.SelectedID)
         .Extension(NyxStudioStateKey, LKey)
         .Extension(NyxStudioBindingTargetKey, NyxBindingPropertyName(LTarget))
@@ -410,6 +464,11 @@ begin
     for LIndex := 0 to ASession.Selected.BindingCount - 1 do
     begin
       LLocal := LLocal or (ASession.Selected.Bindings[LIndex].Target = LTarget);
+    end;
+
+    if LPendingBinding then
+    begin
+      LLocal := not LInheritPending;
     end;
     LPanel.Add(Button('binding-inherit', 'Use inherited binding').Configure.Enabled(LLocal)
       .Extension(NyxStudioBindingOwnerKey, ASession.SelectedID)
