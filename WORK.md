@@ -6796,3 +6796,15 @@ sequence **200**. Primary source/design/history, services, deployed artifacts an
 personal configuration remain untouched. Private process proof is
 `.local/codex-restart-check/collection-inspector-processes.json`. Remote checkpoint
 follows; authorization to push `hello-nyx` remains in force.
+
+Remote checkpoint: product commit
+`680b5d4ea9714410f2e2bcd626f63721c18fa541` is pushed to
+`origin/hello-nyx`; exact remote/local refs match and the worktree was clean.
+Both native compilers pass 115 private admission and four pending presentation
+checks. Actual native collection controls pass 71, exact compiled companion/table
+callback eight, existing collection authoring 27/29 and source regressions 140/33,
+all with zero leaks. Final owned warnings are zero; browser consumers remain
+staged only with the same seven installed RTL warnings visible. This handoff
+keeps codegen criterion 3 open at no-closure 26 and the next structured semantic
+workflow and host gates intact. Its own clean/exact remote proof is stored
+privately after pushing; the full goal remains active/incomplete.
