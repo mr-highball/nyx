@@ -29,7 +29,7 @@ interface
 uses
   nyx.text, nyx.types, nyx.model, nyx.scheduler, nyx.schema, nyx.callbacks,
   nyx.source.preparation, nyx.studio.session, nyx.projection.refresh,
-  nyx.studio.inspector
+  nyx.studio.inspector, nyx.studio.collectionintent, nyx.studio.collections
   {$ifdef PAS2JS}, JS, Web{$endif};
 
 type
@@ -175,7 +175,7 @@ type
     procedure Detach;
     { Consume Nyx Apply/Restore, scalar state/binding, inspector and structural
       events. Current shell form fields are borrowed only during typed capture.
-      Collections retain their existing ordinary command router. }
+      Collection capture also submits only scoped, family-qualified values. }
     function Route(ANode: TNyxNode; ATrigger: TNyxTrigger;
       AShellRoot: TNyxNode = nil): Boolean;
     property State: TNyxSourceCommandState read FState;
@@ -192,7 +192,7 @@ type
 implementation
 
 uses
-  SysUtils, nyx.data, nyx.state, nyx.binding.types, nyx.studio.authoring,
+  SysUtils, nyx.data, nyx.state, nyx.collections, nyx.binding.types, nyx.studio.authoring,
   nyx.studio.commands
   {$ifndef PAS2JS}, Classes{$endif};
 
@@ -474,6 +474,23 @@ begin
   FScheduler.RequireUI;
   LPending := PendingDesign;
 
+  if AEdit.Action = sdaCollection then
+  begin
+    AEdit.Collection.Validate;
+
+    if (AEdit.Collection.Action = scaCreate) and LPending.CollectionCreationPending then
+    begin
+      raise ENyxCollection.Create('Wait for collection creation before submitting this form again');
+    end;
+
+    if LPending.CollectionLocked(AEdit.Collection.Key) or
+      (NyxStudioCollectionViewAction(AEdit.Collection.Action) and
+        LPending.CollectionViewLocked(AEdit.Selection)) then
+    begin
+      raise ENyxCollection.Create('Wait for the exact collection/view structure change before editing it');
+    end;
+  end;
+
   if (AEdit.Action in [sdaSetStateDefault, sdaRenameStateDefault, sdaRemoveStateDefault]) and
     LPending.StateLocked(AEdit.Name) then
   begin
@@ -519,7 +536,7 @@ begin
     if (LLast >= 0) and (FQueue[LLast].Kind = eskDesign) and
       FSession.MatchesCommandContext(FQueue[LLast].Context) and
       (AEdit.Action in [sdaProperty, sdaTitle, sdaCanvasValue, sdaSetStateDefault,
-        sdaSetBinding, sdaEvent]) and
+        sdaSetBinding, sdaEvent, sdaCollection]) and
       (FQueue[LLast].Edit.Action = AEdit.Action) and
       (FQueue[LLast].Edit.Selection = AEdit.Selection) and
       (FQueue[LLast].Edit.View = AEdit.View) and (FQueue[LLast].Edit.Name = AEdit.Name) and
@@ -530,7 +547,18 @@ begin
         ((AEdit.Event.Action = seaPolicy) and
         (FQueue[LLast].Edit.Event.Action = seaPolicy) and
         (FQueue[LLast].Edit.Event.Trigger = AEdit.Event.Trigger) and
-        (FQueue[LLast].Edit.Event.Name.Name = AEdit.Event.Name.Name))) then
+        (FQueue[LLast].Edit.Event.Name.Name = AEdit.Event.Name.Name))) and
+      ((AEdit.Action <> sdaCollection) or
+        ((AEdit.Collection.Action in [scaDefault, scaCell, scaTitle, scaMode,
+          scaScope, scaSelection]) and
+        (FQueue[LLast].Edit.Collection.Action = AEdit.Collection.Action) and
+        (FQueue[LLast].Edit.Collection.Key.Name = AEdit.Collection.Key.Name) and
+        FQueue[LLast].Edit.Collection.Field.SameReference(AEdit.Collection.Field) and
+        (FQueue[LLast].Edit.Collection.Item.Defined = AEdit.Collection.Item.Defined) and
+        (not AEdit.Collection.Item.Defined or
+          (FQueue[LLast].Edit.Collection.Item.ID = AEdit.Collection.Item.ID)) and
+        (FQueue[LLast].Edit.Collection.Input = AEdit.Collection.Input) and
+        (FQueue[LLast].Edit.Collection.Projection = AEdit.Collection.Projection))) then
     begin
       FQueue[LLast].Schemas.Free;
       FQueue[LLast] := LJob;
@@ -722,6 +750,13 @@ var
       SetLength(Result.Events, LCount + 1);
       Result.Events[LCount].Owner := AEdit.Selection;
       Result.Events[LCount].Intent := AEdit.Event;
+    end
+    else if AEdit.Action = sdaCollection then
+    begin
+      LCount := Length(Result.Collections);
+      SetLength(Result.Collections, LCount + 1);
+      Result.Collections[LCount].Owner := AEdit.Selection;
+      Result.Collections[LCount].Intent := AEdit.Collection;
     end;
   end;
 
@@ -1100,6 +1135,14 @@ begin
   if FDetached then
   begin
     raise ENyxModel.Create('This source-command context has retired');
+  end;
+  { Collection data is document-scoped, while view intent captures its exact
+    selected owner. Capture never generates source or borrows a runtime store. }
+
+  if CaptureNyxStudioCollection(FSession, ANode, ATrigger, PendingDesign, LEdit) then
+  begin
+    Edit(LEdit);
+    Exit(True);
   end;
   LCapture := CaptureNyxStudioAuthoring(FSession, ANode, ATrigger, AShellRoot,
     PendingDesign, LEdit);

@@ -218,8 +218,11 @@ begin
     FreeAndNil(LCandidate);
 
     LLegacy := TNyxCodec.Decode('{"version":1,"title":"Legacy","pages":[{"kind":"list","id":"old","props":{},"children":[],"collectionView":{"intent":"🌙"}}],"components":[]}');
+    { Expected non-ASCII values use the portable text contract explicitly;
+      comparisons must not promote native UTF-8 through an implicit Unicode cast. }
     Check(not LLegacy.HasCollectionViews and
-      (LLegacy.Pages[0].Extensions.Value(NyxExtension('collectionView')).Field('intent').AsText = '🌙'),
+      (LLegacy.Pages[0].Extensions.Value(NyxExtension('collectionView')).Field('intent').AsText =
+      TNyxText('🌙')),
       'v1 same-name node extension stays opaque', Result);
     LLegacy.Collections.Define(LDocument.Collections.Snapshot(NyxCollection('tasks')));
     LBefore := TNyxCodec.Encode(LLegacy);
@@ -277,9 +280,9 @@ begin
     LView := LRuntime.PageCollections('home').ViewFor('left/items');
     LRight := LRuntime.PageCollections('home').ViewFor('right/items');
     LView.Edit(NyxItem(NyxCollection('tasks'), 'root'), 0, TNyxStateValue.FromText('Left only'));
-    Check((LRight.CellText(NyxItem(NyxCollection('tasks'), 'root'), 0) = 'Root 漢字 🌙') and
+    Check((LRight.CellText(NyxItem(NyxCollection('tasks'), 'root'), 0) = TNyxText('Root 漢字 🌙')) and
       (LRuntime.Collections.Collection(NyxCollection('tasks')).Snapshot.ItemAt(0)
-       .GetValue(NyxTextField('caption')) = 'Root 漢字 🌙'),
+       .GetValue(NyxTextField('caption')) = TNyxText('Root 漢字 🌙')),
       'automatic reusable owners isolate stores', Result);
     LView.Select(NyxItem(NyxCollection('tasks'), 'child'));
     LRoot := RealizeNyxView(LDocument, LDocument.Pages[0]);
@@ -472,7 +475,7 @@ begin
       'selection survives navigation and control recreation', Result);
     Check((LRenderer.CollectionView('left/items').CellText(NyxItem(NyxCollection('tasks'), 'root'), 0)
       = 'Independent left') and (LRenderer.CollectionView('right/items').CellText(
-      NyxItem(NyxCollection('tasks'), 'root'), 0) = 'Root 漢字 🌙'),
+      NyxItem(NyxCollection('tasks'), 'root'), 0) = TNyxText('Root 漢字 🌙')),
       'instance data survives navigation without sibling leakage', Result);
     LRenderer.Root.Configure.ReadOnly(True).Done;
     LRenderer.Sync;
@@ -581,7 +584,7 @@ begin
     Shell;
     Change('collection-0-row-0-cell-0', 'Saved from Studio 🌙');
     Check(LSession.Document.Collections.Snapshot(NyxCollection('tasks')).ItemAt(0)
-      .GetValue(NyxTextField('caption')) = 'Saved from Studio 🌙',
+      .GetValue(NyxTextField('caption')) = TNyxText('Saved from Studio 🌙'),
       'actual Studio row editor updates exact saved default', Result);
     LSession.DefineCollection(NyxCollection('tasks'),
       LSession.Document.Collections.Snapshot(NyxCollection('tasks')).Schema,
@@ -592,7 +595,7 @@ begin
     Change('collection-0-row-0-cell-0', NyxStudioStateEditorText(
       TNyxStateValue.FromText('Exact' + #0 + '🌙')));
     Check(LSession.Document.Collections.Snapshot(NyxCollection('tasks')).ItemAt(0)
-      .GetValue(NyxTextField('caption')) = 'Exact' + #0 + '🌙',
+      .GetValue(NyxTextField('caption')) = TNyxText('Exact') + #0 + TNyxText('🌙'),
       'actual escaped row editor preserves NUL and supplementary Unicode', Result);
     Shell;
     Click('collection-0-add-row');

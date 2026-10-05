@@ -3376,7 +3376,9 @@ var
   LIndex: Integer;
   LUses: Boolean;
   LInterfaceEnd: Integer;
-  LNameStage: Integer;
+  LAtUnitName: Boolean;
+  LNameCursor: Integer;
+  LQualifiedName: TNyxText;
 begin
   { Recovery can retain a pre-interface companion frame. Regenerated builders
     now need nyx.controls; add that import while retaining all existing imports,
@@ -3385,7 +3387,7 @@ begin
   LTokens := Lex(AFrame);
   LUses := False;
   LInterfaceEnd := 0;
-  LNameStage := 0;
+  LAtUnitName := False;
   for LIndex := 0 to Length(LTokens) - 1 do
   begin
 
@@ -3407,25 +3409,58 @@ begin
     if (LInterfaceEnd > 0) and SameText(LTokens[LIndex].Text, 'uses') then
     begin
       LUses := True;
+      LAtUnitName := True;
+      Continue;
     end;
 
-    if LUses and (LNameStage = 2) and
-      SameText(LTokens[LIndex].Text, Copy(AUnit, 5, MaxInt)) then
+    if LUses and LAtUnitName and (LTokens[LIndex].Kind = tkWord) then
     begin
-      Exit;
+      { Lex splits every namespace segment into a word. Compare the complete
+        qualified name, including deeper units such as collections.view.types.
+        A two-segment comparison used to append those imports on every edit,
+        yielding a companion that admitted but could not compile. Comments may
+        separate segments; names remain case insensitive like the compiler. }
+      LAtUnitName := False;
+      LQualifiedName := LTokens[LIndex].Text;
+      LNameCursor := LIndex + 1;
+      while LNameCursor < Length(LTokens) do
+      begin
+
+        if LTokens[LNameCursor].Kind = tkComment then
+        begin
+          Inc(LNameCursor);
+          Continue;
+        end;
+
+        if LTokens[LNameCursor].Text <> '.' then
+        begin
+          Break;
+        end;
+        Inc(LNameCursor);
+        while (LNameCursor < Length(LTokens)) and
+          (LTokens[LNameCursor].Kind = tkComment) do
+        begin
+          Inc(LNameCursor);
+        end;
+
+        if (LNameCursor >= Length(LTokens)) or
+          (LTokens[LNameCursor].Kind <> tkWord) then
+        begin
+          Break;
+        end;
+        LQualifiedName := LQualifiedName + '.' + LTokens[LNameCursor].Text;
+        Inc(LNameCursor);
+      end;
+
+      if SameText(LQualifiedName, AUnit) then
+      begin
+        Exit;
+      end;
     end;
 
-    if LUses and (LNameStage = 1) and (LTokens[LIndex].Text = '.') then
+    if LUses and (LTokens[LIndex].Text = ',') then
     begin
-      LNameStage := 2;
-    end
-    else if LUses and SameText(LTokens[LIndex].Text, 'nyx') then
-    begin
-      LNameStage := 1;
-    end
-    else
-    begin
-      LNameStage := 0;
+      LAtUnitName := True;
     end;
 
     if LUses and (LTokens[LIndex].Text = ';') then

@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1165,6 +1165,72 @@ try {
     foreach ($nyxHost in @('interactions.html', 'interaction-controls.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxHost") -Destination $nyxBrowserDir
     }
+    exit 0
+  }
+
+  if ($Target -eq 'collection-inspectors') {
+    # Pascal owns typed replay, actual controls and exact companion assertions.
+    # Independent outputs preserve checked artifacts and compiler compatibility.
+    # No listener, observing project or live service is launched/replaced here.
+    $nyxCollectionRoot = Join-Path $nyxRoot 'build/collection-inspectors'
+    $nyxCollectionNative = Join-Path $nyxCollectionRoot 'native'
+    $nyxCollectionLcl = Join-Path $nyxCollectionRoot 'lcl'
+    $nyxCollectionBrowser = Join-Path $nyxCollectionRoot 'browser'
+    $nyxCollectionExport = Join-Path $nyxCollectionRoot 'export'
+    $nyxCollectionControls = Join-Path $nyxCollectionRoot 'controls'
+
+    if ($BrowserOutput) { $nyxCollectionBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxCollectionNative, $nyxCollectionLcl,
+      $nyxCollectionBrowser, $nyxCollectionExport, $nyxCollectionControls | Out-Null
+    $nyxCollectionFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxCollectionNative", "-FE$nyxCollectionNative")
+    foreach ($nyxCollectionProgram in @('nyx_collection_queue_tests',
+        'nyx_collection_pending_tests', 'nyx_design_source_tests', 'nyx_managed_source_tests')) {
+      Invoke-NyxCompiler $nyxFpc ($nyxCollectionFlags + @("tests/$nyxCollectionProgram.lpr"))
+      & (Join-Path $nyxCollectionNative "$nyxCollectionProgram.exe") $nyxCollectionExport
+
+      if ($LASTEXITCODE -ne 0) { throw "Collection shared fixture failed: $nyxCollectionProgram" }
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxCollectionPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxCollectionControlFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxCollectionExport",
+      "-Fu$nyxLazarus/lcl/units/$nyxCollectionPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxCollectionPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxCollectionPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxCollectionPlatform",
+      "-FU$nyxCollectionLcl", "-FE$nyxCollectionLcl")
+    foreach ($nyxCollectionProgram in @('nyx_collection_queue_tests',
+        'nyx_collection_pending_tests', 'nyx_collection_queue_controls', 'nyx_collection_queue_generated',
+        'nyx_collection_authoring_tests')) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxCollectionControlFlags + @("tests/$nyxCollectionProgram.lpr"))
+      $nyxCollectionArgument = ''
+
+      if ($nyxCollectionProgram -eq 'nyx_collection_queue_controls') {
+        $nyxCollectionArgument = $nyxCollectionControls
+      }
+      & (Join-Path $nyxCollectionLcl "$nyxCollectionProgram.exe") $nyxCollectionArgument
+
+      if ($LASTEXITCODE -ne 0) { throw "Collection native fixture failed: $nyxCollectionProgram" }
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxCollectionProgram in @('nyx_collection_queue_tests',
+        'nyx_collection_pending_tests', 'nyx_collection_queue_browser', 'nyx_collection_queue_generated')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxCollectionExport", "-FE$nyxCollectionBrowser",
+        "tests/$nyxCollectionProgram.lpr")
+    }
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxCollectionBrowser", 'studio/nyx_studio.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxCollectionBrowser 'rtl.js') -Force
+    foreach ($nyxCollectionHost in @('index.html', 'collection-inspectors.html',
+        'collection-inspector-controls.html', 'collection-inspector-generated.html',
+        'collection-inspector-pending.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxCollectionHost") -Destination $nyxCollectionBrowser
+    }
+    Write-Host 'Collection consumers and Studio staged; browser execution needs its permitted host.'
     exit 0
   }
 

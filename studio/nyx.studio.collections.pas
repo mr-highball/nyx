@@ -30,15 +30,66 @@ uses
   nyx.text,
   nyx.types,
   nyx.model,
-  nyx.studio.session;
+  nyx.studio.session,
+  nyx.studio.collectionintent;
+
+type
+  { Opaque, value-only chrome identity at the transport boundary. The six
+    metadata values distinguish collection/row/column ownership when positional
+    widget IDs are reused. This is presentation identity, not authoring intent;
+    CaptureNyxStudioCollection decodes its behavioral choices into typed values. }
+  TNyxStudioCollectionChromeIdentity = record
+  private
+    FDefined: Boolean;
+    FCommand: TNyxText;
+    FKey: TNyxText;
+    FField: TNyxText;
+    FRow: TNyxText;
+    FOwner: TNyxText;
+    FKind: TNyxText;
+  public
+    { Borrow only while copying; no accepted node or physical input is kept. }
+    class function FromNode(ANode: TNyxNode): TNyxStudioCollectionChromeIdentity; static;
+    { Undefined identities never match. A defined identity requires all copied
+      values, so a reused positional widget ID cannot inherit another field's focus. }
+    function Matches(ANode: TNyxNode): Boolean;
+    property Defined: Boolean read FDefined;
+  end;
 
 { Nyx-built collection authoring. Values cross normal control events, then the
   router decodes closed choices and invokes detached, undoable session commands.
   No target handles, callbacks or mutable stores are retained by this UI. }
 procedure AddNyxCollectionDefaultsPanel(AParent: TNyxNode;
-  ASession: TNyxStudioSession; AVisible: Boolean);
+  ASession: TNyxStudioSession; AVisible: Boolean); overload;
+procedure AddNyxCollectionDefaultsPanel(AParent: TNyxNode;
+  ASession: TNyxStudioSession; AVisible: Boolean;
+  const APending: TNyxStudioPendingDesign); overload;
 procedure AddNyxCollectionBindingPanel(AParent: TNyxNode;
-  ASession: TNyxStudioSession; AProjection: TNyxNode);
+  ASession: TNyxStudioSession; AProjection: TNyxNode); overload;
+procedure AddNyxCollectionBindingPanel(AParent: TNyxNode;
+  ASession: TNyxStudioSession; AProjection: TNyxNode;
+  const APending: TNyxStudioPendingDesign); overload;
+{ Capture owns no accepted node/store and performs no source generation.
+  Partial scalar notation stays text until the isolated session parses it.
+  False means this is not the command's supported event. Invalid closed choices,
+  stale mounted identities or pending structural locks raise before enqueueing. }
+function CaptureNyxStudioCollection(ASession: TNyxStudioSession;
+  ANode: TNyxNode; AEvent: TNyxTrigger; const APending: TNyxStudioPendingDesign;
+  out AEdit: TNyxStudioDesignEdit): Boolean;
+
+const
+  { Explicit shared chrome metadata; adapters use the complete logical tuple
+    when restoring focus across positional collection/row/column IDs. }
+  NyxStudioCollectionCommandKey = 'collection-command';
+  NyxStudioCollectionKey = 'collection-key';
+  NyxStudioCollectionFieldKey = 'collection-field';
+  NyxStudioCollectionRowKey = 'collection-row';
+  NyxStudioCollectionOwnerKey = 'collection-owner';
+  NyxStudioCollectionKindKey = 'collection-kind';
+
+{ Compatibility consumer for synchronous/embedded authoring. Studio's adapters
+  consume Capture through their independent source queue before this router.
+  A successful route uses the same typed replay and paired session boundary. }
 function RouteNyxStudioCollection(ASession: TNyxStudioSession;
   ANode: TNyxNode; AEvent: TNyxTrigger): Boolean;
 
@@ -54,9 +105,7 @@ uses
   nyx.studio.authoring;
 
 type
-  TCollectionCommand = (ccCreate, ccRemove, ccAddField, ccDefault, ccAddRow,
-    ccRemoveRow, ccCell, ccBind, ccScope, ccTitle, ccMode, ccParent,
-    ccRemoveColumn, ccAddColumn, ccClear, ccInherit, ccSelection);
+  TCollectionCommand = TNyxStudioCollectionAction;
 
 const
   CCommandKey = 'collection-command';
@@ -69,6 +118,34 @@ const
     ('create', 'remove', 'add-field', 'default', 'add-row', 'remove-row',
     'cell', 'bind', 'scope', 'title', 'mode', 'parent', 'remove-column',
     'add-column', 'clear', 'inherit', 'selection');
+
+class function TNyxStudioCollectionChromeIdentity.FromNode(ANode: TNyxNode):
+  TNyxStudioCollectionChromeIdentity;
+begin
+  Result := Default(TNyxStudioCollectionChromeIdentity);
+
+  if (ANode = nil) or (ANode.Prop(CCommandKey) = '') then
+  begin
+    Exit;
+  end;
+  Result.FDefined := True;
+  Result.FCommand := ANode.Prop(CCommandKey);
+  Result.FKey := ANode.Prop(CKey);
+  Result.FField := ANode.Prop(CField);
+  Result.FRow := ANode.Prop(CRow);
+  Result.FOwner := ANode.Prop(COwner);
+  Result.FKind := ANode.Prop(CKind);
+end;
+
+function TNyxStudioCollectionChromeIdentity.Matches(ANode: TNyxNode): Boolean;
+var
+  LOther: TNyxStudioCollectionChromeIdentity;
+begin
+  LOther := FromNode(ANode);
+  Result := FDefined and LOther.FDefined and (FCommand = LOther.FCommand) and
+    (FKey = LOther.FKey) and (FField = LOther.FField) and (FRow = LOther.FRow) and
+    (FOwner = LOther.FOwner) and (FKind = LOther.FKind);
+end;
 
 function Command(AKind: TNyxKind; const AID, ATitle, AKey: TNyxText;
   ACommand: TCollectionCommand): TNyxNode;
@@ -97,6 +174,7 @@ begin
   Result := Command(LKind, AID, ATitle, AKey, ACommand);
   Result.Configure.Value(NyxStudioStateEditorText(AValue))
     .Extension(CField, AField).Extension(CRow, ARow)
+    .Extension(CKind, NyxStateKindName(AValue.Kind))
     .Extension(NyxStudioStateInputKey, NyxStudioStateInputName(LInput)).Done;
 
   if LInput = ssiBoolean then
@@ -107,6 +185,14 @@ end;
 
 procedure AddNyxCollectionDefaultsPanel(AParent: TNyxNode;
   ASession: TNyxStudioSession; AVisible: Boolean);
+begin
+  AddNyxCollectionDefaultsPanel(AParent, ASession, AVisible,
+    Default(TNyxStudioPendingDesign));
+end;
+
+procedure AddNyxCollectionDefaultsPanel(AParent: TNyxNode;
+  ASession: TNyxStudioSession; AVisible: Boolean;
+  const APending: TNyxStudioPendingDesign);
 var
   LPanel, LCard, LRow: TNyxNode;
   LData: INyxCollectionSnapshot;
@@ -115,6 +201,38 @@ var
   LCollection, LIndex, LItem: Integer;
   LKind: TNyxStateKind;
   LKey, LPrefix: TNyxText;
+  LPending: TNyxStudioCollectionIntent;
+  LItemRef: TNyxItemRef;
+  LLocked: Boolean;
+
+  function PendingEditor(const AID, ATitle, AField: TNyxText;
+    const AItem: TNyxItemRef; const AValue: TNyxStateValue;
+    AAction: TNyxStudioCollectionAction): TNyxNode;
+  var
+    LRowID: TNyxText;
+    LInput: TNyxStudioStateInput;
+    LReference: TNyxStudioCollectionFieldRef;
+  begin
+    LRowID := '';
+
+    if AItem.Defined then
+    begin
+      LRowID := AItem.ID;
+    end;
+    Result := Editor(AID, ATitle, LKey, AField, LRowID, AValue, AAction);
+    Result.Configure.Enabled(not LLocked).Done;
+    LReference := TNyxStudioCollectionFieldRef.FromMetadata(LField);
+
+    if APending.CollectionValue(NyxCollection(LKey), AItem, LReference,
+      AAction, '', LPending) then
+    begin
+      { A newer waiting escaped/plain notation owns this field presentation.
+        Earlier publication or failure must not normalize/drop its exact text. }
+      LInput := LPending.Input;
+      Result.Configure.Value(LPending.Value)
+        .Extension(NyxStudioStateInputKey, NyxStudioStateInputName(LInput)).Done;
+    end;
+  end;
 begin
 
   if not AVisible then
@@ -126,34 +244,38 @@ begin
   LPanel.Add(TNyxNode.Create(nkHeading, 'collections-title').Configure.Text('Collections').Done);
   LPanel.Add(TNyxNode.Create(nkLabel, 'collections-help').Configure.Text(
     'Define typed fields and saved rows. Bind a list, table or tree in the inspector.').Done);
-  LPanel.Add(Command(nkButton, 'collection-create', 'Add collection', '', ccCreate));
+  LPanel.Add(Command(nkButton, 'collection-create', 'Add collection', '', scaCreate)
+    .Configure.Enabled(not APending.CollectionCreationPending).Done);
   for LCollection := 0 to ASession.Document.Collections.Count - 1 do
   begin
     LKey := ASession.Document.Collections.Key(LCollection).Name;
     LData := ASession.Document.Collections.Snapshot(NyxCollection(LKey));
     LSchema := LData.Schema;
+    LLocked := APending.CollectionLocked(NyxCollection(LKey));
     LPrefix := 'collection-' + IntToStr(LCollection);
     LCard := TNyxNode.Create(nkPanel, LPrefix).Configure.Surface(True).Padding(12).Gap(8).Done;
     LPanel.Add(LCard);
     LCard.Add(TNyxNode.Create(nkHeading, LPrefix + '-title').Configure.Text(LKey).Done);
-    LCard.Add(Command(nkButton, LPrefix + '-remove', 'Remove collection', LKey, ccRemove));
+    LCard.Add(Command(nkButton, LPrefix + '-remove', 'Remove collection', LKey, scaRemove)
+      .Configure.Enabled(not LLocked).Done);
     for LIndex := 0 to LSchema.Count - 1 do
     begin
       LField := LSchema.FieldAt(LIndex);
-      LCard.Add(Editor(LPrefix + '-field-' + IntToStr(LIndex),
+      LCard.Add(PendingEditor(LPrefix + '-field-' + IntToStr(LIndex),
         LField.Name + ' / ' + NyxStateKindName(LField.Kind) + ' default',
-        LKey, LField.Name, '', LField.DefaultValue, ccDefault));
+        LField.Name, Default(TNyxItemRef), LField.DefaultValue, scaDefault));
     end;
     LRow := TNyxNode.Create(nkGrid, LPrefix + '-add-fields').Configure.Columns(2).Gap(6).Done;
     LCard.Add(LRow);
     for LKind := Low(TNyxStateKind) to High(TNyxStateKind) do
     begin
       LRow.Add(Command(nkButton, LPrefix + '-add-' + NyxStateKindName(LKind),
-        '+ ' + NyxStateKindName(LKind) + ' field', LKey, ccAddField).Configure
-        .Extension(CKind, NyxStateKindName(LKind)).Done);
+        '+ ' + NyxStateKindName(LKind) + ' field', LKey, scaAddField).Configure
+        .Extension(CKind, NyxStateKindName(LKind)).Enabled(not LLocked).Done);
     end;
     for LItem := 0 to LData.Count - 1 do
     begin
+      LItemRef := LData.ItemAt(LItem).Ref;
       LRow := TNyxNode.Create(nkPanel, LPrefix + '-row-' + IntToStr(LItem))
         .Configure.Surface(True).Padding(8).Gap(6).Done;
       LCard.Add(LRow);
@@ -161,19 +283,28 @@ begin
       for LIndex := 0 to LSchema.Count - 1 do
       begin
         LField := LSchema.FieldAt(LIndex);
-        LRow.Add(Editor(LRow.ID + '-cell-' + IntToStr(LIndex), LField.Name,
-          LKey, LField.Name, LData.ItemAt(LItem).Ref.ID,
-          LData.ItemAt(LItem).FieldValue(LIndex), ccCell));
+        LRow.Add(PendingEditor(LRow.ID + '-cell-' + IntToStr(LIndex), LField.Name,
+          LField.Name, LItemRef,
+          LData.ItemAt(LItem).FieldValue(LIndex), scaCell));
       end;
-      LRow.Add(Command(nkButton, LRow.ID + '-remove', 'Remove row', LKey, ccRemoveRow)
-        .Configure.Extension(CRow, LData.ItemAt(LItem).Ref.ID).Done);
+      LRow.Add(Command(nkButton, LRow.ID + '-remove', 'Remove row', LKey, scaRemoveRow)
+        .Configure.Extension(CRow, LItemRef.ID).Enabled(not LLocked).Done);
     end;
-    LCard.Add(Command(nkButton, LPrefix + '-add-row', 'Add row', LKey, ccAddRow));
+    LCard.Add(Command(nkButton, LPrefix + '-add-row', 'Add row', LKey, scaAddRow)
+      .Configure.Enabled(not LLocked).Done);
   end;
 end;
 
 procedure AddNyxCollectionBindingPanel(AParent: TNyxNode;
   ASession: TNyxStudioSession; AProjection: TNyxNode);
+begin
+  AddNyxCollectionBindingPanel(AParent, ASession, AProjection,
+    Default(TNyxStudioPendingDesign));
+end;
+
+procedure AddNyxCollectionBindingPanel(AParent: TNyxNode;
+  ASession: TNyxStudioSession; AProjection: TNyxNode;
+  const APending: TNyxStudioPendingDesign);
 var
   LPanel, LRow: TNyxNode;
   LSpec: TNyxCollectionViewSpec;
@@ -182,12 +313,14 @@ var
   LIndex, LFieldIndex: Integer;
   LKey, LID: TNyxText;
   LFound: Boolean;
+  LLocked: Boolean;
+  LPendingIndex: Integer;
 
   function Action(AKind: TNyxKind; const AID, ATitle: TNyxText;
     ACommand: TCollectionCommand): TNyxNode;
   begin
     Result := Command(AKind, AID, ATitle, LKey, ACommand).Configure
-      .Extension(COwner, ASession.SelectedID).Done;
+      .Extension(COwner, ASession.SelectedID).Enabled(not LLocked).Done;
   end;
 
 begin
@@ -212,19 +345,44 @@ begin
   begin
     LSpec := Default(TNyxCollectionViewSpec);
   end;
+  LLocked := APending.CollectionViewLocked(ASession.SelectedID);
+  for LPendingIndex := 0 to High(APending.Collections) do
+  begin
+
+    if (APending.Collections[LPendingIndex].Owner = ASession.SelectedID) and
+      NyxStudioCollectionViewAction(APending.Collections[LPendingIndex].Intent.Action) and
+      (APending.Collections[LPendingIndex].Intent.Action <> scaInherit) then
+    begin
+      try
+        LSchema := ASession.Document.Collections.Snapshot(
+          APending.Collections[LPendingIndex].Intent.Key).Schema;
+        LSpec := ApplyNyxStudioCollectionViewIntent(
+          APending.Collections[LPendingIndex].Intent, LSpec, LSchema);
+      except
+        on ENyxCollection do
+        begin
+          { Pending presentation is never admission. A valid typed proposal can
+            still reference a missing collection/field or a changed family.
+            Preserve the last displayable specification while isolated replay
+            owns its diagnostic; do not throw from the editor paint callback. }
+        end;
+      end;
+    end;
+  end;
 
   if LSpec.Defined then
   begin
     LKey := LSpec.Key.Name;
+    LLocked := LLocked or APending.CollectionLocked(LSpec.Key);
     LPanel.Add(TNyxNode.Create(nkLabel, 'collection-binding-current').Configure.Text('Current: ' + LKey).Done);
-    LPanel.Add(Action(nkSelect, 'collection-binding-scope', 'Data scope', ccScope)
+    LPanel.Add(Action(nkSelect, 'collection-binding-scope', 'Data scope', scaScope)
       .Configure.Items('Application' + #10 + 'Reusable instance').Value('Application').Done);
 
     if LSpec.Scope = csInstance then
     begin
       LPanel.Children[LPanel.Count - 1].Configure.Value('Reusable instance').Done;
     end;
-    LPanel.Add(Action(nkSelect, 'collection-binding-selection', 'Selection', ccSelection)
+    LPanel.Add(Action(nkSelect, 'collection-binding-selection', 'Selection', scaSelection)
       .Configure.Items('Single item' + #10 + 'Multiple items').Value('Single item').Done);
 
     if LSpec.SelectionMode = nsmMultiple then
@@ -237,18 +395,21 @@ begin
       LID := 'collection-column-' + IntToStr(LIndex);
       LRow := TNyxNode.Create(nkColumn, LID).Configure.Gap(6).Done;
       LPanel.Add(LRow);
-      LRow.Add(Action(nkInput, LID + '-title', LColumn.FieldName + ' title', ccTitle)
-        .Configure.Value(LColumn.Title).Extension(CField, LColumn.FieldName).Done);
-      LRow.Add(Action(nkSelect, LID + '-mode', 'Editing', ccMode)
+      LRow.Add(Action(nkInput, LID + '-title', LColumn.FieldName + ' title', scaTitle)
+        .Configure.Value(LColumn.Title).Extension(CField, LColumn.FieldName)
+        .Extension(CKind, NyxStateKindName(LColumn.Kind)).Done);
+      LRow.Add(Action(nkSelect, LID + '-mode', 'Editing', scaMode)
         .Configure.Items('Read only' + #10 + 'Editable').Value('Read only')
-        .Extension(CField, LColumn.FieldName).Done);
+        .Extension(CField, LColumn.FieldName)
+        .Extension(CKind, NyxStateKindName(LColumn.Kind)).Done);
 
       if LColumn.Mode = cmEditable then
       begin
         LRow.Children[LRow.Count - 1].Configure.Value('Editable').Done;
       end;
-      LRow.Add(Action(nkButton, LID + '-remove', 'Remove column', ccRemoveColumn)
-        .Configure.Extension(CField, LColumn.FieldName).Done);
+      LRow.Add(Action(nkButton, LID + '-remove', 'Remove column', scaRemoveColumn)
+        .Configure.Extension(CField, LColumn.FieldName)
+        .Extension(CKind, NyxStateKindName(LColumn.Kind)).Done);
     end;
     LSchema := ASession.Document.Collections.Snapshot(LSpec.Key).Schema;
     for LFieldIndex := 0 to LSchema.Count - 1 do
@@ -262,29 +423,31 @@ begin
       if not LFound then
       begin
         LPanel.Add(Action(nkButton, 'collection-column-add-' + IntToStr(LFieldIndex),
-          '+ ' + LSchema.FieldAt(LFieldIndex).Name + ' column', ccAddColumn)
-          .Configure.Extension(CField, LSchema.FieldAt(LFieldIndex).Name).Done);
+          '+ ' + LSchema.FieldAt(LFieldIndex).Name + ' column', scaAddColumn)
+          .Configure.Extension(CField, LSchema.FieldAt(LFieldIndex).Name)
+          .Extension(CKind, NyxStateKindName(LSchema.FieldAt(LFieldIndex).Kind)).Done);
       end;
 
       if (AProjection.ProjectionKind = 'tree') and (LSchema.FieldAt(LFieldIndex).Kind = nskText) then
       begin
         LPanel.Add(Action(nkButton, 'collection-parent-' + IntToStr(LFieldIndex),
-          'Parent field: ' + LSchema.FieldAt(LFieldIndex).Name, ccParent)
-          .Configure.Extension(CField, LSchema.FieldAt(LFieldIndex).Name).Done);
+          'Parent field: ' + LSchema.FieldAt(LFieldIndex).Name, scaParent)
+          .Configure.Extension(CField, LSchema.FieldAt(LFieldIndex).Name)
+          .Extension(CKind, NyxStateKindName(nskText)).Done);
       end;
     end;
 
     if AProjection.ProjectionKind = 'tree' then
     begin
-      LPanel.Add(Action(nkButton, 'collection-parent-none', 'No parent field', ccParent));
+      LPanel.Add(Action(nkButton, 'collection-parent-none', 'No parent field', scaParent));
     end;
-    LPanel.Add(Action(nkButton, 'collection-binding-clear', 'Unbind collection', ccClear));
-    LPanel.Add(Action(nkButton, 'collection-binding-inherit', 'Restore inherited binding', ccInherit));
+    LPanel.Add(Action(nkButton, 'collection-binding-clear', 'Unbind collection', scaClear));
+    LPanel.Add(Action(nkButton, 'collection-binding-inherit', 'Restore inherited binding', scaInherit));
   end;
   for LIndex := 0 to ASession.Document.Collections.Count - 1 do
   begin
     LKey := ASession.Document.Collections.Key(LIndex).Name;
-    LPanel.Add(Action(nkButton, 'collection-bind-' + IntToStr(LIndex), 'Bind ' + LKey, ccBind));
+    LPanel.Add(Action(nkButton, 'collection-bind-' + IntToStr(LIndex), 'Bind ' + LKey, scaBind));
   end;
 
   if ASession.Document.Collections.Count = 0 then
@@ -294,59 +457,35 @@ begin
   end;
 end;
 
-function AddColumn(const ASpec: TNyxCollectionViewSpec; const AName, ATitle: TNyxText;
-  AKind: TNyxStateKind; AMode: TNyxCollectionCellMode): TNyxCollectionViewSpec;
-begin
-  case AKind of
-    nskText: Result := ASpec.Column(NyxTextField(AName), ATitle, AMode);
-    nskBoolean: Result := ASpec.Column(NyxBooleanField(AName), ATitle, AMode);
-    nskInteger: Result := ASpec.Column(NyxIntegerField(AName), ATitle, AMode);
-    nskNumber: Result := ASpec.Column(NyxNumberField(AName), ATitle, AMode);
-  end;
-end;
 
-function PutValue(const AItem: TNyxCollectionItem; const AField: TNyxText;
-  const AValue: TNyxStateValue): TNyxCollectionItem;
-begin
-  case AValue.Kind of
-    nskText: Result := AItem.WithValue(NyxTextField(AField), AValue.TextValue);
-    nskBoolean: Result := AItem.WithValue(NyxBooleanField(AField), AValue.BooleanValue);
-    nskInteger: Result := AItem.WithValue(NyxIntegerField(AField), AValue.IntegerValue);
-    nskNumber: Result := AItem.WithValue(NyxNumberField(AField), AValue.NumberValue);
-  end;
-end;
-
-function RouteNyxStudioCollection(ASession: TNyxStudioSession;
-  ANode: TNyxNode; AEvent: TNyxTrigger): Boolean;
+function CaptureNyxStudioCollection(ASession: TNyxStudioSession;
+  ANode: TNyxNode; AEvent: TNyxTrigger; const APending: TNyxStudioPendingDesign;
+  out AEdit: TNyxStudioDesignEdit): Boolean;
 var
-  LCommand: TCollectionCommand;
+  LAction: TNyxStudioCollectionAction;
   LFound: Boolean;
-  LKey, LField, LName: TNyxText;
+  LKey: TNyxText;
+  LFieldName: TNyxText;
+  LName: TNyxText;
   LData: INyxCollectionSnapshot;
-  LSchema, LNextSchema: TNyxCollectionSchema;
-  LItems: array of TNyxCollectionItem;
-  LSpec, LNext: TNyxCollectionViewSpec;
+  LSchema: TNyxCollectionSchema;
+  LField: TNyxCollectionField;
   LProjection: TNyxNode;
-  LColumn: TNyxCollectionColumn;
-  LFieldInfo: TNyxCollectionField;
-  LValue: TNyxStateValue;
+  LIndex: Integer;
   LKind: TNyxStateKind;
-  LIndex, LCount, LRowIndex: Integer;
-  LMode: TNyxCollectionCellMode;
-  LInput: TNyxStudioStateInput;
-  LTitle: TNyxText;
 begin
   Result := False;
+  AEdit := Default(TNyxStudioDesignEdit);
 
   if (ANode = nil) or (ASession = nil) or (ANode.Prop(CCommandKey) = '') then
   begin
     Exit;
   end;
   LFound := False;
-  for LCommand := Low(TCollectionCommand) to High(TCollectionCommand) do
+  for LAction := Low(TNyxStudioCollectionAction) to High(TNyxStudioCollectionAction) do
   begin
 
-    if ANode.Prop(CCommandKey) = CCommands[LCommand] then
+    if ANode.Prop(CCommandKey) = CCommands[LAction] then
     begin
       LFound := True;
       Break;
@@ -358,332 +497,241 @@ begin
     raise ENyxCollection.Create('Unknown collection command');
   end;
 
-  if ((LCommand in [ccDefault, ccCell, ccScope, ccTitle, ccMode, ccSelection]) and
+  if ((LAction in [scaDefault, scaCell, scaScope, scaTitle, scaMode, scaSelection]) and
     (AEvent <> ntChange)) or
-    (not (LCommand in [ccDefault, ccCell, ccScope, ccTitle, ccMode, ccSelection]) and
+    (not (LAction in [scaDefault, scaCell, scaScope, scaTitle, scaMode, scaSelection]) and
     (AEvent <> ntClick)) then
   begin
     Exit;
   end;
+  AEdit.Action := sdaCollection;
+  AEdit.Collection.Action := LAction;
   LKey := ANode.Prop(CKey);
-  LField := ANode.Prop(CField);
 
-  if LCommand = ccCreate then
+  if LAction = scaCreate then
   begin
+
+    if APending.CollectionCreationPending then
+    begin
+      raise ENyxCollection.Create('Wait for collection creation before submitting this form again');
+    end;
     LIndex := 1;
     repeat
       LKey := 'collection' + IntToStr(LIndex);
       Inc(LIndex);
     until not ASession.Document.Collections.Has(NyxCollection(LKey));
-    ASession.DefineCollection(NyxCollection(LKey), NyxCollectionSchema.Text(NyxTextField('caption'), ''), []);
+    AEdit.Collection.Key := NyxCollection(LKey);
+    AEdit.Collection.Validate;
     Exit(True);
   end;
+  AEdit.Collection.Key := NyxCollection(LKey);
 
-  if LCommand = ccRemove then
+  if APending.CollectionLocked(AEdit.Collection.Key) then
   begin
-    ASession.RemoveCollection(NyxCollection(LKey));
-    Exit(True);
+    raise ENyxCollection.Create('Wait for this collection structure change before editing it');
   end;
+  LData := ASession.Document.Collections.Snapshot(AEdit.Collection.Key);
+  LSchema := LData.Schema;
+  LFieldName := ANode.Prop(CField);
 
-  if LCommand in [ccAddField, ccDefault, ccAddRow, ccRemoveRow, ccCell] then
+  if LFieldName <> '' then
   begin
-    LData := ASession.Document.Collections.Snapshot(NyxCollection(LKey));
-    LSchema := LData.Schema;
-    SetLength(LItems, LData.Count);
-    for LIndex := 0 to LData.Count - 1 do
+    LFound := False;
+    for LIndex := 0 to LSchema.Count - 1 do
     begin
-      LItems[LIndex] := LData.ItemAt(LIndex);
+      LField := LSchema.FieldAt(LIndex);
+
+      if LField.Name = LFieldName then
+      begin
+
+        if (ANode.Prop(CKind) <> '') and
+          (ANode.Prop(CKind) <> NyxStateKindName(LField.Kind)) then
+        begin
+          raise ENyxCollection.Create('Mounted collection field changed its scalar family');
+        end;
+        AEdit.Collection.Field := TNyxStudioCollectionFieldRef.FromMetadata(LField);
+        LFound := True;
+        Break;
+      end;
     end;
 
-    if LCommand = ccAddField then
+    if not LFound then
     begin
-      LFound := False;
-      for LKind := Low(TNyxStateKind) to High(TNyxStateKind) do
-      begin
+      raise ENyxCollection.Create('Collection field no longer exists');
+    end;
+  end;
 
-        if ANode.Prop(CKind) = NyxStateKindName(LKind) then
-        begin
-          LFound := True;
-          Break;
-        end;
-      end;
-
-      if not LFound then
-      begin
-        raise ENyxCollection.Create('Unknown collection field type');
-      end;
-      LIndex := 1;
-      repeat
-        LName := NyxStateKindName(LKind) + IntToStr(LIndex);
-        Inc(LIndex);
-        LFound := False;
-        for LCount := 0 to LSchema.Count - 1 do
-        begin
-          LFound := LFound or (LSchema.FieldAt(LCount).Name = LName);
-        end;
-      until not LFound;
-      case LKind of
-        nskText: LSchema := LSchema.Text(NyxTextField(LName), '');
-        nskBoolean: LSchema := LSchema.Boolean(NyxBooleanField(LName), False);
-        nskInteger: LSchema := LSchema.Integer(NyxIntegerField(LName), 0);
-        nskNumber: LSchema := LSchema.Number(NyxNumberField(LName), 0);
-      end;
-    end
-    else if LCommand = ccDefault then
+  if LAction = scaAddField then
+  begin
+    LFound := False;
+    for LKind := Low(TNyxStateKind) to High(TNyxStateKind) do
     begin
-      LNextSchema := NyxCollectionSchema;
-      LFound := False;
-      for LIndex := 0 to LSchema.Count - 1 do
+
+      if ANode.Prop(CKind) = NyxStateKindName(LKind) then
       begin
-        LFieldInfo := LSchema.FieldAt(LIndex);
-        LValue := LFieldInfo.DefaultValue;
-
-        if LFieldInfo.Name = LField then
-        begin
-
-          if not TryNyxStudioStateInput(ANode.Prop(NyxStudioStateInputKey), LInput) or
-            (NyxStudioStateInputKind(LInput) <> LValue.Kind) then
-          begin
-            raise ENyxCollection.Create('Collection editor type no longer matches its field');
-          end;
-          LValue := ParseNyxStudioStateInput(LInput, ANode.Prop('value'));
-          LFound := True;
-        end;
-        LNextSchema := LNextSchema.Field(LFieldInfo.Name, LValue, LFieldInfo.Domain);
+        AEdit.Collection.Kind := LKind;
+        LFound := True;
+        Break;
       end;
+    end;
 
-      if not LFound then
-      begin
-        raise ENyxCollection.Create('Collection field no longer exists');
-      end;
-      LSchema := LNextSchema;
-    end
-    else if LCommand = ccAddRow then
+    if not LFound then
     begin
-      LIndex := 1;
-      repeat
-        LName := 'row' + IntToStr(LIndex);
-        Inc(LIndex);
-      until LData.IndexOf(NyxItem(NyxCollection(LKey), LName)) < 0;
-      SetLength(LItems, LData.Count + 1);
-      LItems[LData.Count] := NyxCollectionItem(NyxItem(NyxCollection(LKey), LName));
-    end
-    else
-    begin
-      LRowIndex := LData.IndexOf(NyxItem(NyxCollection(LKey), ANode.Prop(CRow)));
+      raise ENyxCollection.Create('Unknown collection field family');
+    end;
+  end;
 
-      if LRowIndex < 0 then
+  if LAction = scaAddRow then
+  begin
+    LIndex := 1;
+    repeat
+      LName := 'row' + IntToStr(LIndex);
+      Inc(LIndex);
+    until LData.IndexOf(NyxItem(AEdit.Collection.Key, LName)) < 0;
+    AEdit.Collection.Item := NyxItem(AEdit.Collection.Key, LName);
+  end
+  else if LAction in [scaCell, scaRemoveRow] then
+  begin
+    AEdit.Collection.Item := NyxItem(AEdit.Collection.Key, ANode.Prop(CRow));
+
+    if LData.IndexOf(AEdit.Collection.Item) < 0 then
+    begin
+      raise ENyxCollection.Create('Collection row no longer exists');
+    end;
+  end;
+
+  if LAction in [scaDefault, scaCell] then
+  begin
+
+    if not TryNyxStudioStateInput(ANode.Prop(NyxStudioStateInputKey), AEdit.Collection.Input) then
+    begin
+      raise ENyxCollection.Create('Unknown collection scalar notation');
+    end;
+    AEdit.Collection.Value := ANode.Prop('value');
+  end
+  else if LAction = scaTitle then
+  begin
+    AEdit.Collection.Value := ANode.Prop('value');
+  end;
+
+  if NyxStudioCollectionViewAction(LAction) then
+  begin
+
+    if ANode.Prop(COwner) <> ASession.SelectedID then
+    begin
+      raise ENyxCollection.Create('Collection selection changed; use its current inspector');
+    end;
+
+    if APending.CollectionViewLocked(ASession.SelectedID) then
+    begin
+      raise ENyxCollection.Create('Wait for this collection view structure change before editing it');
+    end;
+    AEdit.Selection := ASession.SelectedID;
+    AEdit.View := ASession.ActiveViewID;
+    LProjection := ASession.SelectedProjection;
+    try
+
+      if LProjection = nil then
       begin
-        raise ENyxCollection.Create('Collection row no longer exists');
+        raise ENyxCollection.Create('Select a list, table or tree');
       end;
 
-      if LCommand = ccRemoveRow then
+      if LProjection.ProjectionKind = NyxKindName(nkList) then
       begin
-        for LIndex := LRowIndex to Length(LItems) - 2 do
-        begin
-          LItems[LIndex] := LItems[LIndex + 1];
-        end;
-        SetLength(LItems, Length(LItems) - 1);
+        AEdit.Collection.Projection := cpList;
+      end
+      else if LProjection.ProjectionKind = NyxKindName(nkTable) then
+      begin
+        AEdit.Collection.Projection := cpTable;
+      end
+      else if LProjection.ProjectionKind = NyxKindName(nkTree) then
+      begin
+        AEdit.Collection.Projection := cpTree;
       end
       else
       begin
-        LFound := False;
-        for LIndex := 0 to LSchema.Count - 1 do
-        begin
-
-          if LSchema.FieldAt(LIndex).Name = LField then
-          begin
-
-            if not TryNyxStudioStateInput(ANode.Prop(NyxStudioStateInputKey), LInput) or
-              (NyxStudioStateInputKind(LInput) <> LSchema.FieldAt(LIndex).Kind) then
-            begin
-              raise ENyxCollection.Create('Collection editor type no longer matches its field');
-            end;
-            LValue := ParseNyxStudioStateInput(LInput, ANode.Prop('value'));
-            LItems[LRowIndex] := PutValue(LItems[LRowIndex], LField, LValue);
-            LFound := True;
-            Break;
-          end;
-        end;
-
-        if not LFound then
-        begin
-          raise ENyxCollection.Create('Collection field no longer exists');
-        end;
+        raise ENyxCollection.Create('Selected control no longer supports collection views');
       end;
-    end;
-    ASession.DefineCollection(NyxCollection(LKey), LSchema, LItems);
-    Exit(True);
-  end;
 
-  if ANode.Prop(COwner) <> ASession.SelectedID then
-  begin
-    raise ENyxCollection.Create('Collection selection changed; use its current inspector');
-  end;
-
-  if LCommand = ccClear then
-  begin
-    ASession.SetCollectionView(Default(TNyxCollectionViewSpec));
-    Exit(True);
-  end;
-
-  if LCommand = ccInherit then
-  begin
-    ASession.InheritCollectionView;
-    Exit(True);
-  end;
-  LProjection := ASession.SelectedProjection;
-  try
-
-    if LProjection = nil then
-    begin
-      raise ENyxCollection.Create('Select a list, table or tree');
-    end;
-    LSpec := LProjection.CollectionView;
-
-    if LCommand = ccBind then
-    begin
-      LSchema := ASession.Document.Collections.Snapshot(NyxCollection(LKey)).Schema;
-      LSpec := NyxCollectionView(NyxCollection(LKey));
-      for LIndex := 0 to LSchema.Count - 1 do
-      begin
-        LFieldInfo := LSchema.FieldAt(LIndex);
-        LSpec := AddColumn(LSpec, LFieldInfo.Name, LFieldInfo.Name, LFieldInfo.Kind, cmReadOnly);
-      end;
-    end
-    else
-    begin
-
-      if not LSpec.Defined or (LSpec.Key.Name <> LKey) then
+      if (LAction <> scaBind) and
+        (not LProjection.CollectionView.Defined or
+        (LProjection.CollectionView.Key.Name <> LKey)) then
       begin
         raise ENyxCollection.Create('Collection binding changed; use its current inspector');
       end;
-      LNext := NyxCollectionView(LSpec.Key).Scoped(LSpec.Scope).Selection(LSpec.SelectionMode);
-
-      if LSpec.ParentField <> '' then
-      begin
-        LNext := LNext.Parent(NyxTextField(LSpec.ParentField));
-      end;
-      for LIndex := 0 to LSpec.Count - 1 do
-      begin
-        LColumn := LSpec.ColumnAt(LIndex);
-
-        if (LCommand = ccRemoveColumn) and (LColumn.FieldName = LField) then
-        begin
-          Continue;
-        end;
-        LTitle := LColumn.Title;
-        LMode := LColumn.Mode;
-
-        if LColumn.FieldName = LField then
-        begin
-
-          if LCommand = ccTitle then
-          begin
-            LTitle := ANode.Prop('value');
-          end
-          else if LCommand = ccMode then
-          begin
-
-            if ANode.Prop('value') = 'Editable' then
-            begin
-              LMode := cmEditable;
-            end
-            else if ANode.Prop('value') = 'Read only' then
-            begin
-              LMode := cmReadOnly;
-            end
-            else
-            begin
-              raise ENyxCollection.Create('Unknown column editability');
-            end;
-          end;
-        end;
-        LNext := AddColumn(LNext, LColumn.FieldName, LTitle, LColumn.Kind, LMode);
-      end;
-
-      if LCommand = ccSelection then
-      begin
-
-        if ANode.Prop('value') = 'Single item' then
-        begin
-          LNext := LNext.Selection(nsmSingle);
-        end
-        else if ANode.Prop('value') = 'Multiple items' then
-        begin
-          LNext := LNext.Selection(nsmMultiple);
-        end
-        else
-        begin
-          raise ENyxCollection.Create('Unknown selection mode');
-        end;
-      end
-      else if LCommand = ccScope then
-      begin
-
-        if ANode.Prop('value') = 'Application' then
-        begin
-          LNext := LNext.Scoped(csApplication);
-        end
-        else if ANode.Prop('value') = 'Reusable instance' then
-        begin
-          LNext := LNext.Scoped(csInstance);
-        end
-        else
-        begin
-          raise ENyxCollection.Create('Unknown collection scope');
-        end;
-      end
-      else if LCommand = ccParent then
-      begin
-
-        if LField = '' then
-        begin
-          { Rebuild without Parent; an uninitialized text reference is invalid. }
-          LNext := NyxCollectionView(LSpec.Key).Scoped(LSpec.Scope).Selection(LSpec.SelectionMode);
-          for LIndex := 0 to LSpec.Count - 1 do
-          begin
-            LColumn := LSpec.ColumnAt(LIndex);
-            LNext := AddColumn(LNext, LColumn.FieldName, LColumn.Title, LColumn.Kind, LColumn.Mode);
-          end;
-        end
-        else
-        begin
-          LNext := LNext.Parent(NyxTextField(LField));
-        end;
-      end
-      else if LCommand = ccAddColumn then
-      begin
-        LSchema := ASession.Document.Collections.Snapshot(LSpec.Key).Schema;
-        LFound := False;
-        for LIndex := 0 to LSchema.Count - 1 do
-        begin
-
-          if LSchema.FieldAt(LIndex).Name = LField then
-          begin
-            LFieldInfo := LSchema.FieldAt(LIndex);
-            LNext := AddColumn(LNext, LField, LField, LFieldInfo.Kind, cmReadOnly);
-            LFound := True;
-            Break;
-          end;
-        end;
-
-        if not LFound then
-        begin
-          raise ENyxCollection.Create('Collection field no longer exists');
-        end;
-      end;
-
-      if LNext.Count = 0 then
-      begin
-        LNext := Default(TNyxCollectionViewSpec);
-      end;
-      LSpec := LNext;
+    finally
+      LProjection.Free;
     end;
-    ASession.SetCollectionView(LSpec);
-    Result := True;
-  finally
-    LProjection.Free;
+    case LAction of
+      scaScope:
+        begin
+
+          if ANode.Prop('value') = 'Application' then
+          begin
+            AEdit.Collection.Scope := csApplication;
+          end
+          else if ANode.Prop('value') = 'Reusable instance' then
+          begin
+            AEdit.Collection.Scope := csInstance;
+          end
+          else
+          begin
+            raise ENyxCollection.Create('Unknown collection scope');
+          end;
+        end;
+      scaSelection:
+        begin
+
+          if ANode.Prop('value') = 'Single item' then
+          begin
+            AEdit.Collection.SelectionMode := nsmSingle;
+          end
+          else if ANode.Prop('value') = 'Multiple items' then
+          begin
+            AEdit.Collection.SelectionMode := nsmMultiple;
+          end
+          else
+          begin
+            raise ENyxCollection.Create('Unknown collection selection mode');
+          end;
+        end;
+      scaMode:
+        begin
+
+          if ANode.Prop('value') = 'Read only' then
+          begin
+            AEdit.Collection.Mode := cmReadOnly;
+          end
+          else if ANode.Prop('value') = 'Editable' then
+          begin
+            AEdit.Collection.Mode := cmEditable;
+          end
+          else
+          begin
+            raise ENyxCollection.Create('Unknown collection column editability');
+          end;
+        end;
+    else
+      begin
+        { Other operations carry no extra closed view choice. }
+      end;
+    end;
+  end;
+  AEdit.Collection.Validate;
+  Result := True;
+end;
+
+function RouteNyxStudioCollection(ASession: TNyxStudioSession;
+  ANode: TNyxNode; AEvent: TNyxTrigger): Boolean;
+var
+  LEdit: TNyxStudioDesignEdit;
+begin
+  Result := CaptureNyxStudioCollection(ASession, ANode, AEvent,
+    Default(TNyxStudioPendingDesign), LEdit);
+
+  if Result then
+  begin
+    ASession.ApplyCollectionIntent(LEdit.Collection);
   end;
 end;
 

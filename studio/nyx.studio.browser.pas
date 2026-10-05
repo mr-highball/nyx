@@ -45,6 +45,7 @@ uses
   nyx.studio.authoring,
   nyx.studio.commands,
   nyx.studio.inspector,
+  nyx.studio.collections,
   nyx.callbacks,
   nyx.studio.palette,
   nyx.studio.hierarchy,
@@ -598,6 +599,7 @@ var
   LFocusEventOwner: TNyxText;
   LFocusEventTrigger: TNyxText;
   LFocusEventName: TNyxText;
+  LFocusCollection: TNyxStudioCollectionChromeIdentity;
   LFocusNode: TNyxNode;
   LField: TJSHTMLElement;
   LReplacement: TJSHTMLElement;
@@ -648,6 +650,7 @@ begin
   LFocusEventOwner := '';
   LFocusEventTrigger := '';
   LFocusEventName := '';
+  LFocusCollection := Default(TNyxStudioCollectionChromeIdentity);
   LActive := TJSHTMLElement(document.activeElement);
 
   if APreserveDraft and (LActive <> nil) and
@@ -669,6 +672,7 @@ begin
         LFocusEventOwner := LFocusNode.Prop(NyxStudioEventOwnerKey);
         LFocusEventTrigger := LFocusNode.Prop(NyxStudioEventTriggerKey);
         LFocusEventName := LFocusNode.Prop(NyxStudioEventNameKey);
+        LFocusCollection := TNyxStudioCollectionChromeIdentity.FromNode(LFocusNode);
       end;
 
       if LFocusID = 'studio-code' then
@@ -894,6 +898,22 @@ begin
       { Pending policies already overlay the new Nyx shell. Rejected or retired
         values regain the accepted policy, retaining focus only at the exact
         owner/event rather than writing old DOM input over that presentation. }
+      LFocusValue := LFocusNode.Prop('value');
+    end;
+  end;
+
+  if (LFocusID <> '') and LFocusCollection.Defined then
+  begin
+    LFocusNode := FShell.Find(LFocusID);
+
+    if not LFocusCollection.Matches(LFocusNode) then
+    begin
+      LFocusID := '';
+    end
+    else
+    begin
+      { Pending proposals already own the new shell value. Do not copy an older
+        rejected DOM value over accepted/current pending field presentation. }
       LFocusValue := LFocusNode.Prop('value');
     end;
   end;

@@ -756,7 +756,7 @@ begin
   LViews.Add(Button(NyxStudioReviewRootID, 'Remove active view').Configure
     .Enabled(ASession.ActiveViewID <> '').Done);
   AddStatePanel(LLeft, ASession, AState);
-  AddNyxCollectionDefaultsPanel(LLeft, ASession, AState.StateVisible);
+  AddNyxCollectionDefaultsPanel(LLeft, ASession, AState.StateVisible, AState.PendingDesign);
   AddNyxStudioPalette(LLeft, ASession.Catalog, AState.Palette);
   LCenter := TNyxNode.Create('column', 'studio-center');
   LCenter.Configure.ForPlatform(npfNativeLCL).Flex(1).Padding(0).Gap(0).Done;
@@ -961,7 +961,7 @@ begin
 
         if AState.BindingsVisible then
         begin
-          AddNyxCollectionBindingPanel(LRight, ASession, LSelectedProjection);
+          AddNyxCollectionBindingPanel(LRight, ASession, LSelectedProjection, AState.PendingDesign);
         end;
         LProperties := NyxProperties(LSelected, ASession.Document);
         for LIndex := 0 to Length(LProperties) - 1 do

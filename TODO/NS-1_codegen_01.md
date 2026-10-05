@@ -923,3 +923,31 @@ typed isolated intent with exact schema/row/field/view ownership, pending input
 and ordinary controls. Complete source synchronization, comfortable large-project
 editing, both-target ordinary editor outcomes and observing deployment retain
 their original acceptance and gates; no task moves to DONE.
+
+## Ordinary structured collection source boundary — 2026-10-05
+
+All seventeen existing collection authoring operations now capture typed values
+and use the isolated command queue. Exact schema family, collection-scoped row
+and authored view identities retain ownership across reordered columns, pending
+input, reusable overrides and later navigation. Structural locks precede paint;
+refused values restore accepted presentation and each successful candidate keeps
+one paired Undo step. Independent Pascal drafts/helpers remain retained.
+
+Private admission passes 115 on each native compiler. Actual standalone native
+controls pass 71, the exact compiled companion/native table callback passes eight
+and pending metadata refusal/presentation passes four on each compiler, with zero
+leaks. Repeated qualified import detection fixes a real emitted-companion compile
+failure discovered by this consumer. Existing source and collection authoring
+regressions pass; WORK.md owns exact counts and retained failures. Browser Studio,
+module worker and portable/DOM/generated consumers compile but retain the existing
+execution/observing host gate. Existing sidebar overflow and broader metrics stay
+with their renderer/authoring owners.
+
+Criteria 1/2 remain accepted and criterion 3 remains open. Its no-closure count
+advances 25→26 once; workflow 3, renderer 3, native authoring 7 and delivery 1
+remain unchanged. Reassessment ends this inspector expansion. Next expose bounded
+structured collection context and grouped typed operations through the existing
+semantic workflow owner, reusing the admitted command contract instead of a
+second authoring implementation. Complete source/import workflows, comfortable
+large-project editing, ordinary both-target editor outcomes and observing
+deployment retain their original requirements. No task moves to DONE.

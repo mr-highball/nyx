@@ -279,6 +279,33 @@ count describes completed adapter passes, not browser frames or native paints.
 Virtualization, incremental large-data work and documented frame/memory budgets
 retain their owner in [extension/performance](../TODO/NS-3_extension-performance_01.md).
 
+## Studio collection authoring
+
+The Project Data section edits saved typed schemas, defaults and rows. The
+selected list/table/tree exposes its collection binding through the Inspector's
+Bindings panel. The seventeen existing operations now capture immutable Pascal
+intent before source synchronization: collection/row/field identity, scalar
+family, notation, projection and enum choices travel independently of widgets.
+View column order may differ from schema order; edits follow the exact field.
+
+Ordinary Studio controls submit that intent to the shared isolated command queue.
+An admitted candidate publishes source and design together as one Undo entry.
+Newer waiting scalar/title/choice text stays visible; structural changes lock the
+exact collection or authored view before repaint. Rejected numeric text returns
+to its accepted value while retaining the field's focus. Reusable overrides,
+later navigation, independent Pascal drafts and new loads retain their existing
+ownership guards. Pending presentation is not admission: missing/mismatched
+typed metadata keeps the last displayable binding until replay reports its
+diagnostic. Renderers do not borrow a worker's document or mutable store.
+
+The current native journey qualifies these ordinary controls and exact emitted
+companion; browser Studio, its module worker and asynchronous DOM journey
+compile. Current browser execution/observing deployment, comfortable large-project
+editing, wider widget metrics and accessibility retain their original gates.
+Structured collection semantic operations remain with the existing
+[agent workflow owner](../TODO/NS-4_agent-workflows_01.md); the active MCP release
+is not changed by this inspector integration. See [WORK.md](../WORK.md).
+
 ## Reproducible checks
 
 `tools/build.ps1 -Target collection-views` compiles the portable view fixtures,
@@ -297,6 +324,15 @@ can be staged with `-BrowserOutput` while Studio remains live.
 
 Execute `collection-authoring.html`, `collection-authoring-generated.html` and
 `collection-unicode.html` after compilation to check the browser consumers.
+
+`tools/build.ps1 -Target collection-inspectors` runs typed isolated request/reply
+checks, source regressions, pending refusal presentation, real standalone native
+controls, the existing collection authoring consumer and the exact compiled
+companion with its native table callback. English desktop/390 captures belong to
+its `controls/` directory. The `browser/` directory stages Studio, its matched
+Pascal module worker and the four `collection-inspector*.html` qualification
+hosts. The build command launches no listener and replaces no observing project
+or live service. Compilation alone does not qualify those browser journeys.
 
 `collection-view-benchmark.html` measures mounting and twenty committed integer
 updates with a list, table and four-way tree simultaneously attached, at 512 and

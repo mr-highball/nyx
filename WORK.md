@@ -6668,3 +6668,131 @@ This handoff keeps codegen criterion 3 open at no-closure 25 and preserves the
 next structured-collection deliverable and existing host gates above. Its own
 clean/remote proof will be stored privately after pushing; the full goal remains
 active/incomplete.
+
+Current continuation batch: original codegen criterion 3, consumed by ordinary
+structured collection authoring. The previous goal turn is progress: typed event
+controls, final native focus eligibility and exact clean/pushed checkpoint are
+authoritative at d925b80/3ade3e4. Deliver all seventeen existing operations through
+copied typed collection/row/field/view intent, strict isolated replay and pending
+presentation. Preserve independent input/drafts/navigation, exact schema families,
+reusable ownership and one paired Undo publication. Qualify both native compilers,
+actual ordinary native controls, exact emitted companion and current browser
+compilation; browser runtime/observing deployment retain the existing host gate.
+Stop on retargeted rows/columns, dropped newer input, partial publication or weaker
+admission. Codegen no-closure 25 / workflow 3 / renderer 3 / native authoring 7 /
+delivery 1 remain unchanged until handoff assessment. Protected services and the
+active user pair remain independent of these qualification projects.
+
+## Queued ordinary structured collection authoring — 2026-10-05
+
+Original owner: codegen criterion 3, with the existing collection inspectors as
+its ordinary consumer. All seventeen pre-existing operations now capture copied
+typed intent before source synchronization. The new portable field reference
+retains its scalar family; collection-scoped row references retain their namespace.
+Data edits own the exact document collection, while view edits carry the exact
+authored control/view and list/table/tree projection. The private processor request
+is version 5 with strict collection payload; its reply stays version 2 and portable
+project persistence stays version 1. No target object or live store enters replay.
+
+Both adapters route these controls through the independent source processor.
+Pending scalar notation, column titles and closed choices remain visible without
+entering accepted state. Structural proposals lock their exact data/view controls
+before paint. Adjacent compatible scalar/view choices coalesce without replacing
+other fields, rows, owners or loads. Reordered columns resolve their exact schema
+name/family instead of borrowing a positional field. Focus restoration requires
+the complete collection/row/field/owner/family metadata identity; browser restore
+uses the admitted/pending value. Successful publication still contributes one
+paired Undo entry and preserves independent source drafts/helpers and navigation.
+
+Independent compilation exposed a real source bug: import detection recognized
+only two namespace segments, so repeated edits appended collection view/selection
+units repeatedly. The emitted companion then failed compilation with duplicate
+identifiers (`generated/build.log`). Import detection now compares the complete
+qualified name, preserving comments, casing, existing imports and helpers. The
+final exact exported companion compiles and drives a real native table callback.
+Pending display now also tolerates unadmitted missing/wrong-family metadata while
+isolated replay owns its diagnostic. This does not admit such a proposal or change
+accepted data; four focused shared consumers qualify that added failure branch.
+
+Ignored evidence is under `build/collection-inspector-queue/`:
+
+- `shared-qualified/` and `shared-3.3-qualified/` each pass **115** checked typed
+  request/reply/admission checks on FPC 3.2.0 and 3.3.1. All seventeen operations,
+  exact Unicode/NUL/numbers, reordered columns, reusable inheritance, independent
+  helpers/drafts/navigation, paired history, malformed descriptors and same-ID
+  load retirement qualify. Earlier 104/114 runs are superseded, not extra features.
+- `native-controls-final/` passes **71** actual standalone Win32 queued control
+  checks. Pending text/focus, numeric refusal/restore, physical structural locks,
+  exact row/column/default owners, all seventeen operations, tree mapping, reusable
+  scope, drafts/history, later navigation and retired mounted/worker owners pass.
+  English `controls/collections-desktop.png` and `collections-390.png` were viewed.
+  Narrow binding controls read/paint correctly; existing sidebar horizontal
+  overflow and wider native widget/aesthetic metrics remain open.
+- `pending-native/` and `pending-3.3/` each pass **4** focused portable presentation
+  checks: wrong family, missing field/key and unrelated owner cannot throw from
+  panel construction or replace accepted data/source. The successful native
+  71-check control path remains applicable to the unchanged valid presentation.
+- `generated-final/` passes **8** after compiling the exact exported companion:
+  typed reconstruction, supplementary/newline text, reusable/application store
+  independence, tree mapping and an actual native table editor callback. Runtime
+  edits leave document defaults and a second application untouched. The earlier
+  `generated-qualified/run.log` refused an incorrect fixture lookup: reusable
+  runtime roots use `instance/definition`, verified in composition/bindings code.
+- `legacy-collection-final/` passes existing **27 shared / 29 actual native authoring**
+  checks; `source-regression/` passes existing **140 detached design/source / 33
+  managed source** checks. The earlier 56 state/binding request checks under
+  version 5 remain applicable. These are distinct regressions, not new features.
+- All native processes above report **zero unfreed blocks**. Native Studio's final
+  `native-studio-final/build.log` compiles the owned guard with zero warnings.
+- `browser-final/` compiles Studio, the correctly targeted Pascal module worker,
+  shared tickets, focused pending failures, asynchronous DOM controls and the
+  exact companion. Matched RTL and four English qualification hosts are staged,
+  not served/executed. Owned warnings are **zero**; seven distinct installed
+  Classes RTL warnings stay visible. No dependency source or toolchain changed.
+
+The first ordinary fixture needed explicit Bindings/Pascal pane activation;
+`native-controls/hidden-source-trial.log` retains its incomplete journey and zero
+leak result. Its complete 71-check successor retains the intended assertions.
+The three implicit Unicode comparison warnings in the compiled consumer were
+fixed with explicit portable text operands, not warning suppression. Product
+warnings from the initial draft were likewise corrected. No partial earlier
+journey substitutes the final actual consumer or compiled source evidence.
+The final warning audit also found six implicit Unicode comparisons in the
+older collection authoring fixture. Its final successor retains the same values
+through explicit TNyxText operands; the earlier warning log remains retained.
+The final native run still passes 27/29 with zero leaks and warnings, and its
+browser consumer compiles with zero owned warnings. Final warning audit covers
+all ten native build logs above; none retains an owned warning.
+
+`tools/build.ps1 -Target collection-inspectors` now orchestrates these consumers
+and stages browser hosts without a listener. Its parser check passes; the full
+composite command was not repeated after individually qualifying its consumers.
+PROJECT, collection/build guides and original task owners record the scope.
+
+This goal turn is progress. Codegen criteria 1/2 remain accepted; criterion 3
+remains open and its no-closure sequence advances **25→26** once. Workflow **3**,
+renderer **3**, native authoring **7** and delivery **1** remain unchanged. End
+this inspector expansion. Next expose bounded collection/schema/row/view context
+and grouped revision/actor-aware semantic operations through the existing workflow
+owner, reusing the typed intent and paired candidate machinery. General source/
+import workflows, comfortable large-project editing, current ordinary browser
+execution, authenticated updated discovery/observing deployment and full editor/
+accessibility quality retain their original owners and requirements. No task
+moves to DONE; the full Nyx/Nyx Studio goal stays active/incomplete.
+
+The existing automatic approval rejection of listener launch remains "blocked
+by policy" without a further reason. No equivalent listener, live artifact
+deployment or service replacement was attempted. Source catalog eighteen/current
+authenticated release fifteen remains unchanged. Semantic MCP remains primary;
+this packet used bounded read-only session inspection and independent native
+input consumers for behavior the document API cannot establish. The missing
+structured collection vocabulary is recorded with the existing MCP task owner.
+
+Final preservation: all **eight** protected process identities match exact paths
+and creation timestamps; **zero** focused fixture processes remain. Connected
+native MCP `nyx_session` reports revision **6**, Untitled project / home, one page/
+reusable root, no pending draft, Undo unavailable and Redo available, activity
+sequence **200**. Primary source/design/history, services, deployed artifacts and
+personal configuration remain untouched. Private process proof is
+`.local/codex-restart-check/collection-inspector-processes.json`. Remote checkpoint
+follows; authorization to push `hello-nyx` remains in force.

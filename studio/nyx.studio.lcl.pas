@@ -29,7 +29,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, ExtCtrls,
   nyx.text, nyx.types, nyx.behavior, nyx.data, nyx.model, nyx.theme, nyx.render.lcl,
-  nyx.events, nyx.viewport, nyx.projection.refresh, nyx.callbacks,
+  nyx.events, nyx.viewport, nyx.projection.refresh, nyx.callbacks, nyx.studio.collections,
   nyx.studio.session, nyx.studio.view, nyx.studio.projects,
   nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.rootedits,
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
@@ -1473,6 +1473,7 @@ var
   LChromeEventOwner: TNyxText;
   LChromeEventTrigger: TNyxText;
   LChromeEventName: TNyxText;
+  LChromeCollection: TNyxStudioCollectionChromeIdentity;
   {$ifdef NYX_STUDIO_PROFILE}
   LPhaseStarted: QWord;
 
@@ -1498,6 +1499,10 @@ var
       (ANode.Prop(NyxStudioStateCommandKey) <> '') or
       ((ANode.Kind = NyxKindName(nkSelect)) and
         (ANode.Prop(NyxStudioEventCommandKey) <> '')) or
+      { Collection buttons do not own an editing input. }
+      (((ANode.Kind = NyxKindName(nkInput)) or
+        (ANode.Kind = NyxKindName(nkMemo)) or (ANode.Kind = NyxKindName(nkSelect))) and
+        (ANode.Prop(NyxStudioCollectionCommandKey) <> '')) or
       (ANode.ID = NyxStudioNewStateNameID) or (ANode.ID = NyxStudioNewStateValueID) then
     begin
 
@@ -1547,6 +1552,7 @@ begin
     LChromeEventOwner := '';
     LChromeEventTrigger := '';
     LChromeEventName := '';
+    LChromeCollection := Default(TNyxStudioCollectionChromeIdentity);
 
     if (LFocus <> nil) and (FShellView.Root <> nil) and
       InsideControl(LFocus, FShellView.ControlFor(FShellView.Root.ID)) then
@@ -1559,6 +1565,8 @@ begin
         LChromeEventOwner := FShellView.Root.Find(LChromeID).Prop(NyxStudioEventOwnerKey);
         LChromeEventTrigger := FShellView.Root.Find(LChromeID).Prop(NyxStudioEventTriggerKey);
         LChromeEventName := FShellView.Root.Find(LChromeID).Prop(NyxStudioEventNameKey);
+        LChromeCollection := TNyxStudioCollectionChromeIdentity.FromNode(
+          FShellView.Root.Find(LChromeID));
       end;
     end;
 
@@ -1751,6 +1759,18 @@ begin
       { Removing a state can reuse its positional chrome ID for a different
         row. Restore only the original exact identity, never that replacement. }
       LChromeID := '';
+    end;
+
+    if (LChromeID <> '') and (FShell.Find(LChromeID) <> nil) then
+    begin
+      { Removed rows/columns can reuse their positional control ID. Retain
+        focus only for the full original collection/field/item/owner tuple. }
+
+      if LChromeCollection.Defined and
+        not LChromeCollection.Matches(FShell.Find(LChromeID)) then
+      begin
+        LChromeID := '';
+      end;
     end;
 
     if (LChromeID <> '') and (FShell.Find(LChromeID) <> nil) then

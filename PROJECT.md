@@ -195,6 +195,21 @@ desktop/390 captures qualify this focused inspector; existing visual gaps and
 remaining browser/observing qualification are recorded in WORK.md. This packet
 does not accept full source synchronization or native/browser parity.
 
+Ordinary structured collection controls now consume immutable typed isolated
+intent for all seventeen existing operations. Exact field families, row scopes,
+reordered columns and authored view owners travel independently of widgets.
+Pending input/focus, structural locks, reusable overrides, drafts, navigation
+and paired history qualify through 71 actual standalone native checks. Private
+admission passes 115 on each native compiler; four pending refusal/presentation
+checks on each compiler preserve accepted display while replay owns diagnostics.
+The exact emitted companion passes eight compiled native checks, including its
+real table callback and independent runtime stores. Repeated edits now retain
+one complete qualified collection import instead of emitting duplicate units.
+Current browser Studio, module worker and portable/DOM/generated consumers
+compile with zero owned warnings; execution and observing deployment retain the
+existing host gate. WORK.md owns evidence, unchanged acceptance and the next
+structured collection semantic workflow; no complete source/parity claim follows.
+
 The warning-cleanup packet now reports zero owned warnings on the qualified
 native/LCL/pas2js builds and current MCP application jobs. Shared execution,
 actual layout controls and Studio resize/split checks pass. Seven installed

@@ -418,9 +418,17 @@ begin
 end;
 
 function TNyxStudioDesignRequest.ToData: TNyxDataValue;
+var
+  LCollection: TNyxDataValue;
 begin
+  LCollection := NyxNull;
+
+  if FEdit.Action = sdaCollection then
+  begin
+    LCollection := FEdit.Collection.ToData;
+  end;
   Result := NyxObject([
-    NyxField('version', NyxData(4)), NyxField('owner', NyxData(FOwner)),
+    NyxField('version', NyxData(5)), NyxField('owner', NyxData(FOwner)),
     NyxField('generation', NyxData(FGeneration)), NyxField('nextId', NyxData(FNextID)),
     NyxField('schemaRevision', NyxData(FSchemaRevision)),
     NyxField('pair', NyxData(EncodeNyxProject(FPair))),
@@ -432,7 +440,8 @@ begin
       NyxField('platform', NyxData(Ord(FEdit.Platform))),
       NyxField('stateInput', NyxData(Ord(FEdit.StateInput))),
       NyxField('binding', DesignBindingData(FEdit)),
-      NyxField('event', DesignEventData(FEdit))]))]);
+      NyxField('event', DesignEventData(FEdit)),
+      NyxField('collection', LCollection)]))]);
 end;
 
 function TNyxStudioDesignRequest.SameRequest(const AOther: TNyxStudioDesignRequest): Boolean;
@@ -459,6 +468,11 @@ begin
     (FEdit.Event.Policy = AOther.FEdit.Event.Policy) and
     (FEdit.Event.ID.Name = AOther.FEdit.Event.ID.Name) and
     (FEdit.Event.Handler.Name = AOther.FEdit.Event.Handler.Name);
+
+  if Result and (FEdit.Action = sdaCollection) then
+  begin
+    Result := FEdit.Collection.SameIntent(AOther.FEdit.Collection);
+  end;
 end;
 
 function ReadNyxStudioDesignRequest(const AData: TNyxDataValue): TNyxStudioDesignRequest;
@@ -479,7 +493,7 @@ var
 begin
 
   if (AData.Kind <> ndObject) or (AData.Count <> 7) or
-    (AData.Field('version').AsInteger <> 4) then
+    (AData.Field('version').AsInteger <> 5) then
   begin
     raise ENyxModel.Create('Design processor requires its exact versioned ticket');
   end;
@@ -492,7 +506,7 @@ begin
   LEdit := AData.Field('edit');
 
   if (Result.FOwner = '') or (Result.FGeneration < 0) or (Result.FNextID < 0) or
-    (Result.FSchemaRevision < 0) or (LEdit.Kind <> ndObject) or (LEdit.Count <> 10) then
+    (Result.FSchemaRevision < 0) or (LEdit.Kind <> ndObject) or (LEdit.Count <> 11) then
   begin
     raise ENyxModel.Create('Design processor ticket has invalid identity or intent');
   end;
@@ -634,6 +648,27 @@ begin
   begin
     raise ENyxModel.Create('Only canvas intent selects a concrete replay platform');
   end;
+
+  if Result.FEdit.Action = sdaCollection then
+  begin
+    Result.FEdit.Collection := TNyxStudioCollectionIntent.FromData(LEdit.Field('collection'));
+
+    if NyxStudioCollectionViewAction(Result.FEdit.Collection.Action) and
+      ((Result.FEdit.Selection = '') or (Result.FEdit.View = '')) then
+    begin
+      raise ENyxCollection.Create('Collection view intent requires its captured owner/view');
+    end;
+
+    if not NyxStudioCollectionViewAction(Result.FEdit.Collection.Action) and
+      ((Result.FEdit.Selection <> '') or (Result.FEdit.View <> '')) then
+    begin
+      raise ENyxCollection.Create('Document collection data cannot borrow selected-view ownership');
+    end;
+  end
+  else if LEdit.Field('collection').Kind <> ndNull then
+  begin
+    raise ENyxCollection.Create('Only collection intent carries collection payload');
+  end;
 end;
 
 destructor TPreparedDesign.Destroy;
@@ -712,6 +747,10 @@ begin
       sdaSetBinding: LSession.SetBinding(FRequest.FEdit.Binding);
       sdaInheritBinding: LSession.InheritBinding(FRequest.FEdit.Binding.Target);
       sdaEvent: LSession.ApplyEventIntent(FRequest.FEdit.Event, FAddedHandler, LLine);
+      sdaCollection:
+        begin
+          LSession.ApplyCollectionIntent(FRequest.FEdit.Collection);
+        end;
     end;
     FSource := LSession.Source;
     FDesign := LSession.FSourceWorkspace.Capture.Design;
@@ -945,6 +984,23 @@ begin
   if (AEdit.Action = sdaCanvasValue) and not MatchesCommandContext(AEdit.CanvasContext) then
   begin
     raise ENyxModel.Create('Captured canvas intent belongs to an earlier session or project load');
+  end;
+
+  if AEdit.Action = sdaCollection then
+  begin
+    AEdit.Collection.Validate;
+
+    if NyxStudioCollectionViewAction(AEdit.Collection.Action) <>
+      ((AEdit.Selection <> '') and (AEdit.View <> '')) then
+    begin
+      raise ENyxCollection.Create('Collection view/data ownership does not match its captured intent');
+    end;
+
+    if not NyxStudioCollectionViewAction(AEdit.Collection.Action) and
+      ((AEdit.Selection <> '') or (AEdit.View <> '')) then
+    begin
+      raise ENyxCollection.Create('Document collection data cannot borrow selected-view ownership');
+    end;
   end;
   Result := Default(TNyxStudioDesignRequest);
   Result.FOwner := FSourceIdentity;

@@ -627,6 +627,27 @@ These staged browser consumers still need execution through a permitted host.
 The command starts no listener and changes no enrollment, profile or live project.
 Exact current execution evidence and remaining scope are in [WORK.md](../WORK.md).
 
+The focused structured collection inspector qualification is available as:
+
+```powershell
+./tools/build.ps1 -Target collection-inspectors
+```
+
+It runs all seventeen typed collection operations through independent replay,
+strict private descriptors and exact source/design publication. Native controls
+exercise pending input/focus, row/default/column ownership, structural locks,
+reusable scope, tree parent mapping, drafts, paired history and retired loads.
+The exact exported companion compiles and drives a real native table callback;
+runtime stores remain independent of document defaults and other applications.
+Source regression also checks that qualified collection units are imported only
+once through repeated edits. English desktop/390 captures are in `controls/`.
+Studio, its matched Pascal module worker and portable/DOM/generated consumers
+stage in `browser/`, with four English collection qualification hosts. Current
+browser execution needs its permitted host; the command launches no listener,
+changes no enrollment/profile and replaces no live service or observing project.
+[WORK.md](../WORK.md) records current individually executed consumers separately
+from the maintained composite command and the original acceptance gates.
+
 The optional Win32 transport consumer needs no Studio server, project, enrollment
 or application compiler profile:
 

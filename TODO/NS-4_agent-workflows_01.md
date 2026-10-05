@@ -361,3 +361,21 @@ boundaries. Do not drop or retarget consecutive rename input. Original codegen
 criterion 3 consumes this source/history integration and advances 22→23; renderer
 3, native authoring 7 and delivery 1 stay unchanged. No acceptance/DONE gate or
 scope is weakened. WORK.md owns exact artifacts, deployment and remote evidence.
+
+## Structured collection workflow prerequisite — 2026-10-05
+
+Ordinary collection inspectors now supply a reusable typed isolated intent
+contract for all seventeen existing data/view operations, with exact scoped
+rows/field families, ownership guards and paired source/history publication.
+The actual native consumer and compiled companion qualify that prerequisite;
+current browser execution retains its host gate. This packet adds no semantic
+tool or authenticated deployment: source catalog eighteen/current release fifteen
+and this owner's no-closure count 3 remain unchanged.
+
+Criterion 5 still requires bounded collection/schema/row/view queries and grouped
+semantic authoring at exact revision/actor authority. Reuse the existing intent
+and candidate machinery, preserve document defaults versus runtime stores, and
+refuse invalid groups atomically. Do not substitute screenshot-driven editing or
+whole-document dumps for missing semantic vocabulary. General source/import,
+richer reusable workflows, updated authenticated discovery and observing browser
+qualification keep their original requirements. WORK.md records the return path.

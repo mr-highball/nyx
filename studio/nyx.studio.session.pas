@@ -52,6 +52,7 @@ uses
   nyx.callbacks,
   nyx.scheduler,
   nyx.studio.authoring,
+  nyx.studio.collectionintent,
   nyx.sample;
 
 type
@@ -81,7 +82,7 @@ type
     sdaMove, sdaTitle, sdaAddPage, sdaCreateComponent, sdaAddInstance, sdaCustomizePart,
     sdaCanvasValue, sdaSetStateDefault, sdaCreateStateDefault,
     sdaRenameStateDefault, sdaRemoveStateDefault, sdaSetBinding, sdaInheritBinding,
-    sdaEvent);
+    sdaEvent, sdaCollection);
   { Callback operations carry exact typed event/registration references. Removal
     includes the handler the user reviewed; IDs alone cannot authorize replacing
     a registration. Empty references belong only to add/policy intent. }
@@ -132,6 +133,9 @@ type
     Binding: TNyxBindingSpec;
     { Value-only callback intent, with no source pointer or executable closure. }
     Event: TNyxStudioEventIntent;
+    { Collection-scoped values and family-qualified field/item references.
+      Data operations have no selected owner; view operations capture one. }
+    Collection: TNyxStudioCollectionIntent;
     { Immutable origin of a canvas capture. Queue admission uses this mounted
       session/load identity even when the caller retains intent before enqueue. }
     property CanvasContext: TNyxStudioCommandContext read FCanvasContext;
@@ -168,6 +172,12 @@ type
     Owner: TNyxText;
     Intent: TNyxStudioEventIntent;
   end;
+  { Value-only pending collection proposal. Owner is empty for document data
+    and exact authored identity for collection-view operations. }
+  TNyxStudioPendingCollection = record
+    Owner: TNyxText;
+    Intent: TNyxStudioCollectionIntent;
+  end;
   TNyxStudioPendingDesign = record
     TitleDefined: Boolean;
     Title: TNyxText;
@@ -181,6 +191,18 @@ type
     NewDefaultPending: Boolean;
     Bindings: array of TNyxStudioPendingBinding;
     Events: array of TNyxStudioPendingEvent;
+    Collections: array of TNyxStudioPendingCollection;
+    { Structural data locks guard pre-paint clicks and pending form duplication;
+      view locks belong to the exact authored control, never a positional ID. }
+    function CollectionLocked(const AKey: TNyxCollectionRef): Boolean;
+    function CollectionViewLocked(const AOwner: TNyxText): Boolean;
+    function CollectionCreationPending: Boolean;
+    { Latest matching scalar/column proposal keeps its original notation.
+      False clears the output; accepted data/history are never modified. }
+    function CollectionValue(const AKey: TNyxCollectionRef;
+      const AItem: TNyxItemRef; const AField: TNyxStudioCollectionFieldRef;
+      AAction: TNyxStudioCollectionAction; const AOwner: TNyxText;
+      out AIntent: TNyxStudioCollectionIntent): Boolean;
     { Latest waiting policy wins without changing the accepted event contract. }
     function EventPolicy(const AOwner: TNyxText; ATrigger: TNyxTrigger;
       const AName: TNyxEventRef; out APolicy: TNyxExecutionPolicy): Boolean;
@@ -376,6 +398,11 @@ type
     procedure RemoveCollection(const AKey: TNyxCollectionRef);
     procedure SetCollectionView(const ASpec: TNyxCollectionViewSpec);
     procedure InheritCollectionView;
+    { Apply a typed collection proposal on this session's detached candidate.
+      Exact field families, scoped item identity and view projection are checked
+      before mutation; unknown/missing identities refuse without partial data.
+      The ordinary command retains independent Pascal drafts and paired history. }
+    procedure ApplyCollectionIntent(const AIntent: TNyxStudioCollectionIntent);
     { Execute one closed event command against this session's current selection.
       All supported-event and reviewed-registration checks precede mutation.
       Add requires accepted Pascal and returns its owned TODO stub reference/line;
@@ -2338,6 +2365,7 @@ begin
 end;
 
 {$include nyx.studio.session.design.inc}
+{$include nyx.studio.session.collections.inc}
 
 function TNyxStudioSession.GetSourceDiagnostic: TNyxSourceDiagnostic;
 begin
