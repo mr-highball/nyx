@@ -88,8 +88,11 @@ type
     { Arguments are admitted JSON data at this explicit semantic boundary.
       Results are bounded immutable copies. Rejected operations retain accepted
       pair, editable draft and history. Activity records both success and refusal. }
+    { An owning transport may supply a private request identity independently
+      of its friendly display actor. Receipts and warned-removal tickets use
+      this identity; activity continues to show the readable actor. }
     function Call(const ATool, AActor: TNyxText;
-      const AArguments: TNyxDataValue): TNyxDataValue;
+      const AArguments: TNyxDataValue; const ARequestOwner: TNyxText = ''): TNyxDataValue;
     { Private editor transport, never advertised as an MCP tool. Observations
       send paired files only after a changed revision. Commit is compare-and-swap;
       first attachment may claim recovered local files, later views observe.
@@ -1256,7 +1259,7 @@ begin
 end;
 
 function TNyxAgentSession.Call(const ATool, AActor: TNyxText;
-  const AArguments: TNyxDataValue): TNyxDataValue;
+  const AArguments: TNyxDataValue; const ARequestOwner: TNyxText): TNyxDataValue;
 var
   LBefore: TNyxText;
   LOperationID: TNyxText;
@@ -1271,7 +1274,14 @@ var
   LHandlerResults: TNyxDataValue;
   LRootApply: Boolean;
   LRootResults: TNyxDataValue;
+  LAuthority: TNyxText;
 begin
+  LAuthority := ARequestOwner;
+
+  if LAuthority = '' then
+  begin
+    LAuthority := AActor;
+  end;
   LCallbackApply := False;
   LCallbackResults := NyxNull;
   LHandlerApply := False;
@@ -1315,7 +1325,7 @@ begin
       begin
         raise ENyxModel.Create('Mutation operationId must contain 1..120 characters');
       end;
-      LKey := NyxObject([NyxField('actor', NyxData(AActor)),
+      LKey := NyxObject([NyxField('actor', NyxData(LAuthority)),
         NyxField('id', NyxData(LOperationID))]).ToJSON;
       LRequest := NyxObject([NyxField('tool', NyxData(ATool)),
         NyxField('arguments', AArguments)]).ToJSON;
@@ -1380,7 +1390,7 @@ begin
       begin
         raise ENyxModel.Create('Callback mode must be review or apply');
       end;
-      Result := EditCallbacks(AArguments, AActor, LCallbackApply);
+      Result := EditCallbacks(AArguments, LAuthority, LCallbackApply);
       LCallbackResults := Result;
     end
     else if ATool = 'nyx_pascal' then
@@ -1400,7 +1410,7 @@ begin
       begin
         raise ENyxModel.Create('Root mode must be review or apply');
       end;
-      Result := RemoveRoots(AArguments, AActor, LRootApply);
+      Result := RemoveRoots(AArguments, LAuthority, LRootApply);
       LRootResults := Result;
     end
     else if ATool = 'nyx_select' then

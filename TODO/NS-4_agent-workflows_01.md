@@ -54,8 +54,10 @@ immutable build requests and bounded status are now qualified. Local callback
 implementation editing now has a focused bounded tool. General
 source/import editing remains absent. State/binding
 commands and reusable authoring are not advertised. Root
-creation and reviewed root deletion are supported; root ordering and isolated
-review-session lifecycle remain absent. Property values preserve their JSON scalar types, but
+creation and reviewed root deletion are supported; root ordering remains absent.
+Protected review lifecycle and explicit concurrent project contexts now have
+source/staged qualification packets below, distinct from production deployment.
+Property values preserve their JSON scalar types, but
 numeric/Boolean schema defaults still use metadata text; typed effective defaults
 would reduce interpretation by agents. Exact schemas are discoverable through
 the native semantic client; an unknown source `limit` was correctly rejected,
@@ -284,3 +286,34 @@ concurrent-project criterion. Next deliverable follows the user's priority:
 stable explicit project contexts, transport-independent project lifetimes and
 full-editor jump/return with drafts/history/view/presentation preserved. See
 [the packet](../WORK.md#protected-review-qualification--2026-10-04).
+
+## Concurrent-project foundation — 2026-10-04
+
+Criterion 6 now has a qualified portable registry, explicit semantic routing,
+immutable compiler contexts and ordinary browser full-editor jump/return.
+Projects survive agent disconnect independently of temporary reviews. Native
+and executed-browser ownership/presentation checks pass 215 each; actual Nyx
+Agents controls pass ten on LCL and browser. Authenticated semantic composition,
+paired history, bounded export, both application compilers, exact source
+currentness, selective preview and observing editor checks pass 202 desktop /
+203 at an actual 390-pixel viewport, with zero native leaks. Friendly actor names
+do not substitute for private request authority. Foreign/closed/mixed scopes,
+permission reduction and old-service closure capability refuse safely.
+
+The private operator close route is compiled but unlaunched: automatic approval
+review rejected launching its independent qualification server ("blocked by
+policy", no further reason). Warning/cancel controls and portable closure pass;
+successful live confirmation/authentication/refusal and completion after project
+closure remain required. Full native Studio navigation and broader presentation
+journeys retain their owners. The LAN release remains at fifteen tools; this
+source/staged candidate has seventeen. See
+[the packet](../WORK.md#concurrent-project-qualification--2026-10-04).
+
+No original criterion closes in this second consecutive batch. Reassessment
+ends the implementation/fixture-expansion sequence: checkpoint this usable
+foundation, then finish live operator close/closed-job currentness when execution
+is available and follow the full native/presentation acceptance path. Do not
+repeat stable registry/jump fixtures or relabel a preview as full authoring.
+The user's new warning-cleanup priority follows NS-6 delivery; return here
+after that bounded source/build cleanup. Criteria 2/3/4 retain accepted evidence;
+criteria 5/6 and the full task remain open.

@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -202,6 +202,54 @@ try {
     if ($LASTEXITCODE -ne 0) {
       throw 'MCP configuration preservation checks failed'
     }
+    exit 0
+  }
+
+  if ($Target -eq 'project-workspaces') {
+    # Stage current portable contracts, actual target view consumers and service
+    # artifacts. Starting a listener or resetting an editor is never a build
+    # side effect; the maintained Pascal MCP journey takes explicit fixture args.
+    $nyxProjectDir = Join-Path $nyxRoot 'build/project-workspaces/orchestrated'
+    $nyxProjectNative = Join-Path $nyxProjectDir 'native'
+    $nyxProjectViews = Join-Path $nyxProjectDir 'views'
+    $nyxProjectProtocol = Join-Path $nyxProjectDir 'protocol'
+    $nyxBrowserDir = Join-Path $nyxProjectDir 'web'
+
+    if ($BrowserOutput) { $nyxBrowserDir = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxProjectNative, $nyxProjectViews, $nyxProjectProtocol, $nyxBrowserDir | Out-Null
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxProjectFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxProjectNative", "-FE$nyxProjectNative")
+    Invoke-NyxCompiler $nyxFpc ($nyxProjectFlags + @('tests/nyx_workspace_tests.lpr'))
+    & (Join-Path $nyxProjectNative 'nyx_workspace_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Portable native project ownership/presentation checks failed' }
+    Invoke-NyxCompiler $nyxFpc ($nyxProjectFlags + @('studio/nyx_studio_server.lpr'))
+    $nyxProjectHostFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxProjectProtocol", "-FE$nyxProjectProtocol")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxProjectHostFlags + @('tests/nyx_mcp_workspace_tests.lpr'))
+    $nyxProjectPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxProjectViewFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxProjectViews", "-FE$nyxProjectViews",
+      "-Fu$nyxLazarus/lcl/units/$nyxProjectPlatform", "-Fu$nyxLazarus/lcl/units/$nyxProjectPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxProjectPlatform", "-Fu$nyxLazarus/packager/units/$nyxProjectPlatform")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxProjectViewFlags + @('tests/nyx_workspace_view_tests.lpr'))
+    & (Join-Path $nyxProjectViews 'nyx_workspace_view_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native project view controls failed' }
+    foreach ($nyxProjectProgram in @('tests/nyx_workspace_tests.lpr', 'tests/nyx_workspace_view_tests.lpr',
+        'studio/nyx_studio.lpr', 'studio/nyx_studio_review.lpr', 'studio/nyx_studio_preview.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Fusrc', '-Fustudio',
+        "-FE$nyxBrowserDir", $nyxProjectProgram)
+    }
+    foreach ($nyxProjectHost in @('workspaces.html', 'workspace-view.html', 'index.html',
+        'agent-review.html', 'agent-preview.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxProjectHost") -Destination $nyxBrowserDir
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     exit 0
   }
 

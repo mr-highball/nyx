@@ -42,6 +42,21 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Responsive shell evidence — 2026-10-03
 
+Concurrent-project continuation (2026-10-04): criterion 7 now has ordinary
+browser full-editor jump/return evidence, independent paired drafts/history,
+typed per-project presentation and Nyx-built Agents session cards. Real desktop
+and actual-390 journeys pass 202/203 checks; shared ownership/presentation passes
+215 per target and actual shared Agents controls pass ten on browser and LCL.
+Observed agent paints retain a pressed navigation control through release;
+source proportions, Unicode drafts and compiler currentness survive return.
+The private close route is compiled but its new qualification-server launch was
+rejected by automatic approval review. Successful live warned closure, completion
+after closure, broader presentation and full native editor navigation remain
+required. Criterion 7 and this task remain open. The workflow owner's second
+consecutive batch reassessment ends fixture expansion and chooses these remaining
+gates after the user's bounded NS-6 warning cleanup. See
+[the packet](../WORK.md#concurrent-project-qualification--2026-10-04).
+
 The user's phone review exposed fixed sidebars and inherited row wrapping that
 squeezed the design. Compact shared Nyx Project/Design/Inspector compositions now
 give one panel the full workspace; desktop retains three panels. Dynamic viewport

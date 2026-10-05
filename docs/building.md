@@ -334,3 +334,13 @@ bounded agent discovery. Native protected virtual mouse/key paths and browser
 synthetic host events exercise real controls; they do not establish trusted
 hardware input or full accessibility conformance. The compiler matrix also
 rejects string-valued selection modes/actions on both compilers.
+
+`tools/build.ps1 -Target project-workspaces -BrowserOutput <staging-directory>`
+stages checked portable ownership/presentation fixtures, actual LCL Agents
+controls, the native semantic/browser coordinator and Studio/server artifacts.
+It does not start a listener or mutate an editor. Execute `workspaces.html` and
+`workspace-view.html` over HTTP too; a native pass does not establish pas2js
+ownership or target presentation. The maintained MCP journey uses an explicitly
+owned fixture configuration and records exact project frames, both compiler
+sources and a selective PNG. See [project sessions](studio-agents.md#concurrent-project-sessions)
+for arguments, lifetimes, limits and remaining close/native-controller gates.

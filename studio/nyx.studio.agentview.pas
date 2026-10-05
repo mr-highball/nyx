@@ -27,7 +27,8 @@ unit nyx.studio.agentview;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.studio.agents;
+  SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.studio.agents,
+  nyx.studio.workspaces;
 
 type
   { Immutable-by-copy observer presentation. No transport credentials, borrowed
@@ -46,12 +47,29 @@ type
     { Operator-only bounded review summaries; no transport owner credentials or
       user document buffers. Preview links show independent, live review views. }
     Reviews: TNyxDataValue;
+    { Full editor context is fixed for this observer, independently of agents.
+      Project summaries include bounded session/activity metadata only. }
+    Workspace: TNyxWorkspaceRef;
+    Workspaces: TNyxDataValue;
+    { Operator consent is an exact project/revision snapshot, never a label or
+      current list index. It is ephemeral UI state, not a persisted design. }
+    CloseWorkspace: TNyxWorkspaceRef;
+    CloseRevision: Integer;
+    CloseLabel: TNyxText;
+    { Explicit editor capability advertisement. A newer client must not offer
+      confirmation against an older service that lacks operator closure. }
+    CanCloseWorkspace: Boolean;
   end;
 
 function DefaultNyxStudioAgentView: TNyxStudioAgentView;
 { Typed editor-only URL metadata. Target controllers decide how to show this
   independent view; it never routes a document mutation or a control property. }
 function NyxStudioReviewPreviewKey: TNyxExtensionRef;
+{ Typed editor navigation metadata. Empty denotes the primary project; it is
+  never a document root ID, compiler target or agent-retargeting instruction. }
+function NyxStudioWorkspaceJumpKey: TNyxExtensionRef;
+{ Operator-only closure metadata; agents have no project-close tool. }
+function NyxStudioWorkspaceCloseKey: TNyxExtensionRef;
 { Owned ordinary Nyx controls; both adapters can mount the same permission and
   activity UI. Controllers route explicit operator actions to their service. }
 function BuildNyxStudioAgents(const AState: TNyxStudioAgentView): TNyxNode;
@@ -61,6 +79,16 @@ implementation
 function NyxStudioReviewPreviewKey: TNyxExtensionRef;
 begin
   Result := NyxExtension('studio.review-preview');
+end;
+
+function NyxStudioWorkspaceJumpKey: TNyxExtensionRef;
+begin
+  Result := NyxExtension('studio.workspace-jump');
+end;
+
+function NyxStudioWorkspaceCloseKey: TNyxExtensionRef;
+begin
+  Result := NyxExtension('studio.workspace-close');
 end;
 
 function DefaultNyxStudioAgentView: TNyxStudioAgentView;
@@ -75,6 +103,12 @@ begin
   Result.Activity := NyxArray([]);
   Result.Compiler := NyxNull;
   Result.Reviews := NyxArray([]);
+  Result.Workspace := NyxPrimaryWorkspace;
+  Result.Workspaces := NyxArray([]);
+  Result.CloseWorkspace := NyxPrimaryWorkspace;
+  Result.CloseRevision := 0;
+  Result.CloseLabel := '';
+  Result.CanCloseWorkspace := False;
 end;
 
 function LabelNode(const AID, AText: TNyxText): TNyxNode;
@@ -93,6 +127,9 @@ var
   LCaption: TNyxText;
   LReview: TNyxNode;
   LSummary: TNyxDataValue;
+  LConnection: Integer;
+  LWorkspace: TNyxNode;
+  LWorkspaceKey: TNyxText;
 begin
   Result := TNyxNode.Create(nkCard, 'studio-agents');
   try
@@ -171,6 +208,82 @@ begin
           LButton.Extensions.SetValue(NyxStudioReviewPreviewKey, LItem.Field('preview'));
           LReview.Add(LButton);
         end;
+      end;
+    end;
+    for LIndex := 0 to AState.Workspaces.Count - 1 do
+    begin
+      LItem := AState.Workspaces.Item(LIndex);
+      LSummary := LItem.Field('session');
+      LWorkspaceKey := LItem.Field('workspace').AsText;
+
+      if LWorkspaceKey = '' then
+      begin
+        LWorkspaceKey := 'primary';
+      end;
+      { Navigation controls keep their exact project identity when another
+        project closes. An array position must never identify an action target. }
+      LWorkspace := TNyxNode.Create(nkCard, 'studio-agent-workspace-' + LWorkspaceKey)
+        .Configure.Layout(nlColumn).Gap(6).Padding(12).Done;
+      Result.Add(LWorkspace);
+      LWorkspace.Add(LabelNode('studio-agent-workspace-label-' + LWorkspaceKey,
+        LItem.Field('label').AsText + ' / ' + LSummary.Field('title').AsText));
+      LWorkspace.Add(LabelNode('studio-agent-workspace-revision-' + LWorkspaceKey,
+        'Project / revision ' + IntToStr(LSummary.Field('revision').AsInteger) +
+        ' / ' + IntToStr(LItem.Field('connections').Count) + ' agent sessions'));
+      for LConnection := 0 to LItem.Field('connections').Count - 1 do
+      begin
+        LWorkspace.Add(LabelNode('studio-agent-workspace-connection-' +
+          LWorkspaceKey + '-' + IntToStr(LConnection),
+          LItem.Field('connections').Item(LConnection).Field('actor').AsText +
+          ' / session ' + IntToStr(LItem.Field('connections').Item(LConnection)
+            .Field('session').AsInteger)));
+      end;
+
+      if LItem.Field('workspace').AsText = AState.Workspace.ID then
+      begin
+        LWorkspace.Add(LabelNode('studio-agent-workspace-current-' + LWorkspaceKey,
+          'You are editing this project. Agents retain their own explicit targets.'));
+      end
+      else
+      begin
+        LButton := TNyxNode.Create(nkButton, 'studio-agent-workspace-jump-' + LWorkspaceKey)
+          .Configure.Text('Jump into project').Enabled(AState.Connected and not AState.Conflict).Done;
+        LButton.Extensions.SetValue(NyxStudioWorkspaceJumpKey, LItem.Field('workspace'));
+        LWorkspace.Add(LButton);
+
+        if LItem.Field('workspace').AsText <> '' then
+        begin
+          LButton := TNyxNode.Create(nkButton, 'studio-agent-workspace-close-' + LWorkspaceKey)
+            .Configure.Text('Close project...')
+            .Enabled(AState.Connected and not AState.Conflict and not AState.Busy).Done;
+          LButton.Extensions.SetValue(NyxStudioWorkspaceCloseKey, LItem.Field('workspace'));
+          LWorkspace.Add(LButton);
+        end;
+      end;
+    end;
+
+    if AState.CloseWorkspace.ID <> '' then
+    begin
+      LWorkspace := TNyxNode.Create(nkCard, 'studio-agent-workspace-close-warning')
+        .Configure.Layout(nlColumn).Gap(8).Padding(12).Done;
+      Result.Add(LWorkspace);
+      LWorkspace.Add(LabelNode('studio-agent-workspace-close-title',
+        'Close ' + AState.CloseLabel + '?'));
+      LWorkspace.Add(LabelNode('studio-agent-workspace-close-explanation',
+        'Unsaved work, pending Pascal drafts and Undo history in this project will be released. ' +
+        'Save a project backup first. Agents using it will lose access; running builds retain their inputs. ' +
+        'Confirmation applies only to revision ' + IntToStr(AState.CloseRevision) + '.'));
+      LWorkspace.Add(TNyxNode.Create(nkButton, 'action-workspace-close-cancel')
+        .Configure.Text('Keep project').Done);
+      LWorkspace.Add(TNyxNode.Create(nkButton, 'action-workspace-close-confirm')
+        .Configure.Text('Close and release unsaved work')
+        .Enabled(AState.CanCloseWorkspace and AState.Connected and
+          not AState.Conflict and not AState.Busy).Done);
+
+      if not AState.CanCloseWorkspace then
+      begin
+        LWorkspace.Add(LabelNode('studio-agent-workspace-close-unavailable',
+          'Closing projects is unavailable for this connection. Your project remains open.'));
       end;
     end;
     Result.Add(LabelNode('studio-agents-activity-title', 'Recent agent activity'));

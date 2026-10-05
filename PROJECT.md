@@ -64,6 +64,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Concurrent project sessions now have a qualified portable foundation and
+ordinary browser jump/return workflow: 215 shared checks per target, ten actual
+Agents-control checks per target and 202 desktop / 203 exact-390 real MCP/editor
+checks. Both application compiler files match the bounded semantic export.
+Projects retain independent drafts/history and survive agent disconnection;
+view navigation cannot retarget requests/jobs. Live operator closure and full
+native editor navigation remain open. The seventeen-tool candidate is staged;
+the LAN release still has fifteen. See [WORK.md](WORK.md) for the deployment
+refusal, original acceptance owners and the user's warning-cleanup priority.
+
 The typed layout policy now crosses managed authoring, persistence, Studio source
 admission/generation, bounded MCP metadata and both adapters. Two semantic review
 pages exercise natural widths, wrap/align/justify, shared spacer defaults and

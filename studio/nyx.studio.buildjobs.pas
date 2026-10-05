@@ -28,7 +28,7 @@ interface
 
 uses
   Classes, SysUtils, SyncObjs, nyx.text, nyx.data, nyx.studio.projects,
-  nyx.studio.builds, nyx.studio.compiler, nyx.studio.reviews;
+  nyx.studio.builds, nyx.studio.compiler, nyx.studio.reviews, nyx.studio.workspaces;
 
 type
   { Native compiler jobs own immutable accepted text and a private machine
@@ -62,7 +62,13 @@ type
     function Submit(const AActor: TNyxText; const AArguments: TNyxDataValue;
       const APair: TNyxProjectPair; const AReview: TNyxReviewRef;
       const ARetryOwner: TNyxText): TNyxDataValue; overload;
+    { User project identity is captured beside review identity. The two scopes
+      are mutually exclusive and remain immutable through editor navigation. }
+    function Submit(const AActor: TNyxText; const AArguments: TNyxDataValue;
+      const APair: TNyxProjectPair; const AReview: TNyxReviewRef;
+      const ARetryOwner: TNyxText; const AWorkspace: TNyxWorkspaceRef): TNyxDataValue; overload;
     function Context(const AJob: TNyxText): TNyxReviewRef;
+    function WorkspaceContext(const AJob: TNyxText): TNyxWorkspaceRef;
     { Bounded immutable results; no source, compiler log or machine profile dump.
       Current-source and navigation flags are added by the model-owning transport. }
     function Status(const AArguments: TNyxDataValue;
@@ -74,6 +80,9 @@ type
     function TakeCompletion(out AActor, AOutcome: TNyxText;
       out APair: TNyxProjectPair; out AReport: INyxCompilerReport;
       out AReview: TNyxReviewRef): Boolean; overload;
+    function TakeCompletion(out AActor, AOutcome: TNyxText;
+      out APair: TNyxProjectPair; out AReport: INyxCompilerReport;
+      out AReview: TNyxReviewRef; out AWorkspace: TNyxWorkspaceRef): Boolean; overload;
   end;
 
 { Optimistic byte fingerprint, explicitly MD5 rather than an authentication
@@ -104,6 +113,7 @@ type
     ID: TNyxText;
     Actor: TNyxText;
     Review: TNyxReviewRef;
+    Workspace: TNyxWorkspaceRef;
     Repository: TNyxText;
     Profile: TNyxText;
     Pair: TNyxProjectPair;
@@ -597,6 +607,29 @@ end;
 function TNyxBuildJobs.Submit(const AActor: TNyxText;
   const AArguments: TNyxDataValue; const APair: TNyxProjectPair;
   const AReview: TNyxReviewRef; const ARetryOwner: TNyxText): TNyxDataValue;
+begin
+  Result := Submit(AActor, AArguments, APair, AReview, ARetryOwner, NyxPrimaryWorkspace);
+end;
+
+function TNyxBuildJobs.WorkspaceContext(const AJob: TNyxText): TNyxWorkspaceRef;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to FJobs.Count - 1 do
+  begin
+
+    if TBuildJob(FJobs[LIndex]).ID = AJob then
+    begin
+      Exit(TBuildJob(FJobs[LIndex]).Workspace);
+    end;
+  end;
+  raise ENyxModel.Create('Unknown or expired build job; no project context fallback');
+end;
+
+function TNyxBuildJobs.Submit(const AActor: TNyxText;
+  const AArguments: TNyxDataValue; const APair: TNyxProjectPair;
+  const AReview: TNyxReviewRef; const ARetryOwner: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef): TNyxDataValue;
 var
   LExecutor: TNyxBuildExecutor;
   LIssue: TNyxText;
@@ -606,6 +639,11 @@ var
   LIndex: Integer;
   LID: TGUID;
 begin
+
+  if (AReview.ID <> '') and (AWorkspace.ID <> '') then
+  begin
+    raise ENyxModel.Create('Compiler jobs require one exact project or review context');
+  end;
 
   if AArguments.Field('outputID').AsText <> NyxBuildFingerprint(FProfile) then
   begin
@@ -653,6 +691,7 @@ begin
     LJob.ID := Copy(GUIDToString(LID), 2, 36);
     LJob.Actor := AActor;
     LJob.Review := AReview;
+    LJob.Workspace := AWorkspace;
     LJob.Repository := FRepository;
     LJob.Profile := FProfile;
     LJob.Arguments := AArguments.Copy;
@@ -762,6 +801,15 @@ end;
 function TNyxBuildJobs.TakeCompletion(out AActor, AOutcome: TNyxText;
   out APair: TNyxProjectPair; out AReport: INyxCompilerReport;
   out AReview: TNyxReviewRef): Boolean;
+var
+  LWorkspace: TNyxWorkspaceRef;
+begin
+  Result := TakeCompletion(AActor, AOutcome, APair, AReport, AReview, LWorkspace);
+end;
+
+function TNyxBuildJobs.TakeCompletion(out AActor, AOutcome: TNyxText;
+  out APair: TNyxProjectPair; out AReport: INyxCompilerReport;
+  out AReview: TNyxReviewRef; out AWorkspace: TNyxWorkspaceRef): Boolean;
 const
   CSeparator: TNyxText = ' · ';
 var
@@ -771,6 +819,7 @@ begin
   Result := False;
   AReport := nil;
   AReview := NyxActiveWorkspace;
+  AWorkspace := NyxPrimaryWorkspace;
   for LIndex := 0 to FJobs.Count - 1 do
   begin
     LJob := TBuildJob(FJobs[LIndex]);
@@ -790,6 +839,7 @@ begin
         end;
         APair := LJob.Pair;
         AReview := LJob.Review;
+        AWorkspace := LJob.Workspace;
         AReport := LJob.Report;
         Exit(True);
       end;

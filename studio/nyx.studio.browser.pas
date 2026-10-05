@@ -32,6 +32,7 @@ uses
   nyx.types,
   nyx.behavior,
   nyx.text,
+  nyx.data,
   Classes,
   SysUtils,
   JS,
@@ -56,7 +57,8 @@ uses
   nyx.studio.view,
   nyx.studio.builds,
   nyx.studio.outputs,
-  nyx.studio.projects, nyx.studio.rootedits, nyx.studio.rootview;
+  nyx.studio.projects, nyx.studio.rootedits, nyx.studio.rootview,
+  nyx.studio.workspaces, nyx.studio.presentation;
 
 type
   { Transport operation is closed and independent of application build targets. }
@@ -108,6 +110,16 @@ type
     FCompact: Boolean;
     FPanel: TNyxStudioPanel;
     FResizeHandler: TJSEventHandler;
+    { Keep an observed shell mounted through the complete press/release/click
+      task. Coalesced agent paints run afterward; requests retain fixed targets. }
+    FPointerBeginHandler: TJSEventHandler;
+    FPointerEndHandler: TJSEventHandler;
+    FPointerBlurHandler: TJSEventHandler;
+    FPressedPointers: array of NativeInt;
+    FAgentRefreshPending: Boolean;
+    FAgentContentPending: Boolean;
+    FPointerRefreshTimer: NativeInt;
+    FAgentsScroll: NativeInt;
     FLeftScroll: NativeInt;
     FRightScroll: NativeInt;
     FCanvasScrollTop: NativeInt;
@@ -142,7 +154,19 @@ type
     FRemoteRevision: TNyxText;
     FAgents: TNyxStudioAgentBridge;
     FAgentsVisible: Boolean;
+    FWorkspace: TNyxWorkspaceRef;
+    FPendingPresentation: TNyxDataValue;
+    function RecoveryKey: TNyxText;
+    function PresentationKey: TNyxText;
+    procedure SavePresentation;
+    procedure LoadPresentation;
+    procedure RestorePresentationControls;
+    procedure JumpWorkspace(const AReference: TNyxWorkspaceRef);
     procedure AgentRefresh(AContentChanged: Boolean);
+    function PointerBegin(AEvent: TJSEvent): Boolean;
+    function PointerEnd(AEvent: TJSEvent): Boolean;
+    function PointerBlur(AEvent: TJSEvent): Boolean;
+    procedure FlushAgentRefresh;
     function CreateShell: TNyxDocument;
     { Retain focused new-default drafts across panel/viewport transitions and
       keyboard/programmatic Add actions, independently of project history. }
@@ -180,7 +204,6 @@ type
 implementation
 
 uses
-  nyx.data,
   nyx.codegen,
   nyx.codec,
   nyx.json,
@@ -193,6 +216,12 @@ type
   TNyxReviewWindow = class external name 'Window' (TJSWindow)
     function OpenReview(const AURL, ATarget, AFeatures: String): TJSWindow;
       external name 'open';
+  end;
+  { The installed Web unit exposes only the two-argument removal overload.
+    DOM listener lifetime requires the same capture flag used at registration. }
+  TNyxStudioEventTarget = class external name 'EventTarget' (TJSEventTarget)
+    procedure RemoveCaptureListener(const AName: String; AHandler: TJSEventHandler;
+      ACapture: Boolean); external name 'removeEventListener';
   end;
 
 function StudioCSS: TNyxText;
@@ -294,10 +323,43 @@ begin
 end;
 
 constructor TNyxStudio.Create;
+var
+  LQuery: TNyxText;
+  LPart: TNyxText;
+  LStart: Integer;
+  LFinish: Integer;
+  LFound: Boolean;
 begin
   inherited Create;
+  FWorkspace := NyxPrimaryWorkspace;
+  LFound := False;
+  { Only the adapter decodes URL text into a typed service reference. Duplicate
+    or empty contexts refuse; there is no implicit primary-project fallback. }
+  LQuery := Copy(window.location.search, 2, MaxInt);
+  LStart := 1;
+  while LStart <= Length(LQuery) do
+  begin
+    LFinish := LStart;
+    while (LFinish <= Length(LQuery)) and (LQuery[LFinish] <> '&') do
+    begin
+      Inc(LFinish);
+    end;
+    LPart := Copy(LQuery, LStart, LFinish - LStart);
+
+    if (LPart = 'workspace') or (Pos('workspace=', LPart) = 1) then
+    begin
+
+      if LFound then
+      begin
+        raise ENyxModel.Create('Studio URL supplies more than one project context');
+      end;
+      LFound := True;
+      FWorkspace := NyxWorkspace(decodeURIComponent(Copy(LPart, 11, MaxInt)));
+    end;
+    LStart := LFinish + 1;
+  end;
   FSession := TNyxStudioSession.Create;
-  FAgents := TNyxStudioAgentBridge.Create(FSession, @AgentRefresh);
+  FAgents := TNyxStudioAgentBridge.Create(FSession, @AgentRefresh, FWorkspace);
   FOutputs := TNyxOutputConfiguration.Create;
   FShellRenderer := TNyxBrowserRenderer.Create;
   FShellRenderer.OnEvent := HandleShell;
@@ -313,12 +375,28 @@ begin
   FNewStateInput := ssiText;
   FPanel := nspDesign;
   FResizeHandler := ViewportResize;
+  FPointerBeginHandler := PointerBegin;
+  FPointerEndHandler := PointerEnd;
+  FPointerBlurHandler := PointerBlur;
+  FPointerRefreshTimer := -1;
   FRecoveryEnabled := True;
+  { Arriving through a project handle exposes its session switcher on the first
+    visit. Saved presentation remains authoritative on subsequent returns. }
+  FAgentsVisible := FWorkspace.ID <> '';
   FStatus := 'Ready to design';
 end;
 
 destructor TNyxStudio.Destroy;
 begin
+  TNyxStudioEventTarget(document).RemoveCaptureListener('pointerdown', FPointerBeginHandler, True);
+  TNyxStudioEventTarget(document).RemoveCaptureListener('pointerup', FPointerEndHandler, True);
+  TNyxStudioEventTarget(document).RemoveCaptureListener('pointercancel', FPointerEndHandler, True);
+  window.removeEventListener('blur', FPointerBlurHandler);
+
+  if FPointerRefreshTimer >= 0 then
+  begin
+    window.clearTimeout(FPointerRefreshTimer);
+  end;
   FAgents.Free;
   window.removeEventListener('resize', FResizeHandler);
 
@@ -530,6 +608,12 @@ begin
   begin
     FRightScroll := LPrevious.scrollTop;
   end;
+  LPrevious := TJSHTMLElement(document.querySelector('[data-node=studio-agents]'));
+
+  if LPrevious <> nil then
+  begin
+    FAgentsScroll := LPrevious.scrollTop;
+  end;
   LSameView := FCanvasViewID = FSession.ActiveViewID;
   LPrevious := TJSHTMLElement(document.querySelector('[data-node=studio-canvas-wrap]'));
   LActive := nil;
@@ -675,6 +759,12 @@ begin
   begin
     LPrevious.scrollTop := FRightScroll;
   end;
+  LPrevious := TJSHTMLElement(document.querySelector('[data-node=studio-agents]'));
+
+  if LPrevious <> nil then
+  begin
+    LPrevious.scrollTop := FAgentsScroll;
+  end;
   document.body.setAttribute('data-nyx-studio-ready', 'true');
   document.title := FSession.Document.Title + ' / Nyx Studio';
   try
@@ -701,11 +791,95 @@ begin
   FAgents.Connect;
 end;
 
+function TNyxStudio.PointerBegin(AEvent: TJSEvent): Boolean;
+var
+  LID: NativeInt;
+  LIndex: Integer;
+begin
+  Result := True;
+  LID := TJSPointerEvent(AEvent).pointerId;
+  for LIndex := 0 to High(FPressedPointers) do
+  begin
+
+    if FPressedPointers[LIndex] = LID then
+    begin
+      Exit;
+    end;
+  end;
+  SetLength(FPressedPointers, Length(FPressedPointers) + 1);
+  FPressedPointers[High(FPressedPointers)] := LID;
+end;
+
+function TNyxStudio.PointerEnd(AEvent: TJSEvent): Boolean;
+var
+  LID: NativeInt;
+  LIndex: Integer;
+  LMove: Integer;
+begin
+  Result := True;
+  LID := TJSPointerEvent(AEvent).pointerId;
+  for LIndex := High(FPressedPointers) downto 0 do
+  begin
+
+    if FPressedPointers[LIndex] = LID then
+    begin
+      for LMove := LIndex + 1 to High(FPressedPointers) do
+      begin
+        FPressedPointers[LMove - 1] := FPressedPointers[LMove];
+      end;
+      SetLength(FPressedPointers, Length(FPressedPointers) - 1);
+      Break;
+    end;
+  end;
+
+  if (Length(FPressedPointers) = 0) and FAgentRefreshPending and
+    (FPointerRefreshTimer < 0) then
+  begin
+    { Capture-phase pointerup precedes target/default click. The next task must
+      paint; flushing here would still remove the pressed navigation button. }
+    FPointerRefreshTimer := window.setTimeout(@FlushAgentRefresh, 0);
+  end;
+end;
+
+function TNyxStudio.PointerBlur(AEvent: TJSEvent): Boolean;
+begin
+  Result := True;
+  FPressedPointers := nil;
+
+  if FAgentRefreshPending and (FPointerRefreshTimer < 0) then
+  begin
+    FPointerRefreshTimer := window.setTimeout(@FlushAgentRefresh, 0);
+  end;
+end;
+
+procedure TNyxStudio.FlushAgentRefresh;
+var
+  LChanged: Boolean;
+begin
+  FPointerRefreshTimer := -1;
+
+  if (Length(FPressedPointers) > 0) or not FAgentRefreshPending then
+  begin
+    Exit;
+  end;
+  LChanged := FAgentContentPending;
+  FAgentRefreshPending := False;
+  FAgentContentPending := False;
+  AgentRefresh(LChanged);
+end;
+
 procedure TNyxStudio.AgentRefresh(AContentChanged: Boolean);
 var
   LState: TNyxStudioAgentView;
   LActivity: TNyxDataValue;
 begin
+
+  if Length(FPressedPointers) > 0 then
+  begin
+    FAgentRefreshPending := True;
+    FAgentContentPending := FAgentContentPending or AContentChanged;
+    Exit;
+  end;
   LState := FAgents.State;
 
   if (LState.Compiler.Kind = ndObject) and
@@ -749,6 +923,7 @@ begin
     FStatus := LState.Status;
   end;
   Refresh(not AContentChanged, True);
+  RestorePresentationControls;
 end;
 
 procedure TNyxStudio.HandleCanvas(ANode: TNyxNode; const AEvent: TNyxEventInfo);
@@ -1002,7 +1177,36 @@ begin
     else if AEvent.Trigger = ntClick then
     begin
 
-      if ANode.Extensions.Has(NyxStudioReviewPreviewKey) then
+      if ANode.Extensions.Has(NyxStudioWorkspaceCloseKey) then
+      begin
+        FAgents.RequestWorkspaceClose(NyxWorkspace(
+          ANode.Extensions.Value(NyxStudioWorkspaceCloseKey).AsText));
+        Exit;
+      end
+      else if ANode.ID = 'action-workspace-close-cancel' then
+      begin
+        FAgents.CancelWorkspaceClose;
+        Exit;
+      end
+      else if ANode.ID = 'action-workspace-close-confirm' then
+      begin
+        FAgents.ConfirmWorkspaceClose;
+        Exit;
+      end
+      else if ANode.Extensions.Has(NyxStudioWorkspaceJumpKey) then
+      begin
+
+        if ANode.Extensions.Value(NyxStudioWorkspaceJumpKey).AsText = '' then
+        begin
+          JumpWorkspace(NyxPrimaryWorkspace);
+        end
+        else
+        begin
+          JumpWorkspace(NyxWorkspace(ANode.Extensions.Value(NyxStudioWorkspaceJumpKey).AsText));
+        end;
+        Exit;
+      end
+      else if ANode.Extensions.Has(NyxStudioReviewPreviewKey) then
       begin
         { A new observation tab retains this editor's unsent/local draft and
           input focus. The URL is operator metadata, never an application edit. }
@@ -1557,7 +1761,7 @@ begin
     begin
       raise ENyxModel.Create('Recovery exceeds the UTF-8 packet budget');
     end;
-    window.localStorage.setItem('nyx-studio-project-v2', LRecovery);
+    window.localStorage.setItem(RecoveryKey, LRecovery);
   end;
 end;
 
@@ -1993,6 +2197,273 @@ begin
   end;
 end;
 
+function TNyxStudio.RecoveryKey: TNyxText;
+begin
+  Result := 'nyx-studio-project-v2';
+
+  if FWorkspace.ID <> '' then
+  begin
+    Result := Result + '.' + FWorkspace.ID;
+  end;
+end;
+
+function TNyxStudio.PresentationKey: TNyxText;
+begin
+  Result := 'nyx-studio-presentation-v2.' + FWorkspace.ID;
+end;
+
+{ Optional presentation panes are deliberately absent in compact panel views.
+  ElementFor is a required lookup and raises on an unmounted control; first
+  inspect the renderer's realized root to preserve its public failure contract. }
+function MountedStudioElement(ARenderer: TNyxBrowserRenderer;
+  const AID: TNyxText): TJSHTMLElement;
+begin
+  Result := nil;
+
+  if (ARenderer.Root <> nil) and (ARenderer.Root.Find(AID) <> nil) then
+  begin
+    Result := ARenderer.ElementFor(AID);
+  end;
+end;
+
+procedure TNyxStudio.SavePresentation;
+var
+  LValue: TNyxStudioPresentation;
+  LEditor: TJSHTMLTextAreaElement;
+  LPane: TJSHTMLElement;
+begin
+  CaptureNewStateDraft;
+  LValue := DefaultNyxStudioPresentation;
+  LValue.CodeVisible := FCodeVisible;
+  LValue.CanvasPercent := FCanvasPercent;
+  LValue.Phone := FPhone;
+  LValue.Preview := FPreview;
+  LValue.AgentsVisible := FAgentsVisible;
+  LValue.Panel := FPanel;
+  LValue.AdvancedProperties := FAdvancedProperties;
+  LValue.InspectorTab := FInspectorTab;
+  LValue.StateVisible := FStateVisible;
+  LValue.BindingsVisible := FBindingsVisible;
+  LValue.BindingTarget := FBindingTarget;
+  LValue.BindingDirection := FBindingDirection;
+  LValue.NewStateName := FNewStateName;
+  LValue.NewStateInput := FNewStateInput;
+  LValue.NewStateValue := FNewStateValue;
+  LValue.OutputVisible := FOutputVisible;
+  LValue.OutputTarget := FOutputTarget;
+  LValue.FilesVisible := FFilesVisible;
+  { Read the live mounted panes at departure. The cached positions reflect the
+    preceding shell refresh and may precede the operator's most recent scroll. }
+  LPane := MountedStudioElement(FShellRenderer, 'studio-left');
+
+  if LPane <> nil then
+  begin
+    FLeftScroll := LPane.scrollTop;
+  end;
+  LPane := MountedStudioElement(FShellRenderer, 'studio-right');
+
+  if LPane <> nil then
+  begin
+    FRightScroll := LPane.scrollTop;
+  end;
+  LPane := MountedStudioElement(FShellRenderer, 'studio-canvas-wrap');
+
+  if LPane <> nil then
+  begin
+    FCanvasScrollTop := LPane.scrollTop;
+    FCanvasScrollLeft := LPane.scrollLeft;
+  end;
+  LValue.LeftScroll := NyxStudioScrollPosition(FLeftScroll);
+  LValue.RightScroll := NyxStudioScrollPosition(FRightScroll);
+  LPane := MountedStudioElement(FShellRenderer, 'studio-agents');
+
+  if LPane <> nil then
+  begin
+    FAgentsScroll := LPane.scrollTop;
+  end;
+  LValue.AgentsScroll := NyxStudioScrollPosition(FAgentsScroll);
+  LValue.CanvasScrollTop := NyxStudioScrollPosition(FCanvasScrollTop);
+  LValue.CanvasScrollLeft := NyxStudioScrollPosition(FCanvasScrollLeft);
+  LValue.CanvasView := FCanvasViewID;
+  LValue.Palette := FPalette;
+  LEditor := nil;
+
+  if MountedStudioElement(FCodeRenderer, 'studio-code') <> nil then
+  begin
+    LEditor := TJSHTMLTextAreaElement(FCodeRenderer.InputFor('studio-code'));
+  end;
+
+  if LEditor <> nil then
+  begin
+    LValue.CodeCaretStart := LEditor.selectionStart;
+    LValue.CodeCaretEnd := LEditor.selectionEnd;
+    LValue.CodeScrollTop := NyxStudioScrollPosition(LEditor.scrollTop);
+    LValue.CodeScrollLeft := NyxStudioScrollPosition(LEditor.scrollLeft);
+    LValue.CodeFocused := document.activeElement = LEditor;
+  end;
+  window.sessionStorage.setItem(PresentationKey, EncodeNyxStudioPresentation(LValue));
+end;
+
+procedure TNyxStudio.LoadPresentation;
+var
+  LSaved: TNyxText;
+  LValue: TNyxStudioPresentation;
+begin
+
+  if not FRecoveryEnabled then
+  begin
+    Exit;
+  end;
+  try
+    LSaved := window.sessionStorage.getItem(PresentationKey);
+
+    if not isString(LSaved) or (LSaved = '') then
+    begin
+      Exit;
+    end;
+    { Decode all fields before publishing one. Project content remains owned by
+      ordinary recovery/agent admission; preferences cannot replace its pair. }
+    LValue := DecodeNyxStudioPresentation(LSaved);
+    FCodeVisible := LValue.CodeVisible;
+    FCanvasPercent := LValue.CanvasPercent;
+    FPhone := LValue.Phone;
+    FPreview := LValue.Preview;
+    FAgentsVisible := LValue.AgentsVisible;
+    FPanel := LValue.Panel;
+    FAdvancedProperties := LValue.AdvancedProperties;
+    FInspectorTab := LValue.InspectorTab;
+    FStateVisible := LValue.StateVisible;
+    FBindingsVisible := LValue.BindingsVisible;
+    FBindingTarget := LValue.BindingTarget;
+    FBindingDirection := LValue.BindingDirection;
+    FNewStateName := LValue.NewStateName;
+    FNewStateInput := LValue.NewStateInput;
+    FNewStateValue := LValue.NewStateValue;
+    FOutputVisible := LValue.OutputVisible;
+    FOutputTarget := LValue.OutputTarget;
+    FFilesVisible := LValue.FilesVisible;
+    FLeftScroll := LValue.LeftScroll;
+    FRightScroll := LValue.RightScroll;
+    FAgentsScroll := LValue.AgentsScroll;
+    FCanvasScrollTop := LValue.CanvasScrollTop;
+    FCanvasScrollLeft := LValue.CanvasScrollLeft;
+    FPalette := LValue.Palette;
+    FPendingPresentation := TNyxDataValue.ParseJSON(LSaved);
+  except
+    on LException: Exception do
+    begin
+      FStatus := 'Editor preferences need review: ' + LException.Message;
+    end;
+  end;
+end;
+
+procedure TNyxStudio.RestorePresentationControls;
+var
+  LValue: TNyxStudioPresentation;
+  LElement: TJSHTMLElement;
+  LEditor: TJSHTMLTextAreaElement;
+  LStart: Integer;
+  LFinish: Integer;
+begin
+
+  if (FPendingPresentation.Kind <> ndObject) or not FAgents.State.Connected or
+    FAgents.State.Conflict then
+  begin
+    Exit;
+  end;
+  LValue := DecodeNyxStudioPresentation(FPendingPresentation.ToJSON);
+  LElement := MountedStudioElement(FShellRenderer, 'studio-left');
+
+  if LElement <> nil then
+  begin
+    LElement.scrollTop := LValue.LeftScroll;
+  end;
+  LElement := MountedStudioElement(FShellRenderer, 'studio-right');
+
+  if LElement <> nil then
+  begin
+    LElement.scrollTop := LValue.RightScroll;
+  end;
+  LElement := MountedStudioElement(FShellRenderer, 'studio-canvas-wrap');
+
+  if (LElement <> nil) and (LValue.CanvasView = FSession.ActiveViewID) then
+  begin
+    LElement.scrollTop := LValue.CanvasScrollTop;
+    LElement.scrollLeft := LValue.CanvasScrollLeft;
+  end;
+  LElement := MountedStudioElement(FShellRenderer, 'studio-agents');
+
+  if LElement <> nil then
+  begin
+    LElement.scrollTop := LValue.AgentsScroll;
+  end;
+  LEditor := nil;
+
+  if MountedStudioElement(FCodeRenderer, 'studio-code') <> nil then
+  begin
+    LEditor := TJSHTMLTextAreaElement(FCodeRenderer.InputFor('studio-code'));
+  end;
+
+  if LEditor <> nil then
+  begin
+    LStart := LValue.CodeCaretStart;
+    LFinish := LValue.CodeCaretEnd;
+
+    if LStart > Length(LEditor.value) then
+    begin
+      LStart := Length(LEditor.value);
+    end;
+
+    if LFinish > Length(LEditor.value) then
+    begin
+      LFinish := Length(LEditor.value);
+    end;
+    LEditor.selectionStart := LStart;
+    LEditor.selectionEnd := LFinish;
+    LEditor.scrollTop := LValue.CodeScrollTop;
+    LEditor.scrollLeft := LValue.CodeScrollLeft;
+
+    if LValue.CodeFocused then
+    begin
+      NyxFocusWithoutScroll(LEditor);
+    end;
+  end;
+  FPendingPresentation := NyxNull;
+end;
+
+procedure TNyxStudio.JumpWorkspace(const AReference: TNyxWorkspaceRef);
+var
+  LURL: TNyxText;
+begin
+
+  if AReference.ID = FWorkspace.ID then
+  begin
+    Exit;
+  end;
+  FAgents.RecordLocal;
+
+  if not FAgents.CanSwitchWorkspace or (FRequest <> nil) or
+    (FProjectRequest <> nil) or (FConfigurationRequest <> nil) or
+    (FImportReader <> nil) then
+  begin
+    FStatus := 'Finish synchronizing or resolve the current operation before switching projects';
+    Refresh(True, True);
+    Exit;
+  end;
+  { Navigation keeps each observer's transport target immutable. Save exact
+    recovery and typed presentation before leaving; a denied store refuses the
+    jump and leaves this full editor mounted with its local work intact. }
+  SaveRecovery;
+  SavePresentation;
+  LURL := window.location.pathname;
+
+  if AReference.ID <> '' then
+  begin
+    LURL := LURL + '?workspace=' + encodeURIComponent(AReference.ID);
+  end;
+  window.location.href := LURL;
+end;
+
 procedure TNyxStudio.Run(ARecovery: Boolean);
 var
   LSaved: TNyxText;
@@ -2004,11 +2475,15 @@ begin
   FRecoveryEnabled := ARecovery;
   FCompact := window.innerWidth <= 960;
   window.addEventListener('resize', FResizeHandler);
+  document.addEventListener('pointerdown', FPointerBeginHandler, True);
+  document.addEventListener('pointerup', FPointerEndHandler, True);
+  document.addEventListener('pointercancel', FPointerEndHandler, True);
+  window.addEventListener('blur', FPointerBlurHandler);
 
   if ARecovery then
   begin
     try
-      LSaved := window.localStorage.getItem('nyx-studio-project-v2');
+      LSaved := window.localStorage.getItem(RecoveryKey);
 
       if isString(LSaved) and (LSaved <> '') then
       begin
@@ -2144,6 +2619,7 @@ begin
     end;
   end;
   document.onkeydown := KeyDown;
+  LoadPresentation;
   Refresh;
   Configuration(False);
 

@@ -28,7 +28,7 @@ interface
 
 uses
   SysUtils, JS, Web, nyx.text, nyx.data, nyx.studio.session,
-  nyx.studio.projects, nyx.studio.agents, nyx.studio.agentview;
+  nyx.studio.projects, nyx.studio.agents, nyx.studio.agentview, nyx.studio.workspaces;
 
 type
   TNyxAgentRefresh = procedure(AContentChanged: Boolean) of object;
@@ -59,6 +59,10 @@ type
     FProtectLocal: Boolean;
     FWarning: TNyxText;
     FOnRefresh: TNyxAgentRefresh;
+    FWorkspace: TNyxWorkspaceRef;
+    FWorkspaceMetadata: TNyxText;
+    procedure Initialize(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh;
+      const AWorkspace: TNyxWorkspaceRef);
     function Frame: TNyxText;
     procedure Send(const AMessage: TNyxDataValue; AConnect: Boolean = False);
     procedure Ready;
@@ -66,7 +70,9 @@ type
     procedure Schedule;
     procedure Queue(const AMessage: TNyxDataValue);
   public
-    constructor Create(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh);
+    constructor Create(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh); overload;
+    constructor Create(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh;
+      const AWorkspace: TNyxWorkspaceRef); overload;
     destructor Destroy; override;
     procedure Connect;
     { Call after ordinary editor publications, including draft typing. Does not
@@ -78,6 +84,14 @@ type
     procedure Pause;
     procedure AcceptRemote;
     function State: TNyxStudioAgentView;
+    { Navigation must wait for every local pair/draft publication. Observations
+      may be in flight because their immutable target never changes. }
+    function CanSwitchWorkspace: Boolean;
+    { Capture one other project's exact revision for a visible warning. Keeping
+      or confirming that warning never changes this observer's fixed target. }
+    procedure RequestWorkspaceClose(const AReference: TNyxWorkspaceRef);
+    procedure CancelWorkspaceClose;
+    procedure ConfirmWorkspaceClose;
     { Exact locally retained pair/frame must match the acknowledged service
       frame before server diagnostics can borrow this observer's source text.
       Pending local publications and protected conflicts cannot grant navigation. }
@@ -98,8 +112,23 @@ constructor TNyxStudioAgentBridge.Create(ASession: TNyxStudioSession;
   ARefresh: TNyxAgentRefresh);
 begin
   inherited Create;
+  Initialize(ASession, ARefresh, NyxPrimaryWorkspace);
+end;
+
+constructor TNyxStudioAgentBridge.Create(ASession: TNyxStudioSession;
+  ARefresh: TNyxAgentRefresh; const AWorkspace: TNyxWorkspaceRef);
+begin
+  inherited Create;
+  Initialize(ASession, ARefresh, AWorkspace);
+end;
+
+procedure TNyxStudioAgentBridge.Initialize(ASession: TNyxStudioSession;
+  ARefresh: TNyxAgentRefresh; const AWorkspace: TNyxWorkspaceRef);
+begin
+  FWorkspace := AWorkspace;
   FSession := ASession;
   FView := DefaultNyxStudioAgentView;
+  FView.Workspace := FWorkspace;
   FTimer := -1;
   FInitialProject := EncodeNyxProject(FSession.ProjectSnapshot);
   FOnRefresh := ARefresh;
@@ -127,6 +156,12 @@ end;
 function TNyxStudioAgentBridge.State: TNyxStudioAgentView;
 begin
   Result := FView;
+end;
+
+function TNyxStudioAgentBridge.CanSwitchWorkspace: Boolean;
+begin
+  Result := FEnabled and FView.Connected and not FView.Conflict and
+    (Length(FQueue) = 0) and (Frame = FKnownFrame);
 end;
 
 function TNyxStudioAgentBridge.Frame: TNyxText;
@@ -181,7 +216,7 @@ begin
   begin
     FRequest.setRequestHeader('X-Nyx-Editor', FToken);
   end;
-  FRequest.send(AMessage.ToJSON);
+  FRequest.send(NyxWithWorkspace(AMessage, FWorkspace).ToJSON);
 end;
 
 procedure TNyxStudioAgentBridge.Queue(const AMessage: TNyxDataValue);
@@ -265,6 +300,64 @@ procedure TNyxStudioAgentBridge.Configure(APermission: TNyxAgentPermission);
 begin
   Queue(NyxObject([NyxField('op', NyxData('configure')),
     NyxField('permission', NyxData(NyxAgentPermissionName(APermission)))]));
+  Tick;
+end;
+
+procedure TNyxStudioAgentBridge.RequestWorkspaceClose(const AReference: TNyxWorkspaceRef);
+var
+  LIndex: Integer;
+  LItem: TNyxDataValue;
+begin
+
+  if not CanSwitchWorkspace or (AReference.ID = '') or
+    (AReference.ID = FWorkspace.ID) then
+  begin
+    raise Exception.Create('Switch to another synchronized project before closing this one');
+  end;
+  for LIndex := 0 to FView.Workspaces.Count - 1 do
+  begin
+    LItem := FView.Workspaces.Item(LIndex);
+
+    if LItem.Field('workspace').AsText = AReference.ID then
+    begin
+      FView.CloseWorkspace := AReference;
+      FView.CloseRevision := LItem.Field('session').Field('revision').AsInteger;
+      FView.CloseLabel := LItem.Field('label').AsText;
+
+      if Assigned(FOnRefresh) then
+      begin
+        FOnRefresh(False);
+      end;
+      Exit;
+    end;
+  end;
+  raise Exception.Create('The project to close is no longer open');
+end;
+
+procedure TNyxStudioAgentBridge.CancelWorkspaceClose;
+begin
+  FView.CloseWorkspace := NyxPrimaryWorkspace;
+  FView.CloseRevision := 0;
+  FView.CloseLabel := '';
+
+  if Assigned(FOnRefresh) then
+  begin
+    FOnRefresh(False);
+  end;
+end;
+
+procedure TNyxStudioAgentBridge.ConfirmWorkspaceClose;
+begin
+
+  if not FView.CanCloseWorkspace or not CanSwitchWorkspace or (FView.CloseWorkspace.ID = '') then
+  begin
+    raise Exception.Create('Project close requires a synchronized editor and an explicit warning');
+  end;
+  Queue(NyxObject([NyxField('op', NyxData('close-workspace')),
+    NyxField('target', NyxData(FView.CloseWorkspace.ID)),
+    NyxField('expectedRevision', NyxData(FView.CloseRevision)),
+    NyxField('confirmed', NyxData(True))]));
+  CancelWorkspaceClose;
   Tick;
 end;
 
@@ -447,6 +540,15 @@ begin
       begin
         LState := LData;
       end;
+      { Admission must name the same immutable editor context. A missing or
+        substituted project response cannot replace local source or recovery. }
+
+      if (NyxAgentHas(LState, 'workspace') and
+        (LState.Field('workspace').AsText <> FWorkspace.ID)) or
+        ((FWorkspace.ID <> '') and not NyxAgentHas(LState, 'workspace')) then
+      begin
+        raise Exception.Create('Editor response belongs to another project; local work is retained');
+      end;
       LSummary := LState.Field('session');
       LRefresh := (LSummary.Field('activitySequence').AsInteger <>
         FActivitySerial) or not FView.Connected;
@@ -471,6 +573,19 @@ begin
         raise Exception.Create('Invalid agent permission response');
       end;
       FView.Activity := LState.Field('activity').Copy;
+      FView.CanCloseWorkspace := False;
+
+      if NyxAgentHas(LState, 'workspaceClosing') then
+      begin
+        FView.CanCloseWorkspace := LState.Field('workspaceClosing').AsBoolean;
+      end;
+
+      if NyxAgentHas(LState, 'workspaces') then
+      begin
+        LRefresh := LRefresh or (FWorkspaceMetadata <> LState.Field('workspaces').ToJSON);
+        FWorkspaceMetadata := LState.Field('workspaces').ToJSON;
+        FView.Workspaces := LState.Field('workspaces').Copy;
+      end;
 
       if NyxAgentHas(LState, 'reviews') then
       begin

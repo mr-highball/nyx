@@ -650,3 +650,91 @@ and check its completion marker. The maintained journey also types through the
 real compiled browser input, separately from the programmatic control fixture.
 The evidence packet in WORK.md records native/executed-browser, real transport,
 compiler, selective rendering and ordinary desktop/narrow Studio results.
+
+## Concurrent project sessions
+
+The source candidate adds `nyx_workspaces` alongside temporary `nyx_reviews`.
+These have different lifetimes: a review belongs to its authenticated transport;
+an open project survives every agent disconnect and remains until an operator
+closes it or the service shuts down. Open-session retention does not replace
+saving a paired project file. The current LAN release still exposes fifteen
+tools; the independently staged project fixture exposes seventeen. See WORK.md
+for the exact qualification and deployment boundary.
+
+`nyx_workspaces` offers bounded `list`, `inspect` and `create` modes. List returns
+at most nine summaries: the primary project plus eight open projects. Summaries
+contain project identity/title, revision, selection/view, draft/history flags
+and friendly agent names with distinct public connection numbers. They omit
+complete documents/source, transport authority, credentials and machine paths.
+Labels admit up to 256 Unicode scalars. Creation guards the primary revision,
+uses `empty` or `accepted` as its base and excludes pending source drafts from
+accepted copies. Its immutable operation receipt belongs to the authenticated
+connection, independently of the friendly display name.
+
+```json
+{"mode":"create","expectedRevision":6,"operationId":"new-project","label":"Input workshop","base":"empty"}
+```
+
+Use the returned `workspace` as an outer argument to ordinary tools. Read that
+project's revision before editing, then keep related operations in one undoable
+transaction. Supply either `workspace` or `review`; combining them refuses.
+Omitting both always names the stable primary project, regardless of which
+project the user is viewing. Missing, closed, foreign-service and explicitly
+empty supplied handles cannot fall back to another project.
+
+```json
+{"workspace":"<returned-reference>","line":1,"count":20}
+```
+
+The same scope routes selection, properties, callbacks, Pascal implementation
+editing, history, diagnostics, compiler jobs and previews. Jobs capture their
+exact context and admitted pair. Status refuses a handle queried through
+another context; navigation cannot retarget it. Two workers, sixteen retained
+job handles and existing compiler receipt budgets remain shared across projects.
+Connection presence is bounded to 64 connection/project pairs. Each live
+transport retains up to 64 project-creation receipts without eviction; an old
+retry cannot resurrect a closed project.
+
+The Nyx-built **Agents** panel lists project sessions and offers **Jump into
+project**. This opens the full ordinary editor in the same tab. Departing waits
+for acknowledged local publications and refuses outstanding imports/file/build
+operations or unresolved conflicts. Each project retains its own paired source,
+pending draft/base, selection/view and Undo/Redo on the service. Per-tab typed
+preferences retain code visibility/proportion, panels, search/filter, authoring
+draft fields, caret and scroll. Agent paints defer through pointer release so
+navigation controls remain mounted during a tap; project controls use stable
+reference identities rather than list positions. Saved preferences contain no
+document pointers, credentials or compiler paths.
+
+Closing is operator-only. Switch to another project, request **Close project...**,
+review the unsaved-work/draft/history warning and explicitly confirm its exact
+revision, or choose **Keep project**. The primary project cannot be closed through
+this registry. An older service that does not advertise closure disables
+confirmation. The portable close contract and actual warning/cancel controls
+are qualified; the newly added private editor HTTP close route still requires
+live qualification. Automatic approval review refused launching its new fixture
+server. Do not infer successful closure from its compile or UI presence.
+
+```powershell
+./tools/build.ps1 -Target project-workspaces
+```
+
+This builds portable checks, actual LCL controls, the service, Studio/viewers and
+the maintained native semantic/browser journey under
+`build/project-workspaces/orchestrated/`. It launches no service and edits no
+live project. Serve `workspaces.html` and `workspace-view.html` to execute the
+matching browser fixtures. The protocol program takes an owned fixture editor
+URL, its private Codex configuration and an evidence directory; its path guard
+accepts only the documented project fixture roots. It deliberately resets its
+disposable baseline. Optional fourth argument names a private JSON artifact with
+exact `first`/`second` project references for explicit fixture reuse; previous
+frames are saved before reset. Optional fifth argument `390` selects an actual
+390-pixel viewport. Composition, history, source export, build requests and
+preview validation remain semantic; only physical navigation/typing uses the
+browser host. Preserve failed captures, and never use this reset harness against
+a user's working service.
+
+Full native Studio navigation, successful live warned closure, job completion
+after project closure and broader source/state/reusable workflows retain their
+original task owners. The current evidence establishes the portable foundation
+and observing browser journey, not the complete concurrent authoring criterion.
