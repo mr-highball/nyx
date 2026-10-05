@@ -45,8 +45,10 @@ var
 begin
   Result := TNyxDocument.Create;
   try
-    { A starter is ordinary project content. Branch names and build milestones
-      belong in development records, never in the editor's default document. }
+    { A starter is ordinary project content, with English copy for the initial
+      experience. Multilingual and supplementary Unicode belong in dedicated
+      qualification inputs; the portable text contract remains unrestricted.
+      Branch names and build milestones belong in development records. }
     Result.Title := 'Untitled project';
     LDefinition := TNyxNode.Create(nkCard, 'welcome-card')
       .Configure.Padding(24).Gap(12).Done;

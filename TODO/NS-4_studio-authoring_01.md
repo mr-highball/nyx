@@ -42,6 +42,27 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Native-controller prerequisite — 2026-10-05
 
+Standalone native controller (2026-10-05): a runnable LCL entry point now consumes
+the shared Nyx shell/session/routers and paired local store. Actual native controls
+pass 74 checks with zero leaks: instance editing, recipe independence, full
+page/component navigation, properties, multiple TODO callbacks/source navigation,
+warned removal, paired Undo/Redo, retained Unicode drafts/ranges, optional outputs,
+real Save and conflict resolution. Focused compact geometry/title checks provide
+bounded additional evidence. An earlier full callback journey captured a blank
+compact canvas; the refreshed English journey paints its memo. Reliable painting
+and native sidebar overflow remain open. See
+[native Studio](../docs/native-studio.md) and WORK for exact artifacts and limits.
+English is now the initial starter/review copy; dedicated edits/drafts keep
+broader Unicode coverage.
+
+Original criteria 2/4/7 remain open. No prerequisite, criterion or task is accepted
+from this candidate. The no-closure counter advances from 3 to 4. Reassessment
+ends adapter/controller-only fixture expansion: the next deliverable connects
+this actual native editor to existing HTTP/MCP project transport, qualifies
+observed remote edits and workspace jump/return with retained paired state, and
+qualifies reliable compact painting after the longer journey. Live warned closure and
+closed-context compiler completion retain their existing refused-launch gate.
+
 Native-controller prerequisite (2026-10-05): LCL now has designer-purpose
 projection, actual instance-only canvas editing/paired history, painted authored
 selection and MoveHost with focused Unicode ranges/scroll and former-host

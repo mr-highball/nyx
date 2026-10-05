@@ -4443,3 +4443,130 @@ hello-nyx and pushed, with exact remote-head verification retained privately at
 .local/codex-restart-check/native-designer-remote-proof.json. The one-off report
 reply made no additional product progress; the subsequent continuation verified
 the final captures and proceeded to the native controller.
+
+Current batch: original NS-4 authoring criteria 2/4/7 own the standalone native
+controller. Deliver a runnable Nyx-built native editor using the existing shared
+shell, source/authoring/inspector routers and paired store. Native callbacks only
+enqueue painting; mounted canvas/source survive chrome and compact-panel changes.
+Evidence must use actual controls, full page/component navigation, pending Unicode
+source, paired Undo/Redo and real saved files. Stop on destruction within a widget
+callback, draft/history loss or application dispatch in designer mode. The full
+HTTP/MCP/concurrent-workspace and wider authoring requirements remain explicit;
+this batch cannot accept native parity from compilation or another adapter probe.
+
+## Standalone native Studio controller — 2026-10-05
+
+Original NS-4 authoring criteria 2/4/7 own this runnable editor candidate. The
+native entry point consumes BuildNyxStudioView, the portable session and existing
+source/property/palette/authoring/event/root/diagnostic routers; native widgets
+remain public Nyx adapters. An already built editor starts without application
+compilers or a network service. Native event callbacks queue one coalesced paint,
+parking the independently mounted canvas/source before replacing chrome. Source
+typing and title/source feedback preserve the notifying input. Local paired
+Save/Open uses the shared revision-guarded store; warned conflict resolution
+backs up the exact current pair before admitting the saved version.
+
+The shared shell now uses public scroll views for palette/inspector and typed
+native platform layout overrides. Single unwrapped native rows with a definite
+cross axis allocate that viewport instead of expanding to a scroll child's
+natural height; wrapped/intrinsic lines retain their previous policy. Shared
+browser consumers remain qualified separately. The maintained build target is
+tools/build.ps1 -Target native-studio, with explicit -VerifyNativeStudio and
+-DesignerSourceDirectory for the actual-controller qualification.
+
+Checked installed FPC 3.3.1/LCL Win32 evidence under build/native-studio/:
+
+- controller-qualified-orchestration.log: 74 actual native editor checks, zero
+  owned warnings and zero retained allocations. Source is the unchanged earlier
+  MCP export 93bd930faac0d6ef69fd35cf1f1c6e2a. The journey covers inherited canvas
+  proposals/recipe independence, page/reusable creation/use/return, property
+  editing, multiple callbacks/TODO navigation, warned removal/paired Undo,
+  retained Unicode source focus/scalar ranges, compact navigation, optional
+  outputs, real saved files, independent-writer conflict and warned recovery.
+- controller-final-build.log / editor-title-geometry.log: the immediate title
+  update branch passes in the focused 17-check actual editor journey, zero leaks.
+  controller-final-application-build.log compiles the standalone executable.
+- controller-layout-regression.log: 2,169 actual native layout/control checks
+  with zero leaks; controller-browser-layout-qualified/capture.dom.html passes
+  2,214 executed browser checks. Owned native warnings are zero; current pas2js
+  retains only seven installed classes.pas warnings.
+- controller-browser-authoring-pass2 and controller-browser-authoring-narrow:
+  69 ordinary browser editor checks each, the latter measured at 390 pixels.
+  controller-browser-resize passes 21; controller-browser-split passes nine
+  host transitions and the existing 20 child interactions, retaining the draft.
+  The first desktop authoring request had a missing host HTML/404; the admitted
+  host subsequently executed. The first layout capture requested the wrong
+  passed marker; the corrected bounded capture retains the actual 2,214 result.
+
+The user clarified that starters/demos should use English, while Nyx retains
+broader text support. The actual default document already has English copy,
+confirmed with bounded native MCP property queries at revision 6. The reusable
+review's initial memo/name now also use English. Dedicated Unicode title, memo,
+draft, source/history and file checks retain their multilingual inputs. This
+preference is recorded in AGENTS/PROJECT; user-authored text is never rewritten.
+The real Pascal MCP client creates an owned review, groups nine changes at its
+expected revision, exports bounded accepted source and asks both application
+compilers. Both immutable jobs succeed/current, with exact source fingerprint
+15ae74c977f0bb28909f5caae32f17cc (3,352 bytes); the review is retired and the
+published primary content/history/navigation frame remains unchanged. Receipts
+are in source-english/ and english-semantic-review.log. The older staged server
+library still emits owned warnings; these jobs establish exact source/compilation
+only. Current repository native/browser consumers qualify the repaired library.
+
+English review qualification: english-designer-controls.log passes 32 actual
+native designer/view checks with zero leaks, then compiles pas2js with only the
+seven installed RTL warnings. english-designer-desktop/capture.dom.html passes
+32 and english-designer-narrow/capture.dom.html passes 33 in the actual 390-pixel
+iframe. The first desktop capture command supplied the wrong attribute; its
+retained DOM already contains the correct terminal passed marker/count, verified
+independently in english-designer-desktop-marker-proof.json without re-running
+the UI. The narrow capture uses the declared marker and exits zero.
+english-native-editor.log passes the complete 74-check controller journey with
+the new unchanged English MCP export and zero leaks/owned warnings. Its actual
+desktop capture shows English memo/name text. This rerun retains the Unicode
+editing/draft/file cases. Final visual inspection of the refreshed full English
+journey shows its memo painted inside the compact canvas; it does not explain
+or establish a fix for the earlier blank capture.
+english-native-geometry.log passes 18 focused controller checks with zero leaks:
+Unicode title input updates source immediately, initial review presentation
+returns to English, pending Unicode source survives parked views and the actual
+memo intersects its 390-pixel canvas viewport. The final geometry and full
+callback compact PNGs were inspected; both paint their English memos. All current
+semantic-author/native/browser capture handles have terminal results. No passing
+micro-journey substitutes for reliable full native visual qualification.
+
+Failures and incomplete outcomes remain retained. The independent fixture writer
+initially aliased expected revision with its returned revision and correctly
+failed; a distinct output fixes the fixture without weakening the store guard.
+Actual PNGs were captured from native controls. The earlier full 74-check callback
+journey retained its compact controls/source yet captured a blank canvas; the
+refreshed English full journey and short geometry journey both paint their actual
+memos. The cause of that intermittent discrepancy remains unqualified, so it does
+not establish reliable narrow native visual parity. Native sidebar horizontal
+overflow/clipping and native editor performance remain open. The checked full
+journey's cumulative allocations are not a release-performance measurement.
+Original captures are retained under editor-before-english/ as review inputs.
+
+No production listener, profile, private enrollment or primary project was
+replaced. Native named MCP remains connected with fifteen tools; its published
+revision-6 selection/view/history/draft frame is unchanged. Existing staged
+services retain their verified executable identities. The earlier automatic
+updated-listener launch rejection (blocked by policy) was not retried through
+another route. Compiler/MCP observation, native workspace jump/return, compiled
+reload and general native import/export remain open; the candidate reports its
+missing service connection rather than claiming those actions ran.
+
+No original acceptance criterion closes and no task moves to DONE. The original
+NS-4 no-closure count advances 3 to 4. Reassessment ends adapter/controller-only
+fixture expansion; next connect the runnable editor to existing HTTP/MCP project
+transport, qualify actual observed edits and workspace navigation with retained
+paired state, and qualify reliable compact painting after the longer journey. Live
+warned workspace closure and closed-context compiler completion still retain
+their separate refused-launch gate. Full Nyx/Studio remains the active goal.
+
+Publication for this packet is committed on hello-nyx and pushed only after the
+maintained checks and final evidence review. Exact remote-head verification is
+retained privately at
+.local/codex-restart-check/native-studio-controller-remote-proof.json. The earlier
+adapter checkpoint 18b97e7 remains independently verified. Current publication
+does not establish replacement of the LAN or staged service executables.

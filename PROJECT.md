@@ -56,6 +56,8 @@ public library contract and its reusable components as the proof of capability.
   launches without application compilers; its Nyx-built output section remains
   available at any time. Readiness is checked only for the requested build.
 - Editor defaults do not contain branch names or build-specific milestone text.
+- Starter documents, demos and initial review examples use English. Dedicated
+  qualification inputs exercise broader Unicode without restricting user text.
 - Browser and LCL implementations expose the same documented semantics. Target
   differences are explicit capabilities with useful diagnostics.
 - The compiler service confines inputs and outputs to admitted project/build
@@ -64,13 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-The native designer prerequisite now qualifies designer-only input/selection and
-retained view movement with actual source focus, Unicode ranges and scrolling.
-An MCP-authored companion passes 34 checked LCL cases including painted selection,
-and 32 desktop / 33 actual-390 browser cases. Both delegated compiler sources
-equal its bounded export. This advances the platform needed by native Studio;
-the standalone native controller and full project navigation remain open. See
-[designer views](docs/designer-views.md) and WORK.md for the current evidence.
+The native editor now has a runnable standalone controller consuming the shared
+Nyx shell, portable session, authoring routers and paired local store. Its actual
+Win32 journey passes 74 checks with zero leaks, including reusable navigation,
+multiple callbacks, retained source/drafts, optional outputs and saved-file
+conflicts. A focused compact journey also qualifies immediate title/source
+updates. Full compiler/MCP/workspace integration, intermittent compact painting
+observed in an earlier callback journey and sidebar overflow remain open. The
+refreshed English journey paints its memo; that alone does not establish a fix. See
+[native Studio](docs/native-studio.md) and WORK.md for the current evidence.
+The preceding designer prerequisite retains its 34 native / 32 desktop / 33
+actual-390 browser checks, including painted selection and focused view movement.
 
 Concurrent project sessions now have a qualified portable foundation and
 ordinary browser jump/return workflow: 215 shared checks per target, ten actual

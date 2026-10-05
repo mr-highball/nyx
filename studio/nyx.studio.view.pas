@@ -578,6 +578,7 @@ begin
   Result.Title := 'Nyx Studio';
   LRoot := TNyxNode.Create('page', 'studio-shell');
   Result.AddPage(LRoot);
+  LRoot.Configure.ForPlatform(npfNativeLCL).Padding(0).Gap(0).Done;
   { Stable node IDs are command identities shared by platform controllers.
     Building chrome as ordinary nodes makes it inspectable and renderable by
     the same public adapters used for the applications Studio designs. }
@@ -622,8 +623,19 @@ begin
     end;
   end;
   LWorkspace := TNyxNode.Create('row', 'studio-workspace');
+  LWorkspace.Configure.ForPlatform(npfNativeLCL).Flex(1).Padding(0).Gap(0)
+    .Layout(TNyxLayoutPolicy.Row.Wrap(nfwNoWrap).Align(ncaStretch)).Done;
   LRoot.Add(LWorkspace);
-  LLeft := TNyxNode.Create('column', 'studio-left');
+  { Independent public scroll views keep native palettes/inspectors inside the
+    workspace, rather than making the complete application one tall scroll page.
+    Browser chrome continues to consume these same identities and compositions. }
+  LLeft := TNyxNode.Create(nkScroll, 'studio-left').Configure.Layout(nlColumn).Done;
+  LLeft.Configure.ForPlatform(npfNativeLCL).Width(250).Padding(12).Gap(10).Done;
+
+  if AState.Compact then
+  begin
+    LLeft.Configure.ForPlatform(npfNativeLCL).Clear(atWidth).Flex(1).Done;
+  end;
   { Pages and definitions remain separate document roots. Palette buttons carry
     semantic add-kind metadata instead of retaining widget-specific callbacks. }
   LWorkspace.Add(LLeft);
@@ -696,6 +708,7 @@ begin
   AddNyxCollectionDefaultsPanel(LLeft, ASession, AState.StateVisible);
   AddNyxStudioPalette(LLeft, ASession.Catalog, AState.Palette);
   LCenter := TNyxNode.Create('column', 'studio-center');
+  LCenter.Configure.ForPlatform(npfNativeLCL).Flex(1).Padding(0).Gap(0).Done;
   { The authoring area is itself Nyx: a public nested-view surface and an
     optional public source editor. This avoids a second Studio-only widget API. }
   LWorkspace.Add(LCenter);
@@ -727,6 +740,7 @@ begin
     LViewbar.Children[LViewbar.Count - 1].SetProp('text', 'Output: choose anytime');
   end;
   LCanvas := TNyxNode.Create('column', 'studio-canvas-wrap');
+  LCanvas.Configure.ForPlatform(npfNativeLCL).Flex(1).Padding(0).Gap(0).Done;
 
   if AState.CodeVisible then
   begin
@@ -743,6 +757,7 @@ begin
   end;
   LField := TNyxNode.Create('design-surface', 'studio-canvas')
     .SetProp('aria-label', 'Visual design canvas');
+  LField.Configure.ForPlatform(npfNativeLCL).Flex(1).Padding(0).Gap(0).Done;
   LCanvas.Add(LField);
 
   if AState.Phone then
@@ -782,7 +797,13 @@ begin
       LCodePane.Add(NewNyxStudioCodeEditor(ASession.DraftSource));
     end;
   end;
-  LRight := TNyxNode.Create('column', 'studio-right');
+  LRight := TNyxNode.Create(nkScroll, 'studio-right').Configure.Layout(nlColumn).Done;
+  LRight.Configure.ForPlatform(npfNativeLCL).Width(290).Padding(12).Gap(10).Done;
+
+  if AState.Compact then
+  begin
+    LRight.Configure.ForPlatform(npfNativeLCL).Clear(atWidth).Flex(1).Done;
+  end;
   { Inspector fields describe model properties. A controller sends their changes
     through the session's undoable command boundary, then rebuilds this view. }
   LWorkspace.Add(LRight);

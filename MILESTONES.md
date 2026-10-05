@@ -3,7 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current source delivery (2026-10-04): typed layout policies advance the original
+Current native editor candidate (2026-10-05): the runnable standalone controller
+consumes the shared Nyx shell/session/routers and paired local store. Actual
+Win32 authoring passes 74 checks with zero leaks; browser shared-shell regression
+passes 69 desktop / 69 exact-390 checks. Initial demo/review text is English,
+with dedicated multilingual qualification inputs retained. Full native parity,
+HTTP/MCP/workspace integration and intermittent canvas/sidebar visual gaps remain
+under [the original authoring owner](TODO/NS-4_studio-authoring_01.md). Its
+no-closure count is 4. Next integrate the actual native editor with existing
+project transport and qualify observed changes/navigation; the refused updated
+listener gate remains separate. No acceptance credit is earned by this candidate.
+See [native Studio](docs/native-studio.md) and WORK.md for bounded evidence.
+
+Earlier source delivery (2026-10-04): typed layout policies advance the original
 [LCL](TODO/NS-2_lcl-renderer_01.md) and
 [parity](TODO/NS-2_parity-accessibility_01.md) criteria through public authoring,
 paired source/persistence, semantic MCP and actual controls. The shared review

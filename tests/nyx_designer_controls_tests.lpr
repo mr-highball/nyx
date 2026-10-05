@@ -273,7 +273,9 @@ procedure Run;
 const
   CDraft: TNyxText = '// An independent source draft / 🌙 漢字';
   CReply: TNyxText = 'A customized reply / 🌙 漢字';
-  COriginal: TNyxText = 'Original / 🌙 漢字';
+  { Initial review copy is English. The edit and pending draft above retain
+    independent supplementary/Chinese coverage through both actual adapters. }
+  COriginal: TNyxText = 'Your reply starts here.';
 var
   LOriginal: TNyxDocument;
   LTemplate: TNyxText;

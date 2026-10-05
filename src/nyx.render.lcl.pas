@@ -1728,12 +1728,25 @@ begin
         Continue;
       end;
       LCellHeight := LHeights[LIndex];
+      { A single flex line fills a definite cross axis. Its natural height can
+        greatly exceed the allocated workspace when a child is a scroll view.
+        Stretch/center/end must use the admitted host extent, as browser flex
+        does, rather than growing that viewport to all of its scroll content. }
 
       if (ANode.Prop('flow-wrap') = 'nowrap') or
         (((ANode.Prop('flow-wrap') = '') or (ANode.Prop('flow-wrap') = 'auto')) and
         (FPanel.ClientWidth > 600)) then
       begin
-        LCellHeight := Max(LCellHeight, LHeight - 2 * LPadding);
+
+        if (AHeight >= 0) or ((ANode.Prop('height') <> '') and
+          ((ANode.Prop('height-sizing') = '') or (ANode.Prop('height-sizing') = 'auto'))) then
+        begin
+          LCellHeight := Max(0, LHeight - 2 * LPadding);
+        end
+        else
+        begin
+          LCellHeight := Max(LCellHeight, LHeight - 2 * LPadding);
+        end;
       end;
       LFitHeight := Measure(LChild, LSizes[LIndex], True);
 

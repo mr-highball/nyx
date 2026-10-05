@@ -1,10 +1,10 @@
 [
   {"op":"create","kind":"column","id":"designer-reply","root":"component","properties":{"compound":true,"gap":8,"padding":12}},
-  {"op":"create","kind":"memo","id":"designer-reply-memo","parent":"designer-reply","properties":{"part":"reply","text":"Write a reply","value":"Original / 🌙 漢字","height":100}},
+  {"op":"create","kind":"memo","id":"designer-reply-memo","parent":"designer-reply","properties":{"part":"reply","text":"Write a reply","value":"Your reply starts here.","height":100}},
   {"op":"create","kind":"button","id":"designer-reply-send","parent":"designer-reply","properties":{"part":"send","text":"Send reply","action":"clear","target":"reply"}},
   {"op":"create","kind":"page","id":"designer-review","root":"page","properties":{"padding":24,"gap":16}},
   {"op":"create","kind":"heading","id":"designer-title","parent":"designer-review","properties":{"text":"A view that stays with you"}},
-  {"op":"create","kind":"input","id":"designer-name","parent":"designer-review","properties":{"text":"Name","value":"Pascal developer / 🌙"}},
+  {"op":"create","kind":"input","id":"designer-name","parent":"designer-review","properties":{"text":"Name","value":"Pascal developer"}},
   {"op":"create","kind":"component","id":"designer-first","parent":"designer-review","properties":{"component":"designer-reply"}},
   {"op":"create","kind":"component","id":"designer-second","parent":"designer-review","properties":{"component":"designer-reply"}},
   {"op":"create","kind":"spacer","id":"designer-tail","parent":"designer-review","properties":{"height":1000}}

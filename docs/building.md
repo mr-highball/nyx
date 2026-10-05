@@ -15,6 +15,13 @@ It launches no server. See [designer views](designer-views.md) for ownership,
 runtime isolation, native painting, actual browser execution and remaining
 native Studio requirements.
 
+`native-studio` builds the standalone LCL editor at
+`build/native-studio/controller/nyx_studio_native.exe`. An already built executable
+launches without application compilers or a service. Add `-VerifyNativeStudio`
+and `-DesignerSourceDirectory <semantic-export>` to execute its maintained actual
+editor journey. See [native Studio](native-studio.md) for lifetime, paired files,
+native/browser evidence and remaining compiler/MCP/workspace integration.
+
 The verified Windows pair is FPC 3.2.0 for checked portable fixtures, and the
 existing FPC 3.3.1/Lazarus 4.99 pair for LCL. Browser checks use pas2js 3.3.1 and
 its matching `rtl.js`. These are observed capabilities, not a promise that every

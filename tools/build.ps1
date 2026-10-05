@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -54,7 +54,10 @@ param(
   [string]$DesignerSourceDirectory = 'build/native-studio/source',
   # Optional explicit enrollment for the Pascal semantic review author. Supplying
   # it creates/compiles/retires an owned review, never the operator's project.
-  [string]$DesignerMCPConfig
+  [string]$DesignerMCPConfig,
+  # Explicit actual-editor qualification consumes a pre-exported semantic pair.
+  # Ordinary native Studio builds do not require a server or application tools.
+  [switch]$VerifyNativeStudio
 )
 
 $ErrorActionPreference = 'Stop'
@@ -206,6 +209,34 @@ try {
 
     if ($LASTEXITCODE -ne 0) {
       throw 'MCP configuration preservation checks failed'
+    }
+    exit 0
+  }
+
+  if ($Target -eq 'native-studio') {
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxStudioNative = Join-Path $nyxRoot 'build/native-studio/controller'
+    New-Item -ItemType Directory -Force $nyxStudioNative | Out-Null
+    $nyxStudioPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxStudioArguments = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests',
+      "-Fu$nyxLazarus/lcl/units/$nyxStudioPlatform", "-Fu$nyxLazarus/lcl/units/$nyxStudioPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxStudioPlatform", "-Fu$nyxLazarus/packager/units/$nyxStudioPlatform",
+      "-FU$nyxStudioNative", "-FE$nyxStudioNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @('studio/nyx_studio_native.lpr'))
+
+    if ($VerifyNativeStudio) {
+      $nyxStudioSource = [IO.Path]::GetFullPath($DesignerSourceDirectory)
+
+      if (-not (Test-Path -LiteralPath (Join-Path $nyxStudioSource 'nyx.generated.view.pas'))) {
+        throw 'Native editor qualification requires the exact MCP-authored companion export'
+      }
+      Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @("-Fu$nyxStudioSource", 'tests/nyx_studio_native_tests.lpr'))
+      & (Join-Path $nyxStudioNative 'nyx_studio_native_tests.exe') $nyxStudioSource `
+        (Join-Path $nyxRoot 'build/native-studio/editor-current')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Actual standalone native Studio journey failed' }
     }
     exit 0
   }

@@ -53,6 +53,9 @@ standards.
   separate from exported designs and report readiness when that output is built.
 - Keep editor defaults and chrome free of branch names and development milestones.
   Project titles and user-authored text supply the editor's project identity.
+- Use English text for starter documents, demos and initial review examples.
+  Keep broader Unicode coverage in dedicated qualification inputs; never narrow
+  the portable text contract or rewrite user-authored content to meet this default.
 - Leave a blank line above `if` blocks, as in the original author's preferred
   layout. Keep two-space indentation and expanded begin/end bodies.
 - Declare `{$codepage utf8}` in owned Pascal units/programs and use `TNyxText`

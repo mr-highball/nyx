@@ -6,8 +6,8 @@ The browser and LCL renderers can project a document for application interaction
 or for designer authoring. Pass `True` as the design-mode argument to `Render`;
 ordinary runtime rendering remains the default. The LCL overload also preserves
 existing callers that supply a runtime state store as their fourth argument.
-This is a renderer capability needed by native Studio; the standalone native
-Studio controller is still an open product requirement.
+This is a renderer capability consumed by the new [native Studio controller](native-studio.md).
+Full native Studio integration and parity remain open product requirements.
 
 Designer clicks report `ntDesignSelect`. Editable controls keep their normal
 focus/text behavior and report `ntDesignValue` with the actual realized field.
