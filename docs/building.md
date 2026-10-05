@@ -452,3 +452,28 @@ Unicode location, stale-source refusal and retirement. It preserves the same
 five explicit arguments and skips successful compilation/preview journeys.
 Editing ranges are zero-based scalar offsets in the actual control text;
 source byte indices and accepted LF text are distinct coordinate domains.
+
+The optional Win32 transport consumer needs no Studio server, project, enrollment
+or application compiler profile:
+
+```powershell
+./tools/build.ps1 -Target native-studio -VerifyTransportDeadlines
+```
+
+Its maintained [native consumer](../tests/nyx_transport_deadline_tests.lpr) owns
+a bounded raw Pascal TCP peer on an OS-selected loopback port. This is a scripted
+byte producer, with no Studio/MCP authentication or design state. Real native
+editor/preview adapters exercise stalled headers, body trickles, upload
+backpressure, canceled receivers/timers, deferred replacement and expired queued
+admission. A synthetic artifact qualifies preparation only and is never launched.
+The matched pas2js [browser consumer](../tests/nyx_browser_transport_tests.lpr)
+exercises real XHR deadlines, copied/invalid policy admission and cancellation.
+The maintained Pascal CDP host reads bounded terminal attributes and uses actual
+elapsed time. Accelerated virtual-time screenshot capture is unsuitable for
+these timing assertions.
+
+The command compiles the native socket unit with stable FPC as well as the LCL
+consumer. Execution qualifies the current Win32 LCL toolchain; it does not qualify
+other compilers/widgetsets. Logs and bounded browser status live under
+`build/transport-deadline/`. Failure logs stay retained. This source candidate
+does not deploy an updated editor route or cancel an already admitted build job.

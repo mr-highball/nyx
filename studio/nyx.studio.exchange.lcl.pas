@@ -27,7 +27,7 @@ unit nyx.studio.exchange.lcl;
 interface
 
 uses
-  Classes, ExtCtrls, nyx.text, nyx.studio.exchange;
+  Classes, ExtCtrls, nyx.text, nyx.studio.exchange, nyx.studio.transport;
 
 type
   { Native private editor adapter. One HTTP worker owns bytes only; UI timers
@@ -35,13 +35,15 @@ type
     callback receiver is accessed by that worker. Cancellation detaches delivery
     immediately; a canceled worker may finish server admission independently.
     A subsequent request waits behind that canceled worker without blocking UI.
-    Destruction joins in-flight work before releasing timers. Connect/read waits
-    use five-second timeouts; these are not a whole-request elapsed-time deadline.
+    Destruction joins in-flight work before releasing timers. A monotonic whole-
+    request deadline includes partial headers/body and upload. Socket readiness
+    polls cancellation without borrowing the UI or extending that deadline.
     The explicit loopback HTTP origin remains machine configuration, outside
     portable documents. No redirect, TLS credential or MCP token is introduced. }
   TNyxLCLEditorExchange = class(TNyxStudioEditorExchange)
   private
     FBaseURL: TNyxText;
+    FLimits: TNyxTransportLimits;
     FWorker: TThread;
     FReply: TNyxEditorReply;
     FPoll: TTimer;
@@ -52,12 +54,16 @@ type
     FDeferredToken: TNyxText;
     FDeferredBody: TNyxText;
     FDeferredReply: TNyxEditorReply;
+    FDeferredStartedTick: QWord;
+    procedure PostQueued(AConnect: Boolean; const AToken, ABody: TNyxText;
+      AReply: TNyxEditorReply; AStartedTick: QWord);
     procedure Poll(ASender: TObject);
     procedure Tick(ASender: TObject);
   public
     { Accept an explicit http://127.0.0.1:port origin. A remote/relative URL,
       credentials, path, query or fragment refuses before creating network work. }
-    constructor Create(const ABaseURL: TNyxText);
+    constructor Create(const ABaseURL: TNyxText;
+      const APolicy: INyxTransportPolicy = nil);
     destructor Destroy; override;
     procedure Post(AConnect: Boolean; const AToken, ABody: TNyxText;
       AReply: TNyxEditorReply); override;
@@ -73,11 +79,10 @@ procedure ValidateNyxLocalStudioOrigin(const ABaseURL: TNyxText);
 implementation
 
 uses
-  SysUtils, fphttpclient, nyx.data;
+  SysUtils, nyx.data, nyx.studio.transport.native;
 
 const
   CEditorByteBudget = 16 * 1024 * 1024;
-  CEditorIOTimeoutMS = 5000;
 
 type
   { Bounded response bytes. Avoid unbounded memory growth before JSON admission. }
@@ -92,12 +97,16 @@ type
     FToken: TNyxText;
     FBody: TNyxText;
     FConnect: Boolean;
+    FLifetime: TNyxHTTPRequestLifetime;
   protected
     procedure Execute; override;
   public
     Status: Integer;
     Text: TNyxText;
-    constructor Create(const ABase, AToken, ABody: TNyxText; AConnect: Boolean);
+    constructor Create(const ABase, AToken, ABody: TNyxText; AConnect: Boolean;
+      const ALimits: TNyxTransportLimits; AStartedTick: QWord);
+    destructor Destroy; override;
+    procedure Cancel;
   end;
 
 function TEditorResponseBytes.Write(const ABuffer; ACount: Longint): Longint;
@@ -111,7 +120,7 @@ begin
 end;
 
 constructor TEditorHTTPWorker.Create(const ABase, AToken, ABody: TNyxText;
-  AConnect: Boolean);
+  AConnect: Boolean; const ALimits: TNyxTransportLimits; AStartedTick: QWord);
 begin
   inherited Create(True);
   FreeOnTerminate := False;
@@ -119,11 +128,25 @@ begin
   FToken := AToken;
   FBody := ABody;
   FConnect := AConnect;
+  FLifetime := TNyxHTTPRequestLifetime.Create(ALimits, AStartedTick);
+end;
+
+destructor TEditorHTTPWorker.Destroy;
+begin
+  { Owner joins before destruction; no socket/client borrows this after Execute. }
+  inherited Destroy;
+  FLifetime.Free;
+end;
+
+procedure TEditorHTTPWorker.Cancel;
+begin
+  FLifetime.Cancel;
+  Terminate;
 end;
 
 procedure TEditorHTTPWorker.Execute;
 var
-  LClient: TFPHTTPClient;
+  LClient: TNyxDeadlineHTTPClient;
   LBody: TMemoryStream;
   LReply: TEditorResponseBytes;
   LPath: TNyxText;
@@ -133,12 +156,10 @@ begin
   LReply := nil;
   try
     try
-      LClient := TFPHTTPClient.Create(nil);
+      FLifetime.Check;
+      LClient := TNyxDeadlineHTTPClient.CreateFor(FLifetime);
       LBody := TMemoryStream.Create;
       LReply := TEditorResponseBytes.Create;
-      LClient.ConnectTimeout := CEditorIOTimeoutMS;
-      LClient.IOTimeout := CEditorIOTimeoutMS;
-      LClient.AllowRedirect := False;
       LClient.AddHeader('Content-Type', 'application/json; charset=utf-8');
       LClient.AddHeader('Origin', FBase);
 
@@ -160,6 +181,7 @@ begin
         LPath := '/api/agents/connect';
       end;
       LClient.HTTPMethod('POST', FBase + LPath, LReply, []);
+      FLifetime.Check;
       Status := LClient.ResponseStatusCode;
       SetLength(Text, LReply.Size);
       LReply.Position := 0;
@@ -203,11 +225,19 @@ begin
   end;
 end;
 
-constructor TNyxLCLEditorExchange.Create(const ABaseURL: TNyxText);
+constructor TNyxLCLEditorExchange.Create(const ABaseURL: TNyxText;
+  const APolicy: INyxTransportPolicy);
 begin
   inherited Create;
   ValidateNyxLocalStudioOrigin(ABaseURL);
   FBaseURL := ABaseURL;
+  FLimits := NewNyxTransportPolicy.Snapshot;
+
+  if APolicy <> nil then
+  begin
+    FLimits := APolicy.Snapshot;
+  end;
+  ValidateNyxTransportLimits(FLimits);
   FPoll := TTimer.Create(nil);
   FPoll.Enabled := False;
   FPoll.Interval := 20;
@@ -239,15 +269,22 @@ begin
   FDeferredReply := nil;
   FDeferredToken := '';
   FDeferredBody := '';
+  FDeferredStartedTick := 0;
 
   if FWorker <> nil then
   begin
-    FWorker.Terminate;
+    TEditorHTTPWorker(FWorker).Cancel;
   end;
 end;
 
 procedure TNyxLCLEditorExchange.Post(AConnect: Boolean;
   const AToken, ABody: TNyxText; AReply: TNyxEditorReply);
+begin
+  PostQueued(AConnect, AToken, ABody, AReply, GetTickCount64);
+end;
+
+procedure TNyxLCLEditorExchange.PostQueued(AConnect: Boolean;
+  const AToken, ABody: TNyxText; AReply: TNyxEditorReply; AStartedTick: QWord);
 begin
 
   if Length(ABody) > CEditorByteBudget then
@@ -267,11 +304,18 @@ begin
     FDeferredToken := AToken;
     FDeferredBody := ABody;
     FDeferredReply := AReply;
+    FDeferredStartedTick := AStartedTick;
     Exit;
   end;
   FReply := AReply;
-  FWorker := TEditorHTTPWorker.Create(FBaseURL, AToken, ABody, AConnect);
-  FWorker.Start;
+  FWorker := TEditorHTTPWorker.Create(FBaseURL, AToken, ABody, AConnect, FLimits, AStartedTick);
+  try
+    FWorker.Start;
+  except
+    FReply := nil;
+    FreeAndNil(FWorker);
+    raise;
+  end;
   FPoll.Enabled := True;
 end;
 
@@ -284,6 +328,7 @@ var
   LConnect: Boolean;
   LToken: TNyxText;
   LBody: TNyxText;
+  LStartedTick: QWord;
 begin
 
   if (FWorker = nil) or not FWorker.Finished then
@@ -306,11 +351,13 @@ begin
     LToken := FDeferredToken;
     LBody := FDeferredBody;
     LReply := FDeferredReply;
+    LStartedTick := FDeferredStartedTick;
     FDeferred := False;
     FDeferredReply := nil;
     FDeferredToken := '';
     FDeferredBody := '';
-    Post(LConnect, LToken, LBody, LReply);
+    FDeferredStartedTick := 0;
+    PostQueued(LConnect, LToken, LBody, LReply, LStartedTick);
   end
   else if Assigned(LReply) then
   begin

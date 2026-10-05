@@ -463,3 +463,20 @@ changed drafts disable old locations. Criterion 3 remains open at counter 11.
 Large-project UX/performance remains unchanged. The user's intervening split-pane
 request has its own task; no criteria or performance credit are transferred.
 See [evidence](../WORK.md#semantic-agent-operation-and-compiler-navigation--2026-10-04).
+
+## Return from native transport prerequisite — 2026-10-05
+
+The native compiler/preview and typed whole-request transport consumers now have
+bounded actual-control/real-clock evidence, recorded in WORK.md. They do not
+change criterion 3's remaining source synchronization or large-project editing
+outcome; its no-closure counter remains 11. The service still requires this
+original task to be accepted before its own acceptance.
+
+Reassessment returns to an integrated visual configuration/structural edit/Apply
+responsiveness deliverable using the existing correctness-gated whole-command
+workload. Retain fresh complete candidate validation, visibility of direct model
+mutations, exact authored frames and paired history on native and browser targets.
+Budget one implementation/consumer packet, then reassess. Stop on lost pairs,
+draft/history corruption, stale mutation visibility or failed preservation. Do
+not substitute another isolated lexer report, reset the counter, weaken the
+original criterion or move this task to DONE from transport evidence.

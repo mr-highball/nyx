@@ -68,7 +68,10 @@ param(
   # are copied into the explicitly selected existing artifact-serving root.
   [switch]$VerifyNativeStudioCompiler,
   [string]$NativeStudioCompilerProfile,
-  [string]$NativeStudioArtifactDirectory
+  [string]$NativeStudioArtifactDirectory,
+  # Optional Win32 transport qualification through an isolated raw Pascal TCP
+  # peer. No Studio/MCP listener, project, enrollment or profile is replaced.
+  [switch]$VerifyTransportDeadlines
 )
 
 $ErrorActionPreference = 'Stop'
@@ -236,6 +239,31 @@ try {
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxStudioPlatform", "-Fu$nyxLazarus/packager/units/$nyxStudioPlatform",
       "-FU$nyxStudioNative", "-FE$nyxStudioNative")
     Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @('studio/nyx_studio_native.lpr'))
+
+    if ($VerifyTransportDeadlines) {
+      $nyxTransportRoot = Join-Path $nyxRoot 'build/transport-deadline'
+      $nyxTransportBrowser = Join-Path $nyxTransportRoot 'browser'
+      New-Item -ItemType Directory -Path $nyxTransportBrowser -Force | Out-Null
+      # Compile the socket adapter against stable FPC as well as the installed
+      # LCL compiler. Actual timing/controls below qualify the Win32 LCL build.
+      Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('studio/nyx.studio.transport.native.pas'))
+      Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @('tests/nyx_transport_deadline_tests.lpr'))
+      $nyxTransportConsumer = Join-Path $nyxStudioNative 'nyx_transport_deadline_tests.exe'
+      & $nyxTransportConsumer (Join-Path $nyxTransportRoot 'owned-preview')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Native transport deadline/retirement consumer failed' }
+      $nyxTransportPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+      $nyxTransportRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+      Invoke-NyxCompiler $nyxTransportPas2js @('-B', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests',
+        '-Jirtl.js', "-o$nyxTransportBrowser/transport-tests.js", 'tests/nyx_browser_transport_tests.lpr')
+      Copy-Item -LiteralPath $nyxTransportRuntime -Destination (Join-Path $nyxTransportBrowser 'rtl.js')
+      & $nyxTransportConsumer --prepare-browser $nyxTransportBrowser
+
+      if ($LASTEXITCODE -ne 0) { throw 'Pascal transport browser fixture preparation failed' }
+      & $nyxTransportConsumer --browser $nyxTransportBrowser (Join-Path $nyxTransportRoot 'browser-maintained')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Real-clock browser transport deadline/retirement consumer failed' }
+    }
 
     if ($VerifyNativeStudio) {
       $nyxStudioSource = [IO.Path]::GetFullPath($DesignerSourceDirectory)

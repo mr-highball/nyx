@@ -42,6 +42,16 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Native service integration — 2026-10-05
 
+Transport follow-through qualifies typed whole-request deadlines and stalled
+retirement through actual browser/native adapters, with 66/20 checks and zero
+native leaks. A real compiled-input regression passes ten. This closes the
+bounded transport deliverable, not a full original authoring criterion; its
+no-closure sequence advances 6 to 7. New editor HTTP deployment and complete
+native parity retain their original gates. Reassessment follows the unmet
+[source synchronization prerequisite](NS-1_codegen_01.md), criterion 3's
+large-project responsiveness, rather than adding another deadline/controller
+fixture. See [the packet](../WORK.md#typed-transport-deadlines-and-stalled-retirement--2026-10-05).
+
 The subsequent compiler/preview source candidate now adds optional native output
 preflight, guarded profile saves, asynchronous immutable page/reusable/application
 jobs, bounded diagnostics and compiled Run/Stop/view reload. Its real compiler /

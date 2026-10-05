@@ -27,21 +27,24 @@ unit nyx.studio.exchange.browser;
 interface
 
 uses
-  JS, Web, nyx.text, nyx.studio.exchange;
+  JS, Web, nyx.text, nyx.studio.exchange, nyx.studio.transport;
 
 type
   { Browser adapter for the shared editor protocol. Same-origin XHR supplies its
-    Origin; this adapter owns requests/timers and borrows notification receivers. }
+    Origin; this adapter owns requests/timers and borrows notification receivers.
+    XHR's whole-request timeout includes upload/headers/body; byte progress never
+    extends it. A timeout completes once with status zero and bounded local help. }
   TNyxBrowserEditorExchange = class(TNyxStudioEditorExchange)
   private
     FRequest: TJSXMLHttpRequest;
     FReply: TNyxEditorReply;
     FTick: TNyxEditorTick;
     FTimer: NativeInt;
+    FLimits: TNyxTransportLimits;
     procedure Ready;
     procedure Tick;
   public
-    constructor Create;
+    constructor Create(const APolicy: INyxTransportPolicy = nil);
     destructor Destroy; override;
     procedure Post(AConnect: Boolean; const AToken, ABody: TNyxText;
       AReply: TNyxEditorReply); override;
@@ -53,12 +56,19 @@ type
 implementation
 
 uses
-  SysUtils;
+  SysUtils, nyx.data;
 
-constructor TNyxBrowserEditorExchange.Create;
+constructor TNyxBrowserEditorExchange.Create(const APolicy: INyxTransportPolicy);
 begin
   inherited Create;
   FTimer := -1;
+  FLimits := NewNyxTransportPolicy.Snapshot;
+
+  if APolicy <> nil then
+  begin
+    FLimits := APolicy.Snapshot;
+  end;
+  ValidateNyxTransportLimits(FLimits);
 end;
 
 destructor TNyxBrowserEditorExchange.Destroy;
@@ -100,6 +110,7 @@ begin
     LURL := 'api/agents/connect';
   end;
   FRequest.open('POST', LURL, True);
+  FRequest.timeout := FLimits.DeadlineMS;
   FRequest.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
 
   if not AConnect then
@@ -122,6 +133,12 @@ begin
   end;
   LStatus := FRequest.status;
   LText := FRequest.responseText;
+
+  if LStatus = 0 then
+  begin
+    LText := NyxObject([NyxField('error',
+      NyxData('Editor connection failed or timed out; local work is retained'))]).ToJSON;
+  end;
   FRequest.onreadystatechange := nil;
   FRequest := nil;
   LReply := FReply;

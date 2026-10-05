@@ -27,7 +27,7 @@ unit nyx.studio.preview.lcl;
 interface
 
 uses
-  Classes, ExtCtrls, Process, nyx.text, nyx.studio.preview;
+  Classes, ExtCtrls, Process, nyx.text, nyx.studio.preview, nyx.studio.transport;
 
 type
   TNyxPreviewPrepared = procedure(ASucceeded: Boolean; const AError: TNyxText) of object;
@@ -52,12 +52,14 @@ type
     FProcess: TProcess;
     FFile: TNyxText;
     FProcessFile: TNyxText;
+    FLimits: TNyxTransportLimits;
     procedure RetireFile(const AFile: TNyxText);
     procedure Poll(ASender: TObject);
     function GetProcessID: Integer;
     function GetRunning: Boolean;
   public
-    constructor Create(const ABase, ADirectory: TNyxText);
+    constructor Create(const ABase, ADirectory: TNyxText;
+      const APolicy: INyxTransportPolicy = nil);
     destructor Destroy; override;
     { One preparation at a time. Download only the admitted native executable,
       cap received bytes, compare exact size/MD5 and commit a unique local file.
@@ -80,7 +82,8 @@ type
 implementation
 
 uses
-  SysUtils, fphttpclient, md5, LCLIntf, nyx.studio.builds, nyx.studio.exchange.lcl;
+  SysUtils, md5, LCLIntf, nyx.studio.builds, nyx.studio.exchange.lcl,
+  nyx.studio.transport.native;
 
 type
   TArtifactBytes = class(TMemoryStream)
@@ -90,19 +93,23 @@ type
   end;
 
   { Immutable request bytes and file metadata; no widgets, sessions or editor
-    callback owner are accessed on this thread. IO/connect waits are five seconds;
-    those bounds are not a whole-request elapsed-time deadline. }
+    callback owner are accessed on this thread. The whole-request deadline and
+    thread-safe cancellation are independent of received-byte progress. }
   TArtifactWorker = class(TThread)
   private
     FBase: TNyxText;
     FDirectory: TNyxText;
     FArtifact: TNyxCompiledArtifact;
+    FLifetime: TNyxHTTPRequestLifetime;
   protected
     procedure Execute; override;
   public
     FileName: TNyxText;
     Error: TNyxText;
-    constructor Create(const ABase, ADirectory: TNyxText; const AArtifact: TNyxCompiledArtifact);
+    constructor Create(const ABase, ADirectory: TNyxText;
+      const AArtifact: TNyxCompiledArtifact; const ALimits: TNyxTransportLimits);
+    destructor Destroy; override;
+    procedure Cancel;
   end;
 
 function TArtifactBytes.Write(const ABuffer; ACount: Longint): Longint;
@@ -116,18 +123,32 @@ begin
 end;
 
 constructor TArtifactWorker.Create(const ABase, ADirectory: TNyxText;
-  const AArtifact: TNyxCompiledArtifact);
+  const AArtifact: TNyxCompiledArtifact; const ALimits: TNyxTransportLimits);
 begin
   inherited Create(True);
   FreeOnTerminate := False;
   FBase := ABase;
   FDirectory := ADirectory;
   FArtifact := AArtifact;
+  FLifetime := TNyxHTTPRequestLifetime.Create(ALimits);
+end;
+
+destructor TArtifactWorker.Destroy;
+begin
+  { The preview owner joins before freeing this worker and its borrowed budget. }
+  inherited Destroy;
+  FLifetime.Free;
+end;
+
+procedure TArtifactWorker.Cancel;
+begin
+  FLifetime.Cancel;
+  Terminate;
 end;
 
 procedure TArtifactWorker.Execute;
 var
-  LClient: TFPHTTPClient;
+  LClient: TNyxDeadlineHTTPClient;
   LBytes: TArtifactBytes;
   LFile: TFileStream;
   LIdentity: TGUID;
@@ -138,13 +159,12 @@ begin
   LFile := nil;
   try
     try
-      LClient := TFPHTTPClient.Create(nil);
-      LClient.ConnectTimeout := 5000;
-      LClient.IOTimeout := 5000;
-      LClient.AllowRedirect := False;
+      FLifetime.Check;
+      LClient := TNyxDeadlineHTTPClient.CreateFor(FLifetime);
       LBytes := TArtifactBytes.Create;
       LBytes.Limit := FArtifact.ByteCount;
       LClient.HTTPMethod('GET', FBase + '/' + FArtifact.RelativePath, LBytes, [200]);
+      FLifetime.Check;
 
       if Terminated then
       begin
@@ -167,6 +187,7 @@ begin
       LFile := TFileStream.Create(FileName, fmCreate);
       LBytes.Position := 0;
       LFile.CopyFrom(LBytes, LBytes.Size);
+      FLifetime.Check;
     except
       on LException: Exception do
       begin
@@ -183,12 +204,20 @@ begin
   end;
 end;
 
-constructor TNyxLCLCompiledPreview.Create(const ABase, ADirectory: TNyxText);
+constructor TNyxLCLCompiledPreview.Create(const ABase, ADirectory: TNyxText;
+  const APolicy: INyxTransportPolicy);
 begin
   inherited Create;
   ValidateNyxLocalStudioOrigin(ABase);
   FBase := ABase;
   FDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ADirectory));
+  FLimits := NewNyxTransportPolicy.WholeRequest(30000).Snapshot;
+
+  if APolicy <> nil then
+  begin
+    FLimits := APolicy.Snapshot;
+  end;
+  ValidateNyxTransportLimits(FLimits);
   FTimer := TTimer.Create(nil);
   FTimer.Enabled := False;
   FTimer.Interval := 25;
@@ -253,7 +282,7 @@ begin
 
   if FWorker <> nil then
   begin
-    FWorker.Terminate;
+    TArtifactWorker(FWorker).Cancel;
   end;
 end;
 
@@ -277,7 +306,7 @@ begin
 
   if AArtifact.Target = btNativeLCL then
   begin
-    FWorker := TArtifactWorker.Create(FBase, FDirectory, AArtifact);
+    FWorker := TArtifactWorker.Create(FBase, FDirectory, AArtifact, FLimits);
     try
       FWorker.Start;
     except

@@ -21,8 +21,11 @@ qualifies direct private protocol and existing HTTP artifact delivery, retaining
 the refused updated-listener gate. Full native parity, complete presentation and
 intermittent canvas/sidebar visual gaps remain under
 [the original authoring owner](TODO/NS-4_studio-authoring_01.md). Its no-closure
-count advances to 6. Reassessment changes the next deliverable to whole-request
-deadlines and stalled-worker retirement under the original service owner; new
+count advanced to 6. Whole-request transport follow-through now passes 66 native
+and 20 real-clock browser checks, with ten actual compiled-input regression
+checks and zero native leaks. The consecutive sequence advances to 7; reassessment
+stops transport/controller fixtures and follows the unmet code-generation
+criterion-3 prerequisite for large-project editing responsiveness. New
 editor HTTP qualification still requires resolution of the recorded launch gate.
 No full criterion closes from this packet.
 See [native Studio](docs/native-studio.md) and WORK.md for bounded evidence.
@@ -175,6 +178,13 @@ Current task and return path are maintained in [WORK.md](WORK.md).
 
 ## Reassessment record
 
+- 2026-10-05: typed whole-request transport and stalled receiver retirement pass
+  66 actual native and 20 actual real-clock browser checks; current compiled
+  download/input/refusal passes ten with zero leaks. Original service/authoring
+  criteria stay open and the native prerequisite sequence reaches 7. The next
+  action follows unmet code-generation criterion 3, preserving its counter 11
+  and full large-project synchronization/UX outcome. Compiler cancellation/
+  retention/shutdown and the recorded updated-listener launch gate remain open.
 - 2026-10-05: native compiler/preview consumer handoff passes 123 actual Win32
   checks with zero leaks, retaining English presentation and dedicated Unicode
   qualification. Direct private protocol and existing HTTP artifact delivery

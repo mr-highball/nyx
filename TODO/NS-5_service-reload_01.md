@@ -34,5 +34,25 @@ Evidence uses a suspended private protocol engine and the unchanged existing
 HTTP artifact listener. New editor-route deployment, complete cache/retention/
 cancellation, inactive-project jobs, native browser-launch lifecycle and measured
 reload performance remain open. Per-wait IO/connect limits are not whole-request
-deadlines; stalled-worker retirement retains criterion 1. Original criteria and
+deadlines in the earlier packet; the transport delivery below addresses them.
+Original criteria and
 blockers remain unchanged; this does not accept the full task.
+
+## Whole-request transport delivery — 2026-10-05
+
+Criterion 1 now includes a managed typed deadline policy, immutable adapter
+snapshots, whole queued/request elapsed bounds, nonblocking native socket waits
+and browser XHR timeouts. Actual stalled headers/body/upload, queued expiry,
+canceled/deferred replacement and borrowed receiver retirement pass 66 native
+and 20 real-clock browser checks; native heap tracing reports zero leaks.
+The current compiled-preview download/input/refusal regression passes ten with
+zero leaks. See [the packet](../WORK.md#typed-transport-deadlines-and-stalled-retirement--2026-10-05).
+
+The bounded peer is a raw test byte producer, not a deployed editor/MCP route.
+Running/queued compiler-job cancellation, retention/isolation/cache policies,
+bounded service shutdown, disk/OS stalls and full deployment retain their
+original scope. Worker termination currently checks only before execution;
+compiler overflow/time-budget paths do not explicitly join the terminated
+process. Original blockers/criteria remain open. Reassessment stops transport
+fixture expansion and follows the unmet code-generation synchronization/
+responsiveness prerequisite, preserving its original acceptance path and count.

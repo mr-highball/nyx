@@ -84,6 +84,12 @@ painting observed in an earlier callback journey and sidebar overflow remain
 open. The
 refreshed English journey paints its memo; that alone does not establish a fix. See
 [native Studio](docs/native-studio.md) and WORK.md for the current evidence.
+Typed whole-request transport deadlines now qualify stalled headers/body/upload,
+queued expiry and detached retirement: 66 actual Win32 checks, 20 actual
+real-clock browser checks and ten current compiled-preview/input checks, with
+zero native leaks. New editor HTTP deployment, compiler-job cancellation and
+complete service reliability retain their original gates. The next prerequisite
+is source synchronization's large-project responsiveness; see WORK.md.
 The preceding designer prerequisite retains its 34 native / 32 desktop / 33
 actual-390 browser checks, including painted selection and focused view movement.
 

@@ -65,8 +65,11 @@ Undo/Redo and operator permissions. Platform adapters own HTTP and timers. Nativ
 HTTP workers own bytes only; UI timers deliver replies on the UI thread. Pausing
 detaches local notification, and destruction joins outstanding work before
 releasing its borrowed session. Cancellation cannot revoke an already admitted
-server operation. Five-second connect/read timeouts are per wait; a whole-request
-deadline and stalled-service teardown qualification remain open.
+server operation. The current source candidate now snapshots a typed fifteen-
+second whole-request policy for browser/native editor exchanges. Native queued
+requests retain the original Post time; receiving partial bytes never resets
+the deadline. Actual stalled-header/body/upload and detached-receiver checks
+qualify the Win32 adapter. Deployment of the new editor HTTP route remains open.
 
 Agents shows project sessions and activity in the same public Nyx composition.
 Jumping waits for acknowledged local publications and successful admission of
@@ -181,8 +184,9 @@ A successful current rebuild can replace a running preview; the
 old process remains until the verified candidate launches successfully. Prepared
 native files have independent private directories and retire after their process
 releases them. Download cancellation detaches notification immediately; native
-destruction joins the worker. Connect/read limits remain per-wait bounds, not a
-whole-request deadline. The browser artifact path opens a validated immutable
+destruction joins the worker. Native downloads now use a thirty-second whole-
+request deadline and short nonblocking readiness waits for cancellation. The
+browser artifact path opens a validated immutable
 URL through the system browser; this native consumer's browser-launch lifecycle
 has no new execution qualification.
 
@@ -192,5 +196,37 @@ immutable artifact bytes are copied into an explicitly selected existing
 artifact-serving root. Thus its HTTP download and native execution evidence does
 not establish deployment of the new private editor HTTP route. The separate
 updated-listener refusal remains recorded in WORK.md. Other widgetsets/operating
-systems, whole-request deadlines, reliable visuals and measured performance
-remain open.
+systems, disk/OS stalls, reliable visuals and measured performance remain open.
+
+## Typed transport deadlines
+
+Transport policy is machine/runtime configuration, independent of designs,
+paired history, DOM and LCL types. Both adapters copy an admitted snapshot;
+changing the policy later cannot silently extend an existing adapter's limits:
+
+```pascal
+LPolicy := NewNyxTransportPolicy.WholeRequest(15000);
+LExchange := TNyxLCLEditorExchange.Create(LServiceOrigin, LPolicy);
+LPreview := TNyxLCLCompiledPreview.Create(LServiceOrigin, LPreviewDirectory,
+  NewNyxTransportPolicy.WholeRequest(30000));
+```
+
+`TNyxBrowserEditorExchange.Create(LPolicy)` consumes the same contract. Defaults
+are fifteen seconds for editor exchanges and thirty seconds for native artifact
+downloads. The positive range is 1..120000 milliseconds; unset records and
+invalid external policy implementations refuse before allocating transport work.
+The deadline includes queued retirement waits, connection/upload and headers/body.
+Native socket readiness waits check a thread-safe cancellation event at most
+every fifty milliseconds. Native numeric-loopback connection waits use the
+remaining deadline, capped at five seconds. Browser XHR uses its whole-request
+timeout, as defined by the [XHR standard](https://xhr.spec.whatwg.org/#the-timeout-attribute).
+
+Timeout returns bounded local failure help and never admits partial response
+bytes or a runnable artifact. Cancel detaches receivers immediately; destruction
+joins only owned work. Cancel does not revoke server admission or compiler jobs.
+UI delivery and OS scheduling may occur after the network deadline; this is not
+a hard real-time guarantee or a disk/OS-stall bound. The maintained consumer in
+[building](building.md) uses a raw test-only Pascal peer and the real-clock
+browser host. It does not replace any Studio listener or qualify new editor HTTP
+deployment. Original service admission, job cancellation, retention, caching,
+other-platform and full reload acceptance remain open.

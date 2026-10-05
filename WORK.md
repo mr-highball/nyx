@@ -4838,3 +4838,88 @@ English demo checkpoint 7a4956f remains in branch history. The compiler/preview
 commit and exact remote-head comparison are recorded privately in
 .local/codex-restart-check/native-compiler-preview-remote-proof.json after push;
 machine paths/accounts/endpoint configuration are excluded from the checkpoint.
+
+## Typed transport deadlines and stalled retirement — 2026-10-05
+
+Previous goal turn classification: progress. Checkpoint ff46074 changed the
+native compiler/preview consumer, qualified 123 actual cases and matched the
+remote branch. This continuation follows its selected NS-5_service-reload_01
+criterion-1 prerequisite: a whole-request deadline and detached stalled-worker
+retirement. The bounded deliverable covers shared private editor transport and
+native artifact downloads, not all compiler-service cancellation or deployment.
+One maintained stalled peer/consumer must prove elapsed bounds and owned cleanup;
+stop/switch on late callbacks, expired admission, retained files/processes or
+changed project pairs. All original criteria and hard prerequisites remain.
+
+NewNyxTransportPolicy supplies a managed fluent WholeRequest numeric contract.
+Adapters copy typed admitted snapshots; defaults are fifteen seconds for editor
+exchanges and thirty for native downloads. Zero/default records and invalid
+alternative implementations refuse before work. Native requests include time
+queued behind canceled work. A worker-owned monotonic lifetime and thread-safe
+cancel event gate nonblocking reads/writes; readiness polls are at most fifty
+milliseconds. Partial headers/body and upload progress never extend the budget.
+Numeric loopback connect uses remaining time capped at five seconds. Browser
+XHR uses its whole-request timeout. Timeout refuses partial bytes/artifacts and
+returns bounded help; cancellation cannot revoke existing server admission.
+
+Maintained command: tools/build.ps1 -Target native-studio -VerifyTransportDeadlines.
+build/transport-deadline/maintained-compatible.log terminates with 66 actual
+native transport checks and 20 actual real-clock browser checks, with zero
+unfreed blocks. Native failures for a 220 ms policy arrive at 266/281/281 ms,
+including UI delivery; blocked upload arrives at 281 ms. Canceled editor/preview
+retirement is 63/62 ms. Browser silent/header/body waits are 236.7/231.3/231.9 ms;
+its bounded status is browser-maintained/browser-status.json. Queued expiry
+sends no new packet, canceled replacement still receives its exact reply, and
+destroyed request/timer receivers receive no notification. These measured bounds
+are qualification results, not hard real-time or performance guarantees.
+
+The raw Pascal qualification peer owns an OS-selected loopback socket, bounded
+test packets/files and at most 64 connection workers. It is a byte producer
+without Studio/MCP authentication, profiles, design state or configuration;
+it never starts/replaces the rejected updated Studio listener. Synthetic bytes
+qualify preparation only and are never launched. A separately rebuilt actual
+compiled-input consumer passes ten with zero leaks in compiled-probe-run.log:
+immutable HTTP bytes, actual memo/Space-key actions, independent reusable input,
+mismatch refusal retaining the old process, canceled notification and owned
+retirement. That retained artifact does not establish live source currentness.
+Stable FPC 3.2 compiles the native socket unit; actual native execution uses
+the installed FPC/LCL 3.3.1 Win32 toolchain. Current native and browser product
+entries build with zero owned warnings; seven installed pas2js RTL warnings
+remain visible. Other widgetsets/OSes, disk stalls and full reload stay open.
+
+Retained failures: an initial test manifest had mismatched nested syntax;
+the corrected fixture uses a separate typed manifest entry. Unquoted pas2js
+arguments were split by PowerShell; explicit argument arrays fix orchestration.
+The screenshot runner's accelerated virtual clock failed the elapsed assertion;
+the maintained Pascal browser host runs the real clock and passes, without
+weakening that assertion. A browser-host local declaration initially landed in
+the wrong scope and was corrected. Stable FPC lacks the newer FCL handler Select
+API; the adapter now uses native readiness behind the same nonblocking contract.
+All terminal failure logs/DOM captures remain; no ambiguous mutation is retried.
+
+Handoff/reassessment: no full original criterion closes, and the existing native
+authoring/prerequisite no-closure sequence advances 6 to 7. The whole-request
+transport deliverable is qualified; stop adding deadline/controller fixtures.
+NS-5 criterion 1 still owns running/queued build cancellation, retention,
+isolation and bounded shutdown. Source inspection found worker termination is
+checked before execution only; RunCompiler owns a 60-second loop and terminates
+on budget/log overflow without an explicit exit join. This is an existing gap
+under that owner, not a new task or accepted cancellation outcome.
+
+The next action follows the unmet NS-1_codegen_01 prerequisite, criterion 3's
+large-project editing responsiveness, at its existing no-closure counter 11.
+Use the existing correctness-gated whole-command workload to deliver an
+integrated visual edit/structural edit/Apply improvement, retaining fresh full
+candidate admission, exact authored frames and paired history on both targets.
+Budget one implementation/consumer packet, then reassess; stop on pair/draft
+corruption, stale mutation visibility or failed preservation. Do not add another
+isolated lexer timing report or reset the original count. New editor HTTP
+qualification remains required when execution is available; the recorded
+automatic updated-listener refusal is not retried.
+
+Preservation: named MCP still reads production revision 6, home selection/view,
+one page/component, no draft/Undo and ordinary Redo. Production PID 29656 and
+staged PID 4972 retain their exact prior executables. No active pair, profile or
+enrollment is replaced. Source delivery is separate from production deployment;
+the remote checkpoint proof is kept privately under
+.local/codex-restart-check/transport-deadline-remote-proof.json.
