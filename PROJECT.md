@@ -257,8 +257,25 @@ Both native compilers pass 16 lexical/36 semantic checks; actual discovery passe
 46 and unchanged compiled native memo input nine, with zero owned warnings/leaks.
 Existing routine/callback regressions pass 31/72. Browser consumers/Studio/worker
 compile; current browser execution and updated authenticated observation remain
-unqualified at the existing gate. Signature/class/full-unit authoring and complete
+unqualified at the existing gate. Class/full-unit authoring and complete
 editor quality remain open; WORK.md records evidence and the next deliverable.
+
+Guarded unit-helper signature changes now retain exact acknowledged signature,
+body and public counterpart, with explicit related caller edits in one paired
+Undo step. Both native compilers pass 20 lexical/59 semantic checks, actual
+discovery 50 and unchanged compiled native input nine. All three compilers
+diagnose the intentionally outdated public caller. Native design/source hashes
+agree exactly; browser execution retains its gate. See
+[WORK.md](WORK.md#semantic-helper-signatures--2026-10-05).
+
+User-directed source UX now separates Source from Compiler messages and moves
+the same Nyx editor into an expanded modal with Close/Escape. Actual Win32 checks
+pass 30, including narrow layout, resizing, expanded Apply/Restore, exact draft/selection and owner
+restoration. Per-project presentation migration/ownership passes 225 on each
+native compiler. Native Studio/browser Studio/module worker compile; current
+browser/phone interaction and observing deployment remain unqualified. Existing
+full editor/presentation/accessibility requirements retain their owners. See
+[WORK.md](WORK.md#source-workspace-and-expanded-editor--2026-10-05).
 
 The warning-cleanup packet now reports zero owned warnings on the qualified
 native/LCL/pas2js builds and current MCP application jobs. Shared execution,

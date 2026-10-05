@@ -64,7 +64,7 @@ uses
   nyx.studio.builds,
   nyx.studio.outputs,
   nyx.studio.projects, nyx.studio.rootedits, nyx.studio.rootview,
-  nyx.studio.workspaces, nyx.studio.presentation;
+  nyx.studio.workspaces, nyx.studio.presentation, nyx.modal, nyx.modal.browser;
 
 type
   { Transport operation is closed and independent of application build targets. }
@@ -95,6 +95,14 @@ type
       its realization and never borrows nodes from the shell or design. }
     FCodeDocument: TNyxDocument;
     FCodeRenderer: TNyxBrowserRenderer;
+    { Independent ordinary Nyx source chrome moves with its retained editor.
+      The modal owns only a platform host; these documents own all UI controls. }
+    FSourcePaneDocument: TNyxDocument;
+    FSourcePaneRenderer: TNyxBrowserRenderer;
+    FSourceModal: INyxBrowserModalHost;
+    FSourceTab: TNyxStudioSourceTab;
+    FSourceExpanded: Boolean;
+    FViewState: TNyxStudioViewState;
     FCodeVisible: Boolean;
     FCanvasPercent: Integer;
     FPhone: Boolean;
@@ -189,6 +197,7 @@ type
     function PointerBlur(AEvent: TJSEvent): Boolean;
     procedure FlushAgentRefresh;
     function CreateShell: TNyxDocument;
+    procedure SourceModalDismiss;
     { Retain focused new-default drafts across panel/viewport transitions and
       keyboard/programmatic Add actions, independently of project history. }
     procedure CaptureNewStateDraft;
@@ -298,13 +307,20 @@ begin
     '[data-node=studio-code-actions]{padding:6px 12px!important;flex-wrap:wrap!important;' +
     'flex-shrink:0;background:#fafbfe;border-top:1px solid #dfe3ec;}' +
     '[data-node=studio-code-actions] .nyx-button{font-size:11px;padding:6px 10px;}' +
-    '[data-node=studio-shell] [data-node=studio-code]{font:12px/1.7 Consolas,monospace;' +
+    '[data-node=studio-code]{font:12px/1.7 Consolas,monospace;' +
     'background:#171b29;color:#cbd5ed;' +
     'border:0;border-top:1px solid #343a4e;resize:none;height:0;padding:12px 18px;' +
     'white-space:pre;tab-size:2;outline-offset:-3px;box-sizing:border-box;flex:1;min-height:0;min-width:0;}' +
     '[data-node=studio-source-pane]{overflow:hidden;min-height:0;padding:0!important;gap:0!important;}' +
     '[data-node=studio-source-pane]>:not([data-node=studio-code]):not([data-node=studio-code-host]){flex-shrink:0;}' +
     '[data-node=studio-code-host]{min-height:0;min-width:0;flex:1;}' +
+    '[data-node=studio-source-mount]{min-height:0;min-width:0;flex:1;overflow:hidden;}' +
+    '[data-node=studio-source-pane]{height:100%;min-width:0;display:flex!important;flex-direction:column;}' +
+    '[data-node=studio-source-tabs]{padding:6px 12px!important;flex-shrink:0;background:#fafbfe;flex-wrap:wrap;}' +
+    '[data-node=studio-source-tabs] .nyx-button{font-size:11px;padding:6px 10px;}' +
+    '[data-node=studio-source-messages]{min-height:0;overflow:hidden;}' +
+    '[data-node=studio-source-messages] [data-node=studio-compiler-diagnostics]{height:auto!important;min-height:0;flex:1;}' +
+    'dialog[data-nyx-modal]::backdrop{background:#171b2980;}' +
     '[data-node=studio-split]{min-width:0;min-height:0;overflow:hidden;}' +
     '.nyx-split-divider:focus-visible{outline:2px solid var(--nyx-accent);outline-offset:-3px;}' +
     '[data-node=studio-center]:has([data-node=studio-split]) [data-node=studio-outputs],' +
@@ -398,6 +414,10 @@ begin
   FCanvasRenderer.OnEvent := HandleCanvas;
   FCodeRenderer := TNyxBrowserRenderer.Create;
   FCodeRenderer.OnEvent := HandleShell;
+  FSourcePaneRenderer := TNyxBrowserRenderer.Create;
+  FSourcePaneRenderer.OnEvent := HandleShell;
+  FSourceModal := NewNyxBrowserModalHost;
+  FSourceModal.OnDismiss := SourceModalDismiss;
   FCodeVisible := False;
   FCanvasPercent := 65;
   FPalette := DefaultNyxStudioPaletteState;
@@ -488,8 +508,15 @@ begin
     FConfigurationRequest.abort;
   end;
   FCanvasRenderer.Free;
+  if FSourceModal <> nil then
+  begin
+    FSourceModal.OnDismiss := nil;
+  end;
   FCodeRenderer.Free;
   FCodeDocument.Free;
+  FSourcePaneRenderer.Free;
+  FSourcePaneDocument.Free;
+  FSourceModal := nil;
   FShellRenderer.Free;
   FShell.Free;
   FSession.Free;
@@ -503,7 +530,9 @@ var
 begin
   LState := DefaultNyxStudioViewState;
   LState.CodeVisible := FCodeVisible;
-  LState.CodePresentation := ncpHosted;
+  LState.CodePresentation := ncpPaneHosted;
+  LState.SourceTab := FSourceTab;
+  LState.SourceExpanded := FSourceExpanded;
   LState.CanvasPercent := FCanvasPercent;
   LState.Compact := FCompact;
   LState.Panel := FPanel;
@@ -538,7 +567,15 @@ begin
   LState.NewStateValue := FNewStateValue;
   LState.AgentsVisible := FAgentsVisible;
   LState.Agents := FAgents.State;
+  FViewState := LState;
   Result := BuildNyxStudioView(FSession, LState, FCompilerReport);
+end;
+
+procedure TNyxStudio.SourceModalDismiss;
+begin
+  FSourceExpanded := False;
+  Refresh(True, True);
+  NyxFocusWithoutScroll(FCodeRenderer.InputFor('studio-code'));
 end;
 
 procedure TNyxStudio.CaptureNewStateDraft;
@@ -609,6 +646,8 @@ var
   LCodeScroll: NativeInt;
   LSplit: TNyxNode;
   LCodeHost: TJSHTMLElement;
+  LSourceHost: TJSHTMLElement;
+  LSourceDocument: TNyxDocument;
   LCanvasFocusID: TNyxText;
   LCanvasSelection: TNyxTextSelection;
   LPendingDesign: TNyxStudioPendingDesign;
@@ -818,9 +857,39 @@ begin
     LActive := FCanvasRenderer.InputFor(LCanvasFocusID);
   end;
 
-  if FShell.Find('studio-code-host') <> nil then
+  if FShell.Find('studio-source-mount') <> nil then
   begin
-    LCodeHost := FShellRenderer.ElementFor('studio-code-host');
+    LSourceHost := FShellRenderer.ElementFor('studio-source-mount');
+
+    if FSourceExpanded then
+    begin
+      FSourceModal.Show(NyxModal('Pascal source'));
+      LSourceHost := FSourceModal.Element;
+    end;
+    LSourceDocument := TNyxDocument.Create;
+    try
+      LSourceDocument.AddPage(BuildNyxStudioSourcePane(FSession, FViewState, FCompilerReport));
+
+      if not FSourcePaneRenderer.TryRefresh(LSourceDocument, LSourceDocument.Pages[0], False) then
+      begin
+        FSourcePaneRenderer.Render(LSourceDocument, LSourceDocument.Pages[0], LSourceHost);
+      end
+      else
+      begin
+        FSourcePaneRenderer.MoveHost(LSourceHost);
+      end;
+      FSourcePaneDocument.Free;
+      FSourcePaneDocument := LSourceDocument;
+      LSourceDocument := nil;
+    finally
+      LSourceDocument.Free;
+    end;
+
+    if not FSourceExpanded then
+    begin
+      FSourceModal.Hide;
+    end;
+    LCodeHost := FSourcePaneRenderer.ElementFor('studio-code-host');
 
     if FCodeRenderer.Root = nil then
     begin
@@ -840,7 +909,13 @@ begin
   end
   else
   begin
-    FCodeRenderer.Unmount;
+    { Keep both public views alive in a detached modal host while optional Pascal
+      is hidden. Returning to it retains the same editor, listeners and range. }
+    if FSourcePaneRenderer.Root <> nil then
+    begin
+      FSourcePaneRenderer.MoveHost(FSourceModal.Element);
+    end;
+    FSourceModal.Hide;
   end;
   LPrevious := TJSHTMLElement(document.querySelector('[data-node=studio-canvas-wrap]'));
 
@@ -1737,6 +1812,22 @@ begin
               FCodeVisible := not FCodeVisible;
               FPanel := nspDesign;
             end;
+          'action-source-tab':
+            begin
+              FSourceTab := nstSource;
+              LRetainCanvas := True;
+            end;
+          'action-messages-tab':
+            begin
+              FSourceTab := nstMessages;
+              LRetainCanvas := True;
+            end;
+          'action-expand-source':
+            begin
+              FSourceExpanded := not FSourceExpanded;
+              FSourceTab := nstSource;
+              LRetainCanvas := True;
+            end;
           'action-outputs':
             begin
               FOutputVisible := not FOutputVisible;
@@ -1853,7 +1944,16 @@ begin
     begin
       Exit;
     end;
+    if FSourceLine > 0 then
+    begin
+      FSourceTab := nstSource;
+    end;
     Refresh(LRetainCanvas, LRetainCanvas);
+
+    if ANode.ID = 'action-expand-source' then
+    begin
+      NyxFocusWithoutScroll(FCodeRenderer.InputFor('studio-code'));
+    end;
 
     if FSourceLine > 0 then
     begin
@@ -2706,6 +2806,8 @@ begin
   CaptureNewStateDraft;
   LValue := DefaultNyxStudioPresentation;
   LValue.CodeVisible := FCodeVisible;
+  LValue.SourceTab := FSourceTab;
+  LValue.SourceExpanded := FSourceExpanded;
   LValue.CanvasPercent := FCanvasPercent;
   LValue.Phone := FPhone;
   LValue.Preview := FPreview;
@@ -2796,6 +2898,8 @@ begin
       ordinary recovery/agent admission; preferences cannot replace its pair. }
     LValue := DecodeNyxStudioPresentation(LSaved);
     FCodeVisible := LValue.CodeVisible;
+    FSourceTab := LValue.SourceTab;
+    FSourceExpanded := LValue.SourceExpanded;
     FCanvasPercent := LValue.CanvasPercent;
     FPhone := LValue.Phone;
     FPreview := LValue.Preview;

@@ -951,3 +951,31 @@ semantic workflow owner, reusing the admitted command contract instead of a
 second authoring implementation. Complete source/import workflows, comfortable
 large-project editing, ordinary both-target editor outcomes and observing
 deployment retain their original requirements. No task moves to DONE.
+
+## Source workspace and expanded editor — 2026-10-05
+
+The user's source UX requirement belongs to original criterion 3: compiler
+messages must have independent space, and the same editor must expand into a
+floating modal and return with its draft, selection and project presentation.
+The shared Nyx composition now supplies Source/Compiler messages views and
+Expand/Close through public typed modal options/adapters. Native root fill sizing
+follows viewport/window resizing; owner restoration precedes reparenting focused
+controls. Per-project version-3 preferences retain exact version-2 migration.
+
+Actual Win32 qualification passes 30 and shared presentation/project checks pass
+225 on each native compiler, with zero leaks. Native Studio/browser Studio/module
+worker compile; current browser/phone interaction and authenticated observation
+retain their permitted-host gate. Existing native editor/source regressions,
+English captures and retained failures are recorded in WORK.md. Source rendering
+still needs both-target interaction/accessibility, broader metrics and ordinary
+large-project/editor acceptance; a native capture does not qualify phone behavior.
+
+Criteria 1/2 retain acceptance; criterion 3 remains open. Its no-closure count
+advances **26→27** once; workflow **8** records the distinct paired helper-signature
+packet. Renderer **3**, native authoring **7** and delivery **1** are unchanged.
+Reassessment ends local source/modal fixture expansion after relevant regressions.
+Next qualify current browser/phone return, focus, keyboard and project-switching
+through a permitted host, then return to remaining general-source/reusable
+integration. No listener/deployment retry, smaller passing scope or DONE claim
+substitutes the original acceptance gates.
+See [evidence](../WORK.md#source-workspace-and-expanded-editor--2026-10-05).

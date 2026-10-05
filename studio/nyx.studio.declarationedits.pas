@@ -37,7 +37,7 @@ type
   { Closed ordered intent. Pascal fragments are explicit source boundaries.
     Creation owns its typed declaration; removal acknowledges every exact
     counterpart; implementation edits reuse the qualified routine contract. }
-  TNyxDeclarationAction = (daCreate, daEdit, daRemove);
+  TNyxDeclarationAction = (daCreate, daEdit, daRemove, daSignature);
   TNyxDeclarationEdit = record
   private
     FAction: TNyxDeclarationAction;
@@ -73,6 +73,11 @@ function NyxEditDeclaration(const ARoutine: TNyxRoutineRef;
   Empty expected declaration denotes implementation-only visibility. Retained
   possible references and ambiguous ownership refuse during Candidate. }
 function NyxRemoveDeclaration(const ARoutine: TNyxRoutineRef;
+  const AExpectedSignature, AExpectedImplementation, AExpectedDeclaration: TNyxText): TNyxDeclarationEdit;
+{ Own a complete typed signature/body replacement plus exact old counterparts.
+  Routine identity and visibility remain unchanged. Caller edits can share the
+  group; ordinary compiler diagnostics still establish type correctness. }
+function NyxChangeDeclarationSignature(const AReplacement: TNyxRoutineDeclaration;
   const AExpectedSignature, AExpectedImplementation, AExpectedDeclaration: TNyxText): TNyxDeclarationEdit;
 { Own a copied, ordered group of 1..16 proposals within the total text budget.
   Construction validates the group; Candidate never mutates the supplied pair. }
@@ -156,6 +161,19 @@ begin
   Result.FExpectedDeclaration := AExpectedDeclaration;
 end;
 
+function NyxChangeDeclarationSignature(const AReplacement: TNyxRoutineDeclaration;
+  const AExpectedSignature, AExpectedImplementation, AExpectedDeclaration: TNyxText): TNyxDeclarationEdit;
+begin
+  Result := NyxCreateDeclaration(AReplacement);
+  Result.FAction := daSignature;
+  DeclarationCharacters(AExpectedSignature);
+  DeclarationCharacters(AExpectedImplementation);
+  DeclarationCharacters(AExpectedDeclaration);
+  Result.FExpectedSignature := AExpectedSignature;
+  Result.FExpectedImplementation := AExpectedImplementation;
+  Result.FExpectedDeclaration := AExpectedDeclaration;
+end;
+
 constructor TNyxDeclarationPatch.Create(const AChanges: array of TNyxDeclarationEdit);
 var
   LIndex: Integer;
@@ -179,6 +197,10 @@ begin
           AChanges[LIndex].FExpectedImplementation, AChanges[LIndex].FImplementation);
       Ord(daRemove):
         FChanges[LIndex] := NyxRemoveDeclaration(AChanges[LIndex].Routine,
+          AChanges[LIndex].FExpectedSignature, AChanges[LIndex].FExpectedImplementation,
+          AChanges[LIndex].FExpectedDeclaration);
+      Ord(daSignature):
+        FChanges[LIndex] := NyxChangeDeclarationSignature(AChanges[LIndex].FDeclaration,
           AChanges[LIndex].FExpectedSignature, AChanges[LIndex].FExpectedImplementation,
           AChanges[LIndex].FExpectedDeclaration);
     else
@@ -225,6 +247,10 @@ begin
           FChanges[LIndex].FExpectedImplementation, FChanges[LIndex].FImplementation);
       daRemove:
         LSource := RemoveNyxRoutineDeclaration(LSource, FChanges[LIndex].Routine,
+          FChanges[LIndex].FExpectedSignature, FChanges[LIndex].FExpectedImplementation,
+          FChanges[LIndex].FExpectedDeclaration);
+      daSignature:
+        LSource := ReplaceNyxRoutineDeclaration(LSource, FChanges[LIndex].FDeclaration,
           FChanges[LIndex].FExpectedSignature, FChanges[LIndex].FExpectedImplementation,
           FChanges[LIndex].FExpectedDeclaration);
     end;
@@ -283,9 +309,14 @@ begin
     LOp := LValue.Field('op').AsText;
     LAllowed := '|op|routine|expectedSignature|expectedImplementation|expectedDeclaration|';
 
-    if LOp = 'create' then
+    if (LOp = 'create') or (LOp = 'signature') then
     begin
       LAllowed := '|op|routine|kind|visibility|signature|implementation|';
+
+      if LOp = 'signature' then
+      begin
+        LAllowed := LAllowed + 'expectedSignature|expectedImplementation|expectedDeclaration|';
+      end;
     end
     else if LOp = 'edit' then
     begin
@@ -293,7 +324,7 @@ begin
     end
     else if LOp <> 'remove' then
     begin
-      raise ENyxModel.Create('Declaration action must be create, edit or remove');
+      raise ENyxModel.Create('Declaration action must be create, edit, remove or signature');
     end;
     for LKey := 0 to LValue.Count - 1 do
     begin
@@ -304,7 +335,7 @@ begin
       end;
     end;
 
-    if LOp = 'create' then
+    if (LOp = 'create') or (LOp = 'signature') then
     begin
       LKind := nrProcedure;
 
@@ -329,6 +360,13 @@ begin
       LChanges[LIndex] := NyxCreateDeclaration(NyxRoutineDeclaration(LKind,
         NyxRoutine(LValue.Field('routine').AsText), LVisibility,
         LValue.Field('signature').AsText, LValue.Field('implementation').AsText));
+
+      if LOp = 'signature' then
+      begin
+        LChanges[LIndex] := NyxChangeDeclarationSignature(LChanges[LIndex].FDeclaration,
+          LValue.Field('expectedSignature').AsText, LValue.Field('expectedImplementation').AsText,
+          LValue.Field('expectedDeclaration').AsText);
+      end;
     end
     else if LOp = 'edit' then
     begin

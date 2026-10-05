@@ -105,7 +105,14 @@ var
   LControl: TControl;
   LPaints: Integer;
 begin
-  LControl := GEditor.ShellView.ControlFor(AID);
+  if GEditor.ShellView.Root.Find(AID) <> nil then
+  begin
+    LControl := GEditor.ShellView.ControlFor(AID);
+  end
+  else
+  begin
+    LControl := GEditor.SourceView.ControlFor(AID);
+  end;
   Check(LControl <> nil, 'actual Nyx button exists: ' + AID);
   LPaints := GEditor.PaintCount;
   TControlAccess(LControl).Click;
@@ -139,7 +146,7 @@ var
   LControl: TControl;
   LTop: Integer;
 begin
-  LControl := GEditor.ShellView.ControlFor('studio-source-status');
+  LControl := GEditor.SourceView.ControlFor('studio-source-status');
   Check(LControl <> nil, 'source status is an actual mounted Nyx control');
   LTop := LControl.ClientToScreen(Point(0, 0)).Y - GForm.ClientToScreen(Point(0, 0)).Y;
   Check(LControl.Visible and (LTop >= 0) and

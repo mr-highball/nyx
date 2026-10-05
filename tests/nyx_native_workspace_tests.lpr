@@ -411,7 +411,14 @@ var
   LControl: TControl;
   LPaints: Integer;
 begin
-  LControl := GStudio.ShellView.ControlFor(AID);
+  if GStudio.ShellView.Root.Find(AID) <> nil then
+  begin
+    LControl := GStudio.ShellView.ControlFor(AID);
+  end
+  else
+  begin
+    LControl := GStudio.SourceView.ControlFor(AID);
+  end;
   Check(LControl <> nil, 'actual editor action exists: ' + AID);
   LPaints := GStudio.PaintCount;
   TControlAccess(LControl).Click;

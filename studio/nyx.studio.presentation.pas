@@ -40,6 +40,8 @@ type
     user's current search/filter, separately from global discovery preferences. }
   TNyxStudioPresentation = record
     CodeVisible: Boolean;
+    SourceTab: TNyxStudioSourceTab;
+    SourceExpanded: Boolean;
     CanvasPercent: Integer;
     Phone: Boolean;
     Preview: Boolean;
@@ -114,6 +116,8 @@ end;
 function DefaultNyxStudioPresentation: TNyxStudioPresentation;
 begin
   Result.CodeVisible := False;
+  Result.SourceTab := nstSource;
+  Result.SourceExpanded := False;
   Result.CanvasPercent := 65;
   Result.Phone := False;
   Result.Preview := False;
@@ -148,8 +152,10 @@ end;
 function EncodeNyxStudioPresentation(const AValue: TNyxStudioPresentation): TNyxText;
 begin
   Result := NyxObject([
-    NyxField('version', NyxData(2)),
+    NyxField('version', NyxData(3)),
     NyxField('codeVisible', NyxData(AValue.CodeVisible)),
+    NyxField('sourceTab', NyxData(Ord(AValue.SourceTab))),
+    NyxField('sourceExpanded', NyxData(AValue.SourceExpanded)),
     NyxField('canvasPercent', NyxData(AValue.CanvasPercent)),
     NyxField('phone', NyxData(AValue.Phone)),
     NyxField('preview', NyxData(AValue.Preview)),
@@ -198,13 +204,15 @@ var
   LValue: TNyxDataValue;
   LIndex: Integer;
 const
-  CKeys: TNyxText = '|version|codeVisible|canvasPercent|phone|preview|agentsVisible|panel|advancedProperties|inspectorTab|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
+  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|phone|preview|agentsVisible|panel|advancedProperties|inspectorTab|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
 begin
   Result := DefaultNyxStudioPresentation;
   LValue := TNyxDataValue.ParseJSON(AText);
 
-  if (LValue.Kind <> ndObject) or (LValue.Field('version').AsInteger <> 2) or
-    (LValue.Count <> 32) then
+  if (LValue.Kind <> ndObject) or
+    not (LValue.Field('version').AsInteger in [2, 3]) or
+    ((LValue.Field('version').AsInteger = 2) and (LValue.Count <> 32)) or
+    ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) then
   begin
     raise ENyxModel.Create('Unsupported editor presentation packet');
   end;
@@ -212,12 +220,23 @@ begin
   begin
 
     if (Pos('|', LValue.Key(LIndex)) > 0) or
-      (Pos('|' + LValue.Key(LIndex) + '|', CKeys) = 0) then
+      (Pos('|' + LValue.Key(LIndex) + '|', CKeys) = 0) or
+      ((LValue.Field('version').AsInteger = 2) and
+        ((LValue.Key(LIndex) = 'sourceTab') or
+          (LValue.Key(LIndex) = 'sourceExpanded'))) then
     begin
       raise ENyxModel.Create('Unknown editor presentation field');
     end;
   end;
   Result.CodeVisible := LValue.Field('codeVisible').AsBoolean;
+  { Version 2 preferences retain their original strict shape and default to the
+    source view. Version 3 adds only typed per-project presentation choices. }
+  if LValue.Field('version').AsInteger = 3 then
+  begin
+    Result.SourceTab := TNyxStudioSourceTab(IntegerValue(LValue, 'sourceTab',
+      Ord(Low(TNyxStudioSourceTab)), Ord(High(TNyxStudioSourceTab))));
+    Result.SourceExpanded := LValue.Field('sourceExpanded').AsBoolean;
+  end;
   Result.CanvasPercent := IntegerValue(LValue, 'canvasPercent', 10, 90);
   Result.Phone := LValue.Field('phone').AsBoolean;
   Result.Preview := LValue.Field('preview').AsBoolean;

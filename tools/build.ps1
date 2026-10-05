@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1455,6 +1455,57 @@ try {
     exit 0
   }
 
+  if ($Target -eq 'source-editor') {
+    # Pascal qualifies retained physical controls, modal resizing and strict
+    # per-project presentation migration. This builds ordinary Studio binaries
+    # without starting a listener or refreshing private MCP configuration.
+    $nyxSourceEditorRoot = Join-Path $nyxRoot 'build/source-editor'
+    $nyxSourceEditorNative = Join-Path $nyxSourceEditorRoot 'native'
+    $nyxSourceEditorLcl = Join-Path $nyxSourceEditorRoot 'lcl'
+    $nyxSourceEditorBrowser = Join-Path $nyxSourceEditorRoot 'browser'
+
+    if ($BrowserOutput) { $nyxSourceEditorBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxSourceEditorNative,
+      $nyxSourceEditorLcl, $nyxSourceEditorBrowser | Out-Null
+    $nyxSourceEditorFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxSourceEditorNative", "-FE$nyxSourceEditorNative")
+    Invoke-NyxCompiler $nyxFpc ($nyxSourceEditorFlags + @('tests/nyx_workspace_tests.lpr'))
+    & (Join-Path $nyxSourceEditorNative 'nyx_workspace_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Native per-project presentation qualification failed' }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxSourceEditorPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxSourceEditorLclFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests',
+      "-Fu$nyxLazarus/lcl/units/$nyxSourceEditorPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxSourceEditorPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxSourceEditorPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxSourceEditorPlatform",
+      "-FU$nyxSourceEditorLcl", "-FE$nyxSourceEditorLcl")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxSourceEditorLclFlags + @('tests/nyx_workspace_tests.lpr'))
+    & (Join-Path $nyxSourceEditorLcl 'nyx_workspace_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Matched per-project presentation qualification failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxSourceEditorLclFlags + @('tests/nyx_source_workspace_controls.lpr'))
+    & (Join-Path $nyxSourceEditorLcl 'nyx_source_workspace_controls.exe') $nyxSourceEditorLcl
+
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native source workspace qualification failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxSourceEditorLclFlags + @('studio/nyx_studio_native.lpr'))
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxSourceEditorProgram in @('tests/nyx_workspace_tests.lpr', 'studio/nyx_studio.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests',
+        '-Jirtl.js', "-FE$nyxSourceEditorBrowser", $nyxSourceEditorProgram)
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxSourceEditorBrowser 'rtl.js')
+    foreach ($nyxSourceEditorHost in @('index.html', 'workspaces.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxSourceEditorHost") -Destination $nyxSourceEditorBrowser
+    }
+    Write-Host 'Source editor consumers staged; browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
   if ($Target -eq 'pascal-imports') {
     # Pascal owns lexical/semantic/refusal assertions and the exact companion.
     # This target starts no listener and touches no observing project/config.
@@ -1597,12 +1648,37 @@ try {
     & (Join-Path $nyxDeclarationLcl 'nyx_declaration_controls.exe') (Join-Path $nyxDeclarationExport 'design.nyx')
 
     if ($LASTEXITCODE -ne 0) { throw 'Exact compiled declaration controls failed' }
+    # The exact new public signature compiles above. Diagnose a separately
+    # maintained old caller with both native compilers; tool/unit failures must
+    # never count as the intended parameter-contract rejection.
+    foreach ($nyxDeclarationDiagnosticCompiler in @($nyxFpc, $nyxLclFpc)) {
+      $nyxDeclarationDiagnostic = & $nyxDeclarationDiagnosticCompiler @nyxDeclarationFlags "-Fu$nyxDeclarationExport" 'tests/compile_fail/nyx_outdated_helper_call.lpr' 2>&1
+      $nyxDeclarationDiagnosticExit = $LASTEXITCODE
+      $nyxDeclarationDiagnosticText = $nyxDeclarationDiagnostic -join [Environment]::NewLine
+
+      if ($nyxDeclarationDiagnosticExit -eq 0 -or
+        $nyxDeclarationDiagnosticText -notmatch 'Error:.*(number of parameters|arguments|Incompatible types).*EnglishCaption') {
+        Write-Host $nyxDeclarationDiagnosticText
+        throw 'Expected native stale-caller signature diagnostic was not established'
+      }
+      Write-Host 'PASS native compiler diagnoses the outdated public helper caller'
+    }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     foreach ($nyxDeclarationProgram in @('nyx_declaration_lexical_tests', 'nyx_declaration_tests', 'nyx_declaration_controls')) {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests',
         '-Jirtl.js', "-Fu$nyxDeclarationExport", "-FE$nyxDeclarationBrowser", "tests/$nyxDeclarationProgram.lpr")
     }
+    $nyxDeclarationDiagnostic = & $nyxPas2js '-B' '-Tbrowser' '-Mdelphi' '-Fusrc' '-Fustudio' "-Fu$nyxDeclarationExport" "-FE$nyxDeclarationBrowser" 'tests/compile_fail/nyx_outdated_helper_call.lpr' 2>&1
+    $nyxDeclarationDiagnosticExit = $LASTEXITCODE
+    $nyxDeclarationDiagnosticText = $nyxDeclarationDiagnostic -join [Environment]::NewLine
+
+    if ($nyxDeclarationDiagnosticExit -eq 0 -or
+      $nyxDeclarationDiagnosticText -notmatch 'Error:.*(number of parameters|arguments|Incompatible types).*EnglishCaption') {
+      Write-Host $nyxDeclarationDiagnosticText
+      throw 'Expected browser stale-caller signature diagnostic was not established'
+    }
+    Write-Host 'PASS pas2js diagnoses the outdated public helper caller'
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxDeclarationBrowser 'rtl.js')
     foreach ($nyxDeclarationHost in @('declaration-lexical.html', 'declaration-edits.html', 'declaration-controls.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxDeclarationHost") -Destination $nyxDeclarationBrowser

@@ -316,7 +316,14 @@ var
   LPaints: Integer;
 begin
   LPaints := GStudio.PaintCount;
-  TControlAccess(GStudio.ShellView.ControlFor(AID)).Click;
+  if GStudio.ShellView.Root.Find(AID) <> nil then
+  begin
+    TControlAccess(GStudio.ShellView.ControlFor(AID)).Click;
+  end
+  else
+  begin
+    TControlAccess(GStudio.SourceView.ControlFor(AID)).Click;
+  end;
   Check(GStudio.PaintCount = LPaints, 'native compiler action defers its paint: ' + AID);
   Pump;
 end;
@@ -940,7 +947,8 @@ begin
       Check(GStudio.Session.Source = LBroken, 'actual native source admission retains the exact helper for compilation');
       Click('action-build-app');
       Terminal('lcl', 'application', False);
-      LErrorAction := GStudio.ShellView.Root.Find('action-compiler-diagnostic-0');
+      Click('action-messages-tab');
+      LErrorAction := GStudio.SourceView.Root.Find('action-compiler-diagnostic-0');
       Check((LErrorAction <> nil) and (LErrorAction.Prop('enabled') <> 'false'),
         'real helper error exposes current source navigation through ordinary Nyx controls');
       Click('action-compiler-diagnostic-0');

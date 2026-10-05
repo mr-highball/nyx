@@ -96,7 +96,14 @@ procedure Click(const AID: TNyxText; AWait: Boolean = True);
 var
   LControl: TControl;
 begin
-  LControl := GStudio.ShellView.ControlFor(AID);
+  if GStudio.ShellView.Root.Find(AID) <> nil then
+  begin
+    LControl := GStudio.ShellView.ControlFor(AID);
+  end
+  else
+  begin
+    LControl := GStudio.SourceView.ControlFor(AID);
+  end;
   Check(LControl <> nil, 'Actual command exists / ' + AID);
   TControlAccess(LControl).Click;
 

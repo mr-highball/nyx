@@ -35,7 +35,7 @@ uses
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
   nyx.studio.workspaces, nyx.studio.builds, nyx.studio.editorbuild,
   nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl,
-  nyx.studio.sourcejobs;
+  nyx.studio.sourcejobs, nyx.modal, nyx.modal.lcl;
 
 type
   TNyxNativeStudio = class;
@@ -110,6 +110,11 @@ type
     FTheme: TNyxTheme;
     FShell: TNyxDocument;
     FCodeDocument: TNyxDocument;
+    FSourcePaneDocument: TNyxDocument;
+    FSourcePaneView: TNyxLCLRenderer;
+    FSourcePaneParking: TPanel;
+    FSourceModal: INyxLCLModalHost;
+    FSourceFocusPending: Boolean;
     FShellView: TNyxLCLRenderer;
     { Borrowed receiver registration; cancelled before any controller teardown. }
     FHierarchySubscription: INyxEventSubscription;
@@ -173,6 +178,7 @@ type
     procedure OpenProject;
     procedure AcceptRemote;
     procedure CapturePresentation;
+    procedure SourceModalDismiss;
     { Update independent source/status controls without replacing the title field
       that is currently notifying. Guard programmatic source feedback. }
     procedure UpdateTitleAndSource;
@@ -224,6 +230,9 @@ type
     property ShellView: TNyxLCLRenderer read FShellView;
     property CanvasView: TNyxLCLRenderer read FCanvasView;
     property CodeView: TNyxLCLRenderer read FCodeView;
+    { Borrowed source workspace/window contracts; destroy neither. }
+    property SourceView: TNyxLCLRenderer read FSourcePaneView;
+    property SourceModal: INyxLCLModalHost read FSourceModal;
     property PaintCount: Integer read FPaintCount;
     { UI-thread observation of queued/active presentation work. Source completion
       can precede its visible paint. False means no paint is pending, not that a
@@ -267,6 +276,9 @@ type
     ncCancelRoot,
     ncRemoveRoot,
     ncCode,
+    ncSourceTab,
+    ncMessagesTab,
+    ncExpandSource,
     ncOutputs,
     ncFiles,
     ncAdvanced,
@@ -322,6 +334,9 @@ const
     NyxStudioCancelRootID,
     NyxStudioRemoveRootID,
     'action-code',
+    'action-source-tab',
+    'action-messages-tab',
+    'action-expand-source',
     'action-outputs',
     'action-import',
     'action-advanced-properties',
@@ -509,11 +524,15 @@ begin
   FPreviewDirectory := IncludeTrailingPathDelimiter(ExpandFileName(AProjectDirectory)) +
     'compiled-previews';
   FState := DefaultNyxStudioViewState;
-  FState.CodePresentation := ncpHosted;
+  FState.CodePresentation := ncpPaneHosted;
   FState.Outputs := FOutputs;
   FShellView := TNyxLCLRenderer.Create(FTheme);
   FCanvasView := TNyxLCLRenderer.Create(FTheme);
   FCodeView := TNyxLCLRenderer.Create(FTheme);
+  FSourcePaneView := TNyxLCLRenderer.Create(FTheme);
+  FSourcePaneView.OnEvent := ShellEvent;
+  FSourceModal := NewNyxLCLModalHost(FHost);
+  FSourceModal.OnDismiss := SourceModalDismiss;
   FShellView.OnEvent := ShellEvent;
   FHierarchySubscription := SubscribeNyxStudioHierarchy(FShellView.Events, HierarchyEvent);
   FCanvasView.OnEvent := CanvasEvent;
@@ -524,6 +543,9 @@ begin
   FCodeParking := TPanel.Create(nil);
   FCodeParking.Parent := FHost;
   FCodeParking.Visible := False;
+  FSourcePaneParking := TPanel.Create(nil);
+  FSourcePaneParking.Parent := FHost;
+  FSourcePaneParking.Visible := False;
   TNativeHostAccess(FHost).OnResize := HostResize;
   FSavedPair := EncodeNyxProject(FSession.ProjectSnapshot);
   FInitialPair := FSavedPair;
@@ -570,11 +592,27 @@ begin
     TNativeHostAccess(FHost).OnResize := FPreviousResize;
   end;
   FCanvasView.Free;
+  if FSourceModal <> nil then
+  begin
+    FSourceModal.OnDismiss := nil;
+    FSourceModal.Hide;
+  end;
   FCodeView.Free;
+  FSourcePaneView.Free;
+
+  if FCodeParking <> nil then
+  begin
+    { A refused modal projection may still have borrowed this parking panel.
+      Retire it explicitly with the controller, after its code view unmounts. }
+    FCodeParking.Parent := FHost;
+  end;
+  FSourceModal := nil;
   FShellView.Free;
   FCanvasParking.Free;
   FCodeParking.Free;
+  FSourcePaneParking.Free;
   FCodeDocument.Free;
+  FSourcePaneDocument.Free;
   FShell.Free;
   FRootRemoval := nil;
   FCompilerReport := nil;
@@ -1277,7 +1315,7 @@ begin
       LProject.SourceCommands := TNyxSourceCommands.Create(LProject.Session,
         LProject.SourceChanged);
       LProject.State := DefaultNyxStudioViewState;
-      LProject.State.CodePresentation := ncpHosted;
+      LProject.State.CodePresentation := ncpPaneHosted;
       LProject.State.Outputs := FOutputs;
       LProject.SavedPair := EncodeNyxProject(LProject.Session.ProjectSnapshot);
       LProject.Bridge := TNyxStudioAgentBridge.Create(LProject.Session,
@@ -1413,6 +1451,13 @@ begin
   end;
 end;
 
+procedure TNyxNativeStudio.SourceModalDismiss;
+begin
+  FState.SourceExpanded := False;
+  FSourceFocusPending := True;
+  RequestRefresh;
+end;
+
 procedure TNyxNativeStudio.CapturePresentation;
 var
   LNode: TNyxNode;
@@ -1439,6 +1484,11 @@ end;
 
 function TNyxNativeStudio.ComposeShell: TNyxDocument;
 begin
+
+  if FSourceLine > 0 then
+  begin
+    FState.SourceTab := nstSource;
+  end;
   FState.Compact := FHost.ClientWidth < 900;
   FState.RootRemoval := NyxNull;
   FState.Agents := GetAgentState;
@@ -1460,8 +1510,9 @@ var
   LShell: TNyxDocument;
   LCanvasHost: TWinControl;
   LCodeHost: TWinControl;
+  LSourceHost: TWinControl;
+  LSourceDocument: TNyxDocument;
   LOldCanvasHost: TWinControl;
-  LOldCodeHost: TWinControl;
   LFocus: TWinControl;
   LSelection: TNyxTextSelection;
   LRetainFocus: Boolean;
@@ -1581,12 +1632,19 @@ begin
       FCanvasRestores := nil;
     end;
     LOldCanvasHost := nil;
-    LOldCodeHost := nil;
 
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-capture');{$endif}
     LShell := ComposeShell;
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-compose');{$endif}
     try
+
+      { The independently owned source workspace must leave a retiring chrome
+        host before LCL frees that host's physical children. Modal content already
+        lives in its independent window and needs no parking. }
+      if (FSourcePaneView.Root <> nil) and not FSourceModal.IsOpen then
+      begin
+        FSourcePaneView.MoveHost(FSourcePaneParking);
+      end;
 
       if not FShellView.TryRefresh(LShell, LShell.Pages[0], False) then
       begin
@@ -1602,11 +1660,8 @@ begin
           FCanvasView.MoveHost(FCanvasParking);
         end;
 
-        if FCodeView.Root <> nil then
-        begin
-          LOldCodeHost := FCodeView.ControlFor('studio-code').Parent.Parent;
-          FCodeView.MoveHost(FCodeParking);
-        end;
+        { Source/code already belong to their independent workspace, parked
+          above or mounted in the modal. Retiring chrome cannot free them. }
         {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-park');{$endif}
         FShellView.Render(LShell, LShell.Pages[0], FHost);
       end;
@@ -1619,10 +1674,6 @@ begin
         FCanvasView.MoveHost(LOldCanvasHost);
       end;
 
-      if LOldCodeHost <> nil then
-      begin
-        FCodeView.MoveHost(LOldCodeHost);
-      end;
       raise;
     end;
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-shell-render');{$endif}
@@ -1704,9 +1755,64 @@ begin
       end;
     end;
 
-    if FShell.Find('studio-code-host') <> nil then
+    if FShell.Find('studio-source-mount') <> nil then
     begin
-      LCodeHost := TWinControl(FShellView.ControlFor('studio-code-host'));
+      LSourceHost := TWinControl(FShellView.ControlFor('studio-source-mount'));
+
+      if FState.SourceExpanded then
+      begin
+        FSourceModal.Show(NyxModal('Pascal source'));
+        LSourceHost := FSourceModal.Control;
+      end
+      else
+      begin
+        { Restore the exact owner's input state before reparenting focused
+          native controls. LCL may focus the new form during SetParent; moving
+          into a still-disabled owner can raise before the return completes.
+          Hide retains this host and its children until the ordinary view moves. }
+        FSourceModal.Hide;
+      end;
+      LSourceDocument := TNyxDocument.Create;
+      try
+        LSourceDocument.AddPage(BuildNyxStudioSourcePane(FSession, FState, FCompilerReport));
+        { The retained renderer follows its current host, including native
+          modal resizing. A captured pixel height would freeze this viewport. }
+        LSourceDocument.Pages[0].Configure.HeightSizing(nsFill).Done;
+
+        if not FSourcePaneView.TryRefresh(LSourceDocument, LSourceDocument.Pages[0], False) then
+        begin
+
+          if FCodeView.Root <> nil then
+          begin
+            { A diagnostics/status structure change can rebuild source chrome
+              while expanded. Park inside the same enabled modal window, rather
+              than moving focused controls into its disabled background owner. }
+            FCodeParking.Parent := LSourceHost;
+            FCodeView.MoveHost(FCodeParking);
+          end;
+          FSourcePaneView.Render(LSourceDocument, LSourceDocument.Pages[0], LSourceHost);
+        end
+        else
+        begin
+          FSourcePaneView.MoveHost(LSourceHost);
+        end;
+        FSourcePaneDocument.Free;
+        FSourcePaneDocument := LSourceDocument;
+        LSourceDocument := nil;
+      finally
+        LSourceDocument.Free;
+      end;
+
+      LCodeHost := TWinControl(FSourcePaneView.ControlFor('studio-code-host'));
+    end
+    else
+    begin
+      FSourceModal.Hide;
+
+      if FSourcePaneView.Root <> nil then
+      begin
+        FSourcePaneView.MoveHost(FSourcePaneParking);
+      end;
     end;
 
     if LCodeHost <> nil then
@@ -1717,14 +1823,24 @@ begin
         FreeAndNil(FCodeDocument);
         FCodeDocument := TNyxDocument.Create;
         FCodeDocument.AddPage(NewNyxStudioCodeEditor(FSession.DraftSource));
-        FCodeDocument.Pages[0].Configure.Height(LCodeHost.ClientHeight).Done;
+        FCodeDocument.Pages[0].Configure.HeightSizing(nsFill).Done;
         FCodeView.Render(FCodeDocument, FCodeDocument.Pages[0], LCodeHost);
       end
       else
       begin
-        FCodeView.Root.Configure.Value(FSession.DraftSource).Height(LCodeHost.ClientHeight).Done;
+        FCodeView.Root.Configure.Value(FSession.DraftSource)
+          .Clear(atHeight).HeightSizing(nsFill).Done;
         FCodeView.Sync;
         FCodeView.MoveHost(LCodeHost);
+      end;
+      { This temporary empty parking host must leave the modal before a later
+        MoveHost admission requires its target to contain no other controls. }
+      FCodeParking.Parent := FHost;
+
+      if FSourceFocusPending and (FState.SourceTab = nstSource) then
+      begin
+        TWinControl(FCodeView.InputFor('studio-code')).SetFocus;
+        FSourceFocusPending := False;
       end;
 
       if FSourceLine > 0 then
@@ -2419,6 +2535,21 @@ begin
             begin
               LChanged := RouteNyxRootRemoval(FSession, ANode.ID,
                 AEvent.Trigger, FRootRemoval) = nreRemoved;
+            end;
+          ncSourceTab:
+            begin
+              FState.SourceTab := nstSource;
+              FSourceFocusPending := True;
+            end;
+          ncMessagesTab:
+            begin
+              FState.SourceTab := nstMessages;
+            end;
+          ncExpandSource:
+            begin
+              FState.SourceExpanded := not FState.SourceExpanded;
+              FState.SourceTab := nstSource;
+              FSourceFocusPending := True;
             end;
           ncCode:
             begin

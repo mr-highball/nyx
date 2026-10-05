@@ -130,6 +130,8 @@ begin
     'Large platform scroll saturates at the portable signed bound');
   LOriginal := DefaultNyxStudioPresentation;
   LOriginal.CodeVisible := True;
+  LOriginal.SourceTab := nstMessages;
+  LOriginal.SourceExpanded := True;
   LOriginal.CanvasPercent := 10;
   LOriginal.Phone := True;
   LOriginal.AgentsVisible := True;
@@ -151,10 +153,37 @@ begin
   LDecoded := DecodeNyxStudioPresentation(EncodeNyxStudioPresentation(LOriginal));
   Check(LDecoded.CanvasPercent = 90, 'Presentation accepts both public splitter boundaries');
   LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LOriginal));
-  for LCase := 0 to 13 do
+  { The previous strict packet remains readable. New per-project choices use
+    their defaults, while every earlier preference and Unicode value survives. }
+  SetLength(LFields, LPacket.Count - 2);
+  LCase := 0;
+  for LIndex := 0 to LPacket.Count - 1 do
+  begin
+
+    if (LPacket.Key(LIndex) <> 'sourceTab') and
+      (LPacket.Key(LIndex) <> 'sourceExpanded') then
+    begin
+      LValue := LPacket.Field(LPacket.Key(LIndex));
+
+      if LPacket.Key(LIndex) = 'version' then
+      begin
+        LValue := NyxData(2);
+      end;
+      LFields[LCase] := NyxField(LPacket.Key(LIndex), LValue);
+      Inc(LCase);
+    end;
+  end;
+  LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
+  Check((LDecoded.SourceTab = nstSource) and not LDecoded.SourceExpanded,
+    'Version 2 preferences migrate to the inline source view');
+  LDecoded.SourceTab := LOriginal.SourceTab;
+  LDecoded.SourceExpanded := LOriginal.SourceExpanded;
+  Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
+    'Migration retains every earlier per-project preference exactly');
+  for LCase := 0 to 17 do
   begin
     LKey := 'version';
-    LValue := NyxData(3);
+    LValue := NyxData(4);
     case LCase of
       1:
       begin
@@ -220,6 +249,26 @@ begin
       begin
         LKey := 'panel';
         LValue := NyxData(0.5);
+      end;
+      14:
+      begin
+        LKey := 'sourceTab';
+        LValue := NyxData(Ord(High(TNyxStudioSourceTab)) + 1);
+      end;
+      15:
+      begin
+        LKey := 'sourceTab';
+        LValue := NyxData('source');
+      end;
+      16:
+      begin
+        LKey := 'sourceExpanded';
+        LValue := NyxData('true');
+      end;
+      17:
+      begin
+        LKey := 'version';
+        LValue := NyxData(2);
       end;
     end;
     SetLength(LFields, LPacket.Count);

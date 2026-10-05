@@ -81,7 +81,7 @@ From the repository, run:
 
 Individual build targets are `core`, `generated`, `collections`, `collection-views`,
 `collection-authoring`, `collection-inspectors`, `collection-bindings`,
-`source-workspace`, `pascal-imports`, `pascal-routines`, `pascal-declarations`,
+`source-workspace`, `source-editor`, `pascal-imports`, `pascal-routines`, `pascal-declarations`,
 `agents`, `state-bindings`, `split`, `interactions`,
 `named-events`, `viewport`, `catalog`, `browser`, `studio`, `lcl`, `http`,
 `visual` and `all`.
@@ -757,13 +757,34 @@ The maintained command executes native lexical/semantic checks, actual offline
 MCP discovery and an unchanged emitted companion with mounted Win32 memo input.
 One semantic group creates private/public helpers, updates a retained class
 method and removes an obsolete public helper. Actual compilation/execution
-qualifies the new six-character policy and English caption; dedicated Unicode
+qualifies helper signature/result and related caller changes as one paired
+operation, then the new five-character policy and parameterized English caption; dedicated Unicode
 input verifies scalar limits and exact rejected-value retention.
 
 Native/export/LCL/browser artifacts live under `build/pascal-declarations/`;
 `-BrowserOutput` chooses separate staging. Matching pas2js consumers, RTL and
 three English hosts are staged. No listener, deployment, configuration refresh
 or active-project edit occurs. Browser runtime/updated authenticated observation,
-wider signature/class/full-unit authoring and full source synchronization retain
+wider class/full-unit authoring and full source synchronization retain
 their existing gates. External callers/type correctness need ordinary compiler
-diagnostics. See [evidence](../WORK.md#semantic-helper-declarations--2026-10-05).
+diagnostics. A separate outdated public-helper caller must produce the intended
+named parameter/type diagnostic on both native compilers and pas2js; a missing
+unit or unrelated failure does not count. See
+[evidence](../WORK.md#semantic-helper-signatures--2026-10-05).
+
+## Source workspace and expanded editor
+
+```powershell
+./tools/build.ps1 -Target source-editor
+```
+
+Pascal fixtures qualify strict per-project presentation version 3 on both native
+compilers, including exact migration from version 2. The actual Win32 controller
+exercises Source/Compiler messages switching, Expand/Close/Escape, retained memo
+identity/draft/selection and native window resizing. Its desktop and narrow
+captures, native Studio and browser Studio/module worker/portable counterparts
+are staged under `build/source-editor/`; `-BrowserOutput` selects isolated browser
+staging. This command launches no listener, changes no MCP enrollment and edits
+no active observing project. Current browser/phone interaction and observing
+deployment retain the recorded host gate. See
+[evidence](../WORK.md#source-workspace-and-expanded-editor--2026-10-05).

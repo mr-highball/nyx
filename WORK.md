@@ -7,7 +7,30 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest bounded packet: [semantic helper declarations](#semantic-helper-declarations--2026-10-05)
+Current user priority is source workspace usability under original codegen
+criterion 3: Source/Compiler messages views and an expanded floating source
+editor with Close/Escape, retained draft/selection, project preferences and
+portable public Nyx modal adapters. The previous goal turn was progress:
+845c698/2ba9107 are a verified clean/pushed declaration checkpoint. Its guarded
+paired signature return path now has 20/59 lexical/semantic checks on both native
+compilers, actual discovery 50, compiled native input nine, all three stale-caller
+compiler diagnostics and routine/callback regressions 31/72, with zero leaks.
+Current source UX passes 30 actual Win32 and 225 shared presentation/ownership
+checks on each native compiler. Browser compilation cannot close its existing
+execution/deployment gate. No full criterion closes: workflow no-closure is 8,
+codegen 27, renderer 3, native authoring 7 and delivery 1. Stop on lost editor
+identity/input, disabled-owner return, guessed source ownership or weakened
+publication; preserve failed evidence and the protected observing release.
+
+Latest bounded packet: [source workspace and expanded editor](#source-workspace-and-expanded-editor--2026-10-05).
+Native/modal qualification and original editor/source regressions are recorded
+below; actual current browser/phone observation still needs its permitted host.
+End local modal/fixture expansion after these relevant checks. Return to the
+remaining source/reusable integration and complete both-target ordinary editor
+outcomes with their existing owners; no partial source/Win32 claim substitutes
+full presentation, accessibility, performance or deployment acceptance.
+
+Preceding bounded packet: [semantic helper declarations](#semantic-helper-declarations--2026-10-05)
 extends `nyx_pascal` with exact signature windows and typed grouped helper
 creation, implementation editing and removal through one paired Undo step.
 Both native compilers pass 16 lexical and 36 semantic checks; final actual
@@ -7320,3 +7343,117 @@ signature return path remain explicit. No full criterion closes; the full goal
 remains active/incomplete. Exact handoff remote/clean/protected-process and final
 read-only activity proof is stored privately after pushing at
 `.local/codex-restart-check/declaration-remote-proof.json`.
+
+## Semantic helper signatures — 2026-10-05
+
+Workflow criterion 5's guarded signature return path now uses the same typed
+declaration group and paired source boundary. A complete replacement retains
+the exact acknowledged implementation signature/body and interface counterpart,
+then changes parameter/result and related explicitly authored callers together.
+Routine identity and visibility remain owned. Class/managed/conditional/overload
+boundaries, stale expected text, foreign receipts, no-op proposals, pending drafts
+and late group failures refuse without partial source/design/history publication.
+No caller rewrite or type success is inferred from source admission.
+
+| Evidence | Current result |
+| --- | --- |
+| Checked FPC 3.2.0 and matched 3.3.1 | 20 lexical / 59 semantic each, zero owned warnings/leaks |
+| Maintained `pascal-declarations` | Actual nineteen-tool/nine-mode discovery 50; unchanged compiled Win32 input nine |
+| Deliberately outdated public caller | Named parameter/type diagnostic on both native compilers and pas2js |
+| Existing source regressions | Routine 31 / callback 72, zero leaks |
+| Browser consumers | Lexical/semantic/generated input compile; execution remains gated |
+
+Logs remain under `build/signatures/native-first/`, `matched/`, `final/` and
+`regression/`. Both native exports and the maintained export have exact matching
+SHA-256 design `46DA063DD8EC5CFE83E674C001EB7A24483F6431ED14A7120BD4D00B3F12FF9D`
+and source `38854BB7691495D5F3C0C02FD2F5990DF8E39B79957751ED77CB3B5B58B5F1AC`.
+Actual compiled callbacks enforce the new five-character budget, parameterized
+English caption and exact supplementary-Unicode rejection. These are actual
+Win32 notifications, not hardware/IME or another widgetset qualification.
+
+Initial maintained runs in `maintained/` and `qualified/` stopped on an inadequate
+old-caller fixture: bare procedural values caused an unrelated I/O-type error.
+The final fixture assigns to a typed text destination and requires the intended
+named incompatibility/argument diagnostic. `diagnostic-probe/` retains the real
+native compiler error. The gate was not weakened to generic compilation failure.
+Seven installed pas2js RTL warnings remain visible; dependencies were not edited.
+
+This packet is progress, with no full criterion closure: workflow no-closure
+advances **7→8** once. Reassessment ends signature/schema/fixture expansion.
+The user-directed source UX below is the next concrete deliverable; class/full-unit
+and richer reusable/source workflows retain their original open owners. Current
+authenticated observing discovery/browser execution retain the existing host gate.
+
+## Source workspace and expanded editor — 2026-10-05
+
+The user's screenshot establishes compiler messages consuming nearly all source
+height. Original codegen criterion 3 now has a shared Nyx Source/Compiler messages
+workspace and Expand/Close actions. Messages occupy their own scroll area; the
+same independent source pane and code editor move into a public modal host.
+No second editor/draft is created, and presentation spends no document history.
+Per-project typed source-view/expanded preferences use strict version 3 with
+exact version-2 migration. Diagnostic navigation selects Source before its caret.
+
+`nyx.modal` supplies managed `INyxModalHost` with portable Show/Hide/options and
+borrowed dismiss notification. Browser DOM and LCL controls remain in adapters;
+all source UI content is ordinary public Nyx composition. Native fill sizing
+follows modal resize, and identical Show options preserve a manual resize.
+Close restores the exact owner's previous input state before reparenting focused
+controls. Structural source diagnostic rebuilds park code inside the enabled
+modal, and teardown restores borrowed parking ownership before host retirement.
+
+The maintained `source-editor` command executes **225** shared presentation/project
+checks on each native compiler and **30** actual Win32 source checks, with zero
+leaks/owned warnings. Actual controls cover Source/Messages, retained editor and
+draft/range, desktop/narrow/resize, Close/Escape, expanded rejected-draft diagnostics,
+expanded Restore/Apply and paired Undo. Earlier full editor/source regressions
+pass **74/39** with zero leaks; final current artifacts and logs live under
+`build/source-editor/final/`. Adapted event/collection/project/compiler fixtures
+compile; this packet does not claim their full service journeys were executed.
+Native Studio, browser Studio/module worker and portable presentation consumers
+compile. Final current full editor/source regressions also pass **74/39**, with
+zero leaks; all four adapted physical/service fixture programs compile. Matched
+staged RTL hashes agree; seven installed Classes warnings remain
+visible and zero owned warnings were introduced.
+
+Native desktop and narrow PNGs paint English source/workspace text and have been
+inspected. The desktop source grows from its earlier roughly 80 pixels to 174
+at the existing 65/35 proportion; expanded source receives the larger viewport.
+Existing native chrome/sidebar/footer metrics and complete accessibility,
+performance and other-widgetset outcomes remain open. The browser dialog follows
+HTML dialog/WAI guidance referenced in docs/native-studio.md, checked 2026-10-05;
+current browser/mobile rendering, keyboard, focus and observing deployment remain
+unqualified. Native captures are not phone evidence.
+
+Failed evidence is retained: `modal-first/` (missing Classes type),
+`modal-qualified/` (incorrect guessed fluent method), `modal-accepted/` (fixture
+missing Interfaces), the first maintained source run (unrealistic 200-pixel
+assertion), and `modal-final/`, `modal-return/`, `modal-command/`, `modal-status/`
+(resize/Close failure). Exact status showed `[TCustomForm.SetFocus] ... Cannot focus`;
+restoring the owner before transfer resolves it without replacing the memo.
+The outdated `regression/` export lacked today's required reusable named part;
+the existing current MCP-authored English fixture passes the maintained 74-check
+journey in `regression-final/`. No old fixture failure was counted as a pass.
+
+This user-directed packet is progress and closes no full criterion. Original
+codegen criterion 3 remains open; no-closure advances **26→27** once. Workflow
+**8**, renderer **3**, native authoring **7** and delivery **1** remain explicit;
+no DONE or percentage credit follows. End local modal/source fixture expansion
+after current relevant checks. Next qualify current browser/phone return, focus,
+keyboard and project switching through a permitted host, then return to broader
+source/reusable integration and complete ordinary both-target editor outcomes.
+
+Native semantic MCP remains primary and read-only for the active user project;
+the observed revision changed to **8** before this turn's source edits, with home,
+one page/reusable root, no pending draft, Undo unavailable and Redo available.
+No live user source/design/history mutation, service stop, compiler reinstall,
+dependency edit or private configuration refresh occurred. All eight protected
+process identities match. Source catalog nineteen/protected release fifteen
+remains explicit; offline semantic/physical consumers qualify source-only changes.
+
+The earlier automatic approval rejection of listener launch remains "blocked by
+policy", with no further stated reason. No equivalent listener, service replacement,
+live artifact deployment or configuration refresh was attempted. The phone retains
+the protected earlier release. Current browser/authenticated observation and the
+full Nyx/Nyx Studio goal remain open; the goal is active/incomplete. The authorized
+hello-nyx remote checkpoint follows after final qualification.

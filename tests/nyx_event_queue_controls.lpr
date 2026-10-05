@@ -89,7 +89,14 @@ procedure Click(const AID: TNyxText; AWait: Boolean = True);
 var
   LControl: TControl;
 begin
-  LControl := GStudio.ShellView.ControlFor(AID);
+  if GStudio.ShellView.Root.Find(AID) <> nil then
+  begin
+    LControl := GStudio.ShellView.ControlFor(AID);
+  end
+  else
+  begin
+    LControl := GStudio.SourceView.ControlFor(AID);
+  end;
   Check(LControl <> nil, 'Actual command exists / ' + AID);
   TControlAccess(LControl).Click;
 
@@ -452,7 +459,7 @@ begin
     Check(not GStudio.Session.Document.Find('second-search').Extensions.Has(
       NyxExtension(NyxCallbacksKey)), 'Named addition leaves the other reusable instance independent');
     Click('action-code');
-    Check((GStudio.ShellView.Root.Find('studio-code-host') = nil) and not CodeShowing,
+    Check((GStudio.ShellView.Root.Find('studio-source-mount') = nil) and not CodeShowing,
       'Source is deliberately hidden before navigation during preparation');
     Click(LKey + '-add', False);
     Select('second-search');

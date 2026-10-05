@@ -617,6 +617,14 @@ require the broader source workflow.
 - `edit`: `routine`, exact `expectedImplementation` and new `implementation`.
   This reuses guarded routine replacement, including qualified method bodies,
   while keeping existing signatures.
+- `signature`: the same typed declaration fields as `create`, plus exact
+  `expectedSignature`, `expectedImplementation` and `expectedDeclaration`.
+  An ordinary helper's parameter/result contract and complete body change
+  together; a public helper's interface counterpart changes in the same group.
+  The identity and visibility must stay the same. Include explicit related
+  caller body edits in this ordered group; Nyx does not guess caller rewrites.
+  Exact acknowledgement, conditional/overload ownership and no-op refusal
+  apply before independent admission and one paired Undo publication.
 - `remove`: `routine`, exact `expectedSignature`, `expectedImplementation` and
   `expectedDeclaration` (empty for a private helper). Removal retires its owned
   implementation and interface together. Possible retained identifier references,
@@ -624,7 +632,7 @@ require the broader source workflow.
   not treated as callers. Lexical shadows/member names can be ambiguous and
   conservatively refuse; this does not claim Pascal type resolution.
 
-Creation/removal concern ordinary unit helpers. Class-member signatures and
+Creation/removal/signature replacement concern ordinary unit helpers. Class-member signatures and
 compiler-managed BuildNyxDocument/BindNyxCallbacks remain protected. Definition
 ordering retains successive helpers before class/managed consumers and can
 choose an earlier safe site for a possible existing caller. Attached inline
@@ -654,7 +662,9 @@ authority/receipt and outer workspace/review guards apply. Each fragment permits
 qualification creates private/public helpers, updates a class method, removes
 an obsolete public helper and executes the unchanged compiled companion's actual
 memo callback. External-unit callers and expression/type correctness still need
-ordinary `nyx_build` diagnostics. Signature/class/full-unit authoring, updated
+ordinary `nyx_build` diagnostics. Guarded signature replacement is source admission,
+not successful compilation or execution: incompatible local/external callers
+still need the ordinary compiler result. Class/full-unit authoring, updated
 authenticated observing deployment and complete source quality retain their
 original open owners.
 

@@ -106,7 +106,16 @@ var
   LControl: TControl;
   LPaints: Integer;
 begin
-  LControl := GStudio.ShellView.ControlFor(AID);
+  { Source actions live in a retained independent Nyx view, which can also be
+    mounted inside the expanded editor. Other editor chrome stays in ShellView. }
+  if GStudio.ShellView.Root.Find(AID) <> nil then
+  begin
+    LControl := GStudio.ShellView.ControlFor(AID);
+  end
+  else
+  begin
+    LControl := GStudio.SourceView.ControlFor(AID);
+  end;
   WriteLn('Editor action ', AID);
   Flush(Output);
   LPaints := GStudio.PaintCount;

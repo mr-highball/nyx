@@ -102,8 +102,8 @@ begin
     Check(LMode.Field('mode').Field('const').AsText = 'edit-declarations', 'Grouped declaration authoring');
     LChange := LMode.Field('changes');
     Check((LChange.Field('maxItems').AsInteger = 16) and
-      (LChange.Field('items').Field('oneOf').Count = 3), 'Sixteen typed create/edit/remove operations');
-    for LIndex := 0 to 2 do
+      (LChange.Field('items').Field('oneOf').Count = 4), 'Sixteen typed create/edit/remove/signature operations');
+    for LIndex := 0 to 3 do
     begin
       LMode := LChange.Field('items').Field('oneOf').Item(LIndex);
       Check(not LMode.Field('additionalProperties').AsBoolean and
@@ -115,6 +115,15 @@ begin
       (LMode.Field('visibility').Field('enum').Count = 2), 'Creation choices are closed Pascal domains');
     LMode := LChange.Field('items').Field('oneOf').Item(2);
     Check(LMode.Field('required').Count = 5, 'Removal acknowledges both exact source counterparts');
+    LMode := LChange.Field('items').Field('oneOf').Item(3);
+    Check((LMode.Field('properties').Field('op').Field('const').AsText = 'signature') and
+      (LMode.Field('required').Count = 9), 'Signature replacement requires complete proposed/accepted counterparts');
+    Check((LMode.Field('properties').Field('kind').Field('enum').Count = 2) and
+      (LMode.Field('properties').Field('visibility').Field('enum').Count = 2),
+      'Signature kind/visibility remain closed Pascal choices');
+    Check((LMode.Field('properties').Field('expectedSignature').Field('maxLength').AsInteger = 32768) and
+      (LMode.Field('properties').Field('expectedDeclaration').Field('maxLength').AsInteger = 32768),
+      'Every acknowledged signature counterpart has the declared fragment budget');
     WriteLn('PASS ', LChecks, ' actual Pascal declaration discovery checks');
   except
     on LException: Exception do

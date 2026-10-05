@@ -92,6 +92,39 @@ begin
     LAfter := RemoveNyxRoutineDeclaration(LSource, LRoutine.Routine,
       LRoutine.Signature, LRoutine.Code, LSite.Declaration);
     Check(Pos('LimitText', LAfter) = 0, 'paired removal retires interface and implementation together');
+    LDefinition := NyxRoutineDeclaration(nrFunction, LRoutine.Routine, rvInterface,
+      'function LimitText(const AValue: TNyxText; AMaximum: Integer): TNyxText;',
+      #10 + 'begin' + #10 + '  Result := AValue;' + #10 + 'end;');
+    LAfter := ReplaceNyxRoutineDeclaration(LSource, LDefinition,
+      LRoutine.Signature, LRoutine.Code, LSite.Declaration);
+    Check((ReadNyxRoutineDeclaration(LAfter, LRoutine.Routine).Declaration = LDefinition.Signature) and
+      (ReadNyxRoutineSource(LAfter, LRoutine.Routine).Signature = LDefinition.Signature),
+      'public parameter/result replacement owns both matching counterparts');
+    Check(ReadNyxRoutineSource(LAfter, LRoutine.Routine).Code = LDefinition.Code,
+      'replacement body retains the exact supplied source');
+    LRejected := False;
+    try
+      ReplaceNyxRoutineDeclaration(LSource, LDefinition,
+        LRoutine.Signature, LRoutine.Code, 'stale prototype');
+    except
+      on Exception do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'exact public prototype acknowledgement cannot be guessed');
+    LRejected := False;
+    try
+      ReplaceNyxRoutineDeclaration(LSource,
+        NyxRoutineDeclaration(nrFunction, LRoutine.Routine, rvImplementation,
+          LDefinition.Signature, LDefinition.Code), LRoutine.Signature, LRoutine.Code, LSite.Declaration);
+    except
+      on Exception do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'signature replacement retains public visibility');
     LDefinition := NyxRoutineDeclaration(nrProcedure, NyxRoutine('PrivateNote'), rvImplementation,
       'procedure PrivateNote;', #10 + 'begin' + #10 + 'end;');
     LSource := AddNyxRoutineDeclaration(LBase, LDefinition);

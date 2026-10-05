@@ -641,3 +641,25 @@ Current task and return path are maintained in [WORK.md](WORK.md).
   unchanged. Next deliver guarded paired routine signature authoring, preserving
   the original full general-source/reusable/parity/presentation requirements.
   See [evidence](WORK.md#semantic-helper-declarations--2026-10-05).
+
+- Guarded unit-helper signature changes now retain exact old counterparts and
+  explicit related caller edits in one paired Undo step. Both native compilers
+  pass 20 lexical/59 semantic, actual discovery 50 and compiled native input nine;
+  all three compilers diagnose the outdated public caller. Routine/callback
+  regressions pass 31/72, with zero leaks/owned warnings. Browser execution and
+  updated observation retain their host gate. Workflow criterion 5 stays open
+  at no-closure 8; this bounded packet earns no full criterion/percentage credit.
+  Class/full-unit and richer source/reusable integration retain their owners.
+  See [evidence](WORK.md#semantic-helper-signatures--2026-10-05).
+
+- User-directed source UX now separates Source from Compiler messages and moves
+  the retained Nyx editor into an expanded modal with Close/Escape and native
+  resize. Actual Win32 source controls pass 30, shared per-project presentation/
+  migration 225 on each native compiler, with zero leaks. Native Studio/browser
+  Studio/module worker compile; current browser/phone interaction and observing
+  deployment retain their gate. Original codegen criterion 3 stays open at
+  no-closure 27; renderer 3, native authoring 7 and delivery 1 stay unchanged.
+  No full parity/presentation/performance criterion or percentage advances.
+  Qualify current browser return/focus/project switching through a permitted
+  host, then return to broader source/reusable integration and ordinary editor
+  outcomes. See [evidence](WORK.md#source-workspace-and-expanded-editor--2026-10-05).

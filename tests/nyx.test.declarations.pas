@@ -55,6 +55,9 @@ var
   LBody: TNyxText;
   LBudget: TNyxRoutineSource;
   LCaption: TNyxRoutineSource;
+  LPolicy: TNyxRoutineSource;
+  LReplacementCaption: TNyxRoutineDeclaration;
+  LSignaturePair: TNyxProjectPair;
   LRequest: TNyxDataValue;
   LReceipt: TNyxDataValue;
   LReply: TNyxDataValue;
@@ -98,6 +101,27 @@ var
     Result := NyxObject([
       NyxField('mode', NyxData('edit-declarations')), NyxField('expectedRevision', NyxData(LRevision)),
       NyxField('operationId', NyxData(AID)), NyxField('changes', AChanges)]);
+  end;
+
+  function SignatureChange(const APrevious: TNyxRoutineSource;
+    const AReplacement: TNyxRoutineDeclaration; const APrototype: TNyxText): TNyxDataValue;
+  var
+    LVisibility: TNyxText;
+  begin
+    LVisibility := 'implementation';
+
+    if AReplacement.Visibility = rvInterface then
+    begin
+      LVisibility := 'interface';
+    end;
+    Result := NyxObject([
+      NyxField('op', NyxData('signature')), NyxField('routine', NyxData(AReplacement.Routine.Name)),
+      NyxField('kind', NyxData('function')), NyxField('visibility', NyxData(LVisibility)),
+      NyxField('signature', NyxData(AReplacement.Signature)),
+      NyxField('implementation', NyxData(AReplacement.Code)),
+      NyxField('expectedSignature', NyxData(APrevious.Signature)),
+      NyxField('expectedImplementation', NyxData(APrevious.Code)),
+      NyxField('expectedDeclaration', NyxData(APrototype))]);
   end;
 
   function Query(const AName: TNyxText; AOffset, ACount: Integer): TNyxDataValue;
@@ -381,6 +405,106 @@ begin
     LPair.Pending := False;
     LPair.Draft := '';
     LPair.DraftBase := '';
+    Publish(LPair);
+
+    { Change both private parameter/result typing and a public parameter contract.
+      The retained class caller is supplied explicitly in the same semantic group;
+      no intermediate incompatible source is published or compiled. }
+    LAccepted := Current;
+    LBudget := ReadNyxRoutineSource(LAccepted.Source, NyxRoutine('TextBudget'));
+    LCaption := ReadNyxRoutineSource(LAccepted.Source, NyxRoutine('EnglishCaption'));
+    LPolicy := ReadNyxRoutineSource(LAccepted.Source, NyxRoutine('TNotePolicy.Limit'));
+    LSite := ReadNyxRoutineDeclaration(LAccepted.Source, LCaption.Routine);
+    LDeclaration := NyxRoutineDeclaration(nrFunction, LBudget.Routine, rvImplementation,
+      'function TextBudget(const AMaximum: Integer): TNyxText;',
+      #10 + 'begin' + #10 + TNyxText('  { Exact qualification 🌙; a typed result survives. }') + #10 +
+      '  Result := IntToStr(AMaximum);' + #10 + 'end;');
+    LReplacementCaption := NyxRoutineDeclaration(nrFunction, LCaption.Routine, rvInterface,
+      'function EnglishCaption(const APurpose: TNyxText): TNyxText;',
+      #10 + 'begin' + #10 +
+      '  Result := APurpose + TNyxText('': up to '') + TextBudget(5) + TNyxText('' characters'');' +
+      #10 + 'end;');
+    LBody := #10 + 'begin' + #10 + '  Result := StrToInt(TextBudget(5));' + #10 + 'end;';
+    LPatch := NyxDeclarationPatch([
+      NyxChangeDeclarationSignature(LDeclaration, LBudget.Signature, LBudget.Code, ''),
+      NyxChangeDeclarationSignature(LReplacementCaption, LCaption.Signature, LCaption.Code,
+        LSite.Declaration),
+      NyxEditDeclaration(LPolicy.Routine, LPolicy.Code, LBody)]);
+    LSignaturePair := LPatch.Candidate(LAccepted);
+    Check((LSignaturePair.Design = LInitial.Design) and not LSignaturePair.Pending and
+      (EncodeNyxProject(Current) = EncodeNyxProject(LAccepted)),
+      'typed signature candidate owns an independent exact pair without publication');
+    Check((ReadNyxRoutineSource(LSignaturePair.Source, LBudget.Routine).Signature =
+      LDeclaration.Signature) and
+      (ReadNyxRoutineDeclaration(LSignaturePair.Source, LBudget.Routine).Declaration = ''),
+      'private parameter/result replacement retains implementation-only visibility');
+    Check((ReadNyxRoutineSource(LSignaturePair.Source, LCaption.Routine).Signature =
+      LReplacementCaption.Signature) and
+      (ReadNyxRoutineDeclaration(LSignaturePair.Source, LCaption.Routine).Declaration =
+      LReplacementCaption.Signature), 'public signature replacements own both exact counterparts');
+    LRequest := Args('helper-signatures', NyxArray([
+      SignatureChange(LBudget, LDeclaration, ''),
+      SignatureChange(LCaption, LReplacementCaption, LSite.Declaration),
+      Change('TNotePolicy.Limit', LPolicy.Code, LBody)]));
+    LReceipt := LAgent.Call('nyx_pascal', 'Scooty', LRequest, 'signature-client');
+    LRevision := LAgent.Revision;
+    Check((EncodeNyxProject(Current) = EncodeNyxProject(LSignaturePair)) and
+      (LReceipt.Field('declarations').Field('changes').AsInteger = 3),
+      'one semantic signature/caller group publishes the exact admitted pair');
+    Check((ReadNyxRoutineSource(Current.Source, LPolicy.Routine).Signature = LPolicy.Signature) and
+      (ReadNyxHandlerSource(Current.Source, LHandler).Code =
+      ReadNyxHandlerSource(LInitial.Source, LHandler).Code) and
+      (Pos('// Kept outside the helper:', Current.Source) > 0),
+      'class signatures, callback implementation and surrounding comments remain owned');
+    Check(LAgent.Call('nyx_pascal', 'Scooty', LRequest, 'signature-client').ToJSON = LReceipt.ToJSON,
+      'signature retry returns its exact actor-bound receipt');
+    Refuse(LRequest, 'foreign actor cannot claim a signature receipt', 'foreign-signature-client');
+    History('undo', 'undo-signatures');
+    Check(EncodeNyxProject(Current) = EncodeNyxProject(LAccepted),
+      'one Undo restores private/public signatures, bodies and related caller together');
+    History('redo', 'redo-signatures');
+    Check(EncodeNyxProject(Current) = EncodeNyxProject(LSignaturePair),
+      'one Redo restores exact signature and caller composition');
+    LReply := LAgent.Call('nyx_pascal', 'Scooty', NyxObject([
+      NyxField('mode', NyxData('declaration')), NyxField('routine', NyxData('EnglishCaption'))]));
+    Check(LReply.Field('text').AsText = LReplacementCaption.Signature,
+      'bounded public inspection immediately observes the changed accepted signature');
+    Refuse(Args('stale-signature', NyxArray([
+      SignatureChange(LCaption, LReplacementCaption, LSite.Declaration)])),
+      'old exact counterparts refuse at a fresh outer revision');
+    LBudget := ReadNyxRoutineSource(Current.Source, LBudget.Routine);
+    LCaption := ReadNyxRoutineSource(Current.Source, LCaption.Routine);
+    LSite := ReadNyxRoutineDeclaration(Current.Source, LCaption.Routine);
+    LDeclaration := NyxRoutineDeclaration(nrFunction, LBudget.Routine, rvImplementation,
+      'function TextBudget(const AMaximum, AFloor: Integer): TNyxText;',
+      #10 + 'begin' + #10 + '  Result := IntToStr(AMaximum + AFloor);' + #10 + 'end;');
+    Refuse(Args('late-signature', NyxArray([
+      SignatureChange(LBudget, LDeclaration, ''),
+      Change('TNotePolicy.Limit', 'stale caller body', LBody)])),
+      'a late caller refusal publishes none of the preceding signature replacement');
+    Refuse(Args('signature-visibility', NyxArray([
+      SignatureChange(LBudget, NyxRoutineDeclaration(nrFunction, LBudget.Routine, rvInterface,
+        LDeclaration.Signature, LDeclaration.Code), '')])),
+      'signature operations do not silently change public visibility');
+    Refuse(Args('signature-noop', NyxArray([
+      SignatureChange(LCaption, LReplacementCaption, LSite.Declaration)])),
+      'no-op signature replacement spends no history');
+    LAgent.InheritPermission(apReadOnly);
+    Refuse(Args('signature-readonly', NyxArray([
+      SignatureChange(LBudget, LDeclaration, '')])),
+      'read-only permission refuses an otherwise valid changed signature');
+    LAgent.InheritPermission(apEdit);
+    LPair := Current;
+    LPair.Pending := True;
+    LPair.DraftBase := LPair.Source;
+    LPair.Draft := LPair.Source + #10 + TNyxText('// signature draft 🌙');
+    Publish(LPair);
+    Refuse(Args('signature-draft', NyxArray([
+      SignatureChange(LBudget, LDeclaration, '')])),
+      'pending draft retains exact text and refuses an otherwise valid signature');
+    LPair.Pending := False;
+    LPair.DraftBase := '';
+    LPair.Draft := '';
     Publish(LPair);
     APair := Current;
     Check((APair.Design = LInitial.Design) and not APair.Pending,

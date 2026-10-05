@@ -80,8 +80,9 @@ begin
     {$ifndef PAS2JS}Application.Initialize;{$endif}
     LDocument := BuildNyxDocument;
     try
-      Check(TNotePolicy.Limit = 6, 'Actual compiler resolves the created private helper through the retained policy method');
-      Check(EnglishCaption = 'Up to 6 characters', 'Actual compiler resolves the created public caption helper');
+      Check(TNotePolicy.Limit = 5, 'Actual compiler resolves changed private parameter/result types through the retained policy method');
+      Check(EnglishCaption('Note') = 'Note: up to 5 characters',
+        'Actual compiler resolves the changed public parameter and both signature counterparts');
       {$ifndef PAS2JS}
       LFile := TFileStream.Create(ParamStr(1), fmOpenRead or fmShareDenyWrite);
       try
@@ -121,18 +122,18 @@ begin
         LStream := LRenderer.Events.OnBeforeTextInput(NyxControlEvents(
           LRenderer.Root.Find('short-note').ID, niRuntime));
         Check(LStream.Count = 1, 'Actual generated handler registration binds to the memo');
-        Edit('abcdef');
-        Check((InputText = 'abcdef') and (LRenderer.Root.Find('short-note').Prop('value') = 'abcdef'),
+        Edit('abcde');
+        Check((InputText = 'abcde') and (LRenderer.Root.Find('short-note').Prop('value') = 'abcde'),
           'Real physical text input admits the edited helper limit');
         Check(LStream.Registrations[0].LastExecution.Status = nesSucceeded,
           'Compiled callback really executes');
-        Edit('abcdefg');
-        Check(InputText = 'abcdef', 'Edited helper rejects excessive text physically');
+        Edit('abcdef');
+        Check(InputText = 'abcde', 'Edited helper rejects excessive text physically');
+        Edit(TNyxText('a🌙bcd'));
+        Check(InputText = TNyxText('a🌙bcd'), 'Supplementary Unicode counts one scalar');
         Edit(TNyxText('a🌙bcde'));
-        Check(InputText = TNyxText('a🌙bcde'), 'Supplementary Unicode counts one scalar');
-        Edit(TNyxText('a🌙bcdef'));
-        Check((InputText = TNyxText('a🌙bcde')) and
-          (LRenderer.Root.Find('short-note').Prop('value') = TNyxText('a🌙bcde')),
+        Check((InputText = TNyxText('a🌙bcd')) and
+          (LRenderer.Root.Find('short-note').Prop('value') = TNyxText('a🌙bcd')),
           'Rejected Unicode input preserves exact control and model');
         LStream := nil;
       finally

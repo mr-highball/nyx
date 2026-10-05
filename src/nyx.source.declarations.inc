@@ -479,6 +479,55 @@ begin
   ReadNyxRoutineDeclaration(Result, LDeclaration.Routine);
 end;
 
+function ReplaceNyxRoutineDeclaration(const ASource: TNyxText;
+  const AReplacement: TNyxRoutineDeclaration;
+  const AExpectedSignature, AExpectedImplementation, AExpectedDeclaration: TNyxText): TNyxText;
+var
+  LReplacement: TNyxRoutineDeclaration;
+  LRoutine: TNyxRoutineSource;
+  LSite: TNyxRoutineDeclarationSource;
+begin
+  { Validate a complete replacement before borrowing any old-source offsets.
+    This is an explicit signature/body change, never an inferred caller rewrite. }
+  LReplacement := NyxRoutineDeclaration(AReplacement.Kind, AReplacement.Routine,
+    AReplacement.Visibility, AReplacement.Signature, AReplacement.Code);
+  LRoutine := ReadNyxRoutineSource(ASource, LReplacement.Routine);
+  LSite := ReadNyxRoutineDeclaration(ASource, LReplacement.Routine);
+
+  if not LRoutine.Editable then
+  begin
+    raise ENyxSource.CreateAt(LRoutine.Reason, ASource, LRoutine.FStart);
+  end;
+
+  if (LRoutine.Signature <> AExpectedSignature) or (LRoutine.Code <> AExpectedImplementation) or
+    (LSite.Declaration <> AExpectedDeclaration) then
+  begin
+    raise ENyxSource.CreateAt('Helper declaration changed; inspect all exact accepted counterparts again',
+      ASource, LRoutine.FStart);
+  end;
+
+  if LReplacement.Visibility <> LSite.Visibility then
+  begin
+    raise ENyxSource.CreateAt('Signature editing must retain helper visibility', ASource, LRoutine.FStart);
+  end;
+  Result := JoinSourceFrame([Copy(ASource, 1, LRoutine.FStart - 1),
+    LReplacement.Signature, LReplacement.Code, Copy(ASource, LRoutine.FFinish, MaxInt)]);
+
+  if LSite.Visibility = rvInterface then
+  begin
+    { Interface spans precede the implementation, so their original offsets
+      remain valid after the descending replacement. Surrounding bytes survive. }
+    Result := JoinSourceFrame([Copy(Result, 1, LSite.FStart - 1), LReplacement.Signature,
+      Copy(Result, LSite.FFinish, MaxInt)]);
+  end;
+
+  if Result = ASource then
+  begin
+    raise ENyxModel.Create('Signature replacement has no source change');
+  end;
+  ReadNyxRoutineDeclaration(Result, LReplacement.Routine);
+end;
+
 function RemoveNyxRoutineDeclaration(const ASource: TNyxText;
   const ARoutine: TNyxRoutineRef;
   const AExpectedSignature, AExpectedImplementation, AExpectedDeclaration: TNyxText): TNyxText;

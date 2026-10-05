@@ -53,8 +53,8 @@ create/update/move/delete/title/tokens. Callback authoring now has a focused too
 immutable build requests and bounded status are now qualified. Local callback
 implementation editing now has a focused bounded tool. General
 helper implementation editing now has the bounded source packet below; helper
-creation/removal now have the source packet below, while signature/class/full-unit
-editing remains absent. Unconditional import commands now
+creation/removal and guarded unit-helper signature editing now have source
+packets below, while class/full-unit editing remains absent. Unconditional import commands now
 have the source qualification packet below. Scalar state/binding commands have a
 source/staged qualification packet below; richer reusable workflows remain
 required, while structured collection authoring has its staged packet below. Root
@@ -507,3 +507,25 @@ review lifecycle and complete presentation/accessibility/performance retain
 their original owners and acceptance gates. Do not substitute unit-helper-only
 completion for the full general-source outcome.
 See [evidence](../WORK.md#semantic-helper-declarations--2026-10-05).
+
+## Guarded paired helper signatures — 2026-10-05
+
+Criterion 5 now admits exact acknowledged unit-helper signature/body/public
+counterpart changes and explicit related caller edits as one immutable ordered
+group and paired Undo step. Identity and visibility remain owned; class/managed/
+conditional/overload boundaries still refuse. Both native compilers pass 20
+lexical/59 semantic checks; actual discovery passes 50 and unchanged compiled
+native input nine. Both native compilers and pas2js diagnose an intentionally
+outdated public caller. Routine/callback regressions pass 31/72; zero native
+owned warnings/leaks. Browser consumers compile but retain their execution and
+updated-observation host gate. Source catalog nineteen/release fifteen remains
+explicit; admission does not prove type correctness or successful execution.
+
+No full criterion closes: workflow no-closure advances **7→8** once. The user's
+source workspace priority separately advances original codegen **26→27**;
+renderer **3**, native authoring **7** and delivery **1** remain unchanged.
+Reassessment ends signature/schema/fixture expansion. Deliver the requested
+retained Source/Messages/modal UX, then return to broader general source and
+reusable integration, preserving class/full-unit, review, root-ordering,
+presentation/accessibility/performance and observing-deployment requirements.
+See [evidence](../WORK.md#semantic-helper-signatures--2026-10-05).

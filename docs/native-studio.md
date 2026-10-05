@@ -328,3 +328,39 @@ a hard real-time guarantee or a disk/OS-stall bound. The maintained consumer in
 browser host. It does not replace any Studio listener or qualify new editor HTTP
 deployment. Original service admission, job cancellation, retention, caching,
 other-platform and full reload acceptance remain open.
+
+## Source workspace and expanded editor
+
+The shared Nyx source workspace offers mutually exclusive **Source** and
+**Compiler messages** views. Compiler output receives its own scroll area;
+it no longer reserves a fixed height above Pascal. The existing canvas/source
+split remains resizable. **Expand** moves the retained workspace into a floating
+host, and **Close** or Escape returns it. Apply Pascal, Restore accepted and
+Save draft remain ordinary Nyx actions in either location. Diagnostic navigation
+selects Source before moving the caret.
+
+`BuildNyxStudioSourcePane` creates an owned ordinary Nyx tree. Controllers retain
+that view and the independent public code editor; moving the platform host does
+not create another editor or spend document history. Native root height sizing
+uses `nsFill` so the same memo follows window resizing. Source-view/expanded
+preferences are per-project presentation, stored in the strict version-3 packet;
+version 2 migrates with the inline Source default and preserves earlier choices.
+
+The reusable library boundary is `nyx.modal`: immutable `TNyxModalOptions` and
+managed `INyxModalHost`, with DOM/LCL types confined to their adapters. For example:
+
+```pascal
+LHost := NewNyxLCLModalHost(LWindow);
+LHost.Show(NyxModal('Pascal source').Viewport(94).MaximumWidth(1400));
+```
+
+The controller borrows the exact owning window and clears its dismiss observer
+before retiring. Native Hide restores that owner's previous enabled state before
+reparenting focused controls; the host stays alive until the retained view moves.
+The browser adapter uses the HTML standard dialog top layer and cancel event.
+Close/Escape and meaningful modal focus follow the
+[dialog standard](https://html.spec.whatwg.org/multipage/interactive-elements.html#the-dialog-element)
+and [WAI dialog guidance](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/),
+checked 2026-10-05. Full browser keyboard/accessibility and physical phone
+qualification remain required; compilation alone does not establish them.
+Use the focused [source-editor command](building.md#source-workspace-and-expanded-editor).

@@ -377,6 +377,15 @@ function AddNyxRoutineDeclaration(const ASource: TNyxText;
 function RemoveNyxRoutineDeclaration(const ASource: TNyxText;
   const ARoutine: TNyxRoutineRef;
   const AExpectedSignature, AExpectedImplementation, AExpectedDeclaration: TNyxText): TNyxText;
+{ Replace a free unit helper's signature/body and public counterpart together.
+  Identity and visibility stay retained. Every current counterpart must exactly
+  match the supplied acknowledgement; conditional/overloaded/managed ownership
+  refuses. The replacement owns its explicitly supplied Pascal fragments.
+  Caller edits belong in the same group; compiler diagnostics establish their
+  type compatibility, including callers outside this unit. }
+function ReplaceNyxRoutineDeclaration(const ASource: TNyxText;
+  const AReplacement: TNyxRoutineDeclaration;
+  const AExpectedSignature, AExpectedImplementation, AExpectedDeclaration: TNyxText): TNyxText;
 
 function ReadNyxImports(const ASource: TNyxText; ASection: TNyxImportSection): TNyxImportClause;
 function EditNyxImport(const ASource: TNyxText; ASection: TNyxImportSection;

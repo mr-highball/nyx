@@ -57,8 +57,11 @@ type
   TNyxStudioPanel = (nspDesign, nspProject, nspInspector);
   { Hosts can mount the same public source editor independently to preserve
     control lifetime across chrome refreshes. Inline remains the default for
-    ordinary/native shell consumers; hosted adds only a standard Nyx panel. }
-  TNyxStudioCodePresentation = (ncpInline, ncpHosted);
+    ordinary shell consumers; hosted adds a code panel and pane-hosted delegates
+    the complete reusable workspace to an independently retained Nyx renderer. }
+  TNyxStudioCodePresentation = (ncpInline, ncpHosted, ncpPaneHosted);
+  { Source/messages are editor presentation; neither changes document history. }
+  TNyxStudioSourceTab = (nstSource, nstMessages);
 
   { Target-independent Studio chrome and state. Both adapters consume this same
     Nyx document, including the public designer host and source editor. Platform
@@ -69,6 +72,8 @@ type
   TNyxStudioViewState = record
     CodeVisible: Boolean;
     CodePresentation: TNyxStudioCodePresentation;
+    SourceTab: TNyxStudioSourceTab;
+    SourceExpanded: Boolean;
     { Editor presentation, never project content/history. Proportional sizing
       survives panel switches and host viewport changes on both targets. }
     CanvasPercent: Integer;
@@ -122,6 +127,12 @@ function DefaultNyxStudioViewState: TNyxStudioViewState;
 { Managed ordinary Nyx code editor, shared by inline and retained hosted views.
   The caller retains its interface or transfers ownership into a Nyx document. }
 function NewNyxStudioCodeEditor(const ASource: TNyxText): INyxCodeEditor;
+{ Owned reusable source workspace. Its mutually exclusive source/messages views
+  prevent compiler output from consuming editor height. Controllers may mount it
+  independently and move the same Nyx view into a public modal host. Session and
+  report are borrowed; a nil session raises ENyxModel before allocating a tree. }
+function BuildNyxStudioSourcePane(ASession: TNyxStudioSession;
+  const AState: TNyxStudioViewState; const AReport: INyxCompilerReport): TNyxNode;
 
 { Returns an owned Nyx UI document; session is borrowed and remains unmodified.
   The shell expresses application meaning through public Nyx component kinds.
@@ -195,6 +206,103 @@ end;
 function Caption(const AID, AText: TNyxText): TNyxNode;
 begin
   Result := TNyxNode.Create(nkLabel, AID).Configure.Text(AText).Done;
+end;
+
+function BuildNyxStudioSourcePane(ASession: TNyxStudioSession;
+  const AState: TNyxStudioViewState; const AReport: INyxCompilerReport): TNyxNode;
+var
+  LActions: TNyxNode;
+  LTabs: TNyxNode;
+  LButton: TNyxNode;
+  LMessages: TNyxNode;
+  LField: TNyxNode;
+  LMessageCount: Integer;
+begin
+
+  if ASession = nil then
+  begin
+    raise ENyxModel.Create('A source workspace requires its borrowed Studio session');
+  end;
+  Result := TNyxNode.Create(nkColumn, 'studio-source-pane')
+    .Configure.Gap(0).Padding(0).Flex(1).Done;
+  try
+    Result.Add(NewNyxLabel('studio-source-status').Configure
+      .Text(AState.SourceStatus).Hint('Current Pascal source operation')
+      .Visible(AState.SourceStatus <> '').Done);
+    LActions := TNyxNode.Create(nkRow, 'studio-code-actions')
+      .Configure.Gap(8).Layout(TNyxLayoutPolicy.Row.Wrap(nfwWrap)).Done;
+    Result.Add(LActions);
+    LActions.Add(Button('action-apply-source', 'Apply Pascal'));
+    LActions.Add(Button('action-reset-source', 'Restore accepted'));
+    LActions.Add(Button('action-export-source-draft', 'Save draft'));
+    LButton := Button('action-expand-source', 'Expand');
+    LActions.Add(LButton);
+
+    if AState.SourceExpanded then
+    begin
+      LButton.Configure.Text('Close').Hint('Return to the split editor').Done;
+    end;
+    LTabs := TNyxNode.Create(nkRow, 'studio-source-tabs')
+      .Configure.Gap(8).Layout(TNyxLayoutPolicy.Row.Wrap(nfwWrap)).Done;
+    Result.Add(LTabs);
+    LButton := Button('action-source-tab', 'Source');
+    LButton.Configure.Pressed(AState.SourceTab = nstSource).Done;
+    LTabs.Add(LButton);
+
+    if AState.SourceTab = nstSource then
+    begin
+      LButton.Configure.Variant(nvPrimary).Done;
+    end;
+    LMessageCount := 0;
+
+    if AReport <> nil then
+    begin
+      LMessageCount := AReport.Count;
+    end;
+    LButton := Button('action-messages-tab', 'Compiler messages (' + IntToStr(LMessageCount) + ')');
+    LButton.Configure.Pressed(AState.SourceTab = nstMessages).Done;
+    LTabs.Add(LButton);
+
+    if AState.SourceTab = nstMessages then
+    begin
+      LButton.Configure.Variant(nvPrimary).Done;
+    end;
+    LMessages := TNyxNode.Create(nkColumn, 'studio-source-messages')
+      .Configure.Gap(8).Padding(0).Flex(1).Visible(AState.SourceTab = nstMessages).Done;
+    Result.Add(LMessages);
+    LField := BuildNyxSourceDiagnostic(ASession);
+
+    if LField <> nil then
+    begin
+      LMessages.Add(LField);
+    end;
+    LField := BuildNyxCompilerDiagnostics(ASession, AReport);
+
+    if LField <> nil then
+    begin
+      LField.Configure.Clear(atHeight).Flex(1).Done;
+      LMessages.Add(LField);
+    end
+    else
+    begin
+      LMessages.Add(NewNyxLabel('studio-source-no-messages').Configure
+        .Text('No compiler messages. Build a view or application to see results here.').Done);
+    end;
+
+    if AState.CodePresentation <> ncpInline then
+    begin
+      Result.Add(TNyxNode.Create(nkPanel, 'studio-code-host').Configure
+        .Layout(nlColumn).Gap(0).Padding(0).Flex(1).Visible(AState.SourceTab = nstSource).Done);
+    end
+    else
+    begin
+      Result.Add(NewNyxStudioCodeEditor(ASession.DraftSource).Configure
+        .Visible(AState.SourceTab = nstSource).Done);
+    end;
+  except
+    Result.Free;
+    raise;
+  end;
 end;
 
 function StateEditor(const AID, ATitle, AValue: TNyxText;
@@ -808,7 +916,7 @@ begin
     LSplit := TNyxNode.Create(nkSplitView, 'studio-split')
       .Configure.SplitOrientation(nsoStacked).SplitPosition(AState.CanvasPercent)
       .SplitMinimum(10).SplitMaximum(90).SplitResizable(True)
-      .Height(520).ForPlatform(npfBrowser).Clear(atHeight).Flex(1).Done;
+      .Flex(1).Done;
     LCenter.Add(LSplit);
     LSplit.Add(LCanvas);
   end
@@ -828,42 +936,16 @@ begin
 
   if AState.CodeVisible then
   begin
-    LCodePane := TNyxNode.Create(nkColumn, 'studio-source-pane')
-      .Configure.Gap(0).Padding(0).Done;
-    LSplit.Add(LCodePane);
-
-    { Keep source status as a stable public control. Beginning preparation must
-      change visibility/text rather than replace every inspector widget merely
-      to insert one label. Hidden status consumes no layout extent or Tab entry. }
-    LCodePane.Add(NewNyxLabel('studio-source-status').Configure
-      .Text(AState.SourceStatus).Hint('Current Pascal source operation')
-      .Visible(AState.SourceStatus <> '').Done);
-    LCodePane.Add(TNyxNode.Create(nkRow, 'studio-code-actions')
-      .Configure.Gap(8).Done
-      .Add(Button('action-apply-source', 'Apply Pascal'))
-      .Add(Button('action-reset-source', 'Restore accepted'))
-      .Add(Button('action-export-source-draft', 'Save draft')));
-    LField := BuildNyxSourceDiagnostic(ASession);
-
-    if LField <> nil then
+    if AState.CodePresentation = ncpPaneHosted then
     begin
-      LCodePane.Add(LField);
-    end;
-    LField := BuildNyxCompilerDiagnostics(ASession, AReport);
-
-    if LField <> nil then
-    begin
-      LCodePane.Add(LField);
-    end;
-    if AState.CodePresentation = ncpHosted then
-    begin
-      LCodePane.Add(TNyxNode.Create(nkPanel, 'studio-code-host')
-        .Configure.Layout(nlColumn).Gap(0).Padding(0).Flex(1).Done);
+      LCodePane := TNyxNode.Create(nkPanel, 'studio-source-mount')
+        .Configure.Layout(nlColumn).Gap(0).Padding(0).Flex(1).Done;
     end
     else
     begin
-      LCodePane.Add(NewNyxStudioCodeEditor(ASession.DraftSource));
+      LCodePane := BuildNyxStudioSourcePane(ASession, AState, AReport);
     end;
+    LSplit.Add(LCodePane);
   end;
   LRight := TNyxNode.Create(nkScroll, 'studio-right').Configure.Layout(nlColumn).Done;
   LRight.Configure.ForPlatform(npfNativeLCL).Width(290).Padding(12).Gap(10).Done;
