@@ -6497,3 +6497,11 @@ Native named MCP `nyx_session` remains connected at revision 6, home selection,
 one page/one reusable component, no pending draft, Undo unavailable/Redo available
 and activity sequence 192. This packet made no semantic mutation of that active
 user pair. Private process proof remains in `.local/codex-restart-check/`.
+
+Remote checkpoint: product commit
+`ad45f550abda611ca07369ab9c8d9525da73a2d2` is pushed to `origin/hello-nyx`;
+the exact remote ref matched locally. The overall Nyx/Nyx Studio goal remains
+active and incomplete. Resume with ordinary event/structured-collection routes
+through isolated admission, not more scalar fixture expansion. Preserve the
+active user pair and all protected services; browser execution, observing
+deployment and updated authenticated discovery retain the existing host gate.
