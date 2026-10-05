@@ -76,6 +76,7 @@ backup/
 lib/
 *.json
 !tests/layout-review.operations.json
+!tests/designer-review.operations.json
 *.txt
 *.log
 

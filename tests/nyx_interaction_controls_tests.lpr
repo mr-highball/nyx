@@ -266,6 +266,10 @@ var
         begin
           LName := 'contextmenu';
         end;
+      else
+        begin
+          raise ENyxModel.Create('Unsupported browser interaction fixture trigger');
+        end;
     end;
 
     if ATrigger in [ntDoubleClick, ntContextMenu] then
@@ -295,31 +299,35 @@ var
     case ATrigger of
       ntDoubleClick:
         begin
-          TAccess(LInput).OnDblClick(LInput);
+          TAccess(TWinControl(LInput)).OnDblClick(LInput);
         end;
       ntPointerDown:
         begin
-          TAccess(LInput).OnMouseDown(LInput, mbLeft, [ssLeft, ssCtrl], 12, 8);
+          TAccess(TWinControl(LInput)).OnMouseDown(LInput, mbLeft, [ssLeft, ssCtrl], 12, 8);
         end;
       ntPointerUp:
         begin
-          TAccess(LInput).OnMouseUp(LInput, mbLeft, [ssCtrl], 12, 8);
+          TAccess(TWinControl(LInput)).OnMouseUp(LInput, mbLeft, [ssCtrl], 12, 8);
         end;
       ntPointerMove:
         begin
-          TAccess(LInput).OnMouseMove(LInput, [ssLeft, ssCtrl], 12, 8);
+          TAccess(TWinControl(LInput)).OnMouseMove(LInput, [ssLeft, ssCtrl], 12, 8);
         end;
       ntPointerEnter:
         begin
-          TAccess(LInput).OnMouseEnter(LInput);
+          TAccess(TWinControl(LInput)).OnMouseEnter(LInput);
         end;
       ntPointerExit:
         begin
-          TAccess(LInput).OnMouseLeave(LInput);
+          TAccess(TWinControl(LInput)).OnMouseLeave(LInput);
         end;
       ntContextMenu:
         begin
-          TAccess(LInput).OnContextPopup(LInput, Point(12, 8), LHandled);
+          TAccess(TWinControl(LInput)).OnContextPopup(LInput, Point(12, 8), LHandled);
+        end;
+      else
+        begin
+          raise ENyxModel.Create('Unsupported native interaction fixture trigger');
         end;
     end;
     Result := LHandled;
@@ -376,7 +384,7 @@ begin
       'down phases capture their own declared scalar and shortcut contracts');
     Check(not LProbe.Last[ntBeforeKeyPress].HasValue and
       LProbe.Last[ntKeyPress].HasValue and
-      (LProbe.Last[ntKeyPress].Value.AsText = 'Original / 🌙') and
+      (LProbe.Last[ntKeyPress].Value.AsText = TNyxText('Original / 🌙')) and
       not LProbe.Last[ntAfterKeyPress].HasValue,
       'press phases preserve distinct payload declarations');
     Key(True);
@@ -419,7 +427,7 @@ begin
       IntToStr(LProbe.Counts[ntBeforeTextInput]) + '/' +
       IntToStr(LProbe.Counts[ntTextInput]) + '/' +
       IntToStr(LProbe.Counts[ntAfterTextInput]) + ' ' + LRenderer.LastBindingError);
-    Check((LProbe.Last[ntTextInput].TextEdit.Before = 'Original / 🌙') and
+    Check((LProbe.Last[ntTextInput].TextEdit.Before = TNyxText('Original / 🌙')) and
       (LProbe.Last[ntTextInput].TextEdit.After = LValue) and
       (LRenderer.Root.Find('reply').Prop('value') = LValue),
       'exact accepted Unicode text replacement');

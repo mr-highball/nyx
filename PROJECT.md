@@ -64,6 +64,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The native designer prerequisite now qualifies designer-only input/selection and
+retained view movement with actual source focus, Unicode ranges and scrolling.
+An MCP-authored companion passes 34 checked LCL cases including painted selection,
+and 32 desktop / 33 actual-390 browser cases. Both delegated compiler sources
+equal its bounded export. This advances the platform needed by native Studio;
+the standalone native controller and full project navigation remain open. See
+[designer views](docs/designer-views.md) and WORK.md for the current evidence.
+
 Concurrent project sessions now have a qualified portable foundation and
 ordinary browser jump/return workflow: 215 shared checks per target, ten actual
 Agents-control checks per target and 202 desktop / 203 exact-390 real MCP/editor

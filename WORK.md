@@ -4339,3 +4339,107 @@ and closed-context compiler completion, followed by broader presentation/native
 navigation; compilation or preview-only views do not establish those outcomes.
 Warning checkpoint remote verification is retained privately at
 .local/codex-restart-check/warning-cleanup-remote-proof.json after publication.
+
+Current continuation: the warning checkpoint ffe727e is pushed and independently
+verified. The previous goal turn was progress. Existing services are live, but
+the rejected updated-service launch is not retried through another route.
+Follow the concrete native-controller prerequisite under original NS-4 authoring
+criteria 4/7: LCL currently lacks the browser's designer-purpose projection and
+retained MoveHost boundary. Deliver selection/undoable canvas editing without
+application actions, and move the same mounted controls safely between hosts.
+Qualify an MCP-exported companion on actual LCL/browser controls, including
+Unicode editing, independent reusable parts, focus/caret/scroll, refusal and
+destruction. Stop on action dispatch, source/history leakage or broken mounted
+lifetime. This changes the platform prerequisite, rather than extending the
+already reassessed registry/fixture investigation. Full native Studio/controller,
+live closure and the original concurrency criteria remain required; count 2 is
+retained until original acceptance advances.
+
+## Native designer and retained-view prerequisite — 2026-10-05
+
+Previous user-directed turn supplied the one-off MCP curiosity report; it made
+no product progress. This continuation revalidated the live fixture handles and
+delivered the concrete native-controller prerequisite under original NS-4
+authoring criteria 4/7. The goal stays active; no full native Studio or project
+concurrency acceptance is inferred from an adapter fixture.
+
+LCL now offers designer-purpose Render, non-focus-stealing authored selection
+and retained MoveHost. Designer input proposes values through the same undoable
+session command as the browser while bypassing application actions, runtime
+subscribers and captured creator hooks. Native/browser moves retain actual
+controls, Unicode scalar selections, focused source and containing scrolling;
+nil, descendant, occupied and unmounted destinations refuse. Former hosts can
+be destroyed after a move. Manual subscriptions are explicitly canceled by
+their owner. Browser selection now outlines an outer reusable instance once;
+qualified nested identity remains distinct from an identically named control.
+
+The real Pascal MCP author creates an owned empty review, performs nine related
+operations in one expected-revision transaction, exports bounded source and
+requests both application compilers. Exact revision/currentness/fingerprint
+checks pass; downloaded compiled source bytes on both targets equal the export:
+MD5 93bd930faac0d6ef69fd35cf1f1c6e2a. The exact review is retired and all published
+primary content/history/navigation fields remain unchanged; presence advances
+normally. Receipt/status/source/frame evidence is under
+build/native-studio/source-qualified/. Both immutable jobs succeeded on the
+existing staged backend. Its older library mirror still emits owned warnings;
+those jobs do not qualify current-library warning cleanliness or execution.
+Current repository adapter consumers below do qualify this installed pair.
+
+- qualified-orchestration.log exercises the explicit DesignerMCPConfig path,
+  real review/compilers and checked native controls, then compiles pas2js.
+- final-qualified-orchestration.log passes 32 actual native checks with no leaks.
+  native/qualified-visual.log passes 34, including actual painted accent pixels
+  for both component and page-root selection; three PNGs were inspected.
+- current-designer-desktop / current-designer-narrow pass 32/33 actual browser
+  checks, including exactly one authored-instance outline. Narrow is a measured
+  390-pixel iframe. The consumer preserves exact Unicode source drafts, recipe
+  and sibling values, paired Undo/Redo, focused ranges and actual scroll.
+- regression-interactions.log passes 234 portable contracts. The corrected
+  checked native runtime fixture passes 45 with zero leaks under regression-native.
+  current-runtime-inputs executes all 45 browser runtime cases with a terminal
+  passed marker; owned harness casts, UTF-8 comparisons
+  and both closed-trigger refusals are repaired. Current browser compile keeps
+  only the seven installed RTL warnings.
+- current-identity passes 51 legacy identity/view checks, 44 managed-control
+  and 35 compiled-event checks. Current Studio resize passes 21 exact-width
+  checks; split passes nine host transitions and 20 child interactions, retaining
+  the exact draft. All five current designer/identity/resize/split captures are
+  terminal with passed markers. Final native and narrow browser PNGs were inspected.
+
+Failures remain in ignored output. The initial review omitted named parts and
+therefore correctly refused an instance edit; a verified native debugger stack
+identified its modal exception dialog. That exact fixture process was stopped
+after verifying its executable; callback failures now report through assertions.
+An overwritten imperative spy was still subscribed, exposing the caller-owned
+Cancel contract. Painting then disproved a scroll-host outline: its full-page
+native child occluded graphics. After bounded reassessment, adorners were moved
+to the selected face's immediate paint parent, with an inset root perimeter.
+TShape's excluded final fill row/column required a matching solid pen for the
+full two-pixel accent. Pixel failures, attempted panel variants and the unusable
+desktop-DC observation are retained; no dependency source was edited and no
+capture was manually composed to manufacture passing pixels.
+
+Current native/LCL fixtures report zero owned warnings; current pas2js reports
+only the seven visible installed classes.pas warnings. This qualifies Win32 and
+the executed browser host, not another widgetset, physical phone, IME, hardware
+or assistive technology. The themed creator spy uses a public Nyx LCL button.
+No production listener, compiler profile, private enrollment or user project was
+replaced. Existing services retain their identities; no equivalent retry of the
+automatically rejected updated-service launch occurred.
+
+The bounded prerequisite is delivered; original authoring 4/7 and workflow 6
+remain open. No task moves to DONE and no completion credit is transferred.
+The original NS-4 no-closure counter advances from 2 to 3. Reassessment now ends
+adapter/fixture expansion and chooses the actual standalone native controller:
+consume the shared Nyx shell/session/router, queue native paints after widget
+notifications, retain canvas/source through chrome and page/component navigation,
+then connect existing service/file/workspace transports. Qualify ordinary full
+editor journeys with retained drafts/history and optional outputs. Live warned
+workspace closure and completion after closure still require the refused server
+launch boundary to be resolved; they are not replaced by this prerequisite.
+
+Publication: this complete adapter/semantic-consumer packet is committed on
+hello-nyx and pushed, with exact remote-head verification retained privately at
+.local/codex-restart-check/native-designer-remote-proof.json. The one-off report
+reply made no additional product progress; the subsequent continuation verified
+the final captures and proceeded to the native controller.

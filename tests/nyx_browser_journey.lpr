@@ -146,7 +146,8 @@ begin
   FRenderer.ElementFor(LNested.Part('action').ID, niRuntime).click;
   FRenderer.Select(NyxIdentityInstanceID);
   Check((FLastEvent = 'select') and (FLastDesignID = NyxIdentityInstanceID) and
-    FRenderer.ElementFor(LNested.Part('action').ID, niRuntime).classList.contains('nyx-selected') and
+    FRenderer.ElementFor(NyxIdentityInstanceID, niDesign).classList.contains('nyx-selected') and
+    not FRenderer.ElementFor(LNested.Part('action').ID, niRuntime).classList.contains('nyx-selected') and
     not FRenderer.ElementFor('own/action~🌙', niDesign).classList.contains('nyx-selected'),
     'browser design selection distinguishes inherited parts from own payload');
 end;

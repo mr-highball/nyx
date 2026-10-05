@@ -227,6 +227,9 @@ type
     FLiveBindings: TNyxLiveBindings;
     FCollectionBindings: INyxCollectionBindings;
     FUpdating: Boolean;
+    FDesignMode: Boolean;
+    FSelectedDesignID: TNyxText;
+    FSelectionEdges: array[0..3] of TShape;
     FForceValues: Boolean;
     FOnBindingError: TNyxLCLBindingError;
     FLastBindingError: TNyxText;
@@ -266,6 +269,9 @@ type
     function IdentityBinding(const AID: TNyxText;
       AIdentity: TNyxIdentityKind): TNyxLCLBinding;
     procedure Resize(ASender: TObject);
+    { Adorners share the selected face's immediate paint parent. A graphic at
+      the scroll host would be occluded by its full-page native child window. }
+    procedure UpdateSelection;
     { LCL removes an unchecked radio's TabStop. Restore one entry per native
       peer parent after all value/policy setters, preferring an enabled checked
       item or the first enabled visible item. Creator widgets retain ownership. }
@@ -286,7 +292,27 @@ type
       fresh owned copy of authored defaults is used. Rejected physical edits are
       restored without rebuilding controls or showing a platform exception box. }
     procedure Render(ADocument: TNyxDocument; ARoot: TNyxNode; AHost: TWinControl;
-      AState: TNyxState = nil; const ACollections: INyxCollectionBindings = nil);
+      AState: TNyxState = nil; const ACollections: INyxCollectionBindings = nil); overload;
+    { Designer purpose matches the browser overload: selection/value proposals
+      reach OnEvent as ntDesignSelect/ntDesignValue, while application actions,
+      callbacks, collection edits and drag negotiation stay inactive. Editable
+      native text faces keep their ordinary widgetset input/IME behavior. The
+      realized tree is independent; an editor admits proposals into its own
+      document through an undoable command. Runtime rendering remains default. }
+    procedure Render(ADocument: TNyxDocument; ARoot: TNyxNode; AHost: TWinControl;
+      ADesignMode: Boolean; AState: TNyxState = nil;
+      const ACollections: INyxCollectionBindings = nil); overload;
+    { Move the same mounted view to a different borrowed host, retaining control
+      objects, state/subscriptions, focused text range and containing scroll.
+      Both hosts must outlive their respective parentage; after successful move
+      the old host can be freed. Nil, an unmounted view, a descendant or occupied
+      host refuses before changing parenting. A same-host request is a no-op.
+      No document/history command occurs. }
+    procedure MoveHost(AHost: TWinControl);
+    { Highlight the outermost realized face of this authored design identity.
+      Empty/absent identities clear the outline without taking keyboard focus.
+      Selection is editor presentation and never mutates the owned document. }
+    procedure Select(const ADesignID: TNyxText);
     { Borrow a projected control/host through the same stable identity contract
       as the browser adapter. Caller must not free this renderer-owned control. }
     function ControlFor(const AID: TNyxText;
@@ -331,6 +357,7 @@ type
       View replacement cancels queued work; destruction closes registrations. }
     property Events: INyxEvents read FEvents;
     property Root: TNyxNode read FRoot;
+    property DesignMode: Boolean read FDesignMode;
     property State: TNyxState read FState;
     property OnBindingError: TNyxLCLBindingError read FOnBindingError write FOnBindingError;
     property LastBindingError: TNyxText read FLastBindingError;
@@ -486,6 +513,13 @@ var
 begin
   { Revoke borrowed sinks before destroying any part of the mounted view. }
   FUpdating := True;
+  FDesignMode := False;
+  FSelectedDesignID := '';
+  for LIndex := Low(FSelectionEdges) to High(FSelectionEdges) do
+  begin
+    { The scroll host owns the strips and releases them with its controls. }
+    FSelectionEdges[LIndex] := nil;
+  end;
   LDeferControls := ((FEditingObserver <> nil) and FEditingObserver.Dispatching) or
     ((FPhysicalFrame <> nil) and FPhysicalFrame.Dispatching);
 
@@ -1834,6 +1868,185 @@ begin
   end;
 end;
 
+procedure TNyxLCLRenderer.Select(const ADesignID: TNyxText);
+begin
+  FEvents.Scheduler.RequireUI;
+  FSelectedDesignID := ADesignID;
+  UpdateSelection;
+end;
+
+procedure TNyxLCLRenderer.UpdateSelection;
+var
+  LControl: TControl;
+  LIndex: Integer;
+  LHost: TWinControl;
+  LBounds: TRect;
+begin
+
+  if FPanel = nil then
+  begin
+    Exit;
+  end;
+  LControl := nil;
+
+  if FDesignMode and (FSelectedDesignID <> '') then
+  begin
+    for LIndex := 0 to High(FBindings) do
+    begin
+
+      if (FBindings[LIndex].FNode.DesignID = FSelectedDesignID) and
+        FBindings[LIndex].FControl.Visible and
+        NyxInteractionPolicy(FBindings[LIndex].FNode).Visible then
+      begin
+        { Realization visits parents first. A reusable instance's descendants
+          share its authored identity; outline that instance's outer face once. }
+        LControl := FBindings[LIndex].FControl;
+        Break;
+      end;
+    end;
+  end;
+  LHost := FPanel;
+  LBounds := Rect(0, 0, 0, 0);
+
+  if LControl <> nil then
+  begin
+
+    if (LControl.Parent = FPanel) and (LControl is TWinControl) then
+    begin
+      { Root edges stay inside its client rectangle. They neither extend the
+        scroll range nor sit behind the full-page child window. }
+      LHost := TWinControl(LControl);
+      LBounds := LHost.ClientRect;
+    end
+    else
+    begin
+      LHost := LControl.Parent;
+      LBounds := LControl.BoundsRect;
+      InflateRect(LBounds, 2, 2);
+    end;
+  end;
+  for LIndex := Low(FSelectionEdges) to High(FSelectionEdges) do
+  begin
+
+    if (LControl <> nil) and (FSelectionEdges[LIndex] = nil) then
+    begin
+      FSelectionEdges[LIndex] := TShape.Create(FPanel);
+      FSelectionEdges[LIndex].Shape := stRectangle;
+      FSelectionEdges[LIndex].Pen.Style := psSolid;
+    end;
+
+    if FSelectionEdges[LIndex] <> nil then
+    begin
+      FSelectionEdges[LIndex].Parent := LHost;
+      { TShape's rectangle excludes its final fill row/column. A matching solid
+        pen covers that perimeter too, preserving the complete two-pixel strip. }
+      FSelectionEdges[LIndex].Pen.Color := ThemeColor(FTheme.Accent);
+      FSelectionEdges[LIndex].Brush.Color := ThemeColor(FTheme.Accent);
+      FSelectionEdges[LIndex].Visible := LControl <> nil;
+    end;
+  end;
+
+  if LControl = nil then
+  begin
+    Exit;
+  end;
+  { The scroll panel owns all four graphics even when their paint parent is a
+    nested container. Outside edges leave inputs unobstructed; root edges use
+    the page's padded inner perimeter. Neither kind creates a focus entry. }
+  FSelectionEdges[0].SetBounds(LBounds.Left, LBounds.Top, LBounds.Right - LBounds.Left, 2);
+  FSelectionEdges[1].SetBounds(LBounds.Left, LBounds.Bottom - 2, LBounds.Right - LBounds.Left, 2);
+  FSelectionEdges[2].SetBounds(LBounds.Left, LBounds.Top + 2, 2,
+    Max(0, LBounds.Bottom - LBounds.Top - 4));
+  FSelectionEdges[3].SetBounds(LBounds.Right - 2, LBounds.Top + 2, 2,
+    Max(0, LBounds.Bottom - LBounds.Top - 4));
+  for LIndex := Low(FSelectionEdges) to High(FSelectionEdges) do
+  begin
+    FSelectionEdges[LIndex].BringToFront;
+  end;
+end;
+
+procedure TNyxLCLRenderer.MoveHost(AHost: TWinControl);
+var
+  LParent: TControl;
+  LFocus: TWinControl;
+  LSelection: TNyxTextSelection;
+  LInside: Boolean;
+  LHorizontal: Integer;
+  LVertical: Integer;
+  LUpdating: Boolean;
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if (AHost = nil) or (FPanel = nil) or (FRoot = nil) then
+  begin
+    raise ENyxModel.Create('Moving a native view requires a mounted view and host');
+  end;
+  LParent := AHost;
+  while LParent <> nil do
+  begin
+
+    if LParent = FPanel then
+    begin
+      raise ENyxModel.Create('A native view cannot move into its own descendant');
+    end;
+    LParent := LParent.Parent;
+  end;
+
+  if FPanel.Parent = AHost then
+  begin
+    Exit;
+  end;
+
+  if AHost.ControlCount <> 0 then
+  begin
+    raise ENyxModel.Create('Replacement native host must be empty');
+  end;
+  LFocus := Screen.ActiveControl;
+  LParent := LFocus;
+  LInside := False;
+  while LParent <> nil do
+  begin
+
+    if LParent = FPanel then
+    begin
+      LInside := True;
+      Break;
+    end;
+    LParent := LParent.Parent;
+  end;
+  LSelection := Default(TNyxTextSelection);
+
+  if LInside then
+  begin
+    LSelection := CaptureNyxLCLSelection(LFocus);
+  end;
+  LHorizontal := FPanel.HorzScrollBar.Position;
+  LVertical := FPanel.VertScrollBar.Position;
+  LUpdating := FUpdating;
+  FUpdating := True;
+  try
+    { Reparent the scroll host, never recreate its children or event routers.
+      Guard native focus notifications caused by reparenting from authoring. }
+    FPanel.Parent := AHost;
+    Resize(FPanel);
+
+    if LInside and LFocus.CanFocus then
+    begin
+      LFocus.SetFocus;
+
+      if LSelection.Defined then
+      begin
+        SelectNyxLCLText(LFocus, LSelection);
+      end;
+    end;
+    FPanel.HorzScrollBar.Position := LHorizontal;
+    FPanel.VertScrollBar.Position := LVertical;
+    UpdateSelection;
+  finally
+    FUpdating := LUpdating;
+  end;
+end;
+
 procedure TNyxLCLRenderer.Resize(ASender: TObject);
 var
   LHeight: Integer;
@@ -1857,11 +2070,19 @@ begin
     finally
       FPanel.EnableAutoSizing;
     end;
+    UpdateSelection;
   end;
 end;
 
 procedure TNyxLCLRenderer.Render(ADocument: TNyxDocument; ARoot: TNyxNode;
   AHost: TWinControl; AState: TNyxState; const ACollections: INyxCollectionBindings);
+begin
+  Render(ADocument, ARoot, AHost, False, AState, ACollections);
+end;
+
+procedure TNyxLCLRenderer.Render(ADocument: TNyxDocument; ARoot: TNyxNode;
+  AHost: TWinControl; ADesignMode: Boolean; AState: TNyxState;
+  const ACollections: INyxCollectionBindings);
 var
   LCandidate: TNyxLCLRenderer;
   LIndex: Integer;
@@ -1896,6 +2117,7 @@ begin
     LCandidate.FViewportObserver := NewNyxViewportObserver;
     LCandidate.FEditingObserver := NewNyxLCLEditingObserver;
     LCandidate.FUpdaters := Copy(FUpdaters, 0, Length(FUpdaters));
+    LCandidate.FDesignMode := ADesignMode;
     LCandidate.FRoot := RealizeNyxView(ADocument, ARoot);
     ApplyNyxPlatform(LCandidate.FRoot, npfNativeLCL);
     LCandidate.FCollectionBindings := ACollections;
@@ -1935,7 +2157,11 @@ begin
     end;
     LCandidate.Resize(LCandidate.FPanel);
     LCandidate.Sync;
-    LCandidate.FLiveBindings.Activate;
+
+    if not ADesignMode then
+    begin
+      LCandidate.FLiveBindings.Activate;
+    end;
     { Preserve an explicitly reused owned runtime store through full remount.
       The candidate borrows it until admission; failed factories retain the old
       view/store ownership. Clear only disconnects the old coordinator here. }
@@ -1968,6 +2194,7 @@ begin
     FLastBindingFailure := nbfNone;
     FRoot := LCandidate.FRoot;
     LCandidate.FRoot := nil;
+    FDesignMode := ADesignMode;
     FPanel := LCandidate.FPanel;
     LCandidate.FPanel := nil;
     FBindings := LCandidate.FBindings;
@@ -2184,7 +2411,7 @@ var
   LDispatch: TNyxDispatch;
 begin
 
-  if FUpdating then
+  if FUpdating or FDesignMode then
   begin
     Exit;
   end;
@@ -2215,7 +2442,7 @@ var
   LDispatch: TNyxDispatch;
 begin
 
-  if FUpdating or not FEvents.HasSubscribers(ATrigger) then
+  if FUpdating or FDesignMode or not FEvents.HasSubscribers(ATrigger) then
   begin
     Exit;
   end;
@@ -2246,6 +2473,11 @@ var
   LPolicy: TNyxInteractionPolicy;
   LSource: Boolean;
 begin
+
+  if FRenderer.FDesignMode then
+  begin
+    Exit;
+  end;
   LPrevious := FPointerHooks[PointerSlot(ASender)].StartDrag;
   LRenderer := FRenderer;
   LEvents := LRenderer.FEvents;
@@ -2322,6 +2554,11 @@ var
   LRevision: Integer;
   LFrame: INyxNativeGestureFrame;
 begin
+
+  if FRenderer.FDesignMode then
+  begin
+    Exit;
+  end;
   LPrevious := FPointerHooks[PointerSlot(ASender)].EndDrag;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
@@ -2360,6 +2597,12 @@ var
   LPhase: TNyxDragPhase;
   LTarget: Boolean;
 begin
+
+  if FRenderer.FDesignMode then
+  begin
+    AAccept := False;
+    Exit;
+  end;
   LPrevious := FPointerHooks[PointerSlot(ASender)].DragOver;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
@@ -2451,6 +2694,11 @@ var
   LResult: TNyxGestureResult;
   LTarget: Boolean;
 begin
+
+  if FRenderer.FDesignMode then
+  begin
+    Exit;
+  end;
   LPrevious := FPointerHooks[PointerSlot(ASender)].DragDrop;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
@@ -2504,7 +2752,8 @@ var
 begin
   Result := Default(TNyxGestureResult);
 
-  if FRenderer.FUpdating or not NyxInteractionPolicy(FNode).CanIssueCommand or
+  if FRenderer.FUpdating or FRenderer.FDesignMode or
+    not NyxInteractionPolicy(FNode).CanIssueCommand or
     not (ADragObject is TNyxNativeDragObject) then
   begin
     Exit;
@@ -2652,6 +2901,11 @@ var
   LEvents: INyxEvents;
   LRevision: Integer;
 begin
+
+  if FRenderer.FDesignMode then
+  begin
+    Exit;
+  end;
   LPrevious := FPointerHooks[PointerSlot(ASender)].Wheel;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
@@ -2670,6 +2924,11 @@ var
   LEvents: INyxEvents;
   LRevision: Integer;
 begin
+
+  if FRenderer.FDesignMode then
+  begin
+    Exit;
+  end;
   LPrevious := FPointerHooks[PointerSlot(ASender)].WheelHorz;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
@@ -2691,7 +2950,7 @@ var
 begin
   LEvents := FRenderer.FEvents;
 
-  if AHandled or FRenderer.FUpdating or
+  if AHandled or FRenderer.FUpdating or FRenderer.FDesignMode or
     (not LEvents.HasSubscribers(ntBeforeWheel) and not LEvents.HasSubscribers(ntWheel) and
       not LEvents.HasSubscribers(ntAfterWheel)) then
   begin
@@ -2771,7 +3030,7 @@ begin
   Result := False;
   LEvents := FRenderer.FEvents;
 
-  if FRenderer.FUpdating or not LEvents.HasSubscribers(ATrigger) or
+  if FRenderer.FUpdating or FRenderer.FDesignMode or not LEvents.HasSubscribers(ATrigger) or
     not NyxInteractionPolicy(FNode).CanIssueCommand then
   begin
     Exit;
@@ -2925,6 +3184,11 @@ var
   LPrevious: TNotifyEvent;
   LPosition: TPoint;
 begin
+
+  if FRenderer.FDesignMode then
+  begin
+    Exit;
+  end;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
   LPrevious := FPointerHooks[PointerSlot(ASender)].DoubleClick;
@@ -2949,6 +3213,11 @@ var
   LPrevious: TNotifyEvent;
   LPosition: TPoint;
 begin
+
+  if FRenderer.FDesignMode then
+  begin
+    Exit;
+  end;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
   LPrevious := FPointerHooks[PointerSlot(ASender)].Enter;
@@ -2973,6 +3242,11 @@ var
   LPrevious: TNotifyEvent;
   LPosition: TPoint;
 begin
+
+  if FRenderer.FDesignMode then
+  begin
+    Exit;
+  end;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
   LPrevious := FPointerHooks[PointerSlot(ASender)].Leave;
@@ -2997,6 +3271,11 @@ var
   LRevision: Integer;
   LPrevious: TMouseEvent;
 begin
+
+  if FRenderer.FDesignMode then
+  begin
+    Exit;
+  end;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
   LPrevious := FPointerHooks[PointerSlot(ASender)].Down;
@@ -3021,6 +3300,11 @@ var
   LRevision: Integer;
   LPrevious: TMouseEvent;
 begin
+
+  if FRenderer.FDesignMode then
+  begin
+    Exit;
+  end;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
   LPrevious := FPointerHooks[PointerSlot(ASender)].Up;
@@ -3044,6 +3328,11 @@ var
   LRevision: Integer;
   LPrevious: TMouseMoveEvent;
 begin
+
+  if FRenderer.FDesignMode then
+  begin
+    Exit;
+  end;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
   LPrevious := FPointerHooks[PointerSlot(ASender)].Move;
@@ -3068,6 +3357,11 @@ var
   LRevision: Integer;
   LPrevious: TContextPopupEvent;
 begin
+
+  if FRenderer.FDesignMode then
+  begin
+    Exit;
+  end;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
   LPrevious := FPointerHooks[PointerSlot(ASender)].ContextMenu;
@@ -3093,7 +3387,7 @@ end;
 procedure TNyxLCLBinding.Focus(ASender: TObject);
 begin
 
-  if FRenderer.FUpdating then
+  if FRenderer.FUpdating or FRenderer.FDesignMode then
   begin
     Exit;
   end;
@@ -3131,6 +3425,18 @@ var
   LRevision: Integer;
   LPrevious: TNotifyEvent;
 begin
+
+  if FRenderer.FDesignMode then
+  begin
+
+    if not FRenderer.FUpdating and Assigned(FRenderer.FOnEvent) then
+    begin
+      FRenderer.FOnEvent(FNode, NyxDesignEvent(FNode, ntDesignSelect));
+    end;
+    { A designer selection never calls a creator's application click hook or
+      a live binding action. Native editable controls keep their own defaults. }
+    Exit;
+  end;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
   LPrevious := FPreviousClick;
@@ -3245,7 +3551,7 @@ begin
   LEvents := FEvents;
   LRevision := LEvents.ViewRevision;
 
-  if FUpdating then
+  if FUpdating or FDesignMode then
   begin
     Exit;
   end;
@@ -3398,6 +3704,19 @@ begin
   begin
     LValue := IntToStr(TTrackBar(FInput).Position);
   end;
+
+  if FRenderer.FDesignMode then
+  begin
+    { This is a realized proposal, not a store/application mutation. The host
+      owns admission and can restore a refused value through ordinary Sync. }
+    FNode.SetProp('value', LValue);
+
+    if Assigned(FRenderer.FOnEvent) then
+    begin
+      FRenderer.FOnEvent(FNode, NyxDesignEvent(FNode, ntDesignValue));
+    end;
+    Exit;
+  end;
   { Win32 may deliver a second change after a setter/restoration has returned.
     It already contains the accepted value. Ignore it so a rejected edit cannot
     emit a synthetic success or clear its diagnostic after the update guard. }
@@ -3464,6 +3783,12 @@ var
   LBinding: TNyxLCLBinding;
   LDispatch: TNyxDispatch;
 begin
+  Result := False;
+
+  if FDesignMode then
+  begin
+    Exit;
+  end;
   LBinding := IdentityBinding(AOriginID, niRuntime);
   LDispatch := DispatchNyxNamedEvent(LBinding.FNode, AName, APayload,
     AHasPayload, npfNativeLCL);
@@ -3482,7 +3807,7 @@ var
   LDispatch: TNyxDispatch;
 begin
 
-  if FRenderer.FUpdating then
+  if FRenderer.FUpdating or FRenderer.FDesignMode then
   begin
     Exit;
   end;
@@ -3501,7 +3826,7 @@ var
   LLegacyClick: Boolean;
 begin
 
-  if ADispatch.EventName = '' then
+  if FDesignMode or (ADispatch.EventName = '') then
   begin
     Exit;
   end;
@@ -3536,6 +3861,11 @@ var
   LEvents: INyxEvents;
   LRevision: Integer;
 begin
+
+  if FRenderer.FDesignMode or FRenderer.FUpdating then
+  begin
+    Exit;
+  end;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
   Focus(ASender);
@@ -3565,6 +3895,11 @@ begin
   for LIndex := Low(FPressedKeys) to High(FPressedKeys) do
   begin
     FPressedKeys[LIndex] := False;
+  end;
+
+  if FRenderer.FDesignMode or FRenderer.FUpdating then
+  begin
+    Exit;
   end;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
@@ -3607,6 +3942,11 @@ var
   LDispatch: TNyxDispatch;
   LConsumed: Boolean;
 begin
+
+  if FRenderer.FDesignMode or FRenderer.FUpdating then
+  begin
+    Exit;
+  end;
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
   LPrevious := FPreviousKeyDown;
@@ -4026,7 +4366,7 @@ begin
       if LNode.Props.IndexOfName('drag-source') >= 0 then
       begin
 
-        if LNode.Prop('drag-source') = 'true' then
+        if not FDesignMode and (LNode.Prop('drag-source') = 'true') then
         begin
           TNyxControlAccess(LBinding.FControl).DragMode := dmAutomatic;
         end
@@ -4044,12 +4384,14 @@ begin
 
       if LBinding.FControl is TNyxLCLSplitView then
       begin
-        TNyxLCLSplitView(LBinding.FControl).SetInteraction(LEnabled, LReadOnly);
+        TNyxLCLSplitView(LBinding.FControl).SetInteraction(LEnabled and not FDesignMode,
+          LReadOnly or FDesignMode);
       end;
 
       if LBinding.FCollectionMount <> nil then
       begin
-        LBinding.FCollectionMount.SetInteraction(LEnabled, LReadOnly);
+        LBinding.FCollectionMount.SetInteraction(LEnabled and not FDesignMode,
+          LReadOnly or FDesignMode);
       end;
       LBinding.SyncLiteralItems;
       LBinding.SyncPicture;

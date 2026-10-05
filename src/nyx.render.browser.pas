@@ -282,10 +282,14 @@ type
     { Retain the automatically mounted typed view by exact runtime identity. }
     function CollectionView(const AID: TNyxText): INyxCollectionView;
     { Move a mounted view without recreating controls or bindings. Caller owns
-      both hosts; the new host must be empty and outside the old view. Focus and
-      scroll restoration belong to the containing layout. Compiled frames may
-      move through the same boundary. }
+      both hosts; the new host must be empty and outside the old view. Retains
+      a focused descendant's scalar text range and the host's scroll offsets.
+      Refusal leaves the mounted view unchanged; same-host requests are no-ops.
+      Compiled frames may move through the same boundary. }
     procedure MoveHost(AHost: TJSHTMLElement);
+    { Outline the first visible realized face for an authored identity, retaining
+      keyboard focus. Reusable parts share that identity; highlight their outer
+      instance once rather than outlining every descendant independently. }
     procedure Select(const ADesignID: TNyxText);
     { Synchronize runtime properties while retaining DOM identity and focus.
       Compound actions use this path rather than rebuilding the entire view. }
@@ -1348,6 +1352,13 @@ begin
 end;
 
 procedure TNyxBrowserRenderer.MoveHost(AHost: TJSHTMLElement);
+var
+  LFocus: TJSHTMLElement;
+  LSelection: TNyxTextSelection;
+  LInside: Boolean;
+  LScrollTop: NativeInt;
+  LScrollLeft: NativeInt;
+  LUpdating: Boolean;
 begin
 
   if (AHost = nil) or (FHost = nil) then
@@ -1364,21 +1375,52 @@ begin
   begin
     raise ENyxModel.Create('Replacement browser host must be empty and outside the view');
   end;
-  AHost.classList.add('nyx-root');
-  AHost.setAttribute('data-nyx-theme', FThemeScope);
+  LFocus := TJSHTMLElement(document.activeElement);
+  LInside := (LFocus <> nil) and FHost.contains(LFocus);
+  LSelection := Default(TNyxTextSelection);
 
-  if FDesignMode then
+  if LInside then
   begin
-    AHost.classList.add('nyx-design');
+    LSelection := CaptureNyxBrowserSelection(LFocus);
   end;
-  while FHost.firstChild <> nil do
-  begin
-    AHost.appendChild(FHost.firstChild);
+  LScrollTop := FHost.scrollTop;
+  LScrollLeft := FHost.scrollLeft;
+  LUpdating := FUpdating;
+  FUpdating := True;
+  try
+    AHost.classList.add('nyx-root');
+    AHost.setAttribute('data-nyx-theme', FThemeScope);
+
+    if FDesignMode then
+    begin
+      AHost.classList.add('nyx-design');
+    end;
+    while FHost.firstChild <> nil do
+    begin
+      AHost.appendChild(FHost.firstChild);
+    end;
+    FHost.classList.remove('nyx-root');
+    FHost.classList.remove('nyx-design');
+    FHost.removeAttribute('data-nyx-theme');
+    FHost := AHost;
+
+    if LInside then
+    begin
+      { Moving nodes can blur the real editor even though its object survived.
+        Restore the range/focus under the update guard, with no application
+        focus callback and no incidental scroll-to-top in its new chrome. }
+      NyxFocusWithoutScroll(LFocus);
+
+      if LSelection.Defined then
+      begin
+        SelectNyxBrowserText(LFocus, LSelection);
+      end;
+    end;
+    FHost.scrollTop := LScrollTop;
+    FHost.scrollLeft := LScrollLeft;
+  finally
+    FUpdating := LUpdating;
   end;
-  FHost.classList.remove('nyx-root');
-  FHost.classList.remove('nyx-design');
-  FHost.removeAttribute('data-nyx-theme');
-  FHost := AHost;
 end;
 
 function TNyxBrowserRenderer.InputFor(const AID: TNyxText;
@@ -1478,13 +1520,17 @@ end;
 procedure TNyxBrowserRenderer.Select(const ADesignID: TNyxText);
 var
   LIndex: Integer;
+  LChosen: Boolean;
 begin
+  LChosen := False;
   for LIndex := 0 to Length(FBindings) - 1 do
   begin
 
-    if FBindings[LIndex].FNode.DesignID = ADesignID then
+    if not LChosen and (FBindings[LIndex].FNode.DesignID = ADesignID) and
+      NyxInteractionPolicy(FBindings[LIndex].FNode).Visible then
     begin
       FBindings[LIndex].FElement.classList.add('nyx-selected');
+      LChosen := True;
     end
     else
     begin

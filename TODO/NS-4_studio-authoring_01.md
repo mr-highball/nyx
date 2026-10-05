@@ -40,6 +40,23 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Native-controller prerequisite — 2026-10-05
+
+Native-controller prerequisite (2026-10-05): LCL now has designer-purpose
+projection, actual instance-only canvas editing/paired history, painted authored
+selection and MoveHost with focused Unicode ranges/scroll and former-host
+destruction. The unchanged MCP-authored companion passes 34 checked native
+cases including painted pixels and 32 desktop / 33 exact-390 browser cases.
+Both application compiler sources equal its bounded export. Browser selection
+outlines the outer reusable instance once, with the legacy identity journey
+retained. See [designer views](../docs/designer-views.md) and the latest WORK
+packet for failures, runtime regressions, warnings and deployment limits.
+Original criteria 4/7 remain open; these adapters are not a standalone native
+Studio/controller. The no-closure counter is now 3. Reassessment ends this
+fixture expansion and selects the actual shared-shell native controller and
+full editor navigation as the next product deliverable, retaining the separate
+live closure gate and every original acceptance requirement.
+
 ## Responsive shell evidence — 2026-10-03
 
 Concurrent-project continuation (2026-10-04): criterion 7 now has ordinary

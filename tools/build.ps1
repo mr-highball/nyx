@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -49,7 +49,12 @@ param(
   # Unchanged companion exported by the isolated semantic root-cleanup journey.
   [string]$RootSourceDirectory = 'build/root-cleanup/journey/source',
   # Exact bounded companion exported by the isolated protected-review journey.
-  [string]$ReviewSourceDirectory = 'build/review-workspaces/journey/source'
+  [string]$ReviewSourceDirectory = 'build/review-workspaces/journey/source',
+
+  [string]$DesignerSourceDirectory = 'build/native-studio/source',
+  # Optional explicit enrollment for the Pascal semantic review author. Supplying
+  # it creates/compiles/retires an owned review, never the operator's project.
+  [string]$DesignerMCPConfig
 )
 
 $ErrorActionPreference = 'Stop'
@@ -202,6 +207,53 @@ try {
     if ($LASTEXITCODE -ne 0) {
       throw 'MCP configuration preservation checks failed'
     }
+    exit 0
+  }
+
+  if ($Target -eq 'designer-controls') {
+    # Compile the semantic author separately; running it needs an explicitly
+    # supplied authenticated endpoint. This gate never launches a service or
+    # replaces an operator document. Actual adapters consume its unchanged export.
+    $nyxDesignerSource = [IO.Path]::GetFullPath($DesignerSourceDirectory)
+
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxDesignerAuthor = Join-Path $nyxRoot 'build/native-studio/author'
+    $nyxDesignerNative = Join-Path $nyxRoot 'build/native-studio/native'
+    New-Item -ItemType Directory -Force $nyxDesignerAuthor, $nyxDesignerNative | Out-Null
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxDesignerAuthor", "-FE$nyxDesignerAuthor",
+      'tests/nyx_mcp_designer_review.lpr')
+
+    if ($DesignerMCPConfig) {
+      & (Join-Path $nyxDesignerAuthor 'nyx_mcp_designer_review.exe') $DesignerMCPConfig `
+        (Join-Path $nyxRoot 'tests/designer-review.operations.json') $nyxDesignerSource
+
+      if ($LASTEXITCODE -ne 0) { throw 'Semantic designer review failed; preserve its receipts' }
+    }
+
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxDesignerSource 'nyx.generated.view.pas'))) {
+      throw 'Export the MCP-authored designer-review companion first, or supply DesignerMCPConfig'
+    }
+    $nyxDesignerPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxDesignerSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxDesignerPlatform", "-Fu$nyxLazarus/lcl/units/$nyxDesignerPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxDesignerPlatform", "-Fu$nyxLazarus/packager/units/$nyxDesignerPlatform",
+      "-FU$nyxDesignerNative", "-FE$nyxDesignerNative", 'tests/nyx_designer_controls_tests.lpr')
+    & (Join-Path $nyxDesignerNative 'nyx_designer_controls_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Native designer-purpose/retained-view controls failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxDesignerBrowser = Join-Path $nyxRoot 'build/native-studio/web'
+
+    if ($BrowserOutput) { $nyxDesignerBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxDesignerBrowser | Out-Null
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests',
+      "-Fu$nyxDesignerSource", "-FE$nyxDesignerBrowser", 'tests/nyx_designer_controls_tests.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxDesignerBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/designer.html') -Destination $nyxDesignerBrowser
     exit 0
   }
 

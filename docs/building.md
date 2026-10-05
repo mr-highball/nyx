@@ -7,6 +7,14 @@ Pascal. PowerShell only selects tools, passes compiler arguments and stages
 matched target artifacts. No Node, npm, Python, CSS framework or remote font is
 required.
 
+`designer-controls` compiles the Pascal semantic review author, runs the checked
+actual LCL designer/retained-source consumer and stages its pas2js counterpart.
+Supply `-DesignerMCPConfig <local-file>` for an explicit owned MCP review or
+`-DesignerSourceDirectory <export>` for an unchanged existing semantic export.
+It launches no server. See [designer views](designer-views.md) for ownership,
+runtime isolation, native painting, actual browser execution and remaining
+native Studio requirements.
+
 The verified Windows pair is FPC 3.2.0 for checked portable fixtures, and the
 existing FPC 3.3.1/Lazarus 4.99 pair for LCL. Browser checks use pas2js 3.3.1 and
 its matching `rtl.js`. These are observed capabilities, not a promise that every
