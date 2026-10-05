@@ -189,3 +189,19 @@ The current evidence is in [WORK.md](../WORK.md). Build/capture logs and private
 accepted source remain under ignored output. User-facing editor defaults remain
 free of review names; this page is an owned demo root, not editor chrome. Cleanup
 uses reviewed `nyx_roots` at the current revision, preserving all other roots.
+
+Native large views retain complete logical content behind safe physical geometry.
+`Reveal(ID, Identity)` navigates to an exact mounted face; `ViewViewport` observes
+its containing extent/offset and `ScrollView(X, Y)` restores logical-pixel
+position. `Select` paints an outline without changing scroll/focus. Studio's
+explicit hierarchy navigation consumes this separation. All original controls
+remain owned and retain input while offscreen; projection does not create an
+Undo entry or modify source. The native implementation reuses standard LCL bars.
+
+`tools/build.ps1 -Target native-studio -VerifyLogicalViewport` qualifies checked
+geometry and actual 2048-control/native nested input, resize, scrolling, events
+and retirement, while compiling its browser companion. See WORK.md for current
+evidence and the browser execution gate. Giant native inputs/custom faces and
+large split panes explicitly require logical adapters. Non-panel client offsets,
+logical resize events, widgetset/DPI metrics and complete parity remain under
+the original renderer owners; this API does not accept those untested outcomes.

@@ -29,7 +29,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, ExtCtrls,
   nyx.text, nyx.types, nyx.behavior, nyx.data, nyx.model, nyx.theme, nyx.render.lcl,
-  nyx.events,
+  nyx.events, nyx.viewport,
   nyx.studio.session, nyx.studio.view, nyx.studio.projects,
   nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.rootedits,
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
@@ -1127,7 +1127,7 @@ procedure TNyxNativeStudio.CaptureProject;
 var
   LInput: TWinControl;
   LSelection: TNyxTextSelection;
-  LCanvas: TControl;
+  LViewport: TNyxViewportSnapshot;
 begin
   CapturePresentation;
   FCurrentProject.State := FState;
@@ -1151,13 +1151,9 @@ begin
 
   if FCanvasView.Root <> nil then
   begin
-    LCanvas := FCanvasView.ControlFor(FCanvasView.Root.ID).Parent;
-
-    if LCanvas is TScrollBox then
-    begin
-      FCurrentProject.CanvasTop := TScrollBox(LCanvas).VertScrollBar.Position;
-      FCurrentProject.CanvasLeft := TScrollBox(LCanvas).HorzScrollBar.Position;
-    end;
+    LViewport := FCanvasView.ViewViewport;
+    FCurrentProject.CanvasTop := Trunc(LViewport.Y.Position);
+    FCurrentProject.CanvasLeft := Trunc(LViewport.X.Position);
   end;
 end;
 
@@ -1167,7 +1163,6 @@ var
   LLength: Integer;
   LStart: Integer;
   LEnd: Integer;
-  LCanvas: TControl;
   LControl: TControl;
 begin
 
@@ -1205,13 +1200,7 @@ begin
 
   if FCanvasView.Root <> nil then
   begin
-    LCanvas := FCanvasView.ControlFor(FCanvasView.Root.ID).Parent;
-
-    if LCanvas is TScrollBox then
-    begin
-      TScrollBox(LCanvas).VertScrollBar.Position := FCurrentProject.CanvasTop;
-      TScrollBox(LCanvas).HorzScrollBar.Position := FCurrentProject.CanvasLeft;
-    end;
+    FCanvasView.ScrollView(FCurrentProject.CanvasLeft, FCurrentProject.CanvasTop);
   end;
 end;
 
@@ -1783,6 +1772,7 @@ end;
 procedure TNyxNativeStudio.HierarchyEvent(const AEvent: TNyxEventInfo);
 var
   LNode: TNyxNode;
+  LSelected: TNyxText;
 begin
 
   if FShellView.Root = nil then
@@ -1793,7 +1783,17 @@ begin
 
   if LNode <> nil then
   begin
+    LSelected := FSession.SelectedID;
     ShellEvent(LNode, AEvent);
+
+    if (LSelected <> FSession.SelectedID) and (FCanvasView.Root <> nil) and
+      (FCanvasID = FSession.ActiveViewID) then
+    begin
+      { A deliberate hierarchy navigation reveals the exact authored face.
+        Ordinary observing paints remain scroll-neutral; the pending chrome
+        refresh retains this same public view and its new viewport offset. }
+      FCanvasView.Reveal(FSession.SelectedID, niDesign);
+    end;
   end;
 end;
 

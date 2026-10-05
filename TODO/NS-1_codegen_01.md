@@ -708,3 +708,24 @@ both-target input/selection. Detached visual/structural reconciliation remains
 required afterward. Another capture micro-optimization does not substitute that
 failure. Browser execution needs a permitted host without an equivalent refused
 launch. No scope/count reset, weakened acceptance or full-product completion.
+## Original-size native viewport prerequisite — 2026-10-05
+
+The same original-size editor pair now passes the complete maintained native
+128/512/2048 consumer: 45 actual checks, exact 25094/98822/400022 source byte sizes,
+all hierarchy descendants, revealed final canvas control, retained memo/draft/
+focus/caret/history and zero leaks. Shared logical geometry and actual mixed
+native controls qualify 17/4118; native viewport/source regressions pass 46/39
+with zero leaks. The concrete 81963-pixel canvas failure is resolved through
+public library viewport contracts, with no truncation or silent size clamp.
+Browser consumers and Studio compile; actual browser execution stays gated.
+
+Criterion 3 remains open for comfortable original-size editing, detached
+visual/structural reconciliation and full both-target ordinary editor outcomes.
+Heap-traced/concurrent host fixture timings are not release typing/network
+latency. Original no-closure count advances 17→18, native renderer 2→3; authoring
+7 and delivery 1 remain unchanged. Criteria 1/2 remain accepted. Reassessment
+changes the next action from the concrete viewport failure to detached
+visual/structural reconciliation using current immutable candidates/guards,
+preserving exact source, input, ownership and paired history. WORK.md owns failed
+attempts, current evidence and service/host gates. No scope/count reset or full
+goal completion substitutes the remaining outcome.

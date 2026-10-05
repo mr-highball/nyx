@@ -514,13 +514,26 @@ execution. Heap-checked fixture durations include tracing and in-process protoco
 admission; they are not release typing/network latency measurements. Current
 ordinary measurements and limits belong to WORK.md.
 
-The full native consumer currently refuses at 2048 controls: the design canvas
-exceeds LCL's widget height range. Its hierarchy now uses one bounded public
-Nyx tree, with all descendants retained. The 128/512 journeys and shared protocol
-have evidence; these do not accept the complete original-size editor gate. The
-optional command stages both target consumers and returns failure for that gate.
-No controls are truncated, no renderer height is silently clamped and no listener
-is launched to bypass the current browser host restriction.
+The full native consumer now passes all three original sizes, retaining every
+descendant and exact source bytes. The public hierarchy uses one bounded typed
+Nyx tree; the canvas keeps its full logical extent while allocating safe physical
+geometry. Explicit hierarchy navigation reveals its exact control, while ordinary
+selection painting preserves independent scroll/focus. This resolves the recorded
+81963-pixel height failure. Traced fixture timings do not establish comfortable
+release editing or full browser/LCL parity.
+
+The maintained logical geometry and mixed-control qualification is available as:
+
+```powershell
+./tools/build.ps1 -Target native-studio -VerifyLogicalViewport
+```
+
+It stages both Pascal consumers and matched browser runtime before executing
+native checked/heap-traced geometry, 2048-control navigation, bottom/nested memo
+editing, desktop/390 resizing, actual native scrollbar/wheel events and candidate
+refusal/retirement. Review captures use English; dedicated Unicode/source-size
+inputs remain technical qualification. Browser compilation retains its separate
+permitted-host execution gate. No listener is launched by either option.
 
 The optional Win32 transport consumer needs no Studio server, project, enrollment
 or application compiler profile:

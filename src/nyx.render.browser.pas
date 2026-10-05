@@ -261,6 +261,15 @@ type
     { Read current local CSS-pixel offsets without changing state/selection.
       Signed offsets preserve the browser's RTL and overscroll conventions. }
     function ViewportFor(const AID: TNyxText): TNyxViewportSnapshot;
+    { Read the containing mounted view's logical-pixel range/offset. Missing
+      mount raises; this observation changes neither selection nor the model. }
+    function ViewViewport: TNyxViewportSnapshot;
+    { Set mounted containing-view logical pixel offsets. Browser bounds clamp
+      against its actual scroll extent; no document/history command occurs. }
+    procedure ScrollView(AX, AY: Integer);
+    { Reveal the exact mounted runtime/design identity with nearest-edge
+      scrolling. No control recreation, focus, text edit or history step. }
+    procedure Reveal(const AID: TNyxText; AIdentity: TNyxIdentityKind = niAutomatic);
     { Navigate a mounted public code editor to a one-based source line. Focus
       stays inside the editor and never scrolls its containing designer canvas. }
     { One-based Unicode-scalar column; caret storage is translated for UTF-16.
@@ -342,6 +351,44 @@ begin
     NyxViewportAxis(AElement.scrollTop, AElement.scrollHeight,
       AElement.clientHeight, nvuLogicalPixels),
     AElement.clientWidth, AElement.clientHeight);
+end;
+
+function TNyxBrowserRenderer.ViewViewport: TNyxViewportSnapshot;
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if (FHost = nil) or (FRoot = nil) then
+  begin
+    raise ENyxModel.Create('A containing viewport requires a mounted view');
+  end;
+  Result := CaptureBrowserViewport(FHost);
+end;
+
+procedure TNyxBrowserRenderer.Reveal(const AID: TNyxText; AIdentity: TNyxIdentityKind);
+const
+  CNearest = 'nearest';
+var
+  LOptions: TJSScrollIntoViewOptions;
+begin
+  FEvents.Scheduler.RequireUI;
+  LOptions := TJSScrollIntoViewOptions.new;
+  { DOM keywords stay at this adapter boundary. Public callers supply a typed
+    identity, without embedding browser-specific scroll directives in designs. }
+  LOptions.block := CNearest;
+  LOptions.inline_ := CNearest;
+  ElementFor(AID, AIdentity).scrollIntoView(LOptions);
+end;
+
+procedure TNyxBrowserRenderer.ScrollView(AX, AY: Integer);
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if (FHost = nil) or (FRoot = nil) then
+  begin
+    raise ENyxModel.Create('Scrolling a containing viewport requires a mounted view');
+  end;
+  FHost.scrollLeft := AX;
+  FHost.scrollTop := AY;
 end;
 
 function TNyxBrowserRenderer.ViewportFor(const AID: TNyxText): TNyxViewportSnapshot;

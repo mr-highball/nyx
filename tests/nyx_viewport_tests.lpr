@@ -279,11 +279,11 @@ var
 
     if AHorizontal then
     begin
-      Result := TAccess(LInput).DoMouseWheelHorz([ssCtrl], 60, Point(12, 8));
+      Result := TAccess(TControl(LInput)).DoMouseWheelHorz([ssCtrl], 60, Point(12, 8));
     end
     else
     begin
-      Result := TAccess(LInput).DoMouseWheel([ssCtrl], -150, Point(12, 8));
+      Result := TAccess(TControl(LInput)).DoMouseWheel([ssCtrl], -150, Point(12, 8));
     end;
   end;
   {$endif}

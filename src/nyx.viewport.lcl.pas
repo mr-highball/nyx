@@ -47,7 +47,8 @@ function NewNyxViewportObserver: INyxViewportObserver;
 
 implementation
 
-uses SysUtils, Forms, StdCtrls, Grids, LCLType, LCLIntf, nyx.types;
+uses SysUtils, Forms, StdCtrls, Grids, LCLType, LCLIntf, nyx.types,
+  nyx.viewport.surface.lcl;
 
 type
   TNyxObservedViewport = record
@@ -97,6 +98,11 @@ begin
   if AControl = nil then
   begin
     raise EArgumentException.Create('Viewport capture requires a mounted control');
+  end;
+
+  if AControl is TNyxLogicalScrollBox then
+  begin
+    Exit(TNyxLogicalScrollBox(AControl).Snapshot);
   end;
   LX := Default(TNyxViewportAxis);
   LY := Default(TNyxViewportAxis);

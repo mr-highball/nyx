@@ -77,7 +77,10 @@ param(
   [switch]$VerifySourceScheduling,
   # Paired draft coalescing through the real protocol and native memo/timers.
   # Also builds the portable browser counterpart; it starts no listener.
-  [switch]$VerifyDraftCapture
+  [switch]$VerifyDraftCapture,
+  # Checked logical geometry and actual full-size native scrolling/input.
+  # Browser companions are staged; execution needs a separately permitted host.
+  [switch]$VerifyLogicalViewport
 )
 
 $ErrorActionPreference = 'Stop'
@@ -256,6 +259,28 @@ try {
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxStudioPlatform", "-Fu$nyxLazarus/packager/units/$nyxStudioPlatform",
       "-FU$nyxStudioNative", "-FE$nyxStudioNative")
     Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @('studio/nyx_studio_native.lpr'))
+
+    if ($VerifyLogicalViewport) {
+      foreach ($nyxViewportProgram in @('nyx_logical_viewport_tests', 'nyx_logical_viewport_controls')) {
+        Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @("tests/$nyxViewportProgram.lpr"))
+      }
+      $nyxViewportPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+      $nyxViewportRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+      $nyxViewportBrowser = Join-Path $nyxRoot 'build/logical-viewport/browser'
+      New-Item -ItemType Directory -Force $nyxViewportBrowser | Out-Null
+      foreach ($nyxViewportProgram in @('nyx_logical_viewport_tests', 'nyx_logical_viewport_controls')) {
+        Invoke-NyxCompiler $nyxViewportPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+          '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxViewportBrowser", "tests/$nyxViewportProgram.lpr")
+      }
+      Copy-Item -LiteralPath $nyxViewportRuntime -Destination (Join-Path $nyxViewportBrowser 'rtl.js') -Force
+      & (Join-Path $nyxStudioNative 'nyx_logical_viewport_tests.exe')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Logical viewport geometry checks failed' }
+      & (Join-Path $nyxStudioNative 'nyx_logical_viewport_controls.exe') `
+        (Join-Path $nyxRoot 'build/logical-viewport')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Actual native logical viewport controls failed' }
+    }
 
     if ($VerifySourceScheduling) {
       Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @('tests/nyx_source_scheduling_tests.lpr'))

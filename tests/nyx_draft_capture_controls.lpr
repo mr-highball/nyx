@@ -328,6 +328,9 @@ begin
     Check(GStudio.Session.SelectedID = 'caption-' + IntToStr(AControls - 1),
       'Actual native tree selection routes the exact component identity / ' +
       GStudio.Session.SelectedID + ' / ' + GStudio.Status);
+    Check((GStudio.CanvasView.ViewViewport.Y.Position > 0) and
+      (GStudio.CanvasView.ControlFor(GStudio.Session.SelectedID).Height > 0),
+      'Hierarchy navigation reveals the final full-size canvas control');
     TControlAccess(GStudio.ShellView.ControlFor('action-code')).Click;
     Pump;
     LCode := TMemo(GStudio.CodeView.InputFor('studio-code'));

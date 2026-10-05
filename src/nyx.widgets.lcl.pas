@@ -37,6 +37,7 @@ uses
   Forms,
   CustomDrawnControls,
   nyx.text,
+  nyx.layout.viewport,
   nyx.theme;
 
 type
@@ -85,6 +86,7 @@ type
     LCL controls; clipping children to a curved region is a separate capability. }
   TNyxLCLSurface = class(TPanel)
   private
+    FViewportFace: TNyxViewportBox;
     FBorderColor: TColor;
     FAccentColor: TColor;
     FControlSurface: Boolean;
@@ -95,6 +97,10 @@ type
     constructor Create(AOwner: TComponent); override;
     { ControlSurface selects compact input-frame metrics instead of card metrics. }
     procedure ApplyTheme(ATheme: TNyxTheme; AControlSurface: Boolean = False);
+    { Value-only original face coordinates inside a projected viewport. Native
+      window bounds remain safe while GDI paints the logical border/rounded face
+      under its real clip. Default bounds restore ordinary ClientRect painting. }
+    procedure ProjectFace(const ABounds: TNyxViewportBox);
     property BorderColor: TColor read FBorderColor;
     property CornerRadius: Integer read FRadius;
   end;
@@ -390,6 +396,7 @@ end;
 procedure TNyxLCLSurface.Paint;
 var
   LForm: TCustomForm;
+  LBounds: TRect;
 begin
 
   if (Width < 1) or (Height < 1) then
@@ -410,7 +417,27 @@ begin
   begin
     Canvas.Pen.Color := FAccentColor;
   end;
-  Face(Canvas, Rect(0, 0, Width, Height), FRadius);
+  LBounds := Rect(0, 0, Width, Height);
+
+  if FViewportFace.Defined then
+  begin
+    LBounds := Rect(FViewportFace.X, FViewportFace.Y,
+      FViewportFace.Right, FViewportFace.Bottom);
+  end;
+  Face(Canvas, LBounds, FRadius);
+end;
+
+procedure TNyxLCLSurface.ProjectFace(const ABounds: TNyxViewportBox);
+begin
+
+  if (FViewportFace.Defined = ABounds.Defined) and
+    (FViewportFace.X = ABounds.X) and (FViewportFace.Y = ABounds.Y) and
+    (FViewportFace.Width = ABounds.Width) and (FViewportFace.Height = ABounds.Height) then
+  begin
+    Exit;
+  end;
+  FViewportFace := ABounds;
+  Invalidate;
 end;
 
 end.

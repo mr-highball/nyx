@@ -75,3 +75,23 @@ outcome. Qualify explicit logical scroll extent, safe widget geometry, access to
 all descendants, exact selection/input and teardown through the public designer
 viewport, retaining browser/LCL parity. This discovery accepts no criterion and
 does not reset this task's existing no-closure count of 2.
+## Logical native viewport qualified — 2026-10-05
+
+The original 81963-pixel canvas failure is resolved through complete logical
+extents and bounded physical projection, retaining every descendant/control.
+Public viewport observation/navigation keeps selection painting scroll-neutral.
+The native adapter reuses standard LCL scrollbar controls while its inherited
+physical offsets stay zero; ordinary small views retain automatic native scrolling.
+Actual Win32 mixed-control checks pass 4118, original 128/512/2048 Studio input
+passes 45, and portable geometry/viewport/source regressions pass 17/46/39, all
+with zero leaks. Current browser counterparts/Studio compile but retain the host
+execution gate. English review captures are separate from Unicode qualification.
+
+Criteria 1/2 advance in this bounded scope, without accepting either full original
+criterion. Giant native inputs/custom faces and large split panes need explicit
+adapters; non-panel client offsets, widgetset/DPI metrics, logical resize events,
+accessibility and complete target breadth retain their existing gates. No support
+grade, scope or credit is weakened. No-closure count advances 2→3. Reassessment
+changes the next action back to original codegen criterion 3's detached
+visual/structural reconciliation and comfortable source editing. WORK.md records
+failed attempts, final commands/evidence and the unchanged browser/service block.

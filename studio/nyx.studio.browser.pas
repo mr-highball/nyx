@@ -1043,6 +1043,7 @@ end;
 procedure TNyxStudio.HierarchyEvent(const AEvent: TNyxEventInfo);
 var
   LNode: TNyxNode;
+  LSelected: TNyxText;
 begin
 
   if FShellRenderer.Root = nil then
@@ -1053,7 +1054,15 @@ begin
 
   if LNode <> nil then
   begin
+    LSelected := FSession.SelectedID;
     HandleShell(LNode, AEvent);
+
+    if (LSelected <> FSession.SelectedID) and (FCanvasRenderer.Root <> nil) then
+    begin
+      { Refresh preserves ordinary scroll state. Only deliberate hierarchy
+        navigation reveals a new identity afterward, without forcing focus. }
+      FCanvasRenderer.Reveal(FSession.SelectedID, niDesign);
+    end;
   end;
 end;
 

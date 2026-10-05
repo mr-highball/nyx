@@ -116,11 +116,15 @@ Unsent text blocks acknowledged-frame/build/navigation checks; older replies
 cannot discard it. Studio now consumes a bounded public Nyx tree for hierarchy
 navigation, using typed queued selection and revocable borrowed subscriptions.
 Shared protocol/ownership checks pass 41 and native Apply regression passes 39,
-with zero leaks. The original 2048-control native design canvas exceeds LCL's
-widget height range; its full editor gate remains failed. Browser code compiles
-but remains unexecuted at the existing host gate. English starter presentation
-and dedicated Unicode qualification remain separate. WORK.md owns current
-control evidence, failures and the next native viewport prerequisite.
+with zero leaks. The following logical native viewport retains complete extents
+through bounded physical geometry and standard LCL scrollbar controls. Actual
+mixed-control checks pass 4118 and the original 128/512/2048 Studio journey passes
+45, with zero leaks: the recorded 81963-pixel canvas failure is resolved. Checked
+portable geometry passes 17; native viewport/source regressions pass 46/39.
+Browser counterparts and Studio compile but retain their execution host gate.
+English starter/review presentation and dedicated Unicode qualification remain
+separate. Comfortable source editing, wider widget metrics and detached
+visual/structural reconciliation remain open; WORK.md owns current evidence.
 The preceding designer prerequisite retains its 34 native / 32 desktop / 33
 actual-390 browser checks, including painted selection and focused view movement.
 

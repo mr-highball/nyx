@@ -45,6 +45,7 @@ uses
   nyx.widgets.lcl,
   nyx.model,
   nyx.layout.flow,
+  nyx.layout.viewport,
   nyx.interaction,
   nyx.editing,
   nyx.editing.lcl,
@@ -62,6 +63,7 @@ uses
   nyx.data,
   nyx.viewport,
   nyx.viewport.lcl,
+  nyx.viewport.surface.lcl,
   nyx.event.emitter,
   nyx.state,
   nyx.binding,
@@ -116,6 +118,12 @@ type
     FControl: TControl;
     FInput: TControl;
     FCaption: TLabel;
+    { Value-owned layout and projection. The parent binding is borrowed from the
+      same preorder renderer array, never a reference-counted tree back edge. }
+    FLogicalParent: TNyxLCLBinding;
+    FLogicalBox: TNyxViewportBox;
+    FScreenBox: TNyxViewportBox;
+    FPlacement: TNyxViewportPlacement;
     FLastValue: TNyxText;
     FHasValueBaseline: Boolean;
     { Separate baselines protect literal selection and local picture identity
@@ -207,7 +215,10 @@ type
       Effective document overlays never mutate it or accumulate into its base. }
     FBorrowedTheme: TNyxTheme;
     FRoot: TNyxNode;
-    FPanel: TScrollBox;
+    FPanel: TNyxLogicalScrollBox;
+    FVirtualLayout: Boolean;
+    FLayouting: Boolean;
+    FProjecting: Boolean;
     FBindings: array of TNyxLCLBinding;
     FFactoryKinds: array of TNyxText;
     FFactories: array of TNyxLCLFactory;
@@ -269,6 +280,8 @@ type
     function IdentityBinding(const AID: TNyxText;
       AIdentity: TNyxIdentityKind): TNyxLCLBinding;
     procedure Resize(ASender: TObject);
+    procedure ProjectViewport(ASender: TObject);
+    procedure ArrangeInput(ABinding: TNyxLCLBinding; AWidth, AHeight: Integer);
     { Adorners share the selected face's immediate paint parent. A graphic at
       the scroll host would be occluded by its full-page native child window. }
     procedure UpdateSelection;
@@ -313,6 +326,17 @@ type
       Empty/absent identities clear the outline without taking keyboard focus.
       Selection is editor presentation and never mutates the owned document. }
     procedure Select(const ADesignID: TNyxText);
+    { Reveal exact logical bounds through the containing viewport. Presentation
+      only: no document/history mutation or control reconstruction. Missing IDs
+      refuse; normal/native scrolling retains LCL's own ScrollInView contract. }
+    procedure Reveal(const AID: TNyxText;
+      AIdentity: TNyxIdentityKind = niAutomatic);
+    { Actual containing view offsets/extents in logical pixels, independent of
+      whether the selected node declares its own internal scrolling. }
+    function ViewViewport: TNyxViewportSnapshot;
+    { Set containing-view logical pixel offsets, clamped by its actual extent.
+      A mounted view is required. This changes presentation only. }
+    procedure ScrollView(AX, AY: Integer);
     { Borrow a projected control/host through the same stable identity contract
       as the browser adapter. Caller must not free this renderer-owned control. }
     function ControlFor(const AID: TNyxText;
@@ -513,6 +537,12 @@ var
 begin
   { Revoke borrowed sinks before destroying any part of the mounted view. }
   FUpdating := True;
+  FVirtualLayout := False;
+
+  if FPanel <> nil then
+  begin
+    FPanel.Detach;
+  end;
   FDesignMode := False;
   FSelectedDesignID := '';
   for LIndex := Low(FSelectionEdges) to High(FSelectionEdges) do
@@ -554,6 +584,11 @@ begin
   FreeAndNil(FLiveBindings);
   for LIndex := 0 to Length(FBindings) - 1 do
   begin
+
+    if FBindings[LIndex].FControl is TNyxLogicalScrollBox then
+    begin
+      TNyxLogicalScrollBox(FBindings[LIndex].FControl).Detach;
+    end;
     FBindings[LIndex].FActiveDrag := nil;
     FBindings[LIndex].DisconnectControl(FBindings[LIndex].FControl);
 
@@ -987,7 +1022,7 @@ begin
   end
   else if LKind = 'scroll' then
   begin
-    Result := TScrollBox.Create(FPanel);
+    Result := TNyxLogicalScrollBox.Create(FPanel);
     TScrollBox(Result).BorderStyle := bsNone;
   end
   else if LKind = 'code' then
@@ -1062,6 +1097,11 @@ begin
   LBinding.FControl := Result;
   LBinding.FInput := LInput;
   LBinding.FCaption := LCaption;
+
+  if ANode.Parent <> nil then
+  begin
+    LBinding.FLogicalParent := Binding(ANode.Parent);
+  end;
   LValueDomain := NyxNodeValueDomain(ANode);
   { Numeric drafts need an editing-complete boundary even without a state
     binding. Their declared control/compound domain determines this behavior. }
@@ -1640,9 +1680,7 @@ var
   LCellWidth: Integer;
   LCellHeight: Integer;
   LChild: TNyxNode;
-  LInputWidth: Integer;
   LInputHeight: Integer;
-  LFrameHeight: Integer;
   LFitHeight: Integer;
   LFitWidth: Integer;
   LChildY: Integer;
@@ -1669,47 +1707,35 @@ begin
   begin
     LHeight := AHeight;
   end;
-  LBinding.FControl.SetBounds(AX, AY, LWidth, LHeight);
+  LBinding.FLogicalBox := NyxViewportBox(AX, AY, LWidth, LHeight);
+
+  if not FVirtualLayout then
+  begin
+    LBinding.FControl.SetBounds(AX, AY, LWidth, LHeight);
+    ArrangeInput(LBinding, LWidth, LHeight);
+  end;
 
   if LBinding.FControl is TNyxLCLSplitView then
   begin
+
+    if FVirtualLayout then
+    begin
+      { The split owns ordinary bounded pane hosts. Its existing layout callback
+        records child logical boxes against those pane dimensions. Pane/grip
+        origins use signed native message coordinates even when the containing
+        window's unsigned size would be legal. Refuse that unsupported geometry
+        before Arrange can move a pane outside its physical coordinate domain. }
+
+      if (LWidth > High(SmallInt)) or (LHeight > High(SmallInt)) then
+      begin
+        raise ENyxModel.Create('An oversized native split requires logical pane projection');
+      end;
+      LBinding.FControl.SetBounds(0, 0, LWidth, LHeight);
+    end;
     TNyxLCLSplitView(LBinding.FControl).Arrange;
     Exit;
   end;
 
-  if (LBinding.FInput <> nil) and (LBinding.FInput <> LBinding.FControl) then
-  begin
-
-    if LBinding.FInput.Parent is TNyxLCLSurface then
-    begin
-      LInputWidth := LWidth - 24;
-      LInputHeight := LHeight - 44;
-      LFrameHeight := LHeight - 24;
-
-      if LFrameHeight < 0 then
-      begin
-        LFrameHeight := 0;
-      end;
-
-      if LInputWidth < 0 then
-      begin
-        LInputWidth := 0;
-      end;
-
-      if LInputHeight < 0 then
-      begin
-        LInputHeight := 0;
-      end;
-      { A deliberately tiny explicit height can hide content, but it must never
-        pass negative geometry to the widgetset or move the frame above its label. }
-      LBinding.FInput.Parent.SetBounds(0, 24, LWidth, LFrameHeight);
-      LBinding.FInput.SetBounds(12, 10, LInputWidth, LInputHeight);
-    end
-    else
-    begin
-      LBinding.FInput.SetBounds(0, 24, LWidth, Max(0, LHeight - 24));
-    end;
-  end;
   LPadding := Metric(ANode, 'padding', 0);
   LGap := Metric(ANode, 'gap', 12);
   LAlignment := ANode.Prop('cross-alignment', 'auto');
@@ -1885,6 +1911,8 @@ procedure TNyxLCLRenderer.Select(const ADesignID: TNyxText);
 begin
   FEvents.Scheduler.RequireUI;
   FSelectedDesignID := ADesignID;
+  { Painting selection is deliberately scroll-neutral. Navigation uses Reveal,
+    so an observing refresh cannot undo the user's independent scroll position. }
   UpdateSelection;
 end;
 
@@ -1894,6 +1922,7 @@ var
   LIndex: Integer;
   LHost: TWinControl;
   LBounds: TRect;
+  LSelected: TNyxLCLBinding;
 begin
 
   if FPanel = nil then
@@ -1901,6 +1930,7 @@ begin
     Exit;
   end;
   LControl := nil;
+  LSelected := nil;
 
   if FDesignMode and (FSelectedDesignID <> '') then
   begin
@@ -1913,7 +1943,12 @@ begin
       begin
         { Realization visits parents first. A reusable instance's descendants
           share its authored identity; outline that instance's outer face once. }
-        LControl := FBindings[LIndex].FControl;
+        LSelected := FBindings[LIndex];
+
+        if not FVirtualLayout or LSelected.FPlacement.HasArea then
+        begin
+          LControl := LSelected.FControl;
+        end;
         Break;
       end;
     end;
@@ -1930,11 +1965,27 @@ begin
         scroll range nor sit behind the full-page child window. }
       LHost := TWinControl(LControl);
       LBounds := LHost.ClientRect;
+
+      if FVirtualLayout then
+      begin
+        LBounds := Rect(-LSelected.FPlacement.ContentOffsetX,
+          -LSelected.FPlacement.ContentOffsetY,
+          LSelected.FLogicalBox.Width - LSelected.FPlacement.ContentOffsetX,
+          LSelected.FLogicalBox.Height - LSelected.FPlacement.ContentOffsetY);
+      end;
     end
     else
     begin
       LHost := LControl.Parent;
       LBounds := LControl.BoundsRect;
+
+      if FVirtualLayout then
+      begin
+        OffsetRect(LBounds, -LSelected.FPlacement.ContentOffsetX,
+          -LSelected.FPlacement.ContentOffsetY);
+        LBounds.Right := LBounds.Left + LSelected.FLogicalBox.Width;
+        LBounds.Bottom := LBounds.Top + LSelected.FLogicalBox.Height;
+      end;
       InflateRect(LBounds, 2, 2);
     end;
   end;
@@ -2060,10 +2111,23 @@ begin
   end;
 end;
 
+{$include nyx.render.lcl.viewport.inc}
+
 procedure TNyxLCLRenderer.Resize(ASender: TObject);
 var
   LHeight: Integer;
+  LIndex: Integer;
+  LPass: Integer;
+  LWidth: Integer;
+  LClientHeight: Integer;
+  LChild: Integer;
+  LContentHeight: Double;
 begin
+
+  if FLayouting or FProjecting then
+  begin
+    Exit;
+  end;
 
   if (FRoot <> nil) and (FPanel <> nil) then
   begin
@@ -2072,15 +2136,101 @@ begin
       position in the middle of SetBounds. Keep widgetset layout atomic while
       retaining the same controls and their focus/editing state. }
     FPanel.DisableAutoSizing;
+    FLayouting := True;
     try
-      LHeight := -1;
-
-      if FRoot.Prop('height-sizing') = 'fill' then
+      { Design canvases always retain their logical frame. Runtime views switch
+        when any face/position could exceed the native message coordinate domain,
+        including a large child inside an explicitly bounded scroll container. }
+      FVirtualLayout := FDesignMode;
+      for LIndex := 0 to High(FBindings) do
       begin
-        LHeight := FPanel.ClientHeight;
+        FBindings[LIndex].FLogicalBox := Default(TNyxViewportBox);
+
+        if not FVirtualLayout then
+        begin
+          FVirtualLayout := (Measure(FBindings[LIndex].FNode, FPanel.ClientWidth, True) >
+            High(SmallInt)) or
+            (Abs(Double(Metric(FBindings[LIndex].FNode, 'top', 0))) > High(SmallInt)) or
+            (Abs(Double(Metric(FBindings[LIndex].FNode, 'left', 0))) > High(SmallInt));
+
+          if not FVirtualLayout and (NyxLayout(FBindings[LIndex].FNode) = 'column') and
+            (FBindings[LIndex].FNode.Prop('height') <> '') then
+          begin
+            { An explicit bounded scroll/column height describes its viewport,
+              not its overflowing child extent. Detect that content before any
+              native window receives a distant child position. Small ordinary
+              scroll views keep their existing automatic LCL implementation.
+              Automatic columns were already measured completely above; do not
+              traverse those descendants a second time for each binding. }
+            LContentHeight := 2.0 * Metric(FBindings[LIndex].FNode, 'padding', 0);
+            for LChild := 0 to FBindings[LIndex].FNode.Count - 1 do
+            begin
+
+              if NyxInteractionPolicy(FBindings[LIndex].FNode.Children[LChild]).Visible then
+              begin
+                LContentHeight := LContentHeight + Measure(
+                  FBindings[LIndex].FNode.Children[LChild], FPanel.ClientWidth, True) +
+                  Metric(FBindings[LIndex].FNode, 'gap', 12);
+
+                if LContentHeight > High(SmallInt) then
+                begin
+                  FVirtualLayout := True;
+                  Break;
+                end;
+              end;
+            end;
+          end;
+        end;
       end;
-      Layout(FRoot, 0, 0, FPanel.ClientWidth, LHeight);
+
+      if FVirtualLayout then
+      begin
+        { Showing either native scrollbar changes the available client area.
+          Settle both axes before publishing physical boxes, without recursive
+          layout or sizing the root from the previous viewport width. }
+        for LPass := 0 to 2 do
+        begin
+          LWidth := FPanel.ViewportWidth;
+          LClientHeight := FPanel.ViewportHeight;
+          LHeight := -1;
+
+          if FRoot.Prop('height-sizing') = 'fill' then
+          begin
+            LHeight := LClientHeight;
+          end;
+          Layout(FRoot, 0, 0, LWidth, LHeight);
+          FPanel.SetLogicalExtent(Binding(FRoot).FLogicalBox.Width,
+            Binding(FRoot).FLogicalBox.Height, ProjectViewport);
+
+          if (LWidth = FPanel.ViewportWidth) and
+            (LClientHeight = FPanel.ViewportHeight) then
+          begin
+            Break;
+          end;
+        end;
+        ProjectViewport(FPanel);
+      end
+      else
+      begin
+        FPanel.UseNativeScrolling;
+        LHeight := -1;
+
+        if FRoot.Prop('height-sizing') = 'fill' then
+        begin
+          LHeight := Max(0, FPanel.ClientHeight);
+        end;
+        Layout(FRoot, 0, 0, Max(0, FPanel.ClientWidth), LHeight);
+        for LIndex := 0 to High(FBindings) do
+        begin
+
+          if FBindings[LIndex].FControl is TNyxLCLSurface then
+          begin
+            TNyxLCLSurface(FBindings[LIndex].FControl).ProjectFace(Default(TNyxViewportBox));
+          end;
+        end;
+      end;
     finally
+      FLayouting := False;
       FPanel.EnableAutoSizing;
     end;
     UpdateSelection;
@@ -2153,7 +2303,7 @@ begin
     end;
     LCandidate.FLiveBindings := TNyxLiveBindings.Create(LCandidate.FRoot, LCandidate.FState);
     LCandidate.FLiveBindings.OnSync := LCandidate.Sync;
-    LCandidate.FPanel := TScrollBox.Create(nil);
+    LCandidate.FPanel := TNyxLogicalScrollBox.Create(nil);
     LCandidate.FPanel.Visible := False;
     LCandidate.FPanel.Parent := AHost;
     LCandidate.FPanel.Align := alClient;
@@ -2208,6 +2358,7 @@ begin
     FRoot := LCandidate.FRoot;
     LCandidate.FRoot := nil;
     FDesignMode := ADesignMode;
+    FVirtualLayout := LCandidate.FVirtualLayout;
     FPanel := LCandidate.FPanel;
     LCandidate.FPanel := nil;
     FBindings := LCandidate.FBindings;
@@ -2800,8 +2951,8 @@ begin
   if LDispatch.Info.Pointer.HasPosition then
   begin
     LPosition := FControl.ScreenToClient(TControl(ASender).ClientToScreen(Point(AX, AY)));
-    LDispatch.Info.Pointer.X := LPosition.X;
-    LDispatch.Info.Pointer.Y := LPosition.Y;
+    LDispatch.Info.Pointer.X := Double(LPosition.X) + FPlacement.ContentOffsetX;
+    LDispatch.Info.Pointer.Y := Double(LPosition.Y) + FPlacement.ContentOffsetY;
   end;
   LDecision := NewNyxGestureDecision(LCapabilities, LDrag.Allowed);
   DispatchNyxGesture(FRenderer.FEvents, FNode, LDispatch, LDecision);
@@ -3062,8 +3213,8 @@ begin
   if AHasPosition then
   begin
     LPosition := FControl.ScreenToClient(TControl(ASender).ClientToScreen(APosition));
-    LDispatch.Info.Pointer.X := LPosition.X;
-    LDispatch.Info.Pointer.Y := LPosition.Y;
+    LDispatch.Info.Pointer.X := Double(LPosition.X) + FPlacement.ContentOffsetX;
+    LDispatch.Info.Pointer.Y := Double(LPosition.Y) + FPlacement.ContentOffsetY;
   end;
 
   if ssLeft in AShift then
@@ -3874,6 +4025,11 @@ var
   LEvents: INyxEvents;
   LRevision: Integer;
 begin
+
+  if FRenderer.FVirtualLayout and not FRenderer.FUpdating then
+  begin
+    FRenderer.Reveal(FNode.ID, niRuntime);
+  end;
 
   if FRenderer.FDesignMode or FRenderer.FUpdating then
   begin

@@ -7,21 +7,21 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest source candidate: [coalesced draft capture and public hierarchy](#coalesced-draft-capture-and-public-hierarchy--2026-10-05)
-shares one fresh paired snapshot with recovery and protects unsent text from old
-observations. Actual Win32 128/512-control journeys retain exact selection,
-draft/base, focus/caret and history; the 2048-control canvas fails the native
-widget height range. The public hierarchy has one bounded typed tree. Shared
-protocol checks pass 41 and native Apply regression passes 39, with zero leaks.
-Browser code compiles; current execution retains the host gate.
-Codegen criterion 3 remains open at no-closure count 17. Native authoring's 7 and
-delivery's 1 remain unchanged. This is an integrated source Apply boundary, not
-acceptance of comfortable large-project editing or all command scheduling.
+Latest source candidate: [logical native viewport](#logical-native-viewport-and-original-size-controls--2026-10-05)
+retains full content extent and every control through safe physical geometry and
+standard LCL scrollbars. Mixed controls pass 4118; the unchanged original-size
+128/512/2048 Studio journey passes 45, with zero leaks. The recorded 81963-pixel
+canvas failure is resolved. Portable geometry passes 17 and native viewport /
+source regressions pass 46/39. Current browser consumers and Studio compile;
+execution retains the existing host gate. English starter/review presentation
+continues, with broader Unicode retained in dedicated technical qualification.
+Codegen criterion 3 remains open at no-closure count 18; native renderer advances
+2→3. Native authoring's 7 and delivery's 1 remain unchanged. This accepts no full
+criterion, comfortable editing or complete target parity.
 
-Reassessment follows the concrete failure prerequisite: native logical scroll
-extent and safe widget geometry through the public designer viewport, retaining
-all original-size descendants and input/selection. Detached visual/structural
-reconciliation and comfortable ordinary editing remain required afterward.
+Reassessment follows the now-resolved concrete viewport failure back to original
+codegen criterion 3: detached visual/structural reconciliation and comfortable
+ordinary editing, preserving all original-size descendants and input/selection.
 Reuse the current immutable candidates,
 creator guard and revocable ports. Preserve fresh admission, direct mutation,
 crafted source and paired history; never mutate accepted trees on workers.
@@ -37,12 +37,24 @@ navigation retain exact acknowledged-frame guards. Qualify private protocol
 ordering/conflicts, real native controls and the unchanged large source sizes;
 stop on dropped draft text, reordered accepted commands, stale remote adoption
 or receiver delivery after retirement. Browser execution retains its existing
-host gate. The native viewport failure below is now the immediate prerequisite;
-detached visual/structural reconciliation remains required.
+host gate. The following renderer packet resolves the native viewport failure;
+detached visual/structural reconciliation and comfortable editing remain required.
 The preceding English preference turn confirmed existing content without changing
 authoritative goal state: no progress toward the full goal, now revalidated with
 current source, connected semantic session and protected process identities.
 No count or acceptance gate is reset by that preference check.
+
+Completed renderer packet follows the recorded native viewport prerequisite under
+NS-2_lcl-renderer criteria 1/2, consumed by original codegen criterion 3. Keep full
+logical extents and every control's ownership/text; project physical geometry
+into a bounded native viewport and reveal exact identities for selection/focus.
+Qualify coordinate boundaries, real large mixed controls, scrolling/resize,
+focus/caret, original 128/512/2048 Studio input and existing layout consumers.
+Stop on inaccessible descendants, lost drafts, false coordinates, callback
+retirement or a silent size clamp. Browser compilation remains insufficient for
+parity at the existing host gate. The preceding turn was progress: product source
+3b700e6 and handoff fa28d20 are clean/pushed, and the preserved full-size failure
+changed this next action. No live service or user pair is replaced.
 
 Latest user authorization: the current project is disposable test content and
 may be reset/removed when useful. Its exact prior contents are no longer an
@@ -5604,3 +5616,111 @@ branch. The private proof at
 `.local/codex-restart-check/draft-capture-remote-proof.json` records the current
 clean handoff head separately from that product source checkpoint. Generated
 logs, captures, personal configuration and machine paths remain ignored.
+## Logical native viewport and original-size controls — 2026-10-05
+
+One bounded renderer packet owns the recorded NS-2_lcl-renderer criteria 1/2
+prerequisite consumed by original codegen criterion 3. Complete logical extents,
+all descendants and exact input/source ownership remain required. Public
+`Reveal`, `ViewViewport` and `ScrollView` separate explicit navigation from
+scroll-neutral selection painting. Studio hierarchy navigation consumes those
+contracts; native project presentation captures/restores their logical offsets.
+
+Portable value geometry rejects invalid signed endpoints and unrepresentable
+physical clips. Native bindings retain logical boxes and borrowed parent bindings
+in their existing owned preorder array. Small partly visible faces keep their
+complete native size/origin. Offscreen faces retain their controls/text with zero
+physical allocation. Large containers project their exact visible intersection;
+themed surfaces and outlines retain original face coordinates. Pointer producers
+report logical positions. No model height, descendant count or source is clamped.
+
+The first scrollbar-page attempt failed on a compact zero-area host; preserve
+`build/logical-viewport/failed-page-run.log`. Overriding native scrolling alone
+also failed: actual child-window coordinates moved to -32768 after resize while
+LCL properties still reported zero. Installed LCL Win32 positioning directly
+subtracts inherited scrollbar fields. The final adapter keeps those fields at
+zero in logical mode and reuses separate standard LCL scrollbar controls with
+full Integer ranges and bounded physical pages. Its ordinary mode retains native
+automatic scrolling. Both axis ports/controls retire before their borrowed
+renderer; the existing viewport observer captures the actual logical ports.
+Explicit-height columns inspect overflowing content before native child geometry;
+automatic columns avoid a redundant descendant measurement.
+
+Actual maintained evidence:
+
+- Stable FPC 3.2.0 checked portable geometry: **17**, zero leaks. Trunk native
+  geometry also passes **17** through the maintained build command.
+- Original unchanged **128/512/2048** Studio workload: **45** actual Win32 checks,
+  zero leaks across **198,894,870** allocations. Source bytes remain exactly
+  **25,094 / 98,822 / 400,022**. The final hierarchy entry reveals a physically
+  allocated canvas control; the ordinary memo retains exact source/draft,
+  timer/command/history guards, focus/caret and receiver retirement.
+- Maintained `tools/build.ps1 -Target native-studio -VerifyLogicalViewport` exits
+  successfully. **4,118** actual mixed-control checks, zero leaks across
+  **15,800,512** allocations: every one of 2048 captions is physically reached,
+  bottom/nested memo editing and real focus entry retain the same controls,
+  desktop/390 geometry and logical pointer coordinates qualify, actual standard
+  scrollbar/wheel changes reach typed viewport events. A giant native memo and
+  a 40000-pixel stacked split refuse during candidate staging while retaining
+  the accepted view. Split pane/grip origins require signed position limits,
+  even when the containing window's unsigned size would be legal.
+  The added split fixture initially used 90% with the default 85% maximum,
+  so schema admission refused before the geometry gate. Its final typed maximum
+  is explicitly 90%, with two owned panes. Retain the zero-leak failed setup
+  logs `failed-split-fixture-admission.log` and `failed-split-fixture-bounds.log`;
+  those runs do not establish the geometry refusal.
+- Native viewport regression: **46**, zero leaks. Actual Source Apply/Restore
+  regression: **39**, zero leaks, with its original five-second deadline. An
+  earlier concurrently running physical source consumer exceeded that deadline
+  and reported ten unfreed blocks on its Halt failure path; preserve
+  `failed-source-concurrent-run.log`. Restrict redundant column measurement and
+  run final physical regressions sequentially. Do not weaken that deadline or
+  infer fair timing from concurrent consumers.
+- Current portable geometry, mixed browser companion and browser Studio compile.
+  Native owned warnings remain zero; the browser's seven installed RTL warnings
+  remain visible, with zero owned warnings. Matched runtime is staged. Compilation
+  establishes no current browser execution, input, appearance or parity.
+  Final review removed protected-method access warnings in the new wheel fixture
+  and existing viewport consumer through their actual shared control ancestor;
+  no warning suppression or dependency edits were introduced. Earlier warning
+  logs remain in `maintained-before-review.log` and
+  `viewport-before-warning-review.log`.
+- Maintained English desktop/390 review captures are in
+  `build/logical-viewport/logical-viewport-bottom.png` and
+  `logical-viewport-390.png`; the compact memo paints and remains reachable.
+  Original-source Unicode inputs/captures remain technical qualification, not
+  starter demos or presentation examples.
+
+The earlier traced Studio samples in this packet were collected while other
+qualification work ran: first edit / 80 insert callbacks / timer plus in-process
+protocol were **47/1594/6234**, **156/5063/13000**, **719/21891/54453** ms.
+These are checked/heap-traced host fixture durations, not release or network
+latency comparisons. Full source/draft correctness does not accept comfortable
+large-project input. The former non-traced prototype also passed all sizes but
+preceded the corrected physical-scroll adapter; it is not final acceptance.
+
+The concrete **81963-pixel native canvas failure is resolved**. Full original
+renderer criteria 1/2 and codegen criterion 3 remain open: oversized individual
+native inputs/custom faces and large split panes still need explicit logical
+adapters; non-panel client offsets, widgetset/DPI metrics, logical resize event
+semantics and complete target breadth still need their existing acceptance
+qualification. Browser execution retains its previously recorded permitted-host
+gate. Native captures do not establish complete Studio aesthetics/accessibility.
+
+This packet accepts no complete criterion/task and earns no new completion
+credit. Original codegen no-closure count advances **17→18** and native renderer
+**2→3**; native authoring **7**, delivery **1** and accepted codegen criteria 1/2
+remain unchanged. Reassessment now returns to the existing source criterion's
+detached visual/structural reconciliation and comfortable ordinary editing.
+Reuse immutable candidates, creator guards and revocable ports; accepted trees
+must not be mutated on workers. Preserve the original sizes and exact
+source/history/input guards. Do not start another scrollbar/projection inventory
+as a substitute, reset counters, weaken parity or mark the full goal complete.
+
+Named semantic MCP inspected bounded session, outline and English text at revision
+**6**, with home selection/view, no pending draft, empty Undo and existing Redo.
+Production/staging and the other protected service identities remain unchanged.
+No live transaction, listener, front-end deployment, enrollment/profile change or
+active user pair replacement occurred. Missing general source/status workflows
+retain their NS-4 owner; physical input/rendering uses its explicit Pascal
+harness. No equivalent refused listener or alternate route is retried. The
+unbounded original goal remains active and incomplete.
