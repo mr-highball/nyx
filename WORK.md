@@ -7,6 +7,12 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+Latest source checkpoint: [exact references and fresh admission](#exact-references-and-fresh-document-admission--2026-10-05)
+ends the bounded lookup optimization. The next source prerequisite is one
+integrated ordinary-editor scheduling/responsiveness packet, preserving immutable
+candidate admission and exact paired history. Codegen criterion 3 remains open at
+no-closure count 15; current browser execution retains the recorded host gate.
+
 Latest user authorization: the current project is disposable test content and
 may be reset/removed when useful. Its exact prior contents are no longer an
 operational preservation prerequisite. Keep the recorded fixture/baseline
@@ -5257,3 +5263,111 @@ Named semantic session and production/stage process identities are checked again
 before push. The exact private proof is
 .local/codex-restart-check/source-reconcile-remote-proof.json; machine paths,
 personal configuration, accounts and generated evidence stay outside the commit.
+
+## Exact references and fresh document admission — 2026-10-05
+
+Progress: sequence-sensitive candidate members now borrow the exact reader-owned
+control interface after construction/adoption, replacing repeated document-wide
+ID searches. This covers configuration, bindings, contracts, extensions and
+callbacks without changing their typed public contract. The reader retains each
+interface until replay ends; independent document/parent owners retain admitted
+nodes. Existing grammar cannot remove/rename a local, and explicit guards keep
+constructed identity/ownership current. Complete fresh model/property/encoding
+admission still rejects implicit recipe identity conflicts before publishing
+either accepted owner. No source grammar or retained document cache is added.
+
+The proven private source text index is moved to an internal portable unit and
+shared with document identity validation. Each traversal owns a fresh exact-text
+membership index; original arrays/tree order still determine diagnostics/output.
+Direct renames, exact case/Unicode, hash collisions, growth and cross-root
+uniqueness remain visible on every call. Portable storage encodings may hash
+differently; exact equality and fresh target-local lookup preserve meaning.
+Instances are independently mutable or fully initialized/read-only before sharing.
+
+Fifteen additional public cases qualify direct mutation/rejection/repair, exact
+identities and independent source candidates. Duplicating a compound's implicit
+parts and configuring before ownership reject atomically, retaining source,
+design, rejected buffer and prior Redo. The user-requested English starter/demo
+copy remains in sample/recipes; broader Unicode here is dedicated qualification
+input. No active demo/project is rewritten by this code packet.
+
+Evidence under ignored build/source-references/:
+
+- focused-build.log / focused-run.log: 247 checked native source cases, zero
+  leaks. maintained-build.log repeats the same cases through source-workspace,
+  compiles both benchmarks and browser consumers, and stages static hosts/matched
+  RTL to maintained-browser/. Counts overlap core; no listener is launched.
+- core-build.log / core-run.log: 30 core and 1724 composition/designer checks,
+  zero unfreed blocks; fresh compiler companions remain under core/.
+- generated-build.log / generated-run.log: eight native compiled outcomes
+  execute, preserving crafted names/comments/expressions, typed creation/reuse,
+  exact Unicode identity/events/helpers and real runtime bindings. Zero leaks.
+  generated-browser-build.log compiles their pas2js counterpart.
+- lcl-build.log / lcl-run.log: actual Win32 controls pass 42 managed, 35 event,
+  50 binding and 71 Studio authoring checks, plus ordinary/compact inspectors,
+  optional outputs, theme/factory/customization and 75 catalog projections.
+  All 150240164 allocated blocks are freed. These actual programmatic controls
+  do not establish hardware/IME/assistive input, another widgetset, browser pixels
+  or complete native Studio parity.
+- native-studio-build.log compiles the maintained current controller.
+  browser-shared-build.log, browser-studio-build.log and browser-authoring-build.log
+  compile shared/Studio/actual-authoring counterparts. Owned warnings are zero;
+  seven installed RTL warnings remain visible. No suppression/dependency edit,
+  compiler reinstall, listener replacement or controller deployment occurs.
+
+Ordinary timing compares exact archived 6fc31c4 to this candidate using identical
+checked FPC 3.2.0 flags without profiling/heap tracing. All compiler/control runs
+finish before serial measurements. Original source byte sizes stay
+25094/98822/400022; every row passes crafted-name/comment/expression/Unicode,
+structural, paired history and retained-draft gates before reporting. Raw logs:
+before-source.csv / after/source.csv and before-property.csv / after/property.csv.
+These are complete portable commands, excluding paint, trusted input, HTTP and
+compilation. Single samples near native timer resolution are not zero-cost proof.
+
+| Controls | Apply before/after ms | Visual before/after ms | Structural before/after ms | Three history operations before/after ms |
+| ---: | ---: | ---: | ---: | ---: |
+| 128 | 31 / 31 | 63 / 62 | 93 / 94 | 31 / 31 |
+| 512 | 172 / 156 | 313 / 281 | 390 / 391 | 171 / 172 |
+| 2048 | 891 / 625 | 1360 / 1141 | 1719 / 1484 | 891 / 656 |
+
+The largest Apply/history samples improve about 30%/26%; visual/structural
+commands improve about 16%/14%. Smaller structural/history samples do not improve.
+Fresh property admission measures 156→141 ms and complete shared shell composition
+156→109 ms at 2048 controls, with selected values/help/source/draft guards passing.
+This does not qualify faster painting or comfortable whole-editor responsiveness.
+after/profile-2048.csv and after/profile-index-2048.csv retain explanatory profiles
+before/after fresh identity indexing; parent timings overlap and are not summed.
+Ordinary rows above, not those profiled rows, own performance observations.
+
+Retained qualification corrections: focused-first-run.log records the fixture
+assuming a lexer exception for a complete model uniqueness failure. It now checks
+the public ENyxModel duplicate diagnostic, as well as ownership's ENyxSource,
+before asserting exact pair/history preservation. Final runs have zero leaks;
+the failed entry's Halt retained its diagnostic object. Private failed browser
+orchestration logs retain incorrect filenames/unquoted compiler arguments; the
+verified final consumers use existing entry points and literal argument arrays.
+No product admission/ownership or workload gate is weakened by these corrections.
+
+Browser execution/observing remains pending: automatic approval review rejected
+the separate static fixture listener launch as "blocked by policy", with no
+further reason. No equivalent launch is retried and no frontend/profile/enrollment/
+accepted pair/configuration is replaced. The earlier updated-Studio listener
+refusal and all protected services remain intact. Named semantic MCP reads query
+the existing revision-6 production build, not runtime execution of this candidate.
+Production/stage process identities are checked before push.
+
+Codegen criterion 3 remains open; no-closure count advances 14→15 without reset.
+Native authoring's 7 and delivery's 1 remain unchanged. End lookup/micro-index
+optimization. Next is one integrated source-command scheduling/responsiveness
+packet through the existing public scheduler and ordinary Nyx editor controls:
+immutable candidate work/coalescing, stale-result refusal, visible source/pending
+status and exact paired publication/history. Preserve fresh full admission,
+original workloads, direct mutation visibility and authored frames; never mutate
+accepted trees in background work. Reassess after that bounded packet. Browser
+acceptance still requires a permitted host without an equivalent refused launch.
+No grammar expansion, count reset, scope transfer, weakened parity/DONE gate or
+full-product completion is earned. The original unbounded goal remains active.
+
+The exact remote proof is private at
+.local/codex-restart-check/source-references-remote-proof.json. Machine paths,
+personal configuration, accounts and generated evidence remain outside the commit.

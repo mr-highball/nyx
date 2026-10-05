@@ -491,7 +491,8 @@ implementation
 
 uses
   nyx.schema,
-  nyx.collections.view;
+  nyx.collections.view,
+  nyx.text.index;
 
 procedure ReleaseNyxNode(var ANode: TNyxNode);
 var
@@ -2242,7 +2243,7 @@ end;
 
 procedure TNyxDocument.Validate;
 var
-  LIDs: TNyxStrings;
+  LIDs: TNyxTextIndex;
   LStack: TNyxStrings;
   LChecked: TNyxStrings;
   LTotal: Integer;
@@ -2266,8 +2267,10 @@ var
       raise ENyxModel.Create('Document exceeds depth or node budget');
 
     if LIDs.IndexOf(ANode.ID) >= 0 then
+    begin
       raise ENyxModel.Create('Duplicate node ID: ' + ANode.ID);
-    LIDs.Add(ANode.ID);
+    end;
+    LIDs.AddFirst(ANode.ID, 0);
     ANode.Extensions.Validate;
     ANode.Contract.Validate;
 
@@ -2459,7 +2462,10 @@ begin
     raise ENyxModel.Create('Typed collections conflict with the retained version-1 collections extension');
   end;
   FExtensions.Validate;
-  LIDs := TNyxStrings.Create;
+  { This membership index belongs only to the current validation traversal.
+    Direct node mutations remain visible on every call, and exact case/Unicode
+    identity plus the existing ordered diagnostics and budgets are preserved. }
+  LIDs := TNyxTextIndex.Create;
   LStack := TNyxStrings.Create;
   LChecked := TNyxStrings.Create;
   try

@@ -35,15 +35,16 @@ together, reuses derived canonical text and constructs fresh validation metadata
 without inspector-only help work. Operation-owned descriptor/projection facts
 also serve ordinary authoring queries. All 4104 catalog metadata rows remain
 exactly equal to the previous checkpoint. The unchanged native 2048-control
-workload now measures Apply 985→875 ms, visual editing 2531→1375 ms and structural
-editing 3594→1735 ms against exact b309541 after closed enum vocabulary is indexed
-once. Fresh source/model admission and original preservation gates remain;
-232 focused native and 30/1709 shared checks plus actual LCL consumers qualify
-the candidate. Shared shell composition remains 156 ms in this sample,
-so this does not establish faster full editor painting. Native shared/focused/
+workload now measures Apply 891→625 ms, visual editing 1360→1141 ms and structural
+editing 1719→1484 ms against exact 6fc31c4 after retained local references and
+fresh exact-text identity admission remove repeated whole-tree/list scans.
+Fresh source/model admission and original preservation gates remain;
+247 focused native and 30/1724 shared checks plus actual LCL consumers qualify
+the candidate. Shared shell composition measures 156→109 ms in this sample;
+these portable costs do not establish faster full editor painting. Native shared/focused/
 compiled and actual LCL consumers qualify ownership/source behavior. Browser
 consumers compile; execution is pending after the separate static listener launch
-was refused. Original codegen criterion 3 stays open at counter 14; no complete
+was refused. Original codegen criterion 3 stays open at counter 15; no complete
 criterion or north-star credit is earned.
 
 Earlier source delivery (2026-10-04): typed layout policies advance the original

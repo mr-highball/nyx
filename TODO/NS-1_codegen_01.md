@@ -593,3 +593,47 @@ direct mutation visibility, workload and paired history. Browser/observing
 qualification still needs a permitted host without an equivalent refused launch.
 No isolated lexer report, grammar expansion, counter reset, scope transfer,
 weakened parity requirement, DONE move or full-product completion substitutes it.
+
+## Exact local references and fresh identity admission — 2026-10-05
+
+The bounded delivery borrows each declared control from its reader-retained
+interface after the existing construction/ownership guards. Fluent configuration,
+binding, contract, extension and callback operations use that exact local instead
+of scanning unrelated roots/recipe parts by ID. Reader lifetime owns references;
+strict reconstruction still stages an independent complete tree. No local can
+be removed/renamed by the supported builder grammar. Final complete admission
+still refuses all implicit/explicit duplicate identities before publication.
+
+The former source-only exact-text index is now an internal portable unit shared
+with document validation. Each validation owns a fresh index, retaining exact
+case/Unicode, original traversal/diagnostic order, budgets and direct-mutation
+visibility. It retains no document between operations and does not determine
+source/output order. Public behavior adds fifteen cases for colliding/distinct
+identities, direct rename/rejection/repair, independent candidates, duplicated
+recipe parts, ownership order and retained Redo. Focused native checks pass 247;
+shared checks pass 30/1724 and eight compiled companion outcomes execute. Actual
+LCL source/binding/inspector consumers pass with zero leaks/owned warnings.
+Affected pas2js consumers compile; current execution remains pending at the
+unchanged fixture-host launch gate. WORK.md owns exact logs and limitations.
+
+The original complete-command workload against exact 6fc31c4 keeps all sizes,
+crafted source, Unicode, structural ownership and paired history/rejection gates.
+At 2048 controls Apply measures 891→625 ms, visual editing 1360→1141 ms,
+structural editing 1719→1484 ms and three history operations 891→656 ms. Ordinary
+shared shell composition measures 156→109 ms, excluding painting/physical input.
+Smaller structural/history samples show no material improvement. These timings
+remain insufficient to accept comfortable large-project or both-target editing.
+Criterion 3 stays open; the original no-closure count advances 14→15. Criteria
+1/2 stay accepted; native authoring's 7 and delivery's 1 remain unchanged.
+
+Reassessment ends lookup/micro-index optimization. Another isolated lookup
+variant is not the next deliverable. Next address ordinary editor responsiveness
+as one integrated source-command scheduling delivery: immutable admitted pairs,
+coalesced work through the existing public scheduler contract, stale-result
+refusal and visible source/pending status, consumed by actual Nyx editor controls.
+Keep complete fresh admission, exact authored frames, paired Undo/Redo and the
+original workload; no background mutation of accepted trees is permitted.
+Budget one implementation/evidence packet and reassess. Browser/observing
+acceptance still requires a permitted host without an equivalent refused launch.
+No grammar expansion, count reset, scope transfer, weakened parity/DONE gate or
+full-product completion substitutes the original criterion.

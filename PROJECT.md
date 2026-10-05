@@ -96,10 +96,12 @@ help work, while shared metadata uses operation-owned lookup/projection facts.
 All 4104 catalog metadata rows match the previous checkpoint exactly. Native
 preservation/actual LCL consumers qualify it; browser execution remains pending
 after the separate static listener launch was refused. The unchanged 2048-control
-native workload now measures Apply at 875 ms, visual editing at 1375 ms and
-structural editing at 1735 ms after closed Pascal vocabulary is indexed once,
-without retaining application source facts. Large-project editing and current
-browser execution remain unaccepted.
+native workload now measures Apply at 625 ms, visual editing at 1141 ms and
+structural editing at 1484 ms after sequence-sensitive local references and fresh
+identity admission use exact owned lookups. Direct mutation, case/Unicode and
+recipe-duplicate rejection qualify through public consumers. No document facts
+survive admission. Large-project editing and current browser execution remain
+unaccepted.
 The preceding designer prerequisite retains its 34 native / 32 desktop / 33
 actual-390 browser checks, including painted selection and focused view movement.
 

@@ -260,6 +260,7 @@ implementation
 
 uses
   nyx.codegen,
+  nyx.text.index,
   nyx.codec,
   nyx.data,
   nyx.state,
@@ -273,7 +274,10 @@ uses
   nyx.schema,
   nyx.controls;
 
-{$I nyx.source.index.inc}
+type
+  { Source tables use the same exact-text lookup as fresh document admission.
+    The alias remains private; ordered source arrays still own output order. }
+  TSourceIndex = TNyxTextIndex;
 
 {$ifdef NYX_SOURCE_PROFILE}
 var
@@ -423,6 +427,10 @@ type
     function DataConstructor(const AName: TNyxText): TValue;
     function LocalIndex(const AName: TNyxText): Integer;
     function StateIndex(const AName: TNyxText): Integer;
+    { Borrow the exact constructed local after its ownership statement. The
+      retained interface fixes this reference for the reader's lifetime; no
+      document-wide index or mutable model facts survive candidate replay. }
+    function AdmittedNode(AIndex: Integer): TNyxNode;
     procedure ReferenceAssignment(AIndex: Integer);
     procedure Defaults;
     function CollectionConstructor(const AName: TNyxText): TValue;
@@ -1962,6 +1970,32 @@ begin
   Result := FStateNames.IndexOf(LowerCase(AName));
 end;
 
+function TConfigurationReader.AdmittedNode(AIndex: Integer): TNyxNode;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FLocals)) then
+  begin
+    Fail('A control member requires its declared local');
+  end;
+
+  if not FOwnedTry or not FLocals[AIndex].Created or
+    not FLocals[AIndex].Admitted or (FControls[AIndex] = nil) then
+  begin
+    Fail('Construct and admit the control before using its fluent members');
+  end;
+  Result := FControls[AIndex].Node;
+
+  if (Result = nil) or (Result.ID <> FLocals[AIndex].ID) then
+  begin
+    Fail('The retained control must preserve its constructed identity');
+  end;
+  { This is the Pascal local's reference, not an ID search through unrelated
+    roots or implicit recipe parts. Full document validation still rejects all
+    ambiguous/duplicate identities before either accepted owner is published.
+    Builder grammar admits Add/Insert once, and cannot remove/rename a local's
+    node; the existing parent/document and this interface retain its lifetime. }
+end;
+
 procedure TConfigurationReader.ReferenceAssignment(AIndex: Integer);
 var
   LValue: TValue;
@@ -2128,7 +2162,7 @@ var
   LSpec: TNyxBindingSpec;
 begin
   Inc(FCursor, 3);
-  LNode := FDocument.Find(FLocals[AIndex].ID);
+  LNode := AdmittedNode(AIndex);
   while At('.') do
   begin
     Expect('.');
@@ -2276,7 +2310,7 @@ var
   LAny: Boolean;
 begin
   Inc(FCursor, 3);
-  LNode := FDocument.Find(FLocals[AIndex].ID);
+  LNode := AdmittedNode(AIndex);
   LAny := False;
   while At('.') do
   begin
@@ -2469,7 +2503,7 @@ begin
 
   if AIndex >= 0 then
   begin
-    LStore := FDocument.Find(FLocals[AIndex].ID).Extensions;
+    LStore := AdmittedNode(AIndex).Extensions;
   end;
   LAny := False;
   while At('.') do
@@ -2810,7 +2844,7 @@ begin
   end;
   FLocals[AIndex].Configured := True;
   Inc(FCursor, 3);
-  LNode := FDocument.Find(FLocals[AIndex].ID);
+  LNode := AdmittedNode(AIndex);
   while At('.') do
   begin
     Inc(FCursor);
@@ -2879,7 +2913,7 @@ begin
 
   if FApply then
   begin
-    LEvents := NyxCallbacks(FDocument.Find(FLocals[LLocal].ID));
+    LEvents := NyxCallbacks(AdmittedNode(LLocal));
   end;
 
   if (LMethod = 'metadata') or (LMethod = 'clear') or (LMethod = 'inherit') then

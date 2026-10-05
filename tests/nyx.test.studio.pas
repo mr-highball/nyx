@@ -48,6 +48,7 @@ uses
   nyx.test.schema,
   nyx.test.schema.admission,
   nyx.test.source.vocabulary,
+  nyx.test.source.references,
   nyx.test.fluent,
   nyx.test.state,
   nyx.test.collections,
@@ -114,7 +115,8 @@ begin
     RunNyxStructuralSourceTests + RunNyxCollectionTests + RunNyxCollectionRegistryTests +
     RunNyxCollectionViewTests + RunNyxSourceDiagnosticTests + RunNyxIndexedSourceTests +
     RunNyxSourceContextTests + RunNyxSourceHistoryTests +
-    RunNyxSourceAdmissionTests + RunNyxCompilerDiagnosticTests + RunNyxSourceVocabularyTests;
+    RunNyxSourceAdmissionTests + RunNyxCompilerDiagnosticTests + RunNyxSourceVocabularyTests +
+    RunNyxSourceReferenceTests;
   LCatalog := TNyxCatalog.Create;
   LDocument := TNyxDocument.Create;
   try

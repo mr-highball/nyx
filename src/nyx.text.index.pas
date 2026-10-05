@@ -20,21 +20,33 @@
   SOFTWARE.
 }
 
-{ Private source-reader/reconciler index. Keys and positions are owned per
-  operation; nothing borrows a document, token array or renderer. Exact text
+unit nyx.text.index;
+
+{$mode delphi}{$H+}
+{$codepage utf8}
+
+interface
+
+uses
+  nyx.text;
+
+{ Internal exact-text index. Each caller owns its keys and nonnegative scalar
+  positions; nothing borrows a document, token array or renderer. Exact text
   equality resolves hash collisions. Pascal identifiers are normalized by their
   callers, while application identities remain exact, including empty keys.
-  The table never determines output order: original ordered arrays own that. }
+  The table never determines output order: original ordered arrays own that.
+  Instances are independently owned and mutable; callers must serialize access
+  or publish only a fully initialized read-only instance to other consumers. }
 type
-  TSourceIndexEntry = record
+  TNyxTextIndexEntry = record
     Key: TNyxText;
     Value: Integer;
     Occupied: Boolean;
   end;
-  TSourceIndexEntries = array of TSourceIndexEntry;
-  TSourceIndex = class
+  TNyxTextIndexEntries = array of TNyxTextIndexEntry;
+  TNyxTextIndex = class
   private
-    FEntries: TSourceIndexEntries;
+    FEntries: TNyxTextIndexEntries;
     FCount: Integer;
     function Slot(const AKey: TNyxText): Integer;
     procedure Grow;
@@ -45,7 +57,12 @@ type
     procedure AddFirst(const AKey: TNyxText; AValue: Integer);
   end;
 
-function TSourceIndex.Slot(const AKey: TNyxText): Integer;
+implementation
+
+uses
+  SysUtils;
+
+function TNyxTextIndex.Slot(const AKey: TNyxText): Integer;
 var
   {$IFDEF PAS2JS}
   LHash: NativeInt;
@@ -74,9 +91,9 @@ begin
   end;
 end;
 
-procedure TSourceIndex.Grow;
+procedure TNyxTextIndex.Grow;
 var
-  LPrevious: TSourceIndexEntries;
+  LPrevious: TNyxTextIndexEntries;
   LCapacity: Integer;
   LIndex: Integer;
 begin
@@ -101,7 +118,7 @@ begin
   end;
 end;
 
-function TSourceIndex.IndexOf(const AKey: TNyxText): Integer;
+function TNyxTextIndex.IndexOf(const AKey: TNyxText): Integer;
 var
   LSlot: Integer;
 begin
@@ -119,14 +136,14 @@ begin
   end;
 end;
 
-procedure TSourceIndex.AddFirst(const AKey: TNyxText; AValue: Integer);
+procedure TNyxTextIndex.AddFirst(const AKey: TNyxText; AValue: Integer);
 var
   LSlot: Integer;
 begin
 
   if AValue < 0 then
   begin
-    raise EArgumentException.Create('Source index positions must be nonnegative');
+    raise EArgumentException.Create('Text index positions must be nonnegative');
   end;
 
   if FCount * 2 >= Length(FEntries) then
@@ -143,3 +160,5 @@ begin
     Inc(FCount);
   end;
 end;
+
+end.

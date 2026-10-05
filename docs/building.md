@@ -116,8 +116,8 @@ them.
 
 `source-workspace` runs the native retained-draft/Unicode diagnostic, indexed
 identity/preservation, independent source-context, compiler-location, immutable
-history, paired candidate/cache-restoration, fresh property admission and closed
-vocabulary/source-consumer checks (232 total), and
+history, paired candidate/cache-restoration, fresh property admission, closed
+vocabulary and exact control-reference checks (247 total), and
 compiles their browser counterpart plus the portable source benchmark. Execute
 `source-diagnostics.html` after compilation. Benchmark timing is deliberately a
 separate run: native `nyx_source_benchmark.exe` accepts an optional size of 128,
@@ -135,6 +135,12 @@ argument families and ordinals; source contexts, model values and candidate
 admission remain fresh and operation-owned. Native finalization releases its
 index; browser module lifetime owns the vocabulary. Public round trips, reserved
 locals, wrong families and retained source/history qualify its consumers.
+
+Candidate fluent members borrow their exact declared control only after
+construction and attachment. Full document validation builds an independent
+exact-text membership index on every call, preserving case, Unicode, ordered
+diagnostics and direct-mutation visibility. Duplicate recipe parts and premature
+configuration remain rejected without changing the accepted pair or Redo.
 
 The same target also compiles `nyx_property_benchmark` and stages
 `property-benchmark.html`. Run it separately on an idle host, using the real
