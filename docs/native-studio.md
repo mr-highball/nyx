@@ -39,6 +39,35 @@ replace the canvas deliberately; selection and value proposals keep it mounted.
 Project title edits update the mounted generated source immediately without
 replacing the title field that is notifying.
 
+The source candidate routes Apply through `TNyxSourceCommands`. One immutable
+request runs at a time; repeated Apply replaces one queued request. A worker
+constructs a fresh complete document/companion using owned default recipes and a
+captured creator-schema environment. Completion compares fresh accepted files,
+the exact draft, session/load identity and creator generation before publishing
+one paired Undo entry. Invalid, superseded and stale results retain current work.
+Source status sits above the Pascal actions, including at compact widths.
+
+Native preparation uses `INyxScheduler` worker threads. The browser adapter uses
+the separately compiled Pascal `nyx_source_worker.js`, bundled with browser Studio
+and its matched embedded RTL. Ordinary deferred browser callbacks remain on the
+UI loop. Worker replies use a private trusted processor channel; file, HTTP and
+MCP imports retain complete source admission. Creator publication cannot
+interleave the final generation check and paired swap.
+
+Each native project owns its command controller. Before destroying several
+projects, detach every UI port, then drain retained native work while servicing
+its handoffs. Source workers never borrow accepted nodes, renderer handles or
+mutable recipes. See WORK.md for 39 actual Win32 controls, desktop/390 captures,
+original-size timings and the still-pending browser execution/deployment gate.
+Visual/structural commands and per-keystroke bridge/recovery costs remain open.
+
+```powershell
+./tools/build.ps1 -Target native-studio -VerifySourceScheduling
+```
+
+This local qualification launches no Studio/HTTP/MCP listener and replaces no
+project, enrollment or application compiler profile.
+
 The starting document and initial review examples use English copy. Dedicated
 editing, draft and persistence checks still exercise supplementary and
 multilingual text. These qualification inputs do not limit the author's language.

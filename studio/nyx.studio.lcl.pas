@@ -33,7 +33,8 @@ uses
   nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.rootedits,
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
   nyx.studio.workspaces, nyx.studio.builds, nyx.studio.editorbuild,
-  nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl;
+  nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl,
+  nyx.studio.sourcejobs;
 
 type
   TNyxNativeStudio = class;
@@ -49,6 +50,7 @@ type
     Owner: TNyxNativeStudio;
     Reference: TNyxWorkspaceRef;
     Session: TNyxStudioSession;
+    SourceCommands: TNyxSourceCommands;
     Bridge: TNyxStudioAgentBridge;
     State: TNyxStudioViewState;
     Preview: Boolean;
@@ -85,6 +87,7 @@ type
     procedure PreviewPrepared(ASucceeded: Boolean; const AError: TNyxText);
     procedure PollBuild(ASender: TObject);
     procedure Refresh(AContentChanged: Boolean);
+    procedure SourceChanged(AState: TNyxSourceCommandState; const AMessage: TNyxText);
     destructor Destroy; override;
   end;
 
@@ -102,6 +105,7 @@ type
     FHost: TWinControl;
     FPreviousResize: TNotifyEvent;
     FSession: TNyxStudioSession;
+    FSourceCommands: TNyxSourceCommands;
     FTheme: TNyxTheme;
     FShell: TNyxDocument;
     FCodeDocument: TNyxDocument;
@@ -150,6 +154,8 @@ type
     procedure ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure SourceEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+    procedure SourceCommandChanged(AState: TNyxSourceCommandState;
+      const AMessage: TNyxText);
     procedure SaveProject;
     procedure OpenProject;
     procedure AcceptRemote;
@@ -198,6 +204,9 @@ type
     { Borrowed public contracts for embedding/qualification. Never free them or
       rebuild them from inside a native widget notification. }
     property Session: TNyxStudioSession read FSession;
+    { Borrow the current project's command context on the UI thread. A project
+      jump may change this identity; callers must never free the borrowed owner. }
+    property SourceCommands: TNyxSourceCommands read FSourceCommands;
     property ShellView: TNyxLCLRenderer read FShellView;
     property CanvasView: TNyxLCLRenderer read FCanvasView;
     property CodeView: TNyxLCLRenderer read FCodeView;
@@ -434,9 +443,27 @@ begin
   end;
 end;
 
+procedure TNyxNativeStudioProject.SourceChanged(AState: TNyxSourceCommandState;
+  const AMessage: TNyxText);
+begin
+  State.Status := AMessage;
+  State.SourceStatus := AMessage;
+
+  if (AState = nssApplied) and (Bridge <> nil) then
+  begin
+    Bridge.RecordLocal;
+  end;
+
+  if (Owner <> nil) and (Owner.FCurrentProject = Self) then
+  begin
+    Owner.SourceCommandChanged(AState, AMessage);
+  end;
+end;
+
 destructor TNyxNativeStudioProject.Destroy;
 begin
   Owner := nil;
+  SourceCommands.Free;
   FreeAndNil(BuildTimer);
   CompiledPreview.Free;
   Bridge.Free;
@@ -457,6 +484,7 @@ begin
   FHost := AHost;
   FPreviousResize := TNativeHostAccess(FHost).OnResize;
   FSession := TNyxStudioSession.Create;
+  FSourceCommands := TNyxSourceCommands.Create(FSession, SourceCommandChanged);
   FTheme := TNyxTheme.Create;
   FOutputs := TNyxOutputConfiguration.Create;
   FStore := TNyxProjectStore.Create(AProjectDirectory);
@@ -489,12 +517,18 @@ begin
   FRunning := False;
   { Remove this object's queued callbacks before any view/session lifetime ends. }
   Application.RemoveAsyncCalls(Self);
+
+  if FSourceCommands <> nil then
+  begin
+    FSourceCommands.Detach;
+  end;
   { Detach every context before joining even one worker. Waiting for a native
     thread may dispatch host synchronization; no other context may consult the
     current editor after its views or an earlier context have been released. }
   for LIndex := 0 to High(FProjects) do
   begin
     FProjects[LIndex].Owner := nil;
+    FProjects[LIndex].SourceCommands.Detach;
     FreeAndNil(FProjects[LIndex].BuildTimer);
 
     if FProjects[LIndex].CompiledPreview <> nil then
@@ -522,6 +556,7 @@ begin
 
   if Length(FProjects) = 0 then
   begin
+    FSourceCommands.Free;
     FSession.Free;
   end
   else
@@ -532,6 +567,7 @@ begin
     end;
   end;
   FSession := nil;
+  FSourceCommands := nil;
   FStore.Free;
   FOutputs.Free;
   FTheme.Free;
@@ -1045,6 +1081,8 @@ begin
     SetLength(FProjects, 1);
     FProjects[0] := LProject;
     FCurrentProject := LProject;
+    LProject.SourceCommands := FSourceCommands;
+    FSourceCommands.OnChanged := LProject.SourceChanged;
     LProject := nil;
     FServiceURL := ABaseURL;
     CurrentBridge.Connect(EncodeNyxProject(FSession.ProjectSnapshot) <> FInitialPair);
@@ -1217,6 +1255,8 @@ begin
       LProject.Owner := Self;
       LProject.Reference := AWorkspace;
       LProject.Session := TNyxStudioSession.Create;
+      LProject.SourceCommands := TNyxSourceCommands.Create(LProject.Session,
+        LProject.SourceChanged);
       LProject.State := DefaultNyxStudioViewState;
       LProject.State.CodePresentation := ncpHosted;
       LProject.State.Outputs := FOutputs;
@@ -1269,6 +1309,7 @@ begin
   FPendingProject := nil;
   FChangingProject := True;
   FSession := AProject.Session;
+  FSourceCommands := AProject.SourceCommands;
   FState := AProject.State;
   FPreview := AProject.Preview;
   FSavedPair := AProject.SavedPair;
@@ -1548,6 +1589,16 @@ begin
   end;
 end;
 
+procedure TNyxNativeStudio.SourceCommandChanged(AState: TNyxSourceCommandState;
+  const AMessage: TNyxText);
+begin
+  FState.Status := AMessage;
+  FState.SourceStatus := AMessage;
+  { Every connected project's own callback records its pair. An offline editor
+    has no bridge. Completion never consults a newly selected project. }
+  RequestRefresh(AState = nssApplied);
+end;
+
 procedure TNyxNativeStudio.SourceEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 begin
 
@@ -1723,6 +1774,20 @@ begin
     Exit;
   end;
   LChanged := False;
+  try
+
+    if FSourceCommands.Route(ANode, AEvent.Trigger) then
+    begin
+      Exit;
+    end;
+  except
+    on LException: Exception do
+    begin
+      FState.Status := LException.Message;
+      RequestRefresh;
+      Exit;
+    end;
+  end;
   LBefore := FSession.Save;
   try
 

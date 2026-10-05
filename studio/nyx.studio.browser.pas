@@ -49,6 +49,7 @@ uses
   nyx.render.browser,
   nyx.studio.session,
   nyx.studio.source,
+  nyx.studio.sourcejobs,
   nyx.studio.compiler,
   nyx.studio.diagnostics,
   nyx.studio.agentbridge,
@@ -70,6 +71,7 @@ type
   TNyxStudio = class
   private
     FSession: TNyxStudioSession;
+    FSourceCommands: TNyxSourceCommands;
     FShell: TNyxDocument;
     FShellRenderer: TNyxBrowserRenderer;
     FCanvasRenderer: TNyxBrowserRenderer;
@@ -163,6 +165,8 @@ type
     procedure RestorePresentationControls;
     procedure JumpWorkspace(const AReference: TNyxWorkspaceRef);
     procedure AgentRefresh(AContentChanged: Boolean);
+    procedure SourceCommandChanged(AState: TNyxSourceCommandState;
+      const AMessage: TNyxText);
     function PointerBegin(AEvent: TJSEvent): Boolean;
     function PointerEnd(AEvent: TJSEvent): Boolean;
     function PointerBlur(AEvent: TJSEvent): Boolean;
@@ -359,6 +363,7 @@ begin
     LStart := LFinish + 1;
   end;
   FSession := TNyxStudioSession.Create;
+  FSourceCommands := TNyxSourceCommands.Create(FSession, @SourceCommandChanged);
   FAgents := TNyxStudioAgentBridge.Create(FSession, @AgentRefresh, FWorkspace);
   FOutputs := TNyxOutputConfiguration.Create;
   FShellRenderer := TNyxBrowserRenderer.Create;
@@ -388,6 +393,7 @@ end;
 
 destructor TNyxStudio.Destroy;
 begin
+  FSourceCommands.Free;
   TNyxStudioEventTarget(document).RemoveCaptureListener('pointerdown', FPointerBeginHandler, True);
   TNyxStudioEventTarget(document).RemoveCaptureListener('pointerup', FPointerEndHandler, True);
   TNyxStudioEventTarget(document).RemoveCaptureListener('pointercancel', FPointerEndHandler, True);
@@ -454,6 +460,7 @@ begin
   LState.Palette := FPalette;
   LState.Log := FLog;
   LState.Status := FStatus;
+  LState.SourceStatus := FSourceCommands.Message;
   LState.OutputVisible := FOutputVisible;
   LState.OutputTarget := FOutputTarget;
   LState.Outputs := FOutputs;
@@ -868,6 +875,48 @@ begin
   AgentRefresh(LChanged);
 end;
 
+procedure TNyxStudio.SourceCommandChanged(AState: TNyxSourceCommandState;
+  const AMessage: TNyxText);
+begin
+  FStatus := AMessage;
+
+  if AState = nssApplied then
+  begin
+    FCompiledURL := '';
+    try
+      FAgents.RecordLocal;
+
+      if FRecoveryEnabled then
+      begin
+        SaveRecovery;
+      end;
+    except
+      on LException: Exception do
+      begin
+        FStatus := 'Pascal applied / sharing or recovery needs attention: ' + LException.Message;
+      end;
+    end;
+  end;
+  { Preparing/status refreshes preserve the mounted canvas and source control.
+    Only an admitted pair replaces the design projection. }
+  try
+    Refresh(AState <> nssApplied);
+  except
+    on LException: Exception do
+    begin
+      { Source admission is renderer independent. Preserve its actual outcome
+        and the mounted recovery controls if a projection needs an adapter. }
+      FStatus := 'Design display needs attention: ' + LException.Message;
+
+      if FShellRenderer.Root <> nil then
+      begin
+        FShellRenderer.Root.Find('studio-status').Configure.Text(FStatus).Done;
+        FShellRenderer.Sync;
+      end;
+    end;
+  end;
+end;
+
 procedure TNyxStudio.AgentRefresh(AContentChanged: Boolean);
 var
   LState: TNyxStudioAgentView;
@@ -976,6 +1025,20 @@ begin
   LRetainCanvas := False;
   CaptureNewStateDraft;
   LAcceptedDesign := '';
+  try
+
+    if FSourceCommands.Route(ANode, AEvent.Trigger) then
+    begin
+      Exit;
+    end;
+  except
+    on LException: Exception do
+    begin
+      FStatus := LException.Message;
+      Refresh(True);
+      Exit;
+    end;
+  end;
 
   if (ANode.ID = 'studio-split') and (AEvent.Trigger = ntChange) then
   begin
@@ -1037,8 +1100,7 @@ begin
 
   if (ANode.Prop(NyxStudioStateCommandKey) <> '') or
     (ANode.Prop(NyxStudioBindingCommandKey) <> '') or
-    (ANode.ID = NyxStudioAddStateID) or (ANode.ID = NyxStudioBindingFlowID) or
-    (ANode.ID = 'action-apply-source') then
+    (ANode.ID = NyxStudioAddStateID) or (ANode.ID = NyxStudioBindingFlowID) then
   begin
     LAcceptedDesign := FSession.Save;
   end;
@@ -1322,18 +1384,6 @@ begin
               FPanel := nspDesign;
               FSourceLine := LDiagnostic.Line;
               FSourceColumn := LDiagnostic.Column;
-              LRetainCanvas := True;
-            end;
-          'action-apply-source':
-            begin
-              RouteNyxStudioSource(FSession, ANode, AEvent.Trigger);
-              FCompiledURL := '';
-              FStatus := 'Pascal applied / design updated';
-            end;
-          'action-reset-source':
-            begin
-              RouteNyxStudioSource(FSession, ANode, AEvent.Trigger);
-              FStatus := 'Accepted Pascal restored';
               LRetainCanvas := True;
             end;
           'action-delete': FSession.DeleteSelected;

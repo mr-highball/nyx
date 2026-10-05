@@ -348,7 +348,27 @@ begin
     begin
       Fail('A typed factory accepts identity and optional construction mode');
     end;
-    LControl := NewNyxBuiltinControl(LKind, LArgs[LIDIndex].Text, LConstruction);
+    if (LConstruction = ncoDefault) and (LKind >= nkLabeledButton) and
+      (LKind <> nkSlotOverride) then
+    begin
+
+      if FRecipeCatalog = nil then
+      begin
+        FRecipeCatalog := TNyxCatalog.Create;
+      end;
+      LNode := FRecipeCatalog.NewNode(LKind, LArgs[LIDIndex].Text);
+      try
+        LControl := RetainNyxControl(LNode);
+      finally
+        { Retention acquires an independent reference; the new tree's original
+          ownership token is released on success and every failure path. }
+        ReleaseNyxNode(LNode);
+      end;
+    end
+    else
+    begin
+      LControl := NewNyxBuiltinControl(LKind, LArgs[LIDIndex].Text, LConstruction);
+    end;
   end
   else
   begin

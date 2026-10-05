@@ -75,6 +75,9 @@ type
     Palette: TNyxStudioPaletteState;
     Log: TNyxText;
     Status: TNyxText;
+    { Source processor status sits beside the source actions as well as the
+      global footer, so a compact host can observe preparation and refusal. }
+    SourceStatus: TNyxText;
     OutputVisible: Boolean;
     OutputTarget: TNyxText;
     Outputs: TNyxOutputConfiguration;
@@ -785,6 +788,12 @@ begin
     LCodePane := TNyxNode.Create(nkColumn, 'studio-source-pane')
       .Configure.Gap(0).Padding(0).Done;
     LSplit.Add(LCodePane);
+
+    if AState.SourceStatus <> '' then
+    begin
+      LCodePane.Add(NewNyxLabel('studio-source-status').Configure
+        .Text(AState.SourceStatus).Hint('Current Pascal source operation').Done);
+    end;
     LCodePane.Add(TNyxNode.Create(nkRow, 'studio-code-actions')
       .Configure.Gap(8).Done
       .Add(Button('action-apply-source', 'Apply Pascal'))

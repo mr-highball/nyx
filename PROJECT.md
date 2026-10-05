@@ -102,6 +102,14 @@ identity admission use exact owned lookups. Direct mutation, case/Unicode and
 recipe-duplicate rejection qualify through public consumers. No document facts
 survive admission. Large-project editing and current browser execution remain
 unaccepted.
+The next source candidate now consumes isolated admission through the actual
+native Apply button. Reader-owned recipes and immutable creator metadata travel
+with each request; fresh session/content/draft/schema guards publish one paired
+Undo entry. Source status is visible beside the Pascal actions. Native controls
+pass 39, shared checks pass 30/1769 and source cases pass 292 with zero leaks.
+The compiled Pascal browser worker remains unexecuted at the existing host gate.
+Visual/structural responsiveness and complete ordinary editor qualification stay
+open; WORK.md records the same-size timing and next prerequisite.
 The preceding designer prerequisite retains its 34 native / 32 desktop / 33
 actual-390 browser checks, including painted selection and focused view movement.
 

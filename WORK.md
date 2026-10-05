@@ -7,11 +7,23 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest source checkpoint: [exact references and fresh admission](#exact-references-and-fresh-document-admission--2026-10-05)
-ends the bounded lookup optimization. The next source prerequisite is one
-integrated ordinary-editor scheduling/responsiveness packet, preserving immutable
-candidate admission and exact paired history. Codegen criterion 3 remains open at
-no-closure count 15; current browser execution retains the recorded host gate.
+Latest source checkpoint: [isolated admission and actual editor Apply](#isolated-source-admission-and-editor-apply--2026-10-05)
+consumes immutable creator environments and reader-owned recipes through a
+coalesced source controller. Actual Win32 controls qualify paired publication,
+stale refusal, cancellation, teardown and visible desktop/390 status. The Pascal
+browser worker/controller compiles; current execution retains the host gate.
+Codegen criterion 3 remains open at no-closure count 16. Native authoring's 7 and
+delivery's 1 remain unchanged. This is an integrated source Apply boundary, not
+acceptance of comfortable large-project editing or all command scheduling.
+
+Reassessment follows the remaining concrete source prerequisite: detached visual/
+structural reconciliation, coalesced bridge/recovery capture and ordinary editor
+input/painting at the original sizes. Reuse the current immutable candidates,
+creator guard and revocable ports. Preserve fresh admission, direct mutation,
+crafted source and paired history; never mutate accepted trees on workers.
+Browser Apply/worker and observing editor acceptance still need a permitted host
+without an equivalent refused launch. No further lookup experiment, scope/count
+reset, weakened parity/DONE gate or full-goal completion substitutes these checks.
 
 Latest user authorization: the current project is disposable test content and
 may be reset/removed when useful. Its exact prior contents are no longer an
@@ -5371,3 +5383,101 @@ full-product completion is earned. The original unbounded goal remains active.
 The exact remote proof is private at
 .local/codex-restart-check/source-references-remote-proof.json. Machine paths,
 personal configuration, accounts and generated evidence remain outside the commit.
+
+
+## Isolated source admission and editor Apply — 2026-10-05
+
+Owning gate: original codegen criterion 3, following the counter-15 scheduling
+reassessment. One integrated boundary now connects fresh isolated admission to
+ordinary editor Apply/Restore, instead of another lookup-only improvement. It
+does not close large-project responsiveness, visual/structural scheduling,
+current browser execution or complete Studio/native parity.
+
+Source readers own default recipe blueprints. Immutable reference-counted creator
+environments carry full properties/help/support and event payload/context data;
+native queries/publication use short read leases and thread-local scopes. Scopes
+restore on nested failure, and later registration cannot mutate captured arrays.
+The Pascal processor owns a fully admitted document/companion. Native completion
+transfers this pair without repeating parsing/validation on the UI; the private
+browser worker reply decodes/validates its owned design/frame. File/HTTP/MCP
+imports continue complete source replay and cannot enter that trusted handoff.
+
+The shared source controller runs one preparation and coalesces one latest
+queued Apply. Native work uses INyxScheduler real workers; the browser has a
+separately compiled Pascal worker with matched embedded RTL, protocol guards,
+retirement and a bounded startup/work timeout. Fresh document/source/draft,
+session/load identity and creator-generation checks precede one paired Undo
+entry. The final creator guard excludes concurrent registration through the
+swap. Invalid/stale/superseded completions retain current files/draft/history.
+Native project contexts own their controllers; weak UI ports revoke before
+teardown drains workers. Ordinary pending typing keeps its original base without
+regeneration per keystroke. Bridge/recovery snapshots still need coalescing.
+
+The actual Nyx-built code pane shows source status above its actions, so compact
+hosts need not scroll to an offscreen global footer. Desktop/390 Win32 captures
+paint English starter/review content. Dedicated shared qualification input
+retains supplementary Unicode and CJK text; it is not initial demo content.
+No branch/development label is added to default editor chrome.
+
+Evidence under ignored build/source-scheduling/:
+
+- focused-build.log / focused-run.log: 292 checked native source cases, zero
+  leaks. New ownership/transport/context and publication cases also run in core.
+- core-build.log / core-run.log: 30 core and 1769 composition/designer checks,
+  zero unfreed blocks. The final run emits fresh compiler companions to core/.
+- generated-build.log / generated-run.log: eight fresh generated native outcomes
+  execute with zero leaks; generated-browser-build.log compiles their counterpart. Initial missing-unit
+  attempts came from omitting the runner's output directory, not compiler/type
+  rejection; the corrected emission/build/run passes before handoff.
+- scheduling-lcl-build.log / scheduling-lcl-run.log: 39 actual Win32 source
+  control/worker checks, zero leaks. The real Apply buttons qualify coalescing,
+  exact Undo/Redo, retained code control, invalid draft diagnostics, cancellation,
+  visible status inside desktop/390 viewports and retirement with work in flight.
+  The actual scheduler worker retains older creator rules while publication is
+  visible in the main environment. controls/ PNGs were inspected.
+- studio-lcl-build.log compiles the current standalone native controller.
+  server-build.log compiles the service in an isolated output without launching it.
+  worker-build.log, studio-browser-build.log and focused-browser-build.log compile
+  the Pascal worker, current browser Studio and shared source counterparts.
+  worker output includes its RTL and program startup. Compilation is not worker,
+  input, rendering or observing Studio execution.
+- scheduled-timing.csv uses the original 128/512/2048 controls and source byte
+  sizes 25094/98822/400022. All crafted names/Unicode notes/expressions, structural
+  ownership, paired history and rejection gates pass. Scheduled Apply total is
+  63/157/641 ms; UI submission is 0/0/47 ms at the existing clock resolution.
+  The main loop is serviced 4/10/35 times. At 2048, visual/structural commands
+  still take 1172/1531 ms. This is portable command work, not input/paint or
+  compiler latency, and does not establish comfortable large-project editing.
+- Owned warnings are zero; seven installed pas2js RTL warnings remain visible.
+  PowerShell orchestration parses; maintained-worker-build.log exercises its
+  compiler helper in maintained-browser/ and stages both complete programs.
+  Browser Studio builds now bundle the compiled
+  Pascal worker; native-studio -VerifySourceScheduling invokes the maintained
+  actual controls without a listener.
+
+Codegen criterion 3 remains open; no-closure count advances 15→16 once for this
+boundary. Criteria 1/2 remain accepted; native authoring's 7 and delivery's 1 stay
+unchanged. No task moves to DONE and no north-star credit is earned. Reassessment
+follows detached visual/structural reconciliation plus coalesced bridge/recovery
+capture through ordinary controls at the original sizes. Preserve fresh complete
+admission, mutable-public-tree visibility, exact authored frames and paired
+history. Browser Apply/worker/observing acceptance still requires a permitted
+host without an equivalent refused listener launch.
+
+Semantic MCP remains primary for design/build/review. Current named session and
+bounded outline reads leave revision 6, home selection, one page/one reusable,
+no pending draft, empty Undo and retained Redo intact. The local source editor
+worker path requires the physical harness: general source admission/job-status
+semantic operations remain with the existing NS-4_agent-workflows owner, rather
+than an unrecorded screenshot-driven replacement.
+
+Production/staging process identities were read and retained. No listener,
+served front-end, controller, enrollment, profile or active accepted pair is
+deployed/replaced here. The earlier qualification-listener rejection remains
+"blocked by policy", with no further reason supplied. This packet does not
+retry it. Exact remote proof for this source checkpoint is private at
+.local/codex-restart-check/source-scheduling-remote-proof.json; generated logs,
+machine paths/accounts/hosts and personal configuration stay outside the commit.
+The original unbounded goal remains active. This goal turn is progress because
+product integration and actual preservation evidence changed; it is not a
+blocked goal or completed product.

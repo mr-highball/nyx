@@ -36,7 +36,9 @@ uses
   nyx.test.compiler,
   nyx.test.schema.admission,
   nyx.test.source.vocabulary,
-  nyx.test.source.references;
+  nyx.test.source.references,
+  nyx.test.source.preparation,
+  nyx.test.source.commands;
 
 var
   LCount: Integer;
@@ -45,7 +47,8 @@ begin
     LCount := RunNyxSourceDiagnosticTests + RunNyxIndexedSourceTests +
       RunNyxSourceContextTests + RunNyxSourceHistoryTests +
       RunNyxSourceAdmissionTests + RunNyxCompilerDiagnosticTests +
-      RunNyxSchemaAdmissionTests + RunNyxSourceVocabularyTests + RunNyxSourceReferenceTests;
+      RunNyxSchemaAdmissionTests + RunNyxSourceVocabularyTests + RunNyxSourceReferenceTests +
+      RunNyxSourcePreparationTests + RunNyxSourceCommandTests;
     {$ifdef PAS2JS}
     document.body.textContent := 'PASS ' + IntToStr(LCount) + ' source diagnostic checks';
     document.body.setAttribute('data-source-diagnostics', 'passed');

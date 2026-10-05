@@ -71,7 +71,10 @@ param(
   [string]$NativeStudioArtifactDirectory,
   # Optional Win32 transport qualification through an isolated raw Pascal TCP
   # peer. No Studio/MCP listener, project, enrollment or profile is replaced.
-  [switch]$VerifyTransportDeadlines
+  [switch]$VerifyTransportDeadlines,
+  # Actual local Nyx source controls, with native worker/retirement evidence.
+  # Does not launch or replace a Studio/HTTP/MCP service.
+  [switch]$VerifySourceScheduling
 )
 
 $ErrorActionPreference = 'Stop'
@@ -113,6 +116,17 @@ function Invoke-NyxCompiler([string]$Executable, [string[]]$Arguments) {
 
   if ($LASTEXITCODE -ne 0) {
     throw "Compiler failed with exit code $LASTEXITCODE"
+  }
+  # Studio's source processor is a separate Pascal program. Stage its matched
+  # embedded RTL whenever a browser Studio is built, including focused test
+  # outputs. This only orchestrates the compiler; no service is launched.
+  if ($Arguments -contains 'studio/nyx_studio.lpr') {
+    $nyxWorkerArguments = @($Arguments | Where-Object {
+      $_ -ne 'studio/nyx_studio.lpr' -and $_ -ne '-Tbrowser' -and
+      $_ -ne '-Jirtl.js' -and
+      -not $_.StartsWith('-o', [StringComparison]::Ordinal)
+    }) + @('-Tmodule', '-Jirtl.js', 'studio/nyx_source_worker.lpr')
+    Invoke-NyxCompiler $Executable $nyxWorkerArguments
   }
 }
 
@@ -239,6 +253,14 @@ try {
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxStudioPlatform", "-Fu$nyxLazarus/packager/units/$nyxStudioPlatform",
       "-FU$nyxStudioNative", "-FE$nyxStudioNative")
     Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @('studio/nyx_studio_native.lpr'))
+
+    if ($VerifySourceScheduling) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @('tests/nyx_source_scheduling_tests.lpr'))
+      & (Join-Path $nyxStudioNative 'nyx_source_scheduling_tests.exe') `
+        (Join-Path $nyxRoot 'build/source-scheduling/controls')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Native source scheduling/control qualification failed' }
+    }
 
     if ($VerifyTransportDeadlines) {
       $nyxTransportRoot = Join-Path $nyxRoot 'build/transport-deadline'

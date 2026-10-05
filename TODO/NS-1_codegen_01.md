@@ -637,3 +637,42 @@ Budget one implementation/evidence packet and reassess. Browser/observing
 acceptance still requires a permitted host without an equivalent refused launch.
 No grammar expansion, count reset, scope transfer, weakened parity/DONE gate or
 full-product completion substitutes the original criterion.
+
+## Isolated admission consumed by editor Apply — 2026-10-05
+
+This integrated boundary gives each source reader independent recipe blueprints
+and captures complete immutable creator properties/events with detached transport.
+Native read leases/publication remain thread-safe; scoped environments restore
+on nested failure. Neither accepted nodes nor mutable UI catalogs enter workers.
+The source processor owns a completely admitted document/companion pair.
+
+Actual Studio Apply/Restore buttons consume the coalesced controller. Native
+admission uses real scheduler workers; browser admission has a separately compiled
+Pascal worker and private validated reply channel. Fresh session/load identity,
+accepted files, exact draft and creator generation guard one paired Undo entry.
+The final creator check/swap excludes concurrent registration. Retired/superseded
+results cannot retarget another project. Status is an ordinary Nyx label beside
+the code actions, visible in actual desktop/390 Win32 captures. Source typing
+keeps its original draft base without regenerating on every pending keystroke.
+
+Focused source checks pass 292, core/designer 30/1769 and actual native source
+controls 39, with zero leaks/owned warnings. Fresh compiled companions and
+browser compilation are recorded in WORK.md. Browser worker/controller execution
+and observing qualification remain pending at the original host gate. Compilation
+does not establish parity, input, pixels or source-work scheduling behavior there.
+
+The unchanged 128/512/2048-control workload retains crafted names, Unicode notes,
+unchanged expressions, structural ownership, exact paired history and rejection.
+At 2048 controls scheduled Apply submits in 47 ms and completes in 641 ms while
+the main loop is serviced. Visual/structural edits still take 1172/1531 ms; these
+portable measurements exclude painting and hardware input. This boundary is
+not comfortable large-project or complete ordinary-editor acceptance.
+
+Criterion 3 stays open; the original no-closure count advances 15→16. Criteria
+1/2 remain accepted; native authoring's 7 and delivery's 1 remain unchanged.
+Reassessment follows detached visual/structural reconciliation and coalesced
+bridge/recovery capture, consuming these ownership/creator/retirement guards
+through ordinary controls at the original sizes. Current browser Apply/worker
+still requires a permitted host without an equivalent refused launch. No lookup
+variant, count reset, scope transfer, weakened parity/DONE gate or full-product
+completion substitutes the remaining source criterion.

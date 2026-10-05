@@ -217,6 +217,41 @@ function NyxSupportsTextInput(ANode: TNyxNode): Boolean;
 procedure RegisterNyxSchema(const AKind: TNyxKindRef;
   const AProperties: array of TNyxPropertyInfo; const AEvents: array of TNyxEventSchema);
 
+type
+  { An action completes synchronously inside one captured metadata environment.
+    It must not pump the UI or defer work outside Execute. A native worker owns
+    all mutable documents it uses; the environment owns only immutable schemas. }
+  INyxSchemaAction = interface(IInterface)
+    ['{8B6CF439-AE07-4C41-A6D8-79C501B85401}']
+    procedure Execute;
+  end;
+  { Reference-counted immutable creator metadata, independent of document and
+    target controls. Execute scopes it to the calling native thread or browser
+    context and restores the previous environment even on nested failure.
+    ToData is an explicit versioned worker transport boundary, not authoring. }
+  INyxSchemaSnapshot = interface(IInterface)
+    ['{8B6CF439-AE07-4C41-A6D8-79C501B85402}']
+    function GetRevision: Integer;
+    function ToData: TNyxDataValue;
+    procedure Execute(const AAction: INyxSchemaAction);
+    property Revision: Integer read GetRevision;
+  end;
+
+{ Capture current published metadata atomically; later publication cannot mutate
+  the value. A scoped capture captures that exact environment instead. The wire
+  reader owns detached arrays/payloads and never modifies the global registry. }
+function CaptureNyxSchemas: INyxSchemaSnapshot;
+function ReadNyxSchemaSnapshot(const AData: TNyxDataValue): INyxSchemaSnapshot;
+{ Global publication generation, distinct from a document/content revision.
+  Editors use it to refuse a prepared result when creator rules changed. }
+function NyxSchemaRevision: Integer;
+{ Execute a short publication only while the global creator generation matches.
+  Native registration cannot interleave its final check and swap. The action
+  must not parse, wait, pump events, publish schemas or perform external work.
+  False performs no action; exceptions release the guard and propagate. }
+function CommitNyxSchemaRevision(ARevision: Integer;
+  const AAction: INyxSchemaAction): Boolean;
+
 { Exact scalar contract: local declaration, nearest declared named field, then
   intrinsic primitive meaning. A generic compound/container has no value domain.
   Returned specifications own data. Value fields refer to named parts explicitly. }
@@ -269,9 +304,34 @@ type
     Properties: TNyxPropertyInfos;
     Events: TNyxEventSchemas;
   end;
+  TNyxPublishedSchemas = array of TNyxPublishedSchema;
+
+  TNyxSchemaSnapshot = class(TInterfacedObject, INyxSchemaSnapshot)
+  public
+    Schemas: TNyxPublishedSchemas;
+    CapturedRevision: Integer;
+    function GetRevision: Integer;
+    function ToData: TNyxDataValue;
+    procedure Execute(const AAction: INyxSchemaAction);
+  end;
 
 var
-  GPublishedSchemas: array of TNyxPublishedSchema;
+  GPublishedSchemas: TNyxPublishedSchemas;
+  GSchemaRevision: Integer;
+  {$ifndef PAS2JS}
+  GSchemaLock: TRTLCriticalSection;
+  {$endif}
+
+{$ifdef PAS2JS}
+var
+{$else}
+threadvar
+{$endif}
+  { Borrowed only within a synchronous Execute frame. Its retained interface
+    outlives this pointer; native threads never share the active scope. }
+  GSchemaEnvironment: TNyxSchemaSnapshot;
+
+{$I nyx.schema.snapshot.inc}
 
 procedure RegisterNyxSchema(const AKind: TNyxKindRef;
   const AProperties: array of TNyxPropertyInfo; const AEvents: array of TNyxEventSchema);
@@ -279,19 +339,25 @@ var
   LIndex: Integer;
   LOther: Integer;
   LSchema: TNyxPublishedSchema;
+  LPrevious: TNyxPublishedSchemas;
 begin
 
   if Trim(AKind.Name) = '' then
   begin
     raise ENyxModel.Create('A published schema requires its component kind');
   end;
-  for LIndex := 0 to High(GPublishedSchemas) do
-  begin
-
-    if GPublishedSchemas[LIndex].Kind = AKind.Name then
+  LockSchemas;
+  try
+    for LIndex := 0 to High(GPublishedSchemas) do
     begin
-      raise ENyxModel.Create('A component schema has already been published');
+
+      if GPublishedSchemas[LIndex].Kind = AKind.Name then
+      begin
+        raise ENyxModel.Create('A component schema has already been published');
+      end;
     end;
+  finally
+    UnlockSchemas;
   end;
   LSchema.Kind := AKind.Name;
   SetLength(LSchema.Properties, Length(AProperties));
@@ -355,9 +421,34 @@ begin
     LSchema.Events[LIndex] := AEvents[LIndex].Copy;
     LSchema.Events[LIndex].DeclaredProducer := AEvents[LIndex].Trigger = ntNamed;
   end;
-  LIndex := Length(GPublishedSchemas);
-  SetLength(GPublishedSchemas, LIndex + 1);
-  GPublishedSchemas[LIndex] := LSchema;
+  LockSchemas;
+  try
+    for LIndex := 0 to High(GPublishedSchemas) do
+    begin
+
+      if GPublishedSchemas[LIndex].Kind = AKind.Name then
+      begin
+        raise ENyxModel.Create('A component schema has already been published');
+      end;
+    end;
+
+    if GSchemaRevision = High(Integer) then
+    begin
+      raise ENyxModel.Create('Published schema revision is exhausted');
+    end;
+    { Publish a detached array. Readers retain the previous immutable array;
+      no existing schema/route/payload is changed by a later registration. }
+    SetLength(LPrevious, Length(GPublishedSchemas) + 1);
+    for LIndex := 0 to High(GPublishedSchemas) do
+    begin
+      LPrevious[LIndex] := GPublishedSchemas[LIndex];
+    end;
+    LPrevious[High(LPrevious)] := LSchema;
+    GPublishedSchemas := LPrevious;
+    Inc(GSchemaRevision);
+  finally
+    UnlockSchemas;
+  end;
 end;
 
 function TNyxEventRoute.Copy: TNyxEventRoute;
@@ -1093,6 +1184,7 @@ var
   LAttribute: TNyxAttribute;
   LPublishedIndex: Integer;
   LPropertyIndex: Integer;
+  LPublishedSchemas: TNyxPublishedSchemas;
   LFoundIndex: Integer;
   LAttributeType: TNyxPropertyType;
   LTitle: TNyxText;
@@ -1526,21 +1618,22 @@ begin
   end;
 
 
-  for LPublishedIndex := 0 to High(GPublishedSchemas) do
+  LPublishedSchemas := CurrentSchemas;
+  for LPublishedIndex := 0 to High(LPublishedSchemas) do
   begin
 
-    if (GPublishedSchemas[LPublishedIndex].Kind <> ANode.Kind) and
-      (GPublishedSchemas[LPublishedIndex].Kind <> LBase.Kind) then
+    if (LPublishedSchemas[LPublishedIndex].Kind <> ANode.Kind) and
+      (LPublishedSchemas[LPublishedIndex].Kind <> LBase.Kind) then
     begin
       Continue;
     end;
-    for LPropertyIndex := 0 to High(GPublishedSchemas[LPublishedIndex].Properties) do
+    for LPropertyIndex := 0 to High(LPublishedSchemas[LPublishedIndex].Properties) do
     begin
       LFoundIndex := -1;
       for LIndex := 0 to LCount - 1 do
       begin
 
-        if LProperties[LIndex].Key = GPublishedSchemas[LPublishedIndex].Properties[LPropertyIndex].Key then
+        if LProperties[LIndex].Key = LPublishedSchemas[LPublishedIndex].Properties[LPropertyIndex].Key then
         begin
           LFoundIndex := LIndex;
           Break;
@@ -1551,7 +1644,7 @@ begin
       begin
         LFoundIndex := Append;
       end;
-      LProperties[LFoundIndex] := GPublishedSchemas[LPublishedIndex].Properties[LPropertyIndex];
+      LProperties[LFoundIndex] := LPublishedSchemas[LPublishedIndex].Properties[LPropertyIndex];
       TrackAttribute(LFoundIndex);
     end;
   end;
@@ -1734,6 +1827,7 @@ var
   LFound: Integer;
   LAuthored: TNyxAuthoredEventInfos;
   LPublished: TNyxEventSchema;
+  LPublishedSchemas: TNyxPublishedSchemas;
 
   procedure AddRoute(AControl: TNyxNode; ATrigger: TNyxTrigger;
     AAttribute: TNyxAttribute);
@@ -2179,29 +2273,30 @@ begin
       end;
     end;
     CollectRoutes(LRoot, LRoot.Prop('compound') = 'true');
-    for LPublishedIndex := 0 to High(GPublishedSchemas) do
+    LPublishedSchemas := CurrentSchemas;
+    for LPublishedIndex := 0 to High(LPublishedSchemas) do
     begin
 
-      if (GPublishedSchemas[LPublishedIndex].Kind <> ANode.Kind) and
-        (GPublishedSchemas[LPublishedIndex].Kind <> LRoot.Kind) then
+      if (LPublishedSchemas[LPublishedIndex].Kind <> ANode.Kind) and
+        (LPublishedSchemas[LPublishedIndex].Kind <> LRoot.Kind) then
       begin
         Continue;
       end;
-      for LEventIndex := 0 to High(GPublishedSchemas[LPublishedIndex].Events) do
+      for LEventIndex := 0 to High(LPublishedSchemas[LPublishedIndex].Events) do
       begin
         LFound := -1;
         for LIndex := 0 to High(Result) do
         begin
 
-          if (Result[LIndex].Trigger = GPublishedSchemas[LPublishedIndex].Events[LEventIndex].Trigger) and
-            (Result[LIndex].Name.Name = GPublishedSchemas[LPublishedIndex].Events[LEventIndex].Name.Name) then
+          if (Result[LIndex].Trigger = LPublishedSchemas[LPublishedIndex].Events[LEventIndex].Trigger) and
+            (Result[LIndex].Name.Name = LPublishedSchemas[LPublishedIndex].Events[LEventIndex].Name.Name) then
           begin
             LFound := LIndex;
             Break;
           end;
         end;
 
-        LPublished := GPublishedSchemas[LPublishedIndex].Events[LEventIndex].Copy;
+        LPublished := LPublishedSchemas[LPublishedIndex].Events[LEventIndex].Copy;
 
         if LFound < 0 then
         begin
@@ -2266,6 +2361,7 @@ function FindNyxNamedEvent(ANode: TNyxNode; const AName: TNyxEventRef;
 var
   LPublishedIndex: Integer;
   LEventIndex: Integer;
+  LPublishedSchemas: TNyxPublishedSchemas;
 begin
   ASchema := Default(TNyxEventSchema);
 
@@ -2275,20 +2371,21 @@ begin
   end;
   { Discovery aliases do not authorize a custom producer. Only an explicitly
     registered creator declaration can admit Emit on this component kind. }
-  for LPublishedIndex := 0 to High(GPublishedSchemas) do
+  LPublishedSchemas := CurrentSchemas;
+  for LPublishedIndex := 0 to High(LPublishedSchemas) do
   begin
 
-    if GPublishedSchemas[LPublishedIndex].Kind <> ANode.Kind then
+    if LPublishedSchemas[LPublishedIndex].Kind <> ANode.Kind then
     begin
       Continue;
     end;
-    for LEventIndex := 0 to High(GPublishedSchemas[LPublishedIndex].Events) do
+    for LEventIndex := 0 to High(LPublishedSchemas[LPublishedIndex].Events) do
     begin
 
-      if (GPublishedSchemas[LPublishedIndex].Events[LEventIndex].Trigger = ntNamed) and
-        (GPublishedSchemas[LPublishedIndex].Events[LEventIndex].Name.Name = AName.Name) then
+      if (LPublishedSchemas[LPublishedIndex].Events[LEventIndex].Trigger = ntNamed) and
+        (LPublishedSchemas[LPublishedIndex].Events[LEventIndex].Name.Name = AName.Name) then
       begin
-        ASchema := GPublishedSchemas[LPublishedIndex].Events[LEventIndex].Copy;
+        ASchema := LPublishedSchemas[LPublishedIndex].Events[LEventIndex].Copy;
         Exit(True);
       end;
     end;
@@ -2748,5 +2845,12 @@ begin
     end;
   end;
 end;
+
+{$ifndef PAS2JS}
+initialization
+  InitCriticalSection(GSchemaLock);
+finalization
+  DoneCriticalSection(GSchemaLock);
+{$endif}
 
 end.

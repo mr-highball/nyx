@@ -44,8 +44,22 @@ the candidate. Shared shell composition measures 156→109 ms in this sample;
 these portable costs do not establish faster full editor painting. Native shared/focused/
 compiled and actual LCL consumers qualify ownership/source behavior. Browser
 consumers compile; execution is pending after the separate static listener launch
-was refused. Original codegen criterion 3 stays open at counter 15; no complete
+was refused. That bounded checkpoint left codegen criterion 3 open at counter 15; no complete
 criterion or north-star credit is earned.
+
+The integrated source Apply candidate now owns recipes/creator environments,
+coalesces requests and publishes admitted pairs through a fresh guarded UI
+handoff. Actual Win32 source controls pass 39 with zero leaks, including visible
+desktop/390 status, exact Undo/Redo, cancellation and retired owners. Shared
+checks pass 30/1769 and focused source cases 292. In the same 2048-control workload,
+scheduled Apply submission takes 47 ms and full publication 641 ms; visual and
+structural commands still take 1172/1531 ms. These are portable command costs,
+not proof of comfortable input/painting. Browser worker/controller compilation
+does not replace execution at the refused-host gate. Criterion 3 remains open;
+the original no-closure count advances 15→16. Native authoring's 7 and delivery's 1
+remain unchanged. Next follow detached visual/structural reconciliation and
+coalesced recovery/bridge capture through ordinary controls, with the same
+preservation/workload/parity gates. No north-star credit or DONE move is earned.
 
 Earlier source delivery (2026-10-04): typed layout policies advance the original
 [LCL](TODO/NS-2_lcl-renderer_01.md) and

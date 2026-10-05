@@ -35,6 +35,8 @@ uses
   SysUtils,
   {$ifdef PAS2JS}
   Web,
+  {$else}
+  Classes, nyx.studio.sourcejobs,
   {$endif}
   nyx.text,
   nyx.types,
@@ -47,6 +49,10 @@ uses
 
 const
   SourceBenchmarkControlsPrefix = '?controls=';
+  SourceScheduledArgument = '--scheduled';
+
+var
+  GScheduled: Boolean;
 
 function Clock: Double;
 begin
@@ -56,6 +62,41 @@ begin
   Result := GetTickCount64;
   {$endif}
 end;
+
+{$ifndef PAS2JS}
+{ Use the same admitted command as the actual native editor. The original sizes,
+  source, visual/structural commands and preservation gates stay unchanged.
+  Submission excludes worker admission; total Apply still includes publication.
+  Pulses witness a serviced main loop, not canvas painting or usable input. }
+function ScheduledApply(ASession: TNyxStudioSession;
+  out ASubmit: Double; out APulses: Integer): TNyxSourceCommandState;
+var
+  LCommands: TNyxSourceCommands;
+  LStarted: Double;
+begin
+  LCommands := TNyxSourceCommands.Create(ASession, nil);
+  try
+    LStarted := Clock;
+    LCommands.Apply;
+    ASubmit := Clock - LStarted;
+    APulses := 0;
+    while LCommands.State = nssPreparing do
+    begin
+      CheckSynchronize;
+      Inc(APulses);
+
+      if Clock - LStarted > 30000 then
+      begin
+        raise ENyxModel.Create('Scheduled source benchmark exceeded its deadline');
+      end;
+      Sleep(1);
+    end;
+    Result := LCommands.State;
+  finally
+    LCommands.Free;
+  end;
+end;
+{$endif}
 
 procedure Require(ACondition: Boolean; const AMessage: TNyxText);
 begin
@@ -178,6 +219,10 @@ var
   LIndex, LBytes: Integer;
   LStart, LGenerate, LApply, LVisual, LStructural, LReject, LHistory: Double;
   LRejected: Boolean;
+  {$ifndef PAS2JS}
+  LApplySubmit, LRejectSubmit: Double;
+  LApplyPulses, LRejectPulses: Integer;
+  {$endif}
   {$ifdef NYX_SOURCE_PROFILE}
   LVisualProfile: TNyxText;
   LStructuralProfile: TNyxText;
@@ -210,7 +255,18 @@ begin
     LSession.SetSourceDraft(LCrafted);
     {$ifdef NYX_SOURCE_PROFILE}ResetNyxSourceProfile(@Clock);{$endif}
     LStart := Clock;
-    LSession.ApplySourceDraft;
+    {$ifndef PAS2JS}
+
+    if GScheduled then
+    begin
+      Require(ScheduledApply(LSession, LApplySubmit, LApplyPulses) = nssApplied,
+        'scheduled admission publishes a complete pair');
+    end
+    else
+    {$endif}
+    begin
+      LSession.ApplySourceDraft;
+    end;
     LApply := Clock - LStart;
     {$ifdef NYX_SOURCE_PROFILE}LApplyProfile := ProfileText(AControls, 'apply');{$endif}
     Require((LSession.Source = LCrafted) and (LSession.Save = TNyxCodec.Encode(LDocument)),
@@ -257,7 +313,17 @@ begin
     LRejected := False;
     LStart := Clock;
     try
-      LSession.ApplySourceDraft;
+      {$ifndef PAS2JS}
+
+      if GScheduled then
+      begin
+        LRejected := ScheduledApply(LSession, LRejectSubmit, LRejectPulses) = nssRejected;
+      end
+      else
+      {$endif}
+      begin
+        LSession.ApplySourceDraft;
+      end;
     except
       on LException: ENyxSource do
       begin
@@ -273,6 +339,14 @@ begin
     Result := IntToStr(AControls) + ',' + IntToStr(LBytes) + ',' + Number(LGenerate) + ',' +
       Number(LApply) + ',' + Number(LVisual) + ',' + Number(LStructural) + ',' +
       Number(LReject) + ',' + Number(LHistory);
+    {$ifndef PAS2JS}
+
+    if GScheduled then
+    begin
+      Result := Result + ',' + Number(LApplySubmit) + ',' + Number(LRejectSubmit) +
+        ',' + IntToStr(LApplyPulses);
+    end;
+    {$endif}
     {$ifdef NYX_SOURCE_PROFILE}
     Result := Result + #10 + LApplyProfile + LVisualProfile + LStructuralProfile + LHistoryProfile;
     {$endif}
@@ -318,10 +392,25 @@ begin
       LControls := StrToInt(Copy(window.location.search, 11, MaxInt));
     end;
     {$else}
+    GScheduled := (ParamCount > 0) and (ParamStr(1) = SourceScheduledArgument);
+
+    if GScheduled then
+    begin
+      LCSV := Copy(LCSV, 1, Length(LCSV) - 1) +
+        ',apply_submit_ms,reject_submit_ms,apply_main_loop_pulses' + #10;
+    end;
     Write(LCSV);
     Flush(Output);
 
-    if ParamCount > 0 then
+    if GScheduled then
+    begin
+
+      if ParamCount > 1 then
+      begin
+        LControls := StrToInt(ParamStr(2));
+      end;
+    end
+    else if ParamCount > 0 then
     begin
       LControls := StrToInt(ParamStr(1));
     end;

@@ -43,6 +43,7 @@ uses
   nyx.controls,
   nyx.codegen,
   nyx.source,
+  nyx.source.preparation,
   nyx.studio.history,
   nyx.studio.projects,
   nyx.studio.edits,
@@ -52,6 +53,26 @@ uses
   nyx.sample;
 
 type
+  { An immutable source-command ticket owns only values. Its private session
+    identity prevents a result from being applied to another project, even when
+    both projects happen to contain identical files. No accepted node is borrowed. }
+  TNyxStudioSourceRequest = record
+  private
+    FOwner: TNyxText;
+    FGeneration: Integer;
+    FAccepted: TNyxText;
+    FCheckpoint: TNyxSourceCheckpoint;
+    FSource: TNyxText;
+    FSchemaRevision: Integer;
+    FChanged: Boolean;
+  public
+    property Source: TNyxText read FSource;
+    property SchemaRevision: Integer read FSchemaRevision;
+    property Changed: Boolean read FChanged;
+  end;
+
+  TNyxSourceCompletion = (nscUnchanged, nscApplied, nscRejected, nscStale);
+
   { Closed command destination; extension names and values remain typed data. }
   TNyxStudioExtensionOwner = (seoDocument, seoSelection);
 
@@ -72,6 +93,8 @@ type
     FSourceDraftPending: Boolean;
     FSourceDiagnostic: TNyxSourceDiagnostic;
     FSourceDiagnosticSource: TNyxText;
+    FSourceIdentity: TNyxText;
+    FSourceGeneration: Integer;
     FSelectedID: TNyxText;
     FActiveViewID: TNyxText;
     FNextID: Integer;
@@ -105,6 +128,8 @@ type
       Callers retain both owners if checkpointing fails; success clears them. }
     procedure PublishPair(var ACandidate: TNyxDocument;
       var AWorkspace: TNyxSourceWorkspace);
+    procedure PublishCapturedPair(var ACandidate: TNyxDocument;
+      var AWorkspace: TNyxSourceWorkspace; const ACheckpoint: TNyxSourceCheckpoint);
     function CallbackCandidate: TNyxDocument;
     function DoAddCallback(ATrigger: TNyxTrigger; const AName: TNyxEventRef;
       out ALine: Integer): TNyxHandlerRef;
@@ -230,6 +255,14 @@ type
       turn a stale draft into an edit of a newer visual design. }
     procedure RestoreSourceDraft(const ASource, ABase: TNyxText);
     procedure ApplySourceDraft;
+    { Capture a fresh accepted baseline before dispatching isolated admission.
+      Pending drafts retain their original base; an already stale draft refuses.
+      Complete compares fresh document/source values and creator publication,
+      then transfers both owners through one paired Undo entry. Rejected/stale
+      results never replace the accepted pair or erase the current draft. }
+    function PrepareSourceRequest(ASchemaRevision: Integer): TNyxStudioSourceRequest;
+    function CompleteSourceRequest(const ARequest: TNyxStudioSourceRequest;
+      const APrepared: INyxPreparedSource): TNyxSourceCompletion;
     procedure DiscardSourceDraft;
     { Companion source has independent local recovery. Import first loads the
       portable design, then applies its paired Pascal. .nyx export stays portable. }
@@ -252,9 +285,38 @@ uses
   nyx.studio.authoring,
   nyx.composition;
 
+type
+  { UI publication borrows the session only inside its synchronous creator guard.
+    The action owns both candidate resources until the paired swap clears them. }
+  TSourcePairPublication = class(TInterfacedObject, INyxSchemaAction)
+  public
+    Session: TNyxStudioSession;
+    Document: TNyxDocument;
+    Workspace: TNyxSourceWorkspace;
+    Checkpoint: TNyxSourceCheckpoint;
+    destructor Destroy; override;
+    procedure Execute;
+  end;
+
+destructor TSourcePairPublication.Destroy;
+begin
+  Workspace.Free;
+  Document.Free;
+  inherited Destroy;
+end;
+
+procedure TSourcePairPublication.Execute;
+begin
+  Session.PublishCapturedPair(Document, Workspace, Checkpoint);
+end;
+
 constructor TNyxStudioSession.Create;
+var
+  LIdentity: TGUID;
 begin
   inherited Create;
+  CreateGUID(LIdentity);
+  FSourceIdentity := GUIDToString(LIdentity);
   FDocument := CreateNyxSample;
   FCatalog := TNyxCatalog.Create;
   FUndo := TNyxStudioHistory.Create;
@@ -265,8 +327,12 @@ begin
 end;
 
 constructor TNyxStudioSession.Create(const APair: TNyxProjectPair);
+var
+  LIdentity: TGUID;
 begin
   inherited Create;
+  CreateGUID(LIdentity);
+  FSourceIdentity := GUIDToString(LIdentity);
   FDocument := TNyxDocument.Create;
   FCatalog := TNyxCatalog.Create;
   FUndo := TNyxStudioHistory.Create;
@@ -649,11 +715,17 @@ end;
 
 procedure TNyxStudioSession.PublishPair(var ACandidate: TNyxDocument;
   var AWorkspace: TNyxSourceWorkspace);
+begin
+  PublishCapturedPair(ACandidate, AWorkspace, FSourceWorkspace.Capture(FDocument));
+end;
+
+procedure TNyxStudioSession.PublishCapturedPair(var ACandidate: TNyxDocument;
+  var AWorkspace: TNyxSourceWorkspace; const ACheckpoint: TNyxSourceCheckpoint);
 var
   LPrevious: TNyxDocument;
   LPreviousSource: TNyxSourceWorkspace;
 begin
-  Checkpoint;
+  FUndo.Add(ACheckpoint);
   { No fallible reconciliation follows publication. Source edits already have
     their exact admitted companion; regenerating that unused intermediate would
     reject valid authored arrangements and perform the same work twice. }
@@ -1580,9 +1652,15 @@ end;
 
 procedure TNyxStudioSession.Load(const ASource: TNyxText);
 begin
+
+  if FSourceGeneration = High(Integer) then
+  begin
+    raise ENyxModel.Create('Source session generation is exhausted');
+  end;
   { Admission precedes releasing the baseline. A successful import deliberately
     starts a new history; an invalid import preserves both document and history. }
   Restore(ASource);
+  Inc(FSourceGeneration);
   FSourceWorkspace.Reset;
   DiscardSourceDraft;
   FUndo.Clear;
@@ -1624,6 +1702,11 @@ var
   LWorkspace: TNyxSourceWorkspace;
   LResolved: TNyxProjectPair;
 begin
+
+  if FSourceGeneration = High(Integer) then
+  begin
+    raise ENyxModel.Create('Source session generation is exhausted');
+  end;
   AdmitNyxProject(APair, AResolution, LDocument, LWorkspace, LResolved);
   { Publication contains no parsing, filesystem calls or callback execution.
     Both old owners remain alive until the entire replacement has been admitted. }
@@ -1631,6 +1714,7 @@ begin
   FSourceWorkspace.Free;
   FDocument := LDocument;
   FSourceWorkspace := LWorkspace;
+  Inc(FSourceGeneration);
   FActiveViewID := '';
 
   if FDocument.Count > 0 then
@@ -1760,6 +1844,21 @@ procedure TNyxStudioSession.SetSourceDraft(const ASource: TNyxText);
 var
   LAccepted: TNyxText;
 begin
+  { Once a draft is open, its base deliberately stays fixed. Ordinary typing
+    must not regenerate the entire accepted project on every keystroke. Reverting
+    to that base still refreshes it, so direct public mutations remain visible. }
+
+  if FSourceDraftPending and (ASource <> FSourceDraftBase) then
+  begin
+
+    if ASource <> FSourceDraft then
+    begin
+      FSourceDiagnostic := Default(TNyxSourceDiagnostic);
+      FSourceDiagnosticSource := '';
+    end;
+    FSourceDraft := ASource;
+    Exit;
+  end;
   LAccepted := Source;
 
   if ASource <> DraftSource then
@@ -1833,6 +1932,119 @@ begin
     begin
       FSelectedID := FActiveViewID;
     end;
+  finally
+    LWorkspace.Free;
+    LCandidate.Free;
+  end;
+end;
+
+function TNyxStudioSession.PrepareSourceRequest(
+  ASchemaRevision: Integer): TNyxStudioSourceRequest;
+var
+  LAccepted: TNyxText;
+begin
+  Result := Default(TNyxStudioSourceRequest);
+  LAccepted := Source;
+  Result.FOwner := FSourceIdentity;
+  Result.FGeneration := FSourceGeneration;
+  Result.FAccepted := LAccepted;
+  Result.FCheckpoint := FSourceWorkspace.Capture;
+  Result.FSource := DraftSource;
+  Result.FSchemaRevision := ASchemaRevision;
+  Result.FChanged := Result.FSource <> LAccepted;
+
+  if Result.FChanged and (FSourceDraftBase <> LAccepted) then
+  begin
+    raise ENyxSource.CreateAt(
+      'The design changed while this draft was open. Save the draft, restore ' +
+      'accepted Pascal and merge your edits before applying', Result.FSource, 1);
+  end;
+end;
+
+function TNyxStudioSession.CompleteSourceRequest(
+  const ARequest: TNyxStudioSourceRequest;
+  const APrepared: INyxPreparedSource): TNyxSourceCompletion;
+var
+  LAccepted: TNyxText;
+  LCheckpoint: TNyxSourceCheckpoint;
+  LCandidate: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LPublication: TSourcePairPublication;
+  LAction: INyxSchemaAction;
+begin
+  Result := nscStale;
+
+  if (ARequest.FOwner <> FSourceIdentity) or
+    (ARequest.FGeneration <> FSourceGeneration) or
+    (ARequest.FSchemaRevision <> NyxSchemaRevision) then
+  begin
+    Exit;
+  end;
+  LAccepted := Source;
+  LCheckpoint := FSourceWorkspace.Capture;
+
+  if (LAccepted <> ARequest.FAccepted) or
+    (LCheckpoint.Design <> ARequest.FCheckpoint.Design) or
+    (DraftSource <> ARequest.Source) then
+  begin
+    Exit;
+  end;
+
+  if not ARequest.Changed then
+  begin
+    DiscardSourceDraft;
+    Exit(nscUnchanged);
+  end;
+
+  if (APrepared = nil) or (APrepared.Source <> ARequest.Source) or
+    (APrepared.SchemaRevision <> ARequest.SchemaRevision) then
+  begin
+    raise ENyxModel.Create('Source completion does not match its captured command');
+  end;
+
+  if APrepared.Diagnostic.Defined then
+  begin
+    FSourceDiagnostic := APrepared.Diagnostic;
+    FSourceDiagnosticSource := ARequest.Source;
+    Exit(nscRejected);
+  end;
+  LCandidate := nil;
+  LWorkspace := nil;
+  try
+    APrepared.Take(LCandidate, LWorkspace);
+    { The trusted processor contract already completely admitted this independent
+      pair. No mutable staged handle was exposed before Take; replay/validation
+      on the UI would duplicate that work. Serialized project/MCP imports do not
+      enter here. The private browser handoff decodes and validates its pair. }
+
+    { LCheckpoint was freshly synchronized above. Reusing that exact value
+      avoids a second full accepted encoding on the UI thread. Admission itself
+      already happened on the isolated processor; no Pascal replay occurs here. }
+    LPublication := TSourcePairPublication.Create;
+    LAction := LPublication;
+    LPublication.Session := Self;
+    LPublication.Checkpoint := LCheckpoint;
+    LPublication.Document := LCandidate;
+    LPublication.Workspace := LWorkspace;
+    LCandidate := nil;
+    LWorkspace := nil;
+
+    if not CommitNyxSchemaRevision(ARequest.SchemaRevision, LAction) then
+    begin
+      Exit;
+    end;
+    DiscardSourceDraft;
+
+    if FDocument.Find(FActiveViewID) = nil then
+    begin
+      FActiveViewID := '';
+    end;
+
+    if FDocument.Find(FSelectedID) = nil then
+    begin
+      FSelectedID := FActiveViewID;
+    end;
+    Result := nscApplied;
   finally
     LWorkspace.Free;
     LCandidate.Free;

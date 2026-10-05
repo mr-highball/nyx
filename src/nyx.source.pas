@@ -166,6 +166,12 @@ type
     procedure StageAccepted(ADocument: TNyxDocument; const APrefix, ABody,
       ASuffix, ADesign: TNyxText);
   public
+    { Admit exact source without borrowing an accepted document or workspace.
+      Intended for isolated processors: all factories, tree validation and
+      companion preparation belong to this invocation. Both outputs are owned;
+      failure releases both. Publication still requires an editor baseline guard. }
+    class function PrepareDraft(const ADraft: TNyxText;
+      out AWorkspace: TNyxSourceWorkspace): TNyxDocument; static;
     function Render(ADocument: TNyxDocument): TNyxText; overload;
     function Render(ADocument: TNyxDocument;
       const ARenames: array of TNyxSourceStateRename): TNyxText; overload;
@@ -272,6 +278,7 @@ uses
   nyx.scheduler,
   nyx.json,
   nyx.schema,
+  nyx.catalog,
   nyx.controls;
 
 type
@@ -411,6 +418,9 @@ type
     { Reconstructed controls remain retained even between creation and adoption.
       Failure before an ownership call therefore releases every staged object. }
     FControls: array of INyxControl;
+    { Default recipe blueprints are reader-owned. An isolated source processor
+      must never enter the authoring factories' lazily shared UI registry. }
+    FRecipeCatalog: TNyxCatalog;
     FDocument: TNyxDocument;
     FApply: Boolean;
     FTitleSeen: Boolean;
@@ -1174,6 +1184,7 @@ begin
   { Releasing staged interfaces frees controls that failed before adoption.
     Accepted controls remain retained independently by their document/parent. }
   FControls := nil;
+  FRecipeCatalog.Free;
   FControlIDs.Free;
   FStateNames.Free;
   FLocalNames.Free;
@@ -3868,6 +3879,14 @@ end;
 
 function TNyxSourceWorkspace.PrepareCandidate(ADocument: TNyxDocument;
   const ADraft: TNyxText; out AWorkspace: TNyxSourceWorkspace): TNyxDocument;
+begin
+  AWorkspace := nil;
+  Render(ADocument);
+  Result := PrepareDraft(ADraft, AWorkspace);
+end;
+
+class function TNyxSourceWorkspace.PrepareDraft(const ADraft: TNyxText;
+  out AWorkspace: TNyxSourceWorkspace): TNyxDocument;
 var
   LPrefix: TNyxText;
   LBody: TNyxText;
@@ -3875,7 +3894,6 @@ var
   LDesign: TNyxText;
 begin
   AWorkspace := nil;
-  Render(ADocument);
   Result := ReconstructNyxDraft(ADraft, LPrefix, LBody, LSuffix, LDesign);
   try
     AWorkspace := TNyxSourceWorkspace.Create;
