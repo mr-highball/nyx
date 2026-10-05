@@ -116,8 +116,8 @@ them.
 
 `source-workspace` runs the native retained-draft/Unicode diagnostic, indexed
 identity/preservation, independent source-context, compiler-location, immutable
-history, paired candidate/cache-restoration and fresh property-admission checks
-(103 total), and
+history, paired candidate/cache-restoration, fresh property admission and closed
+vocabulary/source-consumer checks (232 total), and
 compiles their browser counterpart plus the portable source benchmark. Execute
 `source-diagnostics.html` after compilation. Benchmark timing is deliberately a
 separate run: native `nyx_source_benchmark.exe` accepts an optional size of 128,
@@ -128,6 +128,13 @@ crafted locals/comments/unchanged expressions, structural changes, exact paired
 history and rejected-draft recovery before publishing its timings. These measure
 portable source/document work, not painting, trusted input or compiler latency.
 Current costs and remaining large-project work are recorded in WORK.md.
+
+Closed Pascal enum spellings now resolve through an immutable typed vocabulary
+initialized at unit startup in the original matching order. It stores only names,
+argument families and ordinals; source contexts, model values and candidate
+admission remain fresh and operation-owned. Native finalization releases its
+index; browser module lifetime owns the vocabulary. Public round trips, reserved
+locals, wrong families and retained source/history qualify its consumers.
 
 The same target also compiles `nyx_property_benchmark` and stages
 `property-benchmark.html`. Run it separately on an idle host, using the real

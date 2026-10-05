@@ -557,3 +557,39 @@ grammar, replace the correctness workload or return an isolated lexer report.
 Browser execution/observing qualification still requires a permitted fixture
 host, without retrying an equivalent refused listener. No counter reset, scope
 transfer, DONE move, weakened parity requirement or completion credit is earned.
+
+## Typed source vocabulary and complete reconciliation — 2026-10-05
+
+The next bounded delivery indexes the exact closed Pascal enum vocabulary at
+unit startup, retaining original spellings/families/ordinals and first-match
+precedence. It removes repeated temporary construction/scans for every declared
+local and typed expression. The immutable table contains no application names,
+source, expression values, readers, models or callbacks. All source contexts and
+complete sequence-sensitive candidate admission remain independently owned.
+Native finalization/browser module lifetime are explicit.
+
+Public consumers qualify 129 additional cases: generated typed choices/clearing,
+mixed-case authored enums and exact literal text, reserved locals, wrong-family/
+unknown symbols, retained rejected drafts and paired visual Undo/Redo. The
+focused native packet passes 232, shared checks 30/1709 and eight newly compiled
+companion outcomes execute. Actual LCL Studio source/binding/inspector controls
+pass with zero leaks; owned warnings are zero. Current pas2js consumers compile
+with seven installed RTL warnings. Execution remains pending at the original
+fixture-host gate; neither historical browser results nor compilation replace it.
+
+Whole-command ordinary native timings against exact b309541 keep all original
+preservation gates and sizes: 2048-control visual edits 2531→1375 ms, structural
+edits 3594→1735 ms and Apply 985→875 ms. History 890→891 ms and shared Studio
+composition 156 ms show no material improvement. These are portable complete
+commands, not paint/input/compilation. WORK.md owns raw logs, profiled explanation
+and limitations. Large-project responsiveness/current both-target integration
+remain incomplete. Criterion 3 stays open; no-closure count advances 13→14.
+
+Reassessment ends this closed-vocabulary delivery. Next use the current complete
+command profile to address remaining sequence-sensitive control/reference access
+and structural reconciliation with ordinary editor consumption, without a stale
+document cache or weakened ownership/admission. Preserve the same crafted source,
+direct mutation visibility, workload and paired history. Browser/observing
+qualification still needs a permitted host without an equivalent refused launch.
+No isolated lexer report, grammar expansion, counter reset, scope transfer,
+weakened parity requirement, DONE move or full-product completion substitutes it.

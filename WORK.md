@@ -5162,3 +5162,98 @@ Production/stage process identity and named session are rechecked before push.
 The private exact remote proof is
 .local/codex-restart-check/property-responsive-remote-proof.json. Machine paths,
 accounts, personal configuration and generated evidence stay outside the commit.
+
+## Typed vocabulary in complete source reconciliation — 2026-10-05
+
+Progress: exact closed Pascal symbol names now resolve through one immutable
+typed index initialized before source consumers/workers run. Whole-command
+profiling showed repeated enum construction/scans for every local declaration
+dominating reconciliation's symbol facts. Startup keeps original matching order
+and first-match precedence; each entry contains only an argument family and
+ordinal. No application source/name/value, reader, document, callback or mutable
+registry snapshot is retained. Native finalization frees the index; browser
+module lifetime owns the table. All mutable source contexts, strict candidate
+replay, fresh model/property/encoding admission and exact paired publication
+remain unchanged. No Pascal grammar is broadened.
+
+The public source fixture adds 129 cases for typed layout/wrap/alignment/sizing/
+touch/variant/action/input choices and every closed attribute's clearing. It
+also qualifies mixed-case enum spelling with exact Unicode literal text, ten
+reserved locals, wrong-family/unknown arguments, retained accepted pair/buffer/
+history and ordinary visual reconciliation with paired Undo/Redo. It inspects no
+private table and runs through generated candidates/the same Studio session.
+
+Evidence lives under ignored build/source-reconcile/:
+
+- focused-build.log / focused-run.log: 232 checked native source diagnostics,
+  including the new public cases, zero unfreed blocks. maintained-build.log
+  repeats them through source-workspace, compiles both benchmarks/browser
+  consumers and stages static hosts/matched RTL to explicit isolated output.
+  These cases overlap core, not additional totals. No listener is launched.
+- core-build.log / core-run.log: 30 core and 1709 composition/designer checks,
+  zero unfreed blocks. Fresh emitted companions remain under core/.
+- generated-build.log / generated-run.log: eight compiled native outcomes pass,
+  including crafted names/comments/expressions, typed creation/reuse/ownership,
+  Unicode identity/events, legacy/helper migration and live runtime bindings.
+  Zero unfreed blocks. generated-browser-build.log compiles their counterpart.
+- lcl-build.log / lcl-run.log: actual Win32 LCL controls pass 42 managed, 35 event,
+  50 binding and 71 Studio state/source/binding authoring checks, ordinary and
+  compact inspector/shell, optional outputs, theme/reusable factory/customization,
+  75 catalog projections and Unicode recovery. All 150238341 allocated blocks
+  are freed. Programmatic actual controls do not establish hardware input,
+  another widgetset, browser pixels or complete native Studio parity.
+- native-studio-build.log compiles the maintained current product controller;
+  browser-focused-build.log, browser-shared-build.log, browser-studio-build.log
+  and browser-source-build.log compile affected pas2js consumers. Owned warnings
+  are zero; seven installed RTL warnings remain visible. No compiler/dependency
+  source is reinstalled/edited and no service/controller is deployed.
+
+Ordinary timing compares exact archived b309541 against this candidate using
+identical checked FPC 3.2.0 flags without profiling/heap tracing. Commands run
+serially after compilers/native fixtures finish. All original crafted name/
+comment/Unicode/expression, structural, exact paired history and retained rejected
+draft gates pass; source byte sizes remain 25094/98822/400022. Logs are
+before/source.csv / after/source.csv. These are complete portable commands,
+excluding rendering, trusted input, HTTP/compilation and operating-system scale.
+
+| Controls | Apply before/after ms | Visual before/after ms | Structural before/after ms | Three history operations before/after ms |
+| ---: | ---: | ---: | ---: | ---: |
+| 128 | 47 / 47 | 141 / 78 | 219 / 94 | 47 / 47 |
+| 512 | 187 / 172 | 594 / 313 | 859 / 390 | 172 / 172 |
+| 2048 | 985 / 875 | 2531 / 1375 | 3594 / 1735 | 890 / 891 |
+
+Largest visual/structural commands improve about 46%/52%; Apply improves modestly
+and history does not. after/property.csv also qualifies ordinary selected metadata
+and complete shared shell composition with unchanged source/draft. Largest
+composition remains 156 ms; this does not establish faster painting. Values near
+native timer resolution, including measured zero, do not establish zero cost.
+
+before/profile-2048.csv / after/profile-2048.csv retain the opt-in explanation:
+visual symbol-read falls 1359→251 ms across the same five snapshots; structural
+symbol-read 2094→436 ms across eight snapshots. Parent timings overlap their
+children and must not be summed. This is whole-command evidence, not an isolated
+lexer benchmark; the fresh candidate still parses/replays the entire builder.
+Remaining verification, source merging and document encoding are visible costs.
+The ordinary timing rows above, not profiled rows, own performance observations.
+
+Browser execution/observing qualification remains pending under the original
+separate static listener launch refusal: automatic approval review reported
+"blocked by policy", with no further reason. No equivalent launch was retried;
+no listener, frontend, machine profile, enrollment or accepted design/source pair
+was replaced. Existing production/stage services remain protected. English
+starter/review defaults stay unchanged; broader Unicode is qualification input.
+
+Original codegen criterion 3 remains open; its no-closure count advances 13→14.
+Native authoring's count 7 and delivery's count 1 stay unchanged. End this bounded
+closed-vocabulary delivery; next use complete-command evidence for remaining
+sequence-sensitive control/reference access and structural reconciliation with
+ordinary editor consumption. Preserve full fresh admission, direct mutation
+visibility, independent ownership, exact crafted source, workload and paired
+history. Browser/observing still needs a permitted host without an equivalent
+refused launch. No isolated lexer report, grammar expansion, counter reset, scope
+transfer, weakened parity/DONE gate or full-product completion is earned.
+
+Named semantic session and production/stage process identities are checked again
+before push. The exact private proof is
+.local/codex-restart-check/source-reconcile-remote-proof.json; machine paths,
+personal configuration, accounts and generated evidence stay outside the commit.

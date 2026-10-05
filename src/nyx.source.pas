@@ -362,6 +362,12 @@ type
     LayoutPolicy: TNyxLayoutPolicy;
   end;
   TValues = array of TValue;
+  { Closed authoring symbols carry their exact argument family and ordinal.
+    These immutable scalar facts contain no managed application value. }
+  TSourceEnumValue = record
+    Kind: TValueKind;
+    Ordinal: Integer;
+  end;
   TControlLocal = record
     Name: TNyxText;
     ID: TNyxText;
@@ -488,6 +494,8 @@ var
   GFactoryKinds: TSourceIndex;
   GClassKinds: TSourceIndex;
   GInterfaceKinds: TSourceIndex;
+  GEnumNames: TSourceIndex;
+  GEnumValues: array of TSourceEnumValue;
 
 constructor ENyxSource.CreateAt(const AMessage: TNyxText;
   const ASource: TNyxText; APosition: Integer);
@@ -868,7 +876,10 @@ begin
   end;
 end;
 
-function EnumValue(const AName: TNyxText; out AValue: TValue): Boolean;
+{ Publish the closed Pascal vocabulary once, in its original matching order.
+  The first declaration wins if two public spellings coincide. Only scalar
+  type/ordinal facts are retained; no expression value, source or model survives. }
+procedure InitializeEnumSymbols;
 var
   LKind: TNyxKind;
   LAttribute: TNyxAttribute;
@@ -881,167 +892,143 @@ var
   LTrigger: TNyxTrigger;
   LSemantic: TNyxSemanticEvent;
 
-  function Match(AKind: TValueKind; AOrdinal: Integer; const ASymbol: TNyxText): Boolean;
+  procedure RegisterEnum(AKind: TValueKind; AOrdinal: Integer;
+    const ASymbol: TNyxText);
+  var
+    LKey: TNyxText;
+    LIndex: Integer;
   begin
-    Result := SameText(AName, ASymbol);
+    LKey := LowerCase(ASymbol);
 
-    if Result then
+    if GEnumNames.IndexOf(LKey) >= 0 then
     begin
-      AValue.Kind := AKind;
-      AValue.Ordinal := AOrdinal;
+      Exit;
     end;
+    LIndex := Length(GEnumValues);
+    SetLength(GEnumValues, LIndex + 1);
+    GEnumValues[LIndex].Kind := AKind;
+    GEnumValues[LIndex].Ordinal := AOrdinal;
+    GEnumNames.AddFirst(LKey, LIndex);
   end;
 
 begin
-  AValue.Text := '';
+  GEnumNames := TSourceIndex.Create;
+  GEnumValues := nil;
 
-  if Match(vkCollectionScope, Ord(csApplication), 'csApplication') or
-    Match(vkCollectionScope, Ord(csInstance), 'csInstance') or
-    Match(vkSelectionMode, Ord(nsmSingle), 'nsmSingle') or
-    Match(vkSelectionMode, Ord(nsmMultiple), 'nsmMultiple') or
-    Match(vkCollectionCellMode, Ord(cmReadOnly), 'cmReadOnly') or
-    Match(vkCollectionCellMode, Ord(cmEditable), 'cmEditable') then
-  begin
-    Exit(True);
-  end;
+  RegisterEnum(vkCollectionScope, Ord(csApplication), 'csApplication');
+  RegisterEnum(vkCollectionScope, Ord(csInstance), 'csInstance');
+  RegisterEnum(vkSelectionMode, Ord(nsmSingle), 'nsmSingle');
+  RegisterEnum(vkSelectionMode, Ord(nsmMultiple), 'nsmMultiple');
+  RegisterEnum(vkCollectionCellMode, Ord(cmReadOnly), 'cmReadOnly');
+  RegisterEnum(vkCollectionCellMode, Ord(cmEditable), 'cmEditable');
 
-  if Match(vkConstruction, Ord(ncoDefault), 'ncoDefault') or
-    Match(vkConstruction, Ord(ncoDescriptor), 'ncoDescriptor') then
-  begin
-    Exit(True);
-  end;
+  RegisterEnum(vkConstruction, Ord(ncoDefault), 'ncoDefault');
+  RegisterEnum(vkConstruction, Ord(ncoDescriptor), 'ncoDescriptor');
 
-  if Match(vkPolicy, Ord(neSequential), 'neSequential') or
-    Match(vkPolicy, Ord(neAsynchronous), 'neAsynchronous') or
-    Match(vkPolicy, Ord(neUIQueue), 'neUIQueue') or
-    Match(vkPolicy, Ord(neThreaded), 'neThreaded') then
-  begin
-    Exit(True);
-  end;
+  RegisterEnum(vkPolicy, Ord(neSequential), 'neSequential');
+  RegisterEnum(vkPolicy, Ord(neAsynchronous), 'neAsynchronous');
+  RegisterEnum(vkPolicy, Ord(neUIQueue), 'neUIQueue');
+  RegisterEnum(vkPolicy, Ord(neThreaded), 'neThreaded');
   for LSemantic := Low(TNyxSemanticEvent) to High(TNyxSemanticEvent) do
   begin
 
-    if Match(vkSemanticEvent, Ord(LSemantic), NyxSemanticSymbol(LSemantic)) then
-    begin
-      Exit(True);
-    end;
+    RegisterEnum(vkSemanticEvent, Ord(LSemantic), NyxSemanticSymbol(LSemantic));
   end;
   for LTrigger := Low(TNyxTrigger) to High(TNyxTrigger) do
   begin
 
-    if Match(vkTrigger, Ord(LTrigger), 'nt' + SymbolStem(NyxTriggerName(LTrigger))) then
-    begin
-      Exit(True);
-    end;
+    RegisterEnum(vkTrigger, Ord(LTrigger), 'nt' + SymbolStem(NyxTriggerName(LTrigger)));
   end;
 
-  if Match(vkBindingDirection, Ord(bdFromState), 'bdFromState') or
-    Match(vkBindingDirection, Ord(bdTwoWay), 'bdTwoWay') then
-  begin
-    Exit(True);
-  end;
+  RegisterEnum(vkBindingDirection, Ord(bdFromState), 'bdFromState');
+  RegisterEnum(vkBindingDirection, Ord(bdTwoWay), 'bdTwoWay');
   for LBinding := Low(TNyxBindingProperty) to High(TNyxBindingProperty) do
   begin
 
-    if Match(vkBindingProperty, Ord(LBinding), 'bp' + CBindingMethods[LBinding]) then
-    begin
-      Exit(True);
-    end;
+    RegisterEnum(vkBindingProperty, Ord(LBinding), 'bp' + CBindingMethods[LBinding]);
   end;
 
-  if Match(vkVariant, Ord(nvDefault), 'nvDefault') or
-    Match(vkAction, Ord(naNone), 'naNone') then
-  begin
-    Exit(True);
-  end;
+  RegisterEnum(vkVariant, Ord(nvDefault), 'nvDefault');
+  RegisterEnum(vkAction, Ord(naNone), 'naNone');
   for LKind := Low(TNyxKind) to High(TNyxKind) do
   begin
 
-    if Match(vkKind, Ord(LKind), GKindEnums[LKind]) then
-    begin
-      Exit(True);
-    end;
+    RegisterEnum(vkKind, Ord(LKind), GKindEnums[LKind]);
   end;
   for LAttribute := Low(TNyxAttribute) to High(TNyxAttribute) do
   begin
 
-    if Match(vkAttribute, Ord(LAttribute), CAttributes[LAttribute]) then
-    begin
-      Exit(True);
-    end;
+    RegisterEnum(vkAttribute, Ord(LAttribute), CAttributes[LAttribute]);
   end;
 
-  if Match(vkPlatform, Ord(npfAny), 'npfAny') or
-    Match(vkPlatform, Ord(npfBrowser), 'npfBrowser') or
-    Match(vkPlatform, Ord(npfNativeLCL), 'npfNativeLCL') or
-    Match(vkSplitOrientation, Ord(nsoStacked), 'nsoStacked') or
-    Match(vkSplitOrientation, Ord(nsoSideBySide), 'nsoSideBySide') or
-    Match(vkTouchBehavior, Ord(ntbAutomatic), 'ntbAutomatic') or
-    Match(vkTouchBehavior, Ord(ntbNone), 'ntbNone') or
-    Match(vkTouchBehavior, Ord(ntbPanX), 'ntbPanX') or
-    Match(vkTouchBehavior, Ord(ntbPanY), 'ntbPanY') or
-    Match(vkTouchBehavior, Ord(ntbManipulation), 'ntbManipulation') or
-    Match(vkFlowWrap, Ord(nfwAutomatic), 'nfwAutomatic') or
-    Match(vkFlowWrap, Ord(nfwNoWrap), 'nfwNoWrap') or
-    Match(vkFlowWrap, Ord(nfwWrap), 'nfwWrap') or
-    Match(vkCrossAlignment, Ord(ncaAutomatic), 'ncaAutomatic') or
-    Match(vkCrossAlignment, Ord(ncaStart), 'ncaStart') or
-    Match(vkCrossAlignment, Ord(ncaCenter), 'ncaCenter') or
-    Match(vkCrossAlignment, Ord(ncaEnd), 'ncaEnd') or
-    Match(vkCrossAlignment, Ord(ncaStretch), 'ncaStretch') or
-    Match(vkJustification, Ord(njStart), 'njStart') or
-    Match(vkJustification, Ord(njCenter), 'njCenter') or
-    Match(vkJustification, Ord(njEnd), 'njEnd') or
-    Match(vkJustification, Ord(njSpaceBetween), 'njSpaceBetween') or
-    Match(vkJustification, Ord(njSpaceAround), 'njSpaceAround') or
-    Match(vkJustification, Ord(njSpaceEvenly), 'njSpaceEvenly') or
-    Match(vkSizing, Ord(nsAutomatic), 'nsAutomatic') or
-    Match(vkSizing, Ord(nsContent), 'nsContent') or
-    Match(vkSizing, Ord(nsFill), 'nsFill') then
-  begin
-    Exit(True);
-  end;
+  RegisterEnum(vkPlatform, Ord(npfAny), 'npfAny');
+  RegisterEnum(vkPlatform, Ord(npfBrowser), 'npfBrowser');
+  RegisterEnum(vkPlatform, Ord(npfNativeLCL), 'npfNativeLCL');
+  RegisterEnum(vkSplitOrientation, Ord(nsoStacked), 'nsoStacked');
+  RegisterEnum(vkSplitOrientation, Ord(nsoSideBySide), 'nsoSideBySide');
+  RegisterEnum(vkTouchBehavior, Ord(ntbAutomatic), 'ntbAutomatic');
+  RegisterEnum(vkTouchBehavior, Ord(ntbNone), 'ntbNone');
+  RegisterEnum(vkTouchBehavior, Ord(ntbPanX), 'ntbPanX');
+  RegisterEnum(vkTouchBehavior, Ord(ntbPanY), 'ntbPanY');
+  RegisterEnum(vkTouchBehavior, Ord(ntbManipulation), 'ntbManipulation');
+  RegisterEnum(vkFlowWrap, Ord(nfwAutomatic), 'nfwAutomatic');
+  RegisterEnum(vkFlowWrap, Ord(nfwNoWrap), 'nfwNoWrap');
+  RegisterEnum(vkFlowWrap, Ord(nfwWrap), 'nfwWrap');
+  RegisterEnum(vkCrossAlignment, Ord(ncaAutomatic), 'ncaAutomatic');
+  RegisterEnum(vkCrossAlignment, Ord(ncaStart), 'ncaStart');
+  RegisterEnum(vkCrossAlignment, Ord(ncaCenter), 'ncaCenter');
+  RegisterEnum(vkCrossAlignment, Ord(ncaEnd), 'ncaEnd');
+  RegisterEnum(vkCrossAlignment, Ord(ncaStretch), 'ncaStretch');
+  RegisterEnum(vkJustification, Ord(njStart), 'njStart');
+  RegisterEnum(vkJustification, Ord(njCenter), 'njCenter');
+  RegisterEnum(vkJustification, Ord(njEnd), 'njEnd');
+  RegisterEnum(vkJustification, Ord(njSpaceBetween), 'njSpaceBetween');
+  RegisterEnum(vkJustification, Ord(njSpaceAround), 'njSpaceAround');
+  RegisterEnum(vkJustification, Ord(njSpaceEvenly), 'njSpaceEvenly');
+  RegisterEnum(vkSizing, Ord(nsAutomatic), 'nsAutomatic');
+  RegisterEnum(vkSizing, Ord(nsContent), 'nsContent');
+  RegisterEnum(vkSizing, Ord(nsFill), 'nsFill');
   for LLayout := Low(TNyxLayoutMode) to High(TNyxLayoutMode) do
   begin
 
-    if Match(vkLayout, Ord(LLayout), 'nl' + SymbolStem(NyxLayoutName(LLayout))) then
-    begin
-      Exit(True);
-    end;
+    RegisterEnum(vkLayout, Ord(LLayout), 'nl' + SymbolStem(NyxLayoutName(LLayout)));
   end;
   for LVariant := Low(TNyxVariant) to High(TNyxVariant) do
   begin
 
-    if Match(vkVariant, Ord(LVariant), 'nv' + SymbolStem(NyxVariantName(LVariant))) then
-    begin
-      Exit(True);
-    end;
+    RegisterEnum(vkVariant, Ord(LVariant), 'nv' + SymbolStem(NyxVariantName(LVariant)));
   end;
   for LAction := Low(TNyxAction) to High(TNyxAction) do
   begin
 
-    if Match(vkAction, Ord(LAction), 'na' + SymbolStem(NyxActionName(LAction))) then
-    begin
-      Exit(True);
-    end;
+    RegisterEnum(vkAction, Ord(LAction), 'na' + SymbolStem(NyxActionName(LAction)));
   end;
   for LOverride := Low(TNyxOverrideMode) to High(TNyxOverrideMode) do
   begin
 
-    if Match(vkOverride, Ord(LOverride), 'no' + SymbolStem(NyxOverrideName(LOverride))) then
-    begin
-      Exit(True);
-    end;
+    RegisterEnum(vkOverride, Ord(LOverride), 'no' + SymbolStem(NyxOverrideName(LOverride)));
   end;
   for LInput := Low(TNyxInputType) to High(TNyxInputType) do
   begin
 
-    if Match(vkInput, Ord(LInput), 'ni' + SymbolStem(NyxInputTypeName(LInput))) then
-    begin
-      Exit(True);
-    end;
+    RegisterEnum(vkInput, Ord(LInput), 'ni' + SymbolStem(NyxInputTypeName(LInput)));
   end;
-  Result := False;
+end;
+
+
+function EnumValue(const AName: TNyxText; out AValue: TValue): Boolean;
+var
+  LIndex: Integer;
+begin
+  AValue.Text := '';
+  LIndex := GEnumNames.IndexOf(LowerCase(AName));
+  Result := LIndex >= 0;
+
+  if Result then
+  begin
+    AValue.Kind := GEnumValues[LIndex].Kind;
+    AValue.Ordinal := GEnumValues[LIndex].Ordinal;
+  end;
 end;
 
 
@@ -4009,12 +3996,14 @@ end;
 
 initialization
   InitializeSourceSymbols;
+  InitializeEnumSymbols;
 
 {$ifndef PAS2JS}
 { Native unit finalization releases this process-lifetime immutable vocabulary.
-  Browser unit finalization is unsupported; its three closed tables live with
+  Browser unit finalization is unsupported; its four closed tables live with
   their owning module and are collected with that module's execution context. }
 finalization
+  GEnumNames.Free;
   GInterfaceKinds.Free;
   GClassKinds.Free;
   GFactoryKinds.Free;
