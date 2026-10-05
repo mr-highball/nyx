@@ -241,9 +241,11 @@ type
       bindings and event scopes. False changes nothing and requests Render.
       Custom factories, scalar bindings, structure or context changes refuse
       reuse. No caller document/node is retained. Sync failures restore the
-      previous owned properties before reporting the failure. }
+      previous owned properties before reporting the failure. Typed field restores
+      reset only exact authored values, preserving independent other drafts;
+      stale/mismatched restore groups refuse before any mutation. }
     function TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
-      ADesignMode: Boolean): Boolean;
+      ADesignMode: Boolean; const ARestores: TNyxProjectionValueRestores = nil): Boolean;
     { A supplied runtime store is borrowed and must outlive this mounted view.
       Otherwise the renderer owns a fresh copy of document defaults. Design mode
       projects that copy but does not subscribe or write application state.
@@ -1357,7 +1359,7 @@ begin
 end;
 
 function TNyxBrowserRenderer.TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
-  ADesignMode: Boolean): Boolean;
+  ADesignMode: Boolean; const ARestores: TNyxProjectionValueRestores): Boolean;
 var
   LCandidate: TNyxNode;
   LPrevious: TNyxNode;
@@ -1415,7 +1417,11 @@ begin
       Exit;
     end;
     LPrevious := FRoot.Clone;
-    RefreshNyxProjectionProperties(FRoot, LCandidate, FProjectionBaseline);
+
+    if not RefreshNyxProjectionProperties(FRoot, LCandidate, FProjectionBaseline, ARestores) then
+    begin
+      Exit;
+    end;
     try
       Sync;
     except

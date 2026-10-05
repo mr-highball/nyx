@@ -77,7 +77,8 @@ type
   { Closed editor intent. Names/values are data at the inspector/catalog boundary;
     processing invokes existing typed commands, never arbitrary Pascal methods. }
   TNyxStudioDesignAction = (sdaProperty, sdaAddKind, sdaDelete, sdaDuplicate,
-    sdaMove, sdaTitle, sdaAddPage, sdaCreateComponent, sdaAddInstance, sdaCustomizePart);
+    sdaMove, sdaTitle, sdaAddPage, sdaCreateComponent, sdaAddInstance, sdaCustomizePart,
+    sdaCanvasValue);
   { A structural move is one sibling step. Arbitrary integer offsets are not
     accepted by the queued editor contract. }
   TNyxStudioMoveDirection = (nmdPrevious, nmdNext);
@@ -90,18 +91,28 @@ type
     FGeneration: Integer;
   end;
   TNyxStudioDesignEdit = record
+  private
+    FCanvasContext: TNyxStudioCommandContext;
+  public
     Action: TNyxStudioDesignAction;
     { Exact authored IDs captured when the UI emits intent. They do not follow
       later navigation or another session/load with matching control names. }
     Selection: TNyxText;
     View: TNyxText;
-    { Inspector key, catalog kind, reusable definition ID or named part path,
-      according to Action. This is the explicit metadata/extension boundary. }
+    { Inspector key, catalog kind, reusable definition ID, named part path or
+      exact canvas runtime identity, according to Action. This is the explicit
+      metadata/extension boundary, never a method or property to execute. }
     Name: TNyxText;
     { Typed schema admission interprets field input; title remains user text.
       No method name or executable statement is taken from either string. }
     Value: TNyxText;
     Direction: TNyxStudioMoveDirection;
+    { Canvas replay projects the same concrete platform's typed overrides.
+      Other actions use npfAny. Neither DOM nor LCL handles cross this boundary. }
+    Platform: TNyxPlatform;
+    { Immutable origin of a canvas capture. Queue admission uses this mounted
+      session/load identity even when the caller retains intent before enqueue. }
+    property CanvasContext: TNyxStudioCommandContext read FCanvasContext;
   end;
 
   { Owned presentation values for uncommitted field edits. This snapshot affects
@@ -111,14 +122,27 @@ type
     Key: TNyxText;
     Value: TNyxText;
   end;
+  { Copied presentation of an uncommitted field proposal. The exact view,
+    editable owner and runtime field distinguish separate reusable instances. }
+  TNyxStudioPendingCanvasValue = record
+    View: TNyxText;
+    Owner: TNyxText;
+    RuntimeID: TNyxText;
+    Value: TNyxText;
+  end;
   TNyxStudioPendingDesign = record
     TitleDefined: Boolean;
     Title: TNyxText;
     Fields: array of TNyxStudioPendingField;
+    CanvasValues: array of TNyxStudioPendingCanvasValue;
     { Last pending value wins for the exact owner/key. False clears AValue;
       empty text can still be a defined value. The snapshot owns its array. }
     function PropertyValue(const ASelection, AKey: TNyxText;
       out AValue: TNyxText): Boolean;
+    { Overlay only exact pending fields on a realized presentation. Last value
+      wins, without document/state/history mutation. Missing/retired fields are
+      ignored; authored roots refuse. True asks the adapter to synchronize. }
+    function ApplyCanvasValues(ARoot: TNyxNode; const AView: TNyxText): Boolean;
   end;
 
   { An immutable processor ticket captures the complete admitted pair and exact
@@ -215,6 +239,9 @@ type
       APolicy: TNyxExecutionPolicy);
     procedure DoRemoveCallback(ATrigger: TNyxTrigger; const AName: TNyxEventRef;
       const AID: TNyxCallbackRef);
+    { Resolve a value-only canvas ticket on this independently owned session.
+      Platform/default projection precedes policy and typed command admission. }
+    procedure SetCapturedCanvasValue(const AEdit: TNyxStudioDesignEdit);
   public
     constructor Create; overload;
     { Admit an independently owned paired seed directly, without constructing
@@ -236,6 +263,11 @@ type
       edit their authored owner; inherited reusable fields create/update an
       instance-only named-part override, leaving the definition untouched. }
     procedure SetCanvasValue(ARuntimeNode: TNyxNode);
+    { Capture only owned values from a borrowed current-view proposal. Retired
+      views and npfAny refuse; no realized node or renderer survives this call.
+      Queued consumers replay the exact runtime field, never current selection. }
+    function CaptureCanvasValue(ARuntimeNode: TNyxNode;
+      APlatform: TNyxPlatform; const AMountContext: TNyxStudioCommandContext): TNyxStudioDesignEdit;
     { Project naming is an undoable document edit, independent of output choices
       and machine tooling. The title is ordinary user text in the portable file. }
     procedure SetTitle(const ATitle: TNyxText);
@@ -380,7 +412,9 @@ implementation
 uses
   nyx.binding,
   nyx.studio.authoring,
-  nyx.composition;
+  nyx.composition,
+  nyx.platform,
+  nyx.interaction;
 
 type
   { UI publication borrows the session only inside its synchronous creator guard.
@@ -661,6 +695,75 @@ begin
   Commit;
 end;
 
+function TNyxStudioSession.CaptureCanvasValue(ARuntimeNode: TNyxNode;
+  APlatform: TNyxPlatform; const AMountContext: TNyxStudioCommandContext): TNyxStudioDesignEdit;
+var
+  LRoot: TNyxNode;
+begin
+
+  if (ARuntimeNode = nil) or not ARuntimeNode.IsRealized or (APlatform = npfAny) then
+  begin
+    raise ENyxModel.Create('Canvas input requires a realized field and concrete platform');
+  end;
+
+  if not MatchesCommandContext(AMountContext) then
+  begin
+    raise ENyxModel.Create('Canvas input belongs to an earlier mounted project load');
+  end;
+  LRoot := ARuntimeNode;
+  while LRoot.Parent <> nil do
+  begin
+    LRoot := LRoot.Parent;
+  end;
+
+  if (LRoot.DesignID <> FActiveViewID) or
+    (FDocument.Find(ARuntimeNode.DesignID) = nil) then
+  begin
+    raise ENyxModel.Create('Canvas input belongs to a retired or different view');
+  end;
+  Result := Default(TNyxStudioDesignEdit);
+  Result.Action := sdaCanvasValue;
+  Result.Selection := ARuntimeNode.DesignID;
+  Result.View := LRoot.DesignID;
+  Result.Name := ARuntimeNode.ID;
+  Result.Value := ARuntimeNode.Prop(NyxAttributeName(atValue));
+  Result.Platform := APlatform;
+  Result.FCanvasContext := AMountContext;
+end;
+
+procedure TNyxStudioSession.SetCapturedCanvasValue(const AEdit: TNyxStudioDesignEdit);
+var
+  LRoot: TNyxNode;
+  LField: TNyxNode;
+begin
+
+  if AEdit.Platform = npfAny then
+  begin
+    raise ENyxModel.Create('Canvas replay requires its concrete platform');
+  end;
+  LRoot := RealizeNyxView(FDocument, ActiveView);
+  try
+    ApplyNyxPlatform(LRoot, AEdit.Platform);
+    ApplyNyxBindings(LRoot, FDocument.State);
+    LField := LRoot.Find(AEdit.Name);
+
+    if (LField = nil) or (LField.DesignID <> AEdit.Selection) then
+    begin
+      raise ENyxModel.Create('Canvas runtime field no longer belongs to its captured owner');
+    end;
+    { The existing typed authoring command owns default/override semantics.
+      This independent realization supplies its fresh inherited bindings and
+      named-part ancestry; no adapter proposal node is trusted or borrowed. }
+    { Adapter text is a wire proposal, including numeric/Boolean spellings.
+      SetCanvasValue decodes it through the field's typed binding/default
+      contract; public Configure.Value(String) deliberately permits text only. }
+    LField.SetProp(NyxAttributeName(atValue), AEdit.Value);
+    SetCanvasValue(LField);
+  finally
+    LRoot.Free;
+  end;
+end;
+
 procedure TNyxStudioSession.SetCanvasValue(ARuntimeNode: TNyxNode);
 var
   LBinding: TNyxBindingSpec;
@@ -683,6 +786,12 @@ begin
   if LOwner = nil then
   begin
     raise ENyxModel.Create('Canvas field has no editable owner');
+  end;
+
+  if not NyxInteractionPolicy(ARuntimeNode).CanEditValue or
+    (NyxBindingKinds(ARuntimeNode, bpValue) = []) then
+  begin
+    raise ENyxState.Create('Canvas field is not editable');
   end;
   LValue := ARuntimeNode.Prop('value');
 

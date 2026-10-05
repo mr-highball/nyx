@@ -126,6 +126,8 @@ var
   LRoot: TNyxNode;
   LCaption: TFace;
   LInput: TFace;
+  LOtherInput: TFace;
+  LRestores: TNyxProjectionValueRestores;
   LButton: TFace;
   LClicks: Integer;
   LRefused: Boolean;
@@ -158,6 +160,8 @@ begin
     LDocument.Pages[0].Add(NewNyxLabel('caption').WithText('Original caption'));
     LDocument.Pages[0].Add(NewNyxInput('entry').WithText('Your notes'));
     LDocument.Find('entry').Configure.Value('Original default').Done;
+    LDocument.Pages[0].Add(NewNyxInput('other-entry').WithText('Independent notes'));
+    LDocument.Find('other-entry').Configure.Value('Other default').Done;
     LDocument.Pages[0].Add(NewNyxButton('action').WithText('Continue'));
     LRenderer.OnEvent := LObserver.Changed;
     LRenderer.Render(LDocument, LDocument.Pages[0], LHost);
@@ -170,6 +174,7 @@ begin
     LButton := LRenderer.ControlFor('action');
     {$endif}
     LInput := LRenderer.InputFor('entry');
+    LOtherInput := LRenderer.InputFor('other-entry');
     Click(LButton);
     LClicks := LObserver.Clicks;
     Check(LClicks > 0, 'Original actual button reaches its portable event route');
@@ -202,6 +207,42 @@ begin
     Check(LRenderer.TryRefresh(LDocument, LDocument.Pages[0], False) and
       (InputText(LInput) = TNyxText('New authored value / 🌙')),
       'An actual authored value delta updates the retained input');
+
+    SetDraft(LInput);
+    SetDraft(LOtherInput);
+    LCandidate := LDocument.Clone;
+    LCandidate.Find('caption').Configure.Text('Must not publish this caption').Done;
+    SetLength(LRestores, 2);
+    LRestores[0] := TNyxProjectionValueRestore.ForField('entry', 'entry');
+    LRestores[1] := TNyxProjectionValueRestore.ForField('missing-field', 'entry');
+    Check(not LRenderer.TryRefresh(LCandidate, LCandidate.Pages[0], False, LRestores) and
+      (Caption(LCaption) = 'Refreshed caption') and
+      (InputText(LInput) = TNyxText('Independent draft / 🌙')),
+      'A partially invalid restore group refuses before copying any authored delta');
+    FreeAndNil(LCandidate);
+    SetLength(LRestores, 1);
+    LRestores[0] := TNyxProjectionValueRestore.ForField('entry', 'other-entry');
+    Check(not LRenderer.TryRefresh(LDocument, LDocument.Pages[0], False, LRestores),
+      'Matching runtime ID cannot restore another editable owner');
+    LRestores[0] := TNyxProjectionValueRestore.ForField('entry', 'entry');
+    Check(LRenderer.TryRefresh(LDocument, LDocument.Pages[0], False, LRestores) and
+      (LRenderer.InputFor('entry') = LInput) and
+      (InputText(LInput) = TNyxText('New authored value / 🌙')),
+      'Explicit typed restoration resets an unchanged default without replacing its input');
+    Check((LRenderer.InputFor('other-entry') = LOtherInput) and (Caret(LOtherInput) = 4) and
+      (InputText(LOtherInput) = TNyxText('Independent draft / 🌙')),
+      'Restoring one field preserves another field draft, control and caret');
+    LDocument.Find('entry').Props.Delete(
+      LDocument.Find('entry').Props.IndexOfName(NyxAttributeName(atValue)));
+    Check(LRenderer.TryRefresh(LDocument, LDocument.Pages[0], False, LRestores) and
+      (InputText(LInput) = ''), 'Absent authored Value is restored as an absent property');
+    LDocument.Find('entry').Configure.Value('New authored value / 🌙').Done;
+    Check(LRenderer.TryRefresh(LDocument, LDocument.Pages[0], False),
+      'Ordinary authored value deltas continue after explicit field restoration');
+    {$ifndef PAS2JS}
+    Check((LRenderer.InputIdentity(LInput) = 'entry') and
+      (LRenderer.InputIdentity(LCaption) = ''), 'Native input capture returns only exact live input identity');
+    {$endif}
 
     LCandidate := LDocument.Clone;
     LCandidate.Pages[0].Add(NewNyxBadge('additional').WithText('New control'));

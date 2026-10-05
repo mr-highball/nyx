@@ -308,7 +308,7 @@ try {
       $nyxDesignBrowser = Join-Path $nyxDesignArtifacts 'browser'
       New-Item -ItemType Directory -Force $nyxDesignPair, $nyxDesignBrowser | Out-Null
       foreach ($nyxDesignProgram in @('nyx_design_source_tests', 'nyx_design_queue_tests',
-          'nyx_projection_refresh_tests', 'nyx_design_source_controls')) {
+          'nyx_projection_refresh_tests', 'nyx_canvas_queue_controls', 'nyx_design_source_controls')) {
         Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @("tests/$nyxDesignProgram.lpr"))
       }
       & (Join-Path $nyxStudioNative 'nyx_design_source_tests.exe') $nyxDesignPair
@@ -320,11 +320,24 @@ try {
       & (Join-Path $nyxStudioNative 'nyx_projection_refresh_tests.exe')
 
       if ($LASTEXITCODE -ne 0) { throw 'Actual retained native projection qualification failed' }
+      & (Join-Path $nyxStudioNative 'nyx_canvas_queue_controls.exe') (Join-Path $nyxDesignArtifacts 'canvas-controls')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Actual queued native canvas qualification failed' }
       Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @("-Fu$nyxDesignPair",
         'tests/nyx_design_source_consumer.lpr'))
       & (Join-Path $nyxStudioNative 'nyx_design_source_consumer.exe') (Join-Path $nyxDesignPair 'expected.nyx')
 
       if ($LASTEXITCODE -ne 0) { throw 'Exact compiled design/source consumer failed' }
+      # Compile the newly admitted canvas/default/instance companion independently.
+      # Separate units keep a same-named earlier generated builder out of this proof.
+      $nyxCanvasPair = Join-Path $nyxDesignPair 'canvas'
+      $nyxCanvasConsumer = Join-Path $nyxCanvasPair 'compiled'
+      New-Item -ItemType Directory -Force $nyxCanvasConsumer | Out-Null
+      Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @("-Fu$nyxCanvasPair",
+        "-FU$nyxCanvasConsumer", "-FE$nyxCanvasConsumer", 'tests/nyx_design_source_consumer.lpr'))
+      & (Join-Path $nyxCanvasConsumer 'nyx_design_source_consumer.exe') (Join-Path $nyxCanvasPair 'expected.nyx')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Exact compiled canvas design/source consumer failed' }
       $nyxDesignPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
       $nyxDesignRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
       foreach ($nyxDesignProgram in @('tests/nyx_design_source_tests.lpr',

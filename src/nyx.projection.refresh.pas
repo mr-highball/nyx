@@ -28,6 +28,23 @@ interface
 uses
   nyx.text, nyx.types, nyx.model;
 
+type
+  { A typed request to restore one exact field's current authored default during
+    retained projection. It owns only identity values, never a node or widget.
+    An editor uses this after a completed/rejected proposal; unrelated runtime
+    drafts remain independent. Empty or mismatched identities refuse reuse. }
+  TNyxProjectionValueRestore = record
+  private
+    FRuntimeID: TNyxText;
+    FDesignID: TNyxText;
+  public
+    class function ForField(const ARuntimeID, ADesignID: TNyxText):
+      TNyxProjectionValueRestore; static;
+    property RuntimeID: TNyxText read FRuntimeID;
+    property DesignID: TNyxText read FDesignID;
+  end;
+  TNyxProjectionValueRestores = array of TNyxProjectionValueRestore;
+
 { Portable adapter boundary for an independently realized candidate. These
   routines own no document, node or native/DOM handle. A retained view may reuse
   only ordinary scalar presentation: identities, structure, contracts, binding
@@ -41,9 +58,11 @@ function CanRefreshNyxProjection(AExisting, ACandidate: TNyxNode): Boolean;
   retain an independent previous clone for rollback on a widget failure.
   Supplying ABaseline applies only changed authored fields, preserving independent
   runtime input for unchanged defaults. Nil copies all properties for rollback.
-  The optional baseline must have the same completely compatible structure. }
+  The optional baseline must have the same completely compatible structure.
+  Explicit field restores are checked before any mutation, then copy only Value
+  from the fresh candidate. This also restores an absent authored property. }
 function RefreshNyxProjectionProperties(AExisting, ACandidate: TNyxNode;
-  ABaseline: TNyxNode = nil): Boolean;
+  ABaseline: TNyxNode = nil; const ARestores: TNyxProjectionValueRestores = nil): Boolean;
 
 { Exact immutable document context for a mounted view. Fresh encoding validates
   current public data/budgets; it is not an admission cache. All document fields
@@ -57,6 +76,18 @@ implementation
 
 uses
   nyx.codec, nyx.data;
+
+class function TNyxProjectionValueRestore.ForField(const ARuntimeID,
+  ADesignID: TNyxText): TNyxProjectionValueRestore;
+begin
+
+  if (ARuntimeID = '') or (ADesignID = '') then
+  begin
+    raise ENyxModel.Create('Field restoration requires exact runtime and editable identities');
+  end;
+  Result.FRuntimeID := ARuntimeID;
+  Result.FDesignID := ADesignID;
+end;
 
 function RefreshableKey(const AKey: TNyxText): Boolean;
 var
@@ -136,7 +167,12 @@ begin
 end;
 
 function RefreshNyxProjectionProperties(AExisting, ACandidate: TNyxNode;
-  ABaseline: TNyxNode): Boolean;
+  ABaseline: TNyxNode; const ARestores: TNyxProjectionValueRestores): Boolean;
+var
+  LRestore: Integer;
+  LExisting: TNyxNode;
+  LAccepted: TNyxNode;
+  LProperty: Integer;
 
   procedure CopyProperties(AFrom, ATo, ABefore: TNyxNode);
   var
@@ -203,7 +239,43 @@ begin
 
   if Result then
   begin
+    { Validate the complete group before copying any authored delta. A stale
+      reusable owner cannot reset a different field with a matching local ID. }
+    for LRestore := 0 to High(ARestores) do
+    begin
+      LExisting := AExisting.Find(ARestores[LRestore].RuntimeID);
+      LAccepted := ACandidate.Find(ARestores[LRestore].RuntimeID);
+
+      if (LExisting = nil) or (LAccepted = nil) or
+        (ARestores[LRestore].RuntimeID = '') or (ARestores[LRestore].DesignID = '') or
+        (LExisting.DesignID <> ARestores[LRestore].DesignID) or
+        (LAccepted.DesignID <> ARestores[LRestore].DesignID) then
+      begin
+        Exit(False);
+      end;
+    end;
     CopyProperties(ACandidate, AExisting, ABaseline);
+    for LRestore := 0 to High(ARestores) do
+    begin
+      LExisting := AExisting.Find(ARestores[LRestore].RuntimeID);
+      LAccepted := ACandidate.Find(ARestores[LRestore].RuntimeID);
+
+      if LAccepted.Props.IndexOfName(NyxAttributeName(atValue)) >= 0 then
+      begin
+        { Copy the already admitted property representation, including numeric
+          and Boolean fields; typed authoring overloads do not accept wire text. }
+        LExisting.SetProp(NyxAttributeName(atValue), LAccepted.Prop(NyxAttributeName(atValue)));
+      end
+      else
+      begin
+        LProperty := LExisting.Props.IndexOfName(NyxAttributeName(atValue));
+
+        if LProperty >= 0 then
+        begin
+          LExisting.Props.Delete(LProperty);
+        end;
+      end;
+    end;
   end;
 end;
 

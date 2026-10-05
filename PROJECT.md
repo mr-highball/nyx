@@ -144,6 +144,13 @@ avoiding unnecessary large-view reparenting. The explicit optimized Studio build
 keeps compiler safety checks and separate checked artifacts. Its current
 original-size evidence and timing limits are recorded in WORK.md; no full
 browser/native or release-readiness acceptance follows this bounded packet.
+Ordinary canvas proposals now use the same isolated command queue, carrying only
+owned route/value/platform and mounted-load identities. Fresh independent
+realization preserves typed state defaults and instance-only named-part meaning.
+Exact field restores reconcile rejected values without claiming publication;
+newer pending input remains visible. Native input/load/history qualification and
+current both-compiler wire checks are recorded in WORK.md. Browser consumers
+compile; changed browser runtime behavior still requires its permitted host.
 The preceding designer prerequisite retains its 34 native / 32 desktop / 33
 actual-390 browser checks, including painted selection and focused view movement.
 

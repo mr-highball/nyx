@@ -7,36 +7,33 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest bounded source packet: [ordinary native builds and stable retained hosts](#ordinary-native-builds-and-stable-retained-hosts--2026-10-05)
-keeps independent canvas/source views mounted during compatible native shell
-refresh. At unchanged original sizes, ordinary completion is 531/1359/4718 ms;
-the 2048-control result improves from 32813 ms while servicing 100 busy timer
-ticks instead of 2. The explicit optimized build retains compiler safety checks,
-with units/binaries/captures separate from checked ownership evidence. The full
-ordinary packet passes detached 75, projection 20, queue/load/save 10, original
-controls 101, Apply/Restore 39 and the full English native editor 74. The checked
-build passes the same consumers, with zero leaks in all seven traced processes.
-Source/design companion hashes match.
-Browser Studio/worker/shared consumers compile; execution retains the host gate.
-English starters/review captures stay separate from technical Unicode fixtures.
-Criterion 3 remains open at no-closure count 21; renderer 3, authoring 7 and
-delivery 1 remain unchanged. No full criterion or comfortable-editing acceptance
-follows these bounded timings. Earlier evidence retains its original scope.
+Latest bounded source packet: [canvas proposals](#isolated-canvas-input-and-exact-field-reconciliation--2026-10-05)
+now share isolated paired admission. Owned view/runtime/owner/platform and mounted-load identities replace
+worker access to live realized nodes. Fresh replay preserves typed state defaults
+and instance-only named parts. Exact field restoration fixes the actual rejected
+Integer-input defect without claiming successful publication or overwriting newer
+queued input. The focused native packet passes 47 actual canvas and 27 retained
+projection checks, with zero leaks; both native compilers pass 140 shared/wire
+checks. Both complete maintained native matrices pass, with zero leaks in all nine
+checked consumers and exact companion hashes agreeing. English desktop/390 native
+captures are inspected; browser Studio/module worker/shared consumers compile,
+with changed browser runtime behavior still pending at its host gate.
 
-The previous goal turn was progress: guarded controls and moved metadata changed
-product/evidence state; ae27c9e/3042635 are the preceding pushed checkpoint. This
-turn also changes product/evidence state through the concrete mounted-host fix
-and complete original-size ordinary qualification; product ddc67b3 is pushed
-and verified against the exact remote head. Next integrate ordinary
-canvas value proposals with the isolated design-command queue, preserving typed
-state/default and named reusable-part semantics without worker access to live
-realized nodes. Qualify actual input, invalid/read-only bindings, same-ID load
-retirement, drafts/source and exact paired Undo/Redo. Stop or switch on lost or
-reordered input, stale meaning, weakened admission or unsafe ownership. General
-state/binding/event and semantic routes retain their original owners. Browser
-Apply/worker and observing acceptance still need a permitted host without an
-equivalent refused launch. No scope/count reset, timing/lookup variant or weaker
-parity/DONE gate substitutes that functional integration or full-goal completion.
+The previous goal turn was progress: ddc67b3/79e3906 changed mounted native hosts
+and qualified original-size optimized builds, leaving an exact clean/pushed
+checkpoint. This turn changes product/evidence state through actual isolated
+canvas editing and rejection reconciliation. Original codegen criterion 3 remains
+open; its bounded-packet no-closure count advances 21→22 once, with renderer 3,
+native authoring 7 and delivery 1 unchanged. No full criterion, comfortable-editing
+or parity acceptance follows this packet. Earlier evidence keeps its original scope.
+
+Next follow broader source/state/binding/event integration and its existing
+semantic workflow owner, preserving fresh admission, handwritten meaning,
+independent ownership and paired history. Ordinary browser/observing outcomes
+still require the recorded permitted host without an equivalent refused launch.
+Stop or switch on accepted-tree worker access, lost/reordered input, stale meaning,
+retargeted ownership or weakened admission. No scope/count reset, another
+timing/lookup variant or weaker DONE gate substitutes the full intended outcome.
 
 Completed bounded packet under original codegen criterion 3 extends the existing
 isolated source-command processor to ordinary visual property and structural
@@ -6120,3 +6117,133 @@ handoff head separately, both timing sets, exact companion equality and scoped
 ownership/compile evidence. Logs, binaries, captures and local configuration stay
 ignored. This checkpoint changes no deployment, active user pair or acceptance
 gate; the next functional canvas-input integration remains above.
+
+## Isolated canvas input and exact field reconciliation — 2026-10-05
+
+This is bounded functional integration under original codegen criterion 3,
+following product ddc67b3 and handoff 79e3906. Ordinary canvas input now uses the
+same isolated design-command queue as inspector/structural authoring. Capture
+owns proposed wire text, concrete platform, exact view/runtime field/editable
+owner and mounted session/load identity. Retained intent and old mounted controls
+refuse after identical-ID reload before they can coalesce away current work.
+The private processor ticket is version 2 and validates its closed platform enum;
+portable design/project persistence is unchanged.
+
+Fresh worker-owned realization reapplies platform overrides and document defaults
+before invoking the existing typed canvas command. Two-way fields update typed
+document defaults without changing explicit fallback text. Unbound named reusable
+parts receive instance-only overrides, including nested component paths; recipe
+definitions and sibling instances stay independent. Wrong-type/range, one-way and
+read-only fields refuse without partial pair/history publication. No queued job
+or worker borrows a realized node, widget, accepted tree or mutable recipe.
+
+An actual native regression exposed invalid Integer input retaining its physical
+text even though admission rejected it and preserved the default. Completion
+previously exposed canvas restoration only through successful publication.
+A separate transient completed-canvas effect now restores the exact field for
+accepted/rejected/stale/failed results without treating failure as publication.
+Both adapter controllers copy restore identities within their current load;
+pending proposals overlay accepted values so an older completion cannot erase
+newer waiting input. Native deferred paint re-resolves the current input after
+possible full replacement, preserving focus/caret without dereferencing a retired
+control. Adjacent waiting input coalesces only for the same field/platform.
+
+The public renderer refresh contract accepts typed exact-field restore groups.
+The whole group validates before any authored delta or reset. A fresh candidate
+supplies Value or its absence; other controls' runtime drafts remain untouched.
+All existing structure/context/theme/creator/custom-factory/binding guards retain
+their normal full staged-render fallback. Neither this restoration nor pending
+presentation bypasses fresh admission or changes document defaults/history.
+
+The shared English technical fixture covers unbound/nested reusable parts on one
+page and typed bound controls on a separate page. It exercises inherited identity,
+platform policy, pending drafts, wire enum rejection and exact paired history.
+Dedicated supplementary Unicode input remains a technical qualification rather
+than non-English starter copy. The private physical-control fixture is necessary
+for behavior the document API cannot establish; the full editor regression still
+consumes the existing MCP-authored English source export. No screenshot-driven
+editor composition or live design replacement was used.
+
+Current evidence root: `build/canvas-input-qualification/`. Maintained commands:
+
+```powershell
+./tools/build.ps1 -Target native-studio -NativeStudioConfiguration release -VerifyDesignSource -VerifySourceScheduling -VerifyNativeStudio -DesignerSourceDirectory build/native-studio/source-english
+./tools/build.ps1 -Target native-studio -NativeStudioConfiguration checked -VerifyDesignSource -VerifySourceScheduling -VerifyNativeStudio -DesignerSourceDirectory build/native-studio/source-english
+```
+
+| Consumer | Current evidence |
+| --- | --- |
+| Portable FPC 3.2.0 shared/wire | `portable-current/run.log`: 140, zero unfreed blocks |
+| Focused checked FPC 3.3.1 actual canvas | `native-focused/canvas-restore-run.log`: 47, zero unfreed blocks |
+| Focused actual retained projection | `native-focused/projection-run.log`: 27, zero unfreed blocks |
+| Maintained optimized native matrix | `maintained-release.log`: 140 shared, queue 10, projection 27, canvas 47, two exact compiled companions, original-size controls 101, Apply/Restore 39, English full editor 74 |
+| Maintained checked native matrix | `maintained-checked.log`: the same nine consumers pass, all nine with zero unfreed blocks |
+| Browser Studio/shared/renderer/module worker | Maintained staging under `build/design-source/release/browser/` and `build/design-source/maintained/browser/`; compiles, changed runtime remains pending |
+| Actual English desktop/390 native paint | `native-focused/captures/canvas-queue-desktop.png` and `canvas-queue-390.png`, both inspected |
+
+The FPC 3.2.0 run frees all **28417040** allocations; focused native canvas frees
+all **43576708**, projection **198665**, with zero leaks. These are separate
+executions, not additive product coverage. The retained projection test preserves
+its original 20 cases and adds seven native cases (six shared browser cases).
+The shared test preserves all previous 75 cases and adds 65 canvas cases.
+The native canvas journey qualifies rapid active/waiting/coalesced input, actual
+caret/control identity, invalid/range/type restoration, typed two-way defaults,
+one-way/read-only refusal, same-ID retired mounts/intents, source drafts, exact
+paired Undo/Redo and detached worker retirement.
+
+Both maintained configurations reconstruct both exact admitted companions.
+Original source/design hashes remain equal to the preceding checkpoint; the new
+canvas companion hashes agree between checked and optimized builds. Owned warnings
+are zero. Seven distinct existing Classes RTL warnings remain in the installed
+pas2js toolchain. Native notes/hints are retained, including intentional keepalive
+variables.
+The checked original-size consumer frees all **200129951** allocations /
+**7499719637** requested bytes, and the full native editor frees all **130452302** /
+**3635432183**, with zero leaks. Release deliberately omits heap tracing.
+
+| Native configuration | Original controls | Source bytes | Three-input dispatch ms | Completion ms | Busy UI ticks |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Release | 128 | 25094 | 125 | 656 | 3 |
+| Release | 512 | 98822 | 156 | 1469 | 11 |
+| Release | 2048 | 400022 | 203 | 4656 | 53 |
+| Checked | 128 | 25094 | 1125 | 3391 | 3 |
+| Checked | 512 | 98822 | 2000 | 8109 | 56 |
+| Checked | 2048 | 400022 | 1843 | 31812 | 432 |
+
+These are the unchanged inspector/title/structural workloads, not large-project
+canvas-input measurements. The new canvas fixture qualifies a bounded two-page
+input journey. Timings do not establish comfortable editing, new canvas scaling,
+browser behavior, hardware/IME/assistive-technology or another widgetset.
+
+Failures retained in this packet: the original numeric restoration defect is in
+`native-focused/canvas-before-numeric-diagnostic.log` and
+`canvas-diagnostic-run.log`; assertions remain strict after the product fix.
+Early fixture proposals incorrectly used the public text-only Configure.Value
+overload for numeric wire text. They now enter through the explicit adapter
+boundary with the typed Value attribute; public typing was not relaxed. An early
+image-unit name and a two-argument fixture invocation refused before valid input
+qualification, then were corrected. Their tool outputs are not claimed as passes.
+The generic `-Target studio` build tried to relink the running production server;
+Windows refused its locked executable (error 5, `browser-build.log`). Subsequent
+browser work compiled directly into staging; maintained native builds stage their
+own browser/module worker without relinking a server. The early direct worker
+browser-target invocation was corrected to module mode. No compiler was
+reinstalled, dependency edited or warnings suppressed.
+
+Bounded MCP reinspection preserves revision **6**, Untitled project/home, one
+page/component, no pending draft, no Undo and available Redo, activity **187**.
+All eight protected process identities match the preceding private proof; the
+current identity snapshot remains private under `.local/codex-restart-check/`.
+No active user pair/history, enrollment, output profile or live deployment changed.
+Browser execution still needs the permitted host: automatic approval review
+previously rejected qualification listeners with only “blocked by policy”. This
+packet launches no equivalent listener and claims compile-only browser evidence.
+
+Original codegen criterion 3 remains open; its no-closure count advances **21→22**
+once for this functional integration. Accepted criteria 1/2, renderer **3**, native
+authoring **7** and delivery **1** remain unchanged. The original unbounded goal
+is active and incomplete. Next follow broader source/state/binding/event and
+semantic integration with the existing owners, while ordinary both-target
+editor/observing outcomes retain their host and acceptance gates. Another
+timing/lookup variant, scope reset or weaker admission/DONE gate cannot substitute
+the full user outcome.

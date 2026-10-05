@@ -41,8 +41,9 @@ source reconciliation is prepared. Native field callbacks enqueue work; chrome
 replacement follows the callback and restores field identity, focus and scalar
 selection. The mounted Pascal editor receives the admitted companion afterward.
 
-The source candidate routes Apply, inspector properties, project title and
-palette/structural operations through `TNyxSourceCommands`. One immutable request
+The source candidate routes Apply, inspector properties, project title,
+canvas values and palette/structural operations through `TNyxSourceCommands`.
+One immutable request
 runs at a time. Repeated Apply supersedes older Apply requests; design commands
 remain FIFO, coalescing only adjacent waiting changes to the same field. Up to
 64 waiting intents are retained; excess input refuses instead of dropping work.
@@ -75,13 +76,31 @@ projects, detach every UI port, then drain retained native work while servicing
 its handoffs. Source workers never borrow accepted nodes, renderer handles or
 mutable recipes. See WORK.md for 39 actual Win32 controls, desktop/390 captures,
 original-size timings and the still-pending browser execution/deployment gate.
-Ordinary canvas value proposals, state/binding/event authoring and broader
+Broader state/binding/event authoring and general
 source/import/review operations retain their existing owners. Preparation on a
 worker does not establish comfortable editing: fresh admission, publication and
 projection still consume the UI thread. Supported handwritten metadata displaced
 by a move now follows the control's ownership call, preserving later extension
 values, comments and exact compiled design meaning. Broader structural/source
 synchronization remains under the original criterion.
+
+Canvas input captures owned value text, its concrete platform, exact view,
+runtime field, editable owner and mounted session/load identity. No realized
+node or widget reaches the worker. The independent session realizes that field
+again, applies platform overrides and document defaults, then invokes the shared
+typed authoring command. Two-way bindings update typed document defaults without
+changing explicit fallback text. Unbound reusable fields edit only their owning
+instance's named-part override; reusable definitions and siblings stay independent.
+Read-only, one-way, wrong-type and out-of-range proposals refuse atomically.
+
+Accepted and rejected canvas completions reconcile that exact physical field.
+A rejection remains a rejection; its presentation reset does not publish source
+or create history. Copied pending proposals overlay accepted values so completion
+of an older job cannot overwrite newer queued input. Repeated waiting input
+coalesces only for the same field and platform. Old mounted fields and retained
+intents refuse after an identical-ID project reload, before coalescing can replace
+new work. Actual native controls qualify typing, caret, paired Undo/Redo and
+retirement; the browser adapter compiles but retains its runtime execution gate.
 
 Both public renderers expose `TryRefresh`. Each independently realizes and
 validates the requested current view, compares exact document context, creator
@@ -92,6 +111,10 @@ retain an independently edited value. Native checks exercise control identity,
 draft/caret preservation, callbacks and failure paths; browser consumers compile,
 with execution still gated. Scalar bindings, custom factories, structural/style
 changes and context changes refuse reuse and request the normal staged `Render`.
+The optional typed `TNyxProjectionValueRestores` argument uses
+`TNyxProjectionValueRestore.ForField` to reset an exact runtime/editable identity
+to its fresh accepted Value, including an absent property. The complete restore
+group validates before any mutation; unrelated runtime drafts remain untouched.
 Neither renderer retains the caller's document or mutable authored nodes. Native
 candidate construction balances LCL's host sizing lock, including factory failure;
 retirement disconnects resize before freeing bindings. Studio consumes this public

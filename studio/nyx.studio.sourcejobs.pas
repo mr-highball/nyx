@@ -28,7 +28,7 @@ interface
 
 uses
   nyx.text, nyx.types, nyx.model, nyx.scheduler, nyx.schema,
-  nyx.source.preparation, nyx.studio.session
+  nyx.source.preparation, nyx.studio.session, nyx.projection.refresh
   {$ifdef PAS2JS}, JS, Web{$endif};
 
 type
@@ -99,6 +99,9 @@ type
     FDetached: Boolean;
     FPublishedDesign: Boolean;
     FPublishedAction: TNyxStudioDesignAction;
+    FCanvasCompletion: Boolean;
+    FCompletedEdit: TNyxStudioDesignEdit;
+    FCompletedContext: TNyxStudioCommandContext;
     {$ifndef PAS2JS}
     FExecutions: array of INyxExecution;
     {$else}
@@ -131,6 +134,16 @@ type
     { Queue closed intent with explicit target/view identities. Full admission
       and source reconciliation run on independently reconstructed owners. }
     procedure Edit(const AEdit: TNyxStudioDesignEdit);
+    { Synchronously capture immutable proposal values only, then enqueue the
+      ordinary isolated design command. Neither worker nor queue retains ANode. }
+    procedure CanvasValue(ANode: TNyxNode; APlatform: TNyxPlatform;
+      const AMountContext: TNyxStudioCommandContext);
+    { Current completed canvas notification's exact field reset, including
+      rejected/failed proposals whose physical input must regain the accepted
+      value. False for preparation, other commands, retired loads and another
+      active view. The adapter copies this value until its deferred paint;
+      no tree is exposed and no failed command is reported as published. }
+    function CanvasRestore(out ARestore: TNyxProjectionValueRestore): Boolean;
     { Copy pending field/title values for observing chrome. No queued intent,
       accepted document or mutable processor owner is exposed or modified. }
     function PendingDesign: TNyxStudioPendingDesign;
@@ -328,6 +341,11 @@ begin
   FMessage := AMessage;
   FPublishedDesign := (AState = nssApplied) and ADesign;
   FPublishedAction := AAction;
+  { A rejected proposal still changed the physical input before admission.
+    Restore that exact field without treating the rejected pair as published.
+    Every status-only notification clears this transient completion effect. }
+  FCanvasCompletion := ADesign and (AAction = sdaCanvasValue) and
+    (AState in [nssApplied, nssRejected, nssStale, nssFailed]);
 
   if not FDetached and Assigned(FChanged) then
   begin
@@ -431,6 +449,16 @@ begin
   LJob := Default(TNyxEditorSourceJob);
   LJob.Kind := eskDesign;
   LJob.Context := FSession.CommandContext;
+
+  if AEdit.Action = sdaCanvasValue then
+  begin
+    LJob.Context := AEdit.CanvasContext;
+  end;
+
+  if not FSession.MatchesCommandContext(LJob.Context) then
+  begin
+    raise ENyxModel.Create('Captured editor intent belongs to an earlier project load');
+  end;
   LJob.Edit := AEdit;
   LJob.Sequence := NextSequence;
   LJob.Schemas := TNyxEditorSchemaLease.Create(CaptureNyxSchemas);
@@ -439,10 +467,11 @@ begin
 
     if (LLast >= 0) and (FQueue[LLast].Kind = eskDesign) and
       FSession.MatchesCommandContext(FQueue[LLast].Context) and
-      (AEdit.Action in [sdaProperty, sdaTitle]) and
+      (AEdit.Action in [sdaProperty, sdaTitle, sdaCanvasValue]) and
       (FQueue[LLast].Edit.Action = AEdit.Action) and
       (FQueue[LLast].Edit.Selection = AEdit.Selection) and
-      (FQueue[LLast].Edit.View = AEdit.View) and (FQueue[LLast].Edit.Name = AEdit.Name) then
+      (FQueue[LLast].Edit.View = AEdit.View) and (FQueue[LLast].Edit.Name = AEdit.Name) and
+      (FQueue[LLast].Edit.Platform = AEdit.Platform) then
     begin
       FQueue[LLast].Schemas.Free;
       FQueue[LLast] := LJob;
@@ -459,6 +488,29 @@ begin
     end;
   finally
     LJob.Schemas.Free;
+  end;
+end;
+
+procedure TNyxSourceCommands.CanvasValue(ANode: TNyxNode; APlatform: TNyxPlatform;
+  const AMountContext: TNyxStudioCommandContext);
+begin
+  FScheduler.RequireUI;
+  Edit(FSession.CaptureCanvasValue(ANode, APlatform, AMountContext));
+end;
+
+function TNyxSourceCommands.CanvasRestore(out ARestore: TNyxProjectionValueRestore): Boolean;
+begin
+  FScheduler.RequireUI;
+  ARestore := Default(TNyxProjectionValueRestore);
+  Result := FCanvasCompletion and
+    FSession.MatchesCommandContext(FCompletedContext) and
+    (FCompletedEdit.View = FSession.ActiveViewID) and
+    (FCompletedEdit.Name <> '') and (FCompletedEdit.Selection <> '');
+
+  if Result then
+  begin
+    ARestore := TNyxProjectionValueRestore.ForField(FCompletedEdit.Name,
+      FCompletedEdit.Selection);
   end;
 end;
 
@@ -483,6 +535,15 @@ var
       Result.Fields[LCount].Selection := AEdit.Selection;
       Result.Fields[LCount].Key := AEdit.Name;
       Result.Fields[LCount].Value := AEdit.Value;
+    end
+    else if AEdit.Action = sdaCanvasValue then
+    begin
+      LCount := Length(Result.CanvasValues);
+      SetLength(Result.CanvasValues, LCount + 1);
+      Result.CanvasValues[LCount].View := AEdit.View;
+      Result.CanvasValues[LCount].Owner := AEdit.Selection;
+      Result.CanvasValues[LCount].RuntimeID := AEdit.Name;
+      Result.CanvasValues[LCount].Value := AEdit.Value;
     end;
   end;
 
@@ -694,6 +755,8 @@ begin
       published pair into a failed command or trigger a second publication. }
     LDesign := FActive.Kind = eskDesign;
     LAction := FActive.Edit.Action;
+    FCompletedEdit := FActive.Edit;
+    FCompletedContext := FActive.Context;
     RetireJob(FActive);
     try
       Notify(LState, LMessage, LDesign, LAction);

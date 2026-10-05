@@ -329,9 +329,11 @@ type
       scalar bindings, defaults, collections, theme or custom factories refuse
       reuse. No accepted document/node is borrowed after return. Ordinary Sync
       updates values/layout; widget failures restore the previous properties.
-      Call on the owning UI thread with the mounted host alive. }
+      Explicit typed restores reset only their exact fields to current authored
+      defaults; other runtime drafts remain untouched. Invalid restores refuse
+      before mutation. Call on the owning UI thread with the mounted host alive. }
     function TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
-      ADesignMode: Boolean): Boolean;
+      ADesignMode: Boolean; const ARestores: TNyxProjectionValueRestores = nil): Boolean;
     { Move the same mounted view to a different borrowed host, retaining control
       objects, state/subscriptions, focused text range and containing scroll.
       Both hosts must outlive their respective parentage; after successful move
@@ -363,6 +365,9 @@ type
       unmounted identities raise the same error as ControlFor. Never free it. }
     function InputFor(const AID: TNyxText;
       AIdentity: TNyxIdentityKind = niAutomatic): TControl;
+    { Exact runtime identity for a currently borrowed native input. Empty for
+      an unrelated/non-input control. One binding pass; nothing is retained. }
+    function InputIdentity(AInput: TControl): TNyxText;
     { Borrow the actual keyboard/focus face, including a split separator's grip.
       A component without a declared face returns nil; a missing identity raises.
       Collection attachments manage entry within their returned host. The caller
@@ -2497,7 +2502,7 @@ begin
 end;
 
 function TNyxLCLRenderer.TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
-  ADesignMode: Boolean): Boolean;
+  ADesignMode: Boolean; const ARestores: TNyxProjectionValueRestores): Boolean;
 var
   LCandidate: TNyxNode;
   LPrevious: TNyxNode;
@@ -2557,7 +2562,11 @@ begin
       Exit;
     end;
     LPrevious := FRoot.Clone;
-    RefreshNyxProjectionProperties(FRoot, LCandidate, FProjectionBaseline);
+
+    if not RefreshNyxProjectionProperties(FRoot, LCandidate, FProjectionBaseline, ARestores) then
+    begin
+      Exit;
+    end;
     try
       Sync;
     except
@@ -2664,6 +2673,26 @@ function TNyxLCLRenderer.ControlFor(const AID: TNyxText;
   AIdentity: TNyxIdentityKind): TControl;
 begin
   Result := IdentityBinding(AID, AIdentity).FControl;
+end;
+
+function TNyxLCLRenderer.InputIdentity(AInput: TControl): TNyxText;
+var
+  LIndex: Integer;
+begin
+  Result := '';
+
+  if AInput = nil then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if FBindings[LIndex].FInput = AInput then
+    begin
+      Exit(FBindings[LIndex].FNode.ID);
+    end;
+  end;
 end;
 
 function TNyxLCLRenderer.InputFor(const AID: TNyxText;

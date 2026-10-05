@@ -3,16 +3,17 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Latest bounded source packet (2026-10-05): ordinary optimized builds preserve
-checked ownership evidence, while compatible native shell refresh keeps its
-canvas/source mounted. The same original 2048-control completion improves from
-32813 to 4718 ms, servicing 100 busy timer ticks. Original controls pass 101,
-detached 75, projection 20, Apply/Restore 39 and full English native editor 74.
-Both native configurations pass; all seven checked consumers report zero leaks.
-Browser compilation retains its execution gate. Codegen criterion 3 stays open
-at count 21; general queued canvas/state/binding/event routes and full both-target
-ordinary-editor qualification remain required. WORK.md owns current evidence
-and the next integration; earlier packets retain their original scope.
+Latest bounded source packet (2026-10-05): canvas input now shares isolated paired
+admission, carrying owned runtime/view/owner/platform and mounted-load identities.
+Fresh replay preserves typed state defaults and instance-only named parts;
+exact field restores reconcile rejection without publishing failed edits or
+overwriting newer queued input. Shared/wire checks pass 140, actual native canvas
+47 and retained projection 27. The maintained native configurations, compiled
+companions, original-size controls and English editor regression are recorded in
+WORK.md. Browser compilation retains its runtime gate. Codegen criterion 3 stays
+open at count 22; broader source/state/binding/event and semantic integration,
+ordinary both-target editor qualification and full depth remain required.
+Earlier mounted-host timings and packets retain their original scope.
 
 Current native editor candidate (2026-10-05): the runnable standalone controller
 consumes the shared Nyx shell/session/routers and paired local store. Actual
@@ -566,3 +567,16 @@ Current task and return path are maintained in [WORK.md](WORK.md).
   remain unchanged. Next integrate synchronous canvas value proposals with the
   existing isolated queue, preserving state/default and reusable-part semantics.
   See [evidence](WORK.md#ordinary-native-builds-and-stable-retained-hosts--2026-10-05).
+
+- Ordinary canvas proposals now replay on independent session owners through
+  the existing paired command queue. Typed defaults and instance-only named parts
+  retain their meaning; exact physical field restoration fixes the rejected
+  Integer-input defect without publishing failed work or erasing newer input.
+  Native canvas checks pass 47, shared/wire 140 and retained projection 27.
+  Compiled companions preserve exact design meaning, and both native
+  configurations retain the original-size/editor regression gates. Changed
+  browser execution remains pending. Original codegen criterion 3 stays open at
+  count 22; renderer 3, authoring 7 and delivery 1 remain unchanged. This earns
+  no full criterion or product/parity credit. Next follow the broader
+  source/state/binding/event and semantic integration with its existing owners.
+  See [evidence](WORK.md#isolated-canvas-input-and-exact-field-reconciliation--2026-10-05).

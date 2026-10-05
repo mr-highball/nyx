@@ -819,3 +819,36 @@ bindings, load retirement, exact drafts and paired Undo/Redo. Remaining broader
 source/state/binding/event, browser/observing and semantic workflows keep their
 original owners and gates. WORK.md records exact artifacts and current process/
 checkpoint state; no scope reset or DONE move substitutes full acceptance.
+
+## Isolated canvas input and exact field reconciliation — 2026-10-05
+
+Ordinary canvas values now share the isolated design-command processor. Capture
+copies exact view/runtime/editable identities, concrete platform, value and
+mounted session/load context. Independent realization reapplies platform and
+state defaults before the existing typed command interprets that proposal.
+Two-way bindings update typed defaults; unbound named parts update only their
+own instance override. Neither workers nor queued intent retain live projections.
+Retired mounted inputs and saved old intents refuse before coalescing can replace
+current-load work. Completed fields regain accepted values without overwriting
+newer waiting input, independent fields, source drafts or paired history.
+
+The actual native fixture exposed a rejected Integer proposal whose default
+remained correct but whose physical text never reset. Presentation restoration
+now follows completed canvas intent independently of successful pair publication.
+Exact typed restore groups validate before any renderer mutation; unrelated
+drafts remain independent. Shared/wire checks pass 140 (75 previous plus 65 new),
+native queued canvas checks 47 and retained projection checks 27. FPC 3.2.0 and
+3.3.1 qualify the shared ticket; exact admitted companions compile and
+reconstruct their full design. WORK.md owns the complete maintained native
+configuration results, English desktop/390 captures and preserved failures.
+Browser Studio, module worker and shared consumers compile; changed browser
+runtime input, caret and worker retirement remain pending at the host gate.
+
+Criteria 1/2 remain accepted. Criterion 3 stays open; its no-closure count advances
+21→22 once for this bounded functional integration. Renderer 3, native authoring
+7 and delivery 1 remain unchanged. Broader source/state/binding/event commands,
+general semantic source/import/review operations and ordinary both-target editor
+qualification retain their original owners and acceptance gates. Next follow
+that broader integration rather than another timing/lookup variant; preserve
+fresh admission, source meaning, independent ownership and exact paired history.
+This accepts no full task, product readiness or complete parity.

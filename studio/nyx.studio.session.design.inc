@@ -70,10 +70,47 @@ begin
   Result := False;
 end;
 
+function TNyxStudioPendingDesign.ApplyCanvasValues(ARoot: TNyxNode;
+  const AView: TNyxText): Boolean;
+var
+  LIndex: Integer;
+  LField: TNyxNode;
+begin
+  Result := False;
+
+  if ARoot = nil then
+  begin
+    Exit;
+  end;
+
+  if not ARoot.IsRealized then
+  begin
+    raise ENyxModel.Create('Pending canvas values require an independent realized presentation');
+  end;
+  for LIndex := 0 to High(CanvasValues) do
+  begin
+
+    if CanvasValues[LIndex].View <> AView then
+    begin
+      Continue;
+    end;
+    LField := ARoot.Find(CanvasValues[LIndex].RuntimeID);
+
+    if (LField <> nil) and (LField.DesignID = CanvasValues[LIndex].Owner) and
+      (LField.Prop(NyxAttributeName(atValue)) <> CanvasValues[LIndex].Value) then
+    begin
+      { This is unadmitted adapter text, not a typed authored default. Numeric
+        partial input must remain visible until its queued admission completes. }
+      LField.SetProp(NyxAttributeName(atValue), CanvasValues[LIndex].Value);
+      Result := True;
+    end;
+  end;
+end;
+
 function TNyxStudioDesignRequest.ToData: TNyxDataValue;
 begin
   Result := NyxObject([
-    NyxField('version', NyxData(1)), NyxField('owner', NyxData(FOwner)),
+    NyxField('version', NyxData(2)), NyxField('owner', NyxData(FOwner)),
     NyxField('generation', NyxData(FGeneration)), NyxField('nextId', NyxData(FNextID)),
     NyxField('schemaRevision', NyxData(FSchemaRevision)),
     NyxField('pair', NyxData(EncodeNyxProject(FPair))),
@@ -81,7 +118,8 @@ begin
       NyxField('action', NyxData(Ord(FEdit.Action))),
       NyxField('selection', NyxData(FEdit.Selection)), NyxField('view', NyxData(FEdit.View)),
       NyxField('name', NyxData(FEdit.Name)), NyxField('value', NyxData(FEdit.Value)),
-      NyxField('direction', NyxData(Ord(FEdit.Direction)))]))]);
+      NyxField('direction', NyxData(Ord(FEdit.Direction))),
+      NyxField('platform', NyxData(Ord(FEdit.Platform)))]))]);
 end;
 
 function TNyxStudioDesignRequest.SameRequest(const AOther: TNyxStudioDesignRequest): Boolean;
@@ -95,7 +133,7 @@ begin
     (FPair.DraftBase = AOther.FPair.DraftBase) and (FEdit.Action = AOther.FEdit.Action) and
     (FEdit.Selection = AOther.FEdit.Selection) and (FEdit.View = AOther.FEdit.View) and
     (FEdit.Name = AOther.FEdit.Name) and (FEdit.Value = AOther.FEdit.Value) and
-    (FEdit.Direction = AOther.FEdit.Direction);
+    (FEdit.Direction = AOther.FEdit.Direction) and (FEdit.Platform = AOther.FEdit.Platform);
 end;
 
 function ReadNyxStudioDesignRequest(const AData: TNyxDataValue): TNyxStudioDesignRequest;
@@ -103,10 +141,11 @@ var
   LEdit: TNyxDataValue;
   LAction: Integer;
   LDirection: Integer;
+  LPlatform: Integer;
 begin
 
   if (AData.Kind <> ndObject) or (AData.Count <> 7) or
-    (AData.Field('version').AsInteger <> 1) then
+    (AData.Field('version').AsInteger <> 2) then
   begin
     raise ENyxModel.Create('Design processor requires its exact versioned ticket');
   end;
@@ -119,7 +158,7 @@ begin
   LEdit := AData.Field('edit');
 
   if (Result.FOwner = '') or (Result.FGeneration < 0) or (Result.FNextID < 0) or
-    (Result.FSchemaRevision < 0) or (LEdit.Kind <> ndObject) or (LEdit.Count <> 6) then
+    (Result.FSchemaRevision < 0) or (LEdit.Kind <> ndObject) or (LEdit.Count <> 7) then
   begin
     raise ENyxModel.Create('Design processor ticket has invalid identity or intent');
   end;
@@ -143,6 +182,21 @@ begin
     raise ENyxModel.Create('Design processor move is outside its closed contract');
   end;
   Result.FEdit.Direction := TNyxStudioMoveDirection(LDirection);
+  LPlatform := LEdit.Field('platform').AsInteger;
+
+  if (LPlatform < Ord(Low(TNyxPlatform))) or (LPlatform > Ord(High(TNyxPlatform))) then
+  begin
+    raise ENyxModel.Create('Design processor platform is outside its closed contract');
+  end;
+  Result.FEdit.Platform := TNyxPlatform(LPlatform);
+  Result.FEdit.FCanvasContext.FOwner := Result.FOwner;
+  Result.FEdit.FCanvasContext.FGeneration := Result.FGeneration;
+
+  if ((Result.FEdit.Action = sdaCanvasValue) and (Result.FEdit.Platform = npfAny)) or
+    ((Result.FEdit.Action <> sdaCanvasValue) and (Result.FEdit.Platform <> npfAny)) then
+  begin
+    raise ENyxModel.Create('Only canvas intent selects a concrete replay platform');
+  end;
 end;
 
 destructor TPreparedDesign.Destroy;
@@ -195,6 +249,7 @@ begin
       sdaCreateComponent: LSession.CreateComponent;
       sdaAddInstance: LSession.AddComponentInstance(FRequest.FEdit.Name);
       sdaCustomizePart: LSession.CustomizePart(FRequest.FEdit.Name);
+      sdaCanvasValue: LSession.SetCapturedCanvasValue(FRequest.FEdit);
     end;
     FSource := LSession.Source;
     FDesign := LSession.FSourceWorkspace.Capture.Design;
@@ -379,6 +434,11 @@ end;
 function TNyxStudioSession.PrepareDesignRequest(const AEdit: TNyxStudioDesignEdit;
   ASchemaRevision: Integer): TNyxStudioDesignRequest;
 begin
+
+  if (AEdit.Action = sdaCanvasValue) and not MatchesCommandContext(AEdit.CanvasContext) then
+  begin
+    raise ENyxModel.Create('Captured canvas intent belongs to an earlier session or project load');
+  end;
   Result := Default(TNyxStudioDesignRequest);
   Result.FOwner := FSourceIdentity;
   Result.FGeneration := FSourceGeneration;

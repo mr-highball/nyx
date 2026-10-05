@@ -49,6 +49,7 @@ uses
   nyx.studio.hierarchy,
   nyx.theme,
   nyx.render.browser,
+  nyx.projection.refresh,
   nyx.studio.session,
   nyx.studio.source,
   nyx.studio.sourcejobs,
@@ -74,6 +75,12 @@ type
   private
     FSession: TNyxStudioSession;
     FSourceCommands: TNyxSourceCommands;
+    { Copied reset receipts survive deferred/reentrant chrome work only within
+      this exact session/load. Pending proposals overlay the accepted values. }
+    FReplaceCanvas: Boolean;
+    FCanvasRestores: TNyxProjectionValueRestores;
+    FCanvasRestoreContext: TNyxStudioCommandContext;
+    FCanvasCommandContext: TNyxStudioCommandContext;
     FShell: TNyxDocument;
     FShellRenderer: TNyxBrowserRenderer;
     { Borrowed receiver registration; cancelled before any controller teardown. }
@@ -172,6 +179,7 @@ type
     procedure AgentRefresh(AContentChanged: Boolean);
     procedure SourceCommandChanged(AState: TNyxSourceCommandState;
       const AMessage: TNyxText);
+    procedure RememberCanvasRestore(const ARestore: TNyxProjectionValueRestore);
     function PointerBegin(AEvent: TJSEvent): Boolean;
     function PointerEnd(AEvent: TJSEvent): Boolean;
     function PointerBlur(AEvent: TJSEvent): Boolean;
@@ -591,11 +599,21 @@ var
   LCodeScroll: NativeInt;
   LSplit: TNyxNode;
   LCodeHost: TJSHTMLElement;
+  LCanvasFocusID: TNyxText;
+  LCanvasSelection: TNyxTextSelection;
+  LPendingDesign: TNyxStudioPendingDesign;
 begin
   LCodeStart := -1;
   LCodeEnd := -1;
   LCodeScroll := 0;
   LFieldSelection := Default(TNyxTextSelection);
+  LCanvasFocusID := '';
+  LCanvasSelection := Default(TNyxTextSelection);
+
+  if not FSession.MatchesCommandContext(FCanvasRestoreContext) then
+  begin
+    FCanvasRestores := nil;
+  end;
   { Geometry is local editor presentation. Capture the mounted proportion before
     a shell rebuild, including a completed or in-progress touch adjustment. }
 
@@ -682,6 +700,13 @@ begin
     if LPrevious.contains(document.activeElement) then
     begin
       LActive := TJSHTMLElement(document.activeElement);
+      LField := TJSHTMLElement(LActive.closest('[data-node]'));
+
+      if LField <> nil then
+      begin
+        LCanvasFocusID := LField.getAttribute('data-node');
+        LCanvasSelection := CaptureNyxBrowserSelection(LActive);
+      end;
     end;
   end;
   ARetainCanvas := ARetainCanvas and (LPrevious <> nil) and LSameView and
@@ -729,6 +754,13 @@ begin
     { Selection/property chrome may change without replacing live canvas fields.
       Retain their DOM, draft values, selection ranges and event bindings. }
     FCanvasRenderer.MoveHost(LCanvas);
+
+    if FReplaceCanvas and
+      not FCanvasRenderer.TryRefresh(FSession.Document, FSession.ActiveView,
+        not FPreview, FCanvasRestores) then
+    begin
+      FCanvasRenderer.Render(FSession.Document, FSession.ActiveView, LCanvas, not FPreview);
+    end;
     FCanvasRenderer.Select(FSession.SelectedID);
   end
   else if (LCanvas <> nil) and (FCompiledURL <> '') then
@@ -739,6 +771,26 @@ begin
   begin
     FCanvasRenderer.Render(FSession.Document, FSession.ActiveView, LCanvas, not FPreview);
     FCanvasRenderer.Select(FSession.SelectedID);
+  end;
+
+  if (FCanvasRenderer.Root <> nil) and (not ARetainCanvas or FReplaceCanvas) then
+  begin
+    FCanvasCommandContext := FSession.CommandContext;
+  end;
+  LPendingDesign := FSourceCommands.PendingDesign;
+
+  if not FPreview and
+    LPendingDesign.ApplyCanvasValues(FCanvasRenderer.Root, FSession.ActiveViewID) then
+  begin
+    FCanvasRenderer.Sync;
+  end;
+  { A full fallback may have retired the old DOM input. Resolve its runtime
+    field again before focusing; the same rule preserves retained text ranges. }
+
+  if LSameView and (LCanvasFocusID <> '') and (FCanvasRenderer.Root <> nil) and
+    (FCanvasRenderer.Root.Find(LCanvasFocusID) <> nil) then
+  begin
+    LActive := FCanvasRenderer.InputFor(LCanvasFocusID);
   end;
 
   if FShell.Find('studio-code-host') <> nil then
@@ -776,6 +828,11 @@ begin
       FCanvasScrollLeft := 0;
     end;
     NyxFocusWithoutScroll(LActive);
+
+    if (LActive <> nil) and LCanvasSelection.Defined then
+    begin
+      SelectNyxBrowserText(LActive, LCanvasSelection);
+    end;
     LPrevious.scrollTop := FCanvasScrollTop;
     LPrevious.scrollLeft := FCanvasScrollLeft;
     FCanvasViewID := FSession.ActiveViewID;
@@ -854,6 +911,8 @@ begin
     FStatus := 'Automatic recovery unavailable. Download a project backup to keep your work.';
   end;
   FAgents.RecordLocal;
+  FReplaceCanvas := False;
+  FCanvasRestores := nil;
 end;
 
 procedure TNyxStudio.ConnectAgents;
@@ -940,6 +999,8 @@ end;
 
 procedure TNyxStudio.SourceCommandChanged(AState: TNyxSourceCommandState;
   const AMessage: TNyxText);
+var
+  LRestore: TNyxProjectionValueRestore;
 begin
   FStatus := AMessage;
 
@@ -953,11 +1014,19 @@ begin
   if AState = nssApplied then
   begin
     FCompiledURL := '';
+    FReplaceCanvas := True;
+  end;
+
+  if FSourceCommands.CanvasRestore(LRestore) then
+  begin
+    RememberCanvasRestore(LRestore);
+    FReplaceCanvas := True;
   end;
   { Preparing/status refreshes preserve the mounted canvas and source control.
-    Only an admitted pair replaces the design projection. }
+    Completed proposals reconcile accepted values, including exact field resets
+    after rejection. Reuse remains subject to the public projection guards. }
   try
-    Refresh(AState <> nssApplied);
+    Refresh(True);
   except
     on LException: Exception do
     begin
@@ -972,6 +1041,31 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TNyxStudio.RememberCanvasRestore(const ARestore: TNyxProjectionValueRestore);
+var
+  LIndex: Integer;
+  LCount: Integer;
+begin
+
+  if not FSession.MatchesCommandContext(FCanvasRestoreContext) then
+  begin
+    FCanvasRestores := nil;
+    FCanvasRestoreContext := FSession.CommandContext;
+  end;
+  for LIndex := 0 to High(FCanvasRestores) do
+  begin
+
+    if (FCanvasRestores[LIndex].RuntimeID = ARestore.RuntimeID) and
+      (FCanvasRestores[LIndex].DesignID = ARestore.DesignID) then
+    begin
+      Exit;
+    end;
+  end;
+  LCount := Length(FCanvasRestores);
+  SetLength(FCanvasRestores, LCount + 1);
+  FCanvasRestores[LCount] := ARestore;
 end;
 
 procedure TNyxStudio.AgentRefresh(AContentChanged: Boolean);
@@ -1033,7 +1127,10 @@ begin
 end;
 
 procedure TNyxStudio.HandleCanvas(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+var
+  LProposal: TNyxStudioDesignEdit;
 begin
+  LProposal := Default(TNyxStudioDesignEdit);
   try
 
     if AEvent.Trigger = ntDesignSelect then
@@ -1051,15 +1148,20 @@ begin
     end
     else if AEvent.Trigger = ntDesignValue then
     begin
-      FSession.SetCanvasValue(ANode);
-      FCompiledURL := '';
-      FStatus := 'Design updated / Pascal generated';
-      Refresh(True);
+      LProposal := FSession.CaptureCanvasValue(ANode, npfBrowser, FCanvasCommandContext);
+      FSourceCommands.Edit(LProposal);
     end;
   except
     on LException: Exception do
     begin
       FStatus := LException.Message;
+
+      if LProposal.Action = sdaCanvasValue then
+      begin
+        RememberCanvasRestore(TNyxProjectionValueRestore.ForField(LProposal.Name,
+          LProposal.Selection));
+        FReplaceCanvas := True;
+      end;
       { A rejected canvas command may have restored its authored snapshot.
         Reproject accepted values and preserve the containing view's scroll. }
       Refresh;

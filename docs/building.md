@@ -561,13 +561,20 @@ draft/load/creator/navigation guards and every supported structural command. The
 actual native scheduler fixture also qualifies presentation exceptions, retired
 project loads with matching IDs, current pending fields and save/export guards. An
 exported admitted companion is compiled and executed against its exact design.
+An independent canvas/default/instance companion is exported and compiled in a
+separate unit directory, then compared with its exact design. Actual native
+canvas inputs exercise active/waiting/coalesced proposals, typed bound defaults,
+unbound nested reusable parts, rejection restoration, retired mounted fields,
+source drafts, focus/caret and paired Undo/Redo. Exact renderer restore groups
+qualify atomic refusal and preservation of other controls' drafts.
 Moved handwritten configuration/extension statements retain their ownership and
 execution order. The actual retained-projection consumer exercises native control
 identity, independent input, caret, callbacks, fresh refusal and balanced sizing.
 Actual native inspector/title/palette controls exercise FIFO/coalescing, paired
 Undo/Redo, field focus/caret, cancellation/staleness and detached retirement at
 the unchanged 128/512/2048-control source sizes. English desktop/390 captures stay
-separate from private Unicode qualification. Heap tracing is enabled; measured
+separate from private Unicode qualification. The default checked configuration
+enables heap tracing; release stages independent optimized evidence. Measured
 fixture durations do not establish comfortable release latency. Browser Studio,
 the Pascal worker and portable checks are compiled/staged under
 `build/design-source/maintained/browser/`; execution retains its permitted-host

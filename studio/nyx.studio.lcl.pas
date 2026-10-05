@@ -29,7 +29,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, ExtCtrls,
   nyx.text, nyx.types, nyx.behavior, nyx.data, nyx.model, nyx.theme, nyx.render.lcl,
-  nyx.events, nyx.viewport,
+  nyx.events, nyx.viewport, nyx.projection.refresh,
   nyx.studio.session, nyx.studio.view, nyx.studio.projects,
   nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.rootedits,
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
@@ -133,6 +133,11 @@ type
     FPainting: Boolean;
     FQueued: Boolean;
     FReplaceCanvas: Boolean;
+    { Deferred field resets are value-only and bound to this exact session/load.
+      Pending proposals overlay them without changing accepted defaults/history. }
+    FCanvasRestores: TNyxProjectionValueRestores;
+    FCanvasRestoreContext: TNyxStudioCommandContext;
+    FCanvasCommandContext: TNyxStudioCommandContext;
     FSourceLine: Integer;
     FSourceColumn: Integer;
     FPaintCount: Integer;
@@ -157,6 +162,7 @@ type
     procedure ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure HierarchyEvent(const AEvent: TNyxEventInfo);
     procedure CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+    procedure RememberCanvasRestore(const ARestore: TNyxProjectionValueRestore);
     procedure SourceEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure SourceCommandChanged(AState: TNyxSourceCommandState;
       const AMessage: TNyxText);
@@ -1449,6 +1455,7 @@ var
   LCanvasFocus: Boolean;
   LSameView: Boolean;
   LChromeID: TNyxText;
+  LCanvasFocusID: TNyxText;
   {$ifdef NYX_STUDIO_PROFILE}
   LPhaseStarted: QWord;
 
@@ -1504,8 +1511,15 @@ begin
     LRetainFocus := (LFocus <> nil) and
       ((FCodeView.Root <> nil) and (LFocus = FCodeView.InputFor('studio-code')));
     LCanvasFocus := (LFocus <> nil) and (FCanvasView.Root <> nil) and
-      not FReplaceCanvas and (FCanvasID = FSession.ActiveViewID) and
+      (FCanvasID = FSession.ActiveViewID) and
       InsideControl(LFocus, FCanvasView.ControlFor(FCanvasView.Root.ID));
+    LCanvasFocusID := '';
+
+    if LCanvasFocus then
+    begin
+      LCanvasFocusID := FCanvasView.InputIdentity(LFocus);
+      LCanvasFocus := LCanvasFocusID <> '';
+    end;
     LSelection := Default(TNyxTextSelection);
     LChromeID := '';
 
@@ -1520,6 +1534,11 @@ begin
       LSelection := CaptureNyxLCLSelection(LFocus);
     end;
     LSameView := FCanvasID = FSession.ActiveViewID;
+
+    if not FSession.MatchesCommandContext(FCanvasRestoreContext) then
+    begin
+      FCanvasRestores := nil;
+    end;
     LOldCanvasHost := nil;
     LOldCodeHost := nil;
 
@@ -1592,7 +1611,8 @@ begin
         FCanvasView.MoveHost(LCanvasHost);
 
         if FReplaceCanvas and
-          not FCanvasView.TryRefresh(FSession.Document, FSession.ActiveView, not FPreview) then
+          not FCanvasView.TryRefresh(FSession.Document, FSession.ActiveView,
+            not FPreview, FCanvasRestores) then
         begin
           FCanvasView.Render(FSession.Document, FSession.ActiveView, LCanvasHost, not FPreview);
         end;
@@ -1602,7 +1622,18 @@ begin
         FCanvasView.Render(FSession.Document, FSession.ActiveView, LCanvasHost, not FPreview);
       end;
       FCanvasView.Select(FSession.SelectedID);
+
+      if not LSameView or FReplaceCanvas then
+      begin
+        FCanvasCommandContext := FSession.CommandContext;
+      end;
       FCanvasID := FSession.ActiveViewID;
+
+      if not FPreview and
+        FState.PendingDesign.ApplyCanvasValues(FCanvasView.Root, FCanvasID) then
+      begin
+        FCanvasView.Sync;
+      end;
     end
     else if not LSameView or FReplaceCanvas then
     begin
@@ -1612,13 +1643,23 @@ begin
     end;
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-canvas');{$endif}
 
-    if LCanvasFocus and (LCanvasHost <> nil) and LFocus.CanFocus then
-    begin
-      LFocus.SetFocus;
+    { Never dereference the pre-refresh input after a possible full replacement.
+      Resolve its exact runtime identity again; retained fields keep the same
+      control and caret, while compatible replacements restore the text range. }
 
-      if LSelection.Defined then
+    if LCanvasFocus and (LCanvasHost <> nil) and (FCanvasView.Root <> nil) and
+      (FCanvasView.Root.Find(LCanvasFocusID) <> nil) then
+    begin
+      LFocus := TWinControl(FCanvasView.InputFor(LCanvasFocusID, niRuntime));
+
+      if (LFocus <> nil) and LFocus.CanFocus then
       begin
-        SelectNyxLCLText(LFocus, LSelection);
+        LFocus.SetFocus;
+
+        if LSelection.Defined then
+        begin
+          SelectNyxLCLText(LFocus, LSelection);
+        end;
       end;
     end;
 
@@ -1682,6 +1723,7 @@ begin
       end;
     end;
     FReplaceCanvas := False;
+    FCanvasRestores := nil;
     RestoreProjectControls;
     FChangingProject := False;
     Inc(FPaintCount);
@@ -1694,6 +1736,9 @@ end;
 
 procedure TNyxNativeStudio.SourceCommandChanged(AState: TNyxSourceCommandState;
   const AMessage: TNyxText);
+var
+  LRestore: TNyxProjectionValueRestore;
+  LRestoreCanvas: Boolean;
 begin
   FState.Status := AMessage;
   FState.SourceStatus := AMessage;
@@ -1708,7 +1753,38 @@ begin
   end;
   { Every connected project's own callback records its pair. An offline editor
     has no bridge. Completion never consults a newly selected project. }
-  RequestRefresh(AState = nssApplied);
+  LRestoreCanvas := FSourceCommands.CanvasRestore(LRestore);
+
+  if LRestoreCanvas then
+  begin
+    RememberCanvasRestore(LRestore);
+  end;
+  RequestRefresh((AState = nssApplied) or LRestoreCanvas);
+end;
+
+procedure TNyxNativeStudio.RememberCanvasRestore(const ARestore: TNyxProjectionValueRestore);
+var
+  LIndex: Integer;
+  LCount: Integer;
+begin
+
+  if not FSession.MatchesCommandContext(FCanvasRestoreContext) then
+  begin
+    FCanvasRestores := nil;
+    FCanvasRestoreContext := FSession.CommandContext;
+  end;
+  for LIndex := 0 to High(FCanvasRestores) do
+  begin
+
+    if (FCanvasRestores[LIndex].RuntimeID = ARestore.RuntimeID) and
+      (FCanvasRestores[LIndex].DesignID = ARestore.DesignID) then
+    begin
+      Exit;
+    end;
+  end;
+  LCount := Length(FCanvasRestores);
+  SetLength(FCanvasRestores, LCount + 1);
+  FCanvasRestores[LCount] := ARestore;
 end;
 
 procedure TNyxNativeStudio.SourceEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
@@ -1763,12 +1839,15 @@ begin
 end;
 
 procedure TNyxNativeStudio.CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+var
+  LProposal: TNyxStudioDesignEdit;
 begin
 
   if FPainting or FChangingProject then
   begin
     Exit;
   end;
+  LProposal := Default(TNyxStudioDesignEdit);
   try
     case AEvent.Trigger of
       ntDesignSelect:
@@ -1780,10 +1859,8 @@ begin
         end;
       ntDesignValue:
         begin
-          FSession.SetCanvasValue(ANode);
-          FState.Status := 'Design updated / Pascal generated';
-          RecordLocal;
-          RequestRefresh;
+          LProposal := FSession.CaptureCanvasValue(ANode, npfNativeLCL, FCanvasCommandContext);
+          FSourceCommands.Edit(LProposal);
         end;
     else
       begin
@@ -1795,6 +1872,12 @@ begin
     on LException: Exception do
     begin
       FState.Status := LException.Message;
+
+      if LProposal.Action = sdaCanvasValue then
+      begin
+        RememberCanvasRestore(TNyxProjectionValueRestore.ForField(LProposal.Name,
+          LProposal.Selection));
+      end;
       RequestRefresh(True);
     end;
   end;

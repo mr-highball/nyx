@@ -25,7 +25,7 @@ program nyx_design_source_tests;
 uses
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls, nyx.codec,
   nyx.codegen, nyx.schema, nyx.source, nyx.source.preparation,
-  nyx.studio.projects, nyx.studio.session
+  nyx.studio.projects, nyx.studio.session, nyx.test.source.canvas
   {$ifdef PAS2JS}, Web{$else}, Classes{$endif};
 
 var
@@ -111,14 +111,15 @@ begin
 end;
 
 {$ifndef PAS2JS}
-procedure ExportPair(const APair: TNyxProjectPair);
+procedure ExportPair(const APair: TNyxProjectPair; const ASubdirectory: TNyxText = '');
+var
+  LDirectory: TNyxText;
 
   procedure WriteText(const AName, AText: TNyxText);
   var
     LStream: TFileStream;
   begin
-    LStream := TFileStream.Create(IncludeTrailingPathDelimiter(ParamStr(1)) +
-      AName, fmCreate);
+    LStream := TFileStream.Create(IncludeTrailingPathDelimiter(LDirectory) + AName, fmCreate);
     try
 
       if Length(AText) > 0 then
@@ -134,12 +135,21 @@ begin
 
   if ParamCount = 1 then
   begin
-    ForceDirectories(ParamStr(1));
+    LDirectory := IncludeTrailingPathDelimiter(ParamStr(1)) + ASubdirectory;
+    ForceDirectories(LDirectory);
     WriteText('nyx.generated.view.pas', APair.Source);
     WriteText('expected.nyx', APair.Design);
   end;
 end;
 {$endif}
+
+procedure RunCanvas;
+var
+  LPair: TNyxProjectPair;
+begin
+  Inc(GChecks, RunNyxCanvasSourceTests(LPair));
+  {$ifndef PAS2JS}ExportPair(LPair, 'canvas');{$endif}
+end;
 
 procedure Run;
 var
@@ -460,6 +470,7 @@ end;
 begin
   try
     Run;
+    RunCanvas;
     {$ifdef PAS2JS}
     document.body.setAttribute('data-design-source', 'passed');
     document.body.setAttribute('data-design-checks', IntToStr(GChecks));
