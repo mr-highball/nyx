@@ -5598,3 +5598,9 @@ still require their explicit maintained harness. The earlier listener approval
 rejection remains "blocked by policy" without more detail. No equivalent launch
 or alternate route retries it. This goal turn advances product integration and
 actual evidence while the original unbounded goal remains active and incomplete.
+
+Source checkpoint **3b700e6** is pushed and verified against the exact remote
+branch. The private proof at
+`.local/codex-restart-check/draft-capture-remote-proof.json` records the current
+clean handoff head separately from that product source checkpoint. Generated
+logs, captures, personal configuration and machine paths remain ignored.
