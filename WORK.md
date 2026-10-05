@@ -5861,3 +5861,11 @@ retains the previously recorded automatic approval rejection of qualification
 listeners, whose stated reason was only “blocked by policy”. English starter and
 review copy remains separate from dedicated technical Unicode inputs. The
 original unbounded goal remains active and incomplete.
+
+Source checkpoint **86e61f1** is pushed and verified against the exact remote
+`hello-nyx` head with a clean worktree. The private proof at
+`.local/codex-restart-check/design-source-remote-proof.json` records the final
+handoff head separately from this product checkpoint. Logs, captures and local
+toolchain/configuration stay ignored. This remote checkpoint changes no live
+service, active user pair or acceptance gate; the next UI-stage/source-order
+action remains above.
