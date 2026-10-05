@@ -7057,3 +7057,19 @@ policy", with no further stated reason. No equivalent listener, service
 replacement, live artifact deployment or configuration refresh was attempted.
 Updated authenticated discovery and observing/browser execution remain required.
 The full Nyx/Nyx Studio goal stays active/incomplete; remote checkpoint follows.
+
+Remote checkpoint: product commit
+`12519448d27b30b43db751299e6314e83e0d5360` is pushed to
+`origin/hello-nyx`; exact remote/local references match and its worktree is clean.
+Final authenticated `nyx_session` inspection retains revision 6, home, no draft,
+Undo unavailable and Redo available; only read activity advances to 208. All eight
+protected process paths and exact creation timestamps match; zero focused import
+fixture processes remain. The qualified 17/31 lexical/semantic checks on both
+native compilers, 22 discovery checks, nine actual compiled-control checks and
+72 callback regressions retain zero owned native warnings/leaks. Browser programs
+and Studio compile but remain unexecuted at the recorded host gate. Source catalog
+nineteen / authenticated release fifteen and workflow no-closure count 5 remain;
+the next deliverable is guarded general helper inspection/editing, not more import
+fixture expansion. The full goal remains active/incomplete. Exact handoff remote,
+clean-worktree and protected-process proof is stored privately after pushing at
+`.local/codex-restart-check/import-remote-proof.json`.
