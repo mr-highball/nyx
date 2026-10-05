@@ -31,6 +31,7 @@ uses
   SysUtils,
   nyx.text,
   nyx.types,
+  nyx.layout.policy,
   nyx.callbacks,
   nyx.model;
 
@@ -322,7 +323,8 @@ type
     vkConstruction, vkCollectionKey, vkCollectionField, vkCollectionItemRef,
     vkCollectionSchema, vkCollectionItem, vkNoDomain, vkScalarValue,
     vkCollectionView, vkCollectionScope, vkCollectionCellMode, vkSelectionMode, vkPlatform,
-    vkSplitOrientation, vkSemanticEvent, vkTouchBehavior);
+    vkSplitOrientation, vkSemanticEvent, vkTouchBehavior, vkFlowWrap,
+    vkCrossAlignment, vkJustification, vkSizing, vkLayoutPolicy);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -341,6 +343,7 @@ type
     CollectionItemRef: TNyxItemRef;
     ScalarValue: TNyxStateValue;
     CollectionView: TNyxCollectionViewSpec;
+    LayoutPolicy: TNyxLayoutPolicy;
   end;
   TValues = array of TValue;
   TControlLocal = record
@@ -441,7 +444,8 @@ const
     'Variant', 'Action', 'ProjectAs', 'OverrideMode', 'InputType', 'PartName',
     'Target', 'Component', 'OnClick', 'OnChange', 'Option', 'OverridePath', '',
     'SplitOrientation', 'SplitPosition', 'SplitMinimum', 'SplitMaximum', 'SplitResizable',
-    'DragSource', 'DropTarget', 'TouchBehavior');
+    'DragSource', 'DropTarget', 'TouchBehavior', 'Wrap', 'Align', 'Justify',
+    'WidthSizing', 'HeightSizing');
   CAttributes: array[TNyxAttribute] of TNyxText = (
     'atText', 'atValue', 'atPlaceholder', 'atItems', 'atHint', 'atAccessibleName',
     'atHref', 'atSource', 'atAlt', 'atLayout', 'atPadding', 'atGap', 'atColumns',
@@ -451,7 +455,8 @@ const
     'atPart', 'atTarget', 'atComponent', 'atEmit', 'atEmitChange', 'atOption',
     'atPath', 'atDesignID', 'atSplitOrientation', 'atSplitPosition',
     'atSplitMinimum', 'atSplitMaximum', 'atSplitResizable',
-    'atDragSource', 'atDropTarget', 'atTouchBehavior');
+    'atDragSource', 'atDropTarget', 'atTouchBehavior', 'atFlowWrap',
+    'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing');
 
 var
   { Built-in names are a finite immutable vocabulary. Initialize once at unit
@@ -954,7 +959,24 @@ begin
     Match(vkTouchBehavior, Ord(ntbNone), 'ntbNone') or
     Match(vkTouchBehavior, Ord(ntbPanX), 'ntbPanX') or
     Match(vkTouchBehavior, Ord(ntbPanY), 'ntbPanY') or
-    Match(vkTouchBehavior, Ord(ntbManipulation), 'ntbManipulation') then
+    Match(vkTouchBehavior, Ord(ntbManipulation), 'ntbManipulation') or
+    Match(vkFlowWrap, Ord(nfwAutomatic), 'nfwAutomatic') or
+    Match(vkFlowWrap, Ord(nfwNoWrap), 'nfwNoWrap') or
+    Match(vkFlowWrap, Ord(nfwWrap), 'nfwWrap') or
+    Match(vkCrossAlignment, Ord(ncaAutomatic), 'ncaAutomatic') or
+    Match(vkCrossAlignment, Ord(ncaStart), 'ncaStart') or
+    Match(vkCrossAlignment, Ord(ncaCenter), 'ncaCenter') or
+    Match(vkCrossAlignment, Ord(ncaEnd), 'ncaEnd') or
+    Match(vkCrossAlignment, Ord(ncaStretch), 'ncaStretch') or
+    Match(vkJustification, Ord(njStart), 'njStart') or
+    Match(vkJustification, Ord(njCenter), 'njCenter') or
+    Match(vkJustification, Ord(njEnd), 'njEnd') or
+    Match(vkJustification, Ord(njSpaceBetween), 'njSpaceBetween') or
+    Match(vkJustification, Ord(njSpaceAround), 'njSpaceAround') or
+    Match(vkJustification, Ord(njSpaceEvenly), 'njSpaceEvenly') or
+    Match(vkSizing, Ord(nsAutomatic), 'nsAutomatic') or
+    Match(vkSizing, Ord(nsContent), 'nsContent') or
+    Match(vkSizing, Ord(nsFill), 'nsFill') then
   begin
     Exit(True);
   end;
@@ -1623,6 +1645,90 @@ begin
     tkWord:
       begin
         LName := LowerCase(LToken.Text);
+
+        if LName = 'tnyxlayoutpolicy' then
+        begin
+          { Evaluate only the closed public value builder, never arbitrary
+            Pascal calls. Every method keeps its own enum argument family. }
+          Result.Kind := vkLayoutPolicy;
+          Expect('.');
+
+          if FCursor >= Length(FTokens) then
+          begin
+            Fail('Expected a layout policy factory');
+          end;
+          LName := LowerCase(FTokens[FCursor].Text);
+          Inc(FCursor);
+
+          if LName = 'flow' then
+          begin
+            LArgs := Arguments;
+
+            if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkLayout) then
+            begin
+              Fail('Flow requires a layout mode');
+            end;
+            Result.LayoutPolicy := TNyxLayoutPolicy.Flow(TNyxLayoutMode(LArgs[0].Ordinal));
+          end
+          else if (LName = 'row') or (LName = 'column') then
+          begin
+            Result.LayoutPolicy := TNyxLayoutPolicy.Row;
+
+            if LName = 'column' then
+            begin
+              Result.LayoutPolicy := TNyxLayoutPolicy.Column;
+            end;
+
+            if At('(') then
+            begin
+              LArgs := Arguments;
+
+              if Length(LArgs) <> 0 then
+              begin
+                Fail('Row/Column policy factories take no arguments');
+              end;
+            end;
+          end
+          else
+          begin
+            Fail('Unknown layout policy factory');
+          end;
+          while At('.') do
+          begin
+            Expect('.');
+
+            if FCursor >= Length(FTokens) then
+            begin
+              Fail('Expected a layout policy method');
+            end;
+            LName := LowerCase(FTokens[FCursor].Text);
+            Inc(FCursor);
+            LArgs := Arguments;
+
+            if Length(LArgs) <> 1 then
+            begin
+              Fail('A layout policy method requires one typed argument');
+            end;
+
+            if (LName = 'wrap') and (LArgs[0].Kind = vkFlowWrap) then
+            begin
+              Result.LayoutPolicy := Result.LayoutPolicy.Wrap(TNyxFlowWrap(LArgs[0].Ordinal));
+            end
+            else if (LName = 'align') and (LArgs[0].Kind = vkCrossAlignment) then
+            begin
+              Result.LayoutPolicy := Result.LayoutPolicy.Align(TNyxCrossAlignment(LArgs[0].Ordinal));
+            end
+            else if (LName = 'justify') and (LArgs[0].Kind = vkJustification) then
+            begin
+              Result.LayoutPolicy := Result.LayoutPolicy.Justify(TNyxJustification(LArgs[0].Ordinal));
+            end
+            else
+            begin
+              Fail('Wrong layout policy method or typed argument');
+            end;
+          end;
+          Exit;
+        end;
 
         LState := StateIndex(LName);
 
@@ -2516,7 +2622,18 @@ begin
       end;
     atPadding..atMaximum: Require(vkInteger);
     atEnabled..atPressed: Require(vkBoolean);
-    atLayout: Require(vkLayout);
+    atLayout:
+      begin
+
+        if not (LValue.Kind in [vkLayout, vkLayoutPolicy]) then
+        begin
+          Fail('Layout requires its mode or fluent policy value');
+        end;
+      end;
+    atFlowWrap: Require(vkFlowWrap);
+    atCrossAlignment: Require(vkCrossAlignment);
+    atJustification: Require(vkJustification);
+    atWidthSizing, atHeightSizing: Require(vkSizing);
     atSplitOrientation: Require(vkSplitOrientation);
     atSplitPosition, atSplitMinimum, atSplitMaximum: Require(vkInteger);
     atSplitResizable, atDragSource, atDropTarget: Require(vkBoolean);
@@ -2613,7 +2730,23 @@ begin
           Fail('Value/Option requires text, Boolean, Integer or Double');
         end;
       end;
-    atLayout: LConfigure.Layout(TNyxLayoutMode(LValue.Ordinal));
+    atLayout:
+      begin
+
+        if LValue.Kind = vkLayoutPolicy then
+        begin
+          LConfigure.Layout(LValue.LayoutPolicy);
+        end
+        else
+        begin
+          LConfigure.Layout(TNyxLayoutMode(LValue.Ordinal));
+        end;
+      end;
+    atFlowWrap: LConfigure.Wrap(TNyxFlowWrap(LValue.Ordinal));
+    atCrossAlignment: LConfigure.Align(TNyxCrossAlignment(LValue.Ordinal));
+    atJustification: LConfigure.Justify(TNyxJustification(LValue.Ordinal));
+    atWidthSizing: LConfigure.WidthSizing(TNyxSizing(LValue.Ordinal));
+    atHeightSizing: LConfigure.HeightSizing(TNyxSizing(LValue.Ordinal));
     atSplitOrientation: LConfigure.SplitOrientation(TNyxSplitOrientation(LValue.Ordinal));
     atSplitPosition: LConfigure.SplitPosition(LInteger);
     atSplitMinimum: LConfigure.SplitMinimum(LInteger);

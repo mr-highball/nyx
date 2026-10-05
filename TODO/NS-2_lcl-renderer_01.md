@@ -41,3 +41,22 @@ This advances criteria 1/2 without accepting this task. Unspecified intrinsic
 row widths, root height, wrapping/alignment, widget metrics and complete target
 breadth retain their original acceptance paths. See [layout](../docs/layout.md)
 and the current WORK packet; no capability grade or criterion was weakened.
+
+## Typed layout policies — 2026-10-04
+
+Public value-owned policies and managed enum methods now cross persistence,
+generated/admitted Pascal, bounded MCP metadata and both adapters. Actual native
+caption widths, authored-width text height, wrap/alignment/justification,
+implicit spacers, retained pixel metrics and root height propagation qualify
+2,169 checked LCL controls/arithmetic assertions with zero leaks. The identical
+semantic source also passes 2,214 desktop and 2,215 actual-390 browser checks;
+Studio consumes the public policy and retains editing through resizing.
+
+Criteria 1/2 advance but remain open for their complete intended scope. This and
+the preceding allocation batch make two consecutive batches without accepting
+a full criterion. Reassessment changes the next action to the existing
+[protected semantic review prerequisite](NS-4_agent-workflows_01.md), whose
+absence currently forces test history onto the user's Redo stack. Return here
+for the remaining intrinsic constraints, native scaling/widget metrics,
+accessibility, target breadth and native Studio. See WORK.md and the layout guide;
+no scope, support grade or completion credit was reduced.

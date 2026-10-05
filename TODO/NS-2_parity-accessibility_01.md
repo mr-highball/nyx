@@ -31,6 +31,16 @@ criteria remain open for their full intended scope; natural sizing, richer
 responsive policies, hardware/widgetsets, scaling and accessibility are not
 inferred from this bounded geometry evidence.
 
+The following typed-policy packet extends this evidence through enum/value
+authoring, unchanged compiled semantic source, actual wrap/alignment/sizing and
+retained input state: 2,169 native / 2,214 desktop / 2,215 actual-390 checks.
+Nyx Studio passes its desktop and four-width resize journeys. All three original
+criteria and renderer prerequisites remain open; intrinsic/shrinking constraints,
+typographic scaling, representative aesthetics and complete accessibility are
+still required. Two consecutive implementation batches have closed no full
+criterion. The reassessed next action follows the existing NS-4 protected review
+workspace prerequisite, then returns to these original target outcomes.
+
 ## Collection interaction boundary — 2026-10-03
 
 Automatically generated collection editors now inherit enabled/read-only policy

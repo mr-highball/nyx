@@ -288,6 +288,42 @@ begin
   Result := Self as INyxConfiguration;
 end;
 
+function TNyxConfiguration.Layout(const AValue: TNyxLayoutPolicy): INyxConfiguration;
+begin
+  FOwner.Node.Configure.ForPlatform(FPlatform).Layout(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.Wrap(AValue: TNyxFlowWrap): INyxConfiguration;
+begin
+  FOwner.Node.Configure.ForPlatform(FPlatform).Wrap(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.Align(AValue: TNyxCrossAlignment): INyxConfiguration;
+begin
+  FOwner.Node.Configure.ForPlatform(FPlatform).Align(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.Justify(AValue: TNyxJustification): INyxConfiguration;
+begin
+  FOwner.Node.Configure.ForPlatform(FPlatform).Justify(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.WidthSizing(AValue: TNyxSizing): INyxConfiguration;
+begin
+  FOwner.Node.Configure.ForPlatform(FPlatform).WidthSizing(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.HeightSizing(AValue: TNyxSizing): INyxConfiguration;
+begin
+  FOwner.Node.Configure.ForPlatform(FPlatform).HeightSizing(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
 function TNyxConfiguration.Variant(AValue: TNyxVariant): INyxConfiguration;
 begin
   FOwner.Node.Configure.ForPlatform(FPlatform).Variant(AValue);

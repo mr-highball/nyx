@@ -162,6 +162,111 @@ begin
   WriteLn('PASS actual MCP ', ATarget, ' application compiler');
 end;
 
+{ Query only the new policy controls when that maintained root is present.
+  Rejected enum/scalar patches must leave the same paired revision/history;
+  inspection never replaces a project or silently coerces behavior strings. }
+procedure InspectPolicies;
+var
+  LOutline: TNyxDataValue;
+  LIndex: Integer;
+  LPresent: Boolean;
+  LValue: TNyxDataValue;
+  LReply: TNyxDataValue;
+  LRevision: Integer;
+  LUndo: Boolean;
+  LRedo: Boolean;
+
+  { Metadata must describe the same absent-property behavior as both adapters.
+    A spacer's implicit weight is one; an ordinary label's weight is zero.
+    Inspecting the default must not materialize it in the accepted document. }
+  procedure InspectWeight(const AID, ADefault: TNyxText);
+  var
+    LMetadata: TNyxDataValue;
+    LProperty: TNyxDataValue;
+  begin
+    LMetadata := Call('nyx_node', NyxObject([
+      NyxField('id', NyxData(AID)), NyxField('keys', NyxArray([NyxData('flex')]))]));
+    Save(AID + '-default.json', LMetadata.ToJSON);
+
+    if LMetadata.Field('properties').Count <> 1 then
+    begin
+      raise Exception.Create('Weight inspection must return one bounded property');
+    end;
+    LProperty := LMetadata.Field('properties').Item(0);
+
+    if (LProperty.Field('type').AsText <> 'integer') or
+      (LProperty.Field('default').AsText <> ADefault) or
+      (LProperty.Field('value').Kind <> ndNull) then
+    begin
+      raise Exception.Create('Weight metadata disagrees with the absent-property contract');
+    end;
+  end;
+
+  procedure Refuse(const AKey: TNyxText; const AValue: TNyxDataValue);
+  begin
+    LReply := GClient.Tool('nyx_transaction', NyxObject([
+      NyxField('expectedRevision', NyxData(LRevision)),
+      NyxField('operationId', NyxData(GIdentity + '-refuse-' + AKey)),
+      NyxField('operations', NyxArray([NyxObject([
+        NyxField('op', NyxData('update')), NyxField('id', NyxData('policy-alignment')),
+        NyxField('properties', NyxObject([NyxField(AKey, AValue)]))])]))]));
+    Save('refused-' + AKey + '.json', LReply.ToJSON);
+
+    if not LReply.Field('isError').AsBoolean then
+    begin
+      raise Exception.Create('The closed policy property accepted an invalid argument');
+    end;
+    LValue := Call('nyx_session', NyxObject([]));
+
+    if (GRevision <> LRevision) or (LValue.Field('canUndo').AsBoolean <> LUndo) or
+      (LValue.Field('canRedo').AsBoolean <> LRedo) then
+    begin
+      raise Exception.Create('A refused policy patch changed the accepted revision/history');
+    end;
+  end;
+begin
+  LOutline := Call('nyx_outline', NyxObject([
+    NyxField('scope', NyxData('pages')), NyxField('limit', NyxData(10))]));
+  LPresent := False;
+  for LIndex := 0 to LOutline.Field('items').Count - 1 do
+  begin
+    LPresent := LPresent or (LOutline.Field('items').Item(LIndex).Field('id').AsText = 'policy-review');
+  end;
+
+  if not LPresent then
+  begin
+    Exit;
+  end;
+  LValue := Call('nyx_node', NyxObject([
+    NyxField('id', NyxData('policy-alignment')),
+    NyxField('keys', NyxArray([NyxData('flow-wrap'), NyxData('cross-alignment'),
+      NyxData('justification')]))]));
+  Save('policy-properties.json', LValue.ToJSON);
+
+  if LValue.Field('properties').Count <> 3 then
+  begin
+    raise Exception.Create('Policy metadata must expose all three bounded choices');
+  end;
+  for LIndex := 0 to LValue.Field('properties').Count - 1 do
+  begin
+
+    if LValue.Field('properties').Item(LIndex).Field('type').AsText <> 'enum' then
+    begin
+      raise Exception.Create('A closed flow choice was published as untyped text');
+    end;
+  end;
+  InspectWeight('policy-spacer', '1');
+  InspectWeight('policy-small', '0');
+  LRevision := GRevision;
+  LValue := Call('nyx_session', NyxObject([]));
+  LUndo := LValue.Field('canUndo').AsBoolean;
+  LRedo := LValue.Field('canRedo').AsBoolean;
+  Refuse('flow-wrap', NyxData('sometimes'));
+  Refuse('cross-alignment', NyxData(17));
+  Refuse('height-sizing', NyxData(True));
+  WriteLn('PASS bounded policy metadata and exact-revision typed refusals');
+end;
+
 var
   LValue: TNyxDataValue;
   LOperations: TNyxDataValue;
@@ -203,6 +308,7 @@ begin
       NyxField('id', NyxData('layout-first-column')),
       NyxField('keys', NyxArray([NyxData('flex'), NyxData('height')]))]));
     Save('properties.json', LValue.ToJSON);
+    InspectPolicies;
     ExportSource;
     LValue := Call('nyx_build', NyxObject([NyxField('mode', NyxData('outputs'))]));
     Compile('browser', LValue.Field('outputID').AsText);

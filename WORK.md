@@ -7,17 +7,28 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Completed bounded batch (2026-10-04): proportional and hidden-flow layout under
-the existing NS-2 LCL/parity owners. Qualify weighted rows, explicitly sized and
-nested columns, padding/gaps, hidden first/middle/last children, odd-pixel
-remainders, resizing, cleared weights, retained input focus/drafts and collection/
-split descendants. Compose the review through semantic MCP as one owned additive
-page; bounded source export and actual browser/LCL compiler jobs retain one
-revision. Physical consumers use that unchanged companion. Stop qualification
-on overlapping authored fixed widths, hidden space, stale weights or lost focus.
-One integrated implementation/qualification checkpoint; original acceptance,
-support grades and event/codegen counters remain unchanged. Prior goal turn was
-progress: native desktop handles connected and their verification was pushed.
+Completed bounded batch (2026-10-04): typed layout policies under the existing
+NS-2 LCL/parity owners. Public value/managed authoring, source admission and
+generation, persistence, bounded MCP metadata and both actual adapters qualify
+wrap/alignment/justification, content/fill sizing, natural caption widths,
+shared spacers and definite root height. The staged MCP service composes both
+maintained review pages in one 50-operation paired transaction. Original user
+work stays outside it; both compiler files equal the bounded semantic export.
+
+Latest policy evidence: 2,169 actual native checks with zero leaks; 2,214 desktop
+and 2,215 actual-390 browser checks. Studio passes 25 desktop layout/source/
+history checks and the 21-check 390/1100/800/390 resize journey. The catalog
+property and bound-selection regressions pass. The packet below records limits,
+current process identities, exact source and refusal evidence.
+
+The proportional/hidden-flow and typed-policy batches advance implementation
+without closing the original full renderer/parity criteria: consecutive count 2.
+Reassessment now changes the next action to the existing NS-4 workflow criterion
+5 prerequisite: a protected semantic review workspace that can be authored and
+disposed without altering the active user's pair, selection, drafts or history.
+Qualify ordinary observing Studio, revision/refusal behavior and both actual
+compilers before accepting that prerequisite. Retain full NS-2 intrinsic,
+scaling, accessibility and native Studio requirements and their return path.
 
 Latest layout evidence: 2,084 actual native control/arithmetic checks, zero leaks;
 2,094 desktop and 2,095 actual-390 browser checks. Native named MCP composes the
@@ -52,7 +63,7 @@ client retained for isolated test services. The temporary owned review was added
 and removed through MCP; the exact original paired project is restored. Redo
 retains the ordinary test history; no protected review workspace is claimed.
 
-Qualified source checkpoint dd5a95a8e81693024e0defcc0133af250601c659 is pushed
+Prior qualified source checkpoint 51ef0eb017b4deef13c5560ddd96470cd04255ac is pushed
 to origin/hello-nyx and independently equals git ls-remote. The handoff record
 follows that implementation; no unqualified product deployment is claimed.
 
@@ -3740,6 +3751,116 @@ and pushed to origin/hello-nyx; exact remote branch identity was checked with
 git ls-remote after publication. All 21 owned changed files are tracked; private
 records/build artifacts remain ignored. The current handoff records that verified
 implementation without claiming the refused production install.
+
+## Restart verification and typed layout continuation — 2026-10-04
+
+The preceding connection check is progress: this restarted desktop chat exposes
+all fifteen native Nyx handles, and eight live read-only capabilities authenticate
+against revision 6. Selection/view remain home, the accepted pair and history
+remain unchanged, and both output profiles report ready. Native named MCP is
+the primary production design workflow; no setup edit or reconnect is needed.
+
+Current batch stays with NS-2_lcl-renderer_01 criteria 1/2 and the original parity
+owner. Deliver a public value-owned fluent layout policy, enum-valued wrap,
+cross/main-axis alignment and automatic/content/fill sizing through descriptors,
+managed configurations, persistence, generated Pascal, Studio metadata and both
+adapters. Qualify authored-width text measurement, natural row widths, implicit
+spacers and definite root height with actual controls and retained input state.
+Use an independently staged current MCP service for new properties unavailable
+in the older production binary; do not replace the user's pair or retry the
+previously refused production install. Evidence must include semantic admission,
+unchanged compiled source on both targets, real desktop/narrow geometry and
+Studio consumption. A mismatch is a product failure, not permission to weaken
+the fixture. Original acceptance, open counters and full goal remain intact;
+arbitrary constraints, scaling, complete accessibility and native Studio still
+require their original acceptance paths.
+
+## Typed layout policy delivery — 2026-10-04
+
+This finite integrated packet advances NS-2 LCL criteria 1/2 and the original
+parity owner. `TNyxLayoutPolicy` is an independent value builder; managed/raw
+configuration copies its mode, wrapping and logical alignment choices. Five
+appended attributes preserve prior ordinals. Closed wrap/alignment/justification
+and automatic/content/fill enums cross persistence, platform overrides, generated
+methods and the bounded Studio source reader. Wrong enum families refuse in
+both compilers and source admission. Existing pixel metrics survive sizing
+overrides; positive parent weights still own main-axis allocation.
+
+Portable line membership and cumulative spacing feed LCL's actual preferred
+caption widths and authored-width text height. Wrapped lines use natural heights;
+definite non-wrapping rows support cross alignment/stretch. Column alignment and
+root fill propagate actual host height into retained weighted editors. Spacer
+weight is one by default on both adapters and in metadata; explicit zero opts out
+and Clear restores it. Native themed buttons now measure their painted caption.
+Browser automatic wrapping follows its embedded size container; explicit policies
+override it. Safe leading overflow and retained controls preserve keyboard order,
+real draft/focus/selection and ordinary host accessibility behavior. Studio consumes
+the public policy for its header and compact panel bar.
+
+The maintained Pascal MCP client authors two review pages as one 50-operation
+transaction on the independently staged current service, retaining home selection.
+It inspects bounded enum/default metadata, refuses three wrong choice/scalar
+patches at the same revision/history, exports 80-line source windows and requests
+both real application compilers. No production mutation, operator replacement,
+configuration enrollment or automatic mutation retry is used. Final revision 2
+source is 17,468 bytes, SHA256
+36D0D7AE2953621EAF103A6D32CCD097709B5071A6B76E9655A3E08000DFBB90
+(MD5 56db93441b925f8c5714e00104542c7b), unchanged from the first qualified epoch.
+Both compiler files and every served manifest entry match exact bytes/hashes.
+
+Evidence under ignored build/layout-policy/:
+
+| Boundary | Qualified evidence |
+| --- | --- |
+| Current actual LCL / public policy / codec / source / arithmetic | final-controls.log: 2,169 checks, 873,843 allocations/frees, zero leaks |
+| Executed browser / true 390 viewport | desktop-final/ and phone-final/: 2,214 / 2,215; phone asserts actual inner width 390 |
+| Final semantic defaults/refusals and actual compilers | final-metadata.log: both applications succeed/current, 1,805,922 allocations/frees, zero leaks; final-compiler-proof.json verifies full manifests |
+| Core/designer/scheduler/project and strong types | core.log: 30 / 1,542 / 55 / 60, generated companions and three collection checks; 63 intended type errors per compiler in core.log / browser-build.log |
+| Full catalog controls | property-regression-final.log: 15,437 native checks / 76 kinds / 262 faces, 8,099,033 allocations/frees, zero leaks; property-browser-final/: 15,579 executed checks against the current browser companion |
+| Bound selection | selection-regression.log: 154 preparation + 154 compiled native, zero leaks; selection-browser/ publishes passed |
+| Nyx Studio desktop and resizing | studio-desktop/: 25; studio-resize/: 21 across 390/1100/800/390, code/source/history and retained focus |
+| Selective appearance | inspected live desktop and actual-390 policy captures plus Studio resize capture; no blank DOM teardown image counted |
+| Preservation | private layout-policy-preserved.json: exact original paired project, revision 6, home selection/view, no draft/Undo, ordinary prior test Redo retained; production health 200 |
+
+Failures remain visible: native preferred sizing initially gave different
+captions the same generic button width; the public widget repair passed the
+unchanged physical assertion. Earlier fixture/source-reader type issues were
+repaired before qualification. A property gate selected an older export that
+lacked its required numeric review; property-stale-export-failure.log is retained,
+and the unchanged newer semantic export passes. One Studio parent capture used
+the wrong terminal marker; the actual resize fixture already passed, and its
+correct published marker qualifies studio-resize/. A final author rebuild briefly
+overlapped its running client and hit Windows executable error 5; the client
+completed and the sequential rebuild passed. author-lock-failure.log is retained.
+No failed run is counted as accepted evidence.
+
+All jobs/consumers/captures are terminal. The owned current review service remains
+idle at PID 20776, identity recorded in server/launch.json; its executable/root
+are confined to this packet. The prior three disposable services remain idle.
+Production PID 29656 retains its original executable/LAN binding and accepted
+pair. release/ and release-manifest.json stage exactly six qualified files with
+SHA256 checks. The earlier automatic production stop/install/restart rejection
+reported only "blocked by policy" and was not retried. Source publication does
+not establish installation of this or the preceding property/allocation repairs.
+
+Intrinsic constraints/shrinking, border/client/font/scaling behavior, baseline and
+reverse flow, hardware/IME, assistive technology, widgetset breadth and native
+Studio remain under original acceptance. The narrow geometry fixture is not
+universal aesthetic or physical-phone approval. This packet accepts no full
+renderer/parity criterion, task, milestone or product. After this and the preceding
+allocation batch, consecutive no-closure count is 2. Reassessment changes the next
+action to existing NS-4 workflow criterion 5's protected semantic review workspace:
+independent paired source/history, bounded routing, observing Studio, safe
+disposal, exact user-work preservation and both compilers. Keep that prerequisite
+open until its integrated evidence passes, then return to the original target
+outcomes. Event criterion 1 stays at counter 8; accepted 2/3/4 and codegen
+criterion 3 counter 11 remain unchanged. Credits remain unassessed; full goal active.
+
+The layout guide records typed policy semantics and reproduction via
+`tools/build.ps1 -Target layout-policy -LayoutSourceDirectory <semantic export>`.
+The Pascal generators refresh managed configuration and the 76-kind reference;
+private outputs/configuration remain ignored. Publish this source packet on
+hello-nyx and retain exact local/remote identity proof under ignored local state.
 
 ## Native-MCP-authored proportional and hidden layout — 2026-10-04
 

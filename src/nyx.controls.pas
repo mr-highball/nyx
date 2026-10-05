@@ -31,6 +31,7 @@ uses
   SysUtils,
   nyx.text,
   nyx.types,
+  nyx.layout.policy,
   nyx.data,
   nyx.contract,
   nyx.state,

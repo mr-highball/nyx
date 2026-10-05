@@ -1,4 +1,4 @@
-# Proportional and hidden-flow layouts
+# Fluent layout policies
 
 [Architecture](architecture.md) · [Capabilities](capabilities.md) ·
 [LCL owner](../TODO/NS-2_lcl-renderer_01.md) ·
@@ -7,6 +7,79 @@
 Use typed `Layout(nlColumn/nlRow/nlGrid/nlAbsolute)`, `Width`, `Height`, `Padding`,
 `Gap`, `Flex` and `Visible` configuration. The document owns these values;
 adapters consume them without making the portable tree depend on DOM/LCL types.
+
+Use `nyx.layout.policy` for an independent fluent value builder. Managed controls
+and raw descriptors accept the same policy through `Configure.Layout`:
+
+```pascal
+uses
+  nyx.types, nyx.layout.policy, nyx.controls;
+
+var
+  LActions: INyxRow;
+  LPolicy: TNyxLayoutPolicy;
+begin
+  LPolicy := TNyxLayoutPolicy.Row
+    .Wrap(nfwWrap)
+    .Align(ncaCenter)
+    .Justify(njSpaceBetween);
+
+  LActions := NewNyxRow('document-actions');
+  LActions.Configure.Layout(LPolicy).Gap(12).WidthSizing(nsFill);
+end;
+```
+
+Each builder call returns an independent changed value. A configuration copies
+the policy; retaining or changing another value cannot change an existing view.
+`Layout(nlRow)` changes direction alone. The policy overload copies direction,
+wrapping, cross alignment and justification. `Wrap`, `Align` and `Justify` also
+configure their individual typed choices without replacing the other choices.
+
+| Contract | Meaning |
+| --- | --- |
+| `nfwAutomatic` | Rows wrap when their Nyx host is at most 600 logical pixels wide |
+| `nfwNoWrap` | One source-ordered row line, including deliberate overflow |
+| `nfwWrap` | Pack source-ordered lines using available content width |
+| `ncaAutomatic` | Row center; column stretch, with the primitive's own self-sizing default |
+| `ncaStart`, `ncaCenter`, `ncaEnd` | Position children on the perpendicular cross axis |
+| `ncaStretch` | Stretch children lacking an explicit cross-axis size to their line/column extent |
+| `njStart`, `njCenter`, `njEnd` | Position the main-axis group after allocation |
+| `njSpaceBetween`, `njSpaceAround`, `njSpaceEvenly` | Distribute remaining main-axis space while retaining the authored minimum gap |
+| `nsAutomatic` | Use a retained pixel metric or the primitive's natural/default size |
+| `nsContent` | Request intrinsic content size, capped by available width |
+| `nsFill` | Request the containing content extent; a weight still owns main-axis allocation |
+
+`WidthSizing` and `HeightSizing` retain existing pixel metrics. Clearing the
+sizing choice, or selecting Automatic, restores those metrics. Fill height needs
+a definite containing height; otherwise content supplies the natural height.
+Set a root's `HeightSizing(nsFill)` to propagate the host height into nested
+weighted columns. A browser host must itself have a definite CSS height; the LCL
+adapter uses its actual client extent. Fill does not subtract unrelated siblings;
+use `Flex` when the intent is sharing their remaining space.
+
+Rows use actual caption/content widths rather than unspecified equal cells.
+Both adapters collect line membership before distributing zero-basis positive
+weights on each line. Wrapped lines retain natural cross sizes; a non-wrapping
+definite row can center/end/stretch within its full height. Content sizing and
+explicit pixel sizes remain explicit cross-axis choices. Grid/absolute layouts
+retain flow choices for a later direction change, without interpreting them.
+Safe center/end alignment keeps leading overflow reachable. Authored order and
+keyboard order remain unchanged.
+
+Automatic wrapping follows the embedded Nyx host, rather than an outer browser
+window. The browser adapter uses a size container; the native adapter uses its
+host's client width. These bridges follow the [CSS flex line and alignment
+contract](https://www.w3.org/TR/css-flexbox-1/). Font/widget metrics can differ
+between targets; a natural caption is measured by its actual host control.
+Native themed buttons report their painted font/caption through `GetPreferredSize`.
+Natural parent height measures a child at its actual authored/allocated width.
+
+Use `Configure.ForPlatform(npfBrowser/npfNativeLCL)` with these same enum methods
+for a deliberate target-specific presentation rule. Rules belong to portable
+descriptors; realization applies only the selected target to an independent tree.
+Studio's header consumes this public policy, and its compact panel buttons use
+explicit equal weights. Studio/MCP expose closed enum choices and their help;
+generated code uses typed Pascal methods, including Clear for optional choices.
 
 ```pascal
 var
@@ -33,7 +106,9 @@ Positive weights share the remaining main-axis space after padding, visible gaps
 and fixed children. Rows use the available width. Columns need an authored height
 or a height allocated by their parent; an auto-height column keeps natural
 content sizing. A nested weighted row/column can allocate its own descendants.
-`Flex(0)` and `Clear(atFlex)` restore fixed/natural sizing. On a weighted item,
+`Flex(0)` opts out of weighting. `Clear(atFlex)` restores the primitive default:
+ordinary controls default to zero, and a spacer defaults to one. An indefinite
+column's spacer has a natural 16-pixel height. On a weighted item,
 allocation takes precedence over its main-axis width/height. Very small explicit
 allocations can clip content; the widgetset never receives negative input bounds.
 
@@ -58,23 +133,25 @@ These choices are informed by the [CSS flex basis and automatic minimum-size
 rules](https://www.w3.org/TR/css-flexbox-1/), rather than an alternate browser
 layout engine. The maintained adapters keep their ordinary host primitives.
 
-The native unspecified nonflex row-width policy still uses equal cells, with a
-caption fallback to stacking. Browser natural text widths and narrow row wrapping
-remain different in those cases. Border/client metrics, arbitrary mixed intrinsic
-constraints, root height propagation, richer wrapping/alignment policies,
-effective authored-width measurement of natural children,
-typography/scaling and accessibility still belong to the original renderer/parity
-criteria. This packet does not claim complete layout or target parity and does
-not lower published support grades to avoid those remaining outcomes.
+The current policy packet covers natural caption widths, row wrapping/alignment,
+shared spacers, authored-width height measurement and definite root propagation.
+Border/client metrics, arbitrary mixed intrinsic constraints, flexible shrinking,
+baseline/reverse-line alignment, typography/scaling, all widgetsets and complete
+accessibility still belong to the original renderer/parity criteria. It does not
+claim universal CSS layout implementation or complete target parity, and does
+not lower published support grades to avoid remaining outcomes.
 
 ## Semantic review and reproduction
 
 The maintained [operations fixture](../tests/layout-review.operations.json)
-describes one additive `layout-review` page: fixed/weighted siblings, nested
+describes two additive pages in one 50-operation transaction. `layout-review`
+contains fixed/weighted siblings, nested
 columns/rows, a memo, literal list, split panes, hidden natural siblings and grid.
+`policy-review` adds intrinsic actions, a wrapped row, logical alignment,
+authored-width text measurement, an implicit spacer and a root-filling editor.
 JSON here is an explicit MCP wire boundary; metrics/weights are numbers and
 visibility is Boolean. Inspect current roots and revision before composing it.
-Apply its 27 operations in one `nyx_transaction` with current `expectedRevision`
+Apply its 50 operations in one `nyx_transaction` with current `expectedRevision`
 and a unique `operationId`. Existing IDs refuse; never replace a user's project.
 Keep selection unchanged unless the user wants to activate the review.
 
@@ -99,6 +176,14 @@ service; the actual consumer must publish `data-layout-tests="passed"`.
 The [shared fixture](../tests/nyx_layout_controls_tests.lpr) includes fixed known
 allocations, overflow boundaries, pixel conservation, visibility transitions,
 host resizing, actual memo selection and retained collection/split faces.
+
+For the complete typed-policy consumer, use `-Target layout-policy` and supply
+the directory containing the unchanged semantic export with
+`-LayoutSourceDirectory <export>`. That target requires the policy root, exercises
+the public value/managed/source/persistence contract and actual control geometry,
+and refuses missing prerequisites. `layout.html?host=1` supplies an actual
+390-pixel viewport. The semantic client additionally inspects bounded enum
+metadata and rejects wrong choices/types at the same revision/history.
 
 The current evidence is in [WORK.md](../WORK.md). Build/capture logs and private
 accepted source remain under ignored output. User-facing editor defaults remain

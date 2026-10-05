@@ -48,6 +48,17 @@ type
     nkCommandBar, nkFloatingActionPanel, nkSlotOverride);
 
   TNyxLayoutMode = (nlColumn, nlRow, nlGrid, nlAbsolute);
+  { Flow policies use logical axes: main follows row/column direction; cross
+    is perpendicular. Automatic preserves the primitive's documented defaults.
+    Wrap applies to rows; it never changes authored order or keyboard order. }
+  TNyxFlowWrap = (nfwAutomatic, nfwNoWrap, nfwWrap);
+  TNyxCrossAlignment = (ncaAutomatic, ncaStart, ncaCenter, ncaEnd, ncaStretch);
+  TNyxJustification = (njStart, njCenter, njEnd, njSpaceBetween, njSpaceAround,
+    njSpaceEvenly);
+  { Automatic honors an authored pixel metric or the primitive's natural policy.
+    Content requests intrinsic size; Fill requests its containing content extent.
+    A positive Flex weight still owns the parent's main-axis allocation. }
+  TNyxSizing = (nsAutomatic, nsContent, nsFill);
   { Platform selection is a runtime projection choice, independent of the
     compiler that built the authoring tool. Any supplies portable defaults. }
   TNyxPlatform = (npfAny, npfBrowser, npfNativeLCL);
@@ -156,7 +167,8 @@ type
     atVariant, atAction, atProjection, atOverrideMode, atInputType, atPart,
     atTarget, atComponent, atEmit, atEmitChange, atOption, atPath, atDesignID,
     atSplitOrientation, atSplitPosition, atSplitMinimum, atSplitMaximum,
-    atSplitResizable, atDragSource, atDropTarget, atTouchBehavior);
+    atSplitResizable, atDragSource, atDropTarget, atTouchBehavior,
+    atFlowWrap, atCrossAlignment, atJustification, atWidthSizing, atHeightSizing);
 
   { Open application names are distinct value types, never behavioral keywords.
     These records own immutable text values, without mutable arrays/UI handles.
@@ -191,6 +203,10 @@ function TryNyxKind(const AName: TNyxText; out AKind: TNyxKind): Boolean;
 function NyxAttributeName(AAttribute: TNyxAttribute): TNyxText;
 function TryNyxAttribute(const AName: TNyxText; out AAttribute: TNyxAttribute): Boolean;
 function NyxLayoutName(AValue: TNyxLayoutMode): TNyxText;
+function NyxFlowWrapName(AValue: TNyxFlowWrap): TNyxText;
+function NyxCrossAlignmentName(AValue: TNyxCrossAlignment): TNyxText;
+function NyxJustificationName(AValue: TNyxJustification): TNyxText;
+function NyxSizingName(AValue: TNyxSizing): TNyxText;
 function NyxPlatformName(AValue: TNyxPlatform): TNyxText;
 function NyxPlatformSymbol(AValue: TNyxPlatform): TNyxText;
 function NyxSplitOrientationName(AValue: TNyxSplitOrientation): TNyxText;
@@ -282,7 +298,8 @@ const
     'pressed', 'variant', 'action', 'projection-kind', 'mode', 'input-type', 'part',
     'target', 'component', 'emit', 'emit.change', 'option', 'path', 'design-id',
     'split-orientation', 'split-position', 'split-minimum', 'split-maximum',
-    'split-resizable', 'drag-source', 'drop-target', 'touch-behavior');
+    'split-resizable', 'drag-source', 'drop-target', 'touch-behavior',
+    'flow-wrap', 'cross-alignment', 'justification', 'width-sizing', 'height-sizing');
   CLayoutNames: array[TNyxLayoutMode] of TNyxText = ('column', 'row', 'grid', 'absolute');
   CVariantNames: array[TNyxVariant] of TNyxText =
     ('', 'primary', 'secondary', 'danger', 'success', 'warning', 'ghost');
@@ -363,7 +380,8 @@ begin
     atColumns, atWidth, atHeight, atLeft, atTop, atFlex, atEnabled, atVisible,
     atReadOnly, atSurface, atPressed, atVariant, atInputType,
     atSplitOrientation, atSplitPosition, atSplitMinimum, atSplitMaximum,
-    atSplitResizable, atDragSource, atDropTarget, atTouchBehavior];
+    atSplitResizable, atDragSource, atDropTarget, atTouchBehavior,
+    atFlowWrap, atCrossAlignment, atJustification, atWidthSizing, atHeightSizing];
 end;
 
 function NyxPlatformKey(APlatform: TNyxPlatform; AAttribute: TNyxAttribute): TNyxText;
@@ -440,6 +458,36 @@ end;
 function NyxLayoutName(AValue: TNyxLayoutMode): TNyxText;
 begin
   Result := CLayoutNames[AValue];
+end;
+
+function NyxFlowWrapName(AValue: TNyxFlowWrap): TNyxText;
+const
+  CNames: array[TNyxFlowWrap] of TNyxText = ('auto', 'nowrap', 'wrap');
+begin
+  Result := CNames[AValue];
+end;
+
+function NyxCrossAlignmentName(AValue: TNyxCrossAlignment): TNyxText;
+const
+  CNames: array[TNyxCrossAlignment] of TNyxText =
+    ('auto', 'start', 'center', 'end', 'stretch');
+begin
+  Result := CNames[AValue];
+end;
+
+function NyxJustificationName(AValue: TNyxJustification): TNyxText;
+const
+  CNames: array[TNyxJustification] of TNyxText =
+    ('start', 'center', 'end', 'space-between', 'space-around', 'space-evenly');
+begin
+  Result := CNames[AValue];
+end;
+
+function NyxSizingName(AValue: TNyxSizing): TNyxText;
+const
+  CNames: array[TNyxSizing] of TNyxText = ('auto', 'content', 'fill');
+begin
+  Result := CNames[AValue];
 end;
 
 function NyxVariantName(AValue: TNyxVariant): TNyxText;

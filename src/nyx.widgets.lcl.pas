@@ -54,6 +54,11 @@ type
     FRadius: Integer;
     FKeyboardActivation: Word;
   protected
+    { Intrinsic size uses the same font/caption and horizontal frame as Paint.
+      TCDButton's generic default size cannot distinguish short/long captions;
+      GetPreferredSize must remain useful to every native layout consumer. }
+    procedure CalculatePreferredSize(var APreferredWidth, APreferredHeight: Integer;
+      AWithThemeSpace: Boolean); override;
     { TCDButtonControl activates on key-up before invoking OnKeyUp, and activates
       even when the preceding key-down was consumed. Track admitted activation
       keys and order the existing LCL callback before the reused Click operation.
@@ -342,6 +347,14 @@ begin
   LTextStyle.Wordbreak := False;
   LTextStyle.ShowPrefix := False;
   Canvas.TextRect(LBounds, 0, 0, Caption, LTextStyle);
+end;
+
+procedure TNyxLCLButton.CalculatePreferredSize(var APreferredWidth,
+  APreferredHeight: Integer; AWithThemeSpace: Boolean);
+begin
+  Canvas.Font.Assign(Font);
+  APreferredWidth := Canvas.TextWidth(Caption) + 38;
+  APreferredHeight := (Abs(Font.Height) * 3 div 2) + 22;
 end;
 
 constructor TNyxLCLSurface.Create(AOwner: TComponent);

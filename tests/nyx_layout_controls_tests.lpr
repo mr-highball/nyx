@@ -25,6 +25,7 @@ program nyx_layout_controls_tests;
 
 uses
   SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.layout.flow,
+  nyx.layout.policy, nyx.controls, nyx.codec, nyx.source,
   nyx.generated.view,
   {$ifdef PAS2JS}JS, Web, nyx.render.browser;
   {$else}Interfaces, Forms, Controls, StdCtrls, nyx.render.lcl;{$endif}
@@ -312,6 +313,273 @@ begin
   Check(Face('layout-focused-memo') = LMemoFace, 'narrow allocation retains the editor');
 end;
 
+{$ifdef NYX_LAYOUT_POLICY}
+{ This consumer must run the unchanged MCP companion containing policy-review.
+  Native/widget metrics can differ, so fixed policy geometry has exact expected
+  bounds; natural captions are checked for actual measurement and non-overlap. }
+procedure Policies;
+var
+  LRow: TNyxNode;
+  LFirst: TNyxNode;
+  LSecond: TNyxNode;
+  LThird: TNyxNode;
+  LMemoFace: TFace;
+  LPolicy: TNyxLayoutPolicy;
+  LChanged: TNyxLayoutPolicy;
+  LControl: INyxRow;
+  LConfiguration: INyxConfiguration;
+  LOwned: TNyxDocument;
+  LDecoded: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+  LSource: TNyxText;
+  LRejected: Boolean;
+  LItems: TNyxFlowItems;
+  LSizes: TNyxFlowSizes;
+  LPositions: TNyxFlowSizes;
+  LLines: TNyxFlowLines;
+  LJustification: TNyxJustification;
+  LCross: TNyxCrossAlignment;
+  LExpectedFirst: Integer;
+  LExpectedSecond: Integer;
+  LFree: Integer;
+  {$ifdef PAS2JS}LMemo: TJSHTMLTextAreaElement;
+  {$else}LMemo: TMemo;{$endif}
+begin
+  LPolicy := TNyxLayoutPolicy.Row.Wrap(nfwWrap).Align(ncaEnd).Justify(njCenter);
+  LChanged := LPolicy.Wrap(nfwNoWrap).Align(ncaStart);
+  Check((LPolicy.Wrapping = nfwWrap) and (LPolicy.Alignment = ncaEnd) and
+    (LChanged.Wrapping = nfwNoWrap), 'fluent policy values retain independent baselines');
+  LControl := NewNyxRow('public-policy');
+  LConfiguration := LControl.Configure.Layout(LPolicy).WidthSizing(nsContent);
+  LControl := nil;
+  Check(LConfiguration.Done.Node.Prop('flow-wrap') = 'wrap',
+    'managed policy configuration retains its specialized control');
+  LConfiguration := nil;
+  LOwned := TNyxDocument.Create;
+  LWorkspace := TNyxSourceWorkspace.Create;
+  try
+    LOwned.AddPage(TNyxNode.Create(nkRow, 'public-policy').Configure.Layout(LPolicy)
+      .WidthSizing(nsContent).HeightSizing(nsFill).Done);
+    LOwned.Pages[0].Configure.ForPlatform(npfNativeLCL).Wrap(nfwNoWrap).Done;
+    LDecoded := TNyxCodec.Decode(TNyxCodec.Encode(LOwned));
+    try
+      Check(TNyxCodec.Encode(LDecoded) = TNyxCodec.Encode(LOwned),
+        'all policy choices and platform overrides round-trip exactly');
+    finally
+      LDecoded.Free;
+    end;
+    LSource := LWorkspace.Render(LOwned);
+    LWorkspace.Accept(LOwned, LSource);
+    Check((Pos('.Wrap(nfwWrap)', LSource) > 0) and
+      (Pos('.HeightSizing(nsFill)', LSource) > 0), 'generated configuration uses Pascal enums');
+    LSource := StringReplace(LSource, 'Layout(nlRow)',
+      'Layout(TNyxLayoutPolicy.Row.Wrap(nfwWrap).Align(ncaEnd).Justify(njCenter))', []);
+    LDecoded := LWorkspace.Candidate(LOwned, LSource);
+    try
+      Check(TNyxCodec.Encode(LDecoded) = TNyxCodec.Encode(LOwned),
+        'Studio source admission evaluates the fluent value policy without executing code');
+    finally
+      LDecoded.Free;
+    end;
+    LRejected := False;
+    try
+      LDecoded := LWorkspace.Candidate(LOwned, StringReplace(LSource,
+        'Wrap(nfwWrap)', 'Wrap(ncaStart)', []));
+      LDecoded.Free;
+    except
+      on ENyxSource do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'Studio rejects a cross-alignment enum as a wrap argument');
+  finally
+    LWorkspace.Free;
+    LOwned.Free;
+  end;
+  SetLength(LItems, 3);
+  LItems[0].Visible := True;
+  LItems[0].NaturalSize := 80;
+  LItems[1].Visible := False;
+  LItems[1].NaturalSize := 1000;
+  LItems[2].Visible := True;
+  LItems[2].NaturalSize := 80;
+  LSizes := NyxFlowSizes(300, 10, LItems);
+  LPositions := NyxFlowPositions(300, 10, LItems, LSizes, njSpaceBetween);
+  Check((LPositions[0] = 0) and (LPositions[1] = 0) and (LPositions[2] = 220),
+    'justification reserves hidden-free gaps and puts endpoints at known positions');
+  LLines := NyxFlowLines(150, 10, LItems, True);
+  Check((Length(LLines) = 2) and (LLines[0].Last = 0) and (LLines[1].First = 2),
+    'wrapped windows preserve visible order around hidden entries');
+  {$ifdef PAS2JS}GHost.style.setProperty('width', '300px');
+  GHost.style.setProperty('height', '700px');
+  {$else}GHost.ClientWidth := 300;
+  GHost.ClientHeight := 700;{$endif}
+  GRenderer.Render(GDocument, GDocument.Find('policy-review'), GHost);
+  GRenderer.Sync;
+  {$ifdef PAS2JS}Near(Height('policy-review'), Round(GHost.clientHeight), 'root fills definite browser host');
+  {$else}Near(Height('policy-review'), GHost.ClientHeight, 'root fills definite native host');{$endif}
+  Near(Left('policy-small'), 0, 'space-between starts at the leading edge');
+  Near(Left('policy-tall'), Width('policy-alignment') - 80, 'space-between reaches the trailing edge');
+  Near(Top('policy-small'), 60, 'row end alignment uses the definite cross height');
+  Near(Top('policy-tall'), 40, 'different child height shares the same ending edge');
+  Near(Top('policy-wrap-first'), 0, 'first natural wrap line begins at zero');
+  Near(Top('policy-wrap-second'), 0, 'two fixed widths fit the first line');
+  Near(Top('policy-wrap-third'), 50, 'third item starts after the 40-pixel line plus gap');
+  Near(Height('policy-wrap-first'), 40, 'stretch shares the first line height');
+  Near(Height('policy-wrap'), 80, 'wrapped container measures both natural lines');
+  Near(Top('policy-after-text'), Top('policy-narrow-text') + Height('policy-narrow-text') + 10,
+    'parent measures caption at the actual authored width');
+  Check(Height('policy-narrow-text') > 40, 'narrow caption actually wraps through the target font');
+  Check(Width('policy-long-action') > Width('policy-short-action'),
+    'native/browser action widths reflect their different captions');
+  Near(Left('policy-long-action'), Width('policy-short-action') + 10,
+    'natural row children neither overlap nor reserve equal cells');
+  Near(Width('policy-spacer'), Width('policy-spacer-row') - 140,
+    'implicit spacer shares the remaining width on both targets');
+  Near(Left('policy-spacer-end'), Width('policy-spacer-row') - 60,
+    'implicit spacer pushes the final caption to the trailing edge');
+  Near(Height('policy-retained-memo'), Height('policy-fill-body') - 30,
+    'root height reaches the nested weighted editor');
+  LMemoFace := Face('policy-retained-memo');
+  {$ifdef PAS2JS}LMemo := TJSHTMLTextAreaElement(LMemoFace.querySelector('textarea'));
+  LMemo.value := 'Keep this draft 🌙';
+  LMemo.focus;
+  LMemo.selectionStart := 5;
+  LMemo.selectionEnd := 9;
+  {$else}LMemo := TMemo(GRenderer.InputFor('policy-retained-memo', niRuntime));
+  LMemo.Text := 'Keep this draft 🌙';
+  LMemo.SetFocus;
+  LMemo.SelStart := 5;
+  LMemo.SelLength := 4;{$endif}
+  LRow := Node('policy-wrap');
+  LFirst := Node('policy-wrap-first');
+  LSecond := Node('policy-wrap-second');
+  LThird := Node('policy-wrap-third');
+  LRow.Configure.Wrap(nfwNoWrap).Done;
+  GRenderer.Sync;
+  Near(Top(LThird.ID), 0, 'NoWrap preserves a single overflowing line');
+  Near(Left(LThird.ID), 260, 'NoWrap retains all fixed main-axis widths');
+  LRow.Configure.Wrap(nfwWrap).Align(ncaEnd).Done;
+  LFirst.Configure.Visible(False).Done;
+  GRenderer.Sync;
+  Near(Left(LSecond.ID), 0, 'hiding first wrap entry retains source order');
+  Near(Left(LThird.ID), 130, 'showing only two entries fits one line');
+  Near(Top(LThird.ID), 10, 'end alignment uses the taller remaining sibling');
+  LFirst.Configure.Visible(True).Done;
+  LRow.Configure.Clear(atFlowWrap).Align(ncaStart).Done;
+  Node('policy-alignment').Configure.Justify(njCenter).Align(ncaCenter).Done;
+  GRenderer.Sync;
+  Near(Left('policy-small'), (Width('policy-alignment') - 170) div 2,
+    'center justification groups actual fixed widths and gap');
+  Near(Top('policy-small'), 30, 'center cross alignment uses actual child height');
+  for LJustification := Low(TNyxJustification) to High(TNyxJustification) do
+  begin
+    Node('policy-alignment').Configure.Justify(LJustification).Done;
+    GRenderer.Sync;
+    LFree := Width('policy-alignment') - 170;
+    LExpectedFirst := 0;
+    LExpectedSecond := 90;
+    case LJustification of
+      njCenter:
+        begin
+          LExpectedFirst := LFree div 2;
+          LExpectedSecond := LExpectedFirst + 90;
+        end;
+      njEnd:
+        begin
+          LExpectedFirst := LFree;
+          LExpectedSecond := LFree + 90;
+        end;
+      njSpaceBetween: LExpectedSecond := LFree + 90;
+      njSpaceAround:
+        begin
+          LExpectedFirst := LFree div 4;
+          LExpectedSecond := Trunc(LFree * 0.75) + 90;
+        end;
+      njSpaceEvenly:
+        begin
+          LExpectedFirst := LFree div 3;
+          LExpectedSecond := Trunc(LFree * (2 / 3)) + 90;
+        end;
+    end;
+    Near(Left('policy-small'), LExpectedFirst, 'first bound for ' + NyxJustificationName(LJustification));
+    Near(Left('policy-tall'), LExpectedSecond, 'second bound for ' + NyxJustificationName(LJustification));
+  end;
+  for LCross := ncaStart to ncaEnd do
+  begin
+    Node('policy-alignment').Configure.Align(LCross).Done;
+    GRenderer.Sync;
+    LExpectedFirst := 0;
+
+    if LCross = ncaCenter then
+    begin
+      LExpectedFirst := 30;
+    end
+    else if LCross = ncaEnd then
+    begin
+      LExpectedFirst := 60;
+    end;
+    Near(Top('policy-small'), LExpectedFirst, 'cross bound for ' + NyxCrossAlignmentName(LCross));
+  end;
+  LRow.Configure.Wrap(nfwWrap).Align(ncaStretch).Done;
+  LFirst.Configure.HeightSizing(nsContent).Done;
+  GRenderer.Sync;
+  Near(Height(LFirst.ID), 20, 'Content height remains intrinsic under parent stretch');
+  LFirst.Configure.Clear(atHeightSizing).Done;
+  LFirst.Configure.Align(ncaEnd).Done;
+  Node('policy-wrap-first-caption').Configure.WidthSizing(nsContent).Done;
+  GRenderer.Sync;
+  Near(Left('policy-wrap-first-caption'), Width(LFirst.ID) - Width('policy-wrap-first-caption'),
+    'column cross alignment positions a content-sized child');
+  Node('policy-natural-actions').Configure.WidthSizing(nsContent).Done;
+  GRenderer.Sync;
+  Near(Width('policy-natural-actions'), Width('policy-short-action') +
+    Width('policy-long-action') + 10, 'Content width measures a nested natural row');
+  Node('policy-alignment').Configure.Width(100).Justify(njCenter).Done;
+  GRenderer.Sync;
+  Near(Left('policy-small'), 0, 'overflow center keeps leading content reachable');
+  Node('policy-alignment').Configure.Clear(atWidth).Done;
+  LFirst.Configure.Visible(False).Done;
+  LSecond.Configure.Visible(False).Done;
+  LThird.Configure.Visible(False).Done;
+  GRenderer.Sync;
+  Near(Height(LRow.ID), 0, 'all-hidden wrap children reserve no line or gap');
+  LFirst.Configure.Visible(True).Done;
+  LSecond.Configure.Visible(True).Done;
+  LThird.Configure.Visible(True).Done;
+  Node('policy-spacer').Configure.Flex(0).Done;
+  GRenderer.Sync;
+  Near(Width('policy-spacer'), 0, 'explicit zero opts out of implicit spacer weight');
+  Node('policy-spacer').Configure.Clear(atFlex).Done;
+  Node('policy-narrow-text').Configure.WidthSizing(nsFill).Done;
+  GRenderer.Sync;
+  Near(Width('policy-narrow-text'), Width('policy-review') - 20,
+    'Fill overrides retained authored width');
+  Node('policy-narrow-text').Configure.Clear(atWidthSizing).Done;
+  GRenderer.Sync;
+  Near(Width('policy-narrow-text'), 80, 'clearing sizing restores the retained pixel metric');
+  Near(Width('policy-spacer'), Width('policy-spacer-row') - 140,
+    'clearing spacer weight restores its shared default');
+  {$ifdef PAS2JS}GHost.style.setProperty('height', '760px');
+  {$else}GHost.ClientHeight := 760;{$endif}
+  GRenderer.Sync;
+  Near(Height('policy-review'), 760, 'host height resize reaches the mounted root');
+  Near(Height('policy-retained-memo'), Height('policy-fill-body') - 30,
+    'resized height reaches the same nested editor');
+  Node('policy-review').Configure.HeightSizing(nsContent).Done;
+  GRenderer.Sync;
+  Check(Height('policy-review') < 760, 'Content height restores natural root measurement');
+  Node('policy-review').Configure.HeightSizing(nsFill).Done;
+  GRenderer.Sync;
+  Check(Face('policy-retained-memo') = LMemoFace, 'all policy updates retain the mounted editor');
+  {$ifdef PAS2JS}Check((document.activeElement = LMemo) and (LMemo.value = 'Keep this draft 🌙') and
+    (LMemo.selectionStart = 5) and (LMemo.selectionEnd = 9), 'layout policies retain browser draft/focus/selection');
+  {$else}Check((GHost.ActiveControl = LMemo) and (LMemo.Text = 'Keep this draft 🌙') and
+    (LMemo.SelStart = 5) and (LMemo.SelLength = 4), 'layout policies retain native draft/focus/selection');{$endif}
+end;
+{$endif}
+
 procedure Run;
 begin
   GDocument := nil;
@@ -333,6 +601,7 @@ begin
     GHost.Show;{$endif}
     try
       Review;
+      {$ifdef NYX_LAYOUT_POLICY}Policies;{$endif}
       {$ifdef PAS2JS}document.body.setAttribute('data-layout-tests', 'passed');
       document.body.setAttribute('data-layout-checks', IntToStr(GChecks));
       {$else}WriteLn('PASS ', GChecks, ' layout control and arithmetic checks');{$endif}

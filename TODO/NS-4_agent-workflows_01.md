@@ -89,6 +89,23 @@ native semantic operations and also demonstrates why protected review-session
 lifecycle remains an open criterion 5 requirement. No browser editor automation
 or operator project replacement substitutes for that missing capability.
 
+The typed-policy continuation uses the maintained Pascal semantic client against
+an independently staged current server for properties absent from the preceding
+LAN release. One 50-operation transaction creates two review pages, bounded
+metadata includes the shared spacer default, wrong enum/scalar types refuse
+without changing revision/history, and both real application compilers retain
+the exact export. Native desktop tools still authenticate the untouched user's
+revision-6 session. Physical control and Studio consumers qualify the new policy.
+
+The two NS-2 batches now reach the required no-closure reassessment checkpoint.
+The next concrete deliverable belongs to this task's original criterion 5:
+protected review-session lifecycle, including independent paired source/history,
+bounded semantic routing, visible observing Studio activity, safe disposal and
+both actual compiler journeys. Existing root removal does not erase test Redo
+or isolate a user's pending draft. Accept this prerequisite only with complete
+preservation/refusal/observer evidence; criterion 5 and the full task stay open
+for their remaining state/binding/reusable/general-source outcomes. See WORK.md.
+
 ## Contextual admission and rendered viewports — 2026-10-04
 
 The subsequent catalog property journey exposed and repaired contextual scalar

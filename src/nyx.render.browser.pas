@@ -3166,6 +3166,13 @@ begin
       LControl.style.removeProperty('display');
       LControl.style.removeProperty('flex-direction');
       LControl.style.removeProperty('position');
+      LControl.style.removeProperty('flex-wrap');
+      LControl.style.removeProperty('align-items');
+      LControl.style.removeProperty('justify-content');
+      LControl.style.removeProperty('align-content');
+      LControl.classList.remove('nyx-flow-row');
+      LControl.classList.remove('nyx-flow-column');
+      LControl.classList.remove('nyx-aligned');
       LLayout := LNode.Prop('layout');
 
       if (LLayout = '') and not LBinding.FCustom and
@@ -3183,6 +3190,49 @@ begin
       begin
         LControl.style.setProperty('display', 'flex');
         LControl.style.setProperty('flex-direction', LLayout);
+        LControl.classList.add('nyx-flow-' + LLayout);
+        { Wrapped rows pack natural lines at the leading cross edge. A definite
+          height does not stretch every line's height behind the author's back. }
+        LControl.style.setProperty('align-content', 'flex-start');
+        LValue := LNode.Prop('flow-wrap', 'auto');
+
+        if (LLayout = 'row') and (LValue <> '') and (LValue <> 'auto') then
+        begin
+          LControl.style.setProperty('flex-wrap', LValue);
+        end;
+        LValue := LNode.Prop('cross-alignment', 'auto');
+
+        if (LValue <> '') and (LValue <> 'auto') then
+        begin
+          LControl.classList.add('nyx-aligned');
+
+          if (LValue = 'start') or (LValue = 'end') then
+          begin
+            LValue := 'flex-' + LValue;
+          end;
+
+          if (LValue = 'center') or (LValue = 'flex-end') then
+          begin
+            LValue := 'safe ' + LValue;
+          end;
+          LControl.style.setProperty('align-items', LValue);
+        end;
+        LValue := LNode.Prop('justification', 'start');
+
+        if LValue <> '' then
+        begin
+
+          if (LValue = 'start') or (LValue = 'end') then
+          begin
+            LValue := 'flex-' + LValue;
+          end;
+
+          if (LValue = 'center') or (LValue = 'flex-end') then
+          begin
+            LValue := 'safe ' + LValue;
+          end;
+          LControl.style.setProperty('justify-content', LValue);
+        end;
       end
       else if LLayout = 'absolute' then
       begin
@@ -3243,16 +3293,41 @@ begin
           LControl.style.setProperty(CMetricKeys[LMetricIndex], LValue + 'px');
         end;
       end;
+      { Sizing policies are translated only here. Retained pixel metrics become
+        effective again after Automatic/Clear; Sync never changes descriptor data. }
+      LValue := LNode.Prop('width-sizing');
+
+      if LValue = 'content' then
+      begin
+        LControl.style.setProperty('width', 'fit-content');
+      end
+      else if LValue = 'fill' then
+      begin
+        LControl.style.setProperty('width', '100%');
+      end;
+      LValue := LNode.Prop('height-sizing');
+      LControl.style.removeProperty('min-height');
+
+      if LValue = 'content' then
+      begin
+        LControl.style.setProperty('height', 'max-content');
+        LControl.style.setProperty('min-height', '0');
+      end
+      else if LValue = 'fill' then
+      begin
+        LControl.style.setProperty('height', '100%');
+        LControl.style.setProperty('min-height', '0');
+      end;
       LControl.style.removeProperty('flex');
       LControl.classList.remove('nyx-flex');
       LControl.style.removeProperty('grid-template-columns');
 
-      if LNode.Prop('flex') <> '' then
+      if (LNode.Prop('flex') <> '') or (NyxFlexWeight(LNode) > 0) then
       begin
 
-        if StrToIntDef(LNode.Prop('flex'), 0) > 0 then
+        if NyxFlexWeight(LNode) > 0 then
         begin
-          LControl.style.setProperty('flex', LNode.Prop('flex'));
+          LControl.style.setProperty('flex', IntToStr(NyxFlexWeight(LNode)));
           LControl.classList.add('nyx-flex');
         end
         else

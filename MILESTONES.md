@@ -3,7 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Latest delivery (2026-10-04): the [event/scheduler owner](TODO/NS-1_event-scheduler_01.md)
+Current source delivery (2026-10-04): typed layout policies advance the original
+[LCL](TODO/NS-2_lcl-renderer_01.md) and
+[parity](TODO/NS-2_parity-accessibility_01.md) criteria through public authoring,
+paired source/persistence, semantic MCP and actual controls. The shared review
+passes 2,169 native checks with zero leaks, 2,214 desktop and 2,215 actual-390;
+Nyx Studio consumes the policy and passes desktop/resizing journeys. Original
+criteria stay open. After two no-closure batches, the next action follows the
+existing protected semantic review-workspace prerequisite under NS-4. All fifteen
+native desktop handles are connected. Source qualification is staged separately;
+the earlier automatic production replacement refusal still applies. WORK.md
+owns the current evidence, publication and remaining target requirements.
+
+Earlier event delivery (2026-10-04): the [event/scheduler owner](TODO/NS-1_event-scheduler_01.md)
 now supplies typed editing and gesture sessions through actual controls, crafted
 callbacks, Studio/source/history and bounded MCP queries. Ten new fluent gesture
 families qualify owned capture/cancellation and protected/readable drag transfers,
@@ -32,7 +44,7 @@ Typed compiler navigation advances codegen criterion 3 to counter 11 without
 closing source UX/performance. The full product and native Studio remain open.
 
 Explicit Codex user registration now refreshes alongside project configuration.
-Initialized Codex discovery authenticates all fourteen semantic tools; 22 native
+Initialized Codex discovery authenticates all fifteen semantic tools; 22 native
 configuration checks preserve operator files and refuse invalid ownership, with
 zero leaks. Semantic MCP is the default demo/design workflow. Callback batches
 add templates, set policy, reorder and review removal as one content Undo step;
@@ -50,8 +62,8 @@ MCP/observer/compiler/host-input journeys pass 21 desktop and 21 exact-390 check
 Unchanged compiled control consumers pass nine each, with zero native leaks.
 Final MCP passes 64 and Studio Events/source/history passes 52/52. General
 source/import editing, state/bindings and protected review-session operations retain an open
-[primary workflow owner](TODO/NS-4_agent-workflows_01.md). The running desktop chat
-needs one reconnect for native handles; a Pascal semantic client works immediately.
+[primary workflow owner](TODO/NS-4_agent-workflows_01.md). The restarted desktop
+chat has native handles; the Pascal client also serves isolated qualification.
 See [the compiler-job packet](WORK.md#semantic-compiler-jobs--2026-10-04).
 The [handler packet](WORK.md#semantic-handler-implementations--2026-10-04)
 records the new delivery without transferring event/codegen acceptance credit.

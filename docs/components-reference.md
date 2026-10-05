@@ -34,6 +34,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -50,7 +55,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -119,6 +124,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -135,7 +145,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -203,6 +213,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -219,7 +234,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -287,6 +302,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -303,7 +323,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -371,6 +391,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -387,7 +412,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -455,6 +480,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -471,7 +501,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -540,6 +570,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -555,7 +590,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -623,6 +658,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -639,7 +679,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -706,6 +746,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -722,7 +767,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -792,6 +837,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -808,7 +858,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -876,6 +926,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -892,7 +947,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -958,6 +1013,11 @@ Root projection — Browser: Available. LCL: Available.
 | text | Text | Heading |  | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -977,7 +1037,7 @@ Root projection — Browser: Available. LCL: Available.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -1043,6 +1103,11 @@ Root projection — Browser: Available. LCL: Available.
 | text | Text | Text |  | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -1062,7 +1127,7 @@ Root projection — Browser: Available. LCL: Available.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -1129,6 +1194,11 @@ Root projection — Browser: Available. LCL: Available.
 | emit | Text |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -1148,7 +1218,7 @@ Root projection — Browser: Available. LCL: Available.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -1223,6 +1293,11 @@ Root projection — Browser: Available. LCL: Text fallback.
 | href | Text |  |  | Presentation | Available | Unavailable | Browser link destination. Standard LCL link is a focusable command face; a handler supplies native navigation. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -1241,7 +1316,7 @@ Root projection — Browser: Available. LCL: Text fallback.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -1321,6 +1396,11 @@ Root projection — Browser: Available. LCL: Available.
 | readonly | Boolean | false |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -1338,7 +1418,7 @@ Root projection — Browser: Available. LCL: Available.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Basic support | Unavailable | Browser numeric inputs use min/max hints. Declare a bounded numeric domain for exact model admission on both targets. |
 | max | Integer |  | -1000000..1000000 | Presentation | Basic support | Unavailable | Browser numeric inputs use min/max hints. Declare a bounded numeric domain for exact model admission on both targets. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -1426,6 +1506,11 @@ Root projection — Browser: Available. LCL: Available.
 | readonly | Boolean | false |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -1443,7 +1528,7 @@ Root projection — Browser: Available. LCL: Available.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -1531,6 +1616,11 @@ Root projection — Browser: Available. LCL: Available.
 | value | Boolean | false |  | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -1549,7 +1639,7 @@ Root projection — Browser: Available. LCL: Available.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Basic support | Basic support | Refuses user value changes; focus, notifications and programmatic state updates remain available. This selector restores refused physical drafts; it has no standard read-only widget mode. |
@@ -1628,6 +1718,11 @@ Root projection — Browser: Available. LCL: Basic support.
 | value | Boolean | false |  | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -1646,7 +1741,7 @@ Root projection — Browser: Available. LCL: Basic support.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Basic support | Basic support | Refuses user value changes; focus, notifications and programmatic state updates remain available. This selector restores refused physical drafts; it has no standard read-only widget mode. |
@@ -1725,6 +1820,11 @@ Root projection — Browser: Available. LCL: Available.
 | value | Boolean | false |  | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -1743,7 +1843,7 @@ Root projection — Browser: Available. LCL: Available.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Basic support | Basic support | Refuses user value changes; focus, notifications and programmatic state updates remain available. This selector restores refused physical drafts; it has no standard read-only widget mode. |
@@ -1823,6 +1923,11 @@ Root projection — Browser: Available. LCL: Available.
 | items | Lines | First item<br>Second item<br>Third item |  | Presentation | Basic support | Basic support | Static initial rows; use typed collection views for live structured datasets. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -1840,7 +1945,7 @@ Root projection — Browser: Available. LCL: Available.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Basic support | Basic support | Refuses user value changes; focus, notifications and programmatic state updates remain available. This selector restores refused physical drafts; it has no standard read-only widget mode. |
@@ -1921,6 +2026,11 @@ Root projection — Browser: Available. LCL: Available.
 | max | Integer | 100 | -1000000..1000000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -1939,7 +2049,7 @@ Root projection — Browser: Available. LCL: Available.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
 | compound | Boolean |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
@@ -2017,6 +2127,11 @@ Root projection — Browser: Available. LCL: Available.
 | max | Integer | 100 | -1000000..1000000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -2036,7 +2151,7 @@ Root projection — Browser: Available. LCL: Available.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | readonly | Boolean |  |  | Interaction policy | Basic support | Basic support | Refuses user value changes; focus, notifications and programmatic state updates remain available. This selector restores refused physical drafts; it has no standard read-only widget mode. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
 | compound | Boolean |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
@@ -2113,6 +2228,11 @@ Root projection — Browser: Available. LCL: Text fallback.
 | value | Text |  |  | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -2131,7 +2251,7 @@ Root projection — Browser: Available. LCL: Text fallback.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -2210,6 +2330,11 @@ Root projection — Browser: Available. LCL: Text fallback.
 | value | Text |  |  | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -2228,7 +2353,7 @@ Root projection — Browser: Available. LCL: Text fallback.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -2307,6 +2432,11 @@ Root projection — Browser: Available. LCL: Text fallback.
 | value | Text |  |  | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -2325,7 +2455,7 @@ Root projection — Browser: Available. LCL: Text fallback.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -2404,6 +2534,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | items | Lines | First item<br>Second item<br>Third item |  | Presentation | Basic support | Basic support | Static initial rows; use typed collection views for live structured datasets. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -2423,7 +2558,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -2502,6 +2637,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | items | Lines | Name	Status<br>Example	Ready |  | Presentation | Basic support | Basic support | Static initial rows; use typed collection views for live structured datasets. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -2521,7 +2661,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -2600,6 +2740,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | items | Lines | First item<br>Second item<br>Third item |  | Presentation | Basic support | Basic support | Static initial rows; use typed collection views for live structured datasets. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -2619,7 +2764,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -2697,6 +2842,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | alt | Text |  |  | Presentation | Available | Available | Browser alternative text and native accessible description. Empty text deliberately describes a decorative image. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -2715,7 +2865,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -2781,6 +2931,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | text | Text | Avatar |  | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -2800,7 +2955,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -2868,6 +3023,11 @@ Root projection — Browser: Available. LCL: Available.
 | max | Integer | 100 | -1000000..1000000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -2887,7 +3047,7 @@ Root projection — Browser: Available. LCL: Available.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
 | compound | Boolean |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
@@ -2951,6 +3111,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | text | Text | Badge |  | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -2970,7 +3135,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -3036,6 +3201,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | text | Text | Alert |  | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -3055,7 +3225,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -3119,6 +3289,11 @@ Root projection — Browser: Available. LCL: Available.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -3139,7 +3314,7 @@ Root projection — Browser: Available. LCL: Available.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -3203,6 +3378,11 @@ Root projection — Browser: Available. LCL: Available.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -3223,7 +3403,7 @@ Root projection — Browser: Available. LCL: Available.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 1 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -3289,6 +3469,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | text | Text | Code block |  | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -3308,7 +3493,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -3389,6 +3574,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | readonly | Boolean | false |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer | 240 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -3407,7 +3597,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -3497,6 +3687,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -3513,7 +3708,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -3579,6 +3774,11 @@ Root projection — Browser: Available. LCL: Available.
 | component | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -3599,7 +3799,7 @@ Root projection — Browser: Available. LCL: Available.
 | padding | Integer |  | 0..100000 | Presentation | Available | Unavailable | Browser CSS padding is available; standard LCL leaf/split padding requires a custom face or child host. |
 | gap | Integer |  | 0..100000 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | columns | Integer |  | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -3671,6 +3871,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Unavailable | Unavailable | Compose children in a layout host; split panes use their dedicated arrangement. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -3687,7 +3892,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | readonly | Boolean |  |  | Interaction policy | Available | Available | Refuses user value changes; focus, notifications and programmatic state updates remain available. |
@@ -3764,6 +3969,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -3780,7 +3990,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -3874,6 +4084,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -3890,7 +4105,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -3991,6 +4206,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -4007,7 +4227,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -4122,6 +4342,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -4138,7 +4363,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -4239,6 +4464,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -4255,7 +4485,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean | true |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -4367,6 +4597,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -4383,7 +4618,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean | true |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -4487,6 +4722,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -4503,7 +4743,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -4597,6 +4837,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -4613,7 +4858,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -4721,6 +4966,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -4736,7 +4986,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -4834,6 +5084,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -4849,7 +5104,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -4950,6 +5205,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -4966,7 +5226,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -5083,6 +5343,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -5099,7 +5364,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -5216,6 +5481,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -5232,7 +5502,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -5340,6 +5610,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -5356,7 +5631,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -5459,6 +5734,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -5475,7 +5755,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean | true |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -5585,6 +5865,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -5601,7 +5886,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -5700,6 +5985,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -5716,7 +6006,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean | true |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -5814,6 +6104,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -5830,7 +6125,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean | true |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -5928,6 +6223,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -5944,7 +6244,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -6052,6 +6352,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -6068,7 +6373,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -6157,6 +6462,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -6173,7 +6483,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean | true |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -6250,6 +6560,11 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | columns | Integer | 3 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -6266,7 +6581,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -6358,6 +6673,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -6374,7 +6694,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean | true |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -6470,6 +6790,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -6486,7 +6811,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean | true |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -6590,6 +6915,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -6606,7 +6936,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean | true |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -6703,6 +7033,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -6719,7 +7054,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean | true |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -6821,6 +7156,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -6837,7 +7177,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean | true |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -6957,6 +7297,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -6972,7 +7317,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -7071,6 +7416,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -7087,7 +7437,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean | true |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -7192,6 +7542,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -7208,7 +7563,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean | true |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -7313,6 +7668,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -7329,7 +7689,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -7408,6 +7768,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -7424,7 +7789,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean | true |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -7543,6 +7908,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -7559,7 +7929,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean | true |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -7668,6 +8038,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -7684,7 +8059,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |
@@ -7808,6 +8183,11 @@ Root projection — Browser: Available. LCL: Available.
 | columns | Integer | 2 | 1..64 | Presentation | Available | Available | Column count applies when grid layout is selected. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| width-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| height-sizing | Choice | auto | auto<br>content<br>fill | Presentation | Available | Available | Automatic uses the retained pixel metric or primitive default; Content uses intrinsic size; Fill uses the containing content extent. A parent weight owns its main-axis allocation. Fill height in an indefinite parent falls back to natural content. |
+| flow-wrap | Choice | auto | auto<br>nowrap<br>wrap | Presentation | Available | Available | Rows wrap by available content width. Automatic wraps at narrow host widths; nowrap preserves one line. Other layouts retain the choice. |
+| cross-alignment | Choice | auto | auto<br>start<br>center<br>end<br>stretch | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
+| justification | Choice | start | start<br>center<br>end<br>space-between<br>space-around<br>space-evenly | Presentation | Available | Available | Logical cross/main-axis alignment applies to row/column flow. Start/end preserve authored order; grid/absolute retain the choice. |
 | left | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | top | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | enabled | Boolean | true |  | Interaction policy | Available | Available | An ancestor scope also governs descendant interaction. |
@@ -7824,7 +8204,7 @@ Root projection — Browser: Available. LCL: Available.
 | href | Text |  |  | Presentation | Unavailable | Unavailable | A link destination requires a link projection. |
 | src | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 | alt | Text |  |  | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
-| flex | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| flex | Integer | 0 | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | max | Integer |  | -1000000..1000000 | Presentation | Unavailable | Unavailable | Standard min/max applies to range widgets. Declare a bounded numeric domain for another semantic value. |
 | surface | Boolean |  |  | Presentation | Basic support | Basic support | Theme effect follows the supported surface/variant of this projection; arbitrary styles require a supplied face. |

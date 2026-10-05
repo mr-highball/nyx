@@ -165,6 +165,13 @@ begin
     'font:' + IntToStr(FontSize) + 'px/1.5 system-ui,Segoe UI,sans-serif;}' +
     '.nyx-root *{box-sizing:border-box;min-width:0;}' +
     '.nyx-node{position:relative;max-width:100%;}' +
+    { The embedded host, rather than the outer browser window, owns automatic
+      row wrapping. Explicit Wrap/NoWrap inline policies take precedence. }
+    '.nyx-root{container-type:inline-size;}' +
+    '.nyx-root .nyx-flow-row{align-items:safe center;}' +
+    '.nyx-flow-column>.nyx-node,.nyx-flow-row>.nyx-node{flex-shrink:0;}' +
+    '.nyx-root .nyx-aligned>.nyx-node{align-self:auto;}' +
+    '@container(max-width:600px){.nyx-flow-row{flex-wrap:wrap;}}' +
     '.nyx-page,.nyx-column,.nyx-panel,.nyx-card,.nyx-group,.nyx-scroll,' +
     '.nyx-component,.nyx-tab{display:flex;flex-direction:column;gap:12px;}' +
     '.nyx-row,.nyx-toolbar{display:flex;flex-direction:row;gap:12px;align-items:center;}' +
@@ -226,7 +233,7 @@ begin
     '.nyx-root [disabled]{opacity:.5;cursor:default;}' +
     '.nyx-design .nyx-node{cursor:pointer;}.nyx-design .nyx-selected{' +
     'outline:2px solid var(--nyx-accent);outline-offset:3px;}' +
-    '@media(max-width:600px){.nyx-row{flex-wrap:wrap;}.nyx-grid{grid-template-columns:1fr;}' +
+    '@media(max-width:600px){.nyx-grid{grid-template-columns:1fr;}' +
     '.nyx-page{padding:16px;}}';
 end;
 

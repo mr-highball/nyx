@@ -25,6 +25,9 @@ unit nyx.layout.flow;
 
 interface
 
+uses
+  nyx.types;
+
 type
   { Adapter-independent main-axis inputs, in logical pixels. Hidden entries
     keep their identity/index but consume neither space, weight nor a gap.
@@ -37,6 +40,13 @@ type
   end;
   TNyxFlowItems = array of TNyxFlowItem;
   TNyxFlowSizes = array of Integer;
+  { Inclusive source-index windows. Hidden entries can occur inside a window;
+    no window starts/ends on one. Empty visible input returns no lines. }
+  TNyxFlowLine = record
+    First: Integer;
+    Last: Integer;
+  end;
+  TNyxFlowLines = array of TNyxFlowLine;
 
 { Returns a fresh allocation array; inputs remain borrowed and unchanged.
   Negative available space/gaps/sizes/weights are clamped to zero at this adapter
@@ -47,10 +57,22 @@ type
 function NyxFlowSizes(AAvailable, AGap: Integer;
   const AItems: TNyxFlowItems): TNyxFlowSizes;
 
+{ Build source-ordered row lines before allocating weights. A weighted item has
+  zero basis, matching Nyx's positive-weight contract. An oversized first item
+  occupies one line; neither overflow nor hidden entries create empty lines. }
+function NyxFlowLines(AAvailable, AGap: Integer; const AItems: TNyxFlowItems;
+  AWrap: Boolean): TNyxFlowLines;
+{ Fresh logical positions for one line. Extra spacing uses cumulative rounding;
+  gaps are minima. Overflow retains start alignment, keeping the leading content
+  reachable. Hidden indices stay zero. Inputs and prior results remain unchanged.
+  A size-array length mismatch raises EArgumentException before allocation. }
+function NyxFlowPositions(AAvailable, AGap: Integer; const AItems: TNyxFlowItems;
+  const ASizes: TNyxFlowSizes; AJustification: TNyxJustification): TNyxFlowSizes;
+
 implementation
 
 uses
-  Math;
+  Math, SysUtils;
 
 function NyxFlowSizes(AAvailable, AGap: Integer;
   const AItems: TNyxFlowItems): TNyxFlowSizes;
@@ -100,6 +122,124 @@ begin
       LEnd := Trunc(Double(LAvailable) * (LThrough / LWeight));
       Result[LIndex] := LEnd - LAllocated;
       LAllocated := LEnd;
+    end;
+  end;
+end;
+
+function NyxFlowLines(AAvailable, AGap: Integer; const AItems: TNyxFlowItems;
+  AWrap: Boolean): TNyxFlowLines;
+var
+  LIndex: Integer;
+  LLine: Integer;
+  LSize: Integer;
+  LUsed: Double;
+begin
+  SetLength(Result, 0);
+  LUsed := 0;
+  LLine := -1;
+  for LIndex := 0 to High(AItems) do
+  begin
+
+    if not AItems[LIndex].Visible then
+    begin
+      Continue;
+    end;
+    LSize := Max(0, AItems[LIndex].NaturalSize);
+
+    if AItems[LIndex].Weight > 0 then
+    begin
+      LSize := 0;
+    end;
+
+    if (LLine < 0) or (AWrap and
+      (LUsed + Max(0, AGap) + LSize > Max(0, AAvailable))) then
+    begin
+      Inc(LLine);
+      SetLength(Result, LLine + 1);
+      Result[LLine].First := LIndex;
+      LUsed := 0;
+    end
+    else
+    begin
+      LUsed := LUsed + Max(0, AGap);
+    end;
+    Result[LLine].Last := LIndex;
+    LUsed := LUsed + LSize;
+  end;
+end;
+
+function NyxFlowPositions(AAvailable, AGap: Integer; const AItems: TNyxFlowItems;
+  const ASizes: TNyxFlowSizes; AJustification: TNyxJustification): TNyxFlowSizes;
+var
+  LIndex: Integer;
+  LCount: Integer;
+  LPosition: Integer;
+  LUsed: Double;
+  LFree: Double;
+  LOffset: Double;
+  LSpacing: Double;
+  LThrough: Double;
+begin
+
+  if Length(ASizes) <> Length(AItems) then
+  begin
+    raise EArgumentException.Create('Flow positions require one size per item');
+  end;
+  SetLength(Result, Length(AItems));
+  LCount := 0;
+  LUsed := 0;
+  for LIndex := 0 to High(AItems) do
+  begin
+    Result[LIndex] := 0;
+
+    if AItems[LIndex].Visible then
+    begin
+      Inc(LCount);
+      LUsed := LUsed + Max(0, ASizes[LIndex]);
+    end;
+  end;
+  LFree := Max(0.0, AAvailable - LUsed - Double(Max(0, LCount - 1)) * Max(0, AGap));
+  LOffset := 0;
+  LSpacing := 0;
+  case AJustification of
+    njCenter: LOffset := LFree / 2;
+    njEnd: LOffset := LFree;
+    njSpaceBetween:
+      begin
+
+        if LCount > 1 then
+        begin
+          LSpacing := LFree / (LCount - 1);
+        end;
+      end;
+    njSpaceAround:
+      begin
+
+        if LCount > 0 then
+        begin
+          LSpacing := LFree / LCount;
+          LOffset := LSpacing / 2;
+        end;
+      end;
+    njSpaceEvenly:
+      begin
+        LSpacing := LFree / (LCount + 1);
+        LOffset := LSpacing;
+      end;
+  end;
+  LPosition := 0;
+  LThrough := 0;
+  for LIndex := 0 to High(AItems) do
+  begin
+
+    if AItems[LIndex].Visible then
+    begin
+      { Bound conversion at the widgetset's signed Integer limit. Double keeps
+        intermediate sums defined even for deliberately oversized input. }
+      Result[LIndex] := Trunc(Min(Double(High(Integer)), LOffset + LThrough +
+        Double(LPosition) * (Max(0, AGap) + LSpacing)));
+      LThrough := LThrough + Max(0, ASizes[LIndex]);
+      Inc(LPosition);
     end;
   end;
 end;

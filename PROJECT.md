@@ -64,6 +64,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The typed layout policy now crosses managed authoring, persistence, Studio source
+admission/generation, bounded MCP metadata and both adapters. Two semantic review
+pages exercise natural widths, wrap/align/justify, shared spacer defaults and
+root height propagation without replacing the user's project. The current packet
+in WORK.md records actual LCL/desktop/390 controls, Studio resizing and all-catalog
+regressions. Intrinsic constraints, scaling, complete accessibility and native
+Studio remain open. Source evidence still does not establish LAN deployment.
+
 The latest layout batch qualifies weighted rows, explicitly sized/nested columns,
 hidden flow entries, resizing and retained memo/list/split controls. Actual native
 checks pass 2,084 with zero leaks; browser passes 2,094 desktop and 2,095 at an

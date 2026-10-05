@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -97,7 +97,11 @@ function Test-NyxCompilerTypes([string]$Executable, [string[]]$Arguments) {
   # Require the intended type diagnostic as well as failure: a missing unit or
   # tool must never be mistaken for successful rejection of an invalid argument.
   $nyxTypeCases = @{
-    layout = 'TNyxLayoutMode'
+    layout = 'TNyxLayoutMode|TNyxLayoutPolicy'
+    flow_wrap = 'TNyxFlowWrap'
+    cross_alignment = 'TNyxCrossAlignment'
+    sizing = 'TNyxSizing'
+    layout_policy = 'TNyxFlowWrap'
     platform = 'TNyxPlatform'
     split_orientation = 'TNyxSplitOrientation'
     spacing = 'Integer|LongInt'
@@ -300,7 +304,7 @@ try {
     exit 0
   }
 
-  if ($Target -eq 'layout') {
+  if ($Target -in @('layout', 'layout-policy')) {
     $nyxLayoutSource = [IO.Path]::GetFullPath($LayoutSourceDirectory)
 
     if (-not (Test-Path -LiteralPath (Join-Path $nyxLayoutSource 'nyx.generated.view.pas'))) {
@@ -308,29 +312,37 @@ try {
     }
     $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
     $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
-    $nyxLayoutNative = Join-Path $nyxRoot 'build/layout-concordance/native'
-    $nyxLayoutAuthor = Join-Path $nyxRoot 'build/layout-concordance/author'
+    $nyxLayoutBase = 'build/layout-concordance'
+    $nyxLayoutDefinitions = @()
+    if ($Target -eq 'layout-policy') {
+      $nyxLayoutBase = 'build/layout-policy'
+      $nyxLayoutDefinitions = @('-dNYX_LAYOUT_POLICY')
+    }
+    $nyxLayoutNative = Join-Path $nyxRoot "$nyxLayoutBase/native"
+    $nyxLayoutAuthor = Join-Path $nyxRoot "$nyxLayoutBase/author"
     New-Item -ItemType Directory -Force $nyxLayoutNative | Out-Null
     New-Item -ItemType Directory -Force $nyxLayoutAuthor | Out-Null
     Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxLayoutAuthor", "-FE$nyxLayoutAuthor", 'tests/nyx_mcp_layout_review.lpr')
     $nyxLayoutPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
-    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+    Invoke-NyxCompiler $nyxLclFpc (@('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Futests', "-Fu$nyxLayoutSource",
       "-Fu$nyxLazarus/lcl/units/$nyxLayoutPlatform", "-Fu$nyxLazarus/lcl/units/$nyxLayoutPlatform/$Widgetset",
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxLayoutPlatform", "-Fu$nyxLazarus/packager/units/$nyxLayoutPlatform",
-      "-FU$nyxLayoutNative", "-FE$nyxLayoutNative", 'tests/nyx_layout_controls_tests.lpr')
+      "-FU$nyxLayoutNative", "-FE$nyxLayoutNative") + $nyxLayoutDefinitions +
+      @('tests/nyx_layout_controls_tests.lpr'))
     & (Join-Path $nyxLayoutNative 'nyx_layout_controls_tests.exe')
 
     if ($LASTEXITCODE -ne 0) { throw 'Native proportional layout consumer failed' }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
-    $nyxLayoutBrowser = Join-Path $nyxRoot 'build/layout-concordance/web'
+    $nyxLayoutBrowser = Join-Path $nyxRoot "$nyxLayoutBase/web"
 
     if ($BrowserOutput) { $nyxLayoutBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
     New-Item -ItemType Directory -Force $nyxLayoutBrowser | Out-Null
-    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Fusrc', '-Futests',
-      "-Fu$nyxLayoutSource", "-FE$nyxLayoutBrowser", 'tests/nyx_layout_controls_tests.lpr')
+    Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Fusrc', '-Futests',
+      "-Fu$nyxLayoutSource", "-FE$nyxLayoutBrowser") + $nyxLayoutDefinitions +
+      @('tests/nyx_layout_controls_tests.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxLayoutBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/layout.html') -Destination $nyxLayoutBrowser
     exit 0

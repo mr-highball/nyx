@@ -205,14 +205,25 @@ const
     'atPart', 'atTarget', 'atComponent', 'atEmit', 'atEmitChange', 'atOption',
     'atPath', 'atDesignID', 'atSplitOrientation', 'atSplitPosition',
     'atSplitMinimum', 'atSplitMaximum', 'atSplitResizable',
-    'atDragSource', 'atDropTarget', 'atTouchBehavior');
+    'atDragSource', 'atDropTarget', 'atTouchBehavior', 'atFlowWrap',
+    'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing');
   CTouchSymbols: array[TNyxTouchBehavior] of TNyxText =
     ('ntbAutomatic', 'ntbNone', 'ntbPanX', 'ntbPanY', 'ntbManipulation');
+  CWrapSymbols: array[TNyxFlowWrap] of TNyxText = ('nfwAutomatic', 'nfwNoWrap', 'nfwWrap');
+  CCrossSymbols: array[TNyxCrossAlignment] of TNyxText =
+    ('ncaAutomatic', 'ncaStart', 'ncaCenter', 'ncaEnd', 'ncaStretch');
+  CJustificationSymbols: array[TNyxJustification] of TNyxText =
+    ('njStart', 'njCenter', 'njEnd', 'njSpaceBetween', 'njSpaceAround', 'njSpaceEvenly');
+  CSizingSymbols: array[TNyxSizing] of TNyxText = ('nsAutomatic', 'nsContent', 'nsFill');
 var
   LAttribute: TNyxAttribute;
   LNumber: Integer;
   LKind: TNyxKind;
   LLayout: TNyxLayoutMode;
+  LWrap: TNyxFlowWrap;
+  LCross: TNyxCrossAlignment;
+  LJustification: TNyxJustification;
+  LSizing: TNyxSizing;
   LVariant: TNyxVariant;
   LAction: TNyxAction;
   LMode: TNyxOverrideMode;
@@ -460,6 +471,56 @@ begin
           if NyxLayoutName(LLayout) = AValue then
           begin
             Exit('Layout(nl' + ControlStem(AValue) + ')');
+          end;
+        end;
+      end;
+    atFlowWrap:
+      begin
+        for LWrap := Low(TNyxFlowWrap) to High(TNyxFlowWrap) do
+        begin
+
+          if NyxFlowWrapName(LWrap) = AValue then
+          begin
+            Exit('Wrap(' + CWrapSymbols[LWrap] + ')');
+          end;
+        end;
+      end;
+    atCrossAlignment:
+      begin
+        for LCross := Low(TNyxCrossAlignment) to High(TNyxCrossAlignment) do
+        begin
+
+          if NyxCrossAlignmentName(LCross) = AValue then
+          begin
+            Exit('Align(' + CCrossSymbols[LCross] + ')');
+          end;
+        end;
+      end;
+    atJustification:
+      begin
+        for LJustification := Low(TNyxJustification) to High(TNyxJustification) do
+        begin
+
+          if NyxJustificationName(LJustification) = AValue then
+          begin
+            Exit('Justify(' + CJustificationSymbols[LJustification] + ')');
+          end;
+        end;
+      end;
+    atWidthSizing, atHeightSizing:
+      begin
+        LMethod := 'WidthSizing';
+
+        if LAttribute = atHeightSizing then
+        begin
+          LMethod := 'HeightSizing';
+        end;
+        for LSizing := Low(TNyxSizing) to High(TNyxSizing) do
+        begin
+
+          if NyxSizingName(LSizing) = AValue then
+          begin
+            Exit(LMethod + '(' + CSizingSymbols[LSizing] + ')');
           end;
         end;
       end;

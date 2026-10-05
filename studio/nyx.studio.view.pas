@@ -35,6 +35,7 @@ uses
   nyx.contract,
   nyx.schema,
   nyx.types,
+  nyx.layout.policy,
   nyx.state,
   nyx.binding.types,
   nyx.studio.authoring,
@@ -563,6 +564,9 @@ begin
     Building chrome as ordinary nodes makes it inspectable and renderable by
     the same public adapters used for the applications Studio designs. }
   LHeader := TNyxNode.Create('row', 'studio-header');
+  { The same portable flow policy used by applications owns Studio's toolbar.
+    Actions wrap by their actual captions rather than native equal-width cells. }
+  LHeader.Configure.Layout(TNyxLayoutPolicy.Row.Wrap(nfwWrap).Align(ncaCenter)).Done;
   LRoot.Add(LHeader);
   LHeader.Add(Caption('studio-logo', 'nyx'));
   LHeader.Add(Caption('studio-subtitle', 'STUDIO  /  ' + ASession.Document.Title));
@@ -579,10 +583,11 @@ begin
   if AState.Compact then
   begin
     LPanelbar := TNyxNode.Create('row', 'studio-panelbar');
+    LPanelbar.Configure.Wrap(nfwNoWrap).Done;
     LRoot.Add(LPanelbar);
-    LPanelbar.Add(Button('action-panel-project', 'Project'));
-    LPanelbar.Add(Button('action-panel-design', 'Design'));
-    LPanelbar.Add(Button('action-panel-inspector', 'Inspector'));
+    LPanelbar.Add(Button('action-panel-project', 'Project').Configure.Flex(1).Done);
+    LPanelbar.Add(Button('action-panel-design', 'Design').Configure.Flex(1).Done);
+    LPanelbar.Add(Button('action-panel-inspector', 'Inspector').Configure.Flex(1).Done);
     case AState.Panel of
       nspProject:
         begin

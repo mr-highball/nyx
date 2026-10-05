@@ -34,6 +34,7 @@ uses
   nyx.data,
   nyx.contract,
   nyx.types,
+  nyx.layout.policy,
   nyx.state,
   nyx.collections.registry,
   nyx.collections.view.types,
@@ -312,7 +313,20 @@ type
     function Compound(AValue: Boolean): TNyxNodeConfig;
     function Pressed(AValue: Boolean): TNyxNodeConfig;
     { Closed behavioral vocabularies use enums, including built-in projections. }
-    function Layout(AValue: TNyxLayoutMode): TNyxNodeConfig;
+    { Enum form changes direction alone. Value-policy form copies all closed
+      flow choices. Both leave pixel metrics and child ownership unchanged. }
+    function Layout(AValue: TNyxLayoutMode): TNyxNodeConfig; overload;
+    function Layout(const AValue: TNyxLayoutPolicy): TNyxNodeConfig; overload;
+    { Row wrapping and logical main/cross alignment. Grid/absolute retain these
+      choices for a later flow direction but do not interpret them. }
+    function Wrap(AValue: TNyxFlowWrap): TNyxNodeConfig;
+    function Align(AValue: TNyxCrossAlignment): TNyxNodeConfig;
+    function Justify(AValue: TNyxJustification): TNyxNodeConfig;
+    { Sizing choice overrides the retained pixel metric. Automatic restores that
+      metric/default. Fill height requires a definite parent/host content height;
+      an auto-height containing block falls back to natural content. }
+    function WidthSizing(AValue: TNyxSizing): TNyxNodeConfig;
+    function HeightSizing(AValue: TNyxSizing): TNyxNodeConfig;
     function Variant(AValue: TNyxVariant): TNyxNodeConfig;
     function Action(AValue: TNyxAction): TNyxNodeConfig;
     function ProjectAs(AValue: TNyxKind): TNyxNodeConfig;
@@ -1426,6 +1440,39 @@ end;
 function TNyxNodeConfig.Layout(AValue: TNyxLayoutMode): TNyxNodeConfig;
 begin
   Result := Put(atLayout, NyxLayoutName(AValue));
+end;
+
+function TNyxNodeConfig.Layout(const AValue: TNyxLayoutPolicy): TNyxNodeConfig;
+begin
+  Layout(AValue.Mode);
+  Wrap(AValue.Wrapping);
+  Align(AValue.Alignment);
+  Result := Justify(AValue.Justification);
+end;
+
+function TNyxNodeConfig.Wrap(AValue: TNyxFlowWrap): TNyxNodeConfig;
+begin
+  Result := Put(atFlowWrap, NyxFlowWrapName(AValue));
+end;
+
+function TNyxNodeConfig.Align(AValue: TNyxCrossAlignment): TNyxNodeConfig;
+begin
+  Result := Put(atCrossAlignment, NyxCrossAlignmentName(AValue));
+end;
+
+function TNyxNodeConfig.Justify(AValue: TNyxJustification): TNyxNodeConfig;
+begin
+  Result := Put(atJustification, NyxJustificationName(AValue));
+end;
+
+function TNyxNodeConfig.WidthSizing(AValue: TNyxSizing): TNyxNodeConfig;
+begin
+  Result := Put(atWidthSizing, NyxSizingName(AValue));
+end;
+
+function TNyxNodeConfig.HeightSizing(AValue: TNyxSizing): TNyxNodeConfig;
+begin
+  Result := Put(atHeightSizing, NyxSizingName(AValue));
 end;
 
 function TNyxNodeConfig.Variant(AValue: TNyxVariant): TNyxNodeConfig;

@@ -178,6 +178,9 @@ function NyxProjectionSource(ANode: TNyxNode; ADocument: TNyxDocument): TNyxNode
 { Explicit layout overrides the base primitive. Absent/cleared layout uses its
   natural row/grid/column default, consistently for native layout and metadata. }
 function NyxLayout(ANode: TNyxNode): TNyxText;
+{ Spacer's shared implicit weight is one. An explicit zero opts out; a missing
+  or cleared weight restores the primitive default. Other controls default zero. }
+function NyxFlexWeight(ANode: TNyxNode): Integer;
 
 { Returns relevant editable properties for the node's base projection. Known
   extension properties already on a node can be presented separately by Studio. }
@@ -678,6 +681,24 @@ begin
   Result := Pos('|' + AKind + '|', '|' + AKinds + '|') > 0;
 end;
 
+function NyxFlexWeight(ANode: TNyxNode): Integer;
+var
+  LDefault: Integer;
+begin
+  LDefault := 0;
+
+  if ANode.ProjectionKind = 'spacer' then
+  begin
+    LDefault := 1;
+  end;
+  Result := LDefault;
+
+  if ANode.Prop('flex') <> '' then
+  begin
+    Result := StrToIntDef(ANode.Prop('flex'), LDefault);
+  end;
+end;
+
 function NyxProjectionSource(ANode: TNyxNode; ADocument: TNyxDocument): TNyxNode;
 var
   LDefinition: TNyxNode;
@@ -901,7 +922,7 @@ begin
           LDescription := 'Image source/alternative text requires an image projection.';
         end;
       end;
-    atLayout, atGap, atColumns:
+    atLayout, atGap, atColumns, atFlowWrap, atCrossAlignment, atJustification:
       begin
 
         if not LInfo.Container or (LKind = 'split-view') then
@@ -914,6 +935,16 @@ begin
         else if AAttribute = atColumns then
         begin
           LDescription := 'Column count applies when grid layout is selected.';
+        end
+        else if AAttribute = atFlowWrap then
+        begin
+          LDescription := 'Rows wrap by available content width. Automatic wraps ' +
+            'at narrow host widths; nowrap preserves one line. Other layouts retain the choice.';
+        end
+        else if AAttribute in [atCrossAlignment, atJustification] then
+        begin
+          LDescription := 'Logical cross/main-axis alignment applies to row/column ' +
+            'flow. Start/end preserve authored order; grid/absolute retain the choice.';
         end;
       end;
     atPadding:
@@ -1004,6 +1035,13 @@ begin
       begin
         LNative := ncMissing;
         LDescription := 'Browser touch-action negotiation for direct manipulation; declared before a gesture starts. Native mouse hooks do not implement touch-action.';
+      end;
+    atWidthSizing, atHeightSizing:
+      begin
+        LDescription := 'Automatic uses the retained pixel metric or primitive default; ' +
+          'Content uses intrinsic size; Fill uses the containing content extent. ' +
+          'A parent weight owns its main-axis allocation. Fill height in an ' +
+          'indefinite parent falls back to natural content.';
       end;
     atHint, atAccessibleName, atWidth, atHeight, atLeft, atTop, atFlex:
       begin
@@ -1257,6 +1295,14 @@ begin
   end;
   Add('width', 'Width (px)', npInteger);
   Add('height', 'Height (px)', npInteger);
+  Add('width-sizing', 'Width sizing', npChoice, 'auto', 'auto' + #10 + 'content' + #10 + 'fill');
+  Add('height-sizing', 'Height sizing', npChoice, 'auto', 'auto' + #10 + 'content' + #10 + 'fill');
+  Add('flow-wrap', 'Row wrapping', npChoice, 'auto', 'auto' + #10 + 'nowrap' + #10 + 'wrap');
+  Add('cross-alignment', 'Cross-axis alignment', npChoice, 'auto',
+    'auto' + #10 + 'start' + #10 + 'center' + #10 + 'end' + #10 + 'stretch');
+  Add('justification', 'Main-axis alignment', npChoice, 'start',
+    'start' + #10 + 'center' + #10 + 'end' + #10 + 'space-between' + #10 +
+    'space-around' + #10 + 'space-evenly');
   Add('left', 'Left (px)', npInteger);
   Add('top', 'Top (px)', npInteger);
   Add('enabled', 'Enabled', npBoolean, 'true');
@@ -1352,6 +1398,15 @@ begin
     LChoiceNames := Trim(LChoiceNames);
     Add(NyxAttributeName(LAttribute), LTitle, LAttributeType, '', LChoiceNames);
     case LAttribute of
+      atFlex:
+        begin
+          Result[High(Result)].DefaultValue := '0';
+
+          if LBase.ProjectionKind = 'spacer' then
+          begin
+            Result[High(Result)].DefaultValue := '1';
+          end;
+        end;
       atSplitPosition, atSplitMinimum, atSplitMaximum:
         begin
           Result[High(Result)].Maximum := 100;
