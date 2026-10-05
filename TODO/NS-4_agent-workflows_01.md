@@ -257,3 +257,30 @@ workspaces or criterion 5 in full. Semantic state/binding, rich reusable and
 general import/helper workflows retain this owner. Retained application code
 that mentions removed IDs requires compiler validation. Original event/codegen
 criteria and counters stay unchanged; the full user outcome remains open.
+
+## Protected-review prerequisite — 2026-10-04
+
+The interrupted source checkpoint and its continued qualification form one
+logical batch. Independent ordinary sessions retain the primary project's full
+accepted/draft/base bytes, revision, selection/view and both history stacks.
+Owner-bound references, exact lifecycle retry receipts, immediate permission
+reduction and teardown qualify natively and in executed pas2js (200 checks each).
+The real MCP/ordinary observing Studio journey passes 377 checks with zero leaks:
+one grouped composition, bounded source/callback editing, paired Undo/Redo,
+actor-bound reviewed child root cleanup, exact refusal context, four successful
+view/application builds on both real compilers, compiled browser host input,
+selective PNG and a successful native job completing after owner retirement.
+Unchanged compiled control consumers pass eight each on LCL and browser; LCL
+has zero leaks. Desktop layout/source passes 25, actual 390/1100/800/390 resizing
+passes 21 and narrow authoring passes 69. The user's pending Unicode code control
+retains its actual backend identity and exact value during observed agent work.
+
+This accepts criterion 5's bounded protected-review prerequisite. The full
+criterion remains open for semantic state/binding, richer reusable and general
+source/import outcomes; no-closure batch count is 1. The sixteenth source tool
+is staged, not deployed into the fifteen-tool LAN release. The exact production
+pair and revision 6 remain retained. Preview-only reviews do not accept the new
+concurrent-project criterion. Next deliverable follows the user's priority:
+stable explicit project contexts, transport-independent project lifetimes and
+full-editor jump/return with drafts/history/view/presentation preserved. See
+[the packet](../WORK.md#protected-review-qualification--2026-10-04).

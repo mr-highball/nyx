@@ -45,6 +45,8 @@ type
       AExpectedStatus: Integer = 200; const AOrigin: TNyxText = ''): TNyxDataValue;
     function RPC(const AMethod: TNyxText; const AParams: TNyxDataValue): TNyxDataValue;
     function Tool(const AName: TNyxText; const AArguments: TNyxDataValue): TNyxDataValue;
+    { Retire the authenticated transport once. Repeated cleanup is harmless;
+      failed retirement retains the handle so a caller can report/retry it. }
     procedure Close;
   end;
 
@@ -239,6 +241,11 @@ end;
 
 procedure TNyxMCPTestClient.Close;
 begin
+
+  if FSession = '' then
+  begin
+    Exit;
+  end;
   Exchange('DELETE', NyxObject([]));
   FSession := '';
 end;

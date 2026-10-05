@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'semantic-events', 'source-workspace', 'agents', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -47,7 +47,9 @@ param(
   # Exact companion exported by the semantic handler/compilation journey.
   [string]$HandlerSourceDirectory = 'build/handler-edits/journey/source',
   # Unchanged companion exported by the isolated semantic root-cleanup journey.
-  [string]$RootSourceDirectory = 'build/root-cleanup/journey/source'
+  [string]$RootSourceDirectory = 'build/root-cleanup/journey/source',
+  # Exact bounded companion exported by the isolated protected-review journey.
+  [string]$ReviewSourceDirectory = 'build/review-workspaces/journey/source'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -200,6 +202,65 @@ try {
     if ($LASTEXITCODE -ne 0) {
       throw 'MCP configuration preservation checks failed'
     }
+    exit 0
+  }
+
+  if ($Target -in @('review-workspaces', 'review-consumers')) {
+    # This target stages artifacts only. Launching a separate service, admitting
+    # its disposable user fixture and driving MCP remain explicit Pascal steps;
+    # an ordinary build must never silently edit a live Studio project.
+    $nyxReviewDir = Join-Path $nyxRoot 'build/review-workspaces/orchestrated'
+    $nyxReviewNative = Join-Path $nyxReviewDir 'native'
+    $nyxReviewProtocol = Join-Path $nyxReviewDir 'protocol'
+    $nyxBrowserDir = Join-Path $nyxReviewDir 'web'
+
+    if ($BrowserOutput) { $nyxBrowserDir = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxReviewNative, $nyxReviewProtocol, $nyxBrowserDir | Out-Null
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxReviewFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxReviewNative", "-FE$nyxReviewNative")
+
+    if ($Target -eq 'review-workspaces') {
+      Invoke-NyxCompiler $nyxFpc ($nyxReviewFlags + @('tests/nyx_review_tests.lpr'))
+      & (Join-Path $nyxReviewNative 'nyx_review_tests.exe')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Portable native protected-review checks failed' }
+      # The maintained browser-host protocol needs the installed compiler's
+      # fpwebsocket units; use the already qualified matching toolchain.
+      $nyxReviewHostFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+        '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxReviewProtocol", "-FE$nyxReviewProtocol")
+      Invoke-NyxCompiler $nyxLclFpc ($nyxReviewHostFlags + @('tests/nyx_mcp_review_tests.lpr'))
+      Invoke-NyxCompiler $nyxFpc ($nyxReviewFlags + @('studio/nyx_studio_server.lpr'))
+      foreach ($nyxReviewProgram in @('tests/nyx_review_tests.lpr', 'studio/nyx_studio.lpr',
+          'studio/nyx_studio_review.lpr', 'studio/nyx_studio_preview.lpr')) {
+        Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Fusrc', '-Fustudio',
+          "-FE$nyxBrowserDir", $nyxReviewProgram)
+      }
+      foreach ($nyxReviewHost in @('reviews.html', 'index.html', 'agent-review.html', 'agent-preview.html')) {
+        Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxReviewHost") -Destination $nyxBrowserDir
+      }
+    } else {
+      $nyxReviewSource = [IO.Path]::GetFullPath($ReviewSourceDirectory)
+
+      if (-not (Test-Path -LiteralPath (Join-Path $nyxReviewSource 'nyx.generated.view.pas'))) {
+        throw 'Run the isolated semantic review journey first; see docs/studio-agents.md'
+      }
+      $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+      $nyxReviewPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+      $nyxReviewControlFlags = $nyxReviewFlags + @("-Fu$nyxReviewSource",
+        "-Fu$nyxLazarus/lcl/units/$nyxReviewPlatform", "-Fu$nyxLazarus/lcl/units/$nyxReviewPlatform/$Widgetset",
+        "-Fu$nyxLazarus/components/lazutils/lib/$nyxReviewPlatform", "-Fu$nyxLazarus/packager/units/$nyxReviewPlatform")
+      Invoke-NyxCompiler $nyxLclFpc ($nyxReviewControlFlags + @('tests/nyx_review_consumer_tests.lpr'))
+      & (Join-Path $nyxReviewNative 'nyx_review_consumer_tests.exe')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Compiled native protected-review controls failed' }
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Fusrc', "-Fu$nyxReviewSource",
+        "-FE$nyxBrowserDir", 'tests/nyx_review_consumer_tests.lpr')
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/review-consumers.html') -Destination $nyxBrowserDir
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     exit 0
   }
 

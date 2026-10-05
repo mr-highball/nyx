@@ -32,6 +32,7 @@ uses
   nyx.text,
   nyx.data,
   nyx.model,
+  nyx.controls,
   nyx.contract,
   nyx.schema,
   nyx.types,
@@ -53,6 +54,10 @@ type
   { Compact hosts show one ordinary Nyx workspace panel at a time. The choice
     belongs to editor presentation and never changes project data/history. }
   TNyxStudioPanel = (nspDesign, nspProject, nspInspector);
+  { Hosts can mount the same public source editor independently to preserve
+    control lifetime across chrome refreshes. Inline remains the default for
+    ordinary/native shell consumers; hosted adds only a standard Nyx panel. }
+  TNyxStudioCodePresentation = (ncpInline, ncpHosted);
 
   { Target-independent Studio chrome and state. Both adapters consume this same
     Nyx document, including the public designer host and source editor. Platform
@@ -62,6 +67,7 @@ type
     profiles. Copying the record never transfers profile ownership. }
   TNyxStudioViewState = record
     CodeVisible: Boolean;
+    CodePresentation: TNyxStudioCodePresentation;
     { Editor presentation, never project content/history. Proportional sizing
       survives panel switches and host viewport changes on both targets. }
     CanvasPercent: Integer;
@@ -103,6 +109,9 @@ type
 
 { Initializes every field deliberately, including borrowed optional profiles. }
 function DefaultNyxStudioViewState: TNyxStudioViewState;
+{ Managed ordinary Nyx code editor, shared by inline and retained hosted views.
+  The caller retains its interface or transfers ownership into a Nyx document. }
+function NewNyxStudioCodeEditor(const ASource: TNyxText): INyxCodeEditor;
 
 { Returns an owned Nyx UI document; session is borrowed and remains unmodified.
   The shell expresses application meaning through public Nyx component kinds.
@@ -120,9 +129,18 @@ uses
   nyx.binding,
   nyx.composition, nyx.studio.rootview;
 
+function NewNyxStudioCodeEditor(const ASource: TNyxText): INyxCodeEditor;
+begin
+  Result := NewNyxCodeEditor('studio-code');
+  Result.Configure.Text('Pascal source').ReadOnly(False).Flex(1)
+    .Hint('Edit typed configuration, defaults, bindings, contracts and data, then Apply Pascal. Keep application helpers outside nyx:views.')
+    .Value(ASource).Done;
+end;
+
 function DefaultNyxStudioViewState: TNyxStudioViewState;
 begin
   Result.CodeVisible := False;
+  Result.CodePresentation := ncpInline;
   Result.CanvasPercent := 65;
   Result.Phone := False;
   Result.Palette := DefaultNyxStudioPaletteState;
@@ -754,10 +772,15 @@ begin
     begin
       LCodePane.Add(LField);
     end;
-    LCodePane.Add(TNyxNode.Create('code-editor', 'studio-code')
-      .Configure.Text('Pascal source').ReadOnly(False).Flex(1)
-      .Hint('Edit typed configuration, defaults, bindings, contracts and data, then Apply Pascal. Keep application helpers outside nyx:views.')
-      .Value(ASession.DraftSource).Done);
+    if AState.CodePresentation = ncpHosted then
+    begin
+      LCodePane.Add(TNyxNode.Create(nkPanel, 'studio-code-host')
+        .Configure.Layout(nlColumn).Gap(0).Padding(0).Flex(1).Done);
+    end
+    else
+    begin
+      LCodePane.Add(NewNyxStudioCodeEditor(ASession.DraftSource));
+    end;
   end;
   LRight := TNyxNode.Create('column', 'studio-right');
   { Inspector fields describe model properties. A controller sends their changes

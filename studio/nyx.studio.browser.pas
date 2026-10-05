@@ -71,6 +71,11 @@ type
     FShell: TNyxDocument;
     FShellRenderer: TNyxBrowserRenderer;
     FCanvasRenderer: TNyxBrowserRenderer;
+    { Independent ordinary Nyx view preserves the live Pascal control through
+      activity/chrome refreshes. Document owns its editor; renderer owns only
+      its realization and never borrows nodes from the shell or design. }
+    FCodeDocument: TNyxDocument;
+    FCodeRenderer: TNyxBrowserRenderer;
     FCodeVisible: Boolean;
     FCanvasPercent: Integer;
     FPhone: Boolean;
@@ -240,7 +245,8 @@ begin
     'border:0;border-top:1px solid #343a4e;resize:none;height:0;padding:12px 18px;' +
     'white-space:pre;tab-size:2;outline-offset:-3px;box-sizing:border-box;flex:1;min-height:0;min-width:0;}' +
     '[data-node=studio-source-pane]{overflow:hidden;min-height:0;padding:0!important;gap:0!important;}' +
-    '[data-node=studio-source-pane]>:not([data-node=studio-code]){flex-shrink:0;}' +
+    '[data-node=studio-source-pane]>:not([data-node=studio-code]):not([data-node=studio-code-host]){flex-shrink:0;}' +
+    '[data-node=studio-code-host]{min-height:0;min-width:0;flex:1;}' +
     '[data-node=studio-split]{min-width:0;min-height:0;overflow:hidden;}' +
     '.nyx-split-divider:focus-visible{outline:2px solid var(--nyx-accent);outline-offset:-3px;}' +
     '[data-node=studio-center]:has([data-node=studio-split]) [data-node=studio-outputs],' +
@@ -297,6 +303,8 @@ begin
   FShellRenderer.OnEvent := HandleShell;
   FCanvasRenderer := TNyxBrowserRenderer.Create;
   FCanvasRenderer.OnEvent := HandleCanvas;
+  FCodeRenderer := TNyxBrowserRenderer.Create;
+  FCodeRenderer.OnEvent := HandleShell;
   FCodeVisible := False;
   FCanvasPercent := 65;
   FPalette := DefaultNyxStudioPaletteState;
@@ -345,6 +353,8 @@ begin
     FConfigurationRequest.abort;
   end;
   FCanvasRenderer.Free;
+  FCodeRenderer.Free;
+  FCodeDocument.Free;
   FShellRenderer.Free;
   FShell.Free;
   FSession.Free;
@@ -358,6 +368,7 @@ var
 begin
   LState := DefaultNyxStudioViewState;
   LState.CodeVisible := FCodeVisible;
+  LState.CodePresentation := ncpHosted;
   LState.CanvasPercent := FCanvasPercent;
   LState.Compact := FCompact;
   LState.Panel := FPanel;
@@ -453,6 +464,7 @@ var
   LCodeEnd: NativeInt;
   LCodeScroll: NativeInt;
   LSplit: TNyxNode;
+  LCodeHost: TJSHTMLElement;
 begin
   LCodeStart := -1;
   LCodeEnd := -1;
@@ -577,6 +589,31 @@ begin
     FCanvasRenderer.Render(FSession.Document, FSession.ActiveView, LCanvas, not FPreview);
     FCanvasRenderer.Select(FSession.SelectedID);
   end;
+
+  if FShell.Find('studio-code-host') <> nil then
+  begin
+    LCodeHost := FShellRenderer.ElementFor('studio-code-host');
+
+    if FCodeRenderer.Root = nil then
+    begin
+      FreeAndNil(FCodeDocument);
+      FCodeDocument := TNyxDocument.Create;
+      FCodeDocument.AddPage(NewNyxStudioCodeEditor(FSession.DraftSource));
+      FCodeRenderer.Render(FCodeDocument, FCodeDocument.Pages[0], LCodeHost);
+    end
+    else
+    begin
+      { Move the existing public view, including its listeners and text range.
+        Sync changes value only when source admission/history changed the draft. }
+      FCodeRenderer.Root.Configure.Value(FSession.DraftSource).Done;
+      FCodeRenderer.Sync;
+      FCodeRenderer.MoveHost(LCodeHost);
+    end;
+  end
+  else
+  begin
+    FCodeRenderer.Unmount;
+  end;
   LPrevious := TJSHTMLElement(document.querySelector('[data-node=studio-canvas-wrap]'));
 
   if LPrevious <> nil then
@@ -593,9 +630,18 @@ begin
     FCanvasViewID := FSession.ActiveViewID;
   end;
 
-  if (LFocusID <> '') and (FShell.Find(LFocusID) <> nil) then
+  if (LFocusID <> '') and ((FShell.Find(LFocusID) <> nil) or
+    ((LFocusID = 'studio-code') and (FCodeRenderer.Root <> nil))) then
   begin
-    LReplacement := FShellRenderer.ElementFor(LFocusID);
+
+    if LFocusID = 'studio-code' then
+    begin
+      LReplacement := FCodeRenderer.InputFor('studio-code');
+    end
+    else
+    begin
+      LReplacement := FShellRenderer.ElementFor(LFocusID);
+    end;
 
     if not (LReplacement is TJSHTMLTextAreaElement) and
       not (LReplacement is TJSHTMLInputElement) and
@@ -1214,7 +1260,7 @@ begin
       begin
         FSourceColumn := 1;
       end;
-      FShellRenderer.NavigateCodeLine('studio-code', FSourceLine, FSourceColumn);
+      FCodeRenderer.NavigateCodeLine('studio-code', FSourceLine, FSourceColumn);
       FSourceLine := 0;
       FSourceColumn := 0;
     end;

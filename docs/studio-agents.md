@@ -1,5 +1,10 @@
 # Agents in Nyx Studio
 
+The protected-review source candidate advertises a sixteenth tool,
+`nyx_reviews`. The current LAN release and this chat's connected native inventory
+still expose fifteen tools. The qualification service demonstrates the new
+capability; its source packet does not establish deployment or project switching.
+
 Studio starts with agent access enabled and editing allowed. Open **Agents** to
 see the shared revision, connected endpoint and recent operations. **Read only**
 keeps semantic queries available; **Disabled** refuses agent queries and edits.
@@ -576,3 +581,72 @@ owned compiler workers and release the document lock. The legacy main editor
 HTTP route still serializes its own delegated builds, which can delay browser
 observations; a global scheduler remains separate service work. Full native
 Studio and production-scale rendering retain their product owners.
+
+## Protected review workspaces
+
+An authenticated agent can create an independent temporary review without
+replacing the user's project, pending draft, selection or Undo/Redo history.
+`nyx_reviews` has four strict modes: `list`, `inspect`, `create` and `discard`.
+Lists contain only that transport's reviews. Creation uses the primary session's
+exact revision and either `empty` or `accepted` as its base; accepted copies omit
+the user's pending draft. Discard uses the review's own current revision. Both
+mutations require a unique operation ID and return exact retry receipts.
+
+```json
+{"mode":"create","expectedRevision":6,"operationId":"new-workshop","label":"Input workshop","base":"empty"}
+```
+
+Use the returned `review` reference as an outer argument on ordinary semantic
+tools. Inspect its own `nyx_session` revision before editing. Related changes
+remain one ordinary `nyx_transaction` / paired Undo operation. The editor's
+permission applies immediately to every review; an ID does not grant ownership.
+Foreign, retired and empty supplied references refuse without falling back to
+the user's project. Refusal revisions belong only to an admitted owned context.
+
+```json
+{"review":"<returned-reference>","line":1,"count":20}
+```
+
+The same outer reference routes callbacks, bounded Pascal implementation edits,
+reviewed root cleanup, history, compiler jobs and selective rendered previews.
+Compiler inputs are immutable owned pairs. A review's job cannot be queried in
+another context; after retirement its completion cannot publish diagnostics into
+the primary project. Two workers and sixteen retained job handles remain shared
+budgets. At most eight live reviews and sixty-four lifecycle receipts per live
+transport are admitted; creation reserves disposal capacity. Receipts are not
+evicted to recreate a retired workspace on a delayed retry.
+
+The ordinary **Agents** panel shows bounded review summaries and **Watch live
+review**. This opens a Nyx-built observing view while retaining the user's full
+editor. The view polls accepted design revisions and stops on retirement. It
+does not execute compiled callback implementations; use `nyx_build` and the
+actual compiled artifact for behavior. Temporary reviews retire on authenticated
+transport teardown. User project lifetimes and full-editor project switching
+remain the separate concurrent-project criterion; these preview links do not
+satisfy it.
+
+Reproduction uses Pascal fixtures and existing platform tools:
+
+```powershell
+./tools/build.ps1 -Target review-workspaces
+```
+
+This stages a server, browser Studio/viewers, portable checks and the native
+MCP/observing-browser fixture under `build/review-workspaces/orchestrated/`.
+It never launches a service or mutates a live project. Launch the server against
+an independently owned `build/review-workspaces/.../stage` repository/configuration
+and its staged web directory. Run `nyx_mcp_review_tests` with that editor URL,
+its generated `stage/.codex/config.toml` and a private evidence directory. The
+fixture deliberately establishes and edits its disposable user baseline; its
+path guard refuses the production configuration. Preserve failed run artifacts.
+
+```powershell
+./tools/build.ps1 -Target review-consumers -ReviewSourceDirectory '<journey-directory>/source'
+```
+
+The second target compiles the unchanged bounded MCP export into actual LCL and
+browser control consumers. Serve `review-consumers.html` over the staged service
+and check its completion marker. The maintained journey also types through the
+real compiled browser input, separately from the programmatic control fixture.
+The evidence packet in WORK.md records native/executed-browser, real transport,
+compiler, selective rendering and ordinary desktop/narrow Studio results.

@@ -18,6 +18,27 @@ now retain these acceptance criteria. Preview links alone do not satisfy them.
 The independent server remains a qualification fixture, not the intended way
 to achieve concurrent project authoring. No multi-project workflow is accepted.
 
+Protected-review prerequisite now has an integrated qualification packet below:
+200 native/executed-browser lifecycle checks, 377 real MCP/ordinary Studio checks,
+both actual compilers, exact compiled callbacks on both targets and preserved
+production/user-fixture bytes. Teardown passes with zero leaks. The ordinary
+browser shell retains its independent public Nyx code-editor view during agent
+activity. Desktop/narrow/resize source and editing gates pass. This accepts the
+bounded protected-review prerequisite, not original workflow criterion 5's full
+state/binding/reusable/general-source scope, project concurrency or deployment.
+
+Next batch: the user's concurrent-project outcome under NS-4 workflow criterion
+6 / authoring criterion 7. Deliver stable typed project references with lifetimes
+independent of agent transports, explicit semantic routing and full-editor
+jump/return retaining each project's draft/history/view/presentation. Qualify
+both-target shared ownership/refusals and ordinary observing Studio; stop on
+any implicit request/job retargeting or user pair loss. Existing native Studio,
+state/binding and wider renderer requirements remain. One logical protected-review
+batch has completed across its interrupted checkpoint and qualification turns;
+the full criterion remains open (no-closure count 1). No preview-only or
+temporary-only workflow earns project-switching acceptance. Preserve failed
+fixture evidence. No production replacement is retried.
+
 Interrupted review checkpoint: production remains revision 6, home selection/
 view, no pending draft/Undo and ordinary test Redo retained; native MCP reads
 authenticate. Owned stage PID 37008 (launch.json under build/review-workspaces/
@@ -4027,3 +4048,69 @@ closing full parity from this finite fixture. Protected semantic review sessions
 remain the existing NS-4 workflow prerequisite. Source publication uses
 hello-nyx; verify exact local/remote HEAD after pushing this packet and keep its
 private proof outside committed files.
+
+## Protected-review qualification — 2026-10-04
+
+The maintained Pascal journey now passes 377 real MCP/ordinary Studio checks
+with zero unfreed blocks. The earlier 359-check run failed exceptional cleanup:
+the fixture sent DELETE twice for one retired transport and printed PASS too
+early. Its artifact is retained. The client now closes idempotently and the gate
+prints PASS only after teardown. A corrected 341-check run then passed; the
+final extended journey additionally qualifies reviewed child root cleanup,
+exact refusal revisions, trusted compiled browser input and a real native job
+finishing after its mutable review owner is retired. Counts include bounded
+polling/response guards and are not separate product features.
+
+Private evidence lives under build/review-workspaces/: lifecycle/journey holds
+the final exact user baseline/after, bounded source export, four view/application
+job results, source/control preservation, live observation, compiled input and
+the selective semantic PNG. protocol/lifecycle-run.log records the final clean
+teardown. User-fixture accepted/draft/base bytes are equal; pending draft, Undo
+and Redo all remain true. No reviews survive disconnect. Source SHA-256 is
+617C91F2E0F28A525634CF5872DE5F4FC00ABD66AD97AD9FE5A6A76FEBC7CA82;
+both real application compiler files equal that exact bounded export.
+
+Portable lifecycle passes 200 native checks with zero leaks and 200 executed
+pas2js checks. Actual unchanged generated LCL/browser controls pass eight each,
+including numeric admission, ASCII/supplementary veto and clearing. The real
+compiled browser also accepts 12 and atomically vetoes x and a supplementary
+character through trusted host input. The actual LCL consumer uses matching
+installed units and has zero leaks. Agent/shared chrome checks pass 39 natively
+with zero leaks. Public Nyx desktop layout/source passes 25 at width 1076; real
+390/1100/800/390 resize passes 21, and actual-390 authoring passes 69. Captures
+under chrome-layout and chrome-authoring were inspected; narrow scrolling and
+the optional split/source remain contained. No physical-phone, IME, assistive
+technology or additional widgetset qualification is inferred.
+
+The browser shell now hosts its code editor in an independent owned ordinary
+Nyx document/renderer and moves that realization with the shell. Backend DOM
+identity and exact 4,093-unit pending Unicode value survive activity refreshes.
+Frontend inspection handles alone are not element identity; the initial fixture
+comparison was corrected and its failures remain retained. Native/default shared
+views keep the inline public editor. Browser-specific hosting uses a typed
+presentation choice and the same specialized public code-editor factory.
+
+Build targets review-workspaces/review-consumers stage and compile the maintained
+Pascal fixtures and viewers without launching services or editing a user project.
+Both orchestration paths pass using the installed toolchain. The context-candidate
+service's owned identity remains recorded in build/review-workspaces/
+context-candidate/launch.json; all five jobs from the final journey are terminal.
+Neither that service nor the earlier review fixture is a production deployment.
+
+Native named MCP still authenticates the fifteen-tool production release. Latest
+read reports revision 6, home selection/view, one page/component, no pending draft
+or Undo and ordinary Redo retained. Trusted exact pair comparison against the
+original layout-after-undo observation passes; private review-gate-preserved.json
+records it. Production PID 29656 and all release artifacts remain unchanged.
+No replacement, approval request or attempt to bypass the earlier automatic
+"blocked by policy" refusal occurred. Source publishing still requires exact
+local/remote verification; it does not claim LAN delivery of the sixteenth tool.
+
+This closes the bounded protected-review prerequisite only. Full workflow
+criterion 5 and broader goal stay open; one logical batch completed across its
+interrupted checkpoint and qualification, no-closure count 1. User-steered next
+batch owns criterion 6 / authoring 7: concurrent user projects, stable explicit
+agent/job targets and full-editor jump/return preserving each presentation and
+pair/history. A read-only live review or temporary-only manager does not meet
+that acceptance. State/binding, general source/import, richer reusable workflows,
+native Studio and the original renderer/accessibility return paths remain.
