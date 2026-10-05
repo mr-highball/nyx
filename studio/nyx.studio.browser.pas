@@ -1258,8 +1258,14 @@ begin
           'action-undo':
             begin
 
-              if FAgents.Enabled then FAgents.History('undo')
-              else FSession.Undo;
+              if FAgents.Enabled then
+              begin
+                FAgents.History(nehUndo);
+              end
+              else
+              begin
+                FSession.Undo;
+              end;
             end;
           NyxStudioReviewRootID, NyxStudioCancelRootID, NyxStudioRemoveRootID:
             begin
@@ -1289,8 +1295,14 @@ begin
           'action-redo':
             begin
 
-              if FAgents.Enabled then FAgents.History('redo')
-              else FSession.Redo;
+              if FAgents.Enabled then
+              begin
+                FAgents.History(nehRedo);
+              end
+              else
+              begin
+                FSession.Redo;
+              end;
             end;
           'action-agents': FAgentsVisible := not FAgentsVisible;
           'action-agent-connect': ConnectAgents;
@@ -1631,6 +1643,7 @@ begin
     FStatus := 'Compiler service is unavailable or returned an invalid response';
     FLog := LText;
   end;
+
   if FCompilerReport <> nil then
   begin
     FAgents.CompilerReport(FCompilerReport.Encode);
@@ -2109,13 +2122,27 @@ begin
 
     if AEvent.shiftKey then
     begin
-      if FAgents.Enabled then FAgents.History('redo')
-      else FSession.Redo;
+
+      if FAgents.Enabled then
+      begin
+        FAgents.History(nehRedo);
+      end
+      else
+      begin
+        FSession.Redo;
+      end;
     end
     else
     begin
-      if FAgents.Enabled then FAgents.History('undo')
-      else FSession.Undo;
+
+      if FAgents.Enabled then
+      begin
+        FAgents.History(nehUndo);
+      end
+      else
+      begin
+        FSession.Undo;
+      end;
     end;
     FCompiledURL := '';
     Refresh;

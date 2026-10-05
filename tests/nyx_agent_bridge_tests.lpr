@@ -25,13 +25,14 @@ program nyx_agent_bridge_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, Web, nyx.text, nyx.studio.session, nyx.studio.projects,
-  nyx.studio.agentbridge, nyx.studio.agentview;
+  SysUtils, JS, Web, nyx.text, nyx.studio.session, nyx.studio.projects,
+  nyx.studio.agentbridge, nyx.studio.agentview, nyx.studio.workspaces;
 
 var
   GSession: TNyxStudioSession;
   GBridge: TNyxStudioAgentBridge;
   GLocal: TNyxText;
+  GShared: TNyxText;
   GDraft: TNyxText;
   GPhase: Integer;
   GChecks: Integer;
@@ -98,6 +99,7 @@ begin
             Check((GSession.Document.Title <> 'Recovered local workshop') and
               (GSession.DraftSource = GSession.Source), 'Explicit operator resolution adopts shared pair');
             GRevision := LState.Revision;
+            GShared := EncodeNyxProject(GSession.ProjectSnapshot);
             Check(GBridge.SourceSynchronized,
               'Exact resolved observer frame admits its locally retained source');
             { Synchronous typing cannot receive an XHR acknowledgement between
@@ -128,6 +130,20 @@ begin
             Check(GSession.DraftSource = GDraft, 'Coalesced draft retains exact last supplementary Unicode text');
             Check(GBridge.SourceSynchronized,
               'Acknowledged exact pair restores source identity without replacing the draft');
+            { Restore the borrowed qualification project's original accepted pair.
+              This fixture does not leave its private source draft behind. }
+            GSession.DiscardSourceDraft;
+            GBridge.RecordLocal;
+            GPhase := 4;
+          end;
+        end;
+      4:
+        begin
+
+          if (LState.Revision = GRevision + 3) and not LState.Busy and GBridge.SourceSynchronized then
+          begin
+            Check(EncodeNyxProject(GSession.ProjectSnapshot) = GShared,
+              'Acknowledged cleanup restores the exact original shared pair');
             GBridge.Pause;
             GBridge.Free;
             GBridge := nil;
@@ -155,7 +171,24 @@ end;
 
 begin
   GSession := TNyxStudioSession.Create;
-  GBridge := TNyxStudioAgentBridge.Create(GSession, nil);
+
+  if window.location.search = '' then
+  begin
+    GBridge := TNyxStudioAgentBridge.Create(GSession, nil);
+  end
+  else
+  begin
+    { An explicitly selected owned project avoids touching a service's primary
+      project. Unknown or additional query fields never fall back to primary. }
+
+    if (Pos('?workspace=', window.location.search) <> 1) or
+      (Pos('&', window.location.search) <> 0) then
+    begin
+      raise Exception.Create('Bridge fixture requires one explicit project reference');
+    end;
+    GBridge := TNyxStudioAgentBridge.Create(GSession, nil,
+      NyxWorkspace(decodeURIComponent(Copy(window.location.search, 12, MaxInt))));
+  end;
   GSession.SetTitle('Recovered local workshop');
   GSession.SetSourceDraft(GSession.Source + #10 + '// recovered companion 🌙漢字');
   GLocal := EncodeNyxProject(GSession.ProjectSnapshot);

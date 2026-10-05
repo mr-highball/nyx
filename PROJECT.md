@@ -71,8 +71,12 @@ Nyx shell, portable session, authoring routers and paired local store. Its actua
 Win32 journey passes 74 checks with zero leaks, including reusable navigation,
 multiple callbacks, retained source/drafts, optional outputs and saved-file
 conflicts. A focused compact journey also qualifies immediate title/source
-updates. Full compiler/MCP/workspace integration, intermittent compact painting
-observed in an earlier callback journey and sidebar overflow remain open. The
+updates. Native HTTP/MCP observation and full-editor project jump/return now pass
+49 actual checks with independent drafts/history, UI-thread transport replies
+and zero leaks. Desktop/390 captures paint English review text; reviewed cleanup
+restores both original test pairs. Native build requests/reload, complete project
+presentation, intermittent compact painting observed in an earlier callback
+journey and sidebar overflow remain open. The
 refreshed English journey paints its memo; that alone does not establish a fix. See
 [native Studio](docs/native-studio.md) and WORK.md for the current evidence.
 The preceding designer prerequisite retains its 34 native / 32 desktop / 33
@@ -83,8 +87,9 @@ ordinary browser jump/return workflow: 215 shared checks per target, ten actual
 Agents-control checks per target and 202 desktop / 203 exact-390 real MCP/editor
 checks. Both application compiler files match the bounded semantic export.
 Projects retain independent drafts/history and survive agent disconnection;
-view navigation cannot retarget requests/jobs. Live operator closure and full
-native editor navigation remain open. The seventeen-tool candidate is staged;
+view navigation cannot retarget requests/jobs. Native jump/return now has actual
+editor evidence; complete concurrency/presentation and live operator closure
+remain open. The seventeen-tool candidate is staged;
 the LAN release still has fifteen. See [WORK.md](WORK.md) for the deployment
 refusal, original acceptance owners and the user's warning-cleanup priority.
 

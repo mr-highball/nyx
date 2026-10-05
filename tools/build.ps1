@@ -57,7 +57,12 @@ param(
   [string]$DesignerMCPConfig,
   # Explicit actual-editor qualification consumes a pre-exported semantic pair.
   # Ordinary native Studio builds do not require a server or application tools.
-  [switch]$VerifyNativeStudio
+  [switch]$VerifyNativeStudio,
+  # Actual native HTTP/MCP journey. Enrollment and reusable test contexts are
+  # explicit private fixtures; ordinary builds remain independent of a server.
+  [switch]$VerifyNativeStudioService,
+  [string]$NativeStudioServiceMCPConfig,
+  [string]$NativeStudioTestContexts
 )
 
 $ErrorActionPreference = 'Stop'
@@ -237,6 +242,22 @@ try {
         (Join-Path $nyxRoot 'build/native-studio/editor-current')
 
       if ($LASTEXITCODE -ne 0) { throw 'Actual standalone native Studio journey failed' }
+    }
+
+    if ($VerifyNativeStudioService) {
+      if (-not $NativeStudioServiceMCPConfig) {
+        throw 'Native service qualification requires an explicit private MCP fixture configuration'
+      }
+      Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @('tests/nyx_native_workspace_tests.lpr'))
+      $nyxServiceArguments = @($HttpURL, [IO.Path]::GetFullPath($NativeStudioServiceMCPConfig),
+        (Join-Path $nyxRoot 'build/native-studio/service-current'))
+
+      if ($NativeStudioTestContexts) {
+        $nyxServiceArguments += @('reuse-owned', [IO.Path]::GetFullPath($NativeStudioTestContexts))
+      }
+      & (Join-Path $nyxStudioNative 'nyx_native_workspace_tests.exe') @nyxServiceArguments
+
+      if ($LASTEXITCODE -ne 0) { throw 'Actual native service/workspace journey failed; retain owned-review manifest' }
     }
     exit 0
   }

@@ -40,6 +40,26 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Native service integration — 2026-10-05
+
+The runnable full editor now consumes the shared private editor protocol through
+native worker/UI-timer transport. A real semantic MCP/actual native-control
+journey passes 49 checks: observed changes, native Unicode input, authoritative
+Undo/Redo, independent projects, retained source drafts and return with exact
+pair/range/focus. Cancellation/deferred notifications and active destruction
+execute with zero leaks. Reviewed cleanup restores both borrowed original pairs;
+both primary projects remain intact. English desktop/390 captures paint the
+actual memo. Browser shared-transport protection/coalescing/cleanup passes 14.
+
+Original criteria 2/4/7 stay open. This accepts no full native authoring or
+concurrency criterion; complete presentation, visual reliability/overflow,
+performance, native builds/reload/import/export and warned live closure retain
+their scope. Per-wait HTTP timeouts do not qualify a whole-request deadline.
+The no-closure count advances 4 to 5. Reassessment selects actual native build
+requests/diagnostics and compiled preview as the next deliverable, rather than
+expanding another navigation fixture. Successful live closure remains under its
+separate refused-launch gate. See [native Studio](../docs/native-studio.md) and WORK.
+
 ## Native-controller prerequisite — 2026-10-05
 
 Standalone native controller (2026-10-05): a runnable LCL entry point now consumes

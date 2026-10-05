@@ -31,9 +31,40 @@ uses
   nyx.text, nyx.types, nyx.behavior, nyx.data, nyx.model, nyx.theme, nyx.render.lcl,
   nyx.studio.session, nyx.studio.view, nyx.studio.projects,
   nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.rootedits,
-  nyx.studio.compiler;
+  nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
+  nyx.studio.workspaces;
 
 type
+  TNyxNativeStudio = class;
+
+  { Private native context owns one portable mirror and its immutable service
+    bridge. Owner is borrowed. Views remain owned by Studio; this record retains
+    typed editor state and scalar/scroll positions, never borrowed widget handles.
+    Inactive bridges may observe their own project without painting another one. }
+  TNyxNativeStudioProject = class
+  public
+    Owner: TNyxNativeStudio;
+    Reference: TNyxWorkspaceRef;
+    Session: TNyxStudioSession;
+    Bridge: TNyxStudioAgentBridge;
+    State: TNyxStudioViewState;
+    Preview: Boolean;
+    SavedPair: TNyxText;
+    BoundProject: TNyxText;
+    ProjectRevision: TNyxText;
+    RemotePair: TNyxText;
+    RemoteRevision: TNyxText;
+    CodeStart: Integer;
+    CodeEnd: Integer;
+    CodeFocused: Boolean;
+    CanvasTop: Integer;
+    CanvasLeft: Integer;
+    LeftTop: Integer;
+    RightTop: Integer;
+    procedure Refresh(AContentChanged: Boolean);
+    destructor Destroy; override;
+  end;
+
   { Native controller for the shared Nyx Studio composition, not a second set of
     editor widgets. Owns its session, theme, three renderer realizations and local
     paired store. AHost is borrowed and must outlive this controller. No compiler
@@ -74,6 +105,14 @@ type
     FReplaceCanvas: Boolean;
     FSourceLine: Integer;
     FPaintCount: Integer;
+    FServiceURL: TNyxText;
+    FProjects: array of TNyxNativeStudioProject;
+    FCurrentProject: TNyxNativeStudioProject;
+    FPendingProject: TNyxNativeStudioProject;
+    FChangingProject: Boolean;
+    FRestoreProject: Boolean;
+    FAgentCompilerSequence: Integer;
+    FInitialPair: TNyxText;
     procedure HostResize(ASender: TObject);
     procedure PaintQueued(AData: PtrInt);
     procedure Paint;
@@ -87,6 +126,13 @@ type
     { Update independent source/status controls without replacing the title field
       that is currently notifying. Guard programmatic source feedback. }
     procedure UpdateTitleAndSource;
+    procedure AgentRefresh(AContentChanged: Boolean);
+    procedure RecordLocal;
+    procedure CaptureProject;
+    procedure AdmitProject(AProject: TNyxNativeStudioProject);
+    procedure RestoreProjectControls;
+    function CurrentBridge: TNyxStudioAgentBridge;
+    function GetAgentState: TNyxStudioAgentView;
     function ComposeShell: TNyxDocument;
   public
     { Local directory is explicit host configuration, never design content. }
@@ -100,6 +146,14 @@ type
     { Coalesce requests; any request requiring a new design supersedes retention.
       Only application UI-thread callers may access this controller or its views. }
     procedure RequestRefresh(AReplaceCanvas: Boolean = False);
+    { Explicit optional machine connection. The first named workspace adopts its
+      service pair; unsaved offline work refuses attachment until backed up/opened.
+      Existing project contexts are immutable and cannot be silently retargeted. }
+    procedure ConnectService(const ABaseURL: TNyxText;
+      const AWorkspace: TNyxWorkspaceRef);
+    { Switch only after local pair/draft publications are acknowledged. Each
+      project keeps its mirror/bridge, history on the service and editor state. }
+    procedure JumpWorkspace(const AWorkspace: TNyxWorkspaceRef);
     { Borrowed public contracts for embedding/qualification. Never free them or
       rebuild them from inside a native widget notification. }
     property Session: TNyxStudioSession read FSession;
@@ -108,6 +162,7 @@ type
     property CodeView: TNyxLCLRenderer read FCodeView;
     property PaintCount: Integer read FPaintCount;
     property Status: TNyxText read FState.Status;
+    property Agents: TNyxStudioAgentView read GetAgentState;
   end;
 
 implementation
@@ -115,7 +170,8 @@ implementation
 uses
   StdCtrls, nyx.editing, nyx.editing.lcl, nyx.contract, nyx.source,
   nyx.studio.commands, nyx.studio.authoring, nyx.studio.inspector,
-  nyx.studio.palette, nyx.studio.source, nyx.studio.diagnostics, nyx.studio.rootview;
+  nyx.studio.palette, nyx.studio.source, nyx.studio.diagnostics, nyx.studio.rootview,
+  nyx.studio.exchange.lcl, nyx.studio.agents, Math;
 
 type
   TNativeHostAccess = class(TWinControl);
@@ -161,7 +217,18 @@ type
     ncProjectSave,
     ncProjectOpen,
     ncProjectRemote,
-    ncProjectCopy);
+    ncProjectCopy,
+    ncAgents,
+    ncAgentConnect,
+    ncAgentPause,
+    ncAgentAccept,
+    ncAgentDisabled,
+    ncAgentReadOnly,
+    ncAgentEdit,
+    ncWorkspaceCloseCancel,
+    ncWorkspaceCloseConfirm,
+    ncBuildView,
+    ncBuildApplication);
 
 const
   CNativeCommands: array[TNativeCommand] of TNyxText = ('',
@@ -203,7 +270,18 @@ const
     'action-project-save',
     'action-project-open',
     'action-project-use-remote',
-    'action-project-copy');
+    'action-project-copy',
+    'action-agents',
+    'action-agent-connect',
+    'action-agent-pause',
+    'action-agent-accept',
+    'action-agent-disabled',
+    'action-agent-readOnly',
+    'action-agent-edit',
+    'action-workspace-close-cancel',
+    'action-workspace-close-confirm',
+    'action-build-view',
+    'action-build-app');
 
 function DecodeNativeCommand(const AID: TNyxText): TNativeCommand;
 var
@@ -235,6 +313,28 @@ begin
     end;
     AControl := AControl.Parent;
   end;
+end;
+
+procedure TNyxNativeStudioProject.Refresh(AContentChanged: Boolean);
+begin
+
+  if (Owner <> nil) and (Owner.FPendingProject = Self) then
+  begin
+    Owner.AdmitProject(Self);
+  end;
+
+  if (Owner <> nil) and (Owner.FCurrentProject = Self) then
+  begin
+    Owner.AgentRefresh(AContentChanged);
+  end;
+end;
+
+destructor TNyxNativeStudioProject.Destroy;
+begin
+  Owner := nil;
+  Bridge.Free;
+  Session.Free;
+  inherited Destroy;
 end;
 
 
@@ -270,13 +370,26 @@ begin
   FCodeParking.Visible := False;
   TNativeHostAccess(FHost).OnResize := HostResize;
   FSavedPair := EncodeNyxProject(FSession.ProjectSnapshot);
+  FInitialPair := FSavedPair;
 end;
 
 destructor TNyxNativeStudio.Destroy;
+var
+  LIndex: Integer;
 begin
   FRunning := False;
   { Remove this object's queued callbacks before any view/session lifetime ends. }
   Application.RemoveAsyncCalls(Self);
+  { Detach every context before joining even one worker. Waiting for a native
+    thread may dispatch host synchronization; no other context may consult the
+    current editor after its views or an earlier context have been released. }
+  for LIndex := 0 to High(FProjects) do
+  begin
+    FProjects[LIndex].Owner := nil;
+    FProjects[LIndex].Bridge.Pause;
+  end;
+  FCurrentProject := nil;
+  FPendingProject := nil;
 
   if FHost <> nil then
   begin
@@ -291,7 +404,19 @@ begin
   FShell.Free;
   FRootRemoval := nil;
   FCompilerReport := nil;
-  FSession.Free;
+
+  if Length(FProjects) = 0 then
+  begin
+    FSession.Free;
+  end
+  else
+  begin
+    for LIndex := 0 to High(FProjects) do
+    begin
+      FProjects[LIndex].Free;
+    end;
+  end;
+  FSession := nil;
   FStore.Free;
   FOutputs.Free;
   FTheme.Free;
@@ -308,6 +433,345 @@ begin
   FRunning := True;
   FReplaceCanvas := True;
   Paint;
+end;
+
+function TNyxNativeStudio.CurrentBridge: TNyxStudioAgentBridge;
+begin
+  Result := nil;
+
+  if FCurrentProject <> nil then
+  begin
+    Result := FCurrentProject.Bridge;
+  end;
+end;
+
+function TNyxNativeStudio.GetAgentState: TNyxStudioAgentView;
+begin
+  Result := DefaultNyxStudioAgentView;
+
+  if CurrentBridge <> nil then
+  begin
+    Result := CurrentBridge.State;
+  end
+  else
+  begin
+    Result.Status := 'Local project / service connection is optional';
+  end;
+end;
+
+procedure TNyxNativeStudio.RecordLocal;
+begin
+
+  if CurrentBridge <> nil then
+  begin
+    CurrentBridge.RecordLocal;
+  end;
+end;
+
+procedure TNyxNativeStudio.AgentRefresh(AContentChanged: Boolean);
+var
+  LState: TNyxStudioAgentView;
+begin
+  LState := GetAgentState;
+
+  if FPendingProject <> nil then
+  begin
+    AdmitProject(FPendingProject);
+    LState := GetAgentState;
+  end;
+
+  if (LState.Compiler.Kind = ndObject) and
+    (LState.Compiler.Field('sequence').AsInteger <> FAgentCompilerSequence) and
+    CurrentBridge.SourceSynchronized then
+  begin
+    FAgentCompilerSequence := LState.Compiler.Field('sequence').AsInteger;
+
+    if LState.Compiler.Field('total').AsInteger = 0 then
+    begin
+      FCompilerReport := nil;
+    end
+    else if LState.Compiler.Field('acceptedSource').AsBoolean then
+    begin
+      FCompilerReport := DecodeNyxCompilerReport(NyxObject([
+        NyxField('version', NyxData(1)), NyxField('source', NyxData(FSession.Source)),
+        NyxField('items', LState.Compiler.Field('items'))]).ToJSON);
+    end;
+  end;
+  FState.Status := LState.Status;
+
+  if LState.Conflict then
+  begin
+    FState.AgentsVisible := True;
+  end;
+  RequestRefresh(AContentChanged);
+end;
+
+procedure TNyxNativeStudio.ConnectService(const ABaseURL: TNyxText;
+  const AWorkspace: TNyxWorkspaceRef);
+var
+  LProject: TNyxNativeStudioProject;
+begin
+
+  if FCurrentProject <> nil then
+  begin
+
+    if (ABaseURL <> FServiceURL) or (AWorkspace.ID <> FCurrentProject.Reference.ID) then
+    begin
+      raise ENyxModel.Create('Use project navigation; an existing editor connection cannot be retargeted');
+    end;
+    CurrentBridge.Connect;
+    Exit;
+  end;
+  LProject := TNyxNativeStudioProject.Create;
+  try
+    LProject.Owner := Self;
+    LProject.Reference := AWorkspace;
+    LProject.State := FState;
+    LProject.Session := FSession;
+    LProject.Bridge := TNyxStudioAgentBridge.Create(FSession, LProject.Refresh,
+      AWorkspace, TNyxLCLEditorExchange.Create(ABaseURL));
+    SetLength(FProjects, 1);
+    FProjects[0] := LProject;
+    FCurrentProject := LProject;
+    LProject := nil;
+    FServiceURL := ABaseURL;
+    CurrentBridge.Connect(EncodeNyxProject(FSession.ProjectSnapshot) <> FInitialPair);
+    FState.AgentsVisible := True;
+    RequestRefresh;
+  finally
+
+    if LProject <> nil then
+    begin
+      { The controller still owns its original offline session on failed attach. }
+      LProject.Session := nil;
+      LProject.Free;
+    end;
+  end;
+end;
+
+function NativeScrollTop(ARenderer: TNyxLCLRenderer; const AID: TNyxText): Integer;
+var
+  LControl: TControl;
+begin
+  Result := 0;
+  LControl := ARenderer.ControlFor(AID);
+
+  if LControl is TScrollBox then
+  begin
+    Result := TScrollBox(LControl).VertScrollBar.Position;
+  end;
+end;
+
+procedure TNyxNativeStudio.CaptureProject;
+var
+  LInput: TWinControl;
+  LSelection: TNyxTextSelection;
+  LCanvas: TControl;
+begin
+  CapturePresentation;
+  FCurrentProject.State := FState;
+  FCurrentProject.Preview := FPreview;
+  FCurrentProject.SavedPair := FSavedPair;
+  FCurrentProject.BoundProject := FBoundProject;
+  FCurrentProject.ProjectRevision := FProjectRevision;
+  FCurrentProject.RemotePair := FRemotePair;
+  FCurrentProject.RemoteRevision := FRemoteRevision;
+
+  if FCodeView.Root <> nil then
+  begin
+    LInput := TWinControl(FCodeView.InputFor('studio-code'));
+    LSelection := CaptureNyxLCLSelection(LInput);
+    FCurrentProject.CodeStart := LSelection.Start;
+    FCurrentProject.CodeEnd := LSelection.Finish;
+    FCurrentProject.CodeFocused := Screen.ActiveControl = LInput;
+  end;
+  FCurrentProject.LeftTop := NativeScrollTop(FShellView, 'studio-left');
+  FCurrentProject.RightTop := NativeScrollTop(FShellView, 'studio-right');
+
+  if FCanvasView.Root <> nil then
+  begin
+    LCanvas := FCanvasView.ControlFor(FCanvasView.Root.ID).Parent;
+
+    if LCanvas is TScrollBox then
+    begin
+      FCurrentProject.CanvasTop := TScrollBox(LCanvas).VertScrollBar.Position;
+      FCurrentProject.CanvasLeft := TScrollBox(LCanvas).HorzScrollBar.Position;
+    end;
+  end;
+end;
+
+procedure TNyxNativeStudio.RestoreProjectControls;
+var
+  LInput: TWinControl;
+  LLength: Integer;
+  LStart: Integer;
+  LEnd: Integer;
+  LCanvas: TControl;
+  LControl: TControl;
+begin
+
+  if not FRestoreProject or (FCurrentProject = nil) then
+  begin
+    Exit;
+  end;
+  FRestoreProject := False;
+
+  if FCodeView.Root <> nil then
+  begin
+    LInput := TWinControl(FCodeView.InputFor('studio-code'));
+    LLength := NyxTextScalarCount(NyxLCLInputText(LInput));
+    LStart := Min(FCurrentProject.CodeStart, LLength);
+    LEnd := Min(FCurrentProject.CodeEnd, LLength);
+    SelectNyxLCLText(LInput, NyxTextSelection(NyxLCLInputText(LInput), LStart, LEnd));
+
+    if FCurrentProject.CodeFocused and LInput.CanFocus then
+    begin
+      LInput.SetFocus;
+    end;
+  end;
+  LControl := FShellView.ControlFor('studio-left');
+
+  if LControl is TScrollBox then
+  begin
+    TScrollBox(LControl).VertScrollBar.Position := FCurrentProject.LeftTop;
+  end;
+  LControl := FShellView.ControlFor('studio-right');
+
+  if LControl is TScrollBox then
+  begin
+    TScrollBox(LControl).VertScrollBar.Position := FCurrentProject.RightTop;
+  end;
+
+  if FCanvasView.Root <> nil then
+  begin
+    LCanvas := FCanvasView.ControlFor(FCanvasView.Root.ID).Parent;
+
+    if LCanvas is TScrollBox then
+    begin
+      TScrollBox(LCanvas).VertScrollBar.Position := FCurrentProject.CanvasTop;
+      TScrollBox(LCanvas).HorzScrollBar.Position := FCurrentProject.CanvasLeft;
+    end;
+  end;
+end;
+
+procedure TNyxNativeStudio.JumpWorkspace(const AWorkspace: TNyxWorkspaceRef);
+var
+  LIndex: Integer;
+  LProject: TNyxNativeStudioProject;
+  LKnown: Boolean;
+  LWorkspaces: TNyxDataValue;
+begin
+
+  if FCurrentProject = nil then
+  begin
+    raise ENyxModel.Create('Connect the editor before project navigation');
+  end;
+
+  if AWorkspace.ID = FCurrentProject.Reference.ID then
+  begin
+    Exit;
+  end;
+  RecordLocal;
+
+  if not CurrentBridge.CanSwitchWorkspace or FPainting then
+  begin
+    raise ENyxModel.Create('Finish synchronization or resolve the current conflict before switching projects');
+  end;
+  LKnown := AWorkspace.ID = '';
+  LWorkspaces := CurrentBridge.State.Workspaces;
+  for LIndex := 0 to LWorkspaces.Count - 1 do
+  begin
+    LKnown := LKnown or (LWorkspaces.Item(LIndex).Field('workspace').AsText = AWorkspace.ID);
+  end;
+
+  if not LKnown then
+  begin
+    raise ENyxModel.Create('The requested project is not available in this service');
+  end;
+  LProject := nil;
+  for LIndex := 0 to High(FProjects) do
+  begin
+
+    if FProjects[LIndex].Reference.ID = AWorkspace.ID then
+    begin
+      LProject := FProjects[LIndex];
+    end;
+  end;
+
+  if LProject = nil then
+  begin
+    LProject := TNyxNativeStudioProject.Create;
+    try
+      LProject.Owner := Self;
+      LProject.Reference := AWorkspace;
+      LProject.Session := TNyxStudioSession.Create;
+      LProject.State := DefaultNyxStudioViewState;
+      LProject.State.CodePresentation := ncpHosted;
+      LProject.State.Outputs := FOutputs;
+      LProject.SavedPair := EncodeNyxProject(LProject.Session.ProjectSnapshot);
+      LProject.Bridge := TNyxStudioAgentBridge.Create(LProject.Session,
+        LProject.Refresh, AWorkspace, TNyxLCLEditorExchange.Create(FServiceURL));
+      SetLength(FProjects, Length(FProjects) + 1);
+      FProjects[High(FProjects)] := LProject;
+    except
+      LProject.Free;
+      raise;
+    end;
+  end;
+  FPendingProject := LProject;
+
+  if not LProject.Bridge.Enabled then
+  begin
+    LProject.Bridge.Connect;
+  end;
+  AdmitProject(LProject);
+end;
+
+procedure TNyxNativeStudio.AdmitProject(AProject: TNyxNativeStudioProject);
+var
+  LState: TNyxStudioAgentView;
+begin
+
+  if FPendingProject <> AProject then
+  begin
+    Exit;
+  end;
+  LState := AProject.Bridge.State;
+
+  if LState.Conflict then
+  begin
+    FPendingProject := nil;
+    FState.Status := 'Project connection refused / current project retained';
+    RequestRefresh;
+    Exit;
+  end;
+
+  if not LState.Connected or not CurrentBridge.CanSwitchWorkspace then
+  begin
+    Exit;
+  end;
+  CaptureProject;
+  { View retirement is deferred to Paint. The action widget remains alive until
+    its callback returns, and every old request keeps its immutable context. }
+  FCurrentProject := AProject;
+  FPendingProject := nil;
+  FChangingProject := True;
+  FSession := AProject.Session;
+  FState := AProject.State;
+  FPreview := AProject.Preview;
+  FSavedPair := AProject.SavedPair;
+  FBoundProject := AProject.BoundProject;
+  FProjectRevision := AProject.ProjectRevision;
+  FRemotePair := AProject.RemotePair;
+  FRemoteRevision := AProject.RemoteRevision;
+  FCanvasID := '';
+  FRestoreProject := True;
+  FSourceLine := 0;
+  FAgentCompilerSequence := 0;
+  FCompilerReport := nil;
+  FRootRemoval := nil;
+
+  RequestRefresh(True);
 end;
 
 procedure TNyxNativeStudio.LoadProject(const APair: TNyxProjectPair);
@@ -399,6 +863,7 @@ function TNyxNativeStudio.ComposeShell: TNyxDocument;
 begin
   FState.Compact := FHost.ClientWidth < 900;
   FState.RootRemoval := NyxNull;
+  FState.Agents := GetAgentState;
 
   if FRootRemoval <> nil then
   begin
@@ -557,6 +1022,8 @@ begin
     end;
     FSourceLine := 0;
     FReplaceCanvas := False;
+    RestoreProjectControls;
+    FChangingProject := False;
     Inc(FPaintCount);
   finally
     LShell.Free;
@@ -567,7 +1034,7 @@ end;
 procedure TNyxNativeStudio.SourceEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 begin
 
-  if FPainting then
+  if FPainting or FChangingProject then
   begin
     Exit;
   end;
@@ -576,6 +1043,7 @@ begin
     if RouteNyxStudioSource(FSession, ANode, AEvent.Trigger) then
     begin
       FState.Status := 'Pascal draft / apply when ready';
+      RecordLocal;
       { Ordinary typing never replaces chrome, focus, selection or scroll. }
     end;
   except
@@ -611,7 +1079,7 @@ end;
 procedure TNyxNativeStudio.CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 begin
 
-  if FPainting then
+  if FPainting or FChangingProject then
   begin
     Exit;
   end;
@@ -621,12 +1089,14 @@ begin
         begin
           FSession.Select(ANode.DesignID);
           FCanvasView.Select(FSession.SelectedID);
+          RecordLocal;
           RequestRefresh;
         end;
       ntDesignValue:
         begin
           FSession.SetCanvasValue(ANode);
           FState.Status := 'Design updated / Pascal generated';
+          RecordLocal;
           RequestRefresh;
         end;
     else
@@ -726,9 +1196,12 @@ var
   LLine: Integer;
   LChanged: Boolean;
   LBefore: TNyxText;
+  LBackup: TGUID;
+  LBackupRevision: TNyxText;
+  LBackupRemote: TNyxText;
 begin
 
-  if FPainting then
+  if FPainting or FChangingProject then
   begin
     Exit;
   end;
@@ -792,6 +1265,7 @@ begin
           begin
             FSession.SetTitle(ANode.Prop('value'));
             UpdateTitleAndSource;
+            RecordLocal;
           end;
         ncProjectName:
           begin
@@ -860,7 +1334,26 @@ begin
     else if AEvent.Trigger = ntClick then
     begin
 
-      if ANode.Prop('add-kind') <> '' then
+      if ANode.Extensions.Has(NyxStudioWorkspaceJumpKey) then
+      begin
+
+        if ANode.Extensions.Value(NyxStudioWorkspaceJumpKey).AsText = '' then
+        begin
+          JumpWorkspace(NyxPrimaryWorkspace);
+        end
+        else
+        begin
+          JumpWorkspace(NyxWorkspace(ANode.Extensions.Value(NyxStudioWorkspaceJumpKey).AsText));
+        end;
+        Exit;
+      end
+      else if ANode.Extensions.Has(NyxStudioWorkspaceCloseKey) then
+      begin
+        CurrentBridge.RequestWorkspaceClose(NyxWorkspace(
+          ANode.Extensions.Value(NyxStudioWorkspaceCloseKey).AsText));
+        Exit;
+      end
+      else if ANode.Prop('add-kind') <> '' then
       begin
         FSession.AddKind(ANode.Prop('add-kind'));
         FState.Panel := nspDesign;
@@ -896,11 +1389,27 @@ begin
               case DecodeNativeCommand(ANode.ID) of
                 ncUndo:
                   begin
-                    FSession.Undo;
+
+                    if (CurrentBridge <> nil) and CurrentBridge.Enabled then
+                    begin
+                      CurrentBridge.History(nehUndo);
+                    end
+                    else
+                    begin
+                      FSession.Undo;
+                    end;
                   end;
                 ncRedo:
                   begin
-                    FSession.Redo;
+
+                    if (CurrentBridge <> nil) and CurrentBridge.Enabled then
+                    begin
+                      CurrentBridge.History(nehRedo);
+                    end
+                    else
+                    begin
+                      FSession.Redo;
+                    end;
                   end;
                 ncDelete:
                   begin
@@ -1017,6 +1526,67 @@ begin
               FState.ProjectName := FState.ProjectName + '-copy';
               FState.ProjectConflict := False;
             end;
+          ncAgents:
+            begin
+              FState.AgentsVisible := not FState.AgentsVisible;
+            end;
+          ncAgentConnect:
+            begin
+
+              if CurrentBridge = nil then
+              begin
+                raise ENyxModel.Create('Choose an explicit local service connection when launching native Studio');
+              end;
+              CurrentBridge.Connect;
+            end;
+          ncAgentPause:
+            begin
+              CurrentBridge.Pause;
+            end;
+          ncAgentAccept:
+            begin
+              CreateGUID(LBackup);
+
+              if not FStore.SaveProject('backup-' + Copy(GUIDToString(LBackup), 2, 36),
+                '', FSession.ProjectSnapshot, LBackupRevision, LBackupRemote) then
+              begin
+                raise ENyxModel.Create('Cannot save the exact local backup; current work is retained');
+              end;
+              CurrentBridge.AcceptRemote;
+            end;
+          ncAgentDisabled, ncAgentReadOnly, ncAgentEdit:
+            begin
+              case DecodeNativeCommand(ANode.ID) of
+                ncAgentDisabled:
+                  begin
+                    CurrentBridge.Configure(apDisabled);
+                  end;
+                ncAgentReadOnly:
+                  begin
+                    CurrentBridge.Configure(apReadOnly);
+                  end;
+                ncAgentEdit:
+                  begin
+                    CurrentBridge.Configure(apEdit);
+                  end;
+              else
+                begin
+                  raise ENyxModel.Create('Unsupported native permission command');
+                end;
+              end;
+            end;
+          ncWorkspaceCloseCancel:
+            begin
+              CurrentBridge.CancelWorkspaceClose;
+            end;
+          ncWorkspaceCloseConfirm:
+            begin
+              CurrentBridge.ConfirmWorkspaceClose;
+            end;
+          ncBuildView, ncBuildApplication:
+            begin
+              raise ENyxModel.Create('Native build requests are unavailable');
+            end;
         else
           begin
             raise ENyxModel.Create('This action requires the native service connection');
@@ -1028,6 +1598,7 @@ begin
     begin
       Exit;
     end;
+    RecordLocal;
     RequestRefresh(LChanged and (FSession.Save <> LBefore) or
       (FCanvasID <> FSession.ActiveViewID) or
       ((ANode.ID = 'action-preview') and (AEvent.Trigger = ntClick)));

@@ -375,3 +375,33 @@ ownership or target presentation. The maintained MCP journey uses an explicitly
 owned fixture configuration and records exact project frames, both compiler
 sources and a selective PNG. See [project sessions](studio-agents.md#concurrent-project-sessions)
 for arguments, lifetimes, limits and remaining close/native-controller gates.
+
+`tools/build.ps1 -Target native-studio` builds the standalone LCL editor without
+requiring a server or application compiler configuration. The optional
+`-VerifyNativeStudioService` runs actual editor/MCP integration against an
+explicit private service fixture:
+
+```powershell
+./tools/build.ps1 -Target native-studio -VerifyNativeStudioService `
+  -HttpURL <loopback-editor-origin> `
+  -NativeStudioServiceMCPConfig <private-build-config.toml> `
+  -NativeStudioTestContexts <owned-test-contexts.json>
+```
+
+The context file contains `first` and `second` objects, each with an exact
+`workspace` reference and `revision`. Both must be distinct non-primary owned
+test projects without pending drafts. The Pascal consumer saves original paired
+snapshots, appends nonce-owned English review pages, uses real MCP/actual native
+controls and restores the exact original pairs through reviewed root cleanup.
+It retains the primary frame. Histories keep the added ordinary test commands.
+Without the context file it creates two owned projects, subject to the eight-slot
+budget; project closure is a separate operator action and remains unqualified.
+
+Artifacts and the owned-root manifest live under `build/native-studio/service-current/`.
+On failure inspect the same project/revision and retained originals before retry;
+never reset the service or substitute descendant deletion for root cleanup.
+The fixture's explicit `cleanup-owned` mode accepts current revisions plus
+`root` and each context's `original` snapshot path, performs fresh actor-bound
+review/apply and checks exact pairs. It refuses protected pending drafts. Browser
+`agent-bridge.html?workspace=<owned-reference>` separately qualifies protected
+attachment/coalesced typing and restores its accepted pair after its private draft.

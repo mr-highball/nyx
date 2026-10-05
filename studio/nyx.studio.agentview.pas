@@ -185,7 +185,10 @@ begin
         .Configure.Text('Keep local and pause sync').Done);
       Result.Add(TNyxNode.Create(nkButton, 'action-agent-accept')
         .Configure.Text('Download local backup and use shared design').Done);
+      Result.Children[Result.Count - 1].Configure.ForPlatform(npfNativeLCL)
+        .Text('Save local backup and use shared design').Done;
     end;
+
     if AState.Reviews.Defined then
     begin
       for LIndex := 0 to AState.Reviews.Count - 1 do

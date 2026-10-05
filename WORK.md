@@ -4570,3 +4570,107 @@ retained privately at
 .local/codex-restart-check/native-studio-controller-remote-proof.json. The earlier
 adapter checkpoint 18b97e7 remains independently verified. Current publication
 does not establish replacement of the LAN or staged service executables.
+
+Current continuation: the preceding turn is verified progress; b8594ee is pushed
+at the exact remote head. Original authoring 2/4/7 now own native editor/service
+integration, with workflow 6 consuming its fixed project context. Deliver the
+same shared agent-exchange protocol behind browser/native transports, connect the
+actual native editor to an existing service, expose activity/permissions, and
+qualify observed semantic edits plus project jump/return with independent paired
+drafts/history/presentation. Native HTTP must run outside the UI thread, with
+bounded lifetime and cancellation before its callback receiver/session dies.
+Stop on retargeted requests, primary leakage, lost drafts/history, notification
+destruction or source adoption after cancellation. Use the existing staged
+listener; do not repeat the refused updated-server launch through another route.
+The original no-closure count remains 4 until this deliverable is assessed.
+
+## Native editor service integration — 2026-10-05
+
+Original authoring criteria 2/4/7 own this packet; semantic workflow 6 consumes
+its fixed project context. The shared agent protocol now owns revision admission,
+protected recovery, source/currentness, paired publications/history and activity,
+while browser XHR/timers and native HTTP workers/UI timers own platform work.
+Typed editor Undo/Redo replaces raw authoring direction strings. Native worker
+inputs/replies are owned UTF-8 bytes; workers never borrow widgets/controllers.
+Requests/replies have a 16 MiB native byte cap. Per-wait five-second HTTP timeouts
+do not establish a whole-request deadline. Cancellation detaches UI delivery;
+server admission may already have occurred. All native context receivers detach
+before view release/worker joins. Ordinary built Studio remains compiler/server
+independent; optional launch arguments select an explicit loopback origin/context.
+
+The actual native controller now adopts MCP-authored projects, observes semantic
+edits, publishes actual controls, routes history to the server, exposes operator
+permissions/activity and switches independent full-editor contexts. Successful
+target admission and acknowledged local publications precede a jump. Pending
+draft/base, accepted/design bytes, source visibility/range/focus and stored scroll
+positions are scoped to each native context; machine output settings stay shared.
+Failed attachment retains local recovery; explicit adoption saves a local paired
+backup first. Diagnostic metadata requires an exact synchronized accepted source.
+These paths do not establish native build requests or compiled execution.
+
+Qualification uses the unchanged identity-verified staged listener (PID 4972,
+project-workspaces/server, loopback 8278/8279). It has nine workspace summaries:
+primary plus all eight project slots. The bounded read-only probe confirms
+capacity; qualification uses explicit reuse instead of new allocation or reset.
+Exact-revision explicit reuse
+selects two previously owned test contexts, adds nonce-owned English review pages
+with one semantic composition each and performs actor-bound reviewed root cleanup.
+Both original design/source pairs return byte for byte. Existing history retains
+ordinary test commands. The staged primary's revision-25 pending draft/frame and
+published primary's revision-6 content/navigation/history frame remain intact.
+
+Current packet artifacts are under build/native-studio/transport/. The connected
+native journey passes 49 actual checks, including semantic observation, actual
+Unicode memo input, authoritative Undo/Redo, independent pending draft/history,
+full project jump/return, exact scalar source range/focus, and real 390-pixel
+rendering. Deferred HTTP replacement replies on the UI thread once; canceled
+timers/requests and active destruction have no borrowed receiver notification.
+Heap tracing reports zero leaks. Desktop/narrow PNGs were inspected: both paint
+their English memo. This does not establish reliable painting across all longer
+flows, sidebar overflow fixes, other widgetsets, hardware/IME or accessibility.
+
+Browser protection/coalescing/cleanup passes 14 actual checks using an explicit
+owned project, restoring its exact accepted pair after private Unicode typing.
+Shared authoring passes 69 desktop / 69 in an actual 390-pixel iframe. Native
+offline full authoring passes 74 with zero leaks, retaining optional outputs,
+callback/source/draft and paired-file behavior. Final native-entry/consumer builds
+have zero owned warnings. Browser builds retain only seven installed RTL warnings.
+Cumulative checked-fixture allocations are not release-performance measurements.
+
+Final retirement requalification uses service-tests-build-retirement.log and
+service-retirement.log: the same complete connected journey passes 49 with zero
+leaks after all context receivers detach before joins. Its desktop/390 captures
+were inspected. geometry-readiness.log passes 22 focused actual native checks
+with zero leaks, including both accurately unavailable Build actions retaining
+the exact project and the existing English compact memo/source journey. Its
+actual geometry PNG was inspected. native-entry-retirement.log rebuilds the
+runnable product with zero owned warnings. All current native/capture handles
+have terminal results; no primary pair is replaced.
+
+Retained failures: the capacity probe supplied an unsupported limit field before
+using the server's fixed bounded response. The first native full journey reached
+its return checks, then root cleanup correctly refused a string instead of the
+required root/id object. The original pairs and nonce root were retained; a fresh
+exact-revision semantic recovery performs reviewed cleanup and passes nine checks
+with zero leaks. A corrected full journey then passes. A recovery compile command
+initially split its compiler unit arguments; proper argument-array grouping fixes
+that orchestration error. The first explicit browser-context compile lacked the
+JS decoding unit; the corrected maintained fixture compiles and executes. No
+mutation is blindly retried after ambiguous delivery.
+
+No service, profile, private enrollment or primary project is replaced. Browser
+artifacts alone are staged into the existing qualification web root. Production
+retains fifteen native named tools; the staged project service retains seventeen
+and reports unavailable closure. The previous automatic updated-listener launch
+rejection (blocked by policy) is not retried. Live warned closure and closed-job
+currentness retain that separate gate.
+
+No original criterion closes or task moves to DONE. The original authoring
+no-closure count advances 4 to 5. Reassessment selects actual native compiler
+request/diagnostic and compiled-preview integration next, with explicit missing
+output readiness, rather than extending another navigation fixture. Complete
+native project presentation/import/export, whole-request deadlines, reliable
+visuals/overflow and measured performance retain their original owners. Full
+Nyx/Studio remains the active goal. This source packet is checkpointed/pushed on
+hello-nyx; exact remote proof is retained privately in
+.local/codex-restart-check/native-service-remote-proof.json.

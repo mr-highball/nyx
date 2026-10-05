@@ -16,6 +16,11 @@ LCL supplies their native adapters and the containing application window.
 
 The executable takes an optional local project directory as its first argument;
 otherwise it uses the operating system's application configuration directory.
+An optional second argument selects an explicit `http://127.0.0.1:port` service
+origin, and a third selects one exact project reference. Omitting the reference
+selects the service's primary project. Remote origins, paths, queries and
+credentials refuse before network work. These arguments are machine settings,
+outside portable designs; connecting is optional.
 Launching the built editor requires no application compiler, browser runtime or
 server connection. The Outputs section is available at any time, and choosing an
 output does not alter the design or generated source.
@@ -52,6 +57,33 @@ backup keep the current session. Output parameters must be distinct from inputs
 at native file-call boundaries; qualification uses an independent returned
 revision for its second writer.
 
+## Shared service and concurrent projects
+
+The native editor and browser share `TNyxStudioAgentBridge`, including revision
+admission, protected local recovery, queued paired publications, server-owned
+Undo/Redo and operator permissions. Platform adapters own HTTP and timers. Native
+HTTP workers own bytes only; UI timers deliver replies on the UI thread. Pausing
+detaches local notification, and destruction joins outstanding work before
+releasing its borrowed session. Cancellation cannot revoke an already admitted
+server operation. Five-second connect/read timeouts are per wait; a whole-request
+deadline and stalled-service teardown qualification remain open.
+
+Agents shows project sessions and activity in the same public Nyx composition.
+Jumping waits for acknowledged local publications and successful admission of
+the target. Each native context owns an independent mirror and an immutable
+service bridge. Inactive bridges cannot retarget requests or repaint another
+project. Return restores accepted/design/draft/base bytes, optional Pascal
+visibility, scalar range/focus and stored scroll positions. Output machine
+configuration is shared by this editor. The current journey qualifies draft,
+history and source presentation; complete per-project presentation remains open.
+
+A differing recovered pair is retained for explicit resolution. The native
+**Save local backup and use shared design** action writes an independent paired
+backup before adoption. Compiler diagnostics may borrow local accepted source
+only after exact synchronization; consuming this metadata does not prove a build
+request or compiled execution. Older servers visibly report unavailable project
+closure instead of claiming confirmation succeeded.
+
 ## Qualification and remaining integration
 
 The maintained actual-control journey consumes an unchanged MCP-authored export:
@@ -75,10 +107,20 @@ reliable compact painting and native sidebar overflow stay under the original
 native Studio acceptance.
 
 The native controller remains an integration candidate, with Win32 evidence.
-Delegated compiler transport, compiled reload, MCP observation, concurrent
-workspace jump/return and general native import/export actions remain open.
-Their current buttons surface the missing native service connection; selecting
-output profiles and ordinary local paired Save/Open remain available. This does
+The maintained [service journey](../tests/nyx_native_workspace_tests.lpr) passes
+49 checks: real MCP composition/observation, actual native Unicode input,
+authoritative Undo/Redo, independent project drafts/history, full-editor return
+and source focus/range restoration. Actual 390-pixel and desktop captures paint
+their English memo. It also exercises deferred requests, canceled timers and
+destruction with active HTTP work; heap tracing reports zero leaks. Reviewed
+semantic cleanup restores both borrowed test projects' original pairs exactly.
+The production primary and qualification primary remain unchanged. This bounded
+journey does not establish reliable painting or performance across all workflows.
+
+Delegated native build requests, compiled reload and general native import/export
+remain open. Those buttons explain the missing native implementation even after
+connecting. Selecting output profiles and ordinary local paired Save/Open remain
+available. Successful live closure retains its separate qualification gate. This does
 not accept full native parity, editor performance, another widgetset, hardware,
 IME or assistive-technology behavior. Browser regression evidence qualifies the
 shared shell separately; a native compilation cannot substitute for it.

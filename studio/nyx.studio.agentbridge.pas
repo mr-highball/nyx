@@ -27,13 +27,15 @@ unit nyx.studio.agentbridge;
 interface
 
 uses
-  SysUtils, JS, Web, nyx.text, nyx.data, nyx.studio.session,
+  SysUtils, nyx.text, nyx.data, nyx.studio.session, nyx.studio.exchange,
   nyx.studio.projects, nyx.studio.agents, nyx.studio.agentview, nyx.studio.workspaces;
 
 type
   TNyxAgentRefresh = procedure(AContentChanged: Boolean) of object;
+  { Closed editor history choice; strings exist only in the exchange packet. }
+  TNyxEditorHistory = (nehUndo, nehRedo);
 
-  { Browser controller for the private editor exchange. Borrows its ordinary
+  { Shared controller for the private editor exchange. Borrows its ordinary
     Studio session; server owns authoritative paired history. Local publications
     queue in order, each becoming one server history command. A revision race
     freezes synchronization and retains local pair/draft/queue for explicit
@@ -42,7 +44,8 @@ type
   private
     FSession: TNyxStudioSession;
     FView: TNyxStudioAgentView;
-    FRequest: TJSXMLHttpRequest;
+    FExchange: TNyxStudioEditorExchange;
+    FRequest: Boolean;
     FToken: TNyxText;
     FKnownFrame: TNyxText;
     FSentFrame: TNyxText;
@@ -50,7 +53,7 @@ type
     FQueue: array of TNyxDataValue;
     FQueueSizes: array of Integer;
     FQueueUnits: Integer;
-    FTimer: NativeInt;
+    FTimer: Boolean;
     FApplying: Boolean;
     FEnabled: Boolean;
     FAcceptRemote: Boolean;
@@ -65,7 +68,7 @@ type
       const AWorkspace: TNyxWorkspaceRef);
     function Frame: TNyxText;
     procedure Send(const AMessage: TNyxDataValue; AConnect: Boolean = False);
-    procedure Ready;
+    procedure Ready(AStatus: Integer; const AText: TNyxText);
     procedure Tick;
     procedure Schedule;
     procedure Queue(const AMessage: TNyxDataValue);
@@ -73,13 +76,19 @@ type
     constructor Create(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh); overload;
     constructor Create(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh;
       const AWorkspace: TNyxWorkspaceRef); overload;
+    { Takes immediate ownership of AExchange; the borrowed session/receiver must
+      outlive this bridge. Platform transport cancellation precedes their release. }
+    constructor Create(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh;
+      const AWorkspace: TNyxWorkspaceRef; AExchange: TNyxStudioEditorExchange); overload;
     destructor Destroy; override;
-    procedure Connect;
+    { Protect explicit native local recovery even when the bridge was attached
+      after that recovery. Ordinary browser initialization retains its baseline. }
+    procedure Connect(AProtectLocal: Boolean = False);
     { Call after ordinary editor publications, including draft typing. Does not
       poll or reconcile complete source while the editor has remained unchanged. }
     procedure RecordLocal;
     procedure Configure(APermission: TNyxAgentPermission);
-    procedure History(const ADirection: TNyxText);
+    procedure History(ADirection: TNyxEditorHistory);
     procedure CompilerReport(const AReport: TNyxText);
     procedure Pause;
     procedure AcceptRemote;
@@ -102,6 +111,22 @@ type
 
 implementation
 
+uses
+  {$ifdef PAS2JS}nyx.studio.exchange.browser{$else}nyx.studio.exchange.lcl{$endif};
+
+const
+  CRevisionLabel: TNyxText = ' · revision ';
+  CWarningSeparator: TNyxText = ' · ';
+
+function DefaultEditorExchange: TNyxStudioEditorExchange;
+begin
+  {$ifdef PAS2JS}
+  Result := TNyxBrowserEditorExchange.Create;
+  {$else}
+  Result := TNyxLCLEditorExchange.Create('http://127.0.0.1:8088');
+  {$endif}
+end;
+
 function TNyxStudioAgentBridge.SourceSynchronized: Boolean;
 begin
   Result := FView.Connected and not FView.Conflict and
@@ -112,6 +137,7 @@ constructor TNyxStudioAgentBridge.Create(ASession: TNyxStudioSession;
   ARefresh: TNyxAgentRefresh);
 begin
   inherited Create;
+  FExchange := DefaultEditorExchange;
   Initialize(ASession, ARefresh, NyxPrimaryWorkspace);
 end;
 
@@ -119,6 +145,21 @@ constructor TNyxStudioAgentBridge.Create(ASession: TNyxStudioSession;
   ARefresh: TNyxAgentRefresh; const AWorkspace: TNyxWorkspaceRef);
 begin
   inherited Create;
+  FExchange := DefaultEditorExchange;
+  Initialize(ASession, ARefresh, AWorkspace);
+end;
+
+constructor TNyxStudioAgentBridge.Create(ASession: TNyxStudioSession;
+  ARefresh: TNyxAgentRefresh; const AWorkspace: TNyxWorkspaceRef;
+  AExchange: TNyxStudioEditorExchange);
+begin
+  inherited Create;
+  FExchange := AExchange;
+
+  if (FExchange = nil) or (ASession = nil) then
+  begin
+    raise Exception.Create('An editor bridge requires a session and transport');
+  end;
   Initialize(ASession, ARefresh, AWorkspace);
 end;
 
@@ -129,7 +170,7 @@ begin
   FSession := ASession;
   FView := DefaultNyxStudioAgentView;
   FView.Workspace := FWorkspace;
-  FTimer := -1;
+  FTimer := False;
   FInitialProject := EncodeNyxProject(FSession.ProjectSnapshot);
   FOnRefresh := ARefresh;
 end;
@@ -138,16 +179,8 @@ destructor TNyxStudioAgentBridge.Destroy;
 begin
   FEnabled := False;
 
-  if FTimer >= 0 then
-  begin
-    window.clearTimeout(FTimer);
-  end;
-
-  if FRequest <> nil then
-  begin
-    FRequest.onreadystatechange := nil;
-    FRequest.abort;
-  end;
+  FExchange.Free;
+  FExchange := nil;
   FOnRefresh := nil;
   FSession := nil;
   inherited Destroy;
@@ -172,12 +205,12 @@ begin
     NyxField('view', NyxData(FSession.ActiveViewID))]).ToJSON;
 end;
 
-procedure TNyxStudioAgentBridge.Connect;
+procedure TNyxStudioAgentBridge.Connect(AProtectLocal: Boolean);
 var
   LFrame: TNyxDataValue;
 begin
 
-  if FRequest <> nil then
+  if FRequest then
   begin
     Exit;
   end;
@@ -186,7 +219,8 @@ begin
   FView.Connected := False;
   FView.Status := 'Connecting agent session';
   FKnownFrame := Frame;
-  FProtectLocal := EncodeNyxProject(FSession.ProjectSnapshot) <> FInitialProject;
+  FProtectLocal := AProtectLocal or
+    (EncodeNyxProject(FSession.ProjectSnapshot) <> FInitialProject);
   LFrame := TNyxDataValue.ParseJSON(FKnownFrame);
   Send(NyxObject([NyxField('op', NyxData('claim')),
     NyxField('project', LFrame.Field('project')),
@@ -195,28 +229,12 @@ begin
 end;
 
 procedure TNyxStudioAgentBridge.Send(const AMessage: TNyxDataValue; AConnect: Boolean);
-var
-  LURL: TNyxText;
 begin
   FSent := AMessage.Copy;
   FSentFrame := FKnownFrame;
   FView.Busy := True;
-  FRequest := TJSXMLHttpRequest.new;
-  FRequest.onreadystatechange := @Ready;
-  LURL := 'api/agents';
-
-  if AConnect then
-  begin
-    LURL := 'api/agents/connect';
-  end;
-  FRequest.open('POST', LURL, True);
-  FRequest.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
-
-  if not AConnect then
-  begin
-    FRequest.setRequestHeader('X-Nyx-Editor', FToken);
-  end;
-  FRequest.send(NyxWithWorkspace(AMessage, FWorkspace).ToJSON);
+  FRequest := True;
+  FExchange.Post(AConnect, FToken, NyxWithWorkspace(AMessage, FWorkspace).ToJSON, Ready);
 end;
 
 procedure TNyxStudioAgentBridge.Queue(const AMessage: TNyxDataValue);
@@ -231,7 +249,7 @@ begin
   LLast := High(FQueue);
   LMayMerge := (LLast >= 0) and (AMessage.Field('op').AsText = 'commit');
 
-  if LMayMerge and (FRequest <> nil) and (LLast = 0) then
+  if LMayMerge and FRequest and (LLast = 0) then
   begin
     LMayMerge := FSent.Field('op').AsText <> 'commit';
   end;
@@ -290,7 +308,8 @@ begin
     NyxField('project', LData.Field('project')),
     NyxField('selection', LData.Field('selection')), NyxField('view', LData.Field('view'))]));
   FKnownFrame := LFrame;
-  if FRequest = nil then
+
+  if not FRequest then
   begin
     Tick;
   end;
@@ -361,11 +380,13 @@ begin
   Tick;
 end;
 
-procedure TNyxStudioAgentBridge.History(const ADirection: TNyxText);
+procedure TNyxStudioAgentBridge.History(ADirection: TNyxEditorHistory);
+const
+  CDirections: array[TNyxEditorHistory] of TNyxText = ('undo', 'redo');
 begin
   RecordLocal;
   Queue(NyxObject([NyxField('op', NyxData('history')),
-    NyxField('direction', NyxData(ADirection))]));
+    NyxField('direction', NyxData(CDirections[ADirection]))]));
   Tick;
 end;
 
@@ -385,20 +406,13 @@ begin
   FView.Connected := False;
   FView.Status := 'Agent sync paused; your local work is retained';
 
-  if FTimer >= 0 then
-  begin
-    window.clearTimeout(FTimer);
-  end;
-  FTimer := -1;
+  FExchange.CancelTick;
+  FTimer := False;
   { A paused observer must not apply an already-in-flight response after the
     operator chose to keep local work. Server admission may finish independently. }
 
-  if FRequest <> nil then
-  begin
-    FRequest.onreadystatechange := nil;
-    FRequest.abort;
-    FRequest := nil;
-  end;
+  FExchange.CancelRequest;
+  FRequest := False;
   FView.Busy := False;
 end;
 
@@ -415,15 +429,17 @@ end;
 procedure TNyxStudioAgentBridge.Schedule;
 begin
 
-  if FEnabled and not FView.Conflict and (FTimer < 0) then
+  if FEnabled and not FView.Conflict and not FTimer then
   begin
+    FTimer := True;
+
     if Length(FQueue) > 0 then
     begin
-      FTimer := window.setTimeout(@Tick, 25);
+      FExchange.Schedule(25, Tick);
     end
     else
     begin
-      FTimer := window.setTimeout(@Tick, 500);
+      FExchange.Schedule(500, Tick);
     end;
   end;
 end;
@@ -437,18 +453,15 @@ var
   LFieldCount: Integer;
 begin
 
-  if FTimer >= 0 then
-  begin
-    window.clearTimeout(FTimer);
-  end;
-  FTimer := -1;
+  FExchange.CancelTick;
+  FTimer := False;
 
   if not FEnabled or FView.Conflict then
   begin
     Exit;
   end;
 
-  if (FRequest <> nil) or not FView.Connected then
+  if FRequest or not FView.Connected then
   begin
     Schedule;
     Exit;
@@ -479,7 +492,7 @@ begin
   end;
 end;
 
-procedure TNyxStudioAgentBridge.Ready;
+procedure TNyxStudioAgentBridge.Ready(AStatus: Integer; const AText: TNyxText);
 var
   LData: TNyxDataValue;
   LState: TNyxDataValue;
@@ -495,14 +508,13 @@ var
   LPermission: TNyxText;
 begin
 
-  if (FRequest = nil) or (FRequest.readyState <> 4) then
+  if not FRequest or not FEnabled then
   begin
     Exit;
   end;
-  LStatus := FRequest.status;
-  LText := FRequest.responseText;
-  FRequest.onreadystatechange := nil;
-  FRequest := nil;
+  LStatus := AStatus;
+  LText := AText;
+  FRequest := False;
   FView.Busy := False;
   LChanged := False;
   LRefresh := False;
@@ -512,6 +524,7 @@ begin
 
       if LStatus <> 200 then
       begin
+
         if LText <> '' then
         begin
           LData := TNyxDataValue.ParseJSON(LText);
@@ -530,6 +543,7 @@ begin
       begin
         FToken := LData.Field('token').AsText;
         FView.Endpoint := LData.Field('endpoint').AsText;
+
         if NyxAgentHas(LData, 'warning') then
         begin
           FWarning := LData.Field('warning').AsText;
@@ -656,10 +670,12 @@ begin
       end;
       FAcceptRemote := False;
       FView.Revision := LSummary.Field('revision').AsInteger;
-      FView.Status := 'Agents ' + NyxAgentPermissionName(FView.Permission) + ' · revision ' + IntToStr(FView.Revision);
+      FView.Status := 'Agents ' + NyxAgentPermissionName(FView.Permission) +
+        CRevisionLabel + IntToStr(FView.Revision);
+
       if FWarning <> '' then
       begin
-        FView.Status := FView.Status + ' · ' + FWarning;
+        FView.Status := FView.Status + CWarningSeparator + FWarning;
       end;
 
       if Length(FQueue) > 0 then

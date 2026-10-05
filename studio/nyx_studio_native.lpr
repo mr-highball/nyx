@@ -25,12 +25,13 @@ program nyx_studio_native;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Interfaces, Forms, SysUtils, nyx.text, nyx.studio.lcl;
+  Interfaces, Forms, SysUtils, nyx.text, nyx.studio.lcl, nyx.studio.workspaces;
 
 var
   GHost: TForm;
   GStudio: TNyxNativeStudio;
   LDirectory: TNyxText;
+  LWorkspace: TNyxWorkspaceRef;
 begin
   Application.Initialize;
   Application.Title := 'Nyx Studio';
@@ -46,6 +47,17 @@ begin
   GStudio := TNyxNativeStudio.Create(GHost, LDirectory);
   try
     GStudio.Run;
+
+    if ParamCount > 1 then
+    begin
+      LWorkspace := NyxPrimaryWorkspace;
+
+      if ParamCount > 2 then
+      begin
+        LWorkspace := NyxWorkspace(ParamStr(3));
+      end;
+      GStudio.ConnectService(ParamStr(2), LWorkspace);
+    end;
     Application.Run;
   finally
     GStudio.Free;

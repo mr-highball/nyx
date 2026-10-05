@@ -289,6 +289,18 @@ full-editor jump/return with drafts/history/view/presentation preserved. See
 
 ## Concurrent-project foundation — 2026-10-04
 
+Native consumer integration (2026-10-05): the actual runnable Studio now observes
+semantic changes and publishes real native input through the shared protocol,
+with authoritative paired history. Its two-project journey passes 49 checks,
+including protected draft return, scalar source range/focus and UI-thread
+delivery/cancellation/destruction. Reviewed cleanup restores exact borrowed
+original pairs without replacing a project. English desktop/390 captures paint
+the memo. The shared browser bridge's protected attachment/coalesced typing and
+exact cleanup pass 14. Original authoring criteria 2/4/7 own this integration;
+workflow criterion 6 consumes it without double completion credit. Complete
+native/concurrent presentation, warned live closure and closed-job currentness
+remain open, with the earlier refused updated-listener gate unchanged.
+
 Criterion 6 now has a qualified portable registry, explicit semantic routing,
 immutable compiler contexts and ordinary browser full-editor jump/return.
 Projects survive agent disconnect independently of temporary reviews. Native

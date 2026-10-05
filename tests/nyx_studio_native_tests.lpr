@@ -209,7 +209,21 @@ var
   LPoint: TPoint;
   LParent: TControl;
   LSource: TMemo;
+  LBefore: TNyxText;
 begin
+  { Optional service attachment must not make an unimplemented build appear
+    available or suggest that connecting again would execute it. }
+  LBefore := EncodeNyxProject(GStudio.Session.ProjectSnapshot);
+  Click('action-build-view');
+  Check((GStudio.ShellView.Root.Find('studio-status').Prop('text') =
+    'Native build requests are unavailable') and
+    (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore),
+    'unavailable view build reports accurately and retains the exact project');
+  Click('action-build-app');
+  Check((GStudio.ShellView.Root.Find('studio-status').Prop('text') =
+    'Native build requests are unavailable') and
+    (EncodeNyxProject(GStudio.Session.ProjectSnapshot) = LBefore),
+    'unavailable application build retains the exact project');
   Click('view-component-0');
   Click('action-code');
   WriteField(GStudio.ShellView, 'project-title', 'Native title / 🌙 漢字');

@@ -734,7 +734,15 @@ preview validation remain semantic; only physical navigation/typing uses the
 browser host. Preserve failed captures, and never use this reset harness against
 a user's working service.
 
-Full native Studio navigation, successful live warned closure, job completion
+Native full-editor jump/return now has a 49-check real MCP/LCL journey, including
+observed input, independent paired drafts/history and actual source focus/range
+restoration. [Native Studio](native-studio.md) documents its optional loopback
+connection and remaining presentation/transport qualifications. This shares the
+browser's protocol controller; native HTTP runs outside the UI thread. Native
+permissions/activity use the same public Agents composition. Cancellation
+suppresses local delivery without revoking an admitted server operation.
+
+Complete native Studio, successful live warned closure, job completion
 after project closure and broader source/state/reusable workflows retain their
 original task owners. The current evidence establishes the portable foundation
 and observing browser journey, not the complete concurrent authoring criterion.
