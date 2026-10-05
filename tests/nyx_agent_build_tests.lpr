@@ -27,7 +27,7 @@ program nyx_agent_build_tests;
 uses
   SysUtils, {$ifdef PAS2JS}Web,{$endif}
   nyx.text, nyx.data, nyx.studio.agents, nyx.studio.projects, nyx.studio.builds,
-  nyx.studio.compiler;
+  nyx.studio.compiler, nyx.studio.editorbuild, nyx.studio.preview;
 
 var
   GCount: Integer;
@@ -71,6 +71,9 @@ var
   LRefused: Boolean;
   LReport: INyxCompilerReport;
   LOrder: TNyxCompilerDiagnosticIndices;
+  LRequest: INyxCompilerRequest;
+  LArguments: TNyxDataValue;
+  LArtifact: TNyxCompiledArtifact;
 begin
   GSession := nil;
   try
@@ -91,9 +94,25 @@ begin
     GSession.Exchange(NyxObject([NyxField('op', NyxData('configure')),
       NyxField('permission', NyxData('readOnly'))]));
     Refuse(GRevision, bsView, 'home', 'Read-only cannot launch compilers');
+    LPair := GSession.EditorBuildPair(GRevision, bsView, 'home');
+    Check(EncodeNyxProject(LPair) = EncodeNyxProject(GPair),
+      'Trusted operator capture retains the exact pair with read-only agent access');
     GSession.Exchange(NyxObject([NyxField('op', NyxData('configure')),
       NyxField('permission', NyxData('disabled'))]));
     Refuse(GRevision, bsApplication, '', 'Disabled cannot launch compilers');
+    LPair := GSession.EditorBuildPair(GRevision, bsApplication, '');
+    Check(EncodeNyxProject(LPair) = EncodeNyxProject(GPair),
+      'Disabling agents does not disable the operator compiler contract');
+    LRefused := False;
+    try
+      GSession.EditorBuildPair(GRevision - 1, bsView, 'home');
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'Private operator admission still refuses a stale revision');
     GSession.Exchange(NyxObject([NyxField('op', NyxData('configure')),
       NyxField('permission', NyxData('edit'))]));
     LValue := GSession.Call('nyx_transaction', 'Scooty', NyxObject([
@@ -118,6 +137,16 @@ begin
       NyxField('selection', NyxData('home')), NyxField('view', NyxData('home'))]));
     GRevision := GSession.Revision;
     Refuse(GRevision, bsView, 'home', 'Pending draft refuses a build');
+    LRefused := False;
+    try
+      GSession.EditorBuildPair(GRevision, bsApplication, '');
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'Operator authority cannot bypass a pending Pascal draft');
     Check(not GSession.CurrentPair(GPair), 'Pending draft disables current job diagnostics');
     for LScope := Low(TNyxBuildScope) to High(TNyxBuildScope) do
     begin
@@ -149,6 +178,54 @@ begin
       'Bounded presentation prioritizes errors and preserves order within each severity');
     Check(LReport.Item(0).Severity = csWarning, 'Presentation does not mutate the immutable compiler report');
     Check(Length(NyxCompilerDiagnosticOrder(nil)) = 0, 'Absent report has no diagnostic indices');
+    LRequest := NewNyxCompilerRequest.Target(btNativeLCL).Scope(bsReusable)
+      .Root(NyxBuildRoot('welcome-card')).AtRevision(GRevision)
+      .Output(NyxBuildOutput('0123456789abcdef0123456789abcdef'))
+      .Operation(NyxBuildOperation('compiled-view'));
+    LArguments := LRequest.Arguments;
+    Check((LArguments.Field('view').AsText = 'welcome-card') and
+      (LArguments.Field('scope').AsText = 'reusable') and
+      (LArguments.Field('target').AsText = 'lcl'),
+      'Fluent compiler request preserves distinct target, scope and root meanings');
+    LRequest.Scope(bsApplication);
+    Check((LRequest.Arguments.Count = 6) and (LArguments.Field('view').AsText = 'welcome-card'),
+      'Application scope omits its old root; previously captured wire values stay independent');
+    Check(NyxCompilerStatus(NyxBuildJob('job-one')).Field('limit').AsInteger = 20,
+      'Typed diagnostic paging conforms to the actual service admission limit');
+    LValue := NyxObject([NyxField('state', NyxData('succeeded')),
+      NyxField('currentSource', NyxData(True)), NyxField('currentOutput', NyxData(True)),
+      NyxField('target', NyxData('lcl')), NyxField('job', NyxData('one-job')),
+      NyxField('artifact', NyxData('builds/job-01234567-89AB-CDEF-0123-456789ABCDEF/nyx_native.exe')),
+      NyxField('manifest', NyxArray([NyxObject([
+        NyxField('path', NyxData('builds/job-01234567-89AB-CDEF-0123-456789ABCDEF/nyx_native.exe')),
+        NyxField('bytes', NyxData(1234)),
+        NyxField('md5', NyxData('0123456789abcdef0123456789abcdef'))])]))]);
+    LArtifact := AdmitNyxCompiledArtifact(LValue);
+    Check((LArtifact.Target = btNativeLCL) and (LArtifact.ByteCount = 1234),
+      'Compiled artifact admission retains typed target and exact byte manifest');
+    LRefused := False;
+    try
+      AdmitNyxCompiledArtifact(TNyxDataValue.ParseJSON(StringReplace(LValue.ToJSON,
+        'builds/job-', '../builds/job-', [rfReplaceAll])));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'A matching manifest cannot authorize a traversing artifact path');
+    LRefused := False;
+    try
+      AdmitNyxCompiledArtifact(TNyxDataValue.ParseJSON(StringReplace(LValue.ToJSON,
+        '1234', '33554433', [rfReplaceAll])));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'A declared compiler artifact cannot exceed the download budget');
+    LRequest := nil;
     LReport := nil;
     GSession.Free;
     GSession := nil;

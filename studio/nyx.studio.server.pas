@@ -79,6 +79,10 @@ type
     FMCP: TNyxStudioMCP;
     procedure LoadOutputs;
     procedure SaveOutputs(AOutputs: TNyxOutputConfiguration);
+    { Called inside the private compiler guard on the operator HTTP thread.
+      Persist before replacing the accepted machine profile; no recursive MCP
+      configuration call is made from this borrowed callback. }
+    procedure OperatorProfileChanged(const AProfile: TNyxText);
     procedure HandleRequest(ASender: TObject; var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
     procedure ServeFile(const APath: TNyxText; AResponse: TFPHTTPConnectionResponse);
@@ -232,6 +236,7 @@ begin
     AMCPPort := APort + 1;
   end;
   FMCP := TNyxStudioMCP.Create(FRepository, APort, AMCPPort, FOutputs.Encode);
+  FMCP.OnOperatorProfileChange := OperatorProfileChanged;
   FHTTP := TNyxHTTPServer.Create(nil);
   FHTTP.Address := FBindAddress;
   FHTTP.Port := FPort;
@@ -277,6 +282,21 @@ begin
         WriteLn('Output configuration was not restored: ', LException.Message);
       end;
     end;
+  end;
+end;
+
+procedure TNyxStudioServer.OperatorProfileChanged(const AProfile: TNyxText);
+var
+  LProfile: TNyxOutputConfiguration;
+begin
+  LProfile := TNyxOutputConfiguration.Decode(AProfile);
+  try
+    SaveOutputs(LProfile);
+    FOutputs.Free;
+    FOutputs := LProfile;
+    LProfile := nil;
+  finally
+    LProfile.Free;
   end;
 end;
 

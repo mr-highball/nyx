@@ -7,16 +7,24 @@ Current native editor candidate (2026-10-05): the runnable standalone controller
 consumes the shared Nyx shell/session/routers and paired local store. Actual
 Win32 authoring passes 74 checks with zero leaks; browser shared-shell regression
 passes 69 desktop / 69 exact-390 checks. Initial demo/review text is English,
-with dedicated multilingual qualification inputs retained. Full native parity,
-Native HTTP/MCP observation and full-editor project jump/return now pass 49
+with dedicated multilingual qualification inputs retained. Native HTTP/MCP
+observation and full-editor project jump/return now pass 49
 actual checks, retaining independent drafts/history and source focus/ranges.
 Reviewed cleanup restores both borrowed project pairs; desktop/390 captures paint
-English review text. Native build requests/reload, complete presentation and
+English review text. A subsequent compiler/preview source candidate adds typed
+immutable jobs, guarded operator profiles, bounded diagnostics and owned
+Run/Stop/view reload through real compilers and actual native controls. The final
+maintained journey passes 123 checks with zero leaks; the shared request/artifact
+contract passes 43 on native and executed browser targets. Its
+[evidence packet](WORK.md#native-compiler-and-compiled-preview-consumer--2026-10-05)
+qualifies direct private protocol and existing HTTP artifact delivery, retaining
+the refused updated-listener gate. Full native parity, complete presentation and
 intermittent canvas/sidebar visual gaps remain under
 [the original authoring owner](TODO/NS-4_studio-authoring_01.md). Its no-closure
-count is 5. Reassessment selects native build/diagnostic and compiled-preview
-integration next, with explicit unavailable output behavior. The refused updated
-listener/closure gate remains separate. No full criterion closes from this packet.
+count advances to 6. Reassessment changes the next deliverable to whole-request
+deadlines and stalled-worker retirement under the original service owner; new
+editor HTTP qualification still requires resolution of the recorded launch gate.
+No full criterion closes from this packet.
 See [native Studio](docs/native-studio.md) and WORK.md for bounded evidence.
 
 Earlier source delivery (2026-10-04): typed layout policies advance the original
@@ -167,6 +175,13 @@ Current task and return path are maintained in [WORK.md](WORK.md).
 
 ## Reassessment record
 
+- 2026-10-05: native compiler/preview consumer handoff passes 123 actual Win32
+  checks with zero leaks, retaining English presentation and dedicated Unicode
+  qualification. Direct private protocol and existing HTTP artifact delivery
+  leave the updated editor HTTP route unqualified. Original authoring criteria
+  stay open at consecutive no-closure count 6. The next deliverable changes to
+  whole-request deadlines and stalled-worker retirement under NS-5 reload
+  criterion 1; the recorded updated-listener launch gate remains separate.
 - 2026-10-02: initial scope decomposition. Existing source is recorded as
   evidence to validate, not accepted completion. Percentages and task credits
   remain pending rather than being inferred from file count or historical age.

@@ -405,3 +405,50 @@ The fixture's explicit `cleanup-owned` mode accepts current revisions plus
 review/apply and checks exact pairs. It refuses protected pending drafts. Browser
 `agent-bridge.html?workspace=<owned-reference>` separately qualifies protected
 attachment/coalesced typing and restores its accepted pair after its private draft.
+
+The optional native compiler journey consumes an unchanged English semantic
+export and an explicit private machine profile:
+
+```powershell
+./tools/build.ps1 -Target native-studio -VerifyNativeStudioCompiler `
+  -DesignerSourceDirectory <semantic-export-directory> `
+  -NativeStudioCompilerProfile <private-output-profile.json> `
+  -NativeStudioArtifactDirectory <existing-artifact-serving-build-root> `
+  -HttpURL <loopback-editor-origin>
+```
+
+Its [Pascal consumer](../tests/nyx_native_build_tests.lpr) constructs a suspended
+private protocol engine, qualifies operator admission/profile failures and uses
+real compiler jobs through actual native controls. The shell creates a unique
+ignored repository with links to the existing library directories. It never
+starts or replaces a listener. The supplied artifact-serving root must already
+exist; only that test's immutable manifest files are copied there. Profiles,
+enrollment and active documents of the existing listener are untouched.
+
+The maintained fixture requires the semantic designer-review/designer-reply
+export used by the native authoring journey. It exercises browser page/reusable
+compilation, native application/view compilation, owned Run/Stop, current preview
+reload, compiled reply controls and a deliberately invalid retained Pascal
+helper. Its source navigation check uses an exact line/column. Captures and
+compiler status snapshots live in the unique repository under
+`build/native-studio/compiler-current/`; terminal evidence belongs to WORK.md.
+Native host messages establish actual control routing, not hardware/IME or
+assistive-technology behavior. Direct protocol results and actual HTTP artifact
+downloads do not qualify the new editor HTTP deployment.
+
+For a failed compiled-input investigation, the same consumer accepts optional
+`probe-input` as its sixth argument. Its first argument is an existing owned
+compiler repository containing `lcl-application-status.json`; the remaining
+profile/source/artifact paths and HTTP origin stay explicit. It downloads that
+retained admitted artifact and exercises real native controls, byte-mismatch refusal, cancellation
+and owned process retirement without repeating compiler/editor journeys. This
+mode does not establish live source currentness or editor reload. It identifies
+the exact document-titled native form, excluding Lazarus helper windows, and
+uses the custom button's native Space-key path. Evidence belongs to WORK.md.
+
+Optional `diagnostics` instead exercises only the guarded operator protocol,
+actual native source editor, one real compiler error, exact supplementary
+Unicode location, stale-source refusal and retirement. It preserves the same
+five explicit arguments and skips successful compilation/preview journeys.
+Editing ranges are zero-based scalar offsets in the actual control text;
+source byte indices and accepted LF text are distinct coordinate domains.

@@ -117,10 +117,80 @@ semantic cleanup restores both borrowed test projects' original pairs exactly.
 The production primary and qualification primary remain unchanged. This bounded
 journey does not establish reliable painting or performance across all workflows.
 
-Delegated native build requests, compiled reload and general native import/export
-remain open. Those buttons explain the missing native implementation even after
-connecting. Selecting output profiles and ordinary local paired Save/Open remain
-available. Successful live closure retains its separate qualification gate. This does
-not accept full native parity, editor performance, another widgetset, hardware,
-IME or assistive-technology behavior. Browser regression evidence qualifies the
-shared shell separately; a native compilation cannot substitute for it.
+The compiler consumer below is a new source candidate. The identity-verified
+older qualification listener still reports native Build unavailable; it has not
+been replaced. General native import/export, successful live closure and complete
+native parity retain their original acceptance paths. Neither native compilation
+nor the shared-shell browser regression substitutes for those checks.
+
+## Asynchronous compilation and compiled previews
+
+A capable service advertises private editor compilation explicitly. Build view
+captures the selected page or reusable definition; Build app captures the whole
+accepted project. Requests use the same immutable job engine as semantic
+`nyx_build`, with exact project revision and output identity, bounded diagnostic
+windows and owned artifact manifests. Operator builds remain available when
+agent access is disabled or read only. Public MCP credentials gain no operator
+authority and cannot set machine compiler paths.
+
+The native controller loads machine profiles on demand in Outputs, retains local
+field changes during a delayed read and saves through output-identity comparison.
+Persistence failure preserves the accepted service profile. Paths stay outside
+project/design/source history. An empty output choice opens Outputs with useful
+help; a missing compiler refuses only the requested build. An older service
+reports the unavailable capability accurately.
+
+`INyxCompilerRequest` provides reference-counted fluent authoring. Target/scope
+are enums; roots, output identities and operation receipts have distinct types:
+
+```pascal
+LRequest := NewNyxCompilerRequest
+  .Target(btNativeLCL)
+  .Scope(bsView)
+  .Root(NyxBuildRoot('account-page'))
+  .AtRevision(LRevision)
+  .Output(LOutputIdentity)
+  .Operation(NyxBuildOperation('account-preview'));
+LBridge.RequestBuild(LRequest);
+```
+
+The bridge owns a fixed project context. Compiler status queries cannot retarget
+it; profile/build failures do not become document synchronization conflicts.
+Each native context retains its job, captured pair/profile and completion state.
+UI timers observe worker completion; compiler workers do not borrow widgets.
+Inactive-context completion/return still needs actual consumer qualification.
+
+Current compiler failures open the ordinary Pascal editor. Diagnostic actions
+retain Unicode scalar line/column coordinates and require its unchanged accepted
+source; drafts or changed source prevent stale navigation. The original compiler
+log remains available with the job. The private status consumer asks for at most
+twenty diagnostics, with actionable errors first.
+
+Run compiled preview uses an admitted succeeded/current artifact, independently
+of the designer's Interact mode. Before native execution, the adapter downloads
+only the exact admitted executable from the explicit loopback service, rejects
+redirects, caps bytes to the manifest and verifies exact size/MD5. MD5 checks
+delivery consistency, not authentication. It then queries source/output
+currentness again before activation. Native launch uses an executable and owned
+working directory, with no client shell command or arguments.
+
+The adapter owns its preview process separately from Studio. Stop retires only
+that handle; it preserves an independently pending compiler admission/result.
+Finishing that build does not restart an explicitly stopped preview.
+A successful current rebuild can replace a running preview; the
+old process remains until the verified candidate launches successfully. Prepared
+native files have independent private directories and retire after their process
+releases them. Download cancellation detaches notification immediately; native
+destruction joins the worker. Connect/read limits remain per-wait bounds, not a
+whole-request deadline. The browser artifact path opens a validated immutable
+URL through the system browser; this native consumer's browser-launch lifecycle
+has no new execution qualification.
+
+The maintained Pascal compiler/control consumer uses a suspended private protocol
+engine with real compiler workers. It never starts a listener. Only its exact
+immutable artifact bytes are copied into an explicitly selected existing
+artifact-serving root. Thus its HTTP download and native execution evidence does
+not establish deployment of the new private editor HTTP route. The separate
+updated-listener refusal remains recorded in WORK.md. Other widgetsets/operating
+systems, whole-request deadlines, reliable visuals and measured performance
+remain open.

@@ -78,6 +78,9 @@ type
     OutputVisible: Boolean;
     OutputTarget: TNyxText;
     Outputs: TNyxOutputConfiguration;
+    { Host execution capabilities, independent of the uncompiled designer. }
+    CompiledPreviewAvailable: Boolean;
+    CompiledPreviewRunning: Boolean;
     { File UI state is independent of output readiness. Conflicts are presented
       as explicit choices; no accepted session is replaced while one is pending. }
     FilesVisible: Boolean;
@@ -149,6 +152,8 @@ begin
   Result.OutputVisible := False;
   Result.OutputTarget := '';
   Result.Outputs := nil;
+  Result.CompiledPreviewAvailable := False;
+  Result.CompiledPreviewRunning := False;
   Result.FilesVisible := False;
   Result.ProjectName := '';
   Result.ProjectConflict := False;
@@ -733,6 +738,16 @@ begin
   LViewbar.Add(Button('action-desktop', 'Desktop'));
   LViewbar.Add(Button('action-phone', 'Phone'));
   LViewbar.Add(Button('action-preview', 'Interact'));
+
+  if AState.CompiledPreviewAvailable then
+  begin
+    LViewbar.Add(Button('action-compiled-run', 'Run compiled preview'));
+  end;
+
+  if AState.CompiledPreviewRunning then
+  begin
+    LViewbar.Add(Button('action-compiled-stop', 'Stop preview'));
+  end;
   LViewbar.Add(Caption('output-summary', 'Output: ' + AState.OutputTarget));
 
   if AState.OutputTarget = '' then

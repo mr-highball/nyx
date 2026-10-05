@@ -32,6 +32,13 @@ uses
   nyx.studio.reviews, nyx.studio.workspaces;
 
 type
+  { Authority is supplied by the authenticated transport, never client JSON.
+    Operator compilation remains available when agent access is disabled. }
+  TNyxBuildAuthority = (baAgent, baEditor);
+  { Native/server host persists operator profiles. The service owns this borrowed
+    callback; standalone protocol fixtures may keep configuration in memory. }
+  TNyxOperatorProfileChange = procedure(const AProfile: TNyxText) of object;
+
   TNyxMCPHTTP = class(TFPHTTPServer)
   public
     property Address;
@@ -66,6 +73,7 @@ type
     end;
     FFailure: TNyxText;
     FConfigurationIssue: TNyxText;
+    FOnOperatorProfileChange: TNyxOperatorProfileChange;
     procedure Request(ASender: TObject; var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
     procedure WriteCodexConfiguration;
@@ -75,7 +83,8 @@ type
     function CapturePreview(const APreview: TNyxDataValue): TNyxDataValue;
     function ClientIndex(const AID: TNyxText): Integer;
     function BuildTool(const AWireArguments: TNyxDataValue;
-      const AActor, AOwner: TNyxText): TNyxDataValue;
+      const AActor, AOwner: TNyxText;
+      AAuthority: TNyxBuildAuthority = baAgent): TNyxDataValue;
     procedure PollBuilds;
     function EditorState(const ARequest: TNyxDataValue): TNyxDataValue;
     function ReviewViews: TNyxDataValue;
@@ -109,13 +118,15 @@ type
     procedure ConfigureOutputs(const AProfile: TNyxText);
     procedure Stop;
     property Failure: TNyxText read FFailure;
+    property OnOperatorProfileChange: TNyxOperatorProfileChange
+      read FOnOperatorProfileChange write FOnOperatorProfileChange;
   end;
 
 implementation
 
 uses
   nyx.studio.mcpconfig, nyx.types, nyx.studio.builds, nyx.studio.compiler,
-  nyx.model, nyx.codec;
+  nyx.model, nyx.codec, nyx.studio.outputs;
 
 function NewCapability: TNyxText;
 var
@@ -123,6 +134,27 @@ var
 begin
   CreateGUID(LID);
   Result := Copy(GUIDToString(LID), 2, 36);
+end;
+
+function EditorBuildError(const AMessage: TNyxText): TNyxText;
+var
+  LIndex: Integer;
+  LCount: Integer;
+  LScalar: Integer;
+begin
+  LIndex := 1;
+  LCount := 0;
+  while (LIndex <= Length(AMessage)) and (LCount < 1024) do
+  begin
+
+    if not NyxNextScalar(AMessage, LIndex, LScalar) then
+    begin
+      Exit('Compiler request was refused');
+    end;
+    Inc(LCount);
+  end;
+  { Bound the reply without cutting a native UTF-8 or browser UTF-16 scalar. }
+  Result := Copy(AMessage, 1, LIndex - 1);
 end;
 
 function ReadBytes(const APath: TNyxText): TNyxText;
@@ -359,6 +391,8 @@ var
   LSession: TNyxAgentSession;
   LArguments: TNyxDataValue;
   LTarget: TNyxWorkspaceRef;
+  LBuild: TNyxDataValue;
+  LAfter: Integer;
 begin
   LWorkspace := NyxWorkspaceArgument(ARequest);
   LSession := FWorkspaces.Find(LWorkspace);
@@ -368,7 +402,38 @@ begin
     raise ENyxProjectConflict.Create('Editor project is missing or closed; your local work is retained');
   end;
 
-  if ARequest.Field('op').AsText = 'close-workspace' then
+  LBuild := NyxNull;
+
+  if ARequest.Field('op').AsText = 'build' then
+  begin
+    { A private capability admits operator work. Keep job/profile/scoped-pair
+      validation in the same bounded asynchronous compiler service as MCP. }
+    LArguments := NyxWorkspaceArguments(ARequest);
+    NyxAgentFields(LArguments, '|op|after|build|');
+    { Admit observation metadata before a profile write or job submission.
+      A malformed envelope must not leave admitted work behind a lost receipt. }
+    LAfter := LArguments.Field('after').AsInteger;
+
+    if LAfter < 0 then
+    begin
+      raise ENyxProjectConflict.Create('Editor build observation revision must be nonnegative');
+    end;
+    try
+      LBuild := BuildTool(NyxWithWorkspace(LArguments.Field('build'), LWorkspace),
+        'Studio', 'private-editor', baEditor);
+    except
+      on LException: Exception do
+      begin
+        { Compiler admission failure is not an editor synchronization conflict.
+          Keep ordinary observation/publication alive and return bounded help. }
+        LBuild := NyxObject([NyxField('state', NyxData('rejected')),
+          NyxField('error', NyxData(EditorBuildError(TNyxText(LException.Message))))]);
+      end;
+    end;
+    LState := LSession.Exchange(NyxObject([NyxField('op', NyxData('observe')),
+      NyxField('after', NyxData(LAfter))]));
+  end
+  else if ARequest.Field('op').AsText = 'close-workspace' then
   begin
     { This route requires the private editor capability. Project lifecycle MCP
       deliberately omits close; an agent cannot manufacture operator consent.
@@ -398,7 +463,7 @@ begin
   begin
     LState := LSession.Exchange(NyxWorkspaceArguments(ARequest));
   end;
-  SetLength(LFields, LState.Count + 3);
+  SetLength(LFields, LState.Count + 4);
   for LIndex := 0 to LState.Count - 1 do
   begin
     LFields[LIndex] := NyxField(LState.Key(LIndex), LState.Field(LState.Key(LIndex)));
@@ -406,6 +471,13 @@ begin
   LFields[LState.Count] := NyxField('reviews', ReviewViews);
   LFields[LState.Count + 1] := NyxField('workspaces', FWorkspaces.Observe);
   LFields[LState.Count + 2] := NyxField('workspaceClosing', NyxData(True));
+  LFields[LState.Count + 3] := NyxField('editorBuilds', NyxData(True));
+
+  if LBuild.Kind <> ndNull then
+  begin
+    SetLength(LFields, LState.Count + 5);
+    LFields[LState.Count + 4] := NyxField('buildReply', LBuild);
+  end;
   Result := NyxWithWorkspace(NyxObject(LFields), LWorkspace);
 end;
 
@@ -675,7 +747,7 @@ begin
 end;
 
 function TNyxStudioMCP.BuildTool(const AWireArguments: TNyxDataValue;
-  const AActor, AOwner: TNyxText): TNyxDataValue;
+  const AActor, AOwner: TNyxText; AAuthority: TNyxBuildAuthority): TNyxDataValue;
 const
   CRunning: TNyxText = 'running · ';
   CSeparator: TNyxText = ' · ';
@@ -696,25 +768,78 @@ var
   LSession: TNyxAgentSession;
   LRetryOwner: TNyxText;
   LWorkspace: TNyxWorkspaceRef;
+  LProfile: TNyxOutputConfiguration;
 begin
   LWorkspace := NyxWorkspaceArgument(AWireArguments);
   LReview := NyxReviewArgument(AWireArguments);
-  LSession := ContextSession(AWireArguments, AOwner, AActor);
+
+  if AAuthority = baEditor then
+  begin
+
+    if LReview.ID <> '' then
+    begin
+      raise ENyxProjectConflict.Create('Operator compilation requires a project context');
+    end;
+    LSession := FWorkspaces.Find(LWorkspace);
+
+    if LSession = nil then
+    begin
+      raise ENyxProjectConflict.Create('Editor project is missing or closed');
+    end;
+  end
+  else
+  begin
+    LSession := ContextSession(AWireArguments, AOwner, AActor);
+  end;
   AArguments := NyxReviewArguments(NyxWorkspaceArguments(AWireArguments));
   LRetryOwner := AActor;
 
-  if (LReview.ID <> '') or (LWorkspace.ID <> '') then
+  if (AAuthority = baEditor) or (LReview.ID <> '') or (LWorkspace.ID <> '') then
   begin
     LRetryOwner := NyxObject([NyxField('owner', NyxData(AOwner)),
       NyxField('review', NyxData(LReview.ID)),
       NyxField('workspace', NyxData(LWorkspace.ID))]).ToJSON;
   end;
 
-  if FCore.Permission = apDisabled then
+  if (AAuthority = baAgent) and (FCore.Permission = apDisabled) then
   begin
     raise ENyxProjectConflict.Create('Agent access is disabled in Studio');
   end;
   LMode := AArguments.Field('mode').AsText;
+
+  if (AAuthority = baEditor) and (LMode = 'profile') then
+  begin
+    NyxAgentFields(AArguments, '|mode|profile|expectedOutputID|');
+
+    if NyxAgentHas(AArguments, 'expectedOutputID') and
+      not NyxAgentHas(AArguments, 'profile') then
+    begin
+      raise ENyxProjectConflict.Create('A profile identity accompanies a profile save');
+    end;
+
+    if NyxAgentHas(AArguments, 'profile') then
+    begin
+
+      if AArguments.Field('expectedOutputID').AsText <>
+        NyxBuildFingerprint(FBuilds.OperatorProfile) then
+      begin
+        raise ENyxProjectConflict.Create('Output configuration changed; local profile retained');
+      end;
+      LItem := AArguments.Field('profile');
+      { Validate before asking the host to persist. Configure itself re-admits
+        the same versioned text; a failed write never publishes a new profile. }
+      LProfile := TNyxOutputConfiguration.Decode(LItem.ToJSON);
+      LProfile.Free;
+
+      if Assigned(FOnOperatorProfileChange) then
+      begin
+        FOnOperatorProfileChange(LItem.ToJSON);
+      end;
+      FBuilds.Configure(LItem.ToJSON);
+    end;
+    Exit(NyxObject([NyxField('profile', TNyxDataValue.ParseJSON(FBuilds.OperatorProfile)),
+      NyxField('outputID', NyxData(NyxBuildFingerprint(FBuilds.OperatorProfile)))]));
+  end;
 
   if LMode = 'outputs' then
   begin
@@ -783,7 +908,7 @@ begin
   end;
   FBuilds.AdmitRequest(AArguments);
 
-  if FCore.Permission <> apEdit then
+  if (AAuthority = baAgent) and (FCore.Permission <> apEdit) then
   begin
     raise ENyxProjectConflict.Create('Agent builds require Allow edits in Studio');
   end;
@@ -801,7 +926,15 @@ begin
   begin
     LView := AArguments.Field('view').AsText;
   end;
-  LPair := LSession.BuildPair(AArguments.Field('expectedRevision').AsInteger, LScope, LView);
+
+  if AAuthority = baEditor then
+  begin
+    LPair := LSession.EditorBuildPair(AArguments.Field('expectedRevision').AsInteger, LScope, LView);
+  end
+  else
+  begin
+    LPair := LSession.BuildPair(AArguments.Field('expectedRevision').AsInteger, LScope, LView);
+  end;
   Result := NyxWithWorkspace(NyxWithReview(FBuilds.Submit(AActor, AArguments,
     LPair, LReview, LRetryOwner, LWorkspace), LReview), LWorkspace);
   FCore.RecordActivity(AActor, 'nyx_build', CRunning +

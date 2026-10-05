@@ -50,6 +50,9 @@ type
     destructor Destroy; override;
     procedure Configure(const AProfile: TNyxText);
     function Outputs: TNyxDataValue;
+    { Trusted editor configuration only. Public MCP output metadata never calls
+      this accessor and never receives machine paths. Returns an owned copy. }
+    function OperatorProfile: TNyxText;
     { Shape/type admission precedes retry lookup or immutable pair capture. }
     procedure AdmitRequest(const AArguments: TNyxDataValue);
     function Retry(const AActor: TNyxText; const AArguments: TNyxDataValue;
@@ -94,7 +97,7 @@ implementation
 
 uses
   md5, fpjson, nyx.model, nyx.codec, nyx.studio.outputs,
-  nyx.studio.agents, nyx.studio.buildexecutor;
+  nyx.studio.agents, nyx.studio.buildexecutor, nyx.editing;
 
 type
   TBuildJob = class;
@@ -513,6 +516,11 @@ begin
   end;
 end;
 
+function TNyxBuildJobs.OperatorProfile: TNyxText;
+begin
+  Result := FProfile;
+end;
+
 procedure TNyxBuildJobs.AdmitRequest(const AArguments: TNyxDataValue);
 var
   LScope: TNyxBuildScope;
@@ -524,7 +532,8 @@ begin
   LScope := ParseNyxBuildScope(AArguments.Field('scope').AsText);
   LID := AArguments.Field('operationId').AsText;
 
-  if (Length(LID) < 1) or (Length(LID) > 120) then
+  if (NyxTextScalarCount(LID) < 1) or (NyxTextScalarCount(LID) > 120) or
+    (Pos(#0, LID) > 0) or (Pos(#10, LID) > 0) or (Pos(#13, LID) > 0) then
   begin
     raise ENyxModel.Create('Build operationId must contain 1..120 characters');
   end;

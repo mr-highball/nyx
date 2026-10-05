@@ -42,6 +42,24 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Native service integration — 2026-10-05
 
+The subsequent compiler/preview source candidate now adds optional native output
+preflight, guarded profile saves, asynchronous immutable page/reusable/application
+jobs, bounded diagnostics and compiled Run/Stop/view reload. Its real compiler /
+actual-control evidence and retained failures are in
+[the compiler packet](../WORK.md#native-compiler-and-compiled-preview-consumer--2026-10-05).
+The engine is directly exercised without launching its updated listener; actual
+artifact download uses the existing admitted HTTP root. This does not establish
+new private editor HTTP deployment, inactive-project job completion or full
+native authoring. Dedicated Unicode inputs remain separate from English demos.
+
+The completed compiler/preview handoff advances the no-closure count from 5 to 6;
+original criteria 2/3/4/7 and all prerequisites remain open. Reassessment ends
+another controller/navigation fixture expansion. The next bounded deliverable
+follows [service criterion 1](NS-5_service-reload_01.md): whole-request deadlines
+and stalled-worker retirement, with real stalled transport and detached receiver
+evidence before claiming reliability. Updated editor HTTP qualification retains
+the recorded refused-launch gate; do not substitute direct protocol evidence.
+
 The runnable full editor now consumes the shared private editor protocol through
 native worker/UI-timer transport. A real semantic MCP/actual native-control
 journey passes 49 checks: observed changes, native Unicode input, authoritative

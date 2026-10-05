@@ -59,6 +59,12 @@ type
     { Explicit editor capability advertisement. A newer client must not offer
       confirmation against an older service that lacks operator closure. }
     CanCloseWorkspace: Boolean;
+    { Private compiler capability and its latest bounded reply. Job replies omit
+      full source/document ownership. Operator profile replies contain local
+      paths; never export this private view as a public MCP response or design. }
+    CanBuild: Boolean;
+    BuildReply: TNyxDataValue;
+    BuildReplySequence: Integer;
   end;
 
 function DefaultNyxStudioAgentView: TNyxStudioAgentView;
@@ -109,6 +115,9 @@ begin
   Result.CloseRevision := 0;
   Result.CloseLabel := '';
   Result.CanCloseWorkspace := False;
+  Result.CanBuild := False;
+  Result.BuildReply := NyxNull;
+  Result.BuildReplySequence := 0;
 end;
 
 function LabelNode(const AID, AText: TNyxText): TNyxNode;

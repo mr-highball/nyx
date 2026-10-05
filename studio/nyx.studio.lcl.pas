@@ -32,10 +32,13 @@ uses
   nyx.studio.session, nyx.studio.view, nyx.studio.projects,
   nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.rootedits,
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
-  nyx.studio.workspaces;
+  nyx.studio.workspaces, nyx.studio.builds, nyx.studio.editorbuild,
+  nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl;
 
 type
   TNyxNativeStudio = class;
+  TNyxNativeBuildStage = (nbsIdle, nbsProfile, nbsOutputs, nbsRequest, nbsPolling,
+    nbsPreviewInspect, nbsPreviewDownload, nbsPreviewActivate, nbsTerminal);
 
   { Private native context owns one portable mirror and its immutable service
     bridge. Owner is borrowed. Views remain owned by Studio; this record retains
@@ -61,6 +64,26 @@ type
     CanvasLeft: Integer;
     LeftTop: Integer;
     RightTop: Integer;
+    { Compiler work belongs to this immutable project, including while hidden.
+      Its captured pair gates result activation; the UI timer never owns Studio. }
+    BuildStage: TNyxNativeBuildStage;
+    BuildScope: TNyxBuildScope;
+    BuildTarget: TNyxBuildTarget;
+    BuildPair: TNyxText;
+    BuildRoot: TNyxBuildRootRef;
+    BuildJob: TNyxBuildJobRef;
+    BuildReplySequence: Integer;
+    BuildStatusPending: Boolean;
+    BuildTimer: TTimer;
+    BuildArtifact: TNyxText;
+    BuildResult: TNyxDataValue;
+    BuildProfileSent: TNyxText;
+    BuildRequested: Boolean;
+    BuildMessage: TNyxText;
+    BuildOutputSnapshot: TNyxText;
+    CompiledPreview: TNyxLCLCompiledPreview;
+    procedure PreviewPrepared(ASucceeded: Boolean; const AError: TNyxText);
+    procedure PollBuild(ASender: TObject);
     procedure Refresh(AContentChanged: Boolean);
     destructor Destroy; override;
   end;
@@ -104,8 +127,10 @@ type
     FQueued: Boolean;
     FReplaceCanvas: Boolean;
     FSourceLine: Integer;
+    FSourceColumn: Integer;
     FPaintCount: Integer;
     FServiceURL: TNyxText;
+    FPreviewDirectory: TNyxText;
     FProjects: array of TNyxNativeStudioProject;
     FCurrentProject: TNyxNativeStudioProject;
     FPendingProject: TNyxNativeStudioProject;
@@ -113,6 +138,12 @@ type
     FRestoreProject: Boolean;
     FAgentCompilerSequence: Integer;
     FInitialPair: TNyxText;
+    FOutputLoaded: Boolean;
+    FOutputLoading: Boolean;
+    { Field-level dirty tracking preserves edits made while profile reads are
+      in flight. The accepted configuration object stays stable for every view. }
+    FOutputChanged: set of 0..5;
+    FOutputIdentity: TNyxBuildOutputRef;
     procedure HostResize(ASender: TObject);
     procedure PaintQueued(AData: PtrInt);
     procedure Paint;
@@ -127,6 +158,12 @@ type
       that is currently notifying. Guard programmatic source feedback. }
     procedure UpdateTitleAndSource;
     procedure AgentRefresh(AContentChanged: Boolean);
+    procedure BeginBuild(AApplication: Boolean);
+    procedure BeginCompiledPreview(AProject: TNyxNativeStudioProject);
+    function CompiledPreviewCurrent(AProject: TNyxNativeStudioProject): Boolean;
+    function GetCompiledPreviewProcessID: Integer;
+    procedure ReadOutputs(AProject: TNyxNativeStudioProject; ABuild: Boolean);
+    procedure ProjectBuildReply(AProject: TNyxNativeStudioProject);
     procedure RecordLocal;
     procedure CaptureProject;
     procedure AdmitProject(AProject: TNyxNativeStudioProject);
@@ -134,6 +171,10 @@ type
     function CurrentBridge: TNyxStudioAgentBridge;
     function GetAgentState: TNyxStudioAgentView;
     function ComposeShell: TNyxDocument;
+  protected
+    { Owned adapter factory for embedded hosts with another private transport.
+      Default uses asynchronous loopback HTTP. No receiver runs inside Post. }
+    function CreateEditorExchange: TNyxStudioEditorExchange; virtual;
   public
     { Local directory is explicit host configuration, never design content. }
     constructor Create(AHost: TWinControl; const AProjectDirectory: TNyxText);
@@ -163,6 +204,8 @@ type
     property PaintCount: Integer read FPaintCount;
     property Status: TNyxText read FState.Status;
     property Agents: TNyxStudioAgentView read GetAgentState;
+    { Zero for stopped previews or browser windows that this host does not own. }
+    property CompiledPreviewProcessID: Integer read GetCompiledPreviewProcessID;
   end;
 
 implementation
@@ -228,7 +271,9 @@ type
     ncWorkspaceCloseCancel,
     ncWorkspaceCloseConfirm,
     ncBuildView,
-    ncBuildApplication);
+    ncBuildApplication,
+    ncCompiledRun,
+    ncCompiledStop);
 
 const
   CNativeCommands: array[TNativeCommand] of TNyxText = ('',
@@ -281,7 +326,9 @@ const
     'action-workspace-close-cancel',
     'action-workspace-close-confirm',
     'action-build-view',
-    'action-build-app');
+    'action-build-app',
+    'action-compiled-run',
+    'action-compiled-stop');
 
 function DecodeNativeCommand(const AID: TNyxText): TNativeCommand;
 var
@@ -315,8 +362,33 @@ begin
   end;
 end;
 
+procedure TNyxNativeStudioProject.PollBuild(ASender: TObject);
+begin
+
+  if (Owner = nil) or not Owner.FRunning or (BuildStage <> nbsPolling) or
+    BuildStatusPending or not Bridge.Enabled or not Bridge.State.Connected or
+    Bridge.State.Conflict then
+  begin
+    Exit;
+  end;
+  { A timer only queues a bounded private operation. Compiler workers remain
+    service-owned, and the bridge fixes the project's identity on every packet. }
+  BuildStatusPending := True;
+  try
+    Bridge.BuildStatus(BuildJob);
+  except
+    BuildStatusPending := False;
+    raise;
+  end;
+end;
+
 procedure TNyxNativeStudioProject.Refresh(AContentChanged: Boolean);
 begin
+
+  if Owner <> nil then
+  begin
+    Owner.ProjectBuildReply(Self);
+  end;
 
   if (Owner <> nil) and (Owner.FPendingProject = Self) then
   begin
@@ -329,9 +401,44 @@ begin
   end;
 end;
 
+procedure TNyxNativeStudioProject.PreviewPrepared(ASucceeded: Boolean; const AError: TNyxText);
+begin
+
+  if Owner = nil then
+  begin
+    Exit;
+  end;
+  try
+
+    if not ASucceeded then
+    begin
+      raise ENyxModel.Create(AError);
+    end;
+    { A successful download still requires another exact-context currentness
+      query. This callback never authorizes execution from an older snapshot. }
+    BuildStage := nbsPreviewActivate;
+    Bridge.BuildStatus(BuildJob);
+  except
+    on LException: Exception do
+    begin
+      BuildStage := nbsTerminal;
+      BuildMessage := LException.Message;
+      State.Status := BuildMessage;
+
+      if Owner.FCurrentProject = Self then
+      begin
+        Owner.FState.Status := BuildMessage;
+        Owner.RequestRefresh;
+      end;
+    end;
+  end;
+end;
+
 destructor TNyxNativeStudioProject.Destroy;
 begin
   Owner := nil;
+  FreeAndNil(BuildTimer);
+  CompiledPreview.Free;
   Bridge.Free;
   Session.Free;
   inherited Destroy;
@@ -353,6 +460,8 @@ begin
   FTheme := TNyxTheme.Create;
   FOutputs := TNyxOutputConfiguration.Create;
   FStore := TNyxProjectStore.Create(AProjectDirectory);
+  FPreviewDirectory := IncludeTrailingPathDelimiter(ExpandFileName(AProjectDirectory)) +
+    'compiled-previews';
   FState := DefaultNyxStudioViewState;
   FState.CodePresentation := ncpHosted;
   FState.Outputs := FOutputs;
@@ -386,6 +495,12 @@ begin
   for LIndex := 0 to High(FProjects) do
   begin
     FProjects[LIndex].Owner := nil;
+    FreeAndNil(FProjects[LIndex].BuildTimer);
+
+    if FProjects[LIndex].CompiledPreview <> nil then
+    begin
+      FProjects[LIndex].CompiledPreview.Cancel;
+    end;
     FProjects[LIndex].Bridge.Pause;
   end;
   FCurrentProject := nil;
@@ -499,11 +614,407 @@ begin
   end;
   FState.Status := LState.Status;
 
+  if (FCurrentProject <> nil) and (FCurrentProject.BuildMessage <> '') then
+  begin
+    FState.Status := FCurrentProject.BuildMessage;
+  end;
+
   if LState.Conflict then
   begin
     FState.AgentsVisible := True;
   end;
   RequestRefresh(AContentChanged);
+end;
+
+function TNyxNativeStudio.CreateEditorExchange: TNyxStudioEditorExchange;
+begin
+  Result := TNyxLCLEditorExchange.Create(FServiceURL);
+end;
+
+procedure TNyxNativeStudio.ReadOutputs(AProject: TNyxNativeStudioProject; ABuild: Boolean);
+begin
+
+  if FOutputLoading then
+  begin
+    raise ENyxModel.Create('Output configuration is synchronizing; local settings are retained');
+  end;
+  FOutputLoading := True;
+  AProject.BuildRequested := ABuild;
+  AProject.BuildStage := nbsProfile;
+  AProject.BuildReplySequence := AProject.Bridge.State.BuildReplySequence;
+  AProject.BuildProfileSent := '';
+  try
+
+    if FOutputLoaded and (FOutputChanged <> []) then
+    begin
+      AProject.BuildProfileSent := FOutputs.Encode;
+      AProject.Bridge.SaveCompilerProfile(FOutputs, FOutputIdentity);
+    end
+    else
+    begin
+      AProject.Bridge.CompilerProfile;
+    end;
+  except
+    FOutputLoading := False;
+    AProject.BuildStage := nbsIdle;
+    raise;
+  end;
+end;
+
+procedure TNyxNativeStudio.BeginBuild(AApplication: Boolean);
+var
+  LIndex: Integer;
+  LProject: TNyxNativeStudioProject;
+begin
+
+  if (CurrentBridge = nil) or not CurrentBridge.State.CanBuild then
+  begin
+    raise ENyxModel.Create('Native build requests are unavailable');
+  end;
+
+  if FState.OutputTarget = '' then
+  begin
+    FState.OutputVisible := True;
+    raise ENyxModel.Create('Choose an output in Target / output before building');
+  end;
+
+  if FOutputLoading then
+  begin
+    raise ENyxModel.Create('Output configuration is synchronizing; build when ready');
+  end;
+
+  if not CurrentBridge.SourceSynchronized or FSession.ProjectSnapshot.Pending then
+  begin
+    raise ENyxModel.Create('Apply or restore Pascal and finish project synchronization before building');
+  end;
+  LProject := FCurrentProject;
+
+  if LProject.BuildStage in [nbsProfile, nbsOutputs, nbsRequest, nbsPolling,
+    nbsPreviewInspect, nbsPreviewDownload, nbsPreviewActivate] then
+  begin
+    raise ENyxModel.Create('A build is already active for this project');
+  end;
+  LProject.BuildTarget := ParseNyxBuildTarget(FState.OutputTarget);
+  LProject.BuildScope := bsApplication;
+  LProject.BuildRoot := Default(TNyxBuildRootRef);
+
+  if not AApplication then
+  begin
+    LProject.BuildScope := bsView;
+    for LIndex := 0 to FSession.Document.ComponentCount - 1 do
+    begin
+
+      if FSession.Document.Components[LIndex].ID = FSession.ActiveViewID then
+      begin
+        LProject.BuildScope := bsReusable;
+      end;
+    end;
+    LProject.BuildRoot := NyxBuildRoot(FSession.ActiveViewID);
+  end;
+  LProject.BuildPair := EncodeNyxProject(FSession.ProjectSnapshot);
+  LProject.BuildResult := NyxNull;
+  LProject.BuildArtifact := '';
+  LProject.BuildMessage := 'Checking compiler output';
+  FState.Status := LProject.BuildMessage;
+  ReadOutputs(LProject, True);
+end;
+
+function TNyxNativeStudio.CompiledPreviewCurrent(AProject: TNyxNativeStudioProject): Boolean;
+begin
+  Result := (AProject <> nil) and (AProject.BuildArtifact <> '') and
+    (AProject.BuildResult.Kind = ndObject) and AProject.Bridge.SourceSynchronized and
+    (EncodeNyxProject(AProject.Session.ProjectSnapshot) = AProject.BuildPair) and
+    (FOutputs.Encode = AProject.BuildOutputSnapshot);
+end;
+
+function TNyxNativeStudio.GetCompiledPreviewProcessID: Integer;
+begin
+  Result := 0;
+
+  if (FCurrentProject <> nil) and (FCurrentProject.CompiledPreview <> nil) then
+  begin
+    Result := FCurrentProject.CompiledPreview.ProcessID;
+  end;
+end;
+
+procedure TNyxNativeStudio.BeginCompiledPreview(AProject: TNyxNativeStudioProject);
+begin
+
+  if not CompiledPreviewCurrent(AProject) then
+  begin
+    raise ENyxModel.Create('Compile the current accepted project and output before running a preview');
+  end;
+
+  if AProject.BuildStage <> nbsTerminal then
+  begin
+    raise ENyxModel.Create('Compiler or preview preparation is still running');
+  end;
+  AProject.BuildStage := nbsPreviewInspect;
+  AProject.BuildMessage := 'Preparing compiled preview';
+  AProject.Bridge.BuildStatus(AProject.BuildJob);
+end;
+
+procedure TNyxNativeStudio.ProjectBuildReply(AProject: TNyxNativeStudioProject);
+var
+  LView: TNyxStudioAgentView;
+  LReply: TNyxDataValue;
+  LProfile: TNyxOutputConfiguration;
+  LIndex: Integer;
+  LReady: Boolean;
+  LIssue: TNyxText;
+  LRequest: INyxCompilerRequest;
+  LIdentity: TGUID;
+  LCurrent: Boolean;
+begin
+  LView := AProject.Bridge.State;
+
+  if LView.BuildReplySequence = AProject.BuildReplySequence then
+  begin
+    Exit;
+  end;
+  AProject.BuildReplySequence := LView.BuildReplySequence;
+  LReply := LView.BuildReply;
+  try
+
+    if NyxAgentHas(LReply, 'state') and (LReply.Field('state').AsText = 'rejected') then
+    begin
+      raise ENyxModel.Create(LReply.Field('error').AsText);
+    end;
+    case AProject.BuildStage of
+      nbsProfile:
+        begin
+          FOutputLoading := False;
+          FOutputIdentity := NyxBuildOutput(LReply.Field('outputID').AsText);
+          LProfile := TNyxOutputConfiguration.Decode(LReply.Field('profile').ToJSON);
+          try
+
+            if AProject.BuildProfileSent = '' then
+            begin
+              { A delayed read may fill clean fields; it must not erase any field
+                the operator has edited meanwhile, or replace borrowed objects. }
+              for LIndex := 0 to High(NyxOutputFields) do
+              begin
+
+                if not (LIndex in FOutputChanged) then
+                begin
+                  FOutputs.SetField(NyxOutputFields[LIndex], LProfile.Field(NyxOutputFields[LIndex]));
+                end;
+              end;
+            end
+            else if FOutputs.Encode = AProject.BuildProfileSent then
+            begin
+              FOutputChanged := [];
+            end;
+          finally
+            LProfile.Free;
+          end;
+          FOutputLoaded := True;
+
+          if FOutputChanged <> [] then
+          begin
+            ReadOutputs(AProject, AProject.BuildRequested);
+          end
+          else if AProject.BuildRequested then
+          begin
+            AProject.BuildStage := nbsOutputs;
+            AProject.BuildOutputSnapshot := FOutputs.Encode;
+            AProject.Bridge.CompilerOutputs;
+          end
+          else
+          begin
+            AProject.BuildStage := nbsIdle;
+            AProject.BuildMessage := 'Output configuration loaded';
+          end;
+        end;
+      nbsOutputs:
+        begin
+          { Recheck the mirror after preflight. Edits/navigation during any
+            asynchronous admission must never silently compile a different pair. }
+          if not AProject.Bridge.SourceSynchronized or
+            (EncodeNyxProject(AProject.Session.ProjectSnapshot) <> AProject.BuildPair) then
+          begin
+            raise ENyxModel.Create('Project changed during compiler checks; build again when ready');
+          end;
+
+          if FOutputs.Encode <> AProject.BuildOutputSnapshot then
+          begin
+            raise ENyxModel.Create('Output settings changed during compiler checks; local settings retained');
+          end;
+
+          if LReply.Field('outputID').AsText <> FOutputIdentity.ID then
+          begin
+            FOutputLoaded := False;
+            raise ENyxModel.Create('Service output configuration changed; inspect outputs before rebuilding');
+          end;
+          LReady := False;
+          LIssue := 'Requested output is unavailable';
+          for LIndex := 0 to LReply.Field('outputs').Count - 1 do
+          begin
+
+            if LReply.Field('outputs').Item(LIndex).Field('target').AsText =
+              NyxBuildTargetName(AProject.BuildTarget) then
+            begin
+              LReady := LReply.Field('outputs').Item(LIndex).Field('ready').AsBoolean;
+              LIssue := LReply.Field('outputs').Item(LIndex).Field('issue').AsText;
+            end;
+          end;
+
+          if not LReady then
+          begin
+            raise ENyxModel.Create(LIssue);
+          end;
+          CreateGUID(LIdentity);
+          LRequest := NewNyxCompilerRequest.Target(AProject.BuildTarget)
+            .Scope(AProject.BuildScope).AtRevision(LView.Revision)
+            .Output(NyxBuildOutput(LReply.Field('outputID').AsText))
+            .Operation(NyxBuildOperation('studio-' + Copy(GUIDToString(LIdentity), 2, 36)));
+
+          if AProject.BuildScope <> bsApplication then
+          begin
+            LRequest.Root(AProject.BuildRoot);
+          end;
+          AProject.BuildStage := nbsRequest;
+          AProject.Bridge.RequestBuild(LRequest);
+        end;
+      nbsRequest:
+        begin
+          AProject.BuildJob := NyxBuildJob(LReply.Field('job').AsText);
+          AProject.BuildStage := nbsPolling;
+          AProject.BuildMessage := 'Compiling ' + NyxBuildScopeName(AProject.BuildScope);
+
+          if AProject.BuildTimer = nil then
+          begin
+            AProject.BuildTimer := TTimer.Create(nil);
+            AProject.BuildTimer.Enabled := False;
+            AProject.BuildTimer.Interval := 300;
+            AProject.BuildTimer.OnTimer := AProject.PollBuild;
+          end;
+          AProject.BuildTimer.Enabled := True;
+        end;
+      nbsPolling:
+        begin
+          AProject.BuildStatusPending := False;
+
+          if LReply.Field('job').AsText <> AProject.BuildJob.ID then
+          begin
+            raise ENyxModel.Create('Compiler reply belongs to another job; project retained');
+          end;
+          AProject.BuildResult := LReply.Copy;
+
+          if (LReply.Field('state').AsText = 'succeeded') or
+            (LReply.Field('state').AsText = 'failed') then
+          begin
+            AProject.BuildStage := nbsTerminal;
+            AProject.BuildTimer.Enabled := False;
+            LCurrent := LReply.Field('currentSource').AsBoolean and
+              LReply.Field('currentOutput').AsBoolean and AProject.Bridge.SourceSynchronized and
+              (EncodeNyxProject(AProject.Session.ProjectSnapshot) = AProject.BuildPair) and
+              (FOutputs.Encode = AProject.BuildOutputSnapshot);
+
+            if not LCurrent then
+            begin
+              AProject.BuildMessage := 'Build finished / project or output changed; result retained for review';
+            end
+            else if LReply.Field('state').AsText = 'succeeded' then
+            begin
+              AProject.BuildArtifact := LReply.Field('artifact').AsText;
+              AProject.BuildMessage := 'Build complete / compiled artifact available';
+
+              if (AProject.CompiledPreview <> nil) and AProject.CompiledPreview.Running and
+                (FCurrentProject = AProject) then
+              begin
+                BeginCompiledPreview(AProject);
+              end;
+            end
+            else
+            begin
+              AProject.BuildMessage := LReply.Field('error').AsText;
+              AProject.State.CodeVisible := True;
+
+              if FCurrentProject = AProject then
+              begin
+                FState.CodeVisible := True;
+                FState.Panel := nspDesign;
+              end;
+            end;
+          end;
+        end;
+      nbsPreviewInspect, nbsPreviewActivate:
+        begin
+
+          if not LReply.Field('currentSource').AsBoolean or
+            not LReply.Field('currentOutput').AsBoolean then
+          begin
+            { A definitive service refusal retires the stale Run affordance;
+              the previously running owned preview remains available to Stop. }
+            AProject.BuildArtifact := '';
+          end;
+
+          if (LReply.Field('job').AsText <> AProject.BuildJob.ID) or
+            not CompiledPreviewCurrent(AProject) then
+          begin
+            raise ENyxModel.Create('Project or output changed; compiled preview activation refused');
+          end;
+          { Wire admission checks service currentness and the exact immutable
+            artifact manifest; local pair/profile admission is repeated too. }
+          AdmitNyxCompiledArtifact(LReply);
+          AProject.BuildResult := LReply.Copy;
+
+          if AProject.BuildStage = nbsPreviewInspect then
+          begin
+
+            if AProject.CompiledPreview = nil then
+            begin
+              AProject.CompiledPreview := TNyxLCLCompiledPreview.Create(FServiceURL, FPreviewDirectory);
+            end;
+            AProject.BuildStage := nbsPreviewDownload;
+            AProject.CompiledPreview.Prepare(AdmitNyxCompiledArtifact(LReply), AProject.PreviewPrepared);
+          end
+          else
+          begin
+            AProject.BuildStage := nbsTerminal;
+
+            if FCurrentProject = AProject then
+            begin
+              AProject.CompiledPreview.Launch;
+              AProject.BuildMessage := 'Compiled preview running';
+            end
+            else
+            begin
+              AProject.BuildMessage := 'Compiled preview ready / return to this project to run';
+            end;
+          end;
+        end;
+      nbsIdle, nbsPreviewDownload, nbsTerminal:
+        begin
+          { No reply is adopted outside its explicitly owned pending stage. }
+        end;
+    end;
+  except
+    on LException: Exception do
+    begin
+
+      if AProject.BuildStage = nbsProfile then
+      begin
+        FOutputLoading := False;
+        FOutputLoaded := False;
+      end;
+      AProject.BuildStage := nbsTerminal;
+      AProject.BuildMessage := LException.Message;
+
+      if AProject.BuildTimer <> nil then
+      begin
+        AProject.BuildTimer.Enabled := False;
+      end;
+    end;
+  end;
+  AProject.State.Status := AProject.BuildMessage;
+
+  if FCurrentProject = AProject then
+  begin
+    FState.Status := AProject.BuildMessage;
+    RequestRefresh;
+  end;
 end;
 
 procedure TNyxNativeStudio.ConnectService(const ABaseURL: TNyxText;
@@ -528,8 +1039,9 @@ begin
     LProject.Reference := AWorkspace;
     LProject.State := FState;
     LProject.Session := FSession;
+    FServiceURL := ABaseURL;
     LProject.Bridge := TNyxStudioAgentBridge.Create(FSession, LProject.Refresh,
-      AWorkspace, TNyxLCLEditorExchange.Create(ABaseURL));
+      AWorkspace, CreateEditorExchange);
     SetLength(FProjects, 1);
     FProjects[0] := LProject;
     FCurrentProject := LProject;
@@ -710,7 +1222,7 @@ begin
       LProject.State.Outputs := FOutputs;
       LProject.SavedPair := EncodeNyxProject(LProject.Session.ProjectSnapshot);
       LProject.Bridge := TNyxStudioAgentBridge.Create(LProject.Session,
-        LProject.Refresh, AWorkspace, TNyxLCLEditorExchange.Create(FServiceURL));
+        LProject.Refresh, AWorkspace, CreateEditorExchange);
       SetLength(FProjects, Length(FProjects) + 1);
       FProjects[High(FProjects)] := LProject;
     except
@@ -767,6 +1279,7 @@ begin
   FCanvasID := '';
   FRestoreProject := True;
   FSourceLine := 0;
+  FSourceColumn := 0;
   FAgentCompilerSequence := 0;
   FCompilerReport := nil;
   FRootRemoval := nil;
@@ -864,6 +1377,9 @@ begin
   FState.Compact := FHost.ClientWidth < 900;
   FState.RootRemoval := NyxNull;
   FState.Agents := GetAgentState;
+  FState.CompiledPreviewAvailable := CompiledPreviewCurrent(FCurrentProject);
+  FState.CompiledPreviewRunning := (FCurrentProject <> nil) and
+    (FCurrentProject.CompiledPreview <> nil) and FCurrentProject.CompiledPreview.Running;
 
   if FRootRemoval <> nil then
   begin
@@ -1008,7 +1524,7 @@ begin
 
       if FSourceLine > 0 then
       begin
-        FCodeView.NavigateCodeLine('studio-code', FSourceLine);
+        FCodeView.NavigateCodeLine('studio-code', FSourceLine, FSourceColumn);
       end
       else if LRetainFocus and LFocus.CanFocus then
       begin
@@ -1021,6 +1537,7 @@ begin
       end;
     end;
     FSourceLine := 0;
+    FSourceColumn := 0;
     FReplaceCanvas := False;
     RestoreProjectControls;
     FChangingProject := False;
@@ -1220,6 +1737,7 @@ begin
       RouteNyxSourceDiagnostic(FSession, ANode, AEvent.Trigger, LDiagnostic) then
     begin
       FSourceLine := LDiagnostic.Line;
+      FSourceColumn := LDiagnostic.Column;
       FState.CodeVisible := True;
       FState.Panel := nspDesign;
     end
@@ -1230,6 +1748,7 @@ begin
         nieSource:
           begin
             FSourceLine := LLine;
+            FSourceColumn := 1;
             FState.CodeVisible := True;
             FState.Panel := nspDesign;
           end;
@@ -1320,6 +1839,14 @@ begin
           if ANode.Prop('output-field') <> '' then
           begin
             FOutputs.SetField(ANode.Prop('output-field'), ANode.Prop('value'));
+            for LLine := 0 to High(NyxOutputFields) do
+            begin
+
+              if ANode.Prop('output-field') = NyxOutputFields[LLine] then
+              begin
+                Include(FOutputChanged, LLine);
+              end;
+            end;
           end
           else
           begin
@@ -1454,6 +1981,12 @@ begin
           ncOutputs:
             begin
               FState.OutputVisible := not FState.OutputVisible;
+
+              if FState.OutputVisible and (CurrentBridge <> nil) and
+                CurrentBridge.State.CanBuild and not FOutputLoaded and not FOutputLoading then
+              begin
+                ReadOutputs(FCurrentProject, False);
+              end;
             end;
           ncFiles:
             begin
@@ -1585,7 +2118,34 @@ begin
             end;
           ncBuildView, ncBuildApplication:
             begin
-              raise ENyxModel.Create('Native build requests are unavailable');
+              BeginBuild(DecodeNativeCommand(ANode.ID) = ncBuildApplication);
+            end;
+          ncCompiledRun:
+            begin
+              BeginCompiledPreview(FCurrentProject);
+            end;
+          ncCompiledStop:
+            begin
+
+              if (FCurrentProject = nil) or (FCurrentProject.CompiledPreview = nil) then
+              begin
+                raise ENyxModel.Create('This project has no owned compiled preview');
+              end;
+              FCurrentProject.CompiledPreview.Cancel;
+              FCurrentProject.CompiledPreview.Stop;
+
+              if FCurrentProject.BuildStage in [nbsProfile, nbsOutputs, nbsRequest, nbsPolling] then
+              begin
+                { Stop owns preview execution, not an independently admitted
+                  compiler job. Keep its pending receipt/status observation. }
+                FCurrentProject.BuildMessage := 'Compiled preview stopped / build continues';
+              end
+              else
+              begin
+                FCurrentProject.BuildStage := nbsTerminal;
+                FCurrentProject.BuildMessage := 'Compiled preview stopped';
+              end;
+              FState.Status := FCurrentProject.BuildMessage;
             end;
         else
           begin

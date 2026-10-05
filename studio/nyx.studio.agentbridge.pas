@@ -28,7 +28,8 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.studio.session, nyx.studio.exchange,
-  nyx.studio.projects, nyx.studio.agents, nyx.studio.agentview, nyx.studio.workspaces;
+  nyx.studio.projects, nyx.studio.agents, nyx.studio.agentview, nyx.studio.workspaces,
+  nyx.studio.editorbuild, nyx.studio.outputs;
 
 type
   TNyxAgentRefresh = procedure(AContentChanged: Boolean) of object;
@@ -90,6 +91,18 @@ type
     procedure Configure(APermission: TNyxAgentPermission);
     procedure History(ADirection: TNyxEditorHistory);
     procedure CompilerReport(const AReport: TNyxText);
+    { Operator compiler requests use the shared asynchronous job service. Query
+      packets are bounded; requests require an acknowledged exact source frame.
+      Queued packets retain this bridge's immutable project identity. }
+    procedure CompilerOutputs;
+    { Machine profiles use the private editor capability, never public MCP.
+      Compare the expected output identity before saving; local paths remain
+      separate from every portable project and its paired history. }
+    procedure CompilerProfile;
+    procedure SaveCompilerProfile(AProfile: TNyxOutputConfiguration;
+      const AExpected: TNyxBuildOutputRef);
+    procedure RequestBuild(const ARequest: INyxCompilerRequest);
+    procedure BuildStatus(const AJob: TNyxBuildJobRef; AOffset: Integer = 0);
     procedure Pause;
     procedure AcceptRemote;
     function State: TNyxStudioAgentView;
@@ -588,6 +601,19 @@ begin
       end;
       FView.Activity := LState.Field('activity').Copy;
       FView.CanCloseWorkspace := False;
+      FView.CanBuild := False;
+
+      if NyxAgentHas(LState, 'editorBuilds') then
+      begin
+        FView.CanBuild := LState.Field('editorBuilds').AsBoolean;
+      end;
+
+      if NyxAgentHas(LState, 'buildReply') then
+      begin
+        FView.BuildReply := LState.Field('buildReply').Copy;
+        Inc(FView.BuildReplySequence);
+        LRefresh := True;
+      end;
 
       if NyxAgentHas(LState, 'workspaceClosing') then
       begin
@@ -629,7 +655,7 @@ begin
           NyxField('selection', LSummary.Field('selection')),
           NyxField('view', LSummary.Field('view'))]).ToJSON;
 
-        if (LOperation = 'observe') or (LOperation = 'claim') or
+        if (LOperation = 'observe') or (LOperation = 'claim') or (LOperation = 'build') or
           ((LOperation = 'history') and (Length(FQueue) = 0)) then
         begin
 
@@ -700,6 +726,65 @@ begin
   finally
     FApplying := False;
   end;
+end;
+
+procedure TNyxStudioAgentBridge.CompilerOutputs;
+begin
+
+  if not FView.CanBuild or not FView.Connected or FView.Conflict then
+  begin
+    raise Exception.Create('Asynchronous editor builds are unavailable on this service');
+  end;
+  Queue(NyxObject([NyxField('op', NyxData('build')),
+    NyxField('build', NyxCompilerOutputs)]));
+end;
+
+procedure TNyxStudioAgentBridge.CompilerProfile;
+begin
+
+  if not FView.CanBuild or not FView.Connected or FView.Conflict then
+  begin
+    raise Exception.Create('Compiler configuration is unavailable on this service');
+  end;
+  Queue(NyxObject([NyxField('op', NyxData('build')),
+    NyxField('build', NyxObject([NyxField('mode', NyxData('profile'))]))]));
+end;
+
+procedure TNyxStudioAgentBridge.SaveCompilerProfile(AProfile: TNyxOutputConfiguration;
+  const AExpected: TNyxBuildOutputRef);
+begin
+
+  if not FView.CanBuild or not FView.Connected or FView.Conflict or
+    (AProfile = nil) or (AExpected.ID = '') then
+  begin
+    raise Exception.Create('Saving output configuration requires its acknowledged profile identity');
+  end;
+  Queue(NyxObject([NyxField('op', NyxData('build')),
+    NyxField('build', NyxObject([NyxField('mode', NyxData('profile')),
+      NyxField('profile', TNyxDataValue.ParseJSON(AProfile.Encode)),
+      NyxField('expectedOutputID', NyxData(AExpected.ID))]))]));
+end;
+
+procedure TNyxStudioAgentBridge.RequestBuild(const ARequest: INyxCompilerRequest);
+begin
+
+  if not FView.CanBuild or not SourceSynchronized or (ARequest = nil) then
+  begin
+    raise Exception.Create('Build requires an acknowledged exact accepted project');
+  end;
+  Queue(NyxObject([NyxField('op', NyxData('build')),
+    NyxField('build', ARequest.Arguments)]));
+end;
+
+procedure TNyxStudioAgentBridge.BuildStatus(const AJob: TNyxBuildJobRef; AOffset: Integer);
+begin
+
+  if not FView.CanBuild or not FView.Connected or FView.Conflict then
+  begin
+    raise Exception.Create('Compiler status is unavailable on this service');
+  end;
+  Queue(NyxObject([NyxField('op', NyxData('build')),
+    NyxField('build', NyxCompilerStatus(AJob, AOffset))]));
 end;
 
 end.

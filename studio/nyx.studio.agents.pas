@@ -110,6 +110,11 @@ type
       Scope/root agreement is checked before any compiler can be launched. }
     function BuildPair(AExpected: Integer; AScope: TNyxBuildScope;
       const AView: TNyxText): TNyxProjectPair;
+    { Trusted editor admission is independent of agent enablement. Only the
+      authenticated private operator transport calls it; revisions, drafts and
+      root/scope agreement remain identical to agent compilation. }
+    function EditorBuildPair(AExpected: Integer; AScope: TNyxBuildScope;
+      const AView: TNyxText): TNyxProjectPair;
     { Exact accepted pair comparison, independent of revision/selection changes.
       Pending drafts make diagnostics stale even if the accepted source matches. }
     function CurrentPair(const APair: TNyxProjectPair): Boolean;
@@ -1684,16 +1689,22 @@ end;
 
 function TNyxAgentSession.BuildPair(AExpected: Integer; AScope: TNyxBuildScope;
   const AView: TNyxText): TNyxProjectPair;
-var
-  LNode: TNyxNode;
-  LIndex: Integer;
-  LFound: Boolean;
 begin
 
   if FPermission <> apEdit then
   begin
     raise ENyxModel.Create('Agent builds require Allow edits in Studio');
   end;
+  Result := EditorBuildPair(AExpected, AScope, AView);
+end;
+
+function TNyxAgentSession.EditorBuildPair(AExpected: Integer; AScope: TNyxBuildScope;
+  const AView: TNyxText): TNyxProjectPair;
+var
+  LNode: TNyxNode;
+  LIndex: Integer;
+  LFound: Boolean;
+begin
 
   if AExpected <> FRevision then
   begin

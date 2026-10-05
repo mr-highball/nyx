@@ -74,9 +74,14 @@ conflicts. A focused compact journey also qualifies immediate title/source
 updates. Native HTTP/MCP observation and full-editor project jump/return now pass
 49 actual checks with independent drafts/history, UI-thread transport replies
 and zero leaks. Desktop/390 captures paint English review text; reviewed cleanup
-restores both original test pairs. Native build requests/reload, complete project
-presentation, intermittent compact painting observed in an earlier callback
-journey and sidebar overflow remain open. The
+restores both original test pairs. A subsequent source candidate adds guarded
+native build requests, bounded diagnostics and owned compiled Run/Stop/view
+reload. Its maintained real-compiler/control evidence is recorded in
+[WORK.md](WORK.md#native-compiler-and-compiled-preview-consumer--2026-10-05).
+Direct private-protocol and existing HTTP artifact checks do not establish the
+new editor HTTP deployment. Complete project presentation, intermittent compact
+painting observed in an earlier callback journey and sidebar overflow remain
+open. The
 refreshed English journey paints its memo; that alone does not establish a fix. See
 [native Studio](docs/native-studio.md) and WORK.md for the current evidence.
 The preceding designer prerequisite retains its 34 native / 32 desktop / 33

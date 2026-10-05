@@ -66,6 +66,10 @@ type
     procedure CancelTick; override;
   end;
 
+{ Shared native service-origin admission for private exchanges and compiler
+  artifacts. No credentials, redirects or paths enter this machine reference. }
+procedure ValidateNyxLocalStudioOrigin(const ABaseURL: TNyxText);
+
 implementation
 
 uses
@@ -185,20 +189,25 @@ begin
   end;
 end;
 
-constructor TNyxLCLEditorExchange.Create(const ABaseURL: TNyxText);
+procedure ValidateNyxLocalStudioOrigin(const ABaseURL: TNyxText);
 var
   LPort: Integer;
 begin
-  inherited Create;
-  FBaseURL := ABaseURL;
 
-  if (Copy(FBaseURL, 1, 17) <> 'http://127.0.0.1:') or
-    not TryStrToInt(Copy(FBaseURL, 18, MaxInt), LPort) or
+  if (Copy(ABaseURL, 1, 17) <> 'http://127.0.0.1:') or
+    not TryStrToInt(Copy(ABaseURL, 18, MaxInt), LPort) or
     (LPort < 1) or (LPort > 65535) or
-    (FBaseURL <> 'http://127.0.0.1:' + IntToStr(LPort)) then
+    (ABaseURL <> 'http://127.0.0.1:' + IntToStr(LPort)) then
   begin
     raise Exception.Create('Native editor connection requires an explicit loopback HTTP origin');
   end;
+end;
+
+constructor TNyxLCLEditorExchange.Create(const ABaseURL: TNyxText);
+begin
+  inherited Create;
+  ValidateNyxLocalStudioOrigin(ABaseURL);
+  FBaseURL := ABaseURL;
   FPoll := TTimer.Create(nil);
   FPoll.Enabled := False;
   FPoll.Interval := 20;

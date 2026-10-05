@@ -4702,3 +4702,139 @@ build/profile protocol and incomplete controller draft are not qualified or
 included in this presentation checkpoint. Finish that controller and exercise
 currentness, profile admission and diagnostics before claiming native builds;
 compiled execution/reload and the recorded updated-listener gate remain open.
+
+## Current batch: native asynchronous compiler consumer — 2026-10-05
+
+The preceding goal turn made verified progress: both presentation fixtures now
+start in English, executed browser/native captures pass, and remote hello-nyx
+matches 7a4956f. Original authoring criteria 2/3/4/7 and compiler-service criteria
+1/2/3/4 own this continuation; reliable reload criterion 2 retains compiled
+activation/execution. The deliverable is the native Build/output/diagnostic
+consumer of the same bounded immutable jobs as semantic MCP, followed by compiled
+preview integration. Readiness and machine profiles remain optional for design.
+
+Qualification must exercise real compilers, profile conflict/failure admission,
+exact source/project currentness, active native controls, inactive project jobs,
+and receiver retirement. The existing updated-listener rejection is not retried;
+direct public protocol qualification can establish source/controller behavior,
+but cannot establish HTTP deployment. Stop if a request is retargeted, stale
+results activate, editor synchronization freezes on a build refusal, or profiles
+enter portable project history. Record the separate live-HTTP gate and remaining
+compiled-execution checks instead of claiming acceptance from compilation alone.
+
+## Native compiler and compiled-preview consumer — 2026-10-05
+
+Original authoring criteria 2/3/4/7 and compiler-service criteria 1/2/3/4 own
+this source packet; reload criterion 2 consumes compiled activation/execution.
+The native editor now uses the same guarded immutable compiler jobs as semantic
+MCP. Typed managed requests carry distinct root/output/operation/job references
+and enum targets/scopes. Trusted private editor authority is separate from agent
+permissions; revision, scope, pending-draft and output admission still apply.
+Build envelopes validate observation metadata before admitting effects. Profile
+saves compare output identity, validate before persistence and retain accepted
+configuration on failure. Machine paths stay outside portable pairs/history.
+Delayed profile reads preserve local field changes; native views continue to
+borrow the same stable output object. Older servers advertise no native build
+capability and retain accurate unavailable behavior.
+
+Each native context owns its captured pair/profile, job, bounded status timer
+and result. Workers own bytes/immutable snapshots, not widgets. Job replies
+cannot retarget the bridge or freeze ordinary synchronization on an admission
+refusal. Current diagnostics use actual accepted source and retain scalar
+line/column through the native renderer. Preview preparation admits an exact
+succeeded/current artifact, enforces a 32 MiB ceiling, refuses redirects and
+checks downloaded size/MD5. MD5 establishes delivery consistency, not identity.
+A second source/output query precedes launch. The adapter owns its process and
+private files; cancellation detaches callbacks before joins. Successful current
+rebuilds replace a running preview only after candidate launch. Stop owns preview
+execution; the final reviewed change also retains independent compiler admission
+and observation rather than abandoning a pending job.
+
+Qualification is under build/native-studio/compiler/. The corrected maintained
+command passes 105 actual native protocol/control checks with zero leaks:
+real browser page/reusable jobs, native application/view jobs, operator-disabled
+builds, persistence/revision refusals, exact paired-source/profile fingerprints,
+actual owned Run/Stop/re-Run, a running-view rebuild with old-process retirement,
+compiled reply input and independent reusable actions, a real helper compiler
+error, exact supplementary-Unicode navigation and changed-source refusal. This
+105-check run precedes the final Stop-during-build correction; its final consumer
+check is recorded below when terminal. Do not sum overlapping journeys.
+
+The focused compiled-artifact journey passes ten with zero leaks, including
+actual HTTP download/verification, compiled controls, mismatched-byte refusal
+retaining the old process, refused Launch, canceled notification and owned
+retirement. Focused diagnostics passes 35 with zero leaks, through the actual
+editor/private protocol/real compiler, at scalar position 3547. The shared
+request/currentness/artifact contract passes 43 natively and 43 in executed
+pas2js. Actual browser shared authoring passes 69 desktop and 69 in an exact
+390-pixel frame. Native product/server and browser product/consumers build with
+zero owned warnings; seven installed pas2js RTL warnings remain visible.
+
+The protocol engine is suspended and never starts its listener. Actual artifact
+downloads use the unchanged identity-verified qualification listener, with only
+the test's exact immutable manifest files copied into its explicitly selected
+artifact root. This qualifies direct private-protocol/controller behavior and
+HTTP artifact transport, not deployment of the new editor HTTP route. No
+production/staged service, machine profile, enrollment or active user pair is
+replaced. Production retains its fifteen named tools and revision-6 content /
+selection / view / draft / history frame. The earlier automatic updated-listener
+launch rejection ("blocked by policy", no additional reason) is not retried.
+
+English desktop/narrow compiled-control captures were inspected: Run/Stop and
+the memo are painted. Dedicated diagnostic qualification retains supplementary
+Unicode; initial demos/reviews remain English. Sidebar clipping remains visible;
+the diagnostic capture includes preceding Agents content and is not evidence of
+a viewport-visible source caret. Focus/ranges are separately actual-control
+evidence. Reliable visuals, layout/performance, other widgetsets/operating
+systems, native browser-launch lifecycle, inactive-project build completion,
+general import/export/assets and live HTTP deployment remain open. Checked
+cumulative fixture allocations are not a performance measurement. HTTP/download
+timeouts are per wait, not a whole-request deadline; joining stalled workers
+still needs that original acceptance path.
+
+Retained failures: a fresh private test repository initially omitted its library
+directories; orchestration now creates explicit private source links and the
+Pascal consumer checks them before compilation. Cross-process input first used
+GetWindowText for edit text, then BM_CLICK for the custom Lazarus button. The
+focused consumer uses bounded WM_GETTEXT and the actual Space-key contract, pairs
+controls by reusable ownership and selects the exact document-titled form rather
+than a Lazarus helper window. The Win32 text distinction is documented by
+[Microsoft](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getwindowtextw).
+The diagnostic assertion initially mixed accepted LF text / one-based byte
+indices with native physical text / zero-based scalar ranges; the corrected
+consumer converts the actual control prefix and adds a supplementary character.
+All failed terminal logs remain retained. No live mutation is blindly retried.
+
+Final maintained consumer evidence: qualified-stop-continuation.log terminates
+with PASS 123 native compiler protocol/control checks and zero unfreed blocks.
+It supersedes the overlapping 105-check consumer above. Stop during a pending
+view build retires the existing owned process, preserves the exact build receipt
+and result, does not restart the preview implicitly, and permits a subsequent
+explicit Run. The helper error still focuses the real source control at scalar
+position 3547; exact changed-source refusal and listener-free retirement pass.
+The final desktop/390 PNGs in the unique protocol-061fcab6-d882-4f63-a410-1fc1ca68a1fc
+repository were inspected: English reply copy and both Run/Stop controls paint;
+the previously recorded clipping/presentation limits remain. This is checked
+Win32 control/protocol evidence, not hardware/IME, accessibility or performance.
+
+Handoff/reassessment: no full original authoring criterion closes; the consecutive
+native-authoring no-closure count advances from 5 to 6. Criteria 2/3/4/7 and
+the original prerequisite tasks remain open, as do the complete service/reload
+criteria. The current stop point is the qualified compiler/preview source
+candidate and its remote checkpoint. Do not add another stable navigation or
+controller diagnostic fixture. The next bounded deliverable follows original
+NS-5_service-reload_01 criterion 1: implement a whole-request deadline and qualify
+stalled-worker retirement with detached receivers. One maintained stalled
+transport consumer must establish the elapsed bound and owned cleanup; switch
+to the failed boundary if that gate fails, rather than adding successful-only
+journeys. New editor HTTP qualification remains required when execution is
+available; the recorded automatic updated-listener refusal is not retried.
+
+Final preservation reads confirm production revision 6, home selection/view,
+one page/one component, no draft, Undo unavailable and ordinary test Redo retained.
+Both production and staged listener identities are unchanged. Current native MCP
+read activity is expected; no active design/source/profile is replaced. The
+English demo checkpoint 7a4956f remains in branch history. The compiler/preview
+commit and exact remote-head comparison are recorded privately in
+.local/codex-restart-check/native-compiler-preview-remote-proof.json after push;
+machine paths/accounts/endpoint configuration are excluded from the checkpoint.

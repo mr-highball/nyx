@@ -62,7 +62,13 @@ param(
   # explicit private fixtures; ordinary builds remain independent of a server.
   [switch]$VerifyNativeStudioService,
   [string]$NativeStudioServiceMCPConfig,
-  [string]$NativeStudioTestContexts
+  [string]$NativeStudioTestContexts,
+  # Real compiler/control qualification through a suspended private protocol
+  # engine. This never starts or replaces a listener. Only its immutable jobs
+  # are copied into the explicitly selected existing artifact-serving root.
+  [switch]$VerifyNativeStudioCompiler,
+  [string]$NativeStudioCompilerProfile,
+  [string]$NativeStudioArtifactDirectory
 )
 
 $ErrorActionPreference = 'Stop'
@@ -258,6 +264,36 @@ try {
       & (Join-Path $nyxStudioNative 'nyx_native_workspace_tests.exe') @nyxServiceArguments
 
       if ($LASTEXITCODE -ne 0) { throw 'Actual native service/workspace journey failed; retain owned-review manifest' }
+    }
+
+    if ($VerifyNativeStudioCompiler) {
+      $nyxCompilerSource = [IO.Path]::GetFullPath($DesignerSourceDirectory)
+
+      if (-not $NativeStudioCompilerProfile -or -not $NativeStudioArtifactDirectory -or
+        -not (Test-Path -LiteralPath (Join-Path $nyxCompilerSource 'nyx.generated.view.pas'))) {
+        throw 'Compiler qualification requires an exact semantic export, a private profile and an existing artifact-serving root'
+      }
+      $nyxCompilerProfile = [IO.Path]::GetFullPath($NativeStudioCompilerProfile)
+      $nyxCompilerArtifacts = [IO.Path]::GetFullPath($NativeStudioArtifactDirectory)
+
+      if (-not (Test-Path -LiteralPath $nyxCompilerProfile -PathType Leaf) -or
+        -not (Test-Path -LiteralPath $nyxCompilerArtifacts -PathType Container)) {
+        throw 'The explicit compiler profile and artifact root must already exist'
+      }
+      Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @("-Fu$nyxCompilerSource", 'tests/nyx_native_build_tests.lpr'))
+      $nyxCompilerRepository = Join-Path $nyxRoot ('build/native-studio/compiler-current/protocol-' + [Guid]::NewGuid().ToString())
+      New-Item -ItemType Directory -Path $nyxCompilerRepository | Out-Null
+      # The actual compiler expects the library beside its admitted build root.
+      # Read existing sources through private links; never copy a machine path
+      # into a portable design or edit dependency/source files through the links.
+      foreach ($nyxLibraryDirectory in @('src', 'studio')) {
+        New-Item -ItemType Junction -Path (Join-Path $nyxCompilerRepository $nyxLibraryDirectory) `
+          -Target (Join-Path $nyxRoot $nyxLibraryDirectory) | Out-Null
+      }
+      & (Join-Path $nyxStudioNative 'nyx_native_build_tests.exe') $nyxCompilerRepository `
+        $nyxCompilerProfile $nyxCompilerSource $nyxCompilerArtifacts $HttpURL
+
+      if ($LASTEXITCODE -ne 0) { throw 'Actual native compiler/preview journey failed; retain its owned artifacts and paired snapshots' }
     }
     exit 0
   }
