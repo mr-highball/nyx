@@ -29,6 +29,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, ExtCtrls,
   nyx.text, nyx.types, nyx.behavior, nyx.data, nyx.model, nyx.theme, nyx.render.lcl,
+  nyx.events,
   nyx.studio.session, nyx.studio.view, nyx.studio.projects,
   nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.rootedits,
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
@@ -110,6 +111,8 @@ type
     FShell: TNyxDocument;
     FCodeDocument: TNyxDocument;
     FShellView: TNyxLCLRenderer;
+    { Borrowed receiver registration; cancelled before any controller teardown. }
+    FHierarchySubscription: INyxEventSubscription;
     FCanvasView: TNyxLCLRenderer;
     FCodeView: TNyxLCLRenderer;
     FCanvasParking: TPanel;
@@ -152,6 +155,7 @@ type
     procedure PaintQueued(AData: PtrInt);
     procedure Paint;
     procedure ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+    procedure HierarchyEvent(const AEvent: TNyxEventInfo);
     procedure CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure SourceEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure SourceCommandChanged(AState: TNyxSourceCommandState;
@@ -223,7 +227,7 @@ uses
   StdCtrls, nyx.editing, nyx.editing.lcl, nyx.contract, nyx.source,
   nyx.studio.commands, nyx.studio.authoring, nyx.studio.inspector,
   nyx.studio.palette, nyx.studio.source, nyx.studio.diagnostics, nyx.studio.rootview,
-  nyx.studio.exchange.lcl, nyx.studio.agents, Math;
+  nyx.studio.exchange.lcl, nyx.studio.agents, nyx.studio.hierarchy, Math;
 
 type
   TNativeHostAccess = class(TWinControl);
@@ -497,6 +501,7 @@ begin
   FCanvasView := TNyxLCLRenderer.Create(FTheme);
   FCodeView := TNyxLCLRenderer.Create(FTheme);
   FShellView.OnEvent := ShellEvent;
+  FHierarchySubscription := SubscribeNyxStudioHierarchy(FShellView.Events, HierarchyEvent);
   FCanvasView.OnEvent := CanvasEvent;
   FCodeView.OnEvent := SourceEvent;
   FCanvasParking := TPanel.Create(nil);
@@ -515,6 +520,12 @@ var
   LIndex: Integer;
 begin
   FRunning := False;
+
+  if FHierarchySubscription <> nil then
+  begin
+    FHierarchySubscription.Cancel;
+    FHierarchySubscription := nil;
+  end;
   { Remove this object's queued callbacks before any view/session lifetime ends. }
   Application.RemoveAsyncCalls(Self);
 
@@ -1501,6 +1512,13 @@ begin
     FShell.Free;
     FShell := LShell;
     LShell := nil;
+    { Compact Project/Design panels do not mount the Inspector hierarchy. Restore
+      selection only when this shell actually owns the public tree binding. }
+
+    if FShell.Find(NyxStudioHierarchyID) <> nil then
+    begin
+      SelectNyxStudioHierarchy(FShellView.CollectionView(NyxStudioHierarchyID), FSession);
+    end;
     LCanvasHost := nil;
     LCodeHost := nil;
 
@@ -1611,7 +1629,13 @@ begin
     if RouteNyxStudioSource(FSession, ANode, AEvent.Trigger) then
     begin
       FState.Status := 'Pascal draft / apply when ready';
-      RecordLocal;
+      { The session owns text immediately. The bridge's project-owned timer
+        captures once for a typing burst; transport never borrows this memo. }
+
+      if CurrentBridge <> nil then
+      begin
+        CurrentBridge.RecordDraft;
+      end;
       { Ordinary typing never replaces chrome, focus, selection or scroll. }
     end;
   except
@@ -1756,6 +1780,23 @@ begin
   FState.ProjectConflict := False;
 end;
 
+procedure TNyxNativeStudio.HierarchyEvent(const AEvent: TNyxEventInfo);
+var
+  LNode: TNyxNode;
+begin
+
+  if FShellView.Root = nil then
+  begin
+    Exit;
+  end;
+  LNode := FShellView.Root.Find(NyxStudioHierarchyID);
+
+  if LNode <> nil then
+  begin
+    ShellEvent(LNode, AEvent);
+  end;
+end;
+
 procedure TNyxNativeStudio.ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
   LEffect: TNyxInspectorEffect;
@@ -1767,6 +1808,7 @@ var
   LBackup: TGUID;
   LBackupRevision: TNyxText;
   LBackupRemote: TNyxText;
+  LHierarchyChanged: Boolean;
 begin
 
   if FPainting or FChangingProject then
@@ -1775,6 +1817,17 @@ begin
   end;
   LChanged := False;
   try
+
+    if RouteNyxStudioHierarchy(FSession, ANode, AEvent, LHierarchyChanged) then
+    begin
+
+      if LHierarchyChanged then
+      begin
+        RecordLocal;
+        RequestRefresh;
+      end;
+      Exit;
+    end;
 
     if FSourceCommands.Route(ANode, AEvent.Trigger) then
     begin

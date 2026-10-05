@@ -110,6 +110,17 @@ pass 39, shared checks pass 30/1769 and source cases pass 292 with zero leaks.
 The compiled Pascal browser worker remains unexecuted at the existing host gate.
 Visual/structural responsiveness and complete ordinary editor qualification stay
 open; WORK.md records the same-size timing and next prerequisite.
+The following source candidate coalesces draft capture through each project's
+owned timer and shares one fresh paired snapshot with optional browser recovery.
+Unsent text blocks acknowledged-frame/build/navigation checks; older replies
+cannot discard it. Studio now consumes a bounded public Nyx tree for hierarchy
+navigation, using typed queued selection and revocable borrowed subscriptions.
+Shared protocol/ownership checks pass 41 and native Apply regression passes 39,
+with zero leaks. The original 2048-control native design canvas exceeds LCL's
+widget height range; its full editor gate remains failed. Browser code compiles
+but remains unexecuted at the existing host gate. English starter presentation
+and dedicated Unicode qualification remain separate. WORK.md owns current
+control evidence, failures and the next native viewport prerequisite.
 The preceding designer prerequisite retains its 34 native / 32 desktop / 33
 actual-390 browser checks, including painted selection and focused view movement.
 

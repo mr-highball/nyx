@@ -33,6 +33,11 @@ uses
 
 type
   TNyxAgentRefresh = procedure(AContentChanged: Boolean) of object;
+  { A persistence consumer receives the exact encoded paired project captured
+    for sharing. The text is owned, not a borrowed model. Notifications run on
+    the UI thread and must not destroy the bridge or mutate its session inline.
+    A consumer handles its own storage failures; transport admission is separate. }
+  TNyxProjectCaptured = procedure(const AProject: TNyxText) of object;
   { Closed editor history choice; strings exist only in the exchange packet. }
   TNyxEditorHistory = (nehUndo, nehRedo);
 
@@ -65,6 +70,8 @@ type
     FOnRefresh: TNyxAgentRefresh;
     FWorkspace: TNyxWorkspaceRef;
     FWorkspaceMetadata: TNyxText;
+    FDraftCapturePending: Boolean;
+    FOnProjectCaptured: TNyxProjectCaptured;
     procedure Initialize(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh;
       const AWorkspace: TNyxWorkspaceRef);
     function Frame: TNyxText;
@@ -73,6 +80,7 @@ type
     procedure Tick;
     procedure Schedule;
     procedure Queue(const AMessage: TNyxDataValue);
+    procedure CaptureLocal;
   public
     constructor Create(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh); overload;
     constructor Create(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh;
@@ -85,9 +93,16 @@ type
     { Protect explicit native local recovery even when the bridge was attached
       after that recovery. Ordinary browser initialization retains its baseline. }
     procedure Connect(AProtectLocal: Boolean = False);
-    { Call after ordinary editor publications, including draft typing. Does not
-      poll or reconcile complete source while the editor has remained unchanged. }
+    { Capture an ordinary publication or explicit persistence/history boundary
+      immediately. One fresh paired snapshot feeds sharing and optional recovery.
+      Accepted content commands retain their existing order and history. }
     procedure RecordLocal;
+    { Source typing only marks work. The existing owned timer captures the latest
+      draft once within 250 ms instead of encoding a whole project per keystroke.
+      Later keystrokes do not postpone that window indefinitely. The local editor
+      and session already own exact text before this call. An unsent marker blocks
+      remote adoption/build/navigation; it never grants an acknowledged frame. }
+    procedure RecordDraft;
     procedure Configure(APermission: TNyxAgentPermission);
     procedure History(ADirection: TNyxEditorHistory);
     procedure CompilerReport(const AReport: TNyxText);
@@ -120,6 +135,11 @@ type
     function SourceSynchronized: Boolean;
     property Applying: Boolean read FApplying;
     property Enabled: Boolean read FEnabled;
+    property DraftCapturePending: Boolean read FDraftCapturePending;
+    { Borrowed optional persistence receiver. Capture also works while sharing
+      is paused; clear this callback before releasing its owner. }
+    property OnProjectCaptured: TNyxProjectCaptured read FOnProjectCaptured
+      write FOnProjectCaptured;
   end;
 
 implementation
@@ -143,7 +163,7 @@ end;
 function TNyxStudioAgentBridge.SourceSynchronized: Boolean;
 begin
   Result := FView.Connected and not FView.Conflict and
-    (Length(FQueue) = 0) and (Frame = FKnownFrame);
+    not FDraftCapturePending and (Length(FQueue) = 0) and (Frame = FKnownFrame);
 end;
 
 constructor TNyxStudioAgentBridge.Create(ASession: TNyxStudioSession;
@@ -191,7 +211,7 @@ end;
 destructor TNyxStudioAgentBridge.Destroy;
 begin
   FEnabled := False;
-
+  FOnProjectCaptured := nil;
   FExchange.Free;
   FExchange := nil;
   FOnRefresh := nil;
@@ -202,12 +222,17 @@ end;
 function TNyxStudioAgentBridge.State: TNyxStudioAgentView;
 begin
   Result := FView;
+
+  if FDraftCapturePending and FEnabled and not FView.Conflict then
+  begin
+    Result.Status := 'Local Pascal draft waiting to synchronize';
+  end;
 end;
 
 function TNyxStudioAgentBridge.CanSwitchWorkspace: Boolean;
 begin
   Result := FEnabled and FView.Connected and not FView.Conflict and
-    (Length(FQueue) = 0) and (Frame = FKnownFrame);
+    not FDraftCapturePending and (Length(FQueue) = 0) and (Frame = FKnownFrame);
 end;
 
 function TNyxStudioAgentBridge.Frame: TNyxText;
@@ -232,6 +257,7 @@ begin
   FView.Connected := False;
   FView.Status := 'Connecting agent session';
   FKnownFrame := Frame;
+  FDraftCapturePending := False;
   FProtectLocal := AProtectLocal or
     (EncodeNyxProject(FSession.ProjectSnapshot) <> FInitialProject);
   LFrame := TNyxDataValue.ParseJSON(FKnownFrame);
@@ -300,32 +326,79 @@ begin
   Inc(FQueueUnits, LSize);
 end;
 
-procedure TNyxStudioAgentBridge.RecordLocal;
+procedure TNyxStudioAgentBridge.CaptureLocal;
 var
   LFrame: TNyxText;
-  LData: TNyxDataValue;
+  LProject: TNyxText;
 begin
 
-  if not FEnabled or FApplying or FView.Conflict then
+  if FApplying then
   begin
     Exit;
   end;
-  LFrame := Frame;
+  { A snapshot is operation-owned, never cached across direct public mutation.
+    Recovery and sharing consume these same bytes, including the original draft
+    base. No UI callbacks run between capturing the pair and queuing its frame. }
+  LProject := EncodeNyxProject(FSession.ProjectSnapshot);
+  LFrame := NyxObject([NyxField('project', NyxData(LProject)),
+    NyxField('selection', NyxData(FSession.SelectedID)),
+    NyxField('view', NyxData(FSession.ActiveViewID))]).ToJSON;
 
-  if LFrame = FKnownFrame then
+  if FEnabled and not FView.Conflict and (LFrame <> FKnownFrame) then
+  begin
+    Queue(NyxObject([NyxField('op', NyxData('commit')),
+      NyxField('project', NyxData(LProject)),
+      NyxField('selection', NyxData(FSession.SelectedID)),
+      NyxField('view', NyxData(FSession.ActiveViewID))]));
+
+    if not FView.Conflict then
+    begin
+      FKnownFrame := LFrame;
+    end;
+  end;
+  FDraftCapturePending := False;
+
+  if Assigned(FOnProjectCaptured) then
+  begin
+    FOnProjectCaptured(LProject);
+  end;
+end;
+
+procedure TNyxStudioAgentBridge.RecordLocal;
+begin
+
+  if FApplying or ((not FEnabled or FView.Conflict) and
+    not Assigned(FOnProjectCaptured)) then
   begin
     Exit;
   end;
-  LData := TNyxDataValue.ParseJSON(LFrame);
-  Queue(NyxObject([NyxField('op', NyxData('commit')),
-    NyxField('project', LData.Field('project')),
-    NyxField('selection', LData.Field('selection')), NyxField('view', LData.Field('view'))]));
-  FKnownFrame := LFrame;
+  CaptureLocal;
 
-  if not FRequest then
+  if FEnabled and not FView.Conflict and not FRequest then
   begin
     Tick;
   end;
+end;
+
+procedure TNyxStudioAgentBridge.RecordDraft;
+begin
+
+  if FApplying or ((not FEnabled or FView.Conflict) and
+    not Assigned(FOnProjectCaptured)) then
+  begin
+    Exit;
+  end;
+
+  if FDraftCapturePending then
+  begin
+    Exit;
+  end;
+  FDraftCapturePending := True;
+  { Wake an existing observation timer once. The timer remains owned by this
+    immutable project bridge, so cancellation cannot retarget another session. }
+  FExchange.CancelTick;
+  FTimer := False;
+  Schedule;
 end;
 
 procedure TNyxStudioAgentBridge.Configure(APermission: TNyxAgentPermission);
@@ -427,6 +500,9 @@ begin
   FExchange.CancelRequest;
   FRequest := False;
   FView.Busy := False;
+  { Sharing can pause independently of automatic recovery. A retained local
+    marker must still reach its persistence consumer through the same timer. }
+  Schedule;
 end;
 
 procedure TNyxStudioAgentBridge.AcceptRemote;
@@ -434,6 +510,7 @@ begin
   FQueue := nil;
   FQueueSizes := nil;
   FQueueUnits := 0;
+  FDraftCapturePending := False;
   FAcceptRemote := True;
   FView.Conflict := False;
   Send(NyxObject([NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]));
@@ -442,11 +519,16 @@ end;
 procedure TNyxStudioAgentBridge.Schedule;
 begin
 
-  if FEnabled and not FView.Conflict and not FTimer then
+  if not FTimer and ((FEnabled and not FView.Conflict) or
+    (FDraftCapturePending and Assigned(FOnProjectCaptured))) then
   begin
     FTimer := True;
 
-    if Length(FQueue) > 0 then
+    if FDraftCapturePending then
+    begin
+      FExchange.Schedule(250, Tick);
+    end
+    else if Length(FQueue) > 0 then
     begin
       FExchange.Schedule(25, Tick);
     end
@@ -468,6 +550,28 @@ begin
 
   FExchange.CancelTick;
   FTimer := False;
+
+  if FDraftCapturePending then
+  begin
+    try
+      CaptureLocal;
+    except
+      on LException: Exception do
+      begin
+        { Timer failures retain the local marker and accepted pair. Do not spin
+          on malformed direct edits or rewrite the last recovery with a partial
+          capture. Explicit repair/publication may resume this bridge. }
+        FView.Conflict := True;
+        FView.Status := 'Local capture needs attention: ' + LException.Message;
+
+        if Assigned(FOnRefresh) then
+        begin
+          FOnRefresh(False);
+        end;
+        Exit;
+      end;
+    end;
+  end;
 
   if not FEnabled or FView.Conflict then
   begin
@@ -523,6 +627,16 @@ begin
 
   if not FRequest or not FEnabled then
   begin
+    Exit;
+  end;
+  { A capture/queue refusal can occur while an older request is in flight.
+    Its late acknowledgement cannot clear that refusal or replace local work.
+    The operator must resolve the retained conflict explicitly. }
+
+  if FView.Conflict and not FAcceptRemote then
+  begin
+    FRequest := False;
+    FView.Busy := False;
     Exit;
   end;
   LStatus := AStatus;
@@ -671,7 +785,7 @@ begin
             raise Exception.Create('Shared revision changed while you edited; local work and draft are retained');
           end;
 
-          if (Length(FQueue) = 0) or FAcceptRemote then
+          if ((Length(FQueue) = 0) and not FDraftCapturePending) or FAcceptRemote then
           begin
             LPair := DecodeNyxProject(LState.Field('project').AsText);
             LChanged := EncodeNyxProject(FSession.ProjectSnapshot) <> EncodeNyxProject(LPair);
@@ -691,6 +805,11 @@ begin
               FSession.Select(LSummary.Field('selection').AsText);
             end;
             FKnownFrame := Frame;
+
+            if Assigned(FOnProjectCaptured) then
+            begin
+              FOnProjectCaptured(LState.Field('project').AsText);
+            end;
           end;
         end;
       end;

@@ -45,6 +45,9 @@ uses
   SysUtils,
   nyx.codec,
   nyx.composition,
+  nyx.collections,
+  nyx.collections.view,
+  nyx.studio.hierarchy,
   nyx.studio.session,
   nyx.studio.view;
 
@@ -173,6 +176,7 @@ var
   LShell: TNyxDocument;
   LBefore: TNyxText;
   LRejected: Boolean;
+  LHierarchy: INyxCollectionSnapshot;
 begin
   Result := 0;
   LNode := TNyxNode.Create('label', 'before');
@@ -314,10 +318,15 @@ begin
       LShell := BuildNyxStudioView(LSession, DefaultNyxStudioViewState);
       try
         LShell.Validate;
-        Check((LShell.Find('tree-node-4').Prop('select-id') = NyxIdentityInstanceID) and
+        { Exact identity is typed item data in the public tree, independent of
+          row ordinals and of any expanded reusable renderer parts. }
+        LHierarchy := NewNyxCollectionContext(LShell.Collections).Resolve(
+          LShell.Find(NyxStudioHierarchyID).CollectionView, '').Snapshot;
+        Check((LHierarchy.IndexOf(NyxItem(LHierarchy.Key, NyxIdentityInstanceID)) >= 0) and
           (LShell.Find('view-component-0').Prop('view-id') = NyxIdentityDefinitionID),
           'Studio chrome carries long authored identities as command data', Result);
       finally
+        LHierarchy := nil;
         LShell.Free;
       end;
       LBefore := LSession.Save;

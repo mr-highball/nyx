@@ -19,6 +19,8 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 - [NS-1_persistence-state_01](DONE/NS-1_persistence-state_01.md) has accepted version-1 both-target evidence.
 - [NS-1_component-interfaces_01](DONE/NS-1_component-interfaces_01.md) supplies the accepted managed specialized authoring contract.
+- Original-size native editor qualification now needs the logical viewport /
+  safe widget geometry prerequisite in [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md).
 
 ## Source workspace delivery — 2026-10-03
 
@@ -676,3 +678,33 @@ through ordinary controls at the original sizes. Current browser Apply/worker
 still requires a permitted host without an equivalent refused launch. No lookup
 variant, count reset, scope transfer, weakened parity/DONE gate or full-product
 completion substitutes the remaining source criterion.
+
+## Coalesced capture consumed by editor input — 2026-10-05
+
+Project-owned draft capture now feeds agent sharing and optional browser recovery
+from one fresh paired snapshot. Unsent text remains protected from older full
+observations and blocks acknowledged-frame/build/navigation claims. Accepted
+commands retain ordered paired history; failed capture/queue state survives late
+acknowledgement. Shared protocol, Unicode, exact hierarchy identity and queued
+receiver retirement pass 41 checks with zero leaks. Actual native Apply/Restore
+regression passes 39 with zero leaks. Current browser consumers compile but remain
+unexecuted at the existing host gate; compilation accepts no parity.
+
+The unchanged actual native 128/512/2048-control fixture retains all descendants
+and original paired byte sizes. Studio now uses a public bounded typed tree,
+with queued exact selection and safe compact mounting. The complete 128/512
+journeys retain memo/focus/caret and exact pending pairs without posting or
+painting per keystroke. At 2048, actual canvas layout requests height 81963 and
+LCL refuses its widget range. Failure teardown has zero leaks. No height clamp,
+truncation or smaller workload replaces this original-size gate. WORK.md owns
+artifacts, current measurements and limitations; comfortable editing is not
+accepted.
+
+Criterion 3 stays open; the original no-closure count advances 16→17. Criteria
+1/2 remain accepted; native authoring's 7, native renderer's 2 and delivery's 1
+remain unchanged. Reassessment changes the next action to the concrete logical
+viewport / safe native geometry prerequisite, retaining every component and
+both-target input/selection. Detached visual/structural reconciliation remains
+required afterward. Another capture micro-optimization does not substitute that
+failure. Browser execution needs a permitted host without an equivalent refused
+launch. No scope/count reset, weakened acceptance or full-product completion.

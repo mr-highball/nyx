@@ -56,6 +56,12 @@ type
     FLastDesignID: TNyxText;
     FLastSourceID: TNyxText;
     FCount: Integer;
+    FReusableID: TNyxText;
+    { Continue after the real typed selection UI task. Tests must not force an
+      inline policy or inspect the previous shell before queued paint completes. }
+    procedure AfterHierarchyForPayload;
+    procedure AfterHierarchyForNested;
+    procedure Failed(const AMessage: TNyxText);
     procedure Event(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure Check(ACondition: Boolean; const AMessage: TNyxText);
     function Find(const ASelector: TNyxText): TJSHTMLElement;
@@ -467,6 +473,8 @@ begin
   Find('[data-node=instance-component-0]').click;
   Check(Pos('component / ', Find('[data-node=selected-label]').textContent) = 1,
     'reusable component authoring');
+  FReusableID := Copy(Find('[data-node=selected-label]').textContent,
+    Length('component / ') + 1, MaxInt);
   Find('[data-node=customize-part-1]').click;
   LValue := TJSHTMLInputElement(Find('[data-node=inspector-text] input'));
   LValue.value := 'My own welcome / 🌙';
@@ -477,28 +485,62 @@ begin
   Check((Pos('NewNyxSlotOverride', LSource) > 0) and
     (Pos('INyxSlotOverride', LSource) > 0),
     'instance customization generates the specialized public Pascal contract');
-  Find('[data-node=tree-node-2]').click;
-  Find('[data-node=customize-part-root]').click;
-  Find('[data-node=palette-button]').click;
-  Check(Find('[data-node=studio-canvas] button').textContent = 'Button',
-    'palette adds an actual button to this reusable instance');
-  Find('[data-node=action-undo]').click;
-  Check(document.querySelector('[data-node=studio-canvas] button') = nil,
-    'undo removes the instance payload without editing its definition');
-  Find('[data-node=action-redo]').click;
-  Check(Find('[data-node=studio-canvas] button').textContent = 'Button',
-    'redo reconstructs the independent instance payload');
-  Find('[data-node=tree-node-2]').click;
-  Find('[data-node=customize-part-root]').click;
-  Find('[data-node=instance-component-0]').click;
-  Check(document.querySelectorAll('[data-node=studio-canvas] .nyx-heading').length = 2,
-    'a reusable view can itself be added to customized instance content');
-  { Leave the exercised output section visible for visual review. This ephemeral
-    Studio instance does not read or write the user's browser recovery state. }
-  Find('[data-node=action-outputs]').click;
-  Find('[data-node=output-browser]').click;
-  document.body.setAttribute('data-nyx-journey', 'passed');
-  document.body.setAttribute('data-nyx-journey-checks', IntToStr(FCount));
+  Find('[data-node=studio-hierarchy] [data-nyx-item="' + FReusableID + '"] summary').click;
+  window.setTimeout(@AfterHierarchyForPayload, 0);
+end;
+
+procedure TBrowserJourney.Failed(const AMessage: TNyxText);
+begin
+  document.body.setAttribute('data-nyx-journey', 'failed');
+  document.body.setAttribute('data-nyx-journey-error', AMessage);
+end;
+
+procedure TBrowserJourney.AfterHierarchyForPayload;
+begin
+  try
+    Check(Find('[data-node=selected-label]').textContent = 'component / ' + FReusableID,
+      'queued hierarchy selection reaches the exact reusable component');
+    Find('[data-node=customize-part-root]').click;
+    Find('[data-node=palette-button]').click;
+    Check(Find('[data-node=studio-canvas] button').textContent = 'Button',
+      'palette adds an actual button to this reusable instance');
+    Find('[data-node=action-undo]').click;
+    Check(document.querySelector('[data-node=studio-canvas] button') = nil,
+      'undo removes the instance payload without editing its definition');
+    Find('[data-node=action-redo]').click;
+    Check(Find('[data-node=studio-canvas] button').textContent = 'Button',
+      'redo reconstructs the independent instance payload');
+    Find('[data-node=studio-hierarchy] [data-nyx-item="' + FReusableID + '"] summary').click;
+    window.setTimeout(@AfterHierarchyForNested, 0);
+  except
+    on LException: Exception do
+    begin
+      Failed(LException.Message);
+    end;
+  end;
+end;
+
+procedure TBrowserJourney.AfterHierarchyForNested;
+begin
+  try
+    Check(Find('[data-node=selected-label]').textContent = 'component / ' + FReusableID,
+      'queued hierarchy re-selection survives paired Undo/Redo');
+    Find('[data-node=customize-part-root]').click;
+    Find('[data-node=instance-component-0]').click;
+    Check(document.querySelectorAll('[data-node=studio-canvas] .nyx-heading').length = 2,
+      'a reusable view can itself be added to customized instance content');
+    { Leave the exercised output section visible for visual review. This ephemeral
+      Studio instance does not read or write the user's browser recovery state. }
+    Find('[data-node=action-outputs]').click;
+    Find('[data-node=output-browser]').click;
+    document.body.setAttribute('data-nyx-journey', 'passed');
+    document.body.setAttribute('data-nyx-journey-checks', IntToStr(FCount));
+  except
+    on LException: Exception do
+    begin
+      Failed(LException.Message);
+    end;
+  end;
 end;
 
 var

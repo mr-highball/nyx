@@ -497,6 +497,31 @@ five explicit arguments and skips successful compilation/preview journeys.
 Editing ranges are zero-based scalar offsets in the actual control text;
 source byte indices and accepted LF text are distinct coordinate domains.
 
+Coalesced draft capture has a separate optional consumer:
+
+```powershell
+./tools/build.ps1 -Target native-studio -VerifyDraftCapture
+```
+
+It executes the guarded portable editor protocol with a deterministic owned
+clock/reply queue, then the real native Studio memo/timer journey at the original
+128/512/2048-control source sizes. Exact draft/base pairs, accepted command order,
+history, conflicting/late replies and retirement are checked. Its browser
+counterpart and `draft-capture.html` host are compiled/staged under
+`build/draft-capture/browser/`; the command starts no listener. Serve that host
+only through an already permitted qualification environment to establish browser
+execution. Heap-checked fixture durations include tracing and in-process protocol
+admission; they are not release typing/network latency measurements. Current
+ordinary measurements and limits belong to WORK.md.
+
+The full native consumer currently refuses at 2048 controls: the design canvas
+exceeds LCL's widget height range. Its hierarchy now uses one bounded public
+Nyx tree, with all descendants retained. The 128/512 journeys and shared protocol
+have evidence; these do not accept the complete original-size editor gate. The
+optional command stages both target consumers and returns failure for that gate.
+No controls are truncated, no renderer height is silently clamped and no listener
+is launched to bypass the current browser host restriction.
+
 The optional Win32 transport consumer needs no Studio server, project, enrollment
 or application compiler profile:
 

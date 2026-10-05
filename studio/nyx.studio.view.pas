@@ -43,6 +43,7 @@ uses
   nyx.studio.collections,
   nyx.studio.inspector,
   nyx.studio.palette,
+  nyx.studio.hierarchy,
   nyx.studio.session,
   nyx.studio.source,
   nyx.studio.compiler,
@@ -479,30 +480,6 @@ begin
   LPanel.Add(Button('action-reload-outputs', 'Reload saved configuration'));
 end;
 
-procedure AddTree(ASession: TNyxStudioSession; AParent: TNyxNode;
-  ANode: TNyxNode; ADepth: Integer; var ACount: Integer);
-var
-  LButton: TNyxNode;
-  LIndex: Integer;
-begin
-  { Chrome IDs use bounded ordinal keys; the complete authored identity travels
-    as command data. Prefixing a maximum-length ID would overflow its contract. }
-  Inc(ACount);
-  LButton := Button('tree-node-' + IntToStr(ACount), ANode.Kind + ' / ' + ANode.ID)
-    .SetProp('select-id', ANode.ID).SetProp('padding', IntToStr(ADepth * 10 + 6));
-  LButton.Configure.Height(36).Hint(ANode.Kind + ' / ' + ANode.ID).Done;
-
-  if ASession.SelectedID = ANode.ID then
-  begin
-    LButton.SetProp('variant', 'primary');
-  end;
-  AParent.Add(LButton);
-  for LIndex := 0 to ANode.Count - 1 do
-  begin
-    AddTree(ASession, AParent, ANode.Children[LIndex], ADepth + 1, ACount);
-  end;
-end;
-
 procedure AddPartChoices(AParent, ARuntime: TNyxNode;
   const APath: TNyxText; var ACount: Integer);
 var
@@ -551,7 +528,6 @@ var
   LCenter: TNyxNode;
   LRight: TNyxNode;
   LViews: TNyxNode;
-  LTree: TNyxNode;
   LViewbar: TNyxNode;
   LCanvas: TNyxNode;
   LFooter: TNyxNode;
@@ -569,7 +545,6 @@ var
   LMetadataSource: TNyxNode;
   LPartView: TNyxNode;
   LPartCount: Integer;
-  LTreeCount: Integer;
   LPanelbar: TNyxNode;
   LInspectorTabs: TNyxNode;
   LSelectedProjection: TNyxNode;
@@ -1064,14 +1039,7 @@ begin
   LRight.Add(Button('action-delete', 'Delete'));
   LRight.Add(Button('action-export-source', 'Export Pascal'));
   LRight.Add(TNyxNode.Create('heading', 'hierarchy-title').SetProp('text', 'HIERARCHY'));
-  LTree := TNyxNode.Create('column', 'studio-hierarchy').SetProp('gap', '0');
-  LRight.Add(LTree);
-
-  if ASession.ActiveView <> nil then
-  begin
-    LTreeCount := 0;
-    AddTree(ASession, LTree, ASession.ActiveView, 0, LTreeCount);
-  end;
+  LRight.Add(BuildNyxStudioHierarchy(Result, ASession));
 
   if AState.Log <> '' then
   begin

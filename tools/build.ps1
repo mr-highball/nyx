@@ -74,7 +74,10 @@ param(
   [switch]$VerifyTransportDeadlines,
   # Actual local Nyx source controls, with native worker/retirement evidence.
   # Does not launch or replace a Studio/HTTP/MCP service.
-  [switch]$VerifySourceScheduling
+  [switch]$VerifySourceScheduling,
+  # Paired draft coalescing through the real protocol and native memo/timers.
+  # Also builds the portable browser counterpart; it starts no listener.
+  [switch]$VerifyDraftCapture
 )
 
 $ErrorActionPreference = 'Stop'
@@ -260,6 +263,30 @@ try {
         (Join-Path $nyxRoot 'build/source-scheduling/controls')
 
       if ($LASTEXITCODE -ne 0) { throw 'Native source scheduling/control qualification failed' }
+    }
+
+    if ($VerifyDraftCapture) {
+      foreach ($nyxCaptureProgram in @('nyx_draft_capture_tests', 'nyx_draft_capture_controls')) {
+        Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @("tests/$nyxCaptureProgram.lpr"))
+      }
+      $nyxCaptureBrowser = Join-Path $nyxRoot 'build/draft-capture/browser'
+      New-Item -ItemType Directory -Force $nyxCaptureBrowser | Out-Null
+      $nyxCapturePas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+      Invoke-NyxCompiler $nyxCapturePas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxCaptureBrowser", 'tests/nyx_draft_capture_tests.lpr')
+      $nyxCaptureRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+      Copy-Item -LiteralPath $nyxCaptureRuntime -Destination (Join-Path $nyxCaptureBrowser 'rtl.js')
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/draft-capture.html') `
+        -Destination $nyxCaptureBrowser
+      # Stage both consumers even when an original-size runtime gate refuses.
+      # Execution still fails the command; no large-project check is skipped.
+      & (Join-Path $nyxStudioNative 'nyx_draft_capture_tests.exe')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Portable paired draft capture qualification failed' }
+      & (Join-Path $nyxStudioNative 'nyx_draft_capture_controls.exe') `
+        (Join-Path $nyxRoot 'build/draft-capture/controls')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Native original-size draft capture qualification failed' }
     }
 
     if ($VerifyTransportDeadlines) {

@@ -746,3 +746,42 @@ Complete native Studio, successful live warned closure, job completion
 after project closure and broader source/state/reusable workflows retain their
 original task owners. The current evidence establishes the portable foundation
 and observing browser journey, not the complete concurrent authoring criterion.
+
+## Local draft capture
+
+Source typing changes the local Nyx editor/session immediately. Its project-owned
+bridge marks a pending capture and asks the existing adapter timer to run after
+250 milliseconds. Further keystrokes share that window; they do not continually
+postpone it. The timer captures one fresh paired project, including accepted
+Pascal, pending text and its original base. Browser recovery and agent sharing
+consume the same encoded pair. Accepted design/source commands remain immediate,
+ordered publications with ordinary paired history.
+
+Pending local capture prevents source synchronization, build admission and project
+navigation from reporting an acknowledged frame. A complete older observation
+cannot replace unsent typing, even when the publication queue is still empty.
+Concurrent remote changes retain local work and require explicit conflict
+resolution. Capture/queue failures likewise cannot be cleared by a late reply.
+
+Browser recovery continues while sharing is paused. Page hiding/navigation and
+embedded-editor destruction attempt a current recovery write before retiring
+callbacks. A denied/full store retains the preceding readable recovery and local
+draft, with visible help for an explicit backup. Timers and HTTP are best effort;
+these hooks cannot guarantee persistence after a process crash or OS termination.
+Native local files still use the explicit paired save contract. Cancellation does
+not revoke a publication already admitted by the service.
+
+The maintained protocol fixture exercises reply ordering against an independent
+real portable agent session, without an HTTP listener. Its native companion uses
+actual Nyx Studio memo events, Win32 timers and painting at the original source
+sizes. Authentication/network behavior remains covered by its separate consumers;
+compile-only browser evidence does not establish DOM/timer/storage execution.
+
+Studio's hierarchy consumes the specialized public Nyx tree with independent
+typed caption/parent rows and exact component IDs. It occupies a bounded viewport;
+it does not build one native editor button per component. Selection uses the
+public typed `OnSelectionChange` stream with UI-queue delivery, so painting starts
+after the originating tree notification. Shell replacement cancels queued old
+events, and controller retirement cancels the borrowed receiver subscription.
+Compact panels restore selection only when their hierarchy is mounted. Current
+native large-canvas and browser execution limits remain recorded in WORK.md.

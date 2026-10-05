@@ -31,6 +31,7 @@ interface
 uses
   nyx.types,
   nyx.behavior,
+  nyx.events,
   nyx.text,
   nyx.data,
   Classes,
@@ -45,6 +46,7 @@ uses
   nyx.studio.commands,
   nyx.studio.inspector,
   nyx.studio.palette,
+  nyx.studio.hierarchy,
   nyx.theme,
   nyx.render.browser,
   nyx.studio.session,
@@ -74,6 +76,8 @@ type
     FSourceCommands: TNyxSourceCommands;
     FShell: TNyxDocument;
     FShellRenderer: TNyxBrowserRenderer;
+    { Borrowed receiver registration; cancelled before any controller teardown. }
+    FHierarchySubscription: INyxEventSubscription;
     FCanvasRenderer: TNyxBrowserRenderer;
     { Independent ordinary Nyx view preserves the live Pascal control through
       activity/chrome refreshes. Document owns its editor; renderer owns only
@@ -112,6 +116,7 @@ type
     FCompact: Boolean;
     FPanel: TNyxStudioPanel;
     FResizeHandler: TJSEventHandler;
+    FRecoveryBoundaryHandler: TJSEventHandler;
     { Keep an observed shell mounted through the complete press/release/click
       task. Coalesced agent paints run afterward; requests retain fixed targets. }
     FPointerBeginHandler: TJSEventHandler;
@@ -177,6 +182,7 @@ type
     procedure CaptureNewStateDraft;
     procedure Refresh(ARetainCanvas: Boolean = False; APreserveDraft: Boolean = False);
     procedure HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+    procedure HierarchyEvent(const AEvent: TNyxEventInfo);
     procedure HandleCanvas(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure Compile(const AScope, ATarget: TNyxText);
     procedure CompilerReady;
@@ -186,6 +192,11 @@ type
     { Recovery uses one browser storage write. Service identity belongs to the
       recovery wrapper, never to portable downloaded project data. }
     procedure SaveRecovery;
+    procedure SaveRecoveryPacket(const AProject: TNyxText);
+    procedure ProjectCaptured(const AProject: TNyxText);
+    { Mobile/background navigation may suspend timers. Flush the already-owned
+      local draft on pagehide/hidden; ordinary visible typing stays coalesced. }
+    function RecoveryBoundary(AEvent: TJSEvent): Boolean;
     procedure ProjectRequest(AOperation: TNyxProjectOperation);
     procedure ProjectReady;
     procedure ImportProject;
@@ -296,13 +307,12 @@ begin
     '[data-node=palette-result-count]{font-size:11px;color:var(--nyx-muted);}' +
     '[data-node=studio-palette] .nyx-button{width:100%;font-size:11px;font-weight:500;' +
     'padding:8px 6px;min-height:34px;text-align:left;}' +
-    '[data-node=studio-hierarchy] .nyx-button,[data-node=studio-views] .nyx-button{' +
+    '[data-node=studio-views] .nyx-button{' +
     'font-size:11px;border:0;width:100%;text-align:left;padding:6px;background:transparent;}' +
-    '[data-node=studio-hierarchy] .nyx-button[data-variant=primary],'+
     '[data-node=studio-views] .nyx-button[data-variant=primary]{background:#eeeafd;color:#6858e8;}' +
     '[data-node=studio-right] .nyx-input-control{padding:7px 9px;font-size:12px;}' +
     '[data-node=studio-right] .nyx-memo-control{min-height:70px;padding:7px 9px;font-size:12px;}' +
-    '[data-node=studio-hierarchy] .nyx-button{flex:0 0 auto;}' +
+    '[data-node=studio-hierarchy]{height:280px;overflow:auto;flex-shrink:0;font-size:11px;}' +
     '[data-node=studio-right] .nyx-card{min-width:0;}' +
     '[data-node=studio-right] .nyx-button{overflow-wrap:anywhere;}' +
     '[data-node=studio-log]{max-height:120px;overflow:auto;font-size:11px;padding:10px;}' +
@@ -365,9 +375,11 @@ begin
   FSession := TNyxStudioSession.Create;
   FSourceCommands := TNyxSourceCommands.Create(FSession, @SourceCommandChanged);
   FAgents := TNyxStudioAgentBridge.Create(FSession, @AgentRefresh, FWorkspace);
+  FAgents.OnProjectCaptured := @ProjectCaptured;
   FOutputs := TNyxOutputConfiguration.Create;
   FShellRenderer := TNyxBrowserRenderer.Create;
   FShellRenderer.OnEvent := HandleShell;
+  FHierarchySubscription := SubscribeNyxStudioHierarchy(FShellRenderer.Events, @HierarchyEvent);
   FCanvasRenderer := TNyxBrowserRenderer.Create;
   FCanvasRenderer.OnEvent := HandleCanvas;
   FCodeRenderer := TNyxBrowserRenderer.Create;
@@ -380,6 +392,7 @@ begin
   FNewStateInput := ssiText;
   FPanel := nspDesign;
   FResizeHandler := ViewportResize;
+  FRecoveryBoundaryHandler := RecoveryBoundary;
   FPointerBeginHandler := PointerBegin;
   FPointerEndHandler := PointerEnd;
   FPointerBlurHandler := PointerBlur;
@@ -393,6 +406,30 @@ end;
 
 destructor TNyxStudio.Destroy;
 begin
+
+  if FHierarchySubscription <> nil then
+  begin
+    FHierarchySubscription.Cancel;
+    FHierarchySubscription := nil;
+  end;
+  { A host can destroy an embedded editor before its capture timer fires. Save
+    its latest local draft before detaching receivers, without waiting for HTTP.
+    Storage refusal never prevents safe cancellation/teardown. }
+  try
+
+    if (FAgents <> nil) and FAgents.DraftCapturePending then
+    begin
+      SaveRecovery;
+    end;
+  except
+  end;
+
+  if FAgents <> nil then
+  begin
+    FAgents.OnProjectCaptured := nil;
+  end;
+  window.removeEventListener('pagehide', FRecoveryBoundaryHandler);
+  document.removeEventListener('visibilitychange', FRecoveryBoundaryHandler);
   FSourceCommands.Free;
   TNyxStudioEventTarget(document).RemoveCaptureListener('pointerdown', FPointerBeginHandler, True);
   TNyxStudioEventTarget(document).RemoveCaptureListener('pointerup', FPointerEndHandler, True);
@@ -646,6 +683,13 @@ begin
   FShell.Free;
   FShell := CreateShell;
   FShellRenderer.Render(FShell, FShell.Pages[0], TJSHTMLElement(document.body));
+  { Compact Project/Design panels do not mount the Inspector hierarchy. Restore
+    selection only when this shell actually owns the public tree binding. }
+
+  if FShell.Find(NyxStudioHierarchyID) <> nil then
+  begin
+    SelectNyxStudioHierarchy(FShellRenderer.CollectionView(NyxStudioHierarchyID), FSession);
+  end;
   FShellRenderer.ElementFor('studio-shell').setAttribute('data-nyx-studio-compact',
     LowerCase(BoolToStr(FCompact, True)));
   LStyle := TJSHTMLElement(document.getElementById('nyx-studio-style'));
@@ -778,7 +822,6 @@ begin
 
     if FRecoveryEnabled then
     begin
-      SaveRecovery;
       { Only the optional choice is browser-local. Private compiler paths are
         persisted by the service, never exported with the design or Pascal. }
       window.localStorage.setItem('nyx-studio-output-target-v1', FOutputTarget);
@@ -883,19 +926,6 @@ begin
   if AState = nssApplied then
   begin
     FCompiledURL := '';
-    try
-      FAgents.RecordLocal;
-
-      if FRecoveryEnabled then
-      begin
-        SaveRecovery;
-      end;
-    except
-      on LException: Exception do
-      begin
-        FStatus := 'Pascal applied / sharing or recovery needs attention: ' + LException.Message;
-      end;
-    end;
   end;
   { Preparing/status refreshes preserve the mounted canvas and source control.
     Only an admitted pair replaces the design projection. }
@@ -1010,6 +1040,23 @@ begin
   end;
 end;
 
+procedure TNyxStudio.HierarchyEvent(const AEvent: TNyxEventInfo);
+var
+  LNode: TNyxNode;
+begin
+
+  if FShellRenderer.Root = nil then
+  begin
+    Exit;
+  end;
+  LNode := FShellRenderer.Root.Find(NyxStudioHierarchyID);
+
+  if LNode <> nil then
+  begin
+    HandleShell(LNode, AEvent);
+  end;
+end;
+
 procedure TNyxStudio.HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
   LSource: TNyxText;
@@ -1021,11 +1068,22 @@ var
   LDiagnostic: TNyxSourceDiagnostic;
   LCompilerPanel: TNyxNode;
   LCompilerIndex: Integer;
+  LHierarchyChanged: Boolean;
 begin
   LRetainCanvas := False;
   CaptureNewStateDraft;
   LAcceptedDesign := '';
   try
+
+    if RouteNyxStudioHierarchy(FSession, ANode, AEvent, LHierarchyChanged) then
+    begin
+
+      if LHierarchyChanged then
+      begin
+        Refresh(True, True);
+      end;
+      Exit;
+    end;
 
     if FSourceCommands.Route(ANode, AEvent.Trigger) then
     begin
@@ -1084,17 +1142,8 @@ begin
       FShellRenderer.Sync;
     end;
     FStatus := 'Pascal draft / apply when ready';
-    FAgents.RecordLocal;
+    FAgents.RecordDraft;
     FShellRenderer.ElementFor('studio-status').textContent := FStatus;
-
-    if FRecoveryEnabled then
-    begin
-      try
-        SaveRecovery;
-      except
-        { The live buffer and explicit draft download remain available. }
-      end;
-    end;
     Exit;
   end;
 
@@ -1808,6 +1857,15 @@ end;
 
 
 procedure TNyxStudio.SaveRecovery;
+begin
+
+  if FRecoveryEnabled then
+  begin
+    SaveRecoveryPacket(EncodeNyxProject(FSession.ProjectSnapshot));
+  end;
+end;
+
+procedure TNyxStudio.SaveRecoveryPacket(const AProject: TNyxText);
 var
   LRecovery: TNyxText;
 begin
@@ -1816,7 +1874,7 @@ begin
   begin
     LRecovery := NyxObject([
       NyxField('version', NyxData(2)),
-      NyxField('project', NyxData(EncodeNyxProject(FSession.ProjectSnapshot))),
+      NyxField('project', NyxData(AProject)),
       NyxField('name', NyxData(FProjectName)),
       NyxField('boundName', NyxData(FProjectBoundName)),
       NyxField('revision', NyxData(FProjectRevision)),
@@ -1833,6 +1891,48 @@ begin
       raise ENyxModel.Create('Recovery exceeds the UTF-8 packet budget');
     end;
     window.localStorage.setItem(RecoveryKey, LRecovery);
+  end;
+end;
+
+procedure TNyxStudio.ProjectCaptured(const AProject: TNyxText);
+begin
+  try
+    SaveRecoveryPacket(AProject);
+  except
+    on LException: Exception do
+    begin
+      { Sharing has its own admission/acknowledgement. A denied/full browser
+        store keeps the live draft and preceding recovery; expose its failure
+        without reclassifying a successful source publication as rejected. }
+      FStatus := 'Automatic recovery unavailable. Download a project backup to keep your work.';
+
+      if (FShellRenderer <> nil) and (FShellRenderer.Root <> nil) then
+      begin
+        FShellRenderer.ElementFor('studio-status').textContent := FStatus;
+      end;
+    end;
+  end;
+end;
+
+function TNyxStudio.RecoveryBoundary(AEvent: TJSEvent): Boolean;
+begin
+  Result := True;
+
+  if (AEvent._type <> 'pagehide') and (document.visibilityState <> 'hidden') then
+  begin
+    Exit;
+  end;
+
+  if FAgents.DraftCapturePending then
+  begin
+    try
+      FAgents.RecordLocal;
+    except
+      on LException: Exception do
+      begin
+        FStatus := 'Local draft is retained / recovery needs attention: ' + LException.Message;
+      end;
+    end;
   end;
 end;
 
@@ -2558,6 +2658,17 @@ var
   LDocument: TNyxDocument;
 begin
   FRecoveryEnabled := ARecovery;
+
+  if ARecovery then
+  begin
+    FAgents.OnProjectCaptured := @ProjectCaptured;
+  end
+  else
+  begin
+    FAgents.OnProjectCaptured := nil;
+  end;
+  window.addEventListener('pagehide', FRecoveryBoundaryHandler);
+  document.addEventListener('visibilitychange', FRecoveryBoundaryHandler);
   FCompact := window.innerWidth <= 960;
   window.addEventListener('resize', FResizeHandler);
   document.addEventListener('pointerdown', FPointerBeginHandler, True);

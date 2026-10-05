@@ -60,3 +60,18 @@ absence currently forces test history onto the user's Redo stack. Return here
 for the remaining intrinsic constraints, native scaling/widget metrics,
 accessibility, target breadth and native Studio. See WORK.md and the layout guide;
 no scope, support grade or completion credit was reduced.
+
+## Discovered original-size viewport prerequisite — 2026-10-05
+
+The codegen/editor capture consumer retains all 128/512/2048 controls and original
+paired source byte sizes. Studio's hierarchy now uses one bounded public Nyx
+tree with typed independent rows. At 2048 controls, the actual canvas root still
+requests 81963 pixels of native height: `TNyxLCLRenderer.Layout` passes it to
+`TWinControl.SetBounds`, and LCL refuses its widget size range. Failure logs and
+stack evidence are retained in WORK.md; no controls are dropped or heights
+silently clamped. This gap belongs to the existing native scaling/layout
+acceptance path and is a prerequisite for codegen criterion 3's ordinary editor
+outcome. Qualify explicit logical scroll extent, safe widget geometry, access to
+all descendants, exact selection/input and teardown through the public designer
+viewport, retaining browser/LCL parity. This discovery accepts no criterion and
+does not reset this task's existing no-closure count of 2.

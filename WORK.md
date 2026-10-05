@@ -7,23 +7,42 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest source checkpoint: [isolated admission and actual editor Apply](#isolated-source-admission-and-editor-apply--2026-10-05)
-consumes immutable creator environments and reader-owned recipes through a
-coalesced source controller. Actual Win32 controls qualify paired publication,
-stale refusal, cancellation, teardown and visible desktop/390 status. The Pascal
-browser worker/controller compiles; current execution retains the host gate.
-Codegen criterion 3 remains open at no-closure count 16. Native authoring's 7 and
+Latest source candidate: [coalesced draft capture and public hierarchy](#coalesced-draft-capture-and-public-hierarchy--2026-10-05)
+shares one fresh paired snapshot with recovery and protects unsent text from old
+observations. Actual Win32 128/512-control journeys retain exact selection,
+draft/base, focus/caret and history; the 2048-control canvas fails the native
+widget height range. The public hierarchy has one bounded typed tree. Shared
+protocol checks pass 41 and native Apply regression passes 39, with zero leaks.
+Browser code compiles; current execution retains the host gate.
+Codegen criterion 3 remains open at no-closure count 17. Native authoring's 7 and
 delivery's 1 remain unchanged. This is an integrated source Apply boundary, not
 acceptance of comfortable large-project editing or all command scheduling.
 
-Reassessment follows the remaining concrete source prerequisite: detached visual/
-structural reconciliation, coalesced bridge/recovery capture and ordinary editor
-input/painting at the original sizes. Reuse the current immutable candidates,
+Reassessment follows the concrete failure prerequisite: native logical scroll
+extent and safe widget geometry through the public designer viewport, retaining
+all original-size descendants and input/selection. Detached visual/structural
+reconciliation and comfortable ordinary editing remain required afterward.
+Reuse the current immutable candidates,
 creator guard and revocable ports. Preserve fresh admission, direct mutation,
 crafted source and paired history; never mutate accepted trees on workers.
 Browser Apply/worker and observing editor acceptance still need a permitted host
 without an equivalent refused launch. No further lookup experiment, scope/count
 reset, weakened parity/DONE gate or full-goal completion substitutes these checks.
+
+The completed bounded implementation packet follows codegen criterion 3: coalesce source-draft capture
+through the existing owned editor timer, share one fresh paired snapshot with
+browser recovery, and retain unsent typing across observing replies. Typing must
+update the ordinary Nyx editor/session immediately; history, builds and project
+navigation retain exact acknowledged-frame guards. Qualify private protocol
+ordering/conflicts, real native controls and the unchanged large source sizes;
+stop on dropped draft text, reordered accepted commands, stale remote adoption
+or receiver delivery after retirement. Browser execution retains its existing
+host gate. The native viewport failure below is now the immediate prerequisite;
+detached visual/structural reconciliation remains required.
+The preceding English preference turn confirmed existing content without changing
+authoritative goal state: no progress toward the full goal, now revalidated with
+current source, connected semantic session and protected process identities.
+No count or acceptance gate is reset by that preference check.
 
 Latest user authorization: the current project is disposable test content and
 may be reset/removed when useful. Its exact prior contents are no longer an
@@ -5481,3 +5500,101 @@ machine paths/accounts/hosts and personal configuration stay outside the commit.
 The original unbounded goal remains active. This goal turn is progress because
 product integration and actual preservation evidence changed; it is not a
 blocked goal or completed product.
+
+## Coalesced draft capture and public hierarchy — 2026-10-05
+
+The source-command continuation implements coalesced capture through the existing
+project-owned editor exchange timer. Actual source input updates its session
+immediately, then marks one pending window; later keystrokes do not continually
+postpone it. One fresh operation-owned `ProjectSnapshot` encoding supplies both
+sharing and optional browser recovery. No pair is cached across direct mutation.
+Accepted commands retain immediate ordered publication and paired Undo/Redo.
+In-flight queue heads remain immutable; unsent text blocks acknowledged-frame,
+build and project-switch admission. A full older observation cannot adopt over
+an empty queue with dirty local text. Capture/queue refusals survive late replies;
+explicit remote acceptance remains the operator's choice. Paused sharing can
+still persist locally. Pagehide/hidden/destruction recovery is best effort and
+does not claim crash durability or native automatic paired-file save.
+
+The original full native control fixture first failed at 2048 on the hierarchy's
+73800-pixel column. Studio now consumes `INyxTree`, typed independent caption /
+parent rows and exact component item references in one 280-pixel viewport. It
+retains every active-view descendant, including 128-scalar Unicode IDs, without
+retaining authored nodes or allocating a native editor button per row. Selection
+uses public `OnSelectionChange` / `neUIQueue`; the legacy click/change callback
+does not receive it. Renderer generation cancellation and explicit subscription
+retirement protect borrowed receivers. Initialization is a no-op when already
+selected. Compact Project/Design panels restore only mounted bindings. Review
+caught that omission and corrected it; maintained browser continuations now wait
+for the real queued selection task instead of changing its execution policy.
+
+Evidence under ignored `build/draft-capture/`:
+
+- Checked native shared protocol/ownership fixture passes **41**, with zero
+  leaks. It qualifies burst capture, exact supplementary text/original draft
+  base, unchanged full old observation, newer unsent input behind an in-flight
+  commit, remote conflict, explicit acceptance, ordered accepted history, paused
+  persistence, malformed direct mutation/capture refusal, exact tree identity and
+  cancellation of queued shell/receiver events. Its deterministic private
+  `TNyxAgentSession.Exchange` adapter does not qualify sockets/authentication or
+  real elapsed clocks. Failed fixture setup logs are retained separately.
+- Actual checked Win32 Studio memo, timers and paints pass the complete **128
+  and 512** journeys with all components represented and exact final-item tree
+  selection. Eighty `SelText` insertions post/repaint zero times in the input
+  callbacks; one real timer commit shares the exact pending pair. Accepted
+  source/history stay unchanged, the ordinary Nyx memo/focus/caret stay mounted,
+  and pending capture/typed selection retire safely. Original paired source
+  sizes remain **25094 / 98822 / 400022 UTF-8 bytes**. No size is narrowed.
+- The full consumer **fails at 2048** before typing: the design canvas requests
+  height **81963** and LCL refuses `TWinControl.SetBounds`, called by
+  `TNyxLCLRenderer.Layout` during actual canvas Render. Checked failure teardown
+  frees all **83424664** allocated blocks with **zero leaks**. Initial hierarchy,
+  selection, compact-fixture and final canvas failure logs remain retained.
+  No renderer height clamp or descendant truncation substitutes acceptance.
+- Actual native source Apply/Restore regression passes **39**, zero leaks,
+  after the compact binding correction. Current source controls and independent
+  shell ownership remain exercised. Current stable-FPC core/designer regression
+  passes **30 / 1769**, frees all **102232428** allocated blocks and reports
+  **zero leaks**; this includes the maintained exact long-identity hierarchy
+  consumer, now querying typed rows rather than removed button ordinals.
+- Current browser Studio, portable fixture, core/designer and maintained DOM journey compile
+  with zero owned warnings. Seven installed pas2js RTL warnings remain visible.
+  The standalone fixture host includes its matched runtime and starts no
+  listener. These are compiled consumers, **not current browser execution**.
+  Neither DOM/timer/storage nor observing parity is accepted from compilation.
+- Desktop/390 Win32 captures show English review captions and the retained
+  source pane after the compact correction. The narrow pane currently has very
+  little visible source height, so it is not full visual-quality acceptance.
+  The original benchmark's private Unicode note remains qualification input;
+  starter demos continue to use English. No Unicode support was removed.
+
+Tracing times are not release latency: checked first input / 80 insert callbacks
+/ timer plus in-process protocol are 47 / 1485 / 5859 ms at 128 and 156 / 5000 /
+12984 ms at 512. The private GUI fixture executes server admission in-process;
+production HTTP admission has its independent worker. Earlier ordinary samples
+are retained but predate the compact correction and are not current acceptance
+evidence. No comparison or comfortable typing claim follows these timings.
+`-VerifyDraftCapture` stages both consumers, then keeps the full failed native
+gate nonzero. `docs/building.md` documents its present refusal.
+
+Original codegen criterion 3 stays open; the no-closure count advances **16→17**.
+Criteria 1/2 remain accepted, native authoring's **7**, native renderer's **2**
+and delivery's **1** stay unchanged. Discovery is mapped to the existing
+NS-2_lcl-renderer scaling/layout owner as a prerequisite of the original source
+outcome, not a scope transfer or new completion credit. Next fix logical scroll
+extent / safe native widget geometry through the public designer viewport, with
+all original controls reachable and retained input, selection, ownership and
+both-target evidence. Then return to detached visual/structural reconciliation.
+Stop another capture micro-optimization packet; the full-size failure determines
+the next action. No counter reset, weakened parity/DONE gate or goal completion.
+
+Named semantic MCP remains connected and primary. Read-only revalidation retains
+revision **6**, home view/selection, one page/one reusable, no pending draft,
+empty Undo and existing Redo. Production/staging identities remain unchanged;
+no listener, front-end deployment, controller replacement, enrollment/profile
+change or active user pair mutation occurred. Local source scheduling status /
+admission semantic gaps retain their NS-4 workflow owner; physical callbacks
+still require their explicit maintained harness. The earlier listener approval
+rejection remains "blocked by policy" without more detail. No equivalent launch
+or alternate route retries it. This goal turn advances product integration and
+actual evidence while the original unbounded goal remains active and incomplete.
