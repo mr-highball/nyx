@@ -614,3 +614,16 @@ Current task and return path are maintained in [WORK.md](WORK.md).
   and actual compiled consumers under the same owner, keeping richer reusable/
   source and full parity/presentation requirements. See
   [evidence](WORK.md#semantic-pascal-imports--2026-10-05).
+
+- Semantic Pascal helper implementations now extend the existing source boundary:
+  bounded routine discovery/Unicode windows and typed grouped exact-text editing,
+  preserving signatures, comments, callback infrastructure and managed views.
+  Both native compilers pass 21 lexical/31 semantic checks, actual discovery 31
+  and unchanged compiled native input nine, with zero leaks/owned warnings.
+  Callback/import regressions pass 72/31. Browser consumers/Studio/worker compile
+  but retain execution/deployment gates. No full criterion or percentage advances;
+  workflow criterion 5 stays open at no-closure 6, with codegen 26, renderer 3,
+  authoring 7 and delivery 1 unchanged. Next deliver guarded helper declaration
+  creation/removal, preserving the original full general-source outcome and
+  richer reusable/parity/presentation owners. See
+  [evidence](WORK.md#semantic-pascal-helpers--2026-10-05).

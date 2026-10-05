@@ -164,7 +164,8 @@ begin
     Check(Pos('const AEvent: TNyxEventInfo', LFirst.Signature) > 0, 'Read immutable strongly typed signature');
     Check(LFirst.Line = NyxHandlerSourceLine(LOriginal.Source, GFirst), 'Navigation uses the real qualified method');
     LHeader := LFirst.Signature;
-    LGuard := '// Preserved sibling note 🌙 / procedure ' + GFirst.Name + '.Invoke; begin end;';
+    LGuard := TNyxText('// Preserved sibling note 🌙 / procedure ') + GFirst.Name +
+      '.Invoke; begin end;';
     LSource := ReplaceFirst(LOriginal.Source, 'implementation',
       'implementation' + #10 + LGuard);
     RefuseRead(LSource + #10 + LFirst.Signature + LFirst.Code,
@@ -290,7 +291,7 @@ begin
     Refuse(Args('read-only', NyxArray([Change(GFirst, LBody, LBody)])), 'Read-only refuses source publication');
     GAgent.Exchange(NyxObject([NyxField('op', NyxData('configure')), NyxField('permission', NyxData('edit'))]));
     LDraft := Pair;
-    LDraft.Draft := LDraft.Source + #10 + '// Protected unaccepted draft 🌙';
+    LDraft.Draft := LDraft.Source + #10 + TNyxText('// Protected unaccepted draft 🌙');
     LDraft.DraftBase := LDraft.Source;
     LDraft.Pending := True;
     GAgent.Exchange(NyxObject([NyxField('op', NyxData('commit')),

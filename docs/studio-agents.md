@@ -524,8 +524,66 @@ revision/permission/transport authority and exact retry receipts reuse the exist
 Pascal boundary. Workspace/review references stay on the outer request only.
 Import resolution and helper syntax/types require ordinary `nyx_build` diagnostics;
 source admission does not establish compilation or execution. This mode changes
-no target profile or unit search path. General helper/class/full-unit editing and
-authenticated updated observing deployment remain unqualified.
+no target profile or unit search path. General helper implementation editing now
+has the modes below; declaration/class/full-unit authoring and authenticated
+updated observing deployment remain unqualified.
+
+### Handwritten Pascal helpers
+
+Use `nyx_pascal` with `mode: routines` and optional `offset`/`limit` to discover
+accepted top-level implementations in declaration order. The default page has
+20 entries; the maximum is 50. Each row has an exact qualified `routine`, closed
+`kind` (procedure/function/constructor/destructor), one-based `line`, `editable`
+and a refusal `reason`. Class functions retain their complete prefix. Escaped
+Pascal identifiers retain their authored ampersands in the signature and use
+ordinary unescaped qualified identities in references. Nested
+local routines belong to their enclosing implementation. Type member/procedural
+declarations, literals and comments never become independent edit targets.
+Discovery admits at most 4096 entries and preserves selection/history.
+
+`mode: routine` takes one case-insensitive qualified name, `offset` and `count`.
+Offsets/counts address Unicode scalars; at most 4096 are returned. Concatenate
+`text` windows only at the same `revision`. The response includes the exact
+signature through its first semicolon (up to 1024 scalars, with its full size),
+editable status/reason, source line and `pendingDraft`. The editable text starts
+after that semicolon and includes whitespace, local declarations/nested routines
+and the complete implementation through `end;`. Forward/external and conditional
+entries can be inspected when uniquely identified, but cannot be edited.
+Overloaded/duplicate names appear in discovery with refusal reasons; inspection
+by an ambiguous name refuses instead of choosing a signature.
+
+`mode: edit-routines` takes current `expectedRevision`, unique `operationId` and
+1..16 changes containing exactly `routine`, `expected` and `implementation`.
+Expected text must exactly match the accepted window sequence. Each expected or
+proposed field permits at most 32768 Unicode scalars; the whole patch permits
+131072. Each distinct routine occurs once. No-op patches, stale text, pending
+drafts, directives, guessed conditional/overload ownership and compiler-managed
+`BuildNyxDocument`/`BindNyxCallbacks` targets refuse. End text at the final
+semicolon with only optional trailing whitespace; sibling declarations and
+trailing comments cannot enter the replacement.
+
+The public contract uses `TNyxRoutineRef`, immutable `TNyxRoutineSource`/
+`TNyxRoutineCatalog`, `TNyxRoutineEdit` and managed `INyxRoutinePatch`:
+
+```pascal
+LPolicy := ReadNyxRoutineSource(LSource, NyxRoutine('TNotePolicy.Limit'));
+LPatch := NewNyxRoutinePatch([
+  NyxRoutineEdit(LPolicy.Routine, LPolicy.Code, LNewImplementation)
+]);
+```
+
+Candidates reconstruct the ordinary complete source/design contract and require
+exact retained design. Only one final publication adds a paired Undo step;
+late group refusal preserves the entire pair, navigation and history. Signatures,
+imports, surrounding helpers/comments, callback registrations and managed views
+stay owned. Existing operator permission, revision, transport authority, exact
+receipt and outer workspace/review routing guards apply. Read-only permits
+bounded inspection; Disabled refuses access. These three modes extend the same
+nineteen-tool source catalog; the protected release/current chat still has fifteen
+tools and its older Pascal schema. Compilation/type correctness and actual helper
+execution require `nyx_build` and target controls, not source admission. Helper
+creation/removal, signature/class/full-unit changes and updated authenticated
+observing deployment retain their open workflow owner.
 
 ## Maintained authored-input review
 

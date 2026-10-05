@@ -81,7 +81,7 @@ From the repository, run:
 
 Individual build targets are `core`, `generated`, `collections`, `collection-views`,
 `collection-authoring`, `collection-inspectors`, `collection-bindings`,
-`source-workspace`, `pascal-imports`, `agents`, `state-bindings`, `split`, `interactions`,
+`source-workspace`, `pascal-imports`, `pascal-routines`, `agents`, `state-bindings`, `split`, `interactions`,
 `named-events`, `viewport`, `catalog`, `browser`, `studio`, `lcl`, `http`,
 `visual` and `all`.
 The native unit cache includes compiler version and CPU/OS. LCL and pas2js
@@ -722,3 +722,26 @@ zero native leaks/owned warnings. Browser compilation retains seven installed
 RTL warnings. Serve the staged hosts only through an admitted HTTP host to qualify
 browser execution; that and authenticated updated observing deployment remain
 at the recorded gate. See [evidence](../WORK.md#semantic-pascal-imports--2026-10-05).
+
+## Semantic Pascal helper qualification
+
+```powershell
+./tools/build.ps1 -Target pascal-routines
+```
+
+The maintained command executes checked native lexical and semantic consumers,
+actual offline nineteen-tool discovery and an unchanged emitted companion with
+real native memo input. An MCP group edits a qualified policy function and a
+global caption helper; the actual compiled callback uses the new four-character
+limit. Dedicated Unicode input verifies scalar counting and rejected-value
+retention. English demo text remains independent of Unicode qualification
+comments. Candidate admission alone does not prove helper compilation/execution.
+
+Native/export/LCL/browser artifacts live under `build/pascal-routines/`;
+`-BrowserOutput` selects separate browser staging. The command compiles matching
+pas2js consumers, copies the matched RTL and stages three English hosts. It starts
+no listener and changes no live project, service or personal configuration.
+Current browser execution and updated authenticated observation keep their
+recorded host gate. General declaration/class/full-unit authoring and complete
+source synchronization retain original acceptance requirements.
+See [evidence](../WORK.md#semantic-pascal-helpers--2026-10-05).

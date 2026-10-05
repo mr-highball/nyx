@@ -93,6 +93,8 @@ begin
       not HandlerWord(ATokens, AIndex + 1, 'of') and
       not HandlerWord(ATokens, AIndex + 1, 'procedure') and
       not HandlerWord(ATokens, AIndex + 1, 'function') and
+      not HandlerWord(ATokens, AIndex + 1, 'constructor') and
+      not HandlerWord(ATokens, AIndex + 1, 'destructor') and
       not HandlerWord(ATokens, AIndex + 1, 'operator') and
       not HandlerWord(ATokens, AIndex + 1, 'property') and
       not HandlerWord(ATokens, AIndex + 1, 'var');

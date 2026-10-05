@@ -40,6 +40,54 @@ const
   NyxViewsEnd = '// </nyx:views>';
 
 type
+  { Open Pascal routine identity. Qualified methods and ordinary functions use
+    compiler-style case-insensitive names; offsets never identify an edit. }
+  TNyxRoutineRef = record
+  private
+    FName: TNyxText;
+  public
+    property Name: TNyxText read FName;
+  end;
+  TNyxRoutineKind = (nrProcedure, nrFunction, nrConstructor, nrDestructor);
+
+  { An immutable lexical implementation and its exact signature. Code begins
+    after the signature semicolon and ends at the implementation semicolon.
+    It includes local declarations/nested routines. Noneditable entries explain
+    conditional/overload/generated ownership; they remain useful for discovery.
+    Owned text outlives the source/session. Private offsets never escape. }
+  TNyxRoutineSource = record
+  private
+    FRoutine: TNyxRoutineRef;
+    FKind: TNyxRoutineKind;
+    FSignature: TNyxText;
+    FImplementation: TNyxText;
+    FLine: Integer;
+    FStart: Integer;
+    FHeaderFinish: Integer;
+    FFinish: Integer;
+    FEditable: Boolean;
+    FReason: TNyxText;
+  public
+    property Routine: TNyxRoutineRef read FRoutine;
+    property Kind: TNyxRoutineKind read FKind;
+    property Signature: TNyxText read FSignature;
+    property Code: TNyxText read FImplementation;
+    property Line: Integer read FLine;
+    property Editable: Boolean read FEditable;
+    property Reason: TNyxText read FReason;
+  end;
+
+  { Immutable declaration-order discovery. Nested routines belong to their
+    enclosing implementation and never become independent edit targets. }
+  TNyxRoutineCatalog = record
+  private
+    FEntries: array of TNyxRoutineSource;
+    function GetCount: Integer;
+  public
+    function Item(AIndex: Integer): TNyxRoutineSource;
+    property Count: Integer read GetCount;
+  end;
+
   { Import sections are Pascal visibility choices, independent of output target. }
   TNyxImportSection = (nisInterface, nisImplementation);
   TNyxImportAction = (niaAdd, niaRemove);
@@ -261,6 +309,18 @@ function NyxCompanionUnitName(const ASource: TNyxText): TNyxText;
   requires presence in the exact section. File clauses and ambiguous ownership
   refuse. This is lexical admission, not unit resolution or compiler success. }
 function NyxPascalUnit(const AName: TNyxText): TNyxPascalUnitRef;
+{ Discover up to 4096 complete top-level implementations outside interface type
+  declarations. Refuse malformed lexical boundaries. Read resolves one unique
+  name; Replace additionally requires exact expected text and editable ownership.
+  Signatures, surrounding comments and the managed builder are never replaced.
+  Expression/type correctness remains the ordinary compiler's responsibility. }
+function NyxRoutine(const AName: TNyxText): TNyxRoutineRef;
+function ReadNyxRoutines(const ASource: TNyxText): TNyxRoutineCatalog;
+function ReadNyxRoutineSource(const ASource: TNyxText;
+  const ARoutine: TNyxRoutineRef): TNyxRoutineSource;
+function ReplaceNyxRoutineImplementation(const ASource: TNyxText;
+  const ARoutine: TNyxRoutineRef; const AExpected, AImplementation: TNyxText): TNyxText;
+
 function ReadNyxImports(const ASource: TNyxText; ASection: TNyxImportSection): TNyxImportClause;
 function EditNyxImport(const ASource: TNyxText; ASection: TNyxImportSection;
   AAction: TNyxImportAction; const AUnit: TNyxPascalUnitRef): TNyxText;
@@ -3578,6 +3638,7 @@ end;
 
 {$I nyx.source.handlers.inc}
 {$I nyx.source.imports.inc}
+{$I nyx.source.routines.inc}
 
 function WithNyxControlImport(const AFrame: TNyxText): TNyxText;
 begin

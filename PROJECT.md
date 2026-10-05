@@ -236,6 +236,18 @@ updated deployment remain unqualified. General helper/class/full-unit authoring,
 richer reusable workflows and complete editor performance/presentation retain
 their original acceptance requirements.
 
+Handwritten helper implementations now have three focused modes in `nyx_pascal`:
+bounded routine discovery, Unicode text windows and typed grouped exact-text
+replacement through one paired Undo step. Ordinary functions/procedures and
+qualified methods retain signatures/comments; conditional/overload/generated
+ownership refuses. Both native compilers pass 21 lexical and 31 semantic checks;
+actual discovery passes 31 and the unchanged compiled native memo nine, with
+zero leaks/owned warnings. Callback/import regressions pass 72/31. Browser
+consumers, Studio and its module worker compile, but execution/authenticated
+updated observation keep their gate. Helper creation/removal and signature/class/
+full-unit authoring, richer reusable semantics and full editor quality remain
+open; [WORK.md](WORK.md#semantic-pascal-helpers--2026-10-05) owns exact evidence.
+
 The warning-cleanup packet now reports zero owned warnings on the qualified
 native/LCL/pas2js builds and current MCP application jobs. Shared execution,
 actual layout controls and Studio resize/split checks pass. Seven installed

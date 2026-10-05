@@ -52,7 +52,8 @@ the present Windows installation; the Pascal semantic client is usable immediate
 create/update/move/delete/title/tokens. Callback authoring now has a focused tool;
 immutable build requests and bounded status are now qualified. Local callback
 implementation editing now has a focused bounded tool. General
-helper/class/full-unit editing remains absent. Unconditional import commands now
+helper implementation editing now has the bounded source packet below; helper
+creation/removal and signature/class/full-unit editing remain absent. Unconditional import commands now
 have the source qualification packet below. Scalar state/binding commands have a
 source/staged qualification packet below; richer reusable workflows remain
 required, while structured collection authoring has its staged packet below. Root
@@ -440,3 +441,36 @@ claiming callback/import-only completion. Richer reusable semantics, root orderi
 review lifecycle, updated authenticated/browser deployment, comfortable editing
 and complete presentation/accessibility retain original owners and criteria.
 See [evidence](../WORK.md#semantic-pascal-imports--2026-10-05).
+
+## Semantic handwritten Pascal helpers — 2026-10-05
+
+Criterion 5's existing general source outcome now includes bounded declaration-
+order discovery, exact Unicode implementation windows and immutable typed grouped
+replacement through the existing `nyx_pascal` boundary. Ordinary functions/
+procedures and qualified methods (including constructors/destructors) preserve
+signatures, surrounding comments/helpers, callback infrastructure and exact
+design. Nested routines remain owned by their parent; overloads/duplicates,
+directives, conditional ownership, forward/external and managed infrastructure
+refuse edits. Permission/revision/actor/receipt/draft/context and one paired Undo
+guards remain unchanged. General helper creation/removal, signature/class/full-
+unit authoring and richer reusable semantics retain their original requirement.
+
+Both native compilers pass 21 lexical and 31 semantic checks; actual offline
+nineteen-tool discovery passes 31 and the unchanged compiled native memo nine.
+Callback/import regressions pass 72/31, with zero leaks and owned native warnings.
+The maintained `pascal-routines` command executes its actual consumers and stages
+matched browser programs/RTL/English hosts. Browser Studio/module worker compile,
+but updated authenticated observation and browser execution retain their host gate.
+
+No full criterion closes: no-closure advances **5→6** once; codegen **26**,
+renderer **3**, native authoring **7** and delivery **1** remain unchanged.
+Reassessment ends routine/schema/fixture expansion. Next deliver guarded helper
+declaration creation/removal through the same paired source boundary, preserving
+interface/implementation ownership, caller references, class signatures,
+callbacks and managed views. Use ordinary compiler diagnostics and an unchanged
+compiled consumer; refuse guessed conditional/overload ownership and incomplete
+publication. Do not substitute implementation-only completion for full general
+source authoring. Root ordering, richer reusable workflows, review lifecycle,
+updated observing deployment and complete presentation/accessibility/performance
+remain open with their original owners.
+See [evidence](../WORK.md#semantic-pascal-helpers--2026-10-05).
