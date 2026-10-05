@@ -6657,3 +6657,14 @@ occurred on that primary pair. Private identity proof is in
 `.local/codex-restart-check/event-inspector-processes.json`. Existing live
 artifacts, services, projects and personal compiler/configuration paths remain
 untouched by this packet. Remote checkpoint follows.
+
+Remote checkpoint: product commit
+`d925b804139e5a9226ecced3bbb00c5d7cebccfe` is pushed to
+`origin/hello-nyx`; the exact remote ref matched locally. Native event controls
+57, shared authoring 73, direct focus/caret 6, private event admission 49 on both
+native compilers and compiled reconstruction 4 pass with zero leaks. Existing
+56 / 140 / 10 regressions remain applicable. Browser builds are staged only.
+This handoff keeps codegen criterion 3 open at no-closure 25 and preserves the
+next structured-collection deliverable and existing host gates above. Its own
+clean/remote proof will be stored privately after pushing; the full goal remains
+active/incomplete.
