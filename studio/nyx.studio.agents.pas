@@ -69,6 +69,8 @@ type
     function EditorState(AAfter: Integer): TNyxDataValue;
     function Outline(const AArguments: TNyxDataValue): TNyxDataValue;
     function NodeDetails(const AArguments: TNyxDataValue): TNyxDataValue;
+    { Paged reachable named paths from an independent effective projection. }
+    function NamedParts(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
     function Components(const AArguments: TNyxDataValue): TNyxDataValue;
     function Diagnostics(const AArguments: TNyxDataValue): TNyxDataValue;
     function SourceLines(const AArguments: TNyxDataValue): TNyxDataValue;
@@ -544,6 +546,77 @@ begin
   end;
 end;
 
+function TNyxAgentSession.NamedParts(ANode: TNyxNode;
+  AOffset, ALimit: Integer): TNyxDataValue;
+var
+  LContext, LProjection: TNyxNode;
+  LItems: array of TNyxDataValue;
+  LTotal: Integer;
+
+  procedure Visit(APart: TNyxNode; const APath: TNyxText);
+  var
+    LIndex, LCount: Integer;
+    LPath, LRuleID: TNyxText;
+  begin
+
+    if (LTotal >= AOffset) and (Length(LItems) < ALimit) then
+    begin
+      LRuleID := '';
+      for LIndex := 0 to ANode.Count - 1 do
+      begin
+
+        if (ANode.Children[LIndex].Kind = 'slot-override') and
+          (ANode.Children[LIndex].Prop('path') = APath) then
+        begin
+          LRuleID := ANode.Children[LIndex].ID;
+          Break;
+        end;
+      end;
+      LCount := Length(LItems);
+      SetLength(LItems, LCount + 1);
+      LItems[LCount] := NyxObject([NyxField('path', NyxData(APath)),
+        NyxField('kind', NyxData(APart.Kind)),
+        NyxField('source', NyxData(APart.SourceID)),
+        NyxField('designID', NyxData(APart.DesignID)),
+        NyxField('overrideID', NyxData(LRuleID))]);
+    end;
+    Inc(LTotal);
+    for LIndex := 0 to APart.Count - 1 do
+    begin
+      LPath := APart.Children[LIndex].Prop('part');
+
+      if LPath <> '' then
+      begin
+        { Resolve through the same contract before reporting a path. Duplicate
+          sibling names refuse instead of returning misleading source identity. }
+        APart.Part(NyxPart(LPath));
+
+        if APath <> '.' then
+        begin
+          LPath := APath + '/' + LPath;
+        end;
+        { Only direct named children are reachable by the public Part contract.
+          No unnamed ancestor is invented as a path segment. }
+        Visit(APart.Children[LIndex], LPath);
+      end;
+    end;
+  end;
+begin
+  LTotal := 0;
+  LContext := RealizeNyxContext(FSession.Document, ANode, LProjection);
+  try
+
+    if LProjection <> nil then
+    begin
+      Visit(LProjection, '.');
+    end;
+    Result := NyxObject([NyxField('offset', NyxData(AOffset)),
+      NyxField('total', NyxData(LTotal)), NyxField('items', NyxArray(LItems))]);
+  finally
+    LContext.Free;
+  end;
+end;
+
 function TNyxAgentSession.NodeDetails(const AArguments: TNyxDataValue): TNyxDataValue;
 const
   CTypes: array[TNyxPropertyType] of TNyxText = ('string', 'lines', 'boolean',
@@ -591,7 +664,7 @@ var
   LText: TNyxText;
   LValue: TNyxDataValue;
 begin
-  NyxAgentFields(AArguments, '|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|');
+  NyxAgentFields(AArguments, '|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|');
   LNode := FSession.Document.Find(TextArgument(AArguments, 'id', FSession.SelectedID));
 
   if LNode = nil then
@@ -812,6 +885,14 @@ begin
     LFields[13] := NyxField('routeOffset', NyxData(LRouteOffset));
     LFields[14] := NyxField('routesPartial', NyxData(
       (LRouteOffset > 0) or (LRouteCount < LRouteTotal)));
+  end;
+
+  if NyxAgentHas(AArguments, 'parts') and AArguments.Field('parts').AsBoolean then
+  begin
+    SetLength(LFields, Length(LFields) + 1);
+    LFields[High(LFields)] := NyxField('parts', NamedParts(LNode,
+      IntegerArgument(AArguments, 'partOffset', 0, 0, 100000),
+      IntegerArgument(AArguments, 'partLimit', 20, 1, 50)));
   end;
   Result := NyxObject(LFields);
 end;

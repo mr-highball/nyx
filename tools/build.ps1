@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1454,6 +1454,74 @@ try {
     Write-Host 'Semantic collection consumers staged; browser execution requires an admitted HTTP host.'
     exit 0
   }
+
+  if ($Target -eq 'reusables') {
+    # Pascal owns command, history, source and physical-control assertions.
+    # These independent artifacts never launch/deploy a listener or touch the
+    # observing user's project, compiler profile or enrolled MCP configuration.
+    $nyxReusableRoot = Join-Path $nyxRoot 'build/reusables'
+    $nyxReusableStable = Join-Path $nyxReusableRoot 'stable'
+    $nyxReusableMatched = Join-Path $nyxReusableRoot 'matched'
+    $nyxReusableLcl = Join-Path $nyxReusableRoot 'lcl'
+    $nyxReusableExport = Join-Path $nyxReusableRoot 'export-stable'
+    $nyxReusableMatchedExport = Join-Path $nyxReusableRoot 'export-matched'
+    $nyxReusableBrowser = Join-Path $nyxReusableRoot 'browser'
+
+    if ($BrowserOutput) { $nyxReusableBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxReusableStable, $nyxReusableMatched,
+      $nyxReusableLcl, $nyxReusableExport, $nyxReusableMatchedExport,
+      $nyxReusableBrowser | Out-Null
+    $nyxReusableFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests')
+    Invoke-NyxCompiler $nyxFpc ($nyxReusableFlags + @("-FU$nyxReusableStable",
+      "-FE$nyxReusableStable", 'tests/nyx_agent_reusable_tests.lpr'))
+    & (Join-Path $nyxReusableStable 'nyx_agent_reusable_tests.exe') $nyxReusableExport
+
+    if ($LASTEXITCODE -ne 0) { throw 'Stable semantic reusable workflow failed' }
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    Invoke-NyxCompiler $nyxLclFpc ($nyxReusableFlags + @("-FU$nyxReusableMatched",
+      "-FE$nyxReusableMatched", 'tests/nyx_agent_reusable_tests.lpr'))
+    & (Join-Path $nyxReusableMatched 'nyx_agent_reusable_tests.exe') $nyxReusableMatchedExport
+
+    if ($LASTEXITCODE -ne 0) { throw 'Matched semantic reusable workflow failed' }
+    foreach ($nyxReusableArtifact in @('design.nyx', 'nyx.generated.view.pas', 'project.nyxpair')) {
+
+      if ((Get-FileHash -LiteralPath (Join-Path $nyxReusableExport $nyxReusableArtifact)).Hash -cne
+        (Get-FileHash -LiteralPath (Join-Path $nyxReusableMatchedExport $nyxReusableArtifact)).Hash) {
+        throw "Reusable compiler artifacts differ: $nyxReusableArtifact"
+      }
+    }
+    $nyxReusablePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxReusableControlFlags = $nyxReusableFlags + @("-Fu$nyxReusableExport",
+      "-Fu$nyxLazarus/lcl/units/$nyxReusablePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxReusablePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxReusablePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxReusablePlatform",
+      "-FU$nyxReusableLcl", "-FE$nyxReusableLcl")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxReusableControlFlags + @('tests/nyx_agent_reusable_schema.lpr'))
+    & (Join-Path $nyxReusableLcl 'nyx_agent_reusable_schema.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Actual reusable discovery checks failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxReusableControlFlags + @('tests/nyx_agent_reusable_controls.lpr'))
+    & (Join-Path $nyxReusableLcl 'nyx_agent_reusable_controls.exe') (Join-Path $nyxReusableExport 'design.nyx')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Unchanged compiled reusable controls failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxReusableProgram in @('nyx_agent_reusable_tests', 'nyx_agent_reusable_controls')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
+        '-Futests', "-Fu$nyxReusableExport", '-Jirtl.js', "-FE$nyxReusableBrowser",
+        "tests/$nyxReusableProgram.lpr")
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxReusableBrowser 'rtl.js')
+    foreach ($nyxReusableHost in @('agent-reusables.html', 'agent-reusable-controls.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxReusableHost") -Destination $nyxReusableBrowser
+    }
+    Write-Host 'Reusable consumers staged; actual browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
 
   if ($Target -eq 'source-editor') {
     # Pascal qualifies retained physical controls, modal resizing and strict

@@ -1915,24 +1915,36 @@ end;
 
 procedure TNyxStudioSession.CreateComponent;
 var
-  LCopy: TNyxNode;
+  LDefinition: TNyxComponentRef;
+  LIdentities: array of TNyxIdentityAssignment;
+
+  procedure IdentifyDescendants(ANode: TNyxNode);
+  var
+    LIndex, LPosition: Integer;
+  begin
+    for LIndex := 0 to ANode.Count - 1 do
+    begin
+      LPosition := Length(LIdentities);
+      SetLength(LIdentities, LPosition + 1);
+      LIdentities[LPosition] := NyxIdentity(NyxControl(ANode.Children[LIndex].ID),
+        NyxControl(NewID(ANode.Children[LIndex].Kind)));
+      IdentifyDescendants(ANode.Children[LIndex]);
+    end;
+  end;
 begin
 
   if Selected = nil then
   begin
     raise ENyxModel.Create('Select a subtree to make reusable');
   end;
-  LCopy := Selected.Clone;
-  try
-    Reidentify(LCopy);
-    Checkpoint;
-    FDocument.AddComponent(LCopy);
-  except
-    LCopy.Free;
-    raise;
-  end;
-  Activate(LCopy.ID);
-  Commit;
+  { The ordinary inspector and agents share independent derivation and paired
+    publication. This convenience command assigns IDs; the public/MCP contract
+    also accepts an author's crafted exact identities. }
+  LDefinition := NyxComponent(NewID(Selected.Kind));
+  IdentifyDescendants(Selected);
+  ApplyPatch(NyxReusablePatch([NyxDeriveComponent(NyxControl(Selected.ID),
+    LDefinition, LIdentities)]));
+  Activate(LDefinition.Name);
 end;
 
 procedure TNyxStudioSession.AddComponentInstance(const ADefinitionID: TNyxText);

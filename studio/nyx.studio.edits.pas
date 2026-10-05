@@ -33,7 +33,22 @@ type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
     transport boundary; internal behavior never dispatches arbitrary properties
     or method names. A whole immutable patch builds one detached candidate. }
-  TNyxDesignOperation = (doCreate, doUpdate, doMove, doDelete, doTitle, doTokens);
+  TNyxDesignOperation = (doCreate, doUpdate, doMove, doDelete, doTitle, doTokens,
+    doDerive, doInstance, doOverride, doInherit);
+
+  { Copied typed reusable intents. IDs, definition references and named paths
+    have separate families; override behavior is a closed Pascal enum. Mutable
+    caller arrays are copied into a patch and never retained by reference. }
+  TNyxReusableChange = record
+  private
+    FOperation: TNyxDesignOperation;
+    FControl, FOwner: TNyxControlRef;
+    FDefinition: TNyxComponentRef;
+    FPath: TNyxPartRef;
+    FMode: TNyxOverrideMode;
+    FIndex: Integer;
+    FIdentities: array of TNyxIdentityAssignment;
+  end;
 
   INyxDesignPatch = interface
     ['{6B582F67-B92C-4191-9798-7CB64402280E}']
@@ -46,11 +61,32 @@ type
   type; unknown fields/operations fail. IDs and custom kind names are user data.
   Schema/property/document admission also runs on the complete detached result. }
 function ReadNyxDesignPatch(const AOperations: TNyxDataValue): INyxDesignPatch;
+{ Derive copies an exact subtree without altering it or replacing its uses.
+  Every descendant needs an explicit destination; the definition owns the copy. }
+function NyxDeriveComponent(const ASource: TNyxControlRef;
+  const ADefinition: TNyxComponentRef;
+  const AIdentities: array of TNyxIdentityAssignment): TNyxReusableChange;
+{ Instantiate adds a reference, not a copy of the definition. -1 appends; other
+  positions are exact. AParent remains the owner of the new authored reference. }
+function NyxInstantiateComponent(const ADefinition: TNyxComponentRef;
+  const AControl, AParent: TNyxControlRef; AIndex: Integer = -1): TNyxReusableChange;
+{ Override names the exact instance-owned descriptor. A repeated path requires
+  the same descriptor ID. Payload changes use ordinary create/move/delete in the
+  same grouped transaction; incomplete replace/append rules refuse at admission. }
+function NyxOverrideComponentPart(const AInstance, ADescriptor: TNyxControlRef;
+  const APath: TNyxPartRef; AMode: TNyxOverrideMode): TNyxReusableChange;
+{ Restore inheritance removes only the exact matching local descriptor/payload.
+  Missing or changed owner/path/identity refuses; definitions remain untouched. }
+function NyxInheritComponentPart(const AInstance, ADescriptor: TNyxControlRef;
+  const APath: TNyxPartRef): TNyxReusableChange;
+{ Copy 1..64 typed commands into the existing design transaction engine. Source,
+  drafts, revision and paired Undo remain owned by the ordinary Studio session. }
+function NyxReusablePatch(const AChanges: array of TNyxReusableChange): INyxDesignPatch;
 
 implementation
 
 uses
-  nyx.schema, nyx.design.tokens;
+  nyx.schema, nyx.design.tokens, nyx.composition;
 
 type
   TDesignOperation = record
@@ -61,6 +97,11 @@ type
     Index: Integer;
     Root: TNyxText;
     Properties: TNyxDataValue;
+    Source: TNyxText;
+    Component: TNyxComponentRef;
+    Path: TNyxPartRef;
+    Mode: TNyxOverrideMode;
+    Identities: array of TNyxIdentityAssignment;
   end;
 
   TDesignPatch = class(TInterfacedObject, INyxDesignPatch)
@@ -69,6 +110,102 @@ type
   public
     function Candidate(ADocument: TNyxDocument; ACatalog: TNyxCatalog): TNyxDocument;
   end;
+
+function NyxDeriveComponent(const ASource: TNyxControlRef;
+  const ADefinition: TNyxComponentRef;
+  const AIdentities: array of TNyxIdentityAssignment): TNyxReusableChange;
+var
+  LIndex: Integer;
+begin
+  Result := Default(TNyxReusableChange);
+  Result.FOperation := doDerive;
+  Result.FOwner := ASource;
+  Result.FDefinition := ADefinition;
+  SetLength(Result.FIdentities, Length(AIdentities));
+  for LIndex := 0 to High(AIdentities) do
+  begin
+    Result.FIdentities[LIndex] := AIdentities[LIndex];
+  end;
+end;
+
+function NyxInstantiateComponent(const ADefinition: TNyxComponentRef;
+  const AControl, AParent: TNyxControlRef; AIndex: Integer): TNyxReusableChange;
+begin
+
+  if AIndex < -1 then
+  begin
+    raise ENyxModel.Create('Instantiation index must be -1 or an exact nonnegative position');
+  end;
+  Result := Default(TNyxReusableChange);
+  Result.FOperation := doInstance;
+  Result.FDefinition := ADefinition;
+  Result.FControl := AControl;
+  Result.FOwner := AParent;
+  Result.FIndex := AIndex;
+end;
+
+function NyxOverrideComponentPart(const AInstance, ADescriptor: TNyxControlRef;
+  const APath: TNyxPartRef; AMode: TNyxOverrideMode): TNyxReusableChange;
+begin
+
+  if not (AMode in [noProperties, noAppend, noPrepend, noReplace, noRemove]) then
+  begin
+    raise ENyxModel.Create('Override requires a closed operation');
+  end;
+  Result := Default(TNyxReusableChange);
+  Result.FOperation := doOverride;
+  Result.FOwner := AInstance;
+  Result.FControl := ADescriptor;
+  Result.FPath := APath;
+  Result.FMode := AMode;
+end;
+
+function NyxInheritComponentPart(const AInstance, ADescriptor: TNyxControlRef;
+  const APath: TNyxPartRef): TNyxReusableChange;
+begin
+  Result := NyxOverrideComponentPart(AInstance, ADescriptor, APath, noProperties);
+  Result.FOperation := doInherit;
+end;
+
+function NyxReusablePatch(const AChanges: array of TNyxReusableChange): INyxDesignPatch;
+var
+  LOwner: TDesignPatch;
+  LIndex, LMap: Integer;
+  LOperation: TDesignOperation;
+begin
+
+  if (Length(AChanges) < 1) or (Length(AChanges) > 64) then
+  begin
+    raise ENyxModel.Create('A transaction requires 1..64 operations');
+  end;
+  LOwner := TDesignPatch.Create;
+  Result := LOwner;
+  SetLength(LOwner.FOperations, Length(AChanges));
+  for LIndex := 0 to High(AChanges) do
+  begin
+    LOperation := Default(TDesignOperation);
+    LOperation.Operation := AChanges[LIndex].FOperation;
+
+    if not (LOperation.Operation in [doDerive, doInstance, doOverride, doInherit]) then
+    begin
+      raise ENyxModel.Create('Reusable transaction contains an unconstructed command');
+    end;
+    LOperation.ID := AChanges[LIndex].FControl.ID;
+    LOperation.Parent := AChanges[LIndex].FOwner.ID;
+    LOperation.Source := AChanges[LIndex].FOwner.ID;
+    LOperation.Component := AChanges[LIndex].FDefinition;
+    LOperation.Path := AChanges[LIndex].FPath;
+    LOperation.Mode := AChanges[LIndex].FMode;
+    LOperation.Index := AChanges[LIndex].FIndex;
+    LOperation.Properties := NyxObject([]);
+    SetLength(LOperation.Identities, Length(AChanges[LIndex].FIdentities));
+    for LMap := 0 to High(LOperation.Identities) do
+    begin
+      LOperation.Identities[LMap] := AChanges[LIndex].FIdentities[LMap];
+    end;
+    LOwner.FOperations[LIndex] := LOperation;
+  end;
+end;
 
 function HasField(const AObject: TNyxDataValue; const AKey: TNyxText): Boolean;
 var
@@ -111,6 +248,10 @@ var
   LWire: TNyxDataValue;
   LName: TNyxText;
   LOperation: TDesignOperation;
+  LMap: TNyxDataValue;
+  LMapIndex: Integer;
+  LMode: TNyxOverrideMode;
+  LFound: Boolean;
 begin
 
   if (AOperations.Kind <> ndArray) or (AOperations.Count < 1) or
@@ -156,6 +297,66 @@ begin
         LOperation.Parent := LWire.Field('parent').AsText;
       end;
       LOperation.ID := LWire.Field('id').AsText;
+    end
+    else if LName = 'derive' then
+    begin
+      LOperation.Operation := doDerive;
+      CheckFields(LWire, '|op|source|id|identities|');
+      LOperation.Source := LWire.Field('source').AsText;
+      LOperation.Component := NyxComponent(LWire.Field('id').AsText);
+      LMap := LWire.Field('identities');
+
+      if LMap.Kind <> ndObject then
+      begin
+        raise ENyxModel.Create('Derivation identities require an exact source-to-destination object');
+      end;
+      SetLength(LOperation.Identities, LMap.Count);
+      for LMapIndex := 0 to LMap.Count - 1 do
+      begin
+        LOperation.Identities[LMapIndex] := NyxIdentity(NyxControl(LMap.Key(LMapIndex)),
+          NyxControl(LMap.Field(LMap.Key(LMapIndex)).AsText));
+      end;
+    end
+    else if LName = 'instance' then
+    begin
+      LOperation.Operation := doInstance;
+      CheckFields(LWire, '|op|id|component|parent|index|');
+      LOperation.ID := LWire.Field('id').AsText;
+      LOperation.Component := NyxComponent(LWire.Field('component').AsText);
+      LOperation.Parent := LWire.Field('parent').AsText;
+    end
+    else if (LName = 'override') or (LName = 'inherit') then
+    begin
+      LOperation.Operation := doInherit;
+      LOperation.ID := LWire.Field('id').AsText;
+      LOperation.Parent := LWire.Field('instance').AsText;
+      LOperation.Path := NyxPart(LWire.Field('path').AsText);
+
+      if LName = 'override' then
+      begin
+        CheckFields(LWire, '|op|id|instance|path|mode|');
+        LOperation.Operation := doOverride;
+        LFound := False;
+        for LMode := Low(TNyxOverrideMode) to High(TNyxOverrideMode) do
+        begin
+
+          if NyxOverrideName(LMode) = LWire.Field('mode').AsText then
+          begin
+            LOperation.Mode := LMode;
+            LFound := True;
+            Break;
+          end;
+        end;
+
+        if not LFound then
+        begin
+          raise ENyxModel.Create('Override mode must be properties, append, prepend, replace or remove');
+        end;
+      end
+      else
+      begin
+        CheckFields(LWire, '|op|id|instance|path|');
+      end;
     end
     else if LName = 'update' then
     begin
@@ -338,6 +539,7 @@ var
   LNode: TNyxNode;
   LParent: TNyxNode;
   LAncestor: TNyxNode;
+  LRule: TNyxNode;
 begin
   Result := ADocument.Clone;
   try
@@ -345,6 +547,86 @@ begin
     begin
       LOperation := FOperations[LIndex];
       case LOperation.Operation of
+        doDerive:
+          begin
+            LNode := CloneNyxReusableDefinition(Result,
+              RequireNode(Result, LOperation.Source), LOperation.Component,
+              LOperation.Identities);
+            try
+              Result.AddComponent(LNode);
+              LNode := nil;
+            finally
+              LNode.Free;
+            end;
+          end;
+        doInstance:
+          begin
+
+            if (LOperation.ID = '') or (Result.Find(LOperation.ID) <> nil) or
+              (Result.FindComponent(LOperation.Component.Name) = nil) then
+            begin
+              raise ENyxModel.Create('Instantiation requires a new identity and an existing reusable definition');
+            end;
+            LParent := RequireNode(Result, LOperation.Parent);
+            LNode := TNyxNode.Create(nkComponent, LOperation.ID);
+            try
+              LNode.Configure.Component(LOperation.Component).Done;
+              LInsert := LOperation.Index;
+
+              if LInsert < 0 then
+              begin
+                LInsert := LParent.Count;
+              end;
+              LParent.Insert(LInsert, LNode);
+              LNode := nil;
+            finally
+              LNode.Free;
+            end;
+          end;
+        doOverride, doInherit:
+          begin
+            LNode := RequireNode(Result, LOperation.Parent);
+
+            if (LNode.ProjectionKind <> NyxKindName(nkComponent)) or
+              (LOperation.ID = '') then
+            begin
+              raise ENyxModel.Create('Part editing requires a reusable instance and exact descriptor identity');
+            end;
+            LRule := nil;
+            for LChildIndex := 0 to LNode.Count - 1 do
+            begin
+
+              if LNode.Children[LChildIndex].Prop('path') = LOperation.Path.Name then
+              begin
+                LRule := LNode.Children[LChildIndex];
+                Break;
+              end;
+            end;
+
+            if (LRule <> nil) and (LRule.ID <> LOperation.ID) then
+            begin
+              raise ENyxModel.Create('The exact part descriptor identity changed');
+            end;
+
+            if LOperation.Operation = doInherit then
+            begin
+
+              if LRule = nil then
+              begin
+                raise ENyxModel.Create('Restored inheritance requires an existing local part descriptor');
+              end;
+              LNode.Remove(LRule);
+            end
+            else
+            begin
+
+              if (LRule = nil) and (Result.Find(LOperation.ID) <> nil) then
+              begin
+                raise ENyxModel.Create('Part descriptor identity is already occupied');
+              end;
+              LNode.OverridePart(LOperation.Path, LOperation.Mode).Named(LOperation.ID);
+            end;
+          end;
         doCreate:
           begin
 

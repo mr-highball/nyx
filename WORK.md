@@ -7,7 +7,7 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Current user priority is source workspace usability under original codegen
+The preceding user-directed packet covers source workspace usability under original codegen
 criterion 3: Source/Compiler messages views and an expanded floating source
 editor with Close/Escape, retained draft/selection, project preferences and
 portable public Nyx modal adapters. The previous goal turn was progress:
@@ -15,12 +15,27 @@ portable public Nyx modal adapters. The previous goal turn was progress:
 paired signature return path now has 20/59 lexical/semantic checks on both native
 compilers, actual discovery 50, compiled native input nine, all three stale-caller
 compiler diagnostics and routine/callback regressions 31/72, with zero leaks.
-Current source UX passes 30 actual Win32 and 225 shared presentation/ownership
+That source UX passes 30 actual Win32 and 225 shared presentation/ownership
 checks on each native compiler. Browser compilation cannot close its existing
-execution/deployment gate. No full criterion closes: workflow no-closure is 8,
+execution/deployment gate. At that checkpoint, workflow no-closure was 8,
 codegen 27, renderer 3, native authoring 7 and delivery 1. Stop on lost editor
 identity/input, disabled-owner return, guessed source ownership or weakened
 publication; preserve failed evidence and the protected observing release.
+
+Current bounded packet: [semantic reusable authoring](#semantic-reusable-authoring--2026-10-05)
+serves original workflow criterion 5 through the existing transaction/query
+tools: typed derivation/instantiation/part overrides/restored inheritance, exact
+descendant identities and bounded effective named-part discovery. Related edits
+use one paired Undo step. The ordinary inspector shares derivation admission;
+helpers/contracts/defaults/history remain owned. Both native compilers pass 52
+semantic checks, actual discovery 20 and unchanged compiled Win32 controls 14;
+browser consumers/Studio/module worker compile, with execution still gated.
+No criterion closes: workflow no-closure is now 9; codegen 27, renderer 3,
+native authoring 7 and delivery 1 remain unchanged. End local reusable fixture/
+schema expansion after these relevant checks. Return to the broader ordinary
+editor and creator/source integration outcomes under their existing owners.
+No listener launch, protected-release replacement or configuration refresh was
+attempted; no alternative deployment substitutes the existing host gate.
 
 Latest bounded packet: [source workspace and expanded editor](#source-workspace-and-expanded-editor--2026-10-05).
 Native/modal qualification and original editor/source regressions are recorded
@@ -7478,3 +7493,96 @@ native authoring **7** and delivery **1** remain explicit. No full criterion
 closes and the full goal stays active/incomplete. Final exact handoff/remote/
 clean/process/session proof is stored privately after pushing at
 `.local/codex-restart-check/source-editor-remote-proof.json`.
+
+## Semantic reusable authoring — 2026-10-05
+
+The preceding turn was verified progress: product 41793ef and handoff ed39189
+were clean and pushed. This batch returns to original workflow criterion 5,
+retaining the full Nyx/Studio north stars and the source/modal browser gate.
+It adds four closed operations to the existing semantic transaction engine:
+derive an independently owned reusable definition with exact descendant identity
+assignments, insert an instance, create/change a named-part override, and restore
+inheritance by its exact owner/path/descriptor identity. Mixed ordinary payload
+edits publish through one paired design/Pascal Undo step. The ordinary inspector
+Create component command now shares this engine instead of mutating its accepted
+tree before complete candidate admission.
+
+Portable typed authoring uses distinct control/component/part references,
+identity assignments and enum override modes through copied reusable intents.
+The derivation helper borrows the original, copies contracts/bindings/callbacks/
+extensions and retains referenced definitions/Pascal helpers. Hash indexes avoid
+quadratic identity matching without caching mutable authoring state. Unknown
+extension reference meanings are retained; no guessed rewrites occur.
+Named-part queries opt in to independent 20-default/50-maximum paging, returning
+effective paths and exact source/design/local-override identities. Properties and
+events coexist in separately bounded windows. Missing/removed and ambiguous
+paths remain explicit. Duplicate sibling part names now refuse through the
+same portable Part contract instead of silently choosing incidental child order.
+
+The maintained command is `tools/build.ps1 -Target reusables`. Final evidence
+is `build/reusables/final/promotion-run.log`: both native compilers pass **52**
+semantic checks each, actual MCP discovery **20**, and unchanged compiled Win32
+controls **14**, all with zero leaks/owned warnings. Evidence includes grouped
+Undo/Redo, delivery receipts, late atomic refusal, map ownership/typing, all five
+override modes, restored inheritance, nested reusable derivation, retained
+helpers/callbacks/defaults and exact pending-draft refusal. Independent project
+work promotes a subtree via derive/delete/instance with its retained authored
+identity; actor-owned reviews refuse foreign/retired access. Primary work remains
+unchanged. The exact exported companion and design hashes match across both
+native compilers:
+
+- Design: `F3893B2E5511ED212C8ABF723EC7C12073D7B246AFB63DC682C8541DDCB5637B`.
+- Pascal: `E8876B37B3F1C54053401FD4441892D7A9FB76980BD8614FF402F11BCDD62381`.
+
+Actual native controls mount the unchanged compiled companion, paint English
+replacement/append/prepend content and invoke the same retained compiled callback
+through original and both reusable button routes. Supplementary Unicode/NUL
+defaults remain hidden qualification data, with exact persistence/history/
+compiled reconstruction. Named application scalar bindings intentionally share
+runtime state; customization never invents an instance-local namespace. Native
+input changes runtime projections while preserving the authored document.
+
+Initial failures remain in `build/reusables/native-first/`: the control fixture
+first used the outer memo wrapper instead of InputFor, then mistakenly expected
+isolation from an explicitly shared application binding. Corrected public handle
+lookup and the established shared-state expectation produce the final evidence;
+neither failure justified weakening admission or changing runtime semantics.
+The first unquoted pas2js shell flag also failed; maintained quoted argument
+arrays compile correctly. Earlier compile failures and runs remain retained.
+
+Relevant regressions: `build/reusables/regression/agent-run.log` passes **39**
+with zero leaks; the seven owned Unicode conversion warnings in that maintained
+fixture are now fixed through explicit TNyxText literals. Detached source/design
+checks pass **140** on each native compiler, with zero leaks/owned warnings,
+including isolated inspector structural actions. The maintained core command
+passes **30** core/**1769** composition-designer/**55** scheduler/**60** paired
+project checks, intended compiler type refusals, unchanged generated companion
+checks and **3** compiled collection checks. Its normal test artifacts share the
+standard build directory; the protected server executable retains its earlier
+timestamp and all eight exact service process identities remain unchanged.
+
+Current native Studio, browser Studio/module worker and both browser reusable
+consumers compile. The browser consumers remain staged in ignored
+`build/reusables/staged/`; seven installed Classes RTL warnings stay visible in
+each browser compilation, with zero owned warnings. No changed browser execution,
+accessibility, other widgetset, physical hardware/IME or updated authenticated
+observing release follows from compilation.
+
+This is progress, not full criterion closure. Workflow criterion 5 no-closure
+advances **8→9** once; codegen **27**, renderer **3**, native authoring **7** and
+delivery **1** remain unchanged. No DONE/percentage credit follows. End local
+reusable schema/fixture expansion and return to the broader ordinary editor/
+creator and general-source integration owners: class/full-unit authoring, root
+ordering, complete parity/presentation/accessibility/performance and delivery
+remain required. Current tool catalog nineteen/protected release fifteen stays
+explicit. The full goal remains active/incomplete.
+
+The primary native semantic MCP remains connected/read-only for this work at
+revision **8**, home, rating-part selection, no pending draft, Undo unavailable/
+Redo available. No user pair/history mutation, listener launch, service stop,
+live deployment, compiler reinstall, dependency edit or private configuration
+refresh occurred. The earlier automatic approval rejection remains “blocked by
+policy,” with no further stated reason; no equivalent deployment was attempted.
+The phone retains the older observing release. Exact remote/clean/process/session
+proof is stored privately after the authorized push at
+`.local/codex-restart-check/reusable-remote-proof.json`.

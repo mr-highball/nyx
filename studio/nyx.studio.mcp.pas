@@ -1158,17 +1158,24 @@ begin
     '{"type":"object","properties":{"op":{"const":"move"},"id":{"type":"string"},"parent":{"type":"string"},"index":{"type":"integer","minimum":0}},"required":["op","id","parent"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"delete"},"id":{"type":"string"}},"required":["op","id"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"title"},"value":{"type":"string"}},"required":["op","value"],"additionalProperties":false},' +
-    '{"type":"object","properties":{"op":{"const":"tokens"},"values":{"type":"object"}},"required":["op","values"],"additionalProperties":false}]}}');
+    '{"type":"object","properties":{"op":{"const":"tokens"},"values":{"type":"object"}},"required":["op","values"],"additionalProperties":false},' +
+    '{"type":"object","properties":{"op":{"const":"derive"},"source":{"type":"string"},"id":{"type":"string"},"identities":{"type":"object","additionalProperties":{"type":"string"}}},"required":["op","source","id","identities"],"additionalProperties":false},' +
+    '{"type":"object","properties":{"op":{"const":"instance"},"id":{"type":"string"},"component":{"type":"string"},"parent":{"type":"string"},"index":{"type":"integer","minimum":0}},"required":["op","id","component","parent"],"additionalProperties":false},' +
+    '{"type":"object","properties":{"op":{"const":"override"},"id":{"type":"string"},"instance":{"type":"string"},"path":{"type":"string"},"mode":{"enum":["properties","append","prepend","replace","remove"]}},"required":["op","id","instance","path","mode"],"additionalProperties":false},' +
+    '{"type":"object","properties":{"op":{"const":"inherit"},"id":{"type":"string"},"instance":{"type":"string"},"path":{"type":"string"}},"required":["op","id","instance","path"],"additionalProperties":false}]}}');
   Result := NyxObject([NyxField('tools', NyxArray([
     Tool('nyx_session', 'Inspect current revision, selection, active view, permissions and undo/draft state. No document dump.', Schema(NyxObject([]), []), True),
     Tool('nyx_outline', 'Page through pages, reusable definitions or one component''s immediate children. Descend by parent ID.',
       Schema(NyxObject([NyxField('parent', TextSchema('Optional exact component ID')),
         NyxField('scope', NyxObject([NyxField('enum', NyxArray([NyxData('pages'), NyxData('components')]))])),
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit'))]), []), True),
-    Tool('nyx_node', 'Inspect one component''s paged typed properties and optionally events, registrations and semantic source routes. Routes and registrations page across the requested event window. Omitted ID uses selection.',
+    Tool('nyx_node', 'Inspect one component''s paged typed properties and optionally events, registrations, semantic source routes and reachable effective named parts. parts=true returns at most partLimit paths with exact source/design and local override identity. Removed parts are absent; inspect the definition separately for inherited paths. Routes and registrations page across the requested event window. Omitted ID uses selection.',
       Schema(NyxObject([NyxField('id', TextSchema('Exact component ID')),
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit')),
         NyxField('events', LBoolean),
+        NyxField('parts', LBoolean),
+        NyxField('partOffset', IntSchema(0, 100000)),
+        NyxField('partLimit', IntSchema(1, 50)),
         NyxField('eventOffset', IntSchema(0, 100000)),
         NyxField('eventLimit', IntSchema(1, 50)),
         NyxField('registrationOffset', IntSchema(0, 100000)),
@@ -1191,7 +1198,7 @@ begin
     Tool('nyx_diagnostics', 'Page through compiler diagnostics. Locations are Unicode scalar coordinates in submitted source; stale locations cannot navigate.', Schema(LPage, []), True),
     Tool('nyx_source', 'Read only the needed accepted Pascal lines, e.g. around a compiler diagnostic. Does not return pending drafts.',
       Schema(NyxObject([NyxField('line', IntSchema(1, 100000)), NyxField('count', IntSchema(1, 80))]), []), True),
-    Tool('nyx_transaction', 'Apply 1..64 semantic operations atomically as ONE undoable paired design/Pascal edit. Use published property types, exact IDs and current expectedRevision. Pending drafts reject. operationId deduplicates the last 64 successful mutations per session.',
+    Tool('nyx_transaction', 'Apply 1..64 semantic operations atomically as ONE undoable paired design/Pascal edit. Derive copies an exact authored subtree into a new reusable root: identities maps every descendant source ID to a new ID, excluding the root. Instance inserts a reference to an exact reusable definition. Override creates/updates an exact instance-owned named-part descriptor with a closed mode; create/move payload children and update typed properties in the same group. Inherit removes the exact matching descriptor and its payload, restoring definition behavior. Definitions and sibling instances remain independent. Use nyx_node parts for bounded paths and published property types. Incomplete payloads, foreign/occupied identities, invalid paths and drafts reject the whole group. Use current expectedRevision; operationId deduplicates the last 64 successful mutations per session.',
       Schema(NyxObject([NyxField('expectedRevision', IntSchema(1, High(Integer))),
         NyxField('operationId', TextSchema('Unique retry identity, 1..120 characters')),
         NyxField('operations', LTransaction)]), [NyxData('expectedRevision'), NyxData('operationId'), NyxData('operations')]), False),

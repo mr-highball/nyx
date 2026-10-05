@@ -178,7 +178,9 @@ type
     function Find(const AID: TNyxText): TNyxNode;
     { Borrow a named compound part. Slash-separated paths describe nested slots,
       e.g. Part('actions/primary'); '.' borrows the root itself. A missing part raises a contract diagnostic
-      instead of returning nil and failing later in a fluent customization chain. }
+      instead of returning nil and failing later in a fluent customization chain.
+      Duplicate sibling names are ambiguous and refuse; incidental child order
+      never silently chooses which part an author or agent customizes. }
     function Part(const APath: TNyxText): TNyxNode; overload;
     { Typed authoring path. Other reference families cannot borrow a part. }
     function Part(const APath: TNyxPartRef): TNyxNode; overload;
@@ -1843,19 +1845,29 @@ begin
     LName := Copy(APath, 1, LSlash - 1);
     LRemainder := Copy(APath, LSlash + 1, MaxInt);
   end;
+  Result := nil;
   for LIndex := 0 to Count - 1 do
   begin
 
     if Children[LIndex].Prop('part') = LName then
     begin
-      Result := Children[LIndex];
 
-      if LRemainder <> '' then
+      if Result <> nil then
       begin
-        Result := Result.Part(LRemainder);
+        raise ENyxModel.Create('Compound part path is ambiguous: ' + APath);
       end;
-      Exit;
+      Result := Children[LIndex];
     end;
+  end;
+
+  if Result <> nil then
+  begin
+
+    if LRemainder <> '' then
+    begin
+      Result := Result.Part(LRemainder);
+    end;
+    Exit;
   end;
   raise ENyxModel.Create('Compound part not found: ' + APath);
 end;

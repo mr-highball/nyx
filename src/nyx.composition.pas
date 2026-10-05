@@ -31,6 +31,7 @@ uses
   nyx.text,
   Classes,
   SysUtils,
+  nyx.types,
   nyx.model;
 
 { Realize a design root as an independent view tree. Reusable instances expand
@@ -52,10 +53,138 @@ function RealizeNyxContext(ADocument: TNyxDocument; ANode: TNyxNode;
   document. Invalid input frees the candidate and leaves the source untouched. }
 function CloneNyxViewDocument(ADocument: TNyxDocument; ARoot: TNyxNode): TNyxDocument;
 
+{ Copy an authored subtree as an independent reusable definition. ARoot is
+  borrowed from ADocument; the caller owns Result until document admission.
+  ADefinition supplies the new root identity. AIdentities must assign EVERY
+  descendant exactly once, with unique unoccupied destination IDs. Root entries,
+  foreign/missing entries and realized trees refuse. Parts, contracts, bindings,
+  callback descriptors and opaque extension data are copied without rewriting
+  their application names or retained Pascal helpers. Existing reusable refs
+  continue to reference their original definitions. No document is mutated. }
+function CloneNyxReusableDefinition(ADocument: TNyxDocument; ARoot: TNyxNode;
+  const ADefinition: TNyxComponentRef;
+  const AIdentities: array of TNyxIdentityAssignment): TNyxNode;
+
 implementation
 
 uses
-  nyx.behavior;
+  nyx.behavior, nyx.text.index;
+
+function CloneNyxReusableDefinition(ADocument: TNyxDocument; ARoot: TNyxNode;
+  const ADefinition: TNyxComponentRef;
+  const AIdentities: array of TNyxIdentityAssignment): TNyxNode;
+var
+  LUsed: array of Boolean;
+  LIndex: Integer;
+  LSources, LDestinations, LOccupied: TNyxTextIndex;
+
+  procedure IndexTree(ANode: TNyxNode);
+  var
+    LChild: Integer;
+  begin
+    LOccupied.AddFirst(ANode.ID, 0);
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+      IndexTree(ANode.Children[LChild]);
+    end;
+  end;
+
+  procedure AssignDescendants(ANode: TNyxNode);
+  var
+    LChild, LMap: Integer;
+  begin
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+      LMap := LSources.IndexOf(ANode.Children[LChild].ID);
+
+      if LMap < 0 then
+      begin
+        raise ENyxModel.Create('Derivation requires an identity for descendant: ' +
+          ANode.Children[LChild].ID);
+      end;
+      LUsed[LMap] := True;
+      AssignDescendants(ANode.Children[LChild]);
+      ANode.Children[LChild].Named(AIdentities[LMap].Destination.ID);
+    end;
+  end;
+begin
+  Result := nil;
+
+  if (ADocument = nil) or (ARoot = nil) or ARoot.IsRealized or
+    not ADocument.Contains(ARoot) then
+  begin
+    raise ENyxModel.Create('Derivation requires an authored subtree in its document');
+  end;
+  { Admit budgets before recursive Clone. The accepted tree remains borrowed;
+    all later naming and allocation happen only in the independent copy. }
+  ADocument.Validate;
+
+  if Length(AIdentities) >= NyxMaximumNodes then
+  begin
+    raise ENyxModel.Create('Derived descendant assignments exceed the authored tree budget');
+  end;
+
+  if (ADefinition.Name = '') or (ADocument.Find(ADefinition.Name) <> nil) then
+  begin
+    raise ENyxModel.Create('Derived definition requires a new exact identity');
+  end;
+  SetLength(LUsed, Length(AIdentities));
+  LSources := TNyxTextIndex.Create;
+  LDestinations := TNyxTextIndex.Create;
+  LOccupied := TNyxTextIndex.Create;
+  try
+    { These indexes own copied keys only. They avoid quadratic mapping and
+      repeated document scans without caching mutable authoring state. }
+    for LIndex := 0 to ADocument.Count - 1 do
+    begin
+      IndexTree(ADocument.Pages[LIndex]);
+    end;
+    for LIndex := 0 to ADocument.ComponentCount - 1 do
+    begin
+      IndexTree(ADocument.Components[LIndex]);
+    end;
+    for LIndex := 0 to High(AIdentities) do
+    begin
+
+      if (AIdentities[LIndex].Source.ID = ARoot.ID) or
+        (AIdentities[LIndex].Destination.ID = ADefinition.Name) or
+        (AIdentities[LIndex].Destination.ID = '') or
+        (LOccupied.IndexOf(AIdentities[LIndex].Destination.ID) >= 0) then
+      begin
+        raise ENyxModel.Create('Derived descendant identity is occupied or addresses the root');
+      end;
+
+      if (LSources.IndexOf(AIdentities[LIndex].Source.ID) >= 0) or
+        (LDestinations.IndexOf(AIdentities[LIndex].Destination.ID) >= 0) then
+      begin
+        raise ENyxModel.Create('Derived identity assignments must be one-to-one');
+      end;
+      LSources.AddFirst(AIdentities[LIndex].Source.ID, LIndex);
+      LDestinations.AddFirst(AIdentities[LIndex].Destination.ID, LIndex);
+    end;
+    Result := ARoot.Clone;
+    try
+      AssignDescendants(Result);
+      for LIndex := 0 to High(LUsed) do
+      begin
+
+        if not LUsed[LIndex] then
+        begin
+          raise ENyxModel.Create('Derived identity assignment addresses a foreign descendant');
+        end;
+      end;
+      Result.Named(ADefinition.Name);
+    except
+      Result.Free;
+      Result := nil;
+      raise;
+    end;
+  finally
+    LOccupied.Free;
+    LDestinations.Free;
+    LSources.Free;
+  end;
+end;
 
 function RealizeNyxContext(ADocument: TNyxDocument; ANode: TNyxNode;
   out AProjection: TNyxNode): TNyxNode;

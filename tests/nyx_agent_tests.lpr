@@ -130,11 +130,11 @@ begin
   Inc(LRevision);
   LValue := LSession.Call('nyx_node', 'Scooty', NyxObject([
     NyxField('id', NyxData('number-first')), NyxField('keys', NyxArray([NyxData('value')]))]));
-  Check(LValue.Field('properties').Item(0).Field('value').AsText = '🌙 text',
+  Check(LValue.Field('properties').Item(0).Field('value').AsText = TNyxText('🌙 text'),
     'Numeric-to-text configuration admits exact Unicode in the same operation');
   LValue := LSession.Call('nyx_node', 'Scooty', NyxObject([
     NyxField('id', NyxData('selector-first')), NyxField('keys', NyxArray([NyxData('value')]))]));
-  Check(LValue.Field('properties').Item(0).Field('value').AsText = '🌙 text',
+  Check(LValue.Field('properties').Item(0).Field('value').AsText = TNyxText('🌙 text'),
     'Clearing an input format restores its text value domain');
   Refuses('nyx_transaction', Transaction('context-text-number',
     '[{"op":"update","id":"number-first","properties":{"value":12,"input-type":"text"}}]'),
@@ -157,7 +157,7 @@ begin
     (LValue.Field('browser').AsText = 'Available') and
     (LValue.Field('native').AsText = 'Available') and
     (LValue.Field('help').AsText <> ''), 'Bounded semantic property query exposes target support');
-  Check((LValue.Field('value').AsText = '漢') and
+  Check((LValue.Field('value').AsText = TNyxText('漢')) and
     (LValue.Field('totalScalars').AsInteger = 3) and LValue.Field('truncated').AsBoolean,
     'Supplementary Unicode counts as one scalar when slicing');
   Refuses('nyx_node', NyxObject([NyxField('id', NyxData('agent-badge')),
@@ -178,7 +178,7 @@ begin
     public MCP history tool and private editor history must protect that draft. }
   LPair := LSession.PreviewPair(LRevision, 'home');
   LPair.Pending := True;
-  LPair.Draft := LPair.Source + #10 + '// local draft 🌙漢字';
+  LPair.Draft := LPair.Source + #10 + TNyxText('// local draft 🌙漢字');
   LPair.DraftBase := LPair.Source;
   LStale := LRevision;
   LValue := LSession.Exchange(NyxObject([NyxField('op', NyxData('commit')),
@@ -275,7 +275,7 @@ begin
       end;
     end;
     Check(LRejected and (LSession.Revision = LRevision), 'Wrong scalar type rejects whole transaction');
-    Check(LSession.Call('nyx_session', 'Scooty', NyxObject([])).Field('title').AsText = 'Agent workshop 🌙',
+    Check(LSession.Call('nyx_session', 'Scooty', NyxObject([])).Field('title').AsText = TNyxText('Agent workshop 🌙'),
       'Rejected transaction retains prior title');
     LSession.Exchange(NyxObject([NyxField('op', NyxData('configure')),
       NyxField('permission', NyxData('readOnly'))]));
@@ -311,7 +311,7 @@ begin
       NyxField('expectedRevision', NyxData(LRevision)), NyxField('operationId', NyxData('redo-1')),
       NyxField('direction', NyxData('redo'))]));
     Inc(LRevision);
-    Check(LValue.Field('title').AsText = 'Agent workshop 🌙', 'Redo restores exact Unicode pair');
+    Check(LValue.Field('title').AsText = TNyxText('Agent workshop 🌙'), 'Redo restores exact Unicode pair');
     LArgs := Transaction('tokens-1', '[{"op":"tokens","values":{"accent":"#a020c0","fontSize":18}}]');
     LSession.Call('nyx_transaction', 'Scooty', LArgs);
     Inc(LRevision);

@@ -663,3 +663,16 @@ Current task and return path are maintained in [WORK.md](WORK.md).
   Qualify current browser return/focus/project switching through a permitted
   host, then return to broader source/reusable integration and ordinary editor
   outcomes. See [evidence](WORK.md#source-workspace-and-expanded-editor--2026-10-05).
+
+- Typed semantic reusable derivation/instantiation/part overrides/restored
+  inheritance now share the ordinary paired transaction engine, with bounded
+  effective named paths and exact descendant ownership. Both native compilers
+  pass 52 semantic checks, actual discovery 20 and unchanged compiled Win32
+  controls 14; source/design regressions pass 140 on each compiler and agent
+  regressions 39, with zero leaks/owned warnings in checked consumers. Browser
+  consumers/Studio/module worker compile; actual browser/authenticated observation
+  remains gated. Workflow criterion 5 stays open at no-closure **9**; codegen
+  **27**, renderer **3**, authoring **7** and delivery **1** remain unchanged.
+  No full criterion/percentage advances. Return to the ordinary editor/creator
+  and broader source/parity/presentation outcomes, preserving their owners.
+  See [evidence](WORK.md#semantic-reusable-authoring--2026-10-05).

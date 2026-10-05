@@ -529,3 +529,29 @@ retained Source/Messages/modal UX, then return to broader general source and
 reusable integration, preserving class/full-unit, review, root-ordering,
 presentation/accessibility/performance and observing-deployment requirements.
 See [evidence](../WORK.md#semantic-helper-signatures--2026-10-05).
+
+## Typed reusable workflow — 2026-10-05
+
+Criterion 5 now has source/staged derivation, instantiation, named-part
+override/restored-inheritance operations through the existing semantic
+transaction engine. Exact descendant identities, closed modes and bounded
+effective part discovery preserve ownership without a complete document dump.
+The ordinary inspector shares derivation admission. Subtree promotion can group
+derive/delete/instance while retaining the original authored control identity.
+Helpers, callback contracts, typed defaults, draft guards and one paired Undo
+remain owned. Project/review routing refuses foreign or retired contexts.
+
+Both native compilers pass 52 semantic checks, actual discovery 20 and unchanged
+compiled Win32 controls 14, with zero leaks/owned warnings. Shared source/design
+regressions pass 140 on each native compiler and agent regressions 39. Browser
+consumers/Studio/module worker compile; actual current browser and authenticated
+observing deployment retain their host gate. Source catalog nineteen/protected
+release fifteen remains explicit.
+
+No full criterion closes: workflow no-closure advances **8→9** once. Codegen
+**27**, renderer **3**, native authoring **7** and delivery **1** stay unchanged.
+End local reusable schema/fixture expansion. Broader ordinary editor/creator
+integration, class/full-unit source authoring, root ordering, performance,
+accessibility and observing delivery retain their original acceptance owners.
+No bounded Win32/source packet substitutes those full outcomes.
+See [evidence](../WORK.md#semantic-reusable-authoring--2026-10-05).

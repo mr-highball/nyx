@@ -191,6 +191,17 @@ type
   TNyxComponentRef = record
     Name: TNyxText;
   end;
+  { Exact authored control identity, distinct from a reusable definition name
+    and a named-part path. Existence and document uniqueness are admitted by
+    the model; no control, document or platform handle is retained. }
+  TNyxControlRef = record
+    ID: TNyxText;
+  end;
+  { An explicit copied identity assignment used when deriving an owned subtree.
+    Open names are data; derivation never guesses extension/source references. }
+  TNyxIdentityAssignment = record
+    Source, Destination: TNyxControlRef;
+  end;
   TNyxStyleRef = record
     Name: TNyxText;
   end;
@@ -251,6 +262,12 @@ function TryNyxSemantic(const AName: TNyxText; out AEvent: TNyxSemanticEvent): B
   suppressed physical event name, an open named stream cannot be empty. }
 function NyxNamedEvent(const AName: TNyxText): TNyxEventRef;
 function NyxComponent(const AName: TNyxText): TNyxComponentRef;
+{ Capture an exact open control name; existence/encoding/uniqueness are admitted
+  with its document operation. This value never retains a descriptor lifetime. }
+function NyxControl(const AID: TNyxText): TNyxControlRef;
+{ Copy two distinct identity references. Complete one-to-one mapping, occupancy
+  and subtree membership are checked atomically by reusable derivation. }
+function NyxIdentity(const AFrom, ATo: TNyxControlRef): TNyxIdentityAssignment;
 function NyxStyle(const AName: TNyxText): TNyxStyleRef;
 function NyxCustomKind(const AName: TNyxText): TNyxKindRef;
 
@@ -785,6 +802,17 @@ end;
 function NyxComponent(const AName: TNyxText): TNyxComponentRef;
 begin
   Result.Name := AName;
+end;
+
+function NyxControl(const AID: TNyxText): TNyxControlRef;
+begin
+  Result.ID := AID;
+end;
+
+function NyxIdentity(const AFrom, ATo: TNyxControlRef): TNyxIdentityAssignment;
+begin
+  Result.Source := AFrom;
+  Result.Destination := ATo;
 end;
 
 function NyxStyle(const AName: TNyxText): TNyxStyleRef;

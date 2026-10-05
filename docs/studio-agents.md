@@ -295,6 +295,60 @@ observer. Both maintained journeys pass 107 checks against the real compilers.
 Resource/lifetime checks use an explicitly owned Pascal
 compiler substitute; they do not establish target compilation or rendering.
 
+## Reusable components
+
+The source candidate adds four operations to `nyx_transaction`; the protected
+LAN release retains its older vocabulary. `nyx_node` accepts `parts: true` with
+`partOffset` and `partLimit` (20 default, 50 maximum). This returns only reachable
+effective paths, control kind, exact authored source/design identity and the local
+override descriptor ID. Properties and events have independent paging. `.` is
+the root. Removed parts are absent; inspect the referenced definition separately
+to find its inherited paths. Duplicate sibling names refuse as ambiguous.
+
+- `derive` supplies `source`, a new reusable root `id`, and `identities`, an exact
+  object mapping **every descendant** source ID to a new ID. Exclude the root.
+  Foreign, omitted, occupied or duplicate destinations refuse. Derivation copies
+  the subtree independently, retains named parts/contracts/bindings/callbacks and
+  existing reusable references, and preserves Pascal helpers. It neither replaces
+  the original subtree nor guesses references inside opaque extension data.
+- `instance` supplies a new control `id`, exact reusable `component` and owning
+  `parent`; optional `index` is an exact nonnegative insertion position. It adds
+  an owned reference rather than duplicating the definition.
+- `override` supplies exact `instance`, descriptor `id`, named `path` and closed
+  `mode`: `properties`, `append`, `prepend`, `replace` or `remove`. A repeated path
+  must retain the descriptor ID. Use ordinary `update` for typed properties and
+  `create`/`move`/`delete` for payload children in the same transaction. Empty
+  append/prepend, missing/extra replacement payloads and invalid paths refuse.
+- `inherit` supplies exact `instance`, descriptor `id` and `path`. It removes that
+  local rule and its payload, restoring the definition. Missing or changed rule
+  identity refuses. Definitions, siblings and retained Pascal handlers stay owned.
+
+All related operations publish as one paired design/Pascal Undo step under the
+existing revision, permission, draft and actor-bound receipt checks. Failed
+candidate admission retains the complete pair/history. A copied named application
+state binding remains deliberately shared; structural customization does not
+implicitly create a new state namespace.
+
+To promote an owned subtree in place, group `derive`, descendant `delete` and
+`instance` together. The new instance may reuse the removed subtree's exact ID
+and insertion position, while the new definition/descendants receive their own
+identities. Root removal still requires the existing reviewed `nyx_roots` flow.
+
+Pascal editor authors use `NyxReusablePatch`, `NyxDeriveComponent`,
+`NyxInstantiateComponent`, `NyxOverrideComponentPart` and
+`NyxInheritComponentPart` from `nyx.studio.edits`. `NyxControl`, `NyxComponent`,
+`NyxPart` and `NyxIdentity` keep their reference families distinct; override
+choices use `TNyxOverrideMode`. The ordinary inspector's Create component command
+uses this same derivation engine. Portable `CloneNyxReusableDefinition` in
+`nyx.composition` borrows a document/subtree and returns an independently owned
+definition; the caller admits or releases that copy.
+
+`tools/build.ps1 -Target reusables` qualifies semantic publication/refusals,
+actual discovery and unchanged generated controls, including compiled callbacks,
+and stages browser consumers without launching a listener or replacing an active
+project. Browser compilation is separate from actual browser execution; current
+authenticated deployment and broader editor/creator parity remain open in WORK.md.
+
 ## Edits and history
 
 Every mutation supplies the revision it read and a unique `operationId`.
