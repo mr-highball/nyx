@@ -98,6 +98,15 @@ retirement disconnects resize before freeing bindings. Studio consumes this publ
 contract for its shell and native canvas. The stable public source-status label
 changes text/visibility without inserting a new child during preparation.
 
+A compatible native shell keeps the canvas and source mounted in their existing
+borrowed hosts. Parking is reserved for full shell replacement before the old
+hosts retire, with exact-host recovery on admission failure. This avoids two
+large-view reparent/layout passes for every scalar chrome refresh, without
+skipping current view validation or retaining the shell document. Ordinary native
+builds can use `-NativeStudioConfiguration release`; the separate checked build
+retains heap/lifetime evidence. Current timings and original-size qualification
+remain in WORK.md, with browser runtime and full-product gates still open.
+
 ```powershell
 ./tools/build.ps1 -Target native-studio -VerifySourceScheduling
 ```

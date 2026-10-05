@@ -7,31 +7,35 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest bounded source packet: [guarded retained projection and authored ordering](#guarded-retained-projection-and-authored-ownership-ordering--2026-10-05)
-consumes the detached worker boundary without replacing compatible native
-controls or independent input. Supported moved handwritten metadata retains
-exact execution order, source and compiled design meaning. Detached checks pass
-75, actual native projection 20, queue/load/save 10, original 128/512/2048 controls
-101, Apply/Restore 39 and the full English native editor 74, with zero leaks.
-Browser Studio/worker/shared consumers
-compile; execution retains the host gate. English starters/review captures stay
-separate from technical Unicode fixtures. Criterion 3 remains open at no-closure
-count 20; renderer 3, authoring 7 and delivery 1 remain unchanged. This accepts no
-full criterion or comfortable editing. Earlier bounded evidence remains scoped.
+Latest bounded source packet: [ordinary native builds and stable retained hosts](#ordinary-native-builds-and-stable-retained-hosts--2026-10-05)
+keeps independent canvas/source views mounted during compatible native shell
+refresh. At unchanged original sizes, ordinary completion is 531/1359/4718 ms;
+the 2048-control result improves from 32813 ms while servicing 100 busy timer
+ticks instead of 2. The explicit optimized build retains compiler safety checks,
+with units/binaries/captures separate from checked ownership evidence. The full
+ordinary packet passes detached 75, projection 20, queue/load/save 10, original
+controls 101, Apply/Restore 39 and the full English native editor 74. The checked
+build passes the same consumers, with zero leaks in all seven traced processes.
+Source/design companion hashes match.
+Browser Studio/worker/shared consumers compile; execution retains the host gate.
+English starters/review captures stay separate from technical Unicode fixtures.
+Criterion 3 remains open at no-closure count 21; renderer 3, authoring 7 and
+delivery 1 remain unchanged. No full criterion or comfortable-editing acceptance
+follows these bounded timings. Earlier evidence retains its original scope.
 
-The integrated packet resolves its concrete moved-metadata failure and reduces
-traced native completion, preserving all original descendants/source sizes,
-comments/expressions, drafts, focus/caret and paired Undo/Redo. The measured
-2048-control completion is still 56234 ms under checks/heap tracing. Next qualify
-the same original workloads with ordinary application build settings, separately
-from checked ownership evidence, before choosing another optimization. Budget
-one integrated actual-control/reconstruction packet; preserve complete fresh
-admission, exact source/history and accepted-tree worker separation. Stop or
-switch on lost/reordered input, stale meaning, weakened admission or unsafe
-ownership. General canvas/state/binding/event routes retain their original
-owners. Browser Apply/worker and observing acceptance still need a permitted host
-without an equivalent refused launch. No scope/count reset, lookup experiment,
-weakened parity/DONE gate or full-goal completion substitutes those outcomes.
+The previous goal turn was progress: guarded controls and moved metadata changed
+product/evidence state; ae27c9e/3042635 are the preceding pushed checkpoint. This
+turn also changes product/evidence state through the concrete mounted-host fix
+and complete original-size ordinary qualification. Next integrate ordinary
+canvas value proposals with the isolated design-command queue, preserving typed
+state/default and named reusable-part semantics without worker access to live
+realized nodes. Qualify actual input, invalid/read-only bindings, same-ID load
+retirement, drafts/source and exact paired Undo/Redo. Stop or switch on lost or
+reordered input, stale meaning, weakened admission or unsafe ownership. General
+state/binding/event and semantic routes retain their original owners. Browser
+Apply/worker and observing acceptance still need a permitted host without an
+equivalent refused launch. No scope/count reset, timing/lookup variant or weaker
+parity/DONE gate substitutes that functional integration or full-goal completion.
 
 Completed bounded packet under original codegen criterion 3 extends the existing
 isolated source-command processor to ordinary visual property and structural
@@ -5994,3 +5998,114 @@ the final handoff head separately, exact counts/timings and protected identities
 No qualification fixture remains running. Logs, captures and local configuration
 remain ignored. This checkpoint changes no live deployment or acceptance gate;
 the next ordinary-build original-workload qualification remains above.
+
+## Ordinary native builds and stable retained hosts — 2026-10-05
+
+The previous goal turn was progress: ae27c9e/3042635 changed product and exact
+evidence, leaving the authoritative branch clean/pushed. This packet follows
+the original criterion-3 responsiveness outcome with the unchanged original
+128/512/2048 controls and 25094/98822/400022 source bytes.
+
+`-NativeStudioConfiguration release` adds an ordinary optimized Studio build.
+It retains `-Sa -Cr -Co -Ci`, uses `-O2 -Xs` and omits `-gl -gh`; separate
+native binaries/units and qualification artifacts preserve the checked build.
+The existing default remains checked. Application compilers/services remain
+optional at launch; this choice compiles Studio, not an exported user's app.
+The maintained source, actual controls and exact compiled companion run through
+the same Pascal consumers in either configuration. No compiler reinstall,
+dependency edit, application profile or listener is involved.
+
+The initial complete release packet passes detached **75**, queue **10**, actual
+projection **20**, exact compiled companion, original-size controls **101**,
+Apply/Restore **39** and full English native editor **74**. Its timings are
+140/141/203 ms for the three input submissions and 1188/3844/32813 ms for
+completion. This confirms tracing explains only part of the previous costs.
+The existing UI-stage profiler at the unchanged 2048 size then finds repeated
+parking/reparenting of independently owned canvas/source views: roughly
+4750 ms to park and another 4800 ms to return, even while the shell reuses its
+existing borrowed hosts. Current snapshot/capture/publication are small beside
+these actual native layout costs. The diagnostic passes **27** original-largest
+checks; its 33250-ms completion agrees with the ordinary 32813-ms result.
+
+Native Paint now tries guarded shell refresh while its canvas/source remain
+mounted. A compatible shell retains those same hosts; only full replacement
+parks the independent views before old hosts retire. Existing exact-host
+recovery handles replacement failure. No validation, source publication,
+ownership guard, original descendant or history step is omitted. The unchanged
+public `MoveHost` already returns immediately for the current host. The
+post-change largest diagnostic passes **27**, completes in **4672 ms** and
+services **91** busy UI timer ticks versus **2** before. Supported canvas Sync
+in these retained frames takes roughly 485 ms, with no parking stage.
+
+Ignored evidence lives under `build/native-release-qualification/`:
+
+- `before-retained-hosts-run.log` is the complete initial release packet.
+  `profile-before/` and `profile-after/` preserve exact 2048-control stage logs
+  and independently compiled binaries/units. Selected-size diagnostics never
+  substitute full-size or both-target acceptance.
+- `maintained-run.log` requalifies the final ordinary build: detached **75**,
+  queue **10**, retained projection **20**, exact compiled companion, original-size
+  controls **101**, Apply/Restore **39** and full English editor **74** pass.
+  Its exact exported source/design equals the checked companion. Release
+  omits heap instrumentation; zero-leak claims belong to the checked run.
+- Release native desktop/390 captures under `build/design-source/release/controls/`
+  were inspected and paint English review content. Broader Unicode stays in
+  dedicated input/source/codec qualification. The current source editor's
+  hidden technical fixture is not presented as starter-demo copy.
+- `checked-run.log` separately passes detached **75**, queue **10**, actual
+  projection **20**, exact compiled companion, original-size controls **101**
+  and Apply/Restore **39**, plus the full native English editor **74**, each
+  with zero unfreed blocks. The original-size consumer allocates and frees
+  **200130989** blocks / **7558818320** bytes.
+  The full native editor allocates and frees **129260614** blocks /
+  **3593258481** bytes. All seven traced consumers terminate successfully.
+- Final checked/release companion source and `expected.nyx` match by SHA-256.
+  Both builds retain all seven distinct installed pas2js Classes RTL warnings
+  across four browser compilations (28 lines per log); no owned-source warning
+  appears. Dependency source and warning settings remain unchanged.
+
+| Original controls | Exact source bytes | Final ordinary input, ms | Final ordinary completion, ms | Busy UI timer ticks |
+| --- | --- | --- | --- | --- |
+| 128 | 25094 | 140 | 531 | 2 |
+| 512 | 98822 | 156 | 1359 | 17 |
+| 2048 | 400022 | 203 | 4718 | 100 |
+
+| Original controls | Exact source bytes | Final checked input, ms | Final checked completion, ms | Busy UI timer ticks |
+| --- | --- | --- | --- | --- |
+| 128 | 25094 | 1000 | 2844 | 4 |
+| 512 | 98822 | 1515 | 7765 | 72 |
+| 2048 | 400022 | 2172 | 33079 | 432 |
+
+These actual native concurrent-host fixture timings establish bounded progress,
+not release readiness, physical-device/assistive-technology quality or all
+comfortable authoring. Visible large-view editing, full shell replacements,
+exact drafts/caret and paired history remain required acceptance behavior.
+Browser consumers/worker compile; their current execution still needs the
+previously recorded permitted-host gate. Nothing was deployed to the live phone
+instance, and no equivalent refused qualification listener was attempted.
+
+Bounded semantic MCP reinspection keeps the active user pair at revision **6**,
+Untitled project/home, one page/component, no pending draft, no Undo and available
+Redo, activity sequence **183**. All eight protected process identities match
+the preceding checkpoint. No active pair/history, application profile,
+enrollment or live deployment changed. The earlier automatic approval review
+rejected qualification listeners with only “blocked by policy” as its reason;
+this packet attempts no equivalent launch and supplies compile-only browser
+evidence, not execution/parity credit.
+
+Original codegen criterion 3 remains open; this turn advances its no-closure
+count **20→21**. Accepted criteria 1/2, renderer **3**, native authoring **7** and
+delivery **1** remain unchanged. No full task/criterion, scope reset or parity
+credit follows the native timing improvement. The original unbounded goal stays
+active and incomplete.
+
+Next integrate ordinary canvas value proposals with the existing isolated
+design-command queue. Current native CanvasEvent still calls SetCanvasValue
+synchronously. Capture immutable owner/view/runtime identity and proposed value,
+preserving two-way state/default and named reusable-part semantics; never send
+live realized nodes to workers. Qualify actual input, invalid/read-only bindings,
+same-ID load retirement, drafts/source preservation and exact paired Undo/Redo.
+State/binding/event breadth, general semantic source/import/review operations,
+ordinary browser/observing editor outcomes and full-product depth retain their
+original owners. Another timing/lookup variant does not substitute that functional
+integration or permit weaker admission/DONE gates.

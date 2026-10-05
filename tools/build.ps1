@@ -30,6 +30,11 @@ param(
   [string]$Lazarus,
   [string]$LclFpc,
   [string]$Widgetset = 'win32',
+  # Keep checked ownership evidence and ordinary optimized application binaries
+  # separate. Release retains assertions/range/overflow/I/O checks, enables -O2
+  # and stripping, and omits heap tracing and line-debug instrumentation.
+  [ValidateSet('checked', 'release')]
+  [string]$NativeStudioConfiguration = 'checked',
   [string]$HttpURL = 'http://127.0.0.1:8088',
   # Stage browser artifacts independently while an older LAN instance is live.
   [string]$BrowserOutput,
@@ -253,10 +258,17 @@ try {
   if ($Target -eq 'native-studio') {
     $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
     $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
-    $nyxStudioNative = Join-Path $nyxRoot 'build/native-studio/controller'
+    $nyxStudioNativeDirectory = 'build/native-studio/controller'
+    $nyxStudioBuildFlags = @('-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh')
+
+    if ($NativeStudioConfiguration -eq 'release') {
+      $nyxStudioNativeDirectory = 'build/native-studio/release'
+      $nyxStudioBuildFlags = @('-Sa', '-Cr', '-Co', '-Ci', '-O2', '-Xs')
+    }
+    $nyxStudioNative = Join-Path $nyxRoot $nyxStudioNativeDirectory
     New-Item -ItemType Directory -Force $nyxStudioNative | Out-Null
     $nyxStudioPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
-    $nyxStudioArguments = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+    $nyxStudioArguments = @('-B', '-Mdelphi') + $nyxStudioBuildFlags + @(
       '-Fusrc', '-Fustudio', '-Futests',
       "-Fu$nyxLazarus/lcl/units/$nyxStudioPlatform", "-Fu$nyxLazarus/lcl/units/$nyxStudioPlatform/$Widgetset",
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxStudioPlatform", "-Fu$nyxLazarus/packager/units/$nyxStudioPlatform",
@@ -286,7 +298,12 @@ try {
     }
 
     if ($VerifyDesignSource) {
-      $nyxDesignArtifacts = Join-Path $nyxRoot 'build/design-source/maintained'
+      $nyxDesignArtifactDirectory = 'build/design-source/maintained'
+
+      if ($NativeStudioConfiguration -eq 'release') {
+        $nyxDesignArtifactDirectory = 'build/design-source/release'
+      }
+      $nyxDesignArtifacts = Join-Path $nyxRoot $nyxDesignArtifactDirectory
       $nyxDesignPair = Join-Path $nyxDesignArtifacts 'pair'
       $nyxDesignBrowser = Join-Path $nyxDesignArtifacts 'browser'
       New-Item -ItemType Directory -Force $nyxDesignPair, $nyxDesignBrowser | Out-Null
@@ -323,8 +340,13 @@ try {
 
     if ($VerifySourceScheduling) {
       Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @('tests/nyx_source_scheduling_tests.lpr'))
+      $nyxSourceControlsDirectory = 'build/source-scheduling/controls'
+
+      if ($NativeStudioConfiguration -eq 'release') {
+        $nyxSourceControlsDirectory = 'build/source-scheduling/controls-release'
+      }
       & (Join-Path $nyxStudioNative 'nyx_source_scheduling_tests.exe') `
-        (Join-Path $nyxRoot 'build/source-scheduling/controls')
+        (Join-Path $nyxRoot $nyxSourceControlsDirectory)
 
       if ($LASTEXITCODE -ne 0) { throw 'Native source scheduling/control qualification failed' }
     }
@@ -385,8 +407,13 @@ try {
         throw 'Native editor qualification requires the exact MCP-authored companion export'
       }
       Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @("-Fu$nyxStudioSource", 'tests/nyx_studio_native_tests.lpr'))
+      $nyxEditorControlsDirectory = 'build/native-studio/editor-current'
+
+      if ($NativeStudioConfiguration -eq 'release') {
+        $nyxEditorControlsDirectory = 'build/native-studio/editor-release'
+      }
       & (Join-Path $nyxStudioNative 'nyx_studio_native_tests.exe') $nyxStudioSource `
-        (Join-Path $nyxRoot 'build/native-studio/editor-current')
+        (Join-Path $nyxRoot $nyxEditorControlsDirectory)
 
       if ($LASTEXITCODE -ne 0) { throw 'Actual standalone native Studio journey failed' }
     }

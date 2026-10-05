@@ -3,14 +3,16 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Latest bounded source packet (2026-10-05): guarded retained projection preserves
-ordinary native controls, independent input and callback registrations; supported
-moved handwritten metadata retains exact execution order and compiled meaning.
-Original-size controls pass 101, detached checks 75 and actual projection 20,
-with zero leaks. Browser compilation retains its execution gate. Codegen
-criterion 3 remains open at count 20; release responsiveness and full both-target
-ordinary-editor qualification remain required. WORK.md owns the current packet
-and next action; the earlier evidence below retains its original scope.
+Latest bounded source packet (2026-10-05): ordinary optimized builds preserve
+checked ownership evidence, while compatible native shell refresh keeps its
+canvas/source mounted. The same original 2048-control completion improves from
+32813 to 4718 ms, servicing 100 busy timer ticks. Original controls pass 101,
+detached 75, projection 20, Apply/Restore 39 and full English native editor 74.
+Both native configurations pass; all seven checked consumers report zero leaks.
+Browser compilation retains its execution gate. Codegen criterion 3 stays open
+at count 21; general queued canvas/state/binding/event routes and full both-target
+ordinary-editor qualification remain required. WORK.md owns current evidence
+and the next integration; earlier packets retain their original scope.
 
 Current native editor candidate (2026-10-05): the runnable standalone controller
 consumes the shared Nyx shell/session/routers and paired local store. Actual
@@ -553,3 +555,14 @@ Current task and return path are maintained in [WORK.md](WORK.md).
   original workloads in ordinary native builds to distinguish release editing
   from heap-tracing overhead, preserving current ownership/source/history gates.
   See [evidence](WORK.md#guarded-retained-projection-and-authored-ownership-ordering--2026-10-05).
+
+- Native Studio has an explicit optimized build with separate units/binaries
+  and captures, retaining compiler safety checks. UI-stage evidence identifies
+  unnecessary large-view parking even when chrome hosts survive. Keeping those
+  views mounted reduces ordinary completion to 531/1359/4718 ms at the unchanged
+  128/512/2048 sizes, with exact source, control identity and paired history.
+  This accepts no full criterion or release/parity credit. Original codegen
+  criterion 3 remains open at count 21; renderer 3, authoring 7 and delivery 1
+  remain unchanged. Next integrate synchronous canvas value proposals with the
+  existing isolated queue, preserving state/default and reusable-part semantics.
+  See [evidence](WORK.md#ordinary-native-builds-and-stable-retained-hosts--2026-10-05).

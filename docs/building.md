@@ -22,6 +22,21 @@ and `-DesignerSourceDirectory <semantic-export>` to execute its maintained actua
 editor journey. See [native Studio](native-studio.md) for lifetime, paired files,
 native/browser evidence and remaining compiler/MCP/workspace integration.
 
+Native Studio defaults to `-NativeStudioConfiguration checked`: compiler safety
+checks, line debugging and heap tracing, with binaries/units under
+`build/native-studio/controller/`. Select `-NativeStudioConfiguration release`
+for an ordinary optimized application build under `build/native-studio/release/`.
+It retains assertions, range, overflow and I/O checks, uses `-O2 -Xs`, and omits
+`-gl -gh`. Separate native units/binaries prevent reuse of a traced build. This
+configuration choice alone does not establish release readiness or UI latency.
+
+The same `-VerifyDesignSource` qualification executes all original 128/512/2048
+workloads and exact companion reconstruction in either configuration. Release
+artifacts live under `build/design-source/release/`; optional source/editor
+journeys use `build/source-scheduling/controls-release/` and
+`build/native-studio/editor-release/`. Checked artifacts remain in their existing
+paths. Both configurations launch no Studio/MCP listener and preserve active work.
+
 The verified Windows pair is FPC 3.2.0 for checked portable fixtures, and the
 existing FPC 3.3.1/Lazarus 4.99 pair for LCL. Browser checks use pas2js 3.3.1 and
 its matching `rtl.js`. These are observed capabilities, not a promise that every

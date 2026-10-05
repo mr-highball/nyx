@@ -792,3 +792,30 @@ choosing another optimization. Preserve complete fresh admission, exact authored
 meaning, current source/history, input and worker ownership. General canvas/state/
 binding/event routes and both-target ordinary-editor outcomes remain required;
 no scope/count reset or weakened parity gate substitutes them.
+
+## Ordinary native build and mounted-view responsiveness — 2026-10-05
+
+The complete ordinary optimized build preserves the same source/input/history
+checks as the checked build. Its initial 2048-control completion still takes
+32813 ms. Existing UI-stage evidence then identifies roughly 4.8 seconds per
+unnecessary canvas reparent/layout pass. Compatible native shell refresh now
+keeps independently owned canvas/source views in their existing borrowed hosts;
+full shell replacement retains parking and exact-host failure recovery.
+
+The final ordinary packet passes detached 75, queue 10, projection 20, exact
+compiled companion, original-size controls 101, Apply/Restore 39 and full native
+English editor 74. Completion is 531/1359/4718 ms at unchanged original sizes;
+the largest busy timer count rises from 2 to 100. The checked build passes the
+same consumers with zero leaks in all seven traced processes. Browser
+compilation retains separate evidence. No browser execution, full usability,
+release readiness or source-synchronization completion follows these timings.
+
+Criteria 1/2 stay accepted; criterion 3 remains open at no-closure count 20→21.
+Renderer 3, native authoring 7 and delivery 1 remain unchanged. Next integrate
+ordinary canvas value proposals with the existing isolated design-command queue,
+capturing immutable route/value intent instead of live realized nodes. Preserve
+two-way state/default and named reusable-part behavior, actual input, invalid
+bindings, load retirement, exact drafts and paired Undo/Redo. Remaining broader
+source/state/binding/event, browser/observing and semantic workflows keep their
+original owners and gates. WORK.md records exact artifacts and current process/
+checkpoint state; no scope reset or DONE move substitutes full acceptance.

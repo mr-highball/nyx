@@ -1523,23 +1523,31 @@ begin
     LOldCanvasHost := nil;
     LOldCodeHost := nil;
 
-    if FCanvasView.Root <> nil then
-    begin
-      LOldCanvasHost := FCanvasView.ControlFor(FCanvasView.Root.ID).Parent.Parent;
-      FCanvasView.MoveHost(FCanvasParking);
-    end;
-
-    if FCodeView.Root <> nil then
-    begin
-      LOldCodeHost := FCodeView.ControlFor('studio-code').Parent.Parent;
-      FCodeView.MoveHost(FCodeParking);
-    end;
-    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-park');{$endif}
+    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-capture');{$endif}
     LShell := ComposeShell;
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-compose');{$endif}
     try
+
       if not FShellView.TryRefresh(LShell, LShell.Pages[0], False) then
       begin
+        { A compatible shell owns the same borrowed hosts. Keep independent
+          canvas/source views mounted there: parking would reparent and lay out
+          every large-view control twice without changing accepted meaning.
+          Only a full shell replacement needs parking before old hosts retire.
+          Its failure path still restores those exact live hosts below. }
+
+        if FCanvasView.Root <> nil then
+        begin
+          LOldCanvasHost := FCanvasView.ControlFor(FCanvasView.Root.ID).Parent.Parent;
+          FCanvasView.MoveHost(FCanvasParking);
+        end;
+
+        if FCodeView.Root <> nil then
+        begin
+          LOldCodeHost := FCodeView.ControlFor('studio-code').Parent.Parent;
+          FCodeView.MoveHost(FCodeParking);
+        end;
+        {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-park');{$endif}
         FShellView.Render(LShell, LShell.Pages[0], FHost);
       end;
     except

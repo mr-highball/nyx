@@ -139,6 +139,11 @@ remains required; structure/style/context/custom factories still request full
 projection. Comfortable editing, complete
 structural synchronization and wider widget metrics remain open; WORK.md owns
 the original acceptance gates, measurements and preserved failures.
+Native compatible shell refresh now preserves its mounted canvas/source hosts,
+avoiding unnecessary large-view reparenting. The explicit optimized Studio build
+keeps compiler safety checks and separate checked artifacts. Its current
+original-size evidence and timing limits are recorded in WORK.md; no full
+browser/native or release-readiness acceptance follows this bounded packet.
 The preceding designer prerequisite retains its 34 native / 32 desktop / 33
 actual-390 browser checks, including painted selection and focused view movement.
 
