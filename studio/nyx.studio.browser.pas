@@ -222,7 +222,9 @@ uses
   nyx.codegen,
   nyx.codec,
   nyx.json,
-  nyx.source;
+  nyx.source,
+  nyx.editing,
+  nyx.editing.browser;
 
 type
   { The installed Web declarations type the third open argument as an object.
@@ -498,6 +500,7 @@ begin
   LState.Log := FLog;
   LState.Status := FStatus;
   LState.SourceStatus := FSourceCommands.Message;
+  LState.PendingDesign := FSourceCommands.PendingDesign;
   LState.OutputVisible := FOutputVisible;
   LState.OutputTarget := FOutputTarget;
   LState.Outputs := FOutputs;
@@ -584,6 +587,7 @@ var
   LReplacement: TJSHTMLElement;
   LCodeStart: NativeInt;
   LCodeEnd: NativeInt;
+  LFieldSelection: TNyxTextSelection;
   LCodeScroll: NativeInt;
   LSplit: TNyxNode;
   LCodeHost: TJSHTMLElement;
@@ -591,6 +595,7 @@ begin
   LCodeStart := -1;
   LCodeEnd := -1;
   LCodeScroll := 0;
+  LFieldSelection := Default(TNyxTextSelection);
   { Geometry is local editor presentation. Capture the mounted proportion before
     a shell rebuild, including a completed or in-progress touch adjustment. }
 
@@ -635,6 +640,13 @@ begin
         LCodeStart := TJSHTMLTextAreaElement(LActive).selectionStart;
         LCodeEnd := TJSHTMLTextAreaElement(LActive).selectionEnd;
         LCodeScroll := LActive.scrollTop;
+      end
+      else
+      begin
+        { Pending inspector/title refreshes retain scalar selection, including
+          supplementary text. Numeric/select inputs explicitly return undefined
+          instead of receiving unsupported DOM selection instructions. }
+        LFieldSelection := CaptureNyxBrowserSelection(LActive);
       end;
     end;
   end;
@@ -795,6 +807,10 @@ begin
         TJSHTMLTextAreaElement(LReplacement).selectionStart := LCodeStart;
         TJSHTMLTextAreaElement(LReplacement).selectionEnd := LCodeEnd;
         LReplacement.scrollTop := LCodeScroll;
+      end
+      else if LFieldSelection.Defined then
+      begin
+        SelectNyxBrowserText(LReplacement, LFieldSelection);
       end;
     end;
   end;
@@ -922,6 +938,13 @@ procedure TNyxStudio.SourceCommandChanged(AState: TNyxSourceCommandState;
   const AMessage: TNyxText);
 begin
   FStatus := AMessage;
+
+  if FSourceCommands.PublishedDesign and
+    (FSourceCommands.PublishedAction in [sdaAddKind, sdaAddInstance, sdaAddPage,
+      sdaCreateComponent]) then
+  begin
+    FPanel := nspDesign;
+  end;
 
   if AState = nssApplied then
   begin
@@ -1652,6 +1675,13 @@ begin
   { A pending or rejected editor buffer must never become executable merely
     because the user builds. Apply pairs source/design through candidate admission;
     Restore deliberately discards the draft. Both actions are already available. }
+
+  if FSourceCommands.Busy then
+  begin
+    FStatus := 'Wait for pending editor changes before building';
+    Refresh(True, True);
+    Exit;
+  end;
 
   if FSession.DraftSource <> FSession.Source then
   begin

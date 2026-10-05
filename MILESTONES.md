@@ -518,3 +518,16 @@ Current task and return path are maintained in [WORK.md](WORK.md).
   responsiveness retains its original owner and outcome. No completion credit
   is assigned to this partial performance result.
   See [evidence](WORK.md#immutable-paired-history-and-whole-commands--2026-10-03).
+
+- The native logical viewport preserves every original-size control and resolves
+  the recorded widget-height failure. Detached visual/source commands now replay
+  immutable intent on independent owners, with exact publication/load guards,
+  bounded FIFO/coalescing and one paired Undo step. Current evidence includes 62
+  detached checks, 10 real scheduler queue checks, 95 original-size native control
+  checks, 74 full English editor checks and an exact compiled companion, with
+  zero leaks. Browser compilation retains its execution gate. Comfortable editing
+  and deliberately authored structural ordering remain open under original
+  codegen criterion 3, now at no-closure count 19; renderer 3, authoring 7 and
+  delivery 1 remain unchanged. Next profile UI publication/projection and resolve
+  that concrete source-order failure without weakened admission or full-product
+  credit. See [evidence](WORK.md#detached-designsource-commands--2026-10-05).

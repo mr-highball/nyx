@@ -70,8 +70,8 @@ The native editor now has a runnable standalone controller consuming the shared
 Nyx shell, portable session, authoring routers and paired local store. Its actual
 Win32 journey passes 74 checks with zero leaks, including reusable navigation,
 multiple callbacks, retained source/drafts, optional outputs and saved-file
-conflicts. A focused compact journey also qualifies immediate title/source
-updates. Native HTTP/MCP observation and full-editor project jump/return now pass
+conflicts. A focused compact journey qualifies visible title input and its
+admitted companion update. Native HTTP/MCP observation and full-editor project jump/return now pass
 49 actual checks with independent drafts/history, UI-thread transport replies
 and zero leaks. Desktop/390 captures paint English review text; reviewed cleanup
 restores both original test pairs. A subsequent source candidate adds guarded
@@ -123,8 +123,18 @@ mixed-control checks pass 4118 and the original 128/512/2048 Studio journey pass
 portable geometry passes 17; native viewport/source regressions pass 46/39.
 Browser counterparts and Studio compile but retain their execution host gate.
 English starter/review presentation and dedicated Unicode qualification remain
-separate. Comfortable source editing, wider widget metrics and detached
-visual/structural reconciliation remain open; WORK.md owns current evidence.
+separate. A subsequent detached command processor now consumes inspector/title
+and common structural intent through independent session replay, bounded FIFO
+and adjacent field coalescing. Exact load/content/draft/creator guards publish
+one paired Undo step, retain independent navigation and refuse retired intents
+even when a new project has matching IDs. Current native queue checks pass 10,
+original-size controls 95 and the full English editor 74, with zero leaks.
+Detached source checks pass 62 and an exact admitted companion compiles and
+reconstructs its design. Browser Studio/worker compile but remain unexecuted.
+Fresh UI publication/projection is still expensive; deliberately authored
+Configure moves can fail source-order admission. Comfortable editing, complete
+structural synchronization and wider widget metrics remain open; WORK.md owns
+the original acceptance gates, measurements and preserved failures.
 The preceding designer prerequisite retains its 34 native / 32 desktop / 33
 actual-390 browser checks, including painted selection and focused view movement.
 

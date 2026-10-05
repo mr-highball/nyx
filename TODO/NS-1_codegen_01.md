@@ -729,3 +729,37 @@ visual/structural reconciliation using current immutable candidates/guards,
 preserving exact source, input, ownership and paired history. WORK.md owns failed
 attempts, current evidence and service/host gates. No scope/count reset or full
 goal completion substitutes the remaining outcome.
+
+## Detached design/source commands consumed by controls — 2026-10-05
+
+Immutable closed design intent now shares the isolated source processor. Each
+command captures its session/load identity at input, takes a fresh complete pair
+at dispatch and replays existing authoring methods on independent owners. Exact
+publication guards preserve creator generation, authored source, original draft
+base and paired history. A bounded FIFO and adjacent property/title coalescing
+retain command order and captured targets; obsolete loads cannot retarget another
+project with matching IDs. Visible pending fields retain focus/caret. Save/export
+and build refuse to claim the old pair while current intent is pending, and
+presentation exceptions cannot strand later queued work.
+
+Detached checks pass 62, real native queue/exception/load/save checks 10, original
+128/512/2048-control inspector/title/palette checks 95, full English native Studio
+74 and native Apply/Restore 39, with zero leaks. The exact admitted companion
+also compiles and reproduces its full design. Current browser Studio, worker and
+portable consumers compile; execution remains gated. WORK.md records sequencing,
+failed fixture selection, exact byte sizes and the measured UI completion costs.
+
+This accepts no full criterion. Comfortable editing remains unmet: the traced
+2048-control command completes in 98422 ms, including UI publication/projection.
+Moving deliberately authored Configure slots also exposes an admission-order
+gap; refusal preserves the exact accepted pair/history. Remaining canvas/state/
+binding/event routes and full browser/observing outcomes keep their original
+owners. Criterion 3's no-closure count advances 18→19; criteria 1/2 remain
+accepted, native renderer 3, authoring 7 and delivery 1 remain unchanged.
+
+Reassessment follows actual UI-stage profiling, guarded retained projection and
+supported structural source ordering through this worker boundary. Preserve
+original-size controls, complete fresh admission, crafted source, input, drafts
+and exact paired history. Accepted trees must stay off workers. No isolated
+lookup variant, counter/scope reset, weakened parity, DONE move or full-goal
+completion substitutes the remaining criterion.

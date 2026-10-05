@@ -714,6 +714,11 @@ var
   LProject: TNyxNativeStudioProject;
 begin
 
+  if FSourceCommands.Busy then
+  begin
+    raise ENyxModel.Create('Wait for pending editor changes before building');
+  end;
+
   if (CurrentBridge = nil) or not CurrentBridge.State.CanBuild then
   begin
     raise ENyxModel.Create('Native build requests are unavailable');
@@ -1418,6 +1423,7 @@ begin
   FState.Compact := FHost.ClientWidth < 900;
   FState.RootRemoval := NyxNull;
   FState.Agents := GetAgentState;
+  FState.PendingDesign := FSourceCommands.PendingDesign;
   FState.CompiledPreviewAvailable := CompiledPreviewCurrent(FCurrentProject);
   FState.CompiledPreviewRunning := (FCurrentProject <> nil) and
     (FCurrentProject.CompiledPreview <> nil) and FCurrentProject.CompiledPreview.Running;
@@ -1442,6 +1448,32 @@ var
   LRetainFocus: Boolean;
   LCanvasFocus: Boolean;
   LSameView: Boolean;
+  LChromeID: TNyxText;
+
+  function EditingChromeIdentity(ANode: TNyxNode): TNyxText;
+  var
+    LIndex: Integer;
+  begin
+    Result := '';
+
+    if (ANode.ID = 'project-title') or (ANode.Prop('prop-key') <> '') then
+    begin
+
+      if FShellView.InputFor(ANode.ID) = LFocus then
+      begin
+        Exit(ANode.ID);
+      end;
+    end;
+    for LIndex := 0 to ANode.Count - 1 do
+    begin
+      Result := EditingChromeIdentity(ANode.Children[LIndex]);
+
+      if Result <> '' then
+      begin
+        Exit;
+      end;
+    end;
+  end;
 begin
 
   if FPainting then
@@ -1460,8 +1492,15 @@ begin
       not FReplaceCanvas and (FCanvasID = FSession.ActiveViewID) and
       InsideControl(LFocus, FCanvasView.ControlFor(FCanvasView.Root.ID));
     LSelection := Default(TNyxTextSelection);
+    LChromeID := '';
 
-    if LRetainFocus or LCanvasFocus then
+    if (LFocus <> nil) and (FShellView.Root <> nil) and
+      InsideControl(LFocus, FShellView.ControlFor(FShellView.Root.ID)) then
+    begin
+      LChromeID := EditingChromeIdentity(FShellView.Root);
+    end;
+
+    if LRetainFocus or LCanvasFocus or (LChromeID <> '') then
     begin
       LSelection := CaptureNyxLCLSelection(LFocus);
     end;
@@ -1586,6 +1625,25 @@ begin
     end;
     FSourceLine := 0;
     FSourceColumn := 0;
+    { Chrome is independently regenerated while a worker prepares edits. Restore
+      the same inspector/title field by identity and Unicode selection, never
+      retain its destroyed widget pointer across shell replacement. Pending
+      values are already present in ComposeShell's immutable presentation. }
+
+    if (LChromeID <> '') and (FShell.Find(LChromeID) <> nil) then
+    begin
+      LFocus := FShellView.FocusFor(LChromeID);
+
+      if (LFocus <> nil) and LFocus.CanFocus then
+      begin
+        LFocus.SetFocus;
+
+        if LSelection.Defined then
+        begin
+          SelectNyxLCLText(LFocus, LSelection);
+        end;
+      end;
+    end;
     FReplaceCanvas := False;
     RestoreProjectControls;
     FChangingProject := False;
@@ -1601,6 +1659,15 @@ procedure TNyxNativeStudio.SourceCommandChanged(AState: TNyxSourceCommandState;
 begin
   FState.Status := AMessage;
   FState.SourceStatus := AMessage;
+  { Palette/page completion follows its owning project's structural result.
+    Status-only and inspector callbacks retain the user's chosen panel. }
+
+  if FSourceCommands.PublishedDesign and
+    (FSourceCommands.PublishedAction in [sdaAddKind, sdaAddInstance, sdaAddPage,
+      sdaCreateComponent]) then
+  begin
+    FState.Panel := nspDesign;
+  end;
   { Every connected project's own callback records its pair. An offline editor
     has no bridge. Completion never consults a newly selected project. }
   RequestRefresh(AState = nssApplied);

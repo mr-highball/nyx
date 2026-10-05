@@ -44,6 +44,7 @@ uses
   nyx.codegen,
   nyx.source,
   nyx.source.preparation,
+  nyx.schema,
   nyx.studio.history,
   nyx.studio.projects,
   nyx.studio.edits,
@@ -72,6 +73,83 @@ type
   end;
 
   TNyxSourceCompletion = (nscUnchanged, nscApplied, nscRejected, nscStale);
+
+  { Closed editor intent. Names/values are data at the inspector/catalog boundary;
+    processing invokes existing typed commands, never arbitrary Pascal methods. }
+  TNyxStudioDesignAction = (sdaProperty, sdaAddKind, sdaDelete, sdaDuplicate,
+    sdaMove, sdaTitle, sdaAddPage, sdaCreateComponent, sdaAddInstance, sdaCustomizePart);
+  { A structural move is one sibling step. Arbitrary integer offsets are not
+    accepted by the queued editor contract. }
+  TNyxStudioMoveDirection = (nmdPrevious, nmdNext);
+  { Immutable session/load identity for queued intent before its full baseline
+    is captured. This is not a document revision: publication still compares
+    the fresh paired files, draft and creator generation. }
+  TNyxStudioCommandContext = record
+  private
+    FOwner: TNyxText;
+    FGeneration: Integer;
+  end;
+  TNyxStudioDesignEdit = record
+    Action: TNyxStudioDesignAction;
+    { Exact authored IDs captured when the UI emits intent. They do not follow
+      later navigation or another session/load with matching control names. }
+    Selection: TNyxText;
+    View: TNyxText;
+    { Inspector key, catalog kind, reusable definition ID or named part path,
+      according to Action. This is the explicit metadata/extension boundary. }
+    Name: TNyxText;
+    { Typed schema admission interprets field input; title remains user text.
+      No method name or executable statement is taken from either string. }
+    Value: TNyxText;
+    Direction: TNyxStudioMoveDirection;
+  end;
+
+  { Owned presentation values for uncommitted field edits. This snapshot affects
+    only Studio chrome, never admission, source or the accepted design tree. }
+  TNyxStudioPendingField = record
+    Selection: TNyxText;
+    Key: TNyxText;
+    Value: TNyxText;
+  end;
+  TNyxStudioPendingDesign = record
+    TitleDefined: Boolean;
+    Title: TNyxText;
+    Fields: array of TNyxStudioPendingField;
+    { Last pending value wins for the exact owner/key. False clears AValue;
+      empty text can still be a defined value. The snapshot owns its array. }
+    function PropertyValue(const ASelection, AKey: TNyxText;
+      out AValue: TNyxText): Boolean;
+  end;
+
+  { An immutable processor ticket captures the complete admitted pair and exact
+    pending draft. Workers reconstruct independent session/catalog/history owners;
+    neither this record nor a result borrows an accepted node or renderer. }
+  TNyxStudioDesignRequest = record
+  private
+    FOwner: TNyxText;
+    FGeneration: Integer;
+    FNextID: Integer;
+    FSchemaRevision: Integer;
+    FPair: TNyxProjectPair;
+    FEdit: TNyxStudioDesignEdit;
+  public
+    function ToData: TNyxDataValue;
+    function SameRequest(const AOther: TNyxStudioDesignRequest): Boolean;
+    property SchemaRevision: Integer read FSchemaRevision;
+  end;
+
+  { Trusted private processor result. Mutable paired owners are never exposed
+    until the receiving UI consumes Take once; diagnostics own no partial pair. }
+  INyxPreparedDesign = interface(INyxPreparedSource)
+    ['{8B6CF439-AE07-4C41-A6D8-79C501B85405}']
+    function Matches(const ARequest: TNyxStudioDesignRequest): Boolean;
+    function GetSelection: TNyxText;
+    function GetView: TNyxText;
+    function GetNextID: Integer;
+    property Selection: TNyxText read GetSelection;
+    property View: TNyxText read GetView;
+    property NextID: Integer read GetNextID;
+  end;
 
   { Closed command destination; extension names and values remain typed data. }
   TNyxStudioExtensionOwner = (seoDocument, seoSelection);
@@ -263,6 +341,17 @@ type
     function PrepareSourceRequest(ASchemaRevision: Integer): TNyxStudioSourceRequest;
     function CompleteSourceRequest(const ARequest: TNyxStudioSourceRequest;
       const APrepared: INyxPreparedSource): TNyxSourceCompletion;
+    { Capture a queued explicit design intent against the fresh current pair.
+      Processing and paired publication remain separate; captured selection/view
+      never follow a later user navigation. }
+    function PrepareDesignRequest(const AEdit: TNyxStudioDesignEdit;
+      ASchemaRevision: Integer): TNyxStudioDesignRequest;
+    { Capture/compare on the UI thread. Reloading identical files retires this
+      context, preventing waiting commands from being replayed on another load. }
+    function CommandContext: TNyxStudioCommandContext;
+    function MatchesCommandContext(const AContext: TNyxStudioCommandContext): Boolean;
+    function CompleteDesignRequest(const ARequest: TNyxStudioDesignRequest;
+      const APrepared: INyxPreparedDesign): TNyxSourceCompletion;
     procedure DiscardSourceDraft;
     { Companion source has independent local recovery. Import first loads the
       portable design, then applies its paired Pascal. .nyx export stays portable. }
@@ -277,10 +366,18 @@ type
     property SourceDiagnostic: TNyxSourceDiagnostic read GetSourceDiagnostic;
   end;
 
+{ Private worker protocol only. File/HTTP/MCP imports keep strict project/source
+  admission. Decode validates closed fields and exact values, without publishing. }
+function ReadNyxStudioDesignRequest(const AData: TNyxDataValue): TNyxStudioDesignRequest;
+function PrepareNyxStudioDesign(const ARequest: TNyxStudioDesignRequest;
+  const ASchemas: INyxSchemaSnapshot): INyxPreparedDesign;
+function ReceiveNyxPreparedDesign(const AData: TNyxDataValue;
+  const ARequest: TNyxStudioDesignRequest;
+  const ASchemas: INyxSchemaSnapshot): INyxPreparedDesign;
+
 implementation
 
 uses
-  nyx.schema,
   nyx.binding,
   nyx.studio.authoring,
   nyx.composition;
@@ -2050,6 +2147,8 @@ begin
     LCandidate.Free;
   end;
 end;
+
+{$include nyx.studio.session.design.inc}
 
 function TNyxStudioSession.GetSourceDiagnostic: TNyxSourceDiagnostic;
 begin

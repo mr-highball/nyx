@@ -7,27 +7,40 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest source checkpoint: [logical native viewport](#logical-native-viewport-and-original-size-controls--2026-10-05)
-retains full content extent and every control through safe physical geometry and
-standard LCL scrollbars. Mixed controls pass 4118; the unchanged original-size
-128/512/2048 Studio journey passes 45, with zero leaks. The recorded 81963-pixel
-canvas failure is resolved. Portable geometry passes 17 and native viewport /
-source regressions pass 46/39. Current browser consumers and Studio compile;
-execution retains the existing host gate. English starter/review presentation
-continues, with broader Unicode retained in dedicated technical qualification.
-Codegen criterion 3 remains open at no-closure count 18; native renderer advances
-2→3. Native authoring's 7 and delivery's 1 remain unchanged. This accepts no full
-criterion, comfortable editing or complete target parity.
+Latest bounded source packet: [detached design/source commands](#detached-designsource-commands--2026-10-05)
+adds immutable queued intent, isolated replay, exact paired publication and
+session/load/creator/draft guards. Portable checks pass 62, real native queue
+failure/load/save checks 10, original 128/512/2048 controls 95 and the complete
+English native editor 74, with zero leaks. Native Apply/Restore retains 39.
+The exact admitted companion also compiles and reconstructs its full design.
+Browser Studio/worker/shared consumers compile; execution retains the host gate.
+English presentation stays separate from technical Unicode inputs. Criterion 3
+remains open at no-closure count 19; native renderer's 3, authoring's 7 and
+delivery's 1 remain unchanged. This accepts no full criterion or comfortable
+editing. The preceding viewport checkpoint retains its accepted bounded evidence.
 
-Reassessment follows the now-resolved concrete viewport failure back to original
-codegen criterion 3: detached visual/structural reconciliation and comfortable
-ordinary editing, preserving all original-size descendants and input/selection.
-Reuse the current immutable candidates,
-creator guard and revocable ports. Preserve fresh admission, direct mutation,
-crafted source and paired history; never mutate accepted trees on workers.
+Reassessment follows concrete remaining failures under original codegen criterion
+3: fresh UI publication/projection is still expensive, and moved deliberately
+authored Configure slots can fail ownership ordering. Next consume the reliable
+worker boundary through guarded retained projection and supported structural
+source ordering, preserving the original-size descendants, crafted text, drafts,
+input and exact paired history. Profile the actual UI stage before changing it;
+do not weaken fresh admission or move accepted trees onto workers.
 Browser Apply/worker and observing editor acceptance still need a permitted host
 without an equivalent refused launch. No further lookup experiment, scope/count
 reset, weakened parity/DONE gate or full-goal completion substitutes these checks.
+
+Completed bounded packet under original codegen criterion 3 extends the existing
+isolated source-command processor to ordinary visual property and structural
+commands. Capture immutable paired/context values, replay those commands on an
+independent session, and publish one admitted pair through the existing fresh
+session/content/draft/creator guard. Evidence covers real controls, exact original
+128/512/2048 sizes, preserved handwritten source, paired Undo/Redo and retirement.
+Stop on accepted-tree worker access, lost/reordered edits, stale publication or
+detached receiver delivery. Complete browser/ordinary-editor acceptance retains
+its existing host gate; no full criterion is accepted from this packet.
+Previous turn was progress: source 9e1498c and handoff ad9a80e are clean/pushed,
+the concrete viewport failure is resolved, and this changes the next action.
 
 The completed bounded implementation packet follows codegen criterion 3: coalesce source-draft capture
 through the existing owned editor timer, share one fresh paired snapshot with
@@ -5731,3 +5744,120 @@ Source checkpoint **9e1498c** is pushed and verified against the exact remote
 handoff head separately from this product source checkpoint. Logs, captures,
 toolchain paths and personal configuration remain ignored. The next source
 reconciliation action and all original acceptance gates above remain unchanged.
+
+## Detached design/source commands — 2026-10-05
+
+This bounded packet consumes the existing isolated source boundary through
+ordinary inspector/title and common structural controls. Closed action/move
+enums carry copied intent; exact IDs and schema field data remain explicit
+metadata boundaries. Session/load identity is captured at input, before a fresh
+complete paired baseline is taken at dispatch. Existing session authoring methods
+replay on independent document/workspace/history owners under an immutable
+creator snapshot. Workers borrow no accepted node, renderer or mutable recipe.
+Native schema interfaces are retained by the work object; a UI-owned holder keeps
+job records compatible with pas2js's interface restrictions.
+
+One active command and at most 64 waiting commands preserve FIFO. Adjacent
+waiting updates of the same property/title coalesce within the same load.
+Repeated Apply supersedes only older Apply; structural ordering stays intact.
+Fresh owner/load, accepted pair, original draft/base and creator guards admit one
+paired Undo step. Invalid/stale/cancelled results retain accepted work. Queued
+selection/view never follow later navigation, and completion retains independent
+navigation. Reloading even identical files retires old intent, pending fields and
+busy claims. Pending presentation retains native/browser field selection through
+stable chrome identity. Save/export/build refuse an old-pair success while
+current input is pending. Presentation exceptions cannot strand the queue after
+dispatch/publication. Revocable ports and native drain protect retired receivers.
+
+Qualification artifacts remain ignored under `build/design-source/`:
+
+- `portable-run.log` passes **62** detached ticket/wire, exact publication,
+  handwritten source, Unicode, original pending draft/base, structural commands,
+  independent navigation, same-file reload, direct mutation, creator guards and
+  one-shot ownership checks. Stable FPC heap tracing reports 12657896 allocations
+  and frees, **zero unfreed blocks**.
+- `consumer-run.log` executes the exact admitted exported companion against its
+  full expected design, with 623 allocations/frees and zero leaks. This checks
+  reconstruction through the compiler, not only source admission.
+- `queue-run.log` passes **10** current real native scheduler cases: preparing/
+  applied presentation exceptions, later FIFO work, exact history, save guard,
+  matching-ID load retirement, visible pending fields and independent new intent.
+  Heap tracing reports 2713883 allocations/frees and zero leaks.
+- `maintained-build-run.log` passes **95** original-size real native inspector,
+  title and palette checks and **39** Apply/Restore controls, with zero leaks.
+  It preserves all descendants, exact source byte sizes, authored names/comments/
+  expressions, pending fields, focus/caret, retained source widget, compact panel
+  return, paired Undo/Redo, duplicate/delete order and detached cancellation.
+  Timer ticks are measured while preparation remains busy. Corrected timing
+  includes the first pump and completion, rather than reporting a false zero.
+- `editor-english-run.log` passes **74** current full native Studio checks against
+  the existing exact semantic export in `build/native-studio/source-english`:
+  named reusable memo parts, independent recipes, page/component operations,
+  typed supplementary input, ordered callbacks, TODO/source navigation, warned
+  removal/history, retained drafts/caret, compact parking, optional targets and
+  paired saved-file conflicts. Heap tracing reports 111934081 allocations/frees
+  and zero leaks. This runs after the final queue/load/save safety refinements.
+
+| Original controls | Exact source bytes | Three input submissions, ms | Completion, ms | Busy timer ticks |
+| --- | --- | --- | --- | --- |
+| 128 | 25094 | 1343 | 16594 | 2 |
+| 512 | 98822 | 1093 | 25563 | 3 |
+| 2048 | 400022 | 2438 | 98422 | 4 |
+
+These checked/heap-traced concurrent-host costs include ordinary controls and
+expensive fresh UI publication/projection. They are neither release benchmarks
+nor comfortable editing acceptance. The 95-case run precedes the final safety
+refinements; their current evidence is the queue 10/full-editor 74 and final
+target builds. The updated maintained switch includes the queue fixture, but the
+entire combined large suite was not rerun after that addition. Current native
+application compilation succeeds with zero owned warnings.
+
+Current browser Studio, separate Pascal worker and portable qualification
+consumers compile with zero owned warnings; each retains seven warnings in the
+installed Classes RTL. Matched runtime is staged, with no listener or deployment.
+Compilation does not qualify browser execution, physical input, pixels, parity
+or observing editor scheduling. The maintained `-VerifyDesignSource` option
+orchestrates these Pascal consumers without changing application profiles.
+
+Preserved failures and material limits:
+
+- `failed-interface-record-build.log` records pas2js rejecting a COM interface
+  field in a record. The explicit owned schema holder resolves that portability
+  failure; native zero-leak and both-target compilation qualify its ownership.
+- `failed-handwritten-fixture-run.log` records a test comment inserted at a
+  boundary absent from plain generation. The fixture now assembles its real
+  handwritten prefix through `TNyxStrings`; it does not weaken admission.
+- The combined maintained run later fails the broader editor journey because its
+  default older semantic export lacks a named reusable part. That diagnostic and
+  zero-leak teardown remain in `maintained-build-run.log`/`editor-run.log`.
+  A fresh separate-output compile against the actual English semantic export
+  passes all 74 checks. This is a fixture correction, not an unnamed-part bypass
+  or a successful claim for the earlier combined command.
+- Moving deliberately authored Configure slots with a renamed local and
+  preserved expression can fail declaration/construction/admission ordering.
+  Two negative checks prove exact pair/history preservation. Ordinary generated
+  move succeeds; this does not accept arbitrary authored structural movement.
+- Canvas value proposals, state/binding/event routes and general semantic source,
+  job-status/import/review lifecycle remain with their existing owners. No
+  screenshot-driven editor automation substitutes missing MCP operations.
+
+Original codegen criterion 3 stays open; its no-closure count advances **18→19**.
+Accepted criteria 1/2, native renderer **3**, native authoring **7** and delivery
+**1** remain unchanged. No complete task/criterion or completion credit is earned.
+Reassessment now profiles actual UI publication/projection and consumes guarded
+retained projection plus supported authored structural ordering through this
+reliable worker boundary. Preserve original-size descendants, complete fresh
+admission, crafted source, drafts, input and exact paired history. Do not replace
+this with another lookup variant, scope/count reset, accepted-tree worker access,
+weakened parity or full-goal completion.
+
+Connected semantic MCP inspected the bounded session at revision **6**, home
+selection/view, one page/component, no pending draft, empty Undo and existing
+Redo; activity sequence reached **173** through read-only context. All eight
+protected production/staging/qualification process identities remain unchanged.
+No live mutation, listener, front-end deployment, active pair replacement,
+enrollment/profile change or equivalent refused launch occurred. Browser execution
+retains the previously recorded automatic approval rejection of qualification
+listeners, whose stated reason was only “blocked by policy”. English starter and
+review copy remains separate from dedicated technical Unicode inputs. The
+original unbounded goal remains active and incomplete.

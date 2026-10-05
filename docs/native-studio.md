@@ -36,15 +36,31 @@ parking hosts before replacing chrome, then mounts those same views in the new
 shell. Source typing does not rebuild chrome. Hiding Pascal or switching compact
 panels retains its actual control, exact draft and paired baseline. View changes
 replace the canvas deliberately; selection and value proposals keep it mounted.
-Project title edits update the mounted generated source immediately without
-replacing the title field that is notifying.
+Inspector and project-title input stays visible immediately while its paired
+source reconciliation is prepared. Native field callbacks enqueue work; chrome
+replacement follows the callback and restores field identity, focus and scalar
+selection. The mounted Pascal editor receives the admitted companion afterward.
 
-The source candidate routes Apply through `TNyxSourceCommands`. One immutable
-request runs at a time; repeated Apply replaces one queued request. A worker
+The source candidate routes Apply, inspector properties, project title and
+palette/structural operations through `TNyxSourceCommands`. One immutable request
+runs at a time. Repeated Apply supersedes older Apply requests; design commands
+remain FIFO, coalescing only adjacent waiting changes to the same field. Up to
+64 waiting intents are retained; excess input refuses instead of dropping work.
+An immutable session/load context accompanies every queued command. Opening even
+identical files retires earlier intent before a new baseline can be captured;
+old work neither retargets matching IDs nor paints pending fields in that load.
+Save/export and builds wait for current pending edits instead of announcing an
+earlier accepted pair as current. A presentation exception cannot strand the
+remaining command queue or alter already published history.
+A worker
 constructs a fresh complete document/companion using owned default recipes and a
 captured creator-schema environment. Completion compares fresh accepted files,
 the exact draft, session/load identity and creator generation before publishing
-one paired Undo entry. Invalid, superseded and stale results retain current work.
+one paired Undo entry. Design requests replay the existing authoring commands on
+independent session owners. Queued targets retain their original selection/view
+identities; completion does not steal later user navigation. Invalid, superseded
+and stale results retain current work. Existing pending Pascal drafts retain
+their exact original base, becoming visibly stale when the accepted pair changes.
 Source status sits above the Pascal actions, including at compact widths.
 
 Native preparation uses `INyxScheduler` worker threads. The browser adapter uses
@@ -59,7 +75,13 @@ projects, detach every UI port, then drain retained native work while servicing
 its handoffs. Source workers never borrow accepted nodes, renderer handles or
 mutable recipes. See WORK.md for 39 actual Win32 controls, desktop/390 captures,
 original-size timings and the still-pending browser execution/deployment gate.
-Visual/structural commands and per-keystroke bridge/recovery costs remain open.
+Ordinary canvas value proposals, state/binding/event authoring and broader
+source/import/review operations retain their existing owners. Preparation on a
+worker does not establish comfortable editing: fresh publication and full native
+projection still consume the UI thread. A moved deliberately handwritten
+Configure slot can currently fail source-order admission; the exact accepted
+pair/history is retained with a diagnostic. That structural merge remains under
+the original source-synchronization criterion.
 
 ```powershell
 ./tools/build.ps1 -Target native-studio -VerifySourceScheduling

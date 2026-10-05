@@ -79,6 +79,9 @@ type
     { Source processor status sits beside the source actions as well as the
       global footer, so a compact host can observe preparation and refusal. }
     SourceStatus: TNyxText;
+    { Copied pending values keep typing visible while the independent processor
+      prepares its pair. These affect only editor fields, never project content. }
+    PendingDesign: TNyxStudioPendingDesign;
     OutputVisible: Boolean;
     OutputTarget: TNyxText;
     Outputs: TNyxOutputConfiguration;
@@ -538,6 +541,7 @@ var
   LIndex: Integer;
   LKind: TNyxText;
   LName: TNyxText;
+  LPendingValue: TNyxText;
   LProperties: TNyxPropertyInfos;
   LPrimitive: TNyxPrimitiveInfo;
   LPropertyIndex: Integer;
@@ -625,6 +629,11 @@ begin
   LLeft.Add(TNyxNode.Create('heading', 'views-title').SetProp('text', 'PROJECT'));
   LLeft.Add(TNyxNode.Create('input', 'project-title').SetProp('text', 'Project title')
     .SetProp('value', ASession.Document.Title));
+
+  if AState.PendingDesign.TitleDefined then
+  begin
+    LLeft.Find('project-title').Configure.Value(AState.PendingDesign.Title).Done;
+  end;
 
   if AState.FilesVisible then
   begin
@@ -931,6 +940,12 @@ begin
             .SetProp('prop-key', LProperties[LIndex].Key)
             .SetProp('value', LSelected.Prop(LProperties[LIndex].Key,
               LProperties[LIndex].DefaultValue));
+
+          if AState.PendingDesign.PropertyValue(LSelected.ID,
+            LProperties[LIndex].Key, LPendingValue) then
+          begin
+            LField.Configure.Value(LPendingValue).Done;
+          end;
           LField.Configure.Hint(LProperties[LIndex].Support.Description + #10 +
             'Browser: ' + NyxCapabilityText(LProperties[LIndex].Support.Browser) +
             ' / LCL: ' + NyxCapabilityText(LProperties[LIndex].Support.Native)).Done;

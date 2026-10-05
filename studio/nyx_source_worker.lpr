@@ -27,12 +27,13 @@ program nyx_source_worker;
 
 uses
   SysUtils, JS, WebWorker, WebOrWorker,
-  nyx.text, nyx.data, nyx.schema, nyx.source.preparation;
+  nyx.text, nyx.data, nyx.schema, nyx.source.preparation, nyx.studio.session;
 
 function Receive(AEvent: TJSEvent): Boolean;
 var
   LRequest: TNyxDataValue;
   LReply: INyxPreparedSource;
+  LDesign: INyxPreparedDesign;
   LSchemas: INyxSchemaSnapshot;
 begin
   Result := False;
@@ -44,14 +45,28 @@ begin
     end;
     LRequest := TNyxDataValue.ParseJSON(String(TJSMessageEvent(AEvent).data));
 
-    if (LRequest.Kind <> ndObject) or (LRequest.Count <> 3) or
-      (LRequest.Field('version').AsInteger <> 1) then
+    if (LRequest.Kind <> ndObject) or (LRequest.Count <> 3) then
     begin
       raise EArgumentException.Create('Source worker requires its versioned source/schema packet');
     end;
     LSchemas := ReadNyxSchemaSnapshot(LRequest.Field('schemas'));
-    LReply := PrepareNyxSource(LRequest.Field('source').AsText, LSchemas);
-    WebWorker.Self_.postMessage(LReply.ToData.ToJSON);
+    case LRequest.Field('version').AsInteger of
+      1:
+        begin
+          LReply := PrepareNyxSource(LRequest.Field('source').AsText, LSchemas);
+          WebWorker.Self_.postMessage(LReply.ToData.ToJSON);
+        end;
+      2:
+        begin
+          LDesign := PrepareNyxStudioDesign(
+            ReadNyxStudioDesignRequest(LRequest.Field('request')), LSchemas);
+          WebWorker.Self_.postMessage(LDesign.ToData.ToJSON);
+        end;
+    else
+      begin
+        raise EArgumentException.Create('Editor worker request version is unsupported');
+      end;
+    end;
   except
     on LException: Exception do
     begin

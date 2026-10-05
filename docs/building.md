@@ -535,6 +535,28 @@ refusal/retirement. Review captures use English; dedicated Unicode/source-size
 inputs remain technical qualification. Browser compilation retains its separate
 permitted-host execution gate. No listener is launched by either option.
 
+The maintained detached visual/structural source qualification is available as:
+
+```powershell
+./tools/build.ps1 -Target native-studio -VerifyDesignSource
+```
+
+It executes immutable ticket/wire, exact paired publication, handwritten text,
+draft/load/creator/navigation guards and every supported structural command. The
+actual native scheduler fixture also qualifies presentation exceptions, retired
+project loads with matching IDs, current pending fields and save/export guards. An
+exported admitted companion is compiled and executed against its exact design.
+Actual native inspector/title/palette controls exercise FIFO/coalescing, paired
+Undo/Redo, field focus/caret, cancellation/staleness and detached retirement at
+the unchanged 128/512/2048-control source sizes. English desktop/390 captures stay
+separate from private Unicode qualification. Heap tracing is enabled; measured
+fixture durations do not establish comfortable release latency. Browser Studio,
+the Pascal worker and portable checks are compiled/staged under
+`build/design-source/maintained/browser/`; execution retains its permitted-host
+gate. The option launches no listener and changes no application profile or
+enrollment. Current evidence and unsupported authored structural moves belong
+to WORK.md and the original source-synchronization owner.
+
 The optional Win32 transport consumer needs no Studio server, project, enrollment
 or application compiler profile:
 

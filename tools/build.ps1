@@ -80,7 +80,10 @@ param(
   [switch]$VerifyDraftCapture,
   # Checked logical geometry and actual full-size native scrolling/input.
   # Browser companions are staged; execution needs a separately permitted host.
-  [switch]$VerifyLogicalViewport
+  [switch]$VerifyLogicalViewport,
+  # Detached visual/structural admission, exact compiled companion and actual
+  # original-size native controls. Browser programs are staged, not hosted.
+  [switch]$VerifyDesignSource
 )
 
 $ErrorActionPreference = 'Stop'
@@ -280,6 +283,37 @@ try {
         (Join-Path $nyxRoot 'build/logical-viewport')
 
       if ($LASTEXITCODE -ne 0) { throw 'Actual native logical viewport controls failed' }
+    }
+
+    if ($VerifyDesignSource) {
+      $nyxDesignArtifacts = Join-Path $nyxRoot 'build/design-source/maintained'
+      $nyxDesignPair = Join-Path $nyxDesignArtifacts 'pair'
+      $nyxDesignBrowser = Join-Path $nyxDesignArtifacts 'browser'
+      New-Item -ItemType Directory -Force $nyxDesignPair, $nyxDesignBrowser | Out-Null
+      foreach ($nyxDesignProgram in @('nyx_design_source_tests', 'nyx_design_queue_tests', 'nyx_design_source_controls')) {
+        Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @("tests/$nyxDesignProgram.lpr"))
+      }
+      & (Join-Path $nyxStudioNative 'nyx_design_source_tests.exe') $nyxDesignPair
+
+      if ($LASTEXITCODE -ne 0) { throw 'Detached design/source qualification failed' }
+      & (Join-Path $nyxStudioNative 'nyx_design_queue_tests.exe')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Native queued intent/load/presentation qualification failed' }
+      Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @("-Fu$nyxDesignPair",
+        'tests/nyx_design_source_consumer.lpr'))
+      & (Join-Path $nyxStudioNative 'nyx_design_source_consumer.exe') (Join-Path $nyxDesignPair 'expected.nyx')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Exact compiled design/source consumer failed' }
+      $nyxDesignPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+      $nyxDesignRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+      foreach ($nyxDesignProgram in @('tests/nyx_design_source_tests.lpr', 'studio/nyx_studio.lpr')) {
+        Invoke-NyxCompiler $nyxDesignPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+          '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxDesignBrowser", $nyxDesignProgram)
+      }
+      Copy-Item -LiteralPath $nyxDesignRuntime -Destination (Join-Path $nyxDesignBrowser 'rtl.js') -Force
+      & (Join-Path $nyxStudioNative 'nyx_design_source_controls.exe') (Join-Path $nyxDesignArtifacts 'controls')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Actual original-size design/source controls failed' }
     }
 
     if ($VerifySourceScheduling) {

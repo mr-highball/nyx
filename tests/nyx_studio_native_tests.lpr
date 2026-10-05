@@ -79,6 +79,28 @@ end;
 
 { The fixture presses the real public Nyx button. Painting must still be queued
   when its callback returns, rather than destroying that button mid-notification. }
+procedure AwaitEditorChanges;
+var
+  LStarted: QWord;
+begin
+  LStarted := GetTickCount64;
+  repeat
+    CheckSynchronize;
+    Pump;
+
+    if GetTickCount64 - LStarted > 20000 then
+    begin
+      raise ENyxModel.Create('Native editor preparation did not retire / ' + GStudio.Status);
+    end;
+
+    if GStudio.SourceCommands.Busy then
+    begin
+      Sleep(1);
+    end;
+  until not GStudio.SourceCommands.Busy;
+  Pump;
+end;
+
 procedure Click(const AID: TNyxText);
 var
   LControl: TControl;
@@ -90,7 +112,7 @@ begin
   LPaints := GStudio.PaintCount;
   TControlAccess(LControl).Click;
   Check(GStudio.PaintCount = LPaints, 'paint deferred past ' + AID);
-  Pump;
+  AwaitEditorChanges;
 end;
 
 procedure WriteField(ARenderer: TNyxLCLRenderer; const AID, AValue: TNyxText);
@@ -112,7 +134,7 @@ begin
   begin
     TEdit(LInput).Text := AValue;
   end;
-  Pump;
+  AwaitEditorChanges;
 end;
 
 function ReadBytes(const APath: TNyxText): TNyxText;
@@ -230,7 +252,7 @@ begin
   LSource := TMemo(GStudio.CodeView.InputFor('studio-code'));
   Check((GStudio.Session.Document.Title = TNyxText('Native title / 🌙 漢字')) and
     (StringReplace(TNyxText(LSource.Text), #13#10, #10, [rfReplaceAll]) = GStudio.Session.Source),
-    'title edit immediately updates the mounted Pascal source');
+    'admitted title edit updates the retained mounted Pascal source');
   { Keep initial review screenshots in English after qualifying exact Unicode
     title input. The pending draft below still exercises the full text contract. }
   WriteField(GStudio.ShellView, 'project-title', 'A reusable reply');
@@ -356,7 +378,7 @@ begin
       Check(Screen.ActiveControl = LReply, 'selection chrome retains actual memo focus');
       WriteField(GStudio.CanvasView, LFace.ID, 'Edited in native Studio / 🌙 漢字');
       Check(GStudio.Session.CanUndo and (GStudio.Session.Source <> LBefore),
-        'physical memo editing publishes paired source/history');
+        'physical memo editing publishes paired source/history / ' + GStudio.Status);
       Check(DefinitionSnapshot = LDefinition,
         'native instance edit preserves the reusable definition');
       Check(GStudio.CanvasView.InputFor(LFace.ID) = LReply,

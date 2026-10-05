@@ -19,6 +19,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 }
+
 unit nyx.studio.sourcejobs;
 
 {$mode delphi}{$H+}{$codepage utf8}
@@ -37,28 +38,50 @@ type
     const AMessage: TNyxText) of object;
   TNyxSourceCommands = class;
 
-  { Retained couriers borrow only this revocable UI port. Detach revokes it before
-    any controller/session is freed; neither a worker nor a queued result can
-    dereference the editor directly. Its owner field is accessed on the UI only. }
+  { Retained couriers borrow only this revocable UI port. Detach removes its
+    receiver before editor/session retirement. Workers own copied tickets and
+    creator snapshots, and never dereference an accepted tree or controller. }
   INyxSourceCommandPort = interface(IInterface)
     ['{8B6CF439-AE07-4C41-A6D8-79C501B85404}']
-    procedure Deliver(ASequence: Integer; const ARequest: TNyxStudioSourceRequest;
-      const APrepared: INyxPreparedSource; const AFailure: TNyxText);
+    procedure Deliver(ASequence: Integer; const ASource: INyxPreparedSource;
+      const ADesign: INyxPreparedDesign; const AFailure: TNyxText);
     procedure Detach;
   end;
 
-  { One controller belongs to one session, which must outlive it. Source inputs
-    are immutable, native admission uses the public scheduler's real workers,
-    and the browser uses a separately compiled Pascal worker program. Only one
-    preparation runs at a time; repeated Apply replaces one queued request.
-    Superseded results retire without publication. Ordinary compiler diagnostics
-    and application builds remain separate operations.
+  { Closed operation and value-only inputs. Design targets are captured at the
+    UI event; their fresh baseline is captured at dispatch after earlier edits. }
+  TNyxEditorSourceKind = (eskPascal, eskDesign);
+  { UI-owned immutable metadata lease. pas2js forbids COM interfaces in record
+    fields. A native worker retains Value in its OWN class field before dispatch;
+    it never borrows this holder or depends on its UI lifetime. }
+  TNyxEditorSchemaLease = class
+  private
+    FValue: INyxSchemaSnapshot;
+  public
+    constructor Create(const AValue: INyxSchemaSnapshot);
+    property Value: INyxSchemaSnapshot read FValue;
+  end;
+  TNyxEditorSourceJob = record
+    Kind: TNyxEditorSourceKind;
+    Sequence: Integer;
+    Context: TNyxStudioCommandContext;
+    Source: TNyxStudioSourceRequest;
+    Edit: TNyxStudioDesignEdit;
+    Design: TNyxStudioDesignRequest;
+    Schemas: TNyxEditorSchemaLease;
+  end;
 
-    Detach is a UI operation and immediately revokes all editor callbacks. Native
-    destruction drains retained workers while servicing their UI handoffs, after
-    detachment. A host with several controllers must detach ALL of them before
-    destroying any, since that drain may service host synchronization. Browser
-    destruction terminates its owned worker. No accepted document runs on a worker. }
+  { One processor controller belongs to one session. Native work uses the public
+    scheduler and browser work the compiled Pascal worker. Apply coalesces old
+    drafts; design edits remain FIFO, coalescing only adjacent queued changes to
+    the same field. Each admitted command owns one paired Undo step. Up to 64
+    waiting intents are retained; excess input refuses without dropping a job.
+
+    Detach is UI-only and revokes callbacks immediately. Native destruction
+    drains workers after detachment while servicing UI handoffs; a host must
+    detach ALL project contexts before destroying any. Browser destruction
+    terminates its worker. Callbacks may enqueue work but must not free this
+    controller inline during its own delivery stack. }
   TNyxSourceCommands = class
   private
     FSession: TNyxStudioSession;
@@ -68,18 +91,17 @@ type
     FState: TNyxSourceCommandState;
     FMessage: TNyxText;
     FSequence: Integer;
-    FActiveSequence: Integer;
+    FLatestSourceSequence: Integer;
+    FActive: TNyxEditorSourceJob;
+    FQueue: array of TNyxEditorSourceJob;
     FRunning: Boolean;
-    FQueued: Boolean;
+    FDiscardActive: Boolean;
     FDetached: Boolean;
-    FRequest: TNyxStudioSourceRequest;
-    FActiveRequest: TNyxStudioSourceRequest;
-    FSchemas: INyxSchemaSnapshot;
-    FActiveSchemas: INyxSchemaSnapshot;
+    FPublishedDesign: Boolean;
+    FPublishedAction: TNyxStudioDesignAction;
     {$ifndef PAS2JS}
     FExecutions: array of INyxExecution;
-    {$endif}
-    {$ifdef PAS2JS}
+    {$else}
     FWorker: TJSWorker;
     FWorkerURL: TNyxText;
     FTimeout: NativeInt;
@@ -90,32 +112,43 @@ type
     procedure WorkerTimeout;
     procedure RetireWorker;
     {$endif}
-    procedure Notify(AState: TNyxSourceCommandState; const AMessage: TNyxText);
+    function GetBusy: Boolean;
+    function NextSequence: Integer;
+    procedure Notify(AState: TNyxSourceCommandState; const AMessage: TNyxText;
+      ADesign: Boolean = False; AAction: TNyxStudioDesignAction = sdaProperty);
+    procedure Enqueue(const AJob: TNyxEditorSourceJob);
+    procedure ClearQueue;
     procedure StartQueued;
-    procedure Finish(ASequence: Integer; const ARequest: TNyxStudioSourceRequest;
-      const APrepared: INyxPreparedSource; const AFailure: TNyxText);
+    procedure Finish(ASequence: Integer; const ASource: INyxPreparedSource;
+      const ADesign: INyxPreparedDesign; const AFailure: TNyxText);
   public
     constructor Create(ASession: TNyxStudioSession;
       AChanged: TNyxSourceCommandChanged; const AWorkerURL: TNyxText = 'nyx_source_worker.js');
     destructor Destroy; override;
-    { Capture/queue the current exact draft. A stale draft or exhausted command
-      sequence raises before dispatch. Processor failures retain the current pair
-      and appear through State/Message and the optional UI callback. }
+    { Capture the exact draft; repeated Apply supersedes prior Apply while design
+      commands retain their order and their own fresh paired/draft guards. }
     procedure Apply;
-    { Supersede running work and discard the queued request. Running native work
-      may finish, but its sequence can no longer publish. Does not erase a draft. }
+    { Queue closed intent with explicit target/view identities. Full admission
+      and source reconciliation run on independently reconstructed owners. }
+    procedure Edit(const AEdit: TNyxStudioDesignEdit);
+    { Copy pending field/title values for observing chrome. No queued intent,
+      accepted document or mutable processor owner is exposed or modified. }
+    function PendingDesign: TNyxStudioPendingDesign;
+    { Cancel pending intent, preserving accepted files and source draft. Native
+      work may finish but a cancelled result cannot publish. }
     procedure Cancel;
-    { Permanently revoke UI delivery. Safe before freeing other project contexts;
-      use destruction afterward to retire this controller's retained work. }
     procedure Detach;
-    { Consume ordinary Nyx Apply/Restore buttons. Typing stays in the session's
-      existing source router, so editor focus and text selection remain mounted. }
+    { Consume Nyx Apply/Restore, inspector and structural toolbar/palette events.
+      Other authoring event contracts retain their ordinary command routers. }
     function Route(ANode: TNyxNode; ATrigger: TNyxTrigger): Boolean;
     property State: TNyxSourceCommandState read FState;
     property Message: TNyxText read FMessage;
-    { UI-thread callback rebinding supports transferring a standalone editor into
-      a project context. Callbacks may enqueue work, but must not free this
-      controller inline while its delivery stack is active. }
+    property Busy: Boolean read GetBusy;
+    { Current notification's typed design effect. False for source/status-only
+      notifications; consumers may follow structural results without parsing
+      status text or retargeting another project's callback. }
+    property PublishedDesign: Boolean read FPublishedDesign;
+    property PublishedAction: TNyxStudioDesignAction read FPublishedAction;
     property OnChanged: TNyxSourceCommandChanged read FChanged write FChanged;
   end;
 
@@ -129,46 +162,65 @@ type
   TSourcePort = class(TInterfacedObject, INyxSourceCommandPort)
   public
     Owner: TNyxSourceCommands;
-    procedure Deliver(ASequence: Integer; const ARequest: TNyxStudioSourceRequest;
-      const APrepared: INyxPreparedSource; const AFailure: TNyxText);
+    procedure Deliver(ASequence: Integer; const ASource: INyxPreparedSource;
+      const ADesign: INyxPreparedDesign; const AFailure: TNyxText);
     procedure Detach;
   end;
-
   TSourceDelivery = class(TInterfacedObject, INyxWork)
   public
     Port: INyxSourceCommandPort;
     Sequence: Integer;
-    Request: TNyxStudioSourceRequest;
-    Prepared: INyxPreparedSource;
+    Source: INyxPreparedSource;
+    Design: INyxPreparedDesign;
     Failure: TNyxText;
     procedure Execute(const AExecution: INyxExecution);
   end;
-
   {$ifndef PAS2JS}
   TSourcePreparation = class(TInterfacedObject, INyxWork)
   public
     Port: INyxSourceCommandPort;
     Scheduler: INyxScheduler;
-    Sequence: Integer;
-    Request: TNyxStudioSourceRequest;
+    Job: TNyxEditorSourceJob;
     Schemas: INyxSchemaSnapshot;
     procedure Execute(const AExecution: INyxExecution);
   end;
   {$endif}
+
+constructor TNyxEditorSchemaLease.Create(const AValue: INyxSchemaSnapshot);
+begin
+  inherited Create;
+  FValue := AValue;
+end;
+
+procedure RetireJob(var AJob: TNyxEditorSourceJob);
+begin
+  AJob.Schemas.Free;
+  AJob := Default(TNyxEditorSourceJob);
+end;
+
+procedure TNyxSourceCommands.ClearQueue;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(FQueue) do
+  begin
+    RetireJob(FQueue[LIndex]);
+  end;
+  FQueue := nil;
+end;
 
 procedure TSourcePort.Detach;
 begin
   Owner := nil;
 end;
 
-procedure TSourcePort.Deliver(ASequence: Integer;
-  const ARequest: TNyxStudioSourceRequest; const APrepared: INyxPreparedSource;
-  const AFailure: TNyxText);
+procedure TSourcePort.Deliver(ASequence: Integer; const ASource: INyxPreparedSource;
+  const ADesign: INyxPreparedDesign; const AFailure: TNyxText);
 begin
 
   if Owner <> nil then
   begin
-    Owner.Finish(ASequence, ARequest, APrepared, AFailure);
+    Owner.Finish(ASequence, ASource, ADesign, AFailure);
   end;
 end;
 
@@ -177,7 +229,7 @@ begin
 
   if not AExecution.Cancelled then
   begin
-    Port.Deliver(Sequence, Request, Prepared, Failure);
+    Port.Deliver(Sequence, Source, Design, Failure);
   end;
 end;
 
@@ -190,10 +242,17 @@ begin
   LDelivery := TSourceDelivery.Create;
   LWork := LDelivery;
   LDelivery.Port := Port;
-  LDelivery.Sequence := Sequence;
-  LDelivery.Request := Request;
+  LDelivery.Sequence := Job.Sequence;
   try
-    LDelivery.Prepared := PrepareNyxSource(Request.Source, Schemas);
+
+    if Job.Kind = eskPascal then
+    begin
+      LDelivery.Source := PrepareNyxSource(Job.Source.Source, Schemas);
+    end
+    else
+    begin
+      LDelivery.Design := PrepareNyxStudioDesign(Job.Design, Schemas);
+    end;
   except
     on LException: Exception do
     begin
@@ -203,8 +262,6 @@ begin
 
   if not AExecution.Cancelled then
   begin
-    { No accepted state is accessed here. Retirement must reach the UI even
-      when a newer request superseded this one; sequence guards decide admission. }
     Scheduler.PostUI(LWork);
   end;
 end;
@@ -236,11 +293,41 @@ begin
   {$endif}
 end;
 
+function TNyxSourceCommands.GetBusy: Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := FRunning and not FDiscardActive and
+    FSession.MatchesCommandContext(FActive.Context);
+  for LIndex := 0 to High(FQueue) do
+  begin
+    Result := Result or FSession.MatchesCommandContext(FQueue[LIndex].Context);
+  end;
+end;
+
+function TNyxSourceCommands.NextSequence: Integer;
+begin
+
+  if FDetached then
+  begin
+    raise ENyxModel.Create('This source-command context has retired');
+  end;
+
+  if FSequence = High(Integer) then
+  begin
+    raise ENyxModel.Create('Source command sequence is exhausted');
+  end;
+  Inc(FSequence);
+  Result := FSequence;
+end;
+
 procedure TNyxSourceCommands.Notify(AState: TNyxSourceCommandState;
-  const AMessage: TNyxText);
+  const AMessage: TNyxText; ADesign: Boolean; AAction: TNyxStudioDesignAction);
 begin
   FState := AState;
   FMessage := AMessage;
+  FPublishedDesign := (AState = nssApplied) and ADesign;
+  FPublishedAction := AAction;
 
   if not FDetached and Assigned(FChanged) then
   begin
@@ -248,71 +335,237 @@ begin
   end;
 end;
 
+procedure TNyxSourceCommands.Enqueue(const AJob: TNyxEditorSourceJob);
+var
+  LCount: Integer;
+begin
+  LCount := Length(FQueue);
+
+  if LCount >= 64 then
+  begin
+    raise ENyxModel.Create('Wait for pending editor changes before adding more commands');
+  end;
+  SetLength(FQueue, LCount + 1);
+  FQueue[LCount] := AJob;
+end;
+
 procedure TNyxSourceCommands.Apply;
 var
-  LRequest: TNyxStudioSourceRequest;
-  LSchemas: INyxSchemaSnapshot;
+  LJob: TNyxEditorSourceJob;
+  LIndex: Integer;
+  LCount: Integer;
 begin
   FScheduler.RequireUI;
+  LJob := Default(TNyxEditorSourceJob);
+  LJob.Kind := eskPascal;
+  LJob.Context := FSession.CommandContext;
+  LJob.Sequence := NextSequence;
+  LJob.Schemas := TNyxEditorSchemaLease.Create(CaptureNyxSchemas);
+  try
+    LJob.Source := FSession.PrepareSourceRequest(LJob.Schemas.Value.Revision);
+    LCount := 0;
+    for LIndex := 0 to High(FQueue) do
+    begin
 
-  if FDetached then
-  begin
-    raise ENyxModel.Create('This source-command context has retired');
+      if FQueue[LIndex].Kind <> eskPascal then
+      begin
+        Inc(LCount);
+      end;
+    end;
+
+    if (LCount >= 64) and LJob.Source.Changed then
+    begin
+      raise ENyxModel.Create('Wait for pending editor changes before adding more commands');
+    end;
+    { Only waiting source drafts are superseded. Refuse excess input BEFORE
+      removing intent or suppressing a running result. Design order stays exact. }
+    LCount := 0;
+    for LIndex := 0 to High(FQueue) do
+    begin
+
+      if FQueue[LIndex].Kind <> eskPascal then
+      begin
+        FQueue[LCount] := FQueue[LIndex];
+        Inc(LCount);
+      end
+      else
+      begin
+        FQueue[LIndex].Schemas.Free;
+      end;
+    end;
+    SetLength(FQueue, LCount);
+    FLatestSourceSequence := LJob.Sequence;
+
+    if not LJob.Source.Changed then
+    begin
+      FSession.DiscardSourceDraft;
+
+      if Busy then
+      begin
+        Notify(nssPreparing, 'Pending design changes / accepted Pascal retained');
+      end
+      else
+      begin
+        Notify(nssApplied, 'Accepted Pascal is current');
+      end;
+      Exit;
+    end;
+    Enqueue(LJob);
+    LJob.Schemas := nil;
+    try
+      Notify(nssPreparing, 'Preparing Pascal / current design retained');
+    finally
+      StartQueued;
+    end;
+  finally
+    LJob.Schemas.Free;
   end;
-  LSchemas := CaptureNyxSchemas;
-  LRequest := FSession.PrepareSourceRequest(LSchemas.Revision);
+end;
 
-  if FSequence = High(Integer) then
-  begin
-    raise ENyxModel.Create('Source command sequence is exhausted');
+procedure TNyxSourceCommands.Edit(const AEdit: TNyxStudioDesignEdit);
+var
+  LJob: TNyxEditorSourceJob;
+  LLast: Integer;
+begin
+  FScheduler.RequireUI;
+  LJob := Default(TNyxEditorSourceJob);
+  LJob.Kind := eskDesign;
+  LJob.Context := FSession.CommandContext;
+  LJob.Edit := AEdit;
+  LJob.Sequence := NextSequence;
+  LJob.Schemas := TNyxEditorSchemaLease.Create(CaptureNyxSchemas);
+  try
+    LLast := High(FQueue);
+
+    if (LLast >= 0) and (FQueue[LLast].Kind = eskDesign) and
+      FSession.MatchesCommandContext(FQueue[LLast].Context) and
+      (AEdit.Action in [sdaProperty, sdaTitle]) and
+      (FQueue[LLast].Edit.Action = AEdit.Action) and
+      (FQueue[LLast].Edit.Selection = AEdit.Selection) and
+      (FQueue[LLast].Edit.View = AEdit.View) and (FQueue[LLast].Edit.Name = AEdit.Name) then
+    begin
+      FQueue[LLast].Schemas.Free;
+      FQueue[LLast] := LJob;
+    end
+    else
+    begin
+      Enqueue(LJob);
+    end;
+    LJob.Schemas := nil;
+    try
+      Notify(nssPreparing, 'Preparing design / accepted files retained');
+    finally
+      StartQueued;
+    end;
+  finally
+    LJob.Schemas.Free;
   end;
-  Inc(FSequence);
-  FRequest := LRequest;
-  FSchemas := LSchemas;
-  FQueued := LRequest.Changed;
+end;
 
-  if not LRequest.Changed then
+function TNyxSourceCommands.PendingDesign: TNyxStudioPendingDesign;
+var
+  LIndex: Integer;
+
+  procedure Include(const AEdit: TNyxStudioDesignEdit);
+  var
+    LCount: Integer;
   begin
-    FSession.DiscardSourceDraft;
-    Notify(nssApplied, 'Accepted Pascal is current');
-    Exit;
+
+    if AEdit.Action = sdaTitle then
+    begin
+      Result.TitleDefined := True;
+      Result.Title := AEdit.Value;
+    end
+    else if AEdit.Action = sdaProperty then
+    begin
+      LCount := Length(Result.Fields);
+      SetLength(Result.Fields, LCount + 1);
+      Result.Fields[LCount].Selection := AEdit.Selection;
+      Result.Fields[LCount].Key := AEdit.Name;
+      Result.Fields[LCount].Value := AEdit.Value;
+    end;
   end;
-  Notify(nssPreparing, 'Preparing Pascal / current design retained');
 
-  if not FRunning then
+begin
+  FScheduler.RequireUI;
+  Result := Default(TNyxStudioPendingDesign);
+
+  if FRunning and not FDiscardActive and (FActive.Kind = eskDesign) and
+    FSession.MatchesCommandContext(FActive.Context) then
   begin
-    StartQueued;
+    Include(FActive.Edit);
+  end;
+  for LIndex := 0 to High(FQueue) do
+  begin
+
+    if (FQueue[LIndex].Kind = eskDesign) and
+      FSession.MatchesCommandContext(FQueue[LIndex].Context) then
+    begin
+      Include(FQueue[LIndex].Edit);
+    end;
   end;
 end;
 
 procedure TNyxSourceCommands.StartQueued;
-{$ifndef PAS2JS}
 var
+  LIndex: Integer;
+  {$ifndef PAS2JS}
   LWork: TSourcePreparation;
   LLease: INyxWork;
-  LIndex: Integer;
   LCount: Integer;
-{$endif}
+  {$endif}
 begin
 
-  if FDetached or not FQueued then
+  if FDetached or FRunning or (Length(FQueue) = 0) then
   begin
     Exit;
   end;
-  FRunning := True;
-  FQueued := False;
-    FActiveSequence := FSequence;
-    FActiveRequest := FRequest;
-    FActiveSchemas := FSchemas;
+  FActive := FQueue[0];
+  for LIndex := 1 to High(FQueue) do
+  begin
+    FQueue[LIndex - 1] := FQueue[LIndex];
+  end;
+  SetLength(FQueue, Length(FQueue) - 1);
+  FDiscardActive := False;
+  { Target IDs can exist in an unrelated newly opened project. Refuse the old
+    load BEFORE capturing a fresh baseline; exact IDs alone are insufficient.
+    Older preparation may drain, but cannot paint pending values in this load. }
+
+  if not FSession.MatchesCommandContext(FActive.Context) then
+  begin
+    RetireJob(FActive);
+    try
+      Notify(nssStale, 'Queued change belongs to an earlier project load / current files retained');
+    finally
+      StartQueued;
+    end;
+    Exit;
+  end;
   try
+
+    if FActive.Kind = eskDesign then
+    begin
+      FActive.Design := FSession.PrepareDesignRequest(FActive.Edit, FActive.Schemas.Value.Revision);
+    end;
+    FRunning := True;
     {$ifdef PAS2JS}
     FWorker := TJSWorker.new(FWorkerURL);
     FWorker.addEventListener('message', FReceiveHandler);
     FWorker.addEventListener('error', FErrorHandler);
     FTimeout := window.setTimeout(@WorkerTimeout, 30000);
-    FWorker.postMessage(NyxObject([NyxField('version', NyxData(1)),
-      NyxField('source', NyxData(FRequest.Source)),
-      NyxField('schemas', FSchemas.ToData)]).ToJSON);
+
+    if FActive.Kind = eskPascal then
+    begin
+      FWorker.postMessage(NyxObject([NyxField('version', NyxData(1)),
+        NyxField('source', NyxData(FActive.Source.Source)),
+        NyxField('schemas', FActive.Schemas.Value.ToData)]).ToJSON);
+    end
+    else
+    begin
+      FWorker.postMessage(NyxObject([NyxField('version', NyxData(2)),
+        NyxField('request', FActive.Design.ToData),
+        NyxField('schemas', FActive.Schemas.Value.ToData)]).ToJSON);
+    end;
     {$else}
     LCount := 0;
     for LIndex := 0 to High(FExecutions) do
@@ -330,41 +583,53 @@ begin
     LLease := LWork;
     LWork.Port := FPort;
     LWork.Scheduler := FScheduler;
-    LWork.Sequence := FActiveSequence;
-    LWork.Request := FRequest;
-    LWork.Schemas := FSchemas;
+    LWork.Job := FActive;
+    LWork.Schemas := FActive.Schemas.Value;
+    LWork.Job.Schemas := nil;
     SetLength(FExecutions, LCount + 1);
     FExecutions[LCount] := FScheduler.Submit(LLease, neThreaded);
     {$endif}
   except
     on LException: Exception do
     begin
-      {$ifdef PAS2JS}
-      RetireWorker;
-      {$endif}
+      {$ifdef PAS2JS}RetireWorker;{$endif}
       FRunning := False;
-      Notify(nssFailed, 'Source processor unavailable: ' + LException.Message);
+      RetireJob(FActive);
+      try
+        Notify(nssFailed, 'Editor processor unavailable: ' + LException.Message);
+      finally
+        StartQueued;
+      end;
+      Exit;
     end;
+  end;
+
+  if FState <> nssPreparing then
+  begin
+    Notify(nssPreparing, 'Preparing queued editor change / accepted files retained');
   end;
 end;
 
 procedure TNyxSourceCommands.Finish(ASequence: Integer;
-  const ARequest: TNyxStudioSourceRequest; const APrepared: INyxPreparedSource;
+  const ASource: INyxPreparedSource; const ADesign: INyxPreparedDesign;
   const AFailure: TNyxText);
 var
   LCompletion: TNyxSourceCompletion;
   LState: TNyxSourceCommandState;
   LMessage: TNyxText;
+  LDesign: Boolean;
+  LAction: TNyxStudioDesignAction;
 begin
   FScheduler.RequireUI;
 
-  if FDetached or (ASequence <> FActiveSequence) then
+  if FDetached or not FRunning or (ASequence <> FActive.Sequence) then
   begin
     Exit;
   end;
   FRunning := False;
 
-  if ASequence = FSequence then
+  if not FDiscardActive and ((FActive.Kind = eskDesign) or
+    (ASequence = FLatestSourceSequence)) then
   begin
     try
 
@@ -375,22 +640,46 @@ begin
       end
       else
       begin
-        LCompletion := FSession.CompleteSourceRequest(ARequest, APrepared);
+
+        if FActive.Kind = eskPascal then
+        begin
+          LCompletion := FSession.CompleteSourceRequest(FActive.Source, ASource);
+        end
+        else
+        begin
+          LCompletion := FSession.CompleteDesignRequest(FActive.Design, ADesign);
+        end;
         case LCompletion of
           nscUnchanged, nscApplied:
             begin
               LState := nssApplied;
-              LMessage := 'Pascal applied / one Undo restores the pair';
+
+              if FActive.Kind = eskPascal then
+              begin
+                LMessage := 'Pascal applied / one Undo restores the pair';
+              end
+              else
+              begin
+                LMessage := 'Design / Pascal updated / one Undo restores the pair';
+              end;
             end;
           nscRejected:
             begin
               LState := nssRejected;
-              LMessage := FSession.SourceDiagnostic.Message;
+
+              if FActive.Kind = eskPascal then
+              begin
+                LMessage := FSession.SourceDiagnostic.Message;
+              end
+              else
+              begin
+                LMessage := ADesign.Diagnostic.Message;
+              end;
             end;
           nscStale:
             begin
               LState := nssStale;
-              LMessage := 'Source result is stale / current design and draft retained';
+              LMessage := 'Editor result is stale / current design and draft retained';
             end;
         end;
       end;
@@ -401,33 +690,45 @@ begin
         LMessage := LException.Message;
       end;
     end;
-    { Presentation failures must not be misreported as failed admission after
-      the pair already published. Notifications sit outside that error boundary. }
-    Notify(LState, LMessage);
-  end;
-
-  if FQueued then
+    { Notifications remain outside admission. Presentation cannot turn a
+      published pair into a failed command or trigger a second publication. }
+    LDesign := FActive.Kind = eskDesign;
+    LAction := FActive.Edit.Action;
+    RetireJob(FActive);
+    try
+      Notify(LState, LMessage, LDesign, LAction);
+    finally
+      StartQueued;
+    end;
+  end
+  else
   begin
-    StartQueued;
+    RetireJob(FActive);
+
+    try
+
+      if not FDiscardActive and (Length(FQueue) = 0) then
+      begin
+        Notify(nssApplied, 'Accepted Pascal is current');
+      end;
+    finally
+      StartQueued;
+    end;
   end;
 end;
 
 procedure TNyxSourceCommands.Cancel;
 begin
   FScheduler.RequireUI;
-
-  if FSequence = High(Integer) then
-  begin
-    raise ENyxModel.Create('Source command sequence is exhausted');
-  end;
-  Inc(FSequence);
-  FQueued := False;
-  FSchemas := nil;
+  NextSequence;
+  ClearQueue;
+  FDiscardActive := True;
   {$ifdef PAS2JS}
   RetireWorker;
+  RetireJob(FActive);
   FRunning := False;
   {$endif}
-  Notify(nssCancelled, 'Source preparation cancelled / current pair retained');
+  Notify(nssCancelled, 'Pending editor changes cancelled / current files and draft retained');
 end;
 
 procedure TNyxSourceCommands.Detach;
@@ -435,36 +736,165 @@ begin
   FScheduler.RequireUI;
   FDetached := True;
   FChanged := nil;
+  ClearQueue;
+  FDiscardActive := True;
 
   if FPort <> nil then
   begin
     FPort.Detach;
   end;
-  FQueued := False;
 end;
 
 function TNyxSourceCommands.Route(ANode: TNyxNode; ATrigger: TNyxTrigger): Boolean;
+const
+  CApply = 'action-apply-source';
+  CRestore = 'action-reset-source';
+  CDelete = 'action-delete';
+  CDuplicate = 'action-duplicate';
+  CUp = 'action-up';
+  CDown = 'action-down';
+  CPage = 'action-add-page';
+  CComponent = 'action-component';
+  CTitle = 'project-title';
+  CPropertyKey = 'prop-key';
+  CValue = 'value';
+  CAddKind = 'add-kind';
+  CComponentID = 'component-id';
+  COverridePath = 'override-path';
+  CSave = 'action-save';
+  CSaveProject = 'action-project-save';
+  CExportProject = 'action-project-export';
+  CExportFiles = 'action-project-export-files';
+  CExportSource = 'action-export-source';
+  CSaveCopy = 'action-project-copy';
+var
+  LEdit: TNyxStudioDesignEdit;
 begin
   Result := False;
 
-  if (ANode = nil) or (ATrigger <> ntClick) then
+  if ANode = nil then
   begin
     Exit;
   end;
 
-  if ANode.ID = 'action-apply-source' then
+  if FDetached then
   begin
-    Apply;
+    raise ENyxModel.Create('This source-command context has retired');
+  end;
+  { A save/export must not announce success for an earlier accepted pair while
+    the visible fields still describe queued edits. A deliberate source-draft
+    export remains independent; obsolete-load work does not claim Busy. }
+
+  if (ATrigger = ntClick) and Busy and
+    ((ANode.ID = CSave) or (ANode.ID = CSaveProject) or
+    (ANode.ID = CExportProject) or (ANode.ID = CExportFiles) or
+    (ANode.ID = CExportSource) or (ANode.ID = CSaveCopy)) then
+  begin
+    Notify(nssPreparing, 'Wait for pending editor changes before saving or exporting');
     Exit(True);
   end;
+  LEdit := Default(TNyxStudioDesignEdit);
+  LEdit.Selection := FSession.SelectedID;
+  LEdit.View := FSession.ActiveViewID;
 
-  if ANode.ID = 'action-reset-source' then
+  if ATrigger = ntChange then
   begin
-    Cancel;
-    FSession.DiscardSourceDraft;
-    Notify(nssIdle, 'Accepted Pascal restored');
-    Result := True;
+
+    if ANode.Prop(CPropertyKey) <> '' then
+    begin
+      LEdit.Action := sdaProperty;
+      LEdit.Name := ANode.Prop(CPropertyKey);
+      LEdit.Value := ANode.Prop(CValue);
+    end
+    else if ANode.ID = CTitle then
+    begin
+      LEdit.Action := sdaTitle;
+      LEdit.Value := ANode.Prop(CValue);
+    end
+    else
+    begin
+      Exit;
+    end;
+  end
+  else if ATrigger = ntClick then
+  begin
+
+    if ANode.ID = CApply then
+    begin
+      Apply;
+      Exit(True);
+    end;
+
+    if ANode.ID = CRestore then
+    begin
+      Cancel;
+      FSession.DiscardSourceDraft;
+      Notify(nssIdle, 'Accepted Pascal restored');
+      Exit(True);
+    end;
+
+    if ANode.Prop(CAddKind) <> '' then
+    begin
+      LEdit.Action := sdaAddKind;
+      LEdit.Name := ANode.Prop(CAddKind);
+    end
+    else if ANode.Prop(CComponentID) <> '' then
+    begin
+      LEdit.Action := sdaAddInstance;
+      LEdit.Name := ANode.Prop(CComponentID);
+    end
+    else if ANode.Prop(COverridePath) <> '' then
+    begin
+      LEdit.Action := sdaCustomizePart;
+      LEdit.Name := ANode.Prop(COverridePath);
+    end
+    else
+    begin
+      { Decode chrome identity once at this boundary. Native Delphi-dialect
+        FPC does not share pas2js's string CASE extension. The worker contract
+        below still dispatches a closed Pascal enum. }
+
+      if ANode.ID = CDelete then
+      begin
+        LEdit.Action := sdaDelete;
+      end
+      else if ANode.ID = CDuplicate then
+      begin
+        LEdit.Action := sdaDuplicate;
+      end
+      else if (ANode.ID = CUp) or (ANode.ID = CDown) then
+      begin
+        LEdit.Action := sdaMove;
+      end
+      else if ANode.ID = CPage then
+      begin
+        LEdit.Action := sdaAddPage;
+      end
+      else if ANode.ID = CComponent then
+      begin
+        LEdit.Action := sdaCreateComponent;
+      end
+      else
+      begin
+        Exit;
+      end;
+
+      if ANode.ID = CUp then
+      begin
+        LEdit.Direction := nmdPrevious;
+      end
+      else if ANode.ID = CDown then
+      begin
+        LEdit.Direction := nmdNext;
+      end;
+    end;
+  end
+  else
+  begin
+    Exit;
   end;
+  Edit(LEdit);
+  Result := True;
 end;
 
 {$ifdef PAS2JS}
@@ -490,22 +920,29 @@ function TNyxSourceCommands.Receive(AEvent: TJSEvent): Boolean;
 var
   LDelivery: TSourceDelivery;
   LWork: INyxWork;
+  LData: TNyxDataValue;
 begin
   Result := True;
   LDelivery := TSourceDelivery.Create;
   LWork := LDelivery;
   LDelivery.Port := FPort;
-  LDelivery.Sequence := FActiveSequence;
-  LDelivery.Request := FActiveRequest;
+  LDelivery.Sequence := FActive.Sequence;
   try
 
     if not isString(TJSMessageEvent(AEvent).data) then
     begin
-      raise ENyxModel.Create('Source worker returned non-text protocol data');
+      raise ENyxModel.Create('Editor worker returned non-text protocol data');
     end;
-    LDelivery.Prepared := ReceiveNyxPreparedSource(
-      TNyxDataValue.ParseJSON(TNyxText(TJSMessageEvent(AEvent).data)),
-      FActiveRequest.Source, FActiveSchemas);
+    LData := TNyxDataValue.ParseJSON(TNyxText(TJSMessageEvent(AEvent).data));
+
+    if FActive.Kind = eskPascal then
+    begin
+      LDelivery.Source := ReceiveNyxPreparedSource(LData, FActive.Source.Source, FActive.Schemas.Value);
+    end
+    else
+    begin
+      LDelivery.Design := ReceiveNyxPreparedDesign(LData, FActive.Design, FActive.Schemas.Value);
+    end;
   except
     on LException: Exception do
     begin
@@ -526,8 +963,8 @@ end;
 procedure TNyxSourceCommands.WorkerTimeout;
 begin
   RetireWorker;
-  Finish(FActiveSequence, FActiveRequest, nil,
-    'Source processor failed or timed out / current design and draft retained');
+  Finish(FActive.Sequence, nil, nil,
+    'Editor processor failed or timed out / current files and draft retained');
 end;
 {$endif}
 
@@ -553,11 +990,7 @@ begin
         FExecutions[LIndex].Cancel;
       end;
     end;
-    {$endif}
-    FScheduler.Shutdown;
-    {$ifndef PAS2JS}
     repeat
-      CheckSynchronize;
       LWaiting := False;
       for LIndex := 0 to High(FExecutions) do
       begin
@@ -571,16 +1004,16 @@ begin
 
       if LWaiting then
       begin
+        CheckSynchronize(1);
         Sleep(1);
       end;
     until not LWaiting;
-    CheckSynchronize;
+    FExecutions := nil;
     {$endif}
   end;
-  FSession := nil;
   FPort := nil;
-  FSchemas := nil;
-  FScheduler := nil;
+  RetireJob(FActive);
+  ClearQueue;
   inherited Destroy;
 end;
 
