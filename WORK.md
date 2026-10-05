@@ -63,9 +63,10 @@ client retained for isolated test services. The temporary owned review was added
 and removed through MCP; the exact original paired project is restored. Redo
 retains the ordinary test history; no protected review workspace is claimed.
 
-Prior qualified source checkpoint 51ef0eb017b4deef13c5560ddd96470cd04255ac is pushed
-to origin/hello-nyx and independently equals git ls-remote. The handoff record
-follows that implementation; no unqualified product deployment is claimed.
+Typed-policy implementation 20b00f37c897a9f0a583fdb5228785275fffb954 is pushed
+to origin/hello-nyx and independently equals git ls-remote at publication. The
+worktree is clean; ignored layout-policy-remote-proof.json records exact identity.
+This handoff follows that implementation; no unqualified deployment is claimed.
 
 Requested desktop reconnect check (2026-10-04): the active chat exposes all
 fifteen `mcp__nyx_studio__nyx_*` tools. Seven native named calls succeed:
@@ -3859,8 +3860,9 @@ criterion 3 counter 11 remain unchanged. Credits remain unassessed; full goal ac
 The layout guide records typed policy semantics and reproduction via
 `tools/build.ps1 -Target layout-policy -LayoutSourceDirectory <semantic export>`.
 The Pascal generators refresh managed configuration and the 76-kind reference;
-private outputs/configuration remain ignored. Publish this source packet on
-hello-nyx and retain exact local/remote identity proof under ignored local state.
+private outputs/configuration remain ignored. Implementation 20b00f3 is committed
+and pushed on hello-nyx with exact local/remote identity verified. The private
+proof stays under ignored local state and is refreshed after this handoff update.
 
 ## Native-MCP-authored proportional and hidden layout — 2026-10-04
 
