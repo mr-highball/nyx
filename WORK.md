@@ -6921,7 +6921,7 @@ consumer. Semantic MCP remains primary: connected handles supplied bounded
 read-only session inspection; independent semantic/native input consumers qualify
 operations absent from the protected deployed catalog. Final inspection reports
 revision **6**, Untitled project / home, one page/reusable root, no pending draft,
-Undo unavailable, Redo available, activity sequence **204**. All **eight** protected
+Undo unavailable, Redo available, activity sequence **205**. All **eight** protected
 executable paths/exact creation timestamps match; **zero** focused fixture
 processes remain. Private proof:
 `.local/codex-restart-check/collection-mcp-processes.json`. Source catalog now
@@ -6935,3 +6935,16 @@ deployment, service replacement or configuration refresh was attempted. Updated
 authenticated discovery and observing browser execution remain unqualified.
 The full Nyx/Nyx Studio goal stays active/incomplete. Remote checkpoint follows;
 the user's authorization to push `hello-nyx` remains in force.
+
+Remote checkpoint: product commit
+`629b2de300167f84d9fa216210e3db8d471df60c` is pushed to
+`origin/hello-nyx`; exact remote/local references match and its worktree is clean.
+Final authenticated `nyx_session` inspection retains revision 6, home, no draft,
+Undo unavailable and Redo available; only ordinary read activity advances to 205.
+The final warning/heap audit confirms the qualified native consumers above have
+zero owned warnings/leaks. Current browser compilation retains zero owned warnings
+and seven installed RTL warnings, without an execution/deployment claim.
+This handoff preserves workflow count 4, codegen 26 and the concrete general
+import return path; the full goal remains active/incomplete. Its own exact remote,
+clean-worktree and protected-process proof is stored privately after pushing at
+`.local/codex-restart-check/collection-mcp-remote-proof.json`.
