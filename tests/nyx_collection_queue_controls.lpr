@@ -378,6 +378,14 @@ begin
     Select('left-list');
     Click('collection-binding-inherit');
     Check(Spec('left-list').Scope = csInstance, 'Inherit restores reusable recipe binding');
+    Click('collection-binding-clear');
+    Check(not Spec('left-list').Defined and (Spec('right-list').Scope = csInstance),
+      'Cleared reusable view leaves the other instance bound');
+    Check(GStudio.ShellView.ControlFor('collection-binding-inherit') <> nil,
+      'Cleared binding keeps an actual Restore inherited binding control');
+    Click('collection-binding-inherit');
+    Check(Spec('left-list').Defined and (Spec('left-list').Scope = csInstance),
+      'Actual queued Restore button removes the exact reusable clear mask');
 
     GStudio.Session.Activate('other');
     Select('tasks-tree');

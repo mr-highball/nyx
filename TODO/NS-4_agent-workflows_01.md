@@ -379,3 +379,35 @@ refuse invalid groups atomically. Do not substitute screenshot-driven editing or
 whole-document dumps for missing semantic vocabulary. General source/import,
 richer reusable workflows, updated authenticated discovery and observing browser
 qualification keep their original requirements. WORK.md records the return path.
+
+## Semantic structured collections — 2026-10-05
+
+Criterion 5 now has a focused `nyx_collections` tool: eight bounded query/apply
+modes, exact document-default/schema/row/domain/view context and one typed grouped
+paired candidate. Named schemas/fields/scoped rows and complete fluent bindings
+reuse ordinary admission alongside all seventeen inspector intents. Permission/
+revision/transport actor/receipt/context and no-draft guards remain. Queries
+return precise windows and preserve selection/history; a late group failure
+preserves the complete active pair. Runtime stores remain independent.
+
+Both native compilers pass 96 semantic and 14 final masked-inheritance checks.
+Actual offline nineteen-tool discovery passes 57, ordinary native inspector 76
+and unchanged compiled companion/controls 11, with zero leaks. Existing isolated
+queue checks pass 123 per native compiler. The real Restore button now survives
+a reusable clear mask and restores its exact inherited contract; restorable
+metadata/title windows expose that meaning without changing the mask. Browser
+consumers compile with zero owned warnings and seven installed RTL warnings;
+they are staged, not executed. Protected authenticated release/current desktop
+handles remain at fifteen tools.
+
+No full criterion closes. Criterion 5's no-closure count advances **3→4** once;
+codegen **26**, renderer **3**, native authoring **7** and delivery **1** do not
+advance. Reassessment ends collection/schema fixture expansion. Next deliver
+bounded general import inspection and exact revision-aware grouped import editing
+through the paired source boundary, preserving callbacks/helpers/managed views
+and refusing drafts or ambiguous/conditional changes. Actual unchanged compiled
+consumer evidence is required. General source editing, richer reusable semantics,
+root ordering, review lifecycle and updated authenticated/observing browser
+deployment remain open with their original gates. Comfortable editing,
+presentation and full accessibility retain their source/renderer owners. See
+[evidence and preservation](../WORK.md#semantic-structured-collection-commands--2026-10-05).

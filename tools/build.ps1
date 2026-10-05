@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1396,6 +1396,62 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxStateHost") -Destination $nyxStateBrowser
     }
     Write-Host 'Browser semantic and exact compiled-control consumers staged; execution requires an admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'collection-bindings') {
+    # Pascal owns semantic admission/refusals/context assertions and exports the
+    # unchanged companion. No listener, deployment or operator project mutation.
+    $nyxCollectionAgentRoot = Join-Path $nyxRoot 'build/collection-bindings'
+    $nyxCollectionAgentNative = Join-Path $nyxCollectionAgentRoot 'native'
+    $nyxCollectionAgentExport = Join-Path $nyxCollectionAgentRoot 'export'
+    $nyxCollectionAgentLcl = Join-Path $nyxCollectionAgentRoot 'lcl'
+    $nyxCollectionAgentBrowser = Join-Path $nyxCollectionAgentRoot 'browser'
+
+    if ($BrowserOutput) { $nyxCollectionAgentBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxCollectionAgentNative, $nyxCollectionAgentExport,
+      $nyxCollectionAgentLcl, $nyxCollectionAgentBrowser | Out-Null
+    $nyxCollectionAgentFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxCollectionAgentNative", "-FE$nyxCollectionAgentNative")
+    Invoke-NyxCompiler $nyxFpc ($nyxCollectionAgentFlags + @('tests/nyx_agent_collection_tests.lpr'))
+    & (Join-Path $nyxCollectionAgentNative 'nyx_agent_collection_tests.exe') $nyxCollectionAgentExport
+
+    if ($LASTEXITCODE -ne 0) { throw 'Semantic collection admission checks failed' }
+    Invoke-NyxCompiler $nyxFpc ($nyxCollectionAgentFlags + @('tests/nyx_agent_collection_inheritance.lpr'))
+    & (Join-Path $nyxCollectionAgentNative 'nyx_agent_collection_inheritance.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Masked collection inheritance checks failed' }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxCollectionAgentPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxCollectionAgentControlFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxCollectionAgentExport",
+      "-Fu$nyxLazarus/lcl/units/$nyxCollectionAgentPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxCollectionAgentPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxCollectionAgentPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxCollectionAgentPlatform",
+      "-FU$nyxCollectionAgentLcl", "-FE$nyxCollectionAgentLcl")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxCollectionAgentControlFlags + @('tests/nyx_agent_collection_schema.lpr'))
+    & (Join-Path $nyxCollectionAgentLcl 'nyx_agent_collection_schema.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Actual collection MCP discovery checks failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxCollectionAgentControlFlags + @('tests/nyx_agent_collection_controls.lpr'))
+    & (Join-Path $nyxCollectionAgentLcl 'nyx_agent_collection_controls.exe') (Join-Path $nyxCollectionAgentExport 'design.nyx')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Exact compiled semantic collection controls failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxCollectionAgentProgram in @('nyx_agent_collection_tests',
+        'nyx_agent_collection_inheritance', 'nyx_agent_collection_controls')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests',
+        '-Jirtl.js', "-Fu$nyxCollectionAgentExport", "-FE$nyxCollectionAgentBrowser",
+        "tests/$nyxCollectionAgentProgram.lpr")
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxCollectionAgentBrowser 'rtl.js')
+    foreach ($nyxCollectionAgentHost in @('agent-collections.html', 'agent-collection-controls.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxCollectionAgentHost") -Destination $nyxCollectionAgentBrowser
+    }
+    Write-Host 'Semantic collection consumers staged; browser execution requires an admitted HTTP host.'
     exit 0
   }
 

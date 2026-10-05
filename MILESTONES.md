@@ -589,3 +589,16 @@ Current task and return path are maintained in [WORK.md](WORK.md).
   no full criterion or product/parity credit. Next follow the broader
   source/state/binding/event and semantic integration with its existing owners.
   See [evidence](WORK.md#isolated-canvas-input-and-exact-field-reconciliation--2026-10-05).
+
+- Structured collection semantics now expose bounded defaults/schema/row/domain/
+  exact-view context and immutable grouped revision-aware edits. Both native
+  compilers pass 96 semantic and 14 final masked-inheritance checks, actual offline
+  discovery 57, ordinary native controls 76 and unchanged compiled companion 11,
+  with zero leaks. Browser consumers compile with zero owned warnings but retain
+  their execution/deployment gate. Source catalog nineteen/protected release
+  fifteen stays explicit. This partial packet closes no full criterion or changes
+  goal percentages: workflow criterion 5 stays open at no-closure count 4;
+  codegen 26, renderer 3, authoring 7 and delivery 1 remain unchanged. Next finish
+  bounded general import semantics through the paired boundary; richer reusable/
+  source outcomes and complete parity/presentation retain their acceptance paths.
+  See [evidence](WORK.md#semantic-structured-collection-commands--2026-10-05).

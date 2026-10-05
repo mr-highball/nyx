@@ -80,7 +80,8 @@ From the repository, run:
 ```
 
 Individual build targets are `core`, `generated`, `collections`, `collection-views`,
-`collection-authoring`, `source-workspace`, `agents`, `state-bindings`, `split`, `interactions`,
+`collection-authoring`, `collection-inspectors`, `collection-bindings`,
+`source-workspace`, `agents`, `state-bindings`, `split`, `interactions`,
 `named-events`, `viewport`, `catalog`, `browser`, `studio`, `lcl`, `http`,
 `visual` and `all`.
 The native unit cache includes compiler version and CPU/OS. LCL and pas2js
@@ -672,3 +673,31 @@ consumer. Execution qualifies the current Win32 LCL toolchain; it does not quali
 other compilers/widgetsets. Logs and bounded browser status live under
 `build/transport-deadline/`. Failure logs stay retained. This source candidate
 does not deploy an updated editor route or cancel an already admitted build job.
+
+The focused semantic collection workflow is available as:
+
+```powershell
+./tools/build.ps1 -Target collection-bindings
+```
+
+Pascal owns query/admission/refusal assertions. The native journey checks typed
+named schemas/fields/scoped rows, domains, exact Unicode/numbers, view ownership,
+revision/actor/receipt guards and one paired Undo step. A focused consumer checks
+a reusable clear mask's exact inherited contract. Offline discovery executes the
+actual MCP catalog builder without a listener or credential refresh. The exported
+companion is compiled unchanged and drives actual native table edits with
+independent runtime stores. Matching browser programs, RTL and English
+`agent-collections.html` / `agent-collection-controls.html` hosts stage under
+`browser/`; execution still requires an admitted HTTP host. The focused inheritance
+program also compiles for the browser; its masked-contract cases are included in
+the main semantic journey. Output defaults to ignored `build/collection-bindings/`.
+
+The command launches no listener and replaces no service, enrollment or live
+project. Current individual evidence in
+[WORK.md](../WORK.md#semantic-structured-collection-commands--2026-10-05) passes 96
+semantic and 14 masked-inheritance checks per native compiler, 57 discovery
+checks and 11 exact compiled native control checks. The maintained composite has
+parser evidence and was not repeated after those individual consumers. Heap-traced
+large-domain checks establish semantics, not release latency. Browser execution
+and updated authenticated observing deployment remain unqualified; seven installed
+pas2js RTL warnings stay visible.

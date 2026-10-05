@@ -159,10 +159,11 @@ semantic tool and immutable typed grouped command. Current offline qualification
 passes 55 shared checks on each native compiler, 14 actual discovery-schema checks
 and 15 exact compiled native control checks, with zero leaks. Browser consumers
 compile; updated authenticated discovery and observing runtime remain at the
-existing host gate. The source catalog has eighteen tools, while the protected
-LAN release and current desktop chat retain fifteen. General source/import,
-structured-state/richer reusable semantics and broader asynchronous authoring
-remain open; WORK.md owns exact evidence and the next acceptance path. Ordinary
+existing host gate. That scalar checkpoint had eighteen source tools; the current
+collection packet below has nineteen, while the protected LAN release and current
+desktop chat retain fifteen. General source/import, richer reusable semantics
+and broader asynchronous authoring remain open; WORK.md owns exact evidence and
+the next acceptance path. Ordinary
 scalar Project/Bindings controls now consume the isolated typed command queue.
 Name drafts use explicit Rename, pending rows/forms guard stale replay and newer
 field/flow input stays visible. Checked private admission passes 56 on each native
@@ -209,6 +210,19 @@ Current browser Studio, module worker and portable/DOM/generated consumers
 compile with zero owned warnings; execution and observing deployment retain the
 existing host gate. WORK.md owns evidence, unchanged acceptance and the next
 structured collection semantic workflow; no complete source/parity claim follows.
+
+Structured collection authoring now has a focused `nyx_collections` semantic
+tool and immutable typed grouped command. Eight modes expose bounded schema,
+row, value, domain and exact authored view context, including a cleared reusable
+binding's restorable contract. Typed named definitions, field/row edits, complete
+fluent bindings and all seventeen ordinary intents publish one paired Undo step.
+Both native compilers pass 96 semantic and 14 masked-inheritance checks, actual
+offline nineteen-tool discovery passes 57, ordinary native controls 76 and the
+unchanged compiled companion 11, with zero leaks. Current browser consumers
+compile with zero owned warnings; browser execution and authenticated updated
+observing deployment retain their existing gate. General source/import, richer
+reusable semantics, full presentation/accessibility and comfortable large-project
+editing remain open. WORK.md records evidence and performance limitations.
 
 The warning-cleanup packet now reports zero owned warnings on the qualified
 native/LCL/pas2js builds and current MCP application jobs. Shared execution,

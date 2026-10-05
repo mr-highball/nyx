@@ -1,10 +1,10 @@
 # Agents in Nyx Studio
 
-The source candidate advertises eighteen tools, including protected reviews,
-project workspaces and `nyx_state`. The current LAN release and this chat's
-connected native inventory still expose fifteen tools. Current offline state
-qualification proves the semantic command, discovery schema and native compiled
-controls; updated authenticated discovery and observing browser execution remain
+The source candidate advertises nineteen tools, including protected reviews,
+project workspaces, `nyx_state` and `nyx_collections`. The current LAN release and
+this chat's connected native inventory still expose fifteen tools. Offline
+qualification proves the state/collection commands, discovery schemas and native
+compiled controls; updated authenticated discovery and observing browser execution remain
 at the recorded listener/host gate in WORK.md.
 
 Studio starts with agent access enabled and editing allowed. Open **Agents** to
@@ -122,6 +122,7 @@ GET is explicitly unsupported (405); DELETE closes a client session. See the
 | `nyx_pascal` | Bounded accepted callback implementations and grouped exact-text guarded edits |
 | `nyx_roots` | Reviewed removal of exact page/reusable groups on paired Undo history |
 | `nyx_state` (staged) | Bounded scalar defaults, exact text windows and contextual bindings; grouped typed state/binding changes |
+| `nyx_collections` (staged) | Paged collection/schema/row/domain/view context and grouped typed collection commands |
 
 Tool schemas advertise required fields and limits. Unknown arguments and
 unpublished properties are refused. Queries never return the full document.
@@ -837,3 +838,97 @@ after the originating tree notification. Shell replacement cancels queued old
 events, and controller retirement cancels the borrowed receiver subscription.
 Compact panels restore selection only when their hierarchy is mounted. Current
 native large-canvas and browser execution limits remain recorded in WORK.md.
+
+## Structured collection context and authoring
+
+`nyx_collections` inspects **document defaults**, not a running application's
+independent stores. Every query reports its revision. Read several windows at the
+same revision before applying one related group. An observing editor's selection
+never supplies an omitted collection, row or view owner.
+
+| Mode | Required context | Bounded result |
+| --- | --- | --- |
+| `list` | None; optional case-sensitive key substring `filter` | Up to 50 exact keys and field/row counts |
+| `schema` | `key` | Up to 50 typed field definitions with 80-scalar default previews and domain summaries |
+| `rows` | `key`; optionally 1..16 exact `fields` | Up to 20 scoped row IDs; selected cells only, with typed values or 80-scalar text previews |
+| `value` | `key`, `field`; optionally `item` **or** domain `choice` index | Exact Boolean/Integer/Double, or a text window of at most 4096 Unicode scalars |
+| `domain` | `key`, `field` | Range metadata and up to 50 indexed choice previews |
+| `bindings` | Exact authored `owner` | Supported projection, local/cleared/effective/inherited/restorable meaning and paged columns |
+| `column` | `owner`, `field`, explicit `source: local/effective/restorable` | Exact column family/mode and a title text window |
+| `apply` | `expectedRevision`, `operationId`, 1..32 `changes` | One paired publication, ordinary Undo and exact retry receipt |
+
+Page modes accept `offset`/`limit`; text windows accept `offset`/`count`.
+Offsets/counts for text measure Unicode scalars, including supplementary characters
+and embedded NUL. Numeric/Boolean values reject text-window arguments. A row and
+a domain choice cannot both address one value. Full domains and long defaults/
+titles are absent from discovery responses; request their precise windows.
+The complete existing 48 KiB response budget still applies, including unusually
+large open names. Queries preserve accepted source, drafts, history and navigation.
+
+Named commands use strongly typed schema/cell descriptors at this explicit JSON
+boundary. Pascal callers use `NyxDefineCollection`, `NyxSetCollectionField`,
+`NyxAppendCollectionRow`, `NyxUpdateCollectionRow`, `NyxMoveCollectionRow`,
+`NyxRemoveCollectionField` and `NyxBindCollection` with the existing typed field,
+item, domain and fluent view contracts. The immutable `INyxCollectionPatch`
+owns copied proposals; it retains no mutable document, control or runtime store.
+
+- `define`: exact new `key`, `fields`, `rows`. Each definition has `name`,
+  `kind`, typed `default` and optional typed `domain`. Each row has `item` and
+  `values`; each cell has `field`, `kind` and its matching primitive `value`.
+  An existing key refuses. Omitted cells materialize schema defaults.
+- `field`: `key` and one `definition` add/update a named field. Existing families
+  cannot change. Unspecified fields, row values and order remain retained.
+  New defaults do not rewrite materialized existing cells; new domains revalidate
+  every accepted row and dependent view.
+- `append`/`update-row`: `key`, exact `item`, typed `values`. Append refuses a
+  duplicate row; update requires an existing row and changes only supplied cells.
+  Unknown/duplicate fields and wrong primitives/families refuse.
+- `move-row`: `key`, `item`, final `index` after removing the moved row.
+  `remove-field` requires `key`, exact `field` and its `kind`.
+- `bind`: exact authored `owner`, expected `projection: list/table/tree` and
+  a complete versioned `spec` from `TNyxCollectionViewSpec.ToData`. Single
+  selection retains version 1; multiple selection uses version 2.
+
+`intent` reuses all seventeen ordinary editor operations. It requires a closed
+`action` and exact `key`; view actions also require `owner` and `projection`.
+Additional fields depend on that action and are discoverable through tools/list:
+
+| Actions | Additional fields |
+| --- | --- |
+| `create`, `remove` | None |
+| `add-field` | Scalar `kind` (ordinary automatically allocated field name) |
+| `default` | `field`, `kind`, matching primitive `value` |
+| `add-row`, `remove-row` | Scoped `item` |
+| `cell` | `item`, `field`, `kind`, matching primitive `value` |
+| `bind`, `clear`, `inherit` | No additional fields beyond view ownership/projection |
+| `scope`, `selection` | `scope: application/instance`, or `selection: single/multiple` |
+| `column-title`, `column-mode` | `field`, `kind` and `title` or Boolean `editable` |
+| `parent` | Text field name `parent`, or null to clear the tree mapping |
+| `remove-column`, `add-column` | Exact `field`, `kind` |
+
+Ordinary `bind` derives columns from the current schema. Ordinary `add-column`
+adds the field's default presentation; change its title/mode in subsequent
+intents or use a full fluent `bind`. Clear deliberately masks inheritance;
+inherit removes a local override. Exact existing named-part owners are supported.
+
+An explicit reusable clear keeps its effective view unbound; `restorable` reports
+the exact inherited contract beneath that mask, with the same paged columns.
+Studio retains its Restore button for that contract, and both ordinary capture
+and semantic replay recheck the inherited key without changing the live mask.
+
+Apply replays the same ordinary Studio commands on one independent candidate.
+Each ordered intermediate must admit: clear dependent columns/parent mappings
+before removing a field, and clear dependent bindings before removing a collection.
+A late failure discards the entire group. Pending Pascal drafts, stale revisions,
+missing owners/rows, mismatched projections, domains, schema families and unknown
+members refuse without changing the active pair or history. Permission, transport
+actor authority, exact request receipts and visible activity reuse the existing
+agent boundary. Workspace/review routing is available only on the outer request;
+foreign or retired contexts refuse without falling back to the primary project.
+
+`tools/build.ps1 -Target collection-bindings` runs the independent Pascal
+journey, actual discovery builder and unchanged compiled native controls, then
+stages shared/browser controls with matched RTL. It starts no listener and
+performs no deployment or configuration refresh. WORK.md owns observed results.
+Source discovery does not establish authenticated nineteen-tool deployment or
+observing browser execution; those retain the recorded host gate.

@@ -78,6 +78,9 @@ type
     { Bounded accepted-default/binding context and one typed grouped mutation.
       The same revision, permission, receipt and paired Undo guards apply. }
     function StateBindings(const AArguments: TNyxDataValue): TNyxDataValue;
+    { Paged document collection/schema/row/domain and exact authored view context;
+      one typed grouped candidate uses the same guarded paired publication. }
+    function Collections(const AArguments: TNyxDataValue): TNyxDataValue;
     function EditCallbacks(const AArguments: TNyxDataValue;
       const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
     function RemoveRoots(const AArguments: TNyxDataValue;
@@ -145,7 +148,8 @@ uses
   nyx.catalog, nyx.catalog.labels, nyx.callbacks, nyx.codec, nyx.composition,
   Math, nyx.source, nyx.design.tokens, nyx.studio.edits, nyx.studio.callbackedits,
   nyx.studio.handleredits, nyx.studio.stateedits, nyx.state, nyx.binding,
-  nyx.binding.types;
+  nyx.binding.types, nyx.contract, nyx.collections, nyx.collections.view.types,
+  nyx.collections.selection, nyx.studio.collectionedits;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
 var
@@ -1270,6 +1274,7 @@ begin
 end;
 
 {$I nyx.studio.agents.state.inc}
+{$I nyx.studio.agents.collections.inc}
 
 function TNyxAgentSession.Call(const ATool, AActor: TNyxText;
   const AArguments: TNyxDataValue; const ARequestOwner: TNyxText): TNyxDataValue;
@@ -1289,6 +1294,8 @@ var
   LRootResults: TNyxDataValue;
   LStateApply: Boolean;
   LStateResults: TNyxDataValue;
+  LCollectionApply: Boolean;
+  LCollectionResults: TNyxDataValue;
   LAuthority: TNyxText;
 begin
   LAuthority := ARequestOwner;
@@ -1305,6 +1312,8 @@ begin
   LRootResults := NyxNull;
   LStateApply := False;
   LStateResults := NyxNull;
+  LCollectionApply := False;
+  LCollectionResults := NyxNull;
 
   try
 
@@ -1331,8 +1340,14 @@ begin
     begin
       LStateApply := TextArgument(AArguments, 'mode') = 'apply';
     end;
+
+    if ATool = 'nyx_collections' then
+    begin
+      LCollectionApply := TextArgument(AArguments, 'mode') = 'apply';
+    end;
     LMutation := (ATool = 'nyx_transaction') or (ATool = 'nyx_select') or
-      (ATool = 'nyx_history') or LCallbackApply or LHandlerApply or LRootApply or LStateApply;
+      (ATool = 'nyx_history') or LCallbackApply or LHandlerApply or LRootApply or
+      LStateApply or LCollectionApply;
 
     if LMutation and (FPermission <> apEdit) then
     begin
@@ -1409,6 +1424,11 @@ begin
     begin
       Result := StateBindings(AArguments);
       LStateResults := Result;
+    end
+    else if ATool = 'nyx_collections' then
+    begin
+      Result := Collections(AArguments);
+      LCollectionResults := Result;
     end
     else if ATool = 'nyx_callbacks' then
     begin
@@ -1520,6 +1540,11 @@ begin
       if LStateApply then
       begin
         Result := WithResults(Result, LStateResults, 'stateBindings');
+      end;
+
+      if LCollectionApply then
+      begin
+        Result := WithResults(Result, LCollectionResults, 'collections');
       end;
 
       if Length(FReceiptKeys) = 64 then

@@ -379,6 +379,13 @@ begin
     LIntent.Projection := cpList;
     Apply(LIntent, 'left-list');
     Check(ViewSpec('left-list').Scope = csInstance, 'Inheritance restores the reusable definition');
+    LIntent := Proposal(scaClear, 'tasks');
+    Apply(LIntent, 'left-list');
+    Check(not ViewSpec('left-list').Defined, 'Reusable clear masks its effective contract');
+    LIntent := Proposal(scaInherit, 'tasks');
+    Apply(LIntent, 'left-list');
+    Check(ViewSpec('left-list').Defined and (ViewSpec('left-list').Scope = csInstance),
+      'Isolated inheritance restores an exact previously cleared reusable contract');
 
     LIntent := Proposal(scaSelection, 'tasks');
     LIntent.Projection := cpTable;

@@ -131,7 +131,8 @@ implementation
 
 uses
   nyx.studio.mcpconfig, nyx.types, nyx.studio.builds, nyx.studio.compiler,
-  nyx.model, nyx.codec, nyx.studio.outputs, nyx.studio.stateedits;
+  nyx.model, nyx.codec, nyx.studio.outputs, nyx.studio.stateedits,
+  nyx.studio.collectionedits;
 
 function NewCapability: TNyxText;
 var
@@ -1185,6 +1186,8 @@ begin
     Tool('nyx_tokens', 'Read effective semantic theme colors and typed logical-pixel metrics. Change through a grouped tokens operation.', Schema(NyxObject([]), []), True),
     Tool('nyx_state', 'Inspect paged authored defaults (case-sensitive name substring filter), exact text windows in Unicode scalars, or supported/local/effective bindings for an exact authored owner. Defaults previews contain at most 80 scalars; value windows at most 4096. Apply 1..32 ordered create/set/rename/remove/bind/clear-binding/inherit-binding changes as ONE paired Undo step. Primitive types and scalar families are exact. Rename updates authored references across pages and reusable definitions. Clear deliberately masks inheritance; inherit removes a local descriptor. Existing named-part override IDs are supported; this tool does not create overrides. Clear dependent bindings before removing a default. Apply requires Allow edits, current expectedRevision, unique operationId and no draft. Queries do not change selection or history; operator activity shows success and refusal.',
       NyxStateAgentSchema, False),
+    Tool('nyx_collections', 'Inspect document defaults with bounded list/schema/rows/domain pages, Unicode scalar value/title windows, and local/effective authored view bindings. Row queries return IDs unless exact fields are requested (up to 16); text previews contain at most 80 scalars. Runtime stores are independent. Apply 1..32 ordered typed changes as ONE paired Undo step: define named schema/initial rows, add/update a named field, remove a field, append/update/move a scoped row, bind a full fluent view, or reuse seventeen ordinary editor intents. Field definitions carry typed defaults/domains; partial updates preserve other cells. Existing families cannot change. Bind uses the versioned collection-view descriptor. Clear masks inheritance; inherit removes a local override. Named keys/rows are exact and case-sensitive. Clear dependencies before removal; each ordered intermediate must admit. Current revision, unique operationId, Allow edits and no draft are required. Queries preserve navigation/history; activity shows success and refusal.',
+      NyxCollectionAgentSchema, False),
     Tool('nyx_diagnostics', 'Page through compiler diagnostics. Locations are Unicode scalar coordinates in submitted source; stale locations cannot navigate.', Schema(LPage, []), True),
     Tool('nyx_source', 'Read only the needed accepted Pascal lines, e.g. around a compiler diagnostic. Does not return pending drafts.',
       Schema(NyxObject([NyxField('line', IntSchema(1, 100000)), NyxField('count', IntSchema(1, 80))]), []), True),

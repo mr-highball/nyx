@@ -308,6 +308,7 @@ procedure AddNyxCollectionBindingPanel(AParent: TNyxNode;
 var
   LPanel, LRow: TNyxNode;
   LSpec: TNyxCollectionViewSpec;
+  LInherited: TNyxCollectionViewSpec;
   LColumn: TNyxCollectionColumn;
   LSchema: TNyxCollectionSchema;
   LIndex, LFieldIndex: Integer;
@@ -443,6 +444,23 @@ begin
     end;
     LPanel.Add(Action(nkButton, 'collection-binding-clear', 'Unbind collection', scaClear));
     LPanel.Add(Action(nkButton, 'collection-binding-inherit', 'Restore inherited binding', scaInherit));
+  end
+  else if (ASession.Selected <> nil) and ASession.Selected.HasCollectionView and
+    not ASession.Selected.CollectionView.Defined then
+  begin
+    { An explicit clear masks effective metadata; it must still offer a way
+      back to this exact owner's inherited contract. Pending structural paint
+      keeps the same locks, and capture retains that contract's exact key. }
+    LInherited := ASession.ClearedCollectionInheritance(ASession.SelectedID);
+
+    if LInherited.Defined then
+    begin
+      LKey := LInherited.Key.Name;
+      LLocked := LLocked or APending.CollectionLocked(LInherited.Key);
+      LPanel.Add(TNyxNode.Create(nkLabel, 'collection-binding-inherited').Configure
+        .Text('Inherited collection: ' + LKey).Done);
+      LPanel.Add(Action(nkButton, 'collection-binding-inherit', 'Restore inherited binding', scaInherit));
+    end;
   end;
   for LIndex := 0 to ASession.Document.Collections.Count - 1 do
   begin
@@ -471,6 +489,7 @@ var
   LSchema: TNyxCollectionSchema;
   LField: TNyxCollectionField;
   LProjection: TNyxNode;
+  LSpec: TNyxCollectionViewSpec;
   LIndex: Integer;
   LKind: TNyxStateKind;
 begin
@@ -653,9 +672,15 @@ begin
         raise ENyxCollection.Create('Selected control no longer supports collection views');
       end;
 
+      LSpec := LProjection.CollectionView;
+
+      if (LAction = scaInherit) and not LSpec.Defined then
+      begin
+        LSpec := ASession.ClearedCollectionInheritance(ASession.SelectedID);
+      end;
+
       if (LAction <> scaBind) and
-        (not LProjection.CollectionView.Defined or
-        (LProjection.CollectionView.Key.Name <> LKey)) then
+        (not LSpec.Defined or (LSpec.Key.Name <> LKey)) then
       begin
         raise ENyxCollection.Create('Collection binding changed; use its current inspector');
       end;

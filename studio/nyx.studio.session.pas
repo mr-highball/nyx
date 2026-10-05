@@ -398,6 +398,11 @@ type
     procedure RemoveCollection(const AKey: TNyxCollectionRef);
     procedure SetCollectionView(const ASpec: TNyxCollectionViewSpec);
     procedure InheritCollectionView;
+    { Read the contract beneath an exact authored local clear mask on an owned
+      temporary document. No selection/source/history changes. An unbound
+      inherited contract returns undefined; missing/non-cleared owners refuse.
+      The returned typed descriptor owns its values beyond this call. }
+    function ClearedCollectionInheritance(const AOwner: TNyxText): TNyxCollectionViewSpec;
     { Apply a typed collection proposal on this session's detached candidate.
       Exact field families, scoped item identity and view projection are checked
       before mutation; unknown/missing identities refuse without partial data.

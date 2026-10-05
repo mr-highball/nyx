@@ -165,6 +165,49 @@ begin
   end;
 end;
 
+{ A cleared local descriptor intentionally hides the effective collection key.
+  Inherit must qualify the captured key against this same owner's inherited
+  contract, without removing the live mask first. The temporary document and
+  realized root are independent; the returned specification owns its values. }
+function RestoredCollectionView(ADocument: TNyxDocument; const AOwner: TNyxText):
+  TNyxCollectionViewSpec;
+var
+  LDocument: TNyxDocument;
+  LNode: TNyxNode;
+  LRoot: TNyxNode;
+  LProjection: TNyxNode;
+begin
+  Result := Default(TNyxCollectionViewSpec);
+  LDocument := ADocument.Clone;
+  try
+    LNode := LDocument.Find(AOwner);
+
+    if (LNode = nil) or not LNode.HasCollectionView or LNode.CollectionView.Defined then
+    begin
+      raise ENyxCollection.Create('Inheritance requires this exact cleared local descriptor');
+    end;
+    LNode.RemoveCollectionView;
+    LRoot := RealizeNyxContext(LDocument, LNode, LProjection);
+    try
+
+      if (LProjection <> nil) and LProjection.HasCollectionView then
+      begin
+        Result := LProjection.CollectionView;
+      end;
+    finally
+      LRoot.Free;
+    end;
+  finally
+    LDocument.Free;
+  end;
+end;
+
+function TNyxStudioSession.ClearedCollectionInheritance(const AOwner: TNyxText):
+  TNyxCollectionViewSpec;
+begin
+  Result := RestoredCollectionView(Document, AOwner);
+end;
+
 procedure TNyxStudioSession.ApplyCollectionIntent(const AIntent: TNyxStudioCollectionIntent);
 var
   LData: INyxCollectionSnapshot;
@@ -238,6 +281,11 @@ begin
 
       if AIntent.Action = scaInherit then
       begin
+
+        if not LSpec.Defined then
+        begin
+          LSpec := ClearedCollectionInheritance(FSelectedID);
+        end;
 
         if not LSpec.Defined or (LSpec.Key.Name <> AIntent.Key.Name) then
         begin

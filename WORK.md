@@ -7,17 +7,21 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Latest bounded packet: [semantic scalar state and bindings](#semantic-scalar-state-and-binding-commands--2026-10-05)
-adds bounded context and one typed grouped paired edit. Shared checks pass 55 on
-each native compiler, actual offline tools/list discovery 14 and exact compiled
-native controls 15; native teardown has zero leaks. Browser consumers compile
-with matched RTL, while updated authenticated discovery/observing execution keep
-the recorded host gate. Workflow criterion 5 stays open at count 3; codegen
-criterion 3 stays open at count 23. Renderer 3, native authoring 7 and delivery 1
-remain unchanged. Broader asynchronous inspector integration, reusable/structured
-state semantics, source/import and full both-target editor qualification remain.
+Latest bounded packet: [semantic structured collections](#semantic-structured-collection-commands--2026-10-05)
+adds paged collection/schema/row/domain/view context and one immutable typed
+grouped paired edit. Both native compilers pass 96 semantic checks and 14 exact
+masked-inheritance context checks; actual offline discovery passes 57, ordinary
+native controls 76 and the exact compiled companion 11, with zero leaks.
+Collection queue regression passes 123 per native compiler. A real cleared
+reusable binding now keeps its Restore control and restores the exact inherited
+contract. Current browser consumers compile with zero owned warnings, but
+execution and authenticated updated observing deployment retain their host gate.
+The source catalog has nineteen tools; the protected release/chat has fifteen.
+Workflow criterion 5 remains open at no-closure count 4; codegen 26, renderer 3,
+native authoring 7 and delivery 1 remain unchanged. General source/import, richer
+reusable workflows and complete both-target editor qualification remain required.
 
-Preceding bounded source packet: [canvas proposals](#isolated-canvas-input-and-exact-field-reconciliation--2026-10-05)
+Earlier bounded source packet: [canvas proposals](#isolated-canvas-input-and-exact-field-reconciliation--2026-10-05)
 now share isolated paired admission. Owned view/runtime/owner/platform and mounted-load identities replace
 worker access to live realized nodes. Fresh replay preserves typed state defaults
 and instance-only named parts. Exact field restoration fixes the actual rejected
@@ -6808,3 +6812,126 @@ staged only with the same seven installed RTL warnings visible. This handoff
 keeps codegen criterion 3 open at no-closure 26 and the next structured semantic
 workflow and host gates intact. Its own clean/exact remote proof is stored
 privately after pushing; the full goal remains active/incomplete.
+
+Current continuation batch: original workflow criterion 5 consumes the qualified
+collection intent/source prerequisite. The preceding goal turn is progress:
+680b5d4/b9e6b9a is the exact clean/pushed checkpoint, with private preservation
+proof. Deliver bounded collection/schema/row/value/domain/view context and grouped
+typed semantic edits through the existing revision/permission/actor/receipt and
+paired candidate boundary. Preserve scoped references, defaults versus runtime
+stores, handwritten source, pending drafts, exact Unicode/numbers, independent
+projects/reviews, and observing activity. Reuse ordinary collection commands;
+allow named schemas/fields/rows without requiring agents to simulate palette
+clicks. Qualify native compilers, offline actual discovery and exact compiled
+native controls; browser compilation/updated authenticated observing execution
+retain the existing host gate. Stop on partial groups, weakened reference/domain
+admission, hidden document dumps or implicit context retargeting. Workflow
+no-closure 3 / codegen 26 / renderer 3 / native authoring 7 / delivery 1 remain
+unchanged until handoff assessment. Eight protected services and the primary
+revision-6 user pair remain independent of qualification projects. No sub-agents.
+
+## Semantic structured collection commands — 2026-10-05
+
+Original workflow criterion 5 now consumes the qualified inspector prerequisite.
+`nyx_collections` exposes eight bounded modes: list, schema, rows, value, domain,
+bindings, column and apply. Queries inspect document defaults, never application
+runtime stores. Rows return IDs unless exact fields are requested; typed text/
+default/domain/column previews contain at most 80 Unicode scalars, and exact text
+windows at most 4096. Paging, revision, exact authored owner and the existing
+48 KiB response budget stay explicit. Queries preserve selection/drafts/history.
+
+The public immutable `INyxCollectionPatch` owns typed named schema/field/row/view
+proposals and all seventeen ordinary editor intents. Define, field upsert/removal,
+row append/partial update/move and complete fluent bindings replay ordinary
+commands on one detached session. Each ordered intermediate must admit; clear
+dependencies before removal. One publication creates one paired Undo step,
+preserving handwritten helpers, scoped/case-sensitive references, schema families,
+domains, exact text/numbers and independent navigation. Wrong primitives,
+duplicate cells, foreign/missing references, drafts and late failures refuse
+atomically. Permission/revision/transport actor/receipt/context/activity reuse
+the existing agent boundary. No protocol or persistence migration is needed.
+
+Qualification exposed a real ordinary-editor defect: clearing a reusable binding
+hid the inherited key needed by Restore. The inspector now retains its Restore
+button, while capture/replay recheck this exact owner's inherited contract on a
+detached document. The typed read-only query supplies bounded `restorable` context
+and title windows beneath the mask. Case-distinct keys refuse; other instances,
+selection and paired history stay independent. An absent inherited contract
+reports no restorable binding, rather than borrowing another owner's descriptor.
+
+Maintained entry point: `tools/build.ps1 -Target collection-bindings`. Its parser
+passes; the composite command was not repeated after the applicable individual
+consumers below. Checked builds use Delphi mode, assertions, range/overflow/I/O
+checks, debug lines and heap tracing, with separate stable FPC 3.2.0 and matched
+LCL/FPC 3.3.1 outputs. Evidence is retained under ignored
+`build/agent-collections/`:
+
+| Consumer | Actual evidence | Artifact directory |
+| --- | --- | --- |
+| Portable semantic journey, FPC 3.2.0 / 3.3.1 | 96 / 96 checks; all seventeen intents, atomic failures, receipts, drafts, Unicode/NUL, numeric boundaries, schemas/domains and scoped ownership | `shared-final/`, `shared-3.3-final/` |
+| Final masked-inheritance context, both native compilers | 14 / 14 checks; local/effective/restorable, scalar title window, exact key refusal and paired Undo/Redo | `masked-inheritance-stable-final/`, `masked-inheritance-final/` |
+| Actual offline `NyxStudioMCPTools` builder | 57 checks; nineteen-tool catalog, eight modes, strict typed branches and context/value exclusivity | `discovery-complete/` |
+| Existing scalar discovery / semantic regression | 14 / 55 checks | `discovery-final/`, `compile/state-regression.log` |
+| Existing collection queue, both native compilers | 123 / 123 checks, including clear/restore isolated replay | `queue-stable/`, `queue-regression/` |
+| Actual standalone Win32 collection controls | 76 checks; real Restore button, pending input/locks, focus, independent owners, drafts/history and retired loads | `ordinary-controls-qualified/` |
+| Unchanged semantic companion compiled and executed with actual Win32 controls | 11 checks; typed table text/Integer/Boolean/Number callbacks, defaults and independent runtime/reusable stores | `compiled-controls/` |
+| Full native Studio | Compiles with zero owned warnings | `native-studio-qualified/build.log` |
+| Current pas2js Studio, module worker, semantic/inheritance/queue/DOM/exact companion consumers | Compile with zero owned warnings; seven distinct installed `Classes` RTL warnings stay visible | `browser-qualified/` |
+
+Every executed successful native consumer reports zero unfreed blocks. The
+96-check journeys precede the final read-only restorable context/window additions;
+the final 14 checks on both native compilers, actual 57-check discovery and current
+browser compilation qualify those additions. Applicable mutation/control evidence
+is reused. Stable and matched-compiler exports have identical SHA-256 values:
+design `BC562CAA2B1D489E23830EDC63DDA4BBBB69E68C95B680CA9A065AF09A902A4A`;
+companion `B5E9D5FE341EDBCC82B60E47DA392ED0A197988FAB526362DE5496FBA0D42803`.
+The compiled consumer imports that unchanged companion and reconstructs exact
+saved design bytes; source admission alone is not execution evidence.
+
+English desktop/exact-390 native captures in
+`ordinary-controls-qualified/controls/` were visually inspected. The focused
+inspector paints its text/controls; existing sidebar overflow, wider native
+presentation and complete accessibility remain open. Supplementary characters
+and NUL are qualification values, not starter/demo copy. The 50 KiB domain fixture
+proves bounded responses/exact values, not acceptable latency: the fully traced
+broad journey takes minutes and allocates extensively. Release performance and
+comfortable large-project editing keep their original gates. Current browser
+programs/English hosts are staged with matched RTL, not served/executed.
+Initial failed value-literal comparison (native Extended promotion in the fixture),
+masked-inherit replay and actual Restore capture logs remain retained. The guards
+and comparison were corrected, not suppressed. Earlier incomplete-case warnings
+have explicit fallbacks.
+
+This batch is progress but closes no full criterion. Workflow criterion 5 stays
+open; no-closure advances **3→4** once. Codegen **26**, renderer **3**, native
+authoring **7** and delivery **1** remain unchanged. No DONE movement or completion
+credit follows. Reassessment ends collection query/schema/fixture expansion.
+Next deliver bounded general import inspection and revision-aware grouped import
+authoring through the same paired boundary, preserving helpers, callback
+signatures, managed views and deliberate source order. Qualify an unchanged
+compiled companion and actual consumer; refuse ambiguous/conditional edits or
+pending drafts. General source editing, richer reusable workflows, root ordering,
+review lifecycle, full presentation/accessibility and comfortable source
+synchronization remain with existing owners. Browser/observing and authenticated
+updated discovery retain their requirements; no narrower parity claim replaces them.
+
+The preceding status-only turn changed no implementation/acceptance state. This
+continuation changes maintained semantic vocabulary and the actual Restore
+consumer. Semantic MCP remains primary: connected handles supplied bounded
+read-only session inspection; independent semantic/native input consumers qualify
+operations absent from the protected deployed catalog. Final inspection reports
+revision **6**, Untitled project / home, one page/reusable root, no pending draft,
+Undo unavailable, Redo available, activity sequence **204**. All **eight** protected
+executable paths/exact creation timestamps match; **zero** focused fixture
+processes remain. Private proof:
+`.local/codex-restart-check/collection-mcp-processes.json`. Source catalog now
+has **nineteen** tools; authenticated protected release/current desktop chat still
+expose **fifteen**. User work, services, deployed artifacts and personal
+configuration remain untouched.
+
+The existing automatic approval rejection of listener launch remains "blocked
+by policy", with no further stated reason. No equivalent listener, live artifact
+deployment, service replacement or configuration refresh was attempted. Updated
+authenticated discovery and observing browser execution remain unqualified.
+The full Nyx/Nyx Studio goal stays active/incomplete. Remote checkpoint follows;
+the user's authorization to push `hello-nyx` remains in force.
