@@ -7,7 +7,38 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-## Current integrated result: absolute-position movement — 2026-10-06
+## Current integrated result: flow placement previews — 2026-10-06
+
+The [flow packet](#flow-placement-previews--2026-10-06) adds copied typed placement
+policies and physical/logical target frames, inert insertion paint on both adapters
+and optional automatic row/column placement in ordinary Studio. A separate Nyx
+drag button remains available beside the placement selector in compact Design.
+Hover changes neither accepted file; release retains exact ownership/last-frame
+agreement and publishes one paired Undo. Refused hover retires old agreement.
+Checks pass 98 per native compiler/browser, 45 actual Win32 Studio callbacks and
+36 per desktop/exact-390 host browser journey. Both deployed MCP application jobs
+compile exact 178-line/4,267-byte English source. Twenty tools authenticate.
+
+The one-editor-asset LAN overlay preserves seven exact paired projects/navigation/
+history states, the byte-identical v9 worker and fourteen service identities.
+Sixteen served hashes match. `.local/flow-assets-20261006/` owns preservation and
+immutable build receipts, the overlay manifest, byte backup and independent English
+**Flow workshop** handle. It supersedes only the Studio entry of the move overlay;
+the main process remains PID 38744 and primary revision 2. No restart or history
+reset. Native named handles in this chat still need reconnect; the authenticated
+Pascal semantic client remains primary. Do not run obsolete refresh scripts.
+
+This integrated batch is ended. Authoring no-closure advances 20→21 once;
+workflow 9, codegen 28, renderer 3 and delivery 1 remain. No original criterion
+closes. Stop local flow-policy/fixture expansion. Return to original criterion 1's
+stable container allocation and alternate view structures, then the complete
+ordinary editor/parity/accessibility/performance/delivery requirements and their
+unaccepted prerequisites. Automatic grid/absolute insertion, uncommitted canvas
+draft retention across structural reparent and full nested scrolling remain open.
+The compact HTML select's text still clips in a host capture despite its wider
+face; complete chrome typography/overflow remains an existing visual-quality gap.
+
+## Preceding integrated result: absolute-position movement — 2026-10-06
 
 The [move packet](#absolute-position-move-snapping--2026-10-06) now delivers public
 typed policies, copied edge/center guides, ordinary browser/Win32 gestures,
@@ -9117,3 +9148,95 @@ parity/accessibility/performance/delivery. Physical phone input, changing scale
 during a gesture, nested scrolling/virtual geometry, IME/assistive technology,
 another widgetset and large-project performance remain unqualified. Original
 criteria and prerequisites stand.
+
+## Flow placement previews — 2026-10-06
+
+Original authoring criterion 1's flow/reparenting boundary now has public copied
+`TNyxDropPolicy`, `TNyxDropFrame` and `TNyxDropPreview`. The declared gate is actual
+physical target geometry mapped to local logical pixels, exact runtime parent and
+realized row/column axis. No DOM/LCL/tree ownership enters that portable contract.
+Automatic container edge bands/middle and leaf halves resolve typed relative
+intent; unknown/grid/absolute sibling axes refuse. Explicit Inside/Before/After
+remain available. Geometry factories reject undefined/nonfinite/nonpositive data.
+
+Both adapters copy target context and paint clipped inert insertion strips through
+their existing adornments. Runtime application events retain their contract.
+Ordinary Studio consumes its existing local lease and paired worker command; no
+new MCP operation or private worker vocabulary exists. Its separate Nyx drag
+source moved from the Inspector beside the placement selector, remaining usable
+in compact Design. Automatic release requires exact last-hover runtime identity,
+face and edge. Changed pair/mount/creator/ownership refuses. Invalid hover retires
+previous agreement; native final leave hides paint while retaining the agreement
+for its immediately following drop. Accepted input controls are never drag sources.
+
+Maintained `tools/build.ps1 -Target flow-placement -FlowSourceDirectory <export>`
+compiles/runs shared checked fixtures on FPC 3.2.0 and matched FPC 3.3.1, actual
+Win32 Studio against unchanged semantic source, and stages Pascal browser
+consumers/Studio/worker. It starts no listener and changes no enrollment. The
+native projects directory is unique per run. The Pascal browser driver acquires
+real offered drag data, dispatches host drag input/cancellation and selectively
+captures paint. It retries only bounded geometry reads retired by an ordinary
+editor refresh, never an offer/drop/mutation. Exact insertion edges are scrolled
+into the clipped host before input; child visibility alone is insufficient.
+
+Evidence under `build/flow-placement/`:
+
+- `qualified-build.log`: **98** checks per native compiler, zero leaks. Browser
+  contracts pass the same **98** (`browser-contracts-final.log`). New checks cover
+  typed policy/Unicode copying, exact proposals and retired hover agreement.
+- `native/release-compile.log`, `native/release-run.log`: **45** actual Win32 Studio
+  checks, zero leaks, no owned warnings. They qualify registered native callbacks,
+  actual accent pixels, column reparent, row reorder, exact paired Undo/Redo,
+  changed physical face, ending without drop, inherited ownership refusal and
+  retained source-editor identity. Capture is `native/release-projects/flow-native.png`.
+- `browser-release-desktop.log`, `browser-release-compact.log`: **36 / 36** actual
+  host browser checks at desktop and exact 390 pixels, zero driver leaks. Actual
+  offered data, before insertion, worker reparenting, accepted memo text, paired
+  Undo/Redo, host cancellation, row reordering and final paired baseline pass.
+  `browser-release-{desktop,compact}/` owns insertion/row/capture PNGs and receipts.
+  Captures were inspected. A dedicated fixed nonwrapping row deliberately scrolls
+  in compact view; it is a placement consumer, not general responsive-layout proof.
+
+Retained failed attempts explain the gates: a wrapped fixed-height demo overlapped
+its target, corrected through one semantic `.Wrap(nfwNoWrap)` update. A temporary
+face transform could receive a legitimate new browser hover before drop, so its
+fixture was replaced with real host cancellation; shared/native consumers qualify
+strict changed-frame release. The first host cancellation command did not retire
+the intercepted preview; the protocol's actual `dragCancel` path does. A narrow
+child scroll left the parent edge outside the viewport; scrolling the exact edge
+corrected the driver. Two initial native runs were terminated by verified fixture
+identity; tracing subsequently established advancing presentation work and full
+passing runs. No service or user project was stopped/replaced. Checked native
+full-presentation journeys are expensive; these are not performance benchmarks.
+
+Semantic MCP composes the committed English `tests/flow-review.operations.json`
+as one related transaction in an independent workspace. Bounded windows preserve
+the 178-line/4,267-byte source and terminal LF, MD5
+`1d2f658a8e84554f84bc73729f5771eb`. Actual production application jobs on both
+targets succeed at revision 3 and serve exact matching compiled source bytes.
+The native application has no warnings; browser diagnostics contain the seven
+already documented upstream `classes.pas` warnings, with both bounded pages read.
+The known native request client returned a valid running receipt followed by a
+socket-read failure; status was read without mutation retry. The existing workflow
+owner retains that transport gap. Twenty production tools authenticate; obsolete
+native named handles in this chat still require reconnect.
+
+The one-editor-asset overlay leaves the v9 worker byte-identical, preserves all
+seven current project pairs/navigation/history fields and fourteen exact service
+identities, and verifies sixteen loopback/LAN web hashes. No restart/history reset.
+The main process stays PID 38744 and primary revision 2. Private
+`.local/flow-assets-20261006/` owns the asset backup/manifest, frame/service receipts,
+immutable build statuses and independent **Flow workshop** project handle. It
+supersedes only Studio in the move overlay; the earlier worker/executable/helper/
+runtime/HTML closure remains installed. No old refresh script should be rerun.
+
+This integrated packet is ended. Authoring no-closure advances **20→21** once;
+workflow **9**, codegen **28**, renderer **3**, delivery **1** remain. No original
+criterion or task closes. Stop local flow-policy/fixture expansion; return to
+original stable container allocation and alternate structures. Automatic grid/
+absolute insertion, independent canvas drafts through structural reparent, full
+nested scrolling, physical phone touch/hardware, another widgetset, IME/assistive
+technology and complete ordinary editor/parity/accessibility/performance remain
+unqualified. The compact select still clips text in a host capture despite its
+wider face; complete chrome typography/overflow stays open. Preserve original
+criteria and prerequisites rather than accepting this bounded preparation.

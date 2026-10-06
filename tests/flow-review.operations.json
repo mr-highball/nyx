@@ -1,0 +1,16 @@
+[
+  {"op":"title","value":"Space to build"},
+  {"op":"create","kind":"page","id":"home","root":"page","properties":{"padding":16,"gap":12}},
+  {"op":"create","kind":"row","id":"workspace","parent":"home","properties":{"width":640,"height":380,"gap":24,"padding":0,"flow-wrap":"nowrap"}},
+  {"op":"create","kind":"panel","id":"left-layout","parent":"workspace","properties":{"layout":"column","width":264,"height":340,"padding":12,"gap":10,"surface":true}},
+  {"op":"create","kind":"label","id":"first-title","parent":"left-layout","properties":{"text":"First ideas","width":220,"height":28}},
+  {"op":"create","kind":"memo","id":"notes-editor","parent":"left-layout","properties":{"text":"Notes","value":"Keep this English draft.","width":220,"height":100}},
+  {"op":"create","kind":"button","id":"start-button","parent":"left-layout","properties":{"text":"Start here","width":220,"height":44}},
+  {"op":"create","kind":"panel","id":"right-layout","parent":"workspace","properties":{"layout":"column","width":264,"height":340,"padding":12,"gap":10,"surface":true}},
+  {"op":"create","kind":"label","id":"next-title","parent":"right-layout","properties":{"text":"Next ideas","width":220,"height":28}},
+  {"op":"create","kind":"button","id":"reference-button","parent":"right-layout","properties":{"text":"A useful reference","width":220,"height":44}},
+  {"op":"create","kind":"button","id":"tail-button","parent":"right-layout","properties":{"text":"Room for another idea","width":220,"height":44}},
+  {"op":"create","kind":"column","id":"shared-controls","root":"component","properties":{"gap":10}},
+  {"op":"create","kind":"button","id":"shared-action","parent":"shared-controls","properties":{"part":"action","text":"Shared action","height":44}},
+  {"op":"instance","component":"shared-controls","id":"shared-instance","parent":"home"}
+]

@@ -66,6 +66,18 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Flow placement now consumes copied typed policies and exact physical/logical
+target frames. Both adapters paint inert insertion guides; ordinary compact
+Studio exposes its Nyx drag button beside the placement selector. Automatic
+row/column release preserves last-hover agreement and one paired Undo. Checks
+pass 98 per compiler/browser, 45 Win32 Studio callbacks and 36 per desktop/
+exact-390 host browser journey. MCP application builds compile exact English
+source; the one-asset LAN overlay preserves seven pairs/history states, an
+unchanged worker and fourteen services. **Flow workshop** is independent in Agents.
+No full criterion closes; authoring no-closure is 21. Container allocation,
+structural variants and complete editor/parity/accessibility/performance remain
+open. See [flow evidence](WORK.md#flow-placement-previews--2026-10-06).
+
 Absolute-layout movement now uses public copied position policies, sibling/parent
 edge and center guides, managed canvas grips and explicit screen/logical mapping.
 Ordinary Studio previews without changing source, then publishes both origin axes

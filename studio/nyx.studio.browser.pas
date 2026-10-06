@@ -52,6 +52,7 @@ uses
   nyx.studio.hierarchy,
   nyx.theme,
   nyx.render.browser,
+  nyx.designer.placement,
   nyx.projection.refresh,
   nyx.studio.session,
   nyx.studio.source,
@@ -101,6 +102,7 @@ type
     FDesignerResize: TNyxStudioResize;
     FDesignerMove: TNyxStudioMove;
     FDesignerPlacement: TNyxPlacement;
+    FDesignerAutomaticPlacement: Boolean;
     { Independent ordinary Nyx view preserves the live Pascal control through
       activity/chrome refreshes. Document owns its editor; renderer owns only
       its realization and never borrows nodes from the shell or design. }
@@ -223,6 +225,7 @@ type
     procedure DesignerResizeStatus(const AMessage: TNyxText);
     procedure DesignerResizePresentation(const APreview: TNyxResizePreview);
     procedure DesignerDragFeedback(const ATarget: TNyxControlRef);
+    procedure DesignerPlacementFeedback(const APreview: TNyxDropPreview);
     procedure DesignerGesture(const ATarget: TNyxDesignerTarget;
       const AEvent: TNyxEventInfo; const ADecision: INyxGestureDecision);
     procedure HierarchyEvent(const AEvent: TNyxEventInfo);
@@ -436,7 +439,8 @@ begin
   FCanvasRenderer.OnEvent := HandleCanvas;
   FCanvasRenderer.DesignerInput := NyxDesignerInput.Drops(True);
   FCanvasRenderer.OnDesignerGesture := DesignerGesture;
-  FDesignerDrag := TNyxStudioDrag.Create(@DesignerDragContext, @DesignerDragFeedback);
+  FDesignerDrag := TNyxStudioDrag.Create(@DesignerDragContext, @DesignerDragFeedback,
+    @DesignerPlacementFeedback);
   FDesignerResize := TNyxStudioResize.Create(@DesignerDragContext,
     @DesignerResizeMeasure, @DesignerResizeStatus, @DesignerResizePresentation, @DesignerResizeGuides);
   FDesignerMove := TNyxStudioMove.Create(@DesignerDragContext, @DesignerResizeGuides,
@@ -579,6 +583,7 @@ begin
   FPresentationSelection := FPresentationSelection.Reconciled(FSession.Document.Presentations);
   LState.PresentationSelection := FPresentationSelection;
   LState.DesignerPlacement := FDesignerPlacement;
+  LState.DesignerAutomaticPlacement := FDesignerAutomaticPlacement;
   LState.Palette := FPalette;
   LState.Log := FLog;
   LState.Status := FStatus;
@@ -1481,6 +1486,7 @@ begin
   Result.CanvasMount := FCanvasCommandContext;
   Result.Designing := not FPreview;
   Result.Placement := FDesignerPlacement;
+  Result.AutomaticPlacement := FDesignerAutomaticPlacement;
 end;
 
 function TNyxStudio.DesignerMovePoint(const APointer: TNyxPointerSnapshot): TNyxResizePoint;
@@ -1544,6 +1550,24 @@ begin
   end;
 end;
 
+procedure TNyxStudio.DesignerPlacementFeedback(const APreview: TNyxDropPreview);
+begin
+
+  if (FCanvasRenderer <> nil) and (FCanvasRenderer.Root <> nil) and not FPreview then
+  begin
+    FCanvasRenderer.PreviewDrop(APreview);
+
+    if APreview.Active then
+    begin
+      DesignerResizeStatus(APreview.Caption);
+    end
+    else
+    begin
+      DesignerResizeStatus('Ready to design');
+    end;
+  end;
+end;
+
 procedure TNyxStudio.DesignerGesture(const ATarget: TNyxDesignerTarget;
   const AEvent: TNyxEventInfo; const ADecision: INyxGestureDecision);
 begin
@@ -1576,7 +1600,8 @@ begin
     if (ANode.ID = NyxStudioDropPositionID) and (AEvent.Trigger = ntChange) then
     begin
       FDesignerDrag.Cancel;
-      FDesignerPlacement := ReadNyxPlacement(ANode.Prop('value'));
+      ReadNyxStudioPlacementChoice(ANode.Prop('value'), FDesignerPlacement,
+        FDesignerAutomaticPlacement);
       Exit;
     end;
 

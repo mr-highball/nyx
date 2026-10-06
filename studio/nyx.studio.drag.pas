@@ -29,11 +29,15 @@ interface
 uses
   nyx.text, nyx.types, nyx.model, nyx.behavior, nyx.events, nyx.gestures,
   nyx.designer.input, nyx.studio.projects, nyx.studio.session,
-  nyx.studio.edits, nyx.studio.sourcejobs;
+  nyx.studio.edits, nyx.studio.sourcejobs, nyx.designer.placement;
 
 const
   NyxStudioDragMoveID = 'studio-drag-move';
+  { Private shell metadata names an authored source; it is never an application
+    property or a user-facing fluent string choice. }
+  NyxStudioDragControlKey = 'designer-drag-control';
   NyxStudioDropPositionID = 'studio-drop-position';
+  NyxStudioAutomaticPlacement = 'automatic';
 
 type
   { UI-thread borrowed context, used only during the capture callback. The
@@ -47,11 +51,15 @@ type
     CanvasMount: TNyxStudioCommandContext;
     Designing: Boolean;
     Placement: TNyxPlacement;
+    AutomaticPlacement: Boolean;
   end;
   TNyxStudioDragCapture = function: TNyxStudioDragContext of object;
   { Presentation-only feedback. An empty target restores accepted selection.
     Receivers must not publish source/design, refresh sources or navigate here. }
   TNyxStudioDragFeedback = procedure(const ATarget: TNyxControlRef) of object;
+  { Borrowed inert paint receiver. Default clears; it must not mutate source,
+    navigate or remount any view while processing a host gesture. }
+  TNyxStudioPlacementFeedback = procedure(const APreview: TNyxDropPreview) of object;
 
   { Local per-editor drag broker. Public Nyx source streams and designer drop
     input feed this one command path. Transfers contain an opaque local lease,
@@ -63,6 +71,7 @@ type
   private
     FCapture: TNyxStudioDragCapture;
     FFeedback: TNyxStudioDragFeedback;
+    FPlacementFeedback: TNyxStudioPlacementFeedback;
     FCallbacks: array of INyxEventCallback;
     FSubscriptions: array of INyxEventSubscription;
     FConnectedEvents: INyxEvents;
@@ -79,11 +88,18 @@ type
     FView: TNyxText;
     FSchemaRevision: Integer;
     FPlacement: TNyxPlacement;
+    FAutomaticPlacement: Boolean;
+    FPreview: TNyxDropPreview;
+    FPainted: Boolean;
     FMarked: TNyxControlRef;
     function Capture: TNyxStudioDragContext;
     function Live(out AContext: TNyxStudioDragContext): Boolean;
     function Target(const ATarget: TNyxDesignerTarget;
-      ASession: TNyxStudioSession): TNyxControlRef;
+      ASession: TNyxStudioSession; APlacement: TNyxPlacement): TNyxControlRef;
+    function ResolvePlacement(const ATarget: TNyxDesignerTarget;
+      const AEvent: TNyxEventInfo; out APlacement: TNyxPlacement): Boolean;
+    procedure Paint(const APreview: TNyxDropPreview);
+    procedure HidePaint;
     procedure Mark(const ATarget: TNyxControlRef);
     function Offer(const AKind: TNyxKindRef; const AControl: TNyxControlRef;
       const AEvent: TNyxEventInfo; const AResponse: INyxGestureResponse): TNyxText;
@@ -93,7 +109,8 @@ type
     { Borrow both method receivers until Destroy. Capture must run on the UI
       thread and return owners alive throughout this synchronous invocation. }
     constructor Create(ACapture: TNyxStudioDragCapture;
-      AFeedback: TNyxStudioDragFeedback = nil);
+      AFeedback: TNyxStudioDragFeedback = nil;
+      APlacementFeedback: TNyxStudioPlacementFeedback = nil);
     destructor Destroy; override;
     { Scan only the ordinary editor shell, never authored/runtime descendants.
       Retained source views reuse registrations; replacement or changed move
@@ -110,6 +127,12 @@ type
 
 { One bounded private transfer format shared by browser/native adapters. }
 function NyxStudioPlacementFormat: TNyxTransferFormatRef;
+{ Closed UI boundary. Automatic is presentation only; returned explicit intent
+  always remains valid for the unchanged semantic/worker placement contract. }
+function NyxStudioPlacementChoice(APlacement: TNyxPlacement;
+  AAutomatic: Boolean): TNyxText;
+procedure ReadNyxStudioPlacementChoice(const AValue: TNyxText;
+  out APlacement: TNyxPlacement; out AAutomatic: Boolean);
 
 implementation
 
@@ -138,6 +161,29 @@ type
 function NyxStudioPlacementFormat: TNyxTransferFormatRef;
 begin
   Result := NyxTransferFormat('application/x-nyx-studio-placement');
+end;
+
+function NyxStudioPlacementChoice(APlacement: TNyxPlacement;
+  AAutomatic: Boolean): TNyxText;
+begin
+  Result := NyxPlacementName(APlacement);
+
+  if AAutomatic then
+  begin
+    Result := NyxStudioAutomaticPlacement;
+  end;
+end;
+
+procedure ReadNyxStudioPlacementChoice(const AValue: TNyxText;
+  out APlacement: TNyxPlacement; out AAutomatic: Boolean);
+begin
+  AAutomatic := AValue = NyxStudioAutomaticPlacement;
+  APlacement := nplInside;
+
+  if not AAutomatic then
+  begin
+    APlacement := ReadNyxPlacement(AValue);
+  end;
 end;
 
 constructor TSourceCallback.Create(ABroker: TNyxStudioDrag; const AKind: TNyxKindRef;
@@ -176,7 +222,7 @@ begin
 end;
 
 constructor TNyxStudioDrag.Create(ACapture: TNyxStudioDragCapture;
-  AFeedback: TNyxStudioDragFeedback);
+  AFeedback: TNyxStudioDragFeedback; APlacementFeedback: TNyxStudioPlacementFeedback);
 var
   LID: TGUID;
 begin
@@ -194,11 +240,13 @@ begin
   FNonce := TNyxText(GUIDToString(LID));
   FCapture := ACapture;
   FFeedback := AFeedback;
+  FPlacementFeedback := APlacementFeedback;
 end;
 
 destructor TNyxStudioDrag.Destroy;
 begin
   FFeedback := nil;
+  FPlacementFeedback := nil;
   DisconnectSources;
   FCapture := nil;
   inherited Destroy;
@@ -231,6 +279,8 @@ end;
 
 procedure TNyxStudioDrag.Cancel;
 begin
+  HidePaint;
+  FPreview := Default(TNyxDropPreview);
   FLease := '';
   FKind := Default(TNyxKindRef);
   FControl := Default(TNyxControlRef);
@@ -238,6 +288,33 @@ begin
   FContext := Default(TNyxStudioCommandContext);
   FView := '';
   Mark(Default(TNyxControlRef));
+end;
+
+procedure TNyxStudioDrag.HidePaint;
+begin
+
+  if FPainted and Assigned(FPlacementFeedback) then
+  begin
+    FPlacementFeedback(Default(TNyxDropPreview));
+  end;
+  FPainted := False;
+end;
+
+procedure TNyxStudioDrag.Paint(const APreview: TNyxDropPreview);
+begin
+
+  if FPainted and (FPreview.Origin.ID = APreview.Origin.ID) and
+    (FPreview.Placement = APreview.Placement) and FPreview.Frame.SameFrame(APreview.Frame) then
+  begin
+    Exit;
+  end;
+  FPreview := APreview;
+
+  if Assigned(FPlacementFeedback) then
+  begin
+    FPlacementFeedback(APreview);
+    FPainted := APreview.Active;
+  end;
 end;
 
 procedure TNyxStudioDrag.Finish(const ALease: TNyxText);
@@ -276,7 +353,7 @@ var
   LIndex: Integer;
 begin
   LKind := NyxCustomKind(ANode.Prop('add-kind'));
-  LControl := NyxControl(ANode.Prop('designer-drag-control'));
+  LControl := NyxControl(ANode.Prop(NyxStudioDragControlKey));
 
   if (LKind.Name <> '') or (LControl.ID <> '') then
   begin
@@ -314,7 +391,7 @@ begin
 
   if LMove <> nil then
   begin
-    LMoveID := LMove.Prop('designer-drag-control');
+    LMoveID := LMove.Prop(NyxStudioDragControlKey);
   end;
 
   if (FConnectedEvents = AEvents) and
@@ -393,6 +470,7 @@ begin
   FView := LContext.Session.ActiveViewID;
   FSchemaRevision := NyxSchemaRevision;
   FPlacement := LContext.Placement;
+  FAutomaticPlacement := LContext.AutomaticPlacement;
   FKind := AKind;
   FControl := AControl;
   FLease := FNonce + '/' + IntToStr(FSerial);
@@ -414,7 +492,8 @@ begin
     AContext.Session.MatchesCommandContext(FContext) and
     AContext.Session.MatchesCommandContext(AContext.CanvasMount) and
     (AContext.Session.ActiveViewID = FView) and
-    (AContext.Placement = FPlacement) and (NyxSchemaRevision = FSchemaRevision);
+    (AContext.Placement = FPlacement) and
+    (AContext.AutomaticPlacement = FAutomaticPlacement) and (NyxSchemaRevision = FSchemaRevision);
 
   if not Result then
   begin
@@ -422,8 +501,45 @@ begin
   end;
 end;
 
+function TNyxStudioDrag.ResolvePlacement(const ATarget: TNyxDesignerTarget;
+  const AEvent: TNyxEventInfo; out APlacement: TNyxPlacement): Boolean;
+var
+  LEdge: TNyxPlacementEdge;
+begin
+  APlacement := FPlacement;
+  Result := not FAutomaticPlacement;
+
+  if not FAutomaticPlacement then
+  begin
+    Exit;
+  end;
+
+  if not AEvent.HasPointer or not AEvent.Pointer.HasPosition then
+  begin
+    Exit(False);
+  end;
+  Result := NyxDropPolicy.Automatic.Resolve(ATarget.Frame,
+    AEvent.Pointer.X, AEvent.Pointer.Y, LEdge);
+  case LEdge of
+    npeInside: APlacement := nplInside;
+    npeBefore: APlacement := nplBefore;
+    npeAfter: APlacement := nplAfter;
+  end;
+end;
+
+function PreviewEdge(APlacement: TNyxPlacement): TNyxPlacementEdge;
+begin
+  case Ord(APlacement) of
+    Ord(nplInside): Result := npeInside;
+    Ord(nplBefore): Result := npeBefore;
+    Ord(nplAfter): Result := npeAfter;
+  else
+    raise ENyxModel.Create('Placement preview requires a closed relative choice');
+  end;
+end;
+
 function TNyxStudioDrag.Target(const ATarget: TNyxDesignerTarget;
-  ASession: TNyxStudioSession): TNyxControlRef;
+  ASession: TNyxStudioSession; APlacement: TNyxPlacement): TNyxControlRef;
 var
   LOwner: TNyxNode;
   LSource: TNyxNode;
@@ -449,11 +565,11 @@ begin
   begin
     Result := NyxControl(LSource.ID);
   end
-  else if (ATarget.Path.Name = '.') and (FPlacement <> nplInside) then
+  else if (ATarget.Path.Name = '.') and (APlacement <> nplInside) then
   begin
     Result := NyxControl(LOwner.ID);
   end
-  else if (FPlacement = nplInside) and ATarget.Container and (ATarget.Path.Name <> '') then
+  else if (APlacement = nplInside) and ATarget.Container and (ATarget.Path.Name <> '') then
   begin
     { Inherited definition content is never an editable descendant of this
       instance. Only an exact existing customized layout descriptor is eligible;
@@ -476,12 +592,12 @@ begin
   end;
   LParent := ASession.Document.Find(Result.ID);
 
-  if FPlacement <> nplInside then
+  if APlacement <> nplInside then
   begin
     LParent := LParent.Parent;
   end;
 
-  if (LParent = nil) or ((FPlacement = nplInside) and not ATarget.Container) or
+  if (LParent = nil) or ((APlacement = nplInside) and not ATarget.Container) or
     ((LParent.ProjectionKind = NyxKindName(nkComponent)) and
       (LParent.Prop('component') <> '')) then
   begin
@@ -536,6 +652,7 @@ var
   LPair: TNyxProjectPair;
   LOperation: TNyxDropOperation;
   LEdit: TNyxStudioDesignEdit;
+  LPlacement: TNyxPlacement;
 begin
 
   if not AEvent.HasDrag or not Live(LContext) then
@@ -545,6 +662,7 @@ begin
 
   if AEvent.Drag.Phase = ndpExit then
   begin
+    HidePaint;
     Mark(Default(TNyxControlRef));
     Exit;
   end;
@@ -553,13 +671,25 @@ begin
     not AEvent.Drag.Transfer.HasFormat(NyxStudioPlacementFormat) or
     AEvent.Drag.Transfer.HasFiles or not ADecision.CanRequest(ngcAcceptDrop) then
   begin
+    FPreview := Default(TNyxDropPreview);
+    HidePaint;
     Mark(Default(TNyxControlRef));
     Exit;
   end;
-  LTarget := Target(ATarget, LContext.Session);
+
+  if not ResolvePlacement(ATarget, AEvent, LPlacement) then
+  begin
+    FPreview := Default(TNyxDropPreview);
+    HidePaint;
+    Mark(Default(TNyxControlRef));
+    Exit;
+  end;
+  LTarget := Target(ATarget, LContext.Session, LPlacement);
 
   if LTarget.ID = '' then
   begin
+    FPreview := Default(TNyxDropPreview);
+    HidePaint;
     Mark(Default(TNyxControlRef));
     Exit;
   end;
@@ -572,6 +702,9 @@ begin
 
   if not (LOperation in AEvent.Drag.Allowed) then
   begin
+    FPreview := Default(TNyxDropPreview);
+    HidePaint;
+    Mark(Default(TNyxControlRef));
     Exit;
   end;
 
@@ -579,6 +712,20 @@ begin
   begin
     ADecision.AcceptDrop(LOperation);
     Mark(ATarget.Owner);
+
+    if ATarget.Frame.Defined then
+    begin
+      Paint(NyxDropPreview(NyxControl(AEvent.OriginID), ATarget.Frame, PreviewEdge(LPlacement)));
+    end;
+    Exit;
+  end;
+
+  if FAutomaticPlacement and (not FPreview.Active or
+    (FPreview.Origin.ID <> AEvent.OriginID) or
+    (FPreview.Placement <> PreviewEdge(LPlacement)) or
+    not FPreview.Frame.SameFrame(ATarget.Frame)) then
+  begin
+    Cancel;
     Exit;
   end;
 
@@ -601,12 +748,12 @@ begin
 
   if FKind.Name <> '' then
   begin
-    LEdit := LContext.Session.CaptureNewPlacement(FKind, LTarget, FPlacement, LContext.CanvasMount);
+    LEdit := LContext.Session.CaptureNewPlacement(FKind, LTarget, LPlacement, LContext.CanvasMount);
   end
   else
   begin
     LEdit := LContext.Session.CapturePlacement(NyxPlaceControl(FControl, LTarget,
-      FPlacement), LContext.CanvasMount);
+      LPlacement), LContext.CanvasMount);
   end;
   Cancel;
   LContext.Commands.Edit(LEdit);

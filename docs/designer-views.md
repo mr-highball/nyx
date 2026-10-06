@@ -416,3 +416,58 @@ journeys. Maintained evidence is [recorded here](../WORK.md#absolute-position-mo
 The result qualifies this absolute-layout movement path. Full reparenting guides,
 container allocation, nested scrolling, physical devices, accessibility and
 large-project performance remain open.
+
+## Flow placement previews
+
+The public [placement contract](../src/nyx.designer.placement.pas) keeps placement
+choices and geometry copied, typed and independent of either widget system:
+
+```pascal
+LPolicy := NyxDropPolicy.Automatic.EdgeBand(24);
+
+if LPolicy.Resolve(LTarget.Frame, LPointer.X, LPointer.Y, LEdge) then
+begin
+  LPreview := NyxDropPreview(LRuntimeControl, LTarget.Frame, LEdge);
+end;
+```
+
+`LTarget.Frame` contains the actual physical face, logical dimensions, exact
+runtime parent and realized row/column axis. Containers offer Before/After in
+their edge bands and Inside in their middle; leaves use halves of the parent
+axis. Unknown, grid and absolute axes offer only container Inside automatically.
+Explicit `.Explicit(npeBefore)` and `.Explicit(npeAfter)` remain available.
+Automatic is optional; ordinary defaults retain explicit Inside.
+
+Both adapters paint inert insertion strips, clipped to the visible host. A copied
+preview owns no document or controls. Ordinary Studio places its separate
+**Drag selected** Nyx button beside **Drop position**, including compact Design.
+Authored input controls remain editable inputs. Hover changes no accepted file;
+release uses the existing placement command and one paired Undo. Automatic
+release requires the last admitted exact runtime face and edge. Refused targets
+retire that agreement; native final leave hides paint while retaining the proposal
+for its following drop. Changed ownership, pending source, mount or creator epoch
+refuses. Inherited content requires an existing editable local layout override.
+
+Compose [the English fixture](../tests/flow-review.operations.json) through one
+revision-aware `nyx_transaction` in an explicit project. Export bounded source
+windows at one revision, retaining its terminal LF, then run:
+
+```powershell
+./tools/build.ps1 -Target flow-placement -FlowSourceDirectory <export-directory>
+```
+
+The target starts no service and changes no enrollment. It runs checked shared
+contracts on both native compilers and actual Win32 callbacks against the
+unchanged semantic source, then stages Pascal browser contracts, ordinary Studio
+and its worker. The [host driver](../tests/nyx_flow_browser_review.lpr) supplies
+actual browser drag offers, cancellation and drop through the owned Chromium
+host, using `flow-studio.html?workspace=<exact-handle>`. Run desktop and actual
+390-pixel viewport journeys separately. Their observer authors no replacement
+document and fabricates no lease. Evidence belongs to
+[WORK.md](../WORK.md#flow-placement-previews--2026-10-06).
+
+This contract qualifies relative row/column placement. It does not establish
+automatic grid/absolute insertion, uncommitted canvas draft retention through a
+structural reparent, full nested scrolling, physical phone touch, another native
+widgetset, accessibility or large-project performance. Container allocation and
+alternate view structures remain open responsive-authoring work.

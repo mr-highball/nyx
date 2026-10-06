@@ -37,6 +37,7 @@ uses
   nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl,
   nyx.studio.sourcejobs, nyx.modal, nyx.modal.lcl,
   nyx.designer.input, nyx.gestures, nyx.studio.edits, nyx.studio.drag,
+  nyx.designer.placement,
   nyx.designer.resize, nyx.designer.guides, nyx.studio.resize, nyx.presentations, nyx.studio.move;
 
 type
@@ -181,6 +182,7 @@ type
     procedure DesignerResizeStatus(const AMessage: TNyxText);
     procedure DesignerResizePresentation(const APreview: TNyxResizePreview);
     procedure DesignerDragFeedback(const ATarget: TNyxControlRef);
+    procedure DesignerPlacementFeedback(const APreview: TNyxDropPreview);
     procedure DesignerGesture(const ATarget: TNyxDesignerTarget;
       const AEvent: TNyxEventInfo; const ADecision: INyxGestureDecision);
     procedure HierarchyEvent(const AEvent: TNyxEventInfo);
@@ -545,7 +547,8 @@ begin
   FCanvasView := TNyxLCLRenderer.Create(FTheme);
   FCanvasView.DesignerInput := NyxDesignerInput.Drops(True);
   FCanvasView.OnDesignerGesture := DesignerGesture;
-  FDesignerDrag := TNyxStudioDrag.Create(DesignerDragContext, DesignerDragFeedback);
+  FDesignerDrag := TNyxStudioDrag.Create(DesignerDragContext, DesignerDragFeedback,
+    DesignerPlacementFeedback);
   FDesignerResize := TNyxStudioResize.Create(DesignerDragContext,
     DesignerResizeMeasure, DesignerResizeStatus, DesignerResizePresentation, DesignerResizeGuides);
   FDesignerMove := TNyxStudioMove.Create(DesignerDragContext, DesignerResizeGuides,
@@ -2279,6 +2282,7 @@ begin
   Result.CanvasMount := FCanvasCommandContext;
   Result.Designing := not FPreview;
   Result.Placement := FState.DesignerPlacement;
+  Result.AutomaticPlacement := FState.DesignerAutomaticPlacement;
 end;
 
 function TNyxNativeStudio.DesignerMovePoint(const APointer: TNyxPointerSnapshot): TNyxResizePoint;
@@ -2342,6 +2346,24 @@ begin
   end;
 end;
 
+procedure TNyxNativeStudio.DesignerPlacementFeedback(const APreview: TNyxDropPreview);
+begin
+
+  if (FCanvasView <> nil) and (FCanvasView.Root <> nil) and not FPreview then
+  begin
+    FCanvasView.PreviewDrop(APreview);
+
+    if APreview.Active then
+    begin
+      DesignerResizeStatus(APreview.Caption);
+    end
+    else
+    begin
+      DesignerResizeStatus('Ready to design');
+    end;
+  end;
+end;
+
 procedure TNyxNativeStudio.DesignerGesture(const ATarget: TNyxDesignerTarget;
   const AEvent: TNyxEventInfo; const ADecision: INyxGestureDecision);
 begin
@@ -2373,7 +2395,8 @@ begin
     if (ANode.ID = NyxStudioDropPositionID) and (AEvent.Trigger = ntChange) then
     begin
       FDesignerDrag.Cancel;
-      FState.DesignerPlacement := ReadNyxPlacement(ANode.Prop('value'));
+      ReadNyxStudioPlacementChoice(ANode.Prop('value'), FState.DesignerPlacement,
+        FState.DesignerAutomaticPlacement);
       Exit;
     end;
 

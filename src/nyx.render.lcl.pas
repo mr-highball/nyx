@@ -53,6 +53,7 @@ uses
   nyx.editing.lcl,
   nyx.gestures,
   nyx.designer.input,
+  nyx.designer.placement,
   nyx.designer.resize,
   nyx.designer.move,
   nyx.designer.guides,
@@ -259,6 +260,7 @@ type
     FProjectionBaseline: TNyxNode;
     FSelectedDesignID: TNyxText;
     FResizePreview: TNyxResizePreview;
+    FDropPreview: TNyxDropPreview;
     FResizeEdges: array[0..7] of TPanel;
     FCanvasResizeGrips: INyxCanvasResizeGrips;
     FCanvasMoveGrip: INyxCanvasMoveGrip;
@@ -457,6 +459,12 @@ type
       allocations currently use LCL pixels; no widget is retained by the value. }
     function ScreenPointFor(const AID: TNyxText;
       const APointer: TNyxPointerSnapshot): TNyxResizePoint;
+    { Copied exact runtime primitive allocation and screen face. No authored
+      owner fallback; virtual offsets remain in the logical face's geometry. }
+    function DropFrameFor(const AID: TNyxText): TNyxDropFrame;
+    { Inert standard-panel paint. Default clears; selection/unmount/resize
+      retires this proposal before borrowed target controls are released. }
+    procedure PreviewDrop(const APreview: TNyxDropPreview);
     function LogicalPointFor(const AID: TNyxText;
       const AScreen: TNyxResizePoint; AIdentity: TNyxIdentityKind = niAutomatic): TNyxResizePoint;
     { Shared one-based source navigation for the public code-editor component. }
@@ -681,6 +689,7 @@ begin
   ReleaseNyxNode(FProjectionBaseline);
   FSelectedDesignID := '';
   FResizePreview := Default(TNyxResizePreview);
+  FDropPreview := Default(TNyxDropPreview);
   for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
   begin
     FreeAndNil(FResizeEdges[LIndex]);
@@ -2096,7 +2105,22 @@ begin
   FResizePreview := Default(TNyxResizePreview);
   { Painting selection is deliberately scroll-neutral. Navigation uses Reveal,
     so an observing refresh cannot undo the user's independent scroll position. }
+  FDropPreview := Default(TNyxDropPreview);
   UpdateSelection;
+end;
+
+procedure TNyxLCLRenderer.PreviewDrop(const APreview: TNyxDropPreview);
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if APreview.Active and (not FDesignMode or
+    not APreview.Frame.SameFrame(DropFrameFor(APreview.Origin.ID))) then
+  begin
+    raise ENyxModel.Create('Drop presentation requires current exact design geometry');
+  end;
+  FResizePreview := Default(TNyxResizePreview);
+  FDropPreview := APreview;
+  UpdateResizePreview;
 end;
 
 procedure TNyxLCLRenderer.PreviewResize(const APreview: TNyxResizePreview);
@@ -2116,6 +2140,7 @@ begin
     IdentityBinding(APreview.Control.ID, niDesign);
   end;
   FResizePreview := APreview;
+  FDropPreview := Default(TNyxDropPreview);
   UpdateSelection;
 end;
 
@@ -2399,6 +2424,12 @@ var
   LHost: TWinControl;
   LOrigin: TPoint;
   LIndex: Integer;
+  LBox: TNyxGuideBox;
+  LLeft: Double;
+  LTop: Double;
+  LRight: Double;
+  LBottom: Double;
+  LDropFrame: TNyxDropFrame;
 
   procedure Edge(AIndex, ALeft, ATop, AWidth, AHeight: Integer);
   var
@@ -2450,8 +2481,10 @@ var
 
 begin
 
-  if not FResizePreview.Active or (FPanel = nil) or (FPanel.Parent = nil) or
-    (FSelectionEdges[0] = nil) or not FSelectionEdges[0].Visible then
+  if (not FResizePreview.Active and not FDropPreview.Active) or
+    (FPanel = nil) or (FPanel.Parent = nil) or
+    (not FDropPreview.Active and
+      ((FSelectionEdges[0] = nil) or not FSelectionEdges[0].Visible)) then
   begin
     for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
     begin
@@ -2464,21 +2497,31 @@ begin
     Exit;
   end;
   LHost := FPanel.Parent;
-  LBinding := IdentityBinding(FResizePreview.Control.ID, niDesign);
-  { Reuse the freshly laid-out selected outer face, including logical clipping.
-    Undo its two-pixel external highlight before converting to sibling paint
-    space. Root client edges already start at the original face's origin. }
-  LOrigin := Point(FSelectionEdges[0].Left, FSelectionEdges[0].Top);
 
-  if (LBinding.FControl.Parent <> FPanel) or not (LBinding.FControl is TWinControl) then
+  if FDropPreview.Active then
   begin
-    Inc(LOrigin.X, 2);
-    Inc(LOrigin.Y, 2);
+    LBinding := IdentityBinding(FDropPreview.Origin.ID, niRuntime);
+    LOrigin := LHost.ScreenToClient(Point(Round(FDropPreview.Frame.Face.Left),
+      Round(FDropPreview.Frame.Face.Top)));
+  end
+  else
+  begin
+    LBinding := IdentityBinding(FResizePreview.Control.ID, niDesign);
+    { Reuse the freshly laid-out selected outer face, including logical clipping.
+      Undo its two-pixel external highlight before converting to sibling paint
+      space. Root client edges already start at the original face's origin. }
+    LOrigin := Point(FSelectionEdges[0].Left, FSelectionEdges[0].Top);
+
+    if (LBinding.FControl.Parent <> FPanel) or not (LBinding.FControl is TWinControl) then
+    begin
+      Inc(LOrigin.X, 2);
+      Inc(LOrigin.Y, 2);
+    end;
+    LOrigin := LHost.ScreenToClient(FSelectionEdges[0].Parent.ClientToScreen(LOrigin));
+    { Copied logical translation changes only the proposal's bounded paint. }
+    Inc(LOrigin.X, Round(FResizePreview.OffsetX));
+    Inc(LOrigin.Y, Round(FResizePreview.OffsetY));
   end;
-  LOrigin := LHost.ScreenToClient(FSelectionEdges[0].Parent.ClientToScreen(LOrigin));
-  { Copied logical translation changes only the proposal's bounded paint. }
-  Inc(LOrigin.X, Round(FResizePreview.OffsetX));
-  Inc(LOrigin.Y, Round(FResizePreview.OffsetY));
   for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
   begin
 
@@ -2501,6 +2544,32 @@ begin
     end;
     FResizeEdges[LIndex].Parent := LHost;
     FResizeEdges[LIndex].Color := ThemeColor(FTheme.Accent);
+  end;
+
+  if FDropPreview.Active then
+  begin
+    LDropFrame := DropFrameFor(FDropPreview.Origin.ID);
+    for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
+    begin
+      FResizeEdges[LIndex].Visible := False;
+      LBox := FDropPreview.Segment(LIndex);
+
+      if LBox.Defined and FDropPreview.Frame.SameFrame(LDropFrame) then
+      begin
+        { Clip in the wide copied domain before converting to native pixels. }
+        LLeft := Max(0.0, LOrigin.X + LBox.Left);
+        LTop := Max(0.0, LOrigin.Y + LBox.Top);
+        LRight := Min(Double(LHost.ClientWidth), LOrigin.X + LBox.Right);
+        LBottom := Min(Double(LHost.ClientHeight), LOrigin.Y + LBox.Bottom);
+
+        if (LRight > LLeft) and (LBottom > LTop) then
+        begin
+          Edge(LIndex, Round(LLeft), Round(LTop), Round(LRight) - Round(LLeft),
+            Round(LBottom) - Round(LTop));
+        end;
+      end;
+    end;
+    Exit;
   end;
   Edge(0, LOrigin.X - 2, LOrigin.Y - 2, FResizePreview.Size.Width + 4, 2);
   Edge(1, LOrigin.X - 2, LOrigin.Y + FResizePreview.Size.Height,
@@ -3465,6 +3534,36 @@ begin
   Result := NyxResizeSize(LBinding.FLogicalBox.Width, LBinding.FLogicalBox.Height);
 end;
 
+function TNyxLCLRenderer.DropFrameFor(const AID: TNyxText): TNyxDropFrame;
+var
+  LBinding: TNyxLCLBinding;
+  LOrigin: TPoint;
+  LParent: TNyxControlRef;
+begin
+  FEvents.Scheduler.RequireUI;
+  Result := Default(TNyxDropFrame);
+  LBinding := IdentityBinding(AID, niRuntime);
+
+  if not LBinding.FLogicalBox.Defined or (LBinding.FLogicalBox.Width <= 0) or
+    (LBinding.FLogicalBox.Height <= 0) then
+  begin
+    Exit;
+  end;
+  LOrigin := LBinding.FControl.ClientToScreen(Point(0, 0));
+  Dec(LOrigin.X, LBinding.FPlacement.ContentOffsetX);
+  Dec(LOrigin.Y, LBinding.FPlacement.ContentOffsetY);
+  LParent := Default(TNyxControlRef);
+
+  if LBinding.FNode.Parent <> nil then
+  begin
+    LParent := NyxControl(LBinding.FNode.Parent.ID);
+  end;
+  Result := NyxDropFrame(NyxGuideBox(LOrigin.X, LOrigin.Y,
+    LBinding.FLogicalBox.Width, LBinding.FLogicalBox.Height),
+    LBinding.FLogicalBox.Width, LBinding.FLogicalBox.Height, LParent,
+    NyxDesignerParentAxis(LBinding.FNode), NyxDesignerTarget(LBinding.FNode).Container);
+end;
+
 function TNyxLCLRenderer.ScreenPointFor(const AID: TNyxText;
   const APointer: TNyxPointerSnapshot): TNyxResizePoint;
 var
@@ -3907,6 +4006,7 @@ var
   LDecision: INyxGestureDecision;
   LPosition: TPoint;
   LOperation: TNyxDropOperation;
+  LDesignerTarget: TNyxDesignerTarget;
 begin
   Result := Default(TNyxGestureResult);
 
@@ -3967,7 +4067,8 @@ begin
 
       if Assigned(FRenderer.FOnDesignerGesture) then
       begin
-        FRenderer.FOnDesignerGesture(NyxDesignerTarget(FNode), LDispatch.Info, LDecision);
+        LDesignerTarget := NyxDesignerTarget(FNode).WithFrame(FRenderer.DropFrameFor(FNode.ID));
+        FRenderer.FOnDesignerGesture(LDesignerTarget, LDispatch.Info, LDecision);
       end;
     end
     else

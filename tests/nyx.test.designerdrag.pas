@@ -35,7 +35,7 @@ uses
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.data, nyx.behavior, nyx.gestures,
   nyx.events, nyx.schema, nyx.composition, nyx.designer.input, nyx.studio.drag,
   nyx.studio.edits, nyx.studio.projects, nyx.studio.session,
-  nyx.studio.sourcejobs, nyx.test.placement;
+  nyx.studio.sourcejobs, nyx.test.placement, nyx.designer.placement, nyx.designer.guides;
 
 type
   { Own the test owners; the broker borrows this capture receiver. Retained
@@ -45,8 +45,10 @@ type
     Commands: TNyxSourceCommands;
     Context: TNyxStudioDragContext;
     LastMarked: TNyxText;
+    LastPreview: TNyxDropPreview;
     function Capture: TNyxStudioDragContext;
     procedure Feedback(const ATarget: TNyxControlRef);
+    procedure PlacementFeedback(const APreview: TNyxDropPreview);
   end;
 
 function TDragContext.Capture: TNyxStudioDragContext;
@@ -57,6 +59,11 @@ end;
 procedure TDragContext.Feedback(const ATarget: TNyxControlRef);
 begin
   LastMarked := ATarget.ID;
+end;
+
+procedure TDragContext.PlacementFeedback(const APreview: TNyxDropPreview);
+begin
+  LastPreview := APreview;
 end;
 
 function RunNyxDesignerDragGuards: Integer;
@@ -70,6 +77,9 @@ var
   LBefore: TNyxProjectPair;
   LPolicy: TNyxDesignerInput;
   LChecks: Integer;
+  LGeometry: TNyxDropFrame;
+  LPointerX: Double;
+  LPointerY: Double;
 
   procedure Check(AValue: Boolean; const AReason: TNyxText);
   begin
@@ -126,13 +136,25 @@ var
   var
     LInfo: TNyxEventInfo;
     LDecision: INyxGestureDecision;
+    LTarget: TNyxDesignerTarget;
   begin
     LInfo := Default(TNyxEventInfo);
+    LInfo.OriginID := AID;
     LInfo.HasDrag := True;
     LInfo.Drag := NyxDragSnapshot(APhase, ATransfer, AAllowed, ndoNone, '', True);
     LDecision := NewNyxGestureDecision([ngcAcceptDrop], AAllowed);
     try
-      LBroker.Gesture(NyxDesignerTarget(LCanvas.Find(AID)), LInfo, LDecision);
+      LTarget := NyxDesignerTarget(LCanvas.Find(AID));
+
+      if LGeometry.Defined then
+      begin
+        LTarget := LTarget.WithFrame(LGeometry);
+        LInfo.HasPointer := True;
+        LInfo.Pointer.HasPosition := True;
+        LInfo.Pointer.X := LPointerX;
+        LInfo.Pointer.Y := LPointerY;
+      end;
+      LBroker.Gesture(LTarget, LInfo, LDecision);
     finally
       Result := LDecision.Seal;
     end;
@@ -141,6 +163,9 @@ var
 
 begin
   LChecks := 0;
+  LGeometry := Default(TNyxDropFrame);
+  LPointerX := 40;
+  LPointerY := 80;
   LOwner := TDragContext.Create;
   LBroker := nil;
   LShell := nil;
@@ -159,9 +184,9 @@ begin
     LShell.Add(TNyxNode.Create(nkButton, 'palette-button')
       .Configure.DragSource(True).Done.SetProp('add-kind', 'button'));
     LShell.Add(TNyxNode.Create(nkButton, NyxStudioDragMoveID)
-      .Configure.DragSource(True).Done.SetProp('designer-drag-control', 'notes-editor'));
+      .Configure.DragSource(True).Done.SetProp(NyxStudioDragControlKey, 'notes-editor'));
     LCanvas := RealizeNyxView(LOwner.Session.Document, LOwner.Session.ActiveView);
-    LBroker := TNyxStudioDrag.Create(LOwner.Capture, LOwner.Feedback);
+    LBroker := TNyxStudioDrag.Create(LOwner.Capture, LOwner.Feedback, LOwner.PlacementFeedback);
     Connect;
     LPolicy := NyxDesignerInput;
     Check(not LPolicy.DropEnabled and LPolicy.Drops(True).DropEnabled and
@@ -273,6 +298,47 @@ begin
     Connect;
     LOffer := Offer('palette-button');
     Check(LOffer.Offered, 'replacement source registrations remain usable');
+    { Copied geometry qualifies the broker boundary; actual target allocation
+      and input are exercised separately through ordinary Studio adapters. }
+    LCanvas.Free;
+    LCanvas := RealizeNyxView(LOwner.Session.Document, LOwner.Session.ActiveView);
+    LOwner.Context.AutomaticPlacement := True;
+    LOffer := Offer('palette-button');
+    Check(not Gesture('right-layout', ndpOver, LOffer.Transfer.ProtectedCopy,
+      [ndoCopy]).Accepted, 'automatic placement requires actual copied geometry');
+    LGeometry := NyxDropFrame(NyxGuideBox(10, 20, 240, 180), 240, 180,
+      NyxDesignerTarget(LCanvas.Find('right-layout')).Parent, npaVertical, True);
+    Check(Gesture('right-layout', ndpOver, LOffer.Transfer.ProtectedCopy,
+      [ndoCopy]).Accepted and (LOwner.LastPreview.Placement = npeInside),
+      'automatic container middle offers inside with an inert copied preview');
+    LPointerY := 5;
+    Check(Gesture('right-layout', ndpOver, LOffer.Transfer.ProtectedCopy,
+      [ndoCopy]).Accepted and (LOwner.LastPreview.Placement = npeBefore),
+      'automatic flow edge updates the exact relative intent');
+    LGeometry := NyxDropFrame(NyxGuideBox(11, 20, 240, 180), 240, 180,
+      NyxDesignerTarget(LCanvas.Find('right-layout')).Parent, npaVertical, True);
+    Check(not Gesture('right-layout', ndpDrop, LOffer.Transfer,
+      [ndoCopy]).Accepted, 'changed hover frame refuses before any paired command');
+    Check(not LOwner.Commands.Busy and not LOwner.LastPreview.Active,
+      'stale automatic drop cancels paint and queues no mutation');
+    LOffer := Offer('palette-button');
+    Check(Gesture('right-layout', ndpOver, LOffer.Transfer.ProtectedCopy,
+      [ndoCopy]).Accepted, 'fresh geometry can establish another local proposal');
+    LPointerY := 179;
+    Check(not Gesture('right-layout', ndpDrop, LOffer.Transfer,
+      [ndoCopy]).Accepted, 'release cannot invent a different unpreviewed edge');
+    Check(EncodeNyxProject(LOwner.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
+      'automatic refusals preserve the exact paired baseline');
+    LPointerY := 5;
+    LOffer := Offer('palette-button');
+    Check(Gesture('right-layout', ndpOver, LOffer.Transfer.ProtectedCopy,
+      [ndoCopy]).Accepted, 'another hover can establish an exact proposal');
+    Check(not Gesture('right-layout', ndpOver, LOffer.Transfer.ProtectedCopy,
+      [ndoMove]).Accepted and not LOwner.LastPreview.Active,
+      'a refused operation retires previous paint and agreement');
+    Check(not Gesture('right-layout', ndpDrop, LOffer.Transfer,
+      [ndoCopy]).Accepted and not LOwner.Commands.Busy,
+      'release cannot reuse a proposal retired by an intervening refusal');
     LBroker.Free;
     LBroker := nil;
     Check(not Offer('palette-button').Offered,

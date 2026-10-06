@@ -25,7 +25,21 @@ execution. Codegen criterion 3 remains open at no-closure 28; workflow 9, render
 3, authoring 11 and delivery 1 remain. No full criterion, goal percentage or DONE
 claim follows. See [evidence](WORK.md#reviewable-release-refresh--2026-10-05).
 
-Current independent authoring packet: ordinary absolute-position movement consumes
+Current independent authoring packet: typed flow placement consumes exact copied
+physical/logical target geometry and realized row/column axes. Ordinary Studio
+offers automatic or explicit placement, inert both-target insertion paint and a
+compact-accessible Nyx drag source. Release uses one paired Undo and refuses a
+retired hover agreement. Checks pass 98 per compiler/browser, 45 actual Win32
+callbacks and 36 per desktop/exact-390 host browser journey. Both MCP application
+jobs compile exact English source; the LAN editor overlay preserves seven pairs/
+history states, unchanged worker and fourteen services. No original criterion
+closes: authoring no-closure advances **20→21** once; workflow **9**, codegen **28**,
+renderer **3**, delivery **1** remain. End local flow-policy/fixture expansion.
+Stable container allocation, alternate view structures and complete ordinary
+editor/parity/accessibility/performance/delivery remain open. See
+[evidence](WORK.md#flow-placement-previews--2026-10-06).
+
+Preceding independent authoring packet: ordinary absolute-position movement consumes
 copied Nyx policies, edge/center geometry, public pointer/key streams and retained
 adapter controls. Preview paints without source edits; release publishes both
 axes as one paired Undo. Checks pass 99 per native compiler/browser, 22 Win32

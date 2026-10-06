@@ -40,6 +40,32 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Flow placement previews — 2026-10-06
+
+Original criterion 1 now consumes public copied placement policies, actual
+physical/logical faces and explicit realized parent axes. Optional automatic
+row/column edges coexist with explicit Inside/Before/After. Both adapters paint
+inert clipped insertion guides; a separate Nyx source remains available beside
+the selector in compact Design. Accepted inputs remain ordinary controls. Exact
+runtime identity, ownership, last-hover frame, pair, mount and creator guards
+precede one paired publication. Refused hover cannot resurrect an old proposal.
+
+Checks pass 98 per native compiler/browser, 45 actual Win32 callbacks and 36 per
+desktop/exact-390 host browser journey. MCP composes an independent English
+project, and both immutable application jobs compile its exact 178-line source.
+The one-editor-asset LAN overlay preserves seven paired projects/history states,
+the unchanged worker and fourteen services; twenty tools authenticate. See
+[reproduction and limits](../WORK.md#flow-placement-previews--2026-10-06).
+
+No original criterion closes. Authoring no-closure advances **20→21** once;
+workflow **9**, codegen **28**, renderer **3**, delivery **1** remain. End local
+flow-policy/fixture expansion. Stable container allocation and alternate view
+structures are next original criterion 1 gaps. Automatic grid/absolute insertion,
+uncommitted canvas drafts across reparent, full nested scrolling, compact select
+typography and complete native/editor/parity/accessibility/performance remain open.
+The hard prerequisites above remain unaccepted; packet evidence does not satisfy
+the complete criterion or task.
+
 ## Absolute-position move snapping — 2026-10-06
 
 Original criterion 1 now has reusable typed movement policies, managed canvas

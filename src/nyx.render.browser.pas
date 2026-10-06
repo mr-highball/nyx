@@ -43,6 +43,7 @@ uses
   nyx.editing.browser,
   nyx.gestures,
   nyx.designer.input,
+  nyx.designer.placement,
   nyx.designer.resize,
   nyx.designer.move,
   nyx.designer.guides,
@@ -222,6 +223,7 @@ type
     FOnDesignerGesture: TNyxDesignerGesture;
     FSelectedDesignID: TNyxText;
     FResizePreview: TNyxResizePreview;
+    FDropPreview: TNyxDropPreview;
     FResizeEdges: array[0..7] of TJSHTMLElement;
     FResizePreviewHandler: TJSEventHandler;
     FResizeListening: Boolean;
@@ -336,6 +338,12 @@ type
       refuses missing/zero geometry and never retains DOM or event handles. }
     function ScreenPointFor(const AID: TNyxText;
       const APointer: TNyxPointerSnapshot): TNyxResizePoint;
+    { Copied runtime primitive geometry; exact runtime identity is mandatory.
+      No authored-owner fallback or reusable-definition guess is performed. }
+    function DropFrameFor(const AID: TNyxText): TNyxDropFrame;
+    { Inert placement paint, borrowing no tree. Default clears; unmount,
+      selection or resize presentation retires this proposal. }
+    procedure PreviewDrop(const APreview: TNyxDropPreview);
     function LogicalPointFor(const AID: TNyxText;
       const AScreen: TNyxResizePoint; AIdentity: TNyxIdentityKind = niAutomatic): TNyxResizePoint;
     { Read the containing mounted view's logical-pixel range/offset. Missing
@@ -534,6 +542,45 @@ begin
   FEvents.Scheduler.RequireUI;
   LElement := ElementFor(AID, AIdentity);
   Result := NyxResizeSize(Round(LElement.offsetWidth), Round(LElement.offsetHeight));
+end;
+
+function TNyxBrowserRenderer.DropFrameFor(const AID: TNyxText): TNyxDropFrame;
+var
+  LNode: TNyxNode;
+  LElement: TJSHTMLElement;
+  LFace: TJSDOMRect;
+  LParent: TNyxControlRef;
+begin
+  FEvents.Scheduler.RequireUI;
+  Result := Default(TNyxDropFrame);
+
+  if FRoot = nil then
+  begin
+    raise ENyxModel.Create('Drop geometry requires a mounted view');
+  end;
+  LNode := FRoot.Find(AID);
+
+  if LNode = nil then
+  begin
+    raise ENyxModel.Create('Drop geometry requires an exact mounted runtime primitive');
+  end;
+  LElement := ElementFor(AID, niRuntime);
+  LFace := LElement.getBoundingClientRect;
+
+  if (LFace.width <= 0) or (LFace.height <= 0) or
+    (LElement.offsetWidth <= 0) or (LElement.offsetHeight <= 0) then
+  begin
+    Exit;
+  end;
+  LParent := Default(TNyxControlRef);
+
+  if LNode.Parent <> nil then
+  begin
+    LParent := NyxControl(LNode.Parent.ID);
+  end;
+  Result := NyxDropFrame(NyxGuideBox(LFace.left, LFace.top, LFace.width, LFace.height),
+    LElement.offsetWidth, LElement.offsetHeight, LParent,
+    NyxDesignerParentAxis(LNode), NyxDesignerTarget(LNode).Container);
 end;
 
 function TNyxBrowserRenderer.ScreenPointFor(const AID: TNyxText;
@@ -2068,6 +2115,7 @@ var
   LIndex: Integer;
 begin
   FResizePreview := Default(TNyxResizePreview);
+  FDropPreview := Default(TNyxDropPreview);
 
   UpdateResizeListening;
   for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
@@ -2085,7 +2133,8 @@ end;
 procedure TNyxBrowserRenderer.UpdateResizeListening;
 begin
 
-  if FResizePreview.Active or (FCanvasResizeGrips <> nil) or (FCanvasMoveGrip <> nil) then
+  if FResizePreview.Active or FDropPreview.Active or
+    (FCanvasResizeGrips <> nil) or (FCanvasMoveGrip <> nil) then
   begin
 
     if not FResizeListening then
@@ -2422,6 +2471,21 @@ begin
   Result := True;
 end;
 
+procedure TNyxBrowserRenderer.PreviewDrop(const APreview: TNyxDropPreview);
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if APreview.Active and (not FDesignMode or
+    not APreview.Frame.SameFrame(DropFrameFor(APreview.Origin.ID))) then
+  begin
+    raise ENyxModel.Create('Drop presentation requires current exact design geometry');
+  end;
+  ClearResizePreview;
+  FDropPreview := APreview;
+  UpdateResizeListening;
+  UpdateResizePreview;
+end;
+
 procedure TNyxBrowserRenderer.PreviewResize(const APreview: TNyxResizePreview);
 begin
   FEvents.Scheduler.RequireUI;
@@ -2440,6 +2504,7 @@ begin
     the previous presentation. Four outline strips and at most four guide
     strips remain inert paint, independent of accepted document ownership. }
   ElementFor(APreview.Control.ID, niDesign);
+  FDropPreview := Default(TNyxDropPreview);
   FResizePreview := APreview;
 
   UpdateResizeListening;
@@ -2456,6 +2521,8 @@ var
   LHeight: Double;
   LLeft, LTop: Double;
   LIndex: Integer;
+  LBox: TNyxGuideBox;
+  LDropFrame: TNyxDropFrame;
 
   procedure Edge(AIndex: Integer; ALeft, ATop, AWidth, AHeight: Double);
   var
@@ -2517,11 +2584,18 @@ var
 
 begin
 
-  if not FResizePreview.Active or (FHost = nil) then
+  if (not FResizePreview.Active and not FDropPreview.Active) or (FHost = nil) then
   begin
     Exit;
   end;
-  LElement := ElementFor(FResizePreview.Control.ID, niDesign);
+  if FDropPreview.Active then
+  begin
+    LElement := ElementFor(FDropPreview.Origin.ID, niRuntime);
+  end
+  else
+  begin
+    LElement := ElementFor(FResizePreview.Control.ID, niDesign);
+  end;
   LFace := LElement.getBoundingClientRect;
   LClip := FHost.getBoundingClientRect;
   { Resize policy works in logical allocation pixels. Preserve a containing
@@ -2566,6 +2640,29 @@ begin
     begin
       document.body.appendChild(FResizeEdges[LIndex]);
     end;
+  end;
+  if FDropPreview.Active then
+  begin
+    LDropFrame := DropFrameFor(FDropPreview.Origin.ID);
+    for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
+    begin
+      FResizeEdges[LIndex].style.setProperty('display', 'none');
+      FResizeEdges[LIndex].setAttribute('data-nyx-drop-edge', IntToStr(LIndex));
+      LBox := FDropPreview.Segment(LIndex);
+
+      if LBox.Defined and FDropPreview.Frame.SameFrame(LDropFrame) then
+      begin
+        Edge(LIndex, LFace.left + LBox.Left * LFace.width / LElement.offsetWidth,
+          LFace.top + LBox.Top * LFace.height / LElement.offsetHeight,
+          LBox.Width * LFace.width / LElement.offsetWidth,
+          LBox.Height * LFace.height / LElement.offsetHeight);
+      end;
+    end;
+    Exit;
+  end;
+  for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
+  begin
+    FResizeEdges[LIndex].removeAttribute('data-nyx-drop-edge');
   end;
   { A copied position proposal uses the same bounded, pointer-transparent paint.
     Translate the measured face without relocating the live editable control. }
@@ -3428,6 +3525,7 @@ var
   LBounds: TJSDOMRect;
   LTarget: TJSHTMLElement;
   LSource: Boolean;
+  LDesignerTarget: TNyxDesignerTarget;
 begin
   Result := True;
   LEvents := FRenderer.FEvents;
@@ -3546,7 +3644,18 @@ begin
 
       if Assigned(FRenderer.FOnDesignerGesture) then
       begin
-        FRenderer.FOnDesignerGesture(NyxDesignerTarget(FNode), LDispatch.Info, LDecision);
+        LDesignerTarget := NyxDesignerTarget(FNode).WithFrame(FRenderer.DropFrameFor(FNode.ID));
+
+        if LDesignerTarget.Frame.Defined then
+        begin
+          { Designer placement operates in copied logical face pixels. Ordinary
+            application pointer notifications retain their existing contract. }
+          LDispatch.Info.Pointer.X := LDispatch.Info.Pointer.X *
+            LDesignerTarget.Frame.Width / LDesignerTarget.Frame.Face.Width;
+          LDispatch.Info.Pointer.Y := LDispatch.Info.Pointer.Y *
+            LDesignerTarget.Frame.Height / LDesignerTarget.Frame.Face.Height;
+        end;
+        FRenderer.FOnDesignerGesture(LDesignerTarget, LDispatch.Info, LDecision);
       end;
     end
     else

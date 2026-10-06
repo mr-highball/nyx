@@ -27,7 +27,8 @@ unit nyx.designer.input;
 interface
 
 uses
-  nyx.text, nyx.types, nyx.model, nyx.behavior, nyx.data, nyx.gestures;
+  nyx.text, nyx.types, nyx.model, nyx.behavior, nyx.data, nyx.gestures,
+  nyx.designer.placement;
 
 type
   { Explicit renderer-host input policy. Design mode normally exposes selection
@@ -53,11 +54,19 @@ type
     FSource: TNyxControlRef;
     FPath: TNyxPartRef;
     FContainer: Boolean;
+    FParent: TNyxControlRef;
+    FFrame: TNyxDropFrame;
   public
+    { Adapters add only copied, positive physical/logical geometry. Default
+      remains usable by identity-only consumers and refuses automatic placement. }
+    function WithFrame(const AFrame: TNyxDropFrame): TNyxDesignerTarget;
     property Owner: TNyxControlRef read FOwner;
     property Source: TNyxControlRef read FSource;
     property Path: TNyxPartRef read FPath;
     property Container: Boolean read FContainer;
+    { Exact runtime parent identity, absent only for a realized root. }
+    property Parent: TNyxControlRef read FParent;
+    property Frame: TNyxDropFrame read FFrame;
   end;
 
   { Synchronous borrowed receiver. The event/target contain owned values, never
@@ -74,6 +83,9 @@ function NyxDesignerInput: TNyxDesignerInput;
   and direct named-part path; nil refuses and ambiguous unnamed edges stay
   explicitly unaddressable. Platform adapters share this identity contract. }
 function NyxDesignerTarget(AOrigin: TNyxNode): TNyxDesignerTarget;
+{ Borrow the realized origin for this call only. Only ordinary row/column flow
+  has an automatic insertion axis; absolute/grid/custom allocation is explicit. }
+function NyxDesignerParentAxis(AOrigin: TNyxNode): TNyxPlacementAxis;
 { Copy a designer-only physical notification without runtime binding admission.
   Design views deliberately have no live application store subscription. Only
   target drag phases are admitted; values/commands/application hooks stay absent. }
@@ -87,6 +99,39 @@ uses
 function NyxDesignerInput: TNyxDesignerInput;
 begin
   Result := Default(TNyxDesignerInput);
+end;
+
+function TNyxDesignerTarget.WithFrame(const AFrame: TNyxDropFrame): TNyxDesignerTarget;
+begin
+
+  if AFrame.Defined and ((AFrame.Container <> FContainer) or (AFrame.Parent.ID <> FParent.ID)) then
+  begin
+    raise ENyxModel.Create('Designer drop frame disagrees with its realized primitive');
+  end;
+  Result := Self;
+  Result.FFrame := AFrame;
+end;
+
+function NyxDesignerParentAxis(AOrigin: TNyxNode): TNyxPlacementAxis;
+var
+  LLayout: TNyxText;
+begin
+  Result := npaUnknown;
+
+  if (AOrigin = nil) or (AOrigin.Parent = nil) then
+  begin
+    Exit;
+  end;
+  LLayout := NyxLayout(AOrigin.Parent);
+
+  if LLayout = NyxLayoutName(nlRow) then
+  begin
+    Result := npaHorizontal;
+  end
+  else if LLayout = NyxLayoutName(nlColumn) then
+  begin
+    Result := npaVertical;
+  end;
 end;
 
 function TNyxDesignerInput.Drops(AEnabled: Boolean): TNyxDesignerInput;
@@ -109,6 +154,11 @@ begin
   Result := Default(TNyxDesignerTarget);
   Result.FOwner := NyxControl(AOrigin.DesignID);
   Result.FSource := NyxControl(AOrigin.SourceID);
+
+  if AOrigin.Parent <> nil then
+  begin
+    Result.FParent := NyxControl(AOrigin.Parent.ID);
+  end;
   Result.FContainer := FindNyxPrimitive(AOrigin.ProjectionKind, LInfo) and LInfo.Container;
   LPath := '.';
   LPart := AOrigin;

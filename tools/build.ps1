@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -54,6 +54,8 @@ param(
   [string]$GuideSourceDirectory = 'build/alignment/mcp-source',
   # Unchanged bounded MCP companion for the actual absolute-movement journey.
   [string]$MoveSourceDirectory = 'build/move-snapping/mcp-source',
+
+  [string]$FlowSourceDirectory = 'build/flow-placement/mcp-source',
   # The maintained semantic callback journey exports two accepted source pairs.
   [string]$CallbackSourceDirectory = 'build/agent-callbacks/mcp',
   # Exact companion exported by the semantic handler/compilation journey.
@@ -1687,6 +1689,59 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxMovePage") -Destination $nyxMoveBrowser
     }
     Write-Host 'Movement consumers staged; run the host driver against the explicit semantic project.'
+    exit 0
+  }
+  if ($Target -eq 'flow-placement') {
+    # Pascal owns copied policies, strict tickets, real gestures/paint and paired
+    # history. This script compiles/stages tools and never starts a service.
+    $nyxFlowRoot = Join-Path $nyxRoot 'build/flow-placement'
+    $nyxFlowSource = [IO.Path]::GetFullPath($FlowSourceDirectory)
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxFlowSource 'nyx.generated.view.pas'))) {
+      throw 'Export the flow placement MCP companion before building physical consumers'
+    }
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxFlowStable = Join-Path $nyxFlowRoot 'stable'
+    $nyxFlowMatched = Join-Path $nyxFlowRoot 'matched'
+    $nyxFlowNative = Join-Path $nyxFlowRoot 'native'
+    $nyxFlowDriver = Join-Path $nyxFlowRoot 'driver'
+    $nyxFlowBrowser = Join-Path $nyxFlowRoot 'web'
+    if ($BrowserOutput) { $nyxFlowBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxFlowStable, $nyxFlowMatched,
+      $nyxFlowNative, $nyxFlowDriver, $nyxFlowBrowser | Out-Null
+    $nyxFlowFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests')
+    foreach ($nyxFlowCompiler in @(@($nyxFpc, $nyxFlowStable), @($nyxLclFpc, $nyxFlowMatched))) {
+      Invoke-NyxCompiler $nyxFlowCompiler[0] ($nyxFlowFlags + @(
+        "-FU$($nyxFlowCompiler[1])", "-FE$($nyxFlowCompiler[1])", 'tests/nyx_flow_tests.lpr'))
+      & (Join-Path $nyxFlowCompiler[1] 'nyx_flow_tests.exe')
+      if ($LASTEXITCODE -ne 0) { throw 'Shared flow placement contract failed' }
+    }
+    $nyxFlowPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc ($nyxFlowFlags + @("-Fu$nyxFlowSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxFlowPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxFlowPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxFlowPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxFlowPlatform",
+      "-FU$nyxFlowNative", "-FE$nyxFlowNative", 'tests/nyx_flow_studio.lpr'))
+    & (Join-Path $nyxFlowNative 'nyx_flow_studio.exe') (Join-Path $nyxFlowNative ('projects-' + [guid]::NewGuid().ToString('N'))) (Join-Path $nyxFlowSource 'nyx.generated.view.pas')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native Studio flow placement failed' }
+    foreach ($nyxFlowHostProgram in @('tests/nyx_flow_browser_review.lpr', 'tests/nyx_responsive_browser_review.lpr')) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxFlowFlags + @("-FU$nyxFlowDriver", "-FE$nyxFlowDriver", $nyxFlowHostProgram))
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxFlowProgram in @('tests/nyx_flow_tests.lpr', 'tests/nyx_flow_studio_browser.lpr', 'studio/nyx_studio.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
+        '-Futests', '-Jirtl.js', "-FE$nyxFlowBrowser", $nyxFlowProgram)
+    }
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Tmodule', '-Mdelphi', '-Fusrc', '-Fustudio',
+      '-Jirtl.js', "-FE$nyxFlowBrowser", 'studio/nyx_source_worker.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxFlowBrowser 'rtl.js')
+    foreach ($nyxFlowPage in @('flow-tests.html', 'flow-studio.html', 'index.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxFlowPage") -Destination $nyxFlowBrowser
+    }
+    Write-Host 'Flow placement consumers staged; run the host driver against the explicit semantic project.'
     exit 0
   }
   if ($Target -eq 'resize') {

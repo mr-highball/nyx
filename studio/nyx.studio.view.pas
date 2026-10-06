@@ -85,6 +85,7 @@ type
     { Transient physical-drop position; closed intent decoded at the UI boundary.
       It never changes exported documents or the accepted pair on its own. }
     DesignerPlacement: TNyxPlacement;
+    DesignerAutomaticPlacement: Boolean;
     Palette: TNyxStudioPaletteState;
     Log: TNyxText;
     Status: TNyxText;
@@ -943,12 +944,26 @@ begin
       .Hint('Switch a manual configuration without editing the design or its history.').Done);
   end;
   LViewbar.Add(TNyxNode.Create(nkSelect, NyxStudioDropPositionID)
-    .Configure.Text('Drop position').Items('inside' + #10 + 'before' + #10 + 'after')
-    .Value(NyxPlacementName(AState.DesignerPlacement))
+    .Configure.Text('Drop position').Items(NyxStudioAutomaticPlacement + #10 +
+      NyxPlacementName(nplInside) + #10 + NyxPlacementName(nplBefore) + #10 + NyxPlacementName(nplAfter))
+    .Value(NyxStudioPlacementChoice(AState.DesignerPlacement, AState.DesignerAutomaticPlacement))
     .Width(144)
     .AccessibleName('Drop position')
-    .Hint('Choose where dragged components are placed relative to the target.')
-    .WhenPresentation(NyxPresentation('compact')).Text('').Width(96).Done);
+    .Hint('Automatic uses row/column edge zones. Inside, before and after remain explicit choices.')
+    .WhenPresentation(NyxPresentation('compact')).Text('').Width(128).Done);
+  { Keep this ordinary Nyx drag source beside the placement selector. Compact
+    Studio hides the Inspector while designing, so a source there cannot be
+    dragged onto its canvas. Authored inputs remain ordinary editable inputs. }
+  LSelected := ASession.Selected;
+
+  if (LSelected <> nil) and (LSelected.Parent <> nil) and
+    (LSelected.Kind <> 'slot-override') then
+  begin
+    LViewbar.Add(Button(NyxStudioDragMoveID, 'Drag selected')
+      .Configure.DragSource(True).AccessibleName('Drag selected control')
+      .Hint('Drag onto the canvas using the selected drop position.').Done
+      .SetProp(NyxStudioDragControlKey, LSelected.ID));
+  end;
 
   if AState.CompiledPreviewAvailable then
   begin
@@ -1020,15 +1035,9 @@ begin
   if LSelected <> nil then
   begin
     LRight.Add(Caption('selected-label', LSelected.Kind + ' / ' + LSelected.ID));
-    { A separate ordinary Nyx grip preserves text selection/IME and application
-      control input on the canvas; authored inputs are never made drag sources. }
 
     if (LSelected.Parent <> nil) and (LSelected.Kind <> 'slot-override') then
     begin
-      LRight.Add(Button(NyxStudioDragMoveID, 'Drag selected control')
-        .Configure.DragSource(True)
-        .Hint('Drag onto the canvas. Choose inside, before or after in Drop position.').Done
-        .SetProp('designer-drag-control', LSelected.ID));
       LRight.Add(BuildNyxStudioResizeTools(NyxControl(LSelected.ID)));
       LMoveTools := BuildNyxStudioMoveTools(ASession.Document, NyxControl(LSelected.ID));
 
