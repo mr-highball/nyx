@@ -58,19 +58,279 @@ type
     property Maximum: Integer read FMaximum;
   end;
 
+  { Orientation describes the available host rectangle, never a device sensor.
+    Positive square hosts match only Square; zero-sized hosts match only Any. }
+  TNyxViewportOrientation = (nvoAny, nvoPortrait, nvoLandscape, nvoSquare);
+
+  { Copied, immutable conjunction of width, height and orientation. Fluent
+    methods replace their own axis, retaining the other conditions. Logical
+    pixel intervals use the same inclusive/exclusive bounds as ViewportWidth.
+    No renderer, component or application is retained. }
+  TNyxViewportCondition = record
+  private
+    FWidth: TNyxViewportWidth;
+    FHeight: TNyxViewportWidth;
+    FOrientation: TNyxViewportOrientation;
+    function GetWidthMinimum: Integer;
+    function GetWidthMaximum: Integer;
+    function GetHeightMinimum: Integer;
+    function GetHeightMaximum: Integer;
+  public
+    class function Any: TNyxViewportCondition; static;
+    class function FromWidth(const AWidth: TNyxViewportWidth): TNyxViewportCondition; static;
+    function WidthBelow(APixels: Integer): TNyxViewportCondition;
+    function WidthAtLeast(APixels: Integer): TNyxViewportCondition;
+    function WidthBetween(AMinimum, AMaximum: Integer): TNyxViewportCondition;
+    function HeightBelow(APixels: Integer): TNyxViewportCondition;
+    function HeightAtLeast(APixels: Integer): TNyxViewportCondition;
+    function HeightBetween(AMinimum, AMaximum: Integer): TNyxViewportCondition;
+    function Orientation(AValue: TNyxViewportOrientation): TNyxViewportCondition;
+    { Invalid/nonfinite host dimensions raise before projection. }
+    function Matches(AWidth, AHeight: Double): Boolean;
+    function Same(const AOther: TNyxViewportCondition): Boolean;
+    function IsAny: Boolean;
+    function IsWidthOnly: Boolean;
+    function Caption: TNyxText;
+    function Pascal: TNyxText;
+    property WidthMinimum: Integer read GetWidthMinimum;
+    property WidthMaximum: Integer read GetWidthMaximum;
+    property HeightMinimum: Integer read GetHeightMinimum;
+    property HeightMaximum: Integer read GetHeightMaximum;
+    property OrientationValue: TNyxViewportOrientation read FOrientation;
+  end;
+
+{ Closed orientation spellings at persistence and generated-source boundaries. }
+function NyxViewportOrientationName(AValue: TNyxViewportOrientation): TNyxText;
+function NyxViewportOrientationPascal(AValue: TNyxViewportOrientation): TNyxText;
+
 { Presentation scopes admit the same typed attributes as platform scopes.
   Identity, events, ownership, scalar defaults and state domains stay portable.
   The key is an explicit persistence/extension boundary, never authoring text. }
 function NyxViewportKey(const AWidth: TNyxViewportWidth; APlatform: TNyxPlatform;
-  AAttribute: TNyxAttribute): TNyxText;
+  AAttribute: TNyxAttribute): TNyxText; overload;
+function NyxViewportKey(const ACondition: TNyxViewportCondition; APlatform: TNyxPlatform;
+  AAttribute: TNyxAttribute): TNyxText; overload;
 { Reject malformed, noncanonical, unsupported or empty conditions. Out values
   always initialize; callers must inspect the Boolean before using them. }
 function TryNyxViewportKey(const AKey: TNyxText; out AWidth: TNyxViewportWidth;
-  out APlatform: TNyxPlatform; out AAttribute: TNyxAttribute): Boolean;
+  out APlatform: TNyxPlatform; out AAttribute: TNyxAttribute): Boolean; overload;
+function TryNyxViewportKey(const AKey: TNyxText; out ACondition: TNyxViewportCondition;
+  out APlatform: TNyxPlatform; out AAttribute: TNyxAttribute): Boolean; overload;
 
 implementation
 
 uses Math;
+
+function NyxViewportOrientationName(AValue: TNyxViewportOrientation): TNyxText;
+const
+  CNames: array[TNyxViewportOrientation] of TNyxText =
+    ('any', 'portrait', 'landscape', 'square');
+begin
+
+  if (Ord(AValue) < Ord(Low(TNyxViewportOrientation))) or
+    (Ord(AValue) > Ord(High(TNyxViewportOrientation))) then
+  begin
+    raise EArgumentException.Create('Unknown viewport orientation');
+  end;
+  Result := CNames[AValue];
+end;
+
+function NyxViewportOrientationPascal(AValue: TNyxViewportOrientation): TNyxText;
+const
+  CNames: array[TNyxViewportOrientation] of TNyxText =
+    ('nvoAny', 'nvoPortrait', 'nvoLandscape', 'nvoSquare');
+begin
+  NyxViewportOrientationName(AValue);
+  Result := CNames[AValue];
+end;
+
+class function TNyxViewportCondition.Any: TNyxViewportCondition;
+begin
+  Result.FWidth := TNyxViewportWidth.Any;
+  Result.FHeight := TNyxViewportWidth.Any;
+  Result.FOrientation := nvoAny;
+end;
+
+class function TNyxViewportCondition.FromWidth(
+  const AWidth: TNyxViewportWidth): TNyxViewportCondition;
+begin
+  Result := Any;
+  Result.FWidth := AWidth;
+end;
+
+function TNyxViewportCondition.GetWidthMinimum: Integer;
+begin
+  Result := FWidth.Minimum;
+end;
+
+function TNyxViewportCondition.GetWidthMaximum: Integer;
+begin
+  Result := FWidth.Maximum;
+end;
+
+function TNyxViewportCondition.GetHeightMinimum: Integer;
+begin
+  Result := FHeight.Minimum;
+end;
+
+function TNyxViewportCondition.GetHeightMaximum: Integer;
+begin
+  Result := FHeight.Maximum;
+end;
+
+function TNyxViewportCondition.WidthBelow(APixels: Integer): TNyxViewportCondition;
+begin
+  Result := Self;
+  Result.FWidth := TNyxViewportWidth.Below(APixels);
+end;
+
+function TNyxViewportCondition.WidthAtLeast(APixels: Integer): TNyxViewportCondition;
+begin
+  Result := Self;
+  Result.FWidth := TNyxViewportWidth.AtLeast(APixels);
+end;
+
+function TNyxViewportCondition.WidthBetween(AMinimum, AMaximum: Integer): TNyxViewportCondition;
+begin
+  Result := Self;
+  Result.FWidth := TNyxViewportWidth.Between(AMinimum, AMaximum);
+end;
+
+function TNyxViewportCondition.HeightBelow(APixels: Integer): TNyxViewportCondition;
+begin
+  Result := Self;
+  Result.FHeight := TNyxViewportWidth.Below(APixels);
+end;
+
+function TNyxViewportCondition.HeightAtLeast(APixels: Integer): TNyxViewportCondition;
+begin
+  Result := Self;
+  Result.FHeight := TNyxViewportWidth.AtLeast(APixels);
+end;
+
+function TNyxViewportCondition.HeightBetween(AMinimum, AMaximum: Integer): TNyxViewportCondition;
+begin
+  Result := Self;
+  Result.FHeight := TNyxViewportWidth.Between(AMinimum, AMaximum);
+end;
+
+function TNyxViewportCondition.Orientation(
+  AValue: TNyxViewportOrientation): TNyxViewportCondition;
+begin
+  { Validate the closed value even when callers explicitly cast an ordinal. }
+  NyxViewportOrientationName(AValue);
+  Result := Self;
+  Result.FOrientation := AValue;
+end;
+
+function TNyxViewportCondition.Matches(AWidth, AHeight: Double): Boolean;
+var
+  LWidthMatches: Boolean;
+  LHeightMatches: Boolean;
+begin
+  { Evaluate both dimensions before short-circuiting: an invalid height must
+    refuse even when the width lies outside this condition. }
+  LWidthMatches := FWidth.Matches(AWidth);
+
+  if IsNan(AHeight) or IsInfinite(AHeight) or (AHeight < 0) then
+  begin
+    raise EArgumentException.Create('Viewport height must be finite and nonnegative');
+  end;
+  LHeightMatches := FHeight.Matches(AHeight);
+  Result := LWidthMatches and LHeightMatches;
+
+  if (FOrientation <> nvoAny) then
+  begin
+    Result := Result and (AWidth > 0) and (AHeight > 0);
+    case FOrientation of
+      nvoAny:
+        begin
+          { Already handled above; included for exhaustive closed-value checking. }
+        end;
+      nvoPortrait:
+        begin
+          Result := Result and (AHeight > AWidth);
+        end;
+      nvoLandscape:
+        begin
+          Result := Result and (AWidth > AHeight);
+        end;
+      nvoSquare:
+        begin
+          Result := Result and (AWidth = AHeight);
+        end;
+    end;
+  end;
+end;
+
+function TNyxViewportCondition.Same(const AOther: TNyxViewportCondition): Boolean;
+begin
+  Result := FWidth.Same(AOther.FWidth) and FHeight.Same(AOther.FHeight) and
+    (FOrientation = AOther.FOrientation);
+end;
+
+function TNyxViewportCondition.IsWidthOnly: Boolean;
+begin
+  Result := FHeight.IsAny and (FOrientation = nvoAny);
+end;
+
+function TNyxViewportCondition.IsAny: Boolean;
+begin
+  Result := FWidth.IsAny and IsWidthOnly;
+end;
+
+function TNyxViewportCondition.Caption: TNyxText;
+begin
+
+  if IsWidthOnly then
+  begin
+    Exit(FWidth.Caption);
+  end;
+  Result := 'Width: ' + FWidth.Caption + '; height: ' + FHeight.Caption;
+
+  if FOrientation <> nvoAny then
+  begin
+    Result := Result + '; ' + NyxViewportOrientationName(FOrientation);
+  end;
+end;
+
+function TNyxViewportCondition.Pascal: TNyxText;
+
+  function Axis(const AInterval: TNyxViewportWidth; const AName: TNyxText): TNyxText;
+  begin
+
+    if AInterval.IsAny then
+    begin
+      Exit('');
+    end;
+
+    if AInterval.Maximum = 0 then
+    begin
+      Exit('.' + AName + 'AtLeast(' + TNyxText(IntToStr(AInterval.Minimum)) + ')');
+    end;
+
+    if AInterval.Minimum = 0 then
+    begin
+      Exit('.' + AName + 'Below(' + TNyxText(IntToStr(AInterval.Maximum)) + ')');
+    end;
+    Result := '.' + AName + 'Between(' + TNyxText(IntToStr(AInterval.Minimum)) + ', ' +
+      TNyxText(IntToStr(AInterval.Maximum)) + ')';
+  end;
+
+begin
+  { Preserve existing width-only source byte-for-byte. }
+
+  if IsWidthOnly then
+  begin
+    Exit(FWidth.Pascal);
+  end;
+  Result := 'TNyxViewportCondition.Any' + Axis(FWidth, 'Width') + Axis(FHeight, 'Height');
+
+  if FOrientation <> nvoAny then
+  begin
+    Result := Result + '.Orientation(' + NyxViewportOrientationPascal(FOrientation) + ')';
+  end;
+end;
 
 class function TNyxViewportWidth.Any: TNyxViewportWidth;
 begin
@@ -257,6 +517,138 @@ begin
   AWidth.FMinimum := LMinimum;
   AWidth.FMaximum := LMaximum;
   Result := AKey = NyxViewportKey(AWidth, APlatform, AAttribute);
+end;
+
+function NyxViewportKey(const ACondition: TNyxViewportCondition; APlatform: TNyxPlatform;
+  AAttribute: TNyxAttribute): TNyxText;
+begin
+
+  if ACondition.IsWidthOnly then
+  begin
+    Exit(NyxViewportKey(ACondition.FWidth, APlatform, AAttribute));
+  end;
+
+  if not NyxPlatformAttribute(AAttribute) then
+  begin
+    raise EArgumentException.Create('Viewport scope requires a presentation attribute');
+  end;
+  Result := '@nyx.viewport-size:' + TNyxText(IntToStr(ACondition.WidthMinimum)) + ':' +
+    TNyxText(IntToStr(ACondition.WidthMaximum)) + ':' +
+    TNyxText(IntToStr(ACondition.HeightMinimum)) + ':' +
+    TNyxText(IntToStr(ACondition.HeightMaximum)) + ':' +
+    NyxViewportOrientationName(ACondition.OrientationValue) + ':' +
+    NyxPlatformName(APlatform) + ':' + NyxAttributeName(AAttribute);
+end;
+
+function TryNyxViewportKey(const AKey: TNyxText; out ACondition: TNyxViewportCondition;
+  out APlatform: TNyxPlatform; out AAttribute: TNyxAttribute): Boolean;
+var
+  LParts: array[0..6] of TNyxText;
+  LBounds: array[0..3] of Integer;
+  LIndex: Integer;
+  LStart: Integer;
+  LEnd: Integer;
+  LWidth: TNyxViewportWidth;
+  LCandidate: TNyxViewportCondition;
+  LOrientation: TNyxViewportOrientation;
+  LPlatform: TNyxPlatform;
+  LAttribute: TNyxAttribute;
+  LFound: Boolean;
+begin
+  Result := False;
+  ACondition := TNyxViewportCondition.Any;
+  APlatform := npfAny;
+  AAttribute := atText;
+
+  if TryNyxViewportKey(AKey, LWidth, LPlatform, LAttribute) then
+  begin
+    ACondition := TNyxViewportCondition.FromWidth(LWidth);
+    APlatform := LPlatform;
+    AAttribute := LAttribute;
+    Exit(True);
+  end;
+
+  if Copy(AKey, 1, 19) <> '@nyx.viewport-size:' then
+  begin
+    Exit;
+  end;
+  LStart := 20;
+  for LIndex := 0 to 5 do
+  begin
+    LEnd := LStart;
+    while (LEnd <= Length(AKey)) and (AKey[LEnd] <> ':') do
+    begin
+      Inc(LEnd);
+    end;
+
+    if LEnd > Length(AKey) then
+    begin
+      Exit;
+    end;
+    LParts[LIndex] := Copy(AKey, LStart, LEnd - LStart);
+    LStart := LEnd + 1;
+  end;
+  LParts[6] := Copy(AKey, LStart, MaxInt);
+  for LIndex := 0 to 3 do
+  begin
+
+    if not TryStrToInt(LParts[LIndex], LBounds[LIndex]) or (LBounds[LIndex] < 0) then
+    begin
+      Exit;
+    end;
+  end;
+
+  if ((LBounds[1] <> 0) and (LBounds[1] <= LBounds[0])) or
+    ((LBounds[3] <> 0) and (LBounds[3] <= LBounds[2])) then
+  begin
+    Exit;
+  end;
+  LCandidate := TNyxViewportCondition.Any;
+  LCandidate.FWidth.FMinimum := LBounds[0];
+  LCandidate.FWidth.FMaximum := LBounds[1];
+  LCandidate.FHeight.FMinimum := LBounds[2];
+  LCandidate.FHeight.FMaximum := LBounds[3];
+  LFound := False;
+  for LOrientation := Low(TNyxViewportOrientation) to High(TNyxViewportOrientation) do
+  begin
+
+    if LParts[4] = NyxViewportOrientationName(LOrientation) then
+    begin
+      LCandidate.FOrientation := LOrientation;
+      LFound := True;
+      Break;
+    end;
+  end;
+
+  if not LFound or LCandidate.IsWidthOnly then
+  begin
+    Exit;
+  end;
+  LFound := False;
+  for LPlatform := npfAny to npfNativeLCL do
+  begin
+
+    if LParts[5] = NyxPlatformName(LPlatform) then
+    begin
+      LFound := True;
+      Break;
+    end;
+  end;
+
+  if not LFound or not TryNyxAttribute(LParts[6], LAttribute) or
+    not NyxPlatformAttribute(LAttribute) then
+  begin
+    Exit;
+  end;
+
+  if AKey <> NyxViewportKey(LCandidate, LPlatform, LAttribute) then
+  begin
+    Exit;
+  end;
+  ACondition := LCandidate;
+  APlatform := LPlatform;
+  AAttribute := LAttribute;
+  Result := True;
 end;
 
 end.

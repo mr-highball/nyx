@@ -48,7 +48,17 @@ the present Windows installation; the Pascal semantic client is usable immediate
 - Underlying callback/state/source/build behavior remains with its existing owners;
   expose only qualified operations and retain their original acceptance criteria.
 
-**Current staged refresh — 2026-10-05:** The user's requested new release now has
+**Current deployed refresh — 2026-10-06:** The guarded host-condition release
+now serves the actual LAN endpoint with nineteen authenticated tools. An
+independent English project is composed through one semantic transaction;
+bounded source/node inspection, application builds on both targets and grouped
+Undo/Redo qualify the deployed service. The primary pair/selection/view remain
+exact. Private current identity and rollback are under
+`.local/form-factors-refresh-20261006/`; all previous refresh identities are
+obsolete. This reuses the current semantic API, so workflow no-closure remains
+**9**. [Evidence](../WORK.md#responsive-host-conditions--2026-10-06).
+
+**Historical staged refresh — 2026-10-05 (superseded):** The user's requested new release now has
 actual authenticated nineteen-tool discovery and a bounded Pascal semantic
 session query on an independent current service. The backed-up active pair is
 byte-identical there; ordinary source-workspace interaction passes 30 desktop/

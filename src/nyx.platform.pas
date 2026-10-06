@@ -34,14 +34,14 @@ uses nyx.types, nyx.text, nyx.model;
   Viewport rules remain for resize-time projection on the concrete target. }
 procedure ApplyNyxPlatform(ARoot: TNyxNode; APlatform: TNyxPlatform);
 
-{ Admission checks every piecewise viewport interval on both concrete targets.
+{ Admission checks every piecewise host rectangle/orientation on both targets.
   Inconsistent effective size/split bounds refuse before mounting or publishing.
   Candidates contain copied properties only and retain no authored children. }
 procedure ValidateNyxViewportBounds(ANode: TNyxNode);
 
 implementation
 
-uses SysUtils, nyx.responsive;
+uses SysUtils, Math, nyx.responsive;
 
 procedure ApplyNyxPlatform(ARoot: TNyxNode; APlatform: TNyxPlatform);
 
@@ -89,80 +89,169 @@ end;
 
 procedure ValidateNyxViewportBounds(ANode: TNyxNode);
 var
-  LBoundaries: TNyxStrings;
-  LViewport: TNyxViewportWidth;
+  LWidths: array of Integer;
+  LHeights: array of Integer;
+  LViewport: TNyxViewportCondition;
   LPlatform: TNyxPlatform;
   LTarget: TNyxPlatform;
   LAttribute: TNyxAttribute;
   LIndex: Integer;
-  LBoundary: Integer;
+  LWidthIndex: Integer;
+  LHeightIndex: Integer;
+  LWidthEnd: Double;
+  LHeightEnd: Double;
+  LWidthStart: Double;
+  LHeightStart: Double;
+  LWidth: Double;
+  LHeight: Double;
   LProbe: TNyxNode;
   LPosition: Integer;
   LMinimum: Integer;
   LMaximum: Integer;
 
-  procedure AddBoundary(AValue: Integer);
+  procedure AddBoundary(AValue: Integer; AHeight: Boolean);
   var
-    LText: TNyxText;
+    LPosition: Integer;
+    LMove: Integer;
+    LValues: array of Integer;
   begin
-    LText := IntToStr(AValue);
+    { Explicit copied arrays avoid shared candidate mutation on either compiler.
+      Sorted integer boundaries partition the entire nonnegative host plane. }
 
-    if LBoundaries.IndexOf(LText) < 0 then
+    if AHeight then
     begin
-      LBoundaries.Add(LText);
+      LValues := Copy(LHeights, 0, Length(LHeights));
+    end
+    else
+    begin
+      LValues := Copy(LWidths, 0, Length(LWidths));
+    end;
+    LPosition := 0;
+    while (LPosition < Length(LValues)) and (LValues[LPosition] < AValue) do
+    begin
+      Inc(LPosition);
+    end;
+
+    if (LPosition < Length(LValues)) and (LValues[LPosition] = AValue) then
+    begin
+      Exit;
+    end;
+    SetLength(LValues, Length(LValues) + 1);
+    for LMove := High(LValues) downto LPosition + 1 do
+    begin
+      LValues[LMove] := LValues[LMove - 1];
+    end;
+    LValues[LPosition] := AValue;
+
+    if AHeight then
+    begin
+      LHeights := LValues;
+    end
+    else
+    begin
+      LWidths := LValues;
+    end;
+  end;
+
+  procedure CheckPoint(AWidth, AHeight: Double);
+  begin
+    LProbe.ApplyViewport(AWidth, AHeight, LTarget);
+    NyxNodeSizeConstraints(LProbe).Validate;
+
+    if ANode.ProjectionKind = 'split-view' then
+    begin
+      LPosition := StrToIntDef(LProbe.Prop('split-position'), 65);
+      LMinimum := StrToIntDef(LProbe.Prop('split-minimum'), 15);
+      LMaximum := StrToIntDef(LProbe.Prop('split-maximum'), 85);
+
+      if (LMinimum > LMaximum) or (LPosition < LMinimum) or (LPosition > LMaximum) then
+      begin
+        raise ENyxModel.Create('Responsive split position must fit its bounds on ' + ANode.ID);
+      end;
     end;
   end;
 
 begin
-  LBoundaries := TNyxStrings.Create;
-  try
-    for LIndex := 0 to ANode.Props.Count - 1 do
-    begin
+  LWidths := nil;
+  LHeights := nil;
+  for LIndex := 0 to ANode.Props.Count - 1 do
+  begin
 
-      if TryNyxViewportKey(ANode.Props.Names[LIndex], LViewport, LPlatform, LAttribute) then
+    if TryNyxViewportKey(ANode.Props.Names[LIndex], LViewport, LPlatform, LAttribute) and
+      (LAttribute in [atWidth, atHeight, atMinimumWidth, atMaximumWidth,
+      atMinimumHeight, atMaximumHeight, atSplitPosition, atSplitMinimum, atSplitMaximum]) then
+    begin
+      { Other presentation rules cannot change size/split validity. Excluding
+        them avoids a Cartesian admission cost for unrelated text/gap rules. }
+      AddBoundary(LViewport.WidthMinimum, False);
+      AddBoundary(LViewport.WidthMaximum, False);
+      AddBoundary(LViewport.HeightMinimum, True);
+      AddBoundary(LViewport.HeightMaximum, True);
+    end;
+  end;
+
+  if Length(LWidths) = 0 then
+  begin
+    Exit;
+  end;
+  AddBoundary(0, False);
+  AddBoundary(0, True);
+  for LTarget := npfBrowser to npfNativeLCL do
+  begin
+    LProbe := TNyxNode.CreateRealized(ANode.Kind, ANode.ID, ANode.ID, ANode.ID);
+    try
+      LProbe.Props.Assign(ANode.Props);
+      ApplyNyxPlatform(LProbe, LTarget);
+      for LWidthIndex := 0 to High(LWidths) do
       begin
-        AddBoundary(LViewport.Minimum);
-        AddBoundary(LViewport.Maximum);
-      end;
-    end;
+        LWidthStart := LWidths[LWidthIndex];
+        LWidthEnd := 1.0E20;
 
-    if LBoundaries.Count = 0 then
-    begin
-      Exit;
-    end;
-    AddBoundary(0);
-    { Every half-open interval starts at one of these authored bounds. Testing
-      those exact starts qualifies all combinations, including overlaps and
-      unbounded tails, without sampling guessed screen sizes. }
-    for LTarget := npfBrowser to npfNativeLCL do
-    begin
-      LProbe := TNyxNode.CreateRealized(ANode.Kind, ANode.ID, ANode.ID, ANode.ID);
-      try
-        LProbe.Props.Assign(ANode.Props);
-        ApplyNyxPlatform(LProbe, LTarget);
-        for LBoundary := 0 to LBoundaries.Count - 1 do
+        if LWidthIndex < High(LWidths) then
         begin
-          LProbe.ApplyViewport(StrToInt(LBoundaries[LBoundary]), LTarget);
-          NyxNodeSizeConstraints(LProbe).Validate;
+          LWidthEnd := LWidths[LWidthIndex + 1];
+        end;
+        for LHeightIndex := 0 to High(LHeights) do
+        begin
+          LHeightStart := LHeights[LHeightIndex];
+          LHeightEnd := 1.0E20;
 
-          if ANode.ProjectionKind = 'split-view' then
+          if LHeightIndex < High(LHeights) then
           begin
-            LPosition := StrToIntDef(LProbe.Prop('split-position'), 65);
-            LMinimum := StrToIntDef(LProbe.Prop('split-minimum'), 15);
-            LMaximum := StrToIntDef(LProbe.Prop('split-maximum'), 85);
+            LHeightEnd := LHeights[LHeightIndex + 1];
+          end;
+          { Rules are constant inside each half-open rectangle except across
+            the orientation diagonal and zero axes. Its lower corner covers
+            unconstrained/zero-host behavior; one feasible point in each
+            positive diagonal region covers every remaining rule combination.
+            Integer authored bounds make a half-pixel offset exact on both
+            targets, including thin cells and unbounded tails. }
+          CheckPoint(LWidthStart, LHeightStart);
+          LWidth := Max(0.5, LWidthStart);
+          LHeight := Max(LHeightStart, LWidth + 0.5);
 
-            if (LMinimum > LMaximum) or (LPosition < LMinimum) or (LPosition > LMaximum) then
-            begin
-              raise ENyxModel.Create('Responsive split position must fit its bounds on ' + ANode.ID);
-            end;
+          if (LWidth < LWidthEnd) and (LHeight < LHeightEnd) then
+          begin
+            CheckPoint(LWidth, LHeight);
+          end;
+          LHeight := Max(0.5, LHeightStart);
+          LWidth := Max(LWidthStart, LHeight + 0.5);
+
+          if (LWidth < LWidthEnd) and (LHeight < LHeightEnd) then
+          begin
+            CheckPoint(LWidth, LHeight);
+          end;
+          LWidth := Max(0.5, Max(LWidthStart, LHeightStart));
+
+          if (LWidth < LWidthEnd) and (LWidth < LHeightEnd) then
+          begin
+            CheckPoint(LWidth, LWidth);
           end;
         end;
-      finally
-        LProbe.Free;
       end;
+    finally
+      LProbe.Free;
     end;
-  finally
-    LBoundaries.Free;
   end;
 end;
 

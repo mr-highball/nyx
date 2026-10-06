@@ -72,7 +72,7 @@ begin
   try
     LExpected := 'column';
 
-    if (GStep = 0) or (GStep = 2) then
+    if (GStep = 0) or (GStep = 2) or (GStep = 4) then
     begin
       LExpected := 'row';
     end;
@@ -128,13 +128,29 @@ begin
           Check(GRenderer.InputFor('notes-editor') = GInput, 'Boundary crossing retains input identity');
           Check(GInput.value = 'Keep this focused English draft.', 'Leaving a rule retains text');
           Check(TNyxCodec.Encode(GDocument) = GBefore, 'Automatic resize leaves accepted design untouched');
+          GHost.style.setProperty('height', '200px');
+        end;
+      3:
+        begin
+          Check(LOther.top > LRect.bottom, 'Height-only observer change activates short landscape column');
+          Check(GRenderer.InputFor('notes-editor') = GInput, 'Height rule retains actual input identity');
+          Check(GInput.value = 'Keep this focused English draft.', 'Height rule retains live text');
+          Check((GInput.selectionStart = 5) and (GInput.selectionEnd = 9), 'Height rule retains range');
+          Check(document.activeElement = GInput, 'Height rule retains focus');
+          Check(Abs((LOther.top - LRect.bottom) - 6) < 2, 'Short landscape gap reaches rendered geometry');
+          GHost.style.setProperty('height', '300px');
+        end;
+      4:
+        begin
+          Check(Abs(LRect.top - LOther.top) < 2, 'Exclusive height boundary returns to ordinary row');
+          Check(GRenderer.InputFor('notes-editor') = GInput, 'Restored height retains input identity');
           GReplacement := TJSHTMLElement(document.createElement('div'));
           GReplacement.style.setProperty('width', '390px');
           GReplacement.style.setProperty('height', '420px');
           document.body.appendChild(GReplacement);
           GRenderer.MoveHost(GReplacement);
         end;
-      3:
+      5:
         begin
           Check(LOther.top > LRect.bottom, 'Retained view adopts replacement host width');
           Check(document.activeElement = GInput, 'Host replacement restores retained focus');
@@ -150,7 +166,7 @@ begin
           GHost.style.setProperty('width', '390px');
           GRenderer.Render(GDocument, GDocument.Pages[0], GHost, False);
         end;
-      4:
+      6:
         begin
           Check(LOther.top > LRect.bottom, 'Fresh mount applies initial compact width');
           Check(GRenderer.InputFor('notes-editor') <> GInput, 'An ended mount creates an independent new input');
@@ -271,6 +287,25 @@ begin
   Check(LFirst.Top = LSecond.Top, 'Exclusive boundary restores the wide row');
   Check(GRenderer.InputFor('notes-editor') = GInput, 'Leaving compact retains memo identity');
   Check(GInput.Text = 'Keep this focused English draft.', 'Leaving compact retains current live text');
+  { Keep the available width outside the native-specific compact rule even
+    when vertical overflow introduces a widgetset scrollbar. Height is the
+    only dimension changed by the transition under qualification. }
+  GForm.ClientWidth := 800;
+  Pump;
+  GForm.ClientHeight := 200;
+  Pump;
+  Check(LSecond.Top > LFirst.Top + LFirst.Height, 'Height-only native resize activates short landscape');
+  Check(GRenderer.InputFor('notes-editor') = GInput, 'Height rule retains native memo identity');
+  Check(GInput.Text = 'Keep this focused English draft.', 'Height rule retains native live text');
+  Check((GInput.SelStart = 5) and (GInput.SelLength = 4), 'Height rule retains native selection');
+  Check(GForm.ActiveControl = GInput, 'Height rule retains native focus');
+  Check(LSecond.Top - LFirst.Top - LFirst.Height = 6, 'Short landscape gap reaches native geometry');
+  GForm.ClientHeight := 300;
+  Pump;
+  Check(LFirst.Top = LSecond.Top, 'Exclusive native host height boundary restores row despite scrollbars');
+  GForm.ClientHeight := 480;
+  Pump;
+  Check(LFirst.Top = LSecond.Top, 'Restored native height returns to the ordinary row');
   GReplacement := TPanel.Create(GForm);
   GReplacement.Parent := GForm;
   GReplacement.SetBounds(0, 0, 390, 460);
@@ -304,7 +339,8 @@ begin
   for LIndex := LRow.Props.Count - 1 downto 0 do
   begin
 
-    if Copy(LRow.Props.Names[LIndex], 1, 14) = '@nyx.viewport:' then
+    if (Copy(LRow.Props.Names[LIndex], 1, 14) = '@nyx.viewport:') or
+      (Copy(LRow.Props.Names[LIndex], 1, 19) = '@nyx.viewport-size:') then
     begin
       LRow.Props.Delete(LIndex);
     end;
@@ -338,6 +374,9 @@ begin
   window.setTimeout(@Step, 100);
   {$else}
   Application.Initialize;
+  { Automated qualification must report widget callback failures to the process,
+    instead of leaving a hidden LCL exception dialog awaiting human dismissal. }
+  Application.CaptureExceptions := False;
   GForm := TForm.Create(nil);
   GRenderer := TNyxLCLRenderer.Create;
   try

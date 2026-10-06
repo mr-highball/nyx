@@ -534,7 +534,7 @@ type
     vkCollectionView, vkCollectionScope, vkCollectionCellMode, vkSelectionMode, vkPlatform,
     vkSplitOrientation, vkSemanticEvent, vkTouchBehavior, vkFlowWrap,
     vkCrossAlignment, vkJustification, vkSizing, vkLayoutPolicy, vkSizeRange,
-    vkSizeConstraints, vkViewportWidth);
+    vkSizeConstraints, vkViewportWidth, vkViewportCondition, vkViewportOrientation);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -557,6 +557,7 @@ type
     SizeRange: TNyxSizeRange;
     SizeConstraints: TNyxSizeConstraints;
     ViewportWidth: TNyxViewportWidth;
+    ViewportCondition: TNyxViewportCondition;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -639,7 +640,7 @@ type
     procedure Configure(AIndex: Integer);
     procedure ApplyCall(ANode: TNyxNode; const AMethod: TNyxText;
       const AArgs: TValues; APlatform: TNyxPlatform;
-      const AViewport: TNyxViewportWidth);
+      const AViewport: TNyxViewportCondition);
     procedure Declarations;
     procedure ConstructControl(AIndex: Integer);
     procedure OwnControl(AIndex: Integer; const AMethod: TNyxText);
@@ -1171,6 +1172,10 @@ begin
   RegisterEnum(vkPlatform, Ord(npfAny), 'npfAny');
   RegisterEnum(vkPlatform, Ord(npfBrowser), 'npfBrowser');
   RegisterEnum(vkPlatform, Ord(npfNativeLCL), 'npfNativeLCL');
+  RegisterEnum(vkViewportOrientation, Ord(nvoAny), 'nvoAny');
+  RegisterEnum(vkViewportOrientation, Ord(nvoPortrait), 'nvoPortrait');
+  RegisterEnum(vkViewportOrientation, Ord(nvoLandscape), 'nvoLandscape');
+  RegisterEnum(vkViewportOrientation, Ord(nvoSquare), 'nvoSquare');
   RegisterEnum(vkSplitOrientation, Ord(nsoStacked), 'nsoStacked');
   RegisterEnum(vkSplitOrientation, Ord(nsoSideBySide), 'nsoSideBySide');
   RegisterEnum(vkTouchBehavior, Ord(ntbAutomatic), 'ntbAutomatic');
@@ -1987,6 +1992,92 @@ begin
               begin
                 Fail('Unknown size constraints method');
               end;
+            end;
+          end;
+          Exit;
+        end;
+
+        if LName = 'tnyxviewportcondition' then
+        begin
+          Result.Kind := vkViewportCondition;
+          Result.ViewportCondition := TNyxViewportCondition.Any;
+          Expect('.');
+          Expect('Any');
+
+          if At('(') then
+          begin
+            LArgs := Arguments;
+
+            if Length(LArgs) <> 0 then
+            begin
+              Fail('Viewport Any has no arguments');
+            end;
+          end;
+          while At('.') do
+          begin
+            Inc(FCursor);
+
+            if FCursor >= Length(FTokens) then
+            begin
+              Fail('Expected a viewport condition method');
+            end;
+            LName := LowerCase(FTokens[FCursor].Text);
+            Inc(FCursor);
+            LArgs := Arguments;
+
+            if (LName = 'orientation') and (Length(LArgs) = 1) and
+              (LArgs[0].Kind = vkViewportOrientation) then
+            begin
+              Result.ViewportCondition := Result.ViewportCondition.Orientation(
+                TNyxViewportOrientation(LArgs[0].Ordinal));
+            end
+            else if (Length(LArgs) = 1) and (LArgs[0].Kind = vkInteger) then
+            begin
+              LInteger := StrToInt(LArgs[0].Text);
+
+              if LName = 'widthbelow' then
+              begin
+                Result.ViewportCondition := Result.ViewportCondition.WidthBelow(LInteger);
+              end
+              else if LName = 'widthatleast' then
+              begin
+                Result.ViewportCondition := Result.ViewportCondition.WidthAtLeast(LInteger);
+              end
+              else if LName = 'heightbelow' then
+              begin
+                Result.ViewportCondition := Result.ViewportCondition.HeightBelow(LInteger);
+              end
+              else if LName = 'heightatleast' then
+              begin
+                Result.ViewportCondition := Result.ViewportCondition.HeightAtLeast(LInteger);
+              end
+              else
+              begin
+                Fail('Unknown viewport condition method or argument family');
+              end;
+            end
+            else if (Length(LArgs) = 2) and (LArgs[0].Kind = vkInteger) and
+              (LArgs[1].Kind = vkInteger) then
+            begin
+
+              if LName = 'widthbetween' then
+              begin
+                Result.ViewportCondition := Result.ViewportCondition.WidthBetween(
+                  StrToInt(LArgs[0].Text), StrToInt(LArgs[1].Text));
+              end
+              else if LName = 'heightbetween' then
+              begin
+                Result.ViewportCondition := Result.ViewportCondition.HeightBetween(
+                  StrToInt(LArgs[0].Text), StrToInt(LArgs[1].Text));
+              end
+              else
+              begin
+                Fail('Unknown viewport interval method');
+              end;
+            end
+            else
+            begin
+              Fail('Viewport methods require Integer bounds or a viewport orientation enum');
             end;
           end;
           Exit;
@@ -2941,7 +3032,7 @@ end;
 
 procedure TConfigurationReader.ApplyCall(ANode: TNyxNode;
   const AMethod: TNyxText; const AArgs: TValues; APlatform: TNyxPlatform;
-  const AViewport: TNyxViewportWidth);
+  const AViewport: TNyxViewportCondition);
 var
   LAttribute: TNyxAttribute;
   LMethod: TNyxText;
@@ -3223,10 +3314,10 @@ var
   LMethod: TNyxText;
   LArgs: TValues;
   LPlatform: TNyxPlatform;
-  LViewport: TNyxViewportWidth;
+  LViewport: TNyxViewportCondition;
 begin
   LPlatform := npfAny;
-  LViewport := TNyxViewportWidth.Any;
+  LViewport := TNyxViewportCondition.Any;
 
   if FLocals[AIndex].Configured then
   begin
@@ -3265,11 +3356,19 @@ begin
     else if SameText(LMethod, 'WhenViewport') then
     begin
 
-      if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkViewportWidth) then
+      if (Length(LArgs) <> 1) or not
+        (LArgs[0].Kind in [vkViewportWidth, vkViewportCondition]) then
       begin
-        Fail('WhenViewport requires TNyxViewportWidth');
+        Fail('WhenViewport requires a typed viewport width or condition');
       end;
-      LViewport := LArgs[0].ViewportWidth;
+      if LArgs[0].Kind = vkViewportWidth then
+      begin
+        LViewport := TNyxViewportCondition.FromWidth(LArgs[0].ViewportWidth);
+      end
+      else
+      begin
+        LViewport := LArgs[0].ViewportCondition;
+      end;
     end
     else if FApply then
     begin

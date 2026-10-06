@@ -93,7 +93,7 @@ end;
 function RefreshableKey(const AKey: TNyxText): Boolean;
 var
   LAttribute: TNyxAttribute;
-  LViewport: TNyxViewportWidth;
+  LViewport: TNyxViewportCondition;
   LPlatform: TNyxPlatform;
 begin
   Result := TryNyxAttribute(AKey, LAttribute) and

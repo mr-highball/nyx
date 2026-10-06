@@ -458,7 +458,7 @@ begin
     if AMember = 'Configure' then
     begin
       GFacadeTypes.Add('    FPlatform: TNyxPlatform;');
-      GFacadeTypes.Add('    FViewport: TNyxViewportWidth;');
+      GFacadeTypes.Add('    FViewport: TNyxViewportCondition;');
     end;
     GFacadeTypes.Add('  public');
     GFacadeTypes.Add('    constructor Create(const AOwner: INyxControl);');
@@ -557,7 +557,15 @@ begin
       begin
         GFacadeImplementation.Add('  LFacade := TNyxConfiguration.Create(FOwner);');
         GFacadeImplementation.Add('  LFacade.FPlatform := FPlatform;');
-        GFacadeImplementation.Add('  LFacade.FViewport := AWidth;');
+
+        if Pos('AWidth:', LSignature) > 0 then
+        begin
+          GFacadeImplementation.Add('  LFacade.FViewport := TNyxViewportCondition.FromWidth(AWidth);');
+        end
+        else
+        begin
+          GFacadeImplementation.Add('  LFacade.FViewport := ACondition;');
+        end;
         GFacadeImplementation.Add('  Result := LFacade;');
       end
       else if LName = 'Done' then

@@ -27,7 +27,8 @@
   INyxConfiguration = interface(IInterface)
     ['{737A7921-4621-4C6F-8C01-030000000001}']
     function ForPlatform(APlatform: TNyxPlatform): INyxConfiguration;
-    function WhenViewport(const AWidth: TNyxViewportWidth): INyxConfiguration;
+    function WhenViewport(const AWidth: TNyxViewportWidth): INyxConfiguration; overload;
+    function WhenViewport(const ACondition: TNyxViewportCondition): INyxConfiguration; overload;
     function SplitOrientation(AValue: TNyxSplitOrientation): INyxConfiguration;
     function SplitPosition(APercent: Integer): INyxConfiguration;
     function SplitMinimum(APercent: Integer): INyxConfiguration;
@@ -105,11 +106,12 @@
   private
     FOwner: INyxControl;
     FPlatform: TNyxPlatform;
-    FViewport: TNyxViewportWidth;
+    FViewport: TNyxViewportCondition;
   public
     constructor Create(const AOwner: INyxControl);
     function ForPlatform(APlatform: TNyxPlatform): INyxConfiguration;
-    function WhenViewport(const AWidth: TNyxViewportWidth): INyxConfiguration;
+    function WhenViewport(const AWidth: TNyxViewportWidth): INyxConfiguration; overload;
+    function WhenViewport(const ACondition: TNyxViewportCondition): INyxConfiguration; overload;
     function SplitOrientation(AValue: TNyxSplitOrientation): INyxConfiguration;
     function SplitPosition(APercent: Integer): INyxConfiguration;
     function SplitMinimum(APercent: Integer): INyxConfiguration;

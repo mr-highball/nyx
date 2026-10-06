@@ -156,7 +156,10 @@ begin
             end;
             Check(Pos('workspace', Required('selected-label').textContent) > 0,
               'Real canvas selection exposes its ordinary responsive Inspector');
-            Change(NyxStudioViewportMaximumID, '900');
+            Change(NyxStudioViewportMinimumID, '0');
+            Change(NyxStudioViewportMaximumID, '0');
+            Change(NyxStudioViewportHeightMaximumID, '300');
+            Change(NyxStudioViewportOrientationID, 'landscape');
             Change(NyxStudioViewportLayoutID, 'row');
             Check(GEditor.value = GBefore, 'Rule form drafts do not change accepted Pascal');
             Required(NyxStudioViewportApplyID).click;
@@ -176,7 +179,8 @@ begin
               Required('action-panel-design').click;
             end;
             GAfter := TJSHTMLTextAreaElement(Field('studio-code')).value;
-            Check((GAfter <> GBefore) and (Pos('TNyxViewportWidth.Below(900)', GAfter) > 0),
+            Check((GAfter <> GBefore) and
+              (Pos('TNyxViewportCondition.Any.HeightBelow(300).Orientation(nvoLandscape)', GAfter) > 0),
               'Actual browser worker admission publishes crafted responsive Pascal');
             RetainedInput;
             Required('action-undo').click;

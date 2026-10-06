@@ -1132,7 +1132,7 @@ var
   LPlacement: TNyxPlacement;
   LAttribute: TNyxAttribute;
   LPlatform: TNyxPlatform;
-  LViewport: TNyxViewportWidth;
+  LViewport: TNyxViewportCondition;
 begin
   Result := False;
 

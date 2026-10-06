@@ -25,7 +25,20 @@ execution. Codegen criterion 3 remains open at no-closure 28; workflow 9, render
 3, authoring 11 and delivery 1 remain. No full criterion, goal percentage or DONE
 claim follows. See [evidence](WORK.md#reviewable-release-refresh--2026-10-05).
 
-Current independent authoring packet: typed public viewport conditions now
+Current independent authoring packet: typed host width/height/orientation
+conditions reach managed authoring, source/wire admission, both adapters and
+the ordinary Inspector/paired processor. Checks pass 61 per native compiler and
+browser, 30 actual Win32 controls, 31 per browser size, nine native Studio and
+22 per browser Studio size. Actual MCP jobs compile both outputs; grouped
+Undo/Redo restores exact source. A guarded full LAN refresh preserves the exact
+primary pair/selection/view and verifies nineteen authenticated tools and served
+artifact hashes. No original criterion closes: authoring no-closure advances
+15→16 once; workflow 9, codegen 28, renderer 3 and delivery 1 remain. Stop local
+condition/fixture expansion; continue original named/container variants,
+guides/full editor, parity/accessibility/performance/delivery. See
+[evidence](WORK.md#responsive-host-conditions--2026-10-06).
+
+Preceding independent authoring packet: typed public viewport conditions now
 share managed configuration, crafted generation, both-target interval admission
 and ordinary paired Inspector/MCP commands. Shared checks pass 33 per native
 compiler and 33 browser; unchanged semantic source passes 22 Win32 controls, nine

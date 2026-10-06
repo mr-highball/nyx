@@ -26,7 +26,7 @@ program nyx_responsive_tests;
 uses
   SysUtils, Classes, Math, nyx.text, nyx.types, nyx.responsive, nyx.model,
   nyx.controls, nyx.codec, nyx.codegen, nyx.schema, nyx.platform, nyx.composition,
-  nyx.data, nyx.studio.session, nyx.studio.projects, nyx.studio.agents,
+  nyx.data, nyx.source, nyx.studio.session, nyx.studio.projects, nyx.studio.agents,
   nyx.studio.inspector, nyx.studio.view, nyx.studio.sourcejobs
   {$ifdef PAS2JS}, Web{$endif};
 
@@ -39,6 +39,8 @@ var
   LCompact: INyxConfiguration;
   LNative: INyxConfiguration;
   LWidth: TNyxViewportWidth;
+  LCondition: TNyxViewportCondition;
+  LDecodedCondition: TNyxViewportCondition;
   LPlatform: TNyxPlatform;
   LAttribute: TNyxAttribute;
   LBefore: TNyxText;
@@ -118,6 +120,50 @@ begin
     Check(not TryNyxViewportKey('@nyx.viewport:00:640:any:gap', LWidth,
       LPlatform, LAttribute), 'Noncanonical bounds refuse');
 
+    LCondition := TNyxViewportCondition.Any.HeightBelow(300).Orientation(nvoLandscape);
+    Check(LCondition.Matches(640, 299.5), 'Short landscape condition uses both dimensions');
+    Check(not LCondition.Matches(640, 300), 'Height upper boundary is exclusive');
+    Check(not LCondition.Matches(200, 299), 'Portrait does not match landscape');
+    Check(not LCondition.Matches(200, 200), 'Square does not match landscape');
+    Check(not LCondition.Matches(640, 0), 'Orientation excludes zero-height hosts');
+    Check(TNyxViewportCondition.Any.Orientation(nvoSquare).Matches(390, 390),
+      'Square is an explicit positive orientation');
+    Check(TNyxViewportCondition.Any.HeightBetween(300, 600).Matches(640, 300),
+      'Height lower boundary is inclusive');
+    Check(TNyxViewportCondition.Any.WidthBetween(100, 500).HeightBetween(100, 500)
+      .Orientation(nvoPortrait).Matches(200.5, 201), 'Combined fractional portrait geometry');
+    Check(TNyxViewportCondition.FromWidth(TNyxViewportWidth.Below(640)).Pascal =
+      TNyxViewportWidth.Below(640).Pascal, 'Width-only source remains exact');
+    Check(LCondition.HeightAtLeast(600).Matches(800, 600), 'Fluent axis replacement keeps orientation');
+    Check(LCondition.Matches(640, 200), 'Fluent condition copies leave their baseline independent');
+    Check(TryNyxViewportKey(NyxViewportKey(LCondition, npfBrowser, atVisible),
+      LDecodedCondition, LPlatform, LAttribute) and LDecodedCondition.Same(LCondition) and
+      (LPlatform = npfBrowser) and (LAttribute = atVisible), 'Combined canonical wire round trip');
+    Check(not TryNyxViewportKey('@nyx.viewport-size:0:640:0:0:any:any:gap',
+      LDecodedCondition, LPlatform, LAttribute), 'Duplicate width-only advanced wire spelling refuses');
+    Check(not TryNyxViewportKey('@nyx.viewport-size:0:0:00:300:landscape:any:gap',
+      LDecodedCondition, LPlatform, LAttribute), 'Noncanonical height wire spelling refuses');
+    LRejected := False;
+    try
+      LCondition.Matches(1, Infinity);
+    except
+      on EArgumentException do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'Invalid height refuses even when orientation would not match');
+    LRejected := False;
+    try
+      TNyxViewportCondition.Any.HeightBetween(300, 299);
+    except
+      on EArgumentException do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'Reversed height intervals refuse before creating a scope');
+
     LDocument := TNyxDocument.Create;
     LDocument.Title := 'Room for ideas';
     LDocument.AddPage(NewNyxPage('home').Configure.Padding(16).Gap(12).Done);
@@ -130,6 +176,7 @@ begin
     LNative := LCompact.ForPlatform(npfNativeLCL);
     LNative.Gap(10);
     LCommon.Padding(0);
+    LCommon.WhenViewport(LCondition).Layout(nlColumn);
     LRow.Add(NewNyxMemo('notes-editor').Configure.Text('Notes').Width(200).Height(120)
       .Value('Keep this English draft.').Done);
     LRow.Add(NewNyxMemo('other-editor').Configure.Text('Companion notes').Width(160).Height(120)
@@ -145,6 +192,20 @@ begin
     Check((Pos('.WhenViewport(TNyxViewportWidth.Below(640))', LSource) > 0) and
       (Pos('INyxRow', LSource) > 0) and (Pos('@nyx.viewport', LSource) = 0),
       'Generated Pascal keeps typed crafted authoring');
+    Check(PrepareNyxCompanion(LDocument, LDocument, LSource, False) = LSource,
+      'Strongly typed combined source reconstructs the exact authored document');
+    LRejected := False;
+    try
+      PrepareNyxCompanion(LDocument, LDocument,
+        StringReplace(LSource, '.Orientation(nvoLandscape)', '.Orientation(nlRow)', [rfReplaceAll]), False);
+    except
+      on Exception do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'Managed source rejects an orientation from the layout enum family');
+    Check(TNyxCodec.Encode(LDocument) = LBefore, 'Invalid typed source never changes the design');
 
     LRoot := RealizeNyxView(LDocument, LDocument.Pages[0]);
     ApplyNyxPlatform(LRoot, npfBrowser);
@@ -155,6 +216,11 @@ begin
     LRoot.ApplyViewport(640, npfBrowser);
     Check(LRoot.Find('workspace').Prop('gap') = '23', 'Leaving a rule restores current live default');
     Check(LRoot.Find('workspace').Prop('layout', 'row') = 'row', 'Leaving a rule restores default direction');
+    LRoot.ApplyViewport(640, 200, npfBrowser);
+    Check(LRoot.Find('workspace').Prop('gap') = '23', 'Height scope retains unrelated live defaults');
+    Check(LRoot.Find('workspace').Prop('layout') = 'column', 'Landscape condition changes layout');
+    LRoot.ApplyViewport(200, 640, npfBrowser);
+    Check(LRoot.Find('workspace').Prop('gap') = '8', 'Portrait leaves short rule and keeps width rule');
     Check(TNyxCodec.Encode(LDocument) = LBefore, 'Viewport projection never changes authored persistence');
     LRoot.Free;
     LRoot := RealizeNyxView(LDocument, LDocument.Pages[0]);
@@ -183,7 +249,8 @@ begin
       NyxField('op', NyxData('update')), NyxField('id', NyxData('workspace')),
       NyxField('properties', NyxObject([
         NyxField(NyxViewportKey(TNyxViewportWidth.Between(640, 900), npfAny, atGap), NyxData(20)),
-        NyxField(NyxViewportKey(TNyxViewportWidth.Between(640, 900), npfAny, atColumns), NyxData(2))]))])]));
+        NyxField(NyxViewportKey(TNyxViewportWidth.Between(640, 900), npfAny, atColumns), NyxData(2)),
+        NyxField(NyxViewportKey(LCondition, npfAny, atGap), NyxData(6))]))])]));
     LAccepted := LAgent.PreviewPair(LRevision, 'home');
     Check(Pos('TNyxViewportWidth.Between(640, 900)', LAccepted.Source) > 0,
       'Semantic grouped creation generates typed interval source');
@@ -220,6 +287,25 @@ begin
     Check(LRejected and (LAgent.Revision = LRevision), 'Overlapping effective native bounds refuse atomically');
     Check(EncodeNyxProject(LAgent.PreviewPair(LRevision, 'home')) = EncodeNyxProject(LAccepted),
       'Failed admission preserves accepted Pascal and rules');
+    LRejected := False;
+    try
+      Transaction('responsive-square-conflict', NyxArray([NyxObject([
+        NyxField('op', NyxData('update')), NyxField('id', NyxData('workspace')),
+        NyxField('properties', NyxObject([
+          NyxField(NyxViewportKey(TNyxViewportCondition.Any.HeightBelow(500), npfAny,
+            atMinimumWidth), NyxData(300)),
+          NyxField(NyxViewportKey(TNyxViewportCondition.Any.HeightBelow(300).Orientation(nvoSquare),
+            npfNativeLCL, atMaximumWidth), NyxData(200))]))])]));
+    except
+      on Exception do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and (LAgent.Revision = LRevision),
+      'Interior square-only conflict refuses on the native target');
+    Check(EncodeNyxProject(LAgent.PreviewPair(LRevision, 'home')) = EncodeNyxProject(LAccepted),
+      'Diagonal conflict refusal retains the exact accepted pair');
 
     LSession := TNyxStudioSession.Create(LAccepted);
     LSession.Select('workspace');
@@ -243,6 +329,23 @@ begin
     LSession.Undo;
     Check(EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LAccepted),
       'One Inspector Undo restores the exact paired design');
+    LShell.Find(NyxStudioViewportMinimumID).Configure.Value(0);
+    LShell.Find(NyxStudioViewportMaximumID).Configure.Value(0);
+    LShell.Find(NyxStudioViewportHeightMaximumID).Configure.Value(300);
+    LShell.Find(NyxStudioViewportOrientationID).Configure.Value(NyxViewportOrientationName(nvoLandscape));
+    LShell.Find(NyxStudioViewportLayoutID).Configure.Value(NyxLayoutName(nlRow));
+    Check(CaptureNyxViewportInspector(LSession, LShell.Find(NyxStudioViewportApplyID),
+      LShell.Pages[0], LEdit), 'Inspector captures typed height/orientation scope');
+    LRequest := LSession.PrepareDesignRequest(LEdit, LSchemas.Revision);
+    LPrepared := PrepareNyxStudioDesign(LRequest, LSchemas);
+    Check(not LPrepared.Diagnostic.Defined and
+      (LSession.CompleteDesignRequest(LRequest, LPrepared) = nscApplied),
+      'Ordinary paired processor admits combined Inspector scope');
+    Check(Pos('TNyxViewportCondition.Any.HeightBelow(300).Orientation(nvoLandscape)',
+      LSession.ProjectSnapshot.Source) > 0, 'Combined Inspector code is fluent and strongly typed');
+    LSession.Undo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = EncodeNyxProject(LAccepted),
+      'One Undo restores combined Inspector admission');
     {$ifndef PAS2JS}
 
     if ParamCount > 0 then
@@ -258,6 +361,7 @@ begin
     {$else}
     document.body.textContent := 'PASS ' + IntToStr(LChecks) + ' responsive checks';
     document.body.setAttribute('data-nyx-responsive', 'passed');
+    document.body.setAttribute('data-nyx-responsive-checks', IntToStr(LChecks));
     {$endif}
   finally
     LPrepared := nil;

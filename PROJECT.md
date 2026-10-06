@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Public copied viewport conditions now combine width, height and a closed
+orientation enum. Both adapters use host rectangles, preserve retained inputs,
+and share typed generation, strict wire admission and the ordinary Nyx-built
+Inspector. Checks pass 61 per native compiler / browser, 30 native controls,
+31 per browser size, nine native Studio and 22 per browser Studio size. The
+complete LAN release is refreshed with nineteen authenticated tools and an
+exact preserved primary pair; actual MCP jobs compile both outputs. Named/container
+conditions, physical phone input, full editor/parity and performance remain open.
+See [responsive host conditions](WORK.md#responsive-host-conditions--2026-10-06).
+
 Studio now consumes public width rules for compact source captions, placement
 width and Agents visibility. Compatible synchronized Undo/Redo and compact panel
 switches retain independent canvas input. Ordinary browser Inspector/worker

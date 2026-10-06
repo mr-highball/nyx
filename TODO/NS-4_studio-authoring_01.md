@@ -40,6 +40,31 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Responsive host conditions — 2026-10-06
+
+Original criterion 1 now admits copied, typed width/height/orientation conditions
+through the managed public contract, readable generation, strict reserved keys,
+both-target constraint partitions and the ordinary Inspector/paired processor.
+Legacy width source/keys stay exact. Actual native conditions use the stable
+borrowed host, and compatible refresh recognizes both namespaces. Rules retain
+the same controls rather than rewriting design/source during resize.
+
+Evidence: 61 shared checks per native compiler and browser, 30 actual Win32
+controls, 31 desktop / 31 exact-390 browser controls, nine ordinary native Studio
+combined Inspector/Undo checks, and 22 per browser size through the real worker
+and synchronized history. Actual MCP application jobs succeed on both targets;
+grouped Undo/Redo restores exact 100-line source. The qualified nine-artifact LAN
+release is served with nineteen authenticated tools and an exact primary pair.
+See [evidence](../WORK.md#responsive-host-conditions--2026-10-06).
+
+No original criterion closes. Authoring no-closure advances **15→16** once;
+workflow **9**, codegen **28**, renderer **3**, delivery **1** remain. End local
+condition/parser/fixture expansion. Continue original named/container variants,
+snapping/guides and full editor/parity/accessibility/performance outcomes. Actual
+captures still expose desktop view-bar title wrapping with an open Inspector;
+broader ordinary layout quality remains with this owner. Physical phone keyboard,
+IME/assistive technology and another widgetset are not qualified by these hosts.
+
 ## Ordinary responsive Studio — 2026-10-06
 
 Original criterion 1 now has actual browser Inspector/module-worker/shared-history

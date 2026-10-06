@@ -191,6 +191,7 @@ type
       The observer borrows this renderer and disconnects before mount teardown. }
     FViewportObserver: TJSHTMLResizeObserver;
     FViewportWidth: Double;
+    FViewportHeight: Double;
     procedure ObserveViewport;
     procedure ViewportChanged(AEntries: TJSHTMLResizeObserverEntryArray;
       AObserver: TJSHTMLResizeObserver);
@@ -1331,7 +1332,8 @@ begin
     LCandidate.FRoot := RealizeNyxView(ADocument, ARoot);
     ApplyNyxPlatform(LCandidate.FRoot, npfBrowser);
     LCandidate.FViewportWidth := AHost.clientWidth;
-    LCandidate.FRoot.ApplyViewport(LCandidate.FViewportWidth, npfBrowser);
+    LCandidate.FViewportHeight := AHost.clientHeight;
+    LCandidate.FRoot.ApplyViewport(LCandidate.FViewportWidth, LCandidate.FViewportHeight, npfBrowser);
     LCandidate.FProjectionBaseline := LCandidate.FRoot.Clone;
     LCandidate.FCollectionBindings := ACollections;
 
@@ -1413,6 +1415,7 @@ begin
     LCandidate.FBindings := nil;
     FHost := AHost;
     FViewportWidth := LCandidate.FViewportWidth;
+    FViewportHeight := LCandidate.FViewportHeight;
     FDesignMode := ADesignMode;
     FProjectionContext := LCandidate.FProjectionContext;
     FProjectionSchemaRevision := LCandidate.FProjectionSchemaRevision;
@@ -1667,6 +1670,7 @@ begin
   end;
   ObserveViewport;
   FViewportWidth := FHost.clientWidth;
+  FViewportHeight := FHost.clientHeight;
   Sync;
 end;
 
@@ -1690,6 +1694,7 @@ procedure TNyxBrowserRenderer.ViewportChanged(AEntries: TJSHTMLResizeObserverEnt
   AObserver: TJSHTMLResizeObserver);
 var
   LWidth: Double;
+  LHeight: Double;
 begin
 
   if (AObserver <> FViewportObserver) or (FHost = nil) or (FRoot = nil) then
@@ -1697,10 +1702,12 @@ begin
     Exit;
   end;
   LWidth := FHost.clientWidth;
+  LHeight := FHost.clientHeight;
 
-  if LWidth <> FViewportWidth then
+  if (LWidth <> FViewportWidth) or (LHeight <> FViewportHeight) then
   begin
     FViewportWidth := LWidth;
+    FViewportHeight := LHeight;
     Sync;
     UpdateResizePreview;
   end;
@@ -3878,7 +3885,8 @@ begin
         Read current space before projecting; observer callbacks are subsequent
         automatic notifications, not the authority for initial dimensions. }
       FViewportWidth := FHost.clientWidth;
-      FRoot.ApplyViewport(FViewportWidth, npfBrowser);
+      FViewportHeight := FHost.clientHeight;
+      FRoot.ApplyViewport(FViewportWidth, FViewportHeight, npfBrowser);
     end;
     for LIndex := 0 to Length(FBindings) - 1 do
     begin

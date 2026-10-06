@@ -1393,11 +1393,11 @@ var
     LPlatform: TNyxPlatform;
     LScope: TNyxPlatform;
     LAttribute: TNyxAttribute;
-    LViewport: TNyxViewportWidth;
-    LViewportScope: TNyxViewportWidth;
+    LViewport: TNyxViewportCondition;
+    LViewportScope: TNyxViewportCondition;
   begin
     LScope := npfAny;
-    LViewportScope := TNyxViewportWidth.Any;
+    LViewportScope := TNyxViewportCondition.Any;
     { Admit each newly created node to its owner before applying properties.
       Generated try/except can then release the document if later work fails,
       without leaving unowned local builder variables behind. }
@@ -1442,7 +1442,7 @@ var
       LWireKey := ANode.Props.Names[LPropIndex];
       LKey := LWireKey;
       LPlatform := npfAny;
-      LViewport := TNyxViewportWidth.Any;
+      LViewport := TNyxViewportCondition.Any;
 
       if TryNyxPlatformKey(LWireKey, LPlatform, LAttribute) then
       begin

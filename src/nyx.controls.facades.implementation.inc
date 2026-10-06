@@ -49,7 +49,17 @@ var
 begin
   LFacade := TNyxConfiguration.Create(FOwner);
   LFacade.FPlatform := FPlatform;
-  LFacade.FViewport := AWidth;
+  LFacade.FViewport := TNyxViewportCondition.FromWidth(AWidth);
+  Result := LFacade;
+end;
+
+function TNyxConfiguration.WhenViewport(const ACondition: TNyxViewportCondition): INyxConfiguration;
+var
+  LFacade: TNyxConfiguration;
+begin
+  LFacade := TNyxConfiguration.Create(FOwner);
+  LFacade.FPlatform := FPlatform;
+  LFacade.FViewport := ACondition;
   Result := LFacade;
 end;
 

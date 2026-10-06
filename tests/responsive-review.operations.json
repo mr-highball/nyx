@@ -26,7 +26,9 @@
       "@nyx.viewport:0:640:any:gap": 8,
       "@nyx.viewport:0:640:native-lcl:gap": 10,
       "@nyx.viewport:640:900:any:gap": 20,
-      "@nyx.viewport:640:900:any:columns": 2
+      "@nyx.viewport:640:900:any:columns": 2,
+      "@nyx.viewport-size:0:0:0:300:landscape:any:layout": "column",
+      "@nyx.viewport-size:0:0:0:300:landscape:any:gap": 6
     }
   },
   {

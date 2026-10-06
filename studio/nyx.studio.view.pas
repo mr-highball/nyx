@@ -745,7 +745,7 @@ var
   LBinding: TNyxBindingSpec;
   LAttribute: TNyxAttribute;
   LPlatform: TNyxPlatform;
-  LViewport: TNyxViewportWidth;
+  LViewport: TNyxViewportCondition;
 begin
   { Reject a missing controller before allocating any owned shell nodes. }
 

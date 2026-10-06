@@ -1222,7 +1222,7 @@ var
   LKnownAttributes: array of TNyxAttribute;
   LHasAttribute: array of Boolean;
   LScopedPlatforms: set of TNyxPlatform;
-  LViewport: TNyxViewportWidth;
+  LViewport: TNyxViewportCondition;
 
   { All bookkeeping belongs to this call. No node, document, registry snapshot
     or caller array is retained. Geometric growth avoids copying managed fields
@@ -2580,7 +2580,7 @@ var
   LEventOwner: TNyxNode;
   LScalar: Double;
   LSizeConstraints: TNyxSizeConstraints;
-  LViewport: TNyxViewportWidth;
+  LViewport: TNyxViewportCondition;
 
   function SplitMetric(APlatform: TNyxPlatform; AKey: TNyxAttribute;
     ADefault: Integer): Integer;

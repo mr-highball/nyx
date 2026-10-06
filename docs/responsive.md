@@ -3,7 +3,7 @@
 [Designer views](designer-views.md) · [Building](building.md) ·
 [Current evidence](../WORK.md#typed-responsive-authoring--2026-10-05)
 
-`TNyxViewportWidth` describes available rendering space in logical pixels.
+`TNyxViewportWidth` and `TNyxViewportCondition` describe available rendering space in logical pixels.
 It contains no DOM, LCL, operating-system or device-name dependency. Specialized
 managed controls expose the same `WhenViewport` configuration as the base descriptor.
 
@@ -32,16 +32,47 @@ within the current platform scope. `ForPlatform` preserves the width condition,
 and `WhenViewport` preserves the platform. Retaining either facade does not
 change another facade's scope.
 
+Combine dimensions and orientation with a copied fluent value. Each method
+replaces only its own axis; the other conditions remain independent:
+
+```pascal
+LWorkspaceRow.Configure
+  .Layout(nlRow)
+  .Gap(16)
+  .WhenViewport(TNyxViewportCondition.Any
+    .WidthAtLeast(640)
+    .HeightBelow(300)
+    .Orientation(nvoLandscape))
+  .Layout(nlColumn)
+  .Gap(6)
+  .Done;
+
+LDetailsPanel.Configure
+  .Visible(True)
+  .WhenViewport(TNyxViewportCondition.Any.HeightBelow(300))
+  .Visible(False)
+  .Done;
+```
+
+Width/height offer `Below`, `AtLeast` and `Between` methods with the same
+inclusive lower / exclusive upper bounds. Orientation uses the closed
+`nvoAny`, `nvoPortrait`, `nvoLandscape`, `nvoSquare` enum. Portrait means height
+exceeds width; landscape means width exceeds height. A positive square matches
+only Square, and zero-sized hosts match only Any orientation. These are host
+rectangles, not device sensors. NaN, infinity and negative geometry refuse.
+The existing width API, persisted keys and width-only generated source stay exact.
+
 Presentation first uses ordinary defaults and fixed target overrides. Matching
-common width properties then apply, followed by concrete-target width properties.
+common matching properties then apply, followed by concrete-target matching properties.
 Later persisted property positions win within each group; updating an existing
 property retains its position. Leaving a rule exposes the current live default.
 
-Width means the rendering host's client width, shared by that view's descendants.
+Width and height mean the rendering host's client dimensions, shared by that view's descendants.
 It does not mean physical screen width or each nested container's width. Browser
 observation reacts on ordinary rendering frames; LCL uses its resize/layout path.
+Native conditions use the borrowed host rather than its internal scrolling panel.
 Both adapters retain existing controls. First-rule admission starts observation;
-last-rule removal disconnects it. A moved view adopts its new host's width.
+last-rule removal disconnects it. A moved view adopts its new host's rectangle.
 Unmount disconnects observers before disposing controls.
 
 Realized trees own a presentation overlay independently of authored properties.
@@ -49,12 +80,14 @@ Realized trees own a presentation overlay independently of authored properties.
 comparison boundary. Resizing does not rewrite the design, source or history.
 Scalar defaults, bindings, ownership, identities and callbacks cannot become
 viewport-specific. Unsupported control properties and contradictory effective
-size/split bounds refuse before publication. Admission checks every piecewise
-interval on browser and native targets, including overlaps.
+size/split bounds refuse before publication. Admission partitions both dimensions
+at relevant authored bounds and checks every feasible portrait/landscape/square
+region on both targets. This includes conflicts occurring only on the interior
+square diagonal. Text and gap rules do not inflate the constraint partition.
 
 The Nyx-built Inspector exposes **Responsive layout** for controls with a layout
-property. Set an inclusive minimum, exclusive maximum (zero means no upper limit)
-and a layout. **Set layout rule** submits one intent through the existing isolated
+property. Set inclusive minima, exclusive maxima (zero means no upper limit),
+orientation and a layout. **Set layout rule** submits one intent through the existing isolated
 paired processor and one Undo step. Existing responsive fields use ordinary typed
 property editors and readable scope titles. This form creates layout rules;
 other presentation attributes can be authored fluently or semantically.
@@ -113,6 +146,12 @@ Export bounded source windows at one revision; use `nyx_build` for actual compil
 diagnostics. Visual captures qualify rendering selectively, while real target
 controls establish input behavior.
 
+Combined keys use `@nyx.viewport-size:0:0:0:300:landscape:any:gap` for width
+minimum/maximum, height minimum/maximum, orientation, platform and attribute.
+Width-only rules always keep the legacy namespace; alternate duplicate spellings
+refuse. These keys belong to persistence/MCP boundaries. Handwritten and generated
+default authoring uses strongly typed conditions and fluent configuration.
+
 Checked shared fixtures pass 33 on both native compilers and the executed browser
 contract. The unchanged MCP companion passes 22 actual Win32 control checks, nine
 ordinary native Studio inspector/Undo checks and 23 browser checks at desktop and
@@ -130,9 +169,20 @@ Existing source workspace/modal regression passes 30 on each browser size and
 30 on Win32; responsive native Studio still passes nine. The resulting complete
 application compiles through MCP on both targets, with exact build fingerprints.
 
+The height/orientation extension passes 61 shared checks on each native compiler
+and in the browser. Unchanged MCP source passes 30 actual Win32 controls and
+31 browser controls at desktop and exact-390, including height-only observation,
+exclusive height boundaries and retained input/focus/range. Ordinary combined
+Inspector/paired Undo runs pass nine native and 22 per browser size. Actual LAN
+MCP application jobs succeed on both targets and grouped Undo/Redo restores exact
+100-line source. See [current evidence](../WORK.md#responsive-host-conditions--2026-10-06).
+
 Physical phone/hardware, IME/assistive technology, other widgetsets,
-height/orientation conditions, nested container conditions, named
+nested container conditions, named
 variants and comprehensive responsive semantics remain unqualified. Projection
 scans authored rules; these fixtures make no large-project performance claim.
+Keyboard/visual-viewport handling is not established by resizing a fixed test
+host. A height rule follows that host when its layout resizes; it does not assume
+the mobile keyboard has resized the browser layout viewport.
 Full acceptance remains with the existing
 [authoring owner](../TODO/NS-4_studio-authoring_01.md).

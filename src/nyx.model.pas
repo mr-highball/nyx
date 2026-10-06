@@ -181,7 +181,10 @@ type
       Target-specific matches win after common matches; later authored matching
       properties win within each group. Reapplying restores current live defaults.
       Returns True only if effective scoped values changed. }
-    function ApplyViewport(AWidth: Double; APlatform: TNyxPlatform): Boolean;
+    function ApplyViewport(AWidth: Double; APlatform: TNyxPlatform): Boolean; overload;
+    { Both dimensions come from the rendering host, in logical pixels. The
+      compatibility width overload uses height zero and cannot match orientation. }
+    function ApplyViewport(AWidth, AHeight: Double; APlatform: TNyxPlatform): Boolean; overload;
     { Cheap mount-time discovery; no viewport observers are needed for a tree
       containing only ordinary/platform defaults. }
     function HasViewportRules: Boolean;
@@ -274,7 +277,7 @@ type
   private
     FNode: TNyxNode;
     FPlatform: TNyxPlatform;
-    FViewport: TNyxViewportWidth;
+    FViewport: TNyxViewportCondition;
     { Deliberately unit-private: only a node creates/owns this borrowed facade.
       FPC's public-constructor advice conflicts with that lifetime contract. }
     constructor Create(ANode: TNyxNode);
@@ -290,7 +293,10 @@ type
     { Node-owned independent scope; retaining it never changes another facade.
       Any returns the corresponding platform defaults. Target and viewport
       selection commute, and both survive subsequent fluent typed calls. }
-    function WhenViewport(const AWidth: TNyxViewportWidth): TNyxNodeConfig;
+    function WhenViewport(const AWidth: TNyxViewportWidth): TNyxNodeConfig; overload;
+    { Conjunctive host size/orientation scope; independently owned by the node.
+      Any restores the ordinary current-platform configuration. }
+    function WhenViewport(const ACondition: TNyxViewportCondition): TNyxNodeConfig; overload;
     function SplitOrientation(AValue: TNyxSplitOrientation): TNyxNodeConfig;
     function SplitPosition(APercent: Integer): TNyxNodeConfig;
     function SplitMinimum(APercent: Integer): TNyxNodeConfig;
@@ -1209,7 +1215,7 @@ begin
   inherited Create;
   FNode := ANode;
   FPlatform := npfAny;
-  FViewport := TNyxViewportWidth.Any;
+  FViewport := TNyxViewportCondition.Any;
 end;
 
 function TNyxNodeConfig.ForPlatform(APlatform: TNyxPlatform): TNyxNodeConfig;
@@ -1234,11 +1240,16 @@ begin
 end;
 
 function TNyxNodeConfig.WhenViewport(const AWidth: TNyxViewportWidth): TNyxNodeConfig;
+begin
+  Result := WhenViewport(TNyxViewportCondition.FromWidth(AWidth));
+end;
+
+function TNyxNodeConfig.WhenViewport(const ACondition: TNyxViewportCondition): TNyxNodeConfig;
 var
   LIndex: Integer;
 begin
 
-  if AWidth.IsAny then
+  if ACondition.IsAny then
   begin
     Exit(FNode.Configure.ForPlatform(FPlatform));
   end;
@@ -1246,14 +1257,14 @@ begin
   begin
 
     if (FNode.FViewportConfigure[LIndex].FPlatform = FPlatform) and
-      FNode.FViewportConfigure[LIndex].FViewport.Same(AWidth) then
+      FNode.FViewportConfigure[LIndex].FViewport.Same(ACondition) then
     begin
       Exit(FNode.FViewportConfigure[LIndex]);
     end;
   end;
   Result := TNyxNodeConfig.Create(FNode);
   Result.FPlatform := FPlatform;
-  Result.FViewport := AWidth;
+  Result.FViewport := ACondition;
   SetLength(FNode.FViewportConfigure, Length(FNode.FViewportConfigure) + 1);
   FNode.FViewportConfigure[High(FNode.FViewportConfigure)] := Result;
 end;
@@ -1852,9 +1863,14 @@ begin
 end;
 
 function TNyxNode.ApplyViewport(AWidth: Double; APlatform: TNyxPlatform): Boolean;
+begin
+  Result := ApplyViewport(AWidth, 0, APlatform);
+end;
+
+function TNyxNode.ApplyViewport(AWidth, AHeight: Double; APlatform: TNyxPlatform): Boolean;
 var
   LValues: TNyxStrings;
-  LCondition: TNyxViewportWidth;
+  LCondition: TNyxViewportCondition;
   LAttribute: TNyxAttribute;
   LPlatform: TNyxPlatform;
   LPhase: Integer;
@@ -1869,7 +1885,7 @@ begin
   begin
     raise ENyxModel.Create('Viewport projection requires a realized node and concrete target');
   end;
-  TNyxViewportWidth.Any.Matches(AWidth);
+  TNyxViewportCondition.Any.Matches(AWidth, AHeight);
   LValues := nil;
   try
     for LPhase := 0 to 1 do
@@ -1880,7 +1896,7 @@ begin
 
         if TryNyxViewportKey(LKey, LCondition, LPlatform, LAttribute) and
           (((LPhase = 0) and (LPlatform = npfAny)) or
-          ((LPhase = 1) and (LPlatform = APlatform))) and LCondition.Matches(AWidth) then
+          ((LPhase = 1) and (LPlatform = APlatform))) and LCondition.Matches(AWidth, AHeight) then
         begin
           LName := NyxAttributeName(LAttribute);
           LValue := Copy(FProps[LIndex], Length(LKey) + 2, MaxInt);
@@ -1916,7 +1932,7 @@ begin
   end;
   for LIndex := 0 to Count - 1 do
   begin
-    Result := Children[LIndex].ApplyViewport(AWidth, APlatform) or Result;
+    Result := Children[LIndex].ApplyViewport(AWidth, AHeight, APlatform) or Result;
   end;
 end;
 
@@ -1927,7 +1943,8 @@ begin
   for LIndex := 0 to FProps.Count - 1 do
   begin
 
-    if Copy(FProps.Names[LIndex], 1, 14) = '@nyx.viewport:' then
+    if (Copy(FProps.Names[LIndex], 1, 14) = '@nyx.viewport:') or
+      (Copy(FProps.Names[LIndex], 1, 19) = '@nyx.viewport-size:') then
     begin
       Exit(True);
     end;

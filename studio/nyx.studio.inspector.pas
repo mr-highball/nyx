@@ -59,6 +59,9 @@ const
   NyxInspectorEventsID = 'inspector-tab-events';
   NyxStudioViewportMinimumID = 'inspector-viewport-minimum';
   NyxStudioViewportMaximumID = 'inspector-viewport-maximum';
+  NyxStudioViewportHeightMinimumID = 'inspector-viewport-height-minimum';
+  NyxStudioViewportHeightMaximumID = 'inspector-viewport-height-maximum';
+  NyxStudioViewportOrientationID = 'inspector-viewport-orientation';
   NyxStudioViewportLayoutID = 'inspector-viewport-layout';
   NyxStudioViewportApplyID = 'inspector-viewport-apply';
   { Closed size-bound reset intent at the chrome metadata boundary. The captured
@@ -120,11 +123,19 @@ begin
   LCard.Configure.Layout(nlColumn).Gap(8).Padding(12);
   LCard.Add(NewNyxHeading('inspector-viewport-title').Configure.Text('Responsive layout').Done);
   LCard.Add(NewNyxLabel('inspector-viewport-help').Configure.Text(
-    'Use a different layout within a viewport width range. Rules keep the same controls.').Done);
+    'Combine available width, height and orientation. Rules keep the same controls.').Done);
   LCard.Add(NewNyxSpin(NyxStudioViewportMinimumID).Configure.Text('Minimum width (inclusive)')
     .Minimum(0).Maximum(1000000).Value(0).Done);
   LCard.Add(NewNyxSpin(NyxStudioViewportMaximumID).Configure.Text('Below width (0 = no limit)')
     .Minimum(0).Maximum(1000000).Value(640).Done);
+  LCard.Add(NewNyxSpin(NyxStudioViewportHeightMinimumID).Configure.Text('Minimum height (inclusive)')
+    .Minimum(0).Maximum(1000000).Value(0).Done);
+  LCard.Add(NewNyxSpin(NyxStudioViewportHeightMaximumID).Configure.Text('Below height (0 = no limit)')
+    .Minimum(0).Maximum(1000000).Value(0).Done);
+  LCard.Add(NewNyxSelect(NyxStudioViewportOrientationID).Configure.Text('Available orientation')
+    .Items(NyxViewportOrientationName(nvoAny) + #10 + NyxViewportOrientationName(nvoPortrait) +
+      #10 + NyxViewportOrientationName(nvoLandscape) + #10 + NyxViewportOrientationName(nvoSquare))
+    .Value(NyxViewportOrientationName(nvoAny)).Done);
   LCard.Add(NewNyxSelect(NyxStudioViewportLayoutID).Configure.Text('Layout in this range')
     .Items('column' + #10 + 'row' + #10 + 'grid' + #10 + 'absolute').Value('column').Done);
   LCard.Add(NewNyxButton(NyxStudioViewportApplyID).Configure.Text('Set layout rule').Done);
@@ -136,7 +147,10 @@ function CaptureNyxViewportInspector(ASession: TNyxStudioSession;
 var
   LMinimum: Integer;
   LMaximum: Integer;
-  LViewport: TNyxViewportWidth;
+  LHeightMinimum: Integer;
+  LHeightMaximum: Integer;
+  LViewport: TNyxViewportCondition;
+  LOrientation: TNyxViewportOrientation;
   LLayout: TNyxLayoutMode;
   LChoice: TNyxText;
   LFound: Boolean;
@@ -156,23 +170,53 @@ begin
   end;
 
   if not TryStrToInt(AShellRoot.Find(NyxStudioViewportMinimumID).Prop('value'), LMinimum) or
-    not TryStrToInt(AShellRoot.Find(NyxStudioViewportMaximumID).Prop('value'), LMaximum) then
+    not TryStrToInt(AShellRoot.Find(NyxStudioViewportMaximumID).Prop('value'), LMaximum) or
+    not TryStrToInt(AShellRoot.Find(NyxStudioViewportHeightMinimumID).Prop('value'), LHeightMinimum) or
+    not TryStrToInt(AShellRoot.Find(NyxStudioViewportHeightMaximumID).Prop('value'), LHeightMaximum) then
   begin
     raise ENyxModel.Create('Enter complete Integer viewport bounds');
   end;
 
+  LViewport := TNyxViewportCondition.Any;
+
   if LMaximum = 0 then
   begin
-    LViewport := TNyxViewportWidth.AtLeast(LMinimum);
+    LViewport := LViewport.WidthAtLeast(LMinimum);
   end
   else
   begin
-    LViewport := TNyxViewportWidth.Between(LMinimum, LMaximum);
+    LViewport := LViewport.WidthBetween(LMinimum, LMaximum);
+  end;
+
+  if LHeightMaximum = 0 then
+  begin
+    LViewport := LViewport.HeightAtLeast(LHeightMinimum);
+  end
+  else
+  begin
+    LViewport := LViewport.HeightBetween(LHeightMinimum, LHeightMaximum);
+  end;
+  LChoice := AShellRoot.Find(NyxStudioViewportOrientationID).Prop('value');
+  LFound := False;
+  for LOrientation := Low(TNyxViewportOrientation) to High(TNyxViewportOrientation) do
+  begin
+
+    if NyxViewportOrientationName(LOrientation) = LChoice then
+    begin
+      LViewport := LViewport.Orientation(LOrientation);
+      LFound := True;
+      Break;
+    end;
+  end;
+
+  if not LFound then
+  begin
+    raise ENyxModel.Create('Choose a supported viewport orientation');
   end;
 
   if LViewport.IsAny then
   begin
-    raise ENyxModel.Create('Use the ordinary Layout property for every viewport width');
+    raise ENyxModel.Create('Use the ordinary Layout property for every viewport');
   end;
   LChoice := AShellRoot.Find(NyxStudioViewportLayoutID).Prop('value');
   LFound := False;

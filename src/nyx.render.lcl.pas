@@ -308,6 +308,9 @@ type
     function Binding(ANode: TNyxNode): TNyxLCLBinding;
     function IdentityBinding(const AID: TNyxText;
       AIdentity: TNyxIdentityKind): TNyxLCLBinding;
+    { Conditions use the borrowed host's stable client rectangle. Internal
+      content scrollbars/layout must not create a feedback loop in its size. }
+    function UpdateViewport: Boolean;
     procedure Resize(ASender: TObject);
     procedure ProjectViewport(ASender: TObject);
     procedure ArrangeInput(ABinding: TNyxLCLBinding; AWidth, AHeight: Integer);
@@ -2562,6 +2565,18 @@ end;
 
 {$include nyx.render.lcl.viewport.inc}
 
+function TNyxLCLRenderer.UpdateViewport: Boolean;
+begin
+  Result := False;
+
+  if (FRoot = nil) or (FPanel = nil) or (FPanel.Parent = nil) then
+  begin
+    Exit;
+  end;
+  Result := FRoot.ApplyViewport(Max(0, FPanel.Parent.ClientWidth),
+    Max(0, FPanel.Parent.ClientHeight), npfNativeLCL);
+end;
+
 procedure TNyxLCLRenderer.Resize(ASender: TObject);
 var
   LHeight: Integer;
@@ -2581,7 +2596,7 @@ begin
   if (FRoot <> nil) and (FPanel <> nil) then
   begin
 
-    if FRoot.ApplyViewport(Max(0, FPanel.ClientWidth), npfNativeLCL) and not FUpdating then
+    if UpdateViewport and not FUpdating then
     begin
       { Sync applies visibility/interaction as well as geometry, under its
         existing event guard. Its nested Resize sees the already copied overlay. }
@@ -2765,7 +2780,7 @@ begin
     LCandidate.FProjectionSchemaRevision := NyxSchemaRevision;
     LCandidate.FRoot := RealizeNyxView(ADocument, ARoot);
     ApplyNyxPlatform(LCandidate.FRoot, npfNativeLCL);
-    LCandidate.FRoot.ApplyViewport(Max(0, AHost.ClientWidth), npfNativeLCL);
+    LCandidate.FRoot.ApplyViewport(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight), npfNativeLCL);
     LCandidate.FProjectionBaseline := LCandidate.FRoot.Clone;
     LCandidate.FCollectionBindings := ACollections;
 
@@ -5185,7 +5200,7 @@ begin
 
     if (FRoot <> nil) and (FPanel <> nil) then
     begin
-      FRoot.ApplyViewport(Max(0, FPanel.ClientWidth), npfNativeLCL);
+      UpdateViewport;
     end;
     for LIndex := 0 to Length(FBindings) - 1 do
     begin

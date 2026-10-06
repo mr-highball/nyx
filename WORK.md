@@ -8,6 +8,17 @@ lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
 The user's latest explicit LAN instruction is fulfilled. The
+[host-condition release](#responsive-host-conditions--2026-10-06) now supersedes
+the preceding process/asset records: nine qualified artifacts, current server
+identity, exact primary pair/selection/view preservation, served loopback/LAN
+hashes and nineteen authenticated MCP tools are verified. Private current
+identity/manifest/backup/rollback are under `.local/form-factors-refresh-20261006/`;
+the web root is `build/form-factors/release/web`. Do not run previous refresh
+scripts against their obsolete identities. The normal service restart resets
+in-memory history; it preserves the primary pair and leaves auxiliary services
+unchanged. The English MCP example is an independent project shown in Agents.
+
+The preceding
 [responsive editor follow-through](#ordinary-responsive-studio--2026-10-06) also
 refreshes current Studio assets without restarting the service; installed/served
 hashes match, the worker remains byte-identical, and primary revision/selection/
@@ -26,7 +37,23 @@ unchanged. The previous blocked/pending refresh below is historical and supersed
 do not execute its obsolete process manifest. Private current identity, artifact
 manifest, paired backup and rollback live under the current refresh record.
 
-Current independent work: [ordinary responsive Studio](#ordinary-responsive-studio--2026-10-06)
+Current independent work: [responsive host conditions](#responsive-host-conditions--2026-10-06)
+under original authoring criterion 1. Copied typed width/height/orientation rules
+share managed authoring, strict persistence/source admission, both adapters and
+the ordinary Inspector/paired processor. Shared checks pass 61 per native compiler
+and browser; unchanged MCP source passes 30 actual Win32 controls, 31 per browser
+size, nine ordinary native Studio combined Inspector/Undo and 22 per browser
+Studio size. Actual LAN MCP jobs succeed on both outputs; grouped Undo/Redo
+restores exact 100-line source. Authoring no-closure advances 15→16 once; workflow
+9, codegen 28, renderer 3 and delivery 1 remain. Stop local condition/parser/test
+expansion; continue original named/container variants, guides and complete
+editor/parity/accessibility/performance/delivery outcomes. Desktop captures still
+show view-bar title wrapping with the Inspector open. Phone keyboard/visual
+viewport, trusted hardware/IME/assistive technology and other widgetsets remain
+unqualified. The preceding goal turn made progress through retained ordinary
+Studio input, current LAN UI assets and an exact remote checkpoint.
+
+Preceding independent work: [ordinary responsive Studio](#ordinary-responsive-studio--2026-10-06)
 under original authoring criterion 1 and the user's form-factor steering. The
 ordinary browser Inspector reaches its module worker and shared paired history;
 compatible remote/Undo updates and compact panel/preview changes retain live
@@ -8580,3 +8607,83 @@ browser consumer gate is now qualified. End local width/fixture expansion and
 continue original responsive conditions, guides, editor quality, full parity/
 accessibility and delivery. Physical phone review of these latest assets remains
 separate from local LAN delivery and viewport emulation.
+
+## Responsive host conditions — 2026-10-06
+
+Owner: original criterion 1 in [Studio authoring](TODO/NS-4_studio-authoring_01.md)
+and the user's screen-size/presentation request. The deliverable is a usable
+public condition carried through normal authoring, admission, Inspector and both
+actual adapters. Stop on lost input, incorrect conditional admission or guessed
+viewport behavior; full WYSIWYG/guides/parity acceptance remains open.
+
+- `TNyxViewportCondition` is an immutable copied width/height/orientation value.
+  Integer half-open bounds combine fluently with a closed orientation enum;
+  positive squares and zero-host behavior are explicit. Existing width keys and
+  generated source remain exact. Managed facades retain separate scopes and
+  ownership; the maintained Pascal generator owns their refreshed includes.
+- The source reader admits generated typed chains and refuses a layout enum
+  supplied as orientation. Reserved keys are canonical; effective constraints
+  are checked over relevant rectangular intervals and every feasible orientation
+  region on both targets, including square-only interior conflicts. Failed
+  admission leaves paired source/design/revision unchanged. This is not a
+  large-project performance qualification.
+- Browser observation now reacts to height-only changes. Native rules use the
+  borrowed host's stable client rectangle, matching the browser contract instead
+  of its internal scrolling panel. Compatible retained projection recognizes
+  both namespaces. The ordinary Nyx-built Inspector adds height bounds and
+  orientation while keeping one intent, worker admission and paired Undo.
+- Final shared evidence: **61** on stable FPC 3.2.0, matched FPC 3.3.1 and executed
+  pas2js browser. Actual unchanged semantic source passes **30** Win32 controls,
+  **31** desktop / **31** exact-390 browser controls, including height-only resize,
+  the exclusive 300-pixel host boundary, unchanged persistence and live memo
+  identity/text/range/focus. Native ordinary combined Inspector/Undo passes **9**;
+  browser ordinary combined Inspector/worker/Undo/Redo passes **22** at each size.
+  Native checked consumers and the Pascal browser observer report zero leaks.
+- The maintained `responsive` build stages consumers, Studio and its module
+  worker. Final native runs after the host-boundary change are separately logged.
+  Core qualification and typed compiler refusal fixtures pass. Final owned source
+  emits no build warnings; the seven installed pas2js RTL case warnings remain
+  visible without altering or suppressing dependency source.
+- Failed evidence is retained under `build/form-factors/`: an unattended native
+  exception dialog hid an early assertion until the test disabled dialog capture;
+  first-rule refresh then revealed the missing new-namespace compatibility.
+  Another gap assertion overlapped a native-specific width rule / later common
+  property and was corrected to isolate the intended height transition and exact
+  persisted order. Full native Studio execution subsequently completed; its slow
+  run did not establish a resize loop. The stable borrowed-host change is separately
+  exercised by the exact boundary check.
+- Semantic MCP authored the English **Responsive form factors** project as one
+  five-operation transaction in an isolated service, then on the refreshed actual
+  LAN service. Bounded 80-line windows reconstruct identical **100-line** Pascal;
+  actual browser/LCL application jobs both succeed with source fingerprint
+  `5c1bbbb357f976b270ab2b076ca76301`. Grouped Undo empties the demo and one Redo
+  restores exact source. Bounded node metadata exposes typed scope values. The
+  actual demo ends at revision **6**, view `home`, selection `workspace`, pending
+  draft false; the stable primary remains separately preserved.
+- Full release refresh verifies the exact previous process/executable, backs up
+  the active pair, changes only that service and preserves its firewall-covered
+  executable path. Nine staged artifacts include server, Studio, worker, review,
+  preview and matched RTL/hosts. Installed/served hashes match on loopback and
+  LAN; HTTP binds all interfaces, MCP stays loopback, **19** tools authenticate.
+  The primary pair, `rating-2-part-4` selection and `home` view stay exact at
+  revision 2. In-memory history resets during restart. Seven protected auxiliary
+  services and two older isolated services retain their exact identities; this
+  packet's additional isolated service remains available for bounded review.
+  Current private deployment state is `.local/form-factors-refresh-20261006/`.
+
+Evidence: `build/form-factors/qualification-current.log`, `core.log`,
+`shared-stable/`, `shared-matched/`, `nyx_responsive_controls.result.log`,
+`nyx_responsive_studio.result.log`, `review/contracts-current/`,
+`review/controls-desktop/`, `review/controls-compact/`, `review/studio-desktop/`,
+`review/studio-compact/`, `review/actual-*.receipt.json`, `release/`, and the
+private deployment record. Inspected actual desktop, exact-390 and native
+captures; synthetic callbacks / fixed hosts do not establish phone keyboard,
+visual viewport, hardware, IME, assistive technology or another widgetset.
+
+No original criterion closes. Authoring no-closure **15→16** once; workflow **9**,
+codegen **28**, renderer **3**, delivery **1** remain. End local condition/parser/
+fixture expansion. Continue named/container presentations, snapping/guides and
+complete editor/parity/accessibility/performance/delivery. The observed desktop
+view-bar title wrap with the Inspector open remains an ordinary-layout quality
+gap. The branch checkpoint is verified after committing, with its private receipt
+at `build/form-factors/review/remote-checkpoint.json`.

@@ -41,7 +41,10 @@ var
   LBefore: TNyxProjectPair;
   LMemo: TMemo;
   LNotify: TNotifyEvent;
+  LMinimum: TSpinEdit;
   LMaximum: TSpinEdit;
+  LHeightMaximum: TSpinEdit;
+  LOrientation: TComboBox;
   LLayout: TComboBox;
   LChecks: Integer;
 
@@ -100,6 +103,9 @@ begin
     LDocument.Free;
   end;
   Application.Initialize;
+  { Report callback failures to qualification instead of opening an unattended
+    widgetset exception dialog. The Studio still uses its ordinary worker. }
+  Application.CaptureExceptions := False;
   LForm := TForm.CreateNew(nil);
   LForm.SetBounds(20, 20, 1280, 900);
   LForm.Show;
@@ -122,7 +128,18 @@ begin
     LMemo.SelStart := 5;
     LMemo.SelLength := 4;
     LMaximum := TSpinEdit(LStudio.ShellView.InputFor(NyxStudioViewportMaximumID));
-    LMaximum.Value := 900;
+    LMinimum := TSpinEdit(LStudio.ShellView.InputFor(NyxStudioViewportMinimumID));
+    LMinimum.Value := 0;
+    LMaximum.Value := 0;
+    LHeightMaximum := TSpinEdit(LStudio.ShellView.InputFor(NyxStudioViewportHeightMaximumID));
+    LHeightMaximum.Value := 300;
+    LOrientation := TComboBox(LStudio.ShellView.InputFor(NyxStudioViewportOrientationID));
+    LOrientation.ItemIndex := LOrientation.Items.IndexOf('landscape');
+
+    if Assigned(LOrientation.OnChange) then
+    begin
+      LOrientation.OnChange(LOrientation);
+    end;
     LLayout := TComboBox(LStudio.ShellView.InputFor(NyxStudioViewportLayoutID));
     LLayout.ItemIndex := LLayout.Items.IndexOf('row');
 
@@ -134,9 +151,11 @@ begin
     LBefore := LStudio.Session.ProjectSnapshot;
     TControlAccess(LStudio.ShellView.ControlFor(NyxStudioViewportApplyID)).Click;
     Pump;
-    Check(Pos('TNyxViewportWidth.Below(900)', LStudio.Session.ProjectSnapshot.Source) > 0,
+    Check(Pos('TNyxViewportCondition.Any.HeightBelow(300).Orientation(nvoLandscape)',
+      LStudio.Session.ProjectSnapshot.Source) > 0,
       'Real Nyx Inspector button reaches the ordinary paired processor');
-    Check(LStudio.Session.Document.Find('workspace').Prop('@nyx.viewport:0:900:any:layout') = 'row',
+    Check(LStudio.Session.Document.Find('workspace').Prop(
+      '@nyx.viewport-size:0:0:0:300:landscape:any:layout') = 'row',
       'The Inspector applies the captured enum choice');
     Check(LStudio.CanvasView.InputFor('notes-editor') = LMemo,
       'Responsive authoring retains the existing actual input');
