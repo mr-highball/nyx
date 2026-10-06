@@ -28,7 +28,7 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.types, nyx.controls, nyx.behavior, nyx.events,
-  nyx.scheduler, nyx.layout.constraints, nyx.model, nyx.gestures;
+  nyx.scheduler, nyx.layout.constraints, nyx.model, nyx.gestures, nyx.designer.guides;
 
 type
   { Positive edges resize flow controls without inventing absolute positioning.
@@ -58,11 +58,17 @@ type
     FDefined: Boolean;
     FWidth: Integer;
     FHeight: Integer;
+    FWidthGuide: TNyxAlignmentGuide;
+    FHeightGuide: TNyxAlignmentGuide;
   public
     function SameSize(const AOther: TNyxResizeSize): Boolean;
     property Defined: Boolean read FDefined;
     property Width: Integer read FWidth;
     property Height: Integer read FHeight;
+    { Transient explanation only: equality/persistence use dimensions, never
+      renderer geometry. A factory-created ordinary size has no guides. }
+    property WidthGuide: TNyxAlignmentGuide read FWidthGuide;
+    property HeightGuide: TNyxAlignmentGuide read FHeightGuide;
   end;
 
   { Copied designer presentation, independent of the accepted document and
@@ -91,14 +97,19 @@ type
     FGrid: Integer;
     FKeyboardStep: Integer;
     FBounds: TNyxSizeConstraints;
+    FGuides: TNyxAlignmentContext;
   public
     function Snap(AValue: TNyxSizeSnap): TNyxResizePolicy;
     function Grid(AValue: Integer): TNyxResizePolicy;
     function KeyboardStep(AValue: Integer): TNyxResizePolicy;
     function Bounds(const AValue: TNyxSizeConstraints): TNyxResizePolicy;
+    { Copied gesture snapshot. Eligible guides take precedence over the grid.
+      Alt bypasses both; keyboard callers bypass guides to avoid sticky steps. }
+    function Guides(const AValue: TNyxAlignmentContext): TNyxResizePolicy;
     procedure Validate;
     function Adjust(const AStart: TNyxResizeSize; AAxis: TNyxResizeAxis;
-      AX, AY: Double; ABypassGrid: Boolean = False): TNyxResizeSize;
+      AX, AY: Double; ABypassGrid: Boolean = False;
+      ABypassGuides: Boolean = False): TNyxResizeSize;
     property SnapMode: TNyxSizeSnap read FSnap;
     property GridSize: Integer read FGrid;
     property KeyStep: Integer read FKeyboardStep;
@@ -352,13 +363,23 @@ begin
   Result.Validate;
 end;
 
-function TNyxResizePolicy.Adjust(const AStart: TNyxResizeSize; AAxis: TNyxResizeAxis;
-  AX, AY: Double; ABypassGrid: Boolean): TNyxResizeSize;
+function TNyxResizePolicy.Guides(const AValue: TNyxAlignmentContext): TNyxResizePolicy;
+begin
+  Result := Self;
+  Result.FGuides := AValue;
+end;
 
-  function Dimension(AInitial: Integer; ADelta: Double; const ARange: TNyxSizeRange): Integer;
+function TNyxResizePolicy.Adjust(const AStart: TNyxResizeSize; AAxis: TNyxResizeAxis;
+  AX, AY: Double; ABypassGrid, ABypassGuides: Boolean): TNyxResizeSize;
+
+  function Dimension(AInitial: Integer; ADelta: Double; const ARange: TNyxSizeRange;
+    AGuideAxis: TNyxGuideAxis; out AGuide: TNyxAlignmentGuide): Integer;
   var
     LValue: Double;
+    LMinimum: Integer;
+    LMaximum: Integer;
   begin
+    AGuide := Default(TNyxAlignmentGuide);
     { A tap/release or movement only along the other axis is a true no-op,
       including an allocated face that does not start on the chosen grid. }
 
@@ -368,6 +389,18 @@ function TNyxResizePolicy.Adjust(const AStart: TNyxResizeSize; AAxis: TNyxResize
     end;
     LValue := AInitial;
     LValue := EnsureRange(LValue + ADelta, 0.0, MaximumNyxLayoutBound * 1.0);
+
+    if FGuides.Defined and not ABypassGrid and not ABypassGuides then
+    begin
+      LMinimum := ARange.Clamp(0);
+      LMaximum := ARange.Clamp(MaximumNyxLayoutBound);
+      Result := FGuides.Snap(AGuideAxis, LValue, LMinimum, LMaximum, AGuide);
+
+      if AGuide.Kind <> ngkNone then
+      begin
+        Exit;
+      end;
+    end;
 
     if (FSnap = nssGrid) and not ABypassGrid then
     begin
@@ -380,6 +413,8 @@ function TNyxResizePolicy.Adjust(const AStart: TNyxResizeSize; AAxis: TNyxResize
 var
   LWidth: Integer;
   LHeight: Integer;
+  LWidthGuide: TNyxAlignmentGuide;
+  LHeightGuide: TNyxAlignmentGuide;
 begin
   Validate;
   RequireAxis(AAxis);
@@ -390,17 +425,21 @@ begin
   end;
   LWidth := AStart.Width;
   LHeight := AStart.Height;
+  LWidthGuide := Default(TNyxAlignmentGuide);
+  LHeightGuide := Default(TNyxAlignmentGuide);
 
   if AAxis in [nraWidth, nraBoth] then
   begin
-    LWidth := Dimension(LWidth, AX, FBounds.WidthRange);
+    LWidth := Dimension(LWidth, AX, FBounds.WidthRange, ngaWidth, LWidthGuide);
   end;
 
   if AAxis in [nraHeight, nraBoth] then
   begin
-    LHeight := Dimension(LHeight, AY, FBounds.HeightRange);
+    LHeight := Dimension(LHeight, AY, FBounds.HeightRange, ngaHeight, LHeightGuide);
   end;
   Result := NyxResizeSize(LWidth, LHeight);
+  Result.FWidthGuide := LWidthGuide;
+  Result.FHeightGuide := LHeightGuide;
 end;
 
 function NewNyxResizeGrip(const AID: TNyxText; AAxis: TNyxResizeAxis): INyxButton;
@@ -408,7 +447,9 @@ const
   CTitles: array[TNyxResizeAxis] of TNyxText = ('Width', 'Height', 'Both');
 begin
   RequireAxis(AAxis);
-  Result := NewNyxButton(AID).WithText('Resize ' + CTitles[AAxis]);
+  { The containing tools explain the action; short visual captions fit the
+    guaranteed 44-pixel face. The accessible name retains the complete action. }
+  Result := NewNyxButton(AID).WithText(CTitles[AAxis]);
   Result.Configure.Width(116).Height(44).TouchBehavior(ntbNone)
     .AccessibleName('Resize selected control ' + CTitles[AAxis])
     .Hint('Drag to resize. Arrow keys adjust; Shift takes larger steps. Escape cancels; Alt bypasses snapping.')
@@ -817,7 +858,7 @@ begin
     begin
       LStep := LStep * 10;
     end;
-    FCurrent := FPolicy.Adjust(FStart, FAxis, LDeltaX * LStep, LDeltaY * LStep);
+    FCurrent := FPolicy.Adjust(FStart, FAxis, LDeltaX * LStep, LDeltaY * LStep, False, True);
     LInput.Consume;
     Finish;
     Exit;

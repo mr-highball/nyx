@@ -48,6 +48,24 @@ the present Windows installation; the Pascal semantic client is usable immediate
 - Underlying callback/state/source/build behavior remains with its existing owners;
   expose only qualified operations and retain their original acceptance criteria.
 
+## Alignment review follow-through — 2026-10-06
+
+Semantic MCP remains primary: create an independent project, compose one related
+transaction, query four typed properties and bounded same-revision source windows,
+request immutable browser/LCL application jobs, then use physical input only for
+capture/paint/worker/history qualification. The primary project remains untouched.
+The demo is restored through semantic Undo after physical review, retaining its
+own history and leaving other projects independent.
+
+Discovered gap: `nyx_source` windows expose lines but omit exact terminal newline
+framing. This journey verified the final LF against the immutable build's source
+fingerprint/length before compiling the unchanged companion; it did not infer
+byte equality from a line join. Exact source framing belongs to this existing
+workflow owner. Runtime guide geometry/review context also remains outside the
+document inspection tools; physical input harnesses supply that evidence.
+No workflow criterion closes and no-closure remains **9**. See
+[evidence](../WORK.md#alignment-guides--2026-10-06).
+
 **Current deployed refresh — 2026-10-06:** The guarded host-condition release
 now serves the actual LAN endpoint with nineteen authenticated tools. An
 independent English project is composed through one semantic transaction;

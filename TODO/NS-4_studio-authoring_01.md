@@ -40,6 +40,32 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Alignment guides — 2026-10-06
+
+Original criterion 1 now consumes public copied sibling/layout geometry through
+typed resize policies, real browser/LCL guide paint and one ordinary paired
+publication. Flow controls match sizes; absolute layouts also align edges/centers.
+Bounds/ties/Alt/keyboard remain deterministic. A changed snapshot cancels at
+release. Compact Design keeps canvas grips when its Inspector is absent, and
+view-name/resize captions retain useful space. Ambiguous conditional sizing or
+parent flow refuses rather than editing a masked default.
+
+Evidence: 74 shared checks per native compiler and browser; 24 actual Win32 Studio
+checks including painted guide pixels and compact handles; 27 per browser size
+through real pointer capture, module worker and synchronized Undo/Redo. Semantic
+MCP creates an independent English demo, reads bounded context and compiles both
+application targets. Exact 2391-byte source framing matches the immutable jobs.
+The LAN Studio asset is served without restart, with unchanged worker, process,
+primary pair/revision/selection/view/history. See
+[evidence](../WORK.md#alignment-guides--2026-10-06).
+
+No original criterion closes. Authoring no-closure advances **16→17** once;
+workflow **9**, codegen **28**, renderer **3**, delivery **1** remain. Stop local
+guide/fixture expansion. Continue original named/container responsive variants,
+complete move snapping, editor journeys and parity/accessibility/performance.
+Physical phone input, nested scrolling/virtual guide geometry and another
+widgetset remain unqualified; the original prerequisites and criteria stand.
+
 ## Responsive host conditions — 2026-10-06
 
 Original criterion 1 now admits copied, typed width/height/orientation conditions

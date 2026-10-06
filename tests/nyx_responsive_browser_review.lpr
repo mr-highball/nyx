@@ -29,7 +29,7 @@ uses
 type
   { Closed review choices are typed internally; only the command-line boundary
     accepts their advertised names. Unknown names refuse before browser startup. }
-  TResponsiveReviewKind = (rrControls, rrStudio, rrSourceEditor, rrContracts);
+  TResponsiveReviewKind = (rrControls, rrStudio, rrSourceEditor, rrContracts, rrResizeContracts);
   { This owner only observes bounded Pascal-fixture results and captures the
     actual rendered page. It never evaluates scripts, edits a design or uses
     accelerated clocks; ResizeObserver delivery occurs on ordinary browser frames. }
@@ -43,7 +43,7 @@ type
 procedure TResponsiveReview.Run(AKind: TResponsiveReviewKind);
 const
   CNames: array[TResponsiveReviewKind] of TNyxText =
-    ('controls', 'studio', 'source-editor', 'contracts');
+    ('controls', 'studio', 'source-editor', 'contracts', 'resize-contracts');
 var
   LStarted: QWord;
   LMarker: TNyxText;
@@ -62,7 +62,13 @@ begin
     LChecksName := 'data-nyx-responsive-' + LSuffix + '-checks';
   end;
 
-  if AKind = rrContracts then
+  if AKind = rrResizeContracts then
+  begin
+    LResultName := 'data-result';
+    LChecksName := 'data-checks';
+    LErrorName := 'data-error';
+  end
+  else if AKind = rrContracts then
   begin
     LResultName := 'data-nyx-responsive';
     LChecksName := 'data-nyx-responsive-checks';
@@ -142,6 +148,10 @@ begin
       else if ParamStr(3) = 'contracts' then
       begin
         LKind := rrContracts;
+      end
+      else if ParamStr(3) = 'resize-contracts' then
+      begin
+        LKind := rrResizeContracts;
       end
       else
       begin

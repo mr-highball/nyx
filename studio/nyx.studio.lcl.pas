@@ -37,7 +37,7 @@ uses
   nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl,
   nyx.studio.sourcejobs, nyx.modal, nyx.modal.lcl,
   nyx.designer.input, nyx.gestures, nyx.studio.edits, nyx.studio.drag,
-  nyx.designer.resize, nyx.studio.resize;
+  nyx.designer.resize, nyx.designer.guides, nyx.studio.resize;
 
 type
   TNyxNativeStudio = class;
@@ -175,6 +175,7 @@ type
     { Borrow current owners synchronously; hover never publishes a design pair. }
     function DesignerDragContext: TNyxStudioDragContext;
     function DesignerResizeMeasure(const AControl: TNyxControlRef): TNyxResizeSize;
+    function DesignerResizeGuides(const AControl: TNyxControlRef): TNyxAlignmentContext;
     procedure DesignerResizeStatus(const AMessage: TNyxText);
     procedure DesignerResizePresentation(const APreview: TNyxResizePreview);
     procedure DesignerDragFeedback(const ATarget: TNyxControlRef);
@@ -544,7 +545,7 @@ begin
   FCanvasView.OnDesignerGesture := DesignerGesture;
   FDesignerDrag := TNyxStudioDrag.Create(DesignerDragContext, DesignerDragFeedback);
   FDesignerResize := TNyxStudioResize.Create(DesignerDragContext,
-    DesignerResizeMeasure, DesignerResizeStatus, DesignerResizePresentation);
+    DesignerResizeMeasure, DesignerResizeStatus, DesignerResizePresentation, DesignerResizeGuides);
   FCodeView := TNyxLCLRenderer.Create(FTheme);
   FSourcePaneView := TNyxLCLRenderer.Create(FTheme);
   FSourcePaneView.OnEvent := ShellEvent;
@@ -2272,6 +2273,11 @@ end;
 function TNyxNativeStudio.DesignerResizeMeasure(const AControl: TNyxControlRef): TNyxResizeSize;
 begin
   Result := FCanvasView.SizeFor(AControl.ID, niDesign);
+end;
+
+function TNyxNativeStudio.DesignerResizeGuides(const AControl: TNyxControlRef): TNyxAlignmentContext;
+begin
+  Result := FCanvasView.AlignmentFor(AControl.ID, niDesign);
 end;
 
 procedure TNyxNativeStudio.DesignerResizePresentation(const APreview: TNyxResizePreview);

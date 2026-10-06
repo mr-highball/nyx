@@ -7,6 +7,13 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+The current [alignment packet](#alignment-guides--2026-10-06) updates the served
+Studio asset without restarting its LAN server. Process/listeners, byte-identical
+worker and exact primary pair/revision/selection/view/history are retained;
+loopback/LAN asset hashes match. `.local/alignment-assets-20261006/` owns the
+current Studio overlay manifest, backup and pair receipts. It supersedes only
+the Studio asset entry of the preceding full-release manifest.
+
 The user's latest explicit LAN instruction is fulfilled. The
 [host-condition release](#responsive-host-conditions--2026-10-06) now supersedes
 the preceding process/asset records: nine qualified artifacts, current server
@@ -37,7 +44,16 @@ unchanged. The previous blocked/pending refresh below is historical and supersed
 do not execute its obsolete process manifest. Private current identity, artifact
 manifest, paired backup and rollback live under the current refresh record.
 
-Current independent work: [responsive host conditions](#responsive-host-conditions--2026-10-06)
+Current independent work: [alignment guides](#alignment-guides--2026-10-06) now
+has public copied geometry, both adapters and ordinary Studio evidence. The goal
+turn is progress; it closes no full criterion/prerequisite. Authoring no-closure
+advances 16→17 once; workflow 9, codegen 28, renderer 3 and delivery 1 remain.
+End local guide/fixture expansion. Next continue original named/container
+responsive presentations, move snapping and full ordinary editor/parity/
+accessibility/performance/delivery. Explicitly retain the responsive canvas
+selection, nested-scroll/virtual geometry and semantic source-framing gaps.
+
+Preceding independent work: [responsive host conditions](#responsive-host-conditions--2026-10-06)
 under original authoring criterion 1. Copied typed width/height/orientation rules
 share managed authoring, strict persistence/source admission, both adapters and
 the ordinary Inspector/paired processor. Shared checks pass 61 per native compiler
@@ -8607,6 +8623,72 @@ browser consumer gate is now qualified. End local width/fixture expansion and
 continue original responsive conditions, guides, editor quality, full parity/
 accessibility and delivery. Physical phone review of these latest assets remains
 separate from local LAN delivery and viewport emulation.
+
+## Alignment guides — 2026-10-06
+
+Outcome: the public Pascal `nyx.designer.guides` copied geometry/context/guide
+contract now feeds `NyxResizePolicy.Guides`. Nearest eligible sibling dimensions
+win before the grid, with deterministic equal-size/edge/center/order ties.
+Bounds filter candidates first; Alt bypasses all snapping; keyboard steps bypass
+guides. A no-op stays exact. Peer arrays copy independently on FPC/pas2js and
+retain no model/widget. Captures contain at most 256 visible immediate peers;
+absolute layouts admit positional guides, flow layouts only matching sizes.
+
+Both adapters expose `AlignmentFor`, use current allocation/client geometry and
+paint bounded inert guide strips beside existing outlines. Equal sizes paint
+separate honest measurement bars rather than implying collinearity. Native
+conversion clips in the wide domain before allocating physical windows; public
+offscreen capture includes guide panels. Studio captures once and checks copied
+geometry at release, then submits one existing isolated paired edit. Changed
+neighbors cancel. The compact consumer exposed missing canvas handles when its
+Inspector was absent; selection now owns that independent adornment. Short
+resize captions and a view-label minimum width avoid the observed wrapping.
+Conditional sizing/parent flow refuses a portable baseline gesture; selecting
+the intended responsive presentation on the canvas remains open.
+
+Semantic MCP: one independent English project is composed through the maintained
+`tests/alignment-review.operations.json` group. Four typed node properties and
+two bounded 80-line windows at one revision provide context. The 109-line,
+2391-byte accepted source has MD5 `96ce1d371b30fb4781c754090da36817`, verified
+against both immutable application jobs before unchanged compilation. Bounded
+lines omit terminal framing; the final LF was verified against job bytes/hash,
+and this gap is recorded with the existing workflow owner. Browser physical
+review uses the explicit project, then semantic Undo restores its base dimensions
+and retains independent history. Primary revision/selection/view never change.
+
+Qualification: `tools/build.ps1 -Target guides -GuideSourceDirectory
+build/alignment/mcp-source` passes 74 shared checks on stable FPC 3.2.0 and matched
+3.3.1; executed browser shared checks also pass 74. The exact companion/native
+Studio journey passes 24 actual Win32 checks, including painted accent pixels,
+compact grips, Alt, stale layout refusal, retained memo/text/range and exact
+paired Undo/Redo, with zero unfreed blocks. Actual browser Studio passes 27
+desktop / 27 exact-390 checks through real pointer capture, canvas handles,
+module-worker publication and synchronized Undo/Redo. English captures are under
+`build/alignment/native/guides-native.png` and `build/alignment/review/`.
+Both real MCP application jobs succeed; native has zero warnings, browser retains
+seven installed RTL warnings. Final owned source has no compiler warnings.
+Core/negative typed-argument/generated collection regression passes. Earlier
+failed build/input/framing attempts remain in ignored evidence; final exact
+source and current receipts supersede those attempts.
+
+Deployment: current Studio JavaScript is atomically replaced at the already
+running LAN web root after process/executable/creation-time and listener checks.
+The worker is byte-identical. Loopback/LAN hashes match the qualified asset;
+primary pair/revision/selection/view/history and server identity remain exact.
+Private `.local/alignment-assets-20261006/` owns the current overlay manifest,
+previous asset and before/after pair receipts. The full-release server manifest
+still identifies the server; its Studio artifact entry is superseded by this
+overlay. The branch checkpoint/remote verification is recorded in ignored
+`build/alignment/review/remote-checkpoint.json` after push.
+
+Goal-turn classification: **progress**, with authoritative product, both-target
+input/paint/publication, semantic build/history, deployment and remote checkpoint.
+No original criterion/prerequisite/DONE closes. Authoring no-closure advances
+16→17 once; workflow 9, codegen 28, renderer 3 and delivery 1 remain. Stop local
+guide/fixture expansion; continue original named/container presentations, moving
+control snapping, complete editor/parity/accessibility/performance/delivery.
+Nested scroller/virtual/rotation guide geometry, physical phone input, IME/AT,
+another widgetset and large-project performance remain unqualified.
 
 ## Responsive host conditions — 2026-10-06
 

@@ -1,0 +1,8 @@
+[
+  {"op":"title","value":"Cards with space"},
+  {"op":"create","kind":"page","id":"home","root":"page","properties":{"padding":16,"gap":12}},
+  {"op":"create","kind":"panel","id":"workspace","parent":"home","properties":{"layout":"absolute","width":600,"height":440,"padding":0}},
+  {"op":"create","kind":"memo","id":"notes-editor","parent":"workspace","properties":{"text":"Notes","value":"Keep this English draft.","left":20,"top":30,"width":200,"height":120,"min-width":100,"max-width":400,"min-height":40,"max-height":240}},
+  {"op":"create","kind":"memo","id":"other-editor","parent":"workspace","properties":{"text":"Companion notes","value":"This control stays independent.","left":300,"top":60,"width":217,"height":143}},
+  {"op":"create","kind":"button","id":"reference-button","parent":"workspace","properties":{"text":"Align","left":250,"top":250,"width":90,"height":40}}
+]

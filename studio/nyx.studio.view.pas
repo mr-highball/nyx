@@ -913,7 +913,10 @@ begin
   end;
   LViewbar := TNyxNode.Create('row', 'studio-viewbar');
   LCenter.Add(LViewbar);
-  LViewbar.Add(Caption('active-view-label', ASession.ActiveViewID).SetProp('flex', '1'));
+  { A flex caption must retain room for a useful view name when the Inspector
+    narrows the canvas. Let the existing row wrap controls onto the next line. }
+  LViewbar.Add(Caption('active-view-label', ASession.ActiveViewID)
+    .Configure.MinimumWidth(64).Flex(1).Done);
   LViewbar.Add(Button('action-desktop', 'Desktop'));
   LViewbar.Add(Button('action-phone', 'Phone'));
   LViewbar.Add(Button('action-preview', 'Interact'));

@@ -28,7 +28,7 @@ interface
 
 uses
   nyx.text, nyx.types, nyx.model, nyx.events, nyx.designer.resize,
-  nyx.studio.drag, nyx.studio.projects, nyx.studio.session;
+  nyx.studio.drag, nyx.studio.projects, nyx.studio.session, nyx.designer.guides;
 
 const
   NyxStudioResizeWidthID = 'studio-resize-width';
@@ -44,6 +44,9 @@ type
   { Borrowed UI-thread sink for copied canvas presentation. Clear precedes
     commit/cancel/disconnection; it never grants a document mutation lease. }
   TNyxStudioResizePresentation = procedure(const APreview: TNyxResizePreview) of object;
+  { Captures copied visible sibling geometry at start and checks it again at
+    release. Nil preserves grid-only behavior for hosts without layout guides. }
+  TNyxStudioResizeGuides = function(const AControl: TNyxControlRef): TNyxAlignmentContext of object;
 
   { Editor bridge for reusable Nyx grips. A start captures the exact accepted
     pair, mounted session/load, selection/view and creator generation. Preview
@@ -56,6 +59,8 @@ type
     FMeasure: TNyxStudioResizeMeasure;
     FStatus: TNyxStudioResizeStatus;
     FPresentation: TNyxStudioResizePresentation;
+    FGuides: TNyxStudioResizeGuides;
+    FGuideContext: TNyxAlignmentContext;
     FHandles: array[TNyxResizeAxis] of TNyxResizeHandle;
     FCanvasGrips: INyxCanvasResizeGrips;
     FEvents: INyxEvents;
@@ -76,7 +81,8 @@ type
   public
     constructor Create(ACapture: TNyxStudioDragCapture;
       AMeasure: TNyxStudioResizeMeasure; AStatus: TNyxStudioResizeStatus;
-      APresentation: TNyxStudioResizePresentation = nil);
+      APresentation: TNyxStudioResizePresentation = nil;
+      AGuides: TNyxStudioResizeGuides = nil);
     destructor Destroy; override;
     { Shell descriptors are borrowed during connection. Same live mount/owner
       retains grips; replacement cancels the old preview before detaching. }
@@ -95,7 +101,7 @@ function BuildNyxStudioResizeTools(const AOwner: TNyxControlRef): TNyxNode;
 implementation
 
 uses
-  SysUtils, nyx.controls, nyx.schema, nyx.studio.edits, nyx.composition;
+  SysUtils, nyx.controls, nyx.schema, nyx.studio.edits, nyx.composition, nyx.responsive;
 
 const
   CGripIDs: array[TNyxResizeAxis] of TNyxText =
@@ -111,7 +117,7 @@ begin
   try
     Result.Configure.Layout(nlColumn).Padding(0).Gap(6).Done;
     Result.Add(TNyxNode.Create(nkLabel, 'studio-resize-help')
-      .Configure.Text('Resize grips · 8 px grid. Alt bypasses snapping; Escape cancels.').Done);
+      .Configure.Text('Resize grips · nearby size/alignment guides, then 8 px grid. Alt bypasses snapping; Escape cancels.').Done);
     LRow := TNyxNode.Create(nkRow, 'studio-resize-grips');
     Result.Add(LRow);
     LRow.Configure.Wrap(nfwWrap).Gap(6).Done;
@@ -129,7 +135,7 @@ end;
 
 constructor TNyxStudioResize.Create(ACapture: TNyxStudioDragCapture;
   AMeasure: TNyxStudioResizeMeasure; AStatus: TNyxStudioResizeStatus;
-  APresentation: TNyxStudioResizePresentation);
+  APresentation: TNyxStudioResizePresentation; AGuides: TNyxStudioResizeGuides);
 begin
   inherited Create;
 
@@ -141,6 +147,7 @@ begin
   FMeasure := AMeasure;
   FStatus := AStatus;
   FPresentation := APresentation;
+  FGuides := AGuides;
 end;
 
 destructor TNyxStudioResize.Destroy;
@@ -150,6 +157,7 @@ begin
   FMeasure := nil;
   FStatus := nil;
   FPresentation := nil;
+  FGuides := nil;
   inherited Destroy;
 end;
 
@@ -193,14 +201,21 @@ begin
     Disconnect;
     Exit;
   end;
-  LGrip := AShell.Find(NyxStudioResizeWidthID);
-  LOwner := '';
-
-  if LGrip <> nil then
-  begin
-    LOwner := LGrip.Prop(NyxStudioResizeOwnerKey);
-  end;
   LContext := FCapture();
+  LGrip := AShell.Find(NyxStudioResizeWidthID);
+  LOwner := LContext.Session.SelectedID;
+
+  if (LContext.Session.Selected = nil) or
+    (LContext.Session.Selected.Parent = nil) or
+    (LContext.Session.Selected.Kind = 'slot-override') then
+  begin
+    LOwner := '';
+  end;
+
+  if (LGrip <> nil) and (LGrip.Prop(NyxStudioResizeOwnerKey) <> LOwner) then
+  begin
+    raise ENyxModel.Create('Inspector resize tools belong to another selection');
+  end;
 
   if (FEvents = AEvents) and (FRevision = AEvents.ViewRevision) and
     (FOwner.ID = LOwner) and LContext.Session.MatchesCommandContext(FMount) then
@@ -228,7 +243,14 @@ begin
     begin
       LGrip := AShell.Find(CGripIDs[LAxis]);
 
-      if (LGrip = nil) or (LGrip.Prop(NyxStudioResizeOwnerKey) <> FOwner.ID) then
+      if LGrip = nil then
+      begin
+        { Compact Design hides its Inspector. The independently owned canvas
+          document still exposes all three grips for the same selected owner. }
+        Continue;
+      end;
+
+      if LGrip.Prop(NyxStudioResizeOwnerKey) <> FOwner.ID then
       begin
         raise ENyxModel.Create('Resize grips must share one exact authored owner');
       end;
@@ -268,6 +290,10 @@ var
   LRealized: TNyxNode;
   LAttribute: TNyxAttribute;
   LNode: TNyxNode;
+  LIndex: Integer;
+  LCondition: TNyxViewportCondition;
+  LPlatform: TNyxPlatform;
+  LScopedAttribute: TNyxAttribute;
 begin
   Result := False;
   ASize := Default(TNyxResizeSize);
@@ -291,6 +317,35 @@ begin
   end;
   LRealized := RealizeNyxContext(LContext.Session.Document, LNode, LProjection);
   try
+    { A baseline gesture cannot choose which conditional presentation the
+      author intended to change. Refuse scoped dimensions and parent flow
+      rather than publish a default that the current viewport silently masks. }
+    for LIndex := 0 to LProjection.Props.Count - 1 do
+    begin
+
+      if TryNyxViewportKey(LProjection.Props.Names[LIndex], LCondition,
+        LPlatform, LScopedAttribute) and (LScopedAttribute in
+        [atWidth, atHeight, atWidthSizing, atHeightSizing, atFlex,
+        atMinimumWidth, atMaximumWidth, atMinimumHeight, atMaximumHeight]) then
+      begin
+        FStatus('Use the responsive size fields for this control; its viewport sizing is explicitly overridden.');
+        Exit;
+      end;
+    end;
+    if LProjection.Parent = nil then
+    begin
+      Exit;
+    end;
+    for LIndex := 0 to LProjection.Parent.Props.Count - 1 do
+    begin
+
+      if TryNyxViewportKey(LProjection.Parent.Props.Names[LIndex], LCondition,
+        LPlatform, LScopedAttribute) and (LScopedAttribute = atLayout) then
+      begin
+        FStatus('Use responsive size fields; the parent changes flow between viewport presentations.');
+        Exit;
+      end;
+    end;
     { A portable resize must not silently lose to existing scoped dimensions or
       weights. Such controls keep their explicit platform Inspector fields.
       This bounded first gesture path does not guess which override to erase. }
@@ -320,6 +375,13 @@ begin
     LRealized.Free;
   end;
   FPair := LContext.Session.ProjectSnapshot;
+  FGuideContext := Default(TNyxAlignmentContext);
+
+  if Assigned(FGuides) then
+  begin
+    FGuideContext := FGuides(FOwner);
+    APolicy := APolicy.Guides(FGuideContext);
+  end;
   FContext := LContext.Session.CommandContext;
   FView := LContext.Session.ActiveViewID;
   FSchemaRevision := NyxSchemaRevision;
@@ -333,6 +395,7 @@ var
   LContext: TNyxStudioDragContext;
   LPair: TNyxProjectPair;
   LEdit: TNyxStudioDesignEdit;
+  LMessage: TNyxText;
 begin
 
   if not FActive then
@@ -356,9 +419,20 @@ begin
 
   if APhase = nrpPreview then
   begin
-    FStatus(TNyxText('Resize preview · ') + FOwner.ID + TNyxText(' · ') +
+    LMessage := TNyxText('Resize preview · ') + FOwner.ID + TNyxText(' · ') +
       TNyxText(IntToStr(ASize.Width)) + TNyxText(' × ') +
-      TNyxText(IntToStr(ASize.Height)) + TNyxText(' px'));
+      TNyxText(IntToStr(ASize.Height)) + TNyxText(' px');
+
+    if ASize.WidthGuide.Kind <> ngkNone then
+    begin
+      LMessage := LMessage + TNyxText(' · ') + ASize.WidthGuide.Caption;
+    end;
+
+    if ASize.HeightGuide.Kind <> ngkNone then
+    begin
+      LMessage := LMessage + TNyxText(' · ') + ASize.HeightGuide.Caption;
+    end;
+    FStatus(LMessage);
 
     if Assigned(FPresentation) and Live(FCapture()) then
     begin
@@ -377,6 +451,13 @@ begin
   if Assigned(FPresentation) then
   begin
     FPresentation(Default(TNyxResizePreview));
+  end;
+
+  if Assigned(FGuides) and not FGuideContext.SameContext(FGuides(FOwner)) then
+  begin
+    FPair := Default(TNyxProjectPair);
+    FStatus('Resize canceled; neighboring layout changed during the gesture');
+    Exit;
   end;
 
   if (LPair.Design <> FPair.Design) or (LPair.Source <> FPair.Source) or

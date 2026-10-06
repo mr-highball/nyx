@@ -37,7 +37,7 @@ implementation
 
 uses
   SysUtils, Math, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
-  nyx.codec, nyx.codegen, nyx.schema, nyx.designer.resize, nyx.layout.constraints,
+  nyx.codec, nyx.codegen, nyx.schema, nyx.designer.resize, nyx.designer.guides, nyx.layout.constraints,
   nyx.studio.edits, nyx.studio.session, nyx.studio.agents;
 
 function NyxResizeFixture: TNyxProjectPair;
@@ -131,6 +131,9 @@ var
   LWire: TNyxStudioDesignRequest;
   LPrepared: INyxPreparedDesign;
   LSchemas: INyxSchemaSnapshot;
+  LGuides, LGuideCopy: TNyxAlignmentContext;
+  LGuide: TNyxAlignmentGuide;
+  LBox: TNyxGuideBox;
 
   procedure Check(AValue: Boolean; const AReason: TNyxText);
   begin
@@ -169,6 +172,75 @@ begin
   end;
   Check(LRefused, 'undefined geometry refuses before any presentation');
   LPolicy := NyxResizePolicy;
+  { Geometry comes from adapters in the physical journeys. These portable
+    checks qualify deterministic numerical selection, copied ownership and
+    bounds independently of either widgetset's allocation choices. }
+  LGuides := NyxAlignmentContext(NyxGuideBox(20, 30, 200, 120),
+    NyxGuideBox(0, 0, 600, 400), NyxControl('layout'));
+  LGuideCopy := LGuides.Peer(NyxControl('reference'), NyxGuideBox(300, 60, 217, 143));
+  Check((LGuides.PeerCount = 0) and (LGuideCopy.PeerCount = 1),
+    'fluent guide copies own independent peer arrays on both compilers');
+  LGuides := LGuideCopy;
+  LGuideCopy := LGuides.Peer(NyxControl('second'), NyxGuideBox(400, 200, 220, 140));
+  Check((LGuides.PeerCount = 1) and (LGuideCopy.PeerCount = 2),
+    'appending preserves the populated baseline');
+  LCopy := LPolicy.Guides(LGuides);
+  LPreview := NyxResizePreview(NyxControl('notes-editor'), LCopy.Adjust(LSize, nraBoth, 14, 22));
+  Check(LPreview.Size.SameSize(NyxResizeSize(217, 143)) and
+    (LPreview.Size.WidthGuide.Kind = ngkEqualSize) and
+    (LPreview.Size.HeightGuide.Kind = ngkEqualSize), 'nearby matching dimensions win before grid');
+  Check((LPreview.Size.WidthGuide.Reference.ID = 'reference') and
+    (Pos('reference', LPreview.Size.WidthGuide.Caption) > 0), 'guides explain exact reference identity');
+  LBox := LPreview.Size.WidthGuide.Segment(1, 217, 143);
+  Check(LBox.Defined and (LBox.Left = 300) and (LBox.Top = 54) and (LBox.Width = 217),
+    'matching width paints an honest peer measurement bar in the parent plane');
+  Check(LCopy.Adjust(LSize, nraBoth, 14, 22, True).SameSize(NyxResizeSize(214, 142)),
+    'Alt bypasses guides and grid together');
+  Check(LCopy.Adjust(LSize, nraBoth, 14, 22, False, True).SameSize(NyxResizeSize(216, 144)),
+    'keyboard bypass avoids sticky guides while retaining grid policy');
+  Check(LCopy.Adjust(LSize, nraBoth, 0, 0).SameSize(LSize) and
+    (LCopy.Adjust(LSize, nraBoth, 0, 0).WidthGuide.Kind = ngkNone), 'no movement invents no guide or edit');
+  LCopy := LCopy.Bounds(NyxSizeConstraints.MaximumWidth(215));
+  Check((LCopy.Adjust(LSize, nraWidth, 14, 0).Width = 215) and
+    (LCopy.Adjust(LSize, nraWidth, 14, 0).WidthGuide.Kind = ngkNone), 'bounds refuse an invalid nearby guide');
+  Check(LGuideCopy.Snap(ngaWidth, 219, 218, 225, LGuide) = 220,
+    'a nearer invalid candidate does not mask an eligible bounded peer');
+  Check(LGuideCopy.Snap(ngaWidth, 218.5, 0, 1000, LGuide) = 217,
+    'equal distances retain stable peer order');
+  LGuides := NyxAlignmentContext(NyxGuideBox(20, 30, 200, 120),
+    NyxGuideBox(0, 0, 600, 400), NyxControl('layout'))
+    .Peer(NyxControl('reference'), NyxGuideBox(250, 100, 90, 40)).Positions(True);
+  Check((LGuides.Snap(ngaWidth, 318, 0, 1000, LGuide) = 320) and
+    (LGuide.Kind = ngkEdge), 'absolute layout snaps the positive edge');
+  LBox := LGuide.Segment(0, 320, 120);
+  Check((LBox.Left = 340) and (LBox.Width = 1), 'edge line uses the reference edge, not its size');
+  Check((LGuides.Snap(ngaWidth, 547, 0, 1000, LGuide) = 550) and
+    (LGuide.Kind = ngkCenter), 'absolute layout can align centers');
+  Check(not LGuides.SameContext(LGuides.Positions(False)) and
+    not LGuides.SameContext(LGuides.Tolerance(5)) and LGuides.SameContext(LGuides),
+    'release comparison observes geometry policy without retaining model objects');
+  Check((LGuides.Positions(False).Snap(ngaWidth, 318, 0, 1000, LGuide) = 318) and
+    (LGuide.Kind = ngkNone), 'flow layouts do not promise unstable position alignment');
+  LRefused := False;
+  try
+    NyxGuideBox(NaN, 0, 100, 100);
+  except
+    on EArgumentException do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused, 'nonfinite captured geometry refuses');
+  LRefused := False;
+  try
+    LGuides.Peer(NyxControl('reference'), NyxGuideBox(0, 0, 10, 10));
+  except
+    on EArgumentException do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused, 'duplicate reference refuses without changing the snapshot');
   LPoint := NyxResizePoint(-12.5, 204.25);
   Check(LPoint.Defined and (LPoint.X = -12.5) and (LPoint.Y = 204.25),
     'stable-plane coordinates preserve signed fractional values');

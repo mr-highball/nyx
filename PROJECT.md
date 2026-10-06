@@ -66,6 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Copied alignment contexts now supply sibling size matches and absolute-layout
+edge/center guides through public Nyx resize policies and both adapters. Studio
+captures geometry once, paints transient guides and cancels stale layouts before
+one paired publication. Compact Design retains its canvas handles independently
+of Inspector visibility. Checks pass 74 per native compiler and browser, 24 actual
+Win32 Studio and 27 per browser size through real pointer capture/worker/history.
+The current LAN Studio asset is updated without restarting its server or changing
+the worker/primary pair. Broader move snapping, responsive presentation selection,
+virtual/nested-scroll geometry and full editor/parity/performance remain open.
+See [alignment evidence](WORK.md#alignment-guides--2026-10-06).
+
 Public copied viewport conditions now combine width, height and a closed
 orientation enum. Both adapters use host rectangles, preserve retained inputs,
 and share typed generation, strict wire admission and the ordinary Nyx-built

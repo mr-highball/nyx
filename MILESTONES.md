@@ -25,7 +25,20 @@ execution. Codegen criterion 3 remains open at no-closure 28; workflow 9, render
 3, authoring 11 and delivery 1 remain. No full criterion, goal percentage or DONE
 claim follows. See [evidence](WORK.md#reviewable-release-refresh--2026-10-05).
 
-Current independent authoring packet: typed host width/height/orientation
+Current independent authoring packet: public copied alignment snapshots now reach
+resize policies, both adapters and ordinary Studio publication. Shared checks
+pass 74 per compiler/browser; actual Studio passes 24 Win32 and 27 per browser
+size through pointer capture/worker/history. Compact Design retains canvas grips
+without its Inspector. Semantic MCP composes, queries, compiles and restores an
+independent English project; exact source bytes match immutable jobs. The LAN
+Studio asset refresh preserves the server, worker and primary pair/history.
+No original criterion closes: authoring no-closure advances 16→17 once; workflow
+9, codegen 28, renderer 3 and delivery 1 remain. End local guide/fixture expansion;
+continue original responsive variants, move snapping, full editor/parity/
+accessibility/performance/delivery. See
+[evidence](WORK.md#alignment-guides--2026-10-06).
+
+Preceding independent authoring packet: typed host width/height/orientation
 conditions reach managed authoring, source/wire admission, both adapters and
 the ordinary Inspector/paired processor. Checks pass 61 per native compiler and
 browser, 30 actual Win32 controls, 31 per browser size, nine native Studio and

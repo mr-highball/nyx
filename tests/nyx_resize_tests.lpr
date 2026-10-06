@@ -56,6 +56,7 @@ begin
     {$ifdef PAS2JS}
     document.body.textContent := 'PASS ' + IntToStr(LChecks) + ' resize checks';
     document.body.setAttribute('data-result', 'passed');
+    document.body.setAttribute('data-checks', IntToStr(LChecks));
     {$else}
 
     if ParamCount = 1 then

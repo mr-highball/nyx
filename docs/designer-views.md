@@ -242,9 +242,74 @@ IME, assistive technology or another widgetset. The additional browser preview
 consumer passes 47 actual DOM checks at desktop and exact 390 pixels, including
 real canvas keyboard listeners, retirement and retained scope identity. Native
 Studio passes 70 actual checks including moving handles and one paired Undo.
-The browser adapter journey does not establish ordinary Studio pointer
-interaction or phone observation. See
+That earlier adapter journey does not establish ordinary Studio pointer
+interaction or phone observation. The guide journey below now adds ordinary
+browser pointer/worker evidence. See
 [evidence](../WORK.md#direct-canvas-resize-handles--2026-10-05).
+
+## Alignment guides
+
+`nyx.designer.guides` adds a copied, typed layout snapshot to the resize policy.
+Capture it once at gesture start through either renderer's `AlignmentFor`, then
+attach it with `.Guides`:
+
+```pascal
+LGuides := LRenderer.AlignmentFor('notes-editor', niDesign);
+APolicy := NyxResizePolicy.Grid(8)
+  .Bounds(NyxSizeConstraints.MinimumWidth(100).MaximumWidth(400))
+  .Guides(LGuides);
+```
+
+Custom hosts can supply their own geometry without importing DOM or LCL types:
+
+```pascal
+LGuides := NyxAlignmentContext(
+  NyxGuideBox(20, 30, 200, 120),
+  NyxGuideBox(0, 0, 600, 400), NyxControl('workspace'))
+  .Peer(NyxControl('companion'), NyxGuideBox(300, 60, 217, 143))
+  .Tolerance(6)
+  .Positions(True);
+```
+
+Coordinates belong to the same immediate parent's logical client plane.
+Positions may be enabled only when resizing keeps the selected origin stable;
+the built-in adapters enable them for absolute layouts. Flow layouts match
+sibling widths/heights and avoid promising unstable edge/center alignment.
+Snapshots copy identities and geometry, retain no widget/tree, and admit at most
+256 visible sibling peers in stable mount order. Explicit oversized/duplicate
+peer additions refuse. Fluent additions preserve independently retained copies.
+
+Nearby valid integer dimensions take precedence over the grid. Nearest wins;
+ties prefer matching size, edge, center, then snapshot order. Bounds eliminate
+invalid targets before selection. Alt bypasses guides and grid together; arrow
+keys bypass guides and retain the configured step/grid, avoiding sticky keys.
+Zero movement remains a no-op. `TNyxResizeSize.WidthGuide` / `HeightGuide` explain
+each match. They are transient presentation; only dimensions enter history and
+the wire contract.
+
+Matching sizes paint two measurement bars, one at each actual face. Absolute
+edge/center matches paint a connecting line. Both adapters own at most four
+additional inert strips, clip before physical allocation, and retire them with
+the resize outline. `PaintResizePreview` includes native guide panels. Preview
+changes neither accepted source nor live input. Studio resnapshots geometry at
+release and refuses a changed layout rather than committing a stale match.
+Canvas grips now belong to the selected control and remain available when a
+compact Design panel hides its Inspector.
+
+Portable resizing refuses viewport-scoped sizing or parent flow changes because
+it cannot safely infer which presentation the author wants to edit. The existing
+responsive Inspector remains available; choosing a presentation directly on the
+canvas is still open. Transformed rotation, nested scroller/virtual geometry,
+physical phone input, other widgetsets and large-project performance need broader
+qualification. These checks do not close the full authoring/parity criteria.
+
+Use semantic MCP to compose `tests/alignment-review.operations.json` in an
+independent project, then export unchanged accepted Pascal in bounded same-revision
+`nyx_source` windows. `tools/build.ps1 -Target guides -GuideSourceDirectory
+build/alignment/mcp-source` stages shared/native checks, Studio, its worker and
+browser consumers. The Pascal `nyx_guides_browser_review` driver uses real pointer
+input only to qualify capture, paint, worker publication and Undo/Redo against
+that explicit workspace. It does not compose a replacement document.
 
 ## Reproduce the boundary
 

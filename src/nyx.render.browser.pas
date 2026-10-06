@@ -43,6 +43,7 @@ uses
   nyx.gestures,
   nyx.designer.input,
   nyx.designer.resize,
+  nyx.designer.guides,
   nyx.gestures.browser,
   nyx.platform,
   nyx.split,
@@ -210,7 +211,7 @@ type
     FOnDesignerGesture: TNyxDesignerGesture;
     FSelectedDesignID: TNyxText;
     FResizePreview: TNyxResizePreview;
-    FResizeEdges: array[0..3] of TJSHTMLElement;
+    FResizeEdges: array[0..7] of TJSHTMLElement;
     FResizePreviewHandler: TJSEventHandler;
     FResizeListening: Boolean;
     FCanvasResizeGrips: INyxCanvasResizeGrips;
@@ -308,6 +309,11 @@ type
       CSS transforms and including borders. Never returns a borrowed DOM handle. }
     function SizeFor(const AID: TNyxText;
       AIdentity: TNyxIdentityKind = niAutomatic): TNyxResizeSize;
+    { Copied visible immediate siblings in the parent's logical CSS plane.
+      Absolute layouts admit edge/center guides; flow layouts match sizes.
+      Missing identity raises; roots have no guide context. No DOM is retained. }
+    function AlignmentFor(const AID: TNyxText;
+      AIdentity: TNyxIdentityKind = niAutomatic): TNyxAlignmentContext;
     { Read the containing mounted view's logical-pixel range/offset. Missing
       mount raises; this observation changes neither selection nor the model. }
     function ViewViewport: TNyxViewportSnapshot;
@@ -494,6 +500,92 @@ begin
   FEvents.Scheduler.RequireUI;
   LElement := ElementFor(AID, AIdentity);
   Result := NyxResizeSize(Round(LElement.offsetWidth), Round(LElement.offsetHeight));
+end;
+
+function TNyxBrowserRenderer.AlignmentFor(const AID: TNyxText;
+  AIdentity: TNyxIdentityKind): TNyxAlignmentContext;
+var
+  LElement, LParent, LPeer: TJSHTMLElement;
+  LRect, LParentRect: TJSDOMRect;
+  LNode: TNyxNode;
+  LIndex: Integer;
+  LScaleX, LScaleY: Double;
+
+  function BoxFor(AElement: TJSHTMLElement): TNyxGuideBox;
+  var
+    LBox: TJSDOMRect;
+  begin
+    LBox := AElement.getBoundingClientRect;
+    Result := NyxGuideBox((LBox.left - LParentRect.left) / LScaleX - LParent.clientLeft + LParent.scrollLeft,
+      (LBox.top - LParentRect.top) / LScaleY - LParent.clientTop + LParent.scrollTop,
+      AElement.offsetWidth, AElement.offsetHeight);
+  end;
+
+begin
+  FEvents.Scheduler.RequireUI;
+  Result := Default(TNyxAlignmentContext);
+  LElement := ElementFor(AID, AIdentity);
+  LNode := nil;
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if FBindings[LIndex].FElement = LElement then
+    begin
+      LNode := FBindings[LIndex].FNode;
+      Break;
+    end;
+  end;
+
+  if (LNode = nil) or (LNode.Parent = nil) then
+  begin
+    Exit;
+  end;
+  LParent := TJSHTMLElement(LElement.parentElement);
+  LParentRect := LParent.getBoundingClientRect;
+  LScaleX := 1;
+  LScaleY := 1;
+
+  if LParent.offsetWidth > 0 then
+  begin
+    LScaleX := LParentRect.width / LParent.offsetWidth;
+  end;
+
+  if LParent.offsetHeight > 0 then
+  begin
+    LScaleY := LParentRect.height / LParent.offsetHeight;
+  end;
+
+  if (LScaleX <= 0) or (LScaleY <= 0) then
+  begin
+    Exit;
+  end;
+  Result := NyxAlignmentContext(BoxFor(LElement),
+    NyxGuideBox(0, 0, LParent.clientWidth, LParent.clientHeight),
+    NyxControl(LNode.Parent.ID)).Positions(NyxLayout(LNode.Parent) = 'absolute');
+  for LIndex := 0 to High(FBindings) do
+  begin
+    LPeer := FBindings[LIndex].FElement;
+
+    if (FBindings[LIndex].FNode.Parent <> LNode.Parent) or (LPeer = LElement) or
+      not NyxInteractionPolicy(FBindings[LIndex].FNode).Visible then
+    begin
+      Continue;
+    end;
+    LRect := LPeer.getBoundingClientRect;
+
+    if (LRect.width <= 0) or (LRect.height <= 0) or
+      (LRect.right <= LParentRect.left) or (LRect.left >= LParentRect.right) or
+      (LRect.bottom <= LParentRect.top) or (LRect.top >= LParentRect.bottom) then
+    begin
+      Continue;
+    end;
+
+    if Result.PeerCount = NyxMaximumGuidePeers then
+    begin
+      Break;
+    end;
+    Result := Result.Peer(NyxControl(FBindings[LIndex].FNode.ID), BoxFor(LPeer));
+  end;
 end;
 
 procedure NyxFocusWithoutScroll(AControl: TJSHTMLElement);
@@ -2093,7 +2185,8 @@ begin
     raise ENyxModel.Create('Resize presentation requires the selected authored face');
   end;
   { Resolve before replacing a live proposal so missing identity cannot erase
-    the previous presentation. The renderer owns only four inert paint strips. }
+    the previous presentation. Four outline strips and at most four guide
+    strips remain inert paint, independent of accepted document ownership. }
   ElementFor(APreview.Control.ID, niDesign);
   FResizePreview := APreview;
 
@@ -2140,6 +2233,35 @@ var
     end;
   end;
 
+  procedure Guide(AIndex: Integer; const AGuide: TNyxAlignmentGuide; ASegment: Integer);
+  var
+    LBox: TNyxGuideBox;
+    LScaleX, LScaleY: Double;
+  begin
+    FResizeEdges[AIndex].style.setProperty('display', 'none');
+    LBox := AGuide.Segment(ASegment, FResizePreview.Size.Width, FResizePreview.Size.Height);
+
+    if not LBox.Defined then
+    begin
+      Exit;
+    end;
+    LScaleX := 1;
+    LScaleY := 1;
+
+    if LElement.offsetWidth > 0 then
+    begin
+      LScaleX := LFace.width / LElement.offsetWidth;
+    end;
+
+    if LElement.offsetHeight > 0 then
+    begin
+      LScaleY := LFace.height / LElement.offsetHeight;
+    end;
+    Edge(AIndex, LFace.left + (LBox.Left - AGuide.OwnerBox.Left) * LScaleX,
+      LFace.top + (LBox.Top - AGuide.OwnerBox.Top) * LScaleY,
+      LBox.Width * LScaleX, LBox.Height * LScaleY);
+  end;
+
 begin
 
   if not FResizePreview.Active or (FHost = nil) then
@@ -2170,7 +2292,15 @@ begin
     begin
       FResizeEdges[LIndex] := Element('div', 'nyx-resize-preview');
       FResizeEdges[LIndex].setAttribute('aria-hidden', 'true');
-      FResizeEdges[LIndex].setAttribute('data-nyx-resize-edge', IntToStr(LIndex));
+
+      if LIndex < 4 then
+      begin
+        FResizeEdges[LIndex].setAttribute('data-nyx-resize-edge', IntToStr(LIndex));
+      end
+      else
+      begin
+        FResizeEdges[LIndex].setAttribute('data-nyx-alignment-guide', IntToStr(LIndex - 4));
+      end;
       FResizeEdges[LIndex].style.setProperty('position', 'fixed');
       FResizeEdges[LIndex].style.setProperty('pointer-events', 'none');
       FResizeEdges[LIndex].style.setProperty('z-index', '20');
@@ -2188,6 +2318,10 @@ begin
   Edge(1, LFace.left - 2, LFace.top + LHeight, LWidth + 4, 2);
   Edge(2, LFace.left - 2, LFace.top, 2, LHeight);
   Edge(3, LFace.left + LWidth, LFace.top, 2, LHeight);
+  Guide(4, FResizePreview.Size.WidthGuide, 0);
+  Guide(5, FResizePreview.Size.WidthGuide, 1);
+  Guide(6, FResizePreview.Size.HeightGuide, 0);
+  Guide(7, FResizePreview.Size.HeightGuide, 1);
 end;
 
 procedure TNyxBrowserBinding.SplitChanged(ASplit: TNyxBrowserSplit);

@@ -53,6 +53,7 @@ uses
   nyx.gestures,
   nyx.designer.input,
   nyx.designer.resize,
+  nyx.designer.guides,
   nyx.gestures.lcl,
   nyx.platform,
   nyx.split,
@@ -254,7 +255,7 @@ type
     FProjectionBaseline: TNyxNode;
     FSelectedDesignID: TNyxText;
     FResizePreview: TNyxResizePreview;
-    FResizeEdges: array[0..3] of TPanel;
+    FResizeEdges: array[0..7] of TPanel;
     FCanvasResizeGrips: INyxCanvasResizeGrips;
     FCanvasGripViews: array[TNyxResizeAxis] of TNyxLCLRenderer;
     FCanvasGripHosts: array[TNyxResizeAxis] of TPanel;
@@ -430,6 +431,11 @@ type
       window. Exact identity admission matches ControlFor; zero is meaningful. }
     function SizeFor(const AID: TNyxText;
       AIdentity: TNyxIdentityKind = niAutomatic): TNyxResizeSize;
+    { Copied visible immediate siblings from admitted logical allocation,
+      independent of child-window clipping. Roots have no guide context;
+      missing identity raises. No control, binding or model is retained. }
+    function AlignmentFor(const AID: TNyxText;
+      AIdentity: TNyxIdentityKind = niAutomatic): TNyxAlignmentContext;
     { Shared one-based source navigation for the public code-editor component. }
     { One-based Unicode-scalar column, translated to the widgetset's caret units.
       Win32 memo columns use UTF-16 units, including both units of a surrogate.
@@ -2253,6 +2259,33 @@ var
     end;
   end;
 
+  procedure Guide(AIndex: Integer; const AGuide: TNyxAlignmentGuide; ASegment: Integer);
+  var
+    LBox: TNyxGuideBox;
+    LLeft, LTop, LRight, LBottom: Double;
+  begin
+    FResizeEdges[AIndex].Visible := False;
+    LBox := AGuide.Segment(ASegment, FResizePreview.Size.Width, FResizePreview.Size.Height);
+
+    if LBox.Defined then
+    begin
+      { Logical peers may be far outside native message coordinates. Intersect
+        in the wide copied domain before any integer/window conversion. }
+      LLeft := LOrigin.X + LBox.Left - AGuide.OwnerBox.Left;
+      LTop := LOrigin.Y + LBox.Top - AGuide.OwnerBox.Top;
+      LRight := Min(LLeft + LBox.Width, LHost.ClientWidth);
+      LBottom := Min(LTop + LBox.Height, LHost.ClientHeight);
+      LLeft := Max(0.0, LLeft);
+      LTop := Max(0.0, LTop);
+
+      if (LRight > LLeft) and (LBottom > LTop) then
+      begin
+        Edge(AIndex, Round(LLeft), Round(LTop), Round(LRight) - Round(LLeft),
+          Round(LBottom) - Round(LTop));
+      end;
+    end;
+  end;
+
 begin
 
   if not FResizePreview.Active or (FPanel = nil) or (FPanel.Parent = nil) or
@@ -2286,7 +2319,7 @@ begin
 
     if FResizeEdges[LIndex] = nil then
     begin
-      { Reuse standard LCL panels as four tiny child-window paint faces above
+      { Reuse standard LCL panels as bounded child-window paint faces above
         descendant windows. Graphic-only ancestor shapes would paint behind
         those windows or clip to the unchanged row. No custom widget is needed. }
       FResizeEdges[LIndex] := TPanel.Create(nil);
@@ -2309,6 +2342,10 @@ begin
     FResizePreview.Size.Width + 4, 2);
   Edge(2, LOrigin.X - 2, LOrigin.Y, 2, FResizePreview.Size.Height);
   Edge(3, LOrigin.X + FResizePreview.Size.Width, LOrigin.Y, 2, FResizePreview.Size.Height);
+  Guide(4, FResizePreview.Size.WidthGuide, 0);
+  Guide(5, FResizePreview.Size.WidthGuide, 1);
+  Guide(6, FResizePreview.Size.HeightGuide, 0);
+  Guide(7, FResizePreview.Size.HeightGuide, 1);
 end;
 
 procedure TNyxLCLRenderer.PaintResizePreview(ACanvas: TCanvas; const AOrigin: TPoint);
@@ -3208,6 +3245,66 @@ begin
     raise ENyxModel.Create('Control size requires admitted logical layout');
   end;
   Result := NyxResizeSize(LBinding.FLogicalBox.Width, LBinding.FLogicalBox.Height);
+end;
+
+function TNyxLCLRenderer.AlignmentFor(const AID: TNyxText;
+  AIdentity: TNyxIdentityKind): TNyxAlignmentContext;
+var
+  LBinding, LParent, LPeer: TNyxLCLBinding;
+  LIndex: Integer;
+  LWidth, LHeight: Integer;
+
+  function BoxFor(ABinding: TNyxLCLBinding): TNyxGuideBox;
+  begin
+    Result := NyxGuideBox(ABinding.FLogicalBox.X, ABinding.FLogicalBox.Y,
+      ABinding.FLogicalBox.Width, ABinding.FLogicalBox.Height);
+  end;
+
+begin
+  FEvents.Scheduler.RequireUI;
+  Result := Default(TNyxAlignmentContext);
+  LBinding := IdentityBinding(AID, AIdentity);
+  LParent := LBinding.FLogicalParent;
+
+  if (LParent = nil) or not LBinding.FLogicalBox.Defined or
+    not LParent.FLogicalBox.Defined then
+  begin
+    Exit;
+  end;
+  LWidth := LParent.FLogicalBox.Width;
+  LHeight := LParent.FLogicalBox.Height;
+
+  if LParent.FControl is TWinControl then
+  begin
+    { Native decorations consume client area even when the face is projected
+      into a smaller physical window. Subtract the decoration, not clipping. }
+    LWidth := Max(0, LWidth - (LParent.FControl.Width - TWinControl(LParent.FControl).ClientWidth));
+    LHeight := Max(0, LHeight - (LParent.FControl.Height - TWinControl(LParent.FControl).ClientHeight));
+  end;
+  Result := NyxAlignmentContext(BoxFor(LBinding),
+    NyxGuideBox(0, 0, LWidth, LHeight),
+    NyxControl(LParent.FNode.ID)).Positions(LParent.FNode.Prop('layout') = 'absolute');
+  for LIndex := 0 to High(FBindings) do
+  begin
+    LPeer := FBindings[LIndex];
+
+    if (LPeer = LBinding) or (LPeer.FLogicalParent <> LParent) or
+      not LPeer.FControl.Visible or not LPeer.FLogicalBox.Defined or
+      not NyxInteractionPolicy(LPeer.FNode).Visible or
+      (LPeer.FLogicalBox.Width = 0) or (LPeer.FLogicalBox.Height = 0) or
+      (LPeer.FLogicalBox.Right <= 0) or (LPeer.FLogicalBox.X >= LWidth) or
+      (LPeer.FLogicalBox.Bottom <= 0) or (LPeer.FLogicalBox.Y >= LHeight) or
+      (FVirtualLayout and not LPeer.FPlacement.HasArea) then
+    begin
+      Continue;
+    end;
+
+    if Result.PeerCount = NyxMaximumGuidePeers then
+    begin
+      Break;
+    end;
+    Result := Result.Peer(NyxControl(LPeer.FNode.ID), BoxFor(LPeer));
+  end;
 end;
 
 procedure TNyxLCLRenderer.ViewportChanged(const AOriginID: TNyxText;

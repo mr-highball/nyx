@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'responsive', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'responsive', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -50,6 +50,8 @@ param(
   # Optional unchanged companion exported through bounded semantic MCP windows.
   # Empty uses the independent portable contract fixture for offline builds.
   [string]$ResponsiveSourceDirectory,
+  # Unchanged companion exported through semantic MCP for alignment input review.
+  [string]$GuideSourceDirectory = 'build/alignment/mcp-source',
   # The maintained semantic callback journey exports two accepted source pairs.
   [string]$CallbackSourceDirectory = 'build/agent-callbacks/mcp',
   # Exact companion exported by the semantic handler/compilation journey.
@@ -1544,6 +1546,61 @@ try {
     exit 0
   }
 
+  if ($Target -eq 'guides') {
+    # The semantic author supplies the exact source; Pascal owns guide rules,
+    # actual input/paint and paired worker/history assertions. No service starts.
+    $nyxGuideRoot = Join-Path $nyxRoot 'build/alignment'
+    $nyxGuideSource = [IO.Path]::GetFullPath($GuideSourceDirectory)
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxGuideSource 'nyx.generated.view.pas'))) {
+      throw 'Export the alignment MCP companion before building its physical consumers'
+    }
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxGuideStable = Join-Path $nyxGuideRoot 'shared'
+    $nyxGuideMatched = Join-Path $nyxGuideRoot 'matched'
+    $nyxGuideNative = Join-Path $nyxGuideRoot 'native'
+    $nyxGuideDriver = Join-Path $nyxGuideRoot 'driver'
+    $nyxGuideBrowser = Join-Path $nyxGuideRoot 'web'
+    if ($BrowserOutput) { $nyxGuideBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxGuideStable, $nyxGuideMatched,
+      $nyxGuideNative, $nyxGuideDriver, $nyxGuideBrowser | Out-Null
+    $nyxGuideFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests')
+    foreach ($nyxGuideCompiler in @(@($nyxFpc, $nyxGuideStable), @($nyxLclFpc, $nyxGuideMatched))) {
+      Invoke-NyxCompiler $nyxGuideCompiler[0] ($nyxGuideFlags + @(
+        "-FU$($nyxGuideCompiler[1])", "-FE$($nyxGuideCompiler[1])", 'tests/nyx_resize_tests.lpr'))
+      & (Join-Path $nyxGuideCompiler[1] 'nyx_resize_tests.exe')
+      if ($LASTEXITCODE -ne 0) { throw 'Shared alignment contract failed' }
+    }
+    $nyxGuidePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc ($nyxGuideFlags + @("-Fu$nyxGuideSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxGuidePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxGuidePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxGuidePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxGuidePlatform",
+      "-FU$nyxGuideNative", "-FE$nyxGuideNative", 'tests/nyx_guides_studio.lpr'))
+    & (Join-Path $nyxGuideNative 'nyx_guides_studio.exe') (Join-Path $nyxGuideNative 'projects') (Join-Path $nyxGuideSource 'nyx.generated.view.pas')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native Studio alignment failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxGuideFlags + @("-FU$nyxGuideDriver", "-FE$nyxGuideDriver",
+      'tests/nyx_guides_browser_review.lpr'))
+    Invoke-NyxCompiler $nyxLclFpc ($nyxGuideFlags + @("-FU$nyxGuideDriver", "-FE$nyxGuideDriver",
+      'tests/nyx_responsive_browser_review.lpr'))
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxGuideProgram in @('tests/nyx_resize_tests.lpr',
+      'tests/nyx_guides_studio_browser.lpr', 'studio/nyx_studio.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
+        '-Futests', '-Jirtl.js', "-FE$nyxGuideBrowser", $nyxGuideProgram)
+    }
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Tmodule', '-Mdelphi', '-Fusrc', '-Fustudio',
+      '-Futests', '-Jirtl.js', "-FE$nyxGuideBrowser", 'studio/nyx_source_worker.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxGuideBrowser 'rtl.js')
+    foreach ($nyxGuideHost in @('resize.html', 'guides-studio.html', 'index.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxGuideHost") -Destination $nyxGuideBrowser
+    }
+    Write-Host 'Alignment consumers staged; execute the pointer driver against the explicit semantic workspace.'
+    exit 0
+  }
   if ($Target -eq 'resize') {
     # Pascal owns gestures, semantic mutations, worker tickets and actual input.
     # Only stage products here; never launch a listener or refresh enrollment.

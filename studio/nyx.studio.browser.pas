@@ -66,7 +66,7 @@ uses
   nyx.studio.projects, nyx.studio.rootedits, nyx.studio.rootview,
   nyx.studio.workspaces, nyx.studio.presentation, nyx.modal, nyx.modal.browser,
   nyx.designer.input, nyx.gestures, nyx.studio.edits, nyx.studio.drag,
-  nyx.designer.resize, nyx.studio.resize;
+  nyx.designer.resize, nyx.designer.guides, nyx.studio.resize;
 
 type
   { Transport operation is closed and independent of application build targets. }
@@ -215,6 +215,7 @@ type
     { Borrow current owners synchronously; hover only changes the canvas outline. }
     function DesignerDragContext: TNyxStudioDragContext;
     function DesignerResizeMeasure(const AControl: TNyxControlRef): TNyxResizeSize;
+    function DesignerResizeGuides(const AControl: TNyxControlRef): TNyxAlignmentContext;
     procedure DesignerResizeStatus(const AMessage: TNyxText);
     procedure DesignerResizePresentation(const APreview: TNyxResizePreview);
     procedure DesignerDragFeedback(const ATarget: TNyxControlRef);
@@ -433,7 +434,7 @@ begin
   FCanvasRenderer.OnDesignerGesture := DesignerGesture;
   FDesignerDrag := TNyxStudioDrag.Create(@DesignerDragContext, @DesignerDragFeedback);
   FDesignerResize := TNyxStudioResize.Create(@DesignerDragContext,
-    @DesignerResizeMeasure, @DesignerResizeStatus, @DesignerResizePresentation);
+    @DesignerResizeMeasure, @DesignerResizeStatus, @DesignerResizePresentation, @DesignerResizeGuides);
   FDesignerPlacement := nplInside;
   FCodeRenderer := TNyxBrowserRenderer.Create;
   FCodeRenderer.OnEvent := HandleShell;
@@ -1466,6 +1467,11 @@ end;
 function TNyxStudio.DesignerResizeMeasure(const AControl: TNyxControlRef): TNyxResizeSize;
 begin
   Result := FCanvasRenderer.SizeFor(AControl.ID, niDesign);
+end;
+
+function TNyxStudio.DesignerResizeGuides(const AControl: TNyxControlRef): TNyxAlignmentContext;
+begin
+  Result := FCanvasRenderer.AlignmentFor(AControl.ID, niDesign);
 end;
 
 procedure TNyxStudio.DesignerResizePresentation(const APreview: TNyxResizePreview);
