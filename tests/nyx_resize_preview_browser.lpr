@@ -27,7 +27,21 @@ program nyx_resize_preview_browser;
 
 uses
   SysUtils, Math, Web, nyx.text, nyx.types, nyx.model, nyx.designer.resize,
-  nyx.layout.constraints, nyx.render.browser, nyx.generated.view;
+  nyx.layout.constraints, nyx.render.browser, nyx.generated.view,
+  nyx.test.keyboard.browser;
+
+type
+  { Actual public button listeners publish copied callback proposals here.
+    Native Studio separately qualifies admission/history; this browser consumer
+    must not imply that recording a proposal proves its worker publication. }
+  TGripObserver = class
+    Commits: Integer;
+    LastCommit: TNyxResizeSize;
+    function Capture(AAxis: TNyxResizeAxis; out ASize: TNyxResizeSize;
+      out APolicy: TNyxResizePolicy): Boolean;
+    procedure Feedback(AAxis: TNyxResizeAxis; APhase: TNyxResizePhase;
+      const ASize: TNyxResizeSize);
+  end;
 
 var
   GDocument: TNyxDocument;
@@ -37,6 +51,8 @@ var
   GChecks: Integer;
   GFrame: TJSHTMLIFrameElement;
   GPolls: Integer;
+  GGrips: INyxCanvasResizeGrips;
+  GGripObserver: TGripObserver;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -52,6 +68,37 @@ function Ink(AIndex: Integer): TJSHTMLElement;
 begin
   Result := TJSHTMLElement(document.querySelector('[data-nyx-resize-edge="' +
     IntToStr(AIndex) + '"]'));
+end;
+
+function TGripObserver.Capture(AAxis: TNyxResizeAxis; out ASize: TNyxResizeSize;
+  out APolicy: TNyxResizePolicy): Boolean;
+begin
+  ASize := GRenderer.SizeFor('notes-editor', niDesign);
+  { Explicit precision policy: an off-grid allocated width still steps by eight.
+    Native Studio separately exercises its default grid-snapped gesture policy. }
+  APolicy := NyxResizePolicy.Snap(nssUnsnapped)
+    .Bounds(NyxNodeSizeConstraints(GRenderer.Root.Find('notes-editor')));
+  Result := True;
+end;
+
+procedure TGripObserver.Feedback(AAxis: TNyxResizeAxis; APhase: TNyxResizePhase;
+  const ASize: TNyxResizeSize);
+begin
+
+  if APhase = nrpPreview then
+  begin
+    GRenderer.PreviewResize(NyxResizePreview(NyxControl('notes-editor'), ASize));
+  end
+  else
+  begin
+    GRenderer.PreviewResize(Default(TNyxResizePreview));
+
+    if APhase = nrpCommit then
+    begin
+      Inc(Commits);
+      LastCommit := ASize;
+    end;
+  end;
 end;
 
 procedure RetainedInput;
@@ -72,6 +119,8 @@ var
   LIndex: Integer;
   LRefused: Boolean;
   LSettings: TFormatSettings;
+  LGrip: TJSHTMLElement;
+  LKey: TJSKeyboardEvent;
 begin
   try
     GDocument := BuildNyxDocument;
@@ -89,6 +138,36 @@ begin
     LBefore := GRenderer.SizeFor('notes-editor', niDesign);
     LProposal := NyxResizeSize(Max(100, LBefore.Width - 32), LBefore.Height + 40);
     LFace := GRenderer.ElementFor('notes-editor', niDesign);
+    GGripObserver := TGripObserver.Create;
+    GGrips := NewNyxCanvasResizeGrips(NyxControl('notes-editor'),
+      @GGripObserver.Capture, @GGripObserver.Feedback);
+    GRenderer.AttachResizeGrips(GGrips);
+    LGrip := GRenderer.CanvasResizeElement(nraWidth);
+    Check((LGrip.getBoundingClientRect.width = 44) and (LGrip.getBoundingClientRect.height = 44),
+      'public canvas button has a 44-pixel input face');
+    Check(LGrip.getAttribute('aria-label') = 'Resize selected control Width',
+      'glyph button retains its English accessible purpose');
+    GRenderer.AttachResizeGrips(GGrips);
+    Check(GRenderer.CanvasResizeElement(nraWidth) = LGrip,
+      'same adornment attachment preserves DOM and event scope identity');
+    RetainedInput;
+    NyxFocusWithoutScroll(LGrip);
+    LKey := NyxTestKeyboard(ntKeyDown, 'ArrowRight');
+    LGrip.dispatchEvent(LKey);
+    Check(LKey.defaultPrevented, 'actual canvas key listener consumes the handled arrow');
+    Check((GGripObserver.Commits = 1) and
+      GGripObserver.LastCommit.SameSize(NyxResizeSize(LBefore.Width + 8, LBefore.Height)),
+      'public canvas keyboard path delivers one exact typed proposal');
+    Check(GRenderer.SizeFor('notes-editor', niDesign).SameSize(LBefore),
+      'proposal callback does not impersonate accepted source/worker admission');
+    GRenderer.AttachResizeGrips(nil);
+    LGrip.dispatchEvent(NyxTestKeyboard(ntKeyDown, 'ArrowRight'));
+    Check(GGripObserver.Commits = 1, 'retired DOM cannot reach borrowed editor receivers');
+    GRenderer.AttachResizeGrips(GGrips);
+    Check(GRenderer.CanvasResizeElement(nraWidth) <> LGrip,
+      'remount obtains a new valid button scope');
+    GInput.focus;
+    RetainedInput;
     LOrigin := LFace.getBoundingClientRect;
     GRenderer.PreviewResize(NyxResizePreview(NyxControl('notes-editor'), LProposal));
     Check(document.querySelectorAll('[data-nyx-resize-edge]').length = 4,
@@ -153,8 +232,11 @@ begin
     GRenderer.Select('other-editor');
     Check(document.querySelectorAll('[data-nyx-resize-edge]').length = 0,
       'independent selection retires the proposal');
+    Check(document.querySelectorAll('.nyx-canvas-resize-host').length = 0,
+      'selection releases every canvas grip host and its scope');
     GRenderer.Select('notes-editor');
     GRenderer.PreviewResize(NyxResizePreview(NyxControl('notes-editor'), LProposal));
+    GRenderer.AttachResizeGrips(GGrips);
     GRenderer.Unmount;
     Check(document.querySelectorAll('[data-nyx-resize-edge]').length = 0,
       'unmount releases paint and captured producers before retiring controls');
@@ -167,6 +249,7 @@ begin
     GRenderer.Render(GDocument, GDocument.Pages[0], GHost, True);
     GRenderer.Select('notes-editor');
     GRenderer.PreviewResize(NyxResizePreview(NyxControl('notes-editor'), LProposal));
+    GRenderer.AttachResizeGrips(GGrips);
     document.body.setAttribute('data-resize-preview', 'passed');
     document.body.setAttribute('data-resize-preview-checks', IntToStr(GChecks));
   except
@@ -218,7 +301,7 @@ begin
     GFrame := TJSHTMLIFrameElement(document.createElement('iframe'));
     GFrame.style.cssText := 'width:390px;height:900px;border:0;display:block;';
     document.body.appendChild(GFrame);
-    GFrame.src := 'resize-preview.html';
+    GFrame.src := window.location.pathname;
     window.setTimeout(@Observe, 100);
   end
   else

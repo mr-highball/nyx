@@ -115,6 +115,7 @@ var
   LChecks: Integer;
   LSize: TNyxResizeSize;
   LPreview: TNyxResizePreview;
+  LPoint: TNyxResizePoint;
   LPolicy: TNyxResizePolicy;
   LCopy: TNyxResizePolicy;
   LRefused: Boolean;
@@ -168,6 +169,19 @@ begin
   end;
   Check(LRefused, 'undefined geometry refuses before any presentation');
   LPolicy := NyxResizePolicy;
+  LPoint := NyxResizePoint(-12.5, 204.25);
+  Check(LPoint.Defined and (LPoint.X = -12.5) and (LPoint.Y = 204.25),
+    'stable-plane coordinates preserve signed fractional values');
+  LRefused := False;
+  try
+    NyxResizePoint(NaN, 0);
+  except
+    on LException: EArgumentException do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused, 'non-finite coordinates refuse before gesture capture');
   Check(LPolicy.Adjust(LSize, nraBoth, 13, 21).SameSize(NyxResizeSize(216, 144)),
     'nearest grid is deterministic on both dimensions');
   Check(LPolicy.Adjust(LSize, nraWidth, 4, 30).SameSize(NyxResizeSize(208, 120)),

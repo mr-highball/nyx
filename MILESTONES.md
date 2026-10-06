@@ -15,6 +15,20 @@ execution. Codegen criterion 3 remains open at no-closure 28; workflow 9, render
 3, authoring 11 and delivery 1 remain. No full criterion, goal percentage or DONE
 claim follows. See [evidence](WORK.md#reviewable-release-refresh--2026-10-05).
 
+Current independent authoring packet: managed public canvas grips reuse
+specialized Nyx buttons, separate event scopes and stable-plane pointer mapping.
+Actual native Studio passes 70 checks including moving capture, lease retirement
+and one paired Undo; shared checks pass 56 per compiler, unchanged compiled
+controls seven and retained projection 27, with zero checked leaks. Browser
+adapter keyboard/retirement checks pass 47 desktop / 47 exact-390 with inspected
+captures and exact semantic source. Ordinary browser Studio pointer/worker
+execution, phone deployment, responsive variants and full editor/parity remain
+open. Authoring no-closure advances 12→13 once; workflow 9, codegen 28, renderer
+3 and delivery 1 remain. End grip/mapping/fixture expansion and continue typed
+responsive authoring through the existing paired processor. The pending local
+refresh closure remains intact. See
+[evidence](WORK.md#direct-canvas-resize-handles--2026-10-05).
+
 Following independent authoring packet: public copied resize proposals now
 paint through browser/LCL canvas adapters while accepted controls, source and
 input stay intact. Actual Win32 Studio passes 59 checks, retained projection 27,

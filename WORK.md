@@ -7,7 +7,24 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Current independent work: [canvas resize presentation](#canvas-resize-presentation--2026-10-05)
+Current independent work: [direct canvas resize handles](#direct-canvas-resize-handles--2026-10-05)
+under original Studio authoring criterion 1. Managed public Nyx adornments now
+mount specialized button handles on the selected face in both target adapters.
+Stable-plane mapping preserves deltas as handles move; scope retirement revokes
+the shared gesture lease without reentering paint. Shared checks pass 56 per
+native compiler, unchanged compiled controls seven, actual Win32 Studio 70 and
+retained projection 27, with zero checked leaks. Browser adapter checks pass 47
+desktop / 47 exact-390, including actual precision-key listeners and retirement;
+ordinary browser Studio pointer input and physical phone remain unqualified.
+Authoring no-closure advances 12→13 once; workflow 9, codegen 28, renderer 3 and
+delivery 1 remain. End grip/mapping/fixture expansion. Next implement responsive
+authoring through public typed configuration and the same paired processor;
+complete original snapping/guides/editor/parity/accessibility/delivery remain.
+The pending user-local release closure and all protected projects/services stay
+intact. The preceding goal turn was progress: public proposal paint was committed
+and pushed as `dbf27b320b0034b5d91d6e5907f741fbe4043c8b` with actual target evidence.
+
+Preceding independent work: [canvas resize presentation](#canvas-resize-presentation--2026-10-05)
 under original Studio authoring criterion 1. Public copied proposals now paint
 through both canvas adapters without accepting per-pixel edits or changing input.
 Shared checks pass 54 per native compiler, unchanged compiled controls seven,
@@ -8241,3 +8258,74 @@ hardware/IME/assistive technology, full native presentation, accessibility,
 performance and delivery retain their original owners/acceptance gates. Preserve
 the pending user-local refresh and verify its closure/pair/processes after user
 execution; no equivalent rejected service replacement was attempted here.
+
+## Direct canvas resize handles — 2026-10-05
+
+Owner/deliverable: original Studio authoring criterion 1, following the public
+proposal-paint checkpoint `dbf27b320b0034b5d91d6e5907f741fbe4043c8b`. Move sizing
+onto the selected face while retaining Inspector alternatives and the same
+single paired command. This independent work leaves the pending user-local
+release refresh intact; it does not bypass its rejected service operation.
+
+Public `INyxCanvasResizeGrips` owns a small independent document with three
+specialized Nyx buttons. Both adapters retain its interface and mount those
+controls in separate runtime scopes, never enabling application callbacks in
+the edited tree. Width/height/corner faces are 44 logical/viewport pixels,
+bounded by the visible canvas; small faces hide overlapping one-axis handles.
+Copied preview dimensions move the handles while accepted allocation, source,
+independent input and tree ownership remain unchanged. Studio borrows its
+existing guarded capture/feedback receivers; release still enters its isolated
+paired admission exactly once.
+
+Public `TNyxResizePoint` and optional `TNyxResizePointerMap` normalize local
+samples into a stable logical plane. Each sample maps once before computing its
+delta, so moving the handle cannot change the next sample's origin. Native uses
+actual button screen origin; browser uses viewport origin and axis-aligned
+scale. Undefined/non-finite positions refuse before pointer capture. Existing
+stationary clients retain local mapping. Managed target unbind silently retires
+subscriptions and invokes a restricted lease-retirement receiver; it revokes
+Studio's shared lease without painting/reentering mounting. Permanent Disconnect
+retires borrowed editor receivers. Adapters keep the document alive through
+target teardown and reparent their native hosts with the retained canvas.
+
+Final maintained `./tools/build.ps1 -Target resize -BrowserOutput
+build/canvas-resize/staged` passes **56 shared checks per native compiler**,
+compares exact exported design/source/pair bytes, exercises **seven unchanged
+compiled controls** and **70 actual Win32 Studio checks**, with zero unfreed
+blocks. The direct-canvas journey drives two screen-position deltas while the
+same actual button moves, releases one paired edit, retains uncommitted English
+memo/range and restores the exact pair with one Undo. Captured-scope retirement
+permits a fresh keyboard operation without publishing abandoned input.
+Relevant retained projection regression passes **27**, with zero leaks.
+Current browser consumers/Studio/module worker compile; owned compilation has
+zero warnings, while installed RTL warnings remain visible and unchanged.
+
+The actual nineteen-tool semantic client confirms the owned review remains at
+revision 4, with its one accepted transaction and no draft. The browser consumer
+compiles its unchanged 99-line source exported in two bounded MCP windows.
+Actual browser adapter checks pass **47 desktop / 47 exact-390**: specialized
+44-pixel buttons/English accessible names, retained DOM/scopes, actual precision
+keyboard listeners, one exact copied proposal, old-DOM refusal after retirement,
+fresh remount, previous clipping/locale/input/paint guards and selection/unmount
+cleanup. Its precision policy explicitly selects `nssUnsnapped`; Studio's grid
+policy is qualified by the native path. A recorded callback proposal does not
+prove browser worker/source admission. Final English captures on both targets
+are inspected; native captures compose actual control painting, not desktop DC.
+
+Retained failures explain revised fixture assumptions: canvas hosts correctly
+sit above inert outline strips, midpoint pixels can be covered by handles,
+native pointer-up must be supplied in its newly moved local coordinates, and
+an off-grid keyboard proposal honors its configured snapping policy. Those
+artifacts/logs remain under `build/canvas-resize/`. Only uniquely named review
+HTML/JavaScript files were added to the already admitted candidate host. Its
+ordinary Studio index and the nine qualified release artifacts are untouched.
+
+No original criterion closes. Authoring no-closure advances **12→13** once;
+workflow **9**, codegen **28**, renderer **3** and delivery **1** remain. End
+grip/mapping/fixture expansion. Next implement responsive authoring through
+public typed configuration and the same paired processor, then complete richer
+guides, original editor/parity/accessibility/performance and delivery. Trusted
+browser pointer/capture, ordinary browser Studio worker admission, physical
+phone/IME/assistive technology, wider widgetsets and broad native presentation
+retain their acceptance gates. Protected services/pairs/configuration and the
+pending local refresh remain intact; verify that deployment after user execution.

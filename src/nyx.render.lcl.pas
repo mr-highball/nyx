@@ -255,12 +255,19 @@ type
     FSelectedDesignID: TNyxText;
     FResizePreview: TNyxResizePreview;
     FResizeEdges: array[0..3] of TPanel;
+    FCanvasResizeGrips: INyxCanvasResizeGrips;
+    FCanvasGripViews: array[TNyxResizeAxis] of TNyxLCLRenderer;
+    FCanvasGripHosts: array[TNyxResizeAxis] of TPanel;
     FSelectionEdges: array[0..3] of TShape;
     FForceValues: Boolean;
     FOnBindingError: TNyxLCLBindingError;
     FLastBindingError: TNyxText;
     FLastBindingFailure: TNyxBindingFailure;
     procedure UpdateResizePreview;
+    procedure ClearCanvasResizeGrips;
+    procedure UpdateCanvasResizeGrips;
+    function CanvasResizePoint(AAxis: TNyxResizeAxis;
+      const APointer: TNyxPointerSnapshot): TNyxResizePoint;
     procedure Emit(AOrigin: TNyxNode; const ADispatch: TNyxDispatch);
     procedure ViewportChanged(const AOriginID: TNyxText;
       const AViewport: TNyxViewportSnapshot);
@@ -364,12 +371,20 @@ type
       current outline changes. Inert paint strips above the scroll surface
       retain input/focus and clip to the viewport without changing scroll extent. }
     procedure PreviewResize(const APreview: TNyxResizePreview);
+    { Retain public specialized Nyx button adornments for the selected authored
+      face. Nil detaches. Separate runtime scopes do not enable application
+      callbacks in the edited tree. Same attachment preserves target identity,
+      focus/capture. Disconnect borrowed editor receivers before destroying them. }
+    procedure AttachResizeGrips(const AGrips: INyxCanvasResizeGrips);
+    { Borrowed mounted button for actual target input qualification. An absent
+      adornment refuses. Never free this renderer-owned control. }
+    function CanvasResizeControl(AAxis: TNyxResizeAxis): TControl;
     { Compose the actual native proposal windows into a caller-owned capture.
       AOrigin is the screen coordinate represented by canvas pixel (0,0).
       Win32's whole-form WM_PRINT can omit sibling child-window overlays;
       individual LCL PaintTo preserves their real widget paint. No synthesized
-      rectangles, controls, focus or document mutation; only active visible
-      strips are printed. This is an offscreen capture, not desktop observation. }
+      rectangles, controls, focus or document mutation; active visible strips
+      and mounted canvas grips are printed. This is offscreen capture. }
     procedure PaintResizePreview(ACanvas: TCanvas; const AOrigin: TPoint);
     { Reveal exact logical bounds through the containing viewport. Presentation
       only: no document/history mutation or control reconstruction. Missing IDs
@@ -603,6 +618,7 @@ var
   LIndex: Integer;
   LDeferControls: Boolean;
 begin
+  ClearCanvasResizeGrips;
   { Revoke borrowed sinks before destroying any part of the mounted view. }
   FUpdating := True;
   FVirtualLayout := False;
@@ -2021,6 +2037,11 @@ procedure TNyxLCLRenderer.Select(const ADesignID: TNyxText);
 begin
   FEvents.Scheduler.RequireUI;
   FSelectedDesignID := ADesignID;
+
+  if (FCanvasResizeGrips <> nil) and (FCanvasResizeGrips.Owner.ID <> ADesignID) then
+  begin
+    ClearCanvasResizeGrips;
+  end;
   FResizePreview := Default(TNyxResizePreview);
   { Painting selection is deliberately scroll-neutral. Navigation uses Reveal,
     so an observing refresh cannot undo the user's independent scroll position. }
@@ -2045,6 +2066,160 @@ begin
   end;
   FResizePreview := APreview;
   UpdateSelection;
+end;
+
+procedure TNyxLCLRenderer.ClearCanvasResizeGrips;
+var
+  LAxis: TNyxResizeAxis;
+  LGrips: INyxCanvasResizeGrips;
+begin
+  LGrips := FCanvasResizeGrips;
+  FCanvasResizeGrips := nil;
+
+  if LGrips <> nil then
+  begin
+    LGrips.Unbind;
+  end;
+  for LAxis := Low(TNyxResizeAxis) to High(TNyxResizeAxis) do
+  begin
+    FreeAndNil(FCanvasGripViews[LAxis]);
+    FreeAndNil(FCanvasGripHosts[LAxis]);
+  end;
+  { The retained local interface keeps its borrowed document alive until every
+    target view is gone, even when the renderer was its last external owner. }
+  LGrips := nil;
+end;
+
+procedure TNyxLCLRenderer.AttachResizeGrips(const AGrips: INyxCanvasResizeGrips);
+var
+  LAxis: TNyxResizeAxis;
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if AGrips = nil then
+  begin
+    ClearCanvasResizeGrips;
+    Exit;
+  end;
+
+  if not FDesignMode or (AGrips.Owner.ID <> FSelectedDesignID) then
+  begin
+    raise ENyxModel.Create('Canvas grips require the selected authored design face');
+  end;
+  IdentityBinding(AGrips.Owner.ID, niDesign);
+
+  if FCanvasResizeGrips = AGrips then
+  begin
+    UpdateCanvasResizeGrips;
+    Exit;
+  end;
+  ClearCanvasResizeGrips;
+  FCanvasResizeGrips := AGrips;
+  try
+    for LAxis := Low(TNyxResizeAxis) to High(TNyxResizeAxis) do
+    begin
+      FCanvasGripHosts[LAxis] := TPanel.Create(nil);
+      FCanvasGripHosts[LAxis].Name := 'NyxCanvasResizeHost' + IntToStr(Ord(LAxis));
+      FCanvasGripHosts[LAxis].Caption := '';
+      FCanvasGripHosts[LAxis].BevelOuter := bvNone;
+      FCanvasGripHosts[LAxis].BorderWidth := 0;
+      FCanvasGripHosts[LAxis].TabStop := False;
+      FCanvasGripHosts[LAxis].SetBounds(0, 0, 44, 44);
+      FCanvasGripHosts[LAxis].Parent := FPanel.Parent;
+      FCanvasGripViews[LAxis] := TNyxLCLRenderer.Create(FTheme);
+      FCanvasGripViews[LAxis].Render(AGrips.Document, AGrips.Root(LAxis), FCanvasGripHosts[LAxis]);
+      AGrips.Bind(LAxis, FCanvasGripViews[LAxis].Events, CanvasResizePoint);
+    end;
+    UpdateCanvasResizeGrips;
+  except
+    ClearCanvasResizeGrips;
+    raise;
+  end;
+end;
+
+function TNyxLCLRenderer.CanvasResizeControl(AAxis: TNyxResizeAxis): TControl;
+begin
+
+  if (FCanvasResizeGrips = nil) or (FCanvasGripViews[AAxis] = nil) then
+  begin
+    raise ENyxModel.Create('Canvas resize adornment is not mounted');
+  end;
+  Result := FCanvasGripViews[AAxis].ControlFor(NyxCanvasResizeGripID(AAxis));
+end;
+
+function TNyxLCLRenderer.CanvasResizePoint(AAxis: TNyxResizeAxis;
+  const APointer: TNyxPointerSnapshot): TNyxResizePoint;
+var
+  LOrigin: TPoint;
+begin
+  LOrigin := CanvasResizeControl(AAxis).ClientToScreen(Point(0, 0));
+  Result := NyxResizePoint(LOrigin.X + APointer.X, LOrigin.Y + APointer.Y);
+end;
+
+procedure TNyxLCLRenderer.UpdateCanvasResizeGrips;
+var
+  LAxis: TNyxResizeAxis;
+  LBinding: TNyxLCLBinding;
+  LHost: TWinControl;
+  LOrigin: TPoint;
+  LSize: TNyxResizeSize;
+  LX: Integer;
+  LY: Integer;
+  LVisible: Boolean;
+begin
+
+  if (FCanvasResizeGrips = nil) or (FPanel = nil) or (FPanel.Parent = nil) then
+  begin
+    Exit;
+  end;
+  LHost := FPanel.Parent;
+  LBinding := IdentityBinding(FCanvasResizeGrips.Owner.ID, niDesign);
+  LOrigin := LHost.ScreenToClient(LBinding.FControl.Parent.ClientToScreen(
+    Point(LBinding.FControl.Left, LBinding.FControl.Top)));
+
+  if FVirtualLayout then
+  begin
+    Dec(LOrigin.X, LBinding.FPlacement.ContentOffsetX);
+    Dec(LOrigin.Y, LBinding.FPlacement.ContentOffsetY);
+  end;
+  LSize := SizeFor(FCanvasResizeGrips.Owner.ID, niDesign);
+
+  if FResizePreview.Active then
+  begin
+    LSize := FResizePreview.Size;
+  end;
+  for LAxis := Low(TNyxResizeAxis) to High(TNyxResizeAxis) do
+  begin
+    LX := LOrigin.X + LSize.Width;
+    LY := LOrigin.Y + LSize.Height;
+
+    if LAxis = nraWidth then
+    begin
+      LY := LOrigin.Y + LSize.Height div 2;
+    end;
+
+    if LAxis = nraHeight then
+    begin
+      LX := LOrigin.X + LSize.Width div 2;
+    end;
+    LVisible := LBinding.FControl.Visible and (LHost.ClientWidth >= 44) and
+      (LHost.ClientHeight >= 44) and (LX >= 0) and (LX <= LHost.ClientWidth) and
+      (LY >= 0) and (LY <= LHost.ClientHeight);
+
+    if not FCanvasResizeGrips.Dragging(LAxis) then
+    begin
+      LVisible := LVisible and ((LAxis <> nraWidth) or (LSize.Height >= 88)) and
+        ((LAxis <> nraHeight) or (LSize.Width >= 88));
+    end;
+    FCanvasGripHosts[LAxis].Visible := LVisible;
+
+    if LVisible then
+    begin
+      FCanvasGripHosts[LAxis].SetBounds(Max(0, Min(LX - 22, LHost.ClientWidth - 44)),
+        Max(0, Min(LY - 22, LHost.ClientHeight - 44)), 44, 44);
+      FCanvasGripHosts[LAxis].BringToFront;
+    end;
+  end;
 end;
 
 procedure TNyxLCLRenderer.UpdateResizePreview;
@@ -2137,6 +2312,7 @@ procedure TNyxLCLRenderer.PaintResizePreview(ACanvas: TCanvas; const AOrigin: TP
 var
   LIndex: Integer;
   LPoint: TPoint;
+  LAxis: TNyxResizeAxis;
 begin
   FEvents.Scheduler.RequireUI;
 
@@ -2145,10 +2321,6 @@ begin
     raise ENyxModel.Create('Native proposal capture requires a caller-owned canvas');
   end;
 
-  if not FResizePreview.Active then
-  begin
-    Exit;
-  end;
   for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
   begin
 
@@ -2156,6 +2328,15 @@ begin
     begin
       LPoint := FResizeEdges[LIndex].ClientToScreen(Point(0, 0));
       FResizeEdges[LIndex].PaintTo(ACanvas, LPoint.X - AOrigin.X, LPoint.Y - AOrigin.Y);
+    end;
+  end;
+  for LAxis := Low(TNyxResizeAxis) to High(TNyxResizeAxis) do
+  begin
+
+    if (FCanvasGripHosts[LAxis] <> nil) and FCanvasGripHosts[LAxis].Visible then
+    begin
+      LPoint := FCanvasGripHosts[LAxis].ClientToScreen(Point(0, 0));
+      FCanvasGripHosts[LAxis].PaintTo(ACanvas, LPoint.X - AOrigin.X, LPoint.Y - AOrigin.Y);
     end;
   end;
 end;
@@ -2257,6 +2438,7 @@ begin
   if LControl = nil then
   begin
     UpdateResizePreview;
+    UpdateCanvasResizeGrips;
     Exit;
   end;
   { The scroll panel owns all four graphics even when their paint parent is a
@@ -2273,6 +2455,7 @@ begin
     FSelectionEdges[LIndex].BringToFront;
   end;
   UpdateResizePreview;
+  UpdateCanvasResizeGrips;
 end;
 
 procedure TNyxLCLRenderer.MoveHost(AHost: TWinControl);
@@ -2348,6 +2531,14 @@ begin
       if FResizeEdges[LIndex] <> nil then
       begin
         FResizeEdges[LIndex].Parent := AHost;
+      end;
+    end;
+    for LIndex := Ord(Low(TNyxResizeAxis)) to Ord(High(TNyxResizeAxis)) do
+    begin
+
+      if FCanvasGripHosts[TNyxResizeAxis(LIndex)] <> nil then
+      begin
+        FCanvasGripHosts[TNyxResizeAxis(LIndex)].Parent := AHost;
       end;
     end;
     Resize(FPanel);

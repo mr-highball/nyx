@@ -849,14 +849,17 @@ candidate retention. Ordinary native Studio consumes its actual registered
 grip callbacks and existing detached processor; desktop/390-pixel captures are
 written under `build/resize/`.
 
-Current shared checks pass 54 per compiler, unchanged compiled controls seven
-and native Studio 59, with zero checked leaks. Matching browser contract/control/
+Current shared checks pass 56 per compiler, unchanged compiled controls seven
+and native Studio 70, with zero checked leaks. Matching browser contract/control/
 projection and proposal consumers, Studio, its module worker, RTL and three
 English qualification hosts are staged separately. The dedicated
 `resize-preview.html` consumer publishes `data-resize-preview="passed"` and its
 check count; `?host=1` runs its exact 390-pixel iframe. Both executed paths pass
-30 actual DOM checks, retaining English input/range/focus, clipping large
-proposals and removing owned paint/listeners on retirement. The ordinary
+47 actual DOM checks, retaining English input/range/focus, clipping large
+proposals and removing owned paint/listeners on retirement. These now include
+public canvas buttons, exact precision-key proposals, scope reuse and old-DOM
+refusal. Native callbacks separately qualify default grid snapping, moving
+capture, abandoned-scope retirement and one paired Undo. The ordinary
 contract/control hosts use `data-result="passed"`; successful compilation alone
 cannot establish any runtime result. This command starts
 no listener, refreshes no personal MCP configuration and leaves observing
@@ -865,4 +868,4 @@ phone observation and full target parity retain their existing gates. Native
 proposal captures compose actual standard-panel painting over Win32 form
 `PaintTo`; physical screen capture was unavailable. See
 [designer views](designer-views.md#reusable-resize-grips) and
-[evidence](../WORK.md#canvas-resize-presentation--2026-10-05).
+[evidence](../WORK.md#direct-canvas-resize-handles--2026-10-05).

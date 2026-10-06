@@ -1079,6 +1079,15 @@ begin
   FShellCommandContext := FSession.CommandContext;
   FDesignerDrag.ConnectSources(FShellRenderer.Events, FShellRenderer.Root, FShellCommandContext);
   FDesignerResize.Connect(FShellRenderer.Events, FShellRenderer.Root, FShellCommandContext);
+
+  if FCanvasRenderer.DesignMode then
+  begin
+    FCanvasRenderer.AttachResizeGrips(FDesignerResize.CanvasGrips);
+  end
+  else
+  begin
+    FCanvasRenderer.AttachResizeGrips(nil);
+  end;
   document.title := FSession.Document.Title + ' / Nyx Studio';
   try
 

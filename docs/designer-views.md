@@ -206,17 +206,45 @@ Native `PaintResizePreview` paints those actual visible panels into a borrowed
 caller-owned canvas; its origin names the screen pixel represented by bitmap
 pixel (0, 0). Win32 form `PaintTo` includes the non-client frame, so a composed
 whole-form capture must use the window origin. This establishes offscreen
-control painting, rather than physical desktop capture. Direct canvas edge
-handles, richer guides, responsive variants and complete presentation/performance
-acceptance remain open.
+control painting, rather than physical desktop capture. The same capture now
+includes mounted canvas buttons. Richer guides, responsive variants and complete
+presentation/performance acceptance remain open.
+
+`NewNyxCanvasResizeGrips` returns managed `INyxCanvasResizeGrips`, owning an
+independent three-page adornment document with specialized Nyx buttons. A target
+adapter retains it through `AttachResizeGrips`, renders those public controls in
+independent event scopes and places 44-pixel targets at the right midpoint,
+bottom midpoint and bottom-right corner. Small faces hide overlapping one-axis
+handles; the Inspector alternatives remain available. Ordinary application
+callbacks stay suppressed in the edited document.
+
+Its capture/feedback receivers are borrowed exactly like ordinary grips.
+`Disconnect` permanently retires them before their owner is destroyed; target
+`Unbind` silently retires subscriptions and invokes an optional lease-retirement
+receiver. That receiver may revoke lease state, never paint or reenter mounting.
+Repeated attachment retains input identity and capture. Selection/unmount
+retire hosts/scopes before releasing the interface-owned document.
+
+Moving handles use `TNyxResizePointerMap` to return a finite, defined
+`TNyxResizePoint` in one stable logical plane. Native mapping resolves the actual
+button's screen origin; browser mapping uses its viewport origin and the edited
+face's axis-aligned scale. Mapping runs once per sample before computing a delta;
+local-only behavior remains the default for stationary grips. This prevents
+movement feedback from altering the next sample's origin. Keyboard behavior
+honors the configured snapping policy; precision clients can select
+`nssUnsnapped`. Unsupported rotation, physical hardware/IME and full target
+qualification remain outside these bounded checks.
 
 `./tools/build.ps1 -Target resize -BrowserOutput build/resize/staged` reproduces
 the checked shared and actual Win32 evidence plus compiled browser consumers,
 Studio and its worker. Native callback checks do not qualify physical hardware,
 IME, assistive technology or another widgetset. The additional browser preview
-consumer passes 30 actual DOM checks at desktop and exact 390 pixels; that
-adapter journey does not establish ordinary Studio pointer interaction or phone
-observation. See [evidence](../WORK.md#canvas-resize-presentation--2026-10-05).
+consumer passes 47 actual DOM checks at desktop and exact 390 pixels, including
+real canvas keyboard listeners, retirement and retained scope identity. Native
+Studio passes 70 actual checks including moving handles and one paired Undo.
+The browser adapter journey does not establish ordinary Studio pointer
+interaction or phone observation. See
+[evidence](../WORK.md#direct-canvas-resize-handles--2026-10-05).
 
 ## Reproduce the boundary
 

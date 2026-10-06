@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Managed public canvas resize handles now reuse specialized Nyx buttons and
+independent target scopes. Stable-plane mapping preserves movement deltas;
+one release uses Studio's existing paired command/Undo. Shared checks pass 56
+per native compiler, actual Win32 Studio 70 and retained projection 27, with
+zero checked leaks. Browser adapter keyboard/retirement checks pass 47 desktop
+and 47 exact-390 using unchanged bounded MCP-authored source. Ordinary browser
+Studio pointer/worker execution, physical phone, responsive authoring and full
+editor/parity quality remain open. The pending user-local release refresh stays
+intact. See [evidence](WORK.md#direct-canvas-resize-handles--2026-10-05).
+
 Copied public resize proposals now paint the selected authored face through
 both target adapters without changing accepted allocation, source or independent
 input. Shared checks pass 54 per native compiler; actual Win32 Studio passes 59

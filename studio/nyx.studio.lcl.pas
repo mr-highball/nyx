@@ -1947,6 +1947,15 @@ begin
     FShellCommandContext := FSession.CommandContext;
     FDesignerDrag.ConnectSources(FShellView.Events, FShellView.Root, FShellCommandContext);
     FDesignerResize.Connect(FShellView.Events, FShellView.Root, FShellCommandContext);
+
+    if FCanvasView.DesignMode then
+    begin
+      FCanvasView.AttachResizeGrips(FDesignerResize.CanvasGrips);
+    end
+    else
+    begin
+      FCanvasView.AttachResizeGrips(nil);
+    end;
     FChangingProject := False;
     Inc(FPaintCount);
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-finish');{$endif}

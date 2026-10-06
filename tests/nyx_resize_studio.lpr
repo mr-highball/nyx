@@ -49,6 +49,9 @@ var
   LMemo: TMemo;
   LSize: TNyxResizeSize;
   LMemoChange: TNotifyEvent;
+  LCanvasPointerStart: TPoint;
+  LCanvasPointer: TPoint;
+  LCanvasGrip: TControl;
 
 procedure TObserver.Failed(ASender: TObject; AError: Exception);
 begin
@@ -159,7 +162,9 @@ begin
       for LIndex := 0 to 3 do
       begin
         LInk := ResizeInk(LForm, LIndex);
-        LPoint := LInk.ClientToScreen(Point(LInk.Width div 2, LInk.Height div 2));
+        { The new midpoint/corner buttons deliberately cover parts of the ink.
+          Sample the exposed quarter of each actual strip instead. }
+        LPoint := LInk.ClientToScreen(Point(LInk.Width div 4, LInk.Height div 4));
         Dec(LPoint.X, LForm.Left);
         Dec(LPoint.Y, LForm.Top);
         WriteLn('Native proposal paint / ', LIndex, ' / ', LPoint.X, ',', LPoint.Y,
@@ -249,8 +254,8 @@ begin
     'presentation adds no input or keyboard focus entry');
   Check((LTop.Width <= LTop.Parent.ClientWidth) and (LRight.Height <= LRight.Parent.ClientHeight),
     'physical paint geometry stays bounded by the canvas viewport');
-  Check(Pos('NyxResizeEdge', LTop.Parent.Controls[LTop.Parent.ControlCount - 1].Name) = 1,
-    'real native overlays occupy the front of their sibling window order');
+  Check(Pos('NyxCanvasResizeHost', LTop.Parent.Controls[LTop.Parent.ControlCount - 1].Name) = 1,
+    'real canvas handles occupy the front above sibling proposal paint');
 end;
 
 procedure CheckNoOutline;
@@ -332,6 +337,58 @@ begin
       Click('action-redo');
       Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = EncodeNyxProject(LAfter),
         'one ordinary Redo restores both files');
+
+      { Moving canvas handles must normalize local coordinates once. Drive two
+        screen-position deltas while the real handle follows the proposal; a
+        local-only implementation would stall or compound these movements. }
+      LBefore := LStudio.Session.ProjectSnapshot;
+      LCanvasGrip := LStudio.CanvasView.CanvasResizeControl(nraBoth);
+      Check((LCanvasGrip.Width = 44) and (LCanvasGrip.Height = 44),
+        'canvas uses the public specialized button with a 44-pixel input face');
+      LCanvasPointerStart := LCanvasGrip.ClientToScreen(Point(22, 22));
+      TControlAccess(LCanvasGrip).OnMouseDown(LCanvasGrip, mbLeft, [ssLeft], 22, 22);
+      Check(NyxLCLHasPointerCapture(LCanvasGrip), 'actual canvas handle obtains native capture');
+      LCanvasPointer := LCanvasGrip.ScreenToClient(Point(LCanvasPointerStart.X + 16,
+        LCanvasPointerStart.Y + 16));
+      TControlAccess(LCanvasGrip).OnMouseMove(LCanvasGrip, [ssLeft], LCanvasPointer.X, LCanvasPointer.Y);
+      Check(LStudio.CanvasView.CanvasResizeControl(nraBoth) = LCanvasGrip,
+        'preview and shell refresh retain the same capturing canvas handle');
+      LCanvasPointer := LCanvasGrip.ScreenToClient(Point(LCanvasPointerStart.X + 32,
+        LCanvasPointerStart.Y + 24));
+      TControlAccess(LCanvasGrip).OnMouseMove(LCanvasGrip, [ssLeft], LCanvasPointer.X, LCanvasPointer.Y);
+      Check((Pos('368', LStudio.Status) > 0) and (Pos('176', LStudio.Status) > 0),
+        'two absolute deltas remain exact as the canvas handle moves');
+      Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
+        'canvas preview changes neither accepted file nor history');
+      Capture('resize-canvas-proposal.png');
+      LCanvasPointer := LCanvasGrip.ScreenToClient(Point(LCanvasPointerStart.X + 32,
+        LCanvasPointerStart.Y + 24));
+      TControlAccess(LCanvasGrip).OnMouseUp(LCanvasGrip, mbLeft, [], LCanvasPointer.X, LCanvasPointer.Y);
+      Pump;
+      Check((LStudio.Session.Selected.Prop('width') = '368') and
+        (LStudio.Session.Selected.Prop('height') = '176'),
+        'canvas release submits the same paired size operation');
+      Check((LStudio.CanvasView.InputFor('notes-editor') = LMemo) and
+        (LMemo.Text = 'An uncommitted English control draft.') and
+        (LMemo.SelStart = 3) and (LMemo.SelLength = 5),
+        'direct canvas commit retains the independent input and caret');
+      Click('action-undo');
+      Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
+        'one Undo restores the direct canvas pair');
+
+      LCanvasGrip := LStudio.CanvasView.CanvasResizeControl(nraWidth);
+      TControlAccess(LCanvasGrip).OnMouseDown(LCanvasGrip, mbLeft, [ssLeft], 22, 22);
+      LStudio.CanvasView.AttachResizeGrips(nil);
+      TControlAccess(LStudio.CanvasView.ControlFor('notes-editor')).Click;
+      Pump;
+      LGrip := LStudio.CanvasView.CanvasResizeControl(nraWidth);
+      Key(VK_RIGHT);
+      Pump;
+      Check(LStudio.Session.Selected.Prop('width') = '344',
+        'retired canvas scope revokes its shared lease before a fresh keyboard gesture');
+      Click('action-undo');
+      Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
+        'retirement cannot publish the abandoned captured pointer');
 
       LBefore := LStudio.Session.ProjectSnapshot;
       BeginGrip(NyxStudioResizeWidthID);

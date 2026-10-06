@@ -57,6 +57,7 @@ type
     FStatus: TNyxStudioResizeStatus;
     FPresentation: TNyxStudioResizePresentation;
     FHandles: array[TNyxResizeAxis] of TNyxResizeHandle;
+    FCanvasGrips: INyxCanvasResizeGrips;
     FEvents: INyxEvents;
     FRevision: Integer;
     FMount: TNyxStudioCommandContext;
@@ -71,6 +72,7 @@ type
     procedure Feedback(AAxis: TNyxResizeAxis; APhase: TNyxResizePhase;
       const ASize: TNyxResizeSize);
     function Live(const AContext: TNyxStudioDragContext): Boolean;
+    procedure CanvasRetired;
   public
     constructor Create(ACapture: TNyxStudioDragCapture;
       AMeasure: TNyxStudioResizeMeasure; AStatus: TNyxStudioResizeStatus;
@@ -81,6 +83,9 @@ type
     procedure Connect(const AEvents: INyxEvents; AShell: TNyxNode;
       const AMount: TNyxStudioCommandContext);
     procedure Disconnect;
+    { Managed public adornment for the same exact owner and paired operation.
+      Canvas adapters retain it while mounting their independent input scopes. }
+    property CanvasGrips: INyxCanvasResizeGrips read FCanvasGrips;
   end;
 
 { Caller owns the returned panel. It adopts three public specialized buttons;
@@ -155,6 +160,12 @@ begin
   { Prevent teardown feedback from publishing through retired controller views. }
   FActive := False;
 
+  if FCanvasGrips <> nil then
+  begin
+    FCanvasGrips.Disconnect;
+    FCanvasGrips := nil;
+  end;
+
   if Assigned(FPresentation) then
   begin
     FPresentation(Default(TNyxResizePreview));
@@ -212,6 +223,7 @@ begin
   FEvents := AEvents;
   FRevision := AEvents.ViewRevision;
   try
+    FCanvasGrips := NewNyxCanvasResizeGrips(FOwner, BeginChange, Feedback, CanvasRetired);
     for LAxis := Low(TNyxResizeAxis) to High(TNyxResizeAxis) do
     begin
       LGrip := AShell.Find(CGripIDs[LAxis]);
@@ -238,6 +250,14 @@ begin
     AContext.Session.MatchesCommandContext(AContext.CanvasMount) and
     (AContext.Session.SelectedID = FOwner.ID) and
     (AContext.Session.ActiveViewID = FView) and (NyxSchemaRevision = FSchemaRevision);
+end;
+
+procedure TNyxStudioResize.CanvasRetired;
+begin
+  { Adaptor teardown already retires its paint. Revoke the shared lease without
+    reentering shell/canvas painting from an input scope destructor. }
+  FActive := False;
+  FPair := Default(TNyxProjectPair);
 end;
 
 function TNyxStudioResize.BeginChange(AAxis: TNyxResizeAxis; out ASize: TNyxResizeSize;

@@ -40,6 +40,30 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Direct canvas resize handles — 2026-10-05
+
+Original criterion 1 now consumes public `INyxCanvasResizeGrips`: independently
+owned specialized Nyx buttons with separate target scopes and stable-plane
+pointer mapping. Width/height/corner handles follow copied preview dimensions;
+small faces retain a corner and Inspector alternatives. Studio shares its
+existing capture/feedback lease and isolated paired admission. Target scope
+retirement revokes that lease without reentering paint or publishing abandoned
+input. No application callback becomes active in the edited tree.
+
+Shared checks pass 56 per compiler, unchanged compiled controls seven, actual
+Win32 Studio 70 and retained projection 27, with zero checked leaks. Browser
+adapter checks pass 47 desktop / 47 exact-390 through actual public keyboard
+listeners and retired/reused scopes, using the unchanged MCP-authored source.
+Both-target captures are inspected. Trusted pointer input, ordinary browser
+Studio worker admission, observing phone deployment and full parity remain open.
+See [evidence](../WORK.md#direct-canvas-resize-handles--2026-10-05).
+
+No original criterion closes. Authoring no-closure advances **12→13** once;
+workflow 9, codegen 28, renderer 3 and delivery 1 remain. End grip/mapping/fixture
+expansion; next deliver typed responsive authoring and the same paired processor,
+then complete original guides/editor/parity/accessibility/performance/delivery.
+Preserve all blockers and the pending local release refresh.
+
 ## Canvas resize presentation — 2026-10-05
 
 Original criterion 1 now receives copied typed proposals through the public

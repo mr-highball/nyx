@@ -205,6 +205,9 @@ type
     FResizeEdges: array[0..3] of TJSHTMLElement;
     FResizePreviewHandler: TJSEventHandler;
     FResizeListening: Boolean;
+    FCanvasResizeGrips: INyxCanvasResizeGrips;
+    FCanvasGripViews: array[TNyxResizeAxis] of TNyxBrowserRenderer;
+    FCanvasGripHosts: array[TNyxResizeAxis] of TJSHTMLElement;
     FEvents: INyxEvents;
     FState: TNyxState;
     FOwnState: Boolean;
@@ -227,6 +230,11 @@ type
     procedure UpdateResizePreview;
     function ResizePreviewViewport(AEvent: TJSEvent): Boolean;
     procedure ClearResizePreview;
+    procedure UpdateResizeListening;
+    procedure ClearCanvasResizeGrips;
+    procedure UpdateCanvasResizeGrips;
+    function CanvasResizePoint(AAxis: TNyxResizeAxis;
+      const APointer: TNyxPointerSnapshot): TNyxResizePoint;
     procedure Clear;
     function FactoryIndex(ANode: TNyxNode): Integer;
     function CreateElement(ANode: TNyxNode; out AInput: TJSHTMLElement): TJSHTMLElement;
@@ -336,6 +344,15 @@ type
       Pointer-transparent fixed paint strips follow captured scroll/resize,
       clip to the mounted host/viewport and never alter input or scroll extent. }
     procedure PreviewResize(const APreview: TNyxResizePreview);
+    { Retain a public Nyx adornment for this selected authored face. Nil detaches.
+      Three separately rendered specialized buttons keep application callbacks
+      suppressed in the edited view. Caller disconnects editor receivers before
+      destroying them; renderer owns only target views/hosts, not that receiver.
+      Stable repeated attachment retains controls, focus and pointer capture. }
+    procedure AttachResizeGrips(const AGrips: INyxCanvasResizeGrips);
+    { Borrowed physical button for target input/capture validation. An absent
+      adornment refuses; never remove or free this renderer-owned element. }
+    function CanvasResizeElement(AAxis: TNyxResizeAxis): TJSHTMLElement;
     { Synchronize runtime properties while retaining DOM identity and focus.
       Compound actions use this path rather than rebuilding the entire view. }
     procedure Sync;
@@ -349,6 +366,9 @@ type
       queued invocations; renderer destruction closes every registration. }
     property Events: INyxEvents read FEvents;
     property Root: TNyxNode read FRoot;
+    { Copied projection purpose, matching the native adapter. Runtime views
+      cannot mount designer input adornments or emit designer mutations. }
+    property DesignMode: Boolean read FDesignMode;
     property State: TNyxState read FState;
     property OnBindingError: TNyxBrowserBindingError read FOnBindingError write FOnBindingError;
     property LastBindingError: TNyxText read FLastBindingError;
@@ -584,6 +604,7 @@ var
 begin
   { Disconnect before clearing any controls: their destructors and retained
     external producers must never enter a half-disposed view. }
+  ClearCanvasResizeGrips;
   ClearResizePreview;
   FSelectedDesignID := '';
 
@@ -1726,6 +1747,11 @@ var
 begin
   ClearResizePreview;
   FSelectedDesignID := ADesignID;
+
+  if (FCanvasResizeGrips <> nil) and (FCanvasResizeGrips.Owner.ID <> ADesignID) then
+  begin
+    ClearCanvasResizeGrips;
+  end;
   LChosen := False;
   for LIndex := 0 to Length(FBindings) - 1 do
   begin
@@ -1749,12 +1775,7 @@ var
 begin
   FResizePreview := Default(TNyxResizePreview);
 
-  if FResizeListening then
-  begin
-    TNyxPreviewEventTarget(document).Unlisten('scroll', FResizePreviewHandler, True);
-    window.removeEventListener('resize', FResizePreviewHandler);
-    FResizeListening := False;
-  end;
+  UpdateResizeListening;
   for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
   begin
 
@@ -1764,11 +1785,229 @@ begin
       FResizeEdges[LIndex] := nil;
     end;
   end;
+  UpdateCanvasResizeGrips;
+end;
+
+procedure TNyxBrowserRenderer.UpdateResizeListening;
+begin
+
+  if FResizePreview.Active or (FCanvasResizeGrips <> nil) then
+  begin
+
+    if not FResizeListening then
+    begin
+      document.addEventListener('scroll', FResizePreviewHandler, True);
+      window.addEventListener('resize', FResizePreviewHandler);
+      FResizeListening := True;
+    end;
+  end
+  else if FResizeListening then
+  begin
+    TNyxPreviewEventTarget(document).Unlisten('scroll', FResizePreviewHandler, True);
+    window.removeEventListener('resize', FResizePreviewHandler);
+    FResizeListening := False;
+  end;
+end;
+
+procedure TNyxBrowserRenderer.ClearCanvasResizeGrips;
+var
+  LAxis: TNyxResizeAxis;
+  LGrips: INyxCanvasResizeGrips;
+begin
+  LGrips := FCanvasResizeGrips;
+  FCanvasResizeGrips := nil;
+
+  if LGrips <> nil then
+  begin
+    LGrips.Unbind;
+  end;
+  for LAxis := Low(TNyxResizeAxis) to High(TNyxResizeAxis) do
+  begin
+    FreeAndNil(FCanvasGripViews[LAxis]);
+
+    if FCanvasGripHosts[LAxis] <> nil then
+    begin
+      FCanvasGripHosts[LAxis].remove;
+      FCanvasGripHosts[LAxis] := nil;
+    end;
+  end;
+  LGrips := nil;
+  UpdateResizeListening;
+end;
+
+procedure TNyxBrowserRenderer.AttachResizeGrips(const AGrips: INyxCanvasResizeGrips);
+var
+  LAxis: TNyxResizeAxis;
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if AGrips = nil then
+  begin
+    ClearCanvasResizeGrips;
+    Exit;
+  end;
+
+  if not FDesignMode or (AGrips.Owner.ID <> FSelectedDesignID) then
+  begin
+    raise ENyxModel.Create('Canvas grips require the selected authored design face');
+  end;
+  ElementFor(AGrips.Owner.ID, niDesign);
+
+  if FCanvasResizeGrips = AGrips then
+  begin
+    UpdateCanvasResizeGrips;
+    Exit;
+  end;
+  ClearCanvasResizeGrips;
+  FCanvasResizeGrips := AGrips;
+  try
+    for LAxis := Low(TNyxResizeAxis) to High(TNyxResizeAxis) do
+    begin
+      FCanvasGripHosts[LAxis] := Element('div', 'nyx-canvas-resize-host');
+      FCanvasGripHosts[LAxis].style.cssText :=
+        'position:fixed;width:44px;height:44px;z-index:21;overflow:visible;';
+      document.body.appendChild(FCanvasGripHosts[LAxis]);
+      FCanvasGripViews[LAxis] := TNyxBrowserRenderer.Create(FTheme);
+      FCanvasGripViews[LAxis].Render(AGrips.Document, AGrips.Root(LAxis), FCanvasGripHosts[LAxis]);
+      AGrips.Bind(LAxis, FCanvasGripViews[LAxis].Events, @CanvasResizePoint);
+    end;
+    UpdateResizeListening;
+    UpdateCanvasResizeGrips;
+  except
+    ClearCanvasResizeGrips;
+    raise;
+  end;
+end;
+
+function TNyxBrowserRenderer.CanvasResizeElement(AAxis: TNyxResizeAxis): TJSHTMLElement;
+begin
+
+  if (FCanvasResizeGrips = nil) or (FCanvasGripViews[AAxis] = nil) then
+  begin
+    raise ENyxModel.Create('Canvas resize adornment is not mounted');
+  end;
+  Result := FCanvasGripViews[AAxis].ElementFor(NyxCanvasResizeGripID(AAxis));
+end;
+
+function TNyxBrowserRenderer.CanvasResizePoint(AAxis: TNyxResizeAxis;
+  const APointer: TNyxPointerSnapshot): TNyxResizePoint;
+var
+  LGrip: TJSDOMRect;
+  LFace: TJSHTMLElement;
+  LBounds: TJSDOMRect;
+  LScaleX: Double;
+  LScaleY: Double;
+begin
+  LGrip := CanvasResizeElement(AAxis).getBoundingClientRect;
+  LFace := ElementFor(FCanvasResizeGrips.Owner.ID, niDesign);
+  LBounds := LFace.getBoundingClientRect;
+  LScaleX := 1;
+  LScaleY := 1;
+
+  if (LFace.offsetWidth > 0) and (LBounds.width > 0) then
+  begin
+    LScaleX := LBounds.width / LFace.offsetWidth;
+  end;
+
+  if (LFace.offsetHeight > 0) and (LBounds.height > 0) then
+  begin
+    LScaleY := LBounds.height / LFace.offsetHeight;
+  end;
+  Result := NyxResizePoint((LGrip.left + APointer.X) / LScaleX,
+    (LGrip.top + APointer.Y) / LScaleY);
+end;
+
+procedure TNyxBrowserRenderer.UpdateCanvasResizeGrips;
+var
+  LAxis: TNyxResizeAxis;
+  LElement: TJSHTMLElement;
+  LFace: TJSDOMRect;
+  LClip: TJSDOMRect;
+  LWidth: Double;
+  LHeight: Double;
+  LX: Double;
+  LY: Double;
+  LVisible: Boolean;
+  LFormat: TFormatSettings;
+begin
+
+  if (FCanvasResizeGrips = nil) or (FHost = nil) then
+  begin
+    Exit;
+  end;
+  LElement := ElementFor(FCanvasResizeGrips.Owner.ID, niDesign);
+  LFace := LElement.getBoundingClientRect;
+  LClip := FHost.getBoundingClientRect;
+  LWidth := LFace.width;
+  LHeight := LFace.height;
+
+  if FResizePreview.Active then
+  begin
+    LWidth := FResizePreview.Size.Width;
+    LHeight := FResizePreview.Size.Height;
+
+    if LElement.offsetWidth > 0 then
+    begin
+      LWidth := LWidth * LFace.width / LElement.offsetWidth;
+    end;
+
+    if LElement.offsetHeight > 0 then
+    begin
+      LHeight := LHeight * LFace.height / LElement.offsetHeight;
+    end;
+  end;
+  LFormat := FormatSettings;
+  LFormat.DecimalSeparator := '.';
+  for LAxis := Low(TNyxResizeAxis) to High(TNyxResizeAxis) do
+  begin
+    LX := LFace.left + LWidth;
+    LY := LFace.top + LHeight;
+
+    if LAxis = nraWidth then
+    begin
+      LY := LFace.top + LHeight / 2;
+    end;
+
+    if LAxis = nraHeight then
+    begin
+      LX := LFace.left + LWidth / 2;
+    end;
+    { Keep 44px targets within the visible host. Hide overlapping one-axis
+      handles on small faces; their Inspector alternatives remain available. }
+    LVisible := (LClip.width >= 44) and (LClip.height >= 44) and
+      (LX >= Max(0, LClip.left)) and (LX <= Min(window.innerWidth, LClip.right)) and
+      (LY >= Max(0, LClip.top)) and (LY <= Min(window.innerHeight, LClip.bottom));
+
+    if not FCanvasResizeGrips.Dragging(LAxis) then
+    begin
+      LVisible := LVisible and ((LAxis <> nraWidth) or (LHeight >= 88)) and
+        ((LAxis <> nraHeight) or (LWidth >= 88));
+    end;
+
+    if LVisible then
+    begin
+      FCanvasGripHosts[LAxis].style.setProperty('display', 'block');
+      FCanvasGripHosts[LAxis].style.setProperty('left',
+        FloatToStr(Max(Max(0, LClip.left), Min(LX - 22, Min(window.innerWidth, LClip.right) - 44)), LFormat) + 'px');
+      FCanvasGripHosts[LAxis].style.setProperty('top',
+        FloatToStr(Max(Max(0, LClip.top), Min(LY - 22, Min(window.innerHeight, LClip.bottom) - 44)), LFormat) + 'px');
+
+      if not document.body.contains(FCanvasGripHosts[LAxis]) then
+      begin
+        document.body.appendChild(FCanvasGripHosts[LAxis]);
+      end;
+    end
+    else
+    begin
+      FCanvasGripHosts[LAxis].style.setProperty('display', 'none');
+    end;
+  end;
 end;
 
 function TNyxBrowserRenderer.ResizePreviewViewport(AEvent: TJSEvent): Boolean;
 begin
   UpdateResizePreview;
+  UpdateCanvasResizeGrips;
   Result := True;
 end;
 
@@ -1791,13 +2030,9 @@ begin
   ElementFor(APreview.Control.ID, niDesign);
   FResizePreview := APreview;
 
-  if not FResizeListening then
-  begin
-    document.addEventListener('scroll', FResizePreviewHandler, True);
-    window.addEventListener('resize', FResizePreviewHandler);
-    FResizeListening := True;
-  end;
+  UpdateResizeListening;
   UpdateResizePreview;
+  UpdateCanvasResizeGrips;
 end;
 
 procedure TNyxBrowserRenderer.UpdateResizePreview;
@@ -4077,6 +4312,7 @@ begin
       end;
     end;
     UpdateResizePreview;
+    UpdateCanvasResizeGrips;
   finally
     FUpdating := False;
   end;
