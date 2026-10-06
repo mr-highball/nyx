@@ -22,6 +22,22 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - Original-size native editor qualification now needs the logical viewport /
   safe widget geometry prerequisite in [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md).
 
+## Typed structural recipe source — 2026-10-06
+
+Readable specialized `.Content` blocks use distinct component/presentation
+references, copied viewport conditions and platform enums. Strict managed replay,
+including handcrafted `Clear`, and paired reconciliation preserve comments.
+Contract checks pass 50 per native compiler/executed browser; the exact exported
+supplementary-name companion compiles unchanged and executes against 42 actual
+controls per target. Version-five persistence retains inactive dependencies;
+root review counts their retained references. See
+[current evidence](../WORK.md#content-recipes--2026-10-06).
+
+This is support for original NS-4 structural authoring, not another completed
+codegen criterion. Criteria 1/2 retain acceptance; criterion 3 and its no-closure
+counter 28 remain. General handwritten source UX and ordinary structural Studio
+editing/publication stay open under their existing owners.
+
 ## Source workspace delivery — 2026-10-03
 
 Criteria 1 and 2 are accepted for the version-1 portable design contract:

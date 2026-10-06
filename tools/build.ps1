@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1468,6 +1468,56 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxCollectionAgentHost") -Destination $nyxCollectionAgentBrowser
     }
     Write-Host 'Semantic collection consumers staged; browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'content-recipes') {
+    # Pascal owns the contract, semantic grouped history and actual controls.
+    # This branch only orchestrates compiler/run/staging tools. It neither
+    # launches listeners nor changes existing projects or service workspaces.
+    $nyxContentRoot = Join-Path $nyxRoot 'build/content-recipes/maintained'
+    $nyxContentSource = Join-Path $nyxContentRoot 'source'
+    New-Item -ItemType Directory -Force $nyxContentSource | Out-Null
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxContentPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxContentChecked = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh', '-Fusrc', '-Fustudio')
+    foreach ($nyxContentCompiler in @(@($nyxFpc, 'stable'), @($nyxLclFpc, 'matched'))) {
+      $nyxContentUnits = Join-Path $nyxContentRoot $nyxContentCompiler[1]
+      New-Item -ItemType Directory -Force $nyxContentUnits | Out-Null
+      Invoke-NyxCompiler $nyxContentCompiler[0] ($nyxContentChecked + @(
+        "-FU$nyxContentUnits", "-FE$nyxContentUnits", 'tests/nyx_content_tests.lpr'))
+      & (Join-Path $nyxContentUnits 'nyx_content_tests.exe')
+      if ($LASTEXITCODE -ne 0) { throw 'Content recipe contract/semantic qualification failed' }
+    }
+    # The exact exported Pascal includes supplementary recipe names and shared
+    # typed bindings. The actual consumer compiles it unchanged on each target.
+    & (Join-Path $nyxContentRoot 'stable/nyx_content_tests.exe') (Join-Path $nyxContentSource 'nyx.generated.view.pas')
+    if ($LASTEXITCODE -ne 0) { throw 'Content recipe companion export failed' }
+    $nyxContentNative = Join-Path $nyxContentRoot 'controls'
+    New-Item -ItemType Directory -Force $nyxContentNative | Out-Null
+    Invoke-NyxCompiler $nyxLclFpc ($nyxContentChecked + @("-Fu$nyxContentSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxContentPlatform", "-Fu$nyxLazarus/lcl/units/$nyxContentPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxContentPlatform", "-Fu$nyxLazarus/packager/units/$nyxContentPlatform",
+      "-FU$nyxContentNative", "-FE$nyxContentNative", 'tests/nyx_content_controls.lpr'))
+    & (Join-Path $nyxContentNative 'nyx_content_controls.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native content recipe qualification failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxContentBrowser = Join-Path $nyxContentRoot 'web'
+    New-Item -ItemType Directory -Force $nyxContentBrowser | Out-Null
+    foreach ($nyxContentProgram in @('nyx_content_tests', 'nyx_content_controls')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Fustudio',
+        "-Fu$nyxContentSource", "-FE$nyxContentBrowser", "tests/$nyxContentProgram.lpr")
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxContentBrowser 'rtl.js') -Force
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/content-contracts.html'),
+      (Join-Path $nyxRoot 'studio/web/content-controls.html') -Destination $nyxContentBrowser -Force
+    $nyxContentDriver = Join-Path $nyxContentRoot 'driver'
+    New-Item -ItemType Directory -Force $nyxContentDriver | Out-Null
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Fusrc', '-Futests',
+      "-FU$nyxContentDriver", "-FE$nyxContentDriver", 'tests/nyx_responsive_browser_review.lpr')
+    Write-Host 'Content contracts/native controls pass. Browser execution still requires an isolated HTTP host.'
     exit 0
   }
 

@@ -1,9 +1,11 @@
 # Responsive authoring
 
 Retained ownership for structural changes is documented in
-[retained arrangements](retained-arrangements.md). This is the adapter foundation
-for alternate structures; current presentation authoring below still configures
-an unchanged control tree.
+[retained arrangements](retained-arrangements.md). Whole
+[reusable presentation recipes](content-recipes.md) now support typed alternatives
+with different control sets on initial mounts and explicit remounts. Live
+structural switching remains open; scalar authoring below configures a retained
+control tree.
 
 [Designer views](designer-views.md) · [Building](building.md) ·
 [Current evidence](../WORK.md#manual-presentation-selection--2026-10-06)

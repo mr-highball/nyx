@@ -3139,7 +3139,8 @@ begin
     LCandidate.FOnDesignerGesture := FOnDesignerGesture;
     LCandidate.FProjectionContext := NyxProjectionContext(ADocument);
     LCandidate.FProjectionSchemaRevision := NyxSchemaRevision;
-    LCandidate.FRoot := RealizeNyxView(ADocument, ARoot);
+    LCandidate.FRoot := RealizeNyxView(ADocument, ARoot,
+      TNyxViewFrame.At(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight), npfNativeLCL));
     ApplyNyxPlatform(LCandidate.FRoot, npfNativeLCL);
     LCandidate.FRoot.ApplyViewport(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight), npfNativeLCL);
     LCandidate.FProjectionBaseline := LCandidate.FRoot.Clone;

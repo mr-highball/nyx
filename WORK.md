@@ -10,25 +10,107 @@ actual browser/LCL consumers qualify physical behavior selectively.
 ## Current return path: alternate structural presentations — 2026-10-06
 
 Return path: original structural presentations (NS-4 criterion 1), through the
-open native/browser ownership and interaction prerequisites. This integrated turn
-is progress: authoritative bound-state implementation, exact semantic companion,
-both-target execution and verified remote implementation checkpoint.
+open native/browser ownership and interaction prerequisites. The current packet
+adds typed whole-recipe authoring and lazy initial composition with genuinely
+different control sets. It preserves the preceding bound-state prerequisite;
+neither result accepts full live structural publication or the ordinary editor.
 
-The [bound-state prerequisite](#retained-bound-state--2026-10-06) now passes
-61 actual controls/state checks on each target against exact semantic source.
-Strict unbound APIs remain intact. One original coordinator/store/subscription
-survives identical binding contracts, repeated moves and reversal, external state
-writes, number drafts and selective restores. Refresh refuses command and store
-validation/notification reentry; it imports no document defaults into live state.
-General MCP state/binding authoring still has its workflow owner; fixture
-attachments are explicitly typed, not represented as semantic authoring.
+Next deliverable: mounted views retain an independent authored recipe blueprint
+and recompute selected content from exact host/container/manual frames. Publish
+changed control sets through the existing idle command/store guards, with stable
+presentation capabilities, independent scopes and explicit logical-part continuity.
+Qualify resize/manual transitions, state writes, reentry/refusal, teardown and
+retained focus/drafts on both actual targets, then connect ordinary Nyx-built
+Studio recipe editing and its semantic transport journey. Stop extending local
+wire/parser examples once their existing evidence suffices. The full original
+parity/accessibility/performance and delivery criteria remain unchanged.
 
-End local same-control fixture/admission expansion. Return to the original lazy
-alternate recipe ownership/publication contract, typed fluent structural authoring
-and ordinary Studio presentation switching, with all original parity/accessibility/
-performance and delivery criteria retained. This foundation does not narrow
-alternate structures to an unchanged control set. Main services and all eight
-accepted pairs remain protected; no LAN rollout is claimed.
+This batch closes no full criterion. Authoring no-closure advances 22→23 once;
+renderer 6, workflow 9, codegen 28 and delivery 1 remain. This reassessment changes
+the next action from initial composition/admission to mounted changed-set
+publication; it does not restrict alternate structures to unchanged controls or
+credit a remount as continuity. Main services and all eight accepted pairs remain
+protected; no LAN rollout is claimed.
+
+## Content recipes — 2026-10-06
+
+Owner: original NS-4 criterion 1, consuming the open NS-2 ownership/interaction
+and NS-1 source boundaries. [The public contract](docs/content-recipes.md) exposes
+managed `INyxContent` on specialized controls. Independent scope facades choose
+typed reusable references by copied viewport conditions, named presentations
+and closed platform enums. Exact scopes replace in order; common/target defaults,
+automatic and manual phases have explicit precedence. Scopes retain a value book,
+never a document/node/UI cycle; clones and `SetContent` copy independent storage.
+Custom `INyxControl` implementations now supply `GetContent`.
+
+The portable composer validates every inactive/transitive dependency before
+expanding only selected recipes. Immutable logical frames and optional allocated
+container snapshots choose against qualified nearest ancestors. Instance publisher
+overrides apply before nested expansion; appended/replaced slot payloads retain
+their inherited ancestry. Version-five persistence preserves exact Unicode values
+and refuses promotion collisions with older opaque extension fields. Generated
+specialized Pascal and its managed reader share readable `.Content` blocks,
+including authored `Clear`; paired reconciliation preserves handwritten comments.
+Semantic root-removal review counts inactive recipe references without counting
+multiple scopes on one retained instance more than once.
+
+The semantic source candidate extends existing tools: separately paged
+`nyx_node` content and strict `content-set` operations within one expected-revision
+paired transaction. In-process checks exercise bounded inspection, grouped edits,
+comment preservation, stale/invalid refusal and paired Undo/Redo. The backend
+compiles, but protected live services do not advertise these new fields yet.
+Current readonly CLI discovery still authenticates twenty existing tools; the
+desktop chat's cached native handles require reconnection. No new transport tool,
+HTTP recipe-edit journey or LAN deployment is claimed.
+
+Private artifacts under `build/content-recipes/` retain these checks:
+
+- `qualified-build.log`: `tools/build.ps1 -Target content-recipes` passes 50
+  contract checks on stable FPC 3.2.0 and matched 3.3.1, then 42 actual Win32
+  control checks, with zero native leaks. The exact exported supplementary-name
+  companion is compiled unchanged by both actual consumers; source SHA256 is
+  `e5904d58dd7797d90da486e6d50596b71e761ef289d8c05e5f1708fbba1d2ed9`.
+- `browser-qualified-contracts.log` and `browser-qualified-controls.log`:
+  the maintained Pascal browser driver executes 50 and 42 respectively through
+  the existing isolated HTTP host. Concurrent wide/390-logical-pixel host views
+  select different input/memo sets and independent stores. Actual editing retains
+  exact supplementary text; repeated explicit remounts retain accepted values,
+  dispatch callbacks once and retire old leases. Invalid inactive references keep
+  the prior mounted root/store. These are actual programmatic controls; teardown
+  captures do not establish aesthetics, physical phone/IME or assistive input.
+- `core-qualified.log`: the maintained core regression and generated Unicode,
+  event/state/managed-control/collection companions pass, including the existing
+  invalid-argument compiler checks. `retained-regression.log` preserves 34 checks
+  per native compiler, 92 original actual Win32 arrangements and 61 bound Win32
+  checks, zero leaks. Its browser counterparts compile; current browser retained
+  behavior retains the preceding packet's execution evidence rather than a rerun.
+- `server/qualified-compile.log`, `web-studio/*-qualified-compile.log` and
+  `native-studio/qualified-compile.log`: current backend, browser Studio, module
+  worker and native Studio compile separately, with zero owned warnings. Browser
+  builds retain seven warnings in the unchanged upstream RTL.
+- `final-preservation.json`: all fifteen service identities and eight complete
+  main project/navigation/draft/history frames remain exact; existing LAN HTTP
+  returns 200. Only task-owned files inside a new isolated hosting subdirectory
+  are staged. Existing source snapshots, compiler profiles and hosting artifacts
+  stay unchanged. No listener is started or service stopped/restarted.
+
+Qualification corrections retain the intended assertions: the unrelated managed
+decorator now forwards the new public interface method. Native `StringReplace`
+on an entire UTF-8 fixture source had transcoded supplementary references; exact
+`TNyxText` span insertion fixes the fixture without changing the product's text
+contract. Labeled fields expose wrappers, so physical input tests use public
+`InputFor(..., niRuntime)`; nonexistent-control checks use the realized tree first.
+Composer slot ancestry and early instance publisher overrides were product defects
+found and fixed by the maintained shared consumers, including their browser run.
+
+Initial adapter mounts choose automatic host recipes. Explicit `Render` remounts
+may change descendants/control types against the same store. Live resize/container
+selection and `Presentations.Select` still refresh scalar configuration only.
+Remount replaces controls/coordinator/subscription and retires its presentation
+lease; focus, caret and unfinished drafts do not survive by contract. Stable
+changed-set publication, source/editor integration, ordinary Studio recipe editing,
+other widgetsets/DPI, accessibility, release performance and delivery remain open
+under the original owners. No task moves to DONE.
 
 ## Retained bound state — 2026-10-06
 

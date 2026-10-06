@@ -96,10 +96,27 @@ var
   procedure Visit(ANode: TNyxNode);
   var
     LChild: Integer;
+    LRule: Integer;
+    LReferences: Boolean;
   begin
+    LReferences := False;
 
-    if ((ANode.Kind = 'component') or (ANode.ProjectionKind = 'component')) and
-      (ANode.Prop('component') = ARoot.Name) then
+    if (ANode.Kind = 'component') or (ANode.ProjectionKind = 'component') then
+    begin
+      LReferences := ANode.Prop('component') = ARoot.Name;
+
+      if ANode.HasContent then
+      begin
+        { Inactive recipes are authored dependencies too. Count a retained
+          instance once even if several rules/fallbacks reference this root. }
+        for LRule := 0 to ANode.Content.Count - 1 do
+        begin
+          LReferences := LReferences or (ANode.Content.Rule(LRule).Component.Name = ARoot.Name);
+        end;
+      end;
+    end;
+
+    if LReferences then
     begin
       Inc(Result);
     end;

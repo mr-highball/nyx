@@ -20,6 +20,20 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 
+## Structural recipe consumer — 2026-10-06
+
+The original values/layout and ownership criteria consume managed selected-only
+reusable recipes on initial mounts and explicit remounts. The exact compiled
+Unicode companion passes 42 actual Win32 checks, independent bound stores,
+changed input/memo sets, accepted-value remount continuity, callbacks once and
+invalid inactive-branch preservation, with zero leaks. Its browser counterpart
+passes 42. [Evidence](../WORK.md#content-recipes--2026-10-06) retains the limits.
+
+No renderer criterion closes; its counter remains 6 in this NS-4-owned batch.
+Live resize/manual changed-set publication, stable leases, focus/caret/draft
+continuity and full native parity remain with the original task. Explicit
+remounts replace native controls and must not be represented as retained refresh.
+
 ## Proportional and hidden flow — 2026-10-04
 
 Rows now reserve authored fixed widths before distributing weighted space;

@@ -1270,11 +1270,13 @@ begin
         SameText(LTokens[LIndex + 2].Text, 'Collections') or
         SameText(LTokens[LIndex + 2].Text, 'Extensions') or
         SameText(LTokens[LIndex + 2].Text, 'Configure') or
+        SameText(LTokens[LIndex + 2].Text, 'Content') or
         SameText(LTokens[LIndex + 2].Text, 'Binds')) then
       begin
         LName := LTokens[LIndex].Text;
 
         if SameText(LTokens[LIndex + 2].Text, 'Configure') or
+          SameText(LTokens[LIndex + 2].Text, 'Content') or
           SameText(LTokens[LIndex + 2].Text, 'Binds') then
         begin
           { Configuration and binding blocks have independent fluent grammars.

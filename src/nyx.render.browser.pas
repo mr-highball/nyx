@@ -1556,7 +1556,8 @@ begin
     LCandidate.FUpdaters := Copy(FUpdaters, 0, Length(FUpdaters));
     LCandidate.FProjectionContext := NyxProjectionContext(ADocument);
     LCandidate.FProjectionSchemaRevision := NyxSchemaRevision;
-    LCandidate.FRoot := RealizeNyxView(ADocument, ARoot);
+    LCandidate.FRoot := RealizeNyxView(ADocument, ARoot,
+      TNyxViewFrame.At(AHost.clientWidth, AHost.clientHeight, npfBrowser));
     ApplyNyxPlatform(LCandidate.FRoot, npfBrowser);
     LCandidate.FViewportWidth := AHost.clientWidth;
     LCandidate.FViewportHeight := AHost.clientHeight;

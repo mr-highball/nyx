@@ -463,6 +463,7 @@ uses
   nyx.json,
   nyx.schema,
   nyx.catalog,
+  nyx.content,
   nyx.controls;
 
 type
@@ -575,6 +576,7 @@ type
     ID: TNyxText;
     DeclaredType: TNyxText;
     Configured: Boolean;
+    ContentConfigured: Boolean;
     Admitted: Boolean;
     Created: Boolean;
   end;
@@ -643,6 +645,7 @@ type
     procedure Extensions(AIndex: Integer);
     procedure Callbacks;
     procedure Configure(AIndex: Integer);
+    procedure Content(AIndex: Integer);
     procedure ApplyCall(ANode: TNyxNode; const AMethod: TNyxText;
       const AArgs: TValues; APlatform: TNyxPlatform;
       const AViewport: TNyxViewportCondition; const APresentation: TNyxPresentationRef);
@@ -3463,6 +3466,101 @@ begin
     end;
   end;
   Fail('Finish the Configure block with .Done;');
+end;
+
+procedure TConfigurationReader.Content(AIndex: Integer);
+var
+  LContent: INyxContent;
+  LMethod: TNyxText;
+  LArgs: TValues;
+begin
+
+  if FLocals[AIndex].ContentConfigured then
+  begin
+    Fail('Keep one Content block per reusable instance');
+  end;
+  FLocals[AIndex].ContentConfigured := True;
+  Inc(FCursor, 3);
+  LContent := NewNyxContent;
+
+  if FApply then
+  begin
+    LContent := AdmittedNode(AIndex).Content;
+  end;
+  while At('.') do
+  begin
+    Inc(FCursor);
+
+    if (FCursor >= Length(FTokens)) or (FTokens[FCursor].Kind <> tkWord) then
+    begin
+      Fail('Expected a Content method');
+    end;
+    LMethod := FTokens[FCursor].Text;
+    Inc(FCursor);
+
+    if SameText(LMethod, 'Done') then
+    begin
+      Expect(';');
+      Exit;
+    end;
+
+    if SameText(LMethod, 'Clear') then
+    begin
+      LContent.Clear;
+      Continue;
+    end;
+    LArgs := Arguments;
+
+    if SameText(LMethod, 'Use') then
+    begin
+
+      if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkComponent) then
+      begin
+        Fail('Content.Use requires a typed component reference');
+      end;
+      LContent.Use(NyxComponent(LArgs[0].Text));
+    end
+    else if SameText(LMethod, 'ForPlatform') then
+    begin
+
+      if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkPlatform) then
+      begin
+        Fail('Content.ForPlatform requires a TNyxPlatform enum');
+      end;
+      LContent := LContent.ForPlatform(TNyxPlatform(LArgs[0].Ordinal));
+    end
+    else if SameText(LMethod, 'WhenPresentation') then
+    begin
+
+      if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkPresentationRef) then
+      begin
+        Fail('Content.WhenPresentation requires a typed presentation reference');
+      end;
+      LContent := LContent.WhenPresentation(NyxPresentation(LArgs[0].Text));
+    end
+    else if SameText(LMethod, 'WhenViewport') then
+    begin
+
+      if (Length(LArgs) <> 1) or not (LArgs[0].Kind in [vkViewportWidth, vkViewportCondition]) then
+      begin
+        Fail('Content.WhenViewport requires a typed viewport condition');
+      end;
+
+      if LArgs[0].Kind = vkViewportWidth then
+      begin
+        LContent := LContent.WhenViewport(LArgs[0].ViewportWidth);
+      end
+      else
+      begin
+        LContent := LContent.WhenViewport(LArgs[0].ViewportCondition);
+      end;
+    end
+    else
+    begin
+      Fail('Unsupported Content method: ' + LMethod);
+    end;
+  end;
+  Fail('Finish the Content block with .Done;');
 end;
 
 procedure TConfigurationReader.Callbacks;

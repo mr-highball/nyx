@@ -40,6 +40,24 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Typed structural recipes — 2026-10-06
+
+Original criterion 1 now has managed whole-recipe choices, lazy selected-only
+expansion and shared strict persistence/generated-source admission. Viewport,
+named presentation and target choices can contain different descendants/types.
+Shared checks pass 50 per native compiler/executed browser and exact compiled
+Unicode companions pass 42 actual controls per target. Semantic candidate edits
+use one revision-aware paired Undo; running HTTP services remain unchanged.
+See [evidence and public contract](../WORK.md#content-recipes--2026-10-06).
+
+Initial mounts and explicit remounts do not accept live structural publication or
+ordinary Studio recipe editing. No original criterion closes; authoring no-closure
+advances 22→23 once. Renderer 6, workflow 9, codegen 28 and delivery 1 remain.
+End local admission/fixture expansion. Next retain a mounted authored blueprint,
+publish changed control sets through idle guards/stable capabilities and qualify
+actual resize/manual transitions, logical part identity, focus/drafts and teardown
+before ordinary Studio integration. Full original criteria/blockers stay intact.
+
 ## Container-aware presentations — 2026-10-06
 
 Original criterion 1 now includes named ancestor publishers, typed width/full-size

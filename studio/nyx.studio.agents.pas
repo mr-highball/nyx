@@ -664,12 +664,16 @@ var
   LTextLimit: Integer;
   LKeyIndex: Integer;
   LMatch: Integer;
+  LContentOffset: Integer;
+  LContentLimit: Integer;
+  LContentTotal: Integer;
+  LContentItems: array of TNyxDataValue;
   LTotalText: Integer;
   LMatches: Boolean;
   LText: TNyxText;
   LValue: TNyxDataValue;
 begin
-  NyxAgentFields(AArguments, '|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|');
+  NyxAgentFields(AArguments, '|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|content|contentOffset|contentLimit|');
   LNode := FSession.Document.Find(TextArgument(AArguments, 'id', FSession.SelectedID));
 
   if LNode = nil then
@@ -898,6 +902,35 @@ begin
     LFields[High(LFields)] := NyxField('parts', NamedParts(LNode,
       IntegerArgument(AArguments, 'partOffset', 0, 0, 100000),
       IntegerArgument(AArguments, 'partLimit', 20, 1, 50)));
+  end;
+
+  if NyxAgentHas(AArguments, 'content') and AArguments.Field('content').AsBoolean then
+  begin
+    LContentOffset := IntegerArgument(AArguments, 'contentOffset', 0, 0, 100000);
+    LContentLimit := IntegerArgument(AArguments, 'contentLimit', 8, 1, 16);
+    LContentTotal := 0;
+
+    if LNode.HasContent then
+    begin
+      LContentTotal := LNode.Content.Count;
+    end;
+    LCount := 0;
+    SetLength(LContentItems, LContentLimit);
+    for LIndex := LContentOffset to LContentTotal - 1 do
+    begin
+
+      if LCount >= LContentLimit then
+      begin
+        Break;
+      end;
+      LContentItems[LCount] := LNode.Content.Rule(LIndex).ToData;
+      Inc(LCount);
+    end;
+    SetLength(LContentItems, LCount);
+    SetLength(LFields, Length(LFields) + 1);
+    LFields[High(LFields)] := NyxField('content', NyxObject([
+      NyxField('totalRules', NyxData(LContentTotal)),
+      NyxField('offset', NyxData(LContentOffset)), NyxField('rules', NyxArray(LContentItems))]));
   end;
   Result := NyxObject(LFields);
 end;

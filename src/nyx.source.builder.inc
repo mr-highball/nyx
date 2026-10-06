@@ -660,6 +660,10 @@ begin
   begin
     Configure(LLocal);
   end
+  else if not LDocument and SameText(LMethod, 'Content') then
+  begin
+    Content(LLocal);
+  end
   else if not LDocument and SameText(LMethod, 'Binds') then
   begin
     Bindings(LLocal);

@@ -56,6 +56,21 @@ receipts live under `build/retained-arrangement/`; no workflow criterion closes.
 - Underlying callback/state/source/build behavior remains with its existing owners;
   expose only qualified operations and retain their original acceptance criteria.
 
+## Structural content semantic candidate — 2026-10-06
+
+Existing node inspection gains a separate bounded content page and grouped
+transactions gain strict `content-set`. In-process checks prove exact revisions,
+comment preservation, whole-group refusal and paired Undo/Redo; inactive recipe
+dependencies participate in semantic root review. Current server compilation
+passes. Protected running services advertise the preceding twenty-tool contract,
+so this packet claims no HTTP content-edit journey or updated LAN editor.
+See [evidence](../WORK.md#content-recipes--2026-10-06).
+
+The original workflow counter remains 9 and no criterion closes. Its next ordinary
+recipe journey must target an owned workspace, use bounded inspection and one
+paired transaction, execute both exact compiler artifacts and preserve observing
+user projects. General source/state/binding/review gaps keep this existing owner.
+
 ## Container presentation workflow — 2026-10-06
 
 The existing twenty-tool contract now accepts optional exact container names in

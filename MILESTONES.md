@@ -3,7 +3,21 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current prerequisite result (2026-10-06): bound retained rearrangement projects
+Current structural authoring packet (2026-10-06): managed typed content choices
+lazily select distinct reusable control sets by host, presentation and platform.
+Contract checks pass 50 per native compiler/executed browser; exact compiled
+Unicode companions pass 42 actual controls per target. Strict persistence/source,
+in-process semantic paired edits and inactive dependency review are integrated.
+This qualifies initial mounts and explicit remounts, not live resize/manual
+publication, focus/draft continuity or ordinary Studio recipe editing. All fifteen
+services/eight main frames remain exact; no LAN deployment. Authoring no-closure
+22→23 once; renderer 6, workflow 9, codegen 28 and delivery 1 remain. No original
+criterion closes. Next integrate mounted changed-set publication and the ordinary
+editor under the existing original owners, preserving all prerequisite and
+parity/accessibility/performance/delivery criteria. See
+[evidence and reassessment](WORK.md#content-recipes--2026-10-06).
+
+Previous prerequisite result (2026-10-06): bound retained rearrangement projects
 candidate and baseline against the same current idle store while preserving the
 original subscription. Actual Win32/browser controls pass 61 each, including
 number drafts, selective restoration, external writes, focus, callbacks, physical

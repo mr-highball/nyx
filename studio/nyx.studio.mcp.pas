@@ -1143,6 +1143,49 @@ begin
   Result := NyxObject(LFields);
 end;
 
+function ContentRuleSchema(const AScope: TNyxText;
+  const AWhen: TNyxDataValue): TNyxDataValue;
+begin
+  Result := Schema(NyxObject([
+    NyxField('scope', NyxObject([NyxField('const', NyxData(AScope))])),
+    NyxField('platform', NyxObject([NyxField('enum', NyxArray([
+      NyxData('any'), NyxData('browser'), NyxData('native-lcl')]))])),
+    NyxField('component', TNyxDataValue.ParseJSON(
+      '{"type":"string","minLength":1,"maxLength":128}')),
+    NyxField('when', AWhen)]),
+    [NyxData('scope'), NyxData('platform'), NyxData('component'), NyxData('when')]);
+end;
+
+function ContentOperationSchema: TNyxDataValue;
+var
+  LViewport: TNyxDataValue;
+  LRules: TNyxDataValue;
+begin
+  LViewport := Schema(NyxObject([
+    NyxField('widthMinimum', IntSchema(0, High(Integer))),
+    NyxField('widthMaximum', IntSchema(0, High(Integer))),
+    NyxField('heightMinimum', IntSchema(0, High(Integer))),
+    NyxField('heightMaximum', IntSchema(0, High(Integer))),
+    NyxField('orientation', NyxObject([NyxField('enum', NyxArray([
+      NyxData('any'), NyxData('portrait'), NyxData('landscape'), NyxData('square')]))]))]),
+    [NyxData('widthMinimum'), NyxData('widthMaximum'), NyxData('heightMinimum'),
+      NyxData('heightMaximum'), NyxData('orientation')]);
+  LRules := NyxObject([NyxField('type', NyxData('array')),
+    NyxField('maxItems', NyxData(64)),
+    NyxField('items', NyxObject([NyxField('oneOf', NyxArray([
+      ContentRuleSchema('default', NyxObject([NyxField('type', NyxData('null'))])),
+      ContentRuleSchema('viewport', LViewport),
+      ContentRuleSchema('presentation', TNyxDataValue.ParseJSON(
+        '{"type":"string","minLength":1,"maxLength":128}'))]))]))]);
+  Result := Schema(NyxObject([
+    NyxField('op', NyxObject([NyxField('const', NyxData('content-set'))])),
+    NyxField('id', TextSchema('Exact authored reusable instance ID')),
+    NyxField('content', Schema(NyxObject([
+      NyxField('version', NyxObject([NyxField('const', NyxData(1))])),
+      NyxField('rules', LRules)]), [NyxData('version'), NyxData('rules')]))]),
+    [NyxData('op'), NyxData('id'), NyxData('content')]);
+end;
+
 function NyxStudioMCPTools: TNyxDataValue;
 var
   LPage: TNyxDataValue;
@@ -1159,6 +1202,7 @@ begin
     '{"type":"object","properties":{"op":{"const":"delete"},"id":{"type":"string"}},"required":["op","id"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"title"},"value":{"type":"string"}},"required":["op","value"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"tokens"},"values":{"type":"object"}},"required":["op","values"],"additionalProperties":false},' +
+    ContentOperationSchema.ToJSON + ',' +
     '{"type":"object","properties":{"op":{"const":"derive"},"source":{"type":"string"},"id":{"type":"string"},"identities":{"type":"object","additionalProperties":{"type":"string"}}},"required":["op","source","id","identities"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"instance"},"id":{"type":"string"},"component":{"type":"string"},"parent":{"type":"string"},"index":{"type":"integer","minimum":0}},"required":["op","id","component","parent"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"override"},"id":{"type":"string"},"instance":{"type":"string"},"path":{"type":"string"},"mode":{"enum":["properties","append","prepend","replace","remove"]}},"required":["op","id","instance","path","mode"],"additionalProperties":false},' +
@@ -1180,6 +1224,9 @@ begin
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit')),
         NyxField('events', LBoolean),
         NyxField('parts', LBoolean),
+        NyxField('content', LBoolean),
+        NyxField('contentOffset', IntSchema(0, 100000)),
+        NyxField('contentLimit', IntSchema(1, 16)),
         NyxField('partOffset', IntSchema(0, 100000)),
         NyxField('partLimit', IntSchema(1, 50)),
         NyxField('eventOffset', IntSchema(0, 100000)),

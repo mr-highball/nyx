@@ -35,6 +35,7 @@ uses
   nyx.types,
   nyx.responsive,
   nyx.presentations,
+  nyx.content,
   nyx.containers,
   nyx.state,
   nyx.collections,
@@ -1415,6 +1416,10 @@ var
     LPresentationScope: TNyxText;
     LPresentationPlatform: TNyxPlatform;
     LPresentationAttribute: TNyxAttribute;
+    LContentRule: TNyxContentRule;
+    LContentScope: TNyxContentRule;
+    LContentPlatform: TNyxPlatform;
+    LContentIndex: Integer;
   begin
     LScope := npfAny;
     LViewportScope := TNyxViewportCondition.Any;
@@ -1511,6 +1516,40 @@ var
     begin
       LLines.Add('      .Done;');
     end;
+
+    if ANode.HasContent then
+    begin
+      LLines.Add('    ' + LVariable + '.Content');
+      LContentScope := Default(TNyxContentRule);
+      LContentPlatform := npfAny;
+      for LContentIndex := 0 to ANode.Content.Count - 1 do
+      begin
+        LContentRule := ANode.Content.Rule(LContentIndex);
+
+        if LContentRule.Platform <> LContentPlatform then
+        begin
+          LLines.Add('      .ForPlatform(' + NyxPlatformSymbol(LContentRule.Platform) + ')');
+          LContentPlatform := LContentRule.Platform;
+        end;
+
+        if not LContentRule.SameScope(LContentScope) then
+        begin
+
+          if LContentRule.Scope = ncsPresentation then
+          begin
+            LLines.Add('      .WhenPresentation(NyxPresentation(' +
+              PascalString(LContentRule.Presentation.Name) + '))');
+          end
+          else
+          begin
+            LLines.Add('      .WhenViewport(' + LContentRule.Viewport.Pascal + ')');
+          end;
+        end;
+        LLines.Add('      .Use(NyxComponent(' + PascalString(LContentRule.Component.Name) + '))');
+        LContentScope := LContentRule;
+      end;
+      LLines.Add('      .Done;');
+    end;
     EmitBindings(ANode, LVariable);
     EmitExtensions(ANode.Extensions, LVariable);
     for LChildIndex := 0 to ANode.Count - 1 do
@@ -1558,6 +1597,7 @@ begin
     LLines.Add('  nyx.types,');
     LLines.Add('  nyx.responsive,');
     LLines.Add('  nyx.presentations,');
+    LLines.Add('  nyx.content,');
     LLines.Add('  nyx.containers,');
     LLines.Add('  nyx.editing,');
     LLines.Add('  nyx.gestures,');

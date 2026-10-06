@@ -33,6 +33,7 @@ uses
   nyx.types,
   nyx.responsive,
   nyx.presentations,
+  nyx.content,
   nyx.containers,
   nyx.layout.policy,
   nyx.layout.constraints,
@@ -65,6 +66,9 @@ type
     function GetCount: Integer;
     function GetChild(AIndex: Integer): INyxControl;
     function GetConfigure: INyxConfiguration;
+    { Recipe content is available to built-in and extension controls. Document
+      admission requires an instance projection before these choices can mount. }
+    function GetContent: INyxContent;
     function GetBinds: INyxBindings;
     function GetContract: INyxControlContract;
     function GetExtensions: INyxControlExtensions;
@@ -82,6 +86,7 @@ type
     property Count: Integer read GetCount;
     property Children[AIndex: Integer]: INyxControl read GetChild;
     property Configure: INyxConfiguration read GetConfigure;
+    property Content: INyxContent read GetContent;
     property Binds: INyxBindings read GetBinds;
     property Contract: INyxControlContract read GetContract;
     property Extensions: INyxControlExtensions read GetExtensions;
@@ -184,6 +189,9 @@ type
 
   INyxReferenceControl = interface(INyxCaptionControl)
     ['{737A7921-4621-4C6F-8C01-01000000000A}']
+    { Ordinary recipe before viewport/manual choice. Setting it updates the
+      default content rule when choices exist, retaining all conditional rules
+      and the compatible constructor reference. It is never a live view query. }
     function GetReference: TNyxComponentRef;
     procedure SetReference(const AValue: TNyxComponentRef);
     property Reference: TNyxComponentRef read GetReference write SetReference;
@@ -213,6 +221,7 @@ type
     function GetCount: Integer;
     function GetChild(AIndex: Integer): INyxControl;
     function GetConfigure: INyxConfiguration;
+    function GetContent: INyxContent;
     function GetBinds: INyxBindings;
     function GetContract: INyxControlContract;
     function GetExtensions: INyxControlExtensions;
@@ -226,6 +235,7 @@ type
       AMode: TNyxOverrideMode): INyxControl;
     function Clone: INyxControl;
     property Node: TNyxNode read GetNode;
+    property Content: INyxContent read GetContent;
   end;
 
   TNyxCaptionControl = class(TNyxControl, INyxCaptionControl)
@@ -714,12 +724,22 @@ end;
 
 function TNyxReferenceControl.GetReference: TNyxComponentRef;
 begin
-  Result := NyxComponent(Node.Prop(NyxAttributeName(atComponent)));
+  Result := Node.DefaultComponent;
 end;
 
 procedure TNyxReferenceControl.SetReference(const AValue: TNyxComponentRef);
 begin
+
+  if Node.HasContent then
+  begin
+    Node.Content.Use(AValue);
+  end;
   Node.Configure.Component(AValue);
+end;
+
+function TNyxControl.GetContent: INyxContent;
+begin
+  Result := Node.Content;
 end;
 
 {$I nyx.controls.implementation.inc}

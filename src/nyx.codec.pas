@@ -36,12 +36,13 @@ uses
   nyx.state,
   nyx.collections.registry,
   nyx.presentations,
+  nyx.content,
   nyx.binding.types,
   nyx.collections.view.types,
   nyx.model;
 
 type
-  { Version 1/2/3/4 design persistence. The format deliberately stores the portable
+  { Version 1/2/3/4/5 design persistence. The format deliberately stores the portable
     model, not target widget handles or generated source. All custom kinds and
     string-valued extension properties survive an encode/decode round trip.
     Unknown root/node fields retain typed nested extension data, exact strings
@@ -58,6 +59,9 @@ type
     data and ordered node rule arrays. Full Unicode names travel as values,
     avoiding old native JSON object-key limits while preserving rule precedence.
     Older opaque presentations/presentationRules fields retain extension meaning.
+    Version five adds ordered typed instance contentRules, retaining every
+    inactive dependency. Older opaque contentRules fields remain extensions;
+    promotion rejects collisions before exporting a design/history candidate.
     Decode returns ownership to its caller and frees partial trees on failure. }
   TNyxCodec = class
   public
@@ -96,7 +100,8 @@ end;
 
 procedure ReadExtensions(AObject: TJSONObject; AExtensions: TNyxExtensions;
   ACollections: Boolean = False; ACollectionViews: Boolean = False;
-  APresentations: Boolean = False; APresentationRules: Boolean = False);
+  APresentations: Boolean = False; APresentationRules: Boolean = False;
+  AContentRules: Boolean = False);
 var
   LFields: TJSONObject;
   LIndex: Integer;
@@ -110,7 +115,8 @@ begin
         (not ACollections or (AObject.Names[LIndex] <> NyxCollectionsWireField)) and
         (not ACollectionViews or (AObject.Names[LIndex] <> NyxCollectionViewWireField)) and
         (not APresentations or (AObject.Names[LIndex] <> NyxPresentationsWireField)) and
-        (not APresentationRules or (AObject.Names[LIndex] <> NyxPresentationRulesWireField)) then
+        (not APresentationRules or (AObject.Names[LIndex] <> NyxPresentationRulesWireField)) and
+        (not AContentRules or (AObject.Names[LIndex] <> NyxContentRulesWireField)) then
       begin
         LFields.Add(AObject.Names[LIndex], AObject.Items[LIndex].Clone);
       end;
@@ -184,6 +190,11 @@ begin
   try
     Result.Add('kind', ANode.Kind);
     Result.Add('id', ANode.ID);
+
+    if ANode.HasContent then
+    begin
+      Result.Add(NyxContentRulesWireField, DecodeNyxJSON(ANode.Content.ToData.ToJSON));
+    end;
     LProps := TJSONObject.Create;
     Result.Add('props', LProps);
     LRules := nil;
@@ -274,7 +285,15 @@ begin
   LRoot := TJSONObject.Create;
   try
 
-    if ADocument.Presentations.Count > 0 then
+    if ADocument.HasContentRules then
+    begin
+      LRoot.Add('version', 5);
+      LRoot.Add(NyxPresentationsWireField,
+        DecodeNyxJSON(ADocument.Presentations.ToData.ToJSON));
+      LRoot.Add(NyxCollectionsWireField,
+        DecodeNyxJSON(EncodeNyxCollectionDefaults(ADocument.Collections)));
+    end
+    else if ADocument.Presentations.Count > 0 then
     begin
       LRoot.Add('version', 4);
       LRoot.Add(NyxPresentationsWireField,
@@ -509,7 +528,7 @@ begin
 end;
 
 function ReadNode(AData: TJSONData; ADepth: Integer; var ACount: Integer;
-  ACollectionViews, APresentations: Boolean): TNyxNode;
+  ACollectionViews, APresentations, AContentRules: Boolean): TNyxNode;
 var
   LObject: TJSONObject;
   LProps: TJSONObject;
@@ -645,10 +664,16 @@ begin
       Result.SetCollectionView(TNyxCollectionViewSpec.FromData(
         TNyxDataValue.ParseJSON(LObject.Find(NyxCollectionViewWireField).AsJSON)));
     end;
-    ReadExtensions(LObject, Result.Extensions, False, ACollectionViews, False, APresentations);
+
+    if AContentRules and (LObject.Find(NyxContentRulesWireField) <> nil) then
+    begin
+      Result.SetContent(NyxContentFromData(TNyxDataValue.ParseJSON(
+        LObject.Find(NyxContentRulesWireField).AsJSON)));
+    end;
+    ReadExtensions(LObject, Result.Extensions, False, ACollectionViews, False, APresentations, AContentRules);
     for LIndex := 0 to LChildren.Count - 1 do
     begin
-      Result.Add(ReadNode(LChildren.Items[LIndex], ADepth + 1, ACount, ACollectionViews, APresentations));
+      Result.Add(ReadNode(LChildren.Items[LIndex], ADepth + 1, ACount, ACollectionViews, APresentations, AContentRules));
     end;
   except
     Result.Free;
@@ -678,7 +703,7 @@ begin
 
     LVersion := RequireField(LRoot, 'version', jtNumber).AsJSON;
 
-    if (LVersion <> '1') and (LVersion <> '2') and (LVersion <> '3') and (LVersion <> '4') then
+    if (LVersion <> '1') and (LVersion <> '2') and (LVersion <> '3') and (LVersion <> '4') and (LVersion <> '5') then
     begin
       raise ENyxModel.Create('Unsupported design version');
     end;
@@ -699,7 +724,7 @@ begin
         end;
       end;
 
-      if LVersion = '4' then
+      if (LVersion = '4') or (LVersion = '5') then
       begin
         LPresentations := NyxPresentationsFromData(TNyxDataValue.ParseJSON(
           RequireField(LRoot, NyxPresentationsWireField, jtObject).AsJSON));
@@ -709,17 +734,19 @@ begin
             LPresentations.Definition(LPresentations.Reference(LIndex)));
         end;
       end;
-      ReadExtensions(LRoot, Result.Extensions, LVersion <> '1', False, LVersion = '4');
+      ReadExtensions(LRoot, Result.Extensions, LVersion <> '1', False, (LVersion = '4') or (LVersion = '5'));
       LCount := 0;
       for LIndex := 0 to LPages.Count - 1 do
       begin
         Result.AddPage(ReadNode(LPages.Items[LIndex], 0, LCount,
-          (LVersion = '3') or (LVersion = '4'), LVersion = '4'));
+          (LVersion = '3') or (LVersion = '4') or (LVersion = '5'),
+          (LVersion = '4') or (LVersion = '5'), LVersion = '5'));
       end;
       for LIndex := 0 to LComponents.Count - 1 do
       begin
         Result.AddComponent(ReadNode(LComponents.Items[LIndex], 0, LCount,
-          (LVersion = '3') or (LVersion = '4'), LVersion = '4'));
+          (LVersion = '3') or (LVersion = '4') or (LVersion = '5'),
+          (LVersion = '4') or (LVersion = '5'), LVersion = '5'));
       end;
       Result.Validate;
     except

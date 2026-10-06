@@ -30,6 +30,7 @@ interface
 uses
   nyx.text,
   nyx.model,
+  nyx.content,
   nyx.controls;
 
 function RunNyxControlTests: Integer;
@@ -79,6 +80,7 @@ type
     function GetCount: Integer;
     function GetChild(AIndex: Integer): INyxControl;
     function GetConfigure: INyxConfiguration;
+    function GetContent: INyxContent;
     function GetBinds: INyxBindings;
     function GetContract: INyxControlContract;
     function GetExtensions: INyxControlExtensions;
@@ -144,6 +146,11 @@ end;
 function TBadgeDecorator.GetConfigure: INyxConfiguration;
 begin
   Result := TNyxConfiguration.Create(Self as INyxControl);
+end;
+
+function TBadgeDecorator.GetContent: INyxContent;
+begin
+  Result := FInner.Content;
 end;
 
 function TBadgeDecorator.GetBinds: INyxBindings;

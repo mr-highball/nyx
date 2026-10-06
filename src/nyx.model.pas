@@ -36,6 +36,7 @@ uses
   nyx.types,
   nyx.responsive,
   nyx.presentations,
+  nyx.content,
   nyx.containers,
   nyx.layout.policy,
   nyx.layout.constraints,
@@ -115,6 +116,7 @@ type
     FViewportConfigure: array of TNyxNodeConfig;
     FViewportValues: TNyxStrings;
     FPresentationSnapshot: INyxPresentationSnapshot;
+    FContent: INyxContent;
     FContract: TNyxContract;
     FBindingConfig: TNyxNodeBindings;
     FStateBindings: array of TNyxBindingSpec;
@@ -124,6 +126,9 @@ type
     FReferences: Integer;
     FRawOwnership: Boolean;
     function GetConfigure: TNyxNodeConfig;
+    function GetContent: INyxContent;
+    function GetHasContent: Boolean;
+    function GetDefaultComponent: TNyxComponentRef;
     function GetPresentationSnapshot: INyxPresentationSnapshot;
     function GetQueryContainer: TNyxContainerRef;
     function GetContainerContainment: TNyxContainerContainment;
@@ -285,6 +290,13 @@ type
     property Kind: TNyxText read FKind;
     { Borrow this node's lazily allocated typed fluent configuration object. }
     property Configure: TNyxNodeConfig read GetConfigure;
+    { Instance recipe choices own copied references only. Retaining Content
+      never retains this node. SetContent clones the complete candidate at the
+      codec/editor boundary; default content falls back to legacy Component. }
+    procedure SetContent(const AContent: INyxContent);
+    property Content: INyxContent read GetContent;
+    property HasContent: Boolean read GetHasContent;
+    property DefaultComponent: TNyxComponentRef read GetDefaultComponent;
     { Borrow this node's owned scalar/field/event specification facade. Wire data
       lives in the namespaced immutable extension; clones never share a facade. }
     property Contract: TNyxContract read GetContract;
@@ -526,6 +538,7 @@ type
     function GetComponentCount: Integer;
     function GetComponent(AIndex: Integer): TNyxNode;
     function GetHasCollectionViews: Boolean;
+    function GetHasContentRules: Boolean;
     procedure AdmitRoot(ANode: TNyxNode);
   public
     constructor Create;
@@ -567,6 +580,7 @@ type
     property Presentations: INyxPresentations read FPresentations;
     { Includes deliberate clear descriptors; selects version-3 node semantics. }
     property HasCollectionViews: Boolean read GetHasCollectionViews;
+    property HasContentRules: Boolean read GetHasContentRules;
     { Borrowed project-owned structured data. Unknown version-1 root fields are
       retained here; save/history/view builds and generation preserve them. }
     property Extensions: TNyxExtensions read FExtensions;
@@ -1167,7 +1181,57 @@ begin
   FBindingConfig.Free;
   FProps.Free;
   FExtensions.Free;
+  FContent := nil;
   inherited Destroy;
+end;
+
+function TNyxNode.GetContent: INyxContent;
+begin
+
+  if FContent = nil then
+  begin
+    FContent := NewNyxContent;
+  end;
+  Result := FContent;
+end;
+
+function TNyxNode.GetHasContent: Boolean;
+begin
+  Result := (FContent <> nil) and (FContent.Count > 0);
+end;
+
+procedure TNyxNode.SetContent(const AContent: INyxContent);
+begin
+
+  if AContent = nil then
+  begin
+    FContent := nil;
+  end
+  else
+  begin
+    FContent := AContent.Clone.Done;
+  end;
+end;
+
+function TNyxNode.GetDefaultComponent: TNyxComponentRef;
+var
+  LIndex: Integer;
+  LRule: TNyxContentRule;
+begin
+  Result.Name := StoredProp('component');
+
+  if HasContent then
+  begin
+    for LIndex := 0 to FContent.Count - 1 do
+    begin
+      LRule := FContent.Rule(LIndex);
+
+      if (LRule.Scope = ncsDefault) and (LRule.Platform = npfAny) then
+      begin
+        Exit(LRule.Component);
+      end;
+    end;
+  end;
 end;
 
 procedure TNyxNode.BeforeDestruction;
@@ -2524,6 +2588,7 @@ begin
     Result.Extensions.Assign(FExtensions);
     Result.FInstanceScopeID := FInstanceScopeID;
     Result.FPresentationSnapshot := FPresentationSnapshot;
+    Result.SetContent(FContent);
 
     if FHasCollectionView then
     begin
@@ -2980,6 +3045,46 @@ begin
   end;
 end;
 
+function TNyxDocument.GetHasContentRules: Boolean;
+var
+  LIndex: Integer;
+
+  function HasRules(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+    Result := ANode.HasContent;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if Result then
+      begin
+        Exit;
+      end;
+      Result := HasRules(ANode.Children[LChild]);
+    end;
+  end;
+
+begin
+  Result := False;
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if HasRules(FPages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ComponentCount - 1 do
+  begin
+
+    if HasRules(FComponents[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
 procedure TNyxDocument.Validate;
 var
   LIDs: TNyxTextIndex;
@@ -2988,6 +3093,7 @@ var
   LTotal: Integer;
   LIndex: Integer;
   LHasCollectionViews: Boolean;
+  LHasContentRules: Boolean;
 
   procedure Visit(ANode: TNyxNode; ADepth: Integer);
   var
@@ -3003,6 +3109,7 @@ var
     LPlatform: TNyxPlatform;
     LAttribute: TNyxAttribute;
     LPropertyIndex: Integer;
+    LContentRule: TNyxContentRule;
   begin
     Inc(LTotal);
 
@@ -3016,6 +3123,37 @@ var
     LIDs.AddFirst(ANode.ID, 0);
     ANode.Extensions.Validate;
     ANode.Contract.Validate;
+    { Version five promotes contentRules to a typed field on every node. Older
+      opaque fields must never acquire constructor meaning implicitly. }
+
+    if LHasContentRules and ANode.Extensions.Has(NyxExtension(NyxContentRulesWireField)) then
+    begin
+      raise ENyxModel.Create('Typed content conflicts with retained contentRules on ' + ANode.ID);
+    end;
+
+    if ANode.HasContent then
+    begin
+
+      if ANode.ProjectionKind <> 'component' then
+      begin
+        raise ENyxModel.Create('Content recipes require a reusable instance on ' + ANode.ID);
+      end;
+      for LPropertyIndex := 0 to ANode.Content.Count - 1 do
+      begin
+        LContentRule := ANode.Content.Rule(LPropertyIndex);
+
+        if FindComponent(LContentRule.Component.Name) = nil then
+        begin
+          raise ENyxModel.Create('Unknown content recipe: ' + LContentRule.Component.Name);
+        end;
+
+        if (LContentRule.Scope = ncsPresentation) and
+          not FPresentations.Contains(LContentRule.Presentation) then
+        begin
+          raise ENyxModel.Create('Unknown content presentation: ' + LContentRule.Presentation.Name);
+        end;
+      end;
+    end;
     for LPropertyIndex := 0 to ANode.Props.Count - 1 do
     begin
 
@@ -3031,7 +3169,7 @@ var
       raise ENyxModel.Create('Typed collection views conflict with retained collectionView data on ' + ANode.ID);
     end;
 
-    if (FPresentations.Count > 0) and
+    if ((FPresentations.Count > 0) or LHasContentRules) and
       ANode.Extensions.Has(NyxExtension(NyxPresentationRulesWireField)) then
     begin
       raise ENyxModel.Create('Typed presentations conflict with retained presentationRules data on ' + ANode.ID);
@@ -3090,7 +3228,8 @@ var
     end;
 
     if ((ANode.Kind = 'component') or (ANode.ProjectionKind = 'component')) and
-      (FindComponent(ANode.Prop('component')) = nil) then
+      ((FindComponent(ANode.DefaultComponent.Name) = nil) or
+      ((ANode.Prop('component') <> '') and (FindComponent(ANode.Prop('component')) = nil))) then
       raise ENyxModel.Create('Unknown reusable component: ' + ANode.Prop('component'));
 
     if ((ANode.Kind = 'component') or (ANode.ProjectionKind = 'component')) and
@@ -3175,8 +3314,29 @@ var
 
   procedure CheckReferences(ANode: TNyxNode; ADepth: Integer);
   var
-    LDefinition: TNyxNode;
     LChildIndex: Integer;
+    LRuleIndex: Integer;
+
+    procedure CheckDefinition(const AName: TNyxText);
+    var
+      LDefinition: TNyxNode;
+    begin
+      LDefinition := FindComponent(AName);
+
+      if LStack.IndexOf(LDefinition.ID) >= 0 then
+      begin
+        raise ENyxModel.Create('Reusable component cycle: ' + LDefinition.ID);
+      end;
+
+      if LChecked.IndexOf(LDefinition.ID) < 0 then
+      begin
+        LStack.Add(LDefinition.ID);
+        CheckReferences(LDefinition, ADepth + 1);
+        LStack.Delete(LStack.Count - 1);
+        LChecked.Add(LDefinition.ID);
+      end;
+    end;
+
   begin
     { A tree can be acyclic while its component references are recursive.
       Track only the active expansion path: using the same definition twice in
@@ -3187,17 +3347,19 @@ var
 
     if (ANode.Kind = 'component') or (ANode.ProjectionKind = 'component') then
     begin
-      LDefinition := FindComponent(ANode.Prop('component'));
+      CheckDefinition(ANode.DefaultComponent.Name);
 
-      if LStack.IndexOf(LDefinition.ID) >= 0 then
-        raise ENyxModel.Create('Reusable component cycle: ' + LDefinition.ID);
-
-      if LChecked.IndexOf(LDefinition.ID) < 0 then
+      if ANode.Prop('component') <> '' then
       begin
-        LStack.Add(LDefinition.ID);
-        CheckReferences(LDefinition, ADepth + 1);
-        LStack.Delete(LStack.Count - 1);
-        LChecked.Add(LDefinition.ID);
+        CheckDefinition(ANode.Prop('component'));
+      end;
+
+      if ANode.HasContent then
+      begin
+        for LRuleIndex := 0 to ANode.Content.Count - 1 do
+        begin
+          CheckDefinition(ANode.Content.Rule(LRuleIndex).Component.Name);
+        end;
       end;
     end;
     for LChildIndex := 0 to ANode.Count - 1 do
@@ -3209,12 +3371,13 @@ var
 begin
   FState.Validate;
   FCollections.Validate;
+  LHasContentRules := HasContentRules;
 
-  if (FPresentations.Count > 0) and FExtensions.Has(NyxExtension(NyxPresentationsWireField)) then
+  if ((FPresentations.Count > 0) or LHasContentRules) and FExtensions.Has(NyxExtension(NyxPresentationsWireField)) then
   begin
     raise ENyxModel.Create('Typed presentations conflict with retained presentation data');
   end;
-  LHasCollectionViews := HasCollectionViews or (FPresentations.Count > 0);
+  LHasCollectionViews := HasCollectionViews or (FPresentations.Count > 0) or LHasContentRules;
   { Version-1 applications could already own an opaque collections wire field.
     New typed defaults require version 2; reject this explicit collision rather
     than overwrite retained application data during encoding or history. }

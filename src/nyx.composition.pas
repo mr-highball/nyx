@@ -32,13 +32,46 @@ uses
   Classes,
   SysUtils,
   nyx.types,
+  nyx.responsive,
+  nyx.presentations,
+  nyx.containers,
+  nyx.content,
   nyx.model;
+
+type
+  { Copied initial composition frame in logical pixels. At validates finite,
+    nonnegative geometry and a concrete target. Selecting keeps geometry while
+    choosing an exact manual presentation. No document or target is retained.
+    Default realization deliberately uses only the ordinary recipe, so build
+    dependency discovery never accidentally chooses a zero-width alternative. }
+  TNyxViewFrame = record
+  private
+    FSpecified: Boolean;
+    FWidth: Double;
+    FHeight: Double;
+    FPlatform: TNyxPlatform;
+    FSelection: TNyxPresentationSelection;
+  public
+    class function At(AWidth, AHeight: Double; APlatform: TNyxPlatform): TNyxViewFrame; static;
+    function Selecting(const AReference: TNyxPresentationRef): TNyxViewFrame;
+    property Width: Double read FWidth;
+    property Height: Double read FHeight;
+    property Platform: TNyxPlatform read FPlatform;
+    property Selection: TNyxPresentationSelection read FSelection;
+  end;
 
 { Realize a design root as an independent view tree. Reusable instances expand
   definitions, qualify runtime IDs and retain design-id for Studio selection.
   Each instance has independent runtime values; editing one never mutates the
   shared component definition or another instance. Caller owns the result. }
-function RealizeNyxView(ADocument: TNyxDocument; ARoot: TNyxNode): TNyxNode;
+function RealizeNyxView(ADocument: TNyxDocument; ARoot: TNyxNode): TNyxNode; overload;
+{ Lazily expand only each selected recipe. Every branch is validated as authored
+  data first. Container conditions consult the nearest eligible realized ancestor
+  in the supplied immutable measurement frame; absent boxes stay inactive.
+  The returned tree owns no source-document or measurement backreferences. }
+function RealizeNyxView(ADocument: TNyxDocument; ARoot: TNyxNode;
+  const AFrame: TNyxViewFrame;
+  const AMeasurements: INyxContainerSnapshot = nil): TNyxNode; overload;
 
 { Realize the containing page/definition so a selected part retains its owning
   contracts, sibling value sources and reusable overrides. Caller owns Result;
@@ -69,6 +102,34 @@ implementation
 
 uses
   nyx.behavior, nyx.text.index;
+
+class function TNyxViewFrame.At(AWidth, AHeight: Double;
+  APlatform: TNyxPlatform): TNyxViewFrame;
+begin
+  TNyxViewportCondition.Any.Matches(AWidth, AHeight);
+  NyxPlatformName(APlatform);
+
+  if APlatform = npfAny then
+  begin
+    raise ENyxContent.Create('A composition frame requires a concrete target');
+  end;
+  Result := Default(TNyxViewFrame);
+  Result.FSpecified := True;
+  Result.FWidth := AWidth;
+  Result.FHeight := AHeight;
+  Result.FPlatform := APlatform;
+end;
+
+function TNyxViewFrame.Selecting(const AReference: TNyxPresentationRef): TNyxViewFrame;
+begin
+
+  if not FSpecified then
+  begin
+    raise ENyxContent.Create('Manual recipe selection requires a composition frame');
+  end;
+  Result := Self;
+  Result.FSelection := TNyxPresentationSelection.Use(AReference);
+end;
 
 function CloneNyxReusableDefinition(ADocument: TNyxDocument; ARoot: TNyxNode;
   const ADefinition: TNyxComponentRef;
@@ -266,12 +327,155 @@ begin
 end;
 
 function RealizeNyxView(ADocument: TNyxDocument; ARoot: TNyxNode): TNyxNode;
+begin
+  Result := RealizeNyxView(ADocument, ARoot, Default(TNyxViewFrame));
+end;
+
+function RealizeNyxView(ADocument: TNyxDocument; ARoot: TNyxNode;
+  const AFrame: TNyxViewFrame; const AMeasurements: INyxContainerSnapshot): TNyxNode;
 var
   LCount: Integer;
+  LAncestors: array of TNyxNode;
+  LPresentations: INyxPresentationSnapshot;
+
+  function NamedMatches(const ARule: TNyxContentRule): Boolean;
+  var
+    LCondition: TNyxPresentationCondition;
+    LIndex: Integer;
+    LContainer: TNyxContainerRef;
+    LWidth: Double;
+    LHeight: Double;
+  begin
+    LCondition := LPresentations.Definition(ARule.Presentation);
+
+    if LCondition.Activation = npaManual then
+    begin
+      Exit(AFrame.Selection.Matches(ARule.Presentation));
+    end;
+
+    if not LCondition.Container.Defined then
+    begin
+      Exit(LCondition.Viewport.Matches(AFrame.Width, AFrame.Height));
+    end;
+    Result := False;
+
+    if AMeasurements = nil then
+    begin
+      Exit;
+    end;
+    for LIndex := High(LAncestors) downto 0 do
+    begin
+      LContainer := LAncestors[LIndex].QueryContainer;
+
+      if LContainer.Defined and (LContainer.Name = LCondition.Container.Name) and
+        NyxContainerEligible(LAncestors[LIndex].ContainerContainment, LCondition.Viewport) then
+      begin
+        Result := AMeasurements.TrySize(LAncestors[LIndex].ID, LWidth, LHeight);
+
+        if Result then
+        begin
+          Result := LCondition.Viewport.Matches(LWidth, LHeight);
+        end;
+        Exit;
+      end;
+    end;
+  end;
+
+  function SelectedComponent(ANode: TNyxNode): TNyxComponentRef;
+  var
+    LPhase: Integer;
+    LIndex: Integer;
+    LRulePhase: Integer;
+    LRule: TNyxContentRule;
+    LMatches: Boolean;
+  begin
+    Result := ANode.DefaultComponent;
+
+    if not ANode.HasContent then
+    begin
+      Exit;
+    end;
+    { Ordinary defaults, automatic conditions, then manual choice; repeat with
+      target-specific rules last. Last matching rule in each phase wins. This
+      matches scalar presentation precedence without mutating the source tree. }
+    for LPhase := 0 to 5 do
+    begin
+      for LIndex := 0 to ANode.Content.Count - 1 do
+      begin
+        LRule := ANode.Content.Rule(LIndex);
+        LRulePhase := 0;
+        LMatches := True;
+
+        if LRule.Scope <> ncsDefault then
+        begin
+          LRulePhase := 1;
+          LMatches := AFrame.FSpecified;
+
+          if LMatches and (LRule.Scope = ncsViewport) then
+          begin
+            LMatches := LRule.Viewport.Matches(AFrame.Width, AFrame.Height);
+          end
+          else if LMatches then
+          begin
+            LMatches := NamedMatches(LRule);
+
+            if LPresentations.Definition(LRule.Presentation).Activation = npaManual then
+            begin
+              LRulePhase := 2;
+            end;
+          end;
+        end;
+
+        if LRule.Platform <> npfAny then
+        begin
+          Inc(LRulePhase, 3);
+          LMatches := LMatches and AFrame.FSpecified and (LRule.Platform = AFrame.Platform);
+        end;
+
+        if LMatches and (LRulePhase = LPhase) then
+        begin
+          Result := LRule.Component;
+        end;
+      end;
+    end;
+  end;
 
   function Expand(ANode: TNyxNode; const APrefix, ADesignID: TNyxText;
     ADepth: Integer; const ARootKind: TNyxText = '';
-    const AInstanceScope: TNyxText = ''): TNyxNode; forward;
+    const AInstanceScope: TNyxText = ''; const AQueryContainer: TNyxText = #0;
+    const AContainment: TNyxText = #0): TNyxNode; forward;
+
+  function ExpandInParent(ANode, AParent: TNyxNode; const APrefix: TNyxText;
+    ADepth: Integer; const AInstanceScope: TNyxText): TNyxNode;
+  var
+    LPath: array of TNyxNode;
+    LAncestor: TNyxNode;
+    LIndex: Integer;
+    LOriginalCount: Integer;
+  begin
+    { Override payloads expand after their inherited tree has been attached
+      internally. Add its exact root-to-slot ancestry to the existing outer
+      stack; all links are borrowed only during this recursive call. }
+    LOriginalCount := Length(LAncestors);
+    LPath := nil;
+    LAncestor := AParent;
+    while LAncestor <> nil do
+    begin
+      SetLength(LPath, Length(LPath) + 1);
+      LPath[High(LPath)] := LAncestor;
+      LAncestor := LAncestor.Parent;
+    end;
+    try
+      for LIndex := High(LPath) downto 0 do
+      begin
+        SetLength(LAncestors, Length(LAncestors) + 1);
+        LAncestors[High(LAncestors)] := LPath[LIndex];
+      end;
+      Result := Expand(ANode, APrefix, '', ADepth, '', AInstanceScope);
+    finally
+      SetLength(LAncestors, LOriginalCount);
+    end;
+  end;
 
   procedure ApplyOverrides(AReference, ARuntime: TNyxNode;
     const APrefix: TNyxText; ADepth: Integer);
@@ -319,7 +523,8 @@ var
           LParent.Remove(LPart);
           Continue;
         end;
-        LPayload := Expand(LRule.Children[0], APrefix, '', ADepth + 1, '', ARuntime.InstanceScopeID);
+        LPayload := ExpandInParent(LRule.Children[0], LParent, APrefix,
+          ADepth + 1, ARuntime.InstanceScopeID);
         try
           LPayload.SetProp('part', LPart.Prop('part'));
           LParent.Insert(LPosition, LPayload);
@@ -334,7 +539,8 @@ var
       begin
         for LChildIndex := 0 to LRule.Count - 1 do
         begin
-          LPayload := Expand(LRule.Children[LChildIndex], APrefix, '', ADepth + 1, '', ARuntime.InstanceScopeID);
+          LPayload := ExpandInParent(LRule.Children[LChildIndex], LPart, APrefix,
+            ADepth + 1, ARuntime.InstanceScopeID);
           try
 
             if LMode = 'prepend' then
@@ -374,7 +580,8 @@ var
   end;
 
   function Expand(ANode: TNyxNode; const APrefix, ADesignID: TNyxText;
-    ADepth: Integer; const ARootKind, AInstanceScope: TNyxText): TNyxNode;
+    ADepth: Integer; const ARootKind, AInstanceScope, AQueryContainer,
+    AContainment: TNyxText): TNyxNode;
   var
     LIndex: Integer;
     LDefinition: TNyxNode;
@@ -382,6 +589,8 @@ var
     LKey: TNyxText;
     LRootKind: TNyxText;
     LScope: TNyxText;
+    LQueryContainer: TNyxText;
+    LContainment: TNyxText;
   begin
     Inc(LCount);
 
@@ -398,7 +607,7 @@ var
 
     if (ANode.Kind = 'component') or (ANode.ProjectionKind = 'component') then
     begin
-      LDefinition := ADocument.FindComponent(ANode.Prop('component'));
+      LDefinition := ADocument.FindComponent(SelectedComponent(ANode).Name);
 
       if LDefinition = nil then
       begin
@@ -411,8 +620,21 @@ var
         LRootKind := ANode.Kind;
       end;
       LScope := NyxQualifiedID(APrefix, ANode.ID);
+      LQueryContainer := AQueryContainer;
+      LContainment := AContainment;
+
+      if LQueryContainer = #0 then
+      begin
+        LQueryContainer := ANode.StoredProp('query-container', #0);
+      end;
+
+      if LContainment = #0 then
+      begin
+        LContainment := ANode.StoredProp('container-containment', #0);
+      end;
       Result := Expand(LDefinition, LScope, LDesignID,
-        ADepth + 1, LRootKind, NyxQualifiedID(LScope, LDefinition.ID));
+        ADepth + 1, LRootKind, NyxQualifiedID(LScope, LDefinition.ID),
+        LQueryContainer, LContainment);
       try
         { Instance overrides follow the definition recipe. Identity/reference
           metadata is excluded so it cannot corrupt selection or recurse again. }
@@ -452,6 +674,19 @@ var
       NyxQualifiedID(APrefix, ANode.ID), LDesignID);
     try
       Result.Props.Assign(ANode.Props);
+      { Instance publisher overrides must be visible before nested recipe
+        selection, including chains of derived reference definitions. NUL is a
+        private missing-field sentinel, distinct from an explicit empty reset. }
+
+      if AQueryContainer <> #0 then
+      begin
+        Result.SetProp('query-container', AQueryContainer);
+      end;
+
+      if AContainment <> #0 then
+      begin
+        Result.SetProp('container-containment', AContainment);
+      end;
       Result.Extensions.Assign(ANode.Extensions);
       LScope := AInstanceScope;
 
@@ -477,9 +712,18 @@ var
         Result.SetProp('projection-kind', ANode.ProjectionKind);
       end;
       Result.SetProp('design-id', LDesignID);
-      for LIndex := 0 to ANode.Count - 1 do
-      begin
-        Result.Add(Expand(ANode.Children[LIndex], APrefix, ADesignID, ADepth + 1, '', LScope));
+      { Parent pointers are attached after recursive expansion. Keep an explicit
+        composer-owned ancestry stack so nested instances can query the correct
+        qualified publisher before their root is attached. }
+      SetLength(LAncestors, Length(LAncestors) + 1);
+      LAncestors[High(LAncestors)] := Result;
+      try
+        for LIndex := 0 to ANode.Count - 1 do
+        begin
+          Result.Add(Expand(ANode.Children[LIndex], APrefix, ADesignID, ADepth + 1, '', LScope));
+        end;
+      finally
+        SetLength(LAncestors, Length(LAncestors) - 1);
       end;
     except
       Result.Free;
@@ -501,10 +745,13 @@ begin
     raise ENyxModel.Create('View root must belong to its source design document');
   end;
   ADocument.Validate;
+  LPresentations := ADocument.Presentations.Snapshot;
+  AFrame.Selection.Validate(LPresentations);
   LCount := 0;
+  LAncestors := nil;
   Result := Expand(ARoot, '', '', 0);
   try
-    Result.BindPresentations(ADocument.Presentations.Snapshot);
+    Result.BindPresentations(LPresentations);
     PrepareNyxBehavior(Result);
   except
     Result.Free;
@@ -519,21 +766,43 @@ var
 
   procedure CollectDefinitions(ANode: TNyxNode);
   var
-    LDefinition: TNyxNode;
     LIndex: Integer;
-  begin
+    LRuleIndex: Integer;
 
-    if (ANode.Kind = 'component') or (ANode.ProjectionKind = 'component') then
+    procedure CollectDefinition(const AName: TNyxText);
+    var
+      LDefinition: TNyxNode;
     begin
-      LDefinition := ADocument.FindComponent(ANode.Prop('component'));
-      { Source validation has already ruled out missing definitions and cycles.
-        Adding each definition before following its references also deduplicates
-        shared dependencies. Authored IDs need no preview prefix or truncation. }
+      LDefinition := ADocument.FindComponent(AName);
 
       if LCandidate.FindComponent(LDefinition.ID) = nil then
       begin
         LCandidate.AddComponent(LDefinition.Clone);
         CollectDefinitions(LDefinition);
+      end;
+    end;
+
+  begin
+
+    if (ANode.Kind = 'component') or (ANode.ProjectionKind = 'component') then
+    begin
+      { Source validation has already ruled out missing definitions and cycles.
+        Adding each definition before following its references also deduplicates
+        shared dependencies. Authored IDs need no preview prefix or truncation. }
+
+      CollectDefinition(ANode.DefaultComponent.Name);
+
+      if ANode.Prop('component') <> '' then
+      begin
+        CollectDefinition(ANode.Prop('component'));
+      end;
+
+      if ANode.HasContent then
+      begin
+        for LRuleIndex := 0 to ANode.Content.Count - 1 do
+        begin
+          CollectDefinition(ANode.Content.Rule(LRuleIndex).Component.Name);
+        end;
       end;
     end;
     for LIndex := 0 to ANode.Count - 1 do

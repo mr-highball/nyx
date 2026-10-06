@@ -28,7 +28,7 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.catalog, nyx.designer.resize,
-  nyx.responsive, nyx.presentations, nyx.designer.move;
+  nyx.responsive, nyx.presentations, nyx.content, nyx.root.types, nyx.designer.move;
 
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
@@ -37,7 +37,19 @@ type
   TNyxDesignOperation = (doCreate, doUpdate, doMove, doDelete, doTitle, doTokens,
     doDerive, doInstance, doOverride, doInherit, doPlace, doPlaceNew,
     doPresentationDefine, doPresentationRemove, doPresentationUse, doPresentationReset,
-    doPresentationSet);
+    doPresentationSet, doContentSet);
+
+  { Whole copied recipe registry for one exact authored instance. One grouped
+    patch can define recipes/presentations and update this choice atomically.
+    It retains immutable data, never a caller's mutable facade or document. }
+  TNyxContentEdit = record
+  private
+    FControl: TNyxControlRef;
+    FValue: TNyxDataValue;
+  public
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxContentEdit; static;
+  end;
 
   { Copied editor intent. Definition changes affect every referencing control;
     use adds one typed override initialized from the control's current authored
@@ -150,6 +162,11 @@ type
   type; unknown fields/operations fail. IDs and custom kind names are user data.
   Schema/property/document admission also runs on the complete detached result. }
 function ReadNyxDesignPatch(const AOperations: TNyxDataValue): INyxDesignPatch;
+{ Nil content clears typed choices, retaining a stored Component reference if
+  present. Candidate admission still requires an ordinary recipe. Invalid
+  registries/control references refuse before a patch is published. }
+function NyxSetContent(const AControl: TNyxControlRef;
+  const AContent: INyxContent): TNyxContentEdit;
 { One typed command can be grouped with other commands through the same patch
   engine. Undefined references/unsupported overrides refuse candidate admission. }
 function NyxDefinePresentation(const AReference: TNyxPresentationRef;
@@ -460,6 +477,7 @@ type
     Identities: array of TNyxIdentityAssignment;
     Placement: TNyxPlacement;
     Presentation: TNyxPresentationEdit;
+    Content: TNyxContentEdit;
   end;
 
   TDesignPatch = class(TInterfacedObject, INyxDesignPatch)
@@ -876,6 +894,46 @@ begin
   end;
 end;
 
+function NyxSetContent(const AControl: TNyxControlRef;
+  const AContent: INyxContent): TNyxContentEdit;
+var
+  LContent: INyxContent;
+begin
+  NyxRoot(nrReusable, AControl.ID);
+  Result := Default(TNyxContentEdit);
+  Result.FControl := AControl;
+  LContent := NewNyxContent;
+
+  if AContent <> nil then
+  begin
+    LContent := NyxContentFromData(AContent.ToData);
+  end;
+  Result.FValue := LContent.ToData;
+end;
+
+function TNyxContentEdit.ToData: TNyxDataValue;
+begin
+
+  if not FValue.Defined then
+  begin
+    raise ENyxModel.Create('Construct a content edit before encoding it');
+  end;
+  Result := NyxObject([NyxField('op', NyxData('content-set')),
+    NyxField('id', NyxData(FControl.ID)), NyxField('content', FValue)]);
+end;
+
+class function TNyxContentEdit.FromData(const AData: TNyxDataValue): TNyxContentEdit;
+begin
+  CheckFields(AData, '|op|id|content|');
+
+  if AData.Field('op').AsText <> 'content-set' then
+  begin
+    raise ENyxModel.Create('Unknown content edit');
+  end;
+  Result := NyxSetContent(NyxControl(AData.Field('id').AsText),
+    NyxContentFromData(AData.Field('content')));
+end;
+
 class function TNyxPresentationEdit.FromData(const AData: TNyxDataValue): TNyxPresentationEdit;
 var
   LName: TNyxText;
@@ -1011,7 +1069,12 @@ begin
     LOperation.Properties := NyxObject([]);
     LName := LWire.Field('op').AsText;
 
-    if Copy(LName, 1, 13) = 'presentation-' then
+    if LName = 'content-set' then
+    begin
+      LOperation.Content := TNyxContentEdit.FromData(LWire);
+      LOperation.Operation := doContentSet;
+    end
+    else if Copy(LName, 1, 13) = 'presentation-' then
     begin
       LOperation.Presentation := TNyxPresentationEdit.FromData(LWire);
       LOperation.Operation := LOperation.Presentation.FOperation;
@@ -1671,6 +1734,11 @@ begin
             end;
           end;
         doTitle: Result.Title := LOperation.ID;
+        doContentSet:
+          begin
+            LNode := RequireNode(Result, LOperation.Content.FControl.ID);
+            LNode.SetContent(NyxContentFromData(LOperation.Content.FValue));
+          end;
         doTokens: SetNyxDesignTokens(Result, LOperation.Properties);
         doPresentationDefine:
           begin
