@@ -9371,3 +9371,14 @@ owners unchanged. The original hard prerequisites remain unaccepted. Container
 scalar scopes are integrated; anonymous container convenience, alternate child
 structures, vertical writing, other widgetsets/DPI, hardware/IME/assistive input
 and complete performance/editor/accessibility/delivery remain open. End this packet.
+
+Container implementation checkpoint `f3db090ef3f9be112bfeaaeabd8c4af64e79b182`
+is pushed to `origin/hello-nyx` and verified by exact remote SHA. Managed contract
+regeneration is byte-identical across all five includes (77 kind contracts and
+four facades); the default catalog reference remains 76 kinds. Final observation
+retains all seven migrated accepted pairs/selections/views exactly. The container
+demo is separate, and all fifteen current service identities remain unchanged
+since its reviewed main-server replacement. `.local/container-refresh-20261006/`
+owns the final remote receipt. The original goal remains active; no full task or
+milestone is complete. Continue with the next declared ownership/publication gate
+and outstanding original prerequisites, preserving all current projects.
