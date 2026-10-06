@@ -9230,6 +9230,12 @@ immutable build statuses and independent **Flow workshop** project handle. It
 supersedes only Studio in the move overlay; the earlier worker/executable/helper/
 runtime/HTML closure remains installed. No old refresh script should be rerun.
 
+Implementation checkpoint `e7e7904a33a67660aad6686996bbbd9a294a7aeb` is pushed to
+`origin/hello-nyx` with exact remote HEAD verification. Its private overlay manifest
+records that implementation, the unchanged worker and previous overlay chain;
+`.local/flow-assets-20261006/remote-checkpoint.json` owns the remote receipt. Finish
+this packet at the integrated result and preserve all seven projects and services.
+
 This integrated packet is ended. Authoring no-closure advances **20→21** once;
 workflow **9**, codegen **28**, renderer **3**, delivery **1** remain. No original
 criterion or task closes. Stop local flow-policy/fixture expansion; return to
