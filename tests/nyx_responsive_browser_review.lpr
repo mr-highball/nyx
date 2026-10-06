@@ -29,7 +29,8 @@ uses
 type
   { Closed review choices are typed internally; only the command-line boundary
     accepts their advertised names. Unknown names refuse before browser startup. }
-  TResponsiveReviewKind = (rrControls, rrStudio, rrSourceEditor, rrContracts, rrResizeContracts);
+  TResponsiveReviewKind = (rrControls, rrStudio, rrSourceEditor, rrContracts,
+    rrResizeContracts, rrTextLookup, rrLayout);
   { This owner only observes bounded Pascal-fixture results and captures the
     actual rendered page. It never evaluates scripts, edits a design or uses
     accelerated clocks; ResizeObserver delivery occurs on ordinary browser frames. }
@@ -43,7 +44,8 @@ type
 procedure TResponsiveReview.Run(AKind: TResponsiveReviewKind);
 const
   CNames: array[TResponsiveReviewKind] of TNyxText =
-    ('controls', 'studio', 'source-editor', 'contracts', 'resize-contracts');
+    ('controls', 'studio', 'source-editor', 'contracts', 'resize-contracts',
+      'text-lookup', 'layout');
 var
   LStarted: QWord;
   LMarker: TNyxText;
@@ -72,11 +74,17 @@ begin
     LChecksName := 'data-nyx-responsive-' + LSuffix + '-checks';
   end;
 
-  if AKind = rrResizeContracts then
+  if AKind in [rrResizeContracts, rrTextLookup] then
   begin
     LResultName := 'data-result';
     LChecksName := 'data-checks';
     LErrorName := 'data-error';
+  end
+  else if AKind = rrLayout then
+  begin
+    LResultName := 'data-layout-tests';
+    LChecksName := 'data-layout-checks';
+    LErrorName := 'data-layout-error';
   end
   else if AKind = rrContracts then
   begin
@@ -171,6 +179,14 @@ begin
       else if ParamStr(3) = 'resize-contracts' then
       begin
         LKind := rrResizeContracts;
+      end
+      else if ParamStr(3) = 'text-lookup' then
+      begin
+        LKind := rrTextLookup;
+      end
+      else if ParamStr(3) = 'layout' then
+      begin
+        LKind := rrLayout;
       end
       else
       begin

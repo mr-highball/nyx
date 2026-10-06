@@ -95,3 +95,22 @@ grade, scope or credit is weakened. No-closure count advances 2→3. Reassessmen
 changes the next action back to original codegen criterion 3's detached
 visual/structural reconciliation and comfortable source editing. WORK.md records
 failed attempts, final commands/evidence and the unchanged browser/service block.
+
+## Allocation cost in ordinary Studio — 2026-10-06
+
+The unchanged 30-check native Inspector/worker/Undo journey now allocates
+23,493,324 blocks versus 78,252,212 before the change, with zero leaks. Exact
+property-name lookup avoids temporary candidate names; no persistent measurement
+cache or new tree ownership is introduced. Scalar measurement instrumentation is
+opt-in. Actual native layout controls pass 2,169 and container inputs pass 27;
+browser counterparts pass 2,214 desktop / 2,215 exact-390 and 27 respectively.
+The unchanged browser Studio journey passes 74 at each viewport.
+
+Criteria 1/2 advance in this bounded performance prerequisite. Complete native
+breadth, widgetset/DPI, accessibility and release performance remain open; neither
+full original criterion is accepted. No-closure advances 3→4 once for the integrated
+result. Return to the authoring ownership/publication gate for structural
+presentations while retaining the original parity and remaining prerequisite
+requirements. [WORK.md](../WORK.md#allocation-free-property-lookup--2026-10-06)
+records the rejected cache experiment, existing generation regression and exact
+qualification/deployment limits.

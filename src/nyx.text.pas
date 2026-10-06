@@ -75,6 +75,10 @@ type
     procedure Clear;
     procedure Assign(ASource: TNyxStrings);
     function IndexOf(const AValue: TNyxText): Integer;
+    { Exact first name match, without allocating candidate name substrings for
+      ordinary nonempty names. Equality compares native UTF-8 bytes / browser
+      UTF-16 units; it never normalizes Unicode, case or embedded NUL. Empty
+      names retain Names semantics, including items without a separator. }
     function IndexOfName(const AName: TNyxText): Integer;
     { Join admitted items without an extra trailing separator. Native allocation
       is sized once; browser uses its standard array join. Embedded NUL and
@@ -421,11 +425,58 @@ end;
 function TNyxStrings.IndexOfName(const AName: TNyxText): Integer;
 var
   LIndex: Integer;
+  LNameLength: Integer;
+  LUnit: Integer;
+  LSeparator: Integer;
 begin
+  LNameLength := Length(AName);
+
+  if LNameLength = 0 then
+  begin
+    { Names returns empty both for an empty prefix and for an unseparated
+      item. Preserve that existing behavior rather than interpreting every
+      item as a name/value pair. This uncommon path needs no name copy either. }
+    for LIndex := 0 to FCount - 1 do
+    begin
+      LSeparator := Pos('=', FItems[LIndex]);
+
+      if (LSeparator = 0) or (LSeparator = 1) then
+      begin
+        Exit(LIndex);
+      end;
+    end;
+    Exit(-1);
+  end;
+
+  if Pos('=', AName) > 0 then
+  begin
+    { A name ends at the first separator and can never contain one. }
+    Exit(-1);
+  end;
   for LIndex := 0 to FCount - 1 do
   begin
 
-    if GetName(LIndex) = AName then
+    if Length(FItems[LIndex]) <= LNameLength then
+    begin
+      Continue;
+    end;
+
+    if FItems[LIndex][LNameLength + 1] <> '=' then
+    begin
+      Continue;
+    end;
+    LUnit := 1;
+    while LUnit <= LNameLength do
+    begin
+
+      if FItems[LIndex][LUnit] <> AName[LUnit] then
+      begin
+        Break;
+      end;
+      Inc(LUnit);
+    end;
+
+    if LUnit > LNameLength then
     begin
       Exit(LIndex);
     end;

@@ -44,3 +44,10 @@ See [split guide](../../docs/split-views.md) and
 [delivery evidence](../../WORK.md#resizable-workspaces-and-interaction-breadth--2026-10-04).
 Native Studio remains open under its original owner. This task does not close
 general accessibility, platform parity or large-project source performance.
+
+Maintenance qualification (2026-10-06): the viewport-key generator probe added
+after this task's acceptance was clearing a successfully decoded static platform
+scope. Disjoint namespace probes now preserve it. The original 141 split/platform
+checks pass again under both native compilers; actual layout-policy browser
+reconstruction also passes. This restores accepted behavior rather than adding
+credit or changing the original criteria. WORK.md owns the reproduction and fix.

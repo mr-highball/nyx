@@ -250,3 +250,25 @@ evidence and the browser execution gate. Giant native inputs/custom faces and
 large split panes explicitly require logical adapters. Non-panel client offsets,
 logical resize events, widgetset/DPI metrics and complete parity remain under
 the original renderer owners; this API does not accept those untested outcomes.
+
+Native measurement can be inspected with the optional `NYX_LCL_LAYOUT_PROFILE`
+compiler definition. It logs control counts, width/height traversals, row plans
+and elapsed milliseconds, with no authored text or retained document references.
+Ordinary builds contain neither those counters nor measurement clocks.
+
+`TNyxStrings.IndexOfName` compares exact name prefixes in their original storage
+units, without creating a name substring for every candidate property. UTF-8
+bytes natively and UTF-16 units in the browser preserve case, supplementary text,
+embedded NUL, duplicate ordering and the existing empty-name behavior. There is
+no persistent property/measurement cache to invalidate after edits or resizes.
+
+To reproduce the checked native Studio workload, first export the maintained
+manual-presentation companion through semantic MCP, then run
+`tools/build.ps1 -Target native-measurement -ResponsiveSourceDirectory <export>`.
+The target exercises the unchanged ordinary Inspector/worker/history journey,
+runs exact text/ownership fixtures with both native compilers and stages their
+browser counterpart. Execute `text-lookup.html` through an admitted HTTP host;
+compilation alone does not qualify browser behavior. The current allocation
+comparison and actual target/editor evidence are recorded in
+[WORK.md](../WORK.md#allocation-free-property-lookup--2026-10-06). Heap-traced
+allocation counts are cumulative; they are not peak memory or release latency.

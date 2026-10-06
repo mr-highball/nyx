@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1465,6 +1465,54 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxCollectionAgentHost") -Destination $nyxCollectionAgentBrowser
     }
     Write-Host 'Semantic collection consumers staged; browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'native-measurement') {
+    # Preserve the exact manual-presentation MCP companion used by the ordinary
+    # 30-check Studio journey. Pascal owns counters, interaction assertions and
+    # heap accounting; this branch only compiles/runs/stages platform artifacts.
+    if (-not $ResponsiveSourceDirectory) {
+      throw 'Supply -ResponsiveSourceDirectory with the exported manual-presentation companion'
+    }
+    $nyxMeasurementSource = [IO.Path]::GetFullPath($ResponsiveSourceDirectory)
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxMeasurementSource 'nyx.generated.view.pas'))) {
+      throw 'The exact semantic measurement companion is missing'
+    }
+    $nyxMeasurementRoot = Join-Path $nyxRoot 'build/native-measurement/maintained'
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxMeasurementPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxMeasurementChecked = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh', '-Fusrc')
+    foreach ($nyxMeasurementCompiler in @(@($nyxFpc, 'stable'), @($nyxLclFpc, 'matched'))) {
+      $nyxMeasurementUnits = Join-Path $nyxMeasurementRoot $nyxMeasurementCompiler[1]
+      New-Item -ItemType Directory -Force $nyxMeasurementUnits | Out-Null
+      Invoke-NyxCompiler $nyxMeasurementCompiler[0] ($nyxMeasurementChecked + @(
+        "-FU$nyxMeasurementUnits", "-FE$nyxMeasurementUnits", 'tests/nyx_text_lookup_tests.lpr'))
+      & (Join-Path $nyxMeasurementUnits 'nyx_text_lookup_tests.exe')
+      if ($LASTEXITCODE -ne 0) { throw 'Exact portable text lookup failed' }
+    }
+    $nyxMeasurementNative = Join-Path $nyxMeasurementRoot 'studio'
+    $nyxMeasurementProjects = Join-Path $nyxMeasurementRoot 'projects'
+    New-Item -ItemType Directory -Force $nyxMeasurementNative, $nyxMeasurementProjects | Out-Null
+    Invoke-NyxCompiler $nyxLclFpc ($nyxMeasurementChecked + @('-Fustudio', '-Futests',
+      '-dNYX_STUDIO_PROFILE', '-dNYX_LCL_LAYOUT_PROFILE',
+      '-dNYX_PRESENTATION_CONSUMER', '-dNYX_MANUAL_CONSUMER', "-Fu$nyxMeasurementSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxMeasurementPlatform", "-Fu$nyxLazarus/lcl/units/$nyxMeasurementPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxMeasurementPlatform", "-Fu$nyxLazarus/packager/units/$nyxMeasurementPlatform",
+      "-FU$nyxMeasurementNative", "-FE$nyxMeasurementNative", 'tests/nyx_responsive_studio.lpr'))
+    & (Join-Path $nyxMeasurementNative 'nyx_responsive_studio.exe') $nyxMeasurementProjects (Join-Path $nyxMeasurementSource 'nyx.generated.view.pas')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native measurement/editor journey failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxMeasurementBrowser = Join-Path $nyxMeasurementRoot 'web'
+    if ($BrowserOutput) { $nyxMeasurementBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxMeasurementBrowser | Out-Null
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Jirtl.js',
+      "-FE$nyxMeasurementBrowser", 'tests/nyx_text_lookup_tests.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxMeasurementBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/text-lookup.html') -Destination $nyxMeasurementBrowser
+    Write-Host 'Browser lookup execution needs an independently admitted HTTP fixture host.'
     exit 0
   }
 

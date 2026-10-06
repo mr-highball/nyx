@@ -377,7 +377,9 @@ begin
     LDecoded := LWorkspace.Candidate(LOwned, LSource);
     try
       Check(TNyxCodec.Encode(LDecoded) = TNyxCodec.Encode(LOwned),
-        'Studio source admission evaluates the fluent value policy without executing code');
+        'Studio source admission evaluates the fluent value policy without executing code' +
+        #10 + 'Expected: ' + TNyxCodec.Encode(LOwned) +
+        #10 + 'Actual: ' + TNyxCodec.Encode(LDecoded));
     finally
       LDecoded.Free;
     end;

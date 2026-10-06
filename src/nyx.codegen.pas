@@ -1469,10 +1469,12 @@ var
       if TryNyxPlatformKey(LWireKey, LPlatform, LAttribute) then
       begin
         LKey := NyxAttributeName(LAttribute);
-      end;
-
-      if TryNyxViewportKey(LWireKey, LViewport, LPlatform, LAttribute) then
+      end
+      else if TryNyxViewportKey(LWireKey, LViewport, LPlatform, LAttribute) then
       begin
+        { The wire namespaces are disjoint. A failed viewport probe initializes
+          its out parameters; probing after a successful platform decode would
+          discard that platform and generate its value into the base scope. }
         LKey := NyxAttributeName(LAttribute);
       end;
 

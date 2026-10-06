@@ -3,6 +3,20 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current prerequisite result (2026-10-06): exact property-name lookup removes
+temporary candidate strings. The unchanged 30-check native Studio journey uses
+about 70% fewer allocations / 57% fewer cumulative allocated bytes, with zero
+leaks. Browser/LCL control and ordinary Studio counterparts pass; authenticated
+MCP builds compile identical typed static-platform source on both outputs. This
+also restores the accepted split/platform generation contract after a later
+viewport probe regression. The main LAN release and all eight projects remain
+untouched; these changes are qualified in isolated artifacts and await a grouped
+release. Container-aware presentations remain the current deployed authoring
+result. Renderer no-closure advances 3→4 once; authoring 22, workflow 9, codegen
+28 and delivery 1 remain. No full criterion closes. Return to the structural
+presentation ownership/publication gate and the remaining original prerequisites.
+See [evidence](WORK.md#allocation-free-property-lookup--2026-10-06).
+
 Latest deployment follow-through (2026-10-05): the user's explicit LAN update now
 serves current checked server/Studio/worker bytes at the existing HTTP endpoint,
 while MCP stays loopback. Exact process/listener/artifact checks, LAN-address HTTP
@@ -25,7 +39,7 @@ execution. Codegen criterion 3 remains open at no-closure 28; workflow 9, render
 3, authoring 11 and delivery 1 remain. No full criterion, goal percentage or DONE
 claim follows. See [evidence](WORK.md#reviewable-release-refresh--2026-10-05).
 
-Current independent authoring packet: typed flow placement consumes exact copied
+Preceding independent authoring packet: typed flow placement consumes exact copied
 physical/logical target geometry and realized row/column axes. Ordinary Studio
 offers automatic or explicit placement, inert both-target insertion paint and a
 compact-accessible Nyx drag source. Release uses one paired Undo and refuses a

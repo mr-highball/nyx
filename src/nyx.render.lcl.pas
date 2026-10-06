@@ -230,6 +230,13 @@ type
     FPanel: TNyxLogicalScrollBox;
     FVirtualLayout: Boolean;
     FLayouting: Boolean;
+    {$ifdef NYX_LCL_LAYOUT_PROFILE}
+    { Optional checked-workload counters; normal builds have no measurement
+      logging or clocks. Counts describe traversals, never authored user text. }
+    FMeasureCalls: QWord;
+    FNaturalCalls: QWord;
+    FRowPlanCalls: QWord;
+    {$endif}
     FProjecting: Boolean;
     FBindings: array of TNyxLCLBinding;
     FFactoryKinds: array of TNyxText;
@@ -1411,6 +1418,7 @@ end;
 
 function TNyxLCLRenderer.NaturalWidth(ANode: TNyxNode; AAvailable: Integer): Integer;
 begin
+  {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FNaturalCalls);{$endif}
   Result := NyxNodeSizeConstraints(ANode).WidthRange.Clamp(
     NaturalContentWidth(ANode, AAvailable));
 end;
@@ -1581,6 +1589,7 @@ var
   LWrap: Boolean;
   LJustification: TNyxJustification;
 begin
+  {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FRowPlanCalls);{$endif}
   LInner := Max(0, AWidth - 2 * Metric(ANode, 'padding', 0));
   LGap := Metric(ANode, 'gap', 12);
   SetLength(LItems, ANode.Count);
@@ -1674,6 +1683,7 @@ end;
 function TNyxLCLRenderer.Measure(ANode: TNyxNode; AWidth: Integer;
   AAllocatedWidth: Boolean): Integer;
 begin
+  {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FMeasureCalls);{$endif}
 
   if ANode.Prop('visible', 'true') = 'false' then
   begin
@@ -2917,6 +2927,7 @@ var
   LClientHeight: Integer;
   LChild: Integer;
   LContentHeight: Double;
+  {$ifdef NYX_LCL_LAYOUT_PROFILE}LMeasureStarted: QWord;{$endif}
 begin
 
   if FLayouting or FProjecting then
@@ -2940,6 +2951,12 @@ begin
       retaining the same controls and their focus/editing state. }
     FPanel.DisableAutoSizing;
     FLayouting := True;
+    {$ifdef NYX_LCL_LAYOUT_PROFILE}
+    FMeasureCalls := 0;
+    FNaturalCalls := 0;
+    FRowPlanCalls := 0;
+    LMeasureStarted := GetTickCount64;
+    {$endif}
     try
       { Design canvases always retain their logical frame. Runtime views switch
         when any face/position could exceed the native message coordinate domain,
@@ -3034,6 +3051,11 @@ begin
       end;
     finally
       FLayouting := False;
+      {$ifdef NYX_LCL_LAYOUT_PROFILE}
+      WriteLn('PROFILE native layout: nodes=', Length(FBindings),
+        ' height=', FMeasureCalls, ' width=', FNaturalCalls,
+        ' rows=', FRowPlanCalls, ' milliseconds=', GetTickCount64 - LMeasureStarted);
+      {$endif}
       FPanel.EnableAutoSizing;
     end;
     UpdateSelection;

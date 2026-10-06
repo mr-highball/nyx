@@ -7,6 +7,41 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current prerequisite result: native measurement cost — 2026-10-06
+
+Original authoring criterion 1 still needs alternate view structures with explicit
+ownership/publication and retained state. Its parity prerequisite depends on the
+open [LCL renderer](TODO/NS-2_lcl-renderer_01.md), whose model/catalog blockers are
+accepted. The checked 30-step native Studio journey allocated 78,152,553 blocks /
+1,908,781,421 cumulative bytes with zero leaks. That is allocation churn, not peak
+memory or release latency. Measure this existing resize/interaction prerequisite
+before increasing structural tree depth; keep the full authoring return path.
+
+Gate: use identical MCP-authored accepted source and the unchanged ordinary native
+Studio journey; count intrinsic traversals, compare the same checked workload and
+toolchain, and preserve exact layout, retained input, resize, presentation changes
+and teardown. Any reuse must have an explicit bounded lifetime and cannot persist
+across model/widget changes. Qualify corresponding browser controls, without
+claiming that a native optimization proves browser performance. Current LAN
+service, all project pairs and fourteen auxiliary identities remain untouched.
+The [qualified result](#allocation-free-property-lookup--2026-10-06) now removes
+candidate-name allocations, without a persistent measurement cache. The unchanged
+30-check native journey allocates 23,493,324 blocks / ~816 MB cumulatively versus
+78,252,212 / ~1.91 GB in its reproduced baseline, with zero leaks. Exact text checks
+pass 133 per compiler/browser; native layout 2,169 / container 27, browser layout
+2,214 desktop / 2,215 exact-390 / container 27, and actual browser Studio 74 each.
+Static platform generation is also restored after an existing false viewport-key
+probe regression; original split/platform 141 and presentation 72 pass per native
+compiler. Twenty tools authenticate on an isolated current backend, whose MCP
+application jobs compile identical 83-line/1,690-byte typed platform source.
+
+The implementation is staged and qualified; the current main LAN service and all
+eight projects are untouched. No grouped main release is claimed. Renderer
+no-closure advances 3→4 once; authoring 22, workflow 9, codegen 28 and delivery 1
+remain. No original full criterion closes. End local lookup/cache expansion and
+return to the original structural ownership/publication gate and remaining
+parity/accessibility/performance/editor/delivery prerequisites.
+
 ## Current integrated result: container-aware presentations — 2026-10-06
 
 The [container packet](#container-aware-presentations--2026-10-06) adds typed named
@@ -9382,3 +9417,100 @@ since its reviewed main-server replacement. `.local/container-refresh-20261006/`
 owns the final remote receipt. The original goal remains active; no full task or
 milestone is complete. Continue with the next declared ownership/publication gate
 and outstanding original prerequisites, preserving all current projects.
+
+## Allocation-free property lookup — 2026-10-06
+
+This packet serves the available LCL renderer prerequisite before adding alternate
+presentation structures. Its original model/catalog blockers are accepted; native
+interaction/resize and complete parity criteria remain the acceptance owners.
+The existing deeply composed Studio shell was retained, including every control,
+ordinary worker/Inspector action, live memo draft, presentation transition and
+paired Undo. No smaller document or relaxed assertion supplies the comparison.
+
+Optional `NYX_LCL_LAYOUT_PROFILE` measures only fixed traversal counts and time.
+An initial bounded recursive measurement cache produced zero reuse in the actual
+journey, increased allocations slightly and was removed completely. The cause
+addressed instead is `TNyxStrings.IndexOfName`: old lookup copied each candidate
+name through `Names`; new lookup compares exact storage-unit prefixes without
+allocating them. First duplicates, case, normalization, supplementary characters,
+NUL, unseparated items, empty names and large separator offsets retain their public
+semantics. No persistent cache, tree reference or ownership rule is added.
+
+An unrelated original layout-policy assertion also failed against the old lookup.
+Its new bounded expected/actual diagnostic showed the native-only wrapping value
+being generated into the base scope. The successful platform decoder was followed
+by a failed viewport decoder which reset its out parameters. Disjoint namespace
+probes now preserve the platform, restoring the previously accepted split/platform
+contract. Tests and acceptance assertions were retained rather than weakening
+the comparison. Source/target runtime grades and upstream dependencies are unchanged.
+
+Evidence under ignored `build/native-measurement/`:
+
+- `baseline-build.log`, `baseline-run.log`: the unchanged complete 30-check native
+  Studio journey, matched FPC/LCL, range/overflow/I/O/assertions, heap tracing and
+  identical semantic manual-presentation source. 78,252,212 allocations /
+  1,910,166,242 cumulative bytes, zero leaks. The early 23-check run omitted a
+  consumer definition and is not the comparison baseline. The rejected cache
+  run (`optimized-run.log`) passes 30 but has zero cache hits and 78,291,010 /
+  1,918,422,535; none of that cache remains in source.
+- `allocation-free-run.log`: 30 unchanged native Studio checks, 23,493,324 /
+  816,314,623, zero leaks: approximately 70% fewer blocks and 57% fewer bytes.
+  Maintained `tools/build.ps1 -Target native-measurement
+  -ResponsiveSourceDirectory build/manual-presentations/mcp-source
+  -BrowserOutput build/native-measurement/web` ends successfully in
+  `maintained-build.log`; after the platform generator correction its identical
+  block count is 23,493,324 / 813,711,446 bytes. Traversals/control counts remain
+  unchanged. These are cumulative allocations, not peak usage or a release
+  latency budget; development compiler/browser work overlapped timed runs, so
+  wall-time ratios are not claimed.
+- `maintained-build.log`: 133 exact text/ownership checks per FPC 3.2 and matched
+  3.3.1, zero leaks. `browser-text.log`: the same 133 executed in pas2js/Chromium.
+  `contracts-stable/` and `contracts-matched/`: original 141 split/platform and
+  72 named-presentation checks per compiler, zero leaks.
+- `layout-run.log`: 2,169 actual native control/arithmetic checks, zero leaks;
+  `browser-layout.log` / `browser-layout-phone.log`: 2,214 desktop / 2,215 actual
+  390-pixel iframe. `container-run.log` / `browser-container.log`: 27 each actual
+  native/browser allocated-container/retained-input checks. Companions are exact
+  existing semantic exports, not hand-written replacements.
+- `browser-studio-worker-fixed.log` / `browser-studio-phone-worker-fixed.log`:
+  unchanged ordinary Studio Inspector/worker/Undo journey, 74 each desktop /
+  actual-390. Independent projects were composed with one revision-aware MCP
+  transaction each. Earlier browser failures at stage 1 came from my manual
+  staging command using `-Tbrowser` for the source worker; the maintained contract
+  requires `-Tmodule` and its generated `rtl.run`. Correct staging passes. A
+  speculative fixture polling change was reverted; all original assertions and
+  the original fixture remain byte-identical to HEAD.
+- Current isolated backend authenticates all twenty tools. Bounded semantic
+  queries and one grouped transaction create a five-operation English platform
+  companion. It generates both base `.Gap(12)` and native `.Gap(20)` with a typed
+  `ForPlatform(npfNativeLCL)`. Optional outputs are first unconfigured; copying the
+  existing authorized private machine profile into this owned test repository
+  enables both ordinary MCP builds. No user's profile or enrollment is changed.
+  Browser job `1C30EE11-E0D0-4C55-9F3D-4C751B7075D2` and native job
+  `B795A008-6BC0-4FB9-8067-D1AFDB9533C2` succeed with current source/output at
+  revision 2. Two bounded source windows and both downloaded compiler sources
+  match MD5 `fde907a7c00e8d8acf8b2d79d1772777` exactly: 83 lines / 1,690 bytes.
+  Native warnings zero; browser seven upstream RTL warnings, zero owned. These
+  jobs prove compilation, not execution of that small companion.
+
+Only the owned isolated test server was replaced to qualify current generator
+bytes and its machine profile. Main service PID 41164 and fourteen auxiliary
+identities remain protected. `protected-services.json` owns the before identities;
+`protected-main-current.json` captures all eight current exact pairs and navigation,
+with primary revision 2. No main server binary/frontend/profile, project history,
+selection, pending draft or workspace handle is changed by this packet. The main
+LAN release still serves the earlier container closure; the new shared lookup and
+generation changes await a grouped release. Native named handles still return the
+known cached endpoint 404; the authenticated Pascal semantic client is primary.
+
+No full criterion closes. Renderer no-closure advances 3→4 once; authoring 22,
+workflow 9, codegen 28 and delivery 1 remain. Stop local lookup/cache refinement.
+Continue the original structural presentation ownership/publication gate, with
+complete native/browser parity, component breadth, accessibility, performance,
+editor and delivery acceptance requirements retained. The original goal is active.
+
+Final fixture cleanup verifies and stops only the owned compiler test service
+PID 15396. All fifteen pre-existing service identities remain exact and the LAN
+endpoint responds HTTP 200; eight main project frames remain present, with primary
+revision 2. `final-service-preservation.json` records this check. No additional
+fixture listener remains running and no production refresh script was invoked.
