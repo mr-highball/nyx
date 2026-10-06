@@ -185,6 +185,15 @@ under the original NS-5 criterion 1. Retain protected old-service history migrat
 and observing recipe/HTTP qualification as separate gates; do not substitute paired
 files/availability flags for complete older live histories.
 
+Implementation checkpoint: `d1b7af306152e29e5b04eda76dba4edf047c32e2` was committed
+and pushed to `origin/hello-nyx`; exact remote comparison succeeds and the working
+tree was clean. This packet's current maintained backend/browser consumers include
+the correction; the preceding sealed recovery payload remains unchanged and does
+not. Next criterion is original NS-5 worker cancellation/termination-join, with
+the separate primary compiler owner propagation carried into that same integration.
+No observing release, protected service change or full workflow acceptance is
+claimed. Workflow's consecutive no-closure count is 10; no owner count is reset.
+
 ## Session recovery — 2026-10-06
 
 Owner: NS-5 criterion 2 accepted-work preservation, returning to NS-4 observing
