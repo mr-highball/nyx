@@ -45,7 +45,7 @@ end;
 
 { The exported English companion also feeds real browser/LCL consumers. Unicode
   stress data belongs to independent qualification owners, not the starter UI. }
-function Fixture: TNyxDocument;
+function Fixture(AManual: Boolean = False): TNyxDocument;
 var
   LRow: INyxRow;
 begin
@@ -63,6 +63,14 @@ begin
     LRow.Configure.WhenPresentation(NyxPresentation('compact')).Layout(nlColumn).Gap(8)
       .ForPlatform(npfNativeLCL).Gap(10);
     LRow.Configure.WhenPresentation(NyxPresentation('short landscape')).Layout(nlColumn).Gap(6);
+    if AManual then
+    begin
+      Result.Presentations.Define(NyxPresentation('focused'), TNyxPresentationCondition.Manual);
+      Result.Presentations.Define(NyxPresentation('wide workspace'), TNyxPresentationCondition.Manual);
+      LRow.Configure.WhenPresentation(NyxPresentation('focused')).Layout(nlColumn).Gap(4)
+        .ForPlatform(npfNativeLCL).Gap(5);
+      LRow.Configure.WhenPresentation(NyxPresentation('wide workspace')).Layout(nlRow).Gap(20);
+    end;
     LRow.Add(NewNyxMemo('notes-editor').Configure.Text('Notes').Width(200).Height(120)
       .Value('Keep this English draft.').Done);
     LRow.Add(NewNyxMemo('other-editor').Configure.Text('Companion notes').Width(160).Height(120)
@@ -174,6 +182,116 @@ begin
   Check(LRejected and (LRegistry.ToData.ToJSON = LBefore), 'Definition budget refuses without changing baseline');
 end;
 
+procedure ManualJourney;
+var
+  LDocument, LRuntime: TNyxNode;
+  LOwner, LDecoded: TNyxDocument;
+  LSession: TNyxStudioSession;
+  LRegistry: INyxPresentations;
+  LSnapshot: INyxPresentationSnapshot;
+  LChoice: TNyxPresentationSelection;
+  LFocused: TNyxPresentationRef;
+  LWire, LSource, LBefore: TNyxText;
+  LPair: TNyxProjectPair;
+  LRejected: Boolean;
+  LData: TNyxDataValue;
+begin
+  LOwner := Fixture;
+  LDecoded := nil;
+  LRuntime := nil;
+  LSession := nil;
+  { These are borrowed only within their owning document's lifetime. }
+  LDocument := LOwner.Find('workspace');
+  LFocused := NyxPresentation('focused');
+  try
+    LOwner.Presentations.Define(LFocused, TNyxPresentationCondition.Manual);
+    LDocument.Configure.WhenPresentation(LFocused).Layout(nlRow).Gap(3)
+      .ForPlatform(npfNativeLCL).Gap(7);
+    { A later automatic rule cannot accidentally defeat an explicit choice. }
+    LDocument.Configure.WhenViewport(TNyxViewportWidth.Below(640)).Gap(12);
+    LChoice := TNyxPresentationSelection.Use(LFocused);
+    LChoice.Validate(LOwner.Presentations);
+    LRegistry := LOwner.Presentations.Clone;
+    LSnapshot := LOwner.Presentations.Snapshot;
+    LRegistry.Remove(LFocused);
+    Check(LSnapshot.Definition(LFocused).Activation = npaManual,
+      'Manual definitions retain independent immutable snapshots');
+    Check(not LChoice.Reconciled(LRegistry).Reference.Defined,
+      'An admitted removal clears only copied presentation state');
+    LRejected := False;
+    try
+      LSnapshot.Condition(LFocused);
+    except
+      on ENyxPresentation do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'Legacy viewport inspection refuses a manual definition');
+    LWire := TNyxCodec.Encode(LOwner);
+    LData := TNyxDataValue.ParseJSON(LWire).Field('presentations');
+    Check(LData.Field('version').AsInteger = 2, 'Manual registries select their explicit version-two boundary');
+    LDecoded := TNyxCodec.Decode(LWire);
+    Check(TNyxCodec.Encode(LDecoded) = LWire, 'Manual activation persists without hidden viewport predicates');
+    LSource := TNyxCodegen.Generate(LOwner);
+    Check(Pos('TNyxPresentationCondition.Manual', LSource) > 0, 'Manual source uses the dedicated typed construct');
+    Check(PrepareNyxCompanion(LOwner, LOwner, LSource, False) = LSource,
+      'Manual generated source reconstructs the exact paired design');
+    LRuntime := RealizeNyxView(LOwner, LOwner.Pages[0]);
+    ApplyNyxPlatform(LRuntime, npfBrowser);
+    LRuntime.ApplyViewport(390, 700, npfBrowser);
+    Check(LRuntime.Find('workspace').Prop('gap') = '12', 'No manual choice preserves automatic authored precedence');
+    LRuntime.ApplyViewport(390, 700, npfBrowser, LChoice);
+    Check((LRuntime.Find('workspace').Prop('gap') = '3') and
+      (LRuntime.Find('workspace').Prop('layout') = 'row'), 'Manual common scopes win after automatic common scopes');
+    LRuntime.ApplyViewport(390, 700, npfNativeLCL, LChoice);
+    Check(LRuntime.Find('workspace').Prop('gap') = '7', 'Concrete manual scopes win after common and automatic scopes');
+    LRuntime.ApplyViewport(390, 700, npfNativeLCL);
+    Check(LRuntime.Find('workspace').Prop('gap') = '10', 'Clearing a choice restores automatic target scopes');
+    LRejected := False;
+    try
+      TNyxPresentationSelection.Use(NyxPresentation('compact')).Validate(LSnapshot);
+    except
+      on ENyxPresentation do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'Explicit selection refuses automatic names');
+    Check(TNyxCodec.Encode(LOwner) = LWire, 'Runtime selection never persists into the authored pair');
+    LPair := NyxProjectPair(LWire, LSource);
+    LSession := TNyxStudioSession.Create(LPair);
+    LBefore := EncodeNyxProject(LSession.ProjectSnapshot);
+    LSession.ApplyPatch(ReadNyxDesignPatch(NyxArray([NyxDefinePresentation(LFocused,
+      TNyxViewportCondition.Any.WidthBelow(480)).ToData])));
+    Check(LSession.Document.Presentations.Definition(LFocused).Activation = npaAutomatic,
+      'A paired update can deliberately replace manual activation with an automatic condition');
+    LSession.Undo;
+    Check(EncodeNyxProject(LSession.ProjectSnapshot) = LBefore,
+      'One definition Undo restores exact manual activation and source');
+    Check(ReadNyxStudioPresentationChoice(NyxStudioPresentationChoice(LChoice), LSnapshot).Same(LChoice),
+      'The ordinary preview chooser retains exact manual names');
+    { Manual constraints must also be valid while an automatic rule is active. }
+    LOwner.Find('notes-editor').Configure.MinimumWidth(100)
+      .WhenPresentation(LFocused).MaximumWidth(90);
+    LRejected := False;
+    try
+      ValidateNyxDocumentProperties(LOwner);
+    except
+      on ENyxModel do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'Both-target constraint admission checks every exclusive manual choice');
+  finally
+    LSession.Free;
+    LRuntime.Free;
+    LDecoded.Free;
+    LOwner.Free;
+  end;
+end;
+
 procedure ModelJourney(out APair: TNyxProjectPair);
 var
   LDocument: TNyxDocument;
@@ -186,7 +304,7 @@ var
   LScope: INyxConfiguration;
   LDefinition: INyxCard;
 begin
-  LDocument := Fixture;
+  LDocument := Fixture({$ifdef NYX_MANUAL_CONSUMER}True{$else}False{$endif});
   LClone := nil;
   LRuntime := nil;
   LOther := nil;
@@ -491,6 +609,7 @@ var
 begin
   GChecks := 0;
   RegistryJourney;
+  ManualJourney;
   ModelJourney(LPair);
   EditorJourney(LPair);
   UnicodeJourney;

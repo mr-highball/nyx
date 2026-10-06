@@ -29,7 +29,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema,
   nyx.studio.session, nyx.studio.projects, nyx.studio.compiler, nyx.studio.builds,
-  nyx.studio.rootedits;
+  nyx.studio.rootedits, nyx.presentations;
 
 type
   { Operator permissions are closed, session-local and never part of a design.
@@ -116,7 +116,11 @@ type
     { Preview/render workers receive an independent accepted pair under the
       transport lock, then release it before invoking optional external renderers. }
     function PreviewPair(AExpected: Integer; const AView: TNyxText;
-      const AActor: TNyxText = 'MCP client'): TNyxProjectPair;
+      const AActor: TNyxText = 'MCP client'): TNyxProjectPair; overload;
+    { Validate a copied manual choice at the same revision before capturing the
+      immutable pair. Observing editor selection/navigation/history stay intact. }
+    function PreviewPair(AExpected: Integer; const AView, AActor: TNyxText;
+      const ASelection: TNyxPresentationSelection): TNyxProjectPair; overload;
     { Transport-owned work, such as rendering outside the model lock, reports
       completion/refusal through the same bounded operator-visible activity. }
     procedure RecordActivity(const AActor, AOperation, AOutcome: TNyxText);
@@ -159,7 +163,7 @@ uses
   nyx.studio.handleredits, nyx.studio.stateedits, nyx.state, nyx.binding,
   nyx.binding.types, nyx.contract, nyx.collections, nyx.collections.view.types,
   nyx.collections.selection, nyx.studio.collectionedits, nyx.studio.importedits,
-  nyx.studio.routineedits, nyx.studio.declarationedits, nyx.presentations;
+  nyx.studio.routineedits, nyx.studio.declarationedits;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
 var
@@ -974,7 +978,7 @@ begin
     LReference := NyxPresentation(LName);
     Exit(NyxObject([NyxField('revision', NyxData(FRevision)),
       NyxField('definition', NyxPresentationDefinition(LReference,
-        FSession.Document.Presentations.Condition(LReference)))]));
+        FSession.Document.Presentations.Definition(LReference)))]));
   end;
   SetLength(LItems, LLimit);
   LCount := 0;
@@ -987,7 +991,7 @@ begin
     end;
     LReference := FSession.Document.Presentations.Reference(LIndex);
     LItems[LCount] := NyxPresentationDefinition(LReference,
-      FSession.Document.Presentations.Condition(LReference));
+      FSession.Document.Presentations.Definition(LReference));
     Inc(LCount);
   end;
   SetLength(LItems, LCount);
@@ -2271,6 +2275,12 @@ end;
 
 function TNyxAgentSession.PreviewPair(AExpected: Integer;
   const AView, AActor: TNyxText): TNyxProjectPair;
+begin
+  Result := PreviewPair(AExpected, AView, AActor, TNyxPresentationSelection.None);
+end;
+
+function TNyxAgentSession.PreviewPair(AExpected: Integer;
+  const AView, AActor: TNyxText; const ASelection: TNyxPresentationSelection): TNyxProjectPair;
 var
   LNode: TNyxNode;
 begin
@@ -2285,6 +2295,7 @@ begin
     raise ENyxModel.Create('Preview revision conflict');
   end;
   LNode := FSession.Document.Find(AView);
+  ASelection.Validate(FSession.Document.Presentations);
 
   if (LNode = nil) or (LNode.Parent <> nil) then
   begin

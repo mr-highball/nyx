@@ -1223,7 +1223,7 @@ var
   LKnownAttributes: array of TNyxAttribute;
   LHasAttribute: array of Boolean;
   LScopedPlatforms: set of TNyxPlatform;
-  LViewport: TNyxViewportCondition;
+  LViewport: TNyxPresentationCondition;
   LPresentation: TNyxPresentationRef;
   LPresentations: INyxPresentationSnapshot;
 
@@ -1770,7 +1770,7 @@ begin
       LPresentations := ADocument.Presentations;
     end;
 
-    if TryNyxResponsiveKey(LScopedKey, LPresentations, LViewport, LPlatform, LAttribute) then
+    if TryNyxPresentationRule(LScopedKey, LPresentations, LViewport, LPlatform, LAttribute) then
     begin
       LPublishedIndex := LAttributePositions[LAttribute];
 

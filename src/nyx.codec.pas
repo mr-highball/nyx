@@ -706,7 +706,7 @@ begin
         for LIndex := 0 to LPresentations.Count - 1 do
         begin
           Result.Presentations.Define(LPresentations.Reference(LIndex),
-            LPresentations.Condition(LPresentations.Reference(LIndex)));
+            LPresentations.Definition(LPresentations.Reference(LIndex)));
         end;
       end;
       ReadExtensions(LRoot, Result.Extensions, LVersion <> '1', False, LVersion = '4');

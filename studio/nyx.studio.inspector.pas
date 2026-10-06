@@ -66,12 +66,14 @@ const
   NyxStudioViewportLayoutID = 'inspector-viewport-layout';
   NyxStudioViewportApplyID = 'inspector-viewport-apply';
   NyxStudioPresentationNameID = 'inspector-presentation-name';
+  NyxStudioPresentationActivationID = 'inspector-presentation-activation';
   NyxStudioPresentationChoiceID = 'inspector-presentation-choice';
   NyxStudioPresentationAttributeID = 'inspector-presentation-attribute';
   NyxStudioPresentationPlatformID = 'inspector-presentation-platform';
   NyxStudioPresentationDefineID = 'inspector-presentation-define';
   NyxStudioPresentationUseID = 'inspector-presentation-use';
   NyxStudioPresentationResetID = 'inspector-presentation-reset';
+  NyxStudioPresentationPreviewID = 'studio-presentation-preview';
   { Closed size-bound reset intent at the chrome metadata boundary. The captured
     exact authored owner prevents a delayed button acting on a later selection. }
   NyxStudioPropertyClearKey = 'studio.property-clear';
@@ -117,11 +119,73 @@ procedure AddNyxViewportInspector(AParent: TNyxNode; const AOwner: TNyxText;
   No accepted document, source, history or control is changed here. }
 function CaptureNyxViewportInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Closed editor selection boundary. Captions prefix manual names so an
+  application name cannot collide with the default choice. Exact names retain
+  Unicode and order; unknown/automatic selections refuse. No state is changed. }
+function NyxStudioPresentationItems(const ADefinitions: INyxPresentationSnapshot): TNyxText;
+function NyxStudioPresentationChoice(const ASelection: TNyxPresentationSelection): TNyxText;
+function ReadNyxStudioPresentationChoice(const AChoice: TNyxText;
+  const ADefinitions: INyxPresentationSnapshot): TNyxPresentationSelection;
 
 implementation
 
 uses
   nyx.schema, nyx.controls, nyx.studio.callbackedits, nyx.studio.edits;
+
+const
+  CAutomaticPresentation = 'Automatic / defaults';
+  CManualPresentationPrefix = 'Manual / ';
+
+function NyxStudioPresentationItems(const ADefinitions: INyxPresentationSnapshot): TNyxText;
+var
+  LIndex: Integer;
+  LReference: TNyxPresentationRef;
+begin
+  Result := CAutomaticPresentation;
+
+  if ADefinitions = nil then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to ADefinitions.Count - 1 do
+  begin
+    LReference := ADefinitions.Reference(LIndex);
+
+    if ADefinitions.Definition(LReference).Activation = npaManual then
+    begin
+      Result := Result + TNyxText(#10) + TNyxText(CManualPresentationPrefix) + LReference.Name;
+    end;
+  end;
+end;
+
+function NyxStudioPresentationChoice(const ASelection: TNyxPresentationSelection): TNyxText;
+begin
+  Result := CAutomaticPresentation;
+
+  if ASelection.Reference.Defined then
+  begin
+    Result := TNyxText(CManualPresentationPrefix) + ASelection.Reference.Name;
+  end;
+end;
+
+function ReadNyxStudioPresentationChoice(const AChoice: TNyxText;
+  const ADefinitions: INyxPresentationSnapshot): TNyxPresentationSelection;
+begin
+  Result := TNyxPresentationSelection.None;
+
+  if AChoice = CAutomaticPresentation then
+  begin
+    Exit;
+  end;
+
+  if Copy(AChoice, 1, Length(CManualPresentationPrefix)) <> CManualPresentationPrefix then
+  begin
+    raise ENyxPresentation.Create('Choose an available manual presentation or automatic defaults');
+  end;
+  Result := TNyxPresentationSelection.Use(NyxPresentation(
+    Copy(AChoice, Length(CManualPresentationPrefix) + 1, MaxInt)));
+  Result.Validate(ADefinitions);
+end;
 
 procedure AddNyxViewportInspector(AParent: TNyxNode; const AOwner: TNyxText;
   ADocument: TNyxDocument);
@@ -204,7 +268,9 @@ begin
   LCard.Node.Find(NyxStudioViewportApplyID).Configure.Visible(LCanLayout).Done;
   LCard.Add(NewNyxHeading('inspector-presentation-title').Configure.Text('Shared presentations').Done);
   LCard.Add(NewNyxLabel('inspector-presentation-help').Configure.Text(
-    'Define a name using the bounds above. Updating an existing name changes all of its overrides.').Done);
+    'Choose automatic bounds or manual selection. Updating a name changes all of its overrides.').Done);
+  LCard.Add(NewNyxSelect(NyxStudioPresentationActivationID).Configure.Text('Activation')
+    .Items('automatic' + #10 + 'manual').Value('automatic').Done);
   LCard.Add(NewNyxInput(NyxStudioPresentationNameID).Configure.Text('Presentation name')
     .Placeholder('compact').Done);
   LCard.Add(NewNyxButton(NyxStudioPresentationDefineID).Configure.Text('Define or update presentation').Done);
@@ -260,7 +326,7 @@ begin
   if (AButton.ID = NyxStudioPresentationUseID) or (AButton.ID = NyxStudioPresentationResetID) then
   begin
     LReference := NyxPresentation(AShellRoot.Find(NyxStudioPresentationChoiceID).Prop('value'));
-    ASession.Document.Presentations.Condition(LReference);
+    ASession.Document.Presentations.Definition(LReference);
 
     if not TryNyxAttribute(AShellRoot.Find(NyxStudioPresentationAttributeID).Prop('value'), LAttribute) then
     begin
@@ -291,6 +357,26 @@ begin
         LAttribute, LPlatform);
     end;
     Exit;
+  end;
+
+  if AButton.ID = NyxStudioPresentationDefineID then
+  begin
+    LChoice := AShellRoot.Find(NyxStudioPresentationActivationID).Prop('value');
+
+    if LChoice = 'manual' then
+    begin
+      { Bounds are deliberately unused for manual activation. No hidden
+        predicate survives when a shared definition switches activation. }
+      AEdit.Action := sdaPresentation;
+      AEdit.Presentation := NyxDefinePresentation(NyxPresentation(
+        AShellRoot.Find(NyxStudioPresentationNameID).Prop('value')), TNyxPresentationCondition.Manual);
+      Exit;
+    end;
+
+    if LChoice <> 'automatic' then
+    begin
+      raise ENyxModel.Create('Choose automatic or manual presentation activation');
+    end;
   end;
 
   if not TryStrToInt(AShellRoot.Find(NyxStudioViewportMinimumID).Prop('value'), LMinimum) or

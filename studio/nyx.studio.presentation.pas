@@ -26,7 +26,7 @@ unit nyx.studio.presentation;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.model, nyx.binding.types,
+  SysUtils, nyx.text, nyx.data, nyx.model, nyx.binding.types, nyx.presentations,
   nyx.studio.view, nyx.studio.inspector, nyx.studio.authoring, nyx.studio.palette;
 
 type
@@ -44,6 +44,7 @@ type
     SourceExpanded: Boolean;
     CanvasPercent: Integer;
     Phone: Boolean;
+    PresentationSelection: TNyxPresentationSelection;
     Preview: Boolean;
     AgentsVisible: Boolean;
     Panel: TNyxStudioPanel;
@@ -120,6 +121,7 @@ begin
   Result.SourceExpanded := False;
   Result.CanvasPercent := 65;
   Result.Phone := False;
+  Result.PresentationSelection := TNyxPresentationSelection.None;
   Result.Preview := False;
   Result.AgentsVisible := False;
   Result.Panel := nspDesign;
@@ -150,14 +152,23 @@ begin
 end;
 
 function EncodeNyxStudioPresentation(const AValue: TNyxStudioPresentation): TNyxText;
+var
+  LPresentation: TNyxDataValue;
 begin
+  LPresentation := NyxNull;
+
+  if AValue.PresentationSelection.Reference.Defined then
+  begin
+    LPresentation := NyxData(AValue.PresentationSelection.Reference.Name);
+  end;
   Result := NyxObject([
-    NyxField('version', NyxData(3)),
+    NyxField('version', NyxData(4)),
     NyxField('codeVisible', NyxData(AValue.CodeVisible)),
     NyxField('sourceTab', NyxData(Ord(AValue.SourceTab))),
     NyxField('sourceExpanded', NyxData(AValue.SourceExpanded)),
     NyxField('canvasPercent', NyxData(AValue.CanvasPercent)),
     NyxField('phone', NyxData(AValue.Phone)),
+    NyxField('presentation', LPresentation),
     NyxField('preview', NyxData(AValue.Preview)),
     NyxField('agentsVisible', NyxData(AValue.AgentsVisible)),
     NyxField('panel', NyxData(Ord(AValue.Panel))),
@@ -203,24 +214,29 @@ function DecodeNyxStudioPresentation(const AText: TNyxText): TNyxStudioPresentat
 var
   LValue: TNyxDataValue;
   LIndex: Integer;
+  LVersion: Integer;
+  LPresentation: TNyxDataValue;
 const
-  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|phone|preview|agentsVisible|panel|advancedProperties|inspectorTab|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
+  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
 begin
   Result := DefaultNyxStudioPresentation;
   LValue := TNyxDataValue.ParseJSON(AText);
 
   if (LValue.Kind <> ndObject) or
-    not (LValue.Field('version').AsInteger in [2, 3]) or
+    not (LValue.Field('version').AsInteger in [2, 3, 4]) or
     ((LValue.Field('version').AsInteger = 2) and (LValue.Count <> 32)) or
-    ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) then
+    ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) or
+    ((LValue.Field('version').AsInteger = 4) and (LValue.Count <> 35)) then
   begin
     raise ENyxModel.Create('Unsupported editor presentation packet');
   end;
+  LVersion := LValue.Field('version').AsInteger;
   for LIndex := 0 to LValue.Count - 1 do
   begin
 
     if (Pos('|', LValue.Key(LIndex)) > 0) or
       (Pos('|' + LValue.Key(LIndex) + '|', CKeys) = 0) or
+      ((LVersion < 4) and (LValue.Key(LIndex) = 'presentation')) or
       ((LValue.Field('version').AsInteger = 2) and
         ((LValue.Key(LIndex) = 'sourceTab') or
           (LValue.Key(LIndex) = 'sourceExpanded'))) then
@@ -230,8 +246,10 @@ begin
   end;
   Result.CodeVisible := LValue.Field('codeVisible').AsBoolean;
   { Version 2 preferences retain their original strict shape and default to the
-    source view. Version 3 adds only typed per-project presentation choices. }
-  if LValue.Field('version').AsInteger = 3 then
+    source view. Version 3 adds source tabs/expansion; version 4 adds the exact
+    manual presentation reference without making it part of the design pair. }
+
+  if LVersion >= 3 then
   begin
     Result.SourceTab := TNyxStudioSourceTab(IntegerValue(LValue, 'sourceTab',
       Ord(Low(TNyxStudioSourceTab)), Ord(High(TNyxStudioSourceTab))));
@@ -239,6 +257,16 @@ begin
   end;
   Result.CanvasPercent := IntegerValue(LValue, 'canvasPercent', 10, 90);
   Result.Phone := LValue.Field('phone').AsBoolean;
+
+  if LVersion = 4 then
+  begin
+    LPresentation := LValue.Field('presentation');
+
+    if LPresentation.Kind <> ndNull then
+    begin
+      Result.PresentationSelection := TNyxPresentationSelection.Use(NyxPresentation(LPresentation.AsText));
+    end;
+  end;
   Result.Preview := LValue.Field('preview').AsBoolean;
   Result.AgentsVisible := LValue.Field('agentsVisible').AsBoolean;
   Result.Panel := TNyxStudioPanel(IntegerValue(LValue, 'panel',

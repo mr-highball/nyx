@@ -44,6 +44,7 @@ uses
   Graphics,
   nyx.widgets.lcl,
   nyx.model,
+  nyx.presentations,
   nyx.layout.flow,
   nyx.layout.constraints,
   nyx.layout.viewport,
@@ -220,6 +221,8 @@ type
       Effective document overlays never mutate it or accumulate into its base. }
     FBorrowedTheme: TNyxTheme;
     FRoot: TNyxNode;
+    FPresentationSelection: TNyxPresentationSelection;
+    FPresentationView: INyxPresentationViewOwner;
     FPanel: TNyxLogicalScrollBox;
     FVirtualLayout: Boolean;
     FLayouting: Boolean;
@@ -312,6 +315,9 @@ type
     { Conditions use the borrowed host's stable client rectangle. Internal
       content scrollbars/layout must not create a feedback loop in its size. }
     function UpdateViewport: Boolean;
+    procedure SetPresentationSelection(const AValue: TNyxPresentationSelection);
+    function ReadPresentationSelection: TNyxPresentationSelection;
+    function GetPresentationView: INyxPresentationView;
     procedure Resize(ASender: TObject);
     procedure ProjectViewport(ASender: TObject);
     procedure ArrangeInput(ABinding: TNyxLCLBinding; AWidth, AHeight: Integer);
@@ -464,6 +470,13 @@ type
       View replacement cancels queued work; destruction closes registrations. }
     property Events: INyxEvents read FEvents;
     property Root: TNyxNode read FRoot;
+    { UI-thread, view-local exclusive choice. A mounted view is required;
+      unknown/automatic names refuse before mutation. Switching synchronizes
+      the same controls and preserves authored source/history and live input. }
+    property PresentationSelection: TNyxPresentationSelection read FPresentationSelection write SetPresentationSelection;
+    { Portable managed capability. Borrowed receiver links retire on Unmount;
+      caller-retained interfaces stay safe and never retain the renderer. }
+    property Presentations: INyxPresentationView read GetPresentationView;
     property DesignMode: Boolean read FDesignMode;
     property State: TNyxState read FState;
     property OnBindingError: TNyxLCLBindingError read FOnBindingError write FOnBindingError;
@@ -627,6 +640,11 @@ var
   LIndex: Integer;
   LDeferControls: Boolean;
 begin
+  if FPresentationView <> nil then
+  begin
+    FPresentationView.Retire;
+    FPresentationView := nil;
+  end;
   ClearCanvasResizeGrips;
   { Revoke borrowed sinks before destroying any part of the mounted view. }
   FUpdating := True;
@@ -754,6 +772,7 @@ begin
   SetLength(FBindings, 0);
   FCollectionBindings := nil;
   ReleaseNyxNode(FRoot);
+  FPresentationSelection := TNyxPresentationSelection.None;
 
   if FOwnState then
   begin
@@ -2611,7 +2630,7 @@ begin
     Exit;
   end;
   Result := FRoot.ApplyViewport(Max(0, FPanel.Parent.ClientWidth),
-    Max(0, FPanel.Parent.ClientHeight), npfNativeLCL);
+    Max(0, FPanel.Parent.ClientHeight), npfNativeLCL, FPresentationSelection);
 end;
 
 procedure TNyxLCLRenderer.Resize(ASender: TObject);
@@ -2992,6 +3011,7 @@ var
   LPrevious: TNyxNode;
   LTheme: TNyxTheme;
   LIndex: Integer;
+  LPreviousSelection: TNyxPresentationSelection;
 begin
   FEvents.Scheduler.RequireUI;
   Result := False;
@@ -3046,18 +3066,21 @@ begin
       Exit;
     end;
     LPrevious := FRoot.Clone;
+    LPreviousSelection := FPresentationSelection;
 
     if not RefreshNyxProjectionProperties(FRoot, LCandidate, FProjectionBaseline, ARestores) then
     begin
       Exit;
     end;
     try
+      FPresentationSelection := FPresentationSelection.Reconciled(FRoot.PresentationSnapshot);
       Sync;
     except
       { No custom updater or ownership change entered this path. Restore model
         properties before normal synchronization; retained callbacks still
         refer to the same independently owned realized nodes and controls. }
       RefreshNyxProjectionProperties(FRoot, LPrevious);
+      FPresentationSelection := LPreviousSelection;
       Sync;
       raise;
     end;
@@ -3075,6 +3098,55 @@ end;
 procedure TNyxLCLRenderer.Unmount;
 begin
   Clear;
+end;
+
+procedure TNyxLCLRenderer.SetPresentationSelection(const AValue: TNyxPresentationSelection);
+var
+  LPrevious: TNyxPresentationSelection;
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if (FRoot = nil) or (FPanel = nil) or FUpdating or FLayouting then
+  begin
+    raise ENyxModel.Create('Select a presentation on an idle mounted view');
+  end;
+  AValue.Validate(FRoot.PresentationSnapshot);
+
+  if AValue.Same(FPresentationSelection) then
+  begin
+    Exit;
+  end;
+  LPrevious := FPresentationSelection;
+  FPresentationSelection := AValue;
+  try
+    Sync;
+  except
+    FPresentationSelection := LPrevious;
+    Sync;
+    raise;
+  end;
+end;
+
+function TNyxLCLRenderer.ReadPresentationSelection: TNyxPresentationSelection;
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if FRoot = nil then
+  begin
+    raise ENyxPresentation.Create('This presentation view is not mounted');
+  end;
+  Result := FPresentationSelection;
+end;
+
+function TNyxLCLRenderer.GetPresentationView: INyxPresentationView;
+begin
+  ReadPresentationSelection;
+
+  if FPresentationView = nil then
+  begin
+    FPresentationView := NewNyxPresentationView(ReadPresentationSelection, SetPresentationSelection);
+  end;
+  Result := FPresentationView;
 end;
 
 function TNyxLCLRenderer.CollectionView(const AID: TNyxText): INyxCollectionView;

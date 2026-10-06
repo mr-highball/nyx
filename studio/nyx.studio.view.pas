@@ -80,6 +80,8 @@ type
       survives panel switches and host viewport changes on both targets. }
     CanvasPercent: Integer;
     Phone: Boolean;
+    { Exclusive manual preview choice, independent of authored pair/history. }
+    PresentationSelection: TNyxPresentationSelection;
     { Transient physical-drop position; closed intent decoded at the UI boundary.
       It never changes exported documents or the accepted pair on its own. }
     DesignerPlacement: TNyxPlacement;
@@ -171,6 +173,7 @@ begin
   Result := Default(TNyxStudioViewState);
   Result.CodeVisible := False;
   Result.CodePresentation := ncpInline;
+  Result.PresentationSelection := TNyxPresentationSelection.None;
   Result.CanvasPercent := 65;
   Result.Phone := False;
   Result.Palette := DefaultNyxStudioPaletteState;
@@ -746,7 +749,7 @@ var
   LBinding: TNyxBindingSpec;
   LAttribute: TNyxAttribute;
   LPlatform: TNyxPlatform;
-  LViewport: TNyxViewportCondition;
+  LViewport: TNyxPresentationCondition;
   LPresentation: TNyxPresentationRef;
   LFieldID: TNyxText;
 begin
@@ -925,6 +928,19 @@ begin
   LViewbar.Add(Button('action-desktop', 'Desktop'));
   LViewbar.Add(Button('action-phone', 'Phone'));
   LViewbar.Add(Button('action-preview', 'Interact'));
+  { Omit a chooser when no manual configurations exist. The actual target
+    controller reconciles its copied choice against the current document. }
+
+  if Pos(TNyxText(#10), NyxStudioPresentationItems(ASession.Document.Presentations)) > 0 then
+  begin
+    LViewbar.Add(NewNyxSelect(NyxStudioPresentationPreviewID).Configure
+      .Text('Presentation').Width(216)
+      .Items(NyxStudioPresentationItems(ASession.Document.Presentations))
+      .Value(NyxStudioPresentationChoice(AState.PresentationSelection.Reconciled(
+        ASession.Document.Presentations)))
+      .AccessibleName('Preview presentation')
+      .Hint('Switch a manual configuration without editing the design or its history.').Done);
+  end;
   LViewbar.Add(TNyxNode.Create(nkSelect, NyxStudioDropPositionID)
     .Configure.Text('Drop position').Items('inside' + #10 + 'before' + #10 + 'after')
     .Value(NyxPlacementName(AState.DesignerPlacement))
@@ -1123,7 +1139,7 @@ begin
         begin
 
           if LProperties[LIndex].Advanced and not AState.AdvancedProperties and
-            not LSelected.TryResponsiveKey(LProperties[LIndex].Key, LViewport, LPlatform, LAttribute) then
+            not LSelected.TryPresentationRule(LProperties[LIndex].Key, LViewport, LPlatform, LAttribute) then
           begin
             Continue;
           end;
@@ -1230,7 +1246,7 @@ begin
 
           if TryNyxAttribute(LProperties[LIndex].Key, LAttribute) or
             TryNyxPlatformKey(LProperties[LIndex].Key, LPlatform, LAttribute) or
-            LSelected.TryResponsiveKey(LProperties[LIndex].Key, LViewport, LPlatform, LAttribute) then
+            LSelected.TryPresentationRule(LProperties[LIndex].Key, LViewport, LPlatform, LAttribute) then
           begin
 
             if LAttribute in [atMinimumWidth, atMaximumWidth,

@@ -1613,8 +1613,8 @@ begin
       LLines.Add('');
       LLines.Add('    Result.Presentations.Define(NyxPresentation(' +
         PascalString(ADocument.Presentations.Reference(LIndex).Name) + '),');
-      LLines.Add('      ' + ADocument.Presentations.Condition(
-        ADocument.Presentations.Reference(LIndex)).PascalCondition + ');');
+      LLines.Add('      ' + ADocument.Presentations.Definition(
+        ADocument.Presentations.Reference(LIndex)).Pascal + ');');
     end;
     LNextNode := 0;
     for LIndex := 0 to ADocument.Count - 1 do

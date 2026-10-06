@@ -188,6 +188,11 @@ type
     { Both dimensions come from the rendering host, in logical pixels. The
       compatibility width overload uses height zero and cannot match orientation. }
     function ApplyViewport(AWidth, AHeight: Double; APlatform: TNyxPlatform): Boolean; overload;
+    { Manual selection is runtime presentation only. It is exclusive per view,
+      validated before projection, and follows automatic rules within each
+      common/concrete target group. Neither source nor authored Props changes. }
+    function ApplyViewport(AWidth, AHeight: Double; APlatform: TNyxPlatform;
+      const ASelection: TNyxPresentationSelection): Boolean; overload;
     { Realization copies document definitions once, sharing this immutable value
       snapshot among descendants. It has no document/tree backreference. Binding
       is allowed only on realized nodes; retained views can outlive their source. }
@@ -196,6 +201,8 @@ type
       independent immutable snapshot. Detached authored nodes return nil. }
     property PresentationSnapshot: INyxPresentationSnapshot read GetPresentationSnapshot;
     function TryResponsiveKey(const AKey: TNyxText; out ACondition: TNyxViewportCondition;
+      out APlatform: TNyxPlatform; out AAttribute: TNyxAttribute): Boolean;
+    function TryPresentationRule(const AKey: TNyxText; out ACondition: TNyxPresentationCondition;
       out APlatform: TNyxPlatform; out AAttribute: TNyxAttribute): Boolean;
     { Cheap mount-time discovery; no viewport observers are needed for a tree
       containing only ordinary/platform defaults. }
@@ -1972,9 +1979,23 @@ begin
 end;
 
 function TNyxNode.ApplyViewport(AWidth, AHeight: Double; APlatform: TNyxPlatform): Boolean;
+begin
+  Result := ApplyViewport(AWidth, AHeight, APlatform, TNyxPresentationSelection.None);
+end;
+
+function TNyxNode.TryPresentationRule(const AKey: TNyxText;
+  out ACondition: TNyxPresentationCondition; out APlatform: TNyxPlatform;
+  out AAttribute: TNyxAttribute): Boolean;
+begin
+  Result := TryNyxPresentationRule(AKey, PresentationSnapshot, ACondition, APlatform, AAttribute);
+end;
+
+function TNyxNode.ApplyViewport(AWidth, AHeight: Double; APlatform: TNyxPlatform;
+  const ASelection: TNyxPresentationSelection): Boolean;
 var
   LValues: TNyxStrings;
-  LCondition: TNyxViewportCondition;
+  LCondition: TNyxPresentationCondition;
+  LReference: TNyxPresentationRef;
   LAttribute: TNyxAttribute;
   LPlatform: TNyxPlatform;
   LPhase: Integer;
@@ -1983,6 +2004,7 @@ var
   LValue: TNyxText;
   LName: TNyxText;
   LFound: Integer;
+  LMatches: Boolean;
 begin
 
   if not IsRealized or (APlatform = npfAny) then
@@ -1990,17 +2012,34 @@ begin
     raise ENyxModel.Create('Viewport projection requires a realized node and concrete target');
   end;
   TNyxViewportCondition.Any.Matches(AWidth, AHeight);
+  ASelection.Validate(PresentationSnapshot);
   LValues := nil;
   try
-    for LPhase := 0 to 1 do
+    for LPhase := 0 to 3 do
     begin
       for LIndex := 0 to FProps.Count - 1 do
       begin
         LKey := FProps.Names[LIndex];
 
-        if TryResponsiveKey(LKey, LCondition, LPlatform, LAttribute) and
-          (((LPhase = 0) and (LPlatform = npfAny)) or
-          ((LPhase = 1) and (LPlatform = APlatform))) and LCondition.Matches(AWidth, AHeight) then
+        LMatches := False;
+
+        if TryPresentationRule(LKey, LCondition, LPlatform, LAttribute) and
+          (((LPhase < 2) and (LPlatform = npfAny)) or
+          ((LPhase >= 2) and (LPlatform = APlatform))) then
+        begin
+
+          if LCondition.Activation = npaManual then
+          begin
+            LMatches := Odd(LPhase) and TryNyxPresentationKey(LKey, LReference,
+              LPlatform, LAttribute) and ASelection.Matches(LReference);
+          end
+          else
+          begin
+            LMatches := not Odd(LPhase) and LCondition.Viewport.Matches(AWidth, AHeight);
+          end;
+        end;
+
+        if LMatches then
         begin
           LName := NyxAttributeName(LAttribute);
           LValue := Copy(FProps[LIndex], Length(LKey) + 2, MaxInt);
@@ -2036,7 +2075,7 @@ begin
   end;
   for LIndex := 0 to Count - 1 do
   begin
-    Result := Children[LIndex].ApplyViewport(AWidth, AHeight, APlatform) or Result;
+    Result := Children[LIndex].ApplyViewport(AWidth, AHeight, APlatform, ASelection) or Result;
   end;
 end;
 

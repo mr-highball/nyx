@@ -536,7 +536,7 @@ type
     vkSplitOrientation, vkSemanticEvent, vkTouchBehavior, vkFlowWrap,
     vkCrossAlignment, vkJustification, vkSizing, vkLayoutPolicy, vkSizeRange,
     vkSizeConstraints, vkViewportWidth, vkViewportCondition, vkViewportOrientation,
-    vkPresentationRef);
+    vkPresentationRef, vkPresentationCondition);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -560,6 +560,7 @@ type
     SizeConstraints: TNyxSizeConstraints;
     ViewportWidth: TNyxViewportWidth;
     ViewportCondition: TNyxViewportCondition;
+    PresentationCondition: TNyxPresentationCondition;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -1996,6 +1997,40 @@ begin
                 Fail('Unknown size constraints method');
               end;
             end;
+          end;
+          Exit;
+        end;
+
+        if LName = 'tnyxpresentationcondition' then
+        begin
+          Result.Kind := vkPresentationCondition;
+          Expect('.');
+
+          if At('Manual') then
+          begin
+            Inc(FCursor);
+            Result.PresentationCondition := TNyxPresentationCondition.Manual;
+
+            if At('(') then
+            begin
+              LArgs := Arguments;
+
+              if Length(LArgs) <> 0 then
+              begin
+                Fail('Manual presentation has no viewport arguments');
+              end;
+            end;
+          end
+          else
+          begin
+            Expect('Automatic');
+            LArgs := Arguments;
+
+            if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkViewportCondition) then
+            begin
+              Fail('Automatic presentation requires a typed viewport condition');
+            end;
+            Result.PresentationCondition := TNyxPresentationCondition.Automatic(LArgs[0].ViewportCondition);
           end;
           Exit;
         end;

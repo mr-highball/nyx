@@ -37,7 +37,7 @@ uses
   nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl,
   nyx.studio.sourcejobs, nyx.modal, nyx.modal.lcl,
   nyx.designer.input, nyx.gestures, nyx.studio.edits, nyx.studio.drag,
-  nyx.designer.resize, nyx.designer.guides, nyx.studio.resize;
+  nyx.designer.resize, nyx.designer.guides, nyx.studio.resize, nyx.presentations;
 
 type
   TNyxNativeStudio = class;
@@ -1739,6 +1739,9 @@ begin
         FCanvasView.Render(FSession.Document, FSession.ActiveView, LCanvasHost, not FPreview);
       end;
       FCanvasView.Select(FSession.SelectedID);
+      FState.PresentationSelection := FState.PresentationSelection.Reconciled(
+        FCanvasView.Root.PresentationSnapshot);
+      FCanvasView.PresentationSelection := FState.PresentationSelection;
 
       if not LSameView or FReplaceCanvas then
       begin
@@ -2357,6 +2360,17 @@ begin
     begin
       FDesignerDrag.Cancel;
       FState.DesignerPlacement := ReadNyxPlacement(ANode.Prop('value'));
+      Exit;
+    end;
+
+    if (ANode.ID = NyxStudioPresentationPreviewID) and (AEvent.Trigger = ntChange) then
+    begin
+      FDesignerDrag.Cancel;
+      FDesignerResize.Cancel;
+      FState.PresentationSelection := ReadNyxStudioPresentationChoice(ANode.Prop('value'),
+        FSession.Document.Presentations);
+      FCanvasView.PresentationSelection := FState.PresentationSelection;
+      FState.Status := NyxStudioPresentationChoice(FState.PresentationSelection);
       Exit;
     end;
 

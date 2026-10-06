@@ -29,7 +29,7 @@ interface
 uses
   Classes, SysUtils, SyncObjs, fphttpserver, httpdefs, Process, base64,
   nyx.text, nyx.data, nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs,
-  nyx.studio.reviews, nyx.studio.workspaces;
+  nyx.studio.reviews, nyx.studio.workspaces, nyx.presentations;
 
 type
   { Authority is supplied by the authenticated transport, never client JSON.
@@ -1165,7 +1165,7 @@ begin
     '{"type":"object","properties":{"op":{"const":"inherit"},"id":{"type":"string"},"instance":{"type":"string"},"path":{"type":"string"}},"required":["op","id","instance","path"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"place"},"id":{"type":"string"},"target":{"type":"string"},"placement":{"enum":["inside","before","after"]}},"required":["op","id","target","placement"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"place-new"},"kind":{"type":"string"},"id":{"type":"string"},"target":{"type":"string"},"placement":{"enum":["inside","before","after"]}},"required":["op","kind","id","target","placement"],"additionalProperties":false},' +
-    '{"type":"object","properties":{"op":{"const":"presentation-define"},"name":{"type":"string","minLength":1,"maxLength":128},"widthMinimum":{"type":"integer","minimum":0,"maximum":2147483647},"widthMaximum":{"type":"integer","minimum":0,"maximum":2147483647},"heightMinimum":{"type":"integer","minimum":0,"maximum":2147483647},"heightMaximum":{"type":"integer","minimum":0,"maximum":2147483647},"orientation":{"enum":["any","portrait","landscape","square"]}},"required":["op","name","widthMinimum","widthMaximum","heightMinimum","heightMaximum","orientation"],"additionalProperties":false},' +
+    '{"type":"object","properties":{"op":{"const":"presentation-define"},"name":{"type":"string","minLength":1,"maxLength":128},"widthMinimum":{"type":"integer","minimum":0,"maximum":2147483647},"widthMaximum":{"type":"integer","minimum":0,"maximum":2147483647},"heightMinimum":{"type":"integer","minimum":0,"maximum":2147483647},"heightMaximum":{"type":"integer","minimum":0,"maximum":2147483647},"orientation":{"enum":["any","portrait","landscape","square"]},"activation":{"enum":["automatic","manual"]}},"required":["op","name","widthMinimum","widthMaximum","heightMinimum","heightMaximum","orientation"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"presentation-remove"},"name":{"type":"string","minLength":1,"maxLength":128}},"required":["op","name"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"enum":["presentation-use","presentation-reset"]},"name":{"type":"string","minLength":1,"maxLength":128},"id":{"type":"string"},"attribute":{"type":"string"},"platform":{"enum":["any","browser","native-lcl"]}},"required":["op","name","id","attribute","platform"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"presentation-set"},"name":{"type":"string","minLength":1,"maxLength":128},"id":{"type":"string"},"attribute":{"type":"string"},"platform":{"enum":["any","browser","native-lcl"]},"value":{"type":["string","boolean","number"]}},"required":["op","name","id","attribute","platform","value"],"additionalProperties":false}]}}');
@@ -1197,7 +1197,7 @@ begin
         NyxField('group', TextSchema('Intent group key, e.g. inputs, feedback, composition, all')),
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit'))]), []), True),
     Tool('nyx_tokens', 'Read effective semantic theme colors and typed logical-pixel metrics. Change through a grouped tokens operation.', Schema(NyxObject([]), []), True),
-    Tool('nyx_presentations', 'Inspect one exact named viewport presentation or at most 16 definitions per page (default 8). Names are exact, case-sensitive Unicode application references. Definitions combine logical host width, height and orientation; max 64 per document. Controls use typed WhenPresentation scopes without copying conditions. In nyx_transaction, presentation-define creates/replaces a shared definition; presentation-use adds a supported attribute override initialized from its authored default; presentation-set upserts one typed scalar without long JSON object keys. presentation-reset removes one exact override; presentation-remove refuses remaining references. Group related edits as one paired Undo step. Queries preserve navigation/history; no document dump.',
+    Tool('nyx_presentations', 'Inspect one exact named presentation or at most 16 definitions per page (default 8). Names are exact, case-sensitive Unicode application references; max 64 per document. Automatic definitions combine logical host width, height and orientation. Manual definitions require activation manual, all bounds zero and orientation any; one manual choice may be previewed alongside automatic rules. Controls use typed WhenPresentation scopes. In nyx_transaction, presentation-define creates/replaces a shared definition; presentation-use initializes a supported override; presentation-set upserts one typed scalar. presentation-reset removes one exact override; presentation-remove refuses remaining references. Group related edits as one paired Undo step. Queries preserve navigation/history; no document dump.',
       Schema(NyxObject([NyxField('name', TextSchema('Optional exact presentation name; excludes pagination')),
         NyxField('offset', IntSchema(0, 64)), NyxField('limit', IntSchema(1, 16))]), []), True),
     Tool('nyx_state', 'Inspect paged authored defaults (case-sensitive name substring filter), exact text windows in Unicode scalars, or supported/local/effective bindings for an exact authored owner. Defaults previews contain at most 80 scalars; value windows at most 4096. Apply 1..32 ordered create/set/rename/remove/bind/clear-binding/inherit-binding changes as ONE paired Undo step. Primitive types and scalar families are exact. Rename updates authored references across pages and reusable definitions. Clear deliberately masks inheritance; inherit removes a local descriptor. Existing named-part override IDs are supported; this tool does not create overrides. Clear dependent bindings before removing a default. Apply requires Allow edits, current expectedRevision, unique operationId and no draft. Queries do not change selection or history; operator activity shows success and refusal.',
@@ -1221,10 +1221,11 @@ begin
         NyxField('operationId', TextSchema('Unique retry identity')),
         NyxField('direction', NyxObject([NyxField('enum', NyxArray([NyxData('undo'), NyxData('redo')]))]))]),
         [NyxData('expectedRevision'), NyxData('operationId'), NyxData('direction')]), False),
-    Tool('nyx_preview', 'Selectively render an immutable revision/view snapshot with Nyx. Returns a preview resource link; capture=true additionally returns an actual browser PNG when the local renderer is available.',
+    Tool('nyx_preview', 'Selectively render an immutable revision/view snapshot with Nyx. Optional presentation selects one exact manual definition; omit/null retains automatic defaults. It changes no editor selection or history. Returns a preview link; capture=true additionally returns an actual browser PNG when the local renderer is available.',
       Schema(NyxObject([NyxField('expectedRevision', IntSchema(1, High(Integer))),
         NyxField('view', TextSchema('Exact page or reusable root ID')),
         NyxField('width', IntSchema(320, 1600)), NyxField('height', IntSchema(240, 1200)),
+        NyxField('presentation', TNyxDataValue.ParseJSON('{"type":["string","null"],"minLength":1,"maxLength":128}')),
         NyxField('capture', LBoolean)]), [NyxData('expectedRevision'), NyxData('view')]), True),
     Tool('nyx_callbacks', 'Author 1..32 ordered add/policy/move/remove changes as ONE undoable paired source edit. Add returns crafted handler/registration names and final-source TODO lines. Inspect registrations with nyx_node. Results describe each operation in order. Apply requires expectedRevision and operationId; drafts reject. Before removal, review the exact batch for warnings and reviewID, then apply unchanged at that revision/actor. Review does not edit or add history; removal retains Pascal implementations.',
       CallbackSchema, False),
@@ -1421,11 +1422,25 @@ var
   AArguments: TNyxDataValue;
   LReview: TNyxReviewRef;
   LWorkspace: TNyxWorkspaceRef;
+  LSelection: TNyxPresentationSelection;
+  LPresentation: TNyxDataValue;
 begin
   LWorkspace := NyxWorkspaceArgument(AWireArguments);
   LReview := NyxReviewArgument(AWireArguments);
   AArguments := NyxReviewArguments(NyxWorkspaceArguments(AWireArguments));
-  NyxAgentFields(AArguments, '|expectedRevision|view|width|height|capture|');
+  NyxAgentFields(AArguments, '|expectedRevision|view|width|height|capture|presentation|');
+  LSelection := TNyxPresentationSelection.None;
+  LPresentation := NyxNull;
+
+  if NyxAgentHas(AArguments, 'presentation') then
+  begin
+    LPresentation := AArguments.Field('presentation');
+
+    if LPresentation.Kind <> ndNull then
+    begin
+      LSelection := TNyxPresentationSelection.Use(NyxPresentation(LPresentation.AsText));
+    end;
+  end;
   LRevision := AArguments.Field('expectedRevision').AsInteger;
   LView := AArguments.Field('view').AsText;
   LWidth := 1024;
@@ -1448,7 +1463,7 @@ begin
   LToken := NewCapability;
   FGuard.Acquire;
   try
-    LPair := ContextSession(AWireArguments, AOwner, AActor).PreviewPair(LRevision, LView, AActor);
+    LPair := ContextSession(AWireArguments, AOwner, AActor).PreviewPair(LRevision, LView, AActor, LSelection);
 
     if Length(FPreviews) = 16 then
     begin
@@ -1462,11 +1477,13 @@ begin
     FPreviews[High(FPreviews)] := NyxObject([NyxField('token', NyxData(LToken)),
       NyxField('packet', NyxData(NyxObject([NyxField('design', NyxData(LPair.Design)),
         NyxField('view', NyxData(LView)), NyxField('revision', NyxData(LRevision)),
+        NyxField('presentation', LPresentation),
         NyxField('width', NyxData(LWidth)), NyxField('height', NyxData(LHeight))]).ToJSON))]);
   finally
     FGuard.Release;
   end;
   Result := NyxObject([NyxField('revision', NyxData(LRevision)),
+    NyxField('presentation', LPresentation),
     NyxField('view', NyxData(LView)), NyxField('width', NyxData(LWidth)),
     NyxField('height', NyxData(LHeight)),
     NyxField('url', NyxData('http://127.0.0.1:' + IntToStr(FStudioPort) +

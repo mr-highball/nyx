@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'responsive', 'presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1462,15 +1462,18 @@ try {
     exit 0
   }
 
-  if ($Target -in @('responsive','presentations')) {
+  if ($Target -in @('responsive','presentations','manual-presentations')) {
     # Pascal owns interval/cascade, semantic/paired and actual control assertions.
     # These artifacts never start or replace a listener or refresh enrollment.
     $nyxResponsiveRoot = Join-Path $nyxRoot "build/$Target"
     $nyxResponsiveContract = 'nyx_responsive_tests'
     $nyxResponsiveDefines = @()
-    if ($Target -eq 'presentations') {
+    if ($Target -in @('presentations','manual-presentations')) {
       $nyxResponsiveContract = 'nyx_presentations_tests'
       $nyxResponsiveDefines = @('-dNYX_PRESENTATION_CONSUMER')
+    }
+    if ($Target -eq 'manual-presentations') {
+      $nyxResponsiveDefines += '-dNYX_MANUAL_CONSUMER'
     }
     $nyxResponsiveStable = Join-Path $nyxResponsiveRoot 'stable'
     $nyxResponsiveMatched = Join-Path $nyxResponsiveRoot 'maintained-matched'
@@ -1491,12 +1494,12 @@ try {
     foreach ($nyxResponsiveCompiler in @(
       @($nyxFpc, $nyxResponsiveStable, $nyxResponsiveExport),
       @($nyxLclFpc, $nyxResponsiveMatched, $nyxResponsiveMatchedExport))) {
-      Invoke-NyxCompiler $nyxResponsiveCompiler[0] ($nyxResponsiveFlags + @(
+      Invoke-NyxCompiler $nyxResponsiveCompiler[0] ($nyxResponsiveFlags + $nyxResponsiveDefines + @(
         "-FU$($nyxResponsiveCompiler[1])", "-FE$($nyxResponsiveCompiler[1])",
         "tests/$nyxResponsiveContract.lpr"))
       $nyxResponsiveExportFile = Join-Path $nyxResponsiveCompiler[2] 'nyx.generated.view.pas'
       $nyxResponsiveContractArguments = @($nyxResponsiveExportFile)
-      if ($Target -eq 'presentations') {
+      if ($Target -in @('presentations','manual-presentations')) {
         $nyxResponsiveUnicode = Join-Path $nyxResponsiveCompiler[1] 'unicode'
         New-Item -ItemType Directory -Force $nyxResponsiveUnicode | Out-Null
         $nyxResponsiveContractArguments += (Join-Path $nyxResponsiveUnicode 'nyx.generated.view.pas')
@@ -1504,7 +1507,7 @@ try {
       & (Join-Path $nyxResponsiveCompiler[1] "$nyxResponsiveContract.exe") @nyxResponsiveContractArguments
 
       if ($LASTEXITCODE -ne 0) { throw 'Responsive semantic/paired qualification failed' }
-      if ($Target -eq 'presentations') {
+      if ($Target -in @('presentations','manual-presentations')) {
         Invoke-NyxCompiler $nyxResponsiveCompiler[0] ($nyxResponsiveFlags + @(
           "-Fu$nyxResponsiveUnicode", "-FU$nyxResponsiveUnicode", "-FE$nyxResponsiveUnicode",
           'tests/nyx_presentation_names.lpr'))
@@ -1555,7 +1558,7 @@ try {
         '-Futests', "-Fu$nyxResponsiveSource", '-Jirtl.js', "-FE$nyxResponsiveBrowser",
         $nyxResponsiveProgram) + $nyxResponsiveDefines)
     }
-    if ($Target -eq 'presentations') {
+    if ($Target -in @('presentations','manual-presentations')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/presentations.html') -Destination $nyxResponsiveBrowser
       Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/presentation-names.html') -Destination $nyxResponsiveBrowser
       $nyxResponsiveUnicodeSource = Join-Path $nyxResponsiveStable 'unicode'

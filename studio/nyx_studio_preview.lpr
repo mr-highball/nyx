@@ -25,7 +25,7 @@ program nyx_studio_preview;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, JS, Web, nyx.text, nyx.data, nyx.model, nyx.codec, nyx.render.browser;
+  SysUtils, JS, Web, nyx.text, nyx.data, nyx.model, nyx.codec, nyx.render.browser, nyx.presentations;
 
 var
   GRequest: TJSXMLHttpRequest;
@@ -33,6 +33,30 @@ var
   GRenderer: TNyxBrowserRenderer;
   GFrame: TJSHTMLIFrameElement;
   GPacket: TNyxDataValue;
+
+{ Old preview packets have no explicit choice. New packets carry null or one
+  exact manual reference as a value, never a JSON member name. }
+function PresentationName(const APacket: TNyxDataValue): TNyxText;
+var
+  LIndex: Integer;
+  LValue: TNyxDataValue;
+begin
+  Result := '';
+  for LIndex := 0 to APacket.Count - 1 do
+  begin
+
+    if APacket.Key(LIndex) = 'presentation' then
+    begin
+      LValue := APacket.Field('presentation');
+
+      if LValue.Kind <> ndNull then
+      begin
+        Result := LValue.AsText;
+      end;
+      Exit;
+    end;
+  end;
+end;
 
 { A headless browser's minimum outer-window width is not a CSS viewport promise.
   The independently admitted preview lives in an exact-size child viewport;
@@ -54,7 +78,8 @@ begin
   if LReady = 'true' then
   begin
 
-    if (LBody.getAttribute('data-nyx-preview-width') <>
+    if (LBody.getAttribute('data-nyx-preview-presentation') <> PresentationName(GPacket)) or
+      (LBody.getAttribute('data-nyx-preview-width') <>
       IntToStr(GPacket.Field('width').AsInteger)) or
       (LBody.getAttribute('data-nyx-preview-height') <>
       IntToStr(GPacket.Field('height').AsInteger)) or
@@ -65,6 +90,7 @@ begin
       Exit;
     end;
     document.body.setAttribute('data-nyx-preview-width', LBody.getAttribute('data-nyx-preview-width'));
+    document.body.setAttribute('data-nyx-preview-presentation', LBody.getAttribute('data-nyx-preview-presentation'));
     document.body.setAttribute('data-nyx-preview-height', LBody.getAttribute('data-nyx-preview-height'));
     document.body.setAttribute('data-nyx-preview-revision', LBody.getAttribute('data-nyx-preview-revision'));
     document.body.setAttribute('data-nyx-preview-ready', 'true');
@@ -84,6 +110,7 @@ var
   LPacket: TNyxDataValue;
   LRoot: TNyxNode;
   LHost: TJSHTMLElement;
+  LPresentation: TNyxText;
 begin
 
   if GRequest.readyState <> 4 then
@@ -127,6 +154,13 @@ begin
     document.body.appendChild(LHost);
     GRenderer := TNyxBrowserRenderer.Create;
     GRenderer.Render(GDocument, LRoot, LHost, False);
+    LPresentation := PresentationName(LPacket);
+
+    if LPresentation <> '' then
+    begin
+      GRenderer.Presentations.Select(NyxPresentation(LPresentation));
+    end;
+    document.body.setAttribute('data-nyx-preview-presentation', LPresentation);
     document.body.setAttribute('data-nyx-preview-width', IntToStr(window.innerWidth));
     document.body.setAttribute('data-nyx-preview-height', IntToStr(window.innerHeight));
     document.body.setAttribute('data-nyx-preview-ready', 'true');

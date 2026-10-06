@@ -27,7 +27,7 @@ unit nyx.studio.resize;
 interface
 
 uses
-  nyx.text, nyx.types, nyx.model, nyx.events, nyx.designer.resize,
+  nyx.text, nyx.types, nyx.model, nyx.events, nyx.designer.resize, nyx.presentations,
   nyx.studio.drag, nyx.studio.projects, nyx.studio.session, nyx.designer.guides;
 
 const
@@ -89,6 +89,9 @@ type
     procedure Connect(const AEvents: INyxEvents; AShell: TNyxNode;
       const AMount: TNyxStudioCommandContext);
     procedure Disconnect;
+    { A presentation change invalidates transient geometry while keeping the
+      same mounted public grips. Cancel clears the proposal without an edit. }
+    procedure Cancel;
     { Managed public adornment for the same exact owner and paired operation.
       Canvas adapters retain it while mounting their independent input scopes. }
     property CanvasGrips: INyxCanvasResizeGrips read FCanvasGrips;
@@ -185,6 +188,25 @@ begin
   FEvents := nil;
   FOwner := Default(TNyxControlRef);
   FPair := Default(TNyxProjectPair);
+end;
+
+procedure TNyxStudioResize.Cancel;
+var
+  LAxis: TNyxResizeAxis;
+begin
+  for LAxis := Low(TNyxResizeAxis) to High(TNyxResizeAxis) do
+  begin
+
+    if FHandles[LAxis] <> nil then
+    begin
+      FHandles[LAxis].Cancel;
+    end;
+  end;
+
+  if FCanvasGrips <> nil then
+  begin
+    FCanvasGrips.Cancel;
+  end;
 end;
 
 procedure TNyxStudioResize.Connect(const AEvents: INyxEvents; AShell: TNyxNode;
@@ -291,7 +313,7 @@ var
   LAttribute: TNyxAttribute;
   LNode: TNyxNode;
   LIndex: Integer;
-  LCondition: TNyxViewportCondition;
+  LCondition: TNyxPresentationCondition;
   LPlatform: TNyxPlatform;
   LScopedAttribute: TNyxAttribute;
 begin
@@ -323,7 +345,7 @@ begin
     for LIndex := 0 to LProjection.Props.Count - 1 do
     begin
 
-      if LProjection.TryResponsiveKey(LProjection.Props.Names[LIndex], LCondition,
+      if LProjection.TryPresentationRule(LProjection.Props.Names[LIndex], LCondition,
         LPlatform, LScopedAttribute) and (LScopedAttribute in
         [atWidth, atHeight, atWidthSizing, atHeightSizing, atFlex,
         atMinimumWidth, atMaximumWidth, atMinimumHeight, atMaximumHeight]) then
@@ -339,7 +361,7 @@ begin
     for LIndex := 0 to LProjection.Parent.Props.Count - 1 do
     begin
 
-      if LProjection.Parent.TryResponsiveKey(LProjection.Parent.Props.Names[LIndex], LCondition,
+      if LProjection.Parent.TryPresentationRule(LProjection.Parent.Props.Names[LIndex], LCondition,
         LPlatform, LScopedAttribute) and (LScopedAttribute = atLayout) then
       begin
         FStatus('Use responsive size fields; the parent changes flow between viewport presentations.');

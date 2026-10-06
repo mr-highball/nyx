@@ -66,19 +66,21 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Document-owned named presentations now share typed host predicates across
-managed controls and reusable views. Immutable copied snapshots preserve explicit
-ownership and retained inputs; ordered version-four rule arrays preserve full
-Unicode names and precedence. Crafted generation, source admission, the ordinary
-Inspector/worker/history pipeline and bounded MCP queries/mutations agree.
-Checks pass 55 per native compiler/browser, two compiled Unicode checks per
-target, 36 actual Win32 controls, 37 browser controls, 16 native Studio and 39
-per browser Studio size. The full LAN release serves nine verified artifacts and
-twenty authenticated MCP tools, preserving three paired designs/navigation states.
+Document-owned presentations now support typed automatic host predicates and
+exclusive manual configurations. Independent managed view capabilities select
+manual names without changing the document, source, state or history. Immutable
+copied snapshots preserve ownership and retained inputs. Strict wire/source
+admission, ordinary Inspector/worker/preview choices and semantic MCP agree.
+Checks pass 72 per native compiler/browser, two compiled Unicode checks per
+target, 52 actual Win32 controls, 53 browser controls, 26 native Studio and 64
+per browser Studio size. Per-project preferences migrate from versions 2/3 to
+version 4 without losing existing fields. The LAN release serves nine verified
+artifacts and twenty authenticated MCP tools, preserving four existing paired
+designs/navigation states. The English manual example is available in Agents.
 Restart resets previous history and assigns concurrent projects new handles.
-Container predicates, manual activation, alternate view structures, full
+Container predicates, alternate view structures, full
 editor/parity/accessibility/performance and delivery remain open. See
-[named presentation evidence](WORK.md#named-responsive-presentations--2026-10-06).
+[manual presentation evidence](WORK.md#manual-presentation-selection--2026-10-06).
 
 Copied alignment contexts now supply sibling size matches and absolute-layout
 edge/center guides through public Nyx resize policies and both adapters. Studio

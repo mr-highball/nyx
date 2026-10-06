@@ -24,7 +24,7 @@ program nyx_workspace_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.model, nyx.codec, nyx.codegen,
+  SysUtils, nyx.text, nyx.data, nyx.model, nyx.codec, nyx.codegen, nyx.presentations,
   nyx.studio.projects, nyx.studio.agents,
   nyx.studio.workspaces, nyx.studio.presentation, nyx.studio.palette,
   nyx.studio.view, nyx.studio.inspector, nyx.studio.authoring
@@ -141,6 +141,7 @@ begin
   LOriginal.NewStateValue := '漢字 👩‍💻';
   LOriginal.NewStateInput := High(TNyxStudioStateInput);
   LOriginal.CanvasView := 'own page 🌙';
+  LOriginal.PresentationSelection := TNyxPresentationSelection.Use(NyxPresentation('reading 🌙'));
   LOriginal.CodeCaretStart := 2147483646;
   LOriginal.CodeCaretEnd := 2147483647;
   LOriginal.CodeScrollTop := 2147483647;
@@ -155,13 +156,14 @@ begin
   LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LOriginal));
   { The previous strict packet remains readable. New per-project choices use
     their defaults, while every earlier preference and Unicode value survives. }
-  SetLength(LFields, LPacket.Count - 2);
+  SetLength(LFields, LPacket.Count - 3);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
 
     if (LPacket.Key(LIndex) <> 'sourceTab') and
-      (LPacket.Key(LIndex) <> 'sourceExpanded') then
+      (LPacket.Key(LIndex) <> 'sourceExpanded') and
+      (LPacket.Key(LIndex) <> 'presentation') then
     begin
       LValue := LPacket.Field(LPacket.Key(LIndex));
 
@@ -174,16 +176,46 @@ begin
     end;
   end;
   LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
-  Check((LDecoded.SourceTab = nstSource) and not LDecoded.SourceExpanded,
+  Check((LDecoded.SourceTab = nstSource) and not LDecoded.SourceExpanded and
+    not LDecoded.PresentationSelection.Reference.Defined,
     'Version 2 preferences migrate to the inline source view');
   LDecoded.SourceTab := LOriginal.SourceTab;
   LDecoded.SourceExpanded := LOriginal.SourceExpanded;
+  LDecoded.PresentationSelection := LOriginal.PresentationSelection;
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
     'Migration retains every earlier per-project preference exactly');
-  for LCase := 0 to 17 do
+  { Existing Studio installations also wrote version 3, which already owns
+    source tabs and expansion. Its absent manual choice must not discard those
+    fields or any other per-project preference during this migration. }
+  SetLength(LFields, LPacket.Count - 1);
+  LCase := 0;
+  for LIndex := 0 to LPacket.Count - 1 do
+  begin
+
+    if LPacket.Key(LIndex) <> 'presentation' then
+    begin
+      LValue := LPacket.Field(LPacket.Key(LIndex));
+
+      if LPacket.Key(LIndex) = 'version' then
+      begin
+        LValue := NyxData(3);
+      end;
+      LFields[LCase] := NyxField(LPacket.Key(LIndex), LValue);
+      Inc(LCase);
+    end;
+  end;
+  LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
+  Check((LDecoded.SourceTab = LOriginal.SourceTab) and
+    (LDecoded.SourceExpanded = LOriginal.SourceExpanded) and
+    not LDecoded.PresentationSelection.Reference.Defined,
+    'Version 3 migration retains source presentation and defaults its manual choice');
+  LDecoded.PresentationSelection := LOriginal.PresentationSelection;
+  Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
+    'Version 3 migration retains every earlier Unicode, caret and workspace preference exactly');
+  for LCase := 0 to 22 do
   begin
     LKey := 'version';
-    LValue := NyxData(4);
+    LValue := NyxData(5);
     case LCase of
       1:
       begin
@@ -269,6 +301,31 @@ begin
       begin
         LKey := 'version';
         LValue := NyxData(2);
+      end;
+      18:
+      begin
+        LKey := 'presentation';
+        LValue := NyxData(42);
+      end;
+      19:
+      begin
+        LKey := 'presentation';
+        LValue := NyxData(True);
+      end;
+      20:
+      begin
+        LKey := 'presentation';
+        LValue := NyxData('');
+      end;
+      21:
+      begin
+        LKey := 'presentation';
+        LValue := NyxData(TNyxText('reading') + #10);
+      end;
+      22:
+      begin
+        LKey := 'version';
+        LValue := NyxData(3);
       end;
     end;
     SetLength(LFields, LPacket.Count);

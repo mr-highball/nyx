@@ -219,6 +219,48 @@ begin
       NyxPresentationKey(NyxPresentation('compact'), npfAny, atVisible)) < 0,
       'Actual native Inspector resets only the requested presentation override');
     {$endif}
+    {$ifdef NYX_MANUAL_CONSUMER}
+    LBefore := LStudio.Session.ProjectSnapshot;
+    LLayout := TComboBox(LStudio.ShellView.InputFor(NyxStudioPresentationPreviewID));
+    LLayout.ItemIndex := LLayout.Items.IndexOf('Manual / wide workspace');
+    LLayout.OnChange(LLayout);
+    Pump;
+    Check(LStudio.CanvasView.ControlFor('notes-editor').Top =
+      LStudio.CanvasView.ControlFor('other-editor').Top, 'Actual native preview chooser selects the manual row');
+    Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
+      'Manual preview switching writes no paired source or history');
+    LLayout := TComboBox(LStudio.ShellView.InputFor(NyxStudioPresentationPreviewID));
+    LLayout.ItemIndex := LLayout.Items.IndexOf('Manual / focused');
+    LLayout.OnChange(LLayout);
+    Pump;
+    Check(LStudio.CanvasView.ControlFor('other-editor').Top >
+      LStudio.CanvasView.ControlFor('notes-editor').Top, 'Another actual native preview choice restores a column');
+    Check((LStudio.CanvasView.InputFor('notes-editor') = LMemo) and
+      (LMemo.Text = 'Retain this independent English draft.'), 'Ordinary preview switching retains native input and live text');
+    Check((LMemo.SelStart = 5) and (LMemo.SelLength = 4), 'Ordinary preview switching retains native text selection');
+    LLayout := TComboBox(LStudio.ShellView.InputFor(NyxStudioPresentationPreviewID));
+    LLayout.ItemIndex := LLayout.Items.IndexOf('Automatic / defaults');
+    LLayout.OnChange(LLayout);
+    Pump;
+    Check(not LStudio.CanvasView.Presentations.Selection.Reference.Defined,
+      'Ordinary native preview chooser clears the exclusive manual choice');
+    TEdit(LStudio.ShellView.InputFor(NyxStudioPresentationNameID)).Text := 'reading';
+    LLayout := TComboBox(LStudio.ShellView.InputFor(NyxStudioPresentationActivationID));
+    LLayout.ItemIndex := LLayout.Items.IndexOf('manual');
+    LLayout.OnChange(LLayout);
+    TControlAccess(LStudio.ShellView.ControlFor(NyxStudioPresentationDefineID)).Click;
+    Pump;
+    Check(LStudio.Session.Document.Presentations.Definition(NyxPresentation('reading')).Activation = npaManual,
+      'Actual native Inspector adds a manual definition through its ordinary paired worker');
+    Check(Pos('TNyxPresentationCondition.Manual', LStudio.Session.ProjectSnapshot.Source) > 0,
+      'Actual manual Inspector output uses a crafted typed construct');
+    TControlAccess(LStudio.ShellView.ControlFor('action-undo')).Click;
+    Pump;
+    Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
+      'One actual native Undo restores the exact source before manual definition editing');
+    Check(LStudio.CanvasView.InputFor('notes-editor') = LMemo,
+      'Undo of manual definition editing retains the native canvas input');
+    {$endif}
     WriteLn('PASS ', LChecks, ' actual Studio responsive authoring checks');
   finally
     LStudio.Free;

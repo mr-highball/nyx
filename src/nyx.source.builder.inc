@@ -527,6 +527,7 @@ procedure TConfigurationReader.PresentationDefaults;
 var
   LArgs: TValues;
   LReference: TNyxPresentationRef;
+  LDefinition: TNyxPresentationCondition;
 begin
   Inc(FCursor, 3);
   Expect('.');
@@ -535,13 +536,22 @@ begin
   Expect(';');
 
   if (Length(LArgs) <> 2) or (LArgs[0].Kind <> vkPresentationRef) or
-    (LArgs[1].Kind <> vkViewportCondition) then
+    not (LArgs[1].Kind in [vkViewportCondition, vkPresentationCondition]) then
   begin
-    Fail('Presentations.Define requires a presentation reference and viewport condition');
+    Fail('Presentations.Define requires a presentation reference and typed condition');
   end;
   LReference := NyxPresentation(LArgs[0].Text);
 
-  if LArgs[1].ViewportCondition.IsAny then
+  if LArgs[1].Kind = vkViewportCondition then
+  begin
+    LDefinition := TNyxPresentationCondition.Automatic(LArgs[1].ViewportCondition);
+  end
+  else
+  begin
+    LDefinition := LArgs[1].PresentationCondition;
+  end;
+
+  if (LDefinition.Activation = npaAutomatic) and LDefinition.Viewport.IsAny then
   begin
     Fail('A named automatic presentation needs a viewport condition');
   end;
@@ -553,7 +563,7 @@ begin
     begin
       Fail('Define each presentation once in the declarative builder');
     end;
-    FDocument.Presentations.Define(LReference, LArgs[1].ViewportCondition);
+    FDocument.Presentations.Define(LReference, LDefinition);
   end;
 end;
 

@@ -40,6 +40,32 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Manual presentation selection — 2026-10-06
+
+Original criterion 1 now includes typed exclusive manual configurations alongside
+automatic host rules. Managed view capabilities expose selection on both targets
+without retaining the view or changing authored source/history. Each view owns
+its copied choice. Strict versioned definitions, crafted source, ordinary
+Inspector/worker/preview switching and selected immutable MCP captures share the
+same admission. Old editor preferences retain source tabs/expansion and other
+fields while defaulting the new choice.
+
+Evidence: 72 shared checks per native compiler/browser; two compiled Unicode
+checks per target; 52 Win32 / 53 per browser control size; 26 native Studio and
+64 per desktop/exact-390 ordinary Studio journey. Both application outputs compile
+the exact 119-line / 2908-byte MCP companion. The nine-artifact LAN release restores
+four existing pairs/navigation states exactly; twenty tools authenticate. See
+[evidence](../WORK.md#manual-presentation-selection--2026-10-06).
+
+No original criterion closes. Authoring no-closure advances **18→19** once;
+workflow **9**, codegen **28**, renderer **3**, delivery **1** remain. End local
+manual/parser/fixture expansion. Container predicates require explicit stable
+allocation/containment semantics; descendant-dependent natural sizes and detached
+browser candidates prevent deriving them from current parent dimensions alone.
+Alternate structures, full move snapping and complete ordinary editor/parity/
+accessibility/performance/delivery remain open. The original prerequisites and
+criteria stand; this bounded result earns no full-product completion credit.
+
 ## Named responsive presentations — 2026-10-06
 
 Original criterion 1 now has document-owned typed names/host conditions shared

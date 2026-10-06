@@ -95,6 +95,7 @@ var
   LWidths: array of Integer;
   LHeights: array of Integer;
   LViewport: TNyxViewportCondition;
+  LRule: TNyxPresentationCondition;
   LPlatform: TNyxPlatform;
   LTarget: TNyxPlatform;
   LAttribute: TNyxAttribute;
@@ -111,6 +112,7 @@ var
   LPosition: Integer;
   LMinimum: Integer;
   LMaximum: Integer;
+  LManual: array of TNyxPresentationRef;
 
   procedure AddBoundary(AValue: Integer; AHeight: Boolean);
   var
@@ -157,19 +159,34 @@ var
   end;
 
   procedure CheckPoint(AWidth, AHeight: Double);
+  var
+    LChoice: Integer;
+    LSelection: TNyxPresentationSelection;
   begin
-    LProbe.ApplyViewport(AWidth, AHeight, LTarget);
-    NyxNodeSizeConstraints(LProbe).Validate;
-
-    if ANode.ProjectionKind = 'split-view' then
+    { Exclusive manual choices are independent of host rectangles. Test every
+      admitted choice against each automatic partition; testing manual scopes
+      at one guessed viewport would miss conflicting automatic size bounds. }
+    for LChoice := -1 to High(LManual) do
     begin
-      LPosition := StrToIntDef(LProbe.Prop('split-position'), 65);
-      LMinimum := StrToIntDef(LProbe.Prop('split-minimum'), 15);
-      LMaximum := StrToIntDef(LProbe.Prop('split-maximum'), 85);
+      LSelection := TNyxPresentationSelection.None;
 
-      if (LMinimum > LMaximum) or (LPosition < LMinimum) or (LPosition > LMaximum) then
+      if LChoice >= 0 then
       begin
-        raise ENyxModel.Create('Responsive split position must fit its bounds on ' + ANode.ID);
+        LSelection := TNyxPresentationSelection.Use(LManual[LChoice]);
+      end;
+      LProbe.ApplyViewport(AWidth, AHeight, LTarget, LSelection);
+      NyxNodeSizeConstraints(LProbe).Validate;
+
+      if ANode.ProjectionKind = 'split-view' then
+      begin
+        LPosition := StrToIntDef(LProbe.Prop('split-position'), 65);
+        LMinimum := StrToIntDef(LProbe.Prop('split-minimum'), 15);
+        LMaximum := StrToIntDef(LProbe.Prop('split-maximum'), 85);
+
+        if (LMinimum > LMaximum) or (LPosition < LMinimum) or (LPosition > LMaximum) then
+        begin
+          raise ENyxModel.Create('Responsive split position must fit its bounds on ' + ANode.ID);
+        end;
       end;
     end;
   end;
@@ -183,16 +200,31 @@ begin
   end;
   LWidths := nil;
   LHeights := nil;
+  LManual := nil;
+
+  if LPresentations <> nil then
+  begin
+    for LIndex := 0 to LPresentations.Count - 1 do
+    begin
+
+      if LPresentations.Definition(LPresentations.Reference(LIndex)).Activation = npaManual then
+      begin
+        SetLength(LManual, Length(LManual) + 1);
+        LManual[High(LManual)] := LPresentations.Reference(LIndex);
+      end;
+    end;
+  end;
   for LIndex := 0 to ANode.Props.Count - 1 do
   begin
 
-    if TryNyxResponsiveKey(ANode.Props.Names[LIndex], LPresentations,
-      LViewport, LPlatform, LAttribute) and
+    if TryNyxPresentationRule(ANode.Props.Names[LIndex], LPresentations,
+      LRule, LPlatform, LAttribute) and
       (LAttribute in [atWidth, atHeight, atMinimumWidth, atMaximumWidth,
       atMinimumHeight, atMaximumHeight, atSplitPosition, atSplitMinimum, atSplitMaximum]) then
     begin
       { Other presentation rules cannot change size/split validity. Excluding
         them avoids a Cartesian admission cost for unrelated text/gap rules. }
+      LViewport := LRule.Viewport;
       AddBoundary(LViewport.WidthMinimum, False);
       AddBoundary(LViewport.WidthMaximum, False);
       AddBoundary(LViewport.HeightMinimum, True);
@@ -206,6 +238,11 @@ begin
   end;
   AddBoundary(0, False);
   AddBoundary(0, True);
+
+  if 1.0 * Length(LWidths) * Length(LHeights) * (Length(LManual) + 1) * 8 > 65536 then
+  begin
+    raise ENyxModel.Create('Presentation constraint partition budget exceeded on ' + ANode.ID);
+  end;
   for LTarget := npfBrowser to npfNativeLCL do
   begin
     LProbe := TNyxNode.CreateRealized(ANode.Kind, ANode.ID, ANode.ID, ANode.ID);

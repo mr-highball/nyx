@@ -570,7 +570,7 @@ begin
     for LIndex := 0 to ADocument.Presentations.Count - 1 do
     begin
       LCandidate.Presentations.Define(ADocument.Presentations.Reference(LIndex),
-        ADocument.Presentations.Condition(ADocument.Presentations.Reference(LIndex)));
+        ADocument.Presentations.Definition(ADocument.Presentations.Reference(LIndex)));
     end;
     LCandidate.AddPage(ARoot.Clone);
     CollectDefinitions(ARoot);

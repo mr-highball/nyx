@@ -40,6 +40,7 @@ uses
   Web,
   fpjson,
   nyx.model,
+  nyx.presentations,
   nyx.state,
   nyx.binding.types,
   nyx.studio.authoring,
@@ -115,6 +116,7 @@ type
     FCodeVisible: Boolean;
     FCanvasPercent: Integer;
     FPhone: Boolean;
+    FPresentationSelection: TNyxPresentationSelection;
     FPreview: Boolean;
     FStatus: TNyxText;
     FLog: TNyxText;
@@ -444,6 +446,7 @@ begin
   FSourceModal.OnDismiss := SourceModalDismiss;
   FCodeVisible := False;
   FCanvasPercent := 65;
+  FPresentationSelection := TNyxPresentationSelection.None;
   FPalette := DefaultNyxStudioPaletteState;
   FBindingTarget := bpValue;
   FBindingDirection := bdTwoWay;
@@ -568,6 +571,8 @@ begin
   LState.Compact := FCompact;
   LState.Panel := FPanel;
   LState.Phone := FPhone;
+  FPresentationSelection := FPresentationSelection.Reconciled(FSession.Document.Presentations);
+  LState.PresentationSelection := FPresentationSelection;
   LState.DesignerPlacement := FDesignerPlacement;
   LState.Palette := FPalette;
   LState.Log := FLog;
@@ -881,6 +886,12 @@ begin
   if (FCanvasRenderer.Root <> nil) and (not ARetainCanvas or FReplaceCanvas) then
   begin
     FCanvasCommandContext := FSession.CommandContext;
+  end;
+
+  if FCanvasRenderer.Root <> nil then
+  begin
+    FCanvasRenderer.PresentationSelection := FPresentationSelection.Reconciled(
+      FCanvasRenderer.Root.PresentationSnapshot);
   end;
   LPendingDesign := FSourceCommands.PendingDesign;
 
@@ -1552,6 +1563,18 @@ begin
     begin
       FDesignerDrag.Cancel;
       FDesignerPlacement := ReadNyxPlacement(ANode.Prop('value'));
+      Exit;
+    end;
+
+    if (ANode.ID = NyxStudioPresentationPreviewID) and (AEvent.Trigger = ntChange) then
+    begin
+      FDesignerDrag.Cancel;
+      FDesignerResize.Cancel;
+      FPresentationSelection := ReadNyxStudioPresentationChoice(ANode.Prop('value'),
+        FSession.Document.Presentations);
+      FCanvasRenderer.PresentationSelection := FPresentationSelection;
+      FStatus := NyxStudioPresentationChoice(FPresentationSelection);
+      SavePresentation;
       Exit;
     end;
 
@@ -2972,6 +2995,7 @@ begin
   LValue.SourceExpanded := FSourceExpanded;
   LValue.CanvasPercent := FCanvasPercent;
   LValue.Phone := FPhone;
+  LValue.PresentationSelection := FPresentationSelection;
   LValue.Preview := FPreview;
   LValue.AgentsVisible := FAgentsVisible;
   LValue.Panel := FPanel;
@@ -3064,6 +3088,7 @@ begin
     FSourceExpanded := LValue.SourceExpanded;
     FCanvasPercent := LValue.CanvasPercent;
     FPhone := LValue.Phone;
+    FPresentationSelection := LValue.PresentationSelection.Reconciled(FSession.Document.Presentations);
     FPreview := LValue.Preview;
     FAgentsVisible := LValue.AgentsVisible;
     FPanel := LValue.Panel;

@@ -1,0 +1,21 @@
+[
+  {"op":"title","value":"Room for ideas"},
+  {"op":"presentation-define","name":"compact","widthMinimum":0,"widthMaximum":640,"heightMinimum":0,"heightMaximum":0,"orientation":"any"},
+  {"op":"presentation-define","name":"short landscape","widthMinimum":0,"widthMaximum":0,"heightMinimum":0,"heightMaximum":300,"orientation":"landscape"},
+  {"op":"presentation-define","name":"focused","activation":"manual","widthMinimum":0,"widthMaximum":0,"heightMinimum":0,"heightMaximum":0,"orientation":"any"},
+  {"op":"presentation-define","name":"wide workspace","activation":"manual","widthMinimum":0,"widthMaximum":0,"heightMinimum":0,"heightMaximum":0,"orientation":"any"},
+  {"op":"create","kind":"page","id":"home","root":"page","properties":{"padding":16,"gap":12}},
+  {"op":"create","kind":"row","id":"workspace","parent":"home","properties":{"gap":16,"padding":0,"flow-wrap":"nowrap"}},
+  {"op":"presentation-set","id":"workspace","name":"compact","attribute":"layout","platform":"any","value":"column"},
+  {"op":"presentation-set","id":"workspace","name":"compact","attribute":"gap","platform":"any","value":8},
+  {"op":"presentation-set","id":"workspace","name":"compact","attribute":"gap","platform":"native-lcl","value":10},
+  {"op":"presentation-set","id":"workspace","name":"short landscape","attribute":"layout","platform":"any","value":"column"},
+  {"op":"presentation-set","id":"workspace","name":"short landscape","attribute":"gap","platform":"any","value":6},
+  {"op":"presentation-set","id":"workspace","name":"focused","attribute":"layout","platform":"any","value":"column"},
+  {"op":"presentation-set","id":"workspace","name":"focused","attribute":"gap","platform":"any","value":4},
+  {"op":"presentation-set","id":"workspace","name":"focused","attribute":"gap","platform":"native-lcl","value":5},
+  {"op":"presentation-set","id":"workspace","name":"wide workspace","attribute":"layout","platform":"any","value":"row"},
+  {"op":"presentation-set","id":"workspace","name":"wide workspace","attribute":"gap","platform":"any","value":20},
+  {"op":"create","kind":"memo","id":"notes-editor","parent":"workspace","properties":{"text":"Notes","width":200,"height":120,"value":"Keep this English draft."}},
+  {"op":"create","kind":"memo","id":"other-editor","parent":"workspace","properties":{"text":"Companion notes","width":160,"height":120,"value":"This control stays independent."}}
+]

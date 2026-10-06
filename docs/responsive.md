@@ -1,7 +1,7 @@
 # Responsive authoring
 
 [Designer views](designer-views.md) · [Building](building.md) ·
-[Current evidence](../WORK.md#typed-responsive-authoring--2026-10-05)
+[Current evidence](../WORK.md#manual-presentation-selection--2026-10-06)
 
 `TNyxViewportWidth` and `TNyxViewportCondition` describe available rendering space in logical pixels.
 It contains no DOM, LCL, operating-system or device-name dependency. Specialized
@@ -109,6 +109,44 @@ truncate. Versions 1–3 retain their format and opaque extension meaning; a
 conflicting promotion refuses. Generated Pascal uses `Presentations.Define` and
 `WhenPresentation`, never reserved property strings.
 
+A manual presentation gives an application or designer an explicit, exclusive
+choice alongside its automatic rules. Define its intent once, then configure
+any number of controls through the same strongly typed scope:
+
+```pascal
+LFocused := NyxPresentation('focused');
+LDocument.Presentations.Define(LFocused, TNyxPresentationCondition.Manual);
+
+LWorkspaceRow.Configure
+  .WhenPresentation(LFocused)
+  .Layout(nlColumn)
+  .Gap(4)
+  .ForPlatform(npfNativeLCL)
+  .Gap(5)
+  .Done;
+
+// Retain the public capability of this mounted view on either target.
+LViewPresentations.Select(LFocused);
+LViewPresentations.Automatic;
+```
+
+`LViewPresentations` is `INyxPresentationView`, exposed by each adapter's
+`Presentations` property. Selecting a manual name does not change the document,
+accepted Pascal, application state or Undo history. Different mounted views can
+select different names. A choice replaced by an automatic definition or removed
+in an admitted refresh clears to automatic/defaults. Unknown or automatic names
+refuse before changing the view. A retained capability does not retain its view;
+unmount retires its borrowed receivers, `Connected` becomes false, and further
+selection reads or changes raise `ENyxPresentation`.
+
+Definitions use `TNyxPresentationCondition` for complete automatic/manual
+inspection. The earlier `Condition` viewport accessor refuses manual definitions.
+Automatic-only registries preserve their exact nested version-one wire shape.
+A registry containing a manual definition uses nested version two, adding the
+closed `activation` choice to each entry. Manual entries require all bounds zero
+and orientation Any; contradictory hidden predicates refuse. The outer document
+remains version four. Existing automatic generated Pascal stays unchanged.
+
 The Nyx-built Inspector exposes shared definitions for leaf and layout controls.
 Use the condition fields to **Define or update presentation**, choose a shared
 name/property/target to **Add override**, edit its ordinary typed field, and
@@ -121,12 +159,25 @@ expected revision. `presentation-set` admits the published property's exact
 scalar family and carries the name as a value, including full-length Unicode.
 Definition removal must be grouped with removal of its remaining overrides.
 
-Named predicates currently use the rendering host rectangle. Container-relative
-conditions, explicit manual activation, and alternate structural view trees
-remain open authoring work; no physical device identity is inferred.
+The shared-definition Inspector offers automatic/manual activation. Manual
+activation ignores the automatic bounds fields. A **Presentation** preview
+selector appears in the view bar when manual definitions exist; it changes
+per-project editor presentation and retains the canvas inputs. `nyx_preview`
+accepts an optional exact `presentation` name at the requested revision;
+omission/null uses automatic/defaults. Its immutable preview does not change
+the observing editor's choice. The maintained English semantic fixture is
+[manual-presentation-review.operations.json](../tests/manual-presentation-review.operations.json).
+
+Named automatic predicates use the rendering host rectangle. Container-relative
+conditions and alternate structural view trees remain open authoring work.
+Container allocation must avoid feedback from descendant natural measurement;
+reading a nested control's current size alone cannot establish that contract.
+No physical device identity is inferred.
 
 Presentation first uses ordinary defaults and fixed target overrides. Matching
-common matching properties then apply, followed by concrete-target matching properties.
+common automatic properties apply, followed by the selected common manual
+properties, concrete-target automatic properties, and concrete-target selected
+manual properties.
 Later persisted property positions win within each group; updating an existing
 property retains its position. Leaving a rule exposes the current live default.
 
@@ -147,6 +198,8 @@ size/split bounds refuse before publication. Admission partitions both dimension
 at relevant authored bounds and checks every feasible portrait/landscape/square
 region on both targets. This includes conflicts occurring only on the interior
 square diagonal. Text and gap rules do not inflate the constraint partition.
+Each automatic region also checks defaults and every exclusive manual choice.
+Candidates exceeding the bounded 65,536 partition budget refuse explicitly.
 
 The Nyx-built Inspector exposes **Responsive layout** and shared presentations.
 Set inclusive minima, exclusive maxima (zero means no upper limit),
@@ -241,11 +294,21 @@ MCP application jobs succeed on both targets and grouped Undo/Redo restores exac
 100-line source. See [current evidence](../WORK.md#responsive-host-conditions--2026-10-06).
 
 Physical phone/hardware, IME/assistive technology, other widgetsets,
-nested container conditions, named
-variants and comprehensive responsive semantics remain unqualified. Projection
+nested container conditions and comprehensive responsive semantics remain
+unqualified. Projection
 scans authored rules; these fixtures make no large-project performance claim.
 Keyboard/visual-viewport handling is not established by resizing a fixed test
 host. A height rule follows that host when its layout resizes; it does not assume
 the mobile keyboard has resized the browser layout viewport.
 Full acceptance remains with the existing
 [authoring owner](../TODO/NS-4_studio-authoring_01.md).
+
+The manual-selection extension passes 72 shared checks per native compiler and
+executed browser, two compiled Unicode checks per target, 52 Win32 / 53 per
+browser-size retained-control checks, and 26 native / 64 per browser-size ordinary
+Studio checks. Version 2/3 preference migration and exact version-four selection
+round-trip pass in the native/browser workspace journey. The exact English MCP
+companion compiles for both outputs; focused/wide semantic PNGs render different
+layouts without editing the project. The LAN release preserves four existing
+paired designs/navigation states. See
+[manual selection evidence](../WORK.md#manual-presentation-selection--2026-10-06).

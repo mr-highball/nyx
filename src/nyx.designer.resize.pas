@@ -176,13 +176,16 @@ type
     allowing a later remount; Disconnect permanently retires borrowed editor
     receivers. Both must precede destruction of their respective receivers. }
   INyxCanvasResizeGrips = interface(IInterface)
-    ['{82536A1A-1D2D-4727-B4D6-8E6B9CC1C749}']
+    ['{7E22E09D-8E75-4ED3-8F6C-88E35A6B38AD}']
     function GetOwner: TNyxControlRef;
     function GetDocument: TNyxDocument;
     function Root(AAxis: TNyxResizeAxis): TNyxNode;
     procedure Bind(AAxis: TNyxResizeAxis; const AEvents: INyxEvents;
       APointerMap: TNyxResizePointerMap);
     procedure Unbind;
+    { Cancel transient gestures without retiring mounted scopes/receivers.
+      Feedback may clear paint; it must not destroy an executing grip. }
+    procedure Cancel;
     procedure Disconnect;
     function Dragging(AAxis: TNyxResizeAxis): Boolean;
     property Owner: TNyxControlRef read GetOwner;
@@ -269,6 +272,7 @@ type
     procedure Bind(AAxis: TNyxResizeAxis; const AEvents: INyxEvents;
       APointerMap: TNyxResizePointerMap);
     procedure Unbind;
+    procedure Cancel;
     procedure Disconnect;
     function Dragging(AAxis: TNyxResizeAxis): Boolean;
   end;
@@ -587,6 +591,20 @@ begin
   if Assigned(FRetired) then
   begin
     FRetired;
+  end;
+end;
+
+procedure TCanvasResizeGrips.Cancel;
+var
+  LAxis: TNyxResizeAxis;
+begin
+  for LAxis := Low(TNyxResizeAxis) to High(TNyxResizeAxis) do
+  begin
+
+    if FHandles[LAxis] <> nil then
+    begin
+      FHandles[LAxis].Cancel;
+    end;
   end;
 end;
 

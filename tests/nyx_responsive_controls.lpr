@@ -35,6 +35,7 @@ var
   GPlain: TNyxDocument;
   GBefore: TNyxText;
   GChecks: Integer;
+  {$ifdef NYX_MANUAL_CONSUMER}GCapability: INyxPresentationView;{$endif}
   {$ifdef PAS2JS}
   GRenderer: TNyxBrowserRenderer;
   GHost: TJSHTMLElement;
@@ -60,6 +61,80 @@ begin
   end;
   Inc(GChecks);
 end;
+
+{$ifdef NYX_MANUAL_CONSUMER}
+procedure ManualChoices;
+var
+  LRejected: Boolean;
+  LOther: {$ifdef PAS2JS}TNyxBrowserRenderer{$else}TNyxLCLRenderer{$endif};
+  LHost: {$ifdef PAS2JS}TJSHTMLElement{$else}TPanel{$endif};
+
+  function DirectionIsColumn(ARenderer: {$ifdef PAS2JS}TNyxBrowserRenderer{$else}TNyxLCLRenderer{$endif}): Boolean;
+  begin
+    {$ifdef PAS2JS}
+    Result := window.getComputedStyle(ARenderer.ElementFor('workspace')).getPropertyValue('flex-direction') = 'column';
+    {$else}
+    Result := ARenderer.ControlFor('other-editor').Top >
+      ARenderer.ControlFor('notes-editor').Top + ARenderer.ControlFor('notes-editor').Height;
+    {$endif}
+  end;
+
+begin
+  GCapability := GRenderer.Presentations;
+  GCapability.Select(NyxPresentation('focused'));
+  Check(DirectionIsColumn(GRenderer), 'Managed manual selection reaches actual column geometry');
+  Check(GRenderer.InputFor('notes-editor') = GInput, 'Manual selection retains the actual focused input');
+  Check({$ifdef PAS2JS}GInput.value{$else}GInput.Text{$endif} = 'Keep this focused English draft.',
+    'Manual selection preserves independent live text');
+  Check({$ifdef PAS2JS}(GInput.selectionStart = 5) and (GInput.selectionEnd = 9)
+    {$else}(GInput.SelStart = 5) and (GInput.SelLength = 4){$endif}, 'Manual selection preserves the physical text range');
+  Check({$ifdef PAS2JS}document.activeElement = GInput{$else}GForm.ActiveControl = GInput{$endif},
+    'Manual selection preserves actual input focus');
+  LRejected := False;
+  try
+    GCapability.Select(NyxPresentation('absent'));
+  except
+    on ENyxPresentation do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and DirectionIsColumn(GRenderer), 'Unknown manual names refuse before changing physical presentation');
+  LOther := {$ifdef PAS2JS}TNyxBrowserRenderer{$else}TNyxLCLRenderer{$endif}.Create;
+  {$ifdef PAS2JS}
+  LHost := TJSHTMLElement(document.createElement('div'));
+  LHost.style.setProperty('width', '800px');
+  LHost.style.setProperty('height', '400px');
+  document.body.appendChild(LHost);
+  {$else}
+  LHost := TPanel.Create(GForm);
+  LHost.Parent := GForm;
+  LHost.BevelOuter := bvNone;
+  LHost.SetBounds(0, 0, 800, 400);
+  {$endif}
+  try
+    LOther.Render(GDocument, GDocument.Pages[0], LHost, False);
+    Check(not DirectionIsColumn(LOther), 'A second actual view starts with independent automatic defaults');
+    LOther.Presentations.Select(NyxPresentation('wide workspace'));
+    Check(DirectionIsColumn(GRenderer), 'Another view selection cannot alter the first view geometry');
+  finally
+    LOther.Free;
+    {$ifdef PAS2JS}LHost.remove;{$else}LHost.Free;{$endif}
+  end;
+  GCapability.Select(NyxPresentation('wide workspace'));
+  Check(not DirectionIsColumn(GRenderer), 'Another exclusive manual choice replaces the previous layout');
+  Check(TNyxCodec.Encode(GDocument) = GBefore, 'Manual switches never rewrite authored source data');
+  GDocument.Presentations.Define(NyxPresentation('wide workspace'), TNyxViewportCondition.Any.WidthBelow(900));
+  Check(GRenderer.TryRefresh(GDocument, GDocument.Pages[0], False), 'Activation replacement uses a retained property refresh');
+  Check(GCapability.Connected and not GCapability.Selection.Reference.Defined,
+    'Retained managed capability clears a choice deliberately replaced by automatic activation');
+  Check(GRenderer.InputFor('notes-editor') = GInput, 'Activation replacement retains the same actual input');
+  GDocument.Presentations.Define(NyxPresentation('wide workspace'), TNyxPresentationCondition.Manual);
+  Check(GRenderer.TryRefresh(GDocument, GDocument.Pages[0], False), 'Restored manual activation preserves mount lifetime');
+  GCapability.Automatic;
+  Check(not DirectionIsColumn(GRenderer), 'Automatic restores the host configuration after manual switching');
+end;
+{$endif}
 
 {$ifdef PAS2JS}
 procedure Step;
@@ -161,6 +236,7 @@ begin
         begin
           Check(Abs(LRect.top - LOther.top) < 2, 'Exclusive height boundary returns to ordinary row');
           Check(GRenderer.InputFor('notes-editor') = GInput, 'Restored height retains input identity');
+          {$ifdef NYX_MANUAL_CONSUMER}ManualChoices;{$endif}
           GReplacement := TJSHTMLElement(document.createElement('div'));
           GReplacement.style.setProperty('width', '390px');
           GReplacement.style.setProperty('height', '420px');
@@ -179,6 +255,9 @@ begin
           Check(window.getComputedStyle(GRenderer.ElementFor('workspace'))
             .getPropertyValue('flex-direction') = 'row', 'Last-rule removal restores ordinary direction');
           GRenderer.Unmount;
+          {$ifdef NYX_MANUAL_CONSUMER}
+          Check(not GCapability.Connected, 'Unmount retires caller-retained managed presentation capabilities');
+          {$endif}
           GReplacement.style.setProperty('width', '800px');
           GHost.style.setProperty('width', '390px');
           GRenderer.Render(GDocument, GDocument.Pages[0], GHost, False);
@@ -339,6 +418,7 @@ begin
   GForm.ClientHeight := 480;
   Pump;
   Check(LFirst.Top = LSecond.Top, 'Restored native height returns to the ordinary row');
+  {$ifdef NYX_MANUAL_CONSUMER}ManualChoices;{$endif}
   GReplacement := TPanel.Create(GForm);
   GReplacement.Parent := GForm;
   GReplacement.SetBounds(0, 0, 390, 460);
@@ -354,6 +434,9 @@ begin
     'Native last-rule removal retains actual input identity');
   Check(LFirst.Top = LSecond.Top, 'Native last-rule removal restores ordinary direction');
   GRenderer.Unmount;
+  {$ifdef NYX_MANUAL_CONSUMER}
+  Check(not GCapability.Connected, 'Unmount retires caller-retained managed presentation capabilities');
+  {$endif}
   Check(GRenderer.Root = nil, 'Native unmount retires the responsive tree');
   WriteLn('PASS ', GChecks, ' actual native responsive controls');
 end;

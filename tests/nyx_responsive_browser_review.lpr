@@ -51,7 +51,17 @@ var
   LResultName: TNyxText;
   LErrorName: TNyxText;
   LSuffix: TNyxText;
+  LBudget: QWord;
 begin
+  LBudget := 30000;
+
+  if AKind = rrStudio then
+  begin
+    { The ordinary Studio path now includes twelve worker/history stages.
+      Its final paired Undo can finish just after the previous thirty-second
+      deadline. Allow the complete bounded journey on ordinary frames. }
+    LBudget := 60000;
+  end;
   LSuffix := CNames[AKind];
   LResultName := 'data-nyx-responsive-' + LSuffix;
   LErrorName := 'data-nyx-responsive-' + LSuffix + '-error';
@@ -110,9 +120,18 @@ begin
       Exit;
     end;
 
-    if GetTickCount64 - LStarted > 30000 then
+    if GetTickCount64 - LStarted > LBudget then
     begin
-      raise Exception.Create('Responsive fixture did not finish on ordinary browser frames');
+      { Retain the failed gate before teardown. Fixture-owned stage/check
+        markers provide bounded diagnostics without script injection or a
+        design dump; the capture is only for locating a rendering failure. }
+      Save('timeout.png', DecodeStringBase64(Command('Page.captureScreenshot',
+        NyxObject([NyxField('format', NyxData('png'))])).Field('data').AsText));
+      Save('timeout-attributes.json', Command('DOM.getAttributes',
+        NyxObject([NyxField('nodeId', NyxData(Node('body')))])).ToJSON);
+      raise Exception.Create('Responsive fixture did not finish on ordinary browser frames / stage ' +
+        Attribute('data-nyx-responsive-studio-stage') + ' / checks ' + Attribute(LChecksName) +
+        ' / comparison ' + Attribute('data-nyx-responsive-studio-comparison'));
     end;
     Sleep(10);
   until False;

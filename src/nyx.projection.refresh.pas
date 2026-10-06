@@ -141,8 +141,8 @@ var
       begin
 
         if not ATo.PresentationSnapshot.Contains(LPresentation) or
-          not AFrom.PresentationSnapshot.Condition(LPresentation).Same(
-            ATo.PresentationSnapshot.Condition(LPresentation)) then
+          not AFrom.PresentationSnapshot.Definition(LPresentation).Same(
+            ATo.PresentationSnapshot.Definition(LPresentation)) then
         begin
           Exit;
         end;

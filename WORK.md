@@ -7,7 +7,23 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-The current [named presentation release](#named-responsive-presentations--2026-10-06)
+The current [manual presentation release](#manual-presentation-selection--2026-10-06)
+serves nine qualified artifacts over all-interface HTTP, with loopback MCP and
+twenty authenticated tools. Four existing pairs/selection/view states remain
+exact. Restart resets prior histories; concurrent projects receive new handles
+and one import Undo step. The main server is PID 38744, creation
+`2026-10-06T02:38:34.900485-04:00`, using the firewall-covered installed executable
+and `build/manual-presentations/release/web`. Twelve auxiliary services retain
+their exact identities. `.local/manual-presentations-refresh-20261006/` owns the
+current identity, manifest, four paired backups, workspace mapping and rollback.
+It supersedes previous release/overlay records; never run their old refresh
+scripts. The independent English **Manual presentations** project is available
+in Agents. Actual browser/LCL application jobs and selected semantic captures
+pass. The primary remains exact at revision 2. Native named handles in this chat
+still initialize against an obsolete cached endpoint (HTTP 404); the authenticated
+Pascal semantic client remains primary until this chat reconnects.
+
+The preceding [named presentation release](#named-responsive-presentations--2026-10-06)
 serves nine exact qualified artifacts over all-interface HTTP, with MCP loopback
 and twenty authenticated tools. The primary and two concurrent pairs/selection/
 view states remain exact. Restart resets prior histories; concurrent projects
@@ -58,7 +74,7 @@ unchanged. The previous blocked/pending refresh below is historical and supersed
 do not execute its obsolete process manifest. Private current identity, artifact
 manifest, paired backup and rollback live under the current refresh record.
 
-Current independent work: [named responsive presentations](#named-responsive-presentations--2026-10-06)
+Preceding independent work: [named responsive presentations](#named-responsive-presentations--2026-10-06)
 qualify original authoring criterion 1 through managed fluency, exact Unicode
 wire/source/history, immutable copied ownership, retained browser/LCL inputs and
 ordinary Inspector/worker/semantic editing. The nine-artifact release is staged
@@ -69,6 +85,24 @@ remain. End local named-rule/parser/fixture expansion. Continue original
 container/manual/structural variants, full move snapping and complete ordinary
 editor/parity/accessibility/performance/delivery. Preserve the original
 prerequisites, semantic framing/transport gaps and physical-device limits.
+
+Current reassessment — manual presentation selection: original authoring
+criterion 1 retains its blockers. The integrated packet below advances the
+no-closure count 18→19 once; workflow 9, codegen 28, renderer 3 and delivery 1
+remain. The bounded container
+inspection ended: native natural measurement depends on descendants and browser
+candidates initially mount detached. Direct parent client measurements alone
+cannot establish stable, feedback-free allocation or per-instance semantics.
+Do not implement guessed geometry. Container queries need an explicit allocation/
+containment contract and remain open. The materially different next deliverable
+is typed exclusive manual presentation selection, with automatic host rules
+retained, independent view-local state and no design/history writes. Evidence
+now includes strict source/wire admission, both actual retained adapters,
+ordinary Studio preview/Undo and semantic MCP authoring/builds. This integrated
+batch is ended. Stop local manual/parser/fixture expansion. Continue the original
+allocation/containment and structural-variant gaps or full move snapping, then
+ordinary editor/parity/accessibility/performance/delivery. The original criteria
+and prerequisites remain; no original criterion or full-goal percentage closes.
 
 Preceding independent work: [alignment guides](#alignment-guides--2026-10-06) now
 has public copied geometry, both adapters and ordinary Studio evidence. The goal
@@ -8877,3 +8911,82 @@ fixture expansion. Next continue original container/manual/structural variants,
 full move snapping and complete editor/parity/accessibility/performance/delivery.
 Synthetic host input does not establish physical phone keyboard, visual viewport,
 hardware, IME, assistive technology, nested scrolling or another widgetset.
+
+## Manual presentation selection — 2026-10-06
+
+Original owner: [authoring criterion 1](TODO/NS-4_studio-authoring_01.md).
+The bounded container investigation stopped at its geometry gate: native natural
+measurement depends on descendants, while browser candidates mount detached.
+Stable allocation/containment and per-instance conditions remain open. The
+materially different integrated deliverable is exclusive manual configuration.
+
+- `TNyxPresentationCondition` distinguishes automatic host predicates from manual
+  definitions. `TNyxPresentationSelection` is a copied exact application reference.
+  `INyxPresentationView` exposes fluent Select/Automatic on both adapters; its
+  borrowed receivers retire before unmount frees a view. Different views own
+  independent choices. Compatible refresh retains a valid manual choice or clears
+  one deliberately removed/replaced by automatic activation.
+- Matching order is common automatic, selected common manual, concrete automatic,
+  selected concrete manual; authored property order remains stable within each
+  group. Selection changes effective overlays only. Constraint admission checks
+  every automatic region and exclusive manual choice on both targets, refusing
+  more than 65,536 bounded partitions. Automatic-only nested wire remains version
+  one; manual-containing registries use strict version two. Outer documents remain
+  version four. Manual entries refuse hidden bounds/orientation predicates.
+- Ordinary Nyx Inspector defines either activation. The view bar exposes manual
+  preview choices when available; it retains canvas controls/text/ranges and writes
+  no design/Pascal/history. Pending resize/placement proposals cancel before a
+  preview change. Per-project preference version four adds a nullable exact name
+  and admits strict versions two/three without discarding existing fields.
+- Semantic MCP composes the maintained English fixture as one paired transaction.
+  Bounded definition/source queries, grouped Undo/Redo, actual browser/LCL builds
+  and immutable selected previews use explicit workspace/revision context.
+  Automatic/unknown names, stale previews and mixed manual predicates refuse
+  without changing the document/history. Exact source is **119 lines / 2908 bytes**,
+  MD5 `09084a629502e003091f4717dbbd1497`; design fingerprint is
+  `dee250690061647555816c7d4b4bab75`. The source-window terminal LF is restored and
+  checked against immutable job fingerprints before actual consumer compilation.
+- **72** shared checks pass on stable FPC, LCL-matched FPC and browser; **2** actual
+  compiled Unicode checks pass per target. Unchanged MCP source passes **52**
+  Win32 / **53** per browser-size control checks, **26** actual native Studio and
+  **64** desktop / **64** exact-390 ordinary Studio checks through the module
+  worker and synchronized Undo. Preference/workspace checks pass **237** native
+  and browser. Resize regression passes **74**. Checked native runs report zero
+  leaks. No owned warning; seven known upstream pas2js RTL warnings remain.
+- Browser qualification found detached candidate Sync incorrectly replacing the
+  measured final-host rectangle with zero-sized staging geometry. Candidate Sync
+  now retains the final-host measurement; mounted Sync reads live geometry. The
+  first/second actual views apply correct initial automatic defaults. The longer
+  twelve-stage Studio journey passed just beyond the old 30-second host deadline;
+  its bounded deadline is now 60 seconds. Failed captures/progress markers retain
+  that reporting evidence without replacing the real-frame journey.
+
+Evidence: `build/manual-presentations/qualification.log`, `stable/`,
+`maintained-matched/`, `mcp-source/`, `mcp-lcl/`, `browser-contracts-admitted/`,
+`browser-names/`, `browser-controls-fixed/`, `browser-controls-390/`,
+`browser-studio-qualified/`, `browser-studio-390/`, `preferences/`,
+`browser-preferences-final/`, `resize-regression/`, semantic receipts and `release/`.
+Desktop/narrow and selected semantic preview captures were inspected.
+
+The exact nine-artifact closure is deployed through the existing firewall-covered
+executable with HTTP on all interfaces and MCP loopback. Sixteen served web hashes
+match the release manifest. Candidate and deployed restoration retain all four
+existing paired documents, selections and views exactly. Restart resets their
+histories; concurrent projects receive new handles and one import Undo. Twelve
+auxiliary services retain exact PID/executable/creation identities. Current private
+identity/backup/manifest/mapping/rollback lives in
+`.local/manual-presentations-refresh-20261006/`; previous refresh scripts are
+obsolete. The independent **Manual presentations** demo is composed through the
+deployed MCP server. Grouped Undo/Redo and both immutable application jobs succeed;
+selected focused/wide PNG previews render real different layouts at revision 4.
+The stable primary remains exact at revision 2. Twenty tools authenticate through
+the Pascal semantic client; this chat's native named handles still cache an
+obsolete endpoint and return initialization HTTP 404.
+
+No original criterion closes. Authoring no-closure advances **18→19** once;
+workflow **9**, codegen **28**, renderer **3**, delivery **1** remain. End local
+manual/parser/fixture expansion. Next continue original stable container allocation/
+containment, structural variants or full move snapping, then complete ordinary
+editor/parity/accessibility/performance/delivery. Physical phone input/keyboard,
+IME/assistive technology, nested scrolling, another widgetset and large-project
+performance remain unqualified. Preserve all original prerequisites and criteria.

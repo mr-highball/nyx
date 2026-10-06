@@ -38,6 +38,7 @@ const
 
 type
   ENyxPresentation = class(Exception);
+  INyxPresentationSnapshot = interface;
 
   { Exact open application name, independent of Pascal identifiers, target
     widgets and document pointers. Default is absent; reading it refuses. }
@@ -51,15 +52,82 @@ type
     property Defined: Boolean read GetDefined;
   end;
 
+  { A presentation is either selected automatically by available host space or
+    explicitly by the application/editor. Manual definitions deliberately carry
+    no hidden viewport predicate. The default record is an automatic Any value;
+    registry admission refuses it because ordinary configuration owns defaults. }
+  TNyxPresentationActivation = (npaAutomatic, npaManual);
+  TNyxPresentationCondition = record
+  private
+    FActivation: TNyxPresentationActivation;
+    FViewport: TNyxViewportCondition;
+  public
+    class function Automatic(const AViewport: TNyxViewportCondition): TNyxPresentationCondition; static;
+    class function Manual: TNyxPresentationCondition; static;
+    function Same(const AOther: TNyxPresentationCondition): Boolean;
+    function Caption: TNyxText;
+    function Pascal: TNyxText;
+    property Activation: TNyxPresentationActivation read FActivation;
+    { Manual returns Any here for geometry inspection only. It never becomes
+      active through Matches; selection must be evaluated separately. }
+    property Viewport: TNyxViewportCondition read FViewport;
+  end;
+
+  { Copied, exclusive view-local manual choice. Automatic host presentations
+    continue to apply. None restores automatic/default configuration. No tree,
+    registry or UI lifetime is retained; every mounted owner validates a choice
+    against its own immutable definition snapshot before changing presentation. }
+  TNyxPresentationSelection = record
+  private
+    FReference: TNyxPresentationRef;
+  public
+    class function None: TNyxPresentationSelection; static;
+    class function Use(const AReference: TNyxPresentationRef): TNyxPresentationSelection; static;
+    procedure Validate(const APresentations: INyxPresentationSnapshot);
+    { After an admitted definition refresh, retain an exact manual choice or
+      clear one whose definition was removed/replaced by automatic activation.
+      This is copied presentation state, never an authored mutation. }
+    function Reconciled(const APresentations: INyxPresentationSnapshot): TNyxPresentationSelection;
+    function Matches(const AReference: TNyxPresentationRef): Boolean;
+    function Same(const AOther: TNyxPresentationSelection): Boolean;
+    property Reference: TNyxPresentationRef read FReference;
+  end;
+
+  { Portable managed view capability. Applications need neither renderer class
+    nor target directives to select a named configuration. The interface does
+    not own its view; retained capabilities become inert after mount retirement.
+    Calls that read/change selection then raise ENyxPresentation. }
+  INyxPresentationView = interface(IInterface)
+    ['{F7D16481-F0C5-478B-98E4-49D7D2B7A301}']
+    function GetConnected: Boolean;
+    function GetSelection: TNyxPresentationSelection;
+    function Select(const AReference: TNyxPresentationRef): INyxPresentationView;
+    function Automatic: INyxPresentationView;
+    property Connected: Boolean read GetConnected;
+    property Selection: TNyxPresentationSelection read GetSelection;
+  end;
+
+  { Adapter-owned lease, deliberately separate from the application capability.
+    Retirement clears both borrowed receivers before any target/tree is freed. }
+  INyxPresentationViewOwner = interface(INyxPresentationView)
+    ['{60ADFA46-832E-4D6B-ADE5-324E41A20C44}']
+    procedure Retire;
+  end;
+  TNyxPresentationRead = function: TNyxPresentationSelection of object;
+  TNyxPresentationApply = procedure(const ASelection: TNyxPresentationSelection) of object;
+
   { Immutable independent registry snapshot. It retains copied values only,
     so rendered/reusable views can outlive a document without a backreference.
     Index and unknown-name reads refuse; definition order remains stable. }
   INyxPresentationSnapshot = interface(IInterface)
-    ['{6A55BCF5-6D19-41D2-818A-95D707CE9370}']
+    ['{77665F5F-047D-4D03-A3B7-77FCE8A259F1}']
     function GetCount: Integer;
     function Reference(AIndex: Integer): TNyxPresentationRef;
     function Contains(const AReference: TNyxPresentationRef): Boolean;
     function Condition(const AReference: TNyxPresentationRef): TNyxViewportCondition;
+    { Complete typed definition. The compatibility Condition accessor refuses
+      manual definitions rather than treating them as an always-on viewport. }
+    function Definition(const AReference: TNyxPresentationRef): TNyxPresentationCondition;
     function ToData: TNyxDataValue;
     property Count: Integer read GetCount;
   end;
@@ -70,9 +138,11 @@ type
     clones own independent arrays, including on pas2js. No subscribers/tree/UI
     objects are retained. Runtime stores never mutate these authored defaults. }
   INyxPresentations = interface(INyxPresentationSnapshot)
-    ['{64A0A770-131F-4703-8B9A-C510961310EC}']
+    ['{1DCBE42C-C25D-4098-AC69-90FEC22B9E8B}']
     procedure Define(const AReference: TNyxPresentationRef;
-      const ACondition: TNyxViewportCondition);
+      const ACondition: TNyxViewportCondition); overload;
+    procedure Define(const AReference: TNyxPresentationRef;
+      const ACondition: TNyxPresentationCondition); overload;
     procedure Remove(const AReference: TNyxPresentationRef);
     function Snapshot: INyxPresentationSnapshot;
     function Clone: INyxPresentations;
@@ -82,15 +152,25 @@ type
   Names are case-sensitive, retain exact encoding and need not be identifiers. }
 function NyxPresentation(const AName: TNyxText): TNyxPresentationRef;
 function NewNyxPresentations: INyxPresentations;
-{ Strict version-1 structured boundary. Unknown/missing fields, duplicate names,
-  malformed choices and budget excess refuse before returning a candidate. }
+{ Target boundary only. Receivers enforce UI-thread, current mount and exact
+  definition admission. They remain borrowed until the owner retires the lease;
+  the managed capability never forms a reference cycle back to the view. }
+function NewNyxPresentationView(ARead: TNyxPresentationRead;
+  AApply: TNyxPresentationApply): INyxPresentationViewOwner;
+{ Strict structured boundary: legacy automatic-only version 1 and explicit
+  automatic/manual version 2. Unknown/missing fields, duplicate names, manual
+  viewport predicates and budget excess refuse before returning a candidate. }
 function NyxPresentationsFromData(const AData: TNyxDataValue): INyxPresentations;
 { One strict definition at the structured editor/MCP boundary; it uses the
   same admission as a complete registry rather than a second condition grammar. }
 function NyxPresentationDefinition(const AReference: TNyxPresentationRef;
-  const ACondition: TNyxViewportCondition): TNyxDataValue;
+  const ACondition: TNyxViewportCondition): TNyxDataValue; overload;
+function NyxPresentationDefinition(const AReference: TNyxPresentationRef;
+  const ACondition: TNyxPresentationCondition): TNyxDataValue; overload;
 procedure ReadNyxPresentationDefinition(const AData: TNyxDataValue;
-  out AReference: TNyxPresentationRef; out ACondition: TNyxViewportCondition);
+  out AReference: TNyxPresentationRef; out ACondition: TNyxViewportCondition); overload;
+procedure ReadNyxPresentationDefinition(const AData: TNyxDataValue;
+  out AReference: TNyxPresentationRef; out ACondition: TNyxPresentationCondition); overload;
 { Canonical reserved property namespace. Only presentation attributes are
   admitted. Target selection stays orthogonal to the document-owned condition. }
 function NyxPresentationKey(const AReference: TNyxPresentationRef;
@@ -104,14 +184,91 @@ function TryNyxPresentationKey(const AKey: TNyxText;
 function TryNyxResponsiveKey(const AKey: TNyxText;
   const APresentations: INyxPresentationSnapshot; out ACondition: TNyxViewportCondition;
   out APlatform: TNyxPlatform; out AAttribute: TNyxAttribute): Boolean;
+{ Complete automatic/manual rule inspection. Anonymous viewport scopes remain
+  automatic. The legacy responsive accessor refuses a manual definition. }
+function TryNyxPresentationRule(const AKey: TNyxText;
+  const APresentations: INyxPresentationSnapshot; out ACondition: TNyxPresentationCondition;
+  out APlatform: TNyxPlatform; out AAttribute: TNyxAttribute): Boolean;
 
 implementation
 
 type
+  TPresentationView = class(TInterfacedObject, INyxPresentationView, INyxPresentationViewOwner)
+  private
+    FRead: TNyxPresentationRead;
+    FApply: TNyxPresentationApply;
+    procedure RequireConnected;
+  public
+    constructor Create(ARead: TNyxPresentationRead; AApply: TNyxPresentationApply);
+    function GetConnected: Boolean;
+    function GetSelection: TNyxPresentationSelection;
+    function Select(const AReference: TNyxPresentationRef): INyxPresentationView;
+    function Automatic: INyxPresentationView;
+    procedure Retire;
+  end;
   TPresentationEntry = record
     Reference: TNyxPresentationRef;
-    Condition: TNyxViewportCondition;
+    Condition: TNyxPresentationCondition;
   end;
+
+constructor TPresentationView.Create(ARead: TNyxPresentationRead; AApply: TNyxPresentationApply);
+begin
+  inherited Create;
+
+  if not Assigned(ARead) or not Assigned(AApply) then
+  begin
+    raise ENyxPresentation.Create('A presentation view requires both borrowed receivers');
+  end;
+  FRead := ARead;
+  FApply := AApply;
+end;
+
+function NewNyxPresentationView(ARead: TNyxPresentationRead;
+  AApply: TNyxPresentationApply): INyxPresentationViewOwner;
+begin
+  Result := TPresentationView.Create(ARead, AApply);
+end;
+
+procedure TPresentationView.RequireConnected;
+begin
+
+  if not GetConnected then
+  begin
+    raise ENyxPresentation.Create('This presentation view has retired');
+  end;
+end;
+
+function TPresentationView.GetConnected: Boolean;
+begin
+  Result := Assigned(FRead) and Assigned(FApply);
+end;
+
+function TPresentationView.GetSelection: TNyxPresentationSelection;
+begin
+  RequireConnected;
+  Result := FRead();
+end;
+
+function TPresentationView.Select(const AReference: TNyxPresentationRef): INyxPresentationView;
+begin
+  RequireConnected;
+  FApply(TNyxPresentationSelection.Use(AReference));
+  Result := Self;
+end;
+
+function TPresentationView.Automatic: INyxPresentationView;
+begin
+  RequireConnected;
+  FApply(TNyxPresentationSelection.None);
+  Result := Self;
+end;
+
+procedure TPresentationView.Retire;
+begin
+  FRead := nil;
+  FApply := nil;
+end;
+type
   TPresentationEntries = array of TPresentationEntry;
 
   TPresentationSnapshot = class(TInterfacedObject, INyxPresentationSnapshot)
@@ -124,13 +281,16 @@ type
     function Reference(AIndex: Integer): TNyxPresentationRef;
     function Contains(const AReference: TNyxPresentationRef): Boolean;
     function Condition(const AReference: TNyxPresentationRef): TNyxViewportCondition;
+    function Definition(const AReference: TNyxPresentationRef): TNyxPresentationCondition;
     function ToData: TNyxDataValue;
   end;
 
   TPresentations = class(TPresentationSnapshot, INyxPresentations)
   public
     procedure Define(const AReference: TNyxPresentationRef;
-      const ACondition: TNyxViewportCondition);
+      const ACondition: TNyxViewportCondition); overload;
+    procedure Define(const AReference: TNyxPresentationRef;
+      const ACondition: TNyxPresentationCondition); overload;
     procedure Remove(const AReference: TNyxPresentationRef);
     function Snapshot: INyxPresentationSnapshot;
     function Clone: INyxPresentations;
@@ -144,6 +304,112 @@ begin
     raise ENyxPresentation.Create('Construct a presentation reference first');
   end;
   Result := FName;
+end;
+
+class function TNyxPresentationCondition.Automatic(
+  const AViewport: TNyxViewportCondition): TNyxPresentationCondition;
+begin
+  Result := Default(TNyxPresentationCondition);
+  Result.FViewport := AViewport;
+end;
+
+class function TNyxPresentationCondition.Manual: TNyxPresentationCondition;
+begin
+  Result := Automatic(TNyxViewportCondition.Any);
+  Result.FActivation := npaManual;
+end;
+
+function TNyxPresentationCondition.Same(const AOther: TNyxPresentationCondition): Boolean;
+begin
+  Result := (FActivation = AOther.FActivation) and FViewport.Same(AOther.FViewport);
+end;
+
+function TNyxPresentationCondition.Caption: TNyxText;
+begin
+
+  if FActivation = npaManual then
+  begin
+    Exit('Manual selection');
+  end;
+  Result := FViewport.Caption;
+end;
+
+function TNyxPresentationCondition.Pascal: TNyxText;
+begin
+
+  if FActivation = npaManual then
+  begin
+    Exit('TNyxPresentationCondition.Manual');
+  end;
+  { Retain the concise existing overload for automatic authored source. }
+  Result := FViewport.PascalCondition;
+end;
+
+class function TNyxPresentationSelection.None: TNyxPresentationSelection;
+begin
+  Result := Default(TNyxPresentationSelection);
+end;
+
+class function TNyxPresentationSelection.Use(
+  const AReference: TNyxPresentationRef): TNyxPresentationSelection;
+begin
+  AReference.GetName;
+  Result := None;
+  Result.FReference := AReference;
+end;
+
+procedure TNyxPresentationSelection.Validate(const APresentations: INyxPresentationSnapshot);
+begin
+
+  if not FReference.Defined then
+  begin
+    Exit;
+  end;
+
+  if (APresentations = nil) or not APresentations.Contains(FReference) then
+  begin
+    raise ENyxPresentation.Create('Selected presentation is not defined in this view');
+  end;
+
+  if APresentations.Definition(FReference).Activation <> npaManual then
+  begin
+    raise ENyxPresentation.Create('Only manual presentations can be selected explicitly');
+  end;
+end;
+
+function TNyxPresentationSelection.Matches(const AReference: TNyxPresentationRef): Boolean;
+begin
+  Result := FReference.Defined and AReference.Defined;
+
+  if Result then
+  begin
+    Result := FReference.Name = AReference.Name;
+  end;
+end;
+
+function TNyxPresentationSelection.Reconciled(
+  const APresentations: INyxPresentationSnapshot): TNyxPresentationSelection;
+begin
+  Result := None;
+
+  if FReference.Defined and (APresentations <> nil) and APresentations.Contains(FReference) then
+  begin
+
+    if APresentations.Definition(FReference).Activation = npaManual then
+    begin
+      Result := Self;
+    end;
+  end;
+end;
+
+function TNyxPresentationSelection.Same(const AOther: TNyxPresentationSelection): Boolean;
+begin
+  Result := not FReference.Defined and not AOther.FReference.Defined;
+
+  if FReference.Defined and AOther.FReference.Defined then
+  begin
+    Result := FReference.Name = AOther.FReference.Name;
+  end;
 end;
 
 function TNyxPresentationRef.GetDefined: Boolean;
@@ -232,6 +498,20 @@ end;
 
 function TPresentationSnapshot.Condition(const AReference: TNyxPresentationRef): TNyxViewportCondition;
 var
+  LDefinition: TNyxPresentationCondition;
+begin
+  LDefinition := Definition(AReference);
+
+  if LDefinition.Activation <> npaAutomatic then
+  begin
+    raise ENyxPresentation.Create('Manual presentations have no viewport predicate');
+  end;
+  Result := LDefinition.Viewport;
+end;
+
+function TPresentationSnapshot.Definition(
+  const AReference: TNyxPresentationRef): TNyxPresentationCondition;
+var
   LIndex: Integer;
 begin
   LIndex := IndexOf(AReference);
@@ -245,6 +525,12 @@ end;
 
 procedure TPresentations.Define(const AReference: TNyxPresentationRef;
   const ACondition: TNyxViewportCondition);
+begin
+  Define(AReference, TNyxPresentationCondition.Automatic(ACondition));
+end;
+
+procedure TPresentations.Define(const AReference: TNyxPresentationRef;
+  const ACondition: TNyxPresentationCondition);
 var
   LIndex: Integer;
 begin
@@ -252,7 +538,7 @@ begin
   { Ordinary unscoped configuration owns the default presentation. Named
     automatic presentations need a predicate, rather than an always-on alias. }
 
-  if ACondition.IsAny then
+  if (ACondition.Activation = npaAutomatic) and ACondition.Viewport.IsAny then
   begin
     raise ENyxPresentation.Create('A named presentation needs a viewport condition');
   end;
@@ -310,22 +596,47 @@ end;
 function TPresentationSnapshot.ToData: TNyxDataValue;
 var
   LItems: array of TNyxDataValue;
+  LFields: array of TNyxDataField;
   LIndex: Integer;
+  LVersion: Integer;
   LCondition: TNyxViewportCondition;
 begin
+  LVersion := 1;
+  for LIndex := 0 to High(FEntries) do
+  begin
+
+    if FEntries[LIndex].Condition.Activation = npaManual then
+    begin
+      LVersion := 2;
+    end;
+  end;
   SetLength(LItems, Length(FEntries));
   for LIndex := 0 to High(FEntries) do
   begin
-    LCondition := FEntries[LIndex].Condition;
-    LItems[LIndex] := NyxObject([
-      NyxField('name', NyxData(FEntries[LIndex].Reference.Name)),
-      NyxField('widthMinimum', NyxData(LCondition.WidthMinimum)),
-      NyxField('widthMaximum', NyxData(LCondition.WidthMaximum)),
-      NyxField('heightMinimum', NyxData(LCondition.HeightMinimum)),
-      NyxField('heightMaximum', NyxData(LCondition.HeightMaximum)),
-      NyxField('orientation', NyxData(NyxViewportOrientationName(LCondition.OrientationValue)))]);
+    LCondition := FEntries[LIndex].Condition.Viewport;
+    SetLength(LFields, 5 + LVersion);
+    LFields[0] := NyxField('name', NyxData(FEntries[LIndex].Reference.Name));
+    LFields[1] := NyxField('widthMinimum', NyxData(LCondition.WidthMinimum));
+    LFields[2] := NyxField('widthMaximum', NyxData(LCondition.WidthMaximum));
+    LFields[3] := NyxField('heightMinimum', NyxData(LCondition.HeightMinimum));
+    LFields[4] := NyxField('heightMaximum', NyxData(LCondition.HeightMaximum));
+    LFields[5] := NyxField('orientation', NyxData(NyxViewportOrientationName(LCondition.OrientationValue)));
+
+    if LVersion = 2 then
+    begin
+
+      if FEntries[LIndex].Condition.Activation = npaManual then
+      begin
+        LFields[6] := NyxField('activation', NyxData('manual'));
+      end
+      else
+      begin
+        LFields[6] := NyxField('activation', NyxData('automatic'));
+      end;
+    end;
+    LItems[LIndex] := NyxObject(LFields);
   end;
-  Result := NyxObject([NyxField('version', NyxData(1)),
+  Result := NyxObject([NyxField('version', NyxData(LVersion)),
     NyxField('definitions', NyxArray(LItems))]);
 end;
 
@@ -346,6 +657,8 @@ var
   LWidthMaximum: Integer;
   LHeightMinimum: Integer;
   LHeightMaximum: Integer;
+  LVersion: Integer;
+  LActivation: TNyxText;
 
   procedure Reject;
   begin
@@ -354,8 +667,13 @@ var
 
 begin
 
-  if (AData.Kind <> ndObject) or (AData.Count <> 2) or
-    (AData.Field('version').AsInteger <> 1) then
+  if (AData.Kind <> ndObject) or (AData.Count <> 2) then
+  begin
+    Reject;
+  end;
+  LVersion := AData.Field('version').AsInteger;
+
+  if not (LVersion in [1, 2]) then
   begin
     Reject;
   end;
@@ -370,7 +688,7 @@ begin
   begin
     LEntry := LDefinitions.Item(LIndex);
 
-    if (LEntry.Kind <> ndObject) or (LEntry.Count <> Length(CFields)) then
+    if (LEntry.Kind <> ndObject) or (LEntry.Count <> Length(CFields) + LVersion - 1) then
     begin
       Reject;
     end;
@@ -423,7 +741,30 @@ begin
     begin
       Reject;
     end;
-    Result.Define(LReference, LCondition);
+    LActivation := 'automatic';
+
+    if LVersion = 2 then
+    begin
+      LActivation := LEntry.Field('activation').AsText;
+    end;
+
+    if LActivation = 'manual' then
+    begin
+
+      if not LCondition.IsAny then
+      begin
+        Reject;
+      end;
+      Result.Define(LReference, TNyxPresentationCondition.Manual);
+    end
+    else if LActivation = 'automatic' then
+    begin
+      Result.Define(LReference, LCondition);
+    end
+    else
+    begin
+      Reject;
+    end;
   end;
 end;
 
@@ -449,6 +790,12 @@ end;
 
 function NyxPresentationDefinition(const AReference: TNyxPresentationRef;
   const ACondition: TNyxViewportCondition): TNyxDataValue;
+begin
+  Result := NyxPresentationDefinition(AReference, TNyxPresentationCondition.Automatic(ACondition));
+end;
+
+function NyxPresentationDefinition(const AReference: TNyxPresentationRef;
+  const ACondition: TNyxPresentationCondition): TNyxDataValue;
 var
   LDefinitions: INyxPresentations;
 begin
@@ -460,14 +807,35 @@ end;
 procedure ReadNyxPresentationDefinition(const AData: TNyxDataValue;
   out AReference: TNyxPresentationRef; out ACondition: TNyxViewportCondition);
 var
+  LDefinition: TNyxPresentationCondition;
+begin
+  ReadNyxPresentationDefinition(AData, AReference, LDefinition);
+
+  if LDefinition.Activation <> npaAutomatic then
+  begin
+    raise ENyxPresentation.Create('Manual presentations have no viewport predicate');
+  end;
+  ACondition := LDefinition.Viewport;
+end;
+
+procedure ReadNyxPresentationDefinition(const AData: TNyxDataValue;
+  out AReference: TNyxPresentationRef; out ACondition: TNyxPresentationCondition);
+var
   LDefinitions: INyxPresentations;
+  LVersion: Integer;
 begin
   AReference := Default(TNyxPresentationRef);
-  ACondition := TNyxViewportCondition.Any;
+  ACondition := TNyxPresentationCondition.Automatic(TNyxViewportCondition.Any);
+  LVersion := 1;
+
+  if AData.Count = 7 then
+  begin
+    LVersion := 2;
+  end;
   LDefinitions := NyxPresentationsFromData(NyxObject([
-    NyxField('version', NyxData(1)), NyxField('definitions', NyxArray([AData]))]));
+    NyxField('version', NyxData(LVersion)), NyxField('definitions', NyxArray([AData]))]));
   AReference := LDefinitions.Reference(0);
-  ACondition := LDefinitions.Condition(AReference);
+  ACondition := LDefinitions.Definition(AReference);
 end;
 
 function UnescapeName(const AName: TNyxText): TNyxText;
@@ -583,9 +951,26 @@ function TryNyxResponsiveKey(const AKey: TNyxText;
   const APresentations: INyxPresentationSnapshot; out ACondition: TNyxViewportCondition;
   out APlatform: TNyxPlatform; out AAttribute: TNyxAttribute): Boolean;
 var
-  LReference: TNyxPresentationRef;
+  LCondition: TNyxPresentationCondition;
 begin
-  Result := TryNyxViewportKey(AKey, ACondition, APlatform, AAttribute);
+  Result := TryNyxPresentationRule(AKey, APresentations, LCondition, APlatform, AAttribute);
+  ACondition := LCondition.Viewport;
+
+  if Result and (LCondition.Activation = npaManual) then
+  begin
+    raise ENyxPresentation.Create('Use typed presentation-rule inspection for manual definitions');
+  end;
+end;
+
+function TryNyxPresentationRule(const AKey: TNyxText;
+  const APresentations: INyxPresentationSnapshot; out ACondition: TNyxPresentationCondition;
+  out APlatform: TNyxPlatform; out AAttribute: TNyxAttribute): Boolean;
+var
+  LReference: TNyxPresentationRef;
+  LViewport: TNyxViewportCondition;
+begin
+  Result := TryNyxViewportKey(AKey, LViewport, APlatform, AAttribute);
+  ACondition := TNyxPresentationCondition.Automatic(LViewport);
 
   if Result then
   begin
@@ -600,7 +985,7 @@ begin
     begin
       raise ENyxPresentation.Create('Named presentation rules require document definitions');
     end;
-    ACondition := APresentations.Condition(LReference);
+    ACondition := APresentations.Definition(LReference);
   end;
 end;
 

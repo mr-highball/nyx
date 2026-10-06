@@ -49,7 +49,7 @@ type
     FDefined: Boolean;
     FOperation: TNyxDesignOperation;
     FReference: TNyxPresentationRef;
-    FCondition: TNyxViewportCondition;
+    FCondition: TNyxPresentationCondition;
     FControl: TNyxControlRef;
     FAttribute: TNyxAttribute;
     FPlatform: TNyxPlatform;
@@ -138,7 +138,9 @@ function ReadNyxDesignPatch(const AOperations: TNyxDataValue): INyxDesignPatch;
 { One typed command can be grouped with other commands through the same patch
   engine. Undefined references/unsupported overrides refuse candidate admission. }
 function NyxDefinePresentation(const AReference: TNyxPresentationRef;
-  const ACondition: TNyxViewportCondition): TNyxPresentationEdit;
+  const ACondition: TNyxViewportCondition): TNyxPresentationEdit; overload;
+function NyxDefinePresentation(const AReference: TNyxPresentationRef;
+  const ACondition: TNyxPresentationCondition): TNyxPresentationEdit; overload;
 function NyxRemovePresentation(const AReference: TNyxPresentationRef): TNyxPresentationEdit;
 function NyxUsePresentation(const AControl: TNyxControlRef; const AReference: TNyxPresentationRef;
   AAttribute: TNyxAttribute; APlatform: TNyxPlatform = npfAny): TNyxPresentationEdit;
@@ -625,6 +627,12 @@ end;
 function NyxDefinePresentation(const AReference: TNyxPresentationRef;
   const ACondition: TNyxViewportCondition): TNyxPresentationEdit;
 begin
+  Result := NyxDefinePresentation(AReference, TNyxPresentationCondition.Automatic(ACondition));
+end;
+
+function NyxDefinePresentation(const AReference: TNyxPresentationRef;
+  const ACondition: TNyxPresentationCondition): TNyxPresentationEdit;
+begin
   NyxPresentationDefinition(AReference, ACondition);
   Result := Default(TNyxPresentationEdit);
   Result.FDefined := True;
@@ -736,7 +744,7 @@ class function TNyxPresentationEdit.FromData(const AData: TNyxDataValue): TNyxPr
 var
   LName: TNyxText;
   LReference: TNyxPresentationRef;
-  LCondition: TNyxViewportCondition;
+  LCondition: TNyxPresentationCondition;
   LFields: array of TNyxDataField;
   LIndex: Integer;
   LCount: Integer;
@@ -749,7 +757,7 @@ begin
 
   if LName = 'presentation-define' then
   begin
-    CheckFields(AData, '|op|name|widthMinimum|widthMaximum|heightMinimum|heightMaximum|orientation|');
+    CheckFields(AData, '|op|name|widthMinimum|widthMaximum|heightMinimum|heightMaximum|orientation|activation|');
     SetLength(LFields, AData.Count - 1);
     LCount := 0;
     for LIndex := 0 to AData.Count - 1 do

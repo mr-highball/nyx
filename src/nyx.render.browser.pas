@@ -37,6 +37,7 @@ uses
   JS,
   Web,
   nyx.model,
+  nyx.presentations,
   nyx.interaction,
   nyx.editing,
   nyx.editing.browser,
@@ -193,6 +194,15 @@ type
     FViewportObserver: TJSHTMLResizeObserver;
     FViewportWidth: Double;
     FViewportHeight: Double;
+    { Detached candidate mounting already measured the admitted final host.
+      Its temporary DOM container has no allocation and must not replace that
+      measurement during Sync. The mounted owner always reads its live host. }
+    FDetachedCandidate: Boolean;
+    FPresentationSelection: TNyxPresentationSelection;
+    FPresentationView: INyxPresentationViewOwner;
+    function ReadPresentationSelection: TNyxPresentationSelection;
+    function GetPresentationView: INyxPresentationView;
+    procedure SetPresentationSelection(const AValue: TNyxPresentationSelection);
     procedure ObserveViewport;
     procedure ViewportChanged(AEntries: TJSHTMLResizeObserverEntryArray;
       AObserver: TJSHTMLResizeObserver);
@@ -380,6 +390,13 @@ type
       queued invocations; renderer destruction closes every registration. }
     property Events: INyxEvents read FEvents;
     property Root: TNyxNode read FRoot;
+    { UI-thread, view-local exclusive choice. A mounted view is required;
+      unknown/automatic names refuse before mutation. Switching synchronizes
+      the same controls and preserves authored source/history and live input. }
+    property PresentationSelection: TNyxPresentationSelection read FPresentationSelection write SetPresentationSelection;
+    { Portable managed capability. Borrowed receiver links retire on Unmount;
+      caller-retained interfaces stay safe and never retain the renderer. }
+    property Presentations: INyxPresentationView read GetPresentationView;
     { Copied projection purpose, matching the native adapter. Runtime views
       cannot mount designer input adornments or emit designer mutations. }
     property DesignMode: Boolean read FDesignMode;
@@ -703,6 +720,12 @@ var
   LIndex: Integer;
 begin
 
+  if FPresentationView <> nil then
+  begin
+    FPresentationView.Retire;
+    FPresentationView := nil;
+  end;
+
   if FViewportObserver <> nil then
   begin
     FViewportObserver.disconnect;
@@ -766,6 +789,7 @@ begin
   SetLength(FBindings, 0);
   FCollectionBindings := nil;
   ReleaseNyxNode(FRoot);
+  FPresentationSelection := TNyxPresentationSelection.None;
 
   if FOwnState then
   begin
@@ -1401,6 +1425,7 @@ begin
     raise ENyxModel.Create('Browser host is required');
   end;
   LCandidate := TNyxBrowserRenderer.Create(FTheme);
+  LCandidate.FDetachedCandidate := True;
   LTransferState := (AState <> nil) and FOwnState and (AState = FState);
   try
 
@@ -1547,6 +1572,7 @@ var
   LPrevious: TNyxNode;
   LTheme: TNyxTheme;
   LIndex: Integer;
+  LPreviousSelection: TNyxPresentationSelection;
 begin
   FEvents.Scheduler.RequireUI;
   Result := False;
@@ -1599,18 +1625,21 @@ begin
       Exit;
     end;
     LPrevious := FRoot.Clone;
+    LPreviousSelection := FPresentationSelection;
 
     if not RefreshNyxProjectionProperties(FRoot, LCandidate, FProjectionBaseline, ARestores) then
     begin
       Exit;
     end;
     try
+      FPresentationSelection := FPresentationSelection.Reconciled(FRoot.PresentationSnapshot);
       Sync;
       { First-rule admission starts observation; removing the last rule retires
         it. A retained projection must follow the same mount lifetime as Render. }
       ObserveViewport;
     except
       RefreshNyxProjectionProperties(FRoot, LPrevious);
+      FPresentationSelection := LPreviousSelection;
       Sync;
       ObserveViewport;
       raise;
@@ -1630,6 +1659,55 @@ procedure TNyxBrowserRenderer.Unmount;
 begin
   Clear;
   FHost := nil;
+end;
+
+procedure TNyxBrowserRenderer.SetPresentationSelection(const AValue: TNyxPresentationSelection);
+var
+  LPrevious: TNyxPresentationSelection;
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if (FRoot = nil) or (FHost = nil) or FUpdating then
+  begin
+    raise ENyxModel.Create('Select a presentation on an idle mounted view');
+  end;
+  AValue.Validate(FRoot.PresentationSnapshot);
+
+  if AValue.Same(FPresentationSelection) then
+  begin
+    Exit;
+  end;
+  LPrevious := FPresentationSelection;
+  FPresentationSelection := AValue;
+  try
+    Sync;
+  except
+    FPresentationSelection := LPrevious;
+    Sync;
+    raise;
+  end;
+end;
+
+function TNyxBrowserRenderer.ReadPresentationSelection: TNyxPresentationSelection;
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if FRoot = nil then
+  begin
+    raise ENyxPresentation.Create('This presentation view is not mounted');
+  end;
+  Result := FPresentationSelection;
+end;
+
+function TNyxBrowserRenderer.GetPresentationView: INyxPresentationView;
+begin
+  ReadPresentationSelection;
+
+  if FPresentationView = nil then
+  begin
+    FPresentationView := NewNyxPresentationView(@ReadPresentationSelection, @SetPresentationSelection);
+  end;
+  Result := FPresentationView;
 end;
 
 function TNyxBrowserRenderer.CollectionView(const AID: TNyxText): INyxCollectionView;
@@ -4018,9 +4096,13 @@ begin
       { A first rule can arrive after an unobserved ordinary host was resized.
         Read current space before projecting; observer callbacks are subsequent
         automatic notifications, not the authority for initial dimensions. }
-      FViewportWidth := FHost.clientWidth;
-      FViewportHeight := FHost.clientHeight;
-      FRoot.ApplyViewport(FViewportWidth, FViewportHeight, npfBrowser);
+
+      if not FDetachedCandidate then
+      begin
+        FViewportWidth := FHost.clientWidth;
+        FViewportHeight := FHost.clientHeight;
+      end;
+      FRoot.ApplyViewport(FViewportWidth, FViewportHeight, npfBrowser, FPresentationSelection);
     end;
     for LIndex := 0 to Length(FBindings) - 1 do
     begin

@@ -112,9 +112,15 @@ end;
 procedure Poll;
 var
   LStatus: TJSHTMLElement;
+  LActual: TNyxText;
+  LDifference: Integer;
 begin
   try
     Inc(GPolls);
+    { Expose bounded progress for the observing Pascal host when a real
+      worker/history journey fails to finish. No source or design is exported. }
+    document.body.setAttribute('data-nyx-responsive-studio-stage', IntToStr(GStage));
+    document.body.setAttribute(CChecks, IntToStr(GChecks));
 
     if GPolls > 1000 then
     begin
@@ -325,10 +331,83 @@ begin
             begin
               Check(True, 'Reset removes only its exact named override and retains the shared definition');
               RetainedInput;
+              {$ifdef NYX_MANUAL_CONSUMER}
+              Change(NyxStudioPresentationPreviewID, 'Manual / wide workspace');
+              Check(window.getComputedStyle(Required('workspace')).getPropertyValue('flex-direction') = 'row',
+                'Actual browser preview chooser selects the manual row');
+              Check(TJSHTMLTextAreaElement(Field('studio-code')).value = GAfter,
+                'Manual preview changes neither accepted Pascal nor source editor text');
+              RetainedInput;
+              Change(NyxStudioPresentationPreviewID, 'Manual / focused');
+              Check(window.getComputedStyle(Required('workspace')).getPropertyValue('flex-direction') = 'column',
+                'Another browser manual choice replaces the layout');
+              Check(window.getComputedStyle(Required('workspace')).getPropertyValue('gap') = '4px',
+                'Manual browser preview applies its exact scoped configuration');
+              RetainedInput;
+              Change(NyxStudioPresentationPreviewID, 'Automatic / defaults');
+              Check(window.getComputedStyle(Required('workspace')).getPropertyValue('gap') = '8px',
+                'Automatic preview restores the shared host presentation');
+
+              if window.innerWidth <= 960 then
+              begin
+                Required('action-panel-inspector').click;
+              end;
+              Change(NyxStudioPresentationNameID, 'reading');
+              Change(NyxStudioPresentationActivationID, 'manual');
+              Required(NyxStudioPresentationDefineID).click;
+              Check(Pos('Preparing', Required('studio-status').textContent) = 1,
+                'Manual definition starts the ordinary worker: ' + Required('studio-status').textContent);
+              GStage := 10;
+              {$else}
               document.body.setAttribute(CResult, 'passed');
               document.body.setAttribute(CChecks, IntToStr(GChecks));
               Exit;
+              {$endif}
             end;
+          end;
+        end;
+      {$endif}
+      {$ifdef NYX_MANUAL_CONSUMER}
+      10:
+        begin
+
+          if Pos('Design / Pascal updated', Required('studio-status').textContent) = 1 then
+          begin
+
+            if window.innerWidth <= 960 then
+            begin
+              Required('action-panel-design').click;
+            end;
+            Check(Pos('NyxPresentation(''reading'')', TJSHTMLTextAreaElement(Field('studio-code')).value) > 0,
+              'Actual browser Inspector/worker adds the exact manual definition');
+            Check(Pos('TNyxPresentationCondition.Manual', TJSHTMLTextAreaElement(Field('studio-code')).value) > 0,
+              'Ordinary browser manual authoring produces the dedicated Pascal construct');
+            RetainedInput;
+            Required('action-undo').click;
+            GStage := 11;
+          end;
+        end;
+      11:
+        begin
+          LActual := TJSHTMLTextAreaElement(Field('studio-code')).value;
+          LDifference := 1;
+          while (LDifference <= Length(LActual)) and (LDifference <= Length(GAfter)) and
+            (LActual[LDifference] = GAfter[LDifference]) do
+          begin
+            Inc(LDifference);
+          end;
+          document.body.setAttribute('data-nyx-responsive-studio-comparison',
+            IntToStr(Length(LActual)) + '/' + IntToStr(Length(GAfter)) +
+            '/offset=' + IntToStr(LDifference) + '/actual=' + Copy(LActual, LDifference, 60) +
+            '/expected=' + Copy(GAfter, LDifference, 60));
+
+          if TJSHTMLTextAreaElement(Field('studio-code')).value = GAfter then
+          begin
+            Check(True, 'One synchronized browser Undo restores the exact pair before manual definition editing');
+            RetainedInput;
+            document.body.setAttribute(CResult, 'passed');
+            document.body.setAttribute(CChecks, IntToStr(GChecks));
+            Exit;
           end;
         end;
       {$endif}
@@ -368,7 +447,7 @@ begin
     end;
   end;
 
-  if GPolls > 270 then
+  if GPolls > 600 then
   begin
     Failed('Exact-390 Studio journey did not finish');
     Exit;

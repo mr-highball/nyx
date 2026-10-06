@@ -25,7 +25,23 @@ execution. Codegen criterion 3 remains open at no-closure 28; workflow 9, render
 3, authoring 11 and delivery 1 remain. No full criterion, goal percentage or DONE
 claim follows. See [evidence](WORK.md#reviewable-release-refresh--2026-10-05).
 
-Current independent authoring packet: document-owned named presentations share
+Current independent authoring packet: typed exclusive manual configurations now
+coexist with automatic host predicates. Managed view capabilities retain no
+document/view cycles, and each mounted view owns its choice. Ordinary Studio
+preview switching, Inspector/worker authoring and semantic MCP snapshots share
+strict source/wire admission and paired Undo. Checks pass 72 per compiler/browser,
+52 Win32 / 53 browser controls, 26 native Studio and 64 per browser Studio size.
+The nine-artifact LAN release preserves four existing pairs/navigation states;
+twenty tools authenticate and both application builds succeed. Manual selections
+write no source/history. Original container allocation/containment and structural
+variants remain open, along with move snapping and complete ordinary editor/
+parity/accessibility/performance/delivery. No original criterion closes: authoring
+no-closure advances **18→19** once; workflow **9**, codegen **28**, renderer **3**
+and delivery **1** remain. End local manual/parser/fixture expansion and change
+the deliverable to those original gaps. See
+[evidence](WORK.md#manual-presentation-selection--2026-10-06).
+
+Preceding independent authoring packet: document-owned named presentations share
 typed host predicates, copied immutable ownership and crafted Pascal across
 controls/reusable views. Version-four ordered rules preserve full supplementary
 names and precedence. Ordinary Inspector/worker/history and twenty-tool semantic
