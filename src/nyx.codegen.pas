@@ -33,6 +33,7 @@ uses
   nyx.data,
   nyx.contract,
   nyx.types,
+  nyx.responsive,
   nyx.state,
   nyx.collections,
   nyx.collections.view.types,
@@ -1392,8 +1393,11 @@ var
     LPlatform: TNyxPlatform;
     LScope: TNyxPlatform;
     LAttribute: TNyxAttribute;
+    LViewport: TNyxViewportWidth;
+    LViewportScope: TNyxViewportWidth;
   begin
     LScope := npfAny;
+    LViewportScope := TNyxViewportWidth.Any;
     { Admit each newly created node to its owner before applying properties.
       Generated try/except can then release the document if later work fails,
       without leaving unowned local builder variables behind. }
@@ -1438,10 +1442,22 @@ var
       LWireKey := ANode.Props.Names[LPropIndex];
       LKey := LWireKey;
       LPlatform := npfAny;
+      LViewport := TNyxViewportWidth.Any;
 
       if TryNyxPlatformKey(LWireKey, LPlatform, LAttribute) then
       begin
         LKey := NyxAttributeName(LAttribute);
+      end;
+
+      if TryNyxViewportKey(LWireKey, LViewport, LPlatform, LAttribute) then
+      begin
+        LKey := NyxAttributeName(LAttribute);
+      end;
+
+      if not LViewport.Same(LViewportScope) then
+      begin
+        LLines.Add('      .WhenViewport(' + LViewport.Pascal + ')');
+        LViewportScope := LViewport;
       end;
 
       if LPlatform <> LScope then
@@ -1501,6 +1517,7 @@ begin
     LLines.Add('uses');
     LLines.Add('  nyx.text,');
     LLines.Add('  nyx.types,');
+    LLines.Add('  nyx.responsive,');
     LLines.Add('  nyx.editing,');
     LLines.Add('  nyx.gestures,');
 

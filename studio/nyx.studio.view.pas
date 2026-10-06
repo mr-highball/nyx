@@ -36,6 +36,7 @@ uses
   nyx.contract,
   nyx.schema,
   nyx.types,
+  nyx.responsive,
   nyx.layout.policy,
   nyx.state,
   nyx.binding.types,
@@ -731,6 +732,7 @@ var
   LBinding: TNyxBindingSpec;
   LAttribute: TNyxAttribute;
   LPlatform: TNyxPlatform;
+  LViewport: TNyxViewportWidth;
 begin
   { Reject a missing controller before allocating any owned shell nodes. }
 
@@ -1093,10 +1095,20 @@ begin
           AddNyxCollectionBindingPanel(LRight, ASession, LSelectedProjection, AState.PendingDesign);
         end;
         LProperties := NyxProperties(LSelected, ASession.Document);
+        for LIndex := 0 to High(LProperties) do
+        begin
+
+          if LProperties[LIndex].Key = NyxAttributeName(atLayout) then
+          begin
+            AddNyxViewportInspector(LRight, LSelected.ID);
+            Break;
+          end;
+        end;
         for LIndex := 0 to Length(LProperties) - 1 do
         begin
 
-          if LProperties[LIndex].Advanced and not AState.AdvancedProperties then
+          if LProperties[LIndex].Advanced and not AState.AdvancedProperties and
+            not TryNyxViewportKey(LProperties[LIndex].Key, LViewport, LPlatform, LAttribute) then
           begin
             Continue;
           end;

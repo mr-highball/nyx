@@ -82,6 +82,17 @@ the native semantic client; an unknown source `limit` was correctly rejected,
 then the advertised `line`/`count` window succeeded. Keep these gaps visible
 instead of substituting screenshot-driven authoring.
 
+**Responsive journey follow-through — 2026-10-05:** One owned project now uses
+bounded queries, grouped width properties, exact source export, both actual MCP
+compiler targets and paired Undo/Redo. The first browser request printed its
+valid job receipt, then its one-shot Pascal client reported a socket error during
+MCP-session DELETE. Querying that exact handle confirmed successful compilation;
+the service stayed live. Later status/native/history calls closed normally.
+Retain this client-close/receipt distinction for transport follow-through; do not
+retry a mutation blindly or infer compiler failure from cleanup failure. No
+additional workflow criterion closes; count remains 9. See
+[responsive evidence](../WORK.md#typed-responsive-authoring--2026-10-05).
+
 **Setup recheck — 2026-10-04:** Existing project/enrolled configuration matches;
 idempotent enrollment preserves its bytes. The installed Codex client again
 authenticates all fifteen tools from another project. A disposable MCP-authored

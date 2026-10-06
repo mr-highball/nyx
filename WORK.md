@@ -7,7 +7,26 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Current independent work: [direct canvas resize handles](#direct-canvas-resize-handles--2026-10-05)
+Current independent work: [typed responsive authoring](#typed-responsive-authoring--2026-10-05)
+under original Studio authoring criterion 1. Managed public width conditions,
+typed generation/admission, retained target adapters and the Nyx-built Inspector
+share ordinary paired commands. Shared checks pass 33 per native compiler and
+33 in the executed browser contract; unchanged MCP source passes 22 actual Win32
+controls, nine ordinary native Studio checks and 23 desktop / 23 exact-390 browser
+checks, with zero checked native leaks. First/last-rule refresh preserves input
+and owns observer lifetime. Actual MCP browser/LCL jobs succeed; bounded source
+and one grouped Undo/Redo retain exact generated Pascal. Core and retained
+projection regressions pass. Authoring no-closure advances 13→14 once; workflow
+9, codegen 28, renderer 3 and delivery 1 remain. End local interval/fixture
+expansion. Next qualify ordinary browser Studio inspector/worker execution and
+continue original responsive variants, guides, editor/parity/accessibility and
+delivery outcomes. The prepared release-refresh closure and protected services/
+pair remain intact; no new LAN or phone deployment is claimed. The preceding
+user refresh verification was no progress: it confirmed the same pending local
+action without changing the release. This independent integration supplies new
+product evidence while that gate remains.
+
+Preceding independent work: [direct canvas resize handles](#direct-canvas-resize-handles--2026-10-05)
 under original Studio authoring criterion 1. Managed public Nyx adornments now
 mount specialized button handles on the selected face in both target adapters.
 Stable-plane mapping preserves deltas as handles move; scope retirement revokes
@@ -8329,3 +8348,86 @@ browser pointer/capture, ordinary browser Studio worker admission, physical
 phone/IME/assistive technology, wider widgetsets and broad native presentation
 retain their acceptance gates. Protected services/pairs/configuration and the
 pending local refresh remain intact; verify that deployment after user execution.
+
+## Typed responsive authoring — 2026-10-05
+
+Original owner: [Studio authoring criterion 1](TODO/NS-4_studio-authoring_01.md).
+Public `TNyxViewportWidth` supplies immutable half-open logical-width conditions.
+Independent managed/base configuration scopes preserve both target and interval;
+generated specialized Pascal and the closed source reader use `WhenViewport`.
+Reserved wire keys remain an explicit persistence/semantic boundary. Schema
+metadata retains integer/Boolean/enum types and readable interval intent.
+Every piecewise effective size/split interval is checked on both concrete targets
+before admission, including overlapping rules. See [contract](docs/responsive.md).
+
+Realized presentation overlays preserve authored properties and current live
+defaults. Browser ResizeObserver and ordinary LCL resizing refresh existing
+controls. Compatible first/last-rule edits retain the same input; browser
+observation starts/retires with those edits. Effective column CSS overrides the
+primitive row's centering. The Nyx-built Inspector creates layout rules through
+the existing independent paired processor; rule fields remain typed/editable.
+No second editor toolkit, compiler directives in application authoring or
+per-resize source/history mutation is introduced.
+
+Maintained `tools/build.ps1 -Target responsive -ResponsiveSourceDirectory
+build/responsive/mcp-source -BrowserOutput build/responsive/staged` passes:
+
+- Shared contract/semantic/paired checks: **33** on stable FPC 3.2.0 and matched
+  FPC 3.3.1, with identical generated exports and zero checked leaks.
+- Unchanged 97-line MCP companion: **22** actual Win32 controls and **9** ordinary
+  native Studio Inspector/Undo checks, with zero checked leaks. Input identity,
+  independent English text/range/focus, exclusive bounds, concrete-target gap,
+  host replacement and unchanged persistence are qualified.
+- Browser contract: **33** executed through the matched RTL and the Pascal
+  capture helper on ordinary clocks. Actual browser controls: **23** desktop /
+  **23** exact-390 iframe checks through the maintained Pascal CDP observer,
+  with zero checked driver leaks. It observes bounded fixture markers and
+  captures actual rendering without script evaluation or design automation.
+  This includes first/last-rule refresh and actual observer delivery.
+- Focused retained projection: **27** actual native checks, zero leaks. Core
+  regression passes **30**, composition/designer **1777**, scheduler **55**,
+  paired project/disk recovery **60**, compiled collection **3** and **65**
+  intended wrong-type compiler refusals. Generated reconstruction also executes.
+  Studio and its matched module worker compile; owned warnings remain zero.
+  The installed pas2js RTL's seven incomplete-case warnings remain visible.
+
+An independently owned loopback MCP project composes the English maintained
+operation fixture in one five-operation transaction. The initially wrong title
+field is refused at revision 1 without publication. Bounded source windows
+1..80/81..97 export revision 2, consumed unchanged by actual target controls.
+`nyx_build` browser and LCL jobs both succeed with matching source/design/output
+fingerprints and artifact manifests. One grouped Undo empties the owned project
+at revision 3; Redo at revision 4 restores exact generated source. Windows are
+joined with canonical LF and the generator's terminal LF before byte comparison.
+No borrowed active user design is replaced. The original first build request
+printed its receipt, then one-shot client session DELETE reported a socket error;
+querying that exact job confirmed success, and later calls closed normally.
+This retained transport-close gap belongs to the existing workflow owner.
+
+Evidence lives under ignored `build/responsive/`: `qualification-current.log`,
+`core-regression.log`, `projection/`, `browser-contracts/`, `browser-current/`,
+`browser-390-current/`, actual native painted captures and semantic job/source/
+history logs. Native painting is composed through actual Form.PaintTo, not a
+physical desktop capture. Captures contain English text and were inspected.
+Retained failures include initial source-reader integer decoding, an unsupported
+installed textarea method, accelerated-clock observer assumptions and a mistaken
+fixture method spelling. Final tests use the public TryRefresh contract and
+ordinary browser frames. An owned capture helper's uninitialized byte buffer
+warning is corrected without suppressing diagnostics or editing dependencies.
+
+The independent current preview stages only its own browser closure into its
+already running loopback service. The pending user-local release's nine hashes
+stay unchanged; protected process identities and revision-8 user state remain.
+The LAN release is still old, and its replacement is still blocked by the prior
+automatic review. Its reviewed local refresh script still parses and awaits
+user execution. No equivalent LAN launch or phone deployment is claimed.
+
+No original criterion closes. Authoring no-closure advances **13→14** once;
+workflow **9**, codegen **28**, renderer **3** and delivery **1** remain. End local
+interval/fixture expansion. Next qualify ordinary browser Studio Inspector/worker
+execution and continue richer responsive variants and original guides, editor/
+parity/accessibility/performance/delivery. Physical phone, hardware/IME/assistive
+technology, other widgetsets, nested container conditions, named variants and
+large-project performance remain open. Preserve all original task blockers.
+The post-push exact local/remote checkpoint receipt is retained under ignored
+`build/responsive/remote-checkpoint.json`; verify `origin/hello-nyx` before handoff.

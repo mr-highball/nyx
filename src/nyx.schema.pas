@@ -32,6 +32,7 @@ uses
   nyx.text,
   nyx.data,
   nyx.types,
+  nyx.responsive,
   nyx.contract,
   nyx.event.payload,
   nyx.state,
@@ -289,6 +290,7 @@ procedure ValidateNyxDocumentProperties(ADocument: TNyxDocument);
 implementation
 
 uses
+  nyx.platform,
   nyx.binding,
   nyx.callbacks,
   nyx.collections.view,
@@ -1220,6 +1222,7 @@ var
   LKnownAttributes: array of TNyxAttribute;
   LHasAttribute: array of Boolean;
   LScopedPlatforms: set of TNyxPlatform;
+  LViewport: TNyxViewportWidth;
 
   { All bookkeeping belongs to this call. No node, document, registry snapshot
     or caller array is retained. Geometric growth avoids copying managed fields
@@ -1747,6 +1750,42 @@ begin
           begin
             LProperties[LFoundIndex].Support := LProperties[LPropertyIndex].Support.ForPlatform(LPlatform);
           end;
+        end;
+      end;
+    end;
+  end;
+
+  { Each authored responsive property borrows its ordinary typed descriptor.
+    A scoped integer/Boolean/enum never becomes an opaque string input. }
+  for LIndex := 0 to ANode.Props.Count - 1 do
+  begin
+    LScopedKey := ANode.Props.Names[LIndex];
+
+    if TryNyxViewportKey(LScopedKey, LViewport, LPlatform, LAttribute) then
+    begin
+      LPublishedIndex := LAttributePositions[LAttribute];
+
+      if (LPublishedIndex < 0) or (LPublishedIndex >= LPlatformCount) then
+      begin
+        raise ENyxModel.Create('Responsive property is not supported by this control: ' + LScopedKey);
+      end;
+      LFoundIndex := Append;
+      LProperties[LFoundIndex] := LProperties[LPublishedIndex];
+      LProperties[LFoundIndex].Key := LScopedKey;
+      LProperties[LFoundIndex].DefaultValue := '';
+      LProperties[LFoundIndex].Advanced := True;
+
+      if ADetail = npdAuthoring then
+      begin
+        LProperties[LFoundIndex].Title := LViewport.Caption + ' / ' +
+          LProperties[LPublishedIndex].Title;
+
+        if LPlatform <> npfAny then
+        begin
+          LProperties[LFoundIndex].Title := NyxPlatformName(LPlatform) + ' / ' +
+            LProperties[LFoundIndex].Title;
+          LProperties[LFoundIndex].Support :=
+            LProperties[LPublishedIndex].Support.ForPlatform(LPlatform);
         end;
       end;
     end;
@@ -2541,6 +2580,7 @@ var
   LEventOwner: TNyxNode;
   LScalar: Double;
   LSizeConstraints: TNyxSizeConstraints;
+  LViewport: TNyxViewportWidth;
 
   function SplitMetric(APlatform: TNyxPlatform; AKey: TNyxAttribute;
     ADefault: Integer): Integer;
@@ -2636,7 +2676,8 @@ begin
     LValue := ANode.Props.Names[LIndex];
 
     if (Copy(LValue, 1, 5) = '@nyx.') and
-      not TryNyxPlatformKey(LValue, LPlatform, LAttribute) then
+      not TryNyxPlatformKey(LValue, LPlatform, LAttribute) and
+      not TryNyxViewportKey(LValue, LViewport, LPlatform, LAttribute) then
     begin
       raise ENyxModel.Create('Unknown or nonportable platform property on ' + ANode.ID);
     end;
@@ -2748,6 +2789,7 @@ begin
     LSizeConstraints := NyxNodeSizeConstraints(ANode, LPlatform);
     LSizeConstraints.Validate;
   end;
+  ValidateNyxViewportBounds(ANode);
 end;
 
 procedure ValidateNyxPropertyTree(ARoot: TNyxNode; ADocument: TNyxDocument);

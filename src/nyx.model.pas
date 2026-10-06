@@ -34,6 +34,7 @@ uses
   nyx.data,
   nyx.contract,
   nyx.types,
+  nyx.responsive,
   nyx.layout.policy,
   nyx.layout.constraints,
   nyx.state,
@@ -109,6 +110,8 @@ type
     FChildReferences: array of INyxNode;
     FConfigure: TNyxNodeConfig;
     FPlatformConfigure: array[npfBrowser..npfNativeLCL] of TNyxNodeConfig;
+    FViewportConfigure: array of TNyxNodeConfig;
+    FViewportValues: TNyxStrings;
     FContract: TNyxContract;
     FBindingConfig: TNyxNodeBindings;
     FStateBindings: array of TNyxBindingSpec;
@@ -168,6 +171,20 @@ type
       distinguishes an absent key from a present empty value. }
     function SetProp(const AKey, AValue: TNyxText): TNyxNode;
     function Prop(const AKey: TNyxText; const ADefault: TNyxText = ''): TNyxText;
+    { Exact persisted/current live baseline, before viewport presentation.
+      Codecs and authored-delta comparisons use this explicit wire boundary;
+      renderers/application presentation continue to use Prop. }
+    function StoredProp(const AKey: TNyxText; const ADefault: TNyxText = ''): TNyxText;
+    { Runtime-only presentation overlay. Available host width is finite logical
+      pixels. Ordinary defaults/live state remain in Props; matched viewport
+      scopes affect reads without changing persistence, identity or ownership.
+      Target-specific matches win after common matches; later authored matching
+      properties win within each group. Reapplying restores current live defaults.
+      Returns True only if effective scoped values changed. }
+    function ApplyViewport(AWidth: Double; APlatform: TNyxPlatform): Boolean;
+    { Cheap mount-time discovery; no viewport observers are needed for a tree
+      containing only ordinary/platform defaults. }
+    function HasViewportRules: Boolean;
     function Add(ANode: TNyxNode): TNyxNode; overload;
     function Add(const ANode: INyxNode): TNyxNode; overload;
     { Insert accepts 0..Count. Ownership/cycle checks run before mutation. }
@@ -257,6 +274,7 @@ type
   private
     FNode: TNyxNode;
     FPlatform: TNyxPlatform;
+    FViewport: TNyxViewportWidth;
     { Deliberately unit-private: only a node creates/owns this borrowed facade.
       FPC's public-constructor advice conflicts with that lifetime contract. }
     constructor Create(ANode: TNyxNode);
@@ -269,6 +287,10 @@ type
       a scoped facade is retained. npfAny returns the ordinary configuration.
       Managed controls expose the same fluent contract with retained ownership. }
     function ForPlatform(APlatform: TNyxPlatform): TNyxNodeConfig;
+    { Node-owned independent scope; retaining it never changes another facade.
+      Any returns the corresponding platform defaults. Target and viewport
+      selection commute, and both survive subsequent fluent typed calls. }
+    function WhenViewport(const AWidth: TNyxViewportWidth): TNyxNodeConfig;
     function SplitOrientation(AValue: TNyxSplitOrientation): TNyxNodeConfig;
     function SplitPosition(APercent: Integer): TNyxNodeConfig;
     function SplitMinimum(APercent: Integer): TNyxNodeConfig;
@@ -1060,6 +1082,11 @@ begin
   FConfigure.Free;
   FPlatformConfigure[npfBrowser].Free;
   FPlatformConfigure[npfNativeLCL].Free;
+  for LIndex := 0 to High(FViewportConfigure) do
+  begin
+    FViewportConfigure[LIndex].Free;
+  end;
+  FViewportValues.Free;
   FContract.Free;
   FBindingConfig.Free;
   FProps.Free;
@@ -1182,10 +1209,16 @@ begin
   inherited Create;
   FNode := ANode;
   FPlatform := npfAny;
+  FViewport := TNyxViewportWidth.Any;
 end;
 
 function TNyxNodeConfig.ForPlatform(APlatform: TNyxPlatform): TNyxNodeConfig;
 begin
+
+  if not FViewport.IsAny then
+  begin
+    Exit(FNode.Configure.ForPlatform(APlatform).WhenViewport(FViewport));
+  end;
 
   if APlatform = npfAny then
   begin
@@ -1198,6 +1231,31 @@ begin
     FNode.FPlatformConfigure[APlatform].FPlatform := APlatform;
   end;
   Result := FNode.FPlatformConfigure[APlatform];
+end;
+
+function TNyxNodeConfig.WhenViewport(const AWidth: TNyxViewportWidth): TNyxNodeConfig;
+var
+  LIndex: Integer;
+begin
+
+  if AWidth.IsAny then
+  begin
+    Exit(FNode.Configure.ForPlatform(FPlatform));
+  end;
+  for LIndex := 0 to High(FNode.FViewportConfigure) do
+  begin
+
+    if (FNode.FViewportConfigure[LIndex].FPlatform = FPlatform) and
+      FNode.FViewportConfigure[LIndex].FViewport.Same(AWidth) then
+    begin
+      Exit(FNode.FViewportConfigure[LIndex]);
+    end;
+  end;
+  Result := TNyxNodeConfig.Create(FNode);
+  Result.FPlatform := FPlatform;
+  Result.FViewport := AWidth;
+  SetLength(FNode.FViewportConfigure, Length(FNode.FViewportConfigure) + 1);
+  FNode.FViewportConfigure[High(FNode.FViewportConfigure)] := Result;
 end;
 
 function TNyxNodeConfig.SplitOrientation(AValue: TNyxSplitOrientation): TNyxNodeConfig;
@@ -1243,11 +1301,12 @@ end;
 function TNyxNodeConfig.Put(AKey: TNyxAttribute;
   const AValue: TNyxText): TNyxNodeConfig;
 begin
-  if (FPlatform <> npfAny) and not NyxPlatformAttribute(AKey) then
+
+  if ((FPlatform <> npfAny) or not FViewport.IsAny) and not NyxPlatformAttribute(AKey) then
   begin
     raise ENyxModel.Create('This attribute must retain portable meaning: ' + NyxAttributeName(AKey));
   end;
-  FNode.SetProp(NyxPlatformKey(FPlatform, AKey), AValue);
+  FNode.SetProp(NyxViewportKey(FViewport, FPlatform, AKey), AValue);
   Result := Self;
 end;
 
@@ -1693,7 +1752,7 @@ var
 begin
 
   if TryNyxAttribute(AKey, LAttribute) or (Copy(AKey, 1, 5) = '@nyx.') or
-    (FPlatform <> npfAny) then
+    (FPlatform <> npfAny) or not FViewport.IsAny then
   begin
     raise ENyxModel.Create('Built-in property requires typed configuration: ' + AKey);
   end;
@@ -1766,11 +1825,122 @@ function TNyxNode.Prop(const AKey, ADefault: TNyxText): TNyxText;
 var
   LIndex: Integer;
 begin
+
+  if FViewportValues <> nil then
+  begin
+    LIndex := FViewportValues.IndexOfName(AKey);
+
+    if LIndex >= 0 then
+    begin
+      Exit(Copy(FViewportValues[LIndex], Length(AKey) + 2, MaxInt));
+    end;
+  end;
+  Result := StoredProp(AKey, ADefault);
+end;
+
+function TNyxNode.StoredProp(const AKey: TNyxText; const ADefault: TNyxText): TNyxText;
+var
+  LIndex: Integer;
+begin
   LIndex := FProps.IndexOfName(AKey);
 
   if LIndex < 0 then
+  begin
     Exit(ADefault);
+  end;
   Result := Copy(FProps[LIndex], Length(AKey) + 2, MaxInt);
+end;
+
+function TNyxNode.ApplyViewport(AWidth: Double; APlatform: TNyxPlatform): Boolean;
+var
+  LValues: TNyxStrings;
+  LCondition: TNyxViewportWidth;
+  LAttribute: TNyxAttribute;
+  LPlatform: TNyxPlatform;
+  LPhase: Integer;
+  LIndex: Integer;
+  LKey: TNyxText;
+  LValue: TNyxText;
+  LName: TNyxText;
+  LFound: Integer;
+begin
+
+  if not IsRealized or (APlatform = npfAny) then
+  begin
+    raise ENyxModel.Create('Viewport projection requires a realized node and concrete target');
+  end;
+  TNyxViewportWidth.Any.Matches(AWidth);
+  LValues := nil;
+  try
+    for LPhase := 0 to 1 do
+    begin
+      for LIndex := 0 to FProps.Count - 1 do
+      begin
+        LKey := FProps.Names[LIndex];
+
+        if TryNyxViewportKey(LKey, LCondition, LPlatform, LAttribute) and
+          (((LPhase = 0) and (LPlatform = npfAny)) or
+          ((LPhase = 1) and (LPlatform = APlatform))) and LCondition.Matches(AWidth) then
+        begin
+          LName := NyxAttributeName(LAttribute);
+          LValue := Copy(FProps[LIndex], Length(LKey) + 2, MaxInt);
+
+          if LValues = nil then
+          begin
+            LValues := TNyxStrings.Create;
+          end;
+          LFound := LValues.IndexOfName(LName);
+
+          if LFound < 0 then
+          begin
+            LValues.Add(LName + '=' + LValue);
+          end
+          else
+          begin
+            LValues[LFound] := LName + '=' + LValue;
+          end;
+        end;
+      end;
+    end;
+    Result := (FViewportValues <> nil) <> (LValues <> nil);
+
+    if (FViewportValues <> nil) and (LValues <> nil) then
+    begin
+      Result := FViewportValues.Text <> LValues.Text;
+    end;
+    FViewportValues.Free;
+    FViewportValues := LValues;
+    LValues := nil;
+  finally
+    LValues.Free;
+  end;
+  for LIndex := 0 to Count - 1 do
+  begin
+    Result := Children[LIndex].ApplyViewport(AWidth, APlatform) or Result;
+  end;
+end;
+
+function TNyxNode.HasViewportRules: Boolean;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to FProps.Count - 1 do
+  begin
+
+    if Copy(FProps.Names[LIndex], 1, 14) = '@nyx.viewport:' then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if Children[LIndex].HasViewportRules then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
 end;
 
 procedure TNyxNode.Admit(ANode: TNyxNode);

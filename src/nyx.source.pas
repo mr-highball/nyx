@@ -32,6 +32,7 @@ uses
   nyx.text,
   nyx.types,
   nyx.layout.policy,
+  nyx.responsive,
   nyx.layout.constraints,
   nyx.callbacks,
   nyx.model;
@@ -533,7 +534,7 @@ type
     vkCollectionView, vkCollectionScope, vkCollectionCellMode, vkSelectionMode, vkPlatform,
     vkSplitOrientation, vkSemanticEvent, vkTouchBehavior, vkFlowWrap,
     vkCrossAlignment, vkJustification, vkSizing, vkLayoutPolicy, vkSizeRange,
-    vkSizeConstraints);
+    vkSizeConstraints, vkViewportWidth);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -555,6 +556,7 @@ type
     LayoutPolicy: TNyxLayoutPolicy;
     SizeRange: TNyxSizeRange;
     SizeConstraints: TNyxSizeConstraints;
+    ViewportWidth: TNyxViewportWidth;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -636,7 +638,8 @@ type
     procedure Callbacks;
     procedure Configure(AIndex: Integer);
     procedure ApplyCall(ANode: TNyxNode; const AMethod: TNyxText;
-      const AArgs: TValues; APlatform: TNyxPlatform);
+      const AArgs: TValues; APlatform: TNyxPlatform;
+      const AViewport: TNyxViewportWidth);
     procedure Declarations;
     procedure ConstructControl(AIndex: Integer);
     procedure OwnControl(AIndex: Integer; const AMethod: TNyxText);
@@ -1989,6 +1992,51 @@ begin
           Exit;
         end;
 
+        if LName = 'tnyxviewportwidth' then
+        begin
+          Result.Kind := vkViewportWidth;
+          Expect('.');
+
+          if FCursor >= Length(FTokens) then
+          begin
+            Fail('Expected a viewport width factory');
+          end;
+          LName := LowerCase(FTokens[FCursor].Text);
+          Inc(FCursor);
+          LArgs := nil;
+
+          if At('(') then
+          begin
+            LArgs := Arguments;
+          end;
+
+          if (LName = 'any') and (Length(LArgs) = 0) then
+          begin
+            Result.ViewportWidth := TNyxViewportWidth.Any;
+          end
+          else if (Length(LArgs) = 1) and (LArgs[0].Kind = vkInteger) and
+            ((LName = 'below') or (LName = 'atleast')) then
+          begin
+            Result.ViewportWidth := TNyxViewportWidth.AtLeast(StrToInt(LArgs[0].Text));
+
+            if LName = 'below' then
+            begin
+              Result.ViewportWidth := TNyxViewportWidth.Below(StrToInt(LArgs[0].Text));
+            end;
+          end
+          else if (LName = 'between') and (Length(LArgs) = 2) and
+            (LArgs[0].Kind = vkInteger) and (LArgs[1].Kind = vkInteger) then
+          begin
+            Result.ViewportWidth := TNyxViewportWidth.Between(StrToInt(LArgs[0].Text),
+              StrToInt(LArgs[1].Text));
+          end
+          else
+          begin
+            Fail('Viewport width requires a known factory and Integer pixel bounds');
+          end;
+          Exit;
+        end;
+
         if LName = 'tnyxlayoutpolicy' then
         begin
           { Evaluate only the closed public value builder, never arbitrary
@@ -2892,7 +2940,8 @@ begin
 end;
 
 procedure TConfigurationReader.ApplyCall(ANode: TNyxNode;
-  const AMethod: TNyxText; const AArgs: TValues; APlatform: TNyxPlatform);
+  const AMethod: TNyxText; const AArgs: TValues; APlatform: TNyxPlatform;
+  const AViewport: TNyxViewportWidth);
 var
   LAttribute: TNyxAttribute;
   LMethod: TNyxText;
@@ -2912,7 +2961,7 @@ var
   end;
 
 begin
-  LConfigure := ANode.Configure.ForPlatform(APlatform);
+  LConfigure := ANode.Configure.ForPlatform(APlatform).WhenViewport(AViewport);
   LMethod := LowerCase(AMethod);
 
   if LMethod = 'extension' then
@@ -3174,8 +3223,10 @@ var
   LMethod: TNyxText;
   LArgs: TValues;
   LPlatform: TNyxPlatform;
+  LViewport: TNyxViewportWidth;
 begin
   LPlatform := npfAny;
+  LViewport := TNyxViewportWidth.Any;
 
   if FLocals[AIndex].Configured then
   begin
@@ -3211,9 +3262,18 @@ begin
       end;
       LPlatform := TNyxPlatform(LArgs[0].Ordinal);
     end
+    else if SameText(LMethod, 'WhenViewport') then
+    begin
+
+      if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkViewportWidth) then
+      begin
+        Fail('WhenViewport requires TNyxViewportWidth');
+      end;
+      LViewport := LArgs[0].ViewportWidth;
+    end
     else if FApply then
     begin
-      ApplyCall(LNode, LMethod, LArgs, LPlatform);
+      ApplyCall(LNode, LMethod, LArgs, LPlatform, LViewport);
     end;
   end;
   Fail('Finish the Configure block with .Done;');

@@ -39,414 +39,425 @@ var
 begin
   LFacade := TNyxConfiguration.Create(FOwner);
   LFacade.FPlatform := APlatform;
+  LFacade.FViewport := FViewport;
+  Result := LFacade;
+end;
+
+function TNyxConfiguration.WhenViewport(const AWidth: TNyxViewportWidth): INyxConfiguration;
+var
+  LFacade: TNyxConfiguration;
+begin
+  LFacade := TNyxConfiguration.Create(FOwner);
+  LFacade.FPlatform := FPlatform;
+  LFacade.FViewport := AWidth;
   Result := LFacade;
 end;
 
 function TNyxConfiguration.SplitOrientation(AValue: TNyxSplitOrientation): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).SplitOrientation(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).SplitOrientation(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.SplitPosition(APercent: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).SplitPosition(APercent);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).SplitPosition(APercent);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.SplitMinimum(APercent: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).SplitMinimum(APercent);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).SplitMinimum(APercent);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.SplitMaximum(APercent: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).SplitMaximum(APercent);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).SplitMaximum(APercent);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.SplitResizable(AValue: Boolean): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).SplitResizable(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).SplitResizable(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.DragSource(AValue: Boolean): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).DragSource(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).DragSource(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.DropTarget(AValue: Boolean): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).DropTarget(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).DropTarget(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.TouchBehavior(AValue: TNyxTouchBehavior): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).TouchBehavior(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).TouchBehavior(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Text(const AValue: TNyxText): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Text(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Text(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Placeholder(const AValue: TNyxText): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Placeholder(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Placeholder(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Items(const AValue: TNyxText): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Items(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Items(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Hint(const AValue: TNyxText): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Hint(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Hint(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.AccessibleName(const AValue: TNyxText): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).AccessibleName(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).AccessibleName(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.LinkTo(const AValue: TNyxText): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).LinkTo(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).LinkTo(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Source(const AValue: TNyxText): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Source(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Source(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.AlternativeText(const AValue: TNyxText): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).AlternativeText(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).AlternativeText(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Option(const AValue: TNyxText): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Option(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Option(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Option(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Option(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Option(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Option(AValue: Boolean): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Option(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Option(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Option(AValue: Double): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Option(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Option(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Value(const AValue: TNyxText): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Value(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Value(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Value(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Value(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Value(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Value(AValue: Boolean): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Value(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Value(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Value(AValue: Double): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Value(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Value(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Padding(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Padding(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Padding(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Gap(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Gap(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Gap(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Columns(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Columns(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Columns(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Width(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Width(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Width(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Height(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Height(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Height(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.MinimumWidth(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).MinimumWidth(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).MinimumWidth(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.MaximumWidth(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).MaximumWidth(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).MaximumWidth(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.MinimumHeight(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).MinimumHeight(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).MinimumHeight(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.MaximumHeight(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).MaximumHeight(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).MaximumHeight(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Constraints(const AValue: TNyxSizeConstraints): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Constraints(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Constraints(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Left(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Left(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Left(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Top(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Top(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Top(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Flex(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Flex(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Flex(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Minimum(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Minimum(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Minimum(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Maximum(AValue: Integer): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Maximum(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Maximum(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Enabled(AValue: Boolean): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Enabled(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Enabled(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Visible(AValue: Boolean): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Visible(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Visible(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.ReadOnly(AValue: Boolean): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).ReadOnly(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).ReadOnly(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Surface(AValue: Boolean): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Surface(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Surface(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Compound(AValue: Boolean): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Compound(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Compound(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Pressed(AValue: Boolean): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Pressed(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Pressed(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Layout(AValue: TNyxLayoutMode): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Layout(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Layout(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Layout(const AValue: TNyxLayoutPolicy): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Layout(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Layout(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Wrap(AValue: TNyxFlowWrap): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Wrap(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Wrap(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Align(AValue: TNyxCrossAlignment): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Align(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Align(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Justify(AValue: TNyxJustification): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Justify(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Justify(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.WidthSizing(AValue: TNyxSizing): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).WidthSizing(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).WidthSizing(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.HeightSizing(AValue: TNyxSizing): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).HeightSizing(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).HeightSizing(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Variant(AValue: TNyxVariant): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Variant(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Variant(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Action(AValue: TNyxAction): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Action(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Action(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.ProjectAs(AValue: TNyxKind): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).ProjectAs(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).ProjectAs(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.OverrideMode(AValue: TNyxOverrideMode): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).OverrideMode(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).OverrideMode(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.InputType(AValue: TNyxInputType): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).InputType(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).InputType(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.PartName(const AValue: TNyxPartRef): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).PartName(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).PartName(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Target(const AValue: TNyxPartRef): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Target(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Target(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.OverridePath(const AValue: TNyxPartRef): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).OverridePath(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).OverridePath(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Component(const AValue: TNyxComponentRef): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Component(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Component(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.OnClick(const AValue: TNyxEventRef): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).OnClick(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).OnClick(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.OnChange(const AValue: TNyxEventRef): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).OnChange(AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).OnChange(AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Clear(AKey: TNyxAttribute): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Clear(AKey);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Clear(AKey);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Metadata(AKey: TNyxAttribute; const AValue: TNyxText): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Metadata(AKey, AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Metadata(AKey, AValue);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.CustomVariant(const AStyle: TNyxStyleRef): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).CustomVariant(AStyle);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).CustomVariant(AStyle);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.CustomProjection(const AKind: TNyxKindRef): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).CustomProjection(AKind);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).CustomProjection(AKind);
   Result := Self as INyxConfiguration;
 end;
 
 function TNyxConfiguration.Extension(const AKey, AValue: TNyxText): INyxConfiguration;
 begin
-  FOwner.Node.Configure.ForPlatform(FPlatform).Extension(AKey, AValue);
+  FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).Extension(AKey, AValue);
   Result := Self as INyxConfiguration;
 end;
 

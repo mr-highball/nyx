@@ -31,6 +31,7 @@ uses
   SysUtils,
   nyx.text,
   nyx.types,
+  nyx.responsive,
   nyx.layout.policy,
   nyx.layout.constraints,
   nyx.data,

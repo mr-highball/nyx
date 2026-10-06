@@ -66,6 +66,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Typed public viewport-width conditions now generate crafted Pascal and use
+ordinary paired Inspector/MCP admission. Shared checks pass 33 per native compiler
+and 33 in the browser; unchanged semantic source passes 22 Win32 controls, nine
+native Studio checks and 23 desktop / 23 exact-390 browser checks. Controls retain
+input through first/last-rule refresh and automatic resizing. Actual MCP jobs
+compile both targets and grouped Undo/Redo restores exact source. Ordinary browser
+Studio inspector/worker execution, phone deployment, richer responsive variants,
+performance and full parity remain open. See [responsive authoring](docs/responsive.md).
+
 Managed public canvas resize handles now reuse specialized Nyx buttons and
 independent target scopes. Stable-plane mapping preserves movement deltas;
 one release uses Studio's existing paired command/Undo. Shared checks pass 56

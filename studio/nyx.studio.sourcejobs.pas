@@ -27,7 +27,7 @@ unit nyx.studio.sourcejobs;
 interface
 
 uses
-  nyx.text, nyx.types, nyx.model, nyx.scheduler, nyx.schema, nyx.callbacks,
+  nyx.text, nyx.types, nyx.responsive, nyx.model, nyx.scheduler, nyx.schema, nyx.callbacks,
   nyx.source.preparation, nyx.studio.session, nyx.studio.edits, nyx.projection.refresh,
   nyx.studio.inspector, nyx.studio.collectionintent, nyx.studio.collections
   {$ifdef PAS2JS}, JS, Web{$endif};
@@ -1132,6 +1132,7 @@ var
   LPlacement: TNyxPlacement;
   LAttribute: TNyxAttribute;
   LPlatform: TNyxPlatform;
+  LViewport: TNyxViewportWidth;
 begin
   Result := False;
 
@@ -1148,6 +1149,12 @@ begin
   if ATrigger = ntClick then
   begin
 
+    if CaptureNyxViewportInspector(FSession, ANode, AShellRoot, LEdit) then
+    begin
+      Edit(LEdit);
+      Exit(True);
+    end;
+
     if ANode.Prop(NyxStudioPropertyClearKey) <> '' then
     begin
       LEdit := Default(TNyxStudioDesignEdit);
@@ -1156,7 +1163,8 @@ begin
 
       if (LEdit.Selection = '') or (LEdit.Selection <> FSession.SelectedID) or
         not (TryNyxAttribute(LEdit.Name, LAttribute) or
-        TryNyxPlatformKey(LEdit.Name, LPlatform, LAttribute)) then
+        TryNyxPlatformKey(LEdit.Name, LPlatform, LAttribute) or
+        TryNyxViewportKey(LEdit.Name, LViewport, LPlatform, LAttribute)) then
       begin
         raise ENyxModel.Create('Select this component again before unsetting its size bound');
       end;

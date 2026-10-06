@@ -31,6 +31,7 @@ uses
   SysUtils,
   nyx.text,
   nyx.types,
+  nyx.responsive,
   nyx.model,
   nyx.callbacks,
   nyx.scheduler,
@@ -56,6 +57,10 @@ type
 const
   NyxInspectorPropertiesID = 'inspector-tab-properties';
   NyxInspectorEventsID = 'inspector-tab-events';
+  NyxStudioViewportMinimumID = 'inspector-viewport-minimum';
+  NyxStudioViewportMaximumID = 'inspector-viewport-maximum';
+  NyxStudioViewportLayoutID = 'inspector-viewport-layout';
+  NyxStudioViewportApplyID = 'inspector-viewport-apply';
   { Closed size-bound reset intent at the chrome metadata boundary. The captured
     exact authored owner prevents a delayed button acting on a later selection. }
   NyxStudioPropertyClearKey = 'studio.property-clear';
@@ -92,10 +97,105 @@ function RouteNyxStudioEvents(ASession: TNyxStudioSession; ANode: TNyxNode;
   out AEffect: TNyxInspectorEffect; out ALine: Integer;
   out ARemoval: TNyxCallbackRemoval): Boolean;
 
+{ Shared Nyx controls compose a bounded viewport condition and a typed layout.
+  Existing rule properties continue through the ordinary typed inspector. }
+procedure AddNyxViewportInspector(AParent: TNyxNode; const AOwner: TNyxText);
+{ Capture one property intent for the independent paired processor. The source
+  button owns an exact selection; stale owners and incomplete intervals refuse.
+  No accepted document, source, history or control is changed here. }
+function CaptureNyxViewportInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+
 implementation
 
 uses
-  nyx.schema, nyx.studio.callbackedits;
+  nyx.schema, nyx.controls, nyx.studio.callbackedits;
+
+procedure AddNyxViewportInspector(AParent: TNyxNode; const AOwner: TNyxText);
+var
+  LCard: INyxCard;
+begin
+  LCard := NewNyxCard('inspector-viewport-rule');
+  AParent.Add(LCard);
+  LCard.Configure.Layout(nlColumn).Gap(8).Padding(12);
+  LCard.Add(NewNyxHeading('inspector-viewport-title').Configure.Text('Responsive layout').Done);
+  LCard.Add(NewNyxLabel('inspector-viewport-help').Configure.Text(
+    'Use a different layout within a viewport width range. Rules keep the same controls.').Done);
+  LCard.Add(NewNyxSpin(NyxStudioViewportMinimumID).Configure.Text('Minimum width (inclusive)')
+    .Minimum(0).Maximum(1000000).Value(0).Done);
+  LCard.Add(NewNyxSpin(NyxStudioViewportMaximumID).Configure.Text('Below width (0 = no limit)')
+    .Minimum(0).Maximum(1000000).Value(640).Done);
+  LCard.Add(NewNyxSelect(NyxStudioViewportLayoutID).Configure.Text('Layout in this range')
+    .Items('column' + #10 + 'row' + #10 + 'grid' + #10 + 'absolute').Value('column').Done);
+  LCard.Add(NewNyxButton(NyxStudioViewportApplyID).Configure.Text('Set layout rule').Done);
+  LCard.Node.Find(NyxStudioViewportApplyID).SetProp(NyxStudioPropertyOwnerKey, AOwner);
+end;
+
+function CaptureNyxViewportInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LMinimum: Integer;
+  LMaximum: Integer;
+  LViewport: TNyxViewportWidth;
+  LLayout: TNyxLayoutMode;
+  LChoice: TNyxText;
+  LFound: Boolean;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := (AButton <> nil) and (AButton.ID = NyxStudioViewportApplyID);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if (ASession = nil) or (AShellRoot = nil) or
+    (AButton.Prop(NyxStudioPropertyOwnerKey) <> ASession.SelectedID) then
+  begin
+    raise ENyxModel.Create('Select this component again before setting its viewport rule');
+  end;
+
+  if not TryStrToInt(AShellRoot.Find(NyxStudioViewportMinimumID).Prop('value'), LMinimum) or
+    not TryStrToInt(AShellRoot.Find(NyxStudioViewportMaximumID).Prop('value'), LMaximum) then
+  begin
+    raise ENyxModel.Create('Enter complete Integer viewport bounds');
+  end;
+
+  if LMaximum = 0 then
+  begin
+    LViewport := TNyxViewportWidth.AtLeast(LMinimum);
+  end
+  else
+  begin
+    LViewport := TNyxViewportWidth.Between(LMinimum, LMaximum);
+  end;
+
+  if LViewport.IsAny then
+  begin
+    raise ENyxModel.Create('Use the ordinary Layout property for every viewport width');
+  end;
+  LChoice := AShellRoot.Find(NyxStudioViewportLayoutID).Prop('value');
+  LFound := False;
+  for LLayout := Low(TNyxLayoutMode) to High(TNyxLayoutMode) do
+  begin
+
+    if NyxLayoutName(LLayout) = LChoice then
+    begin
+      LFound := True;
+      Break;
+    end;
+  end;
+
+  if not LFound then
+  begin
+    raise ENyxModel.Create('Choose a supported layout');
+  end;
+  AEdit.Action := sdaProperty;
+  AEdit.Selection := ASession.SelectedID;
+  AEdit.View := ASession.ActiveViewID;
+  AEdit.Name := NyxViewportKey(LViewport, npfAny, atLayout);
+  AEdit.Value := NyxLayoutName(LLayout);
+end;
 
 type
   TInspectorCommand = (icAdd, icPolicy, icNavigate, icRequest, icConfirm, icCancel);

@@ -15,7 +15,20 @@ execution. Codegen criterion 3 remains open at no-closure 28; workflow 9, render
 3, authoring 11 and delivery 1 remain. No full criterion, goal percentage or DONE
 claim follows. See [evidence](WORK.md#reviewable-release-refresh--2026-10-05).
 
-Current independent authoring packet: managed public canvas grips reuse
+Current independent authoring packet: typed public viewport conditions now
+share managed configuration, crafted generation, both-target interval admission
+and ordinary paired Inspector/MCP commands. Shared checks pass 33 per native
+compiler and 33 browser; unchanged semantic source passes 22 Win32 controls, nine
+native Studio checks and 23 desktop / 23 exact-390 browser checks. Actual MCP jobs
+compile both targets and grouped Undo/Redo retains exact source. First/last-rule
+refresh preserves input and observer lifetime. No full criterion closes:
+authoring no-closure advances 13→14 once; workflow 9, codegen 28, renderer 3 and
+delivery 1 remain. End interval/fixture expansion; next qualify ordinary browser
+Studio inspector/worker execution and continue original responsive variants,
+guides, editor/parity/accessibility/performance/delivery. The pending user-local
+release remains intact. See [evidence](WORK.md#typed-responsive-authoring--2026-10-05).
+
+Preceding independent authoring packet: managed public canvas grips reuse
 specialized Nyx buttons, separate event scopes and stable-plane pointer mapping.
 Actual native Studio passes 70 checks including moving capture, lease retirement
 and one paired Undo; shared checks pass 56 per compiler, unchanged compiled

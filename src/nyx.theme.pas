@@ -169,6 +169,10 @@ begin
       row wrapping. Explicit Wrap/NoWrap inline policies take precedence. }
     '.nyx-root{container-type:inline-size;}' +
     '.nyx-root .nyx-flow-row{align-items:safe center;}' +
+    { Actual direction wins over the original primitive's row/toolbar class.
+      Responsive row-to-column transitions share the native automatic stretch
+      policy, including leading alignment of explicitly sized children. }
+    '.nyx-root .nyx-flow-column{align-items:stretch;}' +
     '.nyx-flow-column>.nyx-node,.nyx-flow-row>.nyx-node{flex-shrink:0;}' +
     '.nyx-root .nyx-aligned>.nyx-node{align-self:auto;}' +
     '@container(max-width:600px){.nyx-flow-row{flex-wrap:wrap;}}' +

@@ -40,6 +40,23 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Typed responsive authoring — 2026-10-05
+
+Original criterion 1 now consumes public typed width conditions through managed
+controls, crafted generation, piecewise both-target admission, retained adapters
+and the Nyx-built Inspector's existing isolated paired processor. First/last-rule
+refresh and automatic resizing preserve control identity, live input and history.
+Shared checks pass 33 per native compiler and 33 in the browser; unchanged semantic
+source passes 22 actual Win32 controls, nine native Studio checks and 23 desktop /
+23 exact-390 browser checks. Actual MCP compilation and grouped Undo/Redo retain
+the exact companion. See [evidence](../WORK.md#typed-responsive-authoring--2026-10-05).
+
+No original criterion closes. Authoring no-closure advances **13→14** once;
+workflow 9, codegen 28, renderer 3 and delivery 1 remain. End interval/fixture
+expansion. Next qualify ordinary browser Studio inspector/worker execution and
+continue richer responsive variants, original guides, editor/parity/accessibility,
+performance and delivery. Preserve blockers and the pending local release closure.
+
 ## Direct canvas resize handles — 2026-10-05
 
 Original criterion 1 now consumes public `INyxCanvasResizeGrips`: independently

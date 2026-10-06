@@ -81,6 +81,7 @@ begin
     LProcess.Parameters.Add(ParamStr(1));
     LProcess.Execute;
     LStarted := GetTickCount64;
+    LOutput := '';
     { This helper only orchestrates a browser artifact. Pascal in the loaded
       fixture owns every semantic assertion. Drain the process continuously,
       retain exact bytes and bound its lifetime rather than waiting on a pipe. }

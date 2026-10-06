@@ -187,6 +187,13 @@ type
     FThemeScope: TNyxText;
     FRoot: TNyxNode;
     FHost: TJSHTMLElement;
+    { Only views with authored viewport scopes observe available host width.
+      The observer borrows this renderer and disconnects before mount teardown. }
+    FViewportObserver: TJSHTMLResizeObserver;
+    FViewportWidth: Double;
+    procedure ObserveViewport;
+    procedure ViewportChanged(AEntries: TJSHTMLResizeObserverEntryArray;
+      AObserver: TJSHTMLResizeObserver);
     FDesignMode: Boolean;
     FProjectionContext: TNyxText;
     FProjectionSchemaRevision: Integer;
@@ -602,6 +609,12 @@ procedure TNyxBrowserRenderer.Clear;
 var
   LIndex: Integer;
 begin
+
+  if FViewportObserver <> nil then
+  begin
+    FViewportObserver.disconnect;
+    FViewportObserver := nil;
+  end;
   { Disconnect before clearing any controls: their destructors and retained
     external producers must never enter a half-disposed view. }
   ClearCanvasResizeGrips;
@@ -1317,6 +1330,8 @@ begin
     LCandidate.FProjectionSchemaRevision := NyxSchemaRevision;
     LCandidate.FRoot := RealizeNyxView(ADocument, ARoot);
     ApplyNyxPlatform(LCandidate.FRoot, npfBrowser);
+    LCandidate.FViewportWidth := AHost.clientWidth;
+    LCandidate.FRoot.ApplyViewport(LCandidate.FViewportWidth, npfBrowser);
     LCandidate.FProjectionBaseline := LCandidate.FRoot.Clone;
     LCandidate.FCollectionBindings := ACollections;
 
@@ -1397,6 +1412,7 @@ begin
       candidate reference; resizing it would also erase the accepted bindings. }
     LCandidate.FBindings := nil;
     FHost := AHost;
+    FViewportWidth := LCandidate.FViewportWidth;
     FDesignMode := ADesignMode;
     FProjectionContext := LCandidate.FProjectionContext;
     FProjectionSchemaRevision := LCandidate.FProjectionSchemaRevision;
@@ -1423,6 +1439,7 @@ begin
       FBindings[LIndex].FViewRevision := FEvents.ViewRevision;
     end;
     FEmitterScope.Activate(@EmitNamed);
+    ObserveViewport;
   finally
     LCandidate.Free;
   end;
@@ -1494,9 +1511,13 @@ begin
     end;
     try
       Sync;
+      { First-rule admission starts observation; removing the last rule retires
+        it. A retained projection must follow the same mount lifetime as Render. }
+      ObserveViewport;
     except
       RefreshNyxProjectionProperties(FRoot, LPrevious);
       Sync;
+      ObserveViewport;
       raise;
     end;
     ReleaseNyxNode(FProjectionBaseline);
@@ -1643,6 +1664,45 @@ begin
     FHost.scrollLeft := LScrollLeft;
   finally
     FUpdating := LUpdating;
+  end;
+  ObserveViewport;
+  FViewportWidth := FHost.clientWidth;
+  Sync;
+end;
+
+procedure TNyxBrowserRenderer.ObserveViewport;
+begin
+
+  if FViewportObserver <> nil then
+  begin
+    FViewportObserver.disconnect;
+    FViewportObserver := nil;
+  end;
+
+  if (FRoot <> nil) and (FHost <> nil) and FRoot.HasViewportRules then
+  begin
+    FViewportObserver := TJSHTMLResizeObserver.new(@ViewportChanged);
+    FViewportObserver.observe(FHost);
+  end;
+end;
+
+procedure TNyxBrowserRenderer.ViewportChanged(AEntries: TJSHTMLResizeObserverEntryArray;
+  AObserver: TJSHTMLResizeObserver);
+var
+  LWidth: Double;
+begin
+
+  if (AObserver <> FViewportObserver) or (FHost = nil) or (FRoot = nil) then
+  begin
+    Exit;
+  end;
+  LWidth := FHost.clientWidth;
+
+  if LWidth <> FViewportWidth then
+  begin
+    FViewportWidth := LWidth;
+    Sync;
+    UpdateResizePreview;
   end;
 end;
 
@@ -3811,6 +3871,15 @@ begin
   end;
   FUpdating := True;
   try
+
+    if FRoot <> nil then
+    begin
+      { A first rule can arrive after an unobserved ordinary host was resized.
+        Read current space before projecting; observer callbacks are subsequent
+        automatic notifications, not the authority for initial dimensions. }
+      FViewportWidth := FHost.clientWidth;
+      FRoot.ApplyViewport(FViewportWidth, npfBrowser);
+    end;
     for LIndex := 0 to Length(FBindings) - 1 do
     begin
       LBinding := FBindings[LIndex];

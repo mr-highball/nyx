@@ -458,6 +458,7 @@ begin
     if AMember = 'Configure' then
     begin
       GFacadeTypes.Add('    FPlatform: TNyxPlatform;');
+      GFacadeTypes.Add('    FViewport: TNyxViewportWidth;');
     end;
     GFacadeTypes.Add('  public');
     GFacadeTypes.Add('    constructor Create(const AOwner: INyxControl);');
@@ -527,7 +528,7 @@ begin
       LHeader := Copy(LHeader, 1, LFinish);
       GFacadeImplementation.Add(LHeader);
 
-      if (AMember = 'Configure') and (LName = 'ForPlatform') then
+      if (AMember = 'Configure') and ((LName = 'ForPlatform') or (LName = 'WhenViewport')) then
       begin
         GFacadeImplementation.Add('var');
         GFacadeImplementation.Add('  LFacade: TNyxConfiguration;');
@@ -537,7 +538,7 @@ begin
 
       if AMember = 'Configure' then
       begin
-        LCall := 'FOwner.Node.Configure.ForPlatform(FPlatform).' + LName;
+        LCall := 'FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).' + LName;
       end;
 
       if Arguments(LSignature) <> '' then
@@ -549,6 +550,14 @@ begin
       begin
         GFacadeImplementation.Add('  LFacade := TNyxConfiguration.Create(FOwner);');
         GFacadeImplementation.Add('  LFacade.FPlatform := APlatform;');
+        GFacadeImplementation.Add('  LFacade.FViewport := FViewport;');
+        GFacadeImplementation.Add('  Result := LFacade;');
+      end
+      else if (AMember = 'Configure') and (LName = 'WhenViewport') then
+      begin
+        GFacadeImplementation.Add('  LFacade := TNyxConfiguration.Create(FOwner);');
+        GFacadeImplementation.Add('  LFacade.FPlatform := FPlatform;');
+        GFacadeImplementation.Add('  LFacade.FViewport := AWidth;');
         GFacadeImplementation.Add('  Result := LFacade;');
       end
       else if LName = 'Done' then

@@ -81,7 +81,7 @@ From the repository, run:
 
 Individual build targets are `core`, `generated`, `collections`, `collection-views`,
 `collection-authoring`, `collection-inspectors`, `collection-bindings`,
-`reusables`, `placement`, `designer-drag`,
+`reusables`, `placement`, `designer-drag`, `constraints`, `resize`, `responsive`,
 `source-workspace`, `source-editor`, `pascal-imports`, `pascal-routines`, `pascal-declarations`,
 `agents`, `state-bindings`, `split`, `interactions`,
 `named-events`, `viewport`, `catalog`, `browser`, `studio`, `lcl`, `http`,
@@ -93,6 +93,19 @@ compares their exact exported files, runs actual native Studio input and unchang
 compiled controls, checks transaction discovery, then stages browser consumers,
 Studio and its module worker. Its isolated artifacts do not start a listener or
 refresh MCP configuration. Browser compilation retains its host execution gate.
+`responsive` runs shared width/scope/admission and paired Inspector fixtures on
+both native compilers, compares their generated companion, runs actual native
+controls/Studio and stages browser consumers, Studio and its matched module worker.
+Supply `-ResponsiveSourceDirectory <bounded-semantic-export>` to compile unchanged
+MCP source; omitting it uses the independently generated portable fixture. An
+explicit missing source refuses. It also builds the Pascal ordinary-frame browser
+review driver under `build/responsive/driver/`; it starts no listener and changes
+no enrollment. Serve `responsive-contracts.html` and `responsive.html` through an
+admitted HTTP host. The latter's `?host=1` route qualifies an exact 390-pixel iframe.
+Run the driver with that loopback URL and an isolated artifact directory; it
+observes bounded fixture markers and captures rendering without script evaluation.
+These checks qualify [responsive authoring](responsive.md), not ordinary browser
+Studio worker execution, hardware, phone deployment or performance budgets.
 `designer-drag` executes the shared drag lease/identity guards on both native
 compilers, real Win32 Studio source/target callbacks and the unchanged generated
 native companion. It stages browser contract, compiled-control and Studio DOM/

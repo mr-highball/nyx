@@ -26,7 +26,7 @@ unit nyx.projection.refresh;
 interface
 
 uses
-  nyx.text, nyx.types, nyx.model;
+  nyx.text, nyx.types, nyx.responsive, nyx.model;
 
 type
   { A typed request to restore one exact field's current authored default during
@@ -93,13 +93,27 @@ end;
 function RefreshableKey(const AKey: TNyxText): Boolean;
 var
   LAttribute: TNyxAttribute;
+  LViewport: TNyxViewportWidth;
+  LPlatform: TNyxPlatform;
 begin
   Result := TryNyxAttribute(AKey, LAttribute) and
     (LAttribute in [atText, atValue, atHint, atAccessibleName, atEnabled,
       atVisible, atReadOnly, atWidth, atHeight, atFlex, atWidthSizing,
       atHeightSizing, atMinimumWidth, atMaximumWidth, atMinimumHeight, atMaximumHeight]);
+  { A responsive flow changes allocation of identical children, never their
+    primitive/factory type. Restrict retained admission to properties consumed
+    by ordinary target Sync/layout; constructor/asset/extension changes refuse. }
+
+  if TryNyxViewportKey(AKey, LViewport, LPlatform, LAttribute) then
+  begin
+    Result := LAttribute in [atText, atHint, atAccessibleName, atEnabled, atVisible,
+      atReadOnly, atWidth, atHeight, atFlex, atWidthSizing, atHeightSizing,
+      atMinimumWidth, atMaximumWidth, atMinimumHeight, atMaximumHeight,
+      atLayout, atGap, atPadding, atColumns, atLeft, atTop, atFlowWrap,
+      atCrossAlignment, atJustification];
+  end;
   { These dimensions only change allocation on an already identical admitted
-    shape. Structural/layout-mode/platform/binding/creator changes still refuse.
+    shape. Ordinary layout-mode/platform/binding/creator changes still refuse.
     Both adapters use their ordinary Sync/layout and existing rollback clone. }
 end;
 
@@ -118,7 +132,7 @@ var
       LKey := AFrom.Props.Names[LProperty];
 
       if ((ATo.Props.IndexOfName(LKey) < 0) or
-        (AFrom.Prop(LKey) <> ATo.Prop(LKey))) and not RefreshableKey(LKey) then
+        (AFrom.StoredProp(LKey) <> ATo.StoredProp(LKey))) and not RefreshableKey(LKey) then
       begin
         Exit;
       end;
@@ -200,9 +214,9 @@ var
         LKey := AFrom.Props.Names[LIndex];
 
         if (ABefore.Props.IndexOfName(LKey) < 0) or
-          (ABefore.Prop(LKey) <> AFrom.Prop(LKey)) then
+          (ABefore.StoredProp(LKey) <> AFrom.StoredProp(LKey)) then
         begin
-          ATo.SetProp(LKey, AFrom.Prop(LKey));
+          ATo.SetProp(LKey, AFrom.StoredProp(LKey));
         end;
       end;
       for LIndex := 0 to ABefore.Props.Count - 1 do
@@ -269,7 +283,7 @@ begin
       begin
         { Copy the already admitted property representation, including numeric
           and Boolean fields; typed authoring overloads do not accept wire text. }
-        LExisting.SetProp(NyxAttributeName(atValue), LAccepted.Prop(NyxAttributeName(atValue)));
+        LExisting.SetProp(NyxAttributeName(atValue), LAccepted.StoredProp(NyxAttributeName(atValue)));
       end
       else
       begin

@@ -2580,6 +2580,14 @@ begin
 
   if (FRoot <> nil) and (FPanel <> nil) then
   begin
+
+    if FRoot.ApplyViewport(Max(0, FPanel.ClientWidth), npfNativeLCL) and not FUpdating then
+    begin
+      { Sync applies visibility/interaction as well as geometry, under its
+        existing event guard. Its nested Resize sees the already copied overlay. }
+      Sync;
+      Exit;
+    end;
     { LCL's automatic anchor/layout pass must see the complete new geometry.
       Otherwise showing a previously unplaced label can reapply its stale base
       position in the middle of SetBounds. Keep widgetset layout atomic while
@@ -2757,6 +2765,7 @@ begin
     LCandidate.FProjectionSchemaRevision := NyxSchemaRevision;
     LCandidate.FRoot := RealizeNyxView(ADocument, ARoot);
     ApplyNyxPlatform(LCandidate.FRoot, npfNativeLCL);
+    LCandidate.FRoot.ApplyViewport(Max(0, AHost.ClientWidth), npfNativeLCL);
     LCandidate.FProjectionBaseline := LCandidate.FRoot.Clone;
     LCandidate.FCollectionBindings := ACollections;
 
@@ -5173,6 +5182,11 @@ begin
   end;
   FUpdating := True;
   try
+
+    if (FRoot <> nil) and (FPanel <> nil) then
+    begin
+      FRoot.ApplyViewport(Max(0, FPanel.ClientWidth), npfNativeLCL);
+    end;
     for LIndex := 0 to Length(FBindings) - 1 do
     begin
       LBinding := FBindings[LIndex];

@@ -1,0 +1,56 @@
+[
+  {
+    "op": "title",
+    "value": "Room for ideas"
+  },
+  {
+    "op": "create",
+    "kind": "page",
+    "id": "home",
+    "root": "page",
+    "properties": {
+      "padding": 16,
+      "gap": 12
+    }
+  },
+  {
+    "op": "create",
+    "kind": "row",
+    "id": "workspace",
+    "parent": "home",
+    "properties": {
+      "gap": 16,
+      "padding": 0,
+      "flow-wrap": "nowrap",
+      "@nyx.viewport:0:640:any:layout": "column",
+      "@nyx.viewport:0:640:any:gap": 8,
+      "@nyx.viewport:0:640:native-lcl:gap": 10,
+      "@nyx.viewport:640:900:any:gap": 20,
+      "@nyx.viewport:640:900:any:columns": 2
+    }
+  },
+  {
+    "op": "create",
+    "kind": "memo",
+    "id": "notes-editor",
+    "parent": "workspace",
+    "properties": {
+      "text": "Notes",
+      "width": 200,
+      "height": 120,
+      "value": "Keep this English draft."
+    }
+  },
+  {
+    "op": "create",
+    "kind": "memo",
+    "id": "other-editor",
+    "parent": "workspace",
+    "properties": {
+      "text": "Companion notes",
+      "width": 160,
+      "height": 120,
+      "value": "This control stays independent."
+    }
+  }
+]

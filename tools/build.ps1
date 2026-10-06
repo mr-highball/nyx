@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'responsive', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -47,6 +47,9 @@ param(
   [string]$PropertySourceDirectory = 'build/property-concordance/source',
   # Proportional/hidden layout consumes bounded MCP-exported accepted source.
   [string]$LayoutSourceDirectory = 'build/layout-concordance/source',
+  # Optional unchanged companion exported through bounded semantic MCP windows.
+  # Empty uses the independent portable contract fixture for offline builds.
+  [string]$ResponsiveSourceDirectory,
   # The maintained semantic callback journey exports two accepted source pairs.
   [string]$CallbackSourceDirectory = 'build/agent-callbacks/mcp',
   # Exact companion exported by the semantic handler/compilation journey.
@@ -1454,6 +1457,88 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxCollectionAgentHost") -Destination $nyxCollectionAgentBrowser
     }
     Write-Host 'Semantic collection consumers staged; browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'responsive') {
+    # Pascal owns interval/cascade, semantic/paired and actual control assertions.
+    # These artifacts never start or replace a listener or refresh enrollment.
+    $nyxResponsiveRoot = Join-Path $nyxRoot 'build/responsive'
+    $nyxResponsiveStable = Join-Path $nyxResponsiveRoot 'stable'
+    $nyxResponsiveMatched = Join-Path $nyxResponsiveRoot 'maintained-matched'
+    $nyxResponsiveLcl = Join-Path $nyxResponsiveRoot 'lcl'
+    $nyxResponsiveDriver = Join-Path $nyxResponsiveRoot 'driver'
+    $nyxResponsiveExport = Join-Path $nyxResponsiveRoot 'export-stable'
+    $nyxResponsiveMatchedExport = Join-Path $nyxResponsiveRoot 'export-matched'
+    $nyxResponsiveBrowser = Join-Path $nyxResponsiveRoot 'staged'
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+
+    if ($BrowserOutput) { $nyxResponsiveBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxResponsiveStable, $nyxResponsiveMatched,
+      $nyxResponsiveLcl, $nyxResponsiveDriver, $nyxResponsiveExport, $nyxResponsiveMatchedExport,
+      $nyxResponsiveBrowser | Out-Null
+    $nyxResponsiveFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests')
+    foreach ($nyxResponsiveCompiler in @(
+      @($nyxFpc, $nyxResponsiveStable, $nyxResponsiveExport),
+      @($nyxLclFpc, $nyxResponsiveMatched, $nyxResponsiveMatchedExport))) {
+      Invoke-NyxCompiler $nyxResponsiveCompiler[0] ($nyxResponsiveFlags + @(
+        "-FU$($nyxResponsiveCompiler[1])", "-FE$($nyxResponsiveCompiler[1])",
+        'tests/nyx_responsive_tests.lpr'))
+      $nyxResponsiveExportFile = Join-Path $nyxResponsiveCompiler[2] 'nyx.generated.view.pas'
+      & (Join-Path $nyxResponsiveCompiler[1] 'nyx_responsive_tests.exe') $nyxResponsiveExportFile
+
+      if ($LASTEXITCODE -ne 0) { throw 'Responsive semantic/paired qualification failed' }
+    }
+
+    if ((Get-FileHash -LiteralPath (Join-Path $nyxResponsiveExport 'nyx.generated.view.pas')).Hash -cne
+      (Get-FileHash -LiteralPath (Join-Path $nyxResponsiveMatchedExport 'nyx.generated.view.pas')).Hash) {
+      throw 'Responsive compiler exports differ'
+    }
+    $nyxResponsiveSource = $nyxResponsiveExport
+
+    if ($ResponsiveSourceDirectory) {
+      $nyxResponsiveSource = [IO.Path]::GetFullPath($ResponsiveSourceDirectory)
+
+      if (-not (Test-Path -LiteralPath (Join-Path $nyxResponsiveSource 'nyx.generated.view.pas'))) {
+        throw 'Explicit responsive semantic companion is missing'
+      }
+    }
+    $nyxResponsivePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxResponsiveControlFlags = $nyxResponsiveFlags + @("-Fu$nyxResponsiveSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxResponsivePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxResponsivePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxResponsivePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxResponsivePlatform",
+      "-FU$nyxResponsiveLcl", "-FE$nyxResponsiveLcl")
+    foreach ($nyxResponsiveProgram in @('nyx_responsive_controls', 'nyx_responsive_studio')) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxResponsiveControlFlags + @("tests/$nyxResponsiveProgram.lpr"))
+
+      if ($nyxResponsiveProgram -eq 'nyx_responsive_controls') {
+        & (Join-Path $nyxResponsiveLcl "$nyxResponsiveProgram.exe") $nyxResponsiveLcl
+      } else {
+        $nyxResponsiveProjectRoot = Join-Path $nyxResponsiveLcl 'projects'
+        $nyxResponsiveSourceFile = Join-Path $nyxResponsiveSource 'nyx.generated.view.pas'
+        & (Join-Path $nyxResponsiveLcl "$nyxResponsiveProgram.exe") $nyxResponsiveProjectRoot $nyxResponsiveSourceFile
+      }
+
+      if ($LASTEXITCODE -ne 0) { throw 'Actual native responsive qualification failed' }
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxResponsiveProgram in @('tests/nyx_responsive_tests.lpr',
+      'tests/nyx_responsive_controls.lpr', 'studio/nyx_studio.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
+        '-Futests', "-Fu$nyxResponsiveSource", '-Jirtl.js', "-FE$nyxResponsiveBrowser", $nyxResponsiveProgram)
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxResponsiveBrowser 'rtl.js')
+    foreach ($nyxResponsiveHost in @('responsive.html', 'responsive-contracts.html', 'index.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxResponsiveHost") -Destination $nyxResponsiveBrowser
+    }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxResponsiveFlags + @(
+      "-FU$nyxResponsiveDriver", "-FE$nyxResponsiveDriver", 'tests/nyx_responsive_browser_review.lpr'))
+    Write-Host 'Responsive consumers/Studio/worker staged; browser execution needs an admitted host.'
     exit 0
   }
 
