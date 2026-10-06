@@ -43,6 +43,31 @@ attempts per diagnosed cause, then reassess. No criterion closes. Renderer
 no-closure advances **7→8** once; authoring **26**, workflow **11**, codegen **28**
 and delivery **2** remain. NS-2 parity/NS-3 historical totals remain unestablished.
 
+## User-requested artifact cleanup — 2026-10-06
+
+The read-only workspace survey measured 61.6 GB of build files (99.7% of the
+workspace), including 937 retained Chromium profile directories totaling 33.4 GB.
+The user then explicitly authorized cleanup. A checked plan excludes all 15 exact
+live server identities and their served/repository paths, frozen release packages,
+the unfinished date batch, tracked files and links. It targets 921 closed profiles,
+131,185 compiler intermediates and 632 obsolete test executables: 53.6 GB of files.
+
+An initial path preflight refused a link before mutation; the final plan excludes
+reparse points throughout traversal. Automatic approval review then rejected the
+complete guarded native PowerShell cleanup before CreateProcess, with only reason
+"blocked by policy". No file was deleted. Do not retry execution through another
+tool or mechanism. The ignored local helper
+`.local/artifact-cleanup-reviewed-20261006.ps1` is prepared for the user's direct
+review/execution, with syntax admission, exact process/path checks and a private
+plan/receipt. Codex has not executed it. All 15 process identities and eight exact
+accepted/draft pairs still match; the LAN service responds HTTP 200.
+
+After the user runs the helper, inspect its receipt and disk headroom, recheck
+protected pairs/services, then return to the original date-browser qualification
+and exact worktree reconciliation. The full goal remains incomplete; storage
+still blocks qualification. This maintenance attempt accepts no product criterion and
+changes no milestone/no-closure count. Private plans and paths stay uncommitted.
+
 ## Typed date fields checkpoint — 2026-10-06
 
 Reassessment ended callback/transport fixture expansion and returned to NS-2's
