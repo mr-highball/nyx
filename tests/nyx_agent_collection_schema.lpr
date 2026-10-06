@@ -57,7 +57,7 @@ begin
     { This is the actual MCP discovery builder. No server constructor, listener,
       personal configuration or authenticated active project is touched. }
     LTools := NyxStudioMCPTools.Field('tools');
-    Check(LTools.Count = 19, 'complete source catalog count');
+    Check(LTools.Count = 20, 'complete source catalog count');
     LFound := False;
     for LIndex := 0 to LTools.Count - 1 do
     begin

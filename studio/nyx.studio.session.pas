@@ -83,7 +83,7 @@ type
     sdaMove, sdaTitle, sdaAddPage, sdaCreateComponent, sdaAddInstance, sdaCustomizePart,
     sdaCanvasValue, sdaSetStateDefault, sdaCreateStateDefault,
     sdaRenameStateDefault, sdaRemoveStateDefault, sdaSetBinding, sdaInheritBinding,
-    sdaEvent, sdaCollection, sdaPlacement, sdaResize);
+    sdaEvent, sdaCollection, sdaPlacement, sdaResize, sdaPresentation);
   { Callback operations carry exact typed event/registration references. Removal
     includes the handler the user reviewed; IDs alone cannot authorize replacing
     a registration. Empty references belong only to add/policy intent. }
@@ -141,6 +141,8 @@ type
     Placement: TNyxPlacementChange;
     { One grouped typed dimension change; never an executable property string. }
     Resize: TNyxResizeChange;
+    { Named definition/override intent shares the same isolated paired job. }
+    Presentation: TNyxPresentationEdit;
     { Immutable origin of a canvas capture. Queue admission uses this mounted
       session/load identity even when the caller retains intent before enqueue. }
     property CanvasContext: TNyxStudioCommandContext read FCanvasContext;

@@ -33,6 +33,7 @@ uses
   nyx.data,
   nyx.types,
   nyx.responsive,
+  nyx.presentations,
   nyx.contract,
   nyx.event.payload,
   nyx.state,
@@ -1223,6 +1224,8 @@ var
   LHasAttribute: array of Boolean;
   LScopedPlatforms: set of TNyxPlatform;
   LViewport: TNyxViewportCondition;
+  LPresentation: TNyxPresentationRef;
+  LPresentations: INyxPresentationSnapshot;
 
   { All bookkeeping belongs to this call. No node, document, registry snapshot
     or caller array is retained. Geometric growth avoids copying managed fields
@@ -1760,8 +1763,14 @@ begin
   for LIndex := 0 to ANode.Props.Count - 1 do
   begin
     LScopedKey := ANode.Props.Names[LIndex];
+    LPresentations := ANode.PresentationSnapshot;
 
-    if TryNyxViewportKey(LScopedKey, LViewport, LPlatform, LAttribute) then
+    if ADocument <> nil then
+    begin
+      LPresentations := ADocument.Presentations;
+    end;
+
+    if TryNyxResponsiveKey(LScopedKey, LPresentations, LViewport, LPlatform, LAttribute) then
     begin
       LPublishedIndex := LAttributePositions[LAttribute];
 
@@ -1779,6 +1788,12 @@ begin
       begin
         LProperties[LFoundIndex].Title := LViewport.Caption + ' / ' +
           LProperties[LPublishedIndex].Title;
+
+        if TryNyxPresentationKey(LScopedKey, LPresentation, LPlatform, LAttribute) then
+        begin
+          LProperties[LFoundIndex].Title := LPresentation.Name + ' / ' +
+            LProperties[LFoundIndex].Title;
+        end;
 
         if LPlatform <> npfAny then
         begin
@@ -2581,6 +2596,7 @@ var
   LScalar: Double;
   LSizeConstraints: TNyxSizeConstraints;
   LViewport: TNyxViewportCondition;
+  LPresentation: TNyxPresentationRef;
 
   function SplitMetric(APlatform: TNyxPlatform; AKey: TNyxAttribute;
     ADefault: Integer): Integer;
@@ -2677,7 +2693,8 @@ begin
 
     if (Copy(LValue, 1, 5) = '@nyx.') and
       not TryNyxPlatformKey(LValue, LPlatform, LAttribute) and
-      not TryNyxViewportKey(LValue, LViewport, LPlatform, LAttribute) then
+      not TryNyxViewportKey(LValue, LViewport, LPlatform, LAttribute) and
+      not TryNyxPresentationKey(LValue, LPresentation, LPlatform, LAttribute) then
     begin
       raise ENyxModel.Create('Unknown or nonportable platform property on ' + ANode.ID);
     end;
@@ -2789,7 +2806,15 @@ begin
     LSizeConstraints := NyxNodeSizeConstraints(ANode, LPlatform);
     LSizeConstraints.Validate;
   end;
-  ValidateNyxViewportBounds(ANode);
+
+  if ADocument <> nil then
+  begin
+    ValidateNyxViewportBounds(ANode, ADocument.Presentations);
+  end
+  else
+  begin
+    ValidateNyxViewportBounds(ANode);
+  end;
 end;
 
 procedure ValidateNyxPropertyTree(ARoot: TNyxNode; ADocument: TNyxDocument);

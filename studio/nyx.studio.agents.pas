@@ -72,6 +72,7 @@ type
     { Paged reachable named paths from an independent effective projection. }
     function NamedParts(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
     function Components(const AArguments: TNyxDataValue): TNyxDataValue;
+    function Presentations(const AArguments: TNyxDataValue): TNyxDataValue;
     function Diagnostics(const AArguments: TNyxDataValue): TNyxDataValue;
     function SourceLines(const AArguments: TNyxDataValue): TNyxDataValue;
     function CompilerSnapshot: TNyxDataValue;
@@ -158,7 +159,7 @@ uses
   nyx.studio.handleredits, nyx.studio.stateedits, nyx.state, nyx.binding,
   nyx.binding.types, nyx.contract, nyx.collections, nyx.collections.view.types,
   nyx.collections.selection, nyx.studio.collectionedits, nyx.studio.importedits,
-  nyx.studio.routineedits, nyx.studio.declarationedits;
+  nyx.studio.routineedits, nyx.studio.declarationedits, nyx.presentations;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
 var
@@ -948,6 +949,54 @@ begin
     NyxField('items', NyxArray(LItems))]);
 end;
 
+function TNyxAgentSession.Presentations(const AArguments: TNyxDataValue): TNyxDataValue;
+var
+  LOffset: Integer;
+  LLimit: Integer;
+  LIndex: Integer;
+  LCount: Integer;
+  LName: TNyxText;
+  LReference: TNyxPresentationRef;
+  LItems: array of TNyxDataValue;
+begin
+  NyxAgentFields(AArguments, '|name|offset|limit|');
+  LOffset := IntegerArgument(AArguments, 'offset', 0, 0, NyxMaximumPresentations);
+  LLimit := IntegerArgument(AArguments, 'limit', 8, 1, 16);
+
+  if NyxAgentHas(AArguments, 'name') then
+  begin
+
+    if NyxAgentHas(AArguments, 'offset') or NyxAgentHas(AArguments, 'limit') then
+    begin
+      raise ENyxModel.Create('Inspect one exact presentation name or a bounded page');
+    end;
+    LName := AArguments.Field('name').AsText;
+    LReference := NyxPresentation(LName);
+    Exit(NyxObject([NyxField('revision', NyxData(FRevision)),
+      NyxField('definition', NyxPresentationDefinition(LReference,
+        FSession.Document.Presentations.Condition(LReference)))]));
+  end;
+  SetLength(LItems, LLimit);
+  LCount := 0;
+  for LIndex := LOffset to FSession.Document.Presentations.Count - 1 do
+  begin
+
+    if LCount = LLimit then
+    begin
+      Break;
+    end;
+    LReference := FSession.Document.Presentations.Reference(LIndex);
+    LItems[LCount] := NyxPresentationDefinition(LReference,
+      FSession.Document.Presentations.Condition(LReference));
+    Inc(LCount);
+  end;
+  SetLength(LItems, LCount);
+  Result := NyxObject([NyxField('revision', NyxData(FRevision)),
+    NyxField('total', NyxData(FSession.Document.Presentations.Count)),
+    NyxField('offset', NyxData(LOffset)), NyxField('definitions', NyxArray(LItems)),
+    NyxField('hasMore', NyxData(LOffset + LCount < FSession.Document.Presentations.Count))]);
+end;
+
 function TNyxAgentSession.Diagnostics(const AArguments: TNyxDataValue): TNyxDataValue;
 var
   LItems: array of TNyxDataValue;
@@ -1705,6 +1754,10 @@ begin
     else if ATool = 'nyx_source' then
     begin
       Result := SourceLines(AArguments);
+    end
+    else if ATool = 'nyx_presentations' then
+    begin
+      Result := Presentations(AArguments);
     end
     else if ATool = 'nyx_tokens' then
     begin

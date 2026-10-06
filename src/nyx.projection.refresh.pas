@@ -76,7 +76,7 @@ function NyxProjectionContext(ADocument: TNyxDocument): TNyxText;
 implementation
 
 uses
-  nyx.codec, nyx.data;
+  nyx.codec, nyx.data, nyx.presentations;
 
 class function TNyxProjectionValueRestore.ForField(const ARuntimeID,
   ADesignID: TNyxText): TNyxProjectionValueRestore;
@@ -95,6 +95,7 @@ var
   LAttribute: TNyxAttribute;
   LViewport: TNyxViewportCondition;
   LPlatform: TNyxPlatform;
+  LPresentation: TNyxPresentationRef;
 begin
   Result := TryNyxAttribute(AKey, LAttribute) and
     (LAttribute in [atText, atValue, atHint, atAccessibleName, atEnabled,
@@ -104,7 +105,8 @@ begin
     primitive/factory type. Restrict retained admission to properties consumed
     by ordinary target Sync/layout; constructor/asset/extension changes refuse. }
 
-  if TryNyxViewportKey(AKey, LViewport, LPlatform, LAttribute) then
+  if TryNyxViewportKey(AKey, LViewport, LPlatform, LAttribute) or
+    TryNyxPresentationKey(AKey, LPresentation, LPlatform, LAttribute) then
   begin
     Result := LAttribute in [atText, atHint, atAccessibleName, atEnabled, atVisible,
       atReadOnly, atWidth, atHeight, atFlex, atWidthSizing, atHeightSizing,
@@ -125,11 +127,26 @@ var
   function CompatibleProperties(AFrom, ATo: TNyxNode): Boolean;
   var
     LProperty: Integer;
+    LPresentation: TNyxPresentationRef;
+    LPlatform: TNyxPlatform;
+    LAttribute: TNyxAttribute;
   begin
     Result := False;
     for LProperty := 0 to AFrom.Props.Count - 1 do
     begin
       LKey := AFrom.Props.Names[LProperty];
+
+      if TryNyxPresentationKey(LKey, LPresentation, LPlatform, LAttribute) and
+        not RefreshableKey(LKey) then
+      begin
+
+        if not ATo.PresentationSnapshot.Contains(LPresentation) or
+          not AFrom.PresentationSnapshot.Condition(LPresentation).Same(
+            ATo.PresentationSnapshot.Condition(LPresentation)) then
+        begin
+          Exit;
+        end;
+      end;
 
       if ((ATo.Props.IndexOfName(LKey) < 0) or
         (AFrom.StoredProp(LKey) <> ATo.StoredProp(LKey))) and not RefreshableKey(LKey) then
@@ -273,6 +290,7 @@ begin
         Exit(False);
       end;
     end;
+    AExisting.BindPresentations(ACandidate.PresentationSnapshot);
     CopyProperties(ACandidate, AExisting, ABaseline);
     for LRestore := 0 to High(ARestores) do
     begin
@@ -313,10 +331,17 @@ begin
   begin
     LKey := LData.Key(LIndex);
 
-    if (LKey = 'title') or (LKey = 'pages') or (LKey = 'components') then
+    if (LKey = 'title') or (LKey = 'pages') or (LKey = 'components') or
+      (LKey = 'version') or
+      ((LKey = NyxPresentationsWireField) and (ADocument.Presentations.Count > 0)) or
+      ((LKey = 'collections') and (ADocument.Collections.Count = 0) and
+      not ADocument.Extensions.Has(NyxExtension('collections'))) then
     begin
       Continue;
     end;
+    { Wire version is framing, not runtime meaning. Named definitions are
+      checked per referenced property by retained projection admission; unused
+      definitions cannot disturb live controls. Older opaque data stays exact. }
     LFields[LCount] := NyxField(LKey, LData.Field(LKey));
     Inc(LCount);
   end;

@@ -32,6 +32,7 @@ uses
   nyx.text,
   nyx.types,
   nyx.responsive,
+  nyx.presentations,
   nyx.model,
   nyx.callbacks,
   nyx.scheduler,
@@ -64,6 +65,13 @@ const
   NyxStudioViewportOrientationID = 'inspector-viewport-orientation';
   NyxStudioViewportLayoutID = 'inspector-viewport-layout';
   NyxStudioViewportApplyID = 'inspector-viewport-apply';
+  NyxStudioPresentationNameID = 'inspector-presentation-name';
+  NyxStudioPresentationChoiceID = 'inspector-presentation-choice';
+  NyxStudioPresentationAttributeID = 'inspector-presentation-attribute';
+  NyxStudioPresentationPlatformID = 'inspector-presentation-platform';
+  NyxStudioPresentationDefineID = 'inspector-presentation-define';
+  NyxStudioPresentationUseID = 'inspector-presentation-use';
+  NyxStudioPresentationResetID = 'inspector-presentation-reset';
   { Closed size-bound reset intent at the chrome metadata boundary. The captured
     exact authored owner prevents a delayed button acting on a later selection. }
   NyxStudioPropertyClearKey = 'studio.property-clear';
@@ -102,7 +110,8 @@ function RouteNyxStudioEvents(ASession: TNyxStudioSession; ANode: TNyxNode;
 
 { Shared Nyx controls compose a bounded viewport condition and a typed layout.
   Existing rule properties continue through the ordinary typed inspector. }
-procedure AddNyxViewportInspector(AParent: TNyxNode; const AOwner: TNyxText);
+procedure AddNyxViewportInspector(AParent: TNyxNode; const AOwner: TNyxText;
+  ADocument: TNyxDocument = nil);
 { Capture one property intent for the independent paired processor. The source
   button owns an exact selection; stale owners and incomplete intervals refuse.
   No accepted document, source, history or control is changed here. }
@@ -112,11 +121,20 @@ function CaptureNyxViewportInspector(ASession: TNyxStudioSession;
 implementation
 
 uses
-  nyx.schema, nyx.controls, nyx.studio.callbackedits;
+  nyx.schema, nyx.controls, nyx.studio.callbackedits, nyx.studio.edits;
 
-procedure AddNyxViewportInspector(AParent: TNyxNode; const AOwner: TNyxText);
+procedure AddNyxViewportInspector(AParent: TNyxNode; const AOwner: TNyxText;
+  ADocument: TNyxDocument);
 var
   LCard: INyxCard;
+  LNames: TNyxText;
+  LAttributes: TNyxText;
+  LFirstName: TNyxText;
+  LFirstAttribute: TNyxText;
+  LInfos: TNyxPropertyInfos;
+  LIndex: Integer;
+  LAttribute: TNyxAttribute;
+  LCanLayout: Boolean;
 begin
   LCard := NewNyxCard('inspector-viewport-rule');
   AParent.Add(LCard);
@@ -140,6 +158,69 @@ begin
     .Items('column' + #10 + 'row' + #10 + 'grid' + #10 + 'absolute').Value('column').Done);
   LCard.Add(NewNyxButton(NyxStudioViewportApplyID).Configure.Text('Set layout rule').Done);
   LCard.Node.Find(NyxStudioViewportApplyID).SetProp(NyxStudioPropertyOwnerKey, AOwner);
+
+  if ADocument = nil then
+  begin
+    Exit;
+  end;
+  LNames := '';
+  LFirstName := '';
+  for LIndex := 0 to ADocument.Presentations.Count - 1 do
+  begin
+
+    if LIndex = 0 then
+    begin
+      LFirstName := ADocument.Presentations.Reference(LIndex).Name;
+    end
+    else
+    begin
+      LNames := LNames + TNyxText(#10);
+    end;
+    LNames := LNames + ADocument.Presentations.Reference(LIndex).Name;
+  end;
+  LInfos := NyxProperties(ADocument.Find(AOwner), ADocument);
+  LAttributes := '';
+  LFirstAttribute := '';
+  LCanLayout := False;
+  for LIndex := 0 to High(LInfos) do
+  begin
+
+    if TryNyxAttribute(LInfos[LIndex].Key, LAttribute) and NyxPlatformAttribute(LAttribute) then
+    begin
+
+      if LAttributes = '' then
+      begin
+        LFirstAttribute := LInfos[LIndex].Key;
+      end
+      else
+      begin
+        LAttributes := LAttributes + TNyxText(#10);
+      end;
+      LAttributes := LAttributes + LInfos[LIndex].Key;
+      LCanLayout := LCanLayout or (LAttribute = atLayout);
+    end;
+  end;
+  LCard.Node.Find(NyxStudioViewportLayoutID).Configure.Visible(LCanLayout).Done;
+  LCard.Node.Find(NyxStudioViewportApplyID).Configure.Visible(LCanLayout).Done;
+  LCard.Add(NewNyxHeading('inspector-presentation-title').Configure.Text('Shared presentations').Done);
+  LCard.Add(NewNyxLabel('inspector-presentation-help').Configure.Text(
+    'Define a name using the bounds above. Updating an existing name changes all of its overrides.').Done);
+  LCard.Add(NewNyxInput(NyxStudioPresentationNameID).Configure.Text('Presentation name')
+    .Placeholder('compact').Done);
+  LCard.Add(NewNyxButton(NyxStudioPresentationDefineID).Configure.Text('Define or update presentation').Done);
+  LCard.Add(NewNyxSelect(NyxStudioPresentationChoiceID).Configure.Text('Shared presentation')
+    .Items(LNames).Value(LFirstName).Enabled(LNames <> '').Done);
+  LCard.Add(NewNyxSelect(NyxStudioPresentationAttributeID).Configure.Text('Property to override')
+    .Items(LAttributes).Value(LFirstAttribute).Done);
+  LCard.Add(NewNyxSelect(NyxStudioPresentationPlatformID).Configure.Text('Target scope')
+    .Items('any' + #10 + 'browser' + #10 + 'native-lcl').Value('any').Done);
+  LCard.Add(NewNyxButton(NyxStudioPresentationUseID).Configure.Text('Add override')
+    .Enabled(LNames <> '').Done);
+  LCard.Add(NewNyxButton(NyxStudioPresentationResetID).Configure.Text('Reset override')
+    .Enabled(LNames <> '').Done);
+  LCard.Node.Find(NyxStudioPresentationDefineID).SetProp(NyxStudioPropertyOwnerKey, AOwner);
+  LCard.Node.Find(NyxStudioPresentationUseID).SetProp(NyxStudioPropertyOwnerKey, AOwner);
+  LCard.Node.Find(NyxStudioPresentationResetID).SetProp(NyxStudioPropertyOwnerKey, AOwner);
 end;
 
 function CaptureNyxViewportInspector(ASession: TNyxStudioSession;
@@ -154,9 +235,14 @@ var
   LLayout: TNyxLayoutMode;
   LChoice: TNyxText;
   LFound: Boolean;
+  LReference: TNyxPresentationRef;
+  LAttribute: TNyxAttribute;
+  LPlatform: TNyxPlatform;
 begin
   AEdit := Default(TNyxStudioDesignEdit);
-  Result := (AButton <> nil) and (AButton.ID = NyxStudioViewportApplyID);
+  Result := (AButton <> nil) and ((AButton.ID = NyxStudioViewportApplyID) or
+    (AButton.ID = NyxStudioPresentationDefineID) or (AButton.ID = NyxStudioPresentationUseID) or
+    (AButton.ID = NyxStudioPresentationResetID));
 
   if not Result then
   begin
@@ -167,6 +253,44 @@ begin
     (AButton.Prop(NyxStudioPropertyOwnerKey) <> ASession.SelectedID) then
   begin
     raise ENyxModel.Create('Select this component again before setting its viewport rule');
+  end;
+  AEdit.Selection := ASession.SelectedID;
+  AEdit.View := ASession.ActiveViewID;
+
+  if (AButton.ID = NyxStudioPresentationUseID) or (AButton.ID = NyxStudioPresentationResetID) then
+  begin
+    LReference := NyxPresentation(AShellRoot.Find(NyxStudioPresentationChoiceID).Prop('value'));
+    ASession.Document.Presentations.Condition(LReference);
+
+    if not TryNyxAttribute(AShellRoot.Find(NyxStudioPresentationAttributeID).Prop('value'), LAttribute) then
+    begin
+      raise ENyxModel.Create('Choose a published presentation property');
+    end;
+    LFound := False;
+    for LPlatform := npfAny to npfNativeLCL do
+    begin
+
+      if NyxPlatformName(LPlatform) = AShellRoot.Find(NyxStudioPresentationPlatformID).Prop('value') then
+      begin
+        LFound := True;
+        Break;
+      end;
+    end;
+
+    if not LFound then
+    begin
+      raise ENyxModel.Create('Choose a supported target scope');
+    end;
+    AEdit.Action := sdaPresentation;
+    AEdit.Presentation := NyxUsePresentation(NyxControl(ASession.SelectedID), LReference,
+      LAttribute, LPlatform);
+
+    if AButton.ID = NyxStudioPresentationResetID then
+    begin
+      AEdit.Presentation := NyxResetPresentation(NyxControl(ASession.SelectedID), LReference,
+        LAttribute, LPlatform);
+    end;
+    Exit;
   end;
 
   if not TryStrToInt(AShellRoot.Find(NyxStudioViewportMinimumID).Prop('value'), LMinimum) or
@@ -217,6 +341,14 @@ begin
   if LViewport.IsAny then
   begin
     raise ENyxModel.Create('Use the ordinary Layout property for every viewport');
+  end;
+
+  if AButton.ID = NyxStudioPresentationDefineID then
+  begin
+    AEdit.Action := sdaPresentation;
+    AEdit.Presentation := NyxDefinePresentation(NyxPresentation(
+      AShellRoot.Find(NyxStudioPresentationNameID).Prop('value')), LViewport);
+    Exit;
   end;
   LChoice := AShellRoot.Find(NyxStudioViewportLayoutID).Prop('value');
   LFound := False;

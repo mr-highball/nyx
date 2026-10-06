@@ -25,7 +25,21 @@ execution. Codegen criterion 3 remains open at no-closure 28; workflow 9, render
 3, authoring 11 and delivery 1 remain. No full criterion, goal percentage or DONE
 claim follows. See [evidence](WORK.md#reviewable-release-refresh--2026-10-05).
 
-Current independent authoring packet: public copied alignment snapshots now reach
+Current independent authoring packet: document-owned named presentations share
+typed host predicates, copied immutable ownership and crafted Pascal across
+controls/reusable views. Version-four ordered rules preserve full supplementary
+names and precedence. Ordinary Inspector/worker/history and twenty-tool semantic
+MCP consume the same contract. Checks pass 55 per compiler/browser, two compiled
+Unicode checks per target, 36 native / 37 browser controls, 16 native Studio and
+39 per browser Studio size. Immutable application jobs compile both outputs; three
+existing pair/navigation states qualify against the staged release. LAN deployment
+is pending. No original criterion closes: authoring no-closure advances 17→18
+once; workflow 9, codegen 28, renderer 3 and delivery 1 remain. End local named-rule/
+parser/fixture expansion; continue original container/manual/structural variants,
+move snapping and full editor/parity/accessibility/performance/delivery. See
+[evidence](WORK.md#named-responsive-presentations--2026-10-06).
+
+Preceding independent authoring packet: public copied alignment snapshots now reach
 resize policies, both adapters and ordinary Studio publication. Shared checks
 pass 74 per compiler/browser; actual Studio passes 24 Win32 and 27 per browser
 size through pointer capture/worker/history. Compact Design retains canvas grips

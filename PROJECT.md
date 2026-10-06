@@ -66,6 +66,18 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Document-owned named presentations now share typed host predicates across
+managed controls and reusable views. Immutable copied snapshots preserve explicit
+ownership and retained inputs; ordered version-four rule arrays preserve full
+Unicode names and precedence. Crafted generation, source admission, the ordinary
+Inspector/worker/history pipeline and bounded MCP queries/mutations agree.
+Checks pass 55 per native compiler/browser, two compiled Unicode checks per
+target, 36 actual Win32 controls, 37 browser controls, 16 native Studio and 39
+per browser Studio size. The full release is staged; LAN deployment is pending.
+Container predicates, manual activation, alternate view structures, full
+editor/parity/accessibility/performance and delivery remain open. See
+[named presentation evidence](WORK.md#named-responsive-presentations--2026-10-06).
+
 Copied alignment contexts now supply sibling size matches and absolute-layout
 edge/center guides through public Nyx resize policies and both adapters. Studio
 captures geometry once, paints transient guides and cancels stale layouts before

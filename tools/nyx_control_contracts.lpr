@@ -459,6 +459,8 @@ begin
     begin
       GFacadeTypes.Add('    FPlatform: TNyxPlatform;');
       GFacadeTypes.Add('    FViewport: TNyxViewportCondition;');
+      GFacadeTypes.Add('    FPresentation: TNyxPresentationRef;');
+      GFacadeTypes.Add('    function ConfigurationScope: TNyxNodeConfig;');
     end;
     GFacadeTypes.Add('  public');
     GFacadeTypes.Add('    constructor Create(const AOwner: INyxControl);');
@@ -485,6 +487,24 @@ begin
     GFacadeImplementation.Add('  FOwner := AOwner;');
     GFacadeImplementation.Add('end;');
     GFacadeImplementation.Add('');
+
+    if AMember = 'Configure' then
+    begin
+      GFacadeImplementation.Add('function TNyxConfiguration.ConfigurationScope: TNyxNodeConfig;');
+      GFacadeImplementation.Add('begin');
+      GFacadeImplementation.Add('  Result := FOwner.Node.Configure.ForPlatform(FPlatform);');
+      GFacadeImplementation.Add('');
+      GFacadeImplementation.Add('  if FPresentation.Defined then');
+      GFacadeImplementation.Add('  begin');
+      GFacadeImplementation.Add('    Result := Result.WhenPresentation(FPresentation);');
+      GFacadeImplementation.Add('  end');
+      GFacadeImplementation.Add('  else');
+      GFacadeImplementation.Add('  begin');
+      GFacadeImplementation.Add('    Result := Result.WhenViewport(FViewport);');
+      GFacadeImplementation.Add('  end;');
+      GFacadeImplementation.Add('end;');
+      GFacadeImplementation.Add('');
+    end;
     for LIndex := 0 to LMethods.Count - 1 do
     begin
       LSignature := LMethods[LIndex];
@@ -528,7 +548,8 @@ begin
       LHeader := Copy(LHeader, 1, LFinish);
       GFacadeImplementation.Add(LHeader);
 
-      if (AMember = 'Configure') and ((LName = 'ForPlatform') or (LName = 'WhenViewport')) then
+      if (AMember = 'Configure') and ((LName = 'ForPlatform') or
+        (LName = 'WhenViewport') or (LName = 'WhenPresentation')) then
       begin
         GFacadeImplementation.Add('var');
         GFacadeImplementation.Add('  LFacade: TNyxConfiguration;');
@@ -538,7 +559,7 @@ begin
 
       if AMember = 'Configure' then
       begin
-        LCall := 'FOwner.Node.Configure.ForPlatform(FPlatform).WhenViewport(FViewport).' + LName;
+        LCall := 'ConfigurationScope.' + LName;
       end;
 
       if Arguments(LSignature) <> '' then
@@ -551,6 +572,7 @@ begin
         GFacadeImplementation.Add('  LFacade := TNyxConfiguration.Create(FOwner);');
         GFacadeImplementation.Add('  LFacade.FPlatform := APlatform;');
         GFacadeImplementation.Add('  LFacade.FViewport := FViewport;');
+        GFacadeImplementation.Add('  LFacade.FPresentation := FPresentation;');
         GFacadeImplementation.Add('  Result := LFacade;');
       end
       else if (AMember = 'Configure') and (LName = 'WhenViewport') then
@@ -566,6 +588,14 @@ begin
         begin
           GFacadeImplementation.Add('  LFacade.FViewport := ACondition;');
         end;
+        GFacadeImplementation.Add('  Result := LFacade;');
+      end
+      else if (AMember = 'Configure') and (LName = 'WhenPresentation') then
+      begin
+        GFacadeImplementation.Add('  ConfigurationScope.WhenPresentation(AReference);');
+        GFacadeImplementation.Add('  LFacade := TNyxConfiguration.Create(FOwner);');
+        GFacadeImplementation.Add('  LFacade.FPlatform := FPlatform;');
+        GFacadeImplementation.Add('  LFacade.FPresentation := AReference;');
         GFacadeImplementation.Add('  Result := LFacade;');
       end
       else if LName = 'Done' then

@@ -140,7 +140,11 @@ begin
               'The constrained source pane uses its typed compact caption');
             GBefore := GEditor.value;
             Check((Pos('INyxMemo', GBefore) > 0) and
+              {$ifdef NYX_PRESENTATION_CONSUMER}
+              (Pos('.WhenPresentation(NyxPresentation(''compact''))', GBefore) > 0),
+              {$else}
               (Pos('TNyxViewportWidth.Below(640)', GBefore) > 0),
+              {$endif}
               'Observed accepted source retains specialized typed MCP authoring');
             Required('workspace').click;
             GInput := TJSHTMLTextAreaElement(Field('notes-editor'));
@@ -205,13 +209,129 @@ begin
           begin
             Check(True, 'One ordinary editor Redo restores exact admitted Pascal');
             RetainedInput;
+            {$ifdef NYX_PRESENTATION_CONSUMER}
+            Required('action-undo').click;
+            GStage := 4;
+            {$else}
             document.body.setAttribute(CResult, 'passed');
             document.body.setAttribute(CChecks, IntToStr(GChecks));
             { Keep the actual Studio mounted for the observing driver capture.
               Its owned browser profile tears down the transport after capture. }
             Exit;
+            {$endif}
           end;
         end;
+      {$ifdef NYX_PRESENTATION_CONSUMER}
+      4:
+        begin
+
+          if TJSHTMLTextAreaElement(Field('studio-code')).value = GBefore then
+          begin
+
+            if window.innerWidth <= 960 then
+            begin
+              Required('action-panel-inspector').click;
+            end;
+            Change(NyxStudioPresentationNameID, 'compact');
+            Change(NyxStudioViewportMinimumID, '0');
+            Change(NyxStudioViewportMaximumID, '900');
+            Change(NyxStudioViewportHeightMinimumID, '0');
+            Change(NyxStudioViewportHeightMaximumID, '0');
+            Change(NyxStudioViewportOrientationID, 'any');
+            Required(NyxStudioPresentationDefineID).click;
+            GStage := 5;
+          end;
+        end;
+      5:
+        begin
+
+          if Pos('Design / Pascal updated', Required('studio-status').textContent) = 1 then
+          begin
+            if window.innerWidth <= 960 then
+            begin
+              Required('action-panel-design').click;
+            end;
+            GAfter := TJSHTMLTextAreaElement(Field('studio-code')).value;
+            Check(Pos('TNyxViewportCondition.Any.WidthBelow(900)', GAfter) > 0,
+              'Real browser Inspector/worker updates the shared definition');
+            RetainedInput;
+            Required('action-undo').click;
+            GStage := 6;
+          end;
+        end;
+      6:
+        begin
+
+          if TJSHTMLTextAreaElement(Field('studio-code')).value = GBefore then
+          begin
+            Check(True, 'One synchronized Undo restores the exact named definition source');
+            RetainedInput;
+            Required('action-redo').click;
+            GStage := 7;
+          end;
+        end;
+      7:
+        begin
+
+          if TJSHTMLTextAreaElement(Field('studio-code')).value = GAfter then
+          begin
+            Check(True, 'One synchronized Redo restores the exact shared definition source');
+
+            if window.innerWidth <= 960 then
+            begin
+              Required('action-panel-inspector').click;
+            end;
+            Change(NyxStudioPresentationChoiceID, 'compact');
+            Change(NyxStudioPresentationAttributeID, 'visible');
+            Required(NyxStudioPresentationUseID).click;
+            GStage := 8;
+          end;
+        end;
+      8:
+        begin
+
+          if Pos('Design / Pascal updated', Required('studio-status').textContent) = 1 then
+          begin
+
+            if window.innerWidth <= 960 then
+            begin
+              Required('action-panel-design').click;
+            end;
+            Check(Pos('.Visible(True)', TJSHTMLTextAreaElement(Field('studio-code')).value) > 0,
+              'Real browser Inspector adds a strongly typed presentation override');
+
+            if window.innerWidth <= 960 then
+            begin
+              Required('action-panel-inspector').click;
+            end;
+            Change(NyxStudioPresentationChoiceID, 'compact');
+            Change(NyxStudioPresentationAttributeID, 'visible');
+            Required(NyxStudioPresentationResetID).click;
+            GStage := 9;
+          end;
+        end;
+      9:
+        begin
+
+          if Pos('Design / Pascal updated', Required('studio-status').textContent) = 1 then
+          begin
+
+            if window.innerWidth <= 960 then
+            begin
+              Required('action-panel-design').click;
+            end;
+
+            if TJSHTMLTextAreaElement(Field('studio-code')).value = GAfter then
+            begin
+              Check(True, 'Reset removes only its exact named override and retains the shared definition');
+              RetainedInput;
+              document.body.setAttribute(CResult, 'passed');
+              document.body.setAttribute(CChecks, IntToStr(GChecks));
+              Exit;
+            end;
+          end;
+        end;
+      {$endif}
     end;
     window.setTimeout(@Poll, 25);
   except

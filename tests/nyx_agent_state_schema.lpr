@@ -52,7 +52,7 @@ begin
     { The actual tools/list catalog runs without a listener or any constructor
       that refreshes local Codex credentials. This is offline discovery evidence. }
     LTools := NyxStudioMCPTools.Field('tools');
-    Check(LTools.Count = 19, 'staged catalog contains nineteen tools');
+    Check(LTools.Count = 20, 'staged catalog contains twenty tools');
     LFound := False;
     for LIndex := 0 to LTools.Count - 1 do
     begin

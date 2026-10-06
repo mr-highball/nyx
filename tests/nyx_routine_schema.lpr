@@ -50,7 +50,7 @@ begin
   try
     { Actual transport discovery builder; no listener or configuration refresh. }
     LTools := NyxStudioMCPTools.Field('tools');
-    Check(LTools.Count = 19, 'Focused routine modes extend the existing nineteen tools');
+    Check(LTools.Count = 20, 'Focused routine modes extend the twenty advertised tools');
     LFound := False;
     for LIndex := 0 to LTools.Count - 1 do
     begin

@@ -32,6 +32,7 @@ uses
   nyx.text,
   nyx.types,
   nyx.responsive,
+  nyx.presentations,
   nyx.layout.policy,
   nyx.layout.constraints,
   nyx.data,

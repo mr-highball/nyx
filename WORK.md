@@ -44,7 +44,19 @@ unchanged. The previous blocked/pending refresh below is historical and supersed
 do not execute its obsolete process manifest. Private current identity, artifact
 manifest, paired backup and rollback live under the current refresh record.
 
-Current independent work: [alignment guides](#alignment-guides--2026-10-06) now
+Current independent work: [named responsive presentations](#named-responsive-presentations--2026-10-06)
+qualify original authoring criterion 1 through managed fluency, exact Unicode
+wire/source/history, immutable copied ownership, retained browser/LCL inputs and
+ordinary Inspector/worker/semantic editing. The nine-artifact release is staged
+and three existing pairs/navigation states qualify against its candidate; LAN
+deployment is pending. This goal turn is progress, not full completion. Authoring
+no-closure advances 17→18 once; workflow 9, codegen 28, renderer 3 and delivery 1
+remain. End local named-rule/parser/fixture expansion. Continue original
+container/manual/structural variants, full move snapping and complete ordinary
+editor/parity/accessibility/performance/delivery. Preserve the original
+prerequisites, semantic framing/transport gaps and physical-device limits.
+
+Preceding independent work: [alignment guides](#alignment-guides--2026-10-06) now
 has public copied geometry, both adapters and ordinary Studio evidence. The goal
 turn is progress; it closes no full criterion/prerequisite. Authoring no-closure
 advances 16→17 once; workflow 9, codegen 28, renderer 3 and delivery 1 remain.
@@ -8769,3 +8781,69 @@ complete editor/parity/accessibility/performance/delivery. The observed desktop
 view-bar title wrap with the Inspector open remains an ordinary-layout quality
 gap. The branch checkpoint is verified after committing, with its private receipt
 at `build/form-factors/review/remote-checkpoint.json`.
+
+## Named responsive presentations — 2026-10-06
+
+Original [authoring criterion 1](TODO/NS-4_studio-authoring_01.md) now shares one
+typed named host condition across controls and reusable views. This is integrated
+progress toward the full outcome, with the original prerequisites still open.
+
+- `TNyxPresentationRef`, `INyxPresentations` and immutable
+  `INyxPresentationSnapshot` keep exact open names, copied conditions and explicit
+  ownership. Managed controls expose `WhenPresentation`; target scope remains
+  orthogonal. Anonymous/named overlap retains original property order and concrete
+  target priority. Constraints resolve both targets through the same definitions.
+- Version-four document definitions and ordered node `presentationRules` arrays
+  preserve full 128-scalar supplementary names. Qualification found old native
+  fpjson's 255-byte object-key truncation; names now travel as array values with
+  original indices. Old opaque fields retain meaning; conflicting promotion and
+  dangling references refuse. Generation/source admission use crafted typed calls.
+- Ordinary Nyx Inspector defines/updates shared predicates, adds a supported
+  attribute override and resets one exact override. Leaf controls participate.
+  Private worker version eight retains exact owner/typed intent; older tickets
+  remain admitted with their original shape. Paired source/history and retained
+  input identities/text/ranges survive ordinary worker/Undo/Redo execution.
+- Authenticated discovery exposes **20** tools. `nyx_presentations` returns one
+  exact definition or bounded pages. Existing `nyx_transaction` groups definition,
+  scalar set/use/reset/remove operations. `presentation-set` avoids long JSON keys
+  and refuses wrong scalar families atomically. The maintained English operations
+  fixture composes an independent project semantically, with **104 lines / 2438
+  bytes**, MD5 `fddc3a207f28b0ae82e673c0c3b24c41`, matching actual immutable
+  browser/LCL application jobs. `nyx_source` still omits final LF; exact framing
+  was checked against the immutable fingerprint/length before physical compilation.
+- **55** shared checks pass on stable FPC, LCL-matched FPC and browser; **2** actual
+  compiled full-length Unicode checks pass per target; **36** actual Win32 and
+  **37** browser control checks include central definition refresh without input
+  loss. Ordinary Studio passes **16** Win32 and **39** desktop / **39** exact-390
+  checks through actual callbacks/module worker/synchronized history. Compact
+  harness navigation now returns to Design before reading its detached code pane.
+  Captures were inspected. No owned warning; seven known upstream pas2js RTL
+  warnings remain without dependency edits. Checked native runs report zero leaks.
+- Core regression passes; resize passes **74**; discovery regressions pass **57**
+  collection, **14** state, **28** reusable, **50** declaration, **37** import and
+  **37** routine checks. Three protected project pairs/selection/view states were
+  backed up privately and admitted exactly against the candidate. Additional
+  projects require their ordinary private commit after MCP creation; claiming an
+  already seeded workspace deliberately preserves its existing pair.
+
+Evidence: `build/presentations/final-qualification.log`, `core-regression.log`,
+`regression/`, `stable/`, `maintained-matched/`, `review/contracts-final/`,
+`review/compiled-names/`, `review/controls-final/`, `review/studio-desktop-final/`,
+`review/studio-compact-final/`, `semantic/*receipt.json`, `mcp-source/`, and staged
+`release/`. Private backup/preservation proof is
+`.local/presentations-refresh-20261006/`. Full LAN deployment is pending.
+
+Discovered transport gap belongs to the existing
+[workflow owner](TODO/NS-4_agent-workflows_01.md): the Pascal CLI receives its
+build receipt, then reports a DELETE-session cleanup socket error. The mutation
+was not blindly replayed; exact handles independently resolve successful jobs.
+Active-chat native MCP handles still cache the previous endpoint; the Pascal
+semantic client remains primary. Inspector form choices/drafts and restart
+workspace/history identity remain ordinary editor/service lifecycle work.
+
+No original criterion closes. Authoring no-closure **17→18** once; workflow **9**,
+codegen **28**, renderer **3**, delivery **1** remain. Stop local named-rule/parser/
+fixture expansion. Next continue original container/manual/structural variants,
+full move snapping and complete editor/parity/accessibility/performance/delivery.
+Synthetic host input does not establish physical phone keyboard, visual viewport,
+hardware, IME, assistive technology, nested scrolling or another widgetset.

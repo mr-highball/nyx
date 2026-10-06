@@ -26,7 +26,7 @@ unit nyx.platform;
 
 interface
 
-uses nyx.types, nyx.text, nyx.model;
+uses nyx.types, nyx.text, nyx.model, nyx.presentations;
 
 { Project typed presentation overrides into an independently realized tree.
   Defaults and rules in the authored document remain untouched. Fixed platform
@@ -37,7 +37,8 @@ procedure ApplyNyxPlatform(ARoot: TNyxNode; APlatform: TNyxPlatform);
 { Admission checks every piecewise host rectangle/orientation on both targets.
   Inconsistent effective size/split bounds refuse before mounting or publishing.
   Candidates contain copied properties only and retain no authored children. }
-procedure ValidateNyxViewportBounds(ANode: TNyxNode);
+procedure ValidateNyxViewportBounds(ANode: TNyxNode;
+  const APresentations: INyxPresentationSnapshot = nil);
 
 implementation
 
@@ -87,8 +88,10 @@ begin
   Visit(ARoot);
 end;
 
-procedure ValidateNyxViewportBounds(ANode: TNyxNode);
+procedure ValidateNyxViewportBounds(ANode: TNyxNode;
+  const APresentations: INyxPresentationSnapshot);
 var
+  LPresentations: INyxPresentationSnapshot;
   LWidths: array of Integer;
   LHeights: array of Integer;
   LViewport: TNyxViewportCondition;
@@ -172,12 +175,19 @@ var
   end;
 
 begin
+  LPresentations := APresentations;
+
+  if LPresentations = nil then
+  begin
+    LPresentations := ANode.PresentationSnapshot;
+  end;
   LWidths := nil;
   LHeights := nil;
   for LIndex := 0 to ANode.Props.Count - 1 do
   begin
 
-    if TryNyxViewportKey(ANode.Props.Names[LIndex], LViewport, LPlatform, LAttribute) and
+    if TryNyxResponsiveKey(ANode.Props.Names[LIndex], LPresentations,
+      LViewport, LPlatform, LAttribute) and
       (LAttribute in [atWidth, atHeight, atMinimumWidth, atMaximumWidth,
       atMinimumHeight, atMaximumHeight, atSplitPosition, atSplitMinimum, atSplitMaximum]) then
     begin
@@ -201,6 +211,7 @@ begin
     LProbe := TNyxNode.CreateRealized(ANode.Kind, ANode.ID, ANode.ID, ANode.ID);
     try
       LProbe.Props.Assign(ANode.Props);
+      LProbe.BindPresentations(LPresentations);
       ApplyNyxPlatform(LProbe, LTarget);
       for LWidthIndex := 0 to High(LWidths) do
       begin

@@ -51,7 +51,7 @@ begin
   try
     { Actual discovery builder only: no server/configuration constructor. }
     LTools := NyxStudioMCPTools.Field('tools');
-    Check(LTools.Count = 19, 'Catalog inventory remains nineteen');
+    Check(LTools.Count = 20, 'Catalog inventory includes presentations');
     LFound := False;
     for LIndex := 0 to LTools.Count - 1 do
     begin

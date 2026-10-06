@@ -27,7 +27,7 @@ unit nyx.studio.sourcejobs;
 interface
 
 uses
-  nyx.text, nyx.types, nyx.responsive, nyx.model, nyx.scheduler, nyx.schema, nyx.callbacks,
+  nyx.text, nyx.types, nyx.responsive, nyx.presentations, nyx.model, nyx.scheduler, nyx.schema, nyx.callbacks,
   nyx.source.preparation, nyx.studio.session, nyx.studio.edits, nyx.projection.refresh,
   nyx.studio.inspector, nyx.studio.collectionintent, nyx.studio.collections
   {$ifdef PAS2JS}, JS, Web{$endif};
@@ -1133,6 +1133,7 @@ var
   LAttribute: TNyxAttribute;
   LPlatform: TNyxPlatform;
   LViewport: TNyxViewportCondition;
+  LPresentation: TNyxPresentationRef;
 begin
   Result := False;
 
@@ -1164,7 +1165,8 @@ begin
       if (LEdit.Selection = '') or (LEdit.Selection <> FSession.SelectedID) or
         not (TryNyxAttribute(LEdit.Name, LAttribute) or
         TryNyxPlatformKey(LEdit.Name, LPlatform, LAttribute) or
-        TryNyxViewportKey(LEdit.Name, LViewport, LPlatform, LAttribute)) then
+        TryNyxViewportKey(LEdit.Name, LViewport, LPlatform, LAttribute) or
+        TryNyxPresentationKey(LEdit.Name, LPresentation, LPlatform, LAttribute)) then
       begin
         raise ENyxModel.Create('Select this component again before unsetting its size bound');
       end;

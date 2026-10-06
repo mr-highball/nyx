@@ -34,6 +34,7 @@ uses
   nyx.contract,
   nyx.types,
   nyx.responsive,
+  nyx.presentations,
   nyx.state,
   nyx.collections,
   nyx.collections.view.types,
@@ -1395,9 +1396,14 @@ var
     LAttribute: TNyxAttribute;
     LViewport: TNyxViewportCondition;
     LViewportScope: TNyxViewportCondition;
+    LPresentation: TNyxPresentationRef;
+    LPresentationScope: TNyxText;
+    LPresentationPlatform: TNyxPlatform;
+    LPresentationAttribute: TNyxAttribute;
   begin
     LScope := npfAny;
     LViewportScope := TNyxViewportCondition.Any;
+    LPresentationScope := '';
     { Admit each newly created node to its owner before applying properties.
       Generated try/except can then release the document if later work fails,
       without leaving unowned local builder variables behind. }
@@ -1443,6 +1449,7 @@ var
       LKey := LWireKey;
       LPlatform := npfAny;
       LViewport := TNyxViewportCondition.Any;
+      LPresentation := Default(TNyxPresentationRef);
 
       if TryNyxPlatformKey(LWireKey, LPlatform, LAttribute) then
       begin
@@ -1454,10 +1461,25 @@ var
         LKey := NyxAttributeName(LAttribute);
       end;
 
-      if not LViewport.Same(LViewportScope) then
+      if TryNyxPresentationKey(LWireKey, LPresentation,
+        LPresentationPlatform, LPresentationAttribute) then
+      begin
+        LPlatform := LPresentationPlatform;
+        LAttribute := LPresentationAttribute;
+        LKey := NyxAttributeName(LAttribute);
+
+        if LPresentation.Name <> LPresentationScope then
+        begin
+          LLines.Add('      .WhenPresentation(NyxPresentation(' + PascalString(LPresentation.Name) + '))');
+          LPresentationScope := LPresentation.Name;
+          LViewportScope := TNyxViewportCondition.Any;
+        end;
+      end
+      else if (LPresentationScope <> '') or not LViewport.Same(LViewportScope) then
       begin
         LLines.Add('      .WhenViewport(' + LViewport.Pascal + ')');
         LViewportScope := LViewport;
+        LPresentationScope := '';
       end;
 
       if LPlatform <> LScope then
@@ -1518,6 +1540,7 @@ begin
     LLines.Add('  nyx.text,');
     LLines.Add('  nyx.types,');
     LLines.Add('  nyx.responsive,');
+    LLines.Add('  nyx.presentations,');
     LLines.Add('  nyx.editing,');
     LLines.Add('  nyx.gestures,');
 
@@ -1585,6 +1608,14 @@ begin
     EmitExtensions(ADocument.Extensions, 'Result');
     EmitState;
     EmitCollections;
+    for LIndex := 0 to ADocument.Presentations.Count - 1 do
+    begin
+      LLines.Add('');
+      LLines.Add('    Result.Presentations.Define(NyxPresentation(' +
+        PascalString(ADocument.Presentations.Reference(LIndex).Name) + '),');
+      LLines.Add('      ' + ADocument.Presentations.Condition(
+        ADocument.Presentations.Reference(LIndex)).PascalCondition + ');');
+    end;
     LNextNode := 0;
     for LIndex := 0 to ADocument.Count - 1 do
     begin

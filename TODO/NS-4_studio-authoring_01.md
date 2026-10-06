@@ -40,6 +40,32 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Named responsive presentations — 2026-10-06
+
+Original criterion 1 now has document-owned typed names/host conditions shared
+by controls and reusable views. Copied immutable snapshots retain independent
+ownership. Ordered version-four node arrays preserve supplementary names and
+overlapping rule precedence without old native JSON member-key truncation.
+Managed fluency, generated/source-admitted Pascal, both retained adapters and
+ordinary Inspector/worker/history editing consume the same contract. MCP adds
+bounded definition inspection and grouped typed scalar upserts; the English
+example is semantically composed and both application outputs compile.
+
+Evidence: 55 shared checks per native compiler/browser; two actual compiled
+Unicode checks per target; 36 Win32 / 37 browser controls; 16 native Studio and
+39 per desktop/exact-390 Studio journey. Exact 104-line / 2438-byte semantic
+source matches immutable compiler jobs. Three existing pairs/navigation states
+qualify against the candidate; the nine-artifact full release is staged, with
+LAN deployment pending. See
+[evidence](../WORK.md#named-responsive-presentations--2026-10-06).
+
+No original criterion closes. Authoring no-closure advances **17→18** once;
+workflow **9**, codegen **28**, renderer **3**, delivery **1** remain. End local
+named-rule/parser/fixture expansion. Continue original container/manual/structural
+variants, full move snapping and ordinary editor/parity/accessibility/performance
+journeys. Physical phone input, nested scrolling and another widgetset remain
+unqualified. The original prerequisites and acceptance criteria stand.
+
 ## Alignment guides — 2026-10-06
 
 Original criterion 1 now consumes public copied sibling/layout geometry through

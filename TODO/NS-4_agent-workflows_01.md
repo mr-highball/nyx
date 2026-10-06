@@ -48,6 +48,26 @@ the present Windows installation; the Pascal semantic client is usable immediate
 - Underlying callback/state/source/build behavior remains with its existing owners;
   expose only qualified operations and retain their original acceptance criteria.
 
+## Named presentation workflow — 2026-10-06
+
+The primary semantic journey now discovers twenty authenticated tools, creates
+an independent English project, composes related definitions/typed overrides as
+one transaction and reads bounded definition/source windows. `presentation-set`
+carries full Unicode names as values and checks the published scalar family;
+wrong-family and dangling removal refuse without revision/source/history changes.
+Immutable application jobs compile both outputs. Physical Inspector/worker/input
+consumers qualify behavior beyond the document API. Original workflow criteria
+and no-closure 9 remain open; completion belongs to their existing owners.
+
+Discovered transport gap: the Pascal client's completed build-request receipt is
+followed by a socket error during DELETE-session cleanup on this isolated host.
+Do not blindly replay the mutation. The exact returned job handle was queried
+independently to establish compiler success, revision/output and fingerprints.
+This cleanup lifecycle belongs to this owner. Source-window terminal-LF framing
+still needs the immutable length/fingerprint check described below. Inspector
+form-choice persistence and service-restart workspace/history identity remain
+ordinary editor/service lifecycle gaps, rather than completion from these checks.
+
 ## Alignment review follow-through — 2026-10-06
 
 Semantic MCP remains primary: create an independent project, compose one related

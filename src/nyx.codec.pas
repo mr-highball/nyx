@@ -29,17 +29,19 @@ interface
 
 uses
   nyx.text,
+  nyx.types,
   nyx.data,
   SysUtils,
   fpjson,
   nyx.state,
   nyx.collections.registry,
+  nyx.presentations,
   nyx.binding.types,
   nyx.collections.view.types,
   nyx.model;
 
 type
-  { Version 1/2/3 design persistence. The format deliberately stores the portable
+  { Version 1/2/3/4 design persistence. The format deliberately stores the portable
     model, not target widget handles or generated source. All custom kinds and
     string-valued extension properties survive an encode/decode round trip.
     Unknown root/node fields retain typed nested extension data, exact strings
@@ -52,6 +54,10 @@ type
     original meaning. A conflicting extension/default pair refuses export.
     Typed node view bindings select version 3. Older opaque collectionView fields
     retain extension meaning; conflicting promotion is refused, never guessed.
+    Document-owned named presentations select version 4 with strict definition
+    data and ordered node rule arrays. Full Unicode names travel as values,
+    avoiding old native JSON object-key limits while preserving rule precedence.
+    Older opaque presentations/presentationRules fields retain extension meaning.
     Decode returns ownership to its caller and frees partial trees on failure. }
   TNyxCodec = class
   public
@@ -89,7 +95,8 @@ begin
 end;
 
 procedure ReadExtensions(AObject: TJSONObject; AExtensions: TNyxExtensions;
-  ACollections: Boolean = False; ACollectionViews: Boolean = False);
+  ACollections: Boolean = False; ACollectionViews: Boolean = False;
+  APresentations: Boolean = False; APresentationRules: Boolean = False);
 var
   LFields: TJSONObject;
   LIndex: Integer;
@@ -101,7 +108,9 @@ begin
 
       if not NyxReservedField(AExtensions.Scope, AObject.Names[LIndex]) and
         (not ACollections or (AObject.Names[LIndex] <> NyxCollectionsWireField)) and
-        (not ACollectionViews or (AObject.Names[LIndex] <> NyxCollectionViewWireField)) then
+        (not ACollectionViews or (AObject.Names[LIndex] <> NyxCollectionViewWireField)) and
+        (not APresentations or (AObject.Names[LIndex] <> NyxPresentationsWireField)) and
+        (not APresentationRules or (AObject.Names[LIndex] <> NyxPresentationRulesWireField)) then
       begin
         LFields.Add(AObject.Names[LIndex], AObject.Items[LIndex].Clone);
       end;
@@ -155,7 +164,7 @@ begin
   end;
 end;
 
-function NodeJSON(ANode: TNyxNode): TJSONObject;
+function NodeJSON(ANode: TNyxNode; APresentations: Boolean): TJSONObject;
 var
   LProps: TJSONObject;
   LChildren: TJSONArray;
@@ -163,6 +172,11 @@ var
   LBinding: TJSONObject;
   LSpec: TNyxBindingSpec;
   LIndex: Integer;
+  LRules: TJSONArray;
+  LRule: TJSONObject;
+  LReference: TNyxPresentationRef;
+  LPlatform: TNyxPlatform;
+  LAttribute: TNyxAttribute;
 begin
   { Attach JSON containers immediately so the single Result.Free failure path
     releases every completed property and descendant built so far. }
@@ -172,9 +186,33 @@ begin
     Result.Add('id', ANode.ID);
     LProps := TJSONObject.Create;
     Result.Add('props', LProps);
+    LRules := nil;
     for LIndex := 0 to ANode.Props.Count - 1 do
     begin
-      LProps.Add(ANode.Props.Names[LIndex], ANode.Prop(ANode.Props.Names[LIndex]));
+
+      if APresentations and TryNyxPresentationKey(ANode.Props.Names[LIndex],
+        LReference, LPlatform, LAttribute) then
+      begin
+
+        if LRules = nil then
+        begin
+          LRules := TJSONArray.Create;
+          Result.Add(NyxPresentationRulesWireField, LRules);
+        end;
+        LRule := TJSONObject.Create;
+        LRules.Add(LRule);
+        { Keep the original property index: relative order between anonymous,
+          named and concrete-target rules is part of their winning semantics. }
+        LRule.Add('index', LIndex);
+        LRule.Add('name', LReference.Name);
+        LRule.Add('platform', NyxPlatformName(LPlatform));
+        LRule.Add('attribute', NyxAttributeName(LAttribute));
+        LRule.Add('value', ANode.Prop(ANode.Props.Names[LIndex]));
+      end
+      else
+      begin
+        LProps.Add(ANode.Props.Names[LIndex], ANode.Prop(ANode.Props.Names[LIndex]));
+      end;
     end;
 
     if ANode.BindingCount > 0 then
@@ -212,7 +250,7 @@ begin
     Result.Add('children', LChildren);
     for LIndex := 0 to ANode.Count - 1 do
     begin
-      LChildren.Add(NodeJSON(ANode.Children[LIndex]));
+      LChildren.Add(NodeJSON(ANode.Children[LIndex], APresentations));
     end;
     WriteExtensions(ANode.Extensions, Result);
   except
@@ -236,7 +274,15 @@ begin
   LRoot := TJSONObject.Create;
   try
 
-    if ADocument.HasCollectionViews then
+    if ADocument.Presentations.Count > 0 then
+    begin
+      LRoot.Add('version', 4);
+      LRoot.Add(NyxPresentationsWireField,
+        DecodeNyxJSON(ADocument.Presentations.ToData.ToJSON));
+      LRoot.Add(NyxCollectionsWireField,
+        DecodeNyxJSON(EncodeNyxCollectionDefaults(ADocument.Collections)));
+    end
+    else if ADocument.HasCollectionViews then
     begin
       LRoot.Add('version', 3);
       LRoot.Add(NyxCollectionsWireField,
@@ -264,11 +310,11 @@ begin
     LRoot.Add('components', LComponents);
     for LIndex := 0 to ADocument.Count - 1 do
     begin
-      LPages.Add(NodeJSON(ADocument.Pages[LIndex]));
+      LPages.Add(NodeJSON(ADocument.Pages[LIndex], ADocument.Presentations.Count > 0));
     end;
     for LIndex := 0 to ADocument.ComponentCount - 1 do
     begin
-      LComponents.Add(NodeJSON(ADocument.Components[LIndex]));
+      LComponents.Add(NodeJSON(ADocument.Components[LIndex], ADocument.Presentations.Count > 0));
     end;
     WriteExtensions(ADocument.Extensions, LRoot);
     Result := LRoot.AsJSON;
@@ -463,7 +509,7 @@ begin
 end;
 
 function ReadNode(AData: TJSONData; ADepth: Integer; var ACount: Integer;
-  ACollectionViews: Boolean): TNyxNode;
+  ACollectionViews, APresentations: Boolean): TNyxNode;
 var
   LObject: TJSONObject;
   LProps: TJSONObject;
@@ -471,6 +517,16 @@ var
   LIndex: Integer;
   LKind: TNyxText;
   LID: TNyxText;
+  LRules: TJSONData;
+  LRule: TNyxDataValue;
+  LKeys: array of TNyxText;
+  LValues: array of TNyxText;
+  LTotal: Integer;
+  LPosition: Integer;
+  LPropertyIndex: Integer;
+  LPlatform: TNyxPlatform;
+  LAttribute: TNyxAttribute;
+  LFound: Boolean;
 begin
   { Count spans every page and definition, rather than restarting per root.
     Reject wrong types instead of silently coercing damaged design data. }
@@ -494,12 +550,93 @@ begin
     raise ENyxModel.Create('Node exceeds property budget');
   Result := TNyxNode.Create(LKind, LID);
   try
-    for LIndex := 0 to LProps.Count - 1 do
+    LRules := nil;
+
+    if APresentations then
+    begin
+      LRules := LObject.Find(NyxPresentationRulesWireField);
+    end;
+    LTotal := LProps.Count;
+
+    if LRules <> nil then
     begin
 
-      if LProps.Items[LIndex].JSONType <> jtString then
-        raise ENyxModel.Create('Property values must be strings');
-      Result.SetProp(LProps.Names[LIndex], LProps.Items[LIndex].AsString);
+      if (LRules.JSONType <> jtArray) or (LRules.Count > 256 - LTotal) then
+      begin
+        raise ENyxModel.Create('Named rules exceed the property budget or require an array');
+      end;
+      Inc(LTotal, LRules.Count);
+    end;
+    SetLength(LKeys, LTotal);
+    SetLength(LValues, LTotal);
+
+    if LRules <> nil then
+    begin
+      for LIndex := 0 to LRules.Count - 1 do
+      begin
+        LRule := TNyxDataValue.ParseJSON(LRules.Items[LIndex].AsJSON);
+
+        if (LRule.Kind <> ndObject) or (LRule.Count <> 5) then
+        begin
+          raise ENyxModel.Create('A named rule requires exactly index/name/platform/attribute/value');
+        end;
+        LPosition := LRule.Field('index').AsInteger;
+
+        if (LPosition < 0) or (LPosition >= LTotal) then
+        begin
+          raise ENyxModel.Create('Named rule index is outside its property sequence');
+        end;
+
+        if LKeys[LPosition] <> '' then
+        begin
+          raise ENyxModel.Create('Duplicate named rule index');
+        end;
+        LFound := False;
+        for LPlatform := npfAny to npfNativeLCL do
+        begin
+
+          if NyxPlatformName(LPlatform) = LRule.Field('platform').AsText then
+          begin
+            LFound := True;
+            Break;
+          end;
+        end;
+
+        if not LFound or not TryNyxAttribute(LRule.Field('attribute').AsText, LAttribute) then
+        begin
+          raise ENyxModel.Create('Named rule requires closed platform and attribute choices');
+        end;
+        LKeys[LPosition] := NyxPresentationKey(NyxPresentation(LRule.Field('name').AsText),
+          LPlatform, LAttribute);
+        LValues[LPosition] := LRule.Field('value').AsText;
+      end;
+    end;
+    LPropertyIndex := 0;
+    for LIndex := 0 to LTotal - 1 do
+    begin
+
+      if LKeys[LIndex] = '' then
+      begin
+
+        if LProps.Items[LPropertyIndex].JSONType <> jtString then
+        begin
+          raise ENyxModel.Create('Property values must be strings');
+        end;
+        LKeys[LIndex] := LProps.Names[LPropertyIndex];
+        LValues[LIndex] := LProps.Items[LPropertyIndex].AsString;
+        Inc(LPropertyIndex);
+
+        if APresentations and (Copy(LKeys[LIndex], 1, 18) = '@nyx.presentation:') then
+        begin
+          raise ENyxModel.Create('Version-four named rules belong in presentationRules');
+        end;
+      end;
+
+      if Result.Props.IndexOfName(LKeys[LIndex]) >= 0 then
+      begin
+        raise ENyxModel.Create('Duplicate named property scope');
+      end;
+      Result.SetProp(LKeys[LIndex], LValues[LIndex]);
     end;
     ReadBindings(LObject.Find('bindings'), Result);
 
@@ -508,10 +645,10 @@ begin
       Result.SetCollectionView(TNyxCollectionViewSpec.FromData(
         TNyxDataValue.ParseJSON(LObject.Find(NyxCollectionViewWireField).AsJSON)));
     end;
-    ReadExtensions(LObject, Result.Extensions, False, ACollectionViews);
+    ReadExtensions(LObject, Result.Extensions, False, ACollectionViews, False, APresentations);
     for LIndex := 0 to LChildren.Count - 1 do
     begin
-      Result.Add(ReadNode(LChildren.Items[LIndex], ADepth + 1, ACount, ACollectionViews));
+      Result.Add(ReadNode(LChildren.Items[LIndex], ADepth + 1, ACount, ACollectionViews, APresentations));
     end;
   except
     Result.Free;
@@ -530,6 +667,7 @@ var
   LCount: Integer;
   LVersion: TNyxText;
   LCollections: INyxCollectionDefaults;
+  LPresentations: INyxPresentations;
 begin
   LData := DecodeNyxJSON(ASource);
   try
@@ -540,7 +678,7 @@ begin
 
     LVersion := RequireField(LRoot, 'version', jtNumber).AsJSON;
 
-    if (LVersion <> '1') and (LVersion <> '2') and (LVersion <> '3') then
+    if (LVersion <> '1') and (LVersion <> '2') and (LVersion <> '3') and (LVersion <> '4') then
     begin
       raise ENyxModel.Create('Unsupported design version');
     end;
@@ -551,7 +689,7 @@ begin
       Result.Title := RequireField(LRoot, 'title', jtString).AsString;
       ReadState(LRoot.Find('state'), Result.State);
 
-      if (LVersion = '2') or (LVersion = '3') then
+      if LVersion <> '1' then
       begin
         LCollections := DecodeNyxCollectionDefaults(
           RequireField(LRoot, NyxCollectionsWireField, jtObject).AsJSON);
@@ -560,15 +698,28 @@ begin
           Result.Collections.Define(LCollections.Snapshot(LCollections.Key(LIndex)));
         end;
       end;
-      ReadExtensions(LRoot, Result.Extensions, LVersion <> '1');
+
+      if LVersion = '4' then
+      begin
+        LPresentations := NyxPresentationsFromData(TNyxDataValue.ParseJSON(
+          RequireField(LRoot, NyxPresentationsWireField, jtObject).AsJSON));
+        for LIndex := 0 to LPresentations.Count - 1 do
+        begin
+          Result.Presentations.Define(LPresentations.Reference(LIndex),
+            LPresentations.Condition(LPresentations.Reference(LIndex)));
+        end;
+      end;
+      ReadExtensions(LRoot, Result.Extensions, LVersion <> '1', False, LVersion = '4');
       LCount := 0;
       for LIndex := 0 to LPages.Count - 1 do
       begin
-        Result.AddPage(ReadNode(LPages.Items[LIndex], 0, LCount, LVersion = '3'));
+        Result.AddPage(ReadNode(LPages.Items[LIndex], 0, LCount,
+          (LVersion = '3') or (LVersion = '4'), LVersion = '4'));
       end;
       for LIndex := 0 to LComponents.Count - 1 do
       begin
-        Result.AddComponent(ReadNode(LComponents.Items[LIndex], 0, LCount, LVersion = '3'));
+        Result.AddComponent(ReadNode(LComponents.Items[LIndex], 0, LCount,
+          (LVersion = '3') or (LVersion = '4'), LVersion = '4'));
       end;
       Result.Validate;
     except

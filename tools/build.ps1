@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'responsive', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'responsive', 'presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1462,10 +1462,16 @@ try {
     exit 0
   }
 
-  if ($Target -eq 'responsive') {
+  if ($Target -in @('responsive','presentations')) {
     # Pascal owns interval/cascade, semantic/paired and actual control assertions.
     # These artifacts never start or replace a listener or refresh enrollment.
-    $nyxResponsiveRoot = Join-Path $nyxRoot 'build/responsive'
+    $nyxResponsiveRoot = Join-Path $nyxRoot "build/$Target"
+    $nyxResponsiveContract = 'nyx_responsive_tests'
+    $nyxResponsiveDefines = @()
+    if ($Target -eq 'presentations') {
+      $nyxResponsiveContract = 'nyx_presentations_tests'
+      $nyxResponsiveDefines = @('-dNYX_PRESENTATION_CONSUMER')
+    }
     $nyxResponsiveStable = Join-Path $nyxResponsiveRoot 'stable'
     $nyxResponsiveMatched = Join-Path $nyxResponsiveRoot 'maintained-matched'
     $nyxResponsiveLcl = Join-Path $nyxResponsiveRoot 'lcl'
@@ -1487,11 +1493,24 @@ try {
       @($nyxLclFpc, $nyxResponsiveMatched, $nyxResponsiveMatchedExport))) {
       Invoke-NyxCompiler $nyxResponsiveCompiler[0] ($nyxResponsiveFlags + @(
         "-FU$($nyxResponsiveCompiler[1])", "-FE$($nyxResponsiveCompiler[1])",
-        'tests/nyx_responsive_tests.lpr'))
+        "tests/$nyxResponsiveContract.lpr"))
       $nyxResponsiveExportFile = Join-Path $nyxResponsiveCompiler[2] 'nyx.generated.view.pas'
-      & (Join-Path $nyxResponsiveCompiler[1] 'nyx_responsive_tests.exe') $nyxResponsiveExportFile
+      $nyxResponsiveContractArguments = @($nyxResponsiveExportFile)
+      if ($Target -eq 'presentations') {
+        $nyxResponsiveUnicode = Join-Path $nyxResponsiveCompiler[1] 'unicode'
+        New-Item -ItemType Directory -Force $nyxResponsiveUnicode | Out-Null
+        $nyxResponsiveContractArguments += (Join-Path $nyxResponsiveUnicode 'nyx.generated.view.pas')
+      }
+      & (Join-Path $nyxResponsiveCompiler[1] "$nyxResponsiveContract.exe") @nyxResponsiveContractArguments
 
       if ($LASTEXITCODE -ne 0) { throw 'Responsive semantic/paired qualification failed' }
+      if ($Target -eq 'presentations') {
+        Invoke-NyxCompiler $nyxResponsiveCompiler[0] ($nyxResponsiveFlags + @(
+          "-Fu$nyxResponsiveUnicode", "-FU$nyxResponsiveUnicode", "-FE$nyxResponsiveUnicode",
+          'tests/nyx_presentation_names.lpr'))
+        & (Join-Path $nyxResponsiveUnicode 'nyx_presentation_names.exe')
+        if ($LASTEXITCODE -ne 0) { throw 'Compiled Unicode presentation qualification failed' }
+      }
     }
 
     if ((Get-FileHash -LiteralPath (Join-Path $nyxResponsiveExport 'nyx.generated.view.pas')).Hash -cne
@@ -1508,7 +1527,7 @@ try {
       }
     }
     $nyxResponsivePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
-    $nyxResponsiveControlFlags = $nyxResponsiveFlags + @("-Fu$nyxResponsiveSource",
+    $nyxResponsiveControlFlags = $nyxResponsiveFlags + $nyxResponsiveDefines + @("-Fu$nyxResponsiveSource",
       "-Fu$nyxLazarus/lcl/units/$nyxResponsivePlatform",
       "-Fu$nyxLazarus/lcl/units/$nyxResponsivePlatform/$Widgetset",
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxResponsivePlatform",
@@ -1529,12 +1548,23 @@ try {
     }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
-    foreach ($nyxResponsiveProgram in @('tests/nyx_responsive_tests.lpr',
+    foreach ($nyxResponsiveProgram in @("tests/$nyxResponsiveContract.lpr",
       'tests/nyx_responsive_controls.lpr', 'tests/nyx_responsive_studio_browser.lpr',
       'studio/nyx_studio.lpr')) {
-      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
-        '-Futests', "-Fu$nyxResponsiveSource", '-Jirtl.js', "-FE$nyxResponsiveBrowser", $nyxResponsiveProgram)
+      Invoke-NyxCompiler $nyxPas2js (@('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
+        '-Futests', "-Fu$nyxResponsiveSource", '-Jirtl.js', "-FE$nyxResponsiveBrowser",
+        $nyxResponsiveProgram) + $nyxResponsiveDefines)
     }
+    if ($Target -eq 'presentations') {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/presentations.html') -Destination $nyxResponsiveBrowser
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/presentation-names.html') -Destination $nyxResponsiveBrowser
+      $nyxResponsiveUnicodeSource = Join-Path $nyxResponsiveStable 'unicode'
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
+        "-Fu$nyxResponsiveUnicodeSource", '-Jirtl.js', "-FE$nyxResponsiveBrowser",
+        'tests/nyx_presentation_names.lpr')
+    }
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Tmodule', '-Mdelphi', '-Fusrc', '-Fustudio',
+      '-Jirtl.js', "-FE$nyxResponsiveBrowser", 'studio/nyx_source_worker.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxResponsiveBrowser 'rtl.js')
     foreach ($nyxResponsiveHost in @('responsive.html', 'responsive-contracts.html',
       'responsive-studio.html', 'index.html')) {

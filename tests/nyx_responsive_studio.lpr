@@ -25,7 +25,7 @@ program nyx_responsive_studio;
 
 uses
   SysUtils, Classes, Interfaces, Forms, Controls, StdCtrls, Spin,
-  nyx.text, nyx.types, nyx.model, nyx.codec, nyx.generated.view,
+  nyx.text, nyx.types, nyx.model, nyx.codec, nyx.generated.view, nyx.presentations,
   nyx.studio.projects, nyx.studio.lcl, nyx.studio.inspector;
 
 type
@@ -168,6 +168,57 @@ begin
     Check(LStudio.CanvasView.InputFor('notes-editor') = LMemo,
       'Rule Undo retains the same mounted input');
     Check(LMemo.Text = 'Retain this independent English draft.', 'Rule Undo retains the independent draft');
+    {$ifdef NYX_PRESENTATION_CONSUMER}
+    WriteLn('Native presentation: update definition');
+    Flush(Output);
+    LBefore := LStudio.Session.ProjectSnapshot;
+    TEdit(LStudio.ShellView.InputFor(NyxStudioPresentationNameID)).Text := 'compact';
+    TSpinEdit(LStudio.ShellView.InputFor(NyxStudioViewportMaximumID)).Value := 900;
+    TSpinEdit(LStudio.ShellView.InputFor(NyxStudioViewportHeightMaximumID)).Value := 0;
+    LOrientation := TComboBox(LStudio.ShellView.InputFor(NyxStudioViewportOrientationID));
+    LOrientation.ItemIndex := LOrientation.Items.IndexOf('any');
+    TControlAccess(LStudio.ShellView.ControlFor(NyxStudioPresentationDefineID)).Click;
+    Pump;
+    Check(LStudio.Session.Document.Presentations.Condition(NyxPresentation('compact')).WidthMaximum = 900,
+      'Actual native Inspector updates one shared definition through its paired processor');
+    Check(LStudio.CanvasView.InputFor('notes-editor') = LMemo, 'Shared definition editing retains the native Studio input');
+    Check(LMemo.Text = 'Retain this independent English draft.', 'Shared definition editing retains native Studio text');
+    Check((LMemo.SelStart = 5) and (LMemo.SelLength = 4), 'Shared definition editing retains native Studio range');
+    TControlAccess(LStudio.ShellView.ControlFor('action-undo')).Click;
+    Pump;
+    Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
+      'One actual native Undo restores the shared definition and its exact source');
+    WriteLn('Native presentation: add override');
+    Flush(Output);
+    LLayout := TComboBox(LStudio.ShellView.InputFor(NyxStudioPresentationAttributeID));
+    LLayout.ItemIndex := LLayout.Items.IndexOf('visible');
+
+    if Assigned(LLayout.OnChange) then
+    begin
+      LLayout.OnChange(LLayout);
+    end;
+    TControlAccess(LStudio.ShellView.ControlFor(NyxStudioPresentationUseID)).Click;
+    WriteLn('Native presentation: waiting for add');
+    Flush(Output);
+    Pump;
+    Check(LStudio.Session.Selected.Props.IndexOfName(
+      NyxPresentationKey(NyxPresentation('compact'), npfAny, atVisible)) >= 0,
+      'Actual native Inspector adds a typed presentation override');
+    WriteLn('Native presentation: reset override');
+    Flush(Output);
+    LLayout := TComboBox(LStudio.ShellView.InputFor(NyxStudioPresentationAttributeID));
+    LLayout.ItemIndex := LLayout.Items.IndexOf('visible');
+
+    if Assigned(LLayout.OnChange) then
+    begin
+      LLayout.OnChange(LLayout);
+    end;
+    TControlAccess(LStudio.ShellView.ControlFor(NyxStudioPresentationResetID)).Click;
+    Pump;
+    Check(LStudio.Session.Selected.Props.IndexOfName(
+      NyxPresentationKey(NyxPresentation('compact'), npfAny, atVisible)) < 0,
+      'Actual native Inspector resets only the requested presentation override');
+    {$endif}
     WriteLn('PASS ', LChecks, ' actual Studio responsive authoring checks');
   finally
     LStudio.Free;

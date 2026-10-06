@@ -62,6 +62,69 @@ only Square, and zero-sized hosts match only Any orientation. These are host
 rectangles, not device sensors. NaN, infinity and negative geometry refuse.
 The existing width API, persisted keys and width-only generated source stay exact.
 
+Name a shared presentation when several controls should respond to the same
+condition. A distinct application reference keeps the condition in one place:
+
+```pascal
+uses nyx.types, nyx.responsive, nyx.presentations, nyx.controls;
+
+LCompact := NyxPresentation('compact');
+LDocument.Presentations.Define(LCompact,
+  TNyxViewportCondition.Any.WidthBelow(640));
+
+LWorkspaceRow.Configure
+  .WhenPresentation(LCompact)
+  .Layout(nlColumn)
+  .Gap(8)
+  .ForPlatform(npfNativeLCL)
+  .Gap(10)
+  .Done;
+
+LDetailsPanel.Configure
+  .WhenPresentation(LCompact)
+  .Visible(False)
+  .Done;
+```
+
+`LCompact` has type `TNyxPresentationRef`. The document owns its managed
+`INyxPresentations` registry; a realized view retains an independent immutable
+`INyxPresentationSnapshot`. Editing one definition reaches compatible retained
+views without remounting their inputs. A snapshot can safely outlive its document.
+Names are exact, case-sensitive application text: 1–128 Unicode scalars, including
+supplementary characters. Blank/control/malformed names refuse, and at most 64
+definitions are admitted. Replacing a definition retains its position. `Any`
+alone refuses as an automatic named condition; ordinary defaults provide that
+baseline. Unknown references and removal of still-referenced definitions refuse.
+
+`WhenPresentation` replaces an anonymous condition; `WhenViewport` replaces a
+named condition. Both preserve the selected platform, and `ForPlatform` preserves
+the condition/name. All scopes retain the original property order, so an overlap
+between named and anonymous conditions follows the same precedence described
+below. Structural ownership, bindings and callbacks remain outside these scopes.
+
+Version-four persistence stores definitions and an ordered `presentationRules`
+array on each affected node. Names travel as values, with original property
+positions, rather than long JSON object keys that older native fpjson containers
+truncate. Versions 1–3 retain their format and opaque extension meaning; a
+conflicting promotion refuses. Generated Pascal uses `Presentations.Define` and
+`WhenPresentation`, never reserved property strings.
+
+The Nyx-built Inspector exposes shared definitions for leaf and layout controls.
+Use the condition fields to **Define or update presentation**, choose a shared
+name/property/target to **Add override**, edit its ordinary typed field, and
+**Reset override** to remove that exact scope. These operations use the ordinary
+isolated processor and paired Undo. Updating a name affects every referencing
+control. MCP `nyx_presentations` reads one exact definition or at most 16 entries
+per page. Group `presentation-define`, `presentation-set`, `presentation-use`,
+`presentation-reset` and `presentation-remove` inside `nyx_transaction` at an
+expected revision. `presentation-set` admits the published property's exact
+scalar family and carries the name as a value, including full-length Unicode.
+Definition removal must be grouped with removal of its remaining overrides.
+
+Named predicates currently use the rendering host rectangle. Container-relative
+conditions, explicit manual activation, and alternate structural view trees
+remain open authoring work; no physical device identity is inferred.
+
 Presentation first uses ordinary defaults and fixed target overrides. Matching
 common matching properties then apply, followed by concrete-target matching properties.
 Later persisted property positions win within each group; updating an existing
@@ -85,9 +148,9 @@ at relevant authored bounds and checks every feasible portrait/landscape/square
 region on both targets. This includes conflicts occurring only on the interior
 square diagonal. Text and gap rules do not inflate the constraint partition.
 
-The Nyx-built Inspector exposes **Responsive layout** for controls with a layout
-property. Set inclusive minima, exclusive maxima (zero means no upper limit),
-orientation and a layout. **Set layout rule** submits one intent through the existing isolated
+The Nyx-built Inspector exposes **Responsive layout** and shared presentations.
+Set inclusive minima, exclusive maxima (zero means no upper limit),
+orientation and, on layout controls, a layout. **Set layout rule** submits one intent through the existing isolated
 paired processor and one Undo step. Existing responsive fields use ordinary typed
 property editors and readable scope titles. This form creates layout rules;
 other presentation attributes can be authored fluently or semantically.

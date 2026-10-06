@@ -523,6 +523,40 @@ begin
   FLocals[LChild].Admitted := True;
 end;
 
+procedure TConfigurationReader.PresentationDefaults;
+var
+  LArgs: TValues;
+  LReference: TNyxPresentationRef;
+begin
+  Inc(FCursor, 3);
+  Expect('.');
+  Expect('Define');
+  LArgs := Arguments;
+  Expect(';');
+
+  if (Length(LArgs) <> 2) or (LArgs[0].Kind <> vkPresentationRef) or
+    (LArgs[1].Kind <> vkViewportCondition) then
+  begin
+    Fail('Presentations.Define requires a presentation reference and viewport condition');
+  end;
+  LReference := NyxPresentation(LArgs[0].Text);
+
+  if LArgs[1].ViewportCondition.IsAny then
+  begin
+    Fail('A named automatic presentation needs a viewport condition');
+  end;
+
+  if FApply then
+  begin
+
+    if FDocument.Presentations.Contains(LReference) then
+    begin
+      Fail('Define each presentation once in the declarative builder');
+    end;
+    FDocument.Presentations.Define(LReference, LArgs[1].ViewportCondition);
+  end;
+end;
+
 procedure TConfigurationReader.BuilderStatement;
 var
   LLocal: Integer;
@@ -603,6 +637,10 @@ begin
   else if LDocument and SameText(LMethod, 'Collections') then
   begin
     CollectionDefaults;
+  end
+  else if LDocument and SameText(LMethod, 'Presentations') then
+  begin
+    PresentationDefaults;
   end
   else if SameText(LMethod, 'Extensions') then
   begin

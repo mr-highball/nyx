@@ -37,6 +37,7 @@ uses
   nyx.schema,
   nyx.types,
   nyx.responsive,
+  nyx.presentations,
   nyx.layout.policy,
   nyx.state,
   nyx.binding.types,
@@ -746,6 +747,8 @@ var
   LAttribute: TNyxAttribute;
   LPlatform: TNyxPlatform;
   LViewport: TNyxViewportCondition;
+  LPresentation: TNyxPresentationRef;
+  LFieldID: TNyxText;
 begin
   { Reject a missing controller before allocating any owned shell nodes. }
 
@@ -755,6 +758,8 @@ begin
   end;
   Result := ADocument;
   Result.Title := 'Nyx Studio';
+  Result.Presentations.Define(NyxPresentation('compact'),
+    TNyxViewportCondition.Any.WidthBelow(640));
   LRoot := TNyxNode.Create('page', 'studio-shell');
   Result.AddPage(LRoot);
   LRoot.Configure.ForPlatform(npfNativeLCL).Padding(0).Gap(0).Done;
@@ -926,7 +931,7 @@ begin
     .Width(144)
     .AccessibleName('Drop position')
     .Hint('Choose where dragged components are placed relative to the target.')
-    .WhenViewport(TNyxViewportWidth.Below(640)).Text('').Width(96).Done);
+    .WhenPresentation(NyxPresentation('compact')).Text('').Width(96).Done);
 
   if AState.CompiledPreviewAvailable then
   begin
@@ -1113,20 +1118,12 @@ begin
           AddNyxCollectionBindingPanel(LRight, ASession, LSelectedProjection, AState.PendingDesign);
         end;
         LProperties := NyxProperties(LSelected, ASession.Document);
-        for LIndex := 0 to High(LProperties) do
-        begin
-
-          if LProperties[LIndex].Key = NyxAttributeName(atLayout) then
-          begin
-            AddNyxViewportInspector(LRight, LSelected.ID);
-            Break;
-          end;
-        end;
+        AddNyxViewportInspector(LRight, LSelected.ID, ASession.Document);
         for LIndex := 0 to Length(LProperties) - 1 do
         begin
 
           if LProperties[LIndex].Advanced and not AState.AdvancedProperties and
-            not TryNyxViewportKey(LProperties[LIndex].Key, LViewport, LPlatform, LAttribute) then
+            not LSelected.TryResponsiveKey(LProperties[LIndex].Key, LViewport, LPlatform, LAttribute) then
           begin
             Continue;
           end;
@@ -1155,7 +1152,16 @@ begin
                 end;
               end;
           end;
-          LField := TNyxNode.Create(LKind, 'inspector-' + LProperties[LIndex].Key)
+          LFieldID := LProperties[LIndex].Key;
+
+          if TryNyxPresentationKey(LProperties[LIndex].Key, LPresentation, LPlatform, LAttribute) then
+          begin
+            { Exact application names can exceed a control ID once the wire
+              namespace is added. Chrome identity is bounded independently;
+              prop-key retains the complete exact authored scope. }
+            LFieldID := TNyxText('presentation-property-') + TNyxText(IntToStr(LIndex));
+          end;
+          LField := TNyxNode.Create(LKind, TNyxText('inspector-') + LFieldID)
             .SetProp('text', LProperties[LIndex].Title)
             .SetProp('prop-key', LProperties[LIndex].Key)
             .SetProp('value', LSelected.Prop(LProperties[LIndex].Key,
@@ -1223,7 +1229,8 @@ begin
           end;
 
           if TryNyxAttribute(LProperties[LIndex].Key, LAttribute) or
-            TryNyxPlatformKey(LProperties[LIndex].Key, LPlatform, LAttribute) then
+            TryNyxPlatformKey(LProperties[LIndex].Key, LPlatform, LAttribute) or
+            LSelected.TryResponsiveKey(LProperties[LIndex].Key, LViewport, LPlatform, LAttribute) then
           begin
 
             if LAttribute in [atMinimumWidth, atMaximumWidth,
@@ -1232,7 +1239,7 @@ begin
               { Zero is a real limit. Reset submits the same optional-property
                 command with empty wire data; a spin's displayed zero alone
                 cannot communicate or restore absence on both targets. }
-              LRight.Add(Button('inspector-unset-' + LProperties[LIndex].Key,
+              LRight.Add(Button('inspector-unset-' + LFieldID,
                 'Unset ' + LowerCase(LProperties[LIndex].Title))
                 .Configure.Hint('Remove this size limit. Zero remains an explicit limit.').Done
                 .SetProp(NyxStudioPropertyClearKey, LProperties[LIndex].Key)

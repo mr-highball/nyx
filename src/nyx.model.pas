@@ -35,6 +35,7 @@ uses
   nyx.contract,
   nyx.types,
   nyx.responsive,
+  nyx.presentations,
   nyx.layout.policy,
   nyx.layout.constraints,
   nyx.state,
@@ -112,6 +113,7 @@ type
     FPlatformConfigure: array[npfBrowser..npfNativeLCL] of TNyxNodeConfig;
     FViewportConfigure: array of TNyxNodeConfig;
     FViewportValues: TNyxStrings;
+    FPresentationSnapshot: INyxPresentationSnapshot;
     FContract: TNyxContract;
     FBindingConfig: TNyxNodeBindings;
     FStateBindings: array of TNyxBindingSpec;
@@ -121,6 +123,7 @@ type
     FReferences: Integer;
     FRawOwnership: Boolean;
     function GetConfigure: TNyxNodeConfig;
+    function GetPresentationSnapshot: INyxPresentationSnapshot;
     function GetContract: TNyxContract;
     function GetBindingConfig: TNyxNodeBindings;
     function GetBindingCount: Integer;
@@ -185,6 +188,15 @@ type
     { Both dimensions come from the rendering host, in logical pixels. The
       compatibility width overload uses height zero and cannot match orientation. }
     function ApplyViewport(AWidth, AHeight: Double; APlatform: TNyxPlatform): Boolean; overload;
+    { Realization copies document definitions once, sharing this immutable value
+      snapshot among descendants. It has no document/tree backreference. Binding
+      is allowed only on realized nodes; retained views can outlive their source. }
+    procedure BindPresentations(const ASnapshot: INyxPresentationSnapshot);
+    { Authored membership reads the owning registry; realized nodes read their
+      independent immutable snapshot. Detached authored nodes return nil. }
+    property PresentationSnapshot: INyxPresentationSnapshot read GetPresentationSnapshot;
+    function TryResponsiveKey(const AKey: TNyxText; out ACondition: TNyxViewportCondition;
+      out APlatform: TNyxPlatform; out AAttribute: TNyxAttribute): Boolean;
     { Cheap mount-time discovery; no viewport observers are needed for a tree
       containing only ordinary/platform defaults. }
     function HasViewportRules: Boolean;
@@ -278,6 +290,7 @@ type
     FNode: TNyxNode;
     FPlatform: TNyxPlatform;
     FViewport: TNyxViewportCondition;
+    FPresentation: TNyxPresentationRef;
     { Deliberately unit-private: only a node creates/owns this borrowed facade.
       FPC's public-constructor advice conflicts with that lifetime contract. }
     constructor Create(ANode: TNyxNode);
@@ -297,6 +310,9 @@ type
     { Conjunctive host size/orientation scope; independently owned by the node.
       Any restores the ordinary current-platform configuration. }
     function WhenViewport(const ACondition: TNyxViewportCondition): TNyxNodeConfig; overload;
+    { Select a document-owned named condition. Other scope selection replaces
+      it; ForPlatform preserves it. No condition is duplicated onto a control. }
+    function WhenPresentation(const AReference: TNyxPresentationRef): TNyxNodeConfig;
     function SplitOrientation(AValue: TNyxSplitOrientation): TNyxNodeConfig;
     function SplitPosition(APercent: Integer): TNyxNodeConfig;
     function SplitMinimum(APercent: Integer): TNyxNodeConfig;
@@ -462,6 +478,7 @@ type
     FTitle: TNyxText;
     FState: TNyxState;
     FCollections: INyxCollectionDefaults;
+    FPresentations: INyxPresentations;
     FExtensions: TNyxExtensions;
     FPages: array of TNyxNode;
     FComponents: array of TNyxNode;
@@ -507,6 +524,10 @@ type
       applications materialize independent mutable stores. Retained registry or
       snapshot interfaces can safely outlive this document without backreferences. }
     property Collections: INyxCollectionDefaults read FCollections;
+    { Managed named host conditions, independent of output targets. Cloning and
+      isolated view builds copy definitions; realized views capture a readonly
+      snapshot. Document validation refuses dangling control references. }
+    property Presentations: INyxPresentations read FPresentations;
     { Includes deliberate clear descriptors; selects version-3 node semantics. }
     property HasCollectionViews: Boolean read GetHasCollectionViews;
     { Borrowed project-owned structured data. Unknown version-1 root fields are
@@ -1221,6 +1242,11 @@ end;
 function TNyxNodeConfig.ForPlatform(APlatform: TNyxPlatform): TNyxNodeConfig;
 begin
 
+  if FPresentation.Defined then
+  begin
+    Exit(FNode.Configure.ForPlatform(APlatform).WhenPresentation(FPresentation));
+  end;
+
   if not FViewport.IsAny then
   begin
     Exit(FNode.Configure.ForPlatform(APlatform).WhenViewport(FViewport));
@@ -1256,7 +1282,8 @@ begin
   for LIndex := 0 to High(FNode.FViewportConfigure) do
   begin
 
-    if (FNode.FViewportConfigure[LIndex].FPlatform = FPlatform) and
+    if not FNode.FViewportConfigure[LIndex].FPresentation.Defined and
+      (FNode.FViewportConfigure[LIndex].FPlatform = FPlatform) and
       FNode.FViewportConfigure[LIndex].FViewport.Same(ACondition) then
     begin
       Exit(FNode.FViewportConfigure[LIndex]);
@@ -1265,6 +1292,29 @@ begin
   Result := TNyxNodeConfig.Create(FNode);
   Result.FPlatform := FPlatform;
   Result.FViewport := ACondition;
+  SetLength(FNode.FViewportConfigure, Length(FNode.FViewportConfigure) + 1);
+  FNode.FViewportConfigure[High(FNode.FViewportConfigure)] := Result;
+end;
+
+function TNyxNodeConfig.WhenPresentation(const AReference: TNyxPresentationRef): TNyxNodeConfig;
+var
+  LIndex: Integer;
+  LName: TNyxText;
+begin
+  LName := AReference.Name;
+  for LIndex := 0 to High(FNode.FViewportConfigure) do
+  begin
+
+    if FNode.FViewportConfigure[LIndex].FPresentation.Defined and
+      (FNode.FViewportConfigure[LIndex].FPlatform = FPlatform) and
+      (FNode.FViewportConfigure[LIndex].FPresentation.Name = LName) then
+    begin
+      Exit(FNode.FViewportConfigure[LIndex]);
+    end;
+  end;
+  Result := TNyxNodeConfig.Create(FNode);
+  Result.FPlatform := FPlatform;
+  Result.FPresentation := AReference;
   SetLength(FNode.FViewportConfigure, Length(FNode.FViewportConfigure) + 1);
   FNode.FViewportConfigure[High(FNode.FViewportConfigure)] := Result;
 end;
@@ -1313,11 +1363,20 @@ function TNyxNodeConfig.Put(AKey: TNyxAttribute;
   const AValue: TNyxText): TNyxNodeConfig;
 begin
 
-  if ((FPlatform <> npfAny) or not FViewport.IsAny) and not NyxPlatformAttribute(AKey) then
+  if ((FPlatform <> npfAny) or not FViewport.IsAny or FPresentation.Defined) and
+    not NyxPlatformAttribute(AKey) then
   begin
     raise ENyxModel.Create('This attribute must retain portable meaning: ' + NyxAttributeName(AKey));
   end;
-  FNode.SetProp(NyxViewportKey(FViewport, FPlatform, AKey), AValue);
+
+  if FPresentation.Defined then
+  begin
+    FNode.SetProp(NyxPresentationKey(FPresentation, FPlatform, AKey), AValue);
+  end
+  else
+  begin
+    FNode.SetProp(NyxViewportKey(FViewport, FPlatform, AKey), AValue);
+  end;
   Result := Self;
 end;
 
@@ -1763,7 +1822,7 @@ var
 begin
 
   if TryNyxAttribute(AKey, LAttribute) or (Copy(AKey, 1, 5) = '@nyx.') or
-    (FPlatform <> npfAny) or not FViewport.IsAny then
+    (FPlatform <> npfAny) or not FViewport.IsAny or FPresentation.Defined then
   begin
     raise ENyxModel.Create('Built-in property requires typed configuration: ' + AKey);
   end;
@@ -1862,6 +1921,51 @@ begin
   Result := Copy(FProps[LIndex], Length(AKey) + 2, MaxInt);
 end;
 
+function TNyxNode.GetPresentationSnapshot: INyxPresentationSnapshot;
+var
+  LRoot: TNyxNode;
+begin
+  Result := FPresentationSnapshot;
+
+  if IsRealized then
+  begin
+    Exit;
+  end;
+  LRoot := Self;
+  while LRoot.Parent <> nil do
+  begin
+    LRoot := LRoot.Parent;
+  end;
+
+  if LRoot.FOwner <> nil then
+  begin
+    Result := LRoot.FOwner.Presentations;
+  end;
+end;
+
+procedure TNyxNode.BindPresentations(const ASnapshot: INyxPresentationSnapshot);
+var
+  LIndex: Integer;
+begin
+
+  if not IsRealized then
+  begin
+    raise ENyxModel.Create('Presentation snapshots belong only to realized views');
+  end;
+  FPresentationSnapshot := ASnapshot;
+  for LIndex := 0 to Count - 1 do
+  begin
+    Children[LIndex].BindPresentations(ASnapshot);
+  end;
+end;
+
+function TNyxNode.TryResponsiveKey(const AKey: TNyxText;
+  out ACondition: TNyxViewportCondition; out APlatform: TNyxPlatform;
+  out AAttribute: TNyxAttribute): Boolean;
+begin
+  Result := TryNyxResponsiveKey(AKey, PresentationSnapshot, ACondition, APlatform, AAttribute);
+end;
+
 function TNyxNode.ApplyViewport(AWidth: Double; APlatform: TNyxPlatform): Boolean;
 begin
   Result := ApplyViewport(AWidth, 0, APlatform);
@@ -1894,7 +1998,7 @@ begin
       begin
         LKey := FProps.Names[LIndex];
 
-        if TryNyxViewportKey(LKey, LCondition, LPlatform, LAttribute) and
+        if TryResponsiveKey(LKey, LCondition, LPlatform, LAttribute) and
           (((LPhase = 0) and (LPlatform = npfAny)) or
           ((LPhase = 1) and (LPlatform = APlatform))) and LCondition.Matches(AWidth, AHeight) then
         begin
@@ -1944,7 +2048,8 @@ begin
   begin
 
     if (Copy(FProps.Names[LIndex], 1, 14) = '@nyx.viewport:') or
-      (Copy(FProps.Names[LIndex], 1, 19) = '@nyx.viewport-size:') then
+      (Copy(FProps.Names[LIndex], 1, 19) = '@nyx.viewport-size:') or
+      (Copy(FProps.Names[LIndex], 1, 18) = '@nyx.presentation:') then
     begin
       Exit(True);
     end;
@@ -2113,6 +2218,7 @@ begin
     Result.Props.Assign(FProps);
     Result.Extensions.Assign(FExtensions);
     Result.FInstanceScopeID := FInstanceScopeID;
+    Result.FPresentationSnapshot := FPresentationSnapshot;
 
     if FHasCollectionView then
     begin
@@ -2256,6 +2362,7 @@ begin
   inherited Create;
   FState := TNyxState.Create;
   FCollections := NewNyxCollectionDefaults;
+  FPresentations := NewNyxPresentations;
   FExtensions := TNyxExtensions.Create(nesDocument);
   FTitle := 'Untitled Nyx application';
 end;
@@ -2278,6 +2385,7 @@ begin
   end;
   FState.Free;
   FCollections := nil;
+  FPresentations := nil;
   FExtensions.Free;
   inherited Destroy;
 end;
@@ -2497,6 +2605,7 @@ begin
     Result.FState := nil;
     Result.FState := FState.Clone;
     Result.FCollections := FCollections.Clone;
+    Result.FPresentations := FPresentations.Clone;
     for LIndex := 0 to Count - 1 do
     begin
       Result.AddPage(FPages[LIndex].Clone);
@@ -2585,6 +2694,10 @@ var
     LPaths: TNyxStrings;
     LViewSpec: TNyxCollectionViewSpec;
     LProjection: TNyxCollectionProjection;
+    LPresentation: TNyxPresentationRef;
+    LPlatform: TNyxPlatform;
+    LAttribute: TNyxAttribute;
+    LPropertyIndex: Integer;
   begin
     Inc(LTotal);
 
@@ -2598,10 +2711,25 @@ var
     LIDs.AddFirst(ANode.ID, 0);
     ANode.Extensions.Validate;
     ANode.Contract.Validate;
+    for LPropertyIndex := 0 to ANode.Props.Count - 1 do
+    begin
+
+      if TryNyxPresentationKey(ANode.Props.Names[LPropertyIndex], LPresentation,
+        LPlatform, LAttribute) and not FPresentations.Contains(LPresentation) then
+      begin
+        raise ENyxModel.Create('Unknown presentation on ' + ANode.ID + ': ' + LPresentation.Name);
+      end;
+    end;
 
     if LHasCollectionViews and ANode.Extensions.Has(NyxExtension(NyxCollectionViewWireField)) then
     begin
       raise ENyxModel.Create('Typed collection views conflict with retained collectionView data on ' + ANode.ID);
+    end;
+
+    if (FPresentations.Count > 0) and
+      ANode.Extensions.Has(NyxExtension(NyxPresentationRulesWireField)) then
+    begin
+      raise ENyxModel.Create('Typed presentations conflict with retained presentationRules data on ' + ANode.ID);
     end;
 
     if ANode.HasCollectionView then
@@ -2776,7 +2904,12 @@ var
 begin
   FState.Validate;
   FCollections.Validate;
-  LHasCollectionViews := HasCollectionViews;
+
+  if (FPresentations.Count > 0) and FExtensions.Has(NyxExtension(NyxPresentationsWireField)) then
+  begin
+    raise ENyxModel.Create('Typed presentations conflict with retained presentation data');
+  end;
+  LHasCollectionViews := HasCollectionViews or (FPresentations.Count > 0);
   { Version-1 applications could already own an opaque collections wire field.
     New typed defaults require version 2; reject this explicit collision rather
     than overwrite retained application data during encoding or history. }

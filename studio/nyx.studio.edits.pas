@@ -27,14 +27,41 @@ unit nyx.studio.edits;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.catalog, nyx.designer.resize;
+  SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.catalog, nyx.designer.resize,
+  nyx.responsive, nyx.presentations;
 
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
     transport boundary; internal behavior never dispatches arbitrary properties
     or method names. A whole immutable patch builds one detached candidate. }
   TNyxDesignOperation = (doCreate, doUpdate, doMove, doDelete, doTitle, doTokens,
-    doDerive, doInstance, doOverride, doInherit, doPlace, doPlaceNew);
+    doDerive, doInstance, doOverride, doInherit, doPlace, doPlaceNew,
+    doPresentationDefine, doPresentationRemove, doPresentationUse, doPresentationReset,
+    doPresentationSet);
+
+  { Copied editor intent. Definition changes affect every referencing control;
+    use adds one typed override initialized from the control's current authored
+    default, set upserts a schema-typed scalar, reset removes only that override.
+    A default record is absent.
+    No document, interface facade, renderer or widget is retained. }
+  TNyxPresentationEdit = record
+  private
+    FDefined: Boolean;
+    FOperation: TNyxDesignOperation;
+    FReference: TNyxPresentationRef;
+    FCondition: TNyxViewportCondition;
+    FControl: TNyxControlRef;
+    FAttribute: TNyxAttribute;
+    FPlatform: TNyxPlatform;
+    FValue: TNyxDataValue;
+  public
+    { Strict semantic/worker wire boundary; absent intent encodes as null. }
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxPresentationEdit; static;
+    function Same(const AOther: TNyxPresentationEdit): Boolean;
+    property Defined: Boolean read FDefined;
+    property Control: TNyxControlRef read FControl;
+  end;
 
   { Relative placement avoids fragile sibling indices. Inside appends to the
     exact target container; before/after refer to the target's current owner.
@@ -108,6 +135,21 @@ type
   type; unknown fields/operations fail. IDs and custom kind names are user data.
   Schema/property/document admission also runs on the complete detached result. }
 function ReadNyxDesignPatch(const AOperations: TNyxDataValue): INyxDesignPatch;
+{ One typed command can be grouped with other commands through the same patch
+  engine. Undefined references/unsupported overrides refuse candidate admission. }
+function NyxDefinePresentation(const AReference: TNyxPresentationRef;
+  const ACondition: TNyxViewportCondition): TNyxPresentationEdit;
+function NyxRemovePresentation(const AReference: TNyxPresentationRef): TNyxPresentationEdit;
+function NyxUsePresentation(const AControl: TNyxControlRef; const AReference: TNyxPresentationRef;
+  AAttribute: TNyxAttribute; APlatform: TNyxPlatform = npfAny): TNyxPresentationEdit;
+function NyxResetPresentation(const AControl: TNyxControlRef; const AReference: TNyxPresentationRef;
+  AAttribute: TNyxAttribute; APlatform: TNyxPlatform = npfAny): TNyxPresentationEdit;
+{ Structured scalar boundary for semantic clients. The candidate validates the
+  exact published attribute's scalar family and constraints. Upsert retains its
+  original property order; names travel as values, never long JSON object keys. }
+function NyxSetPresentation(const AControl: TNyxControlRef; const AReference: TNyxPresentationRef;
+  AAttribute: TNyxAttribute; const AValue: TNyxDataValue;
+  APlatform: TNyxPlatform = npfAny): TNyxPresentationEdit;
 { Derive copies an exact subtree without altering it or replacing its uses.
   Every descendant needs an explicit destination; the definition owns the copy. }
 function NyxDeriveComponent(const ASource: TNyxControlRef;
@@ -279,6 +321,7 @@ type
     Mode: TNyxOverrideMode;
     Identities: array of TNyxIdentityAssignment;
     Placement: TNyxPlacement;
+    Presentation: TNyxPresentationEdit;
   end;
 
   TDesignPatch = class(TInterfacedObject, INyxDesignPatch)
@@ -579,6 +622,208 @@ begin
   end;
 end;
 
+function NyxDefinePresentation(const AReference: TNyxPresentationRef;
+  const ACondition: TNyxViewportCondition): TNyxPresentationEdit;
+begin
+  NyxPresentationDefinition(AReference, ACondition);
+  Result := Default(TNyxPresentationEdit);
+  Result.FDefined := True;
+  Result.FOperation := doPresentationDefine;
+  Result.FReference := AReference;
+  Result.FCondition := ACondition;
+end;
+
+function NyxRemovePresentation(const AReference: TNyxPresentationRef): TNyxPresentationEdit;
+begin
+  Result := Default(TNyxPresentationEdit);
+  Result.FReference := NyxPresentation(AReference.Name);
+  Result.FDefined := True;
+  Result.FOperation := doPresentationRemove;
+end;
+
+function NyxUsePresentation(const AControl: TNyxControlRef; const AReference: TNyxPresentationRef;
+  AAttribute: TNyxAttribute; APlatform: TNyxPlatform): TNyxPresentationEdit;
+begin
+  NyxPresentationKey(AReference, APlatform, AAttribute);
+  Result := Default(TNyxPresentationEdit);
+  Result.FControl := NyxControl(AControl.ID);
+  Result.FReference := AReference;
+  Result.FDefined := True;
+  Result.FOperation := doPresentationUse;
+  Result.FAttribute := AAttribute;
+  Result.FPlatform := APlatform;
+end;
+
+function NyxResetPresentation(const AControl: TNyxControlRef; const AReference: TNyxPresentationRef;
+  AAttribute: TNyxAttribute; APlatform: TNyxPlatform): TNyxPresentationEdit;
+begin
+  Result := NyxUsePresentation(AControl, AReference, AAttribute, APlatform);
+  Result.FOperation := doPresentationReset;
+end;
+
+function NyxSetPresentation(const AControl: TNyxControlRef; const AReference: TNyxPresentationRef;
+  AAttribute: TNyxAttribute; const AValue: TNyxDataValue;
+  APlatform: TNyxPlatform): TNyxPresentationEdit;
+begin
+  AValue.Validate;
+
+  if not (AValue.Kind in [ndText, ndBoolean, ndNumber]) then
+  begin
+    raise ENyxModel.Create('Named property values require a typed scalar');
+  end;
+  Result := NyxUsePresentation(AControl, AReference, AAttribute, APlatform);
+  Result.FOperation := doPresentationSet;
+  Result.FValue := AValue.Copy;
+end;
+
+function TNyxPresentationEdit.ToData: TNyxDataValue;
+var
+  LData: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LName: TNyxText;
+begin
+  Result := NyxNull;
+
+  if not FDefined then
+  begin
+    Exit;
+  end;
+  case FOperation of
+    doPresentationDefine:
+      begin
+        LData := NyxPresentationDefinition(FReference, FCondition);
+        SetLength(LFields, LData.Count + 1);
+        LFields[0] := NyxField('op', NyxData('presentation-define'));
+        for LIndex := 0 to LData.Count - 1 do
+        begin
+          LFields[LIndex + 1] := NyxField(LData.Key(LIndex), LData.Field(LData.Key(LIndex)));
+        end;
+        Result := NyxObject(LFields);
+      end;
+    doPresentationRemove:
+      begin
+        Result := NyxObject([NyxField('op', NyxData('presentation-remove')),
+          NyxField('name', NyxData(FReference.Name))]);
+      end;
+    doPresentationUse, doPresentationReset, doPresentationSet:
+      begin
+        LName := 'presentation-use';
+
+        if FOperation = doPresentationReset then
+        begin
+          LName := 'presentation-reset';
+        end;
+
+        if FOperation = doPresentationSet then
+        begin
+          Exit(NyxObject([NyxField('op', NyxData('presentation-set')),
+            NyxField('id', NyxData(FControl.ID)), NyxField('name', NyxData(FReference.Name)),
+            NyxField('attribute', NyxData(NyxAttributeName(FAttribute))),
+            NyxField('platform', NyxData(NyxPlatformName(FPlatform))), NyxField('value', FValue)]));
+        end;
+        Result := NyxObject([NyxField('op', NyxData(LName)),
+          NyxField('id', NyxData(FControl.ID)), NyxField('name', NyxData(FReference.Name)),
+          NyxField('attribute', NyxData(NyxAttributeName(FAttribute))),
+          NyxField('platform', NyxData(NyxPlatformName(FPlatform)))]);
+      end;
+  else
+    raise ENyxModel.Create('Unknown presentation intent');
+  end;
+end;
+
+class function TNyxPresentationEdit.FromData(const AData: TNyxDataValue): TNyxPresentationEdit;
+var
+  LName: TNyxText;
+  LReference: TNyxPresentationRef;
+  LCondition: TNyxViewportCondition;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LCount: Integer;
+  LPlatform: TNyxPlatform;
+  LAttribute: TNyxAttribute;
+  LFound: Boolean;
+begin
+  Result := Default(TNyxPresentationEdit);
+  LName := AData.Field('op').AsText;
+
+  if LName = 'presentation-define' then
+  begin
+    CheckFields(AData, '|op|name|widthMinimum|widthMaximum|heightMinimum|heightMaximum|orientation|');
+    SetLength(LFields, AData.Count - 1);
+    LCount := 0;
+    for LIndex := 0 to AData.Count - 1 do
+    begin
+
+      if AData.Key(LIndex) <> 'op' then
+      begin
+        LFields[LCount] := NyxField(AData.Key(LIndex), AData.Field(AData.Key(LIndex)));
+        Inc(LCount);
+      end;
+    end;
+    ReadNyxPresentationDefinition(NyxObject(LFields), LReference, LCondition);
+    Exit(NyxDefinePresentation(LReference, LCondition));
+  end;
+  LReference := NyxPresentation(AData.Field('name').AsText);
+
+  if LName = 'presentation-remove' then
+  begin
+    CheckFields(AData, '|op|name|');
+    Exit(NyxRemovePresentation(LReference));
+  end;
+
+  if (LName <> 'presentation-use') and (LName <> 'presentation-reset') and
+    (LName <> 'presentation-set') then
+  begin
+    raise ENyxModel.Create('Unknown presentation operation');
+  end;
+  if LName = 'presentation-set' then
+  begin
+    CheckFields(AData, '|op|id|name|attribute|platform|value|');
+  end
+  else
+  begin
+    CheckFields(AData, '|op|id|name|attribute|platform|');
+  end;
+
+  if not TryNyxAttribute(AData.Field('attribute').AsText, LAttribute) then
+  begin
+    raise ENyxModel.Create('Presentation override requires a published attribute');
+  end;
+  LFound := False;
+  for LPlatform := npfAny to npfNativeLCL do
+  begin
+
+    if NyxPlatformName(LPlatform) = AData.Field('platform').AsText then
+    begin
+      LFound := True;
+      Break;
+    end;
+  end;
+
+  if not LFound then
+  begin
+    raise ENyxModel.Create('Presentation override requires a closed target scope');
+  end;
+  Result := NyxUsePresentation(NyxControl(AData.Field('id').AsText), LReference,
+    LAttribute, LPlatform);
+
+  if LName = 'presentation-set' then
+  begin
+    Exit(NyxSetPresentation(Result.FControl, LReference, LAttribute, AData.Field('value'), LPlatform));
+  end;
+
+  if LName = 'presentation-reset' then
+  begin
+    Result.FOperation := doPresentationReset;
+  end;
+end;
+
+function TNyxPresentationEdit.Same(const AOther: TNyxPresentationEdit): Boolean;
+begin
+  Result := ToData.ToJSON = AOther.ToData.ToJSON;
+end;
+
 function ReadNyxDesignPatch(const AOperations: TNyxDataValue): INyxDesignPatch;
 var
   LOwner: TDesignPatch;
@@ -609,7 +854,12 @@ begin
     LOperation.Properties := NyxObject([]);
     LName := LWire.Field('op').AsText;
 
-    if (LName = 'place') or (LName = 'place-new') then
+    if Copy(LName, 1, 13) = 'presentation-' then
+    begin
+      LOperation.Presentation := TNyxPresentationEdit.FromData(LWire);
+      LOperation.Operation := LOperation.Presentation.FOperation;
+    end
+    else if (LName = 'place') or (LName = 'place-new') then
     begin
       LPlacement := TNyxPlacementChange.FromData(LWire);
       LOperation.Operation := doPlace;
@@ -771,6 +1021,35 @@ begin
   end;
 end;
 
+{ Shared scalar admission for ordinary and named properties. Spelling conversion
+  belongs at this boundary; Boolean/numeric values cannot be authored as text. }
+function PropertyScalar(const AInfo: TNyxPropertyInfo; const AValue: TNyxDataValue): TNyxText;
+begin
+
+  if AValue.Kind = ndNull then
+  begin
+    Exit('');
+  end;
+  case AInfo.ValueType of
+    npBoolean:
+      begin
+
+        if AValue.AsBoolean then
+        begin
+          Result := 'true';
+        end
+        else
+        begin
+          Result := 'false';
+        end;
+      end;
+    npInteger: Result := TNyxText(IntToStr(AValue.AsInteger));
+    npNumber: Result := AValue.AsDecimal.Text;
+  else
+    Result := AValue.AsText;
+  end;
+end;
+
 procedure ConfigureNode(ANode: TNyxNode; ADocument: TNyxDocument;
   const AProperties: TNyxDataValue);
 var
@@ -839,33 +1118,7 @@ begin
     end;
     LValue := AProperties.Field(LKey);
 
-    if LValue.Kind = ndNull then
-    begin
-      LText := '';
-    end
-    else
-    begin
-      case LInfos[LInfoIndex].ValueType of
-        npBoolean:
-          begin
-
-            if LValue.AsBoolean then
-            begin
-              LText := 'true';
-            end
-            else
-            begin
-              LText := 'false';
-            end;
-          end;
-        npInteger: LText := IntToStr(LValue.AsInteger);
-        npNumber: LText := LValue.AsDecimal.Text;
-        else
-        begin
-          LText := LValue.AsText;
-        end;
-      end;
-    end;
+    LText := PropertyScalar(LInfos[LInfoIndex], LValue);
     { SetProp is the explicit schema/serialization boundary. Agent strings cannot
       bypass their published scalar types; the entire document validates below. }
     ANode.SetProp(LKey, LText);
@@ -928,6 +1181,59 @@ begin
   begin
     raise ENyxModel.Create('Inside placement requires an exact editable container');
   end;
+end;
+
+procedure ApplyPresentationOverride(ADocument: TNyxDocument; const AEdit: TNyxPresentationEdit);
+var
+  LNode: TNyxNode;
+  LInfos: TNyxPropertyInfos;
+  LIndex: Integer;
+  LKey: TNyxText;
+  LBaseline: TNyxText;
+begin
+
+  if not ADocument.Presentations.Contains(AEdit.FReference) then
+  begin
+    raise ENyxModel.Create('Define this presentation before using its overrides');
+  end;
+  LNode := RequireNode(ADocument, AEdit.FControl.ID);
+  LKey := NyxPresentationKey(AEdit.FReference, AEdit.FPlatform, AEdit.FAttribute);
+  LIndex := LNode.Props.IndexOfName(LKey);
+
+  if AEdit.FOperation = doPresentationReset then
+  begin
+
+    if LIndex < 0 then
+    begin
+      raise ENyxModel.Create('This exact presentation override is absent');
+    end;
+    LNode.Props.Delete(LIndex);
+    Exit;
+  end;
+
+  if (LIndex >= 0) and (AEdit.FOperation <> doPresentationSet) then
+  begin
+    raise ENyxModel.Create('Edit the existing presentation override instead of adding it again');
+  end;
+  LInfos := NyxProperties(LNode, ADocument);
+  for LIndex := 0 to High(LInfos) do
+  begin
+
+    if LInfos[LIndex].Key = NyxAttributeName(AEdit.FAttribute) then
+    begin
+
+      if AEdit.FOperation = doPresentationSet then
+      begin
+        LNode.SetProp(LKey, PropertyScalar(LInfos[LIndex], AEdit.FValue));
+        Exit;
+      end;
+      LBaseline := LNode.StoredProp(NyxPlatformKey(AEdit.FPlatform, AEdit.FAttribute),
+        LNode.StoredProp(LInfos[LIndex].Key, LInfos[LIndex].DefaultValue));
+      LNode.SetProp(LKey, LBaseline);
+      Exit;
+    end;
+  end;
+  raise ENyxModel.Create('This control does not publish the requested presentation property');
 end;
 
 function TDesignPatch.Candidate(ADocument: TNyxDocument;
@@ -1209,6 +1515,19 @@ begin
           end;
         doTitle: Result.Title := LOperation.ID;
         doTokens: SetNyxDesignTokens(Result, LOperation.Properties);
+        doPresentationDefine:
+          begin
+            Result.Presentations.Define(LOperation.Presentation.FReference,
+              LOperation.Presentation.FCondition);
+          end;
+        doPresentationRemove:
+          begin
+            Result.Presentations.Remove(LOperation.Presentation.FReference);
+          end;
+        doPresentationUse, doPresentationReset, doPresentationSet:
+          begin
+            ApplyPresentationOverride(Result, LOperation.Presentation);
+          end;
       end;
     end;
     Result.Validate;

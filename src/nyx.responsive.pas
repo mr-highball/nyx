@@ -92,6 +92,9 @@ type
     function IsWidthOnly: Boolean;
     function Caption: TNyxText;
     function Pascal: TNyxText;
+    { Always emits a condition expression. Pascal keeps legacy width shorthand
+      for overloaded WhenViewport calls; named definitions require this type. }
+    function PascalCondition: TNyxText;
     property WidthMinimum: Integer read GetWidthMinimum;
     property WidthMaximum: Integer read GetWidthMaximum;
     property HeightMinimum: Integer read GetHeightMinimum;
@@ -295,6 +298,17 @@ begin
 end;
 
 function TNyxViewportCondition.Pascal: TNyxText;
+begin
+  { Preserve existing width-only source byte-for-byte. }
+
+  if IsWidthOnly then
+  begin
+    Exit(FWidth.Pascal);
+  end;
+  Result := PascalCondition;
+end;
+
+function TNyxViewportCondition.PascalCondition: TNyxText;
 
   function Axis(const AInterval: TNyxViewportWidth; const AName: TNyxText): TNyxText;
   begin
@@ -318,12 +332,6 @@ function TNyxViewportCondition.Pascal: TNyxText;
   end;
 
 begin
-  { Preserve existing width-only source byte-for-byte. }
-
-  if IsWidthOnly then
-  begin
-    Exit(FWidth.Pascal);
-  end;
   Result := 'TNyxViewportCondition.Any' + Axis(FWidth, 'Width') + Axis(FHeight, 'Height');
 
   if FOrientation <> nvoAny then

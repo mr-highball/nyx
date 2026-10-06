@@ -323,7 +323,7 @@ begin
     for LIndex := 0 to LProjection.Props.Count - 1 do
     begin
 
-      if TryNyxViewportKey(LProjection.Props.Names[LIndex], LCondition,
+      if LProjection.TryResponsiveKey(LProjection.Props.Names[LIndex], LCondition,
         LPlatform, LScopedAttribute) and (LScopedAttribute in
         [atWidth, atHeight, atWidthSizing, atHeightSizing, atFlex,
         atMinimumWidth, atMaximumWidth, atMinimumHeight, atMaximumHeight]) then
@@ -339,7 +339,7 @@ begin
     for LIndex := 0 to LProjection.Parent.Props.Count - 1 do
     begin
 
-      if TryNyxViewportKey(LProjection.Parent.Props.Names[LIndex], LCondition,
+      if LProjection.Parent.TryResponsiveKey(LProjection.Parent.Props.Names[LIndex], LCondition,
         LPlatform, LScopedAttribute) and (LScopedAttribute = atLayout) then
       begin
         FStatus('Use responsive size fields; the parent changes flow between viewport presentations.');

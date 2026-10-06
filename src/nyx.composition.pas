@@ -504,6 +504,7 @@ begin
   LCount := 0;
   Result := Expand(ARoot, '', '', 0);
   try
+    Result.BindPresentations(ADocument.Presentations.Snapshot);
     PrepareNyxBehavior(Result);
   except
     Result.Free;
@@ -566,6 +567,11 @@ begin
       LCandidate.Collections.Define(ADocument.Collections.Snapshot(ADocument.Collections.Key(LIndex)));
     end;
     LCandidate.Extensions.Assign(ADocument.Extensions);
+    for LIndex := 0 to ADocument.Presentations.Count - 1 do
+    begin
+      LCandidate.Presentations.Define(ADocument.Presentations.Reference(LIndex),
+        ADocument.Presentations.Condition(ADocument.Presentations.Reference(LIndex)));
+    end;
     LCandidate.AddPage(ARoot.Clone);
     CollectDefinitions(ARoot);
     LCandidate.Validate;

@@ -44,7 +44,7 @@ begin
     { Actual discovery construction without starting any service. This covers
       shared tool routing as well as the closed semantic operation contracts. }
     LTools := NyxStudioMCPTools.Field('tools');
-    Check(LTools.Count = 19, 'source catalog remains focused');
+    Check(LTools.Count = 20, 'source catalog remains focused');
     for LIndex := 0 to LTools.Count - 1 do
     begin
 
@@ -71,7 +71,7 @@ begin
       NyxAgentHas(LProperties, 'workspace') and NyxAgentHas(LProperties, 'review'),
       'mutation retains revision/receipt/project/review routing');
     LVariants := LProperties.Field('operations').Field('items').Field('oneOf');
-    Check(LVariants.Count = 12, 'ordinary, reusable and relative placement operations');
+    Check(LVariants.Count = 16, 'ordinary, reusable, relative placement and named presentation operations');
     for LIndex := 0 to LVariants.Count - 1 do
     begin
       Check(not LVariants.Item(LIndex).Field('additionalProperties').AsBoolean,

@@ -24,7 +24,8 @@ program nyx_responsive_controls;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.codec, nyx.generated.view
+  SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.codec, nyx.generated.view,
+  nyx.presentations, nyx.responsive
   {$ifdef PAS2JS}, Web, nyx.render.browser
   {$else}, Classes, Interfaces, Forms, Controls, StdCtrls, ExtCtrls,
   Graphics, IntfGraphics, FPWritePNG, nyx.render.lcl{$endif};
@@ -120,6 +121,22 @@ begin
           Check(document.activeElement = GInput, 'Compact rule retains focus');
           Check(Abs((LOther.top - LRect.bottom) - 8) < 2, 'Compact gap is actual rendered space');
           Check(Abs(LOther.left - LRect.left) < 2, 'Actual column direction replaces row centering');
+          {$ifdef NYX_PRESENTATION_CONSUMER}
+          GDocument.Presentations.Define(NyxPresentation('compact'),
+            TNyxViewportCondition.Any.WidthBelow(380));
+          Check(GRenderer.TryRefresh(GDocument, GDocument.Pages[0], False),
+            'Changed shared definition admits the actual retained browser view');
+          Check(window.getComputedStyle(GRenderer.ElementFor('workspace'))
+            .getPropertyValue('flex-direction') = 'row', 'Changed shared predicate changes actual browser flow');
+          Check(GRenderer.InputFor('notes-editor') = GInput, 'Definition editing retains the actual browser input');
+          Check(GInput.value = 'Keep this focused English draft.', 'Definition editing retains live browser text');
+          GDocument.Presentations.Define(NyxPresentation('compact'),
+            TNyxViewportCondition.Any.WidthBelow(640));
+          Check(GRenderer.TryRefresh(GDocument, GDocument.Pages[0], False),
+            'Restored shared definition refreshes without remount');
+          Check(window.getComputedStyle(GRenderer.ElementFor('workspace'))
+            .getPropertyValue('flex-direction') = 'column', 'Restored definition restores actual browser flow');
+          {$endif}
           GHost.style.setProperty('width', '640px');
         end;
       2:
@@ -236,7 +253,7 @@ begin
   LWriter := TFPWriterPNG.Create;
   try
     LBitmap.SetSize(GForm.Width, GForm.Height);
-    GForm.PaintTo(LBitmap.Canvas, 0, 0);
+    GForm.PaintTo(LBitmap.Canvas, GForm.Left, GForm.Top);
     LImage := LBitmap.CreateIntfImage;
     LImage.SaveToFile(IncludeTrailingPathDelimiter(ParamStr(1)) + AName, LWriter);
   finally
@@ -280,6 +297,22 @@ begin
   Check(GForm.ActiveControl = GInput, 'Compact rule retains focus');
   Check(LSecond.Top - LFirst.Top - LFirst.Height = 10, 'Concrete native compact gap wins');
   Check(LSecond.Left = LFirst.Left, 'Automatic column aligns fixed widths at their leading edge');
+  {$ifdef NYX_PRESENTATION_CONSUMER}
+  GDocument.Presentations.Define(NyxPresentation('compact'),
+    TNyxViewportCondition.Any.WidthBelow(380));
+  Check(GRenderer.TryRefresh(GDocument, GDocument.Pages[0], False),
+    'Changed shared definition admits the actual retained native view');
+  Pump;
+  Check(LFirst.Top = LSecond.Top, 'Changed shared predicate changes actual native flow');
+  Check(GRenderer.InputFor('notes-editor') = GInput, 'Definition editing retains the native memo');
+  Check(GInput.Text = 'Keep this focused English draft.', 'Definition editing retains live native text');
+  GDocument.Presentations.Define(NyxPresentation('compact'),
+    TNyxViewportCondition.Any.WidthBelow(640));
+  Check(GRenderer.TryRefresh(GDocument, GDocument.Pages[0], False),
+    'Restored shared definition refreshes without remount');
+  Pump;
+  Check(LSecond.Top > LFirst.Top + LFirst.Height, 'Restored definition restores actual native flow');
+  {$endif}
   Check(TNyxCodec.Encode(GDocument) = GBefore, 'Native resize does not rewrite accepted design');
   Capture('responsive-compact.png');
   GForm.ClientWidth := 640;
@@ -340,7 +373,8 @@ begin
   begin
 
     if (Copy(LRow.Props.Names[LIndex], 1, 14) = '@nyx.viewport:') or
-      (Copy(LRow.Props.Names[LIndex], 1, 19) = '@nyx.viewport-size:') then
+      (Copy(LRow.Props.Names[LIndex], 1, 19) = '@nyx.viewport-size:') or
+      (Copy(LRow.Props.Names[LIndex], 1, 18) = '@nyx.presentation:') then
     begin
       LRow.Props.Delete(LIndex);
     end;

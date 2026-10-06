@@ -33,6 +33,7 @@ uses
   nyx.types,
   nyx.layout.policy,
   nyx.responsive,
+  nyx.presentations,
   nyx.layout.constraints,
   nyx.callbacks,
   nyx.model;
@@ -534,7 +535,8 @@ type
     vkCollectionView, vkCollectionScope, vkCollectionCellMode, vkSelectionMode, vkPlatform,
     vkSplitOrientation, vkSemanticEvent, vkTouchBehavior, vkFlowWrap,
     vkCrossAlignment, vkJustification, vkSizing, vkLayoutPolicy, vkSizeRange,
-    vkSizeConstraints, vkViewportWidth, vkViewportCondition, vkViewportOrientation);
+    vkSizeConstraints, vkViewportWidth, vkViewportCondition, vkViewportOrientation,
+    vkPresentationRef);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -632,6 +634,7 @@ type
     procedure Defaults;
     function CollectionConstructor(const AName: TNyxText): TValue;
     function CollectionScalar(const AValue: TValue; AKind: TNyxStateKind): TNyxStateValue;
+    procedure PresentationDefaults;
     procedure CollectionDefaults;
     procedure Bindings(AIndex: Integer);
     procedure Contract(AIndex: Integer);
@@ -640,7 +643,7 @@ type
     procedure Configure(AIndex: Integer);
     procedure ApplyCall(ANode: TNyxNode; const AMethod: TNyxText;
       const AArgs: TValues; APlatform: TNyxPlatform;
-      const AViewport: TNyxViewportCondition);
+      const AViewport: TNyxViewportCondition; const APresentation: TNyxPresentationRef);
     procedure Declarations;
     procedure ConstructControl(AIndex: Integer);
     procedure OwnControl(AIndex: Integer; const AMethod: TNyxText);
@@ -2381,7 +2384,12 @@ begin
           end;
         end;
 
-        if LName = 'nyxpart' then
+        if LName = 'nyxpresentation' then
+        begin
+          Result.Kind := vkPresentationRef;
+          Result.Text := NyxPresentation(Result.Text).Name;
+        end
+        else if LName = 'nyxpart' then
         begin
           Result.Kind := vkPart;
         end
@@ -3032,7 +3040,7 @@ end;
 
 procedure TConfigurationReader.ApplyCall(ANode: TNyxNode;
   const AMethod: TNyxText; const AArgs: TValues; APlatform: TNyxPlatform;
-  const AViewport: TNyxViewportCondition);
+  const AViewport: TNyxViewportCondition; const APresentation: TNyxPresentationRef);
 var
   LAttribute: TNyxAttribute;
   LMethod: TNyxText;
@@ -3053,6 +3061,11 @@ var
 
 begin
   LConfigure := ANode.Configure.ForPlatform(APlatform).WhenViewport(AViewport);
+
+  if APresentation.Defined then
+  begin
+    LConfigure := LConfigure.WhenPresentation(APresentation);
+  end;
   LMethod := LowerCase(AMethod);
 
   if LMethod = 'extension' then
@@ -3315,9 +3328,11 @@ var
   LArgs: TValues;
   LPlatform: TNyxPlatform;
   LViewport: TNyxViewportCondition;
+  LPresentation: TNyxPresentationRef;
 begin
   LPlatform := npfAny;
   LViewport := TNyxViewportCondition.Any;
+  LPresentation := Default(TNyxPresentationRef);
 
   if FLocals[AIndex].Configured then
   begin
@@ -3361,6 +3376,7 @@ begin
       begin
         Fail('WhenViewport requires a typed viewport width or condition');
       end;
+      LPresentation := Default(TNyxPresentationRef);
       if LArgs[0].Kind = vkViewportWidth then
       begin
         LViewport := TNyxViewportCondition.FromWidth(LArgs[0].ViewportWidth);
@@ -3370,9 +3386,19 @@ begin
         LViewport := LArgs[0].ViewportCondition;
       end;
     end
+    else if SameText(LMethod, 'WhenPresentation') then
+    begin
+
+      if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkPresentationRef) then
+      begin
+        Fail('WhenPresentation requires a typed presentation reference');
+      end;
+      LPresentation := NyxPresentation(LArgs[0].Text);
+      LViewport := TNyxViewportCondition.Any;
+    end
     else if FApply then
     begin
-      ApplyCall(LNode, LMethod, LArgs, LPlatform, LViewport);
+      ApplyCall(LNode, LMethod, LArgs, LPlatform, LViewport, LPresentation);
     end;
   end;
   Fail('Finish the Configure block with .Done;');
@@ -4323,6 +4349,7 @@ begin
       LSuffix := FSuffix;
     end;
     LPrefix := WithNyxControlImport(LPrefix);
+    LPrefix := WithNyxImport(LPrefix, 'nyx.presentations');
 
     if ADocument.Collections.Count > 0 then
     begin
