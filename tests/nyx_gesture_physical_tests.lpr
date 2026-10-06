@@ -176,6 +176,11 @@ begin
         Require(AEvent.HasDrag and (AEvent.Drag.Operation = ndoCopy) and
           not AEvent.Drag.Transfer.Readable, 'Real dragend loses final host operation');
       end;
+    else
+    begin
+      { This probe observes only the explicit physical registrations below.
+        Other families do not request capture or transfer authority. }
+    end;
   end;
   Publish;
 end;

@@ -35,7 +35,8 @@ uses
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
   nyx.studio.workspaces, nyx.studio.builds, nyx.studio.editorbuild,
   nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl,
-  nyx.studio.sourcejobs, nyx.modal, nyx.modal.lcl;
+  nyx.studio.sourcejobs, nyx.modal, nyx.modal.lcl,
+  nyx.designer.input, nyx.gestures, nyx.studio.edits, nyx.studio.drag;
 
 type
   TNyxNativeStudio = class;
@@ -119,6 +120,7 @@ type
     { Borrowed receiver registration; cancelled before any controller teardown. }
     FHierarchySubscription: INyxEventSubscription;
     FCanvasView: TNyxLCLRenderer;
+    FDesignerDrag: TNyxStudioDrag;
     FCodeView: TNyxLCLRenderer;
     FCanvasParking: TPanel;
     FCodeParking: TPanel;
@@ -168,6 +170,11 @@ type
     procedure PaintQueued(AData: PtrInt);
     procedure Paint;
     procedure ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+    { Borrow current owners synchronously; hover never publishes a design pair. }
+    function DesignerDragContext: TNyxStudioDragContext;
+    procedure DesignerDragFeedback(const ATarget: TNyxControlRef);
+    procedure DesignerGesture(const ATarget: TNyxDesignerTarget;
+      const AEvent: TNyxEventInfo; const ADecision: INyxGestureDecision);
     procedure HierarchyEvent(const AEvent: TNyxEventInfo);
     procedure CanvasEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure RememberCanvasRestore(const ARestore: TNyxProjectionValueRestore);
@@ -528,6 +535,9 @@ begin
   FState.Outputs := FOutputs;
   FShellView := TNyxLCLRenderer.Create(FTheme);
   FCanvasView := TNyxLCLRenderer.Create(FTheme);
+  FCanvasView.DesignerInput := NyxDesignerInput.Drops(True);
+  FCanvasView.OnDesignerGesture := DesignerGesture;
+  FDesignerDrag := TNyxStudioDrag.Create(DesignerDragContext, DesignerDragFeedback);
   FCodeView := TNyxLCLRenderer.Create(FTheme);
   FSourcePaneView := TNyxLCLRenderer.Create(FTheme);
   FSourcePaneView.OnEvent := ShellEvent;
@@ -556,6 +566,12 @@ var
   LIndex: Integer;
 begin
   FRunning := False;
+
+  if FCanvasView <> nil then
+  begin
+    FCanvasView.OnDesignerGesture := nil;
+  end;
+  FreeAndNil(FDesignerDrag);
 
   if FHierarchySubscription <> nil then
   begin
@@ -1921,6 +1937,7 @@ begin
     FCanvasRestores := nil;
     RestoreProjectControls;
     FShellCommandContext := FSession.CommandContext;
+    FDesignerDrag.ConnectSources(FShellView.Events, FShellView.Root, FShellCommandContext);
     FChangingProject := False;
     Inc(FPaintCount);
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-finish');{$endif}
@@ -2223,6 +2240,41 @@ begin
   end;
 end;
 
+function TNyxNativeStudio.DesignerDragContext: TNyxStudioDragContext;
+begin
+  Result := Default(TNyxStudioDragContext);
+  Result.Session := FSession;
+  Result.Commands := FSourceCommands;
+  Result.SourceMount := FShellCommandContext;
+  Result.CanvasMount := FCanvasCommandContext;
+  Result.Designing := not FPreview;
+  Result.Placement := FState.DesignerPlacement;
+end;
+
+procedure TNyxNativeStudio.DesignerDragFeedback(const ATarget: TNyxControlRef);
+begin
+
+  if (FCanvasView.Root = nil) or FPreview then
+  begin
+    Exit;
+  end;
+
+  if ATarget.ID = '' then
+  begin
+    FCanvasView.Select(FSession.SelectedID);
+  end
+  else
+  begin
+    FCanvasView.Select(ATarget.ID);
+  end;
+end;
+
+procedure TNyxNativeStudio.DesignerGesture(const ATarget: TNyxDesignerTarget;
+  const AEvent: TNyxEventInfo; const ADecision: INyxGestureDecision);
+begin
+  FDesignerDrag.Gesture(ATarget, AEvent, ADecision);
+end;
+
 procedure TNyxNativeStudio.ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
   LEffect: TNyxInspectorEffect;
@@ -2244,6 +2296,13 @@ begin
   end;
   LChanged := False;
   try
+
+    if (ANode.ID = NyxStudioDropPositionID) and (AEvent.Trigger = ntChange) then
+    begin
+      FDesignerDrag.Cancel;
+      FState.DesignerPlacement := ReadNyxPlacement(ANode.Prop('value'));
+      Exit;
+    end;
 
     if RouteNyxStudioHierarchy(FSession, ANode, AEvent, LHierarchyChanged) then
     begin

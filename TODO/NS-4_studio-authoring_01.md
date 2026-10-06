@@ -40,6 +40,33 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Physical designer drag/drop — 2026-10-05
+
+Original criterion 1 now consumes its placement prerequisite through public Nyx
+palette sources, a separate selected-control grip and typed inside/before/after
+intent. Both adapters opt into a value-only designer drop port while application
+events stay suppressed. A local lease guards source mount, active view, load,
+draft, exact paired files, placement and creator epoch. Hover changes only an
+outline; the final drop submits the existing isolated paired command. Inherited
+content requires an exact existing customized layout slot, never an implicit
+shared-definition edit. The two-step keyboard/touch alternative stays available.
+
+Shared guards pass 56 on each native compiler; actual Win32 Studio/input policy
+passes 40 and unchanged compiled controls seven, with zero leaks/owned warnings.
+Original gesture regression and staged browser qualification are recorded in
+[the packet](../WORK.md#physical-designer-dragdrop--2026-10-05). Browser contract,
+compiled-control and DOM Studio reviews, Studio and module worker compile; their
+execution and updated observation still need the admitted host. Callback input
+does not qualify physical mouse/touch, IME, assistive technology or another widgetset.
+
+No original criterion closes: authoring no-closure advances **8→9** once.
+Workflow 9, codegen 27, renderer 3 and delivery 1 stay unchanged. End local drag
+fixture/codec expansion. Continue ordinary sizing, constraints, snapping and
+responsive authoring, complete editor/parity/accessibility/performance and
+delivery under their existing owners. Preserve every original blocker and the
+protected release; another green compiler or guard fixture cannot accept the
+full WYSIWYG criterion or independently usable product.
+
 ## Nested placement prerequisite — 2026-10-05
 
 Original criterion 1 now has typed inside/before/after placement and an ordinary

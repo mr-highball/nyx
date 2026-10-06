@@ -693,3 +693,18 @@ Current task and return path are maintained in [WORK.md](WORK.md).
   resizing, constraints, snapping, responsive variants and complete editor
   quality/parity/delivery retain their original owners. See
   [evidence](WORK.md#nested-placement-prerequisite--2026-10-05).
+
+- Physical designer drag/drop now consumes that prerequisite through public Nyx
+  sources, explicitly opted-in browser/LCL designer ports and the same isolated
+  paired command. Hover is presentation only; exact local leases guard view,
+  load, draft, paired files, placement and creator epoch. Inherited content needs
+  an existing customized layout slot. Shared guards pass 56 per native compiler;
+  real Win32 Studio/input policy passes 40 and unchanged compiled controls seven,
+  with zero leaks/owned warnings. Original gesture regression is retained;
+  browser contract/compiled/DOM Studio reviews, Studio and module worker compile
+  with execution and updated observation still gated. Authoring no-closure
+  advances **8→9** once; workflow **9**, codegen **27**, renderer **3**, delivery
+  **1** remain. No original criterion or full-product percentage closes. End
+  drag guard/codec/fixture expansion and continue ordinary sizing, constraints,
+  snapping/responsive authoring plus the broader original editor/parity outcomes.
+  See [evidence](WORK.md#physical-designer-dragdrop--2026-10-05).

@@ -217,7 +217,7 @@ var
           LHint := LHint + ' / ' + NyxComponentLabelNames(LInfo.Discovery.Labels);
         end;
         LButton := TNyxNode.Create(nkButton, 'palette-' + LInfo.Kind)
-          .Configure.Text(LInfo.Title).Hint(LHint).Done
+          .Configure.Text(LInfo.Title).Hint(LHint).DragSource(True).Done
           .SetProp('add-kind', LInfo.Kind);
 
         if AState.Details then

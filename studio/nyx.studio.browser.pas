@@ -64,7 +64,8 @@ uses
   nyx.studio.builds,
   nyx.studio.outputs,
   nyx.studio.projects, nyx.studio.rootedits, nyx.studio.rootview,
-  nyx.studio.workspaces, nyx.studio.presentation, nyx.modal, nyx.modal.browser;
+  nyx.studio.workspaces, nyx.studio.presentation, nyx.modal, nyx.modal.browser,
+  nyx.designer.input, nyx.gestures, nyx.studio.edits, nyx.studio.drag;
 
 type
   { Transport operation is closed and independent of application build targets. }
@@ -90,6 +91,8 @@ type
     { Borrowed receiver registration; cancelled before any controller teardown. }
     FHierarchySubscription: INyxEventSubscription;
     FCanvasRenderer: TNyxBrowserRenderer;
+    FDesignerDrag: TNyxStudioDrag;
+    FDesignerPlacement: TNyxPlacement;
     { Independent ordinary Nyx view preserves the live Pascal control through
       activity/chrome refreshes. Document owns its editor; renderer owns only
       its realization and never borrows nodes from the shell or design. }
@@ -203,6 +206,11 @@ type
     procedure CaptureNewStateDraft;
     procedure Refresh(ARetainCanvas: Boolean = False; APreserveDraft: Boolean = False);
     procedure HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+    { Borrow current owners synchronously; hover only changes the canvas outline. }
+    function DesignerDragContext: TNyxStudioDragContext;
+    procedure DesignerDragFeedback(const ATarget: TNyxControlRef);
+    procedure DesignerGesture(const ATarget: TNyxDesignerTarget;
+      const AEvent: TNyxEventInfo; const ADecision: INyxGestureDecision);
     procedure HierarchyEvent(const AEvent: TNyxEventInfo);
     procedure HandleCanvas(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure Compile(const AScope, ATarget: TNyxText);
@@ -412,6 +420,10 @@ begin
   FHierarchySubscription := SubscribeNyxStudioHierarchy(FShellRenderer.Events, @HierarchyEvent);
   FCanvasRenderer := TNyxBrowserRenderer.Create;
   FCanvasRenderer.OnEvent := HandleCanvas;
+  FCanvasRenderer.DesignerInput := NyxDesignerInput.Drops(True);
+  FCanvasRenderer.OnDesignerGesture := DesignerGesture;
+  FDesignerDrag := TNyxStudioDrag.Create(@DesignerDragContext, @DesignerDragFeedback);
+  FDesignerPlacement := nplInside;
   FCodeRenderer := TNyxBrowserRenderer.Create;
   FCodeRenderer.OnEvent := HandleShell;
   FSourcePaneRenderer := TNyxBrowserRenderer.Create;
@@ -440,6 +452,12 @@ end;
 
 destructor TNyxStudio.Destroy;
 begin
+
+  if FCanvasRenderer <> nil then
+  begin
+    FCanvasRenderer.OnDesignerGesture := nil;
+  end;
+  FreeAndNil(FDesignerDrag);
 
   if FHierarchySubscription <> nil then
   begin
@@ -537,6 +555,7 @@ begin
   LState.Compact := FCompact;
   LState.Panel := FPanel;
   LState.Phone := FPhone;
+  LState.DesignerPlacement := FDesignerPlacement;
   LState.Palette := FPalette;
   LState.Log := FLog;
   LState.Status := FStatus;
@@ -1050,6 +1069,7 @@ begin
   end;
   document.body.setAttribute('data-nyx-studio-ready', 'true');
   FShellCommandContext := FSession.CommandContext;
+  FDesignerDrag.ConnectSources(FShellRenderer.Events, FShellRenderer.Root, FShellCommandContext);
   document.title := FSession.Document.Title + ' / Nyx Studio';
   try
 
@@ -1396,6 +1416,41 @@ begin
   end;
 end;
 
+function TNyxStudio.DesignerDragContext: TNyxStudioDragContext;
+begin
+  Result := Default(TNyxStudioDragContext);
+  Result.Session := FSession;
+  Result.Commands := FSourceCommands;
+  Result.SourceMount := FShellCommandContext;
+  Result.CanvasMount := FCanvasCommandContext;
+  Result.Designing := not FPreview;
+  Result.Placement := FDesignerPlacement;
+end;
+
+procedure TNyxStudio.DesignerDragFeedback(const ATarget: TNyxControlRef);
+begin
+
+  if (FCanvasRenderer.Root = nil) or FPreview then
+  begin
+    Exit;
+  end;
+
+  if ATarget.ID = '' then
+  begin
+    FCanvasRenderer.Select(FSession.SelectedID);
+  end
+  else
+  begin
+    FCanvasRenderer.Select(ATarget.ID);
+  end;
+end;
+
+procedure TNyxStudio.DesignerGesture(const ATarget: TNyxDesignerTarget;
+  const AEvent: TNyxEventInfo; const ADecision: INyxGestureDecision);
+begin
+  FDesignerDrag.Gesture(ATarget, AEvent, ADecision);
+end;
+
 procedure TNyxStudio.HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
   LSource: TNyxText;
@@ -1418,6 +1473,13 @@ begin
   CaptureNewStateDraft;
   LAcceptedDesign := '';
   try
+
+    if (ANode.ID = NyxStudioDropPositionID) and (AEvent.Trigger = ntChange) then
+    begin
+      FDesignerDrag.Cancel;
+      FDesignerPlacement := ReadNyxPlacement(ANode.Prop('value'));
+      Exit;
+    end;
 
     if RouteNyxStudioHierarchy(FSession, ANode, AEvent, LHierarchyChanged) then
     begin

@@ -10,8 +10,8 @@ actual browser/LCL consumers qualify physical behavior selectively.
 The preceding user-directed packet covers source workspace usability under original codegen
 criterion 3: Source/Compiler messages views and an expanded floating source
 editor with Close/Escape, retained draft/selection, project preferences and
-portable public Nyx modal adapters. The previous goal turn was progress:
-845c698/2ba9107 are a verified clean/pushed declaration checkpoint. Its guarded
+portable public Nyx modal adapters. An earlier goal turn qualified the verified
+clean/pushed declaration checkpoint 845c698/2ba9107. Its guarded
 paired signature return path now has 20/59 lexical/semantic checks on both native
 compilers, actual discovery 50, compiled native input nine, all three stale-caller
 compiler diagnostics and routine/callback regressions 31/72, with zero leaks.
@@ -22,7 +22,24 @@ codegen 27, renderer 3, native authoring 7 and delivery 1. Stop on lost editor
 identity/input, disabled-owner return, guessed source ownership or weakened
 publication; preserve failed evidence and the protected observing release.
 
-Current packet: [nested placement prerequisite](#nested-placement-prerequisite--2026-10-05)
+Current packet: [physical designer drag/drop](#physical-designer-dragdrop--2026-10-05)
+consumes the nested placement prerequisite under original authoring criterion 1.
+Public Nyx sources and explicitly opted-in design adapters now submit the same
+isolated paired operation. Shared guards pass 56 on each native compiler; actual
+Win32 Studio/input policy passes 40 and its unchanged compiled consumer seven,
+with zero leaks. Browser contract/compiled/DOM Studio reviews, Studio and module
+worker compile; execution and updated phone observation remain gated. Authoring
+no-closure advances 8→9 once; workflow 9, codegen 27, renderer 3 and delivery 1
+remain. End drag codec/guard/fixture expansion after relevant regression checks.
+Continue ordinary sizing/constraint/responsive authoring and broader original
+editor/parity outcomes, using the public portable library and existing paired
+processor. No criterion closes. Preserve exact leases/ownership, the active user
+pair and protected observing release. Do not launch listeners, replace releases
+or refresh private configuration. Stop on a second authoring engine, inferred
+ownership or weakened paired publication.
+
+Preceding verified clean/pushed checkpoint: `908331b7fc8988d223b47ee922f05dade88169bb`.
+Its [nested placement prerequisite](#nested-placement-prerequisite--2026-10-05)
 serves original Studio authoring criterion 1 through typed inside/before/after
 commands, the existing semantic transaction and isolated paired processor, and
 ordinary Nyx-built two-step placement controls beside selection. Both native
@@ -30,11 +47,11 @@ compilers pass 44 semantic/worker checks with byte-identical exports; actual
 Win32 Studio/unchanged compiled controls pass 18, discovery 24 and retained
 source/queue/reusable regressions 140/10/52 on both compilers, with zero leaks or
 owned warnings. Final inspector rendering is inspected; browser consumers,
-Studio and worker compile with execution still gated. Native authoring
-no-closure is now 8; workflow 9, codegen 27, renderer 3 and delivery 1 remain.
-End placement codec/fixture expansion after these relevant checks. Next connect
-public Nyx physical drag/drop on both targets to this same operation and
-keyboard alternative; source/load/pair/creator/lease guards remain required.
+Studio and worker compile with execution still gated. At that checkpoint native
+authoring no-closure was 8; workflow 9, codegen 27, renderer 3 and delivery 1 remained.
+Placement codec/fixture expansion ended after those relevant checks. The next
+action connected public Nyx drag/drop to this same operation and keyboard
+alternative, with source/load/pair/creator/lease guards retained in the packet above.
 This prerequisite alone cannot accept drag/drop, resizing, constraints,
 snapping, responsive variants or complete both-target editor parity. Preserve
 the observing release and existing listener/deployment gate. Stop on a second
@@ -7604,6 +7621,104 @@ policy,” with no further stated reason; no equivalent deployment was attempted
 The phone retains the older observing release. Exact remote/clean/process/session
 proof is stored privately after the authorized push at
 `.local/codex-restart-check/reusable-remote-proof.json`.
+
+## Physical designer drag/drop — 2026-10-05
+
+Original Studio authoring criterion 1 now consumes the accepted-in-isolation
+placement operation through physical host callbacks. Both ordinary Studio
+controllers use the same portable drag broker and public Nyx sources. Palette
+buttons offer a copy; the separate inspector grip offers an authored-control
+move, preserving canvas input selection/IME. The Nyx-built viewbar supplies
+typed inside/before/after intent and the existing two-step keyboard/touch workflow
+remains. The narrowed drop selector is visible in the inspected Win32 capture.
+
+Public `NyxDesignerInput.Drops(True)` opts into a copied-identity synchronous
+designer port before mounting. Its owner/source/path/container snapshot borrows
+no node or control; the adapter seals decisions on return or failure. Application
+callbacks and custom native drag hooks stay suppressed. Design views have no
+runtime binding store: the first real input run exposed an erroneous call to
+the runtime signal bridge. Both adapters now construct the same designer-only
+notification instead, with no application value command. Native mounted-policy
+refusal, disabled/read-only target input and retained-decision sealing are exercised.
+
+An opaque local per-drag lease guards source mount, exact load/session, active
+view, captured placement, draft and creator epoch. Hover reads protected format/
+identity only, outlines a visible owner and never refreshes or encodes the pair.
+Only a readable exact final lease and unchanged paired files submit one isolated
+placement command. External transfers, roots beside roots, leaf containers,
+self/cycle moves, retired views and changed pairs refuse. Inherited content needs
+an existing exact customized layout descriptor; no implicit override or shared
+definition mutation occurs. Drop publication and ordinary Undo/Redo update both
+files and preserve the existing source widget and handwritten Pascal.
+
+Maintained reproduction:
+
+```powershell
+./tools/build.ps1 -Target designer-drag -BrowserOutput build/designer-drag/staged
+./tools/build.ps1 -Target gestures -BrowserOutput build/designer-drag/gesture-browser
+```
+
+The first target completes with exit zero in `build/designer-drag/promotion.log`:
+56 shared guards on FPC 3.2.0 and the matched FPC 3.3.1, 40 actual Win32 Studio/
+adapter-policy checks and seven unchanged compiled-control checks. Native heap
+tracing reports zero leaks in each. The exact ordinary-input export hashes are:
+
+- Design: `02CE43B0D0459CF71AD6F7BEE87379A3D026A7CAE88ADA01528915844D77B067`.
+- Adjacent Pascal: `E7DC620B007E2EFC91745855B5DE1C3426F7814ED9CF61BD3966D2C6E46A2219`.
+- Pair: `00002E59D99F2FF6E3EF12AECC523E5EE7A185C3500626CEA823AD5ACC755DE9`.
+
+The unchanged Pascal reconstructs the exact design and mounts the moved memo
+and labeled-button parts; actual native memo editing remains usable. The selective
+ordinary editor capture is `build/designer-drag/export/designer-drag.png`.
+Its new grip/selector and Source/messages/Expand controls are inspected; broader
+chrome clipping/help/visual polish and complete editor performance remain open.
+Checked Studio input allocated roughly 505 MB across the journey; this packet
+does not establish a production latency or memory budget.
+
+Original gesture regression passes 83 preparation / 84 unchanged compiled native
+checks, with zero leaks (`gesture-regression-final.log`). Its two native implicit
+Unicode comparison warnings are fixed with typed portable expected constants.
+The browser physical probe now explicitly handles other trigger families;
+`physical-compile-final.log` qualifies that warning cleanup. Owned current builds
+have zero warnings; the installed pas2js Classes unit's seven warnings per
+compilation remain visible, without suppression or dependency source edits.
+The final Studio browser review's failure cleanup is compiled separately in
+`browser/studio-input-final.log` after promotion.
+
+Browser shared guards, the unchanged compiled companion, actual DOM Studio/
+worker review, Studio and its module worker compile and ship the matched RTL
+into this isolated stage. The English hosts are `designer-drag-guards.html`,
+`designer-drag-compiled.html` and `designer-drag-studio.html`. Their execution is
+not established here. Synthetic DOM and direct Win32 callback evidence do not
+qualify hardware drag-manager negotiation, mobile touch, IME, assistive technology,
+disabled-widget hardware hit-testing or another native widgetset. This packet
+cannot accept full browser/LCL parity or the whole WYSIWYG criterion.
+
+Failed compile/guard/input evidence stays in `guards/compile-first.log`,
+`guards/run-2.log` through `run-6.log`, and `lcl/run-first.log`; the successful
+manual final and maintained logs remain alongside them. Early guard failures
+were malformed synthetic event metadata/name/value, corrected to the existing
+typed event contract. The first real designer signal failure freed all owners.
+No original test requirement was reduced to make the packet pass.
+
+Original authoring criterion 1 remains open: no-closure **8→9** once. Workflow
+criterion 5 stays **9**, codegen criterion 3 **27**, renderer **3**, delivery **1**.
+No task moves to DONE and no full-product percentage closes. End local drag
+guard/codec/fixture expansion. Continue ordinary sizing/constraint/snapping/
+responsive authoring and broader editor/parity/accessibility/performance outcomes
+under their existing owners, preserving all original acceptance and blockers.
+Stop on inferred ownership, a second authoring engine or weakened paired publication.
+
+Authenticated read-only native MCP still connects to the protected fifteen-tool
+release. Revision eight, selection `rating-2-part-4`, home view, one page/component,
+no draft, Undo false/Redo true remain; read activity alone advances 228→229.
+All eight protected process path/start identities match the retained baseline;
+focused fixtures have finished. Production server size/timestamp remain unchanged.
+No listener, protected-release replacement, configuration refresh, compiler
+reinstall or dependency edit occurred. The earlier automatic approval rejection
+remains “blocked by policy,” with no further stated reason. The phone retains
+the older observing release; equivalent deployment was not attempted. Private
+process/artifact/remote proof belongs in `.local/codex-restart-check/` after push.
 
 ## Nested placement prerequisite — 2026-10-05
 

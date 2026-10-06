@@ -49,7 +49,7 @@ uses
   nyx.studio.compiler,
   nyx.studio.diagnostics,
   nyx.studio.agentview,
-  nyx.studio.outputs;
+  nyx.studio.outputs, nyx.studio.edits, nyx.studio.drag;
 
 type
   { Compact hosts show one ordinary Nyx workspace panel at a time. The choice
@@ -78,6 +78,9 @@ type
       survives panel switches and host viewport changes on both targets. }
     CanvasPercent: Integer;
     Phone: Boolean;
+    { Transient physical-drop position; closed intent decoded at the UI boundary.
+      It never changes exported documents or the accepted pair on its own. }
+    DesignerPlacement: TNyxPlacement;
     Palette: TNyxStudioPaletteState;
     Log: TNyxText;
     Status: TNyxText;
@@ -893,6 +896,11 @@ begin
   LViewbar.Add(Button('action-desktop', 'Desktop'));
   LViewbar.Add(Button('action-phone', 'Phone'));
   LViewbar.Add(Button('action-preview', 'Interact'));
+  LViewbar.Add(TNyxNode.Create(nkSelect, NyxStudioDropPositionID)
+    .Configure.Text('Drop position').Items('inside' + #10 + 'before' + #10 + 'after')
+    .Value(NyxPlacementName(AState.DesignerPlacement))
+    .Width(144)
+    .Hint('Choose where dragged components are placed relative to the target.').Done);
 
   if AState.CompiledPreviewAvailable then
   begin
@@ -964,6 +972,16 @@ begin
   if LSelected <> nil then
   begin
     LRight.Add(Caption('selected-label', LSelected.Kind + ' / ' + LSelected.ID));
+    { A separate ordinary Nyx grip preserves text selection/IME and application
+      control input on the canvas; authored inputs are never made drag sources. }
+
+    if (LSelected.Parent <> nil) and (LSelected.Kind <> 'slot-override') then
+    begin
+      LRight.Add(Button(NyxStudioDragMoveID, 'Drag selected control')
+        .Configure.DragSource(True)
+        .Hint('Drag onto the canvas. Choose inside, before or after in Drop position.').Done
+        .SetProp('designer-drag-control', LSelected.ID));
+    end;
     { Placement stays beside selection, ahead of potentially long property/event
       lists. Ordinary canvas/hierarchy selection supplies the destination; the
       project session owns only copied pending identity and accepted-pair data. }

@@ -88,6 +88,48 @@ Imperative event subscriptions belong to the subscribing caller. Releasing an
 interface or remounting a view does not substitute for `Cancel`. Retire temporary
 spies explicitly before installing replacement registrations.
 
+## Explicit designer drops
+
+Design views suppress application callbacks and have no live runtime binding
+store. Hosts can opt into a separate public input contract before mounting:
+
+```pascal
+LRenderer.DesignerInput := NyxDesignerInput.Drops(True);
+LRenderer.OnDesignerGesture := DesignerGesture;
+```
+
+The browser and LCL renderers both expose this typed policy and synchronous
+borrowed receiver. Clear the receiver before destroying its object. Its copied
+target identifies the authored owner, original source, exact direct named-part
+path and effective container. It borrows no tree/widget. The adapter seals the
+decision when the receiver returns or raises; retained decisions cannot act
+later. Changing the policy on a mounted view refuses. Opting into drops keeps
+application hooks and design-canvas drag sources suppressed.
+
+Studio consumes public Nyx palette drag sources and a separate inspector grip,
+so authored text controls retain selection and editing behavior. A closed
+inside/before/after choice supplies placement intent. One local opaque lease
+binds the transfer to this editor, accepted pair, source mount, active view,
+load, placement and creator epoch. Hover reads protected formats and copied
+identities only, paints an outline and never refreshes or publishes the editor.
+Readable drop data must match the exact lease and accepted pair before one
+isolated placement command updates both files. External text, HTML, files and
+URIs never become an implicit import. This follows the
+[HTML drag data-store phases](https://html.spec.whatwg.org/multipage/dnd.html#the-drag-data-store).
+
+Inherited content is addressable only through an existing exact customized
+layout slot. Studio cannot silently create an override or edit the shared
+definition. Cycles, roots beside roots, leaves as containers, retired source
+views, pending drafts and changed pairs/creator epochs refuse. New palette drops
+and moved controls share the same candidate admission, source processor and
+paired Undo as semantic transactions and the keyboard/touch alternative.
+
+`./tools/build.ps1 -Target designer-drag -BrowserOutput build/designer-drag/staged`
+reproduces the staged packet. Its Win32 callback evidence does not qualify
+hardware hit-testing on disabled native widgets. Its compiled browser review
+does not establish physical drag-manager, mobile touch or assistive-technology
+behavior. The existing observing-release and host execution gates remain.
+
 ## Reproduce the boundary
 
 The [semantic review author](../tests/nyx_mcp_designer_review.lpr) creates an owned

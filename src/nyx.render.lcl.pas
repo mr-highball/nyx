@@ -50,6 +50,7 @@ uses
   nyx.editing,
   nyx.editing.lcl,
   nyx.gestures,
+  nyx.designer.input,
   nyx.gestures.lcl,
   nyx.platform,
   nyx.split,
@@ -233,6 +234,8 @@ type
     FLastGestureError: TNyxText;
     FUpdaters: array of TNyxLCLUpdater;
     FOnEvent: TNyxLCLEvent;
+    FDesignerInput: TNyxDesignerInput;
+    FOnDesignerGesture: TNyxDesignerGesture;
     FEvents: INyxEvents;
     FState: TNyxState;
     FOwnState: Boolean;
@@ -260,6 +263,7 @@ type
       const AEditing: TNyxEditingSnapshot);
     procedure CaptureChanged(const AOriginID: TNyxText; ATrigger: TNyxTrigger);
     procedure GestureFailed(const AOriginID, AReason: TNyxText);
+    procedure SetDesignerInput(const AValue: TNyxDesignerInput);
     function EmitNamed(const AOriginID: TNyxText; const AName: TNyxEventRef;
       const APayload: TNyxDataValue; AHasPayload: Boolean): Boolean;
     procedure BindingFailed(ANode: TNyxNode; const AReason: TNyxText;
@@ -401,6 +405,11 @@ type
     function CollectionView(const AID: TNyxText): INyxCollectionView;
     procedure Sync;
     property OnEvent: TNyxLCLEvent read FOnEvent write FOnEvent;
+    { Configure before mounting. Opted-in designer drops use a synchronous
+      value-only receiver and keep application/custom native callbacks bypassed.
+      Clear this borrowed receiver before releasing its object. }
+    property DesignerInput: TNyxDesignerInput read FDesignerInput write SetDesignerInput;
+    property OnDesignerGesture: TNyxDesignerGesture read FOnDesignerGesture write FOnDesignerGesture;
     { Multiple registrations share the portable event/scheduler contract.
       View replacement cancels queued work; destruction closes registrations. }
     property Events: INyxEvents read FEvents;
@@ -2341,6 +2350,8 @@ begin
     LCandidate.FEditingObserver := NewNyxLCLEditingObserver;
     LCandidate.FUpdaters := Copy(FUpdaters, 0, Length(FUpdaters));
     LCandidate.FDesignMode := ADesignMode;
+    LCandidate.FDesignerInput := FDesignerInput;
+    LCandidate.FOnDesignerGesture := FOnDesignerGesture;
     LCandidate.FProjectionContext := NyxProjectionContext(ADocument);
     LCandidate.FProjectionSchemaRevision := NyxSchemaRevision;
     LCandidate.FRoot := RealizeNyxView(ADocument, ARoot);
@@ -2778,6 +2789,16 @@ begin
   { The borrowed binding/renderer may have ended inside Emit. }
 end;
 
+procedure TNyxLCLRenderer.SetDesignerInput(const AValue: TNyxDesignerInput);
+begin
+
+  if FRoot <> nil then
+  begin
+    raise ENyxModel.Create('Configure designer input before mounting its view');
+  end;
+  FDesignerInput := AValue;
+end;
+
 procedure TNyxLCLRenderer.GestureFailed(const AOriginID, AReason: TNyxText);
 var
   LHandler: TNyxGestureFailure;
@@ -2953,7 +2974,7 @@ var
   LTarget: Boolean;
 begin
 
-  if FRenderer.FDesignMode then
+  if FRenderer.FDesignMode and not FRenderer.FDesignerInput.DropEnabled then
   begin
     AAccept := False;
     Exit;
@@ -2963,11 +2984,11 @@ begin
   LRevision := LEvents.ViewRevision;
   LFrame := FRenderer.FPhysicalFrame;
   LOriginID := FNode.ID;
-  LTarget := FNode.Prop('drop-target') = 'true';
+  LTarget := FRenderer.FDesignMode or (FNode.Prop('drop-target') = 'true');
   LFrame.Enter;
   try
 
-    if Assigned(LPrevious) then
+    if not FRenderer.FDesignMode and Assigned(LPrevious) then
     begin
       LPrevious(ASender, ASource, AX, AY, AState, AAccept);
     end;
@@ -3050,7 +3071,7 @@ var
   LTarget: Boolean;
 begin
 
-  if FRenderer.FDesignMode then
+  if FRenderer.FDesignMode and not FRenderer.FDesignerInput.DropEnabled then
   begin
     Exit;
   end;
@@ -3058,7 +3079,7 @@ begin
   LEvents := FRenderer.FEvents;
   LRevision := LEvents.ViewRevision;
   LFrame := FRenderer.FPhysicalFrame;
-  LTarget := FNode.Prop('drop-target') = 'true';
+  LTarget := FRenderer.FDesignMode or (FNode.Prop('drop-target') = 'true');
   LFrame.Enter;
   try
 
@@ -3107,8 +3128,10 @@ var
 begin
   Result := Default(TNyxGestureResult);
 
-  if FRenderer.FUpdating or FRenderer.FDesignMode or
-    not NyxInteractionPolicy(FNode).CanIssueCommand or
+  if FRenderer.FUpdating or
+    (FRenderer.FDesignMode and ((APhase in [ndpStart, ndpDrag, ndpEnd]) or
+      not FRenderer.FDesignerInput.DropEnabled)) or
+    (not FRenderer.FDesignMode and not NyxInteractionPolicy(FNode).CanIssueCommand) or
     not (ADragObject is TNyxNativeDragObject) then
   begin
     Exit;
@@ -3121,7 +3144,7 @@ begin
     Include(LCapabilities, ngcOfferDrag);
   end
   else if (APhase in [ndpEnter, ndpOver, ndpDrop]) and
-    NyxInteractionPolicy(FNode).CanEditValue then
+    (FRenderer.FDesignMode or NyxInteractionPolicy(FNode).CanEditValue) then
   begin
     Include(LCapabilities, ngcAcceptDrop);
   end;
@@ -3131,7 +3154,16 @@ begin
   begin
     LOperation := LDrag.Operation;
   end;
-  LDispatch := FRenderer.FLiveBindings.Signal(FNode, ATrigger);
+
+  if FRenderer.FDesignMode then
+  begin
+    LDispatch := Default(TNyxDispatch);
+    LDispatch.Info := NyxDesignerDragEvent(FNode, ATrigger);
+  end
+  else
+  begin
+    LDispatch := FRenderer.FLiveBindings.Signal(FNode, ATrigger);
+  end;
   LDispatch.Info.HasDrag := True;
   LDispatch.Info.Drag := NyxDragSnapshot(APhase, LDrag.Transfer,
     LDrag.Allowed, LOperation, LDrag.SourceID, LCapabilities <> []);
@@ -3146,8 +3178,23 @@ begin
     LDispatch.Info.Pointer.Y := Double(LPosition.Y) + FPlacement.ContentOffsetY;
   end;
   LDecision := NewNyxGestureDecision(LCapabilities, LDrag.Allowed);
-  DispatchNyxGesture(FRenderer.FEvents, FNode, LDispatch, LDecision);
-  Result := LDecision.Seal;
+  try
+
+    if FRenderer.FDesignMode then
+    begin
+
+      if Assigned(FRenderer.FOnDesignerGesture) then
+      begin
+        FRenderer.FOnDesignerGesture(NyxDesignerTarget(FNode), LDispatch.Info, LDecision);
+      end;
+    end
+    else
+    begin
+      DispatchNyxGesture(FRenderer.FEvents, FNode, LDispatch, LDecision);
+    end;
+  finally
+    Result := LDecision.Seal;
+  end;
 end;
 
 procedure TNyxLCLBinding.DisconnectControl(AControl: TControl);

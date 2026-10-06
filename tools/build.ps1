@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-  [ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1452,6 +1452,68 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxCollectionAgentHost") -Destination $nyxCollectionAgentBrowser
     }
     Write-Host 'Semantic collection consumers staged; browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'designer-drag') {
+    # Pascal owns lease guards, actual Studio input and unchanged compilation.
+    # Outputs stay staged: this target launches no listener, changes no private
+    # MCP configuration and never replaces the protected observing release.
+    $nyxDragRoot = Join-Path $nyxRoot 'build/designer-drag'
+    $nyxDragStable = Join-Path $nyxDragRoot 'guards'
+    $nyxDragMatched = Join-Path $nyxDragRoot 'guards-matched'
+    $nyxDragLcl = Join-Path $nyxDragRoot 'lcl'
+    $nyxDragCompiled = Join-Path $nyxDragRoot 'compiled'
+    $nyxDragExport = Join-Path $nyxDragRoot 'export'
+    $nyxDragBrowser = Join-Path $nyxDragRoot 'browser'
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+
+    if ($BrowserOutput) { $nyxDragBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxDragStable, $nyxDragMatched,
+      $nyxDragLcl, $nyxDragCompiled, $nyxDragExport, $nyxDragBrowser | Out-Null
+    $nyxDragFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests')
+    foreach ($nyxDragCompiler in @(@($nyxFpc, $nyxDragStable), @($nyxLclFpc, $nyxDragMatched))) {
+      Invoke-NyxCompiler $nyxDragCompiler[0] ($nyxDragFlags + @(
+        "-FU$($nyxDragCompiler[1])", "-FE$($nyxDragCompiler[1])",
+        'tests/nyx_designer_drag_guards.lpr'))
+      & (Join-Path $nyxDragCompiler[1] 'nyx_designer_drag_guards.exe')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Designer drag guards failed' }
+    }
+    $nyxDragPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxDragControlFlags = $nyxDragFlags + @(
+      "-Fu$nyxLazarus/lcl/units/$nyxDragPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxDragPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxDragPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxDragPlatform")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxDragControlFlags + @(
+      "-FU$nyxDragLcl", "-FE$nyxDragLcl", 'tests/nyx_designer_drag_controls.lpr'))
+    & (Join-Path $nyxDragLcl 'nyx_designer_drag_controls.exe') $nyxDragExport
+
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native designer drag controls failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxDragControlFlags + @("-Fu$nyxDragExport",
+      "-FU$nyxDragCompiled", "-FE$nyxDragCompiled", 'tests/nyx_designer_drag_compiled.lpr'))
+    & (Join-Path $nyxDragCompiled 'nyx_designer_drag_compiled.exe') (Join-Path $nyxDragExport 'design.nyx')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Unchanged compiled designer drag consumer failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxDragProgram in @('tests/nyx_designer_drag_guards.lpr',
+      'tests/nyx_designer_drag_compiled.lpr', 'tests/nyx_designer_drag_browser.lpr',
+      'studio/nyx_studio.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
+        '-Futests', "-Fu$nyxDragExport", '-Jirtl.js', "-FE$nyxDragBrowser", $nyxDragProgram)
+    }
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Tmodule', '-Mdelphi', '-Fusrc', '-Fustudio',
+      '-Jirtl.js', "-FE$nyxDragBrowser", 'studio/nyx_source_worker.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxDragBrowser 'rtl.js')
+    foreach ($nyxDragHost in @('designer-drag-guards.html', 'designer-drag-compiled.html',
+      'designer-drag-studio.html', 'index.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxDragHost") -Destination $nyxDragBrowser
+    }
+    Write-Host 'Designer drag artifacts staged; browser execution requires an admitted HTTP host.'
     exit 0
   }
 

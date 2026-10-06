@@ -41,6 +41,7 @@ uses
   nyx.editing,
   nyx.editing.browser,
   nyx.gestures,
+  nyx.designer.input,
   nyx.gestures.browser,
   nyx.platform,
   nyx.split,
@@ -196,6 +197,8 @@ type
     FEmitterScope: INyxEventEmitterScope;
     FUpdaters: array of TNyxBrowserUpdater;
     FOnEvent: TNyxBrowserEvent;
+    FDesignerInput: TNyxDesignerInput;
+    FOnDesignerGesture: TNyxDesignerGesture;
     FEvents: INyxEvents;
     FState: TNyxState;
     FOwnState: Boolean;
@@ -209,6 +212,7 @@ type
     FLastGestureError: TNyxText;
     FOnGestureFailure: TNyxGestureFailure;
     procedure GestureFailed(const AOriginID, AReason: TNyxText);
+    procedure SetDesignerInput(const AValue: TNyxDesignerInput);
     procedure Emit(AOrigin: TNyxNode; const ADispatch: TNyxDispatch);
     function EmitNamed(const AOriginID: TNyxText; const AName: TNyxEventRef;
       const APayload: TNyxDataValue; AHasPayload: Boolean): Boolean;
@@ -318,6 +322,11 @@ type
       Compound actions use this path rather than rebuilding the entire view. }
     procedure Sync;
     property OnEvent: TNyxBrowserEvent read FOnEvent write FOnEvent;
+    { Configure before mounting. Design drops use a synchronous value-only
+      receiver, never the application's event registrations. Clear a borrowed
+      receiver before its object ends. Defaults preserve selection-only hosts. }
+    property DesignerInput: TNyxDesignerInput read FDesignerInput write SetDesignerInput;
+    property OnDesignerGesture: TNyxDesignerGesture read FOnDesignerGesture write FOnDesignerGesture;
     { Managed multiple registrations are application/view scoped. Clear cancels
       queued invocations; renderer destruction closes every registration. }
     property Events: INyxEvents read FEvents;
@@ -1272,6 +1281,8 @@ begin
     LCandidate.FLiveBindings.OnSync := @LCandidate.Sync;
     LCandidate.FHost := Element('div', '');
     LCandidate.FDesignMode := ADesignMode;
+    LCandidate.FDesignerInput := FDesignerInput;
+    LCandidate.FOnDesignerGesture := FOnDesignerGesture;
     LStyle := Element('style', '');
     LStyle.textContent := LCandidate.FTheme.CSS('.nyx-root[data-nyx-theme="' + FThemeScope + '"]');
     LCandidate.FHost.appendChild(LStyle);
@@ -2463,6 +2474,16 @@ begin
   AEvent.stopPropagation;
 end;
 
+procedure TNyxBrowserRenderer.SetDesignerInput(const AValue: TNyxDesignerInput);
+begin
+
+  if FRoot <> nil then
+  begin
+    raise ENyxModel.Create('Configure designer input before mounting its view');
+  end;
+  FDesignerInput := AValue;
+end;
+
 procedure TNyxBrowserRenderer.GestureFailed(const AOriginID, AReason: TNyxText);
 var
   LSink: TNyxGestureFailure;
@@ -2536,7 +2557,8 @@ begin
   LSource := APhase in [ndpStart, ndpDrag, ndpEnd];
 
   if (LEvents.ViewRevision <> LRevision) or FRenderer.FUpdating or
-    FRenderer.FDesignMode or AEvent.defaultPrevented then
+    (FRenderer.FDesignMode and (LSource or not FRenderer.FDesignerInput.DropEnabled)) or
+    AEvent.defaultPrevented then
   begin
     Exit;
   end;
@@ -2544,7 +2566,7 @@ begin
 
   if (LTarget.closest('[data-runtime-id]') <> FElement) or
     (LSource and (FNode.Prop('drag-source') <> 'true')) or
-    (not LSource and (FNode.Prop('drop-target') <> 'true')) then
+    (not LSource and not FRenderer.FDesignMode and (FNode.Prop('drop-target') <> 'true')) then
   begin
     Exit;
   end;
@@ -2561,7 +2583,7 @@ begin
   end;
   AEvent.stopPropagation;
 
-  if not LPolicy.CanIssueCommand then
+  if not FRenderer.FDesignMode and not LPolicy.CanIssueCommand then
   begin
 
     if APhase in [ndpStart, ndpDrop] then
@@ -2584,7 +2606,16 @@ begin
       Exit(False);
     end;
   end;
-  LDispatch := FRenderer.FLiveBindings.Signal(FNode, ATrigger);
+
+  if FRenderer.FDesignMode then
+  begin
+    LDispatch := Default(TNyxDispatch);
+    LDispatch.Info := NyxDesignerDragEvent(FNode, ATrigger);
+  end
+  else
+  begin
+    LDispatch := FRenderer.FLiveBindings.Signal(FNode, ATrigger);
+  end;
   LCapabilities := [];
 
   if AEvent.cancelable then
@@ -2594,7 +2625,8 @@ begin
     begin
       Include(LCapabilities, ngcOfferDrag);
     end
-    else if (APhase in [ndpEnter, ndpOver, ndpDrop]) and LPolicy.CanEditValue then
+    else if (APhase in [ndpEnter, ndpOver, ndpDrop]) and
+      (FRenderer.FDesignMode or LPolicy.CanEditValue) then
     begin
       Include(LCapabilities, ngcAcceptDrop);
     end;
@@ -2629,8 +2661,23 @@ begin
     Include(LDispatch.Info.Pointer.Modifiers, nmMeta);
   end;
   LDecision := NewNyxGestureDecision(LCapabilities, LAllowed);
-  DispatchNyxGesture(LEvents, FNode, LDispatch, LDecision);
-  LResponse := LDecision.Seal;
+  try
+
+    if FRenderer.FDesignMode then
+    begin
+
+      if Assigned(FRenderer.FOnDesignerGesture) then
+      begin
+        FRenderer.FOnDesignerGesture(NyxDesignerTarget(FNode), LDispatch.Info, LDecision);
+      end;
+    end
+    else
+    begin
+      DispatchNyxGesture(LEvents, FNode, LDispatch, LDecision);
+    end;
+  finally
+    LResponse := LDecision.Seal;
+  end;
 
   if LEvents.ViewRevision <> LRevision then
   begin

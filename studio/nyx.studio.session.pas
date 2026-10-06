@@ -481,6 +481,12 @@ type
       load contexts refuse before enqueue, even when identities match. }
     function CapturePlacement(const AChange: TNyxPlacementChange;
       const AMountContext: TNyxStudioCommandContext): TNyxStudioDesignEdit;
+    { Reserve a readable unused catalog identity, then capture a value-only new
+      placement. Reservation advances only the private name counter; accepted
+      content/history change only through the ordinary isolated processor. }
+    function CaptureNewPlacement(const AKind: TNyxKindRef;
+      const ATarget: TNyxControlRef; APlacement: TNyxPlacement;
+      const AMountContext: TNyxStudioCommandContext): TNyxStudioDesignEdit;
     { Apply an immutable reviewed root group through one paired Undo command.
       Stale reviews, dangling reusable references and pending drafts retain all
       owners/history. Imports/helpers and document state remain deliberate. }
@@ -496,6 +502,9 @@ type
       Unsupported/invalid edits retain the buffer, document and redo history. }
     function DraftSource: TNyxText;
     procedure SetSourceDraft(const ASource: TNyxText);
+    { Cached editor state for physical input guards. Reading this flag neither
+      renders/encodes the document nor rebases a pending draft. }
+    property SourceDraftPending: Boolean read FSourceDraftPending;
     { Recovery retains the draft's original accepted source, so reloading cannot
       turn a stale draft into an edit of a newer visual design. }
     procedure RestoreSourceDraft(const ASource, ABase: TNyxText);
@@ -2198,6 +2207,20 @@ begin
   Result.View := ActiveViewID;
   Result.Placement := AChange;
   Result.FCanvasContext := AMountContext;
+end;
+
+function TNyxStudioSession.CaptureNewPlacement(const AKind: TNyxKindRef;
+  const ATarget: TNyxControlRef; APlacement: TNyxPlacement;
+  const AMountContext: TNyxStudioCommandContext): TNyxStudioDesignEdit;
+begin
+
+  if not MatchesCommandContext(AMountContext) or
+    (FCatalog.IndexOf(AKind.Name) < 0) or FSourceDraftPending then
+  begin
+    raise ENyxModel.Create('New placement requires the current editor, catalog kind and resolved source');
+  end;
+  Result := CapturePlacement(NyxPlaceNewControl(AKind, NyxControl(NewID(AKind.Name)),
+    ATarget, APlacement), AMountContext);
 end;
 
 procedure TNyxStudioSession.RemoveRoots(const AReview: INyxRootRemoval);

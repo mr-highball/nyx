@@ -81,7 +81,7 @@ From the repository, run:
 
 Individual build targets are `core`, `generated`, `collections`, `collection-views`,
 `collection-authoring`, `collection-inspectors`, `collection-bindings`,
-`reusables`, `placement`,
+`reusables`, `placement`, `designer-drag`,
 `source-workspace`, `source-editor`, `pascal-imports`, `pascal-routines`, `pascal-declarations`,
 `agents`, `state-bindings`, `split`, `interactions`,
 `named-events`, `viewport`, `catalog`, `browser`, `studio`, `lcl`, `http`,
@@ -93,6 +93,15 @@ compares their exact exported files, runs actual native Studio input and unchang
 compiled controls, checks transaction discovery, then stages browser consumers,
 Studio and its module worker. Its isolated artifacts do not start a listener or
 refresh MCP configuration. Browser compilation retains its host execution gate.
+`designer-drag` executes the shared drag lease/identity guards on both native
+compilers, real Win32 Studio source/target callbacks and the unchanged generated
+native companion. It stages browser contract, compiled-control and Studio DOM/
+worker reviews, plus Studio and its module worker, without launching a listener.
+Serve the English `designer-drag-guards.html`, `designer-drag-compiled.html` and
+`designer-drag-studio.html` hosts only through an admitted HTTP host and require
+`data-result="passed"`. The Studio drag review requires a desktop-width viewport;
+compact hosts retain the keyboard/touch placement alternative. DOM synthesis is
+separate from physical browser drag-manager, mobile and accessibility evidence.
 `generated` emits a fixture through native Pascal, compiles/executes its native
 reconstruction and compiles its browser reconstruction. Serve `generated.html`
 to execute the latter. `all` includes these checks. Ordinary browser builds do

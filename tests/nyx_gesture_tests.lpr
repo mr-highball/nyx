@@ -75,6 +75,8 @@ type
 
 const
   CText: TNyxText = 'A🌙é漢 / owned transfer';
+  CTransferName: TNyxText = '🌙';
+  CTransferFileName: TNyxText = 'drawing🌙.pas';
   CGestureTriggers: array[0..9] of TNyxTrigger = (ntPointerCancel,
     ntPointerCapture, ntPointerCaptureLost, ntDragStart, ntDrag, ntDragEnter,
     ntDragOver, ntDragExit, ntDrop, ntDragEnd);
@@ -225,9 +227,9 @@ begin
     (LCopy.TextFor(NyxTextTransferFormat) = ''), 'replacing one format preserves a retained baseline');
   Check(LCopy.HasFormat(NyxTextTransferFormat) and not LCopy.HasFormat(NyxURITransferFormat),
     'present empty text differs from an absent format');
-  Check(LBase.Value.Field('name').AsText = '🌙', 'typed structured values preserve Unicode');
+  Check(LBase.Value.Field('name').AsText = CTransferName, 'typed structured values preserve Unicode');
   LFile := Default(TNyxTransferFileInfo);
-  LFile.Name := 'drawing🌙.pas';
+  LFile.Name := CTransferFileName;
   LFile.MediaType := 'text/plain';
   LFile.Size := 9007199254740991.0;
   LFile.Modified := 1790993512000;
@@ -236,7 +238,7 @@ begin
   LCopy := LBase.WithFiles(LFiles);
   LFiles[0].Name := 'changed.pas';
   Check(LCopy.HasFiles and (LCopy.FileCount = 1) and
-    (LCopy.Files[0].Name = 'drawing🌙.pas') and not LBase.HasFiles,
+    (LCopy.Files[0].Name = CTransferFileName) and not LBase.HasFiles,
     'file metadata owns independent exact values without file handles');
   LProtected := LCopy.ProtectedCopy;
   Check(not LProtected.Readable and LProtected.HasFiles and
