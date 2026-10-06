@@ -7,7 +7,21 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-The current [alignment packet](#alignment-guides--2026-10-06) updates the served
+The current [named presentation release](#named-responsive-presentations--2026-10-06)
+serves nine exact qualified artifacts over all-interface HTTP, with MCP loopback
+and twenty authenticated tools. The primary and two concurrent pairs/selection/
+view states remain exact. Restart resets prior histories; concurrent projects
+receive new handles and one import Undo step. The main server is PID 21036,
+creation `2026-10-06T01:51:03.752648-04:00`, using the firewall-covered installed
+executable and `build/presentations/release/web`. Eleven auxiliary services retain
+their exact identities. `.local/presentations-refresh-20261006/` owns current
+identity, nine-artifact manifest, three paired backups, workspace mapping and
+rollback. It supersedes earlier process/overlay records; do not run their scripts.
+The English **Shared presentations** project is independent and available in
+Agents. The Pascal MCP client is connected; native handles in this chat still
+cache the previous endpoint and need a reconnect.
+
+The preceding [alignment packet](#alignment-guides--2026-10-06) updates the served
 Studio asset without restarting its LAN server. Process/listeners, byte-identical
 worker and exact primary pair/revision/selection/view/history are retained;
 loopback/LAN asset hashes match. `.local/alignment-assets-20261006/` owns the
@@ -48,8 +62,8 @@ Current independent work: [named responsive presentations](#named-responsive-pre
 qualify original authoring criterion 1 through managed fluency, exact Unicode
 wire/source/history, immutable copied ownership, retained browser/LCL inputs and
 ordinary Inspector/worker/semantic editing. The nine-artifact release is staged
-and three existing pairs/navigation states qualify against its candidate; LAN
-deployment is pending. This goal turn is progress, not full completion. Authoring
+and three existing pairs/navigation states qualify exactly after LAN deployment.
+This goal turn is progress, not full completion. Authoring
 no-closure advances 17→18 once; workflow 9, codegen 28, renderer 3 and delivery 1
 remain. End local named-rule/parser/fixture expansion. Continue original
 container/manual/structural variants, full move snapping and complete ordinary
@@ -8831,7 +8845,23 @@ Evidence: `build/presentations/final-qualification.log`, `core-regression.log`,
 `review/compiled-names/`, `review/controls-final/`, `review/studio-desktop-final/`,
 `review/studio-compact-final/`, `semantic/*receipt.json`, `mcp-source/`, and staged
 `release/`. Private backup/preservation proof is
-`.local/presentations-refresh-20261006/`. Full LAN deployment is pending.
+`.local/presentations-refresh-20261006/`. Full LAN deployment verifies installed
+server bytes and sixteen loopback/LAN web-asset hashes against the nine-artifact
+manifest from source commit `176ad0cc5dd66dca2e1cee482bbc400cb422c042`.
+The firewall-covered executable path is preserved; HTTP binds all interfaces,
+MCP loopback. Twenty tools authenticate. Three exact pairs/selection/view states
+are restored; prior histories reset, and concurrent projects have new handles
+and an import Undo step. Eleven auxiliary services keep their exact identities.
+The deployed independent **Shared presentations** project is semantically
+composed; one grouped Undo empties it and one Redo restores the exact 104-line
+source. Both deployed application jobs succeed with the same source fingerprint,
+no owned warnings and current source/output. The demo ends at revision 5,
+selection `workspace`, view `home`, with no pending draft. A bounded 390×700
+semantic preview descriptor is available; physical behavior was qualified by the
+maintained ordinary input harnesses. The stable primary remains at revision 2.
+
+The implementation checkpoint is pushed and exact remote HEAD verified. Final
+handoff/checkpoint evidence is `build/presentations/review/remote-checkpoint.json`.
 
 Discovered transport gap belongs to the existing
 [workflow owner](TODO/NS-4_agent-workflows_01.md): the Pascal CLI receives its

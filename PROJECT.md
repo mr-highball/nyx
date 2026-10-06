@@ -73,7 +73,9 @@ Unicode names and precedence. Crafted generation, source admission, the ordinary
 Inspector/worker/history pipeline and bounded MCP queries/mutations agree.
 Checks pass 55 per native compiler/browser, two compiled Unicode checks per
 target, 36 actual Win32 controls, 37 browser controls, 16 native Studio and 39
-per browser Studio size. The full release is staged; LAN deployment is pending.
+per browser Studio size. The full LAN release serves nine verified artifacts and
+twenty authenticated MCP tools, preserving three paired designs/navigation states.
+Restart resets previous history and assigns concurrent projects new handles.
 Container predicates, manual activation, alternate view structures, full
 editor/parity/accessibility/performance and delivery remain open. See
 [named presentation evidence](WORK.md#named-responsive-presentations--2026-10-06).

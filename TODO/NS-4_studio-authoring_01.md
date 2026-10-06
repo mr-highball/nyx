@@ -55,8 +55,9 @@ Evidence: 55 shared checks per native compiler/browser; two actual compiled
 Unicode checks per target; 36 Win32 / 37 browser controls; 16 native Studio and
 39 per desktop/exact-390 Studio journey. Exact 104-line / 2438-byte semantic
 source matches immutable compiler jobs. Three existing pairs/navigation states
-qualify against the candidate; the nine-artifact full release is staged, with
-LAN deployment pending. See
+remain exact after the nine-artifact LAN refresh. Twenty tools authenticate;
+deployed grouped Undo/Redo and both application builds pass. Restart resets
+previous histories and assigns concurrent projects new handles. See
 [evidence](../WORK.md#named-responsive-presentations--2026-10-06).
 
 No original criterion closes. Authoring no-closure advances **17→18** once;

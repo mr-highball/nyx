@@ -32,8 +32,10 @@ names and precedence. Ordinary Inspector/worker/history and twenty-tool semantic
 MCP consume the same contract. Checks pass 55 per compiler/browser, two compiled
 Unicode checks per target, 36 native / 37 browser controls, 16 native Studio and
 39 per browser Studio size. Immutable application jobs compile both outputs; three
-existing pair/navigation states qualify against the staged release. LAN deployment
-is pending. No original criterion closes: authoring no-closure advances 17→18
+existing pair/navigation states remain exact in the deployed nine-artifact LAN
+release. Twenty tools authenticate; deployed application builds and grouped paired
+Undo/Redo pass. Restart resets previous histories and assigns concurrent projects
+new handles. No original criterion closes: authoring no-closure advances 17→18
 once; workflow 9, codegen 28, renderer 3 and delivery 1 remain. End local named-rule/
 parser/fixture expansion; continue original container/manual/structural variants,
 move snapping and full editor/parity/accessibility/performance/delivery. See
