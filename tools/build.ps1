@@ -99,6 +99,9 @@ param(
   [switch]$VerifyNativeStudioCompiler,
   [string]$NativeStudioCompilerProfile,
   [string]$NativeStudioArtifactDirectory,
+  # Optional already-built Pascal compiler fixture exercises ordinary queued /
+  # running Cancel controls while preserving an actual accepted native preview.
+  [string]$NativeStudioCompilerFixture,
   # Optional Win32 transport qualification through an isolated raw Pascal TCP
   # peer. No Studio/MCP listener, project, enrollment or profile is replaced.
   [switch]$VerifyTransportDeadlines,
@@ -294,13 +297,15 @@ try {
     Invoke-NyxCompiler $nyxFpc ($nyxLifecycleFlags + @('studio/nyx_studio_server.lpr'))
     $nyxLifecycleBrowser = Join-Path $nyxLifecycle 'browser'
     New-Item -ItemType Directory -Force $nyxLifecycleBrowser | Out-Null
-    foreach ($nyxProgram in @('tests/nyx_agent_build_tests.lpr', 'studio/nyx_studio.lpr',
+    foreach ($nyxProgram in @('tests/nyx_agent_build_tests.lpr',
+      'tests/nyx_studio_build_controls_tests.lpr', 'studio/nyx_studio.lpr',
       'studio/nyx_studio_preview.lpr')) {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
         '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxLifecycleBrowser", $nyxProgram)
     }
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxLifecycleBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/agent-builds.html') -Destination $nyxLifecycleBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/studio-build-controls.html') -Destination $nyxLifecycleBrowser
     Write-Host 'Compiler lifecycle qualified; browser artifacts staged for an admitted host.'
     exit 0
   }
@@ -636,6 +641,15 @@ try {
         -not (Test-Path -LiteralPath $nyxCompilerArtifacts -PathType Container)) {
         throw 'The explicit compiler profile and artifact root must already exist'
       }
+      $nyxCompilerFixture = ''
+
+      if ($NativeStudioCompilerFixture) {
+        $nyxCompilerFixture = [IO.Path]::GetFullPath($NativeStudioCompilerFixture)
+
+        if (-not (Test-Path -LiteralPath $nyxCompilerFixture -PathType Leaf)) {
+          throw 'The optional Pascal compiler fixture must already exist'
+        }
+      }
       Invoke-NyxCompiler $nyxLclFpc ($nyxStudioArguments + @("-Fu$nyxCompilerSource", 'tests/nyx_native_build_tests.lpr'))
       $nyxCompilerRepository = Join-Path $nyxRoot ('build/native-studio/compiler-current/protocol-' + [Guid]::NewGuid().ToString())
       New-Item -ItemType Directory -Path $nyxCompilerRepository | Out-Null
@@ -646,8 +660,13 @@ try {
         New-Item -ItemType Junction -Path (Join-Path $nyxCompilerRepository $nyxLibraryDirectory) `
           -Target (Join-Path $nyxRoot $nyxLibraryDirectory) | Out-Null
       }
-      & (Join-Path $nyxStudioNative 'nyx_native_build_tests.exe') $nyxCompilerRepository `
-        $nyxCompilerProfile $nyxCompilerSource $nyxCompilerArtifacts $HttpURL
+      $nyxCompilerRunArguments = @($nyxCompilerRepository, $nyxCompilerProfile,
+        $nyxCompilerSource, $nyxCompilerArtifacts, $HttpURL)
+
+      if ($nyxCompilerFixture) {
+        $nyxCompilerRunArguments += @('build-controls', $nyxCompilerFixture)
+      }
+      & (Join-Path $nyxStudioNative 'nyx_native_build_tests.exe') @nyxCompilerRunArguments
 
       if ($LASTEXITCODE -ne 0) { throw 'Actual native compiler/preview journey failed; retain its owned artifacts and paired snapshots' }
     }

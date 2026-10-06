@@ -64,6 +64,7 @@ uses
   nyx.studio.agents,
   nyx.studio.view,
   nyx.studio.builds,
+  nyx.studio.editorbuild, nyx.studio.exchange, nyx.studio.preview,
   nyx.studio.outputs,
   nyx.studio.projects, nyx.studio.rootedits, nyx.studio.rootview,
   nyx.studio.workspaces, nyx.studio.presentation, nyx.modal, nyx.modal.browser,
@@ -73,6 +74,7 @@ uses
 type
   { Transport operation is closed and independent of application build targets. }
   TNyxProjectOperation = (npoOpen, npoSave);
+  TNyxBrowserBuildStage = (bbsIdle, bbsOutputs, bbsRequest, bbsPolling, bbsTerminal);
   { Browser shell for the portable Studio session. The shell itself is a Nyx
     document: palette, hierarchy, properties and actions are built with the same
     fluent controls it designs. The canvas and editor are reusable Nyx authoring
@@ -128,7 +130,16 @@ type
     FCompiledURL: TNyxText;
     FPendingDesign: TNyxText;
     FPendingSource: TNyxText;
-    FRequest: TJSXMLHttpRequest;
+    FBuildStage: TNyxBrowserBuildStage;
+    FBuildTimer: NativeInt;
+    FBuildStatusPending: Boolean;
+    FBuildReplySequence: Integer;
+    FBuildJob: TNyxBuildJobRef;
+    FBuildRoot: TNyxBuildRootRef;
+    FBuildTarget: TNyxBuildTarget;
+    FBuildScope: TNyxBuildScope;
+    FBuildOutput: TNyxText;
+    FBuildsVisible: Boolean;
     FPalette: TNyxStudioPaletteState;
     FRecoveryEnabled: Boolean;
     FOutputVisible: Boolean;
@@ -231,7 +242,9 @@ type
     procedure HierarchyEvent(const AEvent: TNyxEventInfo);
     procedure HandleCanvas(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure Compile(const AScope, ATarget: TNyxText);
-    procedure CompilerReady;
+    procedure CompilerReply;
+    procedure PollCompiler;
+    procedure ScheduleCompiler;
     procedure Configuration(ASave: Boolean);
     procedure ConfigurationReady;
     procedure Download(const AName, AText: TNyxText);
@@ -251,6 +264,10 @@ type
     procedure AcceptImport(const APacket: TNyxText; AResolution: TNyxProjectResolution);
     function KeyDown(AEvent: TJSKeyboardEvent): Boolean;
     function ViewportResize(AEvent: TJSEvent): Boolean;
+  protected
+    { Embedded hosts may provide another owned asynchronous exchange. Both
+      controllers still consume the same private semantic protocol. }
+    function CreateEditorExchange: TNyxStudioEditorExchange; virtual;
   public
     constructor Create;
     destructor Destroy; override;
@@ -270,7 +287,7 @@ uses
   nyx.json,
   nyx.source,
   nyx.editing,
-  nyx.editing.browser;
+  nyx.editing.browser, nyx.studio.exchange.browser;
 
 type
   { The installed Web declarations type the third open argument as an object.
@@ -429,7 +446,10 @@ begin
   end;
   FSession := TNyxStudioSession.Create;
   FSourceCommands := TNyxSourceCommands.Create(FSession, @SourceCommandChanged);
-  FAgents := TNyxStudioAgentBridge.Create(FSession, @AgentRefresh, FWorkspace);
+  FBuildTimer := -1;
+  FBuildStage := bbsIdle;
+  FAgents := TNyxStudioAgentBridge.Create(FSession, @AgentRefresh, FWorkspace,
+    CreateEditorExchange);
   FAgents.OnProjectCaptured := @ProjectCaptured;
   FOutputs := TNyxOutputConfiguration.Create;
   FShellRenderer := TNyxBrowserRenderer.Create;
@@ -539,10 +559,9 @@ begin
     FImportInput.remove;
   end;
 
-  if FRequest <> nil then
+  if FBuildTimer >= 0 then
   begin
-    FRequest.onreadystatechange := nil;
-    FRequest.abort;
+    window.clearTimeout(FBuildTimer);
   end;
 
   if FConfigurationRequest <> nil then
@@ -613,6 +632,8 @@ begin
   LState.NewStateInput := FNewStateInput;
   LState.NewStateValue := FNewStateValue;
   LState.AgentsVisible := FAgentsVisible;
+  LState.BuildsVisible := FBuildsVisible;
+  LState.BuildControlReady := FAgents.CanCancelBuild;
   LState.Agents := FAgents.State;
   FViewState := LState;
   Result := BuildNyxStudioView(FSession, LState, FCompilerReport);
@@ -1349,6 +1370,7 @@ procedure TNyxStudio.AgentRefresh(AContentChanged: Boolean);
 var
   LState: TNyxStudioAgentView;
   LActivity: TNyxDataValue;
+  LCompiledURL: TNyxText;
 begin
 
   if Length(FPressedPointers) > 0 then
@@ -1404,7 +1426,12 @@ begin
     FAgentsVisible := True;
     FStatus := LState.Status;
   end;
-  Refresh(True, True);
+  LCompiledURL := FCompiledURL;
+  CompilerReply;
+  ScheduleCompiler;
+  { Publishing a newly admitted artifact deliberately replaces the design
+    canvas. Mere job progress/cancellation retains the existing live preview. }
+  Refresh(LCompiledURL = FCompiledURL, True);
   RestorePresentationControls;
 end;
 
@@ -1596,6 +1623,13 @@ begin
   CaptureNewStateDraft;
   LAcceptedDesign := '';
   try
+
+    if FAgents.RouteBuildCancel(ANode, AEvent.Trigger) then
+    begin
+      FStatus := 'Cancellation requested / waiting for compiler retirement';
+      Refresh(True, True);
+      Exit;
+    end;
 
     if (ANode.ID = NyxStudioDropPositionID) and (AEvent.Trigger = ntChange) then
     begin
@@ -1977,6 +2011,11 @@ begin
               FAgentsVisible := not FAgentsVisible;
               LRetainCanvas := True;
             end;
+          'action-builds':
+            begin
+              FBuildsVisible := not FBuildsVisible;
+              LRetainCanvas := True;
+            end;
           'action-agent-connect': ConnectAgents;
           'action-agent-disabled': FAgents.Configure(apDisabled);
           'action-agent-readOnly': FAgents.Configure(apReadOnly);
@@ -2208,6 +2247,8 @@ begin
 end;
 
 procedure TNyxStudio.Compile(const AScope, ATarget: TNyxText);
+var
+  LIndex: Integer;
 begin
   FPanel := nspDesign;
   { Selecting an output is deferred until a build. Designing, source generation
@@ -2233,7 +2274,7 @@ begin
     Exit;
   end;
 
-  if FRequest <> nil then
+  if FBuildStage in [bbsOutputs, bbsRequest, bbsPolling] then
   begin
     FStatus := 'A build is already running';
     Refresh;
@@ -2257,103 +2298,228 @@ begin
     Refresh(True, True);
     Exit;
   end;
+
+  if not FAgents.Enabled or not FAgents.State.CanBuild or
+    not FAgents.SourceSynchronized then
+  begin
+    FStatus := 'Connect and synchronize this project before building';
+    Refresh(True, True);
+    Exit;
+  end;
   FPendingDesign := FSession.Save;
   FPendingSource := FSession.Source;
-  FCompilerReport := nil;
-  FStatus := 'Building ' + AScope + ' / ' + ATarget;
-  Refresh;
-  FRequest := TJSXMLHttpRequest.new;
-  FRequest.open('POST', 'api/build?source=companion&scope=' + AScope + '&target=' + ATarget +
-    '&page=' + encodeURIComponent(FSession.ActiveViewID), True);
-  FRequest.setRequestHeader('Content-Type', 'application/json');
-  FRequest.timeout := 65000;
-  FRequest.onreadystatechange := CompilerReady;
-  FRequest.send(EncodeNyxBuildRequest(FSession.Document, FPendingSource));
+  FBuildOutput := FOutputs.Encode;
+  FBuildTarget := ParseNyxBuildTarget(ATarget);
+  FBuildScope := ParseNyxBuildScope(AScope);
+  FBuildRoot := Default(TNyxBuildRootRef);
+
+  if FBuildScope <> bsApplication then
+  begin
+    FBuildRoot := NyxBuildRoot(FSession.ActiveViewID);
+    for LIndex := 0 to FSession.Document.ComponentCount - 1 do
+    begin
+
+      if FSession.Document.Components[LIndex].ID = FBuildRoot.ID then
+      begin
+        FBuildScope := bsReusable;
+      end;
+    end;
+  end;
+  FBuildReplySequence := FAgents.State.BuildReplySequence;
+  FBuildStage := bbsOutputs;
+  FStatus := 'Checking compiler output';
+  FAgents.CompilerOutputs;
+  Refresh(True, True);
 end;
 
-procedure TNyxStudio.CompilerReady;
-var
-  LData: TJSObject;
-  LText: TNyxText;
-  LStatus: Integer;
+procedure TNyxStudio.ScheduleCompiler;
 begin
 
-  if (FRequest = nil) or (FRequest.readyState <> TJSXMLHttpRequest.DONE) then
+  if (FBuildStage = bbsPolling) and not FBuildStatusPending and
+    (FBuildTimer < 0) and FAgents.Enabled and FAgents.State.Connected and
+    not FAgents.State.Conflict then
+  begin
+    FBuildTimer := window.setTimeout(@PollCompiler, 300);
+  end;
+end;
+
+procedure TNyxStudio.PollCompiler;
+begin
+  FBuildTimer := -1;
+
+  if (FBuildStage <> bbsPolling) or FBuildStatusPending or not FAgents.Enabled or
+    not FAgents.State.Connected or FAgents.State.Conflict then
   begin
     Exit;
   end;
-  LText := FRequest.responseText;
-  LStatus := FRequest.Status;
-  FRequest := nil;
-  try
-    LData := TJSJSON.parseObject(LText);
-    FCompilerReport := nil;
+  FBuildStatusPending := True;
+  FAgents.BuildStatus(FBuildJob);
+end;
 
-    if isObject(LData['diagnostics']) then
+procedure TNyxStudio.CompilerReply;
+var
+  LState: TNyxStudioAgentView;
+  LReply: TNyxDataValue;
+  LRequest: INyxCompilerRequest;
+  LIdentity: TGUID;
+  LIndex: Integer;
+  LReady: Boolean;
+  LJobState: TNyxBuildJobState;
+  LArtifact: TNyxCompiledArtifact;
+begin
+  LState := FAgents.State;
+
+  if LState.BuildReplySequence = FBuildReplySequence then
+  begin
+    Exit;
+  end;
+  FBuildReplySequence := LState.BuildReplySequence;
+  LReply := LState.BuildReply;
+
+  if LState.BuildReplyKind = coCancel then
+  begin
+
+    if LReply.Field('state').AsText = 'rejected' then
     begin
-      FCompilerReport := DecodeNyxCompilerReport(TJSJSON.stringify(LData['diagnostics']));
-
-      if FCompilerReport.Source <> FPendingSource then
-      begin
-        FCompilerReport := nil;
-        raise ENyxModel.Create('Compiler diagnostics do not belong to the submitted Pascal');
-      end;
-    end;
-
-    if (LStatus <> 200) or not Boolean(LData['ok']) then
-    begin
-      FStatus := 'Build failed / see diagnostics';
-      FLog := '';
-
-      if isString(LData['log']) then
-      begin
-        FLog := TNyxText(LData['log']);
-      end;
-
-      if isString(LData['error']) then
-      begin
-        FLog := FLog + TNyxText(LData['error']);
-      end;
-      FOutputVisible := True;
-
-      if (FCompilerReport <> nil) and (FCompilerReport.Count > 0) then
-      begin
-        FCodeVisible := True;
-        FPanel := nspDesign;
-        FOutputVisible := False;
-      end;
-    end
-    else if (FPendingDesign <> FSession.Save) or
-      (FPendingSource <> FSession.Source) or
-      (FSession.DraftSource <> FSession.Source) then
-    begin
-      FStatus := 'Build completed for an earlier design; current edits retained';
+      FStatus := LReply.Field('error').AsText;
     end
     else
     begin
-      FStatus := 'Build complete / ' + TNyxText(LData['scope']);
-      FLog := TNyxText(LData['log']);
+      FStatus := 'Cancellation requested / accepted source and preview retained';
+    end;
+    Exit;
+  end;
 
-      if TNyxText(LData['target']) = 'browser' then
-      begin
-        FCompiledURL := TNyxText(LData['artifact']);
-      end
-      else
-      begin
-        Download('native-build-link.txt', TNyxText(LData['artifact']));
-        FStatus := 'Native build complete / ' + TNyxText(LData['artifact']);
-      end;
+  if LState.BuildReplyKind = coJobs then
+  begin
+    Exit;
+  end;
+  try
+
+    if NyxAgentHas(LReply, 'state') and (LReply.Field('state').AsText = 'rejected') then
+    begin
+      raise ENyxModel.Create(LReply.Field('error').AsText);
+    end;
+    case FBuildStage of
+      bbsOutputs:
+        begin
+
+          if (LState.BuildReplyKind <> coOutputs) or not FAgents.SourceSynchronized or
+            (FPendingDesign <> FSession.Save) or (FPendingSource <> FSession.Source) or
+            (FBuildOutput <> FOutputs.Encode) then
+          begin
+            raise ENyxModel.Create('Project or output changed during compiler checks; build again when ready');
+          end;
+          LReady := False;
+          for LIndex := 0 to LReply.Field('outputs').Count - 1 do
+          begin
+
+            if LReply.Field('outputs').Item(LIndex).Field('target').AsText =
+              NyxBuildTargetName(FBuildTarget) then
+            begin
+              LReady := LReply.Field('outputs').Item(LIndex).Field('ready').AsBoolean;
+
+              if not LReady then
+              begin
+                raise ENyxModel.Create(LReply.Field('outputs').Item(LIndex).Field('issue').AsText);
+              end;
+            end;
+          end;
+
+          if not LReady then
+          begin
+            raise ENyxModel.Create('Requested compiler output is unavailable');
+          end;
+          CreateGUID(LIdentity);
+          LRequest := NewNyxCompilerRequest.Target(FBuildTarget).Scope(FBuildScope)
+            .AtRevision(LState.Revision).Output(NyxBuildOutput(LReply.Field('outputID').AsText))
+            .Operation(NyxBuildOperation('studio-' + Copy(GUIDToString(LIdentity), 2, 36)));
+
+          if FBuildScope <> bsApplication then
+          begin
+            LRequest.Root(FBuildRoot);
+          end;
+          FBuildStage := bbsRequest;
+          FAgents.RequestBuild(LRequest);
+        end;
+      bbsRequest:
+        begin
+
+          if LState.BuildReplyKind <> coRequest then
+          begin
+            raise ENyxModel.Create('Unexpected compiler admission reply');
+          end;
+          FBuildJob := NyxBuildJob(LReply.Field('job').AsText);
+          FBuildStage := bbsPolling;
+          FStatus := 'Build admitted / ' + LReply.Field('state').AsText;
+        end;
+      bbsPolling:
+        begin
+          FBuildStatusPending := False;
+
+          if (LState.BuildReplyKind <> coStatus) or
+            (LReply.Field('job').AsText <> FBuildJob.ID) then
+          begin
+            raise ENyxModel.Create('Compiler reply belongs to another job; project retained');
+          end;
+          LJobState := ParseNyxBuildJobState(LReply.Field('state').AsText);
+          FStatus := 'Build / ' + NyxBuildJobStateName(LJobState);
+
+          if NyxBuildJobTerminal(LJobState) then
+          begin
+            FBuildStage := bbsTerminal;
+
+            if LJobState = bjsCancelled then
+            begin
+              FStatus := 'Build cancelled / accepted source and preview retained';
+            end
+            else if not LReply.Field('currentSource').AsBoolean or
+              not LReply.Field('currentOutput').AsBoolean or not FAgents.SourceSynchronized or
+              (FPendingDesign <> FSession.Save) or (FPendingSource <> FSession.Source) or
+              (FBuildOutput <> FOutputs.Encode) then
+            begin
+              FStatus := 'Build finished for earlier source or output; current edits retained';
+            end
+            else if LJobState = bjsSucceeded then
+            begin
+              LArtifact := AdmitNyxCompiledArtifact(LReply);
+
+              if LArtifact.Target = btBrowser then
+              begin
+                FCompiledURL := LReply.Field('artifact').AsText;
+              end
+              else
+              begin
+                Download('native-build-link.txt', LReply.Field('artifact').AsText);
+              end;
+              FStatus := 'Build complete / ' + NyxBuildScopeName(FBuildScope);
+            end
+            else
+            begin
+              FStatus := LReply.Field('error').AsText;
+              FCodeVisible := True;
+              FSourceTab := nstMessages;
+            end;
+          end;
+        end;
+      bbsIdle, bbsTerminal:
+        begin
+          { No pending controller operation may adopt an unrelated reply. }
+        end;
     end;
   except
-    FStatus := 'Compiler service is unavailable or returned an invalid response';
-    FLog := LText;
+    on LException: Exception do
+    begin
+      FBuildStage := bbsTerminal;
+      FBuildStatusPending := False;
+      FStatus := LException.Message;
+    end;
   end;
+end;
 
-  if FCompilerReport <> nil then
-  begin
-    FAgents.CompilerReport(FCompilerReport.Encode);
-  end;
-  Refresh;
+function TNyxStudio.CreateEditorExchange: TNyxStudioEditorExchange;
+begin
+  Result := TNyxBrowserEditorExchange.Create;
 end;
 
 procedure TNyxStudio.Configuration(ASave: Boolean);
@@ -3244,7 +3410,7 @@ begin
   end;
   FAgents.RecordLocal;
 
-  if not FAgents.CanSwitchWorkspace or (FRequest <> nil) or
+  if not FAgents.CanSwitchWorkspace or
     (FProjectRequest <> nil) or (FConfigurationRequest <> nil) or
     (FImportReader <> nil) then
   begin

@@ -32,6 +32,9 @@ uses
   nyx.studio.directories;
 
 type
+  { Borrowed pure comparison during the serialized List call. Never retained
+    by a job or worker; no callback may mutate a session or reenter admission. }
+  TNyxBuildPairCurrent = function(const APair: TNyxProjectPair): Boolean of object;
   { Native compiler jobs own immutable accepted text and a private machine
     profile. Entry methods are serialized by the MCP transport; workers touch
     only their own guarded result. No worker borrows the editor or its nodes.
@@ -63,6 +66,12 @@ type
     { Trusted editor configuration only. Public MCP output metadata never calls
       this accessor and never receives machine paths. Returns an owned copy. }
     function OperatorProfile: TNyxText;
+    { Context-filtered bounded metadata, including exact currentness and caller
+      cancellation authority. Omits private owners, source, logs and artifacts.
+      Pump joins completed workers before reporting terminal states. }
+    function List(const AArguments: TNyxDataValue; const AReview: TNyxReviewRef;
+      const AWorkspace: TNyxWorkspaceRef; const AOwner: TNyxText;
+      AOperator, ACanCancel: Boolean; ACurrent: TNyxBuildPairCurrent): TNyxDataValue;
     { Serialized host admission. Agents can cancel only their own job; trusted
       operators may cancel any job in the already resolved project. A queued
       job never spawns. Cancelling a terminal job is an explicit no-op. }
@@ -102,6 +111,12 @@ type
     function TakeCompletion(out AActor, AOutcome: TNyxText;
       out APair: TNyxProjectPair; out AReport: INyxCompilerReport;
       out AReview: TNyxReviewRef; out AWorkspace: TNyxWorkspaceRef): Boolean; overload;
+    { Completion publication must admit both its accepted pair and its captured
+      output. A stale machine profile cannot replace the last accepted report. }
+    function TakeCompletion(out AActor, AOutcome: TNyxText;
+      out APair: TNyxProjectPair; out AReport: INyxCompilerReport;
+      out AReview: TNyxReviewRef; out AWorkspace: TNyxWorkspaceRef;
+      out ACurrentOutput: Boolean): Boolean; overload;
   end;
 
 { Optimistic byte fingerprint, explicitly MD5 rather than an authentication
@@ -672,6 +687,131 @@ begin
   Result := FProfile;
 end;
 
+function TNyxBuildJobs.List(const AArguments: TNyxDataValue;
+  const AReview: TNyxReviewRef; const AWorkspace: TNyxWorkspaceRef;
+  const AOwner: TNyxText; AOperator, ACanCancel: Boolean;
+  ACurrent: TNyxBuildPairCurrent): TNyxDataValue;
+var
+  LIndex: Integer;
+  LOffset: Integer;
+  LLimit: Integer;
+  LTotal: Integer;
+  LCount: Integer;
+  LQueued: Integer;
+  LRunning: Integer;
+  LCancelling: Integer;
+  LActiveOnly: Boolean;
+  LJob: TBuildJob;
+  LView: TNyxText;
+  LCurrent: Boolean;
+  LItems: array of TNyxDataValue;
+begin
+  NyxAgentFields(AArguments, '|mode|filter|offset|limit|');
+  LActiveOnly := True;
+  LOffset := 0;
+  LLimit := 10;
+
+  if NyxAgentHas(AArguments, 'filter') then
+  begin
+
+    if (AArguments.Field('filter').AsText <> 'active') and
+      (AArguments.Field('filter').AsText <> 'all') then
+    begin
+      raise ENyxModel.Create('Compiler job filter is active or all');
+    end;
+    LActiveOnly := AArguments.Field('filter').AsText = 'active';
+  end;
+
+  if NyxAgentHas(AArguments, 'offset') then
+  begin
+    LOffset := AArguments.Field('offset').AsInteger;
+  end;
+
+  if NyxAgentHas(AArguments, 'limit') then
+  begin
+    LLimit := AArguments.Field('limit').AsInteger;
+  end;
+
+  if (LOffset < 0) or (LOffset > 16) or (LLimit < 1) or (LLimit > 16) or
+    not Assigned(ACurrent) then
+  begin
+    raise ENyxModel.Create('Compiler job window is offset 0..16, limit 1..16');
+  end;
+  Pump;
+  LTotal := 0;
+  LCount := 0;
+  LQueued := 0;
+  LRunning := 0;
+  LCancelling := 0;
+  SetLength(LItems, LLimit);
+  for LIndex := 0 to FJobs.Count - 1 do
+  begin
+    LJob := TBuildJob(FJobs[LIndex]);
+
+    if (LJob.Review.ID <> AReview.ID) or (LJob.Workspace.ID <> AWorkspace.ID) then
+    begin
+      Continue;
+    end;
+    LJob.Guard.Acquire;
+    try
+      case LJob.State of
+        bjsQueued:
+          begin
+            Inc(LQueued);
+          end;
+        bjsRunning:
+          begin
+            Inc(LRunning);
+          end;
+        bjsCancelling:
+          begin
+            Inc(LCancelling);
+          end;
+        bjsSucceeded, bjsFailed, bjsCancelled:
+          begin
+            { Retained terminal metadata contributes only to the all filter. }
+          end;
+      end;
+
+      if LActiveOnly and NyxBuildJobTerminal(LJob.State) then
+      begin
+        Continue;
+      end;
+      Inc(LTotal);
+
+      if (LTotal <= LOffset) or (LCount = LLimit) then
+      begin
+        Continue;
+      end;
+      LView := '';
+
+      if NyxAgentHas(LJob.Arguments, 'view') then
+      begin
+        LView := LJob.Arguments.Field('view').AsText;
+      end;
+      LCurrent := ACurrent(LJob.Pair);
+      LItems[LCount] := NyxObject([
+        NyxField('job', NyxData(LJob.ID)), NyxField('actor', NyxData(BoundedText(LJob.Actor, 120))),
+        NyxField('state', NyxData(NyxBuildJobStateName(LJob.State))),
+        NyxField('failure', NyxData(NyxCompilerFailureName(LJob.Failure))),
+        NyxField('revision', LJob.Arguments.Field('expectedRevision')),
+        NyxField('target', LJob.Arguments.Field('target')),
+        NyxField('scope', LJob.Arguments.Field('scope')), NyxField('view', NyxData(LView)),
+        NyxField('currentSource', NyxData(LCurrent)),
+        NyxField('currentOutput', NyxData(LJob.Profile = FProfile)),
+        NyxField('canCancel', NyxData(ACanCancel and (AOperator or (LJob.Owner = AOwner)) and
+          (LJob.State in [bjsQueued, bjsRunning])))]);
+      Inc(LCount);
+    finally
+      LJob.Guard.Release;
+    end;
+  end;
+  SetLength(LItems, LCount);
+  Result := NyxObject([NyxField('offset', NyxData(LOffset)), NyxField('total', NyxData(LTotal)),
+    NyxField('queued', NyxData(LQueued)), NyxField('running', NyxData(LRunning)),
+    NyxField('cancelling', NyxData(LCancelling)), NyxField('items', NyxArray(LItems))]);
+end;
+
 procedure TNyxBuildJobs.AdmitRequest(const AArguments: TNyxDataValue);
 var
   LScope: TNyxBuildScope;
@@ -979,6 +1119,16 @@ end;
 function TNyxBuildJobs.TakeCompletion(out AActor, AOutcome: TNyxText;
   out APair: TNyxProjectPair; out AReport: INyxCompilerReport;
   out AReview: TNyxReviewRef; out AWorkspace: TNyxWorkspaceRef): Boolean;
+var
+  LCurrentOutput: Boolean;
+begin
+  Result := TakeCompletion(AActor, AOutcome, APair, AReport, AReview, AWorkspace, LCurrentOutput);
+end;
+
+function TNyxBuildJobs.TakeCompletion(out AActor, AOutcome: TNyxText;
+  out APair: TNyxProjectPair; out AReport: INyxCompilerReport;
+  out AReview: TNyxReviewRef; out AWorkspace: TNyxWorkspaceRef;
+  out ACurrentOutput: Boolean): Boolean;
 const
   CSeparator: TNyxText = ' · ';
 var
@@ -1011,6 +1161,7 @@ begin
         AReview := LJob.Review;
         AWorkspace := LJob.Workspace;
         AReport := LJob.Report;
+        ACurrentOutput := LJob.Profile = FProfile;
         Exit(True);
       end;
     finally

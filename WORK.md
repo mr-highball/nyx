@@ -9,31 +9,81 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 ## Current return path: recipe editor and semantic release — 2026-10-06
 
-Previous goal turn: progress. The compiler lifecycle implementation/evidence and
-its handoff reached the verified remote branch. The reassessment keeps the
-original NS-5 criteria open: direct-process retirement cannot establish helper
-retirement. Complete that concrete boundary instead of adding queue/owner cases.
+Current goal turn: progress. NS-5 criteria 1/3's editor prerequisite now reaches
+the shared both-controller boundary below. Native semantic discovery and actual
+Win32 compiler/preview controls pass; actual browser controls pass with a scripted
+compiler seam. Stop build/control fixture expansion. Authenticated observing
+browser jobs and complete protected old-service history preservation remain the
+next service integration gate; availability flags cannot migrate Undo/Redo stacks.
+No listener/restart/enrollment or observing release changes occur. The phone stays
+on its earlier release. Reassess the remaining original outcomes before another
+batch; do not substitute more offline fixtures for the rollout prerequisite.
+No original criterion/task closes. Workflow no-closure remains 10; the historical
+NS-5 total remains unestablished. Other hosts, crash-atomic compiler creation and
+OS retirement refusal stay open. Failed OS reaping must retain active ownership.
 
-Current batch: NS-5 criterion 1, owned compiler-family retirement on Windows.
-Deliver an invocation-owned job before the suspended compiler runs, with no
-breakaway/fallback; include helpers in execution budgets, normal completion and
-cancellation retirement. Qualify actual child/grandchild processes, compiler-exit
-before helper-exit, cancellation, deadline/log failure and all-job shutdown, then
-real pas2js/FPC compatibility. Stop at that integrated process-family boundary.
-This is one native compiler-host change; the portable authoring contract stays
-unchanged. Other hosts, UI cancellation and observing deployment remain gates.
-Preserve all protected services/pairs; no listener/restart/enrollment or rollout.
-OS failure to reap a terminated child must retain ownership and remain active;
-never claim a terminal result or bounded OS shutdown from a timeout alone.
+## Studio build controls — 2026-10-06
 
-Current return: Windows compiler-family retirement below is qualified. Stop
-process-family fixture expansion. Next deliver bounded operator job discovery
-and visible cancellation in both Studio controllers in NS-5; the browser's
-legacy synchronous HTTP build route must join the semantic job workflow before
-claiming editor parity. Other hosts, crash-atomic compiler creation and OS
-retirement refusal remain hardening/qualification gates. Protected history and observing
-HTTP rollout remain separate gates. Workflow no-closure stays 10; no earlier
-count is reset or an unrecorded NS-5 count invented. Original criteria stay open.
+Current-source `nyx_build` has bounded `jobs` discovery: exact project/review
+filtering precedes counts/pages, active/all is closed, default ten/max sixteen,
+and responses omit source, logs, artifacts, private owners and machine profiles.
+Cancellation capability uses trusted operator/admitting connection authority and
+permission. Typed `NyxCompilerJobs` and reply-purpose enums reach both controllers.
+The ordinary shared Nyx Builds panel exposes active counts, currentness and exact
+job Cancel actions; separate host capability gating preserves older-service UX.
+Pending local capture/document/history/conflict frames refuse cancellation;
+compiler-only polling can queue it without starving a visible Cancel action.
+
+Browser Studio now delegates output/request/status/cancel to the same semantic
+bridge as native Studio. Its owned poll timer never changes admitted job/context
+identity. Cancellation replies cannot advance another build/preview stage.
+Native accepted artifact/job/pair/output ownership is independent of a newer
+pending job, so queued/running cancellation preserves Run and the running preview.
+Browser progress/cancellation retains its iframe; newly admitted artifact URLs
+deliberately replace the design canvas. Completed report publication requires
+both the exact accepted source pair and current captured output profile.
+
+Evidence: `build/build-controls/` (ignored private artifacts), current source.
+
+- Checked FPC 3.2.0 `run-discovery.log`: **144** actual compiler-family/queue/
+  native-semantic checks, including filtered primary/project/review counts,
+  connection/read-only capability, stale-source listing and earlier-output report
+  retention; **zero native leaks**. The engine is suspended, never a new listener.
+- Matched checked FPC 3.3.1/Win32 `run-native-english-5.log`: **126** ordinary
+  Studio compiler/control checks, **zero leaks**. Uses the unchanged English
+  semantic export. Actual application/view compilation, produced native memo/
+  button callbacks, queued/running visible cancellation, stale refusal, exact
+  pair/report/history retention, accepted artifact re-Run, reload retirement,
+  Stop during compilation and Unicode diagnostic navigation pass. Desktop/narrow
+  screenshots live in the owned runtime named by `native-runtime-path.txt`.
+- Actual browser `browser-desktop-final/` and `browser-narrow-fit/`: **24** checks
+  per consumer, actual CSS widths **1076/576**. Ordinary controls exercise queued/
+  running/cancelling/terminal states, exact revision/identity, cancellation refusal
+  and retained pair/report/iframe URL. Compiler responses are scripted: the
+  manifest's preview URL is a stub, not a compiled-app execution receipt. The
+  initial 390px headless capture cropped a wider CSS viewport; the maintained
+  narrow driver now uses a fitting outer window below Nyx's 640px breakpoint.
+- `compile-final-*`: backend, ordinary browser Studio and matched LCL Studio
+  compile with **zero owned warnings**. The two browser compilations retain
+  **14 upstream RTL warnings**, unsuppressed. Build orchestration parses and now
+  stages the browser journey; native compiler qualification accepts an explicit
+  existing Pascal fixture for its optional build-controls journey.
+- `preservation-final.json`: fifteen exact protected process identities, eight
+  exact accepted pairs/navigation/draft/history availability states, LAN HTTP 200,
+  no owned qualification processes left. This is not full-history migration.
+  The existing Pascal semantic client also authenticates bounded primary session
+  inspection; cached desktop native handles remain on the earlier 404 condition.
+
+Qualification corrections: the first native input run used the Unicode stress
+export where the existing English control finder required English captions;
+subsequent runs use the proper semantic export. Checked paint/poll timing exposed
+a fixture's success-after-timeout check and an overly restrictive busy guard.
+Those are corrected. The real product gap was earlier-output completion replacing
+an accepted report; native seam and actual Studio preservation now cover its fix.
+No performance, physical-phone, authenticated HTTP cancellation or observing
+deployment claim follows from these fixtures. No original criterion is accepted.
+Final remote identity/clean-tree evidence belongs to
+`build/build-controls/remote-checkpoint.json` after the checkpoint push.
 
 ## Windows compiler families — 2026-10-06
 

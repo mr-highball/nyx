@@ -3,6 +3,20 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current compiler/editor prerequisite (2026-10-06): Studio's browser and native
+controllers now share bounded job discovery, ordinary Nyx build rows and exact-job
+cancellation. Native protocol/lifecycle passes 144; actual Win32 Studio passes 126
+including real compiler/preview execution, queued/running cancellation, accepted
+report retention, re-Run and reload. Actual browser controls pass 24 per desktop/
+narrow consumer with a scripted compiler seam. Backend and both Studio targets
+compile with zero owned warnings. No protected process/project or observing
+release changes. This closes no original NS-5 criterion; its historical no-closure
+total remains unestablished and workflow stays 10. Stop control fixture expansion.
+The next service integration gate is complete old-service history preservation
+before authenticated observing deployment. Original component breadth, parity,
+accessibility, performance and delivery requirements remain intact. See
+[evidence and return path](WORK.md#studio-build-controls--2026-10-06).
+
 Current semantic workflow prerequisite (2026-10-06): primary/review dispatch now
 propagates the bounded authenticated connection owner. Same-display connections
 retain independent retries and callback/root removal tickets; private review

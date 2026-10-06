@@ -133,7 +133,7 @@ in WORK.md.
 | `nyx_history` | Undo or redo one ordinary content command |
 | `nyx_preview` | An immutable, revision-specific rendered view and optional PNG |
 | `nyx_callbacks` | Grouped callback addition, policy, ordering and reviewed removal on the inspector's paired history |
-| `nyx_build` | Output readiness, immutable accepted builds, owned cancellation and bounded job/artifact/diagnostic inspection |
+| `nyx_build` | Output readiness, bounded project job discovery, immutable accepted builds, owned cancellation and artifact/diagnostic inspection |
 | `nyx_pascal` | Bounded callback/import context, exact guarded callback edits and grouped typed import changes |
 | `nyx_roots` | Reviewed removal of exact page/reusable groups on paired Undo history |
 | `nyx_state` (staged) | Bounded scalar defaults, exact text windows and contextual bindings; grouped typed state/binding changes |
@@ -255,8 +255,8 @@ Submit an accepted page, reusable definition or application:
 
 The closed scopes are `view`, `reusable` and `application`. View/reusable
 requests require an exact page/definition root respectively. Applications omit
-`view`. Browser and `lcl` outputs use the same fixed-argument compiler as
-Studio's existing HTTP build route. Request requires Allow edits, exact revision
+`view`. Browser and `lcl` outputs use the same fixed-argument compiler service.
+Both current Studio controllers consume the semantic job workflow. Request requires Allow edits, exact revision
 and output identity, and no pending draft. It captures an independently owned
 accepted pair/profile and immediately returns an immutable queued job receipt. Compilation
 does not hold the document lock, replace source, change selection or create Undo
@@ -275,6 +275,18 @@ Locations use Unicode scalar coordinates in the exact submitted companion.
 `navigable` is false if a later edit/draft changed that pair. Successful jobs
 include served artifact paths plus byte lengths/fingerprints covering runtime,
 compiled companion and saved scoped design. Failures expose no successful artifact.
+
+Discover `{"mode":"jobs","filter":"active","offset":0,"limit":5}` before
+selecting a job. The default is active, offset zero, limit ten; `all` includes
+retained terminal handles. Offset is 0..16 and limit 1..16. Context filtering
+precedes totals and paging, so primary projects, named projects and private reviews
+never leak each other's handles or counts. Counts describe queued, running and
+cancelling jobs in that exact context. Items expose only job identity, display
+actor, revision, state/failure, target/scope/view, source/output currentness and
+`canCancel`. Source, logs, artifacts, private connection owners and machine
+profiles remain separate. Read-only callers may inspect; only admitting agents
+with Allow edits or trusted project operators receive cancellation capability.
+Portable callers use `NyxCompilerJobs` with the closed `TNyxCompilerJobFilter`.
 
 The original revision, source/design fingerprints, `outputID`, target and scope
 remain attached to the job. `currentRevision`, `currentSource` and
@@ -309,6 +321,18 @@ editing alone does not automatically cancel a build. Portable callers use
 `NyxCompilerCancel` with distinct job/operation references; the editor bridge
 captures its current revision in `CancelBuild`.
 
+Current ordinary Studio has a shared Nyx Builds panel with bounded active rows,
+counts, earlier-source/output labels and exact-job Cancel actions. The host's
+separate `buildJobControl` capability gates this UI against older services.
+Cancellation can queue behind compiler-only polling, but pending local capture,
+document/history operations, conflicts or an unacknowledged editor frame refuse.
+Cancellation acknowledgments never advance another request/status/preview stage.
+Starting or cancelling another job retains the accepted artifact; native Run
+rechecks that artifact's own job rather than the most recent pending job.
+Completed reports require both the exact accepted pair and captured current
+output before publication. Earlier output settings cannot replace the accepted
+report merely because the source still matches.
+
 The current-source native executor checks deadlines/cancellation within pipe
 draining and joins its exact process on every exit. On Windows each invocation
 also owns an unnamed, non-inherited OS job: the compiler starts suspended, is
@@ -322,11 +346,13 @@ the worker active instead of publishing a false terminal result. Actual family
 retirement is qualified on Win32; other hosts retain direct-process retirement.
 The two-call suspended creation/assignment window is not crash-atomic; atomic
 job-list creation and additional host qualification remain hardening work.
-Bounded operator job listing and visible cancellation in both Studio adapters
-remain open. The legacy
-browser HTTP route retains its synchronous behavior; that integration and
-authenticated observing deployment remain separate service work. See
-[current family evidence](../WORK.md#windows-compiler-families--2026-10-06).
+Current-source native semantic discovery and ordinary Win32 controls are qualified;
+the browser controller uses the same asynchronous contract and has an actual
+browser control journey with a scripted compiler seam. This does not qualify its
+authenticated HTTP cancellation/completion journey or update protected older
+services. The legacy synchronous HTTP route remains available to older clients;
+current browser Studio uses semantic jobs. See
+[current control evidence](../WORK.md#studio-build-controls--2026-10-06).
 
 An observing Studio shows start/completion/refusal activity and the first twenty
 severity-ordered diagnostics, with the displayed/total counts. Its ordinary source

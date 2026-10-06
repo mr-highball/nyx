@@ -83,6 +83,11 @@ type
     BuildTimer: TTimer;
     BuildArtifact: TNyxText;
     BuildResult: TNyxDataValue;
+    { Last successful artifact owns an independent acceptance frame. Starting
+      or cancelling another job must not erase this still-current preview. }
+    AcceptedBuildJob: TNyxBuildJobRef;
+    AcceptedBuildPair: TNyxText;
+    AcceptedBuildOutput: TNyxText;
     BuildProfileSent: TNyxText;
     BuildRequested: Boolean;
     BuildMessage: TNyxText;
@@ -318,6 +323,7 @@ type
     ncProjectRemote,
     ncProjectCopy,
     ncAgents,
+    ncBuilds,
     ncAgentConnect,
     ncAgentPause,
     ncAgentAccept,
@@ -376,6 +382,7 @@ const
     'action-project-use-remote',
     'action-project-copy',
     'action-agents',
+    'action-builds',
     'action-agent-connect',
     'action-agent-pause',
     'action-agent-accept',
@@ -476,7 +483,7 @@ begin
     { A successful download still requires another exact-context currentness
       query. This callback never authorizes execution from an older snapshot. }
     BuildStage := nbsPreviewActivate;
-    Bridge.BuildStatus(BuildJob);
+    Bridge.BuildStatus(AcceptedBuildJob);
   except
     on LException: Exception do
     begin
@@ -850,7 +857,6 @@ begin
   end;
   LProject.BuildPair := EncodeNyxProject(FSession.ProjectSnapshot);
   LProject.BuildResult := NyxNull;
-  LProject.BuildArtifact := '';
   LProject.BuildMessage := 'Checking compiler output';
   FState.Status := LProject.BuildMessage;
   ReadOutputs(LProject, True);
@@ -859,9 +865,9 @@ end;
 function TNyxNativeStudio.CompiledPreviewCurrent(AProject: TNyxNativeStudioProject): Boolean;
 begin
   Result := (AProject <> nil) and (AProject.BuildArtifact <> '') and
-    (AProject.BuildResult.Kind = ndObject) and AProject.Bridge.SourceSynchronized and
-    (EncodeNyxProject(AProject.Session.ProjectSnapshot) = AProject.BuildPair) and
-    (FOutputs.Encode = AProject.BuildOutputSnapshot);
+    (AProject.AcceptedBuildJob.ID <> '') and AProject.Bridge.SourceSynchronized and
+    (EncodeNyxProject(AProject.Session.ProjectSnapshot) = AProject.AcceptedBuildPair) and
+    (FOutputs.Encode = AProject.AcceptedBuildOutput);
 end;
 
 function TNyxNativeStudio.GetCompiledPreviewProcessID: Integer;
@@ -888,7 +894,7 @@ begin
   end;
   AProject.BuildStage := nbsPreviewInspect;
   AProject.BuildMessage := 'Preparing compiled preview';
-  AProject.Bridge.BuildStatus(AProject.BuildJob);
+  AProject.Bridge.BuildStatus(AProject.AcceptedBuildJob);
 end;
 
 procedure TNyxNativeStudio.ProjectBuildReply(AProject: TNyxNativeStudioProject);
@@ -911,6 +917,32 @@ begin
   end;
   AProject.BuildReplySequence := LView.BuildReplySequence;
   LReply := LView.BuildReply;
+
+  if LView.BuildReplyKind = coCancel then
+  begin
+    { Independent panel actions do not advance a pending compiler or preview
+      stage. Cancellation remains active until an ordinary joined status. }
+    if LReply.Field('state').AsText = 'rejected' then
+    begin
+      AProject.State.Status := LReply.Field('error').AsText;
+    end
+    else
+    begin
+      AProject.State.Status := 'Cancellation requested / accepted source and preview retained';
+    end;
+
+    if FCurrentProject = AProject then
+    begin
+      FState.Status := AProject.State.Status;
+      RequestRefresh;
+    end;
+    Exit;
+  end;
+
+  if LView.BuildReplyKind = coJobs then
+  begin
+    Exit;
+  end;
   try
 
     if NyxAgentHas(LReply, 'state') and (LReply.Field('state').AsText = 'rejected') then
@@ -1054,6 +1086,9 @@ begin
             else if LReply.Field('state').AsText = 'succeeded' then
             begin
               AProject.BuildArtifact := LReply.Field('artifact').AsText;
+              AProject.AcceptedBuildJob := AProject.BuildJob;
+              AProject.AcceptedBuildPair := AProject.BuildPair;
+              AProject.AcceptedBuildOutput := AProject.BuildOutputSnapshot;
               AProject.BuildMessage := 'Build complete / compiled artifact available';
 
               if (AProject.CompiledPreview <> nil) and AProject.CompiledPreview.Running and
@@ -1090,7 +1125,7 @@ begin
             AProject.BuildArtifact := '';
           end;
 
-          if (LReply.Field('job').AsText <> AProject.BuildJob.ID) or
+          if (LReply.Field('job').AsText <> AProject.AcceptedBuildJob.ID) or
             not CompiledPreviewCurrent(AProject) then
           begin
             raise ENyxModel.Create('Project or output changed; compiled preview activation refused');
@@ -1528,6 +1563,8 @@ begin
   FState.Compact := FHost.ClientWidth < 900;
   FState.RootRemoval := NyxNull;
   FState.Agents := GetAgentState;
+  FState.BuildControlReady := (CurrentBridge <> nil) and
+    CurrentBridge.CanCancelBuild;
   FState.PendingDesign := FSourceCommands.PendingDesign;
   FState.CompiledPreviewAvailable := CompiledPreviewCurrent(FCurrentProject);
   FState.CompiledPreviewRunning := (FCurrentProject <> nil) and
@@ -2395,6 +2432,13 @@ begin
   LChanged := False;
   try
 
+    if (CurrentBridge <> nil) and CurrentBridge.RouteBuildCancel(ANode, AEvent.Trigger) then
+    begin
+      FState.Status := 'Cancellation requested / waiting for compiler retirement';
+      RequestRefresh;
+      Exit;
+    end;
+
     if (ANode.ID = NyxStudioDropPositionID) and (AEvent.Trigger = ntChange) then
     begin
       FDesignerDrag.Cancel;
@@ -2809,6 +2853,10 @@ begin
           ncAgents:
             begin
               FState.AgentsVisible := not FState.AgentsVisible;
+            end;
+          ncBuilds:
+            begin
+              FState.BuildsVisible := not FState.BuildsVisible;
             end;
           ncAgentConnect:
             begin

@@ -127,6 +127,8 @@ type
     Compact: Boolean;
     Panel: TNyxStudioPanel;
     AgentsVisible: Boolean;
+    BuildsVisible: Boolean;
+    BuildControlReady: Boolean;
     Agents: TNyxStudioAgentView;
   end;
 
@@ -156,7 +158,7 @@ implementation
 
 uses
   nyx.binding,
-  nyx.composition, nyx.studio.rootview;
+  nyx.composition, nyx.studio.rootview, nyx.studio.buildview;
 
 function NewNyxStudioCodeEditor(const ASource: TNyxText): INyxCodeEditor;
 begin
@@ -785,6 +787,12 @@ begin
   LHeader.Add(Button('action-save', 'Save'));
   LHeader.Add(Button('action-outputs', 'Outputs'));
   LHeader.Add(Button('action-agents', 'Agents'));
+
+  if AState.Agents.CanControlBuilds then
+  begin
+    LHeader.Add(Button('action-builds', 'Builds (' +
+      IntToStr(AState.Agents.BuildJobs.Field('total').AsInteger) + ')'));
+  end;
   LHeader.Add(Button('action-build-view', 'Build view').SetProp('variant', 'primary'));
   LHeader.Add(Button('action-build-app', 'Build app'));
 
@@ -910,6 +918,11 @@ begin
   if AState.AgentsVisible then
   begin
     LCenter.Add(BuildNyxStudioAgents(AState.Agents));
+  end;
+
+  if AState.BuildsVisible and AState.Agents.CanControlBuilds then
+  begin
+    LCenter.Add(BuildNyxStudioBuildJobs(AState.Agents.BuildJobs, AState.BuildControlReady));
   end;
 
   if AState.OutputVisible then

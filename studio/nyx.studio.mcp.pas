@@ -682,7 +682,7 @@ begin
   begin
     LState := LSession.Exchange(NyxWorkspaceArguments(ARequest));
   end;
-  SetLength(LFields, LState.Count + 4);
+  SetLength(LFields, LState.Count + 6);
   for LIndex := 0 to LState.Count - 1 do
   begin
     LFields[LIndex] := NyxField(LState.Key(LIndex), LState.Field(LState.Key(LIndex)));
@@ -691,11 +691,15 @@ begin
   LFields[LState.Count + 1] := NyxField('workspaces', FWorkspaces.Observe);
   LFields[LState.Count + 2] := NyxField('workspaceClosing', NyxData(True));
   LFields[LState.Count + 3] := NyxField('editorBuilds', NyxData(True));
+  LFields[LState.Count + 4] := NyxField('buildJobControl', NyxData(True));
+  LFields[LState.Count + 5] := NyxField('buildJobs', FBuilds.List(
+    NyxObject([NyxField('mode', NyxData('jobs'))]), NyxActiveWorkspace, LWorkspace,
+    '', True, True, LSession.CurrentPair));
 
   if LBuild.Kind <> ndNull then
   begin
-    SetLength(LFields, LState.Count + 5);
-    LFields[LState.Count + 4] := NyxField('buildReply', LBuild);
+    SetLength(LFields, LState.Count + 7);
+    LFields[LState.Count + 6] := NyxField('buildReply', LBuild);
   end;
   Result := NyxWithWorkspace(NyxObject(LFields), LWorkspace);
 end;
@@ -923,6 +927,7 @@ end;
 procedure TNyxStudioMCP.PollBuilds;
 const
   CEarlierDesign: TNyxText = ' · earlier design';
+  CEarlierOutput: TNyxText = ' · earlier output settings';
 var
   LActor: TNyxText;
   LOutcome: TNyxText;
@@ -931,8 +936,10 @@ var
   LReview: TNyxReviewRef;
   LSession: TNyxAgentSession;
   LWorkspace: TNyxWorkspaceRef;
+  LCurrentOutput: Boolean;
 begin
-  while FBuilds.TakeCompletion(LActor, LOutcome, LPair, LReport, LReview, LWorkspace) do
+  while FBuilds.TakeCompletion(LActor, LOutcome, LPair, LReport, LReview,
+    LWorkspace, LCurrentOutput) do
   begin
 
     if LWorkspace.ID <> '' then
@@ -944,13 +951,18 @@ begin
       LSession := FReviews.Find(LReview);
     end;
 
-    if (LReport <> nil) and (LSession <> nil) and LSession.CurrentPair(LPair) then
+    if (LReport <> nil) and LCurrentOutput and (LSession <> nil) and LSession.CurrentPair(LPair) then
     begin
       LSession.PublishCompilerReport(LReport);
     end
     else if (LSession = nil) or not LSession.CurrentPair(LPair) then
     begin
       LOutcome := LOutcome + CEarlierDesign;
+    end;
+
+    if not LCurrentOutput then
+    begin
+      LOutcome := LOutcome + CEarlierOutput;
     end;
 
     if LReview.ID <> '' then
@@ -1059,6 +1071,20 @@ begin
   begin
     NyxAgentFields(AArguments, '|mode|');
     Exit(NyxWithWorkspace(NyxWithReview(FBuilds.Outputs, LReview), LWorkspace));
+  end;
+
+  if LMode = 'jobs' then
+  begin
+    Result := FBuilds.List(AArguments, LReview, LWorkspace, LRetryOwner,
+      AAuthority = baEditor, (AAuthority = baEditor) or (FCore.Permission = apEdit),
+      LSession.CurrentPair);
+    Result := NyxWithWorkspace(NyxWithReview(Result, LReview), LWorkspace);
+
+    if Length(Result.ToJSON) > 32 * 1024 then
+    begin
+      raise ENyxProjectConflict.Create('Build job metadata exceeds its response budget');
+    end;
+    Exit;
   end;
 
   if LMode = 'status' then
@@ -1513,9 +1539,10 @@ begin
         NyxField('capture', LBoolean)]), [NyxData('expectedRevision'), NyxData('view')]), True),
     Tool('nyx_callbacks', 'Author 1..32 ordered add/policy/move/remove changes as ONE undoable paired source edit. Add returns crafted handler/registration names and final-source TODO lines. Inspect registrations with nyx_node. Results describe each operation in order. Apply requires expectedRevision and operationId; drafts reject. Before removal, review the exact batch for warnings and reviewID, then apply unchanged at that revision/actor. Review does not edit or add history; removal retains Pascal implementations.',
       CallbackSchema, False),
-    Tool('nyx_build', 'Inspect readiness, request an immutable accepted build, page bounded diagnostics, or cancel an owned job. Request/cancel require Allow edits, exact project revision and operationId. Cancel requires the admitting connection and exact project/review; operators may cancel jobs in their project. Two running slots, eight FIFO queued jobs, sixteen retained handles. Queued jobs never spawn when cancelled; cancelling retains its slot until process and worker join. Exact retries return the original receipt without rebuilding. No document history changes, compiler paths/options or source overrides. Only succeeded status advertises artifacts; cancellation retains the accepted source, report and preview.',
+    Tool('nyx_build', 'Inspect readiness, discover bounded project/review jobs, request an immutable accepted build, page bounded diagnostics, or cancel an owned job. Jobs defaults to active, limit 10; all includes retained terminal metadata, maximum 16. Responses expose counts, job identity, state, display actor, revision, target/scope and currentness/cancellation capabilities without source, logs, private owners or compiler profiles. Request/cancel require Allow edits, exact project revision and operationId. Cancel requires the admitting connection and exact project/review; operators may cancel jobs in their project. Two running slots, eight FIFO queued jobs, sixteen retained handles. Queued jobs never spawn when cancelled; cancelling retains its slot until process and worker join. Exact retries return the original receipt without rebuilding. No document history changes, compiler paths/options or source overrides. Only succeeded status advertises artifacts; cancellation retains the accepted source, report and preview.',
       TNyxDataValue.ParseJSON('{"type":"object","oneOf":[' +
         '{"type":"object","properties":{"mode":{"const":"outputs"}},"required":["mode"],"additionalProperties":false},' +
+        '{"type":"object","properties":{"mode":{"const":"jobs"},"filter":{"enum":["active","all"]},"offset":{"type":"integer","minimum":0,"maximum":16},"limit":{"type":"integer","minimum":1,"maximum":16}},"required":["mode"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"status"},"job":{"type":"string"},"offset":{"type":"integer","minimum":0,"maximum":512},"limit":{"type":"integer","minimum":1,"maximum":20},"severity":{"enum":["all","error","fatal","warning","hint","note","info"]}},"required":["mode","job"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"cancel"},"job":{"type":"string","minLength":36,"maxLength":36},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120}},"required":["mode","job","expectedRevision","operationId"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"request"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"outputID":{"type":"string","minLength":32,"maxLength":32},"target":{"enum":["browser","lcl"]},"scope":{"enum":["view","reusable","application"]},"view":{"type":"string","minLength":1}},"required":["mode","expectedRevision","operationId","outputID","target","scope"],"allOf":[{"if":{"properties":{"scope":{"const":"application"}}},"then":{"not":{"required":["view"]}},"else":{"required":["view"]}}],"additionalProperties":false}]}'), False),

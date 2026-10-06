@@ -30,6 +30,10 @@ uses
   nyx.text, nyx.data, nyx.studio.builds;
 
 type
+  { Closed query scope and reply purpose, independent of target widgets. A
+    cancellation receipt must never be mistaken for a status/result reply. }
+  TNyxCompilerJobFilter = (cjfActive, cjfAll);
+  TNyxCompilerOperation = (coNone, coOutputs, coProfile, coRequest, coStatus, coCancel, coJobs);
   { Distinct open identities prevent accidental use of a document root as an
     output profile, operation receipt or compiler job. Empty records mean unset.
     Factories validate text; the service still rechecks identity and currentness. }
@@ -83,6 +87,13 @@ function NewNyxCompilerRequest: INyxCompilerRequest;
 { Closed read/status packets at the explicit serialization boundary. Status is
   bounded at twenty diagnostics, starting at an exact zero-based offset. }
 function NyxCompilerOutputs: TNyxDataValue;
+{ Bounded discovery, never a source/log/profile dump. Offset applies after the
+  service filters the exact project/review and requested active/all scope. }
+function NyxCompilerJobs(AFilter: TNyxCompilerJobFilter = cjfActive;
+  AOffset: Integer = 0; ALimit: Integer = 10): TNyxDataValue;
+{ Strict wire discriminator. Unknown/empty values raise ENyxModel; coNone is an
+  uninitialized observer value rather than an accepted serialized operation. }
+function ParseNyxCompilerOperation(const AMode: TNyxText): TNyxCompilerOperation;
 function NyxCompilerStatus(const AJob: TNyxBuildJobRef; AOffset: Integer = 0): TNyxDataValue;
 { Strongly typed cancellation authoring. It changes execution only, never the
   accepted pair or Undo history. Revision belongs to the current project, so a
@@ -252,6 +263,38 @@ end;
 function NyxCompilerOutputs: TNyxDataValue;
 begin
   Result := NyxObject([NyxField('mode', NyxData('outputs'))]);
+end;
+
+function ParseNyxCompilerOperation(const AMode: TNyxText): TNyxCompilerOperation;
+const
+  CModes: array[TNyxCompilerOperation] of TNyxText =
+    ('', 'outputs', 'profile', 'request', 'status', 'cancel', 'jobs');
+var
+  LOperation: TNyxCompilerOperation;
+begin
+  for LOperation := coOutputs to coJobs do
+  begin
+
+    if CModes[LOperation] = AMode then
+    begin
+      Exit(LOperation);
+    end;
+  end;
+  raise ENyxModel.Create('Unknown compiler operation');
+end;
+
+function NyxCompilerJobs(AFilter: TNyxCompilerJobFilter; AOffset, ALimit: Integer): TNyxDataValue;
+const
+  CFilters: array[TNyxCompilerJobFilter] of TNyxText = ('active', 'all');
+begin
+
+  if (AOffset < 0) or (AOffset > 16) or (ALimit < 1) or (ALimit > 16) then
+  begin
+    raise ENyxModel.Create('Compiler job window is offset 0..16, limit 1..16');
+  end;
+  Result := NyxObject([NyxField('mode', NyxData('jobs')),
+    NyxField('filter', NyxData(CFilters[AFilter])), NyxField('offset', NyxData(AOffset)),
+    NyxField('limit', NyxData(ALimit))]);
 end;
 
 function NyxCompilerStatus(const AJob: TNyxBuildJobRef; AOffset: Integer): TNyxDataValue;

@@ -31,7 +31,8 @@ uses
   nyx.studio.lcl, nyx.studio.mcp, nyx.studio.projects,
   nyx.studio.exchange, nyx.studio.outputs, nyx.studio.agents,
   nyx.studio.buildjobs, nyx.studio.workspaces, nyx.studio.preview,
-  nyx.studio.preview.lcl, nyx.generated.view;
+  nyx.studio.preview.lcl, nyx.studio.editorbuild, nyx.studio.buildview, nyx.studio.builds,
+  nyx.generated.view;
 
 type
   { Exercise the real private protocol and compiler workers without starting a
@@ -96,6 +97,7 @@ var
   GSend: HWND;
 
 procedure PublishOwnedArtifact(const AResult: TNyxDataValue); forward;
+procedure Capture(const AName: TNyxText); forward;
 
 procedure Check(AValue: Boolean; const AReason: TNyxText);
 begin
@@ -333,6 +335,179 @@ begin
   Result := GEngine.EditorExchange(GToken, NyxObject([
     NyxField('op', NyxData('build')), NyxField('after', NyxData(0)),
     NyxField('build', AArguments)])).Field('buildReply');
+end;
+
+procedure ExerciseBuildControls(const AFixture: TNyxText);
+var
+  LProfile, LHoldProfile: TNyxOutputConfiguration;
+  LBefore, LAfter, LReply, LJobs, LItems: TNyxDataValue;
+  LBlockers: array[0..1] of TNyxBuildJobRef;
+  LJob: TNyxBuildJobRef;
+  LRow: TNyxNode;
+  LRevision, LIndex: Integer;
+  LStarted: QWord;
+  LOutput: TNyxBuildOutputRef;
+  LPreview: Integer;
+
+  procedure AwaitJob(const AState: TNyxText);
+  var
+    LItemIndex: Integer;
+  begin
+    LStarted := GetTickCount64;
+    repeat
+      Pump;
+      LItems := GStudio.Agents.BuildJobs.Field('items');
+      LJob := Default(TNyxBuildJobRef);
+      for LItemIndex := 0 to LItems.Count - 1 do
+      begin
+
+        if (LItems.Item(LItemIndex).Field('target').AsText = 'lcl') and
+          (LItems.Item(LItemIndex).Field('state').AsText = AState) then
+        begin
+          LJob := NyxBuildJob(LItems.Item(LItemIndex).Field('job').AsText);
+        end;
+      end;
+
+      if LJob.ID <> '' then
+      begin
+        Break;
+      end;
+
+      if GetTickCount64 - LStarted > 5000 then
+      begin
+        Save('panel-timeout.nyx', GStudio.Agents.BuildJobs.ToJSON);
+        raise Exception.Create('Ordinary build panel did not observe ' + AState + ': ' +
+          GStudio.Status + ' / ' + GStudio.Agents.BuildReply.ToJSON);
+      end;
+    until False;
+  end;
+
+  procedure CancelRow;
+  var
+    LItemIndex: Integer;
+  begin
+    LRow := nil;
+    for LItemIndex := 0 to LItems.Count - 1 do
+    begin
+
+      if LItems.Item(LItemIndex).Field('job').AsText = LJob.ID then
+      begin
+        LRow := GStudio.ShellView.Root.Find('studio-build-' + IntToStr(LItemIndex) + '-cancel');
+      end;
+    end;
+    Check((LRow <> nil) and (LRow.Prop('enabled') <> 'false') and
+      (LRow.Extensions.Value(NyxStudioCancelBuildKey).AsText = LJob.ID),
+      'ordinary cancel row retains exact job identity independently of display order');
+    Click(LRow.ID);
+    LStarted := GetTickCount64;
+    repeat
+      Pump;
+      LReply := OperatorBuild(NyxCompilerStatus(LJob));
+
+      if LReply.Field('state').AsText = 'cancelled' then
+      begin
+        Break;
+      end;
+
+      if GetTickCount64 - LStarted > 5000 then
+      begin
+        raise Exception.Create('Ordinary cancel action did not retire its compiler');
+      end;
+    until False;
+    Ready;
+    Check((LReply.Field('artifact').AsText = '') and (LReply.Field('manifest').Count = 0),
+      'visible cancellation reaches joined terminal state without an artifact');
+    Check(GStudio.CompiledPreviewProcessID = LPreview,
+      'visible cancellation retains the last actual running compiled preview');
+    Check(GStudio.ShellView.Root.Find('action-compiled-run').Prop('enabled') <> 'false',
+      'accepted artifact remains runnable after another job is cancelled');
+  end;
+
+begin
+  LBefore := GEngine.EditorExchange(GToken, NyxObject([NyxField('op', NyxData('observe'))]));
+  LRevision := LBefore.Field('session').Field('revision').AsInteger;
+  LPreview := GStudio.CompiledPreviewProcessID;
+  Check(LPreview <> 0, 'build cancellation qualification starts with an actual accepted preview');
+  LReply := OperatorBuild(NyxObject([NyxField('mode', NyxData('profile'))]));
+  LProfile := TNyxOutputConfiguration.Decode(LReply.Field('profile').ToJSON);
+  LHoldProfile := TNyxOutputConfiguration.Decode(LProfile.Encode);
+  try
+    { Only the isolated runtime's two blocking compilers use the owned Pascal
+      fixture. Restore the original immutable output before the ordinary LCL
+      request so its accepted preview and current profile remain identical. }
+    Save('build/studio/jobs/fixture.mode', 'editor-hold');
+    LHoldProfile.SetField('pas2js', AFixture);
+    LReply := OperatorBuild(NyxObject([NyxField('mode', NyxData('profile')),
+      NyxField('expectedOutputID', LReply.Field('outputID')),
+      NyxField('profile', TNyxDataValue.ParseJSON(LHoldProfile.Encode))]));
+    LOutput := NyxBuildOutput(LReply.Field('outputID').AsText);
+    for LIndex := 0 to High(LBlockers) do
+    begin
+      LReply := OperatorBuild(NewNyxCompilerRequest.Target(btBrowser).Scope(bsApplication)
+        .AtRevision(LRevision).Output(LOutput)
+        .Operation(NyxBuildOperation('panel-blocker-' + IntToStr(LIndex))).Arguments);
+      LBlockers[LIndex] := NyxBuildJob(LReply.Field('job').AsText);
+    end;
+    LReply := OperatorBuild(NyxObject([NyxField('mode', NyxData('profile')),
+      NyxField('expectedOutputID', NyxData(LOutput.ID)),
+      NyxField('profile', TNyxDataValue.ParseJSON(LProfile.Encode))]));
+    Check(LReply.Field('outputID').AsText = NyxBuildFingerprint(LProfile.Encode),
+      'ordinary queued job uses the unchanged accepted output identity');
+    Click('action-builds');
+    Click('action-build-view');
+    AwaitJob('queued');
+    Check((GStudio.Agents.BuildJobs.Field('running').AsInteger = 2) and
+      (GStudio.Agents.BuildJobs.Field('queued').AsInteger = 1),
+      'ordinary Nyx panel observes two real workers and its queued request');
+    LJobs := OperatorBuild(NyxCompilerJobs(cjfAll, 1, 1));
+    Check((LJobs.Field('items').Count = 1) and (LJobs.Field('total').AsInteger >= 3),
+      'operator discovery pages metadata without returning the document');
+    LReply := OperatorBuild(NyxCompilerCancel(LJob, LRevision - 1,
+      NyxBuildOperation('panel-stale-cancel')));
+    Check(LReply.Field('state').AsText = 'rejected',
+      'stale cancellation refuses while the visible immutable request remains queued');
+    Capture('native-builds-desktop');
+    GForm.ClientWidth := 390;
+    Pump;
+    Capture('native-builds-narrow');
+    GForm.ClientWidth := 1280;
+    Pump;
+    CancelRow;
+    { Exercise the same row contract against a real running fixture compiler.
+      Its held lifetime makes input timing deterministic without pretending an
+      uncontrolled fast real compiler must still be running after a UI paint. }
+    LJob := LBlockers[0];
+    LItems := GStudio.Agents.BuildJobs.Field('items');
+    Check(OperatorBuild(NyxCompilerStatus(LJob)).Field('state').AsText = 'running',
+      'running cancellation starts with an actual held compiler worker');
+    CancelRow;
+    OperatorBuild(NyxCompilerCancel(LBlockers[1], LRevision,
+      NyxBuildOperation('retire-panel-blocker-1')));
+    LStarted := GetTickCount64;
+    repeat
+      Pump;
+      LJobs := OperatorBuild(NyxCompilerJobs);
+
+      if GetTickCount64 - LStarted > 5000 then
+      begin
+        raise Exception.Create('Owned panel blockers did not join');
+      end;
+    until LJobs.Field('total').AsInteger = 0;
+    LAfter := GEngine.EditorExchange(GToken, NyxObject([NyxField('op', NyxData('observe'))]));
+    Save('build-controls-before.nyx', LBefore.ToJSON);
+    Save('build-controls-after.nyx', LAfter.ToJSON);
+    Check(LAfter.Field('project').AsText = LBefore.Field('project').AsText,
+      'queued/running panel cancellation retains the exact accepted pair');
+    Check(LAfter.Field('compiler').ToJSON = LBefore.Field('compiler').ToJSON,
+      'queued/running panel cancellation retains the accepted compiler report');
+    Check((LAfter.Field('session').Field('revision').AsInteger = LRevision) and
+      (LAfter.Field('session').Field('canUndo').ToJSON = LBefore.Field('session').Field('canUndo').ToJSON),
+      'build controls do not add document history');
+    Click('action-builds');
+  finally
+    LHoldProfile.Free;
+    LProfile.Free;
+  end;
 end;
 
 procedure Terminal(const ATarget, AScope: TNyxText; ASuccess: Boolean = True);
@@ -732,7 +907,7 @@ begin
   LProfile := nil;
   try
 
-    if (ParamCount <> 5) and (ParamCount <> 6) then
+    if (ParamCount <> 5) and (ParamCount <> 6) and (ParamCount <> 7) then
     begin
       raise Exception.Create('Supply owned repository, profile, semantic source directory, existing artifact build root and HTTP origin');
     end;
@@ -759,6 +934,12 @@ begin
       if (ParamCount = 6) and (ParamStr(6) <> 'diagnostics') then
       begin
         raise Exception.Create('The optional qualification mode is probe-input or diagnostics');
+      end;
+
+      if (ParamCount = 7) and ((ParamStr(6) <> 'build-controls') or
+        not FileExists(ParamStr(7))) then
+      begin
+        raise Exception.Create('Build controls require their existing owned Pascal compiler fixture');
       end;
       LProfile := TNyxOutputConfiguration.Decode(ReadBytes(ParamStr(2)));
       GEngine := TNyxStudioMCP.Create(GDirectory, 8388, 8389, LProfile.Encode);
@@ -851,19 +1032,22 @@ begin
       Click('action-build-app');
       Check(Pos('Choose an output', GStudio.Status) > 0, 'missing selected output is useful and never blocks launch');
 
-      if ParamCount = 5 then
+      if (ParamCount = 5) or (ParamCount = 7) then
       begin
-        Click('output-browser');
-        Click('action-build-view');
-        Terminal('browser', 'view');
-        Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = EncodeNyxProject(GPair),
-          'readiness/profile/compiler work adds no project history or changes');
-        Click('action-outputs');
-        Click('view-component-0');
-        Ready;
-        Click('action-build-view');
-        Terminal('browser', 'reusable');
-        Click('action-outputs');
+        if ParamCount = 5 then
+        begin
+          Click('output-browser');
+          Click('action-build-view');
+          Terminal('browser', 'view');
+          Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = EncodeNyxProject(GPair),
+            'readiness/profile/compiler work adds no project history or changes');
+          Click('action-outputs');
+          Click('view-component-0');
+          Ready;
+          Click('action-build-view');
+          Terminal('browser', 'reusable');
+          Click('action-outputs');
+        end;
         Click('output-lcl');
         Click('action-build-app');
         Terminal('lcl', 'application');
@@ -883,12 +1067,25 @@ begin
         Pump;
         Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = EncodeNyxProject(GPair),
           'compiled execution retains the authored accepted pair');
-        Click('action-compiled-stop');
-        Check(GStudio.CompiledPreviewProcessID = 0, 'explicit Stop retires only the owned preview');
-        Click('action-compiled-run');
-        PreviewRunning;
-        Check(GStudio.CompiledPreviewProcessID <> LOldProcess, 'a new explicit Run owns a fresh application process');
+        if ParamCount = 5 then
+        begin
+          Click('action-compiled-stop');
+          Check(GStudio.CompiledPreviewProcessID = 0, 'explicit Stop retires only the owned preview');
+          Click('action-compiled-run');
+          PreviewRunning;
+          Check(GStudio.CompiledPreviewProcessID <> LOldProcess, 'a new explicit Run owns a fresh application process');
+        end;
         ExerciseCompiledReply;
+
+        if ParamCount = 7 then
+        begin
+          ExerciseBuildControls(ParamStr(7));
+          Click('action-compiled-stop');
+          Click('action-compiled-run');
+          PreviewRunning;
+          Check(GStudio.CompiledPreviewProcessID <> LOldProcess,
+            'a cancelled newer job leaves the earlier accepted job available for actual re-Run');
+        end;
         GPublishArtifacts := True;
         LOldProcess := GStudio.CompiledPreviewProcessID;
         LProcessHandle := OpenProcess(SYNCHRONIZE, False, LOldProcess);

@@ -23,16 +23,16 @@ Investigate this completion/close boundary in the existing workflow/transport
 owner; do not treat a partial transport result alone as compiler success. Private
 receipts live under `build/retained-arrangement/`; no workflow criterion closes.
 
-Compiler workflow follow-up (2026-10-06): current-source `nyx_build` now admits
-owned, revision-aware cancellation through its actual native semantic seam;
-connection-bound primary retries and direct-child retirement are qualified with
-NS-5. Bounded operator discovery of active/queued job handles and visible cancel
-actions in both Studio controllers remain missing semantic/editor operations.
-The browser's legacy synchronous build route must consume the same guarded job
-workflow. Keep these with this workflow owner and
-[the existing compiler lifecycle owner](NS-5_service-reload_01.md); do not replace
-them with screenshot-driven automation or credit authenticated observing rollout
-from a suspended host. See [current evidence](../WORK.md#compiler-queue-and-cancellation--2026-10-06).
+Compiler workflow follow-up (2026-10-06): current-source `nyx_build` now discovers
+bounded exact-context job metadata and admits owned revision-aware cancellation.
+Both Studio controllers consume semantic jobs and shared ordinary Nyx build rows.
+Actual native compiler/visible-control preservation and browser controls with a
+scripted compiler seam pass. Keep remaining authenticated browser integration and
+observing deployment with this workflow owner and
+[the existing compiler lifecycle owner](NS-5_service-reload_01.md). A suspended
+native protocol engine does not qualify authenticated HTTP. Protected full-history
+migration remains the rollout prerequisite. No original criterion closes or
+workflow count changes. See [current evidence](../WORK.md#studio-build-controls--2026-10-06).
 
 **Acceptance Criteria:**
 

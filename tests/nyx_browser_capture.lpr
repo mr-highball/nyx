@@ -31,6 +31,8 @@ type
   { A compiler-produced application has a Boolean ready marker; maintained
     assertion fixtures use their passed marker. Both use the same real browser. }
   TNyxCaptureCompletion = (nccFixturePassed, nccApplicationReady);
+  { Physical browser window width qualifies responsive editor consumers. }
+  TNyxCaptureViewport = (ncvDesktop, ncvNarrow);
 
 var
   LProcess: TProcess;
@@ -44,28 +46,41 @@ var
   LExpected: RawByteString;
   LRealClock: Boolean;
   LCompletion: TNyxCaptureCompletion;
+  LViewport: TNyxCaptureViewport;
+  LArgument: Integer;
 
 begin
   LProcess := nil;
   try
 
-    if ((ParamCount <> 3) and (ParamCount <> 4)) or
+    if (ParamCount < 3) or (ParamCount > 5) or
       (Pos('http://127.0.0.1:', ParamStr(1)) <> 1) then
     begin
       raise Exception.Create('Supply localhost fixture URL, build artifact directory and expected passed attribute');
     end;
-    LRealClock := ParamCount = 4;
-
-    if LRealClock and (ParamStr(4) <> '--real-clock') and
-      (ParamStr(4) <> '--application-ready') then
-    begin
-      raise Exception.Create('Capture mode is --real-clock or --application-ready');
-    end;
+    LRealClock := False;
     LCompletion := nccFixturePassed;
-
-    if ParamStr(4) = '--application-ready' then
+    LViewport := ncvDesktop;
+    for LArgument := 4 to ParamCount do
     begin
-      LCompletion := nccApplicationReady;
+
+      if ParamStr(LArgument) = '--real-clock' then
+      begin
+        LRealClock := True;
+      end
+      else if ParamStr(LArgument) = '--application-ready' then
+      begin
+        LCompletion := nccApplicationReady;
+        LRealClock := True;
+      end
+      else if ParamStr(LArgument) = '--narrow' then
+      begin
+        LViewport := ncvNarrow;
+      end
+      else
+      begin
+        raise Exception.Create('Capture option is --real-clock, --application-ready or --narrow');
+      end;
     end;
     LDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
     ForceDirectories(LDirectory);
@@ -85,7 +100,16 @@ begin
     LProcess.Parameters.Add('--no-default-browser-check');
     LProcess.Parameters.Add('--disable-extensions');
     LProcess.Parameters.Add('--user-data-dir=' + LDirectory + 'profile');
-    LProcess.Parameters.Add('--window-size=1100,1000');
+    case LViewport of
+      ncvDesktop: LProcess.Parameters.Add('--window-size=1100,1000');
+      ncvNarrow:
+        begin
+          { This Windows headless host imposed a wider CSS viewport on a 390px
+            capture, cropping its right edge. Keep the outer window below the
+            shared 640px breakpoint while allowing its real viewport to fit. }
+          LProcess.Parameters.Add('--window-size=600,1000');
+        end;
+    end;
     { Synchronous Pascal benchmarks finish during ordinary page load. Their
       measured performance clock must never run under accelerated virtual time.
       Asynchronous functional captures retain the existing explicit budget. }

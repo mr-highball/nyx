@@ -28,7 +28,7 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.responsive, nyx.model, nyx.studio.agents,
-  nyx.studio.workspaces;
+  nyx.studio.workspaces, nyx.studio.editorbuild;
 
 type
   { Immutable-by-copy observer presentation. No transport credentials, borrowed
@@ -63,7 +63,12 @@ type
       full source/document ownership. Operator profile replies contain local
       paths; never export this private view as a public MCP response or design. }
     CanBuild: Boolean;
+    { Separate capability gates newer job-list/cancel UI against older hosts.
+      BuildJobs is bounded active metadata, not source or machine profiles. }
+    CanControlBuilds: Boolean;
+    BuildJobs: TNyxDataValue;
     BuildReply: TNyxDataValue;
+    BuildReplyKind: TNyxCompilerOperation;
     BuildReplySequence: Integer;
   end;
 
@@ -116,6 +121,11 @@ begin
   Result.CloseLabel := '';
   Result.CanCloseWorkspace := False;
   Result.CanBuild := False;
+  Result.CanControlBuilds := False;
+  Result.BuildJobs := NyxObject([NyxField('offset', NyxData(0)), NyxField('total', NyxData(0)),
+    NyxField('queued', NyxData(0)), NyxField('running', NyxData(0)),
+    NyxField('cancelling', NyxData(0)), NyxField('items', NyxArray([]))]);
+  Result.BuildReplyKind := coNone;
   Result.BuildReply := NyxNull;
   Result.BuildReplySequence := 0;
 end;

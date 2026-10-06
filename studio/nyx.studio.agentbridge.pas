@@ -29,7 +29,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.studio.session, nyx.studio.exchange,
   nyx.studio.projects, nyx.studio.agents, nyx.studio.agentview, nyx.studio.workspaces,
-  nyx.studio.editorbuild, nyx.studio.outputs;
+  nyx.studio.editorbuild, nyx.studio.outputs, nyx.model, nyx.types, nyx.studio.buildview;
 
 type
   TNyxAgentRefresh = procedure(AContentChanged: Boolean) of object;
@@ -118,10 +118,15 @@ type
       const AExpected: TNyxBuildOutputRef);
     procedure RequestBuild(const ARequest: INyxCompilerRequest);
     procedure BuildStatus(const AJob: TNyxBuildJobRef; AOffset: Integer = 0);
+    procedure CompilerJobs(AFilter: TNyxCompilerJobFilter = cjfActive;
+      AOffset: Integer = 0; ALimit: Integer = 10);
     { Does not cancel the transport request: asks the service to retire exactly
       this owned job through the trusted operator exchange. }
     procedure CancelBuild(const AJob: TNyxBuildJobRef;
       const AOperation: TNyxBuildOperationRef);
+    { Shared ordinary-control routing. Uses exact job metadata and fresh current
+      revision, never a row index or HTTP request abort. Returns whether handled. }
+    function RouteBuildCancel(ANode: TNyxNode; ATrigger: TNyxTrigger): Boolean;
     procedure Pause;
     procedure AcceptRemote;
     function State: TNyxStudioAgentView;
@@ -137,6 +142,10 @@ type
       frame before server diagnostics can borrow this observer's source text.
       Pending local publications and protected conflicts cannot grant navigation. }
     function SourceSynchronized: Boolean;
+    { Compiler polling does not alter the accepted document revision. Permit
+      cancellation behind compiler-only packets, but never behind a pending
+      local capture, document/history operation or unacknowledged frame. }
+    function CanCancelBuild: Boolean;
     property Applying: Boolean read FApplying;
     property Enabled: Boolean read FEnabled;
     property DraftCapturePending: Boolean read FDraftCapturePending;
@@ -168,6 +177,27 @@ function TNyxStudioAgentBridge.SourceSynchronized: Boolean;
 begin
   Result := FView.Connected and not FView.Conflict and
     not FDraftCapturePending and (Length(FQueue) = 0) and (Frame = FKnownFrame);
+end;
+
+function TNyxStudioAgentBridge.CanCancelBuild: Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := FEnabled and FView.CanControlBuilds and FView.Connected and
+    not FView.Conflict and not FDraftCapturePending and (Frame = FKnownFrame);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(FQueue) do
+  begin
+
+    if FQueue[LIndex].Field('op').AsText <> 'build' then
+    begin
+      Exit(False);
+    end;
+  end;
 end;
 
 constructor TNyxStudioAgentBridge.Create(ASession: TNyxStudioSession;
@@ -720,6 +750,7 @@ begin
       FView.Activity := LState.Field('activity').Copy;
       FView.CanCloseWorkspace := False;
       FView.CanBuild := False;
+      FView.CanControlBuilds := False;
 
       if NyxAgentHas(LState, 'editorBuilds') then
       begin
@@ -728,9 +759,23 @@ begin
 
       if NyxAgentHas(LState, 'buildReply') then
       begin
+        { Associate with this exact serialized request purpose. A cancellation
+          receipt has no currentness flags and is not a compiled status reply. }
+        FView.BuildReplyKind := ParseNyxCompilerOperation(FSent.Field('build').Field('mode').AsText);
         FView.BuildReply := LState.Field('buildReply').Copy;
         Inc(FView.BuildReplySequence);
         LRefresh := True;
+      end;
+
+      if NyxAgentHas(LState, 'buildJobControl') then
+      begin
+        FView.CanControlBuilds := LState.Field('buildJobControl').AsBoolean;
+      end;
+
+      if NyxAgentHas(LState, 'buildJobs') then
+      begin
+        LRefresh := LRefresh or (FView.BuildJobs.ToJSON <> LState.Field('buildJobs').ToJSON);
+        FView.BuildJobs := LState.Field('buildJobs').Copy;
       end;
 
       if NyxAgentHas(LState, 'workspaceClosing') then
@@ -914,12 +959,41 @@ procedure TNyxStudioAgentBridge.CancelBuild(const AJob: TNyxBuildJobRef;
   const AOperation: TNyxBuildOperationRef);
 begin
 
-  if not FView.CanBuild or not FView.Connected or FView.Conflict then
+  if not CanCancelBuild then
   begin
     raise Exception.Create('Compiler cancellation requires a connected exact project');
   end;
   Queue(NyxObject([NyxField('op', NyxData('build')),
     NyxField('build', NyxCompilerCancel(AJob, FView.Revision, AOperation))]));
+  Tick;
+end;
+
+function TNyxStudioAgentBridge.RouteBuildCancel(ANode: TNyxNode;
+  ATrigger: TNyxTrigger): Boolean;
+var
+  LIdentity: TGUID;
+begin
+  Result := (ATrigger = ntClick) and (ANode <> nil) and
+    ANode.Extensions.Has(NyxStudioCancelBuildKey);
+
+  if Result then
+  begin
+    CreateGUID(LIdentity);
+    CancelBuild(NyxBuildJob(ANode.Extensions.Value(NyxStudioCancelBuildKey).AsText),
+      NyxBuildOperation('cancel-' + Copy(GUIDToString(LIdentity), 2, 36)));
+  end;
+end;
+
+procedure TNyxStudioAgentBridge.CompilerJobs(AFilter: TNyxCompilerJobFilter;
+  AOffset, ALimit: Integer);
+begin
+
+  if not FView.CanControlBuilds or not FEnabled or not FView.Connected or FView.Conflict then
+  begin
+    raise Exception.Create('Compiler job discovery is unavailable on this service');
+  end;
+  Queue(NyxObject([NyxField('op', NyxData('build')),
+    NyxField('build', NyxCompilerJobs(AFilter, AOffset, ALimit))]));
 end;
 
 end.

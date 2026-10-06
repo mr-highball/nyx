@@ -32,15 +32,26 @@ owner; staging accepts no original criterion. See [the release guide](../docs/st
 
 ## Separate release runtime — 2026-10-06
 
+The current editor boundary now delivers bounded context-filtered job discovery,
+shared ordinary Nyx build controls and browser compilation through semantic jobs.
+Native lifecycle passes 144 and actual Win32 Studio passes 126, including visible
+queued/running cancellation, preserved accepted report/preview, re-Run and reload.
+Actual browser controls pass 24 per desktop/narrow consumer with a scripted
+compiler seam. Earlier output completion cannot overwrite the accepted report.
+Stop control fixture expansion at this boundary. Authenticated browser jobs,
+protected-history migration and observing rollout remain separate gates; other
+hosts, OS refusal and crash-atomic creation remain open. This closes no original
+criterion or task and invents no historical counter. See
+[control evidence](../WORK.md#studio-build-controls--2026-10-06).
+
 The next current-source boundary now qualifies Windows compiler families through
 an invocation-owned job assigned before resume. Actual compiler/helper/grandchild
 handles prove whole-family completion/retirement, including cancellation after
 compiler exit, compiler/deadline/log failure, queue slot reuse and shutdown.
 The maintained lifecycle passes 129 checks, and real pas2js/FPC application
 compatibility and execution pass. See [family evidence](../WORK.md#windows-compiler-families--2026-10-06).
-Stop process-family fixture expansion. Deliver bounded job discovery, ordinary
-browser semantic-job integration and visible cancellation in both Studio adapters
-next. Other hosts, x64, OS refusal and crash-atomic Windows job creation remain
+Stop process-family fixture expansion. The editor follow-up is recorded above.
+Other hosts, x64, OS refusal and crash-atomic Windows job creation remain
 hardening/qualification gates; the two-call suspended creation/assignment window
 does not qualify host death during admission. Original criteria remain open.
 
@@ -54,11 +65,10 @@ Actual owned Pascal children, both portable consumers and real compiler success
 are exercised; no protected host or accepted work is replaced.
 
 Stop queue/router fixture expansion at that bounded boundary. Its Windows family
-follow-up is recorded above. The original criterion remains open: other hosts, bounded
-operator job discovery and visible cancellation through both Studio adapters
-need qualification. The browser's legacy synchronous build route remains an
-integration gap; no observing HTTP rollout or fully bounded OS retirement is
-claimed. Failed OS reaping keeps the owned worker active. Earlier counts and
+follow-up is recorded above. The original criterion remains open for other hosts
+and authenticated browser discovery/cancellation through the observing service.
+Current browser Studio consumes semantic jobs; no observing HTTP rollout or fully
+bounded OS retirement is claimed. Failed OS reaping keeps the owned worker active. Earlier counts and
 all original acceptance criteria remain retained.
 
 Preceding gap after NS-4 connection-authority qualification: criterion 1's actual

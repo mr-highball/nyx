@@ -149,6 +149,13 @@ begin
   begin
     Sleep(30000);
   end
+  else if LPolicy = 'editor-hold' then
+  begin
+    { The checked native editor can spend seconds in a layout/heap-trace paint.
+      Keep the actual compiler alive until its visible action retires it. The
+      production invocation deadline still owns the sixty-second upper bound. }
+    Sleep(60000);
+  end
   else if (LPolicy = 'flood') or (LPolicy = 'unicode-flood') or
     (LPolicy = 'family-flood') then
   begin

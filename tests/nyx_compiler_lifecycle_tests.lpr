@@ -28,7 +28,7 @@ uses
   nyx.studio.projects, nyx.studio.agents, nyx.studio.builds,
   nyx.studio.buildjobs, nyx.studio.buildexecutor, nyx.studio.directories,
   nyx.studio.outputs, nyx.studio.compiler, nyx.studio.editorbuild,
-  nyx.studio.mcp;
+  nyx.studio.mcp, nyx.studio.workspaces, nyx.studio.reviews;
 
 type
   { Native handles identify only family members whose ready files were produced
@@ -390,6 +390,23 @@ begin
       'Same display actor and operation ID still admit independent primary jobs');
     LRetry := LEngine.InvokeBuild('connection-one', 'Renamed actor', LArguments);
     Check(LRetry.ToJSON = LFirst.ToJSON, 'Renaming display actor retains connection-owned build retry');
+    LValue := LEngine.InvokeBuild('connection-one', CVisibleActor, NyxCompilerJobs(cjfActive, 0, 1));
+    Check((LValue.Field('items').Count = 1) and (LValue.Field('total').AsInteger = 2) and
+      LValue.Field('items').Item(0).Field('canCancel').AsBoolean,
+      'Bounded discovery exposes the admitting connection cancellation capability');
+    Check(not NyxAgentHas(LValue.Field('items').Item(0), 'source') and
+      not NyxAgentHas(LValue.Field('items').Item(0), 'owner') and
+      not NyxAgentHas(LValue.Field('items').Item(0), 'profile') and
+      not NyxAgentHas(LValue.Field('items').Item(0), 'log'),
+      'Discovery omits accepted source, compiler buffers and private ownership');
+    LValue := LEngine.InvokeBuild('connection-one', CVisibleActor, NyxCompilerJobs(cjfActive, 1, 1));
+    Check((LValue.Field('items').Item(0).Field('job').AsText = LSecond.Field('job').AsText) and
+      not LValue.Field('items').Item(0).Field('canCancel').AsBoolean,
+      'Discovery pages exact jobs and refuses foreign connection cancellation capability');
+    LValue := Observe;
+    Check(LValue.Field('buildJobControl').AsBoolean and
+      LValue.Field('buildJobs').Field('items').Item(1).Field('canCancel').AsBoolean,
+      'Operator observation advertises context-bounded cancellation independently of agent ownership');
     WaitChildren(GRoot + 'semantic/build/studio/jobs/', 5);
     LCancel := NyxCompilerCancel(NyxBuildJob(LFirst.Field('job').AsText), LRevision,
       NyxBuildOperation('owned-cancel'));
@@ -409,6 +426,10 @@ begin
       NyxCompilerStatus(NyxBuildJob(LFirst.Field('job').AsText)));
     Check(not LValue.Field('currentSource').AsBoolean,
       'Actual running job becomes stale after a semantic project edit');
+    LValue := LEngine.InvokeBuild('connection-one', CVisibleActor, NyxCompilerJobs);
+    Check(not LValue.Field('items').Item(0).Field('currentSource').AsBoolean and
+      LValue.Field('items').Item(0).Field('canCancel').AsBoolean,
+      'Earlier-source jobs remain discoverable and cancellable at the new revision');
     LCancel := NyxCompilerCancel(NyxBuildJob(LFirst.Field('job').AsText), LRevision,
       NyxBuildOperation('owned-cancel'));
     LValue := LEngine.InvokeBuild('connection-one', CVisibleActor, LCancel);
@@ -420,6 +441,9 @@ begin
       NyxField('permission', NyxData('readOnly'))]));
     RefuseCancel('connection-two', NyxCompilerCancel(NyxBuildJob(LSecond.Field('job').AsText),
       LRevision, NyxBuildOperation('read-only-cancel')));
+    LValue := LEngine.InvokeBuild('connection-two', CVisibleActor, NyxCompilerJobs);
+    Check(not LValue.Field('items').Item(LValue.Field('items').Count - 1)
+      .Field('canCancel').AsBoolean, 'Read-only discovery never advertises a mutating capability');
     LValue := LEngine.EditorExchange(LToken, NyxObject([NyxField('op', NyxData('build')),
       NyxField('after', NyxData(0)),
       NyxField('build', NyxCompilerCancel(NyxBuildJob(LSecond.Field('job').AsText),
@@ -464,6 +488,55 @@ begin
   finally
     LReport := nil;
     LEngine.Free;
+  end;
+end;
+
+procedure DiscoveryContexts;
+var
+  LJobs: TNyxBuildJobs;
+  LPrimary, LProject, LReview, LValue: TNyxDataValue;
+  LRefused: Boolean;
+begin
+  { Query independent immutable contexts without changing the existing family
+    retirement fixture's timing. These actual held workers belong only here. }
+  Policy(GRoot + 'discovery/build/studio/jobs/', 'hold');
+  LJobs := TNyxBuildJobs.Create(GRoot + 'discovery/', GProfile.Encode);
+  try
+    LPrimary := LJobs.Submit('Primary', Request('primary'), GPair,
+      NyxActiveWorkspace, 'connection-primary');
+    LProject := LJobs.Submit('Project', Request('project'), GPair,
+      NyxActiveWorkspace, 'connection-project', NyxWorkspace('qualification.project-1'));
+    LReview := LJobs.Submit('Review', Request('review'), GPair,
+      NyxReview('qualification-review'), 'connection-review');
+    LValue := LJobs.List(NyxCompilerJobs(cjfActive, 0, 1), NyxActiveWorkspace,
+      NyxPrimaryWorkspace, 'connection-primary', False, True, GSession.CurrentPair);
+    Check((LValue.Field('total').AsInteger = 1) and (LValue.Field('queued').AsInteger = 0) and
+      (LValue.Field('items').Item(0).Field('job').AsText = LPrimary.Field('job').AsText),
+      'Primary counts and pages exclude both project and review jobs');
+    LValue := LJobs.List(NyxCompilerJobs(cjfAll, 0, 1), NyxActiveWorkspace,
+      NyxWorkspace('qualification.project-1'), 'connection-project', False, True, GSession.CurrentPair);
+    Check((LValue.Field('total').AsInteger = 1) and
+      (LValue.Field('items').Item(0).Field('job').AsText = LProject.Field('job').AsText),
+      'Independent project discovery never falls back to primary');
+    LValue := LJobs.List(NyxCompilerJobs, NyxReview('qualification-review'),
+      NyxPrimaryWorkspace, 'connection-review', False, True, GSession.CurrentPair);
+    Check((LValue.Field('total').AsInteger = 1) and (LValue.Field('queued').AsInteger = 1) and
+      (LValue.Field('running').AsInteger = 0) and
+      (LValue.Field('items').Item(0).Field('job').AsText = LReview.Field('job').AsText),
+      'Review metadata reports only its own queued job despite shared running slots');
+    LRefused := False;
+    try
+      LJobs.List(NyxObject([NyxField('mode', NyxData('jobs')), NyxField('limit', NyxData(17))]),
+        NyxActiveWorkspace, NyxPrimaryWorkspace, 'connection-primary', False, True, GSession.CurrentPair);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'Actual service admission refuses a larger metadata window');
+  finally
+    LJobs.Free;
   end;
 end;
 
@@ -548,6 +621,65 @@ begin
   begin
     Check(WaitForSingleObject(GChildren[LIndex].Handle, 0) = WAIT_OBJECT_0,
       'Shutdown retires every actually started compiler/helper/grandchild');
+  end;
+end;
+
+procedure EarlierOutputReport;
+var
+  LEngine: TNyxStudioMCP;
+  LProfile: TNyxOutputConfiguration;
+  LToken, LJob: TNyxText;
+  LValue, LBefore, LAfter: TNyxDataValue;
+  LReport: INyxCompilerReport;
+  LStarted: QWord;
+begin
+  LEngine := TNyxStudioMCP.Create(GRoot + 'output-report/', 8638, 8639, GProfile.Encode);
+  LProfile := TNyxOutputConfiguration.Decode(GProfile.Encode);
+  try
+    LValue := LEngine.ConnectEditor(NyxObject([NyxField('op', NyxData('claim')),
+      NyxField('project', NyxData(EncodeNyxProject(GPair))),
+      NyxField('selection', NyxData('home')), NyxField('view', NyxData('home'))]));
+    LToken := LValue.Field('token').AsText;
+    LReport := ReadNyxCompilerReport(GPair.Source, GPair.Source, 'accepted.pas',
+      'accepted.pas(1,1) Warning: Keep the accepted report');
+    LBefore := LEngine.EditorExchange(LToken, NyxObject([NyxField('op', NyxData('report')),
+      NyxField('report', NyxData(LReport.Encode))]));
+    LValue := LEngine.InvokeBuild('output-owner', 'English output review',
+      NewNyxCompilerRequest.Target(btBrowser).Scope(bsApplication)
+        .AtRevision(LBefore.Field('session').Field('revision').AsInteger)
+        .Output(NyxBuildOutput(NyxBuildFingerprint(GProfile.Encode)))
+        .Operation(NyxBuildOperation('earlier-output')).Arguments);
+    LJob := LValue.Field('job').AsText;
+    LProfile.SetField('pas2js', '');
+    LEngine.ConfigureOutputs(LProfile.Encode);
+    LStarted := GetTickCount64;
+    repeat
+      LValue := LEngine.InvokeBuild('output-owner', 'English output review',
+        NyxCompilerStatus(NyxBuildJob(LJob)));
+
+      if NyxBuildJobTerminal(ParseNyxBuildJobState(LValue.Field('state').AsText)) then
+      begin
+        Break;
+      end;
+
+      if GetTickCount64 - LStarted > 5000 then
+      begin
+        raise Exception.Create('Earlier output qualification did not complete');
+      end;
+      Sleep(10);
+    until False;
+    Check((LValue.Field('state').AsText = 'succeeded') and
+      LValue.Field('currentSource').AsBoolean and not LValue.Field('currentOutput').AsBoolean,
+      'Actual completed job retains its earlier output independently of source currentness');
+    LAfter := LEngine.EditorExchange(LToken, NyxObject([NyxField('op', NyxData('observe'))]));
+    Check(LAfter.Field('compiler').ToJSON = LBefore.Field('compiler').ToJSON,
+      'Earlier output completion never replaces the accepted compiler report');
+    Check(LAfter.Field('project').AsText = LBefore.Field('project').AsText,
+      'Earlier output completion retains the exact paired design and source');
+  finally
+    LReport := nil;
+    LProfile.Free;
+    LEngine.Free;
   end;
 end;
 
@@ -732,6 +864,8 @@ begin
     GPair := GSession.BuildPair(GSession.Revision, bsView, 'home');
     QueueAndShutdown;
     SemanticAuthority;
+    DiscoveryContexts;
+    EarlierOutputReport;
     FamilyCompletion('family-cancel', 'family-root-exit', 'cancelled', TNyxCompilerLimits.Default);
     FamilyCompletion('family-success', 'family-success', 'none', TNyxCompilerLimits.Default);
     FamilyCompletion('family-error', 'family-error', 'compiler', TNyxCompilerLimits.Default);
