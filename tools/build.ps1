@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -61,6 +61,9 @@ param(
   [string]$FlowSourceDirectory = 'build/flow-placement/mcp-source',
   # The container companion is composed and exported through bounded MCP reads.
   [string]$ContainerSourceDirectory = 'build/container-presentations/mcp-source',
+  # Exact English seed exported from content-editor.operations.json through MCP.
+  # Optional DesignerMCPConfig composes/builds/retires its owned review first.
+  [string]$ContentEditorSourceDirectory = 'build/content-editor/source',
   # The maintained semantic callback journey exports two accepted source pairs.
   [string]$CallbackSourceDirectory = 'build/agent-callbacks/mcp',
   # Exact companion exported by the semantic handler/compilation journey.
@@ -1468,6 +1471,69 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxCollectionAgentHost") -Destination $nyxCollectionAgentBrowser
     }
     Write-Host 'Semantic collection consumers staged; browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'content-editor') {
+    # The shared Pascal consumer owns all input, admission, history and checks.
+    # This branch starts no listener and changes no operator project/service.
+    $nyxContentEditorRoot = Join-Path $nyxRoot 'build/content-editor/maintained'
+    $nyxContentEditorSource = $ContentEditorSourceDirectory
+    if (-not [IO.Path]::IsPathRooted($nyxContentEditorSource)) {
+      $nyxContentEditorSource = Join-Path $nyxRoot $nyxContentEditorSource
+    }
+    $nyxContentEditorSource = [IO.Path]::GetFullPath($nyxContentEditorSource)
+    $nyxContentEditorNative = Join-Path $nyxContentEditorRoot 'native'
+    $nyxContentEditorWeb = Join-Path $nyxContentEditorRoot 'web'
+    $nyxContentEditorResult = Join-Path $nyxContentEditorRoot 'result'
+    New-Item -ItemType Directory -Force $nyxContentEditorNative, $nyxContentEditorWeb,
+      $nyxContentEditorResult | Out-Null
+    if ($DesignerMCPConfig) {
+      $nyxContentEditorMCP = Join-Path $nyxContentEditorRoot 'mcp'
+      New-Item -ItemType Directory -Force $nyxContentEditorMCP | Out-Null
+      Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests',
+        "-FU$nyxContentEditorMCP", "-FE$nyxContentEditorMCP", 'tests/nyx_mcp_designer_review.lpr')
+      & (Join-Path $nyxContentEditorMCP 'nyx_mcp_designer_review.exe') $DesignerMCPConfig `
+        (Join-Path $nyxRoot 'tests/content-editor.operations.json') $nyxContentEditorSource
+      if ($LASTEXITCODE -ne 0) { throw 'Semantic content editor seed/export/build journey failed' }
+    }
+    $nyxContentEditorSeed = Join-Path $nyxContentEditorSource 'nyx.generated.view.pas'
+    if (-not (Test-Path -LiteralPath $nyxContentEditorSeed -PathType Leaf)) {
+      throw 'Export the exact content editor MCP seed or supply DesignerMCPConfig'
+    }
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxContentEditorPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxContentEditorSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxContentEditorPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxContentEditorPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxContentEditorPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxContentEditorPlatform",
+      "-FU$nyxContentEditorNative", "-FE$nyxContentEditorNative", 'tests/nyx_content_editor_controls.lpr')
+    & (Join-Path $nyxContentEditorNative 'nyx_content_editor_controls.exe') $nyxContentEditorSeed `
+      (Join-Path $nyxContentEditorResult 'nyx.generated.view.pas') $nyxContentEditorResult
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native content editor/queue qualification failed' }
+    # Execute the exact newly generated unit against shared recipe expectations.
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', "-Fu$nyxContentEditorResult", "-FU$nyxContentEditorResult",
+      "-FE$nyxContentEditorResult", 'tests/nyx_content_editor_generated.lpr')
+    & (Join-Path $nyxContentEditorResult 'nyx_content_editor_generated.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Executed content editor Pascal companion failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Fustudio',
+      '-Futests', "-Fu$nyxContentEditorSource", "-FE$nyxContentEditorWeb", 'tests/nyx_content_editor_controls.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule', '-Jirtl.js', '-Fusrc', '-Fustudio',
+      "-FE$nyxContentEditorWeb", 'studio/nyx_source_worker.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc',
+      "-Fu$nyxContentEditorResult", "-FE$nyxContentEditorWeb", 'tests/nyx_content_editor_generated.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxContentEditorWeb 'rtl.js') -Force
+    Copy-Item -LiteralPath $nyxContentEditorSeed -Destination (Join-Path $nyxContentEditorWeb 'seed.pas.txt') -Force
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/content-editor-controls.html'),
+      (Join-Path $nyxRoot 'studio/web/content-editor-generated.html') `
+      -Destination $nyxContentEditorWeb -Force
+    Write-Host 'Native recipe editor passed; staged browser consumer still requires actual execution on an owned HTTP host.'
     exit 0
   }
 

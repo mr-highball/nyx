@@ -7,7 +7,22 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-## Current return path: alternate structural presentations — 2026-10-06
+## Current return path: recipe editor and semantic release — 2026-10-06
+
+The original NS-4 criterion 1 now has ordinary Nyx-built recipe authoring. Its
+public reusable Properties compound captures copied typed conditions/references
+into the existing independent source queue. The accepted candidate generates
+adjacent Pascal and owns one paired Undo/Redo step. Exact registered removal,
+invalid intervals and stale queued registry refusal are exercised on both targets.
+
+Stop local editor/queue fixtures here. Authenticated discovery still confirms
+twenty running tools without content query or content-set. That concrete deployed
+schema gap is recorded with the existing workflow owner (no-closure 9), while
+current source supports the semantic command. Next deliverable is the observing
+browser Studio/HTTP semantic journey using the same authoring boundary, through
+the maintained protected release path. Prepare/check the release independently;
+retain all fifteen services/eight pairs and their identities. This batch starts,
+stops or restarts no service and claims no LAN rollout.
 
 Return path: original structural presentations (NS-4 criterion 1), through the
 open native/browser ownership and interaction prerequisites. Independent mounted
@@ -18,24 +33,74 @@ Introduced/nested publishers now settle as hidden candidates before acceptance.
 Reversible physical preview now includes actual attachment/showing, synchronization,
 observation, focus/ranges, containing scroll and selection paint before retirement.
 
-Next deliverable: ordinary Nyx-built Studio recipe editing with typed conditions
-and reusable references, paired Pascal/history and observing semantic operations.
-Use reusable public Nyx controls, not adapter-specific Studio UI. Trace the existing
-workspace/transport path first; keep protected endpoints and all eight pairs intact.
-Evidence must exercise normal properties/recipe authoring, grouped Undo/Redo,
-source generation/admission and an observing browser/LCL consumer. Stop when that
-integrated journey is qualified or a concrete transport gap is recorded with the
-workflow owner. Do not extend the qualified wire/parser, simple-host, nested or
-publication fixtures instead. Original full parity/accessibility,
+Reassessment: return from ordinary local integration to the concrete release and
+observing-transport gap, rather than another parser/renderer fixture. The native
+full controller and both Properties/queue consumers are qualified; the latter
+is an independently hosted subtree, not the full observing browser application.
+Original full parity/accessibility,
 performance and delivery criteria remain unchanged; the current proofs do not
 accept hardware IME/assistive input or other widgetsets.
 
-This NS-2-owned batch closes no full original criterion. Renderer no-closure
-advances 6→7 once; authoring 25, workflow 9, codegen 28 and delivery 1 remain.
-Reassessment now returns from the qualified physical boundary to ordinary editor
-integration. It does not restrict alternate structures to fixed control sets or
-credit an explicit remount as continuity. Nothing moves to DONE. Main services
+This NS-4-owned batch closes no full original criterion. Authoring no-closure
+advances 25→26 once; renderer 7, workflow 9, codegen 28 and delivery 1 remain.
+It does not restrict alternate structures to fixed control sets or credit an
+explicit remount as continuity. Nothing moves to DONE. Main services
 and all eight accepted pairs remain protected; no LAN rollout is claimed.
+
+## Ordinary recipe authoring — 2026-10-06
+
+`nyx.content.editor` is a public Nyx compound composed from managed specialized
+cards, labels, selects, spins and buttons. Default, available width/height/
+orientation, named presentation and closed platform choices produce an independent
+registry. Exact rule removal retains other scopes. Studio's Properties view
+consumes that public composition and captures immutable `NyxSetContent` values,
+with an exact mounted registry baseline. Worker admission validates all inactive
+dependencies and preserves source/history on refusal. Stale queued capture is a
+normal rejected diagnostic, not an unavailable processor. Existing requests keep
+v9; only the new content action uses strict v10. A cached count avoids the installed
+pas2js implicit record-method array-index emission bug found by actual execution.
+
+The maintained Pascal MCP author composed the unchanged English seed with one
+semantic transaction in an owned review, exported bounded source windows, requested
+both application builds, checked exact source/revision/output and explicitly
+discarded its review within one owning transport. Both jobs succeeded; primary
+paired frame/navigation/history availability remained exact. A preliminary
+one-shot review could not be continued from a new transport and correctly refused;
+the maintained session resolved the workflow without retargeting a user project.
+
+Evidence under ignored `build/content-editor/`:
+
+- `mcp/run.log` and `source/`: semantic seed/export/both compiler job receipts.
+- `final-qualified.log`: maintained build orchestration passes, including 55
+  actual Properties/queue checks, six additional
+  ordinary native Studio checks (61 total), zero unfreed blocks. Actual native
+  Undo/Redo and retained Pascal control are included. `maintained/result/` owns
+  desktop/390 captures and the exact newly generated companion.
+- `browser-final.log`, `browser-compact.log`: 55 per desktop/exact-390 Properties
+  consumer with the real compiled independent worker and target previews.
+  Captures under their corresponding browser-review directories were inspected.
+- `generated-stable/run.log` and `generated-browser.log`: five checks each execute
+  the unchanged newly generated builder and qualify its accepted registry and
+  realized size/manual recipe meaning; native reports zero leaks.
+- `stable/queue-run.log`: existing real native queue/presentation checks pass 10
+  with zero leaks. Server and browser Studio compile independently; native Studio
+  is compiled/executed by the maintained consumer. Zero owned warnings; each
+  browser compile retains seven unchanged upstream RTL warnings.
+- `final-preservation.json`, `protected-main-final.json`,
+  `protected-services-final.json`: all fifteen process identities and eight
+  exact accepted pairs/navigation/draft/history-availability flags retained;
+  LAN HTTP 200. History stack serialization is not observed by that endpoint.
+  `reviews-final.jsonl` reports zero remaining reviews after transport retirement.
+
+`tools/build.ps1 -Target content-editor` maintains compilation/native execution,
+unchanged generated-companion execution and browser/worker staging. Optional
+`DesignerMCPConfig` composes/builds/retires a review; ordinary Studio startup does
+not require it. Actual browser execution used only newly task-owned child files
+under the existing isolated host. No new listener or production replacement.
+
+Full responsive WYSIWYG/parity/accessibility/performance and original prerequisites
+remain open. Rule loading/draft ergonomics, broader source-change continuity and
+the full observing browser semantic release are not accepted from this packet.
 
 ## Reversible physical publication — 2026-10-06
 

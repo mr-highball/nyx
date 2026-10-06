@@ -1150,6 +1150,12 @@ begin
   if ATrigger = ntClick then
   begin
 
+    if CaptureNyxContentInspector(FSession, ANode, AShellRoot, LEdit) then
+    begin
+      Edit(LEdit);
+      Exit(True);
+    end;
+
     if CaptureNyxViewportInspector(FSession, ANode, AShellRoot, LEdit) then
     begin
       Edit(LEdit);

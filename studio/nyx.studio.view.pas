@@ -1143,6 +1143,11 @@ begin
       end
       else
       begin
+
+        if LSelected.ProjectionKind = 'component' then
+        begin
+          AddNyxContentInspector(LRight, ASession);
+        end;
         AddBindingsPanel(LRight, ASession, LSelectedProjection, AState);
 
         if AState.BindingsVisible then

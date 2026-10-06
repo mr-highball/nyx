@@ -25,6 +25,15 @@ receipts live under `build/retained-arrangement/`; no workflow criterion closes.
 
 **Acceptance Criteria:**
 
+Current recipe-editor release gap (2026-10-06): authenticated discovery of the
+protected running endpoint returns twenty tools, but `nyx_node` has no content
+query and `nyx_transaction` has no `content-set` operation. Current source owns
+both capabilities; its deployment and an observing HTTP journey remain unqualified.
+Use the same typed command for the ordinary Studio editor and local semantic
+consumer. Do not replace protected services/projects or substitute raw property
+updates and browser automation for the missing operation. Workflow no-closure
+remains 9; this is a release follow-up within this existing owner.
+
 - Project/user configuration discovers authenticated tools through actual Codex
   initialization, refreshes enrolled credentials on Studio launch and preserves
   unrelated files. The guide distinguishes configured, connected and active-chat

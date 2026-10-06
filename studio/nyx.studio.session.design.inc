@@ -424,6 +424,11 @@ var
   LResize: TNyxDataValue;
   LPresentation: TNyxDataValue;
   LPosition: TNyxDataValue;
+  LEdit: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LCount: Integer;
+  LVersion: Integer;
 begin
   LCollection := NyxNull;
   LPlacement := NyxNull;
@@ -455,12 +460,7 @@ begin
   begin
     LPosition := FEdit.Position.ToData;
   end;
-  Result := NyxObject([
-    NyxField('version', NyxData(9)), NyxField('owner', NyxData(FOwner)),
-    NyxField('generation', NyxData(FGeneration)), NyxField('nextId', NyxData(FNextID)),
-    NyxField('schemaRevision', NyxData(FSchemaRevision)),
-    NyxField('pair', NyxData(EncodeNyxProject(FPair))),
-    NyxField('edit', NyxObject([
+  LEdit := NyxObject([
       NyxField('action', NyxData(Ord(FEdit.Action))),
       NyxField('selection', NyxData(FEdit.Selection)), NyxField('view', NyxData(FEdit.View)),
       NyxField('name', NyxData(FEdit.Name)), NyxField('value', NyxData(FEdit.Value)),
@@ -471,7 +471,32 @@ begin
       NyxField('event', DesignEventData(FEdit)),
       NyxField('collection', LCollection), NyxField('placement', LPlacement),
       NyxField('resize', LResize), NyxField('presentation', LPresentation),
-      NyxField('position', LPosition)]))]);
+      NyxField('position', LPosition)]);
+  LVersion := 9;
+
+  if FEdit.Action = sdaContent then
+  begin
+    { Existing operations retain their deployed v9 shape. Only the appended
+      recipe operation needs the new envelope, so old helpers remain compatible. }
+    LVersion := 10;
+    { Cache the method result before using it as an index. The installed pas2js
+      compiler mis-emits an implicit parameterless record call inside brackets. }
+    LCount := LEdit.Count;
+    SetLength(LFields, LCount + 1);
+    for LIndex := 0 to LCount - 1 do
+    begin
+      LFields[LIndex] := NyxField(LEdit.Key(LIndex), LEdit.Field(LEdit.Key(LIndex)));
+    end;
+    LFields[LCount] := NyxField('content', NyxObject([
+      NyxField('command', FEdit.Content.ToData),
+      NyxField('baseline', NyxData(FEdit.ContentBaseline))]));
+    LEdit := NyxObject(LFields);
+  end;
+  Result := NyxObject([
+    NyxField('version', NyxData(LVersion)), NyxField('owner', NyxData(FOwner)),
+    NyxField('generation', NyxData(FGeneration)), NyxField('nextId', NyxData(FNextID)),
+    NyxField('schemaRevision', NyxData(FSchemaRevision)),
+    NyxField('pair', NyxData(EncodeNyxProject(FPair))), NyxField('edit', LEdit)]);
 end;
 
 function TNyxStudioDesignRequest.SameRequest(const AOther: TNyxStudioDesignRequest): Boolean;
@@ -523,6 +548,12 @@ begin
   begin
     Result := FEdit.Position.SameChange(AOther.FEdit.Position);
   end;
+
+  if Result and (FEdit.Action = sdaContent) then
+  begin
+    Result := FEdit.Content.Same(AOther.FEdit.Content) and
+      (FEdit.ContentBaseline = AOther.FEdit.ContentBaseline);
+  end;
 end;
 
 function ReadNyxStudioDesignRequest(const AData: TNyxDataValue): TNyxStudioDesignRequest;
@@ -541,12 +572,13 @@ var
   LEventAction: Integer;
   LPolicy: Integer;
   LVersion: Integer;
+  LContent: TNyxDataValue;
 begin
   LVersion := AData.Field('version').AsInteger;
 
   if (AData.Kind <> ndObject) or (AData.Count <> 7) or
     ((LVersion <> 5) and (LVersion <> 6) and (LVersion <> 7) and (LVersion <> 8) and
-    (LVersion <> 9)) then
+    (LVersion <> 9) and (LVersion <> 10)) then
   begin
     raise ENyxModel.Create('Design processor requires its exact versioned ticket');
   end;
@@ -564,7 +596,8 @@ begin
     ((LVersion = 6) and (LEdit.Count <> 12)) or
     ((LVersion = 7) and (LEdit.Count <> 13)) or
     ((LVersion = 8) and (LEdit.Count <> 14)) or
-    ((LVersion = 9) and (LEdit.Count <> 15)) then
+    ((LVersion = 9) and (LEdit.Count <> 15)) or
+    ((LVersion = 10) and (LEdit.Count <> 16)) then
   begin
     raise ENyxModel.Create('Design processor ticket has invalid identity or intent');
   end;
@@ -575,7 +608,8 @@ begin
     ((LVersion = 5) and (LAction > Ord(sdaCollection))) or
     ((LVersion = 6) and (LAction > Ord(sdaPlacement))) or
     ((LVersion = 7) and (LAction > Ord(sdaResize))) or
-    ((LVersion = 8) and (LAction > Ord(sdaPresentation))) then
+    ((LVersion = 8) and (LAction > Ord(sdaPresentation))) or
+    ((LVersion = 9) and (LAction > Ord(sdaPosition))) then
   begin
     raise ENyxModel.Create('Design processor action is outside its closed contract');
   end;
@@ -783,6 +817,28 @@ begin
   begin
     raise ENyxModel.Create('Only position intent carries a position command');
   end;
+
+  if Result.FEdit.Action = sdaContent then
+  begin
+    LContent := LEdit.Field('content');
+
+    if (LContent.Kind <> ndObject) or (LContent.Count <> 2) then
+    begin
+      raise ENyxModel.Create('Content intent requires its exact command and baseline');
+    end;
+    Result.FEdit.Content := TNyxContentEdit.FromData(LContent.Field('command'));
+    Result.FEdit.ContentBaseline := LContent.Field('baseline').AsText;
+
+    if (Result.FEdit.Content.Control.ID <> Result.FEdit.Selection) or
+      (Result.FEdit.ContentBaseline = '') then
+    begin
+      raise ENyxModel.Create('Content payload requires its exact captured owner and baseline');
+    end;
+  end
+  else if (LVersion >= 10) and (LEdit.Field('content').Kind <> ndNull) then
+  begin
+    raise ENyxModel.Create('Only content intent carries a recipe command');
+  end;
 end;
 
 destructor TPreparedDesign.Destroy;
@@ -853,6 +909,15 @@ begin
       sdaPosition: LSession.Position(FRequest.FEdit.Position);
       sdaPresentation:
         LSession.ApplyPatch(ReadNyxDesignPatch(NyxArray([FRequest.FEdit.Presentation.ToData])));
+      sdaContent:
+        begin
+
+          if LSession.Selected.Content.ToData.ToJSON <> FRequest.FEdit.ContentBaseline then
+          begin
+            raise ENyxModel.Create('Content choices changed since this editor was captured');
+          end;
+          LSession.ApplyPatch(ReadNyxDesignPatch(NyxArray([FRequest.FEdit.Content.ToData])));
+        end;
       sdaCanvasValue: LSession.SetCapturedCanvasValue(FRequest.FEdit);
       sdaSetStateDefault:
         LSession.SetStateValues([NyxStateAssign(FRequest.FEdit.Name,
@@ -1134,6 +1199,21 @@ begin
     begin
       raise ENyxModel.Create('Presentation intent requires its exact captured selected owner');
     end;
+  end;
+
+  if AEdit.Action = sdaContent then
+  begin
+
+    if not AEdit.Content.Defined or (AEdit.Content.Control.ID <> AEdit.Selection) or
+      (FDocument.Find(AEdit.Selection) = nil) or
+      (AEdit.ContentBaseline = '') then
+    begin
+      raise ENyxModel.Create('Content intent requires its exact captured owner and baseline');
+    end;
+    { Earlier queued jobs may legitimately have changed this registry. The
+      independent processor compares the mounted baseline against its fresh
+      pair and returns a normal rejected diagnostic; staleness is not a failed
+      scheduler/worker transport and must not be reported as one. }
   end;
 
   if AEdit.Action = sdaCollection then

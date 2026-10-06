@@ -116,6 +116,13 @@ function RouteNyxStudioEvents(ASession: TNyxStudioSession; ANode: TNyxNode;
   Existing rule properties continue through the ordinary typed inspector. }
 procedure AddNyxViewportInspector(AParent: TNyxNode; const AOwner: TNyxText;
   ADocument: TNyxDocument = nil);
+{ Studio borrows its selected authored instance only during composition. The
+  reusable library editor owns copied choices and controls on either adapter. }
+procedure AddNyxContentInspector(AParent: TNyxNode; ASession: TNyxStudioSession);
+{ Captures a copied command for the existing independent paired queue. Stale
+  selection/registry refuses before enqueue; no source/history changes here. }
+function CaptureNyxContentInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 { Capture one property intent for the independent paired processor. The source
   button owns an exact selection; stale owners and incomplete intervals refuse.
   No accepted document, source, history or control is changed here. }
@@ -132,11 +139,66 @@ function ReadNyxStudioPresentationChoice(const AChoice: TNyxText;
 implementation
 
 uses
-  nyx.schema, nyx.controls, nyx.studio.callbackedits, nyx.studio.edits;
+  nyx.schema, nyx.controls, nyx.content, nyx.content.editor,
+  nyx.studio.callbackedits, nyx.studio.edits;
 
 const
   CAutomaticPresentation = 'Automatic / defaults';
   CManualPresentationPrefix = 'Manual / ';
+
+procedure AddNyxContentInspector(AParent: TNyxNode; ASession: TNyxStudioSession);
+var
+  LRecipes: array of TNyxComponentRef;
+  LPresentations: array of TNyxPresentationRef;
+  LIndex: Integer;
+begin
+
+  if (AParent = nil) or (ASession = nil) or (ASession.Selected = nil) or
+    (ASession.Selected.ProjectionKind <> 'component') then
+  begin
+    raise ENyxModel.Create('Content inspector requires a selected reusable instance');
+  end;
+  SetLength(LRecipes, ASession.Document.ComponentCount);
+  for LIndex := 0 to High(LRecipes) do
+  begin
+    LRecipes[LIndex] := NyxComponent(ASession.Document.Components[LIndex].ID);
+  end;
+  SetLength(LPresentations, ASession.Document.Presentations.Count);
+  for LIndex := 0 to High(LPresentations) do
+  begin
+    LPresentations[LIndex] := ASession.Document.Presentations.Reference(LIndex);
+  end;
+  AParent.Add(NewNyxContentEditor('inspector-content', NyxControl(ASession.SelectedID),
+    ASession.Selected.Content, ASession.Selected.DefaultComponent, LRecipes, LPresentations));
+end;
+
+function CaptureNyxContentInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LChange: TNyxContentEditorChange;
+  LContent: INyxContent;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := CaptureNyxContentEditor(AButton, AShellRoot, LChange, LContent);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if (ASession = nil) or (ASession.Selected = nil) or
+    (ASession.SelectedID <> LChange.Owner.ID) or
+    (ASession.Selected.ProjectionKind <> 'component') or
+    (ASession.Selected.Content.ToData.ToJSON <> LChange.Baseline) then
+  begin
+    raise ENyxModel.Create('Select this instance again before applying its content choices');
+  end;
+  AEdit.Action := sdaContent;
+  AEdit.Selection := LChange.Owner.ID;
+  AEdit.View := ASession.ActiveViewID;
+  AEdit.Content := NyxSetContent(LChange.Owner, LContent);
+  AEdit.ContentBaseline := LChange.Baseline;
+end;
 
 function NyxStudioPresentationItems(const ADefinitions: INyxPresentationSnapshot): TNyxText;
 var

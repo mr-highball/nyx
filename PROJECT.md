@@ -66,6 +66,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Studio's ordinary Properties now consumes a public Nyx recipe editor with typed
+size/presentation/platform choices and reusable references. Paired queued edits,
+scope removal, Undo/Redo, target previews and stale refusal pass 55 per browser/
+Win32 consumer; ordinary native Studio adds six checks, with zero native leaks.
+The newly generated companion executes five checks per native/browser. Protected
+running MCP schemas still lack the new content query/mutation; observing browser
+release integration remains open. See [current evidence](WORK.md#ordinary-recipe-authoring--2026-10-06).
+
 Typed whole-recipe alternatives now publish distinct control sets during live
 host/manual/allocated-container changes. Contract checks pass 55 per compiler /
 executed browser; compiled Unicode companions pass 42 initial/remount and 63 live
@@ -74,8 +82,8 @@ focus/drafts, independent scalar/collection stores, admitted source refresh,
 factory failure, callback queue reentry and teardown are qualified. Nested hidden
 settling passes 27 Win32 / 29 browser checks; reversible physical publication passes
 50 per target, including visible-sync/focus refusal, exact accepted recovery,
-committed observer callbacks and designer selection. Full parity and the ordinary
-Studio recipe editor remain open. Protected
+committed observer callbacks and designer selection. Full parity and observing
+Studio release integration remain open. Protected
 LAN services/eight pairs are unchanged. See [the contract](docs/content-recipes.md)
 and [current evidence](WORK.md#reversible-physical-publication--2026-10-06).
 

@@ -3,7 +3,20 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current physical publication packet (2026-10-06): replacement previews actual
+Current ordinary recipe-authoring packet (2026-10-06): a public Nyx Properties
+compound submits typed copied recipe choices through independent paired admission.
+Both target consumers pass 55 checks; ordinary native Studio adds six (61 total),
+with zero leaks. Exact new generated source executes five checks per target.
+Desktop/390 captures are inspected. The semantic English seed uses one owned
+review/transaction and both exact compiler jobs. Fifteen services/eight pairs
+stay exact; LAN HTTP remains available. Running schemas omit current-source content
+query/mutation, recorded with the workflow owner. Original criterion 1 remains
+open; authoring no-closure 25→26 once, renderer 7, workflow 9, codegen 28 and
+delivery 1 remain. Stop local fixtures and finish protected release/observing
+browser integration; original parity/accessibility/performance criteria remain.
+See [evidence and return path](WORK.md#ordinary-recipe-authoring--2026-10-06).
+
+Previous physical publication packet (2026-10-06): replacement previews actual
 attachment/showing, synchronization, observation, focus/ranges, containing scroll
 and selection painting before old retirement. Managed native observer publication
 copies the committed router epoch without reconnecting hooks. Browser/Win32 pass

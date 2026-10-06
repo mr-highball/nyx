@@ -83,7 +83,8 @@ type
     sdaMove, sdaTitle, sdaAddPage, sdaCreateComponent, sdaAddInstance, sdaCustomizePart,
     sdaCanvasValue, sdaSetStateDefault, sdaCreateStateDefault,
     sdaRenameStateDefault, sdaRemoveStateDefault, sdaSetBinding, sdaInheritBinding,
-    sdaEvent, sdaCollection, sdaPlacement, sdaResize, sdaPresentation, sdaPosition);
+    sdaEvent, sdaCollection, sdaPlacement, sdaResize, sdaPresentation, sdaPosition,
+    sdaContent);
   { Callback operations carry exact typed event/registration references. Removal
     includes the handler the user reviewed; IDs alone cannot authorize replacing
     a registration. Empty references belong only to add/policy intent. }
@@ -145,6 +146,11 @@ type
     Position: TNyxPositionChange;
     { Named definition/override intent shares the same isolated paired job. }
     Presentation: TNyxPresentationEdit;
+    { Copied whole-recipe command and exact registry shown when captured.
+      A queued edit cannot silently replace choices changed by an earlier job.
+      Both fields contain values only, never the mutable authoring facade. }
+    Content: TNyxContentEdit;
+    ContentBaseline: TNyxText;
     { Immutable origin of a canvas capture. Queue admission uses this mounted
       session/load identity even when the caller retains intent before enqueue. }
     property CanvasContext: TNyxStudioCommandContext read FCanvasContext;

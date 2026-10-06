@@ -40,6 +40,24 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Ordinary recipe editor — 2026-10-06
+
+Criterion 1 now has a public Nyx Properties composition for whole reusable recipes
+by typed size, named presentation and platform. Independent paired queue admission,
+source generation, exact removal and Undo/Redo, actual previews and stale capture
+refusal pass 55 per target. Ordinary native Studio adds six checks (61 total);
+new generated source executes five per target. Native traces report zero leaks.
+Semantic English composition/export/both build jobs and desktop/390 captures are
+qualified. See [evidence](../WORK.md#ordinary-recipe-authoring--2026-10-06).
+
+No original criterion closes. Authoring no-closure advances 25→26 once; renderer
+7, workflow 9, codegen 28 and delivery 1 remain. Stop local fixtures: protected
+running schemas lack content query/mutation, recorded with the existing workflow
+owner. Return to maintained protected release and an observing browser Studio/HTTP
+journey. Full parity/accessibility/performance/prerequisites, richer form/draft
+ergonomics and broader source continuity remain open. Fifteen services/eight
+pairs stay exact; no LAN rollout is claimed.
+
 ## Physical publication return path — 2026-10-06
 
 The original criterion 1 now consumes the qualified NS-2 physical preview

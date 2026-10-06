@@ -57,6 +57,54 @@ document, renderer or another scope. Retained scopes remain safe after a control
 is released. `Clone` and the node's `SetContent` boundary copy independent storage.
 Inspected rule/reference values cannot mutate registry storage.
 
+## Studio authoring
+
+Select a reusable instance and open Properties → Content recipes. Choose Default,
+Available size, or Named presentation; select All targets, Browser, or Native LCL;
+then choose a reusable definition. Size conditions combine inclusive lower bounds,
+exclusive upper bounds and orientation. A zero upper bound means unbounded.
+An unrestricted size condition refuses and directs the user to Default instead.
+
+Use recipe in this scope upserts the exact scope, retaining its order. Each
+registered rule shows its scope, target and recipe and has an exact removal
+button. Removing a choice retains the others; document admission still requires
+a common default, through an ordinary rule or the existing compatible reference.
+The size fields are used only for Available size; the presentation selector only
+for Named presentation. Output compilers are independent of these choices.
+
+`nyx.content.editor` provides the reusable public Nyx composition. Its card,
+labels, selects, numeric inputs and buttons use specialized managed interfaces
+on both adapters. Composition borrows distinct control/recipe/presentation
+references and the current registry, then retains only copied metadata and owned
+descendants. `CaptureNyxContentEditor` returns an independent registry and exact
+mounted baseline; it never changes the caller's document.
+
+Studio captures `NyxSetContent` as a value-only queued command. The existing
+independent processor compares the shown registry with its fresh paired model,
+validates every dependency and inactive branch, and generates adjacent typed
+Pascal. One accepted operation creates one paired Undo/Redo step. A second queued
+edit from an older registry returns a normal rejected diagnostic and cannot
+erase the earlier edit or add history. Existing worker operations keep their
+version-nine envelope; only recipe edits use version ten.
+
+The maintained Properties/queue consumer passes 55 actual checks on Win32 and
+browser, with six additional checks through ordinary native Studio and zero
+native leaks. Exact-390 browser and compact native captures qualify that bounded
+composition; full browser Studio observation remains a release follow-up. The
+protected running MCP schemas lack content query/mutation despite current source
+support; see [the workflow owner](../TODO/NS-4_agent-workflows_01.md). Do not use raw
+property updates to impersonate an unsupported content operation.
+
+Run `tools/build.ps1 -Target content-editor` against the unchanged English
+MCP-exported companion in `build/content-editor/source`, or supply
+`-ContentEditorSourceDirectory`. Optional `-DesignerMCPConfig` uses the maintained
+Pascal semantic client to create, compose, export, compile and retire one owned
+review within one transport session. Separate one-shot clients cannot continue
+an owner-bound review. Browser staging includes the compiled independent worker
+and matching runtime; `content-editor-controls.html` uses the maintained Pascal
+driver's `projection` mode, optionally with `?compact=1`. The build starts no
+listener and changes no operator project.
+
 ## Composition and mounted views
 
 `RealizeNyxView(Document, Root)` chooses ordinary content for dependency/source

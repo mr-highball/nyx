@@ -46,9 +46,14 @@ type
   private
     FControl: TNyxControlRef;
     FValue: TNyxDataValue;
+    function GetDefined: Boolean;
   public
+    { Equality compares the complete immutable command, including rule order. }
+    function Same(const AOther: TNyxContentEdit): Boolean;
     function ToData: TNyxDataValue;
     class function FromData(const AData: TNyxDataValue): TNyxContentEdit; static;
+    property Control: TNyxControlRef read FControl;
+    property Defined: Boolean read GetDefined;
   end;
 
   { Copied editor intent. Definition changes affect every referencing control;
@@ -909,6 +914,22 @@ begin
     LContent := NyxContentFromData(AContent.ToData);
   end;
   Result.FValue := LContent.ToData;
+end;
+
+function TNyxContentEdit.GetDefined: Boolean;
+begin
+  Result := FValue.Defined;
+end;
+
+function TNyxContentEdit.Same(const AOther: TNyxContentEdit): Boolean;
+begin
+  Result := (FControl.ID = AOther.FControl.ID) and
+    (FValue.Defined = AOther.FValue.Defined);
+
+  if Result and FValue.Defined then
+  begin
+    Result := FValue.ToJSON = AOther.FValue.ToJSON;
+  end;
 end;
 
 function TNyxContentEdit.ToData: TNyxDataValue;

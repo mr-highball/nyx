@@ -1,0 +1,16 @@
+[
+  {"op":"title","value":"Content recipe workshop"},
+  {"op":"create","kind":"page","id":"home","root":"page","properties":{"padding":16,"gap":12}},
+  {"op":"create","kind":"card","id":"comfortable-card","root":"component","properties":{"layout":"column","gap":12,"padding":20}},
+  {"op":"create","kind":"heading","id":"comfortable-heading","parent":"comfortable-card","properties":{"text":"A little room to create","part":"title"}},
+  {"op":"create","kind":"input","id":"comfortable-name","parent":"comfortable-card","properties":{"text":"Project name","value":"A fresh idea","part":"name"}},
+  {"op":"create","kind":"button","id":"comfortable-action","parent":"comfortable-card","properties":{"text":"Create project","part":"action"}},
+  {"op":"create","kind":"column","id":"compact-card","root":"component","properties":{"gap":8,"padding":12}},
+  {"op":"create","kind":"input","id":"compact-name","parent":"compact-card","properties":{"text":"Name","value":"A fresh idea","part":"name"}},
+  {"op":"create","kind":"button","id":"compact-action","parent":"compact-card","properties":{"text":"Create","part":"action"}},
+  {"op":"create","kind":"card","id":"reading-card","root":"component","properties":{"layout":"column","gap":8,"padding":16}},
+  {"op":"create","kind":"heading","id":"reading-heading","parent":"reading-card","properties":{"text":"A moment to reflect","part":"title"}},
+  {"op":"create","kind":"memo","id":"reading-notes","parent":"reading-card","properties":{"text":"Notes","value":"What would you like to make?","part":"notes"}},
+  {"op":"presentation-define","name":"focused","widthMinimum":0,"widthMaximum":0,"heightMinimum":0,"heightMaximum":0,"orientation":"any","activation":"manual"},
+  {"op":"instance","id":"workspace","component":"comfortable-card","parent":"home"}
+]
