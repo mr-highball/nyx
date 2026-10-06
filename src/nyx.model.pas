@@ -35,6 +35,7 @@ uses
   nyx.contract,
   nyx.types,
   nyx.layout.policy,
+  nyx.layout.constraints,
   nyx.state,
   nyx.collections.registry,
   nyx.collections.view.types,
@@ -302,6 +303,15 @@ type
     function Columns(AValue: Integer): TNyxNodeConfig;
     function Width(AValue: Integer): TNyxNodeConfig;
     function Height(AValue: Integer): TNyxNodeConfig;
+    { Explicit logical-pixel bounds. Absence is distinct from a present zero;
+      typed Clear removes one bound. Pair consistency is checked at admission. }
+    function MinimumWidth(AValue: Integer): TNyxNodeConfig;
+    function MaximumWidth(AValue: Integer): TNyxNodeConfig;
+    function MinimumHeight(AValue: Integer): TNyxNodeConfig;
+    function MaximumHeight(AValue: Integer): TNyxNodeConfig;
+    { Replace all four bounds from a copied, validated value. Missing limits
+      clear corresponding authored properties, including platform overrides. }
+    function Constraints(const AValue: TNyxSizeConstraints): TNyxNodeConfig;
     function Left(AValue: Integer): TNyxNodeConfig;
     function Top(AValue: Integer): TNyxNodeConfig;
     { Positive main-axis weight in a row or a column with a definite height.
@@ -489,12 +499,71 @@ function NyxQualifiedID(const APrefix, ASourceID: TNyxText): TNyxText;
   adapter boundary for unmount/admission failure, rather than direct Free. }
 procedure ReleaseNyxNode(var ANode: TNyxNode);
 
+{ Read a copied effective size policy at the explicit persistence/adapter
+  boundary. Empty scoped values clear that bound instead of falling through.
+  Invalid integers/ranges raise ENyxModel; no node or renderer is retained. }
+function NyxNodeSizeConstraints(ANode: TNyxNode;
+  APlatform: TNyxPlatform = npfAny): TNyxSizeConstraints;
+
 implementation
 
 uses
   nyx.schema,
   nyx.collections.view,
   nyx.text.index;
+
+function NyxNodeSizeConstraints(ANode: TNyxNode;
+  APlatform: TNyxPlatform): TNyxSizeConstraints;
+var
+  LWidth, LHeight: TNyxSizeRange;
+
+  function ReadBound(AKey: TNyxAttribute; out AValue: Integer): Boolean;
+  var
+    LText: TNyxText;
+  begin
+    LText := ANode.Prop(NyxPlatformKey(APlatform, AKey),
+      ANode.Prop(NyxAttributeName(AKey)));
+    Result := LText <> '';
+
+    if Result and not TryNyxInteger(LText, AValue) then
+    begin
+      raise ENyxModel.Create('Invalid ' + NyxAttributeName(AKey) + ' on ' + ANode.ID);
+    end;
+  end;
+
+  function ReadRange(AMinimum, AMaximum: TNyxAttribute): TNyxSizeRange;
+  var
+    LValue: Integer;
+  begin
+    Result := NyxSizeRange;
+
+    if ReadBound(AMinimum, LValue) then
+    begin
+      Result := Result.Minimum(LValue);
+    end;
+
+    if ReadBound(AMaximum, LValue) then
+    begin
+      Result := Result.Maximum(LValue);
+    end;
+  end;
+begin
+
+  if ANode = nil then
+  begin
+    raise ENyxModel.Create('Size constraints require a component');
+  end;
+  try
+    LWidth := ReadRange(atMinimumWidth, atMaximumWidth);
+    LHeight := ReadRange(atMinimumHeight, atMaximumHeight);
+    Result := NyxSizeConstraints.Width(LWidth).Height(LHeight);
+  except
+    on E: EArgumentException do
+    begin
+      raise ENyxModel.Create('Invalid size bounds on ' + ANode.ID + ': ' + E.Message);
+    end;
+  end;
+end;
 
 procedure ReleaseNyxNode(var ANode: TNyxNode);
 var
@@ -1391,6 +1460,63 @@ end;
 function TNyxNodeConfig.Height(AValue: Integer): TNyxNodeConfig;
 begin
   Result := PutInteger(atHeight, AValue);
+end;
+
+function TNyxNodeConfig.MinimumWidth(AValue: Integer): TNyxNodeConfig;
+begin
+  NyxSizeRange.Minimum(AValue);
+  Result := PutInteger(atMinimumWidth, AValue);
+end;
+
+function TNyxNodeConfig.MaximumWidth(AValue: Integer): TNyxNodeConfig;
+begin
+  NyxSizeRange.Maximum(AValue);
+  Result := PutInteger(atMaximumWidth, AValue);
+end;
+
+function TNyxNodeConfig.MinimumHeight(AValue: Integer): TNyxNodeConfig;
+begin
+  NyxSizeRange.Minimum(AValue);
+  Result := PutInteger(atMinimumHeight, AValue);
+end;
+
+function TNyxNodeConfig.MaximumHeight(AValue: Integer): TNyxNodeConfig;
+begin
+  NyxSizeRange.Maximum(AValue);
+  Result := PutInteger(atMaximumHeight, AValue);
+end;
+
+function TNyxNodeConfig.Constraints(const AValue: TNyxSizeConstraints): TNyxNodeConfig;
+
+  procedure PutRange(const ARange: TNyxSizeRange;
+    AMinimum, AMaximum: TNyxAttribute);
+  begin
+
+    if ARange.HasMinimum then
+    begin
+      PutInteger(AMinimum, ARange.MinimumValue);
+    end
+    else
+    begin
+      Clear(AMinimum);
+    end;
+
+    if ARange.HasMaximum then
+    begin
+      PutInteger(AMaximum, ARange.MaximumValue);
+    end
+    else
+    begin
+      Clear(AMaximum);
+    end;
+  end;
+begin
+  { Validate both axes before changing any descriptor. Cross-platform inherited
+    combinations are checked together at ordinary candidate admission. }
+  AValue.Validate;
+  PutRange(AValue.WidthRange, atMinimumWidth, atMaximumWidth);
+  PutRange(AValue.HeightRange, atMinimumHeight, atMaximumHeight);
+  Result := Self;
 end;
 
 function TNyxNodeConfig.Left(AValue: Integer): TNyxNodeConfig;

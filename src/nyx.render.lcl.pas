@@ -45,6 +45,7 @@ uses
   nyx.widgets.lcl,
   nyx.model,
   nyx.layout.flow,
+  nyx.layout.constraints,
   nyx.layout.viewport,
   nyx.interaction,
   nyx.editing,
@@ -275,11 +276,16 @@ type
     function Build(ANode: TNyxNode; AParent: TWinControl): TControl;
     function Measure(ANode: TNyxNode; AWidth: Integer;
       AAllocatedWidth: Boolean = False): Integer;
+    { Bound all intrinsic exits uniformly; recursive measurements use Measure
+      so descendant constraints are admitted before measuring their parent. }
+    function MeasureContent(ANode: TNyxNode; AWidth: Integer;
+      AAllocatedWidth: Boolean): Integer;
     { Visible flow entries only; hidden controls remain owned and mounted. }
     function VisibleChildren(ANode: TNyxNode): Integer;
     { Platform typography supplies intrinsic widths. Portable allocation owns
       line membership/weights/spacing; no equal-cell fallback changes the policy. }
     function NaturalWidth(ANode: TNyxNode; AAvailable: Integer): Integer;
+    function NaturalContentWidth(ANode: TNyxNode; AAvailable: Integer): Integer;
     function EffectiveWidth(ANode: TNyxNode; AAvailable: Integer;
       AAllocated: Boolean = False): Integer;
     function ColumnChildWidth(AParent, AChild: TNyxNode; AAvailable: Integer): Integer;
@@ -1305,6 +1311,12 @@ begin
 end;
 
 function TNyxLCLRenderer.NaturalWidth(ANode: TNyxNode; AAvailable: Integer): Integer;
+begin
+  Result := NyxNodeSizeConstraints(ANode).WidthRange.Clamp(
+    NaturalContentWidth(ANode, AAvailable));
+end;
+
+function TNyxLCLRenderer.NaturalContentWidth(ANode: TNyxNode; AAvailable: Integer): Integer;
 var
   LControl: TControl;
   LLabel: TLabel;
@@ -1407,7 +1419,7 @@ begin
 
   if AAllocated then
   begin
-    Exit;
+    Exit(NyxNodeSizeConstraints(ANode).WidthRange.Clamp(Result));
   end;
 
   if ANode.Prop('width-sizing') = 'content' then
@@ -1419,6 +1431,7 @@ begin
   begin
     Result := Min(Result, Metric(ANode, 'width', Result));
   end;
+  Result := NyxNodeSizeConstraints(ANode).WidthRange.Clamp(Result);
 end;
 
 function TNyxLCLRenderer.ColumnChildWidth(AParent, AChild: TNyxNode;
@@ -1448,6 +1461,7 @@ function TNyxLCLRenderer.RowPlan(ANode: TNyxNode; AWidth: Integer;
 var
   LItems: TNyxFlowItems;
   LSlice: TNyxFlowItems;
+  LRanges, LSliceRanges: TNyxSizeRanges;
   LLines: TNyxFlowLines;
   LSizes: TNyxFlowSizes;
   LPositions: TNyxFlowSizes;
@@ -1463,6 +1477,7 @@ begin
   LInner := Max(0, AWidth - 2 * Metric(ANode, 'padding', 0));
   LGap := Metric(ANode, 'gap', 12);
   SetLength(LItems, ANode.Count);
+  SetLength(LRanges, ANode.Count);
   SetLength(AWidths, ANode.Count);
   SetLength(ALefts, ANode.Count);
   SetLength(ATops, ANode.Count);
@@ -1472,6 +1487,7 @@ begin
     LItems[LIndex].Visible := ANode.Children[LIndex].Prop('visible', 'true') <> 'false';
     LItems[LIndex].Weight := NyxFlexWeight(ANode.Children[LIndex]);
     LItems[LIndex].NaturalSize := 0;
+    LRanges[LIndex] := NyxNodeSizeConstraints(ANode.Children[LIndex]).WidthRange;
 
     if LItems[LIndex].Visible and (LItems[LIndex].Weight = 0) then
     begin
@@ -1495,16 +1511,18 @@ begin
       Break;
     end;
   end;
-  LLines := NyxFlowLines(LInner, LGap, LItems, LWrap);
+  LLines := NyxFlowLines(LInner, LGap, LItems, LRanges, LWrap);
   Result := 0;
   for LLine := 0 to High(LLines) do
   begin
     SetLength(LSlice, LLines[LLine].Last - LLines[LLine].First + 1);
+    SetLength(LSliceRanges, Length(LSlice));
     for LLocal := 0 to High(LSlice) do
     begin
       LSlice[LLocal] := LItems[LLines[LLine].First + LLocal];
+      LSliceRanges[LLocal] := LRanges[LLines[LLine].First + LLocal];
     end;
-    LSizes := NyxFlowSizes(LInner, LGap, LSlice);
+    LSizes := NyxFlowSizes(LInner, LGap, LSlice, LSliceRanges);
     LPositions := NyxFlowPositions(LInner, LGap, LSlice, LSizes, LJustification);
     LHeight := 0;
     for LLocal := 0 to High(LSlice) do
@@ -1547,6 +1565,18 @@ begin
 end;
 
 function TNyxLCLRenderer.Measure(ANode: TNyxNode; AWidth: Integer;
+  AAllocatedWidth: Boolean): Integer;
+begin
+
+  if ANode.Prop('visible', 'true') = 'false' then
+  begin
+    Exit(0);
+  end;
+  Result := NyxNodeSizeConstraints(ANode).HeightRange.Clamp(
+    MeasureContent(ANode, AWidth, AAllocatedWidth));
+end;
+
+function TNyxLCLRenderer.MeasureContent(ANode: TNyxNode; AWidth: Integer;
   AAllocatedWidth: Boolean): Integer;
 var
   LIndex: Integer;
@@ -1736,6 +1766,7 @@ var
   LPosition: Integer;
   LDefiniteColumn: Boolean;
   LItems: TNyxFlowItems;
+  LRanges: TNyxSizeRanges;
   LSizes: TNyxFlowSizes;
   LLefts: TNyxFlowSizes;
   LTops: TNyxFlowSizes;
@@ -1755,6 +1786,7 @@ begin
   begin
     LHeight := AHeight;
   end;
+  LHeight := NyxNodeSizeConstraints(ANode).HeightRange.Clamp(LHeight);
   LBinding.FLogicalBox := NyxViewportBox(AX, AY, LWidth, LHeight);
 
   if not FVirtualLayout then
@@ -1830,6 +1862,9 @@ begin
       begin
         LFitHeight := LCellHeight;
       end;
+      { Clamp before alignment, so a capped stretched control is positioned
+        against its actual height rather than its discarded line allocation. }
+      LFitHeight := NyxNodeSizeConstraints(LChild).HeightRange.Clamp(LFitHeight);
       LChildY := LPadding + LTops[LIndex];
 
       if (LAlignment = '') or (LAlignment = 'auto') or (LAlignment = 'center') then
@@ -1856,9 +1891,11 @@ begin
   if NyxLayout(ANode) = 'column' then
   begin
     SetLength(LItems, ANode.Count);
+    SetLength(LRanges, ANode.Count);
     for LIndex := 0 to ANode.Count - 1 do
     begin
       LItems[LIndex].Visible := ANode.Children[LIndex].Prop('visible', 'true') <> 'false';
+      LRanges[LIndex] := NyxNodeSizeConstraints(ANode.Children[LIndex]).HeightRange;
       LItems[LIndex].Weight := 0;
 
       if LDefiniteColumn then
@@ -1873,7 +1910,7 @@ begin
         LItems[LIndex].NaturalSize := Max(0, LHeight - 2 * LPadding);
       end;
     end;
-    LSizes := NyxFlowSizes(Max(0, LHeight - 2 * LPadding), LGap, LItems);
+    LSizes := NyxFlowSizes(Max(0, LHeight - 2 * LPadding), LGap, LItems, LRanges);
     LJustification := njStart;
     for LJustification := Low(TNyxJustification) to High(TNyxJustification) do
     begin

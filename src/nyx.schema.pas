@@ -35,6 +35,7 @@ uses
   nyx.contract,
   nyx.event.payload,
   nyx.state,
+  nyx.layout.constraints,
   nyx.model;
 
 type
@@ -1140,6 +1141,13 @@ begin
           'A parent weight owns its main-axis allocation. Fill height in an ' +
           'indefinite parent falls back to natural content.';
       end;
+    atMinimumWidth, atMaximumWidth, atMinimumHeight, atMaximumHeight:
+      begin
+        LDescription := 'Optional nonnegative logical-pixel bounds apply after sizing. ' +
+          'A blank value clears a bound; zero is an explicit bound. Weighted ' +
+          'siblings redistribute space within bounds. An explicit minimum can ' +
+          'overflow the parent; content stays reachable at its leading edge.';
+      end;
     atHint, atAccessibleName, atWidth, atHeight, atLeft, atTop, atFlex:
       begin
         { These common semantics are applied by both adapters. }
@@ -1488,6 +1496,10 @@ begin
   end;
   Add('width', 'Width (px)', npInteger);
   Add('height', 'Height (px)', npInteger);
+  Add('min-width', 'Minimum width (px)', npInteger);
+  Add('max-width', 'Maximum width (px)', npInteger);
+  Add('min-height', 'Minimum height (px)', npInteger);
+  Add('max-height', 'Maximum height (px)', npInteger);
   Add('width-sizing', 'Width sizing', npChoice, 'auto', 'auto' + #10 + 'content' + #10 + 'fill');
   Add('height-sizing', 'Height sizing', npChoice, 'auto', 'auto' + #10 + 'content' + #10 + 'fill');
   Add('flow-wrap', 'Row wrapping', npChoice, 'auto', 'auto' + #10 + 'nowrap' + #10 + 'wrap');
@@ -2519,6 +2531,7 @@ var
   LEvent: TNyxEventContract;
   LEventOwner: TNyxNode;
   LScalar: Double;
+  LSizeConstraints: TNyxSizeConstraints;
 
   function SplitMetric(APlatform: TNyxPlatform; AKey: TNyxAttribute;
     ADefault: Integer): Integer;
@@ -2717,6 +2730,14 @@ begin
     (LMinimum > LMaximum) then
   begin
     raise ENyxModel.Create('Minimum exceeds maximum on ' + ANode.ID);
+  end;
+  { Check the common pair and each effective override independently. Validating
+    only the four scalars would admit a native maximum below its inherited
+    common minimum. Empty overrides deliberately clear that bound. }
+  for LPlatform := npfAny to npfNativeLCL do
+  begin
+    LSizeConstraints := NyxNodeSizeConstraints(ANode, LPlatform);
+    LSizeConstraints.Validate;
   end;
 end;
 

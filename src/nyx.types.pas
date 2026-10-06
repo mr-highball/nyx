@@ -168,7 +168,8 @@ type
     atTarget, atComponent, atEmit, atEmitChange, atOption, atPath, atDesignID,
     atSplitOrientation, atSplitPosition, atSplitMinimum, atSplitMaximum,
     atSplitResizable, atDragSource, atDropTarget, atTouchBehavior,
-    atFlowWrap, atCrossAlignment, atJustification, atWidthSizing, atHeightSizing);
+    atFlowWrap, atCrossAlignment, atJustification, atWidthSizing, atHeightSizing,
+    atMinimumWidth, atMaximumWidth, atMinimumHeight, atMaximumHeight);
 
   { Open application names are distinct value types, never behavioral keywords.
     These records own immutable text values, without mutable arrays/UI handles.
@@ -316,7 +317,8 @@ const
     'target', 'component', 'emit', 'emit.change', 'option', 'path', 'design-id',
     'split-orientation', 'split-position', 'split-minimum', 'split-maximum',
     'split-resizable', 'drag-source', 'drop-target', 'touch-behavior',
-    'flow-wrap', 'cross-alignment', 'justification', 'width-sizing', 'height-sizing');
+    'flow-wrap', 'cross-alignment', 'justification', 'width-sizing', 'height-sizing',
+    'min-width', 'max-width', 'min-height', 'max-height');
   CLayoutNames: array[TNyxLayoutMode] of TNyxText = ('column', 'row', 'grid', 'absolute');
   CVariantNames: array[TNyxVariant] of TNyxText =
     ('', 'primary', 'secondary', 'danger', 'success', 'warning', 'ghost');
@@ -398,7 +400,8 @@ begin
     atReadOnly, atSurface, atPressed, atVariant, atInputType,
     atSplitOrientation, atSplitPosition, atSplitMinimum, atSplitMaximum,
     atSplitResizable, atDragSource, atDropTarget, atTouchBehavior,
-    atFlowWrap, atCrossAlignment, atJustification, atWidthSizing, atHeightSizing];
+    atFlowWrap, atCrossAlignment, atJustification, atWidthSizing, atHeightSizing,
+    atMinimumWidth, atMaximumWidth, atMinimumHeight, atMaximumHeight];
 end;
 
 function NyxPlatformKey(APlatform: TNyxPlatform; AAttribute: TNyxAttribute): TNyxText;

@@ -1130,6 +1130,8 @@ var
   LEdit: TNyxStudioDesignEdit;
   LCapture: TNyxStudioAuthoringCapture;
   LPlacement: TNyxPlacement;
+  LAttribute: TNyxAttribute;
+  LPlatform: TNyxPlatform;
 begin
   Result := False;
 
@@ -1145,6 +1147,31 @@ begin
 
   if ATrigger = ntClick then
   begin
+
+    if ANode.Prop(NyxStudioPropertyClearKey) <> '' then
+    begin
+      LEdit := Default(TNyxStudioDesignEdit);
+      LEdit.Name := ANode.Prop(NyxStudioPropertyClearKey);
+      LEdit.Selection := ANode.Prop(NyxStudioPropertyOwnerKey);
+
+      if (LEdit.Selection = '') or (LEdit.Selection <> FSession.SelectedID) or
+        not (TryNyxAttribute(LEdit.Name, LAttribute) or
+        TryNyxPlatformKey(LEdit.Name, LPlatform, LAttribute)) then
+      begin
+        raise ENyxModel.Create('Select this component again before unsetting its size bound');
+      end;
+
+      if not (LAttribute in [atMinimumWidth, atMaximumWidth,
+        atMinimumHeight, atMaximumHeight]) then
+      begin
+        raise ENyxModel.Create('This reset action requires a published size bound');
+      end;
+      LEdit.Action := sdaProperty;
+      LEdit.View := FSession.ActiveViewID;
+      LEdit.Value := '';
+      Edit(LEdit);
+      Exit(True);
+    end;
 
     if (ANode.ID = CPlaceStart) or (ANode.ID = CPlaceCancel) then
     begin

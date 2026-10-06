@@ -689,9 +689,13 @@ begin
   Result := BuildNyxStudioView(ASession, AState, nil);
 end;
 
-function BuildNyxStudioView(ASession: TNyxStudioSession;
-  const AState: TNyxStudioViewState; const AReport: INyxCompilerReport): TNyxDocument;
+{ Populate a borrowed owning document. The public wrapper releases it if any
+  creator, projection or pending inspector proposal refuses composition. }
+procedure PopulateNyxStudioView(ASession: TNyxStudioSession;
+  const AState: TNyxStudioViewState; const AReport: INyxCompilerReport;
+  ADocument: TNyxDocument);
 var
+  Result: TNyxDocument;
   LRoot: TNyxNode;
   LHeader: TNyxNode;
   LWorkspace: TNyxNode;
@@ -725,6 +729,8 @@ var
   LSelectedProjection: TNyxNode;
   LBindingTarget: TNyxBindingProperty;
   LBinding: TNyxBindingSpec;
+  LAttribute: TNyxAttribute;
+  LPlatform: TNyxPlatform;
 begin
   { Reject a missing controller before allocating any owned shell nodes. }
 
@@ -732,7 +738,7 @@ begin
   begin
     raise ENyxModel.Create('Studio session is required');
   end;
-  Result := TNyxDocument.Create;
+  Result := ADocument;
   Result.Title := 'Nyx Studio';
   LRoot := TNyxNode.Create('page', 'studio-shell');
   Result.AddPage(LRoot);
@@ -1123,11 +1129,19 @@ begin
             .SetProp('prop-key', LProperties[LIndex].Key)
             .SetProp('value', LSelected.Prop(LProperties[LIndex].Key,
               LProperties[LIndex].DefaultValue));
+          { Admit the field before later configuration can refuse. A failed shell
+            construction must release it with its owning document. }
+          LRight.Add(LField);
 
           if AState.PendingDesign.PropertyValue(LSelected.ID,
             LProperties[LIndex].Key, LPendingValue) then
           begin
-            LField.Configure.Value(LPendingValue).Done;
+            { This is an inspector wire proposal, not an accepted application
+              value. The integer field's published range is installed below;
+              validating against the primitive's temporary default 0..100 would
+              reject a legitimate pending dimension such as 170 prematurely.
+              Candidate/renderer admission remains responsible for typed values. }
+            LField.SetProp('value', LPendingValue);
           end;
           LField.Configure.Hint(LProperties[LIndex].Support.Description + #10 +
             'Browser: ' + NyxCapabilityText(LProperties[LIndex].Support.Browser) +
@@ -1176,7 +1190,24 @@ begin
               LProperties[LIndex].DefaultValue)).Configure.Enabled(False)
               .Hint('Bound to ' + LBinding.StateName + '; edit State or Bindings.').Done;
           end;
-          LRight.Add(LField);
+
+          if TryNyxAttribute(LProperties[LIndex].Key, LAttribute) or
+            TryNyxPlatformKey(LProperties[LIndex].Key, LPlatform, LAttribute) then
+          begin
+
+            if LAttribute in [atMinimumWidth, atMaximumWidth,
+              atMinimumHeight, atMaximumHeight] then
+            begin
+              { Zero is a real limit. Reset submits the same optional-property
+                command with empty wire data; a spin's displayed zero alone
+                cannot communicate or restore absence on both targets. }
+              LRight.Add(Button('inspector-unset-' + LProperties[LIndex].Key,
+                'Unset ' + LowerCase(LProperties[LIndex].Title))
+                .Configure.Hint('Remove this size limit. Zero remains an explicit limit.').Done
+                .SetProp(NyxStudioPropertyClearKey, LProperties[LIndex].Key)
+                .SetProp(NyxStudioPropertyOwnerKey, LSelected.ID));
+            end;
+          end;
 
           if (LProperties[LIndex].Support.Browser = ncMissing) or
             (LProperties[LIndex].Support.Native = ncMissing) then
@@ -1267,6 +1298,23 @@ begin
     begin
       LWorkspace.Remove(LRight);
     end;
+  end;
+end;
+
+function BuildNyxStudioView(ASession: TNyxStudioSession;
+  const AState: TNyxStudioViewState; const AReport: INyxCompilerReport): TNyxDocument;
+begin
+
+  if ASession = nil then
+  begin
+    raise ENyxModel.Create('Studio session is required');
+  end;
+  Result := TNyxDocument.Create;
+  try
+    PopulateNyxStudioView(ASession, AState, AReport, Result);
+  except
+    Result.Free;
+    raise;
   end;
 end;
 

@@ -206,7 +206,8 @@ const
     'atPath', 'atDesignID', 'atSplitOrientation', 'atSplitPosition',
     'atSplitMinimum', 'atSplitMaximum', 'atSplitResizable',
     'atDragSource', 'atDropTarget', 'atTouchBehavior', 'atFlowWrap',
-    'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing');
+    'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing',
+    'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight');
   CTouchSymbols: array[TNyxTouchBehavior] of TNyxText =
     ('ntbAutomatic', 'ntbNone', 'ntbPanX', 'ntbPanY', 'ntbManipulation');
   CWrapSymbols: array[TNyxFlowWrap] of TNyxText = ('nfwAutomatic', 'nfwNoWrap', 'nfwWrap');
@@ -432,6 +433,10 @@ begin
     atColumns: LMethod := 'Columns';
     atWidth: LMethod := 'Width';
     atHeight: LMethod := 'Height';
+    atMinimumWidth: LMethod := 'MinimumWidth';
+    atMaximumWidth: LMethod := 'MaximumWidth';
+    atMinimumHeight: LMethod := 'MinimumHeight';
+    atMaximumHeight: LMethod := 'MaximumHeight';
     atLeft: LMethod := 'Left';
     atTop: LMethod := 'Top';
     atFlex: LMethod := 'Flex';

@@ -26,7 +26,7 @@ unit nyx.layout.flow;
 interface
 
 uses
-  nyx.types;
+  nyx.types, nyx.layout.constraints;
 
 type
   { Adapter-independent main-axis inputs, in logical pixels. Hidden entries
@@ -55,13 +55,26 @@ type
   without overflowing Integer products. It does not implement text measurement,
   CSS minimum-content sizing, wrapping or platform widget metrics. }
 function NyxFlowSizes(AAvailable, AGap: Integer;
-  const AItems: TNyxFlowItems): TNyxFlowSizes;
+  const AItems: TNyxFlowItems): TNyxFlowSizes; overload;
+
+{ Constrained zero-basis weight allocation. Bounds are parallel copied values;
+  old callers need not initialize additional fields in TNyxFlowItem. Fixed
+  extents are clamped first; weighted min/max violations freeze according to
+  their total adjustment, then remaining siblings share remaining space.
+  Explicit minima may overflow; maxima may leave space for justification.
+  A count mismatch or invalid range refuses before producing allocations. }
+function NyxFlowSizes(AAvailable, AGap: Integer; const AItems: TNyxFlowItems;
+  const ARanges: TNyxSizeRanges): TNyxFlowSizes; overload;
 
 { Build source-ordered row lines before allocating weights. A weighted item has
   zero basis, matching Nyx's positive-weight contract. An oversized first item
   occupies one line; neither overflow nor hidden entries create empty lines. }
 function NyxFlowLines(AAvailable, AGap: Integer; const AItems: TNyxFlowItems;
-  AWrap: Boolean): TNyxFlowLines;
+  AWrap: Boolean): TNyxFlowLines; overload;
+{ Weighted hypothetical sizes include their explicit minimum before wrapping;
+  each resulting line subsequently redistributes weights within its bounds. }
+function NyxFlowLines(AAvailable, AGap: Integer; const AItems: TNyxFlowItems;
+  const ARanges: TNyxSizeRanges; AWrap: Boolean): TNyxFlowLines; overload;
 { Fresh logical positions for one line. Extra spacing uses cumulative rounding;
   gaps are minima. Overflow retains start alignment, keeping the leading content
   reachable. Hidden indices stay zero. Inputs and prior results remain unchanged.
@@ -73,6 +86,13 @@ implementation
 
 uses
   Math, SysUtils;
+
+{ Assignment conversion is portable to FPC 3.2 and pas2js. FPC 3.2 does not
+  accept the newer explicit Integer-to-Double cast used by some compilers. }
+function FlowReal(AValue: Integer): Double;
+begin
+  Result := AValue;
+end;
 
 function NyxFlowSizes(AAvailable, AGap: Integer;
   const AItems: TNyxFlowItems): TNyxFlowSizes;
@@ -110,8 +130,8 @@ begin
       end;
     end;
   end;
-  LFixed := LFixed + Double(Max(0, LVisible - 1)) * Max(0, AGap);
-  LAvailable := Trunc(Max(0.0, Double(Max(0, AAvailable)) - LFixed));
+  LFixed := LFixed + FlowReal(Max(0, LVisible - 1)) * Max(0, AGap);
+  LAvailable := Trunc(Max(0.0, FlowReal(Max(0, AAvailable)) - LFixed));
   LThrough := 0;
   LAllocated := 0;
   for LIndex := 0 to High(AItems) do
@@ -120,11 +140,174 @@ begin
     if AItems[LIndex].Visible and (AItems[LIndex].Weight > 0) then
     begin
       LThrough := LThrough + AItems[LIndex].Weight;
-      LEnd := Trunc(Double(LAvailable) * (LThrough / LWeight));
+      LEnd := Trunc(FlowReal(LAvailable) * (LThrough / LWeight));
       Result[LIndex] := LEnd - LAllocated;
       LAllocated := LEnd;
     end;
   end;
+end;
+
+function NyxFlowSizes(AAvailable, AGap: Integer; const AItems: TNyxFlowItems;
+  const ARanges: TNyxSizeRanges): TNyxFlowSizes;
+var
+  LFrozen: array of Boolean;
+  LTargets, LViolations: array of Double;
+  LIndex, LVisible, LRemaining: Integer;
+  LFixed, LWeight, LAvailable, LProposed, LViolation: Double;
+  LThrough: Double;
+  LAllocated, LEnd: Integer;
+  LConstrained: Boolean;
+begin
+
+  if Length(ARanges) <> Length(AItems) then
+  begin
+    raise EArgumentException.Create('Flow bounds require one range per item');
+  end;
+  LConstrained := False;
+  for LIndex := 0 to High(ARanges) do
+  begin
+    ARanges[LIndex].Validate;
+    LConstrained := LConstrained or ARanges[LIndex].HasMinimum or
+      ARanges[LIndex].HasMaximum;
+  end;
+
+  if not LConstrained then
+  begin
+    Exit(NyxFlowSizes(AAvailable, AGap, AItems));
+  end;
+  Result := nil;
+  SetLength(Result, Length(AItems));
+  SetLength(LFrozen, Length(AItems));
+  SetLength(LTargets, Length(AItems));
+  SetLength(LViolations, Length(AItems));
+  LVisible := 0;
+  LRemaining := 0;
+  LFixed := 0;
+  for LIndex := 0 to High(AItems) do
+  begin
+    LFrozen[LIndex] := not AItems[LIndex].Visible or (AItems[LIndex].Weight <= 0);
+    LTargets[LIndex] := 0;
+    Result[LIndex] := 0;
+
+    if AItems[LIndex].Visible then
+    begin
+      Inc(LVisible);
+
+      if LFrozen[LIndex] then
+      begin
+        Result[LIndex] := ARanges[LIndex].Clamp(AItems[LIndex].NaturalSize);
+        LFixed := LFixed + Result[LIndex];
+      end
+      else
+      begin
+        Inc(LRemaining);
+      end;
+    end;
+  end;
+  LFixed := LFixed + FlowReal(Max(0, LVisible - 1)) * Max(0, AGap);
+  while LRemaining > 0 do
+  begin
+    LWeight := 0;
+    LAvailable := FlowReal(Max(0, AAvailable)) - LFixed;
+    for LIndex := 0 to High(AItems) do
+    begin
+
+      if not LFrozen[LIndex] then
+      begin
+        LWeight := LWeight + AItems[LIndex].Weight;
+      end;
+    end;
+    LAvailable := Max(0.0, LAvailable);
+    LViolation := 0;
+    for LIndex := 0 to High(AItems) do
+    begin
+
+      if LFrozen[LIndex] then
+      begin
+        Continue;
+      end;
+      LProposed := LAvailable * (AItems[LIndex].Weight / LWeight);
+      LTargets[LIndex] := LProposed;
+
+      if ARanges[LIndex].HasMaximum then
+      begin
+        LTargets[LIndex] := Min(LTargets[LIndex], ARanges[LIndex].MaximumValue);
+      end;
+
+      if ARanges[LIndex].HasMinimum then
+      begin
+        LTargets[LIndex] := Max(LTargets[LIndex], ARanges[LIndex].MinimumValue);
+      end;
+      LViolations[LIndex] := LTargets[LIndex] - LProposed;
+      LViolation := LViolation + LViolations[LIndex];
+    end;
+    { Freeze the appropriate side, rather than both at once. For 100 pixels,
+      min(60) and max(20) first propose 50/50; freezing both would leave unused
+      space. The negative total freezes max(20), then its sibling receives 80.
+      This is the min/max freezing rule in CSS Flexbox section 9.7, restricted
+      to Nyx's integer positive grow weights and zero main-axis basis. }
+
+    if Abs(LViolation) < 0.0000001 then
+    begin
+      Break;
+    end;
+    for LIndex := 0 to High(AItems) do
+    begin
+
+      if not LFrozen[LIndex] and
+        (((LViolation > 0) and (LViolations[LIndex] > 0)) or
+        ((LViolation < 0) and (LViolations[LIndex] < 0))) then
+      begin
+        LFrozen[LIndex] := True;
+        Result[LIndex] := ARanges[LIndex].Clamp(Round(LTargets[LIndex]));
+        LFixed := LFixed + Result[LIndex];
+        Dec(LRemaining);
+      end;
+    end;
+  end;
+  LThrough := 0;
+  LAllocated := 0;
+  for LIndex := 0 to High(AItems) do
+  begin
+
+    if not LFrozen[LIndex] then
+    begin
+      LThrough := LThrough + LTargets[LIndex];
+      LEnd := Trunc(Min(FlowReal(High(Integer)), LThrough + 0.0000001));
+      Result[LIndex] := ARanges[LIndex].Clamp(LEnd - LAllocated);
+      LAllocated := LEnd;
+    end;
+  end;
+end;
+
+function NyxFlowLines(AAvailable, AGap: Integer; const AItems: TNyxFlowItems;
+  const ARanges: TNyxSizeRanges; AWrap: Boolean): TNyxFlowLines;
+var
+  LHypothetical: TNyxFlowItems;
+  LIndex: Integer;
+begin
+
+  if Length(ARanges) <> Length(AItems) then
+  begin
+    raise EArgumentException.Create('Flow lines require one range per item');
+  end;
+  SetLength(LHypothetical, Length(AItems));
+  for LIndex := 0 to High(AItems) do
+  begin
+    ARanges[LIndex].Validate;
+    LHypothetical[LIndex] := AItems[LIndex];
+    LHypothetical[LIndex].Weight := 0;
+
+    if AItems[LIndex].Weight > 0 then
+    begin
+      LHypothetical[LIndex].NaturalSize := ARanges[LIndex].Clamp(0);
+    end
+    else
+    begin
+      LHypothetical[LIndex].NaturalSize := ARanges[LIndex].Clamp(AItems[LIndex].NaturalSize);
+    end;
+  end;
+  Result := NyxFlowLines(AAvailable, AGap, LHypothetical, AWrap);
 end;
 
 function NyxFlowLines(AAvailable, AGap: Integer; const AItems: TNyxFlowItems;
@@ -200,7 +383,7 @@ begin
       LUsed := LUsed + Max(0, ASizes[LIndex]);
     end;
   end;
-  LFree := Max(0.0, AAvailable - LUsed - Double(Max(0, LCount - 1)) * Max(0, AGap));
+  LFree := Max(0.0, AAvailable - LUsed - FlowReal(Max(0, LCount - 1)) * Max(0, AGap));
   LOffset := 0;
   LSpacing := 0;
   case AJustification of
@@ -242,8 +425,8 @@ begin
     begin
       { Bound conversion at the widgetset's signed Integer limit. Double keeps
         intermediate sums defined even for deliberately oversized input. }
-      Result[LIndex] := Trunc(Min(Double(High(Integer)), LOffset + LThrough +
-        Double(LPosition) * (Max(0, AGap) + LSpacing)));
+      Result[LIndex] := Trunc(Min(FlowReal(High(Integer)), LOffset + LThrough +
+        FlowReal(LPosition) * (Max(0, AGap) + LSpacing)));
       LThrough := LThrough + Max(0, ASizes[LIndex]);
       Inc(LPosition);
     end;

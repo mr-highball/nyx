@@ -3564,6 +3564,47 @@ begin
         LControl.style.setProperty('height', '100%');
         LControl.style.setProperty('min-height', '0');
       end;
+      { Apply admitted pixel bounds after sizing defaults. Unsetting a bound
+        removes stale inline CSS, restoring the theme's containing-width cap.
+        An explicit minimum can still exceed that cap under CSS sizing rules.
+        Flexbox itself redistributes capped weights; no parallel browser layout
+        engine is maintained. These are adapter wire keys, not authoring API. }
+      LValue := LNode.Prop('min-width');
+
+      if LValue = '' then
+      begin
+        LControl.style.removeProperty('min-width');
+      end
+      else
+      begin
+        LControl.style.setProperty('min-width', LValue + 'px');
+      end;
+      LValue := LNode.Prop('max-width');
+
+      if LValue = '' then
+      begin
+        LControl.style.removeProperty('max-width');
+      end
+      else
+      begin
+        LControl.style.setProperty('max-width', 'min(100%, ' + LValue + 'px)');
+      end;
+      LValue := LNode.Prop('min-height');
+
+      if LValue <> '' then
+      begin
+        LControl.style.setProperty('min-height', LValue + 'px');
+      end;
+      LValue := LNode.Prop('max-height');
+
+      if LValue = '' then
+      begin
+        LControl.style.removeProperty('max-height');
+      end
+      else
+      begin
+        LControl.style.setProperty('max-height', LValue + 'px');
+      end;
       LControl.style.removeProperty('flex');
       LControl.classList.remove('nyx-flex');
       LControl.style.removeProperty('grid-template-columns');

@@ -40,6 +40,26 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Portable size constraints — 2026-10-05
+
+The following [portable size-bounds packet](../WORK.md#portable-size-constraints--2026-10-05)
+provides the missing minimum/maximum dimension prerequisite for criterion 1.
+Specialized fluent configuration, generated/readable Pascal, effective scoped
+admission, bounded weight redistribution and ordinary Inspector/semantic
+transactions share one document contract. Actual native Studio set/unset and
+paired history pass 22; unchanged compiled controls pass 38; shared guards pass
+237 per compiler and original native layout/policy regression 2169, with zero
+checked leaks/owned warnings. Browser consumers/Studio/worker compile; runtime
+and observing deployment remain gated.
+
+No original criterion closes: authoring no-closure advances **9→10** once;
+workflow 9, codegen 27, renderer 3 and delivery 1 remain. End bounds/allocator/
+fixture expansion. Next deliver physical resizing/snapping through public
+typed input/policy and the existing isolated paired operation, then responsive
+variants and complete both-target editor/parity/accessibility/performance and
+delivery. These scalar fields alone do not accept full WYSIWYG authoring; retain
+every original blocker and the protected observing release.
+
 ## Physical designer drag/drop — 2026-10-05
 
 Original criterion 1 now consumes its placement prerequisite through public Nyx

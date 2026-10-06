@@ -708,3 +708,17 @@ Current task and return path are maintained in [WORK.md](WORK.md).
   drag guard/codec/fixture expansion and continue ordinary sizing, constraints,
   snapping/responsive authoring plus the broader original editor/parity outcomes.
   See [evidence](WORK.md#physical-designer-dragdrop--2026-10-05).
+
+- Portable minimum/maximum width/height now supply the next sizing prerequisite
+  under original Studio authoring criterion 1. Copied fluent policies, specialized
+  generation, effective target admission and bounded weighted redistribution
+  share ordinary semantic/property operations. Shared guards pass 237 per native
+  compiler; unchanged compiled controls pass 38 and ordinary Studio set/unset/
+  paired history 22, with zero checked leaks/owned warnings. Original native
+  layout/policy regression passes 2169; browser consumers/Studio/worker compile
+  with runtime and observing release still gated. Authoring no-closure advances
+  **9→10** once; workflow 9, codegen 27, renderer 3 and delivery 1 remain. End
+  bounds/allocator/fixture expansion; physical resizing, snapping, responsive
+  variants and complete editor/parity/delivery retain their original owners.
+  No full criterion or product percentage closes. See
+  [evidence](WORK.md#portable-size-constraints--2026-10-05).

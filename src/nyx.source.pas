@@ -32,6 +32,7 @@ uses
   nyx.text,
   nyx.types,
   nyx.layout.policy,
+  nyx.layout.constraints,
   nyx.callbacks,
   nyx.model;
 
@@ -531,7 +532,8 @@ type
     vkCollectionSchema, vkCollectionItem, vkNoDomain, vkScalarValue,
     vkCollectionView, vkCollectionScope, vkCollectionCellMode, vkSelectionMode, vkPlatform,
     vkSplitOrientation, vkSemanticEvent, vkTouchBehavior, vkFlowWrap,
-    vkCrossAlignment, vkJustification, vkSizing, vkLayoutPolicy);
+    vkCrossAlignment, vkJustification, vkSizing, vkLayoutPolicy, vkSizeRange,
+    vkSizeConstraints);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -551,6 +553,8 @@ type
     ScalarValue: TNyxStateValue;
     CollectionView: TNyxCollectionViewSpec;
     LayoutPolicy: TNyxLayoutPolicy;
+    SizeRange: TNyxSizeRange;
+    SizeConstraints: TNyxSizeConstraints;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -665,7 +669,8 @@ const
     'Target', 'Component', 'OnClick', 'OnChange', 'Option', 'OverridePath', '',
     'SplitOrientation', 'SplitPosition', 'SplitMinimum', 'SplitMaximum', 'SplitResizable',
     'DragSource', 'DropTarget', 'TouchBehavior', 'Wrap', 'Align', 'Justify',
-    'WidthSizing', 'HeightSizing');
+    'WidthSizing', 'HeightSizing', 'MinimumWidth', 'MaximumWidth',
+    'MinimumHeight', 'MaximumHeight');
   CAttributes: array[TNyxAttribute] of TNyxText = (
     'atText', 'atValue', 'atPlaceholder', 'atItems', 'atHint', 'atAccessibleName',
     'atHref', 'atSource', 'atAlt', 'atLayout', 'atPadding', 'atGap', 'atColumns',
@@ -676,7 +681,8 @@ const
     'atPath', 'atDesignID', 'atSplitOrientation', 'atSplitPosition',
     'atSplitMinimum', 'atSplitMaximum', 'atSplitResizable',
     'atDragSource', 'atDropTarget', 'atTouchBehavior', 'atFlowWrap',
-    'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing');
+    'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing',
+    'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight');
 
 var
   { Built-in names are a finite immutable vocabulary. Initialize once at unit
@@ -1853,6 +1859,136 @@ begin
       begin
         LName := LowerCase(LToken.Text);
 
+        if (LName = 'nyxsizerange') or (LName = 'nyxsizeconstraints') then
+        begin
+          { A copied closed value builder, never application code execution.
+            Its distinct tags prevent text, enums or a range being substituted
+            for a complete two-axis constraint policy. }
+          Result.Kind := vkSizeConstraints;
+          Result.SizeConstraints := NyxSizeConstraints;
+
+          if LName = 'nyxsizerange' then
+          begin
+            Result.Kind := vkSizeRange;
+            Result.SizeRange := NyxSizeRange;
+          end;
+
+          if At('(') then
+          begin
+            LArgs := Arguments;
+
+            if Length(LArgs) <> 0 then
+            begin
+              Fail('Size policy factories take no arguments');
+            end;
+          end;
+          while At('.') do
+          begin
+            Expect('.');
+
+            if FCursor >= Length(FTokens) then
+            begin
+              Fail('Expected a size policy method');
+            end;
+            LName := LowerCase(FTokens[FCursor].Text);
+            Inc(FCursor);
+
+            if (Result.Kind = vkSizeRange) and
+              ((LName = 'withoutminimum') or (LName = 'withoutmaximum')) then
+            begin
+
+              if At('(') then
+              begin
+                LArgs := Arguments;
+
+                if Length(LArgs) <> 0 then
+                begin
+                  Fail('Clearing a range bound takes no arguments');
+                end;
+              end;
+
+              if LName = 'withoutminimum' then
+              begin
+                Result.SizeRange := Result.SizeRange.WithoutMinimum;
+              end
+              else
+              begin
+                Result.SizeRange := Result.SizeRange.WithoutMaximum;
+              end;
+              Continue;
+            end;
+            LArgs := Arguments;
+
+            if Length(LArgs) <> 1 then
+            begin
+              Fail('A size policy method requires one typed argument');
+            end;
+
+            if (Result.Kind = vkSizeConstraints) and
+              (LArgs[0].Kind = vkSizeRange) and ((LName = 'width') or (LName = 'height')) then
+            begin
+
+              if LName = 'width' then
+              begin
+                Result.SizeConstraints := Result.SizeConstraints.Width(LArgs[0].SizeRange);
+              end
+              else
+              begin
+                Result.SizeConstraints := Result.SizeConstraints.Height(LArgs[0].SizeRange);
+              end;
+              Continue;
+            end;
+
+            if (LArgs[0].Kind <> vkInteger) or
+              not TryNyxStateInteger(LArgs[0].Text, LInteger) then
+            begin
+              Fail('A size bound requires an Integer');
+            end;
+
+            if Result.Kind = vkSizeRange then
+            begin
+
+              if LName = 'minimum' then
+              begin
+                Result.SizeRange := Result.SizeRange.Minimum(LInteger);
+              end
+              else if LName = 'maximum' then
+              begin
+                Result.SizeRange := Result.SizeRange.Maximum(LInteger);
+              end
+              else
+              begin
+                Fail('Unknown size range method');
+              end;
+            end
+            else
+            begin
+
+              if LName = 'minimumwidth' then
+              begin
+                Result.SizeConstraints := Result.SizeConstraints.MinimumWidth(LInteger);
+              end
+              else if LName = 'maximumwidth' then
+              begin
+                Result.SizeConstraints := Result.SizeConstraints.MaximumWidth(LInteger);
+              end
+              else if LName = 'minimumheight' then
+              begin
+                Result.SizeConstraints := Result.SizeConstraints.MinimumHeight(LInteger);
+              end
+              else if LName = 'maximumheight' then
+              begin
+                Result.SizeConstraints := Result.SizeConstraints.MaximumHeight(LInteger);
+              end
+              else
+              begin
+                Fail('Unknown size constraints method');
+              end;
+            end;
+          end;
+          Exit;
+        end;
+
         if LName = 'tnyxlayoutpolicy' then
         begin
           { Evaluate only the closed public value builder, never arbitrary
@@ -2816,6 +2952,13 @@ begin
     Exit;
   end;
 
+  if LMethod = 'constraints' then
+  begin
+    Require(vkSizeConstraints);
+    LConfigure.Constraints(LValue.SizeConstraints);
+    Exit;
+  end;
+
   if LMethod = 'customvariant' then
   begin
     Require(vkStyle);
@@ -2867,6 +3010,7 @@ begin
     atCrossAlignment: Require(vkCrossAlignment);
     atJustification: Require(vkJustification);
     atWidthSizing, atHeightSizing: Require(vkSizing);
+    atMinimumWidth, atMaximumWidth, atMinimumHeight, atMaximumHeight: Require(vkInteger);
     atSplitOrientation: Require(vkSplitOrientation);
     atSplitPosition, atSplitMinimum, atSplitMaximum: Require(vkInteger);
     atSplitResizable, atDragSource, atDropTarget: Require(vkBoolean);
@@ -2993,6 +3137,10 @@ begin
     atColumns: LConfigure.Columns(LInteger);
     atWidth: LConfigure.Width(LInteger);
     atHeight: LConfigure.Height(LInteger);
+    atMinimumWidth: LConfigure.MinimumWidth(LInteger);
+    atMaximumWidth: LConfigure.MaximumWidth(LInteger);
+    atMinimumHeight: LConfigure.MinimumHeight(LInteger);
+    atMaximumHeight: LConfigure.MaximumHeight(LInteger);
     atLeft: LConfigure.Left(LInteger);
     atTop: LConfigure.Top(LInteger);
     atFlex: LConfigure.Flex(LInteger);

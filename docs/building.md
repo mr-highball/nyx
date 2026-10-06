@@ -803,3 +803,24 @@ staging. This command launches no listener, changes no MCP enrollment and edits
 no active observing project. Current browser/phone interaction and observing
 deployment retain the recorded host gate. See
 [evidence](../WORK.md#source-workspace-and-expanded-editor--2026-10-05).
+
+## Portable size constraints
+
+```powershell
+./tools/build.ps1 -Target constraints -BrowserOutput build/constraints/staged
+```
+
+The maintained command exercises copied typed bounds, weighted allocation,
+bounded semantic mutation, atomic refusal and paired Undo/Redo on both native
+compilers. Their exported design/source/pair files must match byte for byte.
+It compiles that exact source unchanged, measures actual Win32 controls and
+retains editor text/focus/selection while limits, visibility and host width change.
+An ordinary Win32 Studio journey edits/unsets limits through mounted Nyx controls
+and the isolated processor, retaining its source editor and handwritten source.
+
+Matching browser contract/control consumers, Studio, its module worker, RTL and
+two English hosts are staged. Compilation alone does not qualify browser input,
+phone observation or full target parity. The command launches no listener,
+changes no personal MCP configuration and leaves observing projects/releases
+intact. See [layout](layout.md) and
+[evidence](../WORK.md#portable-size-constraints--2026-10-05).

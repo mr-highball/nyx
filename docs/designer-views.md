@@ -132,6 +132,16 @@ behavior. The existing observing-release and host execution gates remain.
 
 ## Reproduce the boundary
 
+Portable size bounds now provide the next resizing/constraint prerequisite.
+The ordinary inspector publishes typed minimum/maximum width/height fields and
+an Unset action, preserving explicit zero versus absence. Existing semantic
+property transactions and the isolated ordinary property processor share
+cross-field and target-override validation and paired history. Neither bounds
+nor drag/drop introduce a separate authoring engine. See [layout](layout.md)
+and [the evidence packet](../WORK.md#portable-size-constraints--2026-10-05).
+Physical resizing handles, snapping and responsive variants remain required
+under original Studio authoring criterion 1; these fields alone do not accept it.
+
 The [semantic review author](../tests/nyx_mcp_designer_review.lpr) creates an owned
 empty review using an explicitly supplied MCP configuration, applies the
 [nine-operation composition](../tests/designer-review.operations.json) in one

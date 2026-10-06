@@ -216,6 +216,36 @@ begin
   Result := Self as INyxConfiguration;
 end;
 
+function TNyxConfiguration.MinimumWidth(AValue: Integer): INyxConfiguration;
+begin
+  FOwner.Node.Configure.ForPlatform(FPlatform).MinimumWidth(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.MaximumWidth(AValue: Integer): INyxConfiguration;
+begin
+  FOwner.Node.Configure.ForPlatform(FPlatform).MaximumWidth(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.MinimumHeight(AValue: Integer): INyxConfiguration;
+begin
+  FOwner.Node.Configure.ForPlatform(FPlatform).MinimumHeight(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.MaximumHeight(AValue: Integer): INyxConfiguration;
+begin
+  FOwner.Node.Configure.ForPlatform(FPlatform).MaximumHeight(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.Constraints(const AValue: TNyxSizeConstraints): INyxConfiguration;
+begin
+  FOwner.Node.Configure.ForPlatform(FPlatform).Constraints(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
 function TNyxConfiguration.Left(AValue: Integer): INyxConfiguration;
 begin
   FOwner.Node.Configure.ForPlatform(FPlatform).Left(AValue);

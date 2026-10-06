@@ -56,6 +56,10 @@ type
 const
   NyxInspectorPropertiesID = 'inspector-tab-properties';
   NyxInspectorEventsID = 'inspector-tab-events';
+  { Closed size-bound reset intent at the chrome metadata boundary. The captured
+    exact authored owner prevents a delayed button acting on a later selection. }
+  NyxStudioPropertyClearKey = 'studio.property-clear';
+  NyxStudioPropertyOwnerKey = 'studio.property-owner';
   NyxStudioEventCommandKey = 'studio.event-command';
   NyxStudioEventOwnerKey = 'studio.event-owner';
   NyxStudioEventTriggerKey = 'studio.event-trigger';

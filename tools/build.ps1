@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -154,6 +154,7 @@ function Test-NyxCompilerTypes([string]$Executable, [string[]]$Arguments) {
     cross_alignment = 'TNyxCrossAlignment'
     sizing = 'TNyxSizing'
     layout_policy = 'TNyxFlowWrap'
+    constraints = 'TNyxSizeConstraints'
     platform = 'TNyxPlatform'
     split_orientation = 'TNyxSplitOrientation'
     spacing = 'Integer|LongInt'
@@ -1452,6 +1453,73 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxCollectionAgentHost") -Destination $nyxCollectionAgentBrowser
     }
     Write-Host 'Semantic collection consumers staged; browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'constraints') {
+    # Pascal owns copied policies, semantic/isolated admission and actual controls.
+    # This orchestration stages artifacts only; no listener or live release is
+    # replaced and no private MCP enrollment/configuration is refreshed.
+    $nyxBoundsRoot = Join-Path $nyxRoot 'build/constraints'
+    $nyxBoundsStable = Join-Path $nyxBoundsRoot 'stable'
+    $nyxBoundsMatched = Join-Path $nyxBoundsRoot 'matched'
+    $nyxBoundsExport = Join-Path $nyxBoundsRoot 'export'
+    $nyxBoundsMatchedExport = Join-Path $nyxBoundsRoot 'export-matched'
+    $nyxBoundsLcl = Join-Path $nyxBoundsRoot 'lcl'
+    $nyxBoundsStudio = Join-Path $nyxBoundsRoot 'studio'
+    $nyxBoundsBrowser = Join-Path $nyxBoundsRoot 'browser'
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+
+    if ($BrowserOutput) { $nyxBoundsBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxBoundsStable, $nyxBoundsMatched,
+      $nyxBoundsExport, $nyxBoundsMatchedExport, $nyxBoundsLcl,
+      $nyxBoundsStudio, $nyxBoundsBrowser | Out-Null
+    $nyxBoundsFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests')
+    foreach ($nyxBoundsCompiler in @(@($nyxFpc, $nyxBoundsStable, $nyxBoundsExport),
+      @($nyxLclFpc, $nyxBoundsMatched, $nyxBoundsMatchedExport))) {
+      Invoke-NyxCompiler $nyxBoundsCompiler[0] ($nyxBoundsFlags + @(
+        "-FU$($nyxBoundsCompiler[1])", "-FE$($nyxBoundsCompiler[1])",
+        'tests/nyx_constraints_tests.lpr'))
+      & (Join-Path $nyxBoundsCompiler[1] 'nyx_constraints_tests.exe') $nyxBoundsCompiler[2]
+
+      if ($LASTEXITCODE -ne 0) { throw 'Shared size constraints failed' }
+    }
+    foreach ($nyxBoundsFile in @('design.nyx', 'nyx.generated.view.pas', 'project.nyxpair')) {
+      if ((Get-FileHash (Join-Path $nyxBoundsExport $nyxBoundsFile)).Hash -ne
+        (Get-FileHash (Join-Path $nyxBoundsMatchedExport $nyxBoundsFile)).Hash) {
+        throw "Constraint exports differ between compilers: $nyxBoundsFile"
+      }
+    }
+    $nyxBoundsPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxBoundsControlFlags = $nyxBoundsFlags + @(
+      "-Fu$nyxLazarus/lcl/units/$nyxBoundsPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxBoundsPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxBoundsPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxBoundsPlatform")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxBoundsControlFlags + @("-Fu$nyxBoundsExport",
+      "-FU$nyxBoundsLcl", "-FE$nyxBoundsLcl", 'tests/nyx_constraints_controls.lpr'))
+    & (Join-Path $nyxBoundsLcl 'nyx_constraints_controls.exe') (Join-Path $nyxBoundsExport 'design.nyx') (Join-Path $nyxBoundsExport 'constraints.png')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Actual compiled size constraints failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxBoundsControlFlags + @(
+      "-FU$nyxBoundsStudio", "-FE$nyxBoundsStudio", 'tests/nyx_constraints_studio.lpr'))
+    & (Join-Path $nyxBoundsStudio 'nyx_constraints_studio.exe') $nyxBoundsRoot
+
+    if ($LASTEXITCODE -ne 0) { throw 'Actual Studio size authoring failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxBoundsProgram in @('tests/nyx_constraints_tests.lpr',
+      'tests/nyx_constraints_controls.lpr', 'studio/nyx_studio.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
+        '-Futests', "-Fu$nyxBoundsExport", '-Jirtl.js', "-FE$nyxBoundsBrowser", $nyxBoundsProgram)
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBoundsBrowser 'rtl.js')
+    foreach ($nyxBoundsHost in @('constraints.html', 'constraints-controls.html', 'index.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxBoundsHost") -Destination $nyxBoundsBrowser
+    }
+    Write-Host 'Size constraints staged; browser execution requires an admitted HTTP host.'
     exit 0
   }
 

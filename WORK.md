@@ -22,7 +22,24 @@ codegen 27, renderer 3, native authoring 7 and delivery 1. Stop on lost editor
 identity/input, disabled-owner return, guessed source ownership or weakened
 publication; preserve failed evidence and the protected observing release.
 
-Current packet: [physical designer drag/drop](#physical-designer-dragdrop--2026-10-05)
+Current bounded packet: [portable size constraints](#portable-size-constraints--2026-10-05)
+supplies original Studio authoring criterion 1's missing resizing prerequisite.
+Copied typed bounds, specialized generated configuration, effective target
+validation and weighted redistribution share ordinary semantic/isolated property
+admission. Shared checks pass 237 per native compiler; unchanged compiled Win32
+controls pass 38 and ordinary Studio set/unset/history passes 22, with zero leaks
+and owned warnings. Original native layout/policy regression passes 2169; core
+regressions and staged browser consumers/Studio/worker pass compilation. Browser
+runtime and updated phone observation retain their existing gate. Authoring
+no-closure advances 9→10 once; workflow 9, codegen 27, renderer 3 and delivery 1
+remain. No original criterion closes. End bounds/allocator/fixture expansion;
+next connect physical resizing and snapping to the same typed policies, public
+input contracts and isolated paired operations, then responsive variants and
+broader original editor/parity outcomes. Preserve exact pairs/input/ownership
+and the protected release. No listener, deployment or private configuration
+refresh. Stop on a second authoring engine, weakened admission or input loss.
+
+Preceding packet: [physical designer drag/drop](#physical-designer-dragdrop--2026-10-05)
 consumes the nested placement prerequisite under original authoring criterion 1.
 Public Nyx sources and explicitly opted-in design adapters now submit the same
 isolated paired operation. Shared guards pass 56 on each native compiler; actual
@@ -7799,5 +7816,117 @@ listener launch, live deployment, compiler reinstall or private configuration
 refresh occurred. The earlier automatic approval rejection remains “blocked
 by policy,” with no further reason; no equivalent deployment was attempted.
 The phone retains its earlier observing release. Private remote/process/session/
-artifact proof follows the authorized checkpoint in
+  artifact proof follows the authorized checkpoint in
 `.local/codex-restart-check/placement-remote-proof.json`.
+
+## Portable size constraints — 2026-10-05
+
+Original Studio authoring criterion 1 lacked any portable minimum/maximum
+dimension contract. This source packet adds copied `TNyxSizeRange` and
+`TNyxSizeConstraints` values, four strongly typed configuration methods on every
+managed specialized facade, common published integer metadata and readable
+generated methods. The maintained Pascal facade generator regenerated its owned
+includes; dependency source and existing attribute ordinals are unchanged.
+Bounds are optional logical pixels, 0..100000; explicit zero differs from empty.
+A complete policy validates before changing its four members. Common and each
+effective browser/native pair must remain ordered at document/source/candidate
+admission; an empty scoped value clears that bound.
+
+Browser CSS translates the four bounds after sizing defaults, restoring defaults
+on clear and retaining its containing-width cap. Native intrinsic measurement,
+allocated geometry and cross alignment apply the same admitted bounds. The shared
+zero-basis allocator reserves clamped fixed items/gaps, freezes min/max violations
+by total adjustment and redistributes the remainder. Wrapped row membership
+includes weighted minima; max-capped groups leave free space for justification;
+overflow keeps leading alignment. Existing three-field flow records remain
+compatible. Assignment conversion also fixes older FPC's unsupported explicit
+Integer-to-Double casts in this shared allocator. The implementation uses the
+[CSS Flexbox 9.7 freezing rule](https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths)
+(Candidate Recommendation Draft checked 2026-10-05), restricted to Nyx grow
+weights, without claiming complete CSS sizing/shrinking conformance.
+
+Ordinary Studio exposes all four fields and owner-qualified Unset actions.
+Zero remains a real limit. Reset routes through the existing property processor,
+source worker and one paired Undo; stale selections and foreign properties
+refuse. Existing bounded `nyx_node` and grouped revision-checked
+`nyx_transaction` supply semantic admission, including atomic cross-field/
+target refusals. No new tool, transaction codec or second authoring engine is
+introduced. The strict source reader also accepts copied range/constraint
+builders; ordinary Pascal compilation remains necessary for execution/type
+evidence.
+
+Actual Studio refusal exposed an existing inspector construction defect:
+pending dimensions were sent through the primitive spin's temporary 0..100
+domain before installing their published range. Inspector wire proposals now
+remain at their explicit metadata boundary. Fields are admitted to the owning
+shell before later configuration, and the public shared shell wrapper releases
+its owning document if composition refuses. The accepted application property
+and paired files still require unchanged typed admission. A rejected 170-pixel
+maximum beneath the editor's 180-pixel minimum now restores the accepted field
+and reports its diagnostic without leaking a shell or field.
+
+Maintained command:
+
+```powershell
+./tools/build.ps1 -Target constraints -BrowserOutput build/constraints/staged
+```
+
+Final relevant evidence, in `build/constraints/promotion.log`:
+
+- **237** shared checks on FPC 3.2.0 and matched FPC 3.3.1, with zero heap leaks.
+  Copied policies, explicit zero/clear, mixed violations, overflow, hidden/gap/
+  wrap behavior, integer rounding invariants, typed source replay, bounded
+  semantic queries, grouped mutation/refusals, paired Undo/Redo and isolated
+  ordinary-property wire/publication execute. Exact exports match byte for byte.
+- **38** checks on the unchanged compiled Win32 companion, with zero leaks.
+  Actual widths/heights/positions qualify rows, columns, wrapped weighted minima,
+  natural/fixed/fill caps, explicit zero and native overrides. Limit clearing,
+  sibling visibility and a 390-pixel actual host preserve the memo's real widget,
+  focus, English draft and selection; its minimum can exceed that parent.
+- **22** ordinary Win32 Studio checks, with zero leaks. Real selected-component
+  controls, worker field admission/refusal, Unset, zero, paired history,
+  handwritten source and source-editor identity execute. This qualifies registered
+  widget callbacks, not hardware/IME/assistive technology or another widgetset.
+- Original native layout/policy consumer passes **2169** checks, with zero leaks,
+  using its exact maintained semantic `build/layout-policy/source` companion.
+  Core regression passes **30/1777/55/60**, compiler-family refusals including
+  untyped constraints, unchanged generated applications/source/Unicode/runtime
+  binding consumers and three compiled collection checks.
+- Browser shared/control consumers, Studio and its module worker compile. Two
+  English hosts and matched RTL are staged. Updated browser/phone runtime and
+  authenticated observing qualification retain the existing host gate; no
+  listener or equivalent deployment is attempted. Owned final compiles report
+  zero warnings. Installed pas2js `Classes` still emits seven visible warnings
+  per program; its dependency source and warning policy remain unchanged.
+
+The selective actual native capture `build/constraints/export/constraints.png`
+is inspected at the final narrow host. Deliberately small maxima visibly clip
+their controls: this is dimension evidence, not aesthetic/full presentation
+acceptance. Border/padding metrics, arbitrary mixed intrinsic constraints,
+flexible shrinking, all widgetsets, performance budgets, complete accessibility
+and broader editor presentation remain under their original owners.
+
+Failed evidence is retained privately: first contract/source compilation and
+test expectation logs; the initial whole-shell leak and subsequent orphan-field
+trace; the corrected rejection's old assertion; and a refused regression run
+using the ordinary layout companion without its required policy root. The final
+maintained command and correct policy regression supersede those attempts.
+Compilation failures/refusals never substitute successful behavior.
+
+No full criterion, DONE move or product percentage follows. Authoring no-closure
+advances **9→10** once; workflow **9**, codegen **27**, renderer **3**, delivery
+**1** remain. End local bounds/allocator/fixture expansion. Next connect physical
+resizing and snapping through the public typed policy/input contract and existing
+isolated paired operation; responsive variants and complete multi-page/reusable
+authoring, parity, accessibility, performance and delivery retain their original
+scope and blockers. Stop on inferred ownership, a second authoring engine,
+weakened admission or editor identity/input loss.
+
+Read-only native MCP remains connected at revision 8, home, retained rating-part
+selection, no draft and unchanged Undo/Redo. All eight protected executable/start
+identities and the live server artifact are verified unchanged at checkpoint.
+No protected stop, listener launch, live deployment, reinstall or private
+configuration refresh occurred. The earlier automatic approval rejection remains
+“blocked by policy,” with no further reason. The phone retains its earlier
+release. Final private process/session/artifact/remote proof belongs in
+`.local/codex-restart-check/constraints-remote-proof.json`.

@@ -56,6 +56,11 @@
     function Columns(AValue: Integer): INyxConfiguration;
     function Width(AValue: Integer): INyxConfiguration;
     function Height(AValue: Integer): INyxConfiguration;
+    function MinimumWidth(AValue: Integer): INyxConfiguration;
+    function MaximumWidth(AValue: Integer): INyxConfiguration;
+    function MinimumHeight(AValue: Integer): INyxConfiguration;
+    function MaximumHeight(AValue: Integer): INyxConfiguration;
+    function Constraints(const AValue: TNyxSizeConstraints): INyxConfiguration;
     function Left(AValue: Integer): INyxConfiguration;
     function Top(AValue: Integer): INyxConfiguration;
     function Flex(AValue: Integer): INyxConfiguration;
@@ -131,6 +136,11 @@
     function Columns(AValue: Integer): INyxConfiguration;
     function Width(AValue: Integer): INyxConfiguration;
     function Height(AValue: Integer): INyxConfiguration;
+    function MinimumWidth(AValue: Integer): INyxConfiguration;
+    function MaximumWidth(AValue: Integer): INyxConfiguration;
+    function MinimumHeight(AValue: Integer): INyxConfiguration;
+    function MaximumHeight(AValue: Integer): INyxConfiguration;
+    function Constraints(const AValue: TNyxSizeConstraints): INyxConfiguration;
     function Left(AValue: Integer): INyxConfiguration;
     function Top(AValue: Integer): INyxConfiguration;
     function Flex(AValue: Integer): INyxConfiguration;

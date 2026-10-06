@@ -32,6 +32,7 @@ uses
   nyx.text,
   nyx.types,
   nyx.layout.policy,
+  nyx.layout.constraints,
   nyx.data,
   nyx.contract,
   nyx.state,

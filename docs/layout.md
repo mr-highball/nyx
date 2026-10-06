@@ -57,6 +57,51 @@ weighted columns. A browser host must itself have a definite CSS height; the LCL
 adapter uses its actual client extent. Fill does not subtract unrelated siblings;
 use `Flex` when the intent is sharing their remaining space.
 
+All specialized controls expose `MinimumWidth`, `MaximumWidth`, `MinimumHeight`
+and `MaximumHeight` through their managed `Configure` interface. These optional
+logical-pixel bounds accept integers from 0 to 100000. Zero is an explicit bound;
+`Clear(atMaximumHeight)`, for example, restores an unset maximum. Individual
+methods validate their scalar first; complete document admission also requires
+each minimum to fit its corresponding maximum, for the common policy and every
+effective target override.
+
+```pascal
+LNotesEditor.Configure.Constraints(
+  NyxSizeConstraints
+    .Width(NyxSizeRange.Minimum(180).Maximum(640))
+    .Height(NyxSizeRange.Minimum(120).Maximum(480)));
+```
+
+Import `nyx.layout.constraints` for the copied value builders. They retain no
+control or platform handle and refuse invalid changes without changing the
+original value. Applying a complete `Constraints` value replaces all four
+bounds; absent members explicitly clear their corresponding bounds in that
+configuration scope. `ForPlatform` uses the same methods; an empty scoped bound
+clears it rather than falling through to its common value. Studio's strict
+source reader accepts these closed builders; generated code uses the equivalent
+readable scalar configuration methods on specialized interfaces.
+
+Bounds apply after automatic/content/fill sizing and during main-axis weighted
+allocation. A capped sibling releases space for siblings still able to grow;
+an explicit minimum can overflow the parent, retaining leading alignment.
+Wrapped row membership includes weighted minima before allocating each line.
+If all maxima are reached, justification consumes the remaining space.
+Browser CSS owns its layout; the native zero-basis allocator follows the
+min/max freezing rule in [CSS Flexbox section 9.7](https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths)
+(Candidate Recommendation Draft checked 2026-10-05). This is the Nyx grow-weight
+subset, not a claim of complete CSS sizing conformance. Browser border/padding,
+intrinsic text metrics, flexible shrinking and every widgetset retain the
+original renderer/parity gates.
+
+Studio exposes the four typed fields and an **Unset** action for each published
+bound, including present target overrides. Unset uses the same isolated property
+processor and paired history. Its exact selected owner is captured; changing
+selection refuses an old reset action. Semantic clients use an ordinary bounded
+`nyx_node` query and one revision-checked `nyx_transaction` for related bounds.
+Malformed/inverted common or effective scoped pairs refuse atomically. Current
+source candidates require the matching built server; the protected observing
+release has not been replaced.
+
 Rows use actual caption/content widths rather than unspecified equal cells.
 Both adapters collect line membership before distributing zero-basis positive
 weights on each line. Wrapped lines retain natural cross sizes; a non-wrapping
