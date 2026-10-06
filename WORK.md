@@ -27,6 +27,9 @@ Do not mistake its availability flags or paired exports for a migration receipt.
 Next assess that bridge within the existing workflow owner, then return to
 authenticated content editing and the observing ordinary browser Studio. No
 protected process restart, new listener or enrollment is authorized by staging.
+The newly discovered distinct-request-owner propagation gap is independently
+actionable first within that workflow owner; qualify it through the shared
+semantic boundary before any new authenticated deployment claim.
 
 NS-5 criterion 1's typed source/runtime/enrollment separation is integrated through
 the actual server, MCP protocol and immutable compiler workers. Existing repository
@@ -186,6 +189,16 @@ dispatch seam: `TNyxReviewWorkspaces.Call` currently omits the distinct request
 owner when forwarding ordinary session calls. That authority propagation needs
 explicit same-actor/different-transport qualification before new HTTP workflow
 acceptance; this recovery packet does not claim to resolve it.
+
+Implementation checkpoint: `dc0e1bd5843ecb57005917506256b9b3a10de14c` was committed
+and pushed to `origin/hello-nyx`; exact remote comparison succeeds and the working
+tree was clean. The sealed candidate retains its pre-commit base label
+`2d22ef99a1abe7f1146a19b0de1ebc87c576d29f`; a private SHA-256 receipt maps all 192
+owned compiler-source members to the clean implementation bytes. Its 200-member
+manifest is unchanged. Do not rebuild merely to rewrite that label. Current
+handoff documentation is separate from product compilation. Next work is the
+existing workflow owner's request-owner propagation, retaining the protected
+older-service migration and observing rollout as explicit gates.
 
 ## Separate release runtime — 2026-10-06
 
