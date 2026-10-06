@@ -45,6 +45,17 @@ admitted semantic policy operation. Actual native named tools now authenticate
 in this chat and both review application builds succeed. See
 [the packet](../WORK.md#collection-typeahead--2026-10-06).
 
+Current actual-consumer qualification gap (2026-10-06): native Studio's shared
+confirmation recipe passes the maintained 57 queued callback checks, while the
+browser worker capture either dumps before source publication or accelerates its
+timeout ahead of the real worker. Both target semantic application builds succeed,
+but compilation does not qualify that ordinary browser Studio journey. Add
+readiness-aware actual worker observation within this existing workflow owner;
+do not change production timeouts or silently substitute screenshot automation.
+The shared runtime confirmation browser checks pass independently. See
+[evidence](../WORK.md#managed-confirmation-presentation--2026-10-06).
+Workflow no-closure stays 10; protected services/pairs/rollout are unchanged.
+
 Current recipe-editor release gap (2026-10-06): authenticated discovery of the
 protected running endpoint returns twenty tools, but `nyx_node` has no content
 query and `nyx_transaction` has no `content-set` operation. Current source owns

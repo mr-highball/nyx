@@ -1,0 +1,15 @@
+{
+  "layout": [
+    {"op": "title", "value": "A considered confirmation"},
+    {"op": "create", "root": "page", "kind": "page", "id": "home"},
+    {"op": "create", "parent": "home", "kind": "confirmation-dialog", "id": "remove-project"}
+  ],
+  "customization": [
+    {"op": "update", "id": "remove-project-part-1", "properties": {"text": "Remove this project?"}},
+    {"op": "update", "id": "remove-project-part-2", "properties": {"text": "Review the change before continuing. Your other projects stay available."}},
+    {"op": "update", "id": "remove-project-part-4", "properties": {"text": "Keep project"}},
+    {"op": "update", "id": "remove-project-part-5", "properties": {"text": "Remove project", "variant": "danger"}},
+    {"op": "create", "parent": "remove-project-part-3", "kind": "button", "id": "learn-more", "properties": {"text": "Learn more"}},
+    {"op": "update", "id": "remove-project-part-3", "properties": {"flow-wrap": "wrap"}}
+  ]
+}

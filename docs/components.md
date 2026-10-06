@@ -3,7 +3,7 @@
 [Architecture](architecture.md) · [Catalog](../src/nyx.catalog.pas) ·
 [Default recipes](../src/nyx.recipes.pas) · [Defaults and named parts](components-reference.md)
 
-Nyx currently defines 40 primitive/layout/authoring kinds and 35 compound recipes. A recipe
+Nyx currently defines 41 primitive/layout/authoring kinds and 35 compound recipes. A recipe
 is an ordinary owned tree built from reusable primitives. Named parts are
 editable nodes rather than inaccessible renderer internals. Native and browser
 adapters consume the same expanded tree.
@@ -146,7 +146,9 @@ runtime values; definition edits and instance state have different lifetimes.
 These are defined composition recipes with tested ownership and selected
 interactions. Production behavior is still being completed: for example, the
 Kanban recipe defines lanes and action slots but does not yet implement card
-drag/drop, and the confirmation recipe is currently an inline panel. Data
+drag/drop. The confirmation recipe supports inline use and a
+[managed browser/LCL presentation](confirmation.md) with actual focus, cancellation,
+ordered callbacks and independent content. Data
 virtualization, overlays, picker parity, accessibility and broader interaction
 coverage remain explicit [component work](../TODO/NS-3_components_01.md).
 

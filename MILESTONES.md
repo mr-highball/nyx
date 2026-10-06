@@ -3,6 +3,17 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current advanced-component boundary (2026-10-06): managed confirmation presents
+an independent specialized recipe through typed options and ordinary Nyx target
+hosts/events. Exact MCP-authored content passes 36 checked Win32 / 35 desktop and
+narrow browser checks; native Studio shares the inline recipe and passes 57 queued
+callback checks plus 30 source-workspace checks, leak-free. Both actual named-MCP
+application builds succeed. No original NS-2/NS-3 criterion or prerequisite closes.
+Stop confirmation fixture expansion; the actual asynchronous browser Studio-worker
+consumer, full modal/picker/overlay/accessibility breadth and protected history/
+observing rollout remain. Existing no-closure totals stay unchanged. See
+[evidence and return path](WORK.md#managed-confirmation-presentation--2026-10-06).
+
 Current compiler/editor prerequisite (2026-10-06): Studio's browser and native
 controllers now share bounded job discovery, ordinary Nyx build rows and exact-job
 cancellation. Native protocol/lifecycle passes 144; actual Win32 Studio passes 126

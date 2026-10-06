@@ -336,7 +336,7 @@ begin
   LRecipe := Card('confirmation-dialog')
     .Add(Part(nkHeading, 'title', 'Continue with this action?'))
     .Add(Part(nkLabel, 'description', 'Review the change before confirming.'))
-    .Add(Row('actions')
+    .Add(Row('actions').Configure.Wrap(nfwWrap).Done
       .Add(Action('cancel', 'Cancel', NyxSemantic(nseCancel)))
       .Add(Action('confirm', 'Confirm', NyxSemantic(nseConfirm))));
   Register(nkConfirmationDialog, 'Confirmation panel', 'Feedback compounds');

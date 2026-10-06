@@ -119,7 +119,8 @@ end;
 procedure TNyxBrowserModalHost.Show(const AOptions: TNyxModalOptions);
 begin
   { Revalidate default/untrusted record values before changing presentation. }
-  AOptions.Viewport(AOptions.ViewportPercent).MaximumWidth(AOptions.WidthLimit);
+  AOptions.Viewport(AOptions.ViewportPercent).MaximumWidth(AOptions.WidthLimit)
+    .MaximumHeight(AOptions.HeightLimit);
   { A Nyx view mounted into body may replace its shell while this independently
     owned modal is closed or open. The detached dialog still owns its mounted
     descendants. Reconnect that exact host, clear the previous top-layer state
@@ -135,7 +136,15 @@ begin
   FDialog.style.setProperty('width', IntToStr(AOptions.ViewportPercent) + 'vw');
   FDialog.style.setProperty('height', IntToStr(AOptions.ViewportPercent) + 'dvh');
   FDialog.style.setProperty('max-width', IntToStr(AOptions.WidthLimit) + 'px');
-  FDialog.style.setProperty('max-height', '100dvh');
+
+  if AOptions.HeightLimit = 0 then
+  begin
+    FDialog.style.setProperty('max-height', '100dvh');
+  end
+  else
+  begin
+    FDialog.style.setProperty('max-height', 'min(100dvh, ' + IntToStr(AOptions.HeightLimit) + 'px)');
+  end;
   FDialog.style.setProperty('padding', '0');
   FDialog.style.setProperty('border', '1px solid #dfe3ec');
   FDialog.style.setProperty('border-radius', '12px');
@@ -159,19 +168,25 @@ begin
 end;
 
 function TNyxBrowserModalHost.Cancel(AEvent: TJSEvent): Boolean;
+var
+  LKeepAlive: INyxModalHost;
+  LObserver: TNyxModalDismiss;
 begin
+  LKeepAlive := Self;
+  LObserver := FOnDismiss;
   { The controller first moves the retained view and closes this host. Prevent
     an independent browser close from racing that lifetime/return operation. }
   AEvent.preventDefault;
 
-  if Assigned(FOnDismiss) then
+  if Assigned(LObserver) then
   begin
-    FOnDismiss;
+    LObserver;
   end
   else
   begin
     Hide;
   end;
+  LKeepAlive.GetOpen;
   Result := True;
 end;
 

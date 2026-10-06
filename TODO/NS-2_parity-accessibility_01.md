@@ -20,6 +20,23 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Confirmation focus and lifetime — 2026-10-06
+
+Criterion 2 now has actual browser/Win32 confirmation initial/return focus,
+unavailable-part refusal, Escape/cancel/confirm, closing transition refusal and
+invoker-removal/managed teardown evidence. The same exact MCP companion passes
+36 native (zero leaks) and 35 desktop/narrow browser checks. Compact content sizing
+keeps three actions inside actual host bounds. See
+[the packet](../WORK.md#managed-confirmation-presentation--2026-10-06).
+
+No original criterion or renderer prerequisite closes; the historical no-closure
+total remains unestablished, not reset by this boundary. Native isolation covers
+the exact owner, not all application windows. Hardware Tab/IME/assistive technology,
+other widgetsets, nested presentations, oversized native custom layouts, broader
+visual quality and full accessibility remain. Stop confirmation fixtures and
+reassess the actual Studio-worker prerequisite and original outcomes. Protected
+history migration/observing rollout remains unchanged.
+
 ## Bound list/tree typeahead — 2026-10-06
 
 Criterion 2 now includes shared managed typed runtime search, full pinned Unicode

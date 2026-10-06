@@ -23,6 +23,26 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Managed confirmation behavior — 2026-10-06
+
+Criterion 3 now includes an actual managed browser/LCL presentation of an
+independently cloned confirmation recipe, typed focus/sizing, arbitrary added
+actions, cancellation, ordered callbacks, callback-driven reopen/release and
+host retirement. Actual Win32 passes 36 with zero leaks; desktop/narrow browser
+passes 35 each using the same exact MCP-authored companion. Studio consumes the
+shared recipe for its inline registration warning; actual native queue checks
+pass 57 and source workspace 30, leak-free. See
+[evidence](../WORK.md#managed-confirmation-presentation--2026-10-06) and
+[public usage](../docs/confirmation.md).
+
+Stop this local confirmation batch. No original criterion or renderer prerequisite
+closes. The asynchronous browser Studio-worker journey remains unqualified; its
+readiness-aware consumer has the existing NS-4 workflow owner. Full modal/picker/
+overlay behavior, nested native modality, hardware/assistive input, widgetsets,
+accessibility, aesthetics, virtualization/performance and other production
+families retain their original acceptance. Protected history/observing rollout
+is unchanged; offline checks cannot establish that service prerequisite.
+
 ## Creator metadata — 2026-10-03
 
 All default kinds have high-level descriptions, one intent group and useful

@@ -30,8 +30,9 @@ uses
   nyx.text;
 
 type
-  { A dismiss observer is borrowed. Clear it before the receiver retires;
-    it must return from the current notification before destroying its host. }
+  { A dismiss observer is borrowed. Clear it before the receiver retires.
+    Adapters retain their managed host until the notification returns, allowing
+    a managed controller to release its own host from a completion callback. }
   TNyxModalDismiss = procedure of object;
 
   { Immutable fluent modal geometry in logical viewport percent/pixels.
@@ -41,14 +42,19 @@ type
     FTitle: TNyxText;
     FViewportPercent: Integer;
     FMaximumWidth: Integer;
+    FMaximumHeight: Integer;
   public
     { Return a copied option value. Percent accepts 20..100; pixels 240..16384.
       Invalid dimensions raise ENyxModel before a target changes its window. }
     function Viewport(APercent: Integer): TNyxModalOptions;
     function MaximumWidth(APixels: Integer): TNyxModalOptions;
+    { Zero keeps viewport sizing; 120..16384 caps the height for compact
+      dialogs. Oversized content needs its own ordinary Nyx scrolling layout. }
+    function MaximumHeight(APixels: Integer): TNyxModalOptions;
     property Title: TNyxText read FTitle;
     property ViewportPercent: Integer read FViewportPercent;
     property WidthLimit: Integer read FMaximumWidth;
+    property HeightLimit: Integer read FMaximumHeight;
   end;
 
   { Managed presentation lifetime, independent of document/history ownership.
@@ -104,6 +110,17 @@ begin
   end;
   Result := Self;
   Result.FMaximumWidth := APixels;
+end;
+
+function TNyxModalOptions.MaximumHeight(APixels: Integer): TNyxModalOptions;
+begin
+
+  if (APixels <> 0) and ((APixels < 120) or (APixels > 16384)) then
+  begin
+    raise ENyxModel.Create('Modal maximum height must be zero or 120..16384 logical pixels');
+  end;
+  Result := Self;
+  Result.FMaximumHeight := APixels;
 end;
 
 end.

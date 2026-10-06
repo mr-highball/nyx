@@ -7,7 +7,102 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-## Current return path: collection keyboard parity and semantic release — 2026-10-06
+## Current return path: managed confirmation presentation — 2026-10-06
+
+Current goal turn: progress; the preceding status-only turn made no product
+progress. NS-3 advanced-dialog criterion 3 now has the managed confirmation
+boundary below, following NS-2 keyboard/focus criterion 2 and preserving both
+owners' full acceptance/prerequisites. Stop confirmation fixture expansion here.
+Shared Studio warning reuse is qualified natively; its asynchronous browser-worker
+readiness remains an existing NS-4 integration prerequisite. Reassess that actual
+consumer and the remaining original modal/picker/overlay behavior before another
+batch, without substituting offline fixtures for protected observing deployment.
+No original criterion closes and historical no-closure totals are not reset.
+The old service still lacks complete history export; protected rollout remains
+gated. No new listener, service replacement, enrollment or user-pair change occurred.
+
+## Managed confirmation presentation — 2026-10-06
+
+`INyxConfirmation` owns an independent specialized recipe clone, rendering/host
+lifetime and ordinary managed completion streams. Typed immutable focus, sizing
+and modal height options keep the public contract portable. Real adapters qualify
+initial focus and ancestor admission; close returns focus before ordered completion
+callbacks. An added third action stays unresolved. Explicit silent Close, Escape/
+window Cancel, pending/result enums, callback-driven reopen/release and guarded
+opening/closing transitions are implemented. Native focus uses weak notification
+for an invoker removed while open. Hosts retain themselves across borrowed dismiss
+callbacks; renderers disconnect before host retirement. Retained content remains
+safe, while subscriptions retire. Native owning-window and borrowed-theme lifetimes
+remain explicit. Oversized native custom content needs a suitable Nyx scroll layout.
+
+Studio's actual registration warning now consumes the public confirmation recipe
+and specialized parts. It remains inline; exact callback identity, command context,
+pending admission and paired history stay with the ordinary Studio controller.
+This is shared library consumption, not a claim of new Studio floating warnings.
+The default recipe wraps its actions. See [the guide](docs/confirmation.md) and
+[semantic recipe](tests/confirmation-review.operations.json).
+
+Semantic MCP remained primary. Owned English review `review-4` was composed and
+customized with revision-aware grouped operations; bounded source windows exported
+the exact 130-line accepted companion, MD5 `f63268d3679d32e82d3b2ce96805020e`.
+Its actual named-MCP browser/LCL application jobs both succeeded at revision 4 with
+identical source/design/output fingerprints. `mcp-builds.json` retains receipts.
+Application compilation proves authored content, not execution of the new presenter.
+A second owned empty review applied the maintained JSON's two groups at revisions
+1/2 and reproduced every accepted line exactly at revision 3. No handwritten
+generated companion or user-project replacement supplied this evidence.
+
+Evidence: ignored `build/confirmation/` and maintained source/guide.
+
+- `tools/build.ps1 -Target confirmation`, `maintained-build-qualified.log`: **36**
+  actual checked Win32 checks, **zero leaks**. The unchanged semantic companion
+  compiles for both adapters. `browser-desktop-qualified/` and
+  `browser-narrow-qualified/` execute **35** each at measured CSS widths
+  **1076/576**. English native/desktop/narrow captures are inspected; all three
+  actions fit their real host bounds. The native PNG includes the full window
+  rectangle, avoiding a client-sized capture's false clipping.
+- `run-studio-native-fixed.log`: **57** ordinary native queued callback checks,
+  **zero leaks**, including exact removal/keep/Undo, disabled pending snapshots,
+  independent draft refusal and reusable navigation. `run-source-editor.log`:
+  **30** native source-workspace checks, **zero leaks**, including retained editor,
+  source/messages, expand/resize/Escape/apply/Undo. Existing viewport modal defaults
+  remain qualified; these regressions precede the new presenter's final transition
+  guard, which does not change their host/controller code.
+- `compile-stable-contract.log`: checked **FPC 3.2.0** portable contract compilation
+  succeeds. Actual LCL consumers use the installed matched **3.3.1 Win32** compiler;
+  browser uses matched pas2js/RTL. Final owned warnings: **zero**. Seven upstream
+  `classes.pas` warnings remain visible/unsuppressed; existing lease-local notes
+  are not represented as zero diagnostics.
+- `preservation-final.json`: **15** exact protected service identities and **8**
+  byte-exact accepted pairs plus revision/selection/view/draft/Undo/Redo availability
+  retained; LAN HTTP **200**. Primary remains revision **2**, original selection/
+  view. Seven protected projects have Undo available, not exported histories.
+  Owned reviews are discarded at exact current revisions **4/3**. All owned
+  qualification/capture programs are terminal. No listener, restart, enrollment or
+  observing release change. The phone remains on its preserved older release.
+
+Corrected failures: clearing a recipe button's emit property suppressed its click;
+retain typed semantic emit and route explicit Studio command metadata instead.
+Capture initially cropped native decorations. Win32 retains an active-control slot
+across activation, so the unfinished-close check uses its actual OnHide callback,
+not a fabricated OnEnter. The final focus-release check initially observed before
+a compiler-managed factory temporary retired; its bounded scope now establishes
+actual teardown. Earlier failed captures/checks are not accepted evidence.
+
+The asynchronous browser Studio-worker journey remains **unqualified**. The old
+synchronous fixture did not wait for queued publication. The current queue capture
+either dumps before the worker completes or accelerates the timeout ahead of its
+real worker. Do not modify production timeouts to mask that harness gap. Its
+readiness-aware actual consumer belongs to the existing NS-4 workflow owner.
+This batch does not qualify hardware Tab navigation, physical phones, IME,
+assistive technology, other widgetsets, full APG behavior, nested/out-of-order
+native modality, all overlay/picker lifecycles, broader aesthetics or frame budgets.
+No full original criterion/task is accepted. NS-2's historical no-closure total
+remains unestablished; existing workflow **10**, authoring **26**, renderer **7**,
+codegen **28** and delivery **2** stay unchanged. Prior listener rejection remains
+unretried. Remote checkpoint is recorded after pushing.
+
+## Previous return path: collection keyboard parity and semantic release — 2026-10-06
 
 Previous goal turn: progress; shared build controls reached verified remote
 `0cbccec70331a7c42a0c812cb93d704d4007aeac`, clean worktree. Current reassessment

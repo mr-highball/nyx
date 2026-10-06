@@ -59,6 +59,7 @@ type
     FOpen: Boolean;
     FViewportPercent: Integer;
     FWidthLimit: Integer;
+    FHeightLimit: Integer;
     FOnDismiss: TNyxModalDismiss;
     procedure WindowClose(Sender: TObject; var AAction: TCloseAction);
     procedure WindowKey(Sender: TObject; var AKey: Word; AShift: TShiftState);
@@ -131,21 +132,28 @@ var
   LHeight: Integer;
   LOrigin: TPoint;
 begin
-  LOptions := AOptions.Viewport(AOptions.ViewportPercent).MaximumWidth(AOptions.WidthLimit);
+  LOptions := AOptions.Viewport(AOptions.ViewportPercent).MaximumWidth(AOptions.WidthLimit)
+    .MaximumHeight(AOptions.HeightLimit);
   FWindow.Caption := LOptions.Title;
 
   if not FOpen or (LOptions.ViewportPercent <> FViewportPercent) or
-    (LOptions.WidthLimit <> FWidthLimit) then
+    (LOptions.WidthLimit <> FWidthLimit) or (LOptions.HeightLimit <> FHeightLimit) then
   begin
     { Repeated equal options preserve manual resizing. An explicit new geometry
       still applies through the same portable Show contract without reopening. }
     LWidth := Min(LOptions.WidthLimit, FOwner.ClientWidth * LOptions.ViewportPercent div 100);
     LHeight := FOwner.ClientHeight * LOptions.ViewportPercent div 100;
+
+    if LOptions.HeightLimit <> 0 then
+    begin
+      LHeight := Min(LHeight, LOptions.HeightLimit);
+    end;
     LOrigin := FOwner.ClientToScreen(Point(0, 0));
     FWindow.SetBounds(LOrigin.X + (FOwner.ClientWidth - LWidth) div 2,
       LOrigin.Y + (FOwner.ClientHeight - LHeight) div 2, LWidth, LHeight);
     FViewportPercent := LOptions.ViewportPercent;
     FWidthLimit := LOptions.WidthLimit;
+    FHeightLimit := LOptions.HeightLimit;
   end;
 
   if not FOpen then
@@ -174,16 +182,22 @@ begin
 end;
 
 procedure TNyxLCLModalHost.Dismiss;
+var
+  LKeepAlive: INyxModalHost;
+  LObserver: TNyxModalDismiss;
 begin
+  LKeepAlive := Self;
+  LObserver := FOnDismiss;
 
-  if Assigned(FOnDismiss) then
+  if Assigned(LObserver) then
   begin
-    FOnDismiss;
+    LObserver;
   end
   else
   begin
     Hide;
   end;
+  LKeepAlive.GetOpen;
 end;
 
 procedure TNyxLCLModalHost.WindowClose(Sender: TObject; var AAction: TCloseAction);
