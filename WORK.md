@@ -7,7 +7,14 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-The user's latest explicit LAN instruction is fulfilled:
+The user's latest explicit LAN instruction is fulfilled. The
+[responsive editor follow-through](#ordinary-responsive-studio--2026-10-06) also
+refreshes current Studio assets without restarting the service; installed/served
+hashes match, the worker remains byte-identical, and primary revision/selection/
+view remain unchanged. The current private asset receipt supplements the
+preceding server release manifest below.
+
+The preceding
 [current release refresh](#current-lan-release-refresh--2026-10-05) now serves
 the current checked server, Studio and worker on the existing all-interface HTTP
 endpoint; MCP remains loopback. Exact installed/served hashes and nineteen
@@ -19,7 +26,22 @@ unchanged. The previous blocked/pending refresh below is historical and supersed
 do not execute its obsolete process manifest. Private current identity, artifact
 manifest, paired backup and rollback live under the current refresh record.
 
-Current independent work: [typed responsive authoring](#typed-responsive-authoring--2026-10-05)
+Current independent work: [ordinary responsive Studio](#ordinary-responsive-studio--2026-10-06)
+under original authoring criterion 1 and the user's form-factor steering. The
+ordinary browser Inspector reaches its module worker and shared paired history;
+compatible remote/Undo updates and compact panel/preview changes retain live
+canvas input. Public width conditions now shape Studio's compact source captions,
+placement width and Agents visibility; conflict choices precede optional details.
+Actual checks pass 22 desktop / 22 exact-390, source workspace 30 per browser size,
+nine native responsive Studio and 30 native source workspace, with zero checked
+leaks. MCP application compilation succeeds on both targets with exact source/
+design/output receipts. Authoring no-closure advances 14→15 once; workflow 9,
+codegen 28, renderer 3 and delivery 1 remain. Stop local width/fixture expansion;
+continue original responsive conditions, guides and full editor/parity outcomes.
+The preceding goal turn made progress by deploying the checked LAN release and
+verifying nineteen authenticated tools; its historical approval blocker is resolved.
+
+Preceding independent work: [typed responsive authoring](#typed-responsive-authoring--2026-10-05)
 under original Studio authoring criterion 1. Managed public width conditions,
 typed generation/admission, retained target adapters and the Nyx-built Inspector
 share ordinary paired commands. Shared checks pass 33 per native compiler and
@@ -34,10 +56,7 @@ expansion. Next qualify ordinary browser Studio inspector/worker execution and
 continue original responsive variants, guides, editor/parity/accessibility and
 delivery outcomes. This independent packet retained the prepared release-refresh
 closure and protected services/pair before the separately authorized LAN refresh
-above. The preceding
-user refresh verification was no progress: it confirmed the same pending local
-action without changing the release. This independent integration supplies new
-product evidence while that gate remains.
+above. Its earlier refresh gate is now superseded by the successful deployment.
 
 Preceding independent work: [direct canvas resize handles](#direct-canvas-resize-handles--2026-10-05)
 under original Studio authoring criterion 1. Managed public Nyx adornments now
@@ -8485,3 +8504,79 @@ captures. The earlier staged closure stays intact, but its old refresh script's
 expected process has retired; it is superseded and must not be reused. Continue
 semantic MCP through the current enrollment, never infer that old cached chat
 handles have reconnected merely because the configuration rotated.
+
+## Ordinary responsive Studio — 2026-10-06
+
+Owner: original Studio authoring criterion 1, with the user's additional
+form-factor steering. Deliverable: consume the existing strongly typed viewport
+contract through ordinary browser Studio Inspector/worker/shared history, and use
+that same public contract to reclaim narrow editor space. Stop on lost independent
+input, guessed source ownership or bypassed paired admission; no alternate browser
+design-authoring path or replacement of the primary project is permitted.
+
+The first actual browser journey exposed lost canvas identity during synchronized
+Undo. `HandleShell` retired the canvas before the remote response, and
+`AgentRefresh` unconditionally replaced it after admitting the new pair. Both
+paths now request guarded public projection refresh; incompatible structural/view
+changes retain the normal render fallback. Compact Project/Inspector chrome also
+keeps the last detached browser host reachable and reconciles compatible updates
+there, instead of destroying the canvas. Returning to Design reuses its controls,
+listeners, independent text and selection. Keyboard history and editor/preview
+presentation switches share the same retention policy. Native Studio already
+uses its independently owned parking host and guarded refresh.
+
+Studio's shared Nyx compositions now use `WhenViewport` for shorter source action
+and message captions, redundant status/Agents visibility, and the placement
+select's compact width/caption with an explicit accessible name. Conflict choices
+precede transport/permission information, making shared-project recovery reachable
+on a phone. Documentation gives fluent position, dimension, visibility and layout
+examples alongside target overrides; no compiler directives or raw property keys
+are required for this authoring. The condition is still host-width based;
+height/orientation, nested container and named-variant work remain open.
+
+Semantic MCP created an independent English project and composed the maintained
+five-operation fixture in one expected-revision transaction. Bounded source
+windows retained specialized interfaces and typed rules. The ordinary browser
+test addresses that exact workspace through `ConnectAgents`, drives the actual
+Nyx Inspector, waits for the real module worker, and uses ordinary shared Undo/
+Redo. A subsequent bounded `nyx_node` query confirms both exact layout properties
+and both-target capability metadata at revision 22. Actual `nyx_build` application
+jobs succeed on browser and LCL with matching source/design fingerprints; the
+accepted companion is 2,221 bytes. Native warnings are zero; browser warnings are
+the seven unchanged installed RTL case warnings, with no owned-source warnings.
+
+Evidence under ignored `build/responsive/studio-review/`:
+
+- `qualification.log`: maintained shared checks 33 per native compiler, actual
+  native controls 22 and Studio nine, then staged browser Studio/worker/consumers.
+- `native-studio-current.log` and `native-source-current.log`: final actual Win32
+  responsive Studio nine and source workspace 30, with zero checked leaks.
+- `desktop-final/` and `compact-final/`: 22 ordinary Studio checks each, captured
+  on ordinary browser frames; same input/draft/range and source editor through
+  worker publication, one Undo and one Redo. The compact host is exactly 390 px.
+- `source-desktop-final/` and `source-compact-final/`: existing source workspace/
+  modal regression 30 each, including expanded Close/cancel and retained draft.
+- Semantic creation/transaction, paged source, history, bounded metadata and
+  compiler receipts/status; failed first desktop and retained-history attempts
+  remain alongside terminal successful evidence. Input callbacks are synthetic;
+  these checks do not qualify trusted hardware, IME or assistive technology.
+
+The qualified ordinary Studio JS is now served by the existing LAN service.
+Process executable/creation identity and prior installed hash were checked before
+copying; backup plus new installed/served SHA-256 receipt live in the ignored
+current refresh record as `responsive-ui-20261006.json`. The worker is byte-identical
+to the fresh compilation and remains in place. No service restart or enrollment
+rotation was needed. The primary project's revision 2, selection, view, draft and
+history flags remain unchanged. The original nine-artifact server manifest remains
+historical evidence; this new UI receipt owns the later asset revision. The first
+guard attempt refused because PowerShell auto-decoded the JSON timestamp, then an
+implicit string conversion discarded its fractional seconds. Direct typed UTC
+comparison verified exact identity before the successful update. No process was
+stopped and no service change was inferred from that diagnostic.
+
+No original criterion closes. Authoring no-closure advances **14→15** once;
+workflow 9, codegen 28, renderer 3 and delivery 1 remain. The previous ordinary
+browser consumer gate is now qualified. End local width/fixture expansion and
+continue original responsive conditions, guides, editor quality, full parity/
+accessibility and delivery. Physical phone review of these latest assets remains
+separate from local LAN delivery and viewport emulation.

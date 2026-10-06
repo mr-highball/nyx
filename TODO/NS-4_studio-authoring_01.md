@@ -40,6 +40,28 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Ordinary responsive Studio — 2026-10-06
+
+Original criterion 1 now has actual browser Inspector/module-worker/shared-history
+evidence from an explicitly MCP-authored independent project. The check exposed
+canvas loss during synchronized Undo and compact panel navigation; compatible
+admitted pairs and detached canvas hosts now retain controls and independent text.
+The user's form-factor request is also consumed by Studio through the public
+typed width contract: compact source captions, placement width and Agents
+visibility, with conflict choices before optional information. Logical position,
+dimensions, visibility and layout already share the same fluent scopes.
+
+Actual browser checks pass 22 desktop / 22 exact-390; source workspace regression
+passes 30 on each browser size and 30 Win32. Native responsive Studio passes nine.
+MCP application compilation succeeds on both targets with exact fingerprints.
+See [evidence](../WORK.md#ordinary-responsive-studio--2026-10-06).
+
+No original criterion closes. Authoring no-closure advances **14→15** once;
+workflow 9, codegen 28, renderer 3 and delivery 1 remain. This fulfills the previous
+ordinary-browser consumer check; end local width/fixture expansion. Next continue
+original height/orientation/named responsive conditions, guides, editor quality,
+parity/accessibility and delivery, preserving all existing blockers.
+
 ## Typed responsive authoring — 2026-10-05
 
 Original criterion 1 now consumes public typed width conditions through managed

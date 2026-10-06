@@ -27,41 +27,78 @@ uses
   SysUtils, base64, nyx.text, nyx.data, nyx.test.browser.host;
 
 type
+  { Closed review choices are typed internally; only the command-line boundary
+    accepts their advertised names. Unknown names refuse before browser startup. }
+  TResponsiveReviewKind = (rrControls, rrStudio, rrSourceEditor);
   { This owner only observes bounded Pascal-fixture results and captures the
     actual rendered page. It never evaluates scripts, edits a design or uses
     accelerated clocks; ResizeObserver delivery occurs on ordinary browser frames. }
   TResponsiveReview = class(TNyxBrowserHost)
   public
-    procedure Run;
+    { The optional suffix selects another ordinary responsive consumer using
+      the same bounded marker/capture protocol. It changes no editor behavior. }
+    procedure Run(AKind: TResponsiveReviewKind);
   end;
 
-procedure TResponsiveReview.Run;
+procedure TResponsiveReview.Run(AKind: TResponsiveReviewKind);
+const
+  CNames: array[TResponsiveReviewKind] of TNyxText = ('controls', 'studio', 'source-editor');
 var
   LStarted: QWord;
   LMarker: TNyxText;
+  LChecksName: TNyxText;
+  LResultName: TNyxText;
+  LErrorName: TNyxText;
+  LSuffix: TNyxText;
 begin
+  LSuffix := CNames[AKind];
+  LResultName := 'data-nyx-responsive-' + LSuffix;
+  LErrorName := 'data-nyx-responsive-' + LSuffix + '-error';
+  LChecksName := 'data-nyx-responsive-checks';
+
+  if AKind <> rrControls then
+  begin
+    LChecksName := 'data-nyx-responsive-' + LSuffix + '-checks';
+  end;
+
+  if AKind = rrControls then
+  begin
+    LErrorName := 'data-nyx-responsive-error';
+  end
+  else if AKind = rrSourceEditor then
+  begin
+    { Reuse the existing source workspace's marker protocol for the regression
+      affected by responsive captions and retained chrome. No new fixture or
+      script injection is needed to inspect its actual controls and modal. }
+    LResultName := 'data-source-editor';
+    LChecksName := 'data-source-editor-checks';
+    LErrorName := 'data-source-editor-error';
+  end;
   LStarted := GetTickCount64;
   repeat
     Pump;
-    LMarker := Attribute('data-nyx-responsive-controls');
+    LMarker := Attribute(LResultName);
 
     if LMarker = 'failed' then
     begin
-      raise Exception.Create(Attribute('data-nyx-responsive-error'));
+      Save('failure.png', DecodeStringBase64(Command('Page.captureScreenshot',
+        NyxObject([NyxField('format', NyxData('png'))])).Field('data').AsText));
+
+      raise Exception.Create(Attribute(LErrorName));
     end;
 
     if LMarker = 'passed' then
     begin
       Save('result.json', NyxObject([NyxField('checks',
-        NyxData(StrToInt(Attribute('data-nyx-responsive-checks'))))]).ToJSON);
+        NyxData(StrToInt(Attribute(LChecksName))))]).ToJSON);
       Save('capture.png', DecodeStringBase64(Command('Page.captureScreenshot',
         NyxObject([NyxField('format', NyxData('png'))])).Field('data').AsText));
-      WriteLn('PASS actual browser responsive controls / ',
-        Attribute('data-nyx-responsive-checks'), ' checks');
+      WriteLn('PASS actual browser responsive ', LSuffix, ' / ',
+        Attribute(LChecksName), ' checks');
       Exit;
     end;
 
-    if GetTickCount64 - LStarted > 15000 then
+    if GetTickCount64 - LStarted > 30000 then
     begin
       raise Exception.Create('Responsive fixture did not finish on ordinary browser frames');
     end;
@@ -71,16 +108,38 @@ end;
 
 var
   LReview: TResponsiveReview;
+  LKind: TResponsiveReviewKind;
 begin
   LReview := nil;
   try
 
-    if ParamCount <> 2 then
+    if (ParamCount < 2) or (ParamCount > 3) then
     begin
       raise Exception.Create('Supply isolated loopback fixture and artifact directory');
     end;
+    LKind := rrControls;
+
+    if ParamCount = 3 then
+    begin
+      if ParamStr(3) = 'controls' then
+      begin
+        LKind := rrControls;
+      end
+      else if ParamStr(3) = 'studio' then
+      begin
+        LKind := rrStudio;
+      end
+      else if ParamStr(3) = 'source-editor' then
+      begin
+        LKind := rrSourceEditor;
+      end
+      else
+      begin
+        raise Exception.Create('Unknown responsive review kind');
+      end;
+    end;
     LReview := TResponsiveReview.Create(ParamStr(1), ParamStr(2));
-    LReview.Run;
+    LReview.Run(LKind);
   except
     on LException: Exception do
     begin

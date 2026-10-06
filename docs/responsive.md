@@ -8,7 +8,7 @@ It contains no DOM, LCL, operating-system or device-name dependency. Specialized
 managed controls expose the same `WhenViewport` configuration as the base descriptor.
 
 ```pascal
-uses nyx.types, nyx.responsive, nyx.controls;
+uses nyx.types, nyx.responsive, nyx.layout.policy, nyx.controls;
 
 // The page owns this row after Add; its interface retains the descriptor.
 LWorkspaceRow := NewNyxRow('workspace');
@@ -59,6 +59,49 @@ paired processor and one Undo step. Existing responsive fields use ordinary type
 property editors and readable scope titles. This form creates layout rules;
 other presentation attributes can be authored fluently or semantically.
 
+The condition scopes a complete fluent presentation, including visibility,
+logical positions, dimensions, size constraints, alignment and displayed captions.
+For example, keep an optional details panel and its input alive while giving the
+main content more room:
+
+```pascal
+LDetailsPanel.Configure
+  .Width(320)
+  .Visible(True)
+  .WhenViewport(TNyxViewportWidth.Below(700))
+  .Visible(False)
+  .Done;
+
+LContentRow.Configure
+  .Layout(TNyxLayoutPolicy.Row.Wrap(nfwNoWrap))
+  .Gap(24)
+  .WhenViewport(TNyxViewportWidth.Below(700))
+  .Layout(TNyxLayoutPolicy.Column.Align(ncaStretch))
+  .Gap(12)
+  .Done;
+```
+
+Inside an absolute layout, the same control can use different positions and
+dimensions without a second implementation or compiler directives:
+
+```pascal
+LStatusBadge.Configure
+  .Left(24).Top(24).Width(120).Height(32)
+  .WhenViewport(TNyxViewportWidth.Below(640))
+  .Left(12).Top(12).Width(96).Height(28)
+  .ForPlatform(npfNativeLCL)
+  .Top(16)
+  .Done;
+```
+
+The browser and LCL adapters consume the same conditions. Native-specific `Top`
+above applies only inside the selected width range. Tree ownership, application
+state and callbacks remain shared. Hiding a control retains its existing input;
+normal platform focus rules still apply when the focused control becomes hidden.
+Studio uses these public conditions for compact source captions and Agents chrome.
+Its compact panel switches and compatible synchronized history updates now retain
+the canvas projection and independent input instead of recreating it.
+
 Agents inspect bounded `nyx_node` metadata and group related changes in one
 revision-aware `nyx_transaction`. At this explicit JSON boundary, canonical keys
 have the form `@nyx.viewport:0:640:any:gap`; numeric/Boolean values retain their
@@ -78,8 +121,17 @@ same input identity, independent English text, selection/focus, exclusive bounds
 host replacement and unchanged authored persistence. Actual MCP jobs compile the
 companion on both targets; grouped Undo/Redo restores its exact generated source.
 
-Ordinary browser Studio inspector/worker execution, physical phone/hardware,
-IME/assistive technology, other widgetsets, nested container conditions, named
+The ordinary browser Studio journey now connects to an explicitly MCP-authored
+project, edits the actual responsive Inspector, waits for the module worker,
+and uses ordinary synchronized Undo/Redo. It passes 22 desktop and 22 exact-390
+checks, retaining the same canvas input, uncommitted English text, selection and
+source editor. Compact source/Agents presentation uses the public width contract.
+Existing source workspace/modal regression passes 30 on each browser size and
+30 on Win32; responsive native Studio still passes nine. The resulting complete
+application compiles through MCP on both targets, with exact build fingerprints.
+
+Physical phone/hardware, IME/assistive technology, other widgetsets,
+height/orientation conditions, nested container conditions, named
 variants and comprehensive responsive semantics remain unqualified. Projection
 scans authored rules; these fixtures make no large-project performance claim.
 Full acceptance remains with the existing

@@ -27,7 +27,7 @@ unit nyx.studio.agentview;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.studio.agents,
+  SysUtils, nyx.text, nyx.data, nyx.types, nyx.responsive, nyx.model, nyx.studio.agents,
   nyx.studio.workspaces;
 
 type
@@ -144,11 +144,42 @@ var
 begin
   Result := TNyxNode.Create(nkCard, 'studio-agents');
   try
-    Result.Configure.Layout(nlColumn).Gap(10).Padding(16).Surface(True).Done;
-    Result.Add(TNyxNode.Create(nkHeading, 'studio-agents-title').Configure.Text('Agents').Done);
+    Result.Configure.Layout(nlColumn).Gap(10).Padding(16).Surface(True)
+      .WhenViewport(TNyxViewportWidth.Below(640)).Gap(6).Padding(10).Done;
+    Result.Add(TNyxNode.Create(nkHeading, 'studio-agents-title').Configure.Text('Agents')
+      .WhenViewport(TNyxViewportWidth.Below(640)).Visible(False).Done);
     Result.Add(LabelNode('studio-agents-status', AState.Status));
-    Result.Add(LabelNode('studio-agents-revision', 'Shared revision ' + IntToStr(AState.Revision)));
-    Result.Add(LabelNode('studio-agents-endpoint', AState.Endpoint));
+
+    if AState.Conflict then
+    begin
+      { Resolve choices precede optional configuration/help. An observing phone
+        can reach them without scrolling past transport and permission details.
+        The controller still downloads a backup before accepting the shared pair. }
+      Result.Find('studio-agents-status').Configure
+        .WhenViewport(TNyxViewportWidth.Below(640))
+        .Text('This device has a different saved project.').Done;
+      Result.Add(LabelNode('studio-agent-conflict',
+        'Your local changes are retained. Another view or agent changed the shared revision. ' +
+        'Save a project backup before choosing the shared design.').Configure
+        .WhenViewport(TNyxViewportWidth.Below(640))
+        .Text('Choose the shared project after saving a backup, or keep this device separate.').Done);
+      Result.Add(TNyxNode.Create(nkButton, 'action-agent-pause')
+        .Configure.Text('Keep local and pause sync').Done);
+      LButton := TNyxNode.Create(nkButton, 'action-agent-accept')
+        .Configure.Text('Download local backup and use shared design').Done;
+      LButton.Configure.ForPlatform(npfNativeLCL)
+        .Text('Save local backup and use shared design').Done;
+      LButton.Configure.WhenViewport(TNyxViewportWidth.Below(640))
+        .Text('Back up and use shared').Done;
+      Result.Add(LButton);
+    end;
+    { Revision already appears in connected status. Redundant transport/help
+      remains available at wider widths without occupying scarce compact space.
+      Public viewport rules preserve these controls and their ownership. }
+    Result.Add(LabelNode('studio-agents-revision', 'Shared revision ' + IntToStr(AState.Revision))
+      .Configure.WhenViewport(TNyxViewportWidth.Below(640)).Visible(False).Done);
+    Result.Add(LabelNode('studio-agents-endpoint', AState.Endpoint)
+      .Configure.WhenViewport(TNyxViewportWidth.Below(640)).Visible(False).Done);
 
     if (AState.Compiler.Kind = ndObject) and
       (AState.Compiler.Field('total').AsInteger > 0) then
@@ -160,7 +191,8 @@ begin
     end;
     Result.Add(LabelNode('studio-agents-explanation',
       'Agents use semantic tools against this design. You control access here. ' +
-      'Codex configuration is updated locally; a client already running may need to reconnect.'));
+      'Codex configuration is updated locally; a client already running may need to reconnect.')
+      .Configure.WhenViewport(TNyxViewportWidth.Below(640)).Visible(False).Done);
     LButtons := TNyxNode.Create(nkRow, 'studio-agents-permissions').Configure.Gap(8).Done;
     Result.Add(LButtons);
     for LPermission := Low(TNyxAgentPermission) to High(TNyxAgentPermission) do
@@ -183,19 +215,6 @@ begin
     if not AState.Connected then
     begin
       Result.Add(TNyxNode.Create(nkButton, 'action-agent-connect').Configure.Text('Connect agents').Done);
-    end;
-
-    if AState.Conflict then
-    begin
-      Result.Add(LabelNode('studio-agent-conflict',
-        'Your local changes are retained. Another view or agent changed the shared revision. ' +
-        'Save a project backup before choosing the shared design.'));
-      Result.Add(TNyxNode.Create(nkButton, 'action-agent-pause')
-        .Configure.Text('Keep local and pause sync').Done);
-      Result.Add(TNyxNode.Create(nkButton, 'action-agent-accept')
-        .Configure.Text('Download local backup and use shared design').Done);
-      Result.Children[Result.Count - 1].Configure.ForPlatform(npfNativeLCL)
-        .Text('Save local backup and use shared design').Done;
     end;
 
     if AState.Reviews.Defined then

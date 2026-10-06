@@ -66,6 +66,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Studio now consumes public width rules for compact source captions, placement
+width and Agents visibility. Compatible synchronized Undo/Redo and compact panel
+switches retain independent canvas input. Ordinary browser Inspector/worker
+checks pass 22 desktop / 22 exact-390; source editor checks pass 30 on each browser
+size and 30 Win32, with nine native responsive Studio checks. MCP application
+jobs succeed on both targets. Width rules already scope logical positions,
+dimensions, visibility and layout; broader conditions and full authoring/parity
+remain open. See [current responsive consumer evidence](WORK.md#ordinary-responsive-studio--2026-10-06).
+
 The latest explicit user LAN refresh now serves current checked Studio/server
 artifacts through the existing HTTP endpoint, with MCP kept on loopback.
 Installed/served hashes and nineteen authenticated tools are verified; current
@@ -80,7 +89,8 @@ and 33 in the browser; unchanged semantic source passes 22 Win32 controls, nine
 native Studio checks and 23 desktop / 23 exact-390 browser checks. Controls retain
 input through first/last-rule refresh and automatic resizing. Actual MCP jobs
 compile both targets and grouped Undo/Redo restores exact source. Ordinary browser
-Studio inspector/worker execution, phone deployment, richer responsive variants,
+Studio inspector/worker execution was subsequently qualified above; physical
+phone review, richer responsive variants,
 performance and full parity remain open. See [responsive authoring](docs/responsive.md).
 
 Managed public canvas resize handles now reuse specialized Nyx buttons and

@@ -232,13 +232,23 @@ begin
   try
     Result.Add(NewNyxLabel('studio-source-status').Configure
       .Text(AState.SourceStatus).Hint('Current Pascal source operation')
-      .Visible(AState.SourceStatus <> '').Done);
+      .Visible(AState.SourceStatus <> '')
+      .WhenViewport(TNyxViewportWidth.Below(640)).Visible(False).Done);
     LActions := TNyxNode.Create(nkRow, 'studio-code-actions')
       .Configure.Gap(8).Layout(TNyxLayoutPolicy.Row.Wrap(nfwWrap)).Done;
     Result.Add(LActions);
-    LActions.Add(Button('action-apply-source', 'Apply Pascal'));
-    LActions.Add(Button('action-reset-source', 'Restore accepted'));
-    LActions.Add(Button('action-export-source-draft', 'Save draft'));
+    { These width conditions use the source pane's available space on both
+      targets. The same buttons, callbacks and full hints remain reachable;
+      compact presentation does not create a second set of editor actions. }
+    LActions.Add(Button('action-apply-source', 'Apply Pascal').Configure
+      .Hint('Apply the Pascal draft')
+      .WhenViewport(TNyxViewportWidth.Below(640)).Text('Apply').Done);
+    LActions.Add(Button('action-reset-source', 'Restore accepted').Configure
+      .Hint('Discard the pending draft and restore accepted Pascal')
+      .WhenViewport(TNyxViewportWidth.Below(640)).Text('Restore').Done);
+    LActions.Add(Button('action-export-source-draft', 'Save draft').Configure
+      .Hint('Download the current Pascal draft')
+      .WhenViewport(TNyxViewportWidth.Below(640)).Text('Save draft').Done);
     LButton := Button('action-expand-source', 'Expand');
     LActions.Add(LButton);
 
@@ -264,7 +274,10 @@ begin
       LMessageCount := AReport.Count;
     end;
     LButton := Button('action-messages-tab', 'Compiler messages (' + IntToStr(LMessageCount) + ')');
-    LButton.Configure.Pressed(AState.SourceTab = nstMessages).Done;
+    LButton.Configure.Pressed(AState.SourceTab = nstMessages)
+      .Hint('Compiler messages')
+      .WhenViewport(TNyxViewportWidth.Below(640))
+      .Text('Messages (' + IntToStr(LMessageCount) + ')').Done;
     LTabs.Add(LButton);
 
     if AState.SourceTab = nstMessages then
@@ -908,7 +921,9 @@ begin
     .Configure.Text('Drop position').Items('inside' + #10 + 'before' + #10 + 'after')
     .Value(NyxPlacementName(AState.DesignerPlacement))
     .Width(144)
-    .Hint('Choose where dragged components are placed relative to the target.').Done);
+    .AccessibleName('Drop position')
+    .Hint('Choose where dragged components are placed relative to the target.')
+    .WhenViewport(TNyxViewportWidth.Below(640)).Text('').Width(96).Done);
 
   if AState.CompiledPreviewAvailable then
   begin

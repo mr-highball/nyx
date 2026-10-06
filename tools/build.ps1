@@ -1528,12 +1528,14 @@ try {
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     foreach ($nyxResponsiveProgram in @('tests/nyx_responsive_tests.lpr',
-      'tests/nyx_responsive_controls.lpr', 'studio/nyx_studio.lpr')) {
+      'tests/nyx_responsive_controls.lpr', 'tests/nyx_responsive_studio_browser.lpr',
+      'studio/nyx_studio.lpr')) {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
         '-Futests', "-Fu$nyxResponsiveSource", '-Jirtl.js', "-FE$nyxResponsiveBrowser", $nyxResponsiveProgram)
     }
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxResponsiveBrowser 'rtl.js')
-    foreach ($nyxResponsiveHost in @('responsive.html', 'responsive-contracts.html', 'index.html')) {
+    foreach ($nyxResponsiveHost in @('responsive.html', 'responsive-contracts.html',
+      'responsive-studio.html', 'index.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxResponsiveHost") -Destination $nyxResponsiveBrowser
     }
     Invoke-NyxCompiler $nyxLclFpc ($nyxResponsiveFlags + @(

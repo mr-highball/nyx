@@ -92,6 +92,10 @@ type
     { Borrowed receiver registration; cancelled before any controller teardown. }
     FHierarchySubscription: INyxEventSubscription;
     FCanvasRenderer: TNyxBrowserRenderer;
+    { Keep the last host reachable while compact chrome omits the Design panel.
+      The canvas renderer owns its projection; this target-local DOM reference
+      only parks that borrowed host and never retains an authored document. }
+    FCanvasMount: TJSHTMLElement;
     FDesignerDrag: TNyxStudioDrag;
     FDesignerResize: TNyxStudioResize;
     FDesignerPlacement: TNyxPlacement;
@@ -800,12 +804,16 @@ begin
       end;
     end;
   end;
-  ARetainCanvas := ARetainCanvas and (LPrevious <> nil) and LSameView and
-    (not FCompact or (FPanel = nspDesign));
+  { Compact Project/Inspector panels temporarily detach the canvas host. Its
+    existing projection still owns independent input, selection and listeners.
+    Reuse it on return, and admit compatible worker/history updates while hidden.
+    A different view or an explicit replacement retains the normal teardown. }
+  ARetainCanvas := ARetainCanvas and (FCanvasRenderer.Root <> nil) and LSameView;
 
   if not ARetainCanvas then
   begin
     FCanvasRenderer.Unmount;
+    FCanvasMount := nil;
     LActive := nil;
   end;
   FShell.Free;
@@ -838,6 +846,11 @@ begin
   if FShell.Find('studio-canvas') <> nil then
   begin
     LCanvas := FShellRenderer.ElementFor('studio-canvas');
+    FCanvasMount := LCanvas;
+  end
+  else if ARetainCanvas then
+  begin
+    LCanvas := FCanvasMount;
   end;
 
   if (LCanvas <> nil) and ARetainCanvas then
@@ -1346,6 +1359,11 @@ begin
   if AContentChanged then
   begin
     FCompiledURL := '';
+    { Remote/history pairs already passed source/document admission. Let the
+      public projection guard retain compatible controls; structural changes
+      still fall back to a fresh render. A successful pair never implies that
+      live independent input should be discarded. }
+    FReplaceCanvas := True;
     FStatus := 'Shared design updated · revision ' + IntToStr(LState.Revision);
   end;
 
@@ -1361,7 +1379,7 @@ begin
     FAgentsVisible := True;
     FStatus := LState.Status;
   end;
-  Refresh(not AContentChanged, True);
+  Refresh(True, True);
   RestorePresentationControls;
 end;
 
@@ -1834,6 +1852,7 @@ begin
         case ANode.ID of
           'action-undo':
             begin
+              LRetainCanvas := True;
 
               if FAgents.Enabled then
               begin
@@ -1842,6 +1861,7 @@ begin
               else
               begin
                 FSession.Undo;
+                FReplaceCanvas := True;
               end;
             end;
           NyxStudioReviewRootID, NyxStudioCancelRootID, NyxStudioRemoveRootID:
@@ -1871,6 +1891,7 @@ begin
             end;
           'action-redo':
             begin
+              LRetainCanvas := True;
 
               if FAgents.Enabled then
               begin
@@ -1879,9 +1900,14 @@ begin
               else
               begin
                 FSession.Redo;
+                FReplaceCanvas := True;
               end;
             end;
-          'action-agents': FAgentsVisible := not FAgentsVisible;
+          'action-agents':
+            begin
+              FAgentsVisible := not FAgentsVisible;
+              LRetainCanvas := True;
+            end;
           'action-agent-connect': ConnectAgents;
           'action-agent-disabled': FAgents.Configure(apDisabled);
           'action-agent-readOnly': FAgents.Configure(apReadOnly);
@@ -1910,19 +1936,23 @@ begin
           'action-panel-project':
             begin
               FPanel := nspProject;
+              LRetainCanvas := True;
             end;
           'action-panel-design':
             begin
               FPanel := nspDesign;
+              LRetainCanvas := True;
             end;
           'action-panel-inspector':
             begin
               FPanel := nspInspector;
+              LRetainCanvas := True;
             end;
           'action-code':
             begin
               FCodeVisible := not FCodeVisible;
               FPanel := nspDesign;
+              LRetainCanvas := True;
             end;
           'action-source-tab':
             begin
@@ -1944,6 +1974,7 @@ begin
             begin
               FOutputVisible := not FOutputVisible;
               FPanel := nspDesign;
+              LRetainCanvas := True;
             end;
           'action-advanced-properties': FAdvancedProperties := not FAdvancedProperties;
           NyxInspectorPropertiesID:
@@ -1966,8 +1997,16 @@ begin
               FBindingsVisible := not FBindingsVisible;
               LRetainCanvas := True;
             end;
-          'action-desktop': FPhone := False;
-          'action-phone': FPhone := True;
+          'action-desktop':
+            begin
+              FPhone := False;
+              LRetainCanvas := True;
+            end;
+          'action-phone':
+            begin
+              FPhone := True;
+              LRetainCanvas := True;
+            end;
           'action-preview': FPreview := not FPreview;
           'action-save', 'action-project-save':
             begin
@@ -2793,7 +2832,12 @@ begin
       end;
     end;
     FCompiledURL := '';
-    Refresh;
+
+    if not FAgents.Enabled then
+    begin
+      FReplaceCanvas := True;
+    end;
+    Refresh(True, True);
   end;
 end;
 
