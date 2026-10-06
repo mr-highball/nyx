@@ -25,7 +25,7 @@ program nyx_studio_runtime_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Classes, SysUtils, Process, {$IFDEF MSWINDOWS}Windows,{$ENDIF}
+  Classes, SysUtils, nyx.studio.builds, Process, {$IFDEF MSWINDOWS}Windows,{$ENDIF}
   nyx.text, nyx.data, nyx.model, nyx.codec,
   nyx.studio.directories, nyx.studio.release, nyx.studio.server,
   nyx.studio.mcp, nyx.studio.projects, nyx.studio.outputs, nyx.generated.view;
@@ -261,7 +261,7 @@ begin
     Result := BuildCall(NyxObject([
       NyxField('mode', NyxData('status')), NyxField('job', AJob.Field('job'))]));
 
-    if Result.Field('state').AsText <> 'running' then
+    if NyxBuildJobTerminal(ParseNyxBuildJobState(Result.Field('state').AsText)) then
     begin
       Break;
     end;

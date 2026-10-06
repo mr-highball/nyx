@@ -74,6 +74,7 @@ var
   LRequest: INyxCompilerRequest;
   LArguments: TNyxDataValue;
   LArtifact: TNyxCompiledArtifact;
+  LJobState: TNyxBuildJobState;
 begin
   GSession := nil;
   try
@@ -156,6 +157,19 @@ begin
     begin
       Check(ParseNyxBuildTarget(NyxBuildTargetName(LTarget)) = LTarget, 'Closed target enum round trip');
     end;
+    for LJobState := Low(TNyxBuildJobState) to High(TNyxBuildJobState) do
+    begin
+      Check(ParseNyxBuildJobState(NyxBuildJobStateName(LJobState)) = LJobState,
+        'Closed compiler lifecycle round trip');
+      Check(NyxBuildJobTerminal(LJobState) =
+        (LJobState in [bjsSucceeded, bjsFailed, bjsCancelled]),
+        'Queued and cancelling remain active on both targets');
+    end;
+    LArguments := NyxCompilerCancel(NyxBuildJob('owned-job'), GRevision,
+      NyxBuildOperation('cancel-build'));
+    Check((LArguments.Field('mode').AsText = 'cancel') and
+      (LArguments.Field('expectedRevision').AsInteger = GRevision) and
+      (LArguments.Field('job').AsText = 'owned-job'), 'Typed cancellation packet retains identity and revision');
     LRefused := False;
     try
       ParseNyxBuildTarget('shell');

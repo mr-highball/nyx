@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -268,6 +268,42 @@ try {
   Write-Host "FPC: $nyxFpc / $nyxVersion / $nyxCPU-$nyxOS"
   $nyxNativeFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl',
     '-Fusrc', '-Futests', '-Fustudio', "-FU$nyxNativeDir", "-FE$nyxNativeDir")
+
+  if ($Target -eq 'compiler-lifecycle') {
+    # Actual Pascal children, native process handles and semantic host assertions
+    # belong to the Pascal harness. This script only orchestrates platform tools.
+    # No listeners, protected roots, profiles or enrollment are refreshed.
+    if (-not $IsWindows) { throw 'Actual child-handle qualification currently requires Windows.' }
+    $nyxLifecycle = Join-Path $nyxRoot 'build/compiler-lifecycle/maintained'
+    New-Item -ItemType Directory -Force $nyxLifecycle | Out-Null
+    $nyxLifecycleFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxLifecycle", "-FE$nyxLifecycle")
+    foreach ($nyxProgram in @('nyx_build_compiler_fixture', 'nyx_compiler_lifecycle_tests',
+      'nyx_build_job_tests', 'nyx_agent_build_tests')) {
+      Invoke-NyxCompiler $nyxFpc ($nyxLifecycleFlags + @("tests/$nyxProgram.lpr"))
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxLifecycleRuntime = Join-Path $nyxLifecycle ('runtime-' + [Guid]::NewGuid().ToString())
+    & (Join-Path $nyxLifecycle 'nyx_compiler_lifecycle_tests.exe') $nyxLifecycleRuntime (Join-Path $nyxLifecycle 'nyx_build_compiler_fixture.exe') $nyxRuntime
+    if ($LASTEXITCODE -ne 0) { throw 'Actual compiler cancellation/join qualification failed.' }
+    & (Join-Path $nyxLifecycle 'nyx_build_job_tests.exe') ($nyxLifecycleRuntime + '-retention') (Join-Path $nyxLifecycle 'nyx_build_compiler_fixture.exe') $nyxRuntime
+    if ($LASTEXITCODE -ne 0) { throw 'Compiler retention/profile/retry regression failed.' }
+    & (Join-Path $nyxLifecycle 'nyx_agent_build_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Portable compiler admission/state qualification failed.' }
+    Invoke-NyxCompiler $nyxFpc ($nyxLifecycleFlags + @('studio/nyx_studio_server.lpr'))
+    $nyxLifecycleBrowser = Join-Path $nyxLifecycle 'browser'
+    New-Item -ItemType Directory -Force $nyxLifecycleBrowser | Out-Null
+    foreach ($nyxProgram in @('tests/nyx_agent_build_tests.lpr', 'studio/nyx_studio.lpr',
+      'studio/nyx_studio_preview.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxLifecycleBrowser", $nyxProgram)
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxLifecycleBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/agent-builds.html') -Destination $nyxLifecycleBrowser
+    Write-Host 'Compiler lifecycle qualified; browser artifacts staged for an admitted host.'
+    exit 0
+  }
 
   if ($Target -eq 'mcp-client') {
     # Native Pascal configuration/client tooling needs neither an application

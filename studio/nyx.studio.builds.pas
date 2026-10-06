@@ -36,7 +36,19 @@ type
     Machine profile paths and arguments never belong to this portable contract. }
   TNyxBuildTarget = (btBrowser, btNativeLCL);
   TNyxBuildScope = (bsView, bsReusable, bsApplication);
+  { A cancelling job still owns its execution slot. Terminal means the owned
+    process AND worker have been joined, not merely asked to stop. }
+  TNyxBuildJobState = (bjsQueued, bjsRunning, bjsCancelling, bjsSucceeded,
+    bjsFailed, bjsCancelled);
+  { Execution failures are distinct from source diagnostics. Cancellation is
+    represented by lifecycle state; it is not a compiler rejection. }
+  TNyxCompilerFailure = (bcfNone, bcfCompiler, bcfTimeBudget, bcfLogBudget);
 
+function NyxCompilerFailureName(AValue: TNyxCompilerFailure): TNyxText;
+function ParseNyxCompilerFailure(const AValue: TNyxText): TNyxCompilerFailure;
+function NyxBuildJobStateName(AValue: TNyxBuildJobState): TNyxText;
+function ParseNyxBuildJobState(const AValue: TNyxText): TNyxBuildJobState;
+function NyxBuildJobTerminal(AValue: TNyxBuildJobState): Boolean;
 function NyxBuildTargetName(AValue: TNyxBuildTarget): TNyxText;
 function NyxBuildScopeName(AValue: TNyxBuildScope): TNyxText;
 function ParseNyxBuildTarget(const AValue: TNyxText): TNyxBuildTarget;
@@ -57,6 +69,57 @@ implementation
 uses
   nyx.data,
   nyx.codec;
+
+function NyxCompilerFailureName(AValue: TNyxCompilerFailure): TNyxText;
+const
+  CNames: array[TNyxCompilerFailure] of TNyxText = ('none', 'compiler',
+    'time-budget', 'log-budget');
+begin
+  Result := CNames[AValue];
+end;
+
+function ParseNyxCompilerFailure(const AValue: TNyxText): TNyxCompilerFailure;
+var
+  LValue: TNyxCompilerFailure;
+begin
+  for LValue := Low(TNyxCompilerFailure) to High(TNyxCompilerFailure) do
+  begin
+
+    if AValue = NyxCompilerFailureName(LValue) then
+    begin
+      Exit(LValue);
+    end;
+  end;
+  raise ENyxModel.Create('Unknown compiler execution failure');
+end;
+
+function NyxBuildJobStateName(AValue: TNyxBuildJobState): TNyxText;
+const
+  CNames: array[TNyxBuildJobState] of TNyxText = ('queued', 'running',
+    'cancelling', 'succeeded', 'failed', 'cancelled');
+begin
+  Result := CNames[AValue];
+end;
+
+function ParseNyxBuildJobState(const AValue: TNyxText): TNyxBuildJobState;
+var
+  LValue: TNyxBuildJobState;
+begin
+  for LValue := Low(TNyxBuildJobState) to High(TNyxBuildJobState) do
+  begin
+
+    if AValue = NyxBuildJobStateName(LValue) then
+    begin
+      Exit(LValue);
+    end;
+  end;
+  raise ENyxModel.Create('Unknown compiler job state');
+end;
+
+function NyxBuildJobTerminal(AValue: TNyxBuildJobState): Boolean;
+begin
+  Result := AValue in [bjsSucceeded, bjsFailed, bjsCancelled];
+end;
 
 function NyxBuildTargetName(AValue: TNyxBuildTarget): TNyxText;
 const

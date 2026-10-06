@@ -27,10 +27,39 @@ unit nyx.studio.buildexecutor;
 interface
 
 uses
-  Classes, SysUtils, Process, fpjson, nyx.text, nyx.model, nyx.studio.outputs,
-  nyx.studio.directories;
+  Classes, SysUtils, Process, SyncObjs, fpjson, nyx.text, nyx.model, nyx.studio.outputs,
+  nyx.studio.directories, nyx.studio.builds;
 
 type
+  { A monotonic, thread-safe request to retire an owned compiler. Holding this
+    interface never retains a job, document or transport. Cancellation of an
+    HTTP request alone is deliberately not a compiler cancellation request. }
+  INyxBuildCancellation = interface
+    ['{D1C91834-5DA4-48F2-A6D1-B719A29A5F38}']
+    { Idempotent and irreversible for this invocation. Safe from any thread. }
+    procedure Cancel;
+    function Cancelled: Boolean;
+    { Raises ENyxBuildCancelled when retirement was requested. }
+    procedure Check;
+  end;
+
+  ENyxBuildCancelled = class(ENyxModel);
+
+  { Trusted host policy, copied by value. Wire requests cannot change budgets.
+    Defaults preserve the existing 60-second / 1-MiB compiler limits. }
+  TNyxCompilerLimits = record
+  private
+    FTimeMilliseconds: Cardinal;
+    FLogBytes: Integer;
+  public
+    class function Default: TNyxCompilerLimits; static;
+    { Return copied policies, retaining the other axis. Admission rejects zero
+      and values above 60000 milliseconds / 1048576 bytes with ENyxModel. }
+    function TimeMilliseconds(AValue: Cardinal): TNyxCompilerLimits;
+    function LogBytes(AValue: Integer): TNyxCompilerLimits;
+    procedure Validate;
+  end;
+
   { One independent compiler invocation. Owns an immutable machine profile and
     borrows the caller's detached document only during Build. Both HTTP and MCP
     use this fixed-argument implementation; requests cannot supply shell commands,
@@ -42,9 +71,12 @@ type
     FDirectories: TNyxStudioDirectories;
     FJobRoot: TNyxText;
     FOutputs: TNyxOutputConfiguration;
+    FLimits: TNyxCompilerLimits;
+    FFailure: TNyxCompilerFailure;
     procedure CheckOutput(const ATarget: TNyxText);
     function RunCompiler(const AExecutable, ADirectory: TNyxText;
-      AArguments: TStrings; out ALog: TNyxText): Boolean;
+      AArguments: TStrings; out ALog: TNyxText;
+      const ACancellation: INyxBuildCancellation): Boolean;
   public
     constructor Create(const ARepository, AProfile: TNyxText); overload;
     { Retains the admitted directory value separately from the immutable profile.
@@ -55,15 +87,106 @@ type
     { Readiness is diagnostic only; absent compilers never prevent authoring.
       Empty means ready. Contains no machine path values. }
     function Readiness(const ATarget: TNyxText): TNyxText;
+    { Called by the trusted host before delegation; never during Build. }
+    procedure ConfigureLimits(const ALimits: TNyxCompilerLimits);
     function Build(ADocument: TNyxDocument;
-      const ATarget, AScope, APage, ACompanion: TNyxText): TJSONObject;
+      const ATarget, AScope, APage, ACompanion: TNyxText;
+      const ACancellation: INyxBuildCancellation = nil): TJSONObject;
   end;
+
+{ Returns a fresh reference-counted cancellation lifetime, initially uncancelled.
+  It owns only its native event, never the caller's job or editor. }
+function NewNyxBuildCancellation: INyxBuildCancellation;
 
 implementation
 
 uses
   nyx.json, nyx.schema, nyx.codec, nyx.codegen, nyx.source, nyx.callbacks,
-  nyx.scheduler, nyx.composition, nyx.studio.compiler;
+  nyx.scheduler, nyx.composition, nyx.studio.compiler, nyx.editing;
+
+type
+  TNyxBuildCancellation = class(TInterfacedObject, INyxBuildCancellation)
+  private
+    FCancelled: TEvent;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Cancel;
+    function Cancelled: Boolean;
+    procedure Check;
+  end;
+
+constructor TNyxBuildCancellation.Create;
+begin
+  inherited Create;
+  FCancelled := TEvent.Create(nil, True, False, '');
+end;
+
+destructor TNyxBuildCancellation.Destroy;
+begin
+  FCancelled.Free;
+  inherited Destroy;
+end;
+
+procedure TNyxBuildCancellation.Cancel;
+begin
+  FCancelled.SetEvent;
+end;
+
+function TNyxBuildCancellation.Cancelled: Boolean;
+begin
+  Result := FCancelled.WaitFor(0) = wrSignaled;
+end;
+
+procedure TNyxBuildCancellation.Check;
+begin
+
+  if Cancelled then
+  begin
+    raise ENyxBuildCancelled.Create('Compiler cancellation requested');
+  end;
+end;
+
+function NewNyxBuildCancellation: INyxBuildCancellation;
+begin
+  Result := TNyxBuildCancellation.Create;
+end;
+
+class function TNyxCompilerLimits.Default: TNyxCompilerLimits;
+begin
+  Result.FTimeMilliseconds := 60000;
+  Result.FLogBytes := 1024 * 1024;
+end;
+
+function TNyxCompilerLimits.TimeMilliseconds(AValue: Cardinal): TNyxCompilerLimits;
+begin
+  Result := Self;
+  Result.FTimeMilliseconds := AValue;
+  Result.Validate;
+end;
+
+function TNyxCompilerLimits.LogBytes(AValue: Integer): TNyxCompilerLimits;
+begin
+  Result := Self;
+  Result.FLogBytes := AValue;
+  Result.Validate;
+end;
+
+procedure TNyxCompilerLimits.Validate;
+begin
+
+  if (FTimeMilliseconds < 1) or (FTimeMilliseconds > 60000) or
+    (FLogBytes < 1) or (FLogBytes > 1024 * 1024) then
+  begin
+    raise ENyxModel.Create('Compiler budgets are 1..60000 ms and 1..1048576 log bytes');
+  end;
+end;
+
+procedure TNyxBuildExecutor.ConfigureLimits(const ALimits: TNyxCompilerLimits);
+begin
+  ALimits.Validate;
+  FLimits := ALimits;
+end;
 
 function ReadFile(const APath: TNyxText): TNyxText;
 var
@@ -124,6 +247,7 @@ begin
   FDirectories := ADirectories;
   FJobRoot := FDirectories.Jobs;
   FOutputs := TNyxOutputConfiguration.Decode(AProfile);
+  FLimits := TNyxCompilerLimits.Default;
 end;
 
 destructor TNyxBuildExecutor.Destroy;
@@ -215,14 +339,62 @@ begin
 end;
 
 function TNyxBuildExecutor.RunCompiler(const AExecutable, ADirectory: TNyxText;
-  AArguments: TStrings; out ALog: TNyxText): Boolean;
+  AArguments: TStrings; out ALog: TNyxText;
+  const ACancellation: INyxBuildCancellation): Boolean;
 var
   LProcess: TProcess;
   LBuffer: array[0..4095] of Byte;
   LRead: Integer;
   LChunk: TNyxText;
   LStarted: QWord;
+  LExecuted: Boolean;
+
+  function LogPrefix: TNyxText;
+  var
+    LIndex: Integer;
+    LEnd: Integer;
+    LScalar: Integer;
+  begin
+    { The byte budget may land inside a UTF-8 scalar. Keep only complete
+      scalars at this diagnostic boundary; never cut a supplementary character
+      into malformed text. Invalid compiler bytes end the readable prefix. }
+    LIndex := 1;
+    LEnd := 0;
+    while LIndex <= FLimits.FLogBytes do
+    begin
+
+      if not NyxNextScalar(ALog, LIndex, LScalar) or
+        (LIndex > FLimits.FLogBytes + 1) then
+      begin
+        Break;
+      end;
+      LEnd := LIndex - 1;
+    end;
+    Result := Copy(ALog, 1, LEnd);
+  end;
+
+  procedure CheckCancellation;
+  begin
+
+    if ACancellation <> nil then
+    begin
+      ACancellation.Check;
+    end;
+  end;
+
+  function InTime: Boolean;
+  begin
+    Result := GetTickCount64 - LStarted < FLimits.FTimeMilliseconds;
+
+    if not Result then
+    begin
+      FFailure := bcfTimeBudget;
+      ALog := ALog + #10 + 'Compiler time budget exceeded.';
+    end;
+  end;
 begin
+  CheckCancellation;
+  FLimits.Validate;
 
   if (AExecutable = '') or not FileExists(AExecutable) then
   begin
@@ -230,6 +402,7 @@ begin
     Exit(False);
   end;
   LProcess := TProcess.Create(nil);
+  LExecuted := False;
   try
     LProcess.Executable := AExecutable;
     LProcess.CurrentDirectory := ADirectory;
@@ -237,12 +410,21 @@ begin
     LProcess.Options := [poUsePipes, poStderrToOutPut, poNoConsole];
     ALog := '';
     LProcess.Execute;
+    LExecuted := True;
     LStarted := GetTickCount64;
     repeat
       { Drain pipes while the compiler runs. Waiting for exit before reading can
         deadlock a compiler that fills its pipe with warnings/diagnostics. }
       while LProcess.Output.NumBytesAvailable > 0 do
       begin
+        { Check within the drain loop: a continuously writing compiler must not
+          starve cancellation or the deadline by keeping its pipe nonempty. }
+        CheckCancellation;
+
+        if not InTime then
+        begin
+          Exit(False);
+        end;
         LRead := LProcess.Output.Read(LBuffer, SizeOf(LBuffer));
         SetLength(LChunk, LRead);
 
@@ -252,18 +434,18 @@ begin
           ALog := ALog + LChunk;
         end;
 
-        if Length(ALog) > 1024 * 1024 then
+        if Length(ALog) > FLimits.FLogBytes then
         begin
-          LProcess.Terminate(1);
-          ALog := Copy(ALog, 1, 1024 * 1024) + #10 + 'Compiler log budget exceeded.';
+          FFailure := bcfLogBudget;
+          ALog := LogPrefix + #10 + 'Compiler log budget exceeded.';
           Exit(False);
         end;
       end;
 
-      if GetTickCount64 - LStarted > 60000 then
+      CheckCancellation;
+
+      if not InTime then
       begin
-        LProcess.Terminate(1);
-        ALog := ALog + #10 + 'Compiler exceeded 60-second time budget.';
         Exit(False);
       end;
 
@@ -273,13 +455,41 @@ begin
       end;
     until not LProcess.Running and (LProcess.Output.NumBytesAvailable = 0);
     Result := LProcess.ExitStatus = 0;
+
+    if not Result then
+    begin
+      FFailure := bcfCompiler;
+    end;
   finally
+    { Every exit (including cancellation, read failure, deadline/log failure)
+      joins this exact owned process. A failed OS retirement keeps the worker
+      active; never release its slot, advertise an artifact or orphan a child.
+      No editor lock is held. The budget bounds compiler execution, not an OS
+      that cannot reap its process. Normal Windows retirement is qualified. }
+
+    if LExecuted then
+    begin
+
+      if LProcess.Running then
+      begin
+        LProcess.Terminate(1);
+      end;
+      while not LProcess.WaitOnExit(25) do
+      begin
+
+        if LProcess.Running then
+        begin
+          LProcess.Terminate(1);
+        end;
+      end;
+    end;
     LProcess.Free;
   end;
 end;
 
 function TNyxBuildExecutor.Build(ADocument: TNyxDocument;
-  const ATarget, AScope, APage, ACompanion: TNyxText): TJSONObject;
+  const ATarget, AScope, APage, ACompanion: TNyxText;
+  const ACancellation: INyxBuildCancellation): TJSONObject;
 var
   LDocument: TNyxDocument;
   LRoot: TNyxNode;
@@ -324,6 +534,12 @@ var
   end;
 
 begin
+  FFailure := bcfNone;
+
+  if ACancellation <> nil then
+  begin
+    ACancellation.Check;
+  end;
 
   ValidateNyxOutputTarget(ATarget);
 
@@ -430,7 +646,7 @@ begin
         'end.' + #10;
       WriteFile(LDirectory + 'nyx_preview.lpr', LSource);
       LArguments.Add(LDirectory + 'nyx_preview.lpr');
-      LOK := RunCompiler(LExecutable, LDirectory, LArguments, LLog);
+      LOK := RunCompiler(LExecutable, LDirectory, LArguments, LLog, ACancellation);
       WriteFile(LDirectory + 'rtl.js', ReadFile(LRuntime));
       WriteFile(LDirectory + 'index.html', HostHTML('nyx_preview'));
     end
@@ -461,13 +677,19 @@ begin
         '  end;' + #10 + 'end.' + #10;
       WriteFile(LDirectory + 'nyx_native.lpr', LSource);
       LArguments.Add(LDirectory + 'nyx_native.lpr');
-      LOK := RunCompiler(LExecutable, LDirectory, LArguments, LLog);
+      LOK := RunCompiler(LExecutable, LDirectory, LArguments, LLog, ACancellation);
+    end;
+
+    if ACancellation <> nil then
+    begin
+      ACancellation.Check;
     end;
     WriteFile(LDirectory + 'compiler.log', LLog);
     LReport := ReadNyxCompilerReport(LSubmittedSource, LCompanionSource,
       LDirectory + LUnitName + '.pas', LLog);
     Result := TJSONObject.Create;
     Result.Add('ok', LOK);
+    Result.Add('failure', NyxCompilerFailureName(FFailure));
     Result.Add('build', LJob);
     Result.Add('target', ATarget);
     Result.Add('scope', AScope);

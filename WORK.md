@@ -9,6 +9,84 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 ## Current return path: recipe editor and semantic release — 2026-10-06
 
+Current batch: NS-5 criterion 1, actual compiler lifecycle. Deliver two running
+slots, an eight-entry FIFO queue, typed queued/running/cancelling/terminal states,
+owned cancellation through the real process executor and explicit process/thread
+joining before slot reuse. Semantic cancellation uses exact project/review,
+trusted connection ownership, expected revision and immutable retry receipts;
+primary build retries must also carry connection identity. Qualify owned delayed
+and flooding Pascal children, queue admission/cancellation, shutdown and real
+compiler compatibility. Stop at that integrated lifecycle boundary. Preserve all
+protected services/pairs; no listener/restart/enrollment or observing rollout.
+OS failure to reap a terminated child must retain ownership and remain active;
+never claim a terminal result or bounded OS shutdown from a timeout alone.
+
+Current return: the bounded direct-compiler lifecycle below is qualified. Stop
+queue/owner fixture expansion. Complete process-family retirement (compiler
+linker/helpers), other-host qualification, bounded operator job discovery and
+visible cancellation in both Studio controllers remain in NS-5; the browser's
+legacy synchronous HTTP build route must join the semantic job workflow before
+claiming editor parity. Protected older-service history migration and observing
+HTTP rollout remain separate gates. Workflow no-closure stays 10; no earlier
+count is reset or an unrecorded NS-5 count invented. Original criteria stay open.
+
+## Compiler queue and cancellation — 2026-10-06
+
+NS-5 criterion 1's current-source prerequisite now owns two running slots and
+eight FIFO pending jobs, with sixteen retained handles and sixty-four immutable
+retry receipts. Admission captures the exact source/design/profile/context;
+host request/status/completion polling advances the queue. Queued cancellation
+never constructs a worker; running cancellation stays active until the executor
+joins its exact process and the owner joins its worker. Shutdown signals every
+owned job before joining any one. Only joined success advertises artifacts.
+Deadlines/log caps are typed failures; draining a continuously writing compiler
+cannot starve the time/cancellation checks. Log caps retain complete UTF-8 scalars.
+
+`nyx_build` now admits revision-aware cancel through the same native semantic
+seam used after HTTP authentication. Agents require Allow edits and the admitting
+connection; operators can cancel jobs in their resolved project. Requests/retries
+use private connection, authority and exact project/review, including the primary
+project. Display renaming cannot change authority. Cancellation changes neither
+document history nor accepted source/report/preview ownership. Typed portable
+states and cancellation references reach both adapter compilations; native
+polling recognizes cancelled terminal state without clearing its prior artifact.
+
+Evidence: `build/compiler-lifecycle/` (ignored, private qualification artifacts).
+The final checked FPC 3.2.0 lifecycle run passes **70** actual-child/native-host
+checks with **zero leaks**. It covers the ten-job admission boundary, queued and
+running cancellation, FIFO slot reuse, actual child exit, all-job shutdown,
+same-display primary connections, renamed retries, foreign/stale/read-only
+refusal, operator cancellation and cancellation of earlier-source jobs after a
+semantic edit. Exact revised pair, navigation/draft/history availability and
+previous report/sequence remain retained. Actual deadline and flooding processes
+are reaped. A cap inside a four-byte supplementary scalar preserves earlier exact
+Unicode and a valid prefix. The fixture uses stdout byte streams: its previous
+Text-file path demonstrably converted the scalar to question marks.
+
+The maintained `compiler-lifecycle` target adds orchestration only. Its retained
+profile/receipt/handle regression passes **47** checks, and the portable admission
+consumer passes **56** checks natively and in the actual browser
+(`browser-capture/capture.dom.html`). Backend, browser Studio/independent worker
+and preview compile; seven changed HTTP semantic consumers and current LCL
+Studio compile with matched FPC 3.3.1. Owned warnings are zero; four browser
+compilations retain **28 upstream RTL warnings**, unsuppressed.
+
+The real-compiler compatibility consumer passes **39** checks: actual pas2js/FPC
+application jobs retain exact admitted companions and manifests, and the native
+application mounts/closes normally. The actual browser application also mounts
+from its admitted artifact (`application-capture/capture.dom.html`,
+`data-nyx-ready="true"`) through a new child of the unchanged isolated static host.
+It consumes the previous pristine frozen
+recovery payload; that payload predates the authority/lifecycle corrections and
+is not a freshly sealed candidate. This does not qualify observing HTTP,
+UI cancellation, process descendants, other widgetsets/operating systems or an
+OS that refuses to reap its process. OS retirement retains ownership instead of
+claiming terminal status. All fifteen protected process identities and eight
+exact project/navigation/draft/history-availability pairs remain unchanged;
+LAN remains HTTP 200 on its earlier release. No listener/restart/re-enrollment.
+
+## Earlier return context
+
 Previous goal turn: progress. Actual session/history storage, fresh-process recovery,
 both-target ownership evidence and an exact remote checkpoint changed authoritative
 state. This batch follows the independently actionable request-owner propagation

@@ -122,6 +122,11 @@ type
       Build/preview keep their separately owned external-work paths. }
     function InvokeTool(const ATool, AOwner, AActor: TNyxText;
       const AArguments: TNyxDataValue): TNyxDataValue;
+    { Trusted compiler seam shared with authenticated MCP. Serializes admission,
+      queue pumping, cancellation and exact context; never waits for a compiler
+      under the editor lock. Owner is supplied by transport, not tool arguments. }
+    function InvokeBuild(const AOwner, AActor: TNyxText;
+      const AArguments: TNyxDataValue): TNyxDataValue;
     function PreviewData(const AToken: TNyxText): TNyxText;
     { Read-only operator observation of accepted review design. Unchanged
       revisions return metadata only. Retired capabilities return empty text;
@@ -570,6 +575,32 @@ begin
   end;
 end;
 
+function TNyxStudioMCP.InvokeBuild(const AOwner, AActor: TNyxText;
+  const AArguments: TNyxDataValue): TNyxDataValue;
+begin
+
+  if (AOwner = '') or (AActor = '') or (NyxTextScalarCount(AOwner) > 120) or
+    (NyxTextScalarCount(AActor) > 120) then
+  begin
+    raise ENyxProjectConflict.Create('Compiler dispatch requires a trusted bounded connection');
+  end;
+  FGuard.Acquire;
+  try
+    PollBuilds;
+    try
+      Result := BuildTool(AArguments, AActor, AOwner);
+    except
+      on LException: Exception do
+      begin
+        FCore.RecordActivity(AActor, 'nyx_build', 'refused: ' + LException.Message);
+        raise;
+      end;
+    end;
+  finally
+    FGuard.Release;
+  end;
+end;
+
 function TNyxStudioMCP.EditorState(const ARequest: TNyxDataValue): TNyxDataValue;
 var
   LState: TNyxDataValue;
@@ -913,11 +944,11 @@ begin
       LSession := FReviews.Find(LReview);
     end;
 
-    if (LSession <> nil) and LSession.CurrentPair(LPair) then
+    if (LReport <> nil) and (LSession <> nil) and LSession.CurrentPair(LPair) then
     begin
       LSession.PublishCompilerReport(LReport);
     end
-    else
+    else if (LSession = nil) or not LSession.CurrentPair(LPair) then
     begin
       LOutcome := LOutcome + CEarlierDesign;
     end;
@@ -937,7 +968,6 @@ end;
 function TNyxStudioMCP.BuildTool(const AWireArguments: TNyxDataValue;
   const AActor, AOwner: TNyxText; AAuthority: TNyxBuildAuthority): TNyxDataValue;
 const
-  CRunning: TNyxText = 'running · ';
   CSeparator: TNyxText = ' · ';
 var
   LMode: TNyxText;
@@ -980,14 +1010,10 @@ begin
     LSession := ContextSession(AWireArguments, AOwner, AActor);
   end;
   AArguments := NyxReviewArguments(NyxWorkspaceArguments(AWireArguments));
-  LRetryOwner := AActor;
-
-  if (AAuthority = baEditor) or (LReview.ID <> '') or (LWorkspace.ID <> '') then
-  begin
-    LRetryOwner := NyxObject([NyxField('owner', NyxData(AOwner)),
-      NyxField('review', NyxData(LReview.ID)),
-      NyxField('workspace', NyxData(LWorkspace.ID))]).ToJSON;
-  end;
+  LRetryOwner := NyxObject([NyxField('owner', NyxData(AOwner)),
+    NyxField('authority', NyxData(Ord(AAuthority))),
+    NyxField('review', NyxData(LReview.ID)),
+    NyxField('workspace', NyxData(LWorkspace.ID))]).ToJSON;
 
   if (AAuthority = baAgent) and (FCore.Permission = apDisabled) then
   begin
@@ -1090,9 +1116,38 @@ begin
     Exit;
   end;
 
+  if LMode = 'cancel' then
+  begin
+    FBuilds.AdmitCancel(AArguments);
+
+    if (AAuthority = baAgent) and (FCore.Permission <> apEdit) then
+    begin
+      raise ENyxProjectConflict.Create('Agent cancellation requires Allow edits in Studio');
+    end;
+
+    if (FBuilds.Context(AArguments.Field('job').AsText).ID <> LReview.ID) or
+      (FBuilds.WorkspaceContext(AArguments.Field('job').AsText).ID <> LWorkspace.ID) then
+    begin
+      raise ENyxProjectConflict.Create('Build job belongs to a different workspace');
+    end;
+
+    if FBuilds.Retry(LRetryOwner, AArguments, Result) then
+    begin
+      Exit(NyxWithWorkspace(NyxWithReview(Result, LReview), LWorkspace));
+    end;
+
+    if AArguments.Field('expectedRevision').AsInteger <> LSession.Revision then
+    begin
+      raise ENyxProjectConflict.Create('Project revision changed; inspect before cancelling');
+    end;
+    Result := FBuilds.Cancel(LRetryOwner, AArguments, AAuthority = baEditor);
+    FCore.RecordActivity(AActor, 'nyx_build', Result.Field('state').AsText);
+    Exit(NyxWithWorkspace(NyxWithReview(Result, LReview), LWorkspace));
+  end;
+
   if LMode <> 'request' then
   begin
-    raise ENyxProjectConflict.Create('Build mode must be outputs, request or status');
+    raise ENyxProjectConflict.Create('Build mode must be outputs, request, status or cancel');
   end;
   FBuilds.AdmitRequest(AArguments);
 
@@ -1125,7 +1180,7 @@ begin
   end;
   Result := NyxWithWorkspace(NyxWithReview(FBuilds.Submit(AActor, AArguments,
     LPair, LReview, LRetryOwner, LWorkspace), LReview), LWorkspace);
-  FCore.RecordActivity(AActor, 'nyx_build', CRunning +
+  FCore.RecordActivity(AActor, 'nyx_build', Result.Field('state').AsText + CSeparator +
     NyxBuildScopeName(LScope) + CSeparator + AArguments.Field('target').AsText);
 end;
 
@@ -1458,10 +1513,11 @@ begin
         NyxField('capture', LBoolean)]), [NyxData('expectedRevision'), NyxData('view')]), True),
     Tool('nyx_callbacks', 'Author 1..32 ordered add/policy/move/remove changes as ONE undoable paired source edit. Add returns crafted handler/registration names and final-source TODO lines. Inspect registrations with nyx_node. Results describe each operation in order. Apply requires expectedRevision and operationId; drafts reject. Before removal, review the exact batch for warnings and reviewID, then apply unchanged at that revision/actor. Review does not edit or add history; removal retains Pascal implementations.',
       CallbackSchema, False),
-    Tool('nyx_build', 'Inspect output readiness, request an immutable accepted view/reusable/application compiler job, or page through its status/diagnostics. Request requires Allow edits, exact revision/outputID and operationId. Returns immediately; no document history changes. At most two jobs run and sixteen handles remain. Exact retries return the original receipt without rebuilding; changing arguments refuses. Compiler commands, options, paths and source overrides are forbidden. Successful status includes exact source/design/output fingerprints and artifact manifest; stale diagnostics cannot navigate.',
+    Tool('nyx_build', 'Inspect readiness, request an immutable accepted build, page bounded diagnostics, or cancel an owned job. Request/cancel require Allow edits, exact project revision and operationId. Cancel requires the admitting connection and exact project/review; operators may cancel jobs in their project. Two running slots, eight FIFO queued jobs, sixteen retained handles. Queued jobs never spawn when cancelled; cancelling retains its slot until process and worker join. Exact retries return the original receipt without rebuilding. No document history changes, compiler paths/options or source overrides. Only succeeded status advertises artifacts; cancellation retains the accepted source, report and preview.',
       TNyxDataValue.ParseJSON('{"type":"object","oneOf":[' +
         '{"type":"object","properties":{"mode":{"const":"outputs"}},"required":["mode"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"status"},"job":{"type":"string"},"offset":{"type":"integer","minimum":0,"maximum":512},"limit":{"type":"integer","minimum":1,"maximum":20},"severity":{"enum":["all","error","fatal","warning","hint","note","info"]}},"required":["mode","job"],"additionalProperties":false},' +
+        '{"type":"object","properties":{"mode":{"const":"cancel"},"job":{"type":"string","minLength":36,"maxLength":36},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120}},"required":["mode","job","expectedRevision","operationId"],"additionalProperties":false},' +
         '{"type":"object","properties":{"mode":{"const":"request"},"expectedRevision":{"type":"integer","minimum":1},"operationId":{"type":"string","minLength":1,"maxLength":120},"outputID":{"type":"string","minLength":32,"maxLength":32},"target":{"enum":["browser","lcl"]},"scope":{"enum":["view","reusable","application"]},"view":{"type":"string","minLength":1}},"required":["mode","expectedRevision","operationId","outputID","target","scope"],"allOf":[{"if":{"properties":{"scope":{"const":"application"}}},"then":{"not":{"required":["view"]}},"else":{"required":["view"]}}],"additionalProperties":false}]}'), False),
     Tool('nyx_pascal', 'Inspect bounded Unicode-scalar windows of one exact local callback implementation, or replace 1..16 implementations as ONE paired undoable source edit. Discover handler names through nyx_node/nyx_callbacks. Inspect returns accepted text after its immutable signature through end;, including whitespace and local declarations. Concatenate windows at the same revision for expected. Apply requires exact expected implementation text, current revision, unique operationId, Allow edits and no pending draft; signatures, imports, sibling helpers and managed views are retained. Duplicate or ambiguous/directive methods refuse. Syntax/type diagnostics come from nyx_build, not source admission. Imports mode pages exact interface/implementation namespaces and source lines. edit-imports applies 1..32 ordered add/remove changes as one paired Undo step, retaining comments and authored order. Namespace identity is Pascal case insensitive; duplicate additions, missing removals, file clauses and conditional/directive clauses refuse. Drafts/revision/permission/authority/retry guards apply. Import resolution and helper diagnostics still require nyx_build. Routines pages top-level names/kinds/lines and editability reasons (20 default, 50 maximum). Routine reads at most 4096 Unicode scalars of one exact implementation. edit-routines replaces 1..16 implementations as one paired Undo step with exact expected text. Ordinary functions/procedures and qualified methods including constructors/destructors are supported; nested routines belong to their parent. Signatures, imports, surrounding helpers and managed code remain retained. Overloads/duplicates, directives, forward/external and compiler-managed infrastructure refuse edits. Implementation editing retains signatures and class declarations. Declaration reads bounded exact interface or implementation signature windows through part; a private helper has an empty interface counterpart. edit-declarations applies 1..16 ordered create/edit/remove/signature operations as one paired Undo step. Creation supplies typed procedure/function kind, interface/implementation visibility and exact signature/code fragments. Edit retains signatures. Remove requires exact implementation signature/body and interface counterpart; any possible retained lexical reference blocks removal. Creation/removal never change class-member signatures or managed infrastructure. Signature supplies typed kind, retained visibility, complete replacement signature/body and all three exact expected counterparts. Public counterpart replacement is paired; identity stays retained. Related caller edits share the group. External-unit callers/type correctness still require compiler diagnostics. This tool does not execute code or change compiler profiles.',
       TNyxDataValue.ParseJSON('{"type":"object","oneOf":[' +
@@ -1951,14 +2007,8 @@ begin
 
         if LTool = 'nyx_build' then
         begin
-          FGuard.Acquire;
-          try
-            PollBuilds;
-            LResult := BuildTool(LArguments, FClients[LIndex].Field('actor').AsText, LClientID);
-            LResult := ToolResult(LResult);
-          finally
-            FGuard.Release;
-          end;
+          LResult := ToolResult(InvokeBuild(LClientID,
+            FClients[LIndex].Field('actor').AsText, LArguments));
         end
         else if LTool = 'nyx_preview' then
         begin

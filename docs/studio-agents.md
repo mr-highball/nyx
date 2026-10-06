@@ -133,7 +133,7 @@ in WORK.md.
 | `nyx_history` | Undo or redo one ordinary content command |
 | `nyx_preview` | An immutable, revision-specific rendered view and optional PNG |
 | `nyx_callbacks` | Grouped callback addition, policy, ordering and reviewed removal on the inspector's paired history |
-| `nyx_build` | Output readiness, immutable accepted builds and bounded job/artifact/diagnostic inspection |
+| `nyx_build` | Output readiness, immutable accepted builds, owned cancellation and bounded job/artifact/diagnostic inspection |
 | `nyx_pascal` | Bounded callback/import context, exact guarded callback edits and grouped typed import changes |
 | `nyx_roots` | Reviewed removal of exact page/reusable groups on paired Undo history |
 | `nyx_state` (staged) | Bounded scalar defaults, exact text windows and contextual bindings; grouped typed state/binding changes |
@@ -258,12 +258,15 @@ requests require an exact page/definition root respectively. Applications omit
 `view`. Browser and `lcl` outputs use the same fixed-argument compiler as
 Studio's existing HTTP build route. Request requires Allow edits, exact revision
 and output identity, and no pending draft. It captures an independently owned
-accepted pair/profile and immediately returns a running job receipt. Compilation
+accepted pair/profile and immediately returns an immutable queued job receipt. Compilation
 does not hold the document lock, replace source, change selection or create Undo
 history. Editing can continue while the captured pair compiles.
 
 Query `{"mode":"status","job":"<returned job>","limit":5}`. States are
-`running`, `succeeded` and `failed`. Diagnostics page by `offset`/ `limit`
+`queued`, `running`, `cancelling`, `succeeded`, `failed` and `cancelled`.
+Queued/cancelling remain active; only a joined worker can become terminal.
+`failure` distinguishes `none`, `compiler`, `time-budget` and `log-budget`.
+Diagnostics page by `offset`/ `limit`
 (at most twenty) with stable error/fatal, warning, then informational order.
 Add `"severity":"error"` to retrieve only errors; other closed filters are
 `all`, `fatal`, `warning`, `hint`, `note` and `info`.
@@ -280,16 +283,41 @@ exact pair despite a newer monotonic revision. Fingerprints are explicitly MD5
 optimistic byte identities, consistent with existing project revisions; they
 are not authentication credentials. Current-pair/profile and retry checks compare
 complete exact text. Profiles retain configured fields, not locked compiler binary
-snapshots; toolchain pinning/caching/cancellation keep their service owners.
+snapshots; toolchain pinning/caching keep their service owners.
 
-Exact actor/operation/argument retries return the initial receipt without another
+Exact connection/authority/project/operation/argument retries return the initial receipt without another
 compiler invocation, including after the editor revision or profile changes.
-Different arguments with an accepted operation identity refuse. Sixty-four build
+Display renaming preserves authority; same-name connections remain independent.
+Different arguments with an accepted operation identity refuse. Sixty-four build/cancel
 receipts and sixteen job handles are retained per server session; oldest terminal
 handles expire first. An expired handle is reported explicitly and never silently
-resubmitted. At most two semantic jobs run; a third submission refuses. Server
-shutdown joins owned workers. The legacy HTTP route retains its synchronous
-behavior; a global compiler scheduler remains separate service work.
+resubmitted. Two semantic jobs run and eight await a slot in FIFO order. Host
+request/status/completion polling advances the queue; it does not run detached
+from the host's serialized observation lifecycle. A full ten-job budget refuses
+before spawning. Shutdown signals every owned job before joining any one.
+
+Cancel with `mode: cancel`, the retained `job`, the project's current
+`expectedRevision` and a fresh `operationId`. Agents require Allow edits and the
+connection that admitted the job. Project/review identity must match exactly.
+A queued cancellation constructs no worker; a running cancellation returns
+`cancelling`, then `cancelled` after the owned compiler and worker join. Terminal
+cancellation is a no-op. Exact retries return the original receipt. Cancellation
+does not change the document revision, accepted Pascal, draft or Undo history,
+and a cancelled completion leaves the previous compiler report/preview retained.
+An earlier-source job may be explicitly cancelled using the current revision;
+editing alone does not automatically cancel a build. Portable callers use
+`NyxCompilerCancel` with distinct job/operation references; the editor bridge
+captures its current revision in `CancelBuild`.
+
+The current-source native executor checks deadlines/cancellation within pipe
+draining and joins its exact process on every exit. Log caps retain complete
+UTF-8 scalars. An OS that refuses reaping keeps the worker active instead of
+publishing a false terminal result. Actual direct-child retirement is qualified
+on Windows. Compiler descendants/linkers, other hosts, bounded operator job
+listing and visible cancellation in both Studio adapters remain open. The legacy
+browser HTTP route retains its synchronous behavior; that integration and
+authenticated observing deployment remain separate service work. See
+[current lifecycle evidence](../WORK.md#compiler-queue-and-cancellation--2026-10-06).
 
 An observing Studio shows start/completion/refusal activity and the first twenty
 severity-ordered diagnostics, with the displayed/total counts. Its ordinary source

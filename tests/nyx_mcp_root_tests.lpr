@@ -24,7 +24,7 @@ program nyx_mcp_root_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Classes, SysUtils, base64, fphttpclient, nyx.text, nyx.data, nyx.source,
+  Classes, SysUtils, nyx.studio.builds, base64, fphttpclient, nyx.text, nyx.data, nyx.source,
   nyx.test.mcp.client, nyx.test.browser.host;
 
 type
@@ -181,7 +181,7 @@ begin
       raise Exception.Create('Cleanup compiler job did not finish');
     end;
     Sleep(100);
-  until Result.Field('state').AsText <> 'running';
+  until NyxBuildJobTerminal(ParseNyxBuildJobState(Result.Field('state').AsText));
   Check(Result.Field('state').AsText = 'succeeded', 'Actual compiler accepts cleanup / ' + ATarget);
 end;
 

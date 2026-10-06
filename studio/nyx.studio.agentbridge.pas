@@ -118,6 +118,10 @@ type
       const AExpected: TNyxBuildOutputRef);
     procedure RequestBuild(const ARequest: INyxCompilerRequest);
     procedure BuildStatus(const AJob: TNyxBuildJobRef; AOffset: Integer = 0);
+    { Does not cancel the transport request: asks the service to retire exactly
+      this owned job through the trusted operator exchange. }
+    procedure CancelBuild(const AJob: TNyxBuildJobRef;
+      const AOperation: TNyxBuildOperationRef);
     procedure Pause;
     procedure AcceptRemote;
     function State: TNyxStudioAgentView;
@@ -904,6 +908,18 @@ begin
   end;
   Queue(NyxObject([NyxField('op', NyxData('build')),
     NyxField('build', NyxCompilerStatus(AJob, AOffset))]));
+end;
+
+procedure TNyxStudioAgentBridge.CancelBuild(const AJob: TNyxBuildJobRef;
+  const AOperation: TNyxBuildOperationRef);
+begin
+
+  if not FView.CanBuild or not FView.Connected or FView.Conflict then
+  begin
+    raise Exception.Create('Compiler cancellation requires a connected exact project');
+  end;
+  Queue(NyxObject([NyxField('op', NyxData('build')),
+    NyxField('build', NyxCompilerCancel(AJob, FView.Revision, AOperation))]));
 end;
 
 end.

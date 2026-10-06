@@ -23,6 +23,17 @@ Investigate this completion/close boundary in the existing workflow/transport
 owner; do not treat a partial transport result alone as compiler success. Private
 receipts live under `build/retained-arrangement/`; no workflow criterion closes.
 
+Compiler workflow follow-up (2026-10-06): current-source `nyx_build` now admits
+owned, revision-aware cancellation through its actual native semantic seam;
+connection-bound primary retries and direct-child retirement are qualified with
+NS-5. Bounded operator discovery of active/queued job handles and visible cancel
+actions in both Studio controllers remain missing semantic/editor operations.
+The browser's legacy synchronous build route must consume the same guarded job
+workflow. Keep these with this workflow owner and
+[the existing compiler lifecycle owner](NS-5_service-reload_01.md); do not replace
+them with screenshot-driven automation or credit authenticated observing rollout
+from a suspended host. See [current evidence](../WORK.md#compiler-queue-and-cancellation--2026-10-06).
+
 **Acceptance Criteria:**
 
 Current recipe-editor release gap (2026-10-06): authenticated discovery of the
@@ -54,14 +65,14 @@ HTTP update to the protected running older server.
 
 Reassessment ends router/ticket fixture expansion here. No original criterion
 closes; workflow no-closure advances 9→10 once and does not reset earlier counts.
-The protected migration/observing deployment gate remains. Follow the concrete
-NS-5 worker cancellation/join prerequisite independently: canceled running work
-currently continues compiling, and timeout/log-overflow exits terminate without
-an explicit join. Preserve original criteria and current services/pairs.
-The separate primary compiler path still initializes its retry owner from the
-display actor before adding explicit project/review contexts. Ordinary-tool
-authority qualification does not establish compiler-receipt separation. Carry
-that concrete request-owner gap into the existing compiler worker/cancellation
+The protected migration/observing deployment gate remains. The concrete NS-5
+direct-worker cancellation/join prerequisite is now qualified independently;
+the earlier cancellation and unjoined timeout/log-overflow exits are corrected.
+Original criteria and current services/pairs remain retained. The primary
+compiler path now carries private connection/context identity, with actual
+same-display compiler-receipt evidence. Ordinary-tool authority qualification
+alone still does not establish this external-work boundary. Keep the remaining
+compiler family/editor integration gaps in the existing worker/cancellation
 integration; do not infer all-tool authority or authenticated deployment here.
 
 - Project/user configuration discovers authenticated tools through actual Codex

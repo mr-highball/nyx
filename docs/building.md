@@ -7,6 +7,15 @@ Pascal. PowerShell only selects tools, passes compiler arguments and stages
 matched target artifacts. No Node, npm, Python, CSS framework or remote font is
 required.
 
+`compiler-lifecycle` runs checked Pascal compiler-process/queue/cancellation and
+semantic-host qualification on Windows, plus retained profile/retry/handle and
+portable admission regressions. Each run owns a new runtime. It compiles the
+backend and stages the browser Studio, independent worker, preview and shared
+admission consumer without starting a listener or changing enrollment. Execute
+the staged `agent-builds.html` through an already admitted host for the browser
+half; compilation alone is insufficient. See
+[the current evidence and remaining limits](../WORK.md#compiler-queue-and-cancellation--2026-10-06).
+
 `designer-controls` compiles the Pascal semantic review author, runs the checked
 actual LCL designer/retained-source consumer and stages its pas2js counterpart.
 Supply `-DesignerMCPConfig <local-file>` for an explicit owned MCP review or
@@ -83,7 +92,7 @@ Individual build targets are `core`, `generated`, `collections`, `collection-vie
 `collection-authoring`, `collection-inspectors`, `collection-bindings`,
 `reusables`, `placement`, `designer-drag`, `constraints`, `resize`, `responsive`,
 `source-workspace`, `source-editor`, `pascal-imports`, `pascal-routines`, `pascal-declarations`,
-`agents`, `state-bindings`, `split`, `interactions`,
+`agents`, `compiler-lifecycle`, `state-bindings`, `split`, `interactions`,
 `named-events`, `viewport`, `catalog`, `browser`, `studio`, `lcl`, `http`,
 `visual` and `all`.
 The native unit cache includes compiler version and CPU/OS. LCL and pas2js

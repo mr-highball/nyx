@@ -24,7 +24,7 @@ program nyx_mcp_workspace_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Classes, SysUtils, base64, fphttpclient, nyx.text, nyx.data, nyx.model,
+  Classes, SysUtils, nyx.studio.builds, base64, fphttpclient, nyx.text, nyx.data, nyx.model,
   nyx.codec, nyx.codegen, nyx.studio.projects,
   nyx.studio.session, nyx.studio.agents, nyx.studio.workspaces,
   nyx.test.mcp.client, nyx.test.browser.host;
@@ -493,7 +493,7 @@ begin
       raise Exception.Create('Project compiler exceeded its qualification budget');
     end;
     Sleep(100);
-  until LStatus.Field('state').AsText <> 'running';
+  until NyxBuildJobTerminal(ParseNyxBuildJobState(LStatus.Field('state').AsText));
   Save('build-' + ATarget + '.json', LStatus.ToJSON);
   Check((LStatus.Field('state').AsText = 'succeeded') and
     LStatus.Field('currentSource').AsBoolean and

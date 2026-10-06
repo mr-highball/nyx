@@ -24,7 +24,7 @@ program nyx_mcp_catalog_focus;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Classes, SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.catalog,
+  Classes, SysUtils, nyx.studio.builds, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.catalog,
   nyx.test.mcp.client;
 
 var
@@ -175,7 +175,7 @@ begin
       NyxField('mode', NyxData('status')), NyxField('job', LReceipt.Field('job')),
       NyxField('limit', NyxData(2)), NyxField('severity', NyxData('error'))]));
 
-    if LStatus.Field('state').AsText <> 'running' then
+    if NyxBuildJobTerminal(ParseNyxBuildJobState(LStatus.Field('state').AsText)) then
     begin
       Break;
     end;

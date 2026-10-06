@@ -32,20 +32,36 @@ owner; staging accepts no original criterion. See [the release guide](../docs/st
 
 ## Separate release runtime — 2026-10-06
 
-Current return after NS-4 connection-authority qualification: criterion 1's actual
-worker cancellation and bounded shutdown remain actionable without a new listener
-or protected service change. `TBuildWorker.Execute` checks Terminated only before
-delegation; `TNyxBuildExecutor.RunCompiler` has log/time exits that terminate the
-process without explicitly joining. Follow cooperative cancellation through the
-actual executor, preserve output/source identity and qualify owned running/queued
-children and terminal retirement. This is an existing requirement, not a new task
+Criterion 1's direct-compiler lifecycle prerequisite is now qualified through
+the actual executor/job manager and native semantic host seam: two running slots,
+eight FIFO queued jobs, thread-safe cancellation, explicit process and worker
+join before terminal publication/slot reuse, all-job shutdown and typed execution
+failures. Primary retries also carry connection identity. See
+[the lifecycle evidence](../WORK.md#compiler-queue-and-cancellation--2026-10-06).
+Actual owned Pascal children, both portable consumers and real compiler success
+are exercised; no protected host or accepted work is replaced.
+
+Stop queue/router fixture expansion at that bounded boundary. The original
+criterion remains open: compiler descendants/linkers, other hosts, bounded
+operator job discovery and visible cancellation through both Studio adapters
+need qualification. The browser's legacy synchronous build route remains an
+integration gap; no observing HTTP rollout or fully bounded OS retirement is
+claimed. Failed OS reaping keeps the owned worker active. Earlier counts and
+all original acceptance criteria remain retained.
+
+Preceding gap after NS-4 connection-authority qualification: criterion 1's actual
+worker cancellation was independently actionable without a new listener or
+protected service change. The earlier worker checked Terminated only before
+delegation; log/time exits terminated the process without explicitly joining.
+The lifecycle packet above now qualifies owned running/queued direct children,
+source/output identity and terminal retirement. This is an existing requirement, not a new task
 or a reset of historical no-closure counts. Keep complete history migration and
 observing HTTP rollout as separate gates.
-The primary agent build path also derives its retry key from the display actor;
-project/review/editor paths already include their trusted owner/context. Propagate
-connection identity consistently while integrating per-job cancellation and qualify
-two same-display callers without using current-source ordinary-tool checks as
-evidence for the external compiler path.
+The earlier primary agent build path derived its retry key from the display actor;
+project/review/editor paths already included their trusted owner/context. The
+actual semantic compiler seam now consistently carries connection/context identity
+and qualifies same-display callers independently. Ordinary-tool router evidence
+alone still does not establish an external compiler or authenticated deployment.
 
 Criterion 1's isolation prerequisite now uses an immutable typed directory value
 through the actual server, MCP engine, executor and each admitted job. Source/web

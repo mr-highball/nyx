@@ -1038,8 +1038,7 @@ begin
           end;
           AProject.BuildResult := LReply.Copy;
 
-          if (LReply.Field('state').AsText = 'succeeded') or
-            (LReply.Field('state').AsText = 'failed') then
+          if NyxBuildJobTerminal(ParseNyxBuildJobState(LReply.Field('state').AsText)) then
           begin
             AProject.BuildStage := nbsTerminal;
             AProject.BuildTimer.Enabled := False;
@@ -1062,6 +1061,10 @@ begin
               begin
                 BeginCompiledPreview(AProject);
               end;
+            end
+            else if LReply.Field('state').AsText = 'cancelled' then
+            begin
+              AProject.BuildMessage := 'Build cancelled / accepted source and preview retained';
             end
             else
             begin

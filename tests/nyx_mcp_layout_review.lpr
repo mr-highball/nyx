@@ -24,7 +24,7 @@ program nyx_mcp_layout_review;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Classes, SysUtils, nyx.text, nyx.data, nyx.test.mcp.client;
+  Classes, SysUtils, nyx.studio.builds, nyx.text, nyx.data, nyx.test.mcp.client;
 
 var
   GClient: TNyxMCPTestClient;
@@ -142,7 +142,7 @@ begin
       NyxField('severity', NyxData('error')), NyxField('limit', NyxData(2))]));
     Save(ATarget + '-build.json', LStatus.ToJSON);
 
-    if LStatus.Field('state').AsText <> 'running' then
+    if NyxBuildJobTerminal(ParseNyxBuildJobState(LStatus.Field('state').AsText)) then
     begin
       Break;
     end;

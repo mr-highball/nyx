@@ -24,7 +24,7 @@ program nyx_mcp_build_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Classes, SysUtils, fphttpclient, md5, base64,
+  Classes, SysUtils, nyx.studio.builds, fphttpclient, md5, base64,
   nyx.text, nyx.data, nyx.model, nyx.codec, nyx.codegen, nyx.source,
   nyx.studio.session, nyx.studio.projects, nyx.studio.buildjobs, nyx.studio.agents,
   nyx.test.compiler, nyx.test.mcp.client, nyx.test.browser.host;
@@ -105,7 +105,7 @@ begin
     Result := Call('nyx_build', NyxObject([NyxField('mode', NyxData('status')),
       NyxField('job', NyxData(AJob)), NyxField('limit', NyxData(20))]));
 
-    if not AWait or (Result.Field('state').AsText <> 'running') then
+    if not AWait or NyxBuildJobTerminal(ParseNyxBuildJobState(Result.Field('state').AsText)) then
     begin
       Break;
     end;
@@ -357,7 +357,7 @@ begin
         end;
         LArgs := Request('qualified-' + LTarget + '-' + LScope, LTarget, LScope, LView);
         LReceipt := Call('nyx_build', LArgs);
-        Check(LReceipt.Field('state').AsText = 'running', 'Build returns an immediate immutable receipt');
+        Check(LReceipt.Field('state').AsText = 'queued', 'Build returns an immediate immutable receipt');
         LJob := LReceipt.Field('job').AsText;
 
         if (LTargetIndex = 0) and (LScopeIndex = 0) then

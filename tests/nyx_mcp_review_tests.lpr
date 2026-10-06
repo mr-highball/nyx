@@ -24,7 +24,7 @@ program nyx_mcp_review_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Classes, SysUtils, fphttpclient, base64, nyx.text, nyx.data,
+  Classes, SysUtils, nyx.studio.builds, fphttpclient, base64, nyx.text, nyx.data,
   nyx.studio.agents, nyx.studio.session, nyx.studio.projects,
   nyx.studio.reviews, nyx.studio.buildjobs, nyx.test.mcp.client,
   nyx.test.browser.host;
@@ -408,7 +408,7 @@ begin
       raise Exception.Create('Review compiler job exceeded its qualification budget');
     end;
     Sleep(100);
-  until Result.Field('state').AsText <> 'running';
+  until NyxBuildJobTerminal(ParseNyxBuildJobState(Result.Field('state').AsText));
   Check((Result.Field('state').AsText = 'succeeded') and
     Result.Field('currentSource').AsBoolean, 'Actual compiler succeeds in the independent review context');
   Save('build-' + ATarget + '-' + AScope + '.json', Result.ToJSON);

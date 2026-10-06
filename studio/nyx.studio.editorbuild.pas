@@ -84,6 +84,11 @@ function NewNyxCompilerRequest: INyxCompilerRequest;
   bounded at twenty diagnostics, starting at an exact zero-based offset. }
 function NyxCompilerOutputs: TNyxDataValue;
 function NyxCompilerStatus(const AJob: TNyxBuildJobRef; AOffset: Integer = 0): TNyxDataValue;
+{ Strongly typed cancellation authoring. It changes execution only, never the
+  accepted pair or Undo history. Revision belongs to the current project, so a
+  deliberately cancelled earlier-source job still requires fresh context. }
+function NyxCompilerCancel(const AJob: TNyxBuildJobRef; ARevision: Integer;
+  const AOperation: TNyxBuildOperationRef): TNyxDataValue;
 
 implementation
 
@@ -259,6 +264,19 @@ begin
   Result := NyxObject([NyxField('mode', NyxData('status')),
     NyxField('job', NyxData(AJob.ID)), NyxField('offset', NyxData(AOffset)),
     NyxField('limit', NyxData(20))]);
+end;
+
+function NyxCompilerCancel(const AJob: TNyxBuildJobRef; ARevision: Integer;
+  const AOperation: TNyxBuildOperationRef): TNyxDataValue;
+begin
+
+  if (AJob.ID = '') or (ARevision < 1) or (AOperation.ID = '') then
+  begin
+    raise ENyxModel.Create('Compiler cancellation requires job, current revision and operation');
+  end;
+  Result := NyxObject([NyxField('mode', NyxData('cancel')),
+    NyxField('job', NyxData(AJob.ID)), NyxField('expectedRevision', NyxData(ARevision)),
+    NyxField('operationId', NyxData(AOperation.ID))]);
 end;
 
 end.

@@ -24,7 +24,7 @@ program nyx_mcp_handler_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Classes, SysUtils, base64, fphttpclient, nyx.text, nyx.data,
+  Classes, SysUtils, nyx.studio.builds, base64, fphttpclient, nyx.text, nyx.data,
   nyx.test.mcp.client, nyx.test.browser.host;
 
 type
@@ -229,7 +229,7 @@ begin
       raise Exception.Create('Handler compiler job did not complete');
     end;
     Sleep(100);
-  until Result.Field('state').AsText <> 'running';
+  until NyxBuildJobTerminal(ParseNyxBuildJobState(Result.Field('state').AsText));
 end;
 
 function Fetch(const APath: TNyxText): TNyxText;

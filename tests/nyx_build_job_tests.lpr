@@ -78,7 +78,7 @@ begin
     LValue := GJobs.Status(NyxObject([NyxField('mode', NyxData('status')),
       NyxField('job', NyxData(AID))]), LPair, LCurrent);
 
-    if LValue.Field('state').AsText <> 'running' then
+    if NyxBuildJobTerminal(ParseNyxBuildJobState(LValue.Field('state').AsText)) then
     begin
       Break;
     end;
@@ -96,6 +96,7 @@ var
   LFirstArgs: TNyxDataValue;
   LFirst: TNyxDataValue;
   LSecond: TNyxDataValue;
+  LThird: TNyxDataValue;
   LValue: TNyxDataValue;
   LRetry: TNyxDataValue;
   LIndex: Integer;
@@ -129,16 +130,8 @@ begin
     GJobs.AdmitRequest(LFirstArgs);
     LFirst := GJobs.Submit('Scooty', LFirstArgs, GPair);
     LSecond := GJobs.Submit('Scooty', Args('second'), GPair);
-    LRefused := False;
-    try
-      GJobs.Submit('Scooty', Args('third-at-capacity'), GPair);
-    except
-      on Exception do
-      begin
-        LRefused := True;
-      end;
-    end;
-    Check(LRefused, 'Third concurrent job refuses before compiler submission');
+    LThird := GJobs.Submit('Scooty', Args('third-queued'), GPair);
+    Check(LThird.Field('state').AsText = 'queued', 'Third job admits to the bounded queue');
     Check(GJobs.Retry('Scooty', LFirstArgs, LRetry) and
       (LRetry.ToJSON = LFirst.ToJSON), 'Running retry does not create a third worker');
     LProfile := GOutput.Encode;
@@ -148,6 +141,7 @@ begin
       'Future readiness reflects the operator profile');
     Wait(LFirst.Field('job').AsText);
     Wait(LSecond.Field('job').AsText);
+    Wait(LThird.Field('job').AsText);
     LValue := GJobs.Status(NyxObject([NyxField('mode', NyxData('status')),
       NyxField('job', LFirst.Field('job'))]), LPair, LCurrent);
     Check(not LCurrent and (LValue.Field('outputID').AsText = GOutputID),
@@ -170,7 +164,7 @@ begin
       Inc(LCount);
       Check((LActor = 'Scooty') and (LReport <> nil), 'Completion transfers retained report without worker borrowing');
     end;
-    Check(LCount = 2, 'Two completion notifications drain exactly once');
+    Check(LCount = 3, 'Three completion notifications drain exactly once');
     for LIndex := 2 to 16 do
     begin
       LValue := GJobs.Submit('Scooty', Args('retained-' + IntToStr(LIndex)), GPair);

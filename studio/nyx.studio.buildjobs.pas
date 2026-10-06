@@ -35,7 +35,9 @@ type
   { Native compiler jobs own immutable accepted text and a private machine
     profile. Entry methods are serialized by the MCP transport; workers touch
     only their own guarded result. No worker borrows the editor or its nodes.
-    At most two invocations run concurrently and sixteen job handles are retained.
+    At most two invocations run concurrently, eight await a slot in FIFO order,
+    and sixteen job handles are retained. Host polling advances the queue;
+    cancellation keeps a slot until both child and worker have been joined.
     Terminal handles expire oldest first; artifacts retain the existing service
     lifecycle. Retry receipts (64) cannot silently submit an expired job again. }
   TNyxBuildJobs = class
@@ -46,6 +48,9 @@ type
     FReceiptKeys: array of TNyxText;
     FReceiptRequests: array of TNyxText;
     FReceipts: array of TNyxDataValue;
+    procedure Pump;
+    procedure Remember(const AOwner: TNyxText; const AArguments,
+      AReceipt: TNyxDataValue);
   public
     constructor Create(const ARepository, AProfile: TNyxText); overload;
     { The typed source/runtime value is copied into every admitted worker. Later
@@ -58,6 +63,12 @@ type
     { Trusted editor configuration only. Public MCP output metadata never calls
       this accessor and never receives machine paths. Returns an owned copy. }
     function OperatorProfile: TNyxText;
+    { Serialized host admission. Agents can cancel only their own job; trusted
+      operators may cancel any job in the already resolved project. A queued
+      job never spawns. Cancelling a terminal job is an explicit no-op. }
+    function Cancel(const AOwner: TNyxText; const AArguments: TNyxDataValue;
+      AOperator: Boolean): TNyxDataValue;
+    procedure AdmitCancel(const AArguments: TNyxDataValue);
     { Shape/type admission precedes retry lookup or immutable pair capture. }
     procedure AdmitRequest(const AArguments: TNyxDataValue);
     function Retry(const AActor: TNyxText; const AArguments: TNyxDataValue;
@@ -120,6 +131,7 @@ type
   public
     ID: TNyxText;
     Actor: TNyxText;
+    Owner: TNyxText;
     Review: TNyxReviewRef;
     Workspace: TNyxWorkspaceRef;
     Directories: TNyxStudioDirectories;
@@ -128,7 +140,10 @@ type
     Arguments: TNyxDataValue;
     Guard: TCriticalSection;
     Worker: TBuildWorker;
-    State: TNyxText;
+    State: TNyxBuildJobState;
+    CompletedState: TNyxBuildJobState;
+    Failure: TNyxCompilerFailure;
+    Cancellation: INyxBuildCancellation;
     Error: TNyxText;
     Output: TNyxDataValue;
     Manifest: TNyxDataValue;
@@ -208,7 +223,9 @@ constructor TBuildJob.Create;
 begin
   inherited Create;
   Guard := TCriticalSection.Create;
-  State := 'running';
+  State := bjsQueued;
+  CompletedState := bjsFailed;
+  Cancellation := NewNyxBuildCancellation;
   Output := NyxNull;
   Manifest := NyxArray([]);
 end;
@@ -217,6 +234,10 @@ destructor TBuildJob.Destroy;
 begin
   { The owner joins before releasing immutable inputs/guard. No forced thread
     termination or callbacks into a destroyed Studio session can occur. }
+  if Cancellation <> nil then
+  begin
+    Cancellation.Cancel;
+  end;
   Worker.Free;
   Guard.Free;
   inherited Destroy;
@@ -226,7 +247,7 @@ function TBuildJob.Terminal: Boolean;
 begin
   Guard.Acquire;
   try
-    Result := State <> 'running';
+    Result := NyxBuildJobTerminal(State);
   finally
     Guard.Release;
   end;
@@ -235,6 +256,7 @@ end;
 function TBuildJob.Snapshot(AOffset, ALimit: Integer;
   const ASeverity: TNyxText): TNyxDataValue;
 var
+  LPublicManifest: TNyxDataValue;
   LItems: array of TNyxDataValue;
   LItem: TNyxCompilerDiagnostic;
   LIndex: Integer;
@@ -267,13 +289,18 @@ begin
     begin
       LSource := Output.Field('source').AsText;
 
-      if State = 'succeeded' then
+      if State = bjsSucceeded then
       begin
         LArtifact := Output.Field('artifact').AsText;
       end;
     end;
     LCount := 0;
-    LOrder := NyxCompilerDiagnosticOrder(Report);
+    LOrder := nil;
+
+    if NyxBuildJobTerminal(State) then
+    begin
+      LOrder := NyxCompilerDiagnosticOrder(Report);
+    end;
     SetLength(LFiltered, Length(LOrder));
     for LIndex := 0 to High(LOrder) do
     begin
@@ -306,8 +333,15 @@ begin
       Inc(LCount);
     end;
     SetLength(LItems, LCount);
+    LPublicManifest := NyxArray([]);
+
+    if State = bjsSucceeded then
+    begin
+      LPublicManifest := Manifest;
+    end;
     Result := NyxObject([NyxField('job', NyxData(ID)),
-      NyxField('state', NyxData(State)),
+      NyxField('state', NyxData(NyxBuildJobStateName(State))),
+      NyxField('failure', NyxData(NyxCompilerFailureName(Failure))),
       NyxField('revision', Arguments.Field('expectedRevision')),
       NyxField('target', Arguments.Field('target')),
       NyxField('scope', Arguments.Field('scope')),
@@ -319,13 +353,14 @@ begin
       NyxField('error', NyxData(BoundedText(Error, 1024))),
       NyxField('artifact', NyxData(LArtifact)),
       NyxField('compiledSource', NyxData(LSource)),
-      NyxField('manifest', Manifest),
+      NyxField('manifest', LPublicManifest),
       NyxField('diagnostics', NyxObject([
         NyxField('order', NyxData('severity')),
         NyxField('severity', NyxData(ASeverity)),
         NyxField('available', NyxData(Length(LOrder))),
         NyxField('offset', NyxData(AOffset)), NyxField('total', NyxData(LTotal)),
         NyxField('items', NyxArray(LItems))]))]);
+
 
   finally
     Guard.Release;
@@ -388,7 +423,7 @@ begin
         LScope := 'view';
       end;
       LResult := LExecutor.Build(LDocument, FJob.Arguments.Field('target').AsText,
-        LScope, LView, FJob.Pair.Source);
+        LScope, LView, FJob.Pair.Source, FJob.Cancellation);
       LOutput := TNyxDataValue.ParseJSON(TNyxText(LResult.AsJSON));
       LReport := DecodeNyxCompilerReport(LOutput.Field('diagnostics').ToJSON);
       LRoot := FJob.Directories.Jobs;
@@ -417,18 +452,41 @@ begin
       end;
       FJob.Guard.Acquire;
       try
-        FJob.Output := LOutput;
-        FJob.Manifest := LManifest;
-        FJob.Report := LReport;
+        { The serialized owner can request cancellation after the child exits
+          but before publication. That race still retires the whole job and
+          never replaces the accepted report or advertises a late artifact. }
 
-        if LOutput.Field('ok').AsBoolean then
+        if FJob.Cancellation.Cancelled then
         begin
-          FJob.State := 'succeeded';
+          FJob.CompletedState := bjsCancelled;
+        end
+        else if LOutput.Field('ok').AsBoolean then
+        begin
+          FJob.Output := LOutput;
+          FJob.Manifest := LManifest;
+          FJob.Report := LReport;
+          FJob.CompletedState := bjsSucceeded;
         end
         else
         begin
-          FJob.Error := 'Compiler refused the accepted companion; inspect bounded diagnostics';
-          FJob.State := 'failed';
+          FJob.Output := LOutput;
+          FJob.Report := LReport;
+          FJob.Failure := ParseNyxCompilerFailure(LOutput.Field('failure').AsText);
+          case FJob.Failure of
+            bcfTimeBudget:
+              begin
+                FJob.Error := 'Compiler time budget exceeded';
+              end;
+            bcfLogBudget:
+              begin
+                FJob.Error := 'Compiler log budget exceeded';
+              end;
+          else
+            begin
+              FJob.Error := 'Compiler refused the accepted companion; inspect bounded diagnostics';
+            end;
+          end;
+          FJob.CompletedState := bjsFailed;
         end;
       finally
         FJob.Guard.Release;
@@ -438,8 +496,15 @@ begin
       begin
         FJob.Guard.Acquire;
         try
-          FJob.Error := LException.Message;
-          FJob.State := 'failed';
+          if FJob.Cancellation.Cancelled then
+          begin
+            FJob.CompletedState := bjsCancelled;
+          end
+          else
+          begin
+            FJob.Error := LException.Message;
+            FJob.CompletedState := bjsFailed;
+          end;
         finally
           FJob.Guard.Release;
         end;
@@ -482,6 +547,12 @@ begin
 
   if FJobs <> nil then
   begin
+    { Signal every running job before joining any one. Queued jobs own no
+      worker/process and cannot start during teardown. }
+    for LIndex := 0 to FJobs.Count - 1 do
+    begin
+      TBuildJob(FJobs[LIndex]).Cancellation.Cancel;
+    end;
     for LIndex := 0 to FJobs.Count - 1 do
     begin
       TBuildJob(FJobs[LIndex]).Free;
@@ -489,6 +560,75 @@ begin
   end;
   FJobs.Free;
   inherited Destroy;
+end;
+
+procedure TNyxBuildJobs.Pump;
+var
+  LIndex: Integer;
+  LActive: Integer;
+  LJob: TBuildJob;
+begin
+  LActive := 0;
+  for LIndex := 0 to FJobs.Count - 1 do
+  begin
+    LJob := TBuildJob(FJobs[LIndex]);
+
+    if LJob.Worker <> nil then
+    begin
+
+      if LJob.Worker.Finished then
+      begin
+        { Finished is only a hint. WaitFor joins the actual OS thread before
+          the terminal state becomes visible or another compiler takes a slot. }
+        LJob.Worker.WaitFor;
+        FreeAndNil(LJob.Worker);
+        LJob.Guard.Acquire;
+        try
+
+          if LJob.Cancellation.Cancelled then
+          begin
+            LJob.State := bjsCancelled;
+            LJob.Output := NyxNull;
+            LJob.Manifest := NyxArray([]);
+            LJob.Report := nil;
+            LJob.Failure := bcfNone;
+            LJob.Error := '';
+          end
+          else
+          begin
+            LJob.State := LJob.CompletedState;
+          end;
+        finally
+          LJob.Guard.Release;
+        end;
+      end
+      else
+      begin
+        Inc(LActive);
+      end;
+    end;
+  end;
+  for LIndex := 0 to FJobs.Count - 1 do
+  begin
+    LJob := TBuildJob(FJobs[LIndex]);
+
+    if (LActive < 2) and (LJob.State = bjsQueued) then
+    begin
+      try
+        { Allocation and OS-thread creation belong to the same retirement
+          boundary as Start. A failed constructor cannot strand a queued job. }
+        LJob.Worker := TBuildWorker.Create(LJob);
+        LJob.State := bjsRunning;
+        LJob.Worker.Start;
+        Inc(LActive);
+      except
+        LJob.Cancellation.Cancel;
+        FreeAndNil(LJob.Worker);
+        LJob.State := bjsFailed;
+        LJob.Error := 'Cannot start the owned compiler worker';
+      end;
+    end;
+  end;
 end;
 
 procedure TNyxBuildJobs.Configure(const AProfile: TNyxText);
@@ -680,6 +820,7 @@ begin
   begin
     raise ENyxModel.Create(LIssue);
   end;
+  Pump;
   LActive := 0;
   LEvict := -1;
   for LIndex := 0 to FJobs.Count - 1 do
@@ -695,9 +836,9 @@ begin
     end;
   end;
 
-  if LActive >= 2 then
+  if LActive >= 10 then
   begin
-    raise ENyxModel.Create('Two compiler jobs are active; query status before submitting another');
+    raise ENyxModel.Create('Two compiler slots and eight queued jobs are full; query or cancel owned jobs');
   end;
 
   if FJobs.Count = 16 then
@@ -710,24 +851,31 @@ begin
     CreateGUID(LID);
     LJob.ID := Copy(GUIDToString(LID), 2, 36);
     LJob.Actor := AActor;
+    LJob.Owner := ARetryOwner;
     LJob.Review := AReview;
     LJob.Workspace := AWorkspace;
     LJob.Directories := FDirectories;
     LJob.Profile := FProfile;
     LJob.Arguments := AArguments.Copy;
     LJob.Pair := APair;
-    LJob.Worker := TBuildWorker.Create(LJob);
     Result := LJob.Snapshot(0, 1);
-    LJob.Worker.Start;
-    { Publish ownership only after the worker starts successfully. If starting
-      or adding the handle fails, the local owner joins/frees it without leaving
-      a dangling entry in the retained-job list. The transport lock prevents an
-      observer from seeing this short preparation interval. }
+    { Admission owns immutable queued input before delegation. The original
+      receipt remains queued even when the slot starts immediately; use status
+      for current state. No retry launches a second worker. }
     FJobs.Add(LJob);
     LJob := nil;
   finally
     LJob.Free;
   end;
+  Remember(ARetryOwner, AArguments, Result);
+  Pump;
+end;
+
+procedure TNyxBuildJobs.Remember(const AOwner: TNyxText;
+  const AArguments, AReceipt: TNyxDataValue);
+var
+  LIndex: Integer;
+begin
   LIndex := Length(FReceiptKeys);
 
   if LIndex = 64 then
@@ -746,9 +894,9 @@ begin
     SetLength(FReceiptRequests, LIndex + 1);
     SetLength(FReceipts, LIndex + 1);
   end;
-  FReceiptKeys[LIndex] := ReceiptKey(ARetryOwner, AArguments);
+  FReceiptKeys[LIndex] := ReceiptKey(AOwner, AArguments);
   FReceiptRequests[LIndex] := AArguments.ToJSON;
-  FReceipts[LIndex] := Result;
+  FReceipts[LIndex] := AReceipt;
 end;
 
 function TNyxBuildJobs.Status(const AArguments: TNyxDataValue;
@@ -797,6 +945,7 @@ begin
   begin
     raise ENyxModel.Create('Build diagnostic window is offset 0..512, limit 1..20');
   end;
+  Pump;
   for LIndex := 0 to FJobs.Count - 1 do
   begin
 
@@ -840,17 +989,18 @@ begin
   AReport := nil;
   AReview := NyxActiveWorkspace;
   AWorkspace := NyxPrimaryWorkspace;
+  Pump;
   for LIndex := 0 to FJobs.Count - 1 do
   begin
     LJob := TBuildJob(FJobs[LIndex]);
     LJob.Guard.Acquire;
     try
 
-      if (LJob.State <> 'running') and not LJob.Announced then
+      if NyxBuildJobTerminal(LJob.State) and not LJob.Announced then
       begin
         LJob.Announced := True;
         AActor := LJob.Actor;
-        AOutcome := LJob.State + CSeparator + LJob.Arguments.Field('scope').AsText +
+        AOutcome := NyxBuildJobStateName(LJob.State) + CSeparator + LJob.Arguments.Field('scope').AsText +
           CSeparator + LJob.Arguments.Field('target').AsText;
 
         if LJob.Error <> '' then
@@ -867,6 +1017,78 @@ begin
       LJob.Guard.Release;
     end;
   end;
+end;
+
+procedure TNyxBuildJobs.AdmitCancel(const AArguments: TNyxDataValue);
+var
+  LID: TNyxText;
+begin
+  NyxAgentFields(AArguments, '|mode|job|expectedRevision|operationId|');
+  AArguments.Field('expectedRevision').AsInteger;
+  LID := AArguments.Field('operationId').AsText;
+
+  if (NyxTextScalarCount(LID) < 1) or (NyxTextScalarCount(LID) > 120) or
+    (Pos(#0, LID) > 0) or (Pos(#10, LID) > 0) or (Pos(#13, LID) > 0) then
+  begin
+    raise ENyxModel.Create('Cancel operationId must contain 1..120 characters');
+  end;
+
+  if Length(AArguments.Field('job').AsText) <> 36 then
+  begin
+    raise ENyxModel.Create('Cancel requires an exact retained job ID');
+  end;
+end;
+
+function TNyxBuildJobs.Cancel(const AOwner: TNyxText;
+  const AArguments: TNyxDataValue; AOperator: Boolean): TNyxDataValue;
+var
+  LIndex: Integer;
+  LJob: TBuildJob;
+begin
+  AdmitCancel(AArguments);
+  { Validate ownership before retry lookup. An operator may cancel someone
+    else's job only through the already authenticated operator/context route. }
+  for LIndex := 0 to FJobs.Count - 1 do
+  begin
+    LJob := TBuildJob(FJobs[LIndex]);
+
+    if LJob.ID = AArguments.Field('job').AsText then
+    begin
+
+      if not AOperator and (LJob.Owner <> AOwner) then
+      begin
+        raise ENyxModel.Create('Compiler cancellation requires the admitting connection');
+      end;
+
+      if Retry(AOwner, AArguments, Result) then
+      begin
+        Exit;
+      end;
+      LJob.Guard.Acquire;
+      try
+
+        if not NyxBuildJobTerminal(LJob.State) then
+        begin
+          LJob.Cancellation.Cancel;
+
+          if LJob.State = bjsQueued then
+          begin
+            LJob.State := bjsCancelled;
+          end
+          else
+          begin
+            LJob.State := bjsCancelling;
+          end;
+        end;
+      finally
+        LJob.Guard.Release;
+      end;
+      Result := LJob.Snapshot(0, 1);
+      Remember(AOwner, AArguments, Result);
+      Exit;
+    end;
+  end;
+  raise ENyxModel.Create('Unknown or expired compiler job; cancellation has no context fallback');
 end;
 
 end.
