@@ -112,6 +112,13 @@ changed-set publication, source/editor integration, ordinary Studio recipe editi
 other widgetsets/DPI, accessibility, release performance and delivery remain open
 under the original owners. No task moves to DONE.
 
+Implementation checkpoint `34e5477443e64a426bc22ca6bc26adaee693374f` is pushed to
+`origin/hello-nyx`; its exact remote SHA is verified in
+`build/content-recipes/remote-checkpoint.json`. The final readonly handoff check
+again preserves all fifteen process identities and eight paired editor frames,
+with existing LAN HTTP 200. The following documentation checkpoint records this
+evidence; the full product goal remains active.
+
 ## Retained bound state — 2026-10-06
 
 Owner: NS-2 criteria 1/2 as a prerequisite for original NS-4 responsive structures.
