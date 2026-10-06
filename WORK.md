@@ -140,6 +140,25 @@ boundary, then check authenticated content editing and the full observing browse
 Studio. Cache/cancellation/retention, native packaging, full parity/accessibility
 and performance retain their original owners. No service or LAN rollout is claimed.
 
+Checkpoint: implementation `1fe6c0a9b02f4a7e0b7a16e1c0ffd2b26e5fb9df` is pushed to
+`origin/hello-nyx` and the exact remote SHA is verified in
+`build/runtime-directories/remote-checkpoint.json`. All 191 frozen source members
+match the clean working tree at that checkpoint. The sealed 199-member manifest
+still records its preceding base revision; its inventory owns the compiled bytes,
+and no metadata was rewritten or passing builds repeated merely to relabel it.
+All compiler/harness/application processes completed. The only new hosted child
+contains the executed browser application; no Studio frontend/backend was installed.
+
+Next bounded deliverable: persist and restore the actual protocol workspace/session
+state through typed host runtime storage, including accepted paired projects,
+navigation, drafts and exact paired Undo/Redo ownership. Define version/admission
+and atomic failure behavior, exclude transport credentials from portable designs,
+and qualify actual private-engine save/recreation, Unicode and refusal using the
+existing runtime source/profile boundary. Keep every protected service and user
+pair exact. Stop at integrated restart-preservation evidence before attempting the
+separate authenticated HTTP/observing recipe rollout; no new listener is authorized
+by this handoff and the earlier automatic listener refusal must not be retried.
+
 ## Frozen release prerequisite — 2026-10-06
 
 Owner: NS-6 delivery criterion 3, returning to NS-5 runtime/reload preservation and
