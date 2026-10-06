@@ -35,6 +35,7 @@ uses
   nyx.types,
   nyx.responsive,
   nyx.presentations,
+  nyx.containers,
   nyx.state,
   nyx.collections,
   nyx.collections.view.types,
@@ -209,7 +210,8 @@ const
     'atSplitMinimum', 'atSplitMaximum', 'atSplitResizable',
     'atDragSource', 'atDropTarget', 'atTouchBehavior', 'atFlowWrap',
     'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing',
-    'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight');
+    'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight',
+    'atQueryContainer', 'atContainerContainment');
   CTouchSymbols: array[TNyxTouchBehavior] of TNyxText =
     ('ntbAutomatic', 'ntbNone', 'ntbPanX', 'ntbPanY', 'ntbManipulation');
   CWrapSymbols: array[TNyxFlowWrap] of TNyxText = ('nfwAutomatic', 'nfwNoWrap', 'nfwWrap');
@@ -232,6 +234,7 @@ var
   LMode: TNyxOverrideMode;
   LInputType: TNyxInputType;
   LTouch: TNyxTouchBehavior;
+  LContainment: TNyxContainerContainment;
   LMethod: TNyxText;
   LDomain: TNyxValueDomain;
   LData: TNyxDataValue;
@@ -247,7 +250,7 @@ begin
   LMethod := '';
 
   if (LAttribute in [atSplitOrientation, atSplitPosition, atSplitMinimum,
-    atSplitMaximum, atSplitResizable]) and (AValue = '') then
+    atSplitMaximum, atSplitResizable, atQueryContainer, atContainerContainment]) and (AValue = '') then
   begin
     Exit('Clear(' + CAttributeSymbols[LAttribute] + ')');
   end;
@@ -486,6 +489,18 @@ begin
     end;
   end;
   case LAttribute of
+    atQueryContainer:
+      begin
+        Exit('QueryContainer(' + NyxContainer(AValue).Pascal + ')');
+      end;
+    atContainerContainment:
+      begin
+
+        if TryNyxContainerContainment(AValue, LContainment) then
+        begin
+          Exit('Containment(' + NyxContainerContainmentSymbol(LContainment) + ')');
+        end;
+      end;
     atLayout:
       begin
         for LLayout := Low(TNyxLayoutMode) to High(TNyxLayoutMode) do
@@ -1541,6 +1556,7 @@ begin
     LLines.Add('  nyx.types,');
     LLines.Add('  nyx.responsive,');
     LLines.Add('  nyx.presentations,');
+    LLines.Add('  nyx.containers,');
     LLines.Add('  nyx.editing,');
     LLines.Add('  nyx.gestures,');
 

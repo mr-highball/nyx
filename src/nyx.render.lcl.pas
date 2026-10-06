@@ -45,6 +45,7 @@ uses
   nyx.widgets.lcl,
   nyx.model,
   nyx.presentations,
+  nyx.containers,
   nyx.layout.flow,
   nyx.layout.constraints,
   nyx.layout.viewport,
@@ -130,6 +131,7 @@ type
       same preorder renderer array, never a reference-counted tree back edge. }
     FLogicalParent: TNyxLCLBinding;
     FLogicalBox: TNyxViewportBox;
+    FContainerAllocated: Boolean;
     FScreenBox: TNyxViewportBox;
     FPlacement: TNyxViewportPlacement;
     FLastValue: TNyxText;
@@ -324,6 +326,7 @@ type
     { Conditions use the borrowed host's stable client rectangle. Internal
       content scrollbars/layout must not create a feedback loop in its size. }
     function UpdateViewport: Boolean;
+    function MeasureContainers: INyxContainerSnapshot;
     procedure SetPresentationSelection(const AValue: TNyxPresentationSelection);
     function ReadPresentationSelection: TNyxPresentationSelection;
     function GetPresentationView: INyxPresentationView;
@@ -1436,6 +1439,14 @@ begin
   begin
     Exit(Min(AAvailable, Metric(ANode, 'width', AAvailable)));
   end;
+
+  if ANode.QueryContainer.Defined then
+  begin
+    { Intrinsic width containment is an empty content contribution, rather
+      than a guessed fixed width. Fill/flex allocation, explicit width and
+      typed bounds remain owned by the ordinary external allocator. }
+    Exit(Min(AAvailable, 2 * Metric(ANode, 'padding', 0)));
+  end;
   Result := 0;
 
   if (ANode.Count > 0) and (ANode.ProjectionKind <> 'split-view') then
@@ -1705,6 +1716,11 @@ begin
   begin
     Exit(Metric(ANode, 'height', 32));
   end;
+
+  if ANode.QueryContainer.Defined and (ANode.ContainerContainment = nccSize) then
+  begin
+    Exit(2 * Metric(ANode, 'padding', 0));
+  end;
   Result := 28;
 
   if (ANode.ProjectionKind = 'input') or (ANode.ProjectionKind = 'select') or
@@ -1884,6 +1900,7 @@ begin
   end;
   LHeight := NyxNodeSizeConstraints(ANode).HeightRange.Clamp(LHeight);
   LBinding.FLogicalBox := NyxViewportBox(AX, AY, LWidth, LHeight);
+  LBinding.FContainerAllocated := True;
 
   if not FVirtualLayout then
   begin
@@ -2836,6 +2853,49 @@ end;
 
 {$include nyx.render.lcl.viewport.inc}
 
+function TNyxLCLRenderer.MeasureContainers: INyxContainerSnapshot;
+var
+  LMeasurements: TNyxContainerMeasurements;
+  LIndex, LCount, LPadding: Integer;
+  LAncestor: TNyxNode;
+  LVisible: Boolean;
+  LBinding: TNyxLCLBinding;
+begin
+  LMeasurements := nil;
+  for LIndex := 0 to High(FBindings) do
+  begin
+    LBinding := FBindings[LIndex];
+
+    if not LBinding.FNode.QueryContainer.Defined or not LBinding.FContainerAllocated then
+    begin
+      Continue;
+    end;
+    LAncestor := LBinding.FNode;
+    LVisible := True;
+    while LAncestor <> nil do
+    begin
+      LVisible := LVisible and (LAncestor.Prop('visible', 'true') <> 'false');
+      LAncestor := LAncestor.Parent;
+    end;
+
+    if not LVisible then
+    begin
+      Continue;
+    end;
+    LCount := Length(LMeasurements);
+    SetLength(LMeasurements, LCount + 1);
+    LPadding := 2 * Metric(LBinding.FNode, 'padding', 0);
+    LMeasurements[LCount].RuntimeID := LBinding.FNode.ID;
+    { Logical allocation survives native virtualization. Only non-client
+      thickness comes from the control; never publish its clipped screen size. }
+    LMeasurements[LCount].Width := Max(0, LBinding.FLogicalBox.Width - LPadding -
+      (LBinding.FControl.Width - LBinding.FControl.ClientWidth));
+    LMeasurements[LCount].Height := Max(0, LBinding.FLogicalBox.Height - LPadding -
+      (LBinding.FControl.Height - LBinding.FControl.ClientHeight));
+  end;
+  Result := NewNyxContainerSnapshot(LMeasurements);
+end;
+
 function TNyxLCLRenderer.UpdateViewport: Boolean;
 begin
   Result := False;
@@ -2845,7 +2905,7 @@ begin
     Exit;
   end;
   Result := FRoot.ApplyViewport(Max(0, FPanel.Parent.ClientWidth),
-    Max(0, FPanel.Parent.ClientHeight), npfNativeLCL, FPresentationSelection);
+    Max(0, FPanel.Parent.ClientHeight), npfNativeLCL, FPresentationSelection, MeasureContainers);
 end;
 
 procedure TNyxLCLRenderer.Resize(ASender: TObject);
@@ -2977,6 +3037,11 @@ begin
       FPanel.EnableAutoSizing;
     end;
     UpdateSelection;
+
+    if not FUpdating and UpdateViewport then
+    begin
+      Sync;
+    end;
   end;
 end;
 
@@ -5618,6 +5683,7 @@ end;
 procedure TNyxLCLRenderer.Sync;
 var
   LIndex: Integer;
+  LProjectionPass, LMaximumPasses: Integer;
   LBinding: TNyxLCLBinding;
   LInput: TControl;
   LNode: TNyxNode;
@@ -5640,221 +5706,246 @@ begin
   end;
   FUpdating := True;
   try
-
-    if (FRoot <> nil) and (FPanel <> nil) then
+    { Container containment removes child feedback on queried axes. Nested
+      allocations propagate at most once per publisher, with two extra rounds
+      for scrollbar/client-area settling. Never silently publish an oscillation. }
+    LMaximumPasses := 2;
+    for LIndex := 0 to High(FBindings) do
     begin
-      UpdateViewport;
-    end;
-    for LIndex := 0 to Length(FBindings) - 1 do
-    begin
-      LBinding := FBindings[LIndex];
-      LNode := LBinding.FNode;
-      LBinding.FControl.Visible := LNode.Prop('visible', 'true') <> 'false';
-      LBinding.FControl.Hint := LNode.Prop('hint');
-      LBinding.FControl.ShowHint := LBinding.FControl.Hint <> '';
-      LBinding.FControl.AccessibleName := LNode.Prop('aria-label', LNode.Prop('text'));
-      LPolicy := NyxInteractionPolicy(LNode);
-      LEnabled := LPolicy.Enabled;
-      LReadOnly := LPolicy.ReadOnly;
-      LBinding.FControl.Enabled := LEnabled;
 
-      if LNode.Props.IndexOfName('drag-source') >= 0 then
+      if FBindings[LIndex].FNode.QueryContainer.Defined then
       begin
+        Inc(LMaximumPasses);
+      end;
+    end;
+    for LProjectionPass := 0 to LMaximumPasses do
+    begin
 
-        if not FDesignMode and (LNode.Prop('drag-source') = 'true') then
+      if (FRoot <> nil) and (FPanel <> nil) then
+      begin
+        UpdateViewport;
+      end;
+      for LIndex := 0 to Length(FBindings) - 1 do
+      begin
+        LBinding := FBindings[LIndex];
+        LNode := LBinding.FNode;
+        LBinding.FControl.Visible := LNode.Prop('visible', 'true') <> 'false';
+        LBinding.FControl.Hint := LNode.Prop('hint');
+        LBinding.FControl.ShowHint := LBinding.FControl.Hint <> '';
+        LBinding.FControl.AccessibleName := LNode.Prop('aria-label', LNode.Prop('text'));
+        LPolicy := NyxInteractionPolicy(LNode);
+        LEnabled := LPolicy.Enabled;
+        LReadOnly := LPolicy.ReadOnly;
+        LBinding.FControl.Enabled := LEnabled;
+
+        if LNode.Props.IndexOfName('drag-source') >= 0 then
         begin
-          TNyxControlAccess(LBinding.FControl).DragMode := dmAutomatic;
+
+          if not FDesignMode and (LNode.Prop('drag-source') = 'true') then
+          begin
+            TNyxControlAccess(LBinding.FControl).DragMode := dmAutomatic;
+          end
+          else
+          begin
+            TNyxControlAccess(LBinding.FControl).DragMode := dmManual;
+          end;
+
+          if (LBinding.FInput <> nil) and (LBinding.FInput <> LBinding.FControl) then
+          begin
+            TNyxControlAccess(LBinding.FInput).DragMode :=
+              TNyxControlAccess(LBinding.FControl).DragMode;
+          end;
+        end;
+
+        if LBinding.FControl is TNyxLCLSplitView then
+        begin
+          TNyxLCLSplitView(LBinding.FControl).SetInteraction(LEnabled and not FDesignMode,
+            LReadOnly or FDesignMode);
+        end;
+
+        if LBinding.FCollectionMount <> nil then
+        begin
+          LBinding.FCollectionMount.SetInteraction(LEnabled and not FDesignMode,
+            LReadOnly or FDesignMode);
+        end;
+        LBinding.SyncLiteralItems;
+        LBinding.SyncPicture;
+        LBinding.FControl.AccessibleValue := LNode.Prop('pressed');
+
+        if LBinding.FCaption <> nil then
+        begin
+          LBinding.FCaption.Caption := LNode.Prop('text');
         end
-        else
+        else if not LBinding.FCustom then
         begin
-          TNyxControlAccess(LBinding.FControl).DragMode := dmManual;
+
+          if (LBinding.FControl is TLabel) or (LBinding.FControl is TNyxLCLButton) or
+            (LBinding.FControl is TButton) or (LBinding.FControl is TCheckBox) or
+            (LBinding.FControl is TRadioButton) or (LBinding.FControl is TGroupBox) then
+          begin
+            TNyxControlAccess(LBinding.FControl).Caption := LNode.Prop('text');
+          end;
         end;
 
-        if (LBinding.FInput <> nil) and (LBinding.FInput <> LBinding.FControl) then
+        if not LBinding.FCustom and (LNode.ProjectionKind = 'code') and
+          (StringReplace(TNyxText(TMemo(LBinding.FControl).Text), #13#10, #10,
+          [rfReplaceAll]) <> LNode.Prop('text')) then
         begin
-          TNyxControlAccess(LBinding.FInput).DragMode :=
-            TNyxControlAccess(LBinding.FControl).DragMode;
+          { A code block's content is Text, not the editable scalar Value. Skip
+            unchanged text to preserve its inspection caret/selection and scroll. }
+          TMemo(LBinding.FControl).Text := LNode.Prop('text');
         end;
-      end;
 
-      if LBinding.FControl is TNyxLCLSplitView then
-      begin
-        TNyxLCLSplitView(LBinding.FControl).SetInteraction(LEnabled and not FDesignMode,
-          LReadOnly or FDesignMode);
-      end;
-
-      if LBinding.FCollectionMount <> nil then
-      begin
-        LBinding.FCollectionMount.SetInteraction(LEnabled and not FDesignMode,
-          LReadOnly or FDesignMode);
-      end;
-      LBinding.SyncLiteralItems;
-      LBinding.SyncPicture;
-      LBinding.FControl.AccessibleValue := LNode.Prop('pressed');
-
-      if LBinding.FCaption <> nil then
-      begin
-        LBinding.FCaption.Caption := LNode.Prop('text');
-      end
-      else if not LBinding.FCustom then
-      begin
-
-        if (LBinding.FControl is TLabel) or (LBinding.FControl is TNyxLCLButton) or
-          (LBinding.FControl is TButton) or (LBinding.FControl is TCheckBox) or
-          (LBinding.FControl is TRadioButton) or (LBinding.FControl is TGroupBox) then
+        if LBinding.FControl is TNyxLCLButton then
         begin
-          TNyxControlAccess(LBinding.FControl).Caption := LNode.Prop('text');
+          TNyxLCLButton(LBinding.FControl).ApplyTheme(FTheme, LNode.Prop('variant'));
         end;
-      end;
+        LInput := LBinding.FInput;
+        LValue := LNode.Prop('value');
+        { Composition owns its physical text until the OS end has drained. }
 
-      if not LBinding.FCustom and (LNode.ProjectionKind = 'code') and
-        (StringReplace(TNyxText(TMemo(LBinding.FControl).Text), #13#10, #10,
-        [rfReplaceAll]) <> LNode.Prop('text')) then
-      begin
-        { A code block's content is Text, not the editable scalar Value. Skip
-          unchanged text to preserve its inspection caret/selection and scroll. }
-        TMemo(LBinding.FControl).Text := LNode.Prop('text');
-      end;
-
-      if LBinding.FControl is TNyxLCLButton then
-      begin
-        TNyxLCLButton(LBinding.FControl).ApplyTheme(FTheme, LNode.Prop('variant'));
-      end;
-      LInput := LBinding.FInput;
-      LValue := LNode.Prop('value');
-      { Composition owns its physical text until the OS end has drained. }
-
-      if LBinding.FComposing then
-      begin
-        Continue;
-      end;
-      LWriteValue := FForceValues or not LBinding.FHasValueBaseline or
-        (LBinding.FLastValue <> LValue);
-      LBinding.FHasValueBaseline := True;
-      LBinding.FLastValue := LValue;
-
-      if LInput <> nil then
-      begin
-        LInput.Enabled := LEnabled;
-        LInput.Hint := LBinding.FControl.Hint;
-        LInput.ShowHint := LBinding.FControl.ShowHint;
-        LInput.AccessibleName := LBinding.FControl.AccessibleName;
-      end;
-
-      if LInput is TSpinEdit then
-      begin
-        LMinimum := StrToIntDef(LNode.Prop('min'), 0);
-        LMaximum := StrToIntDef(LNode.Prop('max'), 100);
-
-        if LMinimum > TSpinEdit(LInput).MaxValue then
+        if LBinding.FComposing then
         begin
+          Continue;
+        end;
+        LWriteValue := FForceValues or not LBinding.FHasValueBaseline or
+          (LBinding.FLastValue <> LValue);
+        LBinding.FHasValueBaseline := True;
+        LBinding.FLastValue := LValue;
+
+        if LInput <> nil then
+        begin
+          LInput.Enabled := LEnabled;
+          LInput.Hint := LBinding.FControl.Hint;
+          LInput.ShowHint := LBinding.FControl.ShowHint;
+          LInput.AccessibleName := LBinding.FControl.AccessibleName;
+        end;
+
+        if LInput is TSpinEdit then
+        begin
+          LMinimum := StrToIntDef(LNode.Prop('min'), 0);
+          LMaximum := StrToIntDef(LNode.Prop('max'), 100);
+
+          if LMinimum > TSpinEdit(LInput).MaxValue then
+          begin
+            TSpinEdit(LInput).MaxValue := LMaximum;
+          end;
+          TSpinEdit(LInput).MinValue := LMinimum;
           TSpinEdit(LInput).MaxValue := LMaximum;
-        end;
-        TSpinEdit(LInput).MinValue := LMinimum;
-        TSpinEdit(LInput).MaxValue := LMaximum;
-        TSpinEdit(LInput).ReadOnly := LReadOnly;
+          TSpinEdit(LInput).ReadOnly := LReadOnly;
 
-        if LWriteValue and (TSpinEdit(LInput).Value <> StrToIntDef(LValue, 0)) then
-        begin
-          TSpinEdit(LInput).Value := StrToIntDef(LValue, 0);
-        end;
-      end
-      else if LInput is TCustomEdit then
-      begin
-        TEdit(LInput).ReadOnly := LReadOnly;
-        TEdit(LInput).TextHint := LNode.Prop('placeholder');
-
-        if not LBinding.FCustom and (LNode.ProjectionKind = 'input') then
-        begin
-          { Formatting can change after mounting. Re-resolve its actual scalar
-            domain so a newly numeric face keeps unfinished drafts until commit,
-            and returning to Text restores ordinary per-change admission. An
-            explicit recipe domain remains authoritative over the format hint. }
-          LValueDomain := NyxNodeValueDomain(LNode);
-          LBinding.FDeferredValue := LValueDomain.Defined and
-            (LValueDomain.Kind in [nskInteger, nskNumber]);
-
-          if LBinding.FDeferredValue then
+          if LWriteValue and (TSpinEdit(LInput).Value <> StrToIntDef(LValue, 0)) then
           begin
-            TEdit(LInput).OnEditingDone := LBinding.CommitValue;
-          end
-          else
+            TSpinEdit(LInput).Value := StrToIntDef(LValue, 0);
+          end;
+        end
+        else if LInput is TCustomEdit then
+        begin
+          TEdit(LInput).ReadOnly := LReadOnly;
+          TEdit(LInput).TextHint := LNode.Prop('placeholder');
+
+          if not LBinding.FCustom and (LNode.ProjectionKind = 'input') then
           begin
-            TEdit(LInput).OnEditingDone := nil;
+            { Formatting can change after mounting. Re-resolve its actual scalar
+              domain so a newly numeric face keeps unfinished drafts until commit,
+              and returning to Text restores ordinary per-change admission. An
+              explicit recipe domain remains authoritative over the format hint. }
+            LValueDomain := NyxNodeValueDomain(LNode);
+            LBinding.FDeferredValue := LValueDomain.Defined and
+              (LValueDomain.Kind in [nskInteger, nskNumber]);
+
+            if LBinding.FDeferredValue then
+            begin
+              TEdit(LInput).OnEditingDone := LBinding.CommitValue;
+            end
+            else
+            begin
+              TEdit(LInput).OnEditingDone := nil;
+            end;
+
+            if LNode.Prop('input-type') = 'password' then
+            begin
+              TEdit(LInput).PasswordChar := '*';
+            end
+            else
+            begin
+              TEdit(LInput).PasswordChar := #0;
+            end;
           end;
 
-          if LNode.Prop('input-type') = 'password' then
+          if LWriteValue and
+            (StringReplace(TNyxText(TEdit(LInput).Text), #13#10, #10, [rfReplaceAll]) <> LValue) then
           begin
-            TEdit(LInput).PasswordChar := '*';
-          end
-          else
-          begin
-            TEdit(LInput).PasswordChar := #0;
+            TEdit(LInput).Text := LValue;
           end;
-        end;
-
-        if LWriteValue and
-          (StringReplace(TNyxText(TEdit(LInput).Text), #13#10, #10, [rfReplaceAll]) <> LValue) then
+        end
+        else if LInput is TComboBox then
         begin
-          TEdit(LInput).Text := LValue;
-        end;
-      end
-      else if LInput is TComboBox then
-      begin
 
-        if LWriteValue and (TNyxText(TComboBox(LInput).Text) <> LValue) then
+          if LWriteValue and (TNyxText(TComboBox(LInput).Text) <> LValue) then
+          begin
+            TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(LValue);
+          end;
+        end
+        else if LInput is TCheckBox then
         begin
-          TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(LValue);
-        end;
-      end
-      else if LInput is TCheckBox then
-      begin
 
-        if LWriteValue then
+          if LWriteValue then
+          begin
+            TCheckBox(LInput).Checked := LValue = 'true';
+          end;
+        end
+        else if LInput is TRadioButton then
         begin
-          TCheckBox(LInput).Checked := LValue = 'true';
-        end;
-      end
-      else if LInput is TRadioButton then
-      begin
 
-        if LWriteValue then
+          if LWriteValue then
+          begin
+            TRadioButton(LInput).Checked := LValue = 'true';
+          end;
+        end
+        else if LInput is TTrackBar then
         begin
-          TRadioButton(LInput).Checked := LValue = 'true';
-        end;
-      end
-      else if LInput is TTrackBar then
-      begin
-        LMinimum := StrToIntDef(LNode.Prop('min'), 0);
-        LMaximum := StrToIntDef(LNode.Prop('max'), 100);
+          LMinimum := StrToIntDef(LNode.Prop('min'), 0);
+          LMaximum := StrToIntDef(LNode.Prop('max'), 100);
 
-        if LMinimum > TTrackBar(LInput).Max then
-        begin
+          if LMinimum > TTrackBar(LInput).Max then
+          begin
+            TTrackBar(LInput).Max := LMaximum;
+          end;
+          TTrackBar(LInput).Min := LMinimum;
           TTrackBar(LInput).Max := LMaximum;
-        end;
-        TTrackBar(LInput).Min := LMinimum;
-        TTrackBar(LInput).Max := LMaximum;
 
-        if LWriteValue then
+          if LWriteValue then
+          begin
+            TTrackBar(LInput).Position := StrToIntDef(LValue, 0);
+          end;
+        end;
+
+        if LBinding.FControl is TProgressBar then
         begin
-          TTrackBar(LInput).Position := StrToIntDef(LValue, 0);
+          TProgressBar(LBinding.FControl).Min := StrToIntDef(LNode.Prop('min'), 0);
+          TProgressBar(LBinding.FControl).Max := StrToIntDef(LNode.Prop('max'), 100);
+          TProgressBar(LBinding.FControl).Position := StrToIntDef(LValue, 0);
+        end;
+
+        if Assigned(LBinding.FUpdater) then
+        begin
+          LBinding.FUpdater(LNode, LBinding.FControl);
         end;
       end;
+      SyncRadioFocus;
+      Resize(FPanel);
 
-      if LBinding.FControl is TProgressBar then
+      if not UpdateViewport then
       begin
-        TProgressBar(LBinding.FControl).Min := StrToIntDef(LNode.Prop('min'), 0);
-        TProgressBar(LBinding.FControl).Max := StrToIntDef(LNode.Prop('max'), 100);
-        TProgressBar(LBinding.FControl).Position := StrToIntDef(LValue, 0);
+        Break;
       end;
 
-      if Assigned(LBinding.FUpdater) then
+      if LProjectionPass = LMaximumPasses then
       begin
-        LBinding.FUpdater(LNode, LBinding.FControl);
+        raise ENyxModel.Create('Container presentation allocation did not settle');
       end;
     end;
-    SyncRadioFocus;
-    Resize(FPanel);
   finally
     FUpdating := False;
   end;

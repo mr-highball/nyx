@@ -887,23 +887,36 @@ var
   LPlatform: TNyxPlatform;
   LAttribute: TNyxAttribute;
   LFound: Boolean;
+  LHasContainer, LHasActivation: Boolean;
 begin
   Result := Default(TNyxPresentationEdit);
   LName := AData.Field('op').AsText;
 
   if LName = 'presentation-define' then
   begin
-    CheckFields(AData, '|op|name|widthMinimum|widthMaximum|heightMinimum|heightMaximum|orientation|activation|');
+    CheckFields(AData, '|op|name|widthMinimum|widthMaximum|heightMinimum|heightMaximum|orientation|activation|container|');
     SetLength(LFields, AData.Count - 1);
     LCount := 0;
+    LHasContainer := False;
+    LHasActivation := False;
     for LIndex := 0 to AData.Count - 1 do
     begin
 
       if AData.Key(LIndex) <> 'op' then
       begin
         LFields[LCount] := NyxField(AData.Key(LIndex), AData.Field(AData.Key(LIndex)));
+        LHasContainer := LHasContainer or (AData.Key(LIndex) = 'container');
+        LHasActivation := LHasActivation or (AData.Key(LIndex) = 'activation');
         Inc(LCount);
       end;
+    end;
+
+    if LHasContainer and not LHasActivation then
+    begin
+      { The semantic operation's optional activation retains its documented
+        automatic default. Persisted version-three definitions remain strict. }
+      SetLength(LFields, Length(LFields) + 1);
+      LFields[High(LFields)] := NyxField('activation', NyxData('automatic'));
     end;
     ReadNyxPresentationDefinition(NyxObject(LFields), LReference, LCondition);
     Exit(NyxDefinePresentation(LReference, LCondition));

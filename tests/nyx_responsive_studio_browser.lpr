@@ -405,6 +405,43 @@ begin
           begin
             Check(True, 'One synchronized browser Undo restores the exact pair before manual definition editing');
             RetainedInput;
+
+            if window.innerWidth <= 960 then
+            begin
+              Required('action-panel-inspector').click;
+            end;
+            Change(NyxStudioPresentationNameID, 'compact');
+            Change(NyxStudioPresentationActivationID, 'automatic');
+            Change(NyxStudioPresentationContainerID, 'workspace space');
+            Required(NyxStudioPresentationDefineID).click;
+            GStage := 12;
+          end;
+        end;
+      12:
+        begin
+
+          if Pos('Design / Pascal updated', Required('studio-status').textContent) = 1 then
+          begin
+
+            if window.innerWidth <= 960 then
+            begin
+              Required('action-panel-design').click;
+            end;
+            Check(Pos('TNyxPresentationCondition.Within(NyxContainer(''workspace space'')',
+              TJSHTMLTextAreaElement(Field('studio-code')).value) > 0,
+              'Actual browser Inspector/worker generates the exact fluent container condition');
+            RetainedInput;
+            Required('action-undo').click;
+            GStage := 13;
+          end;
+        end;
+      13:
+        begin
+
+          if TJSHTMLTextAreaElement(Field('studio-code')).value = GAfter then
+          begin
+            Check(True, 'One synchronized browser Undo restores the exact source before container editing');
+            RetainedInput;
             document.body.setAttribute(CResult, 'passed');
             document.body.setAttribute(CChecks, IntToStr(GChecks));
             Exit;

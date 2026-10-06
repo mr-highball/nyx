@@ -66,6 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Container-aware named presentations now use typed publishers and actual allocated
+content boxes on browser/Win32. Independent reusable cards adapt at one unchanged
+host size, retaining live inputs. Shared checks pass 32 per compiler/browser;
+actual controls 27 per target including compiled supplementary names; Studio 30
+native and 74 per desktop/exact-390 browser journey. Both deployed MCP application
+jobs compile exact English source. The LAN release restores seven accepted pairs
+and retains fourteen auxiliary services; histories reset during its backend restart.
+**Container workshop** is independent in Agents. Authoring no-closure is 22;
+alternate structures and complete product/parity/accessibility/performance remain
+open. See [the contract](docs/containers.md) and [evidence](WORK.md#container-aware-presentations--2026-10-06).
+
 Flow placement now consumes copied typed policies and exact physical/logical
 target frames. Both adapters paint inert insertion guides; ordinary compact
 Studio exposes its Nyx drag button beside the placement selector. Automatic

@@ -30,6 +30,8 @@
     function WhenViewport(const AWidth: TNyxViewportWidth): INyxConfiguration; overload;
     function WhenViewport(const ACondition: TNyxViewportCondition): INyxConfiguration; overload;
     function WhenPresentation(const AReference: TNyxPresentationRef): INyxConfiguration;
+    function QueryContainer(const AReference: TNyxContainerRef): INyxConfiguration;
+    function Containment(AValue: TNyxContainerContainment): INyxConfiguration;
     function SplitOrientation(AValue: TNyxSplitOrientation): INyxConfiguration;
     function SplitPosition(APercent: Integer): INyxConfiguration;
     function SplitMinimum(APercent: Integer): INyxConfiguration;
@@ -116,6 +118,8 @@
     function WhenViewport(const AWidth: TNyxViewportWidth): INyxConfiguration; overload;
     function WhenViewport(const ACondition: TNyxViewportCondition): INyxConfiguration; overload;
     function WhenPresentation(const AReference: TNyxPresentationRef): INyxConfiguration;
+    function QueryContainer(const AReference: TNyxContainerRef): INyxConfiguration;
+    function Containment(AValue: TNyxContainerContainment): INyxConfiguration;
     function SplitOrientation(AValue: TNyxSplitOrientation): INyxConfiguration;
     function SplitPosition(APercent: Integer): INyxConfiguration;
     function SplitMinimum(APercent: Integer): INyxConfiguration;

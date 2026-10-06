@@ -7,6 +7,50 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current integrated result: container-aware presentations — 2026-10-06
+
+The [container packet](#container-aware-presentations--2026-10-06) adds typed named
+ancestor publishers, width/full-size containment and copied actual logical
+content-box measurements. Reusable instances adapt independently at one unchanged
+host size. Nearest eligible ancestry excludes self; unavailable boxes stay inactive
+without borrowing another instance's dimensions. Contained axes receive ordinary
+external fill/flex/stretch/bounds allocation, without descendant intrinsic feedback.
+Persistence, crafted Pascal, scalar scopes, Studio Inspector/worker and semantic
+transactions share the public portable contract. Independent coordinate spaces
+are admitted atomically; correlated rules retain their common publisher.
+
+Checks pass 32 per native compiler/browser, 27 per actual browser/Win32 control
+consumer (English and compiled supplementary-name fixtures), 30 native Studio
+and 74 per desktop/exact-390 ordinary browser Studio journey. The preceding 72
+presentation checks remain green on both compilers/browser. Deployed semantic
+application jobs compile the exact 216-line/5,900-byte English companion; bounded
+MCP refusal/history/source checks pass 43 in its explicit workspace. Twenty tools
+authenticate. Both output jobs have zero owned warnings; the browser retains seven
+upstream RTL warnings. Selective immutable MCP captures show wide independent cards
+and the compact stacked phone presentation.
+
+The nine-artifact LAN release restores seven exact accepted pairs/selections/views
+and retains fourteen auxiliary service identities. The necessary backend restart
+resets prior histories and remaps concurrent handles; this is not history retention.
+The main service is PID 41164, creation `2026-10-06T05:16:07.843166-04:00`, installed
+at `build/native/3.2.0/i386-win32/nyx_studio_server.exe`, serving
+`build/container-presentations/release/web`. HTTP binds all interfaces; MCP remains
+loopback. Sixteen served web hashes match. `.local/container-refresh-20261006/`
+owns exact seven-pair backups, identity, manifest, rollback, mapping, bounded build
+receipts and the independent English **Container workshop** project. It supersedes
+the manual release and subsequent Studio/worker overlays. Never rerun their scripts.
+Primary revision 2 remains exact; Container workshop is selected at revision 5.
+
+This integrated batch is ended. Authoring no-closure advances 21→22 once; workflow
+9, codegen 28, renderer 3 and delivery 1 remain. No original criterion closes and
+the original prerequisites remain hard gates. Stop local container/parser/fixture
+expansion. Next declare the ownership/publication gate for original criterion 1's
+alternate view structures, then complete ordinary editor/parity/accessibility/
+performance/delivery and their unaccepted prerequisites. Current logical axes use
+horizontal writing; physical phone input, other widgetsets/DPI, assistive technology
+and performance budgets remain unqualified. Checked native Studio tracing shows
+large allocation churn despite zero leaks; no release latency claim is inferred.
+
 ## Current integrated result: flow placement previews — 2026-10-06
 
 The [flow packet](#flow-placement-previews--2026-10-06) adds copied typed placement
@@ -9246,3 +9290,84 @@ technology and complete ordinary editor/parity/accessibility/performance remain
 unqualified. The compact select still clips text in a host capture despite its
 wider face; complete chrome typography/overflow stays open. Preserve original
 criteria and prerequisites rather than accepting this bounded preparation.
+
+## Container-aware presentations — 2026-10-06
+
+The declared gate was a named eligible ancestor with stable external allocation,
+immutable qualified runtime measurements and no portable widget/tree back edge.
+`nyx.containers` supplies distinct references, a containment enum and copied indexed
+snapshots. `QueryContainer`/`Containment` are static configuration; named `Within`
+conditions reuse the typed viewport axes. Browser `ResizeObserver` content boxes
+and Win32 logical allocation publish actual dimensions. Unmeasured/hidden boxes
+remain absent, self never matches, and nearest missing boxes never fall through.
+Full-size containment supports orientation without using child natural height.
+
+Persistence accepts strict registry version three and retains earlier versions.
+Source generation/admission uses managed specialized controls and typed fluent
+constructs. Effective bound admission independently partitions the host and each
+actual eligible ancestor, correlates shared publishers, includes absent boxes and
+checks both targets/manual choices under the existing 65,536-region budget. A
+late conflicting group leaves both accepted files and revision unchanged.
+Studio uses public Nyx inputs for publisher metadata and shared conditions; actual
+Inspector callbacks run through its ordinary paired processor/worker and one Undo.
+
+Evidence and reproduction:
+
+- Compose `tests/container-review.operations.json` in an explicit empty workspace
+  with `nyx_transaction`. `nyx_container_mcp_review` reads bounded source windows,
+  refuses wrong families/conflicting bounds, checks grouped history and exports
+  exact accepted bytes. Explicit optional workspace routing never follows editor
+  navigation. The isolated starter-based journey passes 53 checks; the deployed
+  empty-project journey passes 43, with fewer source windows. Both end leak-free.
+- `tools/build.ps1 -Target containers` is terminal success in
+  `build/container-presentations/final-build.log`: 32 shared checks each on FPC
+  3.2.0 and matched 3.3.1; actual Win32 27 on unchanged MCP source and another 27
+  on a compiled Unicode-name export. Supplementary query names persist, generate,
+  compile and select actual controls, without changing the English starter text.
+- Actual browser consumers pass 32 contracts and 27 English controls; the compiled
+  Unicode-name consumer also passes 27. Allocation changes at fixed host width
+  preserve memo objects, independent drafts, focus/ranges and accepted document
+  bytes. Full-size frames change orientation under ordinary stretch/flex allocation.
+- Existing presentation contracts pass 72 per compiler and actual browser;
+  compiled presentation-name checks remain 2 per native compiler. Existing native
+  controls pass 52. The direct profiled native Studio journey passes 30, including
+  the new named-container Inspector field; browser Studio passes 74 per desktop
+  and exact-390 iframe host through the ordinary worker, retained inputs and Undo.
+  The early checked native runs were stopped by exact fixture identity while
+  diagnosing slow progress, so their interrupted orchestration is not a passing
+  build. The final instrumentation run completes with zero leaks. Its 78,152,553
+  cumulative allocations/~1.91 GB of cumulative allocation are a performance gap,
+  not a peak-memory or release-latency result. No dependency source was edited.
+- Deployed MCP composes an independent English **Container workshop** in one group,
+  with a whole-view compact rule stacking the same reusable cards on narrow hosts.
+  Its exact 216-line/5,900-byte companion has MD5
+  `f3869b122f2c2dee21432e2b5098aa57`. Browser job
+  `70FC0315-14AF-4DA7-ACB4-4D5AFBEE09E2` and native job
+  `EC7831EE-A7D0-448D-9365-914BBB51473B` succeed at revision 5 with matching downloaded
+  source, current source/output and zero errors/owned warnings. Browser warnings
+  are the existing seven upstream `classes.pas` cases; native warnings are zero.
+- Immutable `nyx_preview` captures at 1000×780 and 390×900 show independent wide/
+  compact cards and the stacked narrow layout. These are semantic captures, not
+  editor screenshot automation. The 76-kind reference is regenerated from metadata.
+- The reviewed nine-artifact release needs the new backend for version-three
+  admission. It checks exact process/listener identity before stopping only the
+  main server, retains fourteen auxiliary services and restores all seven accepted
+  pairs/selections/views. No pending draft existed. Main primary revision 2 stays
+  exact. Previous concurrent histories reset, handles remap and each imported
+  project has one import Undo; the previous Move redo history is not retained.
+  This delivery limitation remains open. Sixteen loopback/LAN web hashes match;
+  twenty tools authenticate and the new demo is the seventh concurrent project.
+  `.local/container-refresh-20261006/` owns current private receipts and rollback.
+
+The isolated container server remains PID 36516, creation
+`2026-10-06T04:47:55.226782-04:00`, loopback HTTP 19688/MCP 19689, with its frozen
+repository and qualified test web root under `build/container-presentations/`.
+The LAN closure is the current top-of-file identity. Earlier overlays/release
+scripts are obsolete. Native named handles are not requalified in this chat;
+the current Pascal semantic client remains the primary workflow.
+
+No full criterion closes. Authoring no-closure advances 21→22 once, with other
+owners unchanged. The original hard prerequisites remain unaccepted. Container
+scalar scopes are integrated; anonymous container convenience, alternate child
+structures, vertical writing, other widgetsets/DPI, hardware/IME/assistive input
+and complete performance/editor/accessibility/delivery remain open. End this packet.

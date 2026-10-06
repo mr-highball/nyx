@@ -36,6 +36,7 @@ uses
   nyx.types,
   nyx.responsive,
   nyx.presentations,
+  nyx.containers,
   nyx.layout.policy,
   nyx.layout.constraints,
   nyx.state,
@@ -124,6 +125,10 @@ type
     FRawOwnership: Boolean;
     function GetConfigure: TNyxNodeConfig;
     function GetPresentationSnapshot: INyxPresentationSnapshot;
+    function GetQueryContainer: TNyxContainerRef;
+    function GetContainerContainment: TNyxContainerContainment;
+    function ContainerMatches(const ACondition: TNyxPresentationCondition;
+      const AMeasurements: INyxContainerSnapshot): Boolean;
     function GetContract: TNyxContract;
     function GetBindingConfig: TNyxNodeBindings;
     function GetBindingCount: Integer;
@@ -193,6 +198,15 @@ type
       common/concrete target group. Neither source nor authored Props changes. }
     function ApplyViewport(AWidth, AHeight: Double; APlatform: TNyxPlatform;
       const ASelection: TNyxPresentationSelection): Boolean; overload;
+    { Adapters provide immutable actual content-box measurements for named
+      container definitions. The compatibility overload leaves them inactive. }
+    function ApplyViewport(AWidth, AHeight: Double; APlatform: TNyxPlatform;
+      const ASelection: TNyxPresentationSelection;
+      const AMeasurements: INyxContainerSnapshot): Boolean; overload;
+    { A publisher is static portable metadata. Descendants query an eligible
+      ancestor; these values cannot be conditional or state-bound. }
+    property QueryContainer: TNyxContainerRef read GetQueryContainer;
+    property ContainerContainment: TNyxContainerContainment read GetContainerContainment;
     { Realization copies document definitions once, sharing this immutable value
       snapshot among descendants. It has no document/tree backreference. Binding
       is allowed only on realized nodes; retained views can outlive their source. }
@@ -320,6 +334,12 @@ type
     { Select a document-owned named condition. Other scope selection replaces
       it; ForPlatform preserves it. No condition is duplicated onto a control. }
     function WhenPresentation(const AReference: TNyxPresentationRef): TNyxNodeConfig;
+    { Publish externally allocated space under an exact application reference.
+      Width containment is the default. Only ordinary layout hosts publish. }
+    function QueryContainer(const AReference: TNyxContainerRef): TNyxNodeConfig;
+    { Ignore child intrinsic contributions on width or both axes. Explicit/fill
+      allocation and bounds still apply; this declaration remains unconditional. }
+    function Containment(AValue: TNyxContainerContainment): TNyxNodeConfig;
     function SplitOrientation(AValue: TNyxSplitOrientation): TNyxNodeConfig;
     function SplitPosition(APercent: Integer): TNyxNodeConfig;
     function SplitMinimum(APercent: Integer): TNyxNodeConfig;
@@ -1366,6 +1386,16 @@ begin
   Result := Put(atTouchBehavior, NyxTouchBehaviorName(AValue));
 end;
 
+function TNyxNodeConfig.QueryContainer(const AReference: TNyxContainerRef): TNyxNodeConfig;
+begin
+  Result := Put(atQueryContainer, AReference.Name);
+end;
+
+function TNyxNodeConfig.Containment(AValue: TNyxContainerContainment): TNyxNodeConfig;
+begin
+  Result := Put(atContainerContainment, NyxContainerContainmentName(AValue));
+end;
+
 function TNyxNodeConfig.Put(AKey: TNyxAttribute;
   const AValue: TNyxText): TNyxNodeConfig;
 begin
@@ -1992,6 +2022,79 @@ end;
 
 function TNyxNode.ApplyViewport(AWidth, AHeight: Double; APlatform: TNyxPlatform;
   const ASelection: TNyxPresentationSelection): Boolean;
+begin
+  Result := ApplyViewport(AWidth, AHeight, APlatform, ASelection, nil);
+end;
+
+function TNyxNode.GetQueryContainer: TNyxContainerRef;
+var
+  LName: TNyxText;
+begin
+  Result := Default(TNyxContainerRef);
+  LName := Prop('query-container');
+
+  if LName <> '' then
+  begin
+    Result := NyxContainer(LName);
+  end;
+end;
+
+function TNyxNode.GetContainerContainment: TNyxContainerContainment;
+var
+  LValue: TNyxText;
+begin
+  LValue := Prop('container-containment');
+  Result := nccWidth;
+
+  if LValue = '' then
+  begin
+    Exit;
+  end;
+
+  if not TryNyxContainerContainment(LValue, Result) then
+  begin
+    raise ENyxModel.Create('Unknown query container containment on ' + ID);
+  end;
+end;
+
+function TNyxNode.ContainerMatches(const ACondition: TNyxPresentationCondition;
+  const AMeasurements: INyxContainerSnapshot): Boolean;
+var
+  LAncestor: TNyxNode;
+  LReference: TNyxContainerRef;
+  LWidth, LHeight: Double;
+begin
+  Result := False;
+
+  if AMeasurements = nil then
+  begin
+    Exit;
+  end;
+  LAncestor := Parent;
+  while LAncestor <> nil do
+  begin
+    LReference := LAncestor.QueryContainer;
+
+    if LReference.Defined and (LReference.Name = ACondition.Container.Name) and
+      NyxContainerEligible(LAncestor.ContainerContainment, ACondition.Viewport) then
+    begin
+      { Stop at the nearest eligible publisher even if it has no current box.
+        Outer instances cannot silently supply geometry for an unmounted child. }
+      Result := AMeasurements.TrySize(LAncestor.ID, LWidth, LHeight);
+
+      if Result then
+      begin
+        Result := ACondition.Viewport.Matches(LWidth, LHeight);
+      end;
+      Exit;
+    end;
+    LAncestor := LAncestor.Parent;
+  end;
+end;
+
+function TNyxNode.ApplyViewport(AWidth, AHeight: Double; APlatform: TNyxPlatform;
+  const ASelection: TNyxPresentationSelection;
+  const AMeasurements: INyxContainerSnapshot): Boolean;
 var
   LValues: TNyxStrings;
   LCondition: TNyxPresentationCondition;
@@ -2035,7 +2138,15 @@ begin
           end
           else
           begin
-            LMatches := not Odd(LPhase) and LCondition.Viewport.Matches(AWidth, AHeight);
+
+            if LCondition.Container.Defined then
+            begin
+              LMatches := not Odd(LPhase) and ContainerMatches(LCondition, AMeasurements);
+            end
+            else
+            begin
+              LMatches := not Odd(LPhase) and LCondition.Viewport.Matches(AWidth, AHeight);
+            end;
           end;
         end;
 
@@ -2075,7 +2186,7 @@ begin
   end;
   for LIndex := 0 to Count - 1 do
   begin
-    Result := Children[LIndex].ApplyViewport(AWidth, AHeight, APlatform, ASelection) or Result;
+    Result := Children[LIndex].ApplyViewport(AWidth, AHeight, APlatform, ASelection, AMeasurements) or Result;
   end;
 end;
 

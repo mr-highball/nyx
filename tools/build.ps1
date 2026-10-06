@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -56,6 +56,8 @@ param(
   [string]$MoveSourceDirectory = 'build/move-snapping/mcp-source',
 
   [string]$FlowSourceDirectory = 'build/flow-placement/mcp-source',
+  # The container companion is composed and exported through bounded MCP reads.
+  [string]$ContainerSourceDirectory = 'build/container-presentations/mcp-source',
   # The maintained semantic callback journey exports two accepted source pairs.
   [string]$CallbackSourceDirectory = 'build/agent-callbacks/mcp',
   # Exact companion exported by the semantic handler/compilation journey.
@@ -1463,6 +1465,85 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxCollectionAgentHost") -Destination $nyxCollectionAgentBrowser
     }
     Write-Host 'Semantic collection consumers staged; browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'containers') {
+    # Pascal owns allocation, ancestry, admission, history and actual controls.
+    # This target stages browser consumers and never launches a service.
+    $nyxContainerRoot = Join-Path $nyxRoot 'build/container-presentations'
+    $nyxContainerSource = [IO.Path]::GetFullPath($ContainerSourceDirectory)
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxContainerSource 'nyx.generated.view.pas'))) {
+      throw 'Export the container MCP companion before building physical consumers'
+    }
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxContainerStable = Join-Path $nyxContainerRoot 'stable'
+    $nyxContainerMatched = Join-Path $nyxContainerRoot 'matched'
+    $nyxContainerNative = Join-Path $nyxContainerRoot 'native'
+    $nyxContainerDriver = Join-Path $nyxContainerRoot 'driver'
+    $nyxContainerBrowser = Join-Path $nyxContainerRoot 'web'
+    if ($BrowserOutput) { $nyxContainerBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxContainerStable, $nyxContainerMatched,
+      $nyxContainerNative, $nyxContainerDriver, $nyxContainerBrowser | Out-Null
+    $nyxContainerFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxContainerSource")
+    foreach ($nyxContainerCompiler in @(@($nyxFpc, $nyxContainerStable), @($nyxLclFpc, $nyxContainerMatched))) {
+      $nyxContainerUnicodeExport = Join-Path $nyxContainerCompiler[1] 'unicode'
+      New-Item -ItemType Directory -Force $nyxContainerUnicodeExport | Out-Null
+      Invoke-NyxCompiler $nyxContainerCompiler[0] ($nyxContainerFlags + @(
+        "-FU$($nyxContainerCompiler[1])", "-FE$($nyxContainerCompiler[1])", 'tests/nyx_container_tests.lpr'))
+      & (Join-Path $nyxContainerCompiler[1] 'nyx_container_tests.exe') (Join-Path $nyxContainerUnicodeExport 'nyx.generated.view.pas')
+      if ($LASTEXITCODE -ne 0) { throw 'Shared container contract failed' }
+    }
+    $nyxContainerUnicode = Join-Path $nyxContainerStable 'unicode'
+    if ((Get-FileHash -LiteralPath (Join-Path $nyxContainerUnicode 'nyx.generated.view.pas')).Hash -cne
+      (Get-FileHash -LiteralPath (Join-Path $nyxContainerMatched 'unicode/nyx.generated.view.pas')).Hash) {
+      throw 'Compiler Unicode container exports differ'
+    }
+    $nyxContainerPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc ($nyxContainerFlags + @(
+      "-Fu$nyxLazarus/lcl/units/$nyxContainerPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxContainerPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxContainerPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxContainerPlatform",
+      "-FU$nyxContainerNative", "-FE$nyxContainerNative", 'tests/nyx_container_controls.lpr'))
+    & (Join-Path $nyxContainerNative 'nyx_container_controls.exe') (Join-Path $nyxContainerNative 'containers.png')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native container allocation failed' }
+    # Recompile the same physical consumer against the exact exported Unicode
+    # name. Separate units prevent an earlier English companion from satisfying it.
+    $nyxContainerUnicodeNative = Join-Path $nyxContainerRoot 'unicode-native'
+    New-Item -ItemType Directory -Force $nyxContainerUnicodeNative | Out-Null
+    $nyxContainerUnicodeFlags = @($nyxContainerFlags | Where-Object { $_ -ne "-Fu$nyxContainerSource" })
+    Invoke-NyxCompiler $nyxLclFpc ($nyxContainerUnicodeFlags + @(
+      "-Fu$nyxContainerUnicode", "-Fu$nyxLazarus/lcl/units/$nyxContainerPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxContainerPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxContainerPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxContainerPlatform",
+      "-FU$nyxContainerUnicodeNative", "-FE$nyxContainerUnicodeNative", 'tests/nyx_container_controls.lpr'))
+    & (Join-Path $nyxContainerUnicodeNative 'nyx_container_controls.exe') (Join-Path $nyxContainerUnicodeNative 'containers.png')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native Unicode container name failed' }
+    foreach ($nyxContainerDriverProgram in @('tests/nyx_container_mcp_review.lpr', 'tests/nyx_responsive_browser_review.lpr')) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxContainerFlags + @(
+        "-FU$nyxContainerDriver", "-FE$nyxContainerDriver", $nyxContainerDriverProgram))
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxContainerProgram in @('tests/nyx_container_tests.lpr', 'tests/nyx_container_controls.lpr', 'studio/nyx_studio.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
+        '-Futests', "-Fu$nyxContainerSource", '-Jirtl.js', "-FE$nyxContainerBrowser", $nyxContainerProgram)
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxContainerBrowser 'rtl.js')
+    $nyxContainerUnicodeBrowser = Join-Path $nyxContainerBrowser 'unicode'
+    New-Item -ItemType Directory -Force $nyxContainerUnicodeBrowser | Out-Null
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
+      '-Futests', "-Fu$nyxContainerUnicode", '-Jirtl.js', "-FE$nyxContainerUnicodeBrowser", 'tests/nyx_container_controls.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxContainerUnicodeBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/containers.html') -Destination $nyxContainerUnicodeBrowser
+    foreach ($nyxContainerHost in @('containers.html', 'container-tests.html', 'index.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxContainerHost") -Destination $nyxContainerBrowser
+    }
+    Write-Host 'Container browser consumers, Studio and matched worker staged; execution requires an admitted HTTP host.'
     exit 0
   }
 

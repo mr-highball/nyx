@@ -38,6 +38,7 @@ uses
   Web,
   nyx.model,
   nyx.presentations,
+  nyx.containers,
   nyx.interaction,
   nyx.editing,
   nyx.editing.browser,
@@ -100,6 +101,11 @@ type
     FElement: TJSHTMLElement;
     FInput: TJSHTMLElement;
     FCaption: TJSHTMLElement;
+    { Copied ResizeObserver content-box data, never a transformed screen box.
+      Absent until the observer reports this mounted face. }
+    FContainerMeasured: Boolean;
+    FContainerWidth: Double;
+    FContainerHeight: Double;
     FLastValue: TNyxText;
     FHasValueBaseline: Boolean;
     { Literal rows have their own baseline. An unrelated state publication must
@@ -206,6 +212,7 @@ type
     function GetPresentationView: INyxPresentationView;
     procedure SetPresentationSelection(const AValue: TNyxPresentationSelection);
     procedure ObserveViewport;
+    function MeasureContainers: INyxContainerSnapshot;
     procedure ViewportChanged(AEntries: TJSHTMLResizeObserverEntryArray;
       AObserver: TJSHTMLResizeObserver);
     FDesignMode: Boolean;
@@ -1944,6 +1951,8 @@ begin
 end;
 
 procedure TNyxBrowserRenderer.ObserveViewport;
+var
+  LIndex: Integer;
 begin
 
   if FViewportObserver <> nil then
@@ -1956,6 +1965,14 @@ begin
   begin
     FViewportObserver := TJSHTMLResizeObserver.new(@ViewportChanged);
     FViewportObserver.observe(FHost);
+    for LIndex := 0 to High(FBindings) do
+    begin
+
+      if FBindings[LIndex].FNode.QueryContainer.Defined then
+      begin
+        FViewportObserver.observe(FBindings[LIndex].FElement);
+      end;
+    end;
   end;
 end;
 
@@ -1964,6 +1981,9 @@ procedure TNyxBrowserRenderer.ViewportChanged(AEntries: TJSHTMLResizeObserverEnt
 var
   LWidth: Double;
   LHeight: Double;
+  LIndex: Integer;
+  LContainerChanged: Boolean;
+  LBindingIndex: Integer;
 begin
 
   if (AObserver <> FViewportObserver) or (FHost = nil) or (FRoot = nil) then
@@ -1972,14 +1992,61 @@ begin
   end;
   LWidth := FHost.clientWidth;
   LHeight := FHost.clientHeight;
+  LContainerChanged := False;
+  for LIndex := 0 to High(AEntries) do
+  begin
+    LContainerChanged := LContainerChanged or (AEntries[LIndex].target <> FHost);
+    for LBindingIndex := 0 to High(FBindings) do
+    begin
 
-  if (LWidth <> FViewportWidth) or (LHeight <> FViewportHeight) then
+      if (AEntries[LIndex].target = FBindings[LBindingIndex].FElement) and
+        FBindings[LBindingIndex].FNode.QueryContainer.Defined then
+      begin
+        FBindings[LBindingIndex].FContainerWidth := AEntries[LIndex].contentRect.width;
+        FBindings[LBindingIndex].FContainerHeight := AEntries[LIndex].contentRect.height;
+        FBindings[LBindingIndex].FContainerMeasured := True;
+        Break;
+      end;
+    end;
+  end;
+
+  if LContainerChanged or (LWidth <> FViewportWidth) or (LHeight <> FViewportHeight) then
   begin
     FViewportWidth := LWidth;
     FViewportHeight := LHeight;
     Sync;
     UpdateResizePreview;
   end;
+end;
+
+function TNyxBrowserRenderer.MeasureContainers: INyxContainerSnapshot;
+var
+  LMeasurements: TNyxContainerMeasurements;
+  LIndex, LCount: Integer;
+  LElement: TJSHTMLElement;
+begin
+  LMeasurements := nil;
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if not FBindings[LIndex].FNode.QueryContainer.Defined or
+      not FBindings[LIndex].FContainerMeasured then
+    begin
+      Continue;
+    end;
+    LElement := FBindings[LIndex].FElement;
+
+    if not document.body.contains(LElement) or (Length(LElement.getClientRects) = 0) then
+    begin
+      Continue;
+    end;
+    LCount := Length(LMeasurements);
+    SetLength(LMeasurements, LCount + 1);
+    LMeasurements[LCount].RuntimeID := FBindings[LIndex].FNode.ID;
+    LMeasurements[LCount].Width := FBindings[LIndex].FContainerWidth;
+    LMeasurements[LCount].Height := FBindings[LIndex].FContainerHeight;
+  end;
+  Result := NewNyxContainerSnapshot(LMeasurements);
 end;
 
 function TNyxBrowserRenderer.InputFor(const AID: TNyxText;
@@ -4390,7 +4457,8 @@ begin
         FViewportWidth := FHost.clientWidth;
         FViewportHeight := FHost.clientHeight;
       end;
-      FRoot.ApplyViewport(FViewportWidth, FViewportHeight, npfBrowser, FPresentationSelection);
+      FRoot.ApplyViewport(FViewportWidth, FViewportHeight, npfBrowser,
+        FPresentationSelection, MeasureContainers);
     end;
     for LIndex := 0 to Length(FBindings) - 1 do
     begin
@@ -4399,6 +4467,20 @@ begin
       LControl := LBinding.FElement;
       LControl.setAttribute('data-variant', LNode.Prop('variant'));
       LControl.title := LNode.Prop('hint');
+      LControl.style.removeProperty('container-type');
+
+      if LNode.QueryContainer.Defined then
+      begin
+
+        if LNode.ContainerContainment = nccSize then
+        begin
+          LControl.style.setProperty('container-type', 'size');
+        end
+        else
+        begin
+          LControl.style.setProperty('container-type', 'inline-size');
+        end;
+      end;
       LControl.draggable := not FDesignMode and (LNode.Prop('drag-source') = 'true');
       LControl.style.setProperty('touch-action', LNode.Prop('touch-behavior', 'auto'));
 

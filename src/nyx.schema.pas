@@ -34,6 +34,7 @@ uses
   nyx.types,
   nyx.responsive,
   nyx.presentations,
+  nyx.containers,
   nyx.contract,
   nyx.event.payload,
   nyx.state,
@@ -1032,7 +1033,8 @@ begin
           LDescription := 'Image source/alternative text requires an image projection.';
         end;
       end;
-    atLayout, atGap, atColumns, atFlowWrap, atCrossAlignment, atJustification:
+    atLayout, atGap, atColumns, atFlowWrap, atCrossAlignment, atJustification,
+      atQueryContainer, atContainerContainment:
       begin
 
         if not AInfo.Container or (AKind = 'split-view') then
@@ -1055,6 +1057,16 @@ begin
         begin
           LDescription := 'Logical cross/main-axis alignment applies to row/column ' +
             'flow. Start/end preserve authored order; grid/absolute retain the choice.';
+        end
+        else if AAttribute = atQueryContainer then
+        begin
+          LDescription := 'Exact named content-box publisher for descendant presentations. ' +
+            'The nearest eligible ancestor is used independently in each reusable instance.';
+        end
+        else if AAttribute = atContainerContainment then
+        begin
+          LDescription := 'Width containment removes child intrinsic width; size does so on both axes. ' +
+            'External allocation and explicit bounds still apply. Height/orientation queries require size.';
         end;
       end;
     atPadding:
@@ -1518,6 +1530,8 @@ begin
   Add('width-sizing', 'Width sizing', npChoice, 'auto', 'auto' + #10 + 'content' + #10 + 'fill');
   Add('height-sizing', 'Height sizing', npChoice, 'auto', 'auto' + #10 + 'content' + #10 + 'fill');
   Add('flow-wrap', 'Row wrapping', npChoice, 'auto', 'auto' + #10 + 'nowrap' + #10 + 'wrap');
+  Add('query-container', 'Query container name', npText);
+  Add('container-containment', 'Query containment', npChoice, 'width', 'width' + #10 + 'size');
   Add('cross-alignment', 'Cross-axis alignment', npChoice, 'auto',
     'auto' + #10 + 'start' + #10 + 'center' + #10 + 'end' + #10 + 'stretch');
   Add('justification', 'Main-axis alignment', npChoice, 'start',
@@ -2571,6 +2585,9 @@ end;
 
 procedure ValidateNyxProperties(ANode: TNyxNode; ADocument: TNyxDocument);
 var
+  LQueryContainer: TNyxContainerRef;
+  LContainment: TNyxContainerContainment;
+  LPrimitive: TNyxPrimitiveInfo;
   LProperties: TNyxPropertyInfos;
   LIndex: Integer;
   LValue: TNyxText;
@@ -2632,6 +2649,19 @@ var
 begin
   ANode.Contract.Validate;
   ValidateNyxCallbacks(ANode);
+  LQueryContainer := ANode.QueryContainer;
+
+  if (ANode.Prop('container-containment') <> '') and
+    not TryNyxContainerContainment(ANode.Prop('container-containment'), LContainment) then
+  begin
+    raise ENyxModel.Create('Unknown query containment on ' + ANode.ID);
+  end;
+
+  if LQueryContainer.Defined and FindNyxPrimitive(ANode.ProjectionKind, LPrimitive) and
+    (not LPrimitive.Container or (ANode.ProjectionKind = 'split-view')) then
+  begin
+    raise ENyxModel.Create('A query publisher requires an ordinary layout host: ' + ANode.ID);
+  end;
   LDomain := NyxNodeValueDomain(ANode);
   CheckFamily(LDomain, IntrinsicValueDomain(ANode));
 
@@ -2858,7 +2888,8 @@ var
   var
     LChildIndex: Integer;
   begin
-    Result := (ANode.Kind = 'slot-override') or (ANode.BindingCount > 0) or
+    Result := (ANode.Kind = 'slot-override') or (ANode.Kind = 'component') or
+      ANode.QueryContainer.Defined or (ANode.BindingCount > 0) or
       ANode.HasCollectionView;
     for LChildIndex := 0 to ANode.Count - 1 do
     begin
@@ -2891,6 +2922,9 @@ var
         ValidateNyxCollectionViewSnapshot(ADocument.Collections.Snapshot(ANode.CollectionView.Key),
           ANode.CollectionView, NyxCollectionProjectionForNode(ANode));
       end;
+      { Effective reusable ancestry can introduce or change a query publisher.
+        Check those constraint combinations before paired candidate admission. }
+      ValidateNyxViewportBounds(ANode, ADocument.Presentations);
       for LChildIndex := 0 to ANode.Count - 1 do
       begin
         CheckHosts(ANode.Children[LChildIndex]);

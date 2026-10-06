@@ -139,13 +139,16 @@ refuse before changing the view. A retained capability does not retain its view;
 unmount retires its borrowed receivers, `Connected` becomes false, and further
 selection reads or changes raise `ENyxPresentation`.
 
-Definitions use `TNyxPresentationCondition` for complete automatic/manual
-inspection. The earlier `Condition` viewport accessor refuses manual definitions.
-Automatic-only registries preserve their exact nested version-one wire shape.
-A registry containing a manual definition uses nested version two, adding the
+Definitions use `TNyxPresentationCondition` for complete automatic/manual/container
+inspection. The earlier `Condition` viewport accessor refuses manual and container
+definitions. Whole-view automatic-only registries preserve their exact nested
+version-one wire shape. A registry with manual definitions and no container uses
+nested version two, adding the
 closed `activation` choice to each entry. Manual entries require all bounds zero
 and orientation Any; contradictory hidden predicates refuse. The outer document
-remains version four. Existing automatic generated Pascal stays unchanged.
+remains version four. Container definitions use nested version three, described
+in [the container contract](containers.md). Existing automatic condition expressions
+stay unchanged.
 
 The Nyx-built Inspector exposes shared definitions for leaf and layout controls.
 Use the condition fields to **Define or update presentation**, choose a shared
@@ -168,11 +171,12 @@ omission/null uses automatic/defaults. Its immutable preview does not change
 the observing editor's choice. The maintained English semantic fixture is
 [manual-presentation-review.operations.json](../tests/manual-presentation-review.operations.json).
 
-Named automatic predicates use the rendering host rectangle. Container-relative
-conditions and alternate structural view trees remain open authoring work.
-Container allocation must avoid feedback from descendant natural measurement;
-reading a nested control's current size alone cannot establish that contract.
-No physical device identity is inferred.
+Named automatic predicates normally use the rendering host rectangle.
+[Container-aware presentations](containers.md) instead select the nearest
+eligible named ancestor's measured content box through typed `Within` conditions
+and static width/full-size containment. Independent reusable instances can adapt
+at one unchanged host size. Alternate structural view trees remain open authoring
+work. No physical device identity is inferred.
 
 Presentation first uses ordinary defaults and fixed target overrides. Matching
 common automatic properties apply, followed by the selected common manual

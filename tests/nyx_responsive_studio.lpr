@@ -111,8 +111,14 @@ begin
   LForm.Show;
   LStudio := TNyxNativeStudio.Create(LForm, ParamStr(1));
   try
+    WriteLn('Native presentation: load project');
+    Flush(Output);
     LStudio.LoadProject(LPair);
+    WriteLn('Native presentation: mount Studio');
+    Flush(Output);
     LStudio.Run;
+    WriteLn('Native presentation: settle initial presentation');
+    Flush(Output);
     Pump;
     TControlAccess(LStudio.CanvasView.ControlFor('workspace')).Click;
     Pump;
@@ -260,6 +266,26 @@ begin
       'One actual native Undo restores the exact source before manual definition editing');
     Check(LStudio.CanvasView.InputFor('notes-editor') = LMemo,
       'Undo of manual definition editing retains the native canvas input');
+    { Exercise the new field through the actual Nyx Inspector and paired
+      processor. The physical container consumer separately qualifies allocated
+      geometry; this missing publisher deliberately remains inactive. }
+    TEdit(LStudio.ShellView.InputFor(NyxStudioPresentationNameID)).Text := 'compact';
+    TEdit(LStudio.ShellView.InputFor(NyxStudioPresentationContainerID)).Text := 'workspace space';
+    LLayout := TComboBox(LStudio.ShellView.InputFor(NyxStudioPresentationActivationID));
+    LLayout.ItemIndex := LLayout.Items.IndexOf('automatic');
+    LLayout.OnChange(LLayout);
+    TControlAccess(LStudio.ShellView.ControlFor(NyxStudioPresentationDefineID)).Click;
+    Pump;
+    Check(LStudio.Session.Document.Presentations.Definition(NyxPresentation('compact')).Container.Name =
+      'workspace space', 'Actual native Inspector captures the exact named container');
+    Check(Pos('TNyxPresentationCondition.Within(NyxContainer(''workspace space'')',
+      LStudio.Session.ProjectSnapshot.Source) > 0, 'Native Inspector generates the fluent container construct');
+    Check((LStudio.CanvasView.InputFor('notes-editor') = LMemo) and
+      (LMemo.Text = 'Retain this independent English draft.'), 'Container authoring retains the actual native input');
+    TControlAccess(LStudio.ShellView.ControlFor('action-undo')).Click;
+    Pump;
+    Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
+      'One native Undo restores the exact pair before container definition editing');
     {$endif}
     WriteLn('PASS ', LChecks, ' actual Studio responsive authoring checks');
   finally

@@ -48,6 +48,26 @@ the present Windows installation; the Pascal semantic client is usable immediate
 - Underlying callback/state/source/build behavior remains with its existing owners;
   expose only qualified operations and retain their original acceptance criteria.
 
+## Container presentation workflow — 2026-10-06
+
+The existing twenty-tool contract now accepts optional exact container names in
+shared definitions and typed publisher metadata in grouped mutations. Bounded
+source windows, explicit workspace routing, wrong-family/bound refusal and paired
+Undo/Redo are qualified through the authenticated Pascal consumer. Deployed
+application jobs compile exact exported bytes; selective MCP captures remain
+immutable. The new consumer explicitly retires its transport. Original criteria
+and no-closure 9 remain; product completion belongs to the existing owners.
+
+Missing semantic context: authored presentation definitions/properties are
+queryable, but allocated runtime content boxes and effective per-instance overlays
+are not exposed as a bounded diagnostic tool. Physical adapters/harnesses establish
+those facts. Keep that operation with this workflow owner rather than substituting
+screenshot-driven authoring. The CLI prints structured preview metadata and does
+not export image blocks; native MCP carries the PNG, and this local qualification
+inspects the artifact already produced by the semantic capture. Existing chat
+handles last observed the stale endpoint; current authenticated Pascal discovery
+is qualified after the release, while native-chat reconnection remains required.
+
 ## Named presentation workflow — 2026-10-06
 
 The primary semantic journey now discovers twenty authenticated tools, creates

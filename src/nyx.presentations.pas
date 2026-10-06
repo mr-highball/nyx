@@ -26,7 +26,7 @@ unit nyx.presentations;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.types, nyx.data, nyx.responsive;
+  SysUtils, nyx.text, nyx.types, nyx.data, nyx.responsive, nyx.containers;
 
 const
   NyxMaximumPresentations = 64;
@@ -52,7 +52,7 @@ type
     property Defined: Boolean read GetDefined;
   end;
 
-  { A presentation is either selected automatically by available host space or
+  { A presentation is either selected automatically by available host/container space or
     explicitly by the application/editor. Manual definitions deliberately carry
     no hidden viewport predicate. The default record is an automatic Any value;
     registry admission refuses it because ordinary configuration owns defaults. }
@@ -61,8 +61,13 @@ type
   private
     FActivation: TNyxPresentationActivation;
     FViewport: TNyxViewportCondition;
+    FContainer: TNyxContainerRef;
   public
     class function Automatic(const AViewport: TNyxViewportCondition): TNyxPresentationCondition; static;
+    { Match the nearest eligible named ancestor's measured content box. Missing
+      publishers/measurements remain inactive; self is never its own container. }
+    class function Within(const AContainer: TNyxContainerRef;
+      const ACondition: TNyxViewportCondition): TNyxPresentationCondition; static;
     class function Manual: TNyxPresentationCondition; static;
     function Same(const AOther: TNyxPresentationCondition): Boolean;
     function Caption: TNyxText;
@@ -71,6 +76,7 @@ type
     { Manual returns Any here for geometry inspection only. It never becomes
       active through Matches; selection must be evaluated separately. }
     property Viewport: TNyxViewportCondition read FViewport;
+    property Container: TNyxContainerRef read FContainer;
   end;
 
   { Copied, exclusive view-local manual choice. Automatic host presentations
@@ -319,9 +325,27 @@ begin
   Result.FActivation := npaManual;
 end;
 
+class function TNyxPresentationCondition.Within(const AContainer: TNyxContainerRef;
+  const ACondition: TNyxViewportCondition): TNyxPresentationCondition;
+begin
+
+  if not AContainer.Defined then
+  begin
+    raise ENyxContainer.Create('A container presentation needs a named publisher');
+  end;
+  Result := Automatic(ACondition);
+  Result.FContainer := AContainer;
+end;
+
 function TNyxPresentationCondition.Same(const AOther: TNyxPresentationCondition): Boolean;
 begin
-  Result := (FActivation = AOther.FActivation) and FViewport.Same(AOther.FViewport);
+  Result := (FActivation = AOther.FActivation) and FViewport.Same(AOther.FViewport) and
+    (FContainer.Defined = AOther.FContainer.Defined);
+
+  if Result and FContainer.Defined then
+  begin
+    Result := FContainer.Name = AOther.FContainer.Name;
+  end;
 end;
 
 function TNyxPresentationCondition.Caption: TNyxText;
@@ -332,6 +356,11 @@ begin
     Exit('Manual selection');
   end;
   Result := FViewport.Caption;
+
+  if FContainer.Defined then
+  begin
+    Result := TNyxText('Within ') + FContainer.Name + TNyxText(' / ') + Result;
+  end;
 end;
 
 function TNyxPresentationCondition.Pascal: TNyxText;
@@ -340,6 +369,12 @@ begin
   if FActivation = npaManual then
   begin
     Exit('TNyxPresentationCondition.Manual');
+  end;
+
+  if FContainer.Defined then
+  begin
+    Exit('TNyxPresentationCondition.Within(' + FContainer.Pascal + ', ' +
+      FViewport.PascalCondition + ')');
   end;
   { Retain the concise existing overload for automatic authored source. }
   Result := FViewport.PascalCondition;
@@ -502,9 +537,9 @@ var
 begin
   LDefinition := Definition(AReference);
 
-  if LDefinition.Activation <> npaAutomatic then
+  if (LDefinition.Activation <> npaAutomatic) or LDefinition.Container.Defined then
   begin
-    raise ENyxPresentation.Create('Manual presentations have no viewport predicate');
+    raise ENyxPresentation.Create('Only host presentations have a viewport predicate');
   end;
   Result := LDefinition.Viewport;
 end;
@@ -605,7 +640,11 @@ begin
   for LIndex := 0 to High(FEntries) do
   begin
 
-    if FEntries[LIndex].Condition.Activation = npaManual then
+    if FEntries[LIndex].Condition.Container.Defined then
+    begin
+      LVersion := 3;
+    end
+    else if (LVersion < 2) and (FEntries[LIndex].Condition.Activation = npaManual) then
     begin
       LVersion := 2;
     end;
@@ -622,7 +661,7 @@ begin
     LFields[4] := NyxField('heightMaximum', NyxData(LCondition.HeightMaximum));
     LFields[5] := NyxField('orientation', NyxData(NyxViewportOrientationName(LCondition.OrientationValue)));
 
-    if LVersion = 2 then
+    if LVersion >= 2 then
     begin
 
       if FEntries[LIndex].Condition.Activation = npaManual then
@@ -632,6 +671,16 @@ begin
       else
       begin
         LFields[6] := NyxField('activation', NyxData('automatic'));
+      end;
+    end;
+
+    if LVersion = 3 then
+    begin
+      LFields[7] := NyxField('container', NyxData(''));
+
+      if FEntries[LIndex].Condition.Container.Defined then
+      begin
+        LFields[7] := NyxField('container', NyxData(FEntries[LIndex].Condition.Container.Name));
       end;
     end;
     LItems[LIndex] := NyxObject(LFields);
@@ -659,6 +708,7 @@ var
   LHeightMaximum: Integer;
   LVersion: Integer;
   LActivation: TNyxText;
+  LContainer: TNyxText;
 
   procedure Reject;
   begin
@@ -673,7 +723,7 @@ begin
   end;
   LVersion := AData.Field('version').AsInteger;
 
-  if not (LVersion in [1, 2]) then
+  if not (LVersion in [1, 2, 3]) then
   begin
     Reject;
   end;
@@ -743,15 +793,21 @@ begin
     end;
     LActivation := 'automatic';
 
-    if LVersion = 2 then
+    if LVersion >= 2 then
     begin
       LActivation := LEntry.Field('activation').AsText;
+    end;
+    LContainer := '';
+
+    if LVersion = 3 then
+    begin
+      LContainer := LEntry.Field('container').AsText;
     end;
 
     if LActivation = 'manual' then
     begin
 
-      if not LCondition.IsAny then
+      if not LCondition.IsAny or (LContainer <> '') then
       begin
         Reject;
       end;
@@ -759,7 +815,15 @@ begin
     end
     else if LActivation = 'automatic' then
     begin
-      Result.Define(LReference, LCondition);
+
+      if LContainer <> '' then
+      begin
+        Result.Define(LReference, TNyxPresentationCondition.Within(NyxContainer(LContainer), LCondition));
+      end
+      else
+      begin
+        Result.Define(LReference, LCondition);
+      end;
     end
     else
     begin
@@ -811,9 +875,9 @@ var
 begin
   ReadNyxPresentationDefinition(AData, AReference, LDefinition);
 
-  if LDefinition.Activation <> npaAutomatic then
+  if (LDefinition.Activation <> npaAutomatic) or LDefinition.Container.Defined then
   begin
-    raise ENyxPresentation.Create('Manual presentations have no viewport predicate');
+    raise ENyxPresentation.Create('Only host presentations have a viewport predicate');
   end;
   ACondition := LDefinition.Viewport;
 end;
@@ -831,6 +895,11 @@ begin
   if AData.Count = 7 then
   begin
     LVersion := 2;
+  end;
+
+  if AData.Count = 8 then
+  begin
+    LVersion := 3;
   end;
   LDefinitions := NyxPresentationsFromData(NyxObject([
     NyxField('version', NyxData(LVersion)), NyxField('definitions', NyxArray([AData]))]));
@@ -956,9 +1025,9 @@ begin
   Result := TryNyxPresentationRule(AKey, APresentations, LCondition, APlatform, AAttribute);
   ACondition := LCondition.Viewport;
 
-  if Result and (LCondition.Activation = npaManual) then
+  if Result and ((LCondition.Activation = npaManual) or LCondition.Container.Defined) then
   begin
-    raise ENyxPresentation.Create('Use typed presentation-rule inspection for manual definitions');
+    raise ENyxPresentation.Create('Use typed presentation-rule inspection for non-host definitions');
   end;
 end;
 

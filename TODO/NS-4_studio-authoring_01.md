@@ -40,6 +40,31 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Container-aware presentations — 2026-10-06
+
+Original criterion 1 now includes named ancestor publishers, typed width/full-size
+containment and copied actual content-box measurements. External allocation avoids
+descendant intrinsic feedback; self, absent and ineligible publishers retain the
+documented ancestry semantics. Instances qualify independently. Host/container
+coordinate spaces preserve correlation and refuse contradictory bounds before
+paired publication. Studio's ordinary Nyx Inspector/worker and semantic transactions
+author the public fluent condition without introducing a second UI toolkit.
+
+Checks pass 32 per compiler/browser, 27 actual controls per target including compiled
+supplementary names, 30 native Studio and 74 per desktop/exact-390 browser Studio
+journey. Existing presentation checks pass 72 per compiler/browser. Both deployed
+MCP application jobs compile exact English source; twenty tools authenticate and
+selective MCP previews validate wide/compact cards. The LAN restart restores seven
+exact pairs/navigation states and retains fourteen auxiliary services. Prior histories
+reset and concurrent handles remap. See [evidence and limits](../WORK.md#container-aware-presentations--2026-10-06).
+
+No original criterion closes. Authoring no-closure advances **21→22** once; workflow
+**9**, codegen **28**, renderer **3**, delivery **1** remain. End local allocation/
+query/parser/fixture expansion. Alternate view structures and complete ordinary
+editor/parity/accessibility/performance/delivery remain open. Current axes assume
+horizontal writing; physical phone input, other widgetsets/DPI and assistive
+technology remain unqualified. All original prerequisites and criteria stand.
+
 ## Flow placement previews — 2026-10-06
 
 Original criterion 1 now consumes public copied placement policies, actual

@@ -33,6 +33,7 @@ uses
   nyx.types,
   nyx.responsive,
   nyx.presentations,
+  nyx.containers,
   nyx.model,
   nyx.callbacks,
   nyx.scheduler,
@@ -67,6 +68,7 @@ const
   NyxStudioViewportApplyID = 'inspector-viewport-apply';
   NyxStudioPresentationNameID = 'inspector-presentation-name';
   NyxStudioPresentationActivationID = 'inspector-presentation-activation';
+  NyxStudioPresentationContainerID = 'inspector-presentation-container';
   NyxStudioPresentationChoiceID = 'inspector-presentation-choice';
   NyxStudioPresentationAttributeID = 'inspector-presentation-attribute';
   NyxStudioPresentationPlatformID = 'inspector-presentation-platform';
@@ -273,6 +275,8 @@ begin
     .Items('automatic' + #10 + 'manual').Value('automatic').Done);
   LCard.Add(NewNyxInput(NyxStudioPresentationNameID).Configure.Text('Presentation name')
     .Placeholder('compact').Done);
+  LCard.Add(NewNyxInput(NyxStudioPresentationContainerID).Configure.Text('Query container (optional)')
+    .Placeholder('Leave empty to measure the whole view').Done);
   LCard.Add(NewNyxButton(NyxStudioPresentationDefineID).Configure.Text('Define or update presentation').Done);
   LCard.Add(NewNyxSelect(NyxStudioPresentationChoiceID).Configure.Text('Shared presentation')
     .Items(LNames).Value(LFirstName).Enabled(LNames <> '').Done);
@@ -434,6 +438,14 @@ begin
     AEdit.Action := sdaPresentation;
     AEdit.Presentation := NyxDefinePresentation(NyxPresentation(
       AShellRoot.Find(NyxStudioPresentationNameID).Prop('value')), LViewport);
+
+    if AShellRoot.Find(NyxStudioPresentationContainerID).Prop('value') <> '' then
+    begin
+      AEdit.Presentation := NyxDefinePresentation(NyxPresentation(
+        AShellRoot.Find(NyxStudioPresentationNameID).Prop('value')),
+        TNyxPresentationCondition.Within(NyxContainer(
+          AShellRoot.Find(NyxStudioPresentationContainerID).Prop('value')), LViewport));
+    end;
     Exit;
   end;
   LChoice := AShellRoot.Find(NyxStudioViewportLayoutID).Prop('value');

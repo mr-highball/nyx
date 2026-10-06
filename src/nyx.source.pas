@@ -34,6 +34,7 @@ uses
   nyx.layout.policy,
   nyx.responsive,
   nyx.presentations,
+  nyx.containers,
   nyx.layout.constraints,
   nyx.callbacks,
   nyx.model;
@@ -536,7 +537,7 @@ type
     vkSplitOrientation, vkSemanticEvent, vkTouchBehavior, vkFlowWrap,
     vkCrossAlignment, vkJustification, vkSizing, vkLayoutPolicy, vkSizeRange,
     vkSizeConstraints, vkViewportWidth, vkViewportCondition, vkViewportOrientation,
-    vkPresentationRef, vkPresentationCondition);
+    vkPresentationRef, vkPresentationCondition, vkContainerRef, vkContainerContainment);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -678,7 +679,7 @@ const
     'SplitOrientation', 'SplitPosition', 'SplitMinimum', 'SplitMaximum', 'SplitResizable',
     'DragSource', 'DropTarget', 'TouchBehavior', 'Wrap', 'Align', 'Justify',
     'WidthSizing', 'HeightSizing', 'MinimumWidth', 'MaximumWidth',
-    'MinimumHeight', 'MaximumHeight');
+    'MinimumHeight', 'MaximumHeight', 'QueryContainer', 'Containment');
   CAttributes: array[TNyxAttribute] of TNyxText = (
     'atText', 'atValue', 'atPlaceholder', 'atItems', 'atHint', 'atAccessibleName',
     'atHref', 'atSource', 'atAlt', 'atLayout', 'atPadding', 'atGap', 'atColumns',
@@ -690,7 +691,8 @@ const
     'atSplitMinimum', 'atSplitMaximum', 'atSplitResizable',
     'atDragSource', 'atDropTarget', 'atTouchBehavior', 'atFlowWrap',
     'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing',
-    'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight');
+    'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight',
+    'atQueryContainer', 'atContainerContainment');
 
 var
   { Built-in names are a finite immutable vocabulary. Initialize once at unit
@@ -1188,6 +1190,8 @@ begin
   RegisterEnum(vkTouchBehavior, Ord(ntbPanY), 'ntbPanY');
   RegisterEnum(vkTouchBehavior, Ord(ntbManipulation), 'ntbManipulation');
   RegisterEnum(vkFlowWrap, Ord(nfwAutomatic), 'nfwAutomatic');
+  RegisterEnum(vkContainerContainment, Ord(nccWidth), 'nccWidth');
+  RegisterEnum(vkContainerContainment, Ord(nccSize), 'nccSize');
   RegisterEnum(vkFlowWrap, Ord(nfwNoWrap), 'nfwNoWrap');
   RegisterEnum(vkFlowWrap, Ord(nfwWrap), 'nfwWrap');
   RegisterEnum(vkCrossAlignment, Ord(ncaAutomatic), 'ncaAutomatic');
@@ -2021,6 +2025,19 @@ begin
               end;
             end;
           end
+          else if At('Within') then
+          begin
+            Inc(FCursor);
+            LArgs := Arguments;
+
+            if (Length(LArgs) <> 2) or (LArgs[0].Kind <> vkContainerRef) or
+              (LArgs[1].Kind <> vkViewportCondition) then
+            begin
+              Fail('Within requires a query container reference and typed size condition');
+            end;
+            Result.PresentationCondition := TNyxPresentationCondition.Within(
+              NyxContainer(LArgs[0].Text), LArgs[1].ViewportCondition);
+          end
           else
           begin
             Expect('Automatic');
@@ -2419,7 +2436,12 @@ begin
           end;
         end;
 
-        if LName = 'nyxpresentation' then
+        if LName = 'nyxcontainer' then
+        begin
+          Result.Kind := vkContainerRef;
+          Result.Text := NyxContainer(Result.Text).Name;
+        end
+        else if LName = 'nyxpresentation' then
         begin
           Result.Kind := vkPresentationRef;
           Result.Text := NyxPresentation(Result.Text).Name;
@@ -3195,6 +3217,8 @@ begin
         end;
       end;
     atFlowWrap: Require(vkFlowWrap);
+    atQueryContainer: Require(vkContainerRef);
+    atContainerContainment: Require(vkContainerContainment);
     atCrossAlignment: Require(vkCrossAlignment);
     atJustification: Require(vkJustification);
     atWidthSizing, atHeightSizing: Require(vkSizing);
@@ -3329,6 +3353,8 @@ begin
     atMaximumWidth: LConfigure.MaximumWidth(LInteger);
     atMinimumHeight: LConfigure.MinimumHeight(LInteger);
     atMaximumHeight: LConfigure.MaximumHeight(LInteger);
+    atQueryContainer: LConfigure.QueryContainer(NyxContainer(LValue.Text));
+    atContainerContainment: LConfigure.Containment(TNyxContainerContainment(LValue.Ordinal));
     atLeft: LConfigure.Left(LInteger);
     atTop: LConfigure.Top(LInteger);
     atFlex: LConfigure.Flex(LInteger);

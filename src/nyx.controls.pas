@@ -33,6 +33,7 @@ uses
   nyx.types,
   nyx.responsive,
   nyx.presentations,
+  nyx.containers,
   nyx.layout.policy,
   nyx.layout.constraints,
   nyx.data,

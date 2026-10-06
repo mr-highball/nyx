@@ -89,6 +89,18 @@ begin
   Result := LFacade;
 end;
 
+function TNyxConfiguration.QueryContainer(const AReference: TNyxContainerRef): INyxConfiguration;
+begin
+  ConfigurationScope.QueryContainer(AReference);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.Containment(AValue: TNyxContainerContainment): INyxConfiguration;
+begin
+  ConfigurationScope.Containment(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
 function TNyxConfiguration.SplitOrientation(AValue: TNyxSplitOrientation): INyxConfiguration;
 begin
   ConfigurationScope.SplitOrientation(AValue);
