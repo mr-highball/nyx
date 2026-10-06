@@ -99,6 +99,12 @@ Full original criteria, ordinary Studio recipe editing/MCP observation,
 accessibility/performance and delivery remain open. The full product goal stays
 active. The next baseline is `build/content-publication/protected-main-final.json`.
 
+Implementation checkpoint `6982d1ab6640aecde8b9c93e08d8238aed160a1e` is pushed to
+`origin/hello-nyx`; exact remote equality is recorded in
+`build/content-publication/remote-checkpoint.json`. No compiler or input harness
+remains active. Continue with ordinary Studio integration, not another physical
+publication fixture. Protected live services still serve their previous release.
+
 ## Hidden nested recipe admission — 2026-10-06
 
 Owner: original NS-4 criterion 1, consuming the open NS-2 ownership prerequisite.
