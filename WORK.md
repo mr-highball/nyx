@@ -9,18 +9,28 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 ## Current return path: disk space and date qualification — 2026-10-06
 
-Previous goal turn: progress; it implemented and checked the date contract below.
-The next continuation completes 33 existing managed-source checks on an isolated
-temporary C: output after D: reports zero free bytes. Bulk generated-cache removal
-and a narrower obsolete-intermediate clean were both rejected by automatic approval
-review with reason "blocked by policy"; neither ran. Do not retry deletion/moving
-as a workaround. The user has a pending request to free at least 1 GB on D:.
+Previous goal turn: progress. The isolated temporary C: output completed all 33
+current managed-source checks with zero leaks. Checkpoint `183789f` was pushed to
+`hello-nyx`; its exact remote head and clean isolated checkout were verified.
+The third consecutive disk audit still reports zero free bytes on D:. The existing
+HTTP fixture child has an incomplete controls script and no reconstruction script;
+the current complete compiler outputs remain retained separately. Final browser
+qualification and original-worktree reconciliation are blocked pending disk space.
+The full goal remains incomplete; no product criterion or prerequisite closes.
 
-An isolated C: checkout preserves the exact current source and adds this handoff/
-guide before the authorized remote checkpoint. The original D: worktree remains
-dirty at its previous head; reconcile the two only after space returns and exact
-source comparison. Do not reset or discard user work. This checkpoint is incomplete
-qualification, not an observing update or a completed component milestone.
+Bulk generated-cache removal and a narrower obsolete-intermediate clean were both
+rejected by automatic approval review with reason "blocked by policy"; neither ran.
+Do not retry deletion/moving as a workaround. The user has a pending request to free
+at least 1 GB on D:. No new listener or protected service replacement is authorized
+by this disk workaround. The exact static/LAN service identities still match and
+the existing LAN editor responds HTTP 200; these are preservation checks, not
+successful execution of the current browser fixture.
+
+The isolated C: checkout preserves the exact current source, guide and handoff.
+The original D: worktree remains dirty at `2549f1c`; reconcile the two only after
+space returns and exact source comparison. Do not reset or discard user work.
+This checkpoint is incomplete qualification, not an observing update or a completed
+component milestone. The ignored remote/disk receipts retain the exact audit.
 
 Next deliverable: repair only the owned date fixture child's incomplete artifacts,
 finish current browser desktop/exact-390 and compiled reconstruction over the
