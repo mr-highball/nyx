@@ -3,6 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Latest user-directed review packet (2026-10-05): the current Pascal service and
+browser product closure are staged separately. Authenticated semantic discovery
+exposes nineteen tools; exact protected source/design reconstructs through FPC
+with zero leaks. Actual source-workspace interaction passes 30 desktop and 30
+390-pixel browser checks. A public modal lifetime fix preserves its mounted editor
+through expanded shell/tab refresh. Replacing the LAN service was rejected by
+automatic approval review; the old release and all eight protected process
+identities remain unchanged. A private reviewed refresh is ready for local user
+execution. Codegen criterion 3 remains open at no-closure 28; workflow 9, renderer
+3, authoring 11 and delivery 1 remain. No full criterion, goal percentage or DONE
+claim follows. See [evidence](WORK.md#reviewable-release-refresh--2026-10-05).
+
 Latest bounded source packet (2026-10-05): canvas input now shares isolated paired
 admission, carrying owned runtime/view/owner/platform and mounted-load identities.
 Fresh replay preserves typed state defaults and instance-only named parts;

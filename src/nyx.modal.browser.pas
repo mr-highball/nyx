@@ -32,7 +32,9 @@ uses
 
 type
   { Borrow Element only while this managed host is alive. Render/move a public
-    Nyx view into it; the adapter creates only the standard HTML dialog host. }
+    Nyx view into it; the adapter creates only the standard HTML dialog host.
+    Show reconnects this same owned element after surrounding host remounts;
+    its mounted descendants and editor input are retained. }
   INyxBrowserModalHost = interface(INyxModalHost)
     ['{271BE5DA-8A62-4F45-A8BC-001005005002}']
     function GetElement: TJSHTMLElement;
@@ -118,6 +120,17 @@ procedure TNyxBrowserModalHost.Show(const AOptions: TNyxModalOptions);
 begin
   { Revalidate default/untrusted record values before changing presentation. }
   AOptions.Viewport(AOptions.ViewportPercent).MaximumWidth(AOptions.WidthLimit);
+  { A Nyx view mounted into body may replace its shell while this independently
+    owned modal is closed or open. The detached dialog still owns its mounted
+    descendants. Reconnect that exact host, clear the previous top-layer state
+    and let showModal establish modality again; never recreate editor input. }
+
+  if not document.body.contains(FDialog) then
+  begin
+    FDialog.close;
+    FOpen := False;
+    document.body.appendChild(FDialog);
+  end;
   FDialog.setAttribute('aria-label', AOptions.Title);
   FDialog.style.setProperty('width', IntToStr(AOptions.ViewportPercent) + 'vw');
   FDialog.style.setProperty('height', IntToStr(AOptions.ViewportPercent) + 'dvh');

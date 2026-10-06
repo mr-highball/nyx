@@ -979,3 +979,29 @@ through a permitted host, then return to remaining general-source/reusable
 integration. No listener/deployment retry, smaller passing scope or DONE claim
 substitutes the original acceptance gates.
 See [evidence](../WORK.md#source-workspace-and-expanded-editor--2026-10-05).
+
+## Browser source workspace and requested refresh — 2026-10-05
+
+The user requested the running new version. A separately staged service now
+serves the exact backed-up active pair and authenticates nineteen semantic tools.
+The maintained Pascal browser journey passes 30 desktop and 30 exact-390 checks:
+separate Source/Compiler messages views, Expand, tab refresh while expanded,
+Close, owned cancellation, exact textarea/draft/range and focus return. The
+actual failed Expand journey found the shell had detached the independently
+owned dialog host; the public Nyx modal now reconnects that same host and its
+retained descendants before reopening. English screenshots are inspected.
+Native source-workspace 30/shared 225 evidence remains applicable; this browser
+adapter fix changes no native implementation or portable contract.
+
+Replacing the LAN service was rejected by automatic approval review with only
+`blocked by policy`. All protected service identities, the actual pair and
+revision-8 history remain unchanged. A private parsed refresh with exact process
+identity, complete staged hashes, backup/restore and rollback is ready for local
+user execution; it has not been run. No full criterion closes: criteria 1/2
+remain accepted and criterion 3 stays open, advancing no-closure **27→28** once.
+Workflow 9, renderer 3, authoring 11 and delivery 1 stay unchanged. End local
+modal/fixture expansion; finish the user-directed refresh when the local command
+is run, then return to general-source/reusable integration and broader ordinary
+editor outcomes. Physical phone keyboard, trusted Escape, accessibility, current
+full-editor/project-switching and large-project acceptance remain open.
+See [evidence](../WORK.md#reviewable-release-refresh--2026-10-05).

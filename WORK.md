@@ -7,6 +7,22 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+Current user priority: [reviewable release refresh](#reviewable-release-refresh--2026-10-05).
+The user explicitly requested the new running version. A separately staged
+Pascal service now authenticates all nineteen tools and serves the exact backed-up
+active pair. Actual browser source-workspace checks pass 30 at desktop and 30 at
+390 pixels, including retained text/range, expanded tab refresh, Close and the
+owned cancel/focus return. The public browser modal reconnects its retained host
+after a surrounding shell remount; this fixes the observed Expand failure.
+Replacing the LAN service was rejected by automatic approval review with only
+`blocked by policy`; its process, pair, revision/history and configuration remain
+unchanged. A private, parsed refresh script with qualified artifact hashes,
+exact process checks, backup/restore and rollback is ready for the user to run.
+Do not retry an equivalent launch or claim that the phone release was refreshed.
+Codegen criterion 3 remains open at no-closure 28; workflow 9, renderer 3,
+authoring 11 and delivery 1 remain. Return to canvas feedback/responsive authoring
+after the user-directed refresh; no canvas implementation changed in this batch.
+
 The preceding user-directed packet covers source workspace usability under original codegen
 criterion 3: Source/Compiler messages views and an expanded floating source
 editor with Close/Escape, retained draft/selection, project preferences and
@@ -22,7 +38,7 @@ codegen 27, renderer 3, native authoring 7 and delivery 1. Stop on lost editor
 identity/input, disabled-owner return, guessed source ownership or weakened
 publication; preserve failed evidence and the protected observing release.
 
-Current bounded packet: [reusable resize grips](#reusable-resize-grips--2026-10-05)
+Preceding bounded packet: [reusable resize grips](#reusable-resize-grips--2026-10-05)
 connects original Studio authoring criterion 1 to public Nyx pointer/key controls,
 typed snapping/bounds and one isolated paired size operation. Shared checks pass
 51 per native compiler; unchanged compiled controls pass seven and ordinary
@@ -8056,3 +8072,79 @@ The earlier automatic approval rejection remains “blocked by policy,” with n
 further reason. The phone retains its earlier observing release. Authorized
 checkpoint proof is retained privately in
 `.local/codex-restart-check/resize-remote-proof.json`.
+
+## Reviewable release refresh — 2026-10-05
+
+Owner/deliverable: the user's explicit running-version request and original
+codegen criterion 3's source-workspace interaction. Stage the current service,
+frontend, source worker, review/preview hosts and matched runtime independently;
+qualify the changed real browser path, preserve the actual user pair, then refresh
+the observing release only if the authorized service operation is allowed.
+Stop on mismatched process/closure/pair or automatic approval rejection. The
+preceding clean/pushed source checkpoint is `9a4f39ef85900dcc96a38341cc9b9633a9750225`.
+No direct canvas-feedback implementation was made before this user steering.
+
+The current checked FPC 3.2.0 Pascal server and semantic client compile into
+`build/refresh-20261005/server/`. The actual candidate listener launched on its
+own loopback ports with an isolated repository/configuration; protected services
+were untouched. Its nineteen-tool inventory authenticates through the maintained
+Pascal MCP client, and bounded `nyx_session` confirms the copied active selection,
+view, permission and draft state. The candidate's exact source/design pair matches
+the private backup byte for byte. That unchanged companion compiles and rebuilds
+its design through `nyx_design_source_consumer`, with zero unfreed blocks.
+Current Studio/module worker, review/preview and matched RTL bytes form a checked
+staged web closure. Private compile logs, inventories, served hashes and process
+identity are under the same ignored build directory. Native compilation has zero
+owned warnings; installed browser RTL warnings remain visible.
+
+The first actual browser journey failed because the shell's body remount detached
+the independently owned modal. The public browser adapter now reconnects the
+same dialog, closes its former top-layer state and calls `showModal` around the
+retained descendants. It does not construct another editor. The maintained
+`nyx_source_workspace_browser.lpr` now passes **30 desktop / 30 exact-390** real
+DOM checks, including pending English text, exact textarea/range, independent
+messages space, substantial expanded editor height, tab refresh while expanded,
+explicit Close and cancellable owned return/focus. Both final screenshots are
+inspected. Fixture declaration failures and the real failed modal capture are
+retained, not overwritten by passing evidence. The installed RTL was not edited.
+The existing source-editor build target now stages the browser fixture and host.
+
+Relevant native source-workspace evidence (30 actual Win32 / 225 shared on each
+native compiler) remains applicable: the fix changes only the browser modal
+adapter. Current browser compilation and source-workspace execution do not
+qualify full observing-editor interaction, isolated-worker admission, every
+recent feature, project switching, physical phone keyboard/trusted Escape,
+assistive technology, complete parity or large-project responsiveness.
+
+The replacement command for the exact production process was rejected before
+execution by automatic approval review, with the sole reason **blocked by
+policy**. No equivalent replacement was attempted afterward. All eight protected
+PID/executable/start identities still match; the actual pair remains byte-identical
+at revision 8, selection `rating-2-part-4`, view `home`, no draft, Undo false and
+Redo true. Direct native MCP session inspection confirms the preserved state;
+only ordinary read activity advances. Production and the current chat retain
+fifteen tools. The candidate retains nineteen tools and a separate copied project.
+No production configuration or executable was replaced.
+
+A private reviewable refresh is prepared at
+`.local/codex-restart-check/refresh-20261005/refresh.ps1`. It verifies nine qualified
+product artifacts by exact lengths/SHA-256, verifies process/start/listener
+ownership, reads and backs up the current pair immediately before stopping,
+refuses intervening edits, restores exact pair/selection/view and provides a
+previous-executable rollback. It starts hidden, preserves LAN editor binding and
+loopback MCP, and leaves auxiliary services alone. Its PowerShell AST parses
+without errors; its release manifest and protected identity checks pass. The
+script has **not executed**. Session Undo/Redo reset is explicitly reported for
+an eventual restart; saved project files and source/design are retained. The
+user must run the local script before deployment can be reported. Private backup,
+configuration, manifest, post-rejection frame and unchanged-process evidence are
+under that ignored directory; credentials are never printed or committed.
+
+No full criterion closes. Codegen no-closure advances **27→28** once; workflow
+**9**, renderer **3**, authoring **11** and delivery **1** remain unchanged.
+Reassessment ends source/modal fixture expansion. Next finish the explicit
+release request after local user execution and verify its served closure,
+restored pair, authenticated tools and auxiliary identities. Then return to
+direct canvas resize feedback/responsive authoring through public Nyx contracts
+and the same isolated paired processor. No gate, history or partial browser result
+narrows the original full-product acceptance criteria; no task moves to DONE.

@@ -48,6 +48,20 @@ the present Windows installation; the Pascal semantic client is usable immediate
 - Underlying callback/state/source/build behavior remains with its existing owners;
   expose only qualified operations and retain their original acceptance criteria.
 
+**Current staged refresh — 2026-10-05:** The user's requested new release now has
+actual authenticated nineteen-tool discovery and a bounded Pascal semantic
+session query on an independent current service. The backed-up active pair is
+byte-identical there; ordinary source-workspace interaction passes 30 desktop/
+30 exact-390 browser checks. Automatic approval review rejected replacing the
+LAN service, returning only `blocked by policy`; its fifteen-tool release,
+configuration, paired project and revision-8 history remain unchanged. The
+private reviewed refresh is prepared for local user execution, not deployed.
+This reuses existing semantic capabilities rather than adding another workflow
+batch or closing a criterion: workflow no-closure remains 9; the source owner
+records its distinct browser qualification at 28. Do not substitute screenshot
+authoring or an equivalent listener-launch attempt. See
+[the work record](../WORK.md#reviewable-release-refresh--2026-10-05).
+
 **Confirmed gaps — 2026-10-04:** The design transaction vocabulary contains
 create/update/move/delete/title/tokens. Callback authoring now has a focused tool;
 immutable build requests and bounded status are now qualified. Local callback

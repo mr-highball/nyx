@@ -2,10 +2,14 @@
 
 The source candidate advertises nineteen tools, including protected reviews,
 project workspaces, `nyx_state` and `nyx_collections`. The current LAN release and
-this chat's connected native inventory still expose fifteen tools. Offline
-qualification proves the state/collection commands, discovery schemas and native
-compiled controls; updated authenticated discovery and observing browser execution remain
-at the recorded listener/host gate in WORK.md.
+this chat's connected native inventory still expose fifteen tools. The separately
+staged current service now has actual authenticated nineteen-tool discovery and
+a bounded semantic session read. It retains an independent copy of the backed-up
+active pair. Automatic approval review rejected replacing the LAN service, so
+current configuration and native chat handles are unchanged. Actual browser
+source-workspace interaction is qualified on the staged host; complete observing
+editor/runtime behavior retains its separate acceptance gates. See the
+[refresh evidence](../WORK.md#reviewable-release-refresh--2026-10-05).
 
 Studio starts with agent access enabled and editing allowed. Open **Agents** to
 see the shared revision, connected endpoint and recent operations. **Read only**

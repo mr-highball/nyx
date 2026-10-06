@@ -1827,12 +1827,13 @@ try {
     Invoke-NyxCompiler $nyxLclFpc ($nyxSourceEditorLclFlags + @('studio/nyx_studio_native.lpr'))
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
-    foreach ($nyxSourceEditorProgram in @('tests/nyx_workspace_tests.lpr', 'studio/nyx_studio.lpr')) {
+    foreach ($nyxSourceEditorProgram in @('tests/nyx_workspace_tests.lpr',
+        'tests/nyx_source_workspace_browser.lpr', 'studio/nyx_studio.lpr')) {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests',
         '-Jirtl.js', "-FE$nyxSourceEditorBrowser", $nyxSourceEditorProgram)
     }
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxSourceEditorBrowser 'rtl.js')
-    foreach ($nyxSourceEditorHost in @('index.html', 'workspaces.html')) {
+    foreach ($nyxSourceEditorHost in @('index.html', 'workspaces.html', 'source-editor.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxSourceEditorHost") -Destination $nyxSourceEditorBrowser
     }
     Write-Host 'Source editor consumers staged; browser execution requires an admitted HTTP host.'

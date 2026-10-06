@@ -66,6 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The user's latest release-review request has a separately staged current service
+with authenticated nineteen-tool discovery and the exact active source/design
+pair. Actual desktop and 390-pixel source-editor journeys each pass 30 checks,
+including expanded tab refresh and retained text, range and focus. The browser
+modal now reconnects the same owned host after shell remounts. This qualifies
+that source-workspace interaction, not the complete current browser editor or
+physical phone input. Automatic approval review rejected replacing the existing
+LAN service; it still exposes fifteen tools. The reviewable local refresh and
+preservation evidence are recorded in WORK.md. Historical host-gate observations
+below retain their original scope.
+
 The native editor now has a runnable standalone controller consuming the shared
 Nyx shell, portable session, authoring routers and paired local store. Its actual
 Win32 journey passes 74 checks with zero leaks, including reusable navigation,
