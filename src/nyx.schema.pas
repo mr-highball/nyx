@@ -666,7 +666,7 @@ const
     (Kind:'slider'; Title:'Slider'; Category:'Inputs'; Container:False;
       Browser:ncAvailable; Native:ncAvailable),
     (Kind:'date'; Title:'Date field'; Category:'Inputs'; Container:False;
-      Browser:ncAvailable; Native:ncText),
+      Browser:ncAvailable; Native:ncBasic),
     (Kind:'time'; Title:'Time field'; Category:'Inputs'; Container:False;
       Browser:ncAvailable; Native:ncText),
     (Kind:'color'; Title:'Color field'; Category:'Inputs'; Container:False;
@@ -1873,7 +1873,7 @@ var
 begin
   Result := False;
 
-  if (ANode = nil) or not KindIn(ANode.ProjectionKind, 'input|memo|code-editor') then
+  if (ANode = nil) or not KindIn(ANode.ProjectionKind, 'input|memo|code-editor|date') then
   begin
     Exit;
   end;
@@ -2504,7 +2504,12 @@ begin
     Exit(NyxNumberDomain.Definition);
   end;
 
-  if KindIn(LKind, 'input|memo|select|date|time|color|code-editor') then
+  if LKind = 'date' then
+  begin
+    Exit(NyxDateDomain.Definition);
+  end;
+
+  if KindIn(LKind, 'input|memo|select|time|color|code-editor') then
   begin
     Exit(NyxTextDomain.Definition);
   end;
@@ -2526,6 +2531,13 @@ begin
 
   if ANode.Contract.FindValue(Result) then
   begin
+
+    if ANode.ProjectionKind = 'date' then
+    begin
+      { Legacy date controls declared Text. Preserve their exact choices while
+        applying the calendar semantics of the physical projection on both hosts. }
+      Result := NyxDateDomain(Result).Definition;
+    end;
     Exit;
   end;
   LOwner := ANode.Parent;
@@ -2548,7 +2560,13 @@ begin
 
       if LTarget = ANode then
       begin
-        Exit(LField.Domain.Copy);
+        Result := LField.Domain.Copy;
+
+        if ANode.ProjectionKind = 'date' then
+        begin
+          Result := NyxDateDomain(Result).Definition;
+        end;
+        Exit;
       end;
     end;
     LOwner := LOwner.Parent;

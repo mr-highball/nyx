@@ -210,6 +210,15 @@ begin
       GTypes.Add('    [''' + KindGUID(NyxKindName(LKind)) + ''']');
       GTypes.Add('    function WithText(const AText: TNyxText): ' + LInterface + ';');
 
+      if LKind = nkDate then
+      begin
+        GTypes.Add('    { Calendar parts are typed; Value is the explicit canonical text boundary. }');
+        GTypes.Add('    function GetDateValue: TNyxCalendarDate;');
+        GTypes.Add('    procedure SetDateValue(const AValue: TNyxCalendarDate);');
+        GTypes.Add('    function WithDate(const AValue: TNyxCalendarDate): INyxDate;');
+        GTypes.Add('    property DateValue: TNyxCalendarDate read GetDateValue write SetDateValue;');
+      end;
+
       if LRecipe <> nil then
       begin
         EmitParts(LRecipe, '', True, False);
@@ -224,6 +233,14 @@ begin
       GTypes.Add('    constructor Create(const AID: TNyxText = '''';');
       GTypes.Add('      AConstruction: TNyxConstruction = ncoDefault); reintroduce;');
       GTypes.Add('    function WithText(const AText: TNyxText): ' + LInterface + ';');
+
+      if LKind = nkDate then
+      begin
+        GTypes.Add('    function GetDateValue: TNyxCalendarDate;');
+        GTypes.Add('    procedure SetDateValue(const AValue: TNyxCalendarDate);');
+        GTypes.Add('    function WithDate(const AValue: TNyxCalendarDate): INyxDate;');
+        GTypes.Add('    property DateValue: TNyxCalendarDate read GetDateValue write SetDateValue;');
+      end;
 
       if LRecipe <> nil then
       begin
@@ -255,6 +272,26 @@ begin
       GImplementation.Add('  Result := ' + LClass + '.Create(AID, AConstruction);');
       GImplementation.Add('end;');
       GImplementation.Add('');
+
+      if LKind = nkDate then
+      begin
+        GImplementation.Add('function TNyxDate.GetDateValue: TNyxCalendarDate;');
+        GImplementation.Add('begin');
+        GImplementation.Add('  Result := TNyxCalendarDate.FromText(Value);');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+        GImplementation.Add('procedure TNyxDate.SetDateValue(const AValue: TNyxCalendarDate);');
+        GImplementation.Add('begin');
+        GImplementation.Add('  GetConfigure.Value(AValue);');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+        GImplementation.Add('function TNyxDate.WithDate(const AValue: TNyxCalendarDate): INyxDate;');
+        GImplementation.Add('begin');
+        GImplementation.Add('  SetDateValue(AValue);');
+        GImplementation.Add('  Result := Self as INyxDate;');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+      end;
 
       if LRecipe <> nil then
       begin

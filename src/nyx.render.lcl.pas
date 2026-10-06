@@ -30,6 +30,8 @@ interface
 uses
   nyx.types,
   nyx.text,
+  nyx.dates,
+  nyx.dates.lcl,
   Classes,
   SysUtils,
   Math,
@@ -129,6 +131,8 @@ type
     FNode: TNyxNode;
     FControl: TControl;
     FInput: TControl;
+    { Borrowed native date host owns the real editable input and its popup. }
+    FDateField: TNyxLCLDateField;
     FCaption: TLabel;
     { Value-owned layout and projection. The parent binding is borrowed from the
       same preorder renderer array, never a reference-counted tree back edge. }
@@ -820,6 +824,11 @@ begin
       TNyxLogicalScrollBox(FBindings[LIndex].FControl).Detach;
     end;
     FBindings[LIndex].FActiveDrag := nil;
+
+    if FBindings[LIndex].FDateField <> nil then
+    begin
+      FBindings[LIndex].FDateField.Disconnect;
+    end;
     FBindings[LIndex].DisconnectControl(FBindings[LIndex].FControl);
 
     if FBindings[LIndex].FInput <> FBindings[LIndex].FControl then
@@ -1004,6 +1013,7 @@ var
   LLabel: TLabel;
   LPanel: TPanel;
   LInputSurface: TNyxLCLSurface;
+  LDateField: TNyxLCLDateField;
   LInfo: TNyxPrimitiveInfo;
   LFactoryIndex: Integer;
 begin
@@ -1110,6 +1120,18 @@ begin
       TComboBox(AInput).Style := csDropDownList;
       { SyncLiteralItems supplies the admitted initial choices once. }
     end
+    else if LKind = 'date' then
+    begin
+      LDateField := TNyxLCLDateField.Create(FPanel);
+      LDateField.Parent := LInputSurface;
+      LDateField.AutoSize := False;
+      LDateField.BorderStyle := bsNone;
+      LDateField.SetBounds(12, 5, 276, 30);
+      LDateField.Text := ANode.Prop('value');
+      LDateField.Font.Height := -FTheme.FontSize;
+      LDateField.Font.Color := ThemeColor(FTheme.Text);
+      AInput := LDateField.Editor;
+    end
     else if LKind = 'spin' then
     begin
       AInput := TSpinEdit.Create(FPanel);
@@ -1129,9 +1151,13 @@ begin
         TEdit(AInput).PasswordChar := '*';
       end;
     end;
-    AInput.Parent := LInputSurface;
-    AInput.SetBounds(12, 10, 276, 20);
-    AInput.Anchors := [akLeft, akTop, akRight];
+
+    if not (AInput.Parent is TNyxLCLDateField) then
+    begin
+      AInput.Parent := LInputSurface;
+      AInput.SetBounds(12, 10, 276, 20);
+      AInput.Anchors := [akLeft, akTop, akRight];
+    end;
     AInput.Font.Height := -FTheme.FontSize;
     LLabel.FocusControl := TWinControl(AInput);
 
@@ -1329,11 +1355,22 @@ begin
   LBinding.FInput := LInput;
   LBinding.FCaption := LCaption;
 
+  if (LInput <> nil) and (LInput.Parent is TNyxLCLDateField) then
+  begin
+    LBinding.FDateField := TNyxLCLDateField(LInput.Parent);
+  end;
+
   if ANode.Parent <> nil then
   begin
     LBinding.FLogicalParent := Binding(ANode.Parent);
   end;
   LValueDomain := NyxNodeValueDomain(ANode);
+
+  if LBinding.FDateField <> nil then
+  begin
+    LBinding.FDateField.SetDomain(LValueDomain);
+    LBinding.FDateField.SetAcceptedValue(TNyxCalendarDate.FromText(ANode.Prop('value')));
+  end;
   { Numeric drafts need an editing-complete boundary even without a state
     binding. Their declared control/compound domain determines this behavior. }
   LBinding.FDeferredValue := (LInput is TCustomEdit) and not (LInput is TSpinEdit) and
@@ -1405,7 +1442,14 @@ begin
     TNyxWinControlAccess(LFocus).OnKeyUp := LBinding.KeyUp;
   end;
 
-  if LInput is TCustomEdit then
+  if LBinding.FDateField <> nil then
+  begin
+    { Preserve the grouped edit's forwarding slots. Keyboard, focus, pointer,
+      selection and editing bridges stay attached to its actual inner editor. }
+    LBinding.FDateField.OnChange := LBinding.Change;
+    LBinding.FDateField.OnEditingDone := LBinding.CommitValue;
+  end
+  else if LInput is TCustomEdit then
   begin
     TEdit(LInput).OnChange := LBinding.Change;
 
@@ -6603,6 +6647,16 @@ begin
         LEnabled := LPolicy.Enabled;
         LReadOnly := LPolicy.ReadOnly;
         LBinding.FControl.Enabled := LEnabled;
+
+        if LBinding.FDateField <> nil then
+        begin
+          LValueDomain := NyxNodeValueDomain(LNode);
+          LBinding.FDateField.SetDomain(LValueDomain);
+          LBinding.FDateField.SetAcceptedValue(
+            TNyxCalendarDate.FromText(LNode.Prop('value')));
+          LBinding.FDateField.SetInteraction(LEnabled, LReadOnly,
+            LBinding.FControl.IsVisible);
+        end;
 
         if LNode.Props.IndexOfName('drag-source') >= 0 then
         begin

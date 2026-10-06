@@ -227,6 +227,12 @@ begin
   Result := Self as INyxConfiguration;
 end;
 
+function TNyxConfiguration.Value(const AValue: TNyxCalendarDate): INyxConfiguration;
+begin
+  ConfigurationScope.Value(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
 function TNyxConfiguration.Value(AValue: Integer): INyxConfiguration;
 begin
   ConfigurationScope.Value(AValue);

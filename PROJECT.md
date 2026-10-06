@@ -66,6 +66,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Typed calendar fields now have a portable Gregorian/date-domain contract,
+specialized managed authoring and readable round-trippable source. Actual Win32
+calendar/edit/state/lifetime checks pass 87, with zero leaks; current managed-source
+regression passes 33. Earlier HTTP browser checks pass 58 at desktop/390, but final
+browser execution is pending because D: is full. The current work is checkpointed
+from an isolated C: checkout; the original worktree needs careful reconciliation
+after disk space returns. No observing release or full parity is claimed. See
+[the packet](WORK.md#typed-date-fields-checkpoint--2026-10-06).
+
 Ordinary browser Studio now qualifies its real compiled Pascal source worker on
 actual clocks. Desktop/exact-390 consumers pass 64 each; checked Win32 Studio passes
 59, with zero native leaks. Both hosts expose typed source readiness, and shared

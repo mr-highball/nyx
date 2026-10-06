@@ -53,6 +53,7 @@
     function Option(AValue: Boolean): INyxConfiguration; overload;
     function Option(AValue: Double): INyxConfiguration; overload;
     function Value(const AValue: TNyxText): INyxConfiguration; overload;
+    function Value(const AValue: TNyxCalendarDate): INyxConfiguration; overload;
     function Value(AValue: Integer): INyxConfiguration; overload;
     function Value(AValue: Boolean): INyxConfiguration; overload;
     function Value(AValue: Double): INyxConfiguration; overload;
@@ -141,6 +142,7 @@
     function Option(AValue: Boolean): INyxConfiguration; overload;
     function Option(AValue: Double): INyxConfiguration; overload;
     function Value(const AValue: TNyxText): INyxConfiguration; overload;
+    function Value(const AValue: TNyxCalendarDate): INyxConfiguration; overload;
     function Value(AValue: Integer): INyxConfiguration; overload;
     function Value(AValue: Boolean): INyxConfiguration; overload;
     function Value(AValue: Double): INyxConfiguration; overload;

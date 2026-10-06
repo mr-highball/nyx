@@ -22,6 +22,27 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - Original-size native editor qualification now needs the logical viewport /
   safe widget geometry prerequisite in [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md).
 
+## Typed date fields — 2026-10-06
+
+The original native interaction/parity and advanced-picker scope now includes
+typed Gregorian dates/domains, specialized managed authoring, exact persistence,
+readable generation/source admission and an owned standard LCL calendar. Checked
+Win32 passes 87 with zero leaks; current managed-source regression passes 33.
+Earlier HTTP desktop/390 browser checks pass 58 each. Final browser execution/
+compiled reconstruction is pending: D: has no free space, and automatic approval
+review rejected generated cleanup. The checkpoint is protected through an isolated
+C: checkout, not an observing rollout. See
+[the packet](../WORK.md#typed-date-fields-checkpoint--2026-10-06).
+
+No original criterion or prerequisite closes. Renderer-owned no-closure advances
+7→8 once; codegen 28, workflow 11, authoring 26 and delivery 2 remain. Historical
+NS-2 parity/NS-3 counts remain unestablished. Stop feature expansion and finish the
+existing final browser checks after disk space returns. Cross-field ordering,
+broader pickers/ranges, browser OS popup/trusted input, hardware/IME/assistive
+technology, other widgetsets/DPI, accessibility and production visuals remain.
+Current date-domain MCP authoring is an existing workflow gap; public Pascal
+fixture enrichment is explicit and never claimed as semantic policy admission.
+
 ## Typed structural recipe source — 2026-10-06
 
 Readable specialized `.Content` blocks use distinct component/presentation

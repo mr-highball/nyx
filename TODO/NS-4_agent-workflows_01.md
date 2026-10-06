@@ -15,6 +15,17 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Current date authoring gap (2026-10-06): the actual named MCP tools composed an
+English reusable date companion in one 16-operation transaction and compiled both
+application targets at revision 2. Its exact source was exported and the owned
+review discarded without changing the primary pair. The live service cannot yet
+author typed calendar domains/ranges/choices. Add revision-aware typed policy
+inspection/admission under this existing contract-authoring owner; do not replace
+it with raw extension fields or browser automation. The current physical fixture's
+public Pascal bounds/state enrichment is deliberately distinct from the semantic
+seed. No workflow criterion closes and its no-closure count remains 11. See
+[evidence and limits](../WORK.md#typed-date-fields-checkpoint--2026-10-06).
+
 Current transport follow-up (2026-10-06): one isolated Pascal-client native build
 request wrote a complete job receipt and then reported a socket-read error.
 Subsequent authenticated bounded status calls returned exit 0 and confirmed both

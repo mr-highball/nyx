@@ -3,7 +3,20 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current actual-consumer boundary (2026-10-06): ordinary browser Studio executes
+Current date boundary (2026-10-06): typed Gregorian values/domains, managed date
+controls and generated/source admission support a real owned native calendar.
+Checked Win32 passes 87 with zero leaks; current managed-source regression passes
+33. Earlier actual HTTP desktop/390 browser passes 58 each, while current browser
+execution/reconstruction is pending disk space. D: has zero free bytes; denied
+generated cleanup was not executed. An isolated C: checkout protects this incomplete
+checkpoint without touching the observing service or user pairs. No original
+criterion closes: renderer no-closure advances 7→8 once; authoring 26, workflow 11,
+codegen 28 and delivery 2 remain. Finish the existing date boundary after space
+returns, then reassess original parity/advanced-component outcomes; no fixture
+expansion or smaller acceptance claim replaces the remaining checks. See
+[evidence and return path](WORK.md#typed-date-fields-checkpoint--2026-10-06).
+
+Previous actual-consumer boundary (2026-10-06): ordinary browser Studio executes
 its compiled Pascal source worker on real clocks and passes 64 checks at both
 desktop/exact-390 widths; actual checked Win32 passes 59 with zero native leaks.
 Shared warnings now appear beside the exact callback. Semantic removal retains

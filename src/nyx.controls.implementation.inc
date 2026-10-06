@@ -454,6 +454,22 @@ begin
   Result := TNyxDate.Create(AID, AConstruction);
 end;
 
+function TNyxDate.GetDateValue: TNyxCalendarDate;
+begin
+  Result := TNyxCalendarDate.FromText(Value);
+end;
+
+procedure TNyxDate.SetDateValue(const AValue: TNyxCalendarDate);
+begin
+  GetConfigure.Value(AValue);
+end;
+
+function TNyxDate.WithDate(const AValue: TNyxCalendarDate): INyxDate;
+begin
+  SetDateValue(AValue);
+  Result := Self as INyxDate;
+end;
+
 constructor TNyxTime.Create(const AID: TNyxText;
   AConstruction: TNyxConstruction);
 begin

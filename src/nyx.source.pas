@@ -30,6 +30,7 @@ interface
 uses
   SysUtils,
   nyx.text,
+  nyx.dates,
   nyx.types,
   nyx.layout.policy,
   nyx.responsive,
@@ -542,7 +543,8 @@ type
     vkSplitOrientation, vkSemanticEvent, vkTouchBehavior, vkFlowWrap,
     vkCrossAlignment, vkJustification, vkSizing, vkLayoutPolicy, vkSizeRange,
     vkSizeConstraints, vkViewportWidth, vkViewportCondition, vkViewportOrientation,
-    vkPresentationRef, vkPresentationCondition, vkContainerRef, vkContainerContainment);
+    vkPresentationRef, vkPresentationCondition, vkContainerRef, vkContainerContainment,
+    vkCalendarDate);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -567,6 +569,7 @@ type
     ViewportWidth: TNyxViewportWidth;
     ViewportCondition: TNyxViewportCondition;
     PresentationCondition: TNyxPresentationCondition;
+    CalendarDate: TNyxCalendarDate;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -630,7 +633,7 @@ type
     function Arguments: TValues;
     function ArrayArguments(AMaximum: Integer): TValues;
     function Numeric(const AValue: TValue): Double;
-    function Domain(AKind: TNyxStateKind): TValue;
+    function Domain(AKind: TNyxStateKind; ACalendar: Boolean = False): TValue;
     function DataConstructor(const AName: TNyxText): TValue;
     function LocalIndex(const AName: TNyxText): Integer;
     function StateIndex(const AName: TNyxText): Integer;
@@ -1521,7 +1524,7 @@ begin
   end;
 end;
 
-function TConfigurationReader.Domain(AKind: TNyxStateKind): TValue;
+function TConfigurationReader.Domain(AKind: TNyxStateKind; ACalendar: Boolean): TValue;
 var
   LMethod: TNyxText;
   LArgs: TValues;
@@ -1530,6 +1533,7 @@ var
   LBooleans: array of Boolean;
   LIntegers: array of Integer;
   LNumbers: array of Double;
+  LDates: array of TNyxCalendarDate;
 begin
   Result.Kind := vkDomain;
   Result.Ordinal := Ord(AKind);
@@ -1540,10 +1544,25 @@ begin
     nskNumber: Result.NumberDomain := NyxNumberDomain;
   end;
 
+  if ACalendar then
+  begin
+    Result.TextDomain := NyxDateDomain;
+  end;
+
   if At('(') then
   begin
-    Expect('(');
-    Expect(')');
+    LArgs := Arguments;
+
+    if Length(LArgs) <> 0 then
+    begin
+
+      if not ACalendar or (Length(LArgs) <> 1) or
+        (LArgs[0].Kind <> vkDomain) or (LArgs[0].Ordinal <> Ord(nskText)) then
+      begin
+        Fail('A domain factory takes no arguments or one Text domain for date enrichment');
+      end;
+      Result.TextDomain := NyxDateDomain(LArgs[0].TextDomain.Definition);
+    end;
   end;
   while At('.') do
   begin
@@ -1565,6 +1584,17 @@ begin
         Fail('Range requires two typed bounds');
       end;
       case AKind of
+        nskText:
+          begin
+
+            if not Result.TextDomain.Definition.CalendarDate or
+              (LArgs[0].Kind <> vkCalendarDate) or (LArgs[1].Kind <> vkCalendarDate) then
+            begin
+              Fail('Date Range requires typed calendar bounds');
+            end;
+            Result.TextDomain := Result.TextDomain.Range(
+              LArgs[0].CalendarDate, LArgs[1].CalendarDate);
+          end;
         nskInteger:
           begin
 
@@ -1580,7 +1610,7 @@ begin
         nskNumber:
           Result.NumberDomain := Result.NumberDomain.Range(Numeric(LArgs[0]), Numeric(LArgs[1]));
       else
-        Fail('Only Integer and Number domains have Range');
+        Fail('Only Integer, Number and Date domains have Range');
       end;
     end
     else if SameText(LMethod, 'Choices') then
@@ -1591,6 +1621,24 @@ begin
       case AKind of
         nskText:
           begin
+            { A date domain accepts its typed overload as one homogeneous array.
+              Text choices remain an explicit canonical wire-boundary overload. }
+
+            if (Length(LArgs) > 0) and (LArgs[0].Kind = vkCalendarDate) then
+            begin
+              SetLength(LDates, Length(LArgs));
+              for LIndex := 0 to Length(LArgs) - 1 do
+              begin
+
+                if LArgs[LIndex].Kind <> vkCalendarDate then
+                begin
+                  Fail('Date Choices requires homogeneous typed calendar members');
+                end;
+                LDates[LIndex] := LArgs[LIndex].CalendarDate;
+              end;
+              Result.TextDomain := Result.TextDomain.Choices(LDates);
+              Continue;
+            end;
             SetLength(LTexts, Length(LArgs));
             for LIndex := 0 to Length(LArgs) - 1 do
             begin
@@ -1641,6 +1689,20 @@ begin
             Result.NumberDomain := Result.NumberDomain.Choices(LNumbers);
           end;
       end;
+    end
+    else if SameText(LMethod, 'CalendarDate') and (AKind = nskText) then
+    begin
+
+      if At('(') then
+      begin
+        LArgs := Arguments;
+
+        if Length(LArgs) <> 0 then
+        begin
+          Fail('CalendarDate takes no arguments');
+        end;
+      end;
+      Result.TextDomain := Result.TextDomain.CalendarDate;
     end
     else
     begin
@@ -1881,6 +1943,41 @@ begin
     tkWord:
       begin
         LName := LowerCase(LToken.Text);
+
+        if (LName = 'nyxdate') or (LName = 'nyxnodate') then
+        begin
+          { Evaluate closed integer parts, never locale text or arbitrary Pascal.
+            The distinct tag prevents dates being substituted for other families. }
+          Result.Kind := vkCalendarDate;
+          Result.CalendarDate := NyxNoDate;
+
+          if (LName = 'nyxdate') or At('(') then
+          begin
+            LArgs := Arguments;
+
+            if LName = 'nyxdate' then
+            begin
+
+              if (Length(LArgs) <> 3) or (LArgs[0].Kind <> vkInteger) or
+                (LArgs[1].Kind <> vkInteger) or (LArgs[2].Kind <> vkInteger) then
+              begin
+                Fail('NyxDate requires Integer year, month and day');
+              end;
+              Result.CalendarDate := NyxDate(StrToInt(LArgs[0].Text),
+                StrToInt(LArgs[1].Text), StrToInt(LArgs[2].Text));
+            end
+            else if Length(LArgs) <> 0 then
+            begin
+              Fail('NyxNoDate takes no arguments');
+            end;
+          end;
+          Exit;
+        end;
+
+        if LName = 'nyxdatedomain' then
+        begin
+          Exit(Domain(nskText, True));
+        end;
 
         if (LName = 'nyxsizerange') or (LName = 'nyxsizeconstraints') then
         begin
@@ -3274,6 +3371,15 @@ begin
     atValue, atOption:
       begin
         case LValue.Kind of
+          vkCalendarDate:
+            begin
+
+              if LAttribute <> atValue then
+              begin
+                Fail('Calendar dates are typed Value arguments, never Option');
+              end;
+              LConfigure.Value(LValue.CalendarDate);
+            end;
           vkText:
             begin
 
@@ -3323,7 +3429,7 @@ begin
               end;
             end;
         else
-          Fail('Value/Option requires text, Boolean, Integer or Double');
+          Fail('Value requires text, Boolean, Integer, Double or CalendarDate; Option requires a scalar');
         end;
       end;
     atLayout:

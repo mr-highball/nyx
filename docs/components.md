@@ -69,7 +69,9 @@ bounded decimal integers are admitted; unknown extension properties survive.
 Studio consumes these fields through ordinary Nyx selects, inputs and number
 fields. Failed edits/imports retain the accepted project and redo history.
 `Available` describes a projection, not full family or property parity; native
-date/time/color remain text fallbacks. Custom factories own their capability
+date now has a standard owned LCL calendar field with Basic support; time/color
+remain text fallbacks. See [typed calendar fields](date-fields.md) for the exact
+contract and qualification limits. Custom factories own their capability
 semantics. Missing projections raise diagnostics instead of rendering an empty box.
 
 Reusable definitions can also be customized per instance, including content:

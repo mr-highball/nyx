@@ -473,6 +473,11 @@
   INyxDate = interface(INyxTextInput)
     ['{737A7921-4621-4C6F-8C01-0200D472DC59}']
     function WithText(const AText: TNyxText): INyxDate;
+    { Calendar parts are typed; Value is the explicit canonical text boundary. }
+    function GetDateValue: TNyxCalendarDate;
+    procedure SetDateValue(const AValue: TNyxCalendarDate);
+    function WithDate(const AValue: TNyxCalendarDate): INyxDate;
+    property DateValue: TNyxCalendarDate read GetDateValue write SetDateValue;
   end;
 
   { Default managed date implementation. Subclass for behavior or implement the interface
@@ -482,6 +487,10 @@
     constructor Create(const AID: TNyxText = '';
       AConstruction: TNyxConstruction = ncoDefault); reintroduce;
     function WithText(const AText: TNyxText): INyxDate;
+    function GetDateValue: TNyxCalendarDate;
+    procedure SetDateValue(const AValue: TNyxCalendarDate);
+    function WithDate(const AValue: TNyxCalendarDate): INyxDate;
+    property DateValue: TNyxCalendarDate read GetDateValue write SetDateValue;
   end;
 
   { Specialized time contract; inherited properties retain the TextInput family.

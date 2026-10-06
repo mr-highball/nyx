@@ -2358,7 +2358,7 @@ Collect a calendar date.
 Palette group: Inputs.
 Search labels: Date & time.
 
-Root projection — Browser: Available. LCL: Text fallback.
+Root projection — Browser: Available. LCL: Basic support.
 
 | Property | Type | Factory default | Constraint | Meaning | Browser | LCL | Effect/help |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -2436,6 +2436,9 @@ Root projection — Browser: Available. LCL: Text fallback.
 | OnAfterKeyPress | Available | Available | After Nyx key dispatch; observes synchronous cancellation; cannot consume |
 | OnBeforeKeyUp | Available | Available | Typed keys/modifiers; emitted before platform default; sequential hooks may consume |
 | OnAfterKeyUp | Available | Available | After Nyx key dispatch; observes synchronous cancellation; cannot consume |
+| OnBeforeTextInput | Available | Available | Before model admission; sequential callbacks may reject and restore text |
+| OnTextInput | Available | Available | Owned old/proposed text; includes paste, deletion and composition |
+| OnAfterTextInput | Available | Available | After text admission attempt; observes accepted or cancelled proposal |
 | OnDoubleClick | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
 | OnPointerDown | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
 | OnPointerUp | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
@@ -2446,6 +2449,11 @@ Root projection — Browser: Available. LCL: Text fallback.
 | OnBeforeWheel | Available | Available | Owned wheel request; explicit pixels/lines/pages or native detents; cancellation depends on platform |
 | OnWheel | Available | Available | Owned wheel request; explicit pixels/lines/pages or native detents; cancellation depends on platform |
 | OnAfterWheel | Available | Available | After Nyx wheel dispatch, before platform default; observes cancellation, not actual movement |
+| OnBeforeEdit | Available | Unavailable | Physical beforeinput; typed edit intent, optional data and scalar selection; cancellation follows host cancelability outside composition; unavailable in LCL |
+| OnCompositionStart | Available | Basic support | Owned physical IME context; accepted model admission waits for composition end; Win32 LCL observes genuine messages and drains final characters at UI idle; other widgetsets require a bridge |
+| OnCompositionUpdate | Available | Basic support | Owned physical IME context; accepted model admission waits for composition end; Win32 LCL observes genuine messages and drains final characters at UI idle; other widgetsets require a bridge |
+| OnCompositionEnd | Available | Basic support | Owned physical IME context; accepted model admission waits for composition end; Win32 LCL observes genuine messages and drains final characters at UI idle; other widgetsets require a bridge |
+| OnTextSelectionChange | Basic support | Basic support | Owned Unicode scalar selection against physical text; browser observes select/selectionchange; Win32 LCL coalesces at idle and cannot report direction |
 | OnPointerCancel | Available | Basic support | Physical pointer capture acquisition/loss or cancellation; browser pointer identity and native mouse capture. Notifications cannot request capture; active sequential down/move callbacks may request it. |
 | OnPointerCapture | Available | Basic support | Physical pointer capture acquisition/loss or cancellation; browser pointer identity and native mouse capture. Notifications cannot request capture; active sequential down/move callbacks may request it. |
 | OnPointerCaptureLost | Available | Basic support | Physical pointer capture acquisition/loss or cancellation; browser pointer identity and native mouse capture. Notifications cannot request capture; active sequential down/move callbacks may request it. |
@@ -5071,6 +5079,9 @@ Root projection — Browser: Available. LCL: Available.
 | OnAfterKeyPress | Available | Available | After Nyx key dispatch; observes synchronous cancellation; cannot consume |
 | OnBeforeKeyUp | Available | Available | Typed keys/modifiers; emitted before platform default; sequential hooks may consume |
 | OnAfterKeyUp | Available | Available | After Nyx key dispatch; observes synchronous cancellation; cannot consume |
+| OnBeforeTextInput | Available | Available | Before model admission; sequential callbacks may reject and restore text |
+| OnTextInput | Available | Available | Owned old/proposed text; includes paste, deletion and composition |
+| OnAfterTextInput | Available | Available | After text admission attempt; observes accepted or cancelled proposal |
 | OnDoubleClick | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
 | OnPointerDown | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
 | OnPointerUp | Available | Available | Owned control-relative pointer data; browser touch/pen and LCL mouse |
@@ -5081,6 +5092,11 @@ Root projection — Browser: Available. LCL: Available.
 | OnBeforeWheel | Available | Available | Owned wheel request; explicit pixels/lines/pages or native detents; cancellation depends on platform |
 | OnWheel | Available | Available | Owned wheel request; explicit pixels/lines/pages or native detents; cancellation depends on platform |
 | OnAfterWheel | Available | Available | After Nyx wheel dispatch, before platform default; observes cancellation, not actual movement |
+| OnBeforeEdit | Available | Unavailable | Physical beforeinput; typed edit intent, optional data and scalar selection; cancellation follows host cancelability outside composition; unavailable in LCL |
+| OnCompositionStart | Available | Basic support | Owned physical IME context; accepted model admission waits for composition end; Win32 LCL observes genuine messages and drains final characters at UI idle; other widgetsets require a bridge |
+| OnCompositionUpdate | Available | Basic support | Owned physical IME context; accepted model admission waits for composition end; Win32 LCL observes genuine messages and drains final characters at UI idle; other widgetsets require a bridge |
+| OnCompositionEnd | Available | Basic support | Owned physical IME context; accepted model admission waits for composition end; Win32 LCL observes genuine messages and drains final characters at UI idle; other widgetsets require a bridge |
+| OnTextSelectionChange | Basic support | Basic support | Owned Unicode scalar selection against physical text; browser observes select/selectionchange; Win32 LCL coalesces at idle and cannot report direction |
 | OnPointerCancel | Available | Basic support | Physical pointer capture acquisition/loss or cancellation; browser pointer identity and native mouse capture. Notifications cannot request capture; active sequential down/move callbacks may request it. |
 | OnPointerCapture | Available | Basic support | Physical pointer capture acquisition/loss or cancellation; browser pointer identity and native mouse capture. Notifications cannot request capture; active sequential down/move callbacks may request it. |
 | OnPointerCaptureLost | Available | Basic support | Physical pointer capture acquisition/loss or cancellation; browser pointer identity and native mouse capture. Notifications cannot request capture; active sequential down/move callbacks may request it. |

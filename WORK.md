@@ -7,7 +7,86 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-## Current return path: real browser worker observation — 2026-10-06
+## Current return path: disk space and date qualification — 2026-10-06
+
+Previous goal turn: progress; it implemented and checked the date contract below.
+The next continuation completes 33 existing managed-source checks on an isolated
+temporary C: output after D: reports zero free bytes. Bulk generated-cache removal
+and a narrower obsolete-intermediate clean were both rejected by automatic approval
+review with reason "blocked by policy"; neither ran. Do not retry deletion/moving
+as a workaround. The user has a pending request to free at least 1 GB on D:.
+
+An isolated C: checkout preserves the exact current source and adds this handoff/
+guide before the authorized remote checkpoint. The original D: worktree remains
+dirty at its previous head; reconcile the two only after space returns and exact
+source comparison. Do not reset or discard user work. This checkpoint is incomplete
+qualification, not an observing update or a completed component milestone.
+
+Next deliverable: repair only the owned date fixture child's incomplete artifacts,
+finish current browser desktop/exact-390 and compiled reconstruction over the
+existing admitted HTTP host, inspect captures, and recheck protected identities/
+pairs. The older final-copy failure leaves the date-controls script incomplete and
+its reconstruction script absent. Current native/source evidence does not replace
+those checks. No new listener, service replacement, enrollment or user-pair change.
+Stop this date batch after the integrated boundary; at most two unsuccessful
+attempts per diagnosed cause, then reassess. No criterion closes. Renderer
+no-closure advances **7→8** once; authoring **26**, workflow **11**, codegen **28**
+and delivery **2** remain. NS-2 parity/NS-3 historical totals remain unestablished.
+
+## Typed date fields checkpoint — 2026-10-06
+
+Reassessment ended callback/transport fixture expansion and returned to NS-2's
+original interaction/ownership/parity prerequisites for NS-3's advanced picker
+criterion. Browser dates already used HTML date inputs; native dates were plain
+edits. The new portable Gregorian record, strict canonical date domains, specialized
+managed date API, readable generation and closed source admission now support
+actual native calendar fields. See [public usage and limits](docs/date-fields.md).
+
+Native date controls retain their real grouped inner editor, state/event paths and
+unfinished drafts. The owned standard calendar applies inclusive bounds, accepts/
+cancels through ordinary commands, sizes to its widget and closes on unavailable
+ancestry or changed domain. Date fields now participate in shared text-edit events.
+Native capability is Basic; time/color stay text fallbacks.
+
+Semantic MCP composed one English "Plan a little getaway" companion in empty owned
+review `review-7`: one 16-operation transaction at revision 1→2 created two independent
+instances of a reusable date range. Bounded accepted-source windows exported the
+same 177-line seed. Both actual named-MCP application jobs succeeded at revision 2
+with matching source/design/output fingerprints. These jobs use the older running
+payload; they do not qualify the new adapter. The fixture explicitly adds typed
+bounds/state via public Pascal contracts because live MCP lacks date-domain policy
+authoring. That gap remains with NS-4. The review was discarded exactly at revision
+2; primary stays revision 2, selection `rating-2-part-4`, view `home`.
+
+Evidence under ignored `build/date-fields/`, plus temporary C: qualification:
+
+- `maintained-build-final.log`: export and exact compiled typed reconstruction
+  pass; **87 actual checked Win32 date checks**, zero leaks. This includes exact
+  persistence, typed choices/empty dates, atomic source refusals, reusable date
+  overrides, ordered edit callbacks/state admission, bounds/refusal, retained
+  partial drafts, acceptance/Escape return focus, inherited availability, changed
+  domain, hidden ancestry and retirement from a calendar callback.
+- Current matched pas2js controls/reconstruction compile. **Zero owned warnings**;
+  seven upstream `classes.pas` warnings per browser artifact remain unsuppressed.
+  Current compiled browser execution is **pending**, interrupted by disk exhaustion.
+- Earlier `desktop-final.log` / `narrow-final.log`: **58** checks each at CSS
+  **1100/390**, zero observer leaks; actual HTTP field captures are inspected.
+  Those runs precede the final source-reader tests and do not qualify the final
+  browser artifact. Updated native field/calendar captures were also inspected.
+- `core-regression.log`: existing core/composition, scheduler, recovery, compiler
+  typing and compiled reconstruction checks passed before final reader changes.
+  The isolated temporary `source-regression.log` then passes **33** current
+  managed-source checks with zero leaks. Its output is on C:, with no private
+  location committed. Copy that receipt into ignored evidence after D: has space.
+- `protected-state.json`: all **15** exact service identities and **8** accepted/
+  draft pairs remain unchanged. No protected service or payload was replaced.
+
+The maintained recipe/build target reproduces the semantic seed and explicit typed
+enrichment. Cross-field ordering, richer range calendars, browser OS picker/trusted
+input, IME/assistive technology, other widgetsets/DPI, complete accessibility and
+production aesthetics remain open. Original criteria and prerequisites stay intact.
+
+## Previous return path: real browser worker observation — 2026-10-06
 
 Current goal turn: progress. Previous checkpoint `d69a31f` was pushed and clean.
 The existing NS-4 actual-consumer prerequisite now reaches the local real-worker

@@ -30,6 +30,7 @@ interface
 uses
   SysUtils,
   nyx.text,
+  nyx.dates,
   nyx.types,
   nyx.responsive,
   nyx.presentations,

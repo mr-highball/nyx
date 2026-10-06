@@ -30,6 +30,7 @@ interface
 uses
   Classes,
   nyx.text,
+  nyx.dates,
   nyx.root.types,
   nyx.data,
   nyx.contract,
@@ -398,6 +399,8 @@ type
     function Option(AValue: Boolean): TNyxNodeConfig; overload;
     function Option(AValue: Double): TNyxNodeConfig; overload;
     function Value(const AValue: TNyxText): TNyxNodeConfig; overload;
+    { Calendar values retain exact Gregorian parts until the control boundary. }
+    function Value(const AValue: TNyxCalendarDate): TNyxNodeConfig; overload;
     function Value(AValue: Integer): TNyxNodeConfig; overload;
     function Value(AValue: Boolean): TNyxNodeConfig; overload;
     function Value(AValue: Double): TNyxNodeConfig; overload;
@@ -1712,6 +1715,11 @@ end;
 function TNyxNodeConfig.Value(const AValue: TNyxText): TNyxNodeConfig;
 begin
   Result := PutValue(TNyxStateValue.FromText(AValue));
+end;
+
+function TNyxNodeConfig.Value(const AValue: TNyxCalendarDate): TNyxNodeConfig;
+begin
+  Result := Value(AValue.ToText);
 end;
 
 function TNyxNodeConfig.Value(AValue: Integer): TNyxNodeConfig;

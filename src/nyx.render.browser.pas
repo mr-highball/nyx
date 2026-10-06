@@ -5396,6 +5396,9 @@ var
   LReadOnly: Boolean;
   LKeyboardKind: TNyxKind;
   LValue: TNyxText;
+  LValueDomain: TNyxValueDomain;
+  LDateDomain: TNyxDataValue;
+  LDateField: Integer;
   LInfo: TNyxPrimitiveInfo;
   LLayout: TNyxText;
   LMinimum: Integer;
@@ -5885,6 +5888,29 @@ begin
           if LNode.Prop('max') <> '' then
           begin
             LControl.setAttribute('max', LNode.Prop('max'));
+          end;
+        end;
+
+        if LNode.ProjectionKind = 'date' then
+        begin
+          { Calendar bounds share the exact typed domain used by value admission;
+            a numeric min/max property never supplies a date interpretation. }
+          LValueDomain := NyxNodeValueDomain(LNode);
+          LControl.removeAttribute('min');
+          LControl.removeAttribute('max');
+
+          if LValueDomain.CalendarDate then
+          begin
+            LDateDomain := LValueDomain.ToData;
+            for LDateField := 0 to LDateDomain.Count - 1 do
+            begin
+
+              if LDateDomain.Key(LDateField) = 'min' then
+              begin
+                LControl.setAttribute('min', LDateDomain.Field('min').AsText);
+                LControl.setAttribute('max', LDateDomain.Field('max').AsText);
+              end;
+            end;
           end;
         end;
         LValue := LNode.Prop('value');

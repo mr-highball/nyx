@@ -30,6 +30,7 @@ interface
 uses
   SysUtils,
   nyx.text,
+  nyx.dates,
   nyx.types,
   nyx.data,
   nyx.state;
@@ -58,6 +59,7 @@ type
     FKind: TNyxStateKind;
     function GetDefined: Boolean;
     function GetKind: TNyxStateKind;
+    function GetCalendarDate: Boolean;
   public
     class function FromData(const AData: TNyxDataValue): TNyxValueDomain; static;
     function ToData: TNyxDataValue;
@@ -70,6 +72,9 @@ type
     procedure Admit(const AValue: TNyxDataValue);
     property Defined: Boolean read GetDefined;
     property Kind: TNyxStateKind read GetKind;
+    { Date domains still bind exact text stores; this closed format adds calendar
+      admission instead of introducing a locale-dependent state representation. }
+    property CalendarDate: Boolean read GetCalendarDate;
   end;
 
   { Distinct builder families keep range/choice arguments typed. Every fluent
@@ -78,7 +83,16 @@ type
   private
     FDomain: TNyxValueDomain;
   public
-    function Choices(const AValues: array of TNyxText): TNyxTextDomain;
+    function Choices(const AValues: array of TNyxText): TNyxTextDomain; overload;
+    { Typed date choices require CalendarDate/NyxDateDomain; a no-date entry is
+      an explicit optional choice. Every value is copied into the specification. }
+    function Choices(const AValues: array of TNyxCalendarDate): TNyxTextDomain; overload;
+    { Return a new canonical calendar specification. Empty is an optional date;
+      choices and date ranges still admit only actual Gregorian days. }
+    function CalendarDate: TNyxTextDomain;
+    { Inclusive bounds require defined dates in ascending order. Empty values
+      remain admitted; required-value policy belongs to application validation. }
+    function Range(const AMinimum, AMaximum: TNyxCalendarDate): TNyxTextDomain;
     function Definition: TNyxValueDomain;
   end;
 
@@ -193,6 +207,10 @@ type
 function NyxNoDomain: TNyxValueDomain;
 function NyxScalarDomain(AKind: TNyxStateKind): TNyxValueDomain;
 function NyxTextDomain: TNyxTextDomain;
+function NyxDateDomain: TNyxTextDomain; overload;
+{ Enrich an existing text specification without dropping choices or bounds.
+  Physical date projections also use this for legacy text declarations. }
+function NyxDateDomain(const ABase: TNyxValueDomain): TNyxTextDomain; overload;
 function NyxBooleanDomain: TNyxBooleanDomain;
 function NyxIntegerDomain: TNyxIntegerDomain;
 function NyxNumberDomain: TNyxNumberDomain;
@@ -301,6 +319,12 @@ begin
   Result := FKind;
 end;
 
+function TNyxValueDomain.GetCalendarDate: Boolean;
+begin
+  Result := Defined and HasField(FData, 'format') and
+    (FData.Field('format').AsText = 'date');
+end;
+
 class function TNyxValueDomain.FromData(const AData: TNyxDataValue): TNyxValueDomain;
 var
   LKind: TNyxStateKind;
@@ -365,6 +389,8 @@ var
   LChoices: TNyxDataValue;
   LIndex: Integer;
   LPrevious: Integer;
+  LMinimumDate: TNyxCalendarDate;
+  LMaximumDate: TNyxCalendarDate;
 begin
   FData.Validate;
 
@@ -372,8 +398,14 @@ begin
   begin
     Exit;
   end;
-  CheckMembers(FData, '|type|min|max|choices|');
+  CheckMembers(FData, '|type|min|max|choices|format|');
   LKind := Kind;
+
+  if HasField(FData, 'format') and
+    ((LKind <> nskText) or (FData.Field('format').AsText <> 'date')) then
+  begin
+    raise ENyxContract.Create('Only text domains support the canonical date format');
+  end;
 
   if HasField(FData, 'min') <> HasField(FData, 'max') then
   begin
@@ -383,20 +415,35 @@ begin
   if HasField(FData, 'min') then
   begin
 
-    if not (LKind in [nskInteger, nskNumber]) then
+    if CalendarDate then
     begin
-      raise ENyxContract.Create('Only numeric domains have ranges');
-    end;
 
-    if LKind = nskInteger then
+      if not TryNyxDate(FData.Field('min').AsText, LMinimumDate) or
+        not TryNyxDate(FData.Field('max').AsText, LMaximumDate) or
+        not LMinimumDate.Defined or not LMaximumDate.Defined or
+        (LMinimumDate.Compare(LMaximumDate) > 0) then
+      begin
+        raise ENyxContract.Create('Calendar range requires ascending defined dates');
+      end;
+    end
+    else
     begin
-      FData.Field('min').AsInteger;
-      FData.Field('max').AsInteger;
-    end;
 
-    if FData.Field('min').AsNumber > FData.Field('max').AsNumber then
-    begin
-      raise ENyxContract.Create('Domain minimum exceeds maximum');
+      if not (LKind in [nskInteger, nskNumber]) then
+      begin
+        raise ENyxContract.Create('Only numeric or calendar domains have ranges');
+      end;
+
+      if LKind = nskInteger then
+      begin
+        FData.Field('min').AsInteger;
+        FData.Field('max').AsInteger;
+      end;
+
+      if FData.Field('min').AsNumber > FData.Field('max').AsNumber then
+      begin
+        raise ENyxContract.Create('Domain minimum exceeds maximum');
+      end;
     end;
   end;
 
@@ -432,12 +479,19 @@ var
   LIndex: Integer;
   LFound: Boolean;
   LNumber: Double;
+  LDate: TNyxCalendarDate;
 begin
   AValue.Validate;
+  LDate := NyxNoDate;
   case Kind of
     nskText:
       begin
         AValue.AsText;
+
+        if CalendarDate and not TryNyxDate(AValue.AsText, LDate) then
+        begin
+          raise ENyxContract.Create('Value requires a valid calendar YYYY-MM-DD date');
+        end;
       end;
     nskBoolean:
       begin
@@ -455,12 +509,27 @@ begin
 
   if HasField(FData, 'min') then
   begin
-    LNumber := AValue.AsNumber;
 
-    if (LNumber < FData.Field('min').AsNumber) or
-      (LNumber > FData.Field('max').AsNumber) then
+    if CalendarDate then
     begin
-      raise ENyxContract.Create('Value is outside its declared domain range');
+      { Empty is deliberately independent of the inclusive calendar bounds. }
+
+      if LDate.Defined and
+        ((LDate.Compare(TNyxCalendarDate.FromText(FData.Field('min').AsText)) < 0) or
+        (LDate.Compare(TNyxCalendarDate.FromText(FData.Field('max').AsText)) > 0)) then
+      begin
+        raise ENyxContract.Create('Date is outside its declared calendar range');
+      end;
+    end
+    else
+    begin
+      LNumber := AValue.AsNumber;
+
+      if (LNumber < FData.Field('min').AsNumber) or
+        (LNumber > FData.Field('max').AsNumber) then
+      begin
+        raise ENyxContract.Create('Value is outside its declared domain range');
+      end;
     end;
   end;
 
@@ -1041,6 +1110,42 @@ begin
   Result.FDomain := NyxScalarDomain(nskText);
 end;
 
+function NyxDateDomain: TNyxTextDomain;
+begin
+  Result := NyxTextDomain.CalendarDate;
+end;
+
+function NyxDateDomain(const ABase: TNyxValueDomain): TNyxTextDomain;
+begin
+  Result.FDomain := ABase.Copy;
+  Result := Result.CalendarDate;
+end;
+
+function TNyxTextDomain.CalendarDate: TNyxTextDomain;
+begin
+
+  if FDomain.Kind <> nskText then
+  begin
+    raise ENyxContract.Create('Calendar format requires a text domain');
+  end;
+  Result.FDomain := TNyxValueDomain.FromData(ReplaceField(
+    FDomain.ToData, 'format', NyxData('date')));
+end;
+
+function TNyxTextDomain.Range(const AMinimum, AMaximum: TNyxCalendarDate): TNyxTextDomain;
+var
+  LData: TNyxDataValue;
+begin
+
+  if not FDomain.CalendarDate or not AMinimum.Defined or not AMaximum.Defined then
+  begin
+    raise ENyxContract.Create('Date range requires a calendar domain and defined bounds');
+  end;
+  LData := ReplaceField(FDomain.ToData, 'min', NyxData(AMinimum.ToText));
+  LData := ReplaceField(LData, 'max', NyxData(AMaximum.ToText));
+  Result.FDomain := TNyxValueDomain.FromData(LData);
+end;
+
 function TNyxTextDomain.Definition: TNyxValueDomain;
 begin
   Result := FDomain.Copy;
@@ -1055,6 +1160,24 @@ begin
   for LIndex := 0 to High(AValues) do
   begin
     LItems[LIndex] := NyxData(AValues[LIndex]);
+  end;
+  Result.FDomain := WithChoices(FDomain, NyxArray(LItems));
+end;
+
+function TNyxTextDomain.Choices(const AValues: array of TNyxCalendarDate): TNyxTextDomain;
+var
+  LItems: array of TNyxDataValue;
+  LIndex: Integer;
+begin
+
+  if not FDomain.CalendarDate then
+  begin
+    raise ENyxContract.Create('Typed date choices require a calendar domain');
+  end;
+  SetLength(LItems, Length(AValues));
+  for LIndex := 0 to High(AValues) do
+  begin
+    LItems[LIndex] := NyxData(AValues[LIndex].ToText);
   end;
   Result.FDomain := WithChoices(FDomain, NyxArray(LItems));
 end;

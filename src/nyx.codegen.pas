@@ -30,6 +30,7 @@ interface
 uses
   Classes,
   nyx.text,
+  nyx.dates,
   nyx.data,
   nyx.contract,
   nyx.types,
@@ -66,6 +67,7 @@ uses
   nyx.json,
   nyx.callbacks,
   nyx.scheduler,
+  nyx.composition,
   nyx.schema;
 
 function ControlStem(const AKind: TNyxText): TNyxText;
@@ -184,6 +186,20 @@ begin
   end;
 end;
 
+function PascalDate(const AText: TNyxText): TNyxText;
+var
+  LDate: TNyxCalendarDate;
+begin
+  LDate := TNyxCalendarDate.FromText(AText);
+
+  if not LDate.Defined then
+  begin
+    Exit('NyxNoDate');
+  end;
+  Result := 'NyxDate(' + TNyxText(IntToStr(LDate.Year)) + ', ' +
+    TNyxText(IntToStr(LDate.Month)) + ', ' + TNyxText(IntToStr(LDate.Day)) + ')';
+end;
+
 function PascalEventReference(const AName: TNyxText): TNyxText;
 var
   LSemantic: TNyxSemanticEvent;
@@ -198,7 +214,8 @@ begin
   Result := 'NyxEvent(' + PascalString(AName) + ')';
 end;
 
-function ConfigurationCall(ANode: TNyxNode; const AKey, AValue: TNyxText): TNyxText;
+function ConfigurationCall(ANode: TNyxNode; const AKey, AValue: TNyxText;
+  ACalendarValue: Boolean = False): TNyxText;
 const
   CAttributeSymbols: array[TNyxAttribute] of TNyxText = (
     'atText', 'atValue', 'atPlaceholder', 'atItems', 'atHint', 'atAccessibleName',
@@ -341,6 +358,12 @@ begin
   if LMethod <> '' then
   begin
     Exit(LMethod + '(' + PascalString(AValue) + ')');
+  end;
+
+  if (LAttribute = atValue) and
+    ((ANode.ProjectionKind = 'date') or ACalendarValue) then
+  begin
+    Exit('Value(' + PascalDate(AValue) + ')');
   end;
 
   if (AValue = '') and (LAttribute = atValue) then
@@ -787,7 +810,15 @@ var
     function Literal(const AValue: TNyxDataValue): TNyxText;
     begin
       case ADomain.Kind of
-        nskText: Result := PascalString(AValue.AsText);
+        nskText:
+          begin
+            Result := PascalString(AValue.AsText);
+
+            if ADomain.CalendarDate then
+            begin
+              Result := PascalDate(AValue.AsText);
+            end;
+          end;
         nskBoolean:
           begin
             Result := 'False';
@@ -805,6 +836,11 @@ var
   begin
     LData := ADomain.ToData;
     Result := CFactories[ADomain.Kind];
+
+    if ADomain.CalendarDate then
+    begin
+      Result := 'NyxDateDomain';
+    end;
     for LIndex := 0 to LData.Count - 1 do
     begin
 
@@ -871,6 +907,13 @@ var
     LData := ADomain.ToData;
     LFields := nil;
     Add('type', LData.Field('type'));
+    { Canonical domain data must retain format during authored fingerprinting;
+      otherwise a date would collapse to unconstrained text after generation. }
+
+    if ADomain.CalendarDate then
+    begin
+      Add('format', LData.Field('format'));
+    end;
     for LIndex := 0 to LData.Count - 1 do
     begin
 
@@ -1420,6 +1463,9 @@ var
     LContentScope: TNyxContentRule;
     LContentPlatform: TNyxPlatform;
     LContentIndex: Integer;
+    LCalendarValue: Boolean;
+    LContext: TNyxNode;
+    LProjection: TNyxNode;
   begin
     LScope := npfAny;
     LViewportScope := TNyxViewportCondition.Any;
@@ -1462,6 +1508,21 @@ var
     if ANode.Props.Count > 0 then
     begin
       LLines.Add('    ' + LVariable + '.Configure');
+    end;
+    LCalendarValue := False;
+
+    if (ANode.Kind = 'slot-override') and
+      (ANode.Props.IndexOfName('value') >= 0) and (ANode.Prop('mode') <> 'remove') then
+    begin
+      { A properties override has no primitive kind of its own. Resolve once
+        against its independently owned reusable context so its default date
+        authoring stays typed, including nested/replaced named parts. }
+      LContext := RealizeNyxContext(ADocument, ANode, LProjection);
+      try
+        LCalendarValue := (LProjection <> nil) and (LProjection.ProjectionKind = 'date');
+      finally
+        LContext.Free;
+      end;
     end;
     for LPropIndex := 0 to ANode.Props.Count - 1 do
     begin
@@ -1509,7 +1570,7 @@ var
         LLines.Add('      .ForPlatform(' + NyxPlatformSymbol(LPlatform) + ')');
         LScope := LPlatform;
       end;
-      LLines.Add('      .' + ConfigurationCall(ANode, LKey, ANode.Prop(LWireKey)));
+      LLines.Add('      .' + ConfigurationCall(ANode, LKey, ANode.Prop(LWireKey), LCalendarValue));
     end;
 
     if ANode.Props.Count > 0 then
@@ -1594,6 +1655,7 @@ begin
     LLines.Add('');
     LLines.Add('uses');
     LLines.Add('  nyx.text,');
+    LLines.Add('  nyx.dates,');
     LLines.Add('  nyx.types,');
     LLines.Add('  nyx.responsive,');
     LLines.Add('  nyx.presentations,');

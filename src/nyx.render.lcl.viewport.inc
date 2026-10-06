@@ -32,7 +32,15 @@ begin
     Exit;
   end;
 
-  if ABinding.FInput.Parent is TNyxLCLSurface then
+  if ABinding.FDateField <> nil then
+  begin
+    { The grouped calendar host owns its editor's geometry. Keep the existing
+      themed frame and let Lazarus arrange its real edit and picker button. }
+    LFrameHeight := Max(0, AHeight - 24);
+    ABinding.FDateField.Parent.SetBounds(0, 24, AWidth, LFrameHeight);
+    ABinding.FDateField.SetBounds(12, 5, Max(0, AWidth - 24), Max(0, AHeight - 34));
+  end
+  else if ABinding.FInput.Parent is TNyxLCLSurface then
   begin
     LFrameHeight := Max(0, AHeight - 24);
     ABinding.FInput.Parent.SetBounds(0, 24, AWidth, LFrameHeight);

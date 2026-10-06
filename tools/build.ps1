@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'confirmation', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'confirmation', 'date-fields', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -53,6 +53,9 @@ param(
   [string]$TypeAheadSourceDirectory = 'build/typeahead/source',
   # Same accepted confirmation template on both targets, exported through MCP.
   [string]$ConfirmationSourceDirectory = 'build/confirmation/source',
+  # Exact semantic date companion. Typed bounds/state enrichment is explicitly
+  # performed by the public Pascal fixture, never handwritten editor mutations.
+  [string]$DateSourceDirectory = 'build/date-fields/companion',
   # Full-catalog source is composed/exported by the Pascal semantic MCP consumer.
   [string]$CatalogFocusSourceDirectory = 'build/catalog-focus/source',
   # Property mutations consume an unchanged MCP-authored catalog/review pair.
@@ -1095,6 +1098,61 @@ try {
       "-Fu$nyxKeyboardSource", "-FE$nyxBrowserDir", 'tests/nyx_keyboard_host_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/keyboard-host.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'date-fields') {
+    # Compile/replay current typed generated source, then exercise real LCL
+    # controls and stage the matching browser consumer. No listener or rollout.
+    $nyxDateRoot = Join-Path $nyxRoot 'build/date-fields/maintained'
+    $nyxDateSource = [IO.Path]::GetFullPath($DateSourceDirectory)
+    $nyxDateExport = Join-Path $nyxDateRoot 'export'
+    $nyxDateTyped = Join-Path $nyxDateRoot 'typed'
+    $nyxDateReplay = Join-Path $nyxDateRoot 'reconstruction'
+    $nyxDateNative = Join-Path $nyxDateRoot 'native'
+    $nyxDateBrowser = Join-Path $nyxDateRoot 'web'
+
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxDateSource 'nyx.generated.view.pas'))) {
+      throw 'Export the semantic date review first; see docs/date-fields.md'
+    }
+    New-Item -ItemType Directory -Force $nyxDateExport, $nyxDateTyped,
+      $nyxDateReplay, $nyxDateNative, $nyxDateBrowser | Out-Null
+    $nyxFpc = Resolve-NyxTool $Fpc 'FPC' 'fpc'
+    $nyxDatePortableFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-Fu$nyxDateSource")
+    Invoke-NyxCompiler $nyxFpc ($nyxDatePortableFlags +
+      @("-FU$nyxDateExport", "-FE$nyxDateExport", 'tests/nyx_date_export.lpr'))
+    & (Join-Path $nyxDateExport 'nyx_date_export.exe') $nyxDateTyped
+
+    if ($LASTEXITCODE -ne 0) { throw 'Typed date export failed' }
+    Invoke-NyxCompiler $nyxFpc ($nyxDatePortableFlags +
+      @("-Fu$nyxDateTyped", "-FU$nyxDateReplay", "-FE$nyxDateReplay",
+        'tests/nyx_date_reconstruction.lpr'))
+    & (Join-Path $nyxDateReplay 'nyx_date_reconstruction.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Typed date reconstruction failed' }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxDatePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc ($nyxDatePortableFlags + @(
+      "-Fu$nyxLazarus/lcl/units/$nyxDatePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxDatePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxDatePlatform",
+      "-FU$nyxDateNative", "-FE$nyxDateNative", 'tests/nyx_date_controls.lpr'))
+    & (Join-Path $nyxDateNative 'nyx_date_controls.exe') (Join-Path $nyxDateRoot 'english')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native date controls failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxDateBrowserFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Futests', "-Fu$nyxDateSource", "-FE$nyxDateBrowser")
+    Invoke-NyxCompiler $nyxPas2js ($nyxDateBrowserFlags + @('tests/nyx_date_controls.lpr'))
+    Invoke-NyxCompiler $nyxPas2js ($nyxDateBrowserFlags +
+      @("-Fu$nyxDateTyped", 'tests/nyx_date_reconstruction.lpr'))
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxDateBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/date-fields.html'),
+      (Join-Path $nyxRoot 'studio/web/date-reconstruction.html') -Destination $nyxDateBrowser
+    Write-Host 'Date consumers staged; execute on an existing admitted HTTP host.'
     exit 0
   }
 

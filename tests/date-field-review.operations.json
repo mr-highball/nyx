@@ -1,0 +1,132 @@
+{
+  "label": "Calendar field workshop",
+  "operations": [
+    {
+      "op": "title",
+      "value": "Plan a little getaway"
+    },
+    {
+      "op": "create",
+      "id": "home",
+      "kind": "page",
+      "root": "page",
+      "properties": {
+        "layout": "column",
+        "gap": 16,
+        "padding": 24
+      }
+    },
+    {
+      "op": "create",
+      "id": "trip-dates",
+      "kind": "date-range",
+      "root": "component",
+      "properties": {
+        "layout": "row",
+        "flow-wrap": "wrap",
+        "gap": 12
+      }
+    },
+    {
+      "op": "create",
+      "id": "trip-title",
+      "kind": "heading",
+      "parent": "home",
+      "properties": {
+        "text": "A date worth looking forward to"
+      }
+    },
+    {
+      "op": "create",
+      "id": "trip-description",
+      "kind": "label",
+      "parent": "home",
+      "properties": {
+        "text": "Choose your arrival and departure dates. Each trip keeps its own calendar fields."
+      }
+    },
+    {
+      "op": "create",
+      "id": "trip-card",
+      "kind": "card",
+      "parent": "home",
+      "properties": {
+        "layout": "column",
+        "gap": 20,
+        "padding": 24
+      }
+    },
+    {
+      "op": "instance",
+      "id": "first-trip",
+      "component": "trip-dates",
+      "parent": "trip-card"
+    },
+    {
+      "op": "override",
+      "id": "first-arrival",
+      "instance": "first-trip",
+      "path": "start",
+      "mode": "properties"
+    },
+    {
+      "op": "update",
+      "id": "first-arrival",
+      "properties": {
+        "text": "Arrival date",
+        "value": "2026-10-06"
+      }
+    },
+    {
+      "op": "override",
+      "id": "first-departure",
+      "instance": "first-trip",
+      "path": "finish",
+      "mode": "properties"
+    },
+    {
+      "op": "update",
+      "id": "first-departure",
+      "properties": {
+        "text": "Departure date",
+        "value": "2026-10-12"
+      }
+    },
+    {
+      "op": "instance",
+      "id": "second-trip",
+      "component": "trip-dates",
+      "parent": "trip-card"
+    },
+    {
+      "op": "override",
+      "id": "second-arrival",
+      "instance": "second-trip",
+      "path": "start",
+      "mode": "properties"
+    },
+    {
+      "op": "update",
+      "id": "second-arrival",
+      "properties": {
+        "text": "Next arrival",
+        "value": "2026-11-03"
+      }
+    },
+    {
+      "op": "override",
+      "id": "second-departure",
+      "instance": "second-trip",
+      "path": "finish",
+      "mode": "properties"
+    },
+    {
+      "op": "update",
+      "id": "second-departure",
+      "properties": {
+        "text": "Next departure",
+        "value": "2026-11-07"
+      }
+    }
+  ]
+}
