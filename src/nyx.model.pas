@@ -228,6 +228,16 @@ type
     procedure Insert(AIndex: Integer; const ANode: INyxNode); overload;
     { Extract detaches without freeing; Remove detaches and frees. }
     function Extract(AIndex: Integer): TNyxNode;
+    { Runtime ownership boundary for retained view arrangement. AShape is an
+      independent realized root containing exactly these runtime/source/design
+      identities and instance scopes. Prepare every child array and managed
+      implementation anchor before changing this root; False changes nothing.
+      Successful publication retains every existing node, value and interface,
+      changing only borrowed parents and owned child order. No node from AShape
+      is adopted. Roots, duplicates, count/depth budgets and lifetime separation
+      are checked. Adapters separately admit compatible contracts/properties and
+      physical parent hosts before calling this structural primitive. }
+    function ArrangeLike(AShape: TNyxNode): Boolean;
     procedure Remove(ANode: TNyxNode);
     function Find(const AID: TNyxText): TNyxNode;
     { Borrow a named compound part. Slash-separated paths describe nested slots,
@@ -587,6 +597,18 @@ uses
   nyx.schema,
   nyx.collections.view,
   nyx.text.index;
+
+type
+  { Private, short-lived ownership candidate. Class fields support managed COM
+    interfaces on both compilers; these objects never escape ArrangeLike. }
+  TNyxArrangementEntry = class
+    Node: TNyxNode;
+    Anchor: INyxNode;
+    Parent: TNyxNode;
+    Children: array of TNyxNode;
+    References: array of INyxNode;
+    Seen: Boolean;
+  end;
 
 function NyxNodeSizeConstraints(ANode: TNyxNode;
   APlatform: TNyxPlatform): TNyxSizeConstraints;
@@ -2312,6 +2334,139 @@ begin
   { Raw extraction explicitly hands a caller ownership token back. A managed
     extraction retains an interface before releasing this token. }
   Result.FRawOwnership := True;
+end;
+
+function TNyxNode.ArrangeLike(AShape: TNyxNode): Boolean;
+var
+  LEntries: array of TNyxArrangementEntry;
+  LIndex: TNyxTextIndex;
+  LCount: Integer;
+  LPrepared: Integer;
+  LEntry: Integer;
+
+  function Collect(ANode: TNyxNode; ADepth: Integer): Boolean;
+  var
+    LChild: Integer;
+    LPosition: Integer;
+  begin
+    Result := False;
+
+    if not ANode.IsRealized or (ADepth > NyxMaximumTreeDepth) or
+      (LCount >= NyxMaximumNodes) or (LIndex.IndexOf(ANode.ID) >= 0) then
+    begin
+      Exit;
+    end;
+    LPosition := LCount;
+    Inc(LCount);
+
+    if Length(LEntries) < LCount then
+    begin
+      SetLength(LEntries, LCount * 2);
+    end;
+    { pas2js COM interfaces require a class field, not a record member. Each
+      short-lived entry owns its implementation anchor through publication. }
+    LEntries[LPosition] := TNyxArrangementEntry.Create;
+    LEntries[LPosition].Node := ANode;
+    LEntries[LPosition].Anchor := ANode.ComponentReference;
+    LIndex.AddFirst(ANode.ID, LPosition);
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if (ANode.Children[LChild].Parent <> ANode) or
+        not Collect(ANode.Children[LChild], ADepth + 1) then
+      begin
+        Exit;
+      end;
+    end;
+    Result := True;
+  end;
+
+  function Prepare(ANode, AParent: TNyxNode; ADepth: Integer): Boolean;
+  var
+    LPosition: Integer;
+    LChild: Integer;
+    LChildPosition: Integer;
+    LExisting: TNyxNode;
+  begin
+    Result := False;
+
+    if not ANode.IsRealized or (ADepth > NyxMaximumTreeDepth) or
+      (LPrepared >= LCount) then
+    begin
+      Exit;
+    end;
+    LPosition := LIndex.IndexOf(ANode.ID);
+
+    if (LPosition < 0) or LEntries[LPosition].Seen then
+    begin
+      Exit;
+    end;
+    LExisting := LEntries[LPosition].Node;
+
+    if (ANode = LExisting) or (ANode.Kind <> LExisting.Kind) or
+      (ANode.SourceID <> LExisting.SourceID) or
+      (ANode.DesignID <> LExisting.DesignID) or
+      (ANode.InstanceScopeID <> LExisting.InstanceScopeID) then
+    begin
+      Exit;
+    end;
+    LEntries[LPosition].Seen := True;
+    LEntries[LPosition].Parent := AParent;
+    Inc(LPrepared);
+    SetLength(LEntries[LPosition].Children, ANode.Count);
+    SetLength(LEntries[LPosition].References, ANode.Count);
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if (ANode.Children[LChild].Parent <> ANode) or
+        not Prepare(ANode.Children[LChild], LExisting, ADepth + 1) then
+      begin
+        Exit;
+      end;
+      LChildPosition := LIndex.IndexOf(ANode.Children[LChild].ID);
+      LEntries[LPosition].Children[LChild] := LEntries[LChildPosition].Node;
+      LEntries[LPosition].References[LChild] := LEntries[LChildPosition].Anchor;
+    end;
+    Result := True;
+  end;
+
+begin
+  Result := False;
+
+  if (AShape = nil) or (AShape = Self) or not IsRealized or
+    (Parent <> nil) or (FOwner <> nil) or (AShape.Parent <> nil) or
+    (AShape.FOwner <> nil) or (AShape.ID <> ID) then
+  begin
+    Exit;
+  end;
+  LIndex := TNyxTextIndex.Create;
+  try
+    LCount := 0;
+    LPrepared := 0;
+
+    if not Collect(Self, 0) or not Prepare(AShape, nil, 0) or
+      (LPrepared <> LCount) then
+    begin
+      Exit;
+    end;
+    { All allocation, identity/ownership checking and implementation retention
+      completed above. These assignments publish prepared arrays without Add,
+      Extract, allocation, user callbacks or a temporary unowned subtree. The
+      local anchors keep managed implementations alive until all owners agree. }
+    for LEntry := 0 to LCount - 1 do
+    begin
+      LEntries[LEntry].Node.FChildren := LEntries[LEntry].Children;
+      LEntries[LEntry].Node.FChildReferences := LEntries[LEntry].References;
+      LEntries[LEntry].Node.FParent := LEntries[LEntry].Parent;
+    end;
+    Result := True;
+  finally
+    for LEntry := 0 to Length(LEntries) - 1 do
+    begin
+      LEntries[LEntry].Free;
+    end;
+    LIndex.Free;
+  end;
 end;
 
 procedure TNyxNode.Remove(ANode: TNyxNode);

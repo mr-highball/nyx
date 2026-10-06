@@ -27,6 +27,7 @@ uses
   {$ifndef PAS2JS}Interfaces, Classes, Forms, Controls, StdCtrls, ExtCtrls,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls,
   nyx.state, nyx.behavior, nyx.projection.refresh
+  {$ifdef NYX_ARRANGEMENT_MCP}, nyx.generated.view{$endif}
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser
   {$else}, nyx.render.lcl{$endif};
 
@@ -124,6 +125,7 @@ var
   LRenderer: TRenderer;
   LObserver: TObservation;
   LRoot: TNyxNode;
+  LEntryNode: TNyxNode;
   LCaption: TFace;
   LInput: TFace;
   LOtherInput: TFace;
@@ -132,19 +134,26 @@ var
   LClicks: Integer;
   LRefused: Boolean;
   LContext: TNyxText;
+  LRepeat: Integer;
   {$ifdef PAS2JS}
   LHost: TJSHTMLElement;
   {$else}
   LHost: TForm;
   {$endif}
 begin
-  LDocument := TNyxDocument.Create;
+  {$ifdef NYX_ARRANGEMENT_MCP}LDocument := BuildNyxDocument;
+  {$else}LDocument := TNyxDocument.Create;{$endif}
   LCandidate := nil;
   LRenderer := TRenderer.Create;
   LObserver := TObservation.Create;
   {$ifdef PAS2JS}
   LHost := TJSHTMLElement(document.createElement('div'));
   LHost.style.setProperty('width', '720px');
+
+  if window.location.search = '?compact' then
+  begin
+    LHost.style.setProperty('width', '390px');
+  end;
   LHost.style.setProperty('height', '540px');
   document.body.appendChild(LHost);
   {$else}
@@ -155,14 +164,21 @@ begin
   LHost.Show;
   {$endif}
   try
+    {$ifndef NYX_ARRANGEMENT_MCP}
     LDocument.Title := 'English control review';
     LDocument.AddPage(NewNyxPage('review'));
     LDocument.Pages[0].Add(NewNyxLabel('caption').WithText('Original caption'));
-    LDocument.Pages[0].Add(NewNyxInput('entry').WithText('Your notes'));
+    LDocument.Pages[0].Add(NewNyxRow('workspace'));
+    LDocument.Find('workspace').Add(NewNyxColumn('left-room'));
+    LDocument.Find('workspace').Add(NewNyxColumn('right-room'));
+    LDocument.Find('left-room').Configure.Width(300).Done;
+    LDocument.Find('right-room').Configure.Width(300).Done;
+    LDocument.Find('left-room').Add(NewNyxInput('entry').WithText('Your notes'));
     LDocument.Find('entry').Configure.Value('Original default').Done;
-    LDocument.Pages[0].Add(NewNyxInput('other-entry').WithText('Independent notes'));
+    LDocument.Find('right-room').Add(NewNyxInput('other-entry').WithText('Independent notes'));
     LDocument.Find('other-entry').Configure.Value('Other default').Done;
-    LDocument.Pages[0].Add(NewNyxButton('action').WithText('Continue'));
+    LDocument.Find('left-room').Add(NewNyxButton('action').WithText('Continue'));
+    {$endif}
     LRenderer.OnEvent := LObserver.Changed;
     LRenderer.Render(LDocument, LDocument.Pages[0], LHost);
     LRoot := LRenderer.Root;
@@ -244,6 +260,87 @@ begin
       (LRenderer.InputIdentity(LCaption) = ''), 'Native input capture returns only exact live input identity');
     {$endif}
 
+    { This admission is deliberately separate from scalar refresh. The same
+      logical controls move between ordinary hosts; alternate node sets, live
+      binding coordinators and special pane structures still need a full mount. }
+    LEntryNode := LRoot.Find('entry');
+    SetDraft(LInput);
+    LCandidate := LDocument.Clone;
+    LCandidate.Find('right-room').Insert(0, LCandidate.Find('left-room').Extract(0));
+    LCandidate.Find('right-room').Insert(1, LCandidate.Find('left-room').Extract(0));
+    LCandidate.Find('caption').Configure.Text('Rearranged caption').Done;
+    for LRepeat := 1 to 6 do
+    begin
+      { The callback exercise below clicks another control and may focus it.
+        Establish this move's intended focused field without rewriting its
+        already retained text/range; focus preservation concerns actual state
+        immediately before publication, not a former application action. }
+      {$ifdef PAS2JS}
+      LInput.focus;
+      TJSHTMLInputElement(LInput).selectionStart := 4;
+      TJSHTMLInputElement(LInput).selectionEnd := 4;
+      {$else}
+      TWinControl(LInput).SetFocus;
+      TCustomEdit(LInput).SelStart := 4;
+      TCustomEdit(LInput).SelLength := 0;
+      {$endif}
+      Check(Caret(LInput) = 4, 'Each arrangement begins with the requested physical caret');
+      Check(LRenderer.TryRefresh(LCandidate, LCandidate.Pages[0], False),
+        'Exact control set admits forward rearrangement');
+      Check((LRenderer.Root = LRoot) and (LRoot.Find('entry') = LEntryNode) and
+        (LRoot.Find('entry').Parent.ID = 'right-room'),
+        'Rearrangement retains exact node identity with its new borrowed parent');
+      Check((LRenderer.InputFor('entry') = LInput) and
+        (InputText(LInput) = TNyxText('Independent draft / 🌙')) and (Caret(LInput) = 4),
+        'Reparent retains actual input object, independent supplementary text and caret');
+      {$ifdef PAS2JS}
+      Check((document.activeElement = LInput) and
+        (LRenderer.ElementFor('entry').parentNode = LRenderer.ElementFor('right-room')) and
+        (LRenderer.ElementFor('right-room').children[0] = LRenderer.ElementFor('entry')),
+        'DOM parent/order and focused editing follow admitted ownership');
+      {$else}
+      Check(LHost.ActiveControl = LInput, 'Native reparent retains focused editing');
+      Check(LRenderer.ControlFor('entry').Parent = LRenderer.ControlFor('right-room'),
+        'Native physical parent follows admitted ownership');
+      Check(TWinControl(LRenderer.ControlFor('entry')).TabOrder = 0,
+        'Native tab order follows the new authored order');
+      {$endif}
+      Check(Caption(LCaption) = 'Rearranged caption',
+        'Authored deltas follow identity independently of former child positions');
+      LClicks := LObserver.Clicks;
+      Click(LButton);
+      Check(LObserver.Clicks = LClicks + 1,
+        'Retained callback fires once after physical reparenting');
+      Check(LRenderer.TryRefresh(LDocument, LDocument.Pages[0], False) and
+        (LRoot.Find('entry').Parent.ID = 'left-room') and
+        (InputText(LInput) = TNyxText('Independent draft / 🌙')) and (Caret(LInput) = 4),
+        'Reverse arrangement restores ownership while retaining live editing');
+    end;
+    FreeAndNil(LCandidate);
+
+    LCandidate := LDocument.Clone;
+    LCandidate.Find('left-room').Insert(0, LCandidate.Find('left-room').Extract(1));
+    Check(LRenderer.TryRefresh(LCandidate, LCandidate.Pages[0], False) and
+      (LRoot.Find('left-room').Children[0].ID = 'action') and
+      (LRenderer.InputFor('entry') = LInput) and (Caret(LInput) = 4),
+      'Sibling-only reorder retains the same physical input and range');
+    Check(LRenderer.TryRefresh(LDocument, LDocument.Pages[0], False),
+      'Original sibling order remains independently recoverable');
+    FreeAndNil(LCandidate);
+
+    LCandidate := LDocument.Clone;
+    LCandidate.Find('right-room').Add(LCandidate.Find('left-room').Extract(0));
+    LCandidate.Find('caption').Configure.Text('Must not publish arrangement').Done;
+    LRestores[0] := TNyxProjectionValueRestore.ForField('entry', 'other-entry');
+    Check(not LRenderer.TryRefresh(LCandidate, LCandidate.Pages[0], False, LRestores) and
+      (LRoot.Find('entry').Parent.ID = 'left-room') and
+      (Caption(LCaption) = 'Refreshed caption') and (Caret(LInput) = 4),
+      'A mismatched restore refuses the complete structure/property group');
+    FreeAndNil(LCandidate);
+    LRestores[0] := TNyxProjectionValueRestore.ForField('entry', 'entry');
+    Check(LRenderer.TryRefresh(LDocument, LDocument.Pages[0], False, LRestores),
+      'Explicit restoration retains its scalar behavior after structural changes');
+
     LCandidate := LDocument.Clone;
     LCandidate.Pages[0].Add(NewNyxBadge('additional').WithText('New control'));
     Check(not LRenderer.TryRefresh(LCandidate, LCandidate.Pages[0], False) and
@@ -251,7 +348,15 @@ begin
       'Structural mismatch refuses reuse without changing mounted controls');
     FreeAndNil(LCandidate);
     LCandidate := LDocument.Clone;
-    LCandidate.Find('action').Configure.Variant(nvPrimary).Done;
+    if LCandidate.Find('action').StoredProp(NyxAttributeName(atVariant)) =
+      NyxVariantName(nvPrimary) then
+    begin
+      LCandidate.Find('action').Configure.Variant(nvSecondary).Done;
+    end
+    else
+    begin
+      LCandidate.Find('action').Configure.Variant(nvPrimary).Done;
+    end;
     Check(not LRenderer.TryRefresh(LCandidate, LCandidate.Pages[0], False),
       'Unqualified style changes request complete candidate rendering');
     FreeAndNil(LCandidate);
@@ -315,7 +420,10 @@ begin
       'Scalar live binding coordinator is explicitly outside retained reuse');
 
     WriteLn('PASS ', GChecks, ' actual retained projection checks');
-    {$ifdef PAS2JS}document.body.setAttribute('data-projection-refresh', 'passed');{$endif}
+    {$ifdef PAS2JS}
+    document.body.setAttribute('data-projection-refresh', 'passed');
+    document.body.setAttribute('data-projection-refresh-checks', IntToStr(GChecks));
+    {$endif}
   finally
     LRenderer.Free;
     LObserver.Free;
@@ -334,6 +442,7 @@ begin
     begin
       WriteLn('FAIL ', LException.Message);
       {$ifdef PAS2JS}document.body.setAttribute('data-projection-refresh', 'failed');
+      document.body.setAttribute('data-projection-refresh-error', LException.Message);
       {$else}DumpExceptionBackTrace(Output); ExitCode := 1;{$endif}
     end;
   end;

@@ -3,7 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current prerequisite result (2026-10-06): exact property-name lookup removes
+Current prerequisite result (2026-10-06): retained rearrangement prepares ownership
+before moving an unchanged realized control set. The scalar guard remains strict;
+actual browser/Win32 inputs, ranges and callbacks survive repeated reparent/reorder
+and reversal. Shared ownership checks pass 34 per compiler/browser; exact semantic
+source passes 91 native / 75 browser at ordinary and 390-pixel host widths. Both
+MCP application outputs compile identical source. Main LAN/projects stay untouched.
+Alternate recipes, bound state, fluent structural authoring and ordinary Studio
+presentation switching remain open. Renderer no-closure 5; authoring 22, workflow 9,
+codegen 28 and delivery 1 remain. No original criterion closes. See
+[evidence and return path](WORK.md#retained-structural-arrangement--2026-10-06).
+
+Previous prerequisite result (2026-10-06): exact property-name lookup removes
 temporary candidate strings. The unchanged 30-check native Studio journey uses
 about 70% fewer allocations / 57% fewer cumulative allocated bytes, with zero
 leaks. Browser/LCL control and ordinary Studio counterparts pass; authenticated

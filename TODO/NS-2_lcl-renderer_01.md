@@ -96,6 +96,25 @@ changes the next action back to original codegen criterion 3's detached
 visual/structural reconciliation and comfortable source editing. WORK.md records
 failed attempts, final commands/evidence and the unchanged browser/service block.
 
+## Retained structural arrangement — 2026-10-06
+
+Criteria 1/2 now include a separate ownership/publication gate for rearranging an
+unchanged realized control set. All owner arrays and implementation anchors are
+prepared before publication. Ordinary physical hosts reuse their exact controls,
+drafts, ranges and callbacks through reparent/reorder and reversal. Special pane
+hosts, additions/removals, changed contracts/creators and live bindings still refuse.
+The original scalar guard is unchanged. Shared checks pass 34 per compiler/browser;
+exact MCP-authored source passes 91 actual Win32 / 75 actual browser checks at
+ordinary and 390-pixel host widths. Native editing regression passes 118, zero leaks.
+Both MCP application jobs compile identical English source; both Studios compile.
+
+No complete original criterion is accepted. Renderer no-closure advances 4→5 once;
+authoring 22, workflow 9, codegen 28 and delivery 1 remain. End this local foundation
+batch. Return to fluent alternate structures, bound-state continuity, ordinary
+Studio presentation switching and original parity/accessibility/performance gates.
+[WORK.md](../WORK.md#retained-structural-arrangement--2026-10-06) records evidence,
+failures, preservation and remote status. The main LAN release remains unchanged.
+
 ## Allocation cost in ordinary Studio — 2026-10-06
 
 The unchanged 30-check native Inspector/worker/Undo journey now allocates

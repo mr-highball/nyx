@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -50,6 +50,9 @@ param(
   # Optional unchanged companion exported through bounded semantic MCP windows.
   # Empty uses the independent portable contract fixture for offline builds.
   [string]$ResponsiveSourceDirectory,
+  # Optional exact base document exported through semantic MCP. The ordinary
+  # portable fixture remains available without starting an application server.
+  [string]$ArrangementSourceDirectory,
   # Unchanged companion exported through semantic MCP for alignment input review.
   [string]$GuideSourceDirectory = 'build/alignment/mcp-source',
   # Unchanged bounded MCP companion for the actual absolute-movement journey.
@@ -1465,6 +1468,53 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxCollectionAgentHost") -Destination $nyxCollectionAgentBrowser
     }
     Write-Host 'Semantic collection consumers staged; browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'retained-arrangement') {
+    # Pascal owns ownership/identity admission and real input assertions. This
+    # branch only compiles/runs/stages artifacts and never launches a listener.
+    $nyxArrangeRoot = Join-Path $nyxRoot 'build/retained-arrangement/maintained'
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxArrangePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxArrangeChecked = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh', '-Fusrc')
+    foreach ($nyxArrangeCompiler in @(@($nyxFpc, 'stable'), @($nyxLclFpc, 'matched'))) {
+      $nyxArrangeUnits = Join-Path $nyxArrangeRoot $nyxArrangeCompiler[1]
+      New-Item -ItemType Directory -Force $nyxArrangeUnits | Out-Null
+      Invoke-NyxCompiler $nyxArrangeCompiler[0] ($nyxArrangeChecked + @(
+        "-FU$nyxArrangeUnits", "-FE$nyxArrangeUnits", 'tests/nyx_arrangement_tests.lpr'))
+      & (Join-Path $nyxArrangeUnits 'nyx_arrangement_tests.exe')
+      if ($LASTEXITCODE -ne 0) { throw 'Owned arrangement qualification failed' }
+    }
+    $nyxArrangeSource = @()
+    if ($ArrangementSourceDirectory) {
+      $nyxArrangeSourcePath = [IO.Path]::GetFullPath($ArrangementSourceDirectory)
+      if (-not (Test-Path -LiteralPath (Join-Path $nyxArrangeSourcePath 'nyx.generated.view.pas'))) {
+        throw 'The exact semantic arrangement companion is missing'
+      }
+      $nyxArrangeSource = @('-dNYX_ARRANGEMENT_MCP', "-Fu$nyxArrangeSourcePath")
+    }
+    $nyxArrangeNative = Join-Path $nyxArrangeRoot 'controls'
+    New-Item -ItemType Directory -Force $nyxArrangeNative | Out-Null
+    Invoke-NyxCompiler $nyxLclFpc ($nyxArrangeChecked + $nyxArrangeSource + @('-Fustudio', '-Futests',
+      "-Fu$nyxLazarus/lcl/units/$nyxArrangePlatform", "-Fu$nyxLazarus/lcl/units/$nyxArrangePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxArrangePlatform", "-Fu$nyxLazarus/packager/units/$nyxArrangePlatform",
+      "-FU$nyxArrangeNative", "-FE$nyxArrangeNative", 'tests/nyx_projection_refresh_tests.lpr'))
+    & (Join-Path $nyxArrangeNative 'nyx_projection_refresh_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native retained arrangement failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxArrangeBrowser = Join-Path $nyxArrangeRoot 'web'
+    New-Item -ItemType Directory -Force $nyxArrangeBrowser | Out-Null
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Futests',
+      "-FE$nyxArrangeBrowser", 'tests/nyx_arrangement_tests.lpr')
+    Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Fustudio',
+      '-Futests', "-FE$nyxArrangeBrowser", 'tests/nyx_projection_refresh_tests.lpr') + $nyxArrangeSource)
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxArrangeBrowser 'rtl.js') -Force
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/arrangement-tests.html'),
+      (Join-Path $nyxRoot 'studio/web/projection-refresh.html') -Destination $nyxArrangeBrowser -Force
+    Write-Host 'Owned/actual native arrangements pass; browser execution still needs its isolated HTTP host.'
     exit 0
   }
 

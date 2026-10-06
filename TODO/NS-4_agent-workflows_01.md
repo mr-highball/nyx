@@ -15,6 +15,14 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Current transport follow-up (2026-10-06): one isolated Pascal-client native build
+request wrote a complete job receipt and then reported a socket-read error.
+Subsequent authenticated bounded status calls returned exit 0 and confirmed both
+immutable jobs succeeded with exact source/output. No main service was involved.
+Investigate this completion/close boundary in the existing workflow/transport
+owner; do not treat a partial transport result alone as compiler success. Private
+receipts live under `build/retained-arrangement/`; no workflow criterion closes.
+
 **Acceptance Criteria:**
 
 - Project/user configuration discovers authenticated tools through actual Codex

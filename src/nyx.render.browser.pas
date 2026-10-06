@@ -277,6 +277,10 @@ type
     { Retain one eligible entry when a checked radio becomes disabled/hidden.
       Grouping follows the physical HTML name/form boundary, not display rows. }
     procedure SyncRadioFocus;
+    { Reattach existing physical faces in admitted runtime-tree order. Guard
+      host focus notifications and preserve editing ranges/scroll positions;
+      no binding, callback, element or emitter is recreated. }
+    procedure ArrangeControls(AFormer: TNyxNode);
   public
     constructor Create(ATheme: TNyxTheme = nil);
     destructor Destroy; override;
@@ -1671,6 +1675,106 @@ begin
   end;
 end;
 
+procedure TNyxBrowserRenderer.ArrangeControls(AFormer: TNyxNode);
+type
+  TEditingPosition = record
+    Selection: TNyxTextSelection;
+    Top: NativeInt;
+    Left: NativeInt;
+    InputTop: NativeInt;
+    InputLeft: NativeInt;
+  end;
+var
+  LPositions: array of TEditingPosition;
+  LFocus: TJSHTMLElement;
+  LInside: Boolean;
+  LUpdating: Boolean;
+  LIndex: Integer;
+  LTop: NativeInt;
+  LLeft: NativeInt;
+
+  procedure Arrange(ANode: TNyxNode);
+  var
+    LParent: TJSHTMLElement;
+    LChild: Integer;
+    LElement: TJSHTMLElement;
+    LNext: TJSNode;
+  begin
+    LParent := ElementFor(ANode.ID, niRuntime);
+    { Candidate preorder moves an ancestor before its descendants. This also
+      safely reverses a former parent/child relationship without a transient
+      DOM cycle. Reverse insertion establishes exact authored sibling order,
+      leaving each host's private caption/glyph nodes in place. }
+    LNext := nil;
+    if NyxProjectionChildrenChanged(ANode, AFormer) then
+    begin
+      for LChild := ANode.Count - 1 downto 0 do
+      begin
+        LElement := ElementFor(ANode.Children[LChild].ID, niRuntime);
+
+        if (LElement.parentNode <> LParent) or (LElement.nextSibling <> LNext) then
+        begin
+          LParent.insertBefore(LElement, LNext);
+        end;
+        LNext := LElement;
+      end;
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+      Arrange(ANode.Children[LChild]);
+    end;
+  end;
+
+begin
+  LFocus := TJSHTMLElement(document.activeElement);
+  LInside := (LFocus <> nil) and FHost.contains(LFocus);
+  LTop := FHost.scrollTop;
+  LLeft := FHost.scrollLeft;
+  SetLength(LPositions, Length(FBindings));
+  for LIndex := 0 to High(FBindings) do
+  begin
+    LPositions[LIndex].Top := FBindings[LIndex].FElement.scrollTop;
+    LPositions[LIndex].Left := FBindings[LIndex].FElement.scrollLeft;
+
+    if FBindings[LIndex].FInput <> nil then
+    begin
+      LPositions[LIndex].Selection := CaptureNyxBrowserSelection(FBindings[LIndex].FInput);
+      LPositions[LIndex].InputTop := FBindings[LIndex].FInput.scrollTop;
+      LPositions[LIndex].InputLeft := FBindings[LIndex].FInput.scrollLeft;
+    end;
+  end;
+  LUpdating := FUpdating;
+  FUpdating := True;
+  try
+    Arrange(FRoot);
+
+    if LInside then
+    begin
+      NyxFocusWithoutScroll(LFocus);
+    end;
+    for LIndex := 0 to High(FBindings) do
+    begin
+
+      if LPositions[LIndex].Selection.Defined then
+      begin
+        SelectNyxBrowserText(FBindings[LIndex].FInput, LPositions[LIndex].Selection);
+      end;
+
+      if FBindings[LIndex].FInput <> nil then
+      begin
+        FBindings[LIndex].FInput.scrollTop := LPositions[LIndex].InputTop;
+        FBindings[LIndex].FInput.scrollLeft := LPositions[LIndex].InputLeft;
+      end;
+      FBindings[LIndex].FElement.scrollTop := LPositions[LIndex].Top;
+      FBindings[LIndex].FElement.scrollLeft := LPositions[LIndex].Left;
+    end;
+    FHost.scrollTop := LTop;
+    FHost.scrollLeft := LLeft;
+  finally
+    FUpdating := LUpdating;
+  end;
+end;
+
 function TNyxBrowserRenderer.TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
   ADesignMode: Boolean; const ARestores: TNyxProjectionValueRestores): Boolean;
 var
@@ -1679,6 +1783,7 @@ var
   LTheme: TNyxTheme;
   LIndex: Integer;
   LPreviousSelection: TNyxPresentationSelection;
+  LArrangement: Boolean;
 begin
   FEvents.Scheduler.RequireUI;
   Result := False;
@@ -1724,8 +1829,11 @@ begin
     LCandidate := RealizeNyxView(ADocument, ARoot);
     ApplyNyxPlatform(LCandidate, npfBrowser);
 
-    if not CanRefreshNyxProjection(FRoot, LCandidate) or
-      not CanRefreshNyxProjection(FProjectionBaseline, LCandidate) or
+    LArrangement := not CanRefreshNyxProjection(FRoot, LCandidate);
+
+    if ((not LArrangement) and not CanRefreshNyxProjection(FProjectionBaseline, LCandidate)) or
+      (LArrangement and (not CanArrangeNyxProjection(FRoot, LCandidate) or
+        not CanArrangeNyxProjection(FProjectionBaseline, LCandidate))) or
       (FProjectionSchemaRevision <> NyxSchemaRevision) then
     begin
       Exit;
@@ -1733,18 +1841,36 @@ begin
     LPrevious := FRoot.Clone;
     LPreviousSelection := FPresentationSelection;
 
-    if not RefreshNyxProjectionProperties(FRoot, LCandidate, FProjectionBaseline, ARestores) then
-    begin
-      Exit;
-    end;
     try
+
+      if LArrangement then
+      begin
+
+        if not RefreshNyxProjectionArrangement(FRoot, LCandidate, FProjectionBaseline, ARestores) then
+        begin
+          Exit;
+        end;
+        ArrangeControls(LPrevious);
+      end
+      else if not RefreshNyxProjectionProperties(FRoot, LCandidate, FProjectionBaseline, ARestores) then
+      begin
+        Exit;
+      end;
       FPresentationSelection := FPresentationSelection.Reconciled(FRoot.PresentationSnapshot);
       Sync;
       { First-rule admission starts observation; removing the last rule retires
         it. A retained projection must follow the same mount lifetime as Render. }
       ObserveViewport;
     except
-      RefreshNyxProjectionProperties(FRoot, LPrevious);
+      if LArrangement then
+      begin
+        RefreshNyxProjectionArrangement(FRoot, LPrevious);
+        ArrangeControls(LCandidate);
+      end
+      else
+      begin
+        RefreshNyxProjectionProperties(FRoot, LPrevious);
+      end;
       FPresentationSelection := LPreviousSelection;
       Sync;
       ObserveViewport;

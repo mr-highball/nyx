@@ -65,6 +65,30 @@ function CanRefreshNyxProjection(AExisting, ACandidate: TNyxNode): Boolean;
 function RefreshNyxProjectionProperties(AExisting, ACandidate: TNyxNode;
   ABaseline: TNyxNode = nil; const ARestores: TNyxProjectionValueRestores = nil): Boolean;
 
+{ Separate structural admission for the exact same realized node set. The
+  scalar guard above stays strict. Reparenting/reordering is permitted only at
+  ordinary page/row/column/grid/panel/card/group/form/toolbar/sidebar hosts;
+  split panes and other special hosts retain their full-mount requirement.
+  Unchanged runtime/source/design identities and instance scopes preserve
+  logical ownership. Every original scalar/contract/binding/collection check
+  still applies after aligning independent comparison copies. False changes
+  nothing. This does not admit alternate recipes, new nodes or live bindings. }
+function CanArrangeNyxProjection(AExisting, ACandidate: TNyxNode): Boolean;
+
+{ Compare direct child identity/order with the same host in an independent
+  former arrangement. Adapters use this only after complete structural admission
+  so private split panes, glyphs and unchanged hosts are never reattached. }
+function NyxProjectionChildrenChanged(ANode, AFormerRoot: TNyxNode): Boolean;
+
+{ Apply an admitted rearrangement and authored scalar deltas without adopting
+  any candidate node. Baseline comparison follows runtime identity rather than
+  child position, preserving independent drafts. Adapters retain a previous
+  clone for model AND physical-parent rollback if a target operation fails.
+  As with scalar copying, allocation failures raise; target owners must catch
+  them before publication and restore their previous arrangement/properties. }
+function RefreshNyxProjectionArrangement(AExisting, ACandidate: TNyxNode;
+  ABaseline: TNyxNode = nil; const ARestores: TNyxProjectionValueRestores = nil): Boolean;
+
 { Exact immutable document context for a mounted view. Fresh encoding validates
   current public data/budgets; it is not an admission cache. All document fields
   except title/pages/components remain significant, including defaults, tokens,
@@ -76,7 +100,7 @@ function NyxProjectionContext(ADocument: TNyxDocument): TNyxText;
 implementation
 
 uses
-  nyx.codec, nyx.data, nyx.presentations;
+  nyx.codec, nyx.data, nyx.presentations, nyx.text.index;
 
 class function TNyxProjectionValueRestore.ForField(const ARuntimeID,
   ADesignID: TNyxText): TNyxProjectionValueRestore;
@@ -317,6 +341,177 @@ begin
         end;
       end;
     end;
+  end;
+end;
+
+function NyxProjectionChildrenChanged(ANode, AFormerRoot: TNyxNode): Boolean;
+var
+  LFormer: TNyxNode;
+  LChild: Integer;
+begin
+  LFormer := AFormerRoot.Find(ANode.ID);
+
+  if LFormer = nil then
+  begin
+    raise ENyxModel.Create('Admitted projection host lost its former identity');
+  end;
+  Result := ANode.Count <> LFormer.Count;
+  for LChild := 0 to ANode.Count - 1 do
+  begin
+
+    if Result then
+    begin
+      Exit;
+    end;
+    Result := ANode.Children[LChild].ID <> LFormer.Children[LChild].ID;
+  end;
+end;
+
+function CanArrangeNyxProjection(AExisting, ACandidate: TNyxNode): Boolean;
+var
+  LAligned: TNyxNode;
+  LNodes: array of TNyxNode;
+  LIndex: TNyxTextIndex;
+  LCount: Integer;
+
+  function PlainHost(ANode: TNyxNode): Boolean;
+  var
+    LKind: TNyxText;
+  begin
+    LKind := ANode.ProjectionKind;
+    Result := (LKind = 'page') or (LKind = 'row') or (LKind = 'column') or
+      (LKind = 'grid') or (LKind = 'panel') or (LKind = 'card') or
+      (LKind = 'group-box') or (LKind = 'form') or (LKind = 'toolbar') or
+      (LKind = 'sidebar');
+  end;
+
+  procedure Collect(ANode: TNyxNode);
+  var
+    LChild: Integer;
+  begin
+    Inc(LCount);
+
+    if Length(LNodes) < LCount then
+    begin
+      SetLength(LNodes, LCount * 2);
+    end;
+    LNodes[LCount - 1] := ANode;
+    LIndex.AddFirst(ANode.ID, LCount - 1);
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+      Collect(ANode.Children[LChild]);
+    end;
+  end;
+
+  function AdmittedParents(ANode: TNyxNode): Boolean;
+  var
+    LExisting: TNyxNode;
+    LChild: Integer;
+    LChangedChildren: Boolean;
+  begin
+    Result := False;
+    LExisting := LNodes[LIndex.IndexOf(ANode.ID)];
+
+    if (ANode.Parent <> nil) and
+      (ANode.Parent.ID <> LExisting.Parent.ID) then
+    begin
+
+      if not PlainHost(ANode.Parent) or not PlainHost(LExisting.Parent) then
+      begin
+        Exit;
+      end;
+    end;
+    LChangedChildren := ANode.Count <> LExisting.Count;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if not LChangedChildren then
+      begin
+        LChangedChildren := ANode.Children[LChild].ID <> LExisting.Children[LChild].ID;
+      end;
+
+      if not AdmittedParents(ANode.Children[LChild]) then
+      begin
+        Exit;
+      end;
+    end;
+    Result := not LChangedChildren or PlainHost(ANode);
+  end;
+
+begin
+  Result := False;
+
+  if (AExisting = nil) or (ACandidate = nil) then
+  begin
+    Exit;
+  end;
+  LAligned := ACandidate.Clone;
+  try
+
+    if not LAligned.ArrangeLike(AExisting) or
+      not CanRefreshNyxProjection(AExisting, LAligned) then
+    begin
+      Exit;
+    end;
+    LIndex := TNyxTextIndex.Create;
+    try
+      LCount := 0;
+      Collect(AExisting);
+      Result := AdmittedParents(ACandidate);
+    finally
+      LIndex.Free;
+    end;
+  finally
+    LAligned.Free;
+  end;
+end;
+
+function RefreshNyxProjectionArrangement(AExisting, ACandidate: TNyxNode;
+  ABaseline: TNyxNode; const ARestores: TNyxProjectionValueRestores): Boolean;
+var
+  LAligned: TNyxNode;
+  LBaseline: TNyxNode;
+begin
+  Result := False;
+
+  if not CanArrangeNyxProjection(AExisting, ACandidate) or
+    ((ABaseline <> nil) and not CanArrangeNyxProjection(ABaseline, ACandidate)) then
+  begin
+    Exit;
+  end;
+  LAligned := nil;
+  LBaseline := nil;
+  try
+    LAligned := ACandidate.Clone;
+
+    if not LAligned.ArrangeLike(AExisting) then
+    begin
+      Exit;
+    end;
+
+    if ABaseline <> nil then
+    begin
+      LBaseline := ABaseline.Clone;
+
+      if not LBaseline.ArrangeLike(AExisting) then
+      begin
+        Exit;
+      end;
+    end;
+
+    if not RefreshNyxProjectionProperties(AExisting, LAligned, LBaseline, ARestores) then
+    begin
+      Exit;
+    end;
+
+    if not AExisting.ArrangeLike(ACandidate) then
+    begin
+      raise ENyxModel.Create('Admitted projection arrangement changed during publication');
+    end;
+    Result := True;
+  finally
+    LBaseline.Free;
+    LAligned.Free;
   end;
 end;
 

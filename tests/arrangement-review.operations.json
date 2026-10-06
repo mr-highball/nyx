@@ -1,0 +1,83 @@
+[
+  {
+    "op": "title",
+    "value": "Room to rearrange"
+  },
+  {
+    "id": "review",
+    "properties": {
+      "layout": "column",
+      "gap": 12
+    },
+    "kind": "page",
+    "root": "page",
+    "op": "create"
+  },
+  {
+    "id": "caption",
+    "kind": "label",
+    "parent": "review",
+    "properties": {
+      "text": "Original caption"
+    },
+    "op": "create"
+  },
+  {
+    "id": "workspace",
+    "kind": "row",
+    "parent": "review",
+    "properties": {
+      "gap": 12
+    },
+    "op": "create"
+  },
+  {
+    "id": "left-room",
+    "kind": "column",
+    "parent": "workspace",
+    "properties": {
+      "width": 300,
+      "gap": 12
+    },
+    "op": "create"
+  },
+  {
+    "id": "right-room",
+    "kind": "column",
+    "parent": "workspace",
+    "properties": {
+      "width": 300,
+      "gap": 12
+    },
+    "op": "create"
+  },
+  {
+    "id": "entry",
+    "kind": "input",
+    "parent": "left-room",
+    "properties": {
+      "text": "Your notes",
+      "value": "Original default"
+    },
+    "op": "create"
+  },
+  {
+    "id": "other-entry",
+    "kind": "input",
+    "parent": "right-room",
+    "properties": {
+      "text": "Independent notes",
+      "value": "Other default"
+    },
+    "op": "create"
+  },
+  {
+    "id": "action",
+    "kind": "button",
+    "parent": "left-room",
+    "properties": {
+      "text": "Continue"
+    },
+    "op": "create"
+  }
+]

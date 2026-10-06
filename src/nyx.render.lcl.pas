@@ -347,6 +347,9 @@ type
       peer parent after all value/policy setters, preferring an enabled checked
       item or the first enabled visible item. Creator widgets retain ownership. }
     procedure SyncRadioFocus;
+    { Reparent admitted ordinary hosts without replacing controls/bindings.
+      Preserve every supported editing range and suppress incidental events. }
+    procedure ArrangeControls(AFormer: TNyxNode);
   public
     constructor Create(ATheme: TNyxTheme = nil);
     destructor Destroy; override;
@@ -3306,6 +3309,113 @@ begin
   {$ifdef NYX_STUDIO_PROFILE}RecordPhase('settle');{$endif}
 end;
 
+procedure TNyxLCLRenderer.ArrangeControls(AFormer: TNyxNode);
+var
+  LSelections: array of TNyxTextSelection;
+  LFocus: TWinControl;
+  LAncestor: TWinControl;
+  LInside: Boolean;
+  LUpdating: Boolean;
+  LIndex: Integer;
+  LHorizontal: Integer;
+  LVertical: Integer;
+
+  procedure Arrange(ANode: TNyxNode);
+  var
+    LBinding: TNyxLCLBinding;
+    LChildBinding: TNyxLCLBinding;
+    LChild: Integer;
+    LTabOrder: Integer;
+  begin
+    LBinding := Binding(ANode);
+    LTabOrder := 0;
+    if NyxProjectionChildrenChanged(ANode, AFormer) then
+    begin
+      for LChild := 0 to ANode.Count - 1 do
+      begin
+        LChildBinding := Binding(ANode.Children[LChild]);
+
+        if LChildBinding.FLogicalParent <> LBinding then
+        begin
+          LChildBinding.FControl.Parent := TWinControl(LBinding.FControl);
+          LChildBinding.FLogicalParent := LBinding;
+        end;
+
+        if (LChildBinding.FControl is TWinControl) and
+          (LChildBinding.FControl.Parent = LBinding.FControl) then
+        begin
+          { Layout uses the portable tree; native keyboard traversal must follow
+            that same order rather than the former TWinControl insertion order. }
+          TWinControl(LChildBinding.FControl).TabOrder := LTabOrder;
+          Inc(LTabOrder);
+        end;
+      end;
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+      Arrange(ANode.Children[LChild]);
+    end;
+  end;
+
+begin
+  LFocus := Screen.ActiveControl;
+  LAncestor := LFocus;
+  LInside := False;
+  while LAncestor <> nil do
+  begin
+
+    if LAncestor = FPanel then
+    begin
+      LInside := True;
+      Break;
+    end;
+    LAncestor := LAncestor.Parent;
+  end;
+  SetLength(LSelections, Length(FBindings));
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if FBindings[LIndex].FInput is TWinControl then
+    begin
+      LSelections[LIndex] := CaptureNyxLCLSelection(TWinControl(FBindings[LIndex].FInput));
+    end;
+  end;
+  LHorizontal := FPanel.HorzScrollBar.Position;
+  LVertical := FPanel.VertScrollBar.Position;
+  LUpdating := FUpdating;
+  FUpdating := True;
+  FPanel.DisableAutoSizing;
+  try
+    Arrange(FRoot);
+    { An emptied destination can still have a zero-height physical client box
+      from its former layout. Allocate the new tree before restoring focus;
+      focusing into the old empty box would be lost during the following Sync. }
+    Resize(FPanel);
+
+    if LInside and LFocus.CanFocus then
+    begin
+      LFocus.SetFocus;
+    end;
+    for LIndex := 0 to High(FBindings) do
+    begin
+
+      if LSelections[LIndex].Defined then
+      begin
+        { Win32 reparenting can retire a nonfocused child's window handle.
+          Recreate that same control's handle before using its physical range
+          bridge; the LCL object, Text and portable event binding stay retained. }
+        TWinControl(FBindings[LIndex].FInput).HandleNeeded;
+        SelectNyxLCLText(TWinControl(FBindings[LIndex].FInput), LSelections[LIndex]);
+      end;
+    end;
+    FPanel.HorzScrollBar.Position := LHorizontal;
+    FPanel.VertScrollBar.Position := LVertical;
+  finally
+    FPanel.EnableAutoSizing;
+    FUpdating := LUpdating;
+  end;
+end;
+
 function TNyxLCLRenderer.TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
   ADesignMode: Boolean; const ARestores: TNyxProjectionValueRestores): Boolean;
 var
@@ -3314,6 +3424,7 @@ var
   LTheme: TNyxTheme;
   LIndex: Integer;
   LPreviousSelection: TNyxPresentationSelection;
+  LArrangement: Boolean;
 begin
   FEvents.Scheduler.RequireUI;
   Result := False;
@@ -3361,8 +3472,11 @@ begin
     LCandidate := RealizeNyxView(ADocument, ARoot);
     ApplyNyxPlatform(LCandidate, npfNativeLCL);
 
-    if not CanRefreshNyxProjection(FRoot, LCandidate) or
-      not CanRefreshNyxProjection(FProjectionBaseline, LCandidate) or
+    LArrangement := not CanRefreshNyxProjection(FRoot, LCandidate);
+
+    if ((not LArrangement) and not CanRefreshNyxProjection(FProjectionBaseline, LCandidate)) or
+      (LArrangement and (not CanArrangeNyxProjection(FRoot, LCandidate) or
+        not CanArrangeNyxProjection(FProjectionBaseline, LCandidate))) or
       (FProjectionSchemaRevision <> NyxSchemaRevision) then
     begin
       Exit;
@@ -3370,18 +3484,37 @@ begin
     LPrevious := FRoot.Clone;
     LPreviousSelection := FPresentationSelection;
 
-    if not RefreshNyxProjectionProperties(FRoot, LCandidate, FProjectionBaseline, ARestores) then
-    begin
-      Exit;
-    end;
     try
+
+      if LArrangement then
+      begin
+
+        if not RefreshNyxProjectionArrangement(FRoot, LCandidate, FProjectionBaseline, ARestores) then
+        begin
+          Exit;
+        end;
+        ArrangeControls(LPrevious);
+      end
+      else if not RefreshNyxProjectionProperties(FRoot, LCandidate, FProjectionBaseline, ARestores) then
+      begin
+        Exit;
+      end;
       FPresentationSelection := FPresentationSelection.Reconciled(FRoot.PresentationSnapshot);
       Sync;
     except
-      { No custom updater or ownership change entered this path. Restore model
-        properties before normal synchronization; retained callbacks still
-        refer to the same independently owned realized nodes and controls. }
-      RefreshNyxProjectionProperties(FRoot, LPrevious);
+      { No custom updater entered this path. Restore properties AND admitted
+        arrangement before normal synchronization; callbacks still refer to
+        the same independently owned realized nodes and native controls. }
+
+      if LArrangement then
+      begin
+        RefreshNyxProjectionArrangement(FRoot, LPrevious);
+        ArrangeControls(LCandidate);
+      end
+      else
+      begin
+        RefreshNyxProjectionProperties(FRoot, LPrevious);
+      end;
       FPresentationSelection := LPreviousSelection;
       Sync;
       raise;

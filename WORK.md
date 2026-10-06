@@ -7,7 +7,37 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-## Current prerequisite result: native measurement cost — 2026-10-06
+## Current prerequisite: retained structural arrangement — 2026-10-06
+
+Current structural gate (NS-4 authoring criterion 1, through the open NS-2 LCL
+ownership/interaction prerequisite): first qualify retained rearrangement of an
+unchanged realized control set. Both roots must retain exact runtime/source/design
+identities, instance scopes, contracts and creator context. Prepare all ownership
+arrays before publication; refuse additions, removals, changed bindings/factories,
+special pane hosts and ambiguous identities. Keep the existing scalar guard intact.
+Actual browser/Win32 controls must retain draft text, caret, focus and callback
+registrations through reparent/order changes and reversal, with balanced teardown.
+This is a prerequisite for alternate presentation structures, not that feature's
+acceptance. Lazy alternate recipes, typed structural authoring and ordinary Studio
+presentation switching remain the return path. Preserve the main LAN service,
+eight project pairs and all auxiliary process identities; use isolated fixtures.
+
+The [qualified foundation](#retained-structural-arrangement--2026-10-06) prepares
+all owner arrays/implementation anchors before rearranging an unchanged realized
+control set. Separate admission keeps the original scalar guard strict. Actual
+browser/Win32 faces retain inputs, ranges, parents/order and callbacks through
+repeated moves and reversal. Core ownership checks pass 34 per compiler/browser;
+compiled MCP source passes 91 native / 75 browser at ordinary and 390-pixel host
+widths. Existing native editing checks pass 118, with zero leaks. Both immutable
+MCP application jobs compile identical 120-line/2,693-byte English source.
+
+No ordinary Studio structural-presentation journey or LAN rollout is claimed.
+Renderer no-closure advances 4→5 once; authoring 22, workflow 9, codegen 28 and
+delivery 1 remain. No original full criterion closes. End rearrangement/fixture
+expansion and return to typed alternate structures, retained bound state, publication,
+ordinary editor/target parity and remaining original prerequisites.
+
+## Previous prerequisite result: native measurement cost — 2026-10-06
 
 Original authoring criterion 1 still needs alternate view structures with explicit
 ownership/publication and retained state. Its parity prerequisite depends on the
@@ -9417,6 +9447,87 @@ since its reviewed main-server replacement. `.local/container-refresh-20261006/`
 owns the final remote receipt. The original goal remains active; no full task or
 milestone is complete. Continue with the next declared ownership/publication gate
 and outstanding original prerequisites, preserving all current projects.
+
+## Retained structural arrangement — 2026-10-06
+
+Owner: original NS-4 authoring criterion 1 through the open NS-2 LCL
+ownership/interaction prerequisite. `TNyxNode.ArrangeLike` prepares all owned
+child arrays and actual implementation anchors before publishing an unchanged
+realized node set. A separate projection gate aligns independent comparison
+copies, then runs the original scalar guard. Source/design/runtime identities,
+instance scopes, context, contracts and constructor semantics stay exact.
+Add/remove, duplicate/foreign keys, special pane changes, live bindings and
+custom creators refuse. Only ordinary hosts reparent/reorder. Both adapters
+retain controls, event bindings and emitter lifetimes; supported ranges and
+scroll positions restore under their update guards. Native tab order follows
+the new child order. A previous clone supports model/physical-parent rollback.
+
+`tools/build.ps1 -Target retained-arrangement -ArrangementSourceDirectory <private
+MCP export>` stages without starting listeners. The maintained English operation
+fixture is `tests/arrangement-review.operations.json`; the public ownership/adapter
+contract is [retained arrangements](docs/retained-arrangements.md). Evidence under
+ignored `build/retained-arrangement/`:
+
+- `final-build.log`: 34 shared ownership checks per stable/matched FPC; 91 actual
+  Win32 retained-control checks against unchanged MCP-generated source. All native
+  fixture teardown reports zero leaks. A separate managed implementation proves
+  actual interface-owner retention through eight structural reversals, then exactly
+  one destruction. Addition/removal/duplicate/scope/constructor/special-host refusals
+  leave the prior tree intact. Invalid restore groups refuse before publication.
+- `browser-qualified-owned.log`: 34 executed pas2js ownership checks.
+  `browser-qualified-controls.log` and `browser-qualified-compact.log`: 75 each
+  against compiled MCP source, including repeated physical reparent/reversal,
+  sibling order, exact supplementary draft text, caret, focus and retained callbacks.
+  Compact means a fixed 390-pixel host in the ordinary headless browser, not an
+  emulated/physical phone. Host marker observation does not inject scripts.
+- `editing-native/prepare-run.log` and `run.log`: existing 117/118 native editing
+  checks including the compiled consumer, zero leaks. Reparenting exposed the range
+  writer's use of a transient current read as a capability check. It now checks the
+  admitted widgetset/window/type and validates the requested scalar range against
+  current Text before writing. Native handles may be recreated; controls stay retained.
+- `studio-browser/compile.log`, `worker-compile.log`, `studio-native/compile.log`:
+  affected browser Studio, embedded-RTL module worker and native Studio compile.
+  These compilation checks do not establish an ordinary Studio structural journey.
+- `all-tools.jsonl`: twenty authenticated semantic tools. One isolated English
+  project is composed in a single nine-operation group. Two moves and a caption
+  update form another paired Undo step; one semantic Undo restores the source.
+  Bounded windows of 80+40 lines at revision 2 export the base. The source API omits
+  its final line separator; restoring that LF matches both immutable compiler
+  copies exactly: 120 lines / 2,693 bytes / MD5 `bca3f8f1d6ab5741282b8eb666e3e0f4`.
+- `status-browser.json` / `status-lcl.json`: jobs
+  `F3448BE8-B65F-48E5-8C30-F4F6EE3BF6BF` and
+  `A87D6E2B-8266-4034-A76B-BFC493C81B6E` succeed with currentSource/currentOutput
+  true at revision 4. Both compiledSource downloads match that exact export.
+  Browser warnings are seven upstream RTL cases; native/owned warnings are zero.
+  These jobs establish compilation, while the separate control consumers establish
+  execution. One native request returned a complete receipt then a socket-read error;
+  subsequent authenticated status calls returned exit 0. The transport follow-up
+  belongs to the existing workflow task, without inflating its completion credit.
+
+Rejected/adjusted preparation: a local record containing an interface could not
+compile with pas2js, and a local class was also unsupported. Unit-private temporary
+classes now own anchors on both targets. Native focus checks establish each move's
+actual starting field/range: clicking another control legitimately changes focus,
+and LCL AutoSelect changes the range when that field is refocused. The fixture
+does not assume an earlier action's focus persists. The original refusal case now
+chooses a different typed variant from the MCP catalog's existing default. These
+changes preserve the assertions and do not relax projection admission.
+
+Readonly preservation observes eight main pairs/navigation/draft/history states,
+all exact against the prior packet. Fifteen preexisting PID/creation/executable/
+command identities and main LAN HTTP 200 remain. The own isolated service is stopped
+only after final browser evidence and exact identity verification. No main binary,
+frontend, worker, compiler profile, pair, history or concurrent handle is replaced.
+Private service/pair/compile receipts remain ignored; remote checkpoint follows.
+
+Renderer no-closure advances 4→5 once for this integrated ownership prerequisite.
+Authoring 22, workflow 9, codegen 28 and delivery 1 remain. No original full criterion
+closes and no DONE task moves. End this local arrangement/fixture batch. Return to
+fluent alternate recipes/structures, retained bound state, atomic view publication,
+ordinary Studio presentation switching and original parity/accessibility/performance/
+delivery prerequisites. IME, nested viewport continuity, rollback fault injection,
+large-project budgets, physical phone, another widgetset/DPI and assistive technology
+remain unqualified. Existing main runtime awaits a grouped release.
 
 ## Allocation-free property lookup — 2026-10-06
 

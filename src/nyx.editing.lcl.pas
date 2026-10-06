@@ -170,10 +170,16 @@ var
   LText: TNyxText;
 begin
 
-  if not ASelection.Defined or not CaptureNyxLCLSelection(AInput).Defined then
+  if not ASelection.Defined or (AInput = nil) or not (AInput is TCustomEdit) or
+    not AInput.HandleAllocated or not NativeSelectionSupported then
   begin
     raise EArgumentException.Create('This widgetset has no admitted scalar selection bridge');
   end;
+  { Reading a current scalar range is not a capability check for writing one.
+    After native handle recreation, a transient physical endpoint can lie
+    inside a surrogate pair and Capture deliberately returns Undefined. The
+    requested scalar range is independently validated against current Text
+    below before EM_SETSEL; no malformed range or unsupported widgetset enters. }
 
   if ASelection.Direction in [ntdForward, ntdBackward] then
   begin
