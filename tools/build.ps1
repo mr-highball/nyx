@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -52,6 +52,8 @@ param(
   [string]$ResponsiveSourceDirectory,
   # Unchanged companion exported through semantic MCP for alignment input review.
   [string]$GuideSourceDirectory = 'build/alignment/mcp-source',
+  # Unchanged bounded MCP companion for the actual absolute-movement journey.
+  [string]$MoveSourceDirectory = 'build/move-snapping/mcp-source',
   # The maintained semantic callback journey exports two accepted source pairs.
   [string]$CallbackSourceDirectory = 'build/agent-callbacks/mcp',
   # Exact companion exported by the semantic handler/compilation journey.
@@ -1632,6 +1634,59 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxGuideHost") -Destination $nyxGuideBrowser
     }
     Write-Host 'Alignment consumers staged; execute the pointer driver against the explicit semantic workspace.'
+    exit 0
+  }
+  if ($Target -eq 'move-snapping') {
+    # Pascal owns copied policies, strict tickets, real gestures/paint and paired
+    # history. This script compiles/stages tools and never starts a service.
+    $nyxMoveRoot = Join-Path $nyxRoot 'build/move-snapping'
+    $nyxMoveSource = [IO.Path]::GetFullPath($MoveSourceDirectory)
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxMoveSource 'nyx.generated.view.pas'))) {
+      throw 'Export the movement MCP companion before building physical consumers'
+    }
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxMoveStable = Join-Path $nyxMoveRoot 'stable'
+    $nyxMoveMatched = Join-Path $nyxMoveRoot 'matched'
+    $nyxMoveNative = Join-Path $nyxMoveRoot 'native'
+    $nyxMoveDriver = Join-Path $nyxMoveRoot 'driver'
+    $nyxMoveBrowser = Join-Path $nyxMoveRoot 'web'
+    if ($BrowserOutput) { $nyxMoveBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxMoveStable, $nyxMoveMatched,
+      $nyxMoveNative, $nyxMoveDriver, $nyxMoveBrowser | Out-Null
+    $nyxMoveFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests')
+    foreach ($nyxMoveCompiler in @(@($nyxFpc, $nyxMoveStable), @($nyxLclFpc, $nyxMoveMatched))) {
+      Invoke-NyxCompiler $nyxMoveCompiler[0] ($nyxMoveFlags + @(
+        "-FU$($nyxMoveCompiler[1])", "-FE$($nyxMoveCompiler[1])", 'tests/nyx_resize_tests.lpr'))
+      & (Join-Path $nyxMoveCompiler[1] 'nyx_resize_tests.exe')
+      if ($LASTEXITCODE -ne 0) { throw 'Shared movement contract failed' }
+    }
+    $nyxMovePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc ($nyxMoveFlags + @("-Fu$nyxMoveSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxMovePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxMovePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxMovePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxMovePlatform",
+      "-FU$nyxMoveNative", "-FE$nyxMoveNative", 'tests/nyx_move_studio.lpr'))
+    & (Join-Path $nyxMoveNative 'nyx_move_studio.exe') (Join-Path $nyxMoveNative 'projects') (Join-Path $nyxMoveSource 'nyx.generated.view.pas')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native Studio movement failed' }
+    foreach ($nyxMoveHostProgram in @('tests/nyx_move_browser_review.lpr', 'tests/nyx_responsive_browser_review.lpr')) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxMoveFlags + @("-FU$nyxMoveDriver", "-FE$nyxMoveDriver", $nyxMoveHostProgram))
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxMoveProgram in @('tests/nyx_resize_tests.lpr', 'tests/nyx_move_studio_browser.lpr', 'studio/nyx_studio.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
+        '-Futests', '-Jirtl.js', "-FE$nyxMoveBrowser", $nyxMoveProgram)
+    }
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Tmodule', '-Mdelphi', '-Fusrc', '-Fustudio',
+      '-Jirtl.js', "-FE$nyxMoveBrowser", 'studio/nyx_source_worker.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxMoveBrowser 'rtl.js')
+    foreach ($nyxMovePage in @('resize.html', 'move-studio.html', 'index.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxMovePage") -Destination $nyxMoveBrowser
+    }
+    Write-Host 'Movement consumers staged; run the host driver against the explicit semantic project.'
     exit 0
   }
   if ($Target -eq 'resize') {

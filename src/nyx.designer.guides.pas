@@ -69,7 +69,11 @@ type
     FPeer: TNyxGuideBox;
     FCoordinate: Double;
     FSize: Integer;
+    FMoving: Boolean;
   public
+    { Rebase a copied move explanation after both axes have been resolved.
+      Retains reference/line coordinates; no source geometry is modified. }
+    function Moved(ALeft, ATop: Integer): TNyxAlignmentGuide;
     function Segment(AIndex, AWidth, AHeight: Integer): TNyxGuideBox;
     function Caption: TNyxText;
     property Kind: TNyxGuideKind read FKind;
@@ -105,6 +109,13 @@ type
       No match returns the rounded desired size; policy owns grid/clamping. }
     function Snap(AAxis: TNyxGuideAxis; ADesired: Double; AMinimum, AMaximum: Integer;
       out AGuide: TNyxAlignmentGuide): Integer;
+    { Translate the owner's origin, preserving its captured size. Absolute
+      contexts align leading/trailing edges and centers with the parent and
+      visible siblings. Flow contexts deliberately supply no position guides.
+      Nearest in bounds wins; ties prefer edges, then stable snapshot order. }
+    function SnapPosition(AAxis: TNyxGuideAxis; ADesired: Double;
+      AMinimum, AMaximum: Integer; out AGuide: TNyxAlignmentGuide): Integer;
+    property PositionsEnabled: Boolean read FPositions;
     property OwnerBox: TNyxGuideBox read FOwner;
     property Defined: Boolean read GetDefined;
     property PeerCount: Integer read GetPeerCount;
@@ -350,6 +361,113 @@ begin
   end;
 end;
 
+function TNyxAlignmentContext.SnapPosition(AAxis: TNyxGuideAxis; ADesired: Double;
+  AMinimum, AMaximum: Integer; out AGuide: TNyxAlignmentGuide): Integer;
+var
+  LDistance: Double;
+  LIndex: Integer;
+
+  procedure Consider(AKind: TNyxGuideKind; const AReference: TNyxControlRef;
+    const APeer: TNyxGuideBox; AOrigin, ACoordinate: Double);
+  var
+    LOrigin: Integer;
+    LDelta: Double;
+  begin
+
+    if (AOrigin < AMinimum) or (AOrigin > AMaximum) then
+    begin
+      Exit;
+    end;
+    LOrigin := Integer(Floor(AOrigin + 0.5));
+    LDelta := Abs(LOrigin - ADesired);
+
+    if (LOrigin < AMinimum) or (LOrigin > AMaximum) or (LDelta > FTolerance) or
+      (LDelta > LDistance) or ((LDelta = LDistance) and (AGuide.Kind <> ngkNone) and
+      (Ord(AKind) >= Ord(AGuide.Kind))) then
+    begin
+      Exit;
+    end;
+    Result := LOrigin;
+    LDistance := LDelta;
+    AGuide.FKind := AKind;
+    AGuide.FAxis := AAxis;
+    AGuide.FReference := AReference;
+    AGuide.FOwner := FOwner;
+    AGuide.FPeer := APeer;
+    AGuide.FCoordinate := ACoordinate;
+    AGuide.FMoving := True;
+  end;
+
+  procedure PositionsFor(const AReference: TNyxControlRef; const APeer: TNyxGuideBox);
+  var
+    LLeading, LTrailing, LSize: Double;
+  begin
+
+    if AAxis = ngaWidth then
+    begin
+      LLeading := APeer.Left;
+      LTrailing := APeer.Right;
+      LSize := FOwner.Width;
+    end
+    else
+    begin
+      LLeading := APeer.Top;
+      LTrailing := APeer.Bottom;
+      LSize := FOwner.Height;
+    end;
+    Consider(ngkEdge, AReference, APeer, LLeading, LLeading);
+    Consider(ngkEdge, AReference, APeer, LTrailing - LSize, LTrailing);
+    Consider(ngkEdge, AReference, APeer, LTrailing, LTrailing);
+    Consider(ngkEdge, AReference, APeer, LLeading - LSize, LLeading);
+    Consider(ngkCenter, AReference, APeer,
+      (LLeading + LTrailing - LSize) / 2, (LLeading + LTrailing) / 2);
+  end;
+
+begin
+  AGuide := Default(TNyxAlignmentGuide);
+
+  if IsNan(ADesired) or IsInfinite(ADesired) or (ADesired < 0) or
+    (ADesired > MaximumNyxLayoutBound) or (AMinimum < 0) or
+    (AMaximum < AMinimum) or (AMaximum > MaximumNyxLayoutBound) or
+    (Ord(AAxis) < Ord(Low(TNyxGuideAxis))) or
+    (Ord(AAxis) > Ord(High(TNyxGuideAxis))) then
+  begin
+    raise EArgumentException.Create('Position guides require valid origin, axis and bounds');
+  end;
+  Result := Integer(Floor(ADesired + 0.5));
+  LDistance := FTolerance + 1;
+
+  if not Defined or not FPositions then
+  begin
+    Exit;
+  end;
+
+  if FParent.Defined then
+  begin
+    PositionsFor(FParentID, FParent);
+  end;
+  for LIndex := 0 to High(FPeers) do
+  begin
+    PositionsFor(FPeers[LIndex].Reference, FPeers[LIndex].FPeer);
+  end;
+end;
+
+function TNyxAlignmentGuide.Moved(ALeft, ATop: Integer): TNyxAlignmentGuide;
+begin
+
+  if (ALeft < 0) or (ATop < 0) or (ALeft > MaximumNyxLayoutBound) or
+    (ATop > MaximumNyxLayoutBound) then
+  begin
+    raise EArgumentException.Create('Guide translation exceeds the portable origin domain');
+  end;
+  Result := Self;
+
+  if FMoving then
+  begin
+    Result.FOwner := NyxGuideBox(ALeft, ATop, FOwner.Width, FOwner.Height);
+  end;
+end;
+
 function TNyxAlignmentGuide.Segment(AIndex, AWidth, AHeight: Integer): TNyxGuideBox;
 var
   LStart: Double;
@@ -412,13 +530,20 @@ function TNyxAlignmentGuide.Caption: TNyxText;
 const
   CAxes: array[TNyxGuideAxis] of TNyxText = ('Width', 'Height');
   CKinds: array[TNyxGuideKind] of TNyxText = ('', ' matches ', ' aligns with ', ' centers on ');
+  CPositions: array[TNyxGuideAxis] of TNyxText = ('Horizontal position', 'Vertical position');
 begin
 
   if FKind = ngkNone then
   begin
     Exit('');
   end;
-  Result := CAxes[FAxis] + CKinds[FKind] + FReference.ID;
+  Result := CAxes[FAxis];
+
+  if FMoving then
+  begin
+    Result := CPositions[FAxis];
+  end;
+  Result := Result + CKinds[FKind] + FReference.ID;
 end;
 
 end.

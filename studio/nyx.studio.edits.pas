@@ -28,7 +28,7 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.catalog, nyx.designer.resize,
-  nyx.responsive, nyx.presentations;
+  nyx.responsive, nyx.presentations, nyx.designer.move;
 
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
@@ -87,6 +87,21 @@ type
     property Axis: TNyxResizeAxis read FAxis;
     property Size: TNyxResizeSize read FSize;
     property Platform: TNyxPlatform read FPlatform;
+  end;
+
+  { Exact portable absolute-position intent. Both axes cross the processor as
+    one typed operation; no gesture, guide geometry or widget is serialized. }
+  TNyxPositionChange = record
+  private
+    FControl: TNyxControlRef;
+    FPosition: TNyxMovePosition;
+  public
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxPositionChange; static;
+    function SameChange(const AOther: TNyxPositionChange): Boolean;
+    function Operation: TNyxDataValue;
+    property Control: TNyxControlRef read FControl;
+    property Position: TNyxMovePosition read FPosition;
   end;
 
   { An immutable, value-only placement command. A blank kind means move; a
@@ -197,11 +212,132 @@ function NyxResizeControl(const AControl: TNyxControlRef; AAxis: TNyxResizeAxis;
   same weight decision on both targets; callers refuse divergent flow scopes. }
 function NyxResizeReleasesWeight(AParent: TNyxNode; AAxis: TNyxResizeAxis;
   APlatform: TNyxPlatform): Boolean;
+function NyxPositionControl(const AControl: TNyxControlRef;
+  const APosition: TNyxMovePosition): TNyxPositionChange;
+{ Borrow the document for synchronous admission. Requires an exact authored
+  non-root control with shared absolute parent policy. Scoped origin/parent
+  layout and active origin bindings refuse rather than masking a baseline edit.
+  Resolve reusable context independently; all temporary ownership is released. }
+procedure ValidateNyxPositionOwner(ADocument: TNyxDocument; const AControl: TNyxControlRef);
 
 implementation
 
 uses
-  nyx.schema, nyx.design.tokens, nyx.composition;
+  nyx.schema, nyx.design.tokens, nyx.composition, nyx.binding.types;
+
+function NyxPositionControl(const AControl: TNyxControlRef;
+  const APosition: TNyxMovePosition): TNyxPositionChange;
+begin
+
+  if (AControl.ID = '') or not APosition.Defined then
+  begin
+    raise ENyxModel.Create('Positioning requires an exact control and defined origin');
+  end;
+  Result := Default(TNyxPositionChange);
+  Result.FControl := AControl;
+  Result.FPosition := NyxMovePosition(APosition.Left, APosition.Top);
+end;
+
+function TNyxPositionChange.ToData: TNyxDataValue;
+begin
+  NyxPositionControl(FControl, FPosition);
+  Result := NyxObject([NyxField('control', NyxData(FControl.ID)),
+    NyxField('left', NyxData(FPosition.Left)), NyxField('top', NyxData(FPosition.Top))]);
+end;
+
+class function TNyxPositionChange.FromData(const AData: TNyxDataValue): TNyxPositionChange;
+begin
+
+  if (AData.Kind <> ndObject) or (AData.Count <> 3) then
+  begin
+    raise ENyxModel.Create('Position payload requires its three exact fields');
+  end;
+  Result := NyxPositionControl(NyxControl(AData.Field('control').AsText),
+    NyxMovePosition(AData.Field('left').AsInteger, AData.Field('top').AsInteger));
+end;
+
+function TNyxPositionChange.SameChange(const AOther: TNyxPositionChange): Boolean;
+begin
+  Result := (FControl.ID = AOther.FControl.ID) and FPosition.SamePosition(AOther.FPosition);
+end;
+
+function TNyxPositionChange.Operation: TNyxDataValue;
+begin
+  ToData;
+  Result := NyxObject([NyxField('op', NyxData('update')),
+    NyxField('id', NyxData(FControl.ID)), NyxField('properties', NyxObject([
+      NyxField(NyxAttributeName(atLeft), NyxData(FPosition.Left)),
+      NyxField(NyxAttributeName(atTop), NyxData(FPosition.Top))]))]);
+end;
+
+procedure ValidateNyxPositionOwner(ADocument: TNyxDocument; const AControl: TNyxControlRef);
+var
+  LNode, LContext, LProjection: TNyxNode;
+  LIndex: Integer;
+  LPlatform: TNyxPlatform;
+  LAttribute: TNyxAttribute;
+  LCondition: TNyxPresentationCondition;
+begin
+
+  if ADocument = nil then
+  begin
+    raise ENyxModel.Create('Positioning requires a live document');
+  end;
+  LNode := ADocument.Find(AControl.ID);
+
+  if (LNode = nil) or (LNode.Parent = nil) or (LNode.Kind = 'slot-override') then
+  begin
+    raise ENyxModel.Create('Positioning requires an exact authored non-root control');
+  end;
+  LContext := RealizeNyxContext(ADocument, LNode, LProjection);
+  try
+
+    if (LProjection.Parent = nil) or
+      (LProjection.Parent.Prop(NyxAttributeName(atLayout)) <> NyxLayoutName(nlAbsolute)) then
+    begin
+      raise ENyxModel.Create('Use placement order for flow layouts; free movement requires an absolute parent');
+    end;
+    for LPlatform in [npfBrowser, npfNativeLCL] do
+    begin
+
+      if (LProjection.Prop(NyxPlatformKey(LPlatform, atLeft)) <> '') or
+        (LProjection.Prop(NyxPlatformKey(LPlatform, atTop)) <> '') or
+        (LProjection.Parent.Prop(NyxPlatformKey(LPlatform, atLayout)) <> '') then
+      begin
+        raise ENyxModel.Create('Use explicit platform fields; this origin or parent layout has a target override');
+      end;
+    end;
+    for LIndex := 0 to LProjection.Props.Count - 1 do
+    begin
+
+      if LProjection.TryPresentationRule(LProjection.Props.Names[LIndex], LCondition,
+        LPlatform, LAttribute) and (LAttribute in [atLeft, atTop]) then
+      begin
+        raise ENyxModel.Create('Use presentation position fields; this origin has a conditional override');
+      end;
+    end;
+    for LIndex := 0 to LProjection.Parent.Props.Count - 1 do
+    begin
+
+      if LProjection.Parent.TryPresentationRule(LProjection.Parent.Props.Names[LIndex],
+        LCondition, LPlatform, LAttribute) and (LAttribute = atLayout) then
+      begin
+        raise ENyxModel.Create('Use presentation fields; the parent changes layout between configurations');
+      end;
+    end;
+    for LIndex := 0 to LProjection.BindingCount - 1 do
+    begin
+
+      if not LProjection.Bindings[LIndex].Cleared and
+        (LProjection.Bindings[LIndex].Target in [bpLeft, bpTop]) then
+      begin
+        raise ENyxModel.Create('Use the typed state value; this origin is controlled by a binding');
+      end;
+    end;
+  finally
+    LContext.Free;
+  end;
+end;
 
 function NyxResizeReleasesWeight(AParent: TNyxNode; AAxis: TNyxResizeAxis;
   APlatform: TNyxPlatform): Boolean;

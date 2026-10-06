@@ -7,7 +7,31 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-The current [manual presentation release](#manual-presentation-selection--2026-10-06)
+## Current integrated result: absolute-position movement — 2026-10-06
+
+The [move packet](#absolute-position-move-snapping--2026-10-06) now delivers public
+typed policies, copied edge/center guides, ordinary browser/Win32 gestures,
+retained live inputs and one paired Undo. Checks pass 99 per compiler/browser,
+22 native Studio and 49 per desktop/exact-390 browser journey. Both deployed
+semantic application jobs compile exact source. The LAN Studio/worker overlay
+retains the running server, all five existing pairs/navigation/history states
+and fourteen exact process identities. Sixteen served web hashes match; twenty
+MCP tools authenticate. `.local/move-assets-20261006/` owns the two-asset overlay
+manifest, byte backups, exact frame receipts and English **Move workshop** project
+handle. It supersedes only Studio/worker entries of the preceding nine-artifact
+manifest; executable/helper/runtime/HTML assets remain unchanged. No restart or
+history reset. The primary remains at revision 2. Do not run old refresh scripts.
+
+This integrated batch is ended. Authoring no-closure advances 19→20 once;
+workflow 9, codegen 28, renderer 3 and delivery 1 remain. No original criterion
+closes. Stop local move-policy/fixture expansion. Next inspect original criterion
+1's reparenting/flow placement and snapping integration, preserving one semantic
+paired publication and exact cancellation. Declare its coordinate/ownership
+gate before another implementation packet. Stable container allocation and
+structural variants remain separate open gaps, followed by complete ordinary
+editor/parity/accessibility/performance/delivery. Preserve active/concurrent pairs.
+
+The underlying [manual presentation release](#manual-presentation-selection--2026-10-06)
 serves nine qualified artifacts over all-interface HTTP, with loopback MCP and
 twenty authenticated tools. Four existing pairs/selection/view states remain
 exact. Restart resets prior histories; concurrent projects receive new handles
@@ -104,7 +128,7 @@ allocation/containment and structural-variant gaps or full move snapping, then
 ordinary editor/parity/accessibility/performance/delivery. The original criteria
 and prerequisites remain; no original criterion or full-goal percentage closes.
 
-Next concrete deliverable: full move snapping under original authoring criterion
+Preceding declared deliverable: full move snapping under original authoring criterion
 1. Inspect the existing placement/drag and public alignment contracts first;
 preserve semantic ownership/revision guards and one paired publication. Establish
 absolute-position versus flow placement behavior, coordinate conversion and
@@ -9005,3 +9029,84 @@ containment, structural variants or full move snapping, then complete ordinary
 editor/parity/accessibility/performance/delivery. Physical phone input/keyboard,
 IME/assistive technology, nested scrolling, another widgetset and large-project
 performance remain unqualified. Preserve all original prerequisites and criteria.
+
+## Absolute-position move snapping — 2026-10-06
+
+Original owner: [authoring criterion 1](TODO/NS-4_studio-authoring_01.md). The
+declared packet stopped at an integrated absolute-layout journey, preserving flow
+placement and refusing ambiguous platform/presentation/bound origin scopes.
+
+- `TNyxMovePosition` and immutable `TNyxMovePolicy` expose typed logical origins,
+  grid/keyboard choices, bounds and copied alignment context. Deterministic
+  leading/trailing/center candidates precede grid, clamp before conversion and
+  preserve unchanged off-grid axes. Alt bypasses snapping; arrows step exactly
+  even near a guide. Copied explanations rebase both axes to the final proposed
+  rectangle. `TNyxCanvasPreview` preserves the old resize alias and paints copied
+  translated outlines/guide segments without moving accepted live controls.
+- `TNyxMoveHandle` uses public sequential pointer/key/focus/capture streams.
+  It owns subscriptions and borrows receivers; matching pointer identity,
+  Escape, loss and retirement cancel. Managed `INyxCanvasMoveGrip` owns an
+  independent Nyx document consumed by both adapters. Explicit screen/logical
+  mapping keeps the proposal stable as its grip moves. Compact Design retains
+  the canvas grip independently of Inspector. No second Studio widget toolkit.
+- Ordinary Studio captures exact accepted pair, owner, view, mount, creator
+  epoch and sibling geometry. Preview changes no source; release revalidates
+  that lease before one isolated worker publication. Both axes are one Undo.
+  Private worker tickets use strict v9/15 fields while reading supported v5–v8;
+  preceding v8 vocabulary cannot smuggle the appended position action. Existing
+  semantic numeric grouped updates remain the MCP operation; no extra MCP tool.
+- Native actual input found baseline left/top missing from retained-refresh
+  compatibility. Both adapters already consumed those fields, but Studio remount
+  lost a live memo draft. Compatible baseline origin changes now retain the same
+  control/text/range; shape/creator/ownership admission stays unchanged. Actual
+  browser and Win32 journeys qualify the fix, rather than store-only fixtures.
+- **99** shared resize/move checks pass on stable FPC 3.2, LCL-matched FPC 3.3.1
+  and the actual browser. They include the preceding-helper preparation path.
+  Existing semantic placement regression passes **44**. The unchanged generated
+  companion passes **22** actual Win32 Studio checks and **49** desktop / **49**
+  exact-390 browser checks through the ordinary module worker. Host pointer
+  capture, snapped paint, Alt, Escape, exact arrow movement, no preview source
+  edits, retained memo/source controls and paired Undo/Redo are exercised.
+  Checked native runs report zero leaks. No owned warning; seven known upstream
+  pas2js RTL warnings remain per affected browser program.
+- Semantic MCP composes the English fixture in one independent project, reads
+  bounded windows at one revision and restores their terminal LF. Exact source
+  is **106 lines / 2325 bytes**, MD5 `a33951c8cb194473f91ca0fd3fdc2efa`; design MD5
+  `c827b2e4bfc1f276ba686b7ce2d67559`. Isolated and deployed immutable jobs compile
+  both outputs; their actual source files match the exported companion. Deployed
+  grouped position Undo/Redo restores exact source, then the demo returns to its
+  baseline at revision 8. One browser build admission returns a valid running
+  receipt before a socket-read client exit; terminal status subsequently succeeds.
+  This retained transport gap belongs to the existing workflow task, not a retry
+  or a compilation claim inferred from admission.
+
+Evidence: `build/move-snapping/qualification.log`, `stable/final-run.log`,
+`matched/final-run.log`, `placement-regression/`, `browser-contracts-final/`,
+`native/visible-run.log` (**22**, superseding earlier 19), `mcp-source/`,
+`browser-studio-input/` and `browser-studio-390/` (**49** each, superseding earlier
+32), final Studio/worker compile logs and private semantic receipts. Native,
+desktop and narrow moving/final captures were inspected. The maintained build
+target is `move-snapping`; physical input tools remain Pascal.
+
+Two final assets publish atomically, backwards-compatible worker first, through
+the existing all-interface LAN service. The initial PowerShell replacement call
+rejected its empty backup argument before either asset changed; an explicit
+private backup path corrected it. The process/listeners and all thirteen auxiliary
+services retain exact PID/executable/creation identities. Five existing project
+pairs, revisions, selections, views, draft states and Undo/Redo availability remain
+exact. Sixteen loopback/LAN served hashes match the nine-artifact closure with only
+Studio/worker replaced. The unchanged executable/helper/runtime/HTML bytes remain
+explicit; no new server deployment or history reset is claimed.
+`.local/move-assets-20261006/` owns byte backups, overlay/served manifests, private
+frame receipts and the independent English **Move workshop** in Agents. Twenty
+tools authenticate using the Pascal client; this chat still needs a reconnect for
+obsolete cached native named handles. The primary remains exact at revision 2.
+
+No original criterion closes. Authoring no-closure advances **19→20** once;
+workflow **9**, codegen **28**, renderer **3**, delivery **1** remain. End local
+move-policy/fixture expansion. Continue original reparenting/flow snap geometry,
+stable container allocation, structural variants and complete ordinary editor/
+parity/accessibility/performance/delivery. Physical phone input, changing scale
+during a gesture, nested scrolling/virtual geometry, IME/assistive technology,
+another widgetset and large-project performance remain unqualified. Original
+criteria and prerequisites stand.

@@ -26,7 +26,7 @@ program nyx_resize_tests;
 
 uses
   SysUtils, {$ifdef PAS2JS}Web,{$else}Classes,{$endif}
-  nyx.text, nyx.studio.projects, nyx.test.resize, nyx.test.resize.input;
+  nyx.text, nyx.studio.projects, nyx.test.resize, nyx.test.resize.input, nyx.test.move;
 var
   LPair: TNyxProjectPair;
   LChecks: Integer;
@@ -52,7 +52,7 @@ end;
 
 begin
   try
-    LChecks := RunNyxResizeJourney(LPair) + RunNyxResizeInputChecks;
+    LChecks := RunNyxResizeJourney(LPair) + RunNyxResizeInputChecks + RunNyxMoveChecks;
     {$ifdef PAS2JS}
     document.body.textContent := 'PASS ' + IntToStr(LChecks) + ' resize checks';
     document.body.setAttribute('data-result', 'passed');

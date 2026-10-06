@@ -44,6 +44,7 @@ uses
   nyx.gestures,
   nyx.designer.input,
   nyx.designer.resize,
+  nyx.designer.move,
   nyx.designer.guides,
   nyx.gestures.browser,
   nyx.platform,
@@ -225,6 +226,9 @@ type
     FResizePreviewHandler: TJSEventHandler;
     FResizeListening: Boolean;
     FCanvasResizeGrips: INyxCanvasResizeGrips;
+    FCanvasMoveGrip: INyxCanvasMoveGrip;
+    FCanvasMoveView: TNyxBrowserRenderer;
+    FCanvasMoveHost: TJSHTMLElement;
     FCanvasGripViews: array[TNyxResizeAxis] of TNyxBrowserRenderer;
     FCanvasGripHosts: array[TNyxResizeAxis] of TJSHTMLElement;
     FEvents: INyxEvents;
@@ -252,6 +256,9 @@ type
     procedure UpdateResizeListening;
     procedure ClearCanvasResizeGrips;
     procedure UpdateCanvasResizeGrips;
+    procedure ClearCanvasMoveGrip;
+    procedure UpdateCanvasMoveGrip;
+    function CanvasMovePoint(const APointer: TNyxPointerSnapshot): TNyxResizePoint;
     function CanvasResizePoint(AAxis: TNyxResizeAxis;
       const APointer: TNyxPointerSnapshot): TNyxResizePoint;
     procedure Clear;
@@ -324,6 +331,13 @@ type
       Missing identity raises; roots have no guide context. No DOM is retained. }
     function AlignmentFor(const AID: TNyxText;
       AIdentity: TNyxIdentityKind = niAutomatic): TNyxAlignmentContext;
+    { Map copied outer-face input to viewport coordinates, then into a chosen
+      control's logical scale. Borrow mounted geometry synchronously. Mapping
+      refuses missing/zero geometry and never retains DOM or event handles. }
+    function ScreenPointFor(const AID: TNyxText;
+      const APointer: TNyxPointerSnapshot): TNyxResizePoint;
+    function LogicalPointFor(const AID: TNyxText;
+      const AScreen: TNyxResizePoint; AIdentity: TNyxIdentityKind = niAutomatic): TNyxResizePoint;
     { Read the containing mounted view's logical-pixel range/offset. Missing
       mount raises; this observation changes neither selection nor the model. }
     function ViewViewport: TNyxViewportSnapshot;
@@ -368,6 +382,9 @@ type
       Pointer-transparent fixed paint strips follow captured scroll/resize,
       clip to the mounted host/viewport and never alter input or scroll extent. }
     procedure PreviewResize(const APreview: TNyxResizePreview);
+    { Retain a public independent adornment; its document remains borrowed by
+      the nested view. Nil retires subscriptions before removing its host. }
+    procedure AttachMoveGrip(const AGrip: INyxCanvasMoveGrip);
     { Retain a public Nyx adornment for this selected authored face. Nil detaches.
       Three separately rendered specialized buttons keep application callbacks
       suppressed in the edited view. Caller disconnects editor receivers before
@@ -517,6 +534,40 @@ begin
   FEvents.Scheduler.RequireUI;
   LElement := ElementFor(AID, AIdentity);
   Result := NyxResizeSize(Round(LElement.offsetWidth), Round(LElement.offsetHeight));
+end;
+
+function TNyxBrowserRenderer.ScreenPointFor(const AID: TNyxText;
+  const APointer: TNyxPointerSnapshot): TNyxResizePoint;
+var
+  LFace: TJSDOMRect;
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if not APointer.HasPosition then
+  begin
+    raise ENyxModel.Create('Pointer mapping requires actual position');
+  end;
+  LFace := ElementFor(AID).getBoundingClientRect;
+  Result := NyxResizePoint(LFace.left + APointer.X, LFace.top + APointer.Y);
+end;
+
+function TNyxBrowserRenderer.LogicalPointFor(const AID: TNyxText;
+  const AScreen: TNyxResizePoint; AIdentity: TNyxIdentityKind): TNyxResizePoint;
+var
+  LElement: TJSHTMLElement;
+  LFace: TJSDOMRect;
+begin
+  FEvents.Scheduler.RequireUI;
+  LElement := ElementFor(AID, AIdentity);
+  LFace := LElement.getBoundingClientRect;
+
+  if not AScreen.Defined or (LElement.offsetWidth <= 0) or (LElement.offsetHeight <= 0) or
+    (LFace.width <= 0) or (LFace.height <= 0) then
+  begin
+    raise ENyxModel.Create('Logical pointer mapping requires positive mounted geometry');
+  end;
+  Result := NyxResizePoint(AScreen.X * LElement.offsetWidth / LFace.width,
+    AScreen.Y * LElement.offsetHeight / LFace.height);
 end;
 
 function TNyxBrowserRenderer.AlignmentFor(const AID: TNyxText;
@@ -734,6 +785,7 @@ begin
   { Disconnect before clearing any controls: their destructors and retained
     external producers must never enter a half-disposed view. }
   ClearCanvasResizeGrips;
+  ClearCanvasMoveGrip;
   ClearResizePreview;
   FSelectedDesignID := '';
 
@@ -1989,6 +2041,11 @@ begin
   begin
     ClearCanvasResizeGrips;
   end;
+
+  if (FCanvasMoveGrip <> nil) and (FCanvasMoveGrip.Owner.ID <> ADesignID) then
+  begin
+    ClearCanvasMoveGrip;
+  end;
   LChosen := False;
   for LIndex := 0 to Length(FBindings) - 1 do
   begin
@@ -2028,7 +2085,7 @@ end;
 procedure TNyxBrowserRenderer.UpdateResizeListening;
 begin
 
-  if FResizePreview.Active or (FCanvasResizeGrips <> nil) then
+  if FResizePreview.Active or (FCanvasResizeGrips <> nil) or (FCanvasMoveGrip <> nil) then
   begin
 
     if not FResizeListening then
@@ -2167,6 +2224,7 @@ var
   LVisible: Boolean;
   LFormat: TFormatSettings;
 begin
+  UpdateCanvasMoveGrip;
 
   if (FCanvasResizeGrips = nil) or (FHost = nil) then
   begin
@@ -2241,6 +2299,122 @@ begin
   end;
 end;
 
+procedure TNyxBrowserRenderer.ClearCanvasMoveGrip;
+var
+  LGrip: INyxCanvasMoveGrip;
+begin
+  LGrip := FCanvasMoveGrip;
+  FCanvasMoveGrip := nil;
+
+  if LGrip <> nil then
+  begin
+    LGrip.Unbind;
+  end;
+  FreeAndNil(FCanvasMoveView);
+
+  if FCanvasMoveHost <> nil then
+  begin
+    FCanvasMoveHost.remove;
+    FCanvasMoveHost := nil;
+  end;
+  LGrip := nil;
+  UpdateResizeListening;
+end;
+
+procedure TNyxBrowserRenderer.AttachMoveGrip(const AGrip: INyxCanvasMoveGrip);
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if AGrip = nil then
+  begin
+    ClearCanvasMoveGrip;
+    Exit;
+  end;
+
+  if not FDesignMode or (AGrip.Owner.ID <> FSelectedDesignID) then
+  begin
+    raise ENyxModel.Create('Canvas move grip requires the selected authored design face');
+  end;
+  ElementFor(AGrip.Owner.ID, niDesign);
+
+  if FCanvasMoveGrip = AGrip then
+  begin
+    UpdateCanvasMoveGrip;
+    Exit;
+  end;
+  ClearCanvasMoveGrip;
+  FCanvasMoveGrip := AGrip;
+  try
+    FCanvasMoveHost := Element('div', 'nyx-canvas-move-host');
+    FCanvasMoveHost.style.cssText := 'position:fixed;width:44px;height:44px;z-index:21;overflow:visible;';
+    document.body.appendChild(FCanvasMoveHost);
+    FCanvasMoveView := TNyxBrowserRenderer.Create(FTheme);
+    FCanvasMoveView.Render(AGrip.Document, AGrip.Root, FCanvasMoveHost);
+    AGrip.Bind(FCanvasMoveView.Events, @CanvasMovePoint);
+    UpdateResizeListening;
+    UpdateCanvasMoveGrip;
+  except
+    ClearCanvasMoveGrip;
+    raise;
+  end;
+end;
+
+function TNyxBrowserRenderer.CanvasMovePoint(const APointer: TNyxPointerSnapshot): TNyxResizePoint;
+begin
+
+  if (FCanvasMoveGrip = nil) or (FCanvasMoveView = nil) then
+  begin
+    raise ENyxModel.Create('Canvas move adornment is not mounted');
+  end;
+  Result := LogicalPointFor(FCanvasMoveGrip.Owner.ID,
+    FCanvasMoveView.ScreenPointFor(NyxCanvasMoveGripID, APointer), niDesign);
+end;
+
+procedure TNyxBrowserRenderer.UpdateCanvasMoveGrip;
+var
+  LElement: TJSHTMLElement;
+  LFace, LClip: TJSDOMRect;
+  LX, LY: Double;
+  LFormat: TFormatSettings;
+begin
+
+  if (FCanvasMoveGrip = nil) or (FCanvasMoveHost = nil) or (FHost = nil) then
+  begin
+    Exit;
+  end;
+  LElement := ElementFor(FCanvasMoveGrip.Owner.ID, niDesign);
+  LFace := LElement.getBoundingClientRect;
+  LClip := FHost.getBoundingClientRect;
+  LX := LFace.left;
+  LY := LFace.top;
+
+  if FResizePreview.Active and (FResizePreview.Control.ID = FCanvasMoveGrip.Owner.ID) then
+  begin
+    LX := LX + FResizePreview.OffsetX * LFace.width / Max(1, LElement.offsetWidth);
+    LY := LY + FResizePreview.OffsetY * LFace.height / Max(1, LElement.offsetHeight);
+  end;
+  FCanvasMoveHost.style.setProperty('display', 'none');
+
+  if (LClip.width < 44) or (LClip.height < 44) or (LFace.width <= 0) or (LFace.height <= 0) or
+    (LX < Max(0, LClip.left)) or (LX > Min(window.innerWidth, LClip.right)) or
+    (LY < Max(0, LClip.top)) or (LY > Min(window.innerHeight, LClip.bottom)) then
+  begin
+    Exit;
+  end;
+  LFormat := FormatSettings;
+  LFormat.DecimalSeparator := '.';
+  FCanvasMoveHost.style.setProperty('display', 'block');
+  FCanvasMoveHost.style.setProperty('left',
+    FloatToStr(Max(Max(0, LClip.left), Min(LX - 22, Min(window.innerWidth, LClip.right) - 44)), LFormat) + 'px');
+  FCanvasMoveHost.style.setProperty('top',
+    FloatToStr(Max(Max(0, LClip.top), Min(LY - 22, Min(window.innerHeight, LClip.bottom) - 44)), LFormat) + 'px');
+
+  if not document.body.contains(FCanvasMoveHost) then
+  begin
+    document.body.appendChild(FCanvasMoveHost);
+  end;
+end;
+
 function TNyxBrowserRenderer.ResizePreviewViewport(AEvent: TJSEvent): Boolean;
 begin
   UpdateResizePreview;
@@ -2280,6 +2454,7 @@ var
   LClip: TJSDOMRect;
   LWidth: Double;
   LHeight: Double;
+  LLeft, LTop: Double;
   LIndex: Integer;
 
   procedure Edge(AIndex: Integer; ALeft, ATop, AWidth, AHeight: Double);
@@ -2335,8 +2510,8 @@ var
     begin
       LScaleY := LFace.height / LElement.offsetHeight;
     end;
-    Edge(AIndex, LFace.left + (LBox.Left - AGuide.OwnerBox.Left) * LScaleX,
-      LFace.top + (LBox.Top - AGuide.OwnerBox.Top) * LScaleY,
+    Edge(AIndex, LLeft + (LBox.Left - AGuide.OwnerBox.Left) * LScaleX,
+      LTop + (LBox.Top - AGuide.OwnerBox.Top) * LScaleY,
       LBox.Width * LScaleX, LBox.Height * LScaleY);
   end;
 
@@ -2392,10 +2567,14 @@ begin
       document.body.appendChild(FResizeEdges[LIndex]);
     end;
   end;
-  Edge(0, LFace.left - 2, LFace.top - 2, LWidth + 4, 2);
-  Edge(1, LFace.left - 2, LFace.top + LHeight, LWidth + 4, 2);
-  Edge(2, LFace.left - 2, LFace.top, 2, LHeight);
-  Edge(3, LFace.left + LWidth, LFace.top, 2, LHeight);
+  { A copied position proposal uses the same bounded, pointer-transparent paint.
+    Translate the measured face without relocating the live editable control. }
+  LLeft := LFace.left + FResizePreview.OffsetX * LFace.width / Max(1, LElement.offsetWidth);
+  LTop := LFace.top + FResizePreview.OffsetY * LFace.height / Max(1, LElement.offsetHeight);
+  Edge(0, LLeft - 2, LTop - 2, LWidth + 4, 2);
+  Edge(1, LLeft - 2, LTop + LHeight, LWidth + 4, 2);
+  Edge(2, LLeft - 2, LTop, 2, LHeight);
+  Edge(3, LLeft + LWidth, LTop, 2, LHeight);
   Guide(4, FResizePreview.Size.WidthGuide, 0);
   Guide(5, FResizePreview.Size.WidthGuide, 1);
   Guide(6, FResizePreview.Size.HeightGuide, 0);

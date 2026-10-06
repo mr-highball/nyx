@@ -54,6 +54,7 @@ uses
   nyx.gestures,
   nyx.designer.input,
   nyx.designer.resize,
+  nyx.designer.move,
   nyx.designer.guides,
   nyx.gestures.lcl,
   nyx.platform,
@@ -260,6 +261,9 @@ type
     FResizePreview: TNyxResizePreview;
     FResizeEdges: array[0..7] of TPanel;
     FCanvasResizeGrips: INyxCanvasResizeGrips;
+    FCanvasMoveGrip: INyxCanvasMoveGrip;
+    FCanvasMoveView: TNyxLCLRenderer;
+    FCanvasMoveHost: TPanel;
     FCanvasGripViews: array[TNyxResizeAxis] of TNyxLCLRenderer;
     FCanvasGripHosts: array[TNyxResizeAxis] of TPanel;
     FSelectionEdges: array[0..3] of TShape;
@@ -270,6 +274,9 @@ type
     procedure UpdateResizePreview;
     procedure ClearCanvasResizeGrips;
     procedure UpdateCanvasResizeGrips;
+    procedure ClearCanvasMoveGrip;
+    procedure UpdateCanvasMoveGrip;
+    function CanvasMovePoint(const APointer: TNyxPointerSnapshot): TNyxResizePoint;
     function CanvasResizePoint(AAxis: TNyxResizeAxis;
       const APointer: TNyxPointerSnapshot): TNyxResizePoint;
     procedure Emit(AOrigin: TNyxNode; const ADispatch: TNyxDispatch);
@@ -381,6 +388,10 @@ type
       current outline changes. Inert paint strips above the scroll surface
       retain input/focus and clip to the viewport without changing scroll extent. }
     procedure PreviewResize(const APreview: TNyxResizePreview);
+    { Retain the independent public Nyx adornment until its nested view is gone. }
+    procedure AttachMoveGrip(const AGrip: INyxCanvasMoveGrip);
+    { Borrow the currently mounted public button; missing adornment refuses. }
+    function CanvasMoveControl: TControl;
     { Retain public specialized Nyx button adornments for the selected authored
       face. Nil detaches. Separate runtime scopes do not enable application
       callbacks in the edited tree. Same attachment preserves target identity,
@@ -442,6 +453,12 @@ type
       missing identity raises. No control, binding or model is retained. }
     function AlignmentFor(const AID: TNyxText;
       AIdentity: TNyxIdentityKind = niAutomatic): TNyxAlignmentContext;
+    { Copied screen-plane mapping for reusable gesture grips. Native logical
+      allocations currently use LCL pixels; no widget is retained by the value. }
+    function ScreenPointFor(const AID: TNyxText;
+      const APointer: TNyxPointerSnapshot): TNyxResizePoint;
+    function LogicalPointFor(const AID: TNyxText;
+      const AScreen: TNyxResizePoint; AIdentity: TNyxIdentityKind = niAutomatic): TNyxResizePoint;
     { Shared one-based source navigation for the public code-editor component. }
     { One-based Unicode-scalar column, translated to the widgetset's caret units.
       Win32 memo columns use UTF-16 units, including both units of a surrogate.
@@ -647,6 +664,7 @@ begin
   end;
   ClearCanvasResizeGrips;
   { Revoke borrowed sinks before destroying any part of the mounted view. }
+  ClearCanvasMoveGrip;
   FUpdating := True;
   FVirtualLayout := False;
 
@@ -2070,6 +2088,11 @@ begin
   begin
     ClearCanvasResizeGrips;
   end;
+
+  if (FCanvasMoveGrip <> nil) and (FCanvasMoveGrip.Owner.ID <> ADesignID) then
+  begin
+    ClearCanvasMoveGrip;
+  end;
   FResizePreview := Default(TNyxResizePreview);
   { Painting selection is deliberately scroll-neutral. Navigation uses Reveal,
     so an observing refresh cannot undo the user's independent scroll position. }
@@ -2195,6 +2218,7 @@ var
   LY: Integer;
   LVisible: Boolean;
 begin
+  UpdateCanvasMoveGrip;
 
   if (FCanvasResizeGrips = nil) or (FPanel = nil) or (FPanel.Parent = nil) then
   begin
@@ -2247,6 +2271,125 @@ begin
         Max(0, Min(LY - 22, LHost.ClientHeight - 44)), 44, 44);
       FCanvasGripHosts[LAxis].BringToFront;
     end;
+  end;
+end;
+
+procedure TNyxLCLRenderer.ClearCanvasMoveGrip;
+var
+  LGrip: INyxCanvasMoveGrip;
+begin
+  LGrip := FCanvasMoveGrip;
+  FCanvasMoveGrip := nil;
+
+  if LGrip <> nil then
+  begin
+    LGrip.Unbind;
+  end;
+  FreeAndNil(FCanvasMoveView);
+  FreeAndNil(FCanvasMoveHost);
+  LGrip := nil;
+end;
+
+procedure TNyxLCLRenderer.AttachMoveGrip(const AGrip: INyxCanvasMoveGrip);
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if AGrip = nil then
+  begin
+    ClearCanvasMoveGrip;
+    Exit;
+  end;
+
+  if not FDesignMode or (AGrip.Owner.ID <> FSelectedDesignID) then
+  begin
+    raise ENyxModel.Create('Canvas move grip requires the selected authored design face');
+  end;
+  IdentityBinding(AGrip.Owner.ID, niDesign);
+
+  if FCanvasMoveGrip = AGrip then
+  begin
+    UpdateCanvasMoveGrip;
+    Exit;
+  end;
+  ClearCanvasMoveGrip;
+  FCanvasMoveGrip := AGrip;
+  try
+    FCanvasMoveHost := TPanel.Create(nil);
+    FCanvasMoveHost.Name := 'NyxCanvasMoveHost';
+    FCanvasMoveHost.Caption := '';
+    FCanvasMoveHost.BevelOuter := bvNone;
+    FCanvasMoveHost.BorderWidth := 0;
+    FCanvasMoveHost.TabStop := False;
+    FCanvasMoveHost.SetBounds(0, 0, 44, 44);
+    FCanvasMoveHost.Parent := FPanel.Parent;
+    FCanvasMoveView := TNyxLCLRenderer.Create(FTheme);
+    FCanvasMoveView.Render(AGrip.Document, AGrip.Root, FCanvasMoveHost);
+    AGrip.Bind(FCanvasMoveView.Events, CanvasMovePoint);
+    UpdateCanvasMoveGrip;
+  except
+    ClearCanvasMoveGrip;
+    raise;
+  end;
+end;
+
+function TNyxLCLRenderer.CanvasMovePoint(const APointer: TNyxPointerSnapshot): TNyxResizePoint;
+begin
+
+  if (FCanvasMoveGrip = nil) or (FCanvasMoveView = nil) then
+  begin
+    raise ENyxModel.Create('Canvas move adornment is not mounted');
+  end;
+  Result := LogicalPointFor(FCanvasMoveGrip.Owner.ID,
+    FCanvasMoveView.ScreenPointFor(NyxCanvasMoveGripID, APointer), niDesign);
+end;
+
+function TNyxLCLRenderer.CanvasMoveControl: TControl;
+begin
+
+  if (FCanvasMoveGrip = nil) or (FCanvasMoveView = nil) then
+  begin
+    raise ENyxModel.Create('Canvas move adornment is not mounted');
+  end;
+  Result := FCanvasMoveView.ControlFor(NyxCanvasMoveGripID);
+end;
+
+procedure TNyxLCLRenderer.UpdateCanvasMoveGrip;
+var
+  LBinding: TNyxLCLBinding;
+  LHost: TWinControl;
+  LOrigin: TPoint;
+begin
+
+  if (FCanvasMoveGrip = nil) or (FCanvasMoveHost = nil) or
+    (FPanel = nil) or (FPanel.Parent = nil) then
+  begin
+    Exit;
+  end;
+  LHost := FPanel.Parent;
+  LBinding := IdentityBinding(FCanvasMoveGrip.Owner.ID, niDesign);
+  LOrigin := LHost.ScreenToClient(LBinding.FControl.Parent.ClientToScreen(
+    Point(LBinding.FControl.Left, LBinding.FControl.Top)));
+
+  if FVirtualLayout then
+  begin
+    Dec(LOrigin.X, LBinding.FPlacement.ContentOffsetX);
+    Dec(LOrigin.Y, LBinding.FPlacement.ContentOffsetY);
+  end;
+
+  if FResizePreview.Active and (FResizePreview.Control.ID = FCanvasMoveGrip.Owner.ID) then
+  begin
+    Inc(LOrigin.X, Round(FResizePreview.OffsetX));
+    Inc(LOrigin.Y, Round(FResizePreview.OffsetY));
+  end;
+  FCanvasMoveHost.Visible := LBinding.FControl.Visible and (LHost.ClientWidth >= 44) and
+    (LHost.ClientHeight >= 44) and (LOrigin.X >= 0) and (LOrigin.X <= LHost.ClientWidth) and
+    (LOrigin.Y >= 0) and (LOrigin.Y <= LHost.ClientHeight);
+
+  if FCanvasMoveHost.Visible then
+  begin
+    FCanvasMoveHost.SetBounds(Max(0, Min(LOrigin.X - 22, LHost.ClientWidth - 44)),
+      Max(0, Min(LOrigin.Y - 22, LHost.ClientHeight - 44)), 44, 44);
+    FCanvasMoveHost.BringToFront;
   end;
 end;
 
@@ -2333,6 +2476,9 @@ begin
     Inc(LOrigin.Y, 2);
   end;
   LOrigin := LHost.ScreenToClient(FSelectionEdges[0].Parent.ClientToScreen(LOrigin));
+  { Copied logical translation changes only the proposal's bounded paint. }
+  Inc(LOrigin.X, Round(FResizePreview.OffsetX));
+  Inc(LOrigin.Y, Round(FResizePreview.OffsetY));
   for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
   begin
 
@@ -3317,6 +3463,33 @@ begin
     raise ENyxModel.Create('Control size requires admitted logical layout');
   end;
   Result := NyxResizeSize(LBinding.FLogicalBox.Width, LBinding.FLogicalBox.Height);
+end;
+
+function TNyxLCLRenderer.ScreenPointFor(const AID: TNyxText;
+  const APointer: TNyxPointerSnapshot): TNyxResizePoint;
+var
+  LOrigin: TPoint;
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if not APointer.HasPosition then
+  begin
+    raise ENyxModel.Create('Pointer mapping requires actual position');
+  end;
+  LOrigin := IdentityBinding(AID, niAutomatic).FControl.ClientToScreen(Point(0, 0));
+  Result := NyxResizePoint(LOrigin.X + APointer.X, LOrigin.Y + APointer.Y);
+end;
+
+function TNyxLCLRenderer.LogicalPointFor(const AID: TNyxText;
+  const AScreen: TNyxResizePoint; AIdentity: TNyxIdentityKind): TNyxResizePoint;
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if not AScreen.Defined or not IdentityBinding(AID, AIdentity).FLogicalBox.Defined then
+  begin
+    raise ENyxModel.Create('Logical pointer mapping requires mounted geometry');
+  end;
+  Result := AScreen;
 end;
 
 function TNyxLCLRenderer.AlignmentFor(const AID: TNyxText;

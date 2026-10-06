@@ -37,7 +37,7 @@ uses
   nyx.studio.exchange, nyx.studio.preview, nyx.studio.preview.lcl,
   nyx.studio.sourcejobs, nyx.modal, nyx.modal.lcl,
   nyx.designer.input, nyx.gestures, nyx.studio.edits, nyx.studio.drag,
-  nyx.designer.resize, nyx.designer.guides, nyx.studio.resize, nyx.presentations;
+  nyx.designer.resize, nyx.designer.guides, nyx.studio.resize, nyx.presentations, nyx.studio.move;
 
 type
   TNyxNativeStudio = class;
@@ -123,6 +123,7 @@ type
     FCanvasView: TNyxLCLRenderer;
     FDesignerDrag: TNyxStudioDrag;
     FDesignerResize: TNyxStudioResize;
+    FDesignerMove: TNyxStudioMove;
     FCodeView: TNyxLCLRenderer;
     FCanvasParking: TPanel;
     FCodeParking: TPanel;
@@ -175,6 +176,7 @@ type
     { Borrow current owners synchronously; hover never publishes a design pair. }
     function DesignerDragContext: TNyxStudioDragContext;
     function DesignerResizeMeasure(const AControl: TNyxControlRef): TNyxResizeSize;
+    function DesignerMovePoint(const APointer: TNyxPointerSnapshot): TNyxResizePoint;
     function DesignerResizeGuides(const AControl: TNyxControlRef): TNyxAlignmentContext;
     procedure DesignerResizeStatus(const AMessage: TNyxText);
     procedure DesignerResizePresentation(const APreview: TNyxResizePreview);
@@ -546,6 +548,8 @@ begin
   FDesignerDrag := TNyxStudioDrag.Create(DesignerDragContext, DesignerDragFeedback);
   FDesignerResize := TNyxStudioResize.Create(DesignerDragContext,
     DesignerResizeMeasure, DesignerResizeStatus, DesignerResizePresentation, DesignerResizeGuides);
+  FDesignerMove := TNyxStudioMove.Create(DesignerDragContext, DesignerResizeGuides,
+    DesignerResizeStatus, DesignerResizePresentation, DesignerMovePoint);
   FCodeView := TNyxLCLRenderer.Create(FTheme);
   FSourcePaneView := TNyxLCLRenderer.Create(FTheme);
   FSourcePaneView.OnEvent := ShellEvent;
@@ -581,6 +585,7 @@ begin
   end;
   FreeAndNil(FDesignerDrag);
   FreeAndNil(FDesignerResize);
+  FreeAndNil(FDesignerMove);
 
   if FHierarchySubscription <> nil then
   begin
@@ -1951,14 +1956,17 @@ begin
     FShellCommandContext := FSession.CommandContext;
     FDesignerDrag.ConnectSources(FShellView.Events, FShellView.Root, FShellCommandContext);
     FDesignerResize.Connect(FShellView.Events, FShellView.Root, FShellCommandContext);
+    FDesignerMove.Connect(FShellView.Events, FShellView.Root, FShellCommandContext);
 
     if FCanvasView.DesignMode then
     begin
       FCanvasView.AttachResizeGrips(FDesignerResize.CanvasGrips);
+      FCanvasView.AttachMoveGrip(FDesignerMove.CanvasGrip);
     end
     else
     begin
       FCanvasView.AttachResizeGrips(nil);
+      FCanvasView.AttachMoveGrip(nil);
     end;
     FChangingProject := False;
     Inc(FPaintCount);
@@ -2273,6 +2281,12 @@ begin
   Result.Placement := FState.DesignerPlacement;
 end;
 
+function TNyxNativeStudio.DesignerMovePoint(const APointer: TNyxPointerSnapshot): TNyxResizePoint;
+begin
+  Result := FCanvasView.LogicalPointFor(FSession.SelectedID,
+    FShellView.ScreenPointFor(NyxStudioMoveGripID, APointer), niDesign);
+end;
+
 function TNyxNativeStudio.DesignerResizeMeasure(const AControl: TNyxControlRef): TNyxResizeSize;
 begin
   Result := FCanvasView.SizeFor(AControl.ID, niDesign);
@@ -2367,6 +2381,7 @@ begin
     begin
       FDesignerDrag.Cancel;
       FDesignerResize.Cancel;
+      FDesignerMove.Cancel;
       FState.PresentationSelection := ReadNyxStudioPresentationChoice(ANode.Prop('value'),
         FSession.Document.Presentations);
       FCanvasView.PresentationSelection := FState.PresentationSelection;

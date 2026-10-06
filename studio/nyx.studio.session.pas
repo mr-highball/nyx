@@ -83,7 +83,7 @@ type
     sdaMove, sdaTitle, sdaAddPage, sdaCreateComponent, sdaAddInstance, sdaCustomizePart,
     sdaCanvasValue, sdaSetStateDefault, sdaCreateStateDefault,
     sdaRenameStateDefault, sdaRemoveStateDefault, sdaSetBinding, sdaInheritBinding,
-    sdaEvent, sdaCollection, sdaPlacement, sdaResize, sdaPresentation);
+    sdaEvent, sdaCollection, sdaPlacement, sdaResize, sdaPresentation, sdaPosition);
   { Callback operations carry exact typed event/registration references. Removal
     includes the handler the user reviewed; IDs alone cannot authorize replacing
     a registration. Empty references belong only to add/policy intent. }
@@ -141,6 +141,8 @@ type
     Placement: TNyxPlacementChange;
     { One grouped typed dimension change; never an executable property string. }
     Resize: TNyxResizeChange;
+    { Both absolute origin axes belong to one paired history operation. }
+    Position: TNyxPositionChange;
     { Named definition/override intent shares the same isolated paired job. }
     Presentation: TNyxPresentationEdit;
     { Immutable origin of a canvas capture. Queue admission uses this mounted
@@ -480,6 +482,12 @@ type
       retain their existing Inspector customization path. One paired Undo. }
     procedure Resize(const AChange: TNyxResizeChange);
     function CaptureResize(const AChange: TNyxResizeChange;
+      const AMountContext: TNyxStudioCommandContext): TNyxStudioDesignEdit;
+    { A baseline absolute-layout origin is one paired command. Conditional or
+      bound origins refuse instead of guessing an authored scope. Capture owns
+      copied values and verifies the borrowed mount's session/load identity. }
+    procedure Position(const AChange: TNyxPositionChange);
+    function CapturePosition(const AChange: TNyxPositionChange;
       const AMountContext: TNyxStudioCommandContext): TNyxStudioDesignEdit;
     { Arm the selected authored control, then choose a destination through the
       ordinary canvas/hierarchy. Arming/canceling are presentation, not Undo.
@@ -2265,6 +2273,31 @@ begin
   Result.Selection := AChange.Control.ID;
   Result.View := ActiveViewID;
   Result.Resize := AChange;
+  Result.FCanvasContext := AMountContext;
+end;
+
+procedure TNyxStudioSession.Position(const AChange: TNyxPositionChange);
+begin
+  AChange.ToData;
+  ValidateNyxPositionOwner(FDocument, AChange.Control);
+  ApplyPatch(ReadNyxDesignPatch(NyxArray([AChange.Operation])));
+end;
+
+function TNyxStudioSession.CapturePosition(const AChange: TNyxPositionChange;
+  const AMountContext: TNyxStudioCommandContext): TNyxStudioDesignEdit;
+begin
+
+  if not MatchesCommandContext(AMountContext) then
+  begin
+    raise ENyxModel.Create('Positioning belongs to an earlier session or project load');
+  end;
+  AChange.ToData;
+  ValidateNyxPositionOwner(FDocument, AChange.Control);
+  Result := Default(TNyxStudioDesignEdit);
+  Result.Action := sdaPosition;
+  Result.Selection := AChange.Control.ID;
+  Result.View := ActiveViewID;
+  Result.Position := AChange;
   Result.FCanvasContext := AMountContext;
 end;
 

@@ -1,0 +1,8 @@
+[
+  {"op":"title","value":"A place for ideas"},
+  {"op":"create","kind":"page","id":"home","root":"page","properties":{"padding":16,"gap":12}},
+  {"op":"create","kind":"panel","id":"workspace","parent":"home","properties":{"layout":"absolute","width":600,"height":440,"padding":0,"gap":0}},
+  {"op":"create","kind":"memo","id":"notes-editor","parent":"workspace","properties":{"text":"Notes","value":"Keep this English draft.","left":20,"top":30,"width":200,"height":120}},
+  {"op":"create","kind":"memo","id":"other-editor","parent":"workspace","properties":{"text":"Companion notes","value":"This control stays independent.","left":240,"top":70,"width":180,"height":120}},
+  {"op":"create","kind":"button","id":"reference-button","parent":"workspace","properties":{"text":"A useful reference","left":120,"top":220,"width":140,"height":44}}
+]

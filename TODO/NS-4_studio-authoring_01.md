@@ -40,6 +40,35 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Absolute-position move snapping — 2026-10-06
+
+Original criterion 1 now has reusable typed movement policies, managed canvas
+grips and copied parent/sibling edge/center guides on browser/LCL. Stable logical
+mapping, matching capture identity, cancellation and exact keyboard increments
+share public event streams. Ordinary Studio paints a proposal without source edits;
+release rechecks pair/view/mount/creator/geometry before one paired publication.
+Baseline origin refresh preserves live controls and independent drafts/selections.
+Compact Design keeps its grip without mounting Inspector. Flow placement retains
+inside/before/after behavior; conditional or bound origins refuse free movement.
+
+Evidence: 99 shared checks per native compiler/browser, including strict current
+worker tickets and preceding helper compatibility; 44 existing placement checks;
+22 actual Win32 Studio checks and 49 per desktop/exact-390 browser journey through
+host pointer capture, Escape, keyboard and synchronized history. Both deployed
+MCP application jobs compile exact 106-line / 2325-byte companion source. The
+two-asset LAN overlay retains five existing paired documents, revisions, selections,
+views and Undo/Redo availability, plus fourteen process identities. No restart.
+Twenty tools authenticate; the English **Move workshop** is independent in Agents.
+See [evidence](../WORK.md#absolute-position-move-snapping--2026-10-06).
+
+No original criterion closes. Authoring no-closure advances **19→20** once;
+workflow **9**, codegen **28**, renderer **3**, delivery **1** remain. End local
+move-policy/fixture expansion. Reparenting/flow snap geometry, container allocation,
+structural variants and full ordinary editor/parity/accessibility/performance/
+delivery remain open. Physical phone input, changing scale during a gesture,
+nested scrolling, assistive technology and another widgetset remain unqualified.
+All original criteria and prerequisites stand.
+
 ## Manual presentation selection — 2026-10-06
 
 Original criterion 1 now includes typed exclusive manual configurations alongside

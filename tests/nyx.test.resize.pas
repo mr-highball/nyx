@@ -85,6 +85,7 @@ begin
   begin
 
     if (LEdit.Key(LIndex) <> 'resize') and (LEdit.Key(LIndex) <> 'presentation') and
+      (LEdit.Key(LIndex) <> 'position') and
       ((AVersion <> 5) or (LEdit.Key(LIndex) <> 'placement')) then
     begin
       LFields[LCount] := NyxField(LEdit.Key(LIndex), LEdit.Field(LEdit.Key(LIndex)));

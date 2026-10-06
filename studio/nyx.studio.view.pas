@@ -51,7 +51,7 @@ uses
   nyx.studio.compiler,
   nyx.studio.diagnostics,
   nyx.studio.agentview,
-  nyx.studio.outputs, nyx.studio.edits, nyx.studio.drag, nyx.studio.resize;
+  nyx.studio.outputs, nyx.studio.edits, nyx.studio.drag, nyx.studio.resize, nyx.studio.move;
 
 type
   { Compact hosts show one ordinary Nyx workspace panel at a time. The choice
@@ -729,6 +729,7 @@ var
   LButton: TNyxNode;
   LField: TNyxNode;
   LSelected: TNyxNode;
+  LMoveTools: TNyxNode;
   LHelpIndex: Integer;
   LIndex: Integer;
   LKind: TNyxText;
@@ -1029,6 +1030,12 @@ begin
         .Hint('Drag onto the canvas. Choose inside, before or after in Drop position.').Done
         .SetProp('designer-drag-control', LSelected.ID));
       LRight.Add(BuildNyxStudioResizeTools(NyxControl(LSelected.ID)));
+      LMoveTools := BuildNyxStudioMoveTools(ASession.Document, NyxControl(LSelected.ID));
+
+      if LMoveTools <> nil then
+      begin
+        LRight.Add(LMoveTools);
+      end;
     end;
     { Placement stays beside selection, ahead of potentially long property/event
       lists. Ordinary canvas/hierarchy selection supplies the destination; the

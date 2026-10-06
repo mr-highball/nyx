@@ -25,7 +25,22 @@ execution. Codegen criterion 3 remains open at no-closure 28; workflow 9, render
 3, authoring 11 and delivery 1 remain. No full criterion, goal percentage or DONE
 claim follows. See [evidence](WORK.md#reviewable-release-refresh--2026-10-05).
 
-Current independent authoring packet: typed exclusive manual configurations now
+Current independent authoring packet: ordinary absolute-position movement consumes
+copied Nyx policies, edge/center geometry, public pointer/key streams and retained
+adapter controls. Preview paints without source edits; release publishes both
+axes as one paired Undo. Checks pass 99 per native compiler/browser, 22 Win32
+Studio and 49 per desktop/exact-390 browser Studio journey. Both deployed MCP
+application jobs compile exact semantic source. The LAN Studio/worker overlay
+preserves the running server and five existing pairs/navigation/history states;
+twenty tools authenticate. Scoped/bound origins refuse instead of guessing an
+authoring scope. No original criterion closes: authoring no-closure advances
+**19→20** once; workflow **9**, codegen **28**, renderer **3**, delivery **1** remain.
+End local move-policy/fixture expansion. Flow/reparenting snap geometry, stable
+container allocation, structural variants and complete ordinary editor/parity/
+accessibility/performance/delivery remain open. See
+[evidence](WORK.md#absolute-position-move-snapping--2026-10-06).
+
+Preceding independent authoring packet: typed exclusive manual configurations now
 coexist with automatic host predicates. Managed view capabilities retain no
 document/view cycles, and each mounted view owns its choice. Ordinary Studio
 preview switching, Inspector/worker authoring and semantic MCP snapshots share

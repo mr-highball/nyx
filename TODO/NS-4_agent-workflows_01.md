@@ -638,3 +638,12 @@ integration, class/full-unit source authoring, root ordering, performance,
 accessibility and observing delivery retain their original acceptance owners.
 No bounded Win32/source packet substitutes those full outcomes.
 See [evidence](../WORK.md#semantic-reusable-authoring--2026-10-05).
+
+The move-snapping journey retains a transport follow-up: one deployed Pascal
+client build request returned an authoritative running-job receipt, then exited
+with `Error reading data from socket`. The same immutable job later succeeded
+through a clean status query and its exact compiled source matched the export.
+Do not retry the mutation or infer successful compilation from that receipt.
+Investigate the stream/shutdown boundary under this existing workflow owner;
+the issue does not earn another workflow completion claim. Private admission,
+stderr and terminal-status evidence lives in `.local/move-assets-20261006/`.

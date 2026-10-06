@@ -75,16 +75,26 @@ type
     target widgets. Default clears the proposal. A defined value names an exact
     authored control and its proposed outer size in logical pixels. Renderers
     resolve the current mounted origin; no tree, input or ownership is retained. }
-  TNyxResizePreview = record
+  TNyxCanvasPreview = record
   private
     FControl: TNyxControlRef;
     FSize: TNyxResizeSize;
+    FOffsetX, FOffsetY: Double;
     function GetActive: Boolean;
   public
+    { Copied translation relative to the mounted accepted outer face, measured
+      in its logical plane. No accepted widget/document geometry is changed. }
+    function Translated(AX, AY: Double): TNyxCanvasPreview;
+    function Aligned(const AHorizontal, AVertical: TNyxAlignmentGuide): TNyxCanvasPreview;
     property Active: Boolean read GetActive;
     property Control: TNyxControlRef read FControl;
     property Size: TNyxResizeSize read FSize;
+    property OffsetX: Double read FOffsetX;
+    property OffsetY: Double read FOffsetY;
   end;
+  { Existing resize callers retain source compatibility with the shared copied
+    canvas presentation contract; position gestures consume the same paint. }
+  TNyxResizePreview = TNyxCanvasPreview;
 
   { Value-only policy. Grid snapping rounds final dimensions to the nearest
     multiple (ties toward increasing size), then clamps to explicit bounds.
@@ -217,9 +227,33 @@ implementation
 uses
   Math;
 
-function TNyxResizePreview.GetActive: Boolean;
+function TNyxCanvasPreview.GetActive: Boolean;
 begin
   Result := FControl.ID <> '';
+end;
+
+function TNyxCanvasPreview.Translated(AX, AY: Double): TNyxCanvasPreview;
+begin
+
+  if not Active or IsNan(AX) or IsInfinite(AX) or IsNan(AY) or IsInfinite(AY) then
+  begin
+    raise EArgumentException.Create('Canvas translation requires active finite geometry');
+  end;
+  Result := Self;
+  Result.FOffsetX := AX;
+  Result.FOffsetY := AY;
+end;
+
+function TNyxCanvasPreview.Aligned(const AHorizontal, AVertical: TNyxAlignmentGuide): TNyxCanvasPreview;
+begin
+
+  if not Active then
+  begin
+    raise EArgumentException.Create('Canvas guides require an active proposal');
+  end;
+  Result := Self;
+  Result.FSize.FWidthGuide := AHorizontal;
+  Result.FSize.FHeightGuide := AVertical;
 end;
 
 function NyxResizePreview(const AControl: TNyxControlRef;

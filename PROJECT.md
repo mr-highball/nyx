@@ -66,6 +66,20 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Absolute-layout movement now uses public copied position policies, sibling/parent
+edge and center guides, managed canvas grips and explicit screen/logical mapping.
+Ordinary Studio previews without changing source, then publishes both origin axes
+as one paired Undo. Compatible refresh retains live memo objects, independent
+drafts and selections. Checks pass 99 per native compiler/browser, 22 actual Win32
+Studio and 49 per desktop/exact-390 browser Studio journey. Both MCP application
+builds compile the unchanged English companion. The LAN editor/worker overlay
+retains its server and all five existing pairs/navigation/history states; twenty
+tools authenticate. **Move workshop** is an independent Agents project. Scoped or
+bound origins refuse free movement; flow placement retains its existing contract.
+Reparenting snap guides, container allocation, structural variants and full
+editor/parity/accessibility/performance remain open. See
+[move evidence](WORK.md#absolute-position-move-snapping--2026-10-06).
+
 Document-owned presentations now support typed automatic host predicates and
 exclusive manual configurations. Independent managed view capabilities select
 manual names without changing the document, source, state or history. Immutable
@@ -74,7 +88,7 @@ admission, ordinary Inspector/worker/preview choices and semantic MCP agree.
 Checks pass 72 per native compiler/browser, two compiled Unicode checks per
 target, 52 actual Win32 controls, 53 browser controls, 26 native Studio and 64
 per browser Studio size. Per-project preferences migrate from versions 2/3 to
-version 4 without losing existing fields. The LAN release serves nine verified
+version 4 without losing existing fields. Its preceding LAN release serves nine verified
 artifacts and twenty authenticated MCP tools, preserving four existing paired
 designs/navigation states. The English manual example is available in Agents.
 Restart resets previous history and assigns concurrent projects new handles.

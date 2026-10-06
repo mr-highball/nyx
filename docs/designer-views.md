@@ -357,3 +357,62 @@ Current commands, retained failures, captures and acceptance limits belong to
 [WORK.md](../WORK.md). These adapter gates do not accept full native Studio,
 concurrent project navigation, live workspace closure or the wider accessibility
 and production UI requirements.
+
+## Absolute-position movement
+
+The public [move contract](../src/nyx.designer.move.pas) provides copied logical
+origins, fluent policies and specialized managed grips. A policy has an explicit
+grid, exact keyboard increment, origin bounds and copied alignment context:
+
+```pascal
+LPolicy := NyxMovePolicy
+  .Snap(npsGrid)
+  .Grid(8)
+  .KeyboardStep(8)
+  .Guides(LAlignment);
+LProposal := LPolicy.Adjust(NyxMovePosition(20, 30), 23, 36);
+```
+
+`LAlignment` is the adapter's copied accepted parent/sibling geometry. Nearest
+edge/center guides precede grid snapping, then bounds clamp the proposal. Alt
+bypasses snapping; arrows use the exact increment and Shift multiplies it by ten.
+An unchanged axis preserves its accepted origin, including an off-grid value.
+The default portable origin domain is 0..100000 logical pixels; explicit zero
+differs from an absent value. Copied guide explanations do not alter equality or
+persistence.
+
+`TNyxMoveHandle` retains subscriptions and borrows synchronous capture/feedback
+receivers until disconnection. Hosts provide copied accepted policy/position,
+map local pointer input into a stable logical plane and own mutation/history.
+`INyxCanvasMoveGrip` owns a separate one-button Nyx document; renderers retain the
+interface and borrow its tree. Its 44-pixel face remains available in compact
+Design even when Inspector is absent. Escape, focus/capture loss and owner/mount
+retirement cancel proposals. External cancellation retains a capture lease until
+the adapter reports release/lost capture.
+
+Ordinary Studio offers movement only for an authored nonroot control under an
+absolute parent. Platform/presentation origin overrides, conditional parent layout
+and active origin bindings refuse free movement. Configure these intentionally
+through the [typed presentation contract](responsive.md). Existing flow placement
+continues to use inside/before/after operations. Transient guides paint a copied
+rectangle; accepted controls, source and live drafts remain unchanged until one
+paired command is admitted at release. The captured pair, view, owner, mount,
+creator epoch and geometry must still match.
+
+Compose the English [semantic fixture](../tests/move-review.operations.json) in
+an explicit project workspace through one revision-checked `nyx_transaction`.
+Export bounded `nyx_source` windows from one revision with its terminal LF, then:
+
+```powershell
+./tools/build.ps1 -Target move-snapping -MoveSourceDirectory <export-directory>
+```
+
+This target starts no server and changes no enrollment. It runs shared/native
+consumers and stages Pascal browser consumers, Studio and the worker. The
+[Pascal host driver](../tests/nyx_move_browser_review.lpr) uses actual host pointer,
+Escape and arrow input against `move-studio.html?workspace=<exact-handle>` on an
+explicit existing test service. Desktop and actual 390-pixel viewports are separate
+journeys. Maintained evidence is [recorded here](../WORK.md#absolute-position-move-snapping--2026-10-06).
+The result qualifies this absolute-layout movement path. Full reparenting guides,
+container allocation, nested scrolling, physical devices, accessibility and
+large-project performance remain open.

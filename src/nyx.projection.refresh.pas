@@ -100,7 +100,11 @@ begin
   Result := TryNyxAttribute(AKey, LAttribute) and
     (LAttribute in [atText, atValue, atHint, atAccessibleName, atEnabled,
       atVisible, atReadOnly, atWidth, atHeight, atFlex, atWidthSizing,
-      atHeightSizing, atMinimumWidth, atMaximumWidth, atMinimumHeight, atMaximumHeight]);
+      atHeightSizing, atMinimumWidth, atMaximumWidth, atMinimumHeight, atMaximumHeight,
+      atLeft, atTop]);
+  { Absolute-origin changes run through ordinary allocation just like widths.
+    Retaining the identical control shape preserves live input and focus during
+    a paired move; no creator/ownership change is admitted by this exception. }
   { A responsive flow changes allocation of identical children, never their
     primitive/factory type. Restrict retained admission to properties consumed
     by ordinary target Sync/layout; constructor/asset/extension changes refuse. }
