@@ -7,41 +7,40 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-## Current return path: disk space and date qualification — 2026-10-06
+## Current return path: completed date boundary and reassessment — 2026-10-06
 
-Previous goal turn: progress. The isolated temporary C: output completed all 33
-current managed-source checks with zero leaks. Checkpoint `183789f` was pushed to
-`hello-nyx`; its exact remote head and clean isolated checkout were verified.
-The third consecutive disk audit still reports zero free bytes on D:. The existing
-HTTP fixture child has an incomplete controls script and no reconstruction script;
-the current complete compiler outputs remain retained separately. Final browser
-qualification and original-worktree reconciliation are blocked pending disk space.
-The full goal remains incomplete; no product criterion or prerequisite closes.
+Current goal turn: progress. The user completed the guarded artifact cleanup;
+53.6 GB of files were removed and D: regained about 55.9 GB free. The incomplete
+owned HTTP fixture child was repaired from the retained current compiler outputs,
+with exact fingerprints and the existing host identity checked. Current actual
+browser controls pass **70** checks at each CSS width **1100/390**; compiled browser
+reconstruction passes. Both meaningful field captures are inspected and all three
+native observer traces report zero leaks. Existing checked Win32 **87** and current
+managed-source **33** results remain applicable; no product source changed here.
 
-Bulk generated-cache removal and a narrower obsolete-intermediate clean were both
-rejected by automatic approval review with reason "blocked by policy"; neither ran.
-Do not retry deletion/moving as a workaround. The user has a pending request to free
-at least 1 GB on D:. No new listener or protected service replacement is authorized
-by this disk workaround. The exact static/LAN service identities still match and
-the existing LAN editor responds HTTP 200; these are preservation checks, not
-successful execution of the current browser fixture.
+All **15** exact protected service identities and **8** byte-exact accepted/draft
+pairs still match, including revision/selection/view and Undo/Redo availability.
+Named MCP authenticates at primary revision **2**; LAN HTTP is **200**, with zero
+active owned qualification runners. Availability does not export full histories.
+No listener, protected payload replacement, enrollment or user-pair change occurred.
+The observing LAN release remains older than this locally qualified date adapter.
 
-The isolated C: checkout preserves the exact current source, guide and handoff.
-The original D: worktree remains dirty at `2549f1c`; reconcile the two only after
-space returns and exact source comparison. Do not reset or discard user work.
-This checkpoint is incomplete qualification, not an observing update or a completed
-component milestone. The ignored remote/disk receipts retain the exact audit.
+The original D: checkout is reconciled by fast-forward to `2195657`, after exact
+comparison of every local product/fixture change with the saved checkpoint. Its
+25 original changed files remain in a verified ignored backup and a retained Git
+stash; no reset/discard was used. `source-regression-current.log` now retains the
+temporary qualification receipt beside the other D: evidence. This turn's docs use
+the same `hello-nyx` branch; verify the exact remote head before reporting the push.
+The private result belongs in `build/date-fields/remote-return.json`.
 
-Next deliverable: repair only the owned date fixture child's incomplete artifacts,
-finish current browser desktop/exact-390 and compiled reconstruction over the
-existing admitted HTTP host, inspect captures, and recheck protected identities/
-pairs. The older final-copy failure leaves the date-controls script incomplete and
-its reconstruction script absent. Current native/source evidence does not replace
-those checks. No new listener, service replacement, enrollment or user-pair change.
-Stop this date batch after the integrated boundary; at most two unsuccessful
-attempts per diagnosed cause, then reassess. No criterion closes. Renderer
-no-closure advances **7→8** once; authoring **26**, workflow **11**, codegen **28**
-and delivery **2** remain. NS-2 parity/NS-3 historical totals remain unestablished.
+Stop date fixture expansion at this integrated boundary. Next action is to reassess
+the original NS-2 parity / NS-3 advanced-component outcome and NS-4 semantic policy
+and protected observing prerequisites. Date-domain MCP authoring remains an existing
+workflow gap; richer ranges, accessibility and other hosts remain with their owners.
+No full criterion or prerequisite closes. Renderer no-closure remains **8** (the
+single **7→8** advance belongs to the existing date batch); authoring **26**, workflow
+**11**, codegen **28** and delivery **2** remain. NS-2 parity/NS-3 historical totals
+remain unestablished. The full Nyx/Studio user outcome remains incomplete.
 
 ## User-requested artifact cleanup — 2026-10-06
 
@@ -55,18 +54,21 @@ the unfinished date batch, tracked files and links. It targets 921 closed profil
 An initial path preflight refused a link before mutation; the final plan excludes
 reparse points throughout traversal. Automatic approval review then rejected the
 complete guarded native PowerShell cleanup before CreateProcess, with only reason
-"blocked by policy". No file was deleted. Do not retry execution through another
+"blocked by policy". No agent deletion ran. Do not retry execution through another
 tool or mechanism. The ignored local helper
 `.local/artifact-cleanup-reviewed-20261006.ps1` is prepared for the user's direct
 review/execution, with syntax admission, exact process/path checks and a private
-plan/receipt. Codex has not executed it. All 15 process identities and eight exact
-accepted/draft pairs still match; the LAN service responds HTTP 200.
+plan/receipt. Codex did not execute it. The user's direct run completed successfully:
+**921** profiles, **131,185** intermediates and **632** obsolete executables removed;
+**53,620,831,324 bytes**, zero errors and zero changed artifacts removed. The receipt
+and subsequent preservation audit verify all 15 services/eight pairs and LAN HTTP
+200. D: had approximately **55.9 GB** free immediately after cleanup.
 
-After the user runs the helper, inspect its receipt and disk headroom, recheck
-protected pairs/services, then return to the original date-browser qualification
-and exact worktree reconciliation. The full goal remains incomplete; storage
-still blocks qualification. This maintenance attempt accepts no product criterion and
-changes no milestone/no-closure count. Private plans and paths stay uncommitted.
+Storage no longer blocks qualification. Current browser checks and exact worktree
+reconciliation above are finished. The earlier zero-space audits and policy-rejected
+attempts remain historical failures, not successful cleanup evidence. This maintenance
+accepts no product criterion and changes no milestone/no-closure count. Private plans,
+identities, credentials and receipts stay in ignored local output.
 
 ## Typed date fields checkpoint — 2026-10-06
 
@@ -103,18 +105,24 @@ Evidence under ignored `build/date-fields/`, plus temporary C: qualification:
   domain, hidden ancestry and retirement from a calendar callback.
 - Current matched pas2js controls/reconstruction compile. **Zero owned warnings**;
   seven upstream `classes.pas` warnings per browser artifact remain unsuppressed.
-  Current compiled browser execution is **pending**, interrupted by disk exhaustion.
-- Earlier `desktop-final.log` / `narrow-final.log`: **58** checks each at CSS
-  **1100/390**, zero observer leaks; actual HTTP field captures are inspected.
-  Those runs precede the final source-reader tests and do not qualify the final
-  browser artifact. Updated native field/calendar captures were also inspected.
+  Current compiled browser execution and reconstruction now **pass**.
+- `desktop-current.log` / `narrow-current.log`: **70** checks each at actual CSS
+  **1100/390**, zero observer leaks; meaningful `date-fields.png` captures are
+  inspected. These execute the final current source-reader/date-contract artifact
+  over the existing HTTP host. `reconstruction-current.log` and its terminal DOM
+  qualify exact compiled browser reconstruction. Final blank captures establish
+  teardown; they are not the field's visual evidence. Earlier **58**-check runs
+  remain historical. Updated native field/calendar captures were also inspected.
 - `core-regression.log`: existing core/composition, scheduler, recovery, compiler
   typing and compiled reconstruction checks passed before final reader changes.
   The isolated temporary `source-regression.log` then passes **33** current
-  managed-source checks with zero leaks. Its output is on C:, with no private
-  location committed. Copy that receipt into ignored evidence after D: has space.
-- `protected-state.json`: all **15** exact service identities and **8** accepted/
-  draft pairs remain unchanged. No protected service or payload was replaced.
+  managed-source checks with zero leaks. The exact receipt is now copied into
+  `source-regression-current.log`; no private location is committed.
+- `staged-post-cleanup.json` records exact served artifact fingerprints.
+  `preservation-post-cleanup-final.json` verifies all **15** exact service identities,
+  **8** accepted/draft pairs, revision/context/history availability, primary revision
+  **2**, LAN HTTP **200** and zero active owned runners. No protected service or
+  payload was replaced. This is not complete protected-history export.
 
 The maintained recipe/build target reproduces the semantic seed and explicit typed
 enrichment. Cross-field ordering, richer range calendars, browser OS picker/trusted

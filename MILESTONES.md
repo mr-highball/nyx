@@ -6,14 +6,14 @@
 Current date boundary (2026-10-06): typed Gregorian values/domains, managed date
 controls and generated/source admission support a real owned native calendar.
 Checked Win32 passes 87 with zero leaks; current managed-source regression passes
-33. Earlier actual HTTP desktop/390 browser passes 58 each, while current browser
-execution/reconstruction is pending disk space. D: has zero free bytes; denied
-generated cleanup was not executed. An isolated C: checkout protects this incomplete
-checkpoint without touching the observing service or user pairs. No original
+33. Current actual HTTP desktop/390 browser passes 70 each and compiled typed
+reconstruction passes; meaningful captures are inspected. The user's guarded cleanup
+freed 53.6 GB, and the original checkout is reconciled with retained backup/stash.
+All protected services/pairs remain unchanged; no observing release. No original
 criterion closes: renderer no-closure advances 7→8 once; authoring 26, workflow 11,
-codegen 28 and delivery 2 remain. Finish the existing date boundary after space
-returns, then reassess original parity/advanced-component outcomes; no fixture
-expansion or smaller acceptance claim replaces the remaining checks. See
+codegen 28 and delivery 2 remain. Stop this integrated date boundary and reassess
+original parity/advanced-component outcomes and semantic/observing prerequisites;
+no fixture expansion or smaller acceptance claim replaces remaining outcomes. See
 [evidence and return path](WORK.md#typed-date-fields-checkpoint--2026-10-06).
 
 Previous actual-consumer boundary (2026-10-06): ordinary browser Studio executes

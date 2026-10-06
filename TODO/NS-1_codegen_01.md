@@ -28,16 +28,16 @@ The original native interaction/parity and advanced-picker scope now includes
 typed Gregorian dates/domains, specialized managed authoring, exact persistence,
 readable generation/source admission and an owned standard LCL calendar. Checked
 Win32 passes 87 with zero leaks; current managed-source regression passes 33.
-Earlier HTTP desktop/390 browser checks pass 58 each. Final browser execution/
-compiled reconstruction is pending: D: has no free space, and automatic approval
-review rejected generated cleanup. The checkpoint is protected through an isolated
-C: checkout, not an observing rollout. See
+Current HTTP desktop/exact-390 browser checks pass 70 each; compiled typed
+reconstruction passes and meaningful field captures are inspected. The user's
+guarded cleanup freed 53.6 GB. The original worktree is reconciled with retained
+backup/stash; protected services/pairs remain exact. No observing rollout. See
 [the packet](../WORK.md#typed-date-fields-checkpoint--2026-10-06).
 
 No original criterion or prerequisite closes. Renderer-owned no-closure advances
 7→8 once; codegen 28, workflow 11, authoring 26 and delivery 2 remain. Historical
-NS-2 parity/NS-3 counts remain unestablished. Stop feature expansion and finish the
-existing final browser checks after disk space returns. Cross-field ordering,
+NS-2 parity/NS-3 counts remain unestablished. Stop this integrated date batch and
+reassess original parity/advanced-component outcomes. Cross-field ordering,
 broader pickers/ranges, browser OS popup/trusted input, hardware/IME/assistive
 technology, other widgetsets/DPI, accessibility and production visuals remain.
 Current date-domain MCP authoring is an existing workflow gap; public Pascal

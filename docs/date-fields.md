@@ -78,8 +78,9 @@ the enriched design was admitted by the older running MCP service.
 This target replays current generated typed source, runs checked native controls
 and stages both browser consumers. It starts no listener. Execute the staged
 consumers with the maintained anonymous-pipe readiness observer on an existing
-admitted HTTP host. The current checkpoint's final browser run is still pending
-disk space; see WORK for the distinction between earlier HTTP captures and
-current native/source evidence. Native capability remains Basic rather than
-universal parity. Other widgetsets, DPI matrices, IME, hardware/assistive input,
+admitted HTTP host. Current actual desktop/exact-390 controls pass 70 checks each;
+compiled browser reconstruction passes and meaningful field captures are inspected.
+Checked Win32 passes 87, managed-source regression 33, with zero native/observer
+leaks; see WORK for exact artifacts and limits. Native capability remains Basic.
+Other widgetsets, DPI matrices, IME, hardware/assistive input,
 complete accessibility and advanced date-range behavior remain open.
