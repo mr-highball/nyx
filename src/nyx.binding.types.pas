@@ -84,6 +84,10 @@ type
       AValueKind: TNyxStateKind; ADirection: TNyxBindingDirection): TNyxBindingSpec; static;
     class function Clear(AProperty: TNyxBindingProperty): TNyxBindingSpec; static;
     function Copy: TNyxBindingSpec;
+    { Exact copied contract equality, including explicit clearing and direction.
+      Open state names retain their precise Unicode spelling. This comparison
+      owns no store and cannot establish that a live value has been admitted. }
+    function Same(const AOther: TNyxBindingSpec): Boolean;
     procedure Validate;
     property Target: TNyxBindingProperty read FProperty;
     property StateName: TNyxText read FStateName;
@@ -144,6 +148,13 @@ begin
   Result.FValueKind := FValueKind;
   Result.FDirection := FDirection;
   Result.FCleared := FCleared;
+end;
+
+function TNyxBindingSpec.Same(const AOther: TNyxBindingSpec): Boolean;
+begin
+  Result := (FProperty = AOther.FProperty) and
+    (FStateName = AOther.FStateName) and (FValueKind = AOther.FValueKind) and
+    (FDirection = AOther.FDirection) and (FCleared = AOther.FCleared);
 end;
 
 procedure TNyxBindingSpec.Validate;

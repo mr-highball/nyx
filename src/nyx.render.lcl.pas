@@ -3421,16 +3421,96 @@ function TNyxLCLRenderer.TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
 var
   LCandidate: TNyxNode;
   LPrevious: TNyxNode;
+  LProjectedCandidate: TNyxNode;
+  LProjectedBaseline: TNyxNode;
+  LAccepted: TNyxNode;
+  LBaseline: TNyxNode;
   LTheme: TNyxTheme;
   LIndex: Integer;
   LPreviousSelection: TNyxPresentationSelection;
   LArrangement: Boolean;
+  LBound: Boolean;
+
+  function Compatible(AFrom, ATo: TNyxNode; AArrange: Boolean): Boolean;
+  begin
+
+    if LBound then
+    begin
+
+      if AArrange then
+      begin
+        Result := CanArrangeNyxBoundProjection(AFrom, ATo);
+      end
+      else
+      begin
+        Result := CanRefreshNyxBoundProjection(AFrom, ATo);
+      end;
+    end
+    else if AArrange then
+    begin
+      Result := CanArrangeNyxProjection(AFrom, ATo);
+    end
+    else
+    begin
+      Result := CanRefreshNyxProjection(AFrom, ATo);
+    end;
+  end;
+
+  function ApplyProjection(AFrom, ABefore: TNyxNode;
+    const AFields: TNyxProjectionValueRestores): Boolean;
+  begin
+
+    if LBound then
+    begin
+
+      if LArrangement then
+      begin
+        Result := RefreshNyxBoundProjectionArrangement(FRoot, AFrom, ABefore, AFields);
+      end
+      else
+      begin
+        Result := RefreshNyxBoundProjectionProperties(FRoot, AFrom, ABefore, AFields);
+      end;
+    end
+    else if LArrangement then
+    begin
+      Result := RefreshNyxProjectionArrangement(FRoot, AFrom, ABefore, AFields);
+    end
+    else
+    begin
+      Result := RefreshNyxProjectionProperties(FRoot, AFrom, ABefore, AFields);
+    end;
+  end;
+
+  procedure RestoreFields;
+  var
+    LField: Integer;
+    LBinding: Integer;
+  begin
+    { The complete restore group has already passed model admission. Clear only
+      each requested face's accepted-value marker so Sync replaces an unfinished
+      numeric draft even when its accepted value is unchanged. Other drafts keep
+      their markers; a bound field restores the CURRENT store, never defaults. }
+    for LField := 0 to High(ARestores) do
+    begin
+      for LBinding := 0 to High(FBindings) do
+      begin
+
+        if FBindings[LBinding].FNode.ID = ARestores[LField].RuntimeID then
+        begin
+          FBindings[LBinding].FHasValueBaseline := False;
+          Break;
+        end;
+      end;
+    end;
+  end;
 begin
   FEvents.Scheduler.RequireUI;
   Result := False;
 
   if (FRoot = nil) or (FPanel = nil) or FUpdating or
     (FDesignMode <> ADesignMode) or
+    ((FLiveBindings <> nil) and not FLiveBindings.RefreshReady) or
     (FProjectionSchemaRevision <> NyxSchemaRevision) then
   begin
     Exit;
@@ -3453,7 +3533,10 @@ begin
   end;
   LCandidate := nil;
   LPrevious := nil;
+  LProjectedCandidate := nil;
+  LProjectedBaseline := nil;
   LTheme := nil;
+  LBound := (FLiveBindings <> nil) and FLiveBindings.HasBindings;
   try
 
     if FBorrowedTheme <> nil then
@@ -3472,11 +3555,25 @@ begin
     LCandidate := RealizeNyxView(ADocument, ARoot);
     ApplyNyxPlatform(LCandidate, npfNativeLCL);
 
-    LArrangement := not CanRefreshNyxProjection(FRoot, LCandidate);
+    LAccepted := LCandidate;
+    LBaseline := FProjectionBaseline;
 
-    if ((not LArrangement) and not CanRefreshNyxProjection(FProjectionBaseline, LCandidate)) or
-      (LArrangement and (not CanArrangeNyxProjection(FRoot, LCandidate) or
-        not CanArrangeNyxProjection(FProjectionBaseline, LCandidate))) or
+    if LBound then
+    begin
+
+      if not FLiveBindings.TryPrepareRefresh(LCandidate, FProjectionBaseline,
+        LProjectedCandidate, LProjectedBaseline) then
+      begin
+        Exit;
+      end;
+      LAccepted := LProjectedCandidate;
+      LBaseline := LProjectedBaseline;
+    end;
+    LArrangement := not Compatible(FRoot, LAccepted, False);
+
+    if ((not LArrangement) and not Compatible(LBaseline, LAccepted, False)) or
+      (LArrangement and (not Compatible(FRoot, LAccepted, True) or
+        not Compatible(LBaseline, LAccepted, True))) or
       (FProjectionSchemaRevision <> NyxSchemaRevision) then
     begin
       Exit;
@@ -3486,19 +3583,16 @@ begin
 
     try
 
-      if LArrangement then
-      begin
-
-        if not RefreshNyxProjectionArrangement(FRoot, LCandidate, FProjectionBaseline, ARestores) then
-        begin
-          Exit;
-        end;
-        ArrangeControls(LPrevious);
-      end
-      else if not RefreshNyxProjectionProperties(FRoot, LCandidate, FProjectionBaseline, ARestores) then
+      if not ApplyProjection(LAccepted, LBaseline, ARestores) then
       begin
         Exit;
       end;
+
+      if LArrangement then
+      begin
+        ArrangeControls(LPrevious);
+      end;
+      RestoreFields;
       FPresentationSelection := FPresentationSelection.Reconciled(FRoot.PresentationSnapshot);
       Sync;
     except
@@ -3508,12 +3602,12 @@ begin
 
       if LArrangement then
       begin
-        RefreshNyxProjectionArrangement(FRoot, LPrevious);
+        ApplyProjection(LPrevious, nil, nil);
         ArrangeControls(LCandidate);
       end
       else
       begin
-        RefreshNyxProjectionProperties(FRoot, LPrevious);
+        ApplyProjection(LPrevious, nil, nil);
       end;
       FPresentationSelection := LPreviousSelection;
       Sync;
@@ -3525,6 +3619,8 @@ begin
     Result := True;
   finally
     LTheme.Free;
+    ReleaseNyxNode(LProjectedBaseline);
+    ReleaseNyxNode(LProjectedCandidate);
     ReleaseNyxNode(LPrevious);
     ReleaseNyxNode(LCandidate);
   end;

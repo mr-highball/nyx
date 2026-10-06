@@ -1503,6 +1503,12 @@ try {
       "-FU$nyxArrangeNative", "-FE$nyxArrangeNative", 'tests/nyx_projection_refresh_tests.lpr'))
     & (Join-Path $nyxArrangeNative 'nyx_projection_refresh_tests.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Actual native retained arrangement failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxArrangeChecked + $nyxArrangeSource + @('-Fustudio', '-Futests',
+      "-Fu$nyxLazarus/lcl/units/$nyxArrangePlatform", "-Fu$nyxLazarus/lcl/units/$nyxArrangePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxArrangePlatform", "-Fu$nyxLazarus/packager/units/$nyxArrangePlatform",
+      "-FU$nyxArrangeNative", "-FE$nyxArrangeNative", 'tests/nyx_bound_arrangement_tests.lpr'))
+    & (Join-Path $nyxArrangeNative 'nyx_bound_arrangement_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native bound arrangement failed' }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     $nyxArrangeBrowser = Join-Path $nyxArrangeRoot 'web'
@@ -1511,9 +1517,12 @@ try {
       "-FE$nyxArrangeBrowser", 'tests/nyx_arrangement_tests.lpr')
     Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Fustudio',
       '-Futests', "-FE$nyxArrangeBrowser", 'tests/nyx_projection_refresh_tests.lpr') + $nyxArrangeSource)
+    Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Fustudio',
+      '-Futests', "-FE$nyxArrangeBrowser", 'tests/nyx_bound_arrangement_tests.lpr') + $nyxArrangeSource)
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxArrangeBrowser 'rtl.js') -Force
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/arrangement-tests.html'),
-      (Join-Path $nyxRoot 'studio/web/projection-refresh.html') -Destination $nyxArrangeBrowser -Force
+      (Join-Path $nyxRoot 'studio/web/projection-refresh.html'),
+      (Join-Path $nyxRoot 'studio/web/bound-arrangement.html') -Destination $nyxArrangeBrowser -Force
     Write-Host 'Owned/actual native arrangements pass; browser execution still needs its isolated HTTP host.'
     exit 0
   }

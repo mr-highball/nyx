@@ -3,7 +3,20 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current prerequisite result (2026-10-06): retained rearrangement prepares ownership
+Current prerequisite result (2026-10-06): bound retained rearrangement projects
+candidate and baseline against the same current idle store while preserving the
+original subscription. Actual Win32/browser controls pass 61 each, including
+number drafts, selective restoration, external writes, focus, callbacks, physical
+width/visibility and teardown. Existing retained controls pass 92 native / 76
+browser; ownership stays 34 per compiler/browser. The exact semantic companion
+compiles through both MCP outputs; state/bindings are explicitly typed consumer
+attachments, not MCP-authored. All eight LAN projects/services stay untouched.
+Renderer no-closure 6; authoring 22, workflow 9, codegen 28 and delivery 1 remain.
+No original criterion closes. Return to lazy alternate recipes, fluent structural
+authoring, ordinary Studio switching and the original full parity/delivery gates.
+See [evidence and remaining work](WORK.md#retained-bound-state--2026-10-06).
+
+Previous prerequisite result (2026-10-06): retained rearrangement prepares ownership
 before moving an unchanged realized control set. The scalar guard remains strict;
 actual browser/Win32 inputs, ranges and callbacks survive repeated reparent/reorder
 and reversal. Shared ownership checks pass 34 per compiler/browser; exact semantic

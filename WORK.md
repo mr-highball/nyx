@@ -7,7 +7,125 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-## Current prerequisite: retained structural arrangement — 2026-10-06
+## Current return path: alternate structural presentations — 2026-10-06
+
+Return path: original structural presentations (NS-4 criterion 1), through the
+open native/browser ownership and interaction prerequisites. The last integrated
+turn is progress: authoritative retained-arrangement implementation, both-target
+execution and remote checkpoint. Current HEAD and remote match the handoff.
+
+The [bound-state prerequisite](#retained-bound-state--2026-10-06) now passes
+61 actual controls/state checks on each target against exact semantic source.
+Strict unbound APIs remain intact. One original coordinator/store/subscription
+survives identical binding contracts, repeated moves and reversal, external state
+writes, number drafts and selective restores. Refresh refuses command and store
+validation/notification reentry; it imports no document defaults into live state.
+General MCP state/binding authoring still has its workflow owner; fixture
+attachments are explicitly typed, not represented as semantic authoring.
+
+End local same-control fixture/admission expansion. Return to the original lazy
+alternate recipe ownership/publication contract, typed fluent structural authoring
+and ordinary Studio presentation switching, with all original parity/accessibility/
+performance and delivery criteria retained. This foundation does not narrow
+alternate structures to an unchanged control set. Main services and all eight
+accepted pairs remain protected; no LAN rollout is claimed.
+
+## Retained bound state — 2026-10-06
+
+Owner: NS-2 criteria 1/2 as a prerequisite for original NS-4 responsive structures.
+The portable `TNyxBindingSpec.Same` compares every copied descriptor field, including
+open Unicode name, kind, direction and explicit clearing. Separate exact-binding
+projection APIs preserve the strict unbound guard. The live coordinator requires
+an active original subscription, unchanged identity/scope/control set and an idle
+command/store. It projects detached candidate AND authored baseline against the
+same current store before property admission. The original runtime root, store,
+token and event binding objects remain attached. Fresh read-only state observations
+are UI-thread contracts, not admission caches or cross-thread locks. Unbound views
+avoid the additional projection clones.
+
+Both adapters reuse the existing scalar or ordinary-host arrangement publication
+and rollback paths with coordinator-prepared roots. Accepted-value markers retain
+unfinished numeric drafts through moves and unrelated writes. Exact field restores
+are fully checked before publication and reset only requested face markers, reading
+current bound values rather than old authored defaults. This does not change store
+revision or notify subscribers. Descriptor retarget/kind/direction/add/clear and
+constructor changes retain their fresh-lifetime requirement.
+
+Private qualification artifacts live under `build/bound-arrangement/`:
+
+- `compiled-source-controls.log`: maintained ownership checks pass 34 per stable
+  FPC 3.2 and matched 3.3.1; original actual retained controls pass 92 Win32, zero
+  leaks. The companion is exact MCP-exported source, compiled with
+  `tools/build.ps1 -Target retained-arrangement -ArrangementSourceDirectory ...`.
+- `qualified-controls/run.log` and `browser-qualified-physical.log` /
+  `browser-qualified-compact.log`: final bound controls pass 61 each native,
+  ordinary browser and 390-pixel browser HOST. Checks include two independent
+  stores, exact supplementary text, accepted decimal numbers, number drafts,
+  selective restoration, physical width/visibility, focus/caret, repeated
+  reparent/reversal, callbacks once, external writes, complete-group/descriptor/
+  constructor refusals, validator/notification reentry and balanced teardown.
+  Native heap tracing reports zero leaks. This is programmatic interaction through
+  actual controls; hardware/IME/assistive input and an exact phone viewport are
+  not claimed. Browser captures follow teardown and do not qualify aesthetics.
+- `browser-qualified-retained.log`: original retained control consumer passes 76.
+  `browser-qualified-owned.log`: portable ownership consumer passes 34.
+  `browser-bindings.log`: original state/control consumer passes 48 browser checks.
+  `regression-native/run-fixed.log`: the complete original native suite passes
+  42 managed / 35 event / 50 binding / 75 Studio authoring checks plus its theme,
+  catalog, derivation, optional-output, compact-inspector and Unicode/recovery
+  journeys, with zero leaks. The earlier failed diagnostic-tab fixture and its
+  correction are retained below; no original assertion was removed.
+- `semantic-review.log` and `mcp-source/`: the maintained persistent Pascal
+  `nyx_mcp_designer_review` creates an empty transport-owned review, composes twelve
+  related operations as one paired transaction, reads two bounded source windows,
+  builds both outputs and retires the review, preserving the service's primary
+  editor frame. The English base appends the curated bound-review number controls
+  to the existing arrangement fixture. Generated source is 138 lines / 3,218 bytes,
+  MD5 `5d35e48ee1eada974a0f8bd8ee1bf964`; both downloaded immutable compiler sources
+  match exactly. Browser job `3DA90AAC-8A62-483E-87C6-6E151C68D7B6` and LCL job
+  `4589293A-6EE4-48DF-A9E8-83757D7D0C0C` succeed at revision 2 with current
+  source/output. Browser has seven upstream RTL warnings, zero owned; native zero.
+  These jobs use the protected existing container backend/source snapshot and
+  establish companion compilation, not deployment of the new renderer. Current
+  renderer execution is established by the checked consumers above. General MCP
+  state/binding authoring is absent from this advertised transport; the consumer
+  attaches those contracts with explicitly identified public typed Pascal calls.
+- `server/compile.log`, `web/studio-compile.log`, `web/worker-compile.log` and
+  `native-studio/compile.log`: current backend, browser Studio, module worker and
+  native Studio compile separately. An automatic command review rejected starting
+  the new isolated listener with only `blocked by policy`; no narrower reason was
+  supplied. No stop/restart was attempted. Existing verified isolated hosting and
+  persistent semantic review provided the safe qualification path instead.
+
+Discovered/fixed qualification issues: the initial fixture omitted its event unit
+and used a non-local loop counter; corrected before execution. Native comparisons
+against an untyped decimal literal tested Extended precision rather than the public
+Double contract; typed Double constants now retain exact authored values. A
+constructor refusal fixture initially made its own numeric binding invalid; the
+valid text/password constructor change now exercises reuse refusal independently.
+The broad native authoring journey clicked diagnostics inside the hidden Messages
+tab. Its fixture now follows Messages → owned location → Source and explicitly
+checks the routed position; hidden controls remain unable to dispatch. No production
+source navigation behavior is weakened. Browser driver compilation needs the
+matched FPC package set (`fpwebsocket`); the stable compiler's absence is explicit.
+
+The one-shot CLI review attempt correctly refused cross-transport ownership:
+each `call` retires its transport. The maintained persistent consumer succeeds.
+This client workflow limitation belongs to the existing MCP workflow owner; no
+authentication or review-lifetime rule is weakened and no additional workflow
+completion claim is made. Main eight pairs/navigation/draft/history frames remain
+exact against the previous packet, and all fifteen service identities stay
+protected. Only new files beneath an isolated review web subdirectory are staged;
+existing hosting files, compiler profiles and source snapshots are unchanged.
+
+No original full criterion closes. Renderer no-closure advances 5→6 once;
+authoring 22, workflow 9, codegen 28 and delivery 1 remain. Lazy alternate recipes,
+typed structural authoring, changed control sets, ordinary Studio switching,
+IME continuity, other widgetsets/DPI, accessibility, fault-injected physical rollback,
+release performance and the full product delivery remain open under original owners.
+The main LAN release remains the existing container presentation release.
+
+## Previous prerequisite: retained structural arrangement — 2026-10-06
 
 Current structural gate (NS-4 authoring criterion 1, through the open NS-2 LCL
 ownership/interaction prerequisite): first qualify retained rearrangement of an

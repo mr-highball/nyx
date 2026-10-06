@@ -262,7 +262,7 @@ begin
 
     { This admission is deliberately separate from scalar refresh. The same
       logical controls move between ordinary hosts; alternate node sets, live
-      binding coordinators and special pane structures still need a full mount. }
+      changed binding contracts and special pane structures still need a full mount. }
     LEntryNode := LRoot.Find('entry');
     SetDraft(LInput);
     LCandidate := LDocument.Clone;
@@ -416,8 +416,10 @@ begin
     FreeAndNil(LRenderer);
     LRenderer := TRenderer.Create;
     LRenderer.Render(LDocument, LDocument.Pages[0], LHost);
-    Check(not LRenderer.TryRefresh(LDocument, LDocument.Pages[0], False),
-      'Scalar live binding coordinator is explicitly outside retained reuse');
+    Check(not CanRefreshNyxProjection(LRenderer.Root, LRenderer.Root),
+      'The public unbound guard still refuses live binding descriptors');
+    Check(LRenderer.TryRefresh(LDocument, LDocument.Pages[0], False),
+      'An exact live binding contract uses the separate coordinator-owned path');
 
     WriteLn('PASS ', GChecks, ' actual retained projection checks');
     {$ifdef PAS2JS}

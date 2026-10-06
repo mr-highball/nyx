@@ -29,8 +29,9 @@ uses
   nyx.text, nyx.types, nyx.responsive, nyx.model;
 
 type
-  { A typed request to restore one exact field's current authored default during
-    retained projection. It owns only identity values, never a node or widget.
+  { A typed request to restore one exact field's accepted value during retained
+    projection: the authored default when unbound, the current runtime store
+    when bound. It owns only identity values, never a node or widget.
     An editor uses this after a completed/rejected proposal; unrelated runtime
     drafts remain independent. Empty or mismatched identities refuse reuse. }
   TNyxProjectionValueRestore = record
@@ -89,6 +90,19 @@ function NyxProjectionChildrenChanged(ANode, AFormerRoot: TNyxNode): Boolean;
 function RefreshNyxProjectionArrangement(AExisting, ACandidate: TNyxNode;
   ABaseline: TNyxNode = nil; const ARestores: TNyxProjectionValueRestores = nil): Boolean;
 
+{ State-coordinator boundary. These explicit APIs additionally admit identical
+  scalar binding descriptors; they do not change the strict unbound APIs above.
+  The owning coordinator must project both candidate and baseline against the
+  same idle runtime store before property admission/publication. A metadata
+  comparison alone never proves current state or live control integration. }
+function SameNyxProjectionBindingContracts(AExisting, ACandidate: TNyxNode): Boolean;
+function CanRefreshNyxBoundProjection(AExisting, ACandidate: TNyxNode): Boolean;
+function CanArrangeNyxBoundProjection(AExisting, ACandidate: TNyxNode): Boolean;
+function RefreshNyxBoundProjectionProperties(AExisting, ACandidate: TNyxNode;
+  ABaseline: TNyxNode = nil; const ARestores: TNyxProjectionValueRestores = nil): Boolean;
+function RefreshNyxBoundProjectionArrangement(AExisting, ACandidate: TNyxNode;
+  ABaseline: TNyxNode = nil; const ARestores: TNyxProjectionValueRestores = nil): Boolean;
+
 { Exact immutable document context for a mounted view. Fresh encoding validates
   current public data/budgets; it is not an admission cache. All document fields
   except title/pages/components remain significant, including defaults, tokens,
@@ -101,6 +115,31 @@ implementation
 
 uses
   nyx.codec, nyx.data, nyx.presentations, nyx.text.index;
+
+type
+  { Only the explicit coordinator boundary admits unchanged bindings. }
+  TProjectionBindingAdmission = (pbaUnbound, pbaExact);
+
+function SameNodeBindings(AExisting, ACandidate: TNyxNode): Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := False;
+
+  if AExisting.BindingCount <> ACandidate.BindingCount then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to AExisting.BindingCount - 1 do
+  begin
+
+    if not AExisting.Bindings[LIndex].Same(ACandidate.Bindings[LIndex]) then
+    begin
+      Exit;
+    end;
+  end;
+  Result := True;
+end;
 
 class function TNyxProjectionValueRestore.ForField(const ARuntimeID,
   ADesignID: TNyxText): TNyxProjectionValueRestore;
@@ -147,7 +186,8 @@ begin
     Both adapters use their ordinary Sync/layout and existing rollback clone. }
 end;
 
-function CanRefreshNyxProjection(AExisting, ACandidate: TNyxNode): Boolean;
+function CanRefreshProjection(AExisting, ACandidate: TNyxNode;
+  ABindings: TProjectionBindingAdmission): Boolean;
 var
   LIndex: Integer;
   LKey: TNyxText;
@@ -201,9 +241,15 @@ begin
     (AExisting.ProjectionKind <> ACandidate.ProjectionKind) or
     (AExisting.IsRealized <> ACandidate.IsRealized) or
     (AExisting.Count <> ACandidate.Count) or
-    (AExisting.BindingCount <> 0) or (ACandidate.BindingCount <> 0) or
+    ((ABindings = pbaUnbound) and
+      ((AExisting.BindingCount <> 0) or (ACandidate.BindingCount <> 0))) or
     (AExisting.HasCollectionView <> ACandidate.HasCollectionView) or
     (AExisting.Extensions.ToJSON <> ACandidate.Extensions.ToJSON) then
+  begin
+    Exit;
+  end;
+
+  if (ABindings = pbaExact) and not SameNodeBindings(AExisting, ACandidate) then
   begin
     Exit;
   end;
@@ -222,7 +268,7 @@ begin
   for LIndex := 0 to AExisting.Count - 1 do
   begin
 
-    if not CanRefreshNyxProjection(AExisting.Children[LIndex], ACandidate.Children[LIndex]) then
+    if not CanRefreshProjection(AExisting.Children[LIndex], ACandidate.Children[LIndex], ABindings) then
     begin
       Exit;
     end;
@@ -230,8 +276,19 @@ begin
   Result := True;
 end;
 
-function RefreshNyxProjectionProperties(AExisting, ACandidate: TNyxNode;
-  ABaseline: TNyxNode; const ARestores: TNyxProjectionValueRestores): Boolean;
+function CanRefreshNyxProjection(AExisting, ACandidate: TNyxNode): Boolean;
+begin
+  Result := CanRefreshProjection(AExisting, ACandidate, pbaUnbound);
+end;
+
+function CanRefreshNyxBoundProjection(AExisting, ACandidate: TNyxNode): Boolean;
+begin
+  Result := CanRefreshProjection(AExisting, ACandidate, pbaExact);
+end;
+
+function RefreshProjectionProperties(AExisting, ACandidate: TNyxNode;
+  ABaseline: TNyxNode; const ARestores: TNyxProjectionValueRestores;
+  ABindings: TProjectionBindingAdmission): Boolean;
 var
   LRestore: Integer;
   LExisting: TNyxNode;
@@ -294,11 +351,11 @@ var
   end;
 
 begin
-  Result := CanRefreshNyxProjection(AExisting, ACandidate);
+  Result := CanRefreshProjection(AExisting, ACandidate, ABindings);
 
   if Result and (ABaseline <> nil) then
   begin
-    Result := CanRefreshNyxProjection(ABaseline, ACandidate);
+    Result := CanRefreshProjection(ABaseline, ACandidate, ABindings);
   end;
 
   if Result then
@@ -344,6 +401,58 @@ begin
   end;
 end;
 
+function RefreshNyxProjectionProperties(AExisting, ACandidate: TNyxNode;
+  ABaseline: TNyxNode; const ARestores: TNyxProjectionValueRestores): Boolean;
+begin
+  Result := RefreshProjectionProperties(AExisting, ACandidate, ABaseline, ARestores, pbaUnbound);
+end;
+
+function RefreshNyxBoundProjectionProperties(AExisting, ACandidate: TNyxNode;
+  ABaseline: TNyxNode; const ARestores: TNyxProjectionValueRestores): Boolean;
+begin
+  Result := RefreshProjectionProperties(AExisting, ACandidate, ABaseline, ARestores, pbaExact);
+end;
+
+function SameNyxProjectionBindingContracts(AExisting, ACandidate: TNyxNode): Boolean;
+var
+  LAligned: TNyxNode;
+
+  function SameTree(AFrom, ATo: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+    Result := False;
+
+    if not SameNodeBindings(AFrom, ATo) then
+    begin
+      Exit;
+    end;
+    for LChild := 0 to AFrom.Count - 1 do
+    begin
+
+      if not SameTree(AFrom.Children[LChild], ATo.Children[LChild]) then
+      begin
+        Exit;
+      end;
+    end;
+    Result := True;
+  end;
+
+begin
+  Result := False;
+
+  if (AExisting = nil) or (ACandidate = nil) then
+  begin
+    Exit;
+  end;
+  LAligned := ACandidate.Clone;
+  try
+    Result := LAligned.ArrangeLike(AExisting) and SameTree(AExisting, LAligned);
+  finally
+    LAligned.Free;
+  end;
+end;
+
 function NyxProjectionChildrenChanged(ANode, AFormerRoot: TNyxNode): Boolean;
 var
   LFormer: TNyxNode;
@@ -367,7 +476,8 @@ begin
   end;
 end;
 
-function CanArrangeNyxProjection(AExisting, ACandidate: TNyxNode): Boolean;
+function CanArrangeProjection(AExisting, ACandidate: TNyxNode;
+  ABindings: TProjectionBindingAdmission): Boolean;
 var
   LAligned: TNyxNode;
   LNodes: array of TNyxNode;
@@ -449,7 +559,7 @@ begin
   try
 
     if not LAligned.ArrangeLike(AExisting) or
-      not CanRefreshNyxProjection(AExisting, LAligned) then
+      not CanRefreshProjection(AExisting, LAligned, ABindings) then
     begin
       Exit;
     end;
@@ -466,16 +576,27 @@ begin
   end;
 end;
 
-function RefreshNyxProjectionArrangement(AExisting, ACandidate: TNyxNode;
-  ABaseline: TNyxNode; const ARestores: TNyxProjectionValueRestores): Boolean;
+function CanArrangeNyxProjection(AExisting, ACandidate: TNyxNode): Boolean;
+begin
+  Result := CanArrangeProjection(AExisting, ACandidate, pbaUnbound);
+end;
+
+function CanArrangeNyxBoundProjection(AExisting, ACandidate: TNyxNode): Boolean;
+begin
+  Result := CanArrangeProjection(AExisting, ACandidate, pbaExact);
+end;
+
+function RefreshProjectionArrangement(AExisting, ACandidate: TNyxNode;
+  ABaseline: TNyxNode; const ARestores: TNyxProjectionValueRestores;
+  ABindings: TProjectionBindingAdmission): Boolean;
 var
   LAligned: TNyxNode;
   LBaseline: TNyxNode;
 begin
   Result := False;
 
-  if not CanArrangeNyxProjection(AExisting, ACandidate) or
-    ((ABaseline <> nil) and not CanArrangeNyxProjection(ABaseline, ACandidate)) then
+  if not CanArrangeProjection(AExisting, ACandidate, ABindings) or
+    ((ABaseline <> nil) and not CanArrangeProjection(ABaseline, ACandidate, ABindings)) then
   begin
     Exit;
   end;
@@ -499,7 +620,7 @@ begin
       end;
     end;
 
-    if not RefreshNyxProjectionProperties(AExisting, LAligned, LBaseline, ARestores) then
+    if not RefreshProjectionProperties(AExisting, LAligned, LBaseline, ARestores, ABindings) then
     begin
       Exit;
     end;
@@ -513,6 +634,18 @@ begin
     LBaseline.Free;
     LAligned.Free;
   end;
+end;
+
+function RefreshNyxProjectionArrangement(AExisting, ACandidate: TNyxNode;
+  ABaseline: TNyxNode; const ARestores: TNyxProjectionValueRestores): Boolean;
+begin
+  Result := RefreshProjectionArrangement(AExisting, ACandidate, ABaseline, ARestores, pbaUnbound);
+end;
+
+function RefreshNyxBoundProjectionArrangement(AExisting, ACandidate: TNyxNode;
+  ABaseline: TNyxNode; const ARestores: TNyxProjectionValueRestores): Boolean;
+begin
+  Result := RefreshProjectionArrangement(AExisting, ACandidate, ABaseline, ARestores, pbaExact);
 end;
 
 function NyxProjectionContext(ADocument: TNyxDocument): TNyxText;

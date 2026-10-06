@@ -547,10 +547,19 @@ begin
     TNyxLCLButton(LRenderer.ControlFor('action-apply-source')).Click;
     Check((LProbe.Error <> '') and LSession.SourceDiagnostic.Defined and
       (LSession.Source = LPair.Source), 'native failed Apply retains pair and an owned diagnostic');
+    { Diagnostics now belong to the Messages tab. A hidden action deliberately
+      cannot dispatch. Follow the visible editor journey before navigating back
+      to Source, rather than accidentally testing a stale callback location. }
+    LState.SourceTab := nstMessages;
     Rebuild;
     Check(Pos('Pascal ', TLabel(LRenderer.ControlFor('studio-source-diagnostic-message')).Caption) = 1,
       'native Nyx label exposes the source diagnostic');
     TNyxLCLButton(LRenderer.ControlFor(NyxStudioDiagnosticGoID)).Click;
+    Check((LProbe.Error = '') and (LProbe.SourceLine = LSession.SourceDiagnostic.Line) and
+      (LProbe.SourceColumn = LSession.SourceDiagnostic.Column),
+      'visible native Messages action returns this exact owned diagnostic');
+    LState.SourceTab := nstSource;
+    Rebuild;
     LRenderer.NavigateCodeLine('studio-code', LProbe.SourceLine, LProbe.SourceColumn);
     Check((TMemo(LRenderer.InputFor('studio-code')).CaretPos.Y = LProbe.SourceLine - 1) and
       (TMemo(LRenderer.InputFor('studio-code')).CaretPos.X = 9),
@@ -607,11 +616,16 @@ begin
     finally
       LCompilerError.Free;
     end;
+    LState.SourceTab := nstMessages;
     Rebuild;
     Check((LRenderer.ControlFor(NyxStudioCompilerDiagnosticsID) <> nil) and
       TNyxLCLButton(LRenderer.ControlFor(NyxStudioCompilerActionPrefix + '0')).Enabled,
       'shared Nyx compiler diagnostics render a real native location action');
     TNyxLCLButton(LRenderer.ControlFor(NyxStudioCompilerActionPrefix + '0')).Click;
+    Check((LProbe.Error = '') and (LProbe.SourceLine > 0) and (LProbe.SourceColumn > 0),
+      'visible native compiler location dispatches before returning to Source');
+    LState.SourceTab := nstSource;
+    Rebuild;
     LRenderer.NavigateCodeLine('studio-code', LProbe.SourceLine, LProbe.SourceColumn);
     LMemo := TMemo(LRenderer.InputFor('studio-code'));
     Check((LProbe.Error = '') and (LProbe.SourceColumn = 11) and
@@ -620,6 +634,7 @@ begin
     Check((LSession.Source = LCompilerSource) and (LSession.DraftSource = LCompilerSource),
       'native navigation leaves its accepted pair and editor buffer intact');
     LMemo.Text := String(LCompilerSource + #10 + '{ pending compiler draft }');
+    LState.SourceTab := nstMessages;
     Rebuild;
     Check(not TNyxLCLButton(LRenderer.ControlFor(NyxStudioCompilerActionPrefix + '0')).Enabled and
       (LRenderer.ControlFor('studio-compiler-stale') <> nil),

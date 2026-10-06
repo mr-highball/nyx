@@ -420,6 +420,7 @@ begin
       begin
         document.body.textContent := 'FAIL ' + LException.Message;
         document.body.setAttribute('data-binding-tests', 'failed');
+        document.body.setAttribute('data-binding-error', LException.Message);
       end;
     end;
   finally

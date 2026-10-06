@@ -240,6 +240,10 @@ type
     property Count: Integer read GetCount;
     property Revision: Integer read FRevision;
     property ReadOnly: Boolean read FReadOnly;
+    { A candidate commit/notification is active. View publication must not
+      reenter that transaction or replace its validation context. Observation
+      is not a cross-thread lock; applications still serialize store access. }
+    property Busy: Boolean read FBusy;
   end;
 
 { References and typed batch helpers. NyxStateAssign is the explicit codec/bulk

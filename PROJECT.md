@@ -66,6 +66,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The retained-arrangement foundation now preserves identical scalar binding
+contracts through the original runtime coordinator/store/subscription. Actual
+browser/Win32 controls pass 61 each for live values, number drafts, selective
+restoration, repeated moves, callbacks and teardown, with zero native leaks.
+This remains a prerequisite for fluent alternate structural recipes; it does not
+accept complete responsive authoring or target parity. The LAN release and all
+eight current pairs stay unchanged. See [current evidence](WORK.md#retained-bound-state--2026-10-06).
+
 Container-aware named presentations now use typed publishers and actual allocated
 content boxes on browser/Win32. Independent reusable cards adapt at one unchanged
 host size, retaining live inputs. Shared checks pass 32 per compiler/browser;

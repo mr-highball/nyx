@@ -61,6 +61,8 @@ type
     FOnSync: TNyxBindingSync;
     FCommandRoot: TNyxNode;
     FCommandProjected: Boolean;
+    function GetRefreshReady: Boolean;
+    function GetHasBindings: Boolean;
     procedure ValidateCandidate(ACandidate: TNyxState; AChanges: TNyxStateChanges);
     procedure StateChanged(AState: TNyxState; AChanges: TNyxStateChanges);
     procedure Synchronize;
@@ -95,6 +97,19 @@ type
     { Proposed complete text replacement. Captures the accepted baseline before
       admission; a sequential adapter input response may reject this proposal. }
     function ProposeText(ANode: TNyxNode; const AValue: TNyxText): TNyxDispatch;
+    { Prepare independent refresh roots against this view's current store. The
+      caller owns both returned roots on success; failure returns nil roots and
+      changes neither the mounted tree nor the store/subscription. Exact node
+      identities/scopes and ordered binding descriptors must remain unchanged.
+      A command, candidate commit or notification in progress refuses reentry.
+      Invalid projection/allocation raises after releasing detached candidates.
+      This is a UI-thread admission boundary, not a cross-thread store lock. }
+    function TryPrepareRefresh(ACandidate, ABaseline: TNyxNode;
+      out AProjectedCandidate, AProjectedBaseline: TNyxNode): Boolean;
+    { Fresh UI-thread observations, never cached admission. Unbound views avoid
+      extra projection clones but must still refuse command/notification reentry. }
+    property RefreshReady: Boolean read GetRefreshReady;
+    property HasBindings: Boolean read GetHasBindings;
     property OnSync: TNyxBindingSync read FOnSync write FOnSync;
   end;
 
@@ -115,7 +130,8 @@ implementation
 
 uses
   nyx.schema,
-  nyx.interaction;
+  nyx.interaction,
+  nyx.projection.refresh;
 
 function ScalarText(const AValue: TNyxStateValue): TNyxText;
 begin
@@ -524,6 +540,79 @@ begin
     raise ENyxState.Create('Live bindings are already activated');
   end;
   FSubscription := FState.Subscribe(StateChanged, ValidateCandidate);
+end;
+
+function TNyxLiveBindings.GetRefreshReady: Boolean;
+begin
+  Result := (FSubscription <> nil) and FSubscription.Connected and
+    (FCommandRoot = nil) and not FState.Busy;
+end;
+
+function TNyxLiveBindings.GetHasBindings: Boolean;
+
+  function HasBindings(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+    Result := ANode.BindingCount <> 0;
+
+    if Result then
+    begin
+      Exit;
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if HasBindings(ANode.Children[LChild]) then
+      begin
+        Exit(True);
+      end;
+    end;
+  end;
+
+begin
+  Result := HasBindings(FRoot);
+end;
+
+function TNyxLiveBindings.TryPrepareRefresh(ACandidate, ABaseline: TNyxNode;
+  out AProjectedCandidate, AProjectedBaseline: TNyxNode): Boolean;
+var
+  LRevision: Integer;
+begin
+  Result := False;
+  AProjectedCandidate := nil;
+  AProjectedBaseline := nil;
+
+  if not RefreshReady then
+  begin
+    Exit;
+  end;
+
+  if not SameNyxProjectionBindingContracts(FRoot, ACandidate) or
+    not SameNyxProjectionBindingContracts(FRoot, ABaseline) then
+  begin
+    Exit;
+  end;
+  LRevision := FState.Revision;
+  try
+    AProjectedCandidate := ACandidate.Clone;
+    AProjectedBaseline := ABaseline.Clone;
+    { Project BOTH copies. Comparing a live value with the original document
+      default could otherwise make a layout refresh overwrite accepted state.
+      No subscriber is replaced: its validator continues borrowing FRoot, whose
+      realized nodes are retained by the subsequent arrangement publication. }
+    ApplyNyxBindings(AProjectedCandidate, FState);
+    ApplyNyxBindings(AProjectedBaseline, FState);
+    Result := not FState.Busy and (FCommandRoot = nil) and
+      (FState.Revision = LRevision);
+  finally
+
+    if not Result then
+    begin
+      FreeAndNil(AProjectedBaseline);
+      FreeAndNil(AProjectedCandidate);
+    end;
+  end;
 end;
 
 procedure TNyxLiveBindings.ValidateCandidate(ACandidate: TNyxState;

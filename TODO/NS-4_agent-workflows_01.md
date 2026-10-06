@@ -675,3 +675,15 @@ Do not retry the mutation or infer successful compilation from that receipt.
 Investigate the stream/shutdown boundary under this existing workflow owner;
 the issue does not earn another workflow completion claim. Private admission,
 stderr and terminal-status evidence lives in `.local/move-assets-20261006/`.
+
+Retained bound-state qualification exposes a client workflow limitation:
+`nyx_studio_mcp call` creates and retires a transport for each invocation, so a
+temporary review cannot span successive calls. This is the intended review owner
+boundary, not a reason to weaken authentication or infer ownership from a label.
+The maintained persistent Pascal `nyx_mcp_designer_review` consumer successfully
+composes the companion, exports bounded source, requests both outputs and retires
+its review in one transport, preserving the service's primary editor frame.
+General persistent CLI authoring remains with this workflow owner; the same packet
+still uses explicit typed fixture attachments for missing general semantic
+state/binding authoring. No workflow criterion or no-closure count changes.
+See [the bound-state evidence](../WORK.md#retained-bound-state--2026-10-06).

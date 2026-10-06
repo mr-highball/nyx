@@ -1,0 +1,26 @@
+[
+  {
+    "op": "title",
+    "value": "A view that keeps your work"
+  },
+  {
+    "op": "create",
+    "kind": "input",
+    "id": "amount",
+    "parent": "left-room",
+    "properties": {
+      "text": "Amount",
+      "input-type": "number"
+    }
+  },
+  {
+    "op": "create",
+    "kind": "input",
+    "id": "other-amount",
+    "parent": "right-room",
+    "properties": {
+      "text": "Independent amount",
+      "input-type": "number"
+    }
+  }
+]

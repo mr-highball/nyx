@@ -115,6 +115,33 @@ Studio presentation switching and original parity/accessibility/performance gate
 [WORK.md](../WORK.md#retained-structural-arrangement--2026-10-06) records evidence,
 failures, preservation and remote status. The main LAN release remains unchanged.
 
+## Retained bound state — 2026-10-06
+
+Criteria 1/2 now include coordinator-owned admission of identical scalar binding
+contracts during retained rearrangement. Independent candidate and baseline
+copies use the same idle runtime store; logical nodes, actual controls, the
+original subscription and accepted values remain attached. Numeric drafts stay
+independent; exact field restoration reads current bound state and resets only
+that face. State validation/notification and command reentry refuse publication.
+The original unbound guard remains strict and avoids extra state-projection clones.
+
+Actual Win32/browser controls pass 61 checks each against the unchanged bounded
+MCP source, including width/visibility, two independent stores, supplementary text,
+carets/focus, repeated reparent/reversal, external writes, callbacks, complete
+restore refusal, descriptor/constructor refusal and teardown. Native heap tracing
+reports zero leaks. The existing retained controls pass 92 native / 76 browser;
+shared ownership remains 34 per native compiler/executed browser. State/binding
+attachments are explicitly typed fixtures: the semantic base is MCP-authored,
+but general MCP state/binding authoring remains an open workflow capability.
+
+No complete original criterion closes. Renderer no-closure advances 5→6 once;
+authoring 22, workflow 9, codegen 28 and delivery 1 remain. Stop local same-control
+foundation expansion and return to fluent alternate recipes and publication,
+ordinary Studio switching and the original parity/accessibility/performance gates.
+IME continuity, changed control sets, special pane hosts and other widgetsets/DPI
+remain unqualified. Main LAN release and all eight project pairs stay untouched.
+See [evidence and return path](../WORK.md#retained-bound-state--2026-10-06).
+
 ## Allocation cost in ordinary Studio — 2026-10-06
 
 The unchanged 30-check native Inspector/worker/Undo journey now allocates
