@@ -9102,6 +9102,13 @@ frame receipts and the independent English **Move workshop** in Agents. Twenty
 tools authenticate using the Pascal client; this chat still needs a reconnect for
 obsolete cached native named handles. The primary remains exact at revision 2.
 
+Implementation checkpoint `a18ac62b61387f156710cceada39d8b13f3a5118` is pushed to
+`origin/hello-nyx` with exact remote HEAD verification. The private receipt is
+`build/move-snapping/remote-checkpoint.json`; the two-asset overlay manifest records
+that implementation. Finish this packet at the integrated result and preserve
+the five existing projects plus the independent Move workshop. Next inspect the
+original reparenting/flow snap boundary before further implementation.
+
 No original criterion closes. Authoring no-closure advances **19→20** once;
 workflow **9**, codegen **28**, renderer **3**, delivery **1** remain. End local
 move-policy/fixture expansion. Continue original reparenting/flow snap geometry,
