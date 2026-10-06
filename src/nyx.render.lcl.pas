@@ -71,6 +71,7 @@ uses
   nyx.data,
   nyx.viewport,
   nyx.viewport.lcl,
+  nyx.observation,
   nyx.viewport.surface.lcl,
   nyx.event.emitter,
   nyx.state,
@@ -215,7 +216,10 @@ type
   { A native projection using Lazarus controls rather than a browser embedded in
     a window. Custom kinds supply native factories through the same string keys
     used by the browser registry. The renderer never owns the caller's host.
-    A supplied theme is borrowed; the default theme is renderer-owned. }
+    A supplied theme is borrowed; the default theme is renderer-owned.
+    Factories/updaters borrow staged nodes and must not mutate their source or
+    runtime store during preparation. Replacements preview fallible target work
+    before retirement; extension destructors must release without raising. }
   TNyxLCLRenderer = class
   private
     FTheme: TNyxTheme;
@@ -3272,9 +3276,6 @@ var
   LKey: TNyxText;
   LCandidate: TNyxNode;
   LStates: TNyxContentFaceStates;
-  LHorizontal: Integer;
-  LVertical: Integer;
-  LSelected: TNyxText;
   LIndex: Integer;
   LPreviousSelection: TNyxPresentationSelection;
 begin
@@ -3336,17 +3337,11 @@ begin
       if not SameNyxContentStructure(FRoot, LCandidate) then
       begin
         LStates := CaptureContentFaces;
-        LHorizontal := FPanel.HorzScrollBar.Position;
-        LVertical := FPanel.VertScrollBar.Position;
-        LSelected := FSelectedDesignID;
         FPublishingContent := True;
         try
           RenderFrame(FContentBlueprint.Document, FContentBlueprint.Root, FPanel.Parent,
             FDesignMode, FState, FCollectionBindings, LFrame, LMeasurements, True, LStates);
           LKey := FContentMeasurementKey;
-          FPanel.HorzScrollBar.Position := LHorizontal;
-          FPanel.VertScrollBar.Position := LVertical;
-          Select(LSelected);
         finally
           FPublishingContent := False;
         end;
@@ -3432,6 +3427,17 @@ var
   LSettlement: TNyxContentSettlement;
   LBlueprint: TNyxContentBlueprint;
   LFirstCandidate: Boolean;
+  LHostSizingLocked: Boolean;
+  LUpdating: Boolean;
+  LFormerFocus: TWinControl;
+  LFormerSelection: TNyxTextSelection;
+  LViewportPublication: INyxObservationPublication;
+  LEditingPublication: INyxObservationPublication;
+  LCapturePublication: INyxObservationPublication;
+  LParent: TWinControl;
+  LMeasurementKey: TNyxText;
+  LFormerHorizontal: Integer;
+  LFormerVertical: Integer;
   {$ifdef NYX_STUDIO_PROFILE}
   LPhaseStarted: QWord;
 
@@ -3455,6 +3461,16 @@ begin
   begin
     raise ENyxModel.Create('Native host is required');
   end;
+  LParent := AHost;
+  while LParent <> nil do
+  begin
+
+    if LParent = FPanel then
+    begin
+      raise ENyxModel.Create('A native view cannot replace itself inside its own descendant');
+    end;
+    LParent := LParent.Parent;
+  end;
   LCandidate := nil;
   LMeasuredRoot := nil;
   LSettlement := nil;
@@ -3472,6 +3488,7 @@ begin
     and every partly constructed sibling. Explicit Nyx layout still runs while
     locked. The host remains borrowed and the failure path releases the lock. }
   AHost.DisableAutoSizing;
+  LHostSizingLocked := True;
   try
 
     if LOwnRuntimeState then
@@ -3556,7 +3573,7 @@ begin
       LCandidate.FPanel.Align := alClient;
       { Alignment is deliberately deferred. Supply the host's current client
         frame for provisional measurements; final LCL alignment and OnResize
-        settle the actual frame after publication, including existing siblings. }
+        run during reversible physical preview, including existing siblings. }
       LCandidate.FPanel.SetBounds(AHost.ClientRect.Left, AHost.ClientRect.Top,
         AHost.ClientWidth, AHost.ClientHeight);
       LCandidate.FPanel.BorderStyle := bsNone;
@@ -3609,6 +3626,141 @@ begin
     begin
       LCandidate.FLiveBindings.Activate;
     end;
+    { Physical preview is reversible: the old model, controls, hooks, pending
+      callbacks and capability remain owned here until all target work succeeds.
+      Native notifications from both trees are muted throughout this phase. }
+    LFormerFocus := Screen.ActiveControl;
+    LFormerSelection := Default(TNyxTextSelection);
+    LFormerHorizontal := 0;
+    LFormerVertical := 0;
+
+    if FPanel <> nil then
+    begin
+      LFormerHorizontal := FPanel.HorzScrollBar.Position;
+      LFormerVertical := FPanel.VertScrollBar.Position;
+    end;
+
+    if LFormerFocus <> nil then
+    begin
+      LFormerSelection := CaptureNyxLCLSelection(LFormerFocus);
+    end;
+    LUpdating := FUpdating;
+    FUpdating := True;
+    try
+      LCandidate.FUpdating := True;
+      LCandidate.FPanel.OnResize := LCandidate.Resize;
+      LCandidate.FPanel.Visible := True;
+
+      if FPanel <> nil then
+      begin
+        LCandidate.FPanel.SendToBack;
+      end;
+      { Native alignment and resize callbacks are target work, not retirement
+        cleanup. Balance the host lock now, while the old tree is still alive. }
+      LHostSizingLocked := False;
+      AHost.EnableAutoSizing;
+      LCandidate.FUpdating := False;
+      LCandidate.Sync;
+      LCandidate.FUpdating := True;
+      LCandidate.FCaptureObserver := NewNyxLCLCaptureObserver(LCandidate.FPhysicalFrame);
+      for LIndex := 0 to High(LCandidate.FBindings) do
+      begin
+
+        if NyxSupportsViewport(LCandidate.FBindings[LIndex].FNode) then
+        begin
+
+          if LCandidate.FBindings[LIndex].FInput is TWinControl then
+          begin
+            LCandidate.FViewportObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
+              TWinControl(LCandidate.FBindings[LIndex].FInput));
+          end
+          else if LCandidate.FBindings[LIndex].FControl is TWinControl then
+          begin
+            LCandidate.FViewportObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
+              TWinControl(LCandidate.FBindings[LIndex].FControl));
+          end;
+        end;
+      end;
+      LCandidate.FViewportObserver.Activate(FEvents, ViewportChanged);
+      for LIndex := 0 to High(LCandidate.FBindings) do
+      begin
+
+        if (NyxSupportsTextInput(LCandidate.FBindings[LIndex].FNode) or
+          (LCandidate.FBindings[LIndex].FNode.ProjectionKind = 'input')) and
+          (LCandidate.FBindings[LIndex].FInput is TCustomEdit) then
+        begin
+          LCandidate.FEditingObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
+            TWinControl(LCandidate.FBindings[LIndex].FInput));
+        end;
+      end;
+      LCandidate.FEditingObserver.Activate(FEvents, EditingChanged);
+      for LIndex := 0 to High(LCandidate.FBindings) do
+      begin
+        LCandidate.FCaptureObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
+          LCandidate.FBindings[LIndex].FControl);
+
+        if (LCandidate.FBindings[LIndex].FInput <> nil) and
+          (LCandidate.FBindings[LIndex].FInput <> LCandidate.FBindings[LIndex].FControl) then
+        begin
+          LCandidate.FCaptureObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
+            LCandidate.FBindings[LIndex].FInput);
+        end;
+      end;
+      LCandidate.FCaptureObserver.Activate(FEvents, CaptureChanged);
+
+      if not Supports(LCandidate.FViewportObserver, INyxObservationPublication,
+        LViewportPublication) or not LViewportPublication.Ready or
+        not Supports(LCandidate.FEditingObserver, INyxObservationPublication,
+        LEditingPublication) or not LEditingPublication.Ready or
+        not Supports(LCandidate.FCaptureObserver, INyxObservationPublication,
+        LCapturePublication) or not LCapturePublication.Ready then
+      begin
+        raise ENyxModel.Create('Native candidate observers cannot publish their prepared revision');
+      end;
+      LCandidate.FPanel.BringToFront;
+      LCandidate.RestoreContentFaces(AStates, True);
+
+      if AKeepPresentation then
+      begin
+        LCandidate.FPanel.HorzScrollBar.Position := LFormerHorizontal;
+        LCandidate.FPanel.VertScrollBar.Position := LFormerVertical;
+        LCandidate.Select(FSelectedDesignID);
+      end;
+      LCandidate.FEmitterScope.Activate(EmitNamed);
+      LMeasurementKey := NyxContentMeasurements(LCandidate.FRoot, LMeasurements);
+    except
+      { Retain exact old controls, input ranges and pending router revision.
+        The candidate owns every newly installed hook and releases it on failure. }
+      try
+        LCandidate.FUpdating := True;
+        LCandidate.FPanel.OnResize := nil;
+        LCandidate.FPanel.Visible := False;
+
+        if FPanel <> nil then
+        begin
+          FPanel.BringToFront;
+        end;
+
+        if (LFormerFocus <> nil) and LFormerFocus.CanFocus then
+        begin
+          LFormerFocus.SetFocus;
+
+          if LFormerSelection.Defined then
+          begin
+            SelectNyxLCLText(LFormerFocus, LFormerSelection);
+          end;
+        end;
+
+        if FPanel <> nil then
+        begin
+          FPanel.HorzScrollBar.Position := LFormerHorizontal;
+          FPanel.VertScrollBar.Position := LFormerVertical;
+        end;
+      finally
+        FUpdating := LUpdating;
+      end;
+      raise;
+    end;
     { Preserve an explicitly reused owned runtime store through full remount.
       The candidate borrows it until admission; failed factories retain the old
       view/store ownership. Clear only disconnects the old coordinator here. }
@@ -3649,7 +3801,7 @@ begin
     FContentRequestedSelection := AFrame.Selection;
     FContentFrame := AFrame;
     FContentFrameKnown := True;
-    FContentMeasurementKey := NyxContentMeasurements(FRoot, LMeasurements);
+    FContentMeasurementKey := LMeasurementKey;
     FDesignMode := ADesignMode;
     FProjectionContext := LCandidate.FProjectionContext;
     FProjectionSchemaRevision := LCandidate.FProjectionSchemaRevision;
@@ -3658,6 +3810,12 @@ begin
     FVirtualLayout := LCandidate.FVirtualLayout;
     FPanel := LCandidate.FPanel;
     LCandidate.FPanel := nil;
+    FSelectedDesignID := LCandidate.FSelectedDesignID;
+    for LIndex := Low(FSelectionEdges) to High(FSelectionEdges) do
+    begin
+      FSelectionEdges[LIndex] := LCandidate.FSelectionEdges[LIndex];
+      LCandidate.FSelectionEdges[LIndex] := nil;
+    end;
     FBindings := LCandidate.FBindings;
     FEmitterScope := LCandidate.FEmitterScope;
     LCandidate.FEmitterScope := nil;
@@ -3666,62 +3824,22 @@ begin
     FEditingObserver := LCandidate.FEditingObserver;
     LCandidate.FEditingObserver := nil;
     FPhysicalFrame := LCandidate.FPhysicalFrame;
-    FCaptureObserver := NewNyxLCLCaptureObserver(FPhysicalFrame);
+    FCaptureObserver := LCandidate.FCaptureObserver;
+    LCandidate.FCaptureObserver := nil;
     LCandidate.FBindings := nil;
     for LIndex := 0 to Length(FBindings) - 1 do
     begin
       FBindings[LIndex].FRenderer := Self;
     end;
     FPanel.OnResize := Resize;
-    FEmitterScope.Activate(EmitNamed);
-    FPanel.Visible := True;
-    Resize(FPanel);
-    RestoreContentFaces(AStates, True);
+    { Commit updates installed revisions through pure managed publication ports.
+      No showing, focus or hook installation follows old retirement. Target
+      extensions must release their controls without raising in destruction. }
+    LViewportPublication.PublishRevision(FEvents.ViewRevision);
+    LEditingPublication.PublishRevision(FEvents.ViewRevision);
+    LCapturePublication.PublishRevision(FEvents.ViewRevision);
+    FUpdating := LUpdating;
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('publish');{$endif}
-    for LIndex := 0 to High(FBindings) do
-    begin
-
-      if NyxSupportsViewport(FBindings[LIndex].FNode) then
-      begin
-
-        if FBindings[LIndex].FInput is TWinControl then
-        begin
-          FViewportObserver.Add(FBindings[LIndex].FNode.ID,
-            TWinControl(FBindings[LIndex].FInput));
-        end
-        else if FBindings[LIndex].FControl is TWinControl then
-        begin
-          FViewportObserver.Add(FBindings[LIndex].FNode.ID,
-            TWinControl(FBindings[LIndex].FControl));
-        end;
-      end;
-    end;
-    FViewportObserver.Activate(FEvents, ViewportChanged);
-    for LIndex := 0 to High(FBindings) do
-    begin
-
-      if (NyxSupportsTextInput(FBindings[LIndex].FNode) or
-        (FBindings[LIndex].FNode.ProjectionKind = 'input')) and
-        (FBindings[LIndex].FInput is TCustomEdit) then
-      begin
-        FEditingObserver.Add(FBindings[LIndex].FNode.ID,
-          TWinControl(FBindings[LIndex].FInput));
-      end;
-    end;
-    FEditingObserver.Activate(FEvents, EditingChanged);
-    { Capture hooks are outermost in the native WindowProc chain. Revoke them
-      before editing and viewport hooks when the mounted view ends. }
-    for LIndex := 0 to High(FBindings) do
-    begin
-      FCaptureObserver.Add(FBindings[LIndex].FNode.ID, FBindings[LIndex].FControl);
-
-      if (FBindings[LIndex].FInput <> nil) and
-        (FBindings[LIndex].FInput <> FBindings[LIndex].FControl) then
-      begin
-        FCaptureObserver.Add(FBindings[LIndex].FNode.ID, FBindings[LIndex].FInput);
-      end;
-    end;
-    FCaptureObserver.Activate(FEvents, CaptureChanged);
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('observe');{$endif}
   finally
     try
@@ -3735,7 +3853,11 @@ begin
         LRuntimeState.Free;
       end;
     finally
-      AHost.EnableAutoSizing;
+
+      if LHostSizingLocked then
+      begin
+        AHost.EnableAutoSizing;
+      end;
     end;
   end;
   {$ifdef NYX_STUDIO_PROFILE}RecordPhase('settle');{$endif}
@@ -5861,7 +5983,7 @@ var
 begin
   Result := False;
 
-  if FDesignMode then
+  if FDesignMode or FUpdating or FPublishingContent then
   begin
     Exit;
   end;
@@ -5903,7 +6025,7 @@ var
   LContentGuard: INyxContentGuard;
 begin
 
-  if FDesignMode or (ADispatch.EventName = '') then
+  if FDesignMode or FUpdating or FPublishingContent or (ADispatch.EventName = '') then
   begin
     Exit;
   end;

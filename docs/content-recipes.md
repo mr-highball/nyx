@@ -1,7 +1,7 @@
 # Reusable presentation recipes
 
 [Responsive configuration](responsive.md) · [Retained arrangements](retained-arrangements.md) ·
-[Current evidence](../WORK.md#live-content-publication--2026-10-06)
+[Current evidence](../WORK.md#reversible-physical-publication--2026-10-06)
 
 `INyxContent` chooses whole reusable recipes for an instance. Recipes can have
 different descendants, control types and named parts. The document owns the
@@ -145,14 +145,35 @@ failure retains the accepted root, selection and capability, exposes
 automatic retry storm. Changed geometry or an explicit request permits retry.
 
 Explicit public `Render` remounts still retire the old presentation lease. This
-live gate does not accept rollback of a physical failure after publication,
-arbitrary nested logical identity migration,
-hardware IME/assistive input, other widgetsets, accessibility or release performance.
-Hidden nested allocation, later-pass failure and controlled extension feedback
-are qualified on actual browser and Win32 controls. Complete reversible physical
-publication is still required. Ordinary Nyx-built Studio recipe editing and its
-observing semantic
-journey remain open under the original authoring/parity owners.
+is separate from the stable capability used by live recipe publication.
+
+Physical publication previews attachment/showing, actual-host synchronization,
+observation installation, focus/ranges, containing scroll and designer selection
+before retiring the old mount. Nyx notifications from both trees are muted during
+this phase. A browser rollback restores the exact old DOM objects, host theme/
+classes and editing position; a native rollback removes the candidate and restores
+the exact old controls, focus/ranges and containing scroll. The old router epoch,
+pending work and presentation capability remain admitted until commit.
+
+Native viewport, editing and capture observers prepare against the final owner's
+router. Their optional `INyxObservationPublication` port is checked before
+retirement; commit copies the actual admitted epoch into connected hooks without
+allocation, target calls or callbacks. Browser prepared resize observation targets
+the final receiver and rejects notifications until transferred. No target showing,
+hook installation, focus or selection painting follows old retirement.
+
+Factories/updaters borrow staged nodes and must not mutate their source or runtime
+store during preparation. Extension destructors must release without raising.
+The recovery contract covers fallible preview work; it cannot reconstruct an old
+object already destroyed by a violating destructor. Controlled visible-sync and
+actual-focus failures, recovery callbacks, committed editing/scroll/capture and
+designer selection are qualified on actual browser and Win32 controls.
+
+Arbitrary nested logical identity migration, complete source-change publication,
+hardware IME/assistive input, other widgetsets/DPI, accessibility and release
+performance retain their original qualification requirements. Ordinary Nyx-built
+Studio recipe editing and its observing semantic journey remain open under the
+original authoring/parity owners.
 
 ## Persistence, source and semantic editing
 
@@ -186,6 +207,8 @@ Run `tools/build.ps1 -Target content-recipes` for contract/native checks and
 browser staging. On an isolated Pascal HTTP host, the maintained Pascal browser
 driver observes `content-contracts.html` using `content-contracts`, and
 `content-controls.html` and `content-live-controls.html` using `projection`.
+`content-settling-controls.html` and `content-publication-controls.html` use that
+same bounded driver protocol for hidden admission and reversible publication.
 The live consumer qualifies resize/manual/container transitions, independent
 stores, logical drafts/focus/selection, source refresh, failed factories, reentry,
 coalescing and teardown. Optional `?preview` retains fresh wide/compact proof views

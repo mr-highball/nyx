@@ -3,7 +3,23 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current nested admission packet (2026-10-06): introduced publishers settle as
+Current physical publication packet (2026-10-06): replacement previews actual
+attachment/showing, synchronization, observation, focus/ranges, containing scroll
+and selection painting before old retirement. Managed native observer publication
+copies the committed router epoch without reconnecting hooks. Browser/Win32 pass
+50 actual recovery/callback/designer checks each; Win32 traces report zero leaks.
+Maintained 55 shared, 42 remount, 63 live and 27/29 native/browser nested checks
+remain passing; ordinary scalar-container controls pass 27 per target. Backend,
+browser Studio/worker and native Studio compile with zero owned warnings. All
+fifteen services/eight frames stay exact; LAN HTTP remains available. No ordinary
+Studio recipe-authoring acceptance or new deployment is claimed. Original full
+criteria stay open; renderer no-closure 6→7 once, authoring 25, workflow 9,
+codegen 28 and delivery 1 remain. Stop publication fixtures and return to ordinary
+Nyx-built Studio recipe editing, paired source/history and semantic observation,
+with original parity/accessibility/performance/delivery requirements unchanged.
+See [evidence and return path](WORK.md#reversible-physical-publication--2026-10-06).
+
+Previous nested admission packet (2026-10-06): introduced publishers settle as
 bounded hidden candidates before accepting changed control sets. Actual Win32/
 browser nested checks pass 27/29, including immediate cold admission, later-pass
 failure, cycle/limit refusal, independent stores and recovery. Original 55 shared,

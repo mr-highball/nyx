@@ -26,7 +26,7 @@ unit nyx.editing.lcl;
 
 interface
 
-uses Controls, nyx.text, nyx.editing, nyx.events;
+uses Controls, nyx.text, nyx.editing, nyx.events, nyx.observation;
 
 type
   TNyxLCLEditingHandler = procedure(const AOriginID: TNyxText;
@@ -65,6 +65,7 @@ type
     procedure Connect(const AEvents: INyxEvents; AHandler: TNyxLCLEditingHandler);
     procedure Disconnect;
     procedure Poll;
+    procedure PublishRevision(ARevision: Integer);
     function Dispatching: Boolean;
   end;
   TNyxLCLEditHook = class(TInterfacedObject, INyxLCLEditHook)
@@ -89,9 +90,11 @@ type
     procedure Connect(const AEvents: INyxEvents; AHandler: TNyxLCLEditingHandler);
     procedure Disconnect;
     procedure Poll;
+    procedure PublishRevision(ARevision: Integer);
     function Dispatching: Boolean;
   end;
-  TNyxLCLEditingObserver = class(TInterfacedObject, INyxLCLEditingObserver)
+  TNyxLCLEditingObserver = class(TInterfacedObject, INyxLCLEditingObserver,
+    INyxObservationPublication)
   private
     FHooks: array of INyxLCLEditHook;
     FEvents: INyxEvents;
@@ -104,6 +107,8 @@ type
     procedure Activate(const AEvents: INyxEvents; AHandler: TNyxLCLEditingHandler);
     procedure Disconnect;
     function Dispatching: Boolean;
+    function GetReady: Boolean;
+    procedure PublishRevision(ARevision: Integer);
   end;
 
 function NativeSelectionSupported: Boolean;
@@ -296,6 +301,11 @@ begin
     FControl.WindowProc := WindowMessage;
     FHooked := True;
   end;
+end;
+
+procedure TNyxLCLEditHook.PublishRevision(ARevision: Integer);
+begin
+  FRevision := ARevision;
 end;
 
 procedure TNyxLCLEditHook.Disconnect;
@@ -501,6 +511,24 @@ begin
   end;
   FConnected := True;
   Application.AddOnIdleHandler(Idle);
+end;
+
+function TNyxLCLEditingObserver.GetReady: Boolean;
+begin
+  Result := FConnected and (FEvents <> nil);
+end;
+
+procedure TNyxLCLEditingObserver.PublishRevision(ARevision: Integer);
+var
+  LIndex: Integer;
+begin
+  { The connected WindowProc chain stays intact. Only its admitted epoch changes;
+    publication allocates nothing and enters no widget, scheduler or receiver. }
+  FRevision := ARevision;
+  for LIndex := 0 to High(FHooks) do
+  begin
+    FHooks[LIndex].PublishRevision(ARevision);
+  end;
 end;
 
 procedure TNyxLCLEditingObserver.Disconnect;

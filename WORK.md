@@ -15,23 +15,89 @@ blueprints now publish genuinely different control sets through coalesced UI job
 Host/manual and allocated-container transitions retain stable capabilities,
 explicit logical part focus/drafts, independent stores and admitted source meaning.
 Introduced/nested publishers now settle as hidden candidates before acceptance.
+Reversible physical preview now includes actual attachment/showing, synchronization,
+observation, focus/ranges, containing scroll and selection paint before retirement.
 
-Next deliverable: make physical changed-set publication reversible through target
-attachment/showing, observer installation and focus restoration. Keep the accepted
-mount until those steps succeed; a failure after old-control retirement cannot be
-credited as rollback. Follow the open NS-2 ownership prerequisite for that gate.
-Then connect ordinary Nyx-built Studio recipe editing and its observing semantic
-transport journey. Do not extend the already qualified wire/parser, simple host
-or nested settlement fixtures instead. Original full parity/accessibility,
+Next deliverable: ordinary Nyx-built Studio recipe editing with typed conditions
+and reusable references, paired Pascal/history and observing semantic operations.
+Use reusable public Nyx controls, not adapter-specific Studio UI. Trace the existing
+workspace/transport path first; keep protected endpoints and all eight pairs intact.
+Evidence must exercise normal properties/recipe authoring, grouped Undo/Redo,
+source generation/admission and an observing browser/LCL consumer. Stop when that
+integrated journey is qualified or a concrete transport gap is recorded with the
+workflow owner. Do not extend the qualified wire/parser, simple-host, nested or
+publication fixtures instead. Original full parity/accessibility,
 performance and delivery criteria remain unchanged; the current proofs do not
 accept hardware IME/assistive input or other widgetsets.
 
-This batch closes no full criterion. Authoring no-closure advances 24→25 once;
-renderer 6, workflow 9, codegen 28 and delivery 1 remain. This reassessment moves
-from hidden nested admission to reversible physical target publication before
-ordinary editor integration. It does not restrict alternate structures to fixed
-control sets or credit an explicit remount as continuity. Main services and all
-eight accepted pairs remain protected; no LAN rollout is claimed.
+This NS-2-owned batch closes no full original criterion. Renderer no-closure
+advances 6→7 once; authoring 25, workflow 9, codegen 28 and delivery 1 remain.
+Reassessment now returns from the qualified physical boundary to ordinary editor
+integration. It does not restrict alternate structures to fixed control sets or
+credit an explicit remount as continuity. Nothing moves to DONE. Main services
+and all eight accepted pairs remain protected; no LAN rollout is claimed.
+
+## Reversible physical publication — 2026-10-06
+
+Owner: original NS-2 native interaction/ownership and browser recovery criteria,
+returning to NS-4 criterion 1. The bounded physical preview gate is qualified;
+the original breadth/parity criteria remain open. Stop publication fixtures here.
+
+The accepted model, controls, router epoch and capability stay owned until the
+replacement succeeds in the real target. Browser preview retains exact old DOM
+objects in an owned holder, mutes Nyx notifications and restores host classes/theme,
+focus/ranges and scroll on refusal. Native preview shows/aligns the new panel while
+the old panel remains alive, synchronizes actual controls and installs observers
+before focus. Its optional managed observation port checks readiness before commit,
+then copies the actual admitted router epoch into viewport/editing/capture hooks
+without target calls, allocation or callbacks. Existing public observer interfaces
+keep their ABI. Containing scroll and selection paint also prepare before retirement;
+native owned selection strips transfer with the new panel.
+
+Custom factories/updaters must leave borrowed source/store unchanged during
+preparation; extension destructors must release without raising. This is recovery
+for fallible physical preview, not reconstruction after a violating destructor has
+destroyed the old view. General external stylesheet equivalence, arbitrary logical
+identity migration, complete source-change publication, other widgetsets/DPI and
+hardware/IME/assistive input remain separate qualifications.
+
+Private evidence under `build/content-publication/`:
+
+- `final-qualified.log`: maintained target passes 55 shared checks per stable
+  3.2.0/matched 3.3.1 compiler, 55 unchanged companion export, 42 Win32 remount,
+  63 live, 27 nested and 50 reversible-publication checks. Every native trace
+  reports zero leaks. The new actual-control fixture refuses visible synchronization
+  and focus after preparation, checks exact old input/draft/scalar range/epoch/
+  capability, then old and committed editing/scroll/capture callbacks. A separate
+  designer mount checks visible selection through refusal, retry and teardown.
+- `browser-*-run.log`: the maintained Pascal driver executes 50 publication,
+  63 live, 29 nested, 42 remount, 55 shared and 27 scalar-container checks.
+  Browser capture is a host notification; it does not establish hardware capture.
+  Only new task-owned files in a new child of the existing isolated web root are
+  staged. No listeners or existing hosted files are changed.
+- `container-native/run.log`: 27 ordinary scalar-container allocation/retained-
+  input checks pass over the unchanged semantic companion, zero leaks.
+- `server/compile.log`, `studio-web/compile.log`, `studio-worker/compile.log`
+  and `studio-native/compile.log`: backend, browser Studio/module worker and
+  native Studio compile with zero owned warnings. Each browser product retains
+  seven unchanged upstream RTL warnings. These are compilations, not an ordinary
+  Studio recipe-authoring journey or deployment.
+- The generated companion stays SHA256
+  `e5904d58dd7797d90da486e6d50596b71e761ef289d8c05e5f1708fbba1d2ed9`.
+  New fixture attachments are explicitly typed consumer instrumentation, not
+  MCP-authored replacement projects. Its initial callback check used design
+  selectors for runtime identities; explicit runtime selectors correct the test.
+  Its long scroll value correctly refused the reverse single-line recipe; restoring
+  an admitted single-line value makes the intended reverse journey valid.
+- `mcp-session.json`: authenticated bounded Pascal semantic read. Cached desktop
+  handles and new-field HTTP integration remain with workflow owner 9.
+- `final-preservation.json` / `protected-main-final.json`: fifteen exact
+  process identities and eight exact paired project/navigation/draft/history-
+  availability frames remain unchanged; LAN HTTP is 200. No service is restarted.
+
+Full original criteria, ordinary Studio recipe editing/MCP observation,
+accessibility/performance and delivery remain open. The full product goal stays
+active. The next baseline is `build/content-publication/protected-main-final.json`.
 
 ## Hidden nested recipe admission — 2026-10-06
 

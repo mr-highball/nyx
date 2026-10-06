@@ -20,6 +20,26 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 
+## Reversible physical publication — 2026-10-06
+
+The original runtime/recovery criteria consume a reversible real-host preview.
+Exact accepted DOM objects, host theme/classes, input draft/range/focus and
+containing scroll remain recoverable through visible synchronization, observer
+installation and focus. Selection painting prepares before old retirement;
+prepared resize observation targets the final receiver. Actual browser checks
+pass 50 for failure/recovery, old/new callbacks, editing/scroll/capture notifications
+and designer selection. Existing 42 remount, 63 live, 29 nested, 55 shared and 27
+scalar-container checks remain passing. Browser capture is a host notification,
+not hardware qualification. See
+[evidence](../WORK.md#reversible-physical-publication--2026-10-06).
+
+The NS-2-owned batch advances renderer no-closure 6→7 once; no full original
+criterion closes. Authoring 25, workflow 9, codegen 28 and delivery 1 remain.
+Return to ordinary Nyx-built Studio recipe editing and semantic observation.
+General stylesheet equivalence, physical mobile/IME/assistive input, complete
+accessibility/visual quality and original blockers remain; no protected endpoint,
+project or existing hosted file is changed.
+
 ## Structural recipe consumer — 2026-10-06
 
 The public managed content contract selects distinct reusable control sets lazily

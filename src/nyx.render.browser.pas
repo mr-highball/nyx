@@ -183,7 +183,10 @@ type
     RegisterFactory admits an owned custom recipe without editing the default
     catalog or renderer. Full Render is the initial correctness path; target
     identity and event ownership remain explicit for later incremental updates.
-    Renderer owns its default theme; a supplied theme is borrowed. }
+    Renderer owns its default theme; a supplied theme is borrowed.
+    Factories/updaters borrow staged nodes and must not mutate their source or
+    runtime store during preparation. Replacements preview fallible target work
+    before retirement; extension destructors must release without raising. }
   TNyxBrowserRenderer = class
   private
     FTheme: TNyxTheme;
@@ -238,7 +241,9 @@ type
     function ReadPresentationSelection: TNyxPresentationSelection;
     function GetPresentationView: INyxPresentationView;
     procedure SetPresentationSelection(const AValue: TNyxPresentationSelection);
-    procedure ObserveViewport;
+    { A prepared observer can target the final owner without publishing its
+      candidate early. Its receiver rejects notifications until ownership moves. }
+    procedure ObserveViewport(AReceiver: TNyxBrowserRenderer = nil);
     function MeasureContainers: INyxContainerSnapshot;
     { Read actual untransformed CSS content boxes synchronously for a connected
       hidden candidate. Missing/disconnected boxes remain missing. }
@@ -1710,9 +1715,6 @@ var
   LKey: TNyxText;
   LCandidate: TNyxNode;
   LStates: TNyxContentFaceStates;
-  LHostLeft: Double;
-  LHostTop: Double;
-  LSelected: TNyxText;
   LIndex: Integer;
   LPreviousSelection: TNyxPresentationSelection;
 begin
@@ -1768,17 +1770,11 @@ begin
       if not SameNyxContentStructure(FRoot, LCandidate) then
       begin
         LStates := CaptureContentFaces;
-        LHostLeft := FHost.scrollLeft;
-        LHostTop := FHost.scrollTop;
-        LSelected := FSelectedDesignID;
         FPublishingContent := True;
         try
           RenderFrame(FContentBlueprint.Document, FContentBlueprint.Root, FHost,
             FDesignMode, FState, FCollectionBindings, LFrame, LMeasurements, True, LStates);
           LKey := FContentMeasurementKey;
-          FHost.scrollLeft := Round(LHostLeft);
-          FHost.scrollTop := Round(LHostTop);
-          Select(LSelected);
         finally
           FPublishingContent := False;
         end;
@@ -1871,14 +1867,33 @@ var
   LFirstCandidate: Boolean;
   LFormat: TFormatSettings;
   LHostStyle: TJSCSSStyleDeclaration;
+  LProbeHost: TJSHTMLElement;
+  LFormerChildren: TJSHTMLElement;
+  LNewChildren: array of TJSNode;
+  LFormerFocus: TJSHTMLElement;
+  LFormerSelection: TNyxTextSelection;
+  LFormerClass: TNyxText;
+  LFormerScope: TNyxText;
+  LHadScope: Boolean;
+  LUpdating: Boolean;
+  LFormerTop: NativeInt;
+  LFormerLeft: NativeInt;
+  LInputTop: NativeInt;
+  LInputLeft: NativeInt;
+  LMeasurementKey: TNyxText;
 begin
-  { Build the entire candidate offscreen. Custom factories and child mounting
-    may fail after realization, so accepting only the model is insufficient.
-    Transfer target/model ownership only after every factory has succeeded. }
+  { Build the entire candidate offscreen, then preview fallible physical work in
+    the actual host. Model admission alone is insufficient. Transfer ownership
+    only after target synchronization, observation and face restoration succeed. }
 
   if AHost = nil then
   begin
     raise ENyxModel.Create('Browser host is required');
+  end;
+
+  if (FHost <> nil) and (FHost <> AHost) and FHost.contains(AHost) then
+  begin
+    raise ENyxModel.Create('A browser view cannot replace itself inside its own descendant');
   end;
   LCandidate := nil;
   LMeasuredRoot := nil;
@@ -1906,6 +1921,7 @@ begin
     end;
     repeat
       LCandidate := TNyxBrowserRenderer.Create(FTheme);
+      LCandidate.FPublishingContent := True;
       LCandidate.FDetachedCandidate := True;
       LCandidate.FStagingMeasurements := LMeasurements;
 
@@ -2069,6 +2085,134 @@ begin
     begin
       LCandidate.FLiveBindings.Activate;
     end;
+    { Keep the accepted model, router revision and controls until the actual
+      host accepts the candidate. Moving the exact old DOM objects to a private
+      holder allows rollback without reconstructing controls or event handlers.
+      A different target host retains its unrelated children on both paths. }
+    LProbeHost := LCandidate.FHost;
+    LFormerChildren := Element('div', '');
+    LFormerClass := AHost.className;
+    LHadScope := AHost.hasAttribute('data-nyx-theme');
+    LFormerScope := AHost.getAttribute('data-nyx-theme');
+    LFormerTop := AHost.scrollTop;
+    LFormerLeft := AHost.scrollLeft;
+    LFormerFocus := TJSHTMLElement(document.activeElement);
+    LFormerSelection := Default(TNyxTextSelection);
+    LInputTop := 0;
+    LInputLeft := 0;
+
+    if LFormerFocus <> nil then
+    begin
+      LFormerSelection := CaptureNyxBrowserSelection(LFormerFocus);
+      LInputTop := LFormerFocus.scrollTop;
+      LInputLeft := LFormerFocus.scrollLeft;
+    end;
+    SetLength(LNewChildren, LProbeHost.childNodes.length);
+    for LIndex := 0 to High(LNewChildren) do
+    begin
+      LNewChildren[LIndex] := LProbeHost.childNodes[LIndex];
+    end;
+    LUpdating := FUpdating;
+    FUpdating := True;
+    LCandidate.FUpdating := True;
+    try
+
+      if FHost = AHost then
+      begin
+        while AHost.firstChild <> nil do
+        begin
+          LFormerChildren.appendChild(AHost.firstChild);
+        end;
+      end;
+      for LIndex := 0 to High(LNewChildren) do
+      begin
+        AHost.appendChild(LNewChildren[LIndex]);
+      end;
+      AHost.classList.add('nyx-root');
+      AHost.setAttribute('data-nyx-theme', LCandidate.FThemeScope);
+
+      if ADesignMode then
+      begin
+        AHost.classList.add('nyx-design');
+      end
+      else
+      begin
+        AHost.classList.remove('nyx-design');
+      end;
+      { Keep the staged projection frozen during physical synchronization. The
+        next live allocation observation is queued only after admission. }
+      LCandidate.FHost := AHost;
+      LCandidate.FUpdating := False;
+      LCandidate.Sync;
+      LCandidate.FUpdating := True;
+      LCandidate.ObserveViewport(Self);
+      LCandidate.RestoreContentFaces(AStates, True);
+
+      if AKeepPresentation then
+      begin
+        AHost.scrollTop := LFormerTop;
+        AHost.scrollLeft := LFormerLeft;
+        LCandidate.Select(FSelectedDesignID);
+      end;
+      LCandidate.FEmitterScope.Activate(@EmitNamed);
+      LMeasurementKey := NyxContentMeasurements(LCandidate.FRoot, LMeasurements);
+    except
+      { Disconnect the new observer before restoring exact accepted DOM objects.
+        Only candidate nodes are removed from a different borrowed host. }
+
+      if LCandidate.FViewportObserver <> nil then
+      begin
+        LCandidate.FViewportObserver.disconnect;
+        LCandidate.FViewportObserver := nil;
+      end;
+      LCandidate.FUpdating := True;
+      LCandidate.FHost := LProbeHost;
+      try
+        for LIndex := 0 to High(LNewChildren) do
+        begin
+          LProbeHost.appendChild(LNewChildren[LIndex]);
+        end;
+        while LFormerChildren.firstChild <> nil do
+        begin
+          AHost.appendChild(LFormerChildren.firstChild);
+        end;
+        AHost.className := LFormerClass;
+
+        if LHadScope then
+        begin
+          AHost.setAttribute('data-nyx-theme', LFormerScope);
+        end
+        else
+        begin
+          AHost.removeAttribute('data-nyx-theme');
+        end;
+
+        if (LFormerFocus <> nil) and document.body.contains(LFormerFocus) then
+        begin
+          NyxFocusWithoutScroll(LFormerFocus);
+
+          if LFormerSelection.Defined then
+          begin
+            SelectNyxBrowserText(LFormerFocus, LFormerSelection);
+          end;
+          LFormerFocus.scrollTop := LInputTop;
+          LFormerFocus.scrollLeft := LInputLeft;
+        end;
+        AHost.scrollTop := LFormerTop;
+        AHost.scrollLeft := LFormerLeft;
+      finally
+        FUpdating := LUpdating;
+      end;
+      raise;
+    end;
+    { The private renderer resumes ownership of its empty probe. Retirement of
+      the old view clears the holder, never the newly attached accepted nodes. }
+    LCandidate.FHost := LProbeHost;
+
+    if FHost = AHost then
+    begin
+      FHost := LFormerChildren;
+    end;
     { Passing this renderer's own State preserves that ownership across a full
       remount. Until admission the candidate only borrows it, so failure cannot
       release the still-mounted store. Clear must not free it during transfer. }
@@ -2109,10 +2253,12 @@ begin
     FContentRequestedSelection := AFrame.Selection;
     FContentFrame := AFrame;
     FContentFrameKnown := True;
-    FContentMeasurementKey := NyxContentMeasurements(FRoot, LMeasurements);
+    FContentMeasurementKey := LMeasurementKey;
     FBindings := LCandidate.FBindings;
     FEmitterScope := LCandidate.FEmitterScope;
     LCandidate.FEmitterScope := nil;
+    FViewportObserver := LCandidate.FViewportObserver;
+    LCandidate.FViewportObserver := nil;
     { pas2js arrays share JavaScript identity after assignment. Detach the
       candidate reference; resizing it would also erase the accepted bindings. }
     LCandidate.FBindings := nil;
@@ -2120,35 +2266,20 @@ begin
     FViewportWidth := LCandidate.FViewportWidth;
     FViewportHeight := LCandidate.FViewportHeight;
     FDesignMode := ADesignMode;
+    FSelectedDesignID := LCandidate.FSelectedDesignID;
     FProjectionContext := LCandidate.FProjectionContext;
     FProjectionSchemaRevision := LCandidate.FProjectionSchemaRevision;
     FProjectionBaseline := LCandidate.FProjectionBaseline;
     LCandidate.FProjectionBaseline := nil;
-    FHost.classList.add('nyx-root');
     FThemeScope := LCandidate.FThemeScope;
-    FHost.setAttribute('data-nyx-theme', FThemeScope);
-
-    if ADesignMode then
-    begin
-      FHost.classList.add('nyx-design');
-    end
-    else
-    begin
-      FHost.classList.remove('nyx-design');
-    end;
-    while LCandidate.FHost.firstChild <> nil do
-    begin
-      FHost.appendChild(LCandidate.FHost.firstChild);
-    end;
     for LIndex := 0 to Length(FBindings) - 1 do
     begin
       FBindings[LIndex].FRenderer := Self;
       FBindings[LIndex].FViewRevision := FEvents.ViewRevision;
     end;
-    FEmitterScope.Activate(@EmitNamed);
-    ObserveViewport;
-    RestoreContentFaces(AStates, True);
-    QueueContent;
+    { Prepared DOM handlers receive the committed epoch by assignment. Target
+      extensions must not raise during destruction of the retired controls. }
+    FUpdating := LUpdating;
   finally
     ReleaseNyxNode(LMeasuredRoot);
     LCandidate.Free;
@@ -2698,10 +2829,15 @@ begin
   Sync;
 end;
 
-procedure TNyxBrowserRenderer.ObserveViewport;
+procedure TNyxBrowserRenderer.ObserveViewport(AReceiver: TNyxBrowserRenderer);
 var
   LIndex: Integer;
 begin
+
+  if AReceiver = nil then
+  begin
+    AReceiver := Self;
+  end;
 
   if FViewportObserver <> nil then
   begin
@@ -2712,7 +2848,7 @@ begin
   if (FRoot <> nil) and (FHost <> nil) and
     (FRoot.HasViewportRules or (FContentBlueprint <> nil)) then
   begin
-    FViewportObserver := TJSHTMLResizeObserver.new(@ViewportChanged);
+    FViewportObserver := TJSHTMLResizeObserver.new(@AReceiver.ViewportChanged);
     FViewportObserver.observe(FHost);
     for LIndex := 0 to High(FBindings) do
     begin
@@ -3947,7 +4083,7 @@ var
 begin
   Result := False;
 
-  if FDesignMode then
+  if FDesignMode or FUpdating or FPublishingContent then
   begin
     Exit;
   end;
@@ -4005,7 +4141,7 @@ var
   LContentGuard: INyxContentGuard;
 begin
 
-  if ADispatch.EventName = '' then
+  if FUpdating or FPublishingContent or FDesignMode or (ADispatch.EventName = '') then
   begin
     Exit;
   end;

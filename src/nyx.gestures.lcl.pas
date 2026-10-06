@@ -26,7 +26,7 @@ unit nyx.gestures.lcl;
 interface
 
 uses Classes, SysUtils, Controls, LMessages, nyx.text, nyx.types, nyx.events,
-  nyx.gestures;
+  nyx.gestures, nyx.observation;
 
 type
   { Hooks and direct drag slots retain this frame on their stack. A retiring view
@@ -105,6 +105,7 @@ type
     procedure Connect(const AEvents: INyxEvents; AHandler: TNyxLCLCaptureHandler);
     procedure Disconnect;
     procedure Observe;
+    procedure PublishRevision(ARevision: Integer);
     function Matches(AControl: TControl): Boolean;
   end;
   TNyxLCLCaptureHook = class(TInterfacedObject, INyxLCLCaptureHook)
@@ -128,9 +129,11 @@ type
     procedure Connect(const AEvents: INyxEvents; AHandler: TNyxLCLCaptureHandler);
     procedure Disconnect;
     procedure Observe;
+    procedure PublishRevision(ARevision: Integer);
     function Matches(AControl: TControl): Boolean;
   end;
-  TNyxLCLCaptureObserver = class(TInterfacedObject, INyxLCLCaptureObserver)
+  TNyxLCLCaptureObserver = class(TInterfacedObject, INyxLCLCaptureObserver,
+    INyxObservationPublication)
   private
     FHooks: array of INyxLCLCaptureHook;
     FFrame: INyxNativeGestureFrame;
@@ -143,6 +146,8 @@ type
     procedure Activate(const AEvents: INyxEvents; AHandler: TNyxLCLCaptureHandler);
     procedure Observe(AControl: TControl);
     procedure Disconnect;
+    function GetReady: Boolean;
+    procedure PublishRevision(ARevision: Integer);
   end;
 
 constructor TNyxDragAbort.CreateFor(AControl: TControl);
@@ -449,6 +454,11 @@ begin
   FConnected := True;
 end;
 
+procedure TNyxLCLCaptureHook.PublishRevision(ARevision: Integer);
+begin
+  FRevision := ARevision;
+end;
+
 procedure TNyxLCLCaptureHook.Disconnect;
 var
   LCurrent: TWndMethod;
@@ -653,6 +663,23 @@ begin
       LHook.Observe;
       Exit;
     end;
+  end;
+end;
+
+function TNyxLCLCaptureObserver.GetReady: Boolean;
+begin
+  Result := FActive;
+end;
+
+procedure TNyxLCLCaptureObserver.PublishRevision(ARevision: Integer);
+var
+  LIndex: Integer;
+begin
+  { No reconnection or target callback belongs in the commit phase. The installed
+    outermost capture hooks simply adopt the now-accepted event-router epoch. }
+  for LIndex := 0 to High(FHooks) do
+  begin
+    FHooks[LIndex].PublishRevision(ARevision);
   end;
 end;
 

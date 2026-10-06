@@ -71,10 +71,13 @@ host/manual/allocated-container changes. Contract checks pass 55 per compiler /
 executed browser; compiled Unicode companions pass 42 initial/remount and 63 live
 checks per actual target. Stable presentation capabilities, explicit named-part
 focus/drafts, independent scalar/collection stores, admitted source refresh,
-factory failure, callback queue reentry and teardown are qualified. Nested detached
-settling, full parity and the ordinary Studio recipe editor remain open. Protected
+factory failure, callback queue reentry and teardown are qualified. Nested hidden
+settling passes 27 Win32 / 29 browser checks; reversible physical publication passes
+50 per target, including visible-sync/focus refusal, exact accepted recovery,
+committed observer callbacks and designer selection. Full parity and the ordinary
+Studio recipe editor remain open. Protected
 LAN services/eight pairs are unchanged. See [the contract](docs/content-recipes.md)
-and [current evidence](WORK.md#live-content-publication--2026-10-06).
+and [current evidence](WORK.md#reversible-physical-publication--2026-10-06).
 
 The retained-arrangement foundation now preserves identical scalar binding
 contracts through the original runtime coordinator/store/subscription. Actual

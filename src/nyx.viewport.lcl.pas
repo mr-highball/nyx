@@ -26,7 +26,7 @@ unit nyx.viewport.lcl;
 
 interface
 
-uses Classes, Controls, nyx.text, nyx.events, nyx.viewport;
+uses Classes, Controls, nyx.text, nyx.events, nyx.viewport, nyx.observation;
 
 type
   TNyxViewportHandler = procedure(const AOriginID: TNyxText;
@@ -56,7 +56,8 @@ type
     Control: TWinControl;
     Baseline: TNyxViewportSnapshot;
   end;
-  TNyxViewportObserver = class(TInterfacedObject, INyxViewportObserver)
+  TNyxViewportObserver = class(TInterfacedObject, INyxViewportObserver,
+    INyxObservationPublication)
   private
     FControls: array of TNyxObservedViewport;
     FEvents: INyxEvents;
@@ -69,6 +70,8 @@ type
     procedure Add(const AOriginID: TNyxText; AControl: TWinControl);
     procedure Activate(const AEvents: INyxEvents; AHandler: TNyxViewportHandler);
     procedure Disconnect;
+    function GetReady: Boolean;
+    procedure PublishRevision(ARevision: Integer);
   end;
 
 function ScrollAxis(AControl: TWinControl; ABar: Integer;
@@ -182,6 +185,18 @@ begin
   FHandler := AHandler;
   FConnected := True;
   Application.AddOnIdleHandler(Idle);
+end;
+
+function TNyxViewportObserver.GetReady: Boolean;
+begin
+  Result := FConnected and (FEvents <> nil);
+end;
+
+procedure TNyxViewportObserver.PublishRevision(ARevision: Integer);
+begin
+  { Prepared hooks keep their baselines and borrowed receiver. Commit performs
+    no target operation or callback and cannot lose the accepted old observer. }
+  FRevision := ARevision;
 end;
 
 procedure TNyxViewportObserver.Disconnect;

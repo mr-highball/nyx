@@ -20,6 +20,25 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 
+## Reversible physical publication — 2026-10-06
+
+The original interaction/ownership criterion now includes reversible physical
+preview: show/align/synchronize the new panel, prepare viewport/editing/capture
+hooks and restore focus/ranges/scroll/selection while the old view remains owned.
+Optional managed publication ports copy the admitted router epoch without target
+operations. Actual Win32 checks pass 50, including visible-sync/focus failure,
+exact old-control recovery, callbacks from recovered/committed controls and
+designer selection, with zero leaks. The actual browser counterpart passes 50.
+Earlier 42 remount, 63 live, 27 nested and ordinary 27 scalar-container checks
+remain passing. See [evidence](../WORK.md#reversible-physical-publication--2026-10-06).
+
+No full original criterion closes. Renderer no-closure advances 6→7 once; authoring
+25, workflow 9, codegen 28 and delivery 1 remain. Stop this boundary's fixtures and
+return to original NS-4 criterion 1: ordinary Nyx-built recipe authoring, paired
+Pascal/history and semantic observation. Full native breadth/parity, other
+widgetsets/DPI, hardware/assistive input, accessibility/performance and original
+blockers remain. No LAN service or paired project is replaced.
+
 ## Structural recipe consumer — 2026-10-06
 
 The original values/layout and ownership criteria consume managed selected-only

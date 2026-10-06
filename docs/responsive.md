@@ -4,8 +4,9 @@ Retained ownership for structural changes is documented in
 [retained arrangements](retained-arrangements.md). Whole
 [reusable presentation recipes](content-recipes.md) support typed alternatives
 with different control sets during live host/manual/allocated-container changes.
-The ordinary Studio recipe editor and nested settling remain open. Scalar authoring
-below configures a retained control tree.
+Nested allocation and reversible physical publication are qualified on actual
+browser/Win32 consumers. The ordinary Studio recipe editor remains open. Scalar
+authoring below configures a retained control tree.
 
 [Designer views](designer-views.md) · [Building](building.md) ·
 [Current evidence](../WORK.md#manual-presentation-selection--2026-10-06)

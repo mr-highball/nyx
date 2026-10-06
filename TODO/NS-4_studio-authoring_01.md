@@ -40,6 +40,23 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Physical publication return path — 2026-10-06
+
+The original criterion 1 now consumes the qualified NS-2 physical preview
+boundary. Real attachment/showing, synchronization, observation, focus/ranges,
+containing scroll and selection painting precede retirement. Actual browser/
+Win32 recovery/callback/designer checks pass 50 each; the maintained earlier
+contracts and control journeys remain passing. See
+[evidence](../WORK.md#reversible-physical-publication--2026-10-06).
+
+No original criterion closes. The NS-2 owner advances renderer no-closure 6→7
+once; authoring 25, workflow 9, codegen 28 and delivery 1 remain. Stop parser/
+admission/publication fixtures here. Next integrate ordinary Nyx-built Studio
+recipe editing with typed conditions/references, paired source/history and
+observing semantic operations. Preserve all original parity/accessibility,
+performance and prerequisite criteria, protected endpoints and eight pairs.
+Compilation of Studio does not accept this authoring journey or a LAN rollout.
+
 ## Hidden nested admission — 2026-10-06
 
 Original criterion 1 now has bounded hidden settlement for introduced/nested
