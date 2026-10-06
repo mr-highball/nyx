@@ -27,7 +27,8 @@ uses
   SysUtils, Classes, Math, nyx.text, nyx.types, nyx.content, nyx.responsive,
   nyx.presentations, nyx.containers, nyx.controls, nyx.model, nyx.composition,
   nyx.codec, nyx.codegen, nyx.source, nyx.data, nyx.state, nyx.studio.projects,
-  nyx.studio.agents, nyx.studio.edits, nyx.studio.rootedits, nyx.root.types
+  nyx.studio.agents, nyx.studio.edits, nyx.studio.rootedits, nyx.root.types,
+  nyx.projection.refresh
   {$ifdef PAS2JS}, Web{$endif};
 
 var
@@ -79,6 +80,41 @@ begin
   except
     Result.Free;
     raise;
+  end;
+end;
+
+{ A source refresh cannot silently replace a runtime recipe owner, even when
+  every control, scalar descriptor and source ID is otherwise identical. }
+procedure RuntimeOwnerJourney;
+var
+  LDocument: TNyxDocument;
+  LView: TNyxNode;
+  LCandidate: TNyxNode;
+  LOwner: TNyxNode;
+begin
+  LDocument := BuildDocument;
+  LView := nil;
+  LCandidate := nil;
+  try
+    LView := RealizeNyxView(LDocument, LDocument.Pages[0],
+      TNyxViewFrame.At(900, 700, npfBrowser));
+    LCandidate := LView.Clone;
+    LOwner := LCandidate.Find(NyxQualifiedID('workspace', 'wide-name')).Parent;
+    Check(LOwner.RuntimeInstanceOwner.ID = 'workspace',
+      'Cloned recipe provenance retains the exact qualified runtime instance');
+    Check(CanRefreshNyxBoundProjection(LView, LCandidate),
+      'An identical copied recipe owner admits retained scalar projection');
+    LOwner.BindRecipeOwner(NyxControl('different workspace'));
+    Check(not CanRefreshNyxBoundProjection(LView, LCandidate),
+      'A changed runtime recipe owner refuses scalar retention');
+    Check(not CanArrangeNyxBoundProjection(LView, LCandidate),
+      'A changed runtime recipe owner refuses retained arrangement');
+    Check(LView.Find(NyxQualifiedID('workspace', 'wide-name')).RuntimeInstanceOwner.ID = 'workspace',
+      'Refused foreign provenance leaves the original runtime owner unchanged');
+  finally
+    LCandidate.Free;
+    LView.Free;
+    LDocument.Free;
   end;
 end;
 
@@ -554,6 +590,7 @@ end;
 begin
   try
     FluentJourney;
+    RuntimeOwnerJourney;
     CompositionJourney;
     WireAndSourceJourney;
     InactiveAdmissionJourney;

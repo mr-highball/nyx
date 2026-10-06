@@ -1,7 +1,7 @@
 # Reusable presentation recipes
 
 [Responsive configuration](responsive.md) · [Retained arrangements](retained-arrangements.md) ·
-[Current evidence](../WORK.md#content-recipes--2026-10-06)
+[Current evidence](../WORK.md#live-content-publication--2026-10-06)
 
 `INyxContent` chooses whole reusable recipes for an instance. Recipes can have
 different descendants, control types and named parts. The document owns the
@@ -84,18 +84,49 @@ overrides apply before nested selection. Append/prepend/replace payloads use the
 inherited root/slot ancestry. Borrowed ancestry exists only during expansion; no
 source tree is mutated or document/measurement backreference retained.
 
-Both adapters choose automatic host recipes on **initial mount**. An explicit
-`Render` remount can choose another control set against the same runtime state
-store; typed bindings carry accepted values into its new controls. Invalid
-inactive references/cycles refuse before replacing the mounted tree.
+Both adapters retain an independently owned authored blueprint containing the
+selected view and every transitive recipe. The original document can be freed.
+Host resizing, allocated container changes and `Presentations.Select` recompute
+content through a coalesced UI queue job. The last request wins; selection reads
+continue to expose the accepted choice until publication succeeds. Scalar-only
+views retain their synchronous selection behavior.
 
-**Live structural switching remains open.** Resize and `Presentations.Select`
-currently update scalar presentation only; they do not recompose recipe content.
-Explicit remounts retire old controls, bindings and presentation leases; they do
-not retain focus, caret or unfinished drafts. Stable publication, reentry guards,
-logical part identity, input continuity and ordinary Studio recipe editing retain
-their original responsive/parity authoring owners. Initial/remount evidence does
-not accept physical phone/IME/assistive input or aesthetics.
+A changed control set is constructed and admitted beside the mounted view before
+that view retires. Its presentation capability stays connected. The same runtime
+state store supplies bound values without importing document defaults. The same
+collection context resolves local stores through copied recipe-instance provenance;
+definition root names can differ. Compatible explicitly named collection parts
+also retain selection. A geometry observation selecting the same recipe keeps
+the actual control objects. Admitted retained source refresh replaces the blueprint
+only after ordinary projection admission succeeds.
+Custom `INyxCollectionBindings` implementations now supply `Recompose`, returning
+an independently admitted view set against their retained runtime context.
+
+Give corresponding inputs explicit `PartName(NyxPart('notes'))` values. Continuity
+uses contiguous named part paths within the exact runtime instance. It never
+guesses from captions, binding keys, sibling order or similar control kinds.
+Unbound accepted values carry across compatible parts. Drafts carry only when
+the value domain, every binding descriptor and accepted baseline remain exact.
+A changed domain or descriptor creates a new field. Focus follows an eligible
+matching part; caret ranges use Unicode scalar offsets and the target's actual
+selection capabilities. Number inputs without a browser selection API retain
+their drafts without an invented caret. Ambiguous saved identities refuse staging.
+
+The queued job requires an idle store/command. A managed callback guard also
+handles native callbacks that pump the UI queue: borrowed controls remain mounted
+until the callback unwinds. Weak work/idle receivers retire before renderer
+destruction. Composition and pointer capture defer replacement. Factory/admission
+failure retains the accepted root, selection and capability, exposes
+`LastContentError`, and remembers the exact failed observation to prevent an
+automatic retry storm. Changed geometry or an explicit request permits retry.
+
+Explicit public `Render` remounts still retire the old presentation lease. This
+live gate does not accept all nested recipe/container settling, rollback of a
+physical failure after publication, arbitrary nested logical identity migration,
+hardware IME/assistive input, other widgetsets, accessibility or release performance.
+Newly introduced publishers and allocation feedback need a bounded detached
+settling gate. Ordinary Nyx-built Studio recipe editing and its observing semantic
+journey remain open under the original authoring/parity owners.
 
 ## Persistence, source and semantic editing
 
@@ -128,5 +159,10 @@ claims no new HTTP discovery or LAN deployment.
 Run `tools/build.ps1 -Target content-recipes` for contract/native checks and
 browser staging. On an isolated Pascal HTTP host, the maintained Pascal browser
 driver observes `content-contracts.html` using `content-contracts`, and
-`content-controls.html` using `projection`. Staged resources use relative URLs.
+`content-controls.html` and `content-live-controls.html` using `projection`.
+The live consumer qualifies resize/manual/container transitions, independent
+stores, logical drafts/focus/selection, source refresh, failed factories, reentry,
+coalescing and teardown. Optional `?preview` retains fresh wide/compact proof views
+for a bounded capture after the teardown assertions; it is not the observing
+editor or a screenshot of retained drafts. Staged resources use relative URLs.
 The build script starts no listener and changes no editor project.

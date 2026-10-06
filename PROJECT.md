@@ -66,15 +66,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Typed whole-recipe alternatives now select distinct reusable control sets by
-viewport, named presentation and target. Contract checks pass 50 per compiler /
-executed browser; exact compiled Unicode companions pass 42 actual controls per
-target, including independent stores and explicit remounts. Persistence/source
-and in-process semantic transactions share the public managed contract. Initial
-mounts select automatically; live resize/manual structural publication and the
-ordinary Studio recipe editor remain open. Protected LAN services/eight pairs
-are unchanged. See [the contract](docs/content-recipes.md) and
-[current evidence](WORK.md#content-recipes--2026-10-06).
+Typed whole-recipe alternatives now publish distinct control sets during live
+host/manual/allocated-container changes. Contract checks pass 55 per compiler /
+executed browser; compiled Unicode companions pass 42 initial/remount and 63 live
+checks per actual target. Stable presentation capabilities, explicit named-part
+focus/drafts, independent scalar/collection stores, admitted source refresh,
+factory failure, callback queue reentry and teardown are qualified. Nested detached
+settling, full parity and the ordinary Studio recipe editor remain open. Protected
+LAN services/eight pairs are unchanged. See [the contract](docs/content-recipes.md)
+and [current evidence](WORK.md#live-content-publication--2026-10-06).
 
 The retained-arrangement foundation now preserves identical scalar binding
 contracts through the original runtime coordinator/store/subscription. Actual

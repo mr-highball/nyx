@@ -3,7 +3,22 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current structural authoring packet (2026-10-06): managed typed content choices
+Current live structural packet (2026-10-06): mounted copied blueprints publish
+changed control sets through coalesced idle jobs. Contract checks pass 55 per
+compiler/browser; actual targets pass 63 live checks and preserve the earlier
+42 remount checks. Named-part focus/drafts/Unicode ranges, independent runtime
+scalar/collection data and selection, retained source refresh, factory failure,
+callback queue reentry and teardown are qualified. Allocated containers switch
+at an unchanged 900-pixel outer viewport. All fifteen services/eight frames stay
+exact; LAN HTTP remains available. No new observing release or ordinary Studio
+recipe editing is claimed. Original NS-4 criterion 1 remains open; authoring
+no-closure advances 23→24 once. Renderer 6, workflow 9, codegen 28 and delivery 1
+remain. Next finish bounded detached nested/container settlement and complete
+changed-set rollback, then ordinary Nyx-built recipe authoring/semantic observation
+with original accessibility/performance/delivery criteria intact. See
+[evidence and reassessment](WORK.md#live-content-publication--2026-10-06).
+
+Previous structural authoring packet (2026-10-06): managed typed content choices
 lazily select distinct reusable control sets by host, presentation and platform.
 Contract checks pass 50 per native compiler/executed browser; exact compiled
 Unicode companions pass 42 actual controls per target. Strict persistence/source,

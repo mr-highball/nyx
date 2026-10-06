@@ -636,6 +636,11 @@ var
         ADepth + 1, LRootKind, NyxQualifiedID(LScope, LDefinition.ID),
         LQueryContainer, LContainment);
       try
+
+        if ANode.HasContent then
+        begin
+          Result.BindRecipeOwner(NyxControl(LScope));
+        end;
         { Instance overrides follow the definition recipe. Identity/reference
           metadata is excluded so it cannot corrupt selection or recurse again. }
         for LIndex := 0 to ANode.Props.Count - 1 do

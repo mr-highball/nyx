@@ -238,6 +238,7 @@ begin
     (AExisting.SourceID <> ACandidate.SourceID) or
     (AExisting.DesignID <> ACandidate.DesignID) or
     (AExisting.InstanceScopeID <> ACandidate.InstanceScopeID) or
+    (AExisting.RecipeOwner.ID <> ACandidate.RecipeOwner.ID) or
     (AExisting.ProjectionKind <> ACandidate.ProjectionKind) or
     (AExisting.IsRealized <> ACandidate.IsRealized) or
     (AExisting.Count <> ACandidate.Count) or

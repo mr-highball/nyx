@@ -29,6 +29,7 @@ interface
 uses
   nyx.text,
   nyx.model,
+  nyx.content.mount,
   nyx.collections.view,
   nyx.collections.view.types;
 
@@ -46,6 +47,10 @@ type
     { Refuse reuse against a different realized contract before a renderer
       replaces accepted controls. IDs, scopes, projection and specs must match. }
     procedure ValidateRoot(ARoot: TNyxNode);
+    { Admit an independent active view set against the same owned runtime
+      context. Recipe changes retain live data and previously resolved scopes;
+      no document collection defaults are re-imported into those stores. }
+    function Recompose(ARoot: TNyxNode): INyxCollectionBindings;
     property Count: Integer read GetCount;
   end;
 
@@ -58,7 +63,7 @@ function NewNyxCollectionBindings(ARoot: TNyxNode;
 implementation
 
 uses
-  nyx.collections;
+  nyx.collections, nyx.collections.selection;
 
 type
   TBindings = class(TInterfacedObject, INyxCollectionBindings)
@@ -66,6 +71,7 @@ type
     FContext: INyxCollectionContext;
     FIDs: array of TNyxText;
     FScopes: array of TNyxText;
+    FIdentities: array of TNyxContentIdentity;
     FViews: array of INyxCollectionView;
     procedure AddNode(ANode: TNyxNode);
   public
@@ -75,6 +81,7 @@ type
     function View(AIndex: Integer): INyxCollectionView;
     function ViewFor(const AID: TNyxText): INyxCollectionView;
     procedure ValidateRoot(ARoot: TNyxNode);
+    function Recompose(ARoot: TNyxNode): INyxCollectionBindings;
   end;
 
 function NyxCollectionProjectionForNode(ANode: TNyxNode): TNyxCollectionProjection;
@@ -129,14 +136,16 @@ begin
     begin
       { Resolve/admit before growing the owned vectors. A failed constructor
         releases every earlier view/token and retains no borrowed node. }
-      LView := NewNyxCollectionView(FContext.Resolve(LSpec, ANode.InstanceScopeID),
+      LView := NewNyxCollectionView(FContext.Resolve(LSpec, ANode.RuntimeInstanceOwner.ID),
         LSpec, NyxCollectionProjectionForNode(ANode));
       LIndex := Length(FViews);
       SetLength(FIDs, LIndex + 1);
       SetLength(FScopes, LIndex + 1);
+      SetLength(FIdentities, LIndex + 1);
       SetLength(FViews, LIndex + 1);
       FIDs[LIndex] := ANode.ID;
-      FScopes[LIndex] := ANode.InstanceScopeID;
+      FScopes[LIndex] := ANode.RuntimeInstanceOwner.ID;
+      FIdentities[LIndex] := NyxContentIdentity(ANode);
       FViews[LIndex] := LView;
     end;
   end;
@@ -149,6 +158,55 @@ end;
 function TBindings.GetCount: Integer;
 begin
   Result := Length(FViews);
+end;
+
+function TBindings.Recompose(ARoot: TNyxNode): INyxCollectionBindings;
+var
+  LCandidate: TBindings;
+  LIndex: Integer;
+  LPrevious: Integer;
+  LMatch: Integer;
+  LItem: Integer;
+  LSelection: INyxCollectionSelection;
+  LItems: array of TNyxItemRef;
+begin
+  LCandidate := TBindings.Create(ARoot, FContext);
+  Result := LCandidate;
+  for LIndex := 0 to LCandidate.GetCount - 1 do
+  begin
+    LMatch := -1;
+    for LPrevious := 0 to GetCount - 1 do
+    begin
+
+      if not FIdentities[LPrevious].Same(LCandidate.FIdentities[LIndex]) then
+      begin
+        Continue;
+      end;
+
+      if LMatch >= 0 then
+      begin
+        raise ENyxCollection.Create('Ambiguous recipe collection part: ' + FIDs[LPrevious]);
+      end;
+      LMatch := LPrevious;
+    end;
+
+    if (LMatch < 0) or (FViews[LMatch].Store <> LCandidate.FViews[LIndex].Store) or
+      (FViews[LMatch].Projection <> LCandidate.FViews[LIndex].Projection) or
+      (FViews[LMatch].Spec.ToData.ToJSON <> LCandidate.FViews[LIndex].Spec.ToData.ToJSON) then
+    begin
+      Continue;
+    end;
+    { Only the compatible explicit part carries view selection. The store is
+      already shared by stable runtime owner, independently of control IDs.
+      No observer exists on the detached candidate during this publication. }
+    LSelection := FViews[LMatch].Selection;
+    SetLength(LItems, LSelection.Count);
+    for LItem := 0 to High(LItems) do
+    begin
+      LItems[LItem] := LSelection.ItemAt(LItem);
+    end;
+    LCandidate.FViews[LIndex].SetSelection(LItems, LSelection.Focus, LSelection.Anchor);
+  end;
 end;
 
 function TBindings.ID(AIndex: Integer): TNyxText;
@@ -200,7 +258,7 @@ var
       begin
 
         if (LNext >= GetCount) or (FIDs[LNext] <> ANode.ID) or
-          (FScopes[LNext] <> ANode.InstanceScopeID) or
+          (FScopes[LNext] <> ANode.RuntimeInstanceOwner.ID) or
           (FViews[LNext].Projection <> NyxCollectionProjectionForNode(ANode)) or
           (FViews[LNext].Spec.ToData.ToJSON <> LSpec.ToData.ToJSON) then
         begin
@@ -237,4 +295,3 @@ begin
 end;
 
 end.
-

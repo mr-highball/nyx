@@ -40,6 +40,24 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Live recipe publication — 2026-10-06
+
+Original criterion 1 now has independent mounted blueprints and coalesced
+changed-set publication through host, manual and allocated-container observations.
+Stable capabilities, explicit logical part continuity, independent scalar/local
+collection data and selection, accepted source refresh, failure/reentry/refusal
+and teardown pass 63 actual checks per target. Shared ownership/source/semantic
+checks pass 55 per compiler/browser. Existing 42 remount and 92/61 native retained
+checks remain passing. See [evidence](../WORK.md#live-content-publication--2026-10-06).
+
+No original criterion closes. Authoring no-closure advances 23→24 once; renderer
+6, workflow 9, codegen 28 and delivery 1 remain. This changes the next gate to
+bounded detached nested/container settlement and complete changed-set rollback,
+followed by ordinary Nyx-built Studio recipe authoring and an observing semantic
+journey. Do not extend the already qualified wire/parser or simple host fixture
+as a substitute. Original parity/accessibility/performance/blockers remain intact;
+no protected service is replaced and no LAN rollout is claimed.
+
 ## Typed structural recipes — 2026-10-06
 
 Original criterion 1 now has managed whole-recipe choices, lazy selected-only

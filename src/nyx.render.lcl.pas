@@ -84,6 +84,8 @@ uses
   nyx.collections.lcl,
   nyx.literal.items,
   nyx.composition,
+  nyx.content.mount,
+  nyx.scheduler,
   nyx.projection.refresh;
 
 type
@@ -227,6 +229,28 @@ type
     FRoot: TNyxNode;
     FPresentationSelection: TNyxPresentationSelection;
     FPresentationView: INyxPresentationViewOwner;
+    { Independently owned recipes outlive the source document. Queued work
+      retains a revocable port, never the renderer or its native controls. }
+    FContentBlueprint: TNyxContentBlueprint;
+    FContentGuard: INyxContentGuard;
+    FContentWork: INyxContentWork;
+    FContentExecution: INyxExecution;
+    FContentRequestedSelection: TNyxPresentationSelection;
+    FContentFrame: TNyxViewFrame;
+    FContentFrameKnown: Boolean;
+    FContentMeasurementKey: TNyxText;
+    FPublishingContent: Boolean;
+    FLastContentError: TNyxText;
+    procedure QueueContent;
+    procedure RefreshContent;
+    function CaptureContentFaces: TNyxContentFaceStates;
+    procedure RestoreContentFaces(const AStates: TNyxContentFaceStates; AFocus: Boolean);
+    procedure RenderFrame(ADocument: TNyxDocument; ARoot: TNyxNode;
+      AHost: TWinControl; ADesignMode: Boolean; AState: TNyxState;
+      const ACollections: INyxCollectionBindings; const AFrame: TNyxViewFrame;
+      const AMeasurements: INyxContainerSnapshot; AKeepPresentation: Boolean;
+      const AStates: TNyxContentFaceStates);
+  private
     FPanel: TNyxLogicalScrollBox;
     FVirtualLayout: Boolean;
     FLayouting: Boolean;
@@ -302,7 +326,7 @@ type
       const APayload: TNyxDataValue; AHasPayload: Boolean): Boolean;
     procedure BindingFailed(ANode: TNyxNode; const AReason: TNyxText;
       AFailure: TNyxBindingFailure = nbfRejected);
-    procedure Clear;
+    procedure Clear(AKeepPresentation: Boolean = False);
     function FactoryIndex(ANode: TNyxNode): Integer;
     function CreateControl(ANode: TNyxNode; out AInput: TControl;
       out ACaption: TLabel): TControl;
@@ -509,8 +533,10 @@ type
     property Events: INyxEvents read FEvents;
     property Root: TNyxNode read FRoot;
     { UI-thread, view-local exclusive choice. A mounted view is required;
-      unknown/automatic names refuse before mutation. Switching synchronizes
-      the same controls and preserves authored source/history and live input. }
+      unknown/automatic names refuse before mutation. Scalar-only views refresh
+      immediately. Content recipes coalesce requests through an idle UI job;
+      reads expose the last accepted choice until that job publishes. Compatible
+      explicit named parts carry input state; changed contracts are new fields. }
     property PresentationSelection: TNyxPresentationSelection read FPresentationSelection write SetPresentationSelection;
     { Portable managed capability. Borrowed receiver links retire on Unmount;
       caller-retained interfaces stay safe and never retain the renderer. }
@@ -520,6 +546,9 @@ type
     property OnBindingError: TNyxLCLBindingError read FOnBindingError write FOnBindingError;
     property LastBindingError: TNyxText read FLastBindingError;
     property LastBindingFailure: TNyxBindingFailure read FLastBindingFailure;
+    { Deferred structural failure retains the accepted view; a new geometry or
+      explicit manual request retries without an identical-frame retry storm. }
+    property LastContentError: TNyxText read FLastContentError;
     { Owned host refusal. The optional sink may navigate or dispose this view. }
     property OnGestureFailure: TNyxGestureFailure read FOnGestureFailure write FOnGestureFailure;
     property LastGestureError: TNyxText read FLastGestureError;
@@ -653,11 +682,17 @@ begin
   FTheme.Validate;
   FBaseTheme := NewNyxDocumentTheme(nil, FTheme);
   FEvents := NewNyxEvents;
+  FContentGuard := NewNyxContentGuard(QueueContent);
   FPhysicalFrame := NewNyxNativeGestureFrame;
 end;
 
 destructor TNyxLCLRenderer.Destroy;
 begin
+
+  if FContentGuard <> nil then
+  begin
+    FContentGuard.Retire;
+  end;
 
   if FEvents <> nil then
   begin
@@ -673,16 +708,37 @@ begin
   inherited Destroy;
 end;
 
-procedure TNyxLCLRenderer.Clear;
+procedure TNyxLCLRenderer.Clear(AKeepPresentation: Boolean);
 var
   LIndex: Integer;
   LDeferControls: Boolean;
 begin
-  if FPresentationView <> nil then
+  if not AKeepPresentation and (FPresentationView <> nil) then
   begin
     FPresentationView.Retire;
     FPresentationView := nil;
   end;
+
+  if not AKeepPresentation then
+  begin
+
+    if FContentWork <> nil then
+    begin
+      FContentWork.Retire;
+      FContentWork := nil;
+    end;
+
+    if FContentExecution <> nil then
+    begin
+      FContentExecution.Cancel;
+      FContentExecution := nil;
+    end;
+    FContentRequestedSelection := TNyxPresentationSelection.None;
+    FLastContentError := '';
+  end;
+  FreeAndNil(FContentBlueprint);
+  FContentFrameKnown := False;
+  FContentMeasurementKey := '';
   ClearCanvasResizeGrips;
   { Revoke borrowed sinks before destroying any part of the mounted view. }
   ClearCanvasMoveGrip;
@@ -3068,6 +3124,7 @@ begin
       Sync;
     end;
   end;
+  QueueContent;
 end;
 
 procedure TNyxLCLRenderer.Render(ADocument: TNyxDocument; ARoot: TNyxNode;
@@ -3076,9 +3133,255 @@ begin
   Render(ADocument, ARoot, AHost, False, AState, ACollections);
 end;
 
+function TNyxLCLRenderer.CaptureContentFaces: TNyxContentFaceStates;
+var
+  LIndex: Integer;
+  LBinding: TNyxLCLBinding;
+begin
+  Result := nil;
+  SetLength(Result, Length(FBindings));
+  for LIndex := 0 to High(FBindings) do
+  begin
+    LBinding := FBindings[LIndex];
+    Result[LIndex] := CaptureNyxContentFace(LBinding.FNode);
+    Result[LIndex].Focused := (Screen.ActiveControl = LBinding.FInput) or
+      (Screen.ActiveControl = LBinding.FControl);
+
+    if LBinding.FInput is TWinControl then
+    begin
+      Result[LIndex].Selection := CaptureNyxLCLSelection(TWinControl(LBinding.FInput));
+      Result[LIndex].HasText := LBinding.FInput is TCustomEdit;
+
+      if Result[LIndex].HasText then
+      begin
+        Result[LIndex].Text := NyxLCLInputText(TWinControl(LBinding.FInput));
+      end;
+    end;
+  end;
+end;
+
+procedure TNyxLCLRenderer.RestoreContentFaces(
+  const AStates: TNyxContentFaceStates; AFocus: Boolean);
+var
+  LIndex: Integer;
+  LSaved: Integer;
+  LBinding: TNyxLCLBinding;
+  LFocus: TWinControl;
+  LUpdating: Boolean;
+begin
+  LUpdating := FUpdating;
+  FUpdating := True;
+  try
+    for LIndex := 0 to High(FBindings) do
+    begin
+      LBinding := FBindings[LIndex];
+      LSaved := NyxContentFaceIndex(LBinding.FNode, AStates);
+
+      if LSaved < 0 then
+      begin
+        Continue;
+      end;
+
+      if AStates[LSaved].HasText and (LBinding.FInput is TCustomEdit) and
+        (LBinding.FNode.Prop('value') = AStates[LSaved].Accepted) then
+      begin
+        TCustomEdit(LBinding.FInput).Text := AStates[LSaved].Text;
+        LBinding.FLastValue := AStates[LSaved].Accepted;
+        LBinding.FHasValueBaseline := True;
+      end;
+      LFocus := nil;
+
+      if LBinding.FInput is TWinControl then
+      begin
+        LFocus := TWinControl(LBinding.FInput);
+      end
+      else if LBinding.FControl is TWinControl then
+      begin
+        LFocus := TWinControl(LBinding.FControl);
+      end;
+
+      if LFocus <> nil then
+      begin
+
+        if AFocus and AStates[LSaved].Focused and LFocus.CanFocus then
+        begin
+          LFocus.SetFocus;
+        end;
+
+        if AStates[LSaved].Selection.Defined and (LFocus is TCustomEdit) and
+          (TNyxText(TCustomEdit(LFocus).Text) = AStates[LSaved].Text) then
+        begin
+          LFocus.HandleNeeded;
+          SelectNyxLCLText(LFocus, AStates[LSaved].Selection);
+        end;
+      end;
+    end;
+  finally
+    FUpdating := LUpdating;
+  end;
+end;
+
+procedure TNyxLCLRenderer.QueueContent;
+begin
+
+  if (FContentBlueprint = nil) or FPublishingContent then
+  begin
+    Exit;
+  end;
+
+  if (FContentExecution <> nil) and
+    (FContentExecution.Status in [nesPending, nesRunning]) then
+  begin
+    Exit;
+  end;
+
+  if FContentWork = nil then
+  begin
+    FContentWork := NewNyxContentWork(RefreshContent);
+  end;
+  FContentExecution := FEvents.Scheduler.Submit(FContentWork, neUIQueue);
+end;
+
+procedure TNyxLCLRenderer.RefreshContent;
+var
+  LFrame: TNyxViewFrame;
+  LMeasurements: INyxContainerSnapshot;
+  LKey: TNyxText;
+  LCandidate: TNyxNode;
+  LStates: TNyxContentFaceStates;
+  LHorizontal: Integer;
+  LVertical: Integer;
+  LSelected: TNyxText;
+  LIndex: Integer;
+  LPreviousSelection: TNyxPresentationSelection;
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if FContentGuard.Busy then
+  begin
+    Exit;
+  end;
+
+  if (FContentBlueprint = nil) or (FPanel = nil) or (FPanel.Parent = nil) or
+    (FRoot = nil) then
+  begin
+    Exit;
+  end;
+
+  if FUpdating or FLayouting or FProjecting or
+    ((FEditingObserver <> nil) and FEditingObserver.Dispatching) or
+    ((FPhysicalFrame <> nil) and FPhysicalFrame.Dispatching) or
+    ((FLiveBindings <> nil) and not FDesignMode and not FLiveBindings.RefreshReady) or
+    ((FState <> nil) and FState.Busy) then
+  begin
+    FLastContentError := 'Structural publication requires an idle view and runtime store';
+    Exit;
+  end;
+  { Host input owns its composing/captured face until its producer ends it.
+    Completion queues a fresh observation rather than replacing that widget. }
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if FBindings[LIndex].FComposing or
+      NyxLCLHasPointerCapture(FBindings[LIndex].FControl) or
+      NyxLCLHasPointerCapture(FBindings[LIndex].FInput) then
+    begin
+      Exit;
+    end;
+  end;
+  LFrame := TNyxViewFrame.At(Max(0, FPanel.Parent.ClientWidth),
+    Max(0, FPanel.Parent.ClientHeight), npfNativeLCL);
+
+  if FContentRequestedSelection.Reference.Defined then
+  begin
+    LFrame := LFrame.Selecting(FContentRequestedSelection.Reference);
+  end;
+  LMeasurements := MeasureContainers;
+  LKey := NyxContentMeasurements(FRoot, LMeasurements);
+
+  if FContentFrameKnown and (FContentFrame.Width = LFrame.Width) and
+    (FContentFrame.Height = LFrame.Height) and
+    FContentFrame.Selection.Same(LFrame.Selection) and (FContentMeasurementKey = LKey) then
+  begin
+    Exit;
+  end;
+  LCandidate := nil;
+  try
+    try
+      LCandidate := FContentBlueprint.Realize(LFrame, LMeasurements);
+
+      if not SameNyxContentStructure(FRoot, LCandidate) then
+      begin
+        LStates := CaptureContentFaces;
+        LHorizontal := FPanel.HorzScrollBar.Position;
+        LVertical := FPanel.VertScrollBar.Position;
+        LSelected := FSelectedDesignID;
+        FPublishingContent := True;
+        try
+          RenderFrame(FContentBlueprint.Document, FContentBlueprint.Root, FPanel.Parent,
+            FDesignMode, FState, FCollectionBindings, LFrame, LMeasurements, True, LStates);
+          FPanel.HorzScrollBar.Position := LHorizontal;
+          FPanel.VertScrollBar.Position := LVertical;
+          Select(LSelected);
+        finally
+          FPublishingContent := False;
+        end;
+      end
+      else
+      begin
+        LPreviousSelection := FPresentationSelection;
+        FPresentationSelection := LFrame.Selection;
+        FPublishingContent := True;
+        try
+          try
+            Sync;
+          except
+            FPresentationSelection := LPreviousSelection;
+            Sync;
+            raise;
+          end;
+        finally
+          FPublishingContent := False;
+        end;
+      end;
+      FContentFrame := LFrame;
+      FContentFrameKnown := True;
+      FContentMeasurementKey := LKey;
+      FLastContentError := '';
+    except
+      on LException: Exception do
+      begin
+        FContentFrame := LFrame;
+        FContentFrameKnown := True;
+        FContentMeasurementKey := LKey;
+        FLastContentError := TNyxText(LException.Message);
+        raise;
+      end;
+    end;
+  finally
+    LCandidate.Free;
+  end;
+end;
+
 procedure TNyxLCLRenderer.Render(ADocument: TNyxDocument; ARoot: TNyxNode;
   AHost: TWinControl; ADesignMode: Boolean; AState: TNyxState;
   const ACollections: INyxCollectionBindings);
+begin
+
+  if AHost = nil then
+  begin
+    raise ENyxModel.Create('Native host is required');
+  end;
+  RenderFrame(ADocument, ARoot, AHost, ADesignMode, AState, ACollections,
+    TNyxViewFrame.At(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight), npfNativeLCL),
+    nil, False, nil);
+end;
+
+procedure TNyxLCLRenderer.RenderFrame(ADocument: TNyxDocument; ARoot: TNyxNode;
+  AHost: TWinControl; ADesignMode: Boolean; AState: TNyxState;
+  const ACollections: INyxCollectionBindings; const AFrame: TNyxViewFrame;
+  const AMeasurements: INyxContainerSnapshot; AKeepPresentation: Boolean;
+  const AStates: TNyxContentFaceStates);
 var
   LCandidate: TNyxLCLRenderer;
   LIndex: Integer;
@@ -3135,20 +3438,37 @@ begin
     LCandidate.FEditingObserver := NewNyxLCLEditingObserver;
     LCandidate.FUpdaters := Copy(FUpdaters, 0, Length(FUpdaters));
     LCandidate.FDesignMode := ADesignMode;
+    LCandidate.FPublishingContent := True;
     LCandidate.FDesignerInput := FDesignerInput;
     LCandidate.FOnDesignerGesture := FOnDesignerGesture;
-    LCandidate.FProjectionContext := NyxProjectionContext(ADocument);
+    if AKeepPresentation then
+    begin
+      LCandidate.FProjectionContext := FProjectionContext;
+    end
+    else
+    begin
+      LCandidate.FProjectionContext := NyxProjectionContext(ADocument);
+    end;
     LCandidate.FProjectionSchemaRevision := NyxSchemaRevision;
-    LCandidate.FRoot := RealizeNyxView(ADocument, ARoot,
-      TNyxViewFrame.At(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight), npfNativeLCL));
+    LCandidate.FPresentationSelection := AFrame.Selection;
+    LCandidate.FRoot := RealizeNyxView(ADocument, ARoot, AFrame, AMeasurements);
     ApplyNyxPlatform(LCandidate.FRoot, npfNativeLCL);
-    LCandidate.FRoot.ApplyViewport(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight), npfNativeLCL);
+    LCandidate.FRoot.ApplyViewport(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight),
+      npfNativeLCL, AFrame.Selection, AMeasurements);
     LCandidate.FProjectionBaseline := LCandidate.FRoot.Clone;
+    RestoreNyxContentValues(LCandidate.FRoot, AStates);
     LCandidate.FCollectionBindings := ACollections;
 
     if ACollections <> nil then
     begin
-      ACollections.ValidateRoot(LCandidate.FRoot);
+      if AKeepPresentation then
+      begin
+        LCandidate.FCollectionBindings := ACollections.Recompose(LCandidate.FRoot);
+      end
+      else
+      begin
+        ACollections.ValidateRoot(LCandidate.FRoot);
+      end;
     end
     else
     begin
@@ -3189,6 +3509,8 @@ begin
     LCandidate.Resize(LCandidate.FPanel);
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('first-layout');{$endif}
     LCandidate.Sync;
+    LCandidate.RestoreContentFaces(AStates, False);
+    LCandidate.FContentBlueprint := NewNyxContentBlueprint(ADocument, ARoot);
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('first-sync');{$endif}
 
     if not ADesignMode then
@@ -3203,7 +3525,7 @@ begin
     begin
       FOwnState := False;
     end;
-    Clear;
+    Clear(AKeepPresentation);
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('retire');{$endif}
     { Publish effective tokens with the successfully staged native controls. }
 
@@ -3228,6 +3550,13 @@ begin
     FLastBindingFailure := nbfNone;
     FRoot := LCandidate.FRoot;
     LCandidate.FRoot := nil;
+    FContentBlueprint := LCandidate.FContentBlueprint;
+    LCandidate.FContentBlueprint := nil;
+    FPresentationSelection := AFrame.Selection;
+    FContentRequestedSelection := AFrame.Selection;
+    FContentFrame := AFrame;
+    FContentFrameKnown := True;
+    FContentMeasurementKey := NyxContentMeasurements(FRoot, AMeasurements);
     FDesignMode := ADesignMode;
     FProjectionContext := LCandidate.FProjectionContext;
     FProjectionSchemaRevision := LCandidate.FProjectionSchemaRevision;
@@ -3254,6 +3583,7 @@ begin
     FEmitterScope.Activate(EmitNamed);
     FPanel.Visible := True;
     Resize(FPanel);
+    RestoreContentFaces(AStates, True);
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('publish');{$endif}
     for LIndex := 0 to High(FBindings) do
     begin
@@ -3431,6 +3761,10 @@ var
   LPreviousSelection: TNyxPresentationSelection;
   LArrangement: Boolean;
   LBound: Boolean;
+  LContentBlueprint: TNyxContentBlueprint;
+  LFrame: TNyxViewFrame;
+  LMeasurements: INyxContainerSnapshot;
+  LNextSelection: TNyxPresentationSelection;
 
   function Compatible(AFrom, ATo: TNyxNode; AArrange: Boolean): Boolean;
   begin
@@ -3538,6 +3872,7 @@ begin
   LProjectedBaseline := nil;
   LTheme := nil;
   LBound := (FLiveBindings <> nil) and FLiveBindings.HasBindings;
+  LContentBlueprint := nil;
   try
 
     if FBorrowedTheme <> nil then
@@ -3553,7 +3888,17 @@ begin
     begin
       Exit;
     end;
-    LCandidate := RealizeNyxView(ADocument, ARoot);
+    LFrame := TNyxViewFrame.At(Max(0, FPanel.Parent.ClientWidth),
+      Max(0, FPanel.Parent.ClientHeight), npfNativeLCL);
+    LNextSelection := FPresentationSelection.Reconciled(ADocument.Presentations.Snapshot);
+
+    if LNextSelection.Reference.Defined then
+    begin
+      LFrame := LFrame.Selecting(LNextSelection.Reference);
+    end;
+    LMeasurements := MeasureContainers;
+    LCandidate := RealizeNyxView(ADocument, ARoot, LFrame, LMeasurements);
+    LContentBlueprint := NewNyxContentBlueprint(ADocument, ARoot);
     ApplyNyxPlatform(LCandidate, npfNativeLCL);
 
     LAccepted := LCandidate;
@@ -3617,8 +3962,15 @@ begin
     ReleaseNyxNode(FProjectionBaseline);
     FProjectionBaseline := LCandidate;
     LCandidate := nil;
+    FreeAndNil(FContentBlueprint);
+    FContentBlueprint := LContentBlueprint;
+    LContentBlueprint := nil;
+    FContentFrameKnown := False;
+    FContentRequestedSelection := FContentRequestedSelection.Reconciled(FRoot.PresentationSnapshot);
+    QueueContent;
     Result := True;
   finally
+    LContentBlueprint.Free;
     LTheme.Free;
     ReleaseNyxNode(LProjectedBaseline);
     ReleaseNyxNode(LProjectedCandidate);
@@ -3638,11 +3990,26 @@ var
 begin
   FEvents.Scheduler.RequireUI;
 
-  if (FRoot = nil) or (FPanel = nil) or FUpdating or FLayouting then
+  if (FRoot = nil) or (FPanel = nil) then
   begin
     raise ENyxModel.Create('Select a presentation on an idle mounted view');
   end;
   AValue.Validate(FRoot.PresentationSnapshot);
+
+  if FContentBlueprint <> nil then
+  begin
+    { Structural requests coalesce on the UI queue. Reading the capability
+      reports accepted selection, never a request whose factories may fail. }
+    FContentRequestedSelection := AValue;
+    FContentFrameKnown := False;
+    QueueContent;
+    Exit;
+  end;
+
+  if FUpdating or FLayouting then
+  begin
+    raise ENyxModel.Create('Select a presentation on an idle mounted view');
+  end;
 
   if AValue.Same(FPresentationSelection) then
   begin
@@ -4015,6 +4382,11 @@ var
   LBinding: TNyxLCLBinding;
   LDispatch: TNyxDispatch;
 begin
+
+  if ATrigger = ntPointerCaptureLost then
+  begin
+    QueueContent;
+  end;
 
   if FUpdating or FDesignMode or not FEvents.HasSubscribers(ATrigger) then
   begin
@@ -5214,6 +5586,7 @@ begin
   LDispatch := FLiveBindings.Signal(LBinding.FNode, LTrigger);
   LDispatch.Info.HasEditing := True;
   LDispatch.Info.Editing := AEditing;
+  QueueContent;
   { Last borrowed renderer/control access. The observer keeps its own producer
     alive, while navigation revokes its handles and pending final admission. }
   Emit(LBinding.FNode, LDispatch);
@@ -5426,6 +5799,7 @@ var
   LLegacy: TNyxLCLEvent;
   LRevision: Integer;
   LLegacyClick: Boolean;
+  LContentGuard: INyxContentGuard;
 begin
 
   if FDesignMode or (ADispatch.EventName = '') then
@@ -5436,6 +5810,8 @@ begin
   LLegacy := FOnEvent;
   LLegacyClick := NyxHasLegacyClick(AOrigin);
   LRevision := LEvents.ViewRevision;
+  LContentGuard := FContentGuard;
+  LContentGuard.Enter;
   AOrigin.AcquireReference;
   ADispatch.Source.AcquireReference;
   try
@@ -5455,6 +5831,7 @@ begin
   finally
     ADispatch.Source.ReleaseReference;
     AOrigin.ReleaseReference;
+    LContentGuard.Leave;
   end;
 end;
 
@@ -6201,6 +6578,7 @@ begin
   finally
     FUpdating := False;
   end;
+  QueueContent;
 end;
 
 end.

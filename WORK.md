@@ -10,27 +10,113 @@ actual browser/LCL consumers qualify physical behavior selectively.
 ## Current return path: alternate structural presentations — 2026-10-06
 
 Return path: original structural presentations (NS-4 criterion 1), through the
-open native/browser ownership and interaction prerequisites. The current packet
-adds typed whole-recipe authoring and lazy initial composition with genuinely
-different control sets. It preserves the preceding bound-state prerequisite;
-neither result accepts full live structural publication or the ordinary editor.
+open native/browser ownership and interaction prerequisites. Independent mounted
+blueprints now publish genuinely different control sets through coalesced UI jobs.
+Host/manual and allocated-container transitions retain stable capabilities,
+explicit logical part focus/drafts, independent stores and admitted source meaning.
 
-Next deliverable: mounted views retain an independent authored recipe blueprint
-and recompute selected content from exact host/container/manual frames. Publish
-changed control sets through the existing idle command/store guards, with stable
-presentation capabilities, independent scopes and explicit logical-part continuity.
-Qualify resize/manual transitions, state writes, reentry/refusal, teardown and
-retained focus/drafts on both actual targets, then connect ordinary Nyx-built
-Studio recipe editing and its semantic transport journey. Stop extending local
-wire/parser examples once their existing evidence suffices. The full original
-parity/accessibility/performance and delivery criteria remain unchanged.
+Next deliverable: complete bounded detached settling for newly introduced/nested
+publishers and allocation feedback, with changed-set rollback beyond prepublication
+factory/admission failure. Then connect ordinary Nyx-built Studio recipe editing
+and its observing semantic transport journey. Do not extend the already qualified
+wire/parser or simple host fixture instead. Original full parity/accessibility,
+performance and delivery criteria remain unchanged; the current proofs do not
+accept hardware IME/assistive input or other widgetsets.
 
-This batch closes no full criterion. Authoring no-closure advances 22→23 once;
-renderer 6, workflow 9, codegen 28 and delivery 1 remain. This reassessment changes
-the next action from initial composition/admission to mounted changed-set
-publication; it does not restrict alternate structures to unchanged controls or
-credit a remount as continuity. Main services and all eight accepted pairs remain
-protected; no LAN rollout is claimed.
+This batch closes no full criterion. Authoring no-closure advances 23→24 once;
+renderer 6, workflow 9, codegen 28 and delivery 1 remain. This reassessment moves
+from the initial ownership gate to the remaining nested publication gate before
+ordinary editor integration. It does not restrict alternate structures to fixed
+control sets or credit an explicit remount as continuity. Main services and all
+eight accepted pairs remain protected; no LAN rollout is claimed.
+
+## Live content publication — 2026-10-06
+
+Owner: original NS-4 criterion 1, consuming the existing NS-2 runtime and NS-1
+identity/source prerequisites. [The public contract](docs/content-recipes.md) now
+describes queued publication alongside typed recipe authoring. Each mounted view
+owns an independent authored blueprint, not a document backreference. A copied
+realized recipe-owner reference separates instance identity from the selected
+definition's source ID. Cloning preserves it; scalar and arrangement retention
+refuse changed provenance before admission.
+
+Actual host/container/manual observations coalesce through managed weak work
+ports. Same-recipe geometry retains actual controls; changed sets stage controls,
+bindings and copied values before replacing the accepted view. The original
+presentation lease remains connected. The same scalar store and collection
+context supply current values without importing defaults; local collection stores
+use exact stable instance ownership. Compatible explicitly named list parts retain
+selection. Contiguous named input paths carry accepted unbound values, compatible
+drafts, focus and Unicode scalar ranges. Domains/descriptors/baselines must match;
+anonymous names and changed contracts receive no guessed migration.
+
+Current store/command guards and a separately managed callback guard prevent
+structural retirement during synchronous callbacks, including native queue pumping.
+Its idle receiver retires before renderer disposal and locally retained guards
+finish without renderer access. Composition/capture defer replacement. Failed
+factory/admission retains the exact accepted tree/choice/lease, records a copied
+diagnostic and suppresses identical-observation retries. Explicit requests retry.
+Retained source admission stages a new blueprint and replaces it only on success.
+
+Private artifacts under `build/content-live/` retain qualification:
+
+- `final-qualified.log`: maintained `-Target content-recipes` passes 55 shared
+  ownership/source/semantic checks per stable 3.2.0 and matched 3.3.1 compiler,
+  the preceding 42 Win32 initial/remount checks and 63 live checks, zero leaks.
+  `native-final-compile.log` / `native-final-run.log` cover the final capture-aware
+  fixture source separately. The unchanged generated Unicode companion retains
+  SHA256 `e5904d58dd7797d90da486e6d50596b71e761ef289d8c05e5f1708fbba1d2ed9`.
+- `browser-final-run.log`, `browser-contracts-final.log` and
+  `browser-remount-final.log`: the maintained Pascal driver executes 63, 55 and
+  42 respectively through task-owned files in a new child of the existing
+  isolated host. The 63-check journey covers both resize directions, manual
+  requests, coalescing, source refresh, named focus/drafts/scalar ranges, unbound
+  values, local collection data/selection, failure recovery and teardown.
+  Allocated 390→900→250 boxes change controls at an unchanged 900-pixel outer
+  viewport. Browser run-to-completion and actual native nested queue service are
+  distinguished. `browser-final-review/capture.png` shows fresh wide/390 proof
+  views after teardown assertions, not retained drafts or observing Studio.
+- `core-regression.log` preserves maintained portable/generated Unicode,
+  event/state/managed-control/collection consumers and invalid-type compilation.
+  `retained-final.log` passes 34 per native compiler, 92 original actual Win32
+  arrangements and 61 bound arrangements, zero leaks. Browser counterparts compile;
+  their earlier execution evidence remains, rather than a rerun in this packet.
+- `manual-native/run.log` and `manual-browser-final.log` preserve 52 Win32 /
+  53 browser checks over the unchanged semantic manual-presentation companion.
+  Fresh source composition first reconciles the accepted choice against the
+  new definition snapshot, preserving the existing manual-to-automatic admission
+  behavior. Native tracing reports zero leaks.
+- `server/final-compile.log`, `web-studio/*-final-compile.log` and
+  `native-studio/final-compile.log` compile the current backend, Studio, module
+  worker and native Studio with zero owned warnings. Each browser product retains
+  seven warnings in unchanged upstream RTL source.
+- `mcp-tools.jsonl` and `mcp-session.json`: current Pascal semantic discovery
+  authenticates twenty tools and performs a bounded active-session read. The
+  desktop's cached fifteen-tool handle still fails initialization with HTTP 404;
+  reconnect remains owned by the existing workflow task. Protected services do
+  not advertise the new content fields. In-process semantic tests qualify those
+  fields; no new HTTP recipe-edit or observing release is claimed.
+- `final-preservation.json` / `protected-main-final.json`: all fifteen service
+  identities and eight exact paired project, navigation, draft and history-
+  availability frames remain unchanged; existing LAN HTTP returns 200. No
+  listener is started or service stopped/restarted. Existing hosting/source/profile
+  files stay unchanged outside the new task-owned hosting child.
+
+Qualification corrections preserve the intended assertions: native class field
+placement and browser scroll integer bridging were corrected. Factory fixtures
+declare the required bound updater before deliberate constructor failure. Browser
+number inputs lack a scalar selection API; restoration checks capabilities.
+Selection comparisons preserve each target's actual direction and exact initial
+supplementary range, rather than inventing native endpoint direction. The capture
+fixture uses an explicit HTMLElement bridge for this matched browser RTL.
+
+Remaining gate: source refresh that changes structure still follows strict refusal
+and explicit remount semantics. New nested publishers/allocation feedback need
+bounded detached settling and full atomic changed-set publication. Physical failure
+after retirement, arbitrary nested part migration, ordinary Studio recipe editing,
+end-to-end hardware/IME/assistive behavior, other widgetsets/DPI, accessibility and
+release performance/delivery remain open under original owners. No task moves to
+DONE and the full product goal remains active.
 
 ## Content recipes — 2026-10-06
 

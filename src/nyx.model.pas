@@ -123,6 +123,7 @@ type
     FHasCollectionView: Boolean;
     FCollectionView: TNyxCollectionViewSpec;
     FInstanceScopeID: TNyxText;
+    FRecipeOwner: TNyxControlRef;
     FReferences: Integer;
     FRawOwnership: Boolean;
     function GetConfigure: TNyxNodeConfig;
@@ -287,6 +288,16 @@ type
       design meaning's scope bridge; no owner object is retained. }
     procedure SetInstanceScope(const AID: TNyxText);
     property InstanceScopeID: TNyxText read FInstanceScopeID;
+    { Realized recipe roots retain their exact qualified instance identity as
+      a copied reference. It survives alternative definition source IDs and
+      owns no document/node. Authored nodes must not acquire runtime provenance. }
+    procedure BindRecipeOwner(const AOwner: TNyxControlRef);
+    property RecipeOwner: TNyxControlRef read FRecipeOwner;
+    { Copy the stable nearest instance owner. A content recipe uses its explicit
+      qualified instance provenance; other scopes retain the existing identity.
+      Runtime collection stores use this value instead of a definition root ID.
+      No ancestor pointer escapes, and an unscoped root returns an empty record. }
+    function RuntimeInstanceOwner: TNyxControlRef;
     property Kind: TNyxText read FKind;
     { Borrow this node's lazily allocated typed fluent configuration object. }
     property Configure: TNyxNodeConfig read GetConfigure;
@@ -716,6 +727,35 @@ begin
     raise ENyxModel.Create('Instance scope belongs to realized nodes only');
   end;
   FInstanceScopeID := AID;
+end;
+
+procedure TNyxNode.BindRecipeOwner(const AOwner: TNyxControlRef);
+begin
+
+  if not IsRealized or (AOwner.ID = '') then
+  begin
+    raise ENyxModel.Create('Recipe provenance requires a realized instance');
+  end;
+  FRecipeOwner := AOwner;
+end;
+
+function TNyxNode.RuntimeInstanceOwner: TNyxControlRef;
+var
+  LOwner: TNyxNode;
+begin
+  Result := Default(TNyxControlRef);
+  Result.ID := FInstanceScopeID;
+  LOwner := Self;
+  while (LOwner.Parent <> nil) and
+    (LOwner.Parent.InstanceScopeID = FInstanceScopeID) do
+  begin
+    LOwner := LOwner.Parent;
+  end;
+
+  if LOwner.RecipeOwner.ID <> '' then
+  begin
+    Result := LOwner.RecipeOwner;
+  end;
 end;
 
 function TNyxNode.GetBindingConfig: TNyxNodeBindings;
@@ -2470,6 +2510,7 @@ var
     if (ANode = LExisting) or (ANode.Kind <> LExisting.Kind) or
       (ANode.SourceID <> LExisting.SourceID) or
       (ANode.DesignID <> LExisting.DesignID) or
+      (ANode.RecipeOwner.ID <> LExisting.RecipeOwner.ID) or
       (ANode.InstanceScopeID <> LExisting.InstanceScopeID) then
     begin
       Exit;
@@ -2587,6 +2628,7 @@ begin
     Result.Props.Assign(FProps);
     Result.Extensions.Assign(FExtensions);
     Result.FInstanceScopeID := FInstanceScopeID;
+    Result.FRecipeOwner := FRecipeOwner;
     Result.FPresentationSnapshot := FPresentationSnapshot;
     Result.SetContent(FContent);
 
