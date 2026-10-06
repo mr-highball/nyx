@@ -3,7 +3,20 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current ordinary recipe-authoring packet (2026-10-06): a public Nyx Properties
+Current frozen-release prerequisite (2026-10-06): a maintained Pascal preparer
+freezes compiler sources before backend/editor/worker/preview compilation and
+verifies all 198 artifact paths, byte lengths and fingerprints. Checked refusal
+consumers pass 29 on both installed native compilers, leak-free; the unchanged
+recipe companion executes five checks per native/browser using frozen sources.
+An actual junction refuses. All fifteen services/eight pairs remain protected.
+This is pristine staging, not an observing rollout or full distribution. Delivery
+no-closure 1→2 once; authoring 26, renderer 7, workflow 9 and codegen 28 remain.
+Stop package fixtures and return to the existing service/reload runtime-root and
+session/history-preservation prerequisites before authenticated recipe observation.
+Original parity/accessibility/performance/delivery criteria remain unchanged.
+See [evidence and return path](WORK.md#frozen-release-prerequisite--2026-10-06).
+
+Previous ordinary recipe-authoring packet (2026-10-06): a public Nyx Properties
 compound submits typed copied recipe choices through independent paired admission.
 Both target consumers pass 55 checks; ordinary native Studio adds six (61 total),
 with zero leaks. Exact new generated source executes five checks per target.

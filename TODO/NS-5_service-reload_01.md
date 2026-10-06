@@ -17,6 +17,14 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 **Blockers**
 
+Release prerequisite (2026-10-06): the NS-6 Pascal preparer now verifies a frozen
+backend/browser/compiler-source bundle. Current build jobs, preview artifacts,
+profiles and MCP enrollment still share its repository root; ordinary project
+sessions and history are memory-only. Runtime/source-root separation and explicit
+session preservation are prerequisites for a checked observing rollout. Keep
+those outcomes within this existing reload/isolation owner and the workflow
+owner; staging accepts no original criterion. See [the release guide](../docs/studio-releases.md).
+
 - [NS-5_compile-service_01](NS-5_compile-service_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-4_studio-slice_01](NS-4_studio-slice_01.md) must have accepted evidence (update link when moved to DONE).
 

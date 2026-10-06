@@ -45,6 +45,22 @@ The source packet owns the actual execution results in WORK.md. This incidental
 fixture repair does not accept the full compiler/platform matrix, reopen the
 ended inventory batch or reset this task's existing no-closure count of 1.
 
+## Frozen backend/browser candidate — 2026-10-06
+
+Criterion 3 gains a maintained Pascal release preparer and verifier. Owned
+compiler sources are frozen before backend/editor/worker/preview compilation;
+matched runtime, production HTML and MIT license complete a strict byte manifest.
+Private configuration/projects and prior artifacts are excluded. Existing
+destinations and malformed/mixed candidates refuse. The installed pair is
+qualified independently; this is staging, not a deployed or complete distribution.
+See [the guide](../docs/studio-releases.md) and [current evidence](../WORK.md).
+
+No complete original criterion closes. Delivery no-closure advances 1→2 once;
+the warning inventory remains ended. Return to the existing service/reload and
+workflow owners for runtime-root separation, session preservation and observing
+HTTP qualification. Native Studio packaging and the supported-platform CI matrix
+remain open. No task moves to DONE.
+
 **Blockers**
 
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).

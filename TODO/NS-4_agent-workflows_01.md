@@ -34,6 +34,11 @@ consumer. Do not replace protected services/projects or substitute raw property
 updates and browser automation for the missing operation. Workflow no-closure
 remains 9; this is a release follow-up within this existing owner.
 
+The NS-6 frozen release preparer now supplies a checked backend/browser candidate.
+The NS-5 runtime-root and memory-only session/history prerequisites still prevent
+crediting that artifact as an observing deployment. Retain current services/pairs;
+do not infer authenticated content support from offline schema or build evidence.
+
 - Project/user configuration discovers authenticated tools through actual Codex
   initialization, refreshes enrolled credentials on Studio launch and preserves
   unrelated files. The guide distinguishes configured, connected and active-chat

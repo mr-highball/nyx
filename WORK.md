@@ -9,6 +9,16 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 ## Current return path: recipe editor and semantic release — 2026-10-06
 
+The NS-6 criterion-3 prerequisite now prepares a frozen compiler-source and
+backend/browser bundle with a strict byte manifest. It refuses existing outputs,
+excludes private state and exercises the frozen sources. Stop package/integrity
+fixtures here. Return to the existing service/reload owner: repository roots
+currently combine compiler sources with writable jobs/profiles/enrollment;
+ordinary workspaces/history are memory-only. An installed runtime/preservation
+boundary is required before this pristine candidate supports an observing rollout.
+All fifteen service identities/eight pairs remain protected. Staging is not an
+authenticated HTTP deployment or a completed delivery criterion.
+
 The original NS-4 criterion 1 now has ordinary Nyx-built recipe authoring. Its
 public reusable Properties compound captures copied typed conditions/references
 into the existing independent source queue. The accepted candidate generates
@@ -41,11 +51,63 @@ Original full parity/accessibility,
 performance and delivery criteria remain unchanged; the current proofs do not
 accept hardware IME/assistive input or other widgetsets.
 
-This NS-4-owned batch closes no full original criterion. Authoring no-closure
-advances 25→26 once; renderer 7, workflow 9, codegen 28 and delivery 1 remain.
-It does not restrict alternate structures to fixed control sets or credit an
+The ordinary editor packet closes no full original criterion and advances
+authoring no-closure 25→26 once. Current renderer 7, workflow 9 and codegen 28
+remain; the release prerequisite below advances delivery 1→2. The editor
+does not restrict alternate structures to fixed control sets or credit an
 explicit remount as continuity. Nothing moves to DONE. Main services
 and all eight accepted pairs remain protected; no LAN rollout is claimed.
+
+## Frozen release prerequisite — 2026-10-06
+
+Owner: NS-6 delivery criterion 3, returning to NS-5 runtime/reload preservation and
+the original NS-4 observing recipe/MCP journey. `nyx.studio.release` and the Pascal
+CLI prepare a new source snapshot before backend/editor/worker/preview compilation.
+Only owned Pascal sources, production hosts, matched runtime and MIT license enter
+the bundle. A strict complete inventory checks exact paths/lengths/MD5 fingerprints;
+MD5 is accidental byte-integrity evidence, not authentication. There is no overwrite,
+recursive deletion, new listener, service replacement or enrollment change.
+
+The first manifest gate exposed Windows RTL collation disagreement for dotted
+units and underscore programs. An explicit ordinal comparator now owns the wire
+order. The Windows unit also qualifies `SysUtils.FindClose` against the same-named
+native API. The initial matched compiler flagged the deliberately separate
+array/object fault cases; the fixture now covers every enum case explicitly and
+consumes the refused function result without an unused local. Failed/unsealed
+output remains separate for inspection.
+
+Private evidence under `build/studio-release/`:
+
+- `qualified-build.log` and `maintained-build.log`: the frozen 198-file / 11,173,649
+  byte candidate compiles backend, ordinary browser Studio, independent module
+  worker and preview. All owned builds have zero warnings; each of the three
+  pas2js builds retains seven upstream RTL warnings. The maintained target also
+  verifies the bundle and runs 29 integrity/privacy/refusal checks with zero leaks.
+- `checks/run-final.log`, `checks-matched/run-final.log`: 29 checked manifest/refusal checks
+  under stable FPC 3.2.0 and matched 3.3.1, both zero leaks. Cases include same-size
+  corruption, changed length, missing worker, private/extra/nested members,
+  traversal/absolute/duplicate paths, malformed metadata, exact UTF-8 bytes,
+  immutable existing outputs and preservation after refusal.
+- `junction-refusal.log`: an actual owned Windows directory junction refuses
+  before sealing; its borrowed target remains intact.
+- `generated-native/run.log`, `generated-browser-review.log`: five checks each
+  execute the unchanged recipe-editor companion against the frozen sources.
+  Native is leak-free; the browser used only new child files beneath the existing
+  protected isolated static host. No compiled frontend/backend was deployed.
+
+Packaging preparation qualifies a pristine candidate, not a live writable root.
+Current `TNyxBuildExecutor`, MCP preview/enrollment and server profiles/jobs use
+the repository root, while ordinary project sessions/history end on shutdown.
+These concrete prerequisites are recorded with their existing owners. Current
+HTTP content query/mutation remains absent and its journey remains unqualified.
+The release can be reproduced with `tools/build.ps1 -Target studio-release` and
+a new `ReleaseOutput`; [the guide](docs/studio-releases.md) explains the boundary.
+
+No original full criterion closes; delivery no-closure advances 1→2 once.
+Authoring 26, renderer 7, workflow 9 and codegen 28 remain. Nothing moves to DONE.
+No full supported-platform distribution, native Studio packaging, performance,
+accessibility or LAN update is claimed. Protected service/project comparisons and
+remote checkpoint receipts belong to this packet's final preservation record.
 
 ## Ordinary recipe authoring — 2026-10-06
 

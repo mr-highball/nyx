@@ -66,6 +66,12 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Pascal release preparation now freezes the compiler sources before compiling the
+backend/browser editor, worker and preview, then verifies a complete 198-file
+byte manifest. Checked refusal and executed recipe companions pass independently.
+This is staging; runtime-root separation, session/history preservation and the
+observing HTTP rollout remain open. See [the guide](docs/studio-releases.md).
+
 Studio's ordinary Properties now consumes a public Nyx recipe editor with typed
 size/presentation/platform choices and reusable references. Paired queued edits,
 scope removal, Undo/Redo, target previews and stale refusal pass 55 per browser/

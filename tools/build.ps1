@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -38,6 +38,9 @@ param(
   [string]$HttpURL = 'http://127.0.0.1:8088',
   # Stage browser artifacts independently while an older LAN instance is live.
   [string]$BrowserOutput,
+  # Release preparation creates a NEW frozen compiler-source/artifact bundle.
+  # This output is never a running service root; existing destinations refuse.
+  [string]$ReleaseOutput = 'build/studio-release/package',
   # The keyboard review source is exported through MCP, never handwritten by
   # this orchestration script. Its generated unit must live in this directory.
   [string]$KeyboardSourceDirectory = 'build/keyboard/mcp',
@@ -271,6 +274,76 @@ try {
     if ($LASTEXITCODE -ne 0) {
       throw 'MCP configuration preservation checks failed'
     }
+    exit 0
+  }
+
+  if ($Target -eq 'studio-release') {
+    # Pascal owns source admission, privacy boundaries, artifact closure and
+    # byte verification. Shell work only invokes compilers in that new snapshot.
+    # No service, enrollment, compiler profile or editor project is changed.
+    $nyxReleaseOutput = [IO.Path]::GetFullPath((Join-Path $nyxRoot $ReleaseOutput))
+
+    if ([IO.Path]::IsPathRooted($ReleaseOutput)) {
+      $nyxReleaseOutput = [IO.Path]::GetFullPath($ReleaseOutput)
+    }
+
+    if (Test-Path -LiteralPath $nyxReleaseOutput) {
+      throw 'Release output already exists; select a new -ReleaseOutput directory.'
+    }
+    $nyxReleaseBuild = Join-Path $nyxRoot 'build/studio-release'
+    $nyxReleaseTool = Join-Path $nyxReleaseBuild 'tool'
+    $nyxReleaseServerUnits = Join-Path $nyxReleaseBuild 'server-units'
+    New-Item -ItemType Directory -Force $nyxReleaseTool, $nyxReleaseServerUnits,
+      (Split-Path -Parent $nyxReleaseOutput) | Out-Null
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl',
+      '-Fusrc', '-Fustudio', "-FU$nyxReleaseTool", "-FE$nyxReleaseTool",
+      'tools/nyx_studio_release.lpr')
+    $nyxReleaseProgram = Join-Path $nyxReleaseTool 'nyx_studio_release.exe'
+
+    if (-not $IsWindows) {
+      $nyxReleaseProgram = Join-Path $nyxReleaseTool 'nyx_studio_release'
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxReleaseRevision = (& git rev-parse HEAD).Trim()
+
+    if ($LASTEXITCODE -ne 0) { throw 'A source checkpoint is required for release preparation.' }
+    & $nyxReleaseProgram prepare $nyxRoot $nyxRuntime $nyxReleaseOutput
+
+    if ($LASTEXITCODE -ne 0) { throw 'Pascal release preparation refused the destination or sources.' }
+    Push-Location $nyxReleaseOutput
+    try {
+      Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
+        '-O2', '-Xs', '-Fusrc', '-Fustudio', "-FU$nyxReleaseServerUnits", '-FEbin',
+        'studio/nyx_studio_server.lpr')
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Fusrc',
+        '-Fustudio', '-Jirtl.js', '-FEweb', 'studio/nyx_studio.lpr')
+      # Invoke-NyxCompiler also builds the compiled independent module worker.
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Fusrc',
+        '-Fustudio', '-Jirtl.js', '-FEweb', 'studio/nyx_studio_preview.lpr')
+    } finally {
+      Pop-Location
+    }
+    & $nyxReleaseProgram seal $nyxReleaseOutput $nyxReleaseRevision $nyxVersion (
+      (& $nyxPas2js '-iV').Trim())
+
+    if ($LASTEXITCODE -ne 0) { throw 'Release closure or byte verification failed.' }
+    # Exercise corruption/refusal against a separate inert fixture and read the
+    # real sealed bundle without mutation. Compile against the frozen unit set.
+    $nyxReleaseChecks = $nyxReleaseOutput + '.qualification'
+    New-Item -ItemType Directory $nyxReleaseChecks | Out-Null
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      "-Fu$nyxReleaseOutput/src", "-Fu$nyxReleaseOutput/studio",
+      "-FU$nyxReleaseChecks", "-FE$nyxReleaseChecks", 'tests/nyx_studio_release_tests.lpr')
+    $nyxReleaseTest = Join-Path $nyxReleaseChecks 'nyx_studio_release_tests.exe'
+
+    if (-not $IsWindows) {
+      $nyxReleaseTest = Join-Path $nyxReleaseChecks 'nyx_studio_release_tests'
+    }
+    & $nyxReleaseTest $nyxReleaseOutput (Join-Path $nyxReleaseChecks 'fixture')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Release preparation/integrity qualification failed.' }
+    Write-Host 'Frozen Studio release verified. No listener was launched or live release replaced.'
     exit 0
   }
 
