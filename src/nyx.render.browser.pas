@@ -200,6 +200,11 @@ type
     FOnEvent: TNyxBrowserEvent;
     FDesignerInput: TNyxDesignerInput;
     FOnDesignerGesture: TNyxDesignerGesture;
+    FSelectedDesignID: TNyxText;
+    FResizePreview: TNyxResizePreview;
+    FResizeEdges: array[0..3] of TJSHTMLElement;
+    FResizePreviewHandler: TJSEventHandler;
+    FResizeListening: Boolean;
     FEvents: INyxEvents;
     FState: TNyxState;
     FOwnState: Boolean;
@@ -219,6 +224,9 @@ type
       const APayload: TNyxDataValue; AHasPayload: Boolean): Boolean;
     procedure BindingFailed(ANode: TNyxNode; const AReason: TNyxText;
       AFailure: TNyxBindingFailure = nbfRejected);
+    procedure UpdateResizePreview;
+    function ResizePreviewViewport(AEvent: TJSEvent): Boolean;
+    procedure ClearResizePreview;
     procedure Clear;
     function FactoryIndex(ANode: TNyxNode): Integer;
     function CreateElement(ANode: TNyxNode; out AInput: TJSHTMLElement): TJSHTMLElement;
@@ -323,6 +331,11 @@ type
       keyboard focus. Reusable parts share that identity; highlight their outer
       instance once rather than outlining every descendant independently. }
     procedure Select(const ADesignID: TNyxText);
+    { Presentation only, for the selected authored face. Default clears it;
+      runtime/foreign-selection proposals refuse before changing presentation.
+      Pointer-transparent fixed paint strips follow captured scroll/resize,
+      clip to the mounted host/viewport and never alter input or scroll extent. }
+    procedure PreviewResize(const APreview: TNyxResizePreview);
     { Synchronize runtime properties while retaining DOM identity and focus.
       Compound actions use this path rather than rebuilding the entire view. }
     procedure Sync;
@@ -368,6 +381,13 @@ type
     standard DOM requires the same capture bit to revoke a key producer. }
   TNyxKeyboardElement = class external name 'HTMLElement' (TJSHTMLElement)
     procedure Unlisten(const AName: String; AHandler: TJSKeyEventHandler;
+      ACapture: Boolean); external name 'removeEventListener';
+  end;
+  { This RTL exposes two-argument removal on Document. Capture listeners need
+    the same capture flag on removal; keep that standard operation in this
+    target-only declaration rather than editing the installed Web unit. }
+  TNyxPreviewEventTarget = class external name 'EventTarget'(TJSEventTarget)
+    procedure Unlisten(const AName: String; AHandler: TJSEventHandler;
       ACapture: Boolean); external name 'removeEventListener';
   end;
 
@@ -538,6 +558,7 @@ begin
   FTheme.Validate;
   FBaseTheme := NewNyxDocumentTheme(nil, FTheme);
   FEvents := NewNyxEvents;
+  FResizePreviewHandler := @ResizePreviewViewport;
 end;
 
 destructor TNyxBrowserRenderer.Destroy;
@@ -563,6 +584,8 @@ var
 begin
   { Disconnect before clearing any controls: their destructors and retained
     external producers must never enter a half-disposed view. }
+  ClearResizePreview;
+  FSelectedDesignID := '';
 
   if FEmitterScope <> nil then
   begin
@@ -1701,6 +1724,8 @@ var
   LIndex: Integer;
   LChosen: Boolean;
 begin
+  ClearResizePreview;
+  FSelectedDesignID := ADesignID;
   LChosen := False;
   for LIndex := 0 to Length(FBindings) - 1 do
   begin
@@ -1716,6 +1741,151 @@ begin
       FBindings[LIndex].FElement.classList.remove('nyx-selected');
     end;
   end;
+end;
+
+procedure TNyxBrowserRenderer.ClearResizePreview;
+var
+  LIndex: Integer;
+begin
+  FResizePreview := Default(TNyxResizePreview);
+
+  if FResizeListening then
+  begin
+    TNyxPreviewEventTarget(document).Unlisten('scroll', FResizePreviewHandler, True);
+    window.removeEventListener('resize', FResizePreviewHandler);
+    FResizeListening := False;
+  end;
+  for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
+  begin
+
+    if FResizeEdges[LIndex] <> nil then
+    begin
+      FResizeEdges[LIndex].remove;
+      FResizeEdges[LIndex] := nil;
+    end;
+  end;
+end;
+
+function TNyxBrowserRenderer.ResizePreviewViewport(AEvent: TJSEvent): Boolean;
+begin
+  UpdateResizePreview;
+  Result := True;
+end;
+
+procedure TNyxBrowserRenderer.PreviewResize(const APreview: TNyxResizePreview);
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if not APreview.Active then
+  begin
+    ClearResizePreview;
+    Exit;
+  end;
+
+  if not FDesignMode or (APreview.Control.ID <> FSelectedDesignID) then
+  begin
+    raise ENyxModel.Create('Resize presentation requires the selected authored face');
+  end;
+  { Resolve before replacing a live proposal so missing identity cannot erase
+    the previous presentation. The renderer owns only four inert paint strips. }
+  ElementFor(APreview.Control.ID, niDesign);
+  FResizePreview := APreview;
+
+  if not FResizeListening then
+  begin
+    document.addEventListener('scroll', FResizePreviewHandler, True);
+    window.addEventListener('resize', FResizePreviewHandler);
+    FResizeListening := True;
+  end;
+  UpdateResizePreview;
+end;
+
+procedure TNyxBrowserRenderer.UpdateResizePreview;
+var
+  LElement: TJSHTMLElement;
+  LFace: TJSDOMRect;
+  LClip: TJSDOMRect;
+  LWidth: Double;
+  LHeight: Double;
+  LIndex: Integer;
+
+  procedure Edge(AIndex: Integer; ALeft, ATop, AWidth, AHeight: Double);
+  var
+    LRight: Double;
+    LBottom: Double;
+    LFormat: TFormatSettings;
+  begin
+    { Clip the strip itself: a proposed far edge outside the viewport disappears
+      rather than inventing an edge at the viewport's boundary. No scroll range
+      is introduced by these fixed, pointer-transparent, non-focusable faces. }
+    LRight := Min(ALeft + AWidth, Min(LClip.right, window.innerWidth));
+    LBottom := Min(ATop + AHeight, Min(LClip.bottom, window.innerHeight));
+    ALeft := Max(ALeft, Max(LClip.left, 0));
+    ATop := Max(ATop, Max(LClip.top, 0));
+    FResizeEdges[AIndex].style.setProperty('display', 'none');
+
+    if (LRight > ALeft) and (LBottom > ATop) then
+    begin
+      { CSS requires a decimal point even when an application localizes its
+        numeric display. Use copied settings; never change the user's locale. }
+      LFormat := FormatSettings;
+      LFormat.DecimalSeparator := '.';
+      FResizeEdges[AIndex].style.setProperty('display', 'block');
+      FResizeEdges[AIndex].style.setProperty('left', FloatToStr(ALeft, LFormat) + 'px');
+      FResizeEdges[AIndex].style.setProperty('top', FloatToStr(ATop, LFormat) + 'px');
+      FResizeEdges[AIndex].style.setProperty('width', FloatToStr(LRight - ALeft, LFormat) + 'px');
+      FResizeEdges[AIndex].style.setProperty('height', FloatToStr(LBottom - ATop, LFormat) + 'px');
+    end;
+  end;
+
+begin
+
+  if not FResizePreview.Active or (FHost = nil) then
+  begin
+    Exit;
+  end;
+  LElement := ElementFor(FResizePreview.Control.ID, niDesign);
+  LFace := LElement.getBoundingClientRect;
+  LClip := FHost.getBoundingClientRect;
+  { Resize policy works in logical allocation pixels. Preserve a containing
+    scale when translating the proposal to the browser's viewport coordinates. }
+  LWidth := FResizePreview.Size.Width;
+  LHeight := FResizePreview.Size.Height;
+
+  if LElement.offsetWidth > 0 then
+  begin
+    LWidth := LWidth * LFace.width / LElement.offsetWidth;
+  end;
+
+  if LElement.offsetHeight > 0 then
+  begin
+    LHeight := LHeight * LFace.height / LElement.offsetHeight;
+  end;
+  for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
+  begin
+
+    if FResizeEdges[LIndex] = nil then
+    begin
+      FResizeEdges[LIndex] := Element('div', 'nyx-resize-preview');
+      FResizeEdges[LIndex].setAttribute('aria-hidden', 'true');
+      FResizeEdges[LIndex].setAttribute('data-nyx-resize-edge', IntToStr(LIndex));
+      FResizeEdges[LIndex].style.setProperty('position', 'fixed');
+      FResizeEdges[LIndex].style.setProperty('pointer-events', 'none');
+      FResizeEdges[LIndex].style.setProperty('z-index', '20');
+      FResizeEdges[LIndex].style.setProperty('background', FTheme.Accent);
+    end;
+    { A surrounding Nyx shell may have moved/remounted the canvas host. Keep
+      this exact owned face; no listener or input is recreated by reconnecting. }
+
+    if not document.body.contains(FResizeEdges[LIndex]) then
+    begin
+      document.body.appendChild(FResizeEdges[LIndex]);
+    end;
+  end;
+  Edge(0, LFace.left - 2, LFace.top - 2, LWidth + 4, 2);
+  Edge(1, LFace.left - 2, LFace.top + LHeight, LWidth + 4, 2);
+  Edge(2, LFace.left - 2, LFace.top, 2, LHeight);
+  Edge(3, LFace.left + LWidth, LFace.top, 2, LHeight);
 end;
 
 procedure TNyxBrowserBinding.SplitChanged(ASplit: TNyxBrowserSplit);
@@ -3906,6 +4076,7 @@ begin
         FBindings[LIndex].FSplit.Update;
       end;
     end;
+    UpdateResizePreview;
   finally
     FUpdating := False;
   end;

@@ -7,7 +7,21 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-Current user priority: [reviewable release refresh](#reviewable-release-refresh--2026-10-05).
+Current independent work: [canvas resize presentation](#canvas-resize-presentation--2026-10-05)
+under original Studio authoring criterion 1. Public copied proposals now paint
+through both canvas adapters without accepting per-pixel edits or changing input.
+Shared checks pass 54 per native compiler, unchanged compiled controls seven,
+actual Win32 Studio 59 and retained projection 27, with zero checked leaks.
+The dedicated browser adapter journey passes 30 desktop / 30 exact-390 checks;
+inspected captures qualify that bounded consumer, not ordinary browser Studio
+grips or physical phone input. An owned MCP workspace was composed in one grouped
+transaction and compiled from bounded exact source windows; one Undo/Redo
+restores empty/accepted state and exact Pascal. Authoring no-closure advances
+11→12 once; workflow 9, codegen 28, renderer 3 and delivery 1 remain. End local
+paint/capture/fixture expansion. Next connect direct canvas handles and responsive
+authoring through public contracts and the existing isolated paired processor.
+
+Pending user priority: [reviewable release refresh](#reviewable-release-refresh--2026-10-05).
 The user explicitly requested the new running version. A separately staged
 Pascal service now authenticates all nineteen tools and serves the exact backed-up
 active pair. Actual browser source-workspace checks pass 30 at desktop and 30 at
@@ -20,8 +34,10 @@ unchanged. A private, parsed refresh script with qualified artifact hashes,
 exact process checks, backup/restore and rollback is ready for the user to run.
 Do not retry an equivalent launch or claim that the phone release was refreshed.
 Codegen criterion 3 remains open at no-closure 28; workflow 9, renderer 3,
-authoring 11 and delivery 1 remain. Return to canvas feedback/responsive authoring
-after the user-directed refresh; no canvas implementation changed in this batch.
+authoring was 11 and delivery 1 remained at that checkpoint. While the local
+refresh is pending, independent canvas work above leaves its qualified artifact
+manifest, candidate editor closure, active user pair and protected services
+intact. No new deployment or phone refresh is claimed.
 
 The preceding user-directed packet covers source workspace usability under original codegen
 criterion 3: Source/Compiler messages views and an expanded floating source
@@ -8148,3 +8164,80 @@ restored pair, authenticated tools and auxiliary identities. Then return to
 direct canvas resize feedback/responsive authoring through public Nyx contracts
 and the same isolated paired processor. No gate, history or partial browser result
 narrows the original full-product acceptance criteria; no task moves to DONE.
+
+## Canvas resize presentation — 2026-10-05
+
+Owner/deliverable: original Studio authoring criterion 1, following public resize
+grips while the user-local release refresh remains pending. Give an observing
+designer direct canvas feedback without per-pixel admission, input replacement
+or another Studio-only widget system. The preceding remote checkpoint is
+`6662a4145239e055b6d25d8ecd375d61030ecf4d`.
+
+`TNyxResizePreview` copies exact authored identity and proposed logical outer
+dimensions; default explicitly clears it. No document, widget or receiver is
+owned by that record. Both public canvas adapters accept only the selected
+authored face in design mode. The existing gesture bridge sends copied
+presentation after shell refresh and a fresh lease check, then clears before
+commit/cancel/disconnection. Release still submits the existing isolated paired
+operation exactly once; accepted allocation and source remain unchanged during
+preview. No persistence/MCP schema or additional mutation path was introduced.
+
+Browser paint uses four fixed, pointer-transparent, aria-hidden accent strips,
+captured scroll/resize listeners and bounded host/viewport intersections.
+Axis-aligned scaling and copied CSS decimal settings preserve logical geometry
+without changing application locale. Native paint reuses four disabled standard
+LCL panels, independently owned/reparented above descendant windows. Fresh
+selection/viewport layout resolves the outer face; maximum logical proposals
+never allocate enormous physical widgets. Retirement releases owned browser
+listeners/paint and native windows with no reference cycle into the tree.
+
+Actual semantic composition uses the separately staged nineteen-tool service.
+An explicitly owned project receives six related title/page/control operations
+as one revision-aware transaction; protected primary selection/pair are retained.
+An initial unpublished-property spelling refused at the unchanged revision;
+bounded catalog metadata supplied the existing typed wire name. Two bounded
+source windows at revision 2 export 99 exact accepted lines, compiled unchanged
+for the actual browser preview consumer. One semantic Undo returns the owned
+workspace to empty at revision 3; Redo restores its accepted project and both
+exact source windows at revision 4. Private workspace IDs/payloads are kept only
+under `build/resize-feedback/`; no user project was replaced or root deleted.
+
+Final maintained `./tools/build.ps1 -Target resize -BrowserOutput
+build/resize-feedback/web-final` runs **54 shared checks per native compiler**,
+compares exact exported design/source/pair bytes, runs **seven unchanged
+compiled Win32 controls**, then **59 actual Studio checks**, with zero unfreed
+blocks. Current browser consumers/Studio/module worker compile. A final native
+identity-refusal guard and independently anchored geometry assertion also pass
+59, followed by **27 actual retained-projection regressions**, with zero leaks.
+Owned compilation has zero warnings; seven installed browser RTL warnings remain
+visible and dependency source is unchanged. Logs are retained in the same output.
+
+The dedicated browser consumer passes **30 desktop / 30 exact-390** actual DOM
+checks: retained English textarea/range/focus, unchanged accepted dimensions,
+selection refusal, scroll tracking, locale-safe fractional geometry, legal
+maximum clipping and cancel/selection/unmount retirement. Its English captures
+are inspected. `resize-preview.html` and its Pascal program are maintained
+products; only their unique fixture files were added to the existing candidate
+host. The nine qualified release artifacts and user-local refresh manifest are
+unchanged. Candidate ordinary Studio remains the preceding qualified editor;
+this standalone adapter journey does not accept current Studio grip input.
+
+Native captures now compose actual standard-panel `PaintTo` over the form's
+offscreen paint, with accent pixels checked on all four proposed edges. Win32
+form painting includes its frame/caption: composing at client origin displaced
+the first image, so the final capture uses the exact window origin. Explicitly
+empty panel captions avoid LCL's automatic Name-as-Caption painting. Corrected
+desktop/proposal and compact captures are inspected. Failed declaration,
+illegal-dimension, print-order/caption and coordinate captures are retained;
+the real desktop DC produced a black image and remains unavailable evidence.
+Do not describe composed offscreen paint as physical desktop rendering.
+
+No original criterion closes. Authoring no-closure advances **11→12** once;
+workflow **9**, codegen **28**, renderer **3** and delivery **1** remain. End
+paint/capture/fixture expansion. Next connect direct canvas edge handles and
+responsive authoring through public Nyx contracts and the same isolated paired
+processor. Richer guides, ordinary browser Studio input, observing phone refresh,
+hardware/IME/assistive technology, full native presentation, accessibility,
+performance and delivery retain their original owners/acceptance gates. Preserve
+the pending user-local refresh and verify its closure/pair/processes after user
+execution; no equivalent rejected service replacement was attempted here.

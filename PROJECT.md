@@ -66,6 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Copied public resize proposals now paint the selected authored face through
+both target adapters without changing accepted allocation, source or independent
+input. Shared checks pass 54 per native compiler; actual Win32 Studio passes 59
+and retained projection 27, with zero checked leaks. The dedicated browser
+consumer passes 30 desktop / 30 exact-390 checks using exact bounded
+MCP-authored source. Native captures compose actual standard-panel painting,
+not physical screen capture. Ordinary browser Studio gestures, direct canvas
+handles, responsive variants and broader authoring/parity remain open. This
+independent packet leaves the pending local release refresh below intact; see
+[current evidence](WORK.md#canvas-resize-presentation--2026-10-05).
+
 The user's latest release-review request has a separately staged current service
 with authenticated nineteen-tool discovery and the exact active source/design
 pair. Actual desktop and 390-pixel source-editor journeys each pass 30 checks,

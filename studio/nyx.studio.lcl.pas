@@ -176,6 +176,7 @@ type
     function DesignerDragContext: TNyxStudioDragContext;
     function DesignerResizeMeasure(const AControl: TNyxControlRef): TNyxResizeSize;
     procedure DesignerResizeStatus(const AMessage: TNyxText);
+    procedure DesignerResizePresentation(const APreview: TNyxResizePreview);
     procedure DesignerDragFeedback(const ATarget: TNyxControlRef);
     procedure DesignerGesture(const ATarget: TNyxDesignerTarget;
       const AEvent: TNyxEventInfo; const ADecision: INyxGestureDecision);
@@ -543,7 +544,7 @@ begin
   FCanvasView.OnDesignerGesture := DesignerGesture;
   FDesignerDrag := TNyxStudioDrag.Create(DesignerDragContext, DesignerDragFeedback);
   FDesignerResize := TNyxStudioResize.Create(DesignerDragContext,
-    DesignerResizeMeasure, DesignerResizeStatus);
+    DesignerResizeMeasure, DesignerResizeStatus, DesignerResizePresentation);
   FCodeView := TNyxLCLRenderer.Create(FTheme);
   FSourcePaneView := TNyxLCLRenderer.Create(FTheme);
   FSourcePaneView.OnEvent := ShellEvent;
@@ -2262,6 +2263,15 @@ end;
 function TNyxNativeStudio.DesignerResizeMeasure(const AControl: TNyxControlRef): TNyxResizeSize;
 begin
   Result := FCanvasView.SizeFor(AControl.ID, niDesign);
+end;
+
+procedure TNyxNativeStudio.DesignerResizePresentation(const APreview: TNyxResizePreview);
+begin
+
+  if FCanvasView <> nil then
+  begin
+    FCanvasView.PreviewResize(APreview);
+  end;
 end;
 
 procedure TNyxNativeStudio.DesignerResizeStatus(const AMessage: TNyxText);

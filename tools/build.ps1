@@ -1507,13 +1507,14 @@ try {
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     foreach ($nyxResizeProgram in @('tests/nyx_resize_tests.lpr',
-      'tests/nyx_resize_controls.lpr', 'tests/nyx_projection_refresh_tests.lpr',
+      'tests/nyx_resize_controls.lpr', 'tests/nyx_resize_preview_browser.lpr',
+      'tests/nyx_projection_refresh_tests.lpr',
       'studio/nyx_studio.lpr')) {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
         '-Futests', "-Fu$nyxResizeExport", '-Jirtl.js', "-FE$nyxResizeBrowser", $nyxResizeProgram)
     }
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxResizeBrowser 'rtl.js')
-    foreach ($nyxResizeHost in @('resize.html', 'resize-controls.html', 'index.html')) {
+    foreach ($nyxResizeHost in @('resize.html', 'resize-controls.html', 'resize-preview.html', 'index.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxResizeHost") -Destination $nyxResizeBrowser
     }
     Write-Host 'Resize consumers and Studio staged; browser execution needs its admitted host.'

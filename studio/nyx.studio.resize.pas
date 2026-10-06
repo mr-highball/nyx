@@ -41,10 +41,13 @@ type
     the public adapter contract, using exact design identity, never client size. }
   TNyxStudioResizeMeasure = function(const AControl: TNyxControlRef): TNyxResizeSize of object;
   TNyxStudioResizeStatus = procedure(const AMessage: TNyxText) of object;
+  { Borrowed UI-thread sink for copied canvas presentation. Clear precedes
+    commit/cancel/disconnection; it never grants a document mutation lease. }
+  TNyxStudioResizePresentation = procedure(const APreview: TNyxResizePreview) of object;
 
   { Editor bridge for reusable Nyx grips. A start captures the exact accepted
     pair, mounted session/load, selection/view and creator generation. Preview
-    publishes dimensions only, never a per-pixel design edit. Release validates
+    publishes copied presentation only, never a per-pixel design edit. Release validates
     the unchanged lease and submits the existing isolated processor once.
     Roots/inherited part descriptors stay with their separate authoring tools. }
   TNyxStudioResize = class
@@ -52,6 +55,7 @@ type
     FCapture: TNyxStudioDragCapture;
     FMeasure: TNyxStudioResizeMeasure;
     FStatus: TNyxStudioResizeStatus;
+    FPresentation: TNyxStudioResizePresentation;
     FHandles: array[TNyxResizeAxis] of TNyxResizeHandle;
     FEvents: INyxEvents;
     FRevision: Integer;
@@ -69,7 +73,8 @@ type
     function Live(const AContext: TNyxStudioDragContext): Boolean;
   public
     constructor Create(ACapture: TNyxStudioDragCapture;
-      AMeasure: TNyxStudioResizeMeasure; AStatus: TNyxStudioResizeStatus);
+      AMeasure: TNyxStudioResizeMeasure; AStatus: TNyxStudioResizeStatus;
+      APresentation: TNyxStudioResizePresentation = nil);
     destructor Destroy; override;
     { Shell descriptors are borrowed during connection. Same live mount/owner
       retains grips; replacement cancels the old preview before detaching. }
@@ -118,7 +123,8 @@ begin
 end;
 
 constructor TNyxStudioResize.Create(ACapture: TNyxStudioDragCapture;
-  AMeasure: TNyxStudioResizeMeasure; AStatus: TNyxStudioResizeStatus);
+  AMeasure: TNyxStudioResizeMeasure; AStatus: TNyxStudioResizeStatus;
+  APresentation: TNyxStudioResizePresentation);
 begin
   inherited Create;
 
@@ -129,6 +135,7 @@ begin
   FCapture := ACapture;
   FMeasure := AMeasure;
   FStatus := AStatus;
+  FPresentation := APresentation;
 end;
 
 destructor TNyxStudioResize.Destroy;
@@ -137,6 +144,7 @@ begin
   FCapture := nil;
   FMeasure := nil;
   FStatus := nil;
+  FPresentation := nil;
   inherited Destroy;
 end;
 
@@ -146,6 +154,11 @@ var
 begin
   { Prevent teardown feedback from publishing through retired controller views. }
   FActive := False;
+
+  if Assigned(FPresentation) then
+  begin
+    FPresentation(Default(TNyxResizePreview));
+  end;
   for LAxis := Low(TNyxResizeAxis) to High(TNyxResizeAxis) do
   begin
     FreeAndNil(FHandles[LAxis]);
@@ -312,6 +325,11 @@ begin
   begin
     FActive := False;
     FPair := Default(TNyxProjectPair);
+
+    if Assigned(FPresentation) then
+    begin
+      FPresentation(Default(TNyxResizePreview));
+    end;
     FStatus('Resize canceled; accepted dimensions retained');
     Exit;
   end;
@@ -321,12 +339,25 @@ begin
     FStatus(TNyxText('Resize preview · ') + FOwner.ID + TNyxText(' · ') +
       TNyxText(IntToStr(ASize.Width)) + TNyxText(' × ') +
       TNyxText(IntToStr(ASize.Height)) + TNyxText(' px'));
+
+    if Assigned(FPresentation) and Live(FCapture()) then
+    begin
+      { Status may refresh the containing shell/layout. Paint only after that
+        update and a fresh lease check, so native child windows stay in front
+        and a remounted browser body cannot discard the just-created strips. }
+      FPresentation(NyxResizePreview(FOwner, ASize));
+    end;
     Exit;
   end;
   { Full paired equality is checked once at commit, not on every pointer pixel.
     Existing preparation/publication independently checks its own captured pair. }
   LPair := LContext.Session.ProjectSnapshot;
   FActive := False;
+
+  if Assigned(FPresentation) then
+  begin
+    FPresentation(Default(TNyxResizePreview));
+  end;
 
   if (LPair.Design <> FPair.Design) or (LPair.Source <> FPair.Source) or
     LPair.Pending or (LPair.Draft <> FPair.Draft) or (LPair.DraftBase <> FPair.DraftBase) then

@@ -184,15 +184,39 @@ Fresh dimension-only projection can retain admitted widget identity, text,
 selection and focus through the existing rollback boundary. Structure, identities,
 bindings, platform metadata, creator context and custom-factory compatibility
 still require exact admission; incompatible changes request a full mount.
-No canvas overlay/live geometry preview, responsive variant editor or complete
-presentation/performance acceptance follows this packet.
+An optional borrowed presentation sink now paints copied proposed dimensions
+through the public canvas adapter, after shell refresh and a fresh lease check:
+
+```pascal
+ARenderer.PreviewResize(NyxResizePreview(NyxControl('notes-editor'),
+  NyxResizeSize(320, 180)));
+ARenderer.PreviewResize(Default(TNyxResizePreview));
+```
+
+Only the selected authored face in design mode accepts an active proposal.
+Missing identity refuses before replacing presentation. Four inert accent strips
+outline its proposed outer size without changing allocation, accepted source,
+input, focus or scroll extent. Selection, cancellation and unmount retire them.
+Browser strips follow captured scroll and viewport resize, preserve axis-aligned
+scale, use locale-independent CSS numbers and clip to host/viewport bounds.
+LCL reuses four bounded, disabled standard panels above descendant windows;
+the renderer owns and reparents them independently of the accepted tree.
+
+Native `PaintResizePreview` paints those actual visible panels into a borrowed
+caller-owned canvas; its origin names the screen pixel represented by bitmap
+pixel (0, 0). Win32 form `PaintTo` includes the non-client frame, so a composed
+whole-form capture must use the window origin. This establishes offscreen
+control painting, rather than physical desktop capture. Direct canvas edge
+handles, richer guides, responsive variants and complete presentation/performance
+acceptance remain open.
 
 `./tools/build.ps1 -Target resize -BrowserOutput build/resize/staged` reproduces
 the checked shared and actual Win32 evidence plus compiled browser consumers,
 Studio and its worker. Native callback checks do not qualify physical hardware,
-IME, assistive technology or another widgetset. Browser compilation does not
-establish runtime interaction or current phone observation. See
-[evidence](../WORK.md#reusable-resize-grips--2026-10-05).
+IME, assistive technology or another widgetset. The additional browser preview
+consumer passes 30 actual DOM checks at desktop and exact 390 pixels; that
+adapter journey does not establish ordinary Studio pointer interaction or phone
+observation. See [evidence](../WORK.md#canvas-resize-presentation--2026-10-05).
 
 ## Reproduce the boundary
 

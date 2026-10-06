@@ -15,6 +15,21 @@ execution. Codegen criterion 3 remains open at no-closure 28; workflow 9, render
 3, authoring 11 and delivery 1 remain. No full criterion, goal percentage or DONE
 claim follows. See [evidence](WORK.md#reviewable-release-refresh--2026-10-05).
 
+Following independent authoring packet: public copied resize proposals now
+paint through browser/LCL canvas adapters while accepted controls, source and
+input stay intact. Actual Win32 Studio passes 59 checks, retained projection 27,
+shared checks 54 per native compiler and unchanged compiled controls seven, with
+zero checked leaks. A semantic MCP workspace supplies exact bounded generated
+source to a browser consumer passing 30 desktop / 30 exact-390 checks. Native
+captures qualify composed actual panel painting; physical desktop capture was
+unavailable. Ordinary browser Studio gestures, phone observation, direct canvas
+handles, responsive variants and complete parity/presentation remain open.
+Authoring no-closure advances 11→12 once; workflow 9, codegen 28, renderer 3 and
+delivery 1 remain. End paint/capture/fixture expansion and continue original
+authoring criterion 1 through public handles/responsive configuration. The
+pending user-local release refresh and its qualified closure remain intact.
+See [evidence](WORK.md#canvas-resize-presentation--2026-10-05).
+
 Latest bounded source packet (2026-10-05): canvas input now shares isolated paired
 admission, carrying owned runtime/view/owner/platform and mounted-load identities.
 Fresh replay preserves typed state defaults and instance-only named parts;

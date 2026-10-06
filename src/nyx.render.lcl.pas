@@ -253,11 +253,14 @@ type
       reference. It distinguishes new defaults from retained runtime edits. }
     FProjectionBaseline: TNyxNode;
     FSelectedDesignID: TNyxText;
+    FResizePreview: TNyxResizePreview;
+    FResizeEdges: array[0..3] of TPanel;
     FSelectionEdges: array[0..3] of TShape;
     FForceValues: Boolean;
     FOnBindingError: TNyxLCLBindingError;
     FLastBindingError: TNyxText;
     FLastBindingFailure: TNyxBindingFailure;
+    procedure UpdateResizePreview;
     procedure Emit(AOrigin: TNyxNode; const ADispatch: TNyxDispatch);
     procedure ViewportChanged(const AOriginID: TNyxText;
       const AViewport: TNyxViewportSnapshot);
@@ -356,6 +359,18 @@ type
       Empty/absent identities clear the outline without taking keyboard focus.
       Selection is editor presentation and never mutates the owned document. }
     procedure Select(const ADesignID: TNyxText);
+    { Presentation only: preview the selected authored face at a proposed size.
+      Default clears it. Runtime views or another selection refuse before the
+      current outline changes. Inert paint strips above the scroll surface
+      retain input/focus and clip to the viewport without changing scroll extent. }
+    procedure PreviewResize(const APreview: TNyxResizePreview);
+    { Compose the actual native proposal windows into a caller-owned capture.
+      AOrigin is the screen coordinate represented by canvas pixel (0,0).
+      Win32's whole-form WM_PRINT can omit sibling child-window overlays;
+      individual LCL PaintTo preserves their real widget paint. No synthesized
+      rectangles, controls, focus or document mutation; only active visible
+      strips are printed. This is an offscreen capture, not desktop observation. }
+    procedure PaintResizePreview(ACanvas: TCanvas; const AOrigin: TPoint);
     { Reveal exact logical bounds through the containing viewport. Presentation
       only: no document/history mutation or control reconstruction. Missing IDs
       refuse; normal/native scrolling retains LCL's own ScrollInView contract. }
@@ -604,6 +619,11 @@ begin
   FProjectionSchemaRevision := 0;
   ReleaseNyxNode(FProjectionBaseline);
   FSelectedDesignID := '';
+  FResizePreview := Default(TNyxResizePreview);
+  for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
+  begin
+    FreeAndNil(FResizeEdges[LIndex]);
+  end;
   for LIndex := Low(FSelectionEdges) to High(FSelectionEdges) do
   begin
     { The scroll host owns the strips and releases them with its controls. }
@@ -2001,9 +2021,143 @@ procedure TNyxLCLRenderer.Select(const ADesignID: TNyxText);
 begin
   FEvents.Scheduler.RequireUI;
   FSelectedDesignID := ADesignID;
+  FResizePreview := Default(TNyxResizePreview);
   { Painting selection is deliberately scroll-neutral. Navigation uses Reveal,
     so an observing refresh cannot undo the user's independent scroll position. }
   UpdateSelection;
+end;
+
+procedure TNyxLCLRenderer.PreviewResize(const APreview: TNyxResizePreview);
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if APreview.Active and (not FDesignMode or
+    (APreview.Control.ID <> FSelectedDesignID)) then
+  begin
+    raise ENyxModel.Create('Resize presentation requires the selected authored face');
+  end;
+
+  if APreview.Active then
+  begin
+    { Resolve before replacing presentation, matching browser refusal semantics.
+      A missing mounted identity cannot publish an unresolvable proposal. }
+    IdentityBinding(APreview.Control.ID, niDesign);
+  end;
+  FResizePreview := APreview;
+  UpdateSelection;
+end;
+
+procedure TNyxLCLRenderer.UpdateResizePreview;
+var
+  LBinding: TNyxLCLBinding;
+  LHost: TWinControl;
+  LOrigin: TPoint;
+  LIndex: Integer;
+
+  procedure Edge(AIndex, ALeft, ATop, AWidth, AHeight: Integer);
+  var
+    LRight: Integer;
+    LBottom: Integer;
+  begin
+    { Clip before assigning physical native geometry. Very large logical
+      proposals must never request an equally large widget/window allocation. }
+    LRight := Min(ALeft + AWidth, LHost.ClientWidth);
+    LBottom := Min(ATop + AHeight, LHost.ClientHeight);
+    ALeft := Max(0, ALeft);
+    ATop := Max(0, ATop);
+    FResizeEdges[AIndex].Visible := False;
+
+    if (LRight > ALeft) and (LBottom > ATop) then
+    begin
+      FResizeEdges[AIndex].SetBounds(ALeft, ATop, LRight - ALeft, LBottom - ATop);
+      FResizeEdges[AIndex].Visible := True;
+      FResizeEdges[AIndex].BringToFront;
+    end;
+  end;
+
+begin
+
+  if not FResizePreview.Active or (FPanel = nil) or (FPanel.Parent = nil) or
+    (FSelectionEdges[0] = nil) or not FSelectionEdges[0].Visible then
+  begin
+    for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
+    begin
+
+      if FResizeEdges[LIndex] <> nil then
+      begin
+        FResizeEdges[LIndex].Visible := False;
+      end;
+    end;
+    Exit;
+  end;
+  LHost := FPanel.Parent;
+  LBinding := IdentityBinding(FResizePreview.Control.ID, niDesign);
+  { Reuse the freshly laid-out selected outer face, including logical clipping.
+    Undo its two-pixel external highlight before converting to sibling paint
+    space. Root client edges already start at the original face's origin. }
+  LOrigin := Point(FSelectionEdges[0].Left, FSelectionEdges[0].Top);
+
+  if (LBinding.FControl.Parent <> FPanel) or not (LBinding.FControl is TWinControl) then
+  begin
+    Inc(LOrigin.X, 2);
+    Inc(LOrigin.Y, 2);
+  end;
+  LOrigin := LHost.ScreenToClient(FSelectionEdges[0].Parent.ClientToScreen(LOrigin));
+  for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
+  begin
+
+    if FResizeEdges[LIndex] = nil then
+    begin
+      { Reuse standard LCL panels as four tiny child-window paint faces above
+        descendant windows. Graphic-only ancestor shapes would paint behind
+        those windows or clip to the unchanged row. No custom widget is needed. }
+      FResizeEdges[LIndex] := TPanel.Create(nil);
+      FResizeEdges[LIndex].Name := 'NyxResizeEdge' + IntToStr(LIndex);
+      { LCL can copy Name into Caption. Paint only the accent, never that text. }
+      FResizeEdges[LIndex].Caption := '';
+      FResizeEdges[LIndex].BevelOuter := bvNone;
+      FResizeEdges[LIndex].BevelInner := bvNone;
+      FResizeEdges[LIndex].BorderWidth := 0;
+      FResizeEdges[LIndex].ParentBackground := False;
+      FResizeEdges[LIndex].ParentColor := False;
+      FResizeEdges[LIndex].Enabled := False;
+      FResizeEdges[LIndex].TabStop := False;
+    end;
+    FResizeEdges[LIndex].Parent := LHost;
+    FResizeEdges[LIndex].Color := ThemeColor(FTheme.Accent);
+  end;
+  Edge(0, LOrigin.X - 2, LOrigin.Y - 2, FResizePreview.Size.Width + 4, 2);
+  Edge(1, LOrigin.X - 2, LOrigin.Y + FResizePreview.Size.Height,
+    FResizePreview.Size.Width + 4, 2);
+  Edge(2, LOrigin.X - 2, LOrigin.Y, 2, FResizePreview.Size.Height);
+  Edge(3, LOrigin.X + FResizePreview.Size.Width, LOrigin.Y, 2, FResizePreview.Size.Height);
+end;
+
+procedure TNyxLCLRenderer.PaintResizePreview(ACanvas: TCanvas; const AOrigin: TPoint);
+var
+  LIndex: Integer;
+  LPoint: TPoint;
+begin
+  FEvents.Scheduler.RequireUI;
+
+  if ACanvas = nil then
+  begin
+    raise ENyxModel.Create('Native proposal capture requires a caller-owned canvas');
+  end;
+
+  if not FResizePreview.Active then
+  begin
+    Exit;
+  end;
+  for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
+  begin
+
+    if (FResizeEdges[LIndex] <> nil) and FResizeEdges[LIndex].Visible then
+    begin
+      LPoint := FResizeEdges[LIndex].ClientToScreen(Point(0, 0));
+      FResizeEdges[LIndex].PaintTo(ACanvas, LPoint.X - AOrigin.X, LPoint.Y - AOrigin.Y);
+    end;
+  end;
 end;
 
 procedure TNyxLCLRenderer.UpdateSelection;
@@ -2102,6 +2256,7 @@ begin
 
   if LControl = nil then
   begin
+    UpdateResizePreview;
     Exit;
   end;
   { The scroll panel owns all four graphics even when their paint parent is a
@@ -2117,6 +2272,7 @@ begin
   begin
     FSelectionEdges[LIndex].BringToFront;
   end;
+  UpdateResizePreview;
 end;
 
 procedure TNyxLCLRenderer.MoveHost(AHost: TWinControl);
@@ -2128,6 +2284,7 @@ var
   LHorizontal: Integer;
   LVertical: Integer;
   LUpdating: Boolean;
+  LIndex: Integer;
 begin
   FEvents.Scheduler.RequireUI;
 
@@ -2182,6 +2339,17 @@ begin
     { Reparent the scroll host, never recreate its children or event routers.
       Guard native focus notifications caused by reparenting from authoring. }
     FPanel.Parent := AHost;
+    { Inert proposal windows are siblings of the scroll host. Move even hidden
+      strips before the caller disposes the previous host; their borrowed parent
+      must never free windows still owned/referenced by this renderer. }
+    for LIndex := Low(FResizeEdges) to High(FResizeEdges) do
+    begin
+
+      if FResizeEdges[LIndex] <> nil then
+      begin
+        FResizeEdges[LIndex].Parent := AHost;
+      end;
+    end;
     Resize(FPanel);
 
     if LInside and LFocus.CanFocus then

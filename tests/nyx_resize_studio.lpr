@@ -26,7 +26,7 @@ program nyx_resize_studio;
 
 uses
   SysUtils, Classes, Interfaces, Forms, Controls, StdCtrls, Graphics,
-  IntfGraphics, FPWritePNG, LCLType, nyx.text, nyx.types, nyx.model,
+  IntfGraphics, FPWritePNG, LCLType, Types, Math, ExtCtrls, nyx.text, nyx.types, nyx.model,
   nyx.designer.resize, nyx.gestures.lcl, nyx.studio.projects,
   nyx.studio.lcl, nyx.studio.resize, nyx.studio.sourcejobs, nyx.test.resize;
 
@@ -126,25 +126,142 @@ begin
   Check(AKey = 0, 'handled resize keyboard shortcut consumes the native default');
 end;
 
+function ResizeInk(AParent: TWinControl; AIndex: Integer): TWinControl; forward;
+
 procedure Capture(const AName: TNyxText);
 var
   LBitmap: TBitmap;
   LImage: TLazIntfImage;
   LWriter: TFPWriterPNG;
+  LInk: TControl;
+  LPoint: TPoint;
+  LIndex: Integer;
 begin
   LBitmap := TBitmap.Create;
   LImage := nil;
   LWriter := nil;
   try
-    LBitmap.SetSize(LForm.ClientWidth, LForm.ClientHeight);
+    { Win32 PaintTo includes the form's non-client frame/caption. The bitmap
+      therefore represents the window origin, rather than the client origin;
+      compose actual child-window paint and sample pixels in that same space. }
+    LBitmap.SetSize(LForm.Width, LForm.Height);
+
     LForm.PaintTo(LBitmap.Canvas, 0, 0);
+    LStudio.CanvasView.PaintResizePreview(LBitmap.Canvas, Point(LForm.Left, LForm.Top));
     LImage := LBitmap.CreateIntfImage;
     LWriter := TFPWriterPNG.Create;
     LImage.SaveToFile(IncludeTrailingPathDelimiter(ParamStr(1)) + AName, LWriter);
+
+    if AName = 'resize-proposal-desktop.png' then
+    begin
+      { Geometry checks cannot prove visible ink. Sample the actual rendered
+        bitmap at each proposed strip, outside the unchanged control's edges. }
+      for LIndex := 0 to 3 do
+      begin
+        LInk := ResizeInk(LForm, LIndex);
+        LPoint := LInk.ClientToScreen(Point(LInk.Width div 2, LInk.Height div 2));
+        Dec(LPoint.X, LForm.Left);
+        Dec(LPoint.Y, LForm.Top);
+        WriteLn('Native proposal paint / ', LIndex, ' / ', LPoint.X, ',', LPoint.Y,
+          ' / ', LInk.Width, 'x', LInk.Height, ' / pixel ',
+          IntToHex(ColorToRGB(LBitmap.Canvas.Pixels[LPoint.X, LPoint.Y]), 8),
+          ' / expected ', IntToHex(ColorToRGB(TWinControlAccess(LInk).Color), 8));
+        Flush(Output);
+        Check(ColorToRGB(LBitmap.Canvas.Pixels[LPoint.X, LPoint.Y]) =
+          ColorToRGB(TWinControlAccess(LInk).Color), 'proposed edge actually paints its accent pixel');
+      end;
+    end;
   finally
     LWriter.Free;
     LImage.Free;
     LBitmap.Free;
+  end;
+end;
+
+function ResizeInk(AParent: TWinControl; AIndex: Integer): TWinControl;
+var
+  LIndex: Integer;
+  LChild: TControl;
+begin
+  Result := nil;
+  for LIndex := 0 to AParent.ControlCount - 1 do
+  begin
+    LChild := AParent.Controls[LIndex];
+
+    if LChild.Name = 'NyxResizeEdge' + IntToStr(AIndex) then
+    begin
+      Exit(TWinControl(LChild));
+    end;
+
+    if LChild is TWinControl then
+    begin
+      Result := ResizeInk(TWinControl(LChild), AIndex);
+
+      if Result <> nil then
+      begin
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+procedure CheckOutline(AWidth, AHeight: Integer);
+var
+  LFace: TControl;
+  LTop: TWinControl;
+  LBottom: TWinControl;
+  LRight: TWinControl;
+  LOrigin: TPoint;
+  LEdge: TShape;
+  LIndex: Integer;
+begin
+  LFace := LStudio.CanvasView.ControlFor('notes-editor');
+  LTop := ResizeInk(LForm, 0);
+  LBottom := ResizeInk(LForm, 1);
+  LRight := ResizeInk(LForm, 3);
+  Check((LTop <> nil) and (LBottom <> nil) and (LRight <> nil),
+    'proposal has real native paint windows');
+  LEdge := nil;
+  for LIndex := 0 to LFace.Parent.ControlCount - 1 do
+  begin
+
+    if (LFace.Parent.Controls[LIndex] is TShape) and
+      LFace.Parent.Controls[LIndex].Visible and
+      (LFace.Parent.Controls[LIndex].Height = 2) and
+      (LFace.Parent.Controls[LIndex].Width > 2) then
+    begin
+
+      if (LEdge = nil) or (LFace.Parent.Controls[LIndex].Top < LEdge.Top) then
+      begin
+        LEdge := TShape(LFace.Parent.Controls[LIndex]);
+      end;
+    end;
+  end;
+  Check(LEdge <> nil, 'existing selected outer face remains visible during the proposal');
+  { Independently resolve the public outer control, rather than calculating an
+    expected proposal from the implementation's selection-strip coordinates. }
+  LOrigin := LTop.Parent.ScreenToClient(LFace.Parent.ClientToScreen(Point(LFace.Left, LFace.Top)));
+  Check(LTop.Visible and LBottom.Visible and LRight.Visible,
+    'proposal reaches the visible canvas above nested native windows');
+  Check((LBottom.Top = LOrigin.Y + AHeight) and (LRight.Left = LOrigin.X + AWidth),
+    'proposed far edges extend beyond the unchanged row using exact outer origin');
+  Check(not LTop.Enabled and not LTop.TabStop and not LRight.Enabled and not LRight.TabStop,
+    'presentation adds no input or keyboard focus entry');
+  Check((LTop.Width <= LTop.Parent.ClientWidth) and (LRight.Height <= LRight.Parent.ClientHeight),
+    'physical paint geometry stays bounded by the canvas viewport');
+  Check(Pos('NyxResizeEdge', LTop.Parent.Controls[LTop.Parent.ControlCount - 1].Name) = 1,
+    'real native overlays occupy the front of their sibling window order');
+end;
+
+procedure CheckNoOutline;
+var
+  LIndex: Integer;
+  LInk: TWinControl;
+begin
+  for LIndex := 0 to 3 do
+  begin
+    LInk := ResizeInk(LForm, LIndex);
+    Check((LInk = nil) or not LInk.Visible, 'retired proposal has no visible native paint strip');
   end;
 end;
 
@@ -186,6 +303,8 @@ begin
       BeginGrip(NyxStudioResizeBothID);
       Check(NyxLCLHasPointerCapture(LGrip), 'real Win32 adapter captures the Nyx grip');
       MoveGrip(33, 40);
+      CheckOutline(336, 152);
+      Capture('resize-proposal-desktop.png');
       Check((Pos('336', LStudio.Status) > 0) and (Pos('152', LStudio.Status) > 0),
         'ordinary status displays snapped dimensions before publication');
       Check(not LStudio.SourceCommands.Busy and
@@ -194,6 +313,7 @@ begin
       Check((LMemo.Text = 'An uncommitted English control draft.') and
         (LMemo.SelStart = 3) and (LMemo.SelLength = 5), 'preview preserves canvas input and selection');
       EndGrip(33, 40);
+      CheckNoOutline;
       Check((LStudio.Session.Selected.Prop('width') = '336') and
         (LStudio.Session.Selected.Prop('height') = '152') and
         (LStudio.Session.Selected.Prop('flex') = '0'), 'release publishes both dimensions as one edit');
@@ -217,6 +337,7 @@ begin
       BeginGrip(NyxStudioResizeWidthID);
       MoveGrip(90, 5);
       Key(VK_ESCAPE);
+      CheckNoOutline;
       EndGrip(90, 5);
       Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = EncodeNyxProject(LBefore),
         'Escape followed by release never publishes the canceled candidate');

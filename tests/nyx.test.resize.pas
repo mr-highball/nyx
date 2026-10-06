@@ -114,6 +114,7 @@ function RunNyxResizeJourney(out APair: TNyxProjectPair): Integer;
 var
   LChecks: Integer;
   LSize: TNyxResizeSize;
+  LPreview: TNyxResizePreview;
   LPolicy: TNyxResizePolicy;
   LCopy: TNyxResizePolicy;
   LRefused: Boolean;
@@ -152,6 +153,20 @@ var
 begin
   LChecks := 0;
   LSize := NyxResizeSize(200, 120);
+  Check(not Default(TNyxResizePreview).Active, 'default presentation is an explicit clear');
+  LPreview := NyxResizePreview(NyxControl('notes-editor'), LSize);
+  Check(LPreview.Active and (LPreview.Control.ID = 'notes-editor') and
+    LPreview.Size.SameSize(LSize), 'preview carries owned typed identity and logical size');
+  LRefused := False;
+  try
+    NyxResizePreview(NyxControl('notes-editor'), Default(TNyxResizeSize));
+  except
+    on EArgumentException do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused, 'undefined geometry refuses before any presentation');
   LPolicy := NyxResizePolicy;
   Check(LPolicy.Adjust(LSize, nraBoth, 13, 21).SameSize(NyxResizeSize(216, 144)),
     'nearest grid is deterministic on both dimensions');

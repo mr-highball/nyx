@@ -51,6 +51,21 @@ type
     property Height: Integer read FHeight;
   end;
 
+  { Copied designer presentation, independent of the accepted document and
+    target widgets. Default clears the proposal. A defined value names an exact
+    authored control and its proposed outer size in logical pixels. Renderers
+    resolve the current mounted origin; no tree, input or ownership is retained. }
+  TNyxResizePreview = record
+  private
+    FControl: TNyxControlRef;
+    FSize: TNyxResizeSize;
+    function GetActive: Boolean;
+  public
+    property Active: Boolean read GetActive;
+    property Control: TNyxControlRef read FControl;
+    property Size: TNyxResizeSize read FSize;
+  end;
+
   { Value-only policy. Grid snapping rounds final dimensions to the nearest
     multiple (ties toward increasing size), then clamps to explicit bounds.
     Thus a non-grid minimum/maximum remains exact. Alt bypasses the grid during
@@ -118,6 +133,10 @@ type
   end;
 
 function NyxResizeSize(AWidth, AHeight: Integer): TNyxResizeSize;
+{ Rejects missing identity or undefined dimensions before any presentation
+  changes. Default(TNyxResizePreview) is the explicit clear operation. }
+function NyxResizePreview(const AControl: TNyxControlRef;
+  const ASize: TNyxResizeSize): TNyxResizePreview;
 function NyxResizePolicy: TNyxResizePolicy;
 { Managed specialized button, stable 116x44 logical-pixel face, explicit touch
   negotiation and an English accessible name/hint. Its descriptor is borrowed
@@ -128,6 +147,24 @@ implementation
 
 uses
   Math;
+
+function TNyxResizePreview.GetActive: Boolean;
+begin
+  Result := FControl.ID <> '';
+end;
+
+function NyxResizePreview(const AControl: TNyxControlRef;
+  const ASize: TNyxResizeSize): TNyxResizePreview;
+begin
+
+  if (AControl.ID = '') or not ASize.Defined then
+  begin
+    raise EArgumentException.Create('Resize preview requires an exact control and defined size');
+  end;
+  Result := Default(TNyxResizePreview);
+  Result.FControl := AControl;
+  Result.FSize := ASize;
+end;
 
 type
   IResizeCallback = interface(INyxEventCallback)

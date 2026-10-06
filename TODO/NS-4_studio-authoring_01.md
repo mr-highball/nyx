@@ -40,6 +40,33 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Canvas resize presentation — 2026-10-05
+
+Original criterion 1 now receives copied typed proposals through the public
+canvas adapters, after shell refresh and a fresh gesture lease check. Four
+inert clipped strips outline proposed outer dimensions without changing the
+accepted tree/source or independent input. Browser paint follows scroll/resize;
+native standard panels remain above descendant windows and move with the
+retained canvas host. Cancel/selection/unmount retire presentation; release
+still submits the same single isolated paired command.
+
+Shared checks pass 54 per native compiler, unchanged compiled controls seven,
+actual Win32 Studio 59 and retained projection 27, with zero checked leaks.
+An owned semantic MCP project is composed in one transaction and its exact
+bounded source compiled unchanged for 30 desktop / 30 exact-390 browser preview
+checks. One semantic Undo/Redo restores empty/accepted state and exact source.
+Native captures compose actual panel painting; the physical desktop capture
+was unavailable. Ordinary browser Studio grip input, observing phone refresh,
+hardware/IME/assistive technology and complete editor/parity remain open. See
+[evidence](../WORK.md#canvas-resize-presentation--2026-10-05).
+
+No original criterion closes. Authoring no-closure advances **11→12** once;
+workflow 9, codegen 28, renderer 3 and delivery 1 remain. End paint/capture/fixture
+expansion. Next connect direct canvas handles and responsive authoring through
+public Nyx contracts and the existing isolated paired processor, then complete
+original editor/parity/accessibility/performance and delivery outcomes. Preserve
+all blockers, protected projects/services and the pending user-local refresh.
+
 ## Reusable resize grips — 2026-10-05
 
 Original criterion 1 now consumes its size-bounds prerequisite through public
