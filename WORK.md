@@ -99,6 +99,12 @@ editing/MCP observation, hardware/IME/assistive input, other widgetsets/DPI and
 original accessibility/performance/delivery outcomes remain open. Next act on
 reversible physical publication rather than repeating admission evidence.
 
+Implementation checkpoint `6381268657ad2db966cd1c71f0b0ac783ee3eb63` is pushed to
+`origin/hello-nyx`; the exact remote SHA is verified in
+`build/content-settling/remote-checkpoint.json`. The next preservation baseline
+is `build/content-settling/protected-main-final.json`, retaining all eight pairs.
+No compiler or input harness remains active. The full product goal stays active.
+
 ## Live content publication — 2026-10-06
 
 Owner: original NS-4 criterion 1, consuming the existing NS-2 runtime and NS-1
