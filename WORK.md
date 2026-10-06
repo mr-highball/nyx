@@ -102,6 +102,15 @@ Full responsive WYSIWYG/parity/accessibility/performance and original prerequisi
 remain open. Rule loading/draft ergonomics, broader source-change continuity and
 the full observing browser semantic release are not accepted from this packet.
 
+Checkpoint: implementation `92c577e045e287d6a138eb9353cb1a2cb5097c6d` is pushed to
+`hello-nyx`; exact remote SHA was verified. The final maintained build passes 61
+actual native checks and five executed companion checks, with zero leaks. Browser
+Properties passes 55 per desktop/390 and its companion passes five. No compiler
+or harness remains live. Private remote/handoff receipts are under
+`build/content-editor/`; the full user goal remains active. Next use the workflow
+owner's protected release/observing path, retaining the eight current pairs and
+fifteen service identities, instead of adding another local editor fixture.
+
 ## Reversible physical publication — 2026-10-06
 
 Owner: original NS-2 native interaction/ownership and browser recovery criteria,
