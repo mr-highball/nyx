@@ -104,6 +104,14 @@ allocation/containment and structural-variant gaps or full move snapping, then
 ordinary editor/parity/accessibility/performance/delivery. The original criteria
 and prerequisites remain; no original criterion or full-goal percentage closes.
 
+Next concrete deliverable: full move snapping under original authoring criterion
+1. Inspect the existing placement/drag and public alignment contracts first;
+preserve semantic ownership/revision guards and one paired publication. Establish
+absolute-position versus flow placement behavior, coordinate conversion and
+responsive-scope refusal before implementing ordinary browser/LCL gestures.
+Container allocation and structural variants remain separately open; this choice
+does not reset authoring's no-closure count or bypass its prerequisites.
+
 Preceding independent work: [alignment guides](#alignment-guides--2026-10-06) now
 has public copied geometry, both adapters and ordinary Studio evidence. The goal
 turn is progress; it closes no full criterion/prerequisite. Authoring no-closure
@@ -8982,6 +8990,13 @@ selected focused/wide PNG previews render real different layouts at revision 4.
 The stable primary remains exact at revision 2. Twenty tools authenticate through
 the Pascal semantic client; this chat's native named handles still cache an
 obsolete endpoint and return initialization HTTP 404.
+
+Implementation checkpoint `6fb9b78cdebe61a9eb8ce12dc3071dc586029242` is pushed to
+`origin/hello-nyx` with exact remote HEAD verification. The private receipt is
+`build/manual-presentations/remote-checkpoint.json`. Current production and all
+twelve protected auxiliary process identities were reverified after deployment
+and semantic qualification. Finish this batch at the integrated result; the next
+deliverable is original full move snapping, not another manual-rule fixture.
 
 No original criterion closes. Authoring no-closure advances **18→19** once;
 workflow **9**, codegen **28**, renderer **3**, delivery **1** remain. End local
