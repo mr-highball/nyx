@@ -9514,3 +9514,10 @@ PID 15396. All fifteen pre-existing service identities remain exact and the LAN
 endpoint responds HTTP 200; eight main project frames remain present, with primary
 revision 2. `final-service-preservation.json` records this check. No additional
 fixture listener remains running and no production refresh script was invoked.
+
+Implementation checkpoint `9d2717b02df36017e0dc85316a847f223cede741` is pushed to
+`origin/hello-nyx`, with exact remote SHA verified. Ignored
+`build/native-measurement/remote-checkpoint.json` records the implementation receipt.
+All owned code/test changes are checked; the original goal remains active. The
+current LAN container release stays unchanged while the next grouped release is
+prepared, retaining all current projects and the remaining structural gate.
