@@ -116,9 +116,23 @@ var
 begin
   LKeepAlive := Self as INyxCollectionMount;
 
+  { Only later UTF-8 text for this admitted key may drive search. Virtual-key
+    codes are not text; AltGr/IME processing and consumed callbacks stay owned
+    by the host. Shift still permits ordinary uppercase characters. }
+  FRejectTextKey := (AShift * [ssAlt, ssCtrl, ssMeta, ssSuper, ssAltGr] <> []) or
+    (AKey = $E5) or (AKey = $E7);
+
   if Assigned(FPreviousKey) then
   begin
     FPreviousKey(Sender, AKey, AShift);
+  end;
+  FConsumedTextKey := AKey = 0;
+  FRejectTextKey := FRejectTextKey or FConsumedTextKey;
+
+  if FRejectTextKey or (AKey in [VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT,
+    VK_HOME, VK_END, VK_SPACE, VK_RETURN, VK_TAB, VK_ESCAPE]) then
+  begin
+    ResetTypeAhead;
   end;
 
   if not GetConnected then
@@ -265,6 +279,80 @@ begin
   end
   else
   begin
+    Select(LOrder[LTarget]);
+  end;
+end;
+
+procedure TNativeMount.UTF8KeyPress(Sender: TObject; var AKey: TUTF8Char);
+var
+  LKeepAlive: INyxCollectionMount;
+  LOrder: TNyxItemRefs;
+  LFocus: TNyxItemRef;
+  LIndex: Integer;
+  LTarget: Integer;
+  LText: TNyxText;
+begin
+  LKeepAlive := Self as INyxCollectionMount;
+
+  if Assigned(FPreviousUTF8) then
+  begin
+    FPreviousUTF8(Sender, AKey);
+  end;
+
+  if not GetConnected then
+  begin
+    AKey := '';
+    Exit;
+  end;
+
+  if FConsumedTextKey then
+  begin
+    { A queued native character may follow a consumed virtual key. Suppress
+      that text as well, before the widgetset can perform its own search. }
+    AKey := '';
+    ResetTypeAhead;
+    Exit;
+  end;
+
+  if FUpdating or FRejectTextKey or ((FTree <> nil) and FTree.IsEditing) then
+  begin
+    ResetTypeAhead;
+    Exit;
+  end;
+  LText := TNyxText(AKey);
+
+  if not NyxTypeAheadCharacter(LText) then
+  begin
+    ResetTypeAhead;
+    Exit;
+  end;
+  { Suppress the widgetset's separate locale-dependent search, even without a
+    match. One portable default owns this admitted text gesture. }
+  AKey := '';
+
+  if not FEnabled then
+  begin
+    ResetTypeAhead;
+    Exit;
+  end;
+  LOrder := VisibleOrder;
+  LFocus := FView.Selection.Focus;
+  LTarget := -1;
+  for LIndex := 0 to Length(LOrder) - 1 do
+  begin
+
+    if LFocus.Defined and (LOrder[LIndex].ID = LFocus.ID) then
+    begin
+      LTarget := LIndex;
+      Break;
+    end;
+  end;
+  LTarget := FindTypeAhead(LText, Double(GetTickCount64), LOrder, LTarget);
+
+  if LTarget >= 0 then
+  begin
+    { Selection refresh reveals the native item. The callback may detach this
+      mount: selection is the last borrowed operation in this retained frame. }
     Select(LOrder[LTarget]);
   end;
 end;

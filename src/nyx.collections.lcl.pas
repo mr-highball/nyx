@@ -54,6 +54,7 @@ uses
   nyx.data,
   nyx.collections,
   nyx.collections.view.types,
+  nyx.typeahead,
   nyx.collections.selection;
 
 type
@@ -72,6 +73,9 @@ type
     FPreviousOptions: TGridOptions;
     FPreviousReadOnly: Boolean;
     FPreviousKey: TKeyEvent;
+    FPreviousUTF8: TUTF8KeyPressEvent;
+    FRejectTextKey: Boolean;
+    FConsumedTextKey: Boolean;
     FPreviousMouse: TMouseEvent;
     FPreviousPrepare: TOnPrepareCanvasEvent;
     FPreviousTreeSelection: TNotifyEvent;
@@ -86,6 +90,7 @@ type
     procedure TreeSelected(Sender: TObject; ANode: TTreeNode);
     procedure TreeSelectionChanged(Sender: TObject);
     procedure KeyDown(Sender: TObject; var AKey: Word; AShift: TShiftState);
+    procedure UTF8KeyPress(Sender: TObject; var AKey: TUTF8Char);
     procedure GridMouseDown(Sender: TObject; AButton: TMouseButton;
       AShift: TShiftState; AX, AY: Integer);
     procedure PrepareGrid(Sender: TObject; AColumn, ARow: Integer; AState: TGridDrawState);
@@ -131,6 +136,8 @@ begin
         FList.OnSelectionChange := ListSelected;
         FPreviousKey := FList.OnKeyDown;
         FList.OnKeyDown := KeyDown;
+        FPreviousUTF8 := FList.OnUTF8KeyPress;
+        FList.OnUTF8KeyPress := UTF8KeyPress;
         FPreviousMultiSelect := FList.MultiSelect;
         FPreviousExtendedSelect := FList.ExtendedSelect;
         FList.MultiSelect := AView.Spec.SelectionMode = nsmMultiple;
@@ -180,6 +187,8 @@ begin
         FTree.ReadOnly := AView.Spec.ColumnAt(0).Mode <> cmEditable;
         FPreviousKey := FTree.OnKeyDown;
         FTree.OnKeyDown := KeyDown;
+        FPreviousUTF8 := FTree.OnUTF8KeyPress;
+        FTree.OnUTF8KeyPress := UTF8KeyPress;
         FPreviousTreeSelection := FTree.OnSelectionChanged;
         FTree.OnSelectionChanged := TreeSelectionChanged;
         FPreviousMultiSelect := FTree.MultiSelect;
@@ -775,6 +784,7 @@ begin
   begin
     FList.OnSelectionChange := FPreviousSelection;
     FList.OnKeyDown := FPreviousKey;
+    FList.OnUTF8KeyPress := FPreviousUTF8;
     FList.MultiSelect := FPreviousMultiSelect;
     FList.ExtendedSelect := FPreviousExtendedSelect;
     FList := nil;
@@ -797,6 +807,7 @@ begin
     FTree.OnEdited := FPreviousTreeEdit;
     FTree.ReadOnly := FPreviousReadOnly;
     FTree.OnKeyDown := FPreviousKey;
+    FTree.OnUTF8KeyPress := FPreviousUTF8;
     FTree.OnSelectionChanged := FPreviousTreeSelection;
     FTree.MultiSelect := FPreviousMultiSelect;
     FTree.MultiSelectStyle := FPreviousMultiStyle;

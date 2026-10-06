@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -49,6 +49,8 @@ param(
   # The keyboard review source is exported through MCP, never handwritten by
   # this orchestration script. Its generated unit must live in this directory.
   [string]$KeyboardSourceDirectory = 'build/keyboard/mcp',
+  # Exact collection review source exported through bounded Nyx MCP queries.
+  [string]$TypeAheadSourceDirectory = 'build/typeahead/source',
   # Full-catalog source is composed/exported by the Pascal semantic MCP consumer.
   [string]$CatalogFocusSourceDirectory = 'build/catalog-focus/source',
   # Property mutations consume an unchanged MCP-authored catalog/review pair.
@@ -1091,6 +1093,58 @@ try {
       "-Fu$nyxKeyboardSource", "-FE$nyxBrowserDir", 'tests/nyx_keyboard_host_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/keyboard-host.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'typeahead') {
+    # Reproduce pinned Unicode data with Pascal, then compile the SAME semantic
+    # review for both adapters. This target never starts/replaces a listener.
+    $nyxTypeAheadRoot = Join-Path $nyxRoot 'build/typeahead/maintained'
+    $nyxTypeAheadGenerator = Join-Path $nyxTypeAheadRoot 'generator'
+    $nyxTypeAheadNative = Join-Path $nyxTypeAheadRoot 'lcl'
+    $nyxTypeAheadSource = [IO.Path]::GetFullPath($TypeAheadSourceDirectory)
+
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxTypeAheadSource 'nyx.generated.view.pas'))) {
+      throw 'Export the MCP typeahead review first; see docs/collection-views.md'
+    }
+    New-Item -ItemType Directory -Force $nyxTypeAheadGenerator, $nyxTypeAheadNative | Out-Null
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', "-FU$nyxTypeAheadGenerator", "-FE$nyxTypeAheadGenerator", 'tools/nyx_unicode_casefold.lpr')
+    $nyxTypeAheadTable = Join-Path $nyxTypeAheadGenerator 'casefold.inc'
+    $nyxTypeAheadInputs = @('data/unicode/17.0.0/CaseFolding.txt',
+      'data/unicode/17.0.0/LICENSE.txt', $nyxTypeAheadTable)
+    & (Join-Path $nyxTypeAheadGenerator 'nyx_unicode_casefold.exe') @nyxTypeAheadInputs
+
+    if ($LASTEXITCODE -ne 0) { throw 'Unicode case-fold generator failed' }
+
+    if ((Get-FileHash -LiteralPath $nyxTypeAheadTable).Hash -ne
+        (Get-FileHash -LiteralPath (Join-Path $nyxRoot 'src/nyx.text.casefold.inc')).Hash) {
+      throw 'Checked-in Unicode table differs from pinned Pascal generation'
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxTypeAheadPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', '-Fustudio', "-Fu$nyxTypeAheadSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxTypeAheadPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxTypeAheadPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxTypeAheadPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxTypeAheadPlatform",
+      "-FU$nyxTypeAheadNative", "-FE$nyxTypeAheadNative", 'tests/nyx_typeahead_tests.lpr')
+    & (Join-Path $nyxTypeAheadNative 'nyx_typeahead_tests.exe') (Join-Path $nyxTypeAheadRoot 'english-native.png')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Native typeahead controls failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxBrowserDir = Join-Path $nyxTypeAheadRoot 'browser'
+
+    if ($BrowserOutput) { $nyxBrowserDir = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxBrowserDir | Out-Null
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxTypeAheadSource", "-FE$nyxBrowserDir",
+      'tests/nyx_typeahead_tests.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/typeahead.html') -Destination $nyxBrowserDir
     exit 0
   }
 

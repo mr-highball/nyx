@@ -267,10 +267,79 @@ uses disabled HTML behavior because that input type has no read-only mode.
 Native tables retain the standard LCL cell editor and widget navigation.
 
 This row-oriented contract is qualified below. Complete cell-oriented grid
-navigation, typeahead, assistive technology and other widgetsets remain open.
+navigation, assistive technology and other widgetsets remain open.
 The [WAI keyboard guidance](https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/)
 and [grid pattern](https://www.w3.org/WAI/ARIA/apg/patterns/grid/) guide further
 work; this packet does not claim full APG conformance.
+
+## List and tree typeahead
+
+Bound lists and trees share a portable managed `INyxTypeAhead` engine. Typing a
+printable Unicode scalar searches the first displayed column, beginning after
+the current focus and wrapping once. Repeating a single letter cycles through
+matches. A rapid extended prefix first tests the current match. The default
+window is one second, measured on a monotonic clock. No match leaves selection
+unchanged. Search uses the actual visible tree order, excluding descendants of
+collapsed branches. A match replaces membership and moves focus, consistent
+with the existing modifier-assisted selection model.
+
+Unicode 17 default full case folding supplies locale-independent comparison,
+including supplementary characters and one-to-many mappings. Authored text
+stays exact; folding neither normalizes nor removes accents. The pinned data,
+license and Pascal regeneration path are described [here](../data/unicode/README.md).
+The engine bounds transient state to 64 typed scalars. Search streams only the
+required label prefix; controls still materialize their complete dataset.
+
+Runtime policy uses an immutable fluent value:
+
+```pascal
+uses nyx.typeahead;
+
+LDestinations := LRenderer.CollectionMount('destination-list');
+LDestinations.ConfigureTypeAhead(
+  NyxTypeAhead.WindowMilliseconds(800).Match(ntmFolded));
+```
+
+`Enabled(False)` disables search; `ntmExact` preserves case. A policy requires a
+factory-defined value and a window of 1..60000 milliseconds. Invalid replacement
+refuses before changing the accepted search. Each mount owns its own engine and
+borrows the pure label reader only during search. Retained mount handles report
+disconnected after unmount and refuse configuration. Prefix/focus/time never
+enter saved documents, stores or Undo history. Dataset revisions, navigation,
+effective interaction changes and external model cursor changes reset the buffer;
+selection refresh alone preserves it. Persisted/Inspector policy authoring is
+still an open Studio capability, rather than a new unvalidated wire field.
+
+Control/Meta shortcuts, Alt/AltGr text, IME composition, cell/label editors and
+consumed key callbacks retain their host ownership. Space keeps its existing
+toggle-selection meaning, so spaces are not part of a search prefix. Read-only
+controls permit selection; disabled controls preserve it. Native adapters use
+the admitted UTF-8 character callback, never translate a virtual key into text,
+and restore the previous callback at disconnect. A queued character following
+consumed KeyDown is also consumed. Browser focus reveals the matched item using
+the host's ordinary focus scrolling; selection callbacks may retire the view
+before that focus step.
+
+This follows [listbox](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/) and
+[treeview](https://www.w3.org/WAI/ARIA/apg/patterns/treeview/) typeahead guidance.
+Current checked Win32 controls pass 67 assertions with zero leaks, and real
+browser consumers pass 68 at CSS widths 1076 and 576. They consume the identical
+English MCP-authored companion. Synthetic DOM events and native callback routing
+qualify the default's semantics, not trusted hardware, IME, assistive technology,
+other widgetsets or complete APG conformance. Literal unbound items and grid
+typeahead are outside this bound list/tree packet.
+
+To reproduce, create an independent empty `nyx_reviews` workspace at the current
+primary revision. Apply the `layout` group in
+[the review recipe](../tests/typeahead-review.operations.json) through
+`nyx_transaction`, then its `collections` group through `nyx_collections`, each
+at the fresh exact revision with a unique operation ID. Export accepted
+`nyx_source` windows of at most 60 lines at one revision to
+`build/typeahead/source/nyx.generated.view.pas`, preserving exact lines. Run
+`tools/build.ps1 -Target typeahead`; `-TypeAheadSourceDirectory` selects another
+semantic export. Serve the resulting browser fixture through an already-owned
+static host, and qualify it using the Pascal browser capture/input harness.
+Discard only the owned review at its exact current revision when finished.
 
 All rows are currently materialized. Native lists rebuild their item text, tables
 visit all visible-model cells, and tree structure changes relocate nodes.

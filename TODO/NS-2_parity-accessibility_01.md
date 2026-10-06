@@ -20,6 +20,28 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Bound list/tree typeahead — 2026-10-06
+
+Criterion 2 now includes shared managed typed runtime search, full pinned Unicode
+17 default folding, visible hierarchy, repeated letters/rapid prefixes, monotonic
+timeout and independent buffers. Actual Win32 passes 67 with zero leaks; actual
+desktop/narrow browser passes 68 each. Both consume the exact MCP-authored English
+companion. Invalid replacement, canonical/queued-text consumption, read-only/
+disabled behavior and teardown during selection are qualified. Existing selection
+passes 154 twice native / 181 browser. Both actual named-MCP application builds
+succeed, and the produced browser application executes. See
+[evidence and limits](../WORK.md#collection-typeahead--2026-10-06).
+
+No original criterion or prerequisite closes. This local boundary does not reset
+the historical no-closure total, which remains unestablished for this task. Stop
+typeahead fixture expansion and reassess remaining original outcomes. Literal
+items, grid patterns, persisted policy/Studio authoring, hardware/IME, assistive
+technology, widgetsets and complete visual/accessibility breadth remain. Runtime
+policy persistence and semantic editing stay with existing NS-4 owners; no raw
+extension field substitutes for an admitted typed authoring contract. Protected
+deployment still needs complete old-service history preservation and observing
+rollout; new offline fixtures cannot establish that prerequisite.
+
 ## Proportional and hidden flow — 2026-10-04
 
 The later proportional/hidden-flow packet is documented in

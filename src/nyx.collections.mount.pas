@@ -32,6 +32,7 @@ uses
   nyx.collections,
   nyx.collections.view,
   nyx.collections.selection,
+  nyx.typeahead,
   nyx.binding.types;
 
 type
@@ -51,6 +52,10 @@ type
     { Controls enforce effective ancestor policy as well as column editability.
       Read-only allows selection. Disabled controls reject selection and edits. }
     procedure SetInteraction(AEnabled, AReadOnly: Boolean);
+    { Transient list/tree keyboard policy. Replaces the control's independent
+      search after validation; no document, store or history is changed. Tables
+      retain their cell-editor defaults. Disconnected controls refuse. }
+    procedure ConfigureTypeAhead(const AOptions: TNyxTypeAheadOptions);
     procedure ObserveSelection(AObserver: TNyxCollectionSelectionObserver);
     function Select(const AItem: TNyxItemRef): Boolean; overload;
     function Select(const AItem: TNyxItemRef; AAction: TNyxSelectionAction): Boolean; overload;
@@ -88,6 +93,10 @@ type
     FRefreshCount: Integer;
     FSelection: INyxCollectionSelection;
     FSelectionObserver: TNyxCollectionSelectionObserver;
+    FTypeAhead: INyxTypeAhead;
+    FTypeAheadRevision: Integer;
+    FSearchOrder: TNyxItemRefs;
+    function SearchLabel(AIndex: Integer): TNyxText;
     procedure Changed(const AView: INyxCollectionView;
       const AChanges: INyxCollectionChanges);
   protected
@@ -105,6 +114,12 @@ type
     { Target wire decoders report rejection through the same diagnostic phase
       contract as commands, before restoring their accepted widget display. }
     procedure Failed(AException: Exception);
+    { Borrow visible identities only during the pure search; the reader cannot
+      publish notifications. Dataset changes reset prefix, selection alone does
+      not. Target handlers retain their mount before selection publication. }
+    function FindTypeAhead(const ACharacter: TNyxText; ATimeMS: Double;
+      const AOrder: TNyxItemRefs; AFocus: Integer): Integer;
+    procedure ResetTypeAhead;
     procedure RenderDataset; virtual; abstract;
     procedure DetachTarget; virtual; abstract;
   public
@@ -114,6 +129,7 @@ type
     procedure Disconnect;
     procedure Refresh;
     procedure SetInteraction(AEnabled, AReadOnly: Boolean);
+    procedure ConfigureTypeAhead(const AOptions: TNyxTypeAheadOptions);
     procedure ObserveSelection(AObserver: TNyxCollectionSelectionObserver);
     function Select(const AItem: TNyxItemRef): Boolean; overload;
     function Select(const AItem: TNyxItemRef; AAction: TNyxSelectionAction): Boolean; overload;
@@ -143,6 +159,8 @@ begin
   end;
   FView := AView;
   FEnabled := True;
+  FTypeAhead := NewNyxTypeAhead(NyxTypeAhead);
+  FTypeAheadRevision := -1;
 end;
 
 destructor TNyxCollectionMountBase.Destroy;
@@ -176,6 +194,8 @@ end;
 
 procedure TNyxCollectionMountBase.Disconnect;
 begin
+  ResetTypeAhead;
+  FSearchOrder := nil;
   FSelectionObserver := nil;
   FSelection := nil;
 
@@ -268,7 +288,53 @@ begin
   end;
   FEnabled := AEnabled;
   FReadOnly := AReadOnly;
+  ResetTypeAhead;
   Refresh;
+end;
+
+procedure TNyxCollectionMountBase.ConfigureTypeAhead(const AOptions: TNyxTypeAheadOptions);
+var
+  LCandidate: INyxTypeAhead;
+begin
+
+  if not FConnected then
+  begin
+    raise ENyxCollection.Create('Collection control is disconnected');
+  end;
+  LCandidate := NewNyxTypeAhead(AOptions);
+  FTypeAhead := LCandidate;
+  FTypeAheadRevision := -1;
+end;
+
+procedure TNyxCollectionMountBase.ResetTypeAhead;
+begin
+
+  if FTypeAhead <> nil then
+  begin
+    FTypeAhead.Reset;
+  end;
+end;
+
+function TNyxCollectionMountBase.SearchLabel(AIndex: Integer): TNyxText;
+begin
+  Result := FView.CellText(FSearchOrder[AIndex], 0);
+end;
+
+function TNyxCollectionMountBase.FindTypeAhead(const ACharacter: TNyxText;
+  ATimeMS: Double; const AOrder: TNyxItemRefs; AFocus: Integer): Integer;
+begin
+
+  if FTypeAheadRevision <> FView.Snapshot.Revision then
+  begin
+    ResetTypeAhead;
+    FTypeAheadRevision := FView.Snapshot.Revision;
+  end;
+  FSearchOrder := AOrder;
+  try
+    Result := FTypeAhead.Find(ACharacter, ATimeMS, Length(AOrder), AFocus, SearchLabel);
+  finally
+    FSearchOrder := nil;
+  end;
 end;
 
 function TNyxCollectionMountBase.Select(const AItem: TNyxItemRef): Boolean;

@@ -2677,7 +2677,7 @@ Root projection — Browser: Available. LCL: Text fallback.
 
 Family: Data. Base projection: `list`.
 
-Display a collection of items for selection. Bound collections have one Tab entry, row navigation and focus recovery when an item is removed.
+Display a collection of items for selection. Bound collections have one Tab entry, row navigation, Unicode typeahead and focus recovery when an item is removed.
 
 Palette group: Data.
 Search labels: Records.
@@ -2895,7 +2895,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 
 Family: Data. Base projection: `tree`.
 
-Display nested items in a hierarchy. Bound collections navigate visible rows and restore focus after removal; disabled rows leave the Tab sequence.
+Display nested items in a hierarchy. Bound collections navigate and search visible rows with Unicode typeahead; focus recovers after removal and disabled rows leave the Tab sequence.
 
 Palette group: Data.
 Search labels: Records, Hierarchy.

@@ -422,6 +422,11 @@ var
         begin
           LKey := 'ArrowRight';
         end;
+      else
+        begin
+          { This helper's other admitted gesture is ArrowDown. }
+          LKey := 'ArrowDown';
+        end;
     end;
     LElement := TJSHTMLElement(LControl.querySelector('[tabindex="0"][data-nyx-item]'));
 
@@ -476,6 +481,11 @@ var
       nkF2Key:
         begin
           LKey := VK_F2;
+        end;
+      else
+        begin
+          { This helper's other admitted gesture is the native Down key. }
+          LKey := VK_DOWN;
         end;
     end;
     LShift := [];

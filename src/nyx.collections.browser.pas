@@ -49,6 +49,7 @@ uses
   nyx.state,
   nyx.collections,
   nyx.collections.view.types,
+  nyx.typeahead,
   nyx.collections.selection;
 
 type

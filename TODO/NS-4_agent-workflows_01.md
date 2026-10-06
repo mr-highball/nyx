@@ -36,6 +36,15 @@ workflow count changes. See [current evidence](../WORK.md#studio-build-controls-
 
 **Acceptance Criteria:**
 
+Bound typeahead follow-up (2026-10-06): typed runtime policy is available through
+existing managed renderer attachments. Default behavior reaches MCP-authored
+collection bindings, but persisted policy, generated policy expressions and
+bounded semantic inspection/editing remain under the original authoring/workflow
+requirements. Do not substitute raw extension properties or UI automation for an
+admitted semantic policy operation. Actual native named tools now authenticate
+in this chat and both review application builds succeed. See
+[the packet](../WORK.md#collection-typeahead--2026-10-06).
+
 Current recipe-editor release gap (2026-10-06): authenticated discovery of the
 protected running endpoint returns twenty tools, but `nyx_node` has no content
 query and `nyx_transaction` has no `content-set` operation. Current source owns

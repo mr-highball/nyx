@@ -99,6 +99,7 @@ begin
   if not GetConnected or not FEnabled or AEvent.defaultPrevented or
     AEvent.isComposing or AEvent.altKey then
   begin
+    ResetTypeAhead;
     Exit;
   end;
   LElement := TJSHTMLElement(AEvent.target);
@@ -113,6 +114,7 @@ begin
     { Editors own caret navigation. Escape discards only their uncommitted
       physical draft, then returns to the row; Tab traverses eligible columns
       within that row. Native LCL retains its standard cell-editor behavior. }
+    ResetTypeAhead;
 
     if (AEvent.key = 'Escape') or (AEvent.key = 'Tab') then
     begin
@@ -216,6 +218,29 @@ begin
     Exit;
   end;
   LKey := AEvent.key;
+
+  if (FView.Projection in [cpList, cpTree]) and not LControl and
+    NyxTypeAheadCharacter(LKey) then
+  begin
+    AEvent.preventDefault;
+    LTarget := FindTypeAhead(LKey, window.performance.now, LOrder, LTarget);
+
+    if LTarget >= 0 then
+    begin
+      LFocus := FRows[FView.Snapshot.IndexOf(LOrder[LTarget])].FElement;
+      Select(LOrder[LTarget]);
+
+      if GetConnected and FHost.contains(LFocus) then
+      begin
+        { Focus reveals the matching row using the host's normal nearest-scroll
+          behavior. Capturing the managed DOM object before publication avoids
+          touching a row released by a selection callback. }
+        LFocus.focus;
+      end;
+    end;
+    Exit;
+  end;
+  ResetTypeAhead;
 
   if (LKey = 'F2') or (LKey = 'Enter') then
   begin

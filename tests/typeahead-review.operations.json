@@ -1,0 +1,236 @@
+{
+  "layout": [
+    {
+      "op": "title",
+      "value": "Find your next destination"
+    },
+    {
+      "op": "create",
+      "root": "page",
+      "kind": "page",
+      "id": "typeahead-review",
+      "properties": {
+        "gap": 16,
+        "padding": 24
+      }
+    },
+    {
+      "op": "create",
+      "parent": "typeahead-review",
+      "kind": "heading",
+      "id": "review-heading",
+      "properties": {
+        "text": "Find your next destination"
+      }
+    },
+    {
+      "op": "create",
+      "parent": "typeahead-review",
+      "kind": "label",
+      "id": "review-help",
+      "properties": {
+        "text": "Focus a list or tree, then type a place name. Repeat a letter to find the next match."
+      }
+    },
+    {
+      "op": "create",
+      "parent": "typeahead-review",
+      "kind": "list",
+      "id": "destination-list",
+      "properties": {
+        "text": "Destinations",
+        "height": 210,
+        "aria-label": "Destinations"
+      }
+    },
+    {
+      "op": "create",
+      "parent": "typeahead-review",
+      "kind": "tree",
+      "id": "destination-tree",
+      "properties": {
+        "text": "Destination groups",
+        "height": 220,
+        "aria-label": "Destination groups"
+      }
+    }
+  ],
+  "collections": [
+    {
+      "op": "define",
+      "key": "destinations",
+      "fields": [
+        {
+          "name": "title",
+          "kind": "text",
+          "default": ""
+        },
+        {
+          "name": "parent",
+          "kind": "text",
+          "default": ""
+        }
+      ],
+      "rows": [
+        {
+          "item": "west",
+          "values": [
+            {
+              "field": "title",
+              "kind": "text",
+              "value": "West coast"
+            },
+            {
+              "field": "parent",
+              "kind": "text",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "item": "seattle",
+          "values": [
+            {
+              "field": "title",
+              "kind": "text",
+              "value": "Seattle"
+            },
+            {
+              "field": "parent",
+              "kind": "text",
+              "value": "west"
+            }
+          ]
+        },
+        {
+          "item": "salem",
+          "values": [
+            {
+              "field": "title",
+              "kind": "text",
+              "value": "Salem"
+            },
+            {
+              "field": "parent",
+              "kind": "text",
+              "value": "west"
+            }
+          ]
+        },
+        {
+          "item": "san-diego",
+          "values": [
+            {
+              "field": "title",
+              "kind": "text",
+              "value": "San Diego"
+            },
+            {
+              "field": "parent",
+              "kind": "text",
+              "value": "west"
+            }
+          ]
+        },
+        {
+          "item": "east",
+          "values": [
+            {
+              "field": "title",
+              "kind": "text",
+              "value": "East coast"
+            },
+            {
+              "field": "parent",
+              "kind": "text",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "item": "boston",
+          "values": [
+            {
+              "field": "title",
+              "kind": "text",
+              "value": "Boston"
+            },
+            {
+              "field": "parent",
+              "kind": "text",
+              "value": "east"
+            }
+          ]
+        },
+        {
+          "item": "baltimore",
+          "values": [
+            {
+              "field": "title",
+              "kind": "text",
+              "value": "Baltimore"
+            },
+            {
+              "field": "parent",
+              "kind": "text",
+              "value": "east"
+            }
+          ]
+        },
+        {
+          "item": "denver",
+          "values": [
+            {
+              "field": "title",
+              "kind": "text",
+              "value": "Denver"
+            },
+            {
+              "field": "parent",
+              "kind": "text",
+              "value": "west"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "op": "bind",
+      "owner": "destination-list",
+      "projection": "list",
+      "spec": {
+        "version": 1,
+        "key": "destinations",
+        "scope": "application",
+        "parent": "",
+        "columns": [
+          {
+            "field": "title",
+            "kind": "text",
+            "title": "Destination",
+            "editable": false
+          }
+        ]
+      }
+    },
+    {
+      "op": "bind",
+      "owner": "destination-tree",
+      "projection": "tree",
+      "spec": {
+        "version": 1,
+        "key": "destinations",
+        "scope": "application",
+        "parent": "parent",
+        "columns": [
+          {
+            "field": "title",
+            "kind": "text",
+            "title": "Destination",
+            "editable": false
+          }
+        ]
+      }
+    }
+  ]
+}

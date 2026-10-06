@@ -529,6 +529,10 @@ type
       const AView: INyxCollectionView): INyxCollectionMount;
     { Retain the automatically mounted typed view by exact runtime identity. }
     function CollectionView(const AID: TNyxText): INyxCollectionView;
+    { Retain the existing target attachment for typed runtime keyboard policy.
+      Does not rebind or replace the control. Retained handles disconnect on
+      Unmount and never retain this renderer. Exact realized identity required. }
+    function CollectionMount(const AID: TNyxText): INyxCollectionMount;
     procedure Sync;
     property OnEvent: TNyxLCLEvent read FOnEvent write FOnEvent;
     { Configure before mounting. Opted-in designer drops use a synchronous
@@ -4279,6 +4283,16 @@ begin
     raise ENyxModel.Create('No authored collection views are mounted');
   end;
   Result := FCollectionBindings.ViewFor(AID);
+end;
+
+function TNyxLCLRenderer.CollectionMount(const AID: TNyxText): INyxCollectionMount;
+begin
+  Result := IdentityBinding(AID, niRuntime).FCollectionMount;
+
+  if (Result = nil) or not Result.Connected then
+  begin
+    raise ENyxModel.Create('No live collection attachment: ' + AID);
+  end;
 end;
 
 function TNyxLCLRenderer.BindCollection(const AID: TNyxText;

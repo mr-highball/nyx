@@ -421,6 +421,10 @@ type
       const AView: INyxCollectionView): INyxCollectionMount;
     { Retain the automatically mounted typed view by exact runtime identity. }
     function CollectionView(const AID: TNyxText): INyxCollectionView;
+    { Retain the existing target attachment for typed runtime keyboard policy.
+      Does not rebind or replace the control. Retained handles disconnect on
+      Unmount and never retain this renderer. Exact realized identity required. }
+    function CollectionMount(const AID: TNyxText): INyxCollectionMount;
     { Move a mounted view without recreating controls or bindings. Caller owns
       both hosts; the new host must be empty and outside the old view. Retains
       a focused descendant's scalar text range and the host's scroll offsets.
@@ -2703,6 +2707,27 @@ begin
     raise ENyxModel.Create('No authored collection views are mounted');
   end;
   Result := FCollectionBindings.ViewFor(AID);
+end;
+
+function TNyxBrowserRenderer.CollectionMount(const AID: TNyxText): INyxCollectionMount;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to Length(FBindings) - 1 do
+  begin
+
+    if FBindings[LIndex].FNode.ID = AID then
+    begin
+      Result := FBindings[LIndex].FCollectionMount;
+
+      if (Result <> nil) and Result.Connected then
+      begin
+        Exit;
+      end;
+      Break;
+    end;
+  end;
+  raise ENyxModel.Create('No live collection attachment: ' + AID);
 end;
 
 function TNyxBrowserRenderer.BindCollection(const AID: TNyxText;

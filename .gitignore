@@ -78,7 +78,10 @@ lib/
 !tests/layout-review.operations.json
 !tests/designer-review.operations.json
 !tests/responsive-review.operations.json
+!tests/typeahead-review.operations.json
 *.txt
+!data/unicode/17.0.0/CaseFolding.txt
+!data/unicode/17.0.0/LICENSE.txt
 *.log
 
 #web

@@ -66,6 +66,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Bound list/tree controls now share typed runtime typeahead and pinned Unicode
+17 default full case folding. The identical English MCP-authored companion passes
+67 actual Win32 / 68 desktop and narrow browser checks. Canonical consumption,
+visible hierarchy, independent buffers, invalid policy replacement and teardown
+are qualified; complete accessibility, literal/grid search, persisted policy,
+hardware/IME and other widgetsets remain open. Native named MCP authenticates
+again and built this review for both targets; the browser application executes.
+See [the packet](WORK.md#collection-typeahead--2026-10-06).
+
 Current Studio controllers now share ordinary Nyx build controls and the semantic
 job workflow. Bounded discovery filters exact project/review context; cancellation
 preserves accepted pairs/reports/previews, and earlier output completions cannot

@@ -343,12 +343,13 @@ begin
     nkTime: Result.Description := 'Collect a time of day.';
     nkColor: Result.Description := 'Let a user choose a color value.';
     nkList: Result.Description := 'Display a collection of items for selection. ' +
-      'Bound collections have one Tab entry, row navigation and focus recovery when an item is removed.';
+      'Bound collections have one Tab entry, row navigation, Unicode typeahead and focus recovery when an item is removed.';
     nkTable: Result.Description := 'Display records in rows and columns. ' +
       'Bound browser tables use one Tab entry; F2 or Enter enters a cell editor, ' +
       'Tab traverses editors and Escape returns to row navigation. Native tables use LCL cell editing.';
     nkTree: Result.Description := 'Display nested items in a hierarchy. ' +
-      'Bound collections navigate visible rows and restore focus after removal; disabled rows leave the Tab sequence.';
+      'Bound collections navigate and search visible rows with Unicode typeahead; ' +
+      'focus recovers after removal and disabled rows leave the Tab sequence.';
     nkImage: Result.Description := 'Display an image with an accessible text alternative.';
     nkAvatar: Result.Description := 'Represent a person or account with compact initials or imagery.';
     nkProgress: Result.Description := 'Show progress toward completion of a bounded task.';
