@@ -102,6 +102,30 @@ only after ordinary projection admission succeeds.
 Custom `INyxCollectionBindings` implementations now supply `Recompose`, returning
 an independently admitted view set against their retained runtime context.
 
+Newly introduced and nested publishers settle before accepting a changed view.
+Each hidden candidate consumes one frozen container snapshot for both structure
+and scalar configuration. Its actual allocation produces the next snapshot.
+Identity, child order, stored properties and every effective typed attribute must
+agree with a fresh realization before admission. The comparison uses authored
+baselines, excluding runtime bound values and physical drafts. One owned blueprint,
+runtime store and collection context serve all passes; discarded candidates own
+and release their controls, coordinators and staged validators.
+
+At most eight candidates are constructed for one admission. A repeated
+configuration refuses a cycle; an unsettled eighth candidate refuses the limit.
+Both failures retain the accepted view. The queued route reports `LastContentError`;
+explicit `Render` propagates the exception. This is a bounded admission guarantee,
+not a claim that all arbitrary extension layouts converge.
+
+The browser measures an inert hidden sibling using the host's classes, inline
+layout, padding and exact client frame. Each candidate has its own theme scope;
+discarding it removes that temporary host and never clears the caller's host.
+Disconnected or `display:none` hosts preserve missing measurements. Native
+candidates use hidden logical allocation. Ordinary scalar-only native container
+views retain their existing scalar settling loop. An already settled observation
+does not create a redundant queued job. General external stylesheet equivalence,
+hardware input and other widgetsets remain separate qualification requirements.
+
 Give corresponding inputs explicit `PartName(NyxPart('notes'))` values. Continuity
 uses contiguous named part paths within the exact runtime instance. It never
 guesses from captions, binding keys, sibling order or similar control kinds.
@@ -121,11 +145,13 @@ failure retains the accepted root, selection and capability, exposes
 automatic retry storm. Changed geometry or an explicit request permits retry.
 
 Explicit public `Render` remounts still retire the old presentation lease. This
-live gate does not accept all nested recipe/container settling, rollback of a
-physical failure after publication, arbitrary nested logical identity migration,
+live gate does not accept rollback of a physical failure after publication,
+arbitrary nested logical identity migration,
 hardware IME/assistive input, other widgetsets, accessibility or release performance.
-Newly introduced publishers and allocation feedback need a bounded detached
-settling gate. Ordinary Nyx-built Studio recipe editing and its observing semantic
+Hidden nested allocation, later-pass failure and controlled extension feedback
+are qualified on actual browser and Win32 controls. Complete reversible physical
+publication is still required. Ordinary Nyx-built Studio recipe editing and its
+observing semantic
 journey remain open under the original authoring/parity owners.
 
 ## Persistence, source and semantic editing

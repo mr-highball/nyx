@@ -14,21 +14,90 @@ open native/browser ownership and interaction prerequisites. Independent mounted
 blueprints now publish genuinely different control sets through coalesced UI jobs.
 Host/manual and allocated-container transitions retain stable capabilities,
 explicit logical part focus/drafts, independent stores and admitted source meaning.
+Introduced/nested publishers now settle as hidden candidates before acceptance.
 
-Next deliverable: complete bounded detached settling for newly introduced/nested
-publishers and allocation feedback, with changed-set rollback beyond prepublication
-factory/admission failure. Then connect ordinary Nyx-built Studio recipe editing
-and its observing semantic transport journey. Do not extend the already qualified
-wire/parser or simple host fixture instead. Original full parity/accessibility,
+Next deliverable: make physical changed-set publication reversible through target
+attachment/showing, observer installation and focus restoration. Keep the accepted
+mount until those steps succeed; a failure after old-control retirement cannot be
+credited as rollback. Follow the open NS-2 ownership prerequisite for that gate.
+Then connect ordinary Nyx-built Studio recipe editing and its observing semantic
+transport journey. Do not extend the already qualified wire/parser, simple host
+or nested settlement fixtures instead. Original full parity/accessibility,
 performance and delivery criteria remain unchanged; the current proofs do not
 accept hardware IME/assistive input or other widgetsets.
 
-This batch closes no full criterion. Authoring no-closure advances 23→24 once;
+This batch closes no full criterion. Authoring no-closure advances 24→25 once;
 renderer 6, workflow 9, codegen 28 and delivery 1 remain. This reassessment moves
-from the initial ownership gate to the remaining nested publication gate before
+from hidden nested admission to reversible physical target publication before
 ordinary editor integration. It does not restrict alternate structures to fixed
 control sets or credit an explicit remount as continuity. Main services and all
 eight accepted pairs remain protected; no LAN rollout is claimed.
+
+## Hidden nested recipe admission — 2026-10-06
+
+Owner: original NS-4 criterion 1, consuming the open NS-2 ownership prerequisite.
+The batch deliverable was bounded real-target hidden settlement of introduced
+publishers, with later-pass/cycle/limit failure retaining accepted controls. The
+evidence boundary is now met; stop extending these fixtures and advance the
+physical publication gate. No full original criterion closes and nothing moves
+to DONE.
+
+One owned authored blueprint, runtime store and collection context serve the
+complete admission. Each candidate freezes structure and scalar projection to
+the same input snapshot. Actual candidate allocation drives the next realization.
+A portable guard compares exact authored identity/order, stored properties and
+effective typed attributes; it excludes runtime drafts/values. Repeated meaning
+or an unsettled eighth candidate refuses. Intermediate target controls, validators
+and coordinators release independently. Browser probes are inert hidden siblings
+with distinct theme scopes and explicit owned removal; missing/disconnected boxes
+remain missing. Native probes use logical allocation. Ordinary scalar-only native
+container views retain their original settling behavior.
+
+Explicit native constructors can service the UI queue without queued structural
+work retiring the accepted mount. A settled observation submits no redundant
+courier. The initial guard change briefly left a cancelled courier at short-
+harness shutdown; the final exact-observation gate corrects that regression.
+The new limit fixture initially edited the retained conditional scope after
+Clear; explicit Done correctly returns to ordinary recipe authoring. These
+corrections keep the intended lifecycle/limit assertions.
+
+Private evidence under `build/content-settling/`:
+
+- `final-qualified.log`: maintained content target passes 55 shared checks per
+  stable 3.2.0 and matched 3.3.1 compiler, 55 unchanged companion export checks,
+  42 actual Win32 remount, 63 live and 27 nested checks, all zero native leaks.
+  Source remains SHA256
+  `e5904d58dd7797d90da486e6d50596b71e761ef289d8c05e5f1708fbba1d2ed9`.
+- `browser/*-final-run.log`: maintained Pascal driver executes 55 contracts,
+  42 remount, 63 live, 29 nested and 27 scalar-container checks. New nested
+  consumers exercise cold admission before any queue turn, a three-level manual
+  publication, later-pass factory failure with exact accepted input/draft/lease,
+  independent stores, eight-candidate refusal, controlled extension allocation
+  feedback, recovery and teardown. Browser additionally checks a hidden host's
+  missing-box fallback and removal of connected probes. Native constructor
+  callbacks pump CheckSynchronize; browser execution remains run-to-completion.
+- `container-native/run.log`: 27 actual Win32 scalar-container allocation and
+  retained-input checks over the unchanged semantic companion, zero leaks.
+  This separately qualifies preservation of the ordinary nonstructural path.
+- `server/compile.log`, `studio-web/compile.log`, `studio-worker/compile.log`
+  and `studio-native/compile.log`: backend, browser Studio/module worker and
+  native Studio compile with zero owned warnings. Each browser product retains
+  seven warnings in unchanged upstream RTL source. These are compilations,
+  not an observing Studio recipe-authoring acceptance or deployment.
+- `mcp-session.json`: authenticated bounded read through the Pascal semantic
+  client. The existing desktop reconnect/new-field HTTP integration gaps remain
+  with the original workflow owner. Protected services are not replaced.
+- `final-preservation.json` / `protected-main-final.json`: fifteen exact process
+  identities and eight exact paired project/navigation/draft/history-availability
+  frames remain unchanged; LAN HTTP is 200. Only a new task-owned child of the
+  existing isolated web root hosts these compiled reviews. No listener changes.
+
+Qualification includes controlled extension allocation feedback, not arbitrary
+external stylesheet equivalence. Physical failure after old retirement, broader
+identity migration, complete source-change publication, ordinary Studio recipe
+editing/MCP observation, hardware/IME/assistive input, other widgetsets/DPI and
+original accessibility/performance/delivery outcomes remain open. Next act on
+reversible physical publication rather than repeating admission evidence.
 
 ## Live content publication — 2026-10-06
 

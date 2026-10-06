@@ -40,6 +40,24 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Hidden nested admission — 2026-10-06
+
+Original criterion 1 now has bounded hidden settlement for introduced/nested
+publishers. Frozen structural/scalar snapshots agree with actual candidate
+allocation before acceptance. Cycles, an unsettled eighth candidate and later-
+pass factory failure retain the accepted controls, draft, store and capability.
+Actual Win32/browser nested checks pass 27/29; cold admission completes before
+queue turns. Existing 55 shared, 42 remount and 63 live checks remain passing.
+Ordinary scalar-container controls pass 27 per target; all native traces are
+leak-free. See [evidence](../WORK.md#hidden-nested-recipe-admission--2026-10-06).
+
+No original criterion closes. Authoring no-closure advances 24→25 once; renderer
+6, workflow 9, codegen 28 and delivery 1 remain. Stop extending admission fixtures;
+follow the open NS-2 prerequisite to make physical publication reversible through
+attachment/showing, observers and focus. Then integrate ordinary Nyx-built recipe
+editing and semantic observation. Full parity/accessibility/performance/blockers
+remain unchanged; protected services/projects stay exact and no LAN rollout occurs.
+
 ## Live recipe publication — 2026-10-06
 
 Original criterion 1 now has independent mounted blueprints and coalesced

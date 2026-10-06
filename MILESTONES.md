@@ -3,7 +3,22 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current live structural packet (2026-10-06): mounted copied blueprints publish
+Current nested admission packet (2026-10-06): introduced publishers settle as
+bounded hidden candidates before accepting changed control sets. Actual Win32/
+browser nested checks pass 27/29, including immediate cold admission, later-pass
+failure, cycle/limit refusal, independent stores and recovery. Original 55 shared,
+42 remount and 63 live checks remain passing; ordinary scalar containers pass 27
+per target. Native traces report zero leaks. Fifteen services/eight frames remain
+exact, LAN HTTP is available, and no new release or ordinary recipe editor is
+claimed. Original NS-4 criterion 1 stays open; authoring no-closure 24→25 once.
+Renderer 6, workflow 9, codegen 28 and delivery 1 remain. Stop extending hidden
+admission fixtures and follow the open NS-2 prerequisite for reversible physical
+publication through attachment/showing, observers and focus. Then integrate
+Nyx-built Studio recipe editing/semantic observation without narrowing original
+parity/accessibility/performance/delivery outcomes. See
+[evidence and reassessment](WORK.md#hidden-nested-recipe-admission--2026-10-06).
+
+Previous live structural packet (2026-10-06): mounted copied blueprints publish
 changed control sets through coalesced idle jobs. Contract checks pass 55 per
 compiler/browser; actual targets pass 63 live checks and preserve the earlier
 42 remount checks. Named-part focus/drafts/Unicode ranges, independent runtime

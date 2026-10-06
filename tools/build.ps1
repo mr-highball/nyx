@@ -1508,18 +1508,25 @@ try {
       "-FU$nyxContentNative", "-FE$nyxContentNative", 'tests/nyx_content_live_controls.lpr'))
     & (Join-Path $nyxContentNative 'nyx_content_live_controls.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Actual native live content publication failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxContentChecked + @(
+      "-Fu$nyxLazarus/lcl/units/$nyxContentPlatform", "-Fu$nyxLazarus/lcl/units/$nyxContentPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxContentPlatform", "-Fu$nyxLazarus/packager/units/$nyxContentPlatform",
+      "-FU$nyxContentNative", "-FE$nyxContentNative", 'tests/nyx_content_settling_controls.lpr'))
+    & (Join-Path $nyxContentNative 'nyx_content_settling_controls.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native nested content admission failed' }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     $nyxContentBrowser = Join-Path $nyxContentRoot 'web'
     New-Item -ItemType Directory -Force $nyxContentBrowser | Out-Null
-    foreach ($nyxContentProgram in @('nyx_content_tests', 'nyx_content_controls', 'nyx_content_live_controls')) {
+    foreach ($nyxContentProgram in @('nyx_content_tests', 'nyx_content_controls', 'nyx_content_live_controls', 'nyx_content_settling_controls')) {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Fustudio',
         "-Fu$nyxContentSource", "-FE$nyxContentBrowser", "tests/$nyxContentProgram.lpr")
     }
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxContentBrowser 'rtl.js') -Force
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/content-contracts.html'),
       (Join-Path $nyxRoot 'studio/web/content-controls.html'),
-      (Join-Path $nyxRoot 'studio/web/content-live-controls.html') -Destination $nyxContentBrowser -Force
+      (Join-Path $nyxRoot 'studio/web/content-live-controls.html'),
+      (Join-Path $nyxRoot 'studio/web/content-settling-controls.html') -Destination $nyxContentBrowser -Force
     $nyxContentDriver = Join-Path $nyxContentRoot 'driver'
     New-Item -ItemType Directory -Force $nyxContentDriver | Out-Null
     Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Fusrc', '-Futests',

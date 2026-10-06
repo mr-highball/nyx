@@ -30,6 +30,20 @@ uses
   nyx.model, nyx.composition, nyx.containers, nyx.editing, nyx.scheduler;
 
 type
+  { A short-lived admission guard for hidden structural candidates. Each pass
+    compares authored effective configuration, never bound values or drafts.
+    Repeated configurations and eight unsettled candidates refuse before the
+    accepted view retires. The guard owns copied signatures and no tree/UI. }
+  TNyxContentSettlement = class
+  private
+    FConfigurations: array of TNyxText;
+  public
+    { True accepts the current candidate. False requires a fresh candidate
+      built from its actual allocation; cycles/limits raise ENyxModel. Both
+      roots remain borrowed and must be independently realized authored roots. }
+    function Accept(ACurrent, AMeasured: TNyxNode): Boolean;
+  end;
+
   { A mounted view owns this independent authored blueprint. It contains only
     its isolated root, all transitive recipes and copied document defaults.
     Document/Root accessors borrow it for adapter staging; callers must neither
@@ -125,6 +139,100 @@ function NyxContentMeasurements(ARoot: TNyxNode;
 implementation
 
 uses nyx.schema;
+
+function ContentConfiguration(ARoot: TNyxNode): TNyxText;
+var
+  LValues: TNyxStrings;
+
+  procedure Put(const AValue: TNyxText);
+  begin
+    { This internal comparison key is a length-framed sequence, not a wire
+      format. One portable Join allocation preserves delimiters, NUL and Unicode
+      without constructing/serializing a JSON object for every empty attribute. }
+    LValues.Add(IntToStr(Length(AValue)) + TNyxText(':'));
+    LValues.Add(AValue);
+  end;
+
+  procedure Visit(ANode: TNyxNode);
+  var
+    LAttribute: TNyxAttribute;
+    LKey: TNyxText;
+    LIndex: Integer;
+  begin
+    Put(ANode.ID);
+    Put(ANode.Kind);
+    Put(ANode.ProjectionKind);
+    Put(ANode.InstanceScopeID);
+    Put(ANode.RecipeOwner.ID);
+    Put(IntToStr(ANode.Count));
+    Put(ANode.Props.Text);
+    for LAttribute := Low(TNyxAttribute) to High(TNyxAttribute) do
+    begin
+      LKey := NyxAttributeName(LAttribute);
+      { Two defaults distinguish an absent attribute from an explicitly empty
+        value, including arbitrary application text containing a NUL scalar. }
+      Put(ANode.Prop(LKey, ''));
+      Put(ANode.Prop(LKey, #0));
+    end;
+    for LIndex := 0 to ANode.Count - 1 do
+    begin
+      Visit(ANode.Children[LIndex]);
+    end;
+  end;
+
+begin
+  LValues := TNyxStrings.Create;
+  try
+    Visit(ARoot);
+    Result := LValues.Join;
+  finally
+    LValues.Free;
+  end;
+end;
+
+function TNyxContentSettlement.Accept(ACurrent, AMeasured: TNyxNode): Boolean;
+const
+  CMaximumCandidates = 8;
+var
+  LCurrent: TNyxText;
+  LMeasured: TNyxText;
+  LIndex: Integer;
+begin
+
+  if (ACurrent = nil) or (AMeasured = nil) then
+  begin
+    raise ENyxModel.Create('Structural settlement requires two realized authored roots');
+  end;
+
+  if not ACurrent.IsRealized or not AMeasured.IsRealized then
+  begin
+    raise ENyxModel.Create('Structural settlement requires two realized authored roots');
+  end;
+  LCurrent := ContentConfiguration(ACurrent);
+  LMeasured := ContentConfiguration(AMeasured);
+  Result := LCurrent = LMeasured;
+
+  if Result then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to High(FConfigurations) do
+  begin
+
+    if (FConfigurations[LIndex] = LCurrent) or
+      (FConfigurations[LIndex] = LMeasured) then
+    begin
+      raise ENyxModel.Create('Structural recipe allocation cycles before publication');
+    end;
+  end;
+
+  if Length(FConfigurations) >= CMaximumCandidates - 1 then
+  begin
+    raise ENyxModel.Create('Structural recipe allocation exceeds eight hidden candidates');
+  end;
+  SetLength(FConfigurations, Length(FConfigurations) + 1);
+  FConfigurations[High(FConfigurations)] := LCurrent;
+end;
 
 type
   TContentGuard = class(TInterfacedObject, INyxContentGuard)

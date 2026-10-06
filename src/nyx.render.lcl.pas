@@ -240,6 +240,10 @@ type
     FContentFrameKnown: Boolean;
     FContentMeasurementKey: TNyxText;
     FPublishingContent: Boolean;
+    { One hidden candidate consumes a frozen allocation snapshot for both
+      structure and scalar projection. Mounted layout observes actual boxes. }
+    FStagingContent: Boolean;
+    FStagingMeasurements: INyxContainerSnapshot;
     FLastContentError: TNyxText;
     procedure QueueContent;
     procedure RefreshContent;
@@ -2966,6 +2970,8 @@ begin
 end;
 
 function TNyxLCLRenderer.UpdateViewport: Boolean;
+var
+  LMeasurements: INyxContainerSnapshot;
 begin
   Result := False;
 
@@ -2973,8 +2979,14 @@ begin
   begin
     Exit;
   end;
+  LMeasurements := FStagingMeasurements;
+
+  if not FStagingContent then
+  begin
+    LMeasurements := MeasureContainers;
+  end;
   Result := FRoot.ApplyViewport(Max(0, FPanel.Parent.ClientWidth),
-    Max(0, FPanel.Parent.ClientHeight), npfNativeLCL, FPresentationSelection, MeasureContainers);
+    Max(0, FPanel.Parent.ClientHeight), npfNativeLCL, FPresentationSelection, LMeasurements);
 end;
 
 procedure TNyxLCLRenderer.Resize(ASender: TObject);
@@ -3229,6 +3241,17 @@ begin
     Exit;
   end;
 
+  if FContentFrameKnown and (FPanel <> nil) and (FPanel.Parent <> nil) and
+    (FContentFrame.Width = Max(0, FPanel.Parent.ClientWidth)) and
+    (FContentFrame.Height = Max(0, FPanel.Parent.ClientHeight)) and
+    FContentFrame.Selection.Same(FContentRequestedSelection) and
+    (FContentMeasurementKey = NyxContentMeasurements(FRoot, MeasureContainers)) then
+  begin
+    { Fully settled publication leaves no gratuitous queued courier at teardown.
+      New host boxes, source admission or explicit choices remain observable. }
+    Exit;
+  end;
+
   if (FContentExecution <> nil) and
     (FContentExecution.Status in [nesPending, nesRunning]) then
   begin
@@ -3257,7 +3280,7 @@ var
 begin
   FEvents.Scheduler.RequireUI;
 
-  if FContentGuard.Busy then
+  if FPublishingContent or FContentGuard.Busy then
   begin
     Exit;
   end;
@@ -3320,6 +3343,7 @@ begin
         try
           RenderFrame(FContentBlueprint.Document, FContentBlueprint.Root, FPanel.Parent,
             FDesignMode, FState, FCollectionBindings, LFrame, LMeasurements, True, LStates);
+          LKey := FContentMeasurementKey;
           FPanel.HorzScrollBar.Position := LHorizontal;
           FPanel.VertScrollBar.Position := LVertical;
           Select(LSelected);
@@ -3372,9 +3396,22 @@ begin
   begin
     raise ENyxModel.Create('Native host is required');
   end;
-  RenderFrame(ADocument, ARoot, AHost, ADesignMode, AState, ACollections,
-    TNyxViewFrame.At(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight), npfNativeLCL),
-    nil, False, nil);
+
+  if FPublishingContent then
+  begin
+    raise ENyxModel.Create('Native structural publication is already staging');
+  end;
+  { A custom constructor may pump CheckSynchronize. Keep accepted controls
+    alive until the complete hidden candidate is admitted or discarded. }
+  FPublishingContent := True;
+  try
+    RenderFrame(ADocument, ARoot, AHost, ADesignMode, AState, ACollections,
+      TNyxViewFrame.At(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight), npfNativeLCL),
+      nil, False, nil);
+  finally
+    FPublishingContent := False;
+  end;
+  QueueContent;
 end;
 
 procedure TNyxLCLRenderer.RenderFrame(ADocument: TNyxDocument; ARoot: TNyxNode;
@@ -3386,6 +3423,15 @@ var
   LCandidate: TNyxLCLRenderer;
   LIndex: Integer;
   LTransferState: Boolean;
+  LRuntimeState: TNyxState;
+  LOwnRuntimeState: Boolean;
+  LCollections: INyxCollectionBindings;
+  LMeasurements: INyxContainerSnapshot;
+  LAllocated: INyxContainerSnapshot;
+  LMeasuredRoot: TNyxNode;
+  LSettlement: TNyxContentSettlement;
+  LBlueprint: TNyxContentBlueprint;
+  LFirstCandidate: Boolean;
   {$ifdef NYX_STUDIO_PROFILE}
   LPhaseStarted: QWord;
 
@@ -3409,7 +3455,15 @@ begin
   begin
     raise ENyxModel.Create('Native host is required');
   end;
-  LCandidate := TNyxLCLRenderer.Create(FTheme);
+  LCandidate := nil;
+  LMeasuredRoot := nil;
+  LSettlement := nil;
+  LBlueprint := nil;
+  LRuntimeState := AState;
+  LOwnRuntimeState := AState = nil;
+  LCollections := ACollections;
+  LMeasurements := AMeasurements;
+  LFirstCandidate := True;
   LTransferState := (AState <> nil) and FOwnState and (AState = FState);
   {$ifdef NYX_STUDIO_PROFILE}LPhaseStarted := GetTickCount64;{$endif}
   { LCL propagates this balanced sizing lock through the host's parents and
@@ -3420,98 +3474,136 @@ begin
   AHost.DisableAutoSizing;
   try
 
-    if FBorrowedTheme <> nil then
+    if LOwnRuntimeState then
     begin
-      LCandidate.FTheme := NewNyxDocumentTheme(ADocument, FBorrowedTheme);
-    end
-    else
-    begin
-      LCandidate.FTheme := NewNyxDocumentTheme(ADocument, FBaseTheme);
+      LRuntimeState := ADocument.State.Clone;
     end;
-    LCandidate.FOwnTheme := True;
-    LCandidate.FFactoryKinds := Copy(FFactoryKinds, 0, Length(FFactoryKinds));
-    LCandidate.FFactories := Copy(FFactories, 0, Length(FFactories));
-    LCandidate.FEventFactories := Copy(FEventFactories, 0, Length(FEventFactories));
-    { Candidate ports belong to the final owner's scheduler and view lifetime. }
-    LCandidate.FEmitterScope := NewNyxEventEmitterScope(FEvents.Scheduler);
-    LCandidate.FViewportObserver := NewNyxViewportObserver;
-    LCandidate.FEditingObserver := NewNyxLCLEditingObserver;
-    LCandidate.FUpdaters := Copy(FUpdaters, 0, Length(FUpdaters));
-    LCandidate.FDesignMode := ADesignMode;
-    LCandidate.FPublishingContent := True;
-    LCandidate.FDesignerInput := FDesignerInput;
-    LCandidate.FOnDesignerGesture := FOnDesignerGesture;
-    if AKeepPresentation then
-    begin
-      LCandidate.FProjectionContext := FProjectionContext;
-    end
-    else
-    begin
-      LCandidate.FProjectionContext := NyxProjectionContext(ADocument);
-    end;
-    LCandidate.FProjectionSchemaRevision := NyxSchemaRevision;
-    LCandidate.FPresentationSelection := AFrame.Selection;
-    LCandidate.FRoot := RealizeNyxView(ADocument, ARoot, AFrame, AMeasurements);
-    ApplyNyxPlatform(LCandidate.FRoot, npfNativeLCL);
-    LCandidate.FRoot.ApplyViewport(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight),
-      npfNativeLCL, AFrame.Selection, AMeasurements);
-    LCandidate.FProjectionBaseline := LCandidate.FRoot.Clone;
-    RestoreNyxContentValues(LCandidate.FRoot, AStates);
-    LCandidate.FCollectionBindings := ACollections;
+    LBlueprint := NewNyxContentBlueprint(ADocument, ARoot);
 
-    if ACollections <> nil then
+    if LBlueprint <> nil then
     begin
-      if AKeepPresentation then
+      LSettlement := TNyxContentSettlement.Create;
+    end;
+    repeat
+      LCandidate := TNyxLCLRenderer.Create(FTheme);
+      LCandidate.FStagingContent := LBlueprint <> nil;
+      LCandidate.FStagingMeasurements := LMeasurements;
+
+      if FBorrowedTheme <> nil then
       begin
-        LCandidate.FCollectionBindings := ACollections.Recompose(LCandidate.FRoot);
+        LCandidate.FTheme := NewNyxDocumentTheme(ADocument, FBorrowedTheme);
       end
       else
       begin
-        ACollections.ValidateRoot(LCandidate.FRoot);
+        LCandidate.FTheme := NewNyxDocumentTheme(ADocument, FBaseTheme);
       end;
-    end
-    else
-    begin
-      LCandidate.FCollectionBindings := NewNyxCollectionBindings(LCandidate.FRoot,
-        NewNyxCollectionContext(ADocument.Collections));
-    end;
-    LCandidate.FState := AState;
-    LCandidate.FOwnState := AState = nil;
+      LCandidate.FOwnTheme := True;
+      LCandidate.FFactoryKinds := Copy(FFactoryKinds, 0, Length(FFactoryKinds));
+      LCandidate.FFactories := Copy(FFactories, 0, Length(FFactories));
+      LCandidate.FEventFactories := Copy(FEventFactories, 0, Length(FEventFactories));
+      { Candidate ports belong to the final owner's scheduler and view lifetime. }
+      LCandidate.FEmitterScope := NewNyxEventEmitterScope(FEvents.Scheduler);
+      LCandidate.FViewportObserver := NewNyxViewportObserver;
+      LCandidate.FEditingObserver := NewNyxLCLEditingObserver;
+      LCandidate.FUpdaters := Copy(FUpdaters, 0, Length(FUpdaters));
+      LCandidate.FDesignMode := ADesignMode;
+      LCandidate.FPublishingContent := True;
+      LCandidate.FDesignerInput := FDesignerInput;
+      LCandidate.FOnDesignerGesture := FOnDesignerGesture;
+      if AKeepPresentation then
+      begin
+        LCandidate.FProjectionContext := FProjectionContext;
+      end
+      else
+      begin
+        LCandidate.FProjectionContext := NyxProjectionContext(ADocument);
+      end;
+      LCandidate.FProjectionSchemaRevision := NyxSchemaRevision;
+      LCandidate.FPresentationSelection := AFrame.Selection;
+      LCandidate.FRoot := RealizeNyxView(ADocument, ARoot, AFrame, LMeasurements);
+      ApplyNyxPlatform(LCandidate.FRoot, npfNativeLCL);
+      LCandidate.FRoot.ApplyViewport(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight),
+        npfNativeLCL, AFrame.Selection, LMeasurements);
+      LCandidate.FProjectionBaseline := LCandidate.FRoot.Clone;
+      RestoreNyxContentValues(LCandidate.FRoot, AStates);
+      LCandidate.FCollectionBindings := LCollections;
 
-    if LCandidate.FOwnState then
-    begin
-      LCandidate.FState := ADocument.State.Clone;
-    end;
-    LCandidate.FLiveBindings := TNyxLiveBindings.Create(LCandidate.FRoot, LCandidate.FState);
-    LCandidate.FLiveBindings.OnSync := LCandidate.Sync;
-    LCandidate.FPanel := TNyxLogicalScrollBox.Create(nil);
-    LCandidate.FPanel.Visible := False;
-    LCandidate.FPanel.Parent := AHost;
-    LCandidate.FPanel.Align := alClient;
-    { Alignment is deliberately deferred. Supply the host's current client
-      frame for provisional measurements; final LCL alignment and OnResize
-      settle the actual frame after publication, including existing siblings. }
-    LCandidate.FPanel.SetBounds(AHost.ClientRect.Left, AHost.ClientRect.Top,
-      AHost.ClientWidth, AHost.ClientHeight);
-    LCandidate.FPanel.BorderStyle := bsNone;
-    LCandidate.FPanel.Color := ThemeColor(LCandidate.FTheme.Background);
-    LCandidate.FPanel.Font.Assign(AHost.Font);
-    LCandidate.FPanel.Font.Height := -LCandidate.FTheme.FontSize;
-    LCandidate.FPanel.Font.Color := ThemeColor(LCandidate.FTheme.Text);
-    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('realize');{$endif}
-    LCandidate.Build(LCandidate.FRoot, LCandidate.FPanel);
-    for LIndex := 0 to LCandidate.FCollectionBindings.Count - 1 do
-    begin
-      LCandidate.BindCollection(LCandidate.FCollectionBindings.ID(LIndex),
-        LCandidate.FCollectionBindings.View(LIndex));
-    end;
-    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('build');{$endif}
-    LCandidate.Resize(LCandidate.FPanel);
-    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('first-layout');{$endif}
-    LCandidate.Sync;
-    LCandidate.RestoreContentFaces(AStates, False);
-    LCandidate.FContentBlueprint := NewNyxContentBlueprint(ADocument, ARoot);
-    {$ifdef NYX_STUDIO_PROFILE}RecordPhase('first-sync');{$endif}
+      if LCollections <> nil then
+      begin
+        if AKeepPresentation or not LFirstCandidate then
+        begin
+          LCandidate.FCollectionBindings := LCollections.Recompose(LCandidate.FRoot);
+        end
+        else
+        begin
+          LCollections.ValidateRoot(LCandidate.FRoot);
+        end;
+      end
+      else
+      begin
+        LCandidate.FCollectionBindings := NewNyxCollectionBindings(LCandidate.FRoot,
+          NewNyxCollectionContext(ADocument.Collections));
+      end;
+      { Hidden passes share one runtime store/context. Candidate teardown removes
+        staged validators and controls without freeing borrowed accepted data. }
+      LCandidate.FState := LRuntimeState;
+      LCandidate.FOwnState := False;
+      LCandidate.FLiveBindings := TNyxLiveBindings.Create(LCandidate.FRoot, LCandidate.FState);
+      LCandidate.FLiveBindings.OnSync := LCandidate.Sync;
+      LCandidate.FPanel := TNyxLogicalScrollBox.Create(nil);
+      LCandidate.FPanel.Visible := False;
+      LCandidate.FPanel.Parent := AHost;
+      LCandidate.FPanel.Align := alClient;
+      { Alignment is deliberately deferred. Supply the host's current client
+        frame for provisional measurements; final LCL alignment and OnResize
+        settle the actual frame after publication, including existing siblings. }
+      LCandidate.FPanel.SetBounds(AHost.ClientRect.Left, AHost.ClientRect.Top,
+        AHost.ClientWidth, AHost.ClientHeight);
+      LCandidate.FPanel.BorderStyle := bsNone;
+      LCandidate.FPanel.Color := ThemeColor(LCandidate.FTheme.Background);
+      LCandidate.FPanel.Font.Assign(AHost.Font);
+      LCandidate.FPanel.Font.Height := -LCandidate.FTheme.FontSize;
+      LCandidate.FPanel.Font.Color := ThemeColor(LCandidate.FTheme.Text);
+      {$ifdef NYX_STUDIO_PROFILE}RecordPhase('realize');{$endif}
+      LCandidate.Build(LCandidate.FRoot, LCandidate.FPanel);
+      for LIndex := 0 to LCandidate.FCollectionBindings.Count - 1 do
+      begin
+        LCandidate.BindCollection(LCandidate.FCollectionBindings.ID(LIndex),
+          LCandidate.FCollectionBindings.View(LIndex));
+      end;
+      {$ifdef NYX_STUDIO_PROFILE}RecordPhase('build');{$endif}
+      LCandidate.Resize(LCandidate.FPanel);
+      {$ifdef NYX_STUDIO_PROFILE}RecordPhase('first-layout');{$endif}
+      LCandidate.Sync;
+      LCandidate.RestoreContentFaces(AStates, False);
+      {$ifdef NYX_STUDIO_PROFILE}RecordPhase('first-sync');{$endif}
+
+      if LBlueprint = nil then
+      begin
+        Break;
+      end;
+      LAllocated := LCandidate.MeasureContainers;
+      LMeasuredRoot := RealizeNyxView(ADocument, ARoot, AFrame, LAllocated);
+      ApplyNyxPlatform(LMeasuredRoot, npfNativeLCL);
+      LMeasuredRoot.ApplyViewport(AFrame.Width, AFrame.Height,
+        npfNativeLCL, AFrame.Selection, LAllocated);
+
+      if LSettlement.Accept(LCandidate.FProjectionBaseline, LMeasuredRoot) then
+      begin
+        ReleaseNyxNode(LMeasuredRoot);
+        LMeasurements := LAllocated;
+        Break;
+      end;
+      ReleaseNyxNode(LMeasuredRoot);
+      LCollections := LCandidate.FCollectionBindings;
+      LMeasurements := LAllocated;
+      LFirstCandidate := False;
+      FreeAndNil(LCandidate);
+    until False;
+    { One owned authored blueprint survives successful admission. Ordinary
+      scalar-only container views keep their existing native settling loop. }
+    LCandidate.FContentBlueprint := LBlueprint;
+    LBlueprint := nil;
 
     if not ADesignMode then
     begin
@@ -3538,7 +3630,8 @@ begin
     LCandidate.FTheme := nil;
     LCandidate.FOwnTheme := False;
     FState := LCandidate.FState;
-    FOwnState := LCandidate.FOwnState or LTransferState;
+    FOwnState := LOwnRuntimeState or LTransferState;
+    LOwnRuntimeState := False;
     LCandidate.FState := nil;
     LCandidate.FOwnState := False;
     FLiveBindings := LCandidate.FLiveBindings;
@@ -3556,7 +3649,7 @@ begin
     FContentRequestedSelection := AFrame.Selection;
     FContentFrame := AFrame;
     FContentFrameKnown := True;
-    FContentMeasurementKey := NyxContentMeasurements(FRoot, AMeasurements);
+    FContentMeasurementKey := NyxContentMeasurements(FRoot, LMeasurements);
     FDesignMode := ADesignMode;
     FProjectionContext := LCandidate.FProjectionContext;
     FProjectionSchemaRevision := LCandidate.FProjectionSchemaRevision;
@@ -3632,7 +3725,15 @@ begin
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('observe');{$endif}
   finally
     try
+      ReleaseNyxNode(LMeasuredRoot);
       LCandidate.Free;
+      LSettlement.Free;
+      LBlueprint.Free;
+
+      if LOwnRuntimeState then
+      begin
+        LRuntimeState.Free;
+      end;
     finally
       AHost.EnableAutoSizing;
     end;
