@@ -78,7 +78,8 @@ output remains separate for inspection.
 
 Private evidence under `build/studio-release/`:
 
-- `qualified-build.log` and `maintained-build.log`: the frozen 198-file / 11,173,649
+- `qualified-build.log`, `maintained-build.log` and `checkpoint-build.log`: the frozen
+  198-file / 11,173,649
   byte candidate compiles backend, ordinary browser Studio, independent module
   worker and preview. All owned builds have zero warnings; each of the three
   pas2js builds retains seven upstream RTL warnings. The maintained target also
@@ -108,6 +109,19 @@ Authoring 26, renderer 7, workflow 9 and codegen 28 remain. Nothing moves to DON
 No full supported-platform distribution, native Studio packaging, performance,
 accessibility or LAN update is claimed. Protected service/project comparisons and
 remote checkpoint receipts belong to this packet's final preservation record.
+
+Checkpoint: implementation `c5a8175a71f7fdb2e913b3b9366c4a3889ddc33b` is pushed to
+`hello-nyx`, with exact remote SHA verified. `checkpoint-package/release.nyx`
+records that committed source revision; the final maintained target passes 29
+checks with zero leaks and zero owned warnings. `live-tools.jsonl` independently
+confirms twenty authenticated deployed tools and no advertised `content-set`.
+`final-preservation.json` retains all fifteen process identities/eight exact
+pairs/navigation/draft/history-availability frames and LAN HTTP 200. All compiler
+and harness processes completed. The only new static-host child contains the
+executed generated-companion check; no frontend/backend release was installed.
+Return to source/runtime-root separation and explicit session preservation within
+the existing service/reload owner, then the observing HTTP recipe journey. Do not
+restart/re-enroll protected services or extend package fixtures from this handoff.
 
 ## Ordinary recipe authoring — 2026-10-06
 
