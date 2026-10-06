@@ -32,7 +32,8 @@ both capabilities; its deployment and an observing HTTP journey remain unqualifi
 Use the same typed command for the ordinary Studio editor and local semantic
 consumer. Do not replace protected services/projects or substitute raw property
 updates and browser automation for the missing operation. Workflow no-closure
-remains 9; this is a release follow-up within this existing owner.
+advances 9→10 once for the request-owner fix below; this remains a follow-up within
+this existing owner.
 
 The NS-6 frozen release preparer now supplies a checked backend/browser candidate.
 The NS-5 native session/history boundary now has exact recovery evidence, including
@@ -42,12 +43,26 @@ Follow that concrete preservation bridge before crediting an observing deploymen
 Retain current services/pairs;
 do not infer authenticated content support from offline schema or build evidence.
 
-Existing authority propagation gap discovered during native recovery integration:
-`TNyxReviewWorkspaces.Call` forwards ordinary session calls without their distinct
-request owner. Qualify and preserve same-actor/different-transport receipt and
-review-ticket separation before accepting the next authenticated HTTP journey.
-This remains in this workflow owner; the recovery boundary supplies rollback and
-does not claim to repair the existing transport-authority contract.
+The authority propagation gap discovered during native recovery integration is
+now corrected in current source: `TNyxReviewWorkspaces.Call` forwards the distinct
+bounded connection owner to ordinary session calls. Primary/project receipts and
+callback/root tickets stay independent for identical display names; private review
+retries survive actor renaming. Both portable consumers and the actual native
+ordinary-tool seam are qualified. See
+[evidence](../WORK.md#connection-authority--2026-10-06). This is not an authenticated
+HTTP update to the protected running older server.
+
+Reassessment ends router/ticket fixture expansion here. No original criterion
+closes; workflow no-closure advances 9→10 once and does not reset earlier counts.
+The protected migration/observing deployment gate remains. Follow the concrete
+NS-5 worker cancellation/join prerequisite independently: canceled running work
+currently continues compiling, and timeout/log-overflow exits terminate without
+an explicit join. Preserve original criteria and current services/pairs.
+The separate primary compiler path still initializes its retry owner from the
+display actor before adding explicit project/review contexts. Ordinary-tool
+authority qualification does not establish compiler-receipt separation. Carry
+that concrete request-owner gap into the existing compiler worker/cancellation
+integration; do not infer all-tool authority or authenticated deployment here.
 
 - Project/user configuration discovers authenticated tools through actual Codex
   initialization, refreshes enrolled credentials on Studio launch and preserves

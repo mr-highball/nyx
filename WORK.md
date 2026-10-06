@@ -9,6 +9,26 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 ## Current return path: recipe editor and semantic release — 2026-10-06
 
+Previous goal turn: progress. Actual session/history storage, fresh-process recovery,
+both-target ownership evidence and an exact remote checkpoint changed authoritative
+state. This batch follows the independently actionable request-owner propagation
+gap in NS-4 workflow criterion 5. Qualify same-display connections, renamed actors,
+callback/root tickets, independent retries and paired history through the portable
+routers and the actual native ordinary-tool seam. Stop at that integrated boundary;
+protected older-service migration and authenticated observing rollout stay open.
+
+Current return: ordinary dispatch authority is now qualified below. Stop router/
+ticket fixture expansion. The previous sealed recovery bundle stays byte-exact
+and predates this one-unit correction; the maintained backend/browser consumers
+are rebuilt, without an authenticated rollout. Workflow no-closure advances 9→10
+once, without resetting earlier counts. The protected older backend still cannot
+export complete history. Follow independently actionable NS-5 criterion 1 next:
+running/queued compiler cancellation and explicit termination/join. Its separate
+primary agent build retry key still starts from the visible actor; carry the same
+trusted connection identity into that compiler path rather than claiming all-tool
+authority from ordinary dispatch. Original observing recipe rollout remains the
+return path after these concrete prerequisites.
+
 Previous goal turn: progress. Typed runtime separation, real compiler/artifact
 execution and an exact remote checkpoint changed authoritative state and removed
 the directory prerequisite. Current batch belongs to NS-5 criterion 2's accepted-
@@ -19,7 +39,7 @@ recreation/fresh processes, both portable consumers, Unicode and exact refusal
 are qualified. Stop at that integrated boundary;
 protected old-service migration and observing HTTP deployment remain separate gates.
 
-Current return path: the native session/history boundary below now retains actual
+Preceding recovery return path: the native session/history boundary below retains actual
 protocol work through a fresh process. Stop recovery fixture expansion after the
 maintained frozen consumer. The remaining preservation gap is specific to the
 protected running older backend: it cannot export complete Undo/Redo stacks.
@@ -90,6 +110,80 @@ remain; the release prerequisite below advances delivery 1→2. The editor
 does not restrict alternate structures to fixed control sets or credit an
 explicit remount as continuity. Nothing moves to DONE. Main services
 and all eight accepted pairs remain protected; no LAN rollout is claimed.
+
+## Connection authority — 2026-10-06
+
+Owner: NS-4 workflow criterion 5, returning to the observing recipe/HTTP release.
+`TNyxReviewWorkspaces.Call` now validates a nonempty bounded Unicode connection
+owner and forwards it to the actual session command. Activity retains the visible
+actor; receipts and callback/root removal tickets use the trusted connection
+identity on primary and private review routes. Existing explicitly routed ordinary
+projects already supplied that owner and retain their behavior. Direct local
+session calls retain their documented display-actor fallback; authenticated native
+ordinary dispatch always supplies a distinct owner.
+
+The new shared semantic journey creates independent controls and ordered callbacks,
+reviews/removes exact registrations and a page root, and executes paired Undo/Redo.
+Two connections intentionally use the same visible supplementary-Unicode label
+and operation IDs. Foreign/current removal tickets refuse without consuming the
+original ticket; original retries stay byte-exact after foreign edits. Every refusal
+preserves exact accepted/draft files, revision, selection/view and history flags.
+A private review retry survives an actor rename and still rejects another transport.
+Empty/overlong trusted owner input refuses instead of silently falling back.
+
+Private evidence under `build/agent-authority/`:
+
+- `before/compile.log`, `run.log`: checked stable FPC reproduces the actual old
+  primary behavior. The second same-name connection incorrectly receives the
+  first connection's successful receipt despite its stale revision. The fixture
+  fails at that refusal assertion, with zero leaks. This is a reproduced contract
+  defect, not inferred only from code inspection.
+- `fixed/compile.log`, `run.log`: the first corrected portable journey passes
+  118 stable-FPC checks, zero leaks/owned warnings. Later empty/overlong-owner cases
+  add 32 assertions; the maintained current fixture below owns the 150 count.
+- `qualified/compile.log`, `run.log`: the actual suspended protocol engine passes
+  147 stable-FPC checks across primary and an independent ordinary project,
+  including prepared rollback/refusal and retained original removal authority.
+  The primary pair remains exact after the project journey; zero native leaks/
+  owned warnings. Calls use its actual locked ordinary-tool seam and trusted
+  operator observations; no HTTP listener/authentication is inferred.
+- `browser/compile.log`, `browser-review.log` and
+  `browser-artifact/capture.dom.html`: actual browser execution publishes 150
+  portable assertions. Only compiled fixture/matched RTL/HTML enter a new child
+  of the existing protected isolated static host. No screenshot-driven editor
+  automation or new visual/input qualification occurs.
+- `maintained-build.log`: the maintained `review-workspaces` target passes existing
+  200 review checks, current 150 portable authority and 147 actual native protocol
+  checks with matched FPC 3.3.1, zero native leaks/owned warnings. It compiles the
+  existing HTTP review consumer, actual backend, ordinary browser Studio, independent
+source worker, private review and preview consumers using pas2js 3.3.1. Six browser
+  compilations retain 42 visible upstream RTL warnings in total. The new tests and
+  English fixture host are part of that maintained target; runtimes get independent
+  identifiers and no previous runtime is deleted or reused.
+
+PowerShell AST parsing and `git diff --check` pass. No listener is started,
+protected process stopped/restarted or protected enrollment refreshed. The actual
+native engine receives only a fresh owned runtime and an empty output profile;
+application compilers are not an authoring prerequisite. No dependency is edited.
+The previous sealed 200-member recovery artifact is retained unchanged; it does
+not contain the new dispatch correction. Current maintained consumer compilation
+is not a new sealed artifact or authenticated HTTP deployment.
+
+`preservation.json` confirms fifteen exact PID/creation/executable/command identities
+and eight exact accepted/draft/navigation/history-availability frames against the
+preceding baseline. LAN HTTP returns 200. Final native verification retains all 200
+members of the previous sealed recovery bundle. All owned qualification processes
+are terminal; no protected process operation or automatic-review retry occurred.
+
+This accepts the bounded ordinary-tool authority fix; no full original criterion
+or task closes and nothing moves to DONE. Workflow no-closure advances 9→10 once;
+authoring 26, renderer 7, codegen 28 and delivery 2 remain. Reassessment ends further
+router/receipt fixtures here. Same-display compiler build retry ownership is a
+separate existing path and remains an explicit integration gap. Next follow actual
+running/queued worker cancellation, termination/join and that compiler ownership
+under the original NS-5 criterion 1. Retain protected old-service history migration
+and observing recipe/HTTP qualification as separate gates; do not substitute paired
+files/availability flags for complete older live histories.
 
 ## Session recovery — 2026-10-06
 

@@ -32,6 +32,21 @@ owner; staging accepts no original criterion. See [the release guide](../docs/st
 
 ## Separate release runtime — 2026-10-06
 
+Current return after NS-4 connection-authority qualification: criterion 1's actual
+worker cancellation and bounded shutdown remain actionable without a new listener
+or protected service change. `TBuildWorker.Execute` checks Terminated only before
+delegation; `TNyxBuildExecutor.RunCompiler` has log/time exits that terminate the
+process without explicitly joining. Follow cooperative cancellation through the
+actual executor, preserve output/source identity and qualify owned running/queued
+children and terminal retirement. This is an existing requirement, not a new task
+or a reset of historical no-closure counts. Keep complete history migration and
+observing HTTP rollout as separate gates.
+The primary agent build path also derives its retry key from the display actor;
+project/review/editor paths already include their trusted owner/context. Propagate
+connection identity consistently while integrating per-job cancellation and qualify
+two same-display callers without using current-source ordinary-tool checks as
+evidence for the external compiler path.
+
 Criterion 1's isolation prerequisite now uses an immutable typed directory value
 through the actual server, MCP engine, executor and each admitted job. Source/web
 stay in the verified payload; jobs, previews, profiles and saved project directories

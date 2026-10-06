@@ -66,6 +66,13 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current primary/review semantic dispatch now uses the authenticated connection
+owner independently of its visible actor. Native/browser checks qualify independent
+receipts and removal tickets for same-named agents, plus private review actor
+renaming. The actual native ordinary-tool seam and maintained consumers pass;
+this does not update the protected running older HTTP service. See
+[the authority packet](WORK.md#connection-authority--2026-10-06).
+
 Pascal release preparation freezes compiler sources before compiling the backend,
 browser editor, worker and preview. One typed host directory value now separates
 that verified payload from writable runtime and enrollment roots, including copied

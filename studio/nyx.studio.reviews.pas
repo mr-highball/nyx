@@ -98,6 +98,9 @@ type
       refuse; there is no fallback to the user's document. Permission is inherited
       from the operator on every call. An absent routing field denotes active. }
     function Resolve(const AOwner: TNyxText; const ARef: TNyxReviewRef): TNyxAgentSession;
+    { The trusted bounded connection owner authorizes session receipts and
+      removal reviews on both primary and private review routes. AActor remains
+      visible activity text; identical/renamed labels never retarget authority. }
     function Call(const ATool, AOwner, AActor: TNyxText;
       const AArguments: TNyxDataValue): TNyxDataValue;
     { Trusted operator presentation is bounded to eight summaries. It contains
@@ -121,7 +124,7 @@ function NyxWithReview(const AResult: TNyxDataValue;
 implementation
 
 uses
-  nyx.model, nyx.codec, nyx.codegen;
+  nyx.model, nyx.codec, nyx.codegen, nyx.editing;
 
 procedure TNyxReviewWorkspaces.RebindActive(AActive: TNyxAgentSession);
 begin
@@ -590,13 +593,19 @@ begin
   LRef := NyxActiveWorkspace;
   try
 
+    if (AOwner = '') or (NyxTextScalarCount(AOwner) > 120) then
+    begin
+      raise ENyxModel.Create('Semantic review dispatch requires a bounded authenticated connection owner');
+    end;
+
     if ATool = 'nyx_reviews' then
     begin
       Exit(Manage(AOwner, AActor, AArguments));
     end;
     LRef := NyxReviewArgument(AArguments);
     LSession := Resolve(AOwner, LRef);
-    Result := NyxWithReview(LSession.Call(ATool, AActor, NyxReviewArguments(AArguments)), LRef);
+    Result := NyxWithReview(LSession.Call(ATool, AActor,
+      NyxReviewArguments(AArguments), AOwner), LRef);
 
     if LRef.ID <> '' then
     begin

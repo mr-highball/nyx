@@ -3,7 +3,20 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current service-isolation prerequisite (2026-10-06): one immutable typed host
+Current semantic workflow prerequisite (2026-10-06): primary/review dispatch now
+propagates the bounded authenticated connection owner. Same-display connections
+retain independent retries and callback/root removal tickets; private review
+retries survive actor renaming. Portable native/browser checks pass 150, and the
+actual native protocol seam passes 147 with zero leaks/owned warnings. The maintained
+target also passes the existing 200 review checks and rebuilds backend/browser
+consumers. No protected server or authenticated HTTP rollout changes. Workflow
+no-closure advances 9→10 once; authoring 26, renderer 7, codegen 28 and delivery 2
+remain. Stop router fixtures. Keep old-service history migration explicit and
+follow NS-5's running-worker cancellation/termination-join prerequisite for reliable
+reload. Original parity/accessibility/performance/delivery criteria stay intact.
+See [evidence and return path](WORK.md#connection-authority--2026-10-06).
+
+Previous service-isolation prerequisite (2026-10-06): one immutable typed host
 value separates verified source/web from runtime jobs/profiles/projects/previews
 and explicit enrollment. Actual protocol and both compiler workers preserve exact
 companions and the pristine payload; both produced applications execute. Repository

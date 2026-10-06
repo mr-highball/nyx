@@ -735,18 +735,31 @@ try {
       & (Join-Path $nyxReviewNative 'nyx_review_tests.exe')
 
       if ($LASTEXITCODE -ne 0) { throw 'Portable native protected-review checks failed' }
+      Invoke-NyxCompiler $nyxFpc ($nyxReviewFlags + @('tests/nyx_agent_authority_tests.lpr'))
+      & (Join-Path $nyxReviewNative 'nyx_agent_authority_tests.exe')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Portable connection authority checks failed' }
+      Invoke-NyxCompiler $nyxFpc ($nyxReviewFlags + @('tests/nyx_mcp_authority_tests.lpr'))
+      # Every maintained run owns a separate runtime. Existing paths are never
+      # deleted or reused; the suspended protocol opens no listener.
+      $nyxAuthorityRuntime = Join-Path $nyxReviewDir ('authority-' + [guid]::NewGuid().ToString('N'))
+      & (Join-Path $nyxReviewNative 'nyx_mcp_authority_tests.exe') $nyxAuthorityRuntime
+
+      if ($LASTEXITCODE -ne 0) { throw 'Native protocol connection authority checks failed' }
       # The maintained browser-host protocol needs the installed compiler's
       # fpwebsocket units; use the already qualified matching toolchain.
       $nyxReviewHostFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
         '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxReviewProtocol", "-FE$nyxReviewProtocol")
       Invoke-NyxCompiler $nyxLclFpc ($nyxReviewHostFlags + @('tests/nyx_mcp_review_tests.lpr'))
       Invoke-NyxCompiler $nyxFpc ($nyxReviewFlags + @('studio/nyx_studio_server.lpr'))
-      foreach ($nyxReviewProgram in @('tests/nyx_review_tests.lpr', 'studio/nyx_studio.lpr',
+      foreach ($nyxReviewProgram in @('tests/nyx_review_tests.lpr', 'tests/nyx_agent_authority_tests.lpr',
+          'studio/nyx_studio.lpr',
           'studio/nyx_studio_review.lpr', 'studio/nyx_studio_preview.lpr')) {
         Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Fusrc', '-Fustudio',
           "-FE$nyxBrowserDir", $nyxReviewProgram)
       }
-      foreach ($nyxReviewHost in @('reviews.html', 'index.html', 'agent-review.html', 'agent-preview.html')) {
+      foreach ($nyxReviewHost in @('reviews.html', 'authority.html', 'index.html',
+          'agent-review.html', 'agent-preview.html')) {
         Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxReviewHost") -Destination $nyxBrowserDir
       }
     } else {

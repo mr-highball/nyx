@@ -108,6 +108,17 @@ and 2025-03-26. Notifications receive an empty 202 response. Optional streaming
 GET is explicitly unsupported (405); DELETE closes a client session. See the
 [MCP transport contract](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports).
 
+Current-source ordinary dispatch binds successful mutation receipts and callback/
+root removal reviews to the authenticated connection owner, separately from its
+visible actor name. Two connections with the same display name have independent
+operation IDs and tickets; renaming that name preserves the original connection's
+receipts. A foreign ticket refuses before changing either paired file or history.
+Private reviews additionally require their owning connection. The same contract
+applies to primary and explicitly routed project sessions. Compiler build requests
+have a separate receipt path whose primary-agent owner propagation remains open.
+Installed older-server and observing HTTP qualification remain recorded separately
+in WORK.md.
+
 | Tool | Context or operation |
 | --- | --- |
 | `nyx_session` | Revision, current selection/view, title, draft status, permissions and history availability |
@@ -328,7 +339,7 @@ to find its inherited paths. Duplicate sibling names refuse as ambiguous.
   identity refuses. Definitions, siblings and retained Pascal handlers stay owned.
 
 All related operations publish as one paired design/Pascal Undo step under the
-existing revision, permission, draft and actor-bound receipt checks. Failed
+existing revision, permission, draft and connection-owner-bound receipt checks. Failed
 candidate admission retains the complete pair/history. A copied named application
 state binding remains deliberately shared; structural customization does not
 implicitly create a new state namespace.
@@ -388,6 +399,9 @@ history. Revisions remain monotonic through Undo/Redo. Stale revisions and pendi
 Pascal drafts refuse mutation. Exact successful retries return their original
 receipt; changing arguments under the same operation identity is refused. The
 last 64 successful mutation receipts are retained for that session.
+Operation identities are scoped to their authenticated connection owner. A retry
+from another connection follows ordinary revision admission and cannot obtain the
+first connection's cached result, even when both use an identical display name.
 
 ## Author callbacks semantically
 
@@ -426,7 +440,7 @@ Before any removal batch, call `mode:"review"` at the current revision with
 exact `changes`, omitting `operationId`. Validation returns warnings and a
 `reviewID` without editing. Inspect the warnings, then apply the unchanged batch
 at that revision with a new operation ID and the review ID. Tickets bind exact
-actor, revision and change bytes; altered identities or stale reviews refuse.
+authenticated connection owner, revision and change bytes; altered identities or stale reviews refuse.
 Sixteen tickets are retained. Successful apply consumes its ticket; exact retry
 still returns the original mutation receipt. Read-only permission allows review;
 disabled access refuses it. A Boolean confirmation cannot bypass review.
@@ -793,7 +807,7 @@ will remain block removal. References within the complete removal group are
 allowed. Review changes neither revision nor Undo history, and is available in
 read-only mode. Only eight immutable paired reviews are retained.
 
-Apply the same roots, in the same order, at the same revision and actor, adding
+Apply the same roots, in the same order, at the same revision and owning connection, adding
 `"mode":"apply"`, `"operationId":"unique-cleanup"` and the returned `reviewID`.
 Apply requires editing permission and no pending draft. A changed project,
 missing/wrong root, altered group, expired ticket or retained dependency refuses
