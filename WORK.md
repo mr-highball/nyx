@@ -7,6 +7,18 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+The user's latest explicit LAN instruction is fulfilled:
+[current release refresh](#current-lan-release-refresh--2026-10-05) now serves
+the current checked server, Studio and worker on the existing all-interface HTTP
+endpoint; MCP remains loopback. Exact installed/served hashes and nineteen
+authenticated tools are verified. The existing executable path preserves the
+working firewall allowance. Source-editor regression passes 30 desktop / 30
+exact-390 against current code. The active pair/selection/view remain exact;
+restart resets in-memory history, now revision 2. Seven auxiliary services remain
+unchanged. The previous blocked/pending refresh below is historical and superseded;
+do not execute its obsolete process manifest. Private current identity, artifact
+manifest, paired backup and rollback live under the current refresh record.
+
 Current independent work: [typed responsive authoring](#typed-responsive-authoring--2026-10-05)
 under original Studio authoring criterion 1. Managed public width conditions,
 typed generation/admission, retained target adapters and the Nyx-built Inspector
@@ -20,8 +32,9 @@ projection regressions pass. Authoring no-closure advances 13→14 once; workflo
 9, codegen 28, renderer 3 and delivery 1 remain. End local interval/fixture
 expansion. Next qualify ordinary browser Studio inspector/worker execution and
 continue original responsive variants, guides, editor/parity/accessibility and
-delivery outcomes. The prepared release-refresh closure and protected services/
-pair remain intact; no new LAN or phone deployment is claimed. The preceding
+delivery outcomes. This independent packet retained the prepared release-refresh
+closure and protected services/pair before the separately authorized LAN refresh
+above. The preceding
 user refresh verification was no progress: it confirmed the same pending local
 action without changing the release. This independent integration supplies new
 product evidence while that gate remains.
@@ -57,8 +70,8 @@ restores empty/accepted state and exact Pascal. Authoring no-closure advances
 paint/capture/fixture expansion. Next connect direct canvas handles and responsive
 authoring through public contracts and the existing isolated paired processor.
 
-Pending user priority: [reviewable release refresh](#reviewable-release-refresh--2026-10-05).
-The user explicitly requested the new running version. A separately staged
+Superseded user-local refresh: [reviewable release refresh](#reviewable-release-refresh--2026-10-05).
+The earlier user request produced a separately staged
 Pascal service now authenticates all nineteen tools and serves the exact backed-up
 active pair. Actual browser source-workspace checks pass 30 at desktop and 30 at
 390 pixels, including retained text/range, expanded tab refresh, Close and the
@@ -68,7 +81,9 @@ Replacing the LAN service was rejected by automatic approval review with only
 `blocked by policy`; its process, pair, revision/history and configuration remain
 unchanged. A private, parsed refresh script with qualified artifact hashes,
 exact process checks, backup/restore and rollback is ready for the user to run.
-Do not retry an equivalent launch or claim that the phone release was refreshed.
+That checkpoint did not refresh the phone release. The user's later explicit LAN
+instruction is fulfilled by the guarded current refresh above; its earlier
+process manifest is obsolete and must not be run.
 Codegen criterion 3 remains open at no-closure 28; workflow 9, renderer 3,
 authoring was 11 and delivery 1 remained at that checkpoint. While the local
 refresh is pending, independent canvas work above leaves its qualified artifact
@@ -8431,3 +8446,42 @@ technology, other widgetsets, nested container conditions, named variants and
 large-project performance remain open. Preserve all original task blockers.
 The post-push exact local/remote checkpoint receipt is retained under ignored
 `build/responsive/remote-checkpoint.json`; verify `origin/hello-nyx` before handoff.
+
+## Current LAN release refresh — 2026-10-05
+
+The user explicitly requested the updated LAN service after the earlier generic
+automatic-review refusal. This execution was permitted. A fresh nine-artifact
+product closure includes the current Pascal server, Studio, matched module worker,
+review/preview consumers, RTL and hosts. The current source-editor browser
+regression passes **30 desktop / 30 exact-390**; the current candidate independently
+admits the exact active paired source/design/selection/view. Owned server warnings
+remain zero; dependency RTL warnings stay visible. Responsive evidence and its
+original acceptance limits remain in the packet above.
+
+The guarded refresh verifies hashes, executable bytes and exact process creation
+before stopping the owned service. It backs up the executable and paired editor
+frame, retains the existing installed executable path and its working firewall
+allowance, and starts the current build hidden with its explicit current web root.
+The first attempt hit a Windows executable lock; guarded rollback restored the
+exact pair and old service. Waiting for the verified process to exit and disposing
+its process handle before copying resolved that race. The subsequent refresh
+completed, preserving the pair/selection/view. In-memory history resets on restart;
+the current primary session is revision **2**, with no pending draft.
+
+Actual checks verify all-interface HTTP, loopback-only MCP, one new exact process
+owning both existing ports, HTTP 200 through this machine's LAN address, and exact
+installed server/served Studio/served worker hashes. The native Pascal semantic
+client authenticates **nineteen** current tools and reads the primary session.
+All seven auxiliary protected services retain their previous exact identities.
+This establishes deployment and local LAN-address delivery; physical phone review
+and ordinary browser Studio responsive Inspector/worker qualification still need
+their own evidence. No original criterion closes from deployment alone.
+
+Private evidence lives under ignored `build/lan-refresh-current/` and
+`.local/codex-restart-check/lan-refresh-current/`: nine-artifact manifest, current
+process identity, exact paired before/after frames, executable backup/rollback,
+served-byte verification, actual MCP discovery/session and desktop/narrow editor
+captures. The earlier staged closure stays intact, but its old refresh script's
+expected process has retired; it is superseded and must not be reused. Continue
+semantic MCP through the current enrollment, never infer that old cached chat
+handles have reconnected merely because the configuration rotated.

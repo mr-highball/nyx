@@ -62,6 +62,16 @@ records its distinct browser qualification at 28. Do not substitute screenshot
 authoring or an equivalent listener-launch attempt. See
 [the work record](../WORK.md#reviewable-release-refresh--2026-10-05).
 
+**Current LAN follow-through — 2026-10-05:** The user's subsequent explicit LAN
+request is now fulfilled by the guarded current refresh. The Pascal semantic
+client authenticates all nineteen tools on the actual refreshed primary service;
+the exact pair remains, with restarted revision-2 history. HTTP serves current
+verified bytes on all interfaces while MCP remains loopback. Current enrollment
+rotated on launch; cached native chat handles need their own connection evidence.
+The earlier blocked refresh is historical and its process manifest is superseded.
+No additional workflow criterion closes; count remains 9. See
+[current work](../WORK.md#current-lan-release-refresh--2026-10-05).
+
 **Confirmed gaps — 2026-10-04:** The design transaction vocabulary contains
 create/update/move/delete/title/tokens. Callback authoring now has a focused tool;
 immutable build requests and bounded status are now qualified. Local callback

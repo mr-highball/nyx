@@ -66,6 +66,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The latest explicit user LAN refresh now serves current checked Studio/server
+artifacts through the existing HTTP endpoint, with MCP kept on loopback.
+Installed/served hashes and nineteen authenticated tools are verified; current
+source-editor checks pass 30 desktop / 30 exact-390. Physical phone review and
+full ordinary-editor qualification remain separate. The earlier blocked refresh
+below is historical and superseded. See
+[current deployment evidence](WORK.md#current-lan-release-refresh--2026-10-05).
+
 Typed public viewport-width conditions now generate crafted Pascal and use
 ordinary paired Inspector/MCP admission. Shared checks pass 33 per native compiler
 and 33 in the browser; unchanged semantic source passes 22 Win32 controls, nine

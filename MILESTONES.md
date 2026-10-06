@@ -3,6 +3,16 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Latest deployment follow-through (2026-10-05): the user's explicit LAN update now
+serves current checked server/Studio/worker bytes at the existing HTTP endpoint,
+while MCP stays loopback. Exact process/listener/artifact checks, LAN-address HTTP
+delivery, nineteen authenticated tools and current source-editor 30 desktop /
+30 exact-390 regression pass. The pair remains exact; in-memory history resets.
+Seven auxiliary services stay unchanged. This supersedes the earlier blocked
+refresh below, without closing original criteria or establishing physical phone
+or full ordinary-editor parity. See
+[evidence](WORK.md#current-lan-release-refresh--2026-10-05).
+
 Latest user-directed review packet (2026-10-05): the current Pascal service and
 browser product closure are staged separately. Authenticated semantic discovery
 exposes nineteen tools; exact protected source/design reconstructs through FPC
