@@ -9518,7 +9518,9 @@ all exact against the prior packet. Fifteen preexisting PID/creation/executable/
 command identities and main LAN HTTP 200 remain. The own isolated service is stopped
 only after final browser evidence and exact identity verification. No main binary,
 frontend, worker, compiler profile, pair, history or concurrent handle is replaced.
-Private service/pair/compile receipts remain ignored; remote checkpoint follows.
+Private service/pair/compile receipts remain ignored. Implementation checkpoint
+`01c4f08e5060efdf3f3e853c74d3f07efa6a9bb5` is pushed to `origin/hello-nyx`, with
+exact remote SHA verified in `build/retained-arrangement/remote-checkpoint.json`.
 
 Renderer no-closure advances 4→5 once for this integrated ownership prerequisite.
 Authoring 22, workflow 9, codegen 28 and delivery 1 remain. No original full criterion
