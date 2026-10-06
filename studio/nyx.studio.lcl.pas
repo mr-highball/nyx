@@ -246,6 +246,10 @@ type
     { Borrowed public contracts for embedding/qualification. Never free them or
       rebuild them from inside a native widget notification. }
     property Session: TNyxStudioSession read FSession;
+    { UI-thread observation shared with the browser Studio. Readiness includes
+      active and queued source work, independently of mounted status controls.
+      False means quiescent, not successful admission; inspect results separately. }
+    function SourceBusy: Boolean;
     { Borrow the current project's command context on the UI thread. A project
       jump may change this identity; callers must never free the borrowed owner. }
     property SourceCommands: TNyxSourceCommands read FSourceCommands;
@@ -273,6 +277,11 @@ uses
   nyx.studio.commands, nyx.studio.authoring, nyx.studio.inspector,
   nyx.studio.palette, nyx.studio.source, nyx.studio.diagnostics, nyx.studio.rootview,
   nyx.studio.exchange.lcl, nyx.studio.agents, nyx.studio.hierarchy, Math;
+
+function TNyxNativeStudio.SourceBusy: Boolean;
+begin
+  Result := (FSourceCommands <> nil) and FSourceCommands.Busy;
+end;
 
 type
   TNativeHostAccess = class(TWinControl);

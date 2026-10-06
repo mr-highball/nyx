@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'confirmation', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'confirmation', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1095,6 +1095,31 @@ try {
       "-Fu$nyxKeyboardSource", "-FE$nyxBrowserDir", 'tests/nyx_keyboard_host_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/keyboard-host.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'browser-worker') {
+    # Real worker qualification uses a maintained Pascal driver with anonymous
+    # Chromium pipes. Stage only: no new listener or observing service changes.
+    $nyxWorkerCheckRoot = Join-Path $nyxRoot 'build/browser-worker-observation/maintained'
+    $nyxWorkerCheckNative = Join-Path $nyxWorkerCheckRoot 'driver'
+    $nyxWorkerCheckBrowser = Join-Path $nyxWorkerCheckRoot 'web'
+    New-Item -ItemType Directory -Force $nyxWorkerCheckNative,
+      $nyxWorkerCheckBrowser | Out-Null
+    $nyxFpc = Resolve-NyxTool $Fpc 'FPC' 'fpc'
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-FU$nyxWorkerCheckNative", "-FE$nyxWorkerCheckNative",
+      'tests/nyx_browser_ready_capture.lpr')
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxWorkerCheckBrowser",
+      'tests/nyx_event_queue_browser.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxWorkerCheckBrowser", 'studio/nyx_source_worker.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxWorkerCheckBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/event-inspector-controls.html') -Destination $nyxWorkerCheckBrowser
+    Write-Host 'Real-worker fixture staged; use ready capture on an existing admitted HTTP host.'
     exit 0
   }
 

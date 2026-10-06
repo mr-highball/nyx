@@ -33,9 +33,11 @@ No original criterion or renderer prerequisite closes; the historical no-closure
 total remains unestablished, not reset by this boundary. Native isolation covers
 the exact owner, not all application windows. Hardware Tab/IME/assistive technology,
 other widgetsets, nested presentations, oversized native custom layouts, broader
-visual quality and full accessibility remain. Stop confirmation fixtures and
-reassess the actual Studio-worker prerequisite and original outcomes. Protected
-history migration/observing rollout remains unchanged.
+visual quality and full accessibility remain. Stop confirmation fixtures. The
+later [real-worker packet](../WORK.md#real-browser-worker-and-contextual-warnings--2026-10-06)
+qualifies local ordinary Studio callback interaction; reassess original outcomes
+and authenticated observing integration next. Protected history migration/
+observing rollout remains unchanged.
 
 ## Bound list/tree typeahead — 2026-10-06
 

@@ -28,14 +28,24 @@ uses
   SysUtils, Web, nyx.text, nyx.types, nyx.callbacks, nyx.scheduler,
   nyx.studio.inspector, nyx.studio.browser;
 
+type
+  TCallbackStage = (csStart, csAdded, csWarning, csConfirmed, csRemoved,
+    csDraftRefused, csRetire);
+
+const
+  CCaptureQuery = '?capture=1';
+  CCheckpoint = 'data-capture-checkpoint';
+  CObserved = 'data-capture-observed';
+
 var
   GStudio: TNyxStudio;
-  GStep: Integer;
+  GStep: TCallbackStage;
   GChecks: Integer;
   GPolls: Integer;
   GBefore: TNyxText;
   GWithCallbacks: TNyxText;
   GKey: TNyxText;
+  GCapture: Boolean;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -107,13 +117,19 @@ begin
 end;
 
 procedure Step;
-var
-  LStatus: TJSHTMLElement;
 begin
   try
-    LStatus := TJSHTMLElement(document.querySelector('[data-node=studio-source-status]'));
+    { Only the maintained real-clock capture opts in to this fixture handshake.
+      Product workers continue normally; the test waits before issuing its next
+      command, so evidence observes actual stable controls without injected code. }
 
-    if (LStatus <> nil) and (Pos('Preparing', LStatus.textContent) = 1) then
+    if GCapture and (document.body.getAttribute(CCheckpoint) <> '') and
+      (document.body.getAttribute(CObserved) <> document.body.getAttribute(CCheckpoint)) then
+    begin
+      window.setTimeout(@Step, 50);
+      Exit;
+    end;
+    if (GStudio <> nil) and GStudio.SourceBusy then
     begin
       Inc(GPolls);
 
@@ -126,11 +142,12 @@ begin
     end;
     GPolls := 0;
     case GStep of
-      0:
+      csStart:
         begin
           { No recovery or service connection touches the observing user's pair. }
           GStudio := TNyxStudio.Create;
           GStudio.Run(False);
+          document.body.setAttribute('data-event-control-width', IntToStr(window.innerWidth));
           Click('action-code');
           Click('project-description');
           Click(NyxInspectorEventsID);
@@ -139,7 +156,7 @@ begin
           Click(GKey + '-add');
           Check(Source = GBefore, 'Add keeps accepted Pascal during isolated preparation');
         end;
-      1:
+      csAdded:
         begin
           Check((Pos('TODO', Source) > 0) and (Find(GKey + '-count').textContent = '1 registrations'),
             'Admitted callback owns a TODO implementation and visible registration');
@@ -149,7 +166,7 @@ begin
           Check(TJSHTMLSelectElement(Field(GKey + '-policy')).value = NyxPolicyName(neUIQueue),
             'Latest waiting policy remains visible');
         end;
-      2:
+      csWarning:
         begin
           Check(TJSHTMLSelectElement(Field(GKey + '-policy')).value = NyxPolicyName(neUIQueue),
             'Worker publication retains latest event policy');
@@ -157,6 +174,17 @@ begin
           Click(GKey + '-callback-0-remove');
           Check((Find('event-removal-warning') <> nil) and (Source = GWithCallbacks),
             'Removal request only exposes its warning');
+          Check(Find('event-removal-warning').parentElement.getAttribute('data-node') =
+            GKey + '-callback-0', 'Warning belongs to the exact callback row');
+          Find('event-removal-warning').scrollIntoView(False);
+
+          if GCapture then
+          begin
+            document.body.setAttribute(CCheckpoint, 'warning');
+          end;
+        end;
+      csConfirmed:
+        begin
           Click('event-removal-cancel');
           Check(Source = GWithCallbacks, 'Keep registration retains source');
           Click(GKey + '-callback-0-remove');
@@ -164,7 +192,7 @@ begin
           Check((Find('event-removal-warning') <> nil) and (Source = GWithCallbacks),
             'Confirmation awaits admission without early pair publication');
         end;
-      3:
+      csRemoved:
         begin
           Check((Find(GKey + '-count').textContent = '0 registrations') and
             (document.querySelector('[data-node=event-removal-warning]') = nil) and
@@ -175,22 +203,28 @@ begin
           Change('studio-code', GBefore);
           Click('event-' + NyxTriggerName(ntAfterKeyPress) + '-add');
         end;
-      4:
+      csDraftRefused:
         begin
           Check(Source = GBefore, 'Rejected addition retains independent Pascal draft');
           Check(Find('event-' + NyxTriggerName(ntAfterKeyPress) + '-count').textContent =
             '0 registrations', 'Rejected addition creates no registration');
+
+          if GCapture then
+          begin
+            document.body.setAttribute(CCheckpoint, 'retained-draft');
+          end;
+        end;
+      csRetire:
+        begin
           FreeAndNil(GStudio);
+          Check(document.querySelector('[data-node=studio-code]') = nil,
+            'Studio retirement unmounts its actual source control');
           document.body.setAttribute('data-event-controls', 'passed');
           document.body.setAttribute('data-event-control-checks', IntToStr(GChecks));
           Exit;
         end;
-    else
-      begin
-        raise Exception.Create('Unknown callback control journey step');
-      end;
     end;
-    Inc(GStep);
+    GStep := Succ(GStep);
     window.setTimeout(@Step, 10);
   except
     on LException: Exception do
@@ -202,5 +236,7 @@ begin
 end;
 
 begin
+  GStep := csStart;
+  GCapture := window.location.search = CCaptureQuery;
   window.setTimeout(@Step, 0);
 end.

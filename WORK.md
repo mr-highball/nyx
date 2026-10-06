@@ -7,7 +7,92 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-## Current return path: managed confirmation presentation — 2026-10-06
+## Current return path: real browser worker observation — 2026-10-06
+
+Current goal turn: progress. Previous checkpoint `d69a31f` was pushed and clean.
+The existing NS-4 actual-consumer prerequisite now reaches the local real-worker
+boundary below. Stop transport/callback fixture expansion here. Reassess original
+modal/picker/overlay breadth and the protected history/observing service gate
+before the next batch; local captures cannot substitute for authenticated rollout.
+No original criterion closes. Workflow no-closure advances **10→11** once;
+authoring **26**, renderer **7**, codegen **28** and delivery **2** remain.
+No listener, protected replacement, enrollment or user-pair change occurred.
+
+## Real browser worker and contextual warnings — 2026-10-06
+
+The maintained Windows Pascal readiness observer owns one headless Chromium
+process/profile and anonymous debugger pipes. It reads bounded terminal markers
+on actual clocks, records Runtime failures and saves meaningful PNG/DOM checkpoints
+before releasing the fixture's next command. It injects no scripts or editor
+commands and opens no debugging TCP listener. The existing ordinary browser
+Studio journey runs its real compiled Pascal source worker. Both Studio hosts
+now expose UI-thread `SourceBusy`, independent of mounted message controls;
+quiescence is not successful admission. The native consumer also waits for its
+existing presentation refresh. See [the guide](docs/browser-qualification.md).
+
+The shared Nyx confirmation recipe now appears inside the exact callback row,
+instead of after the full event catalog. Owner, command context, event, registration
+and handler must all match. Stable action identities, pending disablement, Keep,
+exact removal and paired history remain with the ordinary controller. This is an
+inline warning, not a new floating Studio modal.
+
+Semantic MCP remained primary for the companion authoring/history journey. Owned
+empty review `review-6` composed an English reply memo, then admitted two ordered
+OnBeforeKeyPress registrations and UI-queue policy in one paired group. A bounded
+actor-bound removal review at revision 3 admitted its unchanged group at revision
+4. The retained 115-character implementation and 106-character signature compare
+exactly before/after removal. One semantic Undo restores both registrations and
+typed policy at revision 5; the bounded source window uses `INyxMemo`/`NewNyxMemo`
+and fluent callbacks. The review is discarded at revision 5. Primary revision 2,
+selection/view and accepted pair remain unchanged. This semantic evidence proves
+admission/history, not execution; maintained actual consumers supply that below.
+
+Evidence: ignored `build/browser-worker-observation/` and maintained source/guide.
+
+- `tools/build.ps1 -Target browser-worker`, `maintained-build-final.log`: checked
+  native observer, ordinary browser Studio consumer and matched `-Tmodule` worker
+  stage successfully. **Zero owned warnings**; seven upstream `classes.pas`
+  warnings per pas2js artifact remain visible and unsuppressed.
+- `desktop-context.log` / `narrow-context.log`: **64** actual browser callback
+  checks each, measured CSS widths **1100/390**. Actual add, queued policy,
+  contextual warning, Keep, confirmed removal, exact source retention, paired
+  Undo, independent draft refusal and source-control retirement pass. Both
+  `warning.png` and `retained-draft.png` checkpoints are visually inspected.
+  Final pass markers report 64 after Studio retirement; final blank captures
+  are teardown evidence, not the warning's visual evidence.
+- `compile-native.log` / `native.log`: **59** checked actual Win32 Studio callback
+  checks, including disabled pending confirmation snapshots, reusable/instance
+  ownership, later selection and retirement. Native warning capture is inspected.
+  Native Studio and both observer traces report **zero leaks**. Native compiler
+  is matched LCL 3.3.1; the observer compiles checked FPC 3.2.0. Browser uses
+  installed matched pas2js/RTL. This is not a performance measurement.
+- `mcp-callbacks.json` retains bounded authenticated semantic receipts and exact
+  implementation comparisons. Final native named session and review-list tools
+  authenticate; owned reviews list empty. `preservation-final.json` verifies
+  **15** exact protected process identities and **8** byte-exact accepted pairs,
+  revision/selection/view/draft/Undo/Redo availability, primary revision **2**,
+  LAN HTTP **200** and **zero** active owned qualification runners. Availability
+  flags do not export protected histories. Stage fingerprints are retained in
+  `staged-artifacts.json`; no older observing payload was replaced.
+
+Diagnosed failures are retained, not accepted: initial ad hoc worker staging used
+`-Tbrowser` without its program entry, so no message listener ran. The maintained
+`-Tmodule` stage fixes entry, without changing production timeouts. The first
+correctly staged desktop run passed 61; narrow then advanced before queued policy
+publication because compact Inspector omitted the status label. Typed `SourceBusy`
+replaces that test heuristic for both targets. Actual captures also exposed the
+footer warning's poor placement, corrected through the shared exact-row recipe.
+Final runs pass 64/64/59; no blind repeat or unrelated fixture expansion follows.
+
+The observing LAN service remains on its preserved older release. Authenticated
+browser synchronization, complete old-service history migration, physical phones,
+hardware/IME/assistive input, other engines/widgetsets, full accessibility, modal/
+picker/overlay breadth, aesthetics and performance retain their original owners.
+No full criterion/task is accepted; original criteria/prerequisites stay intact.
+The prior new-listener rejection remains unretried. Remote checkpoint is recorded
+after pushing; this local qualification does not imply an observing refresh.
+
+## Previous return path: managed confirmation presentation — 2026-10-06
 
 Current goal turn: progress; the preceding status-only turn made no product
 progress. NS-3 advanced-dialog criterion 3 now has the managed confirmation

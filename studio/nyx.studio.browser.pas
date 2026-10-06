@@ -271,6 +271,11 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+    { Borrowed UI-thread observation of active/queued source work. It remains
+      available when a compact panel does not mount the source status control;
+      editor hosts must not infer readiness from visible message text. False means
+      quiescent, not successful admission; inspect the command result separately. }
+    function SourceBusy: Boolean;
     { Recovery is enabled for ordinary use. Embedded/test hosts can opt out of
       browser storage without reading or overwriting the user's saved project. }
     procedure Run(ARecovery: Boolean = True);
@@ -288,6 +293,11 @@ uses
   nyx.source,
   nyx.editing,
   nyx.editing.browser, nyx.studio.exchange.browser;
+
+function TNyxStudio.SourceBusy: Boolean;
+begin
+  Result := (FSourceCommands <> nil) and FSourceCommands.Busy;
+end;
 
 type
   { The installed Web declarations type the third open argument as an object.

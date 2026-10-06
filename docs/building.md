@@ -7,6 +7,12 @@ Pascal. PowerShell only selects tools, passes compiler arguments and stages
 matched target artifacts. No Node, npm, Python, CSS framework or remote font is
 required.
 
+`browser-worker` builds the Pascal real-clock readiness observer and stages the
+ordinary Studio callback consumer with its matched module worker and RTL. It
+starts no listener. Execute desktop/narrow journeys through an already admitted
+host; see [browser worker qualification](browser-qualification.md) for arguments,
+ownership, checkpoints and the distinction between readiness and admission.
+
 `compiler-lifecycle` runs checked Pascal compiler-family/queue/cancellation and
 semantic-host qualification on Windows, plus retained profile/retry/handle and
 portable admission regressions. Each run owns a new runtime. It compiles the

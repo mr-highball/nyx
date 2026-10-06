@@ -66,14 +66,24 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Ordinary browser Studio now qualifies its real compiled Pascal source worker on
+actual clocks. Desktop/exact-390 consumers pass 64 each; checked Win32 Studio passes
+59, with zero native leaks. Both hosts expose typed source readiness, and shared
+callback warnings appear beside the exact registration. Semantic removal retains
+the exact implementation and one paired Undo restores its registrations/policy.
+All protected services/eight pairs remain unchanged; authenticated observing
+deployment remains open. See
+[the packet](WORK.md#real-browser-worker-and-contextual-warnings--2026-10-06).
+
 Managed confirmation presentations now clone specialized compound content and
 share typed focus/sizing, target hosts and ordered completion events. The exact
 MCP-authored English companion passes 36 checked Win32 / 35 desktop and narrow
 browser checks; native Studio's shared inline warning passes 57 and source workspace
 30, all native traces leak-free. The maintained semantic recipe reproduces exact
-accepted source; both named-MCP application builds succeed. Browser Studio-worker
-readiness, complete accessibility, other hosts and protected observing rollout
-remain open. See [the packet](WORK.md#managed-confirmation-presentation--2026-10-06).
+accepted source; both named-MCP application builds succeed. The later worker
+packet above qualifies local ordinary Studio interaction; complete accessibility,
+other hosts and protected observing rollout remain open. See
+[the packet](WORK.md#managed-confirmation-presentation--2026-10-06).
 
 Bound list/tree controls now share typed runtime typeahead and pinned Unicode
 17 default full case folding. The identical English MCP-authored companion passes

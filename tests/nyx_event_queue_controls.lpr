@@ -81,7 +81,7 @@ begin
       raise ENyxModel.Create('Event command did not retire / ' + GStudio.Status);
     end;
     Sleep(1);
-  until not GStudio.SourceCommands.Busy and not GStudio.PresentationPending;
+  until not GStudio.SourceBusy and not GStudio.PresentationPending;
   Pump;
 end;
 
@@ -276,30 +276,30 @@ begin
   end;
 end;
 
-procedure CaptureEvents(const AKey: TNyxText);
+procedure RevealInspectorControl(const AKey: TNyxText);
 var
   LScroll: TScrollBox;
   LCard: TControl;
   LPosition: TPoint;
 
-  procedure Reveal;
-  begin
-    LScroll := TScrollBox(GStudio.ShellView.ControlFor('studio-right'));
-    LCard := GStudio.ShellView.ControlFor(AKey);
-    Check((LScroll <> nil) and (LCard <> nil), 'Actual event card and inspector viewport exist');
-    LPosition := LScroll.ScreenToClient(LCard.ClientToScreen(Point(0, 0)));
-    LScroll.VertScrollBar.Position := LScroll.VertScrollBar.Position + LPosition.Y;
-    Pump;
-  end;
-
 begin
-  Reveal;
+  LScroll := TScrollBox(GStudio.ShellView.ControlFor('studio-right'));
+  LCard := GStudio.ShellView.ControlFor(AKey);
+  Check((LScroll <> nil) and (LCard <> nil), 'Actual event card and inspector viewport exist');
+  LPosition := LScroll.ScreenToClient(LCard.ClientToScreen(Point(0, 0)));
+  LScroll.VertScrollBar.Position := LScroll.VertScrollBar.Position + LPosition.Y;
+  Pump;
+end;
+
+procedure CaptureEvents(const AKey: TNyxText);
+begin
+  RevealInspectorControl(AKey);
   Capture('events-desktop');
   GForm.ClientWidth := 390;
   GStudio.RequestRefresh;
   Ready;
   Click('action-panel-inspector');
-  Reveal;
+  RevealInspectorControl(AKey);
   Capture('events-390');
 end;
 
@@ -389,6 +389,10 @@ begin
     Check((GStudio.ShellView.ControlFor('event-removal-warning') <> nil) and
       not GStudio.SourceCommands.Busy and (PairText = LBefore),
       'Actual removal request displays a warning without mutation');
+    Check(GStudio.ShellView.Root.Find('event-removal-warning').Parent.ID =
+      LKey + '-callback-0', 'Warning belongs to the exact native callback row');
+    RevealInspectorControl('event-removal-warning');
+    Capture('warning-desktop');
     Click('event-removal-cancel');
     Check((PairText = LBefore) and
       (GStudio.ShellView.Root.Find('event-removal-warning') = nil),

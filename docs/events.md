@@ -313,7 +313,8 @@ registers it in unit initialization, opens the optional source editor and moves
 the caret to that line. Clicking a registered handler returns to its implementation.
 Additions refuse an unapplied source draft so handwritten work is retained.
 
-**Remove** displays a warning and requires explicit confirmation. It removes the
+**Remove** displays a warning beside the exact registration and requires explicit
+confirmation. It removes the
 registration and retains the implementation. The warning names the exact owner,
 event, registration and handler; an intervening change invalidates it. Addition,
 policy changes and removal share paired source/design undo and redo.
@@ -332,8 +333,10 @@ line only if that command's owner/view is still selected. Later navigation stays
 independent. Policies and removals retain an independent Pascal draft and its
 original base; additions still require Apply or Restore before generating a new
 implementation. The legacy synchronous router uses the same typed intent and
-registration checks. Changed browser execution remains pending at the existing
-host gate; current native evidence is recorded in [WORK.md](../WORK.md).
+registration checks. The real compiled browser worker now passes this local
+ordinary-control journey at desktop and narrow widths; authenticated observing
+deployment remains open. See [browser qualification](browser-qualification.md)
+and [current evidence](../WORK.md#real-browser-worker-and-contextual-warnings--2026-10-06).
 
 **Properties** exposes text and the relevant typed fields; **More properties**
 expands the complete shared fluent configuration. `NyxProperties` and

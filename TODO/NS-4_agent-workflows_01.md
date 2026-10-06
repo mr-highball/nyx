@@ -45,16 +45,18 @@ admitted semantic policy operation. Actual native named tools now authenticate
 in this chat and both review application builds succeed. See
 [the packet](../WORK.md#collection-typeahead--2026-10-06).
 
-Current actual-consumer qualification gap (2026-10-06): native Studio's shared
-confirmation recipe passes the maintained 57 queued callback checks, while the
-browser worker capture either dumps before source publication or accelerates its
-timeout ahead of the real worker. Both target semantic application builds succeed,
-but compilation does not qualify that ordinary browser Studio journey. Add
-readiness-aware actual worker observation within this existing workflow owner;
-do not change production timeouts or silently substitute screenshot automation.
-The shared runtime confirmation browser checks pass independently. See
-[evidence](../WORK.md#managed-confirmation-presentation--2026-10-06).
-Workflow no-closure stays 10; protected services/pairs/rollout are unchanged.
+Current actual-consumer qualification (2026-10-06): a maintained Pascal observer
+now follows real browser worker publication through anonymous Chromium pipes.
+Ordinary Studio passes 64 actual callback checks per desktop/exact-390 consumer;
+native Studio passes 59, with zero native leaks. Typed source readiness replaces
+a status-label heuristic, and the shared warning belongs to the exact callback
+row. Semantic grouped add/policy, warned exact removal, retained implementation
+and paired Undo are qualified independently in an owned English review. Stop
+transport/callback fixture expansion; authenticated observing HTTP and protected
+history migration remain open. See
+[evidence](../WORK.md#real-browser-worker-and-contextual-warnings--2026-10-06).
+No full criterion closes: workflow no-closure advances 10→11 once; protected
+services/eight pairs/rollout are unchanged. Preserve original criteria below.
 
 Current recipe-editor release gap (2026-10-06): authenticated discovery of the
 protected running endpoint returns twenty tools, but `nyx_node` has no content

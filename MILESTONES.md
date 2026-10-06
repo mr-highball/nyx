@@ -3,15 +3,27 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current advanced-component boundary (2026-10-06): managed confirmation presents
+Current actual-consumer boundary (2026-10-06): ordinary browser Studio executes
+its compiled Pascal source worker on real clocks and passes 64 checks at both
+desktop/exact-390 widths; actual checked Win32 passes 59 with zero native leaks.
+Shared warnings now appear beside the exact callback. Semantic removal retains
+the exact body/signature, and one paired Undo restores registrations/policy.
+All 15 protected identities/eight pairs remain exact; no observing rollout.
+Stop transport/callback fixtures. Original criteria stay open; workflow no-closure
+advances 10→11 once, authoring 26, renderer 7, codegen 28 and delivery 2 remain.
+Reassess modal/picker/overlay breadth and protected history/HTTP integration. See
+[evidence and return path](WORK.md#real-browser-worker-and-contextual-warnings--2026-10-06).
+
+Previous advanced-component boundary (2026-10-06): managed confirmation presents
 an independent specialized recipe through typed options and ordinary Nyx target
 hosts/events. Exact MCP-authored content passes 36 checked Win32 / 35 desktop and
 narrow browser checks; native Studio shares the inline recipe and passes 57 queued
 callback checks plus 30 source-workspace checks, leak-free. Both actual named-MCP
 application builds succeed. No original NS-2/NS-3 criterion or prerequisite closes.
-Stop confirmation fixture expansion; the actual asynchronous browser Studio-worker
-consumer, full modal/picker/overlay/accessibility breadth and protected history/
-observing rollout remain. Existing no-closure totals stay unchanged. See
+Stop confirmation fixture expansion. The later packet above qualifies the local
+asynchronous browser Studio-worker consumer; full modal/picker/overlay/accessibility
+breadth and protected history/observing rollout remain. This earlier batch left
+existing no-closure totals unchanged. See
 [evidence and return path](WORK.md#managed-confirmation-presentation--2026-10-06).
 
 Current compiler/editor prerequisite (2026-10-06): Studio's browser and native

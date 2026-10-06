@@ -146,8 +146,9 @@ native content must provide a suitable Nyx scrolling layout; fitting/capping alo
 does not guarantee every custom action remains reachable.
 
 The observing LAN Studio still runs its preserved earlier release. Its protected
-history migration and rollout remain open. The asynchronous browser Studio-worker
-journey is unqualified: the current capture runner either snapshots before worker
-readiness or accelerates its timeout. Do not infer browser Studio integration from
-its compile or adjust production timeouts to mask that harness gap. General modal,
-picker and overlay lifecycle integration remain with the original NS-2/NS-3 owners.
+history migration and rollout remain open. The later
+[real-worker packet](browser-qualification.md) qualifies ordinary browser Studio's
+inline callback warning at desktop and narrow widths, with 64 checks each and
+59 native checks. Its warning is beside the exact registration. This does not
+qualify authenticated observing deployment. General modal, picker and overlay
+lifecycle integration remain with the original NS-2/NS-3 owners.

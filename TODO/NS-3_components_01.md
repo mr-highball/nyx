@@ -36,8 +36,9 @@ pass 57 and source workspace 30, leak-free. See
 [public usage](../docs/confirmation.md).
 
 Stop this local confirmation batch. No original criterion or renderer prerequisite
-closes. The asynchronous browser Studio-worker journey remains unqualified; its
-readiness-aware consumer has the existing NS-4 workflow owner. Full modal/picker/
+closes. The later [NS-4 real-worker packet](../WORK.md#real-browser-worker-and-contextual-warnings--2026-10-06)
+qualifies ordinary browser Studio's shared inline warning; authenticated observing
+deployment remains open. Full modal/picker/
 overlay behavior, nested native modality, hardware/assistive input, widgetsets,
 accessibility, aesthetics, virtualization/performance and other production
 families retain their original acceptance. Protected history/observing rollout

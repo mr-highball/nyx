@@ -565,6 +565,37 @@ begin
     .SetProp(NyxStudioEventNameKey, AName.Name);
 end;
 
+procedure AddEventRemovalWarning(AParent: TNyxNode; ASession: TNyxStudioSession;
+  const ARemoval: TNyxCallbackRemoval; ACanConfirm: Boolean);
+var
+  LWarning: INyxConfirmationDialog;
+  LButton: TNyxNode;
+begin
+  { Consume the public specialized recipe beside its exact callback. A warning
+    at the end of the complete event catalog is easily missed in either target's
+    scrolling inspector. The caller admits current owner/context/registration. }
+  LWarning := NewNyxConfirmationDialog('event-removal-warning');
+  LWarning.Configure.Padding(12).Surface(True).Compound(False).Done;
+  AParent.Add(LWarning);
+  LWarning.TitleHeading.Named('event-removal-title');
+  LWarning.TitleHeading.Text := 'Remove this registration?';
+  LWarning.DescriptionLabel.Named('event-removal-text');
+  LWarning.DescriptionLabel.Text := NyxCallbackRemovalWarning(
+    ASession.Document, ARemoval.OwnerID, ARemoval.Handler);
+  LWarning.ActionsRow.Configure.Layout(nlColumn).Done;
+  LWarning.ActionsConfirmButton.Named('event-removal-confirm');
+  LWarning.ActionsConfirmButton.Text := 'Remove registration';
+  LButton := LWarning.ActionsConfirmButton.Node;
+  ConfigureEventCommand(LButton, icConfirm, ARemoval.OwnerID,
+    ARemoval.Trigger, ARemoval.Name);
+  LButton.Configure.Variant(nvDanger).Enabled(ACanConfirm).Done;
+  LButton.SetProp(NyxStudioEventIDKey, ARemoval.ID.Name);
+  LWarning.ActionsCancelButton.Named('event-removal-cancel');
+  LWarning.ActionsCancelButton.Text := 'Keep registration';
+  ConfigureEventCommand(LWarning.ActionsCancelButton.Node, icCancel,
+    ARemoval.OwnerID, ARemoval.Trigger, ARemoval.Name);
+end;
+
 procedure AddNyxEventsInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
   AProjection: TNyxNode; const ARemoval: TNyxCallbackRemoval);
 begin
@@ -586,7 +617,6 @@ var
   LRow: TNyxNode;
   LButton: TNyxNode;
   LPolicy: TNyxNode;
-  LWarning: INyxConfirmationDialog;
   LKey: TNyxText;
   LChoices: TNyxStrings;
   LExecutionPolicy: TNyxExecutionPolicy;
@@ -743,6 +773,7 @@ begin
         LButton.Configure.Hint('Go to this Pascal implementation').Done;
         LButton.SetProp(NyxStudioEventHandlerKey, LInfo.Callbacks[LCallbackIndex].Handler.Name);
         LRow.Add(LButton);
+
         LButton := EventCommand(nkButton, LRow.ID + '-remove', 'Remove',
           icRequest, ASession.SelectedID, LInfo.Trigger, LInfo.Name);
         LButton.Configure.Width(112).Enabled(not LLocked)
@@ -750,6 +781,15 @@ begin
         LButton.SetProp(NyxStudioEventIDKey, LInfo.Callbacks[LCallbackIndex].ID.Name)
           .SetProp(NyxStudioEventHandlerKey, LInfo.Callbacks[LCallbackIndex].Handler.Name);
         LRow.Add(LButton);
+
+        if ARemoval.Pending and (ARemoval.OwnerID = ASession.SelectedID) and
+          ASession.MatchesCommandContext(ARemoval.Context) and
+          (ARemoval.Trigger = LInfo.Trigger) and (ARemoval.Name.Name = LInfo.Name.Name) and
+          (ARemoval.ID.Name = LInfo.Callbacks[LCallbackIndex].ID.Name) and
+          (ARemoval.Handler.Name = LInfo.Callbacks[LCallbackIndex].Handler.Name) then
+        begin
+          AddEventRemovalWarning(LRow, ASession, ARemoval, not LLocked);
+        end;
       end;
       LCard.Add(EventCommand(nkButton, LKey + '-add', '+ Add callback',
         icAdd, ASession.SelectedID, LInfo.Trigger, LInfo.Name)
@@ -762,34 +802,6 @@ begin
     'Asynchronous uses native workers or the browser event loop. Threaded requires native workers. ' +
     'UI queue defers to the UI thread.').Done);
 
-  if ARemoval.Pending and (ARemoval.OwnerID = ASession.SelectedID) and
-    ASession.MatchesCommandContext(ARemoval.Context) then
-  begin
-    { Consume the same specialized compound recipe as application presenters.
-      Studio routes exact commands from its parts, retaining existing identities
-      and stale/context admission; this warning remains inline in the Inspector. }
-    LWarning := NewNyxConfirmationDialog('event-removal-warning');
-    LWarning.Configure.Padding(12).Surface(True).Compound(False).Done;
-    AParent.Add(LWarning);
-    LWarning.TitleHeading.Named('event-removal-title');
-    LWarning.TitleHeading.Text := 'Remove this registration?';
-    LWarning.DescriptionLabel.Named('event-removal-text');
-    LWarning.DescriptionLabel.Text := NyxCallbackRemovalWarning(
-      ASession.Document, ARemoval.OwnerID, ARemoval.Handler);
-    LWarning.ActionsRow.Configure.Layout(nlColumn).Done;
-    LWarning.ActionsConfirmButton.Named('event-removal-confirm');
-    LWarning.ActionsConfirmButton.Text := 'Remove registration';
-    LButton := LWarning.ActionsConfirmButton.Node;
-    ConfigureEventCommand(LButton, icConfirm, ARemoval.OwnerID,
-      ARemoval.Trigger, ARemoval.Name);
-    LButton.Configure.Variant(nvDanger).Enabled(not APending.EventLocked(
-      ARemoval.OwnerID, ARemoval.Trigger, ARemoval.Name)).Done;
-    LButton.SetProp(NyxStudioEventIDKey, ARemoval.ID.Name);
-    LWarning.ActionsCancelButton.Named('event-removal-cancel');
-    LWarning.ActionsCancelButton.Text := 'Keep registration';
-    ConfigureEventCommand(LWarning.ActionsCancelButton.Node, icCancel,
-      ARemoval.OwnerID, ARemoval.Trigger, ARemoval.Name);
-  end;
 end;
 
 function CaptureNyxStudioEvents(ASession: TNyxStudioSession; ANode: TNyxNode;
