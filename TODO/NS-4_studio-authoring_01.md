@@ -40,6 +40,32 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Reusable resize grips — 2026-10-05
+
+Original criterion 1 now consumes its size-bounds prerequisite through public
+Nyx button grips, matching-pointer capture and keyboard steps. Copied typed
+snapping/bounds, exact mounted geometry and an existing isolated paired command
+publish one Undo step on release. Preview is status only; it does not replace
+the canvas or repeatedly generate source. Effective realized parent flow decides
+which touched main-axis weight is released; target divergence refuses instead
+of silently erasing overrides. Fresh dimension-only projection retains admitted
+controls and independent input under the existing rollback boundary.
+
+Shared/semantic/worker checks pass 51 per native compiler, unchanged compiled
+Win32 controls seven and actual Studio 40, with zero leaks/owned warnings.
+Retained projection/placement regressions pass 27/44; core regressions and
+browser consumers/Studio/worker compile. Desktop and 390-pixel native captures
+are inspected. Browser execution, phone observation, hardware/IME/assistive
+technology and full editor/native presentation retain their gates. See
+[evidence](../WORK.md#reusable-resize-grips--2026-10-05).
+
+No original criterion closes: authoring no-closure advances **10→11** once;
+workflow 9, codegen 27, renderer 3 and delivery 1 remain. End local grip/codec/
+fixture expansion. Next deliver direct canvas resize feedback, richer snapping
+guides and responsive authoring through public Nyx contracts and the existing
+paired processor, then complete original editor/parity/accessibility/performance
+and delivery outcomes. Preserve every original blocker and the observing release.
+
 ## Portable size constraints — 2026-10-05
 
 The following [portable size-bounds packet](../WORK.md#portable-size-constraints--2026-10-05)

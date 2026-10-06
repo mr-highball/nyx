@@ -421,9 +421,11 @@ function TNyxStudioDesignRequest.ToData: TNyxDataValue;
 var
   LCollection: TNyxDataValue;
   LPlacement: TNyxDataValue;
+  LResize: TNyxDataValue;
 begin
   LCollection := NyxNull;
   LPlacement := NyxNull;
+  LResize := NyxNull;
 
   if FEdit.Action = sdaCollection then
   begin
@@ -434,8 +436,13 @@ begin
   begin
     LPlacement := FEdit.Placement.ToData;
   end;
+
+  if FEdit.Action = sdaResize then
+  begin
+    LResize := FEdit.Resize.ToData;
+  end;
   Result := NyxObject([
-    NyxField('version', NyxData(6)), NyxField('owner', NyxData(FOwner)),
+    NyxField('version', NyxData(7)), NyxField('owner', NyxData(FOwner)),
     NyxField('generation', NyxData(FGeneration)), NyxField('nextId', NyxData(FNextID)),
     NyxField('schemaRevision', NyxData(FSchemaRevision)),
     NyxField('pair', NyxData(EncodeNyxProject(FPair))),
@@ -448,7 +455,8 @@ begin
       NyxField('stateInput', NyxData(Ord(FEdit.StateInput))),
       NyxField('binding', DesignBindingData(FEdit)),
       NyxField('event', DesignEventData(FEdit)),
-      NyxField('collection', LCollection), NyxField('placement', LPlacement)]))]);
+      NyxField('collection', LCollection), NyxField('placement', LPlacement),
+      NyxField('resize', LResize)]))]);
 end;
 
 function TNyxStudioDesignRequest.SameRequest(const AOther: TNyxStudioDesignRequest): Boolean;
@@ -485,6 +493,11 @@ begin
   begin
     Result := FEdit.Placement.SameChange(AOther.FEdit.Placement);
   end;
+
+  if Result and (FEdit.Action = sdaResize) then
+  begin
+    Result := FEdit.Resize.SameChange(AOther.FEdit.Resize);
+  end;
 end;
 
 function ReadNyxStudioDesignRequest(const AData: TNyxDataValue): TNyxStudioDesignRequest;
@@ -507,7 +520,7 @@ begin
   LVersion := AData.Field('version').AsInteger;
 
   if (AData.Kind <> ndObject) or (AData.Count <> 7) or
-    ((LVersion <> 5) and (LVersion <> 6)) then
+    ((LVersion <> 5) and (LVersion <> 6) and (LVersion <> 7)) then
   begin
     raise ENyxModel.Create('Design processor requires its exact versioned ticket');
   end;
@@ -522,7 +535,8 @@ begin
   if (Result.FOwner = '') or (Result.FGeneration < 0) or (Result.FNextID < 0) or
     (Result.FSchemaRevision < 0) or (LEdit.Kind <> ndObject) or
     ((LVersion = 5) and (LEdit.Count <> 11)) or
-    ((LVersion = 6) and (LEdit.Count <> 12)) then
+    ((LVersion = 6) and (LEdit.Count <> 12)) or
+    ((LVersion = 7) and (LEdit.Count <> 13)) then
   begin
     raise ENyxModel.Create('Design processor ticket has invalid identity or intent');
   end;
@@ -530,7 +544,8 @@ begin
 
   if (LAction < Ord(Low(TNyxStudioDesignAction))) or
     (LAction > Ord(High(TNyxStudioDesignAction))) or
-    ((LVersion = 5) and (LAction > Ord(sdaCollection))) then
+    ((LVersion = 5) and (LAction > Ord(sdaCollection))) or
+    ((LVersion = 6) and (LAction > Ord(sdaPlacement))) then
   begin
     raise ENyxModel.Create('Design processor action is outside its closed contract');
   end;
@@ -691,9 +706,23 @@ begin
   begin
     Result.FEdit.Placement := TNyxPlacementChange.FromData(LEdit.Field('placement'));
   end
-  else if (LVersion = 6) and (LEdit.Field('placement').Kind <> ndNull) then
+  else if (LVersion >= 6) and (LEdit.Field('placement').Kind <> ndNull) then
   begin
     raise ENyxModel.Create('Only placement intent carries a placement command');
+  end;
+
+  if Result.FEdit.Action = sdaResize then
+  begin
+    Result.FEdit.Resize := TNyxResizeChange.FromData(LEdit.Field('resize'));
+
+    if Result.FEdit.Resize.Control.ID <> Result.FEdit.Selection then
+    begin
+      raise ENyxModel.Create('Resize payload and captured selected owner differ');
+    end;
+  end
+  else if (LVersion >= 7) and (LEdit.Field('resize').Kind <> ndNull) then
+  begin
+    raise ENyxModel.Create('Only resize intent carries a resize command');
   end;
 end;
 
@@ -761,6 +790,7 @@ begin
       sdaAddInstance: LSession.AddComponentInstance(FRequest.FEdit.Name);
       sdaCustomizePart: LSession.CustomizePart(FRequest.FEdit.Name);
       sdaPlacement: LSession.Place(FRequest.FEdit.Placement);
+      sdaResize: LSession.Resize(FRequest.FEdit.Resize);
       sdaCanvasValue: LSession.SetCapturedCanvasValue(FRequest.FEdit);
       sdaSetStateDefault:
         LSession.SetStateValues([NyxStateAssign(FRequest.FEdit.Name,
@@ -1008,10 +1038,20 @@ function TNyxStudioSession.PrepareDesignRequest(const AEdit: TNyxStudioDesignEdi
   ASchemaRevision: Integer): TNyxStudioDesignRequest;
 begin
 
-  if (AEdit.Action in [sdaCanvasValue, sdaPlacement]) and
+  if (AEdit.Action in [sdaCanvasValue, sdaPlacement, sdaResize]) and
     not MatchesCommandContext(AEdit.CanvasContext) then
   begin
     raise ENyxModel.Create('Captured canvas intent belongs to an earlier session or project load');
+  end;
+
+  if AEdit.Action = sdaResize then
+  begin
+    AEdit.Resize.ToData;
+
+    if AEdit.Resize.Control.ID <> AEdit.Selection then
+    begin
+      raise ENyxModel.Create('Resize payload and captured selected owner differ');
+    end;
   end;
 
   if AEdit.Action = sdaCollection then

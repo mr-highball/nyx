@@ -178,7 +178,10 @@ function NyxPropertySupport(ANode: TNyxNode; AAttribute: TNyxAttribute;
 function NyxProjectionSource(ANode: TNyxNode; ADocument: TNyxDocument): TNyxNode;
 { Explicit layout overrides the base primitive. Absent/cleared layout uses its
   natural row/grid/column default, consistently for native layout and metadata. }
-function NyxLayout(ANode: TNyxNode): TNyxText;
+{ Effective layout, including the primitive's row/toolbar/grid defaults. A
+  concrete scope reads its explicit override before falling back to common;
+  an explicitly empty override restores that primitive default. Borrow ANode. }
+function NyxLayout(ANode: TNyxNode; APlatform: TNyxPlatform = npfAny): TNyxText;
 { Spacer's shared implicit weight is one. An explicit zero opts out; a missing
   or cleared weight restores the primitive default. Other controls default zero. }
 function NyxFlexWeight(ANode: TNyxNode): Integer;
@@ -759,9 +762,15 @@ begin
   end;
 end;
 
-function NyxLayout(ANode: TNyxNode): TNyxText;
+function NyxLayout(ANode: TNyxNode; APlatform: TNyxPlatform): TNyxText;
 begin
   Result := ANode.Prop('layout');
+
+  if (APlatform <> npfAny) and
+    (ANode.Props.IndexOfName(NyxPlatformKey(APlatform, atLayout)) >= 0) then
+  begin
+    Result := ANode.Prop(NyxPlatformKey(APlatform, atLayout));
+  end;
 
   if Result <> '' then
   begin

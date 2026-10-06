@@ -45,12 +45,12 @@ var
   LCount: Integer;
 begin
   LEdit := AData.Field('edit');
-  SetLength(LFields, LEdit.Count - 1);
+  SetLength(LFields, LEdit.Count - 2);
   LCount := 0;
   for LIndex := 0 to LEdit.Count - 1 do
   begin
 
-    if LEdit.Key(LIndex) <> 'placement' then
+    if (LEdit.Key(LIndex) <> 'placement') and (LEdit.Key(LIndex) <> 'resize') then
     begin
       LFields[LCount] := NyxField(LEdit.Key(LIndex), LEdit.Field(LEdit.Key(LIndex)));
       Inc(LCount);

@@ -824,3 +824,29 @@ phone observation or full target parity. The command launches no listener,
 changes no personal MCP configuration and leaves observing projects/releases
 intact. See [layout](layout.md) and
 [evidence](../WORK.md#portable-size-constraints--2026-10-05).
+
+## Reusable resize grips
+
+```powershell
+./tools/build.ps1 -Target resize -BrowserOutput build/resize/staged
+```
+
+The maintained command runs copied snapping/bounds, public pointer/key behavior,
+bounded semantic mutation, paired history and isolated resize wire/publication
+on both native compilers. Their exported design/source/pair files must match
+byte for byte. It compiles that exact source unchanged and exercises mounted
+Win32 dimensions, retained memo identity/text/selection/focus and rejected
+candidate retention. Ordinary native Studio consumes its actual registered
+grip callbacks and existing detached processor; desktop/390-pixel captures are
+written under `build/resize/`.
+
+Current shared checks pass 51 per compiler, unchanged compiled controls seven
+and native Studio 40, with zero checked leaks. Matching browser contract/control/
+projection consumers, Studio, its module worker, RTL and two English hosts are
+staged separately. An executed host must publish `data-result="passed"`;
+successful compilation alone cannot establish that result. This command starts
+no listener, refreshes no personal MCP configuration and leaves observing
+projects/releases intact. Browser runtime, updated phone observation and full
+target parity retain their existing gates. See
+[designer views](designer-views.md#reusable-resize-grips) and
+[evidence](../WORK.md#reusable-resize-grips--2026-10-05).

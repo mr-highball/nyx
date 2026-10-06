@@ -47,7 +47,8 @@ type
 
 { Portable adapter boundary for an independently realized candidate. These
   routines own no document, node or native/DOM handle. A retained view may reuse
-  only ordinary scalar presentation: identities, structure, contracts, binding
+  only ordinary scalar presentation and dimension allocation: identities,
+  structure, contracts, binding
   descriptors, platform metadata and collection semantics must remain exact.
   Caller keeps both independent roots alive throughout checking/copying. }
 function CanRefreshNyxProjection(AExisting, ACandidate: TNyxNode): Boolean;
@@ -95,7 +96,11 @@ var
 begin
   Result := TryNyxAttribute(AKey, LAttribute) and
     (LAttribute in [atText, atValue, atHint, atAccessibleName, atEnabled,
-      atVisible, atReadOnly]);
+      atVisible, atReadOnly, atWidth, atHeight, atFlex, atWidthSizing,
+      atHeightSizing, atMinimumWidth, atMaximumWidth, atMinimumHeight, atMaximumHeight]);
+  { These dimensions only change allocation on an already identical admitted
+    shape. Structural/layout-mode/platform/binding/creator changes still refuse.
+    Both adapters use their ordinary Sync/layout and existing rollback clone. }
 end;
 
 function CanRefreshNyxProjection(AExisting, ACandidate: TNyxNode): Boolean;

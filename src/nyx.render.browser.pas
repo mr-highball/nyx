@@ -42,6 +42,7 @@ uses
   nyx.editing.browser,
   nyx.gestures,
   nyx.designer.input,
+  nyx.designer.resize,
   nyx.gestures.browser,
   nyx.platform,
   nyx.split,
@@ -279,6 +280,10 @@ type
     { Read current local CSS-pixel offsets without changing state/selection.
       Signed offsets preserve the browser's RTL and overscroll conventions. }
     function ViewportFor(const AID: TNyxText): TNyxViewportSnapshot;
+    { Integer logical outer-face allocation (offsetWidth/offsetHeight), excluding
+      CSS transforms and including borders. Never returns a borrowed DOM handle. }
+    function SizeFor(const AID: TNyxText;
+      AIdentity: TNyxIdentityKind = niAutomatic): TNyxResizeSize;
     { Read the containing mounted view's logical-pixel range/offset. Missing
       mount raises; this observation changes neither selection nor the model. }
     function ViewViewport: TNyxViewportSnapshot;
@@ -431,6 +436,16 @@ begin
     end;
   end;
   Result := CaptureBrowserViewport(LElement);
+end;
+
+function TNyxBrowserRenderer.SizeFor(const AID: TNyxText;
+  AIdentity: TNyxIdentityKind): TNyxResizeSize;
+var
+  LElement: TJSHTMLElement;
+begin
+  FEvents.Scheduler.RequireUI;
+  LElement := ElementFor(AID, AIdentity);
+  Result := NyxResizeSize(Round(LElement.offsetWidth), Round(LElement.offsetHeight));
 end;
 
 procedure NyxFocusWithoutScroll(AControl: TJSHTMLElement);

@@ -65,7 +65,8 @@ uses
   nyx.studio.outputs,
   nyx.studio.projects, nyx.studio.rootedits, nyx.studio.rootview,
   nyx.studio.workspaces, nyx.studio.presentation, nyx.modal, nyx.modal.browser,
-  nyx.designer.input, nyx.gestures, nyx.studio.edits, nyx.studio.drag;
+  nyx.designer.input, nyx.gestures, nyx.studio.edits, nyx.studio.drag,
+  nyx.designer.resize, nyx.studio.resize;
 
 type
   { Transport operation is closed and independent of application build targets. }
@@ -92,6 +93,7 @@ type
     FHierarchySubscription: INyxEventSubscription;
     FCanvasRenderer: TNyxBrowserRenderer;
     FDesignerDrag: TNyxStudioDrag;
+    FDesignerResize: TNyxStudioResize;
     FDesignerPlacement: TNyxPlacement;
     { Independent ordinary Nyx view preserves the live Pascal control through
       activity/chrome refreshes. Document owns its editor; renderer owns only
@@ -208,6 +210,8 @@ type
     procedure HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     { Borrow current owners synchronously; hover only changes the canvas outline. }
     function DesignerDragContext: TNyxStudioDragContext;
+    function DesignerResizeMeasure(const AControl: TNyxControlRef): TNyxResizeSize;
+    procedure DesignerResizeStatus(const AMessage: TNyxText);
     procedure DesignerDragFeedback(const ATarget: TNyxControlRef);
     procedure DesignerGesture(const ATarget: TNyxDesignerTarget;
       const AEvent: TNyxEventInfo; const ADecision: INyxGestureDecision);
@@ -423,6 +427,8 @@ begin
   FCanvasRenderer.DesignerInput := NyxDesignerInput.Drops(True);
   FCanvasRenderer.OnDesignerGesture := DesignerGesture;
   FDesignerDrag := TNyxStudioDrag.Create(@DesignerDragContext, @DesignerDragFeedback);
+  FDesignerResize := TNyxStudioResize.Create(@DesignerDragContext,
+    @DesignerResizeMeasure, @DesignerResizeStatus);
   FDesignerPlacement := nplInside;
   FCodeRenderer := TNyxBrowserRenderer.Create;
   FCodeRenderer.OnEvent := HandleShell;
@@ -458,6 +464,7 @@ begin
     FCanvasRenderer.OnDesignerGesture := nil;
   end;
   FreeAndNil(FDesignerDrag);
+  FreeAndNil(FDesignerResize);
 
   if FHierarchySubscription <> nil then
   begin
@@ -1070,6 +1077,7 @@ begin
   document.body.setAttribute('data-nyx-studio-ready', 'true');
   FShellCommandContext := FSession.CommandContext;
   FDesignerDrag.ConnectSources(FShellRenderer.Events, FShellRenderer.Root, FShellCommandContext);
+  FDesignerResize.Connect(FShellRenderer.Events, FShellRenderer.Root, FShellCommandContext);
   document.title := FSession.Document.Title + ' / Nyx Studio';
   try
 
@@ -1425,6 +1433,29 @@ begin
   Result.CanvasMount := FCanvasCommandContext;
   Result.Designing := not FPreview;
   Result.Placement := FDesignerPlacement;
+end;
+
+function TNyxStudio.DesignerResizeMeasure(const AControl: TNyxControlRef): TNyxResizeSize;
+begin
+  Result := FCanvasRenderer.SizeFor(AControl.ID, niDesign);
+end;
+
+procedure TNyxStudio.DesignerResizeStatus(const AMessage: TNyxText);
+var
+  LCaption: TNyxNode;
+begin
+  FStatus := AMessage;
+
+  if FShellRenderer.Root <> nil then
+  begin
+    LCaption := FShellRenderer.Root.Find('studio-status');
+
+    if LCaption <> nil then
+    begin
+      LCaption.Configure.Text(AMessage).Done;
+      FShellRenderer.Sync;
+    end;
+  end;
 end;
 
 procedure TNyxStudio.DesignerDragFeedback(const ATarget: TNyxControlRef);

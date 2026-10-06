@@ -27,7 +27,7 @@ unit nyx.studio.edits;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.catalog;
+  SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.catalog, nyx.designer.resize;
 
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
@@ -40,6 +40,27 @@ type
     exact target container; before/after refer to the target's current owner.
     The candidate resolves positions after detaching a moved control. }
   TNyxPlacement = (nplInside, nplBefore, nplAfter);
+
+  { Exact authored size intent. Values cross workers without UI/model handles.
+    The existing grouped scalar patch owns all candidate/property validation. }
+  TNyxResizeChange = record
+  private
+    FControl: TNyxControlRef;
+    FAxis: TNyxResizeAxis;
+    FSize: TNyxResizeSize;
+    FPlatform: TNyxPlatform;
+  public
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxResizeChange; static;
+    function SameChange(const AOther: TNyxResizeChange): Boolean;
+    { Set touched axes to explicit pixels/Automatic. Clear positive main-axis
+      weight only when that axis is resized; unchanged-axis sizing is retained. }
+    function Operation(AClearFlex: Boolean): TNyxDataValue;
+    property Control: TNyxControlRef read FControl;
+    property Axis: TNyxResizeAxis read FAxis;
+    property Size: TNyxResizeSize read FSize;
+    property Platform: TNyxPlatform read FPlatform;
+  end;
 
   { An immutable, value-only placement command. A blank kind means move; a
     constructed kind means create from the catalog. Neither intent retains a
@@ -124,11 +145,124 @@ function NyxPlacementPatch(const AChanges: array of TNyxPlacementChange): INyxDe
 { Stable closed names at persistence and inspector boundaries only. }
 function NyxPlacementName(APlacement: TNyxPlacement): TNyxText;
 function ReadNyxPlacement(const AName: TNyxText): TNyxPlacement;
+{ Default scope changes portable dimensions. A concrete scope explicitly authors
+  that target's override, without erasing another target's independent policy. }
+function NyxResizeControl(const AControl: TNyxControlRef; AAxis: TNyxResizeAxis;
+  const ASize: TNyxResizeSize; APlatform: TNyxPlatform = npfAny): TNyxResizeChange;
+{ Borrow an effective realized parent. Shared one-axis intent must make the
+  same weight decision on both targets; callers refuse divergent flow scopes. }
+function NyxResizeReleasesWeight(AParent: TNyxNode; AAxis: TNyxResizeAxis;
+  APlatform: TNyxPlatform): Boolean;
 
 implementation
 
 uses
   nyx.schema, nyx.design.tokens, nyx.composition;
+
+function NyxResizeReleasesWeight(AParent: TNyxNode; AAxis: TNyxResizeAxis;
+  APlatform: TNyxPlatform): Boolean;
+var
+  LLayout: TNyxText;
+begin
+
+  if AParent = nil then
+  begin
+    raise ENyxModel.Create('Resize allocation requires an effective parent');
+  end;
+  LLayout := NyxLayout(AParent, APlatform);
+  Result := (AAxis = nraBoth) or ((LLayout = 'row') and (AAxis = nraWidth)) or
+    ((LLayout = 'column') and (AAxis = nraHeight));
+end;
+
+function NyxResizeControl(const AControl: TNyxControlRef; AAxis: TNyxResizeAxis;
+  const ASize: TNyxResizeSize; APlatform: TNyxPlatform): TNyxResizeChange;
+begin
+
+  if (AControl.ID = '') or not ASize.Defined or
+    (Ord(AAxis) < Ord(Low(TNyxResizeAxis))) or
+    (Ord(AAxis) > Ord(High(TNyxResizeAxis))) or
+    (Ord(APlatform) < Ord(Low(TNyxPlatform))) or
+    (Ord(APlatform) > Ord(High(TNyxPlatform))) then
+  begin
+    raise ENyxModel.Create('Resize requires an exact control, dimensions and typed scope');
+  end;
+  Result := Default(TNyxResizeChange);
+  Result.FControl := AControl;
+  Result.FAxis := AAxis;
+  Result.FSize := ASize;
+  Result.FPlatform := APlatform;
+end;
+
+function TNyxResizeChange.ToData: TNyxDataValue;
+begin
+  NyxResizeControl(FControl, FAxis, FSize, FPlatform);
+  Result := NyxObject([NyxField('control', NyxData(FControl.ID)),
+    NyxField('axis', NyxData(Ord(FAxis))), NyxField('width', NyxData(FSize.Width)),
+    NyxField('height', NyxData(FSize.Height)), NyxField('platform', NyxData(Ord(FPlatform)))]);
+end;
+
+class function TNyxResizeChange.FromData(const AData: TNyxDataValue): TNyxResizeChange;
+var
+  LAxis: Integer;
+  LPlatform: Integer;
+begin
+
+  if (AData.Kind <> ndObject) or (AData.Count <> 5) then
+  begin
+    raise ENyxModel.Create('Resize payload requires its five exact fields');
+  end;
+  LAxis := AData.Field('axis').AsInteger;
+  LPlatform := AData.Field('platform').AsInteger;
+
+  if (LAxis < Ord(Low(TNyxResizeAxis))) or (LAxis > Ord(High(TNyxResizeAxis))) or
+    (LPlatform < Ord(Low(TNyxPlatform))) or (LPlatform > Ord(High(TNyxPlatform))) then
+  begin
+    raise ENyxModel.Create('Resize payload contains an unknown closed choice');
+  end;
+  Result := NyxResizeControl(NyxControl(AData.Field('control').AsText),
+    TNyxResizeAxis(LAxis), NyxResizeSize(AData.Field('width').AsInteger,
+    AData.Field('height').AsInteger), TNyxPlatform(LPlatform));
+end;
+
+function TNyxResizeChange.SameChange(const AOther: TNyxResizeChange): Boolean;
+begin
+  Result := (FControl.ID = AOther.FControl.ID) and (FAxis = AOther.FAxis) and
+    FSize.SameSize(AOther.FSize) and (FPlatform = AOther.FPlatform);
+end;
+
+function TNyxResizeChange.Operation(AClearFlex: Boolean): TNyxDataValue;
+var
+  LFields: array of TNyxDataField;
+
+  procedure Add(AAttribute: TNyxAttribute; const AValue: TNyxDataValue);
+  begin
+    SetLength(LFields, Length(LFields) + 1);
+    LFields[High(LFields)] := NyxField(NyxPlatformKey(FPlatform, AAttribute), AValue);
+  end;
+
+begin
+  ToData;
+  LFields := nil;
+
+  if FAxis in [nraWidth, nraBoth] then
+  begin
+    Add(atWidth, NyxData(FSize.Width));
+    Add(atWidthSizing, NyxData(NyxSizingName(nsAutomatic)));
+  end;
+
+  if FAxis in [nraHeight, nraBoth] then
+  begin
+    Add(atHeight, NyxData(FSize.Height));
+    Add(atHeightSizing, NyxData(NyxSizingName(nsAutomatic)));
+  end;
+
+  if AClearFlex then
+  begin
+    Add(atFlex, NyxData(0));
+  end;
+  Result := NyxObject([NyxField('op', NyxData('update')),
+    NyxField('id', NyxData(FControl.ID)), NyxField('properties', NyxObject(LFields))]);
+end;
 
 type
   TDesignOperation = record

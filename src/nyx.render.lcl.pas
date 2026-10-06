@@ -52,6 +52,7 @@ uses
   nyx.editing.lcl,
   nyx.gestures,
   nyx.designer.input,
+  nyx.designer.resize,
   nyx.gestures.lcl,
   nyx.platform,
   nyx.split,
@@ -392,6 +393,10 @@ type
     { Read actual offsets without changing document state or selection.
       Units belong to each axis; native widget ranges are never labeled pixels. }
     function ViewportFor(const AID: TNyxText): TNyxViewportSnapshot;
+    { Copied allocated outer face, not the input client area or clipped physical
+      window. Exact identity admission matches ControlFor; zero is meaningful. }
+    function SizeFor(const AID: TNyxText;
+      AIdentity: TNyxIdentityKind = niAutomatic): TNyxResizeSize;
     { Shared one-based source navigation for the public code-editor component. }
     { One-based Unicode-scalar column, translated to the widgetset's caret units.
       Win32 memo columns use UTF-16 units, including both units of a surrogate.
@@ -2805,6 +2810,21 @@ begin
     raise ENyxModel.Create('This native control has no declared viewport');
   end;
   Result := CaptureNyxViewport(TWinControl(LControl));
+end;
+
+function TNyxLCLRenderer.SizeFor(const AID: TNyxText;
+  AIdentity: TNyxIdentityKind): TNyxResizeSize;
+var
+  LBinding: TNyxLCLBinding;
+begin
+  FEvents.Scheduler.RequireUI;
+  LBinding := IdentityBinding(AID, AIdentity);
+
+  if not LBinding.FLogicalBox.Defined then
+  begin
+    raise ENyxModel.Create('Control size requires admitted logical layout');
+  end;
+  Result := NyxResizeSize(LBinding.FLogicalBox.Width, LBinding.FLogicalBox.Height);
 end;
 
 procedure TNyxLCLRenderer.ViewportChanged(const AOriginID: TNyxText;

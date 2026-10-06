@@ -41,6 +41,7 @@ uses
   nyx.codec,
   nyx.catalog,
   nyx.controls,
+  nyx.designer.resize,
   nyx.codegen,
   nyx.source,
   nyx.source.preparation,
@@ -82,7 +83,7 @@ type
     sdaMove, sdaTitle, sdaAddPage, sdaCreateComponent, sdaAddInstance, sdaCustomizePart,
     sdaCanvasValue, sdaSetStateDefault, sdaCreateStateDefault,
     sdaRenameStateDefault, sdaRemoveStateDefault, sdaSetBinding, sdaInheritBinding,
-    sdaEvent, sdaCollection, sdaPlacement);
+    sdaEvent, sdaCollection, sdaPlacement, sdaResize);
   { Callback operations carry exact typed event/registration references. Removal
     includes the handler the user reviewed; IDs alone cannot authorize replacing
     a registration. Empty references belong only to add/policy intent. }
@@ -138,6 +139,8 @@ type
     Collection: TNyxStudioCollectionIntent;
     { Exact relative placement, copied before independent preparation. }
     Placement: TNyxPlacementChange;
+    { One grouped typed dimension change; never an executable property string. }
+    Resize: TNyxResizeChange;
     { Immutable origin of a canvas capture. Queue admission uses this mounted
       session/load identity even when the caller retains intent before enqueue. }
     property CanvasContext: TNyxStudioCommandContext read FCanvasContext;
@@ -471,6 +474,11 @@ type
     { One ordinary candidate/paired Undo, then activate the moved control's
       owning view. Callers borrow no accepted nodes across publication. }
     procedure Place(const AChange: TNyxPlacementChange);
+    { Explicit authored controls/instances only; inherited part descriptors
+      retain their existing Inspector customization path. One paired Undo. }
+    procedure Resize(const AChange: TNyxResizeChange);
+    function CaptureResize(const AChange: TNyxResizeChange;
+      const AMountContext: TNyxStudioCommandContext): TNyxStudioDesignEdit;
     { Arm the selected authored control, then choose a destination through the
       ordinary canvas/hierarchy. Arming/canceling are presentation, not Undo.
       A changed pair, draft or project load invalidates this pending move. }
@@ -2206,6 +2214,55 @@ begin
   Result.Selection := SelectedID;
   Result.View := ActiveViewID;
   Result.Placement := AChange;
+  Result.FCanvasContext := AMountContext;
+end;
+
+procedure TNyxStudioSession.Resize(const AChange: TNyxResizeChange);
+var
+  LNode: TNyxNode;
+  LContext: TNyxNode;
+  LProjection: TNyxNode;
+  LClearFlex: Boolean;
+begin
+  AChange.ToData;
+  LNode := FDocument.Find(AChange.Control.ID);
+
+  if (LNode = nil) or (LNode.Parent = nil) or (LNode.Kind = 'slot-override') then
+  begin
+    raise ENyxModel.Create('Resize requires an exact authored non-root control');
+  end;
+  { Realized context resolves an inherited slot's actual parent instead of
+    guessing flow from its authored override descriptor or catalog kind. }
+  LContext := RealizeNyxContext(FDocument, LNode, LProjection);
+  try
+    LClearFlex := NyxResizeReleasesWeight(LProjection.Parent, AChange.Axis, AChange.Platform);
+
+    if (AChange.Platform = npfAny) and
+      ((LClearFlex <> NyxResizeReleasesWeight(LProjection.Parent, AChange.Axis, npfBrowser)) or
+      (LClearFlex <> NyxResizeReleasesWeight(LProjection.Parent, AChange.Axis, npfNativeLCL))) then
+    begin
+      raise ENyxModel.Create('One-axis resize requires shared parent flow or an explicit target scope');
+    end;
+  finally
+    LContext.Free;
+  end;
+  ApplyPatch(ReadNyxDesignPatch(NyxArray([AChange.Operation(LClearFlex)])));
+end;
+
+function TNyxStudioSession.CaptureResize(const AChange: TNyxResizeChange;
+  const AMountContext: TNyxStudioCommandContext): TNyxStudioDesignEdit;
+begin
+
+  if not MatchesCommandContext(AMountContext) then
+  begin
+    raise ENyxModel.Create('Resize belongs to an earlier session or project load');
+  end;
+  AChange.ToData;
+  Result := Default(TNyxStudioDesignEdit);
+  Result.Action := sdaResize;
+  Result.Selection := AChange.Control.ID;
+  Result.View := ActiveViewID;
+  Result.Resize := AChange;
   Result.FCanvasContext := AMountContext;
 end;
 

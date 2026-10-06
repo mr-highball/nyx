@@ -722,3 +722,18 @@ Current task and return path are maintained in [WORK.md](WORK.md).
   variants and complete editor/parity/delivery retain their original owners.
   No full criterion or product percentage closes. See
   [evidence](WORK.md#portable-size-constraints--2026-10-05).
+
+- Public reusable resize grips now connect typed snapping/bounds and mounted
+  outer geometry to one isolated paired size command under original authoring
+  criterion 1. Status preview leaves controls/input intact; release commits one
+  Undo step. Actual realized flow decides main-axis weight; scoped divergence
+  refuses instead of guessing. Shared checks pass 51 per native compiler,
+  unchanged compiled Win32 controls seven, actual Studio 40 and retained
+  projection/placement regressions 27/44, with zero checked leaks/owned warnings.
+  Desktop/390-pixel native captures are inspected. Browser consumers/Studio/
+  worker compile; runtime and observing deployment remain gated. Authoring
+  no-closure advances **10→11** once; workflow 9, codegen 27, renderer 3 and
+  delivery 1 remain. No full criterion or product percentage closes. End local
+  grip/codec/fixture expansion; direct canvas feedback, richer snapping guides,
+  responsive variants and complete original editor/parity/quality/delivery retain
+  their owners. See [evidence](WORK.md#reusable-resize-grips--2026-10-05).

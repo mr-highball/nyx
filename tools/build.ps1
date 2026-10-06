@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'selection', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -155,6 +155,7 @@ function Test-NyxCompilerTypes([string]$Executable, [string[]]$Arguments) {
     sizing = 'TNyxSizing'
     layout_policy = 'TNyxFlowWrap'
     constraints = 'TNyxSizeConstraints'
+    resize_snap = 'TNyxSizeSnap'
     platform = 'TNyxPlatform'
     split_orientation = 'TNyxSplitOrientation'
     spacing = 'Integer|LongInt'
@@ -1453,6 +1454,69 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxCollectionAgentHost") -Destination $nyxCollectionAgentBrowser
     }
     Write-Host 'Semantic collection consumers staged; browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'resize') {
+    # Pascal owns gestures, semantic mutations, worker tickets and actual input.
+    # Only stage products here; never launch a listener or refresh enrollment.
+    $nyxResizeRoot = Join-Path $nyxRoot 'build/resize'
+    $nyxResizeStable = Join-Path $nyxResizeRoot 'stable'
+    $nyxResizeMatched = Join-Path $nyxResizeRoot 'matched'
+    $nyxResizeExport = Join-Path $nyxResizeRoot 'export'
+    $nyxResizeMatchedExport = Join-Path $nyxResizeRoot 'export-matched'
+    $nyxResizeLcl = Join-Path $nyxResizeRoot 'lcl'
+    $nyxResizeStudio = Join-Path $nyxResizeRoot 'studio'
+    $nyxResizeBrowser = Join-Path $nyxResizeRoot 'browser'
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    if ($BrowserOutput) { $nyxResizeBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxResizeStable, $nyxResizeMatched,
+      $nyxResizeExport, $nyxResizeMatchedExport, $nyxResizeLcl,
+      $nyxResizeStudio, $nyxResizeBrowser | Out-Null
+    $nyxResizeFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests')
+    foreach ($nyxResizeCompiler in @(@($nyxFpc, $nyxResizeStable, $nyxResizeExport),
+      @($nyxLclFpc, $nyxResizeMatched, $nyxResizeMatchedExport))) {
+      Invoke-NyxCompiler $nyxResizeCompiler[0] ($nyxResizeFlags + @(
+        "-FU$($nyxResizeCompiler[1])", "-FE$($nyxResizeCompiler[1])",
+        'tests/nyx_resize_tests.lpr'))
+      & (Join-Path $nyxResizeCompiler[1] 'nyx_resize_tests.exe') $nyxResizeCompiler[2]
+      if ($LASTEXITCODE -ne 0) { throw 'Shared resize checks failed' }
+    }
+    foreach ($nyxResizeFile in @('design.nyx', 'nyx.generated.view.pas', 'project.nyxpair')) {
+      if ((Get-FileHash (Join-Path $nyxResizeExport $nyxResizeFile)).Hash -ne
+        (Get-FileHash (Join-Path $nyxResizeMatchedExport $nyxResizeFile)).Hash) {
+        throw "Resize exports differ between compilers: $nyxResizeFile"
+      }
+    }
+    $nyxResizePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxResizeControlFlags = $nyxResizeFlags + @(
+      "-Fu$nyxLazarus/lcl/units/$nyxResizePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxResizePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxResizePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxResizePlatform")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxResizeControlFlags + @("-Fu$nyxResizeExport",
+      "-FU$nyxResizeLcl", "-FE$nyxResizeLcl", 'tests/nyx_resize_controls.lpr'))
+    & (Join-Path $nyxResizeLcl 'nyx_resize_controls.exe') (Join-Path $nyxResizeExport 'design.nyx')
+    if ($LASTEXITCODE -ne 0) { throw 'Unchanged compiled resize controls failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxResizeControlFlags + @(
+      "-FU$nyxResizeStudio", "-FE$nyxResizeStudio", 'tests/nyx_resize_studio.lpr'))
+    & (Join-Path $nyxResizeStudio 'nyx_resize_studio.exe') $nyxResizeRoot
+    if ($LASTEXITCODE -ne 0) { throw 'Actual Studio resize input failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxResizeProgram in @('tests/nyx_resize_tests.lpr',
+      'tests/nyx_resize_controls.lpr', 'tests/nyx_projection_refresh_tests.lpr',
+      'studio/nyx_studio.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio',
+        '-Futests', "-Fu$nyxResizeExport", '-Jirtl.js', "-FE$nyxResizeBrowser", $nyxResizeProgram)
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxResizeBrowser 'rtl.js')
+    foreach ($nyxResizeHost in @('resize.html', 'resize-controls.html', 'index.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxResizeHost") -Destination $nyxResizeBrowser
+    }
+    Write-Host 'Resize consumers and Studio staged; browser execution needs its admitted host.'
     exit 0
   }
 

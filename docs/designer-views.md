@@ -130,6 +130,70 @@ hardware hit-testing on disabled native widgets. Its compiled browser review
 does not establish physical drag-manager, mobile touch or assistive-technology
 behavior. The existing observing-release and host execution gates remain.
 
+## Reusable resize grips
+
+`nyx.designer.resize` supplies copied `TNyxResizeSize` and
+`TNyxResizePolicy` values, closed width/height/both axes and a public
+`TNyxResizeHandle` behavior attached to ordinary specialized Nyx button events:
+
+```pascal
+LGrip := NewNyxResizeGrip('resize-notes', nraBoth);
+APolicy := NyxResizePolicy.Grid(8).KeyboardStep(8)
+  .Bounds(NyxSizeConstraints.MinimumWidth(160).MaximumHeight(400));
+```
+
+Sizes and bounds are logical outer-face pixels in the admitted 0..100000 domain.
+Snapping rounds final dimensions to the nearest grid multiple, with ties upward,
+then applies exact bounds; the unchanged axis stays exact. A zero delta does
+nothing even for an off-grid size. Alt bypasses the pointer grid. Both changes
+dimensions together without implying aspect-ratio locking. Arrow keys commit
+one step; Shift multiplies the step by ten. Application shortcuts and unrelated
+axis arrows retain normal behavior. Recognized resize arrows remain consumed
+when the host refuses capture, avoiding accidental scroll during a busy/draft
+state.
+
+The behavior borrows synchronous UI-thread capture/feedback method receivers.
+The host must disconnect before destroying receiver objects and must not destroy
+the handle inside a receiver. The owned behavior retains event subscriptions,
+copied dimensions and pointer identity, without borrowing a model or widget.
+Disconnect detaches callbacks before canceling subscriptions. Primary matching
+pointer input requires actual capture capability; foreign pointer IDs and
+secondary releases cannot commit. Escape, focus exit, pointer cancellation,
+capture loss and retired routers cancel. Capture remains owned until terminal
+pointer input after Escape/focus exit, preventing a second gesture from starting
+inside the first one's capture lifetime.
+
+Renderer `SizeFor` reads copied mounted outer geometry. LCL uses the full logical
+allocation, including clipped/offscreen controls; browser uses integer
+`offsetWidth`/`offsetHeight`, including borders and excluding transforms. These
+are allocated dimensions, rather than an input's inner client viewport or its
+authored width before weighted layout.
+
+Studio builds three ordinary grips beside the selected authored non-root
+control. It captures the exact source/canvas mounts, accepted pair, load, view,
+selection and creator epoch. Pointer preview only updates the dimension status;
+release submits one existing isolated paired operation. Pending drafts, busy
+commands, changed pairs and retired leases refuse. Realized parent flow,
+including reusable slot context and primitive Row defaults, determines whether
+a touched main-axis weight must be cleared. Portable single-axis editing refuses
+divergent target flow policies; explicit target fields or Both remain available.
+Existing target sizing/bound overrides retain their explicit Inspector fields
+instead of being silently erased by this first portable gesture path.
+
+Fresh dimension-only projection can retain admitted widget identity, text,
+selection and focus through the existing rollback boundary. Structure, identities,
+bindings, platform metadata, creator context and custom-factory compatibility
+still require exact admission; incompatible changes request a full mount.
+No canvas overlay/live geometry preview, responsive variant editor or complete
+presentation/performance acceptance follows this packet.
+
+`./tools/build.ps1 -Target resize -BrowserOutput build/resize/staged` reproduces
+the checked shared and actual Win32 evidence plus compiled browser consumers,
+Studio and its worker. Native callback checks do not qualify physical hardware,
+IME, assistive technology or another widgetset. Browser compilation does not
+establish runtime interaction or current phone observation. See
+[evidence](../WORK.md#reusable-resize-grips--2026-10-05).
+
 ## Reproduce the boundary
 
 Portable size bounds now provide the next resizing/constraint prerequisite.
@@ -139,8 +203,10 @@ property transactions and the isolated ordinary property processor share
 cross-field and target-override validation and paired history. Neither bounds
 nor drag/drop introduce a separate authoring engine. See [layout](layout.md)
 and [the evidence packet](../WORK.md#portable-size-constraints--2026-10-05).
-Physical resizing handles, snapping and responsive variants remain required
-under original Studio authoring criterion 1; these fields alone do not accept it.
+Reusable resize grips now consume those constraints through the public input
+contract and the existing paired processor. Direct canvas edge feedback, richer
+snapping guides and responsive variants remain required under original Studio
+authoring criterion 1; these fields and grips alone do not accept it.
 
 The [semantic review author](../tests/nyx_mcp_designer_review.lpr) creates an owned
 empty review using an explicitly supplied MCP configuration, applies the

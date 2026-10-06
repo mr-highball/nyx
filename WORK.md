@@ -22,7 +22,25 @@ codegen 27, renderer 3, native authoring 7 and delivery 1. Stop on lost editor
 identity/input, disabled-owner return, guessed source ownership or weakened
 publication; preserve failed evidence and the protected observing release.
 
-Current bounded packet: [portable size constraints](#portable-size-constraints--2026-10-05)
+Current bounded packet: [reusable resize grips](#reusable-resize-grips--2026-10-05)
+connects original Studio authoring criterion 1 to public Nyx pointer/key controls,
+typed snapping/bounds and one isolated paired size operation. Shared checks pass
+51 per native compiler; unchanged compiled controls pass seven and ordinary
+Win32 Studio 40, with zero leaks/owned warnings. Retained projection/placement
+regressions pass 27/44; core and staged browser consumers/Studio/worker compile.
+Compatible dimension refresh preserves admitted controls and independent input.
+Preview currently reports dimensions in status; direct canvas edge feedback,
+richer guides, responsive variants and broader editor/parity outcomes remain.
+No original criterion closes: authoring no-closure advances 10→11 once; workflow
+9, codegen 27, renderer 3 and delivery 1 remain. End local grip/codec/fixture
+expansion after relevant checks. Next connect direct canvas resize feedback and
+responsive authoring, preserving public contracts and the same paired processor.
+Preserve exact pairs/input/ownership and the protected observing release. No
+listener, deployment or private configuration refresh; current browser/phone
+runtime retains the existing host gate. Stop on a second authoring engine,
+weakened admission or editor identity/input loss.
+
+Preceding bounded packet: [portable size constraints](#portable-size-constraints--2026-10-05)
 supplies original Studio authoring criterion 1's missing resizing prerequisite.
 Copied typed bounds, specialized generated configuration, effective target
 validation and weighted redistribution share ordinary semantic/isolated property
@@ -7930,3 +7948,111 @@ configuration refresh occurred. The earlier automatic approval rejection remains
 “blocked by policy,” with no further reason. The phone retains its earlier
 release. Final private process/session/artifact/remote proof belongs in
 `.local/codex-restart-check/constraints-remote-proof.json`.
+
+## Reusable resize grips — 2026-10-05
+
+Original Studio authoring criterion 1 now consumes its size-bounds prerequisite
+through public `nyx.designer.resize` contracts. Copied dimensions, closed axes,
+fluent grid/keyboard/bounds policies and `TNyxResizeHandle` attach to ordinary
+managed specialized buttons. Sequential public streams own matching primary
+pointer capture, terminal release, foreign-pointer refusal, Escape/focus/capture
+cancellation, Alt grid bypass and arrow/Shift keyboard steps. Zero delta leaves
+off-grid dimensions exact; grid ties round upward before exact bounds clamp.
+Borrowed UI-thread receivers detach before subscriptions are retired; no
+model/widget/DOM/LCL handles or reference cycles enter the portable behavior.
+
+Both renderer `SizeFor` methods return copied allocated outer geometry: native
+full logical boxes survive clipping/scroll virtualization; browser integer
+offset dimensions include borders and exclude transforms. Studio composes three
+ordinary Nyx grips beside selected authored non-root controls. Start captures
+the exact accepted pair, mounts, load, view, selection and creator epoch.
+Preview updates dimensions in status only, without source regeneration/canvas
+replacement. Release rechecks exact paired equality and publishes one existing
+isolated command/Undo step. Busy commands, drafts, stale owners and retired
+leases refuse. Recognized resize arrows remain consumed on host refusal.
+
+`TNyxResizeChange` translates copied typed intent to the existing scalar patch
+processor. Effective realized parent flow, including reusable slots, decides
+whether the touched main-axis weight is cleared. The shared `NyxLayout` reader
+now accepts an optional target scope and preserves primitive Row defaults.
+Portable single-axis commands refuse target-flow divergence; explicit scoped
+commands retain the portable dimensions. Studio's first portable grip path
+refuses existing scoped sizing/bounds instead of silently erasing them. Existing
+target Inspector fields remain available. Strict worker version 7 adds the
+resize payload while preserving strict versions 5/6 compatibility for their
+original action vocabularies. No new MCP tool or second authoring engine appears.
+
+Actual native editing exposed a projection gap: scalar dimensions previously
+forced full canvas replacement and lost an independent memo draft. The existing
+fresh retained-projection admission now permits dimension/sizing/flex/bound
+changes while retaining exact structure, identities, bindings, platform metadata,
+creator context, custom-factory compatibility and rollback. Actual retained
+controls qualify text/selection/focus and allocated geometry; incompatible
+changes still request a full mount.
+
+Maintained command:
+
+```powershell
+./tools/build.ps1 -Target resize -BrowserOutput build/resize/staged
+```
+
+Final relevant evidence in `build/resize/promotion.log`:
+
+- **51** shared/semantic/worker/public-input checks on FPC 3.2.0 and matched
+  FPC 3.3.1, with zero heap leaks. Bounded offline semantic inspection/mutation,
+  atomic refusals, paired history, copied snapping/bounds, actual parent flow,
+  old-wire migration, isolated publication and exact exports execute.
+- **Seven** unchanged compiled Win32 companion checks, with zero leaks. Exact
+  reconstructed design, allocated dimensions, retained real memo identity/text/
+  selection/focus and invalid candidate retention execute. Six browser control
+  checks compile but require actual host execution before claiming their result.
+- **40** actual ordinary Win32 Studio checks, with zero leaks. Registered public
+  pointer/key callbacks, isolated commit, paired Undo/Redo, Escape, no-op tap,
+  bounds, Alt, arrow/Shift, stale-pair/draft refusal, handwritten source and
+  independent memo/source identity execute. This qualifies callback behavior,
+  not physical hardware, IME, assistive technology or another widgetset.
+- Desktop and actual 390-pixel native captures `resize-desktop.png` and
+  `resize-compact.png` are inspected. English grip/help text is visible. Existing
+  narrow native chrome/sidebar overflow and complete presentation stay open.
+- Original retained-projection/semantic-placement regressions pass **27/44**
+  with zero leaks. Core passes **30/1777/55/60**, expected typed rejection,
+  unchanged generated applications/Unicode/runtime bindings and three compiled
+  collection checks. Both native compilers and pas2js reject string snapping
+  with the intended `TNyxSizeSnap` diagnostic; an unrelated compiler failure
+  cannot count. Browser consumers, Studio and recursive module worker
+  compile; matched RTL and two English hosts are staged. Owned final compiles
+  report zero warnings; installed pas2js `Classes` retains seven visible warnings
+  per program without dependency edits or suppression.
+
+Checked native builds use Delphi mode, assertions, range/overflow/I/O checks,
+debug information and heap tracing; LCL uses the matched Win32 units. Exact
+export and staged artifact hashes are retained privately with process/session/
+remote proof. No listener, live-web deployment or private configuration refresh
+occurs. Actual current browser/phone interaction remains unqualified at the
+existing host gate; compiled hosts never substitute runtime pass markers.
+
+Failed evidence is retained under `build/resize/`: incomplete input event
+metadata, a harness notification that correctly made Studio busy, lost canvas
+input from full replacement, an unavailable browser textarea declaration and
+an incorrect primitive Row-default assumption. Corrected maintained evidence
+supersedes each failure. The Row probe demonstrated that authored layout can be
+absent while its effective primitive policy is row; adapters and sizing now read
+the shared policy instead of guessing.
+
+No original criterion, DONE move or full-product percentage follows. Authoring
+no-closure advances **10→11** once; workflow **9**, codegen **27**, renderer **3**
+and delivery **1** remain. End local grip/codec/fixture expansion. Next connect
+direct canvas resize feedback and richer guides, then responsive authoring and
+complete original multi-page/reusable editor, parity, accessibility, performance
+and delivery. Status-only previews do not accept live canvas resizing/overlays.
+Preserve exact pairs/input/ownership and stop on a second authoring engine,
+weakened admission or identity/input loss.
+
+Read-only native MCP remains connected at revision 8, home, retained rating-part
+selection, no draft and unchanged Undo/Redo. The eight protected executable/start
+identities and live server artifact remain unchanged. No protected stop, new
+listener, release replacement, reinstall or private enrollment refresh occurred.
+The earlier automatic approval rejection remains “blocked by policy,” with no
+further reason. The phone retains its earlier observing release. Authorized
+checkpoint proof is retained privately in
+`.local/codex-restart-check/resize-remote-proof.json`.

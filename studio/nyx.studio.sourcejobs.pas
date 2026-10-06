@@ -517,7 +517,7 @@ begin
   LJob.Kind := eskDesign;
   LJob.Context := FSession.CommandContext;
 
-  if AEdit.Action in [sdaCanvasValue, sdaPlacement] then
+  if AEdit.Action in [sdaCanvasValue, sdaPlacement, sdaResize] then
   begin
     LJob.Context := AEdit.CanvasContext;
   end;
