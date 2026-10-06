@@ -41,6 +41,11 @@ param(
   # Release preparation creates a NEW frozen compiler-source/artifact bundle.
   # This output is never a running service root; existing destinations refuse.
   [string]$ReleaseOutput = 'build/studio-release/package',
+  # Explicit installed-root qualification consumes a pristine previously staged
+  # release plus the unchanged MCP/Studio-authored recipe companion. No listener.
+  [switch]$VerifyReleaseRuntime,
+  [string]$ReleaseRuntimeProfile,
+  [string]$ReleaseRuntimeSourceDirectory = 'build/content-editor/maintained/result',
   # The keyboard review source is exported through MCP, never handwritten by
   # this orchestration script. Its generated unit must live in this directory.
   [string]$KeyboardSourceDirectory = 'build/keyboard/mcp',
@@ -280,7 +285,9 @@ try {
   if ($Target -eq 'studio-release') {
     # Pascal owns source admission, privacy boundaries, artifact closure and
     # byte verification. Shell work only invokes compilers in that new snapshot.
-    # No service, enrollment, compiler profile or editor project is changed.
+    # Preparation changes no service, enrollment, profile or editor project.
+    # Optional runtime qualification owns a new private profile/enrollment/jobs
+    # subtree; its protocol engine and host are never started as listeners.
     $nyxReleaseOutput = [IO.Path]::GetFullPath((Join-Path $nyxRoot $ReleaseOutput))
 
     if ([IO.Path]::IsPathRooted($ReleaseOutput)) {
@@ -343,6 +350,25 @@ try {
     & $nyxReleaseTest $nyxReleaseOutput (Join-Path $nyxReleaseChecks 'fixture')
 
     if ($LASTEXITCODE -ne 0) { throw 'Release preparation/integrity qualification failed.' }
+
+    if ($VerifyReleaseRuntime) {
+      if (-not $ReleaseRuntimeProfile -or -not (Test-Path -LiteralPath $ReleaseRuntimeProfile)) {
+        throw 'Runtime qualification requires an explicit existing private -ReleaseRuntimeProfile.'
+      }
+      $nyxRuntimeSource = [IO.Path]::GetFullPath($ReleaseRuntimeSourceDirectory)
+      Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+        "-Fu$nyxReleaseOutput/src", "-Fu$nyxReleaseOutput/studio", "-Fu$nyxRuntimeSource",
+        "-FU$nyxReleaseChecks", "-FE$nyxReleaseChecks", 'tests/nyx_studio_runtime_tests.lpr')
+      $nyxRuntimeTest = Join-Path $nyxReleaseChecks 'nyx_studio_runtime_tests.exe'
+
+      if (-not $IsWindows) {
+        $nyxRuntimeTest = Join-Path $nyxReleaseChecks 'nyx_studio_runtime_tests'
+      }
+      & $nyxRuntimeTest $nyxReleaseOutput (Join-Path $nyxReleaseChecks 'runtime') (
+        [IO.Path]::GetFullPath($ReleaseRuntimeProfile)) $nyxRuntimeSource
+
+      if ($LASTEXITCODE -ne 0) { throw 'Integrated frozen release/runtime qualification failed.' }
+    }
     Write-Host 'Frozen Studio release verified. No listener was launched or live release replaced.'
     exit 0
   }

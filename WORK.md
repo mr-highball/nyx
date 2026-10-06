@@ -9,13 +9,23 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 ## Current return path: recipe editor and semantic release — 2026-10-06
 
+NS-5 criterion 1's typed source/runtime/enrollment separation is integrated through
+the actual server, MCP protocol and immutable compiler workers. Existing repository
+launches remain compatible; release writes stay outside the frozen payload.
+Real delegated browser/LCL application jobs and private profile/enrollment behavior
+pass, and both produced applications execute. Stop directory/package fixture
+expansion here. The next prerequisite is explicit session/history restart
+preservation, returning to the original observing recipe/MCP rollout. No protected
+service is restarted or new listener launched; all fifteen identities/eight pairs
+remain protected. The running phone editor still has the previous release.
+
 The NS-6 criterion-3 prerequisite now prepares a frozen compiler-source and
 backend/browser bundle with a strict byte manifest. It refuses existing outputs,
 excludes private state and exercises the frozen sources. Stop package/integrity
-fixtures here. Return to the existing service/reload owner: repository roots
-currently combine compiler sources with writable jobs/profiles/enrollment;
-ordinary workspaces/history are memory-only. An installed runtime/preservation
-boundary is required before this pristine candidate supports an observing rollout.
+fixtures here. The existing service/reload owner now separates release sources
+from writable jobs/profiles/enrollment. Ordinary workspaces/history are still
+memory-only. An explicit preservation boundary is required before this pristine
+candidate supports an observing rollout.
 All fifteen service identities/eight pairs remain protected. Staging is not an
 authenticated HTTP deployment or a completed delivery criterion.
 
@@ -58,6 +68,78 @@ does not restrict alternate structures to fixed control sets or credit an
 explicit remount as continuity. Nothing moves to DONE. Main services
 and all eight accepted pairs remain protected; no LAN rollout is claimed.
 
+## Separate release runtime — 2026-10-06
+
+Owner: NS-5 criterion 1 isolation, returning to NS-4 observing recipe/MCP integration.
+`TNyxStudioDirectories` is an immutable native host value with repository/release
+modes, explicit source/runtime/enrollment roles and copied worker configuration.
+Release admission verifies the byte manifest once and checks ordinary ancestors
+and disjoint writable locations before host creation. No portable document or
+public component depends on these host filesystem choices. Repository overloads
+retain their prior layout and the existing compiler-job resource regression.
+
+The actual server uses runtime profiles, saved project directories and jobs; MCP
+uses the independent enrollment root and runtime preview directory. Compiler units
+come from the frozen payload, while each job owns copied directory/profile/source
+values. The launcher can select a prepared release without rebuilding Studio or
+requiring application compilers; it refuses earlier bundles without this entry
+point. The maintained release target optionally exercises the real protocol/jobs
+using an explicit private profile and the unchanged semantic English companion.
+
+Private evidence under `build/runtime-directories/`:
+
+- `checks/run-executed.log`: 40 checked stable-FPC runtime checks, zero unfreed
+  blocks, including an actual runtime junction refusal and both real compiler
+  workers. The exact accepted companion is SHA-256
+  `30aa676532ae6dd381ce39a3a198197e3ef243b5c03936304e2a91379ffc52a1`.
+  The resulting full native application mounts its authored edit control and
+  closes normally. This is startup/shutdown evidence, not new input qualification.
+- `legacy/run.log`: the unchanged repository-mode compiler-job resource/lifetime
+  regression passes 45 checks with zero leaks. Both checked host compilations have
+  zero owned warnings; ten existing lifetime-retention notes remain.
+- `browser-artifact-review.log` and `browser-artifact/capture.png`: the exact
+  succeeded browser job publishes its application-ready marker and renders the
+  English recipe workshop. Only three verified artifact members enter a new
+  child of the existing protected isolated static host. This is application
+  startup/visual evidence, not a new editor-route deployment or browser input test.
+- `maintained-build.log`: the earlier integrated maintained build freezes 199
+  members and passes 29 integrity plus 37 runtime checks, zero leaks, before
+  native artifact execution was added to the runtime consumer. A final packet
+  below records the current maintained result.
+- `final-build.log`: the complete maintained target compiles the 199-member
+  source snapshot, backend, ordinary browser Studio, independent module worker
+  and preview. The native host/integrity/runtime consumers use matched FPC 3.3.1;
+  browser builds use pas2js 3.3.1 and its matched runtime. It passes 29 integrity
+  and 39 integrated runtime checks with zero native leaks and owned warnings.
+  Each of three browser builds retains seven visible upstream RTL warnings.
+  The earlier checked 40-case consumer independently uses stable FPC 3.2.0.
+- `preservation.json`, `protected-services.json`, `protected-main.json`: all
+  fifteen exact process identities and eight exact paired projects/navigation/
+  draft/history-availability frames match the prior accepted baseline. LAN HTTP
+  returns 200. This verifies history availability, not serialized Undo stacks.
+
+PowerShell AST parsing passes for both maintained scripts. The launcher refuses
+the preceding frozen candidate before executing a server or creating runtime
+storage. That refusal command resolves the matched native compiler hint, so the
+following maintained build correctly records FPC 3.3.1 rather than stable 3.2.0.
+No listener, stop, restart or protected enrollment operation occurs.
+
+Initial test-client failures omitted the required observation cursor and then
+read the editor build-reply wrapper incorrectly. Those fixtures were corrected;
+protocol admission was not weakened. The suspended engine and actual host are
+constructed/destructed only; their listener entry points are never called. Runtime
+test enrollment touches only a new owned directory, with no enrolled-user entry.
+The original pristine payload remains byte-exact after all worker/profile/host work.
+
+This bounded directory boundary is accepted within the original isolation owner;
+no full original criterion, task or product percentage closes. Existing authoring
+26, renderer 7, workflow 9, codegen 28 and delivery 2 counts remain. Sessions,
+navigation, drafts and Undo/Redo stacks remain memory-only; saved project pairs
+do not establish restart preservation. Next implement that explicit preservation
+boundary, then check authenticated content editing and the full observing browser
+Studio. Cache/cancellation/retention, native packaging, full parity/accessibility
+and performance retain their original owners. No service or LAN rollout is claimed.
+
 ## Frozen release prerequisite — 2026-10-06
 
 Owner: NS-6 delivery criterion 3, returning to NS-5 runtime/reload preservation and
@@ -96,8 +178,8 @@ Private evidence under `build/studio-release/`:
   Native is leak-free; the browser used only new child files beneath the existing
   protected isolated static host. No compiled frontend/backend was deployed.
 
-Packaging preparation qualifies a pristine candidate, not a live writable root.
-Current `TNyxBuildExecutor`, MCP preview/enrollment and server profiles/jobs use
+Packaging preparation qualified a pristine candidate, not a live writable root.
+At that checkpoint `TNyxBuildExecutor`, MCP preview/enrollment and server profiles/jobs used
 the repository root, while ordinary project sessions/history end on shutdown.
 These concrete prerequisites are recorded with their existing owners. Current
 HTTP content query/mutation remains absent and its journey remains unqualified.

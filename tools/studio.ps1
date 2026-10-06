@@ -27,7 +27,14 @@ param(
   [string]$BindAddress,
   [switch]$SkipBuild,
   [string]$Server,
-  [string]$ToolchainConfiguration
+  [string]$ToolchainConfiguration,
+  # A prepared release launches directly without compiling Studio. RuntimeRoot
+  # holds private jobs/profiles/projects; EnrollmentRoot optionally selects the
+  # project whose local Codex entry should discover this instance.
+  [string]$ReleaseRoot,
+  [string]$RuntimeRoot,
+  [string]$EnrollmentRoot,
+  [int]$MCPPort = 0
 )
 
 $ErrorActionPreference = 'Stop'
@@ -66,7 +73,11 @@ function Get-NyxConfiguration([string]$Key, [string]$Command = '') {
 Push-Location $nyxRoot
 try {
 
-  if (-not $SkipBuild) {
+  if ([bool]$ReleaseRoot -ne [bool]$RuntimeRoot) {
+    throw 'Supply both -ReleaseRoot and -RuntimeRoot for an installed release.'
+  }
+
+  if (-not $SkipBuild -and -not $ReleaseRoot) {
     & (Join-Path $PSScriptRoot 'build.ps1') -Target studio
   }
   $env:NYX_PAS2JS = Get-NyxConfiguration 'PAS2JS' 'pas2js'
@@ -101,7 +112,26 @@ try {
   # selects a specific binary when several local build profiles exist.
   $nyxServer = $Server
 
-  if (-not $nyxServer) {
+  if ($ReleaseRoot) {
+    $nyxReleaseRoot = (Resolve-Path -LiteralPath $ReleaseRoot).Path
+    # Earlier pristine candidates predate the separate-runtime entry point.
+    # Refuse them here; only the maintained compiler-source bundle supplies the
+    # new host unit and backend together. Pascal verifies all bytes at startup.
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxReleaseRoot 'studio/nyx.studio.directories.pas'))) {
+      throw 'This candidate predates separate runtime storage; prepare a current Studio release.'
+    }
+    $nyxPackagedServer = Join-Path $nyxReleaseRoot 'bin/nyx_studio_server.exe'
+
+    if (-not $IsWindows) {
+      $nyxPackagedServer = Join-Path $nyxReleaseRoot 'bin/nyx_studio_server'
+    }
+
+    if ($nyxServer -and (Resolve-Path -LiteralPath $nyxServer).Path -ne $nyxPackagedServer) {
+      throw 'A release launch must use its own staged backend executable.'
+    }
+    $nyxServer = $nyxPackagedServer
+  }
+  elseif (-not $nyxServer) {
     $nyxServerFile = Get-ChildItem -LiteralPath (Join-Path $nyxRoot 'build/native') -Recurse -File |
       Where-Object { $_.Name -in @('nyx_studio_server.exe', 'nyx_studio_server') } |
       Sort-Object LastWriteTime -Descending | Select-Object -First 1
@@ -124,7 +154,21 @@ try {
   if (-not $BindAddress) {
     $BindAddress = '127.0.0.1'
   }
-  & $nyxServer $nyxRoot $Port $BindAddress
+  if ($ReleaseRoot) {
+    $nyxRuntimeRoot = [IO.Path]::GetFullPath($RuntimeRoot)
+    $nyxEnrollmentRoot = $nyxRuntimeRoot
+
+    if ($EnrollmentRoot) {
+      $nyxEnrollmentRoot = [IO.Path]::GetFullPath($EnrollmentRoot)
+    }
+    $nyxReleaseWeb = Join-Path $nyxReleaseRoot 'web'
+    # Pass every slot explicitly: older PowerShell native argument handling can
+    # discard an empty string and shift the runtime/enrollment arguments.
+    & $nyxServer $nyxReleaseRoot $Port $BindAddress $MCPPort $nyxReleaseWeb $nyxRuntimeRoot $nyxEnrollmentRoot
+  }
+  else {
+    & $nyxServer $nyxRoot $Port $BindAddress $MCPPort
+  }
 
   if ($LASTEXITCODE -ne 0) {
     throw "Studio server exited with $LASTEXITCODE"

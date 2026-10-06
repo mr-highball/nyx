@@ -3,7 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current frozen-release prerequisite (2026-10-06): a maintained Pascal preparer
+Current service-isolation prerequisite (2026-10-06): one immutable typed host
+value separates verified source/web from runtime jobs/profiles/projects/previews
+and explicit enrollment. Actual protocol and both compiler workers preserve exact
+companions and the pristine payload; both produced applications execute. Repository
+compatibility passes the existing resource regression. No protected service changes
+or observing release is claimed. This accepts the bounded directory boundary,
+not the full original criterion; existing authoring 26, renderer 7, workflow 9,
+codegen 28 and delivery 2 counts remain. Stop directory/packaging fixtures and follow
+memory-only session/history preservation before the authenticated recipe rollout.
+Original parity/accessibility/performance/delivery criteria remain unchanged. See
+[evidence and return path](WORK.md#separate-release-runtime--2026-10-06).
+
+Previous frozen-release prerequisite (2026-10-06): a maintained Pascal preparer
 freezes compiler sources before backend/editor/worker/preview compilation and
 verifies all 198 artifact paths, byte lengths and fingerprints. Checked refusal
 consumers pass 29 on both installed native compilers, leak-free; the unchanged

@@ -31,7 +31,8 @@ uses
   cthreads,
   {$ENDIF}
   SysUtils,
-  nyx.studio.server;
+  nyx.studio.server,
+  nyx.studio.directories;
 
 var
   LServer: TNyxStudioServer;
@@ -40,6 +41,7 @@ var
   LPort: Integer;
   LMCPPort: Integer;
   LWebRoot: TNyxText;
+  LDirectories: TNyxStudioDirectories;
 begin
   { Launch from the repository by default. An explicit root lets an IDE or build
     script run the same service without depending on its current directory. }
@@ -75,7 +77,25 @@ begin
   begin
     LWebRoot := ParamStr(5);
   end;
-  LServer := TNyxStudioServer.Create(LRepository, LPort, LBindAddress, LMCPPort, LWebRoot);
+  LDirectories := TNyxStudioDirectories.ForRepository(LRepository);
+
+  if ParamCount > 5 then
+  begin
+    { The optional sixth argument selects a pristine release with a separate
+      private runtime home. Earlier repository invocations retain their layout. }
+    LDirectories := TNyxStudioDirectories.ForRelease(LRepository, ParamStr(6));
+  end;
+
+  if ParamCount > 6 then
+  begin
+    LDirectories := LDirectories.EnrollingProject(ParamStr(7));
+  end;
+
+  if ParamCount > 7 then
+  begin
+    raise Exception.Create('Studio accepts at most seven host arguments');
+  end;
+  LServer := TNyxStudioServer.Create(LDirectories, LPort, LBindAddress, LMCPPort, LWebRoot);
   try
     LServer.Run;
   finally

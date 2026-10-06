@@ -27,24 +27,30 @@ unit nyx.studio.buildexecutor;
 interface
 
 uses
-  Classes, SysUtils, Process, fpjson, nyx.text, nyx.model, nyx.studio.outputs;
+  Classes, SysUtils, Process, fpjson, nyx.text, nyx.model, nyx.studio.outputs,
+  nyx.studio.directories;
 
 type
   { One independent compiler invocation. Owns an immutable machine profile and
     borrows the caller's detached document only during Build. Both HTTP and MCP
     use this fixed-argument implementation; requests cannot supply shell commands,
     compiler options, paths or environment overrides. Artifacts are confined to
-    the repository's build/studio/jobs root. No editor/model lock is held here. }
+    the admitted runtime Jobs root. Compiler sources remain borrowed read-only;
+    repository-mode callers retain build/studio/jobs. No editor/model lock is held here. }
   TNyxBuildExecutor = class
   private
-    FRepository: TNyxText;
+    FDirectories: TNyxStudioDirectories;
     FJobRoot: TNyxText;
     FOutputs: TNyxOutputConfiguration;
     procedure CheckOutput(const ATarget: TNyxText);
     function RunCompiler(const AExecutable, ADirectory: TNyxText;
       AArguments: TStrings; out ALog: TNyxText): Boolean;
   public
-    constructor Create(const ARepository, AProfile: TNyxText);
+    constructor Create(const ARepository, AProfile: TNyxText); overload;
+    { Retains the admitted directory value separately from the immutable profile.
+      Compiler units are borrowed read-only; artifacts belong to runtime Jobs. }
+    constructor Create(const ADirectories: TNyxStudioDirectories;
+      const AProfile: TNyxText); overload;
     destructor Destroy; override;
     { Readiness is diagnostic only; absent compilers never prevent authoring.
       Empty means ready. Contains no machine path values. }
@@ -107,9 +113,16 @@ end;
 
 constructor TNyxBuildExecutor.Create(const ARepository, AProfile: TNyxText);
 begin
+  Create(TNyxStudioDirectories.ForRepository(ARepository), AProfile);
+end;
+
+constructor TNyxBuildExecutor.Create(const ADirectories: TNyxStudioDirectories;
+  const AProfile: TNyxText);
+begin
   inherited Create;
-  FRepository := IncludeTrailingPathDelimiter(ExpandFileName(ARepository));
-  FJobRoot := FRepository + 'build' + PathDelim + 'studio' + PathDelim + 'jobs' + PathDelim;
+  ADirectories.Validate;
+  FDirectories := ADirectories;
+  FJobRoot := FDirectories.Jobs;
   FOutputs := TNyxOutputConfiguration.Decode(AProfile);
 end;
 
@@ -396,7 +409,7 @@ begin
       establish that an error belongs to this admitted companion rather than
       a same-named dependency, so navigation requires this fixed option. }
     LArguments.Add('-vb');
-    LArguments.Add('-Fu' + FRepository + 'src');
+    LArguments.Add('-Fu' + FDirectories.CompilerUnits);
     LArguments.Add('-Fu' + LDirectory);
     LArguments.Add('-FE' + LDirectory);
 

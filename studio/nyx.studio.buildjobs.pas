@@ -28,7 +28,8 @@ interface
 
 uses
   Classes, SysUtils, SyncObjs, nyx.text, nyx.data, nyx.studio.projects,
-  nyx.studio.builds, nyx.studio.compiler, nyx.studio.reviews, nyx.studio.workspaces;
+  nyx.studio.builds, nyx.studio.compiler, nyx.studio.reviews, nyx.studio.workspaces,
+  nyx.studio.directories;
 
 type
   { Native compiler jobs own immutable accepted text and a private machine
@@ -39,14 +40,18 @@ type
     lifecycle. Retry receipts (64) cannot silently submit an expired job again. }
   TNyxBuildJobs = class
   private
-    FRepository: TNyxText;
+    FDirectories: TNyxStudioDirectories;
     FProfile: TNyxText;
     FJobs: TList;
     FReceiptKeys: array of TNyxText;
     FReceiptRequests: array of TNyxText;
     FReceipts: array of TNyxDataValue;
   public
-    constructor Create(const ARepository, AProfile: TNyxText);
+    constructor Create(const ARepository, AProfile: TNyxText); overload;
+    { The typed source/runtime value is copied into every admitted worker. Later
+      host navigation/configuration cannot redirect that worker's artifact root. }
+    constructor Create(const ADirectories: TNyxStudioDirectories;
+      const AProfile: TNyxText); overload;
     destructor Destroy; override;
     procedure Configure(const AProfile: TNyxText);
     function Outputs: TNyxDataValue;
@@ -117,7 +122,7 @@ type
     Actor: TNyxText;
     Review: TNyxReviewRef;
     Workspace: TNyxWorkspaceRef;
-    Repository: TNyxText;
+    Directories: TNyxStudioDirectories;
     Profile: TNyxText;
     Pair: TNyxProjectPair;
     Arguments: TNyxDataValue;
@@ -368,7 +373,7 @@ begin
   end;
   try
     try
-      LExecutor := TNyxBuildExecutor.Create(FJob.Repository, FJob.Profile);
+      LExecutor := TNyxBuildExecutor.Create(FJob.Directories, FJob.Profile);
       LDocument := TNyxCodec.Decode(FJob.Pair.Design);
       LScope := FJob.Arguments.Field('scope').AsText;
       LView := '';
@@ -386,7 +391,7 @@ begin
         LScope, LView, FJob.Pair.Source);
       LOutput := TNyxDataValue.ParseJSON(TNyxText(LResult.AsJSON));
       LReport := DecodeNyxCompilerReport(LOutput.Field('diagnostics').ToJSON);
-      LRoot := FJob.Repository + 'build' + PathDelim + 'studio' + PathDelim + 'jobs' + PathDelim;
+      LRoot := FJob.Directories.Jobs;
       LDirectory := LOutput.Field('build').AsText + '/';
       LManifest := NyxArray([]);
 
@@ -449,16 +454,22 @@ end;
 
 constructor TNyxBuildJobs.Create(const ARepository, AProfile: TNyxText);
 begin
+  Create(TNyxStudioDirectories.ForRepository(ARepository), AProfile);
+end;
+
+constructor TNyxBuildJobs.Create(const ADirectories: TNyxStudioDirectories;
+  const AProfile: TNyxText);
+begin
   inherited Create;
-  FRepository := IncludeTrailingPathDelimiter(ExpandFileName(ARepository));
+  ADirectories.Validate;
+  FDirectories := ADirectories;
   FJobs := TList.Create;
   Configure(AProfile);
   { Prepare the shared parent on the serialized owner before workers start.
     Older FPC ForceDirectories can race while recursively creating that parent;
     each worker subsequently creates only its unique invocation directory. }
 
-  if not ForceDirectories(FRepository + 'build' + PathDelim + 'studio' +
-    PathDelim + 'jobs') then
+  if not ForceDirectories(FDirectories.Jobs) then
   begin
     raise ENyxModel.Create('Cannot prepare the compiler artifact root');
   end;
@@ -499,7 +510,7 @@ var
   LTarget: TNyxBuildTarget;
   LIssue: TNyxText;
 begin
-  LExecutor := TNyxBuildExecutor.Create(FRepository, FProfile);
+  LExecutor := TNyxBuildExecutor.Create(FDirectories, FProfile);
   try
     for LTarget := Low(TNyxBuildTarget) to High(TNyxBuildTarget) do
     begin
@@ -658,7 +669,7 @@ begin
   begin
     raise ENyxModel.Create('Output configuration changed; inspect readiness before submitting');
   end;
-  LExecutor := TNyxBuildExecutor.Create(FRepository, FProfile);
+  LExecutor := TNyxBuildExecutor.Create(FDirectories, FProfile);
   try
     LIssue := LExecutor.Readiness(AArguments.Field('target').AsText);
   finally
@@ -701,7 +712,7 @@ begin
     LJob.Actor := AActor;
     LJob.Review := AReview;
     LJob.Workspace := AWorkspace;
-    LJob.Repository := FRepository;
+    LJob.Directories := FDirectories;
     LJob.Profile := FProfile;
     LJob.Arguments := AArguments.Copy;
     LJob.Pair := APair;

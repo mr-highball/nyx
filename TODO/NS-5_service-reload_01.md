@@ -18,15 +18,34 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 **Blockers**
 
 Release prerequisite (2026-10-06): the NS-6 Pascal preparer now verifies a frozen
-backend/browser/compiler-source bundle. Current build jobs, preview artifacts,
-profiles and MCP enrollment still share its repository root; ordinary project
-sessions and history are memory-only. Runtime/source-root separation and explicit
-session preservation are prerequisites for a checked observing rollout. Keep
+backend/browser/compiler-source bundle. Typed source/runtime/enrollment separation
+now reaches the actual host, protocol and copied compiler-worker values; real
+browser/LCL jobs preserve the pristine payload. Ordinary project sessions and
+history remain memory-only. Explicit session preservation is the next prerequisite
+for a checked observing rollout. Keep
 those outcomes within this existing reload/isolation owner and the workflow
 owner; staging accepts no original criterion. See [the release guide](../docs/studio-releases.md).
 
 - [NS-5_compile-service_01](NS-5_compile-service_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-4_studio-slice_01](NS-4_studio-slice_01.md) must have accepted evidence (update link when moved to DONE).
+
+## Separate release runtime — 2026-10-06
+
+Criterion 1's isolation prerequisite now uses an immutable typed directory value
+through the actual server, MCP engine, executor and each admitted job. Source/web
+stay in the verified payload; jobs, previews, profiles and saved project directories
+use runtime storage; enrollment has an explicit independent root. Existing
+repository constructors remain compatible. Overlaps and actual junctions refuse.
+The suspended protocol admits a profile and delegates both exact application
+builds. The produced native application mounts/closes and the browser artifact
+renders through a new child of the existing isolated static host. No new listener,
+protected-service restart or running MCP re-enrollment occurs. See
+[evidence](../WORK.md#separate-release-runtime--2026-10-06).
+
+This accepts the bounded directory boundary, not the complete original criterion.
+Stop directory/packaging fixture expansion. Follow memory-only session/history
+preservation before authenticated recipe editing and observing Studio deployment;
+cache, cancellation, retention and other original service outcomes remain open.
 
 ## Compiled native preview consumer — 2026-10-05
 

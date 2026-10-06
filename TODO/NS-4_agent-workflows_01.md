@@ -35,7 +35,7 @@ updates and browser automation for the missing operation. Workflow no-closure
 remains 9; this is a release follow-up within this existing owner.
 
 The NS-6 frozen release preparer now supplies a checked backend/browser candidate.
-The NS-5 runtime-root and memory-only session/history prerequisites still prevent
+The NS-5 memory-only session/history prerequisite still prevents
 crediting that artifact as an observing deployment. Retain current services/pairs;
 do not infer authenticated content support from offline schema or build evidence.
 

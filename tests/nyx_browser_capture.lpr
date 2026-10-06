@@ -27,6 +27,11 @@ program nyx_browser_capture;
 uses
   Classes, SysUtils, Process;
 
+type
+  { A compiler-produced application has a Boolean ready marker; maintained
+    assertion fixtures use their passed marker. Both use the same real browser. }
+  TNyxCaptureCompletion = (nccFixturePassed, nccApplicationReady);
+
 var
   LProcess: TProcess;
   LDirectory: String;
@@ -38,6 +43,7 @@ var
   LFile: TFileStream;
   LExpected: RawByteString;
   LRealClock: Boolean;
+  LCompletion: TNyxCaptureCompletion;
 
 begin
   LProcess := nil;
@@ -50,13 +56,25 @@ begin
     end;
     LRealClock := ParamCount = 4;
 
-    if LRealClock and (ParamStr(4) <> '--real-clock') then
+    if LRealClock and (ParamStr(4) <> '--real-clock') and
+      (ParamStr(4) <> '--application-ready') then
     begin
-      raise Exception.Create('The optional capture mode is --real-clock');
+      raise Exception.Create('Capture mode is --real-clock or --application-ready');
+    end;
+    LCompletion := nccFixturePassed;
+
+    if ParamStr(4) = '--application-ready' then
+    begin
+      LCompletion := nccApplicationReady;
     end;
     LDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
     ForceDirectories(LDirectory);
     LExpected := ParamStr(3) + '="passed"';
+
+    if LCompletion = nccApplicationReady then
+    begin
+      LExpected := ParamStr(3) + '="true"';
+    end;
     LProcess := TProcess.Create(nil);
     LProcess.Executable := GetEnvironmentVariable('ProgramFiles(x86)') +
       '\Microsoft\Edge\Application\msedge.exe';

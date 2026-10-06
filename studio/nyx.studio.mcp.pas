@@ -29,7 +29,7 @@ interface
 uses
   Classes, SysUtils, SyncObjs, fphttpserver, httpdefs, Process, base64,
   nyx.text, nyx.data, nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs,
-  nyx.studio.reviews, nyx.studio.workspaces, nyx.presentations;
+  nyx.studio.reviews, nyx.studio.workspaces, nyx.presentations, nyx.studio.directories;
 
 type
   { Authority is supplied by the authenticated transport, never client JSON.
@@ -60,7 +60,7 @@ type
     FID: TNyxText;
     FToken: TNyxText;
     FEditorToken: TNyxText;
-    FRepository: TNyxText;
+    FDirectories: TNyxStudioDirectories;
     FPort: Integer;
     FStudioPort: Integer;
     FClients: array of TNyxDataValue;
@@ -100,7 +100,11 @@ type
     procedure Execute; override;
   public
     constructor Create(const ARepository: TNyxText; AStudioPort, AMCPPort: Integer;
-      const AOutputProfile: TNyxText);
+      const AOutputProfile: TNyxText); overload;
+    { Source, writable artifacts and enrollment are explicit host roles. The
+      suspended constructor enrolls only the admitted project, never a payload. }
+    constructor Create(const ADirectories: TNyxStudioDirectories;
+      AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText); overload;
     destructor Destroy; override;
     { Only trusted same-origin editor requests receive this independent token.
       MCP bearer credentials cannot call the operator exchange or raise access. }
@@ -253,6 +257,13 @@ end;
 constructor TNyxStudioMCP.Create(const ARepository: TNyxText;
   AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText);
 begin
+  Create(TNyxStudioDirectories.ForRepository(ARepository), AStudioPort, AMCPPort,
+    AOutputProfile);
+end;
+
+constructor TNyxStudioMCP.Create(const ADirectories: TNyxStudioDirectories;
+  AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText);
+begin
   inherited Create(True);
   FreeOnTerminate := False;
 
@@ -262,13 +273,14 @@ begin
   end;
   FPort := AMCPPort;
   FStudioPort := AStudioPort;
-  FRepository := IncludeTrailingPathDelimiter(ExpandFileName(ARepository));
+  ADirectories.Validate;
+  FDirectories := ADirectories;
   FID := NewCapability;
   FToken := NewCapability + NewCapability;
   FEditorToken := NewCapability + NewCapability;
   FGuard := SyncObjs.TCriticalSection.Create;
   FCore := TNyxAgentSession.Create;
-  FBuilds := TNyxBuildJobs.Create(FRepository, AOutputProfile);
+  FBuilds := TNyxBuildJobs.Create(FDirectories, AOutputProfile);
   FReviews := TNyxReviewWorkspaces.Create(FCore);
   FWorkspaces := TNyxStudioWorkspaces.Create(FCore, FID);
   FHTTP := TNyxMCPHTTP.Create(nil);
@@ -341,7 +353,7 @@ var
   LPath: TNyxText;
   LBlock: TNyxText;
 begin
-  LPath := FRepository + '.codex' + PathDelim + 'config.toml';
+  LPath := FDirectories.EnrollmentRoot + '.codex' + PathDelim + 'config.toml';
   LBlock := NyxMCPConfigBegin + LineEnding + '[mcp_servers.nyx_studio]' + LineEnding +
     'url = "' + Endpoint + '"' + LineEnding +
     'http_headers = { Authorization = "Bearer ' + FToken + '" }' + LineEnding +
@@ -350,7 +362,7 @@ begin
   NyxMCPPublishBlock(LPath, LBlock);
   { The user chooses global enrollment explicitly. Thereafter new per-session
     credentials refresh that same managed entry without touching other servers. }
-  NyxMCPRefreshRegistration(FRepository, LBlock);
+  NyxMCPRefreshRegistration(FDirectories.EnrollmentRoot, LBlock);
 end;
 
 function TNyxStudioMCP.ConnectEditor(const ARequest: TNyxDataValue): TNyxDataValue;
@@ -1366,7 +1378,7 @@ begin
   begin
     raise ENyxProjectConflict.Create('PNG rendering is unavailable; open the returned preview URL or configure NYX_PREVIEW_BROWSER');
   end;
-  LDirectory := FRepository + 'build' + PathDelim + 'agent-previews' + PathDelim + NewCapability;
+  LDirectory := FDirectories.Previews + NewCapability;
   ForceDirectories(LDirectory);
   LPNG := LDirectory + PathDelim + 'preview.png';
   LProcess := TProcess.Create(nil);

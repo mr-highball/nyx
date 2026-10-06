@@ -50,7 +50,8 @@ uses
   nyx.studio.projects,
   nyx.studio.projectstore,
   nyx.composition,
-  nyx.studio.outputs;
+  nyx.studio.outputs,
+  nyx.studio.directories;
 
 type
   { Older supported FPC exposes Address as protected. Publish it in our local
@@ -68,7 +69,7 @@ type
   TNyxStudioServer = class
   private
     FHTTP: TNyxHTTPServer;
-    FRepository: TNyxText;
+    FDirectories: TNyxStudioDirectories;
     FWebRoot: TNyxText;
     FJobRoot: TNyxText;
     FBindAddress: TNyxText;
@@ -93,7 +94,13 @@ type
       0.0.0.0 also admits devices on the machine's connected IPv4 networks. }
     constructor Create(const ARepository: TNyxText; APort: Integer;
       const ABindAddress: TNyxText = '127.0.0.1'; AMCPPort: Integer = 0;
-      const AWebRoot: TNyxText = '');
+      const AWebRoot: TNyxText = ''); overload;
+    { Release directories separate frozen source/web from profiles, saved paired
+      projects, jobs, previews and optional enrollment. No compiler is required
+      to construct/launch the designer. AWebRoot remains an explicit host override. }
+    constructor Create(const ADirectories: TNyxStudioDirectories; APort: Integer;
+      const ABindAddress: TNyxText = '127.0.0.1'; AMCPPort: Integer = 0;
+      const AWebRoot: TNyxText = ''); overload;
     destructor Destroy; override;
     procedure Run;
   end;
@@ -200,7 +207,15 @@ end;
 constructor TNyxStudioServer.Create(const ARepository: TNyxText; APort: Integer;
   const ABindAddress: TNyxText; AMCPPort: Integer; const AWebRoot: TNyxText);
 begin
+  Create(TNyxStudioDirectories.ForRepository(ARepository), APort, ABindAddress,
+    AMCPPort, AWebRoot);
+end;
+
+constructor TNyxStudioServer.Create(const ADirectories: TNyxStudioDirectories; APort: Integer;
+  const ABindAddress: TNyxText; AMCPPort: Integer; const AWebRoot: TNyxText);
+begin
   inherited Create;
+  ADirectories.Validate;
 
   if (APort < 1024) or (APort > 65535) then
   begin
@@ -213,8 +228,8 @@ begin
     raise Exception.Create('A Studio bind address is required');
   end;
   FBindAddress := ABindAddress;
-  FRepository := IncludeTrailingPathDelimiter(ExpandFileName(ARepository));
-  FWebRoot := FRepository + 'build' + PathDelim + 'browser' + PathDelim;
+  FDirectories := ADirectories;
+  FWebRoot := FDirectories.WebRoot;
   { A launcher may serve a staged frontend for integration checks without
     changing the live editor's files. HTTP requests cannot change this root. }
 
@@ -222,12 +237,20 @@ begin
   begin
     FWebRoot := IncludeTrailingPathDelimiter(ExpandFileName(AWebRoot));
   end;
-  FJobRoot := FRepository + 'build' + PathDelim + 'studio' + PathDelim + 'jobs' + PathDelim;
-  ForceDirectories(FWebRoot);
+  FJobRoot := FDirectories.Jobs;
+
+  if FDirectories.Mode = nsdmRepository then
+  begin
+    ForceDirectories(FWebRoot);
+  end
+  else if not DirectoryExists(FWebRoot) then
+  begin
+    raise ENyxModel.Create('Release web directory is missing; prepare the complete Studio bundle');
+  end;
   ForceDirectories(FJobRoot);
-  FConfigurationPath := FRepository + '.local' + PathDelim + 'studio-outputs.nyx';
+  FConfigurationPath := FDirectories.OutputProfile;
   LoadOutputs;
-  FProjects := TNyxProjectStore.Create(FRepository + '.local' + PathDelim + 'projects');
+  FProjects := TNyxProjectStore.Create(FDirectories.Projects);
   { Editor/LAN and agent ports are separate. Only the latter is loopback-bound;
     its per-launch document endpoint is registered in local Codex configuration. }
 
@@ -235,7 +258,7 @@ begin
   begin
     AMCPPort := APort + 1;
   end;
-  FMCP := TNyxStudioMCP.Create(FRepository, APort, AMCPPort, FOutputs.Encode);
+  FMCP := TNyxStudioMCP.Create(FDirectories, APort, AMCPPort, FOutputs.Encode);
   FMCP.OnOperatorProfileChange := OperatorProfileChanged;
   FHTTP := TNyxHTTPServer.Create(nil);
   FHTTP.Address := FBindAddress;
@@ -386,7 +409,7 @@ function TNyxStudioServer.Build(ADocument: TNyxDocument;
 var
   LExecutor: TNyxBuildExecutor;
 begin
-  LExecutor := TNyxBuildExecutor.Create(FRepository, FOutputs.Encode);
+  LExecutor := TNyxBuildExecutor.Create(FDirectories, FOutputs.Encode);
   try
     Result := LExecutor.Build(ADocument, ATarget, AScope, APage, ACompanion);
   finally

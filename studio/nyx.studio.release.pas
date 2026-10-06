@@ -35,6 +35,15 @@ type
     enrolls credentials, changes projects, overwrites files or deletes a tree. }
   ENyxStudioRelease = class(Exception);
 
+{ Native trusted-host directory admission. Existing ancestors must be ordinary
+  directories without links/junctions; AllowMissing permits a new leaf subtree.
+  Performs no writes. Hosts can use this same boundary before creating private
+  runtime/enrollment directories outside a frozen release. Files never qualify
+  as missing directories. Concurrent hostile filesystem changes remain outside
+  this local staging/host contract. }
+procedure ValidateNyxStudioDirectoryPath(const APath: TNyxText;
+  AAllowMissing: Boolean = False);
+
 { Copy the owned compiler sources, the two production HTML hosts, the MIT license
   and the explicitly matched runtime into a NEW directory. Source directories
   are flat and only Pascal units/includes/programs are admitted. Configuration,
@@ -123,6 +132,35 @@ begin
     end;
     LPath := LParent;
   until False;
+end;
+
+procedure ValidateNyxStudioDirectoryPath(const APath: TNyxText; AAllowMissing: Boolean);
+var
+  LPath: TNyxText;
+  LParent: TNyxText;
+begin
+
+  if Trim(APath) = '' then
+  begin
+    raise ENyxStudioRelease.Create('A host directory must be explicit');
+  end;
+  LPath := ExcludeTrailingPathDelimiter(ExpandFileName(APath));
+  while not DirectoryExists(LPath) do
+  begin
+
+    if FileExists(LPath) or not AAllowMissing then
+    begin
+      raise ENyxStudioRelease.Create('Host directory is missing or is a file');
+    end;
+    LParent := ExcludeTrailingPathDelimiter(ExtractFileDir(LPath));
+
+    if (LParent = '') or (LParent = LPath) then
+    begin
+      raise ENyxStudioRelease.Create('Host directory has no existing ordinary ancestor');
+    end;
+    LPath := LParent;
+  end;
+  RequireOrdinaryAncestors(LPath);
 end;
 
 function IsSourceName(const AName: TNyxText): Boolean;
