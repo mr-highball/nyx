@@ -10,9 +10,9 @@ actual browser/LCL consumers qualify physical behavior selectively.
 ## Current return path: alternate structural presentations — 2026-10-06
 
 Return path: original structural presentations (NS-4 criterion 1), through the
-open native/browser ownership and interaction prerequisites. The last integrated
-turn is progress: authoritative retained-arrangement implementation, both-target
-execution and remote checkpoint. Current HEAD and remote match the handoff.
+open native/browser ownership and interaction prerequisites. This integrated turn
+is progress: authoritative bound-state implementation, exact semantic companion,
+both-target execution and verified remote implementation checkpoint.
 
 The [bound-state prerequisite](#retained-bound-state--2026-10-06) now passes
 61 actual controls/state checks on each target against exact semantic source.
@@ -124,6 +124,17 @@ typed structural authoring, changed control sets, ordinary Studio switching,
 IME continuity, other widgetsets/DPI, accessibility, fault-injected physical rollback,
 release performance and the full product delivery remain open under original owners.
 The main LAN release remains the existing container presentation release.
+
+Implementation checkpoint `0db795ed183401ec5a88dcc537e2b107ff50139e` is pushed to
+`origin/hello-nyx` and the exact remote SHA is verified in
+`build/bound-arrangement/remote-checkpoint.json`. Final preservation verifies all
+fifteen pre-existing service identities, eight exact accepted/navigation/draft/
+history frames, LAN HTTP 200 and zero new fixture listeners. The existing isolated
+host remains running with its original files/source/profile retained; this packet's
+new review artifacts occupy only its dedicated subdirectory. All compiler/browser/
+native test processes have completed. No task moves to DONE and the original goal
+remains active. The next turn is fluent alternate structural recipes/publication,
+with unchanged full acceptance criteria; do not restart local bound-state fixtures.
 
 ## Previous prerequisite: retained structural arrangement — 2026-10-06
 
