@@ -118,6 +118,12 @@ end-to-end hardware/IME/assistive behavior, other widgetsets/DPI, accessibility 
 release performance/delivery remain open under original owners. No task moves to
 DONE and the full product goal remains active.
 
+Implementation checkpoint `9666b49c28d90c6a50b43134646577979b283995` is pushed to
+`origin/hello-nyx`; its exact remote SHA is verified in
+`build/content-live/remote-checkpoint.json`. The following documentation checkpoint
+records that verification. This is a library milestone; the existing LAN Studio
+release stays unchanged and ordinary recipe-editor integration remains open.
+
 ## Content recipes — 2026-10-06
 
 Owner: original NS-4 criterion 1, consuming the open NS-2 ownership/interaction
