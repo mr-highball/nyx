@@ -75,6 +75,10 @@ type
       const AResult: TNyxDataValue);
   public
     constructor Create(AActive: TNyxAgentSession);
+    { Trusted host rollback may atomically replace the primary owner under the
+      transport lock. Review sessions stay independent and retain their owners;
+      rebind before disposing the former borrowed primary. No wire authority. }
+    procedure RebindActive(AActive: TNyxAgentSession);
     destructor Destroy; override;
     { Typed creation copies either an empty document or the exact accepted pair
       at AExpected. A user's pending draft stays solely in the active workspace.
@@ -118,6 +122,16 @@ implementation
 
 uses
   nyx.model, nyx.codec, nyx.codegen;
+
+procedure TNyxReviewWorkspaces.RebindActive(AActive: TNyxAgentSession);
+begin
+
+  if AActive = nil then
+  begin
+    raise ENyxModel.Create('A review manager requires an active session');
+  end;
+  FActive := AActive;
+end;
 
 const
   CSeparator: TNyxText = ' · ';

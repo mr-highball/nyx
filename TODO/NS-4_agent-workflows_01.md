@@ -35,9 +35,19 @@ updates and browser automation for the missing operation. Workflow no-closure
 remains 9; this is a release follow-up within this existing owner.
 
 The NS-6 frozen release preparer now supplies a checked backend/browser candidate.
-The NS-5 memory-only session/history prerequisite still prevents
-crediting that artifact as an observing deployment. Retain current services/pairs;
+The NS-5 native session/history boundary now has exact recovery evidence, including
+fresh-process restart and denied-write rollback. The protected older server lacks
+complete history export; its availability flags cannot migrate those stacks.
+Follow that concrete preservation bridge before crediting an observing deployment.
+Retain current services/pairs;
 do not infer authenticated content support from offline schema or build evidence.
+
+Existing authority propagation gap discovered during native recovery integration:
+`TNyxReviewWorkspaces.Call` forwards ordinary session calls without their distinct
+request owner. Qualify and preserve same-actor/different-transport receipt and
+review-ticket separation before accepting the next authenticated HTTP journey.
+This remains in this workflow owner; the recovery boundary supplies rollback and
+does not claim to repair the existing transport-authority contract.
 
 - Project/user configuration discovers authenticated tools through actual Codex
   initialization, refreshes enrolled credentials on Studio launch and preserves

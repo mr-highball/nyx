@@ -269,8 +269,12 @@ type
     FDesign: TNyxText;
     FCustomFrame: Boolean;
     function GetStorageBytes: TNyxTextBytes;
+    function GetSource: TNyxText;
   public
     property Design: TNyxText read FDesign;
+    { Exact authored companion, assembled without parsing or regeneration. This
+      read-only value supports native recovery of already admitted history. }
+    property Source: TNyxText read GetSource;
     property StorageBytes: TNyxTextBytes read GetStorageBytes;
   end;
 
@@ -4659,6 +4663,11 @@ begin
   {$ifdef PAS2JS}
   Result := Result * 2;
   {$endif}
+end;
+
+function TNyxSourceCheckpoint.GetSource: TNyxText;
+begin
+  Result := JoinSourceFrame([FPrefix, FBody, FSuffix]);
 end;
 
 function TNyxSourceWorkspace.Capture: TNyxSourceCheckpoint;

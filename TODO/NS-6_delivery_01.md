@@ -58,8 +58,10 @@ See [the guide](../docs/studio-releases.md) and [current evidence](../WORK.md).
 No complete original criterion closes. Delivery no-closure advances 1→2 once;
 the warning inventory remains ended. Return to the existing service/reload and
 workflow owners for session preservation and observing HTTP qualification; the
-typed runtime-root boundary now has integrated protocol/worker evidence under
-NS-5, without another delivery count or criterion credit. Native Studio packaging
+typed runtime-root and native session/history boundaries now have integrated
+protocol/worker/recovery evidence under NS-5, without another delivery count or
+criterion credit. The protected older-service migration and observing HTTP gates
+remain open. Native Studio packaging
 and the supported-platform CI matrix
 remain open. No task moves to DONE.
 

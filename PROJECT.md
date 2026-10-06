@@ -70,8 +70,11 @@ Pascal release preparation freezes compiler sources before compiling the backend
 browser editor, worker and preview. One typed host directory value now separates
 that verified payload from writable runtime and enrollment roots, including copied
 compiler-worker values. Real browser/LCL jobs retain exact companions and leave
-the payload unchanged; both produced applications execute. This is staging;
-session/history restart preservation and the observing HTTP rollout remain open.
+the payload unchanged; both produced applications execute. The native protocol
+now checkpoints actual project sessions, paired history, navigation and drafts
+before acknowledging durable changes. Fresh-process recovery and denied-write
+rollback are qualified; migrating the protected older service and the observing
+HTTP rollout remain open. This is staging.
 See [the guide](docs/studio-releases.md) and [current evidence](WORK.md#separate-release-runtime--2026-10-06).
 
 Studio's ordinary Properties now consumes a public Nyx recipe editor with typed

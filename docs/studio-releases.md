@@ -87,10 +87,54 @@ and closes the resulting native application. This is separate from the always-ru
 29 manifest/refusal checks. Browser execution requires a separately hosted artifact;
 the runtime check alone does not prove browser interaction or authenticated HTTP.
 
-Open project sessions, navigation, drafts and Undo/Redo history remain memory-only.
-Explicit restart preservation and the observing HTTP rollout are still required
-within the existing service/reload and workflow owners. Saved project pairs alone
-do not satisfy that session-preservation gate.
+The opt-in runtime check also compiles the native session/recovery consumers
+against the frozen payload. It exercises ordinary engine recreation, denied writes
+and an owned producer terminated before graceful shutdown, followed by a fresh
+recovery process. Shared ownership checks execute natively; the maintained browser
+fixture separately executes the same portable recovery/clone contract.
+
+## Runtime session recovery
+
+Current native hosts automatically maintain `.local/studio-session.nyx` beneath
+the writable runtime root. This private version-1 checkpoint retains the primary
+and up to eight ordinary projects: exact accepted design/Pascal files, pending
+draft/base (including an empty draft), selection, active view, naming counter,
+revision, agent enablement, registry identities and paired Undo/Redo entries.
+Project exports remain portable and independent of this runtime file.
+
+Editor commits/history/configuration, semantic durable mutations and ordinary
+project creation/closure use the existing serialized document boundary. Each call
+prepares independent rollback owners, stages the operation and publishes the
+checkpoint before acknowledgment. A failed write restores the complete in-memory
+baseline, including transient retry/ticket values, and returns a refusal. Read-only
+queries do not rewrite the checkpoint. A process-lifetime lock prevents two new
+hosts from sharing one runtime; the OS releases it after abrupt termination.
+
+Recovery admits every complete project/history pair before publishing new owners.
+Missing files allow first launch; corrupt, appended, unsupported-version or invalid
+state refuses launch before MCP enrollment, retaining the input file. This avoids
+silently replacing recoverable work with a sample. Keep the failed runtime intact
+for diagnosis and explicitly choose a separate runtime if starting independently.
+
+The stream caps the file at 512 MiB, each UTF-8 field at 4 MiB, nine sessions and
+fifty total paired history entries per session. Its trailing MD5 is an accidental
+integrity check. A unique sibling is flushed and closed before same-directory
+replacement; Windows uses the replacement/write-through flags from
+[MoveFileExW](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefileexw).
+The Windows qualification covers process termination and denied replacement;
+it does not establish hardware power-loss or other-OS/filesystem durability.
+
+Connection credentials, activity/presence, retry authority, review tickets and
+compiler jobs expire at restart. They are excluded from the checkpoint; each new
+host rotates and enrolls its connection authority. Ordinary project handles and
+operator enablement remain durable. The portable clone/recovery values work on
+both compiler targets; disk ownership and OS replacement stay native host concerns.
+
+The protected running older server predates this recovery contract and cannot
+export its complete history. Its CanUndo/CanRedo flags establish availability,
+not serialized stacks. A preservation bridge and observing HTTP rollout remain
+required within the existing service/reload and workflow owners. A staged current
+candidate is not authority to replace a protected service or discard its history.
 
 A compiled candidate does not update the running MCP schema. Recipe editing over
 authenticated HTTP and full observing browser Studio must be checked after a

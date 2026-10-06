@@ -43,10 +43,24 @@ type
     primary project's pending draft; an empty project copies no authored data. }
   TNyxWorkspaceBase = (nwbEmpty, nwbAccepted);
 
+  { Value-only native checkpoint. Registry identity/serial preserve ordinary
+    project handles and prevent reuse after closing/reopening across a restart.
+    Presence and transport-owned creation receipts are not durable user work. }
+  TNyxWorkspaceRecoveryFrame = record
+    Identity: TNyxText;
+    Serial: Integer;
+    Entries: array of record
+      Reference: TNyxWorkspaceRef;
+      LabelText: TNyxText;
+      Session: TNyxAgentRecoveryFrame;
+    end;
+  end;
+
   { Owns eight ordinary independent project sessions beside a borrowed primary
-    session. These projects survive agent disconnection; server shutdown or an
-    explicit trusted operator close ends their lifetime. This is open-session
-    retention, not disk persistence. Every borrowed session pointer is valid
+    session. These projects survive agent disconnection. This manager owns their
+    in-memory lifetime; the native host separately checkpoints/restores admitted
+    recovery values across shutdown. A trusted operator close removes the session
+    from both the current registry and its next durable frame. Every borrowed pointer is valid
     only under the owner's existing document lock. Workers capture owned text.
     No browser's currently displayed project is stored here: callers always
     resolve their own reference and switching an editor cannot retarget them. }
@@ -84,6 +98,17 @@ type
     procedure Touch(const AOwner, AActor: TNyxText; const AReference: TNyxWorkspaceRef);
   public
     constructor Create(APrimary: TNyxAgentSession; const AServiceIdentity: TNyxText);
+    { Codec has admitted every child history pair before this atomic candidate
+      registry is returned. Primary remains borrowed and must outlive the result. }
+    constructor CreateRecovered(APrimary: TNyxAgentSession;
+      const AFrame: TNyxWorkspaceRecoveryFrame);
+    { Independent immutable authoring values for every ordinary project. }
+    function RecoveryFrame: TNyxWorkspaceRecoveryFrame;
+    { Small registry/session dirty metadata; contains no complete paired files. }
+    function RecoveryStamp: TNyxText;
+    { Copy all mutable child owners and transient presence/receipts. The caller
+      supplies its independent primary; no original child session is borrowed. }
+    function Clone(APrimary: TNyxAgentSession): TNyxStudioWorkspaces;
     destructor Destroy; override;
     { Admit a full independent pair before publishing a project handle. Failed
       source/model admission leaves the registry and primary project untouched. }
@@ -216,6 +241,102 @@ begin
   end;
   FPrimary := APrimary;
   FIdentity := AServiceIdentity;
+end;
+
+constructor TNyxStudioWorkspaces.CreateRecovered(APrimary: TNyxAgentSession;
+  const AFrame: TNyxWorkspaceRecoveryFrame);
+var
+  LIndex: Integer;
+  LPrior: Integer;
+  LNumber: Integer;
+  LPrefix: TNyxText;
+  LSuffix: TNyxText;
+begin
+  Create(APrimary, AFrame.Identity);
+
+  if (AFrame.Serial < 0) or (Length(AFrame.Entries) > 8) then
+  begin
+    raise ENyxModel.Create('Recovery project registry exceeds its budget');
+  end;
+  FSerial := AFrame.Serial;
+  LPrefix := FIdentity + '.project-';
+  SetLength(FEntries, Length(AFrame.Entries));
+  for LIndex := 0 to High(AFrame.Entries) do
+  begin
+    LSuffix := Copy(AFrame.Entries[LIndex].Reference.ID, Length(LPrefix) + 1, MaxInt);
+
+    if (Copy(AFrame.Entries[LIndex].Reference.ID, 1, Length(LPrefix)) <> LPrefix) or
+      not TryStrToInt(LSuffix, LNumber) or (LNumber < 1) or (LNumber > FSerial) or
+      (IntToStr(LNumber) <> LSuffix) or (AFrame.Entries[LIndex].LabelText = '') or
+      (NyxTextScalarCount(AFrame.Entries[LIndex].LabelText) > 256) then
+    begin
+      raise ENyxModel.Create('Recovery project identity/label is not admitted');
+    end;
+    for LPrior := 0 to LIndex - 1 do
+    begin
+
+      if AFrame.Entries[LPrior].Reference.ID = AFrame.Entries[LIndex].Reference.ID then
+      begin
+        raise ENyxModel.Create('Recovery project identity is duplicated');
+      end;
+    end;
+    FEntries[LIndex].Reference := AFrame.Entries[LIndex].Reference;
+    FEntries[LIndex].LabelText := AFrame.Entries[LIndex].LabelText;
+    FEntries[LIndex].Session := TNyxAgentSession.CreateRecovered(AFrame.Entries[LIndex].Session);
+  end;
+end;
+
+function TNyxStudioWorkspaces.RecoveryFrame: TNyxWorkspaceRecoveryFrame;
+var
+  LIndex: Integer;
+begin
+  Result.Identity := FIdentity;
+  Result.Serial := FSerial;
+  SetLength(Result.Entries, Length(FEntries));
+  for LIndex := 0 to High(FEntries) do
+  begin
+    Result.Entries[LIndex].Reference := FEntries[LIndex].Reference;
+    Result.Entries[LIndex].LabelText := FEntries[LIndex].LabelText;
+    Result.Entries[LIndex].Session := FEntries[LIndex].Session.RecoveryFrame;
+  end;
+end;
+
+function TNyxStudioWorkspaces.RecoveryStamp: TNyxText;
+var
+  LValues: array of TNyxDataValue;
+  LIndex: Integer;
+begin
+  SetLength(LValues, Length(FEntries));
+  for LIndex := 0 to High(FEntries) do
+  begin
+    LValues[LIndex] := NyxObject([NyxField('id', NyxData(FEntries[LIndex].Reference.ID)),
+      NyxField('state', NyxData(FEntries[LIndex].Session.RecoveryStamp))]);
+  end;
+  Result := NyxObject([NyxField('identity', NyxData(FIdentity)),
+    NyxField('serial', NyxData(FSerial)), NyxField('entries', NyxArray(LValues))]).ToJSON;
+end;
+
+function TNyxStudioWorkspaces.Clone(APrimary: TNyxAgentSession): TNyxStudioWorkspaces;
+var
+  LIndex: Integer;
+begin
+  Result := TNyxStudioWorkspaces.Create(APrimary, FIdentity);
+  try
+    Result.FSerial := FSerial;
+    Result.FPresenceSerial := FPresenceSerial;
+    Result.FPresence := Copy(FPresence);
+    Result.FReceipts := Copy(FReceipts);
+    SetLength(Result.FEntries, Length(FEntries));
+    for LIndex := 0 to High(FEntries) do
+    begin
+      Result.FEntries[LIndex].Reference := FEntries[LIndex].Reference;
+      Result.FEntries[LIndex].LabelText := FEntries[LIndex].LabelText;
+      Result.FEntries[LIndex].Session := FEntries[LIndex].Session.Clone;
+    end;
+  except
+    Result.Free;
+    raise;
+  end;
 end;
 
 destructor TNyxStudioWorkspaces.Destroy;

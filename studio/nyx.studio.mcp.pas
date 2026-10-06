@@ -29,7 +29,8 @@ interface
 uses
   Classes, SysUtils, SyncObjs, fphttpserver, httpdefs, Process, base64,
   nyx.text, nyx.data, nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs,
-  nyx.studio.reviews, nyx.studio.workspaces, nyx.presentations, nyx.studio.directories;
+  nyx.studio.reviews, nyx.studio.workspaces, nyx.presentations, nyx.studio.directories,
+  nyx.studio.recovery;
 
 type
   { Authority is supplied by the authenticated transport, never client JSON.
@@ -56,6 +57,7 @@ type
     FCore: TNyxAgentSession;
     FReviews: TNyxReviewWorkspaces;
     FWorkspaces: TNyxStudioWorkspaces;
+    FRecovery: TNyxStudioRuntimeStore;
     FBuilds: TNyxBuildJobs;
     FID: TNyxText;
     FToken: TNyxText;
@@ -86,6 +88,8 @@ type
       const AActor, AOwner: TNyxText;
       AAuthority: TNyxBuildAuthority = baAgent): TNyxDataValue;
     procedure PollBuilds;
+    procedure FinishDocumentChange(var ARollback: TNyxStudioRuntimeRollback);
+    procedure RestoreDocumentChange(var ARollback: TNyxStudioRuntimeRollback);
     function EditorState(const ARequest: TNyxDataValue): TNyxDataValue;
     function ReviewViews: TNyxDataValue;
     { One explicit scope is admitted before every read/edit/build/preview.
@@ -111,6 +115,13 @@ type
     function ConnectEditor(const ARequest: TNyxDataValue): TNyxDataValue;
     function EditorExchange(const AToken: TNyxText;
       const ARequest: TNyxDataValue): TNyxDataValue;
+    { Trusted native hosting seam used by the authenticated MCP ordinary-tool
+      route. It owns locking, semantic dispatch and durable admission together.
+      Host supplies the already authenticated private owner/display actor; neither
+      comes from tool arguments. This is not an additional network endpoint.
+      Build/preview keep their separately owned external-work paths. }
+    function InvokeTool(const ATool, AOwner, AActor: TNyxText;
+      const AArguments: TNyxDataValue): TNyxDataValue;
     function PreviewData(const AToken: TNyxText): TNyxText;
     { Read-only operator observation of accepted review design. Unchanged
       revisions return metadata only. Retired capabilities return empty text;
@@ -136,7 +147,7 @@ implementation
 uses
   nyx.studio.mcpconfig, nyx.types, nyx.studio.builds, nyx.studio.compiler,
   nyx.model, nyx.codec, nyx.studio.outputs, nyx.studio.stateedits,
-  nyx.studio.collectionedits;
+  nyx.studio.collectionedits, nyx.editing;
 
 function NewCapability: TNyxText;
 var
@@ -263,6 +274,9 @@ end;
 
 constructor TNyxStudioMCP.Create(const ADirectories: TNyxStudioDirectories;
   AStudioPort, AMCPPort: Integer; const AOutputProfile: TNyxText);
+var
+  LRestoredCore: TNyxAgentSession;
+  LRestoredWorkspaces: TNyxStudioWorkspaces;
 begin
   inherited Create(True);
   FreeOnTerminate := False;
@@ -281,8 +295,17 @@ begin
   FGuard := SyncObjs.TCriticalSection.Create;
   FCore := TNyxAgentSession.Create;
   FBuilds := TNyxBuildJobs.Create(FDirectories, AOutputProfile);
-  FReviews := TNyxReviewWorkspaces.Create(FCore);
   FWorkspaces := TNyxStudioWorkspaces.Create(FCore, FID);
+  FRecovery := TNyxStudioRuntimeStore.Create(FDirectories);
+
+  if FRecovery.Load(LRestoredCore, LRestoredWorkspaces) then
+  begin
+    FWorkspaces.Free;
+    FCore.Free;
+    FCore := LRestoredCore;
+    FWorkspaces := LRestoredWorkspaces;
+  end;
+  FReviews := TNyxReviewWorkspaces.Create(FCore);
   FHTTP := TNyxMCPHTTP.Create(nil);
   FHTTP.Address := '127.0.0.1';
   FHTTP.Port := FPort;
@@ -308,6 +331,7 @@ begin
   FReviews.Free;
   FWorkspaces.Free;
   FCore.Free;
+  FRecovery.Free;
   FGuard.Free;
   inherited Destroy;
 end;
@@ -366,25 +390,39 @@ begin
 end;
 
 function TNyxStudioMCP.ConnectEditor(const ARequest: TNyxDataValue): TNyxDataValue;
+var
+  LRollback: TNyxStudioRuntimeRollback;
 begin
   if ARequest.Field('op').AsText <> 'claim' then
   begin
     raise ENyxProjectConflict.Create('Connect an editor with its explicit paired project');
   end;
   FGuard.Acquire;
+  LRollback := nil;
   try
     PollBuilds;
-    Result := NyxObject([NyxField('token', NyxData(FEditorToken)),
-      NyxField('endpoint', NyxData(Endpoint)),
-      NyxField('warning', NyxData(FConfigurationIssue + FFailure)),
-      NyxField('state', EditorState(ARequest))]);
+    LRollback := TNyxStudioRuntimeRollback.Create(FCore, FWorkspaces);
+    try
+      Result := NyxObject([NyxField('token', NyxData(FEditorToken)),
+        NyxField('endpoint', NyxData(Endpoint)),
+        NyxField('warning', NyxData(FConfigurationIssue + FFailure)),
+        NyxField('state', EditorState(ARequest))]);
+      FinishDocumentChange(LRollback);
+    except
+      RestoreDocumentChange(LRollback);
+      raise;
+    end;
   finally
+    LRollback.Free;
     FGuard.Release;
   end;
 end;
 
 function TNyxStudioMCP.EditorExchange(const AToken: TNyxText;
   const ARequest: TNyxDataValue): TNyxDataValue;
+var
+  LRollback: TNyxStudioRuntimeRollback;
+  LOperation: TNyxText;
 begin
 
   if AToken <> FEditorToken then
@@ -392,10 +430,142 @@ begin
     raise ENyxProjectConflict.Create('Editor connection capability is missing or expired');
   end;
   FGuard.Acquire;
+  LRollback := nil;
   try
     PollBuilds;
-    Result := EditorState(ARequest);
+    LOperation := ARequest.Field('op').AsText;
+
+    if (LOperation = 'claim') or (LOperation = 'commit') or
+      (LOperation = 'configure') or (LOperation = 'history') or
+      (LOperation = 'close-workspace') then
+    begin
+      LRollback := TNyxStudioRuntimeRollback.Create(FCore, FWorkspaces);
+    end;
+    try
+      Result := EditorState(ARequest);
+      FinishDocumentChange(LRollback);
+    except
+      RestoreDocumentChange(LRollback);
+      raise;
+    end;
   finally
+    LRollback.Free;
+    FGuard.Release;
+  end;
+end;
+
+procedure TNyxStudioMCP.RestoreDocumentChange(var ARollback: TNyxStudioRuntimeRollback);
+var
+  LPreviousCore: TNyxAgentSession;
+  LPreviousWorkspaces: TNyxStudioWorkspaces;
+begin
+
+  if ARollback = nil then
+  begin
+    Exit;
+  end;
+  { Every replacement owner was prepared before mutation. Publication contains
+    no parsing, filesystem access or allocation; independent reviews only rebind
+    their borrowed primary before former owners are released. Workers own text. }
+  LPreviousCore := FCore;
+  LPreviousWorkspaces := FWorkspaces;
+  FReviews.RebindActive(ARollback.Primary);
+  FCore := ARollback.Primary;
+  FWorkspaces := ARollback.Workspaces;
+  ARollback.Primary := nil;
+  ARollback.Workspaces := nil;
+  FreeAndNil(ARollback);
+  LPreviousWorkspaces.Free;
+  LPreviousCore.Free;
+end;
+
+procedure TNyxStudioMCP.FinishDocumentChange(var ARollback: TNyxStudioRuntimeRollback);
+begin
+
+  if ARollback = nil then
+  begin
+    Exit;
+  end;
+
+  if ARollback.Changed(FCore, FWorkspaces) then
+  begin
+    FRecovery.Save(FCore, FWorkspaces);
+  end;
+  FreeAndNil(ARollback);
+end;
+
+function DurableTool(const ATool: TNyxText; const AArguments: TNyxDataValue): Boolean;
+var
+  LMode: TNyxText;
+begin
+  { Names/modes belong only to the MCP wire boundary, never application authoring.
+    Review-local work expires with its transport and cannot change user projects. }
+  Result := False;
+
+  if NyxAgentHas(AArguments, 'review') then
+  begin
+    Exit;
+  end;
+  Result := (ATool = 'nyx_transaction') or (ATool = 'nyx_select') or
+    (ATool = 'nyx_history');
+
+  if NyxAgentHas(AArguments, 'mode') then
+  begin
+    LMode := AArguments.Field('mode').AsText;
+    Result := Result or ((ATool = 'nyx_workspaces') and (LMode = 'create')) or
+      (((ATool = 'nyx_callbacks') or (ATool = 'nyx_pascal') or
+        (ATool = 'nyx_roots') or (ATool = 'nyx_state') or
+        (ATool = 'nyx_collections')) and (LMode = 'apply')) or
+      ((ATool = 'nyx_pascal') and ((LMode = 'edit-imports') or
+        (LMode = 'edit-routines') or (LMode = 'edit-declarations')));
+  end;
+end;
+
+function TNyxStudioMCP.InvokeTool(const ATool, AOwner, AActor: TNyxText;
+  const AArguments: TNyxDataValue): TNyxDataValue;
+var
+  LRollback: TNyxStudioRuntimeRollback;
+begin
+
+  if (AOwner = '') or (AActor = '') or (NyxTextScalarCount(AOwner) > 120) or
+    (NyxTextScalarCount(AActor) > 120) or (ATool = 'nyx_build') or (ATool = 'nyx_preview') then
+  begin
+    raise ENyxProjectConflict.Create('Ordinary tool dispatch requires a trusted bounded transport context');
+  end;
+  LRollback := nil;
+  FGuard.Acquire;
+  try
+    PollBuilds;
+
+    if DurableTool(ATool, AArguments) then
+    begin
+      LRollback := TNyxStudioRuntimeRollback.Create(FCore, FWorkspaces);
+    end;
+    try
+
+      if ATool = 'nyx_workspaces' then
+      begin
+        Result := FWorkspaces.Manage(AOwner, AActor, AArguments);
+      end
+      else if NyxAgentHas(AArguments, 'workspace') then
+      begin
+        Result := FWorkspaces.Call(ATool, AOwner, AActor, AArguments);
+      end
+      else
+      begin
+        Result := FReviews.Call(ATool, AOwner, AActor, AArguments);
+      end;
+      FinishDocumentChange(LRollback);
+    except
+      on LException: Exception do
+      begin
+        RestoreDocumentChange(LRollback);
+        FCore.RecordActivity(AActor, ATool, 'refused: ' + LException.Message);
+        raise;
+      end;
+    end;
+  finally
+    LRollback.Free;
     FGuard.Release;
   end;
 end;
@@ -1816,28 +1986,8 @@ begin
         end
         else
         begin
-          FGuard.Acquire;
-          try
-            PollBuilds;
-            if LTool = 'nyx_workspaces' then
-            begin
-              LResult := FWorkspaces.Manage(LClientID,
-                FClients[LIndex].Field('actor').AsText, LArguments);
-            end
-            else if NyxAgentHas(LArguments, 'workspace') then
-            begin
-              LResult := FWorkspaces.Call(LTool, LClientID,
-                FClients[LIndex].Field('actor').AsText, LArguments);
-            end
-            else
-            begin
-              LResult := FReviews.Call(LTool, LClientID,
-                FClients[LIndex].Field('actor').AsText, LArguments);
-            end;
-            LResult := ToolResult(LResult);
-          finally
-            FGuard.Release;
-          end;
+          LResult := ToolResult(InvokeTool(LTool, LClientID,
+            FClients[LIndex].Field('actor').AsText, LArguments));
         end;
       except
         on LException: Exception do

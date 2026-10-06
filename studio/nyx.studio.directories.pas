@@ -51,6 +51,7 @@ type
     function GetProjects: TNyxText;
     function GetOutputProfile: TNyxText;
     function GetPreviews: TNyxText;
+    function GetSessionCheckpoint: TNyxText;
   public
     { Backward-compatible development layout, including repositories created by
       local test hosts. Filesystem creation belongs to the actual host consumer. }
@@ -77,6 +78,8 @@ type
     property Projects: TNyxText read GetProjects;
     property OutputProfile: TNyxText read GetOutputProfile;
     property Previews: TNyxText read GetPreviews;
+    { Native private session/history recovery; never an exported design member. }
+    property SessionCheckpoint: TNyxText read GetSessionCheckpoint;
   end;
 
 implementation
@@ -210,6 +213,11 @@ end;
 function TNyxStudioDirectories.GetPreviews: TNyxText;
 begin
   Result := FRuntimeRoot + 'build' + PathDelim + 'agent-previews' + PathDelim;
+end;
+
+function TNyxStudioDirectories.GetSessionCheckpoint: TNyxText;
+begin
+  Result := FRuntimeRoot + '.local' + PathDelim + 'studio-session.nyx';
 end;
 
 end.

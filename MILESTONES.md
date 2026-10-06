@@ -10,10 +10,15 @@ companions and the pristine payload; both produced applications execute. Reposit
 compatibility passes the existing resource regression. No protected service changes
 or observing release is claimed. This accepts the bounded directory boundary,
 not the full original criterion; existing authoring 26, renderer 7, workflow 9,
-codegen 28 and delivery 2 counts remain. Stop directory/packaging fixtures and follow
-memory-only session/history preservation before the authenticated recipe rollout.
+codegen 28 and delivery 2 counts remain. Versioned native checkpoints now retain
+actual protocol projects, drafts/navigation and paired Undo/Redo through graceful
+recreation and abrupt owned-process termination. Failed durable writes restore
+exact independent mutable owners before refusal; credentials are ephemeral.
+Stop directory/recovery fixtures and follow the protected older-service migration
+gap before the authenticated recipe rollout. Availability flags on that older
+service cannot export its complete history and do not satisfy migration.
 Original parity/accessibility/performance/delivery criteria remain unchanged. See
-[evidence and return path](WORK.md#separate-release-runtime--2026-10-06).
+[evidence and return path](WORK.md#session-recovery--2026-10-06).
 
 Previous frozen-release prerequisite (2026-10-06): a maintained Pascal preparer
 freezes compiler sources before backend/editor/worker/preview compilation and

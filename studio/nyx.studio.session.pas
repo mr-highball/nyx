@@ -290,6 +290,20 @@ type
   { Closed command destination; extension names and values remain typed data. }
   TNyxStudioExtensionOwner = (seoDocument, seoSelection);
 
+  { Trusted recovery value, independent of any filesystem or target control.
+    History entries are immutable admitted source checkpoints, ordered oldest
+    first. The native recovery codec admits every paired history entry before
+    constructing a session. Arrays returned by RecoveryFrame are independent;
+    their values retain no mutable document, renderer or session owner. }
+  TNyxStudioRecoveryFrame = record
+    Pair: TNyxProjectPair;
+    Selection: TNyxText;
+    View: TNyxText;
+    NextID: Integer;
+    Undo: array of TNyxSourceCheckpoint;
+    Redo: array of TNyxSourceCheckpoint;
+  end;
+
   { Portable designer state, independent of Studio's browser/native shell.
     Commands operate on the same owned document applications consume. Snapshots
     provide deterministic reversible history and never retain renderer handles.
@@ -367,6 +381,22 @@ type
       the demonstration project first. History starts empty. Failed admission
       frees all candidate/session owners; no caller's document is borrowed. }
     constructor Create(const APair: TNyxProjectPair); overload;
+    { Stages the accepted pair and navigation before returning a new owner. The
+      trusted codec supplies admitted immutable history; default checkpoints and
+      out-of-range counters/counts refuse. A failure frees the complete candidate. }
+    constructor CreateRecovered(const AFrame: TNyxStudioRecoveryFrame);
+    { Equivalent owned rollback constructor; does not consume AOrigin and uses
+      its exact existing command identity. Intended for the serialized host. }
+    constructor CreateCopy(AOrigin: TNyxStudioSession);
+    { Independent owned model/source/history copy for a host transaction rollback.
+      The accepted tree is cloned without reparsing Pascal. Queued contexts and
+      transient placement remain exact; no mutable owner is shared. }
+    function Clone: TNyxStudioSession;
+    { Complete immutable paired/history values for a trusted native codec. }
+    function RecoveryFrame: TNyxStudioRecoveryFrame;
+    { Cheap copied durable metadata. Queries need not serialize all paired files
+      or history to determine whether a host checkpoint needs replacement. }
+    function RecoveryStamp: TNyxText;
     destructor Destroy; override;
     function Selected: TNyxNode;
     function ActiveView: TNyxNode;
@@ -606,6 +636,117 @@ end;
 procedure TSourcePairPublication.Execute;
 begin
   Session.PublishCapturedPair(Document, Workspace, Checkpoint);
+end;
+
+constructor TNyxStudioSession.CreateRecovered(const AFrame: TNyxStudioRecoveryFrame);
+var
+  LIndex: Integer;
+begin
+  Create(AFrame.Pair);
+
+  if (AFrame.NextID < 0) or (Length(AFrame.Undo) + Length(AFrame.Redo) > 50) then
+  begin
+    raise ENyxModel.Create('Recovery counters/history exceed the session budget');
+  end;
+
+  if ((AFrame.Selection <> '') and (FDocument.Find(AFrame.Selection) = nil)) or
+    ((AFrame.View <> '') and ((FDocument.Find(AFrame.View) = nil) or
+      (FDocument.Find(AFrame.View).Parent <> nil))) then
+  begin
+    raise ENyxModel.Create('Recovery navigation is outside the accepted document');
+  end;
+  for LIndex := 0 to High(AFrame.Undo) do
+  begin
+
+    if AFrame.Undo[LIndex].Design = '' then
+    begin
+      raise ENyxModel.Create('Recovery Undo checkpoint is not admitted');
+    end;
+    FUndo.Add(AFrame.Undo[LIndex]);
+  end;
+  for LIndex := 0 to High(AFrame.Redo) do
+  begin
+
+    if AFrame.Redo[LIndex].Design = '' then
+    begin
+      raise ENyxModel.Create('Recovery Redo checkpoint is not admitted');
+    end;
+    FRedo.Add(AFrame.Redo[LIndex]);
+  end;
+  FSelectedID := AFrame.Selection;
+  FActiveViewID := AFrame.View;
+  FNextID := AFrame.NextID;
+end;
+
+function TNyxStudioSession.RecoveryFrame: TNyxStudioRecoveryFrame;
+var
+  LIndex: Integer;
+begin
+  Result.Pair := ProjectSnapshot;
+  Result.Selection := FSelectedID;
+  Result.View := FActiveViewID;
+  Result.NextID := FNextID;
+  SetLength(Result.Undo, FUndo.Count);
+  SetLength(Result.Redo, FRedo.Count);
+  for LIndex := 0 to FUndo.Count - 1 do
+  begin
+    Result.Undo[LIndex] := FUndo.Entry(LIndex);
+  end;
+  for LIndex := 0 to FRedo.Count - 1 do
+  begin
+    Result.Redo[LIndex] := FRedo.Entry(LIndex);
+  end;
+end;
+
+function TNyxStudioSession.RecoveryStamp: TNyxText;
+begin
+  Result := NyxObject([NyxField('selection', NyxData(FSelectedID)),
+    NyxField('view', NyxData(FActiveViewID)), NyxField('nextID', NyxData(FNextID)),
+    NyxField('undo', NyxData(FUndo.Count)), NyxField('redo', NyxData(FRedo.Count))]).ToJSON;
+end;
+
+function TNyxStudioSession.Clone: TNyxStudioSession;
+begin
+  Result := TNyxStudioSession.CreateCopy(Self);
+end;
+
+constructor TNyxStudioSession.CreateCopy(AOrigin: TNyxStudioSession);
+var
+  LIndex: Integer;
+begin
+  inherited Create;
+
+  if AOrigin = nil then
+  begin
+    raise ENyxModel.Create('A session rollback copy requires its origin');
+  end;
+  FCatalog := TNyxCatalog.Create;
+  FUndo := TNyxStudioHistory.Create;
+  FRedo := TNyxStudioHistory.Create;
+  FSourceWorkspace := TNyxSourceWorkspace.Create;
+  FDocument := AOrigin.FDocument.Clone;
+  FSourceWorkspace.Restore(AOrigin.FSourceWorkspace.Capture(AOrigin.FDocument));
+  for LIndex := 0 to AOrigin.FUndo.Count - 1 do
+  begin
+    FUndo.Add(AOrigin.FUndo.Entry(LIndex));
+  end;
+  for LIndex := 0 to AOrigin.FRedo.Count - 1 do
+  begin
+    FRedo.Add(AOrigin.FRedo.Entry(LIndex));
+  end;
+  FSourceDraft := AOrigin.FSourceDraft;
+  FSourceDraftBase := AOrigin.FSourceDraftBase;
+  FSourceDraftPending := AOrigin.FSourceDraftPending;
+  FSourceDiagnostic := AOrigin.FSourceDiagnostic;
+  FSourceDiagnosticSource := AOrigin.FSourceDiagnosticSource;
+  FSourceIdentity := AOrigin.FSourceIdentity;
+  FSourceGeneration := AOrigin.FSourceGeneration;
+  FSelectedID := AOrigin.FSelectedID;
+  FActiveViewID := AOrigin.FActiveViewID;
+  FNextID := AOrigin.FNextID;
+  FPlacementSource := AOrigin.FPlacementSource;
+  FPlacementContext := AOrigin.FPlacementContext;
+  FPlacementPair := AOrigin.FPlacementPair;
 end;
 
 constructor TNyxStudioSession.Create;

@@ -49,6 +49,9 @@ type
       references are released when an entry leaves the history. }
     procedure Delete(AIndex: Integer);
     procedure Clear;
+    { Borrow-free immutable value at the exact oldest-to-newest index. Invalid
+      indexes refuse; callers never receive the mutable backing array. }
+    function Entry(AIndex: Integer): TNyxSourceCheckpoint;
     property Count: Integer read GetCount;
     property Last: TNyxSourceCheckpoint read GetLast;
     property StorageBytes: TNyxTextBytes read FStorageBytes;
@@ -72,6 +75,16 @@ begin
     raise ERangeError.Create('History has no checkpoint');
   end;
   Result := FEntries[Count - 1];
+end;
+
+function TNyxStudioHistory.Entry(AIndex: Integer): TNyxSourceCheckpoint;
+begin
+
+  if (AIndex < 0) or (AIndex >= Count) then
+  begin
+    raise ERangeError.Create('Invalid history checkpoint index');
+  end;
+  Result := FEntries[AIndex];
 end;
 
 procedure TNyxStudioHistory.Add(const ACheckpoint: TNyxSourceCheckpoint);

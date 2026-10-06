@@ -36,6 +36,16 @@ type
     Only the editor exchange can change them. MCP cannot grant itself access. }
   TNyxAgentPermission = (apDisabled, apReadOnly, apEdit);
 
+  { Private host recovery contains authoring state and operator permission only.
+    Transport credentials, receipts, removal-review tickets, activity and compiler
+    callbacks deliberately expire with their owning connection/process. }
+  TNyxAgentRecoveryFrame = record
+    Session: TNyxStudioRecoveryFrame;
+    Revision: Integer;
+    Permission: TNyxAgentPermission;
+    Claimed: Boolean;
+  end;
+
   { One active, authoritative authoring session. Owns the ordinary Studio model
     and source/history; no shadow design format or browser automation exists.
     Native transports serialize all calls under an external lock. Portable tests
@@ -99,6 +109,18 @@ type
     { Trusted independent review seed; accepts an owned pair through ordinary
       Studio admission and empty history, without a sample/claim replacement. }
     constructor Create(const APair: TNyxProjectPair); overload;
+    { New authoring owner from admitted durable values. Connection state expires. }
+    constructor CreateRecovered(const AFrame: TNyxAgentRecoveryFrame);
+    { Equivalent owned rollback constructor; origin remains wholly borrowed. }
+    constructor CreateCopy(AOrigin: TNyxAgentSession);
+    { Owned in-process rollback copy includes transient authority and retry state.
+      This is never serialized; immutable commands/reports retain managed values,
+      while the mutable Studio session and every backing array are independent. }
+    function Clone: TNyxAgentSession;
+    { Durable authoring values, excluding all transient transport authority. }
+    function RecoveryFrame: TNyxAgentRecoveryFrame;
+    { Small copied dirty metadata, independent of whole-document/history size. }
+    function RecoveryStamp: TNyxText;
     destructor Destroy; override;
     { Arguments are admitted JSON data at this explicit semantic boundary.
       Results are bounded immutable copies. Rejected operations retain accepted
@@ -348,6 +370,67 @@ begin
   Result := NyxObject([NyxField('id', NyxData(ANode.ID)),
     NyxField('kind', NyxData(ANode.Kind)), NyxField('parent', NyxData(LParent)),
     NyxField('childCount', NyxData(ANode.Count))]);
+end;
+
+constructor TNyxAgentSession.CreateRecovered(const AFrame: TNyxAgentRecoveryFrame);
+begin
+  inherited Create;
+
+  if AFrame.Revision < 1 then
+  begin
+    raise ENyxModel.Create('Recovery session revision must be positive');
+  end;
+  FSession := TNyxStudioSession.CreateRecovered(AFrame.Session);
+  FRevision := AFrame.Revision;
+  FPermission := AFrame.Permission;
+  FClaimed := AFrame.Claimed;
+end;
+
+function TNyxAgentSession.RecoveryFrame: TNyxAgentRecoveryFrame;
+begin
+  Result.Session := FSession.RecoveryFrame;
+  Result.Revision := FRevision;
+  Result.Permission := FPermission;
+  Result.Claimed := FClaimed;
+end;
+
+function TNyxAgentSession.RecoveryStamp: TNyxText;
+begin
+  Result := NyxObject([NyxField('revision', NyxData(FRevision)),
+    NyxField('permission', NyxData(Ord(FPermission))),
+    NyxField('claimed', NyxData(FClaimed)),
+    NyxField('session', NyxData(FSession.RecoveryStamp))]).ToJSON;
+end;
+
+function TNyxAgentSession.Clone: TNyxAgentSession;
+begin
+  Result := TNyxAgentSession.CreateCopy(Self);
+end;
+
+constructor TNyxAgentSession.CreateCopy(AOrigin: TNyxAgentSession);
+begin
+  inherited Create;
+
+  if AOrigin = nil then
+  begin
+    raise ENyxModel.Create('An agent rollback copy requires its origin');
+  end;
+  FSession := AOrigin.FSession.Clone;
+  FRevision := AOrigin.FRevision;
+  FPermission := AOrigin.FPermission;
+  FClaimed := AOrigin.FClaimed;
+  FActivity := Copy(AOrigin.FActivity);
+  FActivitySerial := AOrigin.FActivitySerial;
+  FReport := AOrigin.FReport;
+  FCompilerSequence := AOrigin.FCompilerSequence;
+  FReceiptKeys := Copy(AOrigin.FReceiptKeys);
+  FReceiptRequests := Copy(AOrigin.FReceiptRequests);
+  FReceiptResults := Copy(AOrigin.FReceiptResults);
+  FCallbackReviews := Copy(AOrigin.FCallbackReviews);
+  FCallbackReviewSerial := AOrigin.FCallbackReviewSerial;
+  FRootReviews := Copy(AOrigin.FRootReviews);
+  FRootRemovals := Copy(AOrigin.FRootRemovals);
+  FRootReviewSerial := AOrigin.FRootReviewSerial;
 end;
 
 constructor TNyxAgentSession.Create;

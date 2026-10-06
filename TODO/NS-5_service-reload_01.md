@@ -20,9 +20,10 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 Release prerequisite (2026-10-06): the NS-6 Pascal preparer now verifies a frozen
 backend/browser/compiler-source bundle. Typed source/runtime/enrollment separation
 now reaches the actual host, protocol and copied compiler-worker values; real
-browser/LCL jobs preserve the pristine payload. Ordinary project sessions and
-history remain memory-only. Explicit session preservation is the next prerequisite
-for a checked observing rollout. Keep
+browser/LCL jobs preserve the pristine payload. Actual protocol project sessions,
+drafts/navigation and paired history now use admitted native recovery values.
+Protected old-service migration and observing HTTP qualification remain separate
+prerequisites for a checked rollout. Keep
 those outcomes within this existing reload/isolation owner and the workflow
 owner; staging accepts no original criterion. See [the release guide](../docs/studio-releases.md).
 
@@ -43,9 +44,33 @@ protected-service restart or running MCP re-enrollment occurs. See
 [evidence](../WORK.md#separate-release-runtime--2026-10-06).
 
 This accepts the bounded directory boundary, not the complete original criterion.
-Stop directory/packaging fixture expansion. Follow memory-only session/history
-preservation before authenticated recipe editing and observing Studio deployment;
+Stop directory/packaging fixture expansion. Follow the session-preservation
+boundary below before authenticated recipe editing and observing Studio deployment;
 cache, cancellation, retention and other original service outcomes remain open.
+
+## Session recovery — 2026-10-06
+
+Criterion 2's accepted-work prerequisite now checkpoints the actual protocol's
+primary and eight ordinary projects, exact accepted companions and pending drafts,
+selection/view/counters, enablement and paired Undo/Redo. The native versioned
+stream is private runtime state; the portable document/Studio model stays free
+of filesystem/platform types. Durable calls publish before acknowledgment and
+restore prepared independent owners if admission or replacement fails.
+
+The qualified Windows runtime refuses a second host using the same directory.
+Graceful recreation, abrupt owned-process termination, expired authority,
+supplementary Unicode, full/closed registry and denied replacement are exercised;
+portable ownership executes in FPC and the browser. See
+[the packet](../WORK.md#session-recovery--2026-10-06) and
+[the recovery contract](../docs/studio-releases.md#runtime-session-recovery).
+
+This accepts the bounded recovery boundary, not the complete original criterion.
+Stop codec/session fixture expansion. The protected running older server cannot
+export complete history; observed CanUndo/CanRedo alone cannot migrate it. Its
+exact process identities and active pairs remain retained. No new listener,
+authenticated deployment, other-OS recovery or power-loss durability is claimed.
+Return to the existing workflow owner for the concrete old-service preservation
+bridge and observing recipe/HTTP journey. Original criteria/blockers stay open.
 
 ## Compiled native preview consumer — 2026-10-05
 

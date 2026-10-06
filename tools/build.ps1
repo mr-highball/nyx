@@ -368,6 +368,27 @@ try {
         [IO.Path]::GetFullPath($ReleaseRuntimeProfile)) $nyxRuntimeSource
 
       if ($LASTEXITCODE -ne 0) { throw 'Integrated frozen release/runtime qualification failed.' }
+      # The same frozen host model admits exact sessions/history and rolls back
+      # denied durable mutations. Its process fixture terminates only its own
+      # producer handle, then resumes in a fresh process; no listener is opened.
+      foreach ($nyxRecoveryName in @('nyx_studio_recovery_tests', 'nyx_studio_recovery_shared')) {
+        Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+          "-Fu$nyxReleaseOutput/src", "-Fu$nyxReleaseOutput/studio", "-Fu$nyxRuntimeSource",
+          "-FU$nyxReleaseChecks", "-FE$nyxReleaseChecks", "tests/$nyxRecoveryName.lpr")
+        $nyxRecoveryTest = Join-Path $nyxReleaseChecks $nyxRecoveryName
+
+        if ($IsWindows) { $nyxRecoveryTest += '.exe' }
+
+        if ($nyxRecoveryName -eq 'nyx_studio_recovery_tests') {
+          & $nyxRecoveryTest (Join-Path $nyxReleaseChecks 'recovery-runtime') $nyxRuntimeSource
+          if ($LASTEXITCODE -ne 0) { throw 'Frozen protocol session recovery qualification failed.' }
+          & $nyxRecoveryTest '--process' (Join-Path $nyxReleaseChecks 'recovery-process') $nyxRuntimeSource
+          if ($LASTEXITCODE -ne 0) { throw 'Frozen abrupt-process recovery qualification failed.' }
+        } else {
+          & $nyxRecoveryTest
+          if ($LASTEXITCODE -ne 0) { throw 'Frozen shared recovery ownership qualification failed.' }
+        }
+      }
     }
     Write-Host 'Frozen Studio release verified. No listener was launched or live release replaced.'
     exit 0
