@@ -9,26 +9,86 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 ## Current return path: recipe editor and semantic release — 2026-10-06
 
-Current batch: NS-5 criterion 1, actual compiler lifecycle. Deliver two running
-slots, an eight-entry FIFO queue, typed queued/running/cancelling/terminal states,
-owned cancellation through the real process executor and explicit process/thread
-joining before slot reuse. Semantic cancellation uses exact project/review,
-trusted connection ownership, expected revision and immutable retry receipts;
-primary build retries must also carry connection identity. Qualify owned delayed
-and flooding Pascal children, queue admission/cancellation, shutdown and real
-compiler compatibility. Stop at that integrated lifecycle boundary. Preserve all
-protected services/pairs; no listener/restart/enrollment or observing rollout.
+Previous goal turn: progress. The compiler lifecycle implementation/evidence and
+its handoff reached the verified remote branch. The reassessment keeps the
+original NS-5 criteria open: direct-process retirement cannot establish helper
+retirement. Complete that concrete boundary instead of adding queue/owner cases.
+
+Current batch: NS-5 criterion 1, owned compiler-family retirement on Windows.
+Deliver an invocation-owned job before the suspended compiler runs, with no
+breakaway/fallback; include helpers in execution budgets, normal completion and
+cancellation retirement. Qualify actual child/grandchild processes, compiler-exit
+before helper-exit, cancellation, deadline/log failure and all-job shutdown, then
+real pas2js/FPC compatibility. Stop at that integrated process-family boundary.
+This is one native compiler-host change; the portable authoring contract stays
+unchanged. Other hosts, UI cancellation and observing deployment remain gates.
+Preserve all protected services/pairs; no listener/restart/enrollment or rollout.
 OS failure to reap a terminated child must retain ownership and remain active;
 never claim a terminal result or bounded OS shutdown from a timeout alone.
 
-Current return: the bounded direct-compiler lifecycle below is qualified. Stop
-queue/owner fixture expansion. Complete process-family retirement (compiler
-linker/helpers), other-host qualification, bounded operator job discovery and
-visible cancellation in both Studio controllers remain in NS-5; the browser's
+Current return: Windows compiler-family retirement below is qualified. Stop
+process-family fixture expansion. Next deliver bounded operator job discovery
+and visible cancellation in both Studio controllers in NS-5; the browser's
 legacy synchronous HTTP build route must join the semantic job workflow before
-claiming editor parity. Protected older-service history migration and observing
+claiming editor parity. Other hosts, crash-atomic compiler creation and OS
+retirement refusal remain hardening/qualification gates. Protected history and observing
 HTTP rollout remain separate gates. Workflow no-closure stays 10; no earlier
 count is reset or an unrecorded NS-5 count invented. Original criteria stay open.
+
+## Windows compiler families — 2026-10-06
+
+NS-5 criterion 1's next lifecycle boundary now owns an unnamed Windows job for
+each compiler invocation. The native adapter creates suspended, assigns before
+resume and refuses incompatible job admission without an uncontained fallback.
+Its handle is not inherited and breakaway is not allowed. Active family accounting
+includes descendants after the compiler exits, independently of inherited pipe
+handles. Normal completion waits for the whole family; cancellation, deadline,
+log/read failure and shutdown terminate the family and join the exact compiler
+before worker completion/slot reuse. A compiler's nonzero exit preserves its
+compiler failure instead of waiting for stranded helpers to mask it as a timeout.
+The portable document/component contract and immutable build receipts are unchanged.
+
+Evidence: `build/compiler-family/` (ignored private artifacts), current source.
+`tools/build.ps1 -Target compiler-lifecycle` passes **129** checked FPC 3.2.0
+actual family/queue/semantic lifecycle checks, **47** retained compiler-job checks
+and **56** portable admission checks, all with **zero native leaks**. The owned
+Pascal fixture publishes actual living compiler/helper/grandchild handles before
+opening its gate. Cancellation after compiler exit, normal helper completion,
+compiler failure, family deadline/log failure, slot reuse and all-job shutdown
+confirm every captured handle exited before publication. The marker reader retries
+transient Windows sharing refusal within its existing bounded polling lifetime.
+
+Current backend and browser Studio/worker/preview compile; the actual shared
+browser consumer executes **56** checks (`browser-capture/capture.dom.html`).
+Current LCL Studio compiles with matched FPC 3.3.1. Owned warnings are zero;
+the four browser compilations retain **28 upstream RTL warnings**, unsuppressed.
+The current host's real pas2js/FPC compatibility consumer passes **39** checks
+with zero leaks, including exact semantic companions/manifests and actual native
+application mount/normal close. Its browser application also mounts from the
+admitted succeeded/current manifest (`application-capture/capture.dom.html`).
+Both browser captures use new three-file children of the unchanged isolated
+static host. Compiler input remains the earlier pristine frozen recovery payload,
+not a newly sealed current-source candidate.
+Final preservation receipt (`preservation.json`) confirms all fifteen exact
+protected process identities, eight exact accepted pairs/navigation/draft/history
+availability states and LAN HTTP 200. This is not a full-history migration receipt.
+The owned qualification processes are terminal; the semantic companion retains
+its previous exact SHA-256.
+
+The existing Pascal semantic client authenticates and inspects the protected
+primary project at revision 2; this chat's cached native MCP handles still refuse
+initialization with HTTP 404. No listener/restart/enrollment/config refresh occurs.
+This does not qualify the newly implemented cancellation via observing HTTP or UI.
+
+Stop family/queue/authority fixture expansion at this boundary. Other native hosts
+retain only direct-process retirement. Windows x64, incompatible outer-job refusal,
+OS query/termination refusal and host death during creation are not exercised.
+The two-call suspended-create/assign window is explicitly not crash-atomic;
+kill-on-close protects assigned members. Atomic job-list creation remains NS-5
+hardening. Bounded job discovery, ordinary browser job integration and visible
+both-adapter cancellation are the next concrete editor deliverable. No original
+criterion or task closes, no historical count resets, and the phone stays on its
+earlier release. Protected full-history migration and observing rollout remain open.
 
 ## Compiler queue and cancellation — 2026-10-06
 

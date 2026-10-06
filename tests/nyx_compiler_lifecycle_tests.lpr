@@ -31,11 +31,34 @@ uses
   nyx.studio.mcp;
 
 type
-  { Native handles identify only children whose ready files were produced by
-    our owned compiler fixture. No service enumeration/termination is used. }
+  { Native handles identify only family members whose ready files were produced
+    by our owned compiler fixture. No service enumeration/termination is used. }
   TChild = record
     PID: Cardinal;
     Handle: THandle;
+    Directory: TNyxText;
+    Role: TNyxText;
+  end;
+
+  { A real executor on a private thread lets this harness capture living family
+    members before releasing their fixture gate. Read results only after join. }
+  TExecutorWorker = class(TThread)
+  private
+    FRoot: TNyxText;
+    FProfile: TNyxText;
+    FPair: TNyxProjectPair;
+    FLimits: TNyxCompilerLimits;
+    FCancellation: INyxBuildCancellation;
+  protected
+    procedure Execute; override;
+  public
+    Output: TNyxDataValue;
+    Error: TNyxText;
+    Cancelled: Boolean;
+    constructor Create(const ARoot, AProfile: TNyxText;
+      const APair: TNyxProjectPair; const ALimits: TNyxCompilerLimits);
+    destructor Destroy; override;
+    procedure RequestCancel;
   end;
 
 var
@@ -55,6 +78,69 @@ begin
     raise Exception.Create(AReason);
   end;
   Inc(GChecks);
+end;
+
+constructor TExecutorWorker.Create(const ARoot, AProfile: TNyxText;
+  const APair: TNyxProjectPair; const ALimits: TNyxCompilerLimits);
+begin
+  inherited Create(True);
+  FRoot := ARoot;
+  FProfile := AProfile;
+  FPair := APair;
+  FLimits := ALimits;
+  Output := NyxNull;
+  FCancellation := NewNyxBuildCancellation;
+  Start;
+end;
+
+procedure TExecutorWorker.Execute;
+var
+  LExecutor: TNyxBuildExecutor;
+  LDocument: TNyxDocument;
+  LResult: TJSONObject;
+begin
+  LExecutor := nil;
+  LDocument := nil;
+  LResult := nil;
+  try
+    try
+      LExecutor := TNyxBuildExecutor.Create(FRoot, FProfile);
+      LExecutor.ConfigureLimits(FLimits);
+      LDocument := TNyxCodec.Decode(FPair.Design);
+      LResult := LExecutor.Build(LDocument, 'browser', 'view', 'home', FPair.Source,
+        FCancellation);
+      Output := TNyxDataValue.ParseJSON(TNyxText(LResult.AsJSON));
+    except
+      on ENyxBuildCancelled do
+      begin
+        Cancelled := True;
+      end;
+      on LException: Exception do
+      begin
+        Error := LException.Message;
+      end;
+    end;
+  finally
+    LResult.Free;
+    LDocument.Free;
+    LExecutor.Free;
+  end;
+end;
+
+procedure TExecutorWorker.RequestCancel;
+begin
+  FCancellation.Cancel;
+end;
+
+destructor TExecutorWorker.Destroy;
+begin
+
+  if FCancellation <> nil then
+  begin
+    FCancellation.Cancel;
+  end;
+  WaitFor;
+  inherited Destroy;
 end;
 
 procedure Policy(const AJobs, AMode: TNyxText);
@@ -79,6 +165,9 @@ var
   LIndex: Integer;
   LKnown: Boolean;
   LHandle: THandle;
+  LRoleIndex: Integer;
+  LReady: TNyxText;
+  LReadyStream: TFileStream;
 begin
   LText := TStringList.Create;
   try
@@ -88,9 +177,35 @@ begin
       try
         repeat
 
-          if FileExists(AJobs + LEntry.Name + '/compiler.ready') then
+          for LRoleIndex := 0 to 2 do
           begin
-            LText.LoadFromFile(AJobs + LEntry.Name + '/compiler.ready');
+            case LRoleIndex of
+              0: LReady := 'compiler.ready';
+              1: LReady := 'helper.ready';
+              2: LReady := 'grandchild.ready';
+            end;
+
+            if not FileExists(AJobs + LEntry.Name + '/' + LReady) then
+            begin
+              Continue;
+            end;
+            { Marker publication/polling crosses a real Windows file boundary.
+              A sharing refusal is not an absent/terminal process: leave this
+              exact marker pending and retry within WaitChildren's budget. }
+            try
+              LReadyStream := TFileStream.Create(AJobs + LEntry.Name + '/' + LReady,
+                fmOpenRead or fmShareDenyNone);
+            except
+              on EFOpenError do
+              begin
+                Continue;
+              end;
+            end;
+            try
+              LText.LoadFromStream(LReadyStream);
+            finally
+              LReadyStream.Free;
+            end;
             LPID := StrToInt(Trim(LText.Text));
             LKnown := False;
             for LIndex := 0 to High(GChildren) do
@@ -101,11 +216,14 @@ begin
             if not LKnown then
             begin
               LHandle := OpenProcess(SYNCHRONIZE, False, LPID);
-              Check(LHandle <> 0, 'Owned compiler is alive when its identity is captured');
+              Check((LHandle <> 0) and (WaitForSingleObject(LHandle, 0) = WAIT_TIMEOUT),
+                'Owned compiler family member is alive when its identity is captured');
               LIndex := Length(GChildren);
               SetLength(GChildren, LIndex + 1);
               GChildren[LIndex].PID := LPID;
               GChildren[LIndex].Handle := LHandle;
+              GChildren[LIndex].Directory := AJobs + LEntry.Name + '/';
+              GChildren[LIndex].Role := LReady;
             end;
           end;
         until FindNext(LEntry) <> 0;
@@ -159,6 +277,7 @@ var
   LCurrent: Boolean;
 begin
   Result := GJobs.Status(NyxCompilerStatus(NyxBuildJob(AJob)), LPair, LCurrent);
+
   if ACheckPair then
   begin
     Check(EncodeNyxProject(LPair) = EncodeNyxProject(GPair), 'Cancellation retains immutable input pair');
@@ -178,6 +297,7 @@ begin
     begin
       Break;
     end;
+
     if GetTickCount64 - LStarted >= 5000 then
     begin
       raise Exception.Create('Cancellation did not join within the qualified Windows budget');
@@ -361,13 +481,13 @@ var
   LReport: INyxCompilerReport;
   LExited: Integer;
 begin
-  Policy(GRoot + 'queue/build/studio/jobs/', 'hold');
+  Policy(GRoot + 'queue/build/studio/jobs/', 'family-hold');
   GJobs := TNyxBuildJobs.Create(GRoot + 'queue/', GProfile.Encode);
   for LIndex := 0 to High(LReceipts) do
   begin
     LReceipts[LIndex] := GJobs.Submit('Scooty', Request('queue-' + IntToStr(LIndex)), GPair);
   end;
-  WaitChildren(GRoot + 'queue/build/studio/jobs/', 2);
+  WaitChildren(GRoot + 'queue/build/studio/jobs/', 6);
   LRefused := False;
   try
     GJobs.Submit('Scooty', Request('overflow'), GPair);
@@ -411,8 +531,8 @@ begin
       Inc(LExited);
     end;
   end;
-  Check(LExited = 1, 'Terminal cancellation means one exact owned child exit');
-  WaitChildren(GRoot + 'queue/build/studio/jobs/', 3);
+  Check(LExited = 3, 'Terminal cancellation means compiler/helper/grandchild exit');
+  WaitChildren(GRoot + 'queue/build/studio/jobs/', 9);
   Check(Status(LReceipts[3].Field('job').AsText).Field('state').AsText = 'running',
     'Oldest remaining queued job takes the joined slot');
   Check(Status(LReceipts[4].Field('job').AsText).Field('state').AsText = 'queued',
@@ -427,7 +547,7 @@ begin
   for LIndex := 0 to High(GChildren) do
   begin
     Check(WaitForSingleObject(GChildren[LIndex].Handle, 0) = WAIT_OBJECT_0,
-      'Shutdown joins every actually started compiler');
+      'Shutdown retires every actually started compiler/helper/grandchild');
   end;
 end;
 
@@ -516,6 +636,81 @@ begin
   end;
 end;
 
+procedure FamilyCompletion(const AName, AMode, AExpected: TNyxText;
+  const ALimits: TNyxCompilerLimits);
+var
+  LWorker: TExecutorWorker;
+  LFirst: Integer;
+  LIndex: Integer;
+  LRoot: TNyxText;
+  LGate: TFileStream;
+  LStarted: QWord;
+begin
+  LRoot := GRoot + AName + '/';
+  Policy(LRoot + 'build/studio/jobs/', AMode);
+  LFirst := Length(GChildren);
+  LWorker := TExecutorWorker.Create(LRoot, GProfile.Encode, GPair, ALimits);
+  try
+    WaitChildren(LRoot + 'build/studio/jobs/', LFirst + 3);
+    Check(Length(GChildren) = LFirst + 3, 'One invocation owns compiler/helper/grandchild');
+    { Captured handles prove all three were living before the gate opens. The
+      children intentionally do not inherit the compiler pipe handles. }
+    LGate := TFileStream.Create(GChildren[LFirst].Directory + 'family.continue', fmCreate);
+    LGate.Free;
+
+    if AMode = 'family-root-exit' then
+    begin
+      for LIndex := LFirst to High(GChildren) do
+      begin
+
+        if GChildren[LIndex].Role = 'compiler.ready' then
+        begin
+          Check(WaitForSingleObject(GChildren[LIndex].Handle, 1000) = WAIT_OBJECT_0,
+            'Compiler exits while its detached helpers remain alive');
+        end;
+      end;
+      Check(not LWorker.Finished, 'Compiler exit cannot publish completion while helpers run');
+    end;
+
+    if AExpected = 'cancelled' then
+    begin
+      LWorker.RequestCancel;
+    end;
+    LStarted := GetTickCount64;
+    while not LWorker.Finished do
+    begin
+
+      if GetTickCount64 - LStarted > 5000 then
+      begin
+        raise Exception.Create('Owned process family did not retire within the Windows budget');
+      end;
+      Sleep(10);
+    end;
+    LWorker.WaitFor;
+    Check(LWorker.Error = '', 'Compiler family completes without a host exception');
+
+    if AExpected = 'cancelled' then
+    begin
+      Check(LWorker.Cancelled and (LWorker.Output.Kind = ndNull),
+        'Cancellation after compiler exit still retires helpers without publishing an artifact');
+    end
+    else
+    begin
+      Check(not LWorker.Cancelled and
+        (LWorker.Output.Field('failure').AsText = AExpected) and
+        (LWorker.Output.Field('ok').AsBoolean = (AExpected = 'none')),
+        'Whole-family completion retains the typed compiler outcome');
+    end;
+    for LIndex := LFirst to High(GChildren) do
+    begin
+      Check(WaitForSingleObject(GChildren[LIndex].Handle, 0) = WAIT_OBJECT_0,
+        'Result publication follows actual retirement of every captured family member');
+    end;
+  finally
+    LWorker.Free;
+  end;
+end;
+
 var
   LIndex: Integer;
 begin
@@ -537,6 +732,13 @@ begin
     GPair := GSession.BuildPair(GSession.Revision, bsView, 'home');
     QueueAndShutdown;
     SemanticAuthority;
+    FamilyCompletion('family-cancel', 'family-root-exit', 'cancelled', TNyxCompilerLimits.Default);
+    FamilyCompletion('family-success', 'family-success', 'none', TNyxCompilerLimits.Default);
+    FamilyCompletion('family-error', 'family-error', 'compiler', TNyxCompilerLimits.Default);
+    FamilyCompletion('family-deadline', 'family-root-exit', 'time-budget',
+      TNyxCompilerLimits.Default.TimeMilliseconds(2000));
+    FamilyCompletion('family-log-budget', 'family-flood', 'log-budget',
+      TNyxCompilerLimits.Default.LogBytes(65536));
     BudgetRetirement('deadline', 'hold', TNyxCompilerLimits.Default.TimeMilliseconds(200));
     BudgetRetirement('log-budget', 'flood', TNyxCompilerLimits.Default.LogBytes(65536));
     { Each Windows fixture line is 4093 ASCII bytes, one four-byte moon, CR/LF.
@@ -544,7 +746,7 @@ begin
     BudgetRetirement('unicode-log-budget', 'unicode-flood', TNyxCompilerLimits.Default.LogBytes(8194));
     FreeAndNil(GSession);
     FreeAndNil(GProfile);
-    WriteLn('PASS ', GChecks, ' actual compiler queue/cancellation/join checks');
+    WriteLn('PASS ', GChecks, ' actual compiler family/queue/cancellation/join checks');
   except
     on LException: Exception do
     begin

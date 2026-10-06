@@ -102,7 +102,8 @@ implementation
 
 uses
   nyx.json, nyx.schema, nyx.codec, nyx.codegen, nyx.source, nyx.callbacks,
-  nyx.scheduler, nyx.composition, nyx.studio.compiler, nyx.editing;
+  nyx.scheduler, nyx.composition, nyx.studio.compiler, nyx.editing,
+  nyx.studio.compilerprocess;
 
 type
   TNyxBuildCancellation = class(TInterfacedObject, INyxBuildCancellation)
@@ -342,12 +343,11 @@ function TNyxBuildExecutor.RunCompiler(const AExecutable, ADirectory: TNyxText;
   AArguments: TStrings; out ALog: TNyxText;
   const ACancellation: INyxBuildCancellation): Boolean;
 var
-  LProcess: TProcess;
+  LProcess: TNyxCompilerProcess;
   LBuffer: array[0..4095] of Byte;
   LRead: Integer;
   LChunk: TNyxText;
   LStarted: QWord;
-  LExecuted: Boolean;
 
   function LogPrefix: TNyxText;
   var
@@ -401,8 +401,7 @@ begin
     ALog := 'Compiler executable is missing; configure NYX_PAS2JS or NYX_FPC.';
     Exit(False);
   end;
-  LProcess := TProcess.Create(nil);
-  LExecuted := False;
+  LProcess := TNyxCompilerProcess.Create(nil);
   try
     LProcess.Executable := AExecutable;
     LProcess.CurrentDirectory := ADirectory;
@@ -410,7 +409,6 @@ begin
     LProcess.Options := [poUsePipes, poStderrToOutPut, poNoConsole];
     ALog := '';
     LProcess.Execute;
-    LExecuted := True;
     LStarted := GetTickCount64;
     repeat
       { Drain pipes while the compiler runs. Waiting for exit before reading can
@@ -449,11 +447,19 @@ begin
         Exit(False);
       end;
 
-      if LProcess.Running then
+      if not LProcess.Running and (LProcess.ExitStatus <> 0) then
+      begin
+        { Preserve the compiler's own failure instead of waiting for a stranded
+          helper to turn it into a deadline failure. Finally retires the family. }
+        FFailure := bcfCompiler;
+        Exit(False);
+      end;
+
+      if LProcess.FamilyRunning then
       begin
         Sleep(10);
       end;
-    until not LProcess.Running and (LProcess.Output.NumBytesAvailable = 0);
+    until not LProcess.FamilyRunning and (LProcess.Output.NumBytesAvailable = 0);
     Result := LProcess.ExitStatus = 0;
 
     if not Result then
@@ -461,28 +467,14 @@ begin
       FFailure := bcfCompiler;
     end;
   finally
-    { Every exit (including cancellation, read failure, deadline/log failure)
-      joins this exact owned process. A failed OS retirement keeps the worker
+    { Every exit (including failed suspended admission, cancellation, read
+      failure, deadline/log failure) retires the invocation's process family
+      and joins its exact compiler. A failed OS retirement keeps the worker
       active; never release its slot, advertise an artifact or orphan a child.
       No editor lock is held. The budget bounds compiler execution, not an OS
       that cannot reap its process. Normal Windows retirement is qualified. }
 
-    if LExecuted then
-    begin
-
-      if LProcess.Running then
-      begin
-        LProcess.Terminate(1);
-      end;
-      while not LProcess.WaitOnExit(25) do
-      begin
-
-        if LProcess.Running then
-        begin
-          LProcess.Terminate(1);
-        end;
-      end;
-    end;
+    LProcess.RetireAndJoin;
     LProcess.Free;
   end;
 end;

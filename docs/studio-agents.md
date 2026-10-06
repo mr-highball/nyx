@@ -310,14 +310,23 @@ editing alone does not automatically cancel a build. Portable callers use
 captures its current revision in `CancelBuild`.
 
 The current-source native executor checks deadlines/cancellation within pipe
-draining and joins its exact process on every exit. Log caps retain complete
-UTF-8 scalars. An OS that refuses reaping keeps the worker active instead of
-publishing a false terminal result. Actual direct-child retirement is qualified
-on Windows. Compiler descendants/linkers, other hosts, bounded operator job
-listing and visible cancellation in both Studio adapters remain open. The legacy
+draining and joins its exact process on every exit. On Windows each invocation
+also owns an unnamed, non-inherited OS job: the compiler starts suspended, is
+assigned before resume and does not allow breakaway. Its descendants stay owned
+after the compiler exits. Normal success waits for the whole family; failure or
+cancellation retires all members before the worker joins or its slot is reused.
+Incompatible job admission refuses instead of launching an uncontained compiler.
+These semantics follow Microsoft's [job-object contract](https://learn.microsoft.com/en-us/windows/win32/procthread/job-objects).
+Log caps retain complete UTF-8 scalars. An OS that refuses reaping/accounting keeps
+the worker active instead of publishing a false terminal result. Actual family
+retirement is qualified on Win32; other hosts retain direct-process retirement.
+The two-call suspended creation/assignment window is not crash-atomic; atomic
+job-list creation and additional host qualification remain hardening work.
+Bounded operator job listing and visible cancellation in both Studio adapters
+remain open. The legacy
 browser HTTP route retains its synchronous behavior; that integration and
 authenticated observing deployment remain separate service work. See
-[current lifecycle evidence](../WORK.md#compiler-queue-and-cancellation--2026-10-06).
+[current family evidence](../WORK.md#windows-compiler-families--2026-10-06).
 
 An observing Studio shows start/completion/refusal activity and the first twenty
 severity-ordered diagnostics, with the displayed/total counts. Its ordinary source

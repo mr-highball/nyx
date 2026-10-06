@@ -66,6 +66,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The current-source compiler host now qualifies Windows invocation families:
+compiler/helper/grandchild retirement precedes worker completion and slot reuse,
+including cancellation after compiler exit and compiler/deadline/log failures.
+The maintained lifecycle passes 129 checks; real pas2js/FPC application builds
+and produced browser/native execution pass. Other hosts, crash-atomic creation,
+visible build/cancel controls and observing rollout remain open. See
+[the family packet](WORK.md#windows-compiler-families--2026-10-06).
+
 Current primary/review semantic dispatch now uses the authenticated connection
 owner independently of its visible actor. Native/browser checks qualify independent
 receipts and removal tickets for same-named agents, plus private review actor

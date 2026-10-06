@@ -22,7 +22,64 @@
 
 program nyx_build_compiler_fixture;
 {$mode delphi}{$H+}{$codepage utf8}
-uses Classes, SysUtils, {$ifdef MSWINDOWS}Windows{$else}BaseUnix{$endif};
+uses Classes, SysUtils, Process, {$ifdef MSWINDOWS}Windows{$else}BaseUnix{$endif};
+
+procedure Ready(const AName: String);
+var
+  LStream: TFileStream;
+  LIdentity: UTF8String;
+begin
+  {$ifdef MSWINDOWS}
+  LIdentity := IntToStr(GetCurrentProcessId);
+  {$else}
+  LIdentity := IntToStr(fpGetPID);
+  {$endif}
+  LStream := TFileStream.Create(AName + '.tmp', fmCreate);
+  try
+    LStream.WriteBuffer(LIdentity[1], Length(LIdentity));
+  finally
+    LStream.Free;
+  end;
+  RenameFile(AName + '.tmp', AName);
+end;
+
+procedure SpawnPart(const ARole, APolicy: String);
+var
+  LPart: TProcess;
+begin
+  { This deliberate detached handle exercises the production invocation job.
+    Each descendant belongs to that job even when its immediate parent exits.
+    Do not inherit stdout: family accounting must work independently of pipes. }
+  LPart := TProcess.Create(nil);
+  try
+    LPart.Executable := ParamStr(0);
+    LPart.CurrentDirectory := GetCurrentDir;
+    LPart.Options := [poNoConsole];
+    LPart.InheritHandles := False;
+    LPart.Parameters.Add('--nyx-fixture-child');
+    LPart.Parameters.Add(ARole);
+    LPart.Parameters.Add(APolicy);
+    LPart.Execute;
+  finally
+    LPart.Free;
+  end;
+end;
+
+procedure AwaitFamilyGate;
+var
+  LStart: QWord;
+begin
+  LStart := GetTickCount64;
+  while not FileExists('family.continue') do
+  begin
+
+    if GetTickCount64 - LStart > 10000 then
+    begin
+      raise Exception.Create('Owned family fixture was not released');
+    end;
+    Sleep(10);
+  end;
+end;
 
 var
   LFile: TFileStream;
@@ -32,24 +89,36 @@ var
   LPolicy: String;
   LOutput: THandleStream;
 begin
+  { Descendants publish their own identity. The helper immediately creates a
+    grandchild so checks cover nested ownership, not just one child PID. }
+
+  if ParamStr(1) = '--nyx-fixture-child' then
+  begin
+
+    if ParamStr(2) = 'helper' then
+    begin
+      SpawnPart('grandchild', ParamStr(3));
+    end;
+    Ready(ParamStr(2) + '.ready');
+
+    if ParamStr(3) = 'family-success' then
+    begin
+      AwaitFamilyGate;
+      Sleep(300);
+    end
+    else
+    begin
+      Sleep(30000);
+    end;
+    Exit;
+  end;
   { Owned substitute solely for lifetime/resource admission checks. Actual MCP
     qualification uses real pas2js/FPC. It sleeps long enough to establish the
     two-worker ceiling, then emits a tiny deterministic browser output. }
   { Each actual child records its own identity in its unique invocation root.
     Only this fixture interprets the parent-owned policy file; production
     executors still supply their fixed compiler arguments unchanged. }
-  {$ifdef MSWINDOWS}
-  LText := IntToStr(GetCurrentProcessId);
-  {$else}
-  LText := IntToStr(fpGetPID);
-  {$endif}
-  LFile := TFileStream.Create('compiler.ready.tmp', fmCreate);
-  try
-    LFile.WriteBuffer(LText[1], Length(LText));
-  finally
-    LFile.Free;
-  end;
-  RenameFile('compiler.ready.tmp', 'compiler.ready');
+  Ready('compiler.ready');
   LPolicy := '';
   LMode := TStringList.Create;
   try
@@ -63,11 +132,25 @@ begin
     LMode.Free;
   end;
 
-  if LPolicy = 'hold' then
+  if Pos('family-', LPolicy) = 1 then
+  begin
+    SpawnPart('helper', LPolicy);
+    AwaitFamilyGate;
+  end;
+
+  if LPolicy = 'family-error' then
+  begin
+    WriteLn('Error: Owned compiler failure before helper retirement');
+    ExitCode := 1;
+    Exit;
+  end;
+
+  if (LPolicy = 'hold') or (LPolicy = 'family-hold') then
   begin
     Sleep(30000);
   end
-  else if (LPolicy = 'flood') or (LPolicy = 'unicode-flood') then
+  else if (LPolicy = 'flood') or (LPolicy = 'unicode-flood') or
+    (LPolicy = 'family-flood') then
   begin
     LText := StringOfChar('x', 4096);
 
@@ -90,7 +173,7 @@ begin
       LOutput.Free;
     end;
   end
-  else
+  else if Pos('family-', LPolicy) <> 1 then
   begin
     Sleep(750);
   end;

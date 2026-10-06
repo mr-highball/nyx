@@ -32,6 +32,18 @@ owner; staging accepts no original criterion. See [the release guide](../docs/st
 
 ## Separate release runtime — 2026-10-06
 
+The next current-source boundary now qualifies Windows compiler families through
+an invocation-owned job assigned before resume. Actual compiler/helper/grandchild
+handles prove whole-family completion/retirement, including cancellation after
+compiler exit, compiler/deadline/log failure, queue slot reuse and shutdown.
+The maintained lifecycle passes 129 checks, and real pas2js/FPC application
+compatibility and execution pass. See [family evidence](../WORK.md#windows-compiler-families--2026-10-06).
+Stop process-family fixture expansion. Deliver bounded job discovery, ordinary
+browser semantic-job integration and visible cancellation in both Studio adapters
+next. Other hosts, x64, OS refusal and crash-atomic Windows job creation remain
+hardening/qualification gates; the two-call suspended creation/assignment window
+does not qualify host death during admission. Original criteria remain open.
+
 Criterion 1's direct-compiler lifecycle prerequisite is now qualified through
 the actual executor/job manager and native semantic host seam: two running slots,
 eight FIFO queued jobs, thread-safe cancellation, explicit process and worker
@@ -41,8 +53,8 @@ failures. Primary retries also carry connection identity. See
 Actual owned Pascal children, both portable consumers and real compiler success
 are exercised; no protected host or accepted work is replaced.
 
-Stop queue/router fixture expansion at that bounded boundary. The original
-criterion remains open: compiler descendants/linkers, other hosts, bounded
+Stop queue/router fixture expansion at that bounded boundary. Its Windows family
+follow-up is recorded above. The original criterion remains open: other hosts, bounded
 operator job discovery and visible cancellation through both Studio adapters
 need qualification. The browser's legacy synchronous build route remains an
 integration gap; no observing HTTP rollout or fully bounded OS retirement is
