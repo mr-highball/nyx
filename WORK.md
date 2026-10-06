@@ -32,6 +32,14 @@ count is reset or an unrecorded NS-5 count invented. Original criteria stay open
 
 ## Compiler queue and cancellation — 2026-10-06
 
+Implementation and qualification evidence are committed as
+`28a5afff1f7cb068613140e47fffd983778dad9f`; `origin/hello-nyx` was verified at that
+exact revision with a clean worktree. This handoff update follows separately.
+Next complete owned compiler-family retirement, then bounded job discovery and
+visible cancellation in both Studio controllers. The protected history migration
+and observing release gates above remain open; do not expand queue/owner fixtures
+or treat the phone's earlier release as this implementation.
+
 NS-5 criterion 1's current-source prerequisite now owns two running slots and
 eight FIFO pending jobs, with sixteen retained handles and sixty-four immutable
 retry receipts. Admission captures the exact source/design/profile/context;
