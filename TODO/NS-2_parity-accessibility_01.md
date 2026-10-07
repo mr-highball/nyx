@@ -20,6 +20,22 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Nested menu focus and invocation — 2026-10-06
+
+Original criterion 2 now has submenu Right/Enter/Space, Left/Escape level return,
+whole-family completion/Tab dismissal, managed button Enter/Space/Down/Up and
+browser expanded/controls relationships. Actual Win32 passes 58 menu plus 11
+ordinary Studio checks; actual desktop/390 HTTP menu consumers pass 59 each.
+Full local browser Studio qualifies real Chromium Tab/Shift+Tab from children
+and ordinary Inspector/help commands. Meaningful native/browser captures are
+inspected. No protected process or pair changes. See
+[the packet](../WORK.md#current-return-path-menu-families-and-invokers--2026-10-06).
+
+No original criterion/prerequisite/count closes. Menubars, mobile drill-down,
+hardware/IME/assistive technology, other widgetsets/DPI, original visual breadth,
+binding and production accessibility/performance remain open. Stop fixtures at
+this integrated boundary; no full observing-controller or phone-hardware claim.
+
 ## Managed command-menu focus — 2026-10-06
 
 Original criterion 2 now has real first/last/arrow/Home/End navigation, focusable

@@ -48,7 +48,7 @@ uses
   nyx.studio.inspector,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.browser,
-  nyx.menu, nyx.menu.browser, nyx.studio.menu,
+  nyx.menu, nyx.menu.browser, nyx.menu.button, nyx.controls, nyx.studio.menu,
   nyx.studio.collections,
   nyx.callbacks,
   nyx.studio.palette,
@@ -89,6 +89,7 @@ type
       replacement. Studio owns no separate contextual-window implementation. }
     FComponentHelp: INyxBrowserPopover;
     FActionMenu: INyxBrowserMenu;
+    FActionButton: INyxMenuButton;
     FSourceCommands: TNyxSourceCommands;
     { Copied reset receipts survive deferred/reentrant chrome work only within
       this exact session/load. Pending proposals overlay the accepted values. }
@@ -236,6 +237,7 @@ type
     procedure Refresh(ARetainCanvas: Boolean = False; APreserveDraft: Boolean = False);
     procedure HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure MenuAction(AAction: TNyxStudioMenuAction);
+    procedure PrepareActionMenu;
     procedure ShowComponentHelp(const AAnchor: TNyxControlRef);
     { Borrow current owners synchronously; hover only changes the canvas outline. }
     function DesignerDragContext: TNyxStudioDragContext;
@@ -598,6 +600,7 @@ begin
   FSourcePaneRenderer.Free;
   FSourcePaneDocument.Free;
   FSourceModal := nil;
+  FActionButton := nil;
   FActionMenu := nil;
   FComponentHelp := nil;
   FShellRenderer.Free;
@@ -741,6 +744,7 @@ var
   LCanvasSelection: TNyxTextSelection;
   LPendingDesign: TNyxStudioPendingDesign;
 begin
+  FActionButton := nil;
   FActionMenu := nil;
   FComponentHelp := nil;
   LCodeStart := -1;
@@ -1156,6 +1160,7 @@ begin
   end;
   document.body.setAttribute('data-nyx-studio-ready', 'true');
   FShellCommandContext := FSession.CommandContext;
+  PrepareActionMenu;
   FDesignerDrag.ConnectSources(FShellRenderer.Events, FShellRenderer.Root, FShellCommandContext);
   FDesignerResize.Connect(FShellRenderer.Events, FShellRenderer.Root, FShellCommandContext);
   FDesignerMove.Connect(FShellRenderer.Events, FShellRenderer.Root, FShellCommandContext);
@@ -1661,6 +1666,24 @@ begin
   end;
 end;
 
+procedure TNyxStudio.PrepareActionMenu;
+var
+  LContent: TNyxDocument;
+  LItems: TNyxMenuItems;
+begin
+  LContent := BuildNyxStudioActionMenu(FSession, LItems);
+  try
+    FActionMenu := NewNyxBrowserMenu(FShellRenderer.FocusFor(NyxStudioActionMenuID),
+      LContent, NyxPageRoot(NyxStudioActionMenuRoot), LItems);
+    FActionMenu.OnInvoke.Subscribe(NewNyxStudioMenuCallback(MenuAction));
+    FActionButton := NewNyxMenuButton(RetainNyxControl(
+      FShellRenderer.Root.Find(NyxStudioActionMenuID)) as INyxButton,
+      FShellRenderer.Events, FActionMenu, NyxMenu('Component actions'));
+  finally
+    LContent.Free;
+  end;
+end;
+
 procedure TNyxStudio.ShowComponentHelp(const AAnchor: TNyxControlRef);
 var
   LHelp: TNyxDocument;
@@ -1670,7 +1693,6 @@ begin
 
     if LHelp <> nil then
     begin
-      FActionMenu := nil;
       FComponentHelp := nil;
       FComponentHelp := NewNyxBrowserPopover(FShellRenderer.FocusFor(AAnchor.ID), LHelp,
         NyxPageRoot(NyxComponentHelpRootID));
@@ -1684,8 +1706,6 @@ end;
 
 procedure TNyxStudio.HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
-  LHelp: TNyxDocument;
-  LMenuItems: TNyxMenuItems;
   LSource: TNyxText;
   LRetainCanvas: Boolean;
   LAcceptedDesign: TNyxText;
@@ -1705,17 +1725,8 @@ begin
 
   if (ANode.ID = NyxStudioActionMenuID) and (AEvent.Trigger = ntClick) then
   begin
-    LHelp := BuildNyxStudioActionMenu(FSession, LMenuItems);
-    try
-      FActionMenu := nil;
-      FComponentHelp := nil;
-      FActionMenu := NewNyxBrowserMenu(FShellRenderer.FocusFor(NyxStudioActionMenuID),
-        LHelp, NyxPageRoot(NyxStudioActionMenuRoot), LMenuItems);
-      FActionMenu.OnInvoke.Subscribe(NewNyxStudioMenuCallback(MenuAction));
-      FActionMenu.Open(NyxMenu('Component actions'));
-    finally
-      LHelp.Free;
-    end;
+    { Public Nyx menu-button registration owns click and keyboard invocation. }
+    FComponentHelp := nil;
     Exit;
   end;
 

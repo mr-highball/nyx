@@ -15,6 +15,16 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Current hierarchical-menu gap (2026-10-06): the same authenticated semantic client
+now composes all three English companion roots and exports exact source in one
+owned grouped review (36 checks). Immutable specialized plans, nested recipes and
+managed invoker registration attach typed runtime behavior through public Pascal.
+This existing workflow owner must admit/query their persisted meaning, generate
+crafted declarations and expose revision-aware semantic mutations. No raw
+extension fields or screenshot-driven authoring substitute for that contract.
+The current LAN schema remains unchanged; no original criterion/count closes.
+See [the packet](../WORK.md#current-return-path-menu-families-and-invokers--2026-10-06).
+
 Current menu authoring gap (2026-10-06): authenticated semantic MCP authors the
 exact English command-menu content as one owned grouped review with bounded
 source and paired Undo/Redo (30 checks). Typed runtime item plans/presentation

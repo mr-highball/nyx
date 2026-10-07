@@ -3,6 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current component boundary (2026-10-06): immutable specialized menu items/plans,
+owned submenu recipes and managed menu-button invocation are consumed by ordinary
+Studio Actions/Inspect on both targets. Checked actual Win32 passes 58 menu and
+11 Studio checks; actual desktop/390 HTTP menus pass 59 each. Full local browser
+Studio qualifies nested host Tab/Shift+Tab, Events and contextual help. The exact
+semantic English companion passes 36. All fifteen protected services, nine exact
+pairs and the full checkpoint remain unchanged; observing LAN still serves
+`f9129e0`. No original criterion/count closes. Stop this component fixture batch;
+return to menubar/picker breadth and persisted semantic plan authoring, with
+frozen observing delivery as its existing prerequisite. See
+[evidence and return path](WORK.md#current-return-path-menu-families-and-invokers--2026-10-06).
+
 Current observing boundary (2026-10-06): frozen menu checkpoint `f9129e0` serves
 the existing LAN/editor and loopback MCP ports. Its 221 files verify; authenticated
 twenty-tool MCP and actual shared desktop/390 Actions, host Tab/Shift+Tab, Events

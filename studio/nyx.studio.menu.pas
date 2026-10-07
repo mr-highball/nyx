@@ -48,7 +48,7 @@ function NewNyxStudioMenuCallback(AHandler: TNyxStudioMenuHandler): INyxEventCal
 
 implementation
 
-uses SysUtils, nyx.types, nyx.controls, nyx.behavior, nyx.scheduler,
+uses SysUtils, nyx.types, nyx.controls, nyx.behavior, nyx.scheduler, nyx.root.types,
   nyx.studio.inspector, nyx.studio.help;
 
 const
@@ -119,6 +119,8 @@ function BuildNyxStudioActionMenu(ASession: TNyxStudioSession;
   out AItems: TNyxMenuItems): TNyxDocument;
 var
   LRoot: INyxColumn;
+  LInspector: INyxColumn;
+  LInspectorItems: TNyxMenuItems;
   LButton: INyxButton;
   LSeparator: INyxSeparator;
   LItem: TNyxMenuItem;
@@ -132,6 +134,9 @@ begin
   AItems := NyxMenuItems;
   LRoot := NewNyxColumn(NyxStudioActionMenuRoot);
   LRoot.Configure.Padding(8).Gap(4).Align(ncaStretch).Compound(True);
+  LInspector := NewNyxColumn('studio-component-inspector');
+  LInspector.Configure.Padding(8).Gap(4).Align(ncaStretch).Compound(True);
+  LInspectorItems := NyxMenuItems;
   for LAction := Low(TNyxStudioMenuAction) to High(TNyxStudioMenuAction) do
   begin
 
@@ -145,7 +150,15 @@ begin
     LButton := NewNyxButton('studio-menu-' + CCommands[LAction]);
     LButton.Text := CLabels[LAction];
     LButton.Configure.PartName(NyxPart(CCommands[LAction])).Variant(nvSecondary);
-    LRoot.Add(LButton);
+
+    if LAction < smaProperties then
+    begin
+      LRoot.Add(LButton);
+    end
+    else
+    begin
+      LInspector.Add(LButton);
+    end;
     LItem := NyxMenuAction(NyxPart(CCommands[LAction]), NyxMenuCommand(CCommands[LAction]));
     case LAction of
       smaUndo:
@@ -161,11 +174,27 @@ begin
         LItem := LItem.Enabled(ASession.Selected <> nil);
       end;
     end;
-    AItems := AItems.Add(LItem);
+
+    if LAction < smaProperties then
+    begin
+      AItems := AItems.Add(LItem);
+    end
+    else
+    begin
+      LInspectorItems := LInspectorItems.Add(LItem);
+    end;
   end;
+  LButton := NewNyxButton('studio-menu-inspect');
+  LButton.Text := 'Inspect';
+  LButton.Configure.PartName(NyxPart('inspect')).Variant(nvSecondary);
+  LRoot.Add(LButton);
   Result := TNyxDocument.Create;
   try
     Result.AddPage(LRoot);
+    Result.AddPage(LInspector);
+    AItems := AItems.Add(NyxMenuSubmenu(NyxPart('inspect'), NewNyxMenuRecipe(Result,
+      NyxPageRoot('studio-component-inspector'), LInspectorItems))
+      .Enabled(ASession.Selected <> nil));
   except
     Result.Free;
     raise;

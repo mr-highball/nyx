@@ -140,7 +140,21 @@ begin
         '{"op":"create","kind":"button","id":"menu-compact","parent":"thoughtful-actions",' +
         '"properties":{"text":"Compact","part":"compact","variant":"secondary"}},' +
         '{"op":"create","kind":"button","id":"menu-hidden","parent":"thoughtful-actions",' +
-        '"properties":{"text":"Archived action","part":"hidden","visible":false}}]'))]);
+        '"properties":{"text":"Archived action","part":"hidden","visible":false}},' +
+        '{"op":"create","kind":"button","id":"menu-appearance","parent":"thoughtful-actions",' +
+        '"properties":{"text":"Appearance","part":"appearance","variant":"secondary"}},' +
+        '{"op":"create","kind":"column","id":"appearance-options","root":"page",' +
+        '"properties":{"layout":"column","gap":4,"padding":8,"cross-alignment":"stretch","compound":true}},' +
+        '{"op":"create","kind":"button","id":"appearance-guides","parent":"appearance-options",' +
+        '"properties":{"text":"Show grid","part":"guides","variant":"secondary"}},' +
+        '{"op":"create","kind":"button","id":"appearance-density","parent":"appearance-options",' +
+        '"properties":{"text":"Density","part":"density","variant":"secondary"}},' +
+        '{"op":"create","kind":"column","id":"density-options","root":"page",' +
+        '"properties":{"layout":"column","gap":4,"padding":8,"cross-alignment":"stretch","compound":true}},' +
+        '{"op":"create","kind":"button","id":"density-comfortable","parent":"density-options",' +
+        '"properties":{"text":"Comfortable","part":"comfortable","variant":"secondary"}},' +
+        '{"op":"create","kind":"button","id":"density-compact","parent":"density-options",' +
+        '"properties":{"text":"Compact","part":"compact","variant":"secondary"}}]'))]);
     GRevision := Call('nyx_session', []).Field('revision').AsInteger;
     LSource := Source;
     Check(Pos('INyxButton', LSource) > 0, 'Specialized crafted companion');

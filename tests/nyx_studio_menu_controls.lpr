@@ -50,7 +50,7 @@ begin
   end;
 end;
 
-function MenuWindow: TForm;
+function MenuWindow(const ATitle: String = 'Component actions'): TForm;
 var
   LIndex: Integer;
 begin
@@ -59,7 +59,7 @@ begin
   begin
 
     if Screen.Forms[LIndex].Visible and
-      (Screen.Forms[LIndex].Caption = 'Component actions') then
+      (Screen.Forms[LIndex].Caption = ATitle) then
     begin
       Exit(Screen.Forms[LIndex]);
     end;
@@ -79,7 +79,8 @@ begin
     LChild := AParent.Controls[LIndex];
 
     if (LChild is TWinControl) and
-      (TControlAccess(LChild).Caption = ACaption) then
+      ((TControlAccess(LChild).Caption = ACaption) or
+        ((ACaption = 'Inspect') and (Pos('Inspect ', TControlAccess(LChild).Caption) = 1))) then
     begin
       Exit(TWinControl(LChild));
     end;
@@ -166,15 +167,24 @@ begin
     TControlAccess(Screen.ActiveControl).Click;
     Require((MenuWindow <> nil) and not LStudio.Session.CanUndo,
       'Disabled Undo cannot dispatch an editor operation');
-    Require(Button(LHelp, 'Events') <> nil, 'Actual menu exposes the Events command');
+    Require(Button(LHelp, 'Inspect') <> nil,
+      'Actual menu exposes its typed Inspector branch');
+    TControlAccess(Button(LHelp, 'Inspect')).Click;
+    Application.ProcessMessages;
+    LHelp := MenuWindow('Inspect');
+    Require((LHelp <> nil) and (MenuWindow <> nil), 'Parent remains open beside the native child');
     TControlAccess(Button(LHelp, 'Events')).Click;
     Settle(LStudio);
     Require((MenuWindow = nil) and (LStudio.ShellView.ControlFor('event-click-add') <> nil),
       'Typed menu command reaches the ordinary event Inspector');
     TControlAccess(LStudio.ShellView.ControlFor(NyxStudioActionMenuID)).Click;
     LHelp := MenuWindow;
-    Require((LHelp <> nil) and (Button(LHelp, 'About this component') <> nil),
+    Require((LHelp <> nil) and (Button(LHelp, 'Inspect') <> nil),
       'Menu can reopen after the Inspector refresh');
+    TControlAccess(Button(LHelp, 'Inspect')).Click;
+    Application.ProcessMessages;
+    LHelp := MenuWindow('Inspect');
+    Require(LHelp <> nil, 'Inspector child can reopen independently');
     TControlAccess(Button(LHelp, 'About this component')).Click;
     Application.ProcessMessages;
     Require((MenuWindow = nil) and (Screen.ActiveControl <> nil) and
@@ -184,7 +194,7 @@ begin
     Application.ProcessMessages;
     Require(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore,
       'Menu navigation preserves the exact accepted project/source pair');
-    WriteLn('PASS 9 ordinary native Studio command-menu checks');
+    WriteLn('PASS 11 ordinary native Studio command-menu checks');
   except
     on E: Exception do
     begin

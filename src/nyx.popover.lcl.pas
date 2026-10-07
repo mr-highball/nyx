@@ -39,12 +39,17 @@ type
     ['{B2672EF9-496D-4EC9-8006-061026000003}']
     function GetWindow: TForm;
     function GetRenderer: TNyxLCLRenderer;
+    { Adapter-only family registration. Windows are borrowed; descendants remove
+      themselves before destruction and retain their ancestor presenter. }
+    procedure IncludeWindow(AWindow: TForm);
+    procedure ExcludeWindow(AWindow: TForm);
     property Window: TForm read GetWindow;
     property Renderer: TNyxLCLRenderer read GetRenderer;
   end;
 
 function NewNyxLCLPopover(AAnchor: TWinControl; ADocument: TNyxDocument;
-  const ARoot: TNyxRootRef; ATheme: TNyxTheme = nil): INyxLCLPopover;
+  const ARoot: TNyxRootRef; ATheme: TNyxTheme = nil;
+  const AParent: INyxLCLPopover = nil): INyxLCLPopover;
 
 implementation
 
@@ -68,6 +73,8 @@ type
 
   TLCLPopover = class(TNyxPopoverPresenter, INyxPopover, INyxLCLPopover)
   private
+    FParent: INyxLCLPopover;
+    FFamilyWindows: array of TForm;
     FTargets: TPopoverTargets;
     FWindow: TForm;
     FRenderer: TNyxLCLRenderer;
@@ -76,6 +83,8 @@ type
     procedure Reposition;
     function AnchorAvailable: Boolean;
     procedure Tick(ASender: TObject);
+    function FamilyContains(const APoint: TPoint): Boolean;
+    function FamilyContainsControl(AControl: TControl): Boolean;
     procedure UserInput(ASender: TObject; var AMessage: TLMessage);
     procedure KeyDown(ASender: TObject; var AKey: Word; AShift: TShiftState);
     procedure WindowClose(ASender: TObject; var AAction: TCloseAction);
@@ -87,11 +96,13 @@ type
     procedure Conceal(ARestoreFocus: Boolean); override;
   public
     constructor Create(AAnchor: TWinControl; ADocument: TNyxDocument;
-      const ARoot: TNyxRootRef; ATheme: TNyxTheme);
+      const ARoot: TNyxRootRef; ATheme: TNyxTheme; const AParent: INyxLCLPopover);
     destructor Destroy; override;
     function GetWindow: TForm;
     function GetRenderer: TNyxLCLRenderer;
     function GetEvents: INyxEvents; override;
+    procedure IncludeWindow(AWindow: TForm);
+    procedure ExcludeWindow(AWindow: TForm);
   end;
 
 constructor TPopoverTargets.Create(AAnchor: TWinControl);
@@ -174,7 +185,7 @@ begin
 end;
 
 constructor TLCLPopover.Create(AAnchor: TWinControl; ADocument: TNyxDocument;
-  const ARoot: TNyxRootRef; ATheme: TNyxTheme);
+  const ARoot: TNyxRootRef; ATheme: TNyxTheme; const AParent: INyxLCLPopover);
 begin
   inherited Create(ADocument, ARoot);
 
@@ -184,6 +195,12 @@ begin
   end;
   FTargets := TPopoverTargets.Create(AAnchor);
   FWindow := TForm.CreateNew(nil);
+  FParent := AParent;
+
+  if FParent <> nil then
+  begin
+    FParent.IncludeWindow(FWindow);
+  end;
   FWindow.BorderStyle := bsNone;
   FWindow.Position := poDesigned;
   FWindow.ShowInTaskBar := stNever;
@@ -200,6 +217,12 @@ end;
 destructor TLCLPopover.Destroy;
 begin
   Conceal(False);
+
+  if FParent <> nil then
+  begin
+    FParent.ExcludeWindow(FWindow);
+    FParent := nil;
+  end;
   FTimer.Free;
 
   if FRenderer <> nil then
@@ -381,6 +404,7 @@ var
   LPoint: TPoint;
   LOrigin: TPoint;
   LAnchor: TRect;
+  LControl: TControl;
 begin
   LKeepAlive := Self;
 
@@ -388,7 +412,24 @@ begin
     ((AMessage.Msg = LM_LBUTTONDOWN) or (AMessage.Msg = LM_RBUTTONDOWN) or
       (AMessage.Msg = LM_MBUTTONDOWN)) then
   begin
-    GetCursorPos(LPoint);
+
+    if not GetCursorPos(LPoint) then
+    begin
+      { A locked/noninteractive desktop may refuse cursor coordinates. Never
+        compare uninitialized geometry. A live LCL target still establishes its
+        exact window/ancestor ownership; an unknown sender cannot dismiss. }
+
+      if ASender is TControl then
+      begin
+        LControl := TControl(ASender);
+
+        if not FamilyContainsControl(LControl) then
+        begin
+          Dismiss(nprOutsidePress);
+        end;
+      end;
+      Exit;
+    end;
 
     if AnchorAvailable then
     begin
@@ -396,7 +437,7 @@ begin
       LAnchor := Rect(LOrigin.X, LOrigin.Y, LOrigin.X + FTargets.Anchor.Width,
         LOrigin.Y + FTargets.Anchor.Height);
 
-      if not PtInRect(FWindow.BoundsRect, LPoint) and not PtInRect(LAnchor, LPoint) then
+      if not FamilyContains(LPoint) and not PtInRect(LAnchor, LPoint) then
       begin
         Dismiss(nprOutsidePress);
       end;
@@ -465,9 +506,90 @@ begin
 end;
 
 function NewNyxLCLPopover(AAnchor: TWinControl; ADocument: TNyxDocument;
-  const ARoot: TNyxRootRef; ATheme: TNyxTheme): INyxLCLPopover;
+  const ARoot: TNyxRootRef; ATheme: TNyxTheme;
+  const AParent: INyxLCLPopover): INyxLCLPopover;
 begin
-  Result := TLCLPopover.Create(AAnchor, ADocument, ARoot, ATheme);
+  Result := TLCLPopover.Create(AAnchor, ADocument, ARoot, ATheme, AParent);
+end;
+
+procedure TLCLPopover.IncludeWindow(AWindow: TForm);
+begin
+  SetLength(FFamilyWindows, Length(FFamilyWindows) + 1);
+  FFamilyWindows[High(FFamilyWindows)] := AWindow;
+
+  if FParent <> nil then
+  begin
+    FParent.IncludeWindow(AWindow);
+  end;
+end;
+
+procedure TLCLPopover.ExcludeWindow(AWindow: TForm);
+var
+  LIndex: Integer;
+  LMove: Integer;
+begin
+  for LIndex := 0 to High(FFamilyWindows) do
+  begin
+
+    if FFamilyWindows[LIndex] = AWindow then
+    begin
+      for LMove := LIndex + 1 to High(FFamilyWindows) do
+      begin
+        FFamilyWindows[LMove - 1] := FFamilyWindows[LMove];
+      end;
+      SetLength(FFamilyWindows, Length(FFamilyWindows) - 1);
+      Break;
+    end;
+  end;
+
+  if FParent <> nil then
+  begin
+    FParent.ExcludeWindow(AWindow);
+  end;
+end;
+
+function TLCLPopover.FamilyContains(const APoint: TPoint): Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := PtInRect(FWindow.BoundsRect, APoint);
+  for LIndex := 0 to High(FFamilyWindows) do
+  begin
+
+    if FFamilyWindows[LIndex].Visible and
+      PtInRect(FFamilyWindows[LIndex].BoundsRect, APoint) then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
+function TLCLPopover.FamilyContainsControl(AControl: TControl): Boolean;
+var
+  LWindow: TCustomForm;
+  LAncestor: TControl;
+  LIndex: Integer;
+begin
+  LAncestor := AControl;
+  while LAncestor <> nil do
+  begin
+
+    if LAncestor = FTargets.Anchor then
+    begin
+      Exit(True);
+    end;
+    LAncestor := LAncestor.Parent;
+  end;
+  LWindow := GetParentForm(AControl);
+  Result := (LWindow <> nil) and (LWindow = FWindow);
+  for LIndex := 0 to High(FFamilyWindows) do
+  begin
+
+    if (LWindow = FFamilyWindows[LIndex]) and FFamilyWindows[LIndex].Visible then
+    begin
+      Exit(True);
+    end;
+  end;
 end;
 
 end.

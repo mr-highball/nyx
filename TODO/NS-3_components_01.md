@@ -23,6 +23,25 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Menu families and invokers — 2026-10-06
+
+Original advanced-menu scope now has immutable specialized items/plans and owned
+submenu recipes. Independent child hosts share completion, level-return keyboard
+navigation and whole-family Tab/outside dismissal. Public `INyxMenuButton` owns
+ordinary invocation; Studio consumes it with an Inspect submenu on both targets.
+Checked installed Win32 passes 58 menu / 11 Studio checks; actual desktop/390
+menus pass 59 each. Full local browser Studio qualifies nested host Tab and
+Inspector/help navigation; exact semantic content/source export passes 36.
+Protected services/pairs/checkpoint remain exact; the LAN release is unchanged.
+See [usage](../docs/menu.md) and
+[evidence](../WORK.md#current-return-path-menu-families-and-invokers--2026-10-06).
+
+Stop this integrated fixture batch. No original criterion/count closes; original
+menubar/picker breadth, live binding, persisted plan/catalog/generation, hardware/
+assistive technology, widgetsets/DPI and production visual/performance outcomes
+remain open. Semantic recipe/invoker admission belongs to the existing workflow
+owner; frozen observing delivery remains its existing prerequisite.
+
 ## Managed command-menu boundary — 2026-10-06
 
 Original criterion 3 now has typed commands/check/radio plans on specialized Nyx

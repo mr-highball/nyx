@@ -44,29 +44,63 @@ function NewNyxBrowserMenu(AAnchor: TJSHTMLElement; ADocument: TNyxDocument;
 
 implementation
 
-uses nyx.types, nyx.behavior, nyx.events, nyx.scheduler, nyx.render.browser;
+uses SysUtils, nyx.types, nyx.behavior, nyx.events, nyx.scheduler, nyx.render.browser;
 
 type
   TBrowserMenu = class(TNyxMenuPresenter, INyxBrowserMenu)
   private
     FHost: INyxBrowserPopover;
+    FParent: INyxBrowserPopover;
+    FAnchor: TJSHTMLElement;
+    FTheme: TNyxTheme;
+    FPreviousPopup: TNyxText;
+    FPreviousExpanded: TNyxText;
+    FPreviousControls: TNyxText;
+    FDecorated: Boolean;
     function TextKey(AEvent: TJSKeyboardEvent): Boolean;
   protected
     procedure ApplyFaces; override;
     function FocusFace(AIndex: Integer): Boolean; override;
     procedure TabExit(AReverse: Boolean; const AExecution: INyxExecution); override;
+    function CreateSubmenu(AIndex: Integer; const ARecipe: INyxMenuRecipe):
+      TNyxMenuPresenter; override;
+    procedure PresentationChanged; override;
   public
     constructor Create(AAnchor: TJSHTMLElement; ADocument: TNyxDocument;
-      const ARoot: TNyxRootRef; const AItems: TNyxMenuItems; ATheme: TNyxTheme);
+      const ARoot: TNyxRootRef; const AItems: TNyxMenuItems; ATheme: TNyxTheme;
+      const AParent: INyxBrowserPopover = nil);
     destructor Destroy; override;
     function GetPopover: INyxBrowserPopover;
   end;
 
+var
+  GMenuIdentity: Integer;
+
 constructor TBrowserMenu.Create(AAnchor: TJSHTMLElement; ADocument: TNyxDocument;
-  const ARoot: TNyxRootRef; const AItems: TNyxMenuItems; ATheme: TNyxTheme);
+  const ARoot: TNyxRootRef; const AItems: TNyxMenuItems; ATheme: TNyxTheme;
+  const AParent: INyxBrowserPopover);
 begin
+  FAnchor := AAnchor;
+  FTheme := ATheme;
+  FParent := AParent;
   FHost := NewNyxBrowserPopover(AAnchor, ADocument, ARoot, ATheme);
   inherited Create(FHost, AItems);
+  Inc(GMenuIdentity);
+  FHost.Element.id := 'nyx-menu-' + IntToStr(GMenuIdentity);
+  FPreviousPopup := FAnchor.getAttribute('aria-haspopup');
+  FPreviousExpanded := FAnchor.getAttribute('aria-expanded');
+  FPreviousControls := FAnchor.getAttribute('aria-controls');
+  FAnchor.setAttribute('aria-haspopup', 'menu');
+  FAnchor.setAttribute('aria-expanded', 'false');
+  FAnchor.setAttribute('aria-controls', FHost.Element.id);
+  FDecorated := True;
+
+  if FParent <> nil then
+  begin
+    { Descendant DOM semantics keep the ancestor's outside-press check correct.
+      Browser top-layer painting still places this host beside its parent. }
+    FParent.Element.appendChild(FHost.Element);
+  end;
   { Ordinary Nyx key cycles run on each button first. The bubble text listener
     respects consumption, modifiers and composition instead of guessing letters
     from physical keyboard codes or bypassing application callbacks. }
@@ -81,7 +115,31 @@ begin
     FHost.Element.removeEventListener('keydown', @TextKey);
   end;
   inherited Destroy;
+
+  if FDecorated and (FAnchor <> nil) then
+  begin
+    { The invoker is borrowed. Empty previous attributes are removed below. }
+    FAnchor.setAttribute('aria-haspopup', FPreviousPopup);
+    FAnchor.setAttribute('aria-expanded', FPreviousExpanded);
+    FAnchor.setAttribute('aria-controls', FPreviousControls);
+
+    if FPreviousPopup = '' then
+    begin
+      FAnchor.removeAttribute('aria-haspopup');
+    end;
+
+    if FPreviousExpanded = '' then
+    begin
+      FAnchor.removeAttribute('aria-expanded');
+    end;
+
+    if FPreviousControls = '' then
+    begin
+      FAnchor.removeAttribute('aria-controls');
+    end;
+  end;
   FHost := nil;
+  FParent := nil;
 end;
 
 function TBrowserMenu.GetPopover: INyxBrowserPopover;
@@ -156,6 +214,21 @@ begin
     end;
     { A visual marker never changes the creator's accessible caption. }
     LFace.setAttribute('aria-label', Button(Plan[LIndex].Part).Text);
+
+    if Plan[LIndex].Kind = nmiSubmenu then
+    begin
+      LFace.setAttribute('aria-haspopup', 'menu');
+
+      if BranchOpen(LIndex) then
+      begin
+        LFace.setAttribute('aria-expanded', 'true');
+      end
+      else
+      begin
+        LFace.setAttribute('aria-expanded', 'false');
+      end;
+      LFace.textContent := Button(Plan[LIndex].Part).Text + '  ›';
+    end;
   end;
 end;
 
@@ -181,7 +254,8 @@ begin
   Result := True;
 
   if AEvent.defaultPrevented or AEvent.isComposing or AEvent.altKey or
-    AEvent.ctrlKey or AEvent.metaKey then
+    AEvent.ctrlKey or AEvent.metaKey or
+    (TJSHTMLElement(AEvent.target).closest('[role=menu]') <> FHost.Element) then
   begin
     Exit;
   end;
@@ -192,6 +266,39 @@ begin
     AEvent.preventDefault;
   end;
   LKeepAlive.GetOpen;
+end;
+
+procedure TBrowserMenu.PresentationChanged;
+begin
+  inherited PresentationChanged;
+
+  if FAnchor = nil then
+  begin
+    Exit;
+  end;
+
+  if GetOpen then
+  begin
+    FAnchor.setAttribute('aria-expanded', 'true');
+  end
+  else
+  begin
+    FAnchor.setAttribute('aria-expanded', 'false');
+  end;
+end;
+
+function TBrowserMenu.CreateSubmenu(AIndex: Integer;
+  const ARecipe: INyxMenuRecipe): TNyxMenuPresenter;
+var
+  LDocument: TNyxDocument;
+begin
+  LDocument := ARecipe.CopyDocument;
+  try
+    Result := TBrowserMenu.Create(FHost.Renderer.FocusFor(ItemID(AIndex), niDesign),
+      LDocument, ARecipe.Root, ARecipe.Items, FTheme, FHost);
+  finally
+    LDocument.Free;
+  end;
 end;
 
 function NewNyxBrowserMenu(AAnchor: TJSHTMLElement; ADocument: TNyxDocument;

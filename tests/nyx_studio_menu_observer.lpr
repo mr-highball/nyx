@@ -151,7 +151,7 @@ begin
 
     WaitFor('[data-node=action-actions]');
     GHost.Click('[data-node=action-actions]');
-    WaitFor('.nyx-popover:popover-open[role=menu] [data-node=studio-menu-events]');
+    WaitFor('.nyx-popover:popover-open[role=menu] [data-node=studio-menu-inspect]');
     GHost.Capture('studio-component-actions');
     { A connected editor exposes build-job controls immediately after Actions.
       Local optional-service editors continue directly to Build view. Observe
@@ -171,7 +171,26 @@ begin
     WaitFor('.nyx-popover:popover-open', False);
     WaitFor('[data-node=action-agents]:focus');
     GHost.Click('[data-node=action-actions]');
-    WaitFor('.nyx-popover:popover-open[role=menu] [data-node=studio-menu-events]');
+    WaitFor('.nyx-popover:popover-open[role=menu] [data-node=studio-menu-inspect]');
+    GHost.Click('.nyx-popover:popover-open [data-node=studio-menu-inspect]');
+    WaitFor('[data-node=studio-menu-inspect][aria-expanded=true]');
+    WaitFor('.nyx-popover:popover-open [data-node=studio-menu-events]');
+    GHost.Capture('studio-inspector-submenu');
+    { Real host Tab must leave every submenu from the original menu button. }
+    GHost.Tab;
+    WaitFor('.nyx-popover:popover-open', False);
+    WaitFor('[data-node=' + LNextAction + ']:focus');
+    GHost.Click('[data-node=action-actions]');
+    WaitFor('.nyx-popover:popover-open [data-node=studio-menu-inspect]');
+    GHost.Click('.nyx-popover:popover-open [data-node=studio-menu-inspect]');
+    WaitFor('.nyx-popover:popover-open [data-node=studio-menu-events]');
+    GHost.Tab(True);
+    WaitFor('.nyx-popover:popover-open', False);
+    WaitFor('[data-node=action-agents]:focus');
+    GHost.Click('[data-node=action-actions]');
+    WaitFor('.nyx-popover:popover-open [data-node=studio-menu-inspect]');
+    GHost.Click('.nyx-popover:popover-open [data-node=studio-menu-inspect]');
+    WaitFor('.nyx-popover:popover-open [data-node=studio-menu-events]');
     GHost.Click('.nyx-popover:popover-open [data-node=studio-menu-events]');
     WaitFor('.nyx-popover:popover-open', False);
     WaitFor('[data-node=event-click-add]');
@@ -185,6 +204,8 @@ begin
     end;
     GHost.Capture('studio-menu-events');
     GHost.Click('[data-node=action-actions]');
+    WaitFor('.nyx-popover:popover-open [data-node=studio-menu-inspect]');
+    GHost.Click('.nyx-popover:popover-open [data-node=studio-menu-inspect]');
     WaitFor('.nyx-popover:popover-open [data-node=studio-menu-help]');
     GHost.Click('.nyx-popover:popover-open [data-node=studio-menu-help]');
     WaitFor('.nyx-popover:popover-open [data-node=component-help-description]');

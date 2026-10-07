@@ -7,6 +7,97 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: menu families and invokers — 2026-10-06
+
+Current goal turn is progress on original NS-3 advanced-menu scope through NS-2
+keyboard/focus parity. `INyxMenuItem` / `INyxMenuItems` are specialized immutable
+reference-counted plans; the old T-prefixed spellings remain aliases. Owned
+`INyxMenuRecipe` snapshots admit independently cloned child content before any
+host opens. Eight levels, 2048 total entries and 256 per plan bound admission,
+including foreign implementations; invalid counts/absent items/duplicate parts
+and unknown kinds fail explicitly. Presenters retain their own check/enable state.
+Weak parent/completion leases avoid tree cycles and survive retained child handles.
+
+Right/Enter/Space open branches; Left/Escape return one level. Descendant leaf
+completion closes the family before forwarding the detached command snapshot;
+Space check/radio changes retain it. Tab leaves from the original invoker and an
+outside press closes all levels without stealing focus. Public `INyxMenuButton`
+owns ordinary click and Enter/Space/Down/Up registrations with consumed-input,
+visibility/disablement and repeat/modifier admission. Read-only preserves branch
+navigation while leaf commands refuse. Browser hosts publish expanded/controls
+relationships and nest child DOM semantics; LCL hosts register borrowed descendant
+windows. Native cursor-query failure now checks actual target ownership instead
+of comparing an uninitialized point. Studio consumes these public contracts for
+Actions/Inspect on both targets; it owns no alternate menu toolkit.
+
+Persistent authenticated semantic MCP composes the exact English **Thoughtful
+actions** companion's three roots in one owned empty review with grouped revision
+admission, bounded source export, paired Undo/Redo and retirement. **36** checks
+pass, leak-free. Checked installed Win32 controls pass **58** and ordinary native
+Studio passes **11**, both leak-free. Actual HTTP desktop/exact-390 menu consumers
+pass **59** each. Full local browser Studio qualifies real nested Chromium
+Tab/Shift+Tab, Events navigation and contextual help at both widths. Meaningful
+native/desktop/narrow captures are inspected; narrow placement overlaps ancestors
+to preserve viewport bounds, not a separate mobile drill-down mode.
+
+All **15** protected process identities, **9** exact project/source/navigation/
+draft/history/permission contexts and the entire **147033-byte** native checkpoint
+stay unchanged. No listener is added or replaced; the observing LAN still serves
+frozen source `f9129e0`. Candidate browser assets are hash-verified in one owned
+leaf of the existing fixture host. Local optional-service Studio evidence does
+not qualify authenticated observing integration for these new APIs. Native tests
+use real mounted LCL controls; browser fixtures use actual DOM/event bridges.
+They establish neither hardware/IME nor assistive technology or other widgetsets.
+
+The final maintained build has zero owned warnings. Seven installed RTL warnings
+remain visible in each of three browser programs, with ordinary hints/notes.
+Initial COM-interface fields inside record plans were unsupported by pas2js;
+specialized interface items/plans solve the portable ownership contract without
+serialized string substitutes. A native factory temporary outlived the fixture's
+release assertion; scoped construction now qualifies retirement. Four parallel
+browser launches yielded three Page.navigate clock timeouts and one narrow
+Studio pass. Serial actual-clock journeys pass; no product/server failure is
+inferred from those initial timeouts. Failed checks earn no passes.
+
+Ignored evidence is under `build/menu-family/`: `qualification-complete.log`,
+`source/nyx.generated.view.pas`, `browser-desktop-complete.log`,
+`browser-narrow-complete.log`, `studio-desktop-complete.log`,
+`studio-narrow-complete.log`, inspected capture directories, `staged-files.json`
+and `preservation.json`. Native captures remain under `build/menu/maintained/`.
+The protected baseline/editor profile remains **`build/menu-refresh/`**; private
+paths, capabilities and full pairs stay ignored. Save/push this checkpoint to
+`hello-nyx`, verify exact remote head and retain its private receipt as
+`build/menu-family/remote-return.json`.
+
+Stop this integrated component fixture batch. Original menubar/picker breadth,
+live binding, persisted semantic recipe/invoker/catalog/generation, accessibility,
+widgetset/DPI, visual quality and performance remain open. NS-4's existing workflow
+owner records missing semantic plan operations; frozen observing delivery remains
+the existing integration prerequisite. No original criterion/task closes. Workflow
+**13**, authoring **26**, renderer **8**, codegen **28**, delivery **2** stay
+unchanged; historical NS-2/NS-3 totals remain unestablished. The full goal is active.
+
+## Accepted batch intent: menu families and invokers — 2026-10-06
+
+Previous goal turn is progress: frozen command menus serve the LAN, preservation
+and actual observing journeys qualify, and exact remote `e00be21` is verified.
+Return to original NS-3 advanced menu scope through NS-2 keyboard/focus parity.
+Add immutable typed submenu recipes, independently owned child presenters,
+whole-family completion/Tab dismissal, parent-return Left/Escape behavior and
+public managed menu-button invocation/expanded semantics. Studio consumes these
+contracts for its Actions/Inspect menu on browser and LCL. Semantic MCP continues
+to compose/export the exact English companion in one owned grouped review;
+runtime plans remain explicit until their existing workflow owner admits them.
+
+Required evidence: checked installed native controls/ordinary Studio, exact
+desktop/390 browser consumers and inspected meaningful captures; ownership,
+ordered snapshots, disabled branches, nesting admission and consumed invocation
+must qualify. Existing fifteen process identities, nine pairs and full checkpoint
+remain exact; no listener replacement in this component batch. Stop at integrated
+submenu/invoker behavior and reassess original menubar, picker, persisted plans,
+accessibility/widgetset/DPI and performance requirements. At most two failed
+attempts per diagnosed cause; no original criterion/count closes from this slice.
+
 ## Current return path: command-menu observing release — 2026-10-06
 
 Current goal turn is progress on the authorized NS-5 observing prerequisite for

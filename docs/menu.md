@@ -5,8 +5,8 @@
 
 `INyxMenu` gives ordinary specialized Nyx buttons and named parts a shared command
 contract. Browser and LCL factories present the same independently owned content.
-Studio's **Actions** menu consumes this public contract for Undo, Redo, Inspector
-navigation and component help.
+Studio's **Actions** button consumes `INyxMenuButton`; its **Inspect** submenu
+uses the same managed recipes for Properties, Events and component help.
 
 ## Compose once, attach through an adapter
 
@@ -48,28 +48,92 @@ and configuration access. Theme and physical invoker are borrowed target seams.
 Keep any supplied theme alive until the presentation retires. UI operations run
 on the UI thread; callbacks must not strongly retain their own menu.
 
-Plans admit at most 256 unique named parts. Actions/checks/radios require Nyx
-buttons; separators require Nyx separators. A radio has a distinct
+`INyxMenuItem` and `INyxMenuItems` are specialized reference-counted, immutable
+contracts. `Add` copies items into an independent plan; `Enabled` returns an
+independent item. The original `TNyxMenuItem` / `TNyxMenuItems` spellings remain
+aliases, without exposing mutable record fields. Presenters copy plans before
+changing their own runtime states. Plans admit at most 256 unique named parts.
+Actions/checks/radios/submenus require Nyx buttons; separators require Nyx
+separators. A radio has a distinct
 `NyxMenuGroup` reference, and at most one initial selection per group. Invalid
 parts, duplicate registrations, physically disabled buttons and renderer Actions
 refuse before presentation. Commands belong in `OnInvoke`: a renderer Action
 would run before callback admission and could bypass logical disablement.
 
+## Reuse submenu recipes and ordinary menu buttons
+
+Create a content root from ordinary specialized controls, then capture an
+independent immutable recipe. The document and its authored defaults may change
+afterward without changing that recipe:
+
+```pascal
+LDensityColumn := NewNyxColumn('density-options');
+LDensityColumn.Configure.Padding(8).Gap(4).Align(ncaStretch).Compound(True);
+
+LComfortableButton := NewNyxButton('comfortable-density');
+LComfortableButton.Text := 'Comfortable';
+LComfortableButton.Configure.PartName(NyxPart('comfortable')).Variant(nvSecondary);
+LDensityColumn.Add(LComfortableButton);
+
+LCompactButton := NewNyxButton('compact-density');
+LCompactButton.Text := 'Compact';
+LCompactButton.Configure.PartName(NyxPart('compact')).Variant(nvSecondary);
+LDensityColumn.Add(LCompactButton);
+LDocument.AddComponent(LDensityColumn);
+
+LDensityRecipe := NewNyxMenuRecipe(LDocument, NyxReusableRoot('density-options'),
+  NyxMenuItems
+    .Add(NyxMenuRadio(NyxPart('comfortable'), NyxMenuCommand('comfortable'),
+      NyxMenuGroup('density'), True))
+    .Add(NyxMenuRadio(NyxPart('compact'), NyxMenuCommand('compact'),
+      NyxMenuGroup('density'), False)));
+
+{ The parent content has an ordinary button whose named part is density. }
+LParentItems := LParentItems.Add(NyxMenuSubmenu(NyxPart('density'), LDensityRecipe));
+
+{ Once the target menu is attached, bind its ordinary specialized invoker. }
+LMenuButton := NewNyxMenuButton(LOpenActionsButton, LRenderer.Events, LMenu,
+  NyxMenu('Document actions'));
+```
+
+Keep `LMenuButton: INyxMenuButton` until its renderer/controller retires. It owns
+the descriptor, router, menu and two cancellable weak registrations; releasing it
+removes the registrations. Existing callbacks remain registered. Invocation uses
+sequential click/main-key streams, rejects renderer Actions, and respects consumed
+before-key input, disablement/visibility, modifiers and key repeats. Read-only
+retains nonmutating invocation and branch navigation; read-only leaf commands
+refuse activation. Each independently owned content root has its own policy scope.
+`Click` toggles; Enter/Space/Down open at the first item and Up at the last. Both
+adapters use the portable input contract; browser invokers additionally publish
+`aria-haspopup`, `aria-expanded` and `aria-controls`, including silent closure.
+
+A recipe owns a full copied document and immutable plan. `CopyDocument` returns
+a caller-owned independent clone. Every branch is validated before any host opens;
+invalid external counts, absent entries, duplicate parts and unknown kinds refuse
+with `ENyxModel`. There are at most eight levels and 2048 total entries. External
+recipe implementations must preserve their construction snapshot. Children mount
+lazily and retain independent runtime state on reopening. Parent/child callback
+leases are weak; a retained child does not keep its parent presenter alive.
+Target hosts retain ancestor presentations only to keep borrowed invokers valid.
+
 ## Interaction and completion
 
 These menu choices follow the applicable
-[WAI menu pattern](https://www.w3.org/WAI/ARIA/apg/patterns/menubar/), checked
-2026-10-06. This implements a vertical command menu; submenu/menubar behavior
-remains open.
+[WAI menu pattern](https://www.w3.org/WAI/ARIA/apg/patterns/menubar/) and
+[menu-button pattern](https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/), checked
+2026-10-06. This implements vertical command-menu families; a horizontal menubar
+contract remains open.
 
 | Input | Nyx behavior |
 | --- | --- |
 | Up / Down | Previous/next visible command; wrapping is configurable |
 | Home / End | First/last visible command |
-| Enter | Activate and close before completion |
+| Right / Enter / Space on a submenu | Open its child and focus the first item |
+| Left in a submenu | Close that level and return to the parent item |
+| Enter on a leaf | Activate and close the whole family before completion |
 | Space | Toggle a check or select a radio without closing; actions close |
-| Escape | Dismiss and return focus to the invoker |
-| Tab / Shift+Tab | Close and leave the menu in the requested direction |
+| Escape | Dismiss the current level and return focus to its invoker |
+| Tab / Shift+Tab | Close the whole family; traverse from the original invoker |
 | Printable character | Navigate using the shared typeahead engine |
 
 Separators and hidden entries are skipped. Logical disabled commands remain
@@ -83,7 +147,12 @@ Checks/radios belong to this presentation, not the document's saved defaults.
 snapshot. Multiple registrations receive the same owned snapshot in order,
 including when an earlier callback reopens or releases the menu. Close is silent;
 `OnDismiss` uses the existing typed popover dismissal reasons. Runtime search and
-focus never enter project Undo history.
+focus never enter project Undo history. Descendant invocations forward the same
+detached leaf command/part/check snapshot to parent registrations. Space toggles
+remain inside the family; Enter completion closes every level first. Outside
+presses close the family without stealing focus. Parent navigation closes any
+open sibling child. On narrow hosts, placement can overlap ancestors to retain
+viewport bounds; this is not a separate mobile drill-down presentation.
 
 Typeahead accumulates prefixes during a configurable 1..60000 ms window, default
 1000 ms. Repeated single characters cycle matches; an extended prefix first keeps
@@ -101,8 +170,8 @@ bounded source reads, exact paired Undo/Redo and canonical LF export. It retires
 the review and preserves the primary project. Enroll the MCP configuration first:
 
 ```powershell
-./tools/build.ps1 -Target menu-companion -DesignerMCPConfig .codex/config.toml
-./tools/build.ps1 -Target menu
+./tools/build.ps1 -Target menu-companion -DesignerMCPConfig .codex/config.toml -MenuSourceDirectory build/menu/source
+./tools/build.ps1 -Target menu -MenuSourceDirectory build/menu/source
 ```
 
 The menu target runs checked native controls and ordinary Studio integration,
@@ -118,8 +187,10 @@ component; the connected toolbar's Builds control participates in ordinary Tab
 order. Desktop/390 observing evidence and preserved-state receipts are in
 [WORK.md](../WORK.md#current-return-path-command-menu-observing-release--2026-10-06).
 
-Menu presentation/command plans are explicit runtime attachment, not serialized
-authoring declarations or MCP plan mutations. Submenus, menu-button invocation
-shortcuts/expanded-state semantics, live menu binding, assistive technology,
+Menu presentation/command/recipe plans are explicit runtime attachment, not
+serialized authoring declarations or MCP plan mutations. Their semantic
+admission/generation remains with
+[the existing workflow owner](../TODO/NS-4_agent-workflows_01.md). Menubars, mobile
+drill-down presentation, live menu binding, assistive technology,
 hardware/IME, other widgetsets/DPI and full production accessibility remain open.
 Compiled source admission alone establishes none of these interactions.

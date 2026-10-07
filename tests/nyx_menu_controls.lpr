@@ -27,11 +27,12 @@ program nyx_menu_controls;
 
 uses
   {$IFDEF PAS2JS}JS, Web, nyx.menu.browser, nyx.render.browser,
-  {$ELSE}Interfaces, Classes, Forms, Controls, LCLType, LMessages, Graphics,
+  {$ELSE}Interfaces, Classes, Forms, Controls, LCLType, LCLIntf, LMessages, Graphics,
     IntfGraphics, FPWritePNG,
     nyx.menu.lcl, nyx.render.lcl,{$ENDIF}
   SysUtils, nyx.text, nyx.types, nyx.root.types, nyx.model, nyx.controls,
-  nyx.menu, nyx.popover, nyx.behavior, nyx.events, nyx.scheduler, nyx.generated.view;
+  nyx.menu, nyx.menu.button, nyx.popover, nyx.behavior, nyx.events, nyx.scheduler,
+  nyx.generated.view;
 
 type
   TCompletion = class(TNyxEventCallback)
@@ -44,8 +45,30 @@ type
   public
     procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
   end;
+  { Deliberately invalid third-party plan. The public extension boundary must
+    reject bad counts and absent entries before any native/browser host opens. }
+  TForeignPlan = class(TInterfacedObject, INyxMenuItems)
+  public
+    ReportedCount: Integer;
+    function GetCount: Integer;
+    function GetItem(AIndex: Integer): TNyxMenuItem;
+    function Add(const AItem: TNyxMenuItem): INyxMenuItems;
+  end;
+  TForeignRecipe = class(TInterfacedObject, INyxMenuRecipe)
+  private
+    FPlan: INyxMenuItems;
+  public
+    { The fixture's GDocument remains alive throughout this scoped admission. }
+    constructor Create(ACount: Integer);
+    function CopyDocument: TNyxDocument;
+    function GetRoot: TNyxRootRef;
+    function GetItems: TNyxMenuItems;
+  end;
   {$IFDEF PAS2JS}
   TKeyboard = class external name 'KeyboardEvent'(TJSKeyboardEvent)
+    constructor new(const AKind: String; AOptions: TJSObject);
+  end;
+  TPointer = class external name 'PointerEvent'(TJSPointerEvent)
     constructor new(const AKind: String; AOptions: TJSObject);
   end;
   {$ELSE}
@@ -67,6 +90,50 @@ var
   GResume: NativeInt;
   GToken1: INyxEventSubscription;
   GToken2: INyxEventSubscription;
+  GInvoker: INyxMenuButton;
+  GAppearance: INyxMenu;
+  GDensity: INyxMenu;
+
+function TForeignPlan.GetCount: Integer;
+begin
+  Result := ReportedCount;
+end;
+
+function TForeignPlan.GetItem(AIndex: Integer): TNyxMenuItem;
+begin
+  Result := nil;
+end;
+
+function TForeignPlan.Add(const AItem: TNyxMenuItem): INyxMenuItems;
+begin
+  Result := nil;
+  raise ENyxModel.Create('Invalid fixture plan is immutable');
+end;
+
+constructor TForeignRecipe.Create(ACount: Integer);
+var
+  LPlan: TForeignPlan;
+begin
+  inherited Create;
+  LPlan := TForeignPlan.Create;
+  FPlan := LPlan;
+  LPlan.ReportedCount := ACount;
+end;
+
+function TForeignRecipe.CopyDocument: TNyxDocument;
+begin
+  Result := GDocument.Clone;
+end;
+
+function TForeignRecipe.GetRoot: TNyxRootRef;
+begin
+  Result := NyxPageRoot('density-options');
+end;
+
+function TForeignRecipe.GetItems: TNyxMenuItems;
+begin
+  Result := FPlan;
+end;
 
 procedure Check(AValue: Boolean; const AReason: TNyxText);
 begin
@@ -90,6 +157,9 @@ end;
 
 procedure Cleanup;
 begin
+  GInvoker := nil;
+  GDensity := nil;
+  GAppearance := nil;
   GMenu := nil;
   GToken1 := nil;
   GToken2 := nil;
@@ -175,11 +245,31 @@ end;
 function FocusedID: TNyxText;
 var
   LIndex: Integer;
+  {$IFNDEF PAS2JS}
+  LMenu: INyxLCLMenu;
+  LMenus: array[0..1] of INyxMenu;
+  {$ENDIF}
 begin
   Result := '';
   {$IFDEF PAS2JS}
   Result := TJSHTMLElement(document.activeElement).getAttribute('data-node');
   {$ELSE}
+  LMenus[0] := GDensity;
+  LMenus[1] := GAppearance;
+  for LIndex := 0 to High(LMenus) do
+  begin
+
+    if (LMenus[LIndex] <> nil) and LMenus[LIndex].IsOpen then
+    begin
+      LMenu := LMenus[LIndex] as INyxLCLMenu;
+
+      if LMenu.Presentation.Renderer.FocusFor(LMenu.Content.Part(LMenu.Focused).ID) =
+        Screen.ActiveControl then
+      begin
+        Exit(LMenu.Content.Part(LMenu.Focused).ID);
+      end;
+    end;
+  end;
 
   if Screen.ActiveControl = GRenderer.FocusFor('open-actions') then
   begin
@@ -260,6 +350,14 @@ begin
       begin
         LName := 'Tab';
       end;
+    nkRightKey:
+      begin
+        LName := 'ArrowRight';
+      end;
+    nkLeftKey:
+      begin
+        LName := 'ArrowLeft';
+      end;
   else
     raise Exception.Create('Unknown fixture key');
   end;
@@ -303,6 +401,14 @@ begin
     nkTabKey:
       begin
         LKey := VK_TAB;
+      end;
+    nkRightKey:
+      begin
+        LKey := VK_RIGHT;
+      end;
+    nkLeftKey:
+      begin
+        LKey := VK_LEFT;
       end;
   else
     raise Exception.Create('Unknown fixture key');
@@ -352,31 +458,46 @@ begin
 end;
 
 procedure Finish; forward;
+procedure FamilyFinish; forward;
 
 {$IFNDEF PAS2JS}
 { Capture the live native presentation before completion tears down its controls.
   PaintTo uses the actual owned window; no pixels are synthesized or edited. }
-procedure Capture;
+procedure Capture(const AMenu: INyxLCLMenu = nil; const APath: String = '');
 var
   LBitmap: TBitmap;
   LImage: TLazIntfImage;
   LWriter: TFPWriterPNG;
+  LMenu: INyxLCLMenu;
+  LPath: String;
 begin
 
   if ParamCount = 0 then
   begin
     Exit;
   end;
-  GMenu.Presentation.Window.Repaint;
+  LMenu := AMenu;
+
+  if LMenu = nil then
+  begin
+    LMenu := GMenu;
+  end;
+  LPath := APath;
+
+  if LPath = '' then
+  begin
+    LPath := ParamStr(1);
+  end;
+  LMenu.Presentation.Window.Repaint;
   Pump;
   LBitmap := TBitmap.Create;
   LImage := nil;
   LWriter := TFPWriterPNG.Create;
   try
-    LBitmap.SetSize(GMenu.Presentation.Window.Width, GMenu.Presentation.Window.Height);
-    GMenu.Presentation.Window.PaintTo(LBitmap.Canvas, 0, 0);
+    LBitmap.SetSize(LMenu.Presentation.Window.Width, LMenu.Presentation.Window.Height);
+    LMenu.Presentation.Window.PaintTo(LBitmap.Canvas, 0, 0);
     LImage := LBitmap.CreateIntfImage;
-    LImage.SaveToFile(ParamStr(1), LWriter);
+    LImage.SaveToFile(LPath, LWriter);
   finally
     LWriter.Free;
     LImage.Free;
@@ -404,7 +525,254 @@ begin
     end;
   end;
 end;
+
+procedure AwaitFamilyCapture;
+begin
+
+  if document.body.getAttribute('data-capture-observed') = 'menu-family' then
+  begin
+    window.clearInterval(GResume);
+    try
+      FamilyFinish;
+    except
+      on E: Exception do
+      begin
+        Cleanup;
+        document.body.setAttribute('data-menu', 'failed');
+        document.body.setAttribute('data-event-error', E.Message);
+      end;
+    end;
+  end;
+end;
 {$ENDIF}
+
+{ The same three owned roots are exported through semantic MCP. Runtime plans
+  attach typed behavior; this fixture does not fabricate or replace editor trees. }
+procedure BindInvoker;
+begin
+  { FPC may retain an interface-valued factory temporary through the enclosing
+    routine. End this construction scope before asserting explicit retirement. }
+  GInvoker := NewNyxMenuButton(RetainNyxControl(GRenderer.Root.Find('open-actions'))
+    as INyxButton, GRenderer.Events, GMenu, NyxMenu('Thoughtful actions'));
+end;
+
+procedure FamilyRun;
+const
+  InvalidCounts: array[0..2] of Integer = (-1, 1, 257);
+var
+  LRecipe: INyxMenuRecipe;
+  LAppearance: INyxMenuRecipe;
+  LClone: TNyxDocument;
+  LRejected: Boolean;
+  LDepth: Integer;
+  LBefore: INyxEventSubscription;
+  LBadCount: Integer;
+begin
+  for LBadCount in InvalidCounts do
+  begin
+    LRejected := False;
+    try
+      LRecipe := NewNyxMenuRecipe(GDocument, NyxPageRoot('thoughtful-actions'),
+        NyxMenuItems.Add(NyxMenuSubmenu(NyxPart('appearance'),
+          TForeignRecipe.Create(LBadCount))));
+    except
+      on E: ENyxModel do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'Invalid foreign recipe refuses before any presentation');
+  end;
+  LRecipe := NewNyxMenuRecipe(GDocument, NyxPageRoot('density-options'), NyxMenuItems
+    .Add(NyxMenuRadio(NyxPart('comfortable'), NyxMenuCommand('comfortable'),
+      NyxMenuGroup('density'), True))
+    .Add(NyxMenuRadio(NyxPart('compact'), NyxMenuCommand('compact'),
+      NyxMenuGroup('density'), False)));
+  LClone := LRecipe.CopyDocument;
+  try
+    LClone.Find('density-compact').Configure.Text('Changed copy');
+  finally
+    LClone.Free;
+  end;
+  LClone := LRecipe.CopyDocument;
+  try
+    Check(LClone.Find('density-compact').Prop('text') = TNyxText('Compact'),
+      'Recipe clones preserve independent owned content');
+  finally
+    LClone.Free;
+  end;
+  LAppearance := NewNyxMenuRecipe(GDocument, NyxPageRoot('appearance-options'),
+    NyxMenuItems.Add(NyxMenuCheck(NyxPart('guides'), NyxMenuCommand('grid'), False))
+      .Add(NyxMenuSubmenu(NyxPart('density'), LRecipe)));
+  LRejected := False;
+  try
+    for LDepth := 1 to 9 do
+    begin
+      LRecipe := NewNyxMenuRecipe(GDocument, NyxPageRoot('thoughtful-actions'),
+        NyxMenuItems.Add(NyxMenuSubmenu(NyxPart('appearance'), LRecipe)));
+    end;
+  except
+    on E: ENyxModel do
+    begin
+      LRejected := Pos('bounds', E.Message) > 0;
+    end;
+  end;
+  Check(LRejected, 'Overdeep menus refuse before presentation');
+  LRecipe := nil;
+  GPlan := GPlan.Add(NyxMenuSubmenu(NyxPart('appearance'), LAppearance));
+  LAppearance := nil;
+  GMenu := NewMenu;
+  GMenu.OnInvoke.Subscribe(TCompletion.Create('A'));
+  GMenu.OnInvoke.Subscribe(TCompletion.Create('B'));
+  BindInvoker;
+  Invoker;
+  LBefore := GRenderer.Events.OnBeforeKeyDown(NyxControlEvents('open-actions'))
+    .Subscribe(TConsume.Create);
+  Key(nkDownKey);
+  Check(not GMenu.IsOpen, 'Consumed invoker key cannot open a menu');
+  LBefore.Cancel;
+  LBefore := nil;
+  Key(nkDownKey);
+  Check(GMenu.IsOpen and (FocusedID = 'menu-cut'), 'Invoker Down opens first without a click');
+  {$IFDEF PAS2JS}
+  Check(GRenderer.FocusFor('open-actions').getAttribute('aria-expanded') = 'true',
+    'Actual invoker advertises expanded state');
+  {$ENDIF}
+  Key(nkEscapeKey);
+  Invoker;
+  Key(nkUpKey);
+  Check(FocusedID = 'menu-appearance', 'Invoker Up opens the last visible command');
+  Key(nkRightKey);
+  GAppearance := GMenu.Submenu(NyxPart('appearance'));
+  Check(GMenu.IsOpen and GAppearance.IsOpen and (FocusedID = 'appearance-guides'),
+    'Right opens an independent child while preserving its parent');
+  Key(nkLeftKey);
+  Check(not GAppearance.IsOpen and (FocusedID = 'menu-appearance'),
+    'Left closes only the child and returns to its actual parent button');
+  GMenu.SetEnabled(NyxPart('appearance'), False);
+  Key(nkRightKey);
+  Check(not GAppearance.IsOpen, 'Disabled branch refuses keyboard opening');
+  GMenu.SetEnabled(NyxPart('appearance'), True);
+  GMenu.Button(NyxPart('appearance')).Configure.ReadOnly(True);
+  Key(nkEnterKey);
+  Check(GAppearance.IsOpen, 'Read-only branch retains nonmutating Enter navigation');
+  Key(nkLeftKey);
+  GMenu.Button(NyxPart('appearance')).Configure.ReadOnly(False);
+  Key(nkRightKey);
+  Key(nkDownKey);
+  Key(nkRightKey);
+  GDensity := GAppearance.Submenu(NyxPart('density'));
+  Check(GDensity.IsOpen and (FocusedID = 'density-comfortable'),
+    'A third independent level receives actual focus');
+  Key(nkDownKey);
+  Key(nkSpaceKey);
+  Check(GMenu.IsOpen and GAppearance.IsOpen and GDensity.IsOpen and
+    GDensity.Checked(NyxPart('compact')) and not GDensity.Checked(NyxPart('comfortable')),
+    'Radio Space preserves the whole family and its independent state');
+  GOrder := '';
+  Key(nkEnterKey);
+  Check(not GMenu.IsOpen and not GAppearance.IsOpen and not GDensity.IsOpen and
+    (FocusedID = 'open-actions'), 'Leaf activation closes the whole family before completion');
+  Check((GOrder = 'AB') and (GLast.Command.Name = 'compact') and GLast.Checked,
+    'Root registrations receive the ordered detached descendant snapshot');
+  Invoker;
+  Key(nkUpKey);
+  Key(nkRightKey);
+  Key(nkDownKey);
+  Key(nkRightKey);
+  Check(GDensity.Checked(NyxPart('compact')), 'Reopening retains child runtime check state');
+  Key(nkEscapeKey);
+  Check(not GDensity.IsOpen and GAppearance.IsOpen and GMenu.IsOpen and
+    (FocusedID = 'appearance-density'), 'Escape returns one level rather than closing ancestors');
+  Key(nkEscapeKey);
+  Check(not GAppearance.IsOpen and GMenu.IsOpen and (FocusedID = 'menu-appearance'),
+    'Second Escape returns to the original branch');
+  Key(nkEscapeKey);
+  Check(not GMenu.IsOpen and (FocusedID = 'open-actions'), 'Final Escape returns to the invoker');
+  GInvoker := nil;
+  Invoker;
+  Key(nkDownKey);
+  Check(not GMenu.IsOpen, 'Releasing invoker registration cancels physical keyboard callbacks');
+  GMenu.Open(NyxMenu('Thoughtful actions').Opening(nmoLast));
+  GMenu.OpenSubmenu(NyxPart('appearance'));
+  GAppearance.OpenSubmenu(NyxPart('density'));
+end;
+
+procedure FamilyFinish;
+{$IFDEF PAS2JS}
+var
+  LOptions: TJSObject;
+{$ELSE}
+var
+  LPoint: TPoint;
+  LMessage: TLMessage;
+  LFace: TWinControl;
+{$ENDIF}
+begin
+  Check(GMenu.IsOpen and GAppearance.IsOpen and GDensity.IsOpen,
+    'Captured family retains three open hosts before a pointer press');
+  { A descendant press is inside the root presentation family. The host bridge
+    uses real mounted targets/geometry, not a portable document-only assertion. }
+  {$IFDEF PAS2JS}
+  LOptions := TJSObject.new;
+  LOptions['bubbles'] := True;
+  (GDensity as INyxBrowserMenu).Presentation.Renderer.FocusFor('density-comfortable')
+    .dispatchEvent(TPointer.new('pointerdown', LOptions));
+  {$ELSE}
+  LFace := (GDensity as INyxLCLMenu).Presentation.Renderer.FocusFor('density-comfortable');
+  LPoint := LFace.ClientToScreen(Point(LFace.Width div 2, LFace.Height div 2));
+  SetCursorPos(LPoint.X, LPoint.Y);
+  LMessage := Default(TLMessage);
+  LMessage.Msg := LM_LBUTTONDOWN;
+  Application.NotifyUserInputHandler(LFace, LMessage);
+  {$ENDIF}
+  Check(GMenu.IsOpen and GAppearance.IsOpen and GDensity.IsOpen,
+    'Physical descendant press keeps all ancestor hosts open');
+  {$IFDEF PAS2JS}
+  NyxFocusWithoutScroll(GRenderer.FocusFor('after-actions'));
+  GRenderer.FocusFor('after-actions').dispatchEvent(TPointer.new('pointerdown', LOptions));
+  {$ELSE}
+  LFace := GRenderer.FocusFor('after-actions');
+  LFace.SetFocus;
+  LPoint := LFace.ClientToScreen(Point(LFace.Width div 2, LFace.Height div 2));
+  SetCursorPos(LPoint.X, LPoint.Y);
+  Application.NotifyUserInputHandler(LFace, LMessage);
+  {$ENDIF}
+  Check(not GMenu.IsOpen and not GAppearance.IsOpen and not GDensity.IsOpen and
+    (FocusedID = 'after-actions'), 'Outside press closes the family without stealing destination focus');
+  Invoker;
+  GMenu.Open(NyxMenu('Thoughtful actions').Opening(nmoLast));
+  GMenu.OpenSubmenu(NyxPart('appearance'));
+  GAppearance.OpenSubmenu(NyxPart('density'));
+  {$IFNDEF PAS2JS}
+  Key(nkTabKey);
+  Check(not GMenu.IsOpen and not GAppearance.IsOpen and not GDensity.IsOpen and
+    (FocusedID = 'after-actions'), 'Descendant Tab exits from the root invoker');
+  Invoker;
+  GMenu.Open(NyxMenu('Thoughtful actions').Opening(nmoLast));
+  GMenu.OpenSubmenu(NyxPart('appearance'));
+  GAppearance.OpenSubmenu(NyxPart('density'));
+  Key(nkTabKey, True);
+  Check(not GMenu.IsOpen and (FocusedID = 'before-actions'),
+    'Descendant Shift Tab exits the complete native family backward');
+  {$ENDIF}
+  GMenu.Close;
+  {$IFDEF PAS2JS}
+  Check(GRenderer.FocusFor('open-actions').getAttribute('aria-expanded') = 'false',
+    'Silent root Close updates actual expanded semantics');
+  {$ENDIF}
+  GMenu := nil;
+  Check(not GAppearance.IsOpen and not GDensity.IsOpen and
+    (GDensity.Button(NyxPart('compact')).Text = TNyxText('Compact')),
+    'Retained descendant handles preserve content after root owner retirement');
+  Cleanup;
+  {$IFDEF PAS2JS}
+  document.body.setAttribute('data-menu', 'passed');
+  document.body.setAttribute('data-menu-checks', IntToStr(GChecks));
+  {$ELSE}
+  WriteLn('PASS ', GChecks, ' actual native menu checks');
+  {$ENDIF}
+end;
 
 procedure Finish;
 var
@@ -492,12 +860,14 @@ begin
   GToken1 := nil;
   GToken2 := nil;
   Pump;
-  Cleanup;
+  FamilyRun;
   {$IFDEF PAS2JS}
-  document.body.setAttribute('data-menu', 'passed');
-  document.body.setAttribute('data-menu-checks', IntToStr(GChecks));
+  document.body.setAttribute('data-capture-checkpoint', 'menu-family');
+  GResume := window.setInterval(@AwaitFamilyCapture, 40);
   {$ELSE}
-  WriteLn('PASS ', GChecks, ' actual native menu checks');
+  Capture(GAppearance as INyxLCLMenu, ChangeFileExt(ParamStr(1), '.appearance.png'));
+  Capture(GDensity as INyxLCLMenu, ChangeFileExt(ParamStr(1), '.density.png'));
+  FamilyFinish;
   {$ENDIF}
 end;
 
@@ -519,6 +889,9 @@ begin
     .Add(NyxMenuAction(NyxPart('hidden'), NyxMenuCommand('hidden')));
   LCopy := NyxMenuItems.Add(GPlan[0]);
   Check((LCopy.Count = 1) and (GPlan.Count = 8), 'Menu plans retain independent arrays');
+  LCopy := NyxMenuItems.Add(GPlan[0].Enabled(False));
+  Check(not LCopy[0].IsEnabled and GPlan[0].IsEnabled,
+    'Managed item choices preserve the prior immutable plan');
   GHostDocument := TNyxDocument.Create;
   LPage := NewNyxPage('menu-workbench');
   LPage.Configure.Padding(24).Gap(12);

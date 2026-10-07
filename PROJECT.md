@@ -66,6 +66,18 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Managed menu families now add immutable reference-counted item plans/recipes,
+independent submenus and a public typed menu-button binding. Studio consumes the
+same contracts for Actions/Inspect. Checked actual Win32 passes 58 menu cases
+plus 11 ordinary Studio cases; actual HTTP desktop/390 menus pass 59 each. Full
+local browser Studio qualifies whole-family host Tab, Events and contextual help.
+Exact MCP companion authoring passes 36. Fifteen protected process identities,
+nine exact pairs and the full native checkpoint stay unchanged. The serving LAN
+release remains `f9129e0`; this candidate adds no listener. Menubars, pickers,
+persisted plan authoring, hardware/assistive technology and broader parity remain
+open. See [usage](docs/menu.md) and
+[current evidence](WORK.md#current-return-path-menu-families-and-invokers--2026-10-06).
+
 Managed command menus now reuse specialized Nyx buttons/named parts with typed
 commands, check/radio groups, disabled focus, navigation and Unicode typeahead.
 Studio's Actions menu consumes the same contract. Checked actual Win32 passes

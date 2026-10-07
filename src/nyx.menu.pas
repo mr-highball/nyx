@@ -28,9 +28,11 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.types, nyx.controls, nyx.model, nyx.behavior,
-  nyx.events, nyx.scheduler, nyx.popover, nyx.typeahead;
+  nyx.events, nyx.scheduler, nyx.popover, nyx.typeahead, nyx.root.types;
 
 type
+  INyxMenuRecipe = interface;
+  INyxMenuItem = interface;
   { Open application identities own text, never execution keywords or controls. }
   TNyxMenuCommandRef = record
     Name: TNyxText;
@@ -38,43 +40,59 @@ type
   TNyxMenuGroupRef = record
     Name: TNyxText;
   end;
-  TNyxMenuItemKind = (nmiAction, nmiCheck, nmiRadio, nmiSeparator);
+  TNyxMenuItemKind = (nmiAction, nmiCheck, nmiRadio, nmiSeparator, nmiSubmenu);
   TNyxMenuOpening = (nmoFirst, nmoLast);
 
   { Immutable registration of an existing named Nyx part. Disabled commands
     remain keyboard-focusable; physical Enabled=False is deliberately distinct.
     Check/radio state belongs to this managed runtime, not document defaults. }
-  TNyxMenuItem = record
-  private
-    FPart: TNyxPartRef;
-    FCommand: TNyxMenuCommandRef;
-    FGroup: TNyxMenuGroupRef;
-    FKind: TNyxMenuItemKind;
-    FEnabled: Boolean;
-    FChecked: Boolean;
-  public
+  INyxMenuItem = interface(IInterface)
+    ['{1A8B0719-0647-444E-A241-061026000006}']
+    function GetPart: TNyxPartRef;
+    function GetCommand: TNyxMenuCommandRef;
+    function GetGroup: TNyxMenuGroupRef;
+    function GetKind: TNyxMenuItemKind;
+    function GetEnabled: Boolean;
+    function GetChecked: Boolean;
+    function GetRecipe: INyxMenuRecipe;
     { Return a detached choice; disabling preserves keyboard eligibility. }
-    function Enabled(AValue: Boolean): TNyxMenuItem;
-    property Part: TNyxPartRef read FPart;
-    property Command: TNyxMenuCommandRef read FCommand;
-    property Group: TNyxMenuGroupRef read FGroup;
-    property Kind: TNyxMenuItemKind read FKind;
-    property IsEnabled: Boolean read FEnabled;
-    property IsChecked: Boolean read FChecked;
+    function Enabled(AValue: Boolean): INyxMenuItem;
+    property Part: TNyxPartRef read GetPart;
+    property Command: TNyxMenuCommandRef read GetCommand;
+    property Group: TNyxMenuGroupRef read GetGroup;
+    property Kind: TNyxMenuItemKind read GetKind;
+    property IsEnabled: Boolean read GetEnabled;
+    property IsChecked: Boolean read GetChecked;
+    property Recipe: INyxMenuRecipe read GetRecipe;
   end;
+  { Source-compatible names for the original value-plan spelling. Both now
+    denote specialized reference-counted immutable contracts on both targets. }
+  TNyxMenuItem = INyxMenuItem;
 
-  { Value-owned ordered plan, maximum 256 entries. Add returns an independent
-    array; prior plans stay unchanged on both compilers. Missing/duplicate parts,
+  { Immutable managed ordered plan, maximum 256 entries. Add copies every item
+    into a new plan; prior plans stay unchanged on both compilers. Missing/duplicate parts,
     invalid groups and multiple initially checked radios refuse before opening. }
-  TNyxMenuItems = record
-  private
-    FItems: array of TNyxMenuItem;
+  INyxMenuItems = interface(IInterface)
+    ['{1A8B0719-0647-444E-A241-061026000007}']
     function GetCount: Integer;
     function GetItem(AIndex: Integer): TNyxMenuItem;
-  public
-    function Add(const AItem: TNyxMenuItem): TNyxMenuItems;
+    function Add(const AItem: TNyxMenuItem): INyxMenuItems;
     property Count: Integer read GetCount;
     property Items[AIndex: Integer]: TNyxMenuItem read GetItem; default;
+  end;
+  TNyxMenuItems = INyxMenuItems;
+
+  { Immutable owned submenu content and plan. CopyDocument returns a caller-owned
+    independent clone. Implementations must preserve their construction snapshot;
+    presenters validate every branch before opening any host. Eight levels and
+    2048 total entries bound recipes, including external/cyclic implementations. }
+  INyxMenuRecipe = interface(IInterface)
+    ['{1A8B0719-0647-444E-A241-061026000004}']
+    function CopyDocument: TNyxDocument;
+    function GetRoot: TNyxRootRef;
+    function GetItems: TNyxMenuItems;
+    property Root: TNyxRootRef read GetRoot;
+    property Items: TNyxMenuItems read GetItems;
   end;
 
   { Menu navigation is an explicit typed runtime policy. Every open starts at
@@ -136,6 +154,11 @@ type
     procedure SetEnabled(const APart: TNyxPartRef; AValue: Boolean);
     { Current independent check/radio state; action/separator/foreign parts raise. }
     function Checked(const APart: TNyxPartRef): Boolean;
+    { Open the enabled named branch; lazily clone its independent content. A
+      parent must be open. Disabled branches do nothing. Observe an already
+      created child with Submenu; nil means it has never been mounted. }
+    procedure OpenSubmenu(const APart: TNyxPartRef);
+    function Submenu(const APart: TNyxPartRef): INyxMenu;
     property Content: INyxControl read GetContent;
     property Events: INyxEvents read GetEvents;
     property IsOpen: Boolean read GetOpen;
@@ -154,6 +177,9 @@ type
   private
     FPopover: INyxPopover;
     FItems: TNyxMenuItems;
+    { Borrowed implementation pointer to this presenter's private copied plan.
+      FItems owns it; only internal check/enable changes use this pointer. }
+    FMutableItems: TObject;
     FCompletion: INyxEvents;
     FLease: TNyxMenuLease;
     FLeaseOwner: IInterface;
@@ -161,6 +187,11 @@ type
     FOptions: TNyxMenuOptions;
     FSearch: INyxTypeAhead;
     FFocused: Integer;
+    FChildren: array of TNyxMenuPresenter;
+    FChildOwners: array of INyxMenu;
+    FParentLease: TNyxMenuLease;
+    FParentOwner: IInterface;
+    FReady: Boolean;
     procedure ValidateCommand(const APart: INyxControl);
     function ItemIndex(const APart: TNyxPartRef): Integer;
     function LabelAt(AIndex: Integer): TNyxText;
@@ -170,6 +201,10 @@ type
     procedure Activate(AIndex: Integer; AClose: Boolean);
     procedure Input(AIndex: Integer; const AEvent: TNyxEventInfo;
       const AExecution: INyxExecution);
+    procedure ChildInvoke(const AEvent: TNyxEventInfo; AIndex: Integer);
+    procedure Dismissed(const AEvent: TNyxEventInfo);
+    procedure CloseChildren(AExcept: Integer = -1);
+    function FamilyRoot: TNyxMenuPresenter;
   protected
     procedure ApplyFaces; virtual; abstract;
     function FocusFace(AIndex: Integer): Boolean; virtual; abstract;
@@ -178,6 +213,12 @@ type
     procedure TabExit(AReverse: Boolean; const AExecution: INyxExecution); virtual; abstract;
     function TextInput(const AText: TNyxText; ATimeMS: Double): Boolean;
     function ItemID(AIndex: Integer): TNyxText;
+    function BranchOpen(AIndex: Integer): Boolean;
+    { Child factories borrow a mounted parent face; their popover family keeps
+      native outside presses and browser descendant semantics coherent. }
+    function CreateSubmenu(AIndex: Integer; const ARecipe: INyxMenuRecipe):
+      TNyxMenuPresenter; virtual; abstract;
+    procedure PresentationChanged; virtual;
     property Popover: INyxPopover read FPopover;
     property Plan: TNyxMenuItems read FItems;
   public
@@ -194,6 +235,8 @@ type
     procedure Close;
     procedure SetEnabled(const APart: TNyxPartRef; AValue: Boolean);
     function Checked(const APart: TNyxPartRef): Boolean;
+    procedure OpenSubmenu(const APart: TNyxPartRef);
+    function Submenu(const APart: TNyxPartRef): INyxMenu;
     property Content: INyxControl read GetContent;
   end;
 
@@ -208,6 +251,11 @@ function NyxMenuRadio(const APart: TNyxPartRef;
   const ACommand: TNyxMenuCommandRef; const AGroup: TNyxMenuGroupRef;
   AChecked: Boolean): TNyxMenuItem;
 function NyxMenuSeparator(const APart: TNyxPartRef): TNyxMenuItem;
+function NyxMenuSubmenu(const APart: TNyxPartRef;
+  const ARecipe: INyxMenuRecipe): TNyxMenuItem;
+{ Clone the document immediately; caller can release it after construction. }
+function NewNyxMenuRecipe(ADocument: TNyxDocument; const ARoot: TNyxRootRef;
+  const AItems: TNyxMenuItems): INyxMenuRecipe;
 function NyxMenuItems: TNyxMenuItems;
 function NyxMenu(const ATitle: TNyxText): TNyxMenuOptions;
 { Validate/copy the exact private completion payload. Unrelated events and
@@ -219,6 +267,62 @@ implementation
 uses nyx.data, nyx.interaction;
 
 type
+  { Owned classes avoid unsupported COM-interface record fields in pas2js.
+    Only a presenter's independent copies are mutable; public plans are sealed. }
+  TMenuItem = class(TInterfacedObject, INyxMenuItem)
+  private
+    FPart: TNyxPartRef;
+    FCommand: TNyxMenuCommandRef;
+    FGroup: TNyxMenuGroupRef;
+    FKind: TNyxMenuItemKind;
+    FEnabled: Boolean;
+    FChecked: Boolean;
+    FRecipe: INyxMenuRecipe;
+  public
+    constructor Create(const AItem: INyxMenuItem = nil);
+    function GetPart: TNyxPartRef;
+    function GetCommand: TNyxMenuCommandRef;
+    function GetGroup: TNyxMenuGroupRef;
+    function GetKind: TNyxMenuItemKind;
+    function GetEnabled: Boolean;
+    function GetChecked: Boolean;
+    function GetRecipe: INyxMenuRecipe;
+    function Enabled(AValue: Boolean): INyxMenuItem;
+  end;
+  TMenuItems = class(TInterfacedObject, INyxMenuItems)
+  private
+    FItems: array of INyxMenuItem;
+    FObjects: array of TMenuItem;
+    procedure Append(const AItem: INyxMenuItem);
+  public
+    constructor Create(const AItems: INyxMenuItems = nil);
+    function GetCount: Integer;
+    function GetItem(AIndex: Integer): INyxMenuItem;
+    function Add(const AItem: INyxMenuItem): INyxMenuItems;
+  end;
+  TMenuRecipe = class(TInterfacedObject, INyxMenuRecipe)
+  private
+    FDocument: TNyxDocument;
+    FRoot: TNyxRootRef;
+    FItems: TNyxMenuItems;
+  public
+    constructor Create(ADocument: TNyxDocument; const ARoot: TNyxRootRef;
+      const AItems: TNyxMenuItems);
+    destructor Destroy; override;
+    function CopyDocument: TNyxDocument;
+    function GetRoot: TNyxRootRef;
+    function GetItems: TNyxMenuItems;
+  end;
+  { Borrowed controller pointer lives behind the same weak menu lease. }
+  TMenuCompletion = class(TNyxEventCallback)
+  private
+    FLease: TNyxMenuLease;
+    FOwner: IInterface;
+    FIndex: Integer;
+  public
+    constructor Create(ALease: TNyxMenuLease; AIndex: Integer);
+    procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
+  end;
   { Queued/externally retained callbacks keep this lease, never their owner.
     Retiring the owner clears the pointer before cancellation and host teardown. }
   TMenuInput = class(TNyxEventCallback)
@@ -264,73 +368,395 @@ end;
 
 function NyxMenuAction(const APart: TNyxPartRef;
   const ACommand: TNyxMenuCommandRef): TNyxMenuItem;
+var
+  LItem: TMenuItem;
 begin
-  Result := Default(TNyxMenuItem);
-  Result.FPart := APart;
-  Result.FCommand := NyxMenuCommand(ACommand.Name);
-  Result.FEnabled := True;
+  NyxMenuCommand(ACommand.Name);
+  LItem := TMenuItem.Create;
+  Result := LItem;
+  LItem.FPart := APart;
+  LItem.FCommand := ACommand;
+  LItem.FEnabled := True;
 end;
 
 function NyxMenuCheck(const APart: TNyxPartRef;
   const ACommand: TNyxMenuCommandRef; AChecked: Boolean): TNyxMenuItem;
+var
+  LItem: TMenuItem;
 begin
-  Result := NyxMenuAction(APart, ACommand);
-  Result.FKind := nmiCheck;
-  Result.FChecked := AChecked;
+  LItem := TMenuItem.Create(NyxMenuAction(APart, ACommand));
+  Result := LItem;
+  LItem.FKind := nmiCheck;
+  LItem.FChecked := AChecked;
 end;
 
 function NyxMenuRadio(const APart: TNyxPartRef;
   const ACommand: TNyxMenuCommandRef; const AGroup: TNyxMenuGroupRef;
   AChecked: Boolean): TNyxMenuItem;
+var
+  LItem: TMenuItem;
 begin
-  Result := NyxMenuCheck(APart, ACommand, AChecked);
-  Result.FKind := nmiRadio;
-  Result.FGroup := NyxMenuGroup(AGroup.Name);
+  NyxMenuGroup(AGroup.Name);
+  LItem := TMenuItem.Create(NyxMenuCheck(APart, ACommand, AChecked));
+  Result := LItem;
+  LItem.FKind := nmiRadio;
+  LItem.FGroup := AGroup;
 end;
 
 function NyxMenuSeparator(const APart: TNyxPartRef): TNyxMenuItem;
+var
+  LItem: TMenuItem;
 begin
-  Result := Default(TNyxMenuItem);
-  Result.FPart := APart;
-  Result.FKind := nmiSeparator;
+  LItem := TMenuItem.Create;
+  Result := LItem;
+  LItem.FPart := APart;
+  LItem.FKind := nmiSeparator;
 end;
 
-function TNyxMenuItem.Enabled(AValue: Boolean): TNyxMenuItem;
+function NyxMenuSubmenu(const APart: TNyxPartRef;
+  const ARecipe: INyxMenuRecipe): TNyxMenuItem;
+var
+  LItem: TMenuItem;
 begin
-  Result := Self;
-  Result.FEnabled := AValue;
+
+  if ARecipe = nil then
+  begin
+    raise ENyxModel.Create('Submenu requires an immutable content recipe');
+  end;
+  LItem := TMenuItem.Create;
+  Result := LItem;
+  LItem.FPart := APart;
+  LItem.FKind := nmiSubmenu;
+  LItem.FEnabled := True;
+  LItem.FRecipe := ARecipe;
+end;
+
+function TMenuItem.GetRecipe: INyxMenuRecipe;
+begin
+  Result := FRecipe;
+end;
+
+procedure ValidateMenuTree(const AContent: INyxControl; const AItems: TNyxMenuItems;
+  ADepth: Integer; var ABudget: Integer);
+var
+  LIndex: Integer;
+  LPart: INyxControl;
+  LDocument: TNyxDocument;
+  LNode: TNyxNode;
+  LAction: TNyxAction;
+  LOther: Integer;
+begin
+
+  if AItems = nil then
+  begin
+    raise ENyxModel.Create('Menu recipe requires an item plan');
+  end;
+  if (AItems.Count < 1) or (AItems.Count > 256) then
+  begin
+    raise ENyxModel.Create('Menu recipe requires 1..256 items');
+  end;
+  Dec(ABudget, AItems.Count);
+
+  if (ADepth > 8) or (ABudget < 0) then
+  begin
+    raise ENyxModel.Create('Menu recipe exceeds depth/entry bounds or has no items');
+  end;
+  for LIndex := 0 to AItems.Count - 1 do
+  begin
+
+    if AItems[LIndex] = nil then
+    begin
+      raise ENyxModel.Create('Menu recipe returned an absent item');
+    end;
+
+    if (Ord(AItems[LIndex].Kind) < Ord(Low(TNyxMenuItemKind))) or
+      (Ord(AItems[LIndex].Kind) > Ord(High(TNyxMenuItemKind))) then
+    begin
+      raise ENyxModel.Create('Menu recipe returned an unknown item kind');
+    end;
+    for LOther := 0 to LIndex - 1 do
+    begin
+
+      if AItems[LOther].Part.Name = AItems[LIndex].Part.Name then
+      begin
+        raise ENyxModel.Create('Menu recipe repeats a named part');
+      end;
+    end;
+    LPart := AContent.Part(AItems[LIndex].Part);
+
+    if AItems[LIndex].Kind = nmiSeparator then
+    begin
+
+      if LPart.Kind <> NyxKindName(nkSeparator) then
+      begin
+        raise ENyxModel.Create('Menu separator part must be a Nyx separator');
+      end;
+      Continue;
+    end;
+
+    if (LPart.Kind <> NyxKindName(nkButton)) or
+      not NyxInteractionPolicy(LPart.Node).Enabled then
+    begin
+      raise ENyxModel.Create('Menu commands require physically enabled Nyx buttons');
+    end;
+
+    if not TryNyxAction(LPart.Node.Prop(NyxAttributeName(atAction)), LAction) or
+      (LAction <> naNone) then
+    begin
+      raise ENyxModel.Create('Menu buttons use OnInvoke instead of a renderer action');
+    end;
+
+    if AItems[LIndex].Kind = nmiSubmenu then
+    begin
+
+      if AItems[LIndex].Recipe = nil then
+      begin
+        raise ENyxModel.Create('Submenu recipe is absent');
+      end;
+      LDocument := AItems[LIndex].Recipe.CopyDocument;
+      try
+
+        if LDocument = nil then
+        begin
+          raise ENyxModel.Create('Submenu recipe returned no owned document');
+        end;
+        LDocument.Validate;
+        LNode := LDocument.FindRoot(AItems[LIndex].Recipe.Root);
+
+        if LNode = nil then
+        begin
+          raise ENyxModel.Create('Submenu recipe root is absent');
+        end;
+        ValidateMenuTree(RetainNyxControl(LNode), AItems[LIndex].Recipe.Items,
+          ADepth + 1, ABudget);
+      finally
+        LDocument.Free;
+      end;
+    end
+    else
+    begin
+      NyxMenuCommand(AItems[LIndex].Command.Name);
+
+      if AItems[LIndex].Kind = nmiRadio then
+      begin
+        NyxMenuGroup(AItems[LIndex].Group.Name);
+        for LOther := 0 to LIndex - 1 do
+        begin
+
+          if AItems[LIndex].IsChecked and AItems[LOther].IsChecked and
+            (AItems[LOther].Kind = nmiRadio) and
+            (AItems[LIndex].Group.Name = AItems[LOther].Group.Name) then
+          begin
+            raise ENyxModel.Create('Radio menu group has more than one initial selection');
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
+constructor TMenuRecipe.Create(ADocument: TNyxDocument; const ARoot: TNyxRootRef;
+  const AItems: TNyxMenuItems);
+var
+  LBudget: Integer;
+begin
+  inherited Create;
+
+  if (ADocument = nil) or (ADocument.FindRoot(ARoot) = nil) then
+  begin
+    raise ENyxModel.Create('Menu recipe requires an exact owned document root');
+  end;
+  FDocument := ADocument.Clone;
+  FRoot := ARoot;
+  FItems := TMenuItems.Create(AItems);
+  LBudget := 2048;
+  ValidateMenuTree(RetainNyxControl(FDocument.FindRoot(FRoot)), FItems, 1, LBudget);
+end;
+
+destructor TMenuRecipe.Destroy;
+begin
+  FDocument.Free;
+  inherited Destroy;
+end;
+
+function TMenuRecipe.CopyDocument: TNyxDocument;
+begin
+  Result := FDocument.Clone;
+end;
+
+function TMenuRecipe.GetRoot: TNyxRootRef;
+begin
+  Result := FRoot;
+end;
+
+function TMenuRecipe.GetItems: TNyxMenuItems;
+begin
+  Result := FItems;
+end;
+
+function NewNyxMenuRecipe(ADocument: TNyxDocument; const ARoot: TNyxRootRef;
+  const AItems: TNyxMenuItems): INyxMenuRecipe;
+begin
+  Result := TMenuRecipe.Create(ADocument, ARoot, AItems);
+end;
+
+constructor TMenuCompletion.Create(ALease: TNyxMenuLease; AIndex: Integer);
+begin
+  inherited Create;
+  FLease := ALease;
+  FOwner := ALease;
+  FIndex := AIndex;
+end;
+
+procedure TMenuCompletion.Invoke(const AEvent: TNyxEventInfo;
+  const AExecution: INyxExecution);
+var
+  LKeepAlive: INyxMenu;
+begin
+
+  if FLease.Owner = nil then
+  begin
+    Exit;
+  end;
+  LKeepAlive := FLease.Owner;
+
+  if FIndex < 0 then
+  begin
+    FLease.Owner.Dismissed(AEvent);
+  end
+  else
+  begin
+    FLease.Owner.ChildInvoke(AEvent, FIndex);
+  end;
+  LKeepAlive.GetOpen;
+end;
+
+constructor TMenuItem.Create(const AItem: INyxMenuItem);
+begin
+  inherited Create;
+
+  if AItem <> nil then
+  begin
+    FPart := AItem.Part;
+    FCommand := AItem.Command;
+    FGroup := AItem.Group;
+    FKind := AItem.Kind;
+    FEnabled := AItem.IsEnabled;
+    FChecked := AItem.IsChecked;
+    FRecipe := AItem.Recipe;
+  end;
+end;
+
+function TMenuItem.GetPart: TNyxPartRef;
+begin
+  Result := FPart;
+end;
+
+function TMenuItem.GetCommand: TNyxMenuCommandRef;
+begin
+  Result := FCommand;
+end;
+
+function TMenuItem.GetGroup: TNyxMenuGroupRef;
+begin
+  Result := FGroup;
+end;
+
+function TMenuItem.GetKind: TNyxMenuItemKind;
+begin
+  Result := FKind;
+end;
+
+function TMenuItem.GetEnabled: Boolean;
+begin
+  Result := FEnabled;
+end;
+
+function TMenuItem.GetChecked: Boolean;
+begin
+  Result := FChecked;
+end;
+
+function TMenuItem.Enabled(AValue: Boolean): INyxMenuItem;
+var
+  LItem: TMenuItem;
+begin
+  LItem := TMenuItem.Create(Self);
+  LItem.FEnabled := AValue;
+  Result := LItem;
 end;
 
 function NyxMenuItems: TNyxMenuItems;
 begin
-  Result := Default(TNyxMenuItems);
+  Result := TMenuItems.Create;
 end;
 
-function TNyxMenuItems.GetCount: Integer;
+constructor TMenuItems.Create(const AItems: INyxMenuItems);
+var
+  LIndex: Integer;
+  LCount: Integer;
+begin
+  inherited Create;
+
+  if AItems <> nil then
+  begin
+    LCount := AItems.Count;
+
+    if (LCount < 0) or (LCount > 256) then
+    begin
+      raise ENyxModel.Create('Menu requires at most 256 items');
+    end;
+    for LIndex := 0 to LCount - 1 do
+    begin
+      Append(AItems[LIndex]);
+    end;
+  end;
+end;
+
+function TMenuItems.GetCount: Integer;
 begin
   Result := Length(FItems);
 end;
 
-function TNyxMenuItems.GetItem(AIndex: Integer): TNyxMenuItem;
+function TMenuItems.GetItem(AIndex: Integer): TNyxMenuItem;
 begin
 
-  if (AIndex < 0) or (AIndex >= Count) then
+  if (AIndex < 0) or (AIndex >= GetCount) then
   begin
     raise ENyxModel.Create('Menu item index is outside its plan');
   end;
   Result := FItems[AIndex];
 end;
 
-function TNyxMenuItems.Add(const AItem: TNyxMenuItem): TNyxMenuItems;
+procedure TMenuItems.Append(const AItem: INyxMenuItem);
 var
-  LIndex: Integer;
+  LItem: TMenuItem;
+  LCount: Integer;
 begin
 
-  if (Count >= 256) or (AItem.Part.Name = '') then
+  if AItem = nil then
+  begin
+    raise ENyxModel.Create('Menu plan cannot contain an absent item');
+  end;
+  LItem := TMenuItem.Create(AItem);
+  LCount := GetCount;
+  SetLength(FItems, LCount + 1);
+  FItems[LCount] := LItem;
+  SetLength(FObjects, LCount + 1);
+  FObjects[LCount] := LItem;
+end;
+
+function TMenuItems.Add(const AItem: TNyxMenuItem): TNyxMenuItems;
+var
+  LIndex: Integer;
+  LItems: TMenuItems;
+begin
+
+  if (GetCount >= 256) or (AItem = nil) or (AItem.Part.Name = '') then
   begin
     raise ENyxModel.Create('Menu requires named parts and at most 256 items');
   end;
-  for LIndex := 0 to Count - 1 do
+  for LIndex := 0 to GetCount - 1 do
   begin
 
     if FItems[LIndex].Part.Name = AItem.Part.Name then
@@ -338,13 +764,9 @@ begin
       raise ENyxModel.Create('Menu part occurs more than once');
     end;
   end;
-  Result := Default(TNyxMenuItems);
-  SetLength(Result.FItems, Count + 1);
-  for LIndex := 0 to Count - 1 do
-  begin
-    Result.FItems[LIndex] := FItems[LIndex];
-  end;
-  Result.FItems[Count] := AItem;
+  LItems := TMenuItems.Create(Self);
+  Result := LItems;
+  LItems.Append(AItem);
 end;
 
 function NyxMenu(const ATitle: TNyxText): TNyxMenuOptions;
@@ -421,22 +843,29 @@ var
   LIndex: Integer;
   LOther: Integer;
   LPart: INyxControl;
+  LBudget: Integer;
+  LItems: TMenuItems;
 begin
   inherited Create;
 
-  if (APopover = nil) or (AItems.Count = 0) then
+  if (APopover = nil) or (AItems = nil) or (AItems.Count = 0) then
   begin
     raise ENyxModel.Create('Menu requires an owned presentation and named item plan');
   end;
   FPopover := APopover;
-  FItems := AItems;
-  { Detach the caller's plan before runtime check/radio/enablement changes. }
-  FItems.FItems := Copy(AItems.FItems);
+  { Copy the caller's immutable plan before runtime check/radio changes. }
+  LItems := TMenuItems.Create(AItems);
+  FItems := LItems;
+  FMutableItems := LItems;
   FFocused := -1;
   FCompletion := NewNyxEvents;
   FLease := TNyxMenuLease.Create;
   FLeaseOwner := FLease;
   FLease.Owner := Self;
+  LBudget := 2048;
+  ValidateMenuTree(FPopover.Content, FItems, 1, LBudget);
+  SetLength(FChildren, AItems.Count);
+  SetLength(FChildOwners, AItems.Count);
   SetLength(FSubscriptions, AItems.Count * 2);
   for LIndex := 0 to AItems.Count - 1 do
   begin
@@ -453,7 +882,10 @@ begin
     end;
 
     ValidateCommand(LPart);
-    NyxMenuCommand(AItems[LIndex].Command.Name);
+    if AItems[LIndex].Kind <> nmiSubmenu then
+    begin
+      NyxMenuCommand(AItems[LIndex].Command.Name);
+    end;
 
     if AItems[LIndex].Kind = nmiRadio then
     begin
@@ -476,6 +908,7 @@ begin
     FSubscriptions[LIndex * 2 + 1] := FPopover.Events.On(
       NyxControlEvents(LPart.ID), ntClick).Subscribe(TMenuInput.Create(FLease, LIndex));
   end;
+  FPopover.OnDismiss.Subscribe(TMenuCompletion.Create(FLease, -1));
 end;
 
 destructor TNyxMenuPresenter.Destroy;
@@ -503,8 +936,11 @@ begin
 
   if FPopover <> nil then
   begin
+    CloseChildren;
     FPopover.Close;
   end;
+  FChildren := nil;
+  FChildOwners := nil;
   FPopover := nil;
   FCompletion := nil;
   FLeaseOwner := nil;
@@ -624,6 +1060,7 @@ end;
 
 procedure TNyxMenuPresenter.Focus(AIndex: Integer);
 begin
+  CloseChildren(AIndex);
 
   if (AIndex < 0) or not Visible(AIndex) or not FocusFace(AIndex) then
   begin
@@ -663,6 +1100,8 @@ begin
   try
     ApplyFaces;
     Focus(LInitial);
+    FReady := True;
+    PresentationChanged;
   except
     FPopover.Close;
     raise;
@@ -672,9 +1111,145 @@ end;
 
 procedure TNyxMenuPresenter.Close;
 begin
+  CloseChildren;
   FPopover.Close;
   FSearch := nil;
   FFocused := -1;
+  PresentationChanged;
+end;
+
+procedure TNyxMenuPresenter.PresentationChanged;
+begin
+
+  if FReady then
+  begin
+    ApplyFaces;
+  end;
+end;
+
+function TNyxMenuPresenter.BranchOpen(AIndex: Integer): Boolean;
+begin
+  Result := (FChildren[AIndex] <> nil) and FChildren[AIndex].GetOpen;
+end;
+
+procedure TNyxMenuPresenter.CloseChildren(AExcept: Integer);
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(FChildren) do
+  begin
+
+    if (LIndex <> AExcept) and BranchOpen(LIndex) then
+    begin
+      FChildren[LIndex].Close;
+    end;
+  end;
+end;
+
+function TNyxMenuPresenter.FamilyRoot: TNyxMenuPresenter;
+begin
+  Result := Self;
+  while (Result.FParentLease <> nil) and (Result.FParentLease.Owner <> nil) do
+  begin
+    Result := Result.FParentLease.Owner;
+  end;
+end;
+
+function TNyxMenuPresenter.Submenu(const APart: TNyxPartRef): INyxMenu;
+var
+  LIndex: Integer;
+begin
+  LIndex := ItemIndex(APart);
+
+  if FItems[LIndex].Kind <> nmiSubmenu then
+  begin
+    raise ENyxModel.Create('Menu part is not a submenu');
+  end;
+  Result := FChildOwners[LIndex];
+end;
+
+procedure TNyxMenuPresenter.OpenSubmenu(const APart: TNyxPartRef);
+var
+  LIndex: Integer;
+  LChild: TNyxMenuPresenter;
+begin
+  FCompletion.Scheduler.RequireUI;
+  LIndex := ItemIndex(APart);
+
+  if not GetOpen or (FItems[LIndex].Kind <> nmiSubmenu) then
+  begin
+    raise ENyxModel.Create('Submenu requires an open parent and a named branch');
+  end;
+
+  if not Visible(LIndex) or not FItems[LIndex].IsEnabled then
+  begin
+    Exit;
+  end;
+  Focus(LIndex);
+
+  if FChildren[LIndex] = nil then
+  begin
+    LChild := CreateSubmenu(LIndex, FItems[LIndex].Recipe);
+    FChildOwners[LIndex] := LChild;
+    FChildren[LIndex] := LChild;
+    LChild.FParentLease := FLease;
+    LChild.FParentOwner := FLeaseOwner;
+    LChild.OnInvoke.Subscribe(TMenuCompletion.Create(FLease, LIndex));
+  end;
+
+  if not BranchOpen(LIndex) then
+  begin
+    FChildren[LIndex].Open(FOptions.Presentation(NyxPopover(LabelAt(LIndex))
+      .Placement(npsRight, npaStart).Size(FOptions.Placement.Width, FOptions.Placement.Height)
+      .Spacing(FOptions.Placement.Gap, FOptions.Placement.Margin)
+      .Sizing(FOptions.Placement.SizeMode).DismissOn(FOptions.Placement.Dismissals))
+      .Opening(nmoFirst));
+  end;
+  PresentationChanged;
+end;
+
+procedure TNyxMenuPresenter.ChildInvoke(const AEvent: TNyxEventInfo; AIndex: Integer);
+var
+  LEvent: TNyxEventInfo;
+  LEvents: INyxEvents;
+begin
+  { A closed leaf means activation has completed. Retire every ancestor before
+    dispatching the detached snapshot; Space check/radio changes keep the chain. }
+  LEvents := FCompletion;
+
+  if not BranchOpen(AIndex) then
+  begin
+    Close;
+  end;
+  LEvent := AEvent.Copy;
+  LEvent.SourceID := Content.ID;
+  LEvent.OriginID := Content.ID;
+  LEvent.TargetID := Content.ID;
+  LEvents.Dispatch(LEvent, LEvent.OriginID, LEvent.SourceID);
+end;
+
+procedure TNyxMenuPresenter.Dismissed(const AEvent: TNyxEventInfo);
+var
+  LIndex: Integer;
+  LReason: TNyxPopoverReason;
+begin
+  LReason := NyxPopoverDismissReason(AEvent);
+  for LIndex := 0 to High(FChildren) do
+  begin
+
+    if BranchOpen(LIndex) then
+    begin
+      { Outside/retired-anchor dismissal must not steal focus back to an already
+        hidden ancestor. The same reason cascades through the owned hosts. }
+      FChildren[LIndex].Popover.Dismiss(LReason);
+    end;
+  end;
+  PresentationChanged;
+
+  if (FParentLease <> nil) and (FParentLease.Owner <> nil) then
+  begin
+    FParentLease.Owner.PresentationChanged;
+  end;
 end;
 
 procedure TNyxMenuPresenter.SetEnabled(const APart: TNyxPartRef; AValue: Boolean);
@@ -688,7 +1263,7 @@ begin
   begin
     raise ENyxModel.Create('Separator has no command enablement');
   end;
-  FItems.FItems[LIndex].FEnabled := AValue;
+  TMenuItems(FMutableItems).FObjects[LIndex].FEnabled := AValue;
 
   if GetOpen then
   begin
@@ -716,8 +1291,20 @@ var
   LEvents: INyxEvents;
 begin
 
-  if not Visible(AIndex) or not FItems[AIndex].IsEnabled or
-    NyxInteractionPolicy(Content.Part(FItems[AIndex].Part).Node).ReadOnly then
+  if not Visible(AIndex) or not FItems[AIndex].IsEnabled then
+  begin
+    Exit;
+  end;
+
+  if FItems[AIndex].Kind = nmiSubmenu then
+  begin
+    OpenSubmenu(FItems[AIndex].Part);
+    Exit;
+  end;
+  { Opening a branch is navigation, like Right; read-only refuses leaf commands
+    without disabling focus or changing Enter/Space navigation semantics. }
+
+  if NyxInteractionPolicy(Content.Part(FItems[AIndex].Part).Node).ReadOnly then
   begin
     Exit;
   end;
@@ -725,7 +1312,7 @@ begin
   case FItems[AIndex].Kind of
     nmiCheck:
       begin
-        FItems.FItems[AIndex].FChecked := not FItems[AIndex].IsChecked;
+        TMenuItems(FMutableItems).FObjects[AIndex].FChecked := not FItems[AIndex].IsChecked;
       end;
     nmiRadio:
       begin
@@ -735,7 +1322,7 @@ begin
           if (FItems[LIndex].Kind = nmiRadio) and
             (FItems[LIndex].Group.Name = FItems[AIndex].Group.Name) then
           begin
-            FItems.FItems[LIndex].FChecked := LIndex = AIndex;
+            TMenuItems(FMutableItems).FObjects[LIndex].FChecked := LIndex = AIndex;
           end;
         end;
       end;
@@ -806,8 +1393,8 @@ begin
   if (AEvent.Keyboard.Key = nkTabKey) and
     (AEvent.Keyboard.Modifiers <= [nmShift]) then
   begin
-    Close;
-    TabExit(nmShift in AEvent.Keyboard.Modifiers, AExecution);
+    FamilyRoot.Close;
+    FamilyRoot.TabExit(nmShift in AEvent.Keyboard.Modifiers, AExecution);
     Exit;
   end;
 
@@ -817,6 +1404,27 @@ begin
   end;
   LTarget := -1;
   case AEvent.Keyboard.Key of
+    nkRightKey:
+      begin
+
+        if FItems[AIndex].Kind = nmiSubmenu then
+        begin
+          LResponse.Consume;
+          Activate(AIndex, False);
+        end;
+        Exit;
+      end;
+    nkLeftKey:
+      begin
+
+        if (FParentLease <> nil) and (FParentLease.Owner <> nil) then
+        begin
+          LResponse.Consume;
+          Close;
+          FParentLease.Owner.PresentationChanged;
+        end;
+        Exit;
+      end;
     nkHomeKey:
       begin
         LTarget := Boundary(False);

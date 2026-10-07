@@ -55,22 +55,28 @@ type
     FStyled: Boolean;
     FPreviousText: array of TUTF8KeyPressEvent;
     FColors: array of TColor;
+    FTheme: TNyxTheme;
     procedure TextKey(ASender: TObject; var AKey: TUTF8Char);
   protected
     procedure ApplyFaces; override;
     function FocusFace(AIndex: Integer): Boolean; override;
     procedure TabExit(AReverse: Boolean; const AExecution: INyxExecution); override;
+    function CreateSubmenu(AIndex: Integer; const ARecipe: INyxMenuRecipe):
+      TNyxMenuPresenter; override;
   public
     constructor Create(AAnchor: TWinControl; ADocument: TNyxDocument;
-      const ARoot: TNyxRootRef; const AItems: TNyxMenuItems; ATheme: TNyxTheme);
+      const ARoot: TNyxRootRef; const AItems: TNyxMenuItems; ATheme: TNyxTheme;
+      const AParent: INyxLCLPopover = nil);
     destructor Destroy; override;
     function GetPopover: INyxLCLPopover;
   end;
 
 constructor TLCLMenu.Create(AAnchor: TWinControl; ADocument: TNyxDocument;
-  const ARoot: TNyxRootRef; const AItems: TNyxMenuItems; ATheme: TNyxTheme);
+  const ARoot: TNyxRootRef; const AItems: TNyxMenuItems; ATheme: TNyxTheme;
+  const AParent: INyxLCLPopover);
 begin
-  FHost := NewNyxLCLPopover(AAnchor, ADocument, ARoot, ATheme);
+  FTheme := ATheme;
+  FHost := NewNyxLCLPopover(AAnchor, ADocument, ARoot, ATheme, AParent);
   inherited Create(FHost, AItems);
   SetLength(FPreviousText, Plan.Count);
   SetLength(FColors, Plan.Count);
@@ -137,6 +143,11 @@ begin
       TNyxLCLButton(LFace).Presentation(nbpMenuItem, Plan[LIndex].IsEnabled);
     end;
     LCaption := Button(Plan[LIndex].Part).Text;
+
+    if Plan[LIndex].Kind = nmiSubmenu then
+    begin
+      LCaption := LCaption + TNyxText('  ›');
+    end;
 
     if Plan[LIndex].Kind in [nmiCheck, nmiRadio] then
     begin
@@ -223,6 +234,20 @@ begin
     end;
   end;
   LKeepAlive.GetOpen;
+end;
+
+function TLCLMenu.CreateSubmenu(AIndex: Integer;
+  const ARecipe: INyxMenuRecipe): TNyxMenuPresenter;
+var
+  LDocument: TNyxDocument;
+begin
+  LDocument := ARecipe.CopyDocument;
+  try
+    Result := TLCLMenu.Create(FHost.Renderer.FocusFor(ItemID(AIndex), niDesign),
+      LDocument, ARecipe.Root, ARecipe.Items, FTheme, FHost);
+  finally
+    LDocument.Free;
+  end;
 end;
 
 function NewNyxLCLMenu(AAnchor: TWinControl; ADocument: TNyxDocument;

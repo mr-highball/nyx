@@ -32,7 +32,7 @@ uses
   nyx.events, nyx.viewport, nyx.projection.refresh, nyx.callbacks, nyx.studio.collections,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.lcl,
-  nyx.menu, nyx.menu.lcl, nyx.studio.menu,
+  nyx.menu, nyx.menu.lcl, nyx.menu.button, nyx.controls, nyx.studio.menu,
   nyx.studio.session, nyx.studio.view, nyx.studio.projects,
   nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.rootedits,
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
@@ -130,6 +130,7 @@ type
     { Public managed Nyx presentation owns cloned component help content. }
     FComponentHelp: INyxLCLPopover;
     FActionMenu: INyxLCLMenu;
+    FActionButton: INyxMenuButton;
     { Borrowed receiver registration; cancelled before any controller teardown. }
     FHierarchySubscription: INyxEventSubscription;
     FCanvasView: TNyxLCLRenderer;
@@ -186,6 +187,7 @@ type
     procedure Paint;
     procedure ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure MenuAction(AAction: TNyxStudioMenuAction);
+    procedure PrepareActionMenu;
     procedure ShowComponentHelp(const AAnchor: TNyxControlRef);
     { Borrow current owners synchronously; hover never publishes a design pair. }
     function DesignerDragContext: TNyxStudioDragContext;
@@ -664,6 +666,7 @@ begin
     FCodeParking.Parent := FHost;
   end;
   FSourceModal := nil;
+  FActionButton := nil;
   FActionMenu := nil;
   FComponentHelp := nil;
   FShellView.Free;
@@ -1584,6 +1587,7 @@ begin
   FState.Agents := GetAgentState;
   FState.BuildControlReady := (CurrentBridge <> nil) and
     CurrentBridge.CanCancelBuild;
+  FActionButton := nil;
   FActionMenu := nil;
   FComponentHelp := nil;
   FState.PendingDesign := FSourceCommands.PendingDesign;
@@ -2018,6 +2022,7 @@ begin
     FCanvasRestores := nil;
     RestoreProjectControls;
     FShellCommandContext := FSession.CommandContext;
+    PrepareActionMenu;
     FDesignerDrag.ConnectSources(FShellView.Events, FShellView.Root, FShellCommandContext);
     FDesignerResize.Connect(FShellView.Events, FShellView.Root, FShellCommandContext);
     FDesignerMove.Connect(FShellView.Events, FShellView.Root, FShellCommandContext);
@@ -2466,6 +2471,24 @@ begin
   end;
 end;
 
+procedure TNyxNativeStudio.PrepareActionMenu;
+var
+  LContent: TNyxDocument;
+  LItems: TNyxMenuItems;
+begin
+  LContent := BuildNyxStudioActionMenu(FSession, LItems);
+  try
+    FActionMenu := NewNyxLCLMenu(FShellView.FocusFor(NyxStudioActionMenuID),
+      LContent, NyxPageRoot(NyxStudioActionMenuRoot), LItems, FTheme);
+    FActionMenu.OnInvoke.Subscribe(NewNyxStudioMenuCallback(MenuAction));
+    FActionButton := NewNyxMenuButton(RetainNyxControl(
+      FShellView.Root.Find(NyxStudioActionMenuID)) as INyxButton,
+      FShellView.Events, FActionMenu, NyxMenu('Component actions'));
+  finally
+    LContent.Free;
+  end;
+end;
+
 procedure TNyxNativeStudio.ShowComponentHelp(const AAnchor: TNyxControlRef);
 var
   LHelp: TNyxDocument;
@@ -2475,7 +2498,6 @@ begin
 
     if LHelp <> nil then
     begin
-      FActionMenu := nil;
       FComponentHelp := nil;
       FComponentHelp := NewNyxLCLPopover(FShellView.FocusFor(AAnchor.ID), LHelp,
         NyxPageRoot(NyxComponentHelpRootID), FTheme);
@@ -2489,8 +2511,6 @@ end;
 
 procedure TNyxNativeStudio.ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
-  LHelp: TNyxDocument;
-  LMenuItems: TNyxMenuItems;
   LEffect: TNyxInspectorEffect;
   LRemoval: TNyxCallbackRemoval;
   LDiagnostic: TNyxSourceDiagnostic;
@@ -2511,17 +2531,7 @@ begin
 
   if (ANode.ID = NyxStudioActionMenuID) and (AEvent.Trigger = ntClick) then
   begin
-    LHelp := BuildNyxStudioActionMenu(FSession, LMenuItems);
-    try
-      FActionMenu := nil;
-      FComponentHelp := nil;
-      FActionMenu := NewNyxLCLMenu(FShellView.FocusFor(NyxStudioActionMenuID),
-        LHelp, NyxPageRoot(NyxStudioActionMenuRoot), LMenuItems, FTheme);
-      FActionMenu.OnInvoke.Subscribe(NewNyxStudioMenuCallback(MenuAction));
-      FActionMenu.Open(NyxMenu('Component actions'));
-    finally
-      LHelp.Free;
-    end;
+    FComponentHelp := nil;
     Exit;
   end;
 
