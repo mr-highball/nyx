@@ -20,6 +20,27 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 
+## Ordinary group client content — 2026-10-07
+
+Criteria 1/2 now include actual caption/frame-aware group measurement, row/grid/
+column/flex allocation and clipped nested content, while retaining outer logical
+faces. Owned widgetset bounds preserve decoration metrics even at zero-area
+parking; no temporary controls, authored changes or fixed caption metrics enter
+the portable contract. Actual runtime/design controls pass 124 Win32 checks at
+640/390: nested focus/draft/caret, reveal/scroll, pointer/drop-face mapping,
+font-size simulation, actual parked windows, remeasurement in a 70,000-pixel
+logical page, page switching and retirement. Viewport/Studio/layout/
+compiled gesture regressions pass 4,158/65/2,169/84, all leak-free. Exact browser
+consumers/Studio compile with zero owned warnings. See
+[the packet](../WORK.md#current-return-path-native-group-content-geometry--2026-10-07).
+
+No original criterion closes. Shared renderer no-closure advances 10→11 once;
+workflow/authoring/codegen/delivery stay 19/30/28/2. Stop group fixtures and
+reassess the two geometry packets against original native capability/layout/
+interaction requirements. Current browser execution, displayed pixels, other
+decorated controls/root-group adorners, hardware/IME/assistive technology,
+widgetsets/DPI, visual/budget acceptance and observing delivery remain open.
+
 ## Ordinary form viewport projection — 2026-10-07
 
 Criteria 1/2 now include exact zero-area native allocation for parked form frames,

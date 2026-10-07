@@ -26,7 +26,8 @@ program nyx_logical_viewport_controls;
 
 uses
   SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.codegen,
-  nyx.viewport, nyx.behavior, nyx.events, nyx.callbacks, nyx.scheduler
+  nyx.viewport, nyx.behavior, nyx.events, nyx.callbacks, nyx.scheduler,
+  nyx.designer.resize
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.theme;
   {$else}, Interfaces, Classes, Forms,
   {$ifdef WINDOWS}Windows,{$endif}
@@ -312,6 +313,8 @@ var
   LRejectedPage: INyxPage;
   LRejectedMemo: INyxMemo;
   LRejectedSplit: INyxSplitView;
+  LScreenPoint: TNyxResizePoint;
+  LPointerOrigin: TPoint;
   LRefusalReason: TNyxText;{$endif}
 begin
   {$ifndef PAS2JS}Application.Initialize;{$endif}
@@ -416,6 +419,13 @@ begin
     Check((LProbe.Count = 1) and LProbe.Last.HasPointer and
       (LProbe.Last.Pointer.Y = LBefore.Y.Position + 10),
       'Actual projected native page producer reports original logical pointer position');
+    { Screen conversion must remove the cropped page's content offset once,
+      restoring the exact physical point supplied by its retained producer. }
+    LScreenPoint := GRenderer.ScreenPointFor('home', LProbe.Last.Pointer);
+    LPointerOrigin := Face('home').ClientToScreen(Point(8, 10));
+    Check((LScreenPoint.X = LPointerOrigin.X) and
+      (LScreenPoint.Y = LPointerOrigin.Y),
+      'Clipped native page pointer converts back to its actual screen position');
     {$endif}
     LSubscription.Cancel;
     LSubscription := nil;

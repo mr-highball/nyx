@@ -75,6 +75,7 @@ var
   LExtentX: Integer;
   LExtentY: Integer;
   LUpdating: Boolean;
+  LFrame: TRect;
 begin
 
   if not FVirtualLayout or FProjecting or (FPanel = nil) then
@@ -108,6 +109,22 @@ begin
         LParentY := LParent.FPlacement.ScreenY;
         LOriginX := LParent.FScreenBox.X;
         LOriginY := LParent.FScreenBox.Y;
+        { Child logical coordinates begin at the native parent's client origin,
+          rather than under its group caption/frame. Clip to usable content as
+          well as the ancestor viewport, without changing the outer face box. }
+
+        if LParent.FControl is TCustomGroupBox then
+        begin
+          LFrame := GroupFrameInsets(LParent.FNode);
+          Inc(LOriginX, LFrame.Left);
+          Inc(LOriginY, LFrame.Top);
+          Inc(LParentX, LFrame.Left);
+          Inc(LParentY, LFrame.Top);
+          LParentClip := NyxPlaceViewport(NyxViewportBox(LParentX, LParentY,
+            Max(0, LParent.FPlacement.Width - LFrame.Left - LFrame.Right),
+            Max(0, LParent.FPlacement.Height - LFrame.Top - LFrame.Bottom)),
+            LParentClip, LParentX, LParentY, High(SmallInt), High(Word)).Clip;
+        end;
         { Split panes are ordinary intermediate LCL hosts, not authored nodes.
           Their offsets/clips remain part of physical parenting. }
         LHost := LBinding.FControl.Parent;

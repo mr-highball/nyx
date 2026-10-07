@@ -1268,7 +1268,8 @@ try {
 
   if ($Target -eq 'native-form') {
     # Pascal qualifies actual parked HWNDs, retained focus/input, nested logical
-    # scrolling and ordinary Studio source/history at wide and narrow widths.
+    # scrolling, usable captioned-group content and ordinary Studio source/history
+    # at wide and narrow widths.
     # Printing is diagnostic; displayed capture requires a separate foreground
     # qualification. This target launches no service/browser or existing project.
     $nyxFormRoot = Join-Path $nyxRoot 'build/native-form/maintained'
@@ -1289,13 +1290,14 @@ try {
       "-Fu$nyxLazarus/packager/units/$nyxFormPlatform",
       "-FU$nyxFormNative", "-FE$nyxFormNative")
     foreach ($nyxFormProgram in @('nyx_logical_viewport_tests',
-      'nyx_logical_viewport_controls', 'nyx_source_scheduling_tests')) {
+      'nyx_group_controls_tests', 'nyx_logical_viewport_controls', 'nyx_source_scheduling_tests')) {
       Invoke-NyxCompiler $nyxLclFpc ($nyxFormFlags + @("tests/$nyxFormProgram.lpr"))
       & (Join-Path $nyxFormNative ($nyxFormProgram + '.exe')) $nyxFormControls
       if ($LASTEXITCODE -ne 0) { throw ('Native viewport/Studio consumer failed: ' + $nyxFormProgram) }
     }
     foreach ($nyxFormProgram in @('tests/nyx_logical_viewport_tests.lpr',
-      'tests/nyx_logical_viewport_controls.lpr', 'studio/nyx_studio.lpr',
+      'tests/nyx_group_controls_tests.lpr', 'tests/nyx_logical_viewport_controls.lpr',
+      'studio/nyx_studio.lpr',
       'studio/nyx_source_worker.lpr')) {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
         '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxFormWeb", $nyxFormProgram)

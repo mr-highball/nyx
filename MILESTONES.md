@@ -3,6 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current native group content boundary (2026-10-07): caption/frame geometry now
+participates in usable content measurement, layout, viewport and pointer mapping
+without changing authored outer faces. Actual nested/parked group checks pass 124;
+viewport/Studio/layout/compiled gesture regressions pass 4,158/65/2,169/84,
+leak-free. Exact browser consumers/Studio compile with zero owned warnings.
+Printed diagnostics/font-size simulation leave displayed pixels, current browser
+execution, hardware DPI and full original parity/visual/budget criteria open.
+No original criterion closes. Shared renderer no-closure advances 10→11 once;
+known workflow/authoring/renderer/codegen/delivery counts are 19/30/11/28/2.
+Stop group fixtures and reassess the two native geometry packets against the
+original renderer/parity requirements, retaining deployment/execution gates.
+See [the current packet](WORK.md#current-return-path-native-group-content-geometry--2026-10-07).
+
 Current native viewport boundary (2026-10-07): ordinary form captions and choices
 retain exact zero-area native allocation while parked, and prepared-frame transfer
 reconnects logical scroll receivers. Actual Win32 viewport/Studio/layout checks

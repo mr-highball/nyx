@@ -20,6 +20,26 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Native captioned group content — 2026-10-07
+
+Criteria 2/3 consume native caption/frame-aware usable content without changing
+portable outer boxes. Actual nested runtime/design groups retain memo focus,
+draft/caret and reveal/scroll through wide/narrow allocation; outer pointer/drop
+faces round-trip correctly. Row/grid/fixed-height flex, actual zero-area group
+windows and retained remeasurement on a 70,000-pixel logical page are included
+in 124 Win32 checks. Viewport/Studio/layout/compiled gesture regressions pass
+4,158/65/2,169/84, leak-free. Exact browser consumers/Studio compile with zero
+owned warnings. Printed narrow views and font-size simulation remain diagnostic,
+not displayed-pixel or hardware DPI acceptance. See
+[the packet](../WORK.md#current-return-path-native-group-content-geometry--2026-10-07).
+
+No original criterion/prerequisite closes. Shared renderer alone advances
+no-closure 10→11; this task's historical count remains unestablished. Stop group
+fixtures and reassess the two partial geometry packets against original parity:
+current browser execution/observing delivery, full capabilities/visuals/budgets,
+other decorated controls/root-group adorners, hardware/IME/assistive technology
+and other widgetsets/DPI still require their own evidence.
+
 ## Retained native form viewport boundary — 2026-10-07
 
 Criteria 2/3 consume correct parked form/caption allocation and live root/nested

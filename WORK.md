@@ -7,6 +7,92 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: native group content geometry — 2026-10-07
+
+Previous goal turn is progress: ordinary native viewport allocation/retained
+scroll ownership and qualification are pushed at `e346ff4`, with exact remote/
+clean-worktree evidence. Reassess after the renderer's two partial packets; end
+the generic viewport fixture sequence and follow original LCL criteria 1/2 and
+parity criteria 2/3 through ordinary labeled group content. The built-in uses a
+real TGroupBox; the installed Win32 widgetset subtracts its caption/frame from
+LCL client geometry, while the current layout/projector begins with outer boxes.
+
+Deliver correct client-content measurement, child allocation and viewport
+mapping for ordinary groups, retaining actual controls, captions, focus/drafts
+and authored source across resize/scroll. One bounded built-in group consumer
+must first establish the physical mismatch; stop or switch if no defect exists.
+Require actual wide/narrow native bounds, focus/input/scroll/retirement and the
+unchanged layout/viewport regressions; compile the exact browser consumer and
+Studio without claiming current browser execution. Do not replace protected
+services/projects or retry equivalent rejected browser/primary launches. Original
+full criteria and known counters remain until evidence-backed reassessment.
+
+The ordinary Win32 consumer established an actual mismatch before implementation:
+the outer group was 616×304, its usable client was 612×280, and the memo at left
+12 was 592 wide, four pixels beyond the available padded width. That original
+failure remains in `build/group-geometry/baseline-run.log`, with zero leaks.
+
+The adapter now measures a real group's caption/frame through the widgetset's
+unclamped client bounds and its owned window rectangle. Cached ClientWidth/Height
+erase these insets while a group is parked at zero area. Measurement creates no
+temporary widget, changes no authored padding and assumes no fixed caption/font
+metrics. Natural sizing, row/grid/column arrangement, fixed-height flex allocation
+and viewport projection use the same usable content basis. Logical faces retain
+their outer boxes; child positions remain native client-relative. Pointer/drop
+faces convert through that outer origin. Screen conversion also removes a cropped
+page's logical content offset exactly once.
+
+The bounded public Pascal consumer passes **124 actual Win32 checks** across runtime
+and design modes: nested automatic groups at 640/390, memo focus/draft/caret,
+native pointer and designer drop-face coordinates, narrow nested reveal/scroll,
+row/grid/empty groups, fixed-height flexible input, exact authored source,
+page switching and retirement. A distant group inside a 70,000-pixel logical page
+starts and reparks with actual zero-area native windows. Remeasurement while
+parked preserves its decorations, retained input draft/caret and source; full
+reveal and nested child allocation exercise the runtime logical projector.
+Oversized native group faces retain their existing explicit refusal. A font-size
+change remeasures native captions;
+this is a simulation, not hardware DPI qualification. Printed narrow captures
+are inspected diagnostics, not displayed-pixel evidence. The ordinary viewport
+regression passes **4,158**, including actual cropped-page pointer round-trip;
+Studio source/history passes **65**, portable geometry **17**, unchanged
+MCP-exported layout policy **2,169**, and native gesture preparation/compiled
+consumers **83/84**. All passing native runs are leak-free.
+
+`tools/build.ps1 -Target native-form` now includes the group consumer on both
+compilers. That target and existing layout-policy/gestures targets succeed using
+the existing machine profile; the full maintained run predates the final distant
+group coverage (85), followed by a focused 124-check native run and exact browser
+recompilation. Exact browser consumers, Studio and source worker
+compile with zero owned warnings; installed pas2js RTL warnings remain external.
+No current browser execution or complete visual/parity acceptance is claimed.
+Logs are `maintained-build.log`, `layout-regression.log`, `gesture-regression.log`
+under ignored `build/group-geometry/`, with final focused evidence in
+`group-parked-build.log`, `group-parked-run.log` and `group-browser-qualified.log`.
+Earlier syntax-error and malformed compiler-argument logs are retained; the latter
+is corrected using the maintained build's exact string-argument array.
+
+Authenticated semantic MCP reads only bounded group metadata at revision 2;
+this physical fixture is authored through the public Pascal API, not presented
+as an MCP-authored active design. No protected pair is edited. Fifteen protected
+process identities, nine complete project/history pairs, the full checkpoint,
+LAN bindings and served bytes remain exact. The 229-file LAN payload and separate
+243/242-file packages verify; the independent backend identity is unchanged.
+No equivalent rejected browser or primary-server launch is retried. All owned
+qualification jobs finish before handoff. Exact remote/clean-worktree evidence
+belongs in `build/group-geometry/remote-checkpoint.json`.
+
+This advances original LCL criteria 1/2 and parity criteria 2/3 without closing
+their full acceptance. Shared renderer no-closure advances **10→11 once**;
+workflow/authoring/codegen/delivery remain **19/30/28/2**. Historical parity/NS-3
+counts remain unestablished. Stop group fixture expansion and reassess these two
+partial native geometry packets against the original renderer/parity outcome.
+Current browser execution/observing delivery, full catalog capability semantics,
+other decorated controls and root-group adorners, hardware/IME/assistive technology,
+other widgetsets/DPI, visual quality and sustained budgets retain their original
+owners and acceptance requirements. Do not reopen completed worker/viewport
+fixtures as a substitute for that reassessment.
+
 ## Current return path: native form viewport projection — 2026-10-07
 
 Previous goal turn is progress: bounded reusable native workers and ordinary

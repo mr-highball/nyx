@@ -356,6 +356,10 @@ type
       line membership/weights/spacing; no equal-cell fallback changes the policy. }
     function NaturalWidth(ANode: TNyxNode; AAvailable: Integer): Integer;
     function NaturalContentWidth(ANode: TNyxNode; AAvailable: Integer): Integer;
+    { Read native group decorations without deriving them from clamped cached
+      client sizes. Insets remain measurable while a retained group is parked
+      at zero area; they are local adapter geometry, not authored padding. }
+    function GroupFrameInsets(ANode: TNyxNode): TRect;
     function EffectiveWidth(ANode: TNyxNode; AAvailable: Integer;
       AAllocated: Boolean = False): Integer;
     function ColumnChildWidth(AParent, AChild: TNyxNode; AAvailable: Integer): Integer;
@@ -572,6 +576,10 @@ type
   end;
 
 implementation
+
+uses
+  InterfaceBase,
+  LCLIntf;
 
 procedure TNyxLCLRenderer.NavigateCodeLine(const AID: TNyxText; ALine: Integer; AColumn: Integer);
 var
@@ -1546,6 +1554,44 @@ begin
     NaturalContentWidth(ANode, AAvailable));
 end;
 
+function TNyxLCLRenderer.GroupFrameInsets(ANode: TNyxNode): TRect;
+var
+  LControl: TControl;
+  LGroup: TWinControl;
+  LWindow: TRect;
+  LClient: TRect;
+begin
+  Result := Rect(0, 0, 0, 0);
+
+  if (ANode.ProjectionKind <> 'group') and (FactoryIndex(ANode) < 0) then
+  begin
+    { The common undecorated built-ins need no binding lookup/native query. }
+    Exit;
+  end;
+  LControl := Binding(ANode).FControl;
+
+  if not (LControl is TCustomGroupBox) then
+  begin
+    Exit;
+  end;
+  LGroup := TWinControl(LControl);
+  LGroup.HandleNeeded;
+  { The widgetset's unclamped client bounds include its caption/frame offsets.
+    TWinControl.ClientWidth/Height clamp a parked face to zero and would erase
+    that information. Query the actual owned handle, with no temporary window,
+    authored changes or hard-coded Win32 caption/font metrics. }
+
+  if (LCLIntf.GetWindowRect(LGroup.Handle, LWindow) = 0) or
+    not WidgetSet.GetClientBounds(LGroup.Handle, LClient) then
+  begin
+    raise ENyxModel.Create('Unable to measure native group content: ' + ANode.ID);
+  end;
+  Result.Left := Max(0, LClient.Left);
+  Result.Top := Max(0, LClient.Top);
+  Result.Right := Max(0, LWindow.Right - LWindow.Left - LClient.Right);
+  Result.Bottom := Max(0, LWindow.Bottom - LWindow.Top - LClient.Bottom);
+end;
+
 function TNyxLCLRenderer.NaturalContentWidth(ANode: TNyxNode; AAvailable: Integer): Integer;
 var
   LControl: TControl;
@@ -1557,6 +1603,8 @@ var
   LWrapLength: Integer;
   LVisible: Integer;
   LSum: Double;
+  LFrame: TRect;
+  LContentAvailable: Integer;
 begin
   AAvailable := Max(0, AAvailable);
 
@@ -1582,6 +1630,8 @@ begin
 
   if (ANode.Count > 0) and (ANode.ProjectionKind <> 'split-view') then
   begin
+    LFrame := GroupFrameInsets(ANode);
+    LContentAvailable := Max(0, AAvailable - LFrame.Left - LFrame.Right);
     LSum := 0;
     LVisible := 0;
     for LIndex := 0 to ANode.Count - 1 do
@@ -1592,7 +1642,7 @@ begin
         Continue;
       end;
       Inc(LVisible);
-      LWidth := NaturalWidth(ANode.Children[LIndex], AAvailable);
+      LWidth := NaturalWidth(ANode.Children[LIndex], LContentAvailable);
       Result := Max(Result, LWidth);
       LSum := LSum + LWidth;
     end;
@@ -1608,7 +1658,8 @@ begin
       Result := Trunc(Min(Double(AAvailable), Double(Result) *
         Metric(ANode, 'columns', 2)));
     end;
-    Exit(Min(AAvailable, Result + 2 * Metric(ANode, 'padding', 0)));
+    Exit(Min(AAvailable, Result + 2 * Metric(ANode, 'padding', 0) +
+      LFrame.Left + LFrame.Right));
   end;
   LControl := Binding(ANode).FControl;
 
@@ -1711,9 +1762,12 @@ var
   LGap: Integer;
   LWrap: Boolean;
   LJustification: TNyxJustification;
+  LFrame: TRect;
 begin
   {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FRowPlanCalls);{$endif}
-  LInner := Max(0, AWidth - 2 * Metric(ANode, 'padding', 0));
+  LFrame := GroupFrameInsets(ANode);
+  LInner := Max(0, AWidth - LFrame.Left - LFrame.Right -
+    2 * Metric(ANode, 'padding', 0));
   LGap := Metric(ANode, 'gap', 12);
   SetLength(LItems, ANode.Count);
   SetLength(LRanges, ANode.Count);
@@ -1835,6 +1889,8 @@ var
   LLefts: TNyxFlowSizes;
   LTops: TNyxFlowSizes;
   LHeights: TNyxFlowSizes;
+  LFrame: TRect;
+  LContentWidth: Integer;
 begin
 
   if ANode.Prop('visible', 'true') = 'false' then
@@ -1850,9 +1906,12 @@ begin
     Exit(Metric(ANode, 'height', 32));
   end;
 
+  LFrame := GroupFrameInsets(ANode);
+  LContentWidth := Max(0, AWidth - LFrame.Left - LFrame.Right);
+
   if ANode.QueryContainer.Defined and (ANode.ContainerContainment = nccSize) then
   begin
-    Exit(2 * Metric(ANode, 'padding', 0));
+    Exit(2 * Metric(ANode, 'padding', 0) + LFrame.Top + LFrame.Bottom);
   end;
   Result := 28;
 
@@ -1907,6 +1966,11 @@ begin
 
   if ANode.Count = 0 then
   begin
+
+    if Binding(ANode).FControl is TCustomGroupBox then
+    begin
+      Exit(2 * Metric(ANode, 'padding', 0) + LFrame.Top + LFrame.Bottom);
+    end;
     { Measure real LCL typography at the allocated width. Fixed one-line label
       heights clip headings/captions in a phone-width view or enlarged fonts. }
 
@@ -1943,7 +2007,7 @@ begin
   else if NyxLayout(ANode) = 'grid' then
   begin
     LColumns := LayoutColumns(ANode, AWidth);
-    LCellWidth := Max(0, AWidth - 2 * LPadding - LGap * (LColumns - 1)) div LColumns;
+    LCellWidth := Max(0, LContentWidth - 2 * LPadding - LGap * (LColumns - 1)) div LColumns;
     LRowHeight := 0;
     LPosition := 0;
     for LIndex := 0 to ANode.Count - 1 do
@@ -1982,12 +2046,13 @@ begin
       if ANode.Children[LIndex].Prop('visible', 'true') <> 'false' then
       begin
         Inc(Result, Measure(ANode.Children[LIndex],
-          ColumnChildWidth(ANode, ANode.Children[LIndex], Max(0, AWidth - 2 * LPadding)), True));
+          ColumnChildWidth(ANode, ANode.Children[LIndex],
+            Max(0, LContentWidth - 2 * LPadding)), True));
       end;
     end;
     Inc(Result, LGap * Max(0, LVisible - 1));
   end;
-  Inc(Result, 2 * LPadding);
+  Inc(Result, 2 * LPadding + LFrame.Top + LFrame.Bottom);
 end;
 
 procedure TNyxLCLRenderer.Layout(ANode: TNyxNode; AX, AY, AWidth: Integer;
@@ -2020,6 +2085,7 @@ var
   LAlignment: TNyxText;
   LJustification: TNyxJustification;
   LChildX: Integer;
+  LFrame: TRect;
 begin
   LBinding := Binding(ANode);
   { The browser theme caps every node at its containing block's available
@@ -2063,6 +2129,11 @@ begin
   end;
 
   LPadding := Metric(ANode, 'padding', 0);
+  { Logical outer boxes remain the authored faces. Their children are allocated
+    within native usable content, independently of the current physical clip. }
+  LFrame := GroupFrameInsets(ANode);
+  LWidth := Max(0, LWidth - LFrame.Left - LFrame.Right);
+  LHeight := Max(0, LHeight - LFrame.Top - LFrame.Bottom);
   LGap := Metric(ANode, 'gap', 12);
   LAlignment := ANode.Prop('cross-alignment', 'auto');
   { Rows use one measured line plan for both wrapping and arrangement. Retain
@@ -2070,7 +2141,7 @@ begin
 
   if NyxLayout(ANode) = 'row' then
   begin
-    RowPlan(ANode, LWidth, LSizes, LLefts, LTops, LHeights);
+    RowPlan(ANode, LBinding.FLogicalBox.Width, LSizes, LLefts, LTops, LHeights);
     for LIndex := 0 to ANode.Count - 1 do
     begin
       LChild := ANode.Children[LIndex];
@@ -4531,7 +4602,8 @@ begin
   begin
     Exit;
   end;
-  LOrigin := LBinding.FControl.ClientToScreen(Point(0, 0));
+  LOrigin := LBinding.FControl.Parent.ClientToScreen(
+    Point(LBinding.FControl.Left, LBinding.FControl.Top));
   Dec(LOrigin.X, LBinding.FPlacement.ContentOffsetX);
   Dec(LOrigin.Y, LBinding.FPlacement.ContentOffsetY);
   LParent := Default(TNyxControlRef);
@@ -4550,6 +4622,7 @@ function TNyxLCLRenderer.ScreenPointFor(const AID: TNyxText;
   const APointer: TNyxPointerSnapshot): TNyxResizePoint;
 var
   LOrigin: TPoint;
+  LBinding: TNyxLCLBinding;
 begin
   FEvents.Scheduler.RequireUI;
 
@@ -4557,7 +4630,11 @@ begin
   begin
     raise ENyxModel.Create('Pointer mapping requires actual position');
   end;
-  LOrigin := IdentityBinding(AID, niAutomatic).FControl.ClientToScreen(Point(0, 0));
+  LBinding := IdentityBinding(AID, niAutomatic);
+  LOrigin := LBinding.FControl.Parent.ClientToScreen(
+    Point(LBinding.FControl.Left, LBinding.FControl.Top));
+  Dec(LOrigin.X, LBinding.FPlacement.ContentOffsetX);
+  Dec(LOrigin.Y, LBinding.FPlacement.ContentOffsetY);
   Result := NyxResizePoint(LOrigin.X + APointer.X, LOrigin.Y + APointer.Y);
 end;
 
@@ -4579,6 +4656,7 @@ var
   LBinding, LParent, LPeer: TNyxLCLBinding;
   LIndex: Integer;
   LWidth, LHeight: Integer;
+  LFrame: TRect;
 
   function BoxFor(ABinding: TNyxLCLBinding): TNyxGuideBox;
   begin
@@ -4600,7 +4678,13 @@ begin
   LWidth := LParent.FLogicalBox.Width;
   LHeight := LParent.FLogicalBox.Height;
 
-  if LParent.FControl is TWinControl then
+  if LParent.FControl is TCustomGroupBox then
+  begin
+    LFrame := GroupFrameInsets(LParent.FNode);
+    LWidth := Max(0, LWidth - LFrame.Left - LFrame.Right);
+    LHeight := Max(0, LHeight - LFrame.Top - LFrame.Bottom);
+  end
+  else if LParent.FControl is TWinControl then
   begin
     { Native decorations consume client area even when the face is projected
       into a smaller physical window. Subtract the decoration, not clipping. }
@@ -5042,7 +5126,13 @@ begin
 
   if LDispatch.Info.Pointer.HasPosition then
   begin
-    LPosition := FControl.ScreenToClient(TControl(ASender).ClientToScreen(Point(AX, AY)));
+    { Portable positions belong to the outer face, including native decorations.
+      Use the parent's client coordinates for that outer origin; a groupbox's
+      own ClientToScreen(0,0) begins below its caption and inside its frame. }
+    LPosition := TControl(ASender).ClientToScreen(Point(AX, AY));
+    LPosition := FControl.Parent.ScreenToClient(LPosition);
+    Dec(LPosition.X, FControl.Left);
+    Dec(LPosition.Y, FControl.Top);
     LDispatch.Info.Pointer.X := Double(LPosition.X) + FPlacement.ContentOffsetX;
     LDispatch.Info.Pointer.Y := Double(LPosition.Y) + FPlacement.ContentOffsetY;
   end;
@@ -5320,7 +5410,10 @@ begin
 
   if AHasPosition then
   begin
-    LPosition := FControl.ScreenToClient(TControl(ASender).ClientToScreen(APosition));
+    LPosition := TControl(ASender).ClientToScreen(APosition);
+    LPosition := FControl.Parent.ScreenToClient(LPosition);
+    Dec(LPosition.X, FControl.Left);
+    Dec(LPosition.Y, FControl.Top);
     LDispatch.Info.Pointer.X := Double(LPosition.X) + FPlacement.ContentOffsetX;
     LDispatch.Info.Pointer.Y := Double(LPosition.Y) + FPlacement.ContentOffsetY;
   end;

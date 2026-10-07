@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Ordinary native captioned groups now measure and allocate their usable client
+content independently of their outer logical faces. Nested resize/scroll,
+focus/drafts, actual parked windows, pointer mapping, row/grid/flex and teardown
+pass 124 Win32 checks;
+viewport/Studio/layout/compiled gesture regressions pass 4,158/65/2,169/84,
+leak-free. Affected browser/Studio consumers compile with zero owned warnings.
+Font-size simulation and printed diagnostics do not qualify hardware DPI,
+displayed pixels, current browser execution or full parity. See
+[the group packet](WORK.md#current-return-path-native-group-content-geometry--2026-10-07).
+
 Ordinary native form projection now keeps actual parked windows/captions at zero
 area and reconnects retained scroll callbacks after prepared-view transfer.
 Actual Win32 viewport/Studio/layout checks pass 4,157/65/2,169, leak-free; portable
