@@ -7,6 +7,83 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: managed command menus — 2026-10-06
+
+Current goal turn: progress on original NS-3 criterion 3 through NS-2 criterion 2's
+keyboard/focus prerequisite. Public `INyxMenu` attaches typed commands, check/radio
+groups, logical disablement and Unicode typeahead to specialized Nyx buttons and
+named parts, using the public managed popover on both targets. Studio's Actions
+menu consumes this contract for history, Properties/Events and contextual help.
+Compact Inspector navigation now mounts its pane even when the originating tab
+control was absent. Native menu captions use the correct padded text origin,
+stretch across the shared layout and paint logical disabled/check states.
+
+The persistent authenticated Pascal MCP client authors the exact English
+**Thoughtful actions** companion in one owned empty review: grouped revision-aware
+composition, bounded source export, exact paired Undo/Redo and retirement.
+It passes **30** checks, leak-free. Checked matched FPC/Win32 actual menu controls
+pass **30**, and ordinary native Studio integration passes **9**, both leak-free.
+Actual HTTP desktop/exact-390 menu consumers pass **31** each. Full local browser
+Studio at both widths exercises pointer activation, real Chromium Tab/Shift+Tab
+defaults, Events navigation and public contextual help. Meaningful native/menu/
+Studio captures are inspected; Pascal browser observers leak no allocations.
+This is local consumer evidence, not deployment of the menu to the observing LAN
+release or assistive/hardware/IME qualification.
+
+Maintained commands: `tools/build.ps1 -Target menu-companion` with an explicitly
+enrolled configuration, then `-Target menu`. Evidence is ignored under
+`build/menu/`: `semantic-current.log`, `maintained-build-qualified.log`,
+`browser-desktop-integrated.log` / `browser-narrow-integrated.log`,
+`studio-desktop-integrated.log` / `studio-narrow-integrated.log` and captures.
+The frozen observing service is unchanged. All **15** protected process identities,
+**9** bounded semantic contexts and the complete **147033-byte** project/source/
+history checkpoint remain exact; see `preservation.json`. Current baseline and
+serving identities still belong to `build/popover-refresh/` below. Private paths,
+capabilities and receipts stay ignored.
+
+Failed checks earn no passes. Completion initially copied an undefined data value;
+explicit `NyxNull` admission corrects dispatch. The first native Studio observer
+assumed standard TButton rather than the actual Nyx LCL control. A narrow browser
+journey found the absent Inspector origin; typed presentation routing corrects it.
+Inspected native pixels caught text-origin clipping and incomplete stretch. The
+preservation guard first compared formatted timestamps, then assumed the Pascal
+CLI retained the MCP envelope; exact UTC ticks and its actual bounded structured
+output verify the unchanged identities/context. No service stop or reset occurred.
+
+Stop menu fixture expansion at this integrated boundary. Runtime menu plans are
+not persisted or exposed as semantic mutations; the existing workflow task owns
+that gap. Original submenu/menubar and menu-button invocation/expanded semantics,
+pickers, live binding, full accessibility, widgetsets/DPI, catalog/generation,
+performance and production migration retain their owners. The next authorized
+delivery prerequisite is qualifying a frozen menu release on the observing editor
+without changing active pairs/history, then returning to original advanced menu/
+picker outcomes. No original criterion or task closes. Workflow **13**, authoring
+**26**, renderer **8**, codegen **28**, delivery **2** remain unchanged; NS-2/NS-3
+historical totals remain unestablished. Push `hello-nyx` and verify exact remote
+head with the private `build/menu/remote-return.json` receipt. The full goal stays
+active.
+
+## Accepted batch intent: managed command-menu interaction — 2026-10-06
+
+Previous goal turn is progress: the contextual-help release is deployed, durable
+history/handles and observing desktop/390 behavior qualify, and exact remote
+`1824cb2` is verified. Reassessment returns to NS-3 criterion 3's advanced menus,
+through NS-2 criterion 2's keyboard/focus prerequisite. Deliver a public managed
+command menu consuming ordinary specialized Nyx buttons/named parts, with typed
+commands, check/radio groups, separator/disabled behavior, arrow/Home/End/Escape/
+Tab and shared Unicode typeahead. An ordinary Studio action-menu consumer must
+use the same public contract on both targets. Semantic MCP authors the companion
+as one owned grouped review; actual controls qualify interaction. Runtime menu
+presentation attachment is explicit, not unimplemented persistence/MCP admission.
+
+Required evidence: checked matched FPC actual controls/Studio, actual HTTP
+desktop/390 consumers with meaningful captures, command snapshot/order/reopen/
+retirement and exact companion reuse; protected services/pairs/checkpoint remain
+exact. Stop at the integrated usable menu boundary and reassess original submenu,
+picker, accessibility, widgetset/DPI and catalog/generation outcomes. At most two
+unsuccessful attempts per diagnosed cause. No full original criterion closes from
+a local menu consumer, and existing no-closure totals remain until evidence exists.
+
 ## Current return path: contextual help observing release — 2026-10-06
 
 Current goal turn: progress on the NS-5 observing prerequisite for the original

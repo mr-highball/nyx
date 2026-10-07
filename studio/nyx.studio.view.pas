@@ -788,6 +788,7 @@ begin
   LHeader.Add(Button('action-save', 'Save'));
   LHeader.Add(Button('action-outputs', 'Outputs'));
   LHeader.Add(Button('action-agents', 'Agents'));
+  LHeader.Add(Button('action-actions', 'Actions'));
 
   if AState.Agents.CanControlBuilds then
   begin

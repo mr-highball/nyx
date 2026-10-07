@@ -41,6 +41,9 @@ uses
   nyx.theme;
 
 type
+  { Target presentation only: menu commands stay physically focusable while their
+    logical enablement controls appearance and the managed menu owns admission. }
+  TNyxLCLButtonPresentation = (nbpControl, nbpMenuItem);
   { Themed Lazarus button. TCDButton supplies window/control ownership, tab
     navigation, pointer capture, Space/Enter activation and action integration.
     Nyx reuses its state/activation operations, with keyboard callbacks ordered
@@ -54,6 +57,8 @@ type
     FTextColor: TColor;
     FRadius: Integer;
     FKeyboardActivation: Word;
+    FPresentation: TNyxLCLButtonPresentation;
+    FMenuEnabled: Boolean;
   protected
     { Intrinsic size uses the same font/caption and horizontal frame as Paint.
       TCDButton's generic default size cannot distinguish short/long captions;
@@ -72,6 +77,10 @@ type
     { Snapshot a validated palette. Variant primary uses Accent/AccentText;
       other variants use Surface/Text. Call again after an intentional style edit. }
     procedure ApplyTheme(ATheme: TNyxTheme; const AVariant: TNyxText);
+    { Closed adapter policy. Menu items align captions left and visually dim
+      disabled choices without disabling their physical keyboard focus. Reset
+      to nbpControl when a managed menu releases an externally retained host. }
+    procedure Presentation(AValue: TNyxLCLButtonPresentation; AEnabled: Boolean = True);
     procedure Paint; override;
     { Expose the inherited activation entry point for applications/harnesses.
       Disabled controls (including disabled ancestors) must never activate. }
@@ -195,6 +204,20 @@ begin
   DoubleBuffered := True;
   AccessibleRole := larButton;
   FRadius := 12;
+  FMenuEnabled := True;
+end;
+
+procedure TNyxLCLButton.Presentation(AValue: TNyxLCLButtonPresentation; AEnabled: Boolean);
+begin
+
+  if (Ord(AValue) < Ord(Low(TNyxLCLButtonPresentation))) or
+    (Ord(AValue) > Ord(High(TNyxLCLButtonPresentation))) then
+  begin
+    raise ENyxModel.Create('Unknown native button presentation');
+  end;
+  FPresentation := AValue;
+  FMenuEnabled := AEnabled;
+  Invalidate;
 end;
 
 procedure TNyxLCLButton.ApplyTheme(ATheme: TNyxTheme; const AVariant: TNyxText);
@@ -316,7 +339,7 @@ begin
   LFace := Color;
   LText := FTextColor;
 
-  if not IsEnabled then
+  if not IsEnabled or ((FPresentation = nbpMenuItem) and not FMenuEnabled) then
   begin
     LFace := Blend(LFace, Backdrop(Self), 50);
     LText := Blend(LText, LFace, 50);
@@ -348,11 +371,20 @@ begin
   Canvas.Brush.Style := bsClear;
   LTextStyle := Canvas.TextStyle;
   LTextStyle.Alignment := taCenter;
+
+  if FPresentation = nbpMenuItem then
+  begin
+    LTextStyle.Alignment := taLeftJustify;
+    Inc(LBounds.Left, 16);
+    Dec(LBounds.Right, 16);
+  end;
   LTextStyle.Layout := tlCenter;
   LTextStyle.SingleLine := True;
   LTextStyle.Wordbreak := False;
   LTextStyle.ShowPrefix := False;
-  Canvas.TextRect(LBounds, 0, 0, Caption, LTextStyle);
+  { Left-justified TextRect uses its explicit text origin, unlike centered text.
+    Keep that origin inside the padded menu bounds so no leading glyph clips. }
+  Canvas.TextRect(LBounds, LBounds.Left, 0, Caption, LTextStyle);
 end;
 
 procedure TNyxLCLButton.CalculatePreferredSize(var APreferredWidth,

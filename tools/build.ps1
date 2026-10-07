@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'menu', 'menu-companion', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -55,6 +55,8 @@ param(
   [string]$ConfirmationSourceDirectory = 'build/confirmation/source',
   # Exact English content is composed/exported by the persistent Pascal MCP tool.
   [string]$PopoverSourceDirectory = 'build/popover/source',
+  # Exact English menu companion, composed through the persistent semantic client.
+  [string]$MenuSourceDirectory = 'build/menu/source',
   # Exact semantic date companion. Typed bounds/state enrichment is explicitly
   # performed by the public Pascal fixture, never handwritten editor mutations.
   [string]$DateSourceDirectory = 'build/date-fields/companion',
@@ -1281,6 +1283,74 @@ try {
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxWorkerCheckBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/event-inspector-controls.html') -Destination $nyxWorkerCheckBrowser
     Write-Host 'Real-worker fixture staged; use ready capture on an existing admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'menu-companion') {
+    if ([string]::IsNullOrWhiteSpace($DesignerMCPConfig)) {
+      throw 'Supply -DesignerMCPConfig with an explicitly enrolled MCP configuration.'
+    }
+    $nyxMenuTool = Join-Path $nyxRoot 'build/menu/companion-tool'
+    New-Item -ItemType Directory -Force $nyxMenuTool | Out-Null
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
+      '-gl', '-gh', '-Fusrc', '-Futests', '-Fustudio', "-FU$nyxMenuTool",
+      "-FE$nyxMenuTool", 'tools/nyx_menu_companion.lpr')
+    & (Join-Path $nyxMenuTool 'nyx_menu_companion.exe') $DesignerMCPConfig $MenuSourceDirectory
+
+    if ($LASTEXITCODE -ne 0) { throw 'Semantic menu companion failed' }
+    exit 0
+  }
+
+  if ($Target -eq 'menu') {
+    # Compile actual controls/Studio and browser consumers with one exact source.
+    # Serving/capturing uses an existing admitted host; no listener is started.
+    $nyxMenuRoot = Join-Path $nyxRoot 'build/menu/maintained'
+    $nyxMenuNative = Join-Path $nyxMenuRoot 'lcl'
+    $nyxMenuBrowser = Join-Path $nyxMenuRoot 'browser'
+    $nyxMenuTool = Join-Path $nyxMenuRoot 'tool'
+    $nyxMenuSource = [IO.Path]::GetFullPath($MenuSourceDirectory)
+
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxMenuSource 'nyx.generated.view.pas'))) {
+      throw 'Export the isolated MCP companion first; see docs/menu.md'
+    }
+    New-Item -ItemType Directory -Force $nyxMenuNative,
+      $nyxMenuBrowser, $nyxMenuTool | Out-Null
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxMenuPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxMenuFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', '-Fustudio', "-Fu$nyxMenuSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxMenuPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxMenuPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxMenuPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxMenuPlatform",
+      "-FU$nyxMenuNative", "-FE$nyxMenuNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxMenuFlags + @('tests/nyx_menu_controls.lpr'))
+    & (Join-Path $nyxMenuNative 'nyx_menu_controls.exe') (Join-Path $nyxMenuRoot 'native.png')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Native menu controls failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxMenuFlags + @('tests/nyx_studio_menu_controls.lpr'))
+    & (Join-Path $nyxMenuNative 'nyx_studio_menu_controls.exe') `
+      (Join-Path $nyxMenuSource 'nyx.generated.view.pas') (Join-Path $nyxMenuRoot 'studio-projects')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Native Studio command menu failed' }
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
+      '-gl', '-gh', '-Fusrc', '-Futests', '-Fustudio', "-FU$nyxMenuTool",
+      "-FE$nyxMenuTool", 'tests/nyx_studio_menu_observer.lpr')
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
+      '-gl', '-gh', '-Fusrc', '-Futests', "-FU$nyxMenuTool",
+      "-FE$nyxMenuTool", 'tests/nyx_browser_ready_capture.lpr')
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxMenuSource",
+      "-FE$nyxMenuBrowser", 'tests/nyx_menu_controls.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxMenuBrowser", 'studio/nyx_studio.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxMenuBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/menu.html') -Destination $nyxMenuBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/index.html') -Destination $nyxMenuBrowser
+    Write-Host 'Menu consumers staged; execute on an existing admitted HTTP host.'
     exit 0
   }
 

@@ -32,6 +32,7 @@ uses
   nyx.events, nyx.viewport, nyx.projection.refresh, nyx.callbacks, nyx.studio.collections,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.lcl,
+  nyx.menu, nyx.menu.lcl, nyx.studio.menu,
   nyx.studio.session, nyx.studio.view, nyx.studio.projects,
   nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.rootedits,
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
@@ -128,6 +129,7 @@ type
     FShellView: TNyxLCLRenderer;
     { Public managed Nyx presentation owns cloned component help content. }
     FComponentHelp: INyxLCLPopover;
+    FActionMenu: INyxLCLMenu;
     { Borrowed receiver registration; cancelled before any controller teardown. }
     FHierarchySubscription: INyxEventSubscription;
     FCanvasView: TNyxLCLRenderer;
@@ -183,6 +185,8 @@ type
     procedure PaintQueued(AData: PtrInt);
     procedure Paint;
     procedure ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+    procedure MenuAction(AAction: TNyxStudioMenuAction);
+    procedure ShowComponentHelp(const AAnchor: TNyxControlRef);
     { Borrow current owners synchronously; hover never publishes a design pair. }
     function DesignerDragContext: TNyxStudioDragContext;
     function DesignerResizeMeasure(const AControl: TNyxControlRef): TNyxResizeSize;
@@ -660,6 +664,7 @@ begin
     FCodeParking.Parent := FHost;
   end;
   FSourceModal := nil;
+  FActionMenu := nil;
   FComponentHelp := nil;
   FShellView.Free;
   FCanvasParking.Free;
@@ -1579,6 +1584,7 @@ begin
   FState.Agents := GetAgentState;
   FState.BuildControlReady := (CurrentBridge <> nil) and
     CurrentBridge.CanCancelBuild;
+  FActionMenu := nil;
   FComponentHelp := nil;
   FState.PendingDesign := FSourceCommands.PendingDesign;
   FState.CompiledPreviewAvailable := CompiledPreviewCurrent(FCurrentProject);
@@ -2425,9 +2431,66 @@ begin
   FDesignerDrag.Gesture(ATarget, AEvent, ADecision);
 end;
 
+procedure TNyxNativeStudio.MenuAction(AAction: TNyxStudioMenuAction);
+var
+  LNode: TNyxNode;
+  LEvent: TNyxEventInfo;
+begin
+
+  if AAction = smaHelp then
+  begin
+    ShowComponentHelp(NyxControl(NyxStudioActionMenuID));
+    Exit;
+  end;
+
+  if AAction in [smaProperties, smaEvents] then
+  begin
+    FState.Panel := nspInspector;
+    FState.InspectorTab := nitProperties;
+
+    if AAction = smaEvents then
+    begin
+      FState.InspectorTab := nitEvents;
+    end;
+    RequestRefresh;
+    Exit;
+  end;
+  LNode := FShellView.Root.Find(NyxStudioMenuActionTarget(AAction));
+
+  if LNode <> nil then
+  begin
+    LEvent := Default(TNyxEventInfo);
+    LEvent.Value := NyxNull;
+    LEvent.Trigger := ntClick;
+    ShellEvent(LNode, LEvent);
+  end;
+end;
+
+procedure TNyxNativeStudio.ShowComponentHelp(const AAnchor: TNyxControlRef);
+var
+  LHelp: TNyxDocument;
+begin
+  LHelp := BuildNyxStudioComponentHelp(FSession);
+  try
+
+    if LHelp <> nil then
+    begin
+      FActionMenu := nil;
+      FComponentHelp := nil;
+      FComponentHelp := NewNyxLCLPopover(FShellView.FocusFor(AAnchor.ID), LHelp,
+        NyxPageRoot(NyxComponentHelpRootID), FTheme);
+      FComponentHelp.Open(NyxPopover('About this component')
+        .Size(380, 300).Focus(NyxPart('close')));
+    end;
+  finally
+    LHelp.Free;
+  end;
+end;
+
 procedure TNyxNativeStudio.ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
   LHelp: TNyxDocument;
+  LMenuItems: TNyxMenuItems;
   LEffect: TNyxInspectorEffect;
   LRemoval: TNyxCallbackRemoval;
   LDiagnostic: TNyxSourceDiagnostic;
@@ -2446,23 +2509,25 @@ begin
     Exit;
   end;
 
-  if (ANode.ID = NyxStudioComponentHelpID) and (AEvent.Trigger = ntClick) then
+  if (ANode.ID = NyxStudioActionMenuID) and (AEvent.Trigger = ntClick) then
   begin
-    LHelp := BuildNyxStudioComponentHelp(FSession);
+    LHelp := BuildNyxStudioActionMenu(FSession, LMenuItems);
     try
-
-      if LHelp <> nil then
-      begin
-        FComponentHelp := nil;
-        FComponentHelp := NewNyxLCLPopover(
-          FShellView.FocusFor(NyxStudioComponentHelpID), LHelp,
-          NyxPageRoot(NyxComponentHelpRootID), FTheme);
-        FComponentHelp.Open(NyxPopover('About this component')
-          .Size(380, 300).Focus(NyxPart('close')));
-      end;
+      FActionMenu := nil;
+      FComponentHelp := nil;
+      FActionMenu := NewNyxLCLMenu(FShellView.FocusFor(NyxStudioActionMenuID),
+        LHelp, NyxPageRoot(NyxStudioActionMenuRoot), LMenuItems, FTheme);
+      FActionMenu.OnInvoke.Subscribe(NewNyxStudioMenuCallback(MenuAction));
+      FActionMenu.Open(NyxMenu('Component actions'));
     finally
       LHelp.Free;
     end;
+    Exit;
+  end;
+
+  if (ANode.ID = NyxStudioComponentHelpID) and (AEvent.Trigger = ntClick) then
+  begin
+    ShowComponentHelp(NyxControl(NyxStudioComponentHelpID));
     Exit;
   end;
   LChanged := False;

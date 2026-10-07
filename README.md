@@ -9,6 +9,10 @@ Managed [contextual views](docs/popover.md) present reusable Nyx content beside
 an invoker with typed placement, focus and dismissal on browser and LCL. Studio's
 component help uses the same public managed contract and specialized help card.
 
+[Managed command menus](docs/menu.md) reuse specialized buttons and named parts,
+with typed commands, check/radio choices and shared Unicode typeahead. Studio's
+Actions menu consumes the same browser/LCL contract.
+
 A Pascal-first, fluent UI library for Free Pascal/Lazarus and pas2js. One owned
 UI document describes pages and reusable components; native and browser adapters
 produce real target controls. Nyx Studio uses that same contract for visual

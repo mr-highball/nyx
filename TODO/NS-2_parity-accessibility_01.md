@@ -20,6 +20,22 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Managed command-menu focus — 2026-10-06
+
+Original criterion 2 now has real first/last/arrow/Home/End navigation, focusable
+logical disablement, skipped separators/hidden entries, consumed keys, checked/
+radio activation, Escape return and shared Unicode typeahead on browser/Win32.
+Native checks pass 30 plus 9 ordinary Studio checks; actual HTTP menu consumers
+pass 31 per desktop/390. The full local browser editor exercises real Chromium
+Tab/Shift+Tab defaults plus Inspector/help navigation. Native and browser captures
+are inspected; no observing release is changed. See
+[the packet](../WORK.md#current-return-path-managed-command-menus--2026-10-06).
+
+No original criterion/count closes. Menu-button invocation/expanded semantics,
+submenus/menubars, live binding, assistive/hardware/IME input, other widgetsets/DPI,
+full accessibility and original visual/performance breadth remain. Stop fixtures;
+qualify observing delivery, then return to original advanced-control scope.
+
 ## Typed date fields — 2026-10-06
 
 The original native interaction/parity and advanced-picker scope now includes

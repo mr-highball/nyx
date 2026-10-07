@@ -23,6 +23,24 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Managed command-menu boundary — 2026-10-06
+
+Original criterion 3 now has typed commands/check/radio plans on specialized Nyx
+buttons/named parts, a shared managed host and Unicode search, consumed by ordinary
+Studio Actions on both targets. Checked Win32 controls/Studio pass 30/9; actual
+HTTP desktop/390 menus pass 31 each. Full local browser Studio qualifies host Tab,
+Inspector navigation and contextual help; exact semantic companion export passes
+30. Captures are inspected, native observers are leak-free and protected state
+stays exact. See [usage](../docs/menu.md) and
+[evidence](../WORK.md#current-return-path-managed-command-menus--2026-10-06).
+
+Stop fixtures. No original criterion closes; submenu/menubar, menu-button expanded/
+invocation semantics, pickers, binding, accessibility, widgetsets/DPI, persisted
+catalog/generation, performance and observing delivery remain open. Historical
+NS-3 totals stay unestablished; the existing workflow owner records runtime-plan
+semantic authoring. Continue through a qualified frozen observing release, then
+return to original menu/picker scope.
+
 ## Managed contextual content — 2026-10-06
 
 Original overlay/picker scope now has a portable managed popover, typed geometry,

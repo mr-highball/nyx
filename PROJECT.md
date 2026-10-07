@@ -66,6 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Managed command menus now reuse specialized Nyx buttons/named parts with typed
+commands, check/radio groups, disabled focus, navigation and Unicode typeahead.
+Studio's Actions menu consumes the same contract. Checked actual Win32 passes
+30 plus 9 ordinary Studio checks; actual HTTP desktop/390 menus pass 31 each.
+Full local browser Studio qualifies host Tab, Events navigation and contextual
+help. Exact semantic companion authoring passes 30; protected processes/context/
+checkpoint remain unchanged. This batch is not deployed to the observing release.
+Original submenu/picker/accessibility and persisted menu authoring remain open.
+See [usage](docs/menu.md) and
+[current evidence](WORK.md#current-return-path-managed-command-menus--2026-10-06).
+
 Managed contextual views now share typed placement, sizing, focus and
 dismissal across real browser/LCL hosts. Studio's component help consumes public
 Nyx content/presentation. Checked Win32 passes 40 plus 5 ordinary Studio checks;

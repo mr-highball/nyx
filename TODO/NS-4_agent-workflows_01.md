@@ -15,6 +15,16 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Current menu authoring gap (2026-10-06): authenticated semantic MCP authors the
+exact English command-menu content as one owned grouped review with bounded
+source and paired Undo/Redo (30 checks). Typed runtime item plans/presentation
+attachment use the public Pascal library; they are not persisted designer
+declarations or MCP mutations. This existing task owns semantic plan admission
+alongside its wider source/binding/review workflows. Actual control input remains
+necessary for menu focus/defaults; no screenshot-driven design edits substitute
+for semantic tooling. See
+[the packet](../WORK.md#current-return-path-managed-command-menus--2026-10-06).
+
 Current observing deployment (2026-10-06): authenticated twenty-tool Pascal MCP
 now drives the actual full desktop/exact-390 Studio editor, typed policy/source,
 paired history, expanded source and both real application compiles. All eight

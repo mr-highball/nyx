@@ -48,6 +48,7 @@ uses
   nyx.studio.inspector,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.browser,
+  nyx.menu, nyx.menu.browser, nyx.studio.menu,
   nyx.studio.collections,
   nyx.callbacks,
   nyx.studio.palette,
@@ -87,6 +88,7 @@ type
     { Managed public Nyx content/presentation, retired before shell/selection
       replacement. Studio owns no separate contextual-window implementation. }
     FComponentHelp: INyxBrowserPopover;
+    FActionMenu: INyxBrowserMenu;
     FSourceCommands: TNyxSourceCommands;
     { Copied reset receipts survive deferred/reentrant chrome work only within
       this exact session/load. Pending proposals overlay the accepted values. }
@@ -233,6 +235,8 @@ type
     procedure CaptureNewStateDraft;
     procedure Refresh(ARetainCanvas: Boolean = False; APreserveDraft: Boolean = False);
     procedure HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+    procedure MenuAction(AAction: TNyxStudioMenuAction);
+    procedure ShowComponentHelp(const AAnchor: TNyxControlRef);
     { Borrow current owners synchronously; hover only changes the canvas outline. }
     function DesignerDragContext: TNyxStudioDragContext;
     function DesignerResizeMeasure(const AControl: TNyxControlRef): TNyxResizeSize;
@@ -594,6 +598,7 @@ begin
   FSourcePaneRenderer.Free;
   FSourcePaneDocument.Free;
   FSourceModal := nil;
+  FActionMenu := nil;
   FComponentHelp := nil;
   FShellRenderer.Free;
   FShell.Free;
@@ -736,6 +741,7 @@ var
   LCanvasSelection: TNyxTextSelection;
   LPendingDesign: TNyxStudioPendingDesign;
 begin
+  FActionMenu := nil;
   FComponentHelp := nil;
   LCodeStart := -1;
   LCodeEnd := -1;
@@ -1618,9 +1624,68 @@ begin
   FDesignerDrag.Gesture(ATarget, AEvent, ADecision);
 end;
 
+procedure TNyxStudio.MenuAction(AAction: TNyxStudioMenuAction);
+var
+  LNode: TNyxNode;
+  LEvent: TNyxEventInfo;
+begin
+
+  if AAction = smaHelp then
+  begin
+    ShowComponentHelp(NyxControl(NyxStudioActionMenuID));
+    Exit;
+  end;
+
+  if AAction in [smaProperties, smaEvents] then
+  begin
+    { A compact pane has no mounted Inspector button to route through. Apply the
+      same typed presentation state, then let the ordinary Nyx shell mount it. }
+    FPanel := nspInspector;
+    FInspectorTab := nitProperties;
+
+    if AAction = smaEvents then
+    begin
+      FInspectorTab := nitEvents;
+    end;
+    Refresh(True);
+    Exit;
+  end;
+  LNode := FShellRenderer.Root.Find(NyxStudioMenuActionTarget(AAction));
+
+  if LNode <> nil then
+  begin
+    LEvent := Default(TNyxEventInfo);
+    LEvent.Value := NyxNull;
+    LEvent.Trigger := ntClick;
+    HandleShell(LNode, LEvent);
+  end;
+end;
+
+procedure TNyxStudio.ShowComponentHelp(const AAnchor: TNyxControlRef);
+var
+  LHelp: TNyxDocument;
+begin
+  LHelp := BuildNyxStudioComponentHelp(FSession);
+  try
+
+    if LHelp <> nil then
+    begin
+      FActionMenu := nil;
+      FComponentHelp := nil;
+      FComponentHelp := NewNyxBrowserPopover(FShellRenderer.FocusFor(AAnchor.ID), LHelp,
+        NyxPageRoot(NyxComponentHelpRootID));
+      FComponentHelp.Open(NyxPopover('About this component')
+        .Size(380, 300).Focus(NyxPart('close')));
+    end;
+  finally
+    LHelp.Free;
+  end;
+end;
+
 procedure TNyxStudio.HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
   LHelp: TNyxDocument;
+  LMenuItems: TNyxMenuItems;
   LSource: TNyxText;
   LRetainCanvas: Boolean;
   LAcceptedDesign: TNyxText;
@@ -1638,23 +1703,25 @@ begin
     Exit;
   end;
 
-  if (ANode.ID = NyxStudioComponentHelpID) and (AEvent.Trigger = ntClick) then
+  if (ANode.ID = NyxStudioActionMenuID) and (AEvent.Trigger = ntClick) then
   begin
-    LHelp := BuildNyxStudioComponentHelp(FSession);
+    LHelp := BuildNyxStudioActionMenu(FSession, LMenuItems);
     try
-
-      if LHelp <> nil then
-      begin
-        FComponentHelp := nil;
-        FComponentHelp := NewNyxBrowserPopover(
-          FShellRenderer.FocusFor(NyxStudioComponentHelpID), LHelp,
-          NyxPageRoot(NyxComponentHelpRootID));
-        FComponentHelp.Open(NyxPopover('About this component')
-          .Size(380, 300).Focus(NyxPart('close')));
-      end;
+      FActionMenu := nil;
+      FComponentHelp := nil;
+      FActionMenu := NewNyxBrowserMenu(FShellRenderer.FocusFor(NyxStudioActionMenuID),
+        LHelp, NyxPageRoot(NyxStudioActionMenuRoot), LMenuItems);
+      FActionMenu.OnInvoke.Subscribe(NewNyxStudioMenuCallback(MenuAction));
+      FActionMenu.Open(NyxMenu('Component actions'));
     finally
       LHelp.Free;
     end;
+    Exit;
+  end;
+
+  if (ANode.ID = NyxStudioComponentHelpID) and (AEvent.Trigger = ntClick) then
+  begin
+    ShowComponentHelp(NyxControl(NyxStudioComponentHelpID));
     Exit;
   end;
   LRetainCanvas := False;

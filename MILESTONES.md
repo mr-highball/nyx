@@ -3,7 +3,17 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current component boundary (2026-10-06): managed contextual views supply typed
+Current menu boundary (2026-10-06): typed managed command menus reuse ordinary
+Nyx controls and shared popover/typeahead contracts. Actual Win32 passes 30 plus
+9 ordinary Studio checks; actual HTTP desktop/390 consumers pass 31 each. Full
+local browser Studio qualifies pointer activation, host Tab/Shift+Tab, Inspector
+navigation and contextual help. Semantic companion export passes 30; protected
+processes/context/checkpoint remain exact. No observing deployment, original
+criterion/count or full accessibility closes. Stop fixtures and qualify frozen
+observing delivery before returning to submenu/picker scope. See
+[evidence and return path](WORK.md#current-return-path-managed-command-menus--2026-10-06).
+
+Previous component boundary (2026-10-06): managed contextual views supply typed
 placement, content/fixed sizing, focus, dismissal and owned completion snapshots.
 Real Win32 passes 40 plus 5 full native Studio help checks; actual desktop/390
 browser passes 42 each and full browser Studio opens/closes public Nyx component

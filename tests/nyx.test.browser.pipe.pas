@@ -77,6 +77,10 @@ type
     { Exercise one visible editor host control through ordinary pointer input.
       Callers must use semantic MCP for composition and accepted design edits. }
     procedure Click(const ASelector: TNyxText);
+    { Physical Chromium Tab down/up, including the browser's focus traversal.
+      This qualifies host defaults that synthetic DOM events cannot establish;
+      it does not claim hardware, IME or assistive-technology input. }
+    procedure Tab(AReverse: Boolean = False);
     { Save exact current outer HTML and PNG, using a simple artifact name. This
       does not infer readiness; the caller first observes a terminal fixture mark. }
     procedure Capture(const AName: String);
@@ -591,6 +595,28 @@ begin
     NyxField('type', NyxData('mouseReleased')), NyxField('x', NyxData(LX)),
     NyxField('y', NyxData(LY)), NyxField('button', NyxData('left')),
     NyxField('clickCount', NyxData(1))]), FSession);
+end;
+
+procedure TNyxBrowserPipe.Tab(AReverse: Boolean);
+var
+  LModifiers: Integer;
+begin
+  LModifiers := 0;
+
+  if AReverse then
+  begin
+    LModifiers := 8;
+  end;
+  Request('Input.dispatchKeyEvent', NyxObject([
+    NyxField('type', NyxData('keyDown')), NyxField('key', NyxData('Tab')),
+    NyxField('code', NyxData('Tab')), NyxField('windowsVirtualKeyCode', NyxData(9)),
+    NyxField('nativeVirtualKeyCode', NyxData(9)),
+    NyxField('modifiers', NyxData(LModifiers))]), FSession);
+  Request('Input.dispatchKeyEvent', NyxObject([
+    NyxField('type', NyxData('keyUp')), NyxField('key', NyxData('Tab')),
+    NyxField('code', NyxData('Tab')), NyxField('windowsVirtualKeyCode', NyxData(9)),
+    NyxField('nativeVirtualKeyCode', NyxData(9)),
+    NyxField('modifiers', NyxData(LModifiers))]), FSession);
 end;
 
 procedure TNyxBrowserPipe.Capture(const AName: String);
