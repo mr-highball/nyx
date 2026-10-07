@@ -66,6 +66,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Collection adapters now share immutable typed scalar-row refresh planning.
+Native list entries/objects survive ordinary updates; existing editor/query guards
+remain. Actual Win32 checks pass 29 focused/27 regressions/75 MCP-source controls.
+The same serial 4096-row native workload reduces twenty updates 3406→1391 ms.
+Browser consumers, Studio and worker compile/stage; current browser execution,
+viewport virtualization, complete production budgets and delivery remain open.
+All rows are still materialized. See
+[the refresh packet](WORK.md#current-return-path-incremental-collection-values--2026-10-07).
+
 The existing semantic transaction now composes layout/control, scalar bindings
 and collection/query changes as one ordered candidate with one exact paired Undo.
 Checked native admission and compiled runtime projections pass 41/8; a fresh

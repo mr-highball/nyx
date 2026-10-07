@@ -9,6 +9,21 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current incremental-value prerequisite (2026-10-07): shared immutable refresh
+planning reaches both real adapters. Scalar publications retain native list
+entries/objects and skip unchanged scalar reads/writes; query/order/hierarchy
+changes and missing context retain complete synchronization. Native qualification
+passes 29 focused, 27 existing control and 75 exact MCP-source table checks,
+leak-free. Matched browser consumers, Studio and worker compile/stage.
+Same-workload serial hidden Win32 samples reduce twenty updates from 469→203 ms
+at 512 rows and 3406→1391 ms at 4096. These single samples advance criteria 2/3's
+measured/incremental prerequisites; all rows, full validation/query and metadata
+scans remain. Browser execution, viewport virtualization and both-target production
+budgets stay required. Stop refresh fixtures; no original criterion closes or
+historical NS-3 count is invented/reset. Existing service/project/payload guards
+pass; observing/LAN and remote checkpoint gates remain separate. See
+[the packet](../WORK.md#current-return-path-incremental-collection-values--2026-10-07).
+
 Current structured-read improvement (2026-10-07): immutable immediate-member
 indexes/cached text avoid repeated parent decoding while retaining strict child
 admission and exact canonical values. The same optimized native long-text sample
@@ -63,7 +78,7 @@ owned disconnect gate CSV output.
 These are observed samples, not cross-target speed comparisons or production
 frame budgets. Native widgets were hidden and browser time used the real clock;
 paint, physical input, device scaling and sustained-load memory were not measured.
-All rows remain materialized. Native lists rebuild text; tables visit model cells;
+At that baseline all rows were materialized. Native lists rebuilt text; tables visited model cells;
 trees preserve structure for scalar edits but relocate nodes for structural edits.
 Owned teardown and reusable-instance isolation have focused both-target evidence.
 This task still owns virtualization, changed-row synchronization, deep hierarchy

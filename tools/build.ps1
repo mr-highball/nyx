@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1819,6 +1819,65 @@ try {
       'tests/nyx_typeahead_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/typeahead.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'collection-refresh') {
+    # Pascal owns refresh admission, actual widget/draft assertions and timing
+    # gates. Consume exact already-exported MCP source; never change a design,
+    # enrollment, running service, frozen payload or browser process here.
+    $nyxRefreshRoot = Join-Path $nyxRoot 'build/collection-refresh/maintained'
+    $nyxRefreshNative = Join-Path $nyxRefreshRoot 'native'
+    $nyxRefreshMeasure = Join-Path $nyxRefreshRoot 'measure'
+    $nyxRefreshBrowser = Join-Path $nyxRefreshRoot 'browser'
+    $nyxRefreshSource = [IO.Path]::GetFullPath($GridSourceDirectory)
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxRefreshSource 'nyx.generated.view.pas'))) {
+      throw 'Supply the exact previously authenticated table companion with GridSourceDirectory'
+    }
+    New-Item -ItemType Directory -Force $nyxRefreshNative,
+      $nyxRefreshMeasure, $nyxRefreshBrowser | Out-Null
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxRefreshPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxRefreshUnits = @('-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxRefreshSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxRefreshPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxRefreshPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxRefreshPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxRefreshPlatform")
+    $nyxRefreshFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      "-FU$nyxRefreshNative", "-FE$nyxRefreshNative") + $nyxRefreshUnits
+    Invoke-NyxCompiler $nyxLclFpc ($nyxRefreshFlags + @('tests/nyx_collection_refresh_tests.lpr'))
+    & (Join-Path $nyxRefreshNative 'nyx_collection_refresh_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Incremental collection plan/controls failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxRefreshFlags + @('tests/nyx_collection_query_controls.lpr'))
+    & (Join-Path $nyxRefreshNative 'nyx_collection_query_controls.exe') `
+      (Join-Path $nyxRefreshRoot 'native-query.png')
+    if ($LASTEXITCODE -ne 0) { throw 'Exact semantic table/query regression failed' }
+    # Timing excludes heap/debug instrumentation; keep checked ownership tests
+    # above separate. Workload correctness gates run outside measured intervals.
+    Invoke-NyxCompiler $nyxLclFpc (@('-B', '-Mdelphi', '-O2', '-Sa', '-Cr', '-Co', '-Ci',
+      "-FU$nyxRefreshMeasure", "-FE$nyxRefreshMeasure") + $nyxRefreshUnits +
+      @('tools/nyx_collection_view_benchmark.lpr'))
+    $nyxRefreshSample = & (Join-Path $nyxRefreshMeasure 'nyx_collection_view_benchmark.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Mounted incremental measurement lost control values' }
+    $nyxRefreshSample | Set-Content -LiteralPath (Join-Path $nyxRefreshRoot 'native-sample.csv') -Encoding utf8
+    Write-Output $nyxRefreshSample
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxRefreshProgram in @('tests/nyx_collection_refresh_tests.lpr',
+      'tests/nyx_collection_query_controls.lpr', 'tools/nyx_collection_view_benchmark.lpr',
+      'studio/nyx_studio.lpr', 'studio/nyx_source_worker.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxRefreshSource", "-FE$nyxRefreshBrowser",
+        $nyxRefreshProgram)
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxRefreshBrowser 'rtl.js')
+    foreach ($nyxRefreshHost in @('collection-refresh.html', 'collection-query-controls.html',
+      'collection-view-benchmark.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot ('studio/web/' + $nyxRefreshHost)) `
+        -Destination $nyxRefreshBrowser
+    }
+    Write-Host 'Incremental controls qualified natively; browser consumers staged without execution.'
     exit 0
   }
 

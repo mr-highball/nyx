@@ -76,6 +76,7 @@ var
   LSpec: TNyxCollectionViewSpec;
   LIndex: Integer;
   LRef: TNyxItemRef;
+  LCaption: TNyxText;
   LStart: Double;
   LSetupMS: Double;
   LUpdateMS: Double;
@@ -113,6 +114,7 @@ begin
     .Integer(NyxIntegerField('priority'), 0)
     .Text(NyxTextField('parent'), ''), LItems);
   LRef := LStore.Snapshot.ItemAt(ACount - 1).Ref;
+  LCaption := LStore.Snapshot.Item(LRef).GetValue(NyxTextField('caption'));
   LDocument := TNyxDocument.Create;
   LRoot := NewNyxColumn('measured-view');
   LDocument.AddPage(LRoot);
@@ -160,6 +162,15 @@ begin
       'browser table row count differs');
     Require(LRenderer.ElementFor('measured-tree').querySelectorAll('details').length = ACount,
       'browser hierarchy row count differs');
+    Require(TJSHTMLInputElement(LRenderer.ElementFor('measured-table').querySelector(
+      '[data-nyx-item="' + LRef.ID + '"] input')).value = '20',
+      'browser table did not project the measured scalar');
+    Require(LRenderer.ElementFor('measured-list').querySelector(
+      '[data-nyx-item="' + LRef.ID + '"] span').textContent = LCaption,
+      'browser list lost its unchanged caption');
+    Require(LRenderer.ElementFor('measured-tree').querySelector(
+      '[data-nyx-item="' + LRef.ID + '"] > summary span').textContent = LCaption,
+      'browser tree lost its unchanged caption');
     {$else}
     Require(TListBox(LRenderer.ControlFor('measured-list')).Items.Count = ACount,
       'native list row count differs');
@@ -167,6 +178,12 @@ begin
       'native table row count differs');
     Require(TTreeView(LRenderer.ControlFor('measured-tree')).Items.Count = ACount,
       'native hierarchy row count differs');
+    Require(TStringGrid(LRenderer.ControlFor('measured-table')).Cells[1, ACount] = '20',
+      'native table did not project the measured scalar');
+    Require(TNyxText(TListBox(LRenderer.ControlFor('measured-list')).Items[ACount - 1]) = LCaption,
+      'native list lost its unchanged caption');
+    Require(TTreeView(LRenderer.ControlFor('measured-tree')).Items.FindNodeWithText(LCaption) <> nil,
+      'native tree lost its unchanged caption');
     {$endif}
     Result := IntToStr(ACount) + ',' + TNyxStateValue.FromNumber(LSetupMS).NumberText + ',' +
       TNyxStateValue.FromNumber(LUpdateMS).NumberText + ',21,21,21';

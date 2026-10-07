@@ -7,6 +7,82 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: incremental collection values — 2026-10-07
+
+The previous batch made authoritative progress: combined semantic composition,
+authenticated whole-pair history and exact-input compiler consumers. Its remote
+checkpoint remains pending after another normal push returned the same server
+error; local commits and verified incremental bundle remain retained.
+Reassessment ends composition fixtures and returns to production data controls.
+Original NS-3 component criterion 3 and performance criteria 2/3 own this batch;
+their broader parity/component prerequisites and full acceptance remain open.
+
+Source shows a concrete update cost: native lists clear/repopulate every value,
+and adapters visit all projected scalars despite an ordered store change log.
+Deliver a shared immutable refresh plan consumed by both adapters, retaining
+query/order/hierarchy fallback, editor drafts, selection, normalization and owned
+teardown. Require real native controls, exact query/input regressions and a same-
+workload before/after mounted-control measurement; compile/stage the browser
+consumer without substituting compilation for execution. Do not retry rejected
+browser launch or primary replacement. Stop at the integrated incremental-value
+boundary; viewport virtualization and both-target production budgets remain
+original requirements. Do not invent/reset historical NS-3 counts or close a
+broader criterion from this packet. All protected services/projects stay separate.
+
+Both adapters now consume one shared immutable typed refresh plan. Matching source
+revisions and exact visible identities/order admit update/replace row marks;
+missing context, structural operations, query reshaping and changed parents retain
+the complete path. Selection/policy still synchronize. Native list entries and
+borrowed objects survive scalar/caption changes; grids preserve the existing
+editor/draft and rejected/no-op normalization behavior. Browser labels now avoid
+replacing unchanged DOM text nodes, with existing editor guards retained.
+The plan owns only immutable Boolean bits; its notification log and snapshots
+retire with their explicit mount lifetimes, without renderer/document cycles.
+
+Current native qualification passes **29** focused plan/real-control checks and
+**27** existing collection control checks, leak-free. The unchanged **4398-byte**
+authenticated MCP English companion passes **75** ordinary Win32 query/control
+checks against the new adapters. Maintained `tools/build.ps1 -Target
+collection-refresh -GridSourceDirectory <semantic-export-directory>` passes;
+matched browser fixtures, the exact source consumer, Studio and worker compile/
+stage. Owned warnings are zero; installed pas2js RTL warnings remain visible.
+The final focused log adds caption/object retention beyond the earlier maintained
+28-check run. A first native run caught an absent typed editor reference in the
+new skip condition; the guarded current path passes all named consumers.
+
+Same-workload serial optimized samples use FPC 3.3.1 Win32, `-O2 -Sa -Cr -Co -Ci`,
+no heap/debug instrumentation, the same benchmark source and hidden ordinary LCL
+list/table/four-way tree. Previous adapters come from exact archived `cbca64d`;
+the current adapter sample follows it serially after all test/compiler jobs finish.
+Actual final table scalar, unchanged list/tree captions, rows/revisions, refresh
+counts and disconnects gate CSV output outside the measured intervals.
+
+| Rows | Previous mount (ms) | Current mount (ms) | Previous twenty updates (ms) | Current twenty updates (ms) |
+| ---: | ---: | ---: | ---: | ---: |
+| 512 | 109 | 109 | 469 | 203 |
+| 4096 | 375 | 375 | 3406 | 1391 |
+
+These single native wall-clock samples support this workload's improvement, not
+statistical production budgets, painted frames, sustained memory or browser speed.
+Earlier concurrent samples are exploratory and excluded from this comparison.
+All rows remain materialized; identity/selection/hierarchy scans and complete
+snapshot validation/query costs remain. Current browser execution and full Studio
+observing/LAN delivery are still unqualified; existing policy gates were not
+retried. End refresh fixture expansion. Follow the original viewport virtualization,
+production budgets and application-parity work rather than counting this prerequisite
+as their completion. No original criterion closes and no historical NS-3 count is
+invented/reset; workflow/authoring/renderer/codegen/delivery remain **19/30/9/28/2**.
+
+Evidence is under ignored `build/collection-refresh/`: `native-build.log`,
+`native-run.log`, `browser-build.log`, `maintained-build.log`, `before-qualified/`,
+`before-serial.csv`, `after-serial.csv`, `timing-receipt.json` and maintained native
+query capture. Every test/compiler process is terminal. Original **15** process
+identities, **nine** full protected pairs/**147033-byte** checkpoint and **229**
+frozen/LAN assets remain exact; the combined backend identity and its **243-file**
+package, plus the older query candidate's **242-file** package, remain unchanged.
+See `preservation-after.log`, `combined-release-after.log`, `query-release-after.log`.
+Remote checkpoint remains pending; do not infer a pushed branch or served update.
+
 ## Current return path: combined semantic composition — 2026-10-07
 
 The last mobile follow-up confirmed already delivered behavior and served bytes;

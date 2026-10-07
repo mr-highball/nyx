@@ -83,7 +83,7 @@ type
   public
     constructor Create(AOwner: TBrowserMount; const ARef: TNyxItemRef);
     destructor Destroy; override;
-    procedure Sync;
+    procedure Sync(AValuesChanged: Boolean);
   end;
 
   TBrowserMount = class(TNyxCollectionMountBase)
@@ -296,7 +296,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TBrowserRow.Sync;
+procedure TBrowserRow.Sync(AValuesChanged: Boolean);
 var
   LIndex: Integer;
   LText: TNyxText;
@@ -324,10 +324,9 @@ begin
       FCells[LIndex].setAttribute('aria-readonly', LowerCase(BoolToStr(
         FOwner.FReadOnly or (FOwner.FView.Spec.ColumnAt(LIndex).Mode <> cmEditable), True)));
     end;
-    LText := FOwner.FView.CellText(FRef, LIndex);
-    LApplyValues := LPrevious < 0;
+    LApplyValues := AValuesChanged and (LPrevious < 0);
 
-    if not LApplyValues and (FOwner.FRendered.Revision <> LData.Revision) then
+    if AValuesChanged and not LApplyValues and (FOwner.FRendered.Revision <> LData.Revision) then
     begin
       LColumn := FOwner.FView.Spec.ColumnAt(LIndex);
       LApplyValues := not LColumn.Read(LData.Item(FRef)).SameValue(
@@ -351,6 +350,7 @@ begin
 
       if LApplyValues then
       begin
+        LText := FOwner.FView.CellText(FRef, LIndex);
 
         if FInputs[LIndex]._type = 'checkbox' then
         begin
@@ -362,8 +362,11 @@ begin
         end;
       end;
     end
-    else
+    else if LApplyValues then
     begin
+      { Unchanged label nodes are retained just like editors. Reassigning
+        textContent also destroys their DOM text node and needlessly repaints. }
+      LText := FOwner.FView.CellText(FRef, LIndex);
       FLabels[LIndex].textContent := LText;
     end;
   end;
@@ -590,7 +593,7 @@ begin
     begin
       LNext[LIndex] := TBrowserRow.Create(Self, LData.ItemAt(LIndex).Ref);
     end;
-    LNext[LIndex].Sync;
+    LNext[LIndex].Sync(FRefreshPlan.ValuesChanged(LIndex));
 
     if FView.Projection = cpTable then
     begin

@@ -32,6 +32,7 @@ uses
   nyx.collections,
   nyx.collections.view,
   nyx.collections.selection,
+  nyx.collections.refresh,
   nyx.typeahead,
   nyx.binding.types;
 
@@ -96,6 +97,8 @@ type
     FTypeAhead: INyxTypeAhead;
     FTypeAheadSnapshot: INyxCollectionSnapshot;
     FSearchOrder: TNyxItemRefs;
+    FLastSnapshot: INyxCollectionSnapshot;
+    FChanges: INyxCollectionChanges;
     function SearchLabel(AIndex: Integer): TNyxText;
     procedure Changed(const AView: INyxCollectionView;
       const AChanges: INyxCollectionChanges);
@@ -104,6 +107,9 @@ type
     FUpdating: Boolean;
     FEnabled: Boolean;
     FReadOnly: Boolean;
+    { Valid only during RenderDataset. Dataset notifications carry their log;
+      explicit policy/selection refreshes still synchronize target state. }
+    FRefreshPlan: TNyxCollectionRefreshPlan;
     { A completed target edit restores only its own item/column. Selection and
       unrelated publications preserve other live drafts. No-op/rejected edits
       still normalize their admitted display without a data revision. These
@@ -161,6 +167,10 @@ begin
   FEnabled := True;
   FTypeAhead := NewNyxTypeAhead(NyxTypeAhead);
   FTypeAheadSnapshot := nil;
+
+  FLastSnapshot := nil;
+  FChanges := nil;
+  FRefreshPlan := Default(TNyxCollectionRefreshPlan);
 end;
 
 destructor TNyxCollectionMountBase.Destroy;
@@ -199,6 +209,9 @@ begin
   FSelectionObserver := nil;
   FSelection := nil;
   FTypeAheadSnapshot := nil;
+  FLastSnapshot := nil;
+  FChanges := nil;
+  FRefreshPlan := Default(TNyxCollectionRefreshPlan);
 
   if FToken <> nil then
   begin
@@ -227,7 +240,13 @@ begin
   LAfter := AView.Selection;
   FSelection := LAfter;
   LObserver := FSelectionObserver;
-  Refresh;
+  FChanges := AChanges;
+  try
+    Refresh;
+  finally
+    { Do not retain before/after datasets beyond the notification frame. }
+    FChanges := nil;
+  end;
 
   if FConnected and FEnabled and Assigned(LObserver) and
     not LAfter.SameState(LBefore) then
@@ -251,6 +270,7 @@ end;
 procedure TNyxCollectionMountBase.Refresh;
 var
   LKeepAlive: INyxCollectionMount;
+  LSnapshot: INyxCollectionSnapshot;
 begin
 
   if not FConnected or FUpdating then
@@ -262,9 +282,17 @@ begin
   LKeepAlive := Self as INyxCollectionMount;
   FUpdating := True;
   try
+    LSnapshot := FView.Snapshot;
+    FRefreshPlan := NyxCollectionRefreshPlan(FLastSnapshot, LSnapshot, FView.Spec, FChanges);
     RenderDataset;
+
+    if FConnected then
+    begin
+      FLastSnapshot := LSnapshot;
+    end;
     Inc(FRefreshCount);
   finally
+    FRefreshPlan := Default(TNyxCollectionRefreshPlan);
     FUpdating := False;
   end;
 end;

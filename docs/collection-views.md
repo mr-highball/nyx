@@ -370,12 +370,37 @@ semantic export. Serve the resulting browser fixture through an already-owned
 static host, and qualify it using the Pascal browser capture/input harness.
 Discard only the owned review at its exact current revision when finished.
 
-All rows are currently materialized. Native lists rebuild their item text, tables
-visit all visible-model cells, and tree structure changes relocate nodes.
-Selection and scalar tree changes preserve the existing hierarchy. A refresh
-count describes completed adapter passes, not browser frames or native paints.
-Virtualization, incremental large-data work and documented frame/memory budgets
-retain their owner in [extension/performance](../TODO/NS-3_extension-performance_01.md).
+## Incremental value refresh
+
+Both adapters consume the portable immutable
+[`TNyxCollectionRefreshPlan`](../src/nyx.collections.refresh.pas).
+An authoritative source log, matching revisions and exact visible identities/
+ordering mark updated or replaced rows. Missing context, structural operations,
+query reshaping and changed parent fields use the complete synchronization path.
+Selection and interaction policy continue to synchronize independently of values.
+Rejected/no-op edits still normalize the exact widget cell; unchanged editor
+drafts retain their existing protection.
+
+Native lists retain entry objects and update only affected captions. Table cells
+and tree captions skip unchanged row values. Browser labels retain unchanged text
+nodes and editors retain scalar comparison guards. The plan owns only Boolean
+bits, with no dataset/renderer/widget references; borrowed publication context
+retires after notification, and mounts disconnect before widget disposal.
+
+All rows remain materialized. Visible-identity, selection and hierarchy scans,
+snapshot validation and query evaluation still contribute dataset-wide work.
+A refresh count describes completed adapter passes. Viewport virtualization and
+documented both-target frame/memory budgets retain their owner in
+[extension/performance](../TODO/NS-3_extension-performance_01.md).
+
+`tools/build.ps1 -Target collection-refresh -GridSourceDirectory <semantic-export-directory>`
+consumes an unchanged MCP-exported table companion. Native focused controls pass
+29, existing collection controls 27 and ordinary table/query controls 75; browser
+fixtures, Studio and its worker compile/stage without launching a browser/service.
+The same serial native 4096-row workload reduces twenty updates 3406→1391 ms;
+these hidden-control samples exclude paint and do not establish production budgets.
+Current browser execution and full observing/delivery remain separate gates.
+See [the exact evidence](../WORK.md#current-return-path-incremental-collection-values--2026-10-07).
 
 ## Studio collection authoring
 

@@ -44,6 +44,7 @@ uses
   Classes,
   SysUtils,
   Math,
+  nyx.collections.refresh,
   StdCtrls,
   ComCtrls,
   Grids,
@@ -603,18 +604,49 @@ begin
     end;
     FList.Items.BeginUpdate;
     try
-      FList.Items.Clear;
-      for LIndex := 0 to LData.Count - 1 do
+
+      if FRefreshPlan.Kind = ncrFull then
       begin
-        FList.Items.Add(DisplayText(FView.CellText(LData.ItemAt(LIndex).Ref, 0)));
+        { Rebuild only for a changed shape or unavailable publication context.
+          Scalar/selection refreshes retain entry objects, scroll and selection. }
+        FList.Items.Clear;
+        for LIndex := 0 to LData.Count - 1 do
+        begin
+          FList.Items.Add(DisplayText(FView.CellText(LData.ItemAt(LIndex).Ref, 0)));
+        end;
+      end
+      else
+      begin
+        for LIndex := 0 to LData.Count - 1 do
+        begin
+
+          if FRefreshPlan.ValuesChanged(LIndex) or
+            (FNormalizeValues and (FNormalizeItem.ID = LData.ItemAt(LIndex).Ref.ID)) then
+          begin
+            LText := DisplayText(FView.CellText(LData.ItemAt(LIndex).Ref, 0));
+
+            if TNyxText(FList.Items[LIndex]) <> LText then
+            begin
+              FList.Items[LIndex] := LText;
+            end;
+          end;
+        end;
       end;
-      FList.ItemIndex := LSelected;
+
+      if FList.ItemIndex <> LSelected then
+      begin
+        FList.ItemIndex := LSelected;
+      end;
 
       if FList.MultiSelect then
       begin
         for LIndex := 0 to LData.Count - 1 do
         begin
-          FList.Selected[LIndex] := FView.Selection.Contains(LData.ItemAt(LIndex).Ref);
+
+          if FList.Selected[LIndex] <> FView.Selection.Contains(LData.ItemAt(LIndex).Ref) then
+          begin
+            FList.Selected[LIndex] := FView.Selection.Contains(LData.ItemAt(LIndex).Ref);
+          end;
         end;
       end;
 
@@ -659,6 +691,16 @@ begin
         end;
         for LIndex := 0 to LData.Count - 1 do
         begin
+          { An unchanged row needs no scalar reads. Closing a positional editor
+            can have written its draft into the physical cell, so that row still
+            receives the ordinary per-cell normalization/restoration below. }
+
+          if not FRefreshPlan.ValuesChanged(LIndex) and
+            not (FNormalizeValues and (FNormalizeItem.ID = LData.ItemAt(LIndex).Ref.ID)) and
+            (not LEditingItem.Defined or (LData.ItemAt(LIndex).Ref.ID <> LEditingItem.ID)) then
+          begin
+            Continue;
+          end;
           LPrevious := -1;
 
           if FRendered <> nil then
@@ -780,11 +822,16 @@ begin
           LStructureChanged := True;
         end;
         LNext[LIndex].Data := Pointer(PtrUInt(LIndex + 1));
-        LText := DisplayText(FView.CellText(LData.ItemAt(LIndex).Ref, 0));
 
-        if TNyxText(LNext[LIndex].Text) <> LText then
+        if FRefreshPlan.ValuesChanged(LIndex) or
+          (FNormalizeValues and (FNormalizeItem.ID = LData.ItemAt(LIndex).Ref.ID)) then
         begin
-          LNext[LIndex].Text := LText;
+          LText := DisplayText(FView.CellText(LData.ItemAt(LIndex).Ref, 0));
+
+          if TNyxText(LNext[LIndex].Text) <> LText then
+          begin
+            LNext[LIndex].Text := LText;
+          end;
         end;
       end;
 

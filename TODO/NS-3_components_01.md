@@ -23,6 +23,20 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Incremental collection values — 2026-10-07
+
+Original criterion 3 now has shared change planning integrated with both target
+adapters. Exact identities/revisions admit scalar row updates; structural/query/
+hierarchy changes retain complete synchronization. Actual Win32 focused controls
+pass 29, lifetime/input regressions 27, and the ordinary unchanged MCP-authored
+table 75, leak-free. The mounted native 4096-row sample improves twenty updates
+3406→1391 ms; browser consumers compile/stage without current execution.
+All rows remain materialized and full model/query/metadata work remains. Stop
+refresh fixtures; viewport virtualization, browser/application parity, production
+budgets/styling and the original prerequisites remain open. No original criterion
+closes or component count is created. Existing services/projects/payload stay exact.
+See [the packet](../WORK.md#current-return-path-incremental-collection-values--2026-10-07).
+
 ## Typed collection queries — 2026-10-07
 
 The subsequent reusable public query compound is consumed by Studio and passes

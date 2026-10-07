@@ -12,8 +12,11 @@ Bound tables add shared typed data-cell navigation and current-cell editing,
 independently of row membership. The same specialized MCP-exported application
 exercises both actual targets; browser Tab traversal and narrow horizontal
 scrolling retain authored text scale. See [table behavior](collection-views.md#bound-table-cell-navigation).
-Production paging, sorting/filtering, virtualization and richer table styling
-remain open; declared catalog breadth does not establish those implementations.
+Typed filtering/stable ordering and incremental scalar-row refresh are integrated;
+see [queries](collection-queries.md) and
+[refresh behavior](collection-views.md#incremental-value-refresh).
+Production paging, virtualization and richer table styling remain open; declared
+catalog breadth does not establish those implementations.
 
 Compound scalar values and editable named fields now have explicit [typed
 contracts](contracts.md). Rating/stepper selections are integers; segmented
