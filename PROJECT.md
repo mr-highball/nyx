@@ -66,6 +66,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The existing semantic transaction now composes layout/control, scalar bindings
+and collection/query changes as one ordered candidate with one exact paired Undo.
+Checked native admission and compiled runtime projections pass 41/8; a fresh
+isolated backend passes 42 authenticated composition checks and all four exact-
+input browser/LCL application/view builds. Native table consumers pass 75.
+Browser consumers compile/stage; current execution, full observing and LAN delivery
+retain their separate gates. Existing services/projects remain exact. See
+[the combined packet](WORK.md#current-return-path-combined-semantic-composition--2026-10-07).
+
 Structured-value snapshots now index immediate members and retain exact scalar
 text, removing repeated full-container JSON decoding from reads. The same native
 long-text sample falls from 1015 ms to 141 ms; the unchanged 117-check collection

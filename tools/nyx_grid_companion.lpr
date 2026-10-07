@@ -26,7 +26,7 @@ program nyx_grid_companion;
 
 uses
   Classes, SysUtils, nyx.text, nyx.data, nyx.test.mcp.client,
-  nyx.state, nyx.collections, nyx.collections.view.types, nyx.collections.selection,
+  nyx.state, nyx.binding.types, nyx.collections, nyx.collections.view.types, nyx.collections.selection,
   nyx.studio.collectionedits, nyx.studio.collectionintent, nyx.studio.stateedits,
   nyx.studio.edits, nyx.studio.transactions;
 
@@ -108,6 +108,7 @@ var
   LBefore: TNyxText;
   LKey: TNyxCollectionRef;
   LPatch: INyxCollectionPatch;
+  LScalar: INyxStateBindingPatch;
   LLayout: INyxDesignPatch;
   LTransaction: INyxProjectTransaction;
 begin
@@ -142,14 +143,20 @@ begin
         '"properties":{"text":"A thoughtful work table"}},' +
         '{"op":"create","kind":"label","id":"grid-help","parent":"grid-review",' +
         '"properties":{"text":"Use arrows to move between cells. Enter edits a value; Escape returns to the cell."}},' +
+        '{"op":"create","kind":"input","id":"workspace-note","parent":"grid-review",' +
+        '"properties":{"text":"Workspace note","placeholder":"A thought for later"}},' +
         '{"op":"create","kind":"table","id":"work-table","parent":"grid-review",' +
         '"properties":{"height":240,"aria-label":"Work items"}},' +
         '{"op":"create","kind":"button","id":"after-table","parent":"grid-review",' +
         '"properties":{"text":"Keep creating"}}]'));
-    { The portable paired candidate owns layout and collection/default binding
+    { The portable paired candidate owns layout, scalar and collection binding
       as one semantic mutation. One Undo restores this new workspace's exact
       initial source, including removal of the newly composed page and data. }
     LKey := NyxCollection('work-items');
+    LScalar := NyxStateBindingPatch([
+      NyxCreateDefault(NyxStateValue(NyxTextState('workspace-note'), 'Keep crafting.')),
+      NyxBindControl(NyxBindingOwner('workspace-note'), bpValue,
+        NyxTextState('workspace-note'), bdTwoWay)]);
     LPatch := NyxCollectionPatch([
       NyxDefineCollection(LKey, NyxCollectionSchema.Text(NyxTextField('task'), '')
         .Integer(NyxIntegerField('priority'), 1).Text(NyxTextField('status'), 'Ready'), [
@@ -164,15 +171,16 @@ begin
           .Column(NyxIntegerField('priority'), 'Priority', cmEditable)
           .Column(NyxTextField('status'), 'Status').Selection(nsmMultiple))]);
     LTransaction := NyxProjectTransaction([
-      NyxDesignStep(LLayout), NyxCollectionStep(LPatch)]);
+      NyxDesignStep(LLayout), NyxStateStep(LScalar), NyxCollectionStep(LPatch)]);
     Call('nyx_transaction', [
       NyxField('expectedRevision', NyxData(GRevision)),
       NyxField('operationId', NyxData('grid-companion-compose')),
       NyxField('operations', LTransaction.ToData)]);
     GRevision := Call('nyx_session', []).Field('revision').AsInteger;
     LSource := Source;
-    Check((Pos('INyxTable', LSource) > 0) and (Pos('NyxCollectionView', LSource) > 0),
-      'Specialized crafted bound-table companion');
+    Check((Pos('INyxTable', LSource) > 0) and (Pos('INyxInput', LSource) > 0) and
+      (Pos('NyxCollectionView', LSource) > 0),
+      'Specialized crafted scalar and collection companion');
     History('undo');
     Check(Source = LBefore, 'One paired Undo removes the entire composed layout and data');
     Check(not Call('nyx_session', []).Field('canUndo').AsBoolean,
@@ -181,6 +189,8 @@ begin
       'Whole-composition Undo removes the new page');
     Check(Call('nyx_collections', [NyxField('mode', NyxData('list'))]).Field('total').AsInteger = 0,
       'Whole-composition Undo removes its data defaults');
+    Check(Call('nyx_state', [NyxField('mode', NyxData('defaults'))]).Field('total').AsInteger = 0,
+      'Whole-composition Undo removes its scalar defaults');
     History('redo');
     Check(Source = LSource, 'One paired Redo restores the exact companion');
     ForceDirectories(ParamStr(2));

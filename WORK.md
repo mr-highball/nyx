@@ -10,7 +10,7 @@ actual browser/LCL consumers qualify physical behavior selectively.
 ## Current return path: combined semantic composition — 2026-10-07
 
 The last mobile follow-up confirmed already delivered behavior and served bytes;
-it added no capability to the full goal. Git remains clean at pushed `de949b1`.
+it added no capability to the full goal. This batch began at pushed `de949b1`.
 Reassessment returns to original NS-4 workflow criteria 2/5: layout/control,
 scalar-default/binding and collection/query changes must share one ordered,
 revision-aware semantic transaction and one exact paired Undo. Existing separate
@@ -36,9 +36,9 @@ coalesces adjacent design groups to preserve flat-wire semantics and stages the
 whole pair before one ordinary publication. Built-in design snapshots expose an
 optional interface; the original candidate-only custom-patch interface/GUID is
 unchanged. Layout-only MCP retains the direct tree/source candidate path. The
-maintained English table companion now submits layout and defaults/bindings in
-one mutation and checks that one Undo removes its page, data and hidden history.
-Authenticated execution is the next gate, not inferred from tool compilation.
+maintained English table companion now submits layout, a bound workspace-note
+input and collection/default bindings in one mutation. One Undo removes its page,
+both default families and hidden history; Redo restores the exact source.
 
 Checked native qualification passes **41** combined assertions and **8** actual
 compiled companion/runtime projections, including exact supplementary text,
@@ -50,9 +50,47 @@ All heap traces are leak-free and owned warnings are zero. Maintained
 pas2js shared/compiled consumers; browser execution remains unqualified.
 Evidence is under ignored `build/combined-transactions/`: `transaction-build.log`,
 `transaction.log`, `maintained-build.log` and the three named regression
-build/run logs. The new source snapshot still needs current-backend authenticated
-composition/builds and ordinary observing/browser input evidence. No service
-replacement, project acceptance or browser launch is inferred from these passes.
+build/run logs.
+
+The fresh isolated backend uses the exact **243-file** frozen `c264c9e` package,
+with **29** release preparation/integrity checks. Its independent enrollment,
+process identity and runtime stay under this packet; the backend remains alive.
+Actual authenticated discovery advertises all 21 tools, both data groups and the
+root recursive query schema. The first layout/collection companion passes **40**;
+the complete layout/scalar/collection companion passes **42**, with one exact
+paired Undo/Redo. They own separate new workspaces and retain their exports.
+The latter exports **4398-byte** specialized Pascal; original primary revision
+and all other projects remain unchanged.
+
+The maintained authenticated query journey then passes **265** checks against
+that owned workspace, including source/history/refusal and four real service
+compiler jobs: browser and LCL, each application and view. Every job succeeds,
+reports current source and returns the exact accepted **4842-byte** compiler input.
+Polling checks are not distinct capabilities or performance measurements.
+Checked native consumers of the 4398-byte export pass **56** typed query checks,
+**57** actual compiled builders and **75** ordinary Win32 table/control checks.
+All heap traces are leak-free and owned warnings remain zero. Browser counterparts
+compile/stage, but no current browser execution, full observing Studio journey,
+native editing of the new note input or LAN refresh is inferred.
+
+Additional evidence: `release-build.log`, `current-release-after.log`,
+`authenticated-schema.json`, `grid-companion.log`, `combined-grid-companion.log`,
+`grid-source/`, `combined-grid-source/`, `query-companion.log`,
+`semantic-companion/*-build.json` and `query-controls-build.log`.
+Private identity/enrollment details remain only in ignored evidence.
+Final preservation verifies all **15** original process identities, **nine**
+exact protected pairs, the **147033-byte** checkpoint and **229** frozen/LAN
+assets; the older query candidate's **242** frozen files also remain exact.
+See `preservation-after.log` and `query-preservation-after.log`.
+
+This integrated packet advances workflow no-closure **18→19** once. No original
+criterion closes; authoring/renderer/codegen/delivery stay **30/9/28/2**, and the
+full user goal remains active. End combined-composition fixture expansion.
+Current browser execution/observing and delivery retain the existing workflow
+owner and policy gates; neither previously rejected launch nor primary replacement
+was retried through another route. The timeout cause remains unproven. Continue
+the original production component/virtualization/performance and application
+parity outcomes; richer source/event/review integration remains separate work.
 
 ## Current return path: indexed structured-value reads — 2026-10-07
 

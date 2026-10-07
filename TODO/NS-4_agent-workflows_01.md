@@ -21,12 +21,15 @@ counting every leaf toward 64. One complete candidate publishes one exact paired
 Undo. Ordered groups retain ordinary intermediate admission; custom candidate-only
 commands retain their original interface/GUID. Checked native passes 41 focused
 checks, eight actual compiled runtime projections, and existing 39/52/117
-agent/reusable/collection regressions, leak-free. Matched browser consumers compile
-and stage; the English table companion is changed to one semantic mutation.
-Current authenticated execution/builds and full observing/browser input remain
-required. No original criterion/count closes here; workflow stays 18 pending
-the integrated consumer packet. Preserve the rejected browser/primary actions
-and all existing pairs/services. See
+agent/reusable/collection regressions, leak-free. The fresh frozen backend passes
+42 authenticated all-domain English companion checks, one exact paired Undo/Redo,
+and 265 query/source/history checks with four exact-input browser/LCL application/
+view builds. Actual native query/compiled/control consumers pass 56/57/75.
+Matched browser consumers compile/stage; current browser execution, full observing
+and LAN delivery remain required. No original criterion closes; workflow
+no-closure advances 18→19 once, other counters unchanged. End combined fixture
+expansion. Preserve the rejected browser/primary actions and all existing pairs/
+services; source/event/review integration retains its separate scope. See
 [the packet](../WORK.md#current-return-path-combined-semantic-composition--2026-10-07).
 
 Current bounded query contract (2026-10-07): the existing collection tool now

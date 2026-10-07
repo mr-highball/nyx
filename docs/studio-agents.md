@@ -530,6 +530,12 @@ Built-in design patches expose `INyxDesignChanges` through
 remains unchanged for custom ordinary commands; semantic composition requires
 the optional strict snapshot capability.
 
+The maintained English companion now composes its table, bound workspace-note
+input and both default families in one authenticated mutation. Current isolated
+qualification verifies exact paired Undo/Redo and all four browser/LCL application/
+view compiler inputs. Native table controls execute separately; browser execution
+and full observing Studio retain the boundaries recorded in WORK.md.
+
 `tools/build.ps1 -Target project-transactions` runs checked shared admission and
 exact compiled-source/runtime projection, builds the semantic English table
 companion, and stages matched browser consumers. It starts no service/browser
