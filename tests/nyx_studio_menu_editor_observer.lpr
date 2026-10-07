@@ -39,6 +39,7 @@ var
   GSequence: Integer;
   GWidth: Integer;
   GResetFixture: Boolean;
+  GInteractOnly: Boolean;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -169,6 +170,29 @@ begin
     begin
       raise Exception.Create('Ordinary Studio value did not settle / ' + ASelector +
         ' / expected ' + Copy(AValue, 1, 100) + ' / observed ' + Copy(LValue, 1, 100));
+    end;
+    Sleep(100);
+  until False;
+end;
+
+{ One bounded agent row proves the observing shell actually admitted a changed
+  connection roster. No arbitrary delay or injected script stands in for paint. }
+procedure WaitText(const ASelector, AText: TNyxText; AContains: Boolean);
+var
+  LStarted: QWord;
+begin
+  LStarted := GetTickCount64;
+  repeat
+
+    if (Pos(AText, GHost.ElementHTML(ASelector)) > 0) = AContains then
+    begin
+      Inc(GChecks);
+      Exit;
+    end;
+
+    if (GHost.RuntimeError <> '') or (GetTickCount64 - LStarted > 20000) then
+    begin
+      raise Exception.Create('Expected observing roster paint did not arrive');
     end;
     Sleep(100);
   until False;
@@ -444,6 +468,72 @@ begin
     'semantic Undo restores the exact initial owned companion boundary');
 end;
 
+{ Actual menu input is separate from source admission or TODO execution. An
+  independently initialized read-only MCP witness joins and retires while the
+  family is open, forcing both ordinary shell rebuilds without touching a pair. }
+procedure Interact(const AAcceptedSource: TNyxText);
+var
+  LPeer: TNyxMCPTestClient;
+  LReply: TNyxDataValue;
+  LRow, LWitness: TNyxText;
+begin
+
+  if GHost.Exists('[data-node=studio-panelbar]') then
+  begin
+    GHost.Click('[data-node=action-panel-design]');
+  end;
+  WaitFor('[data-node=action-preview]');
+  WriteLn('Ordinary Studio / canvas Interact');
+  Flush(Output);
+  GHost.Click('[data-node=action-preview]');
+  GHost.Click('[data-node=studio-canvas] [data-node=open-actions]');
+  WaitFor('.nyx-popover:popover-open [data-node=copy-draft]');
+  { Workspace handles may contain punctuation. Quote the exact CSS attribute;
+    a fresh witness name also distinguishes concurrent ordinary review clients. }
+  LRow := '[data-node="studio-agent-workspace-' + GWorkspace + '"]';
+  LWitness := 'Scooty portal witness ' + IntToStr(GetTickCount64);
+  LPeer := TNyxMCPTestClient.Create(ParamStr(1), LWitness);
+  try
+    LReply := LPeer.Tool('nyx_session', NyxObject([
+      NyxField('workspace', NyxData(GWorkspace))]));
+    Check(not LReply.Field('isError').AsBoolean, 'independent witness inspects only the owned workspace');
+    WaitText(LRow, LWitness, True);
+    Check(GHost.Exists('.nyx-popover:popover-open [data-node=show-guides]'),
+      'open menu survives the observed agent roster insertion');
+    LPeer.Close;
+    WaitText(LRow, LWitness, False);
+    Check(GHost.Exists('.nyx-popover:popover-open [data-node=show-guides]'),
+      'open menu survives the observed agent roster retirement');
+  finally
+    { Retire the owned MCP witness even when physical observation refuses. Close
+      is idempotent; its session must not stay in the observing Studio roster. }
+    try
+      LPeer.Close;
+    finally
+      LPeer.Free;
+    end;
+  end;
+  GHost.Capture('interact-actions');
+  GHost.Click('.nyx-popover:popover-open [data-node=show-guides]');
+  WaitFor('.nyx-popover:popover-open', False);
+  GHost.Click('[data-node=studio-canvas] [data-node=open-actions]');
+  WaitFor('.nyx-popover:popover-open [data-node=show-guides][aria-checked=false]');
+  GHost.Click('.nyx-popover:popover-open [data-node=choose-density]');
+  WaitFor('.nyx-popover:popover-open [data-node=compact-density]');
+  GHost.Click('.nyx-popover:popover-open [data-node=compact-density]');
+  WaitFor('.nyx-popover:popover-open', False);
+  GHost.Click('[data-node=studio-canvas] [data-node=open-actions]');
+  GHost.Click('.nyx-popover:popover-open [data-node=choose-density]');
+  WaitFor('.nyx-popover:popover-open [data-node=compact-density][aria-checked=true]');
+  GHost.Capture('interact-density');
+  GHost.Key(nbkEscape);
+  GHost.Key(nbkEscape);
+  WaitFor('.nyx-popover:popover-open', False);
+  Check(Source = AAcceptedSource, 'runtime menu state preserves the accepted design and source');
+  Check(Pos('refused', LowerCase(GHost.ElementHTML('[data-node=studio-status]'))) = 0,
+    'ordinary canvas Interact reports no refusal');
+end;
+
 procedure Journey;
 const
   CNamedCard = '[data-node^=event-named-]';
@@ -456,7 +546,6 @@ var
   LCallbackSource: TNyxText;
   LRevision: Integer;
   LMenu: TNyxDataValue;
-  LHTML: TNyxText;
   LStageHeight: Double;
   LSourceBox: TNyxBrowserBox;
 begin
@@ -574,35 +663,7 @@ begin
   Build('browser');
   Build('lcl');
 
-  if GHost.Exists('[data-node=studio-panelbar]') then
-  begin
-    GHost.Click('[data-node=action-panel-design]');
-  end;
-  WaitFor('[data-node=action-preview]');
-  WriteLn('Ordinary Studio / canvas Interact');
-  Flush(Output);
-  GHost.Click('[data-node=action-preview]');
-  GHost.Click('[data-node=studio-canvas] [data-node=open-actions]');
-  WaitFor('.nyx-popover:popover-open [data-node=copy-draft]');
-  GHost.Capture('interact-actions');
-  GHost.Click('.nyx-popover:popover-open [data-node=show-guides]');
-  WaitFor('.nyx-popover:popover-open', False);
-  GHost.Click('[data-node=studio-canvas] [data-node=open-actions]');
-  WaitFor('.nyx-popover:popover-open [data-node=show-guides][aria-checked=false]');
-  GHost.Click('.nyx-popover:popover-open [data-node=choose-density]');
-  WaitFor('.nyx-popover:popover-open [data-node=compact-density]');
-  GHost.Click('.nyx-popover:popover-open [data-node=compact-density]');
-  WaitFor('.nyx-popover:popover-open', False);
-  GHost.Click('[data-node=studio-canvas] [data-node=open-actions]');
-  GHost.Click('.nyx-popover:popover-open [data-node=choose-density]');
-  WaitFor('.nyx-popover:popover-open [data-node=compact-density][aria-checked=true]');
-  GHost.Capture('interact-density');
-  GHost.Key(nbkEscape);
-  GHost.Key(nbkEscape);
-  WaitFor('.nyx-popover:popover-open', False);
-  Check(Source = LAfter, 'runtime menu state preserves the accepted design and source');
-  LHTML := GHost.ElementHTML('[data-node=studio-status]');
-  Check(Pos('refused', LowerCase(LHTML)) = 0, 'ordinary canvas Interact reports no refusal');
+  Interact(LAfter);
 end;
 
 { A bounded diagnostic reuses an explicitly owned accepted fixture. It changes
@@ -673,10 +734,12 @@ begin
     GWidth := StrToInt(ParamStr(4));
 
     GResetFixture := (ParamCount = 6) and (ParamStr(6) = 'reset-fixture');
+    GInteractOnly := (ParamCount = 6) and (ParamStr(6) = 'interact');
 
-    if (ParamCount = 6) and (ParamStr(6) <> 'navigation') and not GResetFixture then
+    if (ParamCount = 6) and (ParamStr(6) <> 'navigation') and
+      not GResetFixture and not GInteractOnly then
     begin
-      raise Exception.Create('Use only navigation or reset-fixture for an exact retained fixture');
+      raise Exception.Create('Use navigation, interact or reset-fixture for an exact retained fixture');
     end;
 
     if DirectoryExists(GDirectory) then
@@ -693,6 +756,15 @@ begin
     begin
       ResetFixture;
     end
+    else if GInteractOnly then
+    begin
+      WaitFor('[data-node=action-actions]');
+      Inspector(True);
+      WaitFor('[data-node^=event-named-] [data-node$=-callback-0-source]');
+      GHost.Click('[data-node^=event-named-] [data-node$=-callback-0-source]');
+      WaitFor('[data-node=studio-code]');
+      Interact(Source);
+    end
     else if ParamCount = 6 then
     begin
       Navigation;
@@ -705,7 +777,9 @@ begin
     Save('result.json', NyxObject([NyxField('checks', NyxData(GChecks)),
       NyxField('width', NyxData(GWidth)), NyxField('revision', NyxData(GRevision)),
       NyxField('workspace', NyxData(GWorkspace)), NyxField('result', NyxData('passed')),
-      NyxField('navigationOnly', NyxData((ParamCount = 6) and not GResetFixture)),
+      NyxField('navigationOnly', NyxData((ParamCount = 6) and
+        not GResetFixture and not GInteractOnly)),
+      NyxField('interactOnly', NyxData(GInteractOnly)),
       NyxField('resetFixture', NyxData(GResetFixture))]).ToJSON);
     FreeAndNil(GHost);
     GClient.Close;
@@ -714,6 +788,10 @@ begin
     if GResetFixture then
     begin
       WriteLn('PASS ', GChecks, ' owned fixture draft/history recovery / CSS ', GWidth);
+    end
+    else if GInteractOnly then
+    begin
+      WriteLn('PASS ', GChecks, ' ordinary browser Studio portal/Interact retention / CSS ', GWidth);
     end
     else if ParamCount = 6 then
     begin

@@ -101,6 +101,9 @@ type
     FShellCommandContext: TNyxStudioCommandContext;
     FShell: TNyxDocument;
     FShellRenderer: TNyxBrowserRenderer;
+    { Own only shell children. Public popovers/modals are independent body
+      portals; a full chrome fallback must not detach their live elements. }
+    FShellHost: TJSHTMLElement;
     { Borrowed receiver registration; cancelled before any controller teardown. }
     FHierarchySubscription: INyxEventSubscription;
     FCanvasRenderer: TNyxBrowserRenderer;
@@ -491,6 +494,9 @@ begin
   FOutputs := TNyxOutputConfiguration.Create;
   FShellRenderer := TNyxBrowserRenderer.Create;
   FShellRenderer.OnEvent := HandleShell;
+  FShellHost := TJSHTMLElement(document.createElement('div'));
+  FShellHost.setAttribute('data-nyx-studio-host', 'true');
+  document.body.appendChild(FShellHost);
   FHierarchySubscription := SubscribeNyxStudioHierarchy(FShellRenderer.Events, @HierarchyEvent);
   FCanvasRenderer := TNyxBrowserRenderer.Create;
   FCanvasRenderer.OnEvent := HandleCanvas;
@@ -622,6 +628,11 @@ begin
   FActionMenu := nil;
   FComponentHelp := nil;
   FShellRenderer.Free;
+
+  if FShellHost <> nil then
+  begin
+    FShellHost.remove;
+  end;
   FShell.Free;
   FSession.Free;
   FOutputs.Free;
@@ -967,7 +978,7 @@ begin
 
   if not FShellRenderer.TryRefresh(FShell, FShell.Pages[0], False) then
   begin
-    FShellRenderer.Render(FShell, FShell.Pages[0], TJSHTMLElement(document.body));
+    FShellRenderer.Render(FShell, FShell.Pages[0], FShellHost);
   end;
   { Compact Project/Design panels do not mount the Inspector hierarchy. Restore
     selection only when this shell actually owns the public tree binding. }

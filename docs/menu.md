@@ -160,6 +160,11 @@ and canvas Interact; ordinary compilation uses `nyx_build` for both targets.
 It never replaces a user's project or infers callback execution from a TODO stub.
 Its optional exact retained fixture workspace plus `navigation` argument runs
 only the bounded source/Events return path and records actual host allocation.
+`interact` runs only the retained fixture's runtime menu journey. An independent
+read-only MCP witness joins and retires while a menu is open; the observing
+Agents row must change, and the popup family must survive both shell rebuilds.
+The witness is retired even on failure. This mode does not earn full authoring
+journey evidence or establish execution of the generated TODO implementation.
 `reset-fixture` is limited to that retained first-save/first-callback fixture:
 ordinary Restore clears its own probe draft, then two revision-aware semantic
 Undo operations return its companion to the initial boundary. It neither
@@ -172,6 +177,9 @@ stage remains resizable. Compact hosts keep their existing collapse choice.
 Source navigation chooses the Source tab, mounts its editor and then moves the
 real caret, including after asynchronous callback creation. These controls do
 not change accepted source, output settings or project Undo history.
+The browser shell owns a dedicated mount inside the body. Public popovers and
+floating views keep their independent body portals when roster or presentation
+changes require a full shell render; shell teardown removes only its own mount.
 
 ## Attach runtime-only menus through an adapter
 
