@@ -40,20 +40,26 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
-## Saved bar-authoring prerequisite — 2026-10-07
+## Public menu-bar editor — 2026-10-07
 
-Saved immutable row grouping, typed persistence/source, bounded paired semantic
-operations and automatic ordinary browser/LCL application consumers are qualified
-under the existing workflow/component owners (54 candidate checks per target;
-18 actual application checks per target/width). This does not yet supply an
-ordinary Studio bar form. Original criteria 2/6 require a reusable public Nyx
-authoring compound, explicit local/effective grouping, complete typed policy and
-ordered part/menu choices, independent capture/retained draft, stale-baseline
-refusal and one paired Undo. Consume the same public declaration/edit contract;
-then qualify authenticated observing delivery without replacing user pairs.
-Authoring no-closure stays 28; workflow alone advances 15→16. No original full
-criterion closes. See
-[the next integration](../WORK.md#current-return-path-saved-menu-bar-integration--2026-10-07).
+Original criteria 2/6 now consume `NewNyxMenuBarEditor`, a public compound of
+specialized named controls. Local/effective grouping, complete typed policy,
+ordered exact part/menu choices, enabled defaults, reviewed removal/suppression
+and inheritance share independent drafts and paired worker admission. Physical
+inspector/queue controls pass 65 native and 65 each desktop/CSS-390 HTTP browser;
+ordinary Win32 Studio passes 73 through retained input, Save and exact source/
+Undo/Redo. Named compound actions retain source/origin semantics. Menu-editor
+regression passes 73 and saved-model regression 54, leak-free/owned warnings zero.
+All 15 services/nine pairs/full checkpoint and frozen LAN bytes stay exact. See
+[the packet](../WORK.md#current-return-path-public-menu-bar-editor--2026-10-07)
+and [public form](../docs/menu.md#author-a-saved-bar-in-studio).
+
+No original full criterion closes; authoring no-closure advances 28→29 once.
+Workflow 16, renderer 8, codegen 28 and delivery 2 remain. Stop local public-form
+fixtures: full browser Studio/observing journeys and authenticated new-bar HTTP
+delivery retain their existing workflow/delivery owners and original gates.
+Large-form performance, native sidebar clipping, hardware/accessibility and
+broader component/picker depth remain open; a full browser compile is not delivery.
 
 ## Public menu editor — 2026-10-07
 

@@ -1004,10 +1004,23 @@ begin
       sdaMenu:
         begin
 
-          if NyxMenuEditorBaseline(LSession.Document, NyxControl(FRequest.FEdit.Selection)) <>
-            FRequest.FEdit.MenuBaseline then
+          if FRequest.FEdit.Menu.IsMenuBar then
           begin
-            raise ENyxModel.Create('Menu choices changed since this editor was captured');
+
+            if NyxMenuBarEditorBaseline(LSession.Document,
+              NyxControl(FRequest.FEdit.Selection)) <> FRequest.FEdit.MenuBaseline then
+            begin
+              raise ENyxModel.Create('Menu bar choices changed since this editor was captured');
+            end;
+          end
+          else
+          begin
+
+            if NyxMenuEditorBaseline(LSession.Document, NyxControl(FRequest.FEdit.Selection)) <>
+              FRequest.FEdit.MenuBaseline then
+            begin
+              raise ENyxModel.Create('Menu choices changed since this editor was captured');
+            end;
           end;
           LSession.ApplyPatch(NyxMenuPatch([FRequest.FEdit.Menu]));
         end;

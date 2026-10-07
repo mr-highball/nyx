@@ -56,6 +56,9 @@ type
   public
     function ToData: TNyxDataValue;
     class function FromData(const AData: TNyxDataValue): TNyxMenuEdit; static;
+    { Closed operation family selects the appropriate mounted baseline; callers
+      never infer this from serialized command text. }
+    function IsMenuBar: Boolean;
     function Same(const AOther: TNyxMenuEdit): Boolean;
     property Defined: Boolean read FDefined;
     property Control: TNyxControlRef read FControl;
@@ -1450,6 +1453,11 @@ begin
   begin
     Result := ToData.ToJSON = AOther.ToData.ToJSON;
   end;
+end;
+
+function TNyxMenuEdit.IsMenuBar: Boolean;
+begin
+  Result := FDefined and (FOperation in [doMenuBarSet, doMenuBarInherit]);
 end;
 
 function NyxMenuPatch(const AChanges: array of TNyxMenuEdit): INyxDesignPatch;

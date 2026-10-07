@@ -127,6 +127,13 @@ procedure AddNyxMenuInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
   const AReference: TNyxMenuRef);
 function CaptureNyxMenuInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Public row-group compound resolves inherited settings without retaining the
+  projection. Capture rechecks its exact mounted local/effective baseline; the
+  independent paired worker checks again against its dispatch snapshot. }
+procedure AddNyxMenuBarInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode);
+function CaptureNyxMenuBarInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 { Open/new changes only inspector presentation. Stale mounted context refuses. }
 function RouteNyxMenuInspectorChoice(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; ATrigger: TNyxTrigger;
@@ -157,11 +164,60 @@ implementation
 uses
   nyx.schema, nyx.controls, nyx.content, nyx.content.editor,
   nyx.studio.callbackedits, nyx.studio.edits, nyx.dates.editor,
-  nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations;
+  nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
+  nyx.menu.bar.editor, nyx.menu.bar.declarations;
 
 const
   CAutomaticPresentation = 'Automatic / defaults';
   CManualPresentationPrefix = 'Manual / ';
+
+procedure AddNyxMenuBarInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  AProjection: TNyxNode);
+begin
+
+  if (AParent = nil) or (ASession = nil) or (ASession.Selected = nil) or
+    (AProjection = nil) or (AProjection.ProjectionKind <> NyxKindName(nkRow)) then
+  begin
+    Exit;
+  end;
+  { The shell already owns this projection. Use it for applicability rather
+    than cloning a whole application for every unrelated selected component. }
+  AParent.Add(NewNyxMenuBarEditor('inspector-menu-bar',
+    NyxControl(ASession.SelectedID), ASession.Document));
+end;
+
+function CaptureNyxMenuBarInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LChange: TNyxMenuBarEditorChange;
+  LDefinition: INyxMenuBarDefinition;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := CaptureNyxMenuBarEditor(AButton, AShellRoot, LChange, LDefinition);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if (ASession = nil) or (ASession.SelectedID <> LChange.Owner.ID) or
+    (NyxMenuBarEditorBaseline(ASession.Document, LChange.Owner) <> LChange.Baseline) then
+  begin
+    raise ENyxModel.Create('Select this component again before editing its menu bar');
+  end;
+  AEdit.Action := sdaMenu;
+  AEdit.Selection := LChange.Owner.ID;
+  AEdit.View := ASession.ActiveViewID;
+  AEdit.MenuBaseline := LChange.Baseline;
+  case LChange.Action of
+    nmbSave, nmbAddHeading, nmbMoveEarlier, nmbMoveLater, nmbRemoveHeading:
+      AEdit.Menu := NyxConfigureMenuBar(LChange.Owner, LDefinition);
+    nmbMask:
+      AEdit.Menu := NyxNoMenuBar(LChange.Owner);
+    nmbInherit:
+      AEdit.Menu := NyxInheritMenuBar(LChange.Owner);
+  end;
+end;
 
 procedure AddNyxMenuInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
   const AReference: TNyxMenuRef);

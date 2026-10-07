@@ -7,6 +7,70 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: public menu-bar editor — 2026-10-07
+
+Previous turn is progress at pushed checkpoint `5be0e1d`. This batch advances
+NS-4 authoring criteria 2/6's concrete prerequisite without changing full criteria.
+Public `NewNyxMenuBarEditor` is a reusable Nyx compound of specialized controls
+with named policy and nested heading parts. Studio Properties consumes local/
+effective grouping, complete typed search/navigation policy, ordered exact part/
+menu choices, enabled defaults and explicit masks/inheritance. Bounded captions
+retain separate exact Unicode references. Heading removal and whole-bar suppression
+require their own reviewed confirmation; inheritance removes only local grouping.
+
+An independent scalar draft retains unfinished input through panel changes and
+disposable chrome. Context compares owner and exact local/effective grouping,
+registry and resolvable parts. Capture and dispatch both check that baseline;
+the existing independent Pascal worker admits complete intent as one paired
+design/source Undo step. Stale queued forms and pending source drafts refuse.
+The form retains no application tree or renderer and publishes no document.
+The existing version-12 source protocol stays unchanged.
+
+Physical inspector/queue controls pass **65** checked native and **65 each** HTTP
+Chromium at CSS 1100/390. Ordinary Win32 Studio passes **73** total through
+Properties/Events, retained input, actual Save, exact Pascal/Undo/Redo and compact
+Inspector. Inherited draft copies, incomplete numeric input, changed owner/
+baseline and independent sibling ownership are qualified. Existing menu-editor
+regression passes **73** and native saved-model regression **54**. Native owners
+and browser observers retire leak-free. Owned builds have zero warnings; seven
+installed pas2js RTL warnings per compilation remain visible, with no dependency
+edits or warning suppression.
+
+Named compound parts exposed a real routing gap: callbacks correctly reported
+the enclosing compound as source and the clicked button as origin, but Studio's
+queue looked only at source. Its event-aware route now resolves bar actions
+inside that exact source subtree, retaining compound semantics. Physical reorder,
+add/removal and ordinary Studio Save qualify the fix. Initial fixture ordinal/name
+mistakes were corrected; failed logs remain. Inspected captures use readable
+English. Native sidebar clipping and large-form performance remain open; CSS
+emulation does not establish physical-phone behavior.
+
+Maintained command: `tools/build.ps1 -Target menu-bar-editor
+-MenuAuthoringSourceDirectory build/menu-bar-saved/maintained/generated`.
+Ignored evidence under `build/menu-bar-editor/`: `maintained-origin-build.log`,
+`maintained/captures/`, `qualified-desktop/`, `qualified-phone/`,
+`menu-regression-current.log`, `declarations-regression.log`, `staged-assets.json`
+and `preservation.json`. The exact English semantic export remains the base.
+Browser controls execute ordinary inspector composition and the matched source
+worker. Full browser Studio compiles, but its ordinary/observing journey and
+authenticated new-bar HTTP tools remain unqualified.
+
+All **15** protected process identities, **9** full accepted/source/draft pairs,
+navigation/history/permissions and the **147033-byte** checkpoint remain exact.
+Installed server and served bytes still match frozen **229-file** product `6fc231e`.
+Only an owned fixture child of the existing artifact host is restaged; no listener,
+ordinary project or frozen payload is replaced. Current baselines remain
+`build/menu-observing/*-current.json` and its editor-private file.
+
+Stop public-form fixtures at this ordinary native/shared-browser boundary. No
+original full criterion closes; authoring no-closure advances **28→29** once,
+workflow **16**, renderer **8**, codegen **28** and delivery **2** remain. Historical
+NS-3/NS-2 parity totals remain unestablished. Return to existing workflow/delivery
+owners for authenticated new-backend semantic composition/build/history and full
+browser/observing delivery while preserving user pairs. Complete those original
+gates before broader picker/component depth. No DONE move or full-goal completion
+is inferred; remote return is recorded in the ignored evidence receipt.
+
 ## Current return path: saved menu-bar integration — 2026-10-07
 
 This batch advances original NS-3 criteria 1/2 and the existing NS-4 workflow

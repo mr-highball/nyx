@@ -15,6 +15,16 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Current public-form prerequisite (2026-10-07): Studio consumes the reusable typed
+Nyx bar compound through its independent paired worker. Actual inspector controls
+pass 65 native and 65 each desktop/CSS-390 browser; ordinary Win32 Studio passes 73.
+Full browser Studio compiles. No workflow criterion/count changes: 16 remains;
+authoring alone advances 28→29. End form fixtures and qualify authenticated new-bar
+HTTP operations, semantic composition/build/history and ordinary full-browser/
+observing delivery while preserving user pairs and services. Existing source/
+delivery gates stay owned here; shared control fixtures do not establish them.
+See [the packet](../WORK.md#current-return-path-public-menu-bar-editor--2026-10-07).
+
 Current saved-bar boundary (2026-10-07): the existing criterion-5 candidate gate
 now admits typed replacement, masks/inheritance and bounded local/effective row
 queries as one revision-aware paired operation. Strict persistence, crafted

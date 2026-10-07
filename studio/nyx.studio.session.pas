@@ -621,7 +621,8 @@ uses
   nyx.platform,
   nyx.interaction,
   nyx.contract,
-  nyx.menu.editor;
+  nyx.menu.editor,
+  nyx.menu.bar.editor;
 
 type
   { UI publication borrows the session only inside its synchronous creator guard.

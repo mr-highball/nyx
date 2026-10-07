@@ -34,6 +34,7 @@ uses
   nyx.model,
   nyx.controls,
   nyx.menu.editor,
+  nyx.menu.bar.editor,
   nyx.contract,
   nyx.schema,
   nyx.types,
@@ -125,6 +126,8 @@ type
     MenuEditorReference: TNyxMenuRef;
     { Copied incomplete form input; exact context guards prevent stale replay. }
     MenuEditorDraft: TNyxMenuEditorDraft;
+    { Independent scalar draft; shares the public form capture contract. }
+    MenuBarEditorDraft: TNyxMenuBarEditorDraft;
     CallbackRemoval: TNyxCallbackRemoval;
     { Copied confirmation metadata, not an interface or borrowed model. }
     RootRemoval: TNyxDataValue;
@@ -1363,6 +1366,7 @@ begin
         end;
         AddBindingsPanel(LRight, ASession, LSelectedProjection, AState);
         AddNyxDateDomainInspector(LRight, ASession);
+        AddNyxMenuBarInspector(LRight, ASession, LSelectedProjection);
         AddNyxMenuInspector(LRight, ASession, AState.MenuEditorReference);
 
         if AState.BindingsVisible then

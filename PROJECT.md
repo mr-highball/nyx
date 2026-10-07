@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Studio now consumes a public Nyx menu-bar editor with specialized named controls,
+typed policy, ordered exact part/menu choices and local/effective grouping.
+Independent unfinished drafts, reviewed removal and stale-baseline refusal share
+the paired Pascal worker. Actual inspector controls pass 65 native and 65 each
+desktop/CSS-390 browser; ordinary Win32 Studio passes 73 through retained input,
+Save and exact source/Undo/Redo, leak-free. Protected services/pairs/checkpoint
+and frozen LAN bytes stay exact. Full browser Studio compiles; ordinary browser/
+observing and authenticated new-bar HTTP delivery remain the next integration. See
+[the public form packet](WORK.md#current-return-path-public-menu-bar-editor--2026-10-07).
+
 Saved coordinated menu bars now retain immutable typed grouping, strict version-7
 persistence, crafted source and reusable inheritance/masks. Direct bounded
 semantic edits/queries and paired history pass 54 native/HTTP-browser checks.
@@ -74,8 +84,8 @@ independent families, passing 18 actual Win32 and 18 each desktop/CSS-390 browse
 checks, including click, real host Tab/Shift+Tab and safe retirement. Source
 protocol-authority regression passes 147; core/composition passes 30/1781, leak-free.
 All protected services/pairs/checkpoint and frozen LAN bytes remain exact.
-Public Studio bar forms and authenticated new-backend/observing delivery are the
-next integration; the deployed editor still serves `6fc231e`. See
+Authenticated new-backend/observing delivery remains the next integration;
+the deployed editor still serves `6fc231e`. See
 [the saved contract packet](WORK.md#current-return-path-saved-menu-bar-integration--2026-10-07).
 
 Studio Properties now consumes a public typed menu editor with complete saved

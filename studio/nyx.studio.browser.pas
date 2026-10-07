@@ -677,6 +677,7 @@ begin
   LState.InspectorTab := FInspectorTab;
   LState.MenuEditorReference := FViewState.MenuEditorReference;
   LState.MenuEditorDraft := FViewState.MenuEditorDraft;
+  LState.MenuBarEditorDraft := FViewState.MenuBarEditorDraft;
   LState.CallbackRemoval := FCallbackRemoval;
 
   if FRootRemoval <> nil then
@@ -697,6 +698,7 @@ begin
   FViewState := LState;
   Result := BuildNyxStudioView(FSession, LState, FCompilerReport);
   FViewState.MenuEditorDraft.Restore(Result.Pages[0]);
+  FViewState.MenuBarEditorDraft.Restore(Result.Pages[0]);
 end;
 
 procedure TNyxStudio.SourceModalDismiss;
@@ -762,19 +764,35 @@ begin
   if not FSession.MatchesCommandContext(FShellCommandContext) then
   begin
     FViewState.MenuEditorDraft.Clear;
+    FViewState.MenuBarEditorDraft.Clear;
     Exit;
   end;
   LEditor := FShellRenderer.Root.Find('inspector-menu');
   LActive := TJSHTMLElement(document.activeElement);
 
-  if (LEditor <> nil) and (LActive <> nil) and
+  if (LActive <> nil) and
     ((LActive is TJSHTMLInputElement) or (LActive is TJSHTMLSelectElement)) then
   begin
     LField := TJSHTMLElement(LActive.closest('[data-node]'));
 
     if LField <> nil then
     begin
-      LNode := LEditor.Find(LField.getAttribute('data-node'));
+      LNode := nil;
+
+      if LEditor <> nil then
+      begin
+        LNode := LEditor.Find(LField.getAttribute('data-node'));
+      end;
+
+      if LNode = nil then
+      begin
+        LEditor := FShellRenderer.Root.Find('inspector-menu-bar');
+
+        if LEditor <> nil then
+        begin
+          LNode := LEditor.Find(LField.getAttribute('data-node'));
+        end;
+      end;
 
       if (LNode <> nil) and ((LNode.Kind = NyxKindName(nkInput)) or
         (LNode.Kind = NyxKindName(nkSelect)) or (LNode.Kind = NyxKindName(nkSpin))) then
@@ -786,6 +804,7 @@ begin
     end;
   end;
   FViewState.MenuEditorDraft.Capture('inspector-menu', FShellRenderer.Root);
+  FViewState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellRenderer.Root);
 end;
 
 procedure TNyxStudio.Refresh(ARetainCanvas, APreserveDraft: Boolean);
@@ -1918,7 +1937,7 @@ begin
       end;
     end;
 
-    if FSourceCommands.Route(ANode, AEvent.Trigger, FShellRenderer.Root) then
+    if FSourceCommands.Route(ANode, AEvent, FShellRenderer.Root) then
     begin
       Exit;
     end;
@@ -3552,6 +3571,7 @@ begin
     carrying another project's same-named menu into its inspector. }
   FViewState.MenuEditorReference := Default(TNyxMenuRef);
   FViewState.MenuEditorDraft.Clear;
+  FViewState.MenuBarEditorDraft.Clear;
 
   if not FRecoveryEnabled then
   begin

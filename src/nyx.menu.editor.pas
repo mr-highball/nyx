@@ -29,6 +29,14 @@ interface
 uses
   nyx.text, nyx.types, nyx.model, nyx.controls, nyx.menu.declarations;
 
+const
+  { Shared scalar-form context at the chrome metadata boundary. The menu and
+    menu-bar compounds use the same owned draft capture/restore implementation;
+    these keys never change authored application meaning. }
+  NyxMenuFormOwnerKey = 'nyx.menu-editor.owner';
+  NyxMenuFormBaselineKey = 'nyx.menu-editor.baseline';
+  NyxMenuFormReferenceKey = 'nyx.menu-editor.reference';
+
 type
   { Choice is presentation only. Other actions describe copied authoring intent;
     add/reorder/remove-item are complete definition replacements, never edits to
@@ -80,6 +88,9 @@ function NyxMenuEditorFieldID(const AEditorID: TNyxText;
 function NyxMenuEditorActionID(const AEditorID: TNyxText;
   AAction: TNyxMenuEditorAction): TNyxText;
 function NyxMenuEditorItemID(const AEditorID: TNyxText; AIndex: Integer): TNyxText;
+{ Bounded single-line Unicode caption. The ordinal distinguishes clipped names;
+  callers retain the complete exact identity separately from the display text. }
+function NyxMenuEditorChoiceCaption(AIndex: Integer; const AName: TNyxText): TNyxText;
 { Exact registry/local attachment baseline. The document is borrowed for this
   call only. A missing owner refuses rather than using the current selection. }
 function NyxMenuEditorBaseline(ADocument: TNyxDocument;
@@ -110,9 +121,9 @@ uses
 
 const
   CEditor = 'nyx.menu-editor';
-  COwner = 'nyx.menu-editor.owner';
-  CBaseline = 'nyx.menu-editor.baseline';
-  CReference = 'nyx.menu-editor.reference';
+  COwner = NyxMenuFormOwnerKey;
+  CBaseline = NyxMenuFormBaselineKey;
+  CReference = NyxMenuFormReferenceKey;
   CMenus = 'nyx.menu-editor.menus';
   CRoots = 'nyx.menu-editor.roots';
   CCount = 'nyx.menu-editor.count';
@@ -315,6 +326,11 @@ end;
 function MenuCaption(AIndex: Integer; const AName: TNyxText): TNyxText;
 begin
   Result := TNyxText(IntToStr(AIndex + 1)) + TNyxText(' / ') + InlineName(AName);
+end;
+
+function NyxMenuEditorChoiceCaption(AIndex: Integer; const AName: TNyxText): TNyxText;
+begin
+  Result := MenuCaption(AIndex, AName);
 end;
 
 function RootCaption(AIndex: Integer; const ARoot: TNyxRootRef): TNyxText;

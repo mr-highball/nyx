@@ -3,7 +3,21 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current saved-component boundary (2026-10-07): immutable typed bar declarations
+Current public-form boundary (2026-10-07): the reusable Nyx bar editor supplies
+specialized named controls, local/effective grouping, typed policy, ordered exact
+heading/menu choices and reviewed removal. Independent unfinished drafts and
+capture/dispatch baselines use the paired worker. Physical shared forms pass 65
+native and 65 each desktop/CSS-390 browser; ordinary Win32 Studio passes 73 through
+retained input, Save and exact source/history. Native owners/browser observers
+retire leak-free; owned warnings are zero. Protected services/nine pairs/full
+checkpoint and frozen LAN bytes remain exact. Full browser Studio compiles;
+ordinary/observing browser and authenticated new-bar HTTP delivery stay unqualified.
+No original criterion closes; authoring no-closure advances 28→29 once, workflow
+16, renderer 8, codegen 28 and delivery 2 remain. End form fixtures and follow
+those existing workflow/delivery gates before broader component depth. See
+[the packet](WORK.md#current-return-path-public-menu-bar-editor--2026-10-07).
+
+Saved-component boundary (2026-10-07): immutable typed bar declarations
 retain strict persistence, crafted source, reusable inheritance/masks and bounded
 paired semantic edits/queries. Candidate fixtures pass 54 native/HTTP-browser;
 exact generated ordinary applications automatically bind row/buttons and families,

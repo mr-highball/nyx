@@ -23,6 +23,18 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Public bar-authoring integration — 2026-10-07
+
+Studio now consumes a public Nyx bar-editor compound of specialized named controls
+with typed policy, ordered exact heading/menu choices and local/effective grouping.
+Independent drafts and reviewed removal use the paired queue: 65 shared controls
+per target/width and 73 ordinary Win32 Studio checks pass. No original component
+criterion closes; historical totals remain unestablished. Authoring alone advances
+28→29. Stop form fixtures and follow authenticated new-backend/full-browser
+observing delivery under existing owners before broader picker, binding and
+component outcomes. See
+[the packet](../WORK.md#current-return-path-public-menu-bar-editor--2026-10-07).
+
 ## Saved menu-bar integration — 2026-10-07
 
 Original criteria 1/2 now include immutable typed row grouping, strict wire,

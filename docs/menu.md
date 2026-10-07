@@ -488,10 +488,10 @@ Wire version 7 retains opaque `menuBar` fields as extensions in older versions
 and refuses collisions during explicit promotion.
 
 This saved contract is qualified through direct candidate semantic dispatch and
-actual generated browser/Win32 applications. The observing LAN release still
-serves its preceding schema. Authenticated new-backend delivery and a public
-Studio bar form remain with the [existing workflow owner](../TODO/NS-4_agent-workflows_01.md);
-current menu forms do not yet expose bar grouping.
+actual generated browser/Win32 applications. Studio's public bar-authoring form
+is described below. The observing LAN release still serves its preceding schema;
+authenticated new-backend delivery remains with the
+[existing workflow owner](../TODO/NS-4_agent-workflows_01.md).
 
 ```powershell
 ./tools/build.ps1 -Target menu-bar-authoring -MenuSourceDirectory build/menu/source
@@ -502,6 +502,48 @@ Pascal qualifies the paired declaration contract and exports its accepted unit;
 ordinary native/browser consumers compile that exact unit. The target stages
 `menu-bar-declarations.html` and `menu-bar-declarations-controls.html`, plus the
 Pascal real-Tab observer, without starting listeners or replacing projects.
+
+## Author a saved bar in Studio
+
+Selecting a row exposes the reusable `NewNyxMenuBarEditor` compound in Properties.
+Import `nyx.menu.bar.editor` to use that same public form in another Nyx tool.
+It edits the accessible label, wrapping, mouse-entry switching, typed search
+policy and ordered named-button/menu choices. Each heading has its own logical
+enabled default. Choice captions are bounded for display; their separate maps
+retain the exact part paths and menu references, including supplementary Unicode.
+
+The card exposes named parts such as `label`, `search-window`, `heading-0/menu`
+and `new-heading/part`. These are specialized Nyx controls; creators can customize
+them through the ordinary compound contract. Events retain the compound source
+and physical child origin. Studio resolves bar actions inside that source subtree
+and captures a complete typed intent instead of changing the borrowed document.
+
+The form distinguishes local grouping, inherited grouping and an explicit mask.
+Save creates a local override from the effective settings. Add and reorder also
+capture the entire edited plan as one paired source/design Undo step. Heading
+removal requires its own reviewed confirmation; suppression requires the displayed
+whole-bar warning. Restore inheritance removes only the local declaration. Saved
+menu definitions and other reusable instances retain independent ownership.
+
+Incomplete input remains an independent presentation draft through panel switches
+and shell rebuilds. A changed owner or local/effective baseline retires that draft.
+`CaptureNyxMenuBarEditor` returns copied immutable intent and the mounted baseline;
+hosts must recheck it before publication. Studio checks at capture and again in
+the independent source worker. Stale queued forms and pending Pascal drafts refuse
+without publishing over accepted work. Mask and inheritance remain distinct typed
+actions even though neither returns a definition.
+
+```powershell
+./tools/build.ps1 -Target menu-bar-editor -MenuAuthoringSourceDirectory build/menu-bar-saved/maintained/generated
+```
+
+Supply the exact saved-bar companion export. This target checks actual Win32 form
+controls and ordinary native Studio, then compiles the HTTP browser form, matched
+Pascal source worker and full browser Studio. It stages `menu-bar-editor.html`
+without starting a listener or replacing a project. Use the maintained ready-capture
+driver with `data-result` at desktop and narrow CSS widths. These focused browser
+controls exercise ordinary inspector composition and worker publication; they do
+not establish the full browser Studio or authenticated observing delivery journey.
 
 ## Reproduce the companion and qualify hosts
 

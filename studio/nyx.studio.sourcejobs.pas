@@ -28,6 +28,7 @@ interface
 
 uses
   nyx.text, nyx.types, nyx.responsive, nyx.presentations, nyx.model, nyx.scheduler, nyx.schema, nyx.callbacks,
+  nyx.behavior,
   nyx.source.preparation, nyx.studio.session, nyx.studio.edits, nyx.projection.refresh,
   nyx.studio.inspector, nyx.studio.collectionintent, nyx.studio.collections
   {$ifdef PAS2JS}, JS, Web{$endif};
@@ -177,7 +178,12 @@ type
       events. Current shell form fields are borrowed only during typed capture.
       Collection capture also submits only scoped, family-qualified values. }
     function Route(ANode: TNyxNode; ATrigger: TNyxTrigger;
-      AShellRoot: TNyxNode = nil): Boolean;
+      AShellRoot: TNyxNode = nil): Boolean; overload;
+    { Compound events retain the parent as source and the physical child as
+      origin. Resolve an owned bar action only inside that exact source subtree;
+      other editor routes keep their existing source semantics. }
+    function Route(ANode: TNyxNode; const AEvent: TNyxEventInfo;
+      AShellRoot: TNyxNode): Boolean; overload;
     property State: TNyxSourceCommandState read FState;
     property Message: TNyxText read FMessage;
     property Busy: Boolean read GetBusy;
@@ -1098,6 +1104,38 @@ begin
   end;
 end;
 
+function TNyxSourceCommands.Route(ANode: TNyxNode; const AEvent: TNyxEventInfo;
+  AShellRoot: TNyxNode): Boolean;
+var
+  LSource: TNyxNode;
+  LOrigin: TNyxNode;
+  LEdit: TNyxStudioDesignEdit;
+begin
+
+  if FDetached then
+  begin
+    raise ENyxModel.Create('This source-command context has retired');
+  end;
+
+  if (AShellRoot <> nil) and (AEvent.Trigger = ntClick) and not AEvent.DefaultPrevented then
+  begin
+    LSource := AShellRoot.Find(AEvent.SourceID);
+
+    if LSource <> nil then
+    begin
+      LOrigin := LSource.Find(AEvent.OriginID);
+
+      if (LOrigin <> nil) and
+        CaptureNyxMenuBarInspector(FSession, LOrigin, AShellRoot, LEdit) then
+      begin
+        Edit(LEdit);
+        Exit(True);
+      end;
+    end;
+  end;
+  Result := Route(ANode, AEvent.Trigger, AShellRoot);
+end;
+
 function TNyxSourceCommands.Route(ANode: TNyxNode; ATrigger: TNyxTrigger;
   AShellRoot: TNyxNode): Boolean;
 const
@@ -1149,6 +1187,12 @@ begin
 
   if ATrigger = ntClick then
   begin
+
+    if CaptureNyxMenuBarInspector(FSession, ANode, AShellRoot, LEdit) then
+    begin
+      Edit(LEdit);
+      Exit(True);
+    end;
 
     if CaptureNyxMenuInspector(FSession, ANode, AShellRoot, LEdit) then
     begin
