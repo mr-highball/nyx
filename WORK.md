@@ -35,7 +35,45 @@ browser workspace checks pass, preserving both explicit sync choices. The later
 desktop journey adds exact source-text retention and passes **16**. At CSS
 390×640, collapsed details leave **396 px (62%)** for the canvas and expansion
 leaves **587 px (92%)**. Native small-host allocation is **583/740** compact and
-**697/740** expanded. New final observing qualification remains pending below.
+**697/740** expanded.
+
+Frozen source `c7e1e42` now serves the existing observing LAN/editor and loopback
+MCP ports at the original firewall-covered executable path. The backend binary
+is byte-identical to the preceding release; the verified new payload/browser and
+compiler-source root change together. Preparation passes **29** and all **222**
+files verify. Authenticated MCP discovers **20** tools. The final ordinary shared
+390×640 workspace passes **21** checks, including real touch resizing, expansion,
+exact source restoration and unchanged semantic context. Its measured canvas
+allocation remains **396/587 px**. Desktop actual host Tab/Events/help and eleven
+contained toolbar faces also pass. The first new observer measured a starter
+before shared attachment; those captures do not qualify the observing project.
+The maintained observer now waits for the bounded semantic title and exact
+selected design face, then the corrected terminal journey passes. Clean shared
+and isolated conflict captures are inspected. This is emulated Chromium/Win32
+evidence; the preceding user phone capture confirms LAN access, not an independent
+hardware qualification of the new interaction.
+
+All **9** complete project/source pairs, navigation/drafts/permissions/history,
+labels and handles remain exact; the complete **147033-byte** checkpoint is
+byte-identical. All **14** other services retain exact identities. Only the
+verified primary retires; its signed console child exits without another kill.
+The new isolated fixture is retired after qualification. No reset, bootstrap,
+handle remapping or firewall-policy change occurs. Current connection and
+preservation baselines are **`build/mobile-workspace/`**:
+`protected-services-current.json`, `protected-pairs-current.json`,
+`lan-editor-private.json` and `primary-current.json`. Deployment, exact guards,
+release checks, private captures and the remote receipt stay ignored there.
+The terminal `final-preservation.json` verifies fifteen service identities, nine
+exact pairs, the complete checkpoint and both intended primary bindings after
+the corrected observing journey. Later evidence commits do not change the serving
+product revision `c7e1e42`; `remote-return.json` records the exact remote checkpoint.
+
+This user-priority workspace fix is implemented and delivered. Stop these
+fixtures and return to the retained persisted-menu foundation below. Workflow
+**13**, authoring **26**, renderer **8**, codegen **28** and delivery **2** remain
+unchanged: this does not complete their original breadth/parity criteria or the
+full goal. Restore the saved menu source patch excluding its old WORK.md entry;
+retain this rollout's current preservation baselines and return path.
 
 All native traces are leak-free and checked compiles have zero warnings. Existing
 lifetimes produce compiler notes, not warning suppression. Fifteen protected

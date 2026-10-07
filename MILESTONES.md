@@ -3,7 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current observing boundary (2026-10-07): frozen menu-family checkpoint `9f5bd49`
+Current user-priority boundary (2026-10-07): frozen `c7e1e42` serves compact
+mobile/short-host navigation, a collapsed/resizable detail section and reversible
+canvas expansion through public Nyx contracts. Actual shared CSS 390×640 allocates
+62% collapsed and 92% expanded; observing workspace passes 21, actual Win32 22,
+native preference/ownership 247 and browser preference boundary 68. Desktop host
+Tab/Events/help pass. Twenty authenticated MCP tools, 29 preparation checks and
+222 verified files qualify delivery at the original firewall-covered path.
+Nine exact pairs/history/handles/full checkpoint and fourteen other services
+remain unchanged. No original criterion/count closes; original breadth/parity
+remain open. Return to retained persisted-menu work after this user-priority fix.
+See [evidence](WORK.md#current-priority-mobile-workspace-allocation--2026-10-07).
+
+Previous observing boundary (2026-10-07): frozen menu-family checkpoint `9f5bd49`
 serves the existing LAN/editor and loopback MCP ports. Twenty authenticated tools,
 29 preparation checks, 222 verified files and actual shared desktop/390 nested
 Tab/Events/help qualify. Nine exact pairs and full checkpoint preserve histories/

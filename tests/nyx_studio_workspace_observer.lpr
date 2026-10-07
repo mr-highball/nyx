@@ -69,6 +69,31 @@ begin
   until False;
 end;
 
+procedure WaitText(const ASelector, AExpected: TNyxText);
+var
+  LStarted: QWord;
+begin
+  LStarted := GetTickCount64;
+  repeat
+
+    if Pos(AExpected, GHost.ElementHTML(ASelector)) > 0 then
+    begin
+      Exit;
+    end;
+
+    if GHost.RuntimeError <> '' then
+    begin
+      raise Exception.Create('Observing Studio raised before shared readiness');
+    end;
+
+    if GetTickCount64 - LStarted > 30000 then
+    begin
+      raise Exception.Create('Observing Studio has not mounted the semantic project');
+    end;
+    Sleep(30);
+  until False;
+end;
+
 function Session: TNyxDataValue;
 var
   LReply: TNyxDataValue;
@@ -143,6 +168,20 @@ begin
     GHost := TNyxBrowserPipe.Create(ParamStr(1), ParamStr(2), LWidth, LHeight);
     WaitFor('[data-node=studio-canvas-wrap]');
     WaitFor('[data-node=action-actions]');
+    { A starter shell is mounted before authenticated project attachment. The
+      deliberate recovery-conflict fixture retains a different local title;
+      ordinary observing journeys must qualify the bounded semantic title first. }
+
+    if (GClient <> nil) and (Pos('studio-workspace-conflict.html', ParamStr(1)) = 0) then
+    begin
+      WaitText('[data-node=studio-subtitle]', LBefore.Field('title').AsText);
+
+      if LBefore.Field('selection').AsText <> '' then
+      begin
+        WaitFor('[data-node=studio-canvas] [data-node="' +
+          LBefore.Field('selection').AsText + '"]');
+      end;
+    end;
     Sleep(150);
     Check(GHost.Exists('[data-node=studio-panelbar]') = LCompact,
       'both width and short-host policy select the ordinary shell');

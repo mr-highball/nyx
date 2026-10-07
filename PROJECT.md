@@ -66,16 +66,19 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Frozen menu-family checkpoint `9f5bd49` now serves the existing observing LAN/MCP
-ports. Preparation passes 29 checks; 222 payload files verify. Authenticated
-twenty-tool MCP and actual shared desktop/390 Studio qualify nested host Tab,
-Events/help and unchanged context. Nine exact pairs and the full checkpoint retain
-history/handles, with fourteen other services untouched. After the user's loading
-report, the current binary is restored to the original firewall-covered LAN
-executable path; physical phone confirmation is pending. Actual bounded toolbar
-geometry and clean captures establish no overlap at either width, superseding the
-earlier screenshot-only inference. See
-[the current packet](WORK.md#current-return-path-lan-path-repair-and-measured-toolbar--2026-10-07).
+Frozen mobile-workspace checkpoint `c7e1e42` now serves the existing observing
+LAN/MCP ports at the original firewall-covered executable path. Compact menus,
+collapsed/resizable details, optional tools and canvas expansion reclaim space
+without scaling application text. Actual shared CSS 390×640 leaves 62% for the
+canvas with details collapsed, 92% expanded. Checked Win32 passes 22 ordinary
+workspace/menu checks; native preference/ownership regression passes 247, the
+browser preference boundary 68, and the shared phone-sized journey 21. Desktop
+host Tab/Events/help also pass. Preparation passes 29; all 222 files verify and
+twenty authenticated MCP tools work. Nine exact pairs/full checkpoint retain
+history/handles; fourteen other services stay untouched. The user's prior phone
+capture confirms LAN access; current target journeys use emulated Chromium and
+Win32. Broader responsive/accessibility/parity criteria remain open. See
+[the current packet](WORK.md#current-priority-mobile-workspace-allocation--2026-10-07).
 
 Managed menu families now add immutable reference-counted item plans/recipes,
 independent submenus and a public typed menu-button binding. Studio consumes the

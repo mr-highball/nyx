@@ -40,6 +40,20 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Mobile workspace allocation — 2026-10-07
+
+The user's visible-canvas regression now has compact/short-host menus, collapsed
+and public-split-resizable details, optional placement tools and reversible
+canvas expansion. Typed host conditions and ordinary shared Nyx components serve
+browser/Win32; private preference version 5 migrates versions 2–4. Actual shared
+CSS 390×640 gives the canvas 62% collapsed and 92% expanded, with 21 observing
+checks; actual native Studio passes 22, native preference/ownership 247 and
+browser preference boundary 68. Exact source, all protected pairs/history and
+other services remain unchanged; the frozen rollout is qualified. This does not
+close the original responsive variants, full application, concurrency, native
+parity or authoring criteria. Return to the retained menu declaration batch.
+See [evidence and preservation](../WORK.md#current-priority-mobile-workspace-allocation--2026-10-07).
+
 ## Ordinary recipe editor — 2026-10-06
 
 Criterion 1 now has a public Nyx Properties composition for whole reusable recipes
