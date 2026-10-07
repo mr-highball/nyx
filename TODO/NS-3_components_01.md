@@ -41,6 +41,14 @@ NS-3 totals stay unestablished; the existing workflow owner records runtime-plan
 semantic authoring. Continue through a qualified frozen observing release, then
 return to original menu/picker scope.
 
+The observing prerequisite now qualifies frozen checkpoint `f9129e0`: 221 files,
+authenticated twenty-tool MCP and actual shared desktop/390 Studio Actions,
+Tab/Shift+Tab, Events and contextual help. Nine exact pairs and complete native
+checkpoint histories/handles remain unchanged, with fourteen other services
+retained. This closes no complete component criterion or parity prerequisite.
+Return to the original submenu/picker scope; see
+[the delivery packet](../WORK.md#current-return-path-command-menu-observing-release--2026-10-06).
+
 ## Managed contextual content — 2026-10-06
 
 Original overlay/picker scope now has a portable managed popover, typed geometry,

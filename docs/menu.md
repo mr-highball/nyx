@@ -111,6 +111,12 @@ then stages the exact same generated companion for HTTP browser execution. Serve
 maintained ready-capture tool with `menu.html` and the `data-menu` marker at desktop
 and narrow widths. The Studio menu observer exercises actual pointer activation,
 Chromium Tab defaults, Events navigation and public contextual help in `index.html`.
+For an observing server, supply the enrolled repository and exact ordinary
+workspace as the observer's fourth/fifth arguments, with that same workspace in
+the URL's `workspace` query. Bounded semantic context establishes the selected
+component; the connected toolbar's Builds control participates in ordinary Tab
+order. Desktop/390 observing evidence and preserved-state receipts are in
+[WORK.md](../WORK.md#current-return-path-command-menu-observing-release--2026-10-06).
 
 Menu presentation/command plans are explicit runtime attachment, not serialized
 authoring declarations or MCP plan mutations. Submenus, menu-button invocation

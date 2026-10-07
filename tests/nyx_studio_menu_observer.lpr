@@ -107,6 +107,7 @@ var
   LAfter: TNyxDataValue;
   LPacket: TNyxDataValue;
   LKind: TNyxText;
+  LNextAction: TNyxText;
 begin
   try
 
@@ -148,17 +149,22 @@ begin
       WaitText('[data-node=studio-subtitle]', LBefore.Field('title').AsText);
     end;
 
-    if GClient <> nil then
-    begin
-      WaitText('[data-node=selected-label]', LKind + ' / ' + GSelection);
-    end;
     WaitFor('[data-node=action-actions]');
     GHost.Click('[data-node=action-actions]');
     WaitFor('.nyx-popover:popover-open[role=menu] [data-node=studio-menu-events]');
     GHost.Capture('studio-component-actions');
+    { A connected editor exposes build-job controls immediately after Actions.
+      Local optional-service editors continue directly to Build view. Observe
+      the mounted toolbar instead of assuming the disconnected Tab order. }
+    LNextAction := 'action-build-view';
+
+    if GHost.ElementHTML('[data-node=action-builds]') <> '' then
+    begin
+      LNextAction := 'action-builds';
+    end;
     GHost.Tab;
     WaitFor('.nyx-popover:popover-open', False);
-    WaitFor('[data-node=action-build-view]:focus');
+    WaitFor('[data-node=' + LNextAction + ']:focus');
     GHost.Click('[data-node=action-actions]');
     WaitFor('.nyx-popover:popover-open[role=menu]');
     GHost.Tab(True);
@@ -169,6 +175,14 @@ begin
     GHost.Click('.nyx-popover:popover-open [data-node=studio-menu-events]');
     WaitFor('.nyx-popover:popover-open', False);
     WaitFor('[data-node=event-click-add]');
+
+    if GClient <> nil then
+    begin
+      { The compact Inspector does not exist until the menu mounts its pane.
+        Verify the shared selection here, after bounded title readiness and the
+        actual menu command, instead of waiting for an absent initial control. }
+      WaitText('[data-node=selected-label]', LKind + ' / ' + GSelection);
+    end;
     GHost.Capture('studio-menu-events');
     GHost.Click('[data-node=action-actions]');
     WaitFor('.nyx-popover:popover-open [data-node=studio-menu-help]');

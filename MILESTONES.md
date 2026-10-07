@@ -3,7 +3,16 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current menu boundary (2026-10-06): typed managed command menus reuse ordinary
+Current observing boundary (2026-10-06): frozen menu checkpoint `f9129e0` serves
+the existing LAN/editor and loopback MCP ports. Its 221 files verify; authenticated
+twenty-tool MCP and actual shared desktop/390 Actions, host Tab/Shift+Tab, Events
+and contextual help qualify. Nine exact pairs and the full native checkpoint
+preserve history/handles; fourteen other services stay unchanged. No original
+criterion/count closes. Stop rollout checks and return to submenu/picker and
+persisted menu-authoring scope. See
+[evidence and return path](WORK.md#current-return-path-command-menu-observing-release--2026-10-06).
+
+Previous menu boundary (2026-10-06): typed managed command menus reuse ordinary
 Nyx controls and shared popover/typeahead contracts. Actual Win32 passes 30 plus
 9 ordinary Studio checks; actual HTTP desktop/390 consumers pass 31 each. Full
 local browser Studio qualifies pointer activation, host Tab/Shift+Tab, Inspector

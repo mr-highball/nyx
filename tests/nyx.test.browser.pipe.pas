@@ -477,8 +477,23 @@ begin
 
   if LNode <> 0 then
   begin
-    Result := Request('DOM.getOuterHTML', NyxObject([
-      NyxField('nodeId', NyxData(LNode))]), FSession).Field('outerHTML').AsText;
+    try
+      Result := Request('DOM.getOuterHTML', NyxObject([
+        NyxField('nodeId', NyxData(LNode))]), FSession).Field('outerHTML').AsText;
+    except
+      on LException: Exception do
+      begin
+        { An asynchronous editor paint can retire the queried node before this
+          second debugger request. Report transient absence so the caller's
+          bounded readiness loop can query again; other failures remain errors. }
+
+        if Pos('Could not find node with given id', LException.Message) > 0 then
+        begin
+          Exit('');
+        end;
+        raise;
+      end;
+    end;
   end;
 end;
 

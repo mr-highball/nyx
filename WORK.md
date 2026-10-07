@@ -7,6 +7,84 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: command-menu observing release — 2026-10-06
+
+Current goal turn is progress on the authorized NS-5 observing prerequisite for
+NS-3 advanced menus and NS-2 keyboard/focus parity. Frozen source checkpoint
+`f9129e0` now serves the existing LAN/editor and loopback MCP ports. Preparation
+passes **29** integrity checks; the serving payload verifies **221** files.
+Checked installed FPC/pas2js builds have zero owned warnings; the seven installed
+RTL `classes.pas` warnings remain visible in each of three browser builds.
+No product source was changed during this delivery.
+
+Only the exact primary service is replaced. All **14** other protected process
+identities and **9** exact project/source/navigation/draft/history/permission
+contexts survive unchanged. The complete **147033-byte** native checkpoint stays
+byte-identical before restart, after reconnect and after observing interaction.
+Histories, counters, permissions and ordinary workspace handles retain their
+existing identities; there is no bootstrap, reset or remapping. The previous
+release, checkpoint backup and original backup/stash remain retained.
+
+Authenticated Pascal MCP discovers **20** tools at the refreshed enrollment.
+The maintained menu observer reads bounded session/selected-node context and
+exercises the actual shared Memo workspace at CSS **1100/390**. Pointer opening,
+real Chromium Tab/Shift+Tab, Events navigation, contextual help and unchanged
+semantic context pass at both widths. Observer allocations are fully freed;
+meaningful menu/Inspector/help captures are inspected. Earlier actual native
+controls and ordinary Studio evidence applies to unchanged product source.
+This rollout does not establish native observing-controller, assistive technology,
+hardware/IME or additional widgetset qualification. The LAN HTTP endpoint responds
+on this host; physical phone connectivity is still a separate observation.
+
+Current ignored receipts are under `build/menu-refresh/`: `release-build.log`,
+`release-verify-after.log`, `deployment.json`, `before-studio-session.nyx`,
+`semantic-tools.json`, `desktop-corrected.log` / `narrow-corrected.log` and their
+inspected captures. **Use this directory's** `protected-services-current.json`,
+`protected-pairs-current.json` and `lan-editor-private.json` as current baselines.
+The serving bundle is `build/menu-refresh/release`; the same live runtime remains
+`build/legacy-refresh/lan-runtime`. Private paths, connection capabilities and
+full pairs stay ignored. Retired editor authorization explicitly refuses with
+HTTP 400; current project/user enrollment is refreshed without exposing tokens.
+
+Failed checks earn no passes. A combined restart command was automatically
+rejected with `blocked by policy`; the narrow verified primary stop was accepted.
+An execution-order mistake ran that stop after a child-process guard had refused.
+The old process's child retired without a separate kill; durable recovery and all
+other identities were verified before and after the new process started. The
+child's identity was not captured, so no benign-child classification is claimed.
+The first observers assumed the disconnected toolbar's Tab order and a stable
+debugger node across asynchronous paints. Connected Studio instead exposes
+Builds after Actions; known retired debugger nodes now return transient absence
+to bounded readiness loops. Compact selection readiness is checked after the
+Inspector mounts. Both corrected observing journeys pass without another restart.
+These failures did not establish the initially suspected product menu-focus bug.
+
+Stop this delivery batch at the integrated observing boundary. Return to original
+submenu/menubar, menu-button invocation/expanded semantics and picker requirements,
+with persisted semantic menu authoring retained under NS-4 workflows. No complete
+original criterion or task closes. Workflow **13**, authoring **26**, renderer
+**8**, codegen **28**, delivery **2** remain unchanged; historical NS-2/NS-3 totals
+remain unestablished. Push the evidence/observer checkpoint to `hello-nyx` and
+verify exact remote head in `build/menu-refresh/remote-return.json`. The full goal
+remains active.
+
+## Accepted batch intent: observing command-menu release — 2026-10-06
+
+Previous goal turn is progress: typed menus and ordinary Studio consumers qualify,
+and exact remote `f9129e0` is verified. Continue through the existing NS-5 observing
+prerequisite for NS-3 advanced components/NS-2 keyboard parity. Prepare a new
+frozen release without touching a listener; verify its complete payload and retain
+an exact checkpoint backup. Replace only the currently verified primary service
+on the existing LAN/editor and loopback MCP ports, using the same runtime and
+enrollment. No bootstrap/history reset/handle remapping. Qualify authenticated
+tools, exact nine pairs/navigation/draft/history availability and byte-identical
+durable recovery, with fourteen other service identities preserved. Observe the
+actual shared Memo workspace's Actions/Tab/Events/help at desktop and 390 widths.
+Phone hardware connectivity remains a separate observation. Stop this deployment
+batch after concrete evidence; return to the original submenu/picker and persisted
+menu-authoring requirements. At most two failed attempts per diagnosed cause; no
+original criterion closes from this rollout.
+
 ## Current return path: managed command menus — 2026-10-06
 
 Current goal turn: progress on original NS-3 criterion 3 through NS-2 criterion 2's
