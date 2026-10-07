@@ -91,8 +91,8 @@ It creates its own temporary review, composes the English content/declarations,
 reads bounded context/source, checks refusals/history, builds both application
 and standalone-view targets, verifies exact HTTP compiler-input bytes, then
 discards only that review. Supply explicit enrolled `config.toml`, owned output
-directory and editor HTTP base. Its source requires the new twenty-one-tool
-schema; the older observing release remains on twenty tools until refreshed.
+directory and editor HTTP base. Its source requires the twenty-one-tool schema,
+which the current frozen observing release also authenticates.
 
 `tools/build.ps1 -Target menu-authoring` checks the public portable/source fixture
 and stages both target consumers. Add `-MenuAuthoringSourceDirectory` to consume
@@ -147,8 +147,9 @@ a self-starting Pascal module worker and the ordinary browser Studio bundle.
 Execute the fixture over HTTP with the maintained ready-capture driver and
 `data-result` at desktop/narrow widths. Its inspector host qualifies actual controls
 and the real worker, not a full observing browser Studio session or hardware input.
-Full observing delivery and broader component/performance/accessibility acceptance
-remain open; see [current evidence](../WORK.md#current-return-path-public-menu-editor--2026-10-07).
+The observing menu editor is delivered; broader component/performance/accessibility
+acceptance remains open. See
+[delivery evidence](../WORK.md#current-return-path-menu-editor-observing-delivery--2026-10-07).
 
 The same target builds `nyx_studio_menu_editor_observer` under its `observer/`
 directory. Explicit invocation takes an isolated enrolled `config.toml`, loopback
@@ -342,6 +343,95 @@ It supports prefix navigation, not fuzzy matching or completion suggestions.
 Adapters use decoded text and monotonic time; browser composition/modifier keys
 remain with their ordinary input defaults.
 
+## Coordinate a horizontal menu bar
+
+`INyxMenuBar` composes an ordinary specialized `INyxRow`, named Nyx buttons and
+independently owned menu families. It adds coordinated focus and dropdown
+switching without introducing a second widget toolkit. Build each menu with the
+physical heading returned by the same renderer, then bind the mounted row:
+
+```pascal
+LWorkspaceRow := RetainNyxControl(
+  LRenderer.Root.Find('workspace-menu-bar')) as INyxRow;
+
+LFileMenu := NewNyxBrowserMenu(LRenderer.FocusFor('bar-file'), LDocument,
+  NyxPageRoot('thoughtful-actions'), LFileItems);
+LEditMenu := NewNyxBrowserMenu(LRenderer.FocusFor('bar-edit'), LDocument,
+  NyxPageRoot('thoughtful-actions'), LEditItems);
+
+LWorkspaceBar := NewNyxBrowserMenuBar(LWorkspaceRow, LRenderer,
+  NyxMenuBar('Workspace commands')
+    .Wrap(True)
+    .HoverSwitch(True)
+    .TypeAhead(NyxTypeAhead.WindowMilliseconds(1200).Match(ntmFolded)));
+LWorkspaceBar
+  .Add(NyxPart('file'), LFileMenu, NyxMenu('File'))
+  .Add(NyxPart('edit'), LEditMenu, NyxMenu('Edit'));
+LWorkspaceBar.OnInvoke.Subscribe(LCommandCallback);
+```
+
+Native authoring substitutes `NewNyxLCLMenu` and `NewNyxLCLMenuBar`; both consume
+the same typed row/parts, item plans, submenu recipes and policy values. Each
+heading opens a dropdown. Direct command/check/radio headings, vertical bars and
+an application-wide Alt/F10 shortcut are not part of this horizontal contract.
+
+| Input/context | Coordinated behavior |
+| --- | --- |
+| Tab entry | One visible heading participates; returning remembers that heading |
+| Left / Right on a heading | Move to the previous/next visible heading; optional wrapping |
+| Home / End | Focus the first/last visible heading |
+| Enter / Space / Down | Open the heading's first menu item |
+| Up | Open the heading's last menu item |
+| Left in a root dropdown | Close its family and open the previous heading's first item |
+| Right on a leaf at any level | Close the family and open the next heading's first item |
+| Right on a submenu / Left in a nested child | Open that child / return one level |
+| Tab / Shift+Tab from any level | Close the family and leave the whole bar |
+| Mouse entry while a family is open | Switch to another enabled heading when hover is enabled |
+
+Touch entry never performs hover switching. Hidden headings are skipped; logical
+disabled headings retain arrow focus but refuse opening. Printable decoded text
+uses the shared Unicode typeahead policy; browser composition and modified input
+keep their defaults. Before-consumed keys refuse navigation. A repeated opening
+key does not repeatedly reopen the family. `SetEnabled` changes runtime admission;
+it does not rewrite document defaults. Call `Refresh` after changing a mounted
+heading's visibility/physical enablement. Remounting requires retiring and
+rebinding the coordinator.
+
+The bar retains row/families and weak subscription leases; it borrows the target
+renderer. Release it before remounting or destroying that renderer. Its retirement
+closes families, cancels all registrations and restores prior heading/row
+accessibility, Tab stops and native text handlers. Independently retained menus
+remain usable afterward. Callbacks must not strongly retain their own bar; they
+may release the last external owner during ordered completion. `OnInvoke` forwards
+the detached `NyxMenuInvocation` snapshot with the bar as source/target and its
+heading as `OriginID`, preserving the leaf command/part/check state.
+
+Admission requires unique parts/buttons, distinct closed root families, no
+renderer actions and sequential input/completion streams. It never silently
+changes an existing stream's policy. One exact mounted row admits one coordinator;
+independently materialized copies can each own one. A foreign family coordinator
+or wrong physical heading anchor refuses without replacing prior registrations.
+Built-in target popovers expose optional `INyxBrowserPopoverAnchor` /
+`INyxLCLPopoverAnchor` identity queries. They return Boolean observations and do
+not publish dangling target pointers. Custom target families must provide that
+trait and the optional portable `INyxMenuFamilyInput` registration seam.
+
+Keyboard/role design follows the
+[WAI menu and menubar pattern](https://www.w3.org/WAI/ARIA/apg/patterns/menubar/)
+(checked 2026-10-07). Current evidence covers installed Win32 and headless
+Chromium controls, including real host Tab/Shift+Tab at CSS 1100 and 390. This does
+not establish hardware, IME, assistive technology or another widgetset. Narrow
+cascades currently overlap ancestors to stay in bounds; a mobile drill-down
+presentation and broader visual qualification remain open.
+
+This coordinator is currently **runtime-only**. The exact English content is
+MCP-authored, but saved documents generate a row and separate buttons, without
+the coordinated bar declaration. `nyx_menus` and Studio's menu editor currently
+author per-button attachments, not a bar group. Persisted typed grouping, source
+generation/admission, automatic application binding and Studio/MCP authoring are
+the next integration under the
+[existing workflow owner](../TODO/NS-4_agent-workflows_01.md).
+
 ## Reproduce the companion and qualify hosts
 
 The Pascal semantic client authors the English **Thoughtful actions** companion
@@ -352,6 +442,7 @@ the review and preserves the primary project. Enroll the MCP configuration first
 ```powershell
 ./tools/build.ps1 -Target menu-companion -DesignerMCPConfig .codex/config.toml -MenuSourceDirectory build/menu/source
 ./tools/build.ps1 -Target menu -MenuSourceDirectory build/menu/source
+./tools/build.ps1 -Target menu-bar -MenuSourceDirectory build/menu/source
 ```
 
 The menu target runs checked native controls and ordinary Studio integration,
@@ -367,11 +458,19 @@ component; the connected toolbar's Builds control participates in ordinary Tab
 order. Desktop/390 observing evidence and preserved-state receipts are in
 [WORK.md](../WORK.md#current-return-path-observing-menu-families--2026-10-07).
 
+The current companion also includes an English **Workspace commands** page with
+named File/Edit/View headings. The `menu-bar` target runs its native consumer and
+stages `menu-bar.html` plus the Pascal `nyx_menu_bar_observer`. Invoke that observer
+with the admitted HTTP fixture URL, a new evidence directory and CSS width. It
+captures a three-level family, sends real Chromium Tab/Shift+Tab and requires the
+Pascal fixture's terminal result. It starts no HTTP/MCP listener and edits no
+ordinary project. Current results are 42 semantic composition/history checks,
+44 native and 46 per browser width; all native owners retire without heap leaks.
+
 Runtime-only presentation/command/recipe plans remain available independently
-of the saved declarations above. The general editor menu-authoring interface
-remains with [the existing workflow owner](../TODO/NS-4_agent-workflows_01.md).
-Menubars, mobile
-drill-down presentation, live menu binding, assistive technology,
+of the saved declarations above. Coordinated persisted bars and broader semantic
+authoring remain with [the existing workflow owner](../TODO/NS-4_agent-workflows_01.md).
+Mobile drill-down presentation, live menu binding, assistive technology,
 hardware/IME, other widgetsets/DPI and full production accessibility remain open.
 Compiled source admission alone establishes none of these interactions.
 

@@ -7,6 +7,61 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: coordinated menu bars — 2026-10-07
+
+This goal turn is progress on original NS-3 criteria 1/2 and NS-2 criterion 2.
+Public `INyxMenuBar` now coordinates specialized Nyx rows/buttons and independent
+menu families: typed horizontal roving focus, dropdown/branch switching,
+whole-bar Tab exit, logical disabled admission and shared Unicode typeahead.
+Target adapters alone map physical focus/accessibility. Before-consumed input,
+hidden headings, optional wrapping/mouse hover, distinct families and ordered
+detached command snapshots share one portable controller.
+
+Authenticated Pascal semantic MCP composes/exports the exact English companion
+in one owned empty review, bounded source reads and paired Undo/Redo (**42**).
+It retires that review; no ordinary project is replaced or edited. The maintained
+`menu-bar` target qualifies actual Win32 (**44**) and HTTP Chromium at CSS 1100
+and 390 (**46 each**), including real host Tab/Shift+Tab, deep leaf switching,
+before-consumed refusal, callback release and rebinding. Standalone menu
+regression passes **58 native / 59 browser**. Native consumers/observers report
+zero leaks; owned builds report zero warnings. Seven installed pas2js RTL
+warnings remain visible. No dependency source is changed.
+
+Refused foreign coordination exposed a 52-byte native argument-temporary leak;
+explicit managed navigator/callback locals fix it before registration. Wrong
+physical heading anchors now refuse through optional target-only Boolean traits,
+using existing weak anchor lifetime observation. Rejected duplicates, foreign
+navigation and nonsequential streams preserve their prior handlers/policies.
+Corrected failures remain recorded. Initial legacy-browser orchestration failed
+on a misparsed flag, missing output directory and unstaged host HTML; exact staged
+HTTP bytes and the corrected terminal result qualify the regression instead.
+
+Ignored evidence is under `build/menu-bar/`: `companion.log`, exact `source/`,
+`anchor-controls-build.log`, `anchor-desktop/`, `anchor-phone/`,
+`anchor-legacy-native.log`, `legacy-browser-qualified/` and `preservation.json`.
+The narrow three-level capture keeps readable text but overlaps ancestors;
+mobile drill-down aesthetics, hardware/IME/assistive technology, another widgetset
+and live menu binding remain unqualified. The bar is horizontal with dropdown
+headings, not direct top-level commands or application Alt/F10 activation.
+
+All **15** protected service identities, **9** complete accepted/source/draft
+pairs, navigation/history/permissions and the **147033-byte** checkpoint stay
+exact. The primary frozen **229-file** LAN payload remains `6fc231e`; its served
+browser bytes and installed server hash still match. The new public component
+uses a bounded child of the existing unsealed artifact host. No listener
+replacement or frozen payload change occurs. Current authority/identity
+baselines remain `build/menu-observing/*-current.json` and its editor-private file.
+
+Stop this integrated public consumer and fixture expansion. Reassessment:
+runtime-only bar coordination is qualified, but saved rows still generate
+independent buttons. The next meaningful deliverable is typed persisted bar
+grouping, crafted source/admission, automatic runtime binding and Studio/MCP
+authoring under the existing NS-4 workflow criterion 5 and NS-3 component owners;
+then return to wider picker/component depth. Do not substitute raw extension
+properties or browser automation for the missing semantic operation. No full
+original criterion closes. Workflow 15, authoring 28, renderer 8, codegen 28 and
+delivery 2 stay unchanged; historical NS-3/NS-2 parity counts remain unestablished.
+
 ## Current return path: menu editor observing delivery — 2026-10-07
 
 This goal turn is progress on existing NS-5 accepted-work/reload and NS-4 workflow

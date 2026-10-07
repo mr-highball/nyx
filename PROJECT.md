@@ -66,6 +66,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Public coordinated menu bars now consume ordinary specialized rows/buttons and
+independent menu families. Exact MCP-authored English content passes 42 semantic
+checks; actual Win32 passes 44 and desktop/CSS-390 browser 46 each, including real
+host Tab/Shift+Tab and safe callback retirement. Standalone menus retain 58/59.
+All protected services/pairs/checkpoint and frozen LAN bytes remain exact. Bar
+grouping is runtime-only; persisted groups, generation/application binding and
+Studio/MCP authoring are the next integration. See
+[the component packet](WORK.md#current-return-path-coordinated-menu-bars--2026-10-07).
+
 Studio Properties now consumes a public typed menu editor with complete saved
 policy/item forms, distinct attachment/mask/inheritance, stale-baseline refusal,
 confirmed dependency-safe removal and paired source/history. Actual inspector/

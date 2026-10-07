@@ -154,7 +154,27 @@ begin
         '{"op":"create","kind":"button","id":"density-comfortable","parent":"density-options",' +
         '"properties":{"text":"Comfortable","part":"comfortable","variant":"secondary"}},' +
         '{"op":"create","kind":"button","id":"density-compact","parent":"density-options",' +
-        '"properties":{"text":"Compact","part":"compact","variant":"secondary"}}]'))]);
+        '"properties":{"text":"Compact","part":"compact","variant":"secondary"}},' +
+        '{"op":"create","kind":"column","id":"menu-workspace","root":"page",' +
+        '"properties":{"layout":"column","padding":20,"gap":12}},' +
+        '{"op":"create","kind":"heading","id":"bar-title","parent":"menu-workspace",' +
+        '"properties":{"text":"Your command workspace"}},' +
+        '{"op":"create","kind":"label","id":"bar-intent","parent":"menu-workspace",' +
+        '"properties":{"text":"Independent menus, one thoughtful keyboard contract."}},' +
+        '{"op":"create","kind":"button","id":"before-bar","parent":"menu-workspace",' +
+        '"properties":{"text":"Previous control"}},' +
+        '{"op":"create","kind":"row","id":"workspace-menu-bar","parent":"menu-workspace",' +
+        '"properties":{"layout":"row","gap":6,"compound":true}},' +
+        '{"op":"create","kind":"button","id":"bar-file","parent":"workspace-menu-bar",' +
+        '"properties":{"text":"File","part":"file","variant":"secondary"}},' +
+        '{"op":"create","kind":"button","id":"bar-edit","parent":"workspace-menu-bar",' +
+        '"properties":{"text":"Edit","part":"edit","variant":"secondary"}},' +
+        '{"op":"create","kind":"button","id":"bar-hidden","parent":"workspace-menu-bar",' +
+        '"properties":{"text":"Archive","part":"hidden","visible":false}},' +
+        '{"op":"create","kind":"button","id":"bar-view","parent":"workspace-menu-bar",' +
+        '"properties":{"text":"View","part":"view","variant":"secondary"}},' +
+        '{"op":"create","kind":"button","id":"after-bar","parent":"menu-workspace",' +
+        '"properties":{"text":"Keep working"}}]'))]);
     GRevision := Call('nyx_session', []).Field('revision').AsInteger;
     LSource := Source;
     Check(Pos('INyxButton', LSource) > 0, 'Specialized crafted companion');

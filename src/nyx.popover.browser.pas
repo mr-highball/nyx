@@ -43,6 +43,13 @@ type
     property Renderer: TNyxBrowserRenderer read GetRenderer;
   end;
 
+  { Optional target-only identity check. The argument is borrowed for this call;
+    detached anchors refuse. An authored hidden heading may still be bound. }
+  INyxBrowserPopoverAnchor = interface(IInterface)
+    ['{17E9CC06-A34B-4EBB-BDC6-071026000005}']
+    function AnchoredTo(AAnchor: TJSHTMLElement): Boolean;
+  end;
+
 { Anchor is a borrowed physical target seam. Pass renderer.FocusFor(Control.ID)
   for a Nyx button. The document/root are copied; theme must outlive presenter. }
 function NewNyxBrowserPopover(AAnchor: TJSHTMLElement;
@@ -77,7 +84,8 @@ type
     visualViewport: TVisualViewport;
   end;
 
-  TBrowserPopover = class(TNyxPopoverPresenter, INyxPopover, INyxBrowserPopover)
+  TBrowserPopover = class(TNyxPopoverPresenter, INyxPopover, INyxBrowserPopover,
+    INyxBrowserPopoverAnchor)
   private
     FAnchor: TJSHTMLElement;
     FElement: TJSHTMLElement;
@@ -102,6 +110,7 @@ type
     destructor Destroy; override;
     function GetElement: TJSHTMLElement;
     function GetRenderer: TNyxBrowserRenderer;
+    function AnchoredTo(AAnchor: TJSHTMLElement): Boolean;
     function GetEvents: INyxEvents; override;
   end;
 
@@ -361,6 +370,12 @@ end;
 function TBrowserPopover.GetRenderer: TNyxBrowserRenderer;
 begin
   Result := FRenderer;
+end;
+
+function TBrowserPopover.AnchoredTo(AAnchor: TJSHTMLElement): Boolean;
+begin
+  Result := (AAnchor <> nil) and (FAnchor = AAnchor) and
+    Web.document.body.contains(FAnchor);
 end;
 
 function TBrowserPopover.GetEvents: INyxEvents;

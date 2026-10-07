@@ -15,6 +15,21 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Current coordinated-bar gap (2026-10-07): authenticated semantic MCP composes and
+exports the exact English row/heading/menu companion in one owned review with
+bounded reads and paired history (42). Runtime `INyxMenuBar` then qualifies real
+browser/LCL navigation and lifetime through public Pascal (44 native, 46 per
+browser width). Its grouping is not saved meaning: generated documents still
+contain a row and separate buttons. This existing criterion-5 owner must expose
+bounded typed group queries/admission and revision-aware grouped paired edits,
+alongside crafted source and automatic runtime binding owned by their existing
+tasks. Studio must consume that same public declaration/authoring contract.
+Do not hide grouping in extension strings or use screenshot-driven design edits.
+Workflow no-closure remains 15; no workflow criterion closes from library-only
+input qualification. Stop fixture expansion and deliver this integration boundary.
+All 15 services, nine pairs/full checkpoint and frozen LAN bytes remain exact.
+See [the packet](../WORK.md#current-return-path-coordinated-menu-bars--2026-10-07).
+
 Current observing consumer (2026-10-07): frozen `6fc231e` now serves the protected
 LAN/editor with 21 authenticated tools. The owned semantic menu review passes
 355, including all four actual application/view builds and exact paired source/

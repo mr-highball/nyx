@@ -3,6 +3,17 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current component boundary (2026-10-07): public coordinated horizontal bars reuse
+Nyx rows/buttons and independent menu families. Typed focus/dropdown navigation,
+Unicode search, exact anchor admission and callback retirement pass 44 Win32 and
+46 each desktop/CSS-390 browser checks, including real host Tab/Shift+Tab. Exact
+semantic content/history passes 42; standalone menus retain 58/59, leak-free.
+Protected services/pairs/checkpoint and frozen LAN bytes remain unchanged. No
+original criterion/counter closes. End runtime bar fixtures; next deliver typed
+persisted grouping, crafted generation, automatic application binding and
+Studio/MCP authoring under existing owners, then broader component/picker depth.
+See [the packet](WORK.md#current-return-path-coordinated-menu-bars--2026-10-07).
+
 Current observing boundary (2026-10-07): frozen product `6fc231e` serves the
 original LAN executable path and authenticates 21 tools. Actual retained-checkpoint
 admission/byte-identical history round trip pass 106; all nine exact pairs and

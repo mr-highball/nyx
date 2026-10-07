@@ -23,6 +23,26 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Coordinated menu bars — 2026-10-07
+
+Original criteria 1/2 now include a public managed coordinator over ordinary
+specialized rows/buttons and independent menu families. Typed focus/dropdown
+switching, disabled/hidden admission, Unicode search, nested leaf navigation,
+ordered completion and safe registration retirement pass 44 actual Win32 and
+46 each desktop/CSS-390 browser checks. The exact English semantic MCP companion
+passes 42 composition/history checks; standalone menus retain 58/59. All native
+owners retire leak-free. Fifteen services, nine full pairs/checkpoint and frozen
+LAN bytes stay exact; this public component is not rolled out to that editor.
+See [the packet](../WORK.md#current-return-path-coordinated-menu-bars--2026-10-07)
+and [public contract](../docs/menu.md#coordinate-a-horizontal-menu-bar).
+
+No original criterion closes; historical component no-closure totals remain
+unestablished. Stop bar fixture expansion. Saved bar groups, crafted generation,
+automatic runtime binding and typed Studio/MCP authoring remain the immediate
+integration gap under this task and the existing NS-4 workflow owner. Deliver
+that boundary before returning to broader pickers. Live binding, mobile
+drill-down presentation, performance, accessibility and production breadth remain.
+
 ## Menu families and invokers — 2026-10-06
 
 The public menu-editor/observing prerequisite is now delivered (2026-10-07).

@@ -121,6 +121,30 @@ type
     Checked: Boolean;
   end;
 
+  { Synchronous family input is distinct from command completion. A persistent
+    menu bar coordinates root/leaf horizontal traversal and whole-family Tab;
+    standalone menu buttons retain their existing defaults without a binding. }
+  TNyxMenuFamilyDirection = (nmfPrevious, nmfNext, nmfTabForward, nmfTabBackward);
+  INyxMenuFamilyNavigator = interface(IInterface)
+    ['{17E9CC06-A34B-4EBB-BDC6-071026000001}']
+    procedure Navigate(ADirection: TNyxMenuFamilyDirection;
+      const AExecution: INyxExecution);
+  end;
+  { Cancel explicitly before releasing the bar. The token retains a weak menu
+    lease, never its presenter; cancellation remains safe after menu retirement. }
+  INyxMenuFamilyRegistration = interface(IInterface)
+    ['{17E9CC06-A34B-4EBB-BDC6-071026000002}']
+    procedure Cancel;
+  end;
+  { Optional adapter-independent extension. Exactly one coordinator may bind a
+    closed root family; nil, child or duplicate binding refuses without replacing
+    a previous registration. Ordinary OnInvoke remains multi-registration. }
+  INyxMenuFamilyInput = interface(IInterface)
+    ['{17E9CC06-A34B-4EBB-BDC6-071026000003}']
+    function ConnectNavigation(const ANavigator: INyxMenuFamilyNavigator):
+      INyxMenuFamilyRegistration;
+  end;
+
   { Ref-counted command menu on public Nyx content/presentation. It owns its
     independent document through the popover. No callback retains the menu back.
     All operations require the UI thread. Content is specialized managed Nyx
@@ -166,7 +190,7 @@ type
   end;
   { Adapter seam owns the popover and weak callback lease. Subclasses only map
     focus, item semantics and monotonic text input to physical target controls. }
-  TNyxMenuPresenter = class(TInterfacedObject, INyxMenu)
+  TNyxMenuPresenter = class(TInterfacedObject, INyxMenu, INyxMenuFamilyInput)
   private
     FPopover: INyxPopover;
     FItems: TNyxMenuItems;
@@ -185,6 +209,8 @@ type
     FParentLease: TNyxMenuLease;
     FParentOwner: IInterface;
     FReady: Boolean;
+    FNavigator: INyxMenuFamilyNavigator;
+    FNavigationSerial: Integer;
     procedure ValidateCommand(const APart: INyxControl);
     function ItemIndex(const APart: TNyxPartRef): Integer;
     function LabelAt(AIndex: Integer): TNyxText;
@@ -198,6 +224,8 @@ type
     procedure Dismissed(const AEvent: TNyxEventInfo);
     procedure CloseChildren(AExcept: Integer = -1);
     function FamilyRoot: TNyxMenuPresenter;
+    function NavigateFamily(ADirection: TNyxMenuFamilyDirection;
+      const AExecution: INyxExecution): Boolean;
   protected
     procedure ApplyFaces; virtual; abstract;
     function FocusFace(AIndex: Integer): Boolean; virtual; abstract;
@@ -230,6 +258,8 @@ type
     function Checked(const APart: TNyxPartRef): Boolean;
     procedure OpenSubmenu(const APart: TNyxPartRef);
     function Submenu(const APart: TNyxPartRef): INyxMenu;
+    function ConnectNavigation(const ANavigator: INyxMenuFamilyNavigator):
+      INyxMenuFamilyRegistration;
     property Content: INyxControl read GetContent;
   end;
 
@@ -268,6 +298,16 @@ implementation
 uses nyx.data, nyx.interaction, nyx.composition;
 
 type
+  TMenuFamilyRegistration = class(TInterfacedObject, INyxMenuFamilyRegistration)
+  private
+    FLease: TNyxMenuLease;
+    FLeaseOwner: IInterface;
+    FSerial: Integer;
+  public
+    constructor Create(ALease: TNyxMenuLease; ASerial: Integer);
+    procedure Cancel;
+  end;
+
   { Owned classes avoid unsupported COM-interface record fields in pas2js.
     Only a presenter's independent copies are mutable; public plans are sealed. }
   TMenuItem = class(TInterfacedObject, INyxMenuItem)
@@ -955,6 +995,7 @@ destructor TNyxMenuPresenter.Destroy;
 var
   LIndex: Integer;
 begin
+  FNavigator := nil;
 
   if FLease <> nil then
   begin
@@ -1192,6 +1233,58 @@ begin
   while (Result.FParentLease <> nil) and (Result.FParentLease.Owner <> nil) do
   begin
     Result := Result.FParentLease.Owner;
+  end;
+end;
+
+constructor TMenuFamilyRegistration.Create(ALease: TNyxMenuLease; ASerial: Integer);
+begin
+  inherited Create;
+  FLease := ALease;
+  FLeaseOwner := ALease;
+  FSerial := ASerial;
+end;
+
+procedure TMenuFamilyRegistration.Cancel;
+begin
+
+  if (FLease <> nil) and (FLease.Owner <> nil) and
+    (FLease.Owner.FNavigationSerial = FSerial) then
+  begin
+    FLease.Owner.FCompletion.Scheduler.RequireUI;
+    FLease.Owner.FNavigator := nil;
+  end;
+  FLease := nil;
+  FLeaseOwner := nil;
+end;
+
+function TNyxMenuPresenter.ConnectNavigation(const ANavigator: INyxMenuFamilyNavigator):
+  INyxMenuFamilyRegistration;
+begin
+  FCompletion.Scheduler.RequireUI;
+
+  if (ANavigator = nil) or (FNavigator <> nil) or GetOpen or
+    (FParentLease <> nil) then
+  begin
+    raise ENyxModel.Create('Menu navigation requires one coordinator on a closed root family');
+  end;
+  Inc(FNavigationSerial);
+  Result := TMenuFamilyRegistration.Create(FLease, FNavigationSerial);
+  FNavigator := ANavigator;
+end;
+
+function TNyxMenuPresenter.NavigateFamily(ADirection: TNyxMenuFamilyDirection;
+  const AExecution: INyxExecution): Boolean;
+var
+  LNavigator: INyxMenuFamilyNavigator;
+begin
+  { Resolve through the root even from a deeply nested leaf. The local owner
+    permits the callback to retire the bar/family during synchronous dispatch. }
+  LNavigator := FamilyRoot.FNavigator;
+  Result := LNavigator <> nil;
+
+  if Result then
+  begin
+    LNavigator.Navigate(ADirection, AExecution);
   end;
 end;
 
@@ -1441,6 +1534,23 @@ begin
   if (AEvent.Keyboard.Key = nkTabKey) and
     (AEvent.Keyboard.Modifiers <= [nmShift]) then
   begin
+
+    if nmShift in AEvent.Keyboard.Modifiers then
+    begin
+
+      if NavigateFamily(nmfTabBackward, AExecution) then
+      begin
+        Exit;
+      end;
+    end
+    else
+    begin
+
+      if NavigateFamily(nmfTabForward, AExecution) then
+      begin
+        Exit;
+      end;
+    end;
     FamilyRoot.Close;
     FamilyRoot.TabExit(nmShift in AEvent.Keyboard.Modifiers, AExecution);
     Exit;
@@ -1459,6 +1569,10 @@ begin
         begin
           LResponse.Consume;
           Activate(AIndex, False);
+        end
+        else
+        begin
+          NavigateFamily(nmfNext, AExecution);
         end;
         Exit;
       end;
@@ -1470,6 +1584,10 @@ begin
           LResponse.Consume;
           Close;
           FParentLease.Owner.PresentationChanged;
+        end
+        else
+        begin
+          NavigateFamily(nmfPrevious, AExecution);
         end;
         Exit;
       end;

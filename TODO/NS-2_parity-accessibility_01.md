@@ -20,6 +20,24 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Coordinated menu-bar input — 2026-10-07
+
+Criterion 2 now has a shared horizontal coordinator with browser/LCL adapters:
+one Tab stop, exact mounted heading anchors, disabled arrow focus, hidden skips,
+typed Unicode search and nested family switching. Actual Win32 passes 44;
+desktop/CSS-390 passes 46 each including real Chromium Tab/Shift+Tab. All native
+owners retire without leaks and previous standalone menu checks retain 58/59.
+Fifteen service identities, nine complete pairs/history and frozen LAN bytes
+remain exact. See
+[evidence](../WORK.md#current-return-path-coordinated-menu-bars--2026-10-07).
+
+No original criterion closes or historical parity counter is invented. Narrow
+cascades stay readable but overlap ancestors; hardware, IME, assistive technology,
+other widgetsets/DPI, mobile drill-down visuals and live binding remain open.
+Stop input fixture expansion. Persisted typed grouping/application binding and
+Studio/MCP authoring must integrate this qualified controller under their owners
+before broader component work; standalone control evidence does not prove that.
+
 ## Nested menu focus and invocation — 2026-10-06
 
 The observing prerequisite now passes actual shared desktop/390 nested host Tab,

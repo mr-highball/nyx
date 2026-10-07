@@ -47,6 +47,13 @@ type
     property Renderer: TNyxLCLRenderer read GetRenderer;
   end;
 
+  { Optional target-only identity check. The argument is borrowed for this call;
+    the existing FreeNotification lease makes retired anchors refuse safely. }
+  INyxLCLPopoverAnchor = interface(IInterface)
+    ['{17E9CC06-A34B-4EBB-BDC6-071026000006}']
+    function AnchoredTo(AAnchor: TWinControl): Boolean;
+  end;
+
 function NewNyxLCLPopover(AAnchor: TWinControl; ADocument: TNyxDocument;
   const ARoot: TNyxRootRef; ATheme: TNyxTheme = nil;
   const AParent: INyxLCLPopover = nil): INyxLCLPopover;
@@ -71,7 +78,8 @@ type
     procedure Notification(AComponent: TComponent; AOperation: TOperation); override;
   end;
 
-  TLCLPopover = class(TNyxPopoverPresenter, INyxPopover, INyxLCLPopover)
+  TLCLPopover = class(TNyxPopoverPresenter, INyxPopover, INyxLCLPopover,
+    INyxLCLPopoverAnchor)
   private
     FParent: INyxLCLPopover;
     FFamilyWindows: array of TForm;
@@ -100,6 +108,7 @@ type
     destructor Destroy; override;
     function GetWindow: TForm;
     function GetRenderer: TNyxLCLRenderer;
+    function AnchoredTo(AAnchor: TWinControl): Boolean;
     function GetEvents: INyxEvents; override;
     procedure IncludeWindow(AWindow: TForm);
     procedure ExcludeWindow(AWindow: TForm);
@@ -498,6 +507,12 @@ end;
 function TLCLPopover.GetRenderer: TNyxLCLRenderer;
 begin
   Result := FRenderer;
+end;
+
+function TLCLPopover.AnchoredTo(AAnchor: TWinControl): Boolean;
+begin
+  Result := (AAnchor <> nil) and (FTargets <> nil) and
+    (FTargets.Anchor = AAnchor);
 end;
 
 function TLCLPopover.GetEvents: INyxEvents;
