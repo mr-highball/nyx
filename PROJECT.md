@@ -66,6 +66,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Ordinary browser tables now contain measured DOM windows, logical navigation,
+pinned editors and independent detached drafts. Shared geometry passes 793 checked
+native assertions; native controls remain 29/27/75/20, leak-free. Exact MCP-source
+browser consumers, Studio and worker compile with zero owned warnings. Current
+browser interaction, observing delivery and full frame/memory budgets remain
+unverified behind the existing gate. See
+[the browser packet](WORK.md#current-return-path-browser-table-row-windowing--2026-10-07).
+
 Ordinary native Nyx tables now read bound values on demand through a compatible
 owned TStringGrid subclass; local drafts, queries, input and disconnect remain.
 Actual Win32 checks pass 20 focused, with 30 source requests for a painted

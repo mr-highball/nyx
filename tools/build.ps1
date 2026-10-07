@@ -1846,6 +1846,9 @@ try {
       "-Fu$nyxLazarus/packager/units/$nyxRefreshPlatform")
     $nyxRefreshFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       "-FU$nyxRefreshNative", "-FE$nyxRefreshNative") + $nyxRefreshUnits
+    Invoke-NyxCompiler $nyxLclFpc ($nyxRefreshFlags + @('tests/nyx_collection_window_tests.lpr'))
+    & (Join-Path $nyxRefreshNative 'nyx_collection_window_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Measured row geometry checks failed' }
     Invoke-NyxCompiler $nyxLclFpc ($nyxRefreshFlags + @('tests/nyx_collection_refresh_tests.lpr'))
     & (Join-Path $nyxRefreshNative 'nyx_collection_refresh_tests.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Incremental collection plan/controls failed' }
@@ -1869,7 +1872,8 @@ try {
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     foreach ($nyxRefreshProgram in @('tests/nyx_collection_refresh_tests.lpr',
-      'tests/nyx_collection_query_controls.lpr', 'tools/nyx_collection_view_benchmark.lpr',
+      'tests/nyx_collection_query_controls.lpr', 'tests/nyx_collection_window_tests.lpr',
+      'tests/nyx_virtual_table_browser.lpr', 'tools/nyx_collection_view_benchmark.lpr',
       'studio/nyx_studio.lpr', 'studio/nyx_source_worker.lpr')) {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
         '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxRefreshSource", "-FE$nyxRefreshBrowser",
@@ -1877,7 +1881,7 @@ try {
     }
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxRefreshBrowser 'rtl.js')
     foreach ($nyxRefreshHost in @('collection-refresh.html', 'collection-query-controls.html',
-      'collection-view-benchmark.html')) {
+      'collection-window.html', 'virtual-table.html', 'collection-view-benchmark.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot ('studio/web/' + $nyxRefreshHost)) `
         -Destination $nyxRefreshBrowser
     }

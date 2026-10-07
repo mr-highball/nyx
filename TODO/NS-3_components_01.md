@@ -25,6 +25,17 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## On-demand native table values — 2026-10-07
 
+The next primary-browser packet integrates measured DOM row windows with complete
+logical navigation/ranges, pinned editors and detached exact drafts. Shared geometry
+passes 793 checked native assertions; native regressions remain 29/27/75/20 with
+zero leaks. The unchanged authenticated English MCP source, new staged large-table
+consumer and Studio compile. Browser interaction/visual/observing execution remain
+unverified behind the existing launch gate; no compile substitutes for them. This
+is the second partial realization packet without an original criterion closure.
+Reassess and stop window fixture expansion; finish runtime qualification and the
+original parity, component and budget prerequisites. No count is created/reset.
+See [the browser packet](../WORK.md#current-return-path-browser-table-row-windowing--2026-10-07).
+
 Original criterion 3 now has native value realization in ordinary authored
 tables through a compatible owned TStringGrid subclass. Pure source reads,
 sparse exact drafts, query displacement and receiver retirement pass 20 actual

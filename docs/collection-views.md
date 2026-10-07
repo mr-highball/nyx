@@ -387,8 +387,9 @@ nodes and editors retain scalar comparison guards. The plan owns only Boolean
 bits, with no dataset/renderer/widget references; borrowed publication context
 retires after notification, and mounts disconnect before widget disposal.
 
-Lists, trees and browser tables still materialize rows; native table values now
-use the on-demand path below. Visible-identity, selection and hierarchy scans,
+Lists and trees still materialize rows. Native tables read values on demand;
+browser tables contain the measured row window described below, pending runtime
+qualification. Visible-identity, selection and hierarchy scans,
 snapshot validation and query evaluation still contribute dataset-wide work.
 A refresh count describes completed adapter passes. Viewport virtualization and
 documented both-target frame/memory budgets retain their owner in
@@ -429,9 +430,46 @@ empty results and teardown pass with zero leaks. These counts establish on-deman
 native reads, not complete memory/frame budgets. Initial content autosizing may
 read the whole source; grid geometry, model/query and metadata work remain
 dataset-sized. `OverrideCount` reports only Nyx draft overlays, excluding native
-physical caches and all model memory. Browser row windowing and both-target
+physical caches and all model memory. Browser row-window qualification and both-target
 production qualification remain open. See
 [the current evidence](../WORK.md#current-return-path-on-demand-native-table-values--2026-10-07).
+
+## Measured browser table windows
+
+The ordinary browser adapter contains a viewport row window plus six overscan
+rows, using portable [`TNyxCollectionRowGeometry`](../src/nyx.collections.window.pas)
+for logical prefixes and pixel-to-row lookup. Positive measurements replace
+unvisited estimates; variable text heights need no font scaling. Physical rows
+carry source/query identities, while hidden spacers represent missing intervals.
+Logical keyboard movement and Shift ranges use the entire admitted dataset.
+Navigation destinations realize before selection callbacks can retire the view.
+
+Focused editors remain attached; unfocused unfinished drafts retain independent
+detached controls. Returning to their viewport reuses those controls. Accepted
+field changes and explicit normalization keep prior comparison guards. Native
+scroll offsets, focused caret and relocation change noise have explicit handling.
+Scroll/resize/row/ancestor observation coalesces into one animation callback, and
+disconnect withdraws all listeners/targets and cancels pending work. Old ancestors
+retire when a retained view moves. These are implemented paths whose current
+browser interaction and visual qualification remain pending.
+
+Complete logical row counts include the header; each exposed header/data row
+has its index. Spacers carry no selectable item identity and are hidden from
+accessibility, following [WAI grid/table structural guidance](https://www.w3.org/WAI/ARIA/apg/practices/grid-and-table-properties/).
+Typed browser bridges retain fractional scroll coordinates as specified by
+[CSSOM View](https://drafts.csswg.org/cssom-view/#dom-element-scrolltop).
+This metadata does not establish screen-reader or full APG conformance.
+
+The maintained collection-refresh target runs 793 checked native geometry
+assertions and unchanged native 29/27/75/20 consumers, then compiles/stages
+`collection-window.html`, `virtual-table.html`, existing browser consumers, Studio
+and its worker. The new 4096-row consumer asserts draft/caret return, offscreen
+keyboard/range movement, query reshaping, empty results and retirement against
+the unchanged authenticated English MCP export. It has **not executed** in the
+current browser environment. Dataset-sized arrays, model/query work, estimated
+unvisited heights, browser/observing input and production frame/memory budgets
+retain their original acceptance owners. See
+[current qualification](../WORK.md#current-return-path-browser-table-row-windowing--2026-10-07).
 
 ## Studio collection authoring
 

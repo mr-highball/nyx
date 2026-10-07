@@ -3,6 +3,17 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current collection realization (2026-10-07): pushed native tables read bound values
+on demand; the ordinary browser adapter now contains measured row windows, full
+logical navigation and retained drafts/editors. Shared geometry passes 793 native
+checks; native consumers remain 29/27/75/20, leak-free. Exact MCP-source browser
+consumers/Studio/worker compile; current browser execution/observing and both-target
+production budgets remain unverified. Original criteria stay open and established
+workflow/authoring/renderer/codegen/delivery counts remain 19/30/9/28/2. NS-3's
+historical count remains unestablished. End local realization fixtures, reassess
+the two partial packets, and follow the existing runtime/budget/prerequisite gates.
+See [the current packet](WORK.md#current-return-path-browser-table-row-windowing--2026-10-07).
+
 Current structured-read performance (2026-10-07): immutable immediate-member
 indexes/cached text preserve canonical data, exact values and independent
 ownership. Native checked core/designer regressions pass 30/1793, collection

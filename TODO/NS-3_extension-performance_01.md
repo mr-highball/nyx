@@ -9,6 +9,18 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current browser realization prerequisite (2026-10-07): the ordinary adapter now
+contains measured DOM windows and full logical keyboard/range order, retaining
+focused editors and detached exact drafts. Shared geometry passes 793 checked
+native assertions; native regressions remain 29/27/75/20, leak-free. Exact MCP-source
+browser consumers/Studio/worker compile, with zero owned warnings. Browser runtime,
+captures, large-data frames and resident-memory measurements remain unqualified.
+Arrays/model/query scans are dataset-sized and unvisited heights estimated; this
+is not complete both-target virtualization/budget acceptance. Reassess these two
+partial realization packets and stop fixture expansion; follow the existing runtime
+gate and original criteria. No original criterion closes or count is invented/reset.
+See [the packet](../WORK.md#current-return-path-browser-table-row-windowing--2026-10-07).
+
 Current native on-demand prerequisite (2026-10-07): ordinary authored tables
 use a compatible owned TStringGrid subclass with pure borrowed reads and sparse
 explicit draft overlays. Actual native checks pass 20 plus existing 29/27/75,

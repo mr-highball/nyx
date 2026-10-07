@@ -7,6 +7,70 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: browser table row windowing — 2026-10-07
+
+Previous turn made authoritative progress at pushed `34c75f7`: ordinary native
+on-demand tables, real paint/input/query/lifetime checks and remote preservation.
+Reassessment ends native fixtures and follows original NS-3 component criterion 3
+and performance criteria 2/3 into the primary browser consumer. Deliver measured
+row geometry plus an integrated bounded DOM window, keeping full logical keyboard/
+range navigation, exact source/query identities, focused editors and unfinished
+drafts. Require checked portable geometry, affected native regressions, exact
+MCP-exported English application and current browser/Studio compilation. Current
+browser execution retains its external gate: no browser process is live, and the
+previous automatic rejection must not be retried through another launch route.
+Stop at the integrated consumer plus available qualification; do not claim current
+browser execution, full budgets/parity or close original criteria from compilation.
+Do not invent/reset NS-3 counts. Protected services/pairs/frozen payload stay exact.
+
+The ordinary browser table adapter now contains measured row windows with six
+overscan rows, sparse logical row slots, independent detached drafts and pinned
+focused/selected navigation faces. Pure shared prefix geometry updates/lookups
+are logarithmic; unvisited heights remain estimates. Physical measurement uses
+logical outer allocation and viewport clipping compensates axis-aligned scaling.
+Scroll/window/row/ancestor observations coalesce through one animation callback;
+disconnect cancels it and releases listeners/observer targets before rows. Moved
+views withdraw old ancestor targets. Freshly realized rows initialize their values;
+same immutable snapshots skip identity remapping. Header/data rows expose complete
+logical counts/indices, and spacers are hidden from accessibility/navigation.
+
+Full logical keyboard/range order is independent of the DOM window. Distant
+destinations realize before selection publication; focus recovery keeps input
+caret/drafts and suppresses relocation change noise. Accepted-field changes and
+explicit normalization retain the prior scalar guards. These are implemented
+paths, not claims of current browser execution. Dataset-sized metadata arrays,
+store/query validation and scans remain; lists/trees still materialize rows.
+
+Current checked native geometry passes **793** assertions against independent
+linear mixed-height sums, exact/partial boundaries, large overscan/offsets, empty
+sources and atomic refusals, with zero leaks. Maintained native refresh/control/
+query/on-demand regressions pass **29/27/75/20** (paint remains **30/4096**), leak-free.
+The same **4398-byte** authenticated English MCP export is unchanged. Portable
+geometry, existing browser consumers, a new staged 4096-row draft/navigation/query/
+retirement consumer, full Studio and worker compile. Final current browser build
+has zero owned warnings; installed RTL warnings remain visible. Web binding
+adjustments use owned typed bridges, without changing dependency source. CSS
+pixel formatting copies RTL settings and explicitly uses a decimal point.
+
+Evidence: ignored `build/row-window/native-geometry-run.log`, `final-build.log`,
+`qualified-browser-build.log` and the maintained staged `collection-window.html`
+and `virtual-table.html`. No browser process is live; no current browser checks,
+captures, frame/memory budgets or observing delivery are credited. The earlier
+automatic-review browser launch rejection remains; no equivalent launch or primary
+replacement is attempted. Original 15 process identities/nine pairs/full checkpoint,
+229 LAN/frozen assets, combined backend identity/243 files and older 242-file query
+payload remain exact. All qualification jobs are terminal.
+
+Reassessment: native realization and this browser implementation are two bounded
+progress packets without closing an original full NS-3 criterion. End window
+fixture expansion. Finish the existing real-browser/observing qualification gate
+when external state permits, then the original both-target budgets and wider
+component prerequisites; do not replace them with more geometry counters. Other
+safe prerequisite work retains its original task owner while that gate stands.
+No original criterion closes or NS-3 count is invented/reset; established workflow/
+authoring/renderer/codegen/delivery counts stay **19/30/9/28/2**. Remote publication
+requires exact local/remote comparison recorded in `build/row-window/remote-checkpoint.json`.
+
 ## Current priority: mobile follow-up verification — 2026-10-07
 
 The user's screenshot is the earlier stacked layout. Current shared Studio code

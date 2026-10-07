@@ -31,6 +31,19 @@ var
   LIndex: Integer;
   LCount: Integer;
 begin
+  { Every admitted table row participates in navigation/ranges, even when its
+    physical cells are outside the realized viewport. Tree disclosure keeps its
+    existing physical order. The caller owns this copied identity array. }
+
+  if FView.Projection = cpTable then
+  begin
+    SetLength(Result, FView.Snapshot.Count);
+    for LIndex := 0 to Length(Result) - 1 do
+    begin
+      Result[LIndex] := FView.Snapshot.ItemAt(LIndex).Ref;
+    end;
+    Exit;
+  end;
   LRows := FHost.querySelectorAll('[data-nyx-item]');
   SetLength(Result, LRows.length);
   LCount := 0;
@@ -94,6 +107,11 @@ var
 begin
   Result := True;
   LRow := FView.Snapshot.IndexOf(AOrder[ARow]);
+
+  if (LRow < 0) or (FRows[LRow] = nil) then
+  begin
+    Exit;
+  end;
   LColumn := FFocusedColumn;
   LCell := TJSHTMLElement(TJSHTMLElement(AEvent.target).closest('[role=gridcell]'));
 
@@ -178,6 +196,19 @@ begin
   LDestination := MoveNyxGridCell(ARow, LColumn, Length(AOrder), FView.Spec.Count, LMove);
   FFocusedColumn := LDestination.Column;
   LRow := FView.Snapshot.IndexOf(AOrder[LDestination.Row]);
+  EnsureRow(LRow);
+
+  if not GetConnected then
+  begin
+    Exit;
+  end;
+  LRow := FView.Snapshot.IndexOf(AOrder[LDestination.Row]);
+
+  if not GetConnected or (LRow < 0) or (LRow >= Length(FRows)) or
+    (FRows[LRow] = nil) or (FRows[LRow].FRef.ID <> AOrder[LDestination.Row].ID) then
+  begin
+    Exit;
+  end;
   LFocus := FRows[LRow].FCells[LDestination.Column];
 
   if LMove in [ngmLeft, ngmRight, ngmRowStart, ngmRowEnd] then
@@ -255,7 +286,8 @@ begin
       LRow := FView.Snapshot.IndexOf(LItem);
       LColumn := StrToIntDef(LElement.getAttribute('data-nyx-column'), -1);
 
-      if (LRow < 0) or (LColumn < 0) or (LColumn >= Length(FRows[LRow].FInputs)) or
+      if (LRow < 0) or (FRows[LRow] = nil) or (LColumn < 0) or
+        (LColumn >= Length(FRows[LRow].FInputs)) or
         (FRows[LRow].FInputs[LColumn] <> LElement) then
       begin
         Exit;
@@ -361,8 +393,8 @@ begin
   begin
     LRow := FView.Snapshot.IndexOf(LOrder[LIndex]);
 
-    if (LElement = FRows[LRow].FElement) or
-      FRows[LRow].FElement.contains(LElement) then
+    if (FRows[LRow] <> nil) and ((LElement = FRows[LRow].FElement) or
+      FRows[LRow].FElement.contains(LElement)) then
     begin
       { For a nested tree, the deepest actual row wins. }
       LTarget := LIndex;
@@ -512,6 +544,19 @@ begin
   end;
   AEvent.preventDefault;
   LRow := FView.Snapshot.IndexOf(LOrder[LTarget]);
+  EnsureRow(LRow);
+
+  if not GetConnected then
+  begin
+    Exit;
+  end;
+  LRow := FView.Snapshot.IndexOf(LOrder[LTarget]);
+
+  if not GetConnected or (LRow < 0) or (LRow >= Length(FRows)) or
+    (FRows[LRow] = nil) or (FRows[LRow].FRef.ID <> LOrder[LTarget].ID) then
+  begin
+    Exit;
+  end;
   LFocus := FRows[LRow].FElement;
 
   if FView.Projection = cpTable then
