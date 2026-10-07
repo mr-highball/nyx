@@ -995,6 +995,20 @@ extension fields or browser editor automation. No original criterion/count close
 
 ## Typed clock-domain authoring gap — 2026-10-07
 
+The independent current-source clock release now prepares with 29 integrity
+checks and verifies all 252 files at `a87af36`. Automatic review rejected its
+hidden backend launch before execution with only "blocked by policy"; no new
+runtime/enrollment/process exists and no equivalent launch is retried. No
+current-source authentication, semantic clock journey or compiler job is claimed.
+The subsequent available authoring correction integrates public clock-form draft
+retention and actual full native Studio (51 checks, leak-free). That has no
+workflow credit/count change: this owner stays 19. Native input/source history
+and browser compilation are not observing HTTP qualification. End this preparation
+sequence; the next workflow boundary still requires an admitted current-source
+backend/actual browser host, exact authenticated semantic changes/builds and full
+Studio observation. Preserve all existing services/projects/LAN assets. See
+[the handoff](../WORK.md#current-return-path-clock-constraint-draft-retention--2026-10-07).
+
 Source preparation now exposes bounded clock context and a closed time-domain
 schema, reusing the existing typed paired transaction authority. Checked local
 semantic/schema fixtures pass 32/16; the public Nyx Inspector/queue passes 25

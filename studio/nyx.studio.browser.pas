@@ -679,6 +679,7 @@ begin
   LState.MenuEditorDraft := FViewState.MenuEditorDraft;
   LState.MenuBarEditorDraft := FViewState.MenuBarEditorDraft;
   LState.QueryEditorDraft := FViewState.QueryEditorDraft;
+  LState.TimeDomainEditorDraft := FViewState.TimeDomainEditorDraft;
   LState.CallbackRemoval := FCallbackRemoval;
 
   if FRootRemoval <> nil then
@@ -701,6 +702,7 @@ begin
   FViewState.MenuEditorDraft.Restore(Result.Pages[0]);
   FViewState.MenuBarEditorDraft.Restore(Result.Pages[0]);
   FViewState.QueryEditorDraft.Restore(Result.Pages[0]);
+  FViewState.TimeDomainEditorDraft.Restore(Result.Pages[0]);
 end;
 
 procedure TNyxStudio.SourceModalDismiss;
@@ -768,13 +770,15 @@ begin
     FViewState.MenuEditorDraft.Clear;
     FViewState.MenuBarEditorDraft.Clear;
     FViewState.QueryEditorDraft.Clear;
+    FViewState.TimeDomainEditorDraft.Clear;
     Exit;
   end;
   LEditor := FShellRenderer.Root.Find('inspector-menu');
   LActive := TJSHTMLElement(document.activeElement);
 
   if (LActive <> nil) and
-    ((LActive is TJSHTMLInputElement) or (LActive is TJSHTMLSelectElement)) then
+    ((LActive is TJSHTMLInputElement) or (LActive is TJSHTMLSelectElement) or
+      (LActive is TJSHTMLTextAreaElement)) then
   begin
     LField := TJSHTMLElement(LActive.closest('[data-node]'));
 
@@ -797,8 +801,19 @@ begin
         end;
       end;
 
+      if LNode = nil then
+      begin
+        LEditor := FShellRenderer.Root.Find('inspector-time-domain');
+
+        if LEditor <> nil then
+        begin
+          LNode := LEditor.Find(LField.getAttribute('data-node'));
+        end;
+      end;
+
       if (LNode <> nil) and ((LNode.Kind = NyxKindName(nkInput)) or
-        (LNode.Kind = NyxKindName(nkSelect)) or (LNode.Kind = NyxKindName(nkSpin))) then
+        (LNode.Kind = NyxKindName(nkSelect)) or (LNode.Kind = NyxKindName(nkSpin)) or
+        (LNode.Kind = NyxKindName(nkMemo))) then
       begin
         { The focused field may not have blurred yet. Copy its live text into
           the disposable chrome only; Save still owns document admission. }
@@ -809,6 +824,7 @@ begin
   FViewState.MenuEditorDraft.Capture('inspector-menu', FShellRenderer.Root);
   FViewState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellRenderer.Root);
   FViewState.QueryEditorDraft.Capture('inspector-collection-query', FShellRenderer.Root);
+  FViewState.TimeDomainEditorDraft.Capture('inspector-time-domain', FShellRenderer.Root);
 end;
 
 procedure TNyxStudio.Refresh(ARetainCanvas, APreserveDraft: Boolean);
@@ -3577,6 +3593,7 @@ begin
   FViewState.MenuEditorDraft.Clear;
   FViewState.MenuBarEditorDraft.Clear;
   FViewState.QueryEditorDraft.Clear;
+  FViewState.TimeDomainEditorDraft.Clear;
 
   if not FRecoveryEnabled then
   begin

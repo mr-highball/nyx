@@ -118,9 +118,34 @@ Studio's ordinary Properties panel consumes this public form for effective
 clock domains, including inherited compound fields. Apply/Restore enters the
 existing independent paired source queue with the exact selection and baseline.
 Successful admission updates design and adjacent typed Pascal as one Undo step.
-Invalid steps and dependent defaults refuse atomically. This packet qualifies
-actual Win32 form/queue input; full observing browser Studio and retention of
-unsubmitted policy drafts across arbitrary shell refreshes remain open.
+Invalid steps and dependent defaults refuse atomically. Ordinary Win32 Studio
+now retains unsubmitted form values through repaint, Properties/Events changes
+and compact viewport allocation. A refused Apply leaves incomplete step/choice
+text available for correction. Corrected Apply updates the retained Pascal pane
+when displayed, and ordinary Undo/Redo restores the exact accepted pairs.
+
+`TNyxTimeDomainEditorDraft` is the public reusable input snapshot used by both
+Studio hosts. Initialize it with `Default(TNyxTimeDomainEditorDraft)`, capture
+the old disposable form before replacement, and restore onto its freshly
+composed replacement before rendering:
+
+```pascal
+// Capture borrows this root only during the call; the draft owns copied text.
+LTimeDraft.Capture('time-policy', LRenderedFormRoot);
+LTimePolicy := NewNyxTimeDomainEditor('time-policy', NyxControl('meeting-time'),
+  LMeetingTime.Node.Contract, LEffectiveClockDomain);
+LTimeDraft.Restore(LTimePolicy.Node);
+```
+
+The exact editor, owner, local/effective baseline and all five field kinds must
+match. A changed context retires the draft before any write. An absent form parks
+it across panel changes; explicit `Clear` retires it on project replacement.
+Copies outlive their original controls and preserve independent Unicode text.
+The snapshot captures the clock fields' admitted values and raw step/choice
+proposals. Opaque/incomplete physical clock/picker buffers, caret/focus continuity
+and browser reload recovery are separate concerns; the draft is ephemeral and
+never enters exported designs or Undo history. Full observing browser execution
+and authenticated current-backend authoring retain their existing gates.
 
 `NyxSetValueDomain(NyxControl('meeting-time'), NyxTimeDomain...)` has a specialized
 typed overload. The MCP persistence boundary advertises a closed `format: time`

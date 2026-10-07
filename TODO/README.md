@@ -43,3 +43,12 @@ workflows are integrated; complete event capabilities and source synchronization
 remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
+
+Latest authoring boundary (2026-10-07): public copied clock-form input now survives
+ordinary shell/panel/compact changes and refusal recovery. Actual full Win32
+Studio passes 51 checks, leak-free; both Studios/browser consumers compile with
+zero owned warnings. No full criterion closes: authoring advances 31→32 once,
+other counts remain 19/13/28/2. The independent current-source backend launch was
+rejected before execution by automatic review with only "blocked by policy".
+Authentication/browser observing and original acceptance requirements remain open.
+See [the handoff](../WORK.md#current-return-path-clock-constraint-draft-retention--2026-10-07).

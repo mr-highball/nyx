@@ -40,6 +40,25 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Clock-form draft retention — 2026-10-07
+
+Original criterion 6 now consumes `TNyxTimeDomainEditorDraft` through both
+controllers' ordinary capture/restore/project lifetimes. Its copied input uses
+exact editor/owner/local-effective context and complete field kinds. Actual full
+Win32 Studio passes 51 checks: parked panel input, compact allocation, invalid
+Apply correction, typed publication and exact paired Undo/Redo; zero leaks.
+Independent snapshots retain supplementary text and refuse wrong-kind partial
+restoration. Both Studios and matching browser controls/worker compile with zero
+owned warnings. No original full criterion closes: authoring no-closure advances
+31→32 once; workflow/renderer/codegen/delivery remain 19/13/28/2. End this bounded
+consumer correction. Authenticated new-backend workflows/observing browser remain
+with the existing workflow owner; its independent launch was rejected before
+execution by automatic review, stating only "blocked by policy". Opaque physical
+clock/picker drafts, caret/focus continuity, reload recovery, full property/event
+breadth and original native/browser parity/application criteria remain open.
+See [public usage](../docs/time-fields.md#reusable-constraint-editor-and-studio)
+and [evidence](../WORK.md#current-return-path-clock-constraint-draft-retention--2026-10-07).
+
 ## Public clock-policy editor — 2026-10-07
 
 Original criterion 6 now consumes `NewNyxTimeDomainEditor`, a public reusable Nyx

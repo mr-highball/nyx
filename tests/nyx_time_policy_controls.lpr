@@ -26,11 +26,12 @@ program nyx_time_policy_controls;
 
 uses
   {$ifdef PAS2JS}JS, Web, nyx.render.browser,{$else}
-  Interfaces, Classes, Forms, Controls, StdCtrls, nyx.render.lcl,{$endif}
+  Interfaces, Classes, Forms, Controls, StdCtrls, nyx.render.lcl,
+  nyx.studio.lcl,{$endif}
   SysUtils, nyx.text, nyx.types, nyx.data, nyx.times.editor, nyx.contract,
   nyx.model, nyx.codec, nyx.generated.time, nyx.studio.projects,
   nyx.studio.session, nyx.studio.sourcejobs, nyx.studio.view,
-  nyx.behavior, nyx.studio.inspector;
+  nyx.behavior, nyx.studio.inspector, nyx.controls, nyx.schema;
 
 type
   {$ifdef PAS2JS}
@@ -109,6 +110,78 @@ begin
 end;
 {$endif}
 
+{ Qualify the reusable value snapshot independently of Studio's controllers.
+  Copies must outlive the source form, preserve incomplete Unicode text, park
+  while absent, and refuse stale owners/baselines or a same-ID wrong-kind field
+  without publishing even the first value. These checks run on both compilers. }
+{$ifndef NYX_CLOCK_DRAFT_BASELINE}
+procedure CheckDraftSnapshot(AContract: TNyxContract; const ADomain: TNyxValueDomain);
+var
+  LDraft: TNyxTimeDomainEditorDraft;
+  LCopy: TNyxTimeDomainEditorDraft;
+  LEditor: INyxCard;
+  LAbsent: TNyxNode;
+  LChoices: TNyxText;
+  LBefore: TNyxText;
+begin
+  LDraft := Default(TNyxTimeDomainEditorDraft);
+  LCopy := Default(TNyxTimeDomainEditorDraft);
+  LAbsent := TNyxNode.Create(nkColumn, 'parked-inspector');
+  LChoices := '23:00' + #10 + TNyxText('Unfinished note: é U0001f680');
+  try
+    LEditor := NewNyxTimeDomainEditor('draft-form', NyxControl('clock-owner'),
+      AContract, ADomain);
+    LEditor.Node.Find(NyxTimeDomainEditorFieldID('draft-form', ntfMilliseconds))
+      .Configure.Value('1.5').Done;
+    LEditor.Node.Find(NyxTimeDomainEditorFieldID('draft-form', ntfChoices))
+      .Configure.Value(LChoices).Done;
+    LDraft.Capture('draft-form', LEditor.Node);
+    LCopy := LDraft;
+    LEditor.Node.Find(NyxTimeDomainEditorFieldID('draft-form', ntfMilliseconds))
+      .Configure.Value('500').Done;
+    LDraft.Capture('draft-form', LEditor.Node);
+    LEditor := nil;
+    LCopy.Capture('draft-form', LAbsent);
+    Check(not LCopy.Restore(LAbsent), 'An absent form parks copied input');
+    LEditor := NewNyxTimeDomainEditor('draft-form', NyxControl('clock-owner'),
+      AContract, ADomain);
+    Check(LCopy.Restore(LEditor.Node), 'A draft outlives its original form');
+    Check((LEditor.Node.Find(NyxTimeDomainEditorFieldID('draft-form', ntfMilliseconds))
+      .Prop('value') = '1.5') and
+      (LEditor.Node.Find(NyxTimeDomainEditorFieldID('draft-form', ntfChoices))
+      .Prop('value') = LChoices), 'Copies preserve independent invalid and supplementary text');
+    Check(LDraft.Restore(LEditor.Node) and
+      (LEditor.Node.Find(NyxTimeDomainEditorFieldID('draft-form', ntfMilliseconds))
+      .Prop('value') = '500'), 'Later capture cannot mutate an earlier snapshot');
+    LEditor := NewNyxTimeDomainEditor('draft-form', NyxControl('another-owner'),
+      AContract, ADomain);
+    Check(not LDraft.Restore(LEditor.Node), 'Changed owner retires a copied draft');
+    LEditor := NewNyxTimeDomainEditor('draft-form', NyxControl('clock-owner'),
+      AContract, ADomain);
+    Check(not LDraft.Restore(LEditor.Node), 'Retired owner input cannot reappear');
+    LDraft := LCopy;
+    LEditor := NewNyxTimeDomainEditor('draft-form', NyxControl('clock-owner'),
+      AContract, NyxTimeDomain.AnyStep.Definition);
+    Check(not LDraft.Restore(LEditor.Node), 'Changed effective domain retires inherited draft input');
+    LDraft := LCopy;
+    LEditor := NewNyxTimeDomainEditor('draft-form', NyxControl('clock-owner'),
+      AContract, ADomain);
+    LBefore := LEditor.Node.Find(NyxTimeDomainEditorFieldID('draft-form', ntfMilliseconds))
+      .Prop('value');
+    LEditor.Node.Remove(LEditor.Node.Find(NyxTimeDomainEditorFieldID('draft-form', ntfChoices)));
+    LEditor.Add(NewNyxInput(NyxTimeDomainEditorFieldID('draft-form', ntfChoices)));
+    Check(not LDraft.Restore(LEditor.Node) and
+      (LEditor.Node.Find(NyxTimeDomainEditorFieldID('draft-form', ntfMilliseconds))
+      .Prop('value') = LBefore), 'Wrong-kind field refuses before any partial restoration');
+    LCopy.Clear;
+    Check(not LCopy.Restore(LEditor.Node), 'Explicit project retirement clears all draft input');
+  finally
+    LEditor := nil;
+    LAbsent.Free;
+  end;
+end;
+{$endif}
+
 constructor TClockReview.Create(const ASource: TNyxText);
 var
   LDocument: TNyxDocument;
@@ -121,6 +194,9 @@ begin
     LDocument.Free;
   end;
   FSession.Select('start-time');
+  {$ifndef NYX_CLOCK_DRAFT_BASELINE}
+  CheckDraftSnapshot(FSession.Selected.Contract, NyxNodeValueDomain(FSession.Selected));
+  {$endif}
   FCommands := TNyxSourceCommands.Create(FSession, {$ifdef PAS2JS}@{$endif}Changed);
   FRenderer := TRenderer.Create;
   FRenderer.OnEvent := {$ifdef PAS2JS}@{$endif}Event;
@@ -322,6 +398,192 @@ begin
   end;
 end;
 
+{$ifndef PAS2JS}
+{ Exercise the complete ordinary controller, rather than a form-shaped shell.
+  These are local owned projects. Actual controls must retain unfinished input
+  through repaint, panel/viewport changes and a refused Apply; only the paired
+  queue may publish a policy, with one exact ordinary Undo/Redo checkpoint. }
+procedure RunNativeStudio(const ASource: TNyxText);
+var
+  LStudio: TNyxNativeStudio;
+  LForm: TForm;
+  LDocument: TNyxDocument;
+  LBefore: TNyxText;
+  LAfter: TNyxText;
+  LCode: TControl;
+  LDomain: TNyxValueDomain;
+  LChoices: TNyxText;
+
+  procedure Ready;
+  var
+    LStarted: QWord;
+  begin
+    LStarted := GetTickCount64;
+    repeat
+      Application.ProcessMessages;
+      CheckSynchronize;
+
+      if GetTickCount64 - LStarted > 30000 then
+      begin
+        raise Exception.Create('Ordinary clock Studio did not finish: ' + LStudio.Status);
+      end;
+      Sleep(1);
+    until not LStudio.PresentationPending and not LStudio.SourceCommands.Busy;
+  end;
+
+  function Input(AField: TNyxTimeDomainEditorField): TControl;
+  begin
+    Result := LStudio.ShellView.InputFor(
+      NyxTimeDomainEditorFieldID('inspector-time-domain', AField));
+
+    if Result = nil then
+    begin
+      raise Exception.Create('The ordinary clock Inspector field is not mounted');
+    end;
+  end;
+
+  procedure Change(AField: TNyxTimeDomainEditorField; const AValue: TNyxText);
+  var
+    LInput: TControl;
+  begin
+    LInput := Input(AField);
+
+    if LInput is TComboBox then
+    begin
+      TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(AValue);
+      TComboBox(LInput).OnChange(LInput);
+    end
+    else
+    begin
+      TCustomEdit(LInput).Text := AValue;
+
+      if AField in [ntfMinimum, ntfMaximum] then
+      begin
+        TEditAccess(LInput).OnEditingDone(LInput);
+      end;
+    end;
+  end;
+
+  procedure Button(const AID: TNyxText);
+  begin
+    TControlAccess(LStudio.ShellView.ControlFor(AID)).Click;
+    Ready;
+  end;
+
+  procedure DraftRetained(const AReason: TNyxText);
+  var
+    LActual: TNyxDataValue;
+  begin
+    LActual := NyxObject([
+      NyxField('minimum', NyxData(TNyxText(TCustomEdit(Input(ntfMinimum)).Text))),
+      NyxField('maximum', NyxData(TNyxText(TCustomEdit(Input(ntfMaximum)).Text))),
+      NyxField('stepMode', NyxData(TNyxText(TComboBox(Input(ntfStepMode)).Text))),
+      NyxField('milliseconds', NyxData(TNyxText(TCustomEdit(Input(ntfMilliseconds)).Text))),
+      NyxField('choices', NyxData(TNyxText(TCustomEdit(Input(ntfChoices)).Text)))]);
+    Check((TCustomEdit(Input(ntfMinimum)).Text = '23:00:00.000') and
+      (TCustomEdit(Input(ntfMaximum)).Text = '01:00:00.000') and
+      (TComboBox(Input(ntfStepMode)).Text = NyxTimeDomainEditorStepName(ntsMilliseconds)) and
+      (TCustomEdit(Input(ntfMilliseconds)).Text = '1.5') and
+      (TNyxText(TCustomEdit(Input(ntfChoices)).Text) = LChoices),
+      AReason + ' / actual ' + LActual.ToJSON);
+    Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore,
+      'Unsubmitted constraints retain the exact accepted pair');
+  end;
+
+begin
+  LForm := TForm.CreateNew(nil);
+  LStudio := nil;
+  try
+    LForm.SetBounds(20, 20, 1280, 940);
+    LForm.Show;
+    LStudio := TNyxNativeStudio.Create(LForm,
+      IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2))) + 'clock-studio-projects');
+    LDocument := BuildNyxDocument;
+    try
+      LStudio.LoadProject(NyxProjectPair(TNyxCodec.Encode(LDocument), ASource));
+    finally
+      LDocument.Free;
+    end;
+    LStudio.Session.Select('start-time');
+    LStudio.Run;
+    Ready;
+    Check(LStudio.ShellView.Root.Find('inspector-time-domain') <> nil,
+      'Full ordinary Studio mounts the public clock-constraint editor');
+    LBefore := EncodeNyxProject(LStudio.Session.ProjectSnapshot);
+    LChoices := '23:00:00.000' + #10 + '00:30:00.000' + #10 + '(empty)';
+    Change(ntfMinimum, '23:00:00.000');
+    Change(ntfMaximum, '01:00:00.000');
+    Change(ntfStepMode, NyxTimeDomainEditorStepName(ntsMilliseconds));
+    Change(ntfMilliseconds, '1.5');
+    Change(ntfChoices, LChoices);
+    { Native memo APIs expose CRLF. Compare the exact observed physical draft
+      across repaint, rather than assuming the LF source notation survives the
+      widget's initial assignment. The portable snapshot check keeps exact LF. }
+    LChoices := TNyxText(TCustomEdit(Input(ntfChoices)).Text);
+    Button('action-code');
+    LCode := LStudio.CodeView.InputFor('studio-code');
+    DraftRetained('Opening Pascal retains all five unfinished clock fields');
+    Button(NyxInspectorEventsID);
+    Button(NyxInspectorPropertiesID);
+    DraftRetained('Events/Properties navigation retains the parked clock draft');
+    LForm.ClientWidth := 390;
+    Ready;
+    Button('action-panel-inspector');
+    DraftRetained('Compact viewport allocation retains exact clock proposals');
+    Button(NyxTimeDomainEditorFieldID('inspector-time-domain', ntfApply));
+    Check(not LStudio.SourceCommands.Busy, 'Invalid Apply does not enqueue a policy');
+    DraftRetained('Refused Apply leaves invalid text available for correction');
+    Change(ntfMilliseconds, '500');
+    Button(NyxTimeDomainEditorFieldID('inspector-time-domain', ntfApply));
+    Check((LStudio.SourceCommands.State = nssApplied) and
+      LStudio.Session.Selected.Contract.FindValue(LDomain) and LDomain.ClockTime and
+      (LDomain.TimeStepMilliseconds = 500) and (LDomain.ToData.Field('choices').Count = 3),
+      'Ordinary controller admits the corrected complete typed clock policy');
+    { Compact Inspector parks the center/source workspace. Check the published
+      code when that ordinary pane is visible again, retaining its exact control
+      rather than treating a parked widget's old paint as an active source view. }
+    Button('action-panel-design');
+    Check((LStudio.CodeView.InputFor('studio-code') = LCode) and
+      (Pos('.StepMilliseconds(500)', TMemo(LCode).Text) > 0),
+      'The retained Pascal editor reflects the paired typed policy');
+    Button('action-panel-inspector');
+    LAfter := EncodeNyxProject(LStudio.Session.ProjectSnapshot);
+    Button('action-undo');
+    Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore,
+      'Ordinary Undo restores the exact pre-draft accepted pair');
+    Button('action-redo');
+    Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LAfter,
+      'Ordinary Redo restores the exact corrected policy pair');
+    Change(ntfMilliseconds, '2.5');
+    LStudio.Session.Select('earliest-time');
+    LStudio.RequestRefresh;
+    Ready;
+    Check(TCustomEdit(Input(ntfMinimum)).Text = '08:30',
+      'Changed selection never receives another owner clock draft');
+    LStudio.Session.Select('start-time');
+    LStudio.RequestRefresh;
+    Ready;
+    Check(TCustomEdit(Input(ntfMilliseconds)).Text = '500',
+      'Retired owner draft does not replay when selection returns');
+    Change(ntfMilliseconds, '3.5');
+    LDocument := BuildNyxDocument;
+    try
+      LStudio.LoadProject(NyxProjectPair(TNyxCodec.Encode(LDocument), ASource));
+    finally
+      LDocument.Free;
+    end;
+    LStudio.Session.Select('start-time');
+    Ready;
+    Check(TCustomEdit(Input(ntfMilliseconds)).Text = '1500',
+      'Project replacement retires a same-named owner draft');
+  finally
+    LStudio.Free;
+    LForm.Free;
+  end;
+  WriteLn('PASS ', GChecks, ' clock-policy checks including full ordinary native Studio');
+end;
+{$endif}
+
 {$ifdef PAS2JS}
 procedure Tick;
 begin
@@ -418,6 +680,8 @@ begin
       end;
     until LDone;
     WriteLn('PASS ', GChecks, ' actual native clock Inspector/queue checks');
+    FreeAndNil(GReview);
+    RunNativeStudio(LSource);
   except
     on LException: Exception do
     begin

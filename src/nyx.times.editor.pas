@@ -46,6 +46,30 @@ type
     Inherit: Boolean;
     Domain: TNyxValueDomain;
   end;
+  { Ephemeral input for one mounted clock form. All five values are copied;
+    partial step/choice text is deliberately not parsed until Apply. Copies
+    retain no renderer, node, contract or interface and cannot mutate each other.
+    Exact editor/owner/local-and-effective baseline protects selection changes
+    and inherited-policy publication. This never enters design/source history. }
+  TNyxTimeDomainEditorDraft = record
+  private
+    FEditorID: TNyxText;
+    FOwner: TNyxText;
+    FBaseline: TNyxText;
+    FValues: array[ntfMinimum..ntfChoices] of TNyxText;
+  public
+    { Absent forms leave the snapshot parked across Properties/Events switches.
+      A present valid form replaces it atomically; malformed metadata/field
+      kinds retire it. Capture reads disposable form values, never the owner. }
+    procedure Capture(const AEditorID: TNyxText; AShellRoot: TNyxNode);
+    { Restore before rendering. A changed owner/baseline or complete field
+      shape retires the snapshot without a partial write. An absent form keeps
+      its parked input. Bounds retain the exact form's accepted clock text;
+      adapters' opaque/incomplete physical picker buffers are not captured. }
+    function Restore(AShellRoot: TNyxNode): Boolean;
+    { Project replacement explicitly retires even identical owner/baseline text. }
+    procedure Clear;
+  end;
 
 { Canonical descendant identity for a public form field. The caller supplies
   the independently owned editor's identity; no control lifetime is retained. }
@@ -82,6 +106,8 @@ const
     ('minimum', 'maximum', 'step-mode', 'milliseconds', 'choices', 'apply', 'inherit');
   CStepNames: array[TNyxTimeDomainEditorStep] of TNyxText =
     ('No step declaration', 'Any millisecond', 'Fixed milliseconds');
+  CInputKinds: array[ntfMinimum..ntfChoices] of TNyxKind =
+    (nkTime, nkTime, nkSelect, nkInput, nkMemo);
 
 function NyxTimeDomainEditorFieldID(const AEditorID: TNyxText;
   AField: TNyxTimeDomainEditorField): TNyxText;
@@ -92,6 +118,108 @@ end;
 function NyxTimeDomainEditorStepName(AStep: TNyxTimeDomainEditorStep): TNyxText;
 begin
   Result := CStepNames[AStep];
+end;
+
+procedure TNyxTimeDomainEditorDraft.Clear;
+var
+  LField: TNyxTimeDomainEditorField;
+begin
+  FEditorID := '';
+  FOwner := '';
+  FBaseline := '';
+  for LField := ntfMinimum to ntfChoices do
+  begin
+    FValues[LField] := '';
+  end;
+end;
+
+procedure TNyxTimeDomainEditorDraft.Capture(const AEditorID: TNyxText;
+  AShellRoot: TNyxNode);
+var
+  LEditor: TNyxNode;
+  LInput: TNyxNode;
+  LField: TNyxTimeDomainEditorField;
+  LCandidate: TNyxTimeDomainEditorDraft;
+begin
+  LEditor := nil;
+
+  if AShellRoot <> nil then
+  begin
+    LEditor := AShellRoot.Find(AEditorID);
+  end;
+
+  if LEditor = nil then
+  begin
+    Exit;
+  end;
+
+  if (AEditorID = '') or (LEditor.Prop(COwnerKey) = '') or
+    (LEditor.Prop(CBaselineKey) = '') then
+  begin
+    Clear;
+    Exit;
+  end;
+  LCandidate := Default(TNyxTimeDomainEditorDraft);
+  LCandidate.FEditorID := AEditorID;
+  LCandidate.FOwner := LEditor.Prop(COwnerKey);
+  LCandidate.FBaseline := LEditor.Prop(CBaselineKey);
+  for LField := ntfMinimum to ntfChoices do
+  begin
+    LInput := LEditor.Find(NyxTimeDomainEditorFieldID(AEditorID, LField));
+
+    if (LInput = nil) or (LInput.Kind <> NyxKindName(CInputKinds[LField])) then
+    begin
+      Clear;
+      Exit;
+    end;
+    LCandidate.FValues[LField] := LInput.Prop('value');
+  end;
+  Self := LCandidate;
+end;
+
+function TNyxTimeDomainEditorDraft.Restore(AShellRoot: TNyxNode): Boolean;
+var
+  LEditor: TNyxNode;
+  LInput: TNyxNode;
+  LField: TNyxTimeDomainEditorField;
+begin
+  Result := False;
+
+  if (FEditorID = '') or (AShellRoot = nil) then
+  begin
+    Exit;
+  end;
+  LEditor := AShellRoot.Find(FEditorID);
+
+  if LEditor = nil then
+  begin
+    Exit;
+  end;
+
+  if (LEditor.Prop(COwnerKey) <> FOwner) or
+    (LEditor.Prop(CBaselineKey) <> FBaseline) then
+  begin
+    Clear;
+    Exit;
+  end;
+  { Validate every target before publishing any text. A same-ID replacement
+    with another kind cannot receive a clock-form proposal accidentally. }
+  for LField := ntfMinimum to ntfChoices do
+  begin
+    LInput := LEditor.Find(NyxTimeDomainEditorFieldID(FEditorID, LField));
+
+    if (LInput = nil) or (LInput.Kind <> NyxKindName(CInputKinds[LField])) then
+    begin
+      Clear;
+      Exit;
+    end;
+  end;
+  for LField := ntfMinimum to ntfChoices do
+  begin
+    LEditor.Find(NyxTimeDomainEditorFieldID(FEditorID, LField))
+      .Configure.Value(FValues[LField]).Done;
+  end;
+  Result := True;
 end;
 
 function HasMember(const AData: TNyxDataValue; const AName: TNyxText): Boolean;

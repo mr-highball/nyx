@@ -1277,6 +1277,7 @@ try {
       "-Fu$nyxTimePolicySource", "-Fu$nyxLazarus/lcl/units/$nyxTimePolicyPlatform",
       "-Fu$nyxLazarus/lcl/units/$nyxTimePolicyPlatform/$Widgetset",
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxTimePolicyPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxTimePolicyPlatform",
       "-FU$nyxTimePolicyLcl", "-FE$nyxTimePolicyLcl", 'tests/nyx_time_policy_controls.lpr'))
     & (Join-Path $nyxTimePolicyLcl 'nyx_time_policy_controls.exe') $nyxTimePolicySeed $nyxTimePolicyResult
 

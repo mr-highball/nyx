@@ -3,6 +3,22 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current clock-form draft boundary (2026-10-07): a public typed copied snapshot
+now retains admitted bounds and raw step/choice proposals through ordinary
+browser/native Studio repaint. Exact owner/local-effective baseline and complete
+field kinds guard replay. Actual full Win32 Studio passes 51 checks, including
+invalid Apply correction, panel/compact changes and exact paired source/history;
+zero leaks. Both Studios and browser controls/worker compile with zero owned
+warnings. No original full criterion closes: authoring no-closure advances 31→32
+once; workflow/renderer/codegen/delivery stay 19/13/28/2. End this draft/consumer
+correction. The independently frozen 252-file clock backend verifies, but automatic
+review rejected its launch before execution with only "blocked by policy".
+Do not retry an equivalent launch or infer current authentication/delivery from
+preparation. Browser execution, opaque picker buffers/focus/recovery, full
+authoring/parity and original prerequisites retain their gates. All existing
+services/pairs/LAN bytes stay exact. See
+[the packet](WORK.md#current-return-path-clock-constraint-draft-retention--2026-10-07).
+
 Current clock authoring preparation (2026-10-07): Studio's Properties panel now
 consumes a public specialized Nyx clock-policy compound through its paired queue.
 One-sided/overnight bounds, exact choices/precision, absent/Any/fixed steps and

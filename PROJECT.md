@@ -66,14 +66,24 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Studio now consumes a public copied clock-form draft on both hosts. Actual full
+Win32 Studio passes 51 checks, including retained incomplete input, panel/compact
+changes, refusal correction, paired Apply/Undo/Redo and owner/project retirement,
+leak-free. Browser consumers/Studio/worker and native Studio compile with zero
+owned warnings. Current-source authenticated clock workflows remain unverified:
+the independent backend launch was rejected before execution by automatic review
+with only "blocked by policy". No existing service/project/LAN payload changes.
+See [the draft packet](WORK.md#current-return-path-clock-constraint-draft-retention--2026-10-07).
+
 Studio's current source composes a public specialized Nyx clock-constraint form
 with typed domain edits and paired queue/history. Local semantic/schema checks
 pass 32/16, actual Win32 Inspector/queue passes 25 and exact compiled emitted-source
 reconstruction passes five, leak-free. Calendar/standalone Studio regressions
 pass 82/22; browser consumers/worker/replay and both Studios compile with zero
 owned warnings. Authenticated current-backend clock authoring, executed browser/
-observing Studio, refresh retention of unsubmitted policy drafts and rollout
-remain open. The frozen LAN service and all protected projects stay unchanged.
+observing Studio, opaque physical picker-buffer/reload recovery and rollout
+remain open. The newer full native draft journey is described above. The frozen
+LAN service and all protected projects stay unchanged.
 See [the authoring packet](WORK.md#current-return-path-public-clock-constraints-in-studio--2026-10-07).
 
 Typed clock values/domains and managed source integration now preserve exact

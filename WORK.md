@@ -7,7 +7,134 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-## Latest user priority: mobile allocation recheck — 2026-10-07
+## Current return path: clock constraint draft retention — 2026-10-07
+
+The preceding mobile response was **no progress** toward new acceptance: delivered
+allocation and exact LAN bytes were rechecked. This turn takes the next available
+action. The independent authenticated-clock release prepares and verifies, but
+automatic approval review rejects its new hidden backend launch before execution
+with only **"blocked by policy"**. No process/runtime/enrollment exists and no
+equivalent launch or protected service replacement is retried. Switch to the
+concrete original authoring criterion 6 draft gap declared below.
+
+The public `TNyxTimeDomainEditorDraft` now owns copied values for all five clock
+form fields. Bounds retain their admitted exact precision; partial step/choice
+text waits for Apply. Copies retain no tree/contract/renderer/interfaces and stay
+independent. Absent forms park input; exact editor/owner/local-effective baseline
+and complete field kinds gate atomic restoration. Changed context or project
+replacement retires it. Both Studio controllers capture/restore it through their
+ordinary shell paths. The browser also copies a focused input/memo proposal before
+blur when needed. No authored meaning, persistence version or history is changed
+by draft capture. Opaque physical clock/picker buffers, caret/focus continuity and
+reload recovery are not claimed by this value snapshot.
+
+Evidence under ignored `build/time-policy-workflow/`:
+
+- `draft-old-release/run.log`: the corrected same full native Studio check against
+  frozen pre-change `a87af36` fails after 26. Opening Pascal resets minimum/maximum
+  to `22:00`/`02:00`, step to `1500` and choices to empty. Zero leaks. The original
+  earlier failure is retained at `draft-baseline/run.log`.
+- `draft-separated/visible-code-run.log`: **51** checked actual Win32 assertions,
+  zero leaks. This includes nine public snapshot ownership/Unicode/stale/shape
+  checks, the original 25 form/queue checks and 17 full ordinary Studio checks.
+  Pascal opening, Events/Properties parking, compact allocation, invalid Apply
+  correction, typed publication and exact ordinary Undo/Redo all pass. Selection
+  and same-named project replacement cannot replay a retired draft. The retained
+  Pascal control updates when its pane is displayed again.
+- `maintained-final.log`: maintained `tools/build.ps1 -Target time-policy` ends
+  successfully: **16** offline schema, **32** local semantic, **51** native
+  form/full-Studio checks and **five** exact compiled emitted-pair reconstruction
+  checks, all leak-free. Its earlier 34 is included in 51, not added. Matching
+  browser controls/module worker/replay compile and stage; they are not executed.
+- `draft-browser/*-compile.log`, `native-studio/compile.log`: current full browser
+  and native Studios compile with zero owned warnings. Each browser compilation
+  retains the seven installed RTL warnings. No dependency source is edited.
+- `release-prepare.log`, `release-verify-final.log`: new independently frozen
+  `a87af36` package passes **29** integrity checks and verifies all **252** files.
+  This package precedes the draft correction; it is retained preparation, not a
+  deployed or authenticated current Studio. No listener was launched.
+- `preservation-final.log`: all **15** process identities, **nine** complete
+  pairs/navigation/history, full **147,033-byte** checkpoint, **229** sealed LAN
+  files and both intended bindings remain exact. Fresh direct MCP authenticates
+  unchanged primary revision 2/selection/home with no draft or Undo/Redo.
+
+Retained fixture corrections: native memo assignment initially exposes CRLF,
+so the repaint assertion compares the exact text observed before repaint; the
+portable snapshot still checks exact LF and supplementary text. One manual run
+put exported source in the compiler unit directory and subsequently compiled
+that changed export against the original expected seed. Those failures remain in
+`draft-qualified/`; separated unit/result roots correct the preparation. Compact
+Inspector parks the source pane, so the visible-source assertion deliberately
+returns to Design before inspecting the retained Pascal control. No accepted pair
+or ordinary history assertion is weakened. Maintained orchestration already uses
+separate roots and now includes the full native Studio's installed packager units.
+
+This source/actual-consumer correction is progress; no original full criterion or
+prerequisite closes. Authoring no-closure advances **31→32** once; workflow,
+renderer, codegen and delivery stay **19/13/28/2**. End this draft/consumer packet.
+Do not expand local clock/foundation fixtures or repeat the delivered mobile
+recheck. Current-source authenticated semantic clock changes/builds and full
+observing browser Studio remain the existing workflow gate; executing the staged
+browser foundation/consumer remains its original prerequisite. An admitted host
+or external launch-state change is needed for that path. Other available original
+product prerequisites can continue without bypassing it. LAN rollout, full native/
+browser authoring, source ergonomics, events/component breadth, accessibility,
+visual/performance and application/delivery requirements remain open. Goal active.
+Authorized branch/remote checkpoint evidence belongs in ignored
+`build/time-policy-workflow/remote-checkpoint.json` after commit/push.
+
+## Retained priority: mobile allocation recheck — 2026-10-07
+
+The latest goal turn is **no progress** toward a new acceptance boundary: it
+rechecked the already delivered mobile allocation and exact LAN bytes, with no
+product change. Direct MCP revision 2 and all fifteen identities/nine complete
+pairs remain exact (`build/time-policy/mobile-followup-verified.log`). End that
+recheck and resume the existing clock workflow owner below.
+
+## Retained batch intent: authenticated clock-policy workflow — 2026-10-07
+
+Owner: original NS-4 semantic workflow criteria 1/2/4/5, following the public
+clock authoring preparation at `a87af36`. Deliver an independently authenticated
+current-source backend and a maintained Pascal semantic companion: small clock
+queries, one grouped composition, typed policy edits/refusals, reusable-part
+inheritance, exact paired history and four ordinary browser/LCL application/view
+builds whose HTTP compiler inputs equal the accepted bounded source. Use one new
+ordinary workspace, separate frozen release/runtime/enrollment and loopback
+ports. Preserve all existing services, user pairs, profiles and LAN payloads.
+
+Acceptance requires actual authenticated HTTP tool discovery/admission and
+terminal compiler receipts; local session fixtures and successful source
+admission are insufficient. Full observing browser execution, hardware/input,
+native Studio journeys and original parity/authoring criteria remain open. The
+known browser/primary replacement rejection is not retried. Stop this packet
+after the authenticated source/history/build boundary, or switch to a concrete
+product correction if the real workflow exposes a gap. Do not add more local
+clock/picker tests or count this preparation as complete product acceptance.
+Workflow/authoring/renderer/codegen/delivery counts remain 19/31/13/28/2 until
+evidence-backed reassessment. Evidence belongs under ignored
+`build/time-policy-workflow/`; private addresses/configuration remain uncommitted.
+
+## Retained mobile recheck and clock handoff — 2026-10-07
+
+The new frozen clock workflow package prepared successfully: 29 integrity checks,
+zero leaks, source `a87af36`. Automatic approval review rejected its independent
+hidden backend launch **before execution**, stating only **"blocked by policy"**.
+No runtime/enrollment directory or process was created. Do not retry an equivalent
+launch, replace another service, or claim current-source authentication/builds.
+Retain this package for the existing workflow gate without another fixture loop.
+
+The available next concrete product gap is original authoring criterion 6:
+unsubmitted clock-constraint input is absent from both controllers' draft
+capture/restore paths. A shell repaint currently resets bounds, step and choices,
+including invalid input that the user needs to correct. Switch to a public typed,
+independently owned clock-form draft snapshot, guarded by exact owner and
+local/effective contract baseline. Integrate ordinary browser/native Studio
+refresh and project lifetimes; qualify actual full native Studio repaint,
+panel/viewport switching, refusal recovery and exact paired Apply/Undo. Compile
+matching browser consumers/Studio; browser execution remains the existing gate.
+First retain the pre-change failure. Stop after this draft/consumer correction;
+do not expand foundation fixtures or substitute it for authenticated delivery.
+All prior counts and full acceptance criteria remain until final reassessment.
 
 The supplied capture shows the earlier stacked toolbar/detail layout. Read the
 existing mobile delivery evidence before changing code: the current shared builder

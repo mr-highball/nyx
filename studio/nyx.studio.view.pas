@@ -36,6 +36,7 @@ uses
   nyx.menu.editor,
   nyx.menu.bar.editor,
   nyx.collections.query.editor,
+  nyx.times.editor,
   nyx.contract,
   nyx.schema,
   nyx.types,
@@ -131,6 +132,9 @@ type
     MenuBarEditorDraft: TNyxMenuBarEditorDraft;
     { Independent query input, guarded by the complete schema/binding baseline. }
     QueryEditorDraft: TNyxQueryEditorDraft;
+    { Unsubmitted clock policy belongs to this project's editor presentation.
+      Exact owner/local-effective context prevents stale inherited replay. }
+    TimeDomainEditorDraft: TNyxTimeDomainEditorDraft;
     CallbackRemoval: TNyxCallbackRemoval;
     { Copied confirmation metadata, not an interface or borrowed model. }
     RootRemoval: TNyxDataValue;
