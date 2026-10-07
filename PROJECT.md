@@ -66,6 +66,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Native asynchronous/threaded callbacks now use bounded reusable pools with typed
+options, copied load monitoring and per-registration overload diagnostics. Actual
+pool checks pass 118; scheduler/interaction/control/ordinary Studio source checks
+pass 55/234/45/45, leak-free. Browser consumers/Studio compile with zero owned
+warnings. Current browser execution, sustained both-target budgets and full
+native visual quality remain open. See
+[the worker packet](WORK.md#current-return-path-bounded-native-callback-workers--2026-10-07).
+
 Ordinary browser tables now contain measured DOM windows, logical navigation,
 pinned editors and independent detached drafts. Shared geometry passes 793 checked
 native assertions; native controls remain 29/27/75/20, leak-free. Exact MCP-source

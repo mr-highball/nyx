@@ -7,6 +7,72 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: bounded native callback workers — 2026-10-07
+
+Previous turn is progress: browser row-window implementation and qualification
+are committed at `1bcd806`, with publication failure recorded at `88bb6c2`.
+Two GitHub pushes returned Internal Server Error. End collection-window fixture
+expansion after its two partial packets; do not retry the rejected browser launch
+or primary replacement. The full component/parity/performance requirements stay.
+
+Follow the existing NS-3 extension/performance criteria 2/3 production scheduler
+gap, also recorded by the event owner: native async/threaded submissions currently
+create one thread per callback. Deliver a reusable bounded native worker pool,
+typed fluent options and queryable load, preserving the existing scheduler/event
+contract and independent worker lifetime. Require actual thread reuse/concurrency,
+queue saturation/refusal, cancellation/capacity recovery, callback failure and
+nonblocking shutdown checks plus existing native scheduler/interaction consumers.
+Compile affected browser consumers and Studio; their event-loop semantics remain
+unchanged and compilation does not qualify execution. No original task closes
+without its wider original criteria/prerequisites. Stop after this integrated API
+and available qualification, or on stale work, UI deadlock or silent fallback.
+Preserve protected services/pairs/frozen payload and record publication separately.
+
+The built-in native scheduler now starts a per-owner reusable pool lazily. Typed
+copied options default to four workers/1024 pending entries with explicit bounded
+admission; optional monitoring returns copied counters. FIFO dequeue, independent
+queues, cancellation/capacity recovery and nonblocking shutdown preserve worker
+leases without retaining the scheduler/thread objects. Direct saturation raises
+its typed exception; ordinary event dispatch records a failed execution for each
+refused registration and continues independent siblings, without UI fallback.
+Browser async remains its event loop and Threaded still refuses.
+
+Actual checked Win32 pool qualification passes **118**, including exact Unicode
+failure ownership, two-worker reuse, a separate one-worker FIFO pool, queue
+saturation, cancelled capacity recovery, per-registration overload diagnostics,
+running release and retained OS termination handles. All **403** allocations are
+freed. Existing scheduler/interaction/actual-control/ordinary native Studio source
+consumers pass **55/234/45/45**, each leak-free. The maintained `scheduler-pool`
+build target stages affected browser consumers, full Studio and worker; current
+browser compilation has zero owned warnings. Installed RTL warnings remain.
+
+The ordinary source test initially assumed its duplicate operation label stayed
+visible regardless of pane width. An isolated pre-change `88bb6c2` consumer
+reproduced the failure: pane width **560**, duplicate hidden by the existing
+Below(640) directive. The test now requires the exact visible operation in the
+compact footer, with viewport containment, and retains the wide-pane check.
+Its Win32 capture uses measured window bounds for nonclient pixels. Failures
+remain in `maintained-build.log`/`baseline-run.log`; current passing evidence is
+`qualified-build.log`, `final-pool-run.log`, `final-studio-run.log` and
+`final-browser-build.log` under ignored `build/scheduler-pool/`. The clean owned
+baseline checkout is removed after qualification; its logs remain.
+
+Fresh authenticated bounded Pascal MCP context remains revision 2/home, with no
+pending draft. No active design is edited. Original fifteen process identities,
+nine complete pairs/full checkpoint, 229 LAN assets, independent combined backend
+identity/243-file package and older query 242-file package remain exact. Browser
+launch/primary replacement stay behind their existing rejection; no equivalent
+action is retried. Qualification jobs finish before handoff.
+
+This advances the existing production worker prerequisite, not full both-target
+frame/resident-memory budgets, all native widgetsets or broader component/parity
+acceptance. No original criterion closes; known workflow/authoring/renderer/
+codegen/delivery counters remain **19/30/9/28/2**, and no historical NS-3 count is
+invented/reset. End worker fixture expansion. Return to the original renderer/
+parity prerequisite, including native form-content overlaps visible in current
+captures, while keeping real-browser window qualification and full budgets open.
+Remote/local comparison belongs in `build/scheduler-pool/remote-checkpoint.json`.
+
 ## Current return path: browser table row windowing — 2026-10-07
 
 Previous turn made authoritative progress at pushed `34c75f7`: ordinary native

@@ -37,6 +37,19 @@ Pending assessment. Studio consumes this contract through NS-4 authoring.
 Return path: NS-4_studio-authoring_01 must consume the accepted contract in tabbed
 Properties / Events UI, add-handler source navigation and confirmed removal.
 
+## Bounded native callback workers — 2026-10-07
+
+The existing NS-3 performance owner integrates per-scheduler worker reuse, typed
+limits, copied load, FIFO pending work and independent lifetime. Direct capacity
+refusals become failed per-registration diagnostics in ordinary event dispatch,
+continuing independent UI siblings. Actual native pool checks pass 118; accepted
+scheduler/interaction/control and ordinary Studio consumers pass 55/234/45/45,
+leak-free. Browser async/threading semantics remain, and affected consumers compile.
+Current browser execution, complete event/property scope, sustained budgets and
+the original remaining criteria are unchanged. No event criterion/count closes or
+resets; stop worker fixtures and follow wider original consumers/prerequisites.
+See [the performance packet](../WORK.md#current-return-path-bounded-native-callback-workers--2026-10-07).
+
 ## Scheduler/runtime delivery — 2026-10-03
 
 Scheduler criterion 2 is accepted for the implemented Windows FPC/LCL and pas2js

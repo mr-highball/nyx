@@ -229,8 +229,51 @@ Shutdown cancels outstanding work without blocking the UI on running workers.
 The first UI submission initializes older FPC threading before ForceQueue so the
 deferred contract holds even in a previously single-threaded host.
 
-The native backend currently creates one worker per async submission. Bounded
-worker pooling and performance qualification remain production work.
+Native asynchronous/threaded work now shares a lazily started, bounded pool per
+scheduler. Configure it with copied Pascal values, independently of the document:
+
+```pascal
+LScheduler := NewNyxScheduler(
+  TNyxSchedulerOptions.Defaults.Workers(4).PendingCapacity(1024));
+LEvents := NewNyxEvents(LScheduler);
+```
+
+Defaults use four workers and 1024 pending slots. `Workers` accepts 1..64;
+`PendingCapacity` accepts 1..65536. Invalid values and incomplete zeroed options
+refuse construction. Queued work dequeues in FIFO order; concurrent completion
+remains unspecified. Reused threads require callbacks to clean their own
+thread-local state. Workers and pending queues belong to each scheduler; there
+is no global pool or thread object retained by the work queue.
+
+A full native queue raises `ENyxScheduleCapacity` for direct submissions, without
+adopting/running the refused job. Cancellation reclaims pending capacity before
+the next admission. Keep an explicit `INyxWork` lease while handling submission
+exceptions; the caller retains refused work. The event router converts that specific refusal into an
+independent failed execution/`LastExecution` diagnostic and continues siblings;
+worker callbacks never silently run on UI. Other invalid/unsupported admission
+errors retain their existing refusal behavior. An adapter may use
+`NewNyxFailedExecution` to own an exact nonempty failure diagnostic without work.
+
+The optional `INyxSchedulerMonitor.WorkerLoad` returns a small copied snapshot:
+configured limits, active workers, running/pending counts and closed admission.
+Read it on UI. Pending excludes running and deferred UI work; cancelled entries
+can remain until admission/dequeue/shutdown. Active counts may lag startup or
+retirement. Shutdown releases pending couriers and wakes idle workers immediately,
+without joining running callbacks. Independent queue/work leases let those finish
+after releasing the scheduler. UI handoff continues through `PostUI`.
+
+Browser options are validated, but native pool limits/counts are zero: async stays
+on the host event loop and `neThreaded` still refuses. Current native qualification
+passes 118 checked pool/capacity/lifetime assertions, including actual retained
+Win32 termination handles; existing scheduler/interaction/real-control/ordinary
+Studio source checks pass 55/234/45/45, leak-free. A baseline fixture assumed every
+source pane displayed its duplicate status; the compact directive deliberately
+uses the exact footer instead. That presentation is now checked, and native
+captures allocate the Win32 nonclient frame so the footer is not cropped.
+Affected browser consumers, Studio and worker compile; current browser execution,
+sustained production timing/resident-memory budgets, other widgetsets and physical
+device qualification remain open. See
+[the worker packet](../WORK.md#current-return-path-bounded-native-callback-workers--2026-10-07).
 
 ## Authored callbacks and executable companions
 

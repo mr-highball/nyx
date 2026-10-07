@@ -32,6 +32,10 @@ uses
 
 type
   ENyxSchedule = class(Exception);
+  { A saturated native pending queue refuses the submission before adopting its
+    work. Callers may defer/retry, coalesce their inputs or report overload; work
+    never silently falls back to the UI thread. Running work is not queue usage. }
+  ENyxScheduleCapacity = class(ENyxSchedule);
   { Sequential work completes before Submit returns. Asynchronous uses native
     workers or the browser event loop, as advertised by Capabilities. UIQueue
     always defers to the UI thread. Threaded explicitly requires a real worker;
@@ -40,6 +44,47 @@ type
   TNyxSchedulerCapability = (nscDeferredUI, nscWorkerThreads);
   TNyxSchedulerCapabilities = set of TNyxSchedulerCapability;
   TNyxExecutionStatus = (nesPending, nesRunning, nesSucceeded, nesFailed, nesCancelled);
+
+  { Immutable fluent scheduler construction options, copied into the scheduler.
+    Workers are native-only: browser asynchronous callbacks use the host event
+    loop and Threaded still refuses. Start with Defaults; a zeroed record refuses
+    construction instead of implicitly opting into unbounded work. Worker count
+    is 1..64; pending capacity is 1..65536. Defaults are four workers/1024 slots. }
+  TNyxSchedulerOptions = record
+  private
+    FWorkerLimit: Integer;
+    FPendingLimit: Integer;
+  public
+    class function Defaults: TNyxSchedulerOptions; static;
+    function Workers(ACount: Integer): TNyxSchedulerOptions;
+    function PendingCapacity(ACount: Integer): TNyxSchedulerOptions;
+    procedure Validate;
+    property WorkerLimit: Integer read FWorkerLimit;
+    property PendingLimit: Integer read FPendingLimit;
+  end;
+
+  { A copied instantaneous native pool observation, never an ownership handle.
+    Pending excludes running/deferred-UI work; cancelled entries may remain until
+    admission, dequeue or shutdown reclaims them. ActiveWorkers includes idle
+    workers and may lag startup/retirement. Browser counts/limits are zero because
+    it has no native pool. Closed reports scheduler admission, even before start. }
+  TNyxWorkerPoolSnapshot = record
+    WorkerLimit: Integer;
+    PendingLimit: Integer;
+    ActiveWorkers: Integer;
+    Running: Integer;
+    Pending: Integer;
+    Closed: Boolean;
+  end;
+
+  { Optional inspection leaves alternative INyxScheduler implementations source
+    compatible. The built-in scheduler implements this interface on both targets.
+    Read on the UI thread; the native queue copies its counters under its lock. }
+  INyxSchedulerMonitor = interface(IInterface)
+    ['{739BC309-7893-48E3-9600-001001000004}']
+    function GetWorkerLoad: TNyxWorkerPoolSnapshot;
+    property WorkerLoad: TNyxWorkerPoolSnapshot read GetWorkerLoad;
+  end;
 
   { A retained execution owns its diagnostic independently of its work/scheduler.
     Cancellation is cooperative once running; pending cancellation prevents entry.
@@ -59,7 +104,8 @@ type
   { Work is retained until it returns or is skipped. Worker work must own its
     input and avoid UI/model mutations; use UIQueue for those mutations. Implement
     on any reference-counted base. A callback failure belongs to its execution,
-    rather than escaping the browser timer or native thread. }
+    rather than escaping the browser timer or native thread. Native worker threads
+    are reused: do not assume thread-local state starts fresh for each callback. }
   INyxWork = interface(IInterface)
     ['{739BC309-7893-48E3-9600-001001000002}']
     procedure Execute(const AExecution: INyxExecution);
@@ -77,6 +123,9 @@ type
       This check is independent of shutdown so teardown can revoke weak ports. }
     procedure RequireUI;
     procedure Admit(APolicy: TNyxExecutionPolicy);
+    { Native async/threaded submission can raise ENyxScheduleCapacity when the
+      configured pending queue is full. Cancelled pending work is reclaimed before
+      that decision; refusal performs no work and does not switch UI policy. }
     function Submit(const AWork: INyxWork; APolicy: TNyxExecutionPolicy): INyxExecution;
     { Safe worker-to-UI handoff. Native workers wait only for the UI to accept
       the submission; UI work itself runs through its deferred queue. Do not
@@ -92,7 +141,12 @@ type
 { Platform implementation, with no dependency on the document, DOM controls or
   LCL controls. Browser workers require an explicit separate transport/program;
   ordinary Pascal callbacks are deferred on its UI event loop. }
-function NewNyxScheduler: INyxScheduler;
+function NewNyxScheduler: INyxScheduler; overload;
+function NewNyxScheduler(const AOptions: TNyxSchedulerOptions): INyxScheduler; overload;
+{ Adapter admission failures can expose a terminal diagnostic without scheduling
+  a callback. The token owns exact text; empty diagnostics refuse. This does not
+  convert an unsupported policy into supported execution or perform any work. }
+function NewNyxFailedExecution(const AFailure: TNyxText): INyxExecution;
 
 implementation
 
@@ -100,7 +154,8 @@ uses
   {$IFDEF PAS2JS}
   Web;
   {$ELSE}
-  Classes;
+  Classes,
+  SyncObjs;
   {$ENDIF}
 
 type
@@ -140,6 +195,57 @@ type
   end;
 
   {$IFNDEF PAS2JS}
+  { Workers retain only this independent queue, never their scheduler or UI.
+    It owns pending couriers; Take transfers one to a worker. No thread object is
+    retained by the queue, so retiring the scheduler cannot create a cycle. }
+  INyxWorkerQueue = interface(IInterface)
+    ['{739BC309-7893-48E3-9600-001001000005}']
+    procedure StartWorkers;
+    procedure Push(ACourier: TNyxCourier);
+    function Take: TNyxCourier;
+    procedure WorkerEntered;
+    procedure WorkerExited;
+    procedure Finished;
+    procedure Close;
+    function Snapshot: TNyxWorkerPoolSnapshot;
+  end;
+
+  TNyxWorkerQueue = class(TInterfacedObject, INyxWorkerQueue)
+  private
+    FLock: TRTLCriticalSection;
+    FReady: TEvent;
+    FOptions: TNyxSchedulerOptions;
+    FItems: array of TNyxCourier;
+    FHead: Integer;
+    FCount: Integer;
+    FWorkers: Integer;
+    FRunning: Integer;
+    FClosed: Boolean;
+    FStarted: Boolean;
+  public
+    constructor Create(const AOptions: TNyxSchedulerOptions);
+    destructor Destroy; override;
+    procedure StartWorkers;
+    procedure Push(ACourier: TNyxCourier);
+    function Take: TNyxCourier;
+    procedure WorkerEntered;
+    procedure WorkerExited;
+    procedure Finished;
+    procedure Close;
+    function Snapshot: TNyxWorkerPoolSnapshot;
+  end;
+
+  TNyxPoolWorker = class(TThread)
+  private
+    FQueue: INyxWorkerQueue;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(const AQueue: INyxWorkerQueue);
+  end;
+
+  { An empty one-shot worker is retained solely for older RTL UI-queue bootstrap.
+    User asynchronous/threaded work always uses the owned bounded queue above. }
   TNyxWorker = class(TThread)
   private
     FCourier: TNyxCourier;
@@ -151,15 +257,21 @@ type
   end;
   {$ENDIF}
 
-  TNyxScheduler = class(TInterfacedObject, INyxScheduler)
+  TNyxScheduler = class(TInterfacedObject, INyxScheduler, INyxSchedulerMonitor)
   private
     FClosed: Boolean;
+    {$IFNDEF PAS2JS}
+    FOptions: TNyxSchedulerOptions;
+    FPool: INyxWorkerQueue;
+    {$ENDIF}
     FExecutions: array of INyxExecution;
     procedure Prune;
     function SubmitAttached(const AWork: INyxWork; APolicy: TNyxExecutionPolicy;
       const AParent: INyxExecution): INyxExecution;
   public
+    constructor Create(const AOptions: TNyxSchedulerOptions);
     destructor Destroy; override;
+    function GetWorkerLoad: TNyxWorkerPoolSnapshot;
     function GetCapabilities: TNyxSchedulerCapabilities;
     procedure RequireUI;
     procedure Admit(APolicy: TNyxExecutionPolicy);
@@ -179,6 +291,44 @@ type
     procedure Submit;
   end;
   {$ENDIF}
+
+class function TNyxSchedulerOptions.Defaults: TNyxSchedulerOptions;
+begin
+  Result.FWorkerLimit := 4;
+  Result.FPendingLimit := 1024;
+end;
+
+function TNyxSchedulerOptions.Workers(ACount: Integer): TNyxSchedulerOptions;
+begin
+
+  if (ACount < 1) or (ACount > 64) then
+  begin
+    raise ENyxSchedule.Create('Worker count must be between 1 and 64');
+  end;
+  Result := Self;
+  Result.FWorkerLimit := ACount;
+end;
+
+function TNyxSchedulerOptions.PendingCapacity(ACount: Integer): TNyxSchedulerOptions;
+begin
+
+  if (ACount < 1) or (ACount > 65536) then
+  begin
+    raise ENyxSchedule.Create('Pending capacity must be between 1 and 65536');
+  end;
+  Result := Self;
+  Result.FPendingLimit := ACount;
+end;
+
+procedure TNyxSchedulerOptions.Validate;
+begin
+
+  if (FWorkerLimit < 1) or (FWorkerLimit > 64) or
+    (FPendingLimit < 1) or (FPendingLimit > 65536) then
+  begin
+    raise ENyxSchedule.Create('Use valid explicit scheduler options or Defaults');
+  end;
+end;
 
 constructor TNyxExecution.Create(const AParent: INyxExecution);
 begin
@@ -380,12 +530,42 @@ begin
     FCourier.Run;
   end;
 end;
+
+{$I nyx.scheduler.pool.inc}
 {$ENDIF}
+
+constructor TNyxScheduler.Create(const AOptions: TNyxSchedulerOptions);
+begin
+  inherited Create;
+  AOptions.Validate;
+  {$IFNDEF PAS2JS}
+  FOptions := AOptions;
+  {$ENDIF}
+end;
 
 destructor TNyxScheduler.Destroy;
 begin
   Shutdown;
+  {$IFNDEF PAS2JS}
+  FPool := nil;
+  {$ENDIF}
   inherited Destroy;
+end;
+
+function TNyxScheduler.GetWorkerLoad: TNyxWorkerPoolSnapshot;
+begin
+  RequireUI;
+  Result := Default(TNyxWorkerPoolSnapshot);
+  {$IFNDEF PAS2JS}
+  Result.WorkerLimit := FOptions.WorkerLimit;
+  Result.PendingLimit := FOptions.PendingLimit;
+
+  if FPool <> nil then
+  begin
+    Result := FPool.Snapshot;
+  end;
+  {$ENDIF}
+  Result.Closed := FClosed;
 end;
 
 function TNyxScheduler.GetCapabilities: TNyxSchedulerCapabilities;
@@ -506,16 +686,20 @@ begin
       end
       else
       begin
-        LWorker := TNyxWorker.Create(LCourier);
-        { The suspended worker adopts the courier only after construction. }
-        LCourier := nil;
-        try
-          LWorker.Start;
-        except
-          LWorker.FreeOnTerminate := False;
-          LWorker.Free;
-          raise;
+
+        if FPool = nil then
+        begin
+          FPool := TNyxWorkerQueue.Create(FOptions);
+          try
+            FPool.StartWorkers;
+          except
+            FPool := nil;
+            raise;
+          end;
         end;
+        { Adoption occurs only after capacity admission. Saturation preserves
+          caller-owned work and the UI never runs a refused worker submission. }
+        FPool.Push(LCourier);
       end;
       {$ENDIF}
     end;
@@ -544,6 +728,13 @@ begin
     FExecutions[LIndex].Cancel;
   end;
   SetLength(FExecutions, 0);
+  {$IFNDEF PAS2JS}
+
+  if FPool <> nil then
+  begin
+    FPool.Close;
+  end;
+  {$ENDIF}
 end;
 
 {$IFNDEF PAS2JS}
@@ -583,7 +774,27 @@ end;
 
 function NewNyxScheduler: INyxScheduler;
 begin
-  Result := TNyxScheduler.Create;
+  Result := NewNyxScheduler(TNyxSchedulerOptions.Defaults);
+end;
+
+function NewNyxScheduler(const AOptions: TNyxSchedulerOptions): INyxScheduler;
+begin
+  Result := TNyxScheduler.Create(AOptions);
+end;
+
+function NewNyxFailedExecution(const AFailure: TNyxText): INyxExecution;
+var
+  LState: TNyxExecution;
+begin
+
+  if AFailure = '' then
+  begin
+    raise ENyxSchedule.Create('A failed execution requires its diagnostic');
+  end;
+  LState := TNyxExecution.Create(nil);
+  Result := LState;
+  LState.Start;
+  LState.Complete(AFailure);
 end;
 
 end.

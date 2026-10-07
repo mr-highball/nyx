@@ -3,6 +3,16 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current production scheduler prerequisite (2026-10-07): native callbacks use
+typed bounded reusable pools, queryable load, FIFO queues and exact per-registration
+overload diagnostics. Actual pool checks pass 118 and existing scheduler/interaction/
+control/ordinary Studio checks pass 55/234/45/45, leak-free. Browser consumers/Studio
+compile; current browser execution, full budgets, native form visuals and original
+prerequisites remain open. No original criterion closes or count is invented/reset;
+known workflow/authoring/renderer/codegen/delivery counts remain 19/30/9/28/2. Stop
+pool fixture expansion and return to original renderer/parity outcomes. See
+[the current packet](WORK.md#current-return-path-bounded-native-callback-workers--2026-10-07).
+
 Current collection realization (2026-10-07): pushed native tables read bound values
 on demand; the ordinary browser adapter now contains measured row windows, full
 logical navigation and retained drafts/editors. Shared geometry passes 793 native

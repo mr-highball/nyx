@@ -1645,7 +1645,21 @@ begin
         LScope, LSnapshot[LIndex].Entry.Scope, ADecision,
         (ADecision <> nil) and (LSnapshot[LIndex].Policy = neSequential), AGesture,
         (AGesture <> nil) and (LSnapshot[LIndex].Policy = neSequential));
-      Result[LIndex] := FScheduler.Submit(LWork, LSnapshot[LIndex].Policy);
+      try
+        Result[LIndex] := FScheduler.Submit(LWork, LSnapshot[LIndex].Policy);
+      except
+        on LException: ENyxScheduleCapacity do
+        begin
+          { Native backpressure belongs to this invocation's diagnostic. Retain
+            LastExecution and continue independent siblings, including UI-only
+            registrations. Neither run overload on UI nor hide it as success. }
+          {$IFDEF PAS2JS}
+          Result[LIndex] := NewNyxFailedExecution(LException.Message);
+          {$ELSE}
+          Result[LIndex] := NewNyxFailedExecution(UTF8Encode(UnicodeString(LException.Message)));
+          {$ENDIF}
+        end;
+      end;
       LSnapshot[LIndex].Entry.Track(Result[LIndex]);
 
       if FClosed then

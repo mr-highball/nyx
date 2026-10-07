@@ -9,6 +9,20 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current scheduler production prerequisite (2026-10-07): per-owner native pools
+replace one thread per callback with typed worker/queue limits and copied load.
+Actual checked pool tests pass 118, including real worker reuse/termination,
+FIFO, saturation, capacity recovery, event overload and running owner release.
+Existing scheduler/interaction/control/ordinary Studio consumers pass 55/234/45/45,
+leak-free. A pre-change source fixture's obsolete duplicate-status expectation
+is corrected to require the exact compact footer. Browser consumers/Studio compile
+with zero owned warnings, without current runtime qualification. This advances
+criteria 2/3's known worker prerequisite, not full sustained timing/resident-memory
+budgets or all original blockers. No criterion closes or historical count is
+invented/reset. End worker fixture expansion and follow original renderer/parity
+and browser/runtime/budget outcomes. See
+[the packet](../WORK.md#current-return-path-bounded-native-callback-workers--2026-10-07).
+
 Current browser realization prerequisite (2026-10-07): the ordinary adapter now
 contains measured DOM windows and full logical keyboard/range order, retaining
 focused editors and detached exact drafts. Shared geometry passes 793 checked

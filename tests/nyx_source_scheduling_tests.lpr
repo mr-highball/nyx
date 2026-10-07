@@ -24,6 +24,9 @@ program nyx_source_scheduling_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
+  {$IFDEF WINDOWS}
+  Windows,
+  {$ENDIF}
   Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls,
   Graphics, IntfGraphics, FPWritePNG,
   nyx.text, nyx.types, nyx.model, nyx.controls, nyx.codegen,
@@ -124,12 +127,28 @@ var
   LBitmap: TBitmap;
   LImage: TLazIntfImage;
   LWriter: TFPWriterPNG;
+  {$IFDEF WINDOWS}
+  LWindowBounds: Windows.TRect;
+  {$ENDIF}
 begin
   LBitmap := TBitmap.Create;
   LImage := nil;
   LWriter := nil;
   try
+    {$IFDEF WINDOWS}
+    { Win32 PaintTo requests both client and nonclient pixels (WM_PRINT).
+      Query the physical window; cached LCL Width/Height can describe its client
+      allocation. The caption/frame must not crop the actual status footer. }
+
+    if not Windows.GetWindowRect(GForm.Handle, LWindowBounds) then
+    begin
+      raise ENyxModel.Create('Unable to measure the native capture window');
+    end;
+    LBitmap.SetSize(LWindowBounds.Right - LWindowBounds.Left,
+      LWindowBounds.Bottom - LWindowBounds.Top);
+    {$ELSE}
     LBitmap.SetSize(GForm.ClientWidth, GForm.ClientHeight);
+    {$ENDIF}
     GForm.PaintTo(LBitmap.Canvas, 0, 0);
     LImage := LBitmap.CreateIntfImage;
     LWriter := TFPWriterPNG.Create;
@@ -148,10 +167,26 @@ var
 begin
   LControl := GEditor.SourceView.ControlFor('studio-source-status');
   Check(LControl <> nil, 'source status is an actual mounted Nyx control');
+  { Compact source panes intentionally suppress their duplicate operation label.
+    A desktop form can still have a narrow pane between its project/inspector
+    columns. Require the exact visible footer status in that presentation rather
+    than assuming the source-pane width equals the outer form width. }
+
+  if LControl.Parent.ClientWidth < 640 then
+  begin
+    Check(not LControl.Visible, 'compact source pane hides the duplicate status');
+    LControl := GEditor.ShellView.ControlFor('studio-status');
+    Check((LControl <> nil) and (LControl is TLabel), 'compact operation status has a Nyx footer label');
+  end;
+  Check(TNyxText(TLabel(LControl).Caption) = GEditor.Status,
+    'the displayed status retains the exact current operation message');
   LTop := LControl.ClientToScreen(Point(0, 0)).Y - GForm.ClientToScreen(Point(0, 0)).Y;
   Check(LControl.Visible and (LTop >= 0) and
     (LTop + LControl.Height <= GForm.ClientHeight),
-    'source operation status is inside the actual editor viewport');
+    'source operation status is inside the actual editor viewport / visible=' +
+    BoolToStr(LControl.Visible, True) + ' top=' + IntToStr(LTop) +
+    ' height=' + IntToStr(LControl.Height) + ' form=' + IntToStr(GForm.ClientHeight) +
+    ' pane width=' + IntToStr(LControl.Parent.ClientWidth));
 end;
 
 procedure WorkerEnvironment;

@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1263,6 +1263,63 @@ try {
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/date-fields.html'),
       (Join-Path $nyxRoot 'studio/web/date-reconstruction.html') -Destination $nyxDateBrowser
     Write-Host 'Date consumers staged; execute on an existing admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'scheduler-pool') {
+    # Pascal establishes actual worker identities, FIFO/backpressure, cancellation
+    # and independent lifetime. A separate ordinary native Studio consumer runs
+    # source preparation/callbacks. Browser consumers are compiled/staged only;
+    # this target starts no service/browser and changes no existing project pair.
+    $nyxPoolRoot = Join-Path $nyxRoot 'build/scheduler-pool/maintained'
+    $nyxPoolNative = Join-Path $nyxPoolRoot 'native'
+    $nyxPoolLcl = Join-Path $nyxPoolRoot 'lcl'
+    $nyxPoolWeb = Join-Path $nyxPoolRoot 'web'
+    $nyxPoolControls = Join-Path $nyxPoolRoot 'source-controls'
+    New-Item -ItemType Directory -Force $nyxPoolNative, $nyxPoolLcl,
+      $nyxPoolWeb, $nyxPoolControls | Out-Null
+    $nyxFpc = Resolve-NyxTool $Fpc 'FPC' 'fpc'
+    $nyxPoolFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', '-Fustudio', "-FU$nyxPoolNative", "-FE$nyxPoolNative")
+    foreach ($nyxPoolProgram in @('nyx_scheduler_pool_tests', 'nyx_scheduler_tests',
+      'nyx_interaction_tests')) {
+      Invoke-NyxCompiler $nyxFpc ($nyxPoolFlags + @("tests/$nyxPoolProgram.lpr"))
+      & (Join-Path $nyxPoolNative ($nyxPoolProgram + '.exe')) `
+        (Join-Path $nyxPoolNative 'nyx.interaction.generated.pas')
+      if ($LASTEXITCODE -ne 0) { throw ('Native scheduler consumer failed: ' + $nyxPoolProgram) }
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxPoolPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxPoolLclFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', '-Fustudio', "-Fu$nyxPoolNative",
+      "-Fu$nyxLazarus/lcl/units/$nyxPoolPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxPoolPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxPoolPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxPoolPlatform",
+      "-FU$nyxPoolLcl", "-FE$nyxPoolLcl")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxPoolLclFlags + @('-dNYX_COMPILED_INTERACTIONS',
+      'tests/nyx_interaction_controls_tests.lpr'))
+    & (Join-Path $nyxPoolLcl 'nyx_interaction_controls_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native interaction controls failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxPoolLclFlags + @('tests/nyx_source_scheduling_tests.lpr'))
+    & (Join-Path $nyxPoolLcl 'nyx_source_scheduling_tests.exe') $nyxPoolControls
+    if ($LASTEXITCODE -ne 0) { throw 'Ordinary native Studio source scheduling failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxPoolProgram in @('tests/nyx_scheduler_tests.lpr',
+      'tests/nyx_interaction_tests.lpr', 'tests/nyx_interaction_controls_tests.lpr',
+      'studio/nyx_studio.lpr', 'studio/nyx_source_worker.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxPoolNative", "-FE$nyxPoolWeb",
+        '-dNYX_COMPILED_INTERACTIONS', $nyxPoolProgram)
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxPoolWeb 'rtl.js')
+    foreach ($nyxPoolHost in @('scheduler.html', 'interactions.html', 'interaction-controls.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot ('studio/web/' + $nyxPoolHost)) `
+        -Destination $nyxPoolWeb
+    }
+    Write-Host 'Bounded native workers and Studio qualified; browser consumers staged without execution.'
     exit 0
   }
 

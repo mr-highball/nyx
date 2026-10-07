@@ -20,6 +20,21 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 
+## Native source consumer and visual return path — 2026-10-07
+
+The NS-3 worker-pool prerequisite passes ordinary Win32 Studio source preparation,
+coalescing, cancellation, paired history and retirement: 45 actual checks, leak-free.
+Its old fixture wrongly required a duplicate status at every pane width; the
+pre-change baseline reproduces intentional hiding in a 560-pixel source pane.
+Current checks require exact visible footer status, with viewport containment.
+Measured full-window captures expose the footer at client widths 1100/390.
+The desktop capture also exposes overlapping form content near the starter's
+second card. That native layout/visual issue stays with original criteria 1/2
+and parity criterion 3; these scheduler checks do not qualify complete visuals.
+Stop worker fixtures and return to this renderer prerequisite. No renderer
+criterion/count closes or resets. See
+[the worker packet](../WORK.md#current-return-path-bounded-native-callback-workers--2026-10-07).
+
 ## Bound grid navigation — 2026-10-07
 
 Existing input/parity criteria now include shared typed cell movement and
