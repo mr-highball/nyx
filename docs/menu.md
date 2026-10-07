@@ -165,6 +165,13 @@ read-only MCP witness joins and retires while a menu is open; the observing
 Agents row must change, and the popup family must survive both shell rebuilds.
 The witness is retired even on failure. This mode does not earn full authoring
 journey evidence or establish execution of the generated TODO implementation.
+`observe` uses an exact existing selected project, with `primary` denoting the
+omitted primary context. It edits only unsaved local form presentation, switches
+Properties/Events, observes a read-only MCP witness join/retire in Design and
+returns to the retained form. It restores the initial title and checks semantic
+session fields; the delivery controller separately compares full private pairs
+and checkpoint bytes. This qualifies observing form retention while the ordinary
+registry is full, without replacing a project or claiming a full authoring journey.
 `reset-fixture` is limited to that retained first-save/first-callback fixture:
 ordinary Restore clears its own probe draft, then two revision-aware semantic
 Undo operations return its companion to the initial boundary. It neither

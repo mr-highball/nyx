@@ -40,6 +40,7 @@ var
   GWidth: Integer;
   GResetFixture: Boolean;
   GInteractOnly: Boolean;
+  GObserveOnly: Boolean;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -60,14 +61,16 @@ var
   LFields: array of TNyxDataField;
   LIndex: Integer;
   LPacket: TNyxDataValue;
+  LContext: Boolean;
 begin
-  SetLength(LFields, Length(AFields) + Ord(AContext));
+  LContext := AContext and (GWorkspace <> '');
+  SetLength(LFields, Length(AFields) + Ord(LContext));
   for LIndex := 0 to High(AFields) do
   begin
     LFields[LIndex] := AFields[LIndex];
   end;
 
-  if AContext then
+  if LContext then
   begin
     LFields[High(LFields)] := NyxField('workspace', NyxData(GWorkspace));
   end;
@@ -308,9 +311,21 @@ begin
       input attempt without filling the service's bounded project registry.
       The caller owns this exact handle; no project is replaced or re-composed. }
     GWorkspace := ParamStr(5);
+
+    if GObserveOnly and (GWorkspace = 'primary') then
+    begin
+      GWorkspace := '';
+    end;
     Save('workspace.txt', GWorkspace);
     LPrimary := Call('nyx_session', []);
     GRevision := LPrimary.Field('revision').AsInteger;
+
+    if GObserveOnly then
+    begin
+      Check(LPrimary.Field('selection').AsText <> '',
+        'read-only observing qualification requires an existing selected component');
+      Exit;
+    end;
     Check((LPrimary.Field('selection').AsText = 'open-actions') and
       (LPrimary.Field('view').AsText = 'home') and
       (GResetFixture or not LPrimary.Field('pendingDraft').AsBoolean),
@@ -535,6 +550,122 @@ begin
     'ordinary canvas Interact reports no refusal');
 end;
 
+{ The installed host can be qualified while its ordinary registry is full. Use
+  the exact supplied observing project, never replace it or synthesize another
+  accepted pair. Unsaved menu form text is disposable local presentation only.
+  Actual tab/roster rebuilds must retain it, and all semantic session fields stay
+  exact. Protected complete pairs/checkpoint are independently guarded by the
+  deployment controller before and after this read-only input consumer. }
+procedure ObserveMenuEditor;
+const
+  CFields: array[0..9] of TNyxText = ('revision', 'selection', 'view',
+    'pendingDraft', 'permission', 'canUndo', 'canRedo', 'pages', 'components', 'title');
+var
+  LBefore: TNyxDataValue;
+  LAfter: TNyxDataValue;
+  LPeer: TNyxMCPTestClient;
+  LReply: TNyxDataValue;
+  LRow: TNyxText;
+  LWitness: TNyxText;
+  LInitialTitle: TNyxText;
+  LField: Integer;
+
+  { Compact Inspector intentionally omits the center's session list. Observe
+    actual roster paint in Design, then return to the same unsaved Properties
+    form. Desktop keeps both faces mounted. No accepted project is navigated. }
+  procedure ShowObservingRow;
+  begin
+
+    if GHost.Exists('[data-node=studio-panelbar]') then
+    begin
+      GHost.Click('[data-node=action-panel-design]');
+    end;
+
+    if not GHost.Exists('[data-node=studio-agents]') then
+    begin
+      GHost.Click('[data-node=action-actions]');
+      WaitFor('.nyx-popover:popover-open [data-node=studio-menu-project]');
+      GHost.Click('.nyx-popover:popover-open [data-node=studio-menu-project]');
+      WaitFor('.nyx-popover:popover-open [data-node=studio-menu-agents]');
+      GHost.Click('.nyx-popover:popover-open [data-node=studio-menu-agents]');
+      WaitFor('.nyx-popover:popover-open', False);
+    end;
+
+    if not GHost.Exists(LRow) and GHost.Exists('[data-node=action-details-toggle]') then
+    begin
+      GHost.Click('[data-node=action-details-toggle]');
+    end;
+    WaitFor(LRow);
+  end;
+
+begin
+  LBefore := Call('nyx_session', []);
+  WaitFor('[data-node=action-actions]');
+  WaitText('[data-node=studio-subtitle]', LBefore.Field('title').AsText, True);
+  WaitFor('[data-node=studio-canvas] [data-node="' +
+    LBefore.Field('selection').AsText + '"]');
+  Inspector(False);
+  WaitFor(FieldSelector(nmfDefinition, 'select'));
+  Choose(FieldSelector(nmfDefinition, 'select'), 0);
+  GHost.Click(ActionSelector(nmeChoose));
+  Check(GHost.TryFieldValue(FieldSelector(nmfTitle, 'input'), LInitialTitle),
+    'installed ordinary Properties exposes the public typed menu form');
+  GHost.ReplaceText(FieldSelector(nmfTitle, 'input'), 'A thoughtful menu');
+  WaitField(FieldSelector(nmfTitle, 'input'), 'A thoughtful menu');
+  Inspector(True);
+  Inspector(False);
+  WaitField(FieldSelector(nmfTitle, 'input'), 'A thoughtful menu');
+
+  if GWorkspace = '' then
+  begin
+    LRow := '[data-node=studio-agent-workspace-primary]';
+  end
+  else
+  begin
+    LRow := '[data-node="studio-agent-workspace-' + GWorkspace + '"]';
+  end;
+  LWitness := 'Scooty observing menu witness ' + IntToStr(GetTickCount64);
+  ShowObservingRow;
+  LPeer := TNyxMCPTestClient.Create(ParamStr(1), LWitness);
+  try
+
+    if GWorkspace = '' then
+    begin
+      LReply := LPeer.Tool('nyx_session', NyxObject([]));
+    end
+    else
+    begin
+      LReply := LPeer.Tool('nyx_session', NyxObject([
+        NyxField('workspace', NyxData(GWorkspace))]));
+    end;
+    Check(not LReply.Field('isError').AsBoolean,
+      'independent installed MCP witness reads only the observing project');
+    WaitText(LRow, LWitness, True);
+    Inspector(False);
+    WaitField(FieldSelector(nmfTitle, 'input'), 'A thoughtful menu');
+    ShowObservingRow;
+    LPeer.Close;
+    WaitText(LRow, LWitness, False);
+    Inspector(False);
+    WaitField(FieldSelector(nmfTitle, 'input'), 'A thoughtful menu');
+  finally
+    try
+      LPeer.Close;
+    finally
+      LPeer.Free;
+    end;
+  end;
+  GHost.Capture('observing-menu-form');
+  GHost.ReplaceText(FieldSelector(nmfTitle, 'input'), LInitialTitle);
+  WaitField(FieldSelector(nmfTitle, 'input'), LInitialTitle);
+  LAfter := Call('nyx_session', []);
+  for LField := 0 to High(CFields) do
+  begin
+    Check(LAfter.Field(CFields[LField]).ToJSON = LBefore.Field(CFields[LField]).ToJSON,
+      'read-only observing form retains semantic ' + CFields[LField]);
+  end;
+end;
+
 procedure Journey;
 const
   CNamedCard = '[data-node^=event-named-]';
@@ -736,11 +867,12 @@ begin
 
     GResetFixture := (ParamCount = 6) and (ParamStr(6) = 'reset-fixture');
     GInteractOnly := (ParamCount = 6) and (ParamStr(6) = 'interact');
+    GObserveOnly := (ParamCount = 6) and (ParamStr(6) = 'observe');
 
     if (ParamCount = 6) and (ParamStr(6) <> 'navigation') and
-      not GResetFixture and not GInteractOnly then
+      not GResetFixture and not GInteractOnly and not GObserveOnly then
     begin
-      raise Exception.Create('Use navigation, interact or reset-fixture for an exact retained fixture');
+      raise Exception.Create('Use navigation, interact, observe or reset-fixture for an exact retained fixture');
     end;
 
     if DirectoryExists(GDirectory) then
@@ -750,10 +882,24 @@ begin
     ForceDirectories(GDirectory);
     GClient := TNyxMCPTestClient.Create(ParamStr(1), 'Scooty ordinary menu editor');
     Compose;
-    GHost := TNyxBrowserPipe.Create(ParamStr(2) + '?workspace=' + GWorkspace,
-      GDirectory, GWidth, 900);
+    { Primary is represented by an omitted context. An explicitly empty query
+      is an invalid reference, just as it is at the authenticated MCP boundary. }
 
-    if GResetFixture then
+    if GWorkspace = '' then
+    begin
+      GHost := TNyxBrowserPipe.Create(ParamStr(2), GDirectory, GWidth, 900);
+    end
+    else
+    begin
+      GHost := TNyxBrowserPipe.Create(ParamStr(2) + '?workspace=' + GWorkspace,
+        GDirectory, GWidth, 900);
+    end;
+
+    if GObserveOnly then
+    begin
+      ObserveMenuEditor;
+    end
+    else if GResetFixture then
     begin
       ResetFixture;
     end
@@ -779,14 +925,19 @@ begin
       NyxField('width', NyxData(GWidth)), NyxField('revision', NyxData(GRevision)),
       NyxField('workspace', NyxData(GWorkspace)), NyxField('result', NyxData('passed')),
       NyxField('navigationOnly', NyxData((ParamCount = 6) and
-        not GResetFixture and not GInteractOnly)),
+        not GResetFixture and not GInteractOnly and not GObserveOnly)),
       NyxField('interactOnly', NyxData(GInteractOnly)),
+      NyxField('observeOnly', NyxData(GObserveOnly)),
       NyxField('resetFixture', NyxData(GResetFixture))]).ToJSON);
     FreeAndNil(GHost);
     GClient.Close;
     FreeAndNil(GClient);
 
-    if GResetFixture then
+    if GObserveOnly then
+    begin
+      WriteLn('PASS ', GChecks, ' read-only observing Studio menu editor / CSS ', GWidth);
+    end
+    else if GResetFixture then
     begin
       WriteLn('PASS ', GChecks, ' owned fixture draft/history recovery / CSS ', GWidth);
     end
@@ -822,6 +973,20 @@ begin
         end;
       end;
       FreeAndNil(GHost);
+
+      if GClient <> nil then
+      begin
+        try
+          { Retire only this fixture's own initialized MCP transport on failure.
+            Keep the original assertion visible if transport cleanup also refuses. }
+          GClient.Close;
+        except
+          on LCloseError: Exception do
+          begin
+            WriteLn('Transport retirement refused / ', LCloseError.ClassName);
+          end;
+        end;
+      end;
       FreeAndNil(GClient);
       DumpExceptionBackTrace(Output);
       ExitCode := 1;

@@ -7,6 +7,57 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: menu editor observing delivery — 2026-10-07
+
+Previous turn is progress: integrated ordinary desktop/narrow editor journeys,
+native controls and the frozen `c24ae36` candidate qualify; `5cdabf3` is pushed.
+Continue existing NS-5 accepted-work/reload and NS-4 workflow criterion 5 with
+preserving delivery to the observing Studio. Before service replacement, admit
+an exact private copy of the current native checkpoint using the frozen source,
+compare every accepted pair/navigation/permission with current authenticated
+observations, and require a byte-identical full-history round trip. Retain exact
+binary/checkpoint/enrollment backups, the firewall-covered executable path and
+fourteen other process identities. Only the verified primary is eligible for the
+already-authorized update; the earlier isolated stop/launch refusals are not
+retried. No legacy bootstrap, project replacement, history reset or handle remapping.
+After delivery, authenticate current MCP discovery and qualify observing desktop/
+narrow editor input through owned semantic projects. A preserving or HTTP gate
+failure stays with its existing owner and cannot justify another policy workaround.
+This is the existing delivery return path, not another menu fixture expansion.
+No original full criterion is complete; current counters remain workflow 14,
+authoring 28, renderer 8, codegen 28 and delivery 2.
+
+Frozen `c24ae36` is now serving at the original LAN executable path. Its checked
+consumer admits the actual copied checkpoint and all nine authenticated observing
+baselines (**106**), then preserves complete durable bytes on Save/Load. A wrong
+expected revision refuses without rewriting the copied file; both traces are
+leak-free. Only the exact guarded primary is retired; its signed console child
+exits without a separate kill. Fourteen other services, nine accepted pairs,
+navigation/drafts/permissions/history/labels/handles and the **147033-byte** full
+checkpoint stay exact. Retired editor authority refuses with HTTP 400.
+
+Authenticated discovery exposes **21** tools. The deployed semantic menu review
+passes **291** bounded/context/poll checks: grouped typed composition, item
+inspection, stale/dependency refusal, exact paired history/source and all four
+real application/view builds. The observing ordinary workspace passes **16**
+desktop and **21** CSS-390×640; measured canvas allocation is still **396/587 px**.
+No ordinary project is replaced or closed. Its registry is full, so semantic
+mutations use an explicitly owned empty review; observing form input is local,
+unsaved presentation and does not claim an ordinary project-authoring journey.
+
+That observing form retains text through Properties/Events switches. Its roster
+witness exposed a native router gap: omitted primary context records activity but
+bypasses ordinary connection presence, unlike named project context. Successful
+primary tool calls and compiler/preview discovery now register their authenticated
+owner in the same roster; explicit reviews remain independently attributed.
+Presence expires through existing transport DELETE and never enters checkpoints.
+The actual native seam qualifies independent same-display owners, compiler
+discovery, review separation and unchanged durable bytes; full protocol recovery
+passes **72**, leak-free. Refreshed frozen delivery and the corrected observing
+roster/form check are pending. Failed empty-query/hidden-panel assumptions and the genuine absent-
+primary-roster evidence remain in `build/menu-observing/`; only corrected terminal
+passes earn observing evidence. No extra policy workaround or isolated restart.
+
 ## Current return path: public menu editor — 2026-10-07
 
 Current accepted batch continues original authoring criteria 2/6 and workflow

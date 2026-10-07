@@ -140,6 +140,18 @@ host rotates and enrolls its connection authority. Ordinary project handles and
 operator enablement remain durable. The portable clone/recovery values work on
 both compiler targets; disk ownership and OS replacement stay native host concerns.
 
+The checked native recovery consumer also accepts `--retained <verified-release>
+<copied-runtime> <private-observing-baseline.json>`. Compile that consumer against
+the candidate's frozen units before running it. Supply an independent private
+runtime containing an exact checkpoint copy; the live runtime stays owned by its
+server and must never be used for this qualification. The bounded baseline has
+the primary first and up to eight ordinary contexts, with exact encoded pairs,
+labels, handles and public session fields. The consumer admits all accepted/history
+pairs, compares observations and requires a byte-identical native round trip.
+A mismatch refuses before Save; it starts no listener or enrollment and prints
+no project text or credentials. This proves candidate compatibility with retained
+work, separately from generic recovery fixtures and authenticated rollout checks.
+
 ## Explicit legacy test bootstrap
 
 `nyx.studio.legacy` admits a bounded observing snapshot when an older host has

@@ -559,6 +559,16 @@ begin
       else
       begin
         Result := FReviews.Call(ATool, AOwner, AActor, AArguments);
+        { Omitted context denotes the primary ordinary project. Review dispatch
+          retains its existing lifetime/permission rules, but a successful primary
+          query must also appear in that project's connection roster. Presence
+          is transport-owned, expires on DELETE and is excluded from checkpoints;
+          display names never become private connection identities. }
+
+        if (ATool <> 'nyx_reviews') and not NyxAgentHas(AArguments, 'review') then
+        begin
+          FWorkspaces.RecordRequest(AOwner, AActor, NyxPrimaryWorkspace);
+        end;
       end;
       FinishDocumentChange(LRollback);
     except
@@ -723,6 +733,13 @@ begin
   else
   begin
     Result := FReviews.Resolve(AOwner, NyxReviewArgument(AArguments));
+
+    if (AActor <> '') and not NyxAgentHas(AArguments, 'review') then
+    begin
+      { Compiler/preview discovery uses the same primary connection presence as
+        ordinary tools. A review remains attributed only to its review context. }
+      FWorkspaces.RecordRequest(AOwner, AActor, NyxPrimaryWorkspace);
+    end;
   end;
 end;
 

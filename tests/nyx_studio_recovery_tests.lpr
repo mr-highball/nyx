@@ -26,7 +26,8 @@ program nyx_studio_recovery_tests;
 uses
   Classes, SysUtils, Process, md5, nyx.text, nyx.data, nyx.model, nyx.codec,
   nyx.studio.directories, nyx.studio.mcp, nyx.studio.outputs,
-  nyx.studio.projects, nyx.studio.workspaces, nyx.generated.view;
+  nyx.studio.projects, nyx.studio.workspaces, nyx.generated.view,
+  nyx.studio.agents, nyx.studio.recovery;
 
 var
   GEngine: TNyxStudioMCP;
@@ -83,6 +84,110 @@ begin
   end;
 end;
 
+{ Deployment qualification consumes an explicitly copied private checkpoint and
+  bounded authenticated observing baseline. The frozen candidate must admit all
+  accepted/history pairs before any replacement of the live host. Only the copied
+  runtime is opened or rewritten: no enrollment, listener, compiler or live editor
+  request is owned here. Byte-exact Save/Load establishes the complete history,
+  naming counters and registry identity beyond public CanUndo/CanRedo summaries. }
+procedure VerifyRetainedCheckpoint(const ARelease, ARuntime, ABaseline: TNyxText);
+const
+  CFields: array[0..6] of TNyxText = ('selection', 'revision', 'canUndo',
+    'view', 'canRedo', 'pendingDraft', 'permission');
+var
+  LDirectories: TNyxStudioDirectories;
+  LStore: TNyxStudioRuntimeStore;
+  LPrimary: TNyxAgentSession;
+  LWorkspaces: TNyxStudioWorkspaces;
+  LSession: TNyxAgentSession;
+  LStream: TFileStream;
+  LBaselineText: TNyxText;
+  LBaseline: TNyxDataValue;
+  LExpected: TNyxDataValue;
+  LActual: TNyxDataValue;
+  LRows: TNyxDataValue;
+  LBefore: TNyxText;
+  LReference: TNyxWorkspaceRef;
+  LIndex: Integer;
+  LField: Integer;
+  LRow: Integer;
+  LMatches: Integer;
+begin
+  LStream := TFileStream.Create(ABaseline, fmOpenRead or fmShareDenyWrite);
+  try
+    Check((LStream.Size > 0) and (LStream.Size <= 4 * 1024 * 1024),
+      'Retained observing baseline stays within its private input bound');
+    SetLength(LBaselineText, LStream.Size);
+    LStream.ReadBuffer(LBaselineText[1], Length(LBaselineText));
+  finally
+    LStream.Free;
+  end;
+  LBaseline := TNyxDataValue.ParseJSON(LBaselineText);
+  Check((LBaseline.Kind = ndArray) and (LBaseline.Count in [1..9]) and
+    (LBaseline.Item(0).Field('workspace').AsText = ''),
+    'Retained baseline identifies the primary and bounded ordinary registry');
+  LDirectories := TNyxStudioDirectories.ForRelease(ARelease, ARuntime);
+  Check(FileExists(LDirectories.SessionCheckpoint),
+    'Retained qualification requires an explicit copied checkpoint');
+  LBefore := ReadBytes(LDirectories.SessionCheckpoint);
+  LStore := nil;
+  LPrimary := nil;
+  LWorkspaces := nil;
+  try
+    LStore := TNyxStudioRuntimeStore.Create(LDirectories);
+    Check(LStore.Load(LPrimary, LWorkspaces),
+      'Frozen candidate admits all retained accepted and full-history pairs');
+    LRows := LWorkspaces.Observe;
+    Check(LRows.Count = LBaseline.Count,
+      'Candidate retains the exact ordinary project count');
+    for LIndex := 0 to LBaseline.Count - 1 do
+    begin
+      LExpected := LBaseline.Item(LIndex);
+      LReference := NyxPrimaryWorkspace;
+
+      if LIndex > 0 then
+      begin
+        LReference := NyxWorkspace(LExpected.Field('workspace').AsText);
+      end;
+      LSession := LWorkspaces.Find(LReference);
+      Check(LSession <> nil, 'Candidate resolves the exact retained project handle');
+      LActual := LSession.Exchange(NyxObject([NyxField('op', NyxData('observe')),
+        NyxField('after', NyxData(0))]));
+      Check(LActual.Field('project').AsText = LExpected.Field('project').AsText,
+        'Candidate retains the complete accepted pair and pending draft/base');
+      for LField := 0 to High(CFields) do
+      begin
+        Check(LActual.Field('session').Field(CFields[LField]).ToJSON =
+          LExpected.Field(CFields[LField]).ToJSON,
+          'Candidate retains ' + CFields[LField]);
+      end;
+      LMatches := 0;
+      for LRow := 0 to LRows.Count - 1 do
+      begin
+
+        if LRows.Item(LRow).Field('workspace').AsText = LReference.ID then
+        begin
+          Inc(LMatches);
+          Check(LRows.Item(LRow).Field('label').AsText = LExpected.Field('label').AsText,
+            'Candidate retains the exact project label');
+        end;
+      end;
+      Check(LMatches = 1, 'Candidate retains one exact registry identity per project');
+    end;
+    Check(ReadBytes(LDirectories.SessionCheckpoint) = LBefore,
+      'Candidate admission and observation leave the copied checkpoint byte-exact');
+    LStore.Save(LPrimary, LWorkspaces);
+    Check(ReadBytes(LDirectories.SessionCheckpoint) = LBefore,
+      'Candidate round trip retains complete history and private registry bytes');
+  finally
+    { Workspaces borrow Primary; store owns only its independent filesystem lock. }
+    LWorkspaces.Free;
+    LPrimary.Free;
+    LStore.Free;
+  end;
+  WriteLn('PASS ', GChecks, ' retained checkpoint candidate checks');
+end;
+
 function Routed(const AValue: TNyxDataValue; const AWorkspace: TNyxText): TNyxDataValue;
 begin
   Result := AValue;
@@ -97,6 +202,57 @@ function Observe(const AWorkspace: TNyxText = ''): TNyxDataValue;
 begin
   Result := GEngine.EditorExchange(GToken, Routed(NyxObject([
     NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]), AWorkspace));
+end;
+
+{ Exercise the actual native router rather than the workspaces manager directly.
+  Default-context queries previously bypassed its roster. Same display names
+  still identify independent authenticated owners; read-only presence never
+  becomes durable authoring or attributes an isolated review to the primary. }
+procedure VerifyPrimaryPresence;
+var
+  LBefore: TNyxText;
+  LConnections: TNyxDataValue;
+  LReview: TNyxDataValue;
+  LHandle: TNyxText;
+begin
+  LBefore := ReadBytes(GDirectories.SessionCheckpoint);
+  GEngine.InvokeTool('nyx_session', 'primary-reader-one', 'Scooty primary reader',
+    NyxObject([]));
+  LConnections := Observe.Field('workspaces').Item(0).Field('connections');
+  Check((LConnections.Count = 1) and
+    (LConnections.Item(0).Field('actor').AsText = 'Scooty primary reader'),
+    'Actual primary tool dispatch publishes its authenticated connection presence');
+  GEngine.InvokeTool('nyx_session', 'primary-reader-one', 'Scooty primary reader',
+    NyxObject([]));
+  Check(Observe.Field('workspaces').Item(0).Field('connections').Count = 1,
+    'Repeated primary queries retain one connection identity');
+  GEngine.InvokeTool('nyx_session', 'primary-reader-two', 'Scooty primary reader',
+    NyxObject([]));
+  LConnections := Observe.Field('workspaces').Item(0).Field('connections');
+  Check((LConnections.Count = 2) and
+    (LConnections.Item(0).Field('session').AsInteger <>
+      LConnections.Item(1).Field('session').AsInteger),
+    'Same-display primary callers retain independent private owners');
+  LReview := GEngine.InvokeTool('nyx_reviews', 'isolated-reader', 'Scooty review reader',
+    NyxObject([NyxField('mode', NyxData('create')), NyxField('base', NyxData('empty')),
+      NyxField('label', NyxData('Independent presence review')),
+      NyxField('expectedRevision', Observe.Field('session').Field('revision')),
+      NyxField('operationId', NyxData('primary-presence-review'))]));
+  LHandle := LReview.Field('review').AsText;
+  LReview := GEngine.InvokeTool('nyx_session', 'isolated-reader', 'Scooty review reader',
+    NyxObject([NyxField('review', NyxData(LHandle))]));
+  Check(Observe.Field('workspaces').Item(0).Field('connections').Count = 2,
+    'Isolated review dispatch does not claim primary-project presence');
+  GEngine.InvokeTool('nyx_reviews', 'isolated-reader', 'Scooty review reader',
+    NyxObject([NyxField('mode', NyxData('discard')), NyxField('review', NyxData(LHandle)),
+      NyxField('expectedRevision', LReview.Field('revision')),
+      NyxField('operationId', NyxData('primary-presence-retire'))]));
+  GEngine.InvokeBuild('primary-build-reader', 'Scooty compiler reader',
+    NyxObject([NyxField('mode', NyxData('outputs'))]));
+  Check(Observe.Field('workspaces').Item(0).Field('connections').Count = 3,
+    'Default compiler discovery publishes primary-project presence');
+  Check(ReadBytes(GDirectories.SessionCheckpoint) = LBefore,
+    'Read-only primary/review/compile presence leaves the full checkpoint byte-exact');
 end;
 
 function Invoke(const ATool: TNyxText; const AArguments: TNyxDataValue): TNyxDataValue;
@@ -421,6 +577,12 @@ begin
   LLock := nil;
   try
 
+    if (ParamCount = 4) and (ParamStr(1) = '--retained') then
+    begin
+      VerifyRetainedCheckpoint(ParamStr(2), ParamStr(3), ParamStr(4));
+      Exit;
+    end;
+
     if not (ParamCount in [2, 3]) then
     begin
       raise Exception.Create('Supply new owned runtime and maintained semantic source directory');
@@ -470,6 +632,7 @@ begin
       begin
         Connect;
         Check(FileExists(GDirectories.SessionCheckpoint), 'Actual claim is durable without any output compiler');
+        VerifyPrimaryPresence;
         LPair := DecodeNyxProject(Observe.Field('project').AsText);
         LPair.Source := TNyxText('// Authored recovery note 😀') + LineEnding + LPair.Source;
         Commit(LPair);
