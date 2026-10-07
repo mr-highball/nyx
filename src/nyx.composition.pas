@@ -580,6 +580,11 @@ var
       begin
         LPart.SetMenu(LRule.MenuReference);
       end;
+
+      if LRule.HasMenuBar then
+      begin
+        LPart.SetMenuBar(LRule.MenuBar);
+      end;
       LPart.Extensions.Overlay(LRule.Extensions);
     end;
   end;
@@ -671,6 +676,11 @@ var
         begin
           Result.SetMenu(ANode.MenuReference);
         end;
+
+        if ANode.HasMenuBar then
+        begin
+          Result.SetMenuBar(ANode.MenuBar);
+        end;
         Result.Extensions.Overlay(ANode.Extensions);
         ApplyOverrides(ANode, Result, LScope, ADepth + 1);
       except
@@ -719,6 +729,11 @@ var
       if ANode.HasMenu then
       begin
         Result.SetMenu(ANode.MenuReference);
+      end;
+
+      if ANode.HasMenuBar then
+      begin
+        Result.SetMenuBar(ANode.MenuBar);
       end;
       for LIndex := 0 to ANode.BindingCount - 1 do
       begin
@@ -853,6 +868,14 @@ var
     if ANode.HasMenu and (ANode.MenuReference.Name <> '') then
     begin
       CollectMenu(ANode.MenuReference);
+    end;
+
+    if ANode.HasMenuBar and (ANode.MenuBar <> nil) then
+    begin
+      for LIndex := 0 to ANode.MenuBar.Count - 1 do
+      begin
+        CollectMenu(ANode.MenuBar.Item(LIndex).Menu);
+      end;
     end;
 
     if (ANode.Kind = 'component') or (ANode.ProjectionKind = 'component') then

@@ -40,6 +40,7 @@ uses
   nyx.presentations,
   nyx.content,
   nyx.menu.declarations,
+  nyx.menu.bar.declarations,
   nyx.containers,
   nyx.layout.policy,
   nyx.layout.constraints,
@@ -116,6 +117,8 @@ type
     FContent: INyxContent;
     FHasMenu: Boolean;
     FMenuReference: TNyxMenuRef;
+    FHasMenuBar: Boolean;
+    FMenuBar: INyxMenuBarDefinition;
     FContract: TNyxContract;
     FBindingConfig: TNyxNodeBindings;
     FStateBindings: array of TNyxBindingSpec;
@@ -276,6 +279,12 @@ type
     procedure RemoveMenu;
     property HasMenu: Boolean read FHasMenu;
     property MenuReference: TNyxMenuRef read GetMenuReference;
+    { Local immutable row grouping. Nil with HasMenuBar masks inheritance;
+      RemoveMenuBar restores it. Set normalizes foreign plans before publish. }
+    procedure SetMenuBar(const ADefinition: INyxMenuBarDefinition);
+    procedure RemoveMenuBar;
+    property HasMenuBar: Boolean read FHasMenuBar;
+    property MenuBar: INyxMenuBarDefinition read FMenuBar;
     { Explicit descriptor/codec boundary. Copies immutable data and replaces a
       target in place; failed validation preserves metadata and its ordering. }
     procedure SetBinding(const ASpec: TNyxBindingSpec);
@@ -471,6 +480,10 @@ type
     function Menu(const AReference: TNyxMenuRef): TNyxNodeConfig;
     function NoMenu: TNyxNodeConfig;
     function InheritMenu: TNyxNodeConfig;
+    { Grouping is structural; platform/viewport/presentation scopes refuse. }
+    function MenuBar(const ADefinition: INyxMenuBarDefinition): TNyxNodeConfig;
+    function NoMenuBar: TNyxNodeConfig;
+    function InheritMenuBar: TNyxNodeConfig;
     function OnClick(const AValue: TNyxEventRef): TNyxNodeConfig;
     function OnChange(const AValue: TNyxEventRef): TNyxNodeConfig;
     { Clear preserves a present empty property. Metadata is an explicit codec /
@@ -566,6 +579,7 @@ type
     function GetHasCollectionViews: Boolean;
     function GetHasContentRules: Boolean;
     function GetHasMenuDeclarations: Boolean;
+    function GetHasMenuBars: Boolean;
     procedure AdmitRoot(ANode: TNyxNode);
   public
     constructor Create;
@@ -610,6 +624,7 @@ type
       and renderer lifetimes never retain this document through the plans. }
     property Menus: INyxMenuDeclarations read FMenus;
     property HasMenuDeclarations: Boolean read GetHasMenuDeclarations;
+    property HasMenuBars: Boolean read GetHasMenuBars;
     { Includes deliberate clear descriptors; selects version-3 node semantics. }
     property HasCollectionViews: Boolean read GetHasCollectionViews;
     property HasContentRules: Boolean read GetHasContentRules;
@@ -2025,6 +2040,64 @@ begin
   Result := Self;
 end;
 
+procedure TNyxNode.SetMenuBar(const ADefinition: INyxMenuBarDefinition);
+var
+  LCopy: INyxMenuBarDefinition;
+begin
+
+  if ADefinition <> nil then
+  begin
+    LCopy := CopyNyxMenuBarDefinition(ADefinition);
+  end;
+  FMenuBar := LCopy;
+  FHasMenuBar := True;
+end;
+
+procedure TNyxNode.RemoveMenuBar;
+begin
+  FMenuBar := nil;
+  FHasMenuBar := False;
+end;
+
+function TNyxNodeConfig.MenuBar(const ADefinition: INyxMenuBarDefinition): TNyxNodeConfig;
+begin
+
+  if (FPlatform <> npfAny) or not FViewport.IsAny or FPresentation.Defined then
+  begin
+    raise ENyxModel.Create('Menu bar grouping retains portable structural meaning');
+  end;
+
+  if ADefinition = nil then
+  begin
+    raise ENyxModel.Create('Menu bar definition is required; use NoMenuBar to mask inheritance');
+  end;
+  { SetMenuBar performs the independent copy once, before publishing. }
+  FNode.SetMenuBar(ADefinition);
+  Result := Self;
+end;
+
+function TNyxNodeConfig.NoMenuBar: TNyxNodeConfig;
+begin
+
+  if (FPlatform <> npfAny) or not FViewport.IsAny or FPresentation.Defined then
+  begin
+    raise ENyxModel.Create('Menu bar grouping retains portable structural meaning');
+  end;
+  FNode.SetMenuBar(nil);
+  Result := Self;
+end;
+
+function TNyxNodeConfig.InheritMenuBar: TNyxNodeConfig;
+begin
+
+  if (FPlatform <> npfAny) or not FViewport.IsAny or FPresentation.Defined then
+  begin
+    raise ENyxModel.Create('Menu bar grouping retains portable structural meaning');
+  end;
+  FNode.RemoveMenuBar;
+  Result := Self;
+end;
+
 function TNyxNodeConfig.OnClick(const AValue: TNyxEventRef): TNyxNodeConfig;
 begin
   Result := Put(atEmit, AValue.Name);
@@ -2713,6 +2786,11 @@ begin
       Result.SetMenu(FMenuReference);
     end;
 
+    if FHasMenuBar then
+    begin
+      Result.SetMenuBar(FMenuBar);
+    end;
+
     if FHasCollectionView then
     begin
       Result.SetCollectionView(FCollectionView);
@@ -3140,7 +3218,7 @@ var
     LChild: Integer;
   begin
 
-    if ANode.HasMenu then
+    if ANode.HasMenu or ANode.HasMenuBar then
     begin
       Exit(True);
     end;
@@ -3220,6 +3298,50 @@ begin
   end;
 end;
 
+function TNyxDocument.GetHasMenuBars: Boolean;
+var
+  LIndex: Integer;
+
+  function HasBar(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+
+    if ANode.HasMenuBar then
+    begin
+      Exit(True);
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if HasBar(ANode.Children[LChild]) then
+      begin
+        Exit(True);
+      end;
+    end;
+    Result := False;
+  end;
+
+begin
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if HasBar(FPages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ComponentCount - 1 do
+  begin
+
+    if HasBar(FComponents[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
 function TNyxDocument.GetHasContentRules: Boolean;
 var
   LIndex: Integer;
@@ -3270,6 +3392,7 @@ var
   LHasCollectionViews: Boolean;
   LHasContentRules: Boolean;
   LHasMenus: Boolean;
+  LHasMenuBars: Boolean;
 
   procedure Visit(ANode: TNyxNode; ADepth: Integer);
   var
@@ -3286,6 +3409,7 @@ var
     LAttribute: TNyxAttribute;
     LPropertyIndex: Integer;
     LContentRule: TNyxContentRule;
+    LMenuBar: INyxMenuBarDefinition;
   begin
     Inc(LTotal);
 
@@ -3309,6 +3433,24 @@ var
       not FMenus.Contains(ANode.MenuReference) then
     begin
       raise ENyxModel.Create('Control refers to an unresolved menu definition');
+    end;
+
+    if LHasMenuBars and ANode.Extensions.Has(NyxExtension(NyxMenuBarWireField)) then
+    begin
+      raise ENyxModel.Create('Typed bar grouping conflicts with retained menuBar data');
+    end;
+
+    if ANode.HasMenuBar and (ANode.MenuBar <> nil) then
+    begin
+      LMenuBar := ANode.MenuBar;
+      for LPropertyIndex := 0 to LMenuBar.Count - 1 do
+      begin
+
+        if not FMenus.Contains(LMenuBar.Item(LPropertyIndex).Menu) then
+        begin
+          raise ENyxModel.Create('Menu bar heading refers to an unresolved menu definition');
+        end;
+      end;
     end;
     { Version five promotes contentRules to a typed field on every node. Older
       opaque fields must never acquire constructor meaning implicitly. }
@@ -3560,6 +3702,7 @@ begin
   FCollections.Validate;
   FMenus.Validate;
   LHasMenus := HasMenuDeclarations;
+  LHasMenuBars := HasMenuBars;
 
   if LHasMenus and FExtensions.Has(NyxExtension(NyxMenusWireField)) then
   begin

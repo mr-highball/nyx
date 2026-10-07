@@ -23,6 +23,66 @@
 { Included inside TNyxCodegen.Generate. Emit portable meaning through typed
   fluent declarations; focus, search buffers and runtime check changes stay out. }
 
+  { Emit only authored grouping. Runtime focus/search/check state stays out. }
+  procedure EmitMenuBar(ANode: TNyxNode);
+  const
+    CMatch: array[TNyxTypeAheadMatch] of TNyxText = ('ntmFolded', 'ntmExact');
+  var
+    LOptions: TNyxMenuBarOptions;
+    LHeading: INyxMenuBarHeading;
+    LIndex: Integer;
+    LSuffix: TNyxText;
+
+    function BooleanText(AValue: Boolean): TNyxText;
+    begin
+
+      if AValue then
+      begin
+        Result := 'True';
+      end
+      else
+      begin
+        Result := 'False';
+      end;
+    end;
+
+  begin
+
+    if not ANode.HasMenuBar then
+    begin
+      Exit;
+    end;
+
+    if ANode.MenuBar = nil then
+    begin
+      LLines.Add('      .NoMenuBar');
+      Exit;
+    end;
+    LOptions := ANode.MenuBar.Options;
+    LLines.Add('      .MenuBar(');
+    LLines.Add('        NewNyxMenuBarDefinition(');
+    LLines.Add('          NyxMenuBar(' + PascalString(LOptions.Caption) + ')');
+    LLines.Add('            .Wrap(' + BooleanText(LOptions.Wraps) + ')');
+    LLines.Add('            .HoverSwitch(' + BooleanText(LOptions.Hovers) + ')');
+    LLines.Add('            .TypeAhead(NyxTypeAhead');
+    LLines.Add('              .Enabled(' + BooleanText(LOptions.Search.IsEnabled) + ')');
+    LLines.Add('              .WindowMilliseconds(' + IntToStr(LOptions.Search.WindowMS) + ')');
+    LLines.Add('              .Match(' + CMatch[LOptions.Search.MatchMode] + ')))');
+    for LIndex := 0 to ANode.MenuBar.Count - 1 do
+    begin
+      LHeading := ANode.MenuBar.Item(LIndex);
+      LSuffix := '';
+
+      if LIndex = ANode.MenuBar.Count - 1 then
+      begin
+        LSuffix := ')';
+      end;
+      LLines.Add('          .Heading(NyxPart(' + PascalString(LHeading.Part.Name) +
+        '), NyxMenuRef(' + PascalString(LHeading.Menu.Name) + '), ' +
+        BooleanText(LHeading.IsEnabled) + ')' + LSuffix);
+    end;
+  end;
+
   procedure EmitMenus;
   const
     CSides: array[TNyxPopoverSide] of TNyxText =

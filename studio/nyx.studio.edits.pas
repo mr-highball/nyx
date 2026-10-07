@@ -29,7 +29,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.catalog, nyx.designer.resize,
   nyx.responsive, nyx.presentations, nyx.content, nyx.root.types, nyx.designer.move,
-  nyx.contract, nyx.menu.declarations;
+  nyx.contract, nyx.menu.declarations, nyx.menu.bar.declarations;
 
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
@@ -39,7 +39,8 @@ type
     doDerive, doInstance, doOverride, doInherit, doPlace, doPlaceNew,
     doPresentationDefine, doPresentationRemove, doPresentationUse, doPresentationReset,
     doPresentationSet, doContentSet, doValueDomainSet, doValueDomainInherit,
-    doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit);
+    doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit,
+    doMenuBarSet, doMenuBarInherit);
 
   { Immutable copied menu intent. Definition replaces one registry entry;
     attachment sets one exact local invoker reference (NoMenu explicitly masks
@@ -217,6 +218,12 @@ function NyxAttachMenu(const AControl: TNyxControlRef;
   const AReference: TNyxMenuRef): TNyxMenuEdit;
 function NyxNoMenu(const AControl: TNyxControlRef): TNyxMenuEdit;
 function NyxInheritMenu(const AControl: TNyxControlRef): TNyxMenuEdit;
+{ Saved row grouping shares the complete paired menu patch gate. Set normalizes
+  independent values; No explicitly masks inheritance, Inherit removes a local. }
+function NyxConfigureMenuBar(const AControl: TNyxControlRef;
+  const ADefinition: INyxMenuBarDefinition): TNyxMenuEdit;
+function NyxNoMenuBar(const AControl: TNyxControlRef): TNyxMenuEdit;
+function NyxInheritMenuBar(const AControl: TNyxControlRef): TNyxMenuEdit;
 function NyxMenuPatch(const AChanges: array of TNyxMenuEdit): INyxDesignPatch;
 { Nil content clears typed choices, retaining a stored Component reference if
   present. Candidate admission still requires an ordinary recipe. Invalid
@@ -1312,6 +1319,29 @@ begin
   Result.FOperation := doMenuInherit;
 end;
 
+function NyxNoMenuBar(const AControl: TNyxControlRef): TNyxMenuEdit;
+begin
+  Result := Default(TNyxMenuEdit);
+  Result.FControl := NyxControl(AControl.ID);
+  NyxRoot(nrReusable, Result.FControl.ID);
+  Result.FOperation := doMenuBarSet;
+  Result.FDefinition := NyxNull;
+  Result.FDefined := True;
+end;
+
+function NyxConfigureMenuBar(const AControl: TNyxControlRef;
+  const ADefinition: INyxMenuBarDefinition): TNyxMenuEdit;
+begin
+  Result := NyxNoMenuBar(AControl);
+  Result.FDefinition := CopyNyxMenuBarDefinition(ADefinition).ToData;
+end;
+
+function NyxInheritMenuBar(const AControl: TNyxControlRef): TNyxMenuEdit;
+begin
+  Result := NyxNoMenuBar(AControl);
+  Result.FOperation := doMenuBarInherit;
+end;
+
 function TNyxMenuEdit.ToData: TNyxDataValue;
 var
   LValue: TNyxDataValue;
@@ -1322,6 +1352,12 @@ begin
     raise ENyxModel.Create('Construct a menu edit before encoding it');
   end;
   case FOperation of
+    doMenuBarSet:
+      Result := NyxObject([NyxField('op', NyxData('menu-bar-set')),
+        NyxField('id', NyxData(FControl.ID)), NyxField('definition', FDefinition)]);
+    doMenuBarInherit:
+      Result := NyxObject([NyxField('op', NyxData('menu-bar-inherit')),
+        NyxField('id', NyxData(FControl.ID))]);
     doMenuDefine:
       Result := NyxObject([NyxField('op', NyxData('menu-define')),
         NyxField('name', NyxData(FReference.Name)), NyxField('definition', FDefinition)]);
@@ -1354,6 +1390,24 @@ var
   LName: TNyxText;
 begin
   LName := AData.Field('op').AsText;
+
+  if LName = 'menu-bar-set' then
+  begin
+    CheckFields(AData, '|op|id|definition|');
+
+    if AData.Field('definition').Kind = ndNull then
+    begin
+      Exit(NyxNoMenuBar(NyxControl(AData.Field('id').AsText)));
+    end;
+    Exit(NyxConfigureMenuBar(NyxControl(AData.Field('id').AsText),
+      NyxMenuBarDefinitionFromData(AData.Field('definition'))));
+  end;
+
+  if LName = 'menu-bar-inherit' then
+  begin
+    CheckFields(AData, '|op|id|');
+    Exit(NyxInheritMenuBar(NyxControl(AData.Field('id').AsText)));
+  end;
 
   if LName = 'menu-define' then
   begin
@@ -2121,6 +2175,29 @@ begin
             end;
           end;
         doTitle: Result.Title := LOperation.ID;
+        doMenuBarSet:
+          begin
+            LNode := RequireNode(Result, LOperation.Menu.FControl.ID);
+
+            if LOperation.Menu.FDefinition.Kind = ndNull then
+            begin
+              LNode.SetMenuBar(nil);
+            end
+            else
+            begin
+              LNode.SetMenuBar(NyxMenuBarDefinitionFromData(LOperation.Menu.FDefinition));
+            end;
+          end;
+        doMenuBarInherit:
+          begin
+            LNode := RequireNode(Result, LOperation.Menu.FControl.ID);
+
+            if not LNode.HasMenuBar then
+            begin
+              raise ENyxModel.Create('This exact local bar declaration is absent');
+            end;
+            LNode.RemoveMenuBar;
+          end;
         doMenuDefine:
           begin
             Result.Menus.Define(LOperation.Menu.FReference,

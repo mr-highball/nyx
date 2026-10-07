@@ -491,6 +491,24 @@ begin
   Result := Self as INyxConfiguration;
 end;
 
+function TNyxConfiguration.MenuBar(const ADefinition: INyxMenuBarDefinition): INyxConfiguration;
+begin
+  ConfigurationScope.MenuBar(ADefinition);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.NoMenuBar: INyxConfiguration;
+begin
+  ConfigurationScope.NoMenuBar;
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.InheritMenuBar: INyxConfiguration;
+begin
+  ConfigurationScope.InheritMenuBar;
+  Result := Self as INyxConfiguration;
+end;
+
 function TNyxConfiguration.OnClick(const AValue: TNyxEventRef): INyxConfiguration;
 begin
   ConfigurationScope.OnClick(AValue);
@@ -939,4 +957,3 @@ procedure TNyxControlExtensions.LoadJSON(const ASource: TNyxText);
 begin
   FOwner.Node.Extensions.LoadJSON(ASource);
 end;
-

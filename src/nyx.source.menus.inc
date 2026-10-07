@@ -33,6 +33,7 @@ var
   LEnabled: Boolean;
   LDismissals: TNyxPopoverDismissals;
   LDefinition: INyxMenuDefinition;
+  LBarDefinition: INyxMenuBarDefinition;
 
   procedure Require(ACount: Integer; AKind: TValueKind);
   begin
@@ -77,7 +78,13 @@ begin
   begin
     LArgs := Arguments;
 
-    if SameText(AName, 'NewNyxMenuDefinition') then
+    if SameText(AName, 'NewNyxMenuBarDefinition') then
+    begin
+      Require(1, vkMenuBarOptions);
+      Result.Kind := vkMenuBarDefinition;
+      LBarDefinition := NewNyxMenuBarDefinition(LArgs[0].MenuBarOptions);
+    end
+    else if SameText(AName, 'NewNyxMenuDefinition') then
     begin
       Require(2, vkRootRef);
 
@@ -93,7 +100,12 @@ begin
     begin
       Require(1, vkText);
 
-      if SameText(AName, 'NyxMenu') then
+      if SameText(AName, 'NyxMenuBar') then
+      begin
+        Result.Kind := vkMenuBarOptions;
+        Result.MenuBarOptions := NyxMenuBar(LArgs[0].Text);
+      end
+      else if SameText(AName, 'NyxMenu') then
       begin
         Result.Kind := vkMenuOptions;
         Result.MenuOptions := NyxMenu(LArgs[0].Text);
@@ -215,6 +227,54 @@ begin
           begin
             Fail('Unsupported popover builder method');
           end;
+        end;
+      vkMenuBarOptions:
+        begin
+
+          if (LMethod = 'wrap') or (LMethod = 'hoverswitch') then
+          begin
+            Require(1, vkBoolean);
+
+            if LMethod = 'wrap' then
+            begin
+              Result.MenuBarOptions := Result.MenuBarOptions.Wrap(LArgs[0].Ordinal <> 0);
+            end
+            else
+            begin
+              Result.MenuBarOptions := Result.MenuBarOptions.HoverSwitch(LArgs[0].Ordinal <> 0);
+            end;
+          end
+          else if LMethod = 'typeahead' then
+          begin
+            Require(1, vkTypeAheadOptions);
+            Result.MenuBarOptions := Result.MenuBarOptions.TypeAhead(LArgs[0].TypeAheadOptions);
+          end
+          else
+          begin
+            Fail('Unsupported menu bar policy method');
+          end;
+        end;
+      vkMenuBarDefinition:
+        begin
+
+          if (LMethod <> 'heading') or (Length(LArgs) < 2) or (Length(LArgs) > 3) or
+            (LArgs[0].Kind <> vkPart) or (LArgs[1].Kind <> vkMenuRef) then
+          begin
+            Fail('Heading requires a named part, menu reference and optional Boolean');
+          end;
+          LEnabled := True;
+
+          if Length(LArgs) = 3 then
+          begin
+
+            if LArgs[2].Kind <> vkBoolean then
+            begin
+              Fail('Heading enabled default requires a Boolean');
+            end;
+            LEnabled := LArgs[2].Ordinal <> 0;
+          end;
+          LBarDefinition := LBarDefinition.Heading(NyxPart(LArgs[0].Text),
+            NyxMenuRef(LArgs[1].Text), LEnabled);
         end;
       vkMenuOptions:
         begin
@@ -351,6 +411,13 @@ begin
     Result.Ordinal := Length(FMenuDefinitions);
     SetLength(FMenuDefinitions, Result.Ordinal + 1);
     FMenuDefinitions[Result.Ordinal] := LDefinition;
+  end;
+
+  if Result.Kind = vkMenuBarDefinition then
+  begin
+    Result.Ordinal := Length(FMenuBarDefinitions);
+    SetLength(FMenuBarDefinitions, Result.Ordinal + 1);
+    FMenuBarDefinitions[Result.Ordinal] := LBarDefinition;
   end;
 end;
 

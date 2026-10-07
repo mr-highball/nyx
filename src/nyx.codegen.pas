@@ -38,6 +38,7 @@ uses
   nyx.presentations,
   nyx.content,
   nyx.menu.declarations,
+  nyx.menu.bar.declarations,
   nyx.menu.types,
   nyx.popover.types,
   nyx.typeahead,
@@ -1511,7 +1512,7 @@ var
     LLines.Add('    ' + LVariable + ' := ' + LKindArgument + ';');
     LLines.Add('    ' + AOwner + '(' + LVariable + ');');
 
-    if (ANode.Props.Count > 0) or ANode.HasMenu then
+    if (ANode.Props.Count > 0) or ANode.HasMenu or ANode.HasMenuBar then
     begin
       LLines.Add('    ' + LVariable + '.Configure');
     end;
@@ -1528,6 +1529,7 @@ var
         LLines.Add('      .Menu(NyxMenuRef(' + PascalString(ANode.MenuReference.Name) + '))');
       end;
     end;
+    EmitMenuBar(ANode);
     LCalendarValue := False;
 
     if (ANode.Kind = 'slot-override') and
@@ -1592,7 +1594,7 @@ var
       LLines.Add('      .' + ConfigurationCall(ANode, LKey, ANode.Prop(LWireKey), LCalendarValue));
     end;
 
-    if (ANode.Props.Count > 0) or ANode.HasMenu then
+    if (ANode.Props.Count > 0) or ANode.HasMenu or ANode.HasMenuBar then
     begin
       LLines.Add('      .Done;');
     end;
@@ -1683,6 +1685,7 @@ begin
     if ADocument.HasMenuDeclarations then
     begin
       LLines.Add('  nyx.menu.declarations,');
+      LLines.Add('  nyx.menu.bar.declarations,');
       LLines.Add('  nyx.menu.types,');
       LLines.Add('  nyx.popover.types,');
       LLines.Add('  nyx.typeahead,');

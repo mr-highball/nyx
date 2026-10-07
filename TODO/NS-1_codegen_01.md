@@ -22,6 +22,23 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - Original-size native editor qualification now needs the logical viewport /
   safe widget geometry prerequisite in [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md).
 
+## Saved menu-bar source — 2026-10-07
+
+The accepted public-generation/reconstruction foundation now preserves typed bar
+policies, ordered distinct part/menu references and parameterless inheritance
+masks. Exact accepted source compiles into automatically bound ordinary native
+and browser applications, each passing 18 physical-input checks; bounded paired
+semantic/source fixtures pass 54 per target. Reusable inherited grouping and
+standalone menu/content dependencies remain independent. Current core/composition
+passes 30/1781, leak-free. See
+[the packet](../WORK.md#current-return-path-saved-menu-bar-integration--2026-10-07).
+
+Criteria 1/2 retain acceptance; the full source/editor synchronization criterion
+3 remains open at counter 28. This batch belongs to the existing workflow
+prerequisite (15→16), with no second source-owner increment. Public Studio bar
+forms, authenticated new-backend journey and protected observing delivery retain
+their owners; stop source-fixture expansion and follow that concrete prerequisite.
+
 ## Typed date fields — 2026-10-06
 
 The original native interaction/parity and advanced-picker scope now includes

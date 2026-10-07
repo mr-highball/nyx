@@ -26,7 +26,7 @@ unit nyx.menu.button;
 
 interface
 
-uses nyx.menu, nyx.controls, nyx.events, nyx.types;
+uses nyx.menu, nyx.menu.bar, nyx.controls, nyx.events, nyx.types;
 
 type
   { Managed registration on an ordinary specialized Nyx button. Owns the menu,
@@ -59,6 +59,18 @@ type
     property Count: Integer read GetCount;
   end;
 
+  { Optional coordinated-group extension of the same mounted owner. Bar retains
+    its families; this owner cancels forwarding before releasing any coordinator.
+    Menu(control) also observes each exact grouped heading. AddBar refuses duplicate
+    headings/rows and nonsequential forwarding without replacing prior bindings. }
+  INyxMenuBarBindings = interface(IInterface)
+    ['{71000707-BA22-4531-9030-000000000003}']
+    function AddBar(const ABar: INyxMenuBar; const AEvents: INyxEvents): INyxMenuBindings;
+    function Bar(const AControl: TNyxControlRef): INyxMenuBar;
+    function GetBarCount: Integer;
+    property BarCount: Integer read GetBarCount;
+  end;
+
 { Target factories populate this portable owner after mounting a view. It
   retains no renderer and creates no cycle into the document or menu family. }
 function NewNyxMenuBindings: INyxMenuBindings;
@@ -79,21 +91,29 @@ type
     FEvents: INyxEvents;
     FRuntimeID: TNyxText;
     FDesignID: TNyxText;
+    FKeepOrigin: Boolean;
   public
-    constructor Create(const AEvents: INyxEvents; const ARuntimeID, ADesignID: TNyxText);
+    constructor Create(const AEvents: INyxEvents; const ARuntimeID, ADesignID: TNyxText;
+      AKeepOrigin: Boolean = False);
     procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
   end;
-  TMenuBindings = class(TInterfacedObject, INyxMenuBindings)
+  TMenuBindings = class(TInterfacedObject, INyxMenuBindings, INyxMenuBarBindings)
   private
     FIDs: array of TNyxText;
     FInvokers: array of INyxMenuButton;
     FCompletions: array of INyxEventSubscription;
+    FFamilies: array of INyxMenu;
+    FBars: array of INyxMenuBar;
+    FBarCompletions: array of INyxEventSubscription;
   public
     destructor Destroy; override;
     function GetCount: Integer;
     function Add(const AButton: INyxButton; const AEvents: INyxEvents;
       const AMenu: INyxMenu; const AOptions: TNyxMenuOptions): INyxMenuBindings;
     function Menu(const AControl: TNyxControlRef): INyxMenu;
+    function AddBar(const ABar: INyxMenuBar; const AEvents: INyxEvents): INyxMenuBindings;
+    function Bar(const AControl: TNyxControlRef): INyxMenuBar;
+    function GetBarCount: Integer;
   end;
   TMenuButton = class;
   TButtonLease = class(TInterfacedObject)
@@ -132,12 +152,13 @@ begin
 end;
 
 constructor TCommandForwarder.Create(const AEvents: INyxEvents;
-  const ARuntimeID, ADesignID: TNyxText);
+  const ARuntimeID, ADesignID: TNyxText; AKeepOrigin: Boolean);
 begin
   inherited Create;
   FEvents := AEvents;
   FRuntimeID := ARuntimeID;
   FDesignID := ADesignID;
+  FKeepOrigin := AKeepOrigin;
 end;
 
 procedure TCommandForwarder.Invoke(const AEvent: TNyxEventInfo;
@@ -149,7 +170,13 @@ begin
     whose saved menu attachment produced this independent mounted family. }
   NyxMenuInvocation(AEvent);
   LEvent := AEvent.Copy;
-  LEvent.OriginID := FRuntimeID;
+  { A bar already carries the exact runtime heading as origin. Menu buttons
+    instead need their root invoker here, without leaking popup-content IDs. }
+
+  if not FKeepOrigin then
+  begin
+    LEvent.OriginID := FRuntimeID;
+  end;
   LEvent.SourceID := FRuntimeID;
   LEvent.TargetID := FRuntimeID;
   FEvents.Dispatch(LEvent, FDesignID, FDesignID);
@@ -168,7 +195,14 @@ begin
     end;
   end;
   FCompletions := nil;
+  for LIndex := 0 to High(FBarCompletions) do
+  begin
+    FBarCompletions[LIndex].Cancel;
+  end;
+  FBarCompletions := nil;
+  FBars := nil;
   FInvokers := nil;
+  FFamilies := nil;
   inherited Destroy;
 end;
 
@@ -204,9 +238,11 @@ begin
   SetLength(FIDs, LIndex + 1);
   SetLength(FInvokers, LIndex + 1);
   SetLength(FCompletions, LIndex + 1);
+  SetLength(FFamilies, LIndex + 1);
   FIDs[LIndex] := AButton.ID;
   FInvokers[LIndex] := LInvoker;
   FCompletions[LIndex] := LCompletion;
+  FFamilies[LIndex] := AMenu;
   Result := Self;
 end;
 
@@ -219,10 +255,90 @@ begin
 
     if FIDs[LIndex] = AControl.ID then
     begin
-      Exit(FInvokers[LIndex].Menu);
+      Exit(FFamilies[LIndex]);
     end;
   end;
   raise ENyxModel.Create('No declared menu is mounted on this exact control');
+end;
+
+function TMenuBindings.GetBarCount: Integer;
+begin
+  Result := Length(FBars);
+end;
+
+function TMenuBindings.Bar(const AControl: TNyxControlRef): INyxMenuBar;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(FBars) do
+  begin
+
+    if FBars[LIndex].Content.ID = AControl.ID then
+    begin
+      Exit(FBars[LIndex]);
+    end;
+  end;
+  raise ENyxModel.Create('No declared menu bar is mounted on this exact row');
+end;
+
+function TMenuBindings.AddBar(const ABar: INyxMenuBar;
+  const AEvents: INyxEvents): INyxMenuBindings;
+var
+  LIndex: Integer;
+  LOther: Integer;
+  LOffset: Integer;
+  LIDs: array of TNyxText;
+  LMenus: array of INyxMenu;
+  LCompletion: INyxEventSubscription;
+  LCallback: INyxEventCallback;
+begin
+
+  if (ABar = nil) or (AEvents = nil) or (ABar.Count < 1) or
+    (ABar.Count > 64) or (ABar.OnInvoke.ExecutionPolicy <> neSequential) then
+  begin
+    raise ENyxModel.Create('Declared bar requires bounded sequential UI forwarding');
+  end;
+  AEvents.Scheduler.RequireUI;
+  for LIndex := 0 to High(FBars) do
+  begin
+
+    if FBars[LIndex].Content.ID = ABar.Content.ID then
+    begin
+      raise ENyxModel.Create('This exact row already owns a declared bar binding');
+    end;
+  end;
+  SetLength(LIDs, ABar.Count);
+  SetLength(LMenus, ABar.Count);
+  for LIndex := 0 to High(LIDs) do
+  begin
+    LIDs[LIndex] := ABar.Content.Part(ABar.Heading(LIndex)).ID;
+    LMenus[LIndex] := ABar.Menu(ABar.Heading(LIndex));
+    for LOther := 0 to High(FIDs) do
+    begin
+
+      if FIDs[LOther] = LIDs[LIndex] then
+      begin
+        raise ENyxModel.Create('A grouped heading already owns another menu binding');
+      end;
+    end;
+  end;
+  LCallback := TCommandForwarder.Create(AEvents, ABar.Content.ID,
+    ABar.Content.Node.DesignID, True);
+  LCompletion := ABar.OnInvoke.Subscribe(LCallback);
+  LOffset := GetCount;
+  SetLength(FIDs, LOffset + Length(LIDs));
+  SetLength(FFamilies, LOffset + Length(LIDs));
+  for LIndex := 0 to High(LIDs) do
+  begin
+    FIDs[LOffset + LIndex] := LIDs[LIndex];
+    FFamilies[LOffset + LIndex] := LMenus[LIndex];
+  end;
+  LIndex := GetBarCount;
+  SetLength(FBars, LIndex + 1);
+  SetLength(FBarCompletions, LIndex + 1);
+  FBars[LIndex] := ABar;
+  FBarCompletions[LIndex] := LCompletion;
+  Result := Self;
 end;
 
 constructor TButtonInput.Create(ALease: TButtonLease);

@@ -470,6 +470,7 @@ uses
   nyx.catalog,
   nyx.content,
   nyx.menu.declarations,
+  nyx.menu.bar.declarations,
   nyx.menu.types,
   nyx.popover.types,
   nyx.typeahead,
@@ -550,7 +551,8 @@ type
     vkSizeConstraints, vkViewportWidth, vkViewportCondition, vkViewportOrientation,
     vkPresentationRef, vkPresentationCondition, vkContainerRef, vkContainerContainment,
     vkCalendarDate, vkMenuRef, vkMenuCommand, vkMenuGroup, vkRootRef,
-    vkMenuDefinition, vkMenuOptions, vkPopoverOptions, vkTypeAheadOptions,
+    vkMenuDefinition, vkMenuOptions, vkMenuBarDefinition, vkMenuBarOptions,
+    vkPopoverOptions, vkTypeAheadOptions,
     vkMenuOpening, vkPopoverSide, vkPopoverAlignment, vkPopoverSizing,
     vkPopoverDismissal, vkTypeAheadMatch);
   TValue = record
@@ -580,6 +582,7 @@ type
     CalendarDate: TNyxCalendarDate;
     RootRef: TNyxRootRef;
     MenuOptions: TNyxMenuOptions;
+    MenuBarOptions: TNyxMenuBarOptions;
     PopoverOptions: TNyxPopoverOptions;
     TypeAheadOptions: TNyxTypeAheadOptions;
   end;
@@ -634,6 +637,7 @@ type
       ordinals address this reader-owned array of immutable menu plans instead.
       No index survives source admission or refers to a target/runtime host. }
     FMenuDefinitions: array of INyxMenuDefinition;
+    FMenuBarDefinitions: array of INyxMenuBarDefinition;
     { Default recipe blueprints are reader-owned. An isolated source processor
       must never enter the authoring factories' lazily shared UI registry. }
     FRecipeCatalog: TNyxCatalog;
@@ -1431,6 +1435,7 @@ begin
     Accepted controls remain retained independently by their document/parent. }
   FControls := nil;
   FMenuDefinitions := nil;
+  FMenuBarDefinitions := nil;
   FRecipeCatalog.Free;
   FControlIDs.Free;
   FStateNames.Free;
@@ -2444,6 +2449,7 @@ begin
         end;
 
         if (LName = 'newnyxmenudefinition') or (LName = 'nyxmenu') or
+          (LName = 'newnyxmenubardefinition') or (LName = 'nyxmenubar') or
           (LName = 'nyxpopover') or (LName = 'nyxtypeahead') then
         begin
           Exit(MenuConstructor(LName));
@@ -3326,6 +3332,36 @@ begin
     Exit;
   end;
 
+  if LMethod = 'menubar' then
+  begin
+
+    if (Length(AArgs) <> 1) or (AArgs[0].Kind <> vkMenuBarDefinition) then
+    begin
+      Fail('MenuBar requires an immutable typed row grouping');
+    end;
+    LConfigure.MenuBar(FMenuBarDefinitions[AArgs[0].Ordinal]);
+    Exit;
+  end;
+
+  if (LMethod = 'nomenubar') or (LMethod = 'inheritmenubar') then
+  begin
+
+    if Length(AArgs) <> 0 then
+    begin
+      Fail('Menu bar mask/inheritance takes no arguments');
+    end;
+
+    if LMethod = 'nomenubar' then
+    begin
+      LConfigure.NoMenuBar;
+    end
+    else
+    begin
+      LConfigure.InheritMenuBar;
+    end;
+    Exit;
+  end;
+
   if LMethod = 'extension' then
   begin
 
@@ -3628,12 +3664,13 @@ begin
       Expect(';');
       Exit;
     end;
-    { Explicit local menu clear/inherit follow the public parameterless fluent
-      spelling. Other configuration methods still require their argument frame. }
+    { Explicit local menu/bar masks and inheritance follow the public
+      parameterless fluent spelling. Other methods require an argument frame. }
     LArgs := nil;
 
     if At('(') or (not SameText(LMethod, 'NoMenu') and
-      not SameText(LMethod, 'InheritMenu')) then
+      not SameText(LMethod, 'InheritMenu') and not SameText(LMethod, 'NoMenuBar') and
+      not SameText(LMethod, 'InheritMenuBar')) then
     begin
       LArgs := Arguments;
     end;

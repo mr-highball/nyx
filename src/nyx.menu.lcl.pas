@@ -49,7 +49,8 @@ function BindNyxLCLMenus(ADocument: TNyxDocument;
 implementation
 
 uses SysUtils, Classes, Forms, Graphics, LCLType, nyx.types, nyx.behavior,
-  nyx.events, nyx.scheduler, nyx.widgets.lcl, nyx.controls;
+  nyx.events, nyx.scheduler, nyx.widgets.lcl, nyx.controls,
+  nyx.menu.bar, nyx.menu.bar.lcl, nyx.menu.bar.declarations;
 
 type
   TMenuControlAccess = class(TWinControl);
@@ -265,16 +266,65 @@ function BindNyxLCLMenus(ADocument: TNyxDocument;
   ARenderer: TNyxLCLRenderer): INyxMenuBindings;
 var
   LBindings: INyxMenuBindings;
+  LBarBindings: INyxMenuBarBindings;
+  LGroupedIDs: array of TNyxText;
 
-  procedure Visit(ANode: TNyxNode);
+  procedure Visit(ANode: TNyxNode; ABars: Boolean);
   var
     LIndex: Integer;
+    LPosition: Integer;
     LRecipe: INyxMenuRecipe;
     LMenu: INyxLCLMenu;
+    LRow: INyxRow;
+    LBar: INyxMenuBar;
+    LHeading: INyxMenuBarHeading;
+    LButton: INyxButton;
   begin
 
-    if ANode.HasMenu and (ANode.MenuReference.Name <> '') then
+    if ABars and ANode.HasMenuBar and (ANode.MenuBar <> nil) then
     begin
+
+      if not Supports(RetainNyxControl(ANode), INyxRow, LRow) then
+      begin
+        raise ENyxModel.Create('Declared menu bar must project to a specialized row');
+      end;
+      LBar := NewNyxLCLMenuBar(LRow, ARenderer, ANode.MenuBar.Options);
+      for LIndex := 0 to ANode.MenuBar.Count - 1 do
+      begin
+        LHeading := ANode.MenuBar.Item(LIndex);
+
+        if not Supports(LRow.Part(LHeading.Part), INyxButton, LButton) then
+        begin
+          raise ENyxModel.Create('Declared menu bar heading must be a specialized button');
+        end;
+
+        if LButton.Node.HasMenu and (LButton.Node.MenuReference.Name <> '') then
+        begin
+          raise ENyxModel.Create('A grouped heading cannot also attach a standalone menu');
+        end;
+        LRecipe := NewNyxDeclaredMenuRecipe(ADocument, LHeading.Menu);
+        LMenu := NewNyxLCLMenu(ARenderer.FocusFor(LButton.ID, niRuntime),
+          ADocument, LRecipe.Root, LRecipe.Items);
+        LBar.Add(LHeading.Part, LMenu,
+          ADocument.Menus.Definition(LHeading.Menu).Options);
+        LBar.SetEnabled(LHeading.Part, LHeading.IsEnabled);
+        LPosition := Length(LGroupedIDs);
+        SetLength(LGroupedIDs, LPosition + 1);
+        LGroupedIDs[LPosition] := LButton.ID;
+      end;
+      LBarBindings.AddBar(LBar, ARenderer.Events);
+    end;
+
+    if not ABars and ANode.HasMenu and (ANode.MenuReference.Name <> '') then
+    begin
+      for LIndex := 0 to High(LGroupedIDs) do
+      begin
+
+        if LGroupedIDs[LIndex] = ANode.ID then
+        begin
+          raise ENyxModel.Create('A grouped heading cannot also attach a standalone menu');
+        end;
+      end;
       LRecipe := NewNyxDeclaredMenuRecipe(ADocument, ANode.MenuReference);
       LMenu := NewNyxLCLMenu(ARenderer.FocusFor(ANode.ID, niRuntime),
         ADocument, LRecipe.Root, LRecipe.Items);
@@ -283,7 +333,7 @@ var
     end;
     for LIndex := 0 to ANode.Count - 1 do
     begin
-      Visit(ANode.Children[LIndex]);
+      Visit(ANode.Children[LIndex], ABars);
     end;
   end;
 
@@ -291,10 +341,14 @@ begin
 
   if (ADocument = nil) or (ARenderer = nil) or (ARenderer.Root = nil) then
   begin
-    raise ENyxModel.Create('Declared native menus require a mounted view');
+    raise ENyxModel.Create('Declared lcl menus require a mounted view');
   end;
   LBindings := NewNyxMenuBindings;
-  Visit(ARenderer.Root);
+  Supports(LBindings, INyxMenuBarBindings, LBarBindings);
+  { Coordinate groups before standalone invokers. The candidate owner retires
+    every completed family if any later admission refuses. No descriptor changes. }
+  Visit(ARenderer.Root, True);
+  Visit(ARenderer.Root, False);
   Result := LBindings;
 end;
 

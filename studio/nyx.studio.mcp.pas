@@ -1564,12 +1564,30 @@ end;
 
 function NyxStudioMCPTools: TNyxDataValue;
 var
+  LMenuBarOperation: TNyxDataValue;
   LPage: TNyxDataValue;
   LTransaction: TNyxDataValue;
   LBoolean: TNyxDataValue;
 begin
   LPage := NyxObject([NyxField('offset', IntSchema(0, 100000)), NyxField('limit', IntSchema(1, 50))]);
   LBoolean := NyxObject([NyxField('type', NyxData('boolean'))]);
+  LMenuBarOperation := Schema(NyxObject([
+    NyxField('op', NyxObject([NyxField('const', NyxData('menu-bar-set'))])),
+    NyxField('id', TextSchema('Exact authored row/override')),
+    NyxField('definition', TNyxDataValue.ParseJSON(
+      '{"oneOf":[{"type":"null"},{"type":"object","additionalProperties":false,' +
+      '"required":["version","options","headings"],"properties":{"version":{"const":1},' +
+      '"options":{"type":"object","additionalProperties":false,' +
+      '"required":["label","wrap","hoverSwitch","searchEnabled","searchWindowMS","searchMatch"],' +
+      '"properties":{"label":{"type":"string","minLength":1},"wrap":{"type":"boolean"},' +
+      '"hoverSwitch":{"type":"boolean"},"searchEnabled":{"type":"boolean"},' +
+      '"searchWindowMS":{"type":"integer","minimum":1,"maximum":60000},' +
+      '"searchMatch":{"enum":["folded","exact"]}}},' +
+      '"headings":{"type":"array","minItems":1,"maxItems":64,"items":{' +
+      '"type":"object","additionalProperties":false,"required":["part","menu","enabled"],' +
+      '"properties":{"part":{"type":"string","minLength":1},' +
+      '"menu":{"type":"string","minLength":1,"maxLength":128},"enabled":{"type":"boolean"}}}}}}]}'))]),
+    [NyxData('op'), NyxData('id'), NyxData('definition')]);
   LTransaction := TNyxDataValue.ParseJSON(
     '{"type":"array","minItems":1,"maxItems":64,"items":{"oneOf":[' +
     '{"type":"object","properties":{"op":{"const":"create"},"kind":{"type":"string"},"id":{"type":"string"},"parent":{"type":"string"},"root":{"enum":["page","component"]},"index":{"type":"integer","minimum":0},"properties":{"type":"object","additionalProperties":{"type":["string","boolean","integer","number","null"]}}},"required":["op","kind","id"],"additionalProperties":false},' +
@@ -1580,6 +1598,8 @@ begin
     '{"type":"object","properties":{"op":{"const":"tokens"},"values":{"type":"object"}},"required":["op","values"],"additionalProperties":false},' +
     ContentOperationSchema.ToJSON + ',' +
     MenuDefinitionOperationSchema.ToJSON + ',' +
+    LMenuBarOperation.ToJSON + ',' +
+    '{"type":"object","properties":{"op":{"const":"menu-bar-inherit"},"id":{"type":"string"}},"required":["op","id"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"menu-remove"},"name":{"type":"string","minLength":1,"maxLength":128}},"required":["op","name"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"menu-attach"},"id":{"type":"string"},"menu":{"type":["string","null"]}},"required":["op","id","menu"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"menu-inherit"},"id":{"type":"string"}},"required":["op","id"],"additionalProperties":false},' +
@@ -1630,8 +1650,11 @@ begin
       Schema(NyxObject([NyxField('query', TextSchema('AND search terms')),
         NyxField('group', TextSchema('Intent group key, e.g. inputs, feedback, composition, all')),
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit'))]), []), True),
-    Tool('nyx_menus', 'Inspect at most 16 menu summaries (8 default), or one exact menu with at most 16 ordered entries (8 default). Policy titles page by Unicode scalars (256 default, 1024 maximum). Definition and entry pages carry the current revision. Names, commands, radio groups and parts are distinct exact application references. nyx_node reports local menuAttachment. In nyx_transaction, menu-define creates/replaces an immutable typed plan, menu-attach sets an invoker reference (null explicitly masks inheritance), menu-inherit removes a local declaration, and menu-remove refuses retained references. Group related content/definition/attachment edits as ONE paired Undo step. Drafts and stale revisions refuse. Queries never change selection or history.',
-      Schema(NyxObject([NyxField('name', TextSchema('Exact menu reference')),
+    Tool('nyx_menus', 'Inspect at most 16 menu summaries or ordered entries (8 default). An exact row query returns a paged saved bar: ordered heading parts/menu references, logical enabled defaults and typed policy. barScope defaults effective so reusable instances expose inheritance; local reports authored declarations only. localDeclared distinguishes an explicit mask from absence. Policy labels/titles page by Unicode scalars (256 default, 1024 maximum). Every page carries the current revision; queries preserve selection/history. Exact menu/command/group/part references remain distinct. In nyx_transaction, menu-define, menu-attach, menu-inherit and menu-remove edit standalone declarations. menu-bar-set sets an exact row grouping (definition null masks inheritance); menu-bar-inherit removes only a local grouping. Group related content/menu/bar edits as ONE paired Undo step. Unknown parts/references, competing bindings, pending drafts and stale revisions refuse atomically.',
+      Schema(NyxObject([NyxField('row', TextSchema('Exact authored menu bar row')),
+        NyxField('barScope', NyxObject([NyxField('enum', NyxArray([
+          NyxData('local'), NyxData('effective')]))])),
+        NyxField('name', TextSchema('Exact menu reference')),
         NyxField('offset', IntSchema(0, 64)), NyxField('limit', IntSchema(1, 16)),
         NyxField('itemOffset', IntSchema(0, 256)), NyxField('itemLimit', IntSchema(1, 16)),
         NyxField('textOffset', IntSchema(0, 1000000)), NyxField('textLimit', IntSchema(1, 1024))]), []), True),

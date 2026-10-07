@@ -27,32 +27,12 @@ unit nyx.menu.bar;
 interface
 
 uses
-  SysUtils, nyx.text, nyx.types, nyx.controls, nyx.menu, nyx.events,
+  SysUtils, nyx.text, nyx.types, nyx.controls, nyx.menu, nyx.menu.types, nyx.events,
   nyx.behavior, nyx.scheduler, nyx.typeahead;
 
 type
-  { Value-owned horizontal-bar policy. Labels are user text; traversal and
-    hover are typed choices. A fresh bar remembers its last focused heading. }
-  TNyxMenuBarOptions = record
-  private
-    FDefined: Boolean;
-    FLabel: TNyxText;
-    FWrap: Boolean;
-    FHover: Boolean;
-    FSearch: TNyxTypeAheadOptions;
-  public
-    { Arrow traversal wraps by default; False retains the current boundary. }
-    function Wrap(AValue: Boolean): TNyxMenuBarOptions;
-    { Only mouse entry switches an already open dropdown; touch never hovers. }
-    function HoverSwitch(AValue: Boolean): TNyxMenuBarOptions;
-    { Copy the shared Unicode matching/window policy without retaining a reader. }
-    function TypeAhead(const AValue: TNyxTypeAheadOptions): TNyxMenuBarOptions;
-    procedure Validate;
-    property Caption: TNyxText read FLabel;
-    property Wraps: Boolean read FWrap;
-    property Hovers: Boolean read FHover;
-    property Search: TNyxTypeAheadOptions read FSearch;
-  end;
+  { The runtime and saved declaration share the same portable value contract. }
+  TNyxMenuBarOptions = nyx.menu.types.TNyxMenuBarOptions;
 
   { Managed coordinator over a mounted ordinary Nyx row and its named buttons.
     Add retains independently owned menu families, not the renderer or document.
@@ -80,6 +60,8 @@ type
     function GetFocused: TNyxPartRef;
     function GetOpen: Boolean;
     function Menu(const APart: TNyxPartRef): INyxMenu;
+    { Exact declared order, used by mounted binding owners. Out of range refuses. }
+    function Heading(AIndex: Integer): TNyxPartRef;
     { Close any family and focus this exact visible named heading; unknown or
       hidden parts refuse. Target focus failure raises ENyxModel. }
     procedure Focus(const APart: TNyxPartRef);
@@ -179,6 +161,7 @@ type
     function GetFocused: TNyxPartRef;
     function GetOpen: Boolean;
     function Menu(const APart: TNyxPartRef): INyxMenu;
+    function Heading(AIndex: Integer): TNyxPartRef;
     procedure Focus(const APart: TNyxPartRef);
     procedure Open(const APart: TNyxPartRef; AOpening: TNyxMenuOpening);
     procedure Close;
@@ -225,44 +208,7 @@ var
 
 function NyxMenuBar(const ALabel: TNyxText): TNyxMenuBarOptions;
 begin
-  Result := Default(TNyxMenuBarOptions);
-  Result.FDefined := True;
-  Result.FLabel := ALabel;
-  Result.FWrap := True;
-  Result.FHover := True;
-  Result.FSearch := NyxTypeAhead;
-  Result.Validate;
-end;
-
-procedure TNyxMenuBarOptions.Validate;
-begin
-
-  if not FDefined or (FLabel = '') then
-  begin
-    raise ENyxModel.Create('Menu bar requires a defined policy and accessible label');
-  end;
-  FSearch.Validate;
-end;
-
-function TNyxMenuBarOptions.Wrap(AValue: Boolean): TNyxMenuBarOptions;
-begin
-  Result := Self;
-  Result.FWrap := AValue;
-  Result.Validate;
-end;
-
-function TNyxMenuBarOptions.HoverSwitch(AValue: Boolean): TNyxMenuBarOptions;
-begin
-  Result := Self;
-  Result.FHover := AValue;
-  Result.Validate;
-end;
-
-function TNyxMenuBarOptions.TypeAhead(const AValue: TNyxTypeAheadOptions): TNyxMenuBarOptions;
-begin
-  Result := Self;
-  Result.FSearch := AValue;
-  Result.Validate;
+  Result := nyx.menu.types.NyxMenuBar(ALabel);
 end;
 
 destructor TNyxMenuBarEntry.Destroy;
@@ -600,6 +546,16 @@ begin
   Result := FEntries[IndexOf(APart)].Menu;
 end;
 
+function TNyxMenuBarPresenter.Heading(AIndex: Integer): TNyxPartRef;
+begin
+
+  if (AIndex < 0) or (AIndex >= Count) then
+  begin
+    raise ENyxModel.Create('Menu bar heading index is outside its bindings');
+  end;
+  Result := NyxPart(FEntries[AIndex].Part.Name);
+end;
+
 function TNyxMenuBarPresenter.ButtonAt(AIndex: Integer): INyxButton;
 begin
   Result := FEntries[AIndex].Button;
@@ -889,13 +845,15 @@ begin
     end;
     Exit;
   end;
-  LResponse := NyxEventResponse(AExecution);
 
-  if AEvent.DefaultPrevented or not LResponse.CanConsume or LResponse.Consumed then
+  if AEvent.DefaultPrevented then
   begin
     Exit;
   end;
 
+  { Click is an admitted activation notification, with no cancellable keyboard
+    lease. Requiring CanConsume here discards ordinary renderer clicks on both
+    targets. Cancellation admission belongs to the keyboard path below. }
   if AEvent.Trigger = ntClick then
   begin
 
@@ -908,6 +866,12 @@ begin
       OpenIndex(AIndex, nmoFirst);
     end;
     FSearch.Reset;
+    Exit;
+  end;
+  LResponse := NyxEventResponse(AExecution);
+
+  if not LResponse.CanConsume or LResponse.Consumed then
+  begin
     Exit;
   end;
 

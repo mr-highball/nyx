@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'menu', 'menu-bar', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1427,6 +1427,67 @@ try {
     & (Join-Path $nyxMenuTool 'nyx_menu_companion.exe') $DesignerMCPConfig $MenuSourceDirectory
 
     if ($LASTEXITCODE -ne 0) { throw 'Semantic menu companion failed' }
+    exit 0
+  }
+
+  if ($Target -eq 'menu-bar-authoring') {
+    # The immutable English content was composed through MCP. Pascal owns typed
+    # candidate/history admission and exports the exact paired application unit.
+    # This target starts no listener and never edits an active Studio project.
+    $nyxBarRoot = Join-Path $nyxRoot 'build/menu-bar-saved/maintained'
+    $nyxBarCore = Join-Path $nyxBarRoot 'core'
+    $nyxBarNative = Join-Path $nyxBarRoot 'lcl'
+    $nyxBarBrowser = Join-Path $nyxBarRoot 'browser'
+    $nyxBarGenerated = Join-Path $nyxBarRoot 'generated'
+    $nyxBarTool = Join-Path $nyxBarRoot 'tool'
+    $nyxBarSource = [IO.Path]::GetFullPath($MenuSourceDirectory)
+
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxBarSource 'nyx.generated.view.pas'))) {
+      throw 'Export the semantic menu-bar companion first; see docs/menu.md'
+    }
+    New-Item -ItemType Directory -Force $nyxBarCore, $nyxBarNative, $nyxBarBrowser,
+      $nyxBarGenerated, $nyxBarTool | Out-Null
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
+      '-gl', '-gh', '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxBarSource",
+      "-FU$nyxBarCore", "-FE$nyxBarCore", 'tests/nyx_menu_bar_declarations_tests.lpr')
+    & (Join-Path $nyxBarCore 'nyx_menu_bar_declarations_tests.exe') $nyxBarGenerated
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Saved menu-bar candidate/history qualification failed'
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxBarPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxBarFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-Fu$nyxBarGenerated",
+      "-Fu$nyxLazarus/lcl/units/$nyxBarPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxBarPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxBarPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxBarPlatform",
+      "-FU$nyxBarNative", "-FE$nyxBarNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxBarFlags +
+      @('tests/nyx_menu_bar_declarations_controls.lpr'))
+    & (Join-Path $nyxBarNative 'nyx_menu_bar_declarations_controls.exe') (
+      Join-Path $nyxBarRoot 'native.png')
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Automatically bound native menu-bar application failed'
+    }
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
+      '-gl', '-gh', '-Fusrc', '-Futests', "-FU$nyxBarTool", "-FE$nyxBarTool",
+      'tests/nyx_menu_bar_observer.lpr')
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxBarSource", "-FE$nyxBarBrowser",
+      'tests/nyx_menu_bar_declarations_tests.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Futests', "-Fu$nyxBarGenerated", "-FE$nyxBarBrowser",
+      'tests/nyx_menu_bar_declarations_controls.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBarBrowser 'rtl.js')
+    Copy-Item -LiteralPath studio/web/menu-bar-declarations.html,
+      studio/web/menu-bar-declarations-controls.html -Destination $nyxBarBrowser
+    Write-Host 'Saved menu-bar consumers staged; execute on an existing admitted HTTP host.'
     exit 0
   }
 

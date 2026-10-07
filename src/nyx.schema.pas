@@ -2407,9 +2407,11 @@ begin
       It supplies an immutable Details snapshot, decoded by NyxMenuInvocation;
       it does not grant custom Emit or change the physical OnClick contract. }
 
-    if (LRoot.Kind = NyxKindName(nkButton)) and
+    if ((LRoot.Kind = NyxKindName(nkButton)) and
       (LRoot.ProjectionKind = NyxKindName(nkButton)) and LRoot.HasMenu and
-      (LRoot.MenuReference.Name <> '') then
+      (LRoot.MenuReference.Name <> '')) or
+      ((LRoot.ProjectionKind = NyxKindName(nkRow)) and LRoot.HasMenuBar and
+        (LRoot.MenuBar <> nil)) then
     begin
       LFound := -1;
       for LIndex := 0 to High(Result) do
@@ -2947,7 +2949,7 @@ var
   begin
     Result := (ANode.Kind = 'slot-override') or (ANode.Kind = 'component') or
       ANode.QueryContainer.Defined or (ANode.BindingCount > 0) or
-      ANode.HasCollectionView or ANode.HasMenu;
+      ANode.HasCollectionView or ANode.HasMenu or ANode.HasMenuBar;
     for LChildIndex := 0 to ANode.Count - 1 do
     begin
 
@@ -2961,11 +2963,14 @@ var
   procedure ValidateRealized(ARoot: TNyxNode);
   var
     LRuntime: TNyxNode;
+    LBarHeadings: TNyxStrings;
 
     procedure CheckHosts(ANode: TNyxNode);
     var
       LInfo: TNyxPrimitiveInfo;
       LChildIndex: Integer;
+      LHeadingIndex: Integer;
+      LHeading: TNyxNode;
     begin
 
       if FindNyxPrimitive(ANode.ProjectionKind, LInfo) and not LInfo.Container and
@@ -2991,6 +2996,34 @@ var
       begin
           raise ENyxModel.Create('Menu invokers require a specialized Nyx button without renderer actions');
       end;
+
+      if ANode.HasMenuBar and (ANode.MenuBar <> nil) then
+      begin
+
+        if ANode.ProjectionKind <> NyxKindName(nkRow) then
+        begin
+          raise ENyxModel.Create('Menu bar grouping requires a specialized Nyx row');
+        end;
+        for LHeadingIndex := 0 to ANode.MenuBar.Count - 1 do
+        begin
+          LHeading := ANode.Part(ANode.MenuBar.Item(LHeadingIndex).Part);
+
+          if (LHeading.ProjectionKind <> NyxKindName(nkButton)) or
+            (LHeading.Prop(NyxAttributeName(atAction), NyxActionName(naNone)) <>
+              NyxActionName(naNone)) or
+            (LHeading.Prop(NyxAttributeName(atEnabled), 'true') <> 'true') or
+            (LHeading.HasMenu and (LHeading.MenuReference.Name <> '')) then
+          begin
+            raise ENyxModel.Create('Grouped heading requires an enabled Nyx button without another menu or action');
+          end;
+
+          if LBarHeadings.IndexOf(LHeading.ID) >= 0 then
+          begin
+            raise ENyxModel.Create('A physical heading cannot belong to two menu bar groups');
+          end;
+          LBarHeadings.Add(LHeading.ID);
+        end;
+      end;
       for LChildIndex := 0 to ANode.Count - 1 do
       begin
         CheckHosts(ANode.Children[LChildIndex]);
@@ -2998,10 +3031,13 @@ var
     end;
   begin
     LRuntime := RealizeNyxView(ADocument, ARoot);
+    LBarHeadings := nil;
     try
+      LBarHeadings := TNyxStrings.Create;
       CheckHosts(LRuntime);
       ApplyNyxBindings(LRuntime, ADocument.State);
     finally
+      LBarHeadings.Free;
       LRuntime.Free;
     end;
   end;

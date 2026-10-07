@@ -7,6 +7,83 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: saved menu-bar integration — 2026-10-07
+
+This batch advances original NS-3 criteria 1/2 and the existing NS-4 workflow
+criterion 5 prerequisite. Saved rows now own an immutable typed declaration:
+ordered named headings, distinct menu references, logical enabled defaults and
+portable bar/search policy. Node admission normalizes foreign implementations
+through scalar getters; subsequent creator changes cannot mutate an attached
+plan. Structural grouping rejects platform/viewport/presentation scopes rather
+than silently creating divergent trees. Existing responsive layout remains usable.
+
+Strict version-7 persistence retains versions 1–6 and refuses promotion of older
+opaque menuBar fields. Clone, reusable inheritance/local masks, part overrides,
+standalone dependency closure and crafted typed generation/source reconstruction
+share that meaning. Ordinary browser/LCL application mounting automatically binds
+the exact rendered row/buttons to independently owned families. An optional
+INyxMenuBarBindings trait exposes groups without changing INyxMenuBindings;
+retirement cancels command forwarding before releasing hosts. Ordered row
+callbacks preserve the actual heading origin and detached leaf command snapshot.
+
+The existing paired semantic boundary supports typed group replacement, mask and
+inheritance in one revision-aware transaction. Bounded nyx_menus row queries
+report local or effective inherited policy/heading pages and distinguish explicit
+masks. nyx_node reports local declaration state. Direct candidate/agent consumers
+pass **54** on checked native and actual HTTP pas2js, covering stale/dependent/
+wrong-part/kind/competing-binding refusal, twelve strict wire failures, supplementary
+Unicode, exact source/Undo/Redo, independent inherited copies and foreign plans.
+The base English companion remains the exact previously authenticated MCP export.
+The new operations are qualified in-process, not through the older deployed HTTP
+schema. Native protocol-authority regression passes **147** against the current
+source with no listener started; this is not new-bar HTTP delivery evidence.
+
+The exact exported application unit passes **18** actual Win32 and **18 each**
+desktop/CSS-390 browser input checks: ordinary physical click, dropdown switching,
+deep family completion, ordered callbacks, real host Tab/Shift+Tab, runtime state,
+remount defaults and safe retirement. Core/composition regression passes
+**30/1781**. Native applications, candidate tests and browser observers are
+leak-free. Owned builds have zero warnings; seven installed pas2js RTL warnings
+per compilation remain visible, with dependency source untouched.
+
+The first automatically bound click failed because ordinary admitted click
+notifications have no cancellable keyboard lease. The shared controller now
+handles admitted clicks before requiring that lease for keyboard input. Browser
+qualification also caught a parameterless GetCount reference used as an interface
+array index; an explicit scalar local fixes that compiler boundary. Source masks
+now admit parameterless NoMenuBar/InheritMenuBar. A strict-failure fixture assumed
+a returned interface would be nil after an exception; it now explicitly releases
+that unpublished partial result and checks the retained accepted plan instead.
+These initial failures remain recorded. Concurrent headless navigations timed out;
+terminal serialized runs qualify the exact maintained bytes. A core orchestration
+attempt omitted the Studio unit path; the corrected checked run passes.
+
+Maintained command: `tools/build.ps1 -Target menu-bar-authoring
+-MenuSourceDirectory build/menu-bar/source`. Ignored evidence is under
+`build/menu-bar-saved/`: `maintained-build.log`, `maintained/generated/`,
+`qualified-declarations-serial/`, `qualified-desktop-serial/`,
+`qualified-phone-serial/`, `protocol-authority.log`, `core-regression.log` and
+`preservation.json`. Inspected captures retain English/readable text; the narrow
+three-level family overlaps ancestors. Mobile drill-down aesthetics, hardware/
+assistive technology, other widgetsets, live menu binding and broader performance
+remain unqualified. CSS emulation does not establish physical phone behavior.
+
+All **15** protected process identities, **9** full accepted/source/draft pairs,
+navigation/history/permissions and the **147033-byte** checkpoint remain exact.
+The installed server and served browser bytes still match frozen **229-file**
+product `6fc231e`. This batch stages one child of the existing unsealed artifact
+host; it replaces no listener, ordinary project or frozen payload. Current
+baselines remain `build/menu-observing/*-current.json` and its editor-private file.
+
+Stop saved-contract fixtures at this integrated application boundary. No original
+full criterion closes; workflow no-closure advances **15→16** once, authoring 28,
+renderer 8, codegen 28 and delivery 2 remain. Historical NS-3/NS-2 parity totals
+remain unestablished. Reassessment follows the concrete remaining prerequisite:
+a reusable public Nyx bar-authoring form consumed by ordinary Studio, then a
+protected new-backend semantic journey and observing delivery. Keep those existing
+NS-3/NS-4 owners and complete original gates; then return to broader picker and
+component depth. Do not replace them with more declaration/runtime-only fixtures.
+
 ## Current return path: coordinated menu bars — 2026-10-07
 
 This goal turn is progress on original NS-3 criteria 1/2 and NS-2 criterion 2.
@@ -410,6 +487,22 @@ isolated candidate service for new-schema qualification. Full menubar/picker,
 accessibility, binding and product acceptance remain open.
 
 ## Current priority: mobile workspace allocation — 2026-10-07
+
+The latest screenshot follow-up is rechecked against the currently served frozen
+`6fc231e`, rather than the unfinished local menu-bar candidate. A fresh ordinary
+observing CSS 390×640 journey passes **21** checks: canvas **396 px (62%)** with
+details collapsed and **587 px (92%)** expanded, real host touch grip, exact
+source restoration and desktop/short-window transitions. Captures are inspected;
+design text remains readable at its authored scale. Native observer reports zero
+leaks. Authenticated Pascal MCP supplies bounded before/after context; this
+chat's cached named handle still refuses initialization with HTTP 404, so that
+handle supplies no evidence. Current configuration authenticates the Pascal
+client successfully. Before/after guards retain all 15 service identities,
+9 complete pairs/navigation/history, the 147033-byte checkpoint and every one
+of the 229 sealed files plus exact LAN-served assets. No service replacement or
+design mutation occurs. Private evidence: `build/mobile-current-check/`. This
+requalification adds no new task credit and does not establish physical-phone
+keyboard/IME behavior. Resume the saved integration return path above.
 
 The user's phone capture confirms the restored LAN path loads, and establishes
 a different defect: wrapped chrome, expanded sync details and placement tools

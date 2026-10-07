@@ -38,12 +38,13 @@ uses
   nyx.presentations,
   nyx.content,
   nyx.menu.declarations,
+  nyx.menu.bar.declarations,
   nyx.binding.types,
   nyx.collections.view.types,
   nyx.model;
 
 type
-  { Version 1/2/3/4/5/6 design persistence. The format deliberately stores the portable
+  { Version 1/2/3/4/5/6/7 design persistence. The format deliberately stores the portable
     model, not target widget handles or generated source. All custom kinds and
     string-valued extension properties survive an encode/decode round trip.
     Unknown root/node fields retain typed nested extension data, exact strings
@@ -65,6 +66,8 @@ type
     promotion rejects collisions before exporting a design/history candidate.
     Version six adds immutable menu definitions and static node attachments.
     Older opaque menu/menus fields stay extensions; promotion refuses collisions.
+    Version seven adds node-local typed menu-bar grouping and policy. Earlier
+    opaque menuBar fields retain extension meaning; promotion refuses collisions.
     Decode returns ownership to its caller and frees partial trees on failure. }
   TNyxCodec = class
   public
@@ -104,7 +107,8 @@ end;
 procedure ReadExtensions(AObject: TJSONObject; AExtensions: TNyxExtensions;
   ACollections: Boolean = False; ACollectionViews: Boolean = False;
   APresentations: Boolean = False; APresentationRules: Boolean = False;
-  AContentRules: Boolean = False; AMenus: Boolean = False);
+  AContentRules: Boolean = False; AMenus: Boolean = False;
+  AMenuBars: Boolean = False);
 var
   LFields: TJSONObject;
   LIndex: Integer;
@@ -120,6 +124,8 @@ begin
         (not APresentations or (AObject.Names[LIndex] <> NyxPresentationsWireField)) and
         (not APresentationRules or (AObject.Names[LIndex] <> NyxPresentationRulesWireField)) and
         (not AContentRules or (AObject.Names[LIndex] <> NyxContentRulesWireField)) and
+        (not AMenuBars or (AExtensions.Scope <> nesNode) or
+          (AObject.Names[LIndex] <> NyxMenuBarWireField)) and
         (not AMenus or
           ((AExtensions.Scope <> nesDocument) or
             (AObject.Names[LIndex] <> NyxMenusWireField)) and
@@ -209,6 +215,19 @@ begin
       else
       begin
         Result.Add(NyxMenuAttachmentWireField, ANode.MenuReference.Name);
+      end;
+    end;
+
+    if ANode.HasMenuBar then
+    begin
+
+      if ANode.MenuBar = nil then
+      begin
+        Result.Add(NyxMenuBarWireField, TJSONNull.Create);
+      end
+      else
+      begin
+        Result.Add(NyxMenuBarWireField, DecodeNyxJSON(ANode.MenuBar.ToData.ToJSON));
       end;
     end;
 
@@ -308,7 +327,15 @@ begin
 
     if ADocument.HasMenuDeclarations then
     begin
-      LRoot.Add('version', 6);
+
+      if ADocument.HasMenuBars then
+      begin
+        LRoot.Add('version', 7);
+      end
+      else
+      begin
+        LRoot.Add('version', 6);
+      end;
       LRoot.Add(NyxMenusWireField, DecodeNyxJSON(ADocument.Menus.ToData.ToJSON));
       LRoot.Add(NyxPresentationsWireField,
         DecodeNyxJSON(ADocument.Presentations.ToData.ToJSON));
@@ -560,7 +587,7 @@ begin
 end;
 
 function ReadNode(AData: TJSONData; ADepth: Integer; var ACount: Integer;
-  ACollectionViews, APresentations, AContentRules, AMenus: Boolean): TNyxNode;
+  ACollectionViews, APresentations, AContentRules, AMenus, AMenuBars: Boolean): TNyxNode;
 var
   LObject: TJSONObject;
   LProps: TJSONObject;
@@ -715,12 +742,26 @@ begin
           RequireField(LObject, NyxMenuAttachmentWireField, jtString).AsString));
       end;
     end;
+
+    if AMenuBars and (LObject.Find(NyxMenuBarWireField) <> nil) then
+    begin
+
+      if LObject.Find(NyxMenuBarWireField).JSONType = jtNull then
+      begin
+        Result.SetMenuBar(nil);
+      end
+      else
+      begin
+        Result.SetMenuBar(NyxMenuBarDefinitionFromData(TNyxDataValue.ParseJSON(
+          LObject.Find(NyxMenuBarWireField).AsJSON)));
+      end;
+    end;
     ReadExtensions(LObject, Result.Extensions, False, ACollectionViews, False,
-      APresentations, AContentRules, AMenus);
+      APresentations, AContentRules, AMenus, AMenuBars);
     for LIndex := 0 to LChildren.Count - 1 do
     begin
       Result.Add(ReadNode(LChildren.Items[LIndex], ADepth + 1, ACount,
-        ACollectionViews, APresentations, AContentRules, AMenus));
+        ACollectionViews, APresentations, AContentRules, AMenus, AMenuBars));
     end;
   except
     Result.Free;
@@ -741,6 +782,11 @@ var
   LCollections: INyxCollectionDefaults;
   LPresentations: INyxPresentations;
   LMenus: INyxMenuDeclarations;
+  LMenuBars: Boolean;
+  LHasMenus: Boolean;
+  LContentRules: Boolean;
+  LHasPresentations: Boolean;
+  LCollectionViews: Boolean;
 begin
   LData := DecodeNyxJSON(ASource);
   try
@@ -752,10 +798,16 @@ begin
     LVersion := RequireField(LRoot, 'version', jtNumber).AsJSON;
 
     if (LVersion <> '1') and (LVersion <> '2') and (LVersion <> '3') and
-      (LVersion <> '4') and (LVersion <> '5') and (LVersion <> '6') then
+      (LVersion <> '4') and (LVersion <> '5') and (LVersion <> '6') and
+      (LVersion <> '7') then
     begin
       raise ENyxModel.Create('Unsupported design version');
     end;
+    LMenuBars := LVersion = '7';
+    LHasMenus := (LVersion = '6') or LMenuBars;
+    LContentRules := (LVersion = '5') or LHasMenus;
+    LHasPresentations := (LVersion = '4') or LContentRules;
+    LCollectionViews := (LVersion = '3') or LHasPresentations;
     LPages := TJSONArray(RequireField(LRoot, 'pages', jtArray));
     LComponents := TJSONArray(RequireField(LRoot, 'components', jtArray));
     Result := TNyxDocument.Create;
@@ -773,7 +825,7 @@ begin
         end;
       end;
 
-      if (LVersion = '4') or (LVersion = '5') or (LVersion = '6') then
+      if LHasPresentations then
       begin
         LPresentations := NyxPresentationsFromData(TNyxDataValue.ParseJSON(
           RequireField(LRoot, NyxPresentationsWireField, jtObject).AsJSON));
@@ -783,7 +835,8 @@ begin
             LPresentations.Definition(LPresentations.Reference(LIndex)));
         end;
       end;
-      if LVersion = '6' then
+
+      if LHasMenus then
       begin
         LMenus := NyxMenuDeclarationsFromData(TNyxDataValue.ParseJSON(
           RequireField(LRoot, NyxMenusWireField, jtObject).AsJSON));
@@ -794,22 +847,17 @@ begin
         end;
       end;
       ReadExtensions(LRoot, Result.Extensions, LVersion <> '1', False,
-        (LVersion = '4') or (LVersion = '5') or (LVersion = '6'), False, False,
-        LVersion = '6');
+        LHasPresentations, False, False, LHasMenus, LMenuBars);
       LCount := 0;
       for LIndex := 0 to LPages.Count - 1 do
       begin
         Result.AddPage(ReadNode(LPages.Items[LIndex], 0, LCount,
-          (LVersion = '3') or (LVersion = '4') or (LVersion = '5') or (LVersion = '6'),
-          (LVersion = '4') or (LVersion = '5') or (LVersion = '6'),
-          (LVersion = '5') or (LVersion = '6'), LVersion = '6'));
+          LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars));
       end;
       for LIndex := 0 to LComponents.Count - 1 do
       begin
         Result.AddComponent(ReadNode(LComponents.Items[LIndex], 0, LCount,
-          (LVersion = '3') or (LVersion = '4') or (LVersion = '5') or (LVersion = '6'),
-          (LVersion = '4') or (LVersion = '5') or (LVersion = '6'),
-          (LVersion = '5') or (LVersion = '6'), LVersion = '6'));
+          LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars));
       end;
       Result.Validate;
     except

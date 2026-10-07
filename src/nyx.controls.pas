@@ -35,6 +35,7 @@ uses
   nyx.responsive,
   nyx.presentations,
   nyx.content,
+  nyx.menu.bar.declarations,
   nyx.containers,
   nyx.layout.policy,
   nyx.layout.constraints,

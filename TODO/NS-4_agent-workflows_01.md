@@ -15,20 +15,22 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
-Current coordinated-bar gap (2026-10-07): authenticated semantic MCP composes and
-exports the exact English row/heading/menu companion in one owned review with
-bounded reads and paired history (42). Runtime `INyxMenuBar` then qualifies real
-browser/LCL navigation and lifetime through public Pascal (44 native, 46 per
-browser width). Its grouping is not saved meaning: generated documents still
-contain a row and separate buttons. This existing criterion-5 owner must expose
-bounded typed group queries/admission and revision-aware grouped paired edits,
-alongside crafted source and automatic runtime binding owned by their existing
-tasks. Studio must consume that same public declaration/authoring contract.
-Do not hide grouping in extension strings or use screenshot-driven design edits.
-Workflow no-closure remains 15; no workflow criterion closes from library-only
-input qualification. Stop fixture expansion and deliver this integration boundary.
+Current saved-bar boundary (2026-10-07): the existing criterion-5 candidate gate
+now admits typed replacement, masks/inheritance and bounded local/effective row
+queries as one revision-aware paired operation. Strict persistence, crafted
+source and reusable dependency/ownership checks pass 54 native/HTTP-browser.
+The exact previously authenticated English MCP export supplies the content;
+automatic ordinary applications pass 18 Win32 and 18 per browser width. Current
+source protocol authority passes 147, but new bar operations are qualified through
+direct agent/candidate consumers, not authenticated HTTP on the older LAN schema.
 All 15 services, nine pairs/full checkpoint and frozen LAN bytes remain exact.
-See [the packet](../WORK.md#current-return-path-coordinated-menu-bars--2026-10-07).
+No original criterion closes; workflow no-closure advances 15→16 once, with
+other owner totals unchanged. Stop saved-contract fixture expansion. Reassessment
+follows the concrete public Studio bar-authoring prerequisite, then qualifies
+new-backend semantic composition/build/history and observing delivery under this
+existing owner. Preserve the user's pairs and original criterion-5 gates; do not
+substitute raw extension strings or screenshot-driven document edits. See
+[the packet](../WORK.md#current-return-path-saved-menu-bar-integration--2026-10-07).
 
 Current observing consumer (2026-10-07): frozen `6fc231e` now serves the protected
 LAN/editor with 21 authenticated tools. The owned semantic menu review passes

@@ -23,6 +23,27 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Saved menu-bar integration — 2026-10-07
+
+Original criteria 1/2 now include immutable typed row grouping, strict wire,
+crafted generation/source, inheritance/masks and standalone dependency closure.
+Candidate/agent fixtures pass 54 native/HTTP-browser; the exact generated ordinary
+application automatically binds specialized row/buttons and independent families,
+passing 18 actual Win32 and 18 each desktop/CSS-390 browser checks. Physical click,
+ordered completion and host Tab/Shift+Tab qualify beyond compilation. Native
+owners retire leak-free; source protocol authority passes 147 and core/composition
+30/1781. Protected services/pairs/full checkpoint and frozen LAN bytes stay exact.
+See [the packet](../WORK.md#current-return-path-saved-menu-bar-integration--2026-10-07)
+and [saved contract](../docs/menu.md#save-a-coordinated-bar-with-the-application).
+
+No original component criterion closes; historical component counts remain
+unestablished. Workflow owner advances 15→16 once; other established totals stay
+unchanged. Stop declaration/runtime fixtures. The next concrete prerequisite is
+a public reusable Nyx bar editor consumed by Studio, followed by authenticated
+new-backend semantic/observing delivery. Then return to broader picker depth,
+live binding, mobile drill-down, accessibility and production performance/breadth.
+The library's direct semantic checks do not establish this editor/delivery gate.
+
 ## Coordinated menu bars — 2026-10-07
 
 Original criteria 1/2 now include a public managed coordinator over ordinary
@@ -36,12 +57,10 @@ LAN bytes stay exact; this public component is not rolled out to that editor.
 See [the packet](../WORK.md#current-return-path-coordinated-menu-bars--2026-10-07)
 and [public contract](../docs/menu.md#coordinate-a-horizontal-menu-bar).
 
-No original criterion closes; historical component no-closure totals remain
-unestablished. Stop bar fixture expansion. Saved bar groups, crafted generation,
-automatic runtime binding and typed Studio/MCP authoring remain the immediate
-integration gap under this task and the existing NS-4 workflow owner. Deliver
-that boundary before returning to broader pickers. Live binding, mobile
-drill-down presentation, performance, accessibility and production breadth remain.
+No original criterion closed at that runtime boundary; historical component
+no-closure totals remained unestablished. Saved integration above supersedes its
+runtime-only gap. Public Studio/MCP delivery remains the next prerequisite under
+this task and the existing NS-4 workflow owner before broader picker depth.
 
 ## Menu families and invokers — 2026-10-06
 

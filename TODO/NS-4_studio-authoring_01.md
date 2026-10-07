@@ -40,6 +40,21 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Saved bar-authoring prerequisite — 2026-10-07
+
+Saved immutable row grouping, typed persistence/source, bounded paired semantic
+operations and automatic ordinary browser/LCL application consumers are qualified
+under the existing workflow/component owners (54 candidate checks per target;
+18 actual application checks per target/width). This does not yet supply an
+ordinary Studio bar form. Original criteria 2/6 require a reusable public Nyx
+authoring compound, explicit local/effective grouping, complete typed policy and
+ordered part/menu choices, independent capture/retained draft, stale-baseline
+refusal and one paired Undo. Consume the same public declaration/edit contract;
+then qualify authenticated observing delivery without replacing user pairs.
+Authoring no-closure stays 28; workflow alone advances 15→16. No original full
+criterion closes. See
+[the next integration](../WORK.md#current-return-path-saved-menu-bar-integration--2026-10-07).
+
 ## Public menu editor — 2026-10-07
 
 The subsequent protected delivery serves frozen `6fc231e` on the original LAN

@@ -3,16 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current component boundary (2026-10-07): public coordinated horizontal bars reuse
-Nyx rows/buttons and independent menu families. Typed focus/dropdown navigation,
-Unicode search, exact anchor admission and callback retirement pass 44 Win32 and
-46 each desktop/CSS-390 browser checks, including real host Tab/Shift+Tab. Exact
-semantic content/history passes 42; standalone menus retain 58/59, leak-free.
-Protected services/pairs/checkpoint and frozen LAN bytes remain unchanged. No
-original criterion/counter closes. End runtime bar fixtures; next deliver typed
-persisted grouping, crafted generation, automatic application binding and
-Studio/MCP authoring under existing owners, then broader component/picker depth.
-See [the packet](WORK.md#current-return-path-coordinated-menu-bars--2026-10-07).
+Current saved-component boundary (2026-10-07): immutable typed bar declarations
+retain strict persistence, crafted source, reusable inheritance/masks and bounded
+paired semantic edits/queries. Candidate fixtures pass 54 native/HTTP-browser;
+exact generated ordinary applications automatically bind row/buttons and families,
+passing 18 actual Win32 and 18 each desktop/CSS-390 browser checks, including real
+host Tab/Shift+Tab. Current-source protocol authority passes 147; core/composition
+passes 30/1781, leak-free. Protected services/pairs/checkpoint and frozen LAN bytes
+remain unchanged. New-bar HTTP delivery and public Studio forms remain unqualified.
+No original criterion closes; workflow no-closure advances 15→16 once, authoring
+28, renderer 8, codegen 28 and delivery 2 remain. End saved-contract fixtures;
+follow the existing public authoring/observing prerequisite, then return to broader
+component/picker depth. See
+[the packet](WORK.md#current-return-path-saved-menu-bar-integration--2026-10-07).
 
 Current observing boundary (2026-10-07): frozen product `6fc231e` serves the
 original LAN executable path and authenticates 21 tools. Actual retained-checkpoint

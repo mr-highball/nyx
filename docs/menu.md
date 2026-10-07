@@ -60,9 +60,10 @@ Invoker click/Down opens first and Up opens last, following menu-button keyboard
 practice. The menu owns initial focus; the saved generic popover focus value is
 retained for exact reconstruction, without overriding first/last item selection.
 
-Only documents with menu meaning use codec version 6; existing versions 1–5 stay
-supported. Registry limits are 64 definitions, 256 items per definition, eight
-submenu levels and 2048 expanded family items. Missing roots/parts, duplicate
+Menu-only documents use codec version 6; saved bar grouping selects version 7.
+Existing versions 1–6 remain supported. Registry limits are 64 definitions,
+256 items per definition, eight submenu levels and 2048 expanded family items.
+Missing roots/parts, duplicate
 parts, incompatible specialized controls, unknown options, dangling references,
 cycles and multiple initially selected radios refuse. JSON keys exist at the
 persistence/semantic boundary; generated Pascal uses typed fluent expressions.
@@ -302,8 +303,8 @@ Target hosts retain ancestor presentations only to keep borrowed invokers valid.
 These menu choices follow the applicable
 [WAI menu pattern](https://www.w3.org/WAI/ARIA/apg/patterns/menubar/) and
 [menu-button pattern](https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/), checked
-2026-10-06. This implements vertical command-menu families; a horizontal menubar
-contract remains open.
+2026-10-06. The following table describes vertical command-menu families;
+coordinated horizontal-bar behavior is described below.
 
 | Input | Nyx behavior |
 | --- | --- |
@@ -424,13 +425,83 @@ not establish hardware, IME, assistive technology or another widgetset. Narrow
 cascades currently overlap ancestors to stay in bounds; a mobile drill-down
 presentation and broader visual qualification remain open.
 
-This coordinator is currently **runtime-only**. The exact English content is
-MCP-authored, but saved documents generate a row and separate buttons, without
-the coordinated bar declaration. `nyx_menus` and Studio's menu editor currently
-author per-button attachments, not a bar group. Persisted typed grouping, source
-generation/admission, automatic application binding and Studio/MCP authoring are
-the next integration under the
-[existing workflow owner](../TODO/NS-4_agent-workflows_01.md).
+The coordinator can also consume a saved immutable declaration on the ordinary
+row. Generated source and ordinary application mounting use the same public
+contract described below. Direct runtime factories remain useful for transient
+menus and custom adapters.
+
+## Save a coordinated bar with the application
+
+Declare ordinary named button parts in a compound `INyxRow`, and define each
+dropdown through the document's `Menus` registry. Attach an immutable grouping:
+
+```pascal
+LWorkspaceMenuBarRow.Configure
+  .MenuBar(
+    NewNyxMenuBarDefinition(
+      NyxMenuBar('Workspace commands')
+        .Wrap(False)
+        .HoverSwitch(True)
+        .TypeAhead(NyxTypeAhead.WindowMilliseconds(1700)))
+      .Heading(NyxPart('file'), NyxMenuRef('document-actions'))
+      .Heading(NyxPart('edit'), NyxMenuRef('editing-actions'))
+      .Heading(NyxPart('view'), NyxMenuRef('view-actions'), False))
+  .Done;
+```
+
+Import `nyx.menu.types`, `nyx.menu.bar.declarations`, `nyx.menu.declarations`
+and `nyx.controls`. Each fluent `Heading` returns an independent immutable plan;
+attachment copies public getters, including foreign implementations. The row,
+its parts and all referenced menu/content definitions must belong to the design.
+One bar admits 1–64 ordered distinct headings. Several headings may reference
+one menu definition; each mounted family owns independent check/radio state.
+The Boolean heading argument is logical enablement. Its physical button stays
+enabled so keyboard navigation remains available. A physically disabled button,
+renderer action, competing standalone attachment or duplicate physical heading
+refuses candidate admission.
+
+Reusable row instances inherit the definition's grouping. `NoMenuBar` is an
+explicit local mask; `InheritMenuBar` removes only the local declaration. Clones,
+standalone dependency discovery and source reconstruction retain that distinction.
+Grouping is structural, so platform/viewport/presentation scopes refuse it;
+ordinary visibility, layout, captions and whole-content presentation recipes
+continue to use the shared conditional contracts.
+
+Ordinary browser/LCL applications mount saved groups automatically. Commands
+reach the row's named `nseActivate` stream in registration order, with the exact
+heading runtime ID as `OriginID`. `NyxMenuInvocation` reads the typed command and
+checked snapshot. `INyxMenuBarBindings` is an optional capability on the existing
+`Application.Menus` owner: `Bar(exactRuntimeRow)` observes the coordinator;
+`Menu(exactRuntimeHeading)` observes each family. Release observations before
+page navigation/application destruction. No runtime state rewrites saved defaults.
+
+`nyx_menus` accepts an exact authored `row`, with up to 16 headings per page
+(8 default). `barScope` defaults to `effective`, including reusable inheritance;
+`local` inspects only the authored declaration. `localDeclared` distinguishes a
+local mask from absence. Label text pages by Unicode scalars. Queries return the
+same revision without changing selection/history. Group `menu-bar-set`
+(`definition: null` masks) and `menu-bar-inherit` with related menu/content changes
+in one revision-aware paired transaction. Pascal producers use
+`NyxConfigureMenuBar`, `NyxNoMenuBar`, `NyxInheritMenuBar` and `NyxMenuPatch`.
+Strict interchange rejects coercion, missing/unknown fields and invalid policies.
+Wire version 7 retains opaque `menuBar` fields as extensions in older versions
+and refuses collisions during explicit promotion.
+
+This saved contract is qualified through direct candidate semantic dispatch and
+actual generated browser/Win32 applications. The observing LAN release still
+serves its preceding schema. Authenticated new-backend delivery and a public
+Studio bar form remain with the [existing workflow owner](../TODO/NS-4_agent-workflows_01.md);
+current menu forms do not yet expose bar grouping.
+
+```powershell
+./tools/build.ps1 -Target menu-bar-authoring -MenuSourceDirectory build/menu/source
+```
+
+Use the exact exported companion that contains the Workspace commands page.
+Pascal qualifies the paired declaration contract and exports its accepted unit;
+ordinary native/browser consumers compile that exact unit. The target stages
+`menu-bar-declarations.html` and `menu-bar-declarations-controls.html`, plus the
+Pascal real-Tab observer, without starting listeners or replacing projects.
 
 ## Reproduce the companion and qualify hosts
 
@@ -468,8 +539,8 @@ ordinary project. Current results are 42 semantic composition/history checks,
 44 native and 46 per browser width; all native owners retire without heap leaks.
 
 Runtime-only presentation/command/recipe plans remain available independently
-of the saved declarations above. Coordinated persisted bars and broader semantic
-authoring remain with [the existing workflow owner](../TODO/NS-4_agent-workflows_01.md).
+of the saved declarations above. Public Studio bar forms, observing delivery and
+broader semantic authoring remain with [the existing workflow owner](../TODO/NS-4_agent-workflows_01.md).
 Mobile drill-down presentation, live menu binding, assistive technology,
 hardware/IME, other widgetsets/DPI and full production accessibility remain open.
 Compiled source admission alone establishes none of these interactions.

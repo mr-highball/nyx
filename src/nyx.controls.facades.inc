@@ -97,6 +97,10 @@
     function Menu(const AReference: TNyxMenuRef): INyxConfiguration;
     function NoMenu: INyxConfiguration;
     function InheritMenu: INyxConfiguration;
+    { Saved immutable grouping; an explicit mask differs from inheritance. }
+    function MenuBar(const ADefinition: INyxMenuBarDefinition): INyxConfiguration;
+    function NoMenuBar: INyxConfiguration;
+    function InheritMenuBar: INyxConfiguration;
     function OnClick(const AValue: TNyxEventRef): INyxConfiguration;
     function OnChange(const AValue: TNyxEventRef): INyxConfiguration;
     function Clear(AKey: TNyxAttribute): INyxConfiguration;
@@ -189,6 +193,9 @@
     function Menu(const AReference: TNyxMenuRef): INyxConfiguration;
     function NoMenu: INyxConfiguration;
     function InheritMenu: INyxConfiguration;
+    function MenuBar(const ADefinition: INyxMenuBarDefinition): INyxConfiguration;
+    function NoMenuBar: INyxConfiguration;
+    function InheritMenuBar: INyxConfiguration;
     function OnClick(const AValue: TNyxEventRef): INyxConfiguration;
     function OnChange(const AValue: TNyxEventRef): INyxConfiguration;
     function Clear(AKey: TNyxAttribute): INyxConfiguration;
@@ -371,4 +378,3 @@
     function ToJSON: TNyxText;
     procedure LoadJSON(const ASource: TNyxText);
   end;
-

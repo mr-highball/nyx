@@ -29,6 +29,29 @@ interface
 uses nyx.text, nyx.types, nyx.popover.types, nyx.typeahead, nyx.errors;
 
 type
+  { Value-owned horizontal-bar policy. Labels are user text; traversal and
+    hover are typed choices. A fresh bar remembers its last focused heading. }
+  TNyxMenuBarOptions = record
+  private
+    FDefined: Boolean;
+    FLabel: TNyxText;
+    FWrap: Boolean;
+    FHover: Boolean;
+    FSearch: TNyxTypeAheadOptions;
+  public
+    { Arrow traversal wraps by default; False retains the current boundary. }
+    function Wrap(AValue: Boolean): TNyxMenuBarOptions;
+    { Only mouse entry switches an already open dropdown; touch never hovers. }
+    function HoverSwitch(AValue: Boolean): TNyxMenuBarOptions;
+    { Copy the shared Unicode matching/window policy without retaining a reader. }
+    function TypeAhead(const AValue: TNyxTypeAheadOptions): TNyxMenuBarOptions;
+    procedure Validate;
+    property Caption: TNyxText read FLabel;
+    property Wraps: Boolean read FWrap;
+    property Hovers: Boolean read FHover;
+    property Search: TNyxTypeAheadOptions read FSearch;
+  end;
+
   { Open application identities own text, never execution keywords or controls. }
   TNyxMenuCommandRef = record
     Name: TNyxText;
@@ -68,8 +91,52 @@ type
 function NyxMenuCommand(const AName: TNyxText): TNyxMenuCommandRef;
 function NyxMenuGroup(const AName: TNyxText): TNyxMenuGroupRef;
 function NyxMenu(const ATitle: TNyxText): TNyxMenuOptions;
+{ Portable authored bar policy, shared by saved declarations and runtime owners. }
+function NyxMenuBar(const ALabel: TNyxText): TNyxMenuBarOptions;
 
 implementation
+
+function NyxMenuBar(const ALabel: TNyxText): TNyxMenuBarOptions;
+begin
+  Result := Default(TNyxMenuBarOptions);
+  Result.FDefined := True;
+  Result.FLabel := ALabel;
+  Result.FWrap := True;
+  Result.FHover := True;
+  Result.FSearch := NyxTypeAhead;
+  Result.Validate;
+end;
+
+procedure TNyxMenuBarOptions.Validate;
+begin
+
+  if not FDefined or (FLabel = '') then
+  begin
+    raise ENyxModel.Create('Menu bar requires a defined policy and accessible label');
+  end;
+  FSearch.Validate;
+end;
+
+function TNyxMenuBarOptions.Wrap(AValue: Boolean): TNyxMenuBarOptions;
+begin
+  Result := Self;
+  Result.FWrap := AValue;
+  Result.Validate;
+end;
+
+function TNyxMenuBarOptions.HoverSwitch(AValue: Boolean): TNyxMenuBarOptions;
+begin
+  Result := Self;
+  Result.FHover := AValue;
+  Result.Validate;
+end;
+
+function TNyxMenuBarOptions.TypeAhead(const AValue: TNyxTypeAheadOptions): TNyxMenuBarOptions;
+begin
+  Result := Self;
+  Result.FSearch := AValue;
+  Result.Validate;
+end;
 
 function NyxMenuCommand(const AName: TNyxText): TNyxMenuCommandRef;
 begin

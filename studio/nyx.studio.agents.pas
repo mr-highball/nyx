@@ -991,6 +991,10 @@ begin
   LFields[High(LFields)] := NyxField('menuAttachment', NyxObject([
     NyxField('localDeclared', NyxData(LNode.HasMenu)),
     NyxField('name', NyxData(LNode.MenuReference.Name))]));
+  SetLength(LFields, Length(LFields) + 1);
+  LFields[High(LFields)] := NyxField('menuBar', NyxObject([
+    NyxField('localDeclared', NyxData(LNode.HasMenuBar)),
+    NyxField('configured', NyxData(LNode.MenuBar <> nil))]));
 
   if NyxAgentHas(AArguments, 'parts') and AArguments.Field('parts').AsBoolean then
   begin
@@ -1242,6 +1246,10 @@ end;
 
 function TNyxAgentSession.Menus(const AArguments: TNyxDataValue): TNyxDataValue;
 var
+  LRow: TNyxNode;
+  LAuthoredRow: TNyxNode;
+  LContext: TNyxNode;
+  LScope: TNyxText;
   LOffset: Integer;
   LLimit: Integer;
   LIndex: Integer;
@@ -1257,11 +1265,94 @@ var
   LItems: array of TNyxDataValue;
   LText: TNyxText;
 begin
-  NyxAgentFields(AArguments, '|name|offset|limit|itemOffset|itemLimit|textOffset|textLimit|');
+  NyxAgentFields(AArguments, '|row|barScope|name|offset|limit|itemOffset|itemLimit|textOffset|textLimit|');
   LOffset := IntegerArgument(AArguments, 'offset', 0, 0, NyxMaximumMenuDefinitions);
   LLimit := IntegerArgument(AArguments, 'limit', 8, 1, 16);
   LTextOffset := IntegerArgument(AArguments, 'textOffset', 0, 0, 1000000);
   LTextLimit := IntegerArgument(AArguments, 'textLimit', 256, 1, 1024);
+
+  if NyxAgentHas(AArguments, 'row') then
+  begin
+
+    if NyxAgentHas(AArguments, 'name') or NyxAgentHas(AArguments, 'offset') or
+      NyxAgentHas(AArguments, 'limit') then
+    begin
+      raise ENyxModel.Create('Inspect one exact row group or one menu/summary page');
+    end;
+    LAuthoredRow := FSession.Document.Find(AArguments.Field('row').AsText);
+
+    if LAuthoredRow = nil then
+    begin
+      raise ENyxModel.Create('Menu bar query requires an exact authored row ID');
+    end;
+    LScope := TextArgument(AArguments, 'barScope', 'effective');
+
+    if (LScope <> 'local') and (LScope <> 'effective') then
+    begin
+      raise ENyxModel.Create('Menu bar scope must be local or effective');
+    end;
+    LRow := LAuthoredRow;
+    LContext := nil;
+    try
+
+      if LScope = 'effective' then
+      begin
+        LContext := RealizeNyxContext(FSession.Document, LAuthoredRow, LRow);
+      end;
+
+      if (LRow = nil) or (LRow.MenuBar = nil) then
+      begin
+        Exit(NyxObject([NyxField('revision', NyxData(FRevision)),
+          NyxField('row', NyxData(LAuthoredRow.ID)), NyxField('barScope', NyxData(LScope)),
+          NyxField('localDeclared', NyxData(LAuthoredRow.HasMenuBar)),
+          NyxField('configured', NyxData(False))]));
+      end;
+      LWire := LRow.MenuBar.ToData;
+      LPolicy := LWire.Field('options');
+      SetLength(LFields, LPolicy.Count);
+      for LIndex := 0 to LPolicy.Count - 1 do
+      begin
+        LFields[LIndex] := NyxField(LPolicy.Key(LIndex), LPolicy.Field(LPolicy.Key(LIndex)));
+
+        if LFields[LIndex].Name = 'label' then
+        begin
+          LFields[LIndex].Value := NyxData(TextSpan(LPolicy.Field('label').AsText,
+            LTextOffset, LTextLimit, LTotalText));
+        end;
+      end;
+      LOffset := IntegerArgument(AArguments, 'itemOffset', 0, 0, 64);
+      LLimit := IntegerArgument(AArguments, 'itemLimit', 8, 1, 16);
+      SetLength(LItems, LLimit);
+      LCount := 0;
+      for LIndex := LOffset to LRow.MenuBar.Count - 1 do
+      begin
+
+        if LCount >= LLimit then
+        begin
+          Break;
+        end;
+        LItems[LCount] := LWire.Field('headings').Item(LIndex);
+        Inc(LCount);
+      end;
+      SetLength(LItems, LCount);
+      Exit(NyxObject([NyxField('revision', NyxData(FRevision)),
+        NyxField('row', NyxData(LAuthoredRow.ID)), NyxField('barScope', NyxData(LScope)),
+        NyxField('localDeclared', NyxData(LAuthoredRow.HasMenuBar)),
+        NyxField('configured', NyxData(True)), NyxField('options', NyxObject(LFields)),
+        NyxField('labelTotalScalars', NyxData(LTotalText)),
+        NyxField('textOffset', NyxData(LTextOffset)),
+        NyxField('headings', NyxArray(LItems)), NyxField('total', NyxData(LRow.MenuBar.Count)),
+        NyxField('offset', NyxData(LOffset)),
+        NyxField('hasMore', NyxData(LOffset + LCount < LRow.MenuBar.Count))]));
+    finally
+      LContext.Free;
+    end;
+  end;
+
+  if NyxAgentHas(AArguments, 'barScope') then
+  begin
+    raise ENyxModel.Create('Menu bar scope requires an exact row query');
+  end;
 
   if NyxAgentHas(AArguments, 'name') then
   begin
