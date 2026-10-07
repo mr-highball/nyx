@@ -1327,7 +1327,7 @@ never supplies an omitted collection, row or view owner.
 | `rows` | `key`; optionally 1..16 exact `fields` | Up to 20 scoped row IDs; selected cells only, with typed values or 80-scalar text previews |
 | `value` | `key`, `field`; optionally `item` **or** domain `choice` index | Exact Boolean/Integer/Double, or a text window of at most 4096 Unicode scalars |
 | `domain` | `key`, `field` | Range metadata and up to 50 indexed choice previews |
-| `bindings` | Exact authored `owner` | Supported projection, local/cleared/effective/inherited/restorable meaning and paged columns |
+| `bindings` | Exact authored `owner` | Supported projection, local/cleared/effective/inherited/restorable meaning, paged columns and bounded saved/default typeahead |
 | `column` | `owner`, `field`, explicit `source: local/effective/restorable` | Exact column family/mode and a title text window |
 | `query` | `owner`, explicit `source: local/effective/restorable` | Default eight/max twenty predicate nodes, value previews and at most eight sort keys |
 | `query-value` | `owner`, `source`, exact predicate child `path` | One exact typed value or a text window of at most 4096 Unicode scalars |
@@ -1353,7 +1353,8 @@ have at most fifteen child indexes. Read the desired pages at one revision.
 Named commands use strongly typed schema/cell descriptors at this explicit JSON
 boundary. Pascal callers use `NyxDefineCollection`, `NyxSetCollectionField`,
 `NyxAppendCollectionRow`, `NyxUpdateCollectionRow`, `NyxMoveCollectionRow`,
-`NyxRemoveCollectionField`, `NyxBindCollection` and `NyxSetCollectionQuery` with
+`NyxRemoveCollectionField`, `NyxBindCollection`, `NyxSetCollectionQuery`,
+`NyxSetCollectionTypeAhead` and `NyxUseDefaultCollectionTypeAhead` with
 the existing typed field,
 item, domain and fluent view contracts. The immutable `INyxCollectionPatch`
 owns copied proposals; it retains no mutable document, control or runtime store.
@@ -1374,13 +1375,52 @@ owns copied proposals; it retains no mutable document, control or runtime store.
 - `bind`: exact authored `owner`, expected `projection: list/table/tree` and
   a complete versioned `spec` from `TNyxCollectionViewSpec.ToData`. Single
   selection retains version 1; query-free multiple selection uses version 2.
-  A nonempty filter/order policy uses version 3.
+  A nonempty filter/order policy uses version 3. An explicit saved typeahead
+  choice uses version 4, including selection and nullable query.
 - `query`: exact authored `owner`, bound `key`, expected `projection` and a
   complete typed `query` from `TNyxCollectionQuery.ToData`. Null clears only
-  filtering/ordering. Columns, scope, parent mapping and selection remain intact.
+  filtering/ordering. Columns, scope, parent mapping, selection and saved
+  typeahead remain intact.
   An inherited binding acquires an independent local override. Missing/unbound
   owners, changed key/projection and incompatible schema fields refuse. This
   operation can share a single collection group with row/default changes.
+- `typeahead`: exact authored `owner`, bound `key`, expected `projection: list/tree`
+  and `policy` from `TNyxTypeAheadOptions.ToData`. Its four required members are
+  `version: 1`, native Boolean `enabled`, Integer `windowMS: 1..60000` and
+  `match: folded/exact`. Null selects library defaults while retaining an
+  independent local binding. Query, columns, scope, parent and selection survive.
+  Reset does not remove a reusable override or restore inheritance; use the
+  existing `inherit` intent for that separate operation. Missing/unbound owners,
+  changed keys/projections, tables and malformed policies refuse atomically.
+
+Each defined list/tree binding context contains `typeAhead: {declared, policy}`.
+`declared: false` reports the library default; explicit equivalent options remain
+declared. The outer `inherited` flag qualifies effective ownership. A clear mask
+has no effective binding, while `restorable` exposes the inherited policy beneath
+it. `typeAheadSupported` distinguishes list/tree capability; table policies are
+null. Only bounded scalar options are returned: runtime text prefixes, timestamps,
+focus and runtime overrides belong to the mounted application and are absent.
+
+Group related policies through `nyx_collections` or a `collections` group inside
+`nyx_transaction`. For example, at the revision read from `nyx_session`:
+
+```json
+{
+  "mode": "apply",
+  "expectedRevision": 12,
+  "operationId": "destination-search-policy",
+  "changes": [{
+    "op": "typeahead",
+    "owner": "destination-list",
+    "key": "destinations",
+    "projection": "list",
+    "policy": {"version": 1, "enabled": true, "windowMS": 800, "match": "folded"}
+  }]
+}
+```
+
+These strings are the explicit MCP wire boundary. Pascal authoring uses distinct
+references, fluent scalar options and enums; no string selects built-in behavior.
 
 `intent` reuses the ordinary editor's closed operations. It requires a closed
 `action` and exact `key`; view actions also require `owner` and `projection`.
@@ -1433,3 +1473,13 @@ authenticated query/source/history and all four browser/LCL application/view
 builds are qualified; full browser Studio observation and deployed LAN authority
 retain their recorded gate. See
 [the current query workflow packet](../WORK.md#current-return-path-bounded-collection-query-mcp--2026-10-07).
+
+`tools/build.ps1 -Target typeahead-workflow` exercises the current in-process
+dispatcher, actual discovery builder, paired refusal/history and reusable
+ownership using an independent copy of the unchanged authenticated English seed.
+Actual Win32 controls mount the exact accepted semantic design. A separate
+compiler executes its exact accepted source and retained handwritten helper.
+The backend, both Studios, browser consumers and source worker compile without
+launching services. This is not current HTTP authentication, executed browser or
+observing/deployed Studio evidence; those gates remain recorded in
+[the workflow packet](../WORK.md#current-return-path-semantic-saved-search-workflow--2026-10-07).

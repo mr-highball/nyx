@@ -29,6 +29,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.state, nyx.contract, nyx.collections,
   nyx.collections.view.types, nyx.collections.selection, nyx.collections.query,
+  nyx.typeahead,
   nyx.studio.authoring,
   nyx.studio.collectionintent, nyx.studio.stateedits, nyx.studio.projects;
 
@@ -37,7 +38,7 @@ const
 
 type
   TNyxCollectionChangeKind = (ccDefine, ccField, ccRemoveField, ccAppend,
-    ccUpdateRow, ccMoveRow, ccIntent, ccBind, ccQuery);
+    ccUpdateRow, ccMoveRow, ccIntent, ccBind, ccQuery, ccTypeAhead);
 
   { Immutable typed proposals own copied values, never a document/store/control.
     A one-field schema supplies named field authoring with its typed default and
@@ -58,6 +59,10 @@ type
     FSpec: TNyxCollectionViewSpec;
     FProjection: TNyxCollectionProjection;
     FQuery: TNyxCollectionQuery;
+    { Scalar-only authored choice. False means an explicit library-default
+      reset at replay, never collection inheritance or a live search engine. }
+    FTypeAheadDeclared: Boolean;
+    FTypeAhead: TNyxTypeAheadOptions;
   public
     property Kind: TNyxCollectionChangeKind read FKind;
   end;
@@ -114,6 +119,21 @@ function NyxBindCollection(const AOwner: TNyxStudioBindingOwner;
 function NyxSetCollectionQuery(const AOwner: TNyxStudioBindingOwner;
   const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
   const AQuery: TNyxCollectionQuery): TNyxCollectionChange;
+{ Replace only a bound list/tree's authored search choice. Exact owner, key and
+  projection must still agree during replay. Copies preserve columns, hierarchy,
+  query, scope and selection. An inherited view gains an independent local spec;
+  no runtime prefix, timer, receiver or selection enters the patch. Invalid
+  options/projections refuse before a candidate or project can be published. }
+function NyxSetCollectionTypeAhead(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const APolicy: TNyxTypeAheadOptions): TNyxCollectionChange;
+{ Explicit local library-default reset. It retains the complete effective
+  binding; ordinary collection inheritance remains a separate editor operation.
+  Tables, unbound owners and changed identities refuse rather than silently
+  discard behavior. The caller's revision/Undo guards remain authoritative. }
+function NyxUseDefaultCollectionTypeAhead(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection):
+  TNyxCollectionChange;
 function NyxCollectionPatch(const AChanges: array of TNyxCollectionChange):
   INyxCollectionPatch;
 
@@ -331,6 +351,33 @@ begin
   Result.FQuery.ToData;
 end;
 
+function NyxUseDefaultCollectionTypeAhead(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection):
+  TNyxCollectionChange;
+begin
+
+  if not (AProjection in [cpList, cpTree]) then
+  begin
+    raise ENyxCollection.Create('Typeahead edits require a list or tree projection');
+  end;
+  Result := Default(TNyxCollectionChange);
+  Result.FKind := ccTypeAhead;
+  Result.FOwner := NyxBindingOwner(AOwner.ID);
+  Result.FKey := NyxCollection(AKey.Name);
+  Result.FProjection := AProjection;
+  Result.FTypeAheadDeclared := False;
+end;
+
+function NyxSetCollectionTypeAhead(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const APolicy: TNyxTypeAheadOptions): TNyxCollectionChange;
+begin
+  APolicy.Validate;
+  Result := NyxUseDefaultCollectionTypeAhead(AOwner, AKey, AProjection);
+  Result.FTypeAheadDeclared := True;
+  Result.FTypeAhead := APolicy;
+end;
+
 constructor TNyxCollectionPatch.Create(const AChanges: array of TNyxCollectionChange);
 var
   LIndex: Integer;
@@ -413,6 +460,7 @@ var
   LValue: TNyxStateValue;
   LProjected: TNyxNode;
   LIntent: TNyxStudioCollectionIntent;
+  LSpec: TNyxCollectionViewSpec;
 begin
   LSession := TNyxStudioSession.Create(APair);
   try
@@ -438,6 +486,35 @@ begin
           begin
             SelectCollectionOwner(LSession, LChange.FOwner, LChange.FProjection);
             LSession.SetCollectionView(LChange.FSpec);
+          end;
+        ccTypeAhead:
+          begin
+            SelectCollectionOwner(LSession, LChange.FOwner, LChange.FProjection);
+            LProjected := LSession.SelectedProjection;
+            try
+
+              if (LProjected = nil) or not LProjected.HasCollectionView or
+                not LProjected.CollectionView.Defined or
+                (LProjected.CollectionView.Key.Name <> LChange.FKey.Name) then
+              begin
+                raise ENyxCollection.Create('Typeahead edit requires the exact bound collection');
+              end;
+              LSpec := LProjected.CollectionView;
+
+              if LChange.FTypeAheadDeclared then
+              begin
+                LSpec := LSpec.TypeAhead(LChange.FTypeAhead);
+              end
+              else
+              begin
+                LSpec := LSpec.UseDefaultTypeAhead;
+              end;
+              { Use ordinary Studio binding admission in this independent
+                candidate. The agent layer owns the single final paired Undo. }
+              LSession.SetCollectionView(LSpec);
+            finally
+              LProjected.Free;
+            end;
           end;
         ccQuery:
           begin
@@ -1117,6 +1194,7 @@ var
   LRow: Integer;
   LOp: TNyxText;
   LRowData: TNyxDataValue;
+  LPolicy: TNyxDataValue;
 begin
   SetLength(LValues, GetCount);
   for LIndex := 0 to High(FChanges) do
@@ -1180,6 +1258,20 @@ begin
             NyxField('projection', NyxData(CCollectionProjections[LChange.FProjection])),
             NyxField('spec', LChange.FSpec.ToData)]);
         end;
+      ccTypeAhead:
+        begin
+          LPolicy := NyxNull;
+
+          if LChange.FTypeAheadDeclared then
+          begin
+            LPolicy := LChange.FTypeAhead.ToData;
+          end;
+          LValues[LIndex] := NyxObject([NyxField('op', NyxData('typeahead')),
+            NyxField('owner', NyxData(LChange.FOwner.ID)),
+            NyxField('key', NyxData(LChange.FKey.Name)),
+            NyxField('projection', NyxData(CCollectionProjections[LChange.FProjection])),
+            NyxField('policy', LPolicy)]);
+        end;
       ccQuery:
         begin
           LValues[LIndex] := NyxObject([NyxField('op', NyxData('query')),
@@ -1234,6 +1326,28 @@ begin
       LChanges[LIndex] := NyxBindCollection(NyxBindingOwner(LData.Field('owner').AsText),
         ReadProjection(LData.Field('projection')),
         TNyxCollectionViewSpec.FromData(LData.Field('spec')));
+      Continue;
+    end;
+
+    if LOp = 'typeahead' then
+    begin
+      Fields(LData, '|op|owner|key|projection|policy|', 5);
+
+      if LData.Field('policy').Kind = ndNull then
+      begin
+        LChanges[LIndex] := NyxUseDefaultCollectionTypeAhead(
+          NyxBindingOwner(LData.Field('owner').AsText),
+          NyxCollection(LData.Field('key').AsText),
+          ReadProjection(LData.Field('projection')));
+      end
+      else
+      begin
+        LChanges[LIndex] := NyxSetCollectionTypeAhead(
+          NyxBindingOwner(LData.Field('owner').AsText),
+          NyxCollection(LData.Field('key').AsText),
+          ReadProjection(LData.Field('projection')),
+          TNyxTypeAheadOptions.FromData(LData.Field('policy')));
+      end;
       Continue;
     end;
 

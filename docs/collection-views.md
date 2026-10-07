@@ -504,6 +504,13 @@ and compiles both Studios, the browser consumer and source worker. It starts no
 listener, launches no browser and edits no active project. Current browser
 execution and observing deployment remain required; compilation is not parity.
 
+The existing semantic collection tool also supports saved policy-only edits and
+library-default reset. It reports small local/effective/restorable option values
+with explicit declared/default and capability meaning; runtime overrides stay
+private. `tools/build.ps1 -Target typeahead-workflow` qualifies its in-process
+dispatcher, exact source execution, discovery and actual native controls without
+editing a live project. See the [semantic contract](studio-agents.md#structured-collection-context-and-authoring).
+
 ## Incremental value refresh
 
 Both adapters consume the portable immutable

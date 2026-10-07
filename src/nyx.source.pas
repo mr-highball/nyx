@@ -4852,6 +4852,9 @@ var
   LVerifiedBody: TNyxText;
   LVerifiedSuffix: TNyxText;
   LAuthored: Boolean;
+  LGeneratedImports: TNyxImportClause;
+  LImportIndex: Integer;
+  LNeedsTypeAhead: Boolean;
   {$ifdef NYX_SOURCE_PROFILE}
   LStarted: Double;
   LRenderStarted: Double;
@@ -4869,6 +4872,17 @@ begin
     LGenerated := TNyxCodegen.Generate(ADocument);
     Split(LGenerated, LPrefix, LBody, LSuffix, LTokens);
     LGeneratedBody := LBody;
+    { Read the generator's short interface frame, not its potentially large
+      builder. Its canonical import decision includes saved policies in pages,
+      reusable parts and menu contracts. Preserve handwritten frames below,
+      while reconciling this required dependency through the ordinary boundary. }
+    LGeneratedImports := ReadNyxImports(LPrefix, nisInterface);
+    LNeedsTypeAhead := False;
+    for LImportIndex := 0 to LGeneratedImports.Count - 1 do
+    begin
+      LNeedsTypeAhead := LNeedsTypeAhead or
+        (LGeneratedImports.UnitAt(LImportIndex).Name = 'nyx.typeahead');
+    end;
 
     if FCustomFrame then
     begin
@@ -4883,6 +4897,14 @@ begin
       comments and import order through the existing admitted import boundary. }
     LPrefix := WithNyxImport(LPrefix, 'nyx.dates');
     LPrefix := WithNyxImport(LPrefix, 'nyx.times');
+
+    if LNeedsTypeAhead then
+    begin
+      { An existing accepted unit may predate its first saved search choice.
+        Source admission alone cannot prove compiler name resolution. Retain
+        existing imports after reset: application helpers may still use them. }
+      LPrefix := WithNyxImport(LPrefix, 'nyx.typeahead');
+    end;
 
     if ADocument.Collections.Count > 0 then
     begin

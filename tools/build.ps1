@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -2037,11 +2037,27 @@ try {
     exit 0
   }
 
-  if ($Target -eq 'typeahead-policy') {
+  if ($Target -in @('typeahead-policy', 'typeahead-workflow')) {
     # Pascal owns saved-policy admission, history and actual adapter checks.
     # Reuse the unchanged exported semantic seed and enrich its typed bindings
     # locally. This target starts no listener and publishes no active project.
     $nyxPolicyRoot = Join-Path $nyxRoot 'build/typeahead-policy/maintained'
+    $nyxWorkflow = $Target -eq 'typeahead-workflow'
+    $nyxPolicyDefines = @('-dNYX_SAVED_TYPEAHEAD')
+    $nyxPolicyReplayProgram = 'tests/nyx_typeahead_policy_generated.lpr'
+    $nyxPolicyReplayExecutable = 'nyx_typeahead_policy_generated.exe'
+    $nyxPolicyReplayPage = 'studio/web/typeahead-policy.html'
+
+    if ($nyxWorkflow) {
+      # The Pascal dispatcher owns semantic editing and exports its accepted
+      # pair. Ordinary adapters consume that exact design; the separate compiler
+      # executes its exact source and retained helper. No server is launched.
+      $nyxPolicyRoot = Join-Path $nyxRoot 'build/typeahead-workflow/maintained'
+      $nyxPolicyDefines += '-dNYX_TYPEAHEAD_WORKFLOW'
+      $nyxPolicyReplayProgram = 'tests/nyx_typeahead_workflow_generated.lpr'
+      $nyxPolicyReplayExecutable = 'nyx_typeahead_workflow_generated.exe'
+      $nyxPolicyReplayPage = 'studio/web/typeahead-workflow.html'
+    }
     $nyxPolicyNative = Join-Path $nyxPolicyRoot 'native'
     $nyxPolicyGenerated = Join-Path $nyxPolicyRoot 'generated'
     $nyxPolicyReplay = Join-Path $nyxPolicyRoot 'replay'
@@ -2065,7 +2081,7 @@ try {
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxPolicyPlatform",
       "-Fu$nyxLazarus/packager/units/$nyxPolicyPlatform")
     Invoke-NyxCompiler $nyxLclFpc ($nyxPolicyChecks + $nyxPolicyUnits + $nyxPolicyLcl +
-      @('-dNYX_SAVED_TYPEAHEAD', "-FU$nyxPolicyNative", "-FE$nyxPolicyNative",
+      $nyxPolicyDefines + @("-FU$nyxPolicyNative", "-FE$nyxPolicyNative",
         'tests/nyx_typeahead_tests.lpr'))
     $nyxPolicyReviewArgs = @((Join-Path $nyxPolicyRoot 'english-native.png'), $nyxPolicyGenerated)
     & (Join-Path $nyxPolicyNative 'nyx_typeahead_tests.exe') @nyxPolicyReviewArgs
@@ -2074,11 +2090,21 @@ try {
     $nyxPolicyReplayFlags = $nyxPolicyChecks + $nyxPolicyUnits +
       @("-Fu$nyxPolicyGenerated", "-FU$nyxPolicyReplay", "-FE$nyxPolicyReplay")
     Invoke-NyxCompiler $nyxFpc ($nyxPolicyReplayFlags +
-      @('tests/nyx_typeahead_policy_generated.lpr'))
-    & (Join-Path $nyxPolicyReplay 'nyx_typeahead_policy_generated.exe')
+      @($nyxPolicyReplayProgram))
+    & (Join-Path $nyxPolicyReplay $nyxPolicyReplayExecutable)
 
     if ($LASTEXITCODE -ne 0) { throw 'Exact emitted saved-policy reconstruction failed' }
     Test-NyxCompilerTypes $nyxFpc $nyxPolicyReplayFlags @('typeahead_policy')
+
+    if ($nyxWorkflow) {
+      Invoke-NyxCompiler $nyxFpc ($nyxPolicyChecks + $nyxPolicyUnits +
+        @("-FU$nyxPolicyReplay", "-FE$nyxPolicyReplay", 'tests/nyx_agent_collection_schema.lpr'))
+      & (Join-Path $nyxPolicyReplay 'nyx_agent_collection_schema.exe')
+
+      if ($LASTEXITCODE -ne 0) { throw 'Actual semantic search discovery checks failed' }
+      Invoke-NyxCompiler $nyxFpc ($nyxPolicyChecks + $nyxPolicyUnits +
+        @("-FU$nyxPolicyReplay", "-FE$nyxPolicyReplay", 'studio/nyx_studio_server.lpr'))
+    }
     Invoke-NyxCompiler $nyxLclFpc ($nyxPolicyChecks + $nyxPolicyUnits + $nyxPolicyLcl +
       @("-FU$nyxPolicyNative", "-FE$nyxPolicyNative", 'studio/nyx_studio_native.lpr'))
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
@@ -2086,14 +2112,14 @@ try {
     $nyxPolicyBrowserFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js') +
       $nyxPolicyUnits + @("-Fu$nyxPolicyGenerated", "-FE$nyxPolicyBrowser")
     Invoke-NyxCompiler $nyxPas2js ($nyxPolicyBrowserFlags +
-      @('-dNYX_SAVED_TYPEAHEAD', 'tests/nyx_typeahead_tests.lpr'))
+      $nyxPolicyDefines + @('tests/nyx_typeahead_tests.lpr'))
     Invoke-NyxCompiler $nyxPas2js ($nyxPolicyBrowserFlags +
-      @('tests/nyx_typeahead_policy_generated.lpr'))
+      @($nyxPolicyReplayProgram))
     Test-NyxCompilerTypes $nyxPas2js $nyxPolicyBrowserFlags @('typeahead_policy')
     Invoke-NyxCompiler $nyxPas2js ($nyxPolicyBrowserFlags + @('studio/nyx_studio.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxPolicyBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/typeahead.html') -Destination $nyxPolicyBrowser
-    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/typeahead-policy.html') -Destination $nyxPolicyBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot $nyxPolicyReplayPage) -Destination $nyxPolicyBrowser
     Write-Host 'Saved typeahead qualified natively; browser consumers/Studios compile only.'
     exit 0
   }

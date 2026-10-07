@@ -31,6 +31,9 @@ uses
   nyx.types, nyx.model, nyx.controls, nyx.collections,
   nyx.collections.view, nyx.collections.mount, nyx.collections.selection,
   nyx.behavior, nyx.events, nyx.scheduler, nyx.generated.view,
+  {$ifdef NYX_TYPEAHEAD_WORKFLOW}
+  nyx.test.typeahead.workflow, nyx.studio.projects,
+  {$endif}
   {$ifdef NYX_SAVED_TYPEAHEAD}
   nyx.codec, nyx.test.typeahead.policy,
   {$endif}
@@ -72,6 +75,9 @@ type
 
 var
   GChecks: Integer;
+  {$ifdef NYX_TYPEAHEAD_WORKFLOW}
+  GWorkflowPair: TNyxProjectPair;
+  {$endif}
   {$ifdef PAS2JS}
   GVisualDocument: TNyxDocument;
   GVisualRenderer: TRenderer;
@@ -556,7 +562,14 @@ begin
   { These are ordinary target controls using the same callback harness as the
     established runtime review. No mock mount or manually injected spec reader
     stands in for adapter initialization, retained refresh or disconnection. }
+  {$ifdef NYX_TYPEAHEAD_WORKFLOW}
+  { Consume the exact accepted pair from the semantic dispatcher. Its source
+    is independently compiled by the workflow target; this path qualifies the
+    real mount/input lifecycle rather than a manually configured lookalike. }
+  LDocument := TNyxCodec.Decode(GWorkflowPair.Design);
+  {$else}
   LDocument := CreateNyxSavedTypeAheadFixture;
+  {$endif}
   LCandidate := nil;
   LRenderer := TRenderer.Create;
   {$ifdef PAS2JS}
@@ -685,10 +698,18 @@ begin
     SearchChecks;
     ControlChecks;
     {$ifdef NYX_SAVED_TYPEAHEAD}
+    {$ifdef NYX_TYPEAHEAD_WORKFLOW}
+    {$ifdef PAS2JS}
+    Inc(GChecks, RunNyxTypeAheadWorkflowTests(GWorkflowPair));
+    {$else}
+    Inc(GChecks, RunNyxTypeAheadWorkflowTests(GWorkflowPair, TNyxText(ParamStr(2))));
+    {$endif}
+    {$else}
     {$ifdef PAS2JS}
     Inc(GChecks, RunNyxTypeAheadPolicyTests);
     {$else}
     Inc(GChecks, RunNyxTypeAheadPolicyTests(TNyxText(ParamStr(2))));
+    {$endif}
     {$endif}
     SavedPolicyControlChecks;
     {$endif}

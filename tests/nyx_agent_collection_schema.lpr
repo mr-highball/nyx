@@ -57,7 +57,7 @@ begin
     { This is the actual MCP discovery builder. No server constructor, listener,
       personal configuration or authenticated active project is touched. }
     LTools := NyxStudioMCPTools.Field('tools');
-    Check(LTools.Count = 20, 'complete source catalog count');
+    Check(LTools.Count = 21, 'complete source catalog count');
     LFound := False;
     for LIndex := 0 to LTools.Count - 1 do
     begin
@@ -73,7 +73,7 @@ begin
     Check(not LTool.Field('annotations').Field('readOnlyHint').AsBoolean,
       'mixed query/edit tool advertises conservative mutation hint');
     LSchema := LTool.Field('inputSchema').Field('oneOf');
-    Check(LSchema.Count = 8, 'all eight closed context/apply modes are discoverable');
+    Check(LSchema.Count = 10, 'all ten closed context/apply modes are discoverable');
     for LMode := 0 to LSchema.Count - 1 do
     begin
       LVariant := LSchema.Item(LMode);
@@ -102,12 +102,12 @@ begin
     Check((LSchema.Item(6).Field('properties').Field('source').Field('enum').Count = 3) and
       (LSchema.Item(6).Field('properties').Field('source').Field('enum').Item(2).AsText = 'restorable'),
       'masked inherited titles expose the same exact-window query contract');
-    LProperties := LSchema.Item(7).Field('properties');
+    LProperties := LSchema.Item(LSchema.Count - 1).Field('properties');
     Check((LProperties.Field('changes').Field('maxItems').AsInteger = 32) and
       (LProperties.Field('operationId').Field('maxLength').AsInteger = 120),
       'group and retry identity limits');
     LChanges := LProperties.Field('changes').Field('items').Field('oneOf');
-    Check(LChanges.Count = 29, 'named commands and all seventeen ordinary actions');
+    Check(LChanges.Count = 32, 'named commands and all eighteen typed ordinary actions');
     LDefinition := LChanges.Item(1).Field('properties').Field('definition').Field('oneOf');
     Check((LDefinition.Count = 4) and
       (LDefinition.Item(0).Field('properties').Field('default').Field('type').AsText = 'string') and
@@ -117,11 +117,28 @@ begin
       .Field('properties').Field('choices').Field('maxItems').AsInteger = 128,
       'bounded typed domain choices');
     LDefinition := LChanges.Item(5).Field('properties').Field('spec').Field('oneOf');
-    Check((LDefinition.Count = 2) and
+    Check((LDefinition.Count = 4) and
       (LDefinition.Item(0).Field('properties').Field('version').Field('const').AsInteger = 1) and
       (LDefinition.Item(1).Field('required').Count = 6) and
       (LDefinition.Item(1).Field('properties').Field('selection').Field('const').AsText = 'multiple'),
       'exact versioned single/multiple fluent view descriptor');
+    Check((LDefinition.Item(2).Field('properties').Field('version').Field('const').AsInteger = 3) and
+      (LDefinition.Item(3).Field('properties').Field('version').Field('const').AsInteger = 4) and
+      (LDefinition.Item(3).Field('required').Count = 8) and
+      (LDefinition.Item(3).Field('properties').Field('query').Field('anyOf').Item(0)
+        .Field('type').AsText = 'null'), 'query and saved search binding versions are discoverable');
+    LProperties := LDefinition.Item(3).Field('properties').Field('typeAhead');
+    Check((LProperties.Field('required').Count = 4) and
+      (LProperties.Field('properties').Field('enabled').Field('type').AsText = 'boolean') and
+      (LProperties.Field('properties').Field('windowMS').Field('type').AsText = 'integer') and
+      (LProperties.Field('properties').Field('windowMS').Field('maximum').AsInteger = 60000) and
+      not LProperties.Field('additionalProperties').AsBoolean,
+      'saved policy has the closed native scalar descriptor');
+    LProperties := LChanges.Item(7).Field('properties');
+    Check((LProperties.Field('op').Field('const').AsText = 'typeahead') and
+      (LProperties.Field('projection').Field('enum').Count = 2) and
+      (LProperties.Field('policy').Field('oneOf').Item(0).Field('type').AsText = 'null'),
+      'policy-only set/default reset is discoverable through the existing tool');
     for LIndex := 0 to LChanges.Count - 1 do
     begin
       LChange := LChanges.Item(LIndex);

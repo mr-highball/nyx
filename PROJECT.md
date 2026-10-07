@@ -66,14 +66,25 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The existing collection MCP contract now inspects bounded saved/default search
+policies and admits typed policy-only set/reset, including mixed design/data
+transactions and reusable ownership. Checked in-process semantic and actual
+Win32 qualification passes 134 (67 retained runtime, 50 semantic, 17 exact-pair
+control checks), actual discovery 67 and exact compiled source/helper execution
+seven, leak-free. Core/composition and query regressions pass 30/1795/19.
+Both Studios, backend, browser counterparts and worker compile with zero owned
+warnings. Current authenticated HTTP, browser/observing execution and rollout
+remain open; the frozen running service still exposes its earlier API. See
+[the packet](WORK.md#current-return-path-semantic-saved-search-workflow--2026-10-07).
+
 Saved list/tree typeahead now travels through typed collection bindings,
 versioned persistence, crafted source/history and both ordinary mount adapters.
 Runtime overrides remain local; Inspector edits retain saved choices. Checked
 shared/actual Win32 qualification passes 133 (67 retained + 66 new), exact compiled
 builder comparison six, and core/composition regression 30/1795, leak-free.
 Both Studios/browser counterparts/worker compile with zero owned warnings.
-Current browser execution, Inspector policy controls, bounded MCP policy context/
-editing and observing rollout remain open. See
+Current browser execution, Inspector policy controls, authenticated current-backend
+policy editing and observing rollout remain open. See
 [the packet](WORK.md#current-return-path-saved-listtree-typeahead--2026-10-07).
 
 The public recipe form now edits an existing choice and retains its copied

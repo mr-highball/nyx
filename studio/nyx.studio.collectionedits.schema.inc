@@ -41,6 +41,8 @@ var
   LSpecOne: TNyxText;
   LSpecTwo: TNyxText;
   LSpecThree: TNyxText;
+  LSpecFour: TNyxText;
+  LTypeAhead: TNyxText;
   LProperties: TNyxText;
   LRequired: TNyxText;
   LKind: TNyxStateKind;
@@ -145,7 +147,20 @@ begin
     '"parent":{"type":"string"}', []),
     '"required":["version","key","scope","parent","columns"]',
     '"required":["version","key","scope","parent","columns","selection","query"]', []);
-  LSpec := '{"oneOf":[' + LSpecOne + ',' + LSpecTwo + ',' + LSpecThree + ']}';
+  { This is external schema notation, not an authoring string API. Saved
+    policies use the public scalar record's strict four-member descriptor. }
+  LTypeAhead := '{"type":"object","properties":{"version":{"const":1},' +
+    '"enabled":{"type":"boolean"},"windowMS":{"type":"integer","minimum":1,' +
+    '"maximum":60000},"match":{"enum":["folded","exact"]}},' +
+    '"required":["version","enabled","windowMS","match"],"additionalProperties":false}';
+  LSpecFour := StringReplace(StringReplace(StringReplace(LSpecOne,
+    '"const":1', '"const":4', []), '"parent":{"type":"string"}',
+    '"selection":{"enum":["single","multiple"]},' +
+    '"query":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/nyxQuery"}]},' +
+    '"typeAhead":' + LTypeAhead + ',"parent":{"type":"string"}', []),
+    '"required":["version","key","scope","parent","columns"]',
+    '"required":["version","key","scope","parent","columns","selection","query","typeAhead"]', []);
+  LSpec := '{"oneOf":[' + LSpecOne + ',' + LSpecTwo + ',' + LSpecThree + ',' + LSpecFour + ']}';
   Branch('"op":{"const":"bind"},"owner":{"type":"string","minLength":1},' +
     '"projection":{"enum":["list","table","tree"]},"spec":' + LSpec,
     '"op","owner","projection","spec"');
@@ -154,6 +169,10 @@ begin
     '"projection":{"enum":["list","table","tree"]},' +
     '"query":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/nyxQuery"}]}',
     '"op","owner","key","projection","query"');
+  Branch('"op":{"const":"typeahead"},"owner":{"type":"string","minLength":1},' +
+    '"key":{"type":"string","minLength":1},"projection":{"enum":["list","tree"]},' +
+    '"policy":{"oneOf":[{"type":"null"},' + LTypeAhead + ']}',
+    '"op","owner","key","projection","policy"');
 
   for LAction := Low(TNyxStudioCollectionAction) to High(TNyxStudioCollectionAction) do
   begin

@@ -7,6 +7,105 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: semantic saved-search workflow — 2026-10-07
+
+The immediately preceding goal turn is **no progress** toward new acceptance:
+it verified an unchanged delivered mobile layout. The fresh guard and named MCP
+read confirm preservation, so resume the retained semantic-search candidate.
+No process is awaiting completion and no launch is retried.
+
+Previous turn is **progress**: `2d7f3bb` delivers saved typed list/tree search,
+passes 133 checked native/shared and six exact emitted-builder checks, and is
+exact on remote with a clean worktree. No original full criterion closes;
+known workflow/authoring/renderer/codegen/delivery counts are 19/34/16/28/2.
+Stop saved-policy/runtime fixture expansion. Follow the original workflow owner
+and its concrete gap: collection context omits policies; full binds use the new
+decoder, but the advertised schema still omits version four. Agents also need
+a policy-only grouped edit/reset instead of resending columns and queries.
+
+Preregistered deliverable: extend the existing typed collection patch with
+policy-only set/default-reset and bounded local/effective/restorable context,
+including declared/default distinction and explicit list/tree capability.
+Advertise the exact version-four bind and policy schema through existing
+`nyx_collections` / `nyx_transaction`, without another tool or Inspector form.
+Preserve owner/key/projection, other binding fields, independent reusable
+ownership, exact source helpers, permission/revision/receipt guards and one
+paired Undo. Reset is an independent local library-default binding, not removal
+of an inherited collection; ordinary collection inheritance remains distinct.
+
+Evidence/stop: qualify the current in-process semantic dispatcher/candidate
+against the unchanged authenticated English seed, including bounded context,
+grouped edits/reset, retained fields/helpers, whole-group refusal, stale/retry/
+draft/permission guards, reusable isolation and paired history. Execute exact
+emitted source and ordinary native controls; compile both Studios, backend,
+browser consumers and worker. Current authenticated HTTP/browser/observing
+qualification is still a gate, not supplied by an in-process API test. Keep all
+protected fifteen services/nine pairs/229 LAN files exact and do not retry the
+earlier rejected launch. Fixed boundary: two integration/repair passes, then
+reassess concrete remaining failures. End this integrated semantic contract;
+do not expand a local UI form as a substitute for delivery. Workflow is the
+sole no-closure owner; original full acceptance and goal remain open.
+
+The two initial integration passes identify qualification errors rather than
+an admitted product failure: the new test omitted its binding-reference import,
+then used an edit-only review seed to inspect a read-only refusal. Reassessment
+uses the existing trusted recovery frame, which also retains the exact pending
+draft/base that a review seed intentionally excludes. Keep both traces, correct
+that capture and finish the preregistered semantic/control/compiler boundary;
+do not expand another form or restart a service.
+
+The corrected journey reaches a product prerequisite: existing accepted source
+frames omit `nyx.typeahead` after their first semantic policy edit, although a
+fresh generator includes it. Fix the shared workspace's import reconciliation
+from the generator's short typed interface clause, preserve helpers and retain
+imports after reset. Re-run the identified boundary and compile the exact
+accepted companion; parser admission is not successful compiler execution.
+
+Integrated result: `NyxSetCollectionTypeAhead` and
+`NyxUseDefaultCollectionTypeAhead` extend the existing immutable patch. Exact
+owner/key/list-or-tree projection guards preserve every unrelated binding field.
+Null resets to an independent local library-default binding; explicit equivalent
+options remain declared. Bounded bindings expose capability and copied
+local/effective/restorable options without runtime prefixes or timestamps.
+Discovery advertises version-four binds and the exact closed scalar policy;
+`nyx_transaction` consumes the same schema and candidate. Shared source import
+reconciliation retains handwritten helpers and does not remove imports on reset.
+
+Maintained `tools/build.ps1 -Target typeahead-workflow` passes **134** checked
+native/shared assertions: **67** retained runtime checks, **50** semantic checks
+and **17** actual Win32 controls consuming the exact accepted semantic design.
+Actual MCP discovery builder passes **67**; the separate compiler executes the
+exact accepted companion and retained helper with **seven** assertions. Both
+compilers reject a raw string policy with the intended type error. Complete
+candidate refusals retain accepted/draft/base text, every Undo/Redo checkpoint,
+navigation and permission; stale/retry identity, closed fields, whole/mixed group
+rollback, unbound/table capability, reusable local/default/restorable isolation
+and exact paired history are exercised. Core/composition regression passes
+**30/1795**, focused existing query workflow **19**, all leak-free.
+Both Studios, backend, browser counterparts and source worker compile with
+**zero owned warnings**. The seven installed pas2js `Classes` warnings per
+compile remain visible; dependencies are unchanged and unsuppressed.
+
+Evidence: `build/typeahead-workflow/maintained-final.log`, the exact accepted
+`maintained/generated/nyx.generated.workflow.pas` / `project.nyxpair`, compiled
+native/replay binaries and staged matching browser/worker, plus `core-run.log`
+and `query-run.log`. Initial import/qualification/discovery-counter failures
+remain retained separately, leak-free. The authenticated exported English seed
+still hashes `CF3C1136676D7DCB023F424E329DBC1F940F2D52B4EDFC0B69296743578A83DF`.
+New changes are independent in-process semantic edits, not live HTTP mutations.
+
+Direct named MCP reads at revision 2 preserve the active project and explicitly
+confirm that its frozen binding context lacks the new policy capability. This
+logical API packet does not qualify HTTP authentication, browser execution,
+observing Studio, full source/Inspector workflows, hardware/accessibility,
+production budgets, other widgetsets or LAN delivery. No listener launches or
+service replacement occur. Original criteria and goal remain open. Workflow is
+the sole owner: no-closure **19→20**; authoring/renderer/codegen/delivery stay
+**34/16/28/2**. End this integrated semantic-search boundary; do not substitute
+more local forms for the original authenticated/observing gates. The protected
+services/pairs/LAN payload remain exact; final preservation and authorized
+remote checkpoint receipts belong under ignored `build/typeahead-workflow/`.
+
 ## Latest user steering: mobile canvas space recheck — 2026-10-07
 
 The repeated phone capture shows the earlier stacked chrome. Follow-up inspection
@@ -28,6 +127,18 @@ physical-phone qualification. Reloading the existing LAN page exposes the served
 controls; no service replacement, duplicate implementation or new acceptance
 credit is warranted. The unfinished saved-typeahead source edits below remain
 intact and unqualified; this mobile check neither completes nor publishes them.
+
+Latest repeated phone report: fresh authenticated named `nyx_session` returns
+revision 2 without a design edit. The 23:47:20Z read-only preservation check
+again verifies all fifteen services, nine complete pairs and 229 sealed files;
+the LAN root returns HTTP 200, `Cache-Control: no-store` and a device-width
+viewport. Evidence is `build/mobile-space-review/preservation.log`. Inspected
+the retained collapsed/expanded phone captures directly; their earlier 62%/92%
+measurements remain prior emulated-browser evidence, not a new execution or
+physical-phone result. The current served compact shell exposes Undo/Redo/Actions,
+Review, Tools and Expand/Restore. The supplied stacked-toolbar capture does not
+show that shell. No duplicate implementation, listener change, acceptance credit
+or publication of the unfinished semantic-search edits follows from this check.
 
 ## Current return path: saved list/tree typeahead — 2026-10-07
 

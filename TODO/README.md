@@ -44,6 +44,19 @@ remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
+Latest semantic saved-search prerequisite (2026-10-07): the existing collection
+tool exposes bounded local/effective/restorable options and typed policy-only
+set/default reset in ordinary and mixed transactions. Checked native/shared
+passes 134 (67 retained runtime, 50 semantic, 17 exact-pair controls), actual
+discovery 67 and exact compiled source/helper execution seven, leak-free.
+Core/composition/query regression passes 30/1795/19; both Studios, backend and
+browser consumers/worker compile with zero owned warnings. No full criterion
+closes: workflow alone advances 19→20, with authoring/renderer/codegen/delivery
+34/16/28/2 unchanged. End this boundary; current authenticated HTTP, browser/
+observing execution and rollout retain the
+[original owner](NS-4_agent-workflows_01.md) and
+[current evidence](../WORK.md#current-return-path-semantic-saved-search-workflow--2026-10-07).
+
 Latest saved-search prerequisite (2026-10-07): typed collection bindings retain
 typeahead through versioned persistence, crafted source/history and ordinary
 browser/native mount initialization. Overrides stay local; Inspector reconstruction

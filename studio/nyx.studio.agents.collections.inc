@@ -188,13 +188,14 @@ begin
 end;
 
 function CollectionViewContext(const ASpec: TNyxCollectionViewSpec;
-  AOffset, ALimit: Integer): TNyxDataValue;
+  AOffset, ALimit: Integer; ATypeAheadSupported: Boolean): TNyxDataValue;
 var
   LColumns: array of TNyxDataValue;
   LColumn: TNyxCollectionColumn;
   LIndex: Integer;
   LScope: TNyxText;
   LSelection: TNyxText;
+  LTypeAhead: TNyxDataValue;
 begin
 
   if not ASpec.Defined then
@@ -222,12 +223,24 @@ begin
       NyxField('editable', NyxData(LColumn.Mode = cmEditable)),
       NyxField('title', CollectionScalarPreview(TNyxStateValue.FromText(LColumn.Title)))]);
   end;
+  { A bounded scalar policy belongs to each requested binding context. Declared
+    distinguishes saved intent from the library default; the parent response
+    qualifies inheritance. Runtime overrides/prefix/time are never inspected.
+    Tables report null rather than advertise an unsupported search default. }
+  LTypeAhead := NyxNull;
+
+  if ATypeAheadSupported then
+  begin
+    LTypeAhead := NyxObject([NyxField('declared', NyxData(ASpec.HasTypeAhead)),
+      NyxField('policy', ASpec.TypeAheadPolicy.ToData)]);
+  end;
   Result := NyxObject([NyxField('cleared', NyxData(False)),
     NyxField('key', NyxData(ASpec.Key.Name)), NyxField('scope', NyxData(LScope)),
     NyxField('selection', NyxData(LSelection)), NyxField('parent', NyxData(ASpec.ParentField)),
     NyxField('offset', NyxData(AOffset)),
     NyxField('nextOffset', NyxData(Min(AOffset + Length(LColumns), ASpec.Count))),
-    NyxField('total', NyxData(ASpec.Count)), NyxField('columns', NyxArray(LColumns))]);
+    NyxField('total', NyxData(ASpec.Count)), NyxField('columns', NyxArray(LColumns)),
+    NyxField('typeAhead', LTypeAhead)]);
 end;
 
 {$include nyx.studio.agents.collectionqueries.inc}
@@ -398,9 +411,15 @@ begin
       LRestorable := NyxNull;
       LProjectionName := '';
 
+      if LProjection <> nil then
+      begin
+        LProjectionName := LProjection.ProjectionKind;
+      end;
+
       if LNode.HasCollectionView then
       begin
-        LLocal := CollectionViewContext(LNode.CollectionView, LOffset, LLimit);
+        LLocal := CollectionViewContext(LNode.CollectionView, LOffset, LLimit,
+          (LProjectionName = 'list') or (LProjectionName = 'tree'));
 
         if (LMode = acmBindings) and not LNode.CollectionView.Defined then
         begin
@@ -408,7 +427,8 @@ begin
 
           if LSpec.Defined then
           begin
-            LRestorable := CollectionViewContext(LSpec, LOffset, LLimit);
+            LRestorable := CollectionViewContext(LSpec, LOffset, LLimit,
+              (LProjectionName = 'list') or (LProjectionName = 'tree'));
           end;
         end;
       end;
@@ -419,7 +439,8 @@ begin
 
         if LProjection.HasCollectionView then
         begin
-          LEffective := CollectionViewContext(LProjection.CollectionView, LOffset, LLimit);
+          LEffective := CollectionViewContext(LProjection.CollectionView, LOffset, LLimit,
+            (LProjectionName = 'list') or (LProjectionName = 'tree'));
         end;
       end;
 
@@ -429,6 +450,8 @@ begin
           NyxField('owner', NyxData(LName)), NyxField('projection', NyxData(LProjectionName)),
           NyxField('supported', NyxData((LProjectionName = 'list') or
             (LProjectionName = 'table') or (LProjectionName = 'tree'))),
+          NyxField('typeAheadSupported', NyxData((LProjectionName = 'list') or
+            (LProjectionName = 'tree'))),
           NyxField('inherited', NyxData(not LNode.HasCollectionView and
             (LEffective.Kind <> ndNull))), NyxField('local', LLocal),
           NyxField('effective', LEffective)]);

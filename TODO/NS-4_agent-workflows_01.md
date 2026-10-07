@@ -15,6 +15,24 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Current saved-search workflow (2026-10-07): existing `nyx_collections` advertises
+the closed version-four binding, bounded local/effective/restorable scalar options
+and typed policy-only set/library-default reset. Lists/trees report capability;
+tables report null. Inherited views gain independent local bindings; reset does
+not restore inheritance. Mixed transactions retain the ordinary shared publication.
+Current source frames reconcile the required import while retaining exact helpers.
+Checked in-process/native qualification passes 134 (67 retained runtime, 50
+semantic, 17 exact accepted-pair controls), actual MCP discovery 67 and exact
+compiled source/helper execution seven, leak-free. Core/composition/query
+regressions pass 30/1795/19; both Studios, backend and browser consumers/worker
+compile with zero owned warnings. Authenticated HTTP/observing execution and
+rollout remain unverified; the frozen endpoint retains its earlier contract.
+No original criterion closes. Workflow alone advances no-closure 19→20, with
+authoring/renderer/codegen/delivery unchanged at 34/16/28/2. End the semantic
+search boundary; preserve the original workflow/source/renderer acceptance and
+the rejected launch gate. See
+[the packet](../WORK.md#current-return-path-semantic-saved-search-workflow--2026-10-07).
+
 Current combined composition (2026-10-07): `nyx_transaction` now interleaves
 typed copied layout/control, scalar/default binding and collection/query groups,
 counting every leaf toward 64. One complete candidate publishes one exact paired
