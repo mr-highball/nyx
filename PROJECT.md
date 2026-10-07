@@ -69,13 +69,17 @@ public library contract and its reusable components as the proof of capability.
 Studio Properties now consumes a public typed menu editor with complete saved
 policy/item forms, distinct attachment/mask/inheritance, stale-baseline refusal,
 confirmed dependency-safe removal and paired source/history. Actual inspector/
-queue consumers pass 65 per target, ordinary Win32 Studio 72 total. Desktop/390
-browser controls use the real module worker; native captures qualify the ordinary
-controller. Fresh authenticated MCP review passes 181 and all four application/
-view builds from the exact companion. Fifteen services, nine pairs/full checkpoint
-remain protected. The observing release is unchanged; full browser Studio menu
-authoring/registration input, frozen delivery and broader parity/performance stay
-open. See [the packet](WORK.md#current-return-path-public-menu-editor--2026-10-07).
+queue consumers pass 73 per target, ordinary Win32 Studio 80 total. Incomplete
+form input survives shell refresh; public detail splits retain desktop allocation,
+and callback navigation moves the actual source caret. Full desktop/CSS-390 Studio
+journeys pass 484/394, including semantic composition/builds and physical authoring/
+history/Interact. Desktop/390 retained menus each pass 32 while an authenticated
+agent joins/retires; independent popup portals survive observing shell rebuilds.
+Fifteen services, nine pairs/full checkpoint remain protected. Frozen source
+`c24ae36` qualifies its offline 229-file candidate through integrity, installed
+runtime and protocol/process recovery. The observing LAN release remains unchanged.
+Broader parity/performance and preserving backend delivery stay open. See
+[the packet](WORK.md#current-return-path-public-menu-editor--2026-10-07).
 
 Saved menu declarations now pass strict persistence, typed generation/source
 reconstruction, bounded semantic transactions/history and ordinary application

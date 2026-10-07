@@ -24,15 +24,15 @@ failed preserving delivery gate stays with its existing owner; it does not
 authorize a replacement project or another process-policy workaround. The mobile
 allocation correction is already qualified/deployed; this batch retains it.
 
-Ordinary-host qualification found two integrated faults. Presentation/activity
+Ordinary-host qualification found three integrated faults. Presentation/activity
 refreshes discarded incomplete menu form fields. Public `TNyxMenuEditorDraft`
 now owns copied scalar input with exact owner/registry/attachment/definition
 guards; browser and Lazarus hosts capture/restore it without accepting the draft
 or retaining controls. Shared actual inspector/queue consumers pass **73** per
 target; latest ordinary Win32 Studio passes **80**, leak-free. Actual HTTP browser
-73 uses the maintained module worker. The earlier complete CSS-390 host journey
-passes **357**, including menu save/history, ordered named callbacks/policy,
-confirmed removal, both actual application builds and canvas Interact.
+73 uses the maintained module worker. The complete CSS-390 host journey passes
+**394**, including menu save/history, ordered named callbacks/policy, actual
+caret input, confirmed removal, both actual application builds and canvas Interact.
 
 The desktop full-host return to Events failed. Bounded physical allocation found
 the stage at **0 px**, below the viewport: percentage caps on an intrinsically
@@ -43,19 +43,66 @@ source/Events return passes **19**, with a visible **515 px** stage. Pending bro
 callback/diagnostic navigation now chooses Source and moves the actual caret
 after mounting and focus retention, also for worker completion.
 
-Final full desktop/390 journeys additionally type at the real advertised caret,
+Full desktop/390 journeys additionally type at the real advertised caret,
 restore only their own probe draft and exercise the desktop details touch grip.
 Their first versions wrongly held the revision fixed across shared draft changes;
 actual caret input passed but the source assertion refused the changed revision.
 The corrected consumer waits for actual draft receipts. Explicit recovery of
 each exact owned fixture passes **26**: physical Restore followed by two guarded
 semantic Undo steps, without project/root replacement. General semantic draft
-discard remains with the existing workflow owner. Final journeys and offline
-frozen qualification are pending at this checkpoint; no observing refresh or
-original criterion closure is claimed. Current `build/menu-studio/` holds the
-positive and negative evidence. `current-preservation.json` verifies all **15**
-original process identities, **9** exact pairs/navigation/history/drafts/labels,
-the full checkpoint and LAN/MCP bindings. No service was stopped or launched.
+discard remains with the existing workflow owner.
+
+The desktop journey then reached both successful builds but its open Interact
+menu vanished during agent roster refresh. Full shell fallback had rendered into
+the body, removing independent popup portals. The shell now owns a dedicated
+body child; public menus/floating views retain their independent mounts. The
+retained desktop and CSS-390 fixtures each pass **32** read-only Interact checks:
+an authenticated MCP witness joins/retires, its exact observing Agents row changes,
+the open family survives both refreshes, and physical check/radio/Escape input
+preserves the complete accepted source and revision. The witness closes on failure.
+An initial malformed selector test earned no evidence and is retained with its
+correction. A fresh complete desktop journey passes **484**, including physical
+form save, paired history, callback addition/navigation/actual caret input,
+multiple ordered registrations, policy, warning/cancel/confirmed removal,
+details touch resizing, both actual application builds and Interact with the
+read-only roster witness. Its exact exported companion is **6767 bytes**, matching
+the CSS-390 accepted source. Counts include bounded polling/context assertions,
+not independent features. All checked native drivers are leak-free. CSS emulation
+and ordinary Win32 input do not establish phone hardware, IME or assistive technology.
+
+Product **`c24ae36`** freezes the draft/allocation/caret/portal repairs. The new
+offline `final-release/` has a strict **229-file** manifest from that exact source;
+it passes **29** preparation, **39** installed runtime, **66** actual protocol
+recovery, **5** abrupt-process and **14** portable ownership checks, with zero
+leaks. The earlier sealed `1d47ab2` candidate remains independently retained.
+Owned compiles have zero warnings; the seven installed pas2js Classes warnings
+remain visible, with dependency source unchanged. Candidates are independent of
+the protected payload/runtime; neither starts a listener. Runtime qualification
+uses the unchanged semantic content-editor companion because that fixture's
+selection contract is distinct from this menu companion.
+
+Current `build/menu-studio/` holds positive and negative evidence, including
+`full-final-390/`, `full-final-1100/`, `full-portal-1100/`,
+`portal-fixed-1100/`, `portal-fixed-390/`,
+maintained logs, exact private browser backups and frozen candidate qualification.
+`final-preservation.json` verifies all **15** original process identities, **9**
+exact pairs/navigation/history/drafts/labels, the full checkpoint and LAN/MCP
+bindings. No service was stopped or launched. The primary still serves frozen
+`c7e1e42`; the isolated service uses its identified earlier backend with current
+unsealed browser artifacts. No new LAN rollout or full criterion closure is claimed.
+The final branch/remote receipt is `build/menu-studio/remote-return.json`; the
+product source checkpoint and exact remote readback remain distinct from rollout.
+
+This logical integrated batch closes no complete original criterion. Authoring
+no-closure advances **27→28** once; workflow **14**, renderer **8**, codegen **28**
+and delivery **2** stay unchanged. End local menu fixture expansion after this
+ordinary-host/offline candidate boundary. Next is preserving observing HTTP
+delivery of the new backend through its existing service/workflow owners, then
+broader original authoring/component outcomes. Large-form performance, richer
+source/draft ergonomics, hardware/assistive technology, menubars/pickers and other
+widgetsets remain with their original criteria. The full Nyx/Studio goal stays open.
+
+## Previous public editor boundary (`b52f432`) — 2026-10-07
 
 Original NS-4 authoring criteria 2/6 now consume public `nyx.menu.editor`:
 specialized Nyx card/input/select/checkbox/spin/button controls for exact content

@@ -6,17 +6,21 @@
 Current editor boundary (2026-10-07): a reusable public typed menu compound now
 serves Studio Properties and its independent paired queue. Exact whole-form
 policy/item edits, attachment/inheritance, stale refusal and confirmed removal
-pass 65 actual-control checks per target; ordinary Win32 Studio brings its journey
-to 72. Desktop/390 browser uses the actual module worker; native desktop/compact
-captures qualify the ordinary controller. Fresh authenticated MCP passes 181,
-four real application/view builds and exact input. Fifteen protected services,
-nine complete pairs and the checkpoint remain exact. The observing release is
-unchanged. No original full criterion closes: authoring no-closure advances 26→27
-once; workflow 14, renderer 8, codegen 28 and delivery 2 stay unchanged. Stop local
-editor fixtures; qualify ordinary browser Studio authoring/registration and frozen
-observing delivery before further component expansion. Larger-form performance,
-hardware/assistive technology, menubars/pickers and original breadth retain their
-existing owners. See [the packet](WORK.md#current-return-path-public-menu-editor--2026-10-07).
+pass 73 actual-control checks per target; ordinary Win32 Studio brings its journey
+to 80. Shared scalar draft retention protects incomplete forms. Ordinary desktop
+details now use the public split, source navigation moves the actual caret, and
+independent popup portals survive observing shell rebuilds. Full desktop/CSS-390
+journeys pass 484/394; retained Interact each passes 32 with a read-only
+MCP witness joining/retiring. Frozen `c24ae36` qualifies the 229-file candidate
+through integrity/runtime/protocol/process recovery.
+Fifteen protected services, nine complete pairs and checkpoint stay
+exact; the LAN release remains unchanged. No original full criterion closes:
+authoring no-closure advances 27→28 once; workflow 14, renderer 8, codegen 28 and
+delivery 2 stay unchanged. End local menu fixtures after this integrated boundary;
+preserving new-backend observing delivery retains its existing owners before
+broader original authoring/component outcomes. Larger-form performance, hardware/
+assistive technology, menubars/pickers and original breadth retain their owners.
+See [the packet](WORK.md#current-return-path-public-menu-editor--2026-10-07).
 
 Current menu-authoring boundary (2026-10-07): persisted immutable declarations,
 typed generated/source-admitted Pascal, bounded MCP queries/grouped paired edits

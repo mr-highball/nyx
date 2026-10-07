@@ -55,6 +55,16 @@ destinations and malformed/mixed candidates refuse. The installed pair is
 qualified independently; this is staging, not a deployed or complete distribution.
 See [the guide](../docs/studio-releases.md) and [current evidence](../WORK.md).
 
+The integrated menu-editor return (2026-10-07) freezes product `c24ae36` into a
+new 229-file candidate. Exact preparation (29), installed runtime (39), actual
+protocol recovery (66), abrupt-process (5) and portable ownership (14) pass,
+with zero leaks and owned warnings. Qualification uses the unchanged semantic
+content-editor companion; current menu applications compile through `nyx_build`
+on both targets. No listener or new LAN delivery is claimed; primary services,
+complete pairs and checkpoint remain exact. This extends criterion 3 evidence
+without a further delivery count, full criterion closure or supported-matrix claim.
+See [the packet](../WORK.md#current-return-path-public-menu-editor--2026-10-07).
+
 No complete original criterion closes. Delivery no-closure advances 1→2 once;
 the warning inventory remains ended. Return to the existing service/reload and
 workflow owners for session preservation and observing HTTP qualification; the

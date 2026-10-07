@@ -17,13 +17,19 @@ the present Windows installation; the Pascal semantic client is usable immediate
 
 Current editor consumer (2026-10-07): public typed menu forms now use the ordinary
 paired queue with exact mounted registry/local attachment guards. Actual native/
-browser inspector journeys pass 65 each, ordinary Win32 Studio 72 total. Fresh
-authenticated semantic review passes 181 with four real compiler jobs/exact input;
-all 15 protected services, 9 pairs/full checkpoint remain exact. Source still has
-21 tools; observing remains 20. The existing authoring owner advances its counter
-26→27 once; workflow stays 14. No original workflow criterion closes. Full ordinary
-browser Studio authoring/registration input, frozen delivery and richer source/
-review/performance workflows remain open. See
+browser inspector journeys pass 73 each, ordinary Win32 Studio 80 total. Full
+desktop/CSS-390 Studio passes 484/394: bounded authenticated semantic composition/
+context,
+two actual application compiler jobs and exact input, plus physical editor/caret/
+history/Interact. Retained desktop/390 Interact each passes 32 while a separate
+read-only MCP witness joins/retires and its observing roster actually changes;
+open menu portals survive both shell rebuilds. Frozen `c24ae36` qualifies its
+offline candidate through integrity/runtime/protocol/process recovery.
+All 15 protected services, 9 pairs/full
+checkpoint stay exact. Source still has 21 tools; observing remains 20. Authoring
+advances 27→28 once; workflow stays 14. No original workflow criterion closes.
+General pending-draft discard, preserving new-backend observing delivery and
+richer source/review/performance workflows retain their existing owners. See
 [the packet](../WORK.md#current-return-path-public-menu-editor--2026-10-07).
 
 Previous persisted-menu boundary (2026-10-07): document-owned menu definitions and

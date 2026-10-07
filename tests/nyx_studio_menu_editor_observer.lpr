@@ -475,7 +475,8 @@ procedure Interact(const AAcceptedSource: TNyxText);
 var
   LPeer: TNyxMCPTestClient;
   LReply: TNyxDataValue;
-  LRow, LWitness: TNyxText;
+  LRow: TNyxText;
+  LWitness: TNyxText;
 begin
 
   if GHost.Exists('[data-node=studio-panelbar]') then
