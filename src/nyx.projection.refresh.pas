@@ -245,6 +245,8 @@ begin
     ((ABindings = pbaUnbound) and
       ((AExisting.BindingCount <> 0) or (ACandidate.BindingCount <> 0))) or
     (AExisting.HasCollectionView <> ACandidate.HasCollectionView) or
+    (AExisting.HasMenu <> ACandidate.HasMenu) or
+    (AExisting.MenuReference.Name <> ACandidate.MenuReference.Name) or
     (AExisting.Extensions.ToJSON <> ACandidate.Extensions.ToJSON) then
   begin
     Exit;

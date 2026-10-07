@@ -40,7 +40,8 @@ uses
   nyx.state,
   nyx.collections.registry,
   nyx.application.state,
-  nyx.render.lcl;
+  nyx.render.lcl,
+  nyx.menu.button;
 
 type
   { CreateNew avoids a resource-file dependency for a code-first main window.
@@ -61,6 +62,7 @@ type
     FRenderer: TNyxLCLRenderer;
     FViewHost: TPanel;
     FRuntime: TNyxApplicationState;
+    FMenus: INyxMenuBindings;
     function GetState: TNyxState;
     function GetCollections: INyxCollections;
     procedure Navigate(ANode: TNyxNode; const AEvent: TNyxEventInfo);
@@ -78,13 +80,16 @@ type
     { Independent runtime collection stores persist across ShowPage. }
     property Collections: INyxCollections read GetCollections;
     property View: TNyxLCLRenderer read FRenderer;
+    { Retained observations must retire before page changes/window disposal. }
+    property Menus: INyxMenuBindings read FMenus;
     property Window: TNyxApplicationForm read FForm;
   end;
 
 implementation
 
 uses
-  nyx.callbacks;
+  nyx.callbacks,
+  nyx.menu.lcl;
 
 constructor TNyxApplicationForm.Create(AOwner: TComponent);
 begin
@@ -101,6 +106,7 @@ end;
 
 destructor TNyxLCLApplication.Destroy;
 begin
+  FMenus := nil;
   FRenderer.Free;
   FNavigator.Free;
   FRuntime.Free;
@@ -167,6 +173,7 @@ begin
     FViewHost.BevelOuter := bvNone;
     ShowPage(ADocument.Pages[0].ID);
   except
+    FMenus := nil;
     FRenderer.Unmount;
     FNavigator.Unmount;
     FreeAndNil(FNavigation);
@@ -212,8 +219,10 @@ begin
 
     if FDocument.Pages[LIndex].ID = AID then
     begin
+      FMenus := nil;
       FRenderer.Render(FDocument, FDocument.Pages[LIndex], FViewHost, FRuntime.State,
         FRuntime.PageCollections(AID));
+      FMenus := BindNyxLCLMenus(FDocument, FRenderer);
       Exit;
     end;
   end;

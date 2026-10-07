@@ -27,7 +27,7 @@ unit nyx.menu.lcl;
 interface
 
 uses Controls, nyx.text, nyx.model, nyx.root.types, nyx.theme, nyx.menu,
-  nyx.popover.lcl;
+  nyx.popover.lcl, nyx.render.lcl, nyx.menu.button;
 
 type
   INyxLCLMenu = interface(INyxMenu)
@@ -41,11 +41,15 @@ type
 function NewNyxLCLMenu(AAnchor: TWinControl; ADocument: TNyxDocument;
   const ARoot: TNyxRootRef; const AItems: TNyxMenuItems;
   ATheme: TNyxTheme = nil): INyxLCLMenu;
+{ Owns an independent binding for each realized invoker. Release the returned
+  owner before renderer remount/retirement; document defaults stay unchanged. }
+function BindNyxLCLMenus(ADocument: TNyxDocument;
+  ARenderer: TNyxLCLRenderer): INyxMenuBindings;
 
 implementation
 
 uses SysUtils, Classes, Forms, Graphics, LCLType, nyx.types, nyx.behavior,
-  nyx.events, nyx.scheduler, nyx.render.lcl, nyx.widgets.lcl;
+  nyx.events, nyx.scheduler, nyx.widgets.lcl, nyx.controls;
 
 type
   TMenuControlAccess = class(TWinControl);
@@ -255,6 +259,43 @@ function NewNyxLCLMenu(AAnchor: TWinControl; ADocument: TNyxDocument;
   ATheme: TNyxTheme): INyxLCLMenu;
 begin
   Result := TLCLMenu.Create(AAnchor, ADocument, ARoot, AItems, ATheme);
+end;
+
+function BindNyxLCLMenus(ADocument: TNyxDocument;
+  ARenderer: TNyxLCLRenderer): INyxMenuBindings;
+var
+  LBindings: INyxMenuBindings;
+
+  procedure Visit(ANode: TNyxNode);
+  var
+    LIndex: Integer;
+    LRecipe: INyxMenuRecipe;
+    LMenu: INyxLCLMenu;
+  begin
+
+    if ANode.HasMenu and (ANode.MenuReference.Name <> '') then
+    begin
+      LRecipe := NewNyxDeclaredMenuRecipe(ADocument, ANode.MenuReference);
+      LMenu := NewNyxLCLMenu(ARenderer.FocusFor(ANode.ID, niRuntime),
+        ADocument, LRecipe.Root, LRecipe.Items);
+      LBindings.Add(RetainNyxControl(ANode) as INyxButton, ARenderer.Events, LMenu,
+        ADocument.Menus.Definition(ANode.MenuReference).Options);
+    end;
+    for LIndex := 0 to ANode.Count - 1 do
+    begin
+      Visit(ANode.Children[LIndex]);
+    end;
+  end;
+
+begin
+
+  if (ADocument = nil) or (ARenderer = nil) or (ARenderer.Root = nil) then
+  begin
+    raise ENyxModel.Create('Declared native menus require a mounted view');
+  end;
+  LBindings := NewNyxMenuBindings;
+  Visit(ARenderer.Root);
+  Result := LBindings;
 end;
 
 end.

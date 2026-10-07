@@ -298,7 +298,9 @@ uses
   nyx.collections.view,
   nyx.collections.bindings,
   nyx.design.tokens,
-  nyx.composition;
+  nyx.composition,
+  nyx.menu.declarations,
+  nyx.menu.types;
 
 type
   { Admission and authoring share one descriptor construction path. Admission
@@ -2901,6 +2903,12 @@ procedure ValidateNyxDocumentProperties(ADocument: TNyxDocument);
 var
   LIndex: Integer;
   LRequiresRealization: Boolean;
+  LMenuIndex: Integer;
+  LPartIndex: Integer;
+  LMenuRoot: TNyxNode;
+  LMenuPart: TNyxNode;
+  LDefinition: INyxMenuDefinition;
+  LItem: INyxMenuDeclarationItem;
 
   function RequiresRealization(ANode: TNyxNode): Boolean;
   var
@@ -2908,7 +2916,7 @@ var
   begin
     Result := (ANode.Kind = 'slot-override') or (ANode.Kind = 'component') or
       ANode.QueryContainer.Defined or (ANode.BindingCount > 0) or
-      ANode.HasCollectionView;
+      ANode.HasCollectionView or ANode.HasMenu;
     for LChildIndex := 0 to ANode.Count - 1 do
     begin
 
@@ -2943,6 +2951,15 @@ var
       { Effective reusable ancestry can introduce or change a query publisher.
         Check those constraint combinations before paired candidate admission. }
       ValidateNyxViewportBounds(ANode, ADocument.Presentations);
+
+      if ANode.HasMenu and (ANode.MenuReference.Name <> '') and
+        ((ANode.Kind <> NyxKindName(nkButton)) or
+          (ANode.ProjectionKind <> NyxKindName(nkButton)) or
+          (ANode.Prop(NyxAttributeName(atAction), NyxActionName(naNone)) <>
+            NyxActionName(naNone))) then
+      begin
+          raise ENyxModel.Create('Menu invokers require a specialized Nyx button without renderer actions');
+      end;
       for LChildIndex := 0 to ANode.Count - 1 do
       begin
         CheckHosts(ANode.Children[LChildIndex]);
@@ -2967,6 +2984,41 @@ begin
   { Semantic palette data is admitted with the whole document, before either
     renderer or source workspace can publish a candidate. }
   ValidateNyxDesignTokens(ADocument);
+  { Resolve named parts against independent effective content, including reusable
+    instances. A stored declaration cannot enter paired history with a missing,
+    ambiguous, wrong-kind or action-backed command; runtime hosts recheck their
+    actual presentation policy before opening. No adapter is involved here. }
+  for LMenuIndex := 0 to ADocument.Menus.Count - 1 do
+  begin
+    LDefinition := ADocument.Menus.Definition(ADocument.Menus.Reference(LMenuIndex));
+    LMenuRoot := RealizeNyxView(ADocument, ADocument.FindRoot(LDefinition.Root));
+    try
+      for LPartIndex := 0 to LDefinition.Count - 1 do
+      begin
+        LItem := LDefinition.Item(LPartIndex);
+        LMenuPart := LMenuRoot.Part(LItem.Part);
+
+        if LItem.Kind = nmiSeparator then
+        begin
+
+          if (LMenuPart.Kind <> NyxKindName(nkSeparator)) or
+            (LMenuPart.ProjectionKind <> NyxKindName(nkSeparator)) then
+          begin
+            raise ENyxModel.Create('A declared menu separator requires a Nyx separator');
+          end;
+        end
+        else if (LMenuPart.Kind <> NyxKindName(nkButton)) or
+          (LMenuPart.ProjectionKind <> NyxKindName(nkButton)) or
+          (LMenuPart.Prop(NyxAttributeName(atAction), NyxActionName(naNone)) <>
+            NyxActionName(naNone)) then
+        begin
+          raise ENyxModel.Create('Declared menu commands require Nyx buttons without renderer actions');
+        end;
+      end;
+    finally
+      LMenuRoot.Free;
+    end;
+  end;
   LRequiresRealization := False;
   for LIndex := 0 to ADocument.ComponentCount - 1 do
   begin

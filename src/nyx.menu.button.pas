@@ -26,7 +26,7 @@ unit nyx.menu.button;
 
 interface
 
-uses nyx.menu, nyx.controls, nyx.events;
+uses nyx.menu, nyx.controls, nyx.events, nyx.types;
 
 type
   { Managed registration on an ordinary specialized Nyx button. Owns the menu,
@@ -45,6 +45,24 @@ type
     property Menu: INyxMenu read GetMenu;
   end;
 
+  { Owned bindings for one mounted view. Holds independent menus/invokers and
+    forwards their ordered command completions as OnActivate on the exact
+    invoking control. Runtime IDs distinguish sibling reusable instances;
+    design IDs retain callback scope. Release before remounting or destroying
+    the renderer. Runtime check changes never edit document defaults/history. }
+  INyxMenuBindings = interface(IInterface)
+    ['{06C00707-BA22-4531-9030-000000000005}']
+    function GetCount: Integer;
+    function Add(const AButton: INyxButton; const AEvents: INyxEvents;
+      const AMenu: INyxMenu; const AOptions: TNyxMenuOptions): INyxMenuBindings;
+    function Menu(const AControl: TNyxControlRef): INyxMenu;
+    property Count: Integer read GetCount;
+  end;
+
+{ Target factories populate this portable owner after mounting a view. It
+  retains no renderer and creates no cycle into the document or menu family. }
+function NewNyxMenuBindings: INyxMenuBindings;
+
 { Register synchronously on sequential click/key streams without changing any
   existing execution policy. Nil owners, renderer actions or nonsequential
   streams refuse before subscriptions; the caller retains previous registrations. }
@@ -53,9 +71,30 @@ function NewNyxMenuButton(const AButton: INyxButton; const AEvents: INyxEvents;
 
 implementation
 
-uses nyx.types, nyx.model, nyx.behavior, nyx.scheduler, nyx.interaction;
+uses nyx.model, nyx.behavior, nyx.scheduler, nyx.interaction, nyx.text;
 
 type
+  TCommandForwarder = class(TNyxEventCallback)
+  private
+    FEvents: INyxEvents;
+    FRuntimeID: TNyxText;
+    FDesignID: TNyxText;
+  public
+    constructor Create(const AEvents: INyxEvents; const ARuntimeID, ADesignID: TNyxText);
+    procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
+  end;
+  TMenuBindings = class(TInterfacedObject, INyxMenuBindings)
+  private
+    FIDs: array of TNyxText;
+    FInvokers: array of INyxMenuButton;
+    FCompletions: array of INyxEventSubscription;
+  public
+    destructor Destroy; override;
+    function GetCount: Integer;
+    function Add(const AButton: INyxButton; const AEvents: INyxEvents;
+      const AMenu: INyxMenu; const AOptions: TNyxMenuOptions): INyxMenuBindings;
+    function Menu(const AControl: TNyxControlRef): INyxMenu;
+  end;
   TMenuButton = class;
   TButtonLease = class(TInterfacedObject)
   public
@@ -86,6 +125,105 @@ type
     destructor Destroy; override;
     function GetMenu: INyxMenu;
   end;
+
+function NewNyxMenuBindings: INyxMenuBindings;
+begin
+  Result := TMenuBindings.Create;
+end;
+
+constructor TCommandForwarder.Create(const AEvents: INyxEvents;
+  const ARuntimeID, ADesignID: TNyxText);
+begin
+  inherited Create;
+  FEvents := AEvents;
+  FRuntimeID := ARuntimeID;
+  FDesignID := ADesignID;
+end;
+
+procedure TCommandForwarder.Invoke(const AEvent: TNyxEventInfo;
+  const AExecution: INyxExecution);
+var
+  LEvent: TNyxEventInfo;
+begin
+  { Keep the immutable command/part/check payload, while routing to the control
+    whose saved menu attachment produced this independent mounted family. }
+  NyxMenuInvocation(AEvent);
+  LEvent := AEvent.Copy;
+  LEvent.OriginID := FRuntimeID;
+  LEvent.SourceID := FRuntimeID;
+  LEvent.TargetID := FRuntimeID;
+  FEvents.Dispatch(LEvent, FDesignID, FDesignID);
+end;
+
+destructor TMenuBindings.Destroy;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(FCompletions) do
+  begin
+
+    if FCompletions[LIndex] <> nil then
+    begin
+      FCompletions[LIndex].Cancel;
+    end;
+  end;
+  FCompletions := nil;
+  FInvokers := nil;
+  inherited Destroy;
+end;
+
+function TMenuBindings.GetCount: Integer;
+begin
+  Result := Length(FIDs);
+end;
+
+function TMenuBindings.Add(const AButton: INyxButton; const AEvents: INyxEvents;
+  const AMenu: INyxMenu; const AOptions: TNyxMenuOptions): INyxMenuBindings;
+var
+  LIndex: Integer;
+  LInvoker: INyxMenuButton;
+  LCompletion: INyxEventSubscription;
+begin
+
+  if AButton = nil then
+  begin
+    raise ENyxModel.Create('Menu bindings require an exact mounted button');
+  end;
+  for LIndex := 0 to High(FIDs) do
+  begin
+
+    if FIDs[LIndex] = AButton.ID then
+    begin
+      raise ENyxModel.Create('A mounted control already has a menu binding');
+    end;
+  end;
+  LInvoker := NewNyxMenuButton(AButton, AEvents, AMenu, AOptions);
+  LCompletion := AMenu.OnInvoke.Subscribe(TCommandForwarder.Create(AEvents,
+    AButton.ID, AButton.Node.DesignID));
+  LIndex := GetCount;
+  SetLength(FIDs, LIndex + 1);
+  SetLength(FInvokers, LIndex + 1);
+  SetLength(FCompletions, LIndex + 1);
+  FIDs[LIndex] := AButton.ID;
+  FInvokers[LIndex] := LInvoker;
+  FCompletions[LIndex] := LCompletion;
+  Result := Self;
+end;
+
+function TMenuBindings.Menu(const AControl: TNyxControlRef): INyxMenu;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to High(FIDs) do
+  begin
+
+    if FIDs[LIndex] = AControl.ID then
+    begin
+      Exit(FInvokers[LIndex].Menu);
+    end;
+  end;
+  raise ENyxModel.Create('No declared menu is mounted on this exact control');
+end;
 
 constructor TButtonInput.Create(ALease: TButtonLease);
 begin

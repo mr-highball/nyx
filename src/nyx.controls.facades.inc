@@ -94,6 +94,9 @@
     function Target(const AValue: TNyxPartRef): INyxConfiguration;
     function OverridePath(const AValue: TNyxPartRef): INyxConfiguration;
     function Component(const AValue: TNyxComponentRef): INyxConfiguration;
+    function Menu(const AReference: TNyxMenuRef): INyxConfiguration;
+    function NoMenu: INyxConfiguration;
+    function InheritMenu: INyxConfiguration;
     function OnClick(const AValue: TNyxEventRef): INyxConfiguration;
     function OnChange(const AValue: TNyxEventRef): INyxConfiguration;
     function Clear(AKey: TNyxAttribute): INyxConfiguration;
@@ -183,6 +186,9 @@
     function Target(const AValue: TNyxPartRef): INyxConfiguration;
     function OverridePath(const AValue: TNyxPartRef): INyxConfiguration;
     function Component(const AValue: TNyxComponentRef): INyxConfiguration;
+    function Menu(const AReference: TNyxMenuRef): INyxConfiguration;
+    function NoMenu: INyxConfiguration;
+    function InheritMenu: INyxConfiguration;
     function OnClick(const AValue: TNyxEventRef): INyxConfiguration;
     function OnChange(const AValue: TNyxEventRef): INyxConfiguration;
     function Clear(AKey: TNyxAttribute): INyxConfiguration;
@@ -283,6 +289,8 @@
     function EventAt(AIndex: Integer): TNyxEventContract;
     function FindEvent(ATrigger: TNyxTrigger; out AEvent: TNyxEventContract): Boolean;
     function NoValue: INyxControlContract;
+    function InheritValue: INyxControlContract;
+    function Value(const ADomain: TNyxValueDomain): INyxControlContract; overload;
     function Signal(ATrigger: TNyxTrigger): INyxControlContract;
     function Metadata(const AData: TNyxDataValue): INyxControlContract;
     function Value(const ADomain: TNyxTextDomain): INyxControlContract; overload;
@@ -315,6 +323,8 @@
     function EventAt(AIndex: Integer): TNyxEventContract;
     function FindEvent(ATrigger: TNyxTrigger; out AEvent: TNyxEventContract): Boolean;
     function NoValue: INyxControlContract;
+    function InheritValue: INyxControlContract;
+    function Value(const ADomain: TNyxValueDomain): INyxControlContract; overload;
     function Signal(ATrigger: TNyxTrigger): INyxControlContract;
     function Metadata(const AData: TNyxDataValue): INyxControlContract;
     function Value(const ADomain: TNyxTextDomain): INyxControlContract; overload;

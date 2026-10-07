@@ -1508,6 +1508,43 @@ begin
     [NyxData('op'), NyxData('id'), NyxData('domain')]);
 end;
 
+function MenuDefinitionOperationSchema: TNyxDataValue;
+const
+  CDefinition: TNyxText =
+    '{"type":"object","additionalProperties":false,"required":["root","options","items"],' +
+    '"properties":{"root":{"type":"object","additionalProperties":false,' +
+    '"required":["kind","name"],"properties":{"kind":{"enum":["page","reusable"]},' +
+    '"name":{"type":"string","minLength":1}}},' +
+    '"options":{"type":"object","additionalProperties":false,' +
+    '"required":["title","side","alignment","sizing","width","height","gap","margin",' +
+    '"focus","escape","outsidePress","opening","wrap","searchEnabled","searchWindowMS","searchMatch"],' +
+    '"properties":{"title":{"type":"string"},"side":{"enum":["below","above","right","left"]},' +
+    '"alignment":{"enum":["start","center","end"]},"sizing":{"enum":["content","fixed"]},' +
+    '"width":{"type":"integer","minimum":16,"maximum":16384},' +
+    '"height":{"type":"integer","minimum":16,"maximum":16384},' +
+    '"gap":{"type":"integer","minimum":0,"maximum":4096},' +
+    '"margin":{"type":"integer","minimum":0,"maximum":4096},"focus":{"type":"string"},' +
+    '"escape":{"type":"boolean"},"outsidePress":{"type":"boolean"},' +
+    '"opening":{"enum":["first","last"]},"wrap":{"type":"boolean"},' +
+    '"searchEnabled":{"type":"boolean"},"searchWindowMS":{"type":"integer","minimum":1,"maximum":60000},' +
+    '"searchMatch":{"enum":["folded","exact"]}}},' +
+    '"items":{"type":"array","minItems":1,"maxItems":256,"items":{' +
+    '"type":"object","additionalProperties":false,' +
+    '"required":["kind","part","command","group","checked","enabled","submenu"],' +
+    '"properties":{"kind":{"enum":["action","check","radio","separator","submenu"]},' +
+    '"part":{"type":"string","minLength":1},"command":{"type":"string"},' +
+    '"group":{"type":"string"},"checked":{"type":"boolean"},' +
+    '"enabled":{"type":"boolean"},"submenu":{"type":"string"}}}}}}';
+begin
+  { This wire schema exposes complete saved defaults. Pascal admission also
+    checks distinct names, radio exclusivity and the complete dependency graph. }
+  Result := Schema(NyxObject([
+    NyxField('op', NyxObject([NyxField('const', NyxData('menu-define'))])),
+    NyxField('name', TextSchema('Exact menu reference')),
+    NyxField('definition', TNyxDataValue.ParseJSON(CDefinition))]),
+    [NyxData('op'), NyxData('name'), NyxData('definition')]);
+end;
+
 function NyxStudioMCPTools: TNyxDataValue;
 var
   LPage: TNyxDataValue;
@@ -1525,6 +1562,10 @@ begin
     '{"type":"object","properties":{"op":{"const":"title"},"value":{"type":"string"}},"required":["op","value"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"tokens"},"values":{"type":"object"}},"required":["op","values"],"additionalProperties":false},' +
     ContentOperationSchema.ToJSON + ',' +
+    MenuDefinitionOperationSchema.ToJSON + ',' +
+    '{"type":"object","properties":{"op":{"const":"menu-remove"},"name":{"type":"string","minLength":1,"maxLength":128}},"required":["op","name"],"additionalProperties":false},' +
+    '{"type":"object","properties":{"op":{"const":"menu-attach"},"id":{"type":"string"},"menu":{"type":["string","null"]}},"required":["op","id","menu"],"additionalProperties":false},' +
+    '{"type":"object","properties":{"op":{"const":"menu-inherit"},"id":{"type":"string"}},"required":["op","id"],"additionalProperties":false},' +
     ValueDomainOperationSchema.ToJSON + ',' +
     '{"type":"object","properties":{"op":{"const":"value-domain-inherit"},"id":{"type":"string"}},"required":["op","id"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"derive"},"source":{"type":"string"},"id":{"type":"string"},"identities":{"type":"object","additionalProperties":{"type":"string"}}},"required":["op","source","id","identities"],"additionalProperties":false},' +
@@ -1572,6 +1613,11 @@ begin
       Schema(NyxObject([NyxField('query', TextSchema('AND search terms')),
         NyxField('group', TextSchema('Intent group key, e.g. inputs, feedback, composition, all')),
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit'))]), []), True),
+    Tool('nyx_menus', 'Inspect at most 16 menu summaries (8 default), or one exact menu with at most 16 ordered entries (8 default). Policy titles page by Unicode scalars (256 default, 1024 maximum). Definition and entry pages carry the current revision. Names, commands, radio groups and parts are distinct exact application references. nyx_node reports local menuAttachment. In nyx_transaction, menu-define creates/replaces an immutable typed plan, menu-attach sets an invoker reference (null explicitly masks inheritance), menu-inherit removes a local declaration, and menu-remove refuses retained references. Group related content/definition/attachment edits as ONE paired Undo step. Drafts and stale revisions refuse. Queries never change selection or history.',
+      Schema(NyxObject([NyxField('name', TextSchema('Exact menu reference')),
+        NyxField('offset', IntSchema(0, 64)), NyxField('limit', IntSchema(1, 16)),
+        NyxField('itemOffset', IntSchema(0, 256)), NyxField('itemLimit', IntSchema(1, 16)),
+        NyxField('textOffset', IntSchema(0, 1000000)), NyxField('textLimit', IntSchema(1, 1024))]), []), True),
     Tool('nyx_tokens', 'Read effective semantic theme colors and typed logical-pixel metrics. Change through a grouped tokens operation.', Schema(NyxObject([]), []), True),
     Tool('nyx_presentations', 'Inspect one exact named presentation or at most 16 definitions per page (default 8). Names are exact, case-sensitive Unicode application references; max 64 per document. Automatic definitions combine logical width, height and orientation. An optional exact container name selects the nearest eligible measured ancestor content box; omission measures the whole view. Width containment supports width rules; size containment also supports height/orientation. Missing boxes stay inactive. Manual definitions require activation manual, all bounds zero, orientation any and no container; one manual choice may be previewed alongside automatic rules. Controls use typed WhenPresentation scopes. In nyx_transaction, presentation-define creates/replaces a shared definition; presentation-use initializes a supported override; presentation-set upserts one typed scalar. presentation-reset removes one exact override; presentation-remove refuses remaining references. Group related edits as one paired Undo step. Queries preserve navigation/history; no document dump.',
       Schema(NyxObject([NyxField('name', TextSchema('Optional exact presentation name; excludes pagination')),

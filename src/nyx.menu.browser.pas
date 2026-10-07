@@ -27,7 +27,7 @@ unit nyx.menu.browser;
 interface
 
 uses JS, Web, nyx.text, nyx.model, nyx.root.types, nyx.theme, nyx.menu,
-  nyx.popover.browser;
+  nyx.popover.browser, nyx.render.browser, nyx.menu.button;
 
 type
   { The observed popover is managed and may outlive the menu. Its keyboard
@@ -41,10 +41,15 @@ type
 function NewNyxBrowserMenu(AAnchor: TJSHTMLElement; ADocument: TNyxDocument;
   const ARoot: TNyxRootRef; const AItems: TNyxMenuItems;
   ATheme: TNyxTheme = nil): INyxBrowserMenu;
+{ Attach the saved definitions of an already mounted runtime view. Caller owns
+  the returned bindings and releases them before renderer remount/retirement.
+  Any failure releases the complete candidate family and its registrations. }
+function BindNyxBrowserMenus(ADocument: TNyxDocument;
+  ARenderer: TNyxBrowserRenderer): INyxMenuBindings;
 
 implementation
 
-uses SysUtils, nyx.types, nyx.behavior, nyx.events, nyx.scheduler, nyx.render.browser;
+uses SysUtils, nyx.types, nyx.behavior, nyx.events, nyx.scheduler, nyx.controls;
 
 type
   TBrowserMenu = class(TNyxMenuPresenter, INyxBrowserMenu)
@@ -306,6 +311,43 @@ function NewNyxBrowserMenu(AAnchor: TJSHTMLElement; ADocument: TNyxDocument;
   ATheme: TNyxTheme): INyxBrowserMenu;
 begin
   Result := TBrowserMenu.Create(AAnchor, ADocument, ARoot, AItems, ATheme);
+end;
+
+function BindNyxBrowserMenus(ADocument: TNyxDocument;
+  ARenderer: TNyxBrowserRenderer): INyxMenuBindings;
+var
+  LBindings: INyxMenuBindings;
+
+  procedure Visit(ANode: TNyxNode);
+  var
+    LIndex: Integer;
+    LRecipe: INyxMenuRecipe;
+    LMenu: INyxBrowserMenu;
+  begin
+
+    if ANode.HasMenu and (ANode.MenuReference.Name <> '') then
+    begin
+      LRecipe := NewNyxDeclaredMenuRecipe(ADocument, ANode.MenuReference);
+      LMenu := NewNyxBrowserMenu(ARenderer.FocusFor(ANode.ID, niRuntime),
+        ADocument, LRecipe.Root, LRecipe.Items);
+      LBindings.Add(RetainNyxControl(ANode) as INyxButton, ARenderer.Events, LMenu,
+        ADocument.Menus.Definition(ANode.MenuReference).Options);
+    end;
+    for LIndex := 0 to ANode.Count - 1 do
+    begin
+      Visit(ANode.Children[LIndex]);
+    end;
+  end;
+
+begin
+
+  if (ADocument = nil) or (ARenderer = nil) or (ARenderer.Root = nil) then
+  begin
+    raise ENyxModel.Create('Declared browser menus require a mounted view');
+  end;
+  LBindings := NewNyxMenuBindings;
+  Visit(ARenderer.Root);
+  Result := LBindings;
 end;
 
 end.

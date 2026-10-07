@@ -8,7 +8,101 @@ contract. Browser and LCL factories present the same independently owned content
 Studio's **Actions** button consumes `INyxMenuButton`; its **Inspect** submenu
 uses the same managed recipes for Properties, Events and component help.
 
-## Compose once, attach through an adapter
+## Save menus with the application
+
+Document-owned definitions now persist the item order, command/group references,
+check defaults, submenu references and complete presentation/search policy.
+Use ordinary reusable Nyx content, then attach its declaration to a specialized
+button:
+
+```pascal
+LDocument.AddComponent(LActionsColumn);
+LDocument.Menus.Define(
+  NyxMenuRef('document-actions'),
+  NewNyxMenuDefinition(
+    NyxReusableRoot('document-actions'),
+    NyxMenu('Document actions'))
+    .Action(NyxPart('copy'), NyxMenuCommand('copy-selection'))
+    .Check(NyxPart('guides'), NyxMenuCommand('show-guides'), False));
+
+LOpenActionsButton.Configure.Menu(NyxMenuRef('document-actions')).Done;
+NyxCallbacks(LOpenActionsButton)
+  .OnNamed(NyxSemantic(nseActivate))
+  .Add(NyxHandler('TDocumentMenuCommand'), NyxCallbackID('document-menu-command'));
+```
+
+The referenced content root must already belong to the document. Define a nested
+menu independently, then use `.Submenu(NyxPart('density'), NyxMenuRef('density'))`.
+`INyxMenuDefinition` builders return immutable independent plans; the document's
+`INyxMenuDeclarations` registry normalizes public getters into owned definitions.
+References are distinct Pascal types. `NoMenu` explicitly masks an inherited
+attachment; `InheritMenu` removes that local declaration. Attachments are structural
+and refuse platform/viewport/presentation-scoped configuration. Their visibility
+and layout still use Nyx's ordinary presentation contracts.
+
+Ordinary browser/LCL applications automatically bind the mounted invokers. Studio
+binds them in **Interact**; design selection stays an editor operation. Commands
+arrive on the invoker's named `nseActivate` stream. `NyxMenuInvocation(AEvent)`
+returns the typed command, part and optional checked snapshot. Ordered callbacks
+and per-stream scheduling use the existing event contract. Menu input remains
+sequential on the UI thread. Buttons with renderer actions refuse admission.
+
+Mounted families have independent check/radio state and never edit saved defaults.
+Remounting creates a new family from those defaults. `Application.Menus.Menu`
+observes one exact runtime control; release retained observations before changing
+pages or destroying the application. Direct adapter users own the result of
+`BindNyxBrowserMenus` / `BindNyxLCLMenus` and release it before renderer remount or
+retirement. No binding retains a renderer back into the document.
+
+Saved child policies apply in full. Choose `.Presentation(NyxPopover('Density')
+.Placement(npsRight))` for a right-opening branch; its default opens below.
+Invoker click/Down opens first and Up opens last, following menu-button keyboard
+practice. The menu owns initial focus; the saved generic popover focus value is
+retained for exact reconstruction, without overriding first/last item selection.
+
+Only documents with menu meaning use codec version 6; existing versions 1–5 stay
+supported. Registry limits are 64 definitions, 256 items per definition, eight
+submenu levels and 2048 expanded family items. Missing roots/parts, duplicate
+parts, incompatible specialized controls, unknown options, dangling references,
+cycles and multiple initially selected radios refuse. JSON keys exist at the
+persistence/semantic boundary; generated Pascal uses typed fluent expressions.
+Standalone views retain only reachable menu/content dependencies. A reusable
+promoted to the standalone page also retargets its menu root.
+
+## Query and author through MCP
+
+`nyx_menus` lists at most eight definitions by default (sixteen maximum), without
+their item arrays. Supply `name` for exact policy and ordered item inspection;
+`itemOffset`/`itemLimit` page items. `textOffset`/`textLimit` page its title by
+Unicode scalars. `nyx_node` exposes the selected control's local `menuAttachment`,
+distinguishing inheritance from an explicit clear. These queries do not change
+selection, revision or history.
+
+Group `menu-define`, `menu-remove`, `menu-attach` and `menu-inherit` operations in
+one `nyx_transaction` with the current `expectedRevision` and unique operation ID.
+Related control creation, definitions and attachment may be one operation group;
+the complete candidate is validated before paired design/source publication.
+Removing a referenced definition refuses unless its dependents are handled in
+the same group. Retained declarations also prevent removal of their content roots
+through `nyx_roots`. One Undo/Redo restores the whole accepted design/source pair.
+
+`tools/nyx_menu_authoring_review.lpr` is the maintained authenticated Pascal client.
+It creates its own temporary review, composes the English content/declarations,
+reads bounded context/source, checks refusals/history, builds both application
+and standalone-view targets, verifies exact HTTP compiler-input bytes, then
+discards only that review. Supply explicit enrolled `config.toml`, owned output
+directory and editor HTTP base. Its source requires the new twenty-one-tool
+schema; the older observing release remains on twenty tools until refreshed.
+
+`tools/build.ps1 -Target menu-authoring` checks the public portable/source fixture
+and stages both target consumers. Add `-MenuAuthoringSourceDirectory` to consume
+the exact exported `nyx.generated.view.pas` and qualify native Studio Interact.
+Optional `-DesignerMCPConfig` plus `-HttpURL` first runs the authenticated review
+into that explicit source directory. Serve `menu-declarations.html` and
+`menu-declarations-controls.html` on an admitted HTTP host; the maintained Pascal
+ready-capture driver qualifies real-clock completion and desktop/narrow captures.
+
+## Attach runtime-only menus through an adapter
 
 Use specialized controls for the content and typed values for command meaning:
 
@@ -187,10 +281,10 @@ component; the connected toolbar's Builds control participates in ordinary Tab
 order. Desktop/390 observing evidence and preserved-state receipts are in
 [WORK.md](../WORK.md#current-return-path-observing-menu-families--2026-10-07).
 
-Menu presentation/command/recipe plans are explicit runtime attachment, not
-serialized authoring declarations or MCP plan mutations. Their semantic
-admission/generation remains with
-[the existing workflow owner](../TODO/NS-4_agent-workflows_01.md). Menubars, mobile
+Runtime-only presentation/command/recipe plans remain available independently
+of the saved declarations above. The general editor menu-authoring interface
+remains with [the existing workflow owner](../TODO/NS-4_agent-workflows_01.md).
+Menubars, mobile
 drill-down presentation, live menu binding, assistive technology,
 hardware/IME, other widgetsets/DPI and full production accessibility remain open.
 Compiled source admission alone establishes none of these interactions.

@@ -66,6 +66,19 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Saved menu declarations now pass strict persistence, typed generation/source
+reconstruction, bounded semantic transactions/history and ordinary application
+invocation on browser/Win32. Declaration fixtures pass 64 per target; exact
+MCP-exported application consumers pass 14, and native Studio transitions bring
+its consumer to 18. Authenticated isolated MCP passes 172 with all four real
+application/view compiler jobs and exact input bytes. Core/composition regression
+passes 30/1781, leak-free. Source catalog is 21 tools; the observing LAN release
+remains 20. Fifteen services, nine exact pairs and the full checkpoint are retained.
+Final backend refresh, ordinary browser Studio canvas input, editor menu-plan
+authoring, frozen delivery and broader parity remain open. See
+[the current packet](WORK.md#current-return-path-persisted-menu-authoring--2026-10-07)
+and [authoring contract](docs/menu.md).
+
 Frozen mobile-workspace checkpoint `c7e1e42` now serves the existing observing
 LAN/MCP ports at the original firewall-covered executable path. Compact menus,
 collapsed/resizable details, optional tools and canvas expansion reclaim space

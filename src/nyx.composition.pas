@@ -101,7 +101,7 @@ function CloneNyxReusableDefinition(ADocument: TNyxDocument; ARoot: TNyxNode;
 implementation
 
 uses
-  nyx.behavior, nyx.text.index;
+  nyx.behavior, nyx.text.index, nyx.menu.declarations, nyx.menu.types, nyx.root.types;
 
 class function TNyxViewFrame.At(AWidth, AHeight: Double;
   APlatform: TNyxPlatform): TNyxViewFrame;
@@ -575,6 +575,11 @@ var
       begin
         LPart.SetCollectionView(LRule.CollectionView);
       end;
+
+      if LRule.HasMenu then
+      begin
+        LPart.SetMenu(LRule.MenuReference);
+      end;
       LPart.Extensions.Overlay(LRule.Extensions);
     end;
   end;
@@ -661,6 +666,11 @@ var
         begin
           Result.SetCollectionView(ANode.CollectionView);
         end;
+
+        if ANode.HasMenu then
+        begin
+          Result.SetMenu(ANode.MenuReference);
+        end;
         Result.Extensions.Overlay(ANode.Extensions);
         ApplyOverrides(ANode, Result, LScope, ADepth + 1);
       except
@@ -704,6 +714,11 @@ var
       if ANode.HasCollectionView then
       begin
         Result.SetCollectionView(ANode.CollectionView);
+      end;
+
+      if ANode.HasMenu then
+      begin
+        Result.SetMenu(ANode.MenuReference);
       end;
       for LIndex := 0 to ANode.BindingCount - 1 do
       begin
@@ -769,6 +784,52 @@ var
   LCandidate: TNyxDocument;
   LIndex: Integer;
 
+  procedure CollectDefinitions(ANode: TNyxNode); forward;
+
+  procedure CollectMenu(const AReference: TNyxMenuRef);
+  var
+    LDefinition: INyxMenuDefinition;
+    LContent: TNyxNode;
+    LItemIndex: Integer;
+  begin
+
+    if LCandidate.Menus.Contains(AReference) then
+    begin
+      Exit;
+    end;
+    LDefinition := ADocument.Menus.Definition(AReference);
+    LContent := ADocument.FindRoot(LDefinition.Root);
+
+    if LContent = ARoot then
+    begin
+      { The isolated main view is a page even when its source was reusable. }
+      LDefinition := CopyNyxMenuDefinitionToRoot(LDefinition, NyxPageRoot(ARoot.ID));
+    end;
+    LCandidate.Menus.Define(AReference, LDefinition);
+
+    if (LContent <> ARoot) and (LCandidate.FindRoot(LDefinition.Root) = nil) then
+    begin
+
+      if LDefinition.Root.Kind = nrReusable then
+      begin
+        LCandidate.AddComponent(LContent.Clone);
+      end
+      else
+      begin
+        LCandidate.AddPage(LContent.Clone);
+      end;
+      CollectDefinitions(LContent);
+    end;
+    for LItemIndex := 0 to LDefinition.Count - 1 do
+    begin
+
+      if LDefinition.Item(LItemIndex).Kind = nmiSubmenu then
+      begin
+        CollectMenu(LDefinition.Item(LItemIndex).Submenu);
+      end;
+    end;
+  end;
+
   procedure CollectDefinitions(ANode: TNyxNode);
   var
     LIndex: Integer;
@@ -788,6 +849,11 @@ var
     end;
 
   begin
+
+    if ANode.HasMenu and (ANode.MenuReference.Name <> '') then
+    begin
+      CollectMenu(ANode.MenuReference);
+    end;
 
     if (ANode.Kind = 'component') or (ANode.ProjectionKind = 'component') then
     begin

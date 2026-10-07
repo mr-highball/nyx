@@ -131,6 +131,7 @@ type
     FComponentHelp: INyxLCLPopover;
     FActionMenu: INyxLCLMenu;
     FActionButton: INyxMenuButton;
+    FCanvasMenus: INyxMenuBindings;
     { Borrowed receiver registration; cancelled before any controller teardown. }
     FHierarchySubscription: INyxEventSubscription;
     FCanvasView: TNyxLCLRenderer;
@@ -668,6 +669,7 @@ begin
   FSourceModal := nil;
   FActionButton := nil;
   FActionMenu := nil;
+  FCanvasMenus := nil;
   FComponentHelp := nil;
   FShellView.Free;
   FCanvasParking.Free;
@@ -1799,6 +1801,11 @@ begin
       LCanvasHost := TWinControl(FShellView.ControlFor('studio-canvas'));
     end;
 
+    if not LSameView or FReplaceCanvas then
+    begin
+      FCanvasMenus := nil;
+    end;
+
     if (LCanvasHost <> nil) and (FSession.ActiveView <> nil) then
     begin
 
@@ -1816,6 +1823,11 @@ begin
       else
       begin
         FCanvasView.Render(FSession.Document, FSession.ActiveView, LCanvasHost, not FPreview);
+      end;
+
+      if FPreview and (FCanvasMenus = nil) then
+      begin
+        FCanvasMenus := BindNyxLCLMenus(FSession.Document, FCanvasView);
       end;
       FCanvasView.Select(FSession.SelectedID);
       FState.PresentationSelection := FState.PresentationSelection.Reconciled(

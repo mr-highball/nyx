@@ -30,6 +30,7 @@ interface
 uses
   Classes,
   nyx.text,
+  nyx.errors,
   nyx.dates,
   nyx.root.types,
   nyx.data,
@@ -38,6 +39,7 @@ uses
   nyx.responsive,
   nyx.presentations,
   nyx.content,
+  nyx.menu.declarations,
   nyx.containers,
   nyx.layout.policy,
   nyx.layout.constraints,
@@ -59,13 +61,7 @@ type
   { Contract failures are distinct from platform and compiler errors. Callers
     may report these as actionable design diagnostics without exposing a DOM
     or LCL exception type through the portable API. }
-  ENyxModel = class(Exception)
-  public
-    { Older Windows FPC's Exception constructor takes system-tagged String.
-      Store UTF-8 diagnostic bytes without that implicit narrowing conversion;
-      inherited Message remains usable by ordinary Exception handlers. }
-    constructor Create(const AMessage: TNyxText); reintroduce;
-  end;
+  ENyxModel = nyx.errors.ENyxModel;
   TNyxDocument = class;
   TNyxNode = class;
   TNyxNodeConfig = class;
@@ -118,6 +114,8 @@ type
     FViewportValues: TNyxStrings;
     FPresentationSnapshot: INyxPresentationSnapshot;
     FContent: INyxContent;
+    FHasMenu: Boolean;
+    FMenuReference: TNyxMenuRef;
     FContract: TNyxContract;
     FBindingConfig: TNyxNodeBindings;
     FStateBindings: array of TNyxBindingSpec;
@@ -130,6 +128,7 @@ type
     function GetConfigure: TNyxNodeConfig;
     function GetContent: INyxContent;
     function GetHasContent: Boolean;
+    function GetMenuReference: TNyxMenuRef;
     function GetDefaultComponent: TNyxComponentRef;
     function GetPresentationSnapshot: INyxPresentationSnapshot;
     function GetQueryContainer: TNyxContainerRef;
@@ -270,6 +269,13 @@ type
     function OverridePart(const APath: TNyxPartRef;
       AMode: TNyxOverrideMode): TNyxNode; overload;
     function Clone: TNyxNode;
+    { Static authored attachment. An empty local reference deliberately clears
+      inherited behavior; RemoveMenu restores inheritance. Runtime presenters
+      retain independent recipes, never this owning node/document. }
+    procedure SetMenu(const AReference: TNyxMenuRef);
+    procedure RemoveMenu;
+    property HasMenu: Boolean read FHasMenu;
+    property MenuReference: TNyxMenuRef read GetMenuReference;
     { Explicit descriptor/codec boundary. Copies immutable data and replaces a
       target in place; failed validation preserves metadata and its ordering. }
     procedure SetBinding(const ASpec: TNyxBindingSpec);
@@ -460,6 +466,11 @@ type
     function Target(const AValue: TNyxPartRef): TNyxNodeConfig;
     function OverridePath(const AValue: TNyxPartRef): TNyxNodeConfig;
     function Component(const AValue: TNyxComponentRef): TNyxNodeConfig;
+    { Menus refer to document-owned typed plans. Attachments are structural
+      meaning and cannot be conditional through a presentation-only facade. }
+    function Menu(const AReference: TNyxMenuRef): TNyxNodeConfig;
+    function NoMenu: TNyxNodeConfig;
+    function InheritMenu: TNyxNodeConfig;
     function OnClick(const AValue: TNyxEventRef): TNyxNodeConfig;
     function OnChange(const AValue: TNyxEventRef): TNyxNodeConfig;
     { Clear preserves a present empty property. Metadata is an explicit codec /
@@ -542,6 +553,7 @@ type
     FState: TNyxState;
     FCollections: INyxCollectionDefaults;
     FPresentations: INyxPresentations;
+    FMenus: INyxMenuDeclarations;
     FExtensions: TNyxExtensions;
     FPages: array of TNyxNode;
     FComponents: array of TNyxNode;
@@ -553,6 +565,7 @@ type
     function GetComponent(AIndex: Integer): TNyxNode;
     function GetHasCollectionViews: Boolean;
     function GetHasContentRules: Boolean;
+    function GetHasMenuDeclarations: Boolean;
     procedure AdmitRoot(ANode: TNyxNode);
   public
     constructor Create;
@@ -592,6 +605,11 @@ type
       isolated view builds copy definitions; realized views capture a readonly
       snapshot. Document validation refuses dangling control references. }
     property Presentations: INyxPresentations read FPresentations;
+    { Managed immutable menu plans with open references. The registry owns no
+      roots; this document owns those trees. Clone creates a separate registry
+      and renderer lifetimes never retain this document through the plans. }
+    property Menus: INyxMenuDeclarations read FMenus;
+    property HasMenuDeclarations: Boolean read GetHasMenuDeclarations;
     { Includes deliberate clear descriptors; selects version-3 node semantics. }
     property HasCollectionViews: Boolean read GetHasCollectionViews;
     property HasContentRules: Boolean read GetHasContentRules;
@@ -1103,18 +1121,6 @@ begin
   begin
     Result := APrefix + '/' + Result;
   end;
-end;
-
-constructor ENyxModel.Create(const AMessage: TNyxText);
-begin
-  inherited Create('');
-  {$IFDEF PAS2JS}
-  Message := AMessage;
-  {$ELSE}
-  { RawByteString assignment preserves the UTF-8 codepage tag and bytes. It
-    changes this exception only, never the process-wide default codepage. }
-  Message := RawByteString(AMessage);
-  {$ENDIF}
 end;
 
 constructor TNyxNode.Create(const AKind: TNyxText; const AID: TNyxText);
@@ -1957,6 +1963,68 @@ begin
   Result := Put(atComponent, AValue.Name);
 end;
 
+function TNyxNode.GetMenuReference: TNyxMenuRef;
+begin
+  { Construct a fresh record, including on pas2js; returned metadata cannot edit
+    this descriptor through a shared record object. }
+  Result := Default(TNyxMenuRef);
+  Result.Name := FMenuReference.Name;
+end;
+
+procedure TNyxNode.SetMenu(const AReference: TNyxMenuRef);
+var
+  LReference: TNyxMenuRef;
+begin
+  LReference := Default(TNyxMenuRef);
+
+  if AReference.Name <> '' then
+  begin
+    LReference := NyxMenuRef(AReference.Name);
+  end;
+  FMenuReference := LReference;
+  FHasMenu := True;
+end;
+
+procedure TNyxNode.RemoveMenu;
+begin
+  FMenuReference := Default(TNyxMenuRef);
+  FHasMenu := False;
+end;
+
+function TNyxNodeConfig.Menu(const AReference: TNyxMenuRef): TNyxNodeConfig;
+begin
+
+  if (FPlatform <> npfAny) or not FViewport.IsAny or FPresentation.Defined then
+  begin
+    raise ENyxModel.Create('Menu attachments retain portable structural meaning');
+  end;
+  { Empty identities use explicit NoMenu, never accidental uninitialized values. }
+  FNode.SetMenu(NyxMenuRef(AReference.Name));
+  Result := Self;
+end;
+
+function TNyxNodeConfig.NoMenu: TNyxNodeConfig;
+begin
+
+  if (FPlatform <> npfAny) or not FViewport.IsAny or FPresentation.Defined then
+  begin
+    raise ENyxModel.Create('Menu attachments retain portable structural meaning');
+  end;
+  FNode.SetMenu(Default(TNyxMenuRef));
+  Result := Self;
+end;
+
+function TNyxNodeConfig.InheritMenu: TNyxNodeConfig;
+begin
+
+  if (FPlatform <> npfAny) or not FViewport.IsAny or FPresentation.Defined then
+  begin
+    raise ENyxModel.Create('Menu attachments retain portable structural meaning');
+  end;
+  FNode.RemoveMenu;
+  Result := Self;
+end;
+
 function TNyxNodeConfig.OnClick(const AValue: TNyxEventRef): TNyxNodeConfig;
 begin
   Result := Put(atEmit, AValue.Name);
@@ -2640,6 +2708,11 @@ begin
     Result.FPresentationSnapshot := FPresentationSnapshot;
     Result.SetContent(FContent);
 
+    if FHasMenu then
+    begin
+      Result.SetMenu(FMenuReference);
+    end;
+
     if FHasCollectionView then
     begin
       Result.SetCollectionView(FCollectionView);
@@ -2783,6 +2856,7 @@ begin
   FState := TNyxState.Create;
   FCollections := NewNyxCollectionDefaults;
   FPresentations := NewNyxPresentations;
+  FMenus := NewNyxMenuDeclarations;
   FExtensions := TNyxExtensions.Create(nesDocument);
   FTitle := 'Untitled Nyx application';
 end;
@@ -2806,6 +2880,7 @@ begin
   FState.Free;
   FCollections := nil;
   FPresentations := nil;
+  FMenus := nil;
   FExtensions.Free;
   inherited Destroy;
 end;
@@ -3026,6 +3101,7 @@ begin
     Result.FState := FState.Clone;
     Result.FCollections := FCollections.Clone;
     Result.FPresentations := FPresentations.Clone;
+    Result.FMenus := FMenus.Clone;
     for LIndex := 0 to Count - 1 do
     begin
       Result.AddPage(FPages[LIndex].Clone);
@@ -3053,6 +3129,55 @@ begin
     ANode := ANode.Parent;
   end;
   Result := ANode.FOwner = Self;
+end;
+
+function TNyxDocument.GetHasMenuDeclarations: Boolean;
+var
+  LIndex: Integer;
+
+  function HasMenu(ANode: TNyxNode): Boolean;
+  var
+    LChild: Integer;
+  begin
+
+    if ANode.HasMenu then
+    begin
+      Exit(True);
+    end;
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+
+      if HasMenu(ANode.Children[LChild]) then
+      begin
+        Exit(True);
+      end;
+    end;
+    Result := False;
+  end;
+
+begin
+
+  if FMenus.Count > 0 then
+  begin
+    Exit(True);
+  end;
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if HasMenu(FPages[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  for LIndex := 0 to ComponentCount - 1 do
+  begin
+
+    if HasMenu(FComponents[LIndex]) then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
 end;
 
 function TNyxDocument.GetHasCollectionViews: Boolean;
@@ -3144,6 +3269,7 @@ var
   LIndex: Integer;
   LHasCollectionViews: Boolean;
   LHasContentRules: Boolean;
+  LHasMenus: Boolean;
 
   procedure Visit(ANode: TNyxNode; ADepth: Integer);
   var
@@ -3173,6 +3299,17 @@ var
     LIDs.AddFirst(ANode.ID, 0);
     ANode.Extensions.Validate;
     ANode.Contract.Validate;
+
+    if LHasMenus and ANode.Extensions.Has(NyxExtension(NyxMenuAttachmentWireField)) then
+    begin
+      raise ENyxModel.Create('Typed menu attachment conflicts with retained menu data');
+    end;
+
+    if ANode.HasMenu and (ANode.MenuReference.Name <> '') and
+      not FMenus.Contains(ANode.MenuReference) then
+    begin
+      raise ENyxModel.Create('Control refers to an unresolved menu definition');
+    end;
     { Version five promotes contentRules to a typed field on every node. Older
       opaque fields must never acquire constructor meaning implicitly. }
 
@@ -3421,7 +3558,24 @@ var
 begin
   FState.Validate;
   FCollections.Validate;
-  LHasContentRules := HasContentRules;
+  FMenus.Validate;
+  LHasMenus := HasMenuDeclarations;
+
+  if LHasMenus and FExtensions.Has(NyxExtension(NyxMenusWireField)) then
+  begin
+    raise ENyxModel.Create('Typed menus conflict with retained menu data');
+  end;
+  for LIndex := 0 to FMenus.Count - 1 do
+  begin
+
+    if FindRoot(FMenus.Definition(FMenus.Reference(LIndex)).Root) = nil then
+    begin
+      raise ENyxModel.Create('Menu definition refers to a missing content root');
+    end;
+  end;
+  { Version six promotes every preceding typed wire field as well. Opaque legacy
+    fields must refuse collisions, even when their corresponding registry is empty. }
+  LHasContentRules := HasContentRules or LHasMenus;
 
   if ((FPresentations.Count > 0) or LHasContentRules) and FExtensions.Has(NyxExtension(NyxPresentationsWireField)) then
   begin

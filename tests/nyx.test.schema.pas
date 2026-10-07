@@ -105,8 +105,11 @@ begin
     LInfo.Title := 'Caller-owned metadata';
     Check(NyxPrimitiveInfo(0).Title = 'Page', 'metadata record isolation', Result);
     FindNyxPrimitive('date', LInfo);
-    Check((LInfo.Browser = ncAvailable) and (LInfo.Native = ncText),
-      'picker capability exposes the native text fallback', Result);
+    { The managed date field now has a qualified native editor/calendar host.
+      Basic records its documented target limits instead of the old text-only
+      fallback; physical date behavior has its own maintained control journey. }
+    Check((LInfo.Browser = ncAvailable) and (LInfo.Native = ncBasic),
+      'date capability exposes the qualified native editor and its limits', Result);
     LTemplate := TNyxNode.Create('row', 'layout-override');
     try
       Check(NyxLayout(LTemplate) = 'row', 'raw row has its declared natural layout', Result);

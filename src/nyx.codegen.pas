@@ -37,6 +37,11 @@ uses
   nyx.responsive,
   nyx.presentations,
   nyx.content,
+  nyx.menu.declarations,
+  nyx.menu.types,
+  nyx.popover.types,
+  nyx.typeahead,
+  nyx.root.types,
   nyx.containers,
   nyx.state,
   nyx.collections,
@@ -869,6 +874,7 @@ var
   end;
 
   {$I nyx.codegen.collections.inc}
+  {$I nyx.codegen.menus.inc}
 
   function AuthoredDomainData(const ADomain: TNyxValueDomain): TNyxDataValue;
   var
@@ -1505,9 +1511,22 @@ var
     LLines.Add('    ' + LVariable + ' := ' + LKindArgument + ';');
     LLines.Add('    ' + AOwner + '(' + LVariable + ');');
 
-    if ANode.Props.Count > 0 then
+    if (ANode.Props.Count > 0) or ANode.HasMenu then
     begin
       LLines.Add('    ' + LVariable + '.Configure');
+    end;
+
+    if ANode.HasMenu then
+    begin
+
+      if ANode.MenuReference.Name = '' then
+      begin
+        LLines.Add('      .NoMenu');
+      end
+      else
+      begin
+        LLines.Add('      .Menu(NyxMenuRef(' + PascalString(ANode.MenuReference.Name) + '))');
+      end;
     end;
     LCalendarValue := False;
 
@@ -1573,7 +1592,7 @@ var
       LLines.Add('      .' + ConfigurationCall(ANode, LKey, ANode.Prop(LWireKey), LCalendarValue));
     end;
 
-    if ANode.Props.Count > 0 then
+    if (ANode.Props.Count > 0) or ANode.HasMenu then
     begin
       LLines.Add('      .Done;');
     end;
@@ -1660,6 +1679,15 @@ begin
     LLines.Add('  nyx.responsive,');
     LLines.Add('  nyx.presentations,');
     LLines.Add('  nyx.content,');
+
+    if ADocument.HasMenuDeclarations then
+    begin
+      LLines.Add('  nyx.menu.declarations,');
+      LLines.Add('  nyx.menu.types,');
+      LLines.Add('  nyx.popover.types,');
+      LLines.Add('  nyx.typeahead,');
+      LLines.Add('  nyx.root.types,');
+    end;
     LLines.Add('  nyx.containers,');
     LLines.Add('  nyx.editing,');
     LLines.Add('  nyx.gestures,');
@@ -1745,6 +1773,7 @@ begin
     begin
       Emit(ADocument.Components[LIndex], 'Result.AddComponent');
     end;
+    EmitMenus;
     LLines.Add('  except');
     LLines.Add('    Result.Free;');
     LLines.Add('    raise;');

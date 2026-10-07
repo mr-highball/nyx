@@ -3,6 +3,20 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current menu-authoring boundary (2026-10-07): persisted immutable declarations,
+typed generated/source-admitted Pascal, bounded MCP queries/grouped paired edits
+and automatic mounted application invokers qualify on browser/Win32. Fixtures
+pass 64 each; exact semantic application consumers pass 14 each and native Studio
+adds four transitions. Authenticated isolated review passes 172, including all
+four actual application/view compiles and exact input bytes. Core/composition
+regression passes 30/1781, leak-free. Fifteen protected services, nine exact pairs
+and full checkpoint stay unchanged. Source schema has 21 tools; observing stays
+20. Final backend refresh and ordinary browser Studio canvas qualification remain
+open. No original full criterion closes: workflow no-closure advances 13→14 once,
+other totals remain. Stop fixtures and deliver the missing public typed menu
+editor/registration visibility, then qualify frozen observing delivery. See
+[evidence and reassessment](WORK.md#current-return-path-persisted-menu-authoring--2026-10-07).
+
 Current user-priority boundary (2026-10-07): frozen `c7e1e42` serves compact
 mobile/short-host navigation, a collapsed/resizable detail section and reversible
 canvas expansion through public Nyx contracts. Actual shared CSS 390×640 allocates

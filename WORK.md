@@ -7,6 +7,102 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: persisted menu authoring — 2026-10-07
+
+Original NS-4 workflow criteria 2/5 and NS-3 component criteria 2/3 now have
+document-owned immutable menu declarations, typed invoker references, strict
+version-6 persistence and crafted generated/source-admitted Pascal. Existing
+versions 1–5 retain their path. Closed presentation/search policies, ordered
+action/check/radio/separator/submenu items, explicit masks and inheritance survive
+cloning and composition. Standalone views carry only reachable definitions and
+content roots, retargeting a promoted reusable root to its isolated page.
+Property admission rejects missing/wrong-kind parts and action-backed invokers;
+retained menu roots participate in semantic removal dependencies.
+
+Bounded `nyx_menus` discovery/policy/item/title windows and local node attachment
+context share the existing semantic session. Typed define/remove/attach/inherit
+commands publish one revision-aware paired transaction and Undo/Redo. Source
+catalog now has **21** tools; the protected observing release remains **20**.
+Ordinary browser/LCL applications automatically bind declared mounted invokers;
+their typed command snapshots forward to the invoker's named `nseActivate` stream.
+Studio consumes the same public bindings in Interact. Remount retires bindings
+before controls and restores independent saved defaults; runtime check/radio
+changes leave document/source history exact.
+
+Checked native and actual HTTP browser declaration/source/semantic fixtures pass
+**64** each, including graph/strict-type failures, supplementary Unicode,
+standalone dependency closure and exact source reconstruction. The exact English
+MCP export executes **14** ordinary application checks on Win32 and browser
+desktop/390: physical control invocation, nested policy/content, typed application
+callbacks, exclusive runtime radio/check state, defaults, remount and retirement.
+Ordinary Win32 Studio adds four checks for Design/Interact/Design transitions and
+the unchanged accepted pair, for **18** total in its maintained consumer. Browser
+Studio compiles with the same bindings; its new canvas Interact transition has
+not yet earned ordinary observing-host input evidence. Inspected desktop/narrow
+captures qualify the compiled application, not physical phone/accessibility.
+
+The authenticated persistent Pascal review client passes **172** checks on its
+isolated candidate: one grouped English composition, bounded queries/source,
+stale/dangling refusal, exact paired Undo/Redo, four actual compiler jobs
+(browser/LCL application and standalone view), exact HTTP compiler-input bytes,
+review retirement and unchanged primary context. The first run lacked its local
+compiler profile and refused; a later comparison incorrectly included deliberately
+visible activity in preserved document context. Only the corrected terminal pass
+earns this evidence. Final source adds stricter invoker/part admission and the
+portable reader correction; native fixtures qualify those additions, but the
+final backend refresh is still pending below.
+
+pas2js caught two real portability defects: a COM interface in the parser's value
+record, and a parameterless method used directly as an array index. Reader-owned
+immutable plan slots and explicit captured ordinals correct both without altering
+the public contract. Native traces are leak-free; owned changed code compiles
+without warnings. Seven upstream pas2js Classes exhaustiveness warnings remain
+and dependency source is unchanged. A broader current-source regression passes
+**30 core + 1781 composition/designer** checks, leak-free. Its stale date metadata
+expectation is corrected to the existing qualified native editor's `ncBasic`
+capability; it does not change date product behavior.
+
+The current packet is ignored **`build/menu-authoring/`**: maintained build,
+final-core/core-regression logs, MCP receipts/exact source, browser captures and
+`protected-preservation.json`. All **15** original services, **9** complete pairs,
+labels/handles/navigation/history/drafts/permissions, full **147033-byte** durable
+checkpoint and both primary bindings verify exact. Main release/runtime and user
+Codex enrollment are untouched. An isolated developer stage uses its own
+enrollment/profile and loopback listeners; its identity is `server-identity.json`.
+Automatic approval review rejected the final isolated refresh and a separate
+replacement launch with only “blocked by policy”; both commands were rejected
+before execution. The existing isolated candidate remains running. No observing
+refresh, frozen package qualification or deployment is claimed for these changes.
+
+This integrated source/semantic/application boundary is progress; no original
+full criterion closes. Workflow no-closure advances **13→14** once; authoring
+**26**, renderer **8**, codegen **28** and delivery **2** remain unchanged. Stop
+extending menu/store fixtures. Reassessment chooses the missing ordinary editor
+consumer: a reusable public typed menu-declaration editor, selection/registration
+visibility and paired changes through the same intent contract, followed by
+ordinary browser Studio Interact and frozen observing delivery with exact history
+preservation. Menubars/pickers, live binding, arbitrary handwritten builder
+grammar, other widgetsets/DPI, assistive technology and production breadth/
+performance remain with their original acceptance owners. No goal completion.
+
+## Accepted batch intent: persisted menu authoring — 2026-10-07
+
+Previous goal turn is progress: mobile workspace allocation is integrated,
+qualified on actual browser/Win32 hosts and delivered without project/history
+loss; exact remote checkpoint `1e7f9cf` is verified. Return to the retained menu
+foundation under original NS-4 workflow criteria 2/5 and NS-3 component criteria
+2/3. Restore the saved source work without replacing current deployment records.
+Deliver document-owned typed menu definitions and invoker references through
+strict persistence, crafted generation/source admission, bounded semantic
+inspection and one revision-aware paired transaction. Exercise exact compiled
+reconstruction on both targets and actual managed invokers, preserving independent
+runtime state and owned recipes. Stop at the integrated consumer boundary; do not
+extend store-only fixtures in place of source/semantic/runtime integration.
+The fifteen current services, nine exact pairs and full checkpoint remain
+protected. Missing operations stay with the existing workflow owner; use an
+isolated candidate service for new-schema qualification. Full menubar/picker,
+accessibility, binding and product acceptance remain open.
+
 ## Current priority: mobile workspace allocation — 2026-10-07
 
 The user's phone capture confirms the restored LAN path loads, and establishes

@@ -29,7 +29,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.catalog, nyx.designer.resize,
   nyx.responsive, nyx.presentations, nyx.content, nyx.root.types, nyx.designer.move,
-  nyx.contract;
+  nyx.contract, nyx.menu.declarations;
 
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
@@ -38,7 +38,27 @@ type
   TNyxDesignOperation = (doCreate, doUpdate, doMove, doDelete, doTitle, doTokens,
     doDerive, doInstance, doOverride, doInherit, doPlace, doPlaceNew,
     doPresentationDefine, doPresentationRemove, doPresentationUse, doPresentationReset,
-    doPresentationSet, doContentSet, doValueDomainSet, doValueDomainInherit);
+    doPresentationSet, doContentSet, doValueDomainSet, doValueDomainInherit,
+    doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit);
+
+  { Immutable copied menu intent. Definition replaces one registry entry;
+    attachment sets one exact local invoker reference (NoMenu explicitly masks
+    inheritance). Inherit removes an existing local mask/reference. Related
+    definition/content/invoker changes share the same complete candidate gate. }
+  TNyxMenuEdit = record
+  private
+    FOperation: TNyxDesignOperation;
+    FReference: TNyxMenuRef;
+    FControl: TNyxControlRef;
+    FDefinition: TNyxDataValue;
+    FDefined: Boolean;
+  public
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxMenuEdit; static;
+    function Same(const AOther: TNyxMenuEdit): Boolean;
+    property Defined: Boolean read FDefined;
+    property Control: TNyxControlRef read FControl;
+  end;
 
   { One copied value-domain command for an exact authored control/override.
     Setting changes only its local value contract; inherit removes that local
@@ -186,6 +206,18 @@ type
   type; unknown fields/operations fail. IDs and custom kind names are user data.
   Schema/property/document admission also runs on the complete detached result. }
 function ReadNyxDesignPatch(const AOperations: TNyxDataValue): INyxDesignPatch;
+
+{ Typed authoring never supplies raw operation spellings. Nil definitions and
+  uninitialized names refuse before intent is retained. Menu edits are values,
+  independent of the supplied document, registry and immutable plan interface. }
+function NyxDefineMenu(const AReference: TNyxMenuRef;
+  const ADefinition: INyxMenuDefinition): TNyxMenuEdit;
+function NyxRemoveMenu(const AReference: TNyxMenuRef): TNyxMenuEdit;
+function NyxAttachMenu(const AControl: TNyxControlRef;
+  const AReference: TNyxMenuRef): TNyxMenuEdit;
+function NyxNoMenu(const AControl: TNyxControlRef): TNyxMenuEdit;
+function NyxInheritMenu(const AControl: TNyxControlRef): TNyxMenuEdit;
+function NyxMenuPatch(const AChanges: array of TNyxMenuEdit): INyxDesignPatch;
 { Nil content clears typed choices, retaining a stored Component reference if
   present. Candidate admission still requires an ordinary recipe. Invalid
   registries/control references refuse before a patch is published. }
@@ -522,6 +554,7 @@ type
     Presentation: TNyxPresentationEdit;
     Content: TNyxContentEdit;
     ValueDomain: TNyxValueDomainEdit;
+    Menu: TNyxMenuEdit;
   end;
 
   TDesignPatch = class(TInterfacedObject, INyxDesignPatch)
@@ -1235,6 +1268,149 @@ begin
   Result := ToData.ToJSON = AOther.ToData.ToJSON;
 end;
 
+function NyxDefineMenu(const AReference: TNyxMenuRef;
+  const ADefinition: INyxMenuDefinition): TNyxMenuEdit;
+var
+  LRegistry: INyxMenuDeclarations;
+begin
+  Result := Default(TNyxMenuEdit);
+  Result.FReference := NyxMenuRef(AReference.Name);
+  LRegistry := NewNyxMenuDeclarations;
+  LRegistry.Define(Result.FReference, ADefinition);
+  Result.FDefinition := LRegistry.Definition(Result.FReference).ToData;
+  Result.FOperation := doMenuDefine;
+  Result.FDefined := True;
+end;
+
+function NyxRemoveMenu(const AReference: TNyxMenuRef): TNyxMenuEdit;
+begin
+  Result := Default(TNyxMenuEdit);
+  Result.FReference := NyxMenuRef(AReference.Name);
+  Result.FOperation := doMenuRemove;
+  Result.FDefined := True;
+end;
+
+function NyxNoMenu(const AControl: TNyxControlRef): TNyxMenuEdit;
+begin
+  Result := Default(TNyxMenuEdit);
+  Result.FControl := NyxControl(AControl.ID);
+  NyxRoot(nrReusable, Result.FControl.ID);
+  Result.FOperation := doMenuAttach;
+  Result.FDefined := True;
+end;
+
+function NyxAttachMenu(const AControl: TNyxControlRef;
+  const AReference: TNyxMenuRef): TNyxMenuEdit;
+begin
+  Result := NyxNoMenu(AControl);
+  Result.FReference := NyxMenuRef(AReference.Name);
+end;
+
+function NyxInheritMenu(const AControl: TNyxControlRef): TNyxMenuEdit;
+begin
+  Result := NyxNoMenu(AControl);
+  Result.FOperation := doMenuInherit;
+end;
+
+function TNyxMenuEdit.ToData: TNyxDataValue;
+var
+  LValue: TNyxDataValue;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxModel.Create('Construct a menu edit before encoding it');
+  end;
+  case FOperation of
+    doMenuDefine:
+      Result := NyxObject([NyxField('op', NyxData('menu-define')),
+        NyxField('name', NyxData(FReference.Name)), NyxField('definition', FDefinition)]);
+    doMenuRemove:
+      Result := NyxObject([NyxField('op', NyxData('menu-remove')),
+        NyxField('name', NyxData(FReference.Name))]);
+    doMenuAttach:
+      begin
+        LValue := NyxNull;
+
+        if FReference.Name <> '' then
+        begin
+          LValue := NyxData(FReference.Name);
+        end;
+        Result := NyxObject([NyxField('op', NyxData('menu-attach')),
+          NyxField('id', NyxData(FControl.ID)), NyxField('menu', LValue)]);
+      end;
+    doMenuInherit:
+      Result := NyxObject([NyxField('op', NyxData('menu-inherit')),
+        NyxField('id', NyxData(FControl.ID))]);
+    else
+      begin
+        raise ENyxModel.Create('Unknown typed menu operation');
+      end;
+  end;
+end;
+
+class function TNyxMenuEdit.FromData(const AData: TNyxDataValue): TNyxMenuEdit;
+var
+  LName: TNyxText;
+begin
+  LName := AData.Field('op').AsText;
+
+  if LName = 'menu-define' then
+  begin
+    CheckFields(AData, '|op|name|definition|');
+    Exit(NyxDefineMenu(NyxMenuRef(AData.Field('name').AsText),
+      NyxMenuDefinitionFromData(AData.Field('definition'))));
+  end;
+
+  if LName = 'menu-remove' then
+  begin
+    CheckFields(AData, '|op|name|');
+    Exit(NyxRemoveMenu(NyxMenuRef(AData.Field('name').AsText)));
+  end;
+
+  if LName = 'menu-attach' then
+  begin
+    CheckFields(AData, '|op|id|menu|');
+
+    if AData.Field('menu').Kind = ndNull then
+    begin
+      Exit(NyxNoMenu(NyxControl(AData.Field('id').AsText)));
+    end;
+    Exit(NyxAttachMenu(NyxControl(AData.Field('id').AsText),
+      NyxMenuRef(AData.Field('menu').AsText)));
+  end;
+
+  if LName = 'menu-inherit' then
+  begin
+    CheckFields(AData, '|op|id|');
+    Exit(NyxInheritMenu(NyxControl(AData.Field('id').AsText)));
+  end;
+  raise ENyxModel.Create('Unknown semantic menu operation');
+end;
+
+function TNyxMenuEdit.Same(const AOther: TNyxMenuEdit): Boolean;
+begin
+  Result := FDefined = AOther.FDefined;
+
+  if Result and FDefined then
+  begin
+    Result := ToData.ToJSON = AOther.ToData.ToJSON;
+  end;
+end;
+
+function NyxMenuPatch(const AChanges: array of TNyxMenuEdit): INyxDesignPatch;
+var
+  LItems: array of TNyxDataValue;
+  LIndex: Integer;
+begin
+  SetLength(LItems, Length(AChanges));
+  for LIndex := 0 to High(AChanges) do
+  begin
+    LItems[LIndex] := AChanges[LIndex].ToData;
+  end;
+  Result := ReadNyxDesignPatch(NyxArray(LItems));
+end;
+
 function ReadNyxDesignPatch(const AOperations: TNyxDataValue): INyxDesignPatch;
 var
   LOwner: TDesignPatch;
@@ -1265,7 +1441,12 @@ begin
     LOperation.Properties := NyxObject([]);
     LName := LWire.Field('op').AsText;
 
-    if (LName = 'value-domain-set') or (LName = 'value-domain-inherit') then
+    if Copy(LName, 1, 5) = 'menu-' then
+    begin
+      LOperation.Menu := TNyxMenuEdit.FromData(LWire);
+      LOperation.Operation := LOperation.Menu.FOperation;
+    end
+    else if (LName = 'value-domain-set') or (LName = 'value-domain-inherit') then
     begin
       LOperation.ValueDomain := TNyxValueDomainEdit.FromData(LWire);
       LOperation.Operation := doValueDomainSet;
@@ -1940,6 +2121,30 @@ begin
             end;
           end;
         doTitle: Result.Title := LOperation.ID;
+        doMenuDefine:
+          begin
+            Result.Menus.Define(LOperation.Menu.FReference,
+              NyxMenuDefinitionFromData(LOperation.Menu.FDefinition));
+          end;
+        doMenuRemove:
+          begin
+            Result.Menus.Remove(LOperation.Menu.FReference);
+          end;
+        doMenuAttach:
+          begin
+            RequireNode(Result, LOperation.Menu.FControl.ID).SetMenu(
+              LOperation.Menu.FReference);
+          end;
+        doMenuInherit:
+          begin
+            LNode := RequireNode(Result, LOperation.Menu.FControl.ID);
+
+            if not LNode.HasMenu then
+            begin
+              raise ENyxModel.Create('This exact local menu declaration is absent');
+            end;
+            LNode.Configure.InheritMenu;
+          end;
         doValueDomainSet, doValueDomainInherit:
           begin
             LNode := RequireNode(Result, LOperation.ValueDomain.FControl.ID);

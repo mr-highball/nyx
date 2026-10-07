@@ -37,7 +37,8 @@ uses
   nyx.state,
   nyx.collections.registry,
   nyx.application.state,
-  nyx.render.browser;
+  nyx.render.browser,
+  nyx.menu.button;
 
 type
   { Small application host for generated and handwritten documents. Pages are
@@ -52,6 +53,7 @@ type
     FRenderer: TNyxBrowserRenderer;
     FViewHost: TJSHTMLElement;
     FRuntime: TNyxApplicationState;
+    FMenus: INyxMenuBindings;
     function GetState: TNyxState;
     function GetCollections: INyxCollections;
     procedure Navigate(ANode: TNyxNode; const AEvent: TNyxEventInfo);
@@ -67,12 +69,16 @@ type
     { Independent runtime collection stores persist across ShowPage. }
     property Collections: INyxCollections read GetCollections;
     property View: TNyxBrowserRenderer read FRenderer;
+    { Mounted menu context. Release any retained menus/bindings before changing
+      pages or destroying the application; target anchors are borrowed. }
+    property Menus: INyxMenuBindings read FMenus;
   end;
 
 implementation
 
 uses
-  nyx.callbacks;
+  nyx.callbacks,
+  nyx.menu.browser;
 
 constructor TNyxBrowserApplication.Create;
 begin
@@ -84,6 +90,7 @@ end;
 
 destructor TNyxBrowserApplication.Destroy;
 begin
+  FMenus := nil;
   FRenderer.Free;
   FNavigator.Free;
   FRuntime.Free;
@@ -137,6 +144,7 @@ begin
     LContainer.appendChild(FViewHost);
     FRenderer.Render(FDocument, FDocument.Pages[0], FViewHost, False, FRuntime.State,
       FRuntime.PageCollections(FDocument.Pages[0].ID));
+    FMenus := BindNyxBrowserMenus(FDocument, FRenderer);
     FViewHost.setAttribute('data-nyx-page', FDocument.Pages[0].ID);
     { Both view trees and subscriptions are admitted before replacing host content. }
     AHost.textContent := '';
@@ -146,6 +154,7 @@ begin
     end;
     document.title := FDocument.Title;
   except
+    FMenus := nil;
     FRenderer.Unmount;
     FNavigator.Unmount;
     FreeAndNil(FNavigation);
@@ -190,8 +199,10 @@ begin
 
     if FDocument.Pages[LIndex].ID = AID then
     begin
+      FMenus := nil;
       FRenderer.Render(FDocument, FDocument.Pages[LIndex], FViewHost, False, FRuntime.State,
         FRuntime.PageCollections(AID));
+      FMenus := BindNyxBrowserMenus(FDocument, FRenderer);
       FViewHost.setAttribute('data-nyx-page', AID);
       document.title := FDocument.Title;
       Exit;

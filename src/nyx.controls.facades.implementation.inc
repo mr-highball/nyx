@@ -473,6 +473,24 @@ begin
   Result := Self as INyxConfiguration;
 end;
 
+function TNyxConfiguration.Menu(const AReference: TNyxMenuRef): INyxConfiguration;
+begin
+  ConfigurationScope.Menu(AReference);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.NoMenu: INyxConfiguration;
+begin
+  ConfigurationScope.NoMenu;
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.InheritMenu: INyxConfiguration;
+begin
+  ConfigurationScope.InheritMenu;
+  Result := Self as INyxConfiguration;
+end;
+
 function TNyxConfiguration.OnClick(const AValue: TNyxEventRef): INyxConfiguration;
 begin
   ConfigurationScope.OnClick(AValue);
@@ -770,6 +788,18 @@ end;
 function TNyxControlContract.NoValue: INyxControlContract;
 begin
   FOwner.Node.Contract.NoValue;
+  Result := Self as INyxControlContract;
+end;
+
+function TNyxControlContract.InheritValue: INyxControlContract;
+begin
+  FOwner.Node.Contract.InheritValue;
+  Result := Self as INyxControlContract;
+end;
+
+function TNyxControlContract.Value(const ADomain: TNyxValueDomain): INyxControlContract;
+begin
+  FOwner.Node.Contract.Value(ADomain);
   Result := Self as INyxControlContract;
 end;
 

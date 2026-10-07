@@ -28,20 +28,25 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.types, nyx.controls, nyx.model, nyx.behavior,
-  nyx.events, nyx.scheduler, nyx.popover, nyx.typeahead, nyx.root.types;
+  nyx.events, nyx.scheduler, nyx.popover, nyx.typeahead, nyx.root.types,
+  nyx.menu.types, nyx.menu.declarations;
+
+const
+  nmiAction = nyx.menu.types.nmiAction;
+  nmiCheck = nyx.menu.types.nmiCheck;
+  nmiRadio = nyx.menu.types.nmiRadio;
+  nmiSeparator = nyx.menu.types.nmiSeparator;
+  nmiSubmenu = nyx.menu.types.nmiSubmenu;
+  nmoFirst = nyx.menu.types.nmoFirst;
+  nmoLast = nyx.menu.types.nmoLast;
 
 type
   INyxMenuRecipe = interface;
   INyxMenuItem = interface;
-  { Open application identities own text, never execution keywords or controls. }
-  TNyxMenuCommandRef = record
-    Name: TNyxText;
-  end;
-  TNyxMenuGroupRef = record
-    Name: TNyxText;
-  end;
-  TNyxMenuItemKind = (nmiAction, nmiCheck, nmiRadio, nmiSeparator, nmiSubmenu);
-  TNyxMenuOpening = (nmoFirst, nmoLast);
+  TNyxMenuCommandRef = nyx.menu.types.TNyxMenuCommandRef;
+  TNyxMenuGroupRef = nyx.menu.types.TNyxMenuGroupRef;
+  TNyxMenuItemKind = nyx.menu.types.TNyxMenuItemKind;
+  TNyxMenuOpening = nyx.menu.types.TNyxMenuOpening;
 
   { Immutable registration of an existing named Nyx part. Disabled commands
     remain keyboard-focusable; physical Enabled=False is deliberately distinct.
@@ -86,6 +91,17 @@ type
     independent clone. Implementations must preserve their construction snapshot;
     presenters validate every branch before opening any host. Eight levels and
     2048 total entries bound recipes, including external/cyclic implementations. }
+  { Optional authored policy. Legacy runtime recipes inherit the parent's branch
+    navigation/geometry. Document declarations carry their own copied policy;
+    presenters consult this separate interface without changing foreign recipes. }
+  INyxMenuRecipePolicy = interface(IInterface)
+    ['{06C00707-BA22-4531-9030-000000000004}']
+    function GetHasPolicy: Boolean;
+    function GetPolicy: TNyxMenuOptions;
+    property HasPolicy: Boolean read GetHasPolicy;
+    property Policy: TNyxMenuOptions read GetPolicy;
+  end;
+
   INyxMenuRecipe = interface(IInterface)
     ['{1A8B0719-0647-444E-A241-061026000004}']
     function CopyDocument: TNyxDocument;
@@ -95,30 +111,7 @@ type
     property Items: TNyxMenuItems read GetItems;
   end;
 
-  { Menu navigation is an explicit typed runtime policy. Every open starts at
-    first/last visible item. Typeahead uses the shared Unicode search contract. }
-  TNyxMenuOptions = record
-  private
-    FPresentation: TNyxPopoverOptions;
-    FTypeAhead: TNyxTypeAheadOptions;
-    FOpening: TNyxMenuOpening;
-    FWrap: Boolean;
-  public
-    { Copy an existing validated popover policy; the menu owns its initial focus. }
-    function Presentation(const AValue: TNyxPopoverOptions): TNyxMenuOptions;
-    { Copy enabled/matching/inter-key timing policy into the next open. }
-    function TypeAhead(const AValue: TNyxTypeAheadOptions): TNyxMenuOptions;
-    { First/last visible command, including logically disabled commands. }
-    function Opening(AValue: TNyxMenuOpening): TNyxMenuOptions;
-    { Choose whether arrow traversal wraps at the first/last command. }
-    function Wrap(AValue: Boolean): TNyxMenuOptions;
-    { Undefined policies and unknown enum ordinals raise before presentation. }
-    procedure Validate;
-    property Placement: TNyxPopoverOptions read FPresentation;
-    property Search: TNyxTypeAheadOptions read FTypeAhead;
-    property OpenAt: TNyxMenuOpening read FOpening;
-    property Wraps: Boolean read FWrap;
-  end;
+  TNyxMenuOptions = nyx.menu.types.TNyxMenuOptions;
 
   { Detached completion snapshot survives close/reopen and queued callbacks. }
   TNyxMenuInvocation = record
@@ -255,7 +248,15 @@ function NyxMenuSubmenu(const APart: TNyxPartRef;
   const ARecipe: INyxMenuRecipe): TNyxMenuItem;
 { Clone the document immediately; caller can release it after construction. }
 function NewNyxMenuRecipe(ADocument: TNyxDocument; const ARoot: TNyxRootRef;
-  const AItems: TNyxMenuItems): INyxMenuRecipe;
+  const AItems: TNyxMenuItems): INyxMenuRecipe; overload;
+{ Capture complete authored policy as well as the independently owned recipe. }
+function NewNyxMenuRecipe(ADocument: TNyxDocument; const ARoot: TNyxRootRef;
+  const AItems: TNyxMenuItems; const AOptions: TNyxMenuOptions): INyxMenuRecipe; overload;
+{ Resolve a saved graph into immutable runtime recipes. Every branch owns its
+  snapshot, initial state and policy. Later source edits cannot alter this family;
+  missing roots/parts, cycles or budget overflow refuse before any host mounts. }
+function NewNyxDeclaredMenuRecipe(ADocument: TNyxDocument;
+  const AReference: TNyxMenuRef): INyxMenuRecipe;
 function NyxMenuItems: TNyxMenuItems;
 function NyxMenu(const ATitle: TNyxText): TNyxMenuOptions;
 { Validate/copy the exact private completion payload. Unrelated events and
@@ -264,7 +265,7 @@ function NyxMenuInvocation(const AEvent: TNyxEventInfo): TNyxMenuInvocation;
 
 implementation
 
-uses nyx.data, nyx.interaction;
+uses nyx.data, nyx.interaction, nyx.composition;
 
 type
   { Owned classes avoid unsupported COM-interface record fields in pas2js.
@@ -300,11 +301,13 @@ type
     function GetItem(AIndex: Integer): INyxMenuItem;
     function Add(const AItem: INyxMenuItem): INyxMenuItems;
   end;
-  TMenuRecipe = class(TInterfacedObject, INyxMenuRecipe)
+  TMenuRecipe = class(TInterfacedObject, INyxMenuRecipe, INyxMenuRecipePolicy)
   private
     FDocument: TNyxDocument;
     FRoot: TNyxRootRef;
     FItems: TNyxMenuItems;
+    FHasPolicy: Boolean;
+    FPolicy: TNyxMenuOptions;
   public
     constructor Create(ADocument: TNyxDocument; const ARoot: TNyxRootRef;
       const AItems: TNyxMenuItems);
@@ -312,6 +315,8 @@ type
     function CopyDocument: TNyxDocument;
     function GetRoot: TNyxRootRef;
     function GetItems: TNyxMenuItems;
+    function GetHasPolicy: Boolean;
+    function GetPolicy: TNyxMenuOptions;
   end;
   { Borrowed controller pointer lives behind the same weak menu lease. }
   TMenuCompletion = class(TNyxEventCallback)
@@ -358,12 +363,12 @@ end;
 
 function NyxMenuCommand(const AName: TNyxText): TNyxMenuCommandRef;
 begin
-  Result.Name := NyxNamedEvent(AName).Name;
+  Result := nyx.menu.types.NyxMenuCommand(AName);
 end;
 
 function NyxMenuGroup(const AName: TNyxText): TNyxMenuGroupRef;
 begin
-  Result.Name := NyxNamedEvent(AName).Name;
+  Result := nyx.menu.types.NyxMenuGroup(AName);
 end;
 
 function NyxMenuAction(const APart: TNyxPartRef;
@@ -443,6 +448,7 @@ var
   LPart: INyxControl;
   LDocument: TNyxDocument;
   LNode: TNyxNode;
+  LContent: INyxControl;
   LAction: TNyxAction;
   LOther: Integer;
 begin
@@ -514,6 +520,7 @@ begin
         raise ENyxModel.Create('Submenu recipe is absent');
       end;
       LDocument := AItems[LIndex].Recipe.CopyDocument;
+      LNode := nil;
       try
 
         if LDocument = nil then
@@ -521,15 +528,17 @@ begin
           raise ENyxModel.Create('Submenu recipe returned no owned document');
         end;
         LDocument.Validate;
-        LNode := LDocument.FindRoot(AItems[LIndex].Recipe.Root);
-
-        if LNode = nil then
+        if LDocument.FindRoot(AItems[LIndex].Recipe.Root) = nil then
         begin
           raise ENyxModel.Create('Submenu recipe root is absent');
         end;
-        ValidateMenuTree(RetainNyxControl(LNode), AItems[LIndex].Recipe.Items,
+        LNode := RealizeNyxView(LDocument, LDocument.FindRoot(AItems[LIndex].Recipe.Root));
+        LContent := RetainNyxControl(LNode);
+        ValidateMenuTree(LContent, AItems[LIndex].Recipe.Items,
           ADepth + 1, ABudget);
       finally
+        LContent := nil;
+        LNode.Free;
         LDocument.Free;
       end;
     end
@@ -559,6 +568,8 @@ constructor TMenuRecipe.Create(ADocument: TNyxDocument; const ARoot: TNyxRootRef
   const AItems: TNyxMenuItems);
 var
   LBudget: Integer;
+  LRuntime: TNyxNode;
+  LContent: INyxControl;
 begin
   inherited Create;
 
@@ -570,7 +581,14 @@ begin
   FRoot := ARoot;
   FItems := TMenuItems.Create(AItems);
   LBudget := 2048;
-  ValidateMenuTree(RetainNyxControl(FDocument.FindRoot(FRoot)), FItems, 1, LBudget);
+  LRuntime := RealizeNyxView(FDocument, FDocument.FindRoot(FRoot));
+  try
+    LContent := RetainNyxControl(LRuntime);
+    ValidateMenuTree(LContent, FItems, 1, LBudget);
+  finally
+    LContent := nil;
+    LRuntime.Free;
+  end;
 end;
 
 destructor TMenuRecipe.Destroy;
@@ -598,6 +616,71 @@ function NewNyxMenuRecipe(ADocument: TNyxDocument; const ARoot: TNyxRootRef;
   const AItems: TNyxMenuItems): INyxMenuRecipe;
 begin
   Result := TMenuRecipe.Create(ADocument, ARoot, AItems);
+end;
+
+function TMenuRecipe.GetHasPolicy: Boolean;
+begin
+  Result := FHasPolicy;
+end;
+
+function TMenuRecipe.GetPolicy: TNyxMenuOptions;
+begin
+
+  if not FHasPolicy then
+  begin
+    raise ENyxModel.Create('This runtime recipe inherits its branch policy');
+  end;
+  Result := FPolicy;
+end;
+
+function NewNyxMenuRecipe(ADocument: TNyxDocument; const ARoot: TNyxRootRef;
+  const AItems: TNyxMenuItems; const AOptions: TNyxMenuOptions): INyxMenuRecipe;
+var
+  LRecipe: TMenuRecipe;
+begin
+  AOptions.Validate;
+  LRecipe := TMenuRecipe.Create(ADocument, ARoot, AItems);
+  Result := LRecipe;
+  LRecipe.FPolicy := AOptions;
+  LRecipe.FHasPolicy := True;
+end;
+
+function NewNyxDeclaredMenuRecipe(ADocument: TNyxDocument;
+  const AReference: TNyxMenuRef): INyxMenuRecipe;
+
+  function Cook(const AName: TNyxMenuRef): INyxMenuRecipe;
+  var
+    LDefinition: INyxMenuDefinition;
+    LItem: INyxMenuDeclarationItem;
+    LRuntime: INyxMenuItem;
+    LItems: INyxMenuItems;
+    LIndex: Integer;
+  begin
+    LDefinition := ADocument.Menus.Definition(AName);
+    LItems := NyxMenuItems;
+    for LIndex := 0 to LDefinition.Count - 1 do
+    begin
+      LItem := LDefinition.Item(LIndex);
+      case LItem.Kind of
+        nmiAction: LRuntime := NyxMenuAction(LItem.Part, LItem.Command);
+        nmiCheck: LRuntime := NyxMenuCheck(LItem.Part, LItem.Command, LItem.IsChecked);
+        nmiRadio: LRuntime := NyxMenuRadio(LItem.Part, LItem.Command, LItem.Group, LItem.IsChecked);
+        nmiSeparator: LRuntime := NyxMenuSeparator(LItem.Part);
+        nmiSubmenu: LRuntime := NyxMenuSubmenu(LItem.Part, Cook(LItem.Submenu));
+      end;
+      LItems := LItems.Add(LRuntime.Enabled(LItem.IsEnabled));
+    end;
+    Result := NewNyxMenuRecipe(ADocument, LDefinition.Root, LItems, LDefinition.Options);
+  end;
+
+begin
+
+  if ADocument = nil then
+  begin
+    raise ENyxModel.Create('Declared menus require an owned document');
+  end;
+  ADocument.Validate;
+  Result := Cook(NyxMenuRef(AReference.Name));
 end;
 
 constructor TMenuCompletion.Create(ALease: TNyxMenuLease; AIndex: Integer);
@@ -771,50 +854,7 @@ end;
 
 function NyxMenu(const ATitle: TNyxText): TNyxMenuOptions;
 begin
-  Result := Default(TNyxMenuOptions);
-  Result.FPresentation := NyxPopover(ATitle).Size(280, 600);
-  Result.FTypeAhead := NyxTypeAhead;
-  Result.FWrap := True;
-end;
-
-procedure TNyxMenuOptions.Validate;
-begin
-  FPresentation.Validate;
-  FTypeAhead.Validate;
-
-  if (Ord(FOpening) < Ord(Low(TNyxMenuOpening))) or
-    (Ord(FOpening) > Ord(High(TNyxMenuOpening))) then
-  begin
-    raise ENyxModel.Create('Unknown menu opening policy');
-  end;
-end;
-
-function TNyxMenuOptions.Presentation(const AValue: TNyxPopoverOptions): TNyxMenuOptions;
-begin
-  Result := Self;
-  Result.FPresentation := AValue;
-  Result.Validate;
-end;
-
-function TNyxMenuOptions.TypeAhead(const AValue: TNyxTypeAheadOptions): TNyxMenuOptions;
-begin
-  Result := Self;
-  Result.FTypeAhead := AValue;
-  Result.Validate;
-end;
-
-function TNyxMenuOptions.Opening(AValue: TNyxMenuOpening): TNyxMenuOptions;
-begin
-  Result := Self;
-  Result.FOpening := AValue;
-  Result.Validate;
-end;
-
-function TNyxMenuOptions.Wrap(AValue: Boolean): TNyxMenuOptions;
-begin
-  Result := Self;
-  Result.FWrap := AValue;
-  Result.Validate;
+  Result := nyx.menu.types.NyxMenu(ATitle);
 end;
 
 function NyxMenuInvocation(const AEvent: TNyxEventInfo): TNyxMenuInvocation;
@@ -1172,6 +1212,8 @@ procedure TNyxMenuPresenter.OpenSubmenu(const APart: TNyxPartRef);
 var
   LIndex: Integer;
   LChild: TNyxMenuPresenter;
+  LPolicy: INyxMenuRecipePolicy;
+  LOptions: TNyxMenuOptions;
 begin
   FCompletion.Scheduler.RequireUI;
   LIndex := ItemIndex(APart);
@@ -1199,11 +1241,17 @@ begin
 
   if not BranchOpen(LIndex) then
   begin
-    FChildren[LIndex].Open(FOptions.Presentation(NyxPopover(LabelAt(LIndex))
+    LOptions := FOptions.Presentation(NyxPopover(LabelAt(LIndex))
       .Placement(npsRight, npaStart).Size(FOptions.Placement.Width, FOptions.Placement.Height)
       .Spacing(FOptions.Placement.Gap, FOptions.Placement.Margin)
       .Sizing(FOptions.Placement.SizeMode).DismissOn(FOptions.Placement.Dismissals))
-      .Opening(nmoFirst));
+      .Opening(nmoFirst);
+
+    if Supports(FItems[LIndex].Recipe, INyxMenuRecipePolicy, LPolicy) and LPolicy.HasPolicy then
+    begin
+      LOptions := LPolicy.Policy;
+    end;
+    FChildren[LIndex].Open(LOptions);
   end;
   PresentationChanged;
 end;

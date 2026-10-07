@@ -29,7 +29,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema,
   nyx.studio.session, nyx.studio.projects, nyx.studio.compiler, nyx.studio.builds,
-  nyx.studio.rootedits, nyx.presentations;
+  nyx.studio.rootedits, nyx.presentations, nyx.menu.declarations, nyx.root.types;
 
 type
   { Operator permissions are closed, session-local and never part of a design.
@@ -87,6 +87,8 @@ type
     function NamedParts(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
     function Components(const AArguments: TNyxDataValue): TNyxDataValue;
     function Presentations(const AArguments: TNyxDataValue): TNyxDataValue;
+    { Lists summaries only; one exact name pages its policy title and entries. }
+    function Menus(const AArguments: TNyxDataValue): TNyxDataValue;
     function Diagnostics(const AArguments: TNyxDataValue): TNyxDataValue;
     function SourceLines(const AArguments: TNyxDataValue): TNyxDataValue;
     function CompilerSnapshot: TNyxDataValue;
@@ -983,6 +985,13 @@ begin
       (LRouteOffset > 0) or (LRouteCount < LRouteTotal)));
   end;
 
+  { Invoker attachment is a distinct portable field, never an arbitrary property.
+    This reports the authored local declaration; realization owns inheritance. }
+  SetLength(LFields, Length(LFields) + 1);
+  LFields[High(LFields)] := NyxField('menuAttachment', NyxObject([
+    NyxField('localDeclared', NyxData(LNode.HasMenu)),
+    NyxField('name', NyxData(LNode.MenuReference.Name))]));
+
   if NyxAgentHas(AArguments, 'parts') and AArguments.Field('parts').AsBoolean then
   begin
     SetLength(LFields, Length(LFields) + 1);
@@ -1229,6 +1238,111 @@ begin
     NyxField('total', NyxData(FSession.Document.Presentations.Count)),
     NyxField('offset', NyxData(LOffset)), NyxField('definitions', NyxArray(LItems)),
     NyxField('hasMore', NyxData(LOffset + LCount < FSession.Document.Presentations.Count))]);
+end;
+
+function TNyxAgentSession.Menus(const AArguments: TNyxDataValue): TNyxDataValue;
+var
+  LOffset: Integer;
+  LLimit: Integer;
+  LIndex: Integer;
+  LCount: Integer;
+  LTotalText: Integer;
+  LTextOffset: Integer;
+  LTextLimit: Integer;
+  LReference: TNyxMenuRef;
+  LDefinition: INyxMenuDefinition;
+  LWire: TNyxDataValue;
+  LPolicy: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LItems: array of TNyxDataValue;
+  LText: TNyxText;
+begin
+  NyxAgentFields(AArguments, '|name|offset|limit|itemOffset|itemLimit|textOffset|textLimit|');
+  LOffset := IntegerArgument(AArguments, 'offset', 0, 0, NyxMaximumMenuDefinitions);
+  LLimit := IntegerArgument(AArguments, 'limit', 8, 1, 16);
+  LTextOffset := IntegerArgument(AArguments, 'textOffset', 0, 0, 1000000);
+  LTextLimit := IntegerArgument(AArguments, 'textLimit', 256, 1, 1024);
+
+  if NyxAgentHas(AArguments, 'name') then
+  begin
+
+    if NyxAgentHas(AArguments, 'offset') or NyxAgentHas(AArguments, 'limit') then
+    begin
+      raise ENyxModel.Create('Inspect one exact menu name or a bounded summary page');
+    end;
+    LReference := NyxMenuRef(AArguments.Field('name').AsText);
+    LDefinition := FSession.Document.Menus.Definition(LReference);
+    LWire := LDefinition.ToData;
+    LPolicy := LWire.Field('options');
+    SetLength(LFields, LPolicy.Count);
+    for LIndex := 0 to LPolicy.Count - 1 do
+    begin
+      LFields[LIndex] := NyxField(LPolicy.Key(LIndex), LPolicy.Field(LPolicy.Key(LIndex)));
+
+      if LFields[LIndex].Name = 'title' then
+      begin
+        LFields[LIndex].Value := NyxData(TextSpan(LPolicy.Field('title').AsText,
+          LTextOffset, LTextLimit, LTotalText));
+      end;
+    end;
+    LOffset := IntegerArgument(AArguments, 'itemOffset', 0, 0, NyxMaximumMenuItems);
+    LLimit := IntegerArgument(AArguments, 'itemLimit', 8, 1, 16);
+    SetLength(LItems, LLimit);
+    LCount := 0;
+    for LIndex := LOffset to LDefinition.Count - 1 do
+    begin
+
+      if LCount = LLimit then
+      begin
+        Break;
+      end;
+      LItems[LCount] := LWire.Field('items').Item(LIndex);
+      Inc(LCount);
+    end;
+    SetLength(LItems, LCount);
+    Exit(NyxObject([NyxField('revision', NyxData(FRevision)),
+      NyxField('name', NyxData(LReference.Name)), NyxField('root', LWire.Field('root')),
+      NyxField('options', NyxObject(LFields)), NyxField('textOffset', NyxData(LTextOffset)),
+      NyxField('totalTitleScalars', NyxData(LTotalText)),
+      NyxField('titleTruncated', NyxData((LTextOffset > 0) or
+        (LTotalText > LTextOffset + LTextLimit))),
+      NyxField('totalItems', NyxData(LDefinition.Count)), NyxField('itemOffset', NyxData(LOffset)),
+      NyxField('items', NyxArray(LItems)),
+      NyxField('hasMore', NyxData(LOffset + LCount < LDefinition.Count))]));
+  end;
+
+  if NyxAgentHas(AArguments, 'itemOffset') or NyxAgentHas(AArguments, 'itemLimit') then
+  begin
+    raise ENyxModel.Create('Menu entry pages require one exact menu name');
+  end;
+  SetLength(LItems, LLimit);
+  LCount := 0;
+  for LIndex := LOffset to FSession.Document.Menus.Count - 1 do
+  begin
+
+    if LCount = LLimit then
+    begin
+      Break;
+    end;
+    LReference := FSession.Document.Menus.Reference(LIndex);
+    LDefinition := FSession.Document.Menus.Definition(LReference);
+    LText := TextSpan(LDefinition.Options.Placement.Title,
+      LTextOffset, LTextLimit, LTotalText);
+    LItems[LCount] := NyxObject([NyxField('name', NyxData(LReference.Name)),
+      NyxField('root', NyxObject([NyxField('kind', NyxData(NyxRootKindName(LDefinition.Root.Kind))),
+        NyxField('name', NyxData(LDefinition.Root.Name))])),
+      NyxField('title', NyxData(LText)), NyxField('textOffset', NyxData(LTextOffset)),
+      NyxField('totalTitleScalars', NyxData(LTotalText)),
+      NyxField('titleTruncated', NyxData((LTextOffset > 0) or
+        (LTotalText > LTextOffset + LTextLimit))),
+      NyxField('totalItems', NyxData(LDefinition.Count))]);
+    Inc(LCount);
+  end;
+  SetLength(LItems, LCount);
+  Result := NyxObject([NyxField('revision', NyxData(FRevision)),
+    NyxField('total', NyxData(FSession.Document.Menus.Count)), NyxField('offset', NyxData(LOffset)),
+    NyxField('definitions', NyxArray(LItems)),
+    NyxField('hasMore', NyxData(LOffset + LCount < FSession.Document.Menus.Count))]);
 end;
 
 function TNyxAgentSession.Diagnostics(const AArguments: TNyxDataValue): TNyxDataValue;
@@ -1992,6 +2106,10 @@ begin
     else if ATool = 'nyx_presentations' then
     begin
       Result := Presentations(AArguments);
+    end
+    else if ATool = 'nyx_menus' then
+    begin
+      Result := Menus(AArguments);
     end
     else if ATool = 'nyx_tokens' then
     begin

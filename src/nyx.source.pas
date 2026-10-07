@@ -469,6 +469,11 @@ uses
   nyx.schema,
   nyx.catalog,
   nyx.content,
+  nyx.menu.declarations,
+  nyx.menu.types,
+  nyx.popover.types,
+  nyx.typeahead,
+  nyx.root.types,
   nyx.controls;
 
 type
@@ -544,7 +549,10 @@ type
     vkCrossAlignment, vkJustification, vkSizing, vkLayoutPolicy, vkSizeRange,
     vkSizeConstraints, vkViewportWidth, vkViewportCondition, vkViewportOrientation,
     vkPresentationRef, vkPresentationCondition, vkContainerRef, vkContainerContainment,
-    vkCalendarDate);
+    vkCalendarDate, vkMenuRef, vkMenuCommand, vkMenuGroup, vkRootRef,
+    vkMenuDefinition, vkMenuOptions, vkPopoverOptions, vkTypeAheadOptions,
+    vkMenuOpening, vkPopoverSide, vkPopoverAlignment, vkPopoverSizing,
+    vkPopoverDismissal, vkTypeAheadMatch);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -570,6 +578,10 @@ type
     ViewportCondition: TNyxViewportCondition;
     PresentationCondition: TNyxPresentationCondition;
     CalendarDate: TNyxCalendarDate;
+    RootRef: TNyxRootRef;
+    MenuOptions: TNyxMenuOptions;
+    PopoverOptions: TNyxPopoverOptions;
+    TypeAheadOptions: TNyxTypeAheadOptions;
   end;
   TValues = array of TValue;
   { Closed authoring symbols carry their exact argument family and ordinal.
@@ -618,6 +630,10 @@ type
     { Reconstructed controls remain retained even between creation and adoption.
       Failure before an ownership call therefore releases every staged object. }
     FControls: array of INyxControl;
+    { pas2js cannot place COM interfaces inside records. Tagged expression
+      ordinals address this reader-owned array of immutable menu plans instead.
+      No index survives source admission or refers to a target/runtime host. }
+    FMenuDefinitions: array of INyxMenuDefinition;
     { Default recipe blueprints are reader-owned. An isolated source processor
       must never enter the authoring factories' lazily shared UI registry. }
     FRecipeCatalog: TNyxCatalog;
@@ -630,7 +646,7 @@ type
     procedure Expect(const AText: TNyxText);
     function Expression: TValue;
     function Primary: TValue;
-    function Arguments: TValues;
+    function Arguments(AMaximum: Integer = 3): TValues;
     function ArrayArguments(AMaximum: Integer): TValues;
     function Numeric(const AValue: TValue): Double;
     function Domain(AKind: TNyxStateKind; ACalendar: Boolean = False): TValue;
@@ -644,6 +660,9 @@ type
     procedure ReferenceAssignment(AIndex: Integer);
     procedure Defaults;
     function CollectionConstructor(const AName: TNyxText): TValue;
+    { Declarative menu expressions retain immutable plans, never runtime hosts. }
+    function MenuConstructor(const AName: TNyxText): TValue;
+    procedure MenuDefaults;
     function CollectionScalar(const AValue: TValue; AKind: TNyxStateKind): TNyxStateValue;
     procedure PresentationDefaults;
     procedure CollectionDefaults;
@@ -1218,6 +1237,21 @@ begin
   RegisterEnum(vkSizing, Ord(nsAutomatic), 'nsAutomatic');
   RegisterEnum(vkSizing, Ord(nsContent), 'nsContent');
   RegisterEnum(vkSizing, Ord(nsFill), 'nsFill');
+  RegisterEnum(vkMenuOpening, Ord(nmoFirst), 'nmoFirst');
+  RegisterEnum(vkMenuOpening, Ord(nmoLast), 'nmoLast');
+  RegisterEnum(vkPopoverSide, Ord(npsBelow), 'npsBelow');
+  RegisterEnum(vkPopoverSide, Ord(npsAbove), 'npsAbove');
+  RegisterEnum(vkPopoverSide, Ord(npsRight), 'npsRight');
+  RegisterEnum(vkPopoverSide, Ord(npsLeft), 'npsLeft');
+  RegisterEnum(vkPopoverAlignment, Ord(npaStart), 'npaStart');
+  RegisterEnum(vkPopoverAlignment, Ord(npaCenter), 'npaCenter');
+  RegisterEnum(vkPopoverAlignment, Ord(npaEnd), 'npaEnd');
+  RegisterEnum(vkPopoverSizing, Ord(npzContent), 'npzContent');
+  RegisterEnum(vkPopoverSizing, Ord(npzFixed), 'npzFixed');
+  RegisterEnum(vkPopoverDismissal, Ord(npdEscape), 'npdEscape');
+  RegisterEnum(vkPopoverDismissal, Ord(npdOutsidePress), 'npdOutsidePress');
+  RegisterEnum(vkTypeAheadMatch, Ord(ntmFolded), 'ntmFolded');
+  RegisterEnum(vkTypeAheadMatch, Ord(ntmExact), 'ntmExact');
   for LLayout := Low(TNyxLayoutMode) to High(TNyxLayoutMode) do
   begin
 
@@ -1396,6 +1430,7 @@ begin
   { Releasing staged interfaces frees controls that failed before adoption.
     Accepted controls remain retained independently by their document/parent. }
   FControls := nil;
+  FMenuDefinitions := nil;
   FRecipeCatalog.Free;
   FControlIDs.Free;
   FStateNames.Free;
@@ -1446,7 +1481,7 @@ begin
   Inc(FCursor);
 end;
 
-function TConfigurationReader.Arguments: TValues;
+function TConfigurationReader.Arguments(AMaximum: Integer): TValues;
 var
   LCount: Integer;
 begin
@@ -1458,9 +1493,9 @@ begin
     repeat
       LCount := Length(Result);
 
-      if LCount >= 3 then
+      if LCount >= AMaximum then
       begin
-        Fail('This configuration accepts at most three arguments');
+        Fail('Configuration exceeds its typed argument budget');
       end;
       SetLength(Result, LCount + 1);
       Result[LCount] := Expression;
@@ -1712,6 +1747,7 @@ begin
 end;
 
 {$I nyx.source.collections.inc}
+{$I nyx.source.menus.inc}
 
 function TConfigurationReader.DataConstructor(const AName: TNyxText): TValue;
 var
@@ -2407,6 +2443,12 @@ begin
           end;
         end;
 
+        if (LName = 'newnyxmenudefinition') or (LName = 'nyxmenu') or
+          (LName = 'nyxpopover') or (LName = 'nyxtypeahead') then
+        begin
+          Exit(MenuConstructor(LName));
+        end;
+
         if (LName = 'nyxcollection') or (LName = 'nyxitem') or
           (LName = 'nyxcollectionschema') or (LName = 'nyxcollectionitem') or
           (LName = 'nyxtextfield') or (LName = 'nyxbooleanfield') or
@@ -2540,7 +2582,32 @@ begin
           end;
         end;
 
-        if LName = 'nyxcontainer' then
+        if (LName = 'nyxpageroot') or (LName = 'nyxreusableroot') then
+        begin
+          Result.Kind := vkRootRef;
+          Result.RootRef := NyxPageRoot(Result.Text);
+
+          if LName = 'nyxreusableroot' then
+          begin
+            Result.RootRef := NyxReusableRoot(Result.Text);
+          end;
+        end
+        else if LName = 'nyxmenuref' then
+        begin
+          Result.Kind := vkMenuRef;
+          Result.Text := NyxMenuRef(Result.Text).Name;
+        end
+        else if LName = 'nyxmenucommand' then
+        begin
+          Result.Kind := vkMenuCommand;
+          Result.Text := NyxMenuCommand(Result.Text).Name;
+        end
+        else if LName = 'nyxmenugroup' then
+        begin
+          Result.Kind := vkMenuGroup;
+          Result.Text := NyxMenuGroup(Result.Text).Name;
+        end
+        else if LName = 'nyxcontainer' then
         begin
           Result.Kind := vkContainerRef;
           Result.Text := NyxContainer(Result.Text).Name;
@@ -3229,6 +3296,36 @@ begin
   end;
   LMethod := LowerCase(AMethod);
 
+  if (LMethod = 'nomenu') or (LMethod = 'inheritmenu') then
+  begin
+
+    if Length(AArgs) <> 0 then
+    begin
+      Fail(AMethod + ' takes no arguments');
+    end;
+
+    if LMethod = 'nomenu' then
+    begin
+      LConfigure.NoMenu;
+    end
+    else
+    begin
+      LConfigure.InheritMenu;
+    end;
+    Exit;
+  end;
+
+  if LMethod = 'menu' then
+  begin
+
+    if (Length(AArgs) <> 1) or (AArgs[0].Kind <> vkMenuRef) then
+    begin
+      Fail('Menu requires a typed menu reference');
+    end;
+    LConfigure.Menu(NyxMenuRef(AArgs[0].Text));
+    Exit;
+  end;
+
   if LMethod = 'extension' then
   begin
 
@@ -3531,7 +3628,15 @@ begin
       Expect(';');
       Exit;
     end;
-    LArgs := Arguments;
+    { Explicit local menu clear/inherit follow the public parameterless fluent
+      spelling. Other configuration methods still require their argument frame. }
+    LArgs := nil;
+
+    if At('(') or (not SameText(LMethod, 'NoMenu') and
+      not SameText(LMethod, 'InheritMenu')) then
+    begin
+      LArgs := Arguments;
+    end;
 
     if SameText(LMethod, 'ForPlatform') then
     begin

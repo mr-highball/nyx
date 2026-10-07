@@ -104,6 +104,8 @@ type
     { Borrowed receiver registration; cancelled before any controller teardown. }
     FHierarchySubscription: INyxEventSubscription;
     FCanvasRenderer: TNyxBrowserRenderer;
+    { Saved menu contracts use the public managed binding owner in Interact. }
+    FCanvasMenus: INyxMenuBindings;
     { Keep the last host reachable while compact chrome omits the Design panel.
       The canvas renderer owns its projection; this target-local DOM reference
       only parks that borrowed host and never retains an authored document. }
@@ -605,6 +607,7 @@ begin
     FConfigurationRequest.onreadystatechange := nil;
     FConfigurationRequest.abort;
   end;
+  FCanvasMenus := nil;
   FCanvasRenderer.Free;
   if FSourceModal <> nil then
   begin
@@ -899,6 +902,11 @@ begin
     A different view or an explicit replacement retains the normal teardown. }
   ARetainCanvas := ARetainCanvas and (FCanvasRenderer.Root <> nil) and LSameView;
 
+  if not ARetainCanvas or FReplaceCanvas then
+  begin
+    FCanvasMenus := nil;
+  end;
+
   if not ARetainCanvas then
   begin
     FCanvasRenderer.Unmount;
@@ -964,6 +972,11 @@ begin
   begin
     FCanvasRenderer.Render(FSession.Document, FSession.ActiveView, LCanvas, not FPreview);
     FCanvasRenderer.Select(FSession.SelectedID);
+  end;
+
+  if FPreview and (FCanvasRenderer.Root <> nil) and (FCanvasMenus = nil) then
+  begin
+    FCanvasMenus := BindNyxBrowserMenus(FSession.Document, FCanvasRenderer);
   end;
 
   if (FCanvasRenderer.Root <> nil) and (not ARetainCanvas or FReplaceCanvas) then

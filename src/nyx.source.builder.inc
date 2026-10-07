@@ -652,6 +652,10 @@ begin
   begin
     PresentationDefaults;
   end
+  else if LDocument and SameText(LMethod, 'Menus') then
+  begin
+    MenuDefaults;
+  end
   else if SameText(LMethod, 'Extensions') then
   begin
     Extensions(LLocal);

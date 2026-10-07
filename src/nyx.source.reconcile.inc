@@ -1268,6 +1268,7 @@ begin
       else if (LTokens[LIndex + 1].Text = '.') and
         (SameText(LTokens[LIndex + 2].Text, 'Contract') or
         SameText(LTokens[LIndex + 2].Text, 'Collections') or
+        SameText(LTokens[LIndex + 2].Text, 'Menus') or
         SameText(LTokens[LIndex + 2].Text, 'Extensions') or
         SameText(LTokens[LIndex + 2].Text, 'Configure') or
         SameText(LTokens[LIndex + 2].Text, 'Content') or

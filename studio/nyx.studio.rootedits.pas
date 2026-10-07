@@ -128,6 +128,18 @@ var
 
 begin
   Result := 0;
+  { Menu declarations retain roots even when no invoker is mounted. They are
+    independent document defaults, so deleting content must not silently erase
+    a definition. Remove those declarations in an explicit semantic edit first. }
+  for LIndex := 0 to ADocument.Menus.Count - 1 do
+  begin
+
+    if (ADocument.Menus.Definition(ADocument.Menus.Reference(LIndex)).Root.Kind = ARoot.Kind) and
+      (ADocument.Menus.Definition(ADocument.Menus.Reference(LIndex)).Root.Name = ARoot.Name) then
+    begin
+      Inc(Result);
+    end;
+  end;
 
   if ARoot.Kind <> nrReusable then
   begin

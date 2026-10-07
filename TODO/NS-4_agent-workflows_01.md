@@ -15,7 +15,20 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
-Current hierarchical-menu gap (2026-10-06): the same authenticated semantic client
+Current persisted-menu boundary (2026-10-07): document-owned menu definitions and
+typed invokers persist, generate/reconstruct and reach ordinary browser/LCL
+applications. Bounded menu queries and grouped paired edits pass authenticated
+isolated review (172), including exact compiler input and all application/view
+targets. Declaration fixtures pass 64 each; application consumers 14 and native
+Studio transitions 18. Source catalog is 21 tools; observing stays 20. Fifteen
+services, nine exact pairs/full checkpoint remain exact. Final backend refresh,
+ordinary browser Studio input, user-facing typed menu-plan editor, registration
+visibility and broader original workflow acceptance remain open. No original
+criterion closes; no-closure advances 13→14 once. Stop fixture expansion and
+deliver that existing editor/observing boundary. See
+[the current packet](../WORK.md#current-return-path-persisted-menu-authoring--2026-10-07).
+
+Previous hierarchical-menu gap (2026-10-06): the same authenticated semantic client
 now composes all three English companion roots and exports exact source in one
 owned grouped review (36 checks). Immutable specialized plans, nested recipes and
 managed invoker registration attach typed runtime behavior through public Pascal.

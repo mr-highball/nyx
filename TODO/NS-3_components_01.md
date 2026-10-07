@@ -25,6 +25,19 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Menu families and invokers — 2026-10-06
 
+The persisted-authoring follow-up (2026-10-07) adds document-owned immutable menu
+definitions/invokers, strict wire/crafted source and automatically mounted
+browser/LCL application families. Declaration fixtures pass 64 each; exact
+semantic application consumers 14 each and native Studio transitions 18.
+Authenticated isolated review passes 172 with all four real application/view
+compiles and exact source bytes. Source schema is 21 tools; observing stays 20.
+Protected services/pairs/checkpoint remain exact. No original component/parity
+criterion closes. The next integrated consumer is a public typed Studio menu
+editor plus ordinary browser canvas qualification and protected observing
+delivery; menubars/pickers, live binding, accessibility and production breadth/
+performance remain open. See
+[the current packet](../WORK.md#current-return-path-persisted-menu-authoring--2026-10-07).
+
 The frozen observing prerequisite now qualifies `9f5bd49`: 222 files, twenty
 authenticated MCP tools and actual shared desktop/390 nested host Tab/Events/help.
 All nine exact pairs and full checkpoint history/handles stay unchanged; fourteen

@@ -178,6 +178,10 @@ type
   TNyxPartRef = record
     Name: TNyxText;
   end;
+  { Exact open menu identity, distinct from a command, group, root or part. }
+  TNyxMenuRef = record
+    Name: TNyxText;
+  end;
   TNyxEventRef = record
     Name: TNyxText;
   end;
