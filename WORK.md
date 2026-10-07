@@ -7,6 +7,52 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current priority: mobile workspace allocation — 2026-10-07
+
+The user's phone capture confirms the restored LAN path loads, and establishes
+a different defect: wrapped chrome, expanded sync details and placement tools
+leave only a small fraction for the design. Preserve exact projects and pending
+sync choices. Deliver compact action navigation, a collapsible/resizable detail
+section, optional canvas tools and an explicit canvas expansion, without scaling
+design text. Both hosts must consume the same public Nyx menu/split/presentation
+contracts. Qualify actual narrow/short and desktop hosts, unchanged semantic
+context, then refresh only the verified primary at its firewall-covered path.
+Original NS-4 authoring and NS-2 responsive acceptance remain intact.
+
+The shared builder now implements compact action branches, optional placement
+tools, a collapsed sync/detail strip, a public resizable detail split and canvas
+expansion/restoration. Available-space conditions include short landscape hosts;
+design fonts/scale are unchanged. Per-project preference version 5 strictly
+migrates versions 2–4 and retains allocation independently of application history.
+Checked Win32 ordinary Studio passes **22** menu/workspace checks, including the
+actual detail grip's Home key and unchanged exact accepted pair. Native ownership/
+preference regression passes **247**; the focused browser preference boundary
+passes **68**. The large full browser workspace fixture exceeds its navigation
+deadline; it earns no new full-suite evidence. Actual full browser menu/Tab/Events/
+help journeys pass at desktop/390. The retained-device conflict is seeded only on
+an isolated test origin, against a different MCP-authored shared title: **20**
+browser workspace checks pass, preserving both explicit sync choices. The later
+desktop journey adds exact source-text retention and passes **16**. At CSS
+390×640, collapsed details leave **396 px (62%)** for the canvas and expansion
+leaves **587 px (92%)**. Native small-host allocation is **583/740** compact and
+**697/740** expanded. New final observing qualification remains pending below.
+
+All native traces are leak-free and checked compiles have zero warnings. Existing
+lifetimes produce compiler notes, not warning suppression. Fifteen protected
+service identities, nine exact pairs/navigation/history and the full durable
+checkpoint remain unchanged before release preparation. An attempted isolated
+port was occupied and refused; a checked unused loopback pair hosts the fixture,
+with separate enrollment/runtime. Private evidence is `build/mobile-workspace/`.
+Fixture lookup/argument errors were corrected before the terminal passes; they
+earn no product or preservation evidence. No original criterion/task closes.
+
+The unfinished persisted-menu foundation is retained in stash
+`5cb5d273a433975b305aca189ebb9ea6d9684515`, separately from the earlier retained
+stash. Its native refusal fixture still has a whitespace-sensitive JSON mutation
+to repair; browser/source/semantic/runtime integration remains unqualified.
+Resume that original menu-authoring batch after the user-priority workspace fix.
+No menu declaration completion or new task credit is asserted.
+
 ## Current return path: LAN path repair and measured toolbar — 2026-10-07
 
 The user reported that the refreshed Studio would not load. The preceding rollout

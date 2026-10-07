@@ -33,14 +33,19 @@ const
   NyxStudioActionMenuRoot: TNyxText = 'studio-component-actions';
 
 type
-  TNyxStudioMenuAction = (smaUndo, smaRedo, smaProperties, smaEvents, smaHelp);
+  { Closed semantic editor commands. Targets are UI identities, never strings
+    that change application behavior. Hidden compact faces share these routes. }
+  TNyxStudioMenuAction = (smaUndo, smaRedo, smaProperties, smaEvents, smaHelp,
+    smaCode, smaDesktop, smaPhone, smaInteract, smaCanvasTools, smaCanvasExpand, smaPalette,
+    smaOpen, smaSave, smaOutputs, smaAgents, smaBuilds, smaBuildView, smaBuildApp);
   TNyxStudioMenuHandler = procedure(AAction: TNyxStudioMenuAction) of object;
 
 { Independently owned public Nyx recipe, plus a copied typed item plan. Selection
   and history remain owned by the ordinary Studio session; building changes none.
   The caller frees the document after the public menu has copied its content. }
 function BuildNyxStudioActionMenu(ASession: TNyxStudioSession;
-  out AItems: TNyxMenuItems): TNyxDocument;
+  out AItems: TNyxMenuItems; AWorkspaceActions: Boolean = False;
+  ACanControlBuilds: Boolean = False): TNyxDocument;
 function NyxStudioMenuActionTarget(AAction: TNyxStudioMenuAction): TNyxText;
 { UI-thread controller callback is borrowed. Studio keeps this stream sequential
   and retires its menu before controller teardown or project/chrome replacement. }
@@ -53,12 +58,20 @@ uses SysUtils, nyx.types, nyx.controls, nyx.behavior, nyx.scheduler, nyx.root.ty
 
 const
   CCommands: array[TNyxStudioMenuAction] of TNyxText =
-    ('undo', 'redo', 'properties', 'events', 'help');
+    ('undo', 'redo', 'properties', 'events', 'help', 'code', 'desktop', 'phone',
+      'interact', 'canvas-tools', 'canvas-expand', 'palette', 'open', 'save', 'outputs',
+      'agents', 'builds', 'build-view', 'build-app');
   CLabels: array[TNyxStudioMenuAction] of TNyxText =
-    ('Undo', 'Redo', 'Properties', 'Events', 'About this component');
+    ('Undo', 'Redo', 'Properties', 'Events', 'About this component', 'Pascal source',
+      'Desktop preview', 'Phone preview', 'Interact with design', 'Canvas tools',
+      'Expand or restore canvas', 'Project and components', 'Open project', 'Save project', 'Outputs',
+      'Agents and sync', 'Build jobs', 'Build view', 'Build application');
   CTargets: array[TNyxStudioMenuAction] of TNyxText =
     ('action-undo', 'action-redo', NyxInspectorPropertiesID,
-      NyxInspectorEventsID, NyxStudioComponentHelpID);
+      NyxInspectorEventsID, NyxStudioComponentHelpID, 'action-code',
+      'action-desktop', 'action-phone', 'action-preview', 'action-canvas-tools',
+      'action-canvas-expand', 'action-panel-project', 'action-import', 'action-save', 'action-outputs',
+      'action-agents', 'action-builds', 'action-build-view', 'action-build-app');
 
 type
   TStudioMenuCallback = class(TNyxEventCallback)
@@ -116,7 +129,8 @@ begin
 end;
 
 function BuildNyxStudioActionMenu(ASession: TNyxStudioSession;
-  out AItems: TNyxMenuItems): TNyxDocument;
+  out AItems: TNyxMenuItems; AWorkspaceActions: Boolean;
+  ACanControlBuilds: Boolean): TNyxDocument;
 var
   LRoot: INyxColumn;
   LInspector: INyxColumn;
@@ -125,6 +139,40 @@ var
   LSeparator: INyxSeparator;
   LItem: TNyxMenuItem;
   LAction: TNyxStudioMenuAction;
+
+  { Each branch owns independent ordinary Nyx content. Recipes retain immutable
+    copies; no menu or item holds the Studio session/controller alive. }
+  procedure AddBranch(const AName, ACaption: TNyxText;
+    AFirst, ALast: TNyxStudioMenuAction);
+  var
+    LContent: INyxColumn;
+    LPlan: TNyxMenuItems;
+    LChoice: TNyxStudioMenuAction;
+    LFace: INyxButton;
+  begin
+    LContent := NewNyxColumn('studio-menu-branch-' + AName);
+    LContent.Configure.Padding(8).Gap(4).Align(ncaStretch).Compound(True);
+    LPlan := NyxMenuItems;
+    for LChoice := AFirst to ALast do
+    begin
+
+      if (LChoice = smaBuilds) and not ACanControlBuilds then
+      begin
+        Continue;
+      end;
+      LFace := NewNyxButton('studio-menu-' + CCommands[LChoice]);
+      LFace.Configure.Text(CLabels[LChoice]).PartName(NyxPart(CCommands[LChoice]));
+      LContent.Add(LFace);
+      LPlan := LPlan.Add(NyxMenuAction(NyxPart(CCommands[LChoice]),
+        NyxMenuCommand(CCommands[LChoice])));
+    end;
+    Result.AddPage(LContent);
+    LFace := NewNyxButton('studio-menu-' + AName);
+    LFace.Configure.Text(ACaption).PartName(NyxPart(AName));
+    LRoot.Add(LFace);
+    AItems := AItems.Add(NyxMenuSubmenu(NyxPart(AName), NewNyxMenuRecipe(Result,
+      NyxPageRoot('studio-menu-branch-' + AName), LPlan)));
+  end;
 begin
 
   if ASession = nil then
@@ -137,7 +185,7 @@ begin
   LInspector := NewNyxColumn('studio-component-inspector');
   LInspector.Configure.Padding(8).Gap(4).Align(ncaStretch).Compound(True);
   LInspectorItems := NyxMenuItems;
-  for LAction := Low(TNyxStudioMenuAction) to High(TNyxStudioMenuAction) do
+  for LAction := smaUndo to smaHelp do
   begin
 
     if LAction = smaProperties then
@@ -195,6 +243,13 @@ begin
     AItems := AItems.Add(NyxMenuSubmenu(NyxPart('inspect'), NewNyxMenuRecipe(Result,
       NyxPageRoot('studio-component-inspector'), LInspectorItems))
       .Enabled(ASession.Selected <> nil));
+
+    if AWorkspaceActions then
+    begin
+      AddBranch('view', 'View', smaCode, smaPalette);
+      AddBranch('project', 'Project', smaOpen, smaAgents);
+      AddBranch('build', 'Build', smaBuilds, smaBuildApp);
+    end;
   except
     Result.Free;
     raise;

@@ -1340,6 +1340,9 @@ try {
     Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
       '-gl', '-gh', '-Fusrc', '-Futests', "-FU$nyxMenuTool",
       "-FE$nyxMenuTool", 'tests/nyx_browser_ready_capture.lpr')
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
+      '-gl', '-gh', '-Fusrc', '-Futests', '-Fustudio', "-FU$nyxMenuTool",
+      "-FE$nyxMenuTool", 'tests/nyx_studio_workspace_observer.lpr')
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
@@ -1347,9 +1350,12 @@ try {
       "-FE$nyxMenuBrowser", 'tests/nyx_menu_controls.lpr')
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', '-Fustudio', "-FE$nyxMenuBrowser", 'studio/nyx_studio.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxMenuBrowser", 'tests/nyx_studio_workspace_conflict.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxMenuBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/menu.html') -Destination $nyxMenuBrowser
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/index.html') -Destination $nyxMenuBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/studio-workspace-conflict.html') -Destination $nyxMenuBrowser
     Write-Host 'Menu consumers staged; execute on an existing admitted HTTP host.'
     exit 0
   }

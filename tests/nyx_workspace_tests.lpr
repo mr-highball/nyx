@@ -120,6 +120,12 @@ var
   LKey: TNyxText;
   LValue: TNyxDataValue;
   LRefused: Boolean;
+
+  function AllocationField(const AName: TNyxText): Boolean;
+  begin
+    Result := (AName = 'detailsPercent') or (AName = 'detailsExpanded') or
+      (AName = 'canvasToolsVisible') or (AName = 'canvasExpanded');
+  end;
 begin
   Check(NyxStudioScrollPosition(-12.5) = 0, 'Negative platform overscroll preserves a valid preference');
   Check(NyxStudioScrollPosition(0) = 0, 'Origin scroll remains exact');
@@ -156,14 +162,15 @@ begin
   LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LOriginal));
   { The previous strict packet remains readable. New per-project choices use
     their defaults, while every earlier preference and Unicode value survives. }
-  SetLength(LFields, LPacket.Count - 3);
+  SetLength(LFields, LPacket.Count - 7);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
 
     if (LPacket.Key(LIndex) <> 'sourceTab') and
       (LPacket.Key(LIndex) <> 'sourceExpanded') and
-      (LPacket.Key(LIndex) <> 'presentation') then
+      (LPacket.Key(LIndex) <> 'presentation') and
+      not AllocationField(LPacket.Key(LIndex)) then
     begin
       LValue := LPacket.Field(LPacket.Key(LIndex));
 
@@ -187,12 +194,13 @@ begin
   { Existing Studio installations also wrote version 3, which already owns
     source tabs and expansion. Its absent manual choice must not discard those
     fields or any other per-project preference during this migration. }
-  SetLength(LFields, LPacket.Count - 1);
+  SetLength(LFields, LPacket.Count - 5);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
 
-    if LPacket.Key(LIndex) <> 'presentation' then
+    if (LPacket.Key(LIndex) <> 'presentation') and
+      not AllocationField(LPacket.Key(LIndex)) then
     begin
       LValue := LPacket.Field(LPacket.Key(LIndex));
 
@@ -212,10 +220,40 @@ begin
   LDecoded.PresentationSelection := LOriginal.PresentationSelection;
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
     'Version 3 migration retains every earlier Unicode, caret and workspace preference exactly');
-  for LCase := 0 to 22 do
+  { Version 4 is the last observing release's exact packet. Its manual preview
+    and all unrelated preferences survive, while new details start collapsed. }
+  SetLength(LFields, LPacket.Count - 4);
+  LCase := 0;
+  for LIndex := 0 to LPacket.Count - 1 do
+  begin
+
+    if not AllocationField(LPacket.Key(LIndex)) then
+    begin
+      LValue := LPacket.Field(LPacket.Key(LIndex));
+
+      if LPacket.Key(LIndex) = 'version' then
+      begin
+        LValue := NyxData(4);
+      end;
+      LFields[LCase] := NyxField(LPacket.Key(LIndex), LValue);
+      Inc(LCase);
+    end;
+  end;
+  LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
+  Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
+    'Version 4 retains all preferences and supplies collapsed allocation defaults');
+  LOriginal.DetailsPercent := 60;
+  LOriginal.DetailsExpanded := True;
+  LOriginal.CanvasToolsVisible := True;
+  LOriginal.CanvasExpanded := True;
+  LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LOriginal));
+  LDecoded := DecodeNyxStudioPresentation(LPacket.ToJSON);
+  Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
+    'Version 5 independently retains all workspace allocation choices');
+  for LCase := 0 to 26 do
   begin
     LKey := 'version';
-    LValue := NyxData(5);
+    LValue := NyxData(6);
     case LCase of
       1:
       begin
@@ -327,6 +365,26 @@ begin
         LKey := 'version';
         LValue := NyxData(3);
       end;
+      23:
+        begin
+          LKey := 'detailsPercent';
+          LValue := NyxData(14);
+        end;
+      24:
+        begin
+          LKey := 'detailsPercent';
+          LValue := NyxData(61);
+        end;
+      25:
+        begin
+          LKey := 'detailsExpanded';
+          LValue := NyxData('true');
+        end;
+      26:
+        begin
+          LKey := 'detailsPercent';
+          LValue := NyxData(32.5);
+        end;
     end;
     SetLength(LFields, LPacket.Count);
     for LIndex := 0 to LPacket.Count - 1 do
@@ -676,12 +734,22 @@ end;
 begin
   try
     try
+      {$ifdef NYX_PRESENTATION_ONLY}
+      { Browser UI qualification needs the changed strict preference boundary,
+        independent of this fixture's large workspace lifetime-budget loop. }
+      PresentationChecks;
+      {$else}
       Run;
+      {$endif}
     finally
       GWorkspaces.Free;
       GPrimary.Free;
     end;
+    {$ifdef NYX_PRESENTATION_ONLY}
+    WriteLn('PASS ', GChecks, ' editor presentation checks');
+    {$else}
     WriteLn('PASS ', GChecks, ' concurrent project ownership checks');
+    {$endif}
     {$ifdef PAS2JS}
     document.body.setAttribute('data-nyx-workspaces', 'passed');
     document.body.setAttribute('data-nyx-workspace-checks', IntToStr(GChecks));

@@ -25,12 +25,13 @@ program nyx_studio_menu_controls;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls,
+  Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls, LCLType,
   nyx.text, nyx.model, nyx.codec, nyx.studio.projects, nyx.studio.lcl,
-  nyx.studio.help, nyx.studio.menu, nyx.generated.view;
+  nyx.studio.help, nyx.studio.menu, nyx.split.lcl, nyx.generated.view;
 
 type
   TControlAccess = class(TWinControl);
+  TGripAccess = class(TNyxLCLSplitGrip);
 
 function ReadSource(const APath: String): TNyxText;
 var
@@ -80,7 +81,7 @@ begin
 
     if (LChild is TWinControl) and
       ((TControlAccess(LChild).Caption = ACaption) or
-        ((ACaption = 'Inspect') and (Pos('Inspect ', TControlAccess(LChild).Caption) = 1))) then
+        (Pos(ACaption + ' ', TControlAccess(LChild).Caption) = 1)) then
     begin
       Exit(TWinControl(LChild));
     end;
@@ -130,6 +131,9 @@ var
   LSource: TNyxText;
   LBefore: TNyxText;
   LHelp: TForm;
+  LCanvasHeight: Integer;
+  LSplit: TNyxLCLSplitView;
+  LKey: Word;
 begin
   LForm := nil;
   LStudio := nil;
@@ -194,7 +198,61 @@ begin
     Application.ProcessMessages;
     Require(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore,
       'Menu navigation preserves the exact accepted project/source pair');
-    WriteLn('PASS 11 ordinary native Studio command-menu checks');
+    { The ordinary native controller consumes the same available-space policy.
+      Small native hosts qualify allocation without claiming phone hardware. }
+    LForm.SetBounds(30, 30, 390, 740);
+    Application.ProcessMessages;
+    Settle(LStudio);
+    Require((LStudio.ShellView.ControlFor('studio-panelbar') <> nil) and
+      not LStudio.ShellView.ControlFor('action-build-app').Visible,
+      'Compact native Studio moves advanced chrome into its public menu');
+    TControlAccess(LStudio.ShellView.ControlFor('action-panel-design')).Click;
+    Settle(LStudio);
+    LCanvasHeight := LStudio.ShellView.ControlFor('studio-canvas-wrap').Height;
+    WriteLn('Native compact canvas / ', LCanvasHeight, ' of ', LForm.ClientHeight);
+    Require(LCanvasHeight > LForm.ClientHeight * 0.50,
+      'Compact native canvas retains at least half of the host');
+    TControlAccess(LStudio.ShellView.ControlFor('action-canvas-expand')).Click;
+    Settle(LStudio);
+    WriteLn('Native expanded canvas / ',
+      LStudio.ShellView.ControlFor('studio-canvas-wrap').Height, ' of ', LForm.ClientHeight);
+    Require(LStudio.ShellView.ControlFor('studio-canvas-wrap').Height >=
+      LForm.ClientHeight * 0.85, 'Expanded native design receives the available host');
+    TControlAccess(LStudio.ShellView.ControlFor('action-workspace-restore')).Click;
+    Settle(LStudio);
+    Require(LStudio.ShellView.ControlFor('studio-canvas-wrap').Height = LCanvasHeight,
+      'Restore returns the previous native allocation');
+    TControlAccess(LStudio.ShellView.ControlFor(NyxStudioActionMenuID)).Click;
+    Application.ProcessMessages;
+    LHelp := MenuWindow;
+    Require((LHelp <> nil) and (Button(LHelp, 'Project') <> nil),
+      'Workspace project branch is physically mounted');
+    TControlAccess(Button(LHelp, 'Project')).Click;
+    Application.ProcessMessages;
+    LHelp := MenuWindow('Project');
+    Require((LHelp <> nil) and (Button(LHelp, 'Agents and sync') <> nil),
+      'Compact native menu exposes optional workspace tools');
+    TControlAccess(Button(LHelp, 'Agents and sync')).Click;
+    Settle(LStudio);
+    Require(LStudio.ShellView.ControlFor('studio-details-split') <> nil,
+      'Native details mount in the shared public resizable split');
+    LSplit := TNyxLCLSplitView(LStudio.ShellView.ControlFor('studio-details-split'));
+    LCanvasHeight := LStudio.ShellView.ControlFor('studio-canvas-wrap').Height;
+    LKey := VK_HOME;
+    TGripAccess(LSplit.Grip).KeyDown(LKey, []);
+    Application.ProcessMessages;
+    Require((LKey = 0) and
+      (LStudio.ShellView.Root.Find('studio-details-split').Prop('split-position') = '15'),
+      'Native detail grip consumes Home and publishes its typed resize');
+    Require(LStudio.ShellView.ControlFor('studio-canvas-wrap').Height > LCanvasHeight,
+      'Native keyboard grip gives space back to the design');
+    TControlAccess(LStudio.ShellView.ControlFor('action-details-toggle')).Click;
+    Settle(LStudio);
+    Require(LStudio.ShellView.Root.Find('studio-details-split') = nil,
+      'Native details collapse without replacing the design');
+    Require(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore,
+      'Native workspace allocation preserves the exact accepted pair');
+    WriteLn('PASS 22 ordinary native Studio menu/workspace checks');
   except
     on E: Exception do
     begin

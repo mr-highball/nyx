@@ -194,3 +194,14 @@ admission/generation remains with
 drill-down presentation, live menu binding, assistive technology,
 hardware/IME, other widgetsets/DPI and full production accessibility remain open.
 Compiled source admission alone establishes none of these interactions.
+
+The maintained menu target also stages `nyx_studio_workspace_observer` and an
+isolated `studio-workspace-conflict.html` fixture. The observer takes URL, capture
+directory, CSS width and height, then optional enrolled root and exact workspace
+(`primary` omits the MCP context). It qualifies compact/short navigation, details
+collapse, actual host touch resizing, canvas expansion/restoration and retained
+source. Optional bounded semantic queries check revision/navigation/history.
+Use the recovery fixture only on an isolated test origin and fresh profile:
+its public Pascal recovery seed intentionally creates an independent local pair.
+Author a different shared title through MCP before using that conflict journey.
+It never represents permission to overwrite an observing user's recovery.

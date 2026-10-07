@@ -1,5 +1,28 @@
 # Responsive authoring
 
+Studio uses the same public contracts to reclaim space in narrow and short
+windows. Compact chrome keeps Undo/Redo/Actions in one row; Actions contains
+View, Project and Build branches. Tools reveals placement/drag controls on demand.
+Optional sync/output/build details start behind a Review strip on compact hosts;
+opening them uses a public stacked split with a touch/keyboard divider. A pending
+sync conflict stays visible in the strip and still requires an explicit choice.
+Expand temporarily gives the design the workspace, retaining details, source
+and tool settings for Restore. Application fonts and scale remain unchanged.
+
+The host policy combines narrow width with a separate width-and-height condition
+for short landscape windows. The short presentation collapses panel navigation;
+View → Project and components and Inspect keep those panes reachable. Browser
+and LCL consume the same builder, condition matching, menus and split contract.
+Per-project editor preferences migrate versions 2–4 to version 5 with collapsed
+detail defaults; these preferences never enter exported designs or Undo history.
+
+For an application, the same code-first building blocks are
+`Presentations.Define`, `WhenPresentation`, `WhenViewport`, `ForPlatform`, typed
+split sizing and managed menu/popover recipes. Width, height, orientation and
+container conditions can be combined with explicit manual presentations and
+whole reusable content recipes; no compiler directive is needed to choose a
+form-factor configuration. See [current qualification](../WORK.md#current-priority-mobile-workspace-allocation--2026-10-07).
+
 Retained ownership for structural changes is documented in
 [retained arrangements](retained-arrangements.md). Whole
 [reusable presentation recipes](content-recipes.md) support typed alternatives

@@ -43,6 +43,12 @@ type
     SourceTab: TNyxStudioSourceTab;
     SourceExpanded: Boolean;
     CanvasPercent: Integer;
+    { Per-project workspace choices retain disclosure/grip state across editor
+      navigation. They never become part of a portable application or Undo pair. }
+    DetailsPercent: Integer;
+    DetailsExpanded: Boolean;
+    CanvasToolsVisible: Boolean;
+    CanvasExpanded: Boolean;
     Phone: Boolean;
     PresentationSelection: TNyxPresentationSelection;
     Preview: Boolean;
@@ -120,6 +126,10 @@ begin
   Result.SourceTab := nstSource;
   Result.SourceExpanded := False;
   Result.CanvasPercent := 65;
+  Result.DetailsPercent := 32;
+  Result.DetailsExpanded := False;
+  Result.CanvasToolsVisible := False;
+  Result.CanvasExpanded := False;
   Result.Phone := False;
   Result.PresentationSelection := TNyxPresentationSelection.None;
   Result.Preview := False;
@@ -162,11 +172,15 @@ begin
     LPresentation := NyxData(AValue.PresentationSelection.Reference.Name);
   end;
   Result := NyxObject([
-    NyxField('version', NyxData(4)),
+    NyxField('version', NyxData(5)),
     NyxField('codeVisible', NyxData(AValue.CodeVisible)),
     NyxField('sourceTab', NyxData(Ord(AValue.SourceTab))),
     NyxField('sourceExpanded', NyxData(AValue.SourceExpanded)),
     NyxField('canvasPercent', NyxData(AValue.CanvasPercent)),
+    NyxField('detailsPercent', NyxData(AValue.DetailsPercent)),
+    NyxField('detailsExpanded', NyxData(AValue.DetailsExpanded)),
+    NyxField('canvasToolsVisible', NyxData(AValue.CanvasToolsVisible)),
+    NyxField('canvasExpanded', NyxData(AValue.CanvasExpanded)),
     NyxField('phone', NyxData(AValue.Phone)),
     NyxField('presentation', LPresentation),
     NyxField('preview', NyxData(AValue.Preview)),
@@ -217,16 +231,17 @@ var
   LVersion: Integer;
   LPresentation: TNyxDataValue;
 const
-  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
+  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
 begin
   Result := DefaultNyxStudioPresentation;
   LValue := TNyxDataValue.ParseJSON(AText);
 
   if (LValue.Kind <> ndObject) or
-    not (LValue.Field('version').AsInteger in [2, 3, 4]) or
+    not (LValue.Field('version').AsInteger in [2, 3, 4, 5]) or
     ((LValue.Field('version').AsInteger = 2) and (LValue.Count <> 32)) or
     ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) or
-    ((LValue.Field('version').AsInteger = 4) and (LValue.Count <> 35)) then
+    ((LValue.Field('version').AsInteger = 4) and (LValue.Count <> 35)) or
+    ((LValue.Field('version').AsInteger = 5) and (LValue.Count <> 39)) then
   begin
     raise ENyxModel.Create('Unsupported editor presentation packet');
   end;
@@ -237,6 +252,10 @@ begin
     if (Pos('|', LValue.Key(LIndex)) > 0) or
       (Pos('|' + LValue.Key(LIndex) + '|', CKeys) = 0) or
       ((LVersion < 4) and (LValue.Key(LIndex) = 'presentation')) or
+      ((LVersion < 5) and ((LValue.Key(LIndex) = 'detailsPercent') or
+        (LValue.Key(LIndex) = 'detailsExpanded') or
+        (LValue.Key(LIndex) = 'canvasToolsVisible') or
+        (LValue.Key(LIndex) = 'canvasExpanded'))) or
       ((LValue.Field('version').AsInteger = 2) and
         ((LValue.Key(LIndex) = 'sourceTab') or
           (LValue.Key(LIndex) = 'sourceExpanded'))) then
@@ -256,9 +275,19 @@ begin
     Result.SourceExpanded := LValue.Field('sourceExpanded').AsBoolean;
   end;
   Result.CanvasPercent := IntegerValue(LValue, 'canvasPercent', 10, 90);
+  { Earlier packets retain their exact field count and acquire collapsed
+    details/default sizing. Version 5 adds only private editor allocation. }
+
+  if LVersion >= 5 then
+  begin
+    Result.DetailsPercent := IntegerValue(LValue, 'detailsPercent', 15, 60);
+    Result.DetailsExpanded := LValue.Field('detailsExpanded').AsBoolean;
+    Result.CanvasToolsVisible := LValue.Field('canvasToolsVisible').AsBoolean;
+    Result.CanvasExpanded := LValue.Field('canvasExpanded').AsBoolean;
+  end;
   Result.Phone := LValue.Field('phone').AsBoolean;
 
-  if LVersion = 4 then
+  if LVersion >= 4 then
   begin
     LPresentation := LValue.Field('presentation');
 

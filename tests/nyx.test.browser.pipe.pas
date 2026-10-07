@@ -68,7 +68,8 @@ type
     { URL must name a loopback HTTP fixture. Directory receives a fresh profile,
       bounded diagnostics and captures. Width accepts 320..4096 CSS pixels.
       Failed construction retires only the process/handles owned by this host. }
-    constructor Create(const AURL, ADirectory: String; AWidth: Integer = 1100);
+    constructor Create(const AURL, ADirectory: String; AWidth: Integer = 1100;
+      AHeight: Integer = 900);
     destructor Destroy; override;
     { Bounded current body observation; absent attributes return empty text.
       SetAttribute acknowledges fixture-only capture checkpoints, not editor
@@ -79,6 +80,9 @@ type
       scripts. Missing elements return empty text. This is physical observation,
       separate from document inspection through semantic MCP. }
     function ElementHTML(const ASelector: TNyxText): TNyxText;
+    { Single bounded existence query, avoiding full-shell serialization and
+      the two-request lifetime race when only presentation presence matters. }
+    function Exists(const ASelector: TNyxText): Boolean;
     { Observe the mounted face without scrolling, evaluating scripts or changing
       the design. Missing faces fail explicitly; transformed quads are enclosed
       in their viewport-aligned border box. Call after ordinary readiness. }
@@ -93,6 +97,12 @@ type
       This qualifies host defaults that synthetic DOM events cannot establish;
       it does not claim hardware, IME or assistive-technology input. }
     procedure Tab(AReverse: Boolean = False);
+    { Change real host allocation, including landscape/short-window transitions.
+      Bounds are 320..4096 wide and 240..4096 high; no application script runs. }
+    procedure Resize(AWidth, AHeight: Integer);
+    { Trusted host touch sequence on a visible control. Intended for public
+      splitter/gesture qualification; never use it to author a design. }
+    procedure DragTouch(const ASelector: TNyxText; ADeltaX, ADeltaY: Double);
     { Save exact current outer HTML and PNG, using a simple artifact name. This
       does not infer readiness; the caller first observes a terminal fixture mark. }
     procedure Capture(const AName: String);
@@ -140,7 +150,8 @@ begin
   end;
 end;
 
-constructor TNyxBrowserPipe.Create(const AURL, ADirectory: String; AWidth: Integer);
+constructor TNyxBrowserPipe.Create(const AURL, ADirectory: String;
+  AWidth, AHeight: Integer);
 var
   LSecurity: TSecurityAttributes;
   LChildInput: THandle;
@@ -154,7 +165,7 @@ begin
   inherited Create;
 
   if (Pos('http://127.0.0.1:', AURL) <> 1) or
-    (AWidth < 320) or (AWidth > 4096) then
+    (AWidth < 320) or (AWidth > 4096) or (AHeight < 240) or (AHeight > 4096) then
   begin
     raise Exception.Create('Supply a loopback HTTP fixture and width 320..4096');
   end;
@@ -210,9 +221,7 @@ begin
   Request('Runtime.enable', NyxObject([]), FSession);
   Request('Page.enable', NyxObject([]), FSession);
   Request('DOM.enable', NyxObject([]), FSession);
-  Request('Emulation.setDeviceMetricsOverride', NyxObject([
-    NyxField('width', NyxData(AWidth)), NyxField('height', NyxData(900)),
-    NyxField('deviceScaleFactor', NyxData(1)), NyxField('mobile', NyxData(False))]), FSession);
+  Resize(AWidth, AHeight);
   Request('Page.navigate', NyxObject([NyxField('url', NyxData(TNyxText(AURL)))]), FSession);
   LStarted := GetTickCount64;
   while not FLoaded do
@@ -478,6 +487,13 @@ begin
     NyxField('name', NyxData(AName)), NyxField('value', NyxData(AValue))]), FSession);
 end;
 
+function TNyxBrowserPipe.Exists(const ASelector: TNyxText): Boolean;
+begin
+  Result := Request('DOM.querySelector', NyxObject([
+    NyxField('nodeId', NyxData(Body)), NyxField('selector', NyxData(ASelector))]),
+    FSession).Field('nodeId').AsInteger <> 0;
+end;
+
 function TNyxBrowserPipe.ElementHTML(const ASelector: TNyxText): TNyxText;
 var
   LNode: Integer;
@@ -698,6 +714,64 @@ begin
     NyxField('code', NyxData('Tab')), NyxField('windowsVirtualKeyCode', NyxData(9)),
     NyxField('nativeVirtualKeyCode', NyxData(9)),
     NyxField('modifiers', NyxData(LModifiers))]), FSession);
+end;
+
+procedure TNyxBrowserPipe.Resize(AWidth, AHeight: Integer);
+begin
+
+  if (AWidth < 320) or (AWidth > 4096) or (AHeight < 240) or (AHeight > 4096) then
+  begin
+    raise Exception.Create('Host allocation is outside the admitted bounds');
+  end;
+  Request('Emulation.setDeviceMetricsOverride', NyxObject([
+    NyxField('width', NyxData(AWidth)), NyxField('height', NyxData(AHeight)),
+    NyxField('deviceScaleFactor', NyxData(1)), NyxField('mobile', NyxData(False))]), FSession);
+end;
+
+procedure TNyxBrowserPipe.DragTouch(const ASelector: TNyxText;
+  ADeltaX, ADeltaY: Double);
+var
+  LBox: TNyxBrowserBox;
+  LIndex: Integer;
+  LX: Double;
+  LY: Double;
+
+  procedure Touch(const AType: TNyxText; APosition: Double; AEnd: Boolean);
+  var
+    LPoints: TNyxDataValue;
+  begin
+    LPoints := NyxArray([]);
+
+    if not AEnd then
+    begin
+      LPoints := NyxArray([NyxObject([
+        NyxField('x', NyxData(LX + ADeltaX * APosition)),
+        NyxField('y', NyxData(LY + ADeltaY * APosition)),
+        NyxField('id', NyxData(1))])]);
+    end;
+    Request('Input.dispatchTouchEvent', NyxObject([
+      NyxField('type', NyxData(AType)), NyxField('touchPoints', LPoints)]), FSession);
+  end;
+begin
+  LBox := Bounds(ASelector);
+
+  if (LBox.Width <= 0) or (LBox.Height <= 0) then
+  begin
+    raise Exception.Create('Touch target has no visible allocation');
+  end;
+  LX := LBox.Left + LBox.Width / 2;
+  LY := LBox.Top + LBox.Height / 2;
+  Touch('touchStart', 0, False);
+  try
+    for LIndex := 1 to 5 do
+    begin
+      Touch('touchMove', LIndex / 5, False);
+    end;
+    Touch('touchEnd', 1, True);
+  except
+    Touch('touchCancel', 0, True);
+    raise;
+  end;
 end;
 
 procedure TNyxBrowserPipe.Capture(const AName: String);

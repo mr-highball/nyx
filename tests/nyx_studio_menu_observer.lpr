@@ -116,7 +116,9 @@ var
   LPresent: array[0..10] of Boolean;
   LIndex: Integer;
   LOther: Integer;
+  LCompact: Boolean;
 begin
+  LCompact := GHost.Exists('[data-node=studio-panelbar]');
   LHeader := GHost.Bounds('[data-node=studio-header]');
   for LIndex := 0 to High(CActionIDs) do
   begin
@@ -133,6 +135,16 @@ begin
         GHost.Capture('toolbar-missing');
         raise Exception.Create('Toolbar action is absent / ' + CActionIDs[LIndex]);
       end;
+      Continue;
+    end;
+    { Compact navigation intentionally moves these operations into typed menu
+      branches. Only the three visible header actions own physical geometry. }
+
+    if LCompact and not (CActionIDs[LIndex] = 'action-undo') and
+      not (CActionIDs[LIndex] = 'action-redo') and
+      not (CActionIDs[LIndex] = 'action-actions') then
+    begin
+      LPresent[LIndex] := False;
       Continue;
     end;
     LBoxes[LIndex] := GHost.Bounds('[data-node=' + CActionIDs[LIndex] + ']');
@@ -175,6 +187,7 @@ var
   LPacket: TNyxDataValue;
   LKind: TNyxText;
   LNextAction: TNyxText;
+  LPreviousAction: TNyxText;
 begin
   try
 
@@ -225,10 +238,17 @@ begin
       Local optional-service editors continue directly to Build view. Observe
       the mounted toolbar instead of assuming the disconnected Tab order. }
     LNextAction := 'action-build-view';
+    LPreviousAction := 'action-agents';
 
     if GHost.ElementHTML('[data-node=action-builds]') <> '' then
     begin
       LNextAction := 'action-builds';
+    end;
+
+    if GHost.Exists('[data-node=studio-panelbar]') then
+    begin
+      LNextAction := 'action-panel-project';
+      LPreviousAction := 'action-redo';
     end;
     GHost.Tab;
     WaitFor('.nyx-popover:popover-open', False);
@@ -237,7 +257,7 @@ begin
     WaitFor('.nyx-popover:popover-open[role=menu]');
     GHost.Tab(True);
     WaitFor('.nyx-popover:popover-open', False);
-    WaitFor('[data-node=action-agents]:focus');
+    WaitFor('[data-node=' + LPreviousAction + ']:focus');
     GHost.Click('[data-node=action-actions]');
     WaitFor('.nyx-popover:popover-open[role=menu] [data-node=studio-menu-inspect]');
     GHost.Click('.nyx-popover:popover-open [data-node=studio-menu-inspect]');
@@ -254,7 +274,7 @@ begin
     WaitFor('.nyx-popover:popover-open [data-node=studio-menu-events]');
     GHost.Tab(True);
     WaitFor('.nyx-popover:popover-open', False);
-    WaitFor('[data-node=action-agents]:focus');
+    WaitFor('[data-node=' + LPreviousAction + ']:focus');
     GHost.Click('[data-node=action-actions]');
     WaitFor('.nyx-popover:popover-open [data-node=studio-menu-inspect]');
     GHost.Click('.nyx-popover:popover-open [data-node=studio-menu-inspect]');

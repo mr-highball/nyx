@@ -128,6 +128,10 @@ type
     FViewState: TNyxStudioViewState;
     FCodeVisible: Boolean;
     FCanvasPercent: Integer;
+    FDetailsPercent: Integer;
+    FDetailsExpanded: Boolean;
+    FCanvasToolsVisible: Boolean;
+    FCanvasExpanded: Boolean;
     FPhone: Boolean;
     FPresentationSelection: TNyxPresentationSelection;
     FPreview: Boolean;
@@ -349,6 +353,13 @@ begin
     '[data-node=studio-right]{width:265px;flex-shrink:0;overflow:auto;padding:16px!important;' +
     'background:#fff;border-left:1px solid #dfe3ec;gap:10px!important;}' +
     '[data-node=studio-center]{flex:1;min-width:0;min-height:0;gap:0!important;padding:0!important;}' +
+    '[data-node=studio-stage]{flex:1;min-width:0;min-height:0;gap:0!important;padding:0!important;}' +
+    '[data-node=studio-details]{min-width:0;min-height:0;overflow:auto;padding:0!important;gap:0!important;}' +
+    '[data-node=studio-details-summary]{flex-shrink:0;background:#fff;border-bottom:1px solid #dfe3ec;}' +
+    '[data-node=studio-details-label]{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}' +
+    '[data-node=studio-details-summary] .nyx-button{min-height:40px;padding:6px 12px;font-size:12px;}' +
+    '[data-node=studio-details-split]{flex:1;min-width:0;min-height:0;overflow:hidden;}' +
+    '[data-node=studio-details-split] [data-node=studio-details]{height:100%;}' +
     '[data-node=studio-outputs]{padding:16px 20px!important;background:#fff;' +
     'border-bottom:1px solid #dfe3ec;max-height:360px;overflow:auto;flex-shrink:0;}' +
     '[data-node=studio-outputs] .nyx-heading{font-size:18px;}' +
@@ -416,14 +427,17 @@ begin
     '[data-nyx-studio-compact=true] [data-node=studio-left],' +
     '[data-nyx-studio-compact=true] [data-node=studio-right]{width:100%;flex:1;min-height:0;border:0;}' +
     '[data-nyx-studio-compact=true] [data-node=studio-center]{width:100%;min-width:0;}' +
-    '[data-nyx-studio-compact=true] [data-node=studio-header]{padding:10px 12px!important;gap:8px!important;}' +
+    '[data-nyx-studio-compact=true] [data-node=studio-header]{min-height:0;padding:6px 12px!important;gap:8px!important;}' +
+    '[data-nyx-studio-compact=true] [data-node=studio-logo]{flex:1;}' +
     '[data-nyx-studio-compact=true] [data-node=studio-header] .nyx-button{min-height:40px;}' +
     '[data-nyx-studio-compact=true] [data-node=studio-canvas-wrap]{padding:12px!important;}' +
-    '[data-nyx-studio-compact=true] [data-node=studio-viewbar]{padding:10px 12px!important;gap:8px!important;}' +
+    '[data-nyx-studio-compact=true] [data-node=studio-viewbar]{padding:6px 12px!important;gap:8px!important;}' +
+    '[data-nyx-studio-compact=true] [data-node=studio-viewbar] .nyx-button{min-height:40px;padding:6px 10px;}' +
     '[data-nyx-studio-compact=true] [data-node=output-summary]{width:100%;}' +
-    '[data-nyx-studio-compact=true] [data-node=studio-outputs]{max-height:45%;}' +
-    '[data-nyx-studio-compact=true] [data-node=studio-agents]{max-height:45%;}' +
+    '[data-nyx-studio-compact=true] [data-node=studio-details]>*{max-height:none!important;flex-shrink:0;}' +
     '[data-nyx-studio-compact=true] [data-node=studio-footer]{padding:7px 12px!important;}' +
+    '[data-nyx-studio-compact=true] [data-node=studio-status]{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;' +
+    'min-width:0;max-width:100%;}' +
     '[data-nyx-studio-compact=true] [data-node=studio-palette] .nyx-button{min-height:44px;font-size:13px;}' +
     '[data-nyx-studio-compact=true] [data-node^=palette-description-]{font-size:13px;}' +
     '[data-node=selected-label],[data-node=selected-capabilities]{overflow-wrap:anywhere;}';
@@ -495,6 +509,7 @@ begin
   FSourceModal.OnDismiss := SourceModalDismiss;
   FCodeVisible := False;
   FCanvasPercent := 65;
+  FDetailsPercent := 32;
   FPresentationSelection := TNyxPresentationSelection.None;
   FPalette := DefaultNyxStudioPaletteState;
   FBindingTarget := bpValue;
@@ -615,11 +630,15 @@ var
   LState: TNyxStudioViewState;
 begin
   LState := DefaultNyxStudioViewState;
-  LState.CodeVisible := FCodeVisible;
+  LState.CodeVisible := FCodeVisible and not FCanvasExpanded;
   LState.CodePresentation := ncpPaneHosted;
   LState.SourceTab := FSourceTab;
   LState.SourceExpanded := FSourceExpanded;
   LState.CanvasPercent := FCanvasPercent;
+  LState.DetailsPercent := FDetailsPercent;
+  LState.DetailsExpanded := FDetailsExpanded;
+  LState.CanvasToolsVisible := FCanvasToolsVisible;
+  LState.CanvasExpanded := FCanvasExpanded;
   LState.Compact := FCompact;
   LState.Panel := FPanel;
   LState.Phone := FPhone;
@@ -768,6 +787,12 @@ begin
     if LSplit <> nil then
     begin
       FCanvasPercent := StrToIntDef(LSplit.Prop('split-position'), FCanvasPercent);
+    end;
+    LSplit := FShellRenderer.Root.Find('studio-details-split');
+
+    if LSplit <> nil then
+    begin
+      FDetailsPercent := StrToIntDef(LSplit.Prop('split-position'), FDetailsPercent);
     end;
   end;
 
@@ -1646,6 +1671,7 @@ begin
     { A compact pane has no mounted Inspector button to route through. Apply the
       same typed presentation state, then let the ordinary Nyx shell mount it. }
     FPanel := nspInspector;
+    FCanvasExpanded := False;
     FInspectorTab := nitProperties;
 
     if AAction = smaEvents then
@@ -1664,6 +1690,22 @@ begin
     LEvent.Trigger := ntClick;
     HandleShell(LNode, LEvent);
   end;
+  { In compact Project/Inspector mode a viewbar is intentionally unmounted.
+    Route a typed menu command through a temporary owned command face instead
+    of requiring an invisible widget to keep the operation reachable. }
+
+  if LNode = nil then
+  begin
+    LNode := TNyxNode.Create(nkButton, NyxStudioMenuActionTarget(AAction));
+    try
+      LEvent := Default(TNyxEventInfo);
+      LEvent.Value := NyxNull;
+      LEvent.Trigger := ntClick;
+      HandleShell(LNode, LEvent);
+    finally
+      LNode.Free;
+    end;
+  end;
 end;
 
 procedure TNyxStudio.PrepareActionMenu;
@@ -1671,7 +1713,8 @@ var
   LContent: TNyxDocument;
   LItems: TNyxMenuItems;
 begin
-  LContent := BuildNyxStudioActionMenu(FSession, LItems);
+  LContent := BuildNyxStudioActionMenu(FSession, LItems, True,
+    FAgents.State.CanControlBuilds);
   try
     FActionMenu := NewNyxBrowserMenu(FShellRenderer.FocusFor(NyxStudioActionMenuID),
       LContent, NyxPageRoot(NyxStudioActionMenuRoot), LItems);
@@ -1835,6 +1878,22 @@ begin
     { The public control already resized its existing DOM. No source edit,
       remount or project history entry belongs to this presentation choice. }
     FCanvasPercent := StrToIntDef(ANode.Prop('split-position'), FCanvasPercent);
+    Exit;
+  end;
+
+  if (ANode.ID = 'studio-details-split') and (AEvent.Trigger = ntChange) then
+  begin
+    FDetailsPercent := StrToIntDef(ANode.Prop('split-position'), FDetailsPercent);
+    Exit;
+  end;
+
+  if (AEvent.Trigger = ntClick) and RouteNyxStudioWorkspace(FViewState, ANode.ID) then
+  begin
+    FCanvasExpanded := FViewState.CanvasExpanded;
+    FCanvasToolsVisible := FViewState.CanvasToolsVisible;
+    FDetailsExpanded := FViewState.DetailsExpanded;
+    FPanel := FViewState.Panel;
+    Refresh(True, True);
     Exit;
   end;
 
@@ -2125,11 +2184,17 @@ begin
           'action-agents':
             begin
               FAgentsVisible := not FAgentsVisible;
+              FDetailsExpanded := FAgentsVisible;
+              FCanvasExpanded := False;
+              FPanel := nspDesign;
               LRetainCanvas := True;
             end;
           'action-builds':
             begin
               FBuildsVisible := not FBuildsVisible;
+              FDetailsExpanded := FBuildsVisible;
+              FCanvasExpanded := False;
+              FPanel := nspDesign;
               LRetainCanvas := True;
             end;
           'action-agent-connect': ConnectAgents;
@@ -2160,6 +2225,7 @@ begin
           'action-panel-project':
             begin
               FPanel := nspProject;
+              FCanvasExpanded := False;
               LRetainCanvas := True;
             end;
           'action-panel-design':
@@ -2170,11 +2236,13 @@ begin
           'action-panel-inspector':
             begin
               FPanel := nspInspector;
+              FCanvasExpanded := False;
               LRetainCanvas := True;
             end;
           'action-code':
             begin
               FCodeVisible := not FCodeVisible;
+              FCanvasExpanded := False;
               FPanel := nspDesign;
               LRetainCanvas := True;
             end;
@@ -2197,6 +2265,8 @@ begin
           'action-outputs':
             begin
               FOutputVisible := not FOutputVisible;
+              FDetailsExpanded := FOutputVisible;
+              FCanvasExpanded := False;
               FPanel := nspDesign;
               LRetainCanvas := True;
             end;
@@ -2243,6 +2313,7 @@ begin
             begin
               FFilesVisible := not FFilesVisible;
               FPanel := nspProject;
+              FCanvasExpanded := False;
               LRetainCanvas := True;
             end;
           'action-project-open':
@@ -3203,7 +3274,7 @@ var
   LCanvasFocus: Boolean;
 begin
   Result := True;
-  LCompact := window.innerWidth <= 960;
+  LCompact := NyxStudioCompactHost(window.innerWidth, window.innerHeight);
   { Ordinary resizes let CSS reflow existing controls. Rebuild only when crossing
     the compact boundary, preserving a focused field's uncommitted draft. }
 
@@ -3316,6 +3387,10 @@ begin
   LValue.SourceTab := FSourceTab;
   LValue.SourceExpanded := FSourceExpanded;
   LValue.CanvasPercent := FCanvasPercent;
+  LValue.DetailsPercent := FDetailsPercent;
+  LValue.DetailsExpanded := FDetailsExpanded;
+  LValue.CanvasToolsVisible := FCanvasToolsVisible;
+  LValue.CanvasExpanded := FCanvasExpanded;
   LValue.Phone := FPhone;
   LValue.PresentationSelection := FPresentationSelection;
   LValue.Preview := FPreview;
@@ -3409,6 +3484,10 @@ begin
     FSourceTab := LValue.SourceTab;
     FSourceExpanded := LValue.SourceExpanded;
     FCanvasPercent := LValue.CanvasPercent;
+    FDetailsPercent := LValue.DetailsPercent;
+    FDetailsExpanded := LValue.DetailsExpanded;
+    FCanvasToolsVisible := LValue.CanvasToolsVisible;
+    FCanvasExpanded := LValue.CanvasExpanded;
     FPhone := LValue.Phone;
     FPresentationSelection := LValue.PresentationSelection.Reconciled(FSession.Document.Presentations);
     FPreview := LValue.Preview;
@@ -3568,7 +3647,7 @@ begin
   end;
   window.addEventListener('pagehide', FRecoveryBoundaryHandler);
   document.addEventListener('visibilitychange', FRecoveryBoundaryHandler);
-  FCompact := window.innerWidth <= 960;
+  FCompact := NyxStudioCompactHost(window.innerWidth, window.innerHeight);
   window.addEventListener('resize', FResizeHandler);
   document.addEventListener('pointerdown', FPointerBeginHandler, True);
   document.addEventListener('pointerup', FPointerEndHandler, True);

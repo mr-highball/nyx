@@ -1566,6 +1566,12 @@ begin
   begin
     FState.CanvasPercent := StrToIntDef(LNode.Prop('split-position'), FState.CanvasPercent);
   end;
+  LNode := FShellView.Root.Find('studio-details-split');
+
+  if LNode <> nil then
+  begin
+    FState.DetailsPercent := StrToIntDef(LNode.Prop('split-position'), FState.DetailsPercent);
+  end;
   LNode := FShellView.Root.Find(NyxStudioNewStateNameID);
 
   if LNode <> nil then
@@ -1582,7 +1588,7 @@ begin
   begin
     FState.SourceTab := nstSource;
   end;
-  FState.Compact := FHost.ClientWidth < 900;
+  FState.Compact := NyxStudioCompactHost(FHost.ClientWidth, FHost.ClientHeight);
   FState.RootRemoval := NyxNull;
   FState.Agents := GetAgentState;
   FState.BuildControlReady := (CurrentBridge <> nil) and
@@ -2452,6 +2458,7 @@ begin
   begin
     FState.Panel := nspInspector;
     FState.InspectorTab := nitProperties;
+    FState.CanvasExpanded := False;
 
     if AAction = smaEvents then
     begin
@@ -2469,6 +2476,19 @@ begin
     LEvent.Trigger := ntClick;
     ShellEvent(LNode, LEvent);
   end;
+
+  if LNode = nil then
+  begin
+    LNode := TNyxNode.Create(nkButton, NyxStudioMenuActionTarget(AAction));
+    try
+      LEvent := Default(TNyxEventInfo);
+      LEvent.Value := NyxNull;
+      LEvent.Trigger := ntClick;
+      ShellEvent(LNode, LEvent);
+    finally
+      LNode.Free;
+    end;
+  end;
 end;
 
 procedure TNyxNativeStudio.PrepareActionMenu;
@@ -2476,7 +2496,8 @@ var
   LContent: TNyxDocument;
   LItems: TNyxMenuItems;
 begin
-  LContent := BuildNyxStudioActionMenu(FSession, LItems);
+  LContent := BuildNyxStudioActionMenu(FSession, LItems, True,
+    FState.Agents.CanControlBuilds);
   try
     FActionMenu := NewNyxLCLMenu(FShellView.FocusFor(NyxStudioActionMenuID),
       LContent, NyxPageRoot(NyxStudioActionMenuRoot), LItems, FTheme);
@@ -2641,6 +2662,18 @@ begin
     if (ANode.ID = 'studio-split') and (AEvent.Trigger = ntChange) then
     begin
       FState.CanvasPercent := StrToIntDef(ANode.Prop('split-position'), FState.CanvasPercent);
+      Exit;
+    end;
+
+    if (ANode.ID = 'studio-details-split') and (AEvent.Trigger = ntChange) then
+    begin
+      FState.DetailsPercent := StrToIntDef(ANode.Prop('split-position'), FState.DetailsPercent);
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and RouteNyxStudioWorkspace(FState, ANode.ID) then
+    begin
+      RequestRefresh;
       Exit;
     end;
 
@@ -2879,10 +2912,15 @@ begin
           ncCode:
             begin
               FState.CodeVisible := not FState.CodeVisible;
+              FState.CanvasExpanded := False;
+              FState.Panel := nspDesign;
             end;
           ncOutputs:
             begin
               FState.OutputVisible := not FState.OutputVisible;
+              FState.DetailsExpanded := FState.OutputVisible;
+              FState.CanvasExpanded := False;
+              FState.Panel := nspDesign;
 
               if FState.OutputVisible and (CurrentBridge <> nil) and
                 CurrentBridge.State.CanBuild and not FOutputLoaded and not FOutputLoading then
@@ -2893,6 +2931,8 @@ begin
           ncFiles:
             begin
               FState.FilesVisible := not FState.FilesVisible;
+              FState.CanvasExpanded := False;
+              FState.Panel := nspProject;
             end;
           ncAdvanced:
             begin
@@ -2905,10 +2945,12 @@ begin
           ncProjectPanel:
             begin
               FState.Panel := nspProject;
+              FState.CanvasExpanded := False;
             end;
           ncInspectorPanel:
             begin
               FState.Panel := nspInspector;
+              FState.CanvasExpanded := False;
             end;
           ncProperties:
             begin
@@ -2964,10 +3006,16 @@ begin
           ncAgents:
             begin
               FState.AgentsVisible := not FState.AgentsVisible;
+              FState.DetailsExpanded := FState.AgentsVisible;
+              FState.CanvasExpanded := False;
+              FState.Panel := nspDesign;
             end;
           ncBuilds:
             begin
               FState.BuildsVisible := not FState.BuildsVisible;
+              FState.DetailsExpanded := FState.BuildsVisible;
+              FState.CanvasExpanded := False;
+              FState.Panel := nspDesign;
             end;
           ncAgentConnect:
             begin

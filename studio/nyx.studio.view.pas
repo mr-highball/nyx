@@ -65,6 +65,8 @@ type
   TNyxStudioCodePresentation = (ncpInline, ncpHosted, ncpPaneHosted);
   { Source/messages are editor presentation; neither changes document history. }
   TNyxStudioSourceTab = (nstSource, nstMessages);
+  { Closed allocation commands, separate from application design commands. }
+  TNyxStudioWorkspaceAction = (swaUnknown, swaDetails, swaTools, swaExpand, swaRestore);
 
   { Target-independent Studio chrome and state. Both adapters consume this same
     Nyx document, including the public designer host and source editor. Platform
@@ -80,6 +82,13 @@ type
     { Editor presentation, never project content/history. Proportional sizing
       survives panel switches and host viewport changes on both targets. }
     CanvasPercent: Integer;
+    { Transient workspace allocation. Collapse retains sync choices and tool
+      settings; expansion temporarily gives the canvas the available host.
+      The detail split uses the public Nyx touch/keyboard resize contract. }
+    DetailsPercent: Integer;
+    DetailsExpanded: Boolean;
+    CanvasToolsVisible: Boolean;
+    CanvasExpanded: Boolean;
     Phone: Boolean;
     { Exclusive manual preview choice, independent of authored pair/history. }
     PresentationSelection: TNyxPresentationSelection;
@@ -135,6 +144,13 @@ type
 
 { Initializes every field deliberately, including borrowed optional profiles. }
 function DefaultNyxStudioViewState: TNyxStudioViewState;
+{ Available-space policy shared by both controllers. Logical host dimensions,
+  rather than operating system names, include short landscape phone windows. }
+function NyxStudioCompactHost(AWidth, AHeight: Double): Boolean;
+{ Closed workspace commands decoded only at the editor UI boundary. Returns
+  False for unrelated IDs. Allocation never changes design/source/history. }
+function RouteNyxStudioWorkspace(var AState: TNyxStudioViewState;
+  const AControlID: TNyxText): Boolean;
 { Managed ordinary Nyx code editor, shared by inline and retained hosted views.
   The caller retains its interface or transfers ownership into a Nyx document. }
 function NewNyxStudioCodeEditor(const ASource: TNyxText): INyxCodeEditor;
@@ -161,6 +177,69 @@ uses
   nyx.binding,
   nyx.composition, nyx.studio.rootview, nyx.studio.buildview;
 
+const
+  CCompactWidth = 961;
+  CShortWidth = 1201;
+  CShortHeight = 501;
+
+function NyxStudioCompactHost(AWidth, AHeight: Double): Boolean;
+begin
+  Result := TNyxViewportCondition.Any.WidthBelow(CCompactWidth).Matches(AWidth, AHeight) or
+    TNyxViewportCondition.Any.WidthBelow(CShortWidth).HeightBelow(CShortHeight)
+      .Matches(AWidth, AHeight);
+end;
+
+function RouteNyxStudioWorkspace(var AState: TNyxStudioViewState;
+  const AControlID: TNyxText): Boolean;
+const
+  CControlIDs: array[TNyxStudioWorkspaceAction] of TNyxText = ('',
+    'action-details-toggle', 'action-canvas-tools', 'action-canvas-expand',
+    'action-workspace-restore');
+var
+  LAction: TNyxStudioWorkspaceAction;
+begin
+  LAction := swaUnknown;
+  for LAction := swaDetails to swaRestore do
+  begin
+
+    if AControlID = CControlIDs[LAction] then
+    begin
+      Break;
+    end;
+  end;
+  Result := AControlID = CControlIDs[LAction];
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  case LAction of
+    swaDetails:
+      begin
+        AState.DetailsExpanded := not AState.DetailsExpanded;
+      end;
+    swaTools:
+      begin
+        AState.CanvasToolsVisible := not AState.CanvasToolsVisible;
+        AState.CanvasExpanded := False;
+        AState.Panel := nspDesign;
+      end;
+    swaExpand:
+      begin
+        AState.CanvasExpanded := not AState.CanvasExpanded;
+        AState.Panel := nspDesign;
+      end;
+    swaRestore:
+      begin
+        AState.CanvasExpanded := False;
+      end;
+  else
+    begin
+      Result := False;
+    end;
+  end;
+end;
+
 function NewNyxStudioCodeEditor(const ASource: TNyxText): INyxCodeEditor;
 begin
   Result := NewNyxCodeEditor('studio-code');
@@ -179,6 +258,7 @@ begin
   Result.CodePresentation := ncpInline;
   Result.PresentationSelection := TNyxPresentationSelection.None;
   Result.CanvasPercent := 65;
+  Result.DetailsPercent := 32;
   Result.Phone := False;
   Result.Palette := DefaultNyxStudioPaletteState;
   Result.Log := '';
@@ -725,6 +805,10 @@ var
   LCodePane: TNyxNode;
   LLeft: TNyxNode;
   LCenter: TNyxNode;
+  LStage: TNyxNode;
+  LDetails: TNyxNode;
+  LDetailSplit: TNyxNode;
+  LSummary: TNyxNode;
   LRight: TNyxNode;
   LViews: TNyxNode;
   LViewbar: TNyxNode;
@@ -757,6 +841,7 @@ var
   LViewport: TNyxPresentationCondition;
   LPresentation: TNyxPresentationRef;
   LFieldID: TNyxText;
+  LHasDetails: Boolean;
 begin
   { Reject a missing controller before allocating any owned shell nodes. }
 
@@ -767,7 +852,9 @@ begin
   Result := ADocument;
   Result.Title := 'Nyx Studio';
   Result.Presentations.Define(NyxPresentation('compact'),
-    TNyxViewportCondition.Any.WidthBelow(640));
+    TNyxViewportCondition.Any.WidthBelow(CCompactWidth));
+  Result.Presentations.Define(NyxPresentation('short'),
+    TNyxViewportCondition.Any.WidthBelow(CShortWidth).HeightBelow(CShortHeight));
   LRoot := TNyxNode.Create('page', 'studio-shell');
   Result.AddPage(LRoot);
   LRoot.Configure.ForPlatform(npfNativeLCL).Padding(0).Gap(0).Done;
@@ -797,6 +884,26 @@ begin
   end;
   LHeader.Add(Button('action-build-view', 'Build view').SetProp('variant', 'primary'));
   LHeader.Add(Button('action-build-app', 'Build app'));
+  { Narrow chrome keeps ordinary actions in the document for shared routing,
+    while public managed menus make the hidden actions reachable. This changes
+    chrome allocation only: design text and application scale stay untouched. }
+  for LIndex := 1 to LHeader.Count - 1 do
+  begin
+    LButton := LHeader.Children[LIndex];
+
+    if (LButton.ID <> 'action-actions') and
+      ((AState.CanvasExpanded) or ((AState.Compact) and
+        (LButton.ID <> 'action-undo') and (LButton.ID <> 'action-redo'))) then
+    begin
+      LButton.Configure.Visible(False).Done;
+    end;
+  end;
+
+  if AState.CanvasExpanded then
+  begin
+    LHeader.Add(Button('action-workspace-restore', 'Restore')
+      .Configure.AccessibleName('Restore workspace controls').Done);
+  end;
 
   if AState.Compact then
   begin
@@ -820,6 +927,8 @@ begin
           LPanelbar.Children[2].SetProp('variant', 'primary');
         end;
     end;
+    LPanelbar.Configure.Visible(not AState.CanvasExpanded)
+      .WhenPresentation(NyxPresentation('short')).Visible(False).Done;
   end;
   LWorkspace := TNyxNode.Create('row', 'studio-workspace');
   LWorkspace.Configure.ForPlatform(npfNativeLCL).Flex(1).Padding(0).Gap(0)
@@ -916,28 +1025,82 @@ begin
   { The authoring area is itself Nyx: a public nested-view surface and an
     optional public source editor. This avoids a second Studio-only widget API. }
   LWorkspace.Add(LCenter);
+  LDetails := TNyxNode.Create(nkScroll, 'studio-details')
+    .Configure.Layout(nlColumn).Gap(0).Padding(0).Done;
+  { The owning center holds both groups, including collapsed detail controls.
+    Hiding an unchosen group never admits a sync decision or loses its state. }
+  LCenter.Add(LDetails);
+  LStage := TNyxNode.Create(nkColumn, 'studio-stage')
+    .Configure.Flex(1).Gap(0).Padding(0).Done;
+  LCenter.Add(LStage);
 
   if AState.AgentsVisible then
   begin
-    LCenter.Add(BuildNyxStudioAgents(AState.Agents));
+    LDetails.Add(BuildNyxStudioAgents(AState.Agents));
   end;
 
   if AState.BuildsVisible and AState.Agents.CanControlBuilds then
   begin
-    LCenter.Add(BuildNyxStudioBuildJobs(AState.Agents.BuildJobs, AState.BuildControlReady));
+    LDetails.Add(BuildNyxStudioBuildJobs(AState.Agents.BuildJobs, AState.BuildControlReady));
   end;
 
   if AState.OutputVisible then
   begin
-    AddOutputPanel(LCenter, AState);
+    AddOutputPanel(LDetails, AState);
   end;
 
   if AState.RootRemoval.Kind = ndObject then
   begin
-    LCenter.Add(BuildNyxRootRemovalCard(AState.RootRemoval));
+    LDetails.Add(BuildNyxRootRemovalCard(AState.RootRemoval));
+  end;
+  LHasDetails := LDetails.Count > 0;
+
+  if AState.Compact and LHasDetails and not AState.CanvasExpanded then
+  begin
+    LSummary := TNyxNode.Create(nkRow, 'studio-details-summary')
+      .Configure.Layout(TNyxLayoutPolicy.Row.Wrap(nfwNoWrap).Align(ncaCenter))
+      .Padding(6).Gap(8).Done;
+    LSummary.Add(Caption('studio-details-label', 'Workspace details')
+      .Configure.Flex(1).Done);
+
+    if AState.Agents.Conflict and AState.AgentsVisible then
+    begin
+      LSummary.Children[0].Configure.Text('Shared project differs')
+        .Hint('Your local project is retained. Review the choices before changing sync.').Done;
+    end;
+    LSummary.Add(Button('action-details-toggle', 'Review')
+      .Configure.AccessibleName('Show workspace details').Done);
+    LCenter.Insert(0, LSummary);
+
+    if AState.DetailsExpanded then
+    begin
+      LSummary.Children[1].Configure.Text('Hide')
+        .AccessibleName('Hide workspace details').Done;
+      LDetailSplit := TNyxNode.Create(nkSplitView, 'studio-details-split')
+        .Configure.SplitOrientation(nsoStacked).SplitPosition(AState.DetailsPercent)
+        .SplitMinimum(15).SplitMaximum(60).SplitResizable(True).Flex(1)
+        .AccessibleName('Workspace details and design size').Done;
+      { Extract transfers ownership; Remove would destroy the independently
+        composed group before it can become the public split's first pane. }
+      LCenter.Extract(1);
+      LCenter.Extract(1);
+      LDetailSplit.Add(LDetails);
+      LDetailSplit.Add(LStage);
+      LCenter.Add(LDetailSplit);
+      LDetails.Configure.Flex(1).Done;
+    end
+    else
+    begin
+      LDetails.Configure.Visible(False).Done;
+    end;
+  end;
+
+  if not LHasDetails or AState.CanvasExpanded then
+  begin
+    LDetails.Configure.Visible(False).Done;
   end;
   LViewbar := TNyxNode.Create('row', 'studio-viewbar');
-  LCenter.Add(LViewbar);
+  LStage.Add(LViewbar);
   { A flex caption must retain room for a useful view name when the Inspector
     narrows the canvas. Let the existing row wrap controls onto the next line. }
   LViewbar.Add(Caption('active-view-label', ASession.ActiveViewID)
@@ -945,6 +1108,16 @@ begin
   LViewbar.Add(Button('action-desktop', 'Desktop'));
   LViewbar.Add(Button('action-phone', 'Phone'));
   LViewbar.Add(Button('action-preview', 'Interact'));
+  LViewbar.Add(Button('action-canvas-tools', 'Tools')
+    .Configure.Visible(AState.Compact).Hint('Show placement and drag controls.').Done);
+  LViewbar.Add(Button('action-canvas-expand', 'Expand')
+    .Configure.AccessibleName('Expand design canvas').Done);
+
+  if AState.Compact then
+  begin
+    LViewbar.Find('action-desktop').Configure.Visible(False).Done;
+    LViewbar.Find('action-phone').Configure.Visible(False).Done;
+  end;
   { Omit a chooser when no manual configurations exist. The actual target
     controller reconciles its copied choice against the current document. }
 
@@ -965,6 +1138,7 @@ begin
     .Width(144)
     .AccessibleName('Drop position')
     .Hint('Automatic uses row/column edge zones. Inside, before and after remain explicit choices.')
+    .Visible(not AState.Compact or AState.CanvasToolsVisible)
     .WhenPresentation(NyxPresentation('compact')).Text('').Width(128).Done);
   { Keep this ordinary Nyx drag source beside the placement selector. Compact
     Studio hides the Inspector while designing, so a source there cannot be
@@ -976,6 +1150,7 @@ begin
   begin
     LViewbar.Add(Button(NyxStudioDragMoveID, 'Drag selected')
       .Configure.DragSource(True).AccessibleName('Drag selected control')
+      .Visible(not AState.Compact or AState.CanvasToolsVisible)
       .Hint('Drag onto the canvas using the selected drop position.').Done
       .SetProp(NyxStudioDragControlKey, LSelected.ID));
   end;
@@ -995,21 +1170,24 @@ begin
   begin
     LViewbar.Children[LViewbar.Count - 1].SetProp('text', 'Output: choose anytime');
   end;
+  LViewbar.Find('output-summary').Configure
+    .Visible(not AState.Compact or AState.CanvasToolsVisible).Done;
+  LViewbar.Configure.Visible(not AState.CanvasExpanded).Done;
   LCanvas := TNyxNode.Create('column', 'studio-canvas-wrap');
   LCanvas.Configure.ForPlatform(npfNativeLCL).Flex(1).Padding(0).Gap(0).Done;
 
-  if AState.CodeVisible then
+  if AState.CodeVisible and not AState.CanvasExpanded then
   begin
     LSplit := TNyxNode.Create(nkSplitView, 'studio-split')
       .Configure.SplitOrientation(nsoStacked).SplitPosition(AState.CanvasPercent)
       .SplitMinimum(10).SplitMaximum(90).SplitResizable(True)
       .Flex(1).Done;
-    LCenter.Add(LSplit);
+    LStage.Add(LSplit);
     LSplit.Add(LCanvas);
   end
   else
   begin
-    LCenter.Add(LCanvas);
+    LStage.Add(LCanvas);
   end;
   LField := TNyxNode.Create('design-surface', 'studio-canvas')
     .SetProp('aria-label', 'Visual design canvas');
@@ -1021,7 +1199,7 @@ begin
     LField.SetProp('width', '390');
   end;
 
-  if AState.CodeVisible then
+  if AState.CodeVisible and not AState.CanvasExpanded then
   begin
     if AState.CodePresentation = ncpPaneHosted then
     begin
@@ -1369,24 +1547,26 @@ begin
   LFooter := TNyxNode.Create('row', 'studio-footer');
   LRoot.Add(LFooter);
   LFooter.Add(Caption('studio-status', AState.Status));
+  LFooter.Children[0].Configure.Hint(AState.Status).Done;
+  LFooter.Configure.Visible(not AState.CanvasExpanded).Done;
   { Each compact panel remains the same public Nyx composition as its desktop
     counterpart. Omit inactive roots so both adapters give the active panel its
     full host width rather than reserving space for invisible siblings. }
 
-  if AState.Compact then
+  if AState.Compact or AState.CanvasExpanded then
   begin
 
-    if AState.Panel <> nspProject then
+    if (AState.Panel <> nspProject) or AState.CanvasExpanded then
     begin
       LWorkspace.Remove(LLeft);
     end;
 
-    if AState.Panel <> nspDesign then
+    if (AState.Panel <> nspDesign) and not AState.CanvasExpanded then
     begin
       LWorkspace.Remove(LCenter);
     end;
 
-    if AState.Panel <> nspInspector then
+    if (AState.Panel <> nspInspector) or AState.CanvasExpanded then
     begin
       LWorkspace.Remove(LRight);
     end;
