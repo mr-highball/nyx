@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'confirmation', 'date-fields', 'date-policy', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1100,6 +1100,30 @@ try {
       "-Fu$nyxKeyboardSource", "-FE$nyxBrowserDir", 'tests/nyx_keyboard_host_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/keyboard-host.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'legacy-snapshot') {
+    # Explicit legacy admission; this neither snapshots a live editor nor starts
+    # a listener. Pascal owns history-policy refusal, paired data and handle tests.
+    $nyxLegacyRoot = Join-Path $nyxRoot 'build/legacy-refresh/maintained'
+    $nyxLegacyNative = Join-Path $nyxLegacyRoot 'native'
+    $nyxLegacyWeb = Join-Path $nyxLegacyRoot 'web'
+    New-Item -ItemType Directory -Force $nyxLegacyNative, $nyxLegacyWeb | Out-Null
+    $nyxLegacyFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', "-FU$nyxLegacyNative", "-FE$nyxLegacyNative")
+    Invoke-NyxCompiler $nyxFpc ($nyxLegacyFlags + @('tests/nyx_studio_legacy_tests.lpr'))
+    & (Join-Path $nyxLegacyNative 'nyx_studio_legacy_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Legacy snapshot admission checks failed' }
+    Invoke-NyxCompiler $nyxFpc ($nyxLegacyFlags + @('tools/nyx_studio_seed.lpr'))
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxLegacyWeb", 'tests/nyx_studio_legacy_tests.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxLegacyWeb 'rtl.js') -Force
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/legacy-snapshot.html') -Destination $nyxLegacyWeb -Force
+    Write-Host 'Legacy bootstrap built; runtime seeding requires an explicit policy and fresh destination.'
     exit 0
   }
 

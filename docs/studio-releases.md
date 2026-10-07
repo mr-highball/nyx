@@ -130,10 +130,53 @@ host rotates and enrolls its connection authority. Ordinary project handles and
 operator enablement remain durable. The portable clone/recovery values work on
 both compiler targets; disk ownership and OS replacement stay native host concerns.
 
+## Explicit legacy test bootstrap
+
+`nyx.studio.legacy` admits a bounded observing snapshot when an older host has
+no native runtime checkpoint. This is a separate explicit bootstrap contract;
+production migration should retain the complete runtime checkpoint instead.
+It preserves exact accepted design/source, pending draft/base (including a defined
+empty draft), public revision, selection, view, labels and operator permission.
+It cannot infer private legacy naming counters, registry serials or history.
+
+Default `nlhRequireEmptyHistory` refuses any reported Undo/Redo. The typed
+`nlhResetTestHistory` policy explicitly permits unavailable test history to reset;
+it is never selected because a runtime is malformed. Both policies reset unknown
+naming counters and assign a fresh ordinary workspace epoch, returning a small
+old/new handle mapping. Retired handles refuse and cannot alias later projects.
+The primary context remains the primary context. Original production history,
+isolation and rollout acceptance requirements stay unchanged.
+
+The Pascal host tool admits every pair before creating a fresh runtime, saves
+through the ordinary bounded/atomic recovery store, then loads it again and
+compares exact recovery stamps. Existing destinations refuse without changes.
+It starts no listener, selects no live project and refreshes no credentials:
+
+```powershell
+./tools/build.ps1 -Target legacy-snapshot
+./build/legacy-refresh/maintained/native/nyx_studio_seed.exe `
+  <observing-snapshot.json> <verified-release-root> <new-runtime-root> require-empty-history
+```
+
+Use `reset-test-history` only with explicit operator authorization for disposable
+test sessions. The input is an array with the primary first and at most eight
+ordinary entries. Each entry contains workspace, label, exact encoded project,
+and session metadata (revision, permission, selection, view, pendingDraft,
+canUndo, canRedo). Unknown fields, inconsistent draft metadata, invalid pairs or
+navigation, duplicate handles and a reused creation epoch refuse.
+
+The maintained shared fixture passes 16 checks in checked matched FPC and actual
+browser execution. The current eight captured test pairs save/load with zero
+native leaks; strict-history and existing-destination refusals preserve storage.
+See [the rollout return path](../WORK.md#current-return-path-test-mode-observing-release-refresh--2026-10-06).
+
 The protected running older server predates this recovery contract and cannot
 export its complete history. Its CanUndo/CanRedo flags establish availability,
-not serialized stacks. A preservation bridge and observing HTTP rollout remain
-required within the existing service/reload and workflow owners. A staged current
+not serialized stacks. A full production preservation bridge and observing HTTP
+rollout remain required within the existing service/reload and workflow owners.
+The user's explicit disposable-test instruction permits the bootstrap above for
+the current review environment; it does not establish complete history migration.
+A staged current
 candidate is not authority to replace a protected service or discard its history.
 
 A compiled candidate does not update the running MCP schema. Recipe editing over

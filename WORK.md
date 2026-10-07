@@ -7,7 +7,44 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-## Current return path: completed date-constraint authoring boundary — 2026-10-06
+## Current return path: test-mode observing release refresh — 2026-10-06
+
+Previous turn: progress; typed date-policy boundary committed/pushed as `2a471cf`,
+exact remote verified and worktree clean. This batch follows NS-5's accepted-work /
+observing release prerequisite for NS-4. Authoritative live inspection confirms the
+active primary has empty Undo/Redo; seven other sessions are owned test workshops.
+The user's earlier explicit test-mode instruction permits discarding their test
+history. Reassessment removes the inferred all-test-history gate for this refresh;
+it does not weaken production migration or original task acceptance criteria.
+
+Deliver an explicit Pascal legacy-snapshot bootstrap policy and fresh durable
+runtime, qualify exact pair/draft/navigation admission and reset disclosure, freeze
+a current release, then replace only the verified existing LAN service identity
+on its existing ports. Preserve the exact active pair and carry workshop pairs
+forward with fresh workspace handles/histories; retired old handles must not alias
+future projects. Unknown legacy naming counters also reset explicitly. Validate
+the observing browser editor and authenticated semantic edits/builds against the
+current schema, including both generated targets and desktop/narrow captures.
+Other 14 protected services/payloads remain untouched. No new endpoint/listener.
+At most two unsuccessful attempts per diagnosed cause. Stop at the delivered
+observing boundary and reassess. Do not claim complete old-history migration,
+production delivery, full criteria or goal completion. Existing counters remain
+until this batch has its evidence and handoff.
+
+Preparation evidence under ignored `build/legacy-refresh/`: the public Pascal
+legacy-snapshot admission fixture passes **16** checked matched-FPC and **16**
+actual HTTP browser checks, zero native/observer leaks. The current **8** exact
+observed pairs admit to a fresh runtime; saved/loaded recovery stamps match. The
+report explicitly discloses **7** unavailable test-history resets, fresh ordinary
+handles and unknown naming-counter resets. Strict mode creates no destination;
+existing destination refusal preserves the exact checkpoint. The maintained
+`legacy-snapshot` target compiles/runs/stages the same consumers and host tool.
+The private stale FPC setting now points to the verified installed matched 3.3.1
+compiler; no installation or committed machine path changed. The LAN process is
+still the original process at this preparation boundary. Continue the frozen
+release/refresh and actual observing journey; staging is not deployment evidence.
+
+## Previous return path: completed date-constraint authoring boundary — 2026-10-06
 
 Current goal turn: progress. The original NS-4 semantic workflow prerequisite now
 has copied typed set/inherit policy commands, bounded local/effective queries and
