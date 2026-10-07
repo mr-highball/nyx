@@ -3,7 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current authoring integration (2026-10-07): the public recipe form supplies
+Current saved-search prerequisite (2026-10-07): typed collection bindings retain
+typeahead through persistence, crafted generation/source history and ordinary
+browser/native mount initialization. Local overrides stay separate; Inspector
+reconstruction preserves choices. Checked shared/actual Win32 qualification passes
+133 (67 retained + 66 new), exact emitted execution six and core/composition
+regression 30/1795, leak-free. Both Studios/browser counterparts/worker compile
+with zero owned warnings. No original full criterion closes; only renderer
+no-closure advances 15→16 once, other counts remain 19/34/28/2. End this saved-policy
+boundary; current browser execution, semantic/Inspector policy workflows, full
+component/parity/visual/budget and observing requirements remain open. See
+[the packet](WORK.md#current-return-path-saved-listtree-typeahead--2026-10-07).
+
+Previous authoring integration (2026-10-07): the public recipe form supplies
 Edit-this-choice prefill, ordered replacement/collision refusal and copied input
 through ordinary source/panel/compact lifetimes on both Studio controllers.
 Checked shared/actual Win32 Studio checks pass 50, exact accepted source execution

@@ -267,12 +267,26 @@ workflow remains 19. See
 
 Bound typeahead follow-up (2026-10-06): typed runtime policy is available through
 existing managed renderer attachments. Default behavior reaches MCP-authored
-collection bindings, but persisted policy, generated policy expressions and
-bounded semantic inspection/editing remain under the original authoring/workflow
-requirements. Do not substitute raw extension properties or UI automation for an
+collection bindings. The saved-policy prerequisite below now owns persistence
+and generation; bounded semantic inspection/editing retain the original authoring/
+workflow requirements. Do not substitute raw extension properties or UI automation for an
 admitted semantic policy operation. Actual native named tools now authenticate
 in this chat and both review application builds succeed. See
 [the packet](../WORK.md#collection-typeahead--2026-10-06).
+
+Saved typeahead prerequisite (2026-10-07): the unchanged authenticated English
+export is locally enriched with typed binding choices. Persistence, crafted
+generation, paired history and actual native controls pass 133; exact emitted
+execution passes six, leak-free. Both Studios/browser consumers compile only.
+Current-source grouped bind invokes the shared version-four decoder in
+`nyx.studio.collectionedits`, but the frozen running backend does not admit it.
+`CollectionViewContext` omits saved/effective/restorable search choices. Add bounded
+typed context and edit/default-reset operations with expected revisions, grouped
+paired Undo/refusal and authenticated observing qualification under this task.
+Dedicated Inspector policy controls retain the authoring owner. No new tool,
+HTTP qualification, launch retry or full criterion is claimed. Workflow stays 19;
+only renderer advances 15→16. See
+[the packet](../WORK.md#current-return-path-saved-listtree-typeahead--2026-10-07).
 
 Current actual-consumer qualification (2026-10-06): a maintained Pascal observer
 now follows real browser worker publication through anonymous Chromium pipes.

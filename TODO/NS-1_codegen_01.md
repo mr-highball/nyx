@@ -22,6 +22,21 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - Original-size native editor qualification now needs the logical viewport /
   safe widget geometry prerequisite in [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md).
 
+## Saved list/tree search source — 2026-10-07
+
+Existing public-generation criteria 1/2 now emit typed search choices on
+specialized list/tree bindings and import the contract without requiring menus.
+Both parameterless reset spellings reconstruct; wrong families and invalid timing
+retain the accepted pair/draft with a location. One paired Undo/Redo restores exact
+source and model. Shared/actual Win32 qualification passes 133; exact compiled
+complete-builder comparison six, leak-free. Both compilers reject a raw-string
+policy; browser consumers/Studios compile, not execute. See
+[the packet](../WORK.md#current-return-path-saved-listtree-typeahead--2026-10-07).
+
+No original full criterion closes; source synchronization remains 28. Shared
+renderer alone owns 15→16. End this boundary; complete source/editor grammar,
+current-backend authoring, browser/observing journeys and prerequisites remain.
+
 ## Numeric slider source ordering — 2026-10-07
 
 Accepted criteria 1/2 now preserve a specialized slider's Number contract before

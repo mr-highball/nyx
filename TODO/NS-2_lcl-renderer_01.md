@@ -23,6 +23,21 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   prerequisite for replacing the time-field text fallback. Other native input
   and full renderer criteria remain required; this allocates no extra credit.
 
+## Saved list/tree search prerequisite — 2026-10-07
+
+Original criteria 1/2 now consume authored typed typeahead on both mount adapters.
+Saved disabled/exact choices, runtime overrides, retained refresh, changed-policy
+refusal and remount restoration reach actual Win32 input. Wire/source/history
+and these controls pass 133 checked assertions (67 existing + 66 new), leak-free;
+six exact emitted-builder assertions pass after compilation. Both Studios/browser
+consumer/worker compile with zero owned warnings; both compilers reject raw-string
+policies. See [the packet](../WORK.md#current-return-path-saved-listtree-typeahead--2026-10-07).
+
+No original full criterion closes. Shared renderer no-closure advances 15→16
+once; other established counts stay 19/34/28/2. End this saved-policy boundary.
+Executed browser, hardware/accessibility/other widgetsets, production visuals/
+budgets, full parity and observing delivery remain required.
+
 ## Typed numeric slider prerequisite — 2026-10-07
 
 Criteria 1/2 now consume real native trackbars with a portable numeric scale,

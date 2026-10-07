@@ -33,7 +33,8 @@ uses
   nyx.data,
   nyx.collections,
   nyx.collections.query,
-  nyx.collections.selection;
+  nyx.collections.selection,
+  nyx.typeahead;
 
 const
   { Reserved only by design version 3. Earlier designs may retain an opaque
@@ -81,12 +82,15 @@ type
     FSelectionMode: TNyxSelectionMode;
     FParent: TNyxText;
     FQuery: TNyxCollectionQuery;
+    FHasTypeAhead: Boolean;
+    FTypeAhead: TNyxTypeAheadOptions;
     FColumns: array of TNyxCollectionColumn;
     function AddColumn(const AName: TNyxText; AKind: TNyxStateKind;
       const ATitle: TNyxText; AMode: TNyxCollectionCellMode): TNyxCollectionViewSpec;
     function GetCount: Integer;
     function GetKey: TNyxCollectionRef;
     function GetQuery: TNyxCollectionQuery;
+    function GetTypeAhead: TNyxTypeAheadOptions;
   public
     function Column(const AField: TNyxTextFieldRef; const ATitle: TNyxText;
       AMode: TNyxCollectionCellMode = cmReadOnly): TNyxCollectionViewSpec; overload;
@@ -102,6 +106,13 @@ type
     { Authored immutable query default. Runtime views copy this value and can
       independently configure another policy without editing the document. }
     function Query(const APolicy: TNyxCollectionQuery): TNyxCollectionViewSpec;
+    { Authored list/tree search choice. Returns an independent binding, keeping
+      columns/query/selection/scope exact. Undefined or invalid options refuse
+      before changing Self. Runtime mounts copy this policy into separate engines. }
+    function TypeAhead(const APolicy: TNyxTypeAheadOptions): TNyxCollectionViewSpec;
+    { Remove the explicit saved choice and use the library's enabled, folded,
+      one-second default. This restores the original version 1/2/3 descriptor. }
+    function UseDefaultTypeAhead: TNyxCollectionViewSpec;
     function ColumnAt(AIndex: Integer): TNyxCollectionColumn;
     function Copy: TNyxCollectionViewSpec;
     procedure Validate;
@@ -116,6 +127,11 @@ type
     property SelectionMode: TNyxSelectionMode read FSelectionMode;
     property ParentField: TNyxText read FParent;
     property QueryPolicy: TNyxCollectionQuery read GetQuery;
+    { Distinguish an explicit saved choice from the library default. The policy
+      getter returns a copied default when absent, including an unbound record;
+      attaching a choice still requires a defined, valid collection binding. }
+    property HasTypeAhead: Boolean read FHasTypeAhead;
+    property TypeAheadPolicy: TNyxTypeAheadOptions read GetTypeAhead;
     property Count: Integer read GetCount;
   end;
 
@@ -167,6 +183,8 @@ begin
   Result.FSelectionMode := nsmSingle;
   Result.FParent := '';
   Result.FQuery := NyxCollectionQuery;
+  Result.FHasTypeAhead := False;
+  Result.FTypeAhead := Default(TNyxTypeAheadOptions);
   SetLength(Result.FColumns, 0);
 end;
 
@@ -195,6 +213,8 @@ begin
   Result.FSelectionMode := FSelectionMode;
   Result.FParent := FParent;
   Result.FQuery := FQuery.Copy;
+  Result.FHasTypeAhead := FHasTypeAhead;
+  Result.FTypeAhead := FTypeAhead;
   SetLength(Result.FColumns, Count);
   for LIndex := 0 to Count - 1 do
   begin
@@ -205,6 +225,42 @@ end;
 function TNyxCollectionViewSpec.GetQuery: TNyxCollectionQuery;
 begin
   Result := FQuery.Copy;
+end;
+
+function TNyxCollectionViewSpec.GetTypeAhead: TNyxTypeAheadOptions;
+begin
+  Result := NyxTypeAhead;
+
+  if FHasTypeAhead then
+  begin
+    Result := FTypeAhead;
+  end;
+end;
+
+function TNyxCollectionViewSpec.TypeAhead(
+  const APolicy: TNyxTypeAheadOptions): TNyxCollectionViewSpec;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxCollection.Create('Create a collection view before choosing typeahead');
+  end;
+  APolicy.Validate;
+  Result := Copy;
+  Result.FTypeAhead := APolicy;
+  Result.FHasTypeAhead := True;
+end;
+
+function TNyxCollectionViewSpec.UseDefaultTypeAhead: TNyxCollectionViewSpec;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxCollection.Create('Create a collection view before restoring default typeahead');
+  end;
+  Result := Copy;
+  Result.FHasTypeAhead := False;
+  Result.FTypeAhead := Default(TNyxTypeAheadOptions);
 end;
 
 function TNyxCollectionViewSpec.Query(const APolicy: TNyxCollectionQuery): TNyxCollectionViewSpec;
@@ -328,13 +384,18 @@ begin
   if not FDefined then
   begin
 
-    if (Count <> 0) or (FParent <> '') or FQuery.Defined then
+    if (Count <> 0) or (FParent <> '') or FQuery.Defined or FHasTypeAhead then
     begin
       raise ENyxCollection.Create('Absent collection view contains a descriptor');
     end;
     Exit;
   end;
   LReference := NyxCollection(FKey.Name);
+
+  if FHasTypeAhead then
+  begin
+    FTypeAhead.Validate;
+  end;
 
   if (Ord(FSelectionMode) < Ord(Low(TNyxSelectionMode))) or
     (Ord(FSelectionMode) > Ord(High(TNyxSelectionMode))) then
@@ -434,6 +495,24 @@ begin
       NyxField('parent', NyxData(FParent)), NyxField('columns', NyxArray(LColumns)),
       NyxField('selection', NyxData(LSelection)), NyxField('query', FQuery.ToData)]);
   end;
+
+  if FHasTypeAhead then
+  begin
+    { Version four is explicit even for a default-valued authored choice.
+      Earlier descriptors remain byte-compatible when no policy is declared.
+      Query is present and may be null, preserving one exact complete shape. }
+    LSelection := 'single';
+
+    if FSelectionMode = nsmMultiple then
+    begin
+      LSelection := 'multiple';
+    end;
+    Result := NyxObject([NyxField('version', NyxData(4)),
+      NyxField('key', NyxData(FKey.Name)), NyxField('scope', NyxData(LScope)),
+      NyxField('parent', NyxData(FParent)), NyxField('columns', NyxArray(LColumns)),
+      NyxField('selection', NyxData(LSelection)), NyxField('query', FQuery.ToData),
+      NyxField('typeAhead', FTypeAhead.ToData)]);
+  end;
 end;
 
 class function TNyxCollectionViewSpec.FromData(
@@ -458,17 +537,18 @@ begin
   if (AData.Kind <> ndObject) or
     not (((AData.Count = 5) and (AData.Field('version').AsInteger = 1)) or
       ((AData.Count = 6) and (AData.Field('version').AsInteger = 2)) or
-      ((AData.Count = 7) and (AData.Field('version').AsInteger = 3))) then
+      ((AData.Count = 7) and (AData.Field('version').AsInteger = 3)) or
+      ((AData.Count = 8) and (AData.Field('version').AsInteger = 4))) then
   begin
     raise ENyxCollection.Create('Unsupported collection view descriptor');
   end;
   Result := NyxCollectionView(NyxCollection(AData.Field('key').AsText));
 
-  if AData.Field('version').AsInteger = 3 then
+  if AData.Field('version').AsInteger in [3, 4] then
   begin
     Result := Result.Query(TNyxCollectionQuery.FromData(AData.Field('query')));
 
-    if not Result.QueryPolicy.Defined then
+    if (AData.Field('version').AsInteger = 3) and not Result.QueryPolicy.Defined then
     begin
       raise ENyxCollection.Create('Version-3 collection views require a nonempty query');
     end;
@@ -481,6 +561,11 @@ begin
     begin
       raise ENyxCollection.Create('Unknown collection selection mode');
     end;
+  end;
+
+  if AData.Field('version').AsInteger = 4 then
+  begin
+    Result := Result.TypeAhead(TNyxTypeAheadOptions.FromData(AData.Field('typeAhead')));
   end;
 
   if AData.Field('version').AsInteger = 2 then

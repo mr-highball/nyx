@@ -410,7 +410,39 @@ license and Pascal regeneration path are described [here](../data/unicode/README
 The engine bounds transient state to 64 typed scalars. Search streams only the
 required label prefix; controls still materialize their complete dataset.
 
-Runtime policy uses an immutable fluent value:
+The same immutable fluent value can be authored on a saved list/tree binding:
+
+```pascal
+LDestinations.Binds
+  .Collection(
+    NyxCollectionView(NyxCollection('destinations'))
+      .Column(NyxTextField('title'), 'Destination')
+      .TypeAhead(NyxTypeAhead
+        .Enabled(True)
+        .WindowMilliseconds(800)
+        .Match(ntmFolded)))
+  .Done;
+```
+
+Import `nyx.typeahead` when authoring by hand; generated units include it when
+needed, including applications without menus. `TypeAhead` copies the binding's
+columns, query, selection and scope. `UseDefaultTypeAhead` removes its explicit
+choice and returns to the library default. Both parameterless Pascal spellings
+reconstruct through the source workspace. An explicit saved default differs
+from an absent choice. Policy getters and fluent copies own only scalar values.
+
+An explicit policy uses the strict version-four collection-binding descriptor:
+eight required members, including a nullable query and a four-member version-one
+typeahead value. Unknown versions, choices, extra/missing/duplicate fields and
+wrong scalar families refuse. Bindings without an explicit policy keep their
+exact version-one/two/three wire shape. Document clone/persistence and generated
+Pascal preserve the choice; a source Apply/Undo/Redo owns one exact design/source
+pair. Invalid source retains the accepted pair and editable draft with a location.
+Tables refuse declared typeahead during document/live-view admission. This
+contract covers bound lists/trees, not literal items or grid cell search.
+
+Each ordinary browser/native mount initializes an independent engine from its
+accepted binding. Runtime policy can independently override that engine:
 
 ```pascal
 uses nyx.typeahead;
@@ -427,8 +459,11 @@ borrows the pure label reader only during search. Retained mount handles report
 disconnected after unmount and refuse configuration. Prefix/focus/time never
 enter saved documents, stores or Undo history. Dataset revisions, navigation,
 effective interaction changes and external model cursor changes reset the buffer;
-selection refresh alone preserves it. Persisted/Inspector policy authoring is
-still an open Studio capability, rather than a new unvalidated wire field.
+selection refresh alone preserves it. Unrelated retained refreshes keep runtime
+overrides; a changed saved policy refuses retained reuse, and a full remount
+restores the newly authored choice. Ordinary Inspector column/scope/parent edits
+retain the saved policy. Dedicated Inspector policy controls and bounded semantic
+policy inspection/editing remain open Studio workflows.
 
 Control/Meta shortcuts, Alt/AltGr text, IME composition, cell/label editors and
 consumed key callbacks retain their host ownership. Space keeps its existing
@@ -460,6 +495,14 @@ at the fresh exact revision with a unique operation ID. Export accepted
 semantic export. Serve the resulting browser fixture through an already-owned
 static host, and qualify it using the Pascal browser capture/input harness.
 Discard only the owned review at its exact current revision when finished.
+
+Saved-policy qualification uses `tools/build.ps1 -Target typeahead-policy` with
+that same exported seed, then explicit local typed enrichment. The maintained
+target checks wire/source/history and actual Win32 input, executes an independently
+compiled exact emitted builder, checks wrong-family rejection on both compilers,
+and compiles both Studios, the browser consumer and source worker. It starts no
+listener, launches no browser and edits no active project. Current browser
+execution and observing deployment remain required; compilation is not parity.
 
 ## Incremental value refresh
 

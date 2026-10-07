@@ -513,6 +513,14 @@ begin
   end;
   Result := NyxCollectionView(ASpec.Key).Scoped(ASpec.Scope)
     .Selection(ASpec.SelectionMode).Query(ASpec.QueryPolicy);
+  { Column/parent/scope edits reconstruct the ordered binding. Retain an exact
+    saved search choice as well; an unrelated Inspector action must not silently
+    restore the library default or lose an explicitly disabled policy. }
+
+  if ASpec.HasTypeAhead then
+  begin
+    Result := Result.TypeAhead(ASpec.TypeAheadPolicy);
+  end;
 
   if (AIntent.Action <> scaParent) and (ASpec.ParentField <> '') then
   begin

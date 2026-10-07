@@ -400,6 +400,11 @@ begin
   begin
     raise ENyxCollection.Create('Unknown collection projection');
   end;
+
+  if ASpec.HasTypeAhead and (AProjection = cpTable) then
+  begin
+    raise ENyxCollection.Create('Authored typeahead requires a list or tree projection');
+  end;
   FStore := AStore;
   FSpec := ASpec.Copy;
   FProjection := AProjection;
@@ -467,6 +472,13 @@ begin
     (Ord(AProjection) > Ord(High(TNyxCollectionProjection))) then
   begin
     raise ENyxCollection.Create('Saved collection view requires a binding and projection');
+  end;
+
+  if ASpec.HasTypeAhead and (AProjection = cpTable) then
+  begin
+    { Shared document admission runs before target mounts are created. Reject
+      an unsupported authored policy here as well as in live view construction. }
+    raise ENyxCollection.Create('Authored typeahead requires a list or tree projection');
   end;
   LValidator := TView.CreateValidator(ASpec, AProjection);
   try

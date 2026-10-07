@@ -26,6 +26,20 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   time pickers. Full picker/component criteria retain this task's ownership;
   the shared NS-1 prerequisite creates no extra completion credit.
 
+## Saved list/tree search prerequisite — 2026-10-07
+
+Original input/data criteria 1/3 now have typed saved typeahead with persistence,
+crafted source/history and ordinary browser/native mount initialization. Checked
+shared/actual Win32 qualification passes 133 (67 retained + 66 new); exact emitted
+execution passes six, leak-free. Both Studios/browser consumers compile only.
+The authenticated seed is explicitly enriched locally. See
+[the packet](../WORK.md#current-return-path-saved-listtree-typeahead--2026-10-07).
+
+No component/full criterion closes or historical count is invented. Renderer
+alone owns 15→16. End this boundary; browser/Inspector/semantic workflows, advanced
+compound breadth/style, large-data budgets, full parity and observing delivery
+retain the original requirements.
+
 ## Numeric control prerequisite — 2026-10-07
 
 Original criteria 1/3 now include specialized fluent Number sliders, full signed

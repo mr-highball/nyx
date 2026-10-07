@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -198,7 +198,8 @@ function Invoke-NyxCompiler([string]$Executable, [string[]]$Arguments) {
   }
 }
 
-function Test-NyxCompilerTypes([string]$Executable, [string[]]$Arguments) {
+function Test-NyxCompilerTypes([string]$Executable, [string[]]$Arguments,
+  [string[]]$Cases = @()) {
   # These are Pascal compiler fixtures, not a shell implementation of typing.
   # Require the intended type diagnostic as well as failure: a missing unit or
   # tool must never be mistaken for successful rejection of an invalid argument.
@@ -269,10 +270,15 @@ function Test-NyxCompilerTypes([string]$Executable, [string[]]$Arguments) {
     collection_view_field = 'TNyx(Text|Boolean|Integer|Number)FieldRef'
     collection_view_scope = 'TNyxCollectionScope'
     collection_binding = 'TNyxCollectionViewSpec'
+    typeahead_policy = 'TNyxTypeAheadOptions'
     # Overload diagnostics can point at the final numeric field overload.
     collection_cell_mode = 'TNyxCollectionCellMode|TNyxNumberFieldRef'
   }
   foreach ($nyxTypeCase in $nyxTypeCases.Keys) {
+
+    if ($Cases.Count -gt 0 -and $nyxTypeCase -notin $Cases) {
+      continue
+    }
     $nyxCompilerOutput = & $Executable @Arguments "tests/compile_fail/nyx_invalid_$nyxTypeCase.lpr" 2>&1
     $nyxCompilerExit = $LASTEXITCODE
     $nyxCompilerText = $nyxCompilerOutput -join [Environment]::NewLine
@@ -2028,6 +2034,67 @@ try {
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxConfirmationBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/confirmation.html') -Destination $nyxConfirmationBrowser
     Write-Host 'Confirmation consumer staged; execute on an existing admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'typeahead-policy') {
+    # Pascal owns saved-policy admission, history and actual adapter checks.
+    # Reuse the unchanged exported semantic seed and enrich its typed bindings
+    # locally. This target starts no listener and publishes no active project.
+    $nyxPolicyRoot = Join-Path $nyxRoot 'build/typeahead-policy/maintained'
+    $nyxPolicyNative = Join-Path $nyxPolicyRoot 'native'
+    $nyxPolicyGenerated = Join-Path $nyxPolicyRoot 'generated'
+    $nyxPolicyReplay = Join-Path $nyxPolicyRoot 'replay'
+    $nyxPolicySource = [IO.Path]::GetFullPath($TypeAheadSourceDirectory)
+    $nyxPolicyBrowser = Join-Path $nyxPolicyRoot 'browser'
+
+    if ($BrowserOutput) { $nyxPolicyBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxPolicySource 'nyx.generated.view.pas'))) {
+      throw 'Supply the exact exported typeahead review through TypeAheadSourceDirectory'
+    }
+    New-Item -ItemType Directory -Force $nyxPolicyNative, $nyxPolicyGenerated,
+      $nyxPolicyReplay, $nyxPolicyBrowser | Out-Null
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxPolicyPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxPolicyUnits = @('-Fusrc', '-Futests', '-Fustudio', "-Fu$nyxPolicySource")
+    $nyxPolicyChecks = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh')
+    $nyxPolicyLcl = @("-Fu$nyxLazarus/lcl/units/$nyxPolicyPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxPolicyPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxPolicyPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxPolicyPlatform")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxPolicyChecks + $nyxPolicyUnits + $nyxPolicyLcl +
+      @('-dNYX_SAVED_TYPEAHEAD', "-FU$nyxPolicyNative", "-FE$nyxPolicyNative",
+        'tests/nyx_typeahead_tests.lpr'))
+    $nyxPolicyReviewArgs = @((Join-Path $nyxPolicyRoot 'english-native.png'), $nyxPolicyGenerated)
+    & (Join-Path $nyxPolicyNative 'nyx_typeahead_tests.exe') @nyxPolicyReviewArgs
+
+    if ($LASTEXITCODE -ne 0) { throw 'Saved typeahead control/source/history checks failed' }
+    $nyxPolicyReplayFlags = $nyxPolicyChecks + $nyxPolicyUnits +
+      @("-Fu$nyxPolicyGenerated", "-FU$nyxPolicyReplay", "-FE$nyxPolicyReplay")
+    Invoke-NyxCompiler $nyxFpc ($nyxPolicyReplayFlags +
+      @('tests/nyx_typeahead_policy_generated.lpr'))
+    & (Join-Path $nyxPolicyReplay 'nyx_typeahead_policy_generated.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Exact emitted saved-policy reconstruction failed' }
+    Test-NyxCompilerTypes $nyxFpc $nyxPolicyReplayFlags @('typeahead_policy')
+    Invoke-NyxCompiler $nyxLclFpc ($nyxPolicyChecks + $nyxPolicyUnits + $nyxPolicyLcl +
+      @("-FU$nyxPolicyNative", "-FE$nyxPolicyNative", 'studio/nyx_studio_native.lpr'))
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxPolicyBrowserFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js') +
+      $nyxPolicyUnits + @("-Fu$nyxPolicyGenerated", "-FE$nyxPolicyBrowser")
+    Invoke-NyxCompiler $nyxPas2js ($nyxPolicyBrowserFlags +
+      @('-dNYX_SAVED_TYPEAHEAD', 'tests/nyx_typeahead_tests.lpr'))
+    Invoke-NyxCompiler $nyxPas2js ($nyxPolicyBrowserFlags +
+      @('tests/nyx_typeahead_policy_generated.lpr'))
+    Test-NyxCompilerTypes $nyxPas2js $nyxPolicyBrowserFlags @('typeahead_policy')
+    Invoke-NyxCompiler $nyxPas2js ($nyxPolicyBrowserFlags + @('studio/nyx_studio.lpr'))
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxPolicyBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/typeahead.html') -Destination $nyxPolicyBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/typeahead-policy.html') -Destination $nyxPolicyBrowser
+    Write-Host 'Saved typeahead qualified natively; browser consumers/Studios compile only.'
     exit 0
   }
 

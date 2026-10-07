@@ -44,7 +44,19 @@ remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
-Latest authoring integration (2026-10-07): existing recipe rows now supply local
+Latest saved-search prerequisite (2026-10-07): typed collection bindings retain
+typeahead through versioned persistence, crafted source/history and ordinary
+browser/native mount initialization. Overrides stay local; Inspector reconstruction
+preserves choices. Checked native/shared qualification passes 133 (67 existing +
+66 new), exact compiled execution six and core/composition regression 30/1795,
+leak-free. Both Studios/browser counterparts/worker compile with zero owned warnings.
+No full criterion closes: renderer alone advances 15→16; workflow/authoring/codegen/
+delivery stay 19/34/28/2. End this boundary; current browser, semantic/Inspector
+policy authoring, full component/parity/visual/budget and observing gates remain.
+See [the original owner](NS-2_lcl-renderer_01.md) and
+[current evidence](../WORK.md#current-return-path-saved-listtree-typeahead--2026-10-07).
+
+Previous authoring integration (2026-10-07): existing recipe rows now supply local
 Edit prefill, ordered scope replacement/collision refusal and copied proposal
 retention through source/panel/compact transitions on both Studio controllers.
 Checked shared/actual Win32 Studio checks pass 50, exact accepted source execution

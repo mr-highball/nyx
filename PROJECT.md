@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Saved list/tree typeahead now travels through typed collection bindings,
+versioned persistence, crafted source/history and both ordinary mount adapters.
+Runtime overrides remain local; Inspector edits retain saved choices. Checked
+shared/actual Win32 qualification passes 133 (67 retained + 66 new), exact compiled
+builder comparison six, and core/composition regression 30/1795, leak-free.
+Both Studios/browser counterparts/worker compile with zero owned warnings.
+Current browser execution, Inspector policy controls, bounded MCP policy context/
+editing and observing rollout remain open. See
+[the packet](WORK.md#current-return-path-saved-listtree-typeahead--2026-10-07).
+
 The public recipe form now edits an existing choice and retains its copied
 proposal through ordinary Studio source/panel/compact transitions on both host
 controllers. Scope replacement preserves order and refuses collisions; context

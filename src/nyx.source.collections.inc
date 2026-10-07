@@ -102,7 +102,39 @@ begin
       end;
       LMethod := FTokens[FCursor].Text;
       Inc(FCursor);
-      LArgs := Arguments;
+      { Pascal permits this parameterless reset with or without parentheses.
+        Other methods keep their ordinary typed argument grammar. }
+
+      if SameText(LMethod, 'UseDefaultTypeAhead') and not At('(') then
+      begin
+        LArgs := nil;
+      end
+      else
+      begin
+        LArgs := Arguments;
+      end;
+
+      if SameText(LMethod, 'TypeAhead') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkTypeAheadOptions) then
+        begin
+          Fail('TypeAhead requires a typed NyxTypeAhead policy');
+        end;
+        Result.CollectionView := Result.CollectionView.TypeAhead(LArgs[0].TypeAheadOptions);
+        Continue;
+      end;
+
+      if SameText(LMethod, 'UseDefaultTypeAhead') then
+      begin
+
+        if Length(LArgs) <> 0 then
+        begin
+          Fail('UseDefaultTypeAhead takes no arguments');
+        end;
+        Result.CollectionView := Result.CollectionView.UseDefaultTypeAhead;
+        Continue;
+      end;
 
       if SameText(LMethod, 'Query') then
       begin

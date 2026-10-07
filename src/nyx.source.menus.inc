@@ -161,7 +161,19 @@ begin
           else if LMethod = 'windowmilliseconds' then
           begin
             Require(1, vkInteger);
-            Result.TypeAheadOptions := Result.TypeAheadOptions.WindowMilliseconds(IntegerAt(0));
+            { Keep the public builder as the range authority. Its refusal must
+              carry an ordinary source location, so Studio can retain the draft
+              and navigate the invalid timing rather than report an unlocated
+              argument exception. This also covers saved collection policies. }
+            try
+              Result.TypeAheadOptions :=
+                Result.TypeAheadOptions.WindowMilliseconds(IntegerAt(0));
+            except
+              on LException: EArgumentException do
+              begin
+                Fail(LException.Message);
+              end;
+            end;
           end
           else if LMethod = 'match' then
           begin

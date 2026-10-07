@@ -93,6 +93,7 @@
   const
     CFields: array[TNyxStateKind] of TNyxText =
       ('NyxTextField', 'NyxBooleanField', 'NyxIntegerField', 'NyxNumberField');
+    CMatches: array[TNyxTypeAheadMatch] of TNyxText = ('ntmFolded', 'ntmExact');
   var
     LView: TNyxCollectionViewSpec;
     LColumn: TNyxCollectionColumn;
@@ -141,6 +142,23 @@
     if LView.SelectionMode = nsmMultiple then
     begin
       LLines.Add('          .Selection(nsmMultiple)');
+    end;
+
+    if LView.HasTypeAhead then
+    begin
+      { Saved behavior uses the same public fluent value as runtime authoring.
+        No wire text, search prefix or timer state enters generated Pascal. }
+      LLine := 'True';
+
+      if not LView.TypeAheadPolicy.IsEnabled then
+      begin
+        LLine := 'False';
+      end;
+      LLines.Add('          .TypeAhead(NyxTypeAhead');
+      LLines.Add('            .Enabled(' + LLine + ')');
+      LLines.Add('            .WindowMilliseconds(' +
+        IntToStr(LView.TypeAheadPolicy.WindowMS) + ')');
+      LLines.Add('            .Match(' + CMatches[LView.TypeAheadPolicy.MatchMode] + '))');
     end;
     LQuery := LView.QueryPolicy;
 

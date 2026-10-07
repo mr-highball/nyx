@@ -7,6 +7,130 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Latest user steering: mobile canvas space recheck — 2026-10-07
+
+The repeated phone capture shows the earlier stacked chrome. Follow-up inspection
+finds the requested blend already implemented and delivered: compact Actions,
+collapsed Review details, the public touch/keyboard details divider, optional
+placement Tools and canvas Expand/Restore. Shared typed width/height conditions
+include short hosts; platform overrides and named presentations retain the
+portable contract. Allocation does not shrink authored application text.
+
+This turn's direct authenticated `nyx_session` reads revision 2 without changing
+the active document. The fresh read-only guard passes all fifteen exact services,
+nine complete project/source/draft/history/navigation pairs, the full checkpoint,
+229 sealed LAN files, intended bindings and HTTP-served asset hashes. Evidence:
+`build/mobile-followup-current/preservation.log`. Re-inspected retained
+`build/mobile-current-check/phone/` captures and its existing 21-check browser
+journey measure 396/640 px (62%) normally and 587/640 px (92%) expanded. These
+are earlier emulated-browser observations, not fresh browser execution or
+physical-phone qualification. Reloading the existing LAN page exposes the served
+controls; no service replacement, duplicate implementation or new acceptance
+credit is warranted. The unfinished saved-typeahead source edits below remain
+intact and unqualified; this mobile check neither completes nor publishes them.
+
+## Current return path: saved list/tree typeahead — 2026-10-07
+
+The immediately preceding mobile follow-up is **no progress** toward the full
+goal: it revalidated an unchanged delivered layout/payload and supplied review
+guidance. Its fresh guard/MCP read does not add acceptance credit. This turn
+follows the available saved-policy action instead of repeating that observation.
+
+The previous turn is **progress**: checkpoint `629a9f8` adds actual existing-row
+recipe revision/retention, passes 50 checked native/shared and five exact source
+execution checks, and is exact on the remote branch with a clean worktree.
+No full criterion closes. Known workflow/authoring/renderer/codegen/delivery
+no-closure counts are 19/34/15/28/2. Stop recipe-form fixture expansion. Reassessment
+of remaining outcomes found a concrete original component criteria 1/3 prerequisite:
+bound list/tree typeahead has qualified runtime configuration, but its options
+cannot be owned by the saved collection binding or reconstructed from generated
+Pascal. The current workflow owner records that exact gap. New-backend/browser
+launch and rollout remain gated; no equivalent retry is authorized by this packet.
+
+Preregistered deliverable: extend the existing immutable `TNyxCollectionViewSpec`
+with a fluent typed TypeAhead choice/default reset, strict version-four binding
+data, crafted generation and the existing typed source-reader grammar. Versions
+one/two/three retain their exact default wire. Each ordinary target mount starts
+its independent runtime engine from the copied accepted binding. Buffers, focus,
+time and runtime overrides remain local; tables refuse unsupported declared
+typeahead rather than silently dropping it. Preserve query/selection/columns,
+instance scope, exact references, ownership and atomic candidate refusal.
+
+Evidence/stop: use the unchanged authenticated English typeahead export, with
+explicit local typed enrichment only. Qualify descriptor/version/refusal/copy,
+persistence, paired source admission/history, exact generated compilation and
+execution, and actual native list/tree input including declared disable/exact
+matching, runtime override and remount. Compile matching browser controls and
+both Studios; compile is not browser execution. Reuse the existing runtime's
+applicable evidence; repeat only changed boundaries. Preserve all fifteen exact
+services, nine pairs and frozen LAN files. Fixed implementation budget: two
+integration/repair passes at this saved-policy boundary, then stop/reassess any
+remaining failure. End after the integrated source/runtime contract; do not add
+another local inspector form as HTTP/observing acceptance. The renderer prerequisite
+has one credit owner; complete component/parity/authoring/workflow gates stay open.
+
+The two initial integration passes reached concrete refusals: a qualification
+copy attempted a duplicate column (the existing admission correctly refused),
+then an invalid timing escaped the reused typeahead grammar as an unlocated
+argument exception. Both traces are retained and leak-free. Reassessment changes
+the next action to the identified source-diagnostic prerequisite: translate only
+the public timing builder's argument refusal into the existing located source
+failure. Keep its public range authority. Correct the duplicate-column fixture,
+use the configured pas2js compiler's quoted argument array, then finish the
+already declared consumer/source checks without expanding the fixture scope.
+
+Integrated result: typed `TypeAhead` / `UseDefaultTypeAhead`, copied scalar
+options, strict inner version-four bindings and version-one policy values feed
+both ordinary target mounts. Absence retains exact versions one/two/three;
+explicit defaults stay distinct. Tables refuse unsupported authored behavior.
+Crafted generation uses specialized references and Boolean/Integer/enum choices.
+The reused reader admits both reset spellings and locates invalid timing while
+retaining the accepted pair and draft. Ordinary Inspector reconstruction retains
+the policy when editing columns/scope/parents. An exact compiler failure exposed
+the missing search import for applications without menus; preorder import
+detection fixes it while retaining unconfigured applications' source shape.
+
+Maintained `tools/build.ps1 -Target typeahead-policy` passes **133** checked
+shared/actual Win32 assertions (**67** retained runtime + **66** new saved-policy
+checks), plus **six** independently compiled exact-builder assertions, leak-free.
+Stages are not independent feature totals. Native input covers disabled/exact
+defaults, override/refusal, unchanged-binding refresh, changed-policy refusal,
+remount/disconnection and unchanged document defaults. Shared checks cover strict
+wire/copy/refusal, dedicated supplementary caption retention, clone/persistence,
+Inspector policy retention and paired source Apply/Undo/Redo with located refusal.
+The separately compiled builder is compared with the complete local candidate.
+Both compilers reject a raw-string policy with the intended type error. Both
+Studios, browser controls/compiled builder and independent source worker compile
+with **zero owned warnings**; seven installed pas2js `Classes` warnings remain
+visible per compile, without dependency edits or suppression. Core/composition
+regression passes **30/1795**, leak-free.
+
+Private evidence: `build/typeahead-policy/maintained-current.log`,
+`maintained/generated/nyx.generated.typeahead.pas`, staged `maintained/browser/`,
+`core/build-current.log`, `core/run-current.log` and inspected English native PNG.
+The unchanged authenticated seed stays SHA256
+`CF3C1136676D7DCB023F424E329DBC1F940F2D52B4EDFC0B69296743578A83DF`.
+New choices are local typed enrichment, not frozen-server admission. Initial
+duplicate-column/unlocated-timing traces and missing-import failure remain
+retained. No listener/browser launch, rollout or active project mutation occurs.
+
+No original full criterion closes. Renderer owns this packet once: no-closure
+**15→16**; workflow/authoring/codegen/delivery stay **19/34/28/2**. Browser execution,
+hardware/IME/accessibility, other widgetsets, production budgets, full component
+breadth/visual/parity and observing delivery stay open. End this saved-policy
+boundary. Next return to the original semantic workflow/authoring requirements:
+bounded policy inspection/editing is still missing from the running backend's
+collection context. Current-source grouped bind shares the new decoder but has
+no authenticated current-backend/observing qualification. Keep these gaps with
+the existing workflow owner rather than substituting another local form.
+
+The final read-only guard (`build/typeahead-policy/preservation-final.log`,
+23:39:12Z) verifies all fifteen service identities, nine complete accepted/source/
+draft/history/navigation pairs, the exact 147033-byte checkpoint, all 229 frozen
+LAN files and intended bindings/HTTP hashes. No process or release changes.
+The authorized remote/clean-worktree receipt will be stored under ignored
+`build/typeahead-policy/remote-checkpoint.json` after checkpoint/push.
+
 ## Current return path: revising recipe choices — 2026-10-07
 
 The previous turn is **progress**: `f9551cc` is exact on the remote branch with

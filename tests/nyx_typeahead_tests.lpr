@@ -31,6 +31,9 @@ uses
   nyx.types, nyx.model, nyx.controls, nyx.collections,
   nyx.collections.view, nyx.collections.mount, nyx.collections.selection,
   nyx.behavior, nyx.events, nyx.scheduler, nyx.generated.view,
+  {$ifdef NYX_SAVED_TYPEAHEAD}
+  nyx.codec, nyx.test.typeahead.policy,
+  {$endif}
   {$ifdef PAS2JS}JS, Web, nyx.render.browser, nyx.test.keyboard.browser;
   {$else}Classes, Interfaces, Forms, Controls, StdCtrls, ComCtrls, LCLType,
   Graphics, IntfGraphics, FPWritePNG, nyx.render.lcl;{$endif}
@@ -516,6 +519,139 @@ begin
   end;
 end;
 
+{$ifdef NYX_SAVED_TYPEAHEAD}
+procedure SavedPolicyControlChecks;
+var
+  LDocument: TNyxDocument;
+  LCandidate: TNyxDocument;
+  LRenderer: TRenderer;
+  LList: TControl;
+  LTree: TControl;
+  LListView: INyxCollectionView;
+  LTreeView: INyxCollectionView;
+  LListMount: INyxCollectionMount;
+  LTreeMount: INyxCollectionMount;
+  LOldMount: INyxCollectionMount;
+  LBefore: TNyxText;
+  LRejected: Boolean;
+  {$ifdef PAS2JS}LHost: TJSHTMLElement;
+  {$else}LHost: TForm;{$endif}
+
+  procedure MountedControls;
+  begin
+    LListView := LRenderer.CollectionView('destination-list');
+    LTreeView := LRenderer.CollectionView('destination-tree');
+    LListMount := LRenderer.CollectionMount('destination-list');
+    LTreeMount := LRenderer.CollectionMount('destination-tree');
+    {$ifdef PAS2JS}
+    LList := LRenderer.ElementFor('destination-list');
+    LTree := LRenderer.ElementFor('destination-tree');
+    {$else}
+    LList := TWinControl(LRenderer.ControlFor('destination-list'));
+    LTree := TWinControl(LRenderer.ControlFor('destination-tree'));
+    {$endif}
+  end;
+
+begin
+  { These are ordinary target controls using the same callback harness as the
+    established runtime review. No mock mount or manually injected spec reader
+    stands in for adapter initialization, retained refresh or disconnection. }
+  LDocument := CreateNyxSavedTypeAheadFixture;
+  LCandidate := nil;
+  LRenderer := TRenderer.Create;
+  {$ifdef PAS2JS}
+  LHost := TJSHTMLElement(document.createElement('main'));
+  document.body.appendChild(LHost);
+  {$else}
+  LHost := TForm.Create(nil);
+  LHost.SetBounds(50, 50, 740, 700);
+  LHost.Show;
+  {$endif}
+  try
+    LBefore := TNyxCodec.Encode(LDocument);
+    LRenderer.Render(LDocument, LDocument.Pages[0], LHost);
+    MountedControls;
+    LListMount.Select(Item('west'));
+    Press(LList, 's');
+    Check(LListView.Selection.Focus.ID = 'west',
+      'ordinary list begins with the saved disabled policy');
+    LTreeMount.Select(Item('west'));
+    Press(LTree, 'ArrowRight');
+    Check(Press(LTree, 'S') and (LTreeView.Selection.Focus.ID = 'seattle'),
+      'ordinary tree begins with saved exact-case search');
+    LTreeMount.Select(Item('west'));
+    Press(LTree, 's');
+    Check(LTreeView.Selection.Focus.ID = 'west',
+      'saved exact tree search refuses lowercase without changing selection');
+    LListMount.ConfigureTypeAhead(NyxTypeAhead);
+    Check(Press(LList, 's') and (LListView.Selection.Focus.ID = 'seattle'),
+      'runtime override independently enables the mounted list');
+    Check(not LListView.Spec.TypeAheadPolicy.IsEnabled and
+      (LListView.Spec.TypeAheadPolicy.WindowMS = 700),
+      'runtime override leaves the copied authored binding exact');
+    LRejected := False;
+    try
+      LListMount.ConfigureTypeAhead(Default(TNyxTypeAheadOptions));
+    except
+      on EArgumentException do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected and Press(LList, 'a') and
+      (LListView.Selection.Focus.ID = 'salem'),
+      'invalid runtime replacement retains the mounted override and prefix');
+    Check(TNyxCodec.Encode(LDocument) = LBefore,
+      'keys, selections and runtime policies do not edit saved defaults');
+    LCandidate := LDocument.Clone;
+    LCandidate.Find('review-heading').Configure.Text('Same policy, refreshed heading').Done;
+    Check(LRenderer.TryRefresh(LCandidate, LCandidate.Pages[0], False),
+      'unrelated chrome refresh accepts an unchanged binding');
+    Check(LListMount.Connected and
+      (LRenderer.CollectionMount('destination-list') = LListMount),
+      'ordinary refresh retains the mount and its runtime engine');
+    LListMount.Select(Item('west'));
+    Check(Press(LList, 's') and (LListView.Selection.Focus.ID = 'seattle'),
+      'retained refresh preserves the local override');
+    LOldMount := LListMount;
+    LRenderer.Render(LDocument, LDocument.Pages[0], LHost);
+    MountedControls;
+    Check(not LOldMount.Connected and LListMount.Connected,
+      'remount disconnects old handles and owns a fresh engine');
+    LListMount.Select(Item('west'));
+    Press(LList, 's');
+    Check(LListView.Selection.Focus.ID = 'west',
+      'remount restores the saved disabled policy');
+    LCandidate.Find('destination-list').SetCollectionView(
+      LCandidate.Find('destination-list').CollectionView.TypeAhead(NyxTypeAhead));
+    Check(not LRenderer.TryRefresh(LCandidate, LCandidate.Pages[0], False),
+      'a changed saved policy refuses retained refresh');
+    Check((LRenderer.CollectionMount('destination-list') = LListMount) and
+      LListMount.Connected, 'refused refresh leaves the accepted mount alive');
+    Press(LList, 's');
+    Check(LListView.Selection.Focus.ID = 'west',
+      'refused refresh leaves the accepted search policy untouched');
+    LRenderer.Render(LCandidate, LCandidate.Pages[0], LHost);
+    MountedControls;
+    LListMount.Select(Item('west'));
+    Check(Press(LList, 's') and (LListView.Selection.Focus.ID = 'seattle'),
+      'accepted full render applies the newly saved policy');
+    Check(TNyxCodec.Encode(LDocument) = LBefore,
+      'all control journeys retain the original saved document');
+  finally
+    LRenderer.Free;
+    LOldMount := nil;
+    LListMount := nil;
+    LTreeMount := nil;
+    LListView := nil;
+    LTreeView := nil;
+    {$ifdef PAS2JS}LHost.remove;{$else}LHost.Free;{$endif}
+    LCandidate.Free;
+    LDocument.Free;
+  end;
+end;
+{$endif}
+
 {$ifdef PAS2JS}
 procedure ShowReview;
 var
@@ -548,6 +684,14 @@ begin
     {$ifndef PAS2JS}Application.Initialize;{$endif}
     SearchChecks;
     ControlChecks;
+    {$ifdef NYX_SAVED_TYPEAHEAD}
+    {$ifdef PAS2JS}
+    Inc(GChecks, RunNyxTypeAheadPolicyTests);
+    {$else}
+    Inc(GChecks, RunNyxTypeAheadPolicyTests(TNyxText(ParamStr(2))));
+    {$endif}
+    SavedPolicyControlChecks;
+    {$endif}
     {$ifdef PAS2JS}
     ShowReview;
     window.addEventListener('pagehide', @RetireReview);

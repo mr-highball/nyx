@@ -779,6 +779,7 @@ var
   LStateVariables: array of TNyxText;
   LStateValue: TNyxStateValue;
   LKind: TNyxKind;
+  LHasSavedTypeAhead: Boolean;
 
   procedure EmitData(AData: TJSONData; const APrefix, ATail: TNyxText;
     AIndent: Integer);
@@ -1572,6 +1573,14 @@ var
     LSerial: Integer;
     LSerialText: TNyxText;
   begin
+    { Import the saved search contract even in applications without menus.
+      Reuse this existing preorder: definitions and overrides participate, and
+      unconfigured applications retain their original generated import list. }
+
+    if ANode.HasCollectionView and ANode.CollectionView.HasTypeAhead then
+    begin
+      LHasSavedTypeAhead := True;
+    end;
     { A local conveys both authored purpose and control type: project-description
       becomes LProjectDescriptionMemo. Type-bearing IDs such as welcome-card or
       memo-17 avoid repeating the type. Non-ASCII-only IDs use the control kind.
@@ -1850,6 +1859,7 @@ begin
   LLines := TNyxStrings.Create;
   LUsedVariables := TStringList.Create;
   try
+    LHasSavedTypeAhead := False;
     LUsedVariables.CaseSensitive := False;
     LUsedVariables.Sorted := True;
     SetLength(LStateVariables, ADocument.State.Count);
@@ -1892,6 +1902,10 @@ begin
       LLines.Add('  nyx.popover.types,');
       LLines.Add('  nyx.typeahead,');
       LLines.Add('  nyx.root.types,');
+    end
+    else if LHasSavedTypeAhead then
+    begin
+      LLines.Add('  nyx.typeahead,');
     end;
     LLines.Add('  nyx.containers,');
     LLines.Add('  nyx.editing,');

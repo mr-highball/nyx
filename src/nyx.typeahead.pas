@@ -26,14 +26,14 @@ unit nyx.typeahead;
 
 interface
 
-uses nyx.text;
+uses nyx.text, nyx.data;
 
 type
   { Exact preserves case; Folded uses Unicode 17 default full folding. Matching
     never normalizes, translates or modifies authored labels. }
   TNyxTypeAheadMatch = (ntmFolded, ntmExact);
 
-  { Immutable fluent runtime policy. Times are monotonic milliseconds. The
+  { Immutable fluent search policy. Times are monotonic milliseconds. The
     factory supplies a one-second window, Unicode folding and enabled search. }
   TNyxTypeAheadOptions = record
   private
@@ -50,6 +50,11 @@ type
     function Match(AValue: TNyxTypeAheadMatch): TNyxTypeAheadOptions;
     { Undefined records, invalid windows and enum ordinals refuse. }
     procedure Validate;
+    { Strict policy-only wire boundary. All four members are required; unknown
+      versions, choices, scalar families and extra members refuse. No search
+      prefix, timestamp, focus, label, control or receiver enters this data. }
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxTypeAheadOptions; static;
     property IsEnabled: Boolean read FEnabled;
     property WindowMS: Integer read FWindowMS;
     property MatchMode: TNyxTypeAheadMatch read FMatch;
@@ -127,6 +132,42 @@ begin
   Validate;
   Result := Self;
   Result.FEnabled := AValue;
+end;
+
+function TNyxTypeAheadOptions.ToData: TNyxDataValue;
+const
+  CMatches: array[TNyxTypeAheadMatch] of TNyxText = ('folded', 'exact');
+begin
+  Validate;
+  Result := NyxObject([NyxField('version', NyxData(1)),
+    NyxField('enabled', NyxData(FEnabled)), NyxField('windowMS', NyxData(FWindowMS)),
+    NyxField('match', NyxData(CMatches[FMatch]))]);
+end;
+
+class function TNyxTypeAheadOptions.FromData(
+  const AData: TNyxDataValue): TNyxTypeAheadOptions;
+var
+  LMatch: TNyxText;
+begin
+  AData.Validate;
+
+  if (AData.Kind <> ndObject) or (AData.Count <> 4) or
+    (AData.Field('version').AsInteger <> 1) then
+  begin
+    raise EArgumentException.Create('Unsupported typeahead policy descriptor');
+  end;
+  LMatch := AData.Field('match').AsText;
+  Result := NyxTypeAhead.Enabled(AData.Field('enabled').AsBoolean)
+    .WindowMilliseconds(AData.Field('windowMS').AsInteger);
+
+  if LMatch = 'exact' then
+  begin
+    Result := Result.Match(ntmExact);
+  end
+  else if LMatch <> 'folded' then
+  begin
+    raise EArgumentException.Create('Unknown typeahead match choice');
+  end;
 end;
 
 function TNyxTypeAheadOptions.WindowMilliseconds(AValue: Integer): TNyxTypeAheadOptions;

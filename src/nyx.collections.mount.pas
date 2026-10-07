@@ -165,7 +165,10 @@ begin
   end;
   FView := AView;
   FEnabled := True;
-  FTypeAhead := NewNyxTypeAhead(NyxTypeAhead);
+  { The view owns only immutable authored options. Each browser/native mount
+    starts a separate engine before activation; prefix/time/focus and later
+    ConfigureTypeAhead overrides never write back into the saved binding. }
+  FTypeAhead := NewNyxTypeAhead(AView.Spec.TypeAheadPolicy);
   FTypeAheadSnapshot := nil;
 
   FLastSnapshot := nil;
