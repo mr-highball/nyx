@@ -92,6 +92,14 @@ was retried through another route. The timeout cause remains unproven. Continue
 the original production component/virtualization/performance and application
 parity outcomes; richer source/event/review integration remains separate work.
 
+Remote checkpoint: the product and integrated evidence are committed locally.
+Three normal `hello-nyx` pushes returned GitHub's remote `Internal Server Error`;
+remote still reports `de949b1`. No force push or alternate credential/configuration
+was attempted. A verified incremental Git bundle and exact local/remote receipt
+are retained under ignored `build/combined-transactions/`; retry the ordinary push
+and verify matching OIDs when the remote accepts it. This is a pending checkpoint,
+not a completed remote save or a block on independent product work.
+
 ## Current return path: indexed structured-value reads — 2026-10-07
 
 Previous turn is progress at pushed `99c8efd`; authenticated bounded queries,
