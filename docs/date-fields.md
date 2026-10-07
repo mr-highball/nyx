@@ -65,9 +65,10 @@ window does not claim to implement that modal-dialog example.
 The maintained semantic recipe is
 [date-field-review.operations.json](../tests/date-field-review.operations.json).
 Compose it in an owned empty MCP review with exact expected revisions and one
-transaction, then export bounded accepted-source windows. The live MCP server
-cannot yet author typed date domains/bounds; that gap belongs to its existing
-workflow task. The physical fixture explicitly enriches the exact semantic seed
+transaction, then export bounded accepted-source windows. The protected older
+MCP service cannot yet author typed date domains/bounds. Current source provides
+the typed policy operations described below; observing deployment remains with
+the existing workflow task. The date-field physical fixture enriches the semantic seed
 using public Pascal contracts and a runtime binding. It does not pretend that
 the enriched design was admitted by the older running MCP service.
 
@@ -84,3 +85,55 @@ Checked Win32 passes 87, managed-source regression 33, with zero native/observer
 leaks; see WORK for exact artifacts and limits. Native capability remains Basic.
 Other widgetsets, DPI matrices, IME, hardware/assistive input,
 complete accessibility and advanced date-range behavior remain open.
+
+## Studio and semantic constraint authoring
+
+The ordinary Properties Inspector composes the public
+`NewNyxDateDomainEditor` from specialized Nyx Card, Date, Memo, Button and Label
+interfaces. It appears when the selected authored control or named-part override
+has an effective calendar domain. Bounds are inclusive; leave both empty for any
+date. Allowed dates use one canonical date per line; `(empty)` explicitly permits
+no date in a restricted list. Leave the list blank for unrestricted choices.
+
+Editing these controls changes only the mounted draft. Apply captures the exact
+owner and copied local/effective baseline, then uses Studio's ordinary isolated
+source queue to admit one paired design/Pascal Undo step. Invalid dates, duplicate
+choices, incomplete bounds, stale selection or a changed baseline refuse. A
+domain excluding an authored value or dependent state default also refuses;
+semantic callers can group dependent default changes with policy changes.
+Restore removes only the local value declaration and reveals inherited policy.
+It preserves named fields/events and is disabled when no local declaration exists.
+This differs from `NoValue`, which explicitly masks an inherited value contract.
+
+The typed shared command is usable without the editor:
+
+```pascal
+LSession.ApplyPatch(NyxValueDomainPatch([
+  NyxSetValueDomain(NyxControl('arrival'), NyxDateDomain
+    .Range(NyxDate(2026, 10, 1), NyxDate(2026, 10, 31))
+    .Choices([NyxDate(2026, 10, 6), NyxDate(2026, 10, 9), NyxNoDate]))]));
+```
+
+Use `nyx.studio.edits` for copied set/inherit commands and `nyx.dates.editor`
+for the reusable public editor. Other scalar domain families have specialized
+command overloads; the date editor deliberately handles calendar constraints.
+`Contract.InheritValue` removes just the local declaration. Generated source uses
+typed `NyxDateDomain.Range(...).Choices(...)`, rather than string property writes.
+Unchanged legacy accepted source retains its spelling during incremental edits;
+fresh generation emits typed date constructors throughout.
+
+Current-source MCP exposes opt-in `nyx_node` value-domain inspection and closed
+`value-domain-set` / `value-domain-inherit` operations in ordinary grouped
+transactions. See [the semantic guide](studio-agents.md#value-domains).
+The protected running endpoint retains its earlier schema; offline discovery,
+native controls and real browser workers do not establish an observing rollout.
+
+```powershell
+./tools/build.ps1 -Target date-policy -DatePolicySourceDirectory <MCP-exported-source-directory>
+```
+
+This target consumes the unchanged English semantic date seed, exercises actual
+native Studio controls and compiles/executes the newly accepted exact companion.
+It stages the browser consumer, real Pascal source worker and reconstruction
+with the matched RTL. Run the browser consumers on an existing admitted HTTP
+host; this target starts no listener and does not change a user project.

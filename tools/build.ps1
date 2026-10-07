@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'confirmation', 'date-fields', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'confirmation', 'date-fields', 'date-policy', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -56,6 +56,8 @@ param(
   # Exact semantic date companion. Typed bounds/state enrichment is explicitly
   # performed by the public Pascal fixture, never handwritten editor mutations.
   [string]$DateSourceDirectory = 'build/date-fields/companion',
+  # Unchanged English date seed exported with bounded semantic MCP reads.
+  [string]$DatePolicySourceDirectory = 'build/date-policy/source',
   # Full-catalog source is composed/exported by the Pascal semantic MCP consumer.
   [string]$CatalogFocusSourceDirectory = 'build/catalog-focus/source',
   # Property mutations consume an unchanged MCP-authored catalog/review pair.
@@ -1098,6 +1100,68 @@ try {
       "-Fu$nyxKeyboardSource", "-FE$nyxBrowserDir", 'tests/nyx_keyboard_host_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/keyboard-host.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'date-policy') {
+    # Pascal owns typed policy admission, actual controls, paired history and
+    # exact executed reconstruction. Orchestration starts no server/listener.
+    $nyxDatePolicyRoot = Join-Path $nyxRoot 'build/date-policy/maintained'
+    $nyxDatePolicySource = [IO.Path]::GetFullPath($DatePolicySourceDirectory)
+    $nyxDatePolicySeed = Join-Path $nyxDatePolicySource 'nyx.generated.view.pas'
+    $nyxDatePolicyNative = Join-Path $nyxDatePolicyRoot 'native'
+    $nyxDatePolicyResult = Join-Path $nyxDatePolicyRoot 'result'
+    $nyxDatePolicySchema = Join-Path $nyxDatePolicyRoot 'schema'
+    $nyxDatePolicyReplay = Join-Path $nyxDatePolicyRoot 'reconstruction'
+    $nyxDatePolicyWeb = Join-Path $nyxDatePolicyRoot 'web'
+
+    if (-not (Test-Path -LiteralPath $nyxDatePolicySeed -PathType Leaf)) {
+      throw 'Export the semantic date review first; see docs/date-fields.md'
+    }
+    New-Item -ItemType Directory -Force $nyxDatePolicyNative, $nyxDatePolicyResult,
+      $nyxDatePolicySchema, $nyxDatePolicyReplay, $nyxDatePolicyWeb | Out-Null
+    $nyxDatePolicyFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests')
+    Invoke-NyxCompiler $nyxFpc ($nyxDatePolicyFlags + @(
+      "-FU$nyxDatePolicySchema", "-FE$nyxDatePolicySchema", 'tests/nyx_date_policy_schema.lpr'))
+    & (Join-Path $nyxDatePolicySchema 'nyx_date_policy_schema.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Value-domain discovery schema checks failed' }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxDatePolicyPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc ($nyxDatePolicyFlags + @(
+      "-Fu$nyxDatePolicySource",
+      "-Fu$nyxLazarus/lcl/units/$nyxDatePolicyPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxDatePolicyPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxDatePolicyPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxDatePolicyPlatform",
+      "-FU$nyxDatePolicyNative", "-FE$nyxDatePolicyNative", 'tests/nyx_date_policy_controls.lpr'))
+    & (Join-Path $nyxDatePolicyNative 'nyx_date_policy_controls.exe') $nyxDatePolicySeed $nyxDatePolicyResult
+
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native Studio date-policy controls failed' }
+    Invoke-NyxCompiler $nyxFpc ($nyxDatePolicyFlags + @(
+      "-Fu$nyxDatePolicyResult", "-FU$nyxDatePolicyReplay", "-FE$nyxDatePolicyReplay",
+      'tests/nyx_date_policy_generated.lpr'))
+    & (Join-Path $nyxDatePolicyReplay 'nyx_date_policy_generated.exe') (Join-Path $nyxDatePolicyResult 'design.nyx.json')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Exact executed date-policy reconstruction failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxDatePolicyBrowserFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxDatePolicyWeb")
+    Invoke-NyxCompiler $nyxPas2js ($nyxDatePolicyBrowserFlags + @(
+      "-Fu$nyxDatePolicySource", 'tests/nyx_date_policy_controls.lpr'))
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxDatePolicyWeb", 'studio/nyx_source_worker.lpr')
+    Invoke-NyxCompiler $nyxPas2js ($nyxDatePolicyBrowserFlags + @(
+      "-Fu$nyxDatePolicyResult", 'tests/nyx_date_policy_generated.lpr'))
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxDatePolicyWeb 'rtl.js') -Force
+    Copy-Item -LiteralPath $nyxDatePolicySeed -Destination (Join-Path $nyxDatePolicyWeb 'seed.pas.txt') -Force
+    Copy-Item -LiteralPath (Join-Path $nyxDatePolicyResult 'design.nyx.json'),
+      (Join-Path $nyxRoot 'studio/web/date-policy-controls.html'),
+      (Join-Path $nyxRoot 'studio/web/date-policy-generated.html') -Destination $nyxDatePolicyWeb -Force
+    Write-Host 'Date-policy consumers staged; browser execution needs an existing admitted HTTP host.'
     exit 0
   }
 

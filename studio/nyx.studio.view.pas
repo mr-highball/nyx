@@ -1162,6 +1162,7 @@ begin
           AddNyxContentInspector(LRight, ASession);
         end;
         AddBindingsPanel(LRight, ASession, LSelectedProjection, AState);
+        AddNyxDateDomainInspector(LRight, ASession);
 
         if AState.BindingsVisible then
         begin

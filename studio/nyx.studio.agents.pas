@@ -79,6 +79,10 @@ type
     function EditorState(AAfter: Integer): TNyxDataValue;
     function Outline(const AArguments: TNyxDataValue): TNyxDataValue;
     function NodeDetails(const AArguments: TNyxDataValue): TNyxDataValue;
+    { One requested local/effective value domain, with bounded Unicode choice
+      windows. Realized projections are released before the response escapes. }
+    function ValueDomainDetails(ANode: TNyxNode;
+      const AArguments: TNyxDataValue): TNyxDataValue;
     { Paged reachable named paths from an independent effective projection. }
     function NamedParts(ANode: TNyxNode; AOffset, ALimit: Integer): TNyxDataValue;
     function Components(const AArguments: TNyxDataValue): TNyxDataValue;
@@ -756,7 +760,7 @@ var
   LText: TNyxText;
   LValue: TNyxDataValue;
 begin
-  NyxAgentFields(AArguments, '|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|content|contentOffset|contentLimit|');
+  NyxAgentFields(AArguments, '|id|offset|limit|events|eventOffset|eventLimit|registrationOffset|registrationLimit|routeOffset|routeLimit|keys|textOffset|textLimit|parts|partOffset|partLimit|content|contentOffset|contentLimit|valueDomain|domainScope|domainOffset|domainLimit|');
   LNode := FSession.Document.Find(TextArgument(AArguments, 'id', FSession.SelectedID));
 
   if LNode = nil then
@@ -1015,7 +1019,117 @@ begin
       NyxField('totalRules', NyxData(LContentTotal)),
       NyxField('offset', NyxData(LContentOffset)), NyxField('rules', NyxArray(LContentItems))]));
   end;
+
+  if NyxAgentHas(AArguments, 'valueDomain') and AArguments.Field('valueDomain').AsBoolean then
+  begin
+    SetLength(LFields, Length(LFields) + 1);
+    LFields[High(LFields)] := NyxField('valueDomain', ValueDomainDetails(LNode, AArguments));
+  end;
   Result := NyxObject(LFields);
+end;
+
+function TNyxAgentSession.ValueDomainDetails(ANode: TNyxNode;
+  const AArguments: TNyxDataValue): TNyxDataValue;
+var
+  LDomain: TNyxValueDomain;
+  LProjection: TNyxNode;
+  LContext: TNyxNode;
+  LScope: TNyxText;
+  LDeclared: Boolean;
+  LData: TNyxDataValue;
+  LChoices: TNyxDataValue;
+  LItems: array of TNyxDataValue;
+  LValue: TNyxDataValue;
+  LType: TNyxText;
+  LFormat: TNyxText;
+  LMinimum: TNyxDataValue;
+  LMaximum: TNyxDataValue;
+  LOffset: Integer;
+  LLimit: Integer;
+  LTextOffset: Integer;
+  LTextLimit: Integer;
+  LTotal: Integer;
+  LIndex: Integer;
+  LCount: Integer;
+begin
+  LDeclared := ANode.Contract.FindValue(LDomain);
+  LScope := TextArgument(AArguments, 'domainScope', 'effective');
+
+  if (LScope <> 'local') and (LScope <> 'effective') then
+  begin
+    raise ENyxContract.Create('Domain scope is local or effective');
+  end;
+
+  if LScope = 'effective' then
+  begin
+    LContext := RealizeNyxContext(FSession.Document, ANode, LProjection);
+    try
+      LDomain := NyxNodeValueDomain(LProjection).Copy;
+    finally
+      LContext.Free;
+    end;
+  end;
+  LOffset := IntegerArgument(AArguments, 'domainOffset', 0, 0, NyxMaximumDomainChoices);
+  LLimit := IntegerArgument(AArguments, 'domainLimit', 8, 1, 16);
+  LTextOffset := IntegerArgument(AArguments, 'textOffset', 0, 0, 1000000);
+  LTextLimit := IntegerArgument(AArguments, 'textLimit', 80, 1, 2048);
+  LData := LDomain.ToData;
+  LChoices := NyxArray([]);
+  LType := 'none';
+  LFormat := '';
+  LMinimum := NyxNull;
+  LMaximum := NyxNull;
+
+  if LDomain.Defined then
+  begin
+    LType := NyxStateKindName(LDomain.Kind);
+
+    if LDomain.CalendarDate then
+    begin
+      LFormat := 'date';
+    end;
+
+    if NyxAgentHas(LData, 'choices') then
+    begin
+      LChoices := LData.Field('choices');
+    end;
+
+    if NyxAgentHas(LData, 'min') then
+    begin
+      LMinimum := LData.Field('min');
+      LMaximum := LData.Field('max');
+    end;
+  end;
+  SetLength(LItems, LLimit);
+  LCount := 0;
+  for LIndex := LOffset to LChoices.Count - 1 do
+  begin
+
+    if LCount = LLimit then
+    begin
+      Break;
+    end;
+    LValue := LChoices.Item(LIndex);
+    LTotal := 0;
+
+    if LValue.Kind = ndText then
+    begin
+      LValue := NyxData(TextSpan(LValue.AsText, LTextOffset, LTextLimit, LTotal));
+    end;
+    LItems[LCount] := NyxObject([NyxField('index', NyxData(LIndex)),
+      NyxField('value', LValue), NyxField('textOffset', NyxData(LTextOffset)),
+      NyxField('totalScalars', NyxData(LTotal)), NyxField('truncated', NyxData(
+        (LValue.Kind = ndText) and ((LTextOffset > 0) or
+        (LTotal > LTextOffset + LTextLimit))))]);
+    Inc(LCount);
+  end;
+  SetLength(LItems, LCount);
+  Result := NyxObject([NyxField('scope', NyxData(LScope)),
+    NyxField('localDeclared', NyxData(LDeclared)), NyxField('defined', NyxData(LDomain.Defined)),
+    NyxField('type', NyxData(LType)), NyxField('format', NyxData(LFormat)),
+    NyxField('minimum', LMinimum), NyxField('maximum', LMaximum),
+    NyxField('totalChoices', NyxData(LChoices.Count)), NyxField('offset', NyxData(LOffset)),
+    NyxField('choices', NyxArray(LItems))]);
 end;
 
 function TNyxAgentSession.Components(const AArguments: TNyxDataValue): TNyxDataValue;

@@ -66,6 +66,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Ordinary Studio now composes a public typed date-constraint editor and shares
+value-only set/inherit commands with bounded semantic MCP policy queries. Current
+checked matched FPC native Studio passes 82; actual browser/real worker passes 75
+per desktop/exact-390 consumer. Exact compiled reconstruction passes 4 per target;
+managed-source regression 33, all native traces leak-free. A missing calendar import
+in retained source frames is corrected. Protected services/pairs/LAN stay unchanged;
+the older observing endpoint does not yet expose this policy schema. See
+[the packet](WORK.md#typed-date-constraints-in-studio-and-mcp--2026-10-06).
+
 Typed calendar fields now have a portable Gregorian/date-domain contract,
 specialized managed authoring and readable round-trippable source. Actual Win32
 calendar/edit/state/lifetime checks pass 87, with zero leaks; current managed-source

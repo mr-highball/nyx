@@ -180,6 +180,13 @@ type
     function EventAt(AIndex: Integer): TNyxEventContract;
     function FindEvent(ATrigger: TNyxTrigger; out AEvent: TNyxEventContract): Boolean;
     function NoValue: TNyxContract;
+    { Remove only the local value declaration, including an explicit NoValue
+      mask. Other named-field/event declarations retain exact order and values.
+      Missing declarations refuse; inheritance is distinct from NoValue. }
+    function InheritValue: TNyxContract;
+    { Immutable typed specification for shared editors and semantic admission.
+      Normal handwritten builders retain their specialized overloads below. }
+    function Value(const ADomain: TNyxValueDomain): TNyxContract; overload;
     function Signal(ATrigger: TNyxTrigger): TNyxContract;
     { Explicit descriptor/import boundary. Default generated source emits the
       typed factories; noncanonical admitted descriptors retain exact data here. }
@@ -1090,6 +1097,58 @@ end;
 function TNyxContract.NoValue: TNyxContract;
 begin
   Publish(ReplaceField(Snapshot, 'value', NyxNull));
+  Result := Self;
+end;
+
+function TNyxContract.InheritValue: TNyxContract;
+var
+  LData: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LCount: Integer;
+begin
+  LData := Snapshot;
+
+  if not HasField(LData, 'value') then
+  begin
+    raise ENyxContract.Create('There is no local value declaration to restore');
+  end;
+  SetLength(LFields, LData.Count - 1);
+  LCount := 0;
+  for LIndex := 0 to LData.Count - 1 do
+  begin
+
+    if LData.Key(LIndex) = 'value' then
+    begin
+      Continue;
+    end;
+    LFields[LCount] := NyxField(LData.Key(LIndex), LData.Field(LData.Key(LIndex)));
+    Inc(LCount);
+  end;
+
+  if LCount = 1 then
+  begin
+    { A version-only namespace carries no declaration. Remove it instead of
+      forcing generated authoring to emit an empty Metadata block. }
+    FExtensions.Remove(FKey);
+    FHasReadSnapshot := False;
+  end
+  else
+  begin
+    Publish(NyxObject(LFields));
+  end;
+  Result := Self;
+end;
+
+function TNyxContract.Value(const ADomain: TNyxValueDomain): TNyxContract;
+begin
+  ADomain.Validate;
+
+  if not ADomain.Defined then
+  begin
+    raise ENyxContract.Create('A value declaration requires a typed scalar domain');
+  end;
+  Publish(ReplaceField(Snapshot, 'value', ADomain.ToData));
   Result := Self;
 end;
 

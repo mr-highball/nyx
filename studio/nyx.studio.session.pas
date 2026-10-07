@@ -84,7 +84,7 @@ type
     sdaCanvasValue, sdaSetStateDefault, sdaCreateStateDefault,
     sdaRenameStateDefault, sdaRemoveStateDefault, sdaSetBinding, sdaInheritBinding,
     sdaEvent, sdaCollection, sdaPlacement, sdaResize, sdaPresentation, sdaPosition,
-    sdaContent);
+    sdaContent, sdaValueDomain);
   { Callback operations carry exact typed event/registration references. Removal
     includes the handler the user reviewed; IDs alone cannot authorize replacing
     a registration. Empty references belong only to add/policy intent. }
@@ -151,6 +151,10 @@ type
       Both fields contain values only, never the mutable authoring facade. }
     Content: TNyxContentEdit;
     ContentBaseline: TNyxText;
+    { Copied exact-owner policy and mounted local/effective baseline. The
+      independent processor refuses a changed policy before paired publication. }
+    ValueDomain: TNyxValueDomainEdit;
+    ValueDomainBaseline: TNyxText;
     { Immutable origin of a canvas capture. Queue admission uses this mounted
       session/load identity even when the caller retains intent before enqueue. }
     property CanvasContext: TNyxStudioCommandContext read FCanvasContext;
@@ -611,7 +615,8 @@ uses
   nyx.binding,
   nyx.composition,
   nyx.platform,
-  nyx.interaction;
+  nyx.interaction,
+  nyx.contract;
 
 type
   { UI publication borrows the session only inside its synchronous creator guard.

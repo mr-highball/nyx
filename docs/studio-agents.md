@@ -373,6 +373,51 @@ observer. Both maintained journeys pass 107 checks against the real compilers.
 Resource/lifetime checks use an explicitly owned Pascal
 compiler substitute; they do not establish target compilation or rendering.
 
+## Value domains
+
+Current source extends existing tools rather than adding a separate policy
+service. These capabilities remain staged until the protected observing release
+is updated; inspect actual discovery before using them on a running endpoint.
+
+Request `nyx_node` with `valueDomain: true` and `domainScope: "local"` or
+`"effective"` (default). The response includes `localDeclared`, `defined`, scalar
+`type`, `format`, exact inclusive `minimum`/`maximum` or null, `totalChoices`,
+`offset`, and bounded `choices`. Local absence differs from an explicit NoValue
+mask. `domainOffset` is 0..128; `domainLimit` is 1..16 (default 8). Text choices
+reuse `textOffset`/`textLimit` Unicode-scalar windows (default 80 for domains),
+with index, totalScalars and truncated metadata; numeric/Boolean choices keep
+their exact primitive type. Omission returns no domain context.
+
+Group policy changes with other related operations in one `nyx_transaction`,
+supplying the exact expected revision and unique retry identity:
+
+```json
+{
+  "op": "value-domain-set",
+  "id": "arrival",
+  "domain": {
+    "type": "text",
+    "format": "date",
+    "min": "2026-10-01",
+    "max": "2026-10-31",
+    "choices": ["2026-10-06", "2026-10-09", ""]
+  }
+}
+```
+
+This JSON is an explicit transport boundary; internal commands and generated
+Pascal use typed domain/date builders. Scalar types are text, Boolean, integer
+and number. Calendar format is canonical Gregorian date text or empty. Bounds
+are paired, ascending and inclusive; numeric bounds retain numeric types. Choices
+are unique, 1..128, exact and compatible with bounds. Unknown fields, impossible
+dates, wrong control families and incompatible defaults refuse the complete
+group without advancing history. Setting changes only the owner's local value
+contract, retaining fields/events/bindings/defaults. Group dependent value updates
+in the same candidate when needed. `{"op":"value-domain-inherit","id":"arrival"}`
+removes an existing local declaration; missing declarations refuse. Each authored
+reusable override remains independent. The ordinary Inspector uses the same typed
+command and paired source/history path. See [usage](date-fields.md#studio-and-semantic-constraint-authoring).
+
 ## Reusable components
 
 The source candidate adds four operations to `nyx_transaction`; the protected

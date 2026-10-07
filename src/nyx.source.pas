@@ -4619,6 +4619,11 @@ begin
     end;
     LPrefix := WithNyxControlImport(LPrefix);
     LPrefix := WithNyxImport(LPrefix, 'nyx.presentations');
+    { Older accepted frames predate typed calendar constructors. The generator's
+      stable public imports include their namespace; reconcile that dependency
+      before publishing a new managed body, while preserving authored helpers,
+      comments and import order through the existing admitted import boundary. }
+    LPrefix := WithNyxImport(LPrefix, 'nyx.dates');
 
     if ADocument.Collections.Count > 0 then
     begin

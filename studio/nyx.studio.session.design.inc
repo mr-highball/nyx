@@ -474,10 +474,10 @@ begin
       NyxField('position', LPosition)]);
   LVersion := 9;
 
-  if FEdit.Action = sdaContent then
+  if FEdit.Action in [sdaContent, sdaValueDomain] then
   begin
-    { Existing operations retain their deployed v9 shape. Only the appended
-      recipe operation needs the new envelope, so old helpers remain compatible. }
+    { Existing operations retain their deployed v9 shape. Appended recipe and
+      value-policy intents alone need new envelopes; old helpers stay compatible. }
     LVersion := 10;
     { Cache the method result before using it as an index. The installed pas2js
       compiler mis-emits an implicit parameterless record call inside brackets. }
@@ -487,9 +487,22 @@ begin
     begin
       LFields[LIndex] := NyxField(LEdit.Key(LIndex), LEdit.Field(LEdit.Key(LIndex)));
     end;
-    LFields[LCount] := NyxField('content', NyxObject([
-      NyxField('command', FEdit.Content.ToData),
-      NyxField('baseline', NyxData(FEdit.ContentBaseline))]));
+
+    if FEdit.Action = sdaValueDomain then
+    begin
+      { New policy commands alone use v11. Existing deployed envelopes retain
+        their exact shape; no absent policy payload is appended to other intents. }
+      LVersion := 11;
+      LFields[LCount] := NyxField('valueDomain', NyxObject([
+        NyxField('command', FEdit.ValueDomain.ToData),
+        NyxField('baseline', NyxData(FEdit.ValueDomainBaseline))]));
+    end
+    else
+    begin
+      LFields[LCount] := NyxField('content', NyxObject([
+        NyxField('command', FEdit.Content.ToData),
+        NyxField('baseline', NyxData(FEdit.ContentBaseline))]));
+    end;
     LEdit := NyxObject(LFields);
   end;
   Result := NyxObject([
@@ -554,6 +567,12 @@ begin
     Result := FEdit.Content.Same(AOther.FEdit.Content) and
       (FEdit.ContentBaseline = AOther.FEdit.ContentBaseline);
   end;
+
+  if Result and (FEdit.Action = sdaValueDomain) then
+  begin
+    Result := FEdit.ValueDomain.Same(AOther.FEdit.ValueDomain) and
+      (FEdit.ValueDomainBaseline = AOther.FEdit.ValueDomainBaseline);
+  end;
 end;
 
 function ReadNyxStudioDesignRequest(const AData: TNyxDataValue): TNyxStudioDesignRequest;
@@ -578,7 +597,7 @@ begin
 
   if (AData.Kind <> ndObject) or (AData.Count <> 7) or
     ((LVersion <> 5) and (LVersion <> 6) and (LVersion <> 7) and (LVersion <> 8) and
-    (LVersion <> 9) and (LVersion <> 10)) then
+    (LVersion <> 9) and (LVersion <> 10) and (LVersion <> 11)) then
   begin
     raise ENyxModel.Create('Design processor requires its exact versioned ticket');
   end;
@@ -597,7 +616,7 @@ begin
     ((LVersion = 7) and (LEdit.Count <> 13)) or
     ((LVersion = 8) and (LEdit.Count <> 14)) or
     ((LVersion = 9) and (LEdit.Count <> 15)) or
-    ((LVersion = 10) and (LEdit.Count <> 16)) then
+    ((LVersion in [10, 11]) and (LEdit.Count <> 16)) then
   begin
     raise ENyxModel.Create('Design processor ticket has invalid identity or intent');
   end;
@@ -609,7 +628,9 @@ begin
     ((LVersion = 6) and (LAction > Ord(sdaPlacement))) or
     ((LVersion = 7) and (LAction > Ord(sdaResize))) or
     ((LVersion = 8) and (LAction > Ord(sdaPresentation))) or
-    ((LVersion = 9) and (LAction > Ord(sdaPosition))) then
+    ((LVersion = 9) and (LAction > Ord(sdaPosition))) or
+    ((LVersion = 10) and (LAction > Ord(sdaContent))) or
+    ((LVersion = 11) and (LAction <> Ord(sdaValueDomain))) then
   begin
     raise ENyxModel.Create('Design processor action is outside its closed contract');
   end;
@@ -835,9 +856,27 @@ begin
       raise ENyxModel.Create('Content payload requires its exact captured owner and baseline');
     end;
   end
-  else if (LVersion >= 10) and (LEdit.Field('content').Kind <> ndNull) then
+  else if (LVersion = 10) and (LEdit.Field('content').Kind <> ndNull) then
   begin
     raise ENyxModel.Create('Only content intent carries a recipe command');
+  end;
+
+  if Result.FEdit.Action = sdaValueDomain then
+  begin
+    LContent := LEdit.Field('valueDomain');
+
+    if (LContent.Kind <> ndObject) or (LContent.Count <> 2) then
+    begin
+      raise ENyxContract.Create('Value-domain intent requires exact command and baseline');
+    end;
+    Result.FEdit.ValueDomain := TNyxValueDomainEdit.FromData(LContent.Field('command'));
+    Result.FEdit.ValueDomainBaseline := LContent.Field('baseline').AsText;
+
+    if (Result.FEdit.ValueDomain.Control.ID <> Result.FEdit.Selection) or
+      (Result.FEdit.ValueDomainBaseline = '') then
+    begin
+      raise ENyxContract.Create('Value-domain intent requires the exact captured owner/baseline');
+    end;
   end;
 end;
 
@@ -917,6 +956,16 @@ begin
             raise ENyxModel.Create('Content choices changed since this editor was captured');
           end;
           LSession.ApplyPatch(ReadNyxDesignPatch(NyxArray([FRequest.FEdit.Content.ToData])));
+        end;
+      sdaValueDomain:
+        begin
+
+          if NyxStudioValueDomainBaseline(LSession.Document,
+            FRequest.FEdit.ValueDomain.Control) <> FRequest.FEdit.ValueDomainBaseline then
+          begin
+            raise ENyxContract.Create('Value constraints changed since this editor was captured');
+          end;
+          LSession.ApplyPatch(NyxValueDomainPatch([FRequest.FEdit.ValueDomain]));
         end;
       sdaCanvasValue: LSession.SetCapturedCanvasValue(FRequest.FEdit);
       sdaSetStateDefault:
@@ -1198,6 +1247,17 @@ begin
       (AEdit.Presentation.Control.ID <> AEdit.Selection)) then
     begin
       raise ENyxModel.Create('Presentation intent requires its exact captured selected owner');
+    end;
+  end;
+
+  if AEdit.Action = sdaValueDomain then
+  begin
+
+    if not AEdit.ValueDomain.Defined or
+      (AEdit.ValueDomain.Control.ID <> AEdit.Selection) or
+      (FDocument.Find(AEdit.Selection) = nil) or (AEdit.ValueDomainBaseline = '') then
+    begin
+      raise ENyxContract.Create('Value-domain intent requires its captured owner/baseline');
     end;
   end;
 

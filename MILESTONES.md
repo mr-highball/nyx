@@ -3,6 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current typed policy boundary (2026-10-06): ordinary Studio's public Nyx date
+editor and semantic grouped transactions share copied value-domain commands.
+Bounded node queries distinguish local/effective policies. Checked matched FPC
+native Studio passes 82; actual browser/real worker passes 75 each at desktop/390;
+exact executed reconstruction passes 4 per target and source regression 33, with
+zero native leaks. All protected services/pairs stay unchanged; observing rollout
+remains open. No original criterion closes: workflow no-closure advances 11→12
+once; authoring 26, renderer 8, codegen 28 and delivery 2 remain. Stop calendar
+fixture expansion and reassess original advanced breadth/parity and the protected
+history/observing prerequisite. See
+[evidence and return path](WORK.md#typed-date-constraints-in-studio-and-mcp--2026-10-06).
+
 Current date boundary (2026-10-06): typed Gregorian values/domains, managed date
 controls and generated/source admission support a real owned native calendar.
 Checked Win32 passes 87 with zero leaks; current managed-source regression passes

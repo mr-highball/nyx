@@ -7,7 +7,103 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-## Current return path: completed date boundary and reassessment — 2026-10-06
+## Current return path: completed date-constraint authoring boundary — 2026-10-06
+
+Current goal turn: progress. The original NS-4 semantic workflow prerequisite now
+has copied typed set/inherit policy commands, bounded local/effective queries and
+an ordinary public Nyx Inspector consumer on both targets. Current checked native
+Studio passes **82**; actual browser/real worker passes **75** each at CSS **1100/390**.
+Exact compiled reconstruction passes **4** per compiler/executed browser; the
+existing managed-source regression passes **33**, all native traces leak-free.
+See the packet below. Stop date-policy fixture expansion at this integrated boundary.
+
+Reassessment returns to original NS-2 parity / NS-3 advanced-component breadth and
+the concrete NS-5 protected-history/observing release prerequisite for NS-4.
+The running older endpoint does not advertise these policy operations. Do not claim
+authenticated observing deployment from a local controller or offline schema.
+All 15 services and eight exact pairs remain protected; no listener/replacement or
+enrollment change occurred. The original worktree backup/stash remains retained.
+At most two unsuccessful attempts per diagnosed cause; switch on a repeated cause.
+No original criterion or prerequisite closes. Workflow no-closure advances **11→12**
+once for this batch; authoring **26**, renderer **8**, codegen **28**, delivery **2**
+remain. NS-2 parity / NS-3 historical totals remain unestablished. The full user
+outcome is incomplete. Save this batch on `hello-nyx` and verify the exact remote
+head before reporting its push; the ignored receipt is `build/date-policy/remote-return.json`.
+
+## Typed date constraints in Studio and MCP — 2026-10-06
+
+The existing grouped candidate now accepts immutable typed value-domain set/inherit
+commands. Setting changes only the exact authored control/override's local value
+declaration; inheriting removes that declaration, including a NoValue mask. Fields,
+events, bindings and defaults stay retained. Complete candidate admission rejects
+incompatible dependent values. Bounded opt-in node queries distinguish local
+declarations from effective policy and page exact Unicode/scalar choices.
+
+Ordinary Properties composes `NewNyxDateDomainEditor`, a public Nyx compound of
+specialized Card/Date/Memo/Button/Label interfaces. Drafts do not change the accepted
+pair. Captured owner and copied local/effective baseline travel through an isolated
+v11 source ticket and recheck before one paired Undo step. Other existing v9/v10
+intents retain their envelope. Restore reveals inherited constraints. See
+[usage](docs/date-fields.md#studio-and-semantic-constraint-authoring) and
+[semantic transport](docs/studio-agents.md#value-domains).
+
+Authenticated named MCP composed one unchanged English date seed in owned empty
+review `review-8`: the maintained 16-operation recipe, revision 1→2, then bounded
+80-line accepted-source windows. The 177-line/4,983-byte seed was exported unchanged;
+the review was discarded at revision 2. Native handles now authenticate twenty tools
+in this chat. Primary remains revision 2, selection `rating-2-part-4`, view `home`;
+review listing is empty. The protected older endpoint still lacks the new policy
+schema. Local semantic admission below does not imply an updated authenticated
+HTTP mutation or observing rollout.
+
+Evidence under ignored `build/date-policy/`:
+
+- `maintained-build-final.log`: checked matched FPC **3.3.1**, **13** offline actual
+  MCP discovery-schema checks, **82** actual native checks including the full
+  ordinary Studio controller, **4** exact executed reconstruction checks. The
+  native count includes **42** portable semantic checks and the **74**-check shared
+  Inspector journey; these are nested counts, not independent totals. Grouped
+  refusal, independent reusable policies, bounded local/effective context, retries,
+  permission and paired Undo/Redo preserve exact companions. Full Studio's own
+  callbacks/queue update the retained Pascal memo and Restore works in compact mode.
+- `desktop-final.log` / `narrow-final.log`: **75** checks each at actual CSS
+  **1100/390** with the real compiled Pascal source worker. Exact restored inherited
+  policy, invalid default/choice refusal and live preview min/max are checked.
+  Meaningful `date-constraints.png` captures are inspected. The fixture mounts the
+  ordinary Inspector's public compound; this is distinct from authenticated
+  observing HTTP. Final blank captures establish teardown, not visual quality.
+- `reconstruction-final.log`: browser execution reconstructs the entire exact
+  accepted wire document from the unchanged generated companion, **4** checks.
+  All three native observer traces report **zero** leaks. Meaningful native field,
+  preview and full Studio desktop/compact captures were inspected as well.
+- `source-regression-final.log`: **33** current managed-source checks, zero leaks.
+  Exact companion compilation caught a real missing `nyx.dates` import in older
+  retained source frames; shared source synchronization now adds it using the
+  existing import boundary. The earlier failed maintained build remains evidence
+  of that diagnosed defect, not successful execution. Earlier browser failures
+  used an authored override ID instead of its qualified runtime identity; the
+  corrected final consumer queries the actual realized named part.
+- `staged-final.json`: eight exact compiler/seed/wire/HTML artifacts copied into an
+  owned child of the existing admitted HTTP host after process identity checks.
+  No listener or protected payload replacement. `preservation-current.json` verifies
+  all **15** exact service identities, **8** byte-exact accepted/draft pairs and
+  revision/selection/view/history availability, plus LAN HTTP **200**. Availability
+  does not establish full protected-history migration.
+
+Current browser compilations report **zero owned warnings**; seven upstream
+`classes.pas` warnings per artifact remain unsuppressed. The previously configured
+stable FPC executable is now absent; this batch uses the verified existing matched
+compiler explicitly and changes no toolchain profile or installation. Earlier
+stable receipts remain historical. The maintained `date-policy` build target starts
+no listener and consumes an exact MCP-exported source directory.
+
+Unchanged accepted legacy date values retain their original source spelling during
+incremental editing; fresh generation emits typed constructors throughout. This
+packet does not accept complete source/codegen, all scalar-policy Studio editors,
+advanced date-range behavior, hardware/IME/assistive input, other hosts, full
+accessibility/parity/aesthetics or protected observing release deployment.
+
+## Previous return path: completed date boundary and reassessment — 2026-10-06
 
 Current goal turn: progress. The user completed the guarded artifact cleanup;
 53.6 GB of files were removed and D: regained about 55.9 GB free. The incomplete

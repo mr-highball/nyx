@@ -1449,6 +1449,65 @@ begin
     [NyxData('op'), NyxData('id'), NyxData('content')]);
 end;
 
+function ValueDomainOperationSchema: TNyxDataValue;
+var
+  LDomains: array of TNyxDataValue;
+  LKind: Integer;
+  LType: TNyxText;
+  LScalar: TNyxText;
+  LBounds: TNyxText;
+  LExtra: TNyxText;
+  LRequired: TNyxText;
+const
+  CTypes: array[0..4] of TNyxText = ('text', 'boolean', 'integer', 'number', 'text');
+begin
+  { JSON is the explicit external boundary. Every branch keeps native scalar
+    types and closed fields; strict Pascal admission also checks Gregorian days,
+    ascending bounds, exact choices and candidate dependencies. }
+  SetLength(LDomains, 5);
+  for LKind := 0 to 4 do
+  begin
+    LType := CTypes[LKind];
+    LScalar := '{"type":"' + LType + '"}';
+    LExtra := '';
+    LBounds := '';
+    LRequired := '"type"';
+
+    if LType = 'text' then
+    begin
+      LScalar := '{"type":"string"}';
+    end;
+
+    if LKind = 2 then
+    begin
+      LScalar := '{"type":"integer","minimum":-2147483648,"maximum":2147483647}';
+    end;
+
+    if LKind = 4 then
+    begin
+      LExtra := ',"format":{"const":"date"}';
+      LRequired := LRequired + ',"format"';
+      LBounds := ',"min":{"type":"string","minLength":10,"maxLength":10},' +
+        '"max":{"type":"string","minLength":10,"maxLength":10}';
+    end
+    else if LKind in [2, 3] then
+    begin
+      LBounds := ',"min":' + LScalar + ',"max":' + LScalar;
+    end;
+    LDomains[LKind] := TNyxDataValue.ParseJSON('{"type":"object","properties":{' +
+      '"type":{"const":"' + LType + '"}' + LExtra + LBounds +
+      ',"choices":{"type":"array","minItems":1,"maxItems":128,"uniqueItems":true,' +
+      '"items":' + LScalar + '}},"required":[' + LRequired + '],"additionalProperties":false' +
+      ',"anyOf":[{"not":{"anyOf":[{"required":["min"]},{"required":["max"]}]}},' +
+      '{"required":["min","max"]}]}');
+  end;
+  Result := Schema(NyxObject([
+    NyxField('op', NyxObject([NyxField('const', NyxData('value-domain-set'))])),
+    NyxField('id', TextSchema('Exact authored control or named-part override ID')),
+    NyxField('domain', NyxObject([NyxField('oneOf', NyxArray(LDomains))]))]),
+    [NyxData('op'), NyxData('id'), NyxData('domain')]);
+end;
+
 function NyxStudioMCPTools: TNyxDataValue;
 var
   LPage: TNyxDataValue;
@@ -1466,6 +1525,8 @@ begin
     '{"type":"object","properties":{"op":{"const":"title"},"value":{"type":"string"}},"required":["op","value"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"tokens"},"values":{"type":"object"}},"required":["op","values"],"additionalProperties":false},' +
     ContentOperationSchema.ToJSON + ',' +
+    ValueDomainOperationSchema.ToJSON + ',' +
+    '{"type":"object","properties":{"op":{"const":"value-domain-inherit"},"id":{"type":"string"}},"required":["op","id"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"derive"},"source":{"type":"string"},"id":{"type":"string"},"identities":{"type":"object","additionalProperties":{"type":"string"}}},"required":["op","source","id","identities"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"instance"},"id":{"type":"string"},"component":{"type":"string"},"parent":{"type":"string"},"index":{"type":"integer","minimum":0}},"required":["op","id","component","parent"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"override"},"id":{"type":"string"},"instance":{"type":"string"},"path":{"type":"string"},"mode":{"enum":["properties","append","prepend","replace","remove"]}},"required":["op","id","instance","path","mode"],"additionalProperties":false},' +
@@ -1482,12 +1543,17 @@ begin
       Schema(NyxObject([NyxField('parent', TextSchema('Optional exact component ID')),
         NyxField('scope', NyxObject([NyxField('enum', NyxArray([NyxData('pages'), NyxData('components')]))])),
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit'))]), []), True),
-    Tool('nyx_node', 'Inspect one component''s paged typed properties and optionally events, registrations, semantic source routes and reachable effective named parts. parts=true returns at most partLimit paths with exact source/design and local override identity. Removed parts are absent; inspect the definition separately for inherited paths. Routes and registrations page across the requested event window. Omitted ID uses selection.',
+    Tool('nyx_node', 'Inspect one component''s paged typed properties and optionally events, registrations, semantic source routes and reachable effective named parts. parts=true returns at most partLimit paths with exact source/design and local override identity. Removed parts are absent; inspect the definition separately for inherited paths. Routes and registrations page across the requested event window. valueDomain=true returns one local or effective scalar policy (domainScope defaults effective), exact inclusive bounds, and at most 16 choices (domainLimit defaults 8). domainOffset pages choices; textOffset/textLimit page text choices by Unicode scalars. localDeclared distinguishes inheritance from an explicit local mask; defined distinguishes usable domains. Calendar format is date with canonical YYYY-MM-DD text. Omitted ID uses selection.',
       Schema(NyxObject([NyxField('id', TextSchema('Exact component ID')),
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit')),
         NyxField('events', LBoolean),
         NyxField('parts', LBoolean),
         NyxField('content', LBoolean),
+        NyxField('valueDomain', LBoolean),
+        NyxField('domainScope', NyxObject([NyxField('enum', NyxArray([
+          NyxData('local'), NyxData('effective')]))])),
+        NyxField('domainOffset', IntSchema(0, 128)),
+        NyxField('domainLimit', IntSchema(1, 16)),
         NyxField('contentOffset', IntSchema(0, 100000)),
         NyxField('contentLimit', IntSchema(1, 16)),
         NyxField('partOffset', IntSchema(0, 100000)),
@@ -1517,7 +1583,7 @@ begin
     Tool('nyx_diagnostics', 'Page through compiler diagnostics. Locations are Unicode scalar coordinates in submitted source; stale locations cannot navigate.', Schema(LPage, []), True),
     Tool('nyx_source', 'Read only the needed accepted Pascal lines, e.g. around a compiler diagnostic. Does not return pending drafts.',
       Schema(NyxObject([NyxField('line', IntSchema(1, 100000)), NyxField('count', IntSchema(1, 80))]), []), True),
-    Tool('nyx_transaction', 'Apply 1..64 semantic operations atomically as ONE undoable paired design/Pascal edit. Place moves an exact authored control relative to target: inside appends to an editable container, before/after use its owner and resolve ordering after detaching the source. Place-new creates an unused catalog control/recipe at that location. Roots, cycles, self-placement, leaf containers and inherited instance content refuse. Customize a named layout part first. Derive copies an exact subtree into a reusable root; identities maps every descendant source ID, excluding the root. Instance inserts a reusable reference. Override edits an exact instance-owned named-part descriptor; create/move payload and update typed properties in the same group. Inherit removes the exact matching descriptor/payload. Use nyx_node for bounded parts and property types. Incomplete payloads, foreign/occupied identities, invalid paths and drafts reject the whole group. Supply current expectedRevision; operationId deduplicates the last 64 successful mutations per session.',
+    Tool('nyx_transaction', 'Apply 1..64 semantic operations atomically as ONE undoable paired design/Pascal edit. Place moves an exact authored control relative to target: inside appends to an editable container, before/after use its owner and resolve ordering after detaching the source. Place-new creates an unused catalog control/recipe at that location. Roots, cycles, self-placement, leaf containers and inherited instance content refuse. Customize a named layout part first. Derive copies an exact subtree into a reusable root; identities maps every descendant source ID, excluding the root. Instance inserts a reusable reference. Override edits an exact instance-owned named-part descriptor; create/move payload and update typed properties in the same group. Inherit removes the exact matching descriptor/payload. value-domain-set replaces only the exact authored owner''s local scalar value policy, retaining fields/events/bindings/defaults. Its closed domain uses native JSON scalar types; calendar format date uses valid Gregorian YYYY-MM-DD bounds and choices, with empty text for an optional date. Bounds are paired and inclusive; choices are unique (1..128). Group dependent default changes in the same transaction. value-domain-inherit removes only an existing local declaration, distinct from NoValue. Use nyx_node for bounded parts, property types and local/effective domains. Incomplete payloads, foreign/occupied identities, invalid paths/domains/defaults and drafts reject the whole group. Supply current expectedRevision; operationId deduplicates the last 64 successful mutations per session.',
       Schema(NyxObject([NyxField('expectedRevision', IntSchema(1, High(Integer))),
         NyxField('operationId', TextSchema('Unique retry identity, 1..120 characters')),
         NyxField('operations', LTransaction)]), [NyxData('expectedRevision'), NyxData('operationId'), NyxData('operations')]), False),

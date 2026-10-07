@@ -28,7 +28,8 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.catalog, nyx.designer.resize,
-  nyx.responsive, nyx.presentations, nyx.content, nyx.root.types, nyx.designer.move;
+  nyx.responsive, nyx.presentations, nyx.content, nyx.root.types, nyx.designer.move,
+  nyx.contract;
 
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
@@ -37,7 +38,25 @@ type
   TNyxDesignOperation = (doCreate, doUpdate, doMove, doDelete, doTitle, doTokens,
     doDerive, doInstance, doOverride, doInherit, doPlace, doPlaceNew,
     doPresentationDefine, doPresentationRemove, doPresentationUse, doPresentationReset,
-    doPresentationSet, doContentSet);
+    doPresentationSet, doContentSet, doValueDomainSet, doValueDomainInherit);
+
+  { One copied value-domain command for an exact authored control/override.
+    Setting changes only its local value contract; inherit removes that local
+    declaration. Named fields/events, bindings and defaults remain independently
+    owned. Complete candidate admission rechecks all dependent values/recipes. }
+  TNyxValueDomainEdit = record
+  private
+    FControl: TNyxControlRef;
+    FDomain: TNyxValueDomain;
+    FDefined: Boolean;
+    FInherit: Boolean;
+  public
+    function Same(const AOther: TNyxValueDomainEdit): Boolean;
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxValueDomainEdit; static;
+    property Control: TNyxControlRef read FControl;
+    property Defined: Boolean read FDefined;
+  end;
 
   { Whole copied recipe registry for one exact authored instance. One grouped
     patch can define recipes/presentations and update this choice atomically.
@@ -172,6 +191,25 @@ function ReadNyxDesignPatch(const AOperations: TNyxDataValue): INyxDesignPatch;
   registries/control references refuse before a patch is published. }
 function NyxSetContent(const AControl: TNyxControlRef;
   const AContent: INyxContent): TNyxContentEdit;
+{ Specialized builders keep handwritten editor commands typed. The immutable
+  specification overload is the shared admission/worker descriptor boundary. }
+function NyxSetValueDomain(const AControl: TNyxControlRef;
+  const ADomain: TNyxValueDomain): TNyxValueDomainEdit; overload;
+function NyxSetValueDomain(const AControl: TNyxControlRef;
+  const ADomain: TNyxTextDomain): TNyxValueDomainEdit; overload;
+function NyxSetValueDomain(const AControl: TNyxControlRef;
+  const ADomain: TNyxBooleanDomain): TNyxValueDomainEdit; overload;
+function NyxSetValueDomain(const AControl: TNyxControlRef;
+  const ADomain: TNyxIntegerDomain): TNyxValueDomainEdit; overload;
+function NyxSetValueDomain(const AControl: TNyxControlRef;
+  const ADomain: TNyxNumberDomain): TNyxValueDomainEdit; overload;
+function NyxInheritValueDomain(const AControl: TNyxControlRef): TNyxValueDomainEdit;
+{ One paired candidate for related domain edits. Caller arrays are not retained. }
+function NyxValueDomainPatch(const AChanges: array of TNyxValueDomainEdit): INyxDesignPatch;
+{ Copied mounted baseline includes the exact local declarations and effective
+  inherited domain. Borrow document only while realizing an independent context. }
+function NyxStudioValueDomainBaseline(ADocument: TNyxDocument;
+  const AControl: TNyxControlRef): TNyxText;
 { One typed command can be grouped with other commands through the same patch
   engine. Undefined references/unsupported overrides refuse candidate admission. }
 function NyxDefinePresentation(const AReference: TNyxPresentationRef;
@@ -483,6 +521,7 @@ type
     Placement: TNyxPlacement;
     Presentation: TNyxPresentationEdit;
     Content: TNyxContentEdit;
+    ValueDomain: TNyxValueDomainEdit;
   end;
 
   TDesignPatch = class(TInterfacedObject, INyxDesignPatch)
@@ -899,6 +938,142 @@ begin
   end;
 end;
 
+function NyxSetValueDomain(const AControl: TNyxControlRef;
+  const ADomain: TNyxValueDomain): TNyxValueDomainEdit;
+begin
+  NyxRoot(nrReusable, AControl.ID);
+  ADomain.Validate;
+
+  if not ADomain.Defined then
+  begin
+    raise ENyxContract.Create('Set requires a defined scalar value domain');
+  end;
+  Result := Default(TNyxValueDomainEdit);
+  Result.FControl := AControl;
+  Result.FDomain := ADomain.Copy;
+  Result.FDefined := True;
+end;
+
+function NyxStudioValueDomainBaseline(ADocument: TNyxDocument;
+  const AControl: TNyxControlRef): TNyxText;
+var
+  LAuthored: TNyxNode;
+  LProjection: TNyxNode;
+  LContext: TNyxNode;
+begin
+
+  if ADocument = nil then
+  begin
+    raise ENyxContract.Create('Value-domain baseline requires a document');
+  end;
+  LAuthored := ADocument.Find(AControl.ID);
+
+  if LAuthored = nil then
+  begin
+    raise ENyxContract.Create('Value-domain owner is missing');
+  end;
+  LContext := RealizeNyxContext(ADocument, LAuthored, LProjection);
+  try
+    Result := NyxObject([NyxField('local', LAuthored.Contract.Snapshot),
+      NyxField('effective', NyxNodeValueDomain(LProjection).ToData)]).ToJSON;
+  finally
+    LContext.Free;
+  end;
+end;
+
+function NyxSetValueDomain(const AControl: TNyxControlRef;
+  const ADomain: TNyxTextDomain): TNyxValueDomainEdit;
+begin
+  Result := NyxSetValueDomain(AControl, ADomain.Definition);
+end;
+
+function NyxSetValueDomain(const AControl: TNyxControlRef;
+  const ADomain: TNyxBooleanDomain): TNyxValueDomainEdit;
+begin
+  Result := NyxSetValueDomain(AControl, ADomain.Definition);
+end;
+
+function NyxSetValueDomain(const AControl: TNyxControlRef;
+  const ADomain: TNyxIntegerDomain): TNyxValueDomainEdit;
+begin
+  Result := NyxSetValueDomain(AControl, ADomain.Definition);
+end;
+
+function NyxSetValueDomain(const AControl: TNyxControlRef;
+  const ADomain: TNyxNumberDomain): TNyxValueDomainEdit;
+begin
+  Result := NyxSetValueDomain(AControl, ADomain.Definition);
+end;
+
+function NyxInheritValueDomain(const AControl: TNyxControlRef): TNyxValueDomainEdit;
+begin
+  NyxRoot(nrReusable, AControl.ID);
+  Result := Default(TNyxValueDomainEdit);
+  Result.FControl := AControl;
+  Result.FDomain := NyxNoDomain;
+  Result.FDefined := True;
+  Result.FInherit := True;
+end;
+
+function TNyxValueDomainEdit.Same(const AOther: TNyxValueDomainEdit): Boolean;
+begin
+  Result := (FDefined = AOther.FDefined) and (FControl.ID = AOther.FControl.ID) and
+    (FInherit = AOther.FInherit);
+
+  if Result and FDefined and not FInherit then
+  begin
+    Result := FDomain.ToData.ToJSON = AOther.FDomain.ToData.ToJSON;
+  end;
+end;
+
+function TNyxValueDomainEdit.ToData: TNyxDataValue;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxContract.Create('Construct a value-domain command before encoding');
+  end;
+
+  if FInherit then
+  begin
+    Exit(NyxObject([NyxField('op', NyxData('value-domain-inherit')),
+      NyxField('id', NyxData(FControl.ID))]));
+  end;
+  Result := NyxObject([NyxField('op', NyxData('value-domain-set')),
+    NyxField('id', NyxData(FControl.ID)), NyxField('domain', FDomain.ToData)]);
+end;
+
+class function TNyxValueDomainEdit.FromData(const AData: TNyxDataValue): TNyxValueDomainEdit;
+begin
+
+  if AData.Field('op').AsText = 'value-domain-inherit' then
+  begin
+    CheckFields(AData, '|op|id|');
+    Exit(NyxInheritValueDomain(NyxControl(AData.Field('id').AsText)));
+  end;
+  CheckFields(AData, '|op|id|domain|');
+
+  if AData.Field('op').AsText <> 'value-domain-set' then
+  begin
+    raise ENyxContract.Create('Unknown value-domain command');
+  end;
+  Result := NyxSetValueDomain(NyxControl(AData.Field('id').AsText),
+    TNyxValueDomain.FromData(AData.Field('domain')));
+end;
+
+function NyxValueDomainPatch(const AChanges: array of TNyxValueDomainEdit): INyxDesignPatch;
+var
+  LItems: array of TNyxDataValue;
+  LIndex: Integer;
+begin
+  SetLength(LItems, Length(AChanges));
+  for LIndex := 0 to High(AChanges) do
+  begin
+    LItems[LIndex] := AChanges[LIndex].ToData;
+  end;
+  Result := ReadNyxDesignPatch(NyxArray(LItems));
+end;
+
 function NyxSetContent(const AControl: TNyxControlRef;
   const AContent: INyxContent): TNyxContentEdit;
 var
@@ -1090,7 +1265,17 @@ begin
     LOperation.Properties := NyxObject([]);
     LName := LWire.Field('op').AsText;
 
-    if LName = 'content-set' then
+    if (LName = 'value-domain-set') or (LName = 'value-domain-inherit') then
+    begin
+      LOperation.ValueDomain := TNyxValueDomainEdit.FromData(LWire);
+      LOperation.Operation := doValueDomainSet;
+
+      if LName = 'value-domain-inherit' then
+      begin
+        LOperation.Operation := doValueDomainInherit;
+      end;
+    end
+    else if LName = 'content-set' then
     begin
       LOperation.Content := TNyxContentEdit.FromData(LWire);
       LOperation.Operation := doContentSet;
@@ -1755,6 +1940,19 @@ begin
             end;
           end;
         doTitle: Result.Title := LOperation.ID;
+        doValueDomainSet, doValueDomainInherit:
+          begin
+            LNode := RequireNode(Result, LOperation.ValueDomain.FControl.ID);
+
+            if LOperation.Operation = doValueDomainInherit then
+            begin
+              LNode.Contract.InheritValue;
+            end
+            else
+            begin
+              LNode.Contract.Value(LOperation.ValueDomain.FDomain);
+            end;
+          end;
         doContentSet:
           begin
             LNode := RequireNode(Result, LOperation.Content.FControl.ID);

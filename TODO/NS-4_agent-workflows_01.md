@@ -26,6 +26,17 @@ public Pascal bounds/state enrichment is deliberately distinct from the semantic
 seed. No workflow criterion closes and its no-closure count remains 11. See
 [evidence and limits](../WORK.md#typed-date-fields-checkpoint--2026-10-06).
 
+The subsequent current-source policy boundary now supplies copied typed set/inherit
+commands, bounded local/effective node context and the ordinary public Nyx
+date-constraint Inspector using the same paired candidate. Checked native Studio
+passes 82; actual real-worker browser passes 75 at each desktop/exact-390 width;
+exact executed reconstruction passes 4 per target, source regression 33 and offline
+discovery 13, all native traces leak-free. The protected running schema still lacks
+these operations; authenticated observing/history migration remains the existing
+prerequisite. No full criterion closes. Workflow no-closure advances 11→12 once;
+stop calendar fixture expansion and reassess the original requirements. See
+[the packet](../WORK.md#typed-date-constraints-in-studio-and-mcp--2026-10-06).
+
 Current transport follow-up (2026-10-06): one isolated Pascal-client native build
 request wrote a complete job receipt and then reported a socket-read error.
 Subsequent authenticated bounded status calls returned exit 0 and confirmed both
