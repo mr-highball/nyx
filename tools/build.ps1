@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1263,6 +1263,45 @@ try {
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/date-fields.html'),
       (Join-Path $nyxRoot 'studio/web/date-reconstruction.html') -Destination $nyxDateBrowser
     Write-Host 'Date consumers staged; execute on an existing admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'native-form') {
+    # Pascal qualifies actual parked HWNDs, retained focus/input, nested logical
+    # scrolling and ordinary Studio source/history at wide and narrow widths.
+    # Printing is diagnostic; displayed capture requires a separate foreground
+    # qualification. This target launches no service/browser or existing project.
+    $nyxFormRoot = Join-Path $nyxRoot 'build/native-form/maintained'
+    $nyxFormNative = Join-Path $nyxFormRoot 'native'
+    $nyxFormWeb = Join-Path $nyxFormRoot 'web'
+    $nyxFormControls = Join-Path $nyxFormRoot 'controls'
+    New-Item -ItemType Directory -Force $nyxFormNative, $nyxFormWeb, $nyxFormControls | Out-Null
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxFormPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxFormFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', '-Fustudio',
+      "-Fu$nyxLazarus/lcl/units/$nyxFormPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxFormPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxFormPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxFormPlatform",
+      "-FU$nyxFormNative", "-FE$nyxFormNative")
+    foreach ($nyxFormProgram in @('nyx_logical_viewport_tests',
+      'nyx_logical_viewport_controls', 'nyx_source_scheduling_tests')) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxFormFlags + @("tests/$nyxFormProgram.lpr"))
+      & (Join-Path $nyxFormNative ($nyxFormProgram + '.exe')) $nyxFormControls
+      if ($LASTEXITCODE -ne 0) { throw ('Native viewport/Studio consumer failed: ' + $nyxFormProgram) }
+    }
+    foreach ($nyxFormProgram in @('tests/nyx_logical_viewport_tests.lpr',
+      'tests/nyx_logical_viewport_controls.lpr', 'studio/nyx_studio.lpr',
+      'studio/nyx_source_worker.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxFormWeb", $nyxFormProgram)
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxFormWeb 'rtl.js')
+    Write-Host 'Native form projection qualified; browser consumers compiled without execution.'
     exit 0
   }
 

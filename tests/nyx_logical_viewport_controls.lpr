@@ -28,7 +28,9 @@ uses
   SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.codegen,
   nyx.viewport, nyx.behavior, nyx.events, nyx.callbacks, nyx.scheduler
   {$ifdef PAS2JS}, JS, Web, nyx.render.browser, nyx.theme;
-  {$else}, Interfaces, Classes, Forms, Controls, StdCtrls, ExtCtrls, Types,
+  {$else}, Interfaces, Classes, Forms,
+  {$ifdef WINDOWS}Windows,{$endif}
+  Controls, StdCtrls, ExtCtrls, Types,
   Graphics, IntfGraphics, FPWritePNG, nyx.render.lcl, nyx.widgets.lcl;{$endif}
 
 type
@@ -146,6 +148,15 @@ begin
   LButton := NewNyxButton('save-button');
   LButton.WithText('Save notes');
   LCard.Add(LButton);
+  { These standard native choices have preferred automatic sizes. Keep them
+    beyond the initial viewport to qualify first-handle parking as well as
+    retained focus/input after Reveal, using the same portable source. }
+  LCard.Add(NewNyxCheckbox('review-checkbox').WithText('Email updates')
+    .Configure.Value(False).Done);
+  LCard.Add(NewNyxSwitch('review-switch').WithText('Remember preferences')
+    .Configure.Value(False).Done);
+  LCard.Add(NewNyxRadio('review-radio').WithText('Review first')
+    .Configure.Value(False).Done);
 
   LPage := NewNyxPage('nested');
   LPage.Configure.Layout(nlColumn).Gap(8).Padding(12).Done;
@@ -191,6 +202,89 @@ begin
     LWriter.Free;
     LImage.Free;
     LBitmap.Free;
+  end;
+end;
+{$endif}
+
+{$ifndef PAS2JS}
+{ Compare settled native allocation with Nyx's physical LCL bounds. Reading only
+  TControl.Width/Height misses a late-created HWND retaining its default size. }
+procedure CheckNativeAllocation(const AID: TNyxText; AParked: Boolean);
+var
+  LControl: TWinControl;
+  {$ifdef WINDOWS}
+  LBounds: Windows.TRect;
+  {$endif}
+begin
+  LControl := TWinControl(Face(AID));
+  LControl.HandleNeeded;
+  Pump;
+
+  if AParked then
+  begin
+    Check(LControl.Visible and (LControl.Width = 0) and (LControl.Height = 0),
+      'Parked control retains authored visibility with no physical area: ' + AID);
+  end;
+  {$ifdef WINDOWS}
+  Check(Windows.GetWindowRect(LControl.Handle, LBounds),
+    'Actual owned native rectangle is available: ' + AID);
+  Check((LBounds.Right - LBounds.Left = LControl.Width) and
+    (LBounds.Bottom - LBounds.Top = LControl.Height),
+    'Actual owned native allocation matches projected bounds: ' + AID);
+  {$endif}
+end;
+
+procedure CheckRetainedChoices;
+const
+  CChoices: array[0..2] of TNyxText =
+    ('review-checkbox', 'review-switch', 'review-radio');
+var
+  LIndex: Integer;
+  LControl: TWinControl;
+begin
+  for LIndex := Low(CChoices) to High(CChoices) do
+  begin
+    LControl := GRenderer.FocusFor(CChoices[LIndex]);
+    GRenderer.FocusFor('save-button').SetFocus;
+    GRenderer.ScrollView(0, 0);
+    CheckNativeAllocation(CChoices[LIndex], True);
+    LControl.SetFocus;
+    Pump;
+    WriteLn('CHOICE ', CChoices[LIndex], ' focused=', LControl.Focused,
+      ' screen=', OnScreen(Face(CChoices[LIndex])), ' bounds=', LControl.Left, ',',
+      LControl.Top, ',', LControl.Width, ',', LControl.Height,
+      ' scroll=', GRenderer.ViewViewport.Y.Position:0:0);
+    Check((GRenderer.FocusFor(CChoices[LIndex]) = LControl) and
+      LControl.Focused and OnScreen(Face(CChoices[LIndex])),
+      'Actual choice focus reveals its original retained control: ' + CChoices[LIndex]);
+    CheckNativeAllocation(CChoices[LIndex], False);
+    {$ifdef WINDOWS}
+    { Native button-message input reaches the owned widget's normal producer.
+      This qualifies programmatic host input, not physical hardware. }
+    Windows.SendMessage(LControl.Handle, BM_CLICK, 0, 0);
+    Pump;
+
+    if LControl is TRadioButton then
+    begin
+      Check(TRadioButton(LControl).Checked, 'Actual revealed radio accepts native activation');
+    end
+    else
+    begin
+      Check(TCheckBox(LControl).Checked, 'Actual revealed check/switch accepts native activation');
+    end;
+    GRenderer.ScrollView(0, 0);
+    GRenderer.Reveal(CChoices[LIndex]);
+    Pump;
+
+    if LControl is TRadioButton then
+    begin
+      Check(TRadioButton(LControl).Checked, 'Radio value survives parking and reveal');
+    end
+    else
+    begin
+      Check(TCheckBox(LControl).Checked, 'Check/switch value survives parking and reveal');
+    end;
+    {$endif}
   end;
 end;
 {$endif}
@@ -251,6 +345,15 @@ begin
     Check(LBefore.Y.Extent > 81963, 'Complete 2048-control extent includes the bottom compound');
     Check(LBefore.X.Extent <= LBefore.Width,
       'Scrollbar appearance settles width without introducing false horizontal overflow');
+    {$ifndef PAS2JS}
+    CheckNativeAllocation('notes-card', True);
+    CheckNativeAllocation('notes-memo', True);
+    CheckNativeAllocation('review-checkbox', True);
+    CheckNativeAllocation('review-switch', True);
+    CheckNativeAllocation('review-radio', True);
+    CheckRetainedChoices;
+    GRenderer.ScrollView(0, 0);
+    {$endif}
     LFirst := Face('caption-0');
     LLast := Face('caption-2047');
     for LIndex := 0 to 2047 do

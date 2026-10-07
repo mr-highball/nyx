@@ -7,6 +7,81 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: native form viewport projection — 2026-10-07
+
+Previous goal turn is progress: bounded reusable native workers and ordinary
+Studio qualification are pushed at `d2cd097`, with exact remote/clean-worktree
+evidence. End worker fixtures and follow original NS-2 LCL renderer criteria 1/2
+and parity criterion 3. Current full-window captures show form labels/checkboxes
+near the top of a card when their logical rows should be below the canvas clip.
+
+Deliver correct ordinary native form projection, preserving retained fields,
+draft/focus/reveal behavior and independent authored geometry. First distinguish
+actual window allocation/painting from Win32 WM_PRINT capture artifacts with one
+bounded native starter/Studio consumer and physical rectangles/captures. Fix the
+owned adapter only if a product defect is established; a print-only defect instead
+requires reliable qualification capture and withdrawal of the inaccurate visual
+finding. Require actual native input/scroll/resize, relevant viewport/layout
+regressions and affected browser/Studio compilation. Stop after that integrated
+boundary; do not invent parity/visual completion or retry rejected browser/primary
+launches. Preserve services/pairs/frozen payload and keep original criteria/counters.
+
+The ordinary LCL adapter now owns caption/check/switch/radio sizing and parks
+offscreen faces at a distinct zero-area physical origin. Logical geometry,
+authored visibility, parenting and focus eligibility remain. Actual measurements
+established product defects independently of printing: a parked memo's cached
+0×0 frame retained a 170×50 native window; automatic checkboxes restored preferred
+sizes. Disabling automatic sizing alone left 90×23 native checkbox windows behind
+0×0 cached bounds. Lazarus initializes its realized-bounds cache to zero; the
+distinct empty origin makes its normal realization send the parked allocation.
+
+The actual focus consumer also exposed a stale borrowed scroll receiver after
+prepared-frame ownership transfer. Its callback still addressed the released
+candidate, so the offset changed without reprojecting the controls. Commit now
+reconnects root and nested logical scroll ports to the permanent renderer through
+a pure method-pointer assignment, with no post-retirement native layout. Actual
+focus reveals the original check/switch/radio; native activation and values survive
+parking. Existing memo draft/caret, pointer coordinates, resize and nested scrolling
+remain qualified; source is unchanged and ownership teardown is leak-free.
+
+Maintained `tools/build.ps1 -Target native-form` passes **17** portable geometry,
+**4,157** actual Win32 viewport/control and **65** ordinary wide/narrow Studio
+source/history checks. The unchanged MCP-exported layout-policy companion passes
+**2,169** native checks. Every passing native consumer reports zero unfreed blocks.
+Affected browser viewport/layout consumers, full Studio and source worker compile
+with zero owned warnings; installed RTL warnings remain. This does not establish
+current browser execution or sustained memory/frame budgets.
+
+Evidence is under ignored `build/native-form/`: `qualified-build.log`,
+`layout-regression.log`, native printed PNGs in `maintained/controls/`, and original
+`observation-run.log`, `allocation-run.log`, `focus-run.log`, `trace-run.log` failures/
+diagnostics. The first displayed-window attempt refused because the owned form was
+not foreground; its failed abrupt teardown retains its leak log and is not passing
+evidence. Displayed capture remains unverified. The maintained consumer defaults
+to explicit diagnostic printing and has an opt-in foreground-only `--display`
+qualification that never substitutes printing. Current printed desktop/390 PNGs
+are inspected: the previously misplaced form labels are absent. The initial
+maintained invocation completed native checks but used an incorrect explicit
+pas2js path; its failure remains in `maintained-build.log`. The corrected maintained
+command uses the existing verified machine profile and exits successfully.
+
+Fresh authenticated bounded Pascal MCP context remains revision 2/home with no
+pending draft. No active design is edited. All fifteen protected process identities,
+nine complete project/history pairs, full checkpoint and 229 LAN assets remain
+exact; the independent combined backend identity and 243/242-file frozen packages
+verify. Existing LAN/browser replacement rejection remains; no equivalent launch
+is retried. Qualification jobs finish before handoff. Remote comparison and
+clean-worktree evidence belong in `build/native-form/remote-checkpoint.json`.
+
+This advances original renderer criteria 1/2 and parity criteria 2/3 without
+closing their full acceptance. The shared renderer no-closure counter advances
+9→10 once; workflow/authoring/codegen/delivery stay 19/30/28/2. Historical parity/
+NS-3 counts remain unestablished. End this viewport fixture expansion. Reassess
+original native layout/parity outcomes next, including client-area semantics,
+representative visuals and responsive scaling; current browser execution,
+hardware/IME/assistive technology, other widgetsets/DPI and deployment retain their
+separate original requirements. Do not reopen the completed worker-pool packet.
+
 ## Current return path: bounded native callback workers — 2026-10-07
 
 Previous turn is progress: browser row-window implementation and qualification

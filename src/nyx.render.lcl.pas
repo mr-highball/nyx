@@ -1094,6 +1094,9 @@ begin
     Result := LPanel;
     LLabel := TLabel.Create(FPanel);
     LLabel.Parent := LPanel;
+    { Nyx owns the caption's viewport allocation. Automatic label sizing would
+      restore its preferred size after an offscreen frame is parked at zero. }
+    LLabel.AutoSize := False;
     ACaption := LLabel;
     LLabel.Caption := ANode.Prop('text');
     LLabel.SetBounds(0, 0, 300, 20);
@@ -1193,6 +1196,9 @@ begin
   else if (LKind = 'checkbox') or (LKind = 'switch') then
   begin
     Result := TCheckBox.Create(FPanel);
+    { Retain the widget's preferred metrics for measurement, but let Nyx alone
+      assign its physical bounds, including a parked zero-area allocation. }
+    TCheckBox(Result).AutoSize := False;
     TCheckBox(Result).Caption := ANode.Prop('text');
     TCheckBox(Result).Checked := ANode.Prop('value') = 'true';
     AInput := Result;
@@ -1200,6 +1206,7 @@ begin
   else if LKind = 'radio' then
   begin
     Result := TRadioButton.Create(FPanel);
+    TRadioButton(Result).AutoSize := False;
     TRadioButton(Result).Caption := ANode.Prop('text');
     TRadioButton(Result).Checked := ANode.Prop('value') = 'true';
     AInput := Result;
@@ -3876,9 +3883,18 @@ begin
     FCaptureObserver := LCandidate.FCaptureObserver;
     LCandidate.FCaptureObserver := nil;
     LCandidate.FBindings := nil;
+    { Logical scroll ports borrow their renderer receiver. The prepared frame
+      was wired to LCandidate, which is released below. Rebase every port during
+      ownership transfer, without rerunning native layout after old retirement. }
+    FPanel.RebindProjection(ProjectViewport);
     for LIndex := 0 to Length(FBindings) - 1 do
     begin
       FBindings[LIndex].FRenderer := Self;
+
+      if FBindings[LIndex].FControl is TNyxLogicalScrollBox then
+      begin
+        TNyxLogicalScrollBox(FBindings[LIndex].FControl).RebindProjection(ProjectViewport);
+      end;
     end;
     FPanel.OnResize := Resize;
     { Commit updates installed revisions through pure managed publication ports.

@@ -88,6 +88,11 @@ type
     { Complete logical extent, never a truncated document/child. Both axis
       visibility/page sizes settle before subsequent renderer projection. }
     procedure SetLogicalExtent(AWidth, AHeight: Integer; AReceiver: TNotifyEvent);
+    { Replace the borrowed renderer receiver after a prepared physical frame is
+      transferred to its long-lived owner. This only assigns the method pointer;
+      it changes no geometry, offsets, native handles or user input. The receiver
+      must remain alive until another rebind or Detach, on the owning UI thread. }
+    procedure RebindProjection(AReceiver: TNotifyEvent);
     procedure UseNativeScrolling;
     procedure Detach;
     function Snapshot: TNyxViewportSnapshot;
@@ -365,6 +370,11 @@ begin
   TScrollBox(Self).HorzScrollBar.Visible := True;
   TScrollBox(Self).VertScrollBar.Visible := True;
   AutoScroll := True;
+end;
+
+procedure TNyxLogicalScrollBox.RebindProjection(AReceiver: TNotifyEvent);
+begin
+  FOnLogicalScroll := AReceiver;
 end;
 
 function TNyxLogicalScrollBox.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;

@@ -28,9 +28,9 @@ uses
   Windows,
   {$ENDIF}
   Interfaces, Classes, SysUtils, Forms, Controls, StdCtrls,
-  Graphics, IntfGraphics, FPWritePNG,
   nyx.text, nyx.types, nyx.model, nyx.controls, nyx.codegen,
   nyx.schema, nyx.scheduler, nyx.source.preparation,
+  nyx.test.capture.lcl,
   nyx.studio.lcl, nyx.studio.sourcejobs;
 
 type
@@ -122,42 +122,68 @@ begin
   Check(LPaints = GEditor.PaintCount, 'button callback leaves painting deferred');
 end;
 
-procedure Capture(const AName: TNyxText);
+procedure TraceProjection(const AID: TNyxText);
 var
-  LBitmap: TBitmap;
-  LImage: TLazIntfImage;
-  LWriter: TFPWriterPNG;
+  LFace: TControl;
+  LParent: TWinControl;
+  LChildControl: TControl;
+  LChild: Integer;
   {$IFDEF WINDOWS}
-  LWindowBounds: Windows.TRect;
+  LBounds: Windows.TRect;
   {$ENDIF}
 begin
-  LBitmap := TBitmap.Create;
-  LImage := nil;
-  LWriter := nil;
-  try
-    {$IFDEF WINDOWS}
-    { Win32 PaintTo requests both client and nonclient pixels (WM_PRINT).
-      Query the physical window; cached LCL Width/Height can describe its client
-      allocation. The caption/frame must not crop the actual status footer. }
+  LFace := GEditor.CanvasView.ControlFor(AID, niDesign);
+  Check(LFace <> nil, 'ordinary starter retains projected control ' + AID);
+  WriteLn('PROJECTED ', AID, ' ', LFace.ClassName, ' bounds=', LFace.Left, ',',
+    LFace.Top, ',', LFace.Width, ',', LFace.Height);
+  {$IFDEF WINDOWS}
 
-    if not Windows.GetWindowRect(GForm.Handle, LWindowBounds) then
+  if LFace is TWinControl then
+  begin
+    LParent := TWinControl(LFace);
+    WriteLn('ALLOCATED ', AID, ' ', LParent.HandleAllocated);
+    LParent.HandleNeeded;
+    Pump;
+    Check(Windows.GetWindowRect(LParent.Handle, LBounds),
+      'projected control has an actual native window rectangle');
+    WriteLn('NATIVE ', AID, ' width=', LBounds.Right - LBounds.Left,
+      ' height=', LBounds.Bottom - LBounds.Top);
+    Check((LBounds.Right - LBounds.Left = LFace.Width) and
+      (LBounds.Bottom - LBounds.Top = LFace.Height),
+      'actual native allocation matches projected starter bounds for ' + AID);
+    for LChild := 0 to LParent.ControlCount - 1 do
     begin
-      raise ENyxModel.Create('Unable to measure the native capture window');
+      LChildControl := LParent.Controls[LChild];
+      WriteLn('CHILD ', AID, ' ', LChildControl.ClassName, ' bounds=', LChildControl.Left, ',',
+        LChildControl.Top, ',', LChildControl.Width, ',', LChildControl.Height);
+
+      if LChildControl is TLabel then
+      begin
+        Check((LChildControl.Width <= LFace.Width) and
+          (LChildControl.Height <= LFace.Height),
+          'field caption stays within its projected frame');
+      end;
     end;
-    LBitmap.SetSize(LWindowBounds.Right - LWindowBounds.Left,
-      LWindowBounds.Bottom - LWindowBounds.Top);
-    {$ELSE}
-    LBitmap.SetSize(GForm.ClientWidth, GForm.ClientHeight);
-    {$ENDIF}
-    GForm.PaintTo(LBitmap.Canvas, 0, 0);
-    LImage := LBitmap.CreateIntfImage;
-    LWriter := TFPWriterPNG.Create;
-    LImage.SaveToFile(IncludeTrailingPathDelimiter(ParamStr(1)) + AName + '.png', LWriter);
-  finally
-    LWriter.Free;
-    LImage.Free;
-    LBitmap.Free;
   end;
+  {$ENDIF}
+end;
+
+procedure Capture(const AName: TNyxText);
+begin
+  TraceProjection('project-description');
+  TraceProjection('email-updates');
+  TraceProjection('remember-preferences');
+  SaveNyxNativeCapture(GForm, IncludeTrailingPathDelimiter(ParamStr(1)) + AName + '.png', ncmPrint);
+  {$IFDEF WINDOWS}
+
+  if (ParamCount = 2) and (ParamStr(2) = '--display') then
+  begin
+    { Display qualification is explicit and never falls back to a printed PNG.
+      The caller must keep this owned form foreground; we do not seize it. }
+    SaveNyxNativeCapture(GForm, IncludeTrailingPathDelimiter(ParamStr(1)) + AName +
+      '-display.png', ncmDisplay);
+  end;
+  {$ENDIF}
 end;
 
 procedure CheckVisibleStatus;
@@ -250,9 +276,10 @@ begin
   GFailure := TFailureObserver.Create;
   try
 
-    if ParamCount <> 1 then
+    if (ParamCount < 1) or (ParamCount > 2) or
+      ((ParamCount = 2) and (ParamStr(2) <> '--display')) then
     begin
-      raise ENyxModel.Create('Supply an owned artifact directory');
+      raise ENyxModel.Create('Supply an owned artifact directory and optional --display');
     end;
     ForceDirectories(ParamStr(1));
     Application.Initialize;

@@ -889,6 +889,23 @@ the journey; replacing the observing LAN release remains rejected by automatic
 approval review. See
 [evidence](../WORK.md#source-workspace-and-expanded-editor--2026-10-05).
 
+## Native form viewport projection
+
+`tools/build.ps1 -Target native-form` uses the configured Lazarus/FPC and matched
+pas2js tools. It runs checked portable viewport geometry, the actual retained
+2048-control/nested native consumer and ordinary native Studio source/history
+consumer. Evidence and diagnostic printed PNGs live under ignored
+`build/native-form/maintained/`. It compiles the browser viewport consumers,
+Studio and its worker without launching a browser or replacing a running service.
+
+The Pascal checks compare actual native window allocation with LCL bounds and
+exercise parked checkbox/switch/radio focus and native activation, memo drafts,
+caret continuity, scroll/resize and teardown. To qualify displayed pixels
+separately, run `nyx_source_scheduling_tests <owned-artifact-directory> --display`
+with its exact owned form in foreground. That option refuses unavailable display
+capture; the default PNGs use printing and do not establish displayed clipping.
+See [layout behavior](layout.md) and the current WORK.md evidence for limits.
+
 ## Portable size constraints
 
 ```powershell

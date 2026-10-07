@@ -20,6 +20,25 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Retained native form viewport boundary — 2026-10-07
+
+Criteria 2/3 consume correct parked form/caption allocation and live root/nested
+scroll receivers after prepared-frame ownership transfer. Actual Win32 focus
+reveals original check/switch/radio controls; native activation/value retention,
+memo draft/caret, scroll/resize, pointer coordinates and teardown pass 4,157.
+Ordinary wide/narrow Studio passes 65, unchanged semantic-source layout passes
+2,169 and portable geometry passes 17, all native consumers leak-free. Affected
+browser/Studio consumers compile with zero owned warnings. Printed diagnostic
+captures show corrected overlap; displayed capture/current browser execution
+remain unverified. See
+[the packet](../WORK.md#current-return-path-native-form-viewport-projection--2026-10-07).
+
+No original full criterion or renderer prerequisite closes. Shared renderer
+no-closure advances 9→10 once under its owner; this task's historical count stays
+unestablished. End viewport fixtures and reassess original layout/parity outcomes.
+Client-area semantics, representative visuals, scaling/DPI/widgetsets, hardware/
+IME/assistive technology and full performance/observing rollout remain required.
+
 ## Bound grid navigation — 2026-10-07
 
 Criterion 2 now includes shared typed data-cell arrows/endpoints, current-cell

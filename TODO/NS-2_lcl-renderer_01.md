@@ -20,6 +20,29 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 
+## Ordinary form viewport projection — 2026-10-07
+
+Criteria 1/2 now include exact zero-area native allocation for parked form frames,
+captions and check/switch/radio controls, independent of authored visibility.
+Nyx owns their geometry; a distinct empty origin avoids the installed Lazarus
+zero-cache/default-window mismatch. Prepared physical-frame transfer reconnects
+root/nested logical scroll receivers without native operations after retirement.
+Actual control focus/input, memo draft/caret, source preservation, resize, scroll,
+pointer coordinates and teardown pass 4,157 Win32 checks; ordinary wide/narrow
+Studio passes 65, and unchanged MCP-source layout regression passes 2,169.
+Portable geometry passes 17; all passing native consumers are leak-free.
+Affected browser/Studio consumers compile with zero owned warnings. Printed
+captures are inspected; displayed capture refused foreground availability and
+remains unverified. The old failure/diagnostic logs remain. See
+[the packet](../WORK.md#current-return-path-native-form-viewport-projection--2026-10-07).
+
+No original full criterion closes. Shared renderer no-closure advances 9→10 once;
+workflow/authoring/codegen/delivery stay 19/30/28/2. End viewport fixtures and
+reassess original native layout/parity criteria, including client-area semantics,
+representative visuals and responsive scaling. Current browser execution,
+widgetsets/DPI, hardware/IME/assistive technology, complete visuals/performance and
+observing LAN rollout remain open. Protected services/pairs/frozen bytes verify.
+
 ## Native source consumer and visual return path — 2026-10-07
 
 The NS-3 worker-pool prerequisite passes ordinary Win32 Studio source preparation,

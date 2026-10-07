@@ -66,6 +66,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Ordinary native form projection now keeps actual parked windows/captions at zero
+area and reconnects retained scroll callbacks after prepared-view transfer.
+Actual Win32 viewport/Studio/layout checks pass 4,157/65/2,169, leak-free; portable
+geometry passes 17. Browser consumers/Studio compile with zero owned warnings.
+Printed wide/narrow captures are diagnostic; displayed capture, current browser
+execution and full visual/scaling parity remain open. See
+[the viewport packet](WORK.md#current-return-path-native-form-viewport-projection--2026-10-07).
+
 Native asynchronous/threaded callbacks now use bounded reusable pools with typed
 options, copied load monitoring and per-registration overload diagnostics. Actual
 pool checks pass 118; scheduler/interaction/control/ordinary Studio source checks

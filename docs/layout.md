@@ -243,6 +243,24 @@ explicit hierarchy navigation consumes this separation. All original controls
 remain owned and retain input while offscreen; projection does not create an
 Undo entry or modify source. The native implementation reuses standard LCL bars.
 
+Projected native form controls and their captions use Nyx-assigned bounds rather
+than automatic widget sizing. A parked face remains visible in the authored
+contract and focusable, with zero physical area. Its distinct physical origin
+avoids Lazarus treating the initial zero rectangle as already realized; logical
+geometry remains unchanged. Prepared-view ownership transfer also reconnects
+borrowed logical scroll receivers to the permanent renderer, including nested
+scroll scopes. These are adapter responsibilities, not application conditionals.
+
+`tools/build.ps1 -Target native-form` reproduces checked portable geometry,
+actual retained Win32 form/scroll/focus/input and ordinary wide/narrow Studio
+source/history checks, then compiles browser consumers and Studio. Native window
+rectangles are compared with the projected LCL bounds. Printed PNGs remain
+diagnostic redraws, not proof of displayed clipping. The source consumer's
+explicit `--display` option instead requires its exact owned form in foreground
+and refuses otherwise; it never silently substitutes a printed image. Current
+displayed capture, browser execution, other widgetsets/DPI and complete visual
+parity retain their separate qualification requirements.
+
 `tools/build.ps1 -Target native-studio -VerifyLogicalViewport` qualifies checked
 geometry and actual 2048-control/native nested input, resize, scrolling, events
 and retirement, while compiling its browser companion. See WORK.md for current

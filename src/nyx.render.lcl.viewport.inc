@@ -32,6 +32,13 @@ begin
     Exit;
   end;
 
+  if ABinding.FCaption <> nil then
+  begin
+    { Caption and input remain mounted and focus-linked while their outer frame
+      is parked. No preferred label extent may escape that frame's allocation. }
+    ABinding.FCaption.SetBounds(0, 0, AWidth, Min(20, AHeight));
+  end;
+
   if ABinding.FDateField <> nil then
   begin
     { The grouped calendar host owns its editor's geometry. Keep the existing
@@ -143,8 +150,22 @@ begin
         raise ENyxModel.Create('Oversized native face needs a logical paint adapter: ' +
           LBinding.FNode.ID);
       end;
-      LBinding.FControl.SetBounds(LBinding.FPlacement.X, LBinding.FPlacement.Y,
-        LBinding.FPlacement.Width, LBinding.FPlacement.Height);
+
+      if LBinding.FPlacement.HasArea then
+      begin
+        LBinding.FControl.SetBounds(LBinding.FPlacement.X, LBinding.FPlacement.Y,
+          LBinding.FPlacement.Width, LBinding.FPlacement.Height);
+      end
+      else
+      begin
+        { Lazarus initializes its realized-bounds cache to the all-zero rectangle.
+          A window first created at (0,0,0,0) can therefore keep its widgetset's
+          default size: the later realization sees an unchanged cached rectangle.
+          Use a distinct zero-area physical origin so normal LCL realization sends
+          the parked size. Logical boxes/clips are unchanged; visibility, parenting
+          and focus eligibility remain intact for focus-triggered Reveal. }
+        LBinding.FControl.SetBounds(-1, -1, 0, 0);
+      end;
       ArrangeInput(LBinding, LBinding.FPlacement.Width, LBinding.FPlacement.Height);
 
       if LBinding.FControl is TNyxLCLSurface then

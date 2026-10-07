@@ -3,6 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current native viewport boundary (2026-10-07): ordinary form captions and choices
+retain exact zero-area native allocation while parked, and prepared-frame transfer
+reconnects logical scroll receivers. Actual Win32 viewport/Studio/layout checks
+pass 4,157/65/2,169, leak-free; portable geometry passes 17. Browser consumers/
+Studio compile with zero owned warnings. Printed captures improve; displayed
+capture, current browser execution, complete native visuals/scaling and production
+budgets remain open. No original criterion closes. Renderer no-closure advances
+9→10 once; known workflow/authoring/renderer/codegen/delivery counts are
+19/30/10/28/2. End viewport fixtures and reassess original native layout/parity
+requirements, preserving the existing deployment/execution gates. See
+[the current packet](WORK.md#current-return-path-native-form-viewport-projection--2026-10-07).
+
 Current production scheduler prerequisite (2026-10-07): native callbacks use
 typed bounded reusable pools, queryable load, FIFO queues and exact per-registration
 overload diagnostics. Actual pool checks pass 118 and existing scheduler/interaction/
