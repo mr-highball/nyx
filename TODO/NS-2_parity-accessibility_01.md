@@ -20,6 +20,20 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Numeric slider contract — 2026-10-07
+
+Criterion 2 now has a shared numeric range/choice scale consumed by both real
+range controls. Exact accepted values survive physical no-ops, resolution changes
+and disabled/read-only restoration. Actual Win32 Home/End/Left/Right, callbacks,
+bindings and receiver retirement are included in 73 checked shared/native
+assertions; core/full native Studio regressions are leak-free. Browser numeric
+ARIA/focus consumers and both Studios compile only. See
+[the packet](../WORK.md#current-return-path-typed-numeric-sliders--2026-10-07).
+No original criterion/prerequisite closes; this owner's historical count remains
+unestablished and renderer alone advances 14→15. Stop native slider fixtures;
+retain actual browser, trusted/assistive input, full matrix/layout/visual/budget,
+other widgetsets/DPI and observing acceptance.
+
 ## Bound-tree disclosure contract — 2026-10-07
 
 Criterion 2 now has shared runtime disclosure and visible preorder in both tree

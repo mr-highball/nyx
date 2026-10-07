@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -54,6 +54,8 @@ param(
   # Optional exact English tree companion exported through one semantic MCP
   # transaction. Empty builds the public offline fixture; no server is launched.
   [string]$TreeSourceDirectory,
+  # Typed local numeric-policy candidate enriched from the semantic seed.
+  [string]$SliderSourceDirectory,
   # Same accepted confirmation template on both targets, exported through MCP.
   [string]$ConfirmationSourceDirectory = 'build/confirmation/source',
   # Exact English content is composed/exported by the persistent Pascal MCP tool.
@@ -2436,6 +2438,44 @@ try {
       '-Fusrc', '-Futests', '-Fustudio', "-FE$nyxTreeBrowser") + $nyxTreeSourceFlags + @('tests/nyx_tree_hierarchy_tests.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxTreeBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/tree-hierarchy.html') -Destination $nyxTreeBrowser
+    exit 0
+  }
+
+  if ($Target -eq 'slider-fields') {
+    # Pascal owns assertions and typed policy enrichment. Native controls run;
+    # browser artifacts stage only. This does not launch or update a service.
+    $nyxSliderRoot = Join-Path $nyxRoot 'build/slider-values/maintained'
+    $nyxSliderNative = Join-Path $nyxSliderRoot 'native'
+    $nyxSliderBrowser = Join-Path $nyxSliderRoot 'browser'
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxSliderPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxSliderSourceFlags = @()
+
+    if ($SliderSourceDirectory) {
+      $nyxSliderSource = [IO.Path]::GetFullPath($SliderSourceDirectory)
+      if (-not (Test-Path -LiteralPath (Join-Path $nyxSliderSource 'nyx.generated.slider.pas'))) {
+        throw 'Supply the typed slider candidate with SliderSourceDirectory'
+      }
+      $nyxSliderSourceFlags = @("-Fu$nyxSliderSource", '-dNYX_COMPILED_SLIDER')
+    }
+    New-Item -ItemType Directory -Force $nyxSliderNative | Out-Null
+    $nyxSliderFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', '-Fustudio', "-Fu$nyxLazarus/lcl/units/$nyxSliderPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxSliderPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxSliderPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxSliderPlatform", "-FU$nyxSliderNative", "-FE$nyxSliderNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxSliderFlags + $nyxSliderSourceFlags + @('tests/nyx_slider_controls.lpr'))
+    & (Join-Path $nyxSliderNative 'nyx_slider_controls.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Native slider consumer failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    if ($BrowserOutput) { $nyxSliderBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxSliderBrowser | Out-Null
+    Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Futests', '-Fustudio', "-FE$nyxSliderBrowser") + $nyxSliderSourceFlags + @('tests/nyx_slider_controls.lpr'))
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxSliderBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/slider-fields.html') -Destination $nyxSliderBrowser
     exit 0
   }
 

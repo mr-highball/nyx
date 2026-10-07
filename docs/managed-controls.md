@@ -36,6 +36,10 @@ Memo.Text is its caption; Memo.Value is its editable content. A badge has no
 editable Value property. Generic Configure is an explicitly shared typed surface;
 WithText retains the exact specialized interface.
 
+Sliders also expose typed `NumberValue`/`WithNumber` for declared Number domains.
+Their ordinary target controls consume a portable numeric scale; see
+[typed sliders](sliders.md) for ranges, choices and exact value retention.
+
 Compound interfaces expose their default named parts with specialized types:
 CommentThread.ReplyMemo, StatCard.TrendBadge and NumberStepper.ValueSpin, for
 example. These properties retain their parts; missing or incompatibly replaced

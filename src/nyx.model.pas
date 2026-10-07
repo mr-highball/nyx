@@ -445,6 +445,10 @@ type
     function Flex(AValue: Integer): TNyxNodeConfig;
     function Minimum(AValue: Integer): TNyxNodeConfig;
     function Maximum(AValue: Integer): TNyxNodeConfig;
+    { Physical intervals for Number/large Integer sliders, 1..1,000,000.
+      Exact numeric choices and small Integer ranges retain one tick per value.
+      Programmatic values remain exact between ticks until the user moves. }
+    function SliderIntervals(AValue: Integer): TNyxNodeConfig;
     { Boolean options never accept text such as 'true'. }
     function Enabled(AValue: Boolean): TNyxNodeConfig;
     function Visible(AValue: Boolean): TNyxNodeConfig;
@@ -1593,6 +1597,12 @@ begin
   LMinimum := 0;
   LMaximum := 100000;
 
+  if AKey = atSliderIntervals then
+  begin
+    LMinimum := 1;
+    LMaximum := 1000000;
+  end;
+
   if AKey in [atSplitPosition, atSplitMinimum, atSplitMaximum] then
   begin
     LMaximum := 100;
@@ -1602,6 +1612,14 @@ begin
   begin
     LMinimum := -1000000;
     LMaximum := 1000000;
+  end;
+
+  if (AKey = atValue) and (FNode.ProjectionKind = 'slider') then
+  begin
+    { Numeric domain admission precedes this setter. Private ordinal scaling
+      lets a slider retain the complete portable signed Integer value range. }
+    LMinimum := Low(Integer);
+    LMaximum := High(Integer);
   end;
 
   if AKey = atColumns then
@@ -1871,6 +1889,16 @@ end;
 function TNyxNodeConfig.Maximum(AValue: Integer): TNyxNodeConfig;
 begin
   Result := PutInteger(atMaximum, AValue);
+end;
+
+function TNyxNodeConfig.SliderIntervals(AValue: Integer): TNyxNodeConfig;
+begin
+
+  if (AValue < 1) or (AValue > 1000000) then
+  begin
+    raise ENyxModel.Create('Slider intervals require 1..1000000');
+  end;
+  Result := PutInteger(atSliderIntervals, AValue);
 end;
 
 function TNyxNodeConfig.Enabled(AValue: Boolean): TNyxNodeConfig;

@@ -253,6 +253,16 @@ runtime-operation gaps with this existing owner; no screenshot-driven editor
 workaround or new listener is used. See
 [the packet](../WORK.md#current-return-path-portable-tree-disclosure--2026-10-07).
 
+Numeric slider consumer boundary (2026-10-07): the existing combined service
+passes 36 authenticated checks for one grouped English layout/state seed,
+bounded source, exact paired Undo/Redo and discarded independent review. New
+Number/choice policies and resolution are separately enriched through public
+Pascal; this is explicitly not frozen-server policy admission. Current-backend
+numeric authoring, runtime scale operations and observing deployment remain
+with this existing workflow owner. No full criterion closes or counter advances;
+workflow remains 19. See
+[the packet](../WORK.md#current-return-path-typed-numeric-sliders--2026-10-07).
+
 **Acceptance Criteria:**
 
 Bound typeahead follow-up (2026-10-06): typed runtime policy is available through

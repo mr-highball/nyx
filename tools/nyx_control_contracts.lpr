@@ -210,6 +210,16 @@ begin
       GTypes.Add('    [''' + KindGUID(NyxKindName(LKind)) + ''']');
       GTypes.Add('    function WithText(const AText: TNyxText): ' + LInterface + ';');
 
+      if LKind = nkSlider then
+      begin
+        GTypes.Add('    { NumberValue reads numeric meaning; writes require a declared Number domain.');
+        GTypes.Add('      The inherited Integer Value remains explicit and refuses fractions. }');
+        GTypes.Add('    function GetNumberValue: Double;');
+        GTypes.Add('    procedure SetNumberValue(AValue: Double);');
+        GTypes.Add('    function WithNumber(AValue: Double): INyxSlider;');
+        GTypes.Add('    property NumberValue: Double read GetNumberValue write SetNumberValue;');
+      end;
+
       if LKind = nkDate then
       begin
         GTypes.Add('    { Calendar parts are typed; Value is the explicit canonical text boundary. }');
@@ -243,6 +253,14 @@ begin
       GTypes.Add('    constructor Create(const AID: TNyxText = '''';');
       GTypes.Add('      AConstruction: TNyxConstruction = ncoDefault); reintroduce;');
       GTypes.Add('    function WithText(const AText: TNyxText): ' + LInterface + ';');
+
+      if LKind = nkSlider then
+      begin
+        GTypes.Add('    function GetNumberValue: Double;');
+        GTypes.Add('    procedure SetNumberValue(AValue: Double);');
+        GTypes.Add('    function WithNumber(AValue: Double): INyxSlider;');
+        GTypes.Add('    property NumberValue: Double read GetNumberValue write SetNumberValue;');
+      end;
 
       if LKind = nkDate then
       begin
@@ -290,6 +308,26 @@ begin
       GImplementation.Add('  Result := ' + LClass + '.Create(AID, AConstruction);');
       GImplementation.Add('end;');
       GImplementation.Add('');
+
+      if LKind = nkSlider then
+      begin
+        GImplementation.Add('function TNyxSlider.GetNumberValue: Double;');
+        GImplementation.Add('begin');
+        GImplementation.Add('  Result := NyxNodeValueDomain(Node).ReadWire(Node.Prop(''value'', ''0'')).AsNumber;');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+        GImplementation.Add('procedure TNyxSlider.SetNumberValue(AValue: Double);');
+        GImplementation.Add('begin');
+        GImplementation.Add('  GetConfigure.Value(AValue);');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+        GImplementation.Add('function TNyxSlider.WithNumber(AValue: Double): INyxSlider;');
+        GImplementation.Add('begin');
+        GImplementation.Add('  SetNumberValue(AValue);');
+        GImplementation.Add('  Result := Self as INyxSlider;');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+      end;
 
       if LKind = nkDate then
       begin

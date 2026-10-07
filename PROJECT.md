@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Typed numeric sliders now consume a portable range/choice scale and exact
+accepted-value cache in both ordinary adapters. Specialized fluent Number
+authoring, full signed Integer values, private ordinal coordinates and generated
+contract ordering pass 73 actual Win32/shared assertions, leak-free. The English
+MCP seed passes 36 authenticated grouped/history checks; new policies are explicitly
+enriched locally because the running service is frozen. Core/native Studio
+regressions pass; both Studios and browser consumers compile with zero owned
+warnings. Browser execution/visuals, current-backend policy authoring and rollout
+remain open. See [the slider packet](WORK.md#current-return-path-typed-numeric-sliders--2026-10-07).
+
 Bound trees now consume a managed typed runtime disclosure capability in both
 adapters: stable branch identity, iterative visible preorder, preserved membership/
 anchor and visible cursor recovery. The unchanged authenticated semantic companion

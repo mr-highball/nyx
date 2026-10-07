@@ -347,6 +347,12 @@ begin
   Result := Self as INyxConfiguration;
 end;
 
+function TNyxConfiguration.SliderIntervals(AValue: Integer): INyxConfiguration;
+begin
+  ConfigurationScope.SliderIntervals(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
 function TNyxConfiguration.Enabled(AValue: Boolean): INyxConfiguration;
 begin
   ConfigurationScope.Enabled(AValue);

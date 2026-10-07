@@ -3,6 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current numeric prerequisite (2026-10-07): sliders explicitly admit Number
+domains and share exact numeric range/choice scales across real host controls.
+Specialized interfaces, full signed Integer values, copied callback payloads,
+native keys and generated source ordering pass 73 checked Win32/shared assertions,
+leak-free. An independent grouped MCP seed passes 36; new policies are separately
+enriched locally. Core/full native Studio regressions pass; browser consumer,
+both Studios and source worker compile with zero owned warnings. No original
+criterion closes: only renderer no-closure advances 14→15 once; known other counts
+remain 19/32/28/2. End this boundary. Browser execution/visuals/accessibility,
+current-backend authoring, full breadth/performance and observing delivery retain
+their prerequisites. See
+[the packet](WORK.md#current-return-path-typed-numeric-sliders--2026-10-07).
+
 Current tree prerequisite (2026-10-07): both ordinary bound-tree adapters consume
 managed typed disclosure, stable identity through structural/query publication,
 iterative visible preorder and focus independent of membership/anchor. The exact

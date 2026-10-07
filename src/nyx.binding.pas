@@ -33,6 +33,7 @@ uses
   nyx.types,
   nyx.data,
   nyx.contract,
+  nyx.sliders,
   nyx.state,
   nyx.binding.types,
   nyx.model,
@@ -367,6 +368,7 @@ procedure CheckValueRange(ANode: TNyxNode; const ASpec: TNyxBindingSpec;
   const AValue: TNyxStateValue);
 var
   LValue: Double;
+  LScale: TNyxSliderScale;
   LMinimum: Integer;
   LMaximum: Integer;
   LDefaultMinimum: TNyxText;
@@ -376,6 +378,17 @@ begin
   if (ASpec.Target <> bpValue) or
     not (AValue.Kind in [nskInteger, nskNumber]) then
   begin
+    Exit;
+  end;
+
+  if ANode.ProjectionKind = 'slider' then
+  begin
+    { Declared numeric bounds/choices govern the private physical scale.
+      Legacy min/max only supply fallback bounds for an unbounded domain. }
+    LScale := TNyxSliderScale.Create(NyxNodeValueDomain(ANode),
+      StrToIntDef(ANode.Prop('min'), 0), StrToIntDef(ANode.Prop('max'), 100),
+      StrToIntDef(ANode.Prop('slider-intervals'), 1000));
+    LScale.PositionOf(ProjectionText(ANode, ASpec, AValue));
     Exit;
   end;
   LValue := 0;

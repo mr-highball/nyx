@@ -436,6 +436,22 @@ begin
   Result := TNyxSlider.Create(AID, AConstruction);
 end;
 
+function TNyxSlider.GetNumberValue: Double;
+begin
+  Result := NyxNodeValueDomain(Node).ReadWire(Node.Prop('value', '0')).AsNumber;
+end;
+
+procedure TNyxSlider.SetNumberValue(AValue: Double);
+begin
+  GetConfigure.Value(AValue);
+end;
+
+function TNyxSlider.WithNumber(AValue: Double): INyxSlider;
+begin
+  SetNumberValue(AValue);
+  Result := Self as INyxSlider;
+end;
+
 constructor TNyxDate.Create(const AID: TNyxText;
   AConstruction: TNyxConstruction);
 begin

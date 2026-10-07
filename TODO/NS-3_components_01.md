@@ -26,6 +26,19 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   time pickers. Full picker/component criteria retain this task's ownership;
   the shared NS-1 prerequisite creates no extra completion credit.
 
+## Numeric control prerequisite — 2026-10-07
+
+Original criteria 1/3 now include specialized fluent Number sliders, full signed
+Integer values, exact numeric choices and independently owned scales behind both
+ordinary target controls. Checked shared/actual native behavior passes 73,
+leak-free. The grouped English seed passes 36 authenticated checks; new contracts
+are explicitly enriched locally. Matching browser/Studios compile only. See
+[the packet](../WORK.md#current-return-path-typed-numeric-sliders--2026-10-07).
+No component/full criterion closes or count is invented. Only renderer no-closure
+advances 14→15; end this packet. Original parity prerequisites, executed browser,
+creator/Studio policy workflows, production compound breadth/aesthetics, budgets
+and observing delivery remain open.
+
 ## Portable tree behavior prerequisite — 2026-10-07
 
 Original criteria 1/3 now have one typed managed runtime hierarchy contract in

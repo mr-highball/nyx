@@ -34,6 +34,8 @@ uses
   nyx.dates.lcl,
   nyx.times,
   nyx.times.lcl,
+  nyx.sliders,
+  nyx.sliders.lcl,
   Classes,
   SysUtils,
   Math,
@@ -1252,10 +1254,10 @@ begin
   end
   else if LKind = 'slider' then
   begin
-    Result := TTrackBar.Create(FPanel);
-    TTrackBar(Result).Min := StrToIntDef(ANode.Prop('min'), 0);
-    TTrackBar(Result).Max := StrToIntDef(ANode.Prop('max'), 100);
-    TTrackBar(Result).Position := StrToIntDef(ANode.Prop('value'), 0);
+    Result := TNyxLCLSlider.Create(FPanel);
+    TNyxLCLSlider(Result).Accept(TNyxSliderScale.Create(NyxNodeValueDomain(ANode),
+      StrToIntDef(ANode.Prop('min'), 0), StrToIntDef(ANode.Prop('max'), 100),
+      StrToIntDef(ANode.Prop('slider-intervals'), 1000)), ANode.Prop('value', '0'));
     AInput := Result;
   end
   else if LKind = 'progress' then
@@ -6136,6 +6138,10 @@ begin
       LValue := 'true';
     end;
   end
+  else if FInput is TNyxLCLSlider then
+  begin
+    LValue := TNyxLCLSlider(FInput).NumericValue;
+  end
   else if FInput is TTrackBar then
   begin
     LValue := IntToStr(TTrackBar(FInput).Position);
@@ -7053,6 +7059,12 @@ begin
           begin
             TRadioButton(LInput).Checked := LValue = 'true';
           end;
+        end
+        else if LInput is TNyxLCLSlider then
+        begin
+          TNyxLCLSlider(LInput).Accept(TNyxSliderScale.Create(NyxNodeValueDomain(LNode),
+            StrToIntDef(LNode.Prop('min'), 0), StrToIntDef(LNode.Prop('max'), 100),
+            StrToIntDef(LNode.Prop('slider-intervals'), 1000)), LValue);
         end
         else if LInput is TTrackBar then
         begin

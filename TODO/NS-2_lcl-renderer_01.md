@@ -23,6 +23,23 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   prerequisite for replacing the time-field text fallback. Other native input
   and full renderer criteria remain required; this allocates no extra credit.
 
+## Typed numeric slider prerequisite — 2026-10-07
+
+Criteria 1/2 now consume real native trackbars with a portable numeric scale,
+exact off-tick value retention, ordered numeric choices and full signed Integer
+values. Specialized interfaces, actual bindings/callbacks/keyboard, singleton/
+maximum-resolution changes, restoration and renderer retirement pass 73 checked
+shared/Win32 assertions, leak-free. Core/full native Studio regressions pass;
+matching browser consumer and both Studios compile. The authenticated seed passes
+36; new policy enrichment is local and explicit. See
+[the packet](../WORK.md#current-return-path-typed-numeric-sliders--2026-10-07)
+and [the contract](../docs/sliders.md).
+
+No original criterion closes. Only renderer no-closure advances 14→15 once;
+other known counts stay 19/32/28/2. Stop this bounded numeric packet. Current
+browser execution, other widgetsets/DPI, production visual/accessibility/budget
+acceptance, full event/layout parity and observing delivery remain required.
+
 ## Portable bound-tree disclosure — 2026-10-07
 
 Criteria 1/2 now consume a managed public tree hierarchy capability in ordinary

@@ -44,7 +44,17 @@ remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
-Latest component prerequisite (2026-10-07): portable bound-tree disclosure now
+Latest numeric prerequisite (2026-10-07): specialized Number/Integer sliders now
+consume portable range/choice scales and exact accepted-value caches in both
+ordinary adapters. Checked actual/shared native assertions pass 73; the independent
+MCP seed passes 36, with new policies explicitly enriched locally. Core and full
+native Studio regressions pass, leak-free; browser consumer/Studios compile only.
+No criterion closes; renderer no-closure advances 14→15 once and the known other
+counts stay 19/32/28/2. End this slider boundary and retain current-backend authoring,
+executed browser, full parity/visual/budget and observing prerequisites. See
+[the handoff](../WORK.md#current-return-path-typed-numeric-sliders--2026-10-07).
+
+Preceding component prerequisite (2026-10-07): portable bound-tree disclosure now
 feeds both adapters. Exact authenticated English source passes 83 Win32/shared
 checks; grouped semantic composition/source/history passes 37 on the existing
 combined service. Native physical retirement and stale/cancelled queue proposals

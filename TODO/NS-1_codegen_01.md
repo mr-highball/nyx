@@ -22,6 +22,18 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - Original-size native editor qualification now needs the logical viewport /
   safe widget geometry prerequisite in [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md).
 
+## Numeric slider source ordering — 2026-10-07
+
+Accepted criteria 1/2 now preserve a specialized slider's Number contract before
+its typed Number setter. Ordered extension groups remain exact; public typed
+resolution and domains reconstruct and compile on both targets. The separately
+enriched authenticated seed passes 73 checked shared/actual native assertions;
+core passes 30/1795, leak-free. See
+[the packet](../WORK.md#current-return-path-typed-numeric-sliders--2026-10-07).
+No criterion closes; source synchronization stays open at 28. Renderer owns this
+bounded prerequisite's single 14→15 increment. Full source grammar/editor, actual
+browser policy workflows and observing delivery remain required.
+
 ## Saved menu-bar source — 2026-10-07
 
 The accepted public-generation/reconstruction foundation now preserves typed bar

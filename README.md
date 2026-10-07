@@ -5,6 +5,9 @@ Specialized authoring uses managed interfaces and factories such as
 See [managed controls](docs/managed-controls.md) for typing, lifetime and compound
 composition examples.
 
+[Typed sliders](docs/sliders.md) retain fractional values and exact numeric
+choices through shared scales, specialized interfaces and real target controls.
+
 Managed [contextual views](docs/popover.md) present reusable Nyx content beside
 an invoker with typed placement, focus and dismissal on browser and LCL. Studio's
 component help uses the same public managed contract and specialized help card.

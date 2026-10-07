@@ -54,6 +54,7 @@ uses
   nyx.split.browser,
   nyx.schema,
   nyx.contract,
+  nyx.sliders,
   nyx.theme,
   nyx.design.tokens,
   nyx.behavior,
@@ -110,6 +111,9 @@ type
     FContainerHeight: Double;
     FLastValue: TNyxText;
     FHasValueBaseline: Boolean;
+    { Mount-owned numeric wire baseline; ordinal slider coordinates never
+      enter design proposals, stores or callback snapshots. }
+    FSliderValue: TNyxSliderValue;
     { Literal rows have their own baseline. An unrelated state publication must
       not destroy option/row handles, selection or scroll. Bound collections and
       creator factories own their content independently of this fallback. }
@@ -3987,7 +3991,11 @@ begin
     end;
   end;
 
-  if FInput is TJSHTMLTextAreaElement then
+  if (FNode.ProjectionKind = 'slider') and not FCustom then
+  begin
+    LValue := FSliderValue.ReadPosition(StrToIntDef(TJSHTMLInputElement(FInput).value, -1));
+  end
+  else if FInput is TJSHTMLTextAreaElement then
   begin
     LValue := TJSHTMLTextAreaElement(FInput).value;
   end
@@ -5403,6 +5411,7 @@ var
   LTimeField: Integer;
   LTimeStep: Integer;
   LTimeFraction: TNyxText;
+  LSliderScale: TNyxSliderScale;
   LInfo: TNyxPrimitiveInfo;
   LLayout: TNyxText;
   LMinimum: Integer;
@@ -5874,7 +5883,23 @@ begin
           end;
         end;
 
-        if (LNode.ProjectionKind = 'spin') or (LNode.ProjectionKind = 'slider') then
+        if (LNode.ProjectionKind = 'slider') and not LBinding.FCustom then
+        begin
+          LSliderScale := TNyxSliderScale.Create(NyxNodeValueDomain(LNode),
+            StrToIntDef(LNode.Prop('min'), 0), StrToIntDef(LNode.Prop('max'), 100),
+            StrToIntDef(LNode.Prop('slider-intervals'), 1000));
+          LBinding.FSliderValue.Accept(LSliderScale, LNode.Prop('value', '0'));
+          LControl.setAttribute('min', '0');
+          LControl.setAttribute('max', IntToStr(LSliderScale.MaximumPosition));
+          LControl.setAttribute('step', '1');
+          { Accessibility exposes numeric meaning, never internal ordinal ticks. }
+          LControl.setAttribute('aria-valuemin', TNyxStateValue.FromNumber(LSliderScale.Minimum).NumberText);
+          LControl.setAttribute('aria-valuemax', TNyxStateValue.FromNumber(LSliderScale.Maximum).NumberText);
+          LControl.setAttribute('aria-valuenow', LNode.Prop('value', '0'));
+          LControl.setAttribute('aria-valuetext', LNode.Prop('value', '0'));
+          TJSHTMLInputElement(LControl).value := IntToStr(LBinding.FSliderValue.Position);
+        end
+        else if (LNode.ProjectionKind = 'spin') or (LNode.ProjectionKind = 'slider') then
         begin
           LControl.setAttribute('min', LNode.Prop('min', '0'));
           LControl.setAttribute('max', LNode.Prop('max', '100'));
@@ -5962,6 +5987,13 @@ begin
           end;
         end;
         LValue := LNode.Prop('value');
+        { The ordinal range already consumed the complete numeric publication.
+          Writing numeric text again would narrow it through HTML sanitization. }
+
+        if (LNode.ProjectionKind = 'slider') and not LBinding.FCustom then
+        begin
+          Continue;
+        end;
         { Layout/state publications must not replace text owned by an IME. The
           accepted baseline remains pending until the real composition end. }
 

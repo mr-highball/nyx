@@ -293,6 +293,7 @@ implementation
 
 uses
   nyx.platform,
+  nyx.sliders,
   nyx.binding,
   nyx.callbacks,
   nyx.collections.view,
@@ -1081,6 +1082,18 @@ begin
             'padding requires a custom face or child host.';
         end;
       end;
+    atSliderIntervals:
+      begin
+        LDescription := 'Physical intervals for Number or large Integer sliders. ' +
+          'Exact choices and small Integer ranges keep one tick per value. ' +
+          'Application values stay exact between ticks until the thumb moves.';
+
+        if AKind <> 'slider' then
+        begin
+          LBrowser := ncMissing;
+          LNative := ncMissing;
+        end;
+      end;
     atMinimum, atMaximum:
       begin
 
@@ -1440,6 +1453,14 @@ begin
       begin
         LProperties[LIndex].ValueType := npNumber;
       end;
+
+      if (LKind = 'slider') and LDomain.Defined and (LDomain.Kind = nskInteger) then
+      begin
+        { Domain/scale admission governs bounds; control coordinates do not
+          constrain authored/state values to a native thumb integer span. }
+        LProperties[LIndex].Minimum := Low(Integer);
+        LProperties[LIndex].Maximum := High(Integer);
+      end;
     end;
   end;
 
@@ -1570,7 +1591,7 @@ begin
       atValue: LTitle := 'Value';
       atItems: LAttributeType := npLines;
       atPadding, atGap, atColumns, atWidth, atHeight, atLeft, atTop,
-      atFlex, atMinimum, atMaximum: LAttributeType := npInteger;
+      atFlex, atMinimum, atMaximum, atSliderIntervals: LAttributeType := npInteger;
       atSplitPosition, atSplitMinimum, atSplitMaximum: LAttributeType := npInteger;
       atEnabled, atVisible, atReadOnly, atSurface, atCompound, atPressed, atSplitResizable,
         atDragSource, atDropTarget:
@@ -1629,6 +1650,12 @@ begin
     LChoiceNames := Trim(LChoiceNames);
     Add(NyxAttributeName(LAttribute), LTitle, LAttributeType, '', LChoiceNames);
     case LAttribute of
+      atSliderIntervals:
+        begin
+          LProperties[LCount - 1].DefaultValue := '1000';
+          LProperties[LCount - 1].Minimum := 1;
+          LProperties[LCount - 1].Maximum := 1000000;
+        end;
       atFlex:
         begin
           LProperties[LCount - 1].DefaultValue := '0';
@@ -2529,7 +2556,14 @@ begin
     Exit(NyxBooleanDomain.Definition);
   end;
 
-  if KindIn(LKind, 'spin|slider|progress') then
+  if LKind = 'slider' then
+  begin
+    { Range adapters project both numeric families through a private ordinal
+      scale. Integer remains the undeclared legacy authoring default below. }
+    Exit(NyxNumberDomain.Definition);
+  end;
+
+  if KindIn(LKind, 'spin|progress') then
   begin
     Exit(NyxIntegerDomain.Definition);
   end;
@@ -2625,6 +2659,11 @@ begin
   end;
   Result := IntrinsicValueDomain(ANode);
 
+  if ANode.ProjectionKind = 'slider' then
+  begin
+    Result := NyxIntegerDomain.Definition;
+  end;
+
   if Result.Defined then
   begin
     Exit;
@@ -2681,6 +2720,7 @@ var
   LEvent: TNyxEventContract;
   LEventOwner: TNyxNode;
   LScalar: Double;
+  LSliderScale: TNyxSliderScale;
   LSizeConstraints: TNyxSizeConstraints;
   LViewport: TNyxViewportCondition;
   LPresentation: TNyxPresentationRef;
@@ -2897,6 +2937,18 @@ begin
     (LMinimum > LMaximum) then
   begin
     raise ENyxModel.Create('Minimum exceeds maximum on ' + ANode.ID);
+  end;
+
+  if ANode.ProjectionKind = 'slider' then
+  begin
+    LSliderScale := TNyxSliderScale.Create(LDomain,
+      StrToIntDef(LMinimumText, 0), StrToIntDef(LMaximumText, 100),
+      StrToIntDef(ANode.Prop('slider-intervals'), 1000));
+
+    if ANode.Prop('value') <> '' then
+    begin
+      LSliderScale.PositionOf(ANode.Prop('value'));
+    end;
   end;
   { Check the common pair and each effective override independently. Validating
     only the four scalars would admit a native maximum below its inherited

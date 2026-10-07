@@ -74,6 +74,7 @@
     function Flex(AValue: Integer): INyxConfiguration;
     function Minimum(AValue: Integer): INyxConfiguration;
     function Maximum(AValue: Integer): INyxConfiguration;
+    function SliderIntervals(AValue: Integer): INyxConfiguration;
     function Enabled(AValue: Boolean): INyxConfiguration;
     function Visible(AValue: Boolean): INyxConfiguration;
     function ReadOnly(AValue: Boolean): INyxConfiguration;
@@ -171,6 +172,7 @@
     function Flex(AValue: Integer): INyxConfiguration;
     function Minimum(AValue: Integer): INyxConfiguration;
     function Maximum(AValue: Integer): INyxConfiguration;
+    function SliderIntervals(AValue: Integer): INyxConfiguration;
     function Enabled(AValue: Boolean): INyxConfiguration;
     function Visible(AValue: Boolean): INyxConfiguration;
     function ReadOnly(AValue: Boolean): INyxConfiguration;

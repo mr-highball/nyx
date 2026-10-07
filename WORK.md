@@ -7,6 +7,110 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: typed numeric sliders — 2026-10-07
+
+The preceding turn is **progress**: portable tree disclosure is integrated and
+checkpoint `3e5a11a` matches the remote branch. Its 83 native/shared and 37 actual
+MCP checks pass leak-free; no full criterion closes. Known workflow/authoring/
+renderer/codegen/delivery no-closure counts are 19/32/14/28/2. Reassess after the
+existing partial packets, end tree fixtures and take a materially different
+original renderer/parity prerequisite for component criteria 1/3: slider model
+admission currently refuses Number domains, and native rendering/change uses
+integer positions directly; numeric choice domains lack a shared physical scale.
+
+Preregistered deliverable: an independently owned typed numeric slider scale,
+public fluent numeric-position resolution, ordinary browser/native consumers,
+exact accepted value preservation and shared choice/range mapping. Persisted
+domains remain the value authority. Closed behavioral options stay typed and
+generated/imported source remains readable; adapter positions never leak into
+application state or event values. Both hosts retain native range controls.
+This serves original native renderer criteria 1/2 and parity criterion 2. Their
+model/catalog foundations are accepted; full parity still gates NS-3 acceptance.
+
+Evidence/stop: retain the pre-change Number-domain admission refusal (before
+native rendering), then qualify fractional host publication, checked
+portable range/choice/boundary/refusal ownership, actual ordinary Win32 sliders
+with binding/event values, policy changes/disabled/read-only/retirement and exact
+compiled typed source. Compose the English companion through one authenticated
+semantic MCP transaction and bounded source export on an existing capable service.
+Rebuild both Studios and matching browser consumers without a new listener or an
+equivalent retry of a rejected launch. Browser physical/trusted execution, visuals,
+other widgetsets/DPI and original full criteria remain required. Stop after the
+integrated slider boundary or a concrete source/host failure that changes the next
+action; do not substitute a static recipe, integer-only contract or fixture count
+for the requested product. Preserve all protected services/projects/releases and
+checkpoint the branch.
+
+Integrated result: `TNyxSliderScale` and the independently owned accepted-value
+cache supply numeric range/choice/ordinal mapping without node/store/widget links.
+Number sliders are now explicitly admitted; unrelated spin/progress families
+retain Integer admission. `INyxSlider.NumberValue`/`WithNumber` and typed
+`.Configure.SliderIntervals` preserve specialized authoring. The Pascal facade
+generator owns the emitted interface implementations. Slider Integer values
+retain the entire signed 32-bit range. Numeric domain bounds/choices override
+legacy physical hints; exact accepted off-tick values remain unchanged until
+the thumb actually moves. Explicit Double intermediates avoid native extended
+expression precision becoming a separate tick policy.
+
+Both ordinary adapters consume the same numeric cache. Native marker spacing
+remains bounded even while growing/shrinking a million-interval range; keyboard
+steps still select individual positions. Browser accessibility exposes semantic
+numeric bounds/current value rather than private ordinals. Source generation
+declares a specialized slider's Number contract before its typed value setter,
+while preserving ordered extensions. Exact managed replay now reconstructs it.
+No server/listener/compiler installation or live LAN files changed.
+
+Evidence under ignored `build/slider-values/`:
+
+- `baseline/run.log` retains the pre-change Number-family admission refusal,
+  before a native control was created. Its three leaked baseline allocations
+  were the fixture's early construction cleanup error, corrected before product
+  evidence; they are not labeled a renderer leak.
+- `semantic.log`: **36** authenticated seed/source/paired-history checks pass
+  on the existing combined-operation service, leak-free. One grouped independent
+  review creates three English sliders and an Integer store/binding. Bounded
+  source windows, one Undo/Redo and review discard preserve the primary project.
+  The subsequent local enrichment initially refused because catalog defaults
+  were 50; the helper now explicitly sets admitted choices before validation.
+  `enrichment.log` records corrected local typed enrichment, without repeating
+  authenticated mutations. This is not authenticated Number-policy admission.
+- The exact retained seed hash is
+  `BFF103D7EAC3157CAC3316FE7B0828228A5317B23A8F2EBA60836B24E1CE35C8`;
+  the separately enriched `semantic-source/nyx.generated.slider.pas` hash is
+  `AD6108147F6A10A18EF8BF9A7A6B905FEA4A0BCA4E9B33EAFFA6D6B747D1A12A`.
+  Both remain distinct; accepted HTTP source was never rewritten in place.
+- `maintained-qualified.log`: **73** checked shared/actual Win32 assertions,
+  zero leaks, consuming that compiled typed candidate. Range/choice refusal,
+  independent sorting/cache, exact off-tick values, extreme/subnormal bounds,
+  signed Integer spans, specialization, managed source replay, actual negative/
+  fractional callbacks and bindings, Home/End/Left/Right messages, singleton and
+  million-position policies, disabled/read-only restoration and whole-renderer
+  callback retirement are exercised. A prior fixture compared a Double with
+  an untyped native extended literal; it now uses a declared Double baseline.
+- `core-final/run.log`: **30 core / 1,795 composition/designer** checks, zero
+  leaks. `lcl-regression/run.log` passes **42 managed / 35 events / 50 bindings /
+  75 Studio authoring** checks, plus native catalog, extension, optional output,
+  property-inspector and compact/Unicode journeys, zero leaks. These totals
+  remain regressions, not additional slider or completion credits.
+- Matching browser consumer, both full Studios and module source worker compile
+  with zero owned warnings. Seven unchanged upstream RTL warnings remain visible
+  in browser builds; dependency sources are untouched. Browser artifacts are
+  staged only: current physical/trusted execution, ARIA assertions, touch/
+  assistive technology and representative visuals remain unverified.
+- `preservation-final.log` retains all **15** process identities, **9** protected
+  project pairs/history/drafts, the checkpoint and **229** sealed LAN payload
+  files; LAN resources still return HTTP 200. No protected project/release moved.
+
+No original full criterion or DONE status closes. Shared renderer no-closure
+advances **14→15 once**; workflow/authoring/codegen/delivery stay **19/32/28/2**.
+NS-3/parity historical counts remain unestablished. End this integrated slider
+boundary, retain original browser/native/production prerequisites and reassess
+the full Studio/component outcome. Current-backend numeric policy workflows,
+runtime semantic control operations, executed browser and observing deployment
+remain with their existing owners. Earlier automatic review rejected backend/
+browser launches before execution with only "blocked by policy"; no equivalent
+retry or service replacement was attempted here.
+
 ## Current return path: portable tree disclosure — 2026-10-07
 
 The preceding turn is **progress**: copied clock drafts are integrated, the full

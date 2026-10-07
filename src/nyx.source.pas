@@ -728,7 +728,7 @@ const
     'SplitOrientation', 'SplitPosition', 'SplitMinimum', 'SplitMaximum', 'SplitResizable',
     'DragSource', 'DropTarget', 'TouchBehavior', 'Wrap', 'Align', 'Justify',
     'WidthSizing', 'HeightSizing', 'MinimumWidth', 'MaximumWidth',
-    'MinimumHeight', 'MaximumHeight', 'QueryContainer', 'Containment');
+    'MinimumHeight', 'MaximumHeight', 'QueryContainer', 'Containment', 'SliderIntervals');
   CAttributes: array[TNyxAttribute] of TNyxText = (
     'atText', 'atValue', 'atPlaceholder', 'atItems', 'atHint', 'atAccessibleName',
     'atHref', 'atSource', 'atAlt', 'atLayout', 'atPadding', 'atGap', 'atColumns',
@@ -741,7 +741,7 @@ const
     'atDragSource', 'atDropTarget', 'atTouchBehavior', 'atFlowWrap',
     'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing',
     'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight',
-    'atQueryContainer', 'atContainerContainment');
+    'atQueryContainer', 'atContainerContainment', 'atSliderIntervals');
 
 var
   { Built-in names are a finite immutable vocabulary. Initialize once at unit
@@ -3561,6 +3561,7 @@ begin
     atFlowWrap: Require(vkFlowWrap);
     atQueryContainer: Require(vkContainerRef);
     atContainerContainment: Require(vkContainerContainment);
+    atSliderIntervals: Require(vkInteger);
     atCrossAlignment: Require(vkCrossAlignment);
     atJustification: Require(vkJustification);
     atWidthSizing, atHeightSizing: Require(vkSizing);
@@ -3720,6 +3721,7 @@ begin
     atFlex: LConfigure.Flex(LInteger);
     atMinimum: LConfigure.Minimum(LInteger);
     atMaximum: LConfigure.Maximum(LInteger);
+    atSliderIntervals: LConfigure.SliderIntervals(LInteger);
     atEnabled: LConfigure.Enabled(LValue.Ordinal <> 0);
     atVisible: LConfigure.Visible(LValue.Ordinal <> 0);
     atReadOnly: LConfigure.ReadOnly(LValue.Ordinal <> 0);

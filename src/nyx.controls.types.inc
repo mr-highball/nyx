@@ -457,6 +457,12 @@
   INyxSlider = interface(INyxIntegerInput)
     ['{737A7921-4621-4C6F-8C01-02006EAC67FC}']
     function WithText(const AText: TNyxText): INyxSlider;
+    { NumberValue reads numeric meaning; writes require a declared Number domain.
+      The inherited Integer Value remains explicit and refuses fractions. }
+    function GetNumberValue: Double;
+    procedure SetNumberValue(AValue: Double);
+    function WithNumber(AValue: Double): INyxSlider;
+    property NumberValue: Double read GetNumberValue write SetNumberValue;
   end;
 
   { Default managed slider implementation. Subclass for behavior or implement the interface
@@ -466,6 +472,10 @@
     constructor Create(const AID: TNyxText = '';
       AConstruction: TNyxConstruction = ncoDefault); reintroduce;
     function WithText(const AText: TNyxText): INyxSlider;
+    function GetNumberValue: Double;
+    procedure SetNumberValue(AValue: Double);
+    function WithNumber(AValue: Double): INyxSlider;
+    property NumberValue: Double read GetNumberValue write SetNumberValue;
   end;
 
   { Specialized date contract; inherited properties retain the TextInput family.

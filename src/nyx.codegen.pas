@@ -287,7 +287,7 @@ const
     'atDragSource', 'atDropTarget', 'atTouchBehavior', 'atFlowWrap',
     'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing',
     'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight',
-    'atQueryContainer', 'atContainerContainment');
+    'atQueryContainer', 'atContainerContainment', 'atSliderIntervals');
   CTouchSymbols: array[TNyxTouchBehavior] of TNyxText =
     ('ntbAutomatic', 'ntbNone', 'ntbPanX', 'ntbPanY', 'ntbManipulation');
   CWrapSymbols: array[TNyxFlowWrap] of TNyxText = ('nfwAutomatic', 'nfwNoWrap', 'nfwWrap');
@@ -540,6 +540,7 @@ begin
     atFlex: LMethod := 'Flex';
     atMinimum: LMethod := 'Minimum';
     atMaximum: LMethod := 'Maximum';
+    atSliderIntervals: LMethod := 'SliderIntervals';
     else
       begin
         { This attribute does not use a numeric configuration method. }
@@ -1652,6 +1653,7 @@ var
     LContentIndex: Integer;
     LCalendarValue: Boolean;
     LClockValue: Boolean;
+    LEarlyExtensions: Boolean;
     LContext: TNyxNode;
     LProjection: TNyxNode;
   begin
@@ -1692,6 +1694,17 @@ var
     end;
     LLines.Add('    ' + LVariable + ' := ' + LKindArgument + ';');
     LLines.Add('    ' + AOwner + '(' + LVariable + ');');
+    { A specialized slider defaults to Integer. Declare its Number contract
+      before calling a typed Number setter; deferring it would make otherwise
+      valid generated Pascal refuse at runtime. Emit the whole ordered group
+      once so opaque extension order and callback definitions remain exact. }
+    LEarlyExtensions := (ANode.Kind = 'slider') and
+      (NyxNodeValueDomain(ANode).Kind = nskNumber);
+
+    if LEarlyExtensions then
+    begin
+      EmitExtensions(ANode.Extensions, LVariable);
+    end;
 
     if (ANode.Props.Count > 0) or ANode.HasMenu or ANode.HasMenuBar then
     begin
@@ -1817,7 +1830,11 @@ var
       LLines.Add('      .Done;');
     end;
     EmitBindings(ANode, LVariable);
-    EmitExtensions(ANode.Extensions, LVariable);
+
+    if not LEarlyExtensions then
+    begin
+      EmitExtensions(ANode.Extensions, LVariable);
+    end;
     for LChildIndex := 0 to ANode.Count - 1 do
     begin
       Emit(ANode.Children[LChildIndex], LVariable + '.Add');

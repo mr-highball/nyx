@@ -349,7 +349,8 @@ function NewNyxControl(const AKind: TNyxKindRef;
 implementation
 
 uses
-  nyx.catalog;
+  nyx.catalog,
+  nyx.schema;
 
 var
   { Private immutable recipe registry, shared only to clone default blueprints.
