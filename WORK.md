@@ -72,6 +72,9 @@ invented/reset. End worker fixture expansion. Return to the original renderer/
 parity prerequisite, including native form-content overlaps visible in current
 captures, while keeping real-browser window qualification and full budgets open.
 Remote/local comparison belongs in `build/scheduler-pool/remote-checkpoint.json`.
+Implementation checkpoint `539ea2e` is pushed, including both previously pending
+browser-window commits; the exact remote comparison succeeds. Later documentation
+checkpoint identity and clean-worktree evidence remain in that private receipt.
 
 ## Current return path: browser table row windowing — 2026-10-07
 
@@ -137,11 +140,12 @@ No original criterion closes or NS-3 count is invented/reset; established workfl
 authoring/renderer/codegen/delivery counts stay **19/30/9/28/2**. Remote publication
 requires exact local/remote comparison recorded in `build/row-window/remote-checkpoint.json`.
 
-Implementation is committed locally at `1bcd806`. Two ordinary pushes on
-2026-10-07 returned GitHub `Internal Server Error`; the verified remote still
-points to the previous accepted `34c75f7`. Publication remains pending, and no
-force push or alternate authentication route is attempted. The local worktree
-and ignored qualification evidence retain the current implementation.
+Implementation is committed at `1bcd806`. Two initial ordinary pushes on
+2026-10-07 returned GitHub `Internal Server Error`, leaving the remote at
+`34c75f7`. The later worker-pool checkpoint `539ea2e` successfully publishes
+both retained browser-window commits through the ordinary push route, with an
+exact remote comparison. No force push or alternate authentication is used.
+Ignored qualification evidence remains local.
 
 ## Current priority: mobile follow-up verification — 2026-10-07
 
