@@ -17,6 +17,16 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 **Blockers**
 
+Observing prerequisite update (2026-10-06): the current verified frozen release
+now serves the existing LAN/MCP ports. Explicit legacy test-snapshot admission
+preserves eight exact pairs and discloses seven test-history resets/fresh handles.
+Actual authenticated full-editor desktop/narrow journeys and both real compiler
+jobs pass; the payload remains verified. This unblocks using the current review
+environment, while full production legacy-history migration and native observing
+integration retain their original owners and criteria. No original criterion
+closes and historical NS-5 totals remain unestablished. See
+[the current packet](../WORK.md#current-return-path-test-mode-observing-release-refresh--2026-10-06).
+
 Release prerequisite (2026-10-06): the NS-6 Pascal preparer now verifies a frozen
 backend/browser/compiler-source bundle. Typed source/runtime/enrollment separation
 now reaches the actual host, protocol and copied compiler-worker values; real

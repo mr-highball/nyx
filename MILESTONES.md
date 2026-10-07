@@ -3,6 +3,17 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current observing boundary (2026-10-06): the verified frozen release replaces only
+the exact primary LAN process. Disposable-test bootstrap retains eight exact pairs
+while resetting seven workshop histories and retiring old handles. Authenticated
+twenty-tool MCP drives actual desktop/exact-390 Studio: 126/60 checks, paired typed
+constraints/source, modal expansion and both application compiles; the produced
+browser application executes. Fourteen other services remain untouched. Original
+criteria, production migration and native observing-controller integration stay
+open. Workflow no-closure advances 12→13 once; other totals remain. Stop rollout
+fixtures and return to advanced picker/menu/overlay breadth and keyboard/focus parity.
+See [evidence and reassessment](WORK.md#current-return-path-test-mode-observing-release-refresh--2026-10-06).
+
 Current typed policy boundary (2026-10-06): ordinary Studio's public Nyx date
 editor and semantic grouped transactions share copied value-domain commands.
 Bounded node queries distinguish local/effective policies. Checked matched FPC

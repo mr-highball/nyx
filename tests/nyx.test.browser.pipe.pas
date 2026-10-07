@@ -67,6 +67,16 @@ type
       operations. Product design composition remains semantic MCP work. }
     function Attribute(const AName: TNyxText): TNyxText;
     procedure SetAttribute(const AName, AValue: TNyxText);
+    { Read a bounded selector's rendered subtree or live value without evaluating
+      scripts. Missing elements return empty text. This is physical observation,
+      separate from document inspection through semantic MCP. }
+    function ElementHTML(const ASelector: TNyxText): TNyxText;
+    { False means absent or retired during ordinary asynchronous DOM replacement,
+      distinct from a present empty field. Unknown protocol errors still raise. }
+    function TryFieldValue(const ASelector: TNyxText; out AValue: TNyxText): Boolean;
+    { Exercise one visible editor host control through ordinary pointer input.
+      Callers must use semantic MCP for composition and accepted design edits. }
+    procedure Click(const ASelector: TNyxText);
     { Save exact current outer HTML and PNG, using a simple artifact name. This
       does not infer readiness; the caller first observes a terminal fixture mark. }
     procedure Capture(const AName: String);
@@ -450,6 +460,137 @@ procedure TNyxBrowserPipe.SetAttribute(const AName, AValue: TNyxText);
 begin
   Request('DOM.setAttributeValue', NyxObject([NyxField('nodeId', NyxData(Body)),
     NyxField('name', NyxData(AName)), NyxField('value', NyxData(AValue))]), FSession);
+end;
+
+function TNyxBrowserPipe.ElementHTML(const ASelector: TNyxText): TNyxText;
+var
+  LNode: Integer;
+begin
+  LNode := Request('DOM.querySelector', NyxObject([
+    NyxField('nodeId', NyxData(Body)), NyxField('selector', NyxData(ASelector))]),
+    FSession).Field('nodeId').AsInteger;
+  Result := '';
+
+  if LNode <> 0 then
+  begin
+    Result := Request('DOM.getOuterHTML', NyxObject([
+      NyxField('nodeId', NyxData(LNode))]), FSession).Field('outerHTML').AsText;
+  end;
+end;
+
+function TNyxBrowserPipe.TryFieldValue(const ASelector: TNyxText;
+  out AValue: TNyxText): Boolean;
+var
+  LNode: Integer;
+  LBackend: Integer;
+  LSnapshot: TNyxDataValue;
+  LNodes: TNyxDataValue;
+  LValues: TNyxDataValue;
+  LStrings: TNyxDataValue;
+  LBackends: TNyxDataValue;
+  LNames: TNyxDataValue;
+  LIndexes: TNyxDataValue;
+  LStringIndexes: TNyxDataValue;
+  LIndex: Integer;
+  LValueIndex: Integer;
+begin
+  Result := False;
+  AValue := '';
+  LNode := Request('DOM.querySelector', NyxObject([
+    NyxField('nodeId', NyxData(Body)), NyxField('selector', NyxData(ASelector))]),
+    FSession).Field('nodeId').AsInteger;
+
+  if LNode = 0 then
+  begin
+    Exit;
+  end;
+  try
+    LBackend := Request('DOM.describeNode', NyxObject([
+      NyxField('nodeId', NyxData(LNode))]), FSession).Field('node').Field('backendNodeId').AsInteger;
+  except
+    on LException: Exception do
+    begin
+
+      if Pos('Could not find node with given id', LException.Message) > 0 then
+      begin
+        Exit(False);
+      end;
+      raise;
+    end;
+  end;
+  { The browser snapshot exposes live input/textarea values without evaluating
+    getters or injecting source. Backend identity selects exactly this field;
+    no snapshot is returned as agent document context. Packet bounds still apply. }
+  LSnapshot := Request('DOMSnapshot.captureSnapshot', NyxObject([
+    NyxField('computedStyles', NyxArray([]))]), FSession);
+  LStrings := LSnapshot.Field('strings');
+  LNodes := LSnapshot.Field('documents').Item(0).Field('nodes');
+  { Field returns a detached owned value. Cache each table once; copying a full
+    node table inside every indexed iteration makes observation quadratic. }
+  LBackends := LNodes.Field('backendNodeId');
+  LNames := LNodes.Field('nodeName');
+  LValues := LNodes.Field('inputValue');
+  for LIndex := 0 to LBackends.Count - 1 do
+  begin
+
+    if (LBackends.Item(LIndex).AsInteger = LBackend) and
+      (LStrings.Item(LNames.Item(LIndex).AsInteger).AsText = 'TEXTAREA') then
+    begin
+      { CDP exposes textarea values separately from INPUT values. Keep source
+        editor observation exact without evaluating a getter or script. }
+      LValues := LNodes.Field('textValue');
+      Break;
+    end;
+  end;
+  LIndexes := LValues.Field('index');
+  LStringIndexes := LValues.Field('value');
+  for LIndex := 0 to LIndexes.Count - 1 do
+  begin
+    LValueIndex := LIndexes.Item(LIndex).AsInteger;
+
+    if LBackends.Item(LValueIndex).AsInteger = LBackend then
+    begin
+      LValueIndex := LStringIndexes.Item(LIndex).AsInteger;
+
+      if LValueIndex < 0 then
+      begin
+        Exit(True);
+      end;
+      AValue := LStrings.Item(LValueIndex).AsText;
+      Exit(True);
+    end;
+  end;
+end;
+
+procedure TNyxBrowserPipe.Click(const ASelector: TNyxText);
+var
+  LNode: Integer;
+  LQuad: TNyxDataValue;
+  LX: Double;
+  LY: Double;
+begin
+  LNode := Request('DOM.querySelector', NyxObject([
+    NyxField('nodeId', NyxData(Body)), NyxField('selector', NyxData(ASelector))]),
+    FSession).Field('nodeId').AsInteger;
+
+  if LNode = 0 then
+  begin
+    raise Exception.Create('Requested host control is absent');
+  end;
+  Request('DOM.scrollIntoViewIfNeeded', NyxObject([
+    NyxField('nodeId', NyxData(LNode))]), FSession);
+  LQuad := Request('DOM.getBoxModel', NyxObject([
+    NyxField('nodeId', NyxData(LNode))]), FSession).Field('model').Field('border');
+  LX := (LQuad.Item(0).AsNumber + LQuad.Item(4).AsNumber) / 2;
+  LY := (LQuad.Item(1).AsNumber + LQuad.Item(5).AsNumber) / 2;
+  Request('Input.dispatchMouseEvent', NyxObject([
+    NyxField('type', NyxData('mousePressed')), NyxField('x', NyxData(LX)),
+    NyxField('y', NyxData(LY)), NyxField('button', NyxData('left')),
+    NyxField('clickCount', NyxData(1))]), FSession);
+  Request('Input.dispatchMouseEvent', NyxObject([
+    NyxField('type', NyxData('mouseReleased')), NyxField('x', NyxData(LX)),
+    NyxField('y', NyxData(LY)), NyxField('button', NyxData('left')),
+    NyxField('clickCount', NyxData(1))]), FSession);
 end;
 
 procedure TNyxBrowserPipe.Capture(const AName: String);

@@ -15,6 +15,16 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Current observing deployment (2026-10-06): authenticated twenty-tool Pascal MCP
+now drives the actual full desktop/exact-390 Studio editor, typed policy/source,
+paired history, expanded source and both real application compiles. All eight
+previous exact pairs remain; seven disposable workshop histories reset under the
+user's explicit test-mode authorization. Native cached handles need one reconnect.
+126/60 checks and executed browser output qualify this deployment boundary, not
+production migration or complete workflow criteria. Workflow no-closure advances
+12→13 once; stop rollout fixtures and return to original advanced control/parity
+outcomes. See [the current packet](../WORK.md#current-return-path-test-mode-observing-release-refresh--2026-10-06).
+
 Current date authoring gap (2026-10-06): the actual named MCP tools composed an
 English reusable date companion in one 16-operation transaction and compiled both
 application targets at revision 2. Its exact source was exported and the owned

@@ -9,6 +9,55 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 ## Current return path: test-mode observing release refresh — 2026-10-06
 
+Delivered observing boundary: the frozen release at source checkpoint `2a12071`
+now serves the existing LAN/editor and loopback MCP ports. Only the verified primary
+process was replaced. **14** other protected identities and all **8** original
+exact project/source pairs remain unchanged. Explicit test-mode bootstrap resets
+**7** disposable workshop histories and unknown naming counters; ordinary handles
+receive a fresh epoch with a private mapping. The primary's empty history, revision,
+selection and view remain exact. The user's disposable-test authorization applies;
+this is not production legacy-history migration.
+
+Authenticated Pascal MCP discovers **20** tools and composes an independent English
+**Calendar workshop** in the eighth ordinary project slot. The actual full browser
+Studio passes **126** desktop checks including two real application compiler jobs,
+and **60** exact-CSS-390 checks. Counts include bounded protocol/status checks,
+not independent component coverage. Inspector values and the complete canonical
+LF companion follow grouped typed policy edits, default-incompatible refusal,
+paired Undo/Redo and source modal opening/closing on real clocks. Meaningful
+captures are inspected. Both application builds succeed with identical companion
+fingerprints; the produced browser application executes and renders. Native
+application execution is not claimed from compilation. Earlier checked Win32
+consumer evidence applies to unchanged UI source, without claiming a new
+observing native-controller journey.
+
+Project/enrolled-user MCP configuration refresh succeeds without warnings. The
+retired editor capability refuses. Cached native chat handles return 404 at their
+retired endpoint; use the current authenticated Pascal semantic client until one
+native-client reconnect. Permissions and credential protection remain intact.
+The release remains verified after jobs; bootstrap, observer and artifact-driver
+native heap traces are leak-free.
+
+Ignored evidence: `build/legacy-refresh/release-build.log` (**29** release integrity
+checks), `lan-mapping.json`, `lan-seed-heap.log`, `desktop-current.log`,
+`narrow-final.log`, `browser-application.log` and their inspected captures.
+Use `protected-services-current.json` and `protected-pairs-current.json` under that
+directory as the new baselines; historical baselines and the original worktree
+backup/stash remain retained. The maintained `release-observer` target builds only;
+running its Pascal consumer requires an explicit owned calendar workspace.
+Failed harness attempts are retained: absent local inheritance, line-array
+responses, empty-field/textarea readback, retired DOM identity and compact panel
+mounting were corrected. Failed results earn no pass count.
+
+Stop rollout fixtures here. Reassessment returns to original NS-3 advanced picker/
+menu/overlay breadth and NS-2 keyboard/focus parity through this current semantic
+and observing environment. Production migration, native observing-controller
+integration, other widgetsets, accessibility and original criteria remain open.
+No original criterion closes: workflow no-closure **12→13** once; authoring **26**,
+renderer **8**, codegen **28**, delivery **2** remain. NS-5 historical totals stay
+unestablished. Push `hello-nyx`, verify the exact remote head and record the private
+receipt in `build/legacy-refresh/remote-return.json`. The full goal remains active.
+
 Previous turn: progress; typed date-policy boundary committed/pushed as `2a471cf`,
 exact remote verified and worktree clean. This batch follows NS-5's accepted-work /
 observing release prerequisite for NS-4. Authoritative live inspection confirms the

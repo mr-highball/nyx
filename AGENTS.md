@@ -83,10 +83,10 @@ The generated reference covers 76 kinds. Bound browser tables currently use
 row-oriented navigation and explicitly documented cell-editor entry/exit.
 
 Codex project and explicitly enrolled user configuration refresh on each Studio
-launch. Actual installed Codex initialization authenticates all fifteen Nyx tools.
-The restarted desktop chat exposes all fifteen native named handles; direct
-authenticated bounded reads are verified. Use native semantic MCP as primary;
-the Pascal semantic client remains available for isolated test services. Missing
+launch. The current observing release authenticates twenty tools through the
+Pascal semantic client. Cached native chat handles need one reconnect after the
+test-mode refresh retired their endpoint. Keep semantic MCP primary; use the
+current Pascal client until those handles reconnect. Missing
 general source/import/state/binding/review operations belong to the existing workflow
 task, not silent browser automation. No sub-agents. WORK.md owns current process,
 qualification, deployment, preservation and remote-checkpoint state; verify

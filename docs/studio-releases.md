@@ -170,6 +170,40 @@ browser execution. The current eight captured test pairs save/load with zero
 native leaks; strict-history and existing-destination refusals preserve storage.
 See [the rollout return path](../WORK.md#current-return-path-test-mode-observing-release-refresh--2026-10-06).
 
+## Qualify an observing editor
+
+Build the maintained Windows Pascal observer with
+`./tools/build.ps1 -Target release-observer`. It uses authenticated semantic MCP
+for document queries, grouped policies, history and real compiler jobs. It observes
+the ordinary editor through Chromium anonymous pipes on real clocks; host pointer
+input only opens panels and the source modal. It starts no service/debugger listener,
+injects no scripts and never claims or replaces the primary project.
+
+First create an explicitly owned empty ordinary workspace through `nyx_workspaces`,
+then compose `tests/date-field-review.operations.json` through one `nyx_transaction`
+at its exact revision. Configure output compilers through ordinary Studio Outputs.
+Run the resulting program against the current enrolled default-port service:
+
+```text
+nyx_studio_release_observer <enrolled-repository> <owned-workspace> <fresh-evidence-directory> 1100
+nyx_studio_release_observer <enrolled-repository> <same-owned-workspace> <another-fresh-directory> 390
+```
+
+The explicitly supplied workspace is modified and retains its paired history.
+Each run inspects existing policy before restoring inheritance, applies two
+independent typed date ranges, refuses a default-incompatible change and exercises
+one paired Undo/Redo. It observes actual Inspector values and the entire canonical
+LF-terminated companion through source modal opening/closing. Desktop also builds
+both application targets and saves bounded terminal status packets. Compilation
+alone does not establish native execution or parity. Do not run this destructive
+fixture against a user's authored project. All evidence stays under ignored output.
+
+The physical observer distinguishes absent fields from present empty controls and
+uses the protocol's separate input/textarea value tables; see the primary
+[Chromium DOMSnapshot contract](https://raw.githubusercontent.com/ChromeDevTools/devtools-protocol/master/pdl/domains/DOMSnapshot.pdl).
+This mechanism validates presentation selectively; it does not replace bounded
+semantic MCP as the design authoring/inspection contract.
+
 The protected running older server predates this recovery contract and cannot
 export its complete history. Its CanUndo/CanRedo flags establish availability,
 not serialized stacks. A full production preservation bridge and observing HTTP

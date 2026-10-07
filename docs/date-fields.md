@@ -64,11 +64,12 @@ window does not claim to implement that modal-dialog example.
 
 The maintained semantic recipe is
 [date-field-review.operations.json](../tests/date-field-review.operations.json).
-Compose it in an owned empty MCP review with exact expected revisions and one
-transaction, then export bounded accepted-source windows. The protected older
-MCP service cannot yet author typed date domains/bounds. Current source provides
-the typed policy operations described below; observing deployment remains with
-the existing workflow task. The date-field physical fixture enriches the semantic seed
+Compose it in an owned empty MCP review or project with exact expected revisions
+and one transaction, then export bounded accepted-source windows. Current MCP
+supports the typed policy operations below. The observing release qualifies these
+through authenticated MCP and the full desktop/narrow Studio Inspector; see the
+[observing packet](../WORK.md#current-return-path-test-mode-observing-release-refresh--2026-10-06).
+The date-field physical fixture enriches the semantic seed
 using public Pascal contracts and a runtime binding. It does not pretend that
 the enriched design was admitted by the older running MCP service.
 

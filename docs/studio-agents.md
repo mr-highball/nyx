@@ -1,21 +1,21 @@
 # Agents in Nyx Studio
 
-The source candidate advertises nineteen tools, including protected reviews,
-project workspaces, `nyx_state` and `nyx_collections`. The current LAN release and
-this chat's connected native inventory still expose fifteen tools. The separately
-staged current service now has actual authenticated nineteen-tool discovery and
-a bounded semantic session read. It retains an independent copy of the backed-up
-active pair. Automatic approval review rejected replacing the LAN service, so
-current configuration and native chat handles are unchanged. Actual browser
-source-workspace interaction is qualified on the staged host; complete observing
-editor/runtime behavior retains its separate acceptance gates. See the
-[refresh evidence](../WORK.md#reviewable-release-refresh--2026-10-05).
+The current observing release advertises twenty tools, including protected reviews,
+project workspaces, state, collections, typed value-domain policy and presentations.
+Authenticated Pascal MCP drives the actual full editor on desktop and narrow hosts:
+paired source/history, expanded source and real application builds. Explicit
+disposable-test bootstrap retained eight exact previous pairs with fresh ordinary
+handles and seven disclosed history resets; production legacy migration is separate.
+Launch refreshed project and enrolled-user Codex configuration. Cached native chat
+handles need one reconnect after credential rotation; use the authenticated semantic
+client below meanwhile. See
+[current observing evidence](../WORK.md#current-return-path-test-mode-observing-release-refresh--2026-10-06).
 
 Studio starts with agent access enabled and editing allowed. Open **Agents** to
 see the shared revision, connected endpoint and recent operations. **Read only**
 keeps semantic queries available; **Disabled** refuses agent queries and edits.
-These operator controls apply immediately to the current server session and
-return to the enabled default on a new server session. Agents cannot change
+These operator controls apply immediately. Fresh runtimes begin enabled; durable
+runtime recovery retains the saved permission. Agents cannot change
 permissions through MCP. The footer shows recent activity even with the panel
 closed. The panel itself is composed from public Nyx controls.
 

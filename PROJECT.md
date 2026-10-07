@@ -66,6 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The current frozen Studio release now serves the existing observing LAN/MCP ports.
+Explicit test-mode bootstrap retains eight exact project/source pairs, resets seven
+disposable histories and retires ordinary handles with a fresh mapping. Actual
+authenticated twenty-tool MCP drives the full browser editor: 126 desktop checks
+including both real application compiles, and 60 exact-390 checks. Inspector,
+typed source, paired history and expanded source modal follow semantic edits;
+the produced browser application executes. Fourteen other services remain untouched.
+Cached native chat handles need one reconnect; the Pascal semantic client works.
+Production migration and broader parity remain open. See
+[the observing packet](WORK.md#current-return-path-test-mode-observing-release-refresh--2026-10-06).
+
 Ordinary Studio now composes a public typed date-constraint editor and shares
 value-only set/inherit commands with bounded semantic MCP policy queries. Current
 checked matched FPC native Studio passes 82; actual browser/real worker passes 75
