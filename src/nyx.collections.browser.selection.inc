@@ -31,9 +31,14 @@ var
   LIndex: Integer;
   LCount: Integer;
 begin
-  { Every admitted table row participates in navigation/ranges, even when its
-    physical cells are outside the realized viewport. Tree disclosure keeps its
-    existing physical order. The caller owns this copied identity array. }
+  { Every admitted table row participates in navigation/ranges, including rows
+    outside its realized viewport. Trees use the same portable disclosed order
+    as LCL; layout boxes and queued DOM toggle events do not own navigation. }
+
+  if FView.Projection = cpTree then
+  begin
+    Exit(NyxTreeHierarchy(FView).VisibleItems);
+  end;
 
   if FView.Projection = cpTable then
   begin
@@ -471,15 +476,13 @@ begin
     if (LKey = 'ArrowRight') and (FRows[LRow].FChildren.children.length > 0) and
       not TNyxDetails(LElement).open then
     begin
-      TNyxDetails(LElement).open := True;
-      FRows[LRow].Toggle(nil);
+      NyxTreeHierarchy(FView).SetExpanded(FView.Snapshot.ItemAt(LRow).Ref, True);
       Exit;
     end;
 
     if (LKey = 'ArrowLeft') and TNyxDetails(LElement).open then
     begin
-      TNyxDetails(LElement).open := False;
-      FRows[LRow].Toggle(nil);
+      NyxTreeHierarchy(FView).SetExpanded(FView.Snapshot.ItemAt(LRow).Ref, False);
       Exit;
     end;
 

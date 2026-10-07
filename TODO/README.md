@@ -44,6 +44,16 @@ remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
+Latest component prerequisite (2026-10-07): portable bound-tree disclosure now
+feeds both adapters. Exact authenticated English source passes 83 Win32/shared
+checks; grouped semantic composition/source/history passes 37 on the existing
+combined service. Native physical retirement and stale/cancelled queue proposals
+are exercised. Browser consumer/Studios compile only; full parity/visual/budget/
+observing requirements remain. No criterion closes; only renderer no-closure
+advances 13→14 once, other established counts remain 19/32/28/2. Stop this tree
+packet and retain the original prerequisites. See
+[the handoff](../WORK.md#current-return-path-portable-tree-disclosure--2026-10-07).
+
 Latest authoring boundary (2026-10-07): public copied clock-form input now survives
 ordinary shell/panel/compact changes and refusal recovery. Actual full Win32
 Studio passes 51 checks, leak-free; both Studios/browser consumers compile with

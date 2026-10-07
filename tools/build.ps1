@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -51,6 +51,9 @@ param(
   [string]$KeyboardSourceDirectory = 'build/keyboard/mcp',
   # Exact collection review source exported through bounded Nyx MCP queries.
   [string]$TypeAheadSourceDirectory = 'build/typeahead/source',
+  # Optional exact English tree companion exported through one semantic MCP
+  # transaction. Empty builds the public offline fixture; no server is launched.
+  [string]$TreeSourceDirectory,
   # Same accepted confirmation template on both targets, exported through MCP.
   [string]$ConfirmationSourceDirectory = 'build/confirmation/source',
   # Exact English content is composed/exported by the persistent Pascal MCP tool.
@@ -2394,6 +2397,45 @@ try {
     Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Futests', "-FU$nyxGridTool", "-FE$nyxGridTool", 'tests/nyx_grid_navigation_observer.lpr')
     Write-Host 'Grid consumers built; actual HTTP browser execution remains explicit.'
+    exit 0
+  }
+
+  if ($Target -eq 'tree-hierarchy') {
+    # Pascal owns shared/runtime assertions. The optional managed view is the
+    # exact bounded MCP export, never a rewritten demo. Native widgets run here;
+    # browser artifacts stage only. Existing service processes remain untouched.
+    $nyxTreeRoot = Join-Path $nyxRoot 'build/tree-disclosure/maintained'
+    $nyxTreeNative = Join-Path $nyxTreeRoot 'native'
+    $nyxTreeBrowser = Join-Path $nyxTreeRoot 'browser'
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxTreePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxTreeSourceFlags = @()
+
+    if ($TreeSourceDirectory) {
+      $nyxTreeSource = [IO.Path]::GetFullPath($TreeSourceDirectory)
+      if (-not (Test-Path -LiteralPath (Join-Path $nyxTreeSource 'nyx.generated.view.pas'))) {
+        throw 'Supply the exact semantic tree export with TreeSourceDirectory'
+      }
+      $nyxTreeSourceFlags = @("-Fu$nyxTreeSource", '-dNYX_COMPILED_TREE')
+    }
+    New-Item -ItemType Directory -Force $nyxTreeNative | Out-Null
+    $nyxTreeFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', '-Fustudio', "-Fu$nyxLazarus/lcl/units/$nyxTreePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxTreePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxTreePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxTreePlatform", "-FU$nyxTreeNative", "-FE$nyxTreeNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxTreeFlags + $nyxTreeSourceFlags + @('tests/nyx_tree_hierarchy_tests.lpr'))
+    & (Join-Path $nyxTreeNative 'nyx_tree_hierarchy_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Native tree hierarchy consumer failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    if ($BrowserOutput) { $nyxTreeBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxTreeBrowser | Out-Null
+    Invoke-NyxCompiler $nyxPas2js (@('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Futests', '-Fustudio', "-FE$nyxTreeBrowser") + $nyxTreeSourceFlags + @('tests/nyx_tree_hierarchy_tests.lpr'))
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxTreeBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/tree-hierarchy.html') -Destination $nyxTreeBrowser
     exit 0
   }
 

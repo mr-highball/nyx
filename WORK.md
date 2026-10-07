@@ -7,6 +7,110 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: portable tree disclosure — 2026-10-07
+
+The preceding turn is **progress**: copied clock drafts are integrated, the full
+native Studio journey passes 51 leak-free checks and checkpoint `0f30fb8` matches
+the remote branch. Original criteria remain open; workflow/authoring/renderer/
+codegen/delivery no-closure counts remain 19/32/13/28/2. Reassess rather than
+extend clock fixtures: take the concrete native/parity prerequisite of advanced
+component criterion 3. Tree disclosure currently belongs to DOM details and LCL
+nodes, without a portable public application contract. Accepted model/catalog/
+structured-state foundations apply; full renderer/parity prerequisites still gate
+NS-3 acceptance.
+
+Preregistered deliverable: one managed, typed runtime tree hierarchy capability,
+independent of document defaults, preserving branch identity through structural
+publication and query displacement. Both ordinary collection adapters consume
+it, including physical disclosure and existing keyboard routes. Collapsing a
+focused descendant returns focus to the visible branch while retaining selected
+membership/anchor. Explicit programmatic focus reveals ancestors. Public visible
+preorder uses iterative hierarchy traversal. This serves native renderer criteria
+1/2 and parity criterion 2 before returning to full component breadth.
+
+Evidence/stop: checked shared ownership, exact identity, publication/refusal,
+query and deep-hierarchy fixtures; actual ordinary Win32 tree controls, keyboard,
+structural refresh and receiver teardown; unchanged collection/selection
+regressions; matching browser consumer and both Studios compile. Current browser
+execution remains required, and existing rejected browser/backend launches are
+not retried through another route. Stop after this integrated boundary, record
+unexecuted behavior explicitly, retain all protected service/project/release
+bytes and checkpoint the branch. No original criterion or DONE status is earned
+by compilation or fixture counts.
+
+Integrated result: `INyxTreeHierarchy` supplies fluent Boolean disclosure,
+HasChildren, independent visible preorder and an accepted-command stamp, while
+the existing collection interface remains unchanged. Complete-source identities
+retain disclosure through query displacement; actual/grouped removal retires it.
+Copied adjacency/state retain no document/widget/renderer/receiver back-link.
+Both ordinary adapters consume it. Explicit focus reveals ancestors; collapse
+returns to the highest visible closed ancestor without changing membership or
+anchor. Runtime state leaves the authored pair exact.
+
+Native physical disclosure now queues copied identities after LCL returns from
+its node stack. Disconnect/authoritative refresh revoke pending proposals; a
+newer accepted command, including a silent no-op, supersedes an older host action.
+The queued frame remains managed through whole-renderer retirement. Browser
+disclosure uses its coalesced DOM toggle event and shared visible navigation.
+Disabled host changes refuse; read-only still permits disclosure. No listener,
+dependency source, compiler installation or output profile changes.
+
+Evidence under ignored `build/tree-disclosure/`:
+
+- `semantic.log`: **37** actual authenticated MCP assertions, zero leaks. One
+  transport connects to the already-running independently frozen combined
+  service, creates an empty owned review, applies one public typed grouped
+  layout/collection composition, inspects bounded rows/source, performs exact
+  paired Undo/Redo and discards the review. `semantic-source/nyx.generated.view.pas`
+  is the exact accepted English source used by both compilers. Primary revision
+  stays unchanged. No new backend or enrollment is launched/configured.
+- Direct connected-primary composition refuses `Unknown semantic operation:
+  collections`, leaving its empty review at revision 1. That review is discarded.
+  The deployed combined-operation gap and absent semantic runtime tree commands
+  are recorded with the existing workflow owner; no two-step composition or
+  browser automation substitutes for the grouped contract.
+- `maintained-qualified.log`: maintained `tools/build.ps1 -Target tree-hierarchy
+  -TreeSourceDirectory build/tree-disclosure/semantic-source` ends successfully.
+  **83** checked actual Win32/shared assertions, **zero leaks**. Included shared
+  checks are **54**, not added again. Deep 4,096-level preorder/collapse, exact
+  supplementary identity, independent views/snapshots, query/move/reparent,
+  grouped removal, reentry/refusal/post-publication failure and silent commands
+  pass. Ordinary actual native keys, physical expand/collapse, disabled/read-only
+  behavior, visible cursor, attachment retirement, superseded/cancelled queued
+  proposals and whole-renderer destruction during physical publication pass.
+  Matching browser controls compile/stage with seven installed RTL warnings,
+  zero owned warnings; staged DOM/ARIA/focus checks are **not executed**.
+- The early native failure was a fixture lookup error: LCL Items use hierarchical
+  order, not the deliberate child-before-parent source order. Lookup now resolves
+  the fixture's unique exact caption. `native/run.log` is retained; no product
+  baseline failure or weakened assertion is claimed. `native/run2.log` and
+  `maintained.log` are earlier 70/76-check preparations included in the final
+  packet, not added as extra coverage.
+- `view-regression/run.log`, `collections-controls/final-run.log`,
+  `selection/final-run.log`: unchanged **32/27/155** view/control/selection
+  checks, all leak-free. `native-studio/final-compile.log`,
+  `browser-studio/final-compile.log`, `worker/final-compile.log` and
+  `browser-selection/final-compile.log` compile current full consumers with
+  **zero owned warnings**. This establishes compilation, not browser execution
+  or current observing Studio deployment.
+- `preservation-final.log` verifies all **15** existing process identities,
+  **nine** full protected pairs/navigation/draft/history, the **147,033-byte**
+  checkpoint and all **229** sealed LAN payload files. Existing LAN binding/
+  endpoint remains. Combined/query frozen releases and primary user work stay
+  unchanged; no server, browser, profile, enrollment or protected project is
+  replaced. Prior automatically rejected launches are not retried.
+
+No original full criterion or prerequisite closes. Shared renderer no-closure
+advances **13→14** once; workflow/authoring/codegen/delivery stay **19/32/28/2**.
+Component/parity historical counts remain unestablished, never reset or invented.
+End this integrated hierarchy boundary. Current browser trusted/physical execution,
+observing current Studio/backend, runtime semantic controls, hierarchy lazy loading/
+virtualization/drag-drop, breadth/style, accessibility, other widgetsets/DPI and
+production budgets retain their original owners and acceptance requirements.
+The full goal stays active. Next return to current browser/delivery qualification
+when an admitted host is available, or another concrete original component/parity
+prerequisite; do not add another native disclosure fixture packet for convenience.
+
 ## Current return path: clock constraint draft retention — 2026-10-07
 
 The preceding mobile response was **no progress** toward new acceptance: delivered

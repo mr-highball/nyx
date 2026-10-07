@@ -3,6 +3,21 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current tree prerequisite (2026-10-07): both ordinary bound-tree adapters consume
+managed typed disclosure, stable identity through structural/query publication,
+iterative visible preorder and focus independent of membership/anchor. The exact
+English MCP-exported companion passes 83 checked Win32/shared assertions;
+authenticated grouped composition/source/paired history passes 37 on the existing
+combined-operation service. Queue cancellation, newer silent intents and physical
+renderer retirement are exercised. Existing view/control/selection regressions
+pass 32/27/155, leak-free. Matching browser consumer and both Studios compile
+with zero owned warnings. No original full criterion closes; only renderer
+no-closure advances 13→14 once, with workflow/authoring/codegen/delivery remaining
+19/32/28/2. Stop this disclosure boundary. Current browser execution, semantic
+runtime operations, full parity/component/visual/budget acceptance and observing
+delivery retain their gates. Protected services/projects/releases remain exact.
+See [the packet](WORK.md#current-return-path-portable-tree-disclosure--2026-10-07).
+
 Current clock-form draft boundary (2026-10-07): a public typed copied snapshot
 now retains admitted bounds and raw step/choice proposals through ordinary
 browser/native Studio repaint. Exact owner/local-effective baseline and complete

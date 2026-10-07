@@ -23,6 +23,24 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   prerequisite for replacing the time-field text fallback. Other native input
   and full renderer criteria remain required; this allocates no extra credit.
 
+## Portable bound-tree disclosure — 2026-10-07
+
+Criteria 1/2 now consume a managed public tree hierarchy capability in ordinary
+bound controls. Exact source identities preserve disclosure across moves,
+reparenting, queries and removal; collapse preserves membership/anchor and a
+visible cursor. Native physical disclosure/keys, disabled/read-only policy and
+attachment/physical renderer retirement are included in 83 actual/shared checks
+of the unchanged
+authenticated MCP export. Shared/view/control/selection regressions pass
+54/32/27/155, leak-free; 54 is included in 83. Both Studios and browser consumers
+compile with zero owned warnings. See [the packet](../WORK.md#current-return-path-portable-tree-disclosure--2026-10-07).
+
+No original criterion closes. Shared renderer no-closure advances 13→14 once;
+other established counts stay 19/32/28/2. End this disclosure boundary rather
+than adding more native tree fixtures. Current browser execution,
+trusted input/accessibility, widgetsets,
+visual/budget acceptance and full renderer/parity prerequisites remain open.
+
 ## Native picker focus and actual focus events — 2026-10-07
 
 Original criteria 1/2 consume one independently owned weak focus-return helper

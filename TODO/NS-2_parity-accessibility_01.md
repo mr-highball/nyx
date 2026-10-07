@@ -20,6 +20,21 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Bound-tree disclosure contract — 2026-10-07
+
+Criterion 2 now has shared runtime disclosure and visible preorder in both tree
+adapters, with collapsed cursor recovery independent of membership/anchor.
+The unchanged authenticated semantic companion passes 83 checked Win32/shared
+assertions; original native selection/control regressions pass 155/27, leak-free.
+The browser consumer and both Studios compile with zero owned warnings. Browser
+physical-focus/ARIA assertions are staged, not executed, and synthetic disclosure
+does not establish trusted input or assistive technology. See
+[the packet](../WORK.md#current-return-path-portable-tree-disclosure--2026-10-07).
+No criterion/prerequisite closes; historical parity count stays unestablished,
+and only renderer no-closure advances 13→14. Stop local disclosure fixtures and
+retain browser execution, full capability/visual/
+performance and hardware/widgetset/accessibility acceptance requirements.
+
 ## Native picker focus qualification — 2026-10-07
 
 Criterion 2 now has actual Win32 acceptance focus handles and returning callback

@@ -44,6 +44,7 @@ uses
   Classes,
   SysUtils,
   Math,
+  Forms,
   nyx.collections.refresh,
   nyx.collections.lcl.grid,
   StdCtrls,
@@ -74,6 +75,14 @@ type
     FPreviousValidate: TValidateEntryEvent;
     FPreviousTreeChange: TTVChangedEvent;
     FPreviousTreeEdit: TTVEditedEvent;
+    FPreviousTreeExpanded: TTVExpandedEvent;
+    FPreviousTreeCollapsed: TTVExpandedEvent;
+    { Host disclosure publishes after LCL has finished its node call stack.
+      Only exact copied identities/values cross that queue turn. Queue callbacks
+      borrow this mount; DetachTarget revokes them before the receiver dies. }
+    FDisclosureItems: TNyxItemRefs;
+    FDisclosureValues: array of Boolean;
+    FDisclosureSerial: Integer;
     FPreviousOptions: TGridOptions;
     FPreviousReadOnly: Boolean;
     FPreviousKey: TKeyEvent;
@@ -92,6 +101,10 @@ type
     procedure GridEdited(Sender: TObject; ACol, ARow: Integer;
       const OldValue: String; var NewValue: String);
     procedure TreeSelected(Sender: TObject; ANode: TTreeNode);
+    procedure TreeExpanded(Sender: TObject; ANode: TTreeNode);
+    procedure TreeCollapsed(Sender: TObject; ANode: TTreeNode);
+    procedure TreeDisclosure(ANode: TTreeNode; AExpanded: Boolean);
+    procedure PublishDisclosure(AData: PtrInt);
     procedure TreeSelectionChanged(Sender: TObject);
     procedure KeyDown(Sender: TObject; var AKey: Word; AShift: TShiftState);
     procedure UTF8KeyPress(Sender: TObject; var AKey: TUTF8Char);
@@ -194,9 +207,13 @@ begin
         FTree := TTreeView(AControl);
         FPreviousTreeChange := FTree.OnChange;
         FPreviousTreeEdit := FTree.OnEdited;
+        FPreviousTreeExpanded := FTree.OnExpanded;
+        FPreviousTreeCollapsed := FTree.OnCollapsed;
         FPreviousReadOnly := FTree.ReadOnly;
         FTree.OnChange := TreeSelected;
         FTree.OnEdited := TreeEdited;
+        FTree.OnExpanded := TreeExpanded;
+        FTree.OnCollapsed := TreeCollapsed;
         FTree.ReadOnly := AView.Spec.ColumnAt(0).Mode <> cmEditable;
         FPreviousKey := FTree.OnKeyDown;
         FTree.OnKeyDown := KeyDown;
@@ -466,6 +483,143 @@ begin
   end;
 end;
 
+procedure TNativeMount.TreeDisclosure(ANode: TTreeNode; AExpanded: Boolean);
+var
+  LIndex: Integer;
+  LPending: Integer;
+  LItem: TNyxItemRef;
+  LKeepAlive: INyxCollectionMount;
+begin
+
+  if FUpdating or not GetConnected then
+  begin
+    Exit;
+  end;
+  LKeepAlive := Self as INyxCollectionMount;
+
+  if not FEnabled then
+  begin
+    Refresh;
+    Exit;
+  end;
+  LIndex := NodeIndex(ANode);
+
+  if LIndex >= 0 then
+  begin
+    LItem := FView.Snapshot.ItemAt(LIndex).Ref;
+
+    if (Length(FDisclosureItems) > 0) and
+      (FDisclosureSerial <> NyxTreeHierarchy(FView).CommandSerial) then
+    begin
+      Application.RemoveAsyncCalls(Self);
+      FDisclosureItems := nil;
+      FDisclosureValues := nil;
+    end;
+    for LPending := 0 to Length(FDisclosureItems) - 1 do
+    begin
+
+      if FDisclosureItems[LPending].ID = LItem.ID then
+      begin
+        FDisclosureValues[LPending] := AExpanded;
+        Exit;
+      end;
+    end;
+    LPending := Length(FDisclosureItems);
+    SetLength(FDisclosureItems, LPending + 1);
+    SetLength(FDisclosureValues, LPending + 1);
+    FDisclosureItems[LPending] := LItem;
+    FDisclosureValues[LPending] := AExpanded;
+
+    if LPending = 0 then
+    begin
+      FDisclosureSerial := NyxTreeHierarchy(FView).CommandSerial;
+      Application.QueueAsyncCall(PublishDisclosure, 0);
+    end;
+  end;
+end;
+
+procedure TNativeMount.PublishDisclosure(AData: PtrInt);
+var
+  LKeepAlive: INyxCollectionMount;
+  LItems: TNyxItemRefs;
+  LValues: array of Boolean;
+  LIndex: Integer;
+begin
+  LKeepAlive := Self as INyxCollectionMount;
+  LItems := FDisclosureItems;
+  LValues := FDisclosureValues;
+  FDisclosureItems := nil;
+  FDisclosureValues := nil;
+
+  if not GetConnected then
+  begin
+    Exit;
+  end;
+
+  if FDisclosureSerial <> NyxTreeHierarchy(FView).CommandSerial then
+  begin
+    { Even a silent CollapseAll/SetExpanded/explicit focus supersedes a queued
+      host transition. Reconcile physical disclosure without replaying it. }
+    Refresh;
+    Exit;
+  end;
+  for LIndex := 0 to Length(LItems) - 1 do
+  begin
+
+    if not GetConnected then
+    begin
+      Exit;
+    end;
+
+    if FEnabled and FView.Snapshot.Has(LItems[LIndex]) then
+    begin
+      { Publication can retire the whole host. No node or tree pointer crosses
+        this boundary, and the current mount call frame remains managed. }
+      NyxTreeHierarchy(FView).SetExpanded(LItems[LIndex], LValues[LIndex]);
+    end;
+  end;
+
+  if GetConnected then
+  begin
+    Refresh;
+  end;
+end;
+
+procedure TNativeMount.TreeExpanded(Sender: TObject; ANode: TTreeNode);
+var
+  LKeepAlive: INyxCollectionMount;
+begin
+  LKeepAlive := Self as INyxCollectionMount;
+  { Preserve an existing host callback before publication can retire its node. }
+
+  if not FUpdating and Assigned(FPreviousTreeExpanded) then
+  begin
+    FPreviousTreeExpanded(Sender, ANode);
+  end;
+
+  if GetConnected then
+  begin
+    TreeDisclosure(ANode, True);
+  end;
+end;
+
+procedure TNativeMount.TreeCollapsed(Sender: TObject; ANode: TTreeNode);
+var
+  LKeepAlive: INyxCollectionMount;
+begin
+  LKeepAlive := Self as INyxCollectionMount;
+
+  if not FUpdating and Assigned(FPreviousTreeCollapsed) then
+  begin
+    FPreviousTreeCollapsed(Sender, ANode);
+  end;
+
+  if GetConnected then
+  begin
+    TreeDisclosure(ANode, False);
+  end;
+end;
+
 procedure TNativeMount.TreeEdited(Sender: TObject; ANode: TTreeNode;
   var AText: String);
 var
@@ -543,6 +697,7 @@ end;
 procedure TNativeMount.RenderDataset;
 var
   LData: INyxCollectionSnapshot;
+  LHierarchy: INyxTreeHierarchy;
   LIndex: Integer;
   LColumn: Integer;
   LSelected: Integer;
@@ -564,6 +719,15 @@ var
   LEditor: TCustomEdit;
 begin
   LData := FView.Snapshot;
+  { An authoritative view publication supersedes any host proposal queued before
+    it. Never replay that older physical state over a later application command. }
+
+  if Length(FDisclosureItems) > 0 then
+  begin
+    Application.RemoveAsyncCalls(Self);
+    FDisclosureItems := nil;
+    FDisclosureValues := nil;
+  end;
   LRestoreEditor := False;
   LEditingItem := Default(TNyxItemRef);
   LEditingColumn := -1;
@@ -824,6 +988,7 @@ begin
   end
   else
   begin
+    LHierarchy := NyxTreeHierarchy(FView);
     FTree.Items.BeginUpdate;
     try
 
@@ -931,6 +1096,13 @@ begin
           FNodes[LIndex].MultiSelected := FView.Selection.Contains(LData.ItemAt(LIndex).Ref);
         end;
       end;
+      { LCL may open ancestors while setting Selected or moving nodes. Restore
+        public disclosure after those host operations, under FUpdating so host
+        notifications cannot feed back into a view currently publishing. }
+      for LIndex := 0 to Length(FNodes) - 1 do
+      begin
+        FNodes[LIndex].Expanded := LHierarchy.IsExpanded(LData.ItemAt(LIndex).Ref);
+      end;
     finally
       FTree.Items.EndUpdate;
     end;
@@ -940,6 +1112,9 @@ end;
 
 procedure TNativeMount.DetachTarget;
 begin
+  Application.RemoveAsyncCalls(Self);
+  FDisclosureItems := nil;
+  FDisclosureValues := nil;
 
   if FList <> nil then
   begin
@@ -972,6 +1147,8 @@ begin
   begin
     FTree.OnChange := FPreviousTreeChange;
     FTree.OnEdited := FPreviousTreeEdit;
+    FTree.OnExpanded := FPreviousTreeExpanded;
+    FTree.OnCollapsed := FPreviousTreeCollapsed;
     FTree.ReadOnly := FPreviousReadOnly;
     FTree.OnKeyDown := FPreviousKey;
     FTree.OnUTF8KeyPress := FPreviousUTF8;

@@ -57,9 +57,35 @@ type
     property Connected: Boolean read GetConnected;
   end;
 
+  { Optional tree capability, obtained with NyxTreeHierarchy. It retains the
+    runtime view, never a document or host widget. Closed branches are the default.
+    Exact scoped identities retain disclosure through moves, reparenting and
+    query displacement; actual removal retires it. Leaf disclosure is a no-op.
+    Commands publish once through the view's existing ordered subscriptions;
+    nil Changes also denotes disclosure. Reentrant mutation refuses, and observer
+    failures report after publication. Calls remain confined to the UI thread.
+    VisibleItems returns an independent preorder of currently disclosed items.
+    Collapsing returns a hidden cursor to its visible ancestor, preserving both
+    membership and anchor. Explicit view focus reveals its ancestors. }
+  INyxTreeHierarchy = interface
+    ['{B9D00F36-FD30-4F2D-93F8-E820A056DFE7}']
+    { Monotonic accepted-command stamp, including silent no-ops and explicit
+      focus. Adapters use it to refuse an older queued physical proposal after
+      a newer application intent. It is not a store/document revision. }
+    function GetCommandSerial: Integer;
+    function HasChildren(const AItem: TNyxItemRef): Boolean;
+    function IsExpanded(const AItem: TNyxItemRef): Boolean;
+    function SetExpanded(const AItem: TNyxItemRef;
+      AExpanded: Boolean): INyxTreeHierarchy;
+    function ExpandAll: INyxTreeHierarchy;
+    function CollapseAll: INyxTreeHierarchy;
+    function VisibleItems: TNyxItemRefs;
+    property CommandSerial: Integer read GetCommandSerial;
+  end;
+
   { Live portable data view. Owns its store/snapshot/specification and one store
     subscription without retaining a renderer, document or application. Multiple
-    observers are ordered; nil Changes denotes a selection/query publication.
+    observers are ordered; nil Changes denotes selection/query/disclosure.
     Selection owns scoped item identities independently of focus and anchor.
     Moves retain membership; removals prune missing identities and preserve a
     nearby keyboard cursor. Single is the compatible default, Multiple is an
@@ -141,6 +167,9 @@ type
 function NewNyxCollectionView(const AStore: INyxCollection;
   const ASpec: TNyxCollectionViewSpec;
   AProjection: TNyxCollectionProjection): INyxCollectionView;
+{ Refuses nil/non-tree/alternative views without the optional capability. The
+  existing collection interface remains unchanged for alternative implementations. }
+function NyxTreeHierarchy(const AView: INyxCollectionView): INyxTreeHierarchy;
 function NewNyxCollectionContext(
   const ADefaults: INyxCollectionDefaults): INyxCollectionContext;
 { Admit a saved/default projection without constructing a mutable store or
@@ -163,7 +192,7 @@ type
   end;
   TParentIndexes = TNyxQueryIndexes;
 
-  TView = class(TInterfacedObject, INyxCollectionView)
+  TView = class(TInterfacedObject, INyxCollectionView, INyxTreeHierarchy)
   private
     FStore: INyxCollection;
     FSource: INyxCollectionSnapshot;
@@ -172,6 +201,12 @@ type
     FSpec: TNyxCollectionViewSpec;
     FProjection: TNyxCollectionProjection;
     FParents: TParentIndexes;
+    { Disclosure indexes the complete source. Adjacency indexes the query result;
+      neither array contains a widget, tree node, callback or managed back-link. }
+    FExpanded: array of Boolean;
+    FFirstChild: TParentIndexes;
+    FNextSibling: TParentIndexes;
+    FTreeCommandSerial: Integer;
     FSelection: INyxCollectionSelection;
     FStoreToken: INyxCollectionSubscription;
     FTokens: array of TViewSubscription;
@@ -188,6 +223,11 @@ type
     procedure Disconnect(AToken: TViewSubscription);
     function ReconcileSelection(const ASource, AResult,
       APrevious: INyxCollectionSnapshot): INyxCollectionSelection;
+    procedure BuildHierarchy;
+    function TreeIndex(const AItem: TNyxItemRef): Integer;
+    procedure ReconcileTreeFocus;
+    function RevealAncestors(const AFocus: TNyxItemRef): Boolean;
+    procedure AdvanceTreeCommand;
   public
     { TView is an implementation-only type. The temporary validator has no
       subscriptions and remains owned solely by its unit-local caller. }
@@ -222,6 +262,14 @@ type
     procedure Apply(const AEdits: array of TNyxCollectionEdit;
       AExpectedRevision: Integer = -1);
     function Subscribe(AObserver: TNyxCollectionViewObserver): INyxCollectionViewSubscription;
+    function HasChildren(const AItem: TNyxItemRef): Boolean;
+    function GetCommandSerial: Integer;
+    function IsExpanded(const AItem: TNyxItemRef): Boolean;
+    function SetExpanded(const AItem: TNyxItemRef;
+      AExpanded: Boolean): INyxTreeHierarchy;
+    function ExpandAll: INyxTreeHierarchy;
+    function CollapseAll: INyxTreeHierarchy;
+    function VisibleItems: TNyxItemRefs;
   end;
 
   TContext = class(TInterfacedObject, INyxCollectionContext)
@@ -359,6 +407,12 @@ begin
   FQuery := ASpec.QueryPolicy;
   ValidateDataset(FSource, LParents);
   FSnapshot := NyxQuerySnapshot(FSource, FQuery, LParents, FParents);
+
+  if FProjection = cpTree then
+  begin
+    SetLength(FExpanded, FSource.Count);
+  end;
+  BuildHierarchy;
   FSelection := NewNyxCollectionSelection(FSource, [],
     Default(TNyxItemRef), Default(TNyxItemRef));
   FStoreToken := FStore.Subscribe(StoreChanged, ValidateCandidate);
@@ -565,14 +619,52 @@ var
   LResultParents: TParentIndexes;
   LResult: INyxCollectionSnapshot;
   LSelection: INyxCollectionSelection;
+  LExpanded: array of Boolean;
+  LIndex: Integer;
+  LPrevious: Integer;
 begin
   ValidateDataset(AChanges.After, LParents);
   LResult := NyxQuerySnapshot(AChanges.After, FQuery, LParents, LResultParents);
   LSelection := ReconcileSelection(AChanges.After, LResult, FSnapshot);
+  LExpanded := nil;
+  { Disclosure follows exact surviving source identity, including rows currently
+    filtered out. A new item with a previously removed ID starts closed. }
+
+  if FProjection = cpTree then
+  begin
+    SetLength(LExpanded, AChanges.After.Count);
+    for LIndex := 0 to AChanges.After.Count - 1 do
+    begin
+      LPrevious := FSource.IndexOf(AChanges.After.ItemAt(LIndex).Ref);
+
+      if LPrevious >= 0 then
+      begin
+        LExpanded[LIndex] := FExpanded[LPrevious];
+      end;
+    end;
+    { A grouped remove/reinsert can keep the final ID while replacing its runtime
+      instance. Honor the admitted operation log instead of resurrecting state. }
+    for LIndex := 0 to AChanges.Count - 1 do
+    begin
+
+      if AChanges.Kind(LIndex) = nceRemove then
+      begin
+        LPrevious := AChanges.After.IndexOf(AChanges.ItemRef(LIndex));
+
+        if LPrevious >= 0 then
+        begin
+          LExpanded[LPrevious] := False;
+        end;
+      end;
+    end;
+  end;
   FSource := AChanges.After;
   FSnapshot := LResult;
   FParents := LResultParents;
   FSelection := LSelection;
+  FExpanded := LExpanded;
+  BuildHierarchy;
+  ReconcileTreeFocus;
   Notify(AChanges);
 end;
 
@@ -659,6 +751,8 @@ begin
   FSnapshot := LResult;
   FParents := LResultParents;
   FSelection := LSelection;
+  BuildHierarchy;
+  ReconcileTreeFocus;
   Notify(nil);
 end;
 
@@ -762,6 +856,7 @@ var
   LItems: array of TNyxItemRef;
   LIndex: Integer;
   LCount: Integer;
+  LRevealed: Boolean;
 begin
   Writable;
   LSelection := NewNyxCollectionSelection(FSource, AItems, AFocus, AAnchor);
@@ -789,14 +884,20 @@ begin
     end;
   end;
   LSelection := NewNyxCollectionSelection(FSource, LItems, AFocus, AAnchor);
+  AdvanceTreeCommand;
+  { Admission above must finish before disclosure changes. Explicit application
+    focus opens ancestors; a later structural/collapse publication never does. }
+  LRevealed := RevealAncestors(AFocus);
 
-  if FSelection.SameState(LSelection) then
+  if FSelection.SameState(LSelection) and not LRevealed then
   begin
     Exit;
   end;
   FSelection := LSelection;
   Notify(nil);
 end;
+
+{$I nyx.collections.tree.inc}
 
 procedure TView.Select(const AItem: TNyxItemRef; AAction: TNyxSelectionAction);
 var

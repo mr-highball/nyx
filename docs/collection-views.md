@@ -206,7 +206,7 @@ Views retain their stores and accepted snapshots. Their store subscription and
 observer tokens disconnect deterministically without a reference cycle. Multiple
 observers execute in registration order; cancellation can suppress a later
 observer in the same dispatch. Mutations and new subscriptions during dispatch
-reject. A nil change argument denotes a selection-only notification. Receivers
+reject. A nil change argument denotes selection, query or tree disclosure. Receivers
 are borrowed: disconnect their tokens before disposing receivers.
 
 An attachment retains its view and borrows its target control. The renderer
@@ -222,6 +222,97 @@ Read-only permits selection while rejecting edits; disabled controls reject
 selection and editing. Browser design mode disables data editing. Physical
 callbacks enforce this policy even when invoked programmatically; application
 code can still edit its independent store through the typed runtime API.
+
+## Typed runtime tree disclosure
+
+Bound trees expose a managed optional `INyxTreeHierarchy` through their ordinary
+runtime collection view. Alternative view implementations may supply that
+interface; `NyxTreeHierarchy` refuses absent/non-tree/unsupported views without
+changing the existing `INyxCollectionView` interface.
+
+```pascal
+LHandbookView := LRenderer.CollectionView('handbook-tree');
+LHandbookTree := NyxTreeHierarchy(LHandbookView);
+LDocumentation := NyxItem(NyxCollection('handbook'), 'docs');
+
+LHandbookTree
+  .SetExpanded(LDocumentation, True)
+  .ExpandAll;
+
+LVisibleSections := LHandbookTree.VisibleItems;
+```
+
+Branches start closed. Exact scoped identities retain disclosure through source
+moves/reparenting and temporary query displacement. Removal retires disclosure,
+including an admitted grouped remove/reinsert; a no-op store batch does not
+publish a removal. Leaves expose no disclosure and expansion commands on a leaf
+are silent. Commands require an item in the current query result, which can
+include a child hidden by a closed ancestor. `ExpandAll` opens current query
+branches in one publication; `CollapseAll` also clears parked source branches.
+
+`CommandSerial` is a monotonic stamp for accepted disclosure/explicit-focus
+commands, including silent no-ops. It is independent of document/store revision.
+Invalid/reentrant commands do not advance it; exhaustion refuses before mutation.
+Native queued physical proposals compare that stamp before publishing, so a later
+application `CollapseAll`, even an unchanged one, cannot be overwritten by an
+older host expansion. Authoritative view refresh and disconnect revoke pending
+physical proposals. Physical native disclosure publishes on the next UI queue
+turn after LCL returns from its node stack; browser disclosure uses its queued
+DOM toggle event. Direct typed commands publish synchronously on both targets.
+
+`VisibleItems` returns independently owned identities in sibling-stable preorder,
+including datasets with children before their parents. Adjacency construction
+and traversal are iterative; a deep tree does not use recursive call-stack space.
+This contract does not virtualize tree controls: both hosts still materialize
+their rows. Collection lookup/query/model costs and production budgets remain.
+
+Collapsing an ancestor returns a descendant cursor to its highest visible closed
+ancestor, retaining selected membership and anchor. Explicit `Select`/`SetSelection`
+focus opens ancestors before the same publication. A source/query refresh instead
+returns a hidden cursor to its visible ancestor. Descendant disclosure remains
+remembered when an ancestor closes. Selection and disclosure are independent
+runtime state; neither changes document defaults, saved designs, generated source
+or authoring Undo. Controllers retain the view to retain this state through
+navigation; a newly materialized runtime starts independently.
+
+Both adapters consume this public state for physical disclosure and navigation.
+Right opens a closed parent without moving focus, then moves to its first child;
+Left closes an open parent or moves a closed child to its parent. Visible ranges
+and typeahead use the same portable preorder. This follows the
+[WAI tree keyboard pattern](https://www.w3.org/WAI/ARIA/apg/patterns/treeview/).
+The browser exposes `aria-expanded` only on parents and returns physical focus
+from a hidden row to the admitted visible entry. Native expansion slots are
+restored on disconnect; disabled physical disclosure cannot change runtime state,
+while read-only permits disclosure. Existing ordered view observers see one
+publication; no-op commands stay silent, reentry refuses, and observer errors
+report after publication.
+
+Qualification (2026-10-07): the maintained exact MCP-exported English companion
+passes 83 checked Win32/shared assertions, leak-free, including deep traversal,
+query/move/reparent/removal, independent ownership, physical keys/disclosure,
+disabled state, superseded/cancelled host proposals and whole-renderer retirement
+inside physical disclosure publication. The companion's authenticated semantic
+composition/source/paired Undo/Redo passes 37 on the existing combined-operation
+service. The connected primary frozen server refuses combined collection steps;
+its empty refused review is discarded. Collection view/control/selection
+regressions pass 32/27/155. Matching pas2js consumer and both full Studios compile
+with zero owned warnings. Browser checks are staged, **not executed** here;
+synthetic DOM events would not establish trusted pointer/keyboard behavior.
+Hardware/assistive technology, other widgetsets, visuals and full parity remain
+unqualified. Literal unbound tree items have their existing host behavior;
+this capability belongs to typed bound runtime collections.
+
+Reproduce without starting or replacing a service:
+
+```powershell
+& tools/build.ps1 -Target tree-hierarchy -TreeSourceDirectory <exact-mcp-export>
+```
+
+Omit `TreeSourceDirectory` for the independent public Pascal fixture. The Pascal
+consumer's `--semantic <existing-config.toml> <new-export-directory>` mode uses one
+authenticated transport and a temporary owned review, with one grouped typed
+composition and exact bounded source windows. It never edits enrollment, profiles
+or primary user work. It requires a backend admitting combined collection steps.
 
 ## Studio and persistence
 

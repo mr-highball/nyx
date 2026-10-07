@@ -72,37 +72,17 @@ end;
 function TNativeMount.VisibleOrder: TNyxItemRefs;
 var
   LIndex: Integer;
-  LCount: Integer;
-  LNode: TTreeNode;
 begin
-  Result := nil;
-  SetLength(Result, FView.Snapshot.Count);
-  LCount := 0;
 
   if FTree <> nil then
   begin
-    LNode := FTree.Items.GetFirstNode;
-    while LNode <> nil do
-    begin
-      LIndex := NodeIndex(LNode);
-
-      if LIndex >= 0 then
-      begin
-        Result[LCount] := FView.Snapshot.ItemAt(LIndex).Ref;
-        Inc(LCount);
-      end;
-      LNode := LNode.GetNextVisible;
-    end;
-  end
-  else
-  begin
-    LCount := FView.Snapshot.Count;
-    for LIndex := 0 to LCount - 1 do
-    begin
-      Result[LIndex] := FView.Snapshot.ItemAt(LIndex).Ref;
-    end;
+    Exit(NyxTreeHierarchy(FView).VisibleItems);
   end;
-  SetLength(Result, LCount);
+  SetLength(Result, FView.Snapshot.Count);
+  for LIndex := 0 to Length(Result) - 1 do
+  begin
+    Result[LIndex] := FView.Snapshot.ItemAt(LIndex).Ref;
+  end;
 end;
 
 procedure TNativeMount.KeyDown(Sender: TObject; var AKey: Word; AShift: TShiftState);
@@ -293,15 +273,15 @@ begin
 
     if (AKey = VK_RIGHT) and LNode.HasChildren and not LNode.Expanded then
     begin
-      LNode.Expand(False);
       AKey := 0;
+      NyxTreeHierarchy(FView).SetExpanded(LFocus, True);
       Exit;
     end;
 
     if (AKey = VK_LEFT) and LNode.Expanded then
     begin
-      LNode.Collapse(False);
       AKey := 0;
+      NyxTreeHierarchy(FView).SetExpanded(LFocus, False);
       Exit;
     end;
 

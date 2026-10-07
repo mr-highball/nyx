@@ -240,6 +240,19 @@ native protocol engine does not qualify authenticated HTTP. Protected full-histo
 migration remains the rollout prerequisite. No original criterion closes or
 workflow count changes. See [current evidence](../WORK.md#studio-build-controls--2026-10-06).
 
+Current tree boundary (2026-10-07): the primary frozen endpoint refuses a combined
+layout/collection transaction (`Unknown semantic operation: collections`), leaving
+its empty owned review at revision 1; that review is discarded. The already
+running independently frozen combined-operation service admits the public typed
+English companion through one authenticated Pascal client transport: 37 checks
+cover grouped composition, bounded exact source, paired Undo/Redo and retirement.
+Primary projects remain unchanged. This is existing-service qualification, not
+deployment of current backend or observing Studio. Runtime collection disclosure
+also has no semantic inspection/command operation yet. Keep those deployment and
+runtime-operation gaps with this existing owner; no screenshot-driven editor
+workaround or new listener is used. See
+[the packet](../WORK.md#current-return-path-portable-tree-disclosure--2026-10-07).
+
 **Acceptance Criteria:**
 
 Bound typeahead follow-up (2026-10-06): typed runtime policy is available through

@@ -26,6 +26,23 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   time pickers. Full picker/component criteria retain this task's ownership;
   the shared NS-1 prerequisite creates no extra completion credit.
 
+## Portable tree behavior prerequisite — 2026-10-07
+
+Original criteria 1/3 now have one typed managed runtime hierarchy contract in
+both ordinary bound-tree adapters. Stable disclosure, iterative visible preorder,
+focus independent of membership, query displacement and grouped removal are
+integrated. Exact authenticated English source passes 83 Win32/shared checks;
+semantic composition/paired history passes 37 on the existing combined service.
+Browser consumer/Studios compile only, not executed parity. See
+[the packet](../WORK.md#current-return-path-portable-tree-disclosure--2026-10-07)
+and [the contract](../docs/collection-views.md#typed-runtime-tree-disclosure).
+
+No original criterion or component count is created/closed/reset. Only shared
+renderer no-closure advances 13→14. Stop this bounded disclosure packet. Original
+parity prerequisites, executed browser, production breadth/style, hierarchy
+virtualization/lazy loading, drag/drop, application scheduling, accessibility and
+budgets remain required rather than being replaced with fixture totals.
+
 ## Native exact clock picker preparation — 2026-10-07
 
 Ordinary time fields now use an owned native grouped editor/popup with exact

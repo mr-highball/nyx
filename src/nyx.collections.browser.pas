@@ -1020,10 +1020,34 @@ begin
 end;
 
 function TBrowserRow.Toggle(AEvent: TEventListenerEvent): Boolean;
+var
+  LMount: INyxCollectionMount;
+  LHierarchy: INyxTreeHierarchy;
+  LExpanded: Boolean;
 begin
   Result := True;
+  LMount := FOwner as INyxCollectionMount;
 
-  if FChildren.children.length = 0 then
+  if not LMount.Connected then
+  begin
+    Exit;
+  end;
+  LHierarchy := NyxTreeHierarchy(FOwner.FView);
+  { Real disclosure proposes runtime state. A nil event synchronizes and never
+    publishes during Notify. DOM toggle events coalesce; current final state is
+    authoritative instead of an obsolete event transition. }
+  LExpanded := TNyxDetails(FElement).open;
+
+  if (AEvent <> nil) and FOwner.FEnabled and LHierarchy.HasChildren(FRef) and
+    (LExpanded <> LHierarchy.IsExpanded(FRef)) then
+  begin
+    LHierarchy.SetExpanded(FRef, LExpanded);
+    { An observer can free this row. Only managed locals may be used afterward. }
+    Exit;
+  end;
+  TNyxDetails(FElement).open := LHierarchy.IsExpanded(FRef);
+
+  if not LHierarchy.HasChildren(FRef) then
   begin
     { A leaf is not a collapsed parent. Exposing aria-expanded on it would
       advertise disclosure that has no corresponding tree children. }

@@ -66,6 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Bound trees now consume a managed typed runtime disclosure capability in both
+adapters: stable branch identity, iterative visible preorder, preserved membership/
+anchor and visible cursor recovery. The unchanged authenticated semantic companion
+passes 83 checked Win32/shared assertions and 37 MCP/source/history checks,
+leak-free. Physical native disclosure safely queues past the node stack; later
+application commands/unmount revoke stale proposals. View/control/selection
+regressions pass 32/27/155. Both Studios/browser consumers compile with zero owned
+warnings; current browser execution/visuals/accessibility and observing rollout
+remain open. Existing services/projects stay exact. See
+[the tree packet](WORK.md#current-return-path-portable-tree-disclosure--2026-10-07).
+
 Studio now consumes a public copied clock-form draft on both hosts. Actual full
 Win32 Studio passes 51 checks, including retained incomplete input, panel/compact
 changes, refusal correction, paired Apply/Undo/Redo and owner/project retirement,
