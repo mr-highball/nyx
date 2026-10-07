@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1819,6 +1819,33 @@ try {
       'tests/nyx_typeahead_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/typeahead.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'data-read') {
+    # Keep wall-clock samples separate from heap-traced ownership regressions.
+    # Pascal owns the workload and exact-value checks. Staging never launches a
+    # browser/service or changes an operator document/enrollment.
+    $nyxDataReadRoot = Join-Path $nyxRoot 'build/data-index/maintained'
+    $nyxDataReadNative = Join-Path $nyxDataReadRoot 'native'
+    $nyxDataReadBrowser = Join-Path $nyxDataReadRoot 'browser'
+    New-Item -ItemType Directory -Force $nyxDataReadNative, $nyxDataReadBrowser | Out-Null
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-O2', '-Sa', '-Cr', '-Co', '-Ci',
+      '-Fusrc', "-FU$nyxDataReadNative", "-FE$nyxDataReadNative",
+      'tools/nyx_data_read_bench.lpr')
+    & (Join-Path $nyxDataReadNative 'nyx_data_read_bench.exe')
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Structured-value read benchmark lost exact values/order'
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', "-FE$nyxDataReadBrowser", 'tools/nyx_data_read_bench.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxDataReadBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/data-read.html') `
+      -Destination $nyxDataReadBrowser
+    Write-Host 'Native read sample completed; browser sample staged without execution.'
     exit 0
   }
 

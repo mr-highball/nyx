@@ -7,6 +7,104 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: indexed structured-value reads — 2026-10-07
+
+Previous turn is progress at pushed `99c8efd`; authenticated bounded queries,
+source/history and four exact-input compiles pass. Reassessment now follows a
+concrete performance prerequisite rather than repeating the timed-out browser
+driver. Original NS-3 performance criterion 2 and the existing source/workflow
+consumers own this batch. `TNyxDataValue` now indexes immediate members and caches
+scalar text, retaining strict admission, exact canonical JSON/numeric spelling,
+Unicode and independent ownership. The bounded library implementation and native
+evidence are complete; current browser execution/observing and broader production
+budgets remain required. Stop index fixture expansion and retain those gates;
+the rejected browser launch is not retried through another route.
+
+Source inspection establishes a concrete repeated-work path: every Count/Key/
+Field/Item currently decodes the full container, and child lookup parses again.
+Long sibling values therefore multiply the cost of bounded semantic reads. This
+does not prove the browser timeout's cause. The index keeps only immediate
+offsets/lengths/exact decoded keys beside canonical text; it retains
+neither mutable JSON trees nor duplicated descendant payloads or caller arrays.
+One strict parse owns construction; a cursor only indexes already admitted
+formatter output, including whitespace and escaped structural characters. Child
+extraction still uses ordinary strict admission and owns only its child payload.
+Copy explicitly copies metadata arrays under both compilers. Cached reads retain
+the former byte-budget refusal if formatting expands an admitted input too far.
+No schema, persistence version, semantic tool or generated authoring API changes.
+
+The maintained Pascal `nyx_data_read_bench` separates construction from exact
+Count/Key/Field/text reads. Each sample has four sibling values, sixteen complete
+read rounds, supplementary Unicode/NUL and verified checksums. Native before/
+after use the same FPC 3.3.1 Win32 compiler, `-O2 -Sa -Cr -Co -Ci`, without heap
+tracing. These are wall-clock samples, not statistical production budgets:
+
+| ASCII prefix per value | Before read (ms) | After read (ms) | Exact checksum |
+| ---: | ---: | ---: | ---: |
+| 512 | 0 | 0 | 33088 |
+| 5001 | 109 | 16 | 320384 |
+| 50001 | 1015 | 141 | 3200384 |
+
+Zero means below the native clock's resolution, not zero work. Construction
+samples remain 0/0/16 ms before and 0/0/0 ms after; they are too small to support
+a construction-speed claim. New maintained `tools/build.ps1 -Target data-read`
+also runs correctly (read samples 0/15/125 ms) and stages the identical browser
+Pascal/RTL/English host without launching it. Comparisons apply to this native
+workload, not cross-target speed or complete Studio latency.
+
+Checked native core/designer regressions pass **30/1793**, including twelve new
+meaningful snapshot cases: escaped structure, mixed nested types, exact empty/
+NUL/supplementary keys, wide indexes, independent child/copy lifetime, missing/
+wrong-kind/end/negative refusal and exact decimal/canonical bytes. Existing
+Unicode/duplicate/depth/member/byte, persistence/history/source tests remain.
+Actual compiled general Pascal executes **eight** reconstruction/runtime checks.
+Typed query policies pass **56**, their actual compiled builders **57**, and
+ordinary Win32 table controls **75**, consuming the unchanged **3704-byte**
+English grid export from the previous authenticated semantic companion.
+All checked native owners free every allocation; owned warnings are zero.
+
+The unchanged full semantic collection journey passes **117** under the same
+checked heap-traced flags. Its cumulative allocations fall from
+**122604856 blocks / 77008357058 bytes** to
+**26402206 blocks / 15821606570 bytes**, with zero unfreed blocks in each run.
+That is about 79% fewer cumulative allocated bytes, not a resident-memory or
+latency claim. Remaining allocation/source/candidate costs still require measured
+budgets; this is not completion of performance criterion 2.
+
+Current pas2js compiles the exact new shared data assertions, core/designer suite,
+read sample, full collection journey, Studio, source worker and generated-source
+consumer; query/control target stages its compiled consumer too. Seven installed
+RTL warnings remain visible per compilation without dependency edits. No current
+browser execution, visual/input parity or browser-timeout resolution is claimed.
+The previous automatic-review rejection of a separate hidden browser launch,
+stated only as "blocked by policy", remains an explicit gate. No equivalent
+launch through another route or new permission request was made.
+
+Evidence: `build/data-index/before-build.log`/`before.csv`,
+`after-build.log`/`after.csv`, `maintained-build.log`, `core-build.log`/`core.log`,
+`query-build.log`/`query.log`, `generated-build.log`/`generated.log`,
+`generated-browser-build.log`, `browser-build.log` and
+`query-controls-build.log`. Optimized timing and heap-traced ownership are kept
+separate. Native exports live under `native/generated/`; browser outputs under
+`browser/` and `maintained/browser/` are staged only, not served/deployed authority.
+
+Fresh preservation checks retain the original **15** process identities, **9**
+exact accepted/source/draft/navigation/history/permission pairs, **147033-byte**
+checkpoint and **229** frozen LAN files. The separately owned prior **242-file**
+query candidate is also exact; it retains its prior snapshot implementation.
+No service, enrollment, observing project or frozen source is refreshed. Its
+authenticated 235 checks remain evidence for that preserved candidate, not a live
+qualification of the new indexing implementation.
+
+No original criterion closes; known authoring/workflow/renderer/codegen/delivery
+counts remain **30/18/9/28/2**. NS-3's historical no-closure count is unestablished;
+this bounded prerequisite does not reset it or invent completion credit.
+Reassessment ends index work here. Next qualify the changed browser read/candidate
+and observing Studio boundary under the existing workflow/performance owners;
+retain the unproven timeout cause. Then continue original large-data/update/
+virtualization budgets, cross-domain semantic transactions and component quality.
+The full user goal remains active.
+
 ## Current return path: bounded collection-query MCP — 2026-10-07
 
 The previous public-form batch is progress at pushed `6a28cca`; it supplies the

@@ -136,8 +136,119 @@ var
   LSource: TNyxText;
   LParts: TNyxStrings;
   LIndex: Integer;
+
+  { Container punctuation inside escaped keys/strings must never become an
+    indexed boundary. Child snapshots keep exact meaning after every parent and
+    caller record is reassigned; cached reads retain ordinary contract failures. }
+  procedure IndexedReads;
+  var
+    LParent: TNyxDataValue;
+    LSaved: TNyxDataValue;
+    LChild: TNyxDataValue;
+    LLeaf: TNyxDataValue;
+    LName: TNyxText;
+    LNested: TNyxText;
+    LCanonical: TNyxText;
+    LRejected: Boolean;
+    LNumbers: array of TNyxDataValue;
+    LNumber: Integer;
+  begin
+    LName := TNyxText('nul') + NyxScalarText(0) + TNyxText('moon🌙');
+    LParent := TNyxDataValue.ParseJSON(
+      '{"": [{"[]":"a\"b\\c{}[],","empty":{}},false,-0.000E+00],' +
+      '"nul\u0000moon\ud83c\udf19":"🌙\u0000true", "A":null}');
+    Check((LParent.Count = 3) and (LParent.Key(0) = '') and
+      (LParent.Key(1) = LName) and (LParent.Key(2) = 'A'),
+      'indexed object keys retain exact empty/NUL/supplementary identity/order', Result);
+    LCanonical := LParent.ToJSON;
+    Check(TNyxDataValue.ParseJSON(LCanonical).ToJSON = LCanonical,
+      'indexed snapshot retains canonical interchange bytes', Result);
+    LChild := LParent.Field('');
+    Check((LChild.Count = 3) and (LChild.Item(0).Kind = ndObject) and
+      not LChild.Item(1).AsBoolean and
+      (LChild.Item(2).AsDecimal.Text = '-0.000E+00'),
+      'indexed array retains mixed kinds and exact number spelling', Result);
+    Check((LChild.Item(0).Field('[]').AsText = 'a"b\c{}[],') and
+      (LChild.Item(0).Field('empty').Count = 0),
+      'escaped quotes/slashes and container punctuation remain string data', Result);
+    LLeaf := LParent.Field(LName);
+    LSaved := LParent.Copy;
+    LParent := NyxObject([]);
+    Check((LSaved.ToJSON = LCanonical) and (LSaved.Count = 3) and
+      (LChild.Item(0).Field('[]').AsText = 'a"b\c{}[],'),
+      'copied index and child outlive reassigned parent', Result);
+    LSaved := NyxNull;
+    LChild := NyxArray([]);
+    Check(LLeaf.Copy.AsText = TNyxText('🌙') + NyxScalarText(0) + TNyxText('true'),
+      'cached scalar is independent of released containers and never coerces text', Result);
+    LRejected := False;
+    try
+      LLeaf.Count;
+    except
+      on ENyxJSON do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'cached scalar cannot supply a container count', Result);
+    LRejected := False;
+    try
+      LParent.Field('missing');
+    except
+      on ENyxJSON do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'indexed missing object member refuses', Result);
+    LRejected := False;
+    try
+      LChild.Item(0);
+    except
+      on ENyxJSON do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'indexed empty array rejects its end index', Result);
+    LRejected := False;
+    try
+      LChild.Item(-1);
+    except
+      on ENyxJSON do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'indexed array rejects a negative index', Result);
+    SetLength(LNumbers, 1024);
+    for LNumber := 0 to High(LNumbers) do
+    begin
+      LNumbers[LNumber] := NyxData(LNumber - 512);
+    end;
+    LParent := NyxArray(LNumbers);
+    LSaved := LParent.Copy;
+    LNumbers[512] := NyxData('replaced caller');
+    LParent := NyxNull;
+    Check((LSaved.Count = 1024) and (LSaved.Item(0).AsInteger = -512) and
+      (LSaved.Item(512).AsInteger = 0) and (LSaved.Item(1023).AsInteger = 511),
+      'wide copied array retains first/middle/final offsets and caller independence', Result);
+    LNested := '{"inside":["[]{}\"\\",{"end":true}]}';
+    for LNumber := 1 to 20 do
+    begin
+      LNested := '[' + LNested + ']';
+    end;
+    LChild := TNyxDataValue.ParseJSON(LNested);
+    for LNumber := 1 to 20 do
+    begin
+      LChild := LChild.Item(0);
+    end;
+    Check(LChild.Field('inside').Item(1).Field('end').AsBoolean,
+      'nested container spans ignore escaped structural characters', Result);
+  end;
 begin
   Result := 0;
+  IndexedReads;
   LReference := Default(TNyxExtensionRef);
   LValue := NyxData(TNyxText('🌙漢字') + NyxScalarText(0) + TNyxText('true'));
   Check((LValue.Kind = ndText) and

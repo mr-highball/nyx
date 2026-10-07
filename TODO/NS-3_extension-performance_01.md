@@ -9,7 +9,21 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Observed query-fixture cost (2026-10-07): checked native semantic collections
+Current structured-read improvement (2026-10-07): immutable immediate-member
+indexes/cached text avoid repeated parent decoding while retaining strict child
+admission and exact canonical values. The same optimized native long-text sample
+falls 1015→141 ms, with identical checksums. Unchanged checked collection semantics
+pass 117 and reduce cumulative allocations 77.0→15.8 GB, all freed. Core/designer
+regressions pass 30/1793; typed/compiled query cases 56/57 and actual Win32 controls
+75 pass. Browser contract/query/Studio/worker/generated consumers compile; no
+current browser execution or timeout-cause proof is claimed. This advances
+criterion 2's measured-work prerequisite, not its production both-target budgets.
+No criterion closes; this bounded implementation does not establish/reset the
+unrecorded historical NS-3 no-closure count. Known other-owner counts stay exact.
+Stop index fixtures and follow existing browser-observing/source/performance gates.
+See [the packet](../WORK.md#current-return-path-indexed-structured-value-reads--2026-10-07).
+
+Previous query-fixture cost (2026-10-07): checked native semantic collections
 pass 117 with zero leaks, but allocate about 77 GB cumulatively under heap tracing;
 the focused long-value query path passes 19 with about 760 MB cumulative
 allocations. These totals are neither live resident memory nor production timing.

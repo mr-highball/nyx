@@ -3,7 +3,22 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current bounded-query workflow (2026-10-07): the existing MCP tool supplies small
+Current structured-read performance (2026-10-07): immutable immediate-member
+indexes/cached text preserve canonical data, exact values and independent
+ownership. Native checked core/designer regressions pass 30/1793, collection
+semantics 117 and real Win32 query controls 75; typed/compiled query fixtures pass
+56/57. The same optimized long-text sample reads in 141 ms versus 1015 ms before.
+Checked full-query cumulative allocations fall 77.0→15.8 GB, all freed. Browser
+contracts/Studio/worker compile, but browser execution/observing and production
+budgets remain unqualified. Protected services/pairs/payload stay exact. No
+original criterion closes; known authoring/workflow/renderer/codegen/delivery
+counters remain 30/18/9/28/2. NS-3's historical no-closure count remains
+unestablished, not reset or silently credited. Stop index fixture expansion and
+retain browser readiness/observation and wider performance outcomes with their
+existing owners. See
+[the packet](WORK.md#current-return-path-indexed-structured-value-reads--2026-10-07).
+
+Previous bounded-query workflow (2026-10-07): the existing MCP tool supplies small
 predicate pages/exact scalar windows and typed query-only grouped mutations.
 Checked native collection admission passes 117, including 19 focused query checks.
 A separately owned current authenticated backend passes 235 source/history/

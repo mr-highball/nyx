@@ -51,13 +51,24 @@ type
     child objects or caller arrays to mutate after admission. Copy explicitly
     copies fields for pas2js record semantics. Default records are invalid.
     ParseJSON/ToJSON are explicit interchange boundaries; authoring uses typed
-    factories below. Object member order and array order remain significant. }
+    factories below. Object member order and array order remain significant.
+    Immediate members are indexed once beside canonical text; reads never parse
+    unrelated siblings. No mutable JSON tree or descendant payload is retained.
+    Text reads reuse the exact admitted scalar. Child extraction admits its own
+    snapshot, so a small child does not retain a large parent or its index. }
   TNyxDataValue = record
   private
     FKind: TNyxDataKind;
     FJSON: TNyxText;
+    FText: TNyxText;
+    FReadBudget: Boolean;
+    FMemberNames: array of TNyxText;
+    FMemberStarts: array of Integer;
+    FMemberLengths: array of Integer;
     function GetDefined: Boolean;
     procedure RequireKind(AKind: TNyxDataKind);
+    procedure RequireReadBudget;
+    function Member(AIndex: Integer): TNyxDataValue;
   public
     class function ParseJSON(const ASource: TNyxText): TNyxDataValue; static;
     procedure Validate;
@@ -192,6 +203,114 @@ const
 var
   LData: TJSONData;
   LType: TJSONType;
+  LPosition: Integer;
+  LMember: Integer;
+  {$ifdef PAS2JS}
+  LIndex: Integer;
+  LScalar: Integer;
+  LBytes: Integer;
+  {$endif}
+
+  { Only trusted formatter output reaches this cursor. Admission still belongs
+    to DecodeNyxJSON, including Unicode, exact numbers, duplicates and budgets.
+    The cursor locates immediate spans without reparsing/formatting each child;
+    it accepts formatter whitespace on either target and checks every boundary. }
+  procedure SkipSpace;
+  begin
+    while (LPosition <= Length(Result.FJSON)) and
+      (Result.FJSON[LPosition] in [#9, #10, #13, ' ']) do
+    begin
+      Inc(LPosition);
+    end;
+  end;
+
+  procedure Take(AChar: Char);
+  begin
+    SkipSpace;
+
+    if (LPosition > Length(Result.FJSON)) or (Result.FJSON[LPosition] <> AChar) then
+    begin
+      raise ENyxJSON.Create('Snapshot formatter emitted an unexpected boundary');
+    end;
+    Inc(LPosition);
+  end;
+
+  procedure SkipString;
+  begin
+    Take('"');
+    while LPosition <= Length(Result.FJSON) do
+    begin
+
+      if Result.FJSON[LPosition] = '"' then
+      begin
+        Inc(LPosition);
+        Exit;
+      end;
+
+      if Result.FJSON[LPosition] = '\' then
+      begin
+        { Escaped quotes/brackets are string data; strict admission has already
+          qualified escape/surrogate syntax, including the following character. }
+        Inc(LPosition);
+      end;
+      Inc(LPosition);
+    end;
+    raise ENyxJSON.Create('Snapshot formatter omitted a string terminator');
+  end;
+
+  procedure SkipValue;
+  var
+    LDepth: Integer;
+  begin
+    SkipSpace;
+
+    if LPosition > Length(Result.FJSON) then
+    begin
+      raise ENyxJSON.Create('Snapshot formatter omitted a value');
+    end;
+
+    if Result.FJSON[LPosition] = '"' then
+    begin
+      SkipString;
+    end
+    else if Result.FJSON[LPosition] in ['{', '['] then
+    begin
+      LDepth := 0;
+      repeat
+
+        if LPosition > Length(Result.FJSON) then
+        begin
+          raise ENyxJSON.Create('Snapshot formatter omitted a container terminator');
+        end;
+
+        if Result.FJSON[LPosition] = '"' then
+        begin
+          SkipString;
+        end
+        else
+        begin
+
+          if Result.FJSON[LPosition] in ['{', '['] then
+          begin
+            Inc(LDepth);
+          end
+          else if Result.FJSON[LPosition] in ['}', ']'] then
+          begin
+            Dec(LDepth);
+          end;
+          Inc(LPosition);
+        end;
+      until LDepth = 0;
+    end
+    else
+    begin
+      while (LPosition <= Length(Result.FJSON)) and
+        not (Result.FJSON[LPosition] in [#9, #10, #13, ' ', ',', '}', ']']) do
+      begin
+        Inc(LPosition);
+      end;
+    end;
+  end;
 begin
   LData := DecodeNyxJSON(ASource);
   try
@@ -200,6 +319,104 @@ begin
     LType := LData.JSONType;
     Result.FKind := CKinds[LType];
     Result.FJSON := LData.AsJSON;
+    Result.FText := '';
+    Result.FMemberNames := nil;
+    Result.FMemberStarts := nil;
+    Result.FMemberLengths := nil;
+    { Formatting can expand an admitted raw string/container beyond the reader's
+      byte budget. Preserve the former read-time refusal instead of making a
+      cached read bypass it. Native TNyxText units are already UTF-8 bytes. }
+    Result.FReadBudget := Length(Result.FJSON) <= NyxMaximumJSONBytes;
+    {$ifdef PAS2JS}
+    LIndex := 1;
+    LBytes := 0;
+    while Result.FReadBudget and (LIndex <= Length(Result.FJSON)) do
+    begin
+
+      if not NyxNextScalar(Result.FJSON, LIndex, LScalar) then
+      begin
+        raise ENyxJSON.Create('Snapshot formatter emitted malformed Unicode');
+      end;
+
+      if LScalar <= $7f then
+      begin
+        Inc(LBytes);
+      end
+      else if LScalar <= $7ff then
+      begin
+        Inc(LBytes, 2);
+      end
+      else if LScalar <= $ffff then
+      begin
+        Inc(LBytes, 3);
+      end
+      else
+      begin
+        Inc(LBytes, 4);
+      end;
+      Result.FReadBudget := LBytes <= NyxMaximumJSONBytes;
+    end;
+    {$endif}
+
+    if Result.FKind = ndText then
+    begin
+      Result.FText := LData.AsString;
+    end;
+
+    if Result.FReadBudget and (Result.FKind in [ndObject, ndArray]) then
+    begin
+      SetLength(Result.FMemberStarts, LData.Count);
+      SetLength(Result.FMemberLengths, LData.Count);
+
+      if Result.FKind = ndObject then
+      begin
+        SetLength(Result.FMemberNames, LData.Count);
+      end;
+      LPosition := 1;
+
+      if Result.FKind = ndObject then
+      begin
+        Take('{');
+      end
+      else
+      begin
+        Take('[');
+      end;
+      for LMember := 0 to LData.Count - 1 do
+      begin
+
+        if LMember > 0 then
+        begin
+          Take(',');
+        end;
+
+        if Result.FKind = ndObject then
+        begin
+          Result.FMemberNames[LMember] := TJSONObject(LData).Names[LMember];
+          SkipString;
+          Take(':');
+        end;
+        SkipSpace;
+        Result.FMemberStarts[LMember] := LPosition;
+        SkipValue;
+        Result.FMemberLengths[LMember] := LPosition - Result.FMemberStarts[LMember];
+      end;
+
+      if Result.FKind = ndObject then
+      begin
+        Take('}');
+      end
+      else
+      begin
+        Take(']');
+      end;
+      SkipSpace;
+
+      if LPosition <= Length(Result.FJSON) then
+      begin
+        raise ENyxJSON.Create('Snapshot formatter emitted trailing data');
+      end;
+    end;
   finally
     LData.Free;
   end;
@@ -224,11 +441,52 @@ begin
   end;
 end;
 
+procedure TNyxDataValue.RequireReadBudget;
+begin
+
+  if not FReadBudget then
+  begin
+    raise ENyxJSON.Create('JSON exceeds 4 MiB formatted UTF-8 read budget');
+  end;
+end;
+
+function TNyxDataValue.Member(AIndex: Integer): TNyxDataValue;
+begin
+  RequireReadBudget;
+
+  if (AIndex < 0) or (AIndex >= Length(FMemberStarts)) then
+  begin
+    raise ENyxJSON.Create('Data member index out of range');
+  end;
+  Result := ParseJSON(System.Copy(FJSON, FMemberStarts[AIndex], FMemberLengths[AIndex]));
+end;
+
 function TNyxDataValue.Copy: TNyxDataValue;
+var
+  LIndex: Integer;
 begin
   Validate;
   Result.FKind := FKind;
   Result.FJSON := FJSON;
+  Result.FText := FText;
+  Result.FReadBudget := FReadBudget;
+  Result.FMemberNames := nil;
+  Result.FMemberStarts := nil;
+  Result.FMemberLengths := nil;
+  { The index contains only immutable text/integer values. Explicit arrays keep
+    both compilers' record-copy semantics independent; no JSON owner is shared. }
+  SetLength(Result.FMemberNames, Length(FMemberNames));
+  for LIndex := 0 to High(FMemberNames) do
+  begin
+    Result.FMemberNames[LIndex] := FMemberNames[LIndex];
+  end;
+  SetLength(Result.FMemberStarts, Length(FMemberStarts));
+  SetLength(Result.FMemberLengths, Length(FMemberLengths));
+  for LIndex := 0 to High(FMemberStarts) do
+  begin
+    Result.FMemberStarts[LIndex] := FMemberStarts[LIndex];
+    Result.FMemberLengths[LIndex] := FMemberLengths[LIndex];
+  end;
 end;
 
 function TNyxDataValue.GetDefined: Boolean;
@@ -243,16 +501,10 @@ begin
 end;
 
 function TNyxDataValue.AsText: TNyxText;
-var
-  LData: TJSONData;
 begin
   RequireKind(ndText);
-  LData := DecodeNyxJSON(FJSON);
-  try
-    Result := LData.AsString;
-  finally
-    LData.Free;
-  end;
+  RequireReadBudget;
+  Result := FText;
 end;
 
 function TNyxDataValue.AsBoolean: Boolean;
@@ -292,8 +544,6 @@ begin
 end;
 
 function TNyxDataValue.Count: Integer;
-var
-  LData: TJSONData;
 begin
   Validate;
 
@@ -301,68 +551,49 @@ begin
   begin
     raise ENyxJSON.Create('Count requires an array or object');
   end;
-  LData := DecodeNyxJSON(FJSON);
-  try
-    Result := LData.Count;
-  finally
-    LData.Free;
-  end;
+  RequireReadBudget;
+  Result := Length(FMemberStarts);
 end;
 
 function TNyxDataValue.Key(AIndex: Integer): TNyxText;
-var
-  LData: TJSONData;
 begin
   RequireKind(ndObject);
-  LData := DecodeNyxJSON(FJSON);
-  try
+  RequireReadBudget;
 
-    if (AIndex < 0) or (AIndex >= LData.Count) then
-    begin
-      raise ENyxJSON.Create('Data member index out of range');
-    end;
-    Result := TJSONObject(LData).Names[AIndex];
-  finally
-    LData.Free;
+  if (AIndex < 0) or (AIndex >= Length(FMemberNames)) then
+  begin
+    raise ENyxJSON.Create('Data member index out of range');
   end;
+  Result := FMemberNames[AIndex];
 end;
 
 function TNyxDataValue.Field(const AName: TNyxText): TNyxDataValue;
 var
-  LData: TJSONData;
-  LField: TJSONData;
+  LIndex: Integer;
 begin
   RequireKind(ndObject);
-  LData := DecodeNyxJSON(FJSON);
-  try
-    LField := TJSONObject(LData).Find(AName);
+  RequireReadBudget;
+  for LIndex := 0 to High(FMemberNames) do
+  begin
 
-    if LField = nil then
+    if FMemberNames[LIndex] = AName then
     begin
-      raise ENyxJSON.Create('Data member is missing: ' + AName);
+      Exit(Member(LIndex));
     end;
-    Result := ParseJSON(LField.AsJSON);
-  finally
-    LData.Free;
   end;
+  raise ENyxJSON.Create('Data member is missing: ' + AName);
 end;
 
 function TNyxDataValue.Item(AIndex: Integer): TNyxDataValue;
-var
-  LData: TJSONData;
 begin
   RequireKind(ndArray);
-  LData := DecodeNyxJSON(FJSON);
-  try
+  RequireReadBudget;
 
-    if (AIndex < 0) or (AIndex >= LData.Count) then
-    begin
-      raise ENyxJSON.Create('Data item index out of range');
-    end;
-    Result := ParseJSON(LData.Items[AIndex].AsJSON);
-  finally
-    LData.Free;
+  if (AIndex < 0) or (AIndex >= Length(FMemberStarts)) then
+  begin
+    raise ENyxJSON.Create('Data item index out of range');
   end;
+  Result := Member(AIndex);
 end;
 
 function NyxNull: TNyxDataValue;

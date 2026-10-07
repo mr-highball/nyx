@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Structured-value snapshots now index immediate members and retain exact scalar
+text, removing repeated full-container JSON decoding from reads. The same native
+long-text sample falls from 1015 ms to 141 ms; the unchanged 117-check collection
+journey reduces cumulative allocations from 77.0 GB to 15.8 GB, with zero leaks.
+Core/designer regressions pass 30/1793 and actual Win32 query controls pass 75.
+Browser contracts, query path, Studio/worker and generated consumer compile;
+current browser execution, observing delivery and production budgets remain open.
+Existing frozen services/projects remain exact. See
+[the performance packet](WORK.md#current-return-path-indexed-structured-value-reads--2026-10-07).
+
 The current isolated backend supports bounded predicate pages/value windows and
 typed query-only grouped changes through the existing collection MCP tool.
 Authenticated source/history/refusal and all four browser/LCL application/view

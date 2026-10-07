@@ -7,6 +7,12 @@ Pascal. PowerShell only selects tools, passes compiler arguments and stages
 matched target artifacts. No Node, npm, Python, CSS framework or remote font is
 required.
 
+`data-read` measures exact structured-value construction/reads in an optimized
+checked native Pascal workload and stages its browser counterpart with matched
+RTL. Heap tracing is omitted from timing; ownership and codec/source regressions
+remain separate checks. It starts no browser/service and changes no enrollment.
+See [immutable snapshot indexing](extensions.md) for bounds, lifetime and evidence.
+
 `collection-query-workflow` runs the focused checked query admission/context/
 history journey, stages its pas2js consumer with matched RTL, and compiles the
 explicit authenticated English grid/query companion tools. It starts no service,
