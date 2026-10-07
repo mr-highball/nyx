@@ -66,14 +66,23 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Frozen menu-family checkpoint `9f5bd49` now serves the existing observing LAN/MCP
+ports. Preparation passes 29 checks; 222 payload files verify. Authenticated
+twenty-tool MCP and actual shared desktop/390 Studio qualify nested host Tab,
+Events/help and unchanged context. Nine exact pairs and the full checkpoint retain
+history/handles, with fourteen other services untouched. A connected desktop
+toolbar overlap remains under the original responsive visual owner. See
+[the observing packet](WORK.md#current-return-path-observing-menu-families--2026-10-07).
+
 Managed menu families now add immutable reference-counted item plans/recipes,
 independent submenus and a public typed menu-button binding. Studio consumes the
 same contracts for Actions/Inspect. Checked actual Win32 passes 58 menu cases
 plus 11 ordinary Studio cases; actual HTTP desktop/390 menus pass 59 each. Full
 local browser Studio qualifies whole-family host Tab, Events and contextual help.
 Exact MCP companion authoring passes 36. Fifteen protected process identities,
-nine exact pairs and the full native checkpoint stay unchanged. The serving LAN
-release remains `f9129e0`; this candidate adds no listener. Menubars, pickers,
+nine exact pairs and the full native checkpoint stay unchanged. That component
+batch left the LAN listener intact; the observing packet above qualifies its
+subsequent refresh. Menubars, pickers,
 persisted plan authoring, hardware/assistive technology and broader parity remain
 open. See [usage](docs/menu.md) and
 [current evidence](WORK.md#current-return-path-menu-families-and-invokers--2026-10-06).

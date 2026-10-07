@@ -17,6 +17,13 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 **Blockers**
 
+Observing menu-family refresh (2026-10-07): the frozen 222-file `9f5bd49` release
+qualifies twenty authenticated tools and actual shared desktop/390 nested
+menu/Tab/Events/help. Nine exact pairs and full native checkpoint histories/handles
+survive unchanged; fourteen other service identities remain exact. No bootstrap/
+reset/remapping and no original criterion/count closure. See
+[the packet](../WORK.md#current-return-path-observing-menu-families--2026-10-07).
+
 Observing refresh (2026-10-06): the contextual-help release uses the current
 native runtime checkpoint without legacy bootstrap/reset/remapping. Nine exact
 pairs and complete durable bytes survive restart and actual desktop/390 observing

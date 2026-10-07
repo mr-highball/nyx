@@ -25,6 +25,12 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Menu families and invokers — 2026-10-06
 
+The frozen observing prerequisite now qualifies `9f5bd49`: 222 files, twenty
+authenticated MCP tools and actual shared desktop/390 nested host Tab/Events/help.
+All nine exact pairs and full checkpoint history/handles stay unchanged; fourteen
+other services remain exact. No original component/parity criterion closes. See
+[the observing packet](../WORK.md#current-return-path-observing-menu-families--2026-10-07).
+
 Original advanced-menu scope now has immutable specialized items/plans and owned
 submenu recipes. Independent child hosts share completion, level-return keyboard
 navigation and whole-family Tab/outside dismissal. Public `INyxMenuButton` owns

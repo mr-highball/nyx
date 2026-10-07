@@ -7,6 +7,75 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: observing menu families — 2026-10-07
+
+The authorized LAN refresh is qualified as progress. Frozen source `9f5bd49`
+now serves the existing editor/LAN port with MCP confined to loopback. The Pascal
+preparer passes **29** integrity checks and the pristine serving payload verifies
+**222** files before/after launch. Builds have zero owned warnings; seven installed
+RTL warnings remain visible in each of three browser programs. Earlier checked
+Win32 menu/ordinary Studio evidence applies to the unchanged product source.
+
+Only the exact primary service is replaced. Its sole child was captured as the
+signed Windows console host with the exact parent/creation identity; it retired
+without a separate kill. All **14** other protected service identities and **9**
+exact project/source/navigation/draft/history/permission contexts stay unchanged.
+The complete **147033-byte** native checkpoint remains byte-identical before
+retirement, after recovery/reconnection and after observing journeys. There is no
+bootstrap, reset, counter/history loss or workspace remapping. Earlier frozen
+payloads, backup and original stash remain retained. Every preflight's successful
+exit is inspected before the next dependent mutation.
+
+Project/explicitly enrolled user Codex configuration refreshes on launch. Actual
+authenticated Pascal MCP discovers **20** tools. The maintained observer reads
+bounded shared Memo context at its exact revision and qualifies connected full
+Studio at CSS **1100/390**: root/child pointer activation, real nested Chromium
+Tab/Shift+Tab, Events navigation, contextual help and unchanged semantic selection/
+revision. Both observer traces are leak-free and meaningful captures are inspected.
+The LAN HTTP route returns 200 on this host; phone hardware/firewall reachability
+is not established by same-host requests. Windows firewall inspection refused
+access; no rule was altered. Cached native chat handles need one reconnect;
+the enrolled Pascal semantic client works immediately.
+
+An initial malformed editor-connect envelope refused with missing `op`. Exact
+`claim` of the already preserved primary pair reconnected successfully without
+changing it. Failed checks earn no passes. Actual connected desktop capture also
+shows Builds/Build view overlapping at 1100 width; the original NS-2 responsive
+chrome/visual owner retains that discovered gap. This qualifies menu behavior,
+not complete visual quality, native observing integration, assistive technology,
+hardware/IME, other widgetsets or production accessibility/performance.
+
+Current ignored evidence is **`build/menu-family-refresh/`**: `release-build.log`,
+`release-verify-before.log`, `release-verify-after.log`, `deployment.json`,
+`before-studio-session.nyx`, `primary-console-child.json`, `semantic-tools.jsonl`,
+`desktop.log` / `narrow.log` and inspected captures. **Use this directory's**
+`protected-services-current.json`, `protected-pairs-current.json` and
+`lan-editor-private.json` as current preservation/connection baselines. Serving
+payload is `build/menu-family-refresh/release`; runtime remains unchanged under
+`build/legacy-refresh/lan-runtime`. Private capabilities, paths and pairs stay
+ignored. Evidence-only checkpoint is pushed to `hello-nyx`; verify its exact
+remote head in `build/menu-family-refresh/remote-return.json`.
+
+Stop this integrated rollout batch. Reassess the original menubar/picker breadth,
+persisted semantic plan authoring and responsive chrome gap. No original criterion
+or task closes. Workflow **13**, authoring **26**, renderer **8**, codegen **28**,
+delivery **2** stay unchanged; historical NS-2/NS-3 totals remain unestablished.
+The full goal stays active.
+
+## Accepted batch intent: observing menu families — 2026-10-07
+
+The component boundary is accepted as progress and exact remote `9f5bd49` is
+verified. Continue its existing NS-5 observing prerequisite under the user's
+standing primary-LAN replacement permission. Freeze/verify that source checkpoint;
+retain the complete durable checkpoint, all nine exact pairs/context/history and
+all fourteen other service identities. Replace only the verified primary listener
+on the existing LAN/MCP ports, with the unchanged runtime; no bootstrap/reset or
+workspace remapping. Inspect every guard's exit status before dependent mutation.
+Qualify authenticated semantic discovery and actual shared desktop/390 Studio
+nested menu/Tab/Events/help. Stop at integrated observing evidence; return to
+original menubar/picker and persisted semantic-plan scope. No criterion/count
+closes; at most two failed attempts per diagnosed cause.
+
 ## Current return path: menu families and invokers — 2026-10-06
 
 Current goal turn is progress on original NS-3 advanced-menu scope through NS-2

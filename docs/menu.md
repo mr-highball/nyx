@@ -185,7 +185,7 @@ workspace as the observer's fourth/fifth arguments, with that same workspace in
 the URL's `workspace` query. Bounded semantic context establishes the selected
 component; the connected toolbar's Builds control participates in ordinary Tab
 order. Desktop/390 observing evidence and preserved-state receipts are in
-[WORK.md](../WORK.md#current-return-path-command-menu-observing-release--2026-10-06).
+[WORK.md](../WORK.md#current-return-path-observing-menu-families--2026-10-07).
 
 Menu presentation/command/recipe plans are explicit runtime attachment, not
 serialized authoring declarations or MCP plan mutations. Their semantic
