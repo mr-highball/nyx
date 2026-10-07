@@ -54,6 +54,8 @@
     function Option(AValue: Double): INyxConfiguration; overload;
     function Value(const AValue: TNyxText): INyxConfiguration; overload;
     function Value(const AValue: TNyxCalendarDate): INyxConfiguration; overload;
+    { Retains exact clock precision; no time is distinct from midnight. }
+    function Value(const AValue: TNyxClockTime): INyxConfiguration; overload;
     function Value(AValue: Integer): INyxConfiguration; overload;
     function Value(AValue: Boolean): INyxConfiguration; overload;
     function Value(AValue: Double): INyxConfiguration; overload;
@@ -150,6 +152,7 @@
     function Option(AValue: Double): INyxConfiguration; overload;
     function Value(const AValue: TNyxText): INyxConfiguration; overload;
     function Value(const AValue: TNyxCalendarDate): INyxConfiguration; overload;
+    function Value(const AValue: TNyxClockTime): INyxConfiguration; overload;
     function Value(AValue: Integer): INyxConfiguration; overload;
     function Value(AValue: Boolean): INyxConfiguration; overload;
     function Value(AValue: Double): INyxConfiguration; overload;
@@ -303,6 +306,10 @@
     function Value(const ADomain: TNyxTextDomain): INyxControlContract; overload;
     function Field(const APart: TNyxPartRef; const ADomain: TNyxTextDomain): INyxControlContract; overload;
     function On(ATrigger: TNyxTrigger; const ASource: TNyxEventValueRef; const ADomain: TNyxTextDomain): INyxControlContract; overload;
+    { Distinct clock bounds/choices; every admitted declaration is copied. }
+    function Value(const ADomain: TNyxTimeDomain): INyxControlContract; overload;
+    function Field(const APart: TNyxPartRef; const ADomain: TNyxTimeDomain): INyxControlContract; overload;
+    function On(ATrigger: TNyxTrigger; const ASource: TNyxEventValueRef; const ADomain: TNyxTimeDomain): INyxControlContract; overload;
     function Value(const ADomain: TNyxBooleanDomain): INyxControlContract; overload;
     function Field(const APart: TNyxPartRef; const ADomain: TNyxBooleanDomain): INyxControlContract; overload;
     function On(ATrigger: TNyxTrigger; const ASource: TNyxEventValueRef; const ADomain: TNyxBooleanDomain): INyxControlContract; overload;
@@ -337,6 +344,9 @@
     function Value(const ADomain: TNyxTextDomain): INyxControlContract; overload;
     function Field(const APart: TNyxPartRef; const ADomain: TNyxTextDomain): INyxControlContract; overload;
     function On(ATrigger: TNyxTrigger; const ASource: TNyxEventValueRef; const ADomain: TNyxTextDomain): INyxControlContract; overload;
+    function Value(const ADomain: TNyxTimeDomain): INyxControlContract; overload;
+    function Field(const APart: TNyxPartRef; const ADomain: TNyxTimeDomain): INyxControlContract; overload;
+    function On(ATrigger: TNyxTrigger; const ASource: TNyxEventValueRef; const ADomain: TNyxTimeDomain): INyxControlContract; overload;
     function Value(const ADomain: TNyxBooleanDomain): INyxControlContract; overload;
     function Field(const APart: TNyxPartRef; const ADomain: TNyxBooleanDomain): INyxControlContract; overload;
     function On(ATrigger: TNyxTrigger; const ASource: TNyxEventValueRef; const ADomain: TNyxBooleanDomain): INyxControlContract; overload;

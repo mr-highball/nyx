@@ -233,6 +233,12 @@ begin
   Result := Self as INyxConfiguration;
 end;
 
+function TNyxConfiguration.Value(const AValue: TNyxClockTime): INyxConfiguration;
+begin
+  ConfigurationScope.Value(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
 function TNyxConfiguration.Value(AValue: Integer): INyxConfiguration;
 begin
   ConfigurationScope.Value(AValue);
@@ -846,6 +852,24 @@ begin
 end;
 
 function TNyxControlContract.On(ATrigger: TNyxTrigger; const ASource: TNyxEventValueRef; const ADomain: TNyxTextDomain): INyxControlContract;
+begin
+  FOwner.Node.Contract.On(ATrigger, ASource, ADomain);
+  Result := Self as INyxControlContract;
+end;
+
+function TNyxControlContract.Value(const ADomain: TNyxTimeDomain): INyxControlContract;
+begin
+  FOwner.Node.Contract.Value(ADomain);
+  Result := Self as INyxControlContract;
+end;
+
+function TNyxControlContract.Field(const APart: TNyxPartRef; const ADomain: TNyxTimeDomain): INyxControlContract;
+begin
+  FOwner.Node.Contract.Field(APart, ADomain);
+  Result := Self as INyxControlContract;
+end;
+
+function TNyxControlContract.On(ATrigger: TNyxTrigger; const ASource: TNyxEventValueRef; const ADomain: TNyxTimeDomain): INyxControlContract;
 begin
   FOwner.Node.Contract.On(ATrigger, ASource, ADomain);
   Result := Self as INyxControlContract;

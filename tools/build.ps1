@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1146,6 +1146,68 @@ try {
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxLegacyWeb 'rtl.js') -Force
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/legacy-snapshot.html') -Destination $nyxLegacyWeb -Force
     Write-Host 'Legacy bootstrap built; runtime seeding requires an explicit policy and fresh destination.'
+    exit 0
+  }
+
+  if ($Target -eq 'time-values') {
+    # A checked public Pascal contract and its exact generated companion. This
+    # stages browser consumers without starting a browser, listener or project.
+    $nyxTimeRoot = Join-Path $nyxRoot 'build/time-fields/maintained'
+    $nyxTimeNative = Join-Path $nyxTimeRoot 'native'
+    $nyxTimeSource = Join-Path $nyxTimeRoot 'source'
+    $nyxTimeWeb = Join-Path $nyxTimeRoot 'web'
+    New-Item -ItemType Directory -Force $nyxTimeNative, $nyxTimeSource, $nyxTimeWeb | Out-Null
+    $nyxTimeNativeFlags = @('-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', '-Fustudio', "-Fu$nyxTimeSource", "-FU$nyxTimeNative", "-FE$nyxTimeNative")
+    Invoke-NyxCompiler $nyxFpc (@('-B') + $nyxTimeNativeFlags + @('tests/nyx_time_values_tests.lpr'))
+    & (Join-Path $nyxTimeNative 'nyx_time_values_tests.exe') $nyxTimeSource
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Checked portable clock authoring/admission failed'
+    }
+    Invoke-NyxCompiler $nyxFpc ($nyxTimeNativeFlags + @('tests/nyx_time_reconstruction.lpr'))
+    & (Join-Path $nyxTimeNative 'nyx_time_reconstruction.exe')
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Exact compiled clock reconstruction failed'
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxTimeWebFlags = @('-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Futests', '-Fustudio',
+      "-Fu$nyxTimeSource", "-FE$nyxTimeWeb")
+    foreach ($nyxTimeConsumer in @('tests/nyx_time_values_tests.lpr', 'tests/nyx_time_reconstruction.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js (@('-B') + $nyxTimeWebFlags + @($nyxTimeConsumer))
+    }
+    # Qualify the expected argument family, not merely a failed build. A missing
+    # unit or invalid compiler flag must never count as strong-type evidence.
+    $nyxTimeTypes = [ordered]@{
+      bound = 'TNyxClockTime'
+      precision = 'TNyxTimePrecision'
+      step = 'Integer|LongInt'
+      choice = 'TNyxClockTime'
+      base = 'TNyxValueDomain'
+      value = 'TNyxClockTime'
+    }
+    foreach ($nyxTimeFamily in $nyxTimeTypes.Keys) {
+      $nyxTimeFailure = "tests/compile_fail/nyx_invalid_time_$nyxTimeFamily.lpr"
+      $nyxTimeTypeError = 'Error:.*Incompatible type.*expected.*(' + $nyxTimeTypes[$nyxTimeFamily] + ')'
+      $nyxTimeNativeLog = Join-Path $nyxTimeRoot "refused-native-$nyxTimeFamily.log"
+      & $nyxFpc @nyxTimeNativeFlags $nyxTimeFailure *> $nyxTimeNativeLog
+
+      if ($LASTEXITCODE -eq 0 -or -not (Select-String -LiteralPath $nyxTimeNativeLog -Pattern $nyxTimeTypeError -Quiet)) {
+        throw "Native compiler did not refuse the wrong clock argument family: $nyxTimeFamily"
+      }
+      $nyxTimeWebLog = Join-Path $nyxTimeRoot "refused-browser-$nyxTimeFamily.log"
+      & $nyxPas2js @nyxTimeWebFlags $nyxTimeFailure *> $nyxTimeWebLog
+
+      if ($LASTEXITCODE -eq 0 -or -not (Select-String -LiteralPath $nyxTimeWebLog -Pattern $nyxTimeTypeError -Quiet)) {
+        throw "Browser compiler did not refuse the wrong clock argument family: $nyxTimeFamily"
+      }
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxTimeWeb 'rtl.js') -Force
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/time-values.html') -Destination $nyxTimeWeb -Force
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/time-reconstruction.html') -Destination $nyxTimeWeb -Force
+    Write-Host 'Clock contract/reconstruction staged; twelve wrong-family compiler cases refused. Browser execution remains separate.'
     exit 0
   }
 

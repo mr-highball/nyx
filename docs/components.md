@@ -24,6 +24,10 @@ choices are text; a search action carries its query field. Layout-only roots
 declare no self value. Recipe instantiation retains independently owned root
 contracts, extension data and bindings along with its parts.
 
+Specialized calendar and clock controls also have immutable typed values and
+fluent domains; see [calendar fields](date-fields.md) and [clock fields](time-fields.md).
+Typed authoring does not by itself qualify every target's picker implementation.
+
 Text APIs use `TNyxText` from `nyx.text`: native UTF-8 and browser Unicode. Source
 units declare `{$codepage utf8}`. `Props` is an owned `TNyxStrings` collection;
 it preserves property order, empty values and case-sensitive keys. UTF-8 captions

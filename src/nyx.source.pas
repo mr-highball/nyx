@@ -31,6 +31,7 @@ uses
   SysUtils,
   nyx.text,
   nyx.dates,
+  nyx.times,
   nyx.types,
   nyx.layout.policy,
   nyx.responsive,
@@ -553,7 +554,8 @@ type
     vkCrossAlignment, vkJustification, vkSizing, vkLayoutPolicy, vkSizeRange,
     vkSizeConstraints, vkViewportWidth, vkViewportCondition, vkViewportOrientation,
     vkPresentationRef, vkPresentationCondition, vkContainerRef, vkContainerContainment,
-    vkCalendarDate, vkMenuRef, vkMenuCommand, vkMenuGroup, vkRootRef,
+    vkCalendarDate, vkClockTime, vkTimePrecision, vkClockDomain, vkValueDomain,
+    vkMenuRef, vkMenuCommand, vkMenuGroup, vkRootRef,
     vkMenuDefinition, vkMenuOptions, vkMenuBarDefinition, vkMenuBarOptions,
     vkPopoverOptions, vkTypeAheadOptions,
     vkMenuOpening, vkPopoverSide, vkPopoverAlignment, vkPopoverSizing,
@@ -586,6 +588,9 @@ type
     ViewportCondition: TNyxViewportCondition;
     PresentationCondition: TNyxPresentationCondition;
     CalendarDate: TNyxCalendarDate;
+    ClockTime: TNyxClockTime;
+    TimeDomain: TNyxTimeDomain;
+    ValueDomain: TNyxValueDomain;
     RootRef: TNyxRootRef;
     MenuOptions: TNyxMenuOptions;
     MenuBarOptions: TNyxMenuBarOptions;
@@ -660,6 +665,10 @@ type
     function ArrayArguments(AMaximum: Integer): TValues;
     function Numeric(const AValue: TValue): Double;
     function Domain(AKind: TNyxStateKind; ACalendar: Boolean = False): TValue;
+    { Closed clock constructors retain exact readings/precision and distinct
+      domains. No locale text, callback execution or renderer state is evaluated. }
+    function ClockValue(const AName: TNyxText): TValue;
+    function ClockDomain: TValue;
     function DataConstructor(const AName: TNyxText): TValue;
     function LocalIndex(const AName: TNyxText): Integer;
     function StateIndex(const AName: TNyxText): Integer;
@@ -1145,6 +1154,7 @@ var
   LBinding: TNyxBindingProperty;
   LTrigger: TNyxTrigger;
   LSemantic: TNyxSemanticEvent;
+  LTimePrecision: TNyxTimePrecision;
 
   procedure RegisterEnum(AKind: TValueKind; AOrdinal: Integer;
     const ASymbol: TNyxText);
@@ -1168,6 +1178,11 @@ var
 begin
   GEnumNames := TSourceIndex.Create;
   GEnumValues := nil;
+
+  for LTimePrecision := Low(TNyxTimePrecision) to High(TNyxTimePrecision) do
+  begin
+    RegisterEnum(vkTimePrecision, Ord(LTimePrecision), NyxTimePrecisionPascal(LTimePrecision));
+  end;
 
   RegisterEnum(vkCollectionScope, Ord(csApplication), 'csApplication');
   RegisterEnum(vkCollectionScope, Ord(csInstance), 'csInstance');
@@ -1741,6 +1756,39 @@ begin
           end;
       end;
     end
+    else if SameText(LMethod, 'Definition') then
+    begin
+
+      if At('(') then
+      begin
+        LArgs := Arguments;
+
+        if Length(LArgs) <> 0 then
+        begin
+          Fail('Domain Definition takes no arguments');
+        end;
+      end;
+      case AKind of
+        nskText:
+          begin
+            Result.ValueDomain := Result.TextDomain.Definition;
+          end;
+        nskBoolean:
+          begin
+            Result.ValueDomain := Result.BooleanDomain.Definition;
+          end;
+        nskInteger:
+          begin
+            Result.ValueDomain := Result.IntegerDomain.Definition;
+          end;
+        nskNumber:
+          begin
+            Result.ValueDomain := Result.NumberDomain.Definition;
+          end;
+      end;
+      Result.Kind := vkValueDomain;
+      Exit;
+    end
     else if SameText(LMethod, 'CalendarDate') and (AKind = nskText) then
     begin
 
@@ -1765,6 +1813,7 @@ end;
 {$I nyx.source.collections.inc}
 {$I nyx.source.query.inc}
 {$I nyx.source.menus.inc}
+{$I nyx.source.times.inc}
 
 function TConfigurationReader.DataConstructor(const AName: TNyxText): TValue;
 var
@@ -1999,6 +2048,16 @@ begin
     tkWord:
       begin
         LName := LowerCase(LToken.Text);
+
+        if (LName = 'nyxtime') or (LName = 'nyxnotime') then
+        begin
+          Exit(ClockValue(LName));
+        end;
+
+        if LName = 'nyxtimedomain' then
+        begin
+          Exit(ClockDomain);
+        end;
 
         if (LName = 'nyxdate') or (LName = 'nyxnodate') then
         begin
@@ -3102,7 +3161,8 @@ begin
     if SameText(LMethod, 'Value') then
     begin
 
-      if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkDomain) then
+      if (Length(LArgs) <> 1) or
+        not (LArgs[0].Kind in [vkDomain, vkClockDomain, vkValueDomain]) then
       begin
         Fail('Contract Value requires a typed scalar domain');
       end;
@@ -3112,7 +3172,7 @@ begin
     begin
 
       if (Length(LArgs) <> 2) or (LArgs[0].Kind <> vkPart) or
-        (LArgs[1].Kind <> vkDomain) then
+        not (LArgs[1].Kind in [vkDomain, vkClockDomain]) then
       begin
         Fail('Field requires a typed part reference and scalar domain');
       end;
@@ -3123,7 +3183,8 @@ begin
     begin
 
       if (Length(LArgs) <> 3) or (LArgs[0].Kind <> vkTrigger) or
-        (LArgs[1].Kind <> vkEventSource) or (LArgs[2].Kind <> vkDomain) then
+        (LArgs[1].Kind <> vkEventSource) or
+        not (LArgs[2].Kind in [vkDomain, vkClockDomain]) then
       begin
         Fail('On requires a trigger, typed event value source and scalar domain');
       end;
@@ -3143,6 +3204,30 @@ begin
     { Invoke the actual public overload for each family. Descriptor construction
       is reserved for the explicit Metadata boundary, never an implicit shortcut
       that accepts a domain the Pascal compiler would refuse for this call. }
+
+    if LDomain.Kind = vkValueDomain then
+    begin
+      LNode.Contract.Value(LDomain.ValueDomain);
+      Continue;
+    end;
+
+    if LDomain.Kind = vkClockDomain then
+    begin
+
+      if SameText(LMethod, 'Value') then
+      begin
+        LNode.Contract.Value(LDomain.TimeDomain);
+      end
+      else if SameText(LMethod, 'Field') then
+      begin
+        LNode.Contract.Field(LPart, LDomain.TimeDomain);
+      end
+      else
+      begin
+        LNode.Contract.On(LTrigger, LSource, LDomain.TimeDomain);
+      end;
+      Continue;
+    end;
     case TNyxStateKind(LDomain.Ordinal) of
       nskText:
         begin
@@ -3524,6 +3609,15 @@ begin
     atValue, atOption:
       begin
         case LValue.Kind of
+          vkClockTime:
+            begin
+
+              if LAttribute <> atValue then
+              begin
+                Fail('Clock times are typed Value arguments, never Option');
+              end;
+              LConfigure.Value(LValue.ClockTime);
+            end;
           vkCalendarDate:
             begin
 
@@ -3582,7 +3676,7 @@ begin
               end;
             end;
         else
-          Fail('Value requires text, Boolean, Integer, Double or CalendarDate; Option requires a scalar');
+          Fail('Value requires a typed scalar, CalendarDate or ClockTime; Option requires a scalar');
         end;
       end;
     atLayout:
@@ -4786,6 +4880,7 @@ begin
       before publishing a new managed body, while preserving authored helpers,
       comments and import order through the existing admitted import boundary. }
     LPrefix := WithNyxImport(LPrefix, 'nyx.dates');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.times');
 
     if ADocument.Collections.Count > 0 then
     begin

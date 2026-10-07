@@ -5399,6 +5399,10 @@ var
   LValueDomain: TNyxValueDomain;
   LDateDomain: TNyxDataValue;
   LDateField: Integer;
+  LTimeDomain: TNyxDataValue;
+  LTimeField: Integer;
+  LTimeStep: Integer;
+  LTimeFraction: TNyxText;
   LInfo: TNyxPrimitiveInfo;
   LLayout: TNyxText;
   LMinimum: Integer;
@@ -5910,6 +5914,50 @@ begin
                 LControl.setAttribute('min', LDateDomain.Field('min').AsText);
                 LControl.setAttribute('max', LDateDomain.Field('max').AsText);
               end;
+            end;
+          end;
+        end;
+
+        if LNode.ProjectionKind = 'time' then
+        begin
+          { HTML time uses seconds for step; the portable contract owns exact
+            integer milliseconds and a midnight/minimum base. The default is
+            any exact reading, so never inherit the browser's minute default.
+            Raw numeric bounds do not supply clock semantics. }
+          LValueDomain := NyxNodeValueDomain(LNode);
+          LControl.removeAttribute('min');
+          LControl.removeAttribute('max');
+          LControl.setAttribute('step', 'any');
+
+          if LValueDomain.ClockTime then
+          begin
+            LTimeDomain := LValueDomain.ToData;
+            for LTimeField := 0 to LTimeDomain.Count - 1 do
+            begin
+
+              if (LTimeDomain.Key(LTimeField) = 'min') or
+                (LTimeDomain.Key(LTimeField) = 'max') then
+              begin
+                LControl.setAttribute(LTimeDomain.Key(LTimeField),
+                  LTimeDomain.Field(LTimeDomain.Key(LTimeField)).AsText);
+              end;
+            end;
+            LTimeStep := LValueDomain.TimeStepMilliseconds;
+
+            if LTimeStep > 0 then
+            begin
+              LValue := IntToStr(LTimeStep div 1000);
+
+              if LTimeStep mod 1000 <> 0 then
+              begin
+                LTimeFraction := Copy(TNyxText(IntToStr(LTimeStep mod 1000 + 1000)), 2, 3);
+                while LTimeFraction[Length(LTimeFraction)] = '0' do
+                begin
+                  SetLength(LTimeFraction, Length(LTimeFraction) - 1);
+                end;
+                LValue := LValue + '.' + LTimeFraction;
+              end;
+              LControl.setAttribute('step', LValue);
             end;
           end;
         end;

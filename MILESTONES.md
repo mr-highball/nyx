@@ -3,6 +3,21 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current reassessment (2026-10-07): end the two native geometry packets and follow
+the native time-field text fallback through its strong-typing prerequisite.
+[NS-1_time-values_01](TODO/NS-1_time-values_01.md) owns exact clock values, domains
+and generated/source contracts; original NS-2/NS-3 owners retain physical time
+pickers, accessibility, visuals and both-target qualification. Scope/credit is
+redistributed from those unfinished inputs, with no added or earned credit and
+no original criterion closure. Established counts remain 19/30/11/28/2;
+current browser execution/observing delivery keep their existing gates. Native
+clock/source checks now pass 1,613 plus 49 unchanged calendar regressions and
+exact compiled reconstruction, leak-free; twelve expected type refusals pass.
+Browser consumers compile only. Two partial prerequisite batches require stopping
+fixture expansion and following executed browser qualification; independent native
+picker preparation does not accept the prerequisite or original consumer outcome. See
+[the current path](WORK.md#current-return-path-typed-time-field-prerequisite--2026-10-07).
+
 Current native group content boundary (2026-10-07): caption/frame geometry now
 participates in usable content measurement, layout, viewport and pointer mapping
 without changing authored outer faces. Actual nested/parked group checks pass 124;

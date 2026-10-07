@@ -16,6 +16,7 @@ blockers rather than filename order.
 | NS-1 | [Observable structured state](DONE/NS-1_state-collections_01.md) | Accepted typed stores, persisted/source bindings, runtime scopes and Studio/control consumers | Pending assessment |
 | NS-1 | [Specialized component interfaces](DONE/NS-1_component-interfaces_01.md) | Accepted managed specialized controls, factories and generated authoring | Pending assessment |
 | NS-1 | [Events and scheduler](NS-1_event-scheduler_01.md) | Typed multiple callbacks, execution policies and target schedulers | Pending assessment |
+| NS-1 | [Typed clock-time prerequisite](NS-1_time-values_01.md) | Exact time values/domains and typed authoring for native/browser pickers | Pending assessment |
 | NS-1 | [Pascal generation](NS-1_codegen_01.md) | Deterministic adjacent Delphi-dialect source | Pending assessment |
 | NS-2 | [Browser renderer slice](NS-2_browser-renderer_01.md) | Incremental DOM projection for M1 | Pending assessment |
 | NS-2 | [LCL renderer slice](NS-2_lcl-renderer_01.md) | Incremental native projection for M1 | Pending assessment |

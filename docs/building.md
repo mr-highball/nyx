@@ -7,6 +7,12 @@ Pascal. PowerShell only selects tools, passes compiler arguments and stages
 matched target artifacts. No Node, npm, Python, CSS framework or remote font is
 required.
 
+`time-values` executes the checked native clock/domain/source/history journey and
+its exact compiled Pascal reconstruction. Both compilers must reject six specified
+wrong argument families. It stages pas2js fixtures and their matched runtime/hosts;
+it starts no browser/listener and edits no active project. Execute both staged HTML
+hosts over an admitted HTTP server for browser evidence. See [typed clock fields](time-fields.md).
+
 `data-read` measures exact structured-value construction/reads in an optimized
 checked native Pascal workload and stages its browser counterpart with matched
 RTL. Heap tracing is omitted from timing; ownership and codec/source regressions

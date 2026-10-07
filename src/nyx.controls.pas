@@ -31,6 +31,7 @@ uses
   SysUtils,
   nyx.text,
   nyx.dates,
+  nyx.times,
   nyx.types,
   nyx.responsive,
   nyx.presentations,

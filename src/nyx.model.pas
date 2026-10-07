@@ -32,6 +32,7 @@ uses
   nyx.text,
   nyx.errors,
   nyx.dates,
+  nyx.times,
   nyx.root.types,
   nyx.data,
   nyx.contract,
@@ -416,6 +417,8 @@ type
     function Value(const AValue: TNyxText): TNyxNodeConfig; overload;
     { Calendar values retain exact Gregorian parts until the control boundary. }
     function Value(const AValue: TNyxCalendarDate): TNyxNodeConfig; overload;
+    { Clock values retain their exact optional reading and wire precision. }
+    function Value(const AValue: TNyxClockTime): TNyxNodeConfig; overload;
     function Value(AValue: Integer): TNyxNodeConfig; overload;
     function Value(AValue: Boolean): TNyxNodeConfig; overload;
     function Value(AValue: Double): TNyxNodeConfig; overload;
@@ -1739,6 +1742,11 @@ begin
 end;
 
 function TNyxNodeConfig.Value(const AValue: TNyxCalendarDate): TNyxNodeConfig;
+begin
+  Result := Value(AValue.ToText);
+end;
+
+function TNyxNodeConfig.Value(const AValue: TNyxClockTime): TNyxNodeConfig;
 begin
   Result := Value(AValue.ToText);
 end;

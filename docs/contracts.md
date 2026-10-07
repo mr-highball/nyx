@@ -35,9 +35,11 @@ the search button. `ValueID` identifies that payload field independently of
 | `NyxBooleanDomain` | Boolean |
 | `NyxIntegerDomain` | Signed 32-bit integer |
 | `NyxNumberDomain` | Finite Double |
+| `NyxDateDomain` | Exact Gregorian calendar dates; [calendar field contract](date-fields.md) |
+| `NyxTimeDomain` | Exact local clock readings; [clock field contract](time-fields.md) |
 | `NyxNoDomain` | Explicit descriptor-level absence |
 
-All four scalar builders have typed `Choices([...])`. Numeric builders also
+The four general scalar builders have typed `Choices([...])`. Numeric builders also
 have typed `Range(minimum, maximum)`. These methods return independent narrowed
 specifications, retaining their baseline. Choices contain 1..128 distinct
 admitted values. Numeric membership compares numeric values: `1`, `1.0` and

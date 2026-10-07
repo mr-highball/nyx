@@ -1,6 +1,6 @@
 # Typed calendar fields
 
-[Components](components.md) · [Contracts](contracts.md) ·
+[Components](components.md) · [Contracts](contracts.md) · [Clock fields](time-fields.md) ·
 [Current evidence](../WORK.md#typed-date-fields-checkpoint--2026-10-06)
 
 `nyx.dates` supplies immutable Gregorian calendar dates without DOM, LCL,

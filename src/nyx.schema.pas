@@ -2544,7 +2544,12 @@ begin
     Exit(NyxDateDomain.Definition);
   end;
 
-  if KindIn(LKind, 'input|memo|select|time|color|code-editor') then
+  if LKind = 'time' then
+  begin
+    Exit(NyxTimeDomain.Definition);
+  end;
+
+  if KindIn(LKind, 'input|memo|select|color|code-editor') then
   begin
     Exit(NyxTextDomain.Definition);
   end;
@@ -2573,6 +2578,13 @@ begin
         applying the calendar semantics of the physical projection on both hosts. }
       Result := NyxDateDomain(Result).Definition;
     end;
+
+    if ANode.ProjectionKind = 'time' then
+    begin
+      { Preserve legacy exact text choices while adding the physical clock
+        format. Malformed values and incompatible domains refuse admission. }
+      Result := NyxTimeDomain(Result).Definition;
+    end;
     Exit;
   end;
   LOwner := ANode.Parent;
@@ -2600,6 +2612,11 @@ begin
         if ANode.ProjectionKind = 'date' then
         begin
           Result := NyxDateDomain(Result).Definition;
+        end;
+
+        if ANode.ProjectionKind = 'time' then
+        begin
+          Result := NyxTimeDomain(Result).Definition;
         end;
         Exit;
       end;

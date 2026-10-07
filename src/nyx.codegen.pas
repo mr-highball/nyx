@@ -31,6 +31,7 @@ uses
   Classes,
   nyx.text,
   nyx.dates,
+  nyx.times,
   nyx.data,
   nyx.contract,
   nyx.types,
@@ -207,6 +208,56 @@ begin
     TNyxText(IntToStr(LDate.Month)) + ', ' + TNyxText(IntToStr(LDate.Day)) + ')';
 end;
 
+function PascalTime(const AText: TNyxText): TNyxText;
+var
+  LTime: TNyxClockTime;
+  LNatural: TNyxClockTime;
+begin
+  LTime := TNyxClockTime.FromText(AText);
+
+  if not LTime.Defined then
+  begin
+    Exit('NyxNoTime');
+  end;
+  Result := 'NyxTime(' + TNyxText(IntToStr(LTime.Hour)) + ', ' +
+    TNyxText(IntToStr(LTime.Minute));
+
+  if (LTime.Second <> 0) or (LTime.Millisecond <> 0) then
+  begin
+    Result := Result + ', ' + TNyxText(IntToStr(LTime.Second));
+  end;
+
+  if LTime.Millisecond <> 0 then
+  begin
+    Result := Result + ', ' + TNyxText(IntToStr(LTime.Millisecond));
+  end;
+  Result := Result + ')';
+  LNatural := NyxTime(LTime.Hour, LTime.Minute, LTime.Second, LTime.Millisecond);
+  { Explicit zero seconds/fractions and shorter fractional spellings are part
+    of the authored wire. Preserve them with a closed enum, without text parsing
+    in ordinary generated authoring or silently normalizing the accepted pair. }
+
+  if LTime.Precision <> LNatural.Precision then
+  begin
+    Result := Result + '.WithPrecision(' + NyxTimePrecisionPascal(LTime.Precision) + ')';
+  end;
+end;
+
+function HasDataField(const AData: TNyxDataValue; const AName: TNyxText): Boolean;
+var
+  LIndex: Integer;
+begin
+  for LIndex := 0 to AData.Count - 1 do
+  begin
+
+    if AData.Key(LIndex) = AName then
+    begin
+      Exit(True);
+    end;
+  end;
+  Result := False;
+end;
+
 function PascalEventReference(const AName: TNyxText): TNyxText;
 var
   LSemantic: TNyxSemanticEvent;
@@ -222,7 +273,7 @@ begin
 end;
 
 function ConfigurationCall(ANode: TNyxNode; const AKey, AValue: TNyxText;
-  ACalendarValue: Boolean = False): TNyxText;
+  ACalendarValue: Boolean = False; AClockValue: Boolean = False): TNyxText;
 const
   CAttributeSymbols: array[TNyxAttribute] of TNyxText = (
     'atText', 'atValue', 'atPlaceholder', 'atItems', 'atHint', 'atAccessibleName',
@@ -371,6 +422,17 @@ begin
     ((ANode.ProjectionKind = 'date') or ACalendarValue) then
   begin
     Exit('Value(' + PascalDate(AValue) + ')');
+  end;
+
+  if LAttribute = atValue then
+  begin
+    LDomain := NyxNodeValueDomain(ANode);
+
+    if (ANode.ProjectionKind = 'time') or AClockValue or
+      (LDomain.Defined and LDomain.ClockTime) then
+    begin
+      Exit('Value(' + PascalTime(AValue) + ')');
+    end;
   end;
 
   if (AValue = '') and (LAttribute = atValue) then
@@ -825,6 +887,11 @@ var
             begin
               Result := PascalDate(AValue.AsText);
             end;
+
+            if ADomain.ClockTime then
+            begin
+              Result := PascalTime(AValue.AsText);
+            end;
           end;
         nskBoolean:
           begin
@@ -848,13 +915,46 @@ var
     begin
       Result := 'NyxDateDomain';
     end;
+
+    if ADomain.ClockTime then
+    begin
+      Result := 'NyxTimeDomain';
+    end;
     for LIndex := 0 to LData.Count - 1 do
     begin
 
       if LData.Key(LIndex) = 'min' then
       begin
-        Result := Result + '.Range(' + Literal(LData.Field('min')) + ', ' +
-          Literal(LData.Field('max')) + ')';
+
+        if ADomain.ClockTime and not HasDataField(LData, 'max') then
+        begin
+          Result := Result + '.Minimum(' + Literal(LData.Field('min')) + ')';
+        end
+        else
+        begin
+          Result := Result + '.Range(' + Literal(LData.Field('min')) + ', ' +
+            Literal(LData.Field('max')) + ')';
+        end;
+      end;
+
+      if ADomain.ClockTime and (LData.Key(LIndex) = 'max') and
+        not HasDataField(LData, 'min') then
+      begin
+        Result := Result + '.Maximum(' + Literal(LData.Field('max')) + ')';
+      end;
+
+      if ADomain.ClockTime and (LData.Key(LIndex) = 'step') then
+      begin
+
+        if ADomain.TimeStepMilliseconds = 0 then
+        begin
+          Result := Result + '.AnyStep';
+        end
+        else
+        begin
+          Result := Result + '.StepMilliseconds(' +
+            PascalInteger(ADomain.TimeStepMilliseconds) + ')';
+        end;
       end;
 
       if LData.Key(LIndex) = 'choices' then
@@ -877,6 +977,80 @@ var
 
   {$I nyx.codegen.collections.inc}
   {$I nyx.codegen.menus.inc}
+
+  function AuthoredTimeDomainData(const ADomain: TNyxValueDomain): TNyxDataValue;
+  var
+    LData: TNyxDataValue;
+    LDomain: TNyxTimeDomain;
+    LChoices: array of TNyxClockTime;
+    LIndex: Integer;
+    LChoiceIndex: Integer;
+  begin
+    Result := NyxNull;
+    LData := ADomain.ToData;
+    LDomain := NyxTimeDomain;
+    { Fingerprint the actual typed chain, including every intermediate admission.
+      A valid imported final domain may order choices/step before the minimum
+      defining its step base. If that chain refuses, EmitContract preserves the
+      complete admitted descriptor through its existing atomic Metadata boundary.
+      Reordering it would lose exact representation; ignoring the refusal would
+      emit Pascal that compiles but fails while building the application. }
+    try
+      for LIndex := 0 to LData.Count - 1 do
+      begin
+
+        if LData.Key(LIndex) = 'min' then
+        begin
+
+          if HasDataField(LData, 'max') then
+          begin
+            LDomain := LDomain.Range(TNyxClockTime.FromText(LData.Field('min').AsText),
+              TNyxClockTime.FromText(LData.Field('max').AsText));
+          end
+          else
+          begin
+            LDomain := LDomain.Minimum(TNyxClockTime.FromText(LData.Field('min').AsText));
+          end;
+        end;
+
+        if (LData.Key(LIndex) = 'max') and not HasDataField(LData, 'min') then
+        begin
+          LDomain := LDomain.Maximum(TNyxClockTime.FromText(LData.Field('max').AsText));
+        end;
+
+        if LData.Key(LIndex) = 'step' then
+        begin
+
+          if ADomain.TimeStepMilliseconds = 0 then
+          begin
+            LDomain := LDomain.AnyStep;
+          end
+          else
+          begin
+            LDomain := LDomain.StepMilliseconds(ADomain.TimeStepMilliseconds);
+          end;
+        end;
+
+        if LData.Key(LIndex) = 'choices' then
+        begin
+          SetLength(LChoices, LData.Field('choices').Count);
+          for LChoiceIndex := 0 to High(LChoices) do
+          begin
+            LChoices[LChoiceIndex] := TNyxClockTime.FromText(
+              LData.Field('choices').Item(LChoiceIndex).AsText);
+          end;
+          LDomain := LDomain.Choices(LChoices);
+        end;
+      end;
+      Result := LDomain.Definition.ToData;
+    except
+      on LException: ENyxContract do
+      begin
+        { Null is a fingerprint mismatch, never an emitted domain replacement. }
+        Result := NyxNull;
+      end;
+    end;
+  end;
 
   function AuthoredDomainData(const ADomain: TNyxValueDomain): TNyxDataValue;
   var
@@ -911,6 +1085,11 @@ var
     if not ADomain.Defined then
     begin
       Exit;
+    end;
+
+    if ADomain.ClockTime then
+    begin
+      Exit(AuthoredTimeDomainData(ADomain));
     end;
     LData := ADomain.ToData;
     LFields := nil;
@@ -1472,6 +1651,7 @@ var
     LContentPlatform: TNyxPlatform;
     LContentIndex: Integer;
     LCalendarValue: Boolean;
+    LClockValue: Boolean;
     LContext: TNyxNode;
     LProjection: TNyxNode;
   begin
@@ -1532,6 +1712,7 @@ var
     end;
     EmitMenuBar(ANode);
     LCalendarValue := False;
+    LClockValue := False;
 
     if (ANode.Kind = 'slot-override') and
       (ANode.Props.IndexOfName('value') >= 0) and (ANode.Prop('mode') <> 'remove') then
@@ -1542,6 +1723,7 @@ var
       LContext := RealizeNyxContext(ADocument, ANode, LProjection);
       try
         LCalendarValue := (LProjection <> nil) and (LProjection.ProjectionKind = 'date');
+        LClockValue := (LProjection <> nil) and (LProjection.ProjectionKind = 'time');
       finally
         LContext.Free;
       end;
@@ -1592,7 +1774,8 @@ var
         LLines.Add('      .ForPlatform(' + NyxPlatformSymbol(LPlatform) + ')');
         LScope := LPlatform;
       end;
-      LLines.Add('      .' + ConfigurationCall(ANode, LKey, ANode.Prop(LWireKey), LCalendarValue));
+      LLines.Add('      .' + ConfigurationCall(ANode, LKey, ANode.Prop(LWireKey),
+        LCalendarValue, LClockValue));
     end;
 
     if (ANode.Props.Count > 0) or ANode.HasMenu or ANode.HasMenuBar then
@@ -1678,6 +1861,7 @@ begin
     LLines.Add('uses');
     LLines.Add('  nyx.text,');
     LLines.Add('  nyx.dates,');
+    LLines.Add('  nyx.times,');
     LLines.Add('  nyx.types,');
     LLines.Add('  nyx.responsive,');
     LLines.Add('  nyx.presentations,');

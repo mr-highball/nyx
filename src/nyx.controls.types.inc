@@ -498,6 +498,12 @@
   INyxTime = interface(INyxTextInput)
     ['{737A7921-4621-4C6F-8C01-02005D3C9BE4}']
     function WithText(const AText: TNyxText): INyxTime;
+    { Clock parts/precision are typed; empty remains distinct from midnight.
+      Value is the explicit wire boundary; malformed wire reads refuse. }
+    function GetTimeValue: TNyxClockTime;
+    procedure SetTimeValue(const AValue: TNyxClockTime);
+    function WithTime(const AValue: TNyxClockTime): INyxTime;
+    property TimeValue: TNyxClockTime read GetTimeValue write SetTimeValue;
   end;
 
   { Default managed time implementation. Subclass for behavior or implement the interface
@@ -507,6 +513,10 @@
     constructor Create(const AID: TNyxText = '';
       AConstruction: TNyxConstruction = ncoDefault); reintroduce;
     function WithText(const AText: TNyxText): INyxTime;
+    function GetTimeValue: TNyxClockTime;
+    procedure SetTimeValue(const AValue: TNyxClockTime);
+    function WithTime(const AValue: TNyxClockTime): INyxTime;
+    property TimeValue: TNyxClockTime read GetTimeValue write SetTimeValue;
   end;
 
   { Specialized color contract; inherited properties retain the TextInput family.
@@ -2444,4 +2454,3 @@
       AConstruction: TNyxConstruction = ncoDefault); reintroduce;
     function WithText(const AText: TNyxText): INyxSlotOverride;
   end;
-

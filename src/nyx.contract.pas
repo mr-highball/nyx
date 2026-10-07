@@ -31,6 +31,7 @@ uses
   SysUtils,
   nyx.text,
   nyx.dates,
+  nyx.times,
   nyx.types,
   nyx.data,
   nyx.state;
@@ -60,6 +61,8 @@ type
     function GetDefined: Boolean;
     function GetKind: TNyxStateKind;
     function GetCalendarDate: Boolean;
+    function GetClockTime: Boolean;
+    function GetTimeStepMilliseconds: Integer;
   public
     class function FromData(const AData: TNyxDataValue): TNyxValueDomain; static;
     function ToData: TNyxDataValue;
@@ -75,6 +78,10 @@ type
     { Date domains still bind exact text stores; this closed format adds calendar
       admission instead of introducing a locale-dependent state representation. }
     property CalendarDate: Boolean read GetCalendarDate;
+    { Clock domains retain exact text stores; reading admission uses immutable
+      time values. Zero step means any millisecond, not the HTML default minute. }
+    property ClockTime: Boolean read GetClockTime;
+    property TimeStepMilliseconds: Integer read GetTimeStepMilliseconds;
   end;
 
   { Distinct builder families keep range/choice arguments typed. Every fluent
@@ -93,6 +100,29 @@ type
     { Inclusive bounds require defined dates in ascending order. Empty values
       remain admitted; required-value policy belongs to application validation. }
     function Range(const AMinimum, AMaximum: TNyxCalendarDate): TNyxTextDomain;
+    function Definition: TNyxValueDomain;
+  end;
+
+  { Distinct clock builder: date/numeric/string bounds cannot accidentally serve
+    as clock bounds. Every operation returns a new immutable specification.
+    Empty values remain optional unless an explicit choice list excludes them. }
+  TNyxTimeDomain = record
+  private
+    FDomain: TNyxValueDomain;
+  public
+    { Inclusive reversed bounds describe the two allowed portions spanning
+      midnight. Equal bounds admit that one reading, not an entire day. }
+    function Range(const AMinimum, AMaximum: TNyxClockTime): TNyxTimeDomain;
+    function Minimum(const AMinimum: TNyxClockTime): TNyxTimeDomain;
+    function Maximum(const AMaximum: TNyxClockTime): TNyxTimeDomain;
+    { Choice identity is the clock reading; different spellings of that same
+      reading are duplicates. Admission preserves the caller's exact wire text. }
+    function Choices(const AValues: array of TNyxClockTime): TNyxTimeDomain;
+    { Positive exact millisecond quantum. The base is the declared minimum or
+      midnight; signed differences use exact Integer remainder, never rounding. }
+    function StepMilliseconds(AMilliseconds: Integer): TNyxTimeDomain;
+    function StepSeconds(ASeconds: Integer): TNyxTimeDomain;
+    function AnyStep: TNyxTimeDomain;
     function Definition: TNyxValueDomain;
   end;
 
@@ -195,6 +225,10 @@ type
     function Field(const APart: TNyxPartRef; const ADomain: TNyxTextDomain): TNyxContract; overload;
     function On(ATrigger: TNyxTrigger; const ASource: TNyxEventValueRef;
       const ADomain: TNyxTextDomain): TNyxContract; overload;
+    function Value(const ADomain: TNyxTimeDomain): TNyxContract; overload;
+    function Field(const APart: TNyxPartRef; const ADomain: TNyxTimeDomain): TNyxContract; overload;
+    function On(ATrigger: TNyxTrigger; const ASource: TNyxEventValueRef;
+      const ADomain: TNyxTimeDomain): TNyxContract; overload;
     function Value(const ADomain: TNyxBooleanDomain): TNyxContract; overload;
     function Field(const APart: TNyxPartRef; const ADomain: TNyxBooleanDomain): TNyxContract; overload;
     function On(ATrigger: TNyxTrigger; const ASource: TNyxEventValueRef;
@@ -218,6 +252,10 @@ function NyxDateDomain: TNyxTextDomain; overload;
 { Enrich an existing text specification without dropping choices or bounds.
   Physical date projections also use this for legacy text declarations. }
 function NyxDateDomain(const ABase: TNyxValueDomain): TNyxTextDomain; overload;
+function NyxTimeDomain: TNyxTimeDomain; overload;
+{ Enrich admitted text while retaining constraints. Invalid existing choices/
+  bounds refuse atomically; numeric/calendar specifications cannot become clocks. }
+function NyxTimeDomain(const ABase: TNyxValueDomain): TNyxTimeDomain; overload;
 function NyxBooleanDomain: TNyxBooleanDomain;
 function NyxIntegerDomain: TNyxIntegerDomain;
 function NyxNumberDomain: TNyxNumberDomain;
@@ -332,6 +370,37 @@ begin
     (FData.Field('format').AsText = 'date');
 end;
 
+function TNyxValueDomain.GetClockTime: Boolean;
+begin
+  Result := Defined and HasField(FData, 'format') and
+    (FData.Field('format').AsText = 'time');
+end;
+
+function TNyxValueDomain.GetTimeStepMilliseconds: Integer;
+begin
+
+  if not ClockTime then
+  begin
+    raise ENyxContract.Create('A clock step requires a time domain');
+  end;
+  Result := 0;
+
+  if HasField(FData, 'step') then
+  begin
+
+    if (FData.Field('step').Kind = ndText) and (FData.Field('step').AsText = 'any') then
+    begin
+      Exit;
+    end;
+    Result := FData.Field('step').AsInteger;
+
+    if Result <= 0 then
+    begin
+      raise ENyxContract.Create('Clock step requires positive Integer milliseconds or any');
+    end;
+  end;
+end;
+
 class function TNyxValueDomain.FromData(const AData: TNyxDataValue): TNyxValueDomain;
 var
   LKind: TNyxStateKind;
@@ -390,6 +459,29 @@ begin
   Result := ALeft.ToJSON = ARight.ToJSON;
 end;
 
+function SameDomainValue(const ADomain: TNyxValueDomain;
+  const ALeft, ARight: TNyxDataValue): Boolean;
+var
+  LLeft: TNyxClockTime;
+  LRight: TNyxClockTime;
+begin
+
+  if (ADomain.Kind <> nskText) or not ADomain.ClockTime then
+  begin
+    Exit(SameDomainScalar(ADomain.Kind, ALeft, ARight));
+  end;
+  { A clock's optional spelling is independent of temporal choice membership.
+    Preserve exact store text; do not rewrite it to compare or normalize it. }
+  LLeft := TNyxClockTime.FromText(ALeft.AsText);
+  LRight := TNyxClockTime.FromText(ARight.AsText);
+  Result := not LLeft.Defined and not LRight.Defined;
+
+  if LLeft.Defined and LRight.Defined then
+  begin
+    Result := LLeft.Compare(LRight) = 0;
+  end;
+end;
+
 procedure TNyxValueDomain.Validate;
 var
   LKind: TNyxStateKind;
@@ -398,6 +490,7 @@ var
   LPrevious: Integer;
   LMinimumDate: TNyxCalendarDate;
   LMaximumDate: TNyxCalendarDate;
+  LTime: TNyxClockTime;
 begin
   FData.Validate;
 
@@ -405,21 +498,48 @@ begin
   begin
     Exit;
   end;
-  CheckMembers(FData, '|type|min|max|choices|format|');
+  CheckMembers(FData, '|type|min|max|choices|format|step|');
   LKind := Kind;
 
   if HasField(FData, 'format') and
-    ((LKind <> nskText) or (FData.Field('format').AsText <> 'date')) then
+    ((LKind <> nskText) or ((FData.Field('format').AsText <> 'date') and
+    (FData.Field('format').AsText <> 'time'))) then
   begin
-    raise ENyxContract.Create('Only text domains support the canonical date format');
+    raise ENyxContract.Create('Only text domains support the date/time formats');
   end;
 
-  if HasField(FData, 'min') <> HasField(FData, 'max') then
+  if HasField(FData, 'step') then
+  begin
+    GetTimeStepMilliseconds;
+  end;
+
+  if not ClockTime and (HasField(FData, 'min') <> HasField(FData, 'max')) then
   begin
     raise ENyxContract.Create('Domain range requires both bounds');
   end;
 
-  if HasField(FData, 'min') then
+  if ClockTime then
+  begin
+
+    if HasField(FData, 'min') then
+    begin
+
+      if not TryNyxTime(FData.Field('min').AsText, LTime) or not LTime.Defined then
+      begin
+        raise ENyxContract.Create('Clock minimum requires a defined time');
+      end;
+    end;
+
+    if HasField(FData, 'max') then
+    begin
+
+      if not TryNyxTime(FData.Field('max').AsText, LTime) or not LTime.Defined then
+      begin
+        raise ENyxContract.Create('Clock maximum requires a defined time');
+      end;
+    end;
+  end
+  else if HasField(FData, 'min') then
   begin
 
     if CalendarDate then
@@ -471,7 +591,7 @@ begin
       for LPrevious := 0 to LIndex - 1 do
       begin
 
-        if SameDomainScalar(LKind, LChoices.Item(LPrevious), LChoices.Item(LIndex)) then
+        if SameDomainValue(Self, LChoices.Item(LPrevious), LChoices.Item(LIndex)) then
         begin
           raise ENyxContract.Create('Duplicate domain choice');
         end;
@@ -487,9 +607,14 @@ var
   LFound: Boolean;
   LNumber: Double;
   LDate: TNyxCalendarDate;
+  LTime: TNyxClockTime;
+  LMinimumTime: Integer;
+  LMaximumTime: Integer;
+  LStep: Integer;
 begin
   AValue.Validate;
   LDate := NyxNoDate;
+  LTime := NyxNoTime;
   case Kind of
     nskText:
       begin
@@ -498,6 +623,11 @@ begin
         if CalendarDate and not TryNyxDate(AValue.AsText, LDate) then
         begin
           raise ENyxContract.Create('Value requires a valid calendar YYYY-MM-DD date');
+        end;
+
+        if ClockTime and not TryNyxTime(AValue.AsText, LTime) then
+        begin
+          raise ENyxContract.Create('Value requires a valid clock time');
         end;
       end;
     nskBoolean:
@@ -514,7 +644,54 @@ begin
       end;
   end;
 
-  if HasField(FData, 'min') then
+  if ClockTime then
+  begin
+
+    if LTime.Defined then
+    begin
+      LMinimumTime := 0;
+      LMaximumTime := NyxMillisecondsPerDay - 1;
+
+      if HasField(FData, 'min') then
+      begin
+        LMinimumTime := TNyxClockTime.FromText(FData.Field('min').AsText).MillisecondsSinceMidnight;
+      end;
+
+      if HasField(FData, 'max') then
+      begin
+        LMaximumTime := TNyxClockTime.FromText(FData.Field('max').AsText).MillisecondsSinceMidnight;
+      end;
+
+      if LMinimumTime <= LMaximumTime then
+      begin
+
+        if (LTime.MillisecondsSinceMidnight < LMinimumTime) or
+          (LTime.MillisecondsSinceMidnight > LMaximumTime) then
+        begin
+          raise ENyxContract.Create('Time is outside its declared clock range');
+        end;
+      end
+      else
+      begin
+        { A reversed periodic range excludes the open middle of the day. Its
+          two inclusive portions retain their original min/max spelling. }
+
+        if (LTime.MillisecondsSinceMidnight > LMaximumTime) and
+          (LTime.MillisecondsSinceMidnight < LMinimumTime) then
+        begin
+          raise ENyxContract.Create('Time is outside its midnight-crossing range');
+        end;
+      end;
+      LStep := TimeStepMilliseconds;
+
+      if (LStep > 0) and
+        ((LTime.MillisecondsSinceMidnight - LMinimumTime) mod LStep <> 0) then
+      begin
+        raise ENyxContract.Create('Time does not match its declared clock step');
+      end;
+    end;
+  end
+  else if HasField(FData, 'min') then
   begin
 
     if CalendarDate then
@@ -547,7 +724,7 @@ begin
     for LIndex := 0 to LChoices.Count - 1 do
     begin
 
-      if SameDomainScalar(Kind, LChoices.Item(LIndex), AValue) then
+      if SameDomainValue(Self, LChoices.Item(LIndex), AValue) then
       begin
         LFound := True;
         Break;
@@ -1256,6 +1433,125 @@ end;
 
 function TNyxContract.On(ATrigger: TNyxTrigger; const ASource: TNyxEventValueRef;
   const ADomain: TNyxTextDomain): TNyxContract;
+begin
+  PutEvent(ATrigger, ASource, ADomain.Definition);
+  Result := Self;
+end;
+
+function NyxTimeDomain: TNyxTimeDomain;
+begin
+  Result := NyxTimeDomain(NyxScalarDomain(nskText));
+end;
+
+function NyxTimeDomain(const ABase: TNyxValueDomain): TNyxTimeDomain;
+begin
+  ABase.Validate;
+
+  if (ABase.Kind <> nskText) or ABase.CalendarDate then
+  begin
+    raise ENyxContract.Create('Clock enrichment requires a non-calendar text domain');
+  end;
+  Result.FDomain := TNyxValueDomain.FromData(ReplaceField(
+    ABase.ToData, 'format', NyxData('time')));
+end;
+
+function TNyxTimeDomain.Definition: TNyxValueDomain;
+begin
+  Result := FDomain.Copy;
+end;
+
+function TNyxTimeDomain.Minimum(const AMinimum: TNyxClockTime): TNyxTimeDomain;
+begin
+
+  if not AMinimum.Defined then
+  begin
+    raise ENyxContract.Create('Clock minimum requires a defined time');
+  end;
+  Result.FDomain := TNyxValueDomain.FromData(ReplaceField(
+    FDomain.ToData, 'min', NyxData(AMinimum.ToText)));
+end;
+
+function TNyxTimeDomain.Maximum(const AMaximum: TNyxClockTime): TNyxTimeDomain;
+begin
+
+  if not AMaximum.Defined then
+  begin
+    raise ENyxContract.Create('Clock maximum requires a defined time');
+  end;
+  Result.FDomain := TNyxValueDomain.FromData(ReplaceField(
+    FDomain.ToData, 'max', NyxData(AMaximum.ToText)));
+end;
+
+function TNyxTimeDomain.Range(const AMinimum, AMaximum: TNyxClockTime): TNyxTimeDomain;
+var
+  LData: TNyxDataValue;
+begin
+
+  if not AMinimum.Defined or not AMaximum.Defined then
+  begin
+    raise ENyxContract.Create('Clock range requires two defined times');
+  end;
+  { Admit the complete candidate once. Chaining Minimum/Maximum could reject
+    valid replacement choices against a transient old/new half-range. }
+  LData := ReplaceField(FDomain.ToData, 'min', NyxData(AMinimum.ToText));
+  LData := ReplaceField(LData, 'max', NyxData(AMaximum.ToText));
+  Result.FDomain := TNyxValueDomain.FromData(LData);
+end;
+
+function TNyxTimeDomain.Choices(const AValues: array of TNyxClockTime): TNyxTimeDomain;
+var
+  LItems: array of TNyxDataValue;
+  LIndex: Integer;
+begin
+  SetLength(LItems, Length(AValues));
+  for LIndex := 0 to High(AValues) do
+  begin
+    LItems[LIndex] := NyxData(AValues[LIndex].ToText);
+  end;
+  Result.FDomain := WithChoices(FDomain, NyxArray(LItems));
+end;
+
+function TNyxTimeDomain.StepMilliseconds(AMilliseconds: Integer): TNyxTimeDomain;
+begin
+
+  if AMilliseconds <= 0 then
+  begin
+    raise ENyxContract.Create('Clock step requires positive Integer milliseconds');
+  end;
+  Result.FDomain := TNyxValueDomain.FromData(ReplaceField(
+    FDomain.ToData, 'step', NyxData(AMilliseconds)));
+end;
+
+function TNyxTimeDomain.StepSeconds(ASeconds: Integer): TNyxTimeDomain;
+begin
+
+  if (ASeconds <= 0) or (ASeconds > High(Integer) div 1000) then
+  begin
+    raise ENyxContract.Create('Clock seconds step exceeds its exact millisecond range');
+  end;
+  Result := StepMilliseconds(ASeconds * 1000);
+end;
+
+function TNyxTimeDomain.AnyStep: TNyxTimeDomain;
+begin
+  Result.FDomain := TNyxValueDomain.FromData(ReplaceField(
+    FDomain.ToData, 'step', NyxData('any')));
+end;
+
+function TNyxContract.Value(const ADomain: TNyxTimeDomain): TNyxContract;
+begin
+  Result := Value(ADomain.Definition);
+end;
+
+function TNyxContract.Field(const APart: TNyxPartRef;
+  const ADomain: TNyxTimeDomain): TNyxContract;
+begin
+  PutField(APart, ADomain.Definition);
+  Result := Self;
+end;
+
+function TNyxContract.On(ATrigger: TNyxTrigger; const ASource: TNyxEventValueRef;
+  const ADomain: TNyxTimeDomain): TNyxContract;
 begin
   PutEvent(ATrigger, ASource, ADomain.Definition);
   Result := Self;

@@ -66,6 +66,14 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Typed clock values/domains and managed source integration now preserve exact
+precision, empty versus midnight, overnight ranges, choices and millisecond steps.
+Checked native fixtures pass 1,613 plus 49 unchanged calendar checks; exact emitted
+reconstruction passes, leak-free. Six wrong argument families fail on each compiler.
+Browser fixtures/Studio/worker compile with zero owned warnings. Executed pas2js,
+physical time pickers and Studio/MCP domain authoring remain open; native time is
+still a text fallback. See [the clock packet](WORK.md#current-return-path-typed-time-field-prerequisite--2026-10-07).
+
 Ordinary native captioned groups now measure and allocate their usable client
 content independently of their outer logical faces. Nested resize/scroll,
 focus/drafts, actual parked windows, pointer mapping, row/grid/flex and teardown

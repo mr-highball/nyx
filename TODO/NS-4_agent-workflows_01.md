@@ -992,3 +992,18 @@ transaction refuses an unpublished `on-click` property atomically. Its typed
 Pascal runtime attachment is explicit enrichment, never claimed as MCP admission.
 Keep these operations with this existing workflow owner; do not substitute raw
 extension fields or browser editor automation. No original criterion/count closes.
+
+## Typed clock-domain authoring gap — 2026-10-07
+
+The portable managed clock contract now has exact values/precision, one-sided and
+overnight bounds, choices and millisecond steps, plus crafted paired source admission.
+The frozen deployed MCP/component schema does not expose typed clock-domain queries
+or grouped editing of these constraints. This existing workflow owner must provide
+bounded selected-component/domain context and typed revision-aware paired changes,
+with ordinary inspector/source consumers, refusals and observing Studio evidence.
+Use the established candidate/history authority rather than raw extension fields
+or screenshot-driven editor automation. This implementation packet edits no active
+design and creates no workflow credit/count change. Foundation browser execution,
+physical pickers and full parity retain their prerequisite/renderer owners.
+See [the prerequisite](NS-1_time-values_01.md) and
+[evidence](../WORK.md#current-return-path-typed-time-field-prerequisite--2026-10-07).

@@ -219,6 +219,16 @@ begin
         GTypes.Add('    property DateValue: TNyxCalendarDate read GetDateValue write SetDateValue;');
       end;
 
+      if LKind = nkTime then
+      begin
+        GTypes.Add('    { Clock parts/precision are typed; empty remains distinct from midnight.');
+        GTypes.Add('      Value is the explicit wire boundary; malformed wire reads refuse. }');
+        GTypes.Add('    function GetTimeValue: TNyxClockTime;');
+        GTypes.Add('    procedure SetTimeValue(const AValue: TNyxClockTime);');
+        GTypes.Add('    function WithTime(const AValue: TNyxClockTime): INyxTime;');
+        GTypes.Add('    property TimeValue: TNyxClockTime read GetTimeValue write SetTimeValue;');
+      end;
+
       if LRecipe <> nil then
       begin
         EmitParts(LRecipe, '', True, False);
@@ -240,6 +250,14 @@ begin
         GTypes.Add('    procedure SetDateValue(const AValue: TNyxCalendarDate);');
         GTypes.Add('    function WithDate(const AValue: TNyxCalendarDate): INyxDate;');
         GTypes.Add('    property DateValue: TNyxCalendarDate read GetDateValue write SetDateValue;');
+      end;
+
+      if LKind = nkTime then
+      begin
+        GTypes.Add('    function GetTimeValue: TNyxClockTime;');
+        GTypes.Add('    procedure SetTimeValue(const AValue: TNyxClockTime);');
+        GTypes.Add('    function WithTime(const AValue: TNyxClockTime): INyxTime;');
+        GTypes.Add('    property TimeValue: TNyxClockTime read GetTimeValue write SetTimeValue;');
       end;
 
       if LRecipe <> nil then
@@ -289,6 +307,26 @@ begin
         GImplementation.Add('begin');
         GImplementation.Add('  SetDateValue(AValue);');
         GImplementation.Add('  Result := Self as INyxDate;');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+      end;
+
+      if LKind = nkTime then
+      begin
+        GImplementation.Add('function TNyxTime.GetTimeValue: TNyxClockTime;');
+        GImplementation.Add('begin');
+        GImplementation.Add('  Result := TNyxClockTime.FromText(Value);');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+        GImplementation.Add('procedure TNyxTime.SetTimeValue(const AValue: TNyxClockTime);');
+        GImplementation.Add('begin');
+        GImplementation.Add('  GetConfigure.Value(AValue);');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+        GImplementation.Add('function TNyxTime.WithTime(const AValue: TNyxClockTime): INyxTime;');
+        GImplementation.Add('begin');
+        GImplementation.Add('  SetTimeValue(AValue);');
+        GImplementation.Add('  Result := Self as INyxTime;');
         GImplementation.Add('end;');
         GImplementation.Add('');
       end;
@@ -481,6 +519,22 @@ begin
       if Pos('function Done:', LSignature) = 1 then
       begin
         LSignature := 'function Done: INyxControl;';
+      end;
+
+      if (AMember = 'Configure') and (Pos('function MenuBar(', LSignature) = 1) then
+      begin
+        GFacadeTypes.Add('    { Saved immutable grouping; an explicit mask differs from inheritance. }');
+      end;
+
+      if (AMember = 'Configure') and (Pos('TNyxClockTime', LSignature) > 0) then
+      begin
+        GFacadeTypes.Add('    { Retains exact clock precision; no time is distinct from midnight. }');
+      end;
+
+      if (AMember = 'Contract') and (Pos('function Value(', LSignature) = 1) and
+        (Pos('TNyxTimeDomain', LSignature) > 0) then
+      begin
+        GFacadeTypes.Add('    { Distinct clock bounds/choices; every admitted declaration is copied. }');
       end;
       GFacadeTypes.Add('    ' + LSignature);
     end;
@@ -681,6 +735,12 @@ begin
     and the existing typed descriptor declarations, not external templates. }
   ALines.Insert(0, '{ Maintained by tools/nyx_control_contracts.lpr; edit the contract source, then regenerate. }');
   ALines.Insert(0, LSource);
+  { Stable source ends with exactly one newline, including regenerated facades.
+    Trailing blank records otherwise create noise on every contract update. }
+  while (ALines.Count > 0) and (Trim(ALines[ALines.Count - 1]) = '') do
+  begin
+    ALines.Delete(ALines.Count - 1);
+  end;
   ALines.LineBreak := #10;
   ALines.SaveToFile(APath);
 end;

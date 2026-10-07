@@ -406,4 +406,3 @@ function NewNyxFloatingActionPanel(const AID: TNyxText = '';
   ncoDescriptor constructs an empty exact descriptor for source reconstruction. }
 function NewNyxSlotOverride(const AID: TNyxText = '';
   AConstruction: TNyxConstruction = ncoDefault): INyxSlotOverride;
-

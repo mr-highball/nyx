@@ -488,6 +488,22 @@ begin
   Result := TNyxTime.Create(AID, AConstruction);
 end;
 
+function TNyxTime.GetTimeValue: TNyxClockTime;
+begin
+  Result := TNyxClockTime.FromText(Value);
+end;
+
+procedure TNyxTime.SetTimeValue(const AValue: TNyxClockTime);
+begin
+  GetConfigure.Value(AValue);
+end;
+
+function TNyxTime.WithTime(const AValue: TNyxClockTime): INyxTime;
+begin
+  SetTimeValue(AValue);
+  Result := Self as INyxTime;
+end;
+
 constructor TNyxColor.Create(const AID: TNyxText;
   AConstruction: TNyxConstruction);
 begin
