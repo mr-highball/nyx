@@ -33,6 +33,7 @@ uses
   nyx.data,
   nyx.model,
   nyx.controls,
+  nyx.menu.editor,
   nyx.contract,
   nyx.schema,
   nyx.types,
@@ -122,6 +123,8 @@ type
     InspectorTab: TNyxInspectorTab;
     { Open menu definition belongs to presentation, never application history. }
     MenuEditorReference: TNyxMenuRef;
+    { Copied incomplete form input; exact context guards prevent stale replay. }
+    MenuEditorDraft: TNyxMenuEditorDraft;
     CallbackRemoval: TNyxCallbackRemoval;
     { Copied confirmation metadata, not an interface or borrowed model. }
     RootRemoval: TNyxDataValue;
@@ -1057,35 +1060,49 @@ begin
   end;
   LHasDetails := LDetails.Count > 0;
 
-  if AState.Compact and LHasDetails and not AState.CanvasExpanded then
+  if LHasDetails and not AState.CanvasExpanded then
   begin
-    LSummary := TNyxNode.Create(nkRow, 'studio-details-summary')
-      .Configure.Layout(TNyxLayoutPolicy.Row.Wrap(nfwNoWrap).Align(ncaCenter))
-      .Padding(6).Gap(8).Done;
-    LSummary.Add(Caption('studio-details-label', 'Workspace details')
-      .Configure.Flex(1).Done);
+    LSummary := nil;
 
-    if AState.Agents.Conflict and AState.AgentsVisible then
+    if AState.Compact then
     begin
-      LSummary.Children[0].Configure.Text('Shared project differs')
-        .Hint('Your local project is retained. Review the choices before changing sync.').Done;
+      LSummary := TNyxNode.Create(nkRow, 'studio-details-summary')
+        .Configure.Layout(TNyxLayoutPolicy.Row.Wrap(nfwNoWrap).Align(ncaCenter))
+        .Padding(6).Gap(8).Done;
+      LSummary.Add(Caption('studio-details-label', 'Workspace details')
+        .Configure.Flex(1).Done);
+
+      if AState.Agents.Conflict and AState.AgentsVisible then
+      begin
+        LSummary.Children[0].Configure.Text('Shared project differs')
+          .Hint('Your local project is retained. Review the choices before changing sync.').Done;
+      end;
+      LSummary.Add(Button('action-details-toggle', 'Review')
+        .Configure.AccessibleName('Show workspace details').Done);
+      LCenter.Insert(0, LSummary);
     end;
-    LSummary.Add(Button('action-details-toggle', 'Review')
-      .Configure.AccessibleName('Show workspace details').Done);
-    LCenter.Insert(0, LSummary);
 
-    if AState.DetailsExpanded then
+    if not AState.Compact or AState.DetailsExpanded then
     begin
-      LSummary.Children[1].Configure.Text('Hide')
-        .AccessibleName('Hide workspace details').Done;
+
+      if LSummary <> nil then
+      begin
+        LSummary.Children[1].Configure.Text('Hide')
+          .AccessibleName('Hide workspace details').Done;
+      end;
+      { One public allocation contract bounds aggregate details on both hosts.
+        Desktop keeps them visible; compact hosts retain their collapse choice.
+        A growing session/build list scrolls inside its pane instead of giving
+        the design/source stage zero height. No percentage CSS depends on an
+        intrinsically sized details ancestor. }
       LDetailSplit := TNyxNode.Create(nkSplitView, 'studio-details-split')
         .Configure.SplitOrientation(nsoStacked).SplitPosition(AState.DetailsPercent)
         .SplitMinimum(15).SplitMaximum(60).SplitResizable(True).Flex(1)
         .AccessibleName('Workspace details and design size').Done;
       { Extract transfers ownership; Remove would destroy the independently
         composed group before it can become the public split's first pane. }
-      LCenter.Extract(1);
-      LCenter.Extract(1);
+      LCenter.Extract(Ord(AState.Compact));
+      LCenter.Extract(Ord(AState.Compact));
       LDetailSplit.Add(LDetails);
       LDetailSplit.Add(LStage);
       LCenter.Add(LDetailSplit);

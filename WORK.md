@@ -9,6 +9,54 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 ## Current return path: public menu editor — 2026-10-07
 
+Current accepted batch continues original authoring criteria 2/6 and workflow
+criterion 5: qualify the existing menu editor in the ordinary browser Studio,
+including named callback addition/navigation, ordered registrations, warning/
+removal, paired history and canvas Interact. Compose an independent ordinary
+workspace through authenticated semantic MCP on the retained isolated service;
+physical browser input establishes editor behavior rather than composing the
+demo. Its earlier backend remains explicitly identified. Stage current browser
+artifacts with an exact local backup; do not stop/start that service or mutate
+the protected primary payload. Preserve all original services/pairs/checkpoint.
+Stop fixture expansion after desktop/narrow journeys, then prepare and verify a
+frozen source/backend/browser candidate offline. A backend incompatibility or
+failed preserving delivery gate stays with its existing owner; it does not
+authorize a replacement project or another process-policy workaround. The mobile
+allocation correction is already qualified/deployed; this batch retains it.
+
+Ordinary-host qualification found two integrated faults. Presentation/activity
+refreshes discarded incomplete menu form fields. Public `TNyxMenuEditorDraft`
+now owns copied scalar input with exact owner/registry/attachment/definition
+guards; browser and Lazarus hosts capture/restore it without accepting the draft
+or retaining controls. Shared actual inspector/queue consumers pass **73** per
+target; latest ordinary Win32 Studio passes **80**, leak-free. Actual HTTP browser
+73 uses the maintained module worker. The earlier complete CSS-390 host journey
+passes **357**, including menu save/history, ordered named callbacks/policy,
+confirmed removal, both actual application builds and canvas Interact.
+
+The desktop full-host return to Events failed. Bounded physical allocation found
+the stage at **0 px**, below the viewport: percentage caps on an intrinsically
+sized detail ancestor allowed the session list to displace it. Both hosts now use
+the same public details split on desktop as well as compact; compact collapse and
+authored design/text scale stay unchanged. The exact retained failing workspace's
+source/Events return passes **19**, with a visible **515 px** stage. Pending browser
+callback/diagnostic navigation now chooses Source and moves the actual caret
+after mounting and focus retention, also for worker completion.
+
+Final full desktop/390 journeys additionally type at the real advertised caret,
+restore only their own probe draft and exercise the desktop details touch grip.
+Their first versions wrongly held the revision fixed across shared draft changes;
+actual caret input passed but the source assertion refused the changed revision.
+The corrected consumer waits for actual draft receipts. Explicit recovery of
+each exact owned fixture passes **26**: physical Restore followed by two guarded
+semantic Undo steps, without project/root replacement. General semantic draft
+discard remains with the existing workflow owner. Final journeys and offline
+frozen qualification are pending at this checkpoint; no observing refresh or
+original criterion closure is claimed. Current `build/menu-studio/` holds the
+positive and negative evidence. `current-preservation.json` verifies all **15**
+original process identities, **9** exact pairs/navigation/history/drafts/labels,
+the full checkpoint and LAN/MCP bindings. No service was stopped or launched.
+
 Original NS-4 authoring criteria 2/6 now consume public `nyx.menu.editor`:
 specialized Nyx card/input/select/checkbox/spin/button controls for exact content
 roots, ordered item kinds, command/group/submenu references, defaults and complete

@@ -122,6 +122,15 @@ revision and source ownership checks remain with the existing queue. One Undo
 restores both files. Definition removal shows a warning and requires an explicit
 checkbox confirmation; ordinary candidate admission still refuses retained uses.
 
+`TNyxMenuEditorDraft` lets a host retain incomplete form input while chrome is
+rebuilt or temporarily hidden. `Capture` copies only scalar field values; it
+borrows no tree, renderer or interface. `Restore` applies the complete snapshot
+only to the same selected owner, exact registry/attachment baseline and inspected
+definition. Changed context retires it without changing the new form. Copies stay
+independent after capture/clear. This is ephemeral presentation, never exported
+design state; Save remains the validation/admission boundary. Studio uses the
+same value contract in browser and Lazarus hosts and clears it on project change.
+
 Declared invokers expose menu command completion in their named `nseActivate`
 event metadata. Existing Events authoring consumes that metadata without granting
 a custom Emit API. The completion's `Details` belong to `NyxMenuInvocation`,
@@ -140,6 +149,29 @@ Execute the fixture over HTTP with the maintained ready-capture driver and
 and the real worker, not a full observing browser Studio session or hardware input.
 Full observing delivery and broader component/performance/accessibility acceptance
 remain open; see [current evidence](../WORK.md#current-return-path-public-menu-editor--2026-10-07).
+
+The same target builds `nyx_studio_menu_editor_observer` under its `observer/`
+directory. Explicit invocation takes an isolated enrolled `config.toml`, loopback
+editor base URL with trailing slash, a new evidence directory and CSS width.
+It creates its own ordinary project through authenticated semantic MCP, leaving
+that project available for review. Physical input then qualifies menu save,
+paired history, Events registration/policy/removal, actual callback caret input
+and canvas Interact; ordinary compilation uses `nyx_build` for both targets.
+It never replaces a user's project or infers callback execution from a TODO stub.
+Its optional exact retained fixture workspace plus `navigation` argument runs
+only the bounded source/Events return path and records actual host allocation.
+`reset-fixture` is limited to that retained first-save/first-callback fixture:
+ordinary Restore clears its own probe draft, then two revision-aware semantic
+Undo operations return its companion to the initial boundary. It neither
+replaces a project nor closes another workspace. Local draft changes have shared
+revisions; the caret journey waits for their receipts before reading source.
+
+Workspace details use the public Nyx split on desktop as well as compact hosts.
+An expanding session/build list scrolls inside its allocation; the design/source
+stage remains resizable. Compact hosts keep their existing collapse choice.
+Source navigation chooses the Source tab, mounts its editor and then moves the
+real caret, including after asynchronous callback creation. These controls do
+not change accepted source, output settings or project Undo history.
 
 ## Attach runtime-only menus through an adapter
 

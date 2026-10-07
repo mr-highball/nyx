@@ -225,6 +225,8 @@ type
     function PresentationKey: TNyxText;
     procedure SavePresentation;
     procedure LoadPresentation;
+    { Capture incomplete menu form input before presentation replaces chrome. }
+    procedure CaptureMenuDraft;
     procedure RestorePresentationControls;
     procedure JumpWorkspace(const AReference: TNyxWorkspaceRef);
     procedure AgentRefresh(AContentChanged: Boolean);
@@ -399,8 +401,6 @@ begin
     'dialog[data-nyx-modal]::backdrop{background:#171b2980;}' +
     '[data-node=studio-split]{min-width:0;min-height:0;overflow:hidden;}' +
     '.nyx-split-divider:focus-visible{outline:2px solid var(--nyx-accent);outline-offset:-3px;}' +
-    '[data-node=studio-center]:has([data-node=studio-split]) [data-node=studio-outputs],' +
-    '[data-node=studio-center]:has([data-node=studio-split]) [data-node=studio-agents]{max-height:25%;}' +
     '[data-node=studio-footer]{padding:7px 20px!important;font-size:11px;background:#fff;' +
     'border-top:1px solid #dfe3ec;min-height:32px;flex-shrink:0;}' +
     '[data-node=studio-status]{flex:1;}' +
@@ -665,6 +665,7 @@ begin
   LState.AdvancedProperties := FAdvancedProperties;
   LState.InspectorTab := FInspectorTab;
   LState.MenuEditorReference := FViewState.MenuEditorReference;
+  LState.MenuEditorDraft := FViewState.MenuEditorDraft;
   LState.CallbackRemoval := FCallbackRemoval;
 
   if FRootRemoval <> nil then
@@ -684,6 +685,7 @@ begin
   LState.Agents := FAgents.State;
   FViewState := LState;
   Result := BuildNyxStudioView(FSession, LState, FCompilerReport);
+  FViewState.MenuEditorDraft.Restore(Result.Pages[0]);
 end;
 
 procedure TNyxStudio.SourceModalDismiss;
@@ -738,6 +740,43 @@ begin
   end;
 end;
 
+procedure TNyxStudio.CaptureMenuDraft;
+var
+  LEditor: TNyxNode;
+  LNode: TNyxNode;
+  LActive: TJSHTMLElement;
+  LField: TJSHTMLElement;
+begin
+
+  if not FSession.MatchesCommandContext(FShellCommandContext) then
+  begin
+    FViewState.MenuEditorDraft.Clear;
+    Exit;
+  end;
+  LEditor := FShellRenderer.Root.Find('inspector-menu');
+  LActive := TJSHTMLElement(document.activeElement);
+
+  if (LEditor <> nil) and (LActive <> nil) and
+    ((LActive is TJSHTMLInputElement) or (LActive is TJSHTMLSelectElement)) then
+  begin
+    LField := TJSHTMLElement(LActive.closest('[data-node]'));
+
+    if LField <> nil then
+    begin
+      LNode := LEditor.Find(LField.getAttribute('data-node'));
+
+      if (LNode <> nil) and ((LNode.Kind = NyxKindName(nkInput)) or
+        (LNode.Kind = NyxKindName(nkSelect)) or (LNode.Kind = NyxKindName(nkSpin))) then
+      begin
+        { The focused field may not have blurred yet. Copy its live text into
+          the disposable chrome only; Save still owns document admission. }
+        LNode.SetProp('value', TJSHTMLInputElement(LActive).value);
+      end;
+    end;
+  end;
+  FViewState.MenuEditorDraft.Capture('inspector-menu', FShellRenderer.Root);
+end;
+
 procedure TNyxStudio.Refresh(ARetainCanvas, APreserveDraft: Boolean);
 var
   LCanvas: TJSHTMLElement;
@@ -770,6 +809,14 @@ begin
   FActionButton := nil;
   FActionMenu := nil;
   FComponentHelp := nil;
+  { Admitted callback creation and explicit source navigation share this path.
+    Both choose Source before composing its host, including after Messages was
+    selected. Only a mounted code view can consume the pending caret. }
+
+  if FSourceLine > 0 then
+  begin
+    FSourceTab := nstSource;
+  end;
   LCodeStart := -1;
   LCodeEnd := -1;
   LCodeScroll := 0;
@@ -914,6 +961,7 @@ begin
     FCanvasMount := nil;
     LActive := nil;
   end;
+  CaptureMenuDraft;
   FShell.Free;
   FShell := CreateShell;
 
@@ -1215,6 +1263,21 @@ begin
     FCanvasRenderer.AttachMoveGrip(nil);
   end;
   document.title := FSession.Document.Title + ' / Nyx Studio';
+
+  if (FSourceLine > 0) and (FShell.Find('studio-source-mount') <> nil) then
+  begin
+
+    if FSourceColumn < 1 then
+    begin
+      FSourceColumn := 1;
+    end;
+    { A pending admitted-handler/diagnostic navigation owns focus after chrome
+      retention, so an earlier inspector field cannot reclaim its caret. The
+      same completion runs for worker results and presentation-only commands. }
+    FCodeRenderer.NavigateCodeLine('studio-code', FSourceLine, FSourceColumn);
+    FSourceLine := 0;
+    FSourceColumn := 0;
+  end;
   try
 
     if FRecoveryEnabled then
@@ -2421,18 +2484,6 @@ begin
     begin
       NyxFocusWithoutScroll(FCodeRenderer.InputFor('studio-code'));
     end;
-
-    if FSourceLine > 0 then
-    begin
-
-      if FSourceColumn < 1 then
-      begin
-        FSourceColumn := 1;
-      end;
-      FCodeRenderer.NavigateCodeLine('studio-code', FSourceLine, FSourceColumn);
-      FSourceLine := 0;
-      FSourceColumn := 0;
-    end;
   except
     on LException: Exception do
     begin
@@ -3489,6 +3540,7 @@ begin
   { Definition inspection is ephemeral. Reset on project navigation instead of
     carrying another project's same-named menu into its inspector. }
   FViewState.MenuEditorReference := Default(TNyxMenuRef);
+  FViewState.MenuEditorDraft.Clear;
 
   if not FRecoveryEnabled then
   begin

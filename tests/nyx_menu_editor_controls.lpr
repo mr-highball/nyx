@@ -263,6 +263,11 @@ var
   LMetadata: TNyxEventSchemas;
   LIndex: Integer;
   LFound: Boolean;
+  LForm: INyxCard;
+  LReplacement: INyxCard;
+  LDraft: TNyxMenuEditorDraft;
+  LCopy: TNyxMenuEditorDraft;
+  LDocument: TNyxDocument;
 begin
   Result := False;
 
@@ -294,6 +299,50 @@ begin
         end;
         Check(LFound, 'Declared invoker advertises its real menu completion without granting Emit');
         FBefore := Pair;
+        { Incomplete form input is presentation, including invalid numeric text.
+          Capture owns values rather than the form; copied snapshots remain
+          independent after capture/clear and never replay into another owner,
+          definition or changed declaration registry. }
+        LForm := NewNyxMenuEditor('draft-menu', NyxControl('open-actions'),
+          FSession.Document, NyxMenuRef('actions'));
+        LForm.Node.Find(NyxMenuEditorFieldID('draft-menu', nmfTitle)).SetProp('value', 'A careful draft');
+        LForm.Node.Find(NyxMenuEditorFieldID('draft-menu', nmfWidth)).SetProp('value', '-');
+        LDraft := Default(TNyxMenuEditorDraft);
+        LDraft.Capture('draft-menu', LForm.Node);
+        LCopy := LDraft;
+        LForm := nil;
+        LDraft.Capture('draft-menu', nil);
+        LReplacement := NewNyxMenuEditor('draft-menu', NyxControl('open-actions'),
+          FSession.Document, NyxMenuRef('actions'));
+        Check(LDraft.Restore(LReplacement.Node), 'Parked draft restores after its form is destroyed');
+        Check((LReplacement.Node.Find(NyxMenuEditorFieldID('draft-menu', nmfTitle)).Prop('value') = 'A careful draft') and
+          (LReplacement.Node.Find(NyxMenuEditorFieldID('draft-menu', nmfWidth)).Prop('value') = '-'),
+          'Draft preserves incomplete text without admitting document values');
+        LDraft.Clear;
+        Check(LCopy.Restore(LReplacement.Node), 'Clearing one copied snapshot does not mutate another');
+        LReplacement := NewNyxMenuEditor('draft-menu', NyxControl('home'),
+          FSession.Document, NyxMenuRef('actions'));
+        LDraft := LCopy;
+        Check(not LDraft.Restore(LReplacement.Node), 'Draft refuses a different selected owner');
+        LReplacement := NewNyxMenuEditor('draft-menu', NyxControl('open-actions'),
+          FSession.Document, NyxMenuRef('density'));
+        LDraft := LCopy;
+        Check(not LDraft.Restore(LReplacement.Node), 'Draft refuses a different inspected definition');
+        LDocument := FSession.Document.Clone;
+        try
+          LDocument.Menus.Define(NyxMenuRef('reading-actions'),
+            LDocument.Menus.Definition(NyxMenuRef('actions')));
+          LReplacement := NewNyxMenuEditor('draft-menu', NyxControl('open-actions'),
+            LDocument, NyxMenuRef('actions'));
+          LDraft := LCopy;
+          Check(not LDraft.Restore(LReplacement.Node), 'Draft refuses a changed registry atomically');
+          Check(LReplacement.Node.Find(NyxMenuEditorFieldID('draft-menu', nmfTitle)).Prop('value') = 'Thoughtful actions',
+            'Refusal leaves all new form fields unchanged');
+        finally
+          LReplacement := nil;
+          LDocument.Free;
+        end;
+        Check(Pair = FBefore, 'Draft capture/restore never enters accepted project history');
         Change('inspector-menu', nmfTitle, 'Thoughtful choices');
         Change('inspector-menu', nmfWidth, '352');
         Change('inspector-menu', nmfSide, 'Above');

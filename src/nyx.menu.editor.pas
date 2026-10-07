@@ -46,6 +46,32 @@ type
     Action: TNyxMenuEditorAction;
     Reference: TNyxMenuRef;
   end;
+  { An immutable value snapshot of one mounted form, independent of renderer,
+    document and interfaces. Incomplete input is retained verbatim until Save
+    validates it. Copies share only an immutable private array; Capture creates
+    a fresh array. Restore requires the same owner, registry/attachment baseline
+    and inspected definition, so drafts cannot cross selection or menu changes.
+    This is ephemeral presentation, never part of an exported design. }
+  TNyxMenuEditorDraft = record
+  private
+    FEditorID: TNyxText;
+    FOwner: TNyxText;
+    FBaseline: TNyxText;
+    FReference: TNyxText;
+    FValues: array of record
+      ID: TNyxText;
+      Value: TNyxText;
+    end;
+  public
+    { Absent editor keeps a parked draft across panel switches. A present form
+      replaces the snapshot with copied scalar values and borrows no nodes. }
+    procedure Capture(const AEditorID: TNyxText; AShellRoot: TNyxNode);
+    { Applies all matching values before rendering; changed context retires the
+      snapshot without editing the new form. An absent editor remains parked. }
+    function Restore(AShellRoot: TNyxNode): Boolean;
+    { Explicitly retires copied input when its host changes projects. }
+    procedure Clear;
+  end;
 
 { Stable identities for host navigation/input harnesses. Item fields use their
   row's ID as the prefix; enum values never denote executable property names. }
@@ -112,6 +138,106 @@ function NyxMenuEditorFieldID(const AEditorID: TNyxText;
   AField: TNyxMenuEditorField): TNyxText;
 begin
   Result := AEditorID + TNyxText('-') + CFields[AField];
+end;
+
+procedure TNyxMenuEditorDraft.Clear;
+begin
+  FEditorID := '';
+  FOwner := '';
+  FBaseline := '';
+  FReference := '';
+  FValues := nil;
+end;
+
+procedure TNyxMenuEditorDraft.Capture(const AEditorID: TNyxText;
+  AShellRoot: TNyxNode);
+var
+  LEditor: TNyxNode;
+
+  procedure Collect(ANode: TNyxNode);
+  var
+    LIndex: Integer;
+    LCount: Integer;
+  begin
+
+    if (ANode.Kind = NyxKindName(nkInput)) or
+      (ANode.Kind = NyxKindName(nkSelect)) or
+      (ANode.Kind = NyxKindName(nkSpin)) or
+      (ANode.Kind = NyxKindName(nkCheckbox)) then
+    begin
+      LCount := Length(FValues);
+      SetLength(FValues, LCount + 1);
+      FValues[LCount].ID := ANode.ID;
+      FValues[LCount].Value := ANode.Prop('value');
+    end;
+    for LIndex := 0 to ANode.Count - 1 do
+    begin
+      Collect(ANode.Children[LIndex]);
+    end;
+  end;
+begin
+  LEditor := nil;
+
+  if AShellRoot <> nil then
+  begin
+    LEditor := AShellRoot.Find(AEditorID);
+  end;
+
+  if (LEditor = nil) or (LEditor.Prop(COwner) = '') or
+    (LEditor.Prop(CBaseline) = '') then
+  begin
+    Exit;
+  end;
+  Clear;
+  FEditorID := AEditorID;
+  FOwner := LEditor.Prop(COwner);
+  FBaseline := LEditor.Prop(CBaseline);
+  FReference := LEditor.Prop(CReference);
+  Collect(LEditor);
+end;
+
+function TNyxMenuEditorDraft.Restore(AShellRoot: TNyxNode): Boolean;
+var
+  LEditor: TNyxNode;
+  LIndex: Integer;
+begin
+  Result := False;
+
+  if (FEditorID = '') or (AShellRoot = nil) then
+  begin
+    Exit;
+  end;
+  LEditor := AShellRoot.Find(FEditorID);
+
+  if LEditor = nil then
+  begin
+    Exit;
+  end;
+
+  if (LEditor.Prop(COwner) <> FOwner) or
+    (LEditor.Prop(CBaseline) <> FBaseline) or
+    (LEditor.Prop(CReference) <> FReference) then
+  begin
+    Clear;
+    Exit;
+  end;
+  { Check the complete shape before writing any value. An item replacement
+    changes the registry baseline; a malformed host form cannot partially use
+    an older snapshot even when its context metadata happens to match. }
+  for LIndex := 0 to High(FValues) do
+  begin
+
+    if LEditor.Find(FValues[LIndex].ID) = nil then
+    begin
+      Clear;
+      Exit;
+    end;
+  end;
+  for LIndex := 0 to High(FValues) do
+  begin
+    LEditor.Find(FValues[LIndex].ID).SetProp('value', FValues[LIndex].Value);
+  end;
+  Result := True;
 end;
 
 function NyxMenuEditorActionID(const AEditorID: TNyxText;

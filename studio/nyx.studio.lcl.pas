@@ -1483,6 +1483,7 @@ end;
 procedure TNyxNativeStudio.LoadProject(const APair: TNyxProjectPair);
 begin
   FSession.LoadProject(APair);
+  FState.MenuEditorDraft.Clear;
   FBoundProject := '';
   FProjectRevision := '';
   FSavedPair := EncodeNyxProject(FSession.ProjectSnapshot);
@@ -1562,6 +1563,11 @@ begin
   begin
     Exit;
   end;
+
+  if FSession.MatchesCommandContext(FShellCommandContext) then
+  begin
+    FState.MenuEditorDraft.Capture('inspector-menu', FShellView.Root);
+  end;
   LNode := FShellView.Root.Find('studio-split');
 
   if LNode <> nil then
@@ -1608,6 +1614,7 @@ begin
     FState.RootRemoval := FRootRemoval.Inspect;
   end;
   Result := BuildNyxStudioView(FSession, FState, FCompilerReport);
+  FState.MenuEditorDraft.Restore(Result.Pages[0]);
   Result.Pages[0].Configure.Height(FHost.ClientHeight).Done;
 end;
 

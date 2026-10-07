@@ -31,6 +31,10 @@ uses
   Classes, SysUtils, Windows, Process, nyx.text, nyx.data;
 
 type
+  { Closed host keys used by maintained input journeys. These are Chromium
+    protocol input, not portable product events or application shortcuts. }
+  TNyxBrowserKey = (nbkHome, nbkEnd, nbkUp, nbkDown, nbkEnter, nbkEscape,
+    nbkSelectAll);
   { Physical axis-aligned viewport border bounds in CSS pixels, observed through
     Chromium's DOM protocol. This is target evidence, not document layout state. }
   TNyxBrowserBox = record
@@ -97,6 +101,16 @@ type
       This qualifies host defaults that synthetic DOM events cannot establish;
       it does not claim hardware, IME or assistive-technology input. }
     procedure Tab(AReverse: Boolean = False);
+    { Exercise the focused host control with trusted keyboard input. SelectAll
+      uses Control+A on this Windows host. No DOM value is assigned. }
+    procedure Key(AKey: TNyxBrowserKey);
+    { Insert text at the actual focused host caret. Does not assign a DOM value
+      or focus a replacement element; this also qualifies source navigation. }
+    procedure TypeText(const AText: TNyxText);
+    { Replace a visible text input through focus, host selection and text input;
+      ordinary Tab commits its change. Use only for control qualification, never
+      as a substitute for semantic demo/document composition. }
+    procedure ReplaceText(const ASelector, AText: TNyxText);
     { Change real host allocation, including landscape/short-window transitions.
       Bounds are 320..4096 wide and 240..4096 high; no application script runs. }
     procedure Resize(AWidth, AHeight: Integer);
@@ -540,6 +554,7 @@ var
   LStringIndexes: TNyxDataValue;
   LIndex: Integer;
   LValueIndex: Integer;
+  LFace: TNyxDataValue;
 begin
   Result := False;
   AValue := '';
@@ -564,6 +579,26 @@ begin
       end;
       raise;
     end;
+  end;
+  LFace := Request('DOM.describeNode', NyxObject([
+    NyxField('backendNodeId', NyxData(LBackend))]), FSession).Field('node');
+
+  if LFace.Field('nodeName').AsText = 'SELECT' then
+  begin
+    { DOMSnapshot inputValue excludes SELECT. Its native accessible value is
+      the current option caption, including a keyboard change that never edits
+      the option's selected attribute. Nyx's text-only choices use that exact
+      caption as their value. Keep this observation bounded to one host face. }
+    LSnapshot := Request('Accessibility.getPartialAXTree', NyxObject([
+      NyxField('backendNodeId', NyxData(LBackend)),
+      NyxField('fetchRelatives', NyxData(False))]), FSession).Field('nodes');
+
+    if LSnapshot.Count = 1 then
+    begin
+      AValue := LSnapshot.Item(0).Field('value').Field('value').AsText;
+      Exit(True);
+    end;
+    Exit(False);
   end;
   { The browser snapshot exposes live input/textarea values without evaluating
     getters or injecting source. Backend identity selects exactly this field;
@@ -669,19 +704,49 @@ var
   LQuad: TNyxDataValue;
   LX: Double;
   LY: Double;
+  LPrepared: Boolean;
+  LStarted: QWord;
 begin
-  LNode := Request('DOM.querySelector', NyxObject([
-    NyxField('nodeId', NyxData(Body)), NyxField('selector', NyxData(ASelector))]),
-    FSession).Field('nodeId').AsInteger;
+  LStarted := GetTickCount64;
+  repeat
+    LPrepared := False;
+    try
+      LNode := Request('DOM.querySelector', NyxObject([
+        NyxField('nodeId', NyxData(Body)), NyxField('selector', NyxData(ASelector))]),
+        FSession).Field('nodeId').AsInteger;
 
-  if LNode = 0 then
-  begin
-    raise Exception.Create('Requested host control is absent');
-  end;
-  Request('DOM.scrollIntoViewIfNeeded', NyxObject([
-    NyxField('nodeId', NyxData(LNode))]), FSession);
-  LQuad := Request('DOM.getBoxModel', NyxObject([
-    NyxField('nodeId', NyxData(LNode))]), FSession).Field('model').Field('border');
+      if LNode <> 0 then
+      begin
+        Request('DOM.scrollIntoViewIfNeeded', NyxObject([
+          NyxField('nodeId', NyxData(LNode))]), FSession);
+        LQuad := Request('DOM.getBoxModel', NyxObject([
+          NyxField('nodeId', NyxData(LNode))]), FSession).Field('model').Field('border');
+        LPrepared := True;
+      end;
+    except
+      on LError: Exception do
+      begin
+        { Observation can race an ordinary asynchronous chrome replacement.
+          Retry only retired-node preparation, before any physical input has
+          been sent. Never replay a mouse press or an editor command. }
+
+        if Pos('Could not find node with given id', LError.Message) = 0 then
+        begin
+          raise;
+        end;
+      end;
+    end;
+
+    if not LPrepared then
+    begin
+
+      if GetTickCount64 - LStarted > 5000 then
+      begin
+        raise Exception.Create('Requested host control is absent or keeps retiring / ' + ASelector);
+      end;
+      Sleep(50);
+    end;
+  until LPrepared;
   LX := (LQuad.Item(0).AsNumber + LQuad.Item(4).AsNumber) / 2;
   LY := (LQuad.Item(1).AsNumber + LQuad.Item(5).AsNumber) / 2;
   Request('Input.dispatchMouseEvent', NyxObject([
@@ -714,6 +779,49 @@ begin
     NyxField('code', NyxData('Tab')), NyxField('windowsVirtualKeyCode', NyxData(9)),
     NyxField('nativeVirtualKeyCode', NyxData(9)),
     NyxField('modifiers', NyxData(LModifiers))]), FSession);
+end;
+
+procedure TNyxBrowserPipe.Key(AKey: TNyxBrowserKey);
+const
+  CNames: array[TNyxBrowserKey] of TNyxText =
+    ('Home', 'End', 'ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'a');
+  CCodes: array[TNyxBrowserKey] of TNyxText =
+    ('Home', 'End', 'ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'KeyA');
+  CVirtual: array[TNyxBrowserKey] of Integer = (36, 35, 38, 40, 13, 27, 65);
+var
+  LModifiers: Integer;
+begin
+  LModifiers := 0;
+
+  if AKey = nbkSelectAll then
+  begin
+    LModifiers := 2;
+  end;
+  Request('Input.dispatchKeyEvent', NyxObject([
+    NyxField('type', NyxData('keyDown')), NyxField('key', NyxData(CNames[AKey])),
+    NyxField('code', NyxData(CCodes[AKey])),
+    NyxField('windowsVirtualKeyCode', NyxData(CVirtual[AKey])),
+    NyxField('nativeVirtualKeyCode', NyxData(CVirtual[AKey])),
+    NyxField('modifiers', NyxData(LModifiers))]), FSession);
+  Request('Input.dispatchKeyEvent', NyxObject([
+    NyxField('type', NyxData('keyUp')), NyxField('key', NyxData(CNames[AKey])),
+    NyxField('code', NyxData(CCodes[AKey])),
+    NyxField('windowsVirtualKeyCode', NyxData(CVirtual[AKey])),
+    NyxField('nativeVirtualKeyCode', NyxData(CVirtual[AKey])),
+    NyxField('modifiers', NyxData(LModifiers))]), FSession);
+end;
+
+procedure TNyxBrowserPipe.TypeText(const AText: TNyxText);
+begin
+  Request('Input.insertText', NyxObject([NyxField('text', NyxData(AText))]), FSession);
+end;
+
+procedure TNyxBrowserPipe.ReplaceText(const ASelector, AText: TNyxText);
+begin
+  Click(ASelector);
+  Key(nbkSelectAll);
+  TypeText(AText);
+  Tab;
 end;
 
 procedure TNyxBrowserPipe.Resize(AWidth, AHeight: Integer);

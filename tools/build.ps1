@@ -1302,7 +1302,9 @@ try {
     $nyxMenuRoot = Join-Path $nyxRoot 'build/menu-editor/maintained'
     $nyxMenuNative = Join-Path $nyxMenuRoot 'lcl'
     $nyxMenuBrowser = Join-Path $nyxMenuRoot 'browser'
-    New-Item -ItemType Directory -Force $nyxMenuNative, $nyxMenuBrowser | Out-Null
+    $nyxMenuObserver = Join-Path $nyxMenuRoot 'observer'
+    New-Item -ItemType Directory -Force $nyxMenuNative, $nyxMenuBrowser,
+      $nyxMenuObserver | Out-Null
     $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
     $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
     $nyxMenuPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
@@ -1317,6 +1319,12 @@ try {
       Join-Path $nyxMenuRoot 'studio-projects') (Join-Path $nyxMenuRoot 'captures')
 
     if ($LASTEXITCODE -ne 0) { throw 'Actual native menu editor/Studio journey failed' }
+    # Build the ordinary full-host input consumer without creating a project or
+    # opening a browser. Its explicit invocation names an isolated enrollment,
+    # editor endpoint and fresh evidence directory; Pascal owns semantic setup.
+    Invoke-NyxCompiler $nyxFpc @('-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxMenuObserver", "-FE$nyxMenuObserver",
+      'tests/nyx_studio_menu_editor_observer.lpr')
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js @('-Mdelphi', '-Tbrowser', '-Jirtl.js',
