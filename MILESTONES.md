@@ -3,7 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current responsive integration (2026-10-07): immutable fluent available-height
+Current authoring integration (2026-10-07): the public recipe form supplies
+Edit-this-choice prefill, ordered replacement/collision refusal and copied input
+through ordinary source/panel/compact lifetimes on both Studio controllers.
+Checked shared/actual Win32 Studio checks pass 50, exact accepted source execution
+five and core/composition regression 30/1795, leak-free. Both Studios and matching
+browser consumer/worker compile with zero owned warnings. No original full
+criterion closes; only authoring no-closure advances 33→34, with other known
+counts 19/15/28/2 unchanged. Browser execution, actual phone/IME/accessibility,
+other widgetsets and observing rollout retain their gates. End the integrated
+revise-choice boundary and retain original prerequisites for full both-target
+authoring journeys. See [the packet](WORK.md#current-return-path-revising-recipe-choices--2026-10-07).
+
+Previous responsive integration (2026-10-07): immutable fluent available-height
 fitting and managed host observations now serve ordinary browser/native Studio
 and the expanded browser source modal. Checked native/shared resize/lifetime
 qualification passes 47; actual native source workspace passes 30, leak-free.

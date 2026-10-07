@@ -305,6 +305,16 @@ Follow that concrete preservation bridge before crediting an observing deploymen
 Retain current services/pairs;
 do not infer authenticated content support from offline schema or build evidence.
 
+The 2026-10-07 authoring packet now supplies ordinary Edit-row prefill, ordered
+scope replacement/collision refusal and copied recipe proposals across both
+Studio controllers. It qualifies 50 checked shared/actual Win32 assertions and
+five exact accepted-source execution checks; browser consumers compile only.
+This adds no authenticated HTTP content journey, workflow credit or deployment.
+The next observing recipe journey retains this owner's original prerequisites:
+an independently admitted current backend, bounded content inspection and one
+expected-revision paired transaction, with all protected services/pairs retained.
+See [authoring evidence](../WORK.md#current-return-path-revising-recipe-choices--2026-10-07).
+
 The authority propagation gap discovered during native recovery integration is
 now corrected in current source: `TNyxReviewWorkspaces.Call` forwards the distinct
 bounded connection owner to ordinary session calls. Primary/project receipts and

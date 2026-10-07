@@ -66,9 +66,14 @@ exclusive upper bounds and orientation. A zero upper bound means unbounded.
 An unrestricted size condition refuses and directs the user to Default instead.
 
 Use recipe in this scope upserts the exact scope, retaining its order. Each
-registered rule shows its scope, target and recipe and has an exact removal
-button. Removing a choice retains the others; document admission still requires
-a common default, through an ordinary rule or the existing compatible reference.
+registered rule shows its scope, target and recipe with Edit this choice and
+Remove this choice actions. Edit prefills the form without changing the document
+or source history. Applying an edited condition replaces its original row in
+evaluation order. A collision with another registered scope refuses and retains
+both choices; revise the proposal or edit that other row instead. Ordinary
+unselected Apply still upserts its exact scope. Removing a choice retains the
+others; document admission still requires a common default, through an ordinary
+rule or the existing compatible reference.
 The size fields are used only for Available size; the presentation selector only
 for Named presentation. Output compilers are independent of these choices.
 
@@ -78,6 +83,31 @@ on both adapters. Composition borrows distinct control/recipe/presentation
 references and the current registry, then retains only copied metadata and owned
 descendants. `CaptureNyxContentEditor` returns an independent registry and exact
 mounted baseline; it never changes the caller's document.
+
+`TNyxContentEditorDraft` copies the nine form values and optional edited-row
+identity. The public `CaptureNyxContentEditorRule` action returns a complete
+prefilling draft from an exact mounted row. A controller compares `Matches`
+against its fresh selected owner/default/registry, restores the disposable form,
+then synchronizes its existing renderer. `NyxContentEditorRuleID` and the closed
+scope/platform/orientation helpers supply typed action and selector contracts.
+Neither capture nor prefill publishes a design edit.
+
+Both ordinary Studio controllers capture and restore the proposal across source
+pane changes, Properties/Events and compact panel parking. Missing forms park
+input. Changed owner, registry, compatible default, available recipe/presentation
+choices or field kinds retire it. Restore checks all context and every field
+before writing anything. Explicit project replacement clears it even when IDs and
+baseline text match. The copied record owns no document, node, control, interface
+or renderer. Native opaque in-progress spin-edit buffers are not captured; the
+committed widget value is. Browser focused input text is captured at its draft
+boundary. Proposal text is parsed only on Apply and never enters design/source
+history itself.
+
+Size fields use specialized `INyxSpin` inputs and the nonnegative 32-bit range
+of the portable viewport contract. Spin's public Integer setters and property
+descriptors admit the complete signed Pascal range; other presentation/progress/
+stepper limits keep their own bounds. Invalid/incomplete conditions refuse through
+the existing queue and leave the form available for correction.
 
 Studio captures `NyxSetContent` as a value-only queued command. The existing
 independent processor compares the shown registry with its fresh paired model,
@@ -104,6 +134,23 @@ an owner-bound review. Browser staging includes the compiled independent worker
 and matching runtime; `content-editor-controls.html` uses the maintained Pascal
 driver's `projection` mode, optionally with `?compact=1`. The build starts no
 listener and changes no operator project.
+
+Run `tools/build.ps1 -Target content-revisions` with that same exact semantic seed
+to qualify revising existing rows through ordinary native Studio and compile the
+exact accepted Pascal companion. It stages the matching browser consumer,
+independent worker and runtime under a separate ignored directory; it does not
+start a listener, launch a browser, replace a service or overwrite retained
+content-editor evidence. `content-revisions.html` is a Pascal-driven actual-control
+consumer awaiting admitted HTTP execution. See [current evidence](../WORK.md#current-return-path-revising-recipe-choices--2026-10-07).
+
+The revise-choice consumer passes 50 checked shared/actual full Win32 Studio
+assertions and five exact generated-companion execution checks, leak-free. Original
+editor/queue regression remains 55 plus six native Studio checks. Compact capture
+shows the refused 800/720 interval retained for correction; desktop shows a
+2147483647 proposal after returning from compact panels. Both complete Studios
+and browser consumer/worker/companion compile with zero owned warnings; current
+browser execution, phone/IME/keyboard, accessibility and observing deployment
+remain open. These captures and model checks do not qualify those target gates.
 
 ## Composition and mounted views
 

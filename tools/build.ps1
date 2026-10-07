@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -3073,6 +3073,58 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxCollectionAgentHost") -Destination $nyxCollectionAgentBrowser
     }
     Write-Host 'Semantic collection consumers staged; browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'content-revisions') {
+    # The unchanged semantic export supplies the English application. Pascal
+    # owns typed enrichment, real Studio input, paired admission and assertions.
+    # Each output is isolated from retained baseline evidence and live services.
+    $nyxRevisionRoot = Join-Path $nyxRoot 'build/content-revisions/maintained'
+    $nyxRevisionSource = [IO.Path]::GetFullPath($ContentEditorSourceDirectory)
+    $nyxRevisionSeed = Join-Path $nyxRevisionSource 'nyx.generated.view.pas'
+    if (-not (Test-Path -LiteralPath $nyxRevisionSeed -PathType Leaf)) {
+      throw 'Supply the unchanged content-editor semantic source export'
+    }
+    $nyxRevisionNative = Join-Path $nyxRevisionRoot 'native'
+    $nyxRevisionResult = Join-Path $nyxRevisionRoot 'result'
+    $nyxRevisionGenerated = Join-Path $nyxRevisionRoot 'generated'
+    $nyxRevisionWeb = Join-Path $nyxRevisionRoot 'browser'
+    New-Item -ItemType Directory -Force $nyxRevisionNative, $nyxRevisionResult,
+      $nyxRevisionGenerated, $nyxRevisionWeb | Out-Null
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxRevisionPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxRevisionSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxRevisionPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxRevisionPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxRevisionPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxRevisionPlatform",
+      "-FU$nyxRevisionNative", "-FE$nyxRevisionNative", 'tests/nyx_content_revisions_controls.lpr')
+    & (Join-Path $nyxRevisionNative 'nyx_content_revisions_controls.exe') $nyxRevisionResult
+    if ($LASTEXITCODE -ne 0) { throw 'Actual Studio recipe revision checks failed' }
+    Copy-Item -LiteralPath (Join-Path $nyxRevisionResult 'accepted.pas.txt') `
+      -Destination (Join-Path $nyxRevisionGenerated 'nyx.generated.view.pas') -Force
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-dNYX_RECIPE_REVISIONS', '-Fusrc', '-Fustudio', "-Fu$nyxRevisionGenerated",
+      "-FU$nyxRevisionGenerated", "-FE$nyxRevisionGenerated", 'tests/nyx_content_editor_generated.lpr')
+    & (Join-Path $nyxRevisionGenerated 'nyx_content_editor_generated.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Executed revised recipe source failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc',
+      '-Fustudio', '-Futests', "-Fu$nyxRevisionSource", "-FE$nyxRevisionWeb",
+      'tests/nyx_content_revisions_controls.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule', '-Jirtl.js', '-Fusrc',
+      '-Fustudio', "-FE$nyxRevisionWeb", 'studio/nyx_source_worker.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-dNYX_RECIPE_REVISIONS', '-Fusrc', "-Fu$nyxRevisionGenerated", "-FE$nyxRevisionWeb",
+      'tests/nyx_content_editor_generated.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxRevisionWeb 'rtl.js') -Force
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/content-revisions.html'),
+      (Join-Path $nyxRoot 'studio/web/content-editor-generated.html') -Destination $nyxRevisionWeb -Force
+    Write-Host 'Native revision/source checks passed; browser staging requires actual admitted HTTP execution.'
     exit 0
   }
 

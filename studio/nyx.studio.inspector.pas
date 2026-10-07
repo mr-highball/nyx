@@ -33,6 +33,7 @@ uses
   nyx.types,
   nyx.responsive,
   nyx.presentations,
+  nyx.content.editor,
   nyx.containers,
   nyx.model,
   nyx.callbacks,
@@ -151,6 +152,10 @@ function CaptureNyxTimeDomainInspector(ASession: TNyxStudioSession;
   selection/registry refuses before enqueue; no source/history changes here. }
 function CaptureNyxContentInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Local recipe prefill rechecks exact selection/registry/default without
+  publishing a source operation. Restore/Sync only the disposable form. }
+function CaptureNyxContentRuleInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out ADraft: TNyxContentEditorDraft): Boolean;
 { Capture one property intent for the independent paired processor. The source
   button owns an exact selection; stale owners and incomplete intervals refuse.
   No accepted document, source, history or control is changed here. }
@@ -167,7 +172,7 @@ function ReadNyxStudioPresentationChoice(const AChoice: TNyxText;
 implementation
 
 uses
-  nyx.schema, nyx.controls, nyx.content, nyx.content.editor,
+  nyx.schema, nyx.controls, nyx.content,
   nyx.studio.callbackedits, nyx.studio.edits, nyx.dates.editor, nyx.times.editor,
   nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
   nyx.menu.bar.editor, nyx.menu.bar.declarations;
@@ -458,6 +463,29 @@ begin
   end;
   AParent.Add(NewNyxContentEditor('inspector-content', NyxControl(ASession.SelectedID),
     ASession.Selected.Content, ASession.Selected.DefaultComponent, LRecipes, LPresentations));
+end;
+
+function CaptureNyxContentRuleInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out ADraft: TNyxContentEditorDraft): Boolean;
+var
+  LCandidate: TNyxContentEditorDraft;
+begin
+  ADraft := Default(TNyxContentEditorDraft);
+  Result := CaptureNyxContentEditorRule(AButton, AShellRoot, LCandidate);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if (ASession = nil) or (ASession.Selected = nil) or
+    (ASession.Selected.ProjectionKind <> 'component') or
+    not LCandidate.Matches(NyxControl(ASession.SelectedID),
+      ASession.Selected.Content, ASession.Selected.DefaultComponent) then
+  begin
+    raise ENyxModel.Create('Select this instance again before revising its recipe');
+  end;
+  ADraft := LCandidate;
 end;
 
 function CaptureNyxContentInspector(ASession: TNyxStudioSession;

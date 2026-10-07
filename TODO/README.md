@@ -44,6 +44,18 @@ remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
+Latest authoring integration (2026-10-07): existing recipe rows now supply local
+Edit prefill, ordered scope replacement/collision refusal and copied proposal
+retention through source/panel/compact transitions on both Studio controllers.
+Checked shared/actual Win32 Studio checks pass 50, exact accepted source execution
+five and core/composition regression 30/1795, leak-free. Both Studios and matching
+browser consumer/worker compile with zero owned warnings. Browser execution,
+actual phone/IME/accessibility, other widgetsets and rollout remain open. No
+criterion closes; authoring no-closure advances 33→34 once, with workflow/renderer/
+codegen/delivery unchanged at 19/15/28/2. End this revise-choice boundary; retain
+the [original authoring criteria](NS-4_studio-authoring_01.md) and
+[current evidence](../WORK.md#current-return-path-revising-recipe-choices--2026-10-07).
+
 Latest numeric prerequisite (2026-10-07): specialized Number/Integer sliders now
 consume portable range/choice scales and exact accepted-value caches in both
 ordinary adapters. Checked actual/shared native assertions pass 73; the independent

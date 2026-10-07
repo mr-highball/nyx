@@ -31,6 +31,7 @@ uses
   nyx.text, nyx.types, nyx.behavior, nyx.data, nyx.model, nyx.theme, nyx.render.lcl,
   nyx.events, nyx.viewport, nyx.projection.refresh, nyx.callbacks, nyx.studio.collections,
   nyx.hostspace, nyx.hostspace.lcl,
+  nyx.content.editor,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.lcl,
   nyx.menu, nyx.menu.lcl, nyx.menu.button, nyx.controls, nyx.studio.menu,
@@ -1489,6 +1490,7 @@ begin
   FState.MenuBarEditorDraft.Clear;
   FState.QueryEditorDraft.Clear;
   FState.TimeDomainEditorDraft.Clear;
+  FState.ContentEditorDraft.Clear;
   FBoundProject := '';
   FProjectRevision := '';
   FSavedPair := EncodeNyxProject(FSession.ProjectSnapshot);
@@ -1570,6 +1572,7 @@ begin
     FState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellView.Root);
     FState.QueryEditorDraft.Capture('inspector-collection-query', FShellView.Root);
     FState.TimeDomainEditorDraft.Capture('inspector-time-domain', FShellView.Root);
+    FState.ContentEditorDraft.Capture('inspector-content', FShellView.Root);
   end;
   LNode := FShellView.Root.Find('studio-split');
 
@@ -1621,6 +1624,7 @@ begin
   FState.MenuBarEditorDraft.Restore(Result.Pages[0]);
   FState.QueryEditorDraft.Restore(Result.Pages[0]);
   FState.TimeDomainEditorDraft.Restore(Result.Pages[0]);
+  FState.ContentEditorDraft.Restore(Result.Pages[0]);
   Result.Pages[0].Configure.Height(FHost.ClientHeight).Done;
 end;
 
@@ -2567,6 +2571,8 @@ var
   LBackupRevision: TNyxText;
   LBackupRemote: TNyxText;
   LHierarchyChanged: Boolean;
+  LContentDraft: TNyxContentEditorDraft;
+  LContentFocus: TWinControl;
 begin
 
   if FPainting or FChangingProject or
@@ -2636,6 +2642,26 @@ begin
       begin
         raise ENyxModel.Create('Unknown binding flow');
       end;
+    end;
+
+    if (AEvent.Trigger = ntClick) and CaptureNyxContentRuleInspector(FSession,
+      ANode, FShellView.Root, LContentDraft) then
+    begin
+      FState.ContentEditorDraft := LContentDraft;
+
+      if not FState.ContentEditorDraft.Restore(FShellView.Root) then
+      begin
+        raise ENyxModel.Create('Recipe form changed before the selected choice could be loaded');
+      end;
+      FShellView.Sync;
+      LContentFocus := FShellView.FocusFor(
+        NyxContentEditorFieldID('inspector-content', ncfScope));
+
+      if (LContentFocus <> nil) and LContentFocus.CanFocus then
+      begin
+        LContentFocus.SetFocus;
+      end;
+      Exit;
     end;
 
     if FSourceCommands.Route(ANode, AEvent, FShellView.Root) then

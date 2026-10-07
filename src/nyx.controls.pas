@@ -158,6 +158,10 @@ type
     property Resizable: Boolean read GetResizable write SetResizable;
   end;
 
+  { Managed numeric reference. Spin projects the full signed Pascal Integer
+    range; other numeric faces keep their own domain/presentation bounds. These
+    setters admit scalar values, while ordinary document/property admission
+    validates the complete contract before a renderer publishes it. }
   INyxIntegerInput = interface(INyxCaptionControl)
     ['{737A7921-4621-4C6F-8C01-010000000007}']
     function GetValue: Integer;

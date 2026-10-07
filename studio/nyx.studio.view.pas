@@ -37,6 +37,7 @@ uses
   nyx.menu.bar.editor,
   nyx.collections.query.editor,
   nyx.times.editor,
+  nyx.content.editor,
   nyx.contract,
   nyx.schema,
   nyx.types,
@@ -135,6 +136,8 @@ type
     { Unsubmitted clock policy belongs to this project's editor presentation.
       Exact owner/local-effective context prevents stale inherited replay. }
     TimeDomainEditorDraft: TNyxTimeDomainEditorDraft;
+    { Copied recipe proposal survives inspector parking and shell transitions. }
+    ContentEditorDraft: TNyxContentEditorDraft;
     CallbackRemoval: TNyxCallbackRemoval;
     { Copied confirmation metadata, not an interface or borrowed model. }
     RootRemoval: TNyxDataValue;

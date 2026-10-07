@@ -40,6 +40,28 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Revising recipe choices — 2026-10-07
+
+Original criteria 1/2/6 now consume a public value-only content form draft and
+exact Edit-this-choice action through both ordinary Studio controllers. Prefill
+creates no design/history. Changing an edited scope replaces its original row in
+order; a collision with another scope refuses without merging or deleting it.
+Properties/Events, compact panels and source-pane changes retain proposals;
+changed owner/default/registry/choices/field kinds and explicit project replacement
+retire them. The prerequisite Integer spin setter/descriptor range now matches
+portable viewport bounds without loosening progress/layout/stepper limits.
+
+Checked shared/actual Win32 Studio qualification passes 50, leak-free, and exact
+accepted Pascal execution passes five. Core/composition regression passes
+30/1795; both Studios and matching browser consumer/worker compile with zero
+owned warnings. Browser execution, phone/IME/accessibility, other widgetsets and
+observing rollout remain open; no rejected listener/browser launch is retried.
+No original full criterion closes. This packet's sole owner advances authoring
+no-closure 33→34; workflow/renderer/codegen/delivery stay 19/15/28/2. End the
+integrated revise-choice boundary; full responsive both-target journeys and the
+original prerequisites remain required. See [the public form](../docs/content-recipes.md#studio-authoring)
+and [current evidence](../WORK.md#current-return-path-revising-recipe-choices--2026-10-07).
+
 ## Available host space — 2026-10-07
 
 The current available-host-space packet serves original criteria 1/2 through
@@ -51,7 +73,7 @@ allocation remains accepted partial evidence; no unchanged journey is recredited
 Actual browser/phone keyboard/zoom and rollout remain open after the earlier
 launch review rejection. No original full criterion closes; only authoring
 no-closure advances 32→33, other known counts stay 19/15/28/2. End this boundary;
-ordinary responsive recipe authoring and full both-target journeys retain this
+revising existing recipe choices and full both-target journeys retain this
 task's original criteria/prerequisites. See
 [available space](../docs/host-space.md) and
 [current evidence](../WORK.md#current-return-path-available-host-space--2026-10-07).

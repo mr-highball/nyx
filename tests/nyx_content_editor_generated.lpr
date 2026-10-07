@@ -52,10 +52,17 @@ begin
     LDocument := BuildNyxDocument;
     LDocument.Validate;
     ValidateNyxDocumentProperties(LDocument);
+    {$ifdef NYX_RECIPE_REVISIONS}
+    Check(LDocument.Find('workspace').Content.Count = 2, 'Revising a choice retains its accepted rule count');
+    Check(LDocument.Find('workspace').Content.Rule(0).Viewport.Same(
+      TNyxViewportCondition.Any.WidthBelow(720)),
+      'Generated revised condition replaces the original bound');
+    {$else}
     Check(LDocument.Find('workspace').Content.Count = 3, 'Generated recipe registry retains its accepted rule count');
     Check(LDocument.Find('workspace').Content.Rule(0).Viewport.Same(
       TNyxViewportCondition.Any.WidthBelow(700).HeightBelow(500).Orientation(nvoLandscape)),
       'Generated width/height/orientation retains its accepted condition');
+    {$endif}
     Check((LDocument.Find('workspace').Content.Rule(1).Presentation.Name = 'focused') and
       (LDocument.Find('workspace').Content.Rule(1).Component.Name = 'reading-card'),
       'Generated named presentation retains its distinct reference');

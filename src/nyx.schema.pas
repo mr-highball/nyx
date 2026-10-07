@@ -1421,7 +1421,16 @@ begin
     begin
       Add('value', 'Value', npLines);
     end
-    else if KindIn(LKind, 'spin|slider|progress') then
+    else if LKind = 'spin' then
+    begin
+      { Spin inputs project Integer directly on both hosts. Keep descriptor and
+        fluent bounds identical so valid portable viewport limits survive form
+        composition, admission, persistence and generated code. }
+      Add('value', 'Value', npInteger, '0', '', Low(Integer), High(Integer));
+      Add('min', 'Minimum', npInteger, '0', '', Low(Integer), High(Integer));
+      Add('max', 'Maximum', npInteger, '100', '', Low(Integer), High(Integer));
+    end
+    else if KindIn(LKind, 'slider|progress') then
     begin
       Add('value', 'Value', npInteger, '0', '', -1000000, 1000000);
       Add('min', 'Minimum', npInteger, '0', '', -1000000, 1000000);

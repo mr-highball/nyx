@@ -35,6 +35,7 @@ uses
   nyx.text,
   nyx.data,
   nyx.hostspace, nyx.hostspace.browser,
+  nyx.content.editor,
   Classes,
   SysUtils,
   JS,
@@ -686,6 +687,7 @@ begin
   LState.MenuBarEditorDraft := FViewState.MenuBarEditorDraft;
   LState.QueryEditorDraft := FViewState.QueryEditorDraft;
   LState.TimeDomainEditorDraft := FViewState.TimeDomainEditorDraft;
+  LState.ContentEditorDraft := FViewState.ContentEditorDraft;
   LState.CallbackRemoval := FCallbackRemoval;
 
   if FRootRemoval <> nil then
@@ -709,6 +711,7 @@ begin
   FViewState.MenuBarEditorDraft.Restore(Result.Pages[0]);
   FViewState.QueryEditorDraft.Restore(Result.Pages[0]);
   FViewState.TimeDomainEditorDraft.Restore(Result.Pages[0]);
+  FViewState.ContentEditorDraft.Restore(Result.Pages[0]);
 end;
 
 procedure TNyxStudio.SourceModalDismiss;
@@ -777,6 +780,7 @@ begin
     FViewState.MenuBarEditorDraft.Clear;
     FViewState.QueryEditorDraft.Clear;
     FViewState.TimeDomainEditorDraft.Clear;
+    FViewState.ContentEditorDraft.Clear;
     Exit;
   end;
   LEditor := FShellRenderer.Root.Find('inspector-menu');
@@ -817,6 +821,16 @@ begin
         end;
       end;
 
+      if LNode = nil then
+      begin
+        LEditor := FShellRenderer.Root.Find('inspector-content');
+
+        if LEditor <> nil then
+        begin
+          LNode := LEditor.Find(LField.getAttribute('data-node'));
+        end;
+      end;
+
       if (LNode <> nil) and ((LNode.Kind = NyxKindName(nkInput)) or
         (LNode.Kind = NyxKindName(nkSelect)) or (LNode.Kind = NyxKindName(nkSpin)) or
         (LNode.Kind = NyxKindName(nkMemo))) then
@@ -831,6 +845,7 @@ begin
   FViewState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellRenderer.Root);
   FViewState.QueryEditorDraft.Capture('inspector-collection-query', FShellRenderer.Root);
   FViewState.TimeDomainEditorDraft.Capture('inspector-time-domain', FShellRenderer.Root);
+  FViewState.ContentEditorDraft.Capture('inspector-content', FShellRenderer.Root);
 end;
 
 procedure TNyxStudio.Refresh(ARetainCanvas, APreserveDraft: Boolean);
@@ -1896,6 +1911,8 @@ var
   LCompilerPanel: TNyxNode;
   LCompilerIndex: Integer;
   LHierarchyChanged: Boolean;
+  LContentDraft: TNyxContentEditorDraft;
+  LContentFocus: TJSHTMLElement;
 begin
 
   if not FSession.MatchesCommandContext(FShellCommandContext) then
@@ -1965,6 +1982,28 @@ begin
       begin
         raise ENyxModel.Create('Unknown binding flow');
       end;
+    end;
+
+    if (AEvent.Trigger = ntClick) and CaptureNyxContentRuleInspector(FSession,
+      ANode, FShellRenderer.Root, LContentDraft) then
+    begin
+      FViewState.ContentEditorDraft := LContentDraft;
+
+      if not FViewState.ContentEditorDraft.Restore(FShellRenderer.Root) then
+      begin
+        raise ENyxModel.Create('Recipe form changed before the selected choice could be loaded');
+      end;
+      { Sync existing controls only: no document/source/history operation and
+        no destruction of the button currently delivering this callback. }
+      FShellRenderer.Sync;
+      LContentFocus := FShellRenderer.FocusFor(
+        NyxContentEditorFieldID('inspector-content', ncfScope));
+
+      if LContentFocus <> nil then
+      begin
+        LContentFocus.focus;
+      end;
+      Exit;
     end;
 
     if FSourceCommands.Route(ANode, AEvent, FShellRenderer.Root) then
@@ -3622,6 +3661,7 @@ begin
   FViewState.MenuBarEditorDraft.Clear;
   FViewState.QueryEditorDraft.Clear;
   FViewState.TimeDomainEditorDraft.Clear;
+  FViewState.ContentEditorDraft.Clear;
 
   if not FRecoveryEnabled then
   begin

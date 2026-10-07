@@ -7,6 +7,108 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: revising recipe choices — 2026-10-07
+
+The previous turn is **progress**: `f9551cc` is exact on the remote branch with
+a clean worktree, 47 checked host observations and 30 actual native source
+workspace checks. No full criterion closed. Known workflow/authoring/renderer/
+codegen/delivery no-closure counts are 19/33/15/28/2. Reassessment of the proposed
+return path found that ordinary recipe authoring already exists and has retained
+55 target-editor/six native Studio checks; that wording was stale. Do not rebuild
+the editor or recredit its baseline. The concrete original criteria 1/2/6 gap is
+revising existing choices: rows expose only Remove, while unsubmitted scope/size/
+recipe values can reset when the form is removed because recipe drafts are not
+captured. Ordinary retained repaint already preserves numeric fields; do not
+credit that existing behavior to this change.
+
+Preregistered deliverable: a public value-only recipe form draft and exact
+Edit-this-choice action, consumed by both ordinary Studio controllers. Prefill
+loads a selected typed scope/target/recipe without publishing design/history;
+Apply retains the existing independent processor and one paired Undo step.
+Changing an edited scope replaces its original row in evaluation order;
+collision with another authored scope refuses without erasing either choice.
+Draft replay checks exact owner, registry, compatible default, available choices
+and complete field kinds before any write; project replacement retires input.
+Use the entire signed-positive viewport-bound range already admitted by the
+portable condition contract, preserving typed numeric controls.
+
+Evidence/stop: retain the existing no-edit/reset failure, then qualify public
+snapshot isolation/refusal and actual native Studio edit → change → panel/compact
+transition → Apply/correction → paired Undo/Redo through the exact existing
+authenticated English source. Rebuild both Studios, matching browser consumer
+and independent worker; browser execution remains a gate. Read bounded semantic
+context and preserve all protected services/pairs/LAN files. No new listener or
+equivalent retry of a rejected launch. Stop after this integrated revise-choice
+boundary; do not substitute store-only snapshots or repeat unchanged recipe
+rendering as new acceptance. Full authoring/parity prerequisites remain open.
+
+Integrated result: `TNyxContentEditorDraft`, `NyxContentEditorRuleID` and public
+`CaptureNyxContentEditorRule` supply copied exact-row prefill, proposal retention
+and stable local action identity. Both ordinary controllers consume the same
+record; the Properties wrapper checks the fresh selected owner/default/registry.
+Apply replaces an edited row at its original position and refuses collision with
+another row. Ordinary unselected upsert/removal and the independent paired source
+processor remain the authority. Restore validates all nine field kinds and exact
+context before writing proposal text. Explicit project load clears the record.
+
+The numeric prerequisite exposed a real admission mismatch: spin's fluent and
+descriptor bounds were ±1000000 while viewport conditions admit signed-positive
+Integer limits. Spin alone now admits full signed Integer values/bounds; progress,
+dimensions and compound steppers keep their existing limits. Actual native form
+values preserve 2147483647 through compact/desktop transitions. Draft restoration
+uses an explicit copied-value boundary: the typed `Value(String)` overload
+correctly refuses String for Integer, so raw proposal text must not use it.
+
+Evidence under ignored `build/content-revisions/`:
+
+- Frozen parent `f9551cc` from an isolated source archive passes the three gap
+  observations: source-pane opening resets proposed 900 to 640, Events removes
+  the form, and there is no Edit-row action. The initial expectation that opening
+  Outputs would reset the same field was disproved; that overlay retained 900.
+  Its failed fixture log is retained, and no existing retained repaint is recredited.
+- Checked shared/actual full Win32 Studio passes **50**, leak-free. This includes
+  full Integer setter/schema bounds and unrelated-bound refusal, copied-draft
+  isolation/context/shape/forged-row refusal, local Edit prefill/focus, source and
+  Events/panel/compact retention, invalid-interval/collision correction, ordered
+  replacement, exact paired Undo/Redo and explicit project retirement. Opaque
+  uncommitted native spin text is excluded; actual widget values are exercised.
+- Exact accepted source hash is `BAC9A7F63D709E84AAE18B3054C6E757F2EF33C1105E0B0550B18A0EC7D6A879`;
+  unchanged compiled execution passes **five**, leak-free. Original recipe
+  editor/queue regression passes **55 + six** actual native Studio checks,
+  leak-free; core/composition regression passes **30/1795**, leak-free.
+- Both complete Studios, matching browser consumer, independent worker and
+  executed-companion browser source compile with zero owned warnings. Seven
+  upstream pas2js Classes warnings remain unmodified. Browser paths are staged,
+  **not executed**; native compact/desktop captures use actual mounted controls.
+- Maintained `tools/build.ps1 -Target content-revisions` executes **50 + five**
+  native/reconstructed assertions, leak-free, and stages the exact matching
+  browser consumer/worker/companion/runtime without starting a service. Accepted
+  source hash remains identical. Actual compact correction capture shows both
+  800/720 bounds; desktop shows the preserved 2147483647 proposal. Earlier captures
+  only showed the card heading/first field and were insufficient visual evidence;
+  the maintained capture scrolls the real sidebar to show the complete size form.
+- The original authenticated English seed remains exact at
+  `D450F6414BFD3839781536F512ED0041B5A0937356BFA45B243159B56E999B7E`.
+  Initial typed recipe enrichment is local, not a claimed mutation through the
+  protected frozen MCP schema. Bounded `nyx_session` remains authenticated at
+  revision two; no operator selection/pair/history was changed.
+- Final preservation check at `23:12:25Z`: all **15** exact process identities, **nine**
+  complete pairs/navigation/history/drafts, checkpoint bytes and **229** frozen
+  LAN files remain exact; primary HTTP is 200. No new listener or browser launch
+  and no equivalent retry of an earlier review rejection occurred.
+
+Classification is **progress**. Sole credit owner is original authoring criteria
+1/2/6: known no-closure advances authoring 33→34; workflow/renderer/codegen/delivery
+stay 19/15/28/2. No full original criterion/task/milestone closes. Stop this
+integrated revise-choice boundary after orchestration/preservation/remote proof.
+Full observing responsive authoring on both targets, browser/phone/IME/keyboard/
+accessibility, richer semantic source/review workflows and rollout remain open.
+Next meaningful return is the existing workflow owner: qualify the current
+semantic recipe tools and ordinary observing Studio against an independently
+admitted backend when the launch gate changes, using bounded queries and one
+revision-aware paired transaction. Do not keep replaying local forms as HTTP or
+full authoring evidence; other authorized unmet prerequisites remain available.
+
 ## Current return path: available host space — 2026-10-07
 
 The slider checkpoint `9cdd22e` is exact on the remote branch and the worktree

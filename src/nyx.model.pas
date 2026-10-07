@@ -1614,10 +1614,13 @@ begin
     LMaximum := 1000000;
   end;
 
-  if (AKey = atValue) and (FNode.ProjectionKind = 'slider') then
+  if ((AKey = atValue) and (FNode.ProjectionKind = 'slider')) or
+    ((AKey in [atValue, atMinimum, atMaximum]) and (FNode.ProjectionKind = 'spin')) then
   begin
     { Numeric domain admission precedes this setter. Private ordinal scaling
-      lets a slider retain the complete portable signed Integer value range. }
+      lets a slider retain the complete portable signed Integer value range.
+      Integer spin inputs use that same Pascal range directly; presentation
+      dimensions, progress and compound steppers retain their separate bounds. }
     LMinimum := Low(Integer);
     LMaximum := High(Integer);
   end;

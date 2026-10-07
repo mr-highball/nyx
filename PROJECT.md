@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The public recipe form now edits an existing choice and retains its copied
+proposal through ordinary Studio source/panel/compact transitions on both host
+controllers. Scope replacement preserves order and refuses collisions; context
+changes retire drafts before any partial replay. Full signed Integer spin bounds
+match the portable viewport contract. Checked shared/actual Win32 Studio checks
+pass 50, exact accepted source execution five and core/composition regression
+30/1795, leak-free. Both Studios/browser consumer/worker compile with zero owned
+warnings. Browser execution, phone input, visual/accessibility parity and rollout
+remain open. See [the packet](WORK.md#current-return-path-revising-recipe-choices--2026-10-07).
+
 Typed numeric sliders now consume a portable range/choice scale and exact
 accepted-value cache in both ordinary adapters. Specialized fluent Number
 authoring, full signed Integer values, private ordinal coordinates and generated
