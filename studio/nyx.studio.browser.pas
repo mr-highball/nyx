@@ -34,6 +34,7 @@ uses
   nyx.events,
   nyx.text,
   nyx.data,
+  nyx.hostspace, nyx.hostspace.browser,
   Classes,
   SysUtils,
   JS,
@@ -176,7 +177,8 @@ type
     FNewStateValue: TNyxText;
     FCompact: Boolean;
     FPanel: TNyxStudioPanel;
-    FResizeHandler: TJSEventHandler;
+    { Public Nyx window observation owns both layout/visual resize listeners. }
+    FHostSpace: INyxHostSpace;
     FRecoveryBoundaryHandler: TJSEventHandler;
     { Keep an observed shell mounted through the complete press/release/click
       task. Coalesced agent paints run afterward; requests retain fixed targets. }
@@ -285,7 +287,7 @@ type
     function ImportRead(AEvent: TJSEvent): Boolean;
     procedure AcceptImport(const APacket: TNyxText; AResolution: TNyxProjectResolution);
     function KeyDown(AEvent: TJSKeyboardEvent): Boolean;
-    function ViewportResize(AEvent: TJSEvent): Boolean;
+    procedure HostSpaceChanged(const AExtent: TNyxHostExtent);
   protected
     { Embedded hosts may provide another owned asynchronous exchange. Both
       controllers still consume the same private semantic protocol. }
@@ -343,7 +345,7 @@ begin
     emulation changes the rendered view, not the application's global viewport. }
   Result :=
     'html,body{height:100%;margin:0;}body{background:#f3f5fa;}' +
-    '[data-node=studio-shell]{height:100vh;height:100dvh;padding:0!important;gap:0!important;overflow:hidden;}' +
+    '[data-node=studio-shell]{height:100vh;height:100dvh;height:var(--nyx-host-height,100dvh);padding:0!important;gap:0!important;overflow:hidden;}' +
     '[data-node=studio-header]{min-height:66px;flex-wrap:wrap!important;flex-shrink:0;padding:12px 20px!important;' +
     'background:#fff;border-bottom:1px solid #dfe3ec;gap:14px!important;}' +
     '[data-node=studio-shell] [data-node=studio-logo]{font-size:24px;font-weight:800;' +
@@ -524,7 +526,6 @@ begin
   FBindingDirection := bdTwoWay;
   FNewStateInput := ssiText;
   FPanel := nspDesign;
-  FResizeHandler := ViewportResize;
   FRecoveryBoundaryHandler := RecoveryBoundary;
   FPointerBeginHandler := PointerBegin;
   FPointerEndHandler := PointerEnd;
@@ -539,6 +540,12 @@ end;
 
 destructor TNyxStudio.Destroy;
 begin
+
+  if FHostSpace <> nil then
+  begin
+    FHostSpace.Disconnect;
+    FHostSpace := nil;
+  end;
 
   if FCanvasRenderer <> nil then
   begin
@@ -582,7 +589,6 @@ begin
     window.clearTimeout(FPointerRefreshTimer);
   end;
   FAgents.Free;
-  window.removeEventListener('resize', FResizeHandler);
 
   if FProjectRequest <> nil then
   begin
@@ -1028,6 +1034,10 @@ begin
   end;
   FShellRenderer.ElementFor('studio-shell').setAttribute('data-nyx-studio-compact',
     LowerCase(BoolToStr(FCompact, True)));
+  { Size only the editor host. Application typography, preview scale, authored
+    layout and project/history remain unchanged. Reapply after shell fallback. }
+  FShellHost.style.setProperty('--nyx-host-height',
+    IntToStr(FHostSpace.Extent.Height) + 'px');
   LStyle := TJSHTMLElement(document.getElementById('nyx-studio-style'));
 
   if LStyle = nil then
@@ -1110,7 +1120,7 @@ begin
 
     if FSourceExpanded then
     begin
-      FSourceModal.Show(NyxModal('Pascal source'));
+      FSourceModal.Show(NyxModal('Pascal source').Sizing(nhfAvailableHeight));
       LSourceHost := FSourceModal.Element;
     end;
     LSourceDocument := TNyxDocument.Create;
@@ -3385,7 +3395,7 @@ begin
   end;
 end;
 
-function TNyxStudio.ViewportResize(AEvent: TJSEvent): Boolean;
+procedure TNyxStudio.HostSpaceChanged(const AExtent: TNyxHostExtent);
 var
   LCompact: Boolean;
   LActive: TJSHTMLElement;
@@ -3394,9 +3404,27 @@ var
   LID: TNyxText;
   LValue: TNyxText;
   LCanvasFocus: Boolean;
+  LShell: TJSHTMLElement;
 begin
-  Result := True;
-  LCompact := NyxStudioCompactHost(window.innerWidth, window.innerHeight);
+  { A visual-only keyboard resize ordinarily changes geometry in place, without
+    remounting input or changing focus/scroll for the same mode.
+    Keep host allocation on the external mount. Renderer synchronization owns
+    node metrics and may clear an inline node height during ordinary updates. }
+  FShellHost.style.setProperty('--nyx-host-height', IntToStr(AExtent.Height) + 'px');
+  LShell := nil;
+
+  if FShellRenderer.Root <> nil then
+  begin
+    LShell := FShellRenderer.ElementFor('studio-shell');
+  end;
+
+  LCompact := NyxStudioCompactHost(AExtent.Width, AExtent.Height);
+
+  if LShell = nil then
+  begin
+    FCompact := LCompact;
+    Exit;
+  end;
   { Ordinary resizes let CSS reflow existing controls. Rebuild only when crossing
     the compact boundary, preserving a focused field's uncommitted draft. }
 
@@ -3776,8 +3804,9 @@ begin
   end;
   window.addEventListener('pagehide', FRecoveryBoundaryHandler);
   document.addEventListener('visibilitychange', FRecoveryBoundaryHandler);
-  FCompact := NyxStudioCompactHost(window.innerWidth, window.innerHeight);
-  window.addEventListener('resize', FResizeHandler);
+  FHostSpace := NewNyxBrowserHostSpace(NyxHostSizing.Fit(nhfAvailableHeight));
+  FCompact := NyxStudioCompactHost(FHostSpace.Extent.Width, FHostSpace.Extent.Height);
+  FHostSpace.OnChange := @HostSpaceChanged;
   document.addEventListener('pointerdown', FPointerBeginHandler, True);
   document.addEventListener('pointerup', FPointerEndHandler, True);
   document.addEventListener('pointercancel', FPointerEndHandler, True);

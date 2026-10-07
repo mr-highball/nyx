@@ -7,6 +7,12 @@ Pascal. PowerShell only selects tools, passes compiler arguments and stages
 matched target artifacts. No Node, npm, Python, CSS framework or remote font is
 required.
 
+`host-space` executes the checked portable geometry/admission and actual native
+resize/lifetime consumer, then stages its Pascal browser counterpart and matched
+RTL. It starts no listener/browser and changes no active project. See
+[available host space](host-space.md) for typed policies and remaining browser/
+phone qualification.
+
 `time-values` executes the checked native clock/domain/source/history journey and
 its exact compiled Pascal reconstruction. Both compilers must reject six specified
 wrong argument families. It stages pas2js fixtures and their matched runtime/hosts;

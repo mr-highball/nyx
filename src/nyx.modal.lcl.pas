@@ -133,7 +133,7 @@ var
   LOrigin: TPoint;
 begin
   LOptions := AOptions.Viewport(AOptions.ViewportPercent).MaximumWidth(AOptions.WidthLimit)
-    .MaximumHeight(AOptions.HeightLimit);
+    .MaximumHeight(AOptions.HeightLimit).Sizing(AOptions.HostFit);
   FWindow.Caption := LOptions.Title;
 
   if not FOpen or (LOptions.ViewportPercent <> FViewportPercent) or

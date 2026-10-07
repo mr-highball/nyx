@@ -3,6 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current responsive integration (2026-10-07): immutable fluent available-height
+fitting and managed host observations now serve ordinary browser/native Studio
+and the expanded browser source modal. Checked native/shared resize/lifetime
+qualification passes 47; actual native source workspace passes 30, leak-free.
+Both Studios and the browser consumer/worker compile with zero owned warnings.
+No original full criterion closes; only authoring no-closure advances 32→33,
+with other known counts 19/15/28/2 unchanged. Existing deployed mobile allocation
+is not recredited. Actual browser/phone keyboard/zoom, other widgetsets/DPI and
+observing rollout retain their gates; no equivalent retry of the rejected launch
+occurred. End this host boundary and return to ordinary responsive recipe
+authoring through its original prerequisites. See
+[the packet](WORK.md#current-return-path-available-host-space--2026-10-07).
+
 Current numeric prerequisite (2026-10-07): sliders explicitly admit Number
 domains and share exact numeric range/choice scales across real host controls.
 Specialized interfaces, full signed Integer values, copied callback payloads,

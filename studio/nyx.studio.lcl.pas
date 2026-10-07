@@ -30,6 +30,7 @@ uses
   Classes, SysUtils, Forms, Controls, ExtCtrls,
   nyx.text, nyx.types, nyx.behavior, nyx.data, nyx.model, nyx.theme, nyx.render.lcl,
   nyx.events, nyx.viewport, nyx.projection.refresh, nyx.callbacks, nyx.studio.collections,
+  nyx.hostspace, nyx.hostspace.lcl,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.lcl,
   nyx.menu, nyx.menu.lcl, nyx.menu.button, nyx.controls, nyx.studio.menu,
@@ -115,7 +116,7 @@ type
   TNyxNativeStudio = class
   private
     FHost: TWinControl;
-    FPreviousResize: TNotifyEvent;
+    FHostSpace: INyxHostSpace;
     FSession: TNyxStudioSession;
     FSourceCommands: TNyxSourceCommands;
     FTheme: TNyxTheme;
@@ -183,7 +184,7 @@ type
       in flight. The accepted configuration object stays stable for every view. }
     FOutputChanged: set of 0..5;
     FOutputIdentity: TNyxBuildOutputRef;
-    procedure HostResize(ASender: TObject);
+    procedure HostSpaceChanged(const AExtent: TNyxHostExtent);
     procedure PaintQueued(AData: PtrInt);
     procedure Paint;
     procedure ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
@@ -559,7 +560,7 @@ begin
     raise ENyxModel.Create('Native Studio requires a host');
   end;
   FHost := AHost;
-  FPreviousResize := TNativeHostAccess(FHost).OnResize;
+  FHostSpace := NewNyxLCLHostSpace(FHost, NyxHostSizing.Fit(nhfAvailableHeight));
   FSession := TNyxStudioSession.Create;
   FSourceCommands := TNyxSourceCommands.Create(FSession, SourceCommandChanged);
   FTheme := TNyxTheme.Create;
@@ -598,7 +599,7 @@ begin
   FSourcePaneParking := TPanel.Create(nil);
   FSourcePaneParking.Parent := FHost;
   FSourcePaneParking.Visible := False;
-  TNativeHostAccess(FHost).OnResize := HostResize;
+  FHostSpace.OnChange := HostSpaceChanged;
   FSavedPair := EncodeNyxProject(FSession.ProjectSnapshot);
   FInitialPair := FSavedPair;
 end;
@@ -647,9 +648,10 @@ begin
   FCurrentProject := nil;
   FPendingProject := nil;
 
-  if FHost <> nil then
+  if FHostSpace <> nil then
   begin
-    TNativeHostAccess(FHost).OnResize := FPreviousResize;
+    FHostSpace.Disconnect;
+    FHostSpace := nil;
   end;
   FCanvasView.Free;
   if FSourceModal <> nil then
@@ -1514,13 +1516,8 @@ begin
   Application.QueueAsyncCall(PaintQueued, 0);
 end;
 
-procedure TNyxNativeStudio.HostResize(ASender: TObject);
+procedure TNyxNativeStudio.HostSpaceChanged(const AExtent: TNyxHostExtent);
 begin
-
-  if Assigned(FPreviousResize) then
-  begin
-    FPreviousResize(ASender);
-  end;
   RequestRefresh;
 end;
 
@@ -1602,7 +1599,7 @@ begin
   begin
     FState.SourceTab := nstSource;
   end;
-  FState.Compact := NyxStudioCompactHost(FHost.ClientWidth, FHost.ClientHeight);
+  FState.Compact := NyxStudioCompactHost(FHostSpace.Extent.Width, FHostSpace.Extent.Height);
   FState.RootRemoval := NyxNull;
   FState.Agents := GetAgentState;
   FState.BuildControlReady := (CurrentBridge <> nil) and
@@ -1896,7 +1893,7 @@ begin
 
       if FState.SourceExpanded then
       begin
-        FSourceModal.Show(NyxModal('Pascal source'));
+        FSourceModal.Show(NyxModal('Pascal source').Sizing(nhfAvailableHeight));
         LSourceHost := FSourceModal.Control;
       end
       else

@@ -27,7 +27,7 @@ unit nyx.modal;
 interface
 
 uses
-  nyx.text;
+  nyx.text, nyx.hostspace;
 
 type
   { A dismiss observer is borrowed. Clear it before the receiver retires.
@@ -43,6 +43,7 @@ type
     FViewportPercent: Integer;
     FMaximumWidth: Integer;
     FMaximumHeight: Integer;
+    FHostFit: TNyxHostFit;
   public
     { Return a copied option value. Percent accepts 20..100; pixels 240..16384.
       Invalid dimensions raise ENyxModel before a target changes its window. }
@@ -51,10 +52,14 @@ type
     { Zero keeps viewport sizing; 120..16384 caps the height for compact
       dialogs. Oversized content needs its own ordinary Nyx scrolling layout. }
     function MaximumHeight(APixels: Integer): TNyxModalOptions;
+    { Explicit host policy. AvailableHeight fits visual occlusion without
+      reducing fonts or disabling zoom; Layout preserves the default behavior. }
+    function Sizing(AFit: TNyxHostFit): TNyxModalOptions;
     property Title: TNyxText read FTitle;
     property ViewportPercent: Integer read FViewportPercent;
     property WidthLimit: Integer read FMaximumWidth;
     property HeightLimit: Integer read FMaximumHeight;
+    property HostFit: TNyxHostFit read FHostFit;
   end;
 
   { Managed presentation lifetime, independent of document/history ownership.
@@ -81,6 +86,13 @@ implementation
 
 uses
   nyx.model;
+
+function TNyxModalOptions.Sizing(AFit: TNyxHostFit): TNyxModalOptions;
+begin
+  NyxHostSizing.Fit(AFit);
+  Result := Self;
+  Result.FHostFit := AFit;
+end;
 
 function NyxModal(const ATitle: TNyxText): TNyxModalOptions;
 begin

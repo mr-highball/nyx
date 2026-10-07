@@ -40,6 +40,22 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Available host space — 2026-10-07
+
+The current available-host-space packet serves original criteria 1/2 through
+public typed fitting, managed browser/LCL observations and ordinary Studio/source
+modal integration. It passes 47 checked shared/actual Win32 resize/lifetime checks
+and 30 actual native source workspace checks, leak-free. Both Studios and matching
+browser consumer/worker compile with zero owned warnings. Existing mobile canvas
+allocation remains accepted partial evidence; no unchanged journey is recredited.
+Actual browser/phone keyboard/zoom and rollout remain open after the earlier
+launch review rejection. No original full criterion closes; only authoring
+no-closure advances 32→33, other known counts stay 19/15/28/2. End this boundary;
+ordinary responsive recipe authoring and full both-target journeys retain this
+task's original criteria/prerequisites. See
+[available space](../docs/host-space.md) and
+[current evidence](../WORK.md#current-return-path-available-host-space--2026-10-07).
+
 ## Clock-form draft retention — 2026-10-07
 
 Original criterion 6 now consumes `TNyxTimeDomainEditorDraft` through both

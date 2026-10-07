@@ -557,6 +557,13 @@ Studio inspector/worker execution was subsequently qualified above; physical
 phone review, richer responsive variants,
 performance and full parity remain open. See [responsive authoring](docs/responsive.md).
 
+Public [available host space](docs/host-space.md) now separates layout dimensions
+from visual occlusion and magnification. Ordinary Studio/source modal consume
+the typed fitting policy and managed observations; actual browser/phone keyboard,
+zoom and current observing rollout remain open. Native/shared resize/lifetime
+checks pass 47 and actual native source workspace passes 30, leak-free; browser
+consumer and both Studios compile with zero owned warnings.
+
 Managed public canvas resize handles now reuse specialized Nyx buttons and
 independent target scopes. Stable-plane mapping preserves movement deltas;
 one release uses Studio's existing paired command/Undo. Shared checks pass 56

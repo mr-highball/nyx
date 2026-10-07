@@ -28,7 +28,7 @@ unit nyx.modal.browser;
 interface
 
 uses
-  Web, nyx.modal;
+  Web, nyx.modal, nyx.hostspace;
 
 type
   { Borrow Element only while this managed host is alive. Render/move a public
@@ -48,7 +48,7 @@ function NewNyxBrowserModalHost: INyxBrowserModalHost;
 implementation
 
 uses
-  SysUtils, nyx.text;
+  SysUtils, Math, nyx.hostspace.browser;
 
 type
   { The installed Web binding predates this interface. The bridge is limited
@@ -65,7 +65,10 @@ type
     FDialog: TNyxHTMLDialog;
     FOpen: Boolean;
     FOnDismiss: TNyxModalDismiss;
+    FHostSpace: INyxHostSpace;
+    FOptions: TNyxModalOptions;
     function Cancel(AEvent: TJSEvent): Boolean;
+    procedure SpaceChanged(const AExtent: TNyxHostExtent);
   public
     constructor Create;
     destructor Destroy; override;
@@ -90,6 +93,12 @@ end;
 destructor TNyxBrowserModalHost.Destroy;
 begin
   FOnDismiss := nil;
+
+  if FHostSpace <> nil then
+  begin
+    FHostSpace.Disconnect;
+    FHostSpace := nil;
+  end;
   Hide;
   FDialog.removeEventListener('cancel', @Cancel);
   FDialog.remove;
@@ -117,10 +126,27 @@ begin
 end;
 
 procedure TNyxBrowserModalHost.Show(const AOptions: TNyxModalOptions);
+var
+  LOptions: TNyxModalOptions;
+  LSpace: INyxHostSpace;
 begin
   { Revalidate default/untrusted record values before changing presentation. }
-  AOptions.Viewport(AOptions.ViewportPercent).MaximumWidth(AOptions.WidthLimit)
-    .MaximumHeight(AOptions.HeightLimit);
+  LOptions := AOptions.Viewport(AOptions.ViewportPercent).MaximumWidth(AOptions.WidthLimit)
+    .MaximumHeight(AOptions.HeightLimit).Sizing(AOptions.HostFit);
+
+  if (FHostSpace = nil) or (FOptions.HostFit <> LOptions.HostFit) then
+  begin
+    { Admit the new observation before replacing an accepted policy. }
+    LSpace := NewNyxBrowserHostSpace(NyxHostSizing.Fit(LOptions.HostFit));
+
+    if FHostSpace <> nil then
+    begin
+      FHostSpace.Disconnect;
+    end;
+    FHostSpace := LSpace;
+    FHostSpace.OnChange := @SpaceChanged;
+  end;
+  FOptions := LOptions;
   { A Nyx view mounted into body may replace its shell while this independently
     owned modal is closed or open. The detached dialog still owns its mounted
     descendants. Reconnect that exact host, clear the previous top-layer state
@@ -134,18 +160,11 @@ begin
   end;
   FDialog.setAttribute('aria-label', AOptions.Title);
   FDialog.style.setProperty('width', IntToStr(AOptions.ViewportPercent) + 'vw');
-  FDialog.style.setProperty('height', IntToStr(AOptions.ViewportPercent) + 'dvh');
   FDialog.style.setProperty('max-width', IntToStr(AOptions.WidthLimit) + 'px');
 
-  if AOptions.HeightLimit = 0 then
-  begin
-    FDialog.style.setProperty('max-height', '100dvh');
-  end
-  else
-  begin
-    FDialog.style.setProperty('max-height', 'min(100dvh, ' + IntToStr(AOptions.HeightLimit) + 'px)');
-  end;
+  SpaceChanged(FHostSpace.Extent);
   FDialog.style.setProperty('padding', '0');
+  FDialog.style.setProperty('box-sizing', 'border-box');
   FDialog.style.setProperty('border', '1px solid #dfe3ec');
   FDialog.style.setProperty('border-radius', '12px');
   FDialog.style.setProperty('overflow', 'hidden');
@@ -155,6 +174,30 @@ begin
     FDialog.showModal;
     FOpen := True;
   end;
+end;
+
+procedure TNyxBrowserModalHost.SpaceChanged(const AExtent: TNyxHostExtent);
+var
+  LKeepAlive: INyxModalHost;
+  LHeight: Integer;
+begin
+  LKeepAlive := Self;
+  { Divide in Double before rounding to avoid overflowing a large logical host. }
+  LHeight := Floor(AExtent.Height * (FOptions.ViewportPercent / 100));
+
+  if FOptions.HeightLimit <> 0 then
+  begin
+    LHeight := Min(LHeight, FOptions.HeightLimit);
+  end;
+  FDialog.style.setProperty('height', IntToStr(LHeight) + 'px');
+  FDialog.style.setProperty('max-height', IntToStr(AExtent.Height) + 'px');
+  { UA modal centering uses the layout viewport. Explicit vertical centering
+    places the retained dialog within the fitted height when a keyboard covers
+    the lower part. Visual panning remains browser-owned for magnified input. }
+  FDialog.style.setProperty('top', '0');
+  FDialog.style.setProperty('bottom', 'auto');
+  FDialog.style.setProperty('margin-top', IntToStr((AExtent.Height - LHeight) div 2) + 'px');
+  LKeepAlive.GetOpen;
 end;
 
 procedure TNyxBrowserModalHost.Hide;

@@ -7,7 +7,82 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
-## Current return path: typed numeric sliders — 2026-10-07
+## Current return path: available host space — 2026-10-07
+
+The slider checkpoint `9cdd22e` is exact on the remote branch and the worktree
+starts clean. This batch returns to original Studio authoring criteria 1/2:
+responsive editing must use available space without reducing application fonts.
+The main mobile allocation correction is already deployed and qualified (62%
+ordinary / 92% expanded at CSS 390×640); do not repeat that unchanged journey.
+The remaining concrete gap is that ordinary browser Studio uses `innerHeight`
+and `100dvh`, and its public source modal also uses viewport units. A keyboard
+can resize only the visual viewport, leaving those layout dimensions unchanged.
+
+Preregistered deliverable: a portable, immutable, fluent host-sizing policy and
+managed browser/LCL observations, consumed by ordinary Studio and the browser
+modal. Available-height fitting preserves layout width and normalizes visual
+height by visual scale, so pinch magnification does not become a small-screen
+breakpoint. Host callbacks borrow receivers, detach safely and do not own a
+document, renderer or control. No application state/history or device-specific
+compiler directives enter this contract.
+
+Evidence/stop: checked shared geometry, finite/bounds/refusal and zoom/keyboard
+observations, actual Win32 resize/receiver/control retirement and existing
+source workspace retention; compile the matching browser consumer and both
+Studios. Use bounded semantic context on the protected editor. Preserve all
+fifteen services, nine pairs and frozen LAN bytes. No new listener, browser launch
+or equivalent retry of a rejected launch. Browser actual viewport event delivery,
+phone keyboard/IME, accessibility and rollout remain gates. Stop after this
+integrated host boundary or a concrete failure requiring reassessment. Known
+no-closure counts begin workflow/authoring/renderer/codegen/delivery 19/32/15/28/2;
+this packet has one authoring credit owner and cannot close the whole criteria.
+
+Integrated result: `NyxHostSizing.Fit(nhfAvailableHeight)`, copied host metrics and
+managed `INyxHostSpace` observers now supply ordinary browser/native Studio.
+Native uses additional resize handlers without replacing `OnResize`; component
+notification cancels a dying host. Browser subscribes to window/VisualViewport
+resize. The external Studio mount owns its height variable, avoiding renderer
+synchronization clearing an inline node metric. Public modal `.Sizing` admits
+the same policy; expanded source explicitly opts in and keeps its retained view.
+
+Current evidence under ignored `build/host-space/`: `maintained-build.log` passes
+47 checked native/shared assertions with zero leaks and stages the matching
+browser consumer/RTL/HTML. Supplied metrics exercise visual-only occlusion and
+pinch normalization; actual Win32 checks exercise resize dispatch, preservation
+of replaced receivers, cancellation, host destruction and callback retirement.
+The earlier automatic-retirement assertion failed because its enclosing FPC
+routine still owned the factory's hidden result temporary; the fixture now ends
+construction in a helper before last-owner release, matching Studio's constructor
+lifetime. `automatic-retirement-before.log` retains that failed fixture run;
+its three failure-exception allocations are not a successful leak qualification.
+
+Actual native source workspace passes 30 with zero leaks in
+`source-workspace/run.log`; expanded desktop/narrow captures were retained and
+the narrow capture inspected. Its same memo/draft/selection and exact paired Undo
+survive expansion/return. Both Studios and the browser consumer/source worker
+compile; owned warnings remain zero, seven upstream browser Classes warnings
+remain visible. Authenticated `nyx_session` inspected bounded revision-2 context
+without changing the user's document or claiming new-backend policy admission.
+
+`preservation-final.log` verifies all fifteen exact service identities, nine
+complete paired projects/navigation/history/drafts, the unchanged checkpoint,
+229 frozen LAN files, HTTP 200 and LAN/loopback bindings. No protected process,
+design, release or enrollment was changed. The remote checkpoint receipt belongs
+under ignored `build/host-space/remote-checkpoint.json`; verify exact pushed HEAD
+and a clean worktree there rather than embedding a self-referential commit hash.
+
+No original criterion closes. Only authoring-owned no-closure advances 32→33;
+workflow/renderer/codegen/delivery remain 19/15/28/2. End this host boundary rather
+than add more supplied-metric fixtures. The already deployed 62%/92% mobile
+allocation evidence receives no new credit. Actual browser/phone viewport events,
+keyboard/IME/zoom/accessibility, other widgetsets/DPI and observing rollout remain
+gates. The earlier automatic review rejected new server/browser launch before
+execution with only "blocked by policy"; no equivalent retry occurred. The next
+original responsive authoring outcome is the ordinary recipe editor described
+in `docs/content-recipes.md`, following its accepted portable composition
+prerequisites and preserving full authoring/parity acceptance.
+
+## Previous return path: typed numeric sliders — 2026-10-07
 
 The preceding turn is **progress**: portable tree disclosure is integrated and
 checkpoint `3e5a11a` matches the remote branch. Its 83 native/shared and 37 actual

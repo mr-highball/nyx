@@ -1,5 +1,9 @@
 # Responsive authoring
 
+[Available host space](host-space.md) supplies typed fitting and managed
+browser/LCL host observations. Studio consumes it for ordinary resizing and
+the expanded source modal; actual phone keyboard/zoom qualification remains open.
+
 Studio uses the same public contracts to reclaim space in narrow and short
 windows. Compact chrome keeps Undo/Redo/Actions in one row; Actions contains
 View, Project and Build branches. Tools reveals placement/drag controls on demand.
