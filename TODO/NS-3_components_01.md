@@ -26,6 +26,21 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   time pickers. Full picker/component criteria retain this task's ownership;
   the shared NS-1 prerequisite creates no extra completion credit.
 
+## Native exact clock picker preparation — 2026-10-07
+
+Ordinary time fields now use an owned native grouped editor/popup with exact
+integer parts, milliseconds, deterministic empty proposals and typed domain
+refusals. Draft focus loss, retained key/arrow action routes, policy revocation,
+geometry and callback retirement pass 73 Win32 checks, leak-free. The same
+maintained target compiles the exact browser control consumer; it does not execute
+it or accept the clock foundation. Native time is Basic support. Existing calendar
+and pre-change renderer both fail acceptance focus return; preserve that native/
+parity follow-up before more picker breadth. Printed diagnostics, other widgetsets,
+hardware/accessibility, visuals, full Studio/MCP authoring and observing rollout
+remain open. See [the packet](../WORK.md#current-return-path-native-clock-field-preparation--2026-10-07).
+No original component criterion or historical count is closed/reset; only shared
+renderer no-closure advances 11→12 once. Stop this bounded native clock packet.
+
 ## On-demand native table values — 2026-10-07
 
 The next primary-browser packet integrates measured DOM row windows with complete

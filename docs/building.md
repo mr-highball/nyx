@@ -13,6 +13,12 @@ wrong argument families. It stages pas2js fixtures and their matched runtime/hos
 it starts no browser/listener and edits no active project. Execute both staged HTML
 hosts over an admitted HTTP server for browser evidence. See [typed clock fields](time-fields.md).
 
+`time-fields` includes the same exact clock contract/reconstruction checks, then
+executes ordinary native grouped time controls and their owned millisecond picker.
+It stages the matching browser control consumer and diagnostic native prints;
+no browser, listener or active-design mutation is started. See
+[native clock controls and limits](time-fields.md#generated-source-and-current-limits).
+
 `data-read` measures exact structured-value construction/reads in an optimized
 checked native Pascal workload and stages its browser counterpart with matched
 RTL. Heap tracing is omitted from timing; ownership and codec/source regressions

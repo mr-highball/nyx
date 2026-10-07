@@ -23,6 +23,28 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   prerequisite for replacing the time-field text fallback. Other native input
   and full renderer criteria remain required; this allocates no extra credit.
 
+## Owned exact clock picker preparation — 2026-10-07
+
+Original criteria 1/2/3 now consume an owned grouped clock editor and integer-part
+native picker through the ordinary renderer. Actual drafts, real focus loss,
+millisecond precision, range/step/choice refusal, retained arrow/key action routes,
+explicit Escape focus return, inherited availability, client containment and
+callback retirement pass 73 Win32 checks, leak-free/owned warnings zero. The
+maintained target stages exact browser control consumers and retains portable
+clock/source/type-refusal evidence. Ordinary native Studio passes 22; browser
+Studio/worker compile only. Schema/reference now declare native Basic support.
+See [the packet](../WORK.md#current-return-path-native-clock-field-preparation--2026-10-07)
+and [public behavior](../docs/time-fields.md).
+
+The unchanged date regression and exact pre-change renderer both fail after 71
+checks at calendar acceptance focus return, leak-free. Retain the assertion and
+original criterion-2 ownership; this is not a passing regression or a qualified
+clock acceptance-focus route. Stop picker fixture expansion and resolve native
+focus/foreground and safe callback retirement before new breadth. Executed browser,
+the clock foundation, full parity/visuals/hardware/other widgetsets and observing
+delivery remain open. No original criterion closes; shared renderer no-closure
+advances 11→12 once, other known counts remain 19/30/28/2.
+
 ## Ordinary group client content — 2026-10-07
 
 Criteria 1/2 now include actual caption/frame-aware group measurement, row/grid/

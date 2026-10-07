@@ -20,6 +20,24 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Native picker focus boundary — 2026-10-07
+
+Owned clock controls pass 73 actual Win32 checks through the ordinary renderer,
+including invalid drafts across real focus loss, exact millisecond/domain
+admission, explicit Escape focus return and callback retirement. Native Studio
+workspace regression passes 22; both are leak-free. Browser controls/Studio compile,
+and diagnostic prints do not establish displayed pixels or hardware. The existing
+calendar consumer fails after 71 checks at acceptance focus return; the exact
+pre-change renderer reproduces that failure. Preserve both failed receipts and
+the assertion under original criterion 2. Clock acceptance focus return is also
+not established by the new fixture. Resolve focus/foreground and safe callback
+retirement before further native picker breadth. See
+[the packet](../WORK.md#current-return-path-native-clock-field-preparation--2026-10-07).
+No original criterion/prerequisite closes; only shared renderer no-closure advances
+11→12, with this task's historical count still unestablished. Executed browser,
+full accessible semantics, other widgetsets/DPI, visual/performance and delivery
+requirements remain open.
+
 ## Native captioned group content — 2026-10-07
 
 Criteria 2/3 consume native caption/frame-aware usable content without changing

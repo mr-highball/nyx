@@ -2474,7 +2474,7 @@ Collect a time of day.
 Palette group: Inputs.
 Search labels: Date & time.
 
-Root projection — Browser: Available. LCL: Text fallback.
+Root projection — Browser: Available. LCL: Basic support.
 
 | Property | Type | Factory default | Constraint | Meaning | Browser | LCL | Effect/help |
 | --- | --- | --- | --- | --- | --- | --- | --- |

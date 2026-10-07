@@ -670,7 +670,7 @@ const
     (Kind:'date'; Title:'Date field'; Category:'Inputs'; Container:False;
       Browser:ncAvailable; Native:ncBasic),
     (Kind:'time'; Title:'Time field'; Category:'Inputs'; Container:False;
-      Browser:ncAvailable; Native:ncText),
+      Browser:ncAvailable; Native:ncBasic),
     (Kind:'color'; Title:'Color field'; Category:'Inputs'; Container:False;
       Browser:ncAvailable; Native:ncText),
     (Kind:'list'; Title:'List'; Category:'Data'; Container:False;

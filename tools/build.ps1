@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'time-fields', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1149,7 +1149,7 @@ try {
     exit 0
   }
 
-  if ($Target -eq 'time-values') {
+  if ($Target -in @('time-values', 'time-fields')) {
     # A checked public Pascal contract and its exact generated companion. This
     # stages browser consumers without starting a browser, listener or project.
     $nyxTimeRoot = Join-Path $nyxRoot 'build/time-fields/maintained'
@@ -1207,6 +1207,31 @@ try {
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxTimeWeb 'rtl.js') -Force
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/time-values.html') -Destination $nyxTimeWeb -Force
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/time-reconstruction.html') -Destination $nyxTimeWeb -Force
+
+    if ($Target -eq 'time-fields') {
+      # Consume the exact compiled public-Pascal companion through ordinary
+      # native controls. The Pascal fixture owns drafts, popup input, domain
+      # admission, geometry and retirement checks. No active MCP project changes.
+      $nyxTimeLcl = Join-Path $nyxTimeRoot 'lcl'
+      $nyxTimePrints = Join-Path $nyxTimeRoot 'native-prints'
+      New-Item -ItemType Directory -Force $nyxTimeLcl, $nyxTimePrints | Out-Null
+      $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+      $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+      $nyxTimePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+      Invoke-NyxCompiler $nyxLclFpc (@('-B') + $nyxTimeNativeFlags + @(
+        "-Fu$nyxLazarus/lcl/units/$nyxTimePlatform",
+        "-Fu$nyxLazarus/lcl/units/$nyxTimePlatform/$Widgetset",
+        "-Fu$nyxLazarus/components/lazutils/lib/$nyxTimePlatform",
+        "-FU$nyxTimeLcl", "-FE$nyxTimeLcl", 'tests/nyx_time_controls.lpr'))
+      & (Join-Path $nyxTimeLcl 'nyx_time_controls.exe') $nyxTimePrints
+
+      if ($LASTEXITCODE -ne 0) {
+        throw 'Actual native clock controls failed'
+      }
+      Invoke-NyxCompiler $nyxPas2js (@('-B') + $nyxTimeWebFlags + @('tests/nyx_time_controls.lpr'))
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/time-controls.html') -Destination $nyxTimeWeb -Force
+      Write-Host 'Clock controls qualified natively; printed images are diagnostic. Browser controls are staged, not executed.'
+    }
     Write-Host 'Clock contract/reconstruction staged; twelve wrong-family compiler cases refused. Browser execution remains separate.'
     exit 0
   }

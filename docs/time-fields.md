@@ -1,7 +1,7 @@
 # Typed clock fields
 
 [Components](components.md) · [Contracts](contracts.md) · [Calendar fields](date-fields.md) ·
-[Current evidence](../WORK.md#current-return-path-typed-time-field-prerequisite--2026-10-07)
+[Current native evidence](../WORK.md#current-return-path-native-clock-field-preparation--2026-10-07)
 
 `nyx.times` supplies immutable local clock readings. `NyxTime(Hour, Minute,
 Second, Millisecond)` accepts hours 0..23, minutes/seconds 0..59 and milliseconds
@@ -98,13 +98,42 @@ accepted document/source pair; one Undo restores an accepted grouped change.
 Intrinsic time controls and legacy text contracts on time controls gain clock
 validation. Invalid legacy time strings are diagnosed rather than coerced.
 The browser adapter projects typed bounds and converts millisecond steps to exact
-decimal seconds; its default is `step="any"`. Native projection remains the
-existing text field. Browser execution, native pickers, physical input,
-accessibility and Studio/MCP domain authoring remain open with their original
-task owners. Compiling the adapters does not qualify those behaviors.
+decimal seconds; its default is `step="any"`. The ordinary native renderer now
+uses an LCL grouped clock field with an owned picker. Its real inner editor keeps
+focus, keyboard and grouped forwarding; native clock drafts wait for editing
+completion before shared admission. An invalid draft is diagnosed and the accepted
+reading restored, without a successful change callback.
+
+The native picker supplies separate hour/minute/second/millisecond parts, Clear,
+Cancel and Use time. Parts compose native edits and native arrow controls. They
+retain empty, fractional or otherwise invalid drafts across focus loss; values
+must be whole ASCII digits within the part's bounds. Arrows and Up/Down step only
+valid integer parts and clamp rather than round or wrap. Domain rejection leaves
+the picker open with a diagnostic. Existing precision is retained when lossless;
+new nonzero seconds/milliseconds increase it when necessary. Opening an empty
+field proposes midnight, a minimum or the first nonempty choice, and never changes
+the field until explicit acceptance. Escape cancels and returns focus; Enter uses
+the same admission as Use time. Clear remains subject to declared choices.
+
+Each field owns its popup. Domain changes and inherited hidden/read-only/disabled
+policy revoke the old popup context. Retirement disconnects borrowed callbacks
+before freeing controls; an accepted callback may retire its own view safely.
+The native capability is Basic support. Current evidence qualifies Win32 control
+drafts, retained keyboard/arrow action routes, millisecond admission and lifetime;
+printed images are diagnostics, not displayed-pixel or hardware evidence.
+Executed browser controls, other widgetsets/DPI, hardware/IME/accessibility,
+production styling and Studio/MCP domain authoring retain their original task
+owners. Compiling the adapters does not qualify those behaviors.
 
 `tools/build.ps1 -Target time-values` executes checked native contract and exact
 compiled-companion reconstruction, checks six wrong argument families on both
 compilers, and stages the shared pas2js fixtures with their matched runtime.
 Execute `time-values.html` and `time-reconstruction.html` over an admitted HTTP
 host to establish browser evidence. The build command starts no browser or service.
+
+`tools/build.ps1 -Target time-fields` includes that same contract/reconstruction
+qualification, executes `tests/nyx_time_controls.lpr` against its exact compiled
+public-Pascal companion through the ordinary LCL renderer, and stages the matching
+pas2js control consumer at `build/time-fields/maintained/web/time-controls.html`.
+It neither edits an active MCP design nor starts a browser/service. Execute the
+staged host through an admitted HTTP path to establish browser control evidence.

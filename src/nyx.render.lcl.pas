@@ -32,6 +32,8 @@ uses
   nyx.text,
   nyx.dates,
   nyx.dates.lcl,
+  nyx.times,
+  nyx.times.lcl,
   Classes,
   SysUtils,
   Math,
@@ -134,6 +136,8 @@ type
     FInput: TControl;
     { Borrowed native date host owns the real editable input and its popup. }
     FDateField: TNyxLCLDateField;
+    { Borrowed clock host owns its exact grouped editor and picker window. }
+    FTimeField: TNyxLCLTimeField;
     FCaption: TLabel;
     { Value-owned layout and projection. The parent binding is borrowed from the
       same preorder renderer array, never a reference-counted tree back edge. }
@@ -838,6 +842,11 @@ begin
     begin
       FBindings[LIndex].FDateField.Disconnect;
     end;
+
+    if FBindings[LIndex].FTimeField <> nil then
+    begin
+      FBindings[LIndex].FTimeField.Disconnect;
+    end;
     FBindings[LIndex].DisconnectControl(FBindings[LIndex].FControl);
 
     if FBindings[LIndex].FInput <> FBindings[LIndex].FControl then
@@ -1023,6 +1032,7 @@ var
   LPanel: TPanel;
   LInputSurface: TNyxLCLSurface;
   LDateField: TNyxLCLDateField;
+  LTimeField: TNyxLCLTimeField;
   LInfo: TNyxPrimitiveInfo;
   LFactoryIndex: Integer;
 begin
@@ -1144,6 +1154,18 @@ begin
       LDateField.Font.Color := ThemeColor(FTheme.Text);
       AInput := LDateField.Editor;
     end
+    else if LKind = 'time' then
+    begin
+      LTimeField := TNyxLCLTimeField.Create(FPanel);
+      LTimeField.Parent := LInputSurface;
+      LTimeField.AutoSize := False;
+      LTimeField.BorderStyle := bsNone;
+      LTimeField.SetBounds(12, 5, 276, 30);
+      LTimeField.Text := ANode.Prop('value');
+      LTimeField.Font.Height := -FTheme.FontSize;
+      LTimeField.Font.Color := ThemeColor(FTheme.Text);
+      AInput := LTimeField.Editor;
+    end
     else if LKind = 'spin' then
     begin
       AInput := TSpinEdit.Create(FPanel);
@@ -1164,7 +1186,8 @@ begin
       end;
     end;
 
-    if not (AInput.Parent is TNyxLCLDateField) then
+    if not (AInput.Parent is TNyxLCLDateField) and
+      not (AInput.Parent is TNyxLCLTimeField) then
     begin
       AInput.Parent := LInputSurface;
       AInput.SetBounds(12, 10, 276, 20);
@@ -1376,6 +1399,11 @@ begin
     LBinding.FDateField := TNyxLCLDateField(LInput.Parent);
   end;
 
+  if (LInput <> nil) and (LInput.Parent is TNyxLCLTimeField) then
+  begin
+    LBinding.FTimeField := TNyxLCLTimeField(LInput.Parent);
+  end;
+
   if ANode.Parent <> nil then
   begin
     LBinding.FLogicalParent := Binding(ANode.Parent);
@@ -1387,14 +1415,22 @@ begin
     LBinding.FDateField.SetDomain(LValueDomain);
     LBinding.FDateField.SetAcceptedValue(TNyxCalendarDate.FromText(ANode.Prop('value')));
   end;
-  { Numeric drafts need an editing-complete boundary even without a state
-    binding. Their declared control/compound domain determines this behavior. }
+
+  if LBinding.FTimeField <> nil then
+  begin
+    LBinding.FTimeField.SetDomain(LValueDomain);
+    LBinding.FTimeField.SetAcceptedValue(TNyxClockTime.FromText(ANode.Prop('value')));
+  end;
+  { Numeric and native clock drafts need an editing-complete boundary even
+    without a state binding. Subsecond clock steps must not reject an unfinished
+    fractional draft before its final digit can be entered. }
   LBinding.FDeferredValue := (LInput is TCustomEdit) and not (LInput is TSpinEdit) and
     LValueDomain.Defined;
 
   if LBinding.FDeferredValue then
   begin
-    LBinding.FDeferredValue := LValueDomain.Kind in [nskInteger, nskNumber];
+    LBinding.FDeferredValue := (LValueDomain.Kind in [nskInteger, nskNumber]) or
+      (LBinding.FTimeField <> nil);
   end;
   LBinding.FCustom := FactoryIndex(ANode) >= 0;
 
@@ -1464,6 +1500,12 @@ begin
       selection and editing bridges stay attached to its actual inner editor. }
     LBinding.FDateField.OnChange := LBinding.Change;
     LBinding.FDateField.OnEditingDone := LBinding.CommitValue;
+  end
+  else if LBinding.FTimeField <> nil then
+  begin
+    { The real grouped input keeps its forwarding/keyboard/focus/IME hooks. }
+    LBinding.FTimeField.OnChange := LBinding.Change;
+    LBinding.FTimeField.OnEditingDone := LBinding.CommitValue;
   end
   else if LInput is TCustomEdit then
   begin
@@ -6029,9 +6071,9 @@ begin
 
   if FDeferredValue and not FCommitting then
   begin
-    { A numeric draft such as '-' or '0.' is meaningful while typing. Lazarus's
-      editing-complete event supplies the admission boundary, matching browser
-      commit behavior instead of restoring the old number on every keystroke. }
+    { A numeric/clock draft such as '-' or '08:30:00.1' is meaningful while typing.
+      Lazarus's editing-complete event supplies the admission boundary, matching
+      browser commit behavior instead of restoring a value on every keystroke. }
     Exit;
   end;
   LValue := '';
@@ -6765,6 +6807,16 @@ begin
           LBinding.FDateField.SetAcceptedValue(
             TNyxCalendarDate.FromText(LNode.Prop('value')));
           LBinding.FDateField.SetInteraction(LEnabled, LReadOnly,
+            LBinding.FControl.IsVisible);
+        end;
+
+        if LBinding.FTimeField <> nil then
+        begin
+          LValueDomain := NyxNodeValueDomain(LNode);
+          LBinding.FTimeField.SetDomain(LValueDomain);
+          LBinding.FTimeField.SetAcceptedValue(
+            TNyxClockTime.FromText(LNode.Prop('value')));
+          LBinding.FTimeField.SetInteraction(LEnabled, LReadOnly,
             LBinding.FControl.IsVisible);
         end;
 

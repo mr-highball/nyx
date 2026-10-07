@@ -3,6 +3,20 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current native clock boundary (2026-10-07): ordinary grouped fields retain exact
+clock drafts and an owned native integer-part/millisecond picker. Actual Win32
+controls pass 73, leak-free; the maintained target retains the 1,613/49 contract
+checks, exact compiled reconstruction and twelve type refusals. Native Studio
+workspace regression passes 22, leak-free; affected browser/Studio consumers
+compile with zero owned warnings. Printed captures remain diagnostic. The unchanged
+calendar consumer and pre-change renderer both fail acceptance focus return; retain
+that original native/parity gate. No original criterion closes: shared renderer
+no-closure advances 11→12 once; known counts are 19/30/12/28/2. Stop clock fixture
+expansion; next resolve that concrete native focus/retirement boundary and require
+executed browser foundation/control evidence before acceptance. No browser launch
+or protected service replacement is retried. See
+[the packet](WORK.md#current-return-path-native-clock-field-preparation--2026-10-07).
+
 Current reassessment (2026-10-07): end the two native geometry packets and follow
 the native time-field text fallback through its strong-typing prerequisite.
 [NS-1_time-values_01](TODO/NS-1_time-values_01.md) owns exact clock values, domains

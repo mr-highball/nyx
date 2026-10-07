@@ -7,6 +7,94 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: native clock-field preparation — 2026-10-07
+
+The preceding mobile follow-up makes no product/acceptance progress: the served
+layout and preserved pairs are unchanged. Direct named MCP handles now authenticate
+in this chat. Revalidate the stopped native clock consumer and take its next safe
+action rather than repeating mobile rollout checks or clock foundation fixtures.
+
+Previous goal turn is progress: typed clocks/managed exact reconstruction are
+pushed at `cc541fe`, with exact remote and clean-worktree evidence. End those two
+foundation batches. Executed pas2js remains a hard acceptance gate; a fresh process
+inspection finds no live remote-debugging browser, and no rejected launch is retried.
+
+Follow independent native consumer preparation under original LCL criteria 1/2/3
+and NS-3 picker breadth. The installed TTimeEdit normalizes locale drafts and seeds
+an empty default popup from the system clock; its standard popup only selects
+hours/minutes. The existing ordinary time projection is a bare TEdit. Deliver an
+owned grouped time editor and native picker, retaining actual LCL controls while
+Nyx owns exact clock/precision, empty values, domain admission, popup lifetime and
+editing completion. Qualify physical draft/commit, millisecond picking, range/step/
+choice refusal, inherited availability, synchronization and callback retirement
+through the ordinary renderer. Compile affected browser/Studio consumers, preserving
+all protected services/pairs/payloads. Stop after this integrated boundary; do not
+expand clock fixtures or claim foundation/picker/both-target acceptance from native
+checks. The foundation remains open, and established counters are not reset.
+
+The pre-change ordinary renderer reproduces a real typing failure: it discards
+an unfinished off-step fractional draft (`build/time-picker/baseline-run.log`).
+The first grouped picker then exposes a second physical failure: Win32's floating
+spin widget rewrites an empty part on focus loss after the LCL callback. That
+failed 21-check run is retained in `draft-qualified-run.log`; overriding the edit
+setter/completion alone cannot solve the widgetset behavior. No dependency is edited.
+
+`nyx.times.lcl` now composes LCL's grouped clock editor with an independently owned
+picker and exact integer parts using native edits plus native arrows. Nyx owns
+strict ASCII part admission, exact precision, deterministic empty proposals and
+typed domain rejection. Drafts survive real focus moves; arrows/Up/Down step only
+valid integers. Clear/Cancel/Use time and Escape/Enter retain distinct semantics.
+Domains and inherited hidden/read-only/disabled policy revoke stale popup context;
+ordinary accepted change callbacks can retire their own view safely. Actual usable
+client sizing after realization contains every popup button; widgetset-measured
+outer print sizes avoid cropped diagnostic captures. The schema and its Pascal-
+generated 76-kind reference now report native time as Basic support.
+
+Maintained `tools/build.ps1 -Target time-fields` passes **73 native clock controls**,
+the unchanged **1,613 clock / 49 calendar contract checks**, exact compiled source
+reconstruction and **12 expected wrong-family compiler refusals**. Passing native
+clock/contract consumers have zero leaks and owned warnings. The exact compiled
+public-Pascal clock companion is a physical harness, not an MCP-authored active
+design; frozen domain-authoring gaps remain with the existing workflow owner.
+The matching browser control/contract consumers compile/stage with their RTL/hosts.
+Final receipt: `build/time-picker/maintained-qualified-final.log`. Printed wide,
+narrow and popup diagnostics are inspected; they do not qualify displayed pixels.
+
+Native Studio compiles with zero warnings; its unchanged ordinary wide/narrow
+workspace journey passes **22**, leak-free. Browser Studio and source worker
+compile with zero owned warnings, retaining seven installed RTL warnings each.
+Core/designer/scheduler/project/compiled-collection regression passes
+**30/1,793/55/60/3**. Evidence is under `build/time-picker/`: `native-studio/`,
+`studio-regression/`, `web-studio/` and `core-qualified-build-run.log`.
+
+The physical calendar regression fails after 71 checks at acceptance focus return,
+with zero leaks. The exact pre-change renderer reproduces the same failure in a
+serial comparison (`date-regression/qualified-run.log`, `baseline-date/baseline-run.log`).
+Do not claim that regression passes or weaken its assertion. Its actual focus/
+foreground and callback-retirement contract belongs to original native/parity
+criterion 2; calendar source and that fixture remain unchanged in this packet.
+The clock check qualifies explicit Escape focus return, not acceptance focus return.
+
+No original full criterion closes. Shared renderer no-closure advances **11→12**
+once; workflow/authoring/codegen/delivery remain **19/30/28/2**. Foundation remains
+at two partial batches; historical parity/NS-3 counts stay unestablished. Stop this
+native clock fixture packet. Reassess original input parity through the retained
+calendar acceptance-focus failure and safe callback retirement before adding picker
+breadth; require executed clock/browser fixtures before accepting their foundation
+or both-target consumer outcome. A fresh process inspection finds no live remote-
+debugging browser, and no equivalent rejected launch or protected service is retried.
+Hardware/IME/accessibility, other widgetsets/DPI, visuals/budgets, full Studio/MCP
+clock authoring and observing/LAN delivery retain their original owners and gates.
+
+Final direct semantic MCP reads retain revision 2, selection/home, no draft and
+no history; this chat no longer needs the Pascal-client fallback for named tools.
+The read-only preservation guard verifies all **15** process identities, **nine**
+complete pairs/navigation/history, the **147,033-byte** checkpoint, all **229**
+frozen LAN files and both bindings (`build/time-picker/preservation-final.log`).
+The separate frozen **243/242-file** packages also verify unchanged. This packet
+is source work, not a primary deployment. Remote and clean-worktree evidence belongs
+in ignored `build/time-picker/remote-checkpoint.json` after the authorized branch push.
+
 ## Latest user priority: mobile canvas follow-up — 2026-10-07
 
 The attached capture shows the earlier stacked workspace. Follow the user's
@@ -28,6 +116,18 @@ No duplicate implementation, fixture expansion, service replacement or task
 credit is warranted. The user can reload the existing LAN page to review these
 controls. Resume the unfinished typed-time prerequisite; keep its uncommitted
 work and all original acceptance criteria/counters intact.
+
+The latest follow-up also initializes this chat's direct `nyx_session` handle
+successfully: revision 2, the same selection/home view, no draft and no Undo/Redo.
+The previously cached-handle initialization limit no longer applies to this chat.
+The new read-only guard again verifies all 229 sealed files, 15 process identities,
+nine complete pairs, the full checkpoint and both bindings; all four LAN assets
+return HTTP 200 with exact sealed hashes. Receipt:
+`build/mobile-response-check/current-preservation.log`. The two retained narrow
+captures are re-inspected; no new browser execution, phone qualification, product
+change, service replacement or acceptance credit is claimed. The native clock
+focus-loss failure is resolved in the preparation packet above; its baseline
+failure and original consumer acceptance criteria remain retained.
 
 ## Current return path: typed time-field prerequisite — 2026-10-07
 

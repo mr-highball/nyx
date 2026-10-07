@@ -70,9 +70,14 @@ Typed clock values/domains and managed source integration now preserve exact
 precision, empty versus midnight, overnight ranges, choices and millisecond steps.
 Checked native fixtures pass 1,613 plus 49 unchanged calendar checks; exact emitted
 reconstruction passes, leak-free. Six wrong argument families fail on each compiler.
-Browser fixtures/Studio/worker compile with zero owned warnings. Executed pas2js,
-physical time pickers and Studio/MCP domain authoring remain open; native time is
-still a text fallback. See [the clock packet](WORK.md#current-return-path-typed-time-field-prerequisite--2026-10-07).
+Browser fixtures/Studio/worker compile with zero owned warnings. Ordinary native
+time now uses an owned grouped clock/millisecond picker; 73 Win32 checks pass,
+leak-free. Invalid parts survive focus loss; exact domains and lifetime retain
+shared meaning. Printed captures are diagnostic. The unchanged calendar consumer
+and pre-change renderer both fail acceptance focus return; that parity gate stays
+open. Executed pas2js, hardware/accessibility, full Studio/MCP domain authoring and
+rollout remain unverified. See
+[the native clock packet](WORK.md#current-return-path-native-clock-field-preparation--2026-10-07).
 
 Ordinary native captioned groups now measure and allocate their usable client
 content independently of their outer logical faces. Nested resize/scroll,
