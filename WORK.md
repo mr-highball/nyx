@@ -7,6 +7,56 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## User follow-up: mobile canvas space — 2026-10-07
+
+The latest phone screenshot is addressed by the already delivered compact
+workspace; a fresh check consumes the actual frozen LAN `6fc231e`, not the
+unfinished grid application or isolated bar candidate. Ordinary observing
+Chromium at CSS **390×640 passes 21** checks, including touch detail resizing,
+expansion/restore, exact source retention and desktop/short-window transitions.
+Collapsed details leave **396 px (62%)**, expanded canvas **587 px (92%)**.
+The inspected captures retain authored text size. Compact actions, optional
+placement tools, collapsible/resizable details and expansion use public Nyx
+menus, splits and typed viewport/presentation contracts. No new product change
+or physical-phone qualification is claimed from this recheck.
+
+Private evidence is `build/mobile-user-review/`: `phone.log`, `phone/`, bounded
+`semantic-before-corrected.json` / `semantic-after.json` and `guard-after.log`.
+The first read used the runtime directory instead of the separate enrolled
+project root and refused before observation; the corrected installed Pascal
+client authenticates through the existing project configuration. The cached
+desktop MCP handle still refuses initialize with HTTP 404. All **15** original
+process identities, **9** exact project/source/history pairs, the **147033-byte**
+checkpoint and all **229** frozen/served payload files remain exact. Runtime
+observations are leak-free. This adds no task credit and requires no listener
+replacement or project acceptance. Resume the unfinished grid return path below.
+
+## Current return path: bound grid cell navigation — 2026-10-07
+
+This implementation remains an uncommitted working batch while the mobile
+follow-up is answered. Its exact MCP-authored ordinary application already passes
+the companion's 41 checks, checked native controls 26 and actual browser controls
+43 at desktop. Real host keyboard/Tab evidence, current selection regression,
+narrow/native captures, documentation and a complete final preservation packet
+remain required before this batch can be checkpointed as qualified progress.
+
+Previous turn is progress at pushed `18da50e`: authenticated full ordinary Studio
+bar workflows are qualified in the isolated candidate; protected LAN replacement
+was rejected before execution. Do not repeat that action or expand bar fixtures.
+Advance NS-2 parity criterion 2 and its browser/LCL interaction prerequisites,
+consumed by NS-3's original production-table requirement. The current bound table
+uses browser row navigation and native cell position, an explicit published gap.
+Deliver shared typed cell movement, one browser cell Tab stop, column-preserving
+row navigation, Home/End and Ctrl corners, current-cell editor entry/return, exact
+row membership, retained drafts and safe retirement. WAI's current grid pattern
+is checked at its primary source; this is not a complete assistive-technology claim.
+Evidence must exercise actual browser/native controls, an ordinary generated bound
+application and desktop/narrow rendering, with protected processes/pairs unchanged.
+Use bounded authenticated MCP to compose/export owned English review content;
+record any missing semantic operation with the existing workflow owner. Stop this
+batch at integrated cell navigation; do not substitute a pure cursor fixture or
+reset existing counters. Ignored evidence belongs under `build/grid-navigation/`.
+
 ## Current return path: menu-bar workflow delivery — 2026-10-07
 
 This batch advances existing NS-4 workflow criterion 5 and the NS-5/NS-6 retained
