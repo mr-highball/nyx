@@ -1,15 +1,16 @@
 # Agents in Nyx Studio
 
-The current observing release advertises twenty tools, including protected reviews,
-project workspaces, state, collections, typed value-domain policy and presentations.
-Authenticated Pascal MCP drives the actual full editor on desktop and narrow hosts:
-paired source/history, expanded source and real application builds. Explicit
-disposable-test bootstrap retained eight exact previous pairs with fresh ordinary
-handles and seven disclosed history resets; production legacy migration is separate.
-Launch refreshed project and enrolled-user Codex configuration. Cached native chat
-handles need one reconnect after credential rotation; use the authenticated semantic
+The current observing release advertises twenty-one tools, including protected
+reviews, project workspaces, state, collections, typed value-domain policy,
+presentations and menu declarations. Authenticated Pascal MCP drives bounded
+composition, paired source/history and real browser/LCL application/view builds.
+The current native checkpoint retains all nine exact pairs, full histories and
+ordinary handles through delivery. Earlier explicit disposable-test bootstrap
+and production legacy migration remain separately qualified. Launch refreshes
+project and enrolled-user Codex configuration. Cached native chat handles need
+one reconnect after credential rotation; use the authenticated semantic
 client below meanwhile. See
-[current observing evidence](../WORK.md#current-return-path-test-mode-observing-release-refresh--2026-10-06).
+[current observing evidence](../WORK.md#current-return-path-menu-editor-observing-delivery--2026-10-07).
 
 Studio starts with agent access enabled and editing allowed. Open **Agents** to
 see the shared revision, connected endpoint and recent operations. **Read only**
@@ -1110,6 +1111,13 @@ job handles and existing compiler receipt budgets remain shared across projects.
 Connection presence is bounded to 64 connection/project pairs. Each live
 transport retains up to 64 project-creation receipts without eviction; an old
 retry cannot resurrect a closed project.
+
+Successful primary-context queries/edits and compiler/preview discovery publish
+their authenticated connection in the primary project's roster, just as explicit
+project calls do. Repeated requests update that owner; two connections sharing a
+display name remain distinct. Explicit review requests retain review attribution.
+Transport DELETE removes the retiring owner's presence from every project.
+Presence is transient and never changes document revisions or checkpoint bytes.
 
 The Nyx-built **Agents** panel lists project sessions and offers **Jump into
 project**. This opens the full ordinary editor in the same tab. Departing waits

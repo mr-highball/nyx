@@ -75,11 +75,16 @@ and callback navigation moves the actual source caret. Full desktop/CSS-390 Stud
 journeys pass 484/394, including semantic composition/builds and physical authoring/
 history/Interact. Desktop/390 retained menus each pass 32 while an authenticated
 agent joins/retires; independent popup portals survive observing shell rebuilds.
-Fifteen services, nine pairs/full checkpoint remain protected. Frozen source
-`c24ae36` qualifies its offline 229-file candidate through integrity, installed
-runtime and protocol/process recovery. The observing LAN release remains unchanged.
-Broader parity/performance and preserving backend delivery stay open. See
-[the packet](WORK.md#current-return-path-public-menu-editor--2026-10-07).
+Frozen product `6fc231e` now serves the observing LAN editor and authenticates
+21 MCP tools. Copied-checkpoint admission/byte-identical history round trip pass
+106; deployed semantic menu authoring and four real browser/LCL application/view
+builds pass 355. Read-only primary menu forms pass 32 desktop/32 CSS-390 through
+unsaved text retention and authenticated session join/retirement. Primary MCP
+connections now appear in the same Agents roster as named projects. Nine exact
+pairs/full checkpoint and fourteen other services remain unchanged. Compact
+canvas allocation remains 62% collapsed/92% expanded with readable authored text.
+Broader parity/performance and component depth stay open. See
+[the current packet](WORK.md#current-return-path-menu-editor-observing-delivery--2026-10-07).
 
 Saved menu declarations now pass strict persistence, typed generation/source
 reconstruction, bounded semantic transactions/history and ordinary application
@@ -87,14 +92,15 @@ invocation on browser/Win32. Declaration fixtures pass 64 per target; exact
 MCP-exported application consumers pass 14, and native Studio transitions bring
 its consumer to 18. Authenticated isolated MCP passes 172 with all four real
 application/view compiler jobs and exact input bytes. Core/composition regression
-passes 30/1781, leak-free. Source catalog is 21 tools; the observing LAN release
-remains 20. Fifteen services, nine exact pairs and the full checkpoint are retained.
+passes 30/1781, leak-free. At that earlier boundary source catalog was 21 tools
+and the observing LAN release remained 20. Fifteen services, nine exact pairs
+and the full checkpoint were retained.
 At that boundary final backend refresh, ordinary browser Studio canvas input,
 editor menu-plan authoring, frozen delivery and broader parity remained open. See
 [the current packet](WORK.md#current-return-path-persisted-menu-authoring--2026-10-07)
 and [authoring contract](docs/menu.md).
 
-Frozen mobile-workspace checkpoint `c7e1e42` now serves the existing observing
+The earlier mobile-workspace checkpoint `c7e1e42` served the existing observing
 LAN/MCP ports at the original firewall-covered executable path. Compact menus,
 collapsed/resizable details, optional tools and canvas expansion reclaim space
 without scaling application text. Actual shared CSS 390×640 leaves 62% for the

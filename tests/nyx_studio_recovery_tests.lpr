@@ -112,6 +112,7 @@ var
   LField: Integer;
   LRow: Integer;
   LMatches: Integer;
+  LPrior: Integer;
 begin
   LStream := TFileStream.Create(ABaseline, fmOpenRead or fmShareDenyWrite);
   try
@@ -126,6 +127,21 @@ begin
   Check((LBaseline.Kind = ndArray) and (LBaseline.Count in [1..9]) and
     (LBaseline.Item(0).Field('workspace').AsText = ''),
     'Retained baseline identifies the primary and bounded ordinary registry');
+  { A duplicate expected handle must not let one project stand in for another
+    while the counts still agree. Admit the complete baseline before opening the
+    copied store; project identity is exact and case sensitive. }
+  for LIndex := 0 to LBaseline.Count - 1 do
+  begin
+    for LPrior := 0 to LIndex - 1 do
+    begin
+
+      if LBaseline.Item(LIndex).Field('workspace').AsText =
+        LBaseline.Item(LPrior).Field('workspace').AsText then
+      begin
+        raise Exception.Create('Retained baseline contains a duplicate project handle');
+      end;
+    end;
+  end;
   LDirectories := TNyxStudioDirectories.ForRelease(ARelease, ARuntime);
   Check(FileExists(LDirectories.SessionCheckpoint),
     'Retained qualification requires an explicit copied checkpoint');

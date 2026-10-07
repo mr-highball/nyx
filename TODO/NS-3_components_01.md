@@ -25,6 +25,16 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Menu families and invokers — 2026-10-06
 
+The public menu-editor/observing prerequisite is now delivered (2026-10-07).
+Frozen `6fc231e` authenticates 21 tools; retained native history/pairs stay exact,
+the deployed semantic menu review passes 355 with four real builds, and read-only
+primary forms pass 32 desktop/32 CSS-390 through draft retention and actual
+Agents join/retirement. Its preceding full ordinary authoring journeys remain
+484/394. End integrated delivery fixtures and return to original menu-bar/picker,
+live-binding, accessibility and production breadth/performance outcomes under
+existing NS-3/NS-2 owners. No original component criterion closes. See
+[the current packet](../WORK.md#current-return-path-menu-editor-observing-delivery--2026-10-07).
+
 The persisted-authoring follow-up (2026-10-07) adds document-owned immutable menu
 definitions/invokers, strict wire/crafted source and automatically mounted
 browser/LCL application families. Declaration fixtures pass 64 each; exact

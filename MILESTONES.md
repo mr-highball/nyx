@@ -3,7 +3,20 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current editor boundary (2026-10-07): a reusable public typed menu compound now
+Current observing boundary (2026-10-07): frozen product `6fc231e` serves the
+original LAN executable path and authenticates 21 tools. Actual retained-checkpoint
+admission/byte-identical history round trip pass 106; all nine exact pairs and
+fourteen other service identities remain unchanged. Default-primary MCP owners
+now appear in the project roster; native recovery passes 72. Deployed semantic
+menu authoring passes 355 with all four real application/view builds. Read-only
+primary forms pass 32 desktop/32 CSS-390 through local text retention and actual
+Agents join/retirement. Compact canvas allocation remains 62%/92%, without text
+scaling. No original criterion closes; workflow no-closure advances 14→15 once,
+authoring 28, renderer 8, codegen 28 and delivery 2 remain. End delivery fixtures
+and return to advanced component/menu-bar/picker outcomes under existing owners.
+See [the current packet](WORK.md#current-return-path-menu-editor-observing-delivery--2026-10-07).
+
+Previous editor boundary (2026-10-07): a reusable public typed menu compound now
 serves Studio Properties and its independent paired queue. Exact whole-form
 policy/item edits, attachment/inheritance, stale refusal and confirmed removal
 pass 73 actual-control checks per target; ordinary Win32 Studio brings its journey

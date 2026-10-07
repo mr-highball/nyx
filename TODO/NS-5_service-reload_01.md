@@ -17,7 +17,20 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 **Blockers**
 
-LAN path follow-through (2026-10-07): after the user's loading report, the exact
+Current preserving delivery (2026-10-07): frozen product `6fc231e` serves the
+original firewall-covered executable path and runtime with 21 authenticated tools.
+Candidate admission against an actual checkpoint copy and nine observing baselines
+passes 106; exact full-history round trip and revision/duplicate refusal precede
+guarded replacement. All nine pairs/handles/navigation/drafts/permissions and
+complete checkpoint bytes stay exact, with fourteen other services unchanged.
+Final deployed semantic review passes 355 with four actual application/view
+builds; observing primary forms pass 32 desktop/32 CSS-390 through actual roster
+join/retirement and local draft retention. Retired authority expires. No original
+criterion closes and historical NS-5 totals remain unestablished. End this delivery
+batch; wider worker/reload outcomes retain their original acceptance. See
+[the current packet](../WORK.md#current-return-path-menu-editor-observing-delivery--2026-10-07).
+
+Earlier LAN path follow-through (2026-10-07): after the user's loading report, the exact
 verified frozen binary is restored at the original firewall-covered executable
 path. Payload/runtime arguments remain independent and unchanged. Nine exact
 pairs, full checkpoint and fourteen other service identities are preserved;

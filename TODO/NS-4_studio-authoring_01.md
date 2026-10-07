@@ -42,6 +42,15 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Public menu editor — 2026-10-07
 
+The subsequent protected delivery serves frozen `6fc231e` on the original LAN
+path with all nine pairs/full histories retained and 21 authenticated tools.
+Read-only primary forms pass 32 desktop/32 CSS-390 through unsaved input retention
+and actual authenticated Agents join/retirement. This extends observing evidence
+without another authoring count or full original criterion closure. The delivery/
+primary-presence batch belongs to existing workflow/service owners; stop those
+fixtures and return to original advanced component outcomes. See
+[the current packet](../WORK.md#current-return-path-menu-editor-observing-delivery--2026-10-07).
+
 Original criteria 2/6 now consume a reusable public Nyx menu compound with typed
 content/item/reference/default/presentation/search authoring. Distinct local
 attachment, mask/inheritance and confirmed definition removal share the exact

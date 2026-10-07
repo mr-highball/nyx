@@ -55,7 +55,19 @@ destinations and malformed/mixed candidates refuse. The installed pair is
 qualified independently; this is staging, not a deployed or complete distribution.
 See [the guide](../docs/studio-releases.md) and [current evidence](../WORK.md).
 
-The integrated menu-editor return (2026-10-07) freezes product `c24ae36` into a
+The preserving observing return (2026-10-07) freezes product `6fc231e` into a
+229-file release. Preparation (29), installed runtime (39), actual protocol
+recovery (72), abrupt-process (5) and portable ownership (14) pass with zero
+leaks and owned warnings. Copied actual checkpoint admission passes 106 and
+requires byte-identical complete durable history. The existing NS-5 owner
+delivers the exact payload at the original LAN executable path; served frontend
+bytes and all frozen files verify after four real MCP application/view builds.
+Nine exact pairs/full checkpoint and fourteen other services remain unchanged.
+This extends criterion 3 evidence without another delivery count, full criterion
+closure or supported-matrix claim. See
+[the current packet](../WORK.md#current-return-path-menu-editor-observing-delivery--2026-10-07).
+
+The preceding integrated menu-editor return (2026-10-07) freezes product `c24ae36` into a
 new 229-file candidate. Exact preparation (29), installed runtime (39), actual
 protocol recovery (66), abrupt-process (5) and portable ownership (14) pass,
 with zero leaks and owned warnings. Qualification uses the unchanged semantic

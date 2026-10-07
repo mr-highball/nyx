@@ -15,7 +15,22 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
-Current editor consumer (2026-10-07): public typed menu forms now use the ordinary
+Current observing consumer (2026-10-07): frozen `6fc231e` now serves the protected
+LAN/editor with 21 authenticated tools. The owned semantic menu review passes
+355, including all four actual application/view builds and exact paired source/
+history. Read-only primary forms pass 32 desktop/32 CSS-390; unsaved input survives
+tab changes and authenticated witnesses joining/retiring. Default-primary dispatch
+now records connection presence just like named projects; explicit reviews stay
+separate, DELETE retires owners and presence remains outside durable checkpoints.
+Native recovery passes 72; retained checkpoint admission/round trip passes 106.
+Nine exact pairs/full histories and fourteen other services remain unchanged.
+No original full criterion closes; workflow no-closure advances 14→15 once,
+other totals stay unchanged. End this integration/delivery batch and return to
+original component outcomes; richer source/review and compiler receipt-owner
+work remain with their existing owners. See
+[the current packet](../WORK.md#current-return-path-menu-editor-observing-delivery--2026-10-07).
+
+Previous editor consumer (2026-10-07): public typed menu forms now use the ordinary
 paired queue with exact mounted registry/local attachment guards. Actual native/
 browser inspector journeys pass 73 each, ordinary Win32 Studio 80 total. Full
 desktop/CSS-390 Studio passes 484/394: bounded authenticated semantic composition/

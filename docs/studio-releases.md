@@ -146,11 +146,12 @@ the candidate's frozen units before running it. Supply an independent private
 runtime containing an exact checkpoint copy; the live runtime stays owned by its
 server and must never be used for this qualification. The bounded baseline has
 the primary first and up to eight ordinary contexts, with exact encoded pairs,
-labels, handles and public session fields. The consumer admits all accepted/history
-pairs, compares observations and requires a byte-identical native round trip.
-A mismatch refuses before Save; it starts no listener or enrollment and prints
-no project text or credentials. This proves candidate compatibility with retained
-work, separately from generic recovery fixtures and authenticated rollout checks.
+labels, unique handles and public session fields. The consumer admits all
+accepted/history pairs, compares observations and requires a byte-identical
+native round trip. A mismatch or duplicate handle refuses before Save; it starts
+no listener or enrollment and prints no project text or credentials. This proves
+candidate compatibility with retained work, separately from generic recovery
+fixtures and authenticated rollout checks.
 
 ## Explicit legacy test bootstrap
 
@@ -229,10 +230,12 @@ semantic MCP as the design authoring/inspection contract.
 The earlier legacy host predated native recovery and could not export full
 history. Its CanUndo/CanRedo flags established availability, not serialized stacks;
 the explicitly authorized test bootstrap did not qualify production migration.
-The current observing host now uses native recovery. Its contextual-help refresh
-retains nine exact pairs, complete byte-identical checkpoint/history and ordinary
-handles through restart and authenticated desktop/narrow observing checks. See
-[current rollout evidence](../WORK.md#current-return-path-contextual-help-observing-release--2026-10-06).
+The current observing host uses native recovery. Its menu-editor delivery retains
+nine exact pairs, complete byte-identical checkpoint/history and ordinary handles
+through candidate admission, restart and authenticated desktop/narrow observing
+checks. The deployed 229-file release authenticates 21 tools; four real MCP
+application/view builds leave its sealed payload unchanged. See
+[current rollout evidence](../WORK.md#current-return-path-menu-editor-observing-delivery--2026-10-07).
 Full production migration from an older host remains open. A staged candidate
 alone is not authority to replace a service or discard its history.
 

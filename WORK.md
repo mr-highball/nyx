@@ -9,54 +9,68 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 ## Current return path: menu editor observing delivery — 2026-10-07
 
-Previous turn is progress: integrated ordinary desktop/narrow editor journeys,
-native controls and the frozen `c24ae36` candidate qualify; `5cdabf3` is pushed.
-Continue existing NS-5 accepted-work/reload and NS-4 workflow criterion 5 with
-preserving delivery to the observing Studio. Before service replacement, admit
-an exact private copy of the current native checkpoint using the frozen source,
-compare every accepted pair/navigation/permission with current authenticated
-observations, and require a byte-identical full-history round trip. Retain exact
-binary/checkpoint/enrollment backups, the firewall-covered executable path and
-fourteen other process identities. Only the verified primary is eligible for the
-already-authorized update; the earlier isolated stop/launch refusals are not
-retried. No legacy bootstrap, project replacement, history reset or handle remapping.
-After delivery, authenticate current MCP discovery and qualify observing desktop/
-narrow editor input through owned semantic projects. A preserving or HTTP gate
-failure stays with its existing owner and cannot justify another policy workaround.
-This is the existing delivery return path, not another menu fixture expansion.
-No original full criterion is complete; current counters remain workflow 14,
-authoring 28, renderer 8, codegen 28 and delivery 2.
+This goal turn is progress on existing NS-5 accepted-work/reload and NS-4 workflow
+criterion 5. The authorized primary LAN service now serves frozen product
+`6fc231e`, **229** verified files, at its original firewall-covered executable
+path. The existing runtime and all nine accepted/source/draft pairs remain exact;
+the **147033-byte** checkpoint retains full histories, handles, labels, navigation
+and permissions. Fourteen other service identities remain unchanged. No legacy
+bootstrap, replacement project, history reset or remapping occurs.
 
-Frozen `c24ae36` is now serving at the original LAN executable path. Its checked
-consumer admits the actual copied checkpoint and all nine authenticated observing
-baselines (**106**), then preserves complete durable bytes on Save/Load. A wrong
-expected revision refuses without rewriting the copied file; both traces are
-leak-free. Only the exact guarded primary is retired; its signed console child
-exits without a separate kill. Fourteen other services, nine accepted pairs,
-navigation/drafts/permissions/history/labels/handles and the **147033-byte** full
-checkpoint stay exact. Retired editor authority refuses with HTTP 400.
+Before each primary replacement, the checked candidate consumer admits an exact
+private checkpoint copy against all nine authenticated observing baselines
+(**106**) and requires a byte-identical complete round trip. Wrong-revision and
+duplicate-handle baselines refuse without rewriting the copy; positive and
+negative traces are leak-free. Exact binary/checkpoint/enrollment backups precede
+guarded replacement. The primary's signed console child exits without a separate
+kill, retired editor authority refuses with HTTP 400, and project/enrolled-user
+Codex configuration refreshes. Earlier isolated stop/launch refusals are not retried.
 
-Authenticated discovery exposes **21** tools. The deployed semantic menu review
-passes **291** bounded/context/poll checks: grouped typed composition, item
-inspection, stale/dependency refusal, exact paired history/source and all four
-real application/view builds. The observing ordinary workspace passes **16**
-desktop and **21** CSS-390×640; measured canvas allocation is still **396/587 px**.
-No ordinary project is replaced or closed. Its registry is full, so semantic
-mutations use an explicitly owned empty review; observing form input is local,
-unsaved presentation and does not claim an ordinary project-authoring journey.
+Initial `c24ae36` delivery passes **291** semantic checks and **16/21** ordinary
+desktop/CSS-390 workspace checks. The compact canvas still occupies **396/587 px**
+of a 640 px viewport when collapsed/expanded; text is not scaled down. Final
+browser artifact hashes equal that checked frontend and exact LAN-served bytes.
+Actual physical phone input and other widgetsets remain separate qualification.
 
-That observing form retains text through Properties/Events switches. Its roster
-witness exposed a native router gap: omitted primary context records activity but
-bypasses ordinary connection presence, unlike named project context. Successful
-primary tool calls and compiler/preview discovery now register their authenticated
-owner in the same roster; explicit reviews remain independently attributed.
-Presence expires through existing transport DELETE and never enters checkpoints.
-The actual native seam qualifies independent same-display owners, compiler
-discovery, review separation and unchanged durable bytes; full protocol recovery
-passes **72**, leak-free. Refreshed frozen delivery and the corrected observing
-roster/form check are pending. Failed empty-query/hidden-panel assumptions and the genuine absent-
-primary-roster evidence remain in `build/menu-observing/`; only corrected terminal
-passes earn observing evidence. No extra policy workaround or isolated restart.
+Readonly observing menu input exposed a native router gap: omitted primary
+context recorded activity but bypassed project connection presence. Successful
+primary tool calls and compiler/preview discovery now register the authenticated
+owner in the same bounded roster as named projects; explicit reviews retain their
+own attribution. Existing transport DELETE retires presence, which never enters
+checkpoints. Native protocol recovery passes **72**, including distinct owners
+with the same display name, repeated-owner stability, compiler discovery, review
+separation and unchanged durable bytes. Frozen qualification also passes
+integrity **29**, runtime **39**, abrupt-process **5** and ownership **14**, leak-free.
+Owned builds report zero warnings; the seven installed pas2js RTL warnings remain
+visible and dependency source is unchanged.
+
+Final deployed discovery authenticates **21** tools. The owned semantic menu
+review passes **355** checks, including typed grouped composition, bounded item
+inspection, stale/dependency refusal, exact source/history and all four actual
+browser/LCL application/view builds. The final observing primary form passes
+**32 desktop and 32 CSS-390**: unsaved text survives Properties/Events switching
+and a distinct authenticated witness joining/retiring; the exact primary Agents
+row paints both changes. These read-only form checks do not establish a complete
+ordinary project-authoring journey; its preceding full journeys remain **484/394**.
+The full ordinary registry is retained, so semantic mutations use an explicitly
+owned empty review. No ordinary project is replaced, closed or edited by the probe.
+
+Current ignored identity/authority baselines are under `build/menu-observing/`:
+`primary-current.json`, `protected-services-current.json`,
+`protected-pairs-current.json` and `lan-editor-private.json`. Use these for the
+next guard; earlier directories describe retired deployments. Final preservation,
+LAN-served bytes and sealed verification are in `final-preservation.json`,
+`deployment.json` and `final-release-verify-after.log`; `remote-return.json` records
+the exact pushed checkpoint. Failed fixture assumptions and absent-primary-roster
+captures remain identified alongside corrected terminal passes. Cached native
+chat handles still need a reconnect; authenticated Pascal MCP remains primary.
+
+No original full criterion closes. Workflow no-closure advances **14→15 once**
+for this integrated observing/presence batch; authoring **28**, renderer **8**,
+codegen **28** and delivery **2** stay unchanged. Historical NS-5 totals remain
+unestablished. End this delivery/retained-fixture batch. Return to original advanced
+menu-bar/picker, live-binding, accessibility and component breadth outcomes under
+existing NS-3/NS-2 owners, with wider source/review workflows retaining NS-4.
 
 ## Current return path: public menu editor — 2026-10-07
 
