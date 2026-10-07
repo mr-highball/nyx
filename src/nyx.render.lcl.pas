@@ -85,6 +85,7 @@ uses
   nyx.collections.view.types,
   nyx.collections.mount,
   nyx.collections.lcl,
+  nyx.collections.lcl.grid,
   nyx.literal.items,
   nyx.composition,
   nyx.content.mount,
@@ -1227,7 +1228,7 @@ begin
   end
   else if LKind = 'table' then
   begin
-    Result := TStringGrid.Create(FPanel);
+    Result := TNyxCollectionStringGrid.Create(FPanel);
   end
   else if LKind = 'image' then
   begin

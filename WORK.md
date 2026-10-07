@@ -7,6 +7,81 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current priority: mobile follow-up verification — 2026-10-07
+
+The user's screenshot is the earlier stacked layout. Current shared Studio code
+already blends compact Actions navigation, collapsed Review/details, a touch/
+keyboard split grip, optional Tools and reversible canvas Expand/Restore. The
+previous actual CSS 390×640 journey passes 21 checks and captures 396/587 px
+(62%/92%) canvas allocation with unchanged authored text scale. Both captures
+are re-inspected; these are retained Chromium viewport evidence, not a new phone
+run. Fresh authenticated Pascal MCP reads bounded session context successfully;
+the desktop named handle still refuses initialization with HTTP 404. Fresh guards
+confirm exact currently served `6fc231e` bytes, all 15 process identities, nine
+pairs/history and the complete checkpoint. No project edit or service replacement
+occurs. Do not repeat the separately rejected browser launch or primary replacement
+to requalify unchanged mobile behavior. Typed width/height/orientation, named/manual
+presentations and public menu/split/modal contracts remain the application API.
+Evidence: `build/mobile-current-check/phone/`, `build/virtual-table/mobile-session.json`
+and `build/virtual-table/preservation-after.log`. This follow-up adds no task credit.
+
+## Current return path: on-demand native table values — 2026-10-07
+
+Previous turn made authoritative progress at pushed `fce2ba7`: integrated scalar
+refresh, actual native controls and same-workload serial measurements. Reassessment
+ends refresh fixtures and follows original NS-3 component criterion 3/performance
+criteria 2/3 toward viewport realization. Installed Lazarus source establishes
+that `TCustomStringGrid.GetCells/SetCells` are virtual; owned Nyx grids can preserve
+the ordinary TStringGrid API while reading bound values on demand.
+
+Deliver the native on-demand table adapter, retaining exact cell reads, local
+draft overlays, callbacks, query/reorder behavior and disconnect lifetime. Require
+the unchanged semantic MCP table consumer, real large native paint/read checks,
+owned teardown and affected browser/Studio compilation. Stop at that integrated
+native boundary; browser row windowing, complete virtualization/both-target budgets
+and broader component/parity prerequisites remain original requirements. Do not
+retry the rejected browser launch or primary replacement, change active projects,
+invent/reset historical NS-3 counts or close broader criteria from native-only
+evidence. All frozen services/payloads and protected pairs remain separate.
+
+Ordinary Nyx native tables now use the owned `TNyxCollectionStringGrid` subclass.
+Bound accepted values come from a borrowed pure text reader; ordinary `Cells`
+reads, native painting and editing keep the TStringGrid contract. Explicit widget
+drafts use sparse exact-text overlays; normalization/query displacement clear
+the affected coordinates. Unbound literal cells retain inherited behavior. The
+mount detaches its receiver before restoring handlers/retiring widgets, without
+a managed backreference. Native widget streaming does not serialize provider data;
+portable Nyx persistence continues to own that data.
+
+The maintained collection-refresh command now passes **20** on-demand native
+checks alongside **29** focused refresh, **27** existing controls and **75** unchanged
+ordinary MCP-source query/control checks, all with zero leaks. The exact English
+MCP layout uses an independent 4096-row runtime source: actual viewport Repaint
+requests **30** source cells; one distant `Cells` read requests exactly **one**.
+Offscreen updates, Unicode drafts, no-op normalization, query reorder, selection,
+empty results and disconnect pass. The native capture is inspected. Matched browser
+consumers, full Studio and its worker compile/stage; owned warnings are zero and
+the installed RTL warnings remain visible. No current browser execution is claimed.
+
+This is native on-demand value realization, not full virtualization acceptance.
+Grid geometry/model/query/metadata remain dataset-sized; initial native content
+AutoSize can read all cells. Overlay count excludes physical LCL cache/metadata
+and is not a resident-memory measurement. Browser rows still materialize. Stop
+native fixture expansion at this integrated boundary; browser row windowing and
+both-target production budgets remain the original next outcome. No original
+criterion closes or historical NS-3 count is invented/reset; existing workflow/
+authoring/renderer/codegen/delivery counts remain **19/30/9/28/2**.
+
+Current evidence is under ignored `build/virtual-table/`: `final-build.log`,
+`native-build.log`, `native-run.log`, inspected native capture and preservation/
+immutable-package verification. All qualification jobs are terminal. The combined
+backend identity and its **243-file** sealed package, older **242-file** query
+package, all protected original processes/pairs/checkpoint and **229** frozen/LAN
+assets remain exact. Observing/browser/LAN gates stay separate and were not retried.
+The normal branch checkpoint is recorded separately in
+`build/virtual-table/remote-checkpoint.json`; publication is accepted only after
+an exact local/remote branch comparison and clean working-tree check.
+
 ## Current return path: incremental collection values — 2026-10-07
 
 The previous batch made authoritative progress: combined semantic composition,

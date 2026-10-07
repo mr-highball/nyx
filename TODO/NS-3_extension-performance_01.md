@@ -9,6 +9,19 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current native on-demand prerequisite (2026-10-07): ordinary authored tables
+use a compatible owned TStringGrid subclass with pure borrowed reads and sparse
+explicit draft overlays. Actual native checks pass 20 plus existing 29/27/75,
+leak-free/owned warnings zero. Viewport painting requests 30 values from 4096
+rows; a distant API read requests one. This advances criteria 2/3's native
+realization prerequisite, not production frame/memory budgets: geometry/model
+work and initial content autosizing remain dataset-sized, and overlay count
+excludes native caches/model memory. Browser consumers compile/stage only.
+Stop native fixture expansion; browser row windowing and complete both-target
+budgets remain required. No original criterion closes or historical NS-3 count
+is invented/reset. Protected services/pairs/payload remain exact. See
+[the packet](../WORK.md#current-return-path-on-demand-native-table-values--2026-10-07).
+
 Current incremental-value prerequisite (2026-10-07): shared immutable refresh
 planning reaches both real adapters. Scalar publications retain native list
 entries/objects and skip unchanged scalar reads/writes; query/order/hierarchy

@@ -1853,6 +1853,10 @@ try {
     & (Join-Path $nyxRefreshNative 'nyx_collection_query_controls.exe') `
       (Join-Path $nyxRefreshRoot 'native-query.png')
     if ($LASTEXITCODE -ne 0) { throw 'Exact semantic table/query regression failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxRefreshFlags + @('tests/nyx_virtual_table_controls.lpr'))
+    & (Join-Path $nyxRefreshNative 'nyx_virtual_table_controls.exe') `
+      (Join-Path $nyxRefreshRoot 'native-virtual-table.png')
+    if ($LASTEXITCODE -ne 0) { throw 'On-demand native table paint/read/lifetime checks failed' }
     # Timing excludes heap/debug instrumentation; keep checked ownership tests
     # above separate. Workload correctness gates run outside measured intervals.
     Invoke-NyxCompiler $nyxLclFpc (@('-B', '-Mdelphi', '-O2', '-Sa', '-Cr', '-Co', '-Ci',

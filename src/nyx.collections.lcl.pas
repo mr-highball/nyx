@@ -45,6 +45,7 @@ uses
   SysUtils,
   Math,
   nyx.collections.refresh,
+  nyx.collections.lcl.grid,
   StdCtrls,
   ComCtrls,
   Grids,
@@ -64,6 +65,7 @@ type
   private
     FList: TListBox;
     FGrid: TStringGrid;
+    FGridReaderAttached: Boolean;
     FTree: TTreeView;
     FNodes: array of TTreeNode;
     FRendered: INyxCollectionSnapshot;
@@ -100,6 +102,9 @@ type
     procedure TreeEdited(Sender: TObject; ANode: TTreeNode; var AText: String);
     function NodeIndex(ANode: TTreeNode): Integer;
     function DisplayText(const AValue: TNyxText): TNyxText;
+    { Pure UI-thread read, clipped during native geometry/teardown transitions.
+      It borrows the view only while this mount owns the grid reader. }
+    function GridText(AColumn, ARow: Integer): TNyxText;
     function EditText(const AItem: TNyxItemRef; AColumn: Integer;
       const AValue: TNyxText): TNyxText;
   protected
@@ -164,6 +169,12 @@ begin
         FGrid.OnKeyDown := KeyDown;
         FGrid.OnMouseDown := GridMouseDown;
         FGrid.OnPrepareCanvas := PrepareGrid;
+
+        if FGrid is TNyxCollectionStringGrid then
+        begin
+          TNyxCollectionStringGrid(FGrid).AttachReader(GridText);
+          FGridReaderAttached := True;
+        end;
         for LIndex := 0 to AView.Spec.Count - 1 do
         begin
 
@@ -506,6 +517,29 @@ begin
   AText := DisplayText(LView.CellText(LItem, 0));
 end;
 
+function TNativeMount.GridText(AColumn, ARow: Integer): TNyxText;
+var
+  LData: INyxCollectionSnapshot;
+begin
+  Result := '';
+
+  if (FView = nil) or (AColumn < 0) or (AColumn >= FView.Spec.Count) then
+  begin
+    Exit;
+  end;
+
+  if ARow = 0 then
+  begin
+    Exit(FView.Spec.ColumnAt(AColumn).Title);
+  end;
+  LData := FView.Snapshot;
+
+  if (ARow > 0) and (ARow <= LData.Count) then
+  begin
+    Result := DisplayText(FView.CellText(LData.ItemAt(ARow - 1).Ref, AColumn));
+  end;
+end;
+
 procedure TNativeMount.RenderDataset;
 var
   LData: INyxCollectionSnapshot;
@@ -680,6 +714,11 @@ begin
           FGrid.RowCount := Max(2, LData.Count + 1);
         end;
         FGrid.FixedRows := 1;
+
+        if FGridReaderAttached then
+        begin
+          TNyxCollectionStringGrid(FGrid).TrimOverrides(FView.Spec.Count, LData.Count);
+        end;
         for LColumn := 0 to FView.Spec.Count - 1 do
         begin
           FGrid.Cells[LColumn, 0] := FView.Spec.ColumnAt(LColumn).Title;
@@ -735,8 +774,16 @@ begin
 
             if LApplyValues then
             begin
-              FGrid.Cells[LColumn, LIndex + 1] := DisplayText(
-                FView.CellText(LData.ItemAt(LIndex).Ref, LColumn));
+
+              if FGridReaderAttached then
+              begin
+                TNyxCollectionStringGrid(FGrid).ClearOverride(LColumn, LIndex + 1);
+              end
+              else
+              begin
+                FGrid.Cells[LColumn, LIndex + 1] := DisplayText(
+                  FView.CellText(LData.ItemAt(LIndex).Ref, LColumn));
+              end;
             end;
           end;
         end;
@@ -906,6 +953,12 @@ begin
 
   if FGrid <> nil then
   begin
+
+    if FGridReaderAttached then
+    begin
+      TNyxCollectionStringGrid(FGrid).DetachReader;
+      FGridReaderAttached := False;
+    end;
     FGrid.OnSelectCell := FPreviousCell;
     FGrid.OnValidateEntry := FPreviousValidate;
     FGrid.OnKeyDown := FPreviousKey;

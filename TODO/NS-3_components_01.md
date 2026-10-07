@@ -23,6 +23,21 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 
+## On-demand native table values — 2026-10-07
+
+Original criterion 3 now has native value realization in ordinary authored
+tables through a compatible owned TStringGrid subclass. Pure source reads,
+sparse exact drafts, query displacement and receiver retirement pass 20 actual
+native checks: viewport painting requests 30 cells from 4096 rows; one distant
+cell requests one. Existing refresh/input/query consumers pass 29/27/75 with
+zero leaks/owned warnings. Browser and Studio consumers compile/stage only.
+Geometry/model work and initial content measurement remain dataset-sized; native
+overlay counts are not resident-memory measurements. Stop native fixtures at
+this integrated boundary. Browser row windowing, both-target budgets, styling,
+parity and original prerequisites stay open. No original criterion closes or
+component count is created; protected services/projects remain exact. See
+[the packet](../WORK.md#current-return-path-on-demand-native-table-values--2026-10-07).
+
 ## Incremental collection values — 2026-10-07
 
 Original criterion 3 now has shared change planning integrated with both target

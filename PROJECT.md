@@ -66,13 +66,21 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Ordinary native Nyx tables now read bound values on demand through a compatible
+owned TStringGrid subclass; local drafts, queries, input and disconnect remain.
+Actual Win32 checks pass 20 focused, with 30 source requests for a painted
+4096-row viewport and one for a distant cell. Refresh/control/query regressions
+pass 29/27/75, leak-free. Browser/Studio consumers compile/stage. Dataset-sized
+geometry/model work, browser row windowing and full budgets remain open. See
+[the native packet](WORK.md#current-return-path-on-demand-native-table-values--2026-10-07).
+
 Collection adapters now share immutable typed scalar-row refresh planning.
 Native list entries/objects survive ordinary updates; existing editor/query guards
 remain. Actual Win32 checks pass 29 focused/27 regressions/75 MCP-source controls.
 The same serial 4096-row native workload reduces twenty updates 3406→1391 ms.
 Browser consumers, Studio and worker compile/stage; current browser execution,
 viewport virtualization, complete production budgets and delivery remain open.
-All rows are still materialized. See
+At that refresh baseline all rows were materialized. See
 [the refresh packet](WORK.md#current-return-path-incremental-collection-values--2026-10-07).
 
 The existing semantic transaction now composes layout/control, scalar bindings

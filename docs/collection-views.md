@@ -387,7 +387,8 @@ nodes and editors retain scalar comparison guards. The plan owns only Boolean
 bits, with no dataset/renderer/widget references; borrowed publication context
 retires after notification, and mounts disconnect before widget disposal.
 
-All rows remain materialized. Visible-identity, selection and hierarchy scans,
+Lists, trees and browser tables still materialize rows; native table values now
+use the on-demand path below. Visible-identity, selection and hierarchy scans,
 snapshot validation and query evaluation still contribute dataset-wide work.
 A refresh count describes completed adapter passes. Viewport virtualization and
 documented both-target frame/memory budgets retain their owner in
@@ -401,6 +402,36 @@ The same serial native 4096-row workload reduces twenty updates 3406→1391 ms;
 these hidden-control samples exclude paint and do not establish production budgets.
 Current browser execution and full observing/delivery remain separate gates.
 See [the exact evidence](../WORK.md#current-return-path-incremental-collection-values--2026-10-07).
+
+## On-demand native table values
+
+Ordinary authored tables automatically use
+[`TNyxCollectionStringGrid`](../src/nyx.collections.lcl.grid.pas), an owned
+TStringGrid subclass. Existing public `Cells`, keyboard/editing and rendering
+contracts remain available. With a collection attached, native painting and
+direct cell reads obtain the current accepted query value through a borrowed pure
+UI-thread reader. Without a reader, literal tables retain inherited behavior.
+No authoring string, target directive or extra saved descriptor is required.
+
+Explicit widget drafts retain sparse exact-text overlays. Unrelated publications
+retain them; accepted/no-op normalization clears the exact overlay, and query
+displacement/empty-result geometry withdraws obsolete coordinates. Source/model
+snapshots own accepted values. Mount disconnect detaches its receiver before
+restoring native handlers; the grid does not retain the mount/view/document.
+Native widget XML streaming is not a persistence path for provider data: portable
+Nyx persistence owns the collection and its authoring contract.
+
+The maintained collection-refresh command includes 20 actual native checks using
+the unchanged authenticated English MCP-exported layout and an independent
+4096-row runtime source. A real viewport repaint requests 30 source cell values;
+a distant `Cells` read requests one. Drafts, updates, query ordering, selection,
+empty results and teardown pass with zero leaks. These counts establish on-demand
+native reads, not complete memory/frame budgets. Initial content autosizing may
+read the whole source; grid geometry, model/query and metadata work remain
+dataset-sized. `OverrideCount` reports only Nyx draft overlays, excluding native
+physical caches and all model memory. Browser row windowing and both-target
+production qualification remain open. See
+[the current evidence](../WORK.md#current-return-path-on-demand-native-table-values--2026-10-07).
 
 ## Studio collection authoring
 
