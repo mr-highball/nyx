@@ -50,6 +50,17 @@ and returns focus. Inclusive bounds, inherited availability and changed-domain
 contexts are enforced. Hiding/read-only ancestry closes an open popup. Calendar
 acceptance travels through the ordinary shared value/state/callback path.
 
+Acceptance returns to the exact editor after shared admission. The native weak
+focus-return helper distinguishes an application's deliberate redirect from the
+host's automatic focus restoration when concealing the popup. Hidden, disabled,
+disconnected or destroyed targets refuse restoration. The returning OnAfterEnter
+callback observes the admitted value; it may retire the view. Escape retains its
+separate cancellation path. Win32 calendar controls pass 94 maintained checks,
+including exact native focus handles, one returning callback, explicit redirect
+and change/focus callback retirement, with zero leaks. The 94 include 49 shared
+date-contract checks. This is native evidence;
+browser popup, other widgetsets and accessibility qualification remain separate.
+
 Each native field owns its exact popup. Renderer retirement revokes callbacks
 before disposing its controls; deferred physical retirement permits a change
 callback to unmount its own view safely. Popups size to the installed calendar

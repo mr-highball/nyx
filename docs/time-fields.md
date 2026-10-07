@@ -115,6 +115,15 @@ field proposes midnight, a minimum or the first nonempty choice, and never chang
 the field until explicit acceptance. Escape cancels and returns focus; Enter uses
 the same admission as Use time. Clear remains subject to declared choices.
 
+Accepted Use time, Enter and Clear return to their exact clock editor after value
+admission. The shared native weak focus-return helper preserves a deliberate
+application redirect, distinguishing it from the host's automatic restoration
+when a popup closes. Native focus observations share logical LCL Enter/Exit's
+transition baseline, so the returning callback sees the committed state once.
+Destroyed/disconnected/unfocusable targets refuse; change or focus callbacks may
+retire the view safely. The maintained Win32 clock consumer passes 85 checks,
+leak-free, including these paths. Browser execution retains its separate gate.
+
 Each field owns its popup. Domain changes and inherited hidden/read-only/disabled
 policy revoke the old popup context. Retirement disconnects borrowed callbacks
 before freeing controls; an accepted callback may retire its own view safely.

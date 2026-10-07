@@ -28,7 +28,7 @@ interface
 
 uses
   Classes, SysUtils, Types, Forms, Controls, StdCtrls, ComCtrls, EditBtn, LCLType,
-  nyx.text, nyx.times, nyx.data, nyx.contract;
+  nyx.text, nyx.times, nyx.data, nyx.contract, nyx.focus.lcl;
 
 type
   { Exact integer editor for one clock part. The edit owns its native arrow
@@ -545,6 +545,7 @@ end;
 procedure TNyxLCLTimeField.Publish(const AValue: TNyxClockTime);
 var
   LValue: TNyxText;
+  LReturn: TNyxLCLFocusReturn;
 begin
 
   if FDisconnected or not IsEnabled or not IsVisible or ReadOnly then
@@ -562,14 +563,40 @@ begin
       Exit;
     end;
   end;
-  { Close before invoking the borrowed commit receiver: application callbacks
-    may unmount this exact field. No field/control access follows that callback. }
-  ClosePopup(False);
-  Text := LValue;
+  { Native Hide can itself re-enter the editor. Commit first so focus callbacks
+    observe the admitted store; the independent weak lease guards later access
+    if a text/change/commit callback retires the field. Disconnect closes that
+    retired field's popup. Deliberate application focus redirection wins. }
+  LReturn := TNyxLCLFocusReturn.CreateFor(Self, Editor);
+  try
+    LReturn.Capture;
 
-  if not FDisconnected and Assigned(OnEditingDone) then
-  begin
-    OnEditingDone(Self);
+    if not LReturn.ContextAlive or FDisconnected then
+    begin
+      Exit;
+    end;
+    try
+      Text := LValue;
+
+      if LReturn.ContextAlive and not FDisconnected and Assigned(OnEditingDone) then
+      begin
+        OnEditingDone(Self);
+      end;
+    finally
+
+      if LReturn.ContextAlive and not FDisconnected then
+      begin
+        LReturn.BeforeConceal;
+        ClosePopup(False);
+      end;
+    end;
+
+    if LReturn.ContextAlive and not FDisconnected then
+    begin
+      LReturn.Restore;
+    end;
+  finally
+    LReturn.Free;
   end;
 end;
 
@@ -646,7 +673,7 @@ begin
     FClosing := False;
   end;
 
-  if AReturnFocus and not FDisconnected and Editor.CanFocus then
+  if AReturnFocus and not FDisconnected and Editor.CanSetFocus then
   begin
     Editor.SetFocus;
   end;

@@ -23,6 +23,24 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   prerequisite for replacing the time-field text fallback. Other native input
   and full renderer criteria remain required; this allocates no extra credit.
 
+## Native picker focus and actual focus events — 2026-10-07
+
+Original criteria 1/2 consume one independently owned weak focus-return helper
+for date/time acceptance. It distinguishes explicit application redirection from
+automatic host restoration, refuses retired/unfocusable targets and keeps accepted
+state visible to returning callbacks. The existing native message chain observes
+the admitted keyboard surface and deduplicates it against logical LCL slots;
+native top-level popup transitions no longer disappear. Original failures remain
+retained rather than weakened. Actual Win32 calendar/clock consumers pass 94/85,
+leak-free; both include change/focus callback retirement. Full catalog focus passes
+30,637 across 103 faces, leak-free. See
+[the packet](../WORK.md#current-return-path-native-picker-focus-and-callback-lifetime--2026-10-07).
+
+No original full criterion closes. Shared renderer no-closure advances 12→13 once;
+other known counts remain 19/30/28/2. End this focus fixture packet. Executed
+pas2js, full event/capability/layout parity, other widgetsets/DPI, accessibility,
+representative visuals/budgets and observing delivery remain required.
+
 ## Owned exact clock picker preparation — 2026-10-07
 
 Original criteria 1/2/3 now consume an owned grouped clock editor and integer-part

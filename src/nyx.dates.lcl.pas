@@ -28,7 +28,7 @@ interface
 
 uses
   Classes, SysUtils, Types, Forms, Controls, StdCtrls, EditBtn, Calendar,
-  LCLType, nyx.text, nyx.dates, nyx.data, nyx.contract;
+  LCLType, nyx.text, nyx.dates, nyx.data, nyx.contract, nyx.focus.lcl;
 
 type
   { LCL calendar field. The real editor remains the renderer's input/focus surface.
@@ -42,6 +42,7 @@ type
     FDomain: TNyxValueDomain;
     FAcceptedDate: TNyxCalendarDate;
     FClosing: Boolean;
+    FDisconnected: Boolean;
     function GetEditor: TCustomEdit;
     procedure CalendarKeyDown(ASender: TObject; var AKey: Word; AShift: TShiftState);
     procedure CalendarDoubleClick(ASender: TObject);
@@ -100,7 +101,7 @@ var
   LDate: TNyxCalendarDate;
 begin
 
-  if not TryNyxDate(TNyxText(Text), LDate) then
+  if FDisconnected or not TryNyxDate(TNyxText(Text), LDate) then
   begin
     Exit;
   end;
@@ -110,7 +111,7 @@ end;
 procedure TNyxLCLDateField.EditEditingDone;
 begin
 
-  if Assigned(OnEditingDone) then
+  if not FDisconnected and Assigned(OnEditingDone) then
   begin
     OnEditingDone(Self);
   end;
@@ -154,7 +155,7 @@ procedure TNyxLCLDateField.SetInteraction(AEnabled, AReadOnly, AVisible: Boolean
 begin
   Enabled := AEnabled;
   ReadOnly := AReadOnly;
-  Button.Enabled := AEnabled and not AReadOnly;
+  Button.Enabled := AEnabled and not AReadOnly and not FDisconnected;
 
   if not AEnabled or AReadOnly or not AVisible then
   begin
@@ -174,7 +175,7 @@ var
   LCurrent: TDateTime;
 begin
 
-  if not IsEnabled or not IsVisible or ReadOnly then
+  if FDisconnected or not IsEnabled or not IsVisible or ReadOnly then
   begin
     Exit;
   end;
@@ -269,7 +270,7 @@ procedure TNyxLCLDateField.CalendarKeyDown(ASender: TObject; var AKey: Word;
   AShift: TShiftState);
 begin
 
-  if AShift <> [] then
+  if FDisconnected or (FPopup = nil) or not FPopup.Visible or (AShift <> []) then
   begin
     Exit;
   end;
@@ -290,7 +291,8 @@ end;
 procedure TNyxLCLDateField.CalendarDoubleClick(ASender: TObject);
 begin
 
-  if (FCalendar.GetCalendarView = cvMonth) and
+  if not FDisconnected and (FPopup <> nil) and FPopup.Visible and
+    (FCalendar.GetCalendarView = cvMonth) and
     (FCalendar.HitTest(FCalendar.ScreenToClient(Mouse.CursorPos)) = cpDate) then
   begin
     AcceptCalendar;
@@ -303,19 +305,47 @@ var
   LMonth: Word;
   LDay: Word;
   LValue: TNyxText;
+  LReturn: TNyxLCLFocusReturn;
 begin
 
-  if not IsEnabled or not IsVisible or ReadOnly then
+  if FDisconnected or (FPopup = nil) or not FPopup.Visible or
+    not IsEnabled or not IsVisible or ReadOnly then
   begin
     CloseCalendar(False);
     Exit;
   end;
   DecodeDate(FCalendar.DateTime, LYear, LMonth, LDay);
   LValue := NyxDate(LYear, LMonth, LDay).ToText;
-  { Shared admission reports a refused range/choice through ordinary diagnostics.
-    Hide before notifying application code; it may retire this entire field. }
-  CloseCalendar(False);
-  Text := LValue;
+  { Shared admission reports refused range/choice through ordinary diagnostics.
+    Publish before concealing: native Hide can itself re-enter the editor, whose
+    focus callbacks must observe the admitted value. The independent weak lease
+    survives retirement; Disconnect closes the popup for a retired field. }
+  LReturn := TNyxLCLFocusReturn.CreateFor(Self, Editor);
+  try
+    LReturn.Capture;
+
+    if not LReturn.ContextAlive or FDisconnected then
+    begin
+      Exit;
+    end;
+    try
+      Text := LValue;
+    finally
+
+      if LReturn.ContextAlive and not FDisconnected then
+      begin
+        LReturn.BeforeConceal;
+        CloseCalendar(False);
+      end;
+    end;
+
+    if LReturn.ContextAlive and not FDisconnected then
+    begin
+      LReturn.Restore;
+    end;
+  finally
+    LReturn.Free;
+  end;
 end;
 
 procedure TNyxLCLDateField.CloseCalendar(AReturnFocus: Boolean);
@@ -332,7 +362,8 @@ begin
     FClosing := False;
   end;
 
-  if AReturnFocus and not (csDestroying in ComponentState) and Editor.CanFocus then
+  if AReturnFocus and not FDisconnected and
+    not (csDestroying in ComponentState) and Editor.CanSetFocus then
   begin
     { Focus callbacks may retire the field. Nothing touches Self afterward. }
     Editor.SetFocus;
@@ -352,6 +383,7 @@ end;
 
 procedure TNyxLCLDateField.Disconnect;
 begin
+  FDisconnected := True;
   OnChange := nil;
   OnEditingDone := nil;
   CloseCalendar(False);

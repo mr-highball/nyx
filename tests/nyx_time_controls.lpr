@@ -49,6 +49,13 @@ type
     constructor new(const AType: String; const AOptions: TJSObject); reintroduce;
   end;
   {$else}
+  { Native focus callbacks observe the committed store. The last focus route
+    retires its own view to qualify the independent return lease. }
+  TClockFocusObserver = class(TNyxEventCallback)
+  public
+    procedure Invoke(const AEvent: TNyxEventInfo;
+      const AExecution: INyxExecution); override;
+  end;
   TClockEditAccess = class(TCustomEdit)
   public
     procedure Complete;
@@ -73,6 +80,10 @@ var
   {$else}
   GView: TNyxLCLRenderer;
   GHost: TForm;
+  GRedirectChange: Boolean;
+  GRetireOnFocus: Boolean;
+  GFocusValue: TNyxText;
+  GFocusCount: Integer;
   {$endif}
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
@@ -96,6 +107,14 @@ procedure TClockObserver.Invoke(const AEvent: TNyxEventInfo;
 begin
   GOrder := GOrder + TNyxText(IntToStr(FMarker));
   GSnapshot := AEvent.Copy;
+  {$ifndef PAS2JS}
+
+  if GRedirectChange and (FMarker = 2) then
+  begin
+    GRedirectChange := False;
+    TCustomEdit(GView.InputFor('earliest-time', niRuntime)).SetFocus;
+  end;
+  {$endif}
 
   if GRetire and (FMarker = 2) then
   begin
@@ -103,6 +122,21 @@ begin
     GView.Unmount;
   end;
 end;
+
+{$ifndef PAS2JS}
+procedure TClockFocusObserver.Invoke(const AEvent: TNyxEventInfo;
+  const AExecution: INyxExecution);
+begin
+  Inc(GFocusCount);
+  GFocusValue := GView.State.GetValue(NyxTextState('reminder'));
+
+  if GRetireOnFocus then
+  begin
+    GRetireOnFocus := False;
+    GView.Unmount;
+  end;
+end;
+{$endif}
 
 procedure Pump;
 begin
@@ -243,6 +277,7 @@ var
   LLatest: TNyxLCLTimeField;
   LChoice: TNyxLCLTimeField;
   LKey: Word;
+  LEnterBefore: Integer;
   {$endif}
 begin
   { This is the exact previously compiled public-Pascal companion, not an active
@@ -267,6 +302,10 @@ begin
     .Subscribe(TClockObserver.Create(1));
   GView.Events.On(NyxControlEvents('start-time', niRuntime), ntChange)
     .Subscribe(TClockObserver.Create(2));
+  {$ifndef PAS2JS}
+  GView.Events.On(NyxControlEvents('start-time', niRuntime), ntAfterEnter)
+    .Subscribe(TClockFocusObserver.Create);
+  {$endif}
   Check(InputValue('start-time') = '00:30:00.000', 'bound exact precision reaches the actual input');
   {$ifndef PAS2JS}
   TCustomEdit(GView.InputFor('start-time', niRuntime)).SetFocus;
@@ -305,6 +344,7 @@ begin
   GView.State.SetValue(NyxTextState('reminder'), '23:00:00.000');
   Check(InputValue('start-time') = '23:00:00.000', 'programmatic state refresh updates the same actual field');
   {$ifndef PAS2JS}
+  LEnterBefore := GFocusCount;
   OpenPicker(LStart);
   Check((LStart.HourControl.Value = 23) and (LStart.MillisecondControl.Value = 0),
     'the native picker starts from the accepted exact reading');
@@ -321,7 +361,18 @@ begin
   Pick(LStart, 23, 0, 1, 500);
   Check(not LStart.Popup.Visible and (InputValue('start-time') = '23:00:01.500'),
     'the popup admits exact millisecond steps through ordinary shared state');
+  Check(Screen.ActiveControl = LStart.Editor,
+    'native clock acceptance returns focus to the exact editor');
+  Check((LCLIntf.GetFocus = LStart.Editor.Handle) and (GFocusValue = '23:00:01.500') and
+    (GFocusCount = LEnterBefore + 1),
+    'the native focus handle and after-enter callback observe the committed clock');
   LEarliest := Field('earliest-time');
+  GRedirectChange := True;
+  OpenPicker(LStart);
+  Pick(LStart, 23, 0, 4, 500);
+  Check((Screen.ActiveControl = LEarliest.Editor) and not GRedirectChange and
+    (InputValue('start-time') = '23:00:04.500'),
+    'an explicit application focus change wins over default clock restoration');
   OpenPicker(LEarliest);
   Check(LEarliest.Popup <> LStart.Popup, 'each field owns its own picker instance');
   Pick(LEarliest, 8, 30, 0, 375);
@@ -365,10 +416,12 @@ begin
   OpenPicker(LLatest);
   LLatest.ClearButton.Click;
   Check(InputValue('latest-time') = '', 'Clear preserves an optional empty value');
+  Check(Screen.ActiveControl = LLatest.Editor, 'Clear returns focus to the exact clock editor');
   OpenPicker(LLatest);
   Check(InputValue('latest-time') = '', 'opening an empty field never substitutes the current time');
   PickerKey(LLatest, VK_RETURN);
   Check(InputValue('latest-time') = '00:00', 'explicit acceptance distinguishes defined midnight from empty');
+  Check(Screen.ActiveControl = LLatest.Editor, 'Enter acceptance returns focus to the same clock editor');
   LChoice := Field('choice-time');
   OpenPicker(LChoice);
   Pick(LChoice, 9, 0, 0, 200);
@@ -444,6 +497,24 @@ begin
   Check(GView.Root = nil, 'an accepted callback retires its own native/browser view safely');
   Check(GSnapshot.Value.AsText = '23:00:03.000', 'the last callback value outlives its controls');
   Pump;
+  {$ifndef PAS2JS}
+  { Re-admit the unchanged public companion after the change-retirement route.
+    A genuine native after-enter callback now retires the default focus return. }
+  GView.Render(GDocument, GDocument.Pages[0], GHost);
+  Pump;
+  GView.State.SetValue(NyxTextState('reminder'), '23:00:00.000');
+  GView.Events.On(NyxControlEvents('start-time', niRuntime), ntAfterEnter)
+    .Subscribe(TClockFocusObserver.Create);
+  LStart := Field('start-time');
+  OpenPicker(LStart);
+  GRetireOnFocus := True;
+  Pick(LStart, 23, 0, 3, 0);
+  Check((GView.Root = nil) and not GRetireOnFocus and (GFocusValue = '23:00:03.000'),
+    'native after-enter may retire its field after observing the accepted clock');
+  Check(TNyxCodec.Encode(GDocument) = GOriginal,
+    'both clock retirement routes retain the exact authored defaults and recipes');
+  Pump;
+  {$endif}
 end;
 
 procedure Retire;

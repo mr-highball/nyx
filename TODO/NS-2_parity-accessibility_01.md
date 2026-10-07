@@ -20,7 +20,22 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
-## Native picker focus boundary — 2026-10-07
+## Native picker focus qualification — 2026-10-07
+
+Criterion 2 now has actual Win32 acceptance focus handles and returning callback
+store observations for native calendar/clock controls. Shared weak observations preserve
+explicit application redirects and refuse retired targets; native message hooks
+cover popup transitions without duplicating normal LCL Enter/Exit notifications.
+Actual date/time consumers pass 94/85; full catalog focus passes 30,637 across
+103 faces, all leak-free. Original failed receipts stay retained. See
+[the packet](../WORK.md#current-return-path-native-picker-focus-and-callback-lifetime--2026-10-07).
+
+No original criterion or prerequisite closes. Only shared renderer no-closure
+advances 12→13; this task's historical count remains unestablished. Stop this
+native focus boundary. Executed browser, full keyboard/accessibility semantics,
+other widgetsets/DPI, visuals/performance and observing delivery retain their gates.
+
+## Preceding native picker focus boundary — 2026-10-07
 
 Owned clock controls pass 73 actual Win32 checks through the ordinary renderer,
 including invalid drafts across real focus loss, exact millisecond/domain

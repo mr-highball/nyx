@@ -165,6 +165,11 @@ type
     FPreviousInputClick: TNotifyEvent;
     FPreviousEnter: TNotifyEvent;
     FPreviousExit: TNotifyEvent;
+    { Borrowed exact keyboard surface. Logical Enter/Exit and native focus
+      messages share one transition baseline so ordinary focus never duplicates
+      subscriptions, while popup returns remain observable. }
+    FFocusControl: TWinControl;
+    FHasFocus: Boolean;
     FPreviousKeyDown: TKeyEvent;
     FPreviousKeyUp: TKeyEvent;
     FCollectionMount: INyxCollectionMount;
@@ -216,6 +221,9 @@ type
     procedure Focus(ASender: TObject);
     procedure Enter(ASender: TObject);
     procedure Leave(ASender: TObject);
+    { Native message observation skips creator Enter/Exit forwarding: those
+      slots remain LCL-owned. Only Nyx's typed focus transition is recovered. }
+    procedure ObserveFocus(ATrigger: TNyxTrigger);
     procedure KeyDown(ASender: TObject; var AKey: Word; AShift: TShiftState);
     procedure KeyUp(ASender: TObject; var AKey: Word; AShift: TShiftState);
     procedure Keyboard(ASender: TObject; var AKey: Word; AShift: TShiftState;
@@ -1484,6 +1492,7 @@ begin
 
   if LFocus <> nil then
   begin
+    LBinding.FFocusControl := LFocus;
     LBinding.FPreviousEnter := TNyxWinControlAccess(LFocus).OnEnter;
     LBinding.FPreviousExit := TNyxWinControlAccess(LFocus).OnExit;
     TNyxWinControlAccess(LFocus).OnEnter := LBinding.Enter;
@@ -3866,13 +3875,23 @@ begin
       for LIndex := 0 to High(LCandidate.FBindings) do
       begin
         LCandidate.FCaptureObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
-          LCandidate.FBindings[LIndex].FControl);
+          LCandidate.FBindings[LIndex].FControl,
+          LCandidate.FBindings[LIndex].FControl = LCandidate.FBindings[LIndex].FFocusControl);
 
         if (LCandidate.FBindings[LIndex].FInput <> nil) and
           (LCandidate.FBindings[LIndex].FInput <> LCandidate.FBindings[LIndex].FControl) then
         begin
           LCandidate.FCaptureObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
-            LCandidate.FBindings[LIndex].FInput);
+            LCandidate.FBindings[LIndex].FInput,
+            LCandidate.FBindings[LIndex].FInput = LCandidate.FBindings[LIndex].FFocusControl);
+        end;
+
+        if (LCandidate.FBindings[LIndex].FFocusControl <> nil) and
+          (LCandidate.FBindings[LIndex].FFocusControl <> LCandidate.FBindings[LIndex].FControl) and
+          (LCandidate.FBindings[LIndex].FFocusControl <> LCandidate.FBindings[LIndex].FInput) then
+        begin
+          LCandidate.FCaptureObserver.Add(LCandidate.FBindings[LIndex].FNode.ID,
+            LCandidate.FBindings[LIndex].FFocusControl, True);
         end;
       end;
       LCandidate.FCaptureObserver.Activate(FEvents, CaptureChanged);
@@ -4806,6 +4825,15 @@ var
   LBinding: TNyxLCLBinding;
   LDispatch: TNyxDispatch;
 begin
+
+  if ATrigger in [ntAfterEnter, ntAfterExit] then
+  begin
+    { Update the transition baseline even without subscribers. Do not project
+      native focus as a pointer signal or invoke the creator's logical slot. }
+    LBinding := IdentityBinding(AOriginID, niRuntime);
+    LBinding.ObserveFocus(ATrigger);
+    Exit;
+  end;
 
   if ATrigger = ntPointerCaptureLost then
   begin
@@ -6272,7 +6300,10 @@ procedure TNyxLCLBinding.Enter(ASender: TObject);
 var
   LEvents: INyxEvents;
   LRevision: Integer;
+  LChanged: Boolean;
 begin
+  LChanged := not FHasFocus;
+  FHasFocus := True;
 
   if FRenderer.FVirtualLayout and not FRenderer.FUpdating then
   begin
@@ -6297,7 +6328,7 @@ begin
     Exit;
   end;
 
-  if not FRenderer.FUpdating and LEvents.HasSubscribers(ntAfterEnter) then
+  if LChanged and not FRenderer.FUpdating and LEvents.HasSubscribers(ntAfterEnter) then
   begin
     FRenderer.Emit(FNode, FRenderer.FLiveBindings.Focus(FNode, ntAfterEnter));
   end;
@@ -6308,7 +6339,10 @@ var
   LEvents: INyxEvents;
   LRevision: Integer;
   LIndex: Integer;
+  LChanged: Boolean;
 begin
+  LChanged := FHasFocus;
+  FHasFocus := False;
   for LIndex := Low(FPressedKeys) to High(FPressedKeys) do
   begin
     FPressedKeys[LIndex] := False;
@@ -6332,9 +6366,44 @@ begin
     Exit;
   end;
 
-  if not FRenderer.FUpdating and LEvents.HasSubscribers(ntAfterExit) then
+  if LChanged and not FRenderer.FUpdating and LEvents.HasSubscribers(ntAfterExit) then
   begin
     FRenderer.Emit(FNode, FRenderer.FLiveBindings.Focus(FNode, ntAfterExit));
+  end;
+end;
+
+procedure TNyxLCLBinding.ObserveFocus(ATrigger: TNyxTrigger);
+var
+  LEntered: Boolean;
+  LIndex: Integer;
+begin
+  LEntered := ATrigger = ntAfterEnter;
+
+  if FHasFocus = LEntered then
+  begin
+    Exit;
+  end;
+  FHasFocus := LEntered;
+
+  if not LEntered then
+  begin
+    for LIndex := Low(FPressedKeys) to High(FPressedKeys) do
+    begin
+      FPressedKeys[LIndex] := False;
+    end;
+  end;
+
+  if FRenderer.FDesignMode or FRenderer.FUpdating then
+  begin
+    Exit;
+  end;
+  Focus(FFocusControl);
+
+  if FRenderer.FEvents.HasSubscribers(ATrigger) then
+  begin
+    { Emit can unmount this binding. No binding/widget access follows it. The
+      caller's native physical frame owns safe deferred control retirement. }
+    FRenderer.Emit(FNode, FRenderer.FLiveBindings.Focus(FNode, ATrigger));
   end;
 end;
 

@@ -37,6 +37,19 @@ Pending assessment. Studio consumes this contract through NS-4 authoring.
 Return path: NS-4_studio-authoring_01 must consume the accepted contract in tabbed
 Properties / Events UI, add-handler source navigation and confirmed removal.
 
+## Actual native focus producer — 2026-10-07
+
+Original native/parity criteria now integrate physical LM_SETFOCUS/LM_KILLFOCUS
+observation on the binding's admitted keyboard surface. LCL retains its logical
+creator slots; one Nyx transition baseline deduplicates them against native
+messages, including returns from top-level popups. Snapshots follow native/default
+editing completion; callbacks share safe physical control retirement. Calendar/
+clock consumers pass 94/85, and full catalog focus passes 30,637 across 103 faces,
+leak-free. This supplies evidence for original criteria 1/3 without closing them
+or resetting any event count. Executed browser, complete event scope and all
+remaining criteria persist. See
+[the native packet](../WORK.md#current-return-path-native-picker-focus-and-callback-lifetime--2026-10-07).
+
 ## Bounded native callback workers — 2026-10-07
 
 The existing NS-3 performance owner integrates per-scheduler worker reuse, typed

@@ -27,7 +27,7 @@ program nyx_date_controls;
 
 uses
   {$IFDEF PAS2JS}JS, Web, nyx.render.browser,
-  {$ELSE}Interfaces, Classes, Forms, Controls, StdCtrls, Calendar, LCLType,
+  {$ELSE}Interfaces, Classes, Forms, Controls, StdCtrls, Calendar, LCLType, LCLIntf,
     Graphics, IntfGraphics, FPWritePNG, nyx.dates.lcl, nyx.render.lcl,{$ENDIF}
   SysUtils, nyx.text, nyx.dates, nyx.types, nyx.data, nyx.contract, nyx.model,
   nyx.controls, nyx.composition, nyx.state, nyx.binding.types, nyx.behavior, nyx.events,
@@ -47,6 +47,14 @@ type
   {$IFDEF PAS2JS}
   TInputEvent = class external name 'Event'(TJSEvent)
     constructor new(const AType: String; const AOptions: TJSObject); reintroduce;
+  end;
+  {$ELSE}
+  { Actual native focus observes accepted state; the final route retires its
+    own renderer while default picker restoration is on the call stack. }
+  TDateFocusObserver = class(TNyxEventCallback)
+  public
+    procedure Invoke(const AEvent: TNyxEventInfo;
+      const AExecution: INyxExecution); override;
   end;
   {$ENDIF}
 
@@ -68,6 +76,10 @@ var
   GHost: TJSHTMLElement;
   {$ELSE}
   GView: TNyxLCLRenderer;
+  GRedirectChange: Boolean;
+  GRetireOnFocus: Boolean;
+  GFocusValue: TNyxText;
+  GFocusCount: Integer;
   GHost: TForm;
   {$ENDIF}
 
@@ -92,6 +104,14 @@ procedure TChangeObserver.Invoke(const AEvent: TNyxEventInfo;
 begin
   GOrder := GOrder + TNyxText(IntToStr(Marker));
   GSnapshot := AEvent.Copy;
+  {$IFNDEF PAS2JS}
+
+  if GRedirectChange and (Marker = 2) then
+  begin
+    GRedirectChange := False;
+    TCustomEdit(GView.InputFor(GOtherID, niRuntime)).SetFocus;
+  end;
+  {$ENDIF}
 
   if GRetire and (Marker = 2) then
   begin
@@ -99,6 +119,21 @@ begin
     GView.Unmount;
   end;
 end;
+
+{$IFNDEF PAS2JS}
+procedure TDateFocusObserver.Invoke(const AEvent: TNyxEventInfo;
+  const AExecution: INyxExecution);
+begin
+  Inc(GFocusCount);
+  GFocusValue := GView.State.GetValue(NyxTextState('arrival'));
+
+  if GRetireOnFocus then
+  begin
+    GRetireOnFocus := False;
+    GView.Unmount;
+  end;
+end;
+{$ENDIF}
 
 procedure Pump;
 begin
@@ -180,6 +215,7 @@ var
   {$IFNDEF PAS2JS}
   LField: TNyxLCLDateField;
   LOther: TNyxLCLDateField;
+  LEnterBefore: Integer;
   {$ELSE}
   LInput: TJSHTMLInputElement;
   {$ENDIF}
@@ -210,6 +246,10 @@ begin
   GOtherID := GView.Root.Find(NyxQualifiedID('second-trip', 'trip-dates')).Part('start').ID;
   GView.Events.On(NyxControlEvents(GArrivalID, niRuntime), ntChange).Subscribe(TChangeObserver.Create(1));
   GView.Events.On(NyxControlEvents(GArrivalID, niRuntime), ntChange).Subscribe(TChangeObserver.Create(2));
+  {$IFNDEF PAS2JS}
+  GView.Events.On(NyxControlEvents(GArrivalID, niRuntime), ntAfterEnter)
+    .Subscribe(TDateFocusObserver.Create);
+  {$ENDIF}
   Check(InputValue(GArrivalID) = '2026-10-06', 'bound arrival is canonical');
   Check(InputValue(GOtherID) = '2026-11-03', 'second reusable instance has its own value');
   {$IFDEF PAS2JS}
@@ -263,6 +303,7 @@ begin
   LField.OnEditingDone(LField);
   Check((InputValue(GArrivalID) = '2026-10-09') and (GView.LastBindingError <> ''),
     'commit rejects the malformed date without locale coercion');
+  LEnterBefore := GFocusCount;
   LField.Button.Click;
   Pump;
   Check((LField.Popup <> nil) and LField.Popup.Visible, 'actual native picker opens');
@@ -277,6 +318,13 @@ begin
   Check(not LField.Popup.Visible and (InputValue(GArrivalID) = '2026-10-10'),
     'calendar acceptance edits through the existing value command');
   Check(Screen.ActiveControl = LField.Editor, 'calendar acceptance returns focus to the exact editor');
+  Check((LCLIntf.GetFocus = LField.Editor.Handle) and (GFocusValue = '2026-10-10') and
+    (GFocusCount = LEnterBefore + 1),
+    'the native date focus handle and after-enter callback observe accepted state / handle=' +
+    TNyxText(IntToStr(LCLIntf.GetFocus)) + ' / editor=' +
+    TNyxText(IntToStr(LField.Editor.Handle)) + ' / observed=' + GFocusValue +
+    ' / enter count before=' + TNyxText(IntToStr(LEnterBefore)) +
+    ' / after=' + TNyxText(IntToStr(GFocusCount)));
   LField.Button.Click;
   Pump;
   LField.CalendarControl.DateTime := EncodeDate(2026, 10, 11);
@@ -284,6 +332,14 @@ begin
   Check((InputValue(GArrivalID) = '2026-10-10') and not LField.Popup.Visible,
     'Escape cancels without admitting highlighted date');
   Check(Screen.ActiveControl = LField.Editor, 'Escape returns focus to the exact editor');
+  GRedirectChange := True;
+  LField.Button.Click;
+  Pump;
+  LField.CalendarControl.DateTime := EncodeDate(2026, 10, 14);
+  CalendarKey(LField, VK_RETURN);
+  Check((Screen.ActiveControl = LOther.Editor) and not GRedirectChange and
+    (InputValue(GArrivalID) = '2026-10-14'),
+    'an explicit application focus move wins over default calendar restoration');
   {$ENDIF}
 
   LRuntime := GView.Root.Find('trip-card');
@@ -341,6 +397,23 @@ begin
   CalendarKey(LField, VK_RETURN);
   Check(GView.Root = nil, 'calendar callback safely retires its renderer and owned popup');
   Check(GSnapshot.Value.AsText = '2026-10-13', 'retained callback data outlives the native field');
+  Pump;
+  GView.Render(GDocument, GDocument.Pages[0], GHost);
+  Pump;
+  GView.Events.On(NyxControlEvents(GArrivalID, niRuntime), ntAfterEnter)
+    .Subscribe(TDateFocusObserver.Create);
+  LField := Field(GArrivalID);
+  LField.Button.Click;
+  Pump;
+  Check(LField.Popup.Visible, 'the independent date focus-retirement context opens');
+  GRetireOnFocus := True;
+  LField.CalendarControl.DateTime := EncodeDate(2026, 10, 15);
+  CalendarKey(LField, VK_RETURN);
+  Check((GView.Root = nil) and not GRetireOnFocus and (GFocusValue = '2026-10-15'),
+    'actual native after-enter may retire its field after observing the accepted date');
+  Check(TNyxCodec.Encode(GDocument) = GOriginal,
+    'both native date retirement routes retain authored defaults and recipes');
+  Pump;
   {$ELSE}
   Check(GRetainedSnapshot.Value.AsText = '2026-10-08', 'earlier event snapshot remains owned');
   {$ENDIF}

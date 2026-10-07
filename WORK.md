@@ -7,6 +7,100 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: native picker focus and callback lifetime — 2026-10-07
+
+Previous goal turn is progress: owned exact clock controls and their maintained
+target are pushed at `fcaea0f`, with exact remote/clean-worktree evidence. End that
+native clock packet; do not expand its foundation fixtures. Original native/parity
+criterion 2 now follows the actual retained calendar acceptance-focus failure,
+reproduced by both the previous and current renderer. Keep its assertion intact.
+
+Deliver one reusable native weak focus-return contract used by date/time picker
+commit paths. Return to the exact editor after acceptance, respect an application's
+explicit focus change, and refuse destroyed/disconnected/hidden targets. Change or
+focus callbacks may retire their own view, so restoration must use independently
+owned weak observations instead of accessing a field after its commit callback.
+Qualify actual native calendar/clock acceptance, clear/cancel, callback ordering,
+explicit focus redirection and callback retirement. Preserve the existing failed
+calendar baseline and first establish the newly asserted clock focus failure before
+changing product code. Compile affected Studio/browser consumers and preserve all
+protected services/pairs/payloads. Stop after this native focus boundary; executed
+browser, hardware/accessibility, other widgetsets/DPI, full visuals and all original
+foundation/consumer criteria remain required. Known counts stay 19/30/12/28/2 until
+evidence-backed reassessment; no rejected launch or protected service is retried.
+
+The retained stronger date trace now distinguishes logical from actual focus:
+Win32 GetFocus equals the exact editor handle, but the OnAfterEnter counter stays
+1→1 and its snapshot retains the previous value, including with commit-before-hide.
+Receipt: `build/picker-focus/date/transition-baseline-run.log`, failure after 72,
+zero leaks. Installed LCL's LM_SETFOCUS does not issue its logical CM_ENTER when
+the host retains the same active control across a popup. Extend the existing
+revocable physical-message hook to report actual focus on the admitted inner
+surface, deduplicating it against normal LCL Enter/Exit forwarding. This is an
+original native/parity/event-source gap, not permission to weaken the assertion
+or synthesize a picker-only callback. Qualify actual callbacks and their teardown.
+
+`nyx.focus.lcl` now owns one UI-thread weak return lease, independent of its
+context/editor/host. Free notifications revoke borrowed targets. Commit sampling
+distinguishes deliberate application redirection from native Hide restoring the
+host's previous active control. Date/time acceptance publishes before concealment
+and touches its field only while the independent lease remains live/connected.
+The existing native physical-message chain observes only the admitted keyboard
+surface; one binding baseline deduplicates native and logical Enter/Exit. Creator
+slots remain LCL-owned. Native focus notifications follow default handling/editing
+completion and use the retained physical frame for callback retirement.
+
+Qualified actual Win32 consumers pass **94 date / 85 clock checks**, zero leaks
+and owned warnings (`build/picker-focus/date/qualified-*.log`,
+`time/qualified-*.log`). The calendar total includes its **49 shared date-contract**
+checks; do not count all 94 as separate physical-input cases. They retain the old
+acceptance assertion and strengthen it with exact native focus handles, one
+returning callback and accepted snapshots;
+explicit redirects, Clear/Enter/Escape and change/focus retirement are exercised.
+Those picker observers read the accepted runtime store; the separate unchanged
+event regression qualifies declared typed focus payloads. Do not conflate them.
+The stronger original focus trace and first clock Clear failure remain retained;
+the latter identified automatic host restoration versus a deliberate redirect.
+Full catalog focus passes **30,637 across 103 faces**, leak-free/owned warnings zero
+(`regression/catalog-*.log`). Browser date/clock/Studio/worker compile with zero
+owned warnings and seven unchanged installed RTL warnings each (`web/`). Their
+generated consumers and matched RTL are staged without starting a host/browser.
+
+Native Studio compiles with zero warnings. The unchanged broader native renderer
+regression passes **42 managed / 35 event / 50 binding / 75 Studio authoring** checks
+and its keyboard, catalog/factory, identity and Studio shell journeys, leak-free
+(`regression/lcl-*.log`). That older authoring fixture takes several minutes in
+native window construction; two read-only attached debugger snapshots distinguish
+active construction from a modal wait. Neither service nor test code is changed.
+Passing assertions count as regression evidence, not new individual task credits.
+
+No original full criterion closes. Shared renderer no-closure advances **12→13**
+once; other known counts remain **19/30/28/2**, and event/parity/NS-3 historical
+counts stay unestablished. Stop this native focus fixture packet. Reassess original
+native/parity/event consumers before new picker breadth; executed clock/browser
+foundation and controls remain a hard gate. Hardware/IME/accessibility, other
+widgetsets/DPI, full capability/layout/visual/budget and Studio/MCP domain authoring
+retain their existing owners. No rejected launch or protected service is retried.
+
+Direct named MCP inspection authenticates in this chat and preserves primary
+revision 2, selection/home, no draft and no history. The fresh read-only guard
+verifies all **15** process identities, **nine** complete paired designs/navigation/
+history, the **147,033-byte** checkpoint, **229** frozen LAN files and both bindings
+(`build/picker-focus/preservation-final.log`). This is source work, not a primary
+LAN deployment. The separate frozen **243/242-file** packages verify unchanged
+(`combined-package.log`, `query-qualified-package.log`). Two earlier root-level
+diagnostic PNGs are retained byte-for-byte under ignored `pre-existing-root-captures/`.
+Record final standalone Studio and remote evidence here below.
+
+The unchanged standalone native Studio wide/narrow geometry journey passes **22**,
+leak-free (`native-studio/geometry-run.log`); its exact MCP-exported companion is
+compiled independently. Current browser controls/Studio execution and displayed
+pixel/hardware evidence remain open. The authorized `hello-nyx` source checkpoint
+is committed/pushed after this record; exact remote equality and clean worktree
+belong in ignored `build/picker-focus/remote-checkpoint.json`.
+A fresh process inspection finds no live remote-debugging browser; the existing
+execution gate remains and no equivalent rejected launch is retried.
+
 ## Current return path: native clock-field preparation — 2026-10-07
 
 The preceding mobile follow-up makes no product/acceptance progress: the served

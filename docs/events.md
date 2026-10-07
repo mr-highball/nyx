@@ -190,8 +190,18 @@ Close automatically.
 NyxControlEvents selects the originating control. NyxCompoundEvents selects the
 semantic source. Design identity is the default; explicit niRuntime selects an
 exact realized instance/part. These names remain distinct typed selectors.
-OnAfterEnter/OnAfterExit fire from actual focus transitions. They never execute a
-click action, change state or clone a view. Contract.On can declare their scalar
+OnAfterEnter/OnAfterExit fire from actual focus transitions. A Nyx registration
+runs once for a transition described by both a logical LCL slot and a native focus
+message. The LCL adapter observes the admitted inner
+keyboard surface through its existing revocable message chain. This also covers
+returning from a top-level picker while LCL retains the same host active control.
+Creator Enter/Exit forwarding remains in its original logical slots; physical
+observations capture the typed Nyx focus payload after default native handling
+and editing completion. Native focus callbacks share the deferred-control lifetime
+guard used by physical input and may retire their own view safely.
+
+Focus observations never execute a click action, change state or clone a view.
+Contract.On can declare their scalar
 payload; Contract.Signal declares a signal without a payload. Those declarations
 persist and generate typed Pascal just like click/change domains.
 

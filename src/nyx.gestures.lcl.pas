@@ -46,13 +46,17 @@ type
   TNyxLCLCaptureHandler = procedure(const AOriginID: TNyxText;
     ATrigger: TNyxTrigger) of object;
 
-  { Borrowed control observer; notification sinks are explicitly revoked before
-    controls or their model are freed. It chains rather than replaces the
+  { Borrowed pointer-capture and physical-focus observer. Notification sinks are
+    explicitly revoked before controls or their model are freed. It chains the
     widget's original procedure. Attach after editing/viewport hooks and detach
     before them so nested native procedure chains preserve their lifetimes. }
   INyxLCLCaptureObserver = interface(IInterface)
     ['{739BC309-7893-48E3-9600-001008000004}']
-    procedure Add(const AOriginID: TNyxText; AControl: TControl);
+    { Observe focus only on the binding's real keyboard surface, never both its
+      grouped frame and editor. Logical LCL Enter/Exit alone miss transitions
+      between native top-level windows that retain the same active control. }
+    procedure Add(const AOriginID: TNyxText; AControl: TControl;
+      AObserveFocus: Boolean = False);
     procedure Activate(const AEvents: INyxEvents; AHandler: TNyxLCLCaptureHandler);
     procedure Observe(AControl: TControl);
     procedure Disconnect;
@@ -119,12 +123,13 @@ type
     FHandler: TNyxLCLCaptureHandler;
     FConnected: Boolean;
     FCaptured: Boolean;
+    FObserveFocus: Boolean;
     FButtons: TNyxPointerButtons;
     procedure Handle(var AMessage: TLMessage);
     procedure Notify(ATrigger: TNyxTrigger);
   public
     constructor Create(const AOriginID: TNyxText; AControl: TControl;
-      const AFrame: INyxNativeGestureFrame);
+      const AFrame: INyxNativeGestureFrame; AObserveFocus: Boolean);
     destructor Destroy; override;
     procedure Connect(const AEvents: INyxEvents; AHandler: TNyxLCLCaptureHandler);
     procedure Disconnect;
@@ -142,7 +147,8 @@ type
   public
     constructor Create(const AFrame: INyxNativeGestureFrame);
     destructor Destroy; override;
-    procedure Add(const AOriginID: TNyxText; AControl: TControl);
+    procedure Add(const AOriginID: TNyxText; AControl: TControl;
+      AObserveFocus: Boolean = False);
     procedure Activate(const AEvents: INyxEvents; AHandler: TNyxLCLCaptureHandler);
     procedure Observe(AControl: TControl);
     procedure Disconnect;
@@ -423,7 +429,7 @@ begin
 end;
 
 constructor TNyxLCLCaptureHook.Create(const AOriginID: TNyxText;
-  AControl: TControl; const AFrame: INyxNativeGestureFrame);
+  AControl: TControl; const AFrame: INyxNativeGestureFrame; AObserveFocus: Boolean);
 begin
   inherited Create;
 
@@ -433,6 +439,7 @@ begin
   end;
   FControl := AControl;
   FOriginID := AOriginID;
+  FObserveFocus := AObserveFocus;
   FFrame := AFrame;
   FPrevious := AControl.WindowProc;
   FCaptured := NyxLCLHasPointerCapture(AControl);
@@ -592,6 +599,24 @@ begin
     begin
       LPrevious(AMessage);
     end;
+    { Observe after the native/default handler and its editing completion. The
+      router epoch refuses a retired view; the retained physical frame protects
+      controls through a callback that unmounts that same view. Renderer-side
+      transition state deduplicates these messages against logical LCL slots. }
+
+    if FObserveFocus then
+    begin
+      case LMessageID of
+        LM_SETFOCUS:
+          begin
+            Notify(ntAfterEnter);
+          end;
+        LM_KILLFOCUS:
+          begin
+            Notify(ntAfterExit);
+          end;
+      end;
+    end;
     Observe;
   finally
     LFrame.Leave;
@@ -610,7 +635,8 @@ begin
   inherited Destroy;
 end;
 
-procedure TNyxLCLCaptureObserver.Add(const AOriginID: TNyxText; AControl: TControl);
+procedure TNyxLCLCaptureObserver.Add(const AOriginID: TNyxText; AControl: TControl;
+  AObserveFocus: Boolean);
 var
   LIndex: Integer;
 begin
@@ -628,7 +654,8 @@ begin
     end;
   end;
   SetLength(FHooks, Length(FHooks) + 1);
-  FHooks[High(FHooks)] := TNyxLCLCaptureHook.Create(AOriginID, AControl, FFrame);
+  FHooks[High(FHooks)] := TNyxLCLCaptureHook.Create(AOriginID, AControl, FFrame,
+    AObserveFocus);
 end;
 
 procedure TNyxLCLCaptureObserver.Activate(const AEvents: INyxEvents;

@@ -3,7 +3,22 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current native clock boundary (2026-10-07): ordinary grouped fields retain exact
+Current native focus boundary (2026-10-07): date/time acceptance now uses a shared
+weak return contract and the ordinary renderer observes actual keyboard-surface
+focus messages. Logical LCL slots retain creator forwarding; transition state
+suppresses duplicates while covering top-level popup returns. Accepted store values,
+explicit redirects and change/focus callback retirement pass 94 date / 85 clock
+checks. Full catalog focus passes 30,637 across 103 faces, all leak-free. Affected
+browser/Studio consumers compile with zero owned warnings; current browser
+execution remains required. No original full criterion closes: shared renderer
+no-closure advances 12→13 once; known counts are 19/30/13/28/2. End this native
+focus fixture packet and reassess original native/parity/event consumers. Full
+capability/layout/visual/budget, hardware/accessibility, other widgetsets/DPI,
+clock foundation/browser qualification and observing delivery remain required.
+No rejected browser launch or protected service is retried. See
+[the packet](WORK.md#current-return-path-native-picker-focus-and-callback-lifetime--2026-10-07).
+
+Preceding native clock boundary (2026-10-07): ordinary grouped fields retain exact
 clock drafts and an owned native integer-part/millisecond picker. Actual Win32
 controls pass 73, leak-free; the maintained target retains the 1,613/49 contract
 checks, exact compiled reconstruction and twelve type refusals. Native Studio
