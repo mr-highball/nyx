@@ -27,7 +27,8 @@ program nyx_grid_companion;
 uses
   Classes, SysUtils, nyx.text, nyx.data, nyx.test.mcp.client,
   nyx.state, nyx.collections, nyx.collections.view.types, nyx.collections.selection,
-  nyx.studio.collectionedits, nyx.studio.collectionintent, nyx.studio.stateedits;
+  nyx.studio.collectionedits, nyx.studio.collectionintent, nyx.studio.stateedits,
+  nyx.studio.edits, nyx.studio.transactions;
 
 var
   GClient: TNyxMCPTestClient;
@@ -107,6 +108,8 @@ var
   LBefore: TNyxText;
   LKey: TNyxCollectionRef;
   LPatch: INyxCollectionPatch;
+  LLayout: INyxDesignPatch;
+  LTransaction: INyxProjectTransaction;
 begin
 
   if ParamCount <> 2 then
@@ -130,10 +133,9 @@ begin
     GReview := LReply.Field('workspace').AsText;
     Check(GReview <> '', 'Owned ordinary workspace has an exact identity');
     GRevision := Call('nyx_session', []).Field('revision').AsInteger;
-    Call('nyx_transaction', [
-      NyxField('expectedRevision', NyxData(GRevision)),
-      NyxField('operationId', NyxData('grid-companion-layout')),
-      NyxField('operations', TNyxDataValue.ParseJSON(
+    Check(GRevision = 1, 'New owned workspace begins without composition history');
+    LBefore := Source;
+    LLayout := ReadNyxDesignPatch(TNyxDataValue.ParseJSON(
         '[{"op":"create","kind":"page","id":"grid-review","root":"page",' +
         '"properties":{"gap":12,"padding":20}},' +
         '{"op":"create","kind":"heading","id":"grid-title","parent":"grid-review",' +
@@ -143,12 +145,10 @@ begin
         '{"op":"create","kind":"table","id":"work-table","parent":"grid-review",' +
         '"properties":{"height":240,"aria-label":"Work items"}},' +
         '{"op":"create","kind":"button","id":"after-table","parent":"grid-review",' +
-        '"properties":{"text":"Keep creating"}}]'))]);
-    GRevision := Call('nyx_session', []).Field('revision').AsInteger;
-    LBefore := Source;
-    { Layout creation and collection/default binding currently have separate
-      semantic APIs. Each phase is one grouped paired operation; do not claim
-      a single whole-composition Undo. Record that existing workflow gap. }
+        '"properties":{"text":"Keep creating"}}]'));
+    { The portable paired candidate owns layout and collection/default binding
+      as one semantic mutation. One Undo restores this new workspace's exact
+      initial source, including removal of the newly composed page and data. }
     LKey := NyxCollection('work-items');
     LPatch := NyxCollectionPatch([
       NyxDefineCollection(LKey, NyxCollectionSchema.Text(NyxTextField('task'), '')
@@ -163,16 +163,24 @@ begin
         NyxCollectionView(LKey).Column(NyxTextField('task'), 'Task', cmEditable)
           .Column(NyxIntegerField('priority'), 'Priority', cmEditable)
           .Column(NyxTextField('status'), 'Status').Selection(nsmMultiple))]);
-    Call('nyx_collections', [NyxField('mode', NyxData('apply')),
+    LTransaction := NyxProjectTransaction([
+      NyxDesignStep(LLayout), NyxCollectionStep(LPatch)]);
+    Call('nyx_transaction', [
       NyxField('expectedRevision', NyxData(GRevision)),
-      NyxField('operationId', NyxData('grid-companion-data')),
-      NyxField('changes', LPatch.ToData)]);
+      NyxField('operationId', NyxData('grid-companion-compose')),
+      NyxField('operations', LTransaction.ToData)]);
     GRevision := Call('nyx_session', []).Field('revision').AsInteger;
     LSource := Source;
     Check((Pos('INyxTable', LSource) > 0) and (Pos('NyxCollectionView', LSource) > 0),
       'Specialized crafted bound-table companion');
     History('undo');
-    Check(Source = LBefore, 'One paired Undo restores the exact layout before data binding');
+    Check(Source = LBefore, 'One paired Undo removes the entire composed layout and data');
+    Check(not Call('nyx_session', []).Field('canUndo').AsBoolean,
+      'No hidden layout or collection history remains after the one Undo');
+    Check(Call('nyx_outline', [NyxField('scope', NyxData('pages'))]).Field('total').AsInteger = 0,
+      'Whole-composition Undo removes the new page');
+    Check(Call('nyx_collections', [NyxField('mode', NyxData('list'))]).Field('total').AsInteger = 0,
+      'Whole-composition Undo removes its data defaults');
     History('redo');
     Check(Source = LSource, 'One paired Redo restores the exact companion');
     ForceDirectories(ParamStr(2));

@@ -206,6 +206,23 @@ type
     function Candidate(ADocument: TNyxDocument; ACatalog: TNyxCatalog): TNyxDocument;
   end;
 
+  { Optional immutable semantic snapshot capability. Keep the original
+    candidate-only interface and its GUID unchanged for custom implementations.
+    All built-in patches provide this separately queryable contract. }
+  INyxDesignChanges = interface(INyxDesignPatch)
+    ['{35B50DAD-6037-443B-99F7-66134A7C822E}']
+    { Independent transport snapshot/count for composition with typed data steps.
+      Encoding does not execute a command or borrow its original input array. }
+    function ToData: TNyxDataValue;
+    function GetCount: Integer;
+    property Count: Integer read GetCount;
+  end;
+
+{ Requires the optional semantic snapshot capability. Ordinary ApplyPatch still
+  accepts candidate-only custom patches; external transaction composition must
+  have a strict value descriptor and refuses opaque imperative implementations. }
+function NyxDesignChanges(const APatch: INyxDesignPatch): INyxDesignChanges;
+
 { Decode 1..64 operations. Primitive property values retain their JSON scalar
   type; unknown fields/operations fail. IDs and custom kind names are user data.
   Schema/property/document admission also runs on the complete detached result. }
@@ -567,11 +584,14 @@ type
     Menu: TNyxMenuEdit;
   end;
 
-  TDesignPatch = class(TInterfacedObject, INyxDesignPatch)
+  TDesignPatch = class(TInterfacedObject, INyxDesignPatch, INyxDesignChanges)
   private
     FOperations: array of TDesignOperation;
+    FData: TNyxDataValue;
   public
     function Candidate(ADocument: TNyxDocument; ACatalog: TNyxCatalog): TNyxDocument;
+    function ToData: TNyxDataValue;
+    function GetCount: Integer;
   end;
 
 function NyxPlacementName(APlacement: TNyxPlacement): TNyxText;
@@ -706,6 +726,7 @@ function NyxPlacementPatch(const AChanges: array of TNyxPlacementChange): INyxDe
 var
   LOwner: TDesignPatch;
   LIndex: Integer;
+  LValues: array of TNyxDataValue;
 begin
 
   if (Length(AChanges) < 1) or (Length(AChanges) > 64) then
@@ -715,6 +736,7 @@ begin
   LOwner := TDesignPatch.Create;
   Result := LOwner;
   SetLength(LOwner.FOperations, Length(AChanges));
+  SetLength(LValues, Length(AChanges));
   for LIndex := 0 to High(AChanges) do
   begin
 
@@ -732,7 +754,9 @@ begin
     LOwner.FOperations[LIndex].Parent := AChanges[LIndex].Target.ID;
     LOwner.FOperations[LIndex].Kind := AChanges[LIndex].Kind.Name;
     LOwner.FOperations[LIndex].Placement := AChanges[LIndex].Placement;
+    LValues[LIndex] := AChanges[LIndex].ToData;
   end;
+  LOwner.FData := NyxArray(LValues);
 end;
 
 function NyxDeriveComponent(const ASource: TNyxControlRef;
@@ -796,6 +820,9 @@ var
   LOwner: TDesignPatch;
   LIndex, LMap: Integer;
   LOperation: TDesignOperation;
+  LValues: array of TNyxDataValue;
+  LIdentities: array of TNyxDataField;
+  LFields: array of TNyxDataField;
 begin
 
   if (Length(AChanges) < 1) or (Length(AChanges) > 64) then
@@ -805,6 +832,7 @@ begin
   LOwner := TDesignPatch.Create;
   Result := LOwner;
   SetLength(LOwner.FOperations, Length(AChanges));
+  SetLength(LValues, Length(AChanges));
   for LIndex := 0 to High(AChanges) do
   begin
     LOperation := Default(TDesignOperation);
@@ -828,7 +856,58 @@ begin
       LOperation.Identities[LMap] := AChanges[LIndex].FIdentities[LMap];
     end;
     LOwner.FOperations[LIndex] := LOperation;
+    { Serialize the same typed command, including omitted append indexes.
+      Distinct identity/part references remain values; no source nodes survive. }
+    case LOperation.Operation of
+      doDerive:
+        begin
+          SetLength(LIdentities, Length(LOperation.Identities));
+          for LMap := 0 to High(LIdentities) do
+          begin
+            LIdentities[LMap] := NyxField(LOperation.Identities[LMap].Source.ID,
+              NyxData(LOperation.Identities[LMap].Destination.ID));
+          end;
+          LValues[LIndex] := NyxObject([NyxField('op', NyxData('derive')),
+            NyxField('source', NyxData(LOperation.Source)),
+            NyxField('id', NyxData(LOperation.Component.Name)),
+            NyxField('identities', NyxObject(LIdentities))]);
+        end;
+      doInstance:
+        begin
+          SetLength(LFields, 4 + Ord(LOperation.Index >= 0));
+          LFields[0] := NyxField('op', NyxData('instance'));
+          LFields[1] := NyxField('id', NyxData(LOperation.ID));
+          LFields[2] := NyxField('component', NyxData(LOperation.Component.Name));
+          LFields[3] := NyxField('parent', NyxData(LOperation.Parent));
+
+          if LOperation.Index >= 0 then
+          begin
+            LFields[4] := NyxField('index', NyxData(LOperation.Index));
+          end;
+          LValues[LIndex] := NyxObject(LFields);
+        end;
+      doOverride:
+        begin
+          LValues[LIndex] := NyxObject([NyxField('op', NyxData('override')),
+            NyxField('id', NyxData(LOperation.ID)),
+            NyxField('instance', NyxData(LOperation.Parent)),
+            NyxField('path', NyxData(LOperation.Path.Name)),
+            NyxField('mode', NyxData(NyxOverrideName(LOperation.Mode)))]);
+        end;
+      doInherit:
+        begin
+          LValues[LIndex] := NyxObject([NyxField('op', NyxData('inherit')),
+            NyxField('id', NyxData(LOperation.ID)),
+            NyxField('instance', NyxData(LOperation.Parent)),
+            NyxField('path', NyxData(LOperation.Path.Name))]);
+        end;
+      else
+        begin
+          raise ENyxModel.Create('Reusable transaction contains an unconstructed command');
+        end;
+    end;
   end;
+  LOwner.FData := NyxArray(LValues);
 end;
 
 function HasField(const AObject: TNyxDataValue; const AKey: TNyxText): Boolean;
@@ -1494,6 +1573,7 @@ begin
   end;
   LOwner := TDesignPatch.Create;
   Result := LOwner;
+  LOwner.FData := AOperations.Copy;
   SetLength(LOwner.FOperations, AOperations.Count);
   for LIndex := 0 to AOperations.Count - 1 do
   begin
@@ -1903,6 +1983,25 @@ begin
     end;
   end;
   raise ENyxModel.Create('This control does not publish the requested presentation property');
+end;
+
+function NyxDesignChanges(const APatch: INyxDesignPatch): INyxDesignChanges;
+begin
+
+  if (APatch = nil) or not Supports(APatch, INyxDesignChanges, Result) then
+  begin
+    raise ENyxModel.Create('Transaction composition requires a serializable design patch');
+  end;
+end;
+
+function TDesignPatch.ToData: TNyxDataValue;
+begin
+  Result := FData.Copy;
+end;
+
+function TDesignPatch.GetCount: Integer;
+begin
+  Result := Length(FOperations);
 end;
 
 function TDesignPatch.Candidate(ADocument: TNyxDocument;

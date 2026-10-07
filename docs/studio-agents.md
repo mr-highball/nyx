@@ -491,8 +491,54 @@ Every mutation supplies the revision it read and a unique `operationId`.
 }
 ```
 
-A transaction contains 1–64 operations: create, update, move, delete, title or
-tokens. Creation supports child placement or a new page/reusable root; these
+A transaction contains 1–64 total changes. Existing design operations can
+interleave `{"op":"state","changes":[...]}` and
+`{"op":"collections","changes":[...]}` groups. Their changes use the same
+strict typed shapes advertised by `nyx_state` and `nyx_collections`; each
+group retains its 1–32 limit, and **every nested change counts** toward 64.
+Create a control, define its default, bind it, and move it into another layout
+in one mutation with one exact paired Undo/Redo. Data and design groups run in
+order: each complete intermediate must admit, so define dependencies before
+binding and remove dependent owners/bindings before deleting their defaults.
+Consecutive design operations share ordinary grouped admission.
+
+The public Pascal contract uses copied typed steps, including existing placement,
+reusable, content, menu and presentation patches:
+
+```pascal
+LTransaction := NyxProjectTransaction([
+  NyxDesignStep(NyxPlacementPatch([
+    NyxPlaceNewControl(nkMemo, NyxControl('reply-memo'),
+      NyxControl('home'), nplInside)])),
+  NyxStateStep(NyxStateBindingPatch([
+    NyxCreateDefault(NyxStateValue(NyxTextState('reply'), 'Ready to compose.')),
+    NyxBindControl(NyxBindingOwner('reply-memo'), bpValue,
+      NyxTextState('reply'), bdTwoWay)]))
+]);
+```
+
+`INyxProjectTransaction.ToData` supplies the existing tool's `operations`
+argument; still provide the current expected revision and unique operation ID.
+`Candidate` stages an independent complete pair; an embedding controller may
+publish that pair once through ordinary Studio history. No intermediate candidate
+history escapes. Pending drafts, late failures, stale revisions and foreign retry
+authorities retain the accepted pair/navigation/history. Nested transaction
+wrappers, permission changes and handwritten source edits are outside this
+contract. Root removal still requires the actor-bound `nyx_roots` review.
+Built-in design patches expose `INyxDesignChanges` through
+`NyxDesignChanges`. The original `INyxDesignPatch` candidate-only interface
+remains unchanged for custom ordinary commands; semantic composition requires
+the optional strict snapshot capability.
+
+`tools/build.ps1 -Target project-transactions` runs checked shared admission and
+exact compiled-source/runtime projection, builds the semantic English table
+companion, and stages matched browser consumers. It starts no service/browser
+and supplies no browser execution or observing qualification. The new grouped
+contract requires a backend built from current source; frozen older servers do
+not acquire it from local compilation. Browser readiness and LAN refresh retain
+their separately recorded gates in WORK.md.
+
+Creation supports child placement or a new page/reusable root; these
 placements are mutually exclusive. Move/delete currently operate on descendants,
 not page/reusable roots. Updating a published property to null clears its explicit
 override. Tokens cover the seven built-in palette colors and radius,

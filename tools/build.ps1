@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1846,6 +1846,55 @@ try {
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/data-read.html') `
       -Destination $nyxDataReadBrowser
     Write-Host 'Native read sample completed; browser sample staged without execution.'
+    exit 0
+  }
+
+  if ($Target -eq 'project-transactions') {
+    # Pascal owns all admission/history, schema, ownership and compiled source
+    # assertions. This target stages browser consumers and builds the explicit
+    # MCP companion; it enrolls no client and starts no service or browser.
+    $nyxTransactionRoot = Join-Path $nyxRoot 'build/combined-transactions/maintained'
+    $nyxTransactionNative = Join-Path $nyxTransactionRoot 'native'
+    $nyxTransactionBrowser = Join-Path $nyxTransactionRoot 'browser'
+    $nyxTransactionSource = Join-Path $nyxTransactionRoot 'source'
+    $nyxTransactionTools = Join-Path $nyxTransactionRoot 'tools'
+    New-Item -ItemType Directory -Force $nyxTransactionNative,
+      $nyxTransactionBrowser, $nyxTransactionSource, $nyxTransactionTools | Out-Null
+    $nyxTransactionFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests')
+    Invoke-NyxCompiler $nyxFpc ($nyxTransactionFlags + @(
+      "-FU$nyxTransactionNative", "-FE$nyxTransactionNative",
+      'tests/nyx_agent_transaction_tests.lpr'))
+    & (Join-Path $nyxTransactionNative 'nyx_agent_transaction_tests.exe') $nyxTransactionSource
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Combined semantic transaction checks failed'
+    }
+    Invoke-NyxCompiler $nyxFpc ($nyxTransactionFlags + @(
+      "-Fu$nyxTransactionSource", "-FU$nyxTransactionNative", "-FE$nyxTransactionNative",
+      'tests/nyx_transaction_generated_tests.lpr'))
+    & (Join-Path $nyxTransactionNative 'nyx_transaction_generated_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Exact compiled transaction companion failed'
+    }
+    Invoke-NyxCompiler $nyxFpc ($nyxTransactionFlags + @(
+      "-FU$nyxTransactionTools", "-FE$nyxTransactionTools", 'tools/nyx_grid_companion.lpr'))
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxTransactionProgram in @('tests/nyx_agent_transaction_tests.lpr',
+      'tests/nyx_transaction_generated_tests.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxTransactionSource",
+        "-FE$nyxTransactionBrowser", $nyxTransactionProgram)
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxTransactionBrowser 'rtl.js')
+    foreach ($nyxTransactionHost in @('agent-transactions.html', 'transaction-generated.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot ('studio/web/' + $nyxTransactionHost)) `
+        -Destination $nyxTransactionBrowser
+    }
+    Write-Host 'Transaction consumers staged; browser execution remains a separate qualification.'
+    Write-Host 'Grid companion needs an explicit owned backend/config and new export destination.'
     exit 0
   }
 

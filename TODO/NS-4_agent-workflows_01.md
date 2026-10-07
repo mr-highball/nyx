@@ -15,6 +15,20 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Current combined composition (2026-10-07): `nyx_transaction` now interleaves
+typed copied layout/control, scalar/default binding and collection/query groups,
+counting every leaf toward 64. One complete candidate publishes one exact paired
+Undo. Ordered groups retain ordinary intermediate admission; custom candidate-only
+commands retain their original interface/GUID. Checked native passes 41 focused
+checks, eight actual compiled runtime projections, and existing 39/52/117
+agent/reusable/collection regressions, leak-free. Matched browser consumers compile
+and stage; the English table companion is changed to one semantic mutation.
+Current authenticated execution/builds and full observing/browser input remain
+required. No original criterion/count closes here; workflow stays 18 pending
+the integrated consumer packet. Preserve the rejected browser/primary actions
+and all existing pairs/services. See
+[the packet](../WORK.md#current-return-path-combined-semantic-composition--2026-10-07).
+
 Current bounded query contract (2026-10-07): the existing collection tool now
 inspects small predicate pages/exact scalar windows and admits typed query-only
 changes, grouped with row/default edits. Checked native admission passes 117

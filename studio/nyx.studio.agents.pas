@@ -191,7 +191,7 @@ uses
   nyx.studio.handleredits, nyx.studio.stateedits, nyx.state, nyx.binding,
   nyx.binding.types, nyx.contract, nyx.collections, nyx.collections.view.types,
   nyx.collections.selection, nyx.collections.query,
-  nyx.studio.collectionedits, nyx.studio.importedits,
+  nyx.studio.collectionedits, nyx.studio.transactions, nyx.studio.importedits,
   nyx.studio.routineedits, nyx.studio.declarationedits;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
@@ -2074,6 +2074,8 @@ var
   LCollectionApply: Boolean;
   LCollectionResults: TNyxDataValue;
   LAuthority: TNyxText;
+  LTransaction: INyxProjectTransaction;
+  LDesignPatch: INyxDesignPatch;
 begin
   LAuthority := ARequestOwner;
 
@@ -2212,7 +2214,18 @@ begin
     else if ATool = 'nyx_transaction' then
     begin
       NyxAgentFields(AArguments, '|expectedRevision|operationId|operations|');
-      FSession.ApplyPatch(ReadNyxDesignPatch(AArguments.Field('operations')));
+      LTransaction := ReadNyxProjectTransaction(AArguments.Field('operations'));
+
+      if LTransaction.TryDesignPatch(LDesignPatch) then
+      begin
+        FSession.ApplyPatch(LDesignPatch);
+      end
+      else
+      begin
+        { Compose on independent paired candidates; publish exactly once through
+          the ordinary Studio history/source gate. Navigation stays authoritative. }
+        FSession.AdoptProject(LTransaction.Candidate(FSession.ProjectSnapshot));
+      end;
     end
     else if ATool = 'nyx_state' then
     begin

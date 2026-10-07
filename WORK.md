@@ -7,6 +7,53 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: combined semantic composition — 2026-10-07
+
+The last mobile follow-up confirmed already delivered behavior and served bytes;
+it added no capability to the full goal. Git remains clean at pushed `de949b1`.
+Reassessment returns to original NS-4 workflow criteria 2/5: layout/control,
+scalar-default/binding and collection/query changes must share one ordered,
+revision-aware semantic transaction and one exact paired Undo. Existing separate
+patches supply ordinary admission prerequisites. Extend `nyx_transaction`, not
+the tool count, with typed copied steps and strict domain groups. Preserve
+intermediate admission, handwritten helpers, pending-draft refusal, reviewed root
+authority, permissions, exact retries and independent project navigation.
+
+Deliverable: public typed transaction composition plus the maintained English
+table companion using one semantic mutation. Required evidence: late-group rollback,
+cross-domain ordering, exact source/design Undo/Redo, strict total budgets/schema,
+permission/revision/retry refusal, current authenticated backend and ordinary
+browser/LCL compiler consumers. A compile does not establish UI execution or
+observing parity. Stop fixture expansion at the integrated consumer boundary;
+retain browser readiness/deployment gates and do not retry either rejected launch
+or primary replacement through an equivalent route. Existing services, frozen
+payloads and protected pairs remain owned separately. No original criterion closes
+at preregistration; workflow/authoring/renderer/codegen/delivery counts remain
+18/30/9/28/2. The full user goal stays active.
+
+The implemented contract now copies typed ordered design/state/collection steps,
+coalesces adjacent design groups to preserve flat-wire semantics and stages the
+whole pair before one ordinary publication. Built-in design snapshots expose an
+optional interface; the original candidate-only custom-patch interface/GUID is
+unchanged. Layout-only MCP retains the direct tree/source candidate path. The
+maintained English table companion now submits layout and defaults/bindings in
+one mutation and checks that one Undo removes its page, data and hidden history.
+Authenticated execution is the next gate, not inferred from tool compilation.
+
+Checked native qualification passes **41** combined assertions and **8** actual
+compiled companion/runtime projections, including exact supplementary text,
+unbound NUL data, independent stores, late failure, strict nesting/budgets,
+custom-interface compatibility, actor-bound retries, drafts and paired history.
+Current regressions pass **39** agents, **52** reusables and **117** collections.
+All heap traces are leak-free and owned warnings are zero. Maintained
+`tools/build.ps1 -Target project-transactions` passes and stages the matched
+pas2js shared/compiled consumers; browser execution remains unqualified.
+Evidence is under ignored `build/combined-transactions/`: `transaction-build.log`,
+`transaction.log`, `maintained-build.log` and the three named regression
+build/run logs. The new source snapshot still needs current-backend authenticated
+composition/builds and ordinary observing/browser input evidence. No service
+replacement, project acceptance or browser launch is inferred from these passes.
+
 ## Current return path: indexed structured-value reads — 2026-10-07
 
 Previous turn is progress at pushed `99c8efd`; authenticated bounded queries,
