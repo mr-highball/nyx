@@ -66,14 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Candidate managed contextual views now share typed placement, sizing, focus and
+Managed contextual views now share typed placement, sizing, focus and
 dismissal across real browser/LCL hosts. Studio's component help consumes public
 Nyx content/presentation. Checked Win32 passes 40 plus 5 ordinary Studio checks;
 actual desktop/390 browser passes 42 each, and full browser editor help works.
-Persistent semantic companion authoring passes 30; protected 15 services/9 exact
-pairs and the frozen observing release remain unchanged. This is candidate
-integration, with broader picker/menu/parity and rollout still open. See
-[current evidence](WORK.md#current-return-path-managed-contextual-views--2026-10-06).
+Persistent semantic companion authoring passes 30. Frozen source checkpoint
+`6efdd96` now serves the existing observing ports: 217 files verify, authenticated
+twenty-tool MCP and full desktop/390 editor help work. Nine exact pairs and the
+complete native checkpoint survive unchanged, including history and handles;
+fourteen other services stay untouched. Broader picker/menu/parity and production
+migration remain open. See
+[current evidence](WORK.md#current-return-path-contextual-help-observing-release--2026-10-06).
 
 The current frozen Studio release now serves the existing observing LAN/MCP ports.
 Explicit test-mode bootstrap retains eight exact project/source pairs, resets seven

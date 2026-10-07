@@ -204,14 +204,15 @@ uses the protocol's separate input/textarea value tables; see the primary
 This mechanism validates presentation selectively; it does not replace bounded
 semantic MCP as the design authoring/inspection contract.
 
-The protected running older server predates this recovery contract and cannot
-export its complete history. Its CanUndo/CanRedo flags establish availability,
-not serialized stacks. A full production preservation bridge and observing HTTP
-rollout remain required within the existing service/reload and workflow owners.
-The user's explicit disposable-test instruction permits the bootstrap above for
-the current review environment; it does not establish complete history migration.
-A staged current
-candidate is not authority to replace a protected service or discard its history.
+The earlier legacy host predated native recovery and could not export full
+history. Its CanUndo/CanRedo flags established availability, not serialized stacks;
+the explicitly authorized test bootstrap did not qualify production migration.
+The current observing host now uses native recovery. Its contextual-help refresh
+retains nine exact pairs, complete byte-identical checkpoint/history and ordinary
+handles through restart and authenticated desktop/narrow observing checks. See
+[current rollout evidence](../WORK.md#current-return-path-contextual-help-observing-release--2026-10-06).
+Full production migration from an older host remains open. A staged candidate
+alone is not authority to replace a service or discard its history.
 
 A compiled candidate does not update the running MCP schema. Recipe editing over
 authenticated HTTP and full observing browser Studio must be checked after a

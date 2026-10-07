@@ -17,6 +17,14 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 **Blockers**
 
+Observing refresh (2026-10-06): the contextual-help release uses the current
+native runtime checkpoint without legacy bootstrap/reset/remapping. Nine exact
+pairs and complete durable bytes survive restart and actual desktop/390 observing
+help; fourteen other services remain untouched. Authenticated twenty-tool MCP and
+the frozen 217-file payload verify. Original criteria and wider qualification
+remain open. See
+[current evidence](../WORK.md#current-return-path-contextual-help-observing-release--2026-10-06).
+
 Observing prerequisite update (2026-10-06): the current verified frozen release
 now serves the existing LAN/MCP ports. Explicit legacy test-snapshot admission
 preserves eight exact pairs and discloses seven test-history resets/fresh handles.

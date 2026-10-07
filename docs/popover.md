@@ -127,6 +127,15 @@ capture for `popover.html` / `data-popover` and
 `nyx_studio_help_observer` for `index.html` at CSS 1100 and 390.
 Run full editor observers sequentially on a constrained host.
 
+For an already enrolled observing server, the help observer accepts two optional
+arguments after URL, evidence directory and width: repository and exact ordinary
+workspace. The URL must carry that same `?workspace=` handle. It uses bounded
+`nyx_session`/`nyx_node` queries, waits for the shared title/selection before host
+input, and verifies unchanged revision/navigation/draft/history availability.
+Use an existing explicitly owned workspace whose selected component exposes help;
+this read-only journey neither creates nor replaces its project. Full durable
+pair/history preservation belongs to the release owner, not UI availability flags.
+
 Managed presentation declarations and primitive semantic action assignment are
 not yet exposed by MCP. The fixture attaches typed runtime dismissal through the
 public Pascal API; its exported companion stays unchanged. This is explicit
@@ -134,4 +143,3 @@ runtime enrichment, not semantic presentation admission. That gap stays with
 [the workflow owner](../TODO/NS-4_agent-workflows_01.md). Scalar default cloning
 and unbound draft retention are exercised here; live scalar/collection binding
 inside popovers needs additional actual-control qualification.
-

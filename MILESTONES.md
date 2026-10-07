@@ -7,11 +7,14 @@ Current component boundary (2026-10-06): managed contextual views supply typed
 placement, content/fixed sizing, focus, dismissal and owned completion snapshots.
 Real Win32 passes 40 plus 5 full native Studio help checks; actual desktop/390
 browser passes 42 each and full browser Studio opens/closes public Nyx component
-help. Persistent semantic companion authoring passes 30. Protected 15 services,
-9 exact pairs and the current observing release stay unchanged. Stop fixtures at
-this candidate boundary; original picker/menu keyboard, broader parity and
-rollout remain open. No original criterion/count closes. See
-[evidence and return path](WORK.md#current-return-path-managed-contextual-views--2026-10-06).
+help. Persistent semantic companion authoring passes 30. Frozen checkpoint
+`6efdd96` now serves the existing observing ports; authenticated twenty-tool MCP
+and full desktop/390 editor help pass. Nine exact pairs and the complete native
+checkpoint retain history/handles unchanged; fourteen other services stay exact.
+Stop fixtures at this integrated observing boundary; original picker/menu keyboard,
+broader parity and production migration remain open. No original criterion/count
+closes. See
+[evidence and return path](WORK.md#current-return-path-contextual-help-observing-release--2026-10-06).
 
 Previous observing boundary (2026-10-06): the verified frozen release replaces only
 the exact primary LAN process. Disposable-test bootstrap retains eight exact pairs

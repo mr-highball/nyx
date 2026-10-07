@@ -39,6 +39,25 @@ if (-not $nyxPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Adminis
 }
 
 if (-not $Server) {
+  # Prefer the process actually serving this port. Frozen releases live outside
+  # build/native, so the newest development binary need not be the LAN owner.
+  # Administrator execution is already required for the scoped firewall update.
+  $nyxListeners = @(Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue |
+    Select-Object -ExpandProperty OwningProcess -Unique)
+  $nyxServing = @($nyxListeners | ForEach-Object {
+    Get-CimInstance Win32_Process -Filter ('ProcessId=' + $_)
+  } | Where-Object { $_.Name -eq 'nyx_studio_server.exe' })
+
+  if ($nyxServing.Count -gt 1) {
+    throw 'Several Studio processes serve this port. Pass -Server with the intended executable.'
+  }
+
+  if ($nyxServing.Count -eq 1) {
+    $Server = $nyxServing[0].ExecutablePath
+  }
+}
+
+if (-not $Server) {
   $nyxServerFile = Get-ChildItem -LiteralPath (Join-Path $nyxRoot 'build/native') -Recurse -File |
     Where-Object { $_.Name -eq 'nyx_studio_server.exe' } |
     Sort-Object LastWriteTime -Descending | Select-Object -First 1

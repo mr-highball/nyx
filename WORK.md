@@ -7,6 +7,59 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: contextual help observing release — 2026-10-06
+
+Current goal turn: progress on the NS-5 observing prerequisite for the original
+NS-3 advanced component and NS-2 focus/parity outcomes. Frozen source checkpoint
+`6efdd96` now serves the existing LAN/editor and loopback MCP ports. The release
+preparer passes **29** integrity checks, with zero native leaks; the deployed
+payload verifies **217** files. Only the exact primary service identity changes.
+All **14** other protected processes and **9** exact project/source/navigation
+contexts remain unchanged. The native checkpoint stays byte-identical across
+restart and observing checks, retaining complete paired history, naming counters,
+permissions and ordinary workspace handles. This uses current native recovery;
+there is no legacy snapshot bootstrap, history reset or handle remapping.
+
+Authenticated Pascal MCP discovers **20** tools at the newly enrolled endpoint.
+The maintained help observer reads bounded session/selected-node context, waits
+for the actual shared title and selection, and opens/closes public Nyx Memo help
+in the full observing browser Studio at CSS **1100/390**. Both consumers pass,
+with zero observer leaks, unchanged revision/draft/navigation/history availability
+and inspected meaningful captures. Exact pairs and checkpoint bytes remain
+unchanged afterward. Earlier checked native Studio/popover evidence applies to
+unchanged product source; this rollout does not claim a new native observing
+controller journey or complete menu/picker parity. The LAN address responds on
+this host; physical phone connectivity remains unqualified. Firewall inspection
+is denied in this nonadministrator session. The existing administrator LAN helper
+now resolves the actual serving process before falling back to a development
+binary, so a frozen release can be admitted with the same operator command.
+
+Ignored evidence under `build/popover-refresh/`: `release-build.log`,
+`deployment.json`, `before-studio-session.nyx`, authenticated `semantic-tools.json`,
+`desktop-observing.log` / `narrow-observing.log` and their inspected captures.
+Use **this directory's** `protected-services-current.json`,
+`protected-pairs-current.json` and `lan-editor-private.json` as current baselines.
+The live runtime remains in `build/legacy-refresh/lan-runtime`; the pristine
+release is `build/popover-refresh/release`. Private paths/capabilities remain
+ignored. The original backup/stash and previous release are retained.
+
+Failed checks earn no pass count. The first handoff guard expected HTTP 403 for
+an expired editor capability; the actual explicit HTTP 400 refusal is verified.
+An observer clicked the starter's help before shared attachment and encountered
+a retired DOM node; semantic context readiness corrects that assumption. No
+service restart or source mutation was repeated to work around either failure.
+
+Stop rollout fixture expansion. Return to original NS-3 picker/menu outcomes
+through the managed host, with NS-2 keyboard/focus prerequisites first. Native
+chat handles still refer to a retired endpoint and need one reconnect; authenticated
+Pascal semantic MCP remains primary. Production legacy-history migration, native
+observing integration, binding within popovers, accessibility and wider platform
+qualification retain their original owners. No original criterion closes;
+workflow **13**, authoring **26**, renderer **8**, codegen **28**, delivery **2**
+remain unchanged, and NS-2 parity/NS-3 historical totals stay unestablished.
+Push `hello-nyx`, verify the exact remote head, and retain the private receipt in
+`build/popover-refresh/remote-return.json`. The full goal remains active.
+
 ## Current return path: managed contextual views — 2026-10-06
 
 Current goal turn: progress on original NS-3 advanced overlays/pickers and NS-2
