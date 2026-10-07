@@ -118,17 +118,17 @@ Actual browser/LCL list, table and tree controls support arrows, Home/End,
 modifier-assisted focus, toggle/range/additive-range and select-all. Trees support
 left/right parent, child and expansion navigation. Canonical before-key callbacks
 run first and can consume a default. Read-only data permits selection; disabled
-controls refuse forced gestures. Browser rows expose their selected state and a
-visible keyboard entry point. Tables use grid/row/gridcell semantics, so editable
-cells do not pretend to be interactive children of listbox options.
+controls refuse forced gestures. Browser rows expose their selected state.
+Lists/trees retain a visible row entry; tables have one data-cell Tab entry and
+grid/row/gridcell semantics, with row/column dimensions and cell indices.
 
 These choices are mapped to the W3C [listbox](https://www.w3.org/WAI/ARIA/apg/patterns/listbox/),
 [tree view](https://www.w3.org/WAI/ARIA/apg/patterns/treeview/) and
 [grid](https://www.w3.org/WAI/ARIA/apg/patterns/grid/) guidance. The current adapter
 uses the modifier-assisted selection model. Full pattern qualification remains
-open, including type-ahead, paging, complete grid cell navigation, assistive
-technology checks and physical-device testing. This delivery does not establish
-blanket accessibility conformance.
+open, including paging, cell/column selection, assistive technology checks and
+physical-device testing. This delivery does not establish blanket accessibility
+conformance.
 
 `NyxCallbacks(LTasksList).OnSelectionChange` authors multiple ordered handlers and
 their normal scheduler policy. Runtime subscriptions use
@@ -250,27 +250,53 @@ uses actual `TListBox`,
 `TStringGrid` and `TTreeView` widgets. Tree nodes retain identity across edits and
 relocation; existing widget selection/edit handlers are restored at disconnect.
 
-Bound browser collections offer one Tab entry. Arrow keys, Home and End move
-among visible rows; selection and keyboard focus are separate. Removing the
+Bound browser collections offer one Tab entry. Lists/trees use arrows, Home and
+End among visible rows; selection and keyboard focus are separate. Removing the
 focused row transfers physical focus to the surviving model cursor. An empty
 collection remains reachable, while a disabled collection has no Tab entry.
 Restoring focus uses `preventScroll` and never takes focus from another control.
 Collapsed tree descendants stay outside the visible navigation order; leaf
 nodes do not advertise a collapsed parent.
 
-For a browser table, F2 or Enter moves from a row into its first available cell
-editor. Tab and Shift+Tab visit eligible editors in that row. Tab at an editing
-boundary leaves the table. Escape restores the uncommitted cell draft and returns
-to row navigation. Text editors keep their ordinary caret keys; read-only text
-remains focusable for inspection, selection and copying. A read-only checkbox
-uses disabled HTML behavior because that input type has no read-only mode.
-Native tables retain the standard LCL cell editor and widget navigation.
+## Bound table cell navigation
 
-This row-oriented contract is qualified below. Complete cell-oriented grid
-navigation, assistive technology and other widgetsets remain open.
-The [WAI keyboard guidance](https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/)
-and [grid pattern](https://www.w3.org/WAI/ARIA/apg/patterns/grid/) guide further
-work; this packet does not claim full APG conformance.
+Browser and LCL tables share typed `TNyxGridMove` intentions and zero-based
+data-cell positions; the header is excluded from navigation. Left/Right move
+within a row, Up/Down retain the column, Home/End address that row's endpoints,
+and Control+Home/End address the first/last data cells. Edges clip without wrapping.
+Horizontal movement preserves row membership. Vertical movement keeps the
+existing modifier model: Shift extends its anchored row range, Control moves
+focus only, and Control+Shift extends additively. Cells and columns do not become
+selection members. Cursor columns are runtime presentation, never saved defaults.
+
+Enter or F2 addresses the current cell's editor. A noneditable column does not
+redirect to a different column. Active text editors retain ordinary caret keys.
+Browser Tab/Shift+Tab visit eligible editors in that row; Tab at a boundary leaves
+through ordinary host traversal. Escape restores an uncommitted browser draft
+before blur and returns to that exact cell. F2 also restores cell navigation,
+using normal blur/validation. Read-only browser text remains inspectable; a
+read-only checkbox uses disabled HTML behavior. LCL retains its standard editor
+validation/discard and widget Tab behavior; read-only grids refuse editor entry.
+
+The browser grid has one data-cell Tab entry; editors and rows add none while
+navigating. The cell itself receives focus, so readonly columns remain reachable.
+Per-cell `aria-readonly`, column indices and row indices include the accessible
+header. Native initial columns fit admitted content using LCL font measurement;
+later publications retain user widths and active drafts. This is presentation
+only. Canonical key callbacks can consume defaults; selection callbacks can
+retire the view safely on both targets.
+
+The ordinary exact MCP-authored English table passes 28 checked Win32 controls
+and 43 HTTP browser controls per desktop/CSS-390. Trusted Chromium keys and
+Tab/Shift+Tab add 30 host checks per width, including current numeric entry,
+Escape discard, editor boundaries and exact row membership. Selection regression
+passes 155 native and 182 browser checks. See
+[the current packet](../WORK.md#current-return-path-bound-grid-cell-navigation--2026-10-07).
+The [WAI grid pattern](https://www.w3.org/WAI/ARIA/apg/patterns/grid/), rechecked
+2026-10-07, guides this contract. Paging, cell/column selection, virtualization,
+sorting/filtering, hardware/IME/assistive technology and other widgetsets/DPI
+remain open. Host emulation and controlled LCL messages do not prove full APG
+conformance or physical Android input.
 
 ## List and tree typeahead
 

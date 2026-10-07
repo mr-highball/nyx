@@ -458,6 +458,25 @@ paired history, name collisions, metadata order and failed visual publication
 are covered. General structural Pascal editing and large-document performance
 remain with their original owners.
 
+`tools/build.ps1 -Target grid-navigation` consumes an exact previously exported
+ordinary MCP table application, checks actual LCL input/retirement and emits the
+browser consumer plus Pascal trusted-key observer. Use `-GridSourceDirectory`
+with a retained export directory. An explicit
+`-DesignerMCPConfig <config.toml> -GridSourceDirectory <new-source-directory>`
+first runs the authenticated Pascal companion in a new owned workspace; an
+existing destination refuses. Layout and data binding currently form two separate
+paired operations. Without that opt-in, the build creates no project, opens no
+listener and changes no enrollment.
+
+Serve only its three browser artifacts from an explicitly owned artifact child.
+Run `nyx_grid_navigation_observer.exe` with the loopback grid URL, new evidence
+directory and CSS width for actual host arrows/modifiers, Enter/F2,
+Escape and Tab/Shift+Tab. Width 390 uses a 640-pixel-high host; desktop uses 900.
+The observer changes runtime controls, never document/source composition. Native
+PNG and checked input logs are under `build/grid-navigation/maintained/`; see
+[the grid packet](../WORK.md#current-return-path-bound-grid-cell-navigation--2026-10-07)
+for scope and qualification limits.
+
 `tools/build.ps1 -Target selection -BrowserOutput <staging-directory>` runs the
 actual LCL collection-selection journey, prepares its crafted companion, repeats
 the native journey against that compiled source and compiles the same pas2js

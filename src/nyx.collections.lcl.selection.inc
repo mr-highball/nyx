@@ -113,6 +113,10 @@ var
   LTarget: Integer;
   LFocus: TNyxItemRef;
   LNode: TTreeNode;
+  LMove: TNyxGridMove;
+  LDestination: TNyxGridCell;
+  LGridMove: Boolean;
+  LColumn: Integer;
 begin
   LKeepAlive := Self as INyxCollectionMount;
 
@@ -149,6 +153,14 @@ begin
 
   if (FGrid <> nil) and FGrid.EditorMode then
   begin
+
+    if AKey = VK_F2 then
+    begin
+      { Ending editing uses the widget's ordinary typed validation callback.
+        Escape remains the native discard path and keeps its cell position. }
+      AKey := 0;
+      FGrid.EditorMode := False;
+    end;
     Exit;
   end;
 
@@ -174,6 +186,104 @@ begin
     begin
       LTarget := LIndex;
       Break;
+    end;
+  end;
+
+  if FGrid <> nil then
+  begin
+
+    if (AKey = VK_F2) or (AKey = VK_RETURN) then
+    begin
+      { Read-only columns have no editing authority. Enter/F2 addresses this
+        exact cell, never scans for a different editable column in the row. }
+      AKey := 0;
+
+      if not FReadOnly and (FGrid.Row > 0) and
+        (FView.Spec.ColumnAt(FGrid.Col).Mode = cmEditable) then
+      begin
+        FGrid.EditorMode := True;
+      end;
+      Exit;
+    end;
+    LGridMove := True;
+    case AKey of
+      VK_LEFT:
+        begin
+          LMove := ngmLeft;
+        end;
+      VK_RIGHT:
+        begin
+          LMove := ngmRight;
+        end;
+      VK_UP:
+        begin
+          LMove := ngmUp;
+        end;
+      VK_DOWN:
+        begin
+          LMove := ngmDown;
+        end;
+      VK_HOME:
+        begin
+          LMove := ngmRowStart;
+
+          if ssCtrl in AShift then
+          begin
+            LMove := ngmFirstCell;
+          end;
+        end;
+      VK_END:
+        begin
+          LMove := ngmRowEnd;
+
+          if ssCtrl in AShift then
+          begin
+            LMove := ngmLastCell;
+          end;
+        end;
+      else
+        begin
+          LGridMove := False;
+        end;
+    end;
+
+    if LGridMove then
+    begin
+
+      if LTarget < 0 then
+      begin
+        LTarget := 0;
+      end;
+      LColumn := FGrid.Col;
+      LDestination := MoveNyxGridCell(LTarget, LColumn, Length(LOrder), FView.Spec.Count, LMove);
+      AKey := 0;
+      FUpdating := True;
+      try
+        { The physical column and row membership are separate. Prevent the
+          widget's selection slot from interpreting a horizontal move as a
+          mouse gesture or publishing a second row-selection notification. }
+        FGrid.Col := LDestination.Column;
+      finally
+        FUpdating := False;
+      end;
+
+      if LMove in [ngmLeft, ngmRight, ngmRowStart, ngmRowEnd] then
+      begin
+        Select(LOrder[LDestination.Row], nsaFocus);
+      end
+      else if ssShift in AShift then
+      begin
+        SelectRange(LOrder[LDestination.Row], LOrder, ssCtrl in AShift);
+      end
+      else if ssCtrl in AShift then
+      begin
+        Select(LOrder[LDestination.Row], nsaFocus);
+      end
+      else
+      begin
+        Select(LOrder[LDestination.Row]);
+      end;
+      Exit;
     end;
   end;
 

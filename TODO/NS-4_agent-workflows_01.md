@@ -15,6 +15,18 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Observed combined-composition gap (2026-10-07): the ordinary English table
+companion uses bounded authenticated MCP exclusively, with exact source/history
+and an independent owned workspace. It passes 41 checks. Layout creation through
+`nyx_transaction` and collection/default binding through `nyx_collections` remain
+two separate grouped paired operations. The collection phase undoes/redoes its
+exact source in one step; the entire layout-plus-data composition does not.
+This existing task owns a revision-aware grouped operation across those document
+domains, with candidate admission, source generation and one paired Undo step.
+Do not replace it with source/browser authoring or claim cross-domain atomicity
+from the two-phase companion. No criterion or workflow count advances (17
+remains). See [the packet](../WORK.md#current-return-path-bound-grid-cell-navigation--2026-10-07).
+
 Current full-browser candidate (2026-10-07): criterion 5 now qualifies authenticated
 bar tools, grouped semantic composition/history/refusal and full ordinary Studio
 Properties/Events/observing input: 513 desktop, 456 CSS 390×640, four actual exact-

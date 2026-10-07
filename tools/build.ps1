@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -65,6 +65,8 @@ param(
   [string]$DateSourceDirectory = 'build/date-fields/companion',
   # Unchanged English date seed exported with bounded semantic MCP reads.
   [string]$DatePolicySourceDirectory = 'build/date-policy/source',
+  # Exact English bound-table source composed/exported through authenticated MCP.
+  [string]$GridSourceDirectory = 'build/grid-navigation/source',
   # Full-catalog source is composed/exported by the Pascal semantic MCP consumer.
   [string]$CatalogFocusSourceDirectory = 'build/catalog-focus/source',
   # Property mutations consume an unchanged MCP-authored catalog/review pair.
@@ -1817,6 +1819,49 @@ try {
       'tests/nyx_typeahead_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/typeahead.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'grid-navigation') {
+    # Semantic source remains the ordinary companion on both targets. Optional
+    # explicit enrollment creates one owned project; no listener/enrollment or
+    # active project is replaced. Each semantic phase keeps its own paired Undo.
+    $nyxGridRoot = Join-Path $nyxRoot 'build/grid-navigation/maintained'
+    $nyxGridTool = Join-Path $nyxGridRoot 'tool'
+    $nyxGridNative = Join-Path $nyxGridRoot 'lcl'
+    $nyxGridBrowser = Join-Path $nyxGridRoot 'browser'
+    New-Item -ItemType Directory -Force $nyxGridTool, $nyxGridNative, $nyxGridBrowser | Out-Null
+    if ($DesignerMCPConfig) {
+      Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+        '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxGridTool", "-FE$nyxGridTool", 'tools/nyx_grid_companion.lpr')
+      & (Join-Path $nyxGridTool 'nyx_grid_companion.exe') $DesignerMCPConfig $GridSourceDirectory
+      if ($LASTEXITCODE -ne 0) { throw 'Authenticated semantic grid companion failed' }
+    }
+    $nyxGridSource = [IO.Path]::GetFullPath($GridSourceDirectory)
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxGridSource 'nyx.generated.view.pas'))) {
+      throw 'Export the MCP grid companion or supply an explicit enrolled DesignerMCPConfig'
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxGridPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-Fu$nyxGridSource", "-Fu$nyxLazarus/lcl/units/$nyxGridPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxGridPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxGridPlatform", "-Fu$nyxLazarus/packager/units/$nyxGridPlatform",
+      "-FU$nyxGridNative", "-FE$nyxGridNative", 'tests/nyx_grid_navigation_controls.lpr')
+    & (Join-Path $nyxGridNative 'nyx_grid_navigation_controls.exe') (Join-Path $nyxGridRoot 'native.png')
+    if ($LASTEXITCODE -ne 0) { throw 'Ordinary native grid navigation failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Futests',
+      "-Fu$nyxGridSource", "-FE$nyxGridBrowser", 'tests/nyx_grid_navigation_controls.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxGridBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/grid-navigation.html') -Destination $nyxGridBrowser
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-FU$nyxGridTool", "-FE$nyxGridTool", 'tests/nyx_browser_ready_capture.lpr')
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-FU$nyxGridTool", "-FE$nyxGridTool", 'tests/nyx_grid_navigation_observer.lpr')
+    Write-Host 'Grid consumers built; actual HTTP browser execution remains explicit.'
     exit 0
   }
 

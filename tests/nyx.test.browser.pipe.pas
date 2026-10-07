@@ -34,7 +34,7 @@ type
   { Closed host keys used by maintained input journeys. These are Chromium
     protocol input, not portable product events or application shortcuts. }
   TNyxBrowserKey = (nbkHome, nbkEnd, nbkUp, nbkDown, nbkEnter, nbkEscape,
-    nbkSelectAll, nbkLeft, nbkRight);
+    nbkSelectAll, nbkLeft, nbkRight, nbkF2);
   { Physical axis-aligned viewport border bounds in CSS pixels, observed through
     Chromium's DOM protocol. This is target evidence, not document layout state. }
   TNyxBrowserBox = record
@@ -102,8 +102,10 @@ type
       it does not claim hardware, IME or assistive-technology input. }
     procedure Tab(AReverse: Boolean = False);
     { Exercise the focused host control with trusted keyboard input. SelectAll
-      uses Control+A on this Windows host. No DOM value is assigned. }
-    procedure Key(AKey: TNyxBrowserKey);
+      uses Control+A on this Windows host. Optional modifiers are explicit
+      protocol input; no hardware key state or DOM value is assigned. }
+    procedure Key(AKey: TNyxBrowserKey; AControl: Boolean = False;
+      AShift: Boolean = False);
     { Insert text at the actual focused host caret. Does not assign a DOM value
       or focus a replacement element; this also qualifies source navigation. }
     procedure TypeText(const AText: TNyxText);
@@ -781,21 +783,28 @@ begin
     NyxField('modifiers', NyxData(LModifiers))]), FSession);
 end;
 
-procedure TNyxBrowserPipe.Key(AKey: TNyxBrowserKey);
+procedure TNyxBrowserPipe.Key(AKey: TNyxBrowserKey; AControl, AShift: Boolean);
 const
   CNames: array[TNyxBrowserKey] of TNyxText =
-    ('Home', 'End', 'ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'a', 'ArrowLeft', 'ArrowRight');
+    ('Home', 'End', 'ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'a',
+      'ArrowLeft', 'ArrowRight', 'F2');
   CCodes: array[TNyxBrowserKey] of TNyxText =
-    ('Home', 'End', 'ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'KeyA', 'ArrowLeft', 'ArrowRight');
-  CVirtual: array[TNyxBrowserKey] of Integer = (36, 35, 38, 40, 13, 27, 65, 37, 39);
+    ('Home', 'End', 'ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'KeyA',
+      'ArrowLeft', 'ArrowRight', 'F2');
+  CVirtual: array[TNyxBrowserKey] of Integer = (36, 35, 38, 40, 13, 27, 65, 37, 39, 113);
 var
   LModifiers: Integer;
 begin
   LModifiers := 0;
 
-  if AKey = nbkSelectAll then
+  if (AKey = nbkSelectAll) or AControl then
   begin
     LModifiers := 2;
+  end;
+
+  if AShift then
+  begin
+    LModifiers := LModifiers or 8;
   end;
   Request('Input.dispatchKeyEvent', NyxObject([
     NyxField('type', NyxData('keyDown')), NyxField('key', NyxData(CNames[AKey])),

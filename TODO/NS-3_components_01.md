@@ -23,6 +23,22 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Production table cell input — 2026-10-07
+
+Original criteria 1/3 now have shared typed cell movement, current-cell editing
+and exact independent row membership in a real specialized bound table. The
+same ordinary authenticated MCP export passes 28 Win32 controls, 43 HTTP browser
+controls and 30 trusted key/Tab checks per desktop/CSS 390×640. Native initial
+widths expose English content and retain user allocation on publication; source
+defaults and protected services/pairs remain exact. See
+[the packet](../WORK.md#current-return-path-bound-grid-cell-navigation--2026-10-07).
+
+No original component criterion closes or component count is created. Renderer
+alone advances 8→9 once; other established totals remain. Stop cell-navigation
+fixtures. Production paging, sorting/filtering, virtualization, large-data
+performance, cell/column selection, styling and broader accessibility retain
+their original owners; basic grid input is not completion of those requirements.
+
 ## Public bar-authoring integration — 2026-10-07
 
 The subsequent existing workflow packet qualifies authenticated bar edits and

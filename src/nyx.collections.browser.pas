@@ -50,6 +50,7 @@ uses
   nyx.collections,
   nyx.collections.view.types,
   nyx.typeahead,
+  nyx.collections.grid,
   nyx.collections.selection;
 
 type
@@ -71,6 +72,9 @@ type
     FRef: TNyxItemRef;
     FElement: TJSHTMLElement;
     FChildren: TJSHTMLElement;
+    { Exact owned data-cell surfaces. Editors remain children with a separate
+      editing mode; row membership is independent of this physical cursor. }
+    FCells: array of TJSHTMLElement;
     FLabels: array of TJSHTMLElement;
     FInputs: array of TJSHTMLInputElement;
     function Click(AEvent: TJSMouseEvent): Boolean;
@@ -88,6 +92,9 @@ type
     FBody: TJSHTMLElement;
     FRows: array of TBrowserRow;
     FRendered: INyxCollectionSnapshot;
+    FFocusedColumn: Integer;
+    function GridKey(AEvent: TJSKeyboardEvent; const AOrder: TNyxItemRefs;
+      ARow: Integer): Boolean;
     function Key(AEvent: TJSKeyboardEvent): Boolean;
     function VisibleOrder: TNyxItemRefs;
     procedure Gesture(const AItem: TNyxItemRef; AShift, AControl: Boolean;
@@ -139,6 +146,7 @@ begin
     begin
       LCell := NewElement('th');
       LCell.setAttribute('role', 'columnheader');
+      LCell.setAttribute('aria-colindex', IntToStr(LIndex + 1));
       LCell.textContent := AView.Spec.ColumnAt(LIndex).Title;
       LCell.setAttribute('scope', 'col');
       LRow.appendChild(LCell);
@@ -210,6 +218,7 @@ begin
   FElement.onclick := Click;
   SetLength(FLabels, LColumns);
   SetLength(FInputs, LColumns);
+  SetLength(FCells, LColumns);
   for LIndex := 0 to LColumns - 1 do
   begin
     LCell := FElement;
@@ -218,6 +227,9 @@ begin
     begin
       LCell := NewElement('td');
       LCell.setAttribute('role', 'gridcell');
+      LCell.setAttribute('data-nyx-column', IntToStr(LIndex));
+      LCell.setAttribute('aria-colindex', IntToStr(LIndex + 1));
+      LCell.setAttribute('tabindex', '-1');
       FElement.appendChild(LCell);
     end
     else if FOwner.FView.Projection = cpTree then
@@ -225,6 +237,7 @@ begin
       LCell := LCaption;
     end;
     LColumn := FOwner.FView.Spec.ColumnAt(LIndex);
+    FCells[LIndex] := LCell;
 
     if (LColumn.Mode = cmEditable) and (FOwner.FView.Projection <> cpList) then
     begin
@@ -304,6 +317,13 @@ begin
   end;
   for LIndex := 0 to Length(FLabels) - 1 do
   begin
+
+    if FOwner.FView.Projection = cpTable then
+    begin
+      FCells[LIndex].setAttribute('tabindex', '-1');
+      FCells[LIndex].setAttribute('aria-readonly', LowerCase(BoolToStr(
+        FOwner.FReadOnly or (FOwner.FView.Spec.ColumnAt(LIndex).Mode <> cmEditable), True)));
+    end;
     LText := FOwner.FView.CellText(FRef, LIndex);
     LApplyValues := LPrevious < 0;
 
@@ -391,6 +411,8 @@ var
   LFocus: TJSHTMLElement;
   LEditor: TJSElement;
   LOptions: TFocusOptions;
+  LCell: TJSHTMLElement;
+  LColumn: Integer;
 begin
   { A nested tree item owns its selection; bubbling must not select its parent. }
   AEvent.stopPropagation;
@@ -413,6 +435,22 @@ begin
   LMount := FOwner as INyxCollectionMount;
   LHost := FOwner.FHost;
   LFocus := FElement;
+
+  if FOwner.FView.Projection = cpTable then
+  begin
+    LCell := TJSHTMLElement(TJSHTMLElement(AEvent.target).closest('[role=gridcell]'));
+
+    if LCell <> nil then
+    begin
+      LColumn := StrToIntDef(LCell.getAttribute('data-nyx-column'), -1);
+
+      if (LColumn >= 0) and (LColumn < Length(FCells)) and (FCells[LColumn] = LCell) then
+      begin
+        FOwner.FFocusedColumn := LColumn;
+        LFocus := LCell;
+      end;
+    end;
+  end;
   { Selecting an editable row must not steal the caret from the actual editor.
     Capture that managed DOM element before publication can detach this row. }
 
@@ -423,6 +461,13 @@ begin
     LFocus := TJSHTMLElement(LEditor);
   end;
   FOwner.Gesture(FRef, AEvent.shiftKey, AEvent.ctrlKey or AEvent.metaKey);
+
+  if LMount.Connected then
+  begin
+    { A same-row click may change only the column, so no selection publication
+      is required. Refresh the single Tab entry while preserving all drafts. }
+    LMount.Refresh;
+  end;
 
   if LMount.Connected then
   begin
@@ -499,6 +544,8 @@ begin
   if FView.Projection = cpTable then
   begin
     FHost.setAttribute('aria-readonly', LowerCase(BoolToStr(FReadOnly, True)));
+    FHost.setAttribute('aria-rowcount', IntToStr(LData.Count + 1));
+    FHost.setAttribute('aria-colcount', IntToStr(FView.Spec.Count));
   end;
   LFocused := TJSHTMLElement(document.activeElement);
 
@@ -544,6 +591,11 @@ begin
       LNext[LIndex] := TBrowserRow.Create(Self, LData.ItemAt(LIndex).Ref);
     end;
     LNext[LIndex].Sync;
+
+    if FView.Projection = cpTable then
+    begin
+      LNext[LIndex].FElement.setAttribute('aria-rowindex', IntToStr(LIndex + 2));
+    end;
   end;
   { First relocate surviving tree rows, so removing an ancestor never destroys
     a retained child that was reparented in the same atomic batch. }
@@ -631,6 +683,11 @@ begin
       (LVisible[LIndex].ID = FView.Selection.Focus.ID)) then
     begin
       LTabStop := FRows[LPrevious].FElement;
+
+      if FView.Projection = cpTable then
+      begin
+        LTabStop := FRows[LPrevious].FCells[FFocusedColumn];
+      end;
     end;
   end;
   FHost.setAttribute('tabindex', '-1');

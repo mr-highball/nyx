@@ -8,6 +8,13 @@ is an ordinary owned tree built from reusable primitives. Named parts are
 editable nodes rather than inaccessible renderer internals. Native and browser
 adapters consume the same expanded tree.
 
+Bound tables add shared typed data-cell navigation and current-cell editing,
+independently of row membership. The same specialized MCP-exported application
+exercises both actual targets; browser Tab traversal and narrow horizontal
+scrolling retain authored text scale. See [table behavior](collection-views.md#bound-table-cell-navigation).
+Production paging, sorting/filtering, virtualization and richer table styling
+remain open; declared catalog breadth does not establish those implementations.
+
 Compound scalar values and editable named fields now have explicit [typed
 contracts](contracts.md). Rating/stepper selections are integers; segmented
 choices are text; a search action carries its query field. Layout-only roots

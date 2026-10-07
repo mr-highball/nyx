@@ -3,6 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current table boundary (2026-10-07): shared typed cell navigation, exact row
+membership and current-cell editing reach an ordinary authenticated MCP-exported
+application on both targets. Checked Win32 passes 28; HTTP browser passes 43 plus
+30 trusted key/Tab checks per desktop/CSS 390×640. Selection regression is 155
+native/182 browser per width, leak-free. Initial native widths fit English content;
+later publications retain editor drafts/user widths. Protected services/pairs and
+frozen LAN payload remain exact. No original criterion closes; renderer no-closure
+advances 8→9 once, workflow 17, authoring 29, codegen 28 and delivery 2 remain.
+Stop cell-navigation fixtures; advance original production table paging, sorting/
+filtering, virtualization and performance, with styling/accessibility still open.
+Combined layout/data semantic composition remains an existing workflow gap. See
+[the packet](WORK.md#current-return-path-bound-grid-cell-navigation--2026-10-07).
+
 Current authenticated candidate boundary (2026-10-07): frozen `0ce846f` qualifies
 21 MCP tools and full ordinary browser Studio/observing bar journeys, 513 desktop
 and 456 CSS 390×640, with four exact-source browser/LCL application/view builds

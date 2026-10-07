@@ -20,6 +20,24 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Bound grid navigation — 2026-10-07
+
+Criterion 2 now includes shared typed data-cell arrows/endpoints, current-cell
+editing/return, separate row membership and one browser cell Tab entry with
+dimensions/indices. An exact authenticated MCP-exported ordinary application
+passes 28 Win32 controls and 43 HTTP browser controls plus 30 trusted key/Tab
+checks per desktop/CSS 390×640. Selection regression passes 155 native/182 browser
+per width, leak-free. English native/browser captures are inspected; native
+initial widths fit content without refitting user allocation during publication.
+Protected services/pairs/frozen LAN payload stay exact. See
+[the packet](../WORK.md#current-return-path-bound-grid-cell-navigation--2026-10-07).
+
+No original criterion closes or historical parity count is invented. Renderer
+alone advances its existing no-closure count 8→9. Stop this input batch; original
+production paging, sorting/filtering, virtualization, cell/column selection,
+styling and performance remain, alongside hardware/IME/assistive technology and
+other widgetsets/DPI. Emulated host defaults do not establish full APG conformance.
+
 ## Coordinated menu-bar input — 2026-10-07
 
 Criterion 2 now has a shared horizontal coordinator with browser/LCL adapters:

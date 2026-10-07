@@ -79,11 +79,12 @@ Standards include the current Pointer Events Level 3 Recommendation and HTML
 Living Standard drag model, linked in docs/events.md, plus WAI keyboard/grid
 practice in docs/collection-views.md (checked 2026-10-04). Host input qualifies
 browser defaults, not hardware/IME/assistive technology or another widgetset.
-The generated reference covers 76 kinds. Bound browser tables currently use
-row-oriented navigation and explicitly documented cell-editor entry/exit.
+The generated reference covers 76 kinds. Bound tables use shared data-cell
+movement with separate row membership, current-cell editing and one browser
+cell Tab entry. Paging, cell selection and broader grid qualification remain open.
 
 Codex project and explicitly enrolled user configuration refresh on each Studio
-launch. The current observing release authenticates twenty tools through the
+launch. The current observing release authenticates twenty-one tools through the
 Pascal semantic client. Cached native chat handles need one reconnect after the
 test-mode refresh retired their endpoint. Keep semantic MCP primary; use the
 current Pascal client until those handles reconnect. Missing

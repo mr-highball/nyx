@@ -20,6 +20,23 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 
+## Bound grid navigation — 2026-10-07
+
+Existing input/retained-focus criteria now include shared typed cell movement,
+one browser cell Tab entry and current-cell editor entry/return, independently
+of row membership. The exact authenticated MCP-exported application passes 43
+HTTP browser controls plus 30 trusted key/Tab checks per desktop/CSS 390×640;
+Win32 passes 28. Selection regression is 155 native/182 browser per width,
+leak-free. Initial native columns fit English content and retain user widths on
+publication. Protected services/pairs and frozen LAN bytes remain exact. See
+[the packet](../WORK.md#current-return-path-bound-grid-cell-navigation--2026-10-07).
+
+No original criterion closes; renderer no-closure advances 8→9 once across both
+renderer owners. Workflow 17, authoring 29, codegen 28 and delivery 2 remain.
+Stop cell-navigation fixtures. Paging, sorting/filtering, virtualization,
+cell/column selection, large-data performance, production styling and hardware/
+assistive/other-widgetset qualification retain their original owners.
+
 ## Typed date fields — 2026-10-06
 
 The original native interaction/parity and advanced-picker scope now includes

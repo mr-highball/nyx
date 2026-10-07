@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Bound tables now share typed data-cell navigation, separate row membership and
+current-cell editor entry/return. An exact authenticated MCP-exported application
+passes 28 actual Win32 controls, 43 HTTP browser controls and 30 trusted host keys/
+Tab checks per desktop/CSS 390×640. Selection regression passes 155 native/182
+browser per width, leak-free. Native initial columns fit English content; narrow
+browser tables scroll without shrinking text. Protected services/projects and
+frozen LAN bytes remain unchanged. Paging, sorting/filtering, virtualization,
+cell selection, production styling and hardware/accessibility remain open. See
+[the grid packet](WORK.md#current-return-path-bound-grid-cell-navigation--2026-10-07).
+
 Studio consumes a public typed Nyx menu-bar editor with independent drafts,
 reviewed removal and paired source/history. Its isolated frozen candidate now
 authenticates 21 MCP tools and passes full ordinary Studio/observing journeys:

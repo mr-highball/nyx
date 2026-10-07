@@ -53,6 +53,7 @@ uses
   nyx.state,
   nyx.data,
   nyx.collections,
+  nyx.collections.grid,
   nyx.collections.view.types,
   nyx.typeahead,
   nyx.collections.selection;
@@ -617,6 +618,7 @@ begin
         for LColumn := 0 to FView.Spec.Count - 1 do
         begin
           FGrid.Cells[LColumn, 0] := FView.Spec.ColumnAt(LColumn).Title;
+
           if LData.Count = 0 then
           begin
             FGrid.Cells[LColumn, 1] := '';
@@ -654,6 +656,15 @@ begin
                 FView.CellText(LData.ItemAt(LIndex).Ref, LColumn));
             end;
           end;
+        end;
+        { The widget's fixed default width clips ordinary task captions. Fit
+          admitted headers/content once through LCL's own font measurement;
+          later publications retain user column widths and active editor drafts.
+          This remains adapter presentation, never an authored schema mutation. }
+
+        if FRendered = nil then
+        begin
+          FGrid.AutoSizeColumns;
         end;
       end;
 

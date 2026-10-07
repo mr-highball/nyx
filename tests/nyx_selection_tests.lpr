@@ -428,7 +428,7 @@ var
           LKey := 'ArrowDown';
         end;
     end;
-    LElement := TJSHTMLElement(LControl.querySelector('[tabindex="0"][data-nyx-item]'));
+    LElement := TJSHTMLElement(LControl.querySelector('[tabindex="0"]'));
 
     if LElement = nil then
     begin
@@ -669,7 +669,18 @@ begin
       Press(nkSpaceKey, False, True);
       Check((LView.Selection.Count = 2) and LView.Selection.Contains(Row(1)),
         'real control toggles focused membership');
-      Press(nkEndKey, True, False);
+
+      if LIndex = 1 then
+      begin
+        { A grid's plain End addresses columns. Shift+Down extends the same row
+          range; Control+Shift+End deliberately adds to existing membership. }
+        Press(nkDownKey, True, False);
+        Press(nkDownKey, True, False);
+      end
+      else
+      begin
+        Press(nkEndKey, True, False);
+      end;
       Check((LView.Selection.Count = 3) and not LView.Selection.Contains(Row(0)),
         'real control extends a range from the toggle anchor');
       Press(nkAKey, False, True);
@@ -871,9 +882,14 @@ begin
       Check(LProbe.Calls = LBefore + 1, 'removal publishes exactly one selection callback');
       {$ifdef PAS2JS}
       LFocus := TJSHTMLElement(LControl.querySelector('[data-nyx-item="build"]'));
+
+      if LIndex = 1 then
+      begin
+        LFocus := TJSHTMLElement(LFocus.querySelector('[role=gridcell][tabindex="0"]'));
+      end;
       Check(document.activeElement = LFocus, 'removed focused row transfers physical browser focus');
-      Check(LControl.querySelectorAll('[data-nyx-item][tabindex="0"]').length = 1,
-        'rich collection has exactly one row tab stop');
+      Check(LControl.querySelectorAll('[tabindex="0"]').length = 1,
+        'rich collection has exactly one navigation tab stop');
 
       if LIndex = 1 then
       begin
@@ -916,7 +932,7 @@ begin
           'read-only text cell remains focusable for selection and copying');
         LInput.focus;
         Check(document.activeElement = LInput, 'read-only text cell accepts actual focus');
-        LFocus := TJSHTMLElement(LControl.querySelector('[data-nyx-item][tabindex="0"]'));
+        LFocus := TJSHTMLElement(LControl.querySelector('[tabindex="0"]'));
         LFocus.focus;
         LVersion := LView.Store.Snapshot.Revision;
         Check(EditorPress(LFocus, nkF2Key) and (document.activeElement = LInput),

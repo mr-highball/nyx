@@ -76,6 +76,133 @@ begin
   end;
 end;
 
+{ Grid navigation addresses the current data cell, not the first editor in a
+  row. Capture physical objects before selection callbacks can retire this mount.
+  Column position is runtime presentation; document defaults are never rewritten. }
+function TBrowserMount.GridKey(AEvent: TJSKeyboardEvent;
+  const AOrder: TNyxItemRefs; ARow: Integer): Boolean;
+var
+  LRow: Integer;
+  LColumn: Integer;
+  LCell: TJSHTMLElement;
+  LFocus: TJSHTMLElement;
+  LInput: TJSHTMLInputElement;
+  LMove: TNyxGridMove;
+  LDestination: TNyxGridCell;
+  LOptions: TFocusOptions;
+  LControl: Boolean;
+begin
+  Result := True;
+  LRow := FView.Snapshot.IndexOf(AOrder[ARow]);
+  LColumn := FFocusedColumn;
+  LCell := TJSHTMLElement(TJSHTMLElement(AEvent.target).closest('[role=gridcell]'));
+
+  if LCell <> nil then
+  begin
+    LColumn := StrToIntDef(LCell.getAttribute('data-nyx-column'), -1);
+
+    if (LColumn < 0) or (LColumn >= Length(FRows[LRow].FCells)) or
+      (FRows[LRow].FCells[LColumn] <> LCell) then
+    begin
+      Exit;
+    end;
+  end;
+  FFocusedColumn := LColumn;
+  LControl := AEvent.ctrlKey or AEvent.metaKey;
+
+  if (AEvent.key = 'Enter') or (AEvent.key = 'F2') then
+  begin
+    AEvent.preventDefault;
+    LInput := FRows[LRow].FInputs[LColumn];
+
+    if (LInput = nil) or LInput.disabled then
+    begin
+      Exit;
+    end;
+    Select(AOrder[ARow], nsaFocus);
+
+    if GetConnected and FHost.contains(LInput) then
+    begin
+      Refresh;
+
+      if GetConnected and FHost.contains(LInput) then
+      begin
+        LOptions := TFocusOptions.new;
+        LOptions.preventScroll := True;
+        TFocusable(LInput).focus(LOptions);
+      end;
+    end;
+    Exit;
+  end;
+  case AEvent.key of
+    'ArrowLeft':
+      begin
+        LMove := ngmLeft;
+      end;
+    'ArrowRight':
+      begin
+        LMove := ngmRight;
+      end;
+    'ArrowUp':
+      begin
+        LMove := ngmUp;
+      end;
+    'ArrowDown':
+      begin
+        LMove := ngmDown;
+      end;
+    'Home':
+      begin
+        LMove := ngmRowStart;
+
+        if LControl then
+        begin
+          LMove := ngmFirstCell;
+        end;
+      end;
+    'End':
+      begin
+        LMove := ngmRowEnd;
+
+        if LControl then
+        begin
+          LMove := ngmLastCell;
+        end;
+      end;
+    else
+      begin
+        Exit(False);
+      end;
+  end;
+  AEvent.preventDefault;
+  LDestination := MoveNyxGridCell(ARow, LColumn, Length(AOrder), FView.Spec.Count, LMove);
+  FFocusedColumn := LDestination.Column;
+  LRow := FView.Snapshot.IndexOf(AOrder[LDestination.Row]);
+  LFocus := FRows[LRow].FCells[LDestination.Column];
+
+  if LMove in [ngmLeft, ngmRight, ngmRowStart, ngmRowEnd] then
+  begin
+    Select(AOrder[LDestination.Row], nsaFocus);
+  end
+  else
+  begin
+    Gesture(AOrder[LDestination.Row], AEvent.shiftKey, LControl,
+      LControl and not AEvent.shiftKey);
+  end;
+
+  if GetConnected and FHost.contains(LFocus) then
+  begin
+    Refresh;
+    { Navigation reveals the cell using normal nearest scrolling. A surviving
+      editor owns caret movement instead and takes the separate path below. }
+
+    if GetConnected and FHost.contains(LFocus) then
+    begin
+      LFocus.focus;
+    end;
+  end;
+end;
+
 function TBrowserMount.Key(AEvent: TJSKeyboardEvent): Boolean;
 var
   LKeepAlive: INyxCollectionMount;
@@ -112,11 +239,11 @@ begin
     (LowerCase(LElement.tagName) = 'select') then
   begin
     { Editors own caret navigation. Escape discards only their uncommitted
-      physical draft, then returns to the row; Tab traverses eligible columns
+      physical draft, then returns to the cell; Tab traverses eligible columns
       within that row. Native LCL retains its standard cell-editor behavior. }
     ResetTypeAhead;
 
-    if (AEvent.key = 'Escape') or (AEvent.key = 'Tab') then
+    if (AEvent.key = 'Escape') or (AEvent.key = 'F2') or (AEvent.key = 'Tab') then
     begin
       LRowElement := TJSHTMLElement(LElement.closest('[data-nyx-item]'));
 
@@ -135,21 +262,40 @@ begin
       end;
       LInput := FRows[LRow].FInputs[LColumn];
 
-      if AEvent.key = 'Escape' then
+      if FView.Projection = cpTable then
+      begin
+        FFocusedColumn := LColumn;
+      end;
+
+      if (AEvent.key = 'Escape') or (AEvent.key = 'F2') then
       begin
         AEvent.preventDefault;
 
-        if LInput._type = 'checkbox' then
+        if AEvent.key = 'Escape' then
         begin
-          LInput.checked := FView.CellText(LItem, LColumn) = 'true';
-        end
-        else
-        begin
-          LInput.value := FView.CellText(LItem, LColumn);
+
+          if LInput._type = 'checkbox' then
+          begin
+            LInput.checked := FView.CellText(LItem, LColumn) = 'true';
+          end
+          else
+          begin
+            LInput.value := FView.CellText(LItem, LColumn);
+          end;
         end;
-        LOptions := TFocusOptions.new;
-        LOptions.preventScroll := True;
-        TFocusable(LRowElement).focus(LOptions);
+
+        if FView.Projection = cpTable then
+        begin
+          LRowElement := FRows[LRow].FCells[LColumn];
+        end;
+        Refresh;
+
+        if GetConnected and FHost.contains(LRowElement) then
+        begin
+          LOptions := TFocusOptions.new;
+          LOptions.preventScroll := True;
+          TFocusable(LRowElement).focus(LOptions);
+        end;
         Exit;
       end;
       LNextColumn := LColumn + 1;
@@ -165,9 +311,19 @@ begin
         if (LInput <> nil) and not LInput.disabled then
         begin
           AEvent.preventDefault;
-          LOptions := TFocusOptions.new;
-          LOptions.preventScroll := True;
-          TFocusable(LInput).focus(LOptions);
+
+          if FView.Projection = cpTable then
+          begin
+            FFocusedColumn := LNextColumn;
+            Refresh;
+          end;
+
+          if GetConnected and FHost.contains(LInput) then
+          begin
+            LOptions := TFocusOptions.new;
+            LOptions.preventScroll := True;
+            TFocusable(LInput).focus(LOptions);
+          end;
           Exit;
         end;
 
@@ -241,6 +397,11 @@ begin
     Exit;
   end;
   ResetTypeAhead;
+
+  if (FView.Projection = cpTable) and GridKey(AEvent, LOrder, LTarget) then
+  begin
+    Exit;
+  end;
 
   if (LKey = 'F2') or (LKey = 'Enter') then
   begin
@@ -352,6 +513,11 @@ begin
   AEvent.preventDefault;
   LRow := FView.Snapshot.IndexOf(LOrder[LTarget]);
   LFocus := FRows[LRow].FElement;
+
+  if FView.Projection = cpTable then
+  begin
+    LFocus := FRows[LRow].FCells[FFocusedColumn];
+  end;
 
   if (LKey = ' ') and not AEvent.shiftKey then
   begin

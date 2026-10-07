@@ -33,29 +33,84 @@ replacement or project acceptance. Resume the unfinished grid return path below.
 
 ## Current return path: bound grid cell navigation — 2026-10-07
 
-This implementation remains an uncommitted working batch while the mobile
-follow-up is answered. Its exact MCP-authored ordinary application already passes
-the companion's 41 checks, checked native controls 26 and actual browser controls
-43 at desktop. Real host keyboard/Tab evidence, current selection regression,
-narrow/native captures, documentation and a complete final preservation packet
-remain required before this batch can be checkpointed as qualified progress.
+Previous turn is progress at pushed `db94c56`: the live mobile workspace is
+requalified with its exact project pair retained. Resume existing NS-2 parity
+criterion 2 and browser/LCL interaction prerequisites, consumed by NS-3's original
+production-table requirement. Bound tables now share typed data-cell movement:
+column-preserving arrows, Home/End and Control corners, clipped edges, current-cell
+Enter/F2 and exact return. Row membership stays independent. Browser grids have
+one cell Tab entry, dimensions/indices and per-cell readonly semantics. Canonical
+callbacks can consume defaults; selection callbacks safely retire actual views.
 
-Previous turn is progress at pushed `18da50e`: authenticated full ordinary Studio
-bar workflows are qualified in the isolated candidate; protected LAN replacement
-was rejected before execution. Do not repeat that action or expand bar fixtures.
-Advance NS-2 parity criterion 2 and its browser/LCL interaction prerequisites,
-consumed by NS-3's original production-table requirement. The current bound table
-uses browser row navigation and native cell position, an explicit published gap.
-Deliver shared typed cell movement, one browser cell Tab stop, column-preserving
-row navigation, Home/End and Ctrl corners, current-cell editor entry/return, exact
-row membership, retained drafts and safe retirement. WAI's current grid pattern
-is checked at its primary source; this is not a complete assistive-technology claim.
-Evidence must exercise actual browser/native controls, an ordinary generated bound
-application and desktop/narrow rendering, with protected processes/pairs unchanged.
-Use bounded authenticated MCP to compose/export owned English review content;
-record any missing semantic operation with the existing workflow owner. Stop this
-batch at integrated cell navigation; do not substitute a pure cursor fixture or
-reset existing counters. Ignored evidence belongs under `build/grid-navigation/`.
+The unchanged **3704-byte** ordinary English application is exported through
+authenticated bounded MCP in an explicitly owned workspace, using specialized
+`INyxTable` and typed binding/default declarations. SHA256 is
+`44BAC16FA1B7E758D1FE5531DC760D827E62B3D7F05656253AEB2305BE70E1F2`.
+Its companion passes **41** source/history checks with exact paired Undo/Redo.
+Layout and collection/default binding currently require **two semantic phases**,
+each one grouped paired operation. Whole-composition atomic Undo is not claimed;
+the missing combined operation is recorded with the existing workflow owner.
+The owned project remains reviewable at revision **5**; the stable primary is
+unchanged. No screenshot-driven document composition is used.
+
+Current checked Win32 ordinary controls pass **28**; actual HTTP browser controls
+pass **43 per width**. Trusted Chromium arrows/modifiers, Enter/F2, numeric text,
+Escape discard and navigation/editor Tab/Shift+Tab pass **30 per width**, at
+**1100×900** and **390×640**. Runtime input retains exact document defaults.
+An unrelated collection publication retains editor drafts and native user column
+allocation. Native initial columns now fit actual loaded English captions using
+LCL font measurement, correcting clipping observed in the first capture. Later
+publications do not refit them. Browser narrow tables scroll horizontally at
+authored text size. Native and both browser captures are inspected. This remains
+basic table styling, not acceptance of the original visual/production breadth.
+
+Selection regression passes **155 native** (preparation and compiled companion)
+and **182 browser per width**. Native owners/anonymous-pipe observers retire with
+zero leaks; owned warnings are zero. Seven installed pas2js RTL warnings remain
+visible per browser compile, without dependency edits or warning suppression.
+The first retirement fixture bypassed the native physical frame with a direct
+virtual key call. It earned no product lifetime evidence. Actual unmodified
+`CN_KEYDOWN` enters LCL's installed canonical frame and safely qualifies retirement;
+modified controls use explicit shift sets, not changed hardware modifier state.
+Failed LM/direct-call, import and old row-End range assumptions remain in logs.
+
+Maintained `tools/build.ps1 -Target grid-navigation` consumes the exact exported
+source, checks native input and builds both browser/host observers; it opens no
+listener or project. Only an explicit `DesignerMCPConfig` creates a new owned
+companion. Private evidence under **`build/grid-navigation/`** includes
+`maintained-current-build.log` (semantic companion), `maintained-retention-build.log`,
+`maintained/native.png`, `host-desktop/`, `host-phone/`, `selection-final-build.log`,
+`selection-desktop/`, `selection-phone/` and `final-companion-session.json`.
+The qualified browser artifacts remain byte-identical after native-only fixes.
+
+Original **15** service identities, **9** exact accepted/source/draft pairs,
+navigation/history/permissions and the **147033-byte** checkpoint remain retained.
+The original frozen **229-file `6fc231e` LAN payload** is unchanged. Candidate
+PID **7060** stays an additional isolated frozen `0ce846f` service with 21 tools;
+its sealed 234-file payload is not overwritten. The current grid application is
+served only from an explicitly owned child of the existing unsealed artifact host,
+not the deployed Studio. The earlier policy-rejected primary replacement is not
+retried or reinterpreted as missing user permission. Final guards, receipts and
+remote checkpoint remain ignored under the same evidence root.
+
+Terminal `final-preservation.log` verifies the original processes, pairs,
+checkpoint and exact served/installed LAN payload. `final-candidate-release.json`
+verifies all **234** sealed files; exact candidate process identity and
+`final-authenticated-tools.jsonl` verify all **21** tools. No stopped or restarted
+listener is inferred from a finished qualification process.
+
+No original full criterion closes; renderer no-closure advances **8→9** once,
+workflow **17**, authoring **29**, codegen **28** and delivery **2** remain.
+Historical parity/NS-3 totals remain unestablished. Stop this integrated cell
+navigation batch. Original table paging, sorting/filtering, virtualization,
+cell/column selection, large-data performance and production styling remain
+with their existing owners; hardware/IME/assistive technology and other widgetsets
+remain unqualified. The next concrete deliverable is typed sorting/filtering for
+bound tables, preserving exact item identity and row membership through ordinary
+browser/LCL applications, source/persistence and semantic authoring. Follow it
+with the original paging/virtualization and measured large-data requirements;
+do not add cursor arithmetic fixtures. Protected observing delivery retains its
+existing unresolved gate without repeating the rejected action.
 
 ## Current return path: menu-bar workflow delivery — 2026-10-07
 
