@@ -101,6 +101,73 @@ begin
   until False;
 end;
 
+{ Physical chrome geometry is distinct from the design document. Read a bounded
+  set of ordinary toolbar faces through CDP, without authoring through the UI.
+  Pairwise checks catch overlap even when wrapping moves an action to a new line. }
+procedure ObserveToolbar;
+const
+  CActionIDs: array[0..10] of TNyxText = ('action-undo', 'action-redo',
+    'action-code', 'action-import', 'action-save', 'action-outputs',
+    'action-agents', 'action-actions', 'action-builds', 'action-build-view',
+    'action-build-app');
+var
+  LHeader: TNyxBrowserBox;
+  LBoxes: array[0..10] of TNyxBrowserBox;
+  LPresent: array[0..10] of Boolean;
+  LIndex: Integer;
+  LOther: Integer;
+begin
+  LHeader := GHost.Bounds('[data-node=studio-header]');
+  for LIndex := 0 to High(CActionIDs) do
+  begin
+    LPresent[LIndex] := GHost.ElementHTML(
+      '[data-node=' + CActionIDs[LIndex] + ']') <> '';
+
+    if not LPresent[LIndex] then
+    begin
+      { Builds is capability-dependent in disconnected Studio. Every other
+        declared action must exist; absence must not earn a geometry pass. }
+
+      if CActionIDs[LIndex] <> 'action-builds' then
+      begin
+        GHost.Capture('toolbar-missing');
+        raise Exception.Create('Toolbar action is absent / ' + CActionIDs[LIndex]);
+      end;
+      Continue;
+    end;
+    LBoxes[LIndex] := GHost.Bounds('[data-node=' + CActionIDs[LIndex] + ']');
+    WriteLn('Toolbar / ', CActionIDs[LIndex], ' / ',
+      LBoxes[LIndex].Left:0:2, ',', LBoxes[LIndex].Top:0:2, ' / ',
+      LBoxes[LIndex].Width:0:2, ' x ', LBoxes[LIndex].Height:0:2);
+
+    if (LBoxes[LIndex].Width <= 0) or (LBoxes[LIndex].Height <= 0) or
+      (LBoxes[LIndex].Left < LHeader.Left - 1) or
+      (LBoxes[LIndex].Left + LBoxes[LIndex].Width > LHeader.Left + LHeader.Width + 1) or
+      (LBoxes[LIndex].Top < LHeader.Top - 1) or
+      (LBoxes[LIndex].Top + LBoxes[LIndex].Height > LHeader.Top + LHeader.Height + 1) then
+    begin
+      GHost.Capture('toolbar-overflow');
+      raise Exception.Create('Toolbar action exceeds its header / ' +
+        CActionIDs[LIndex]);
+    end;
+    for LOther := 0 to LIndex - 1 do
+    begin
+
+      if LPresent[LOther] and
+        (LBoxes[LIndex].Left < LBoxes[LOther].Left + LBoxes[LOther].Width - 1) and
+        (LBoxes[LOther].Left < LBoxes[LIndex].Left + LBoxes[LIndex].Width - 1) and
+        (LBoxes[LIndex].Top < LBoxes[LOther].Top + LBoxes[LOther].Height - 1) and
+        (LBoxes[LOther].Top < LBoxes[LIndex].Top + LBoxes[LIndex].Height - 1) then
+      begin
+        GHost.Capture('toolbar-overlap');
+        raise Exception.Create('Toolbar actions overlap / ' + CActionIDs[LOther] +
+          ' / ' + CActionIDs[LIndex]);
+      end;
+    end;
+  end;
+  GHost.Capture('toolbar-geometry');
+end;
+
 var
   LWidth: Integer;
   LBefore: TNyxDataValue;
@@ -150,6 +217,7 @@ begin
     end;
 
     WaitFor('[data-node=action-actions]');
+    ObserveToolbar;
     GHost.Click('[data-node=action-actions]');
     WaitFor('.nyx-popover:popover-open[role=menu] [data-node=studio-menu-inspect]');
     GHost.Capture('studio-component-actions');

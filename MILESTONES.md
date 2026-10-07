@@ -7,11 +7,13 @@ Current observing boundary (2026-10-07): frozen menu-family checkpoint `9f5bd49`
 serves the existing LAN/editor and loopback MCP ports. Twenty authenticated tools,
 29 preparation checks, 222 verified files and actual shared desktop/390 nested
 Tab/Events/help qualify. Nine exact pairs and full checkpoint preserve histories/
-handles; fourteen other services remain exact. Connected desktop toolbar overlap
-is retained under the original responsive visual owner. No original criterion/
-count closes. Stop rollout checks; return to menubar/picker, persisted semantic
-plans and that chrome gap. See
-[the packet](WORK.md#current-return-path-observing-menu-families--2026-10-07).
+handles; fourteen other services remain exact. The user's loading report leads to
+restoring the verified binary at the original firewall-covered LAN executable
+path; physical phone confirmation remains pending. Actual bounded desktop/390
+toolbar geometry and inspected clean captures supersede the earlier overlap
+inference. No product layout defect is established. No original criterion/count
+closes. Stop diagnostics; return to menubar/picker and persisted semantic plans. See
+[the packet](WORK.md#current-return-path-lan-path-repair-and-measured-toolbar--2026-10-07).
 
 Current component boundary (2026-10-06): immutable specialized menu items/plans,
 owned submenu recipes and managed menu-button invocation are consumed by ordinary

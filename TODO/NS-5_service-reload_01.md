@@ -17,6 +17,16 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 **Blockers**
 
+LAN path follow-through (2026-10-07): after the user's loading report, the exact
+verified frozen binary is restored at the original firewall-covered executable
+path. Payload/runtime arguments remain independent and unchanged. Nine exact
+pairs, full checkpoint and fourteen other service identities are preserved;
+twenty authenticated tools and actual shared desktop/390 journeys pass. Read-only
+firewall records confirm the stable path's Private allowance, but physical phone
+confirmation remains pending. Future primary LAN replacements must retain that
+path. No original criterion/count closes. See
+[the current packet](../WORK.md#current-return-path-lan-path-repair-and-measured-toolbar--2026-10-07).
+
 Observing menu-family refresh (2026-10-07): the frozen 222-file `9f5bd49` release
 qualifies twenty authenticated tools and actual shared desktop/390 nested
 menu/Tab/Events/help. Nine exact pairs and full native checkpoint histories/handles

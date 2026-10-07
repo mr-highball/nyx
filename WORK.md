@@ -7,6 +7,81 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: LAN path repair and measured toolbar — 2026-10-07
+
+The user reported that the refreshed Studio would not load. The preceding rollout
+changed the server executable path while the working Windows LAN allowance named
+the original executable. Read-only registry inspection now confirms that the
+existing enabled TCP/editor-port allowance matches that original path and Private
+profile, and the active Wi-Fi network is Private. No firewall rule is altered;
+the nonadministrator firewall cmdlet still cannot inspect policy. This identifies
+a likely external-access cause; same-host requests cannot establish phone access.
+The user's physical phone confirmation remains pending.
+
+The exact current frozen `9f5bd49` server bytes are installed at the original stable
+LAN executable path, with a retained previous-binary backup. Only the verified
+primary listener is replaced; its captured signed console child retires without
+a separate kill. The same frozen release root/web/compiler sources and unchanged
+runtime remain arguments. Future primary LAN replacements must retain this
+firewall-covered executable path independently of the frozen payload directory.
+HTTP binds all interfaces and MCP stays loopback. The pristine **222**-file payload
+verifies; installed server SHA-256 matches its frozen binary. Actual authenticated
+Pascal MCP discovers **20** tools. Local loopback/LAN page and required assets
+respond successfully, and real observing Chromium initializes Studio.
+
+All **14** other protected service identities and **9** exact project/source pairs,
+workspace labels/handles, revisions, selections, views, drafts, permissions and
+Undo/Redo availability remain unchanged. The complete **147033-byte** runtime
+checkpoint stays byte-identical. There is no bootstrap, reset, remap or history
+loss. A final read-only comparison first looked for workspace labels in the
+session summary and refused; the actual workspace-list contract was then checked
+without mutation. Only the corrected successful guard earns preservation evidence.
+
+The earlier desktop screenshot overlap inference is superseded by actual mounted
+border geometry: all **11** toolbar actions have positive bounds inside the header
+and no pair overlaps at CSS **1100/390**. Builds and Build view have a **14-pixel**
+desktop gap; narrow actions wrap with **8-pixel** gaps. Inspected clean captures
+agree. No product layout defect is established and no speculative layout change
+is made. The maintained Pascal observer now reads bounded protocol border quads,
+requires ordinary actions, checks containment/overlap and captures the toolbar
+before opening menus. Checked native compilation has zero warnings. Full observing
+desktop/narrow nested menu, real Tab/Shift+Tab, Events/help and unchanged bounded
+semantic context pass, leak-free. This is Chromium viewport evidence, not physical
+phone, native chrome, assistive technology or full responsive acceptance.
+
+**Current preservation/connection baselines are `build/lan-path-repair/`:**
+`protected-services-current.json`, `protected-pairs-current.json` and
+`lan-editor-private.json`. That packet retains backups, launch/child identities,
+`final-preservation.json`, `semantic-tools.jsonl`, payload verification and
+deployment/remote receipts. Product payload remains
+`build/menu-family-refresh/release`; runtime remains
+`build/legacy-refresh/lan-runtime`. Physical toolbar evidence is
+`build/toolbar-geometry/`: checked `observer-build.log`, desktop/narrow observation
+logs and inspected captures. Private paths, credentials, hosts and pairs stay
+ignored. The exact pushed checkpoint is recorded in this repair packet's
+`remote-return.json`; serving product source remains `9f5bd49`.
+
+Stop the diagnostic sequence: host geometry resolves the suspected layout cause,
+and the user-priority LAN path repair is implemented. Return to original
+menubar/picker and persisted semantic-plan scope. No original criterion or task
+closes. Workflow **13**, authoring **26**, renderer **8**, codegen **28**, delivery
+**2** stay unchanged; historical NS-2/NS-3 totals remain unestablished. The full
+goal remains active.
+
+## Accepted batch intent: toolbar geometry — 2026-10-07
+
+Previous goal turn is progress: menu families are qualified on both targets and
+serve the LAN; exact remote `b3b07ad` is verified. Inspect the connected desktop
+Builds/Build view overlap under original NS-2 criterion 3. Establish actual host
+geometry before assigning a layout cause. Repair the public Nyx flow/projection
+contract if it owns the defect; Studio must consume public types, not a second
+layout toolkit. Qualify desktop/390 browser and native ordinary Studio interaction,
+with protected fifteen identities/nine pairs/checkpoint unchanged during component
+work. Semantic MCP remains primary for design context; target host observations
+qualify chrome behavior. Stop at an integrated evidence boundary, then return to
+original menubar/picker and persisted semantic-plan scope. At most two failed
+attempts per diagnosed cause; no original criterion/count closes from a small fix.
+
 ## Current return path: observing menu families — 2026-10-07
 
 The authorized LAN refresh is qualified as progress. Frozen source `9f5bd49`
@@ -37,11 +112,16 @@ is not established by same-host requests. Windows firewall inspection refused
 access; no rule was altered. Cached native chat handles need one reconnect;
 the enrolled Pascal semantic client works immediately.
 
+Superseded deployment baselines: the LAN path repair above restores the original
+firewall-covered executable path and owns the current process/private baselines.
+The frozen payload below remains the serving product closure.
+
 An initial malformed editor-connect envelope refused with missing `op`. Exact
 `claim` of the already preserved primary pair reconnected successfully without
 changing it. Failed checks earn no passes. Actual connected desktop capture also
-shows Builds/Build view overlapping at 1100 width; the original NS-2 responsive
-chrome/visual owner retains that discovered gap. This qualifies menu behavior,
+suggested Builds/Build view overlap at 1100 width. The measured-toolbar packet
+above supersedes that screenshot-only inference; no actual overlap is established.
+This qualifies menu behavior,
 not complete visual quality, native observing integration, assistive technology,
 hardware/IME, other widgetsets or production accessibility/performance.
 
@@ -50,7 +130,8 @@ Current ignored evidence is **`build/menu-family-refresh/`**: `release-build.log
 `before-studio-session.nyx`, `primary-console-child.json`, `semantic-tools.jsonl`,
 `desktop.log` / `narrow.log` and inspected captures. **Use this directory's**
 `protected-services-current.json`, `protected-pairs-current.json` and
-`lan-editor-private.json` as current preservation/connection baselines. Serving
+`lan-editor-private.json` as this retired rollout's preservation baselines. Current
+baselines belong to the LAN path repair above. Serving
 payload is `build/menu-family-refresh/release`; runtime remains unchanged under
 `build/legacy-refresh/lan-runtime`. Private capabilities, paths and pairs stay
 ignored. Evidence-only checkpoint is pushed to `hello-nyx`; verify its exact

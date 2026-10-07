@@ -63,6 +63,16 @@ compilation and require no application compiler. Configure outputs when requesti
 a build. The launcher refuses earlier candidates that predate the separated-root
 entry point; prepare a current bundle rather than modifying a sealed payload.
 
+On Windows, an existing LAN firewall allowance can name the installed executable
+as well as the port. A primary LAN update must retain that covered executable
+path: preserve its backup, install only the verified candidate's server bytes and
+keep the frozen payload/runtime arguments separate. Changing the payload directory
+does not require changing the installed executable path. Confirm the exact process
+identity before replacement, retain the full runtime checkpoint and verify the
+payload and installed binary afterward. Same-host LAN requests establish local
+delivery; access from a phone requires separate confirmation. The current retained
+path and private preservation baselines belong to WORK.md.
+
 MCP enrollment defaults to the runtime root. Optional `-EnrollmentRoot` chooses
 the project whose `.codex/config.toml` is refreshed, including an explicitly enrolled
 user entry. Its `.codex` and `.local` write locations must be outside the payload.

@@ -24,11 +24,14 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 The observing prerequisite now passes actual shared desktop/390 nested host Tab,
 Events/help at frozen `9f5bd49`, with all contexts/checkpoint preserved. Connected
-desktop capture exposes Builds/Build view overlap at CSS 1100; original criterion
-3 owns its responsive chrome correction and both-width evidence. This packet
+desktop capture initially suggested Builds/Build view overlap at CSS 1100. Actual
+bounded border geometry now qualifies eleven contained, nonoverlapping actions
+at CSS 1100/390, with clean inspected captures. The suspected product layout defect
+is not established; no speculative layout change is made. Original criterion 3's
+broader responsive/native/visual requirements remain. This packet
 qualifies menu interaction without claiming complete visual/assistive/native
 observing parity. See
-[the observing packet](../WORK.md#current-return-path-observing-menu-families--2026-10-07).
+[the current packet](../WORK.md#current-return-path-lan-path-repair-and-measured-toolbar--2026-10-07).
 
 Original criterion 2 now has submenu Right/Enter/Space, Left/Escape level return,
 whole-family completion/Tab dismissal, managed button Enter/Space/Down/Up and

@@ -31,6 +31,14 @@ uses
   Classes, SysUtils, Windows, Process, nyx.text, nyx.data;
 
 type
+  { Physical axis-aligned viewport border bounds in CSS pixels, observed through
+    Chromium's DOM protocol. This is target evidence, not document layout state. }
+  TNyxBrowserBox = record
+    Left: Double;
+    Top: Double;
+    Width: Double;
+    Height: Double;
+  end;
   { Owns one unique headless Chromium profile/process and anonymous debugger
     pipes. No TCP listener or existing editor tab is opened. Requests are serial,
     JSON/UTF-8 packets are NUL-delimited and bounded, and no scripts are injected.
@@ -71,6 +79,10 @@ type
       scripts. Missing elements return empty text. This is physical observation,
       separate from document inspection through semantic MCP. }
     function ElementHTML(const ASelector: TNyxText): TNyxText;
+    { Observe the mounted face without scrolling, evaluating scripts or changing
+      the design. Missing faces fail explicitly; transformed quads are enclosed
+      in their viewport-aligned border box. Call after ordinary readiness. }
+    function Bounds(const ASelector: TNyxText): TNyxBrowserBox;
     { False means absent or retired during ordinary asynchronous DOM replacement,
       distinct from a present empty field. Unknown protocol errors still raise. }
     function TryFieldValue(const ASelector: TNyxText; out AValue: TNyxText): Boolean;
@@ -579,6 +591,60 @@ begin
       Exit(True);
     end;
   end;
+end;
+
+function TNyxBrowserPipe.Bounds(const ASelector: TNyxText): TNyxBrowserBox;
+var
+  LNode: Integer;
+  LQuad: TNyxDataValue;
+  LIndex: Integer;
+  LRight: Double;
+  LBottom: Double;
+  LX: Double;
+  LY: Double;
+begin
+  Result := Default(TNyxBrowserBox);
+  LNode := Request('DOM.querySelector', NyxObject([
+    NyxField('nodeId', NyxData(Body)), NyxField('selector', NyxData(ASelector))]),
+    FSession).Field('nodeId').AsInteger;
+
+  if LNode = 0 then
+  begin
+    raise Exception.Create('Requested observed host face is absent');
+  end;
+  LQuad := Request('DOM.getBoxModel', NyxObject([
+    NyxField('nodeId', NyxData(LNode))]), FSession).Field('model').Field('border');
+  Result.Left := LQuad.Item(0).AsNumber;
+  Result.Top := LQuad.Item(1).AsNumber;
+  LRight := Result.Left;
+  LBottom := Result.Top;
+  for LIndex := 1 to 3 do
+  begin
+    LX := LQuad.Item(LIndex * 2).AsNumber;
+    LY := LQuad.Item(LIndex * 2 + 1).AsNumber;
+
+    if LX < Result.Left then
+    begin
+      Result.Left := LX;
+    end;
+
+    if LY < Result.Top then
+    begin
+      Result.Top := LY;
+    end;
+
+    if LX > LRight then
+    begin
+      LRight := LX;
+    end;
+
+    if LY > LBottom then
+    begin
+      LBottom := LY;
+    end;
+  end;
+  Result.Width := LRight - Result.Left;
+  Result.Height := LBottom - Result.Top;
 end;
 
 procedure TNyxBrowserPipe.Click(const ASelector: TNyxText);

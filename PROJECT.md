@@ -70,9 +70,12 @@ Frozen menu-family checkpoint `9f5bd49` now serves the existing observing LAN/MC
 ports. Preparation passes 29 checks; 222 payload files verify. Authenticated
 twenty-tool MCP and actual shared desktop/390 Studio qualify nested host Tab,
 Events/help and unchanged context. Nine exact pairs and the full checkpoint retain
-history/handles, with fourteen other services untouched. A connected desktop
-toolbar overlap remains under the original responsive visual owner. See
-[the observing packet](WORK.md#current-return-path-observing-menu-families--2026-10-07).
+history/handles, with fourteen other services untouched. After the user's loading
+report, the current binary is restored to the original firewall-covered LAN
+executable path; physical phone confirmation is pending. Actual bounded toolbar
+geometry and clean captures establish no overlap at either width, superseding the
+earlier screenshot-only inference. See
+[the current packet](WORK.md#current-return-path-lan-path-repair-and-measured-toolbar--2026-10-07).
 
 Managed menu families now add immutable reference-counted item plans/recipes,
 independent submenus and a public typed menu-button binding. Studio consumes the
