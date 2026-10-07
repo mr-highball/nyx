@@ -10,9 +10,9 @@ actual browser/LCL consumers qualify physical behavior selectively.
 ## Current return path: incremental collection values — 2026-10-07
 
 The previous batch made authoritative progress: combined semantic composition,
-authenticated whole-pair history and exact-input compiler consumers. Its remote
-checkpoint remains pending after another normal push returned the same server
-error; local commits and verified incremental bundle remain retained.
+authenticated whole-pair history and exact-input compiler consumers. This batch
+began with its remote checkpoint pending after another normal push returned the
+same server error; local commits and verified incremental bundle remained retained.
 Reassessment ends composition fixtures and returns to production data controls.
 Original NS-3 component criterion 3 and performance criteria 2/3 own this batch;
 their broader parity/component prerequisites and full acceptance remain open.
@@ -81,7 +81,10 @@ identities, **nine** full protected pairs/**147033-byte** checkpoint and **229**
 frozen/LAN assets remain exact; the combined backend identity and its **243-file**
 package, plus the older query candidate's **242-file** package, remain unchanged.
 See `preservation-after.log`, `combined-release-after.log`, `query-release-after.log`.
-Remote checkpoint remains pending; do not infer a pushed branch or served update.
+The later normal push succeeds through `edd9278`; remote reports the exact same
+product commit, including the previously pending composition packet. Final local/
+remote OIDs and source provenance live in ignored `remote-checkpoint.json` under
+this packet. The branch save does not update a running service or served payload.
 
 ## Current return path: combined semantic composition — 2026-10-07
 
