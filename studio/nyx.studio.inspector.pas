@@ -122,6 +122,8 @@ procedure AddNyxContentInspector(AParent: TNyxNode; ASession: TNyxStudioSession)
 { Shared public date-constraint compound for the exact selected authored owner.
   Effective inherited fields resolve in an independently owned context. }
 procedure AddNyxDateDomainInspector(AParent: TNyxNode; ASession: TNyxStudioSession);
+{ Shared public clock-policy compound; the queue retains exact clock semantics. }
+procedure AddNyxTimeDomainInspector(AParent: TNyxNode; ASession: TNyxStudioSession);
 { Public menu compound; choice is presentation, all mutations use paired jobs. }
 procedure AddNyxMenuInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
   const AReference: TNyxMenuRef);
@@ -141,6 +143,9 @@ function RouteNyxMenuInspectorChoice(ASession: TNyxStudioSession;
 { Capture a value-only set/inherit command and local/effective mounted baseline.
   Stale selection or policy refuses before enqueue; fresh processor rechecks. }
 function CaptureNyxDateDomainInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Copied clock set/inherit intent, with the same fresh baseline authority. }
+function CaptureNyxTimeDomainInspector(ASession: TNyxStudioSession;
   AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
 { Captures a copied command for the existing independent paired queue. Stale
   selection/registry refuses before enqueue; no source/history changes here. }
@@ -163,7 +168,7 @@ implementation
 
 uses
   nyx.schema, nyx.controls, nyx.content, nyx.content.editor,
-  nyx.studio.callbackedits, nyx.studio.edits, nyx.dates.editor,
+  nyx.studio.callbackedits, nyx.studio.edits, nyx.dates.editor, nyx.times.editor,
   nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations,
   nyx.menu.bar.editor, nyx.menu.bar.declarations;
 
@@ -355,6 +360,64 @@ begin
     (NyxStudioValueDomainBaseline(ASession.Document, LChange.Owner) <> LChange.Baseline) then
   begin
     raise ENyxContract.Create('Select this date component again before applying constraints');
+  end;
+  AEdit.Action := sdaValueDomain;
+  AEdit.Selection := LChange.Owner.ID;
+  AEdit.View := ASession.ActiveViewID;
+  AEdit.ValueDomainBaseline := LChange.Baseline;
+
+  if LChange.Inherit then
+  begin
+    AEdit.ValueDomain := NyxInheritValueDomain(LChange.Owner);
+  end
+  else
+  begin
+    AEdit.ValueDomain := NyxSetValueDomain(LChange.Owner, LChange.Domain);
+  end;
+end;
+
+procedure AddNyxTimeDomainInspector(AParent: TNyxNode; ASession: TNyxStudioSession);
+var
+  LContext: TNyxNode;
+  LProjection: TNyxNode;
+  LDomain: TNyxValueDomain;
+begin
+
+  if (AParent = nil) or (ASession = nil) or (ASession.Selected = nil) then
+  begin
+    Exit;
+  end;
+  LContext := RealizeNyxContext(ASession.Document, ASession.Selected, LProjection);
+  try
+    LDomain := NyxNodeValueDomain(LProjection);
+
+    if LDomain.ClockTime then
+    begin
+      AParent.Add(NewNyxTimeDomainEditor('inspector-time-domain',
+        NyxControl(ASession.SelectedID), ASession.Selected.Contract, LDomain));
+    end;
+  finally
+    LContext.Free;
+  end;
+end;
+
+function CaptureNyxTimeDomainInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LChange: TNyxTimeDomainEditorChange;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := CaptureNyxTimeDomainEditor(AButton, AShellRoot, LChange);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if (ASession = nil) or (ASession.SelectedID <> LChange.Owner.ID) or
+    (NyxStudioValueDomainBaseline(ASession.Document, LChange.Owner) <> LChange.Baseline) then
+  begin
+    raise ENyxContract.Create('Select this time component again before applying constraints');
   end;
   AEdit.Action := sdaValueDomain;
   AEdit.Selection := LChange.Owner.ID;

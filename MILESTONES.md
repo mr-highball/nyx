@@ -3,6 +3,21 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current clock authoring preparation (2026-10-07): Studio's Properties panel now
+consumes a public specialized Nyx clock-policy compound through its paired queue.
+One-sided/overnight bounds, exact choices/precision, absent/Any/fixed steps and
+inheritance retain typed meaning. Local semantic/schema passes 32/16, actual
+Win32 Inspector/queue passes 25 and exact compiled source reconstruction passes
+five, leak-free. Calendar/standalone Studio regressions pass 82/22. Browser
+consumers/worker/replay and both Studios compile with zero owned warnings. No
+original full criterion closes: authoring no-closure advances 30→31 once;
+workflow/renderer/codegen/delivery stay 19/13/28/2. End local form fixtures and
+follow authenticated current-backend paired clock edits/builds and observing
+Studio under the existing workflow owner. Executed pas2js foundation, unsubmitted
+policy-draft refresh retention, broader native/browser authoring/parity and
+delivery retain their gates. Current LAN source/15 services/nine pairs stay exact.
+See [the packet](WORK.md#current-return-path-public-clock-constraints-in-studio--2026-10-07).
+
 Current native focus boundary (2026-10-07): date/time acceptance now uses a shared
 weak return contract and the ordinary renderer observes actual keyboard-surface
 focus messages. Logical LCL slots retain creator forwarding; transition state

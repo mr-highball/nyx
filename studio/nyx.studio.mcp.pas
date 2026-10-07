@@ -1475,20 +1475,23 @@ var
   LBounds: TNyxText;
   LExtra: TNyxText;
   LRequired: TNyxText;
+  LBoundRule: TNyxText;
 const
-  CTypes: array[0..4] of TNyxText = ('text', 'boolean', 'integer', 'number', 'text');
+  CTypes: array[0..5] of TNyxText = ('text', 'boolean', 'integer', 'number', 'text', 'text');
 begin
   { JSON is the explicit external boundary. Every branch keeps native scalar
     types and closed fields; strict Pascal admission also checks Gregorian days,
     ascending bounds, exact choices and candidate dependencies. }
-  SetLength(LDomains, 5);
-  for LKind := 0 to 4 do
+  SetLength(LDomains, 6);
+  for LKind := 0 to 5 do
   begin
     LType := CTypes[LKind];
     LScalar := '{"type":"' + LType + '"}';
     LExtra := '';
     LBounds := '';
     LRequired := '"type"';
+    LBoundRule := ',"anyOf":[{"not":{"anyOf":[{"required":["min"]},' +
+      '{"required":["max"]}]}},{"required":["min","max"]}]';
 
     if LType = 'text' then
     begin
@@ -1507,6 +1510,21 @@ begin
       LBounds := ',"min":{"type":"string","minLength":10,"maxLength":10},' +
         '"max":{"type":"string","minLength":10,"maxLength":10}';
     end
+    else if LKind = 5 then
+    begin
+      { Clock bounds are independently optional and may span midnight. Empty
+        text is a valid optional choice, never a bound. Strict Pascal admission
+        additionally validates ASCII parts, precision, steps and temporal choice
+        uniqueness (.1 and .100 are the same reading). JSON integer milliseconds
+        stay within the portable signed Integer family. }
+      LScalar := '{"type":"string","maxLength":12}';
+      LExtra := ',"format":{"const":"time"},"step":{"oneOf":[' +
+        '{"type":"integer","minimum":1,"maximum":2147483647},{"const":"any"}]}';
+      LRequired := LRequired + ',"format"';
+      LBounds := ',"min":{"type":"string","minLength":5,"maxLength":12},' +
+        '"max":{"type":"string","minLength":5,"maxLength":12}';
+      LBoundRule := '';
+    end
     else if LKind in [2, 3] then
     begin
       LBounds := ',"min":' + LScalar + ',"max":' + LScalar;
@@ -1515,8 +1533,7 @@ begin
       '"type":{"const":"' + LType + '"}' + LExtra + LBounds +
       ',"choices":{"type":"array","minItems":1,"maxItems":128,"uniqueItems":true,' +
       '"items":' + LScalar + '}},"required":[' + LRequired + '],"additionalProperties":false' +
-      ',"anyOf":[{"not":{"anyOf":[{"required":["min"]},{"required":["max"]}]}},' +
-      '{"required":["min","max"]}]}');
+      LBoundRule + '}');
   end;
   Result := Schema(NyxObject([
     NyxField('op', NyxObject([NyxField('const', NyxData('value-domain-set'))])),
@@ -1621,7 +1638,7 @@ begin
       Schema(NyxObject([NyxField('parent', TextSchema('Optional exact component ID')),
         NyxField('scope', NyxObject([NyxField('enum', NyxArray([NyxData('pages'), NyxData('components')]))])),
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit'))]), []), True),
-    Tool('nyx_node', 'Inspect one component''s paged typed properties and optionally events, registrations, semantic source routes and reachable effective named parts. parts=true returns at most partLimit paths with exact source/design and local override identity. Removed parts are absent; inspect the definition separately for inherited paths. Routes and registrations page across the requested event window. valueDomain=true returns one local or effective scalar policy (domainScope defaults effective), exact inclusive bounds, and at most 16 choices (domainLimit defaults 8). domainOffset pages choices; textOffset/textLimit page text choices by Unicode scalars. localDeclared distinguishes inheritance from an explicit local mask; defined distinguishes usable domains. Calendar format is date with canonical YYYY-MM-DD text. Omitted ID uses selection.',
+    Tool('nyx_node', 'Inspect one component''s paged typed properties and optionally events, registrations, semantic source routes and reachable effective named parts. parts=true returns at most partLimit paths with exact source/design and local override identity. Removed parts are absent; inspect the definition separately for inherited paths. Routes and registrations page across the requested event window. valueDomain=true returns one local or effective scalar policy (domainScope defaults effective), exact inclusive bounds, and at most 16 choices (domainLimit defaults 8). domainOffset pages choices; textOffset/textLimit page text choices by Unicode scalars. localDeclared distinguishes inheritance from an explicit local mask; defined distinguishes usable domains. Calendar format is date with canonical YYYY-MM-DD text. Clock format time retains exact HH:MM[:SS[.fff]] text, independent bounds, stepDeclared, native JSON step, exact stepMilliseconds, stepBase and crossesMidnight. Omitted ID uses selection.',
       Schema(NyxObject([NyxField('id', TextSchema('Exact component ID')),
         NyxField('offset', LPage.Field('offset')), NyxField('limit', LPage.Field('limit')),
         NyxField('events', LBoolean),
@@ -1669,7 +1686,7 @@ begin
     Tool('nyx_diagnostics', 'Page through compiler diagnostics. Locations are Unicode scalar coordinates in submitted source; stale locations cannot navigate.', Schema(LPage, []), True),
     Tool('nyx_source', 'Read only the needed accepted Pascal lines, e.g. around a compiler diagnostic. Does not return pending drafts.',
       Schema(NyxObject([NyxField('line', IntSchema(1, 100000)), NyxField('count', IntSchema(1, 80))]), []), True),
-    Tool('nyx_transaction', 'Interleave design operations with state or collections groups: each carries exactly op and changes, using the corresponding tool''s typed change shapes. Count 1..64 total leaf changes; each data group retains its 1..32 limit. Every ordered group must admit before the next; all domains share one final publication and paired Undo. ' + 'Apply 1..64 semantic operations atomically as ONE undoable paired design/Pascal edit. Place moves an exact authored control relative to target: inside appends to an editable container, before/after use its owner and resolve ordering after detaching the source. Place-new creates an unused catalog control/recipe at that location. Roots, cycles, self-placement, leaf containers and inherited instance content refuse. Customize a named layout part first. Derive copies an exact subtree into a reusable root; identities maps every descendant source ID, excluding the root. Instance inserts a reusable reference. Override edits an exact instance-owned named-part descriptor; create/move payload and update typed properties in the same group. Inherit removes the exact matching descriptor/payload. value-domain-set replaces only the exact authored owner''s local scalar value policy, retaining fields/events/bindings/defaults. Its closed domain uses native JSON scalar types; calendar format date uses valid Gregorian YYYY-MM-DD bounds and choices, with empty text for an optional date. Bounds are paired and inclusive; choices are unique (1..128). Group dependent default changes in the same transaction. value-domain-inherit removes only an existing local declaration, distinct from NoValue. Use nyx_node for bounded parts, property types and local/effective domains. Incomplete payloads, foreign/occupied identities, invalid paths/domains/defaults and drafts reject the whole group. Supply current expectedRevision; operationId deduplicates the last 64 successful mutations per session.',
+    Tool('nyx_transaction', 'Interleave design operations with state or collections groups: each carries exactly op and changes, using the corresponding tool''s typed change shapes. Count 1..64 total leaf changes; each data group retains its 1..32 limit. Every ordered group must admit before the next; all domains share one final publication and paired Undo. ' + 'Apply 1..64 semantic operations atomically as ONE undoable paired design/Pascal edit. Place moves an exact authored control relative to target: inside appends to an editable container, before/after use its owner and resolve ordering after detaching the source. Place-new creates an unused catalog control/recipe at that location. Roots, cycles, self-placement, leaf containers and inherited instance content refuse. Customize a named layout part first. Derive copies an exact subtree into a reusable root; identities maps every descendant source ID, excluding the root. Instance inserts a reusable reference. Override edits an exact instance-owned named-part descriptor; create/move payload and update typed properties in the same group. Inherit removes the exact matching descriptor/payload. value-domain-set replaces only the exact authored owner''s local scalar value policy, retaining fields/events/bindings/defaults. Its closed domain uses native JSON scalar types; calendar format date uses valid Gregorian YYYY-MM-DD bounds and choices, with empty text for an optional date. Calendar/numeric bounds are paired and inclusive. Clock format time has independently optional bounds; a reversed pair spans midnight. Step is positive signed Integer milliseconds or explicit any; omission preserves no declaration. Its base is minimum or midnight. Clock choices retain exact wire precision and are unique by reading (1..128), so .1 and .100 duplicate. Group dependent default changes in the same transaction. value-domain-inherit removes only an existing local declaration, distinct from NoValue. Use nyx_node for bounded parts, property types and local/effective domains. Incomplete payloads, foreign/occupied identities, invalid paths/domains/defaults and drafts reject the whole group. Supply current expectedRevision; operationId deduplicates the last 64 successful mutations per session.',
       NyxTransactionAgentSchema(LTransaction), False),
     Tool('nyx_select', 'Select an exact authored component. activate=true requires a page or reusable root. Revision checked; selection does not add content undo history.',
       Schema(NyxObject([NyxField('expectedRevision', IntSchema(1, High(Integer))),

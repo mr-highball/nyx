@@ -1213,6 +1213,12 @@ begin
       Exit(True);
     end;
 
+    if CaptureNyxTimeDomainInspector(FSession, ANode, AShellRoot, LEdit) then
+    begin
+      Edit(LEdit);
+      Exit(True);
+    end;
+
     if CaptureNyxContentInspector(FSession, ANode, AShellRoot, LEdit) then
     begin
       Edit(LEdit);

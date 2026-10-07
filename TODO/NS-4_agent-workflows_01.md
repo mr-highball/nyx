@@ -995,6 +995,18 @@ extension fields or browser editor automation. No original criterion/count close
 
 ## Typed clock-domain authoring gap — 2026-10-07
 
+Source preparation now exposes bounded clock context and a closed time-domain
+schema, reusing the existing typed paired transaction authority. Checked local
+semantic/schema fixtures pass 32/16; the public Nyx Inspector/queue passes 25
+actual Win32 checks and exact compiled emitted-pair reconstruction passes five.
+Browser/worker/Studio compile with zero owned warnings, but are not executed or
+authenticated here. The frozen running backend remains unchanged. This extends
+the prerequisite preparation only: workflow count stays 19 and no original
+criterion closes. Stop local fixtures; this owner still requires authenticated
+current-backend discovery/edits/history/builds and observing full Studio. Preserve
+all 15 services/nine pairs and the existing rejected browser/primary actions.
+See [the packet](../WORK.md#current-return-path-public-clock-constraints-in-studio--2026-10-07).
+
 The portable managed clock contract now has exact values/precision, one-sided and
 overnight bounds, choices and millisecond steps, plus crafted paired source admission.
 The frozen deployed MCP/component schema does not expose typed clock-domain queries

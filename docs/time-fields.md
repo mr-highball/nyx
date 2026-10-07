@@ -63,7 +63,7 @@ of the document's defaults, and ordinary text domains keep their original meanin
 | `Choices([...])` | 1..128 distinct clock readings, including `NyxNoTime` if empty is an allowed choice |
 | `StepMilliseconds(value)` | Positive exact integer step |
 | `StepSeconds(value)` | Positive integer seconds, checked before conversion to milliseconds |
-| `AnyStep` | No step restriction; the default |
+| `AnyStep` | Explicit unrestricted step; an omitted declaration is also unrestricted |
 
 An overnight appointment can declare:
 
@@ -84,6 +84,62 @@ An explicit base overload accepts `TNyxValueDomain`; use a builder's `.Definitio
 when intentionally enriching an existing text specification. Calendar, numeric
 and other wrong-family bases refuse. Native clock values remain independent of
 locale and floating-point timestamps.
+
+## Reusable constraint editor and Studio
+
+`nyx.times.editor` exposes `NewNyxTimeDomainEditor`, an independently owned Nyx
+card composed from specialized time, select, input, memo, label and button
+interfaces. It borrows the authored contract only during construction and retains
+a copied local/effective baseline. Applications and Studio can use the same form:
+
+```pascal
+LTimePolicy := NewNyxTimeDomainEditor('meeting-policy', NyxControl('meeting-time'),
+  LMeetingTime.Node.Contract, NyxNodeValueDomain(LMeetingTime.Node));
+LSettingsPage.Add(LTimePolicy);
+```
+
+The policy form offers independently optional earliest/latest times, a closed
+step selector and allowed times, one per line. Use `(empty)` for an optional empty
+value in a restricted choice list. Bounds and choices retain minute, second or
+fractional precision. A latest time before the earliest time spans midnight.
+`TNyxTimeDomainEditorStep` distinguishes no declaration, explicit Any and fixed
+integer milliseconds. The fixed-step proposal uses an ordinary text input so a
+native numeric widget cannot round a fractional or overflow draft before Apply.
+
+`NyxTimeDomainEditorFieldID` addresses named descendants through the closed
+`TNyxTimeDomainEditorField` enum. `CaptureNyxTimeDomainEditor` recognizes only
+the exact mounted Apply/Restore buttons and returns a copied
+`TNyxTimeDomainEditorChange`. Unrelated actions return `False`; stale/invalid
+fields refuse before publication. The receiver must recheck the owner and
+baseline before admitting the proposed domain. Restore is disabled when no local
+declaration exists. Neither construction nor capture mutates the authored owner.
+
+Studio's ordinary Properties panel consumes this public form for effective
+clock domains, including inherited compound fields. Apply/Restore enters the
+existing independent paired source queue with the exact selection and baseline.
+Successful admission updates design and adjacent typed Pascal as one Undo step.
+Invalid steps and dependent defaults refuse atomically. This packet qualifies
+actual Win32 form/queue input; full observing browser Studio and retention of
+unsubmitted policy drafts across arbitrary shell refreshes remain open.
+
+`NyxSetValueDomain(NyxControl('meeting-time'), NyxTimeDomain...)` has a specialized
+typed overload. The MCP persistence boundary advertises a closed `format: time`
+domain with independently optional `min`/`max`, exact positive signed-Integer
+millisecond `step` or explicit `any`, and 1..128 choices. Pascal admission checks
+clock syntax and duplicate readings; JSON spelling uniqueness alone is insufficient.
+The existing `nyx_node` value-domain window reports format, independent bounds,
+paged exact choices, `stepDeclared`, native JSON `step`, `stepMilliseconds`,
+`stepBase` and `crossesMidnight`. Absent step is null, distinct from explicit Any.
+These are source/local-session capabilities; a frozen running backend gains them
+only after independently qualified replacement. The current LAN backend is unchanged.
+
+`tools/build.ps1 -Target time-policy` consumes the existing exact public-Pascal
+clock companion without repeating foundation/picker tests. It runs offline MCP
+schema checks, local semantic admission/history, physical native Inspector/queue
+input and exact compiled reconstruction of the emitted accepted pair. It stages
+browser controls, their source worker and reconstruction hosts at
+`build/time-policy/maintained/web/`. No listener, browser, enrollment or observing
+project is created or replaced. Browser staging is not execution evidence.
 
 ## Generated source and current limits
 
@@ -131,8 +187,9 @@ The native capability is Basic support. Current evidence qualifies Win32 control
 drafts, retained keyboard/arrow action routes, millisecond admission and lifetime;
 printed images are diagnostics, not displayed-pixel or hardware evidence.
 Executed browser controls, other widgetsets/DPI, hardware/IME/accessibility,
-production styling and Studio/MCP domain authoring retain their original task
-owners. Compiling the adapters does not qualify those behaviors.
+production styling and full authenticated/observing Studio/MCP domain authoring
+retain their original task owners. Compiling the adapters does not qualify those
+behaviors; the local/native policy form evidence is described above.
 
 `tools/build.ps1 -Target time-values` executes checked native contract and exact
 compiled-companion reconstruction, checks six wrong argument families on both

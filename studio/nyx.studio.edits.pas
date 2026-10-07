@@ -262,6 +262,9 @@ function NyxSetValueDomain(const AControl: TNyxControlRef;
   const ADomain: TNyxIntegerDomain): TNyxValueDomainEdit; overload;
 function NyxSetValueDomain(const AControl: TNyxControlRef;
   const ADomain: TNyxNumberDomain): TNyxValueDomainEdit; overload;
+{ Clock policy stays in its distinct fluent argument family. }
+function NyxSetValueDomain(const AControl: TNyxControlRef;
+  const ADomain: TNyxTimeDomain): TNyxValueDomainEdit; overload;
 function NyxInheritValueDomain(const AControl: TNyxControlRef): TNyxValueDomainEdit;
 { One paired candidate for related domain edits. Caller arrays are not retained. }
 function NyxValueDomainPatch(const AChanges: array of TNyxValueDomainEdit): INyxDesignPatch;
@@ -1123,6 +1126,12 @@ end;
 
 function NyxSetValueDomain(const AControl: TNyxControlRef;
   const ADomain: TNyxNumberDomain): TNyxValueDomainEdit;
+begin
+  Result := NyxSetValueDomain(AControl, ADomain.Definition);
+end;
+
+function NyxSetValueDomain(const AControl: TNyxControlRef;
+  const ADomain: TNyxTimeDomain): TNyxValueDomainEdit;
 begin
   Result := NyxSetValueDomain(AControl, ADomain.Definition);
 end;

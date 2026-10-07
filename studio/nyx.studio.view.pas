@@ -1369,6 +1369,7 @@ begin
         end;
         AddBindingsPanel(LRight, ASession, LSelectedProjection, AState);
         AddNyxDateDomainInspector(LRight, ASession);
+        AddNyxTimeDomainInspector(LRight, ASession);
         AddNyxMenuBarInspector(LRight, ASession, LSelectedProjection);
         AddNyxMenuInspector(LRight, ASession, AState.MenuEditorReference);
 

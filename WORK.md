@@ -7,6 +7,130 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Latest user priority: mobile allocation recheck — 2026-10-07
+
+The supplied capture shows the earlier stacked toolbar/detail layout. Read the
+existing mobile delivery evidence before changing code: the current shared builder
+already combines compact Actions navigation, collapsed Review/details, the public
+touch/keyboard detail divider, optional Tools and reversible Expand/Restore.
+Typed viewport width/height/orientation and named/manual presentations supply
+conditional configuration without changing authored font size or design history.
+
+Fresh direct `nyx_session` inspection authenticates revision 2 with unchanged
+selection/home, no draft and no Undo/Redo. The read-only guard verifies all 15
+process identities, nine complete pairs/navigation/history, the full checkpoint,
+229 sealed files and both intended bindings. Every served asset returns HTTP 200
+with its exact sealed hash (`build/time-policy/mobile-preservation-current.log`).
+Re-inspected retained `build/mobile-current-check/phone/` captures show 396/587 px
+of a CSS 390×640 host, 62% normal and 92% expanded; their existing 21-check journey
+is retained browser evidence, not a fresh phone or browser execution. No duplicate
+implementation, fixture expansion, deployment or task credit is warranted.
+Reload the served editor and use Review/Hide, Tools and Expand/Restore to review
+the existing blend. Physical-phone keyboard/visual-viewport behavior retains its
+documented gap. Resume the retained clock-domain integration below.
+
+The pending clock Inspector consumer has now terminated successfully: **25**
+actual native form/paired-queue checks, zero leaks (`controls-qualified-run.log`).
+Keep the uncommitted clock work; browser staging, maintained build orchestration,
+affected Studio compilation, documentation and its remote checkpoint remain open.
+
+## Current return path: public clock constraints in Studio — 2026-10-07
+
+The immediately preceding mobile recheck makes no product/acceptance progress;
+its terminal poll confirms the previously live native consumer passed 25 checks.
+Revalidate retained dirty work and finish the remaining maintained build, exact
+compiled source and affected Studio boundaries instead of repeating mobile or
+picker fixtures. The user-priority presentation path is already delivered.
+
+Previous goal turn is progress: native weak picker focus and actual focus-event
+observation are pushed at `9d0f664`, with exact remote/clean-worktree evidence.
+End that qualified native boundary. The time foundation's executed pas2js gate
+remains; a fresh browser inspection finds no admitted live debug process. Do not
+retry an equivalent rejected launch or expand foundation/native picker fixtures.
+
+Follow original Studio authoring criterion 6 (supported properties) and the
+existing workflow owner's typed clock-domain gap. Studio currently composes only
+the public date editor. Current source MCP discovery offers five scalar/date
+branches, and its bounded value-domain query reads min/max together and omits
+clock format/step semantics. The generic paired command already admits portable
+clock descriptors, so reuse its authority rather than introduce another model.
+
+Deliver a public Nyx clock-domain compound using specialized controls and closed
+editor enums. Preserve one-sided/overnight bounds, absent versus explicit Any
+step, exact milliseconds/precision/choices and inherited restoration. Ordinary
+Studio uses its immutable capture/baseline through the independent source queue.
+Expose a typed time-domain edit overload, bounded clock query fields and a closed
+MCP schema. Qualify meaningful local semantic refusal/history/source and actual
+native Inspector/queue consumers; compile/stage matching pas2js and Studio paths.
+Preserve protected services/pairs/payloads. Current-backend authenticated MCP,
+full browser observing/execution and LAN rollout remain separate required gates;
+source preparation must not be claimed as live discovery/admission. Stop after
+this integration packet. Original criteria/counts remain 19/30/13/28/2 until
+evidence-backed reassessment; no task/foundation is accepted from native checks.
+
+The bounded clock-authoring preparation is now integrated. Public
+`NewNyxTimeDomainEditor` composes specialized Nyx Card/Time/Select/Input/Memo/
+Button/Label controls with copied owner/baseline context and closed field/step
+enums. Independently optional and midnight-crossing bounds, exact precision,
+choice lists/optional empty values, absent versus explicit Any step and positive
+Integer milliseconds retain the portable contract. The fixed-step proposal is
+text until Apply so native numeric controls cannot silently coerce an invalid
+draft. Studio's Properties panel routes its copied set/inherit intent through
+the existing independent paired queue. The typed clock edit overload reuses
+complete candidate admission; no second history/model is introduced.
+
+Current source MCP discovery adds the closed sixth time-domain branch. Bounded
+value-domain reads now report exact independent endpoints, clock format, paged
+choices, declared/native step, integer step size, step base and overnight context.
+The pre-change query failure is retained in `baseline-run.log`. Local semantic
+checks qualify these source capabilities; they do not authenticate a new HTTP
+backend or alter the frozen currently served tool schema.
+
+Maintained `tools/build.ps1 -Target time-policy` passes **16** offline MCP schema,
+**32** local semantic admission/refusal/source/history, **25** actual Win32
+Inspector/queue and **5** exact compiled emitted-pair reconstruction checks.
+Local semantic cases include one-sided queries, no-op form precision, grouped
+Undo/Redo, stale revision, fractional step and dependent-default rollback.
+Physical fields qualify independent proposals, actual Apply, fractional refusal,
+inherited restoration and exact paired history. Generated constructors preserve
+overnight millisecond bounds, the new step and independent control/state defaults.
+The matching browser controls, module worker and exact emitted-source consumer
+compile/stage with their matched RTL/English hosts; no execution is claimed.
+Terminal evidence: `build/time-policy/maintained-qualified-final.log` and
+`maintained/result/`. The first browser fixture compile refused an incorrect
+procedural `onload` signature; its failed log stays at `maintained-final.log`.
+The fixture uses the installed functional event contract in the final pass.
+
+The unchanged calendar policy target passes **82** native checks including full
+ordinary Studio, and **4** exact compiled reconstruction checks, leak-free
+(`calendar-regression-final.log`). Its earlier 74 is included in 82, not added.
+Standalone native Studio's unchanged wide/narrow journey passes **22**, leak-free
+(`studio-geometry-run.log`). Current full browser/native Studio compile with zero
+owned warnings (`studio-*-qualified-final.log`); browser controls/worker/replay
+retain seven installed RTL warnings each. No dependency source is edited and no
+foundation/picker test sequence is repeated. The 16 schema checks repeated by the
+calendar target are regression reuse, not extra acceptance credit.
+
+No original full criterion or prerequisite closes. Authoring no-closure advances
+**30→31** once; workflow/renderer/codegen/delivery stay **19/13/28/2**. End this local
+form/preparation packet. The next meaningful boundary belongs to the existing
+workflow owner: independently authenticated current-backend clock queries/grouped
+edits, exact paired history/builds and observing full browser Studio. The executed
+pas2js foundation gate remains; a new form compile cannot satisfy it. Unsubmitted
+policy drafts across arbitrary shell refreshes, full native Studio clock journeys,
+browser input/readiness, hardware/accessibility, parity/visual/budgets and original
+application requirements remain open. Do not expand more local clock fixtures or
+retry the rejected browser/primary actions as a substitute for those consumers.
+
+Final direct MCP inspection authenticates the unchanged primary revision 2 with
+the same selection/home, no draft or Undo/Redo. The guard verifies all **15** exact
+process identities, **nine** complete pairs/navigation/history, the **147,033-byte**
+checkpoint, **229** frozen LAN files and both bindings (`preservation-final.log`).
+Separate frozen **243/242-file** candidates verify unchanged (`*-package-final.log`).
+This is source preparation, not LAN deployment. The authorized branch checkpoint
+and exact remote/clean-worktree evidence belong in ignored
+`build/time-policy/remote-checkpoint.json` after commit/push.
+
 ## Current return path: native picker focus and callback lifetime — 2026-10-07
 
 Previous goal turn is progress: owned exact clock controls and their maintained

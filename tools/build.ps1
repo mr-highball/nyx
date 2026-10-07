@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'time-fields', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -65,6 +65,9 @@ param(
   [string]$DateSourceDirectory = 'build/date-fields/companion',
   # Unchanged English date seed exported with bounded semantic MCP reads.
   [string]$DatePolicySourceDirectory = 'build/date-policy/source',
+  # Exact public-Pascal clock companion produced by the prerequisite build.
+  # This form/semantic consumer does not re-run its foundation or edit Studio.
+  [string]$TimePolicySourceDirectory = 'build/time-fields/maintained/source',
   # Exact English bound-table source composed/exported through authenticated MCP.
   [string]$GridSourceDirectory = 'build/grid-navigation/source',
   # Full-catalog source is composed/exported by the Pascal semantic MCP consumer.
@@ -1233,6 +1236,73 @@ try {
       Write-Host 'Clock controls qualified natively; printed images are diagnostic. Browser controls are staged, not executed.'
     }
     Write-Host 'Clock contract/reconstruction staged; twelve wrong-family compiler cases refused. Browser execution remains separate.'
+    exit 0
+  }
+
+  if ($Target -eq 'time-policy') {
+    # Pascal owns bounded semantic/schema checks, real Inspector/queue input and
+    # exact compiled source reconstruction. Stage both-target consumers without
+    # starting a browser/listener or replacing an observing user's project.
+    $nyxTimePolicyRoot = Join-Path $nyxRoot 'build/time-policy/maintained'
+    $nyxTimePolicySource = [IO.Path]::GetFullPath($TimePolicySourceDirectory)
+    $nyxTimePolicySeed = Join-Path $nyxTimePolicySource 'nyx.generated.time.pas'
+
+    if (-not (Test-Path -LiteralPath $nyxTimePolicySeed -PathType Leaf)) {
+      throw 'Build the typed public clock companion first; see docs/time-fields.md'
+    }
+    $nyxTimePolicyNative = Join-Path $nyxTimePolicyRoot 'native'
+    $nyxTimePolicyLcl = Join-Path $nyxTimePolicyRoot 'lcl'
+    $nyxTimePolicyResult = Join-Path $nyxTimePolicyRoot 'result'
+    $nyxTimePolicyReplay = Join-Path $nyxTimePolicyRoot 'reconstruction'
+    $nyxTimePolicyWeb = Join-Path $nyxTimePolicyRoot 'web'
+    New-Item -ItemType Directory -Force $nyxTimePolicyNative, $nyxTimePolicyLcl,
+      $nyxTimePolicyResult, $nyxTimePolicyReplay, $nyxTimePolicyWeb | Out-Null
+    $nyxTimePolicyFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests')
+    Invoke-NyxCompiler $nyxFpc ($nyxTimePolicyFlags + @(
+      "-FU$nyxTimePolicyNative", "-FE$nyxTimePolicyNative", 'tests/nyx_date_policy_schema.lpr'))
+    & (Join-Path $nyxTimePolicyNative 'nyx_date_policy_schema.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Clock value-domain discovery schema checks failed' }
+    Invoke-NyxCompiler $nyxFpc ($nyxTimePolicyFlags + @(
+      "-Fu$nyxTimePolicySource", "-FU$nyxTimePolicyNative", "-FE$nyxTimePolicyNative",
+      'tests/nyx_time_policy_tests.lpr'))
+    & (Join-Path $nyxTimePolicyNative 'nyx_time_policy_tests.exe') $nyxTimePolicySeed
+
+    if ($LASTEXITCODE -ne 0) { throw 'Local semantic clock-policy admission failed' }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxTimePolicyPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc ($nyxTimePolicyFlags + @(
+      "-Fu$nyxTimePolicySource", "-Fu$nyxLazarus/lcl/units/$nyxTimePolicyPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxTimePolicyPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxTimePolicyPlatform",
+      "-FU$nyxTimePolicyLcl", "-FE$nyxTimePolicyLcl", 'tests/nyx_time_policy_controls.lpr'))
+    & (Join-Path $nyxTimePolicyLcl 'nyx_time_policy_controls.exe') $nyxTimePolicySeed $nyxTimePolicyResult
+
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native clock Inspector/queue controls failed' }
+    Invoke-NyxCompiler $nyxFpc ($nyxTimePolicyFlags + @(
+      "-Fu$nyxTimePolicyResult", "-FU$nyxTimePolicyReplay", "-FE$nyxTimePolicyReplay",
+      'tests/nyx_time_policy_generated.lpr'))
+    & (Join-Path $nyxTimePolicyReplay 'nyx_time_policy_generated.exe') (Join-Path $nyxTimePolicyResult 'design.nyx.json')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Exact compiled clock-policy reconstruction failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxTimePolicyWebFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxTimePolicyWeb")
+    Invoke-NyxCompiler $nyxPas2js ($nyxTimePolicyWebFlags + @(
+      "-Fu$nyxTimePolicySource", 'tests/nyx_time_policy_controls.lpr'))
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxTimePolicyWeb", 'studio/nyx_source_worker.lpr')
+    Invoke-NyxCompiler $nyxPas2js ($nyxTimePolicyWebFlags + @(
+      "-Fu$nyxTimePolicyResult", 'tests/nyx_time_policy_generated.lpr'))
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxTimePolicyWeb 'rtl.js') -Force
+    Copy-Item -LiteralPath $nyxTimePolicySeed -Destination (Join-Path $nyxTimePolicyWeb 'seed.pas.txt') -Force
+    Copy-Item -LiteralPath (Join-Path $nyxTimePolicyResult 'design.nyx.json'),
+      (Join-Path $nyxRoot 'studio/web/time-policy-controls.html'),
+      (Join-Path $nyxRoot 'studio/web/time-policy-generated.html') -Destination $nyxTimePolicyWeb -Force
+    Write-Host 'Clock Inspector/queue and compiled pair qualified natively. Browser controls/worker/replay staged, not executed.'
     exit 0
   }
 

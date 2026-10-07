@@ -389,6 +389,14 @@ reuse `textOffset`/`textLimit` Unicode-scalar windows (default 80 for domains),
 with index, totalScalars and truncated metadata; numeric/Boolean choices keep
 their exact primitive type. Omission returns no domain context.
 
+Clock format `time` adds five small fields: `stepDeclared`, native JSON `step`
+(positive signed Integer milliseconds, `"any"`, or null when absent), exact
+`stepMilliseconds` (zero for unrestricted), wire-precise `stepBase` (minimum,
+otherwise `"00:00"`) and `crossesMidnight`. Minimum and maximum are independent;
+neither one-sided query fabricates the other endpoint. Clock choices use the
+same bounded text windows. This source/local-session extension does not change
+the frozen deployed endpoint; authenticate actual discovery before using it.
+
 Group policy changes with other related operations in one `nyx_transaction`,
 supplying the exact expected revision and unique retry identity:
 
@@ -407,9 +415,9 @@ supplying the exact expected revision and unique retry identity:
 ```
 
 This JSON is an explicit transport boundary; internal commands and generated
-Pascal use typed domain/date builders. Scalar types are text, Boolean, integer
-and number. Calendar format is canonical Gregorian date text or empty. Bounds
-are paired, ascending and inclusive; numeric bounds retain numeric types. Choices
+Pascal use typed domain/date/clock builders. Scalar types are text, Boolean, integer
+and number. Calendar format is canonical Gregorian date text or empty. Calendar
+and numeric bounds are paired, ascending and inclusive; numeric bounds retain numeric types. Choices
 are unique, 1..128, exact and compatible with bounds. Unknown fields, impossible
 dates, wrong control families and incompatible defaults refuse the complete
 group without advancing history. Setting changes only the owner's local value
@@ -418,6 +426,18 @@ in the same candidate when needed. `{"op":"value-domain-inherit","id":"arrival"}
 removes an existing local declaration; missing declarations refuse. Each authored
 reusable override remains independent. The ordinary Inspector uses the same typed
 command and paired source/history path. See [usage](date-fields.md#studio-and-semantic-constraint-authoring).
+
+Clock domains use `"type":"text","format":"time"` and exact
+`HH:MM[:SS[.fff]]` bounds/choices. Bounds are independently optional; a reversed
+pair spans midnight. An optional `step` uses positive Integer milliseconds or
+`"any"`, based on the minimum or midnight. Omission retains no step declaration.
+Choices are unique by reading, so `09:00:00.1` and `09:00:00.100` duplicate.
+Empty text is an optional empty choice. The public typed `NyxSetValueDomain`
+clock overload and ordinary Nyx-built policy form reuse the existing complete
+candidate and paired Undo authority. Current source preparation passes local
+semantic and Win32 form/queue checks; authenticated current-backend authoring,
+executed browser/observing Studio and rollout still require qualification. See
+[the public editor](time-fields.md#reusable-constraint-editor-and-studio).
 
 ## Reusable components
 

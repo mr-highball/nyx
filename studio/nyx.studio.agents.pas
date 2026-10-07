@@ -192,7 +192,7 @@ uses
   nyx.binding.types, nyx.contract, nyx.collections, nyx.collections.view.types,
   nyx.collections.selection, nyx.collections.query,
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.studio.importedits,
-  nyx.studio.routineedits, nyx.studio.declarationedits;
+  nyx.studio.routineedits, nyx.studio.declarationedits, nyx.times;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
 var
@@ -1058,6 +1058,10 @@ var
   LFormat: TNyxText;
   LMinimum: TNyxDataValue;
   LMaximum: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LStep: TNyxDataValue;
+  LStepBase: TNyxText;
+  LCrossesMidnight: Boolean;
   LOffset: Integer;
   LLimit: Integer;
   LTextOffset: Integer;
@@ -1103,6 +1107,11 @@ begin
       LFormat := 'date';
     end;
 
+    if LDomain.ClockTime then
+    begin
+      LFormat := 'time';
+    end;
+
     if NyxAgentHas(LData, 'choices') then
     begin
       LChoices := LData.Field('choices');
@@ -1111,6 +1120,10 @@ begin
     if NyxAgentHas(LData, 'min') then
     begin
       LMinimum := LData.Field('min');
+    end;
+
+    if NyxAgentHas(LData, 'max') then
+    begin
       LMaximum := LData.Field('max');
     end;
   end;
@@ -1144,6 +1157,44 @@ begin
     NyxField('minimum', LMinimum), NyxField('maximum', LMaximum),
     NyxField('totalChoices', NyxData(LChoices.Count)), NyxField('offset', NyxData(LOffset)),
     NyxField('choices', NyxArray(LItems))]);
+
+  if LDomain.ClockTime then
+  begin
+    { Add only clock context, never a complete contract/document. Null step and
+      stepDeclared preserve absence versus explicit Any; arithmetic remains
+      exact integer milliseconds and the declared minimum is the step base. }
+    LStep := NyxNull;
+
+    if NyxAgentHas(LData, 'step') then
+    begin
+      LStep := LData.Field('step');
+    end;
+    LStepBase := '00:00';
+
+    if LMinimum.Kind = ndText then
+    begin
+      LStepBase := LMinimum.AsText;
+    end;
+    LCrossesMidnight := False;
+
+    if (LMinimum.Kind = ndText) and (LMaximum.Kind = ndText) then
+    begin
+      LCrossesMidnight := TNyxClockTime.FromText(LMinimum.AsText)
+        .Compare(TNyxClockTime.FromText(LMaximum.AsText)) > 0;
+    end;
+    LCount := Result.Count;
+    SetLength(LFields, LCount + 5);
+    for LIndex := 0 to LCount - 1 do
+    begin
+      LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+    end;
+    LFields[LCount] := NyxField('stepDeclared', NyxData(LStep.Kind <> ndNull));
+    LFields[LCount + 1] := NyxField('step', LStep);
+    LFields[LCount + 2] := NyxField('stepMilliseconds', NyxData(LDomain.TimeStepMilliseconds));
+    LFields[LCount + 3] := NyxField('stepBase', NyxData(LStepBase));
+    LFields[LCount + 4] := NyxField('crossesMidnight', NyxData(LCrossesMidnight));
+    Result := NyxObject(LFields);
+  end;
 end;
 
 function TNyxAgentSession.Components(const AArguments: TNyxDataValue): TNyxDataValue;

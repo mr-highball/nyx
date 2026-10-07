@@ -103,7 +103,7 @@ begin
       (LBranch.Field('required').Count = 3),
       'Setting requires an exact owner and typed domain');
     LVariants := LBranch.Field('properties').Field('domain').Field('oneOf');
-    Check(LVariants.Count = 5, 'All scalar families and Gregorian format are discoverable');
+    Check(LVariants.Count = 6, 'All scalar families, Gregorian and clock formats are discoverable');
     for LIndex := 0 to LVariants.Count - 1 do
     begin
       LBranch := LVariants.Item(LIndex);
@@ -123,6 +123,15 @@ begin
       (LProperties.Field('min').Field('minLength').AsInteger = 10) and
       (LVariants.Item(4).Field('anyOf').Item(1).Field('required').Count = 2),
       'Calendar format discovers canonical paired bounds, with strict Pascal date admission');
+    LProperties := LVariants.Item(5).Field('properties');
+    Check((LProperties.Field('format').Field('const').AsText = 'time') and
+      not NyxAgentHas(LVariants.Item(5), 'anyOf') and
+      (LProperties.Field('min').Field('maxLength').AsInteger = 12),
+      'Clock format discovers independently optional exact bounds');
+    Check((LProperties.Field('step').Field('oneOf').Item(0).Field('type').AsText = 'integer') and
+      (LProperties.Field('step').Field('oneOf').Item(0).Field('maximum').AsInteger = High(Integer)) and
+      (LProperties.Field('step').Field('oneOf').Item(1).Field('const').AsText = 'any'),
+      'Clock steps use exact positive milliseconds or the explicit Any boundary');
     WriteLn('PASS ', LChecks, ' offline value-domain MCP schema checks');
   except
     on LException: Exception do

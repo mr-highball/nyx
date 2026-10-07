@@ -40,6 +40,29 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Public clock-policy editor — 2026-10-07
+
+Original criterion 6 now consumes `NewNyxTimeDomainEditor`, a public reusable Nyx
+compound with specialized named controls, typed clock domains and copied capture.
+One-sided/overnight bounds, exact precision/choices, absent versus explicit Any
+steps, Integer milliseconds and inheritance use the existing paired source queue.
+Checked local semantic/schema checks pass 32/16; actual Win32 Inspector/queue
+passes 25 and exact compiled emitted-source reconstruction passes five, leak-free.
+Calendar regression passes 82 including full ordinary native Studio and four
+compiled reconstruction checks; standalone native Studio remains 22. Matching
+browser controls/worker/replay and both Studios compile with zero owned warnings.
+See [public usage](../docs/time-fields.md#reusable-constraint-editor-and-studio)
+and [evidence](../WORK.md#current-return-path-public-clock-constraints-in-studio--2026-10-07).
+
+No original criterion/prerequisite closes. Authoring no-closure advances 30→31
+once; workflow/renderer/codegen/delivery remain 19/13/28/2. Stop local form fixtures.
+Full observing browser/native clock authoring, retention of unsubmitted policy
+drafts across arbitrary refreshes, application/parity/visual/budget and original
+prerequisites remain open. Authenticate new-backend clock context/grouped edits,
+paired history/builds and observing Studio under the existing workflow owner;
+source preparation does not update a frozen live endpoint or satisfy the executed
+pas2js foundation gate. No rejected launch/service replacement is retried.
+
 ## Public collection-query editor — 2026-10-07
 
 Original criteria 2/6 now consume `NewNyxQueryEditor`: reusable specialized named
