@@ -62,6 +62,10 @@ original services, **9** exact pairs, labels/handles/navigation/history/drafts/
 permissions and the full durable checkpoint, with both LAN/MCP bindings verified.
 Primary release/runtime and user enrollment are untouched.
 
+Product checkpoint **`b52f432`** is committed and pushed to `hello-nyx`; the remote
+head was verified exact. The final branch/remote receipt is ignored
+`build/menu-editor/remote-return.json`. No original task is moved to DONE.
+
 The packet is about 402 MB including completed browser profiles. Automatic
 approval review rejected the scoped recursive profile-cache cleanup before
 execution with only “blocked by policy”. Caches and all evidence remain retained;
