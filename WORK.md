@@ -71,6 +71,12 @@ No original criterion closes or NS-3 count is invented/reset; established workfl
 authoring/renderer/codegen/delivery counts stay **19/30/9/28/2**. Remote publication
 requires exact local/remote comparison recorded in `build/row-window/remote-checkpoint.json`.
 
+Implementation is committed locally at `1bcd806`. Two ordinary pushes on
+2026-10-07 returned GitHub `Internal Server Error`; the verified remote still
+points to the previous accepted `34c75f7`. Publication remains pending, and no
+force push or alternate authentication route is attempted. The local worktree
+and ignored qualification evidence retain the current implementation.
+
 ## Current priority: mobile follow-up verification — 2026-10-07
 
 The user's screenshot is the earlier stacked layout. Current shared Studio code
