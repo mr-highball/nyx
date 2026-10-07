@@ -3,7 +3,17 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current observing boundary (2026-10-06): the verified frozen release replaces only
+Current component boundary (2026-10-06): managed contextual views supply typed
+placement, content/fixed sizing, focus, dismissal and owned completion snapshots.
+Real Win32 passes 40 plus 5 full native Studio help checks; actual desktop/390
+browser passes 42 each and full browser Studio opens/closes public Nyx component
+help. Persistent semantic companion authoring passes 30. Protected 15 services,
+9 exact pairs and the current observing release stay unchanged. Stop fixtures at
+this candidate boundary; original picker/menu keyboard, broader parity and
+rollout remain open. No original criterion/count closes. See
+[evidence and return path](WORK.md#current-return-path-managed-contextual-views--2026-10-06).
+
+Previous observing boundary (2026-10-06): the verified frozen release replaces only
 the exact primary LAN process. Disposable-test bootstrap retains eight exact pairs
 while resetting seven workshop histories and retiring old handles. Authenticated
 twenty-tool MCP drives actual desktop/exact-390 Studio: 126/60 checks, paired typed

@@ -66,6 +66,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Candidate managed contextual views now share typed placement, sizing, focus and
+dismissal across real browser/LCL hosts. Studio's component help consumes public
+Nyx content/presentation. Checked Win32 passes 40 plus 5 ordinary Studio checks;
+actual desktop/390 browser passes 42 each, and full browser editor help works.
+Persistent semantic companion authoring passes 30; protected 15 services/9 exact
+pairs and the frozen observing release remain unchanged. This is candidate
+integration, with broader picker/menu/parity and rollout still open. See
+[current evidence](WORK.md#current-return-path-managed-contextual-views--2026-10-06).
+
 The current frozen Studio release now serves the existing observing LAN/MCP ports.
 Explicit test-mode bootstrap retains eight exact project/source pairs, resets seven
 disposable histories and retires ordinary handles with a fresh mapping. Actual

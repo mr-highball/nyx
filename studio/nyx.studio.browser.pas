@@ -46,6 +46,8 @@ uses
   nyx.studio.authoring,
   nyx.studio.commands,
   nyx.studio.inspector,
+  nyx.studio.help, nyx.component.help, nyx.root.types,
+  nyx.popover, nyx.popover.browser,
   nyx.studio.collections,
   nyx.callbacks,
   nyx.studio.palette,
@@ -82,6 +84,9 @@ type
   TNyxStudio = class
   private
     FSession: TNyxStudioSession;
+    { Managed public Nyx content/presentation, retired before shell/selection
+      replacement. Studio owns no separate contextual-window implementation. }
+    FComponentHelp: INyxBrowserPopover;
     FSourceCommands: TNyxSourceCommands;
     { Copied reset receipts survive deferred/reentrant chrome work only within
       this exact session/load. Pending proposals overlay the accepted values. }
@@ -589,6 +594,7 @@ begin
   FSourcePaneRenderer.Free;
   FSourcePaneDocument.Free;
   FSourceModal := nil;
+  FComponentHelp := nil;
   FShellRenderer.Free;
   FShell.Free;
   FSession.Free;
@@ -730,6 +736,7 @@ var
   LCanvasSelection: TNyxTextSelection;
   LPendingDesign: TNyxStudioPendingDesign;
 begin
+  FComponentHelp := nil;
   LCodeStart := -1;
   LCodeEnd := -1;
   LCodeScroll := 0;
@@ -1613,6 +1620,7 @@ end;
 
 procedure TNyxStudio.HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
+  LHelp: TNyxDocument;
   LSource: TNyxText;
   LRetainCanvas: Boolean;
   LAcceptedDesign: TNyxText;
@@ -1627,6 +1635,26 @@ begin
 
   if not FSession.MatchesCommandContext(FShellCommandContext) then
   begin
+    Exit;
+  end;
+
+  if (ANode.ID = NyxStudioComponentHelpID) and (AEvent.Trigger = ntClick) then
+  begin
+    LHelp := BuildNyxStudioComponentHelp(FSession);
+    try
+
+      if LHelp <> nil then
+      begin
+        FComponentHelp := nil;
+        FComponentHelp := NewNyxBrowserPopover(
+          FShellRenderer.FocusFor(NyxStudioComponentHelpID), LHelp,
+          NyxPageRoot(NyxComponentHelpRootID));
+        FComponentHelp.Open(NyxPopover('About this component')
+          .Size(380, 300).Focus(NyxPart('close')));
+      end;
+    finally
+      LHelp.Free;
+    end;
     Exit;
   end;
   LRetainCanvas := False;

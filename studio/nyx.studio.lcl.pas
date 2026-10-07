@@ -30,6 +30,8 @@ uses
   Classes, SysUtils, Forms, Controls, ExtCtrls,
   nyx.text, nyx.types, nyx.behavior, nyx.data, nyx.model, nyx.theme, nyx.render.lcl,
   nyx.events, nyx.viewport, nyx.projection.refresh, nyx.callbacks, nyx.studio.collections,
+  nyx.studio.help, nyx.component.help, nyx.root.types,
+  nyx.popover, nyx.popover.lcl,
   nyx.studio.session, nyx.studio.view, nyx.studio.projects,
   nyx.studio.projectstore, nyx.studio.outputs, nyx.studio.rootedits,
   nyx.studio.compiler, nyx.studio.agentbridge, nyx.studio.agentview,
@@ -124,6 +126,8 @@ type
     FSourceModal: INyxLCLModalHost;
     FSourceFocusPending: Boolean;
     FShellView: TNyxLCLRenderer;
+    { Public managed Nyx presentation owns cloned component help content. }
+    FComponentHelp: INyxLCLPopover;
     { Borrowed receiver registration; cancelled before any controller teardown. }
     FHierarchySubscription: INyxEventSubscription;
     FCanvasView: TNyxLCLRenderer;
@@ -656,6 +660,7 @@ begin
     FCodeParking.Parent := FHost;
   end;
   FSourceModal := nil;
+  FComponentHelp := nil;
   FShellView.Free;
   FCanvasParking.Free;
   FCodeParking.Free;
@@ -1574,6 +1579,7 @@ begin
   FState.Agents := GetAgentState;
   FState.BuildControlReady := (CurrentBridge <> nil) and
     CurrentBridge.CanCancelBuild;
+  FComponentHelp := nil;
   FState.PendingDesign := FSourceCommands.PendingDesign;
   FState.CompiledPreviewAvailable := CompiledPreviewCurrent(FCurrentProject);
   FState.CompiledPreviewRunning := (FCurrentProject <> nil) and
@@ -2421,6 +2427,7 @@ end;
 
 procedure TNyxNativeStudio.ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
+  LHelp: TNyxDocument;
   LEffect: TNyxInspectorEffect;
   LRemoval: TNyxCallbackRemoval;
   LDiagnostic: TNyxSourceDiagnostic;
@@ -2436,6 +2443,26 @@ begin
   if FPainting or FChangingProject or
     not FSession.MatchesCommandContext(FShellCommandContext) then
   begin
+    Exit;
+  end;
+
+  if (ANode.ID = NyxStudioComponentHelpID) and (AEvent.Trigger = ntClick) then
+  begin
+    LHelp := BuildNyxStudioComponentHelp(FSession);
+    try
+
+      if LHelp <> nil then
+      begin
+        FComponentHelp := nil;
+        FComponentHelp := NewNyxLCLPopover(
+          FShellView.FocusFor(NyxStudioComponentHelpID), LHelp,
+          NyxPageRoot(NyxComponentHelpRootID), FTheme);
+        FComponentHelp.Open(NyxPopover('About this component')
+          .Size(380, 300).Focus(NyxPart('close')));
+      end;
+    finally
+      LHelp.Free;
+    end;
     Exit;
   end;
   LChanged := False;

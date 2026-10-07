@@ -806,3 +806,15 @@ General persistent CLI authoring remains with this workflow owner; the same pack
 still uses explicit typed fixture attachments for missing general semantic
 state/binding authoring. No workflow criterion or no-closure count changes.
 See [the bound-state evidence](../WORK.md#retained-bound-state--2026-10-06).
+
+## Managed contextual-view authoring gap — 2026-10-06
+
+The public browser/LCL popover and Studio component help consume ordinary Nyx
+content. A persistent authenticated Pascal client composes the English companion
+inside one owned review, exports bounded source and qualifies grouped paired
+history. Managed presentation declarations and primitive semantic action
+assignment are still absent from the focused semantic schema. The actual MCP
+transaction refuses an unpublished `on-click` property atomically. Its typed
+Pascal runtime attachment is explicit enrichment, never claimed as MCP admission.
+Keep these operations with this existing workflow owner; do not substitute raw
+extension fields or browser editor automation. No original criterion/count closes.

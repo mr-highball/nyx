@@ -5,6 +5,10 @@ Specialized authoring uses managed interfaces and factories such as
 See [managed controls](docs/managed-controls.md) for typing, lifetime and compound
 composition examples.
 
+Managed [contextual views](docs/popover.md) present reusable Nyx content beside
+an invoker with typed placement, focus and dismissal on browser and LCL. Studio's
+component help uses the same public managed contract and specialized help card.
+
 A Pascal-first, fluent UI library for Free Pascal/Lazarus and pas2js. One owned
 UI document describes pages and reusable components; native and browser adapters
 produce real target controls. Nyx Studio uses that same contract for visual

@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -53,6 +53,8 @@ param(
   [string]$TypeAheadSourceDirectory = 'build/typeahead/source',
   # Same accepted confirmation template on both targets, exported through MCP.
   [string]$ConfirmationSourceDirectory = 'build/confirmation/source',
+  # Exact English content is composed/exported by the persistent Pascal MCP tool.
+  [string]$PopoverSourceDirectory = 'build/popover/source',
   # Exact semantic date companion. Typed bounds/state enrichment is explicitly
   # performed by the public Pascal fixture, never handwritten editor mutations.
   [string]$DateSourceDirectory = 'build/date-fields/companion',
@@ -1279,6 +1281,78 @@ try {
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxWorkerCheckBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/event-inspector-controls.html') -Destination $nyxWorkerCheckBrowser
     Write-Host 'Real-worker fixture staged; use ready capture on an existing admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'popover-companion') {
+    # One authenticated transport retains the temporary review's owner through
+    # grouped composition, exact bounded source export and retirement.
+
+    if ([string]::IsNullOrWhiteSpace($DesignerMCPConfig)) {
+      throw 'Supply -DesignerMCPConfig with an explicitly enrolled MCP configuration.'
+    }
+    $nyxPopoverTool = Join-Path $nyxRoot 'build/popover/companion-tool'
+    New-Item -ItemType Directory -Force $nyxPopoverTool | Out-Null
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
+      '-gl', '-gh', '-Fusrc', '-Futests', '-Fustudio', "-FU$nyxPopoverTool",
+      "-FE$nyxPopoverTool", 'tools/nyx_popover_companion.lpr')
+    & (Join-Path $nyxPopoverTool 'nyx_popover_companion.exe') $DesignerMCPConfig $PopoverSourceDirectory
+
+    if ($LASTEXITCODE -ne 0) { throw 'Semantic popover companion failed' }
+    exit 0
+  }
+
+  if ($Target -eq 'popover') {
+    # Build/run actual native controls and stage the same semantic companion for
+    # HTTP browser execution. No listener, enrollment or primary mutation occurs.
+    $nyxPopoverRoot = Join-Path $nyxRoot 'build/popover/maintained'
+    $nyxPopoverNative = Join-Path $nyxPopoverRoot 'lcl'
+    $nyxPopoverBrowser = Join-Path $nyxPopoverRoot 'browser'
+    $nyxPopoverTool = Join-Path $nyxPopoverRoot 'tool'
+    $nyxPopoverSource = [IO.Path]::GetFullPath($PopoverSourceDirectory)
+
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxPopoverSource 'nyx.generated.view.pas'))) {
+      throw 'Export the isolated MCP companion first; see docs/popover.md'
+    }
+    New-Item -ItemType Directory -Force $nyxPopoverNative,
+      $nyxPopoverBrowser, $nyxPopoverTool | Out-Null
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxPopoverPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxPopoverFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', '-Fustudio', "-Fu$nyxPopoverSource",
+      "-Fu$nyxLazarus/lcl/units/$nyxPopoverPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxPopoverPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxPopoverPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxPopoverPlatform",
+      "-FU$nyxPopoverNative", "-FE$nyxPopoverNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxPopoverFlags + @('tests/nyx_popover_controls.lpr'))
+    & (Join-Path $nyxPopoverNative 'nyx_popover_controls.exe') (Join-Path $nyxPopoverRoot 'native.png')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Native popover controls failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxPopoverFlags + @('tests/nyx_studio_help_controls.lpr'))
+    $nyxPopoverCompanion = Join-Path $nyxPopoverSource 'nyx.generated.view.pas'
+    $nyxPopoverProjects = Join-Path $nyxPopoverRoot 'studio-projects'
+    & (Join-Path $nyxPopoverNative 'nyx_studio_help_controls.exe') $nyxPopoverCompanion $nyxPopoverProjects
+
+    if ($LASTEXITCODE -ne 0) { throw 'Native Studio component help failed' }
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
+      '-gl', '-gh', '-Fusrc', '-Futests', '-Fustudio', "-FU$nyxPopoverTool",
+      "-FE$nyxPopoverTool", 'tools/nyx_popover_companion.lpr')
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci',
+      '-gl', '-gh', '-Fusrc', '-Futests', '-Fustudio', "-FU$nyxPopoverTool",
+      "-FE$nyxPopoverTool", 'tests/nyx_studio_help_observer.lpr')
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxPopoverSource",
+      "-FE$nyxPopoverBrowser", 'tests/nyx_popover_controls.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxPopoverBrowser", 'studio/nyx_studio.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxPopoverBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/popover.html') -Destination $nyxPopoverBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/index.html') -Destination $nyxPopoverBrowser
+    Write-Host 'Popover consumer staged; execute on an existing admitted HTTP host.'
     exit 0
   }
 

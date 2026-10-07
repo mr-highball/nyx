@@ -44,6 +44,7 @@ uses
   nyx.studio.authoring,
   nyx.studio.collections,
   nyx.studio.inspector,
+  nyx.studio.help,
   nyx.studio.palette,
   nyx.studio.hierarchy,
   nyx.studio.session,
@@ -1097,6 +1098,7 @@ begin
     begin
       LRight.Add(Caption('selected-component-help',
         ASession.Catalog[LHelpIndex].Discovery.Description));
+      LRight.Add(Button(NyxStudioComponentHelpID, 'About this component'));
     end;
     LInspectorTabs := TNyxNode.Create(nkRow, 'inspector-tabs');
     LInspectorTabs.Configure.Gap(6).Done;

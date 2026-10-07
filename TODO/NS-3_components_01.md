@@ -23,6 +23,25 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Managed contextual content — 2026-10-06
+
+Original overlay/picker scope now has a portable managed popover, typed geometry,
+focus and dismissal, owned reason snapshots and retained ordinary Nyx content.
+Studio's component help consumes a public specialized card through both adapters.
+The same MCP-authored companion passes 40 Win32 / 42 desktop and narrow browser
+checks; full native Studio help passes 5 and actual full browser Studio help works
+at both widths. Native/driver traces are leak-free. All 15 protected services and
+9 exact pairs stay unchanged; the observing release remains intact. See
+[usage](../docs/popover.md) and
+[the candidate packet](../WORK.md#current-return-path-managed-contextual-views--2026-10-06).
+
+No original criterion or parity prerequisite closes; historical NS-3 counts
+remain unestablished. Stop this integrated host batch. Presentation persistence,
+semantic declarations, actual binding within popovers, production menus/picker
+keyboard patterns, nested hosts, hardware/assistive input, other widgetsets/DPI
+and aesthetics/performance retain the original outcome. Runtime attachments are
+explicit typed fixture enrichment, not semantic presentation admission.
+
 ## Typed date fields — 2026-10-06
 
 The original native interaction/parity and advanced-picker scope now includes

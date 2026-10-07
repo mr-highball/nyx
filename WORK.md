@@ -7,6 +7,76 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: managed contextual views — 2026-10-06
+
+Current goal turn: progress on original NS-3 advanced overlays/pickers and NS-2
+focus/parity. Public `INyxPopover` owns a complete independent document snapshot
+and a selected page/reusable root. Typed placement/alignment, content/fixed sizing,
+focus and dismissal options share bounded geometry. Actual browser/LCL hosts keep
+the background interactive, preserve mounted drafts across reopen, return focus
+appropriately and retire on weak anchor loss. Ordered completion closes first;
+typed reason snapshots survive callback-driven reopen/release. Studio consumes
+`NewNyxComponentHelp`, a public specialized card, through both public adapters.
+There is no second Studio contextual UI toolkit. See [usage](docs/popover.md).
+
+Authenticated persistent Pascal MCP composes the exact English **Quick notes**
+companion in one owned empty review: one grouped transaction, bounded 80-line
+source, paired Undo/Redo, exact canonical LF export and review retirement.
+The maintained author target passes **30** protocol/source/history checks with
+zero leaks. An unpublished `on-click` update refuses atomically; managed
+presentation declarations and primitive semantic-action assignment remain with
+the existing workflow owner. The fixture's typed Pascal runtime dismissal is
+explicit enrichment, not semantic admission. The same unchanged generated source
+is compiled/executed by both popover consumers.
+
+Evidence under ignored `build/popover/`:
+
+- `qualified-final-build.log`: checked matched FPC 3.3.1 passes **40** actual
+  Win32 popover/control checks and **5** ordinary full native Studio help checks.
+  Both heap traces are leak-free. The Studio consumer loads the exact semantic
+  companion and retains its accepted pair while showing/closing Memo creator help.
+- `desktop-complete.log` / `narrow-complete.log`: actual HTTP browser consumers
+  pass **42** each at CSS **1100/390**, with real anchor-retirement clocks and an
+  observed meaningful open-popover checkpoint. Checks include shared geometry,
+  independent defaults, exact supplementary input, retained unbound drafts,
+  focus, typed completion/order/reopen/release, outside policy and teardown.
+  Counts include portable/protocol assertions, not independent component coverage.
+- `studio-desktop-complete.log` / `studio-narrow-complete.log`: the full compiled
+  ordinary browser editor opens/closes Page creator help through actual host
+  mouse input. These are independent local editors on the existing fixture host;
+  their unavailable agent sync is expected. They do not establish authenticated
+  observing integration. Native and desktop/narrow meaningful captures are
+  inspected. Native observers/drivers report zero leaks; current builds contain
+  no owned warnings. The seven upstream pas2js Classes warnings remain external.
+- `semantic-final.log`, `preservation.json` and
+  `protected-release-integrity.log`: all **15** protected process identities and
+  **9** exact project/source/navigation/history contexts remain unchanged.
+  Existing LAN release `2a12071` still verifies all **212** files. Only fresh
+  candidate children of the verified existing HTTP fixture host were staged;
+  no new listener, enrollment, protected runtime or deployment was changed.
+  Original backup/stash remain retained.
+
+Failed compile/binding/native button assumptions are retained. Two concurrent
+full-editor startups timed out; HTTP served the exact candidate successfully and
+sequential actual editor consumers passed. Timeouts earn no pass count. Browser
+content sizing includes host border insets so the fitted view has no spurious
+scrollbar. Completion snapshot numeric encoding is an internal data boundary;
+public callers receive an enum through the typed helper.
+
+Stop popover fixture expansion at this integrated candidate boundary. Managed
+presentation persistence/semantic authoring, authenticated observing rollout,
+actual scalar/collection binding within popovers, menu/picker-specific keyboard
+contracts, nested overlay coordination, hardware/IME/assistive input, RTL,
+widgetsets/DPI and production aesthetics/performance retain their original owners.
+No original criterion or prerequisite closes. Historical NS-2 parity/NS-3 totals
+remain unestablished; workflow **13**, authoring **26**, renderer **8**, codegen
+**28**, delivery **2** stay unchanged. Return to original advanced component
+outcomes through this managed host and the current semantic environment; qualify
+the keyboard prerequisite before claiming a production menu/picker. Cached native
+chat handles still require one reconnect; the authenticated Pascal client works.
+Save/push this candidate on `hello-nyx` and verify the exact remote head; keep the
+private receipt in `build/popover/remote-return.json`. The full goal stays active.
+
 ## Current return path: test-mode observing release refresh — 2026-10-06
 
 Delivered observing boundary: the frozen release at source checkpoint `2a12071`
