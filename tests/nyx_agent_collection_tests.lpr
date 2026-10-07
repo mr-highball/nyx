@@ -53,9 +53,11 @@ begin
 end;
   {$endif}
 
+procedure Run;
 begin
   try
-    LCount := RunNyxAgentCollectionJourney(LPair);
+    LCount := RunNyxAgentCollectionJourney(LPair,
+      {$ifdef NYX_QUERY_WORKFLOW_ONLY}True{$else}False{$endif});
     {$ifdef PAS2JS}
     document.body.textContent := 'PASS ' + IntToStr(LCount) + ' semantic collection checks';
     document.body.setAttribute('data-nyx-agent-collections', 'passed');
@@ -84,4 +86,8 @@ begin
       {$endif}
     end;
   end;
+end;
+
+begin
+  Run;
 end.

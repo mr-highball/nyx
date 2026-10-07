@@ -27,12 +27,13 @@
 
 type
   TNyxAgentCollectionMode = (acmList, acmSchema, acmRows, acmValue, acmDomain,
-    acmBindings, acmColumn, acmApply);
+    acmBindings, acmColumn, acmApply, acmQuery, acmQueryValue);
   TNyxAgentCollectionSource = (acsLocal, acsEffective, acsRestorable);
 
 const
   CCollectionModes: array[TNyxAgentCollectionMode] of TNyxText =
-    ('list', 'schema', 'rows', 'value', 'domain', 'bindings', 'column', 'apply');
+    ('list', 'schema', 'rows', 'value', 'domain', 'bindings', 'column', 'apply',
+     'query', 'query-value');
   CCollectionSources: array[TNyxAgentCollectionSource] of TNyxText =
     ('local', 'effective', 'restorable');
 
@@ -229,6 +230,8 @@ begin
     NyxField('total', NyxData(ASpec.Count)), NyxField('columns', NyxArray(LColumns))]);
 end;
 
+{$include nyx.studio.agents.collectionqueries.inc}
+
 function TNyxAgentSession.Collections(const AArguments: TNyxDataValue): TNyxDataValue;
 var
   LMode: TNyxAgentCollectionMode;
@@ -333,7 +336,7 @@ begin
     Exit;
   end;
 
-  if LMode in [acmBindings, acmColumn] then
+  if LMode in [acmBindings, acmColumn, acmQuery, acmQueryValue] then
   begin
 
     if LMode = acmBindings then
@@ -344,7 +347,24 @@ begin
     end
     else
     begin
-      NyxAgentFields(AArguments, '|mode|owner|field|source|offset|count|');
+      case LMode of
+        acmColumn:
+          begin
+            NyxAgentFields(AArguments, '|mode|owner|field|source|offset|count|');
+          end;
+        acmQuery:
+          begin
+            NyxAgentFields(AArguments, '|mode|owner|source|offset|limit|');
+          end;
+        acmQueryValue:
+          begin
+            NyxAgentFields(AArguments, '|mode|owner|source|path|offset|count|');
+          end;
+      else
+        begin
+          raise ENyxCollection.Create('Unexpected collection owner query');
+        end;
+      end;
       LSource := AArguments.Field('source').AsText;
       LFound := False;
       for LColumnSource := Low(TNyxAgentCollectionSource) to High(TNyxAgentCollectionSource) do
@@ -359,7 +379,7 @@ begin
 
       if not LFound then
       begin
-        raise ENyxCollection.Create('Column source must be local, effective or restorable');
+        raise ENyxCollection.Create('Collection source must be local, effective or restorable');
       end;
       LOffset := 0;
       LLimit := 1;
@@ -430,6 +450,19 @@ begin
       if LColumnSource = acsRestorable then
       begin
         LSpec := FSession.ClearedCollectionInheritance(LNode.ID);
+      end;
+
+      if LMode in [acmQuery, acmQueryValue] then
+      begin
+        Result := NyxObject([NyxField('revision', NyxData(FRevision)),
+          NyxField('owner', NyxData(LName)), NyxField('source', NyxData(LSource)),
+          NyxField('projection', NyxData(LProjectionName))]);
+
+        if LMode = acmQuery then
+        begin
+          Exit(WithResults(Result, CollectionQueryPage(LSpec, AArguments), 'query'));
+        end;
+        Exit(WithResults(Result, CollectionQueryValue(LSpec, AArguments), 'value'));
       end;
 
       if LSpec.Defined then

@@ -7,6 +7,14 @@ Pascal. PowerShell only selects tools, passes compiler arguments and stages
 matched target artifacts. No Node, npm, Python, CSS framework or remote font is
 required.
 
+`collection-query-workflow` runs the focused checked query admission/context/
+history journey, stages its pas2js consumer with matched RTL, and compiles the
+explicit authenticated English grid/query companion tools. It starts no service,
+performs no enrollment and mutates no active project. Authenticated execution
+requires an explicitly owned current backend/workspace; see
+[bounded semantic query authoring](collection-queries.md#bounded-semantic-query-authoring)
+for arguments, compiler-input evidence and the observing browser gate.
+
 `collection-query-editor` exercises the reusable specialized Nyx query form,
 ordinary paired source queue and native Studio through the existing semantic
 grid export. It compiles the browser consumer, matching worker and full Studio

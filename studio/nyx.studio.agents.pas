@@ -190,7 +190,8 @@ uses
   Math, nyx.source, nyx.design.tokens, nyx.studio.edits, nyx.studio.callbackedits,
   nyx.studio.handleredits, nyx.studio.stateedits, nyx.state, nyx.binding,
   nyx.binding.types, nyx.contract, nyx.collections, nyx.collections.view.types,
-  nyx.collections.selection, nyx.studio.collectionedits, nyx.studio.importedits,
+  nyx.collections.selection, nyx.collections.query,
+  nyx.studio.collectionedits, nyx.studio.importedits,
   nyx.studio.routineedits, nyx.studio.declarationedits;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;

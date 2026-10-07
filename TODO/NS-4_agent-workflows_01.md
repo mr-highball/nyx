@@ -15,7 +15,24 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
-Query form prerequisite (2026-10-07): Studio consumes the public specialized Nyx
+Current bounded query contract (2026-10-07): the existing collection tool now
+inspects small predicate pages/exact scalar windows and admits typed query-only
+changes, grouped with row/default edits. Checked native admission passes 117
+(19 focused query checks). Actual isolated authenticated discovery/source/history/
+stale refusal and four exact-input browser/LCL application/view builds pass 235;
+English semantic seed composition passes 41. No full browser Studio observing
+journey or application execution is claimed. Three equivalent browser readiness
+attempts timed out; automatic approval review rejected a separate browser launch
+before execution. Preserve this gate rather than retrying the launch through
+another route. Existing services/pairs/frozen payloads are exact; the new owned
+backend/enrollment stays separate. No original criterion closes; workflow
+no-closure advances 17→18 once, other counters unchanged. Reassessment stops query
+fixture expansion; observing readiness and cross-domain layout/data atomicity
+remain here, and large-value source/fixture costs retain their existing
+performance/codegen owners. See
+[the packet](../WORK.md#current-return-path-bounded-collection-query-mcp--2026-10-07).
+
+Previous query form prerequisite (2026-10-07): Studio consumes the public specialized Nyx
 query compound through the independent paired queue. Actual forms pass 78 native
 and 78 HTTP browser per desktop/CSS 390×640; ordinary native Studio passes 86.
 The source schema advertises recursive query families, version-3 bindings and a

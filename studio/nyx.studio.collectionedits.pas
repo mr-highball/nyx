@@ -37,7 +37,7 @@ const
 
 type
   TNyxCollectionChangeKind = (ccDefine, ccField, ccRemoveField, ccAppend,
-    ccUpdateRow, ccMoveRow, ccIntent, ccBind);
+    ccUpdateRow, ccMoveRow, ccIntent, ccBind, ccQuery);
 
   { Immutable typed proposals own copied values, never a document/store/control.
     A one-field schema supplies named field authoring with its typed default and
@@ -57,6 +57,7 @@ type
     FIntent: TNyxStudioCollectionIntent;
     FSpec: TNyxCollectionViewSpec;
     FProjection: TNyxCollectionProjection;
+    FQuery: TNyxCollectionQuery;
   public
     property Kind: TNyxCollectionChangeKind read FKind;
   end;
@@ -104,6 +105,15 @@ function NyxCollectionIntentChange(const AOwner: TNyxStudioBindingOwner;
 function NyxBindCollection(const AOwner: TNyxStudioBindingOwner;
   AProjection: TNyxCollectionProjection; const ASpec: TNyxCollectionViewSpec):
   TNyxCollectionChange;
+{ Replace only the effective view's query, preserving its columns, scope, parent
+  and selection. The exact owner/key/projection must still agree when replayed.
+  A grouped agent caller additionally supplies the authoritative revision; no
+  expanded schema or UI-form baseline needs to cross the protocol. An empty
+  policy clears filtering/sorting without clearing the collection binding.
+  An inherited view acquires an independent local specification. }
+function NyxSetCollectionQuery(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const AQuery: TNyxCollectionQuery): TNyxCollectionChange;
 function NyxCollectionPatch(const AChanges: array of TNyxCollectionChange):
   INyxCollectionPatch;
 
@@ -116,7 +126,7 @@ function NyxCollectionAgentSchema: TNyxDataValue;
 implementation
 
 uses
-  nyx.model, nyx.studio.session;
+  nyx.model, nyx.studio.session, nyx.collections.query.editor;
 
 type
   TNyxCollectionPatch = class(TInterfacedObject, INyxCollectionPatch)
@@ -302,6 +312,25 @@ begin
   Result.FProjection := AProjection;
 end;
 
+function NyxSetCollectionQuery(const AOwner: TNyxStudioBindingOwner;
+  const AKey: TNyxCollectionRef; AProjection: TNyxCollectionProjection;
+  const AQuery: TNyxCollectionQuery): TNyxCollectionChange;
+begin
+  Result := Default(TNyxCollectionChange);
+  Result.FKind := ccQuery;
+  Result.FOwner := NyxBindingOwner(AOwner.ID);
+  Result.FKey := NyxCollection(AKey.Name);
+
+  if (Ord(AProjection) < Ord(Low(TNyxCollectionProjection))) or
+    (Ord(AProjection) > Ord(High(TNyxCollectionProjection))) then
+  begin
+    raise ENyxCollection.Create('Query edit requires a valid collection projection');
+  end;
+  Result.FProjection := AProjection;
+  Result.FQuery := AQuery.Copy;
+  Result.FQuery.ToData;
+end;
+
 constructor TNyxCollectionPatch.Create(const AChanges: array of TNyxCollectionChange);
 var
   LIndex: Integer;
@@ -317,6 +346,7 @@ begin
   for LIndex := 0 to High(AChanges) do
   begin
     FChanges[LIndex] := AChanges[LIndex];
+    FChanges[LIndex].FQuery := AChanges[LIndex].FQuery.Copy;
     { Immutable public records are copied explicitly at the owned group boundary;
       caller array replacement cannot mutate a patch on either compiler. }
     FChanges[LIndex].FItems := nil;
@@ -381,6 +411,8 @@ var
   LOther: Integer;
   LFound: Boolean;
   LValue: TNyxStateValue;
+  LProjected: TNyxNode;
+  LIntent: TNyxStudioCollectionIntent;
 begin
   LSession := TNyxStudioSession.Create(APair);
   try
@@ -406,6 +438,34 @@ begin
           begin
             SelectCollectionOwner(LSession, LChange.FOwner, LChange.FProjection);
             LSession.SetCollectionView(LChange.FSpec);
+          end;
+        ccQuery:
+          begin
+            SelectCollectionOwner(LSession, LChange.FOwner, LChange.FProjection);
+            LProjected := LSession.SelectedProjection;
+            try
+
+              if (LProjected = nil) or not LProjected.HasCollectionView or
+                not LProjected.CollectionView.Defined or
+                (LProjected.CollectionView.Key.Name <> LChange.FKey.Name) then
+              begin
+                raise ENyxCollection.Create('Query edit requires the exact bound collection');
+              end;
+              LIntent := Default(TNyxStudioCollectionIntent);
+              LIntent.Action := scaQuery;
+              LIntent.Key := LChange.FKey;
+              LIntent.Projection := LChange.FProjection;
+              LIntent.Query := LChange.FQuery.Copy;
+              { The candidate owns the current binding/schema at this ordered
+                step. Ordinary Studio admission validates the same complete
+                replacement, without sending private form metadata to agents. }
+              LIntent.QueryBaseline := NyxQueryEditorBaseline(
+                LSession.Document.Collections.Snapshot(LChange.FKey).Schema,
+                LProjected.CollectionView);
+              LSession.ApplyCollectionIntent(LIntent);
+            finally
+              LProjected.Free;
+            end;
           end;
         ccDefine:
           begin
@@ -1120,6 +1180,14 @@ begin
             NyxField('projection', NyxData(CCollectionProjections[LChange.FProjection])),
             NyxField('spec', LChange.FSpec.ToData)]);
         end;
+      ccQuery:
+        begin
+          LValues[LIndex] := NyxObject([NyxField('op', NyxData('query')),
+            NyxField('owner', NyxData(LChange.FOwner.ID)),
+            NyxField('key', NyxData(LChange.FKey.Name)),
+            NyxField('projection', NyxData(CCollectionProjections[LChange.FProjection])),
+            NyxField('query', LChange.FQuery.ToData)]);
+        end;
     end;
   end;
   Result := NyxArray(LValues);
@@ -1166,6 +1234,17 @@ begin
       LChanges[LIndex] := NyxBindCollection(NyxBindingOwner(LData.Field('owner').AsText),
         ReadProjection(LData.Field('projection')),
         TNyxCollectionViewSpec.FromData(LData.Field('spec')));
+      Continue;
+    end;
+
+    if LOp = 'query' then
+    begin
+      Fields(LData, '|op|owner|key|projection|query|', 5);
+      LChanges[LIndex] := NyxSetCollectionQuery(
+        NyxBindingOwner(LData.Field('owner').AsText),
+        NyxCollection(LData.Field('key').AsText),
+        ReadProjection(LData.Field('projection')),
+        TNyxCollectionQuery.FromData(LData.Field('query')));
       Continue;
     end;
     LKey := NyxCollection(LData.Field('key').AsText);

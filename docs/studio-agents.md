@@ -1257,6 +1257,8 @@ never supplies an omitted collection, row or view owner.
 | `domain` | `key`, `field` | Range metadata and up to 50 indexed choice previews |
 | `bindings` | Exact authored `owner` | Supported projection, local/cleared/effective/inherited/restorable meaning and paged columns |
 | `column` | `owner`, `field`, explicit `source: local/effective/restorable` | Exact column family/mode and a title text window |
+| `query` | `owner`, explicit `source: local/effective/restorable` | Default eight/max twenty predicate nodes, value previews and at most eight sort keys |
+| `query-value` | `owner`, `source`, exact predicate child `path` | One exact typed value or a text window of at most 4096 Unicode scalars |
 | `apply` | `expectedRevision`, `operationId`, 1..32 `changes` | One paired publication, ordinary Undo and exact retry receipt |
 
 Page modes accept `offset`/`limit`; text windows accept `offset`/`count`.
@@ -1267,10 +1269,20 @@ titles are absent from discovery responses; request their precise windows.
 The complete existing 48 KiB response budget still applies, including unusually
 large open names. Queries preserve accepted source, drafts, history and navigation.
 
+Query pages traverse the predicate tree in preorder. Each node supplies a
+value-only child `path`, operator and child count; field predicates add the exact
+field/family/comparison and an 80-scalar expected-value preview. A path starts at
+`[]` and appends zero-based child indexes. `query-value` requires a field leaf;
+branch, missing or out-of-budget paths refuse. The query page reports
+`offset`/`nextOffset`/`total` and complete bounded ordering, excluding schema,
+columns, row contents and recursive subtrees. Its maximum offset is 64; paths
+have at most fifteen child indexes. Read the desired pages at one revision.
+
 Named commands use strongly typed schema/cell descriptors at this explicit JSON
 boundary. Pascal callers use `NyxDefineCollection`, `NyxSetCollectionField`,
 `NyxAppendCollectionRow`, `NyxUpdateCollectionRow`, `NyxMoveCollectionRow`,
-`NyxRemoveCollectionField` and `NyxBindCollection` with the existing typed field,
+`NyxRemoveCollectionField`, `NyxBindCollection` and `NyxSetCollectionQuery` with
+the existing typed field,
 item, domain and fluent view contracts. The immutable `INyxCollectionPatch`
 owns copied proposals; it retains no mutable document, control or runtime store.
 
@@ -1289,9 +1301,16 @@ owns copied proposals; it retains no mutable document, control or runtime store.
   `remove-field` requires `key`, exact `field` and its `kind`.
 - `bind`: exact authored `owner`, expected `projection: list/table/tree` and
   a complete versioned `spec` from `TNyxCollectionViewSpec.ToData`. Single
-  selection retains version 1; multiple selection uses version 2.
+  selection retains version 1; query-free multiple selection uses version 2.
+  A nonempty filter/order policy uses version 3.
+- `query`: exact authored `owner`, bound `key`, expected `projection` and a
+  complete typed `query` from `TNyxCollectionQuery.ToData`. Null clears only
+  filtering/ordering. Columns, scope, parent mapping and selection remain intact.
+  An inherited binding acquires an independent local override. Missing/unbound
+  owners, changed key/projection and incompatible schema fields refuse. This
+  operation can share a single collection group with row/default changes.
 
-`intent` reuses all seventeen ordinary editor operations. It requires a closed
+`intent` reuses the ordinary editor's closed operations. It requires a closed
 `action` and exact `key`; view actions also require `owner` and `projection`.
 Additional fields depend on that action and are discoverable through tools/list:
 
@@ -1307,11 +1326,14 @@ Additional fields depend on that action and are discoverable through tools/list:
 | `column-title`, `column-mode` | `field`, `kind` and `title` or Boolean `editable` |
 | `parent` | Text field name `parent`, or null to clear the tree mapping |
 | `remove-column`, `add-column` | Exact `field`, `kind` |
+| `query` | Complete typed `query` and exact schema/binding `baseline` from the public query form |
 
 Ordinary `bind` derives columns from the current schema. Ordinary `add-column`
 adds the field's default presentation; change its title/mode in subsequent
 intents or use a full fluent `bind`. Clear deliberately masks inheritance;
 inherit removes a local override. Exact existing named-part owners are supported.
+The query-only named command derives its baseline from the exact-revision
+candidate; agents do not need to retrieve or resend private form metadata.
 
 An explicit reusable clear keeps its effective view unbound; `restorable` reports
 the exact inherited contract beneath that mask, with the same paged columns.
@@ -1332,5 +1354,10 @@ foreign or retired contexts refuse without falling back to the primary project.
 journey, actual discovery builder and unchanged compiled native controls, then
 stages shared/browser controls with matched RTL. It starts no listener and
 performs no deployment or configuration refresh. WORK.md owns observed results.
-Source discovery does not establish authenticated nineteen-tool deployment or
-observing browser execution; those retain the recorded host gate.
+`tools/build.ps1 -Target collection-query-workflow` runs the focused query
+boundary and builds the explicit authenticated grid/query companion tools.
+It stages the shared browser program without launching it. Current isolated
+authenticated query/source/history and all four browser/LCL application/view
+builds are qualified; full browser Studio observation and deployed LAN authority
+retain their recorded gate. See
+[the current query workflow packet](../WORK.md#current-return-path-bounded-collection-query-mcp--2026-10-07).

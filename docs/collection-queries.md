@@ -1,7 +1,7 @@
 # Typed collection queries
 
 [Collection views](collection-views.md) · [Stores](collections.md) ·
-[Current integration evidence](../WORK.md#current-return-path-typed-collection-queries--2026-10-07)
+[Current integration evidence](../WORK.md#current-return-path-bounded-collection-query-mcp--2026-10-07)
 
 `nyx.collections.query` supplies immutable filters and stable ordering for bound
 lists, tables and trees. The portable contract contains no DOM/LCL types, locale
@@ -195,9 +195,61 @@ listener and changes no active project or enrollment. Execute
 `collection-query-editor.html` over HTTP with its matching worker/RTL and copied
 companion source for browser evidence.
 
-The packet qualifies library policies, persistence/source and actual controls.
-Authenticated current-backend query edits and an observing full browser Studio
-journey remain required integration. The existing deployed/frozen services are
-unchanged. Paging, virtualization, broader
+The form packet qualifies library policies, persistence/source and actual controls.
+The subsequent bounded MCP workflow below qualifies authenticated current-backend
+query edits and compilation. An observing full browser Studio journey remains
+required integration. The existing deployed/frozen services are unchanged.
+Paging, virtualization, broader
 large-data budgets, production styling and hardware/IME/assistive-technology
 qualification keep their original task owners.
+
+## Bounded semantic query authoring
+
+The existing `nyx_collections` tool now supplies `query` predicate pages and
+`query-value` windows for an exact local/effective/restorable binding. Predicates
+carry child paths and short scalar previews; ordering has at most eight typed
+keys. Agents retrieve only the required expected value, rather than a full
+recursive binding/schema/document. Every response reports the authoritative
+revision. See [the tool contract](studio-agents.md#structured-collection-context-and-authoring).
+
+Pascal consumers can replace only a binding's query:
+
+```pascal
+LChanges := NyxCollectionPatch([
+  NyxSetCollectionQuery(
+    NyxBindingOwner('tasks-table'), NyxCollection('tasks'), cpTable, LPolicy)]);
+```
+
+`NyxSetCollectionQuery` requires the exact effective owner, key and projection.
+It preserves columns, scope, parent mapping and selection; an empty
+`NyxCollectionQuery` clears filtering/ordering. Inherited bindings gain an
+independently owned local override. A semantic caller submits the group's
+`expectedRevision` and operation ID; candidate replay derives its current
+schema/binding baseline and uses the same ordinary Studio admission. Related
+row/default/query changes publish as one paired Undo step. An incompatible field,
+late failure, pending Pascal draft or stale revision preserves the accepted pair.
+
+`tools/build.ps1 -Target collection-query-workflow` runs the focused checked
+native admission/context/history journey, compiles its pas2js counterpart with
+matched RTL, and builds `nyx_grid_companion`/`nyx_query_companion`. Outputs stay
+under `build/query-workflow/maintained/`. It launches no listener, changes no
+configuration and authors no active project. First own a current backend with
+its explicit private enrollment and compiler profile. The grid companion creates
+an English project and exports its workspace handle; the query companion takes
+that handle, a new evidence directory and that backend's editor URL:
+
+```powershell
+& './build/query-workflow/maintained/tool/nyx_grid_companion.exe' `
+  '<explicit config.toml>' '<new grid export directory>'
+& './build/query-workflow/maintained/tool/nyx_query_companion.exe' `
+  '<explicit config.toml>' '<exported owned grid workspace>' `
+  '<new query evidence directory>' '<editor URL without trailing slash>'
+```
+
+The authenticated companion inspects bounded context, groups a row/query change,
+checks stale refusal and exact source Undo/Redo, then requests ordinary browser
+and LCL application/view builds. Each terminal successful receipt is compared
+with the actual HTTP compiler input and accepted source. The receipt explicitly
+leaves `browserUIQualified` false: compilation does not execute either application
+or establish observing editor/input behavior. `WORK.md` owns current results and
+the separate browser readiness/performance gate.

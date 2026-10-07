@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-query', 'collection-query-editor', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1819,6 +1819,44 @@ try {
       'tests/nyx_typeahead_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/typeahead.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'collection-query-workflow') {
+    # Pascal owns the query admission/context/history assertions. Compile the
+    # explicit authenticated companions, but never infer authority to launch a
+    # listener, enroll a client or mutate an operator project from a build.
+    $nyxQueryWorkflowRoot = Join-Path $nyxRoot 'build/query-workflow/maintained'
+    $nyxQueryWorkflowNative = Join-Path $nyxQueryWorkflowRoot 'native'
+    $nyxQueryWorkflowBrowser = Join-Path $nyxQueryWorkflowRoot 'browser'
+    $nyxQueryWorkflowTool = Join-Path $nyxQueryWorkflowRoot 'tool'
+    New-Item -ItemType Directory -Force $nyxQueryWorkflowNative,
+      $nyxQueryWorkflowBrowser, $nyxQueryWorkflowTool | Out-Null
+    $nyxQueryWorkflowFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests')
+    Invoke-NyxCompiler $nyxFpc ($nyxQueryWorkflowFlags + @('-dNYX_QUERY_WORKFLOW_ONLY',
+      "-FU$nyxQueryWorkflowNative", "-FE$nyxQueryWorkflowNative",
+      'tests/nyx_agent_collection_tests.lpr'))
+    & (Join-Path $nyxQueryWorkflowNative 'nyx_agent_collection_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Focused query admission/context/history checks failed'
+    }
+    foreach ($nyxQueryWorkflowProgram in @('tools/nyx_grid_companion.lpr',
+      'tools/nyx_query_companion.lpr')) {
+      Invoke-NyxCompiler $nyxFpc ($nyxQueryWorkflowFlags + @(
+        "-FU$nyxQueryWorkflowTool", "-FE$nyxQueryWorkflowTool", $nyxQueryWorkflowProgram))
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-dNYX_QUERY_WORKFLOW_ONLY', '-Fusrc', '-Fustudio', '-Futests',
+      "-FE$nyxQueryWorkflowBrowser", 'tests/nyx_agent_collection_tests.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxQueryWorkflowBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/agent-collections.html') `
+      -Destination $nyxQueryWorkflowBrowser
+    Write-Host 'Query companions built; authenticated execution needs an explicit owned workspace/configuration.'
+    Write-Host 'The browser consumer is staged, not executed; see docs/collection-queries.md.'
     exit 0
   }
 

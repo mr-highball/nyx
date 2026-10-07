@@ -33,15 +33,19 @@ uses
 { Independent English review seed, never a listener or user-owned project. }
 function CreateNyxAgentCollectionSeed: TNyxProjectPair;
 { Shared semantic journey returns its exact admitted companion for target input
-  consumers. Unicode/domain fixtures are qualification data, not starter demos. }
-function RunNyxAgentCollectionJourney(out APair: TNyxProjectPair): Integer;
+  consumers. Unicode/domain fixtures are qualification data, not starter demos.
+  AQueriesOnly exercises the complete changed query boundary independently of
+  the older large domain/source scenarios; APair has the same owned value contract. }
+function RunNyxAgentCollectionJourney(out APair: TNyxProjectPair;
+  AQueriesOnly: Boolean = False): Integer;
 
 implementation
 
 uses
   SysUtils, nyx.model, nyx.types, nyx.controls, nyx.codec, nyx.codegen, nyx.data,
   nyx.contract, nyx.state, nyx.collections, nyx.collections.view.types,
-  nyx.collections.selection, nyx.studio.collectionintent, nyx.studio.collectionedits,
+  nyx.collections.selection, nyx.collections.query, nyx.collections.query.editor,
+  nyx.studio.collectionintent, nyx.studio.collectionedits,
   nyx.studio.stateedits, nyx.studio.agents, nyx.studio.workspaces, nyx.studio.reviews;
 
 function CreateNyxAgentCollectionSeed: TNyxProjectPair;
@@ -86,7 +90,8 @@ begin
   end;
 end;
 
-function RunNyxAgentCollectionJourney(out APair: TNyxProjectPair): Integer;
+function RunNyxAgentCollectionJourney(out APair: TNyxProjectPair;
+  AQueriesOnly: Boolean): Integer;
 var
   LAgent: TNyxAgentSession;
   LSeed: TNyxProjectPair;
@@ -191,7 +196,7 @@ var
   end;
 
   { Exact ordinary intent round trips execute on independent candidates. This
-    covers all seventeen choices without replacing or clicking through Studio. }
+    covers every closed choice without replacing or clicking through Studio. }
   procedure OrdinaryIntents;
   var
     LAction: TNyxStudioCollectionAction;
@@ -270,6 +275,18 @@ var
           begin
             LIntent.SelectionMode := nsmMultiple;
           end;
+        scaQuery:
+          begin
+            LActionDocument := TNyxCodec.Decode(LCurrent.Design);
+            try
+              LIntent.Query := NyxCollectionQuery.OrderBy(NyxIntegerField('priority'));
+              LIntent.QueryBaseline := NyxQueryEditorBaseline(
+                LActionDocument.Collections.Snapshot(LKey).Schema,
+                LActionDocument.Find('tasks-table').CollectionView);
+            finally
+              LActionDocument.Free;
+            end;
+          end;
         scaBind, scaClear, scaInherit:
           begin
             { These actions use the already supplied exact key/owner/projection. }
@@ -315,6 +332,108 @@ var
         LActionDocument.Free;
       end;
     end;
+  end;
+
+  { Query-only operations preserve unrelated binding fields and row data. Pages
+    carry previews/child paths; one requested value window carries exact text.
+    This exercises the actual revision/permission/candidate protocol boundary. }
+  procedure QueryPolicies;
+  var
+    LOriginal: TNyxText;
+    LChanged: TNyxText;
+    LOriginalSpec: TNyxText;
+    LPolicy: TNyxCollectionQuery;
+    LQueryReply: TNyxDataValue;
+    LStale: TNyxDataValue;
+    LDocument: TNyxDocument;
+  begin
+    LOriginal := PairText;
+    LDocument := TNyxCodec.Decode(LAgent.PreviewPair(LRevision, 'home').Design);
+    try
+      LOriginalSpec := LDocument.Find('tasks-table').CollectionView.ToData.ToJSON;
+    finally
+      LDocument.Free;
+    end;
+    LPolicy := NyxCollectionQuery.Where(NyxWhere(NyxTextField('caption')).Contains(LLong)
+      .AndAlso(NyxWhere(NyxIntegerField('priority')).AtLeast(2)
+        .OrElse(NyxWhere(NyxBooleanField('done')).EqualTo(False).Negated)))
+      .OrderBy(NyxIntegerField('priority'), nsdDescending)
+      .ThenBy(NyxTextField('caption'), nsdAscending, nqtAsciiInsensitive);
+    LPatch := NyxCollectionPatch([NyxSetCollectionQuery(
+      NyxBindingOwner('tasks-table'), LKey, cpTable, LPolicy)]);
+    Check(ReadNyxCollectionPatch(LPatch.ToData).ToData.ToJSON = LPatch.ToData.ToJSON,
+      'query-only operation round trips without expanded binding or form baseline');
+    LStale := Args('stale-query', LPatch.ToData);
+    Apply('query-policy', [NyxSetCollectionQuery(
+      NyxBindingOwner('tasks-table'), LKey, cpTable, LPolicy)]);
+    LChanged := PairText;
+    LQueryReply := Query('query', [NyxField('owner', NyxData('tasks-table')),
+      NyxField('source', NyxData('effective')), NyxField('limit', NyxData(3))]).Field('query');
+    Check((LQueryReply.Field('total').AsInteger = 6) and
+      (LQueryReply.Field('nodes').Count = 3) and
+      (LQueryReply.Field('nextOffset').AsInteger = 3), 'bounded preorder predicate page');
+    Check((LQueryReply.Field('order').Count = 2) and
+      (Length(LQueryReply.ToJSON) < 1500) and
+      LQueryReply.Field('nodes').Item(1).Field('expected').Field('truncated').AsBoolean,
+      'small query page excludes long predicate value, schema, columns and rows');
+    Check(LQueryReply.Field('nodes').Item(1).Field('path').ToJSON = '[0]',
+      'value-only exact child path identifies one predicate');
+    LQueryReply := Query('query-value', [NyxField('owner', NyxData('tasks-table')),
+      NyxField('source', NyxData('effective')), NyxField('path', NyxArray([NyxData(0)])),
+      NyxField('offset', NyxData(4999)), NyxField('count', NyxData(2))]);
+    Check(LQueryReply.Field('value').Field('text').AsText = TNyxText('x🌙'),
+      'requested predicate window retains exact supplementary Unicode');
+    LQueryReply := Query('query-value', [NyxField('owner', NyxData('tasks-table')),
+      NyxField('source', NyxData('local')),
+      NyxField('path', NyxArray([NyxData(1), NyxData(0)]))]);
+    Check(LQueryReply.Field('value').Field('value').AsInteger = 2,
+      'numeric query values remain exact primitives');
+    LQueryReply := Query('query', [NyxField('owner', NyxData('tasks-table')),
+      NyxField('source', NyxData('effective')), NyxField('offset', NyxData(3))]).Field('query');
+    Check((LQueryReply.Field('nodes').Count = 3) and
+      (LQueryReply.Field('nodes').Item(1).Field('op').AsText = 'not'),
+      'second page retains preorder and nested operators');
+    LQueryReply := Query('query', [NyxField('owner', NyxData('tasks-table')),
+      NyxField('source', NyxData('effective')), NyxField('offset', NyxData(64))]).Field('query');
+    Check((LQueryReply.Field('nodes').Count = 0) and
+      (LQueryReply.Field('nextOffset').AsInteger = 6), 'query end page is bounded');
+    Refuses(LStale, 'stale query-only edit cannot change the pair/history');
+    Refuses(Args('wrong-query-family', NyxCollectionPatch([NyxSetCollectionQuery(
+      NyxBindingOwner('tasks-table'), LKey, cpTable,
+      NyxCollectionQuery.Where(NyxWhere(NyxTextField('priority')).EqualTo('2')))]).ToData),
+      'schema family disagreement refuses query replacement');
+    Refuses(Args('late-query-failure', NyxCollectionPatch([
+      NyxUpdateCollectionRow(NyxCollectionItem(NyxItem(LKey, 'alpha'))
+        .WithValue(NyxTextField('caption'), 'Unpublished')),
+      NyxSetCollectionQuery(NyxBindingOwner('tasks-table'), NyxCollection('Tasks'),
+        cpTable, LPolicy)]).ToData), 'late query failure rolls back earlier row change');
+    Refuses(NyxObject([NyxField('mode', NyxData('query-value')),
+      NyxField('owner', NyxData('tasks-table')), NyxField('source', NyxData('effective')),
+      NyxField('path', NyxArray([]))]), 'branch path refuses a scalar value request');
+    History('undo', 'query-undo');
+    Check(PairText = LOriginal, 'query-only replacement is one exact paired Undo');
+    History('redo', 'query-redo');
+    Check(PairText = LChanged, 'query-only replacement is one exact paired Redo');
+    Apply('query-clear', [NyxSetCollectionQuery(
+      NyxBindingOwner('tasks-table'), LKey, cpTable, NyxCollectionQuery)]);
+    LDocument := TNyxCodec.Decode(LAgent.PreviewPair(LRevision, 'home').Design);
+    try
+      Check(LDocument.Find('tasks-table').CollectionView.ToData.ToJSON = LOriginalSpec,
+        'clearing query preserves exact query-free binding specification');
+    finally
+      LDocument.Free;
+    end;
+    Check(PairText = LOriginal, 'clearing policy preserves exact original design/source/rows');
+    Apply('inherited-query', [NyxSetCollectionQuery(
+      NyxBindingOwner('first-items'), LKey, cpList, LPolicy)]);
+    Check(Query('query', [NyxField('owner', NyxData('first-items')),
+      NyxField('source', NyxData('local'))]).Field('query').Field('defined').AsBoolean,
+      'inherited owner acquires its independent local query');
+    Check(not Query('query', [NyxField('owner', NyxData('definition-list')),
+      NyxField('source', NyxData('local'))]).Field('query').Field('defined').AsBoolean,
+      'query override preserves reusable definition policy');
+    History('undo', 'inherited-query-undo');
+    Check(PairText = LOriginal, 'inherited query Undo restores exact original pair');
   end;
 
   procedure Contexts;
@@ -426,6 +545,22 @@ begin
       .Column(NyxTextField('caption'), 'Task', cmEditable)
       .Column(NyxBooleanField('done'), 'Done', cmEditable)
       .Column(NyxNumberField('ratio'), 'Ratio', cmEditable);
+
+    if AQueriesOnly then
+    begin
+      { A focused consumer keeps the complete changed query boundary, including
+        long exact text windows, without replaying unrelated large domain/source
+        fixtures inside the browser's navigation or debugger-command budget. }
+      Apply('query-seed', [NyxDefineCollection(LKey, LSchema, [
+        NyxCollectionItem(NyxItem(LKey, 'alpha')).WithValue(NyxTextField('caption'), 'Plan'),
+        NyxCollectionItem(NyxItem(LKey, 'beta')).WithValue(NyxTextField('caption'), 'Review')]),
+        NyxBindCollection(NyxBindingOwner('tasks-table'), cpTable, LSpec),
+        NyxBindCollection(NyxBindingOwner('definition-list'), cpList,
+          NyxCollectionView(LKey).Scoped(csInstance).Column(NyxTextField('caption'), 'Task'))]);
+      QueryPolicies;
+      APair := LAgent.PreviewPair(LRevision, 'home');
+      Exit;
+    end;
     LBefore := PairText;
     LPatch := NyxCollectionPatch([
       NyxDefineCollection(LKey, LSchema, [
@@ -465,6 +600,7 @@ begin
     Check(PairText = LBefore, 'one Undo restores exact original pair');
     History('redo', 'redo-create');
     Check(PairText = LAdded, 'one Redo restores all collections and views');
+    QueryPolicies;
     LReply := Query('list', [NyxField('limit', NyxData(1))]);
     Check((LReply.Field('collections').Count = 1) and
       (LReply.Field('total').AsInteger = 3) and

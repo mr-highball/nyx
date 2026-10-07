@@ -3,7 +3,21 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current public-query form boundary (2026-10-07): Studio consumes a reusable Nyx
+Current bounded-query workflow (2026-10-07): the existing MCP tool supplies small
+predicate pages/exact scalar windows and typed query-only grouped mutations.
+Checked native collection admission passes 117, including 19 focused query checks.
+A separately owned current authenticated backend passes 235 source/history/
+revision checks and four real browser/LCL application/view builds, with exact
+compiler inputs. This does not execute applications or qualify full browser
+Studio observation. Readiness attempts timed out; automatic approval review
+rejected a separate browser launch before execution. Existing services/pairs and
+LAN bytes remain exact. No original criterion closes: workflow no-closure advances
+17→18 once; authoring 30, renderer 9, codegen 28 and delivery 2 stay unchanged.
+Stop query fixture expansion and retain the observing/readiness and combined
+layout/data transaction gates with their existing owners. See
+[the packet](WORK.md#current-return-path-bounded-collection-query-mcp--2026-10-07).
+
+Previous public-query form boundary (2026-10-07): Studio consumes a reusable Nyx
 compound with typed nested predicates, ordered sorts, independent scalar drafts
 and complete paired queue admission. Actual forms pass 78 Win32/78 HTTP browser
 per desktop/CSS 390×640; ordinary native Studio passes 86 including source/history

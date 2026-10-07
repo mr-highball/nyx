@@ -66,14 +66,21 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Studio now consumes a reusable public Nyx filter/sort form with specialized named
+The current isolated backend supports bounded predicate pages/value windows and
+typed query-only grouped changes through the existing collection MCP tool.
+Authenticated source/history/refusal and all four browser/LCL application/view
+builds pass 235 checks; the checked shared native collection journey passes 117,
+including 19 focused query assertions. Existing services/projects remain exact.
+Full browser Studio observation is still required; browser fixture readiness
+timed out and a separate browser launch was rejected before execution. The
+deployed LAN build is unchanged. See
+[the current workflow packet](WORK.md#current-return-path-bounded-collection-query-mcp--2026-10-07).
+
+Studio consumes a reusable public Nyx filter/sort form with specialized named
 controls, independent drafts and complete typed paired edits. Actual forms pass
 78 native/78 HTTP browser per desktop/CSS 390×640; ordinary native Studio adds
 eight checks (86 total). Invalid/stale/pending-draft candidates preserve the
-accepted pair. Browser Studio/worker compile, owned warnings/leaks are zero and
-protected services/projects remain exact. Authenticated current-backend query
-operations and observing full browser Studio remain required integration; the
-deployed LAN build is unchanged. See
+accepted pair. Browser Studio/worker compile with zero owned warnings. See
 [the public form packet](WORK.md#current-return-path-public-collection-query-editor--2026-10-07).
 
 Typed collection filters and stable multi-key ordering now reach live views,
@@ -82,7 +89,7 @@ Win32 passes 75; HTTP browser passes 75 plus 57 compiled source checks per
 desktop/CSS 390×640. Hidden membership/source identities and editor drafts remain
 independent of sorting/filtering. Native selection regression is 155/browser 182,
 leak-free and owned warnings zero. Authenticated
-current-backend semantic/observing query authoring remains required integration;
+observing full browser Studio query authoring remains required integration;
 the deployed LAN build is unchanged. See
 [the query packet](WORK.md#current-return-path-typed-collection-queries--2026-10-07).
 

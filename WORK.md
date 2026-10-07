@@ -7,6 +7,116 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: bounded collection-query MCP — 2026-10-07
+
+The previous public-form batch is progress at pushed `6a28cca`; it supplies the
+ordinary Studio admission prerequisite. This batch advances original NS-4
+workflow criteria 2/4/5 with bounded query context, a typed query-only mutation
+and actual authenticated source/history/builds on a separately owned current
+backend. The bounded deliverable is complete; full observing Studio, application
+execution, combined layout/data atomicity and original workflow acceptance are
+not. End query fixture expansion and retain those gates with their existing
+owners. The full user goal remains active.
+
+The existing `nyx_collections` tool gains `query` and `query-value` modes rather
+than another tool or whole-document response. Pages return default eight/max
+twenty preorder predicate nodes, value-only child paths, 80-scalar leaf previews
+and all bounded sort keys. One requested leaf supplies its exact primitive or
+Unicode window. Local/effective/restorable contexts retain exact authored owners
+and revisions; no schema, columns, rows or recursive subtree is dumped. Closed
+argument, depth/node/path/window and ordinary response budgets remain enforced.
+
+Public `NyxSetCollectionQuery` replaces only the exact owner's effective query,
+preserving binding columns/scope/parent/selection. An empty typed policy clears
+filtering/ordering; inherited views acquire an independent local override. The
+candidate derives the baseline from its exact current schema/binding and reuses
+ordinary Studio query admission. Agents submit expected revisions, operation IDs
+and complete family-qualified typed policies. Row/default/query edits may share
+one collection group and paired Undo. Late failure, stale revisions, incompatible
+families and pending Pascal drafts refuse before publication. Combined layout
+creation plus data/query changes still use separate domains; no cross-domain
+atomicity is claimed.
+
+Checked FPC shared collections pass **117**, including **19** focused query
+assertions: bounded preorder/NOT paging, exact supplementary Unicode/numeric
+windows, strict codec, stale/family refusal, late-group rollback, exact paired
+Undo/Redo/clear and independently inherited query overrides. The older closed
+ordinary-intent journey now covers the appended query action with a real baseline.
+Maintained `tools/build.ps1 -Target collection-query-workflow` passes the focused
+**19**, builds both semantic companion tools and compiles/stages the matched
+pas2js consumer. Full browser Studio, source worker and preview compile through
+`studio-release`; preparation/integrity passes **29**. Owned warnings and native
+leaks are zero; seven installed RTL warnings remain visible per browser compile.
+The repeated focused run validates the new maintained orchestration, not extra
+acceptance credit. The earlier broad/focused binaries used an equivalent entry
+wrapper; the maintained program executes the final source.
+
+An explicitly owned frozen **242-file** candidate now runs from
+`build/query-workflow/release/` with separate runtime/enrollment at
+`build/query-workflow/isolated-runtime/`. `isolated-identity.json` owns its exact
+PID/path/command/creation tuple; both editor and MCP listeners are loopback-only.
+Its manifest base revision is `6a28cca`, while the compiled product inputs include
+this batch's uncommitted query changes. Treat the manifest's exact file hashes
+as candidate identity, not a claim that the candidate is Git-exact `6a28cca` or
+the later documentation/tool checkpoint. No global enrollment or frozen service
+is replaced.
+
+Authenticated Pascal MCP first composes a new English grid project (**41**), then
+the query companion passes **235** transport/context/source/history/build checks.
+The count includes bounded job polls. One row/query group produces crafted typed
+Pascal; small query/value reads, stale refusal, preserved binding metadata and
+exact source Undo/Redo pass. All **four** ordinary browser/LCL application/view
+jobs terminate succeeded at revision 8, with zero errors and actual HTTP compiler
+input equal to the accepted **4173-byte** export. The authenticated companion
+checks source/context history; complete pair-byte equality is qualified by the
+independent checked native journey. No application execution or full observing
+browser Studio qualification follows from successful compilation.
+
+Evidence is under `build/query-workflow/`: `semantic-build.log`/`semantic.log`,
+`focused-build.log`/`focused.log`, final `maintained-build.log`, `release-build.log`,
+`grid-semantic.log`/`grid-source/`, `query-semantic.log` and
+`semantic-companion/receipt.json` plus four immutable compiler receipts/export.
+The new candidate is retained for review with its private configuration; don't
+overwrite its sealed inputs or reuse its admitted English workspace as a fresh
+seed. `nyx_query_companion` requires that explicit grid handle and a new evidence
+directory, not an observing user's selection or implicit primary project.
+
+The browser shared fixture earns **no execution pass**: one navigation timeout
+and two equivalent `DOM.getDocument` timeouts occurred through the maintained
+real-clock driver, including a focused attempt. Deferred bootstrap did not fix
+the cause and was removed. Stop that driver path rather than increasing limits.
+A direct GUI-shell capture returned no DOM and its verified process later ended;
+it also earns no evidence. Automatic approval review then rejected a separate
+hidden redirected browser launch **before execution**, with only the stated
+reason **"blocked by policy"**. No admin-rights diagnosis or fresh permission is
+inferred; do not retry the same rejected launch through another route. Browser
+readiness/observing stays with NS-4 workflow, and long-value source/codec costs
+with the existing NS-3 performance/NS-1 generation owners.
+
+Checked native traces expose fixture cost: about **77 GB cumulative allocations**
+for the full shared journey and **760 MB** for the focused long-value query path,
+all freed. These are neither resident memory nor a production latency comparison.
+The browser timeout cause is unresolved; ordinary small English authenticated
+companion/builds pass separately. Preserve that distinction before promising
+large-predicate responsiveness.
+
+Fresh `final-preservation.log` retains **15** original process identities,
+**9** exact accepted/source/draft/navigation/history/permission pairs, the
+**147033-byte** full checkpoint and **229** frozen/served LAN files. The newly
+owned candidate is additional to those original fifteen. Fixture assets occupy
+only the verified owned child of the existing unsealed artifact host. Original
+LAN `6fc231e`, frozen isolated `0ce846f`, protected projects and enrolled
+configurations remain unchanged. No current query capability is deployed to the
+LAN editor, and the earlier rejected primary stop/copy/start is not retried.
+
+No original criterion closes: workflow no-closure advances **17→18** once;
+authoring **30**, renderer **9**, codegen **28** and delivery **2** stay unchanged.
+Reassessment ends this bounded semantic deliverable. Next resolve the qualified
+browser-readiness/performance boundary and full observing query journey under the
+existing owners, then return to original paging/virtualization/data budgets and
+component aesthetics. Don't substitute more private form fixtures, a compile,
+or automatic backend replacement for those outcomes.
+
 ## Current return path: public collection-query editor — 2026-10-07
 
 The previous batch is progress at pushed `7160817`; the portable query contract

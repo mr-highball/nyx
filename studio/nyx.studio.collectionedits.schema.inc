@@ -149,6 +149,11 @@ begin
   Branch('"op":{"const":"bind"},"owner":{"type":"string","minLength":1},' +
     '"projection":{"enum":["list","table","tree"]},"spec":' + LSpec,
     '"op","owner","projection","spec"');
+  Branch('"op":{"const":"query"},"owner":{"type":"string","minLength":1},' +
+    '"key":{"type":"string","minLength":1},' +
+    '"projection":{"enum":["list","table","tree"]},' +
+    '"query":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/nyxQuery"}]}',
+    '"op","owner","key","projection","query"');
 
   for LAction := Low(TNyxStudioCollectionAction) to High(TNyxStudioCollectionAction) do
   begin
@@ -270,6 +275,17 @@ begin
     '"offset":{"type":"integer","minimum":0,"maximum":8388608},' +
     '"count":{"type":"integer","minimum":1,"maximum":4096}},' +
     '"required":["mode","owner","field","source"],"additionalProperties":false},' +
+    '{"properties":{"mode":{"const":"query"},"owner":{"type":"string","minLength":1},' +
+    '"source":{"enum":["local","effective","restorable"]},' +
+    '"offset":{"type":"integer","minimum":0,"maximum":64},' +
+    '"limit":{"type":"integer","minimum":1,"maximum":20}},' +
+    '"required":["mode","owner","source"],"additionalProperties":false},' +
+    '{"properties":{"mode":{"const":"query-value"},"owner":{"type":"string","minLength":1},' +
+    '"source":{"enum":["local","effective","restorable"]},' +
+    '"path":{"type":"array","maxItems":15,"items":{"type":"integer","minimum":0,"maximum":1}},' +
+    '"offset":{"type":"integer","minimum":0,"maximum":8388608},' +
+    '"count":{"type":"integer","minimum":1,"maximum":4096}},' +
+    '"required":["mode","owner","source","path"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"apply"},"expectedRevision":{"type":"integer","minimum":1},' +
     '"operationId":{"type":"string","minLength":1,"maxLength":120},' +
     '"changes":{"type":"array","minItems":1,"maxItems":32,"items":' +
