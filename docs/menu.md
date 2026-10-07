@@ -487,10 +487,11 @@ Strict interchange rejects coercion, missing/unknown fields and invalid policies
 Wire version 7 retains opaque `menuBar` fields as extensions in older versions
 and refuses collisions during explicit promotion.
 
-This saved contract is qualified through direct candidate semantic dispatch and
-actual generated browser/Win32 applications. Studio's public bar-authoring form
-is described below. The observing LAN release still serves its preceding schema;
-authenticated new-backend delivery remains with the
+This saved contract is qualified through direct candidate semantic dispatch,
+actual generated browser/Win32 applications and authenticated isolated MCP tools.
+The full ordinary browser Studio journey is described below. The observing LAN
+release still serves its preceding bar schema; protected primary deployment
+remains with the
 [existing workflow owner](../TODO/NS-4_agent-workflows_01.md).
 
 ```powershell
@@ -542,8 +543,24 @@ controls and ordinary native Studio, then compiles the HTTP browser form, matche
 Pascal source worker and full browser Studio. It stages `menu-bar-editor.html`
 without starting a listener or replacing a project. Use the maintained ready-capture
 driver with `data-result` at desktop and narrow CSS widths. These focused browser
-controls exercise ordinary inspector composition and worker publication; they do
-not establish the full browser Studio or authenticated observing delivery journey.
+controls exercise ordinary inspector composition and worker publication. The
+separate full Studio observer qualifies authenticated bar queries/mutations,
+retained drafts, observing agent updates, physical paired history and runtime bar
+input on an explicitly owned isolated server. All four browser/LCL application/
+view compiler inputs must equal the exact accepted semantic source.
+
+```powershell
+./tools/build.ps1 -Target menu-bar-workflow
+./build/menu-bar-workflow/observer/nyx_studio_menu_editor_observer.exe <isolated-config-root> <editor-base-url> <fresh-evidence-directory> 390 new bar
+```
+
+Use an enrolled isolated configuration root, never the active user's project.
+The observer creates one ordinary workspace semantically and leaves it reviewable.
+At width 390 it uses height 640; desktop uses 900. The build target starts no
+listener and changes no enrollment. This maintained candidate journey establishes
+full browser Studio input and actual observing updates, not protected LAN delivery,
+physical-phone behavior or native input beyond the separate Win32 fixtures. See
+[the candidate packet](../WORK.md#current-return-path-menu-bar-workflow-delivery--2026-10-07).
 
 ## Reproduce the companion and qualify hosts
 

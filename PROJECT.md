@@ -66,15 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Studio now consumes a public Nyx menu-bar editor with specialized named controls,
-typed policy, ordered exact part/menu choices and local/effective grouping.
-Independent unfinished drafts, reviewed removal and stale-baseline refusal share
-the paired Pascal worker. Actual inspector controls pass 65 native and 65 each
-desktop/CSS-390 browser; ordinary Win32 Studio passes 73 through retained input,
-Save and exact source/Undo/Redo, leak-free. Protected services/pairs/checkpoint
-and frozen LAN bytes stay exact. Full browser Studio compiles; ordinary browser/
-observing and authenticated new-bar HTTP delivery remain the next integration. See
-[the public form packet](WORK.md#current-return-path-public-menu-bar-editor--2026-10-07).
+Studio consumes a public typed Nyx menu-bar editor with independent drafts,
+reviewed removal and paired source/history. Its isolated frozen candidate now
+authenticates 21 MCP tools and passes full ordinary Studio/observing journeys:
+513 desktop and 456 at CSS 390×640, including four exact-input browser/LCL
+application/view builds per journey. Native Studio's 73 and shared forms' 65
+checks remain separate physical input evidence. Owned warnings and native leaks
+are zero. Candidate recovery admits all nine protected histories byte-exact.
+Automatic approval review rejected LAN process replacement before execution;
+the existing `6fc231e` service, protected projects and payload remain unchanged.
+Candidate qualification and LAN delivery are distinct. See
+[the workflow packet](WORK.md#current-return-path-menu-bar-workflow-delivery--2026-10-07).
 
 Saved coordinated menu bars now retain immutable typed grouping, strict version-7
 persistence, crafted source and reusable inheritance/masks. Direct bounded

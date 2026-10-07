@@ -17,6 +17,16 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 **Blockers**
 
+Current bar candidate (2026-10-07): frozen `0ce846f` passes full ordinary browser
+Studio/observing journeys and four exact-source browser/LCL application/view
+builds per desktop/compact run. Actual checkpoint-copy admission/round trip passes
+106 with nine full histories exact. Automatic approval review rejected primary
+replacement before execution. Original LAN `6fc231e`, all protected processes,
+pairs and durable bytes remain unchanged; the new candidate is isolated. This
+closes no original service criterion or counter. Delivery remains with its
+existing owner; do not retry the rejected action through another command. See
+[the packet](../WORK.md#current-return-path-menu-bar-workflow-delivery--2026-10-07).
+
 Current preserving delivery (2026-10-07): frozen product `6fc231e` serves the
 original firewall-covered executable path and runtime with 21 authenticated tools.
 Candidate admission against an actual checkpoint copy and nine observing baselines

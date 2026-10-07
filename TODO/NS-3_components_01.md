@@ -25,6 +25,15 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Public bar-authoring integration — 2026-10-07
 
+The subsequent existing workflow packet qualifies authenticated bar edits and
+full ordinary browser Studio/observing input at desktop/CSS 390×640, including
+four exact-source browser/LCL builds per journey. Primary LAN replacement was
+rejected by automatic approval review before execution; protected work remains
+exact. This closes no component criterion and creates no component counter.
+Stop bar fixtures and keep delivery plus independent broader component outcomes
+with their existing owners. See
+[the packet](../WORK.md#current-return-path-menu-bar-workflow-delivery--2026-10-07).
+
 Studio now consumes a public Nyx bar-editor compound of specialized named controls
 with typed policy, ordered exact heading/menu choices and local/effective grouping.
 Independent drafts and reviewed removal use the paired queue: 65 shared controls

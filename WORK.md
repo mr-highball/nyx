@@ -7,6 +7,77 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: menu-bar workflow delivery — 2026-10-07
+
+This batch advances existing NS-4 workflow criterion 5 and the NS-5/NS-6 retained
+delivery prerequisite. Frozen product `0ce846f` has **234 verified files**. Its
+explicitly owned isolated server authenticates **21** tools, including bounded
+local/effective bar queries and grouped typed replacement, mask and inheritance.
+The enrolled Pascal MCP client remains primary; the cached desktop named handle
+still returns 404 at initialize. No project/user enrollment is redirected.
+
+A maintained full ordinary browser Studio journey composes each empty owned
+workspace semantically in one transaction. Physical Properties/Events input,
+whole-form Save, nested-origin reorder, reviewed heading removal/suppression,
+exact paired Undo/Redo and stale/invalid MCP refusal pass. Unsaved input survives
+real authenticated witnesses joining/retiring; semantic replacement reaches the
+actual inspector. Bound runtime bars survive observing roster updates and support
+real host Right, radio selection/reopening and Escape without rewriting source.
+Desktop **1100×900 passes 513**, compact **390×640 passes 456**; an earlier
+390×900 run passes 452. Counts include bounded reads/polls, not distinct features.
+Each journey requests all four browser/LCL application/view builds through
+`nyx_build` and compares actual HTTP compiler input with the exact **6823-byte**
+accepted semantic source. Successful native compilation is not new native input
+evidence; previous ordinary Win32 Studio 73/shared 65 remain their own packet.
+Observers retire leak-free. Owned warnings are zero; seven installed pas2js RTL
+warnings per browser compilation remain visible. Inspected captures use English.
+The tighter phone view retains readable text and compact/collapsible chrome;
+CSS emulation does not establish physical Android, IME or assistive technology.
+
+The first full desktop run reached compilation but failed on a double-slash
+artifact URL in the observer. Normalizing its editor base fixes that client
+boundary without relaxing server routing. Failed evidence and its owned workspace
+remain retained. Host Left/Right key identifiers append existing ordinals. The
+maintained build opens no listener, creates no project and enrolls no client:
+`tools/build.ps1 -Target menu-bar-workflow`. Explicit observer invocation selects
+the isolated configuration/base, fresh evidence directory, width and `new bar`.
+
+Release preparation/refusal checks pass **29**, actual installed runtime **39**,
+protocol recovery **72**, abrupt-process recovery **5**, portable ownership **14**.
+Admission/round trip of a copy of the exact protected checkpoint passes **106**,
+retaining all nine complete accepted/source/draft pairs and histories byte-exact.
+Ignored evidence under `build/menu-bar-workflow/`: `release-build.log`,
+`retained-admission.log`, `ordinary-desktop-corrected/`, `ordinary-phone-640/`,
+`maintained-final-build.log`, `release-pre-refresh.json` and `primary-backup/`.
+
+**LAN deployment did not occur.** Automatic approval review rejected the already
+authorized exact primary stop/copy/start before execution, reporting only
+`blocked by policy`. Do not retry it through another command form or infer missing
+user authorization. The original PID **30428**, all **15** protected service
+identities, **9** exact pairs/navigation/history/permissions and **147033-byte**
+checkpoint remain unchanged after rejection. Installed/served bytes still match
+frozen **229-file `6fc231e`**. The owned candidate PID **7060** is one additional
+loopback service, with independent enrollment/runtime and reviewable test projects;
+it is not the LAN server. `isolated-identity.json` identifies that service.
+`post-rejection-preservation.log` records the original exact baseline. The private
+`refresh-lan-manual.ps1` handoff is syntax-checked only, never agent-executed;
+its runtime actions and subsequent authority checks remain unqualified.
+Final `final-preservation.log`, `release-final-verified.json`,
+`final-isolated-tools.jsonl` and `delivery-status.json` revalidate protected state,
+sealed payload, exact candidate identity/loopback bindings/served bytes and all
+21 authenticated tools. The maintained observer rebuild passes after comment/
+indentation cleanup; it adds no warnings or product/payload changes.
+
+Stop full-bar fixture expansion at this authenticated/full ordinary candidate
+boundary. No original full criterion closes; workflow no-closure advances
+**16→17** once, authoring **29**, renderer **8**, codegen **28** and delivery **2**
+remain. Historical NS-3/parity totals remain unestablished. Protected LAN refresh
+and fresh observing authority remain with existing workflow/delivery owners;
+external policy refusal is not a DONE move or full-goal completion. Preserve the
+candidate and backups, do not repeat the rejected action, and advance independent
+remaining product work while that delivery gate stays unresolved. Remote checkpoint
+and delivery status are distinguished in the ignored return receipt.
+
 ## Current return path: public menu-bar editor — 2026-10-07
 
 Previous turn is progress at pushed checkpoint `5be0e1d`. This batch advances

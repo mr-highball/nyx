@@ -47,6 +47,17 @@ ended inventory batch or reset this task's existing no-closure count of 1.
 
 ## Frozen backend/browser candidate — 2026-10-06
 
+Subsequent bar-workflow candidate (2026-10-07): frozen `0ce846f` verifies 234 files,
+29 preparation/refusal, 39 installed runtime, 72 protocol recovery, five abrupt-
+process and 14 portable ownership checks. Admission/round trip of the protected
+checkpoint copy passes 106; authenticated full Studio candidate journeys pass
+513 desktop/456 compact with four exact compiler inputs each. Automatic approval
+review rejected the already authorized primary replacement before execution.
+The LAN still serves its preceding frozen payload; no deployed authority claim,
+original criterion closure or delivery count change is inferred. Delivery remains
+at 2; retain verified payload/backups and the exact protected baseline. See
+[the packet](../WORK.md#current-return-path-menu-bar-workflow-delivery--2026-10-07).
+
 Criterion 3 gains a maintained Pascal release preparer and verifier. Owned
 compiler sources are frozen before backend/editor/worker/preview compilation;
 matched runtime, production HTML and MIT license complete a strict byte manifest.

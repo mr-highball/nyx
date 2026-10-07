@@ -15,7 +15,19 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
-Current public-form prerequisite (2026-10-07): Studio consumes the reusable typed
+Current full-browser candidate (2026-10-07): criterion 5 now qualifies authenticated
+bar tools, grouped semantic composition/history/refusal and full ordinary Studio
+Properties/Events/observing input: 513 desktop, 456 CSS 390×640, four actual exact-
+input browser/LCL application/view builds each. Candidate recovery preserves all
+nine protected histories. Automatic approval review rejected primary replacement
+before execution; original LAN services/projects/payload stay exact. New-backend
+candidate authority does not establish deployed observing authority. No original
+criterion closes; workflow no-closure advances 16→17 once, other totals unchanged.
+Stop bar fixtures; retain this delivery gate without retrying the rejected action,
+then advance independent remaining outcomes. See
+[the packet](../WORK.md#current-return-path-menu-bar-workflow-delivery--2026-10-07).
+
+Previous public-form prerequisite (2026-10-07): Studio consumes the reusable typed
 Nyx bar compound through its independent paired worker. Actual inspector controls
 pass 65 native and 65 each desktop/CSS-390 browser; ordinary Win32 Studio passes 73.
 Full browser Studio compiles. No workflow criterion/count changes: 16 remains;

@@ -3,6 +3,21 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current authenticated candidate boundary (2026-10-07): frozen `0ce846f` qualifies
+21 MCP tools and full ordinary browser Studio/observing bar journeys, 513 desktop
+and 456 CSS 390×640, with four exact-source browser/LCL application/view builds
+per journey. Draft retention, reviewed removal, paired history, typed semantic
+replacement/refusal and real runtime bar input pass; native owners retire leak-free.
+Candidate admission retains nine full protected histories byte-exact. Automatic
+approval review rejected the authorized primary replacement before execution;
+original services/pairs/checkpoint and frozen LAN `6fc231e` remain exact. This is
+candidate qualification, not deployed observing authority or physical-phone proof.
+No original criterion closes: workflow no-closure advances 16→17 once, authoring
+29, renderer 8, codegen 28 and delivery 2 remain. Stop bar fixtures, retain the
+existing delivery owner/gate and advance independent remaining outcomes without
+retrying the rejected action. See
+[the packet](WORK.md#current-return-path-menu-bar-workflow-delivery--2026-10-07).
+
 Current public-form boundary (2026-10-07): the reusable Nyx bar editor supplies
 specialized named controls, local/effective grouping, typed policy, ordered exact
 heading/menu choices and reviewed removal. Independent unfinished drafts and

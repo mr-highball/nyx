@@ -34,7 +34,7 @@ type
   { Closed host keys used by maintained input journeys. These are Chromium
     protocol input, not portable product events or application shortcuts. }
   TNyxBrowserKey = (nbkHome, nbkEnd, nbkUp, nbkDown, nbkEnter, nbkEscape,
-    nbkSelectAll);
+    nbkSelectAll, nbkLeft, nbkRight);
   { Physical axis-aligned viewport border bounds in CSS pixels, observed through
     Chromium's DOM protocol. This is target evidence, not document layout state. }
   TNyxBrowserBox = record
@@ -784,10 +784,10 @@ end;
 procedure TNyxBrowserPipe.Key(AKey: TNyxBrowserKey);
 const
   CNames: array[TNyxBrowserKey] of TNyxText =
-    ('Home', 'End', 'ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'a');
+    ('Home', 'End', 'ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'a', 'ArrowLeft', 'ArrowRight');
   CCodes: array[TNyxBrowserKey] of TNyxText =
-    ('Home', 'End', 'ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'KeyA');
-  CVirtual: array[TNyxBrowserKey] of Integer = (36, 35, 38, 40, 13, 27, 65);
+    ('Home', 'End', 'ArrowUp', 'ArrowDown', 'Enter', 'Escape', 'KeyA', 'ArrowLeft', 'ArrowRight');
+  CVirtual: array[TNyxBrowserKey] of Integer = (36, 35, 38, 40, 13, 27, 65, 37, 39);
 var
   LModifiers: Integer;
 begin

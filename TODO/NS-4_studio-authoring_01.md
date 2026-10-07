@@ -42,6 +42,15 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Public menu-bar editor — 2026-10-07
 
+Subsequent workflow integration qualifies the full ordinary browser form and
+observing updates: 513 desktop/456 CSS 390×640, exact paired source/history and
+four real browser/LCL application/view compiler inputs each. This extends the
+existing form evidence without a second authoring count. Workflow advances to 17;
+authoring stays 29. The qualified isolated candidate is not the LAN deployment:
+automatic approval review rejected replacement before execution. Existing delivery
+and broader authoring criteria remain open. See
+[the workflow packet](../WORK.md#current-return-path-menu-bar-workflow-delivery--2026-10-07).
+
 Original criteria 2/6 now consume `NewNyxMenuBarEditor`, a public compound of
 specialized named controls. Local/effective grouping, complete typed policy,
 ordered exact part/menu choices, enabled defaults, reviewed removal/suppression

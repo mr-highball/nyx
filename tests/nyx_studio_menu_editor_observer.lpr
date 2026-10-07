@@ -25,8 +25,9 @@ program nyx_studio_menu_editor_observer;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  Classes, SysUtils, nyx.text, nyx.data, nyx.types, nyx.contract,
+  Classes, SysUtils, fphttpclient, nyx.text, nyx.data, nyx.types, nyx.contract,
   nyx.menu.types, nyx.menu.declarations, nyx.menu.editor, nyx.root.types,
+  nyx.menu.bar.declarations, nyx.menu.bar.editor, nyx.typeahead,
   nyx.studio.edits, nyx.test.mcp.client, nyx.test.browser.pipe;
 
 var
@@ -38,9 +39,11 @@ var
   GChecks: Integer;
   GSequence: Integer;
   GWidth: Integer;
+  GHeight: Integer;
   GResetFixture: Boolean;
   GInteractOnly: Boolean;
   GObserveOnly: Boolean;
+  GBarEditor: Boolean;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -56,7 +59,7 @@ end;
   own ordinary project through MCP; user projects and temporary review lifecycle
   never become editor-writing workarounds. The new project remains reviewable. }
 function Call(const AName: TNyxText; const AFields: array of TNyxDataField;
-  AContext: Boolean = True): TNyxDataValue;
+  AContext: Boolean = True; ARefuse: Boolean = False): TNyxDataValue;
 var
   LFields: array of TNyxDataField;
   LIndex: Integer;
@@ -75,8 +78,8 @@ begin
     LFields[High(LFields)] := NyxField('workspace', NyxData(GWorkspace));
   end;
   LPacket := GClient.Tool(AName, NyxObject(LFields));
-  Check(not LPacket.Field('isError').AsBoolean,
-    AName + ' refused / ' + Copy(LPacket.ToJSON, 1, 900));
+  Check(LPacket.Field('isError').AsBoolean = ARefuse,
+    AName + ' unexpected admission / ' + Copy(LPacket.ToJSON, 1, 900));
   Result := LPacket.Field('structuredContent');
 end;
 
@@ -261,6 +264,37 @@ begin
   Result := '[data-node=' + NyxMenuEditorActionID('inspector-menu', AAction) + ']';
 end;
 
+{ Selectors are a target input boundary. Policy, parts, menu references and
+  mutations still use the public typed contract and authenticated document API. }
+function BarField(AField: TNyxMenuBarEditorField;
+  const AFace: TNyxText = 'input'): TNyxText;
+begin
+  Result := '[data-node=' + NyxMenuBarEditorFieldID('inspector-menu-bar', AField) +
+    '] ' + AFace;
+end;
+
+function BarAction(AAction: TNyxMenuBarEditorAction; AHeading: Integer = -1): TNyxText;
+var
+  LPrefix: TNyxText;
+begin
+  LPrefix := 'inspector-menu-bar';
+
+  if AHeading >= 0 then
+  begin
+    LPrefix := NyxMenuBarEditorHeadingID(LPrefix, AHeading);
+  end;
+  Result := '[data-node=' + NyxMenuBarEditorActionID(LPrefix, AAction) + ']';
+end;
+
+function BarPlan(const ALabel: TNyxText): INyxMenuBarDefinition;
+begin
+  Result := NewNyxMenuBarDefinition(NyxMenuBar(ALabel).Wrap(False)
+    .HoverSwitch(False).TypeAhead(NyxTypeAhead.WindowMilliseconds(1700).Match(ntmExact)))
+    .Heading(NyxPart('file'), NyxMenuRef('actions'))
+    .Heading(NyxPart('edit'), NyxMenuRef('actions'))
+    .Heading(NyxPart('view'), NyxMenuRef('density'));
+end;
+
 { Native select keyboard behavior is exercised rather than changing DOM values.
   Menu metadata already maps these captions to typed exact document references. }
 procedure Choose(const ASelector: TNyxText; AIndex: Integer);
@@ -303,9 +337,11 @@ var
   LIndex: Integer;
   LActions: INyxMenuDefinition;
   LDensity: INyxMenuDefinition;
+  LBarCreation: TNyxDataValue;
+  LSelected: TNyxText;
 begin
 
-  if ParamCount >= 5 then
+  if (ParamCount >= 5) and not GBarEditor then
   begin
     { An explicitly retained fixture workspace permits recovery of a failed
       input attempt without filling the service's bounded project registry.
@@ -362,7 +398,23 @@ begin
   LDensity := NewNyxMenuDefinition(NyxReusableRoot('density-content'), NyxMenu('Density'))
     .Radio(NyxPart('roomy'), NyxMenuCommand('roomy'), NyxMenuGroup('spacing'), True)
     .Radio(NyxPart('compact'), NyxMenuCommand('compact'), NyxMenuGroup('spacing'), False);
-  SetLength(LOperations, LCreation.Count + 3);
+  LSelected := 'open-actions';
+  LBarCreation := NyxArray([]);
+
+  if GBarEditor then
+  begin
+    LSelected := 'workspace-menu-bar';
+    LBarCreation := TNyxDataValue.ParseJSON(
+      '[{"op":"create","kind":"row","id":"workspace-menu-bar","parent":"home",' +
+      '"properties":{"gap":8,"compound":true}},' +
+      '{"op":"create","kind":"button","id":"bar-file","parent":"workspace-menu-bar",' +
+      '"properties":{"text":"File","part":"file"}},' +
+      '{"op":"create","kind":"button","id":"bar-edit","parent":"workspace-menu-bar",' +
+      '"properties":{"text":"Edit","part":"edit"}},' +
+      '{"op":"create","kind":"button","id":"bar-view","parent":"workspace-menu-bar",' +
+      '"properties":{"text":"View","part":"view"}}]');
+  end;
+  SetLength(LOperations, LCreation.Count + 3 + LBarCreation.Count + Ord(GBarEditor));
   for LIndex := 0 to LCreation.Count - 1 do
   begin
     LOperations[LIndex] := LCreation.Item(LIndex);
@@ -370,31 +422,55 @@ begin
   LOperations[LCreation.Count] := NyxDefineMenu(NyxMenuRef('actions'), LActions).ToData;
   LOperations[LCreation.Count + 1] := NyxDefineMenu(NyxMenuRef('density'), LDensity).ToData;
   LOperations[LCreation.Count + 2] := NyxAttachMenu(NyxControl('open-actions'), NyxMenuRef('actions')).ToData;
+  for LIndex := 0 to LBarCreation.Count - 1 do
+  begin
+    LOperations[LCreation.Count + 3 + LIndex] := LBarCreation.Item(LIndex);
+  end;
+
+  if GBarEditor then
+  begin
+    LOperations[High(LOperations)] := NyxConfigureMenuBar(
+      NyxControl('workspace-menu-bar'), BarPlan('Studio commands')).ToData;
+  end;
   Call('nyx_transaction', [NyxField('expectedRevision', NyxData(GRevision)),
     NyxField('operationId', NyxData(Operation)), NyxField('operations', NyxArray(LOperations))]);
   GRevision := Call('nyx_session', []).Field('revision').AsInteger;
   Call('nyx_select', [NyxField('id', NyxData('home')), NyxField('activate', NyxData(True)),
     NyxField('expectedRevision', NyxData(GRevision)), NyxField('operationId', NyxData(Operation))]);
   GRevision := Call('nyx_session', []).Field('revision').AsInteger;
-  Call('nyx_select', [NyxField('id', NyxData('open-actions')),
+  Call('nyx_select', [NyxField('id', NyxData(LSelected)),
     NyxField('expectedRevision', NyxData(GRevision)), NyxField('operationId', NyxData(Operation))]);
   GRevision := Call('nyx_session', []).Field('revision').AsInteger;
 end;
 
 { Real compiler jobs prove the accepted companion remains consumable. Menu
   Interact below qualifies mounted menu input, not execution of TODO handlers. }
-procedure Build(const ATarget: TNyxText);
+procedure Build(const ATarget: TNyxText; const AScope: TNyxText = 'application');
 var
   LReply: TNyxDataValue;
   LOutput: TNyxDataValue;
   LJob: TNyxText;
   LStarted: QWord;
+  LRequest: array of TNyxDataField;
+  LHTTP: TFPHTTPClient;
+  LBytes: TMemoryStream;
+  LCompiled: TNyxText;
+  LBase: TNyxText;
 begin
   LOutput := Call('nyx_build', [NyxField('mode', NyxData('outputs'))]);
-  LReply := Call('nyx_build', [NyxField('mode', NyxData('request')),
-    NyxField('expectedRevision', NyxData(GRevision)), NyxField('operationId', NyxData(Operation)),
-    NyxField('outputID', LOutput.Field('outputID')), NyxField('target', NyxData(ATarget)),
-    NyxField('scope', NyxData('application'))]);
+  SetLength(LRequest, 6 + Ord(AScope <> 'application'));
+  LRequest[0] := NyxField('mode', NyxData('request'));
+  LRequest[1] := NyxField('expectedRevision', NyxData(GRevision));
+  LRequest[2] := NyxField('operationId', NyxData(Operation));
+  LRequest[3] := NyxField('outputID', LOutput.Field('outputID'));
+  LRequest[4] := NyxField('target', NyxData(ATarget));
+  LRequest[5] := NyxField('scope', NyxData(AScope));
+
+  if AScope <> 'application' then
+  begin
+    LRequest[6] := NyxField('view', NyxData('home'));
+  end;
+  LReply := Call('nyx_build', LRequest);
   LJob := LReply.Field('job').AsText;
   LStarted := GetTickCount64;
   repeat
@@ -413,8 +489,32 @@ begin
       raise Exception.Create('Compiler job exceeded the maintained input budget');
     end;
   until False;
-  Save(String(ATarget) + '-build.json', LReply.ToJSON);
-  Check(LReply.Field('state').AsText = 'succeeded', 'accepted callback/menu source compiles / ' + ATarget);
+  Save(String(ATarget + '-' + AScope) + '-build.json', LReply.ToJSON);
+  Check((LReply.Field('state').AsText = 'succeeded') and LReply.Field('currentSource').AsBoolean,
+    'accepted callback/menu source compiles / ' + ATarget + '/' + AScope);
+  { Status alone does not prove compiler input. Compare actual HTTP source bytes
+    with bounded semantic source at that revision; target artifacts stay owned. }
+  LHTTP := TFPHTTPClient.Create(nil);
+  LBytes := TMemoryStream.Create;
+  try
+    LBase := TNyxText(ParamStr(2));
+
+    if Copy(LBase, Length(LBase), 1) = '/' then
+    begin
+      SetLength(LBase, Length(LBase) - 1);
+    end;
+    LHTTP.Get(LBase + TNyxText('/') + LReply.Field('compiledSource').AsText, LBytes);
+    SetLength(LCompiled, LBytes.Size);
+
+    if LBytes.Size > 0 then
+    begin
+      Move(LBytes.Memory^, LCompiled[1], LBytes.Size);
+    end;
+    Check(LCompiled = Source, 'real compiler input equals the exact accepted Pascal');
+  finally
+    LBytes.Free;
+    LHTTP.Free;
+  end;
 end;
 
 { Source presence is insufficient: trusted input at the real caret must reach
@@ -798,6 +898,216 @@ begin
   Interact(LAfter);
 end;
 
+{ Full ordinary bar journey. The companion is composed semantically in an owned
+  ordinary workspace; browser input establishes only physical authoring/runtime
+  behavior. Agent updates must reach the actual inspector and retain unrelated
+  unfinished presentation while connection presence alone changes. }
+procedure BarJourney;
+var
+  LBefore: TNyxText;
+  LAfter: TNyxText;
+  LMask: TNyxText;
+  LReply: TNyxDataValue;
+  LPeer: TNyxMCPTestClient;
+  LRow: TNyxText;
+  LWitness: TNyxText;
+  LPlan: INyxMenuBarDefinition;
+  LRevision: Integer;
+
+  function Query: TNyxDataValue;
+  begin
+    Result := Call('nyx_menus', [NyxField('row', NyxData('workspace-menu-bar')),
+      NyxField('itemLimit', NyxData(1))]);
+    Check(Result.Field('revision').AsInteger = GRevision,
+      'bounded bar context belongs to the exact active revision');
+  end;
+
+  procedure Edit(const AEdit: TNyxMenuEdit);
+  begin
+    LRevision := GRevision;
+    Call('nyx_transaction', [NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData(Operation)),
+      NyxField('operations', NyxArray([AEdit.ToData]))]);
+    GRevision := Call('nyx_session', []).Field('revision').AsInteger;
+    Check(GRevision = LRevision + 1, 'one semantic bar operation is one paired revision');
+  end;
+
+  procedure ShowRow;
+  begin
+
+    if GHost.Exists('[data-node=studio-panelbar]') then
+    begin
+      GHost.Click('[data-node=action-panel-design]');
+    end;
+
+    if not GHost.Exists('[data-node=studio-agents]') then
+    begin
+      GHost.Click('[data-node=action-actions]');
+      WaitFor('.nyx-popover:popover-open [data-node=studio-menu-project]');
+      GHost.Click('.nyx-popover:popover-open [data-node=studio-menu-project]');
+      WaitFor('.nyx-popover:popover-open [data-node=studio-menu-agents]');
+      GHost.Click('.nyx-popover:popover-open [data-node=studio-menu-agents]');
+      WaitFor('.nyx-popover:popover-open', False);
+    end;
+
+    if not GHost.Exists(LRow) and GHost.Exists('[data-node=action-details-toggle]') then
+    begin
+      GHost.Click('[data-node=action-details-toggle]');
+    end;
+    WaitFor(LRow);
+  end;
+
+  procedure Physical(AAction: TNyxMenuBarEditorAction; AHeading: Integer = -1);
+  begin
+    LRevision := GRevision;
+    GHost.Click(BarAction(AAction, AHeading));
+    AwaitRevision(LRevision + 1);
+  end;
+
+  procedure History(const ADirection: TNyxText);
+  begin
+    Call('nyx_history', [NyxField('direction', NyxData(ADirection)),
+      NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('operationId', NyxData(Operation))]);
+    GRevision := Call('nyx_session', []).Field('revision').AsInteger;
+  end;
+
+begin
+  WriteLn('Ordinary Studio / bar Properties and observing draft');
+  Flush(Output);
+  WaitFor('[data-node=action-actions]');
+  Inspector(False);
+  WaitField(BarField(nbfLabel), 'Studio commands');
+  LReply := Query;
+  Check((LReply.Field('total').AsInteger = 3) and LReply.Field('hasMore').AsBoolean and
+    (LReply.Field('headings').Count = 1), 'authenticated bar query pages ordered heading meaning');
+  LBefore := Source;
+  GHost.ReplaceText(BarField(nbfLabel), 'My command workspace');
+  Inspector(True);
+  Inspector(False);
+  WaitField(BarField(nbfLabel), 'My command workspace');
+  LRow := '[data-node="studio-agent-workspace-' + GWorkspace + '"]';
+  ShowRow;
+  LWitness := 'Scooty bar draft witness ' + TNyxText(IntToStr(GetTickCount64));
+  LPeer := TNyxMCPTestClient.Create(ParamStr(1), LWitness);
+  try
+    LReply := LPeer.Tool('nyx_session', NyxObject([NyxField('workspace', NyxData(GWorkspace))]));
+    Check(not LReply.Field('isError').AsBoolean, 'independent bar witness reads only the owned workspace');
+    WaitText(LRow, LWitness, True);
+    Inspector(False);
+    WaitField(BarField(nbfLabel), 'My command workspace');
+    GHost.Capture('bar-retained-draft');
+    ShowRow;
+    LPeer.Close;
+    WaitText(LRow, LWitness, False);
+    Inspector(False);
+    WaitField(BarField(nbfLabel), 'My command workspace');
+  finally
+    try
+      LPeer.Close;
+    finally
+      LPeer.Free;
+    end;
+  end;
+  Check(Source = LBefore, 'tab/roster rebuilds retain unfinished bar input without publishing');
+  GHost.Click(BarField(nbfWrap));
+  GHost.ReplaceText(BarField(nbfSearchWindow), '2300');
+  GHost.Tab;
+  Choose(BarField(nbfSearchMatch, 'select'), 0);
+  Physical(nmbSave);
+  LAfter := Source;
+  LReply := Query;
+  Check((LReply.Field('options').Field('label').AsText = 'My command workspace') and
+    LReply.Field('options').Field('wrap').AsBoolean and
+    (LReply.Field('options').Field('searchWindowMS').AsInteger = 2300) and
+    (LReply.Field('options').Field('searchMatch').AsText = 'folded'),
+    'physical whole-form Save publishes complete typed policy to MCP');
+  GHost.Click('[data-node=action-undo]');
+  AwaitRevision(GRevision + 1);
+  Check(Source = LBefore, 'physical Undo restores exact pre-bar-editor Pascal');
+  GHost.Click('[data-node=action-redo]');
+  AwaitRevision(GRevision + 1);
+  Check(Source = LAfter, 'physical Redo restores exact complete bar candidate');
+  Physical(nmbMoveLater, 0);
+  Check(Query.Field('headings').Item(0).Field('part').AsText = 'edit',
+    'nested compound origin reaches the ordinary reorder command');
+  GHost.Click('[data-node=' + NyxMenuBarEditorFieldID(
+    NyxMenuBarEditorHeadingID('inspector-menu-bar', 0), nbfConfirm) + '] input');
+  Physical(nmbRemoveHeading, 0);
+  Check(Query.Field('total').AsInteger = 2, 'reviewed physical removal keeps the other headings');
+  LBefore := Source;
+  GHost.Click(BarField(nbfConfirm));
+  Physical(nmbMask);
+  LReply := Query;
+  Check(LReply.Field('localDeclared').AsBoolean and not LReply.Field('configured').AsBoolean,
+    'physical suppression is an explicit local mask, not registry removal');
+  LMask := Source;
+  Edit(NyxInheritMenuBar(NyxControl('workspace-menu-bar')));
+  Check(not Query.Field('localDeclared').AsBoolean, 'authenticated inheritance removes only local grouping');
+  History('undo');
+  Check(Source = LMask, 'semantic Undo restores the exact explicit bar mask');
+  History('undo');
+  Check(Source = LBefore, 'semantic Undo restores the exact remaining headings');
+  LPlan := BarPlan('Shared command workspace');
+  Edit(NyxConfigureMenuBar(NyxControl('workspace-menu-bar'), LPlan));
+  WaitField(BarField(nbfLabel), 'Shared command workspace');
+  GHost.Capture('bar-semantic-observed');
+  LBefore := Source;
+  Call('nyx_transaction', [NyxField('expectedRevision', NyxData(GRevision - 1)),
+    NyxField('operationId', NyxData(Operation)),
+    NyxField('operations', NyxArray([NyxNoMenuBar(NyxControl('workspace-menu-bar')).ToData]))], True, True);
+  Call('nyx_transaction', [NyxField('expectedRevision', NyxData(GRevision)),
+    NyxField('operationId', NyxData(Operation)), NyxField('operations', NyxArray([
+      NyxConfigureMenuBar(NyxControl('workspace-menu-bar'),
+        NewNyxMenuBarDefinition(NyxMenuBar('Invalid heading'))
+          .Heading(NyxPart('absent'), NyxMenuRef('actions'))).ToData]))], True, True);
+  Check(Source = LBefore, 'stale and invalid semantic bar candidates retain the accepted pair');
+  Build('browser');
+  Build('lcl');
+  Build('browser', 'view');
+  Build('lcl', 'view');
+  Save('nyx.generated.view.pas', LBefore);
+
+  WriteLn('Ordinary Studio / coordinated bar Interact');
+  Flush(Output);
+  ShowRow;
+  WaitFor('[data-node=action-preview]');
+  GHost.Click('[data-node=action-preview]');
+  GHost.Click('[data-node=studio-canvas] [data-node=bar-file]');
+  WaitFor('.nyx-popover:popover-open [data-node=copy-draft]');
+  LWitness := 'Scooty bar portal witness ' + TNyxText(IntToStr(GetTickCount64));
+  LPeer := TNyxMCPTestClient.Create(ParamStr(1), LWitness);
+  try
+    LReply := LPeer.Tool('nyx_session', NyxObject([NyxField('workspace', NyxData(GWorkspace))]));
+    Check(not LReply.Field('isError').AsBoolean, 'independent witness joins the mounted bar workspace');
+    WaitText(LRow, LWitness, True);
+    Check(GHost.Exists('.nyx-popover:popover-open [data-node=copy-draft]'),
+      'bound bar dropdown survives observing roster insertion');
+    LPeer.Close;
+    WaitText(LRow, LWitness, False);
+    Check(GHost.Exists('.nyx-popover:popover-open [data-node=copy-draft]'),
+      'bound bar dropdown survives observing roster retirement');
+  finally
+    try
+      LPeer.Close;
+    finally
+      LPeer.Free;
+    end;
+  end;
+  GHost.Key(nbkRight);
+  WaitFor('[data-node=studio-canvas] [data-node=bar-edit][aria-expanded=true]');
+  GHost.Click('[data-node=studio-canvas] [data-node=bar-view]');
+  WaitFor('.nyx-popover:popover-open [data-node=compact-density]');
+  GHost.Click('.nyx-popover:popover-open [data-node=compact-density]');
+  WaitFor('.nyx-popover:popover-open', False);
+  GHost.Click('[data-node=studio-canvas] [data-node=bar-view]');
+  WaitFor('.nyx-popover:popover-open [data-node=compact-density][aria-checked=true]');
+  GHost.Capture('bar-interact');
+  GHost.Key(nbkEscape);
+  WaitFor('.nyx-popover:popover-open', False);
+  Check(Source = LBefore, 'mounted bar state changes preserve exact authored Pascal');
+end;
+
 { A bounded diagnostic reuses an explicitly owned accepted fixture. It changes
   presentation only, so an unresponsive navigation path can be located without
   composing another project or replaying callback mutations. }
@@ -868,11 +1178,25 @@ begin
     GResetFixture := (ParamCount = 6) and (ParamStr(6) = 'reset-fixture');
     GInteractOnly := (ParamCount = 6) and (ParamStr(6) = 'interact');
     GObserveOnly := (ParamCount = 6) and (ParamStr(6) = 'observe');
+    GBarEditor := (ParamCount = 6) and (ParamStr(6) = 'bar');
+    GHeight := 900;
+
+    if GBarEditor and (GWidth <= 960) then
+    begin
+      { Match a tighter mobile viewing area, including its scrolling inspector
+        and popup bounds, instead of qualifying only a tall emulated phone. }
+      GHeight := 640;
+    end;
+
+    if GBarEditor and (ParamStr(5) <> 'new') then
+    begin
+      raise Exception.Create('Bar qualification requires new, never a retained user workspace');
+    end;
 
     if (ParamCount = 6) and (ParamStr(6) <> 'navigation') and
-      not GResetFixture and not GInteractOnly and not GObserveOnly then
+      not GResetFixture and not GInteractOnly and not GObserveOnly and not GBarEditor then
     begin
-      raise Exception.Create('Use navigation, interact, observe or reset-fixture for an exact retained fixture');
+      raise Exception.Create('Use navigation, interact, observe, reset-fixture or new/bar');
     end;
 
     if DirectoryExists(GDirectory) then
@@ -887,15 +1211,19 @@ begin
 
     if GWorkspace = '' then
     begin
-      GHost := TNyxBrowserPipe.Create(ParamStr(2), GDirectory, GWidth, 900);
+      GHost := TNyxBrowserPipe.Create(ParamStr(2), GDirectory, GWidth, GHeight);
     end
     else
     begin
       GHost := TNyxBrowserPipe.Create(ParamStr(2) + '?workspace=' + GWorkspace,
-        GDirectory, GWidth, 900);
+        GDirectory, GWidth, GHeight);
     end;
 
-    if GObserveOnly then
+    if GBarEditor then
+    begin
+      BarJourney;
+    end
+    else if GObserveOnly then
     begin
       ObserveMenuEditor;
     end
@@ -922,12 +1250,14 @@ begin
     end;
     GHost.Capture('completed');
     Save('result.json', NyxObject([NyxField('checks', NyxData(GChecks)),
-      NyxField('width', NyxData(GWidth)), NyxField('revision', NyxData(GRevision)),
+      NyxField('width', NyxData(GWidth)), NyxField('height', NyxData(GHeight)),
+      NyxField('revision', NyxData(GRevision)),
       NyxField('workspace', NyxData(GWorkspace)), NyxField('result', NyxData('passed')),
       NyxField('navigationOnly', NyxData((ParamCount = 6) and
-        not GResetFixture and not GInteractOnly and not GObserveOnly)),
+        not GResetFixture and not GInteractOnly and not GObserveOnly and not GBarEditor)),
       NyxField('interactOnly', NyxData(GInteractOnly)),
       NyxField('observeOnly', NyxData(GObserveOnly)),
+      NyxField('barEditor', NyxData(GBarEditor)),
       NyxField('resetFixture', NyxData(GResetFixture))]).ToJSON);
     FreeAndNil(GHost);
     GClient.Close;
@@ -947,7 +1277,15 @@ begin
     end
     else if ParamCount = 6 then
     begin
-      WriteLn('PASS ', GChecks, ' ordinary browser Studio source/Events navigation / CSS ', GWidth);
+
+      if GBarEditor then
+      begin
+        WriteLn('PASS ', GChecks, ' ordinary browser Studio bar workflow / CSS ', GWidth);
+      end
+      else
+      begin
+        WriteLn('PASS ', GChecks, ' ordinary browser Studio source/Events navigation / CSS ', GWidth);
+      end;
     end
     else
     begin
