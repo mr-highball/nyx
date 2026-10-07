@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-query', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-query', 'collection-query-editor', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1819,6 +1819,52 @@ try {
       'tests/nyx_typeahead_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/typeahead.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'collection-query-editor') {
+    # Public Nyx query controls consume the unchanged semantic companion and
+    # ordinary paired Studio queue. This owns no server/project/enrollment.
+    $nyxQueryEditorRoot = Join-Path $nyxRoot 'build/collection-query-editor/maintained'
+    $nyxQueryEditorNative = Join-Path $nyxQueryEditorRoot 'native'
+    $nyxQueryEditorBrowser = Join-Path $nyxQueryEditorRoot 'browser'
+    $nyxQueryEditorSource = [IO.Path]::GetFullPath($GridSourceDirectory)
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxQueryEditorSource 'nyx.generated.view.pas'))) {
+      throw 'Supply the authenticated grid companion with GridSourceDirectory'
+    }
+    New-Item -ItemType Directory -Force $nyxQueryEditorNative, $nyxQueryEditorBrowser | Out-Null
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxQueryEditorPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxQueryEditorFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxQueryEditorSource",
+      "-FU$nyxQueryEditorNative", "-FE$nyxQueryEditorNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxQueryEditorFlags + @(
+      "-Fu$nyxLazarus/lcl/units/$nyxQueryEditorPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxQueryEditorPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxQueryEditorPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxQueryEditorPlatform",
+      'tests/nyx_collection_query_editor_controls.lpr'))
+    & (Join-Path $nyxQueryEditorNative 'nyx_collection_query_editor_controls.exe') `
+      (Join-Path $nyxQueryEditorSource 'nyx.generated.view.pas') `
+      (Join-Path $nyxQueryEditorRoot 'studio-runtime') (Join-Path $nyxQueryEditorRoot 'captures')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native query authoring controls failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxQueryEditorSource", "-FE$nyxQueryEditorBrowser",
+      'tests/nyx_collection_query_editor_controls.lpr')
+    foreach ($nyxQueryEditorProgram in @('studio/nyx_source_worker.lpr', 'studio/nyx_studio.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', "-FE$nyxQueryEditorBrowser", $nyxQueryEditorProgram)
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxQueryEditorBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxQueryEditorSource 'nyx.generated.view.pas') `
+      -Destination (Join-Path $nyxQueryEditorBrowser 'seed.pas.txt')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/collection-query-editor.html') `
+      -Destination $nyxQueryEditorBrowser
+    Invoke-NyxCompiler $nyxFpc ($nyxQueryEditorFlags + @('tests/nyx_browser_ready_capture.lpr'))
+    Write-Host 'Query authoring controls built; execute the browser consumer over HTTP.'
     exit 0
   }
 

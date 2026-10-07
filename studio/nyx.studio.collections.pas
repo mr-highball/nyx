@@ -76,6 +76,11 @@ procedure AddNyxCollectionBindingPanel(AParent: TNyxNode;
 function CaptureNyxStudioCollection(ASession: TNyxStudioSession;
   ANode: TNyxNode; AEvent: TNyxTrigger; const APending: TNyxStudioPendingDesign;
   out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Public query compound capture retains its exact owner/schema/binding. A pending
+  structural operation refuses before enqueue; the worker rechecks the baseline. }
+function CaptureNyxStudioQuery(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
+  out AEdit: TNyxStudioDesignEdit): Boolean;
 
 const
   { Explicit shared chrome metadata; adapters use the complete logical tuple
@@ -102,6 +107,7 @@ uses
   nyx.collections,
   nyx.collections.view.types,
   nyx.collections.selection,
+  nyx.collections.query.editor,
   nyx.studio.authoring;
 
 type
@@ -117,7 +123,7 @@ const
   CCommands: array[TCollectionCommand] of TNyxText =
     ('create', 'remove', 'add-field', 'default', 'add-row', 'remove-row',
     'cell', 'bind', 'scope', 'title', 'mode', 'parent', 'remove-column',
-    'add-column', 'clear', 'inherit', 'selection');
+    'add-column', 'clear', 'inherit', 'selection', 'query');
 
 class function TNyxStudioCollectionChromeIdentity.FromNode(ANode: TNyxNode):
   TNyxStudioCollectionChromeIdentity;
@@ -413,6 +419,9 @@ begin
         .Extension(CKind, NyxStateKindName(LColumn.Kind)).Done);
     end;
     LSchema := ASession.Document.Collections.Snapshot(LSpec.Key).Schema;
+    LPanel.Add(NewNyxQueryEditor('inspector-collection-query',
+      NyxControl(ASession.SelectedID), LSchema, LSpec).Configure
+      .Enabled(not LLocked).Done);
     for LFieldIndex := 0 to LSchema.Count - 1 do
     begin
       LFound := False;
@@ -475,6 +484,74 @@ begin
   end;
 end;
 
+
+function CaptureNyxStudioQuery(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; const APending: TNyxStudioPendingDesign;
+  out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LChange: TNyxQueryEditorChange;
+  LProjection: TNyxNode;
+  LSpec: TNyxCollectionViewSpec;
+  LSchema: TNyxCollectionSchema;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+  Result := CaptureNyxQueryEditor(AButton, AShellRoot, LChange);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+
+  if (ASession = nil) or (ASession.SelectedID <> LChange.Owner.ID) or
+    APending.CollectionViewLocked(LChange.Owner.ID) then
+  begin
+    raise ENyxCollection.Create('Select this bound control again after pending edits');
+  end;
+  LProjection := ASession.SelectedProjection;
+  try
+
+    if (LProjection = nil) or not LProjection.HasCollectionView then
+    begin
+      raise ENyxCollection.Create('This control no longer has a collection binding');
+    end;
+    LSpec := LProjection.CollectionView;
+    LSchema := ASession.Document.Collections.Snapshot(LSpec.Key).Schema;
+
+    if APending.CollectionLocked(LSpec.Key) or
+      (NyxQueryEditorBaseline(LSchema, LSpec) <> LChange.Baseline) then
+    begin
+      raise ENyxCollection.Create('Query binding/schema changed; use its current inspector');
+    end;
+    LChange.Query.Validate(LSchema);
+    AEdit.Action := sdaCollection;
+    AEdit.Selection := LChange.Owner.ID;
+    AEdit.View := ASession.ActiveViewID;
+    AEdit.Collection.Action := scaQuery;
+    AEdit.Collection.Key := LSpec.Key;
+    AEdit.Collection.Query := LChange.Query.Copy;
+    AEdit.Collection.QueryBaseline := LChange.Baseline;
+
+    if LProjection.ProjectionKind = NyxKindName(nkList) then
+    begin
+      AEdit.Collection.Projection := cpList;
+    end
+    else if LProjection.ProjectionKind = NyxKindName(nkTable) then
+    begin
+      AEdit.Collection.Projection := cpTable;
+    end
+    else if LProjection.ProjectionKind = NyxKindName(nkTree) then
+    begin
+      AEdit.Collection.Projection := cpTree;
+    end
+    else
+    begin
+      raise ENyxCollection.Create('Query authoring requires list/table/tree projection');
+    end;
+    AEdit.Collection.Validate;
+  finally
+    LProjection.Free;
+  end;
+end;
 
 function CaptureNyxStudioCollection(ASession: TNyxStudioSession;
   ANode: TNyxNode; AEvent: TNyxTrigger; const APending: TNyxStudioPendingDesign;

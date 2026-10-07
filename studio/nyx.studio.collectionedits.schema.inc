@@ -25,6 +25,8 @@
 { Included by nyx.studio.collectionedits. The advertised schema has the same
   closed choices, primitive families and budgets as the strict decoder. }
 
+{$include nyx.studio.collectionedits.queryschema.inc}
+
 function NyxCollectionAgentSchema: TNyxDataValue;
 var
   LScalar: TNyxDataValue;
@@ -36,6 +38,9 @@ var
   LValues: TNyxText;
   LRows: TNyxText;
   LSpec: TNyxText;
+  LSpecOne: TNyxText;
+  LSpecTwo: TNyxText;
+  LSpecThree: TNyxText;
   LProperties: TNyxText;
   LRequired: TNyxText;
   LKind: TNyxStateKind;
@@ -126,17 +131,21 @@ begin
     '"editable":{"type":"boolean"}},"required":["field","kind","title","editable"],' +
     '"additionalProperties":false}}},"required":["version","key","scope","parent","columns"],' +
     '"additionalProperties":false}';
-  { Version 2 adds exactly one multiple-selection field; version 1 stays byte
-    compatible with the existing persisted fluent view descriptor. }
-  LSpec := '{"oneOf":[' + LSpec + ',' +
-    StringReplace(StringReplace(LSpec, '"const":1', '"const":2', []),
-      '"parent":{"type":"string"}', '"selection":{"const":"multiple"},"parent":{"type":"string"}', []) + ']}';
-  { Build the second required list separately to avoid altering version 1. }
-  LIndex := Pos('"const":2', LSpec);
-  LSpec := Copy(LSpec, 1, LIndex - 1) +
-    StringReplace(Copy(LSpec, LIndex, Length(LSpec)),
-      '"required":["version","key","scope","parent","columns"]',
-      '"required":["version","key","scope","parent","columns","selection"]', []);
+  { Preserve query-free versions; version 3 explicitly chooses selection and
+    carries a nonempty typed query. Recursive references resolve at tool root. }
+  LSpecOne := LSpec;
+  LSpecTwo := StringReplace(StringReplace(StringReplace(LSpecOne,
+    '"const":1', '"const":2', []), '"parent":{"type":"string"}',
+    '"selection":{"const":"multiple"},"parent":{"type":"string"}', []),
+    '"required":["version","key","scope","parent","columns"]',
+    '"required":["version","key","scope","parent","columns","selection"]', []);
+  LSpecThree := StringReplace(StringReplace(StringReplace(LSpecOne,
+    '"const":1', '"const":3', []), '"parent":{"type":"string"}',
+    '"selection":{"enum":["single","multiple"]},"query":{"$ref":"#/$defs/nyxQuery"},' +
+    '"parent":{"type":"string"}', []),
+    '"required":["version","key","scope","parent","columns"]',
+    '"required":["version","key","scope","parent","columns","selection","query"]', []);
+  LSpec := '{"oneOf":[' + LSpecOne + ',' + LSpecTwo + ',' + LSpecThree + ']}';
   Branch('"op":{"const":"bind"},"owner":{"type":"string","minLength":1},' +
     '"projection":{"enum":["list","table","tree"]},"spec":' + LSpec,
     '"op","owner","projection","spec"');
@@ -146,6 +155,13 @@ begin
     LProperties := '"op":{"const":"intent"},"action":{"const":"' +
       CCollectionActions[LAction] + '"},"key":{"type":"string","minLength":1}';
     LRequired := '"op","action","key"';
+
+    if LAction = scaQuery then
+    begin
+      LProperties := LProperties + ',"baseline":{"type":"string","minLength":1},' +
+        '"query":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/nyxQuery"}]}';
+      LRequired := LRequired + ',"baseline","query"';
+    end;
 
     if NyxStudioCollectionViewAction(LAction) then
     begin
@@ -219,7 +235,8 @@ begin
     end;
     Branch(LProperties, LRequired);
   end;
-  Result := TNyxDataValue.ParseJSON('{"type":"object","oneOf":[' +
+  Result := TNyxDataValue.ParseJSON('{"type":"object","$defs":' +
+    QueryAgentDefinitions.ToJSON + ',"oneOf":[' +
     '{"properties":{"mode":{"const":"list"},"offset":{"type":"integer","minimum":0},' +
     '"limit":{"type":"integer","minimum":1,"maximum":50},"filter":{"type":"string"}},' +
     '"required":["mode"],"additionalProperties":false},' +

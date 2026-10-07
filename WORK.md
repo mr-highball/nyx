@@ -7,6 +7,86 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: public collection-query editor — 2026-10-07
+
+The previous batch is progress at pushed `7160817`; the portable query contract
+is the prerequisite, not a completed Studio outcome. This batch advances original
+NS-4 authoring criteria 2/6 with a reusable public form, ordinary paired worker
+admission and actual browser/LCL controls. The concrete deliverable is
+`NewNyxQueryEditor`, consumed by Studio Properties → Bindings. Acceptance of the
+broader authoring criterion still requires the original application, native
+parity, source and interaction gates. Stop form-fixture expansion after the
+maintained target and desktop/narrow captures pass; follow authenticated current-
+backend semantic/observing integration rather than adding more local examples.
+
+The public compound uses specialized named Nyx controls, typed field families,
+recursive AND/OR/NOT, exact numeric/Unicode input and ordered sort cards. Save and
+structural actions capture a complete independent typed policy. Invalid values,
+duplicate sort fields, incompatible matching and changed schema/binding refuse
+before publication. A baseline includes exact binding/schema/defaults/domains,
+excluding row contents. Independent scalar drafts survive unrelated repaint and
+panel changes without borrowing nodes, controls or documents; a changed owner,
+project or baseline retires them. Typed narrow viewport rules reduce padding,
+keeping authored text size. Numeric predicates and ASCII-insensitive matching
+remain explicit rather than coercing raw input into behavior.
+
+Studio consumes the public compound through its ordinary independent source
+queue and exact paired Undo/Redo. Actual controls exposed a compound-origin
+routing gap: delegated query buttons now resolve their real origin through the
+existing menu-bar route. Complete query replacements refuse while a handwritten
+Pascal draft is pending. Private worker descriptors retain the old eleven fields
+for existing actions and exactly thirteen for the appended query action. The
+existing collection MCP schema now advertises family-qualified recursive query
+definitions, canonical query-bearing version-3 bindings and the new intent;
+the Pascal decoder retains depth/node/byte/finite/duplicate guards.
+
+Maintained `tools/build.ps1 -Target collection-query-editor` passes **78** actual
+native form/paired-queue checks and **86** including ordinary native Studio:
+Properties/Events draft retention, complete Save, crafted adjacent source and
+exact Undo/Redo. Actual HTTP browser forms pass **78** at **1100×900 / 390×640**
+using the matching real source worker. The full browser Studio and source worker
+compile; that alone is not an observing full-Studio journey. Native owners and
+browser observers retire with zero leaks. Owned warnings are zero; seven installed
+RTL warnings remain visible per browser compilation without dependency edits.
+
+The consumer keeps the exact existing **3704-byte** authenticated MCP-exported
+English grid companion, SHA256
+`44BAC16FA1B7E758D1FE5531DC760D827E62B3D7F05656253AEB2305BE70E1F2`.
+No design is composed through screenshot-driven editor automation. Evidence is
+under `build/collection-query-editor/`: `qualified-capture-build.log`, ordinary
+native `maintained/captures/`, `browser-desktop-final/`, `browser-phone-final/`
+and their terminal observer logs. Native capture scrolls the actual nested
+sidebar; ordinary nonvirtual renderer Reveal only scrolls its containing host.
+Keep that general nested-reveal limitation with the existing renderer owner.
+
+Initial attempts found a JSON-format-only assertion, a hidden Bindings panel,
+the real compound-origin gap, the new pending-draft refusal requirement and a
+browser identifier collision with Web's `closed` enum. They terminated without
+leaks and earned no pass evidence. Initial native captures displayed only the
+inspector header; they are superseded by the explicit actual-sidebar captures.
+An early authoring regression used an older binary and is not current-source
+qualification. The maintained final consumer and current compilations own this
+batch's evidence.
+
+Fresh `final-preservation.log` retains **15** original process identities,
+**9** exact accepted/source/draft/history pairs, the **147033-byte** checkpoint
+and **229** frozen/served LAN files. Browser fixture assets occupy only the
+admitted owned child of the existing unsealed artifact host. Original LAN
+`6fc231e`, frozen isolated `0ce846f` and enrolled configurations stay unchanged;
+no current query editor deployment is claimed.
+
+No original criterion closes: authoring no-closure advances **29→30** once;
+workflow **17**, renderer **9**, codegen **28** and delivery **2** stay unchanged.
+Reassessment ends this bounded public-form deliverable. Next use an explicitly
+owned current backend/enrollment to qualify authenticated discovery, exact-
+revision grouped query changes, paired source/history, ordinary builds and
+observing full browser Studio. Bounded query inspection/authority and combined
+layout/data transactions remain existing workflow gaps. Frozen services must not
+be overwritten, and the rejected primary stop/copy/start must not be retried
+through another route. Paging, virtualization, large-data budgets, production
+styling and hardware/IME/accessibility retain their original owners. The full
+user goal remains active.
+
 ## Current return path: typed collection queries — 2026-10-07
 
 The mobile follow-up rechecked an existing delivered workspace; it earned no new

@@ -7,6 +7,13 @@ Pascal. PowerShell only selects tools, passes compiler arguments and stages
 matched target artifacts. No Node, npm, Python, CSS framework or remote font is
 required.
 
+`collection-query-editor` exercises the reusable specialized Nyx query form,
+ordinary paired source queue and native Studio through the existing semantic
+grid export. It compiles the browser consumer, matching worker and full Studio
+under an owned output root. It starts no server and changes no enrollment.
+Run the staged HTML consumer over HTTP for browser evidence; see
+[query authoring](collection-queries.md#reusable-query-authoring-form).
+
 `collection-query` checks typed filter/order policies, strict view persistence and
 crafted source, then ordinarily compiles that generated builder and exercises real
 Win32 table controls. It consumes the existing semantic grid export through

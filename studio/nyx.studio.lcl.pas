@@ -1485,6 +1485,7 @@ begin
   FSession.LoadProject(APair);
   FState.MenuEditorDraft.Clear;
   FState.MenuBarEditorDraft.Clear;
+  FState.QueryEditorDraft.Clear;
   FBoundProject := '';
   FProjectRevision := '';
   FSavedPair := EncodeNyxProject(FSession.ProjectSnapshot);
@@ -1569,6 +1570,7 @@ begin
   begin
     FState.MenuEditorDraft.Capture('inspector-menu', FShellView.Root);
     FState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellView.Root);
+    FState.QueryEditorDraft.Capture('inspector-collection-query', FShellView.Root);
   end;
   LNode := FShellView.Root.Find('studio-split');
 
@@ -1618,6 +1620,7 @@ begin
   Result := BuildNyxStudioView(FSession, FState, FCompilerReport);
   FState.MenuEditorDraft.Restore(Result.Pages[0]);
   FState.MenuBarEditorDraft.Restore(Result.Pages[0]);
+  FState.QueryEditorDraft.Restore(Result.Pages[0]);
   Result.Pages[0].Configure.Height(FHost.ClientHeight).Done;
 end;
 

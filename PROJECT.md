@@ -66,13 +66,23 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Studio now consumes a reusable public Nyx filter/sort form with specialized named
+controls, independent drafts and complete typed paired edits. Actual forms pass
+78 native/78 HTTP browser per desktop/CSS 390×640; ordinary native Studio adds
+eight checks (86 total). Invalid/stale/pending-draft candidates preserve the
+accepted pair. Browser Studio/worker compile, owned warnings/leaks are zero and
+protected services/projects remain exact. Authenticated current-backend query
+operations and observing full browser Studio remain required integration; the
+deployed LAN build is unchanged. See
+[the public form packet](WORK.md#current-return-path-public-collection-query-editor--2026-10-07).
+
 Typed collection filters and stable multi-key ordering now reach live views,
 strict saved defaults, crafted Pascal/source admission and actual table controls.
 Win32 passes 75; HTTP browser passes 75 plus 57 compiled source checks per
 desktop/CSS 390×640. Hidden membership/source identities and editor drafts remain
 independent of sorting/filtering. Native selection regression is 155/browser 182,
-leak-free and owned warnings zero. Public Studio query forms and authenticated
-current-backend semantic/observing query authoring remain required integration;
+leak-free and owned warnings zero. Authenticated
+current-backend semantic/observing query authoring remains required integration;
 the deployed LAN build is unchanged. See
 [the query packet](WORK.md#current-return-path-typed-collection-queries--2026-10-07).
 
@@ -82,7 +92,7 @@ passes 28 actual Win32 controls, 43 HTTP browser controls and 30 trusted host ke
 Tab checks per desktop/CSS 390×640. Selection regression passes 155 native/182
 browser per width, leak-free. Native initial columns fit English content; narrow
 browser tables scroll without shrinking text. Protected services/projects and
-frozen LAN bytes remain unchanged. Paging, Studio query authoring, virtualization,
+frozen LAN bytes remain unchanged. Paging, observing query authoring, virtualization,
 cell selection, production styling and hardware/accessibility remain open. See
 [the grid packet](WORK.md#current-return-path-bound-grid-cell-navigation--2026-10-07).
 

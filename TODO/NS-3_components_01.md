@@ -25,6 +25,16 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Typed collection queries — 2026-10-07
 
+The subsequent reusable public query compound is consumed by Studio and passes
+78 actual controls per target/width, with 86 ordinary native Studio checks.
+Specialized named parts, exact typed families, nested predicates and sorting
+share independent ownership/drafts and paired source/history. This creates no
+component count or original criterion closure; authoring alone advances 29→30.
+Authenticated current-backend semantic/observing integration remains with the
+existing workflow owner. Stop form fixtures; preserve the broader component
+requirements. See
+[the form packet](../WORK.md#current-return-path-public-collection-query-editor--2026-10-07).
+
 Original criterion 3 now has reusable typed filtering/stable multi-key ordering,
 source/result separation, hidden identity membership and preserved editor drafts
 on actual tables. Saved defaults/strict source and the compiled builder pass
@@ -36,8 +46,8 @@ Protected services/pairs/frozen LAN bytes remain exact. See
 and [public contract](../docs/collection-queries.md).
 
 No original criterion closes or count is created. Stop portable query fixtures.
-Public Nyx query forms consumed by Studio and authenticated current-backend
-semantic/observing authoring remain required integration with the existing NS-4
+Authenticated current-backend
+semantic/observing authoring remains required integration with the existing NS-4
 owners. Paging, virtualization, large-data budgets, production styling and broader
 input/accessibility keep the original requirements rather than being substituted
 with algorithm fixture totals.

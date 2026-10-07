@@ -15,7 +15,20 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
-Query integration return path (2026-10-07): shared typed query defaults now have
+Query form prerequisite (2026-10-07): Studio consumes the public specialized Nyx
+query compound through the independent paired queue. Actual forms pass 78 native
+and 78 HTTP browser per desktop/CSS 390×640; ordinary native Studio passes 86.
+The source schema advertises recursive query families, version-3 bindings and a
+complete query intent, but authenticated current-backend execution/observing is
+still required. No workflow criterion/count changes: 17 remains; authoring alone
+advances 29→30. Stop form fixtures. Own a fresh current backend/enrollment and
+qualify exact-revision grouped edits, paired Undo/source, builds and full browser
+Studio observing. Query inspection/authority must remain bounded; combined
+layout/data transactions retain this owner. Preserve frozen services/pairs and
+do not replace them or retry the rejected primary action. See
+[the form packet](../WORK.md#current-return-path-public-collection-query-editor--2026-10-07).
+
+Previous query boundary (2026-10-07): shared typed query defaults now have
 strict version-3 view descriptors and crafted source admission, with real browser/
 LCL table evidence. Existing grouped binding changes already call this updated
 specification boundary. Current-backend authenticated query edits, exact paired

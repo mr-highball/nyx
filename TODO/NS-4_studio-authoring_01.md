@@ -40,6 +40,26 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Public collection-query editor — 2026-10-07
+
+Original criteria 2/6 now consume `NewNyxQueryEditor`: reusable specialized named
+parts, typed recursive predicates, ordered sort cards, independent drafts and
+complete paired worker admission. Actual forms pass 78 native/78 HTTP browser
+per desktop/CSS 390×640. Ordinary native Studio passes 86 including panel draft
+retention, Save and exact adjacent source/Undo/Redo. Invalid/stale/pending-draft
+input refuses atomically. Full browser Studio/worker compile; that is not an
+observing full-Studio journey. All protected services/pairs/LAN bytes remain
+exact. See [the packet](../WORK.md#current-return-path-public-collection-query-editor--2026-10-07)
+and [public form](../docs/collection-queries.md#reusable-query-authoring-form).
+
+No original criterion closes: authoring no-closure advances 29→30 once; workflow
+17, renderer 9, codegen 28 and delivery 2 stay unchanged. Reassessment ends the
+bounded form deliverable. Next qualify authenticated current-backend semantic
+query changes, paired source/history, ordinary builds and observing full browser
+Studio under the existing workflow owner. Large forms, source ergonomics, native
+sidebar clipping/nested reveal, styling, hardware/accessibility and the original
+application/parity requirements retain their gates.
+
 ## Public menu-bar editor — 2026-10-07
 
 Subsequent workflow integration qualifies the full ordinary browser form and

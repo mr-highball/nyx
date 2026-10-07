@@ -29,7 +29,8 @@ interface
 
 uses
   nyx.text, nyx.types, nyx.data, nyx.state, nyx.collections,
-  nyx.collections.view.types, nyx.collections.selection, nyx.studio.authoring;
+  nyx.collections.view.types, nyx.collections.selection, nyx.collections.query,
+  nyx.studio.authoring;
 
 type
   { Closed ordinary editor operations. These describe intent, not a saved
@@ -37,7 +38,7 @@ type
     than changing existing private-wire ordinals. }
   TNyxStudioCollectionAction = (scaCreate, scaRemove, scaAddField, scaDefault,
     scaAddRow, scaRemoveRow, scaCell, scaBind, scaScope, scaTitle, scaMode,
-    scaParent, scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaSelection);
+    scaParent, scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaSelection, scaQuery);
 
   { Optional family-qualified field reference. Normal construction requires
     one of the four distinct public field types. The undefined value denotes
@@ -89,6 +90,10 @@ type
     Scope: TNyxCollectionScope;
     SelectionMode: TNyxSelectionMode;
     Projection: TNyxCollectionProjection;
+    { A complete typed replacement, qualified by the form's exact schema/binding
+      baseline. Only scaQuery uses these fields; an empty policy clears defaults. }
+    Query: TNyxCollectionQuery;
+    QueryBaseline: TNyxText;
     procedure Validate;
     function SameIntent(const AOther: TNyxStudioCollectionIntent): Boolean;
     { Strict private descriptor. Null is not an intent. Unknown/extra members,
@@ -113,6 +118,8 @@ function ApplyNyxStudioCollectionViewIntent(const AIntent: TNyxStudioCollectionI
   TNyxCollectionViewSpec;
 
 implementation
+
+uses nyx.collections.query.editor;
 
 function TNyxStudioCollectionFieldRef.GetName: TNyxText;
 begin
@@ -257,13 +264,13 @@ end;
 function NyxStudioCollectionViewAction(AAction: TNyxStudioCollectionAction): Boolean;
 begin
   Result := AAction in [scaBind, scaScope, scaTitle, scaMode, scaParent,
-    scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaSelection];
+    scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaSelection, scaQuery];
 end;
 
 function NyxStudioCollectionStructuralAction(AAction: TNyxStudioCollectionAction): Boolean;
 begin
   Result := AAction in [scaCreate, scaRemove, scaAddField, scaAddRow, scaRemoveRow,
-    scaBind, scaRemoveColumn, scaAddColumn, scaClear, scaInherit];
+    scaBind, scaRemoveColumn, scaAddColumn, scaClear, scaInherit, scaQuery];
 end;
 
 procedure TNyxStudioCollectionIntent.Validate;
@@ -271,6 +278,17 @@ var
   LKey: TNyxText;
 begin
   LKey := Key.Name;
+
+  if ((Action = scaQuery) and (QueryBaseline = '')) or
+    ((Action <> scaQuery) and (Query.Defined or (QueryBaseline <> ''))) then
+  begin
+    raise ENyxCollection.Create('Query intent requires its own exact baseline and policy');
+  end;
+
+  if Action = scaQuery then
+  begin
+    Query.ToData;
+  end;
 
   if (Ord(Action) < Ord(Low(TNyxStudioCollectionAction))) or
     (Ord(Action) > Ord(High(TNyxStudioCollectionAction))) or
@@ -343,7 +361,9 @@ begin
     (Item.Defined = AOther.Item.Defined) and Field.SameReference(AOther.Field) and
     (Input = AOther.Input) and (Value = AOther.Value) and (Kind = AOther.Kind) and
     (Mode = AOther.Mode) and (Scope = AOther.Scope) and
-    (SelectionMode = AOther.SelectionMode) and (Projection = AOther.Projection);
+    (SelectionMode = AOther.SelectionMode) and (Projection = AOther.Projection) and
+    (QueryBaseline = AOther.QueryBaseline) and
+    (Query.ToData.ToJSON = AOther.Query.ToData.ToJSON);
 
   if Result and Item.Defined then
   begin
@@ -355,6 +375,8 @@ end;
 function TNyxStudioCollectionIntent.ToData: TNyxDataValue;
 var
   LItem: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
 begin
   Validate;
   LItem := NyxNull;
@@ -371,6 +393,18 @@ begin
     NyxField('mode', NyxData(Ord(Mode))), NyxField('scope', NyxData(Ord(Scope))),
     NyxField('selection', NyxData(Ord(SelectionMode))),
     NyxField('projection', NyxData(Ord(Projection)))]);
+
+  if Action = scaQuery then
+  begin
+    SetLength(LFields, 13);
+    for LIndex := 0 to 10 do
+    begin
+      LFields[LIndex] := NyxField(Result.Key(LIndex), Result.Field(Result.Key(LIndex)));
+    end;
+    LFields[11] := NyxField('query', Query.ToData);
+    LFields[12] := NyxField('baseline', NyxData(QueryBaseline));
+    Result := NyxObject(LFields);
+  end;
 end;
 
 function AddTypedColumn(const ASpec: TNyxCollectionViewSpec;
@@ -439,6 +473,17 @@ begin
   if not ASpec.Defined or (ASpec.Key.Name <> AIntent.Key.Name) then
   begin
     raise ENyxCollection.Create('Collection binding changed; use its current inspector');
+  end;
+
+  if AIntent.Action = scaQuery then
+  begin
+
+    if AIntent.QueryBaseline <> NyxQueryEditorBaseline(ASchema, ASpec) then
+    begin
+      raise ENyxCollection.Create('Query binding/schema changed; use its current inspector');
+    end;
+    AIntent.Query.Validate(ASchema);
+    Exit(ASpec.Query(AIntent.Query));
   end;
 
   if AIntent.Action = scaClear then
@@ -581,12 +626,23 @@ var
 begin
   Result := Default(TNyxStudioCollectionIntent);
 
-  if (AData.Kind <> ndObject) or (AData.Count <> 11) then
+  if (AData.Kind <> ndObject) or not (AData.Count in [11, 13]) then
   begin
     raise ENyxCollection.Create('Collection intent requires its exact descriptor');
   end;
   Result.Action := TNyxStudioCollectionAction(Choice('action',
     Ord(Low(TNyxStudioCollectionAction)), Ord(High(TNyxStudioCollectionAction))));
+
+  if (Result.Action = scaQuery) <> (AData.Count = 13) then
+  begin
+    raise ENyxCollection.Create('Query intent requires its exact extended descriptor');
+  end;
+
+  if Result.Action = scaQuery then
+  begin
+    Result.Query := TNyxCollectionQuery.FromData(AData.Field('query'));
+    Result.QueryBaseline := AData.Field('baseline').AsText;
+  end;
   Result.Key := NyxCollection(AData.Field('key').AsText);
   LItem := AData.Field('item');
 

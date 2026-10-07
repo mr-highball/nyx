@@ -1126,7 +1126,8 @@ begin
       LOrigin := LSource.Find(AEvent.OriginID);
 
       if (LOrigin <> nil) and
-        CaptureNyxMenuBarInspector(FSession, LOrigin, AShellRoot, LEdit) then
+        (CaptureNyxStudioQuery(FSession, LOrigin, AShellRoot, PendingDesign, LEdit) or
+        CaptureNyxMenuBarInspector(FSession, LOrigin, AShellRoot, LEdit)) then
       begin
         Edit(LEdit);
         Exit(True);
@@ -1187,6 +1188,12 @@ begin
 
   if ATrigger = ntClick then
   begin
+
+    if CaptureNyxStudioQuery(FSession, ANode, AShellRoot, PendingDesign, LEdit) then
+    begin
+      Edit(LEdit);
+      Exit(True);
+    end;
 
     if CaptureNyxMenuBarInspector(FSession, ANode, AShellRoot, LEdit) then
     begin

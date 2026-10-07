@@ -678,6 +678,7 @@ begin
   LState.MenuEditorReference := FViewState.MenuEditorReference;
   LState.MenuEditorDraft := FViewState.MenuEditorDraft;
   LState.MenuBarEditorDraft := FViewState.MenuBarEditorDraft;
+  LState.QueryEditorDraft := FViewState.QueryEditorDraft;
   LState.CallbackRemoval := FCallbackRemoval;
 
   if FRootRemoval <> nil then
@@ -699,6 +700,7 @@ begin
   Result := BuildNyxStudioView(FSession, LState, FCompilerReport);
   FViewState.MenuEditorDraft.Restore(Result.Pages[0]);
   FViewState.MenuBarEditorDraft.Restore(Result.Pages[0]);
+  FViewState.QueryEditorDraft.Restore(Result.Pages[0]);
 end;
 
 procedure TNyxStudio.SourceModalDismiss;
@@ -765,6 +767,7 @@ begin
   begin
     FViewState.MenuEditorDraft.Clear;
     FViewState.MenuBarEditorDraft.Clear;
+    FViewState.QueryEditorDraft.Clear;
     Exit;
   end;
   LEditor := FShellRenderer.Root.Find('inspector-menu');
@@ -805,6 +808,7 @@ begin
   end;
   FViewState.MenuEditorDraft.Capture('inspector-menu', FShellRenderer.Root);
   FViewState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellRenderer.Root);
+  FViewState.QueryEditorDraft.Capture('inspector-collection-query', FShellRenderer.Root);
 end;
 
 procedure TNyxStudio.Refresh(ARetainCanvas, APreserveDraft: Boolean);
@@ -3572,6 +3576,7 @@ begin
   FViewState.MenuEditorReference := Default(TNyxMenuRef);
   FViewState.MenuEditorDraft.Clear;
   FViewState.MenuBarEditorDraft.Clear;
+  FViewState.QueryEditorDraft.Clear;
 
   if not FRecoveryEnabled then
   begin

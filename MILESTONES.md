@@ -3,14 +3,27 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current public-query form boundary (2026-10-07): Studio consumes a reusable Nyx
+compound with typed nested predicates, ordered sorts, independent scalar drafts
+and complete paired queue admission. Actual forms pass 78 Win32/78 HTTP browser
+per desktop/CSS 390×640; ordinary native Studio passes 86 including source/history
+and panel retention. Invalid/stale/pending-draft candidates preserve the accepted
+pair. Full browser Studio/worker compile; authenticated current-backend semantic
+operations and observing full Studio still need qualification. Protected services,
+pairs and frozen LAN bytes remain exact. No original criterion closes: authoring
+no-closure advances 29→30 once; workflow 17, renderer 9, codegen 28 and delivery 2
+stay unchanged. End local form fixtures and follow that existing workflow gate.
+See [the packet](WORK.md#current-return-path-public-collection-query-editor--2026-10-07).
+
 Current collection-query boundary (2026-10-07): typed filters and stable multi-key
 ordering preserve source identity/order, hidden membership and independent view
 state. Strict saved defaults and crafted/source-admitted Pascal pass 56 native/
 57 compiled checks; actual tables pass 75 Win32/75 HTTP browser per desktop and
 CSS 390×640. Selection regression remains 155 native/182 browser per width;
 owned warnings/leaks are zero and protected services/pairs/LAN bytes stay exact.
-This advances original NS-3 criterion 3 through library/source/controls, but public
-Studio query authoring and authenticated semantic/observing integration remain.
+This advances original NS-3 criterion 3 through library/source/controls; the
+subsequent public Studio form above consumes it. Authenticated semantic/observing
+integration remains.
 No original criterion closes or no-closure counter advances. Stop portable query
 fixtures and finish that existing integration before paging/virtualization/large
 data/aesthetics. See [the packet](WORK.md#current-return-path-typed-collection-queries--2026-10-07).

@@ -35,6 +35,7 @@ uses
   nyx.controls,
   nyx.menu.editor,
   nyx.menu.bar.editor,
+  nyx.collections.query.editor,
   nyx.contract,
   nyx.schema,
   nyx.types,
@@ -128,6 +129,8 @@ type
     MenuEditorDraft: TNyxMenuEditorDraft;
     { Independent scalar draft; shares the public form capture contract. }
     MenuBarEditorDraft: TNyxMenuBarEditorDraft;
+    { Independent query input, guarded by the complete schema/binding baseline. }
+    QueryEditorDraft: TNyxQueryEditorDraft;
     CallbackRemoval: TNyxCallbackRemoval;
     { Copied confirmation metadata, not an interface or borrowed model. }
     RootRemoval: TNyxDataValue;

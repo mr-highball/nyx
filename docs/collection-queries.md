@@ -138,9 +138,66 @@ previous authenticated MCP companion, and stages both browser consumers. Supply
 and `collection-query-controls.html` over HTTP for browser evidence. This command
 starts no listener and changes no project or Codex enrollment.
 
-The current packet qualifies library policies, persistence/source and actual
-controls. A Nyx-built query authoring form, authenticated current-backend semantic
-query edits and an observing Studio journey remain required integration. The
-existing deployed/frozen services are unchanged. Paging, virtualization, broader
+## Reusable query authoring form
+
+`nyx.collections.query.editor` supplies `NewNyxQueryEditor`, a compound of
+specialized Nyx controls. Studio consumes it in Properties → Bindings for a
+bound list, table or tree. Applications can mount the same form:
+
+```pascal
+LQueryCard := NewNyxQueryEditor('task-query', NyxControl('tasks-table'),
+  LTasks.Schema, LTasksTable.Node.CollectionView);
+LInspector.Add(LQueryCard);
+
+// Named parts retain the ordinary public configuration/customization contract.
+LQueryCard.Part(NyxPart('field')).Configure.Text('Choose a task field').Done;
+```
+
+Choose a field to add a predicate initialized from its typed default. Existing
+predicates offer only comparisons suitable for their family; Boolean input is a
+checkbox, numeric text requires exact signed Integer/finite Number notation,
+and text remains exact Unicode. AND/OR actions can target any predicate or
+subtree. Toggle NOT wraps/unwraps that subtree; removal collapses an empty branch
+or keeps its remaining child. Sort cards offer exact field choices, direction,
+text matching and earlier/later/removal actions. Duplicate fields, inappropriate
+text matching and policy budgets refuse the complete candidate.
+
+`CaptureNyxQueryEditor` returns a value-only `TNyxQueryEditorChange`: exact owner,
+schema/binding baseline and independent typed query. It changes neither tree.
+Hosts compare `NyxQueryEditorBaseline` against their current binding/schema,
+then admit the replacement through their own undoable candidate or apply it to
+a runtime view. Save and structural actions capture all current form values;
+clearing/removing an invalid subtree can recover it while unrelated invalid
+input still refuses. Fields/binding/defaults/domains define the baseline;
+unrelated row contents do not. Captions are bounded presentation; a separate
+mapping retains exact Unicode field identities, including embedded newlines.
+
+`TNyxQueryEditorDraft` reuses the owned scalar-form draft protocol. Partial text
+survives an unrelated repaint or hidden panel. Changed owner, schema, binding or
+project retires it. The draft borrows no node, renderer or document. Query forms
+use typed viewport rules to reduce narrow padding without reducing text size.
+
+Studio routes actual compound child origins into its independent source queue.
+It captures one complete query replacement and rechecks its baseline on the
+worker before publishing one paired document/Pascal Undo step. Pending structural
+edits and handwritten Pascal drafts refuse. MCP discovery now describes recursive
+typed query alternatives, query-bearing version-3 bindings and the existing
+collection tool's `query` intent. JSON Schema describes shape/families; the
+ordinary Pascal decoder additionally enforces total depth/nodes/bytes, finite
+values and distinct sort fields. Authentication/observing qualification belongs
+to the current backend workflow, not a schema-only fixture.
+
+`tools/build.ps1 -Target collection-query-editor` consumes the existing exact
+semantic grid export through `GridSourceDirectory`, checks physical Win32 forms
+and ordinary native Studio, then compiles the HTTP browser form, source worker
+and full Studio. Its outputs stay under an owned build directory; it launches no
+listener and changes no active project or enrollment. Execute
+`collection-query-editor.html` over HTTP with its matching worker/RTL and copied
+companion source for browser evidence.
+
+The packet qualifies library policies, persistence/source and actual controls.
+Authenticated current-backend query edits and an observing full browser Studio
+journey remain required integration. The existing deployed/frozen services are
+unchanged. Paging, virtualization, broader
 large-data budgets, production styling and hardware/IME/assistive-technology
 qualification keep their original task owners.

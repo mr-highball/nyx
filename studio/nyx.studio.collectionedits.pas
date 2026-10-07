@@ -28,7 +28,8 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.state, nyx.contract, nyx.collections,
-  nyx.collections.view.types, nyx.collections.selection, nyx.studio.authoring,
+  nyx.collections.view.types, nyx.collections.selection, nyx.collections.query,
+  nyx.studio.authoring,
   nyx.studio.collectionintent, nyx.studio.stateedits, nyx.studio.projects;
 
 const
@@ -41,7 +42,8 @@ type
   { Immutable typed proposals own copied values, never a document/store/control.
     A one-field schema supplies named field authoring with its typed default and
     domain. Scoped items keep row identity distinct from open collection names.
-    The ordinary intent overload covers the editor's seventeen existing actions. }
+    The ordinary intent overload covers the editor's closed actions, including
+    complete typed queries qualified by an exact schema/binding baseline. }
   TNyxCollectionChange = record
   private
     FKind: TNyxCollectionChangeKind;
@@ -131,7 +133,7 @@ const
   CCollectionActions: array[TNyxStudioCollectionAction] of TNyxText =
     ('create', 'remove', 'add-field', 'default', 'add-row', 'remove-row', 'cell',
      'bind', 'scope', 'column-title', 'column-mode', 'parent', 'remove-column',
-     'add-column', 'clear', 'inherit', 'selection');
+     'add-column', 'clear', 'inherit', 'selection', 'query');
   CCollectionProjections: array[TNyxCollectionProjection] of TNyxText =
     ('list', 'table', 'tree');
 
@@ -778,6 +780,12 @@ begin
   Add('action', NyxData(CCollectionActions[LIntent.Action]));
   Add('key', NyxData(LIntent.Key.Name));
 
+  if LIntent.Action = scaQuery then
+  begin
+    Add('query', LIntent.Query.ToData);
+    Add('baseline', NyxData(LIntent.QueryBaseline));
+  end;
+
   if NyxStudioCollectionViewAction(LIntent.Action) then
   begin
     Add('owner', NyxData(AChange.FOwner.ID));
@@ -884,6 +892,14 @@ begin
   LIntent.Key := NyxCollection(AData.Field('key').AsText);
   LAllowed := '|op|action|key|';
   LRequired := 3;
+
+  if LIntent.Action = scaQuery then
+  begin
+    LAllowed := LAllowed + 'query|baseline|';
+    Inc(LRequired, 2);
+    LIntent.Query := TNyxCollectionQuery.FromData(AData.Field('query'));
+    LIntent.QueryBaseline := AData.Field('baseline').AsText;
+  end;
 
   if NyxStudioCollectionViewAction(LIntent.Action) then
   begin
