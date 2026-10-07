@@ -1150,6 +1150,12 @@ begin
   if ATrigger = ntClick then
   begin
 
+    if CaptureNyxMenuInspector(FSession, ANode, AShellRoot, LEdit) then
+    begin
+      Edit(LEdit);
+      Exit(True);
+    end;
+
     if CaptureNyxDateDomainInspector(FSession, ANode, AShellRoot, LEdit) then
     begin
       Edit(LEdit);

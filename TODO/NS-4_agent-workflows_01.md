@@ -15,7 +15,18 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
-Current persisted-menu boundary (2026-10-07): document-owned menu definitions and
+Current editor consumer (2026-10-07): public typed menu forms now use the ordinary
+paired queue with exact mounted registry/local attachment guards. Actual native/
+browser inspector journeys pass 65 each, ordinary Win32 Studio 72 total. Fresh
+authenticated semantic review passes 181 with four real compiler jobs/exact input;
+all 15 protected services, 9 pairs/full checkpoint remain exact. Source still has
+21 tools; observing remains 20. The existing authoring owner advances its counter
+26→27 once; workflow stays 14. No original workflow criterion closes. Full ordinary
+browser Studio authoring/registration input, frozen delivery and richer source/
+review/performance workflows remain open. See
+[the packet](../WORK.md#current-return-path-public-menu-editor--2026-10-07).
+
+Previous persisted-menu boundary (2026-10-07): document-owned menu definitions and
 typed invokers persist, generate/reconstruct and reach ordinary browser/LCL
 applications. Bounded menu queries and grouped paired edits pass authenticated
 isolated review (172), including exact compiler input and all application/view

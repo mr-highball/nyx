@@ -2683,6 +2683,13 @@ begin
       Exit;
     end;
 
+    if RouteNyxMenuInspectorChoice(FSession, ANode, FShellView.Root,
+      AEvent.Trigger, FState.MenuEditorReference) then
+    begin
+      RequestRefresh;
+      Exit;
+    end;
+
     if (AEvent.Trigger = ntClick) and RouteNyxStudioWorkspace(FState, ANode.ID) then
     begin
       RequestRefresh;

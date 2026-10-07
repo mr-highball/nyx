@@ -474,10 +474,10 @@ begin
       NyxField('position', LPosition)]);
   LVersion := 9;
 
-  if FEdit.Action in [sdaContent, sdaValueDomain] then
+  if FEdit.Action in [sdaContent, sdaValueDomain, sdaMenu] then
   begin
-    { Existing operations retain their deployed v9 shape. Appended recipe and
-      value-policy intents alone need new envelopes; old helpers stay compatible. }
+    { Existing operations retain their deployed v9 shape. Appended recipe,
+      value-policy and menu intents need new envelopes; old helpers stay compatible. }
     LVersion := 10;
     { Cache the method result before using it as an index. The installed pas2js
       compiler mis-emits an implicit parameterless record call inside brackets. }
@@ -488,7 +488,15 @@ begin
       LFields[LIndex] := NyxField(LEdit.Key(LIndex), LEdit.Field(LEdit.Key(LIndex)));
     end;
 
-    if FEdit.Action = sdaValueDomain then
+    if FEdit.Action = sdaMenu then
+    begin
+      { Only the new menu intent needs v12; deployed envelopes keep their shape. }
+      LVersion := 12;
+      LFields[LCount] := NyxField('menu', NyxObject([
+        NyxField('command', FEdit.Menu.ToData),
+        NyxField('baseline', NyxData(FEdit.MenuBaseline))]));
+    end
+    else if FEdit.Action = sdaValueDomain then
     begin
       { New policy commands alone use v11. Existing deployed envelopes retain
         their exact shape; no absent policy payload is appended to other intents. }
@@ -573,6 +581,12 @@ begin
     Result := FEdit.ValueDomain.Same(AOther.FEdit.ValueDomain) and
       (FEdit.ValueDomainBaseline = AOther.FEdit.ValueDomainBaseline);
   end;
+
+  if Result and (FEdit.Action = sdaMenu) then
+  begin
+    Result := FEdit.Menu.Same(AOther.FEdit.Menu) and
+      (FEdit.MenuBaseline = AOther.FEdit.MenuBaseline);
+  end;
 end;
 
 function ReadNyxStudioDesignRequest(const AData: TNyxDataValue): TNyxStudioDesignRequest;
@@ -597,7 +611,7 @@ begin
 
   if (AData.Kind <> ndObject) or (AData.Count <> 7) or
     ((LVersion <> 5) and (LVersion <> 6) and (LVersion <> 7) and (LVersion <> 8) and
-    (LVersion <> 9) and (LVersion <> 10) and (LVersion <> 11)) then
+    (LVersion <> 9) and (LVersion <> 10) and (LVersion <> 11) and (LVersion <> 12)) then
   begin
     raise ENyxModel.Create('Design processor requires its exact versioned ticket');
   end;
@@ -616,7 +630,7 @@ begin
     ((LVersion = 7) and (LEdit.Count <> 13)) or
     ((LVersion = 8) and (LEdit.Count <> 14)) or
     ((LVersion = 9) and (LEdit.Count <> 15)) or
-    ((LVersion in [10, 11]) and (LEdit.Count <> 16)) then
+    ((LVersion in [10, 11, 12]) and (LEdit.Count <> 16)) then
   begin
     raise ENyxModel.Create('Design processor ticket has invalid identity or intent');
   end;
@@ -630,7 +644,8 @@ begin
     ((LVersion = 8) and (LAction > Ord(sdaPresentation))) or
     ((LVersion = 9) and (LAction > Ord(sdaPosition))) or
     ((LVersion = 10) and (LAction > Ord(sdaContent))) or
-    ((LVersion = 11) and (LAction <> Ord(sdaValueDomain))) then
+    ((LVersion = 11) and (LAction <> Ord(sdaValueDomain))) or
+    ((LVersion = 12) and (LAction <> Ord(sdaMenu))) then
   begin
     raise ENyxModel.Create('Design processor action is outside its closed contract');
   end;
@@ -878,6 +893,25 @@ begin
       raise ENyxContract.Create('Value-domain intent requires the exact captured owner/baseline');
     end;
   end;
+
+  if Result.FEdit.Action = sdaMenu then
+  begin
+    LContent := LEdit.Field('menu');
+
+    if (LContent.Kind <> ndObject) or (LContent.Count <> 2) then
+    begin
+      raise ENyxModel.Create('Menu intent requires its exact command and baseline');
+    end;
+    Result.FEdit.Menu := TNyxMenuEdit.FromData(LContent.Field('command'));
+    Result.FEdit.MenuBaseline := LContent.Field('baseline').AsText;
+
+    if (Result.FEdit.Selection = '') or (Result.FEdit.MenuBaseline = '') or
+      ((Result.FEdit.Menu.Control.ID <> '') and
+      (Result.FEdit.Menu.Control.ID <> Result.FEdit.Selection)) then
+    begin
+      raise ENyxModel.Create('Menu intent requires its captured owner and baseline');
+    end;
+  end;
 end;
 
 destructor TPreparedDesign.Destroy;
@@ -966,6 +1000,16 @@ begin
             raise ENyxContract.Create('Value constraints changed since this editor was captured');
           end;
           LSession.ApplyPatch(NyxValueDomainPatch([FRequest.FEdit.ValueDomain]));
+        end;
+      sdaMenu:
+        begin
+
+          if NyxMenuEditorBaseline(LSession.Document, NyxControl(FRequest.FEdit.Selection)) <>
+            FRequest.FEdit.MenuBaseline then
+          begin
+            raise ENyxModel.Create('Menu choices changed since this editor was captured');
+          end;
+          LSession.ApplyPatch(NyxMenuPatch([FRequest.FEdit.Menu]));
         end;
       sdaCanvasValue: LSession.SetCapturedCanvasValue(FRequest.FEdit);
       sdaSetStateDefault:
@@ -1274,6 +1318,17 @@ begin
       independent processor compares the mounted baseline against its fresh
       pair and returns a normal rejected diagnostic; staleness is not a failed
       scheduler/worker transport and must not be reported as one. }
+  end;
+
+  if AEdit.Action = sdaMenu then
+  begin
+
+    if not AEdit.Menu.Defined or (AEdit.MenuBaseline = '') or
+      (FDocument.Find(AEdit.Selection) = nil) or
+      ((AEdit.Menu.Control.ID <> '') and (AEdit.Menu.Control.ID <> AEdit.Selection)) then
+    begin
+      raise ENyxModel.Create('Menu intent requires its captured owner and baseline');
+    end;
   end;
 
   if AEdit.Action = sdaCollection then

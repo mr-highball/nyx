@@ -2403,6 +2403,37 @@ begin
         Result[LFound] := LPublished;
       end;
     end;
+    { A declared mounted menu is an actual semantic producer on its invoker.
+      It supplies an immutable Details snapshot, decoded by NyxMenuInvocation;
+      it does not grant custom Emit or change the physical OnClick contract. }
+
+    if (LRoot.Kind = NyxKindName(nkButton)) and
+      (LRoot.ProjectionKind = NyxKindName(nkButton)) and LRoot.HasMenu and
+      (LRoot.MenuReference.Name <> '') then
+    begin
+      LFound := -1;
+      for LIndex := 0 to High(Result) do
+      begin
+
+        if (Result[LIndex].Trigger = ntNamed) and
+          (Result[LIndex].Name.Name = NyxSemantic(nseActivate).Name) then
+        begin
+          LFound := LIndex;
+          Break;
+        end;
+      end;
+
+      if LFound < 0 then
+      begin
+        LFound := Length(Result);
+        SetLength(Result, LFound + 1);
+        Result[LFound] := NyxNamedEventSchema(NyxSemantic(nseActivate),
+          NyxSemanticTitle(nseActivate),
+          'Menu command completion. NyxMenuInvocation reads its exact command, part and optional checked state from Details.',
+          ncAvailable, ncAvailable, NyxSignalPayload);
+        Result[LFound].DeclaredProducer := False;
+      end;
+    end;
     { Keep exact authored names discoverable even when their creator is absent.
       This is an honest custom requirement, not a manufactured producer schema. }
     LAuthored := NyxAuthoredEvents(LRoot);

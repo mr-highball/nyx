@@ -102,6 +102,45 @@ into that explicit source directory. Serve `menu-declarations.html` and
 `menu-declarations-controls.html` on an admitted HTTP host; the maintained Pascal
 ready-capture driver qualifies real-clock completion and desktop/narrow captures.
 
+## Edit saved definitions in Studio
+
+Properties consumes the public `NewNyxMenuEditor` compound from
+`nyx.menu.editor`. Its specialized Nyx input/select/checkbox/spin/button controls
+edit the content root, ordered action/check/radio/separator/submenu entries,
+command/group references, saved defaults and presentation/typeahead policy.
+Selectors show readable names; clipped single-line captions map back to exact
+Unicode identities. Open a saved definition to edit it, or choose the empty menu
+choice to start a new name. This editor preserves existing names; it does not
+silently rename definitions or overwrite a saved name from the new-definition form.
+
+Save, add and reorder capture the complete form as one definition replacement.
+Attach, suppress inheritance and restore inheritance remain distinct typed
+commands. Opening a definition is presentation only. The public capture owns
+independent values; Studio checks the exact mounted registry/local attachment
+baseline before enqueue and again on the independent paired processor. Draft,
+revision and source ownership checks remain with the existing queue. One Undo
+restores both files. Definition removal shows a warning and requires an explicit
+checkbox confirmation; ordinary candidate admission still refuses retained uses.
+
+Declared invokers expose menu command completion in their named `nseActivate`
+event metadata. Existing Events authoring consumes that metadata without granting
+a custom Emit API. The completion's `Details` belong to `NyxMenuInvocation`,
+independently of the physical OnClick event and its routes.
+
+```powershell
+./tools/build.ps1 -Target menu-editor -MenuAuthoringSourceDirectory build/menu/source
+```
+
+Supply the exact semantic companion export described above. This target runs the
+actual native inspector/paired-queue and ordinary Studio journeys, saves desktop/
+compact native captures, then stages `menu-editor.html`, the same compiled companion,
+a self-starting Pascal module worker and the ordinary browser Studio bundle.
+Execute the fixture over HTTP with the maintained ready-capture driver and
+`data-result` at desktop/narrow widths. Its inspector host qualifies actual controls
+and the real worker, not a full observing browser Studio session or hardware input.
+Full observing delivery and broader component/performance/accessibility acceptance
+remain open; see [current evidence](../WORK.md#current-return-path-public-menu-editor--2026-10-07).
+
 ## Attach runtime-only menus through an adapter
 
 Use specialized controls for the content and typed values for command meaning:

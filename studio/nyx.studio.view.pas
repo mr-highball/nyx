@@ -120,6 +120,8 @@ type
     ProjectBusy: Boolean;
     AdvancedProperties: Boolean;
     InspectorTab: TNyxInspectorTab;
+    { Open menu definition belongs to presentation, never application history. }
+    MenuEditorReference: TNyxMenuRef;
     CallbackRemoval: TNyxCallbackRemoval;
     { Copied confirmation metadata, not an interface or borrowed model. }
     RootRemoval: TNyxDataValue;
@@ -1344,6 +1346,7 @@ begin
         end;
         AddBindingsPanel(LRight, ASession, LSelectedProjection, AState);
         AddNyxDateDomainInspector(LRight, ASession);
+        AddNyxMenuInspector(LRight, ASession, AState.MenuEditorReference);
 
         if AState.BindingsVisible then
         begin

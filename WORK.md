@@ -7,6 +7,93 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: public menu editor — 2026-10-07
+
+Original NS-4 authoring criteria 2/6 now consume public `nyx.menu.editor`:
+specialized Nyx card/input/select/checkbox/spin/button controls for exact content
+roots, ordered item kinds, command/group/submenu references, defaults and complete
+presentation/typeahead policy. Readable clipped single-line selectors map to
+copied exact identities. Open/new is presentation only. Save/add/reorder capture
+the complete form as one definition replacement; attach, mask and inherit are
+distinct typed intents. A visible warning plus explicit checkbox authorizes
+definition removal; retained invokers/branches still refuse candidate admission.
+No accepted tree or renderer is retained by the form/capture. New names cannot
+overwrite saved definitions, and this editor does not silently rename them.
+
+Studio routes copied menu commands through its existing independent paired queue.
+Only the appended menu intent needs the strict v12 worker envelope; old operations
+retain their deployed shapes. Exact registry/local attachment baselines are checked
+before enqueue and by the fresh processor. Two captured jobs demonstrate stale
+refusal without another history step. Source ownership/draft/revision guards and
+one paired Undo/Redo remain intact. Browser definition inspection resets on project
+navigation; native per-project view state owns its choice. Declared invokers expose
+their real named menu completion metadata to Events without granting custom Emit.
+This batch verifies that metadata, not new physical callback registration/TODO
+or menu-callback implementation execution in observing Studio.
+
+The maintained `menu-editor` target consumes the exact English MCP export. Actual
+shared inspector/queue consumers pass **65** each on Win32 and HTTP browser;
+ordinary native Studio brings its journey to **72**, including physical save,
+exact source/history and compact presentation. Current browser desktop/**390**
+captures and native ordinary desktop/compact captures are inspected. The browser
+consumer executes the real module worker. Its first page-mode worker build timed
+out and earns no evidence; the corrected maintained `-Tmodule` build passes.
+The native fixture was slow rather than deadlocked; terminal traces are leak-free.
+Owned code compiles without warnings; the same seven upstream pas2js Classes
+warnings remain, with dependencies untouched. Original large-form/performance,
+hardware/assistive technology and other widgetset requirements remain open.
+
+Fresh persistent authenticated Pascal MCP review passes **181** (poll-count varies):
+one owned grouped composition, bounded menu/source context, refusals/paired history,
+four actual application/view compiler jobs and exact exported/compiler input.
+The export is byte-identical to the previous companion. This uses the existing
+isolated candidate and keeps semantic MCP primary; no backend stop/launch occurs.
+The source schema remains 21 tools while the observing release remains 20. The
+ordinary full browser Studio bundle/worker compiles; actual new authoring,
+registration navigation and canvas Interact input in that full observing host
+still retain their gate. No frozen package qualification or observing refresh
+is claimed. The earlier isolated launch policy refusal is not retried here.
+
+Ignored evidence is **`build/menu-editor/`**: maintained-build log, exact MCP source
+and receipts, native/core logs, both browser captures and native ordinary captures.
+`final-preservation.json` records current process/checkpoint and authenticated
+bounded observations verifying all **15**
+original services, **9** exact pairs, labels/handles/navigation/history/drafts/
+permissions and the full durable checkpoint, with both LAN/MCP bindings verified.
+Primary release/runtime and user enrollment are untouched.
+
+The packet is about 402 MB including completed browser profiles. Automatic
+approval review rejected the scoped recursive profile-cache cleanup before
+execution with only “blocked by policy”. Caches and all evidence remain retained;
+no alternate deletion or service stop is attempted. This does not block the
+verified product checkpoint or the remaining ordinary browser/release work.
+
+This is progress; no original full criterion closes. Authoring no-closure advances
+**26→27** once; workflow **14**, renderer **8**, codegen **28** and delivery **2** stay
+unchanged. Stop local menu editor fixtures. Next qualify ordinary browser Studio
+authoring/registration and Interact, prepare its frozen protected release, then
+refresh only the verified primary with exact pair/history preservation. Remaining
+full authoring/source/creator ergonomics, performance/accessibility, menubars/
+pickers and broader parity retain their original owners. No goal completion.
+
+## Accepted batch intent: public menu editor — 2026-10-07
+
+Previous goal turn is progress: typed persisted/semantic menu authoring and both
+ordinary application consumers qualify; clean checkpoint `608eedc` is pushed.
+Continue original NS-4 authoring criteria 2/6 and workflow criterion 5 with the
+missing ordinary editor consumer, instead of more menu store fixtures. Deliver a
+reusable public Nyx menu editor for invoker attachment, definition/content root,
+ordered item kinds/references/defaults and presentation/search policy. Selection
+is presentation state; mutations capture independent typed values and use the
+existing paired queue, stale/draft guards and one Undo step. Removal requires a
+visible warning and explicit confirmation. Qualify actual browser/LCL controls,
+ordinary Studio and exact source/history; semantic MCP remains primary for
+composing the companion. Fifteen original services/nine pairs remain protected.
+Native named MCP handles currently return a stale initialization 404; the
+maintained Pascal client is the usable semantic path. The prior process-policy
+refusal does not block reversible editor implementation. Stop at the integrated
+consumer boundary, recording any remaining observing/deployment gate.
+
 ## Current return path: persisted menu authoring — 2026-10-07
 
 Original NS-4 workflow criteria 2/5 and NS-3 component criteria 2/3 now have

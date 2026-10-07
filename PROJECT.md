@@ -66,6 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Studio Properties now consumes a public typed menu editor with complete saved
+policy/item forms, distinct attachment/mask/inheritance, stale-baseline refusal,
+confirmed dependency-safe removal and paired source/history. Actual inspector/
+queue consumers pass 65 per target, ordinary Win32 Studio 72 total. Desktop/390
+browser controls use the real module worker; native captures qualify the ordinary
+controller. Fresh authenticated MCP review passes 181 and all four application/
+view builds from the exact companion. Fifteen services, nine pairs/full checkpoint
+remain protected. The observing release is unchanged; full browser Studio menu
+authoring/registration input, frozen delivery and broader parity/performance stay
+open. See [the packet](WORK.md#current-return-path-public-menu-editor--2026-10-07).
+
 Saved menu declarations now pass strict persistence, typed generation/source
 reconstruction, bounded semantic transactions/history and ordinary application
 invocation on browser/Win32. Declaration fixtures pass 64 per target; exact
@@ -74,8 +85,8 @@ its consumer to 18. Authenticated isolated MCP passes 172 with all four real
 application/view compiler jobs and exact input bytes. Core/composition regression
 passes 30/1781, leak-free. Source catalog is 21 tools; the observing LAN release
 remains 20. Fifteen services, nine exact pairs and the full checkpoint are retained.
-Final backend refresh, ordinary browser Studio canvas input, editor menu-plan
-authoring, frozen delivery and broader parity remain open. See
+At that boundary final backend refresh, ordinary browser Studio canvas input,
+editor menu-plan authoring, frozen delivery and broader parity remained open. See
 [the current packet](WORK.md#current-return-path-persisted-menu-authoring--2026-10-07)
 and [authoring contract](docs/menu.md).
 

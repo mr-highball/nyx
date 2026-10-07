@@ -40,6 +40,26 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Public menu editor — 2026-10-07
+
+Original criteria 2/6 now consume a reusable public Nyx menu compound with typed
+content/item/reference/default/presentation/search authoring. Distinct local
+attachment, mask/inheritance and confirmed definition removal share the exact
+baseline guards and independent paired queue. Actual inspector controls pass 65
+per target; ordinary Win32 Studio passes 72 total, including exact source/history
+and compact presentation. Browser desktop/390 uses the real module worker. Its
+full ordinary observing Studio authoring/registration input remains open. Current
+MCP review passes 181 with four real builds and exact source, preserving all 15
+services/9 pairs/full checkpoint. See
+[the packet](../WORK.md#current-return-path-public-menu-editor--2026-10-07).
+
+No original criterion closes. Authoring no-closure advances 26→27 once; workflow
+14, renderer 8, codegen 28 and delivery 2 stay unchanged. Stop local editor fixtures;
+qualify the ordinary browser/observing frozen package before further expansion.
+Large-form performance, richer definition/draft ergonomics, hardware/accessibility,
+menubars/pickers, other widgetsets and the original full authoring requirements
+retain their existing owners and acceptance criteria.
+
 ## Mobile workspace allocation — 2026-10-07
 
 The user's visible-canvas regression now has compact/short-host menus, collapsed

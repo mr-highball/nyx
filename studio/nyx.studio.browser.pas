@@ -664,6 +664,7 @@ begin
   LState.ProjectBusy := FProjectRequest <> nil;
   LState.AdvancedProperties := FAdvancedProperties;
   LState.InspectorTab := FInspectorTab;
+  LState.MenuEditorReference := FViewState.MenuEditorReference;
   LState.CallbackRemoval := FCallbackRemoval;
 
   if FRootRemoval <> nil then
@@ -1897,6 +1898,13 @@ begin
   if (ANode.ID = 'studio-details-split') and (AEvent.Trigger = ntChange) then
   begin
     FDetailsPercent := StrToIntDef(ANode.Prop('split-position'), FDetailsPercent);
+    Exit;
+  end;
+
+  if RouteNyxMenuInspectorChoice(FSession, ANode, FShellRenderer.Root,
+    AEvent.Trigger, FViewState.MenuEditorReference) then
+  begin
+    Refresh(True, True);
     Exit;
   end;
 
@@ -3478,6 +3486,9 @@ var
   LSaved: TNyxText;
   LValue: TNyxStudioPresentation;
 begin
+  { Definition inspection is ephemeral. Reset on project navigation instead of
+    carrying another project's same-named menu into its inspector. }
+  FViewState.MenuEditorReference := Default(TNyxMenuRef);
 
   if not FRecoveryEnabled then
   begin

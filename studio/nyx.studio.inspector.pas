@@ -122,6 +122,15 @@ procedure AddNyxContentInspector(AParent: TNyxNode; ASession: TNyxStudioSession)
 { Shared public date-constraint compound for the exact selected authored owner.
   Effective inherited fields resolve in an independently owned context. }
 procedure AddNyxDateDomainInspector(AParent: TNyxNode; ASession: TNyxStudioSession);
+{ Public menu compound; choice is presentation, all mutations use paired jobs. }
+procedure AddNyxMenuInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  const AReference: TNyxMenuRef);
+function CaptureNyxMenuInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+{ Open/new changes only inspector presentation. Stale mounted context refuses. }
+function RouteNyxMenuInspectorChoice(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; ATrigger: TNyxTrigger;
+  var AReference: TNyxMenuRef): Boolean;
 { Capture a value-only set/inherit command and local/effective mounted baseline.
   Stale selection or policy refuses before enqueue; fresh processor rechecks. }
 function CaptureNyxDateDomainInspector(ASession: TNyxStudioSession;
@@ -148,11 +157,105 @@ implementation
 uses
   nyx.schema, nyx.controls, nyx.content, nyx.content.editor,
   nyx.studio.callbackedits, nyx.studio.edits, nyx.dates.editor,
-  nyx.contract, nyx.composition;
+  nyx.contract, nyx.composition, nyx.menu.editor, nyx.menu.declarations;
 
 const
   CAutomaticPresentation = 'Automatic / defaults';
   CManualPresentationPrefix = 'Manual / ';
+
+procedure AddNyxMenuInspector(AParent: TNyxNode; ASession: TNyxStudioSession;
+  const AReference: TNyxMenuRef);
+var
+  LReference: TNyxMenuRef;
+begin
+
+  if (AParent = nil) or (ASession = nil) or (ASession.Selected = nil) or
+    ((ASession.Selected.ProjectionKind <> 'button') and (ASession.Document.Menus.Count = 0)) then
+  begin
+    Exit;
+  end;
+  LReference := AReference;
+
+  if (LReference.Name <> '') and not ASession.Document.Menus.Contains(LReference) then
+  begin
+    LReference := Default(TNyxMenuRef);
+  end;
+  AParent.Add(NewNyxMenuEditor('inspector-menu', NyxControl(ASession.SelectedID),
+    ASession.Document, LReference));
+end;
+
+procedure ValidateMenuCapture(ASession: TNyxStudioSession;
+  const AChange: TNyxMenuEditorChange);
+begin
+
+  if (ASession = nil) or (ASession.SelectedID <> AChange.Owner.ID) or
+    (NyxMenuEditorBaseline(ASession.Document, AChange.Owner) <> AChange.Baseline) then
+  begin
+    raise ENyxModel.Create('Select this component again before editing its menus');
+  end;
+end;
+
+function RouteNyxMenuInspectorChoice(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; ATrigger: TNyxTrigger;
+  var AReference: TNyxMenuRef): Boolean;
+var
+  LChange: TNyxMenuEditorChange;
+  LDefinition: INyxMenuDefinition;
+begin
+  Result := False;
+
+  if (ATrigger <> ntClick) or (AButton = nil) or
+    (AButton.ID <> NyxMenuEditorActionID('inspector-menu', nmeChoose)) then
+  begin
+    Exit;
+  end;
+  Result := CaptureNyxMenuEditor(AButton, AShellRoot, LChange, LDefinition);
+
+  if Result then
+  begin
+    ValidateMenuCapture(ASession, LChange);
+    AReference := LChange.Reference;
+  end;
+end;
+
+function CaptureNyxMenuInspector(ASession: TNyxStudioSession;
+  AButton, AShellRoot: TNyxNode; out AEdit: TNyxStudioDesignEdit): Boolean;
+var
+  LChange: TNyxMenuEditorChange;
+  LDefinition: INyxMenuDefinition;
+begin
+  AEdit := Default(TNyxStudioDesignEdit);
+
+  if (AButton <> nil) and (AButton.ID = NyxMenuEditorActionID('inspector-menu', nmeChoose)) then
+  begin
+    Exit(False);
+  end;
+  Result := CaptureNyxMenuEditor(AButton, AShellRoot, LChange, LDefinition);
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  ValidateMenuCapture(ASession, LChange);
+  AEdit.Action := sdaMenu;
+  AEdit.Selection := LChange.Owner.ID;
+  AEdit.View := ASession.ActiveViewID;
+  AEdit.MenuBaseline := LChange.Baseline;
+  case LChange.Action of
+    nmeSave, nmeAddItem, nmeMoveUp, nmeMoveDown, nmeRemoveItem:
+      AEdit.Menu := NyxDefineMenu(LChange.Reference, LDefinition);
+    nmeAttach:
+      AEdit.Menu := NyxAttachMenu(LChange.Owner, LChange.Reference);
+    nmeMask:
+      AEdit.Menu := NyxNoMenu(LChange.Owner);
+    nmeInherit:
+      AEdit.Menu := NyxInheritMenu(LChange.Owner);
+    nmeRemove:
+      AEdit.Menu := NyxRemoveMenu(LChange.Reference);
+  else
+    raise ENyxModel.Create('Menu selection cannot enter paired design history');
+  end;
+end;
 
 procedure AddNyxDateDomainInspector(AParent: TNyxNode; ASession: TNyxStudioSession);
 var
