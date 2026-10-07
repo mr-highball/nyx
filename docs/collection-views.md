@@ -63,7 +63,10 @@ field families must exactly match the admitted store schema. Closed choices use
 `ToData`/`FromData` preserve the canonical version-1 specification for single
 selection, with key, scope, optional parent field and ordered columns. Explicit
 multiple selection uses version 2 and its closed `selection` member. The document
-envelope remains version 3. A null packet means absent;
+envelope remains version 3. Nonempty authored query defaults use view descriptor
+version 3; see [typed queries](collection-queries.md) for filtering, stable ordering,
+hidden membership, independent runtime policy and current integration limits.
+A null packet means absent;
 unknown fields, choices, versions and duplicate columns reject. Design version 3
 reserves `collectionView` for this packet on a node. Version 1/2 fields with that
 name remain opaque extension data; a collision rejects promotion to version 3.
@@ -294,7 +297,7 @@ passes 155 native and 182 browser checks. See
 [the current packet](../WORK.md#current-return-path-bound-grid-cell-navigation--2026-10-07).
 The [WAI grid pattern](https://www.w3.org/WAI/ARIA/apg/patterns/grid/), rechecked
 2026-10-07, guides this contract. Paging, cell/column selection, virtualization,
-sorting/filtering, hardware/IME/assistive technology and other widgetsets/DPI
+full Studio sorting/filtering authoring, hardware/IME/assistive technology and other widgetsets/DPI
 remain open. Host emulation and controlled LCL messages do not prove full APG
 conformance or physical Android input.
 

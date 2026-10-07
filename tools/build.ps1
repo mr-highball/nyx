@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-query', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'responsive', 'presentations', 'manual-presentations', 'selection', 'typeahead', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -1819,6 +1819,55 @@ try {
       'tests/nyx_typeahead_tests.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxBrowserDir 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/typeahead.html') -Destination $nyxBrowserDir
+    exit 0
+  }
+
+  if ($Target -eq 'collection-query') {
+    # Portable policies, strict persistence/source and actual target controls
+    # share the maintained toolchain. The UI consumer uses an already exported
+    # authenticated companion; this build changes no project, service or config.
+    $nyxQueryRoot = Join-Path $nyxRoot 'build/collection-query/maintained'
+    $nyxQueryNative = Join-Path $nyxQueryRoot 'native'
+    $nyxQueryLcl = Join-Path $nyxQueryRoot 'lcl'
+    $nyxQueryBrowser = Join-Path $nyxQueryRoot 'browser'
+    New-Item -ItemType Directory -Force $nyxQueryNative, $nyxQueryLcl, $nyxQueryBrowser | Out-Null
+    $nyxQueryFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-FU$nyxQueryNative", "-FE$nyxQueryNative")
+    Invoke-NyxCompiler $nyxFpc ($nyxQueryFlags + @('tests/nyx_collection_query_tests.lpr'))
+    & (Join-Path $nyxQueryNative 'nyx_collection_query_tests.exe') `
+      (Join-Path $nyxQueryNative 'nyx.query.fixture.pas')
+    if ($LASTEXITCODE -ne 0) { throw 'Portable query checks failed' }
+    Invoke-NyxCompiler $nyxFpc ($nyxQueryFlags + @('-dNYX_COMPILED_QUERY',
+      "-Fu$nyxQueryNative", 'tests/nyx_collection_query_tests.lpr'))
+    & (Join-Path $nyxQueryNative 'nyx_collection_query_tests.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Compiled query builder checks failed' }
+    $nyxQuerySource = [IO.Path]::GetFullPath($GridSourceDirectory)
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxQuerySource 'nyx.generated.view.pas'))) {
+      throw 'Supply the previously authenticated grid companion with GridSourceDirectory'
+    }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxQueryPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Futests', "-Fu$nyxQuerySource", "-Fu$nyxLazarus/lcl/units/$nyxQueryPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxQueryPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxQueryPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxQueryPlatform", "-FU$nyxQueryLcl", "-FE$nyxQueryLcl",
+      'tests/nyx_collection_query_controls.lpr')
+    & (Join-Path $nyxQueryLcl 'nyx_collection_query_controls.exe') (Join-Path $nyxQueryRoot 'native.png')
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native collection query controls failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-dNYX_COMPILED_QUERY',
+      '-Fusrc', "-Fu$nyxQueryNative", "-FE$nyxQueryBrowser", 'tests/nyx_collection_query_tests.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc',
+      "-Fu$nyxQuerySource", "-FE$nyxQueryBrowser", 'tests/nyx_collection_query_controls.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxQueryBrowser 'rtl.js')
+    foreach ($nyxQueryBootstrap in @('collection-query.html', 'collection-query-controls.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxQueryBootstrap") -Destination $nyxQueryBrowser
+    }
+    Invoke-NyxCompiler $nyxFpc ($nyxQueryFlags + @('tests/nyx_browser_ready_capture.lpr'))
+    Write-Host 'Queries built; execute both browser pages over HTTP for target evidence.'
     exit 0
   }
 

@@ -15,6 +15,17 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Query integration return path (2026-10-07): shared typed query defaults now have
+strict version-3 view descriptors and crafted source admission, with real browser/
+LCL table evidence. Existing grouped binding changes already call this updated
+specification boundary. Current-backend authenticated query edits, exact paired
+Undo/source, bounded inspection and observing Studio still need qualification;
+the preserved frozen services do not acquire capabilities from a library compile.
+Consume public Nyx query authoring forms and own any fresh isolated backend/
+enrollment explicitly. Keep the combined layout/data transaction gap and all
+protected contexts. This adds no tool/count/criterion closure. See
+[the packet](../WORK.md#current-return-path-typed-collection-queries--2026-10-07).
+
 Observed combined-composition gap (2026-10-07): the ordinary English table
 companion uses bounded authenticated MCP exclusively, with exact source/history
 and an independent owned workspace. It passes 41 checks. Layout creation through

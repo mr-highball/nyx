@@ -33,6 +33,7 @@ var
   LCheckpoint: TNyxText;
   LLastCheckpoint: TNyxText;
   LWidth: Integer;
+  LHeight: Integer;
   LStarted: QWord;
   LCaptured: Integer;
 
@@ -40,19 +41,25 @@ begin
   LHost := nil;
   try
 
-    if (ParamCount < 3) or (ParamCount > 4) then
+    if (ParamCount < 3) or (ParamCount > 5) then
     begin
-      raise Exception.Create('Supply fixture URL, owned output directory, marker and optional CSS width');
+      raise Exception.Create('Supply fixture URL, owned output directory, marker and optional CSS width/height');
     end;
     LWidth := 1100;
+    LHeight := 900;
     LLastCheckpoint := '';
     LCaptured := 0;
 
-    if ParamCount = 4 then
+    if ParamCount >= 4 then
     begin
       LWidth := StrToInt(ParamStr(4));
     end;
-    LHost := TNyxBrowserPipe.Create(ParamStr(1), ParamStr(2), LWidth);
+
+    if ParamCount = 5 then
+    begin
+      LHeight := StrToInt(ParamStr(5));
+    end;
+    LHost := TNyxBrowserPipe.Create(ParamStr(1), ParamStr(2), LWidth, LHeight);
     LStarted := GetTickCount64;
     repeat
       LMarker := LHost.Attribute(TNyxText(ParamStr(3)));
@@ -95,7 +102,7 @@ begin
     until False;
     LHost.Capture('capture');
     FreeAndNil(LHost);
-    WriteLn('PASS real-clock browser / width ', LWidth, ' / checkpoints ', LCaptured);
+    WriteLn('PASS real-clock browser / ', LWidth, ' x ', LHeight, ' / checkpoints ', LCaptured);
   except
     on LException: Exception do
     begin

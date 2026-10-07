@@ -461,6 +461,7 @@ uses
   nyx.state,
   nyx.collections,
   nyx.collections.view.types,
+  nyx.collections.query,
   nyx.collections.selection,
   nyx.binding.types,
   nyx.contract,
@@ -545,7 +546,9 @@ type
     vkData, vkDataField, vkDecimal, vkPolicy, vkHandler, vkCallbackID,
     vkConstruction, vkCollectionKey, vkCollectionField, vkCollectionItemRef,
     vkCollectionSchema, vkCollectionItem, vkNoDomain, vkScalarValue,
-    vkCollectionView, vkCollectionScope, vkCollectionCellMode, vkSelectionMode, vkPlatform,
+    vkCollectionView, vkCollectionScope, vkCollectionCellMode, vkSelectionMode,
+    vkCollectionQuery, vkCollectionPredicate, vkCollectionSort, vkQueryField,
+    vkSortDirection, vkQueryTextComparison, vkPlatform,
     vkSplitOrientation, vkSemanticEvent, vkTouchBehavior, vkFlowWrap,
     vkCrossAlignment, vkJustification, vkSizing, vkLayoutPolicy, vkSizeRange,
     vkSizeConstraints, vkViewportWidth, vkViewportCondition, vkViewportOrientation,
@@ -573,6 +576,9 @@ type
     CollectionItemRef: TNyxItemRef;
     ScalarValue: TNyxStateValue;
     CollectionView: TNyxCollectionViewSpec;
+    CollectionQuery: TNyxCollectionQuery;
+    CollectionPredicateData: TNyxDataValue;
+    CollectionSort: TNyxCollectionSort;
     LayoutPolicy: TNyxLayoutPolicy;
     SizeRange: TNyxSizeRange;
     SizeConstraints: TNyxSizeConstraints;
@@ -664,6 +670,7 @@ type
     procedure ReferenceAssignment(AIndex: Integer);
     procedure Defaults;
     function CollectionConstructor(const AName: TNyxText): TValue;
+    function QueryConstructor(const AName: TNyxText): TValue;
     { Declarative menu expressions retain immutable plans, never runtime hosts. }
     function MenuConstructor(const AName: TNyxText): TValue;
     procedure MenuDefaults;
@@ -1166,6 +1173,10 @@ begin
   RegisterEnum(vkCollectionScope, Ord(csInstance), 'csInstance');
   RegisterEnum(vkSelectionMode, Ord(nsmSingle), 'nsmSingle');
   RegisterEnum(vkSelectionMode, Ord(nsmMultiple), 'nsmMultiple');
+  RegisterEnum(vkSortDirection, Ord(nsdAscending), 'nsdAscending');
+  RegisterEnum(vkSortDirection, Ord(nsdDescending), 'nsdDescending');
+  RegisterEnum(vkQueryTextComparison, Ord(nqtExact), 'nqtExact');
+  RegisterEnum(vkQueryTextComparison, Ord(nqtAsciiInsensitive), 'nqtAsciiInsensitive');
   RegisterEnum(vkCollectionCellMode, Ord(cmReadOnly), 'cmReadOnly');
   RegisterEnum(vkCollectionCellMode, Ord(cmEditable), 'cmEditable');
 
@@ -1752,6 +1763,7 @@ begin
 end;
 
 {$I nyx.source.collections.inc}
+{$I nyx.source.query.inc}
 {$I nyx.source.menus.inc}
 
 function TConfigurationReader.DataConstructor(const AName: TNyxText): TValue;
@@ -1918,6 +1930,9 @@ begin
   Result.CollectionItem := Default(TNyxCollectionItem);
   Result.CollectionItemRef := Default(TNyxItemRef);
   Result.CollectionView := Default(TNyxCollectionViewSpec);
+  Result.CollectionQuery := Default(TNyxCollectionQuery);
+  Result.CollectionPredicateData := Default(TNyxDataValue);
+  Result.CollectionSort := Default(TNyxCollectionSort);
   Result.Text := '';
   Result.Ordinal := 0;
   case LToken.Kind of
@@ -2453,6 +2468,11 @@ begin
           (LName = 'nyxpopover') or (LName = 'nyxtypeahead') then
         begin
           Exit(MenuConstructor(LName));
+        end;
+
+        if (LName = 'nyxcollectionquery') or (LName = 'nyxwhere') or (LName = 'nyxsort') then
+        begin
+          Exit(QueryConstructor(LName));
         end;
 
         if (LName = 'nyxcollection') or (LName = 'nyxitem') or
@@ -4776,6 +4796,7 @@ begin
     begin
       LPrefix := WithNyxImport(LPrefix, 'nyx.collections.view.types');
       LPrefix := WithNyxImport(LPrefix, 'nyx.collections.selection');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.collections.query');
     end;
 
     if FDesign <> '' then

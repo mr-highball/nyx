@@ -466,7 +466,8 @@ begin
   begin
     raise ENyxCollection.Create('Parent-field authoring requires the captured tree');
   end;
-  Result := NyxCollectionView(ASpec.Key).Scoped(ASpec.Scope).Selection(ASpec.SelectionMode);
+  Result := NyxCollectionView(ASpec.Key).Scoped(ASpec.Scope)
+    .Selection(ASpec.SelectionMode).Query(ASpec.QueryPolicy);
 
   if (AIntent.Action <> scaParent) and (ASpec.ParentField <> '') then
   begin

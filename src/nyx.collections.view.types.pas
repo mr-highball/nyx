@@ -32,6 +32,7 @@ uses
   nyx.state,
   nyx.data,
   nyx.collections,
+  nyx.collections.query,
   nyx.collections.selection;
 
 const
@@ -79,11 +80,13 @@ type
     FScope: TNyxCollectionScope;
     FSelectionMode: TNyxSelectionMode;
     FParent: TNyxText;
+    FQuery: TNyxCollectionQuery;
     FColumns: array of TNyxCollectionColumn;
     function AddColumn(const AName: TNyxText; AKind: TNyxStateKind;
       const ATitle: TNyxText; AMode: TNyxCollectionCellMode): TNyxCollectionViewSpec;
     function GetCount: Integer;
     function GetKey: TNyxCollectionRef;
+    function GetQuery: TNyxCollectionQuery;
   public
     function Column(const AField: TNyxTextFieldRef; const ATitle: TNyxText;
       AMode: TNyxCollectionCellMode = cmReadOnly): TNyxCollectionViewSpec; overload;
@@ -96,6 +99,9 @@ type
     function Scoped(AScope: TNyxCollectionScope): TNyxCollectionViewSpec;
     function Selection(AMode: TNyxSelectionMode): TNyxCollectionViewSpec;
     function Parent(const AField: TNyxTextFieldRef): TNyxCollectionViewSpec;
+    { Authored immutable query default. Runtime views copy this value and can
+      independently configure another policy without editing the document. }
+    function Query(const APolicy: TNyxCollectionQuery): TNyxCollectionViewSpec;
     function ColumnAt(AIndex: Integer): TNyxCollectionColumn;
     function Copy: TNyxCollectionViewSpec;
     procedure Validate;
@@ -109,6 +115,7 @@ type
     property Scope: TNyxCollectionScope read FScope;
     property SelectionMode: TNyxSelectionMode read FSelectionMode;
     property ParentField: TNyxText read FParent;
+    property QueryPolicy: TNyxCollectionQuery read GetQuery;
     property Count: Integer read GetCount;
   end;
 
@@ -159,6 +166,7 @@ begin
   Result.FScope := csApplication;
   Result.FSelectionMode := nsmSingle;
   Result.FParent := '';
+  Result.FQuery := NyxCollectionQuery;
   SetLength(Result.FColumns, 0);
 end;
 
@@ -186,11 +194,28 @@ begin
   Result.FScope := FScope;
   Result.FSelectionMode := FSelectionMode;
   Result.FParent := FParent;
+  Result.FQuery := FQuery.Copy;
   SetLength(Result.FColumns, Count);
   for LIndex := 0 to Count - 1 do
   begin
     Result.FColumns[LIndex] := FColumns[LIndex].Copy;
   end;
+end;
+
+function TNyxCollectionViewSpec.GetQuery: TNyxCollectionQuery;
+begin
+  Result := FQuery.Copy;
+end;
+
+function TNyxCollectionViewSpec.Query(const APolicy: TNyxCollectionQuery): TNyxCollectionViewSpec;
+begin
+
+  if not FDefined then
+  begin
+    raise ENyxCollection.Create('Create a collection view before choosing a query');
+  end;
+  Result := Copy;
+  Result.FQuery := TNyxCollectionQuery.FromData(APolicy.ToData);
 end;
 
 function TNyxCollectionViewSpec.AddColumn(const AName: TNyxText;
@@ -303,7 +328,7 @@ begin
   if not FDefined then
   begin
 
-    if (Count <> 0) or (FParent <> '') then
+    if (Count <> 0) or (FParent <> '') or FQuery.Defined then
     begin
       raise ENyxCollection.Create('Absent collection view contains a descriptor');
     end;
@@ -359,6 +384,7 @@ var
   LColumns: array of TNyxDataValue;
   LIndex: Integer;
   LScope: TNyxText;
+  LSelection: TNyxText;
 begin
   Validate;
 
@@ -394,6 +420,20 @@ begin
       NyxField('parent', NyxData(FParent)), NyxField('columns', NyxArray(LColumns)),
       NyxField('selection', NyxData('multiple'))]);
   end;
+
+  if FQuery.Defined then
+  begin
+    LSelection := 'single';
+
+    if FSelectionMode = nsmMultiple then
+    begin
+      LSelection := 'multiple';
+    end;
+    Result := NyxObject([NyxField('version', NyxData(3)),
+      NyxField('key', NyxData(FKey.Name)), NyxField('scope', NyxData(LScope)),
+      NyxField('parent', NyxData(FParent)), NyxField('columns', NyxArray(LColumns)),
+      NyxField('selection', NyxData(LSelection)), NyxField('query', FQuery.ToData)]);
+  end;
 end;
 
 class function TNyxCollectionViewSpec.FromData(
@@ -417,11 +457,31 @@ begin
 
   if (AData.Kind <> ndObject) or
     not (((AData.Count = 5) and (AData.Field('version').AsInteger = 1)) or
-      ((AData.Count = 6) and (AData.Field('version').AsInteger = 2))) then
+      ((AData.Count = 6) and (AData.Field('version').AsInteger = 2)) or
+      ((AData.Count = 7) and (AData.Field('version').AsInteger = 3))) then
   begin
     raise ENyxCollection.Create('Unsupported collection view descriptor');
   end;
   Result := NyxCollectionView(NyxCollection(AData.Field('key').AsText));
+
+  if AData.Field('version').AsInteger = 3 then
+  begin
+    Result := Result.Query(TNyxCollectionQuery.FromData(AData.Field('query')));
+
+    if not Result.QueryPolicy.Defined then
+    begin
+      raise ENyxCollection.Create('Version-3 collection views require a nonempty query');
+    end;
+
+    if AData.Field('selection').AsText = 'multiple' then
+    begin
+      Result := Result.Selection(nsmMultiple);
+    end
+    else if AData.Field('selection').AsText <> 'single' then
+    begin
+      raise ENyxCollection.Create('Unknown collection selection mode');
+    end;
+  end;
 
   if AData.Field('version').AsInteger = 2 then
   begin

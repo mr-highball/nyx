@@ -23,6 +23,25 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Typed collection queries — 2026-10-07
+
+Original criterion 3 now has reusable typed filtering/stable multi-key ordering,
+source/result separation, hidden identity membership and preserved editor drafts
+on actual tables. Saved defaults/strict source and the compiled builder pass
+56 native/57 compiled checks; controls pass 75 Win32 and 75 each HTTP browser
+desktop/CSS 390×640. Selection regression is 155 native/182 browser at
+1100×900 and 390×900.
+Protected services/pairs/frozen LAN bytes remain exact. See
+[the query packet](../WORK.md#current-return-path-typed-collection-queries--2026-10-07)
+and [public contract](../docs/collection-queries.md).
+
+No original criterion closes or count is created. Stop portable query fixtures.
+Public Nyx query forms consumed by Studio and authenticated current-backend
+semantic/observing authoring remain required integration with the existing NS-4
+owners. Paging, virtualization, large-data budgets, production styling and broader
+input/accessibility keep the original requirements rather than being substituted
+with algorithm fixture totals.
+
 ## Production table cell input — 2026-10-07
 
 Original criteria 1/3 now have shared typed cell movement, current-cell editing

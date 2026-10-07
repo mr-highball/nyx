@@ -47,6 +47,7 @@ uses
   nyx.state,
   nyx.collections,
   nyx.collections.view.types,
+  nyx.collections.query,
   nyx.collections.selection,
   nyx.binding.types,
   SysUtils,
@@ -1706,6 +1707,7 @@ begin
     begin
       LLines.Add('  nyx.collections.view.types,');
       LLines.Add('  nyx.collections.selection,');
+      LLines.Add('  nyx.collections.query,');
     end;
 
     if ADocument.Collections.Count > 0 then

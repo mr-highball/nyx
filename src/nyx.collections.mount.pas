@@ -94,7 +94,7 @@ type
     FSelection: INyxCollectionSelection;
     FSelectionObserver: TNyxCollectionSelectionObserver;
     FTypeAhead: INyxTypeAhead;
-    FTypeAheadRevision: Integer;
+    FTypeAheadSnapshot: INyxCollectionSnapshot;
     FSearchOrder: TNyxItemRefs;
     function SearchLabel(AIndex: Integer): TNyxText;
     procedure Changed(const AView: INyxCollectionView;
@@ -160,7 +160,7 @@ begin
   FView := AView;
   FEnabled := True;
   FTypeAhead := NewNyxTypeAhead(NyxTypeAhead);
-  FTypeAheadRevision := -1;
+  FTypeAheadSnapshot := nil;
 end;
 
 destructor TNyxCollectionMountBase.Destroy;
@@ -198,6 +198,7 @@ begin
   FSearchOrder := nil;
   FSelectionObserver := nil;
   FSelection := nil;
+  FTypeAheadSnapshot := nil;
 
   if FToken <> nil then
   begin
@@ -303,7 +304,7 @@ begin
   end;
   LCandidate := NewNyxTypeAhead(AOptions);
   FTypeAhead := LCandidate;
-  FTypeAheadRevision := -1;
+  FTypeAheadSnapshot := nil;
 end;
 
 procedure TNyxCollectionMountBase.ResetTypeAhead;
@@ -324,10 +325,10 @@ function TNyxCollectionMountBase.FindTypeAhead(const ACharacter: TNyxText;
   ATimeMS: Double; const AOrder: TNyxItemRefs; AFocus: Integer): Integer;
 begin
 
-  if FTypeAheadRevision <> FView.Snapshot.Revision then
+  if FTypeAheadSnapshot <> FView.Snapshot then
   begin
     ResetTypeAhead;
-    FTypeAheadRevision := FView.Snapshot.Revision;
+    FTypeAheadSnapshot := FView.Snapshot;
   end;
   FSearchOrder := AOrder;
   try

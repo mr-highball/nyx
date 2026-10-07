@@ -20,6 +20,73 @@
   SOFTWARE.
 }
 
+  { Immutable predicates are emitted as family-specific fluent expressions.
+    Branch indentation follows the logical structure rather than serializing
+    the wire descriptor into an opaque generated string. }
+  function QueryPredicateExpression(const APredicate: INyxCollectionPredicate;
+    const AIndent: TNyxText): TNyxText;
+  const
+    CFields: array[TNyxStateKind] of TNyxText =
+      ('NyxTextField', 'NyxBooleanField', 'NyxIntegerField', 'NyxNumberField');
+    CMethods: array[TNyxQueryComparison] of TNyxText =
+      ('EqualTo', 'NotEqualTo', 'LessThan', 'AtMost', 'GreaterThan', 'AtLeast',
+       'Contains', 'StartsWith', 'EndsWith');
+  var
+    LValue: TNyxStateValue;
+    LArgument: TNyxText;
+    LMethod: TNyxText;
+  begin
+
+    if APredicate.Kind = nqpNot then
+    begin
+      Exit(QueryPredicateExpression(APredicate.Child(0), AIndent) + '.Negated');
+    end;
+
+    if APredicate.Kind in [nqpAll, nqpAny] then
+    begin
+      LMethod := 'AndAlso';
+
+      if APredicate.Kind = nqpAny then
+      begin
+        LMethod := 'OrElse';
+      end;
+      Exit(QueryPredicateExpression(APredicate.Child(0), AIndent) + #10 + AIndent +
+        '  .' + LMethod + '(' + #10 + AIndent + '    ' +
+        QueryPredicateExpression(APredicate.Child(1), AIndent + '    ') + ')');
+    end;
+    LValue := APredicate.Expected;
+    case LValue.Kind of
+      nskText: LArgument := PascalString(LValue.TextValue);
+      nskBoolean:
+        begin
+          LArgument := 'False';
+
+          if LValue.BooleanValue then
+          begin
+            LArgument := 'True';
+          end;
+        end;
+      nskInteger: LArgument := PascalInteger(LValue.IntegerValue);
+      nskNumber:
+        begin
+          LArgument := LValue.NumberText;
+
+          if (Pos('.', LArgument) = 0) and (Pos('e', LArgument) = 0) then
+          begin
+            LArgument := LArgument + '.0';
+          end;
+        end;
+    end;
+
+    if APredicate.TextComparison = nqtAsciiInsensitive then
+    begin
+      LArgument := LArgument + ', nqtAsciiInsensitive';
+    end;
+    Result := 'NyxWhere(' + CFields[APredicate.FieldKind] + '(' +
+      PascalString(APredicate.FieldName) + ')).' +
+      CMethods[APredicate.Comparison] + '(' + LArgument + ')';
+  end;
+
   { Bindings use the public immutable fluent view object, with exact field
     families and enum choices. No wire property strings become authoring API. }
   procedure EmitCollectionBinding(ANode: TNyxNode; const AVariable: TNyxText);
@@ -31,6 +98,8 @@
     LColumn: TNyxCollectionColumn;
     LIndex: Integer;
     LLine: TNyxText;
+    LQuery: TNyxCollectionQuery;
+    LSort: TNyxCollectionSort;
   begin
 
     if not ANode.HasCollectionView then
@@ -72,6 +141,50 @@
     if LView.SelectionMode = nsmMultiple then
     begin
       LLines.Add('          .Selection(nsmMultiple)');
+    end;
+    LQuery := LView.QueryPolicy;
+
+    if LQuery.Defined then
+    begin
+      LLines.Add('          .Query(');
+      LLines.Add('            NyxCollectionQuery');
+
+      if LQuery.Filter <> nil then
+      begin
+        LLines.Add('              .Where(');
+        LLines.Add('                ' + QueryPredicateExpression(LQuery.Filter, '                ') + ')');
+      end;
+      for LIndex := 0 to LQuery.SortCount - 1 do
+      begin
+        LSort := LQuery.SortAt(LIndex);
+        LLine := '              .ThenBy(';
+
+        if LIndex = 0 then
+        begin
+          LLine := '              .OrderBy(';
+        end;
+        LLine := LLine + CFields[LSort.Kind] + '(' + PascalString(LSort.FieldName) + ')';
+
+        if (LSort.Direction = nsdDescending) or (LSort.TextComparison = nqtAsciiInsensitive) then
+        begin
+
+          if LSort.Direction = nsdDescending then
+          begin
+            LLine := LLine + ', nsdDescending';
+          end
+          else
+          begin
+            LLine := LLine + ', nsdAscending';
+          end;
+        end;
+
+        if LSort.TextComparison = nqtAsciiInsensitive then
+        begin
+          LLine := LLine + ', nqtAsciiInsensitive';
+        end;
+        LLines.Add(LLine + ')');
+      end;
+      LLines[LLines.Count - 1] := LLines[LLines.Count - 1] + ')';
     end;
     LLines[LLines.Count - 1] := LLines[LLines.Count - 1] + ')';
   end;

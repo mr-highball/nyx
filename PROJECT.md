@@ -66,13 +66,23 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Typed collection filters and stable multi-key ordering now reach live views,
+strict saved defaults, crafted Pascal/source admission and actual table controls.
+Win32 passes 75; HTTP browser passes 75 plus 57 compiled source checks per
+desktop/CSS 390×640. Hidden membership/source identities and editor drafts remain
+independent of sorting/filtering. Native selection regression is 155/browser 182,
+leak-free and owned warnings zero. Public Studio query forms and authenticated
+current-backend semantic/observing query authoring remain required integration;
+the deployed LAN build is unchanged. See
+[the query packet](WORK.md#current-return-path-typed-collection-queries--2026-10-07).
+
 Bound tables now share typed data-cell navigation, separate row membership and
 current-cell editor entry/return. An exact authenticated MCP-exported application
 passes 28 actual Win32 controls, 43 HTTP browser controls and 30 trusted host keys/
 Tab checks per desktop/CSS 390×640. Selection regression passes 155 native/182
 browser per width, leak-free. Native initial columns fit English content; narrow
 browser tables scroll without shrinking text. Protected services/projects and
-frozen LAN bytes remain unchanged. Paging, sorting/filtering, virtualization,
+frozen LAN bytes remain unchanged. Paging, Studio query authoring, virtualization,
 cell selection, production styling and hardware/accessibility remain open. See
 [the grid packet](WORK.md#current-return-path-bound-grid-cell-navigation--2026-10-07).
 

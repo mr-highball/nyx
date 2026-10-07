@@ -7,6 +7,87 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: typed collection queries — 2026-10-07
+
+The mobile follow-up rechecked an existing delivered workspace; it earned no new
+product completion. Current-state inspection retained pushed `0e01ee2` and the
+unfinished query worktree, then advanced original NS-3 criterion 3's sorting/
+filtering requirement through shared view, source and real controls. This batch
+is concrete library progress, not completion of the Studio authoring outcome.
+
+`nyx.collections.query` now provides family-specific typed predicates, managed
+immutable composition, explicit scalar/ASCII-insensitive text comparison and
+stable multi-key ordering. `nyx.collections.query.view` retains indexed source
+identities/order/revision and cached scalar keys. Tree filtering includes required
+ancestry. Views retain hidden selection members/anchors, visible focus, readable
+hidden source cells and independent runtime policies. Invalid policy/schema
+admission remains atomic; equal policies are a no-op. Both adapters retain an
+unchanged editor draft/caret through sorting and discard it when filtering hides
+its row. Native refresh and typeahead compare snapshot identity because a query
+can change result order without changing the source revision.
+
+Query-free binding descriptors remain canonical versions 1/2. Nonempty defaults
+use strict version 3; full document persistence and crafted typed Pascal/source
+admission retain exact meaning. Source admits inline fluent predicates/order,
+including supplementary Unicode and signed Integer limits. Raw text in a numeric
+predicate refuses the whole source candidate. Query records store immutable
+descriptors because pas2js refuses COM interfaces inside records; evaluators keep
+one owned predicate interface across all rows. Interface reference counting and
+tree ownership remain explicit, without external callbacks/cycles.
+
+Maintained `tools/build.ps1 -Target collection-query` passes **56** checked native
+portable/source checks, **57** through its ordinarily compiled generated builder,
+and **75** real Win32 table checks. Actual HTTP browser generated checks pass
+**57** and ordinary table controls **75**, each at **1100×900 / 390×640**.
+Selection regression passes **155** native (preparation/compiled companion) and
+**182** browser at **1100×900 / 390×900**. These are controlled widget/DOM journeys;
+query-specific trusted hardware/IME/assistive-technology proof is not claimed.
+Native/desktop/narrow captures are inspected. Table styling remains basic, with
+horizontal narrow scrolling instead of shrinking authored text. All owned
+warnings/native leaks are zero; seven installed RTL warnings stay visible per
+browser compile without dependency edits or suppression.
+
+The ordinary control consumer retains the exact existing **3704-byte**
+authenticated MCP grid export, SHA256
+`44BAC16FA1B7E758D1FE5531DC760D827E62B3D7F05656253AEB2305BE70E1F2`.
+It changes runtime policies only; it does not compose an active design through
+browser automation. Generated query source/compilation are separately qualified
+portable evidence, not a new authenticated query-authoring journey. Existing
+`nyx_collections` binding changes call the updated strict specification boundary;
+current-backend authenticated admission/discovery/observing delivery still needs
+qualification. No extra semantic tool or deployed query editor is claimed.
+
+Private evidence under `build/collection-query/` includes `qualified-build.log`,
+`maintained/native.png`, `qualified-source-{desktop,phone}/`,
+`qualified-controls-{desktop,phone}/`, `selection-regression-build.log`,
+`selection-browser-serial/` and `selection-browser-serial-phone/`.
+The maintained observer now accepts optional CSS height as well as width.
+The initial native assertion mistook LCL's deliberately displayed editor draft
+for accepted cell text; the corrected fixture checks both independently.
+An initial browser build refused the unsupported interface record, a selection
+observer used the wrong readiness attribute and timed out, and five concurrent
+observers timed out during Page.navigate. Those attempts earned no product proof.
+Their processes terminated cleanly; HTTP assets stayed healthy and subsequent
+serial observers passed. Use serial browser startup, not repeated bulk attempts.
+
+Fresh preservation evidence `final-preservation.log` retains **15** original
+process identities, **9** exact accepted/source/draft/history pairs, the
+**147033-byte** checkpoint and **229** frozen/served LAN payload files. Original
+LAN `6fc231e`, isolated frozen `0ce846f` and enrolled configurations are unchanged.
+Query/selection assets are staged only in an admitted owned child of the existing
+unsealed artifact host. Do not replace frozen bytes or retry the rejected primary
+stop/copy/start through another route.
+
+No original task/criterion closes and existing no-closure counters remain
+unchanged: Studio query authoring/semantic integration is still missing. **Stop
+portable query fixture expansion.** Next implement reusable public Nyx query
+authoring controls, consume them in Studio, then qualify exact-revision grouped
+semantic query edits/paired Undo and observing updates on an independently owned
+current backend. Preserve the protected services/project pairs. The existing
+combined layout/data transaction gap keeps its workflow owner. Paging,
+virtualization, large-data budgets, production aesthetics and broader parity keep
+their original NS-3/NS-2 acceptance gates; the full user goal remains active.
+
 ## User follow-up: mobile canvas space — 2026-10-07
 
 The latest phone screenshot is addressed by the already delivered compact

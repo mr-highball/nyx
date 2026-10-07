@@ -104,6 +104,17 @@ begin
       Inc(FCursor);
       LArgs := Arguments;
 
+      if SameText(LMethod, 'Query') then
+      begin
+
+        if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkCollectionQuery) then
+        begin
+          Fail('Query requires a typed NyxCollectionQuery');
+        end;
+        Result.CollectionView := Result.CollectionView.Query(LArgs[0].CollectionQuery);
+        Continue;
+      end;
+
       if SameText(LMethod, 'Selection') then
       begin
 

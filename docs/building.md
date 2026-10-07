@@ -7,6 +7,14 @@ Pascal. PowerShell only selects tools, passes compiler arguments and stages
 matched target artifacts. No Node, npm, Python, CSS framework or remote font is
 required.
 
+`collection-query` checks typed filter/order policies, strict view persistence and
+crafted source, then ordinarily compiles that generated builder and exercises real
+Win32 table controls. It consumes the existing semantic grid export through
+`GridSourceDirectory`; it creates no project/listener/enrollment. Execute both
+staged HTML consumers over HTTP for browser evidence. See
+[typed queries](collection-queries.md) for policy ownership and remaining Studio
+semantic/authoring integration.
+
 `browser-worker` builds the Pascal real-clock readiness observer and stages the
 ordinary Studio callback consumer with its matched module worker and RTL. It
 starts no listener. Execute desktop/narrow journeys through an already admitted

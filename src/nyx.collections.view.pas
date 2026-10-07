@@ -33,6 +33,8 @@ uses
   nyx.data,
   nyx.contract,
   nyx.collections,
+  nyx.collections.query,
+  nyx.collections.query.view,
   nyx.collections.registry,
   nyx.collections.view.types,
   nyx.collections.selection;
@@ -57,7 +59,7 @@ type
 
   { Live portable data view. Owns its store/snapshot/specification and one store
     subscription without retaining a renderer, document or application. Multiple
-    observers are ordered; nil Changes denotes a selection-only publication.
+    observers are ordered; nil Changes denotes a selection/query publication.
     Selection owns scoped item identities independently of focus and anchor.
     Moves retain membership; removals prune missing identities and preserve a
     nearby keyboard cursor. Single is the compatible default, Multiple is an
@@ -75,7 +77,16 @@ type
     function GetHasSelection: Boolean;
     function GetSelected: TNyxItemRef;
     function GetSelection: INyxCollectionSelection;
+    function GetQuery: TNyxCollectionQuery;
+    { Admit one independent runtime policy before publishing. Invalid fields or
+      families leave query, snapshot and selection exact and notify nobody.
+      Equal policies are a no-op. Hidden selection membership is retained;
+      keyboard focus stays on a visible row. Store/defaults remain unchanged. }
+    function ConfigureQuery(const APolicy: TNyxCollectionQuery): INyxCollectionView;
     function ParentIndex(AIndex: Integer): Integer;
+    { Read accepted text for any source identity, including a hidden selected
+      member. Rendering/ranges use Snapshot visibility; missing/foreign source
+      references and invalid columns still refuse. }
     function CellText(const AItem: TNyxItemRef; AColumn: Integer): TNyxText;
     procedure Select(const AItem: TNyxItemRef); overload;
     { Replace, toggle, range/additive range or focus-only. Dataset order defines
@@ -86,7 +97,8 @@ type
       without changing state or notifying. Equal membership/focus/anchor is a no-op. }
     procedure SetSelection(const AItems: array of TNyxItemRef;
       const AFocus, AAnchor: TNyxItemRef);
-    { Multiple only, includes the complete dataset rather than only its viewport. }
+    { Multiple only, replaces membership with the complete query result rather
+      than only its viewport. Filtered-out source rows are not selected by it. }
     procedure SelectAll;
     { Range in the admitted visible ordering, excluding collapsed descendants.
       Add=True preserves discontiguous membership; an invisible anchor restarts
@@ -108,6 +120,7 @@ type
     property HasSelection: Boolean read GetHasSelection;
     property Selected: TNyxItemRef read GetSelected;
     property Selection: INyxCollectionSelection read GetSelection;
+    property QueryPolicy: TNyxCollectionQuery read GetQuery;
   end;
 
   { Application lifetime scope resolver. Shared stores initialize once; each
@@ -148,12 +161,14 @@ type
     function GetConnected: Boolean;
     procedure Disconnect;
   end;
-  TParentIndexes = array of Integer;
+  TParentIndexes = TNyxQueryIndexes;
 
   TView = class(TInterfacedObject, INyxCollectionView)
   private
     FStore: INyxCollection;
+    FSource: INyxCollectionSnapshot;
     FSnapshot: INyxCollectionSnapshot;
+    FQuery: TNyxCollectionQuery;
     FSpec: TNyxCollectionViewSpec;
     FProjection: TNyxCollectionProjection;
     FParents: TParentIndexes;
@@ -171,6 +186,8 @@ type
       const AChanges: INyxCollectionChanges);
     procedure Notify(const AChanges: INyxCollectionChanges);
     procedure Disconnect(AToken: TViewSubscription);
+    function ReconcileSelection(const ASource, AResult,
+      APrevious: INyxCollectionSnapshot): INyxCollectionSelection;
   public
     { TView is an implementation-only type. The temporary validator has no
       subscriptions and remains owned solely by its unit-local caller. }
@@ -186,6 +203,8 @@ type
     function GetHasSelection: Boolean;
     function GetSelected: TNyxItemRef;
     function GetSelection: INyxCollectionSelection;
+    function GetQuery: TNyxCollectionQuery;
+    function ConfigureQuery(const APolicy: TNyxCollectionQuery): INyxCollectionView;
     function ParentIndex(AIndex: Integer): Integer;
     function CellText(const AItem: TNyxItemRef; AColumn: Integer): TNyxText;
     procedure Select(const AItem: TNyxItemRef); overload;
@@ -317,6 +336,8 @@ end;
 
 constructor TView.Create(const AStore: INyxCollection;
   const ASpec: TNyxCollectionViewSpec; AProjection: TNyxCollectionProjection);
+var
+  LParents: TParentIndexes;
 begin
   inherited Create;
   ASpec.Validate;
@@ -334,9 +355,11 @@ begin
   FStore := AStore;
   FSpec := ASpec.Copy;
   FProjection := AProjection;
-  FSnapshot := FStore.Snapshot;
-  ValidateDataset(FSnapshot, FParents);
-  FSelection := NewNyxCollectionSelection(FSnapshot, [],
+  FSource := FStore.Snapshot;
+  FQuery := ASpec.QueryPolicy;
+  ValidateDataset(FSource, LParents);
+  FSnapshot := NyxQuerySnapshot(FSource, FQuery, LParents, FParents);
+  FSelection := NewNyxCollectionSelection(FSource, [],
     Default(TNyxItemRef), Default(TNyxItemRef));
   FStoreToken := FStore.Subscribe(StoreChanged, ValidateCandidate);
 end;
@@ -357,6 +380,7 @@ begin
   end;
   FTokens := nil;
   FSnapshot := nil;
+  FSource := nil;
   FStore := nil;
   inherited Destroy;
 end;
@@ -427,6 +451,8 @@ begin
   end;
   LSchema := AData.Schema;
   LSchema.Validate;
+  FSpec.QueryPolicy.Validate(LSchema);
+  FQuery.Validate(LSchema);
   for LIndex := 0 to FSpec.Count - 1 do
   begin
     LColumn := FSpec.ColumnAt(LIndex);
@@ -536,6 +562,23 @@ procedure TView.StoreChanged(const AStore: INyxCollection;
   const AChanges: INyxCollectionChanges);
 var
   LParents: TParentIndexes;
+  LResultParents: TParentIndexes;
+  LResult: INyxCollectionSnapshot;
+  LSelection: INyxCollectionSelection;
+begin
+  ValidateDataset(AChanges.After, LParents);
+  LResult := NyxQuerySnapshot(AChanges.After, FQuery, LParents, LResultParents);
+  LSelection := ReconcileSelection(AChanges.After, LResult, FSnapshot);
+  FSource := AChanges.After;
+  FSnapshot := LResult;
+  FParents := LResultParents;
+  FSelection := LSelection;
+  Notify(AChanges);
+end;
+
+function TView.ReconcileSelection(const ASource, AResult,
+  APrevious: INyxCollectionSnapshot): INyxCollectionSelection;
+var
   LItems: array of TNyxItemRef;
   LFocus: TNyxItemRef;
   LAnchor: TNyxItemRef;
@@ -543,20 +586,16 @@ var
   LCount: Integer;
   LFocusIndex: Integer;
 begin
-  ValidateDataset(AChanges.After, LParents);
-  FSnapshot := AChanges.After;
-  FParents := LParents;
-
-  { Preserve identity through ordering/field changes, prune only removed items,
-    and keep a keyboard cursor beside a removed focused row without selecting it. }
+  { Membership is validated against the complete source; only actual removals
+    prune it. Visibility constrains the cursor, independently of hidden members. }
   SetLength(LItems, FSelection.Count);
   LCount := 0;
-  for LIndex := 0 to FSnapshot.Count - 1 do
+  for LIndex := 0 to ASource.Count - 1 do
   begin
 
-    if FSelection.Contains(FSnapshot.ItemAt(LIndex).Ref) then
+    if FSelection.Contains(ASource.ItemAt(LIndex).Ref) then
     begin
-      LItems[LCount] := FSnapshot.ItemAt(LIndex).Ref;
+      LItems[LCount] := ASource.ItemAt(LIndex).Ref;
       Inc(LCount);
     end;
   end;
@@ -564,28 +603,63 @@ begin
   LFocus := FSelection.Focus;
   LAnchor := FSelection.Anchor;
 
-  if LFocus.Defined and not FSnapshot.Has(LFocus) then
+  if LFocus.Defined and not AResult.Has(LFocus) then
   begin
-    LFocusIndex := AChanges.Before.IndexOf(LFocus);
+    LFocusIndex := APrevious.IndexOf(LFocus);
     LFocus := Default(TNyxItemRef);
 
-    if FSnapshot.Count > 0 then
+    if AResult.Count > 0 then
     begin
 
-      if LFocusIndex >= FSnapshot.Count then
+      if LFocusIndex >= AResult.Count then
       begin
-        LFocusIndex := FSnapshot.Count - 1;
+        LFocusIndex := AResult.Count - 1;
       end;
-      LFocus := FSnapshot.ItemAt(LFocusIndex).Ref;
+
+      if LFocusIndex < 0 then
+      begin
+        LFocusIndex := 0;
+      end;
+      LFocus := AResult.ItemAt(LFocusIndex).Ref;
     end;
   end;
 
-  if LAnchor.Defined and not FSnapshot.Has(LAnchor) then
+  if LAnchor.Defined and not ASource.Has(LAnchor) then
   begin
     LAnchor := LFocus;
   end;
-  FSelection := NewNyxCollectionSelection(FSnapshot, LItems, LFocus, LAnchor);
-  Notify(AChanges);
+  Result := NewNyxCollectionSelection(ASource, LItems, LFocus, LAnchor);
+end;
+
+function TView.GetQuery: TNyxCollectionQuery;
+begin
+  Result := FQuery.Copy;
+end;
+
+function TView.ConfigureQuery(const APolicy: TNyxCollectionQuery): INyxCollectionView;
+var
+  LPolicy: TNyxCollectionQuery;
+  LParents: TParentIndexes;
+  LResultParents: TParentIndexes;
+  LResult: INyxCollectionSnapshot;
+  LSelection: INyxCollectionSelection;
+begin
+  Writable;
+  Result := Self as INyxCollectionView;
+  LPolicy := TNyxCollectionQuery.FromData(APolicy.ToData);
+
+  if LPolicy.ToData.ToJSON = FQuery.ToData.ToJSON then
+  begin
+    Exit;
+  end;
+  ValidateDataset(FSource, LParents);
+  LResult := NyxQuerySnapshot(FSource, LPolicy, LParents, LResultParents);
+  LSelection := ReconcileSelection(FSource, LResult, FSnapshot);
+  FQuery := LPolicy;
+  FSnapshot := LResult;
+  FParents := LResultParents;
+  FSelection := LSelection;
+  Notify(nil);
 end;
 
 function TView.GetSpec: TNyxCollectionViewSpec;
@@ -649,7 +723,7 @@ var
   LItem: TNyxCollectionItem;
 begin
   LColumn := FSpec.ColumnAt(AColumn);
-  LItem := FSnapshot.Item(AItem);
+  LItem := FSource.Item(AItem);
   case LColumn.Kind of
     nskText:
       begin
@@ -690,26 +764,31 @@ var
   LCount: Integer;
 begin
   Writable;
-  LSelection := NewNyxCollectionSelection(FSnapshot, AItems, AFocus, AAnchor);
+  LSelection := NewNyxCollectionSelection(FSource, AItems, AFocus, AAnchor);
+
+  if AFocus.Defined and not FSnapshot.Has(AFocus) then
+  begin
+    raise ENyxCollection.Create('Collection view focus must be visible');
+  end;
 
   if (FSpec.SelectionMode = nsmSingle) and (LSelection.Count > 1) then
   begin
     raise ENyxCollection.Create('Single selection refuses multiple items');
   end;
-  { Normalize public candidates in current dataset order, never their caller's
+  { Normalize public candidates in complete source order, never their caller's
     dynamic-array order. The temporary snapshot admits all values atomically. }
   SetLength(LItems, LSelection.Count);
   LCount := 0;
-  for LIndex := 0 to FSnapshot.Count - 1 do
+  for LIndex := 0 to FSource.Count - 1 do
   begin
 
-    if LSelection.Contains(FSnapshot.ItemAt(LIndex).Ref) then
+    if LSelection.Contains(FSource.ItemAt(LIndex).Ref) then
     begin
-      LItems[LCount] := FSnapshot.ItemAt(LIndex).Ref;
+      LItems[LCount] := FSource.ItemAt(LIndex).Ref;
       Inc(LCount);
     end;
   end;
-  LSelection := NewNyxCollectionSelection(FSnapshot, LItems, AFocus, AAnchor);
+  LSelection := NewNyxCollectionSelection(FSource, LItems, AFocus, AAnchor);
 
   if FSelection.SameState(LSelection) then
   begin
@@ -728,6 +807,7 @@ var
   LCount: Integer;
   LFirst: Integer;
   LLast: Integer;
+  LVisibleIndex: Integer;
   LSelected: Boolean;
 begin
   Writable;
@@ -760,17 +840,23 @@ begin
   LFirst := FSnapshot.IndexOf(LAnchor);
   LLast := FSnapshot.IndexOf(AItem);
 
+  if LFirst < 0 then
+  begin
+    LFirst := LLast;
+  end;
+
   if LFirst > LLast then
   begin
     LIndex := LFirst;
     LFirst := LLast;
     LLast := LIndex;
   end;
-  SetLength(LItems, FSnapshot.Count);
+  SetLength(LItems, FSource.Count);
   LCount := 0;
-  for LIndex := 0 to FSnapshot.Count - 1 do
+  for LIndex := 0 to FSource.Count - 1 do
   begin
-    LItem := FSnapshot.ItemAt(LIndex).Ref;
+    LItem := FSource.ItemAt(LIndex).Ref;
+    LVisibleIndex := FSnapshot.IndexOf(LItem);
     LSelected := FSelection.Contains(LItem);
     case AAction of
       nsaFocus:
@@ -791,11 +877,12 @@ begin
         end;
       nsaRange:
         begin
-          LSelected := (LIndex >= LFirst) and (LIndex <= LLast);
+          LSelected := (LVisibleIndex >= LFirst) and (LVisibleIndex <= LLast);
         end;
       nsaAddRange:
         begin
-          LSelected := LSelected or ((LIndex >= LFirst) and (LIndex <= LLast));
+          LSelected := LSelected or
+            ((LVisibleIndex >= LFirst) and (LVisibleIndex <= LLast));
         end;
     end;
 
@@ -869,15 +956,15 @@ begin
     LItems[LIndex - LFirst] := LOrder.ItemAt(LIndex);
   end;
   LRange := NewNyxCollectionSelection(FSnapshot, LItems, AItem, LAnchor);
-  SetLength(LItems, FSnapshot.Count);
+  SetLength(LItems, FSource.Count);
   LCount := 0;
-  for LIndex := 0 to FSnapshot.Count - 1 do
+  for LIndex := 0 to FSource.Count - 1 do
   begin
 
-    if LRange.Contains(FSnapshot.ItemAt(LIndex).Ref) or
-      (AAdd and FSelection.Contains(FSnapshot.ItemAt(LIndex).Ref)) then
+    if LRange.Contains(FSource.ItemAt(LIndex).Ref) or
+      (AAdd and FSelection.Contains(FSource.ItemAt(LIndex).Ref)) then
     begin
-      LItems[LCount] := FSnapshot.ItemAt(LIndex).Ref;
+      LItems[LCount] := FSource.ItemAt(LIndex).Ref;
       Inc(LCount);
     end;
   end;

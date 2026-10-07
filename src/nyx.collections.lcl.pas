@@ -520,8 +520,41 @@ var
   LApplyValues: Boolean;
   LColumnSpec: TNyxCollectionColumn;
   LText: TNyxText;
+  LEditingItem: TNyxItemRef;
+  LEditingColumn: Integer;
+  LEditingText: String;
+  LEditingStart: Integer;
+  LEditingLength: Integer;
+  LRestoreEditor: Boolean;
+  LEditor: TCustomEdit;
 begin
   LData := FView.Snapshot;
+  LRestoreEditor := False;
+  LEditingItem := Default(TNyxItemRef);
+  LEditingColumn := -1;
+
+  if (FGrid <> nil) and (FRendered <> nil) and (FRendered <> LData) and
+    FGrid.EditorMode and (FGrid.Editor is TCustomEdit) and
+    (FGrid.Row > 0) and (FGrid.Row <= FRendered.Count) and
+    (FGrid.Col >= 0) and (FGrid.Col < FView.Spec.Count) then
+  begin
+    { End the positional editor while Refresh has FUpdating set, so it cannot
+      admit its draft against a different row after sorting/filtering. Retain
+      the draft/caret only when the same item/column accepted scalar survives. }
+    LEditingItem := FRendered.ItemAt(FGrid.Row - 1).Ref;
+    LEditingColumn := FGrid.Col;
+    LEditor := TCustomEdit(FGrid.Editor);
+    LEditingText := LEditor.Text;
+    LEditingStart := LEditor.SelStart;
+    LEditingLength := LEditor.SelLength;
+    LColumnSpec := FView.Spec.ColumnAt(LEditingColumn);
+    LRestoreEditor := LData.Has(LEditingItem) and
+      LColumnSpec.Read(FRendered.Item(LEditingItem)).SameValue(
+        LColumnSpec.Read(LData.Item(LEditingItem))) and
+      not (FNormalizeValues and (FNormalizeItem.ID = LEditingItem.ID) and
+        (FNormalizeColumn = LEditingColumn));
+    FGrid.EditorMode := False;
+  end;
 
   if FGrid <> nil then
   begin
@@ -601,7 +634,7 @@ begin
         cells are positional, so moved/new rows must receive their new content;
         unchanged rows survive unrelated field publications and normalization. }
 
-      if FNormalizeValues or (FRendered = nil) or (FRendered.Revision <> LData.Revision) then
+      if FNormalizeValues or (FRendered <> LData) then
       begin
 
         if FGrid.ColCount <> FView.Spec.Count then
@@ -635,6 +668,14 @@ begin
           for LColumn := 0 to FView.Spec.Count - 1 do
           begin
             LApplyValues := LPrevious <> LIndex;
+
+            if (LColumn = LEditingColumn) and
+              (LData.ItemAt(LIndex).Ref.ID = LEditingItem.ID) then
+            begin
+              { Closing the old editor may write its text into the physical
+                cell. Normalize it from accepted data before restoring a draft. }
+              LApplyValues := True;
+            end;
 
             if not LApplyValues and (FRendered.Revision <> LData.Revision) then
             begin
@@ -671,6 +712,21 @@ begin
       if (LSelected >= 0) and (FGrid.Row <> LSelected + 1) then
       begin
         FGrid.Row := LSelected + 1;
+      end;
+
+      if LRestoreEditor then
+      begin
+        FGrid.Col := LEditingColumn;
+        FGrid.Row := LData.IndexOf(LEditingItem) + 1;
+        FGrid.EditorMode := True;
+
+        if FGrid.Editor is TCustomEdit then
+        begin
+          LEditor := TCustomEdit(FGrid.Editor);
+          LEditor.Text := LEditingText;
+          LEditor.SelStart := LEditingStart;
+          LEditor.SelLength := LEditingLength;
+        end;
       end;
     finally
       FGrid.EndUpdate;

@@ -3,6 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current collection-query boundary (2026-10-07): typed filters and stable multi-key
+ordering preserve source identity/order, hidden membership and independent view
+state. Strict saved defaults and crafted/source-admitted Pascal pass 56 native/
+57 compiled checks; actual tables pass 75 Win32/75 HTTP browser per desktop and
+CSS 390×640. Selection regression remains 155 native/182 browser per width;
+owned warnings/leaks are zero and protected services/pairs/LAN bytes stay exact.
+This advances original NS-3 criterion 3 through library/source/controls, but public
+Studio query authoring and authenticated semantic/observing integration remain.
+No original criterion closes or no-closure counter advances. Stop portable query
+fixtures and finish that existing integration before paging/virtualization/large
+data/aesthetics. See [the packet](WORK.md#current-return-path-typed-collection-queries--2026-10-07).
+
 Current table boundary (2026-10-07): shared typed cell navigation, exact row
 membership and current-cell editing reach an ordinary authenticated MCP-exported
 application on both targets. Checked Win32 passes 28; HTTP browser passes 43 plus
