@@ -108,6 +108,17 @@ remote checkpoint receipts belong under ignored `build/typeahead-workflow/`.
 
 ## Latest user steering: mobile canvas space recheck — 2026-10-07
 
+Latest follow-up: the direct named MCP read still authenticates revision 2 with
+the same selection and no pending draft/history. Fresh 2026-10-08T00:06:26Z
+verification preserves all fifteen service identities, nine complete pairs,
+229 sealed LAN files and intended bindings; receipt is
+`build/mobile-space-review/preservation-latest.log`. The retained collapsed and
+expanded phone captures were inspected directly. Their 62%/92% allocations
+remain earlier emulated-browser evidence, not new phone execution. The supplied
+capture has the older stacked chrome; the served payload already includes the
+requested compact/collapsible/resizable/expanded blend. No product change,
+listener replacement or acceptance credit follows from this recheck.
+
 The repeated phone capture shows the earlier stacked chrome. Follow-up inspection
 finds the requested blend already implemented and delivered: compact Actions,
 collapsed Review details, the public touch/keyboard details divider, optional
