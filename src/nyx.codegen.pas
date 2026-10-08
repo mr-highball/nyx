@@ -2155,6 +2155,7 @@ begin
     LLines.Add('  nyx.times,');
     LLines.Add('  nyx.colors,');
     LLines.Add('  nyx.images,');
+    LLines.Add('  nyx.image.lifecycle,');
 
     if ADocument.Resources.Count > 0 then
     begin

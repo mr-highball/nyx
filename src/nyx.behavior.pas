@@ -38,7 +38,8 @@ uses
   nyx.model,
   nyx.collections.selection,
   nyx.editing,
-  nyx.gestures;
+  nyx.gestures,
+  nyx.image.lifecycle;
 
 type
   { Target-independent accepted event. Application names stay distinct references;
@@ -96,6 +97,9 @@ type
     HasCollectionSelection: Boolean;
     SelectionBefore: TNyxCollectionSelectionSnapshot;
     Selection: TNyxCollectionSelectionSnapshot;
+    { Read-only image request observation; owned after source/view retirement. }
+    HasImage: Boolean;
+    Image: TNyxImageSnapshot;
     DefaultPrevented: Boolean;
     function IsNamed(const AName: TNyxEventRef): Boolean;
     function Copy: TNyxEventInfo;
@@ -271,6 +275,9 @@ begin
     SelectionBefore.Defined and Selection.Defined;
   Result.SelectionBefore := SelectionBefore;
   Result.Selection := Selection;
+  Result.HasImage := (Trigger in [ntImageLoading, ntImageReady, ntImageError, ntImageCleared]) and
+    Image.Defined and HasImage;
+  Result.Image := Image;
   Result.DefaultPrevented := DefaultPrevented;
 end;
 
@@ -329,6 +336,8 @@ begin
   Result.HasViewport := False;
   Result.Viewport := Default(TNyxViewportSnapshot);
   Result.HasCollectionSelection := False;
+  Result.HasImage := False;
+  Result.Image := Default(TNyxImageSnapshot);
   Result.SelectionBefore := Default(TNyxCollectionSelectionSnapshot);
   Result.Selection := Default(TNyxCollectionSelectionSnapshot);
 end;
@@ -469,6 +478,8 @@ begin
   Result.Info.HasViewport := False;
   Result.Info.Viewport := Default(TNyxViewportSnapshot);
   Result.Info.HasCollectionSelection := False;
+  Result.Info.HasImage := False;
+  Result.Info.Image := Default(TNyxImageSnapshot);
   Result.Info.SelectionBefore := Default(TNyxCollectionSelectionSnapshot);
   Result.Info.Selection := Default(TNyxCollectionSelectionSnapshot);
   LFoundCompound := False;

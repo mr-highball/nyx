@@ -122,7 +122,7 @@ type
     event may carry both its admitted Before/After and physical editing context;
     agents can inspect this bounded typed set without inferring help strings. }
   TNyxEventContextKind = (nctxKeyboard, nctxTextEdit, nctxPointer, nctxWheel,
-    nctxViewport, nctxCollectionSelection, nctxEditing, nctxDrag);
+    nctxViewport, nctxCollectionSelection, nctxEditing, nctxDrag, nctxImage);
   TNyxEventContexts = set of TNyxEventContextKind;
   TNyxEventSchema = record
     Trigger: TNyxTrigger;
@@ -1905,7 +1905,7 @@ end;
 function NyxEventContextsData(AContexts: TNyxEventContexts): TNyxDataValue;
 const
   CNames: array[TNyxEventContextKind] of TNyxText = ('keyboard', 'text-edit',
-    'pointer', 'wheel', 'viewport', 'collection-selection', 'editing', 'drag');
+    'pointer', 'wheel', 'viewport', 'collection-selection', 'editing', 'drag', 'image');
 var
   LKind: TNyxEventContextKind;
   LItems: array of TNyxDataValue;
@@ -2166,6 +2166,12 @@ var
       control. Focus/change still require an actual focusable/editable leaf. }
     Include(LTriggers, ntClick);
     Include(LBridgedTriggers, ntClick);
+
+    if LKind = 'image' then
+    begin
+      LTriggers := LTriggers + [ntImageLoading, ntImageReady, ntImageError, ntImageCleared];
+      LBridgedTriggers := LBridgedTriggers + [ntImageLoading, ntImageReady, ntImageError, ntImageCleared];
+    end;
     { Both target adapters bridge these on the outer face and framed inputs.
       Containers retain pointer enter/exit meaning; ordinary bubbling never
       duplicates down/up/move on an ancestor control. }
@@ -2281,6 +2287,12 @@ begin
         Result[LIndex].Trigger := LTrigger;
         Result[LIndex].Title := NyxTriggerTitle(LTrigger);
         Result[LIndex].Description := 'Multiple ordered callbacks';
+
+        if LTrigger in [ntImageLoading, ntImageReady, ntImageError, ntImageCleared] then
+        begin
+          Result[LIndex].Contexts := [nctxImage];
+          Result[LIndex].Description := 'Owned image request/source/phase/dimensions/failure; ready observes target decoding, not full pixel integrity. Replacement, clearing or disposal cancels stale delivery; cannot consume.';
+        end;
 
         if (LTrigger = ntChange) and NyxSupportsTextInput(LRoot) then
         begin

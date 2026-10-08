@@ -136,6 +136,10 @@ type
     function OnScroll: INyxAuthoredEvent;
     function OnScrollEnd: INyxAuthoredEvent;
     function OnSelectionChange: INyxAuthoredEvent;
+    function OnImageLoading: INyxAuthoredEvent;
+    function OnImageReady: INyxAuthoredEvent;
+    function OnImageError: INyxAuthoredEvent;
+    function OnImageCleared: INyxAuthoredEvent;
     function Snapshot: TNyxDataValue;
     procedure Metadata(const AValue: TNyxDataValue);
     { Clear explicitly suppresses inherited registrations. Inherit removes this
@@ -233,6 +237,10 @@ type
     function OnScroll: INyxAuthoredEvent;
     function OnScrollEnd: INyxAuthoredEvent;
     function OnSelectionChange: INyxAuthoredEvent;
+    function OnImageLoading: INyxAuthoredEvent;
+    function OnImageReady: INyxAuthoredEvent;
+    function OnImageError: INyxAuthoredEvent;
+    function OnImageCleared: INyxAuthoredEvent;
     function Snapshot: TNyxDataValue;
     procedure Metadata(const AValue: TNyxDataValue);
     procedure Clear;
@@ -822,6 +830,26 @@ end;
 function TNyxAuthoredEvents.OnScrollEnd: INyxAuthoredEvent;
 begin
   Result := On(ntScrollEnd);
+end;
+
+function TNyxAuthoredEvents.OnImageLoading: INyxAuthoredEvent;
+begin
+  Result := On(ntImageLoading);
+end;
+
+function TNyxAuthoredEvents.OnImageReady: INyxAuthoredEvent;
+begin
+  Result := On(ntImageReady);
+end;
+
+function TNyxAuthoredEvents.OnImageError: INyxAuthoredEvent;
+begin
+  Result := On(ntImageError);
+end;
+
+function TNyxAuthoredEvents.OnImageCleared: INyxAuthoredEvent;
+begin
+  Result := On(ntImageCleared);
 end;
 
 function TNyxAuthoredEvents.OnSelectionChange: INyxAuthoredEvent;

@@ -201,6 +201,67 @@ disposing. Trusted chooser/physical phone, observing deployment and other
 widgetsets remain unqualified. See
 [the authoring evidence](../WORK.md#current-return-path-image-policy-authoring-and-readiness--2026-10-08).
 
+## Typed lifecycle observations
+
+Images expose `OnImageLoading`, `OnImageReady`, `OnImageError` and
+`OnImageCleared` through both runtime streams and `NyxCallbacks` authoring.
+They use the existing ordered multiple registrations, removal, failure isolation
+and execution policies. Studio's shared event metadata includes all four with
+the `image` context; ordinary handler creation retains source navigation and
+paired Undo/Redo.
+
+```pascal
+NyxCallbacks(LBanner).OnImageReady
+  .Policy(neUIQueue)
+  .Add(NyxHandler('TShowBannerDetails'), NyxCallbackID('banner.details'));
+
+LApplicationEvents.OnImageError(NyxControlEvents('welcome-banner'))
+  .Subscribe(LShowImageError);
+```
+
+Callbacks read `AEvent.HasImage` and the immutable `AEvent.Image` snapshot from
+`nyx.image.lifecycle`. It owns the request identity, exact typed source, phase,
+natural dimensions and typed failure/diagnostic. A retained snapshot survives
+source replacement and view disposal without retaining a control or document.
+IDs are monotonic within one mounted image face; identify them with the event's
+origin and view lifetime, rather than comparing integers across remounts.
+
+| Phase | Meaning |
+| --- | --- |
+| `nipLoading` | The adapter begins an admitted nonempty source request. |
+| `nipReady` | The target accepts decoding with positive natural dimensions. |
+| `nipFailed` | The request cannot supply that decoded image; owned failure text describes the target observation. |
+| `nipCleared` | `NyxNoImage` withdraws the source, including an initially empty face. |
+
+Observations begin on a UI turn after accepted view publication and retain phase
+order through one FIFO pump. Callback policies then apply within each event.
+Changing or clearing the source cancels older pending callbacks and their
+`PostUI` descendants, including siblings not yet entered during sequential
+reentrancy. Running native workers observe cancellation cooperatively. Disposing
+the view retires its listeners, weak receivers and request generations. The
+usual enabled/visible event routing applies; becoming visible does not replay
+completed requests. An unchanged source emits no repeated notifications.
+
+Native decoding still uses an independent candidate picture; decoder failure
+preserves the prior picture and propagates the original `Sync` exception while
+queuing an error observation. Missing/unsupported native locations retain their
+existing empty-face behavior and report `nifUnavailable`. Explicitly calling
+`Sync` after a decoder exception retries a source without an accepted physical
+baseline. Browser readiness waits for the matching current request's `load` and
+`decode()` completion; opaque host request/decode failures report `nifDecode`.
+Neither readiness nor dimensions establish full decoded-pixel integrity or
+replace the typed admission policy. Hosted native fetching remains the resource
+resolver's responsibility. The browser adapter follows the
+[HTML image request model](https://html.spec.whatwg.org/multipage/images.html)
+and [image decoding contract](https://html.spec.whatwg.org/multipage/embedded-content.html#dom-img-decode).
+
+The maintained `image-presentation` target now also executes the request/event
+consumer and emits its exact ordinary-session companion. Its separate compiled
+consumer checks authored registration identity, multiplicity and policy. Actual
+browser execution, host retirement and visual checkpoints remain explicit checks,
+as does deployment to an observing Studio. See
+[the lifecycle packet](../WORK.md#current-return-path-typed-image-lifecycle-delivery--2026-10-08).
+
 Fit/anchor semantics follow [CSS Images object sizing](https://www.w3.org/TR/css-images-3/#the-object-fit).
 Embedded interchange follows [RFC 2397](https://www.rfc-editor.org/rfc/rfc2397);
 PNG framing/header definitions are in [PNG Third Edition](https://www.w3.org/TR/png-3/#11IHDR).

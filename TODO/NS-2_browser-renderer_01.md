@@ -20,6 +20,16 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 
+Typed image lifecycle now consumes the original event/rendering criteria with
+four owned observational phases, ordered delivery and request-scoped cancellation.
+Actual Win32 passes **150** lifecycle checks; HTTP desktop/CSS-390 passes **121**
+each, plus **199 / 231** media regressions. Exact ordinary-session source/history
+and emitted registrations/policy execute on both targets. Shared Events metadata
+exposes the implemented image context; current observing Events UI, authenticated
+rollout, full host/pixel guarantees and remaining original scope stay open. No full
+criterion/counter/credit closes. See
+[the lifecycle packet](../WORK.md#current-return-path-typed-image-lifecycle-delivery--2026-10-08).
+
 ## Consumed typed image admission policy — 2026-10-08
 
 Actual desktop/CSS-390 consumers pass 231 each after the shared checksum policy

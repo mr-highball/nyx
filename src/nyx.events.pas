@@ -200,10 +200,19 @@ type
     function OnScroll(const ATarget: TNyxEventTarget): INyxEventStream;
     function OnScrollEnd(const ATarget: TNyxEventTarget): INyxEventStream;
     function OnSelectionChange(const ATarget: TNyxEventTarget): INyxEventStream;
+    function OnImageLoading(const ATarget: TNyxEventTarget): INyxEventStream;
+    function OnImageReady(const ATarget: TNyxEventTarget): INyxEventStream;
+    function OnImageError(const ATarget: TNyxEventTarget): INyxEventStream;
+    function OnImageCleared(const ATarget: TNyxEventTarget): INyxEventStream;
     { Fast empty-router path lets focus bridges avoid creating unused payloads. }
     function HasSubscribers(ATrigger: TNyxTrigger): Boolean;
     function Dispatch(const AEvent: TNyxEventInfo;
       const AOriginDesignID, ASourceDesignID: TNyxText): TNyxExecutions;
+    { Producer generation cancellation is linked before the first callback and
+      inherited by PostUI alongside view/subscription cancellation. }
+    function DispatchGuarded(const AEvent: TNyxEventInfo;
+      const AOriginDesignID, ASourceDesignID: TNyxText;
+      const ADelivery: INyxCancellationScope): TNyxExecutions;
     { Adapter-only keyboard boundary. The owned decision is sealed before return;
       asynchronous callbacks cannot retroactively prevent the native default. }
     function DispatchInput(const AEvent: TNyxEventInfo;
@@ -277,7 +286,11 @@ type
   TNyxEventScope = class(TInterfacedObject, INyxEventScope)
   private
     FCancelled: LongInt;
+    FParent: INyxEventScope;
+    FDelivery: INyxCancellationScope;
   public
+    constructor Create(const AParent: INyxEventScope = nil;
+      const ADelivery: INyxCancellationScope = nil);
     procedure Cancel;
     function Cancelled: Boolean;
   end;
@@ -403,7 +416,8 @@ type
       const AName: TNyxEventRef): INyxEventStream;
     function DispatchCore(const AEvent: TNyxEventInfo;
       const AOriginDesignID, ASourceDesignID: TNyxText;
-      const ADecision: INyxInputDecision; const AGesture: INyxGestureDecision = nil): TNyxExecutions;
+      const ADecision: INyxInputDecision; const AGesture: INyxGestureDecision = nil;
+      const ADelivery: INyxCancellationScope = nil): TNyxExecutions;
   public
     constructor Create(const AScheduler: INyxScheduler);
     destructor Destroy; override;
@@ -452,9 +466,16 @@ type
     function OnScroll(const ATarget: TNyxEventTarget): INyxEventStream;
     function OnScrollEnd(const ATarget: TNyxEventTarget): INyxEventStream;
     function OnSelectionChange(const ATarget: TNyxEventTarget): INyxEventStream;
+    function OnImageLoading(const ATarget: TNyxEventTarget): INyxEventStream;
+    function OnImageReady(const ATarget: TNyxEventTarget): INyxEventStream;
+    function OnImageError(const ATarget: TNyxEventTarget): INyxEventStream;
+    function OnImageCleared(const ATarget: TNyxEventTarget): INyxEventStream;
     function HasSubscribers(ATrigger: TNyxTrigger): Boolean;
     function Dispatch(const AEvent: TNyxEventInfo;
       const AOriginDesignID, ASourceDesignID: TNyxText): TNyxExecutions; reintroduce;
+    function DispatchGuarded(const AEvent: TNyxEventInfo;
+      const AOriginDesignID, ASourceDesignID: TNyxText;
+      const ADelivery: INyxCancellationScope): TNyxExecutions;
     function DispatchInput(const AEvent: TNyxEventInfo;
       const AOriginDesignID, ASourceDesignID: TNyxText;
       out AConsumed: Boolean): TNyxExecutions;
@@ -804,6 +825,14 @@ begin
   {$ENDIF}
 end;
 
+constructor TNyxEventScope.Create(const AParent: INyxEventScope;
+  const ADelivery: INyxCancellationScope);
+begin
+  inherited Create;
+  FParent := AParent;
+  FDelivery := ADelivery;
+end;
+
 procedure TNyxEventScope.Cancel;
 begin
   {$IFDEF PAS2JS}
@@ -820,6 +849,8 @@ begin
   {$ELSE}
   Result := InterlockedCompareExchange(FCancelled, 0, 0) <> 0;
   {$ENDIF}
+  Result := Result or ((FParent <> nil) and FParent.Cancelled) or
+    ((FDelivery <> nil) and FDelivery.Cancelled);
 end;
 
 constructor TNyxEventExecution.Create(const AExecution: INyxExecution;
@@ -1485,6 +1516,26 @@ begin
   Result := On(ATarget, ntScrollEnd);
 end;
 
+function TNyxEvents.OnImageLoading(const ATarget: TNyxEventTarget): INyxEventStream;
+begin
+  Result := On(ATarget, ntImageLoading);
+end;
+
+function TNyxEvents.OnImageReady(const ATarget: TNyxEventTarget): INyxEventStream;
+begin
+  Result := On(ATarget, ntImageReady);
+end;
+
+function TNyxEvents.OnImageError(const ATarget: TNyxEventTarget): INyxEventStream;
+begin
+  Result := On(ATarget, ntImageError);
+end;
+
+function TNyxEvents.OnImageCleared(const ATarget: TNyxEventTarget): INyxEventStream;
+begin
+  Result := On(ATarget, ntImageCleared);
+end;
+
 function TNyxEvents.OnSelectionChange(const ATarget: TNyxEventTarget): INyxEventStream;
 begin
   Result := On(ATarget, ntSelectionChange);
@@ -1550,6 +1601,18 @@ begin
   FExecutions := PendingTickets(FExecutions);
 end;
 
+function TNyxEvents.DispatchGuarded(const AEvent: TNyxEventInfo;
+  const AOriginDesignID, ASourceDesignID: TNyxText;
+  const ADelivery: INyxCancellationScope): TNyxExecutions;
+begin
+
+  if ADelivery = nil then
+  begin
+    raise ENyxSchedule.Create('Guarded dispatch requires a cancellation generation');
+  end;
+  Result := DispatchCore(AEvent, AOriginDesignID, ASourceDesignID, nil, nil, ADelivery);
+end;
+
 function TNyxEvents.Dispatch(const AEvent: TNyxEventInfo;
   const AOriginDesignID, ASourceDesignID: TNyxText): TNyxExecutions;
 begin
@@ -1593,7 +1656,8 @@ end;
 
 function TNyxEvents.DispatchCore(const AEvent: TNyxEventInfo;
   const AOriginDesignID, ASourceDesignID: TNyxText;
-  const ADecision: INyxInputDecision; const AGesture: INyxGestureDecision): TNyxExecutions;
+  const ADecision: INyxInputDecision; const AGesture: INyxGestureDecision;
+  const ADelivery: INyxCancellationScope): TNyxExecutions;
 var
   LKeepAlive: INyxEvents;
   LSnapshot: array of TNyxInvocation;
@@ -1616,6 +1680,12 @@ begin
   end;
   LEvent := AEvent.Copy;
   LScope := FScope;
+
+  if ADelivery <> nil then
+  begin
+    { Link before the first synchronous invocation, not after Submit returns. }
+    LScope := TNyxEventScope.Create(FScope, ADelivery);
+  end;
   try
     for LIndex := 0 to Length(FGroups) - 1 do
     begin

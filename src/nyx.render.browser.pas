@@ -34,6 +34,8 @@ uses
   nyx.publication,
   nyx.images,
   nyx.images.browser,
+  nyx.image.lifecycle,
+  nyx.image.events,
   nyx.mount.browser,
   Classes,
   SysUtils,
@@ -130,6 +132,10 @@ type
     FCustom: Boolean;
     FUpdater: TNyxBrowserUpdater;
     FViewRevision: Integer;
+    FImageLifecycle: INyxImageLifecycle;
+    FImageRequest: INyxBrowserImageRequest;
+    procedure SyncImage;
+    procedure ImageSignal;
     FComposing: Boolean;
     FEditingSelection: TNyxTextSelection;
     { Capture IDs are host observations/requests for this exact mounted face.
@@ -249,8 +255,10 @@ type
     FContentFrameKnown: Boolean;
     FContentMeasurementKey: TNyxText;
     FPublishingContent: Boolean;
+    FImageDeliveryQueue: INyxImageDeliveryQueue;
     FLastContentError: TNyxText;
     procedure QueueContent;
+    procedure FlushImages;
     procedure RefreshContent;
     function CaptureContentFaces: TNyxContentFaceStates;
     procedure RestoreContentFaces(const AStates: TNyxContentFaceStates; AFocus: Boolean);
@@ -1336,12 +1344,7 @@ begin
     begin
       raise ENyxModel.Create('Unsupported image URL');
     end;
-    { An absent source must not request the surrounding application page. }
-
-    if LURL <> '' then
-    begin
-      TJSHTMLImageElement(Result).src := LURL;
-    end;
+    { Binding-owned request listeners are installed before Sync assigns src. }
     TJSHTMLImageElement(Result).alt := ANode.Prop('alt', ANode.Prop('text'));
     ApplyNyxBrowserImage(ANode, TJSHTMLImageElement(Result));
   end
@@ -1926,6 +1929,7 @@ begin
   finally
     LCandidate.Free;
   end;
+  FlushImages;
 end;
 
 procedure TNyxBrowserRenderer.Render(ADocument: TNyxDocument; ARoot: TNyxNode;
@@ -1958,6 +1962,7 @@ begin
     FPublishingContent := False;
   end;
   QueueContent;
+  FlushImages;
 end;
 
 procedure TNyxBrowserRenderer.RenderFrame(ADocument: TNyxDocument; ARoot: TNyxNode;
@@ -2423,6 +2428,71 @@ begin
       LRuntimeState.Free;
     end;
   end;
+end;
+
+procedure TNyxBrowserBinding.ImageSignal;
+begin
+  FRenderer.FlushImages;
+end;
+
+procedure TNyxBrowserBinding.SyncImage;
+var
+  LSource: TNyxImageSource;
+begin
+  LSource := TNyxImageSource.FromWire(FNode.Prop('src'));
+
+  if (FImageLifecycle <> nil) and FImageLifecycle.Current.Defined and
+    (FImageLifecycle.Current.Source.ToWire = LSource.ToWire) then
+  begin
+    Exit;
+  end;
+
+  if FImageRequest <> nil then
+  begin
+    FImageRequest.Retire;
+    FImageRequest := nil;
+  end;
+
+  if FImageLifecycle = nil then
+  begin
+    FImageLifecycle := NewNyxImageLifecycle;
+  end;
+  FImageRequest := StartNyxBrowserImage(TJSHTMLImageElement(FElement), LSource,
+    FImageLifecycle, ImageSignal);
+end;
+
+procedure TNyxBrowserRenderer.FlushImages;
+var
+  LDeliveries: TNyxImageDeliveries;
+  LIndex: Integer;
+begin
+
+  if FUpdating or FDetachedCandidate or FPublishingContent or FDesignMode then
+  begin
+    Exit;
+  end;
+  LDeliveries := nil;
+  try
+    for LIndex := 0 to Length(FBindings) - 1 do
+    begin
+      PrepareNyxImageDeliveries(FEvents, FBindings[LIndex].FNode,
+        FBindings[LIndex].FImageLifecycle, LDeliveries);
+    end;
+  except
+    for LIndex := 0 to Length(LDeliveries) - 1 do
+    begin
+      LDeliveries[LIndex].Free;
+    end;
+    raise;
+  end;
+  { The FIFO owns copied payloads. Its later UI turn can retire this renderer
+    without using a borrowed binding or node. }
+
+  if FImageDeliveryQueue = nil then
+  begin
+    FImageDeliveryQueue := NewNyxImageDeliveryQueue;
+  end;
+  FImageDeliveryQueue.Enqueue(FEvents, LDeliveries);
 end;
 
 procedure TNyxBrowserRenderer.ArrangeControls(AFormer: TNyxNode);
@@ -5058,6 +5128,18 @@ var
   LIndex: Integer;
   LPointerID: Integer;
 begin
+
+  if FImageRequest <> nil then
+  begin
+    FImageRequest.Retire;
+    FImageRequest := nil;
+  end;
+
+  if FImageLifecycle <> nil then
+  begin
+    FImageLifecycle.Close;
+    FImageLifecycle := nil;
+  end;
   FreeAndNil(FColorField);
   { Detach the exact focus surface before disposing a split behavior. A caller
     may still hold its old DOM element after navigation; it must have no live
@@ -6113,16 +6195,7 @@ begin
           raise ENyxModel.Create('Unsupported image URL');
         end;
 
-        if LValue = '' then
-        begin
-          { src="" requests the current page on some hosts. Clearing a source
-            withdraws the attribute rather than issuing a meaningless request. }
-          LControl.removeAttribute('src');
-        end
-        else if LControl.getAttribute('src') <> LValue then
-        begin
-          LControl.setAttribute('src', LValue);
-        end;
+        LBinding.SyncImage;
         TJSHTMLImageElement(LControl).alt := LNode.Prop('alt', LNode.Prop('text'));
         ApplyNyxBrowserImage(LNode, TJSHTMLImageElement(LControl));
       end;
@@ -6369,6 +6442,7 @@ begin
     UpdateCanvasResizeGrips;
   finally
     FUpdating := False;
+    FlushImages;
   end;
   QueueContent;
 end;

@@ -37,7 +37,26 @@ Pending assessment. Studio consumes this contract through NS-4 authoring.
 Return path: NS-4_studio-authoring_01 must consume the accepted contract in tabbed
 Properties / Events UI, add-handler source navigation and confirmed removal.
 
-## Image load/status contract remains open — 2026-10-08
+## Typed image lifecycle consumer — 2026-10-08
+
+Original criteria 1/3/4 now integrate four fluent runtime/authored image streams,
+immutable request/source/phase/dimension/failure payloads, accepted-view FIFO
+delivery and request-linked scheduler cancellation. Actual Win32 **150** and
+HTTP browser **121** per width execute ordered siblings, isolated failures,
+replacement/clear/reentrant retirement, parented UI work and retained snapshots.
+Native decoder refusal retains prior pixels and reports the original failure;
+browser matching load/decode and Promise ownership explicitly retire. Ordinary
+session metadata/handler source navigation and exact paired history execute;
+exact emitted registrations/policy reconstruct **four** checks per target.
+Readiness is a host observation, separate from portable pixel integrity.
+
+No event criterion/count/credit closes. Complete component lifecycle breadth,
+native threaded image consumers, trusted input, other widgetsets, current ordinary
+Events-pane observation and authenticated deployed MCP/Studio exposure remain
+within original scope. See
+[the packet](../WORK.md#current-return-path-typed-image-lifecycle-delivery--2026-10-08).
+
+## Earlier image load/status gap — 2026-10-08
 
 Current policy authoring now qualifies actual ordinary Studio import/Apply/history
 on both targets, including a decoded browser preview. It adds no image trigger,

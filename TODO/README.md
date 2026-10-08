@@ -46,7 +46,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current image policy authoring (2026-10-08): public Nyx selector, copied imports,
+Current typed image lifecycle (2026-10-08): four fluent streams, owned request/
+source/phase/dimension/failure snapshots and request-linked cancellation execute
+on actual Win32/HTTP browser images. Accepted-view FIFO delivery, source replacement,
+clear, reentrant siblings, queued work and retirement pass **150 native / 121 per
+browser width**, alongside **199 / 231** image regression checks. Exact emitted
+registrations/policies execute **four** checks per target. Shared Studio metadata,
+ordinary source/navigation and paired history consume the contract. Full resource/
+event/renderer/authoring outcomes, trusted input and observing deployment stay open;
+no full criterion/counter/credit closes (**25/10/41/21/28/3** unchanged). See
+[the packet](../WORK.md#current-return-path-typed-image-lifecycle-delivery--2026-10-08).
+
+Previous image policy authoring (2026-10-08): public Nyx selector, copied imports,
 re-admission on Apply, draft migration and exact paired history execute in both
 ordinary Studio controllers. Win32 passes **105**, shared/browser form **59**,
 ordinary HTTP Studio **94 desktop / 126 CSS-390** (polling included), exact emitted

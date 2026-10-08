@@ -6,6 +6,12 @@
 [Compound value/payload declarations](contracts.md) define exact scalar families,
 named field payloads, ranges and choices through the public fluent API.
 
+Image controls add four typed observational streams with owned request/source/
+phase/dimension/failure snapshots. Their per-request cancellation is linked
+before callback entry, alongside view/subscription cancellation, and inherited
+by `PostUI`. See [image lifecycle delivery](images.md#typed-lifecycle-observations)
+for phase order, publication boundaries, host guarantees and recovery behavior.
+
 Both renderers expose the managed multiple-registration router described below,
 and retain the synchronous `TNyxEventHandler` bridge from `nyx.behavior`:
 

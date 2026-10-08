@@ -44,6 +44,7 @@ var
   LPage: INyxPage;
   LMemo: INyxMemo;
   LTasks: INyxList;
+  LImage: INyxImage;
   LTrigger: TNyxTrigger;
 begin
   Result := TNyxDocument.Create;
@@ -77,6 +78,10 @@ begin
     LTasks.Binds.Collection(NyxCollectionView(NyxCollection('tasks'))
       .Column(NyxTextField('caption'), 'Task')).Done;
     LPage.Add(LTasks);
+    { Image observations belong to an image face, not an editor. The maintained
+      lifecycle consumer separately qualifies its actual source/decode delivery. }
+    LImage := NewNyxImage('image-preview');
+    LPage.Add(LImage);
     for LTrigger := Low(TNyxTrigger) to High(TNyxTrigger) do
     begin
 
@@ -87,6 +92,11 @@ begin
         begin
           NyxCallbacks(LTasks).OnSelectionChange.Add(NyxHandler('TInteractionProbe'),
             NyxCallbackID('tasks.selection'));
+        end
+        else if LTrigger in [ntImageLoading, ntImageReady, ntImageError, ntImageCleared] then
+        begin
+          NyxCallbacks(LImage).On(LTrigger).Add(NyxHandler('TInteractionProbe'),
+            NyxCallbackID('image.' + NyxTriggerName(LTrigger)));
         end
         else
         begin
@@ -405,6 +415,11 @@ begin
       if LTrigger = ntSelectionChange then
       begin
         LMetadata := NyxEventsMetadata(LDocument.Find('tasks'));
+      end;
+
+      if LTrigger in [ntImageLoading, ntImageReady, ntImageError, ntImageCleared] then
+      begin
+        LMetadata := NyxEventsMetadata(LDocument.Find('image-preview'));
       end;
       LFound := False;
       for LIndex := 0 to High(LMetadata) do

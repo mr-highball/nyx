@@ -9,7 +9,15 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current image validation prerequisite (2026-10-08) consumes the exact native-MCP
+Current image lifecycle source/metadata is qualified through public Pascal
+consumers of the exact prior MCP workshop seed. Installed authenticated MCP is
+still primary; its frozen release predates the new triggers. Current event/source
+inspection and observing UI/backend exposure need the existing guarded rollout.
+Do not infer deployed support from current source or substitute browser editor
+automation. See
+[the lifecycle packet](../WORK.md#current-return-path-typed-image-lifecycle-delivery--2026-10-08).
+
+Previous image validation prerequisite (2026-10-08) consumes the exact native-MCP
 workshop export with public-Pascal qualification enrichment. Source wire and
 managed generation now retain a fluent validation policy; the frozen installed
 service predates that contract. Current semantic policy operations/observing

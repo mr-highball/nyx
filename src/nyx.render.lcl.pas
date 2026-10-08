@@ -38,6 +38,7 @@ uses
   nyx.colors,
   nyx.colors.lcl,
   nyx.images, nyx.images.lcl,
+  nyx.image.lifecycle, nyx.image.events,
   nyx.sliders,
   nyx.sliders.lcl,
   Classes,
@@ -164,6 +165,7 @@ type
     FHasItemsBaseline: Boolean;
     FLastSource: TNyxText;
     FHasSourceBaseline: Boolean;
+    FImageLifecycle: INyxImageLifecycle;
     FCustom: Boolean;
     FUpdater: TNyxLCLUpdater;
     FDeferredValue: Boolean;
@@ -272,12 +274,16 @@ type
     FContentFrameKnown: Boolean;
     FContentMeasurementKey: TNyxText;
     FPublishingContent: Boolean;
+    FImageDeliveryQueue: INyxImageDeliveryQueue;
+    { Hidden candidates cannot publish lifecycle observations. }
+    FImageViewPublished: Boolean;
     { One hidden candidate consumes a frozen allocation snapshot for both
       structure and scalar projection. Mounted layout observes actual boxes. }
     FStagingContent: Boolean;
     FStagingMeasurements: INyxContainerSnapshot;
     FLastContentError: TNyxText;
     procedure QueueContent;
+    procedure FlushImages;
     procedure RefreshContent;
     function CaptureContentFaces: TNyxContentFaceStates;
     procedure RestoreContentFaces(const AStates: TNyxContentFaceStates; AFocus: Boolean);
@@ -824,6 +830,7 @@ var
   LIndex: Integer;
   LDeferControls: Boolean;
 begin
+  FImageViewPublished := False;
   if not AKeepPresentation and (FPresentationView <> nil) then
   begin
     FPresentationView.Retire;
@@ -936,6 +943,12 @@ begin
       FBindings[LIndex].FColorField.Disconnect;
     end;
     FBindings[LIndex].DisconnectControl(FBindings[LIndex].FControl);
+
+    if FBindings[LIndex].FImageLifecycle <> nil then
+    begin
+      FBindings[LIndex].FImageLifecycle.Close;
+      FBindings[LIndex].FImageLifecycle := nil;
+    end;
 
     if FBindings[LIndex].FInput <> FBindings[LIndex].FControl then
     begin
@@ -3693,6 +3706,7 @@ begin
   finally
     LCandidate.Free;
   end;
+  FlushImages;
 end;
 
 procedure TNyxLCLRenderer.Render(ADocument: TNyxDocument; ARoot: TNyxNode;
@@ -3725,6 +3739,7 @@ begin
     FPublishingContent := False;
   end;
   QueueContent;
+  FlushImages;
 end;
 
 procedure TNyxLCLRenderer.RenderFrame(ADocument: TNyxDocument; ARoot: TNyxNode;
@@ -4193,6 +4208,7 @@ begin
     LViewportPublication.PublishRevision(FEvents.ViewRevision);
     LEditingPublication.PublishRevision(FEvents.ViewRevision);
     LCapturePublication.PublishRevision(FEvents.ViewRevision);
+    FImageViewPublished := True;
     FUpdating := LUpdating;
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('publish');{$endif}
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('observe');{$endif}
@@ -4216,6 +4232,39 @@ begin
     end;
   end;
   {$ifdef NYX_STUDIO_PROFILE}RecordPhase('settle');{$endif}
+end;
+
+procedure TNyxLCLRenderer.FlushImages;
+var
+  LDeliveries: TNyxImageDeliveries;
+  LIndex: Integer;
+begin
+
+  if FUpdating or not FImageViewPublished or FPublishingContent or FDesignMode then
+  begin
+    Exit;
+  end;
+  LDeliveries := nil;
+  try
+    for LIndex := 0 to Length(FBindings) - 1 do
+    begin
+      PrepareNyxImageDeliveries(FEvents, FBindings[LIndex].FNode,
+        FBindings[LIndex].FImageLifecycle, LDeliveries);
+    end;
+  except
+    for LIndex := 0 to Length(LDeliveries) - 1 do
+    begin
+      LDeliveries[LIndex].Free;
+    end;
+    raise;
+  end;
+  { The FIFO retains no borrowed binding or node across its UI turn. }
+
+  if FImageDeliveryQueue = nil then
+  begin
+    FImageDeliveryQueue := NewNyxImageDeliveryQueue;
+  end;
+  FImageDeliveryQueue.Enqueue(FEvents, LDeliveries);
 end;
 
 procedure TNyxLCLRenderer.ArrangeControls(AFormer: TNyxNode);
@@ -7042,6 +7091,8 @@ procedure TNyxLCLBinding.SyncPicture;
 var
   LSource: TNyxText;
   LPicture: TPicture;
+  LRequest: TNyxImageRequestID;
+  LPeer: INyxImageLifecycle;
 begin
 
   if FCustom or not (FControl is TImage) then
@@ -7060,16 +7111,52 @@ begin
   end;
   LSource := FNode.Prop('src');
 
-  if FHasSourceBaseline and (FLastSource = LSource) then
+  if FHasSourceBaseline and (FLastSource = LSource) and
+    (FImageLifecycle <> nil) and
+    (FImageLifecycle.Current.Source.ToWire = LSource) then
   begin
     Exit;
   end;
-  LPicture := NewNyxLCLPicture(TNyxImageSource.FromWire(LSource));
+  if FImageLifecycle = nil then
+  begin
+    FImageLifecycle := NewNyxImageLifecycle;
+  end;
+  LPeer := FImageLifecycle;
+  LRequest := LPeer.Start(TNyxImageSource.FromWire(LSource));
+  LPicture := nil;
   try
-    { Decode on an independent picture before changing this accepted face. }
-    TImage(FControl).Picture.Assign(LPicture);
-    FLastSource := LSource;
-    FHasSourceBaseline := True;
+    try
+
+      if not FHasSourceBaseline or (FLastSource <> LSource) then
+      begin
+        LPicture := NewNyxLCLPicture(TNyxImageSource.FromWire(LSource));
+        { Decode on an independent picture before changing this accepted face. }
+        TImage(FControl).Picture.Assign(LPicture);
+        FLastSource := LSource;
+        FHasSourceBaseline := True;
+      end;
+
+      if LSource <> '' then
+      begin
+
+        if (TImage(FControl).Picture.Width > 0) and (TImage(FControl).Picture.Height > 0) then
+        begin
+          LPeer.Ready(LRequest, TImage(FControl).Picture.Width, TImage(FControl).Picture.Height);
+        end
+        else
+        begin
+          { Missing/unsupported native locations keep their existing empty face
+            semantics; report the observation without inventing network fetch. }
+          LPeer.Fail(LRequest, nifUnavailable, 'Native image location is unavailable');
+        end;
+      end;
+    except
+      on LException: Exception do
+      begin
+        LPeer.Fail(LRequest, nifDecode, 'Native decoder rejected the image request');
+        raise;
+      end;
+    end;
   finally
     LPicture.Free;
   end;
@@ -7442,6 +7529,7 @@ begin
     end;
   finally
     FUpdating := False;
+    FlushImages;
   end;
   QueueContent;
 end;

@@ -31,6 +31,17 @@ uses
   nyx.text;
 
 type
+  { A cancellation generation owns no work, scheduler, model or platform handle.
+    Cancel is irreversible and may be observed by native worker callbacks.
+    A producer cancels its generation before replacing the source, including
+    inside a sequential callback before Submit returns its execution token. }
+  INyxCancellationScope = interface(IInterface)
+    ['{739BC309-7893-48E3-9600-001001000006}']
+    procedure Cancel;
+    function GetCancelled: Boolean;
+    property Cancelled: Boolean read GetCancelled;
+  end;
+
   ENyxSchedule = class(Exception);
   { A saturated native pending queue refuses the submission before adopting its
     work. Callers may defer/retry, coalesce their inputs or report overload; work
@@ -147,6 +158,8 @@ function NewNyxScheduler(const AOptions: TNyxSchedulerOptions): INyxScheduler; o
   a callback. The token owns exact text; empty diagnostics refuse. This does not
   convert an unsupported policy into supported execution or perform any work. }
 function NewNyxFailedExecution(const AFailure: TNyxText): INyxExecution;
+{ Independent cancellation generation. Dropping a lease does not cancel it. }
+function NewNyxCancellationScope: INyxCancellationScope;
 
 implementation
 
@@ -159,6 +172,14 @@ uses
   {$ENDIF}
 
 type
+  TNyxCancellationScope = class(TInterfacedObject, INyxCancellationScope)
+  private
+    FCancelled: LongInt;
+  public
+    procedure Cancel;
+    function GetCancelled: Boolean;
+  end;
+
   TNyxExecution = class(TInterfacedObject, INyxExecution)
   private
     FCancelled: Boolean;
@@ -328,6 +349,29 @@ begin
   begin
     raise ENyxSchedule.Create('Use valid explicit scheduler options or Defaults');
   end;
+end;
+
+procedure TNyxCancellationScope.Cancel;
+begin
+  {$IFDEF PAS2JS}
+  FCancelled := 1;
+  {$ELSE}
+  InterlockedExchange(FCancelled, 1);
+  {$ENDIF}
+end;
+
+function TNyxCancellationScope.GetCancelled: Boolean;
+begin
+  {$IFDEF PAS2JS}
+  Result := FCancelled <> 0;
+  {$ELSE}
+  Result := InterlockedCompareExchange(FCancelled, 0, 0) <> 0;
+  {$ENDIF}
+end;
+
+function NewNyxCancellationScope: INyxCancellationScope;
+begin
+  Result := TNyxCancellationScope.Create;
 end;
 
 constructor TNyxExecution.Create(const AParent: INyxExecution);

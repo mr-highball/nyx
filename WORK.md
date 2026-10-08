@@ -9,7 +9,104 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: image policy authoring and readiness — 2026-10-08
+## Current return path: typed image lifecycle delivery — 2026-10-08
+
+Previous turn is progress at exact pushed `2e4e645`: both ordinary Studio image
+policy consumers, migration, copied import/refusal and exact paired history are
+qualified; remote is exact/clean and protected state/services remain exact.
+Original NS-1 event criteria 1/3/4 now own the public lifecycle integration,
+consumed by NS-2 image adapters and NS-4 Events metadata. Preserve full scope;
+no image/event/product completion follows from a new trigger alone.
+
+Deliver one integrated lifecycle: immutable typed source/request/phase/dimension/
+failure snapshots, fluent loading/ready/error/cleared streams and authored
+registrations, per-request cancellation linked to existing scheduler dispatch,
+guarded browser load/decode and native candidate results. Initial notifications
+must wait for accepted view publication; replaced/cleared/disposed requests cannot
+start stale callbacks, including sequential reentrancy and queued UI work.
+Keep image notifications observational and distinguish host readiness from pixel
+integrity. Both targets must execute actual image controls, ordered callbacks,
+failure/recovery, history/source and explicit retirement using the unchanged
+MCP workshop seed. Inspect the HTML Living Standard image processing/decode model.
+
+Budget: one shared contract/adapter consumer packet; reassess after two concrete
+failed-boundary repairs before extending additional lifecycle features. Do not
+replace this outcome with store-only fixtures or compiler-only evidence. No new
+backend starts, enrollment changes or cleanup retries. Preserve nine pairs,
+fifteen services and sealed LAN bytes; semantic MCP stays primary. Source work
+is available without external input, so the full goal stays active.
+
+Implemented: immutable typed request snapshots and four fluent runtime/authored
+streams are integrated into both ordinary image adapters. Per-request scopes
+join existing view/subscription guards before entry; replacement, clear and
+retirement revoke sequential siblings, queued handlers and parented UI work.
+Accepted publication precedes one view-owned FIFO delivery pump. There are no
+retained nodes/widgets in queued payloads. Browser matching load/decode uses an
+independent Promise lease and revoked weak receiver; native candidate failure
+retains prior pixels and propagates its original exception with a queued typed
+error. Existing default checksums/caller override remain separate from readiness.
+
+Checked Win32 passes **150 lifecycle + 199 image** assertions; desktop/CSS-390
+HTTP browser passes **121 lifecycle + 231 image** each. Native-only original
+decoder-exception/retained-picture assertions and native UI-turn checks explain
+the lifecycle count difference. Both browser visual journeys acknowledge two live
+captures before retirement; recovered narrow/native captures are inspected.
+Exact ordinary-session emitted handlers reconstruct **four** registration/policy
+checks per compiler and execute on native/HTTP browser. This includes five
+registrations over four events, with two independent Ready handlers. Ordinary
+session creation/navigation, fluent source admission and exact paired history
+execute on both targets. Native ordinary Studio image authoring remains **105**,
+its emitted reconstruction **seven**. Those Studio regression artifacts precede
+the final request pump/Promise ownership repair; do not label them a final current
+browser Studio Events/UI qualification. Final generic interaction checks pass
+**246 shared / 45 actual controls** on both Win32 and HTTP browser. Final native
+consumers and browser driver retire leak-free;
+final image browser compiles have **21 upstream RTL warnings**, zero owned warnings.
+
+Final receipts are under `build/image-lifecycle/`: `build-qualified.log`,
+`browser-desktop-final-2.log`, `browser-compact-final.log`,
+`browser-generated-final.log`, `interactions-final.log`,
+`browser-interactions.log` and `browser-interaction-controls.log`.
+`qualification-private.json` records their counts, emitted source and seven-file
+staged closure. Default generated imports include `nyx.image.lifecycle`, so typed
+phase/failure names are available in authored callback bodies. Both browser widths
+execute the current emitted contract; the generated companion's four registration/
+policy assertions execute directly. Final preservation guard keeps all nine
+accepted/source/draft/history pairs, fifteen process identities, checkpoint bytes
+and 299 sealed LAN files exact. The current source changes are not deployed;
+the installed editor remains the sealed previous release. Save and verify the
+exact remote branch checkpoint before leaving this packet.
+
+The packet's reassessment kept the same integrated outcome after concrete lifetime
+failures: unused-image couriers were removed through the empty-router path;
+manual event copying had omitted the new payload; separately scheduled browser
+timers allowed cached Ready to overtake Loading; and captured local COM interfaces
+were finalized before Promise rejection. The final FIFO and independent lease
+address those actual producer boundaries. Test repairs use runtime rendering,
+implementation/TODO navigation distinctions, runtime registration identity,
+admitted relative URL syntax and the native decoder's original exception family.
+No weakened assertions, fixture replacement, backend start or cleanup retry was
+used to manufacture parity. The native CRC case deliberately remains framing-only.
+
+Original NS-1 event criteria 1/3/4 and NS-2 image consumers gain this bounded
+evidence, with NS-4 consuming shared Events metadata and ordinary source/history.
+No full criterion, task or credit closes; existing aggregate no-closure counters
+stay **25/10/41/21/28/3**. Complete lifecycle/component breadth, trusted physical
+input, other widgetsets, full pixel integrity, hosted resolver/cache consumers,
+ordinary current Events-pane observation and deployed MCP/Studio exposure remain
+their existing owners. The installed MCP remains authenticated/primary, revision
+2 and selection unchanged; its image catalog is queried boundedly, and the exact
+previous MCP workshop export remains the source seed. Frozen service predates
+these event additions; current metadata/source authoring are qualified through
+public Pascal consumers rather than silently substituted browser editor automation.
+
+Next meaningful return: continue the original NS-1 resource/NS-4 Resources
+workflow with hosted/embedded resolver, caller cache override and concrete bound
+control consumers; inspect those owners before expanding demos. Keep event/renderer
+and current rollout gaps attached to their owners. Full goal remains active.
+
+<a id="current-return-path-image-policy-authoring-and-readiness--2026-10-08"></a>
+## Previous return path: image policy authoring and readiness — 2026-10-08
 
 Previous turn is progress at exact pushed `d3ed7cd`: default PNG checksums and
 explicit fluent caller choice retain wire/resources/source/history; actual

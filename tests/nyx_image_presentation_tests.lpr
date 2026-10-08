@@ -28,6 +28,7 @@ uses
   SysUtils, Classes, Math, nyx.text, nyx.types, nyx.images, nyx.data, nyx.codec,
   nyx.model, nyx.controls, nyx.codegen, nyx.source, nyx.schema, nyx.responsive, nyx.resources,
   nyx.studio.session, nyx.studio.edits, nyx.studio.projects, nyx.generated.view, nyx.image.fixtures,
+  nyx.test.image.lifecycle,
   {$ifdef PAS2JS}JS, Web, nyx.render.browser;
   {$else}Interfaces, Forms, Controls, Graphics, ExtCtrls, Types, IntfGraphics,
     FPWritePNG, nyx.images.lcl, nyx.render.lcl;{$endif}
@@ -897,6 +898,8 @@ begin
   Result := Undefined;
   try
     Shared;
+    ImageLifecycleShared;
+    await(ImageLifecycleControls);
     await(BrowserControls);
     WriteLn('PASS / image presentation / ', GChecks, ' checks');
     document.body.setAttribute('data-image-checks', IntToStr(GChecks));
@@ -922,6 +925,8 @@ begin
   try
     Application.Initialize;
     Shared;
+    ImageLifecycleShared;
+    ImageLifecycleControls;
     NativeControls;
     WriteLn('PASS / image presentation / ', GChecks, ' checks');
   except

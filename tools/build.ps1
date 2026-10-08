@@ -3191,11 +3191,15 @@ try {
     & (Join-Path $nyxImageNative 'nyx_image_presentation_tests.exe') `
       (Join-Path $nyxImageGenerated 'nyx.generated.images.pas') `
       (Join-Path $nyxImageGenerated 'images-desktop.png') `
-      (Join-Path $nyxImageGenerated 'images-compact.png')
+      (Join-Path $nyxImageGenerated 'images-compact.png') `
+      (Join-Path $nyxImageGenerated 'nyx.generated.image.lifecycle.pas')
     if ($LASTEXITCODE -ne 0) { throw 'Native image presentation failed' }
     Invoke-NyxCompiler $nyxLclFpc ($nyxImageFlags + @("-Fu$nyxImageGenerated", 'tests/nyx_image_generated.lpr'))
     & (Join-Path $nyxImageNative 'nyx_image_generated.exe')
     if ($LASTEXITCODE -ne 0) { throw 'Exact emitted image execution failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxImageFlags + @("-Fu$nyxImageGenerated", 'tests/nyx_image_lifecycle_generated.lpr'))
+    & (Join-Path $nyxImageNative 'nyx_image_lifecycle_generated.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Exact emitted image lifecycle failed' }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
@@ -3205,7 +3209,10 @@ try {
       '-Fusrc', "-Fu$nyxImageGenerated", "-Fu$nyxImageFixtures",
       "-FE$nyxImageBrowser", 'tests/nyx_image_generated.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxImageBrowser 'rtl.js')
-    foreach ($nyxImageHost in @('image-presentation.html', 'image-generated.html')) {
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', "-Fu$nyxImageGenerated", '-Fustudio',
+      "-FE$nyxImageBrowser", 'tests/nyx_image_lifecycle_generated.lpr')
+    foreach ($nyxImageHost in @('image-presentation.html', 'image-generated.html', 'image-lifecycle-generated.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxImageHost") -Destination $nyxImageBrowser
     }
     Write-Host 'Image consumers staged. Browser execution and observing rollout remain separate.'

@@ -88,7 +88,8 @@ type
     ntScrollEnd, ntSelectionChange, ntBeforeEdit, ntCompositionStart,
     ntCompositionUpdate, ntCompositionEnd, ntTextSelectionChange,
     ntPointerCancel, ntPointerCapture, ntPointerCaptureLost,
-    ntDragStart, ntDrag, ntDragEnter, ntDragOver, ntDragExit, ntDrop, ntDragEnd);
+    ntDragStart, ntDrag, ntDragEnter, ntDragOver, ntDragExit, ntDrop, ntDragEnd,
+    ntImageLoading, ntImageReady, ntImageError, ntImageCleared);
   TNyxOverrideMode = (noProperties, noAppend, noPrepend, noReplace, noRemove);
   TNyxInputType = (niText, niPassword, niEmail, niNumber, niSearch, niTel, niUrl);
 
@@ -342,7 +343,8 @@ const
     'scroll-end', 'selection-change', 'before-edit', 'composition-start',
     'composition-update', 'composition-end', 'text-selection-change',
     'pointer-cancel', 'pointer-capture', 'pointer-capture-lost',
-    'drag-start', 'drag', 'drag-enter', 'drag-over', 'drag-exit', 'drop', 'drag-end');
+    'drag-start', 'drag', 'drag-enter', 'drag-over', 'drag-exit', 'drop', 'drag-end',
+    'image-loading', 'image-ready', 'image-error', 'image-cleared');
   CTriggerTitles: array[TNyxTrigger] of TNyxText =
     ('OnClick', 'OnChange', '', '', 'OnAfterEnter', 'OnAfterExit',
     'OnKeyDown', 'OnKeyUp', 'OnBeforeKeyDown', 'OnAfterKeyDown', 'OnKeyPress',
@@ -353,7 +355,8 @@ const
     'OnAfterWheel', 'OnScroll', 'OnScrollEnd', 'OnSelectionChange', 'OnBeforeEdit',
     'OnCompositionStart', 'OnCompositionUpdate', 'OnCompositionEnd', 'OnTextSelectionChange',
     'OnPointerCancel', 'OnPointerCapture', 'OnPointerCaptureLost',
-    'OnDragStart', 'OnDrag', 'OnDragEnter', 'OnDragOver', 'OnDragExit', 'OnDrop', 'OnDragEnd');
+    'OnDragStart', 'OnDrag', 'OnDragEnter', 'OnDragOver', 'OnDragExit', 'OnDrop', 'OnDragEnd',
+    'OnImageLoading', 'OnImageReady', 'OnImageError', 'OnImageCleared');
   COverrideNames: array[TNyxOverrideMode] of TNyxText =
     ('properties', 'append', 'prepend', 'replace', 'remove');
   CInputTypeNames: array[TNyxInputType] of TNyxText =
