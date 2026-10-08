@@ -32,4 +32,3 @@ begin
   { RGB channels require Integer arguments; no implicit text/Boolean/fraction. }
   LColor := NyxRGB(12.5, 34, 56);
 end.
-
