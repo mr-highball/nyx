@@ -960,6 +960,37 @@ changes no personal MCP configuration and leaves observing projects/releases
 intact. See [layout](layout.md) and
 [evidence](../WORK.md#portable-size-constraints--2026-10-05).
 
+## Semantic observing-preview qualification
+
+`tools/build.ps1 -Target compiled-preview-lifetime` builds the Pascal isolated
+server, ordinary browser Studio and its maintained document-lifetime consumer.
+It starts no listener. After starting that qualification server in a newly owned
+runtime, add `-ResourceRuntimeHome <owned-runtime> -HttpURL <loopback-origin>
+-VerifySemanticLaunch` to run the semantic journey. The runtime's exact-origin
+marker refuses ordinary user homes before claims or mutations.
+
+Semantic mode composes with authenticated MCP, requests actual compiler jobs and
+launches those exact jobs through `nyx_build`. Physical memo input, frame identity
+and selected rendering then qualify the ordinary observing controller through
+polling, source modal and compact panels. Exact retries, deliberate relaunch,
+foreign-project/stale/private-authority refusals and paired retirement are
+checked independently of compilation. Omitting the switch retains the ordinary
+operator-build lifetime journey.
+
+`native-studio -VerifyNativeStudioCompiler -VerifySemanticLaunch` runs the
+maintained native semantic compiler consumer with the usual explicit English
+reply companion, private profile, existing artifact-serving **jobs** root and
+loopback origin. Its fresh suspended protocol engine admits semantic builds and
+launches; the ordinary native observer downloads actual manifest bytes and starts
+its owned Win32 process. Actual independent reusable memo/button input, reload,
+Stop during compilation and diagnostic navigation remain in that journey. The
+qualification refuses a recovered pair that differs from its exact companion.
+This direct private transport seam is separate from authenticated native HTTP
+observation. The switch cannot be combined with the scripted compiler fixture.
+Neither mode updates protected LAN assets, personal enrollment or user projects.
+See [the operation](studio-agents.md#exact-job-observing-preview-launch) and WORK.md
+for current checked results and deployment status.
+
 ## Reusable resize grips
 
 ```powershell

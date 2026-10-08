@@ -295,6 +295,11 @@ end;
 procedure Pump;
 begin
   Application.ProcessMessages;
+
+  if GObserver.Error <> '' then
+  begin
+    raise Exception.Create('Native host input/layout failed: ' + GObserver.Error);
+  end;
   Sleep(5);
 end;
 
@@ -306,11 +311,28 @@ begin
   repeat
     Pump;
 
-    if GetTickCount64 - LStarted > 10000 then
+    { Checked initial layout can consume a message-pump turn. Observe success
+      before declaring its deadline expired; a completed connection is terminal
+      even when that turn took longer than the previous polling interval. }
+
+    if GStudio.Agents.Connected and not GStudio.Agents.Busy and
+      not GStudio.Agents.Conflict and not GStudio.SourceBusy and
+      not GStudio.PresentationPending then
     begin
+      Exit;
+    end;
+
+    if GetTickCount64 - LStarted > 30000 then
+    begin
+      Save('native-sync-refusal.json', NyxObject([
+        NyxField('status', NyxData(GStudio.Agents.Status)),
+        NyxField('connected', NyxData(GStudio.Agents.Connected)),
+        NyxField('conflict', NyxData(GStudio.Agents.Conflict)),
+        NyxField('busy', NyxData(GStudio.Agents.Busy)),
+        NyxField('hostError', NyxData(GObserver.Error))]).ToJSON);
       raise Exception.Create('Native compiler editor did not synchronize');
     end;
-  until GStudio.Agents.Connected and not GStudio.Agents.Busy and not GStudio.Agents.Conflict;
+  until False;
 end;
 
 procedure Click(const AID: TNyxText);
@@ -328,6 +350,24 @@ begin
   end;
   Check(GStudio.PaintCount = LPaints, 'native compiler action defers its paint: ' + AID);
   Pump;
+end;
+
+{ Bounded public presentation evidence for a source-pane transition. Never
+  assign private controller state or treat a parked renderer as visible. }
+procedure SourceMountEvidence(const APhase: TNyxText);
+var
+  LFields: array of TNyxDataField;
+begin
+  SetLength(LFields, 6);
+  LFields[0] := NyxField('phase', NyxData(APhase));
+  LFields[1] := NyxField('status', NyxData(GStudio.Status));
+  LFields[2] := NyxField('shellSourceMount',
+    NyxData(GStudio.ShellView.Root.Find('studio-source-mount') <> nil));
+  LFields[3] := NyxField('sourcePaneMounted', NyxData(GStudio.SourceView.Root <> nil));
+  LFields[4] := NyxField('codeMounted', NyxData(GStudio.CodeView.Root <> nil));
+  LFields[5] := NyxField('paintCount', NyxData(GStudio.PaintCount));
+  Save('source-mount-' + APhase + '.json', NyxObject(LFields).ToJSON);
+  Capture('source-mount-' + APhase);
 end;
 
 function OperatorBuild(const AArguments: TNyxDataValue): TNyxDataValue;
@@ -632,8 +672,10 @@ end;
 procedure PreviewRunning(APreviousProcess: Integer = 0);
 var
   LStarted: QWord;
+  LProcessStarted: QWord;
 begin
   LStarted := GetTickCount64;
+  LProcessStarted := 0;
   repeat
     Pump;
     GWindowProcess := GStudio.CompiledPreviewProcessID;
@@ -641,10 +683,20 @@ begin
 
     if (GWindowProcess <> 0) and (GWindowProcess <> DWORD(APreviousProcess)) then
     begin
+      { Preparation and queued Studio layout precede process creation. Give the
+        actual owned executable its separate startup budget, rather than timing
+        its first window from the original HTTP/download request. }
+
+      if LProcessStarted = 0 then
+      begin
+        LProcessStarted := GetTickCount64;
+      end;
       EnumWindows(@FindPreviewWindow, 0);
     end;
 
-    if GetTickCount64 - LStarted > 15000 then
+    if (GWindow = 0) and
+      (((LProcessStarted = 0) and (GetTickCount64 - LStarted > 60000)) or
+        ((LProcessStarted > 0) and (GetTickCount64 - LProcessStarted > 15000))) then
     begin
       raise Exception.Create('Compiled native preview did not mount its own window: ' + GStudio.Status);
     end;
@@ -696,6 +748,92 @@ begin
     end;
   end;
   Result := True;
+end;
+
+{ Exercise actual compiler workers and the ordinary native observer through the
+  trusted semantic transport seam. No operator Compile/Run button starts this
+  preview. Artifact copying below only orchestrates the owned HTTP fixture. }
+procedure ExerciseSemanticNativeLaunch;
+var
+  LSession: TNyxDataValue;
+  LOutputs: TNyxDataValue;
+  LReply: TNyxDataValue;
+  LArguments: TNyxDataValue;
+  LBefore: TNyxText;
+  LStarted: QWord;
+  LProcess: Integer;
+  LRequest: INyxCompilerRequest;
+begin
+  GEngine.EditorExchange(GToken, NyxObject([NyxField('op', NyxData('configure')),
+    NyxField('permission', NyxData('edit'))]));
+  LSession := GEngine.InvokeTool('nyx_session', 'native-semantic-owner',
+    'Scooty native semantic launch', NyxObject([]));
+  LOutputs := GEngine.InvokeBuild('native-semantic-owner', 'Scooty native semantic launch',
+    NyxCompilerOutputs);
+  LBefore := GEngine.EditorExchange(GToken, NyxObject([NyxField('op', NyxData('observe'))]))
+    .Field('project').AsText;
+  LRequest := NewNyxCompilerRequest.Target(btNativeLCL).Scope(bsApplication)
+    .AtRevision(LSession.Field('revision').AsInteger)
+    .Output(NyxBuildOutput(LOutputs.Field('outputID').AsText))
+    .Operation(NyxBuildOperation('native-semantic-build'));
+  LReply := GEngine.InvokeBuild('native-semantic-owner', 'Scooty native semantic launch',
+    LRequest.Arguments);
+  GLastJob := LReply.Field('job').AsText;
+  LStarted := GetTickCount64;
+  repeat
+    Pump;
+    LReply := GEngine.InvokeBuild('native-semantic-owner', 'Scooty native semantic launch',
+      NyxCompilerStatus(NyxBuildJob(GLastJob)));
+
+    if GetTickCount64 - LStarted > 60000 then
+    begin
+      raise Exception.Create('Semantic native compiler did not become terminal');
+    end;
+  until NyxBuildJobTerminal(ParseNyxBuildJobState(LReply.Field('state').AsText));
+  Check(LReply.Field('state').AsText = 'succeeded', 'semantic native application build succeeds');
+  PublishOwnedArtifact(LReply);
+  LArguments := NyxCompilerLaunch(NyxBuildJob(GLastJob), LSession.Field('revision').AsInteger,
+    NyxBuildOperation('native-semantic-launch'));
+  LReply := GEngine.InvokeBuild('native-semantic-owner', 'Scooty native semantic launch', LArguments);
+  Check((LReply.Field('state').AsText = 'requested') and not NyxAgentHas(LReply, 'runtime'),
+    'semantic launch returns intent without private producer authority');
+  PreviewRunning;
+  LProcess := GStudio.CompiledPreviewProcessID;
+  Check(LProcess <> 0, 'ordinary native observer starts the requested owned process');
+  LStarted := GetTickCount64;
+  repeat
+    Pump;
+    LReply := OperatorBuild(NyxObject([NyxField('mode', NyxData('launch-status'))])).Field('launch');
+
+    if GetTickCount64 - LStarted > 15000 then
+    begin
+      raise Exception.Create('Native observer did not acknowledge semantic placement');
+    end;
+  until (LReply.Field('lcl').Kind = ndObject) and
+    (LReply.Field('lcl').Field('result').AsText = 'mounted');
+  Check(LReply.Field('job').AsText = GLastJob, 'native mount acknowledgment names the exact job');
+  GEngine.InvokeBuild('native-semantic-owner', 'Scooty native semantic launch', LArguments);
+  LStarted := GetTickCount64;
+  repeat
+    Pump;
+  until GetTickCount64 - LStarted >= 1200;
+  Check(GStudio.CompiledPreviewProcessID = LProcess, 'exact semantic retry retains the owned process');
+  Check(GEngine.EditorExchange(GToken, NyxObject([NyxField('op', NyxData('observe'))]))
+    .Field('project').AsText = LBefore, 'semantic execution retains the complete accepted pair');
+  { A permission restore cannot reactivate execution intent, including when
+    there was no intervening observer poll. The running process remains owned
+    independently; an exact transport retry must not restart it. }
+  GEngine.EditorExchange(GToken, NyxObject([NyxField('op', NyxData('configure')),
+    NyxField('permission', NyxData('readOnly'))]));
+  GEngine.EditorExchange(GToken, NyxObject([NyxField('op', NyxData('configure')),
+    NyxField('permission', NyxData('edit'))]));
+  Check(OperatorBuild(NyxObject([NyxField('mode', NyxData('launch-status'))]))
+    .Field('launch').Field('state').AsText = 'retired',
+    'restoring edit permission never reactivates old execution intent');
+  GEngine.InvokeBuild('native-semantic-owner', 'Scooty native semantic launch', LArguments);
+  Check(OperatorBuild(NyxObject([NyxField('mode', NyxData('launch-status'))]))
+    .Field('launch').Field('state').AsText = 'retired',
+    'exact retry after retirement returns its receipt without replay');
 end;
 
 procedure ExerciseCompiledReply;
@@ -931,9 +1069,10 @@ begin
     else
     begin
 
-      if (ParamCount = 6) and (ParamStr(6) <> 'diagnostics') then
+      if (ParamCount = 6) and (ParamStr(6) <> 'diagnostics') and
+        (ParamStr(6) <> 'semantic-launch') then
       begin
-        raise Exception.Create('The optional qualification mode is probe-input or diagnostics');
+        raise Exception.Create('The optional qualification mode is probe-input, diagnostics or semantic-launch');
       end;
 
       if (ParamCount = 7) and ((ParamStr(6) <> 'build-controls') or
@@ -949,6 +1088,15 @@ begin
         operator admission, worker jobs and UI callbacks; live HTTP stays a gate. }
       GEngine.OnOperatorProfileChange := GObserver.SaveProfile;
       LDocument := BuildNyxDocument;
+
+      if (ParamCount = 6) and (ParamStr(6) = 'semantic-launch') then
+      begin
+        Check((LDocument.Find('designer-reply-memo') <> nil) and
+          (LDocument.Find('designer-reply-memo').Prop('value') = 'Your reply starts here.') and
+          (LDocument.Find('designer-reply-send') <> nil) and
+          (LDocument.Find('designer-reply-send').Prop('action') = 'clear'),
+          'semantic native input qualification requires the exact English reply companion');
+      end;
       GExpectedTitle := LDocument.Title;
       GPair.Design := TNyxCodec.Encode(LDocument);
       GPair.Source := ReadBytes(IncludeTrailingPathDelimiter(ParamStr(3)) + 'nyx.generated.view.pas');
@@ -958,6 +1106,9 @@ begin
         NyxField('project', NyxData(EncodeNyxProject(GPair))),
         NyxField('selection', NyxData('designer-review')), NyxField('view', NyxData('designer-review'))]));
       GToken := LClaim.Field('token').AsText;
+      Check(GEngine.EditorExchange(GToken, NyxObject([NyxField('op', NyxData('observe'))]))
+        .Field('project').AsText = EncodeNyxProject(GPair),
+        'qualification runtime starts from its exact semantic companion, not recovered prior work');
       Check(LClaim.Field('state').Field('editorBuilds').AsBoolean,
         'private editor explicitly advertises asynchronous compiler support');
       GEngine.EditorExchange(GToken, NyxObject([NyxField('op', NyxData('configure')),
@@ -1029,10 +1180,16 @@ begin
       Ready;
       Check(GStudio.Agents.CanBuild and (GStudio.Agents.Permission = apDisabled),
         'operator builds remain available with agents disabled');
-      Click('action-build-app');
-      Check(Pos('Choose an output', GStudio.Status) > 0, 'missing selected output is useful and never blocks launch');
 
-      if (ParamCount = 5) or (ParamCount = 7) then
+      if (ParamCount <> 6) or (ParamStr(6) <> 'semantic-launch') then
+      begin
+        Click('action-build-app');
+        Check(Pos('Choose an output', GStudio.Status) > 0,
+          'missing selected output is useful and never blocks launch');
+      end;
+
+      if (ParamCount = 5) or (ParamCount = 7) or
+        ((ParamCount = 6) and (ParamStr(6) = 'semantic-launch')) then
       begin
         if ParamCount = 5 then
         begin
@@ -1048,15 +1205,27 @@ begin
           Terminal('browser', 'reusable');
           Click('action-outputs');
         end;
-        Click('output-lcl');
-        Click('action-build-app');
-        Terminal('lcl', 'application');
+
+        if (ParamCount = 6) and (ParamStr(6) = 'semantic-launch') then
+        begin
+          ExerciseSemanticNativeLaunch;
+        end
+        else
+        begin
+          Click('output-lcl');
+          Click('action-build-app');
+          Terminal('lcl', 'application');
+        end;
         Check(GObserver.Saves = 1, 'read-only profile preflight never persists a configuration');
         Click('action-agents');
         Click('action-outputs');
-        PublishOwnedArtifact(GStudio.Agents.BuildReply);
-        Click('action-compiled-run');
-        PreviewRunning;
+
+        if (ParamCount <> 6) or (ParamStr(6) <> 'semantic-launch') then
+        begin
+          PublishOwnedArtifact(GStudio.Agents.BuildReply);
+          Click('action-compiled-run');
+          PreviewRunning;
+        end;
         LOldProcess := GStudio.CompiledPreviewProcessID;
         Capture('native-compiler-desktop');
         GForm.ClientWidth := 390;
@@ -1065,6 +1234,8 @@ begin
         Capture('native-compiler-narrow');
         GForm.ClientWidth := 1280;
         Pump;
+        Save('native-preview-actual-pair.nyx', EncodeNyxProject(GStudio.Session.ProjectSnapshot));
+        Save('native-preview-expected-pair.nyx', EncodeNyxProject(GPair));
         Check(EncodeNyxProject(GStudio.Session.ProjectSnapshot) = EncodeNyxProject(GPair),
           'compiled execution retains the authored accepted pair');
         if ParamCount = 5 then
@@ -1076,6 +1247,14 @@ begin
           Check(GStudio.CompiledPreviewProcessID <> LOldProcess, 'a new explicit Run owns a fresh application process');
         end;
         ExerciseCompiledReply;
+
+        if (ParamCount = 6) and (ParamStr(6) = 'semantic-launch') then
+        begin
+          { The semantic build/launch above needs no chosen editor output.
+            The remaining operator reload/Stop journey explicitly chooses its
+            target through the ordinary Nyx output control. }
+          Click('output-lcl');
+        end;
 
         if ParamCount = 7 then
         begin
@@ -1125,9 +1304,13 @@ begin
           and one real compiler error, without repeating completed build/reload
           journeys. Native text ranges include its physical line endings. }
         Click('output-lcl');
-        Click('action-outputs');
+        { Keep Outputs visible here to qualify source editing beside its native
+          text fields. That combination exposed competing edit autosizing in
+          the ordinary combined preview/source journey. }
       end;
 
+      Ready;
+      SourceMountEvidence('before-open');
       LSource := GStudio.Session.Source;
       LPosition := Pos(#10 + 'end.' + #10, LSource);
       Check(LPosition > 0, 'retained source has an explicit unit-end helper boundary');
@@ -1136,7 +1319,22 @@ begin
           '  { Supplementary position check 🌙 } MissingNativeCompilerHelper;' + #10 +
           'end;' + #10 + #10) + Copy(LSource, LPosition + 1, MaxInt);
       Check(LBroken <> LSource, 'deliberate compiler error changes only a retained Pascal helper');
-      Click('action-code');
+      { A failed build can already open its source/messages pane. The Pascal
+        command toggles that pane, so inspect the public mounted shell rather
+        than blindly closing it. Connection/queue readiness is not proof of
+        successful painting: require actual source owners before input. }
+
+      if GStudio.ShellView.Root.Find('studio-source-mount') = nil then
+      begin
+        Click('action-code');
+      end;
+      Ready;
+      SourceMountEvidence('after-open');
+      Check((GStudio.ShellView.Root.Find('studio-source-mount') <> nil) and
+        (GStudio.SourceView.Root <> nil) and (GStudio.CodeView.Root <> nil),
+        'native source pane actually mounts before input / ' + GStudio.Status);
+      Click('action-source-tab');
+      Ready;
       TMemo(GStudio.CodeView.InputFor('studio-code')).Text := LBroken;
       Pump;
       Click('action-apply-source');
@@ -1190,6 +1388,7 @@ begin
     on LException: Exception do
     begin
       WriteLn('FAIL ', LException.Message);
+      DumpExceptionBackTrace(Output);
       Flush(Output);
       ExitCode := 1;
     end;

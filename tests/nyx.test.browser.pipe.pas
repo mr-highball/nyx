@@ -560,9 +560,25 @@ begin
   begin
     Exit;
   end;
-  LFace := Request('DOM.describeNode', NyxObject([
-    NyxField('nodeId', NyxData(LNode)), NyxField('depth', NyxData(1)),
-    NyxField('pierce', NyxData(True))]), FSession).Field('node');
+  try
+    LFace := Request('DOM.describeNode', NyxObject([
+      NyxField('nodeId', NyxData(LNode)), NyxField('depth', NyxData(1)),
+      NyxField('pierce', NyxData(True))]), FSession).Field('node');
+  except
+    on LException: Exception do
+    begin
+      { A deliberate runtime replacement can retire the iframe between these
+        two bounded observations. Report absence for that exact debugger race;
+        callers still need a positive identity and actual mounted controls.
+        Other debugger/transport errors retain their ordinary failure. }
+
+      if Pos('Could not find node with given id', LException.Message) > 0 then
+      begin
+        Exit(0);
+      end;
+      raise;
+    end;
+  end;
 
   if not HasField(LFace, 'contentDocument') then
   begin
@@ -585,9 +601,21 @@ begin
 
   if LNode <> 0 then
   begin
-    Result := Request('DOM.describeNode', NyxObject([
-      NyxField('nodeId', NyxData(LNode))]), FSession).Field('node')
-      .Field('backendNodeId').AsInteger;
+    try
+      Result := Request('DOM.describeNode', NyxObject([
+        NyxField('nodeId', NyxData(LNode))]), FSession).Field('node')
+        .Field('backendNodeId').AsInteger;
+    except
+      on LException: Exception do
+      begin
+
+        if Pos('Could not find node with given id', LException.Message) = 0 then
+        begin
+          raise;
+        end;
+        Result := 0;
+      end;
+    end;
   end;
 end;
 

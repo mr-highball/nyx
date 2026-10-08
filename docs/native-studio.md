@@ -296,6 +296,30 @@ not establish deployment of the new private editor HTTP route. The separate
 updated-listener refusal remains recorded in WORK.md. Other widgetsets/operating
 systems, disk/OS stalls, reliable visuals and measured performance remain open.
 
+### Semantic preview launch and intrinsic label measurement
+
+Prepared semantic launches use `nyx_build`'s exact-job `launch` operation. The
+ordinary native observer reads the bounded typed intent, loads its private output
+profile when necessary and uses the same verified download/currentness/activation
+path as Run. It executes only in the currently observed ordinary project. A
+browser artifact reports unavailable; a changed local draft/output or context
+refuses. The latest native mount acknowledgment is queryable with `launch-status`.
+Exact retries retain the owned process. A different operation ID deliberately
+requests another run. See [the contract](studio-agents.md#exact-job-observing-preview-launch).
+
+Label intrinsic measurement uses a renderer-owned detached LCL label and temporary
+screen context. It preserves widgetset font/text rules without toggling a live
+label's wrapping during ancestor preferred-size calculation. The helper owns no
+native parent/window and retires with the renderer's controls. Other widgetsets,
+font rotations and hardware DPI still need their own qualification.
+
+Nyx also owns the allocated height of ordinary themed edit faces. Their native
+AutoSize is disabled before parenting so font-height restoration cannot compete
+with the renderer's layout and reject a source/Outputs repaint. Grouped pickers
+keep their own internal layout. The input remains the existing LCL edit widget;
+selection, clipboard and IME behavior are not reimplemented. Source qualification
+checks actual mounted owners, separately from connection and paint-queue idleness.
+
 ## Typed transport deadlines
 
 Transport policy is machine/runtime configuration, independent of designs,

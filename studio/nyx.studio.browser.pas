@@ -163,6 +163,14 @@ type
     FBuildTarget: TNyxBuildTarget;
     FBuildScope: TNyxBuildScope;
     FBuildOutput: TNyxText;
+    { Per-observer transient intent. Repeated observation never restarts a live
+      frame; only a new admitted sequence requests another execution. }
+    FConsumedLaunchSequence: Integer;
+    FLaunchPending: TNyxCompilerLaunch;
+    FLaunchMountPending: Boolean;
+    { Sequence numbers belong to one backend launch. The admitted MCP endpoint
+      identifies that domain without carrying its bearer credential. }
+    FConsumedLaunchEndpoint: TNyxText;
     FBuildsVisible: Boolean;
     FPalette: TNyxStudioPaletteState;
     FRecoveryEnabled: Boolean;
@@ -280,6 +288,7 @@ type
     procedure HandleCanvas(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure Compile(const AScope, ATarget: TNyxText);
     procedure CompilerReply;
+    procedure ConsumeCompilerLaunch;
     procedure PollCompiler;
     procedure ScheduleCompiler;
     procedure Configuration(ASave: Boolean);
@@ -1705,10 +1714,18 @@ begin
   end;
   LCompiledURL := FCompiledURL;
   CompilerReply;
+  ConsumeCompilerLaunch;
   ScheduleCompiler;
   { Publishing a newly admitted artifact deliberately replaces the design
     canvas. Mere job progress/cancellation retains the existing live preview. }
   Refresh(LCompiledURL = FCompiledURL, True);
+
+  if FLaunchMountPending and FCanvasRenderer.IsCompiled(FCompiledURL) then
+  begin
+    FLaunchMountPending := False;
+    FAgents.ReportLaunch(FLaunchPending, btBrowser, clrMounted);
+    FLaunchPending := Default(TNyxCompilerLaunch);
+  end;
   RestorePresentationControls;
 end;
 
@@ -2952,7 +2969,7 @@ begin
     Exit;
   end;
 
-  if LState.BuildReplyKind = coJobs then
+  if LState.BuildReplyKind in [coJobs, coLaunchResult] then
   begin
     Exit;
   end;
@@ -3081,8 +3098,16 @@ begin
           begin
             raise ENyxModel.Create('Project changed before compiled preview launch');
           end;
+
+          if (LReply.Field('job').AsText <> FBuildJob.ID) or
+            ((FLaunchPending.Sequence > 0) and
+              (LState.CompilerLaunch.Sequence <> FLaunchPending.Sequence)) then
+          begin
+            raise ENyxModel.Create('Compiled launch was replaced; existing preview retained');
+          end;
           LArtifact := AdmitNyxCompiledArtifact(LReply);
           FCompiledURL := LArtifact.RelativePath + NyxStudioRuntimeFragment(LReply.Field('runtime'));
+          FLaunchMountPending := FLaunchPending.Sequence > 0;
           FBuildStage := bbsTerminal;
         end;
       bbsIdle, bbsTerminal:
@@ -3096,8 +3121,69 @@ begin
       FBuildStage := bbsTerminal;
       FBuildStatusPending := False;
       FStatus := LException.Message;
+
+      if FLaunchPending.Sequence > 0 then
+      begin
+        FLaunchMountPending := False;
+        FAgents.ReportLaunch(FLaunchPending, btBrowser, clrRefused,
+          'Project, output or launch changed before placement');
+        FLaunchPending := Default(TNyxCompilerLaunch);
+      end;
     end;
   end;
+end;
+
+procedure TNyxStudio.ConsumeCompilerLaunch;
+var
+  LLaunch: TNyxCompilerLaunch;
+begin
+  { A reconnect can preserve this editor object while replacing its backend.
+    That backend starts a fresh transient sequence domain; an old high-water
+    mark must not suppress its new valid launch requests. }
+
+  if FAgents.State.Endpoint <> FConsumedLaunchEndpoint then
+  begin
+    FConsumedLaunchEndpoint := FAgents.State.Endpoint;
+    FConsumedLaunchSequence := 0;
+  end;
+  LLaunch := FAgents.State.CompilerLaunch;
+
+  if (LLaunch.Sequence <= FConsumedLaunchSequence) or
+    not (FBuildStage in [bbsIdle, bbsTerminal]) or
+    FSourceCommands.Busy or FConfigurationDirty or (FConfigurationRequest <> nil) or
+    not FAgents.SourceSynchronized then
+  begin
+    Exit;
+  end;
+  FConsumedLaunchSequence := LLaunch.Sequence;
+
+  if LLaunch.Target <> btBrowser then
+  begin
+    FAgents.ReportLaunch(LLaunch, btBrowser, clrUnavailable,
+      'A native compiled artifact requires a native Studio observer');
+    Exit;
+  end;
+
+  if (LLaunch.Revision <> FAgents.State.Revision) or
+    ((LLaunch.Scope <> bsApplication) and (LLaunch.Root.ID <> FSession.ActiveViewID)) then
+  begin
+    FAgents.ReportLaunch(LLaunch, btBrowser, clrRefused,
+      'The observing editor has a different revision or active view');
+    Exit;
+  end;
+  FLaunchPending := LLaunch;
+  FPendingDesign := FSession.Save;
+  FPendingSource := FSession.Source;
+  FBuildOutput := FOutputs.Encode;
+  FBuildTarget := LLaunch.Target;
+  FBuildScope := LLaunch.Scope;
+  FBuildRoot := LLaunch.Root;
+  FBuildJob := LLaunch.Job;
+  FBuildStage := bbsPreviewGrant;
+  FStatus := LLaunch.Actor + ' requested a compiled preview';
+  { Request only through private editor authority. The backend repeats exact
+    source/output/revision/sequence checks and never exposes this grant to MCP. }
+  FAgents.PreviewGrant(FBuildJob, LLaunch.Sequence);
 end;
 
 function TNyxStudio.CreateEditorExchange: TNyxStudioEditorExchange;

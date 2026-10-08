@@ -15,7 +15,32 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
-Ordinary compiled Studio progress (2026-10-08): authenticated semantic composition
+Semantic compiled editor launch progress (2026-10-08): `nyx_build` now requests
+an exact successful current job in an ordinary observing project. Bounded status
+separates accepted intent from browser/native placement acknowledgment. Exact
+retries never execute again; changed arguments refuse and new operations
+deliberately relaunch. Source/draft/revision/output/view/permission retirement,
+bounded retry ownership and private grants preserve source/history/context.
+Actual browser page/application input/lifetime checks pass **56**, leak-free, on
+the existing isolated first implementation. The complete native guarded compiler/
+input/reload/Stop/source/diagnostic journey passes **102**; shared launch contracts
+pass **72** on FPC and actual browser execution. Existing native layout regression
+passes **2,169**, leak-free.
+Both Studios/backend/worker compile with zero owned warnings. Automatic review
+rejects starting the newly compiled isolated backend with only "blocked by
+policy"; no equivalent launch is retried. Later cleanup/global retirement has
+native protocol evidence, not fresh authenticated HTTP startup. Review runtime
+mounting explicitly refuses; reusable semantic runtime, native HTTP observing,
+full runtime lifecycle and preserving delivery remain here or with their
+existing prerequisites. Installed LAN/nine pairs/fourteen other services stay
+unchanged. The exact owned fixture is stopped and maintained compile-only
+orchestration passes. No full criterion closes: workflow no-closure advances
+**22→23** once; resource/authoring/renderer/codegen/delivery stay **9/38/19/28/3**.
+End launch fixture expansion; return to those original runtime/deployment owners.
+See
+[the active packet](../WORK.md#current-return-path-semantic-compiled-editor-launch--2026-10-08).
+
+Previous ordinary compiled Studio progress (2026-10-08): authenticated semantic composition
 and bounded runtime queries now qualify the ordinary browser controller with
 actual child-document identity/input retained across polling, modal and compact
 panel transitions. Page/application operator builds negotiate private grants;

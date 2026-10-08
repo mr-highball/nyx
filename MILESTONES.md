@@ -4,7 +4,26 @@
 [Current work](WORK.md)
 
 
-Current launched resource reports (2026-10-08): private successful-build grants
+Current semantic compiled editor launch (2026-10-08): the original primary
+workflow owner adds bounded exact-job launch/status through ordinary Studio.
+Requests never rebuild or navigate, expose no runtime credential and retain
+paired source/history. Actual browser semantic page/application input, lifetime,
+retry/refusal and deliberate relaunch pass **56** checked assertions, leak-free,
+against the existing isolated first implementation. The complete native guarded
+compiler/input/reload/Stop/source/diagnostic journey passes **102**; shared launch
+contracts pass **72** on FPC and actual browser execution. Native layout/policy
+regression passes **2,169**, leak-free. Both Studios/backend/
+worker compile with zero owned warnings. New current-backend startup is rejected
+by automatic review with only "blocked by policy"; no equivalent retry occurs.
+Later mailbox cleanup/global retirement has native protocol evidence; fresh HTTP
+startup, review/runtime parity and preserving delivery remain open. Installed
+LAN/nine exact pairs/fourteen other services stay unchanged; the exact owned
+fixture is stopped and maintained compile-only orchestration passes. No full
+criterion closes: workflow no-closure advances **22→23** once; resource/authoring/
+renderer/codegen/delivery stay **9/38/19/28/3**. See
+[the active packet](WORK.md#current-return-path-semantic-compiled-editor-launch--2026-10-08).
+
+Previous launched resource reports (2026-10-08): private successful-build grants
 connect ordinary Studio preview wrappers to bounded revision-aware observations.
 Authenticated HTTP qualification passes **55** checks across separately launched
 browser/Win32 application, page and reusable previews, including actual hosted

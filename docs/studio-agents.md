@@ -1,6 +1,6 @@
 # Agents in Nyx Studio
 
-The current observing release advertises twenty-one tools, including protected
+The current observing release advertises twenty-two tools, including protected
 reviews, project workspaces, state, collections, typed value-domain policy,
 presentations and menu declarations. Authenticated Pascal MCP drives bounded
 composition, paired source/history and real browser/LCL application/view builds.
@@ -10,7 +10,7 @@ and production legacy migration remain separately qualified. Launch refreshes
 project and enrolled-user Codex configuration. Cached native chat handles need
 one reconnect after credential rotation; use the authenticated semantic
 client below meanwhile. See
-[current observing evidence](../WORK.md#current-return-path-menu-editor-observing-delivery--2026-10-07).
+[current observing evidence](../WORK.md#installed-current-source-return--2026-10-08).
 
 Studio starts with agent access enabled and editing allowed. Open **Agents** to
 see the shared revision, connected endpoint and recent operations. **Read only**
@@ -145,7 +145,7 @@ in WORK.md.
 | `nyx_history` | Undo or redo one ordinary content command |
 | `nyx_preview` | An immutable, revision-specific rendered view and optional PNG |
 | `nyx_callbacks` | Grouped callback addition, policy, ordering and reviewed removal on the inspector's paired history |
-| `nyx_build` | Output readiness, bounded project job discovery, immutable accepted builds, owned cancellation and artifact/diagnostic inspection |
+| `nyx_build` | Output readiness, bounded project job discovery, immutable accepted builds, owned cancellation, artifact/diagnostic inspection and exact-job observing preview launch |
 | `nyx_pascal` | Bounded callback/import context, exact guarded callback edits and grouped typed import changes |
 | `nyx_roots` | Reviewed removal of exact page/reusable groups on paired Undo history |
 | `nyx_state` (staged) | Bounded scalar defaults, exact text windows and contextual bindings; grouped typed state/binding changes |
@@ -384,6 +384,77 @@ remains an advertised gap. Add a fourth argument `phone` for the actual 390-by-8
 observer. Both maintained journeys pass 107 checks against the real compilers.
 Resource/lifetime checks use an explicitly owned Pascal
 compiler substitute; they do not establish target compilation or rendering.
+
+### Exact-job observing preview launch
+
+Prepared source adds `launch` and `launch-status` to the existing `nyx_build`
+tool. A launch requests execution of one already successful job in its ordinary
+project. It performs no compilation, source changes, history changes or editor
+navigation. Query status and currentness first, then request the exact job:
+
+```json
+{
+  "mode": "launch",
+  "job": "<successful job reference>",
+  "expectedRevision": 7,
+  "operationId": "preview-settings-page"
+}
+```
+
+Supply `workspace` for an independent project, as with other compiler operations.
+The job must belong to that project and its exact accepted source, revision and
+machine output. Pending drafts, stale outputs, failed jobs and foreign contexts
+refuse. Page and reusable builds additionally require their built root to be the
+project's active view. Application builds do not change the observer's active
+view. Allow edits is required; agents cannot enable themselves. Review workspace
+runtime mounting remains unsupported and refuses explicitly.
+
+Pascal clients use the same typed contract:
+
+```pascal
+LArguments := NyxCompilerLaunch(
+  LSuccessfulJob, LRevision, NyxBuildOperation('preview-settings-page'));
+```
+
+The bounded receipt has a monotonic `sequence`, exact job/revision/output,
+scope/root/target, display actor, `state` and nullable `browser`/`lcl`
+acknowledgments. It contains no source, artifact manifest, machine paths or
+runtime credential. `{"mode":"launch-status"}` queries the latest intent for
+that project. `requested` means accepted intent; `mounted` means the adapter
+placed a browser preview or activated its owned native process. Neither proves
+successful application behavior. Actual input or selected rendering remains
+necessary for that validation. Each adapter field is its latest acknowledgment,
+not a census of every observing window.
+
+An observing Studio consumes each sequence once through its ordinary compiler
+and preview controller. It waits for synchronized source and clean output
+configuration; hidden native projects do not execute until observed. A target
+mismatch reports `unavailable` rather than running a different platform's build.
+Native preparation downloads and verifies the exact executable and rechecks
+currentness before activation. Browser mounting reuses its persistent compiled
+surface. Runtime producer grants remain on the private editor channel; MCP
+cannot mint or read those grants. Requested/mounted/refused activity is visible
+in Studio's Agents panel and footer.
+
+An exact retry on the same authenticated connection/context returns its original
+receipt without another launch. Reusing that operation ID for changed arguments
+refuses. A new operation ID deliberately requests a new runtime, even for the
+same job. Source/draft/revision, scoped-view, output or permission changes retire
+old intent permanently; restoring permissions or a profile does not replay it.
+Already running previews retain their normal separately owned lifecycle.
+Retirement does not stop an operator's process by inference.
+
+The transient mailbox retains at most 16 context slots and 64 retry receipts.
+Capacity refuses before replacement. Authenticated transport deletion frees its
+unreachable retries; operator-confirmed project closure frees that context and
+its retries. Server restart forgets all launch intents and cannot replay them
+from the durable project checkpoint. Observer sequence tracking belongs to the
+admitted backend endpoint: reconnecting to a different backend resets that
+tracking without replaying the old backend's intent. Actual backend replacement
+qualification is recorded separately from ordinary same-endpoint execution.
+No new MCP tool or background service is required. The installed frozen release
+remains separate from this prepared
+source; see WORK.md for current execution and deployment evidence.
 
 ## Value domains
 

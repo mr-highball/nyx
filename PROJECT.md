@@ -66,7 +66,26 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current ordinary compiled Studio and preserving delivery (2026-10-08): the public
+Current semantic preview source (2026-10-08): `nyx_build` adds exact-job launch and
+bounded launch status through ordinary observing Studios. Requests never rebuild
+or navigate, expose no runtime credential and preserve accepted history. Exact
+retries retain execution; different operations deliberately relaunch. The actual
+browser journey passes **56** checked assertions, leak-free, against the existing
+isolated first implementation. The complete native semantic compiler/input/reload/
+Stop/source/diagnostic journey passes **102** through its guarded protocol seam;
+shared launch contracts pass **72** on FPC and actual browser execution, and native
+layout regression passes **2,169**, leak-free. Both
+Studios/backend/worker compile with zero owned warnings. Automatic review rejected
+starting the newly compiled isolated backend with only "blocked by policy"; no
+equivalent launch is retried. Later mailbox cleanup/global retirement has native
+protocol evidence; fresh HTTP startup and preserving delivery remain open. The
+installed LAN/pairs stay unchanged; the exact owned fixture is stopped and the
+maintained compile-only entry point passes. No full criterion closes: workflow
+no-closure advances **22→23** once; resource/authoring/renderer/codegen/delivery
+stay **9/38/19/28/3**. See
+[the active packet](WORK.md#current-return-path-semantic-compiled-editor-launch--2026-10-08).
+
+Previous ordinary compiled Studio and preserving delivery (2026-10-08): the public
 browser persistent mount keeps compiled documents connected through chrome,
 source-modal and compact-panel changes. The ordinary editor journey passes **29**
 checked assertions with actual child-document identity, typed input and active

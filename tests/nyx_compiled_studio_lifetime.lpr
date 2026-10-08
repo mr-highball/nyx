@@ -27,7 +27,8 @@ program nyx_compiled_studio_lifetime;
 
 uses Classes, SysUtils, nyx.text, nyx.data, nyx.model, nyx.controls,
   nyx.codec, nyx.codegen, nyx.studio.projects, nyx.studio.outputs,
-  nyx.test.mcp.client, nyx.test.browser.pipe;
+  nyx.test.mcp.client, nyx.test.browser.pipe, nyx.studio.editorbuild,
+  nyx.studio.builds, nyx.studio.agents;
 
 const
   CFrame = '.nyx-compiled-preview';
@@ -40,6 +41,8 @@ var
   GToken: TNyxText;
   GRevision: Integer;
   GChecks: Integer;
+  GSemantic: Boolean;
+  GLaunchArguments: TNyxDataValue;
 
 procedure Check(AValue: Boolean; const AReason: TNyxText);
 begin
@@ -163,6 +166,111 @@ begin
     NyxField('expectedRevision', NyxData(GRevision))])).Field('items');
 end;
 
+{ The ordinary Studio receives this request through observation; no build/run
+  button or injected browser script is used. Physical input remains below to
+  qualify document lifetime, which the semantic API cannot establish alone. }
+procedure SemanticBuildAndLaunch(AScope: TNyxBuildScope; const AOperation: TNyxText);
+var
+  LOutputs: TNyxDataValue;
+  LReply: TNyxDataValue;
+  LRequest: INyxCompilerRequest;
+  LJob: TNyxBuildJobRef;
+  LStarted: QWord;
+  LBefore: TNyxDataValue;
+  LRefusal: TNyxDataValue;
+  LWorkspace: TNyxText;
+begin
+  LOutputs := Call('nyx_build', NyxCompilerOutputs);
+  LRequest := NewNyxCompilerRequest.Target(btBrowser).Scope(AScope)
+    .AtRevision(GRevision).Output(NyxBuildOutput(LOutputs.Field('outputID').AsText))
+    .Operation(NyxBuildOperation(AOperation + '-build'));
+
+  if AScope <> bsApplication then
+  begin
+    LRequest.Root(NyxBuildRoot('home'));
+  end;
+  LReply := Call('nyx_build', LRequest.Arguments);
+  LJob := NyxBuildJob(LReply.Field('job').AsText);
+  LStarted := GetTickCount64;
+  repeat
+    Pump(100);
+    LReply := Call('nyx_build', NyxCompilerStatus(LJob));
+
+    if GetTickCount64 - LStarted > 60000 then
+    begin
+      raise Exception.Create('Semantic compiler job did not become terminal');
+    end;
+  until NyxBuildJobTerminal(ParseNyxBuildJobState(LReply.Field('state').AsText));
+  Check(LReply.Field('state').AsText = 'succeeded', 'Exact semantic build succeeded');
+  GLaunchArguments := NyxCompilerLaunch(LJob, GRevision, NyxBuildOperation(AOperation));
+  LBefore := Call('nyx_session', NyxObject([]));
+  LRefusal := GClient.Tool('nyx_build', NyxCompilerLaunch(LJob, GRevision - 1,
+    NyxBuildOperation(AOperation + '-stale')));
+  Check(LRefusal.Field('isError').AsBoolean, 'Stale launch revision refuses');
+  LRefusal := GClient.Tool('nyx_build', NyxCompilerPreview(LJob, GRevision));
+  Check(LRefusal.Field('isError').AsBoolean, 'MCP cannot mint a private runtime grant');
+  LWorkspace := Call('nyx_workspaces', NyxObject([
+    NyxField('mode', NyxData('create')), NyxField('expectedRevision', NyxData(GRevision)),
+    NyxField('operationId', NyxData(AOperation + '-context')),
+    NyxField('label', NyxData('Independent launch workshop')),
+    NyxField('base', NyxData('accepted'))])).Field('workspace').AsText;
+  LRefusal := GClient.Tool('nyx_build', NyxObject([
+    NyxField('mode', NyxData('launch')), NyxField('workspace', NyxData(LWorkspace)),
+    NyxField('job', NyxData(LJob.ID)), NyxField('expectedRevision', NyxData(1)),
+    NyxField('operationId', NyxData(AOperation + '-foreign'))]));
+  Check(LRefusal.Field('isError').AsBoolean, 'Another project cannot launch this exact job');
+  Check(Call('nyx_build', NyxObject([NyxField('mode', NyxData('launch-status')),
+    NyxField('workspace', NyxData(LWorkspace))])).Field('launch').Kind = ndNull,
+    'Refusal leaves the independent project mailbox untouched');
+  LReply := Call('nyx_build', GLaunchArguments);
+  Check((LReply.Field('state').AsText = 'requested') and
+    (LReply.Field('job').AsText = LJob.ID) and (Length(LReply.ToJSON) < 2048) and
+    not NyxAgentHas(LReply, 'runtime') and not NyxAgentHas(LReply, 'artifact'),
+    'Bounded exact-job launch is an intent, without source or runtime authority');
+  Check(Call('nyx_build', GLaunchArguments).ToJSON = LReply.ToJSON,
+    'Exact launch retry returns its original receipt without publishing another sequence');
+  LRefusal := GClient.Tool('nyx_build', NyxCompilerLaunch(LJob, GRevision + 1,
+    NyxBuildOperation(AOperation)));
+  Check(LRefusal.Field('isError').AsBoolean,
+    'Reusing a launch operation for changed arguments refuses');
+  Check(Call('nyx_build', NyxObject([NyxField('mode', NyxData('launch-status'))]))
+    .Field('launch').Field('sequence').AsInteger = LReply.Field('sequence').AsInteger,
+    'A changed retry never replaces the admitted launch sequence');
+  LReply := Call('nyx_session', NyxObject([]));
+  Check((LReply.Field('revision').ToJSON = LBefore.Field('revision').ToJSON) and
+    (LReply.Field('canUndo').ToJSON = LBefore.Field('canUndo').ToJSON) and
+    (LReply.Field('canRedo').ToJSON = LBefore.Field('canRedo').ToJSON) and
+    (LReply.Field('selection').ToJSON = LBefore.Field('selection').ToJSON) and
+    (LReply.Field('view').ToJSON = LBefore.Field('view').ToJSON),
+    'Semantic launch and refusals retain document revision, navigation and history');
+end;
+
+procedure AwaitMounted;
+var
+  LReply: TNyxDataValue;
+  LStarted: QWord;
+begin
+  LStarted := GetTickCount64;
+  repeat
+    Pump(100);
+    LReply := Call('nyx_build', NyxObject([NyxField('mode', NyxData('launch-status'))]))
+      .Field('launch');
+
+    if (LReply.Field('browser').Kind = ndObject) and
+      (LReply.Field('browser').Field('result').AsText = 'mounted') then
+    begin
+      Check(LReply.Field('job').AsText = GLaunchArguments.Field('job').AsText,
+        'Ordinary observer acknowledges the exact semantic launch');
+      Exit;
+    end;
+
+    if GetTickCount64 - LStarted > 15000 then
+    begin
+      raise Exception.Create('Observing Studio did not acknowledge the semantic mount');
+    end;
+  until False;
+end;
+
 var
   LRoot: String;
   LDocument: TNyxDocument;
@@ -172,6 +280,7 @@ var
   LOutputs: TNyxOutputConfiguration;
   LIdentity: Integer;
   LNextIdentity: Integer;
+  LRelaunchIdentity: Integer;
   LStarted: QWord;
   LValue: TNyxText;
   LRun: TNyxText;
@@ -183,11 +292,12 @@ begin
   GBrowser := nil;
   try
 
-    if ParamCount <> 3 then
+    if (ParamCount <> 3) and not ((ParamCount = 4) and (ParamStr(4) = 'semantic')) then
     begin
       raise Exception.Create('Supply isolated origin, owned runtime home and local toolchain JSON');
     end;
     GBase := ParamStr(1);
+    GSemantic := ParamCount = 4;
     LRoot := IncludeTrailingPathDelimiter(ParamStr(2));
     { The fixture refuses ordinary user workspaces before any claim or mutation.
       Only the isolated server writes this bounded exact-origin marker. }
@@ -213,8 +323,8 @@ begin
     GClient := TNyxMCPTestClient.Create(LRoot + '.codex/config.toml',
       'Scooty ordinary compiled Studio qualification');
     { All design composition and accepted edits use one revision-aware semantic
-      group. Browser input below exercises operator launch and physical lifetime,
-      because MCP has no observing-editor adopt/launch operation yet. }
+      group. Optional semantic mode also requests exact-job observing mounts;
+      ordinary mode continues qualifying the operator controller independently. }
     LReply := Call('nyx_transaction', NyxObject([
       NyxField('operationId', NyxData('compiled-studio-controls')),
       NyxField('expectedRevision', NyxData(GRevision)),
@@ -244,16 +354,35 @@ begin
       GBrowser.Click('[data-node="action-agent-accept"]');
       Pump(1000);
     end;
-    GBrowser.Click('[data-node="action-outputs"]');
-    WaitFace('[data-node="output-browser"]');
-    GBrowser.Click('[data-node="output-browser"]');
-    Pump(600);
-    GBrowser.Click('[data-node="action-build-view"]');
+
+    if GSemantic then
+    begin
+      SemanticBuildAndLaunch(bsView, 'semantic-studio-page');
+    end
+    else
+    begin
+      GBrowser.Click('[data-node="action-outputs"]');
+      WaitFace('[data-node="output-browser"]');
+      GBrowser.Click('[data-node="output-browser"]');
+      Pump(600);
+      GBrowser.Click('[data-node="action-build-view"]');
+    end;
     LIdentity := WaitCompiled;
+
+    if GSemantic then
+    begin
+      AwaitMounted;
+    end;
     Check(LIdentity <> 0, 'Ordinary controller negotiates and mounts a compiled page');
     GBrowser.Click(CMemo, CFrame);
     GBrowser.TypeText('A thought worth keeping');
     Retained(LIdentity, 'A thought worth keeping', 'input and first observer refresh');
+
+    if GSemantic then
+    begin
+      Call('nyx_build', GLaunchArguments);
+      Retained(LIdentity, 'A thought worth keeping', 'semantic launch retry after editing runtime input');
+    end;
     LItems := Runs;
     Check((LItems.Count = 1) and LItems.Item(0).Field('active').AsBoolean,
       'Ordinary controller grants one active runtime reporter');
@@ -310,11 +439,53 @@ begin
       end;
     until not GBrowser.Exists(CFrame);
     Check(Runs.Count = 0, 'Paired revision clears old runtime authority and observations');
-    GBrowser.Click('[data-node="action-build-app"]');
+
+    if GSemantic then
+    begin
+      LReply := Call('nyx_build', NyxObject([NyxField('mode', NyxData('launch-status'))]));
+      Check(LReply.Field('launch').Field('state').AsText = 'retired',
+        'Accepted edits permanently retire the earlier execution intent');
+    end;
+
+    if GSemantic then
+    begin
+      SemanticBuildAndLaunch(bsApplication, 'semantic-studio-app');
+    end
+    else
+    begin
+      GBrowser.Click('[data-node="action-build-app"]');
+    end;
     LNextIdentity := WaitCompiled;
+
+    if GSemantic then
+    begin
+      AwaitMounted;
+    end;
     Check(LNextIdentity <> LIdentity, 'A new successful application build owns a new document');
     Check(GBrowser.TryFieldValue(CMemo, LValue, CFrame) and (LValue = ''),
       'New execution starts from authored defaults');
+
+    if GSemantic then
+    begin
+      GBrowser.Click(CMemo, CFrame);
+      GBrowser.TypeText('An independent runtime draft');
+      GLaunchArguments := NyxCompilerLaunch(NyxBuildJob(GLaunchArguments.Field('job').AsText),
+        GRevision, NyxBuildOperation('semantic-studio-deliberate-relaunch'));
+      Call('nyx_build', GLaunchArguments);
+      LStarted := GetTickCount64;
+      repeat
+        Pump(100);
+        LRelaunchIdentity := GBrowser.FrameDocumentIdentity(CFrame);
+
+        if GetTickCount64 - LStarted > 15000 then
+        begin
+          raise Exception.Create('A deliberate semantic relaunch did not replace the document');
+        end;
+      until (LRelaunchIdentity > 0) and (LRelaunchIdentity <> LNextIdentity) and
+        GBrowser.TryFieldValue(CMemo, LValue, CFrame) and (LValue = '');
+      AwaitMounted;
+      Check(LValue = '', 'A different operation deliberately relaunches authored defaults');
+    end;
     Check(GBrowser.RuntimeError = '', 'Ordinary browser Studio completed without runtime exceptions');
     WriteLn('Ordinary compiled Studio lifetime: ', GChecks, ' checks passed');
   finally

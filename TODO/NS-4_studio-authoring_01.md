@@ -40,6 +40,16 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Native source-pane allocation follow-up — 2026-10-08
+
+The semantic launch/compiler diagnostic journey reaches the real native source
+editor and its exact Unicode caret, but the inspected 1280-by-900 capture can
+leave very little source height when details and canvas are both visible.
+Criterion 2 retains usable default native split allocation and expanded-source
+presentation as authoring work; callback/navigation success does not establish
+comfortable editing or complete native visual parity. See
+[the active evidence](../WORK.md#current-return-path-semantic-compiled-editor-launch--2026-10-08).
+
 ## Ordinary compiled preview lifetime — 2026-10-08
 
 Original criterion 2 now consumes a public Nyx browser mount that keeps live

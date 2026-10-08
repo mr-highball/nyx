@@ -77,6 +77,9 @@ type
     BuildReply: TNyxDataValue;
     BuildReplyKind: TNyxCompilerOperation;
     BuildReplySequence: Integer;
+    { Latest transient semantic launch, with no credential or source. A retired
+      intent becomes zero; each target controller consumes a sequence once. }
+    CompilerLaunch: TNyxCompilerLaunch;
   end;
 
 function DefaultNyxStudioAgentView: TNyxStudioAgentView;
@@ -136,6 +139,7 @@ begin
   Result.BuildReplyKind := coNone;
   Result.BuildReply := NyxNull;
   Result.BuildReplySequence := 0;
+  Result.CompilerLaunch := Default(TNyxCompilerLaunch);
 end;
 
 function LabelNode(const AID, AText: TNyxText): TNyxNode;

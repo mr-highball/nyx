@@ -9,7 +9,125 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: ordinary compiled Studio lifetime — 2026-10-08
+## Current return path: semantic compiled editor launch — 2026-10-08
+
+Solo batch contract: the existing primary workflow owner supplies the missing
+bounded exact-job observing-editor launch. Consume successful immutable compiler
+jobs through ordinary browser/LCL controllers, preserve exact pair/revision/output
+authority and make transport retries non-executing. Stop local launch expansion
+after actual input and retirement evidence; return to original review/runtime
+lifecycle and preserving delivery. No sub-agents or additional MCP tool are added.
+
+Prepared `nyx_build` now has `launch` and `launch-status`. Typed job/output/root/
+target/scope references and a portable launch record reach the normal Studio
+bridge. Admission requires edit permission, exact project context, successful
+current source/revision/output and no pending draft. Scoped launches require the
+same active root. Requests never rebuild or navigate an observer and return no
+producer credential, source or artifact manifest. Observers negotiate authority
+privately and acknowledge mounted/unavailable/refused with bounded detail. These
+acknowledgments describe placement/activation, not successful application behavior.
+Requested/completed/refused activity remains visible in the common Nyx-built UI.
+
+The transient mailbox retains 16 context slots and 64 actor/context-bound retry
+receipts. Exact retries return their original receipt; changed arguments refuse;
+new operation IDs deliberately relaunch. Source/draft/revision, scoped view,
+profile or permission changes retire intent. Global profile/permission changes
+retire hidden contexts too, even without an intervening poll. Restoration cannot
+replay old intent. MCP DELETE frees unreachable connection receipts; operator
+project closure frees its slot/retries. Durable recovery never serializes intent.
+No document/widget/process pointer is retained in the mailbox.
+
+The maintained portable build-admission fixture now passes **72** checks on FPC
+and actual pas2js browser execution, including exact retry ownership, Unicode
+acknowledgments, permanent retirement, full receipt/context refusal and capacity
+recovery after connection/project closure. Native host receipts report no leaks.
+Observer sequence tracking resets for a different admitted backend endpoint;
+actual backend replacement/reconnect remains a separate unqualified journey.
+Native preliminary profile reads retain no execution intent; the observer
+reacquires current intent after that asynchronous read finishes.
+
+Browser qualification passes **56** checked assertions, leak-free, against the
+already running explicitly owned isolated backend. Actual semantic page and
+application builds/mounts retain child-document identity and input through exact
+retries, polling, source modal, compact panel hiding and desktop return. Foreign
+project/stale/changed-retry/private-grant refusals preserve history/navigation.
+Paired edits retire old intent/authority. A different operation deliberately
+relaunches the same job with authored defaults. Three actual captures are inspected.
+Composition/edits/builds/launches are semantic; physical input qualifies behavior.
+
+The native consumer uses real compiler workers and ordinary Studio through its
+suspended guarded protocol seam, with actual HTTP artifact bytes copied only into
+the existing isolated server's admitted jobs root. Its complete journey passes
+**102** checked assertions, leak-free: semantic application mount, exact retry,
+permission retirement, independent reusable memo/button input, view reload,
+Stop during compilation, paired source editing and exact Unicode diagnostic
+navigation. This is not authenticated native HTTP observation or full native
+Studio acceptance. The existing English semantic reply companion is borrowed
+unchanged. The inspected native diagnostic capture still shows cramped source height when
+details/canvas remain visible; usable default native allocation stays with the
+original authoring criterion, separate from successful navigation and input.
+
+The journey exposed live-label preferred-size recursion. Intrinsic measurement
+now uses a renderer-owned detached LCL label and temporary screen context, keeping
+LCL font/text semantics without toggling a live control's WordWrap. It also found
+an ordinary TEdit autosizing loop: renderer-owned themed editors now honor Nyx's
+allocated height instead of competing with native automatic font height. Grouped
+pickers retain their own internal geometry and ordinary input/IME widgets.
+Focused source editing beside open Outputs passes **37**, including exact Unicode
+diagnostic navigation, leak-free. Connection/queue readiness alone had hidden a
+refused repaint; the combined fixture now requires actually mounted source owners.
+Existing actual native layout/policy/arithmetic checks pass **2,169**, leak-free. Both
+Studios/backend/worker compile with zero owned warnings; fourteen upstream RTL
+warnings remain visible across the browser and worker builds.
+
+Failed qualification receipts remain in ignored output. Artifact staging now uses
+the admitted HTTP jobs root. Fresh homes and early exact-pair/English-companion
+admission refuse recovered fixture mismatches. Preparation and actual native-window
+startup have separate bounded waits; UI readiness also waits for queued painting.
+The browser driver treats only the exact retired-debugger-node race as an absent
+frame and still requires a positive new identity plus actual default control
+values. Native source checks inspect mounted presentation and wait for source
+work separately from connection/paint readiness. These are test corrections,
+not parity evidence from successful compilation.
+
+Automatic approval review rejected starting the newly compiled isolated backend
+before execution, stating only **"blocked by policy"**. No new current-backend
+process/runtime/enrollment was created and no equivalent launch is retried. The
+successful browser journey uses the existing first launch implementation. Later
+mailbox cleanup/global retirement changes compile and use native protocol evidence;
+their fresh HTTP startup qualification remains open. Installed frozen `960134f`,
+LAN PID 39860, all nine exact pairs/full history and fourteen other services stay
+unchanged. Final preservation passes at **2026-10-08T14:12:19Z**: 299 files, fifteen
+identities and the exact 147,033-byte checkpoint. Use the current private guard
+`build/compiled-preview-lifetime/deployment/guard.ps1`; cached native chat handles
+still require reconnect, while the fresh Pascal semantic client works.
+
+Evidence lives under ignored `build/semantic-launch/`: `browser-semantic-settled.log`
+(56), `native-semantic-complete.log` (102), `native-diagnostics-current.log` (37),
+`contract-run.log` and `contract-browser-run-final.log` (72 each),
+`layout-run-current.log` (2,169), current compiler logs and inspected captures.
+The maintained compile-only entry point passes with zero owned warnings; its
+fourteen upstream pas2js RTL warnings remain visible. The exact owned fixture
+server is stopped after PID/path/start/command verification and an active-jobs
+query showing zero; its two test listeners are gone. Protected services were
+untouched. `owned-cleanup.json` and `preservation-final.log` retain those receipts.
+Maintained orchestration uses
+`compiled-preview-lifetime -VerifySemanticLaunch` or
+`native-studio -VerifyNativeStudioCompiler -VerifySemanticLaunch` with explicit
+isolated inputs. No full criterion/task/credit/percentage closes: workflow
+no-closure advances **22→23** once; resource/authoring/renderer/codegen/delivery
+stay **9/38/19/28/3**. This bounded launch packet ends here; the source checkpoint
+is committed/pushed on `hello-nyx`, with exact remote identity retained privately
+after publication. Review workspace mounting, reusable semantic runtime
+qualification, authenticated native HTTP observing, other widgetsets/hardware/
+accessibility, full reload/cancel and
+preserving current-source delivery retain their original owners.
+
+<a id="current-return-path-ordinary-compiled-studio-lifetime--2026-10-08"></a>
+
+## Previous return path: ordinary compiled Studio lifetime — 2026-10-08
+
+Historical packet; the semantic launch return above supersedes its next action.
 
 Solo batch contract: original Studio authoring criterion 2 consumes browser
 renderer ownership and service reload; preserve a compiled document through

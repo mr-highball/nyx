@@ -46,7 +46,25 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current ordinary compiled Studio lifetime (2026-10-08): the public browser mount
+Current semantic compiled editor launch (2026-10-08): the existing workflow owner
+adds exact-job `nyx_build` launch/status through ordinary Studio, without rebuild,
+navigation, source/history changes or public producer credentials. Browser
+semantic builds/mounts/input/retries/relaunch pass **56** checked assertions,
+leak-free, on the existing isolated first implementation. The complete native
+guarded compiler/input/reload/Stop/source/diagnostic journey passes **102**;
+shared launch contracts pass **72** on FPC and actual browser execution.
+Existing native layout/policy regression passes **2,169**, leak-free. Both
+Studios/backend/worker compile with zero owned warnings. Automatic review rejects
+new current-backend startup with only "blocked by policy"; no equivalent retry
+occurs. Later mailbox cleanup/global retirement has native protocol evidence;
+fresh HTTP startup, review runtime, native HTTP observing and preserving delivery
+remain open. Installed frozen LAN/nine pairs stay unchanged; the exact owned
+fixture is stopped and maintained compile-only orchestration passes. No full
+criterion closes: workflow no-closure advances **22→23** once; resource/authoring/
+renderer/codegen/delivery stay **9/38/19/28/3**. See
+[the active packet](../WORK.md#current-return-path-semantic-compiled-editor-launch--2026-10-08).
+
+Previous ordinary compiled Studio lifetime (2026-10-08): the public browser mount
 keeps a live compiled document connected independently of volatile editor
 placement. The ordinary controller passes **29** leak-free checks through actual
 page/application builds, private grants, trusted input, polling/modal/compact

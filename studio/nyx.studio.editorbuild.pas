@@ -33,7 +33,11 @@ type
   { Closed query scope and reply purpose, independent of target widgets. A
     cancellation receipt must never be mistaken for a status/result reply. }
   TNyxCompilerJobFilter = (cjfActive, cjfAll);
-  TNyxCompilerOperation = (coNone, coOutputs, coProfile, coRequest, coStatus, coCancel, coJobs, coPreview);
+  TNyxCompilerOperation = (coNone, coOutputs, coProfile, coRequest, coStatus,
+    coCancel, coJobs, coPreview, coLaunchResult);
+  { An observer reports placement, never successful application behavior. A
+    mounted document/process still needs actual input/runtime qualification. }
+  TNyxCompilerLaunchResult = (clrMounted, clrUnavailable, clrRefused);
   { Distinct open identities prevent accidental use of a document root as an
     output profile, operation receipt or compiler job. Empty records mean unset.
     Factories validate text; the service still rechecks identity and currentness. }
@@ -63,6 +67,21 @@ type
     FID: TNyxText;
   public
     property ID: TNyxText read FID;
+  end;
+
+  { Ephemeral semantic launch intent, copied independently of any session/tree.
+    Sequence distinguishes deliberate relaunch from a transport retry. It holds
+    no URL, runtime credential, compiler path or document ownership. Zero means
+    absent; only an exact synchronized observer can act on a positive sequence. }
+  TNyxCompilerLaunch = record
+    Sequence: Integer;
+    Revision: Integer;
+    Job: TNyxBuildJobRef;
+    Output: TNyxBuildOutputRef;
+    Target: TNyxBuildTarget;
+    Scope: TNyxBuildScope;
+    Root: TNyxBuildRootRef;
+    Actor: TNyxText;
   end;
 
   { Managed fluent authoring, independent of DOM, LCL, compiler paths and source
@@ -97,7 +116,19 @@ function ParseNyxCompilerOperation(const AMode: TNyxText): TNyxCompilerOperation
 function NyxCompilerStatus(const AJob: TNyxBuildJobRef; AOffset: Integer = 0): TNyxDataValue;
 { Private editor launch admission, deliberately absent from public MCP schema.
   Returns current compiler metadata plus a transient producer configuration. }
-function NyxCompilerPreview(const AJob: TNyxBuildJobRef; ARevision: Integer): TNyxDataValue;
+function NyxCompilerPreview(const AJob: TNyxBuildJobRef; ARevision: Integer;
+  ALaunchSequence: Integer = 0): TNyxDataValue;
+{ Public revision-aware intent authoring. It requests an observing editor mount;
+  it neither starts a compiler nor exposes the private preview grant. }
+function NyxCompilerLaunch(const AJob: TNyxBuildJobRef; ARevision: Integer;
+  const AOperation: TNyxBuildOperationRef): TNyxDataValue;
+{ Strict ephemeral intent boundary shared by browser and native controllers. }
+function DecodeNyxCompilerLaunch(const AValue: TNyxDataValue): TNyxCompilerLaunch;
+{ Private editor acknowledgment. Host is the observer's adapter, independently
+  of the artifact target. Detail is bounded to 256 Unicode scalars. }
+function NyxCompilerLaunchResult(const ALaunch: TNyxCompilerLaunch;
+  AHost: TNyxBuildTarget; AResult: TNyxCompilerLaunchResult;
+  const ADetail: TNyxText = ''): TNyxDataValue;
 { Strongly typed cancellation authoring. It changes execution only, never the
   accepted pair or Undo history. Revision belongs to the current project, so a
   deliberately cancelled earlier-source job still requires fresh context. }
@@ -271,11 +302,11 @@ end;
 function ParseNyxCompilerOperation(const AMode: TNyxText): TNyxCompilerOperation;
 const
   CModes: array[TNyxCompilerOperation] of TNyxText =
-    ('', 'outputs', 'profile', 'request', 'status', 'cancel', 'jobs', 'preview');
+    ('', 'outputs', 'profile', 'request', 'status', 'cancel', 'jobs', 'preview', 'launch-result');
 var
   LOperation: TNyxCompilerOperation;
 begin
-  for LOperation := coOutputs to coPreview do
+  for LOperation := coOutputs to High(TNyxCompilerOperation) do
   begin
 
     if CModes[LOperation] = AMode then
@@ -312,15 +343,86 @@ begin
     NyxField('limit', NyxData(20))]);
 end;
 
-function NyxCompilerPreview(const AJob: TNyxBuildJobRef; ARevision: Integer): TNyxDataValue;
+function NyxCompilerPreview(const AJob: TNyxBuildJobRef; ARevision,
+  ALaunchSequence: Integer): TNyxDataValue;
+var
+  LFields: array of TNyxDataField;
 begin
 
   if (AJob.ID = '') or (ARevision < 1) then
   begin
     raise ENyxModel.Create('Preview admission requires its exact job and revision');
   end;
-  Result := NyxObject([NyxField('mode', NyxData('preview')),
-    NyxField('job', NyxData(AJob.ID)), NyxField('expectedRevision', NyxData(ARevision))]);
+  SetLength(LFields, 3);
+  LFields[0] := NyxField('mode', NyxData('preview'));
+  LFields[1] := NyxField('job', NyxData(AJob.ID));
+  LFields[2] := NyxField('expectedRevision', NyxData(ARevision));
+
+  if ALaunchSequence > 0 then
+  begin
+    SetLength(LFields, 4);
+    LFields[3] := NyxField('launchSequence', NyxData(ALaunchSequence));
+  end;
+  Result := NyxObject(LFields);
+end;
+
+function NyxCompilerLaunch(const AJob: TNyxBuildJobRef; ARevision: Integer;
+  const AOperation: TNyxBuildOperationRef): TNyxDataValue;
+begin
+
+  if (AJob.ID = '') or (ARevision < 1) or (AOperation.ID = '') then
+  begin
+    raise ENyxModel.Create('Launch requires an exact job, revision and operation');
+  end;
+  Result := NyxObject([NyxField('mode', NyxData('launch')),
+    NyxField('job', NyxData(AJob.ID)), NyxField('expectedRevision', NyxData(ARevision)),
+    NyxField('operationId', NyxData(AOperation.ID))]);
+end;
+
+function DecodeNyxCompilerLaunch(const AValue: TNyxDataValue): TNyxCompilerLaunch;
+begin
+  Result := Default(TNyxCompilerLaunch);
+
+  if AValue.Kind = ndNull then
+  begin
+    Exit;
+  end;
+  Result.Sequence := AValue.Field('sequence').AsInteger;
+  Result.Revision := AValue.Field('revision').AsInteger;
+
+  if (Result.Sequence < 1) or (Result.Revision < 1) then
+  begin
+    raise ENyxModel.Create('Launch intent requires positive sequence and revision');
+  end;
+  Result.Job := NyxBuildJob(AValue.Field('job').AsText);
+  Result.Output := NyxBuildOutput(AValue.Field('outputID').AsText);
+  Result.Target := ParseNyxBuildTarget(AValue.Field('target').AsText);
+  Result.Scope := ParseNyxBuildScope(AValue.Field('scope').AsText);
+  Result.Actor := AValue.Field('actor').AsText;
+
+  if Result.Scope <> bsApplication then
+  begin
+    Result.Root := NyxBuildRoot(AValue.Field('view').AsText);
+  end;
+end;
+
+function NyxCompilerLaunchResult(const ALaunch: TNyxCompilerLaunch;
+  AHost: TNyxBuildTarget; AResult: TNyxCompilerLaunchResult;
+  const ADetail: TNyxText): TNyxDataValue;
+const
+  CResults: array[TNyxCompilerLaunchResult] of TNyxText =
+    ('mounted', 'unavailable', 'refused');
+begin
+
+  if (ALaunch.Sequence < 1) or (ALaunch.Job.ID = '') or
+    (NyxTextScalarCount(ADetail) > 256) then
+  begin
+    raise ENyxModel.Create('Launch acknowledgment requires its exact bounded intent');
+  end;
+  Result := NyxObject([NyxField('mode', NyxData('launch-result')),
+    NyxField('job', NyxData(ALaunch.Job.ID)), NyxField('sequence', NyxData(ALaunch.Sequence)),
+    NyxField('host', NyxData(NyxBuildTargetName(AHost))),
+    NyxField('result', NyxData(CResults[AResult])), NyxField('detail', NyxData(ADetail))]);
 end;
 
 function NyxCompilerCancel(const AJob: TNyxBuildJobRef; ARevision: Integer;

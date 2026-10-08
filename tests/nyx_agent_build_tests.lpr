@@ -27,7 +27,8 @@ program nyx_agent_build_tests;
 uses
   SysUtils, {$ifdef PAS2JS}Web,{$endif}
   nyx.text, nyx.data, nyx.studio.agents, nyx.studio.projects, nyx.studio.builds,
-  nyx.studio.compiler, nyx.studio.editorbuild, nyx.studio.preview;
+  nyx.studio.compiler, nyx.studio.editorbuild, nyx.studio.preview,
+  nyx.studio.buildlaunches, nyx.studio.workspaces;
 
 var
   GCount: Integer;
@@ -63,6 +64,159 @@ begin
   Check(GSession.Revision = GRevision, 'Refused build retains document revision');
 end;
 
+{ Qualify bounded transient execution ownership independently of compiler/UI
+  timing. The caller supplies an already admitted successful build; actual
+  guarded compiler admission and physical mounting have separate journeys. }
+procedure ExerciseLaunchMailbox;
+var
+  LMailbox: TNyxStudioBuildLaunches;
+  LBuild: TNyxDataValue;
+  LArguments: TNyxDataValue;
+  LOriginal: TNyxDataValue;
+  LReply: TNyxDataValue;
+  LOwner: TNyxText;
+  LOtherOwner: TNyxText;
+  LWorkspace: TNyxWorkspaceRef;
+  LLaunch: TNyxCompilerLaunch;
+  LIndex: Integer;
+  LRefused: Boolean;
+begin
+  LWorkspace := NyxWorkspace('launch-one');
+  LOwner := NyxObject([NyxField('owner', NyxData('connection-one')),
+    NyxField('workspace', NyxData(LWorkspace.ID))]).ToJSON;
+  LOtherOwner := NyxObject([NyxField('owner', NyxData('connection-two')),
+    NyxField('workspace', NyxData('launch-two'))]).ToJSON;
+  LBuild := NyxObject([NyxField('job', NyxData('successful-job')),
+    NyxField('revision', NyxData(7)),
+    NyxField('outputID', NyxData('0123456789abcdef0123456789abcdef')),
+    NyxField('target', NyxData('browser')), NyxField('scope', NyxData('application')),
+    NyxField('view', NyxData(''))]);
+  LMailbox := TNyxStudioBuildLaunches.Create;
+  try
+    LArguments := NyxCompilerLaunch(NyxBuildJob('successful-job'), 7,
+      NyxBuildOperation('launch-once'));
+    LMailbox.Admit(LArguments);
+    LOriginal := LMailbox.Request(LWorkspace, LOwner, 'Scooty', LArguments, LBuild);
+    LLaunch := DecodeNyxCompilerLaunch(LOriginal);
+    Check((LLaunch.Sequence = 1) and (LLaunch.Target = btBrowser) and
+      (LLaunch.Scope = bsApplication), 'Typed launch preserves its exact execution domain');
+    Check(LMailbox.Retry(LOwner, LArguments, LReply) and
+      (LReply.ToJSON = LOriginal.ToJSON), 'Exact launch retry returns its detached original receipt');
+    Check(not LMailbox.Retry(LOtherOwner, LArguments, LReply),
+      'Same display actor cannot share another connection retry');
+    LRefused := False;
+    try
+      LMailbox.Retry(LOwner, NyxCompilerLaunch(NyxBuildJob('different-job'), 7,
+        NyxBuildOperation('launch-once')), LReply);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'Changed arguments refuse an accepted launch operation');
+    LReply := LMailbox.Acknowledge(LWorkspace,
+      NyxCompilerLaunchResult(LLaunch, btBrowser, clrMounted, 'Ready 🌙'));
+    Check(LReply.Field('browser').Field('detail').AsText = TNyxText('Ready 🌙'),
+      'Private mount detail preserves supplementary Unicode');
+    Check(LOriginal.Field('browser').Kind = ndNull,
+      'Later acknowledgment never rewrites an original retry receipt');
+    LMailbox.RetireAll;
+    Check(LMailbox.Pending(LWorkspace).Field('state').AsText = 'retired',
+      'Global retirement includes contexts without observing windows');
+    Check(LMailbox.Retry(LOwner, LArguments, LReply) and
+      (LMailbox.Pending(LWorkspace).Field('state').AsText = 'retired'),
+      'Retry after retirement cannot replay execution');
+    LRefused := False;
+    try
+      LMailbox.Acknowledge(LWorkspace,
+        NyxCompilerLaunchResult(LLaunch, btNativeLCL, clrUnavailable));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'Retired intent refuses late observer acknowledgment');
+    LMailbox.Forget(LWorkspace);
+    Check((LMailbox.Pending(LWorkspace).Kind = ndNull) and
+      not LMailbox.Retry(LOwner, LArguments, LReply),
+      'Closed project releases both its intent and unreachable retries');
+    { Fill the receipt budget using two connections. Deleting one connection
+      must free its budget while preserving the other connection and intent. }
+    for LIndex := 1 to 64 do
+    begin
+      LArguments := NyxCompilerLaunch(NyxBuildJob('successful-job'), 7,
+        NyxBuildOperation('bounded-launch-' + IntToStr(LIndex)));
+
+      if LIndex = 64 then
+      begin
+        LReply := LMailbox.Request(NyxWorkspace('launch-two'), LOtherOwner,
+          'Scooty', LArguments, LBuild);
+      end
+      else
+      begin
+        LMailbox.Request(LWorkspace, LOwner, 'Scooty', LArguments, LBuild);
+      end;
+    end;
+    LOriginal := LMailbox.Pending(LWorkspace);
+    LRefused := False;
+    try
+      LMailbox.Request(LWorkspace, LOwner, 'Scooty',
+        NyxCompilerLaunch(NyxBuildJob('successful-job'), 7,
+          NyxBuildOperation('over-budget')), LBuild);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LMailbox.Pending(LWorkspace).ToJSON = LOriginal.ToJSON),
+      'A full launch budget refuses before replacing accepted intent');
+    LMailbox.ReleaseOwner('connection-one');
+    Check(LMailbox.Retry(LOtherOwner, LArguments, LReply),
+      'Deleting one transport retains another connection retry');
+    Check(LMailbox.Pending(LWorkspace).ToJSON = LOriginal.ToJSON,
+      'Deleting retry ownership does not stop or replace a mounted intent');
+    LReply := LMailbox.Request(LWorkspace, LOwner, 'Scooty',
+      NyxCompilerLaunch(NyxBuildJob('successful-job'), 7,
+        NyxBuildOperation('after-delete')), LBuild);
+    Check(LReply.Field('sequence').AsInteger > LOriginal.Field('sequence').AsInteger,
+      'Released retry capacity admits a fresh monotonic launch');
+    LMailbox.Forget(LWorkspace);
+    LMailbox.Forget(NyxWorkspace('launch-two'));
+    for LIndex := 1 to 16 do
+    begin
+      LMailbox.Request(NyxWorkspace('context-' + IntToStr(LIndex)),
+        NyxObject([NyxField('owner', NyxData('connection-one')),
+          NyxField('workspace', NyxData('context-' + IntToStr(LIndex)))]).ToJSON,
+        'Scooty', LArguments, LBuild);
+    end;
+    LRefused := False;
+    try
+      LMailbox.Request(NyxWorkspace('context-17'),
+        NyxObject([NyxField('owner', NyxData('connection-one')),
+          NyxField('workspace', NyxData('context-17'))]).ToJSON,
+        'Scooty', LArguments, LBuild);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'A full context budget refuses without evicting another project');
+    LMailbox.Forget(NyxWorkspace('context-1'));
+    LReply := LMailbox.Request(NyxWorkspace('context-17'),
+      NyxObject([NyxField('owner', NyxData('connection-one')),
+        NyxField('workspace', NyxData('context-17'))]).ToJSON,
+      'Scooty', LArguments, LBuild);
+    Check(LReply.Field('state').AsText = 'requested',
+      'Confirmed project closure makes its context capacity reusable');
+  finally
+    LMailbox.Free;
+  end;
+end;
+
 var
   LPair: TNyxProjectPair;
   LValue: TNyxDataValue;
@@ -78,6 +232,7 @@ var
 begin
   GSession := nil;
   try
+    ExerciseLaunchMailbox;
     GSession := TNyxAgentSession.Create;
     GRevision := GSession.Revision;
     GPair := GSession.BuildPair(GRevision, bsApplication, '');

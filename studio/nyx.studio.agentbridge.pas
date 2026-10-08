@@ -29,7 +29,8 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.studio.session, nyx.studio.exchange,
   nyx.studio.projects, nyx.studio.agents, nyx.studio.agentview, nyx.studio.workspaces,
-  nyx.studio.editorbuild, nyx.studio.outputs, nyx.model, nyx.types, nyx.studio.buildview;
+  nyx.studio.editorbuild, nyx.studio.outputs, nyx.model, nyx.types, nyx.studio.buildview,
+  nyx.studio.builds;
 
 type
   TNyxAgentRefresh = procedure(AContentChanged: Boolean) of object;
@@ -119,7 +120,12 @@ type
     procedure RequestBuild(const ARequest: INyxCompilerRequest);
     procedure BuildStatus(const AJob: TNyxBuildJobRef; AOffset: Integer = 0);
     { Private launch admission rechecks current compiler context. }
-    procedure PreviewGrant(const AJob: TNyxBuildJobRef);
+    procedure PreviewGrant(const AJob: TNyxBuildJobRef; ALaunchSequence: Integer = 0);
+    { Acknowledges only this observer's actual placement/refusal, with private
+      editor authority. It never publishes an application success claim. }
+    procedure ReportLaunch(const ALaunch: TNyxCompilerLaunch;
+      AHost: TNyxBuildTarget; AResult: TNyxCompilerLaunchResult;
+      const ADetail: TNyxText = '');
     procedure CompilerJobs(AFilter: TNyxCompilerJobFilter = cjfActive;
       AOffset: Integer = 0; ALimit: Integer = 10);
     { Does not cancel the transport request: asks the service to retire exactly
@@ -750,6 +756,22 @@ begin
         raise Exception.Create('Invalid agent permission response');
       end;
       FView.Activity := LState.Field('activity').Copy;
+      { A sequence is delivery identity, not a document revision or heartbeat.
+        Older services omit this optional capability and retain manual builds. }
+
+      if NyxAgentHas(LState, 'buildLaunch') and
+        (LState.Field('buildLaunch').Kind = ndObject) and
+        (LState.Field('buildLaunch').Field('state').AsText = 'requested') then
+      begin
+        LRefresh := LRefresh or (FView.CompilerLaunch.Sequence <>
+          LState.Field('buildLaunch').Field('sequence').AsInteger);
+        FView.CompilerLaunch := DecodeNyxCompilerLaunch(LState.Field('buildLaunch'));
+      end
+      else
+      begin
+        LRefresh := LRefresh or (FView.CompilerLaunch.Sequence <> 0);
+        FView.CompilerLaunch := Default(TNyxCompilerLaunch);
+      end;
       FView.ResourceRuntimes := NyxArray([]);
 
       if NyxAgentHas(LState, 'resourceRuntimes') then
@@ -969,7 +991,8 @@ begin
     NyxField('build', NyxCompilerStatus(AJob, AOffset))]));
 end;
 
-procedure TNyxStudioAgentBridge.PreviewGrant(const AJob: TNyxBuildJobRef);
+procedure TNyxStudioAgentBridge.PreviewGrant(const AJob: TNyxBuildJobRef;
+  ALaunchSequence: Integer);
 begin
 
   if not SourceSynchronized or not FView.CanBuild or not FView.CanReportRuntime then
@@ -977,7 +1000,19 @@ begin
     raise ENyxModel.Create('Preview reporting requires the exact connected project');
   end;
   Queue(NyxObject([NyxField('op', NyxData('build')),
-    NyxField('build', NyxCompilerPreview(AJob, FView.Revision))]));
+    NyxField('build', NyxCompilerPreview(AJob, FView.Revision, ALaunchSequence))]));
+end;
+
+procedure TNyxStudioAgentBridge.ReportLaunch(const ALaunch: TNyxCompilerLaunch;
+  AHost: TNyxBuildTarget; AResult: TNyxCompilerLaunchResult; const ADetail: TNyxText);
+begin
+
+  if not FView.CanBuild or not FView.Connected or FView.Conflict then
+  begin
+    raise ENyxModel.Create('Launch acknowledgment requires the connected editor');
+  end;
+  Queue(NyxObject([NyxField('op', NyxData('build')),
+    NyxField('build', NyxCompilerLaunchResult(ALaunch, AHost, AResult, ADetail))]));
 end;
 
 procedure TNyxStudioAgentBridge.CancelBuild(const AJob: TNyxBuildJobRef;

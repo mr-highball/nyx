@@ -289,6 +289,10 @@ type
       AResourceMode: TNyxResourceRenderMode = nrmConfigured);
   private
     FPanel: TNyxLogicalScrollBox;
+    { One detached LCL label measures intrinsic text without changing a live
+      face's wrap policy or parent child list. Owned directly until Clear; no
+      native window, document node or borrowed parent is retained. }
+    FMeasurementLabel: TLabel;
     FVirtualLayout: Boolean;
     FLayouting: Boolean;
     {$ifdef NYX_LCL_LAYOUT_PROFILE}
@@ -629,7 +633,8 @@ implementation
 
 uses
   InterfaceBase,
-  LCLIntf;
+  LCLIntf,
+  LCLType;
 
 procedure TNyxLCLRenderer.NavigateCodeLine(const AID: TNyxText; ALine: Integer; AColumn: Integer);
 var
@@ -695,6 +700,13 @@ begin
 end;
 
 type
+  { Measure with the widgetset's label implementation without changing a live
+    label or creating a native parent. The renderer owns this detached helper.
+    A temporary screen context supplies its canvas only during measurement. }
+  TNyxIntrinsicLabel = class(TLabel)
+  public
+    procedure UnwrappedSize(out AWidth, AHeight: Integer);
+  end;
   { Access shared focus events without imposing a specific native input class. }
   TNyxWinControlAccess = class(TWinControl);
   TNyxControlAccess = class(TControl);
@@ -714,6 +726,30 @@ type
     Operation: TNyxDropOperation;
     function Live: Boolean;
   end;
+
+procedure TNyxIntrinsicLabel.UnwrappedSize(out AWidth, AHeight: Integer);
+var
+  LContext: HDC;
+begin
+  LContext := LCLIntf.GetDC(0);
+
+  if LContext = 0 then
+  begin
+    raise ENyxModel.Create('The native label measurement context is unavailable');
+  end;
+  try
+    { CalculateSize preserves the canvas handle and applies LCL's font,
+      Unicode, accelerator, multiline and bidi rules. Supply a handle first:
+      a detached TControlCanvas cannot acquire one through a borrowed parent.
+      The wide intrinsic rectangle matches LCL's unwrapped label measurement;
+      the layout caller separately constrains the result to available space. }
+    Canvas.Handle := LContext;
+    CalculateSize(10000, AWidth, AHeight);
+  finally
+    Canvas.Handle := 0;
+    LCLIntf.ReleaseDC(0, LContext);
+  end;
+end;
 
 function TNyxNativeDragObject.Live: Boolean;
 begin
@@ -819,6 +855,7 @@ begin
   ClearCanvasMoveGrip;
   FUpdating := True;
   FVirtualLayout := False;
+  FreeAndNil(FMeasurementLabel);
 
   if FPanel <> nil then
   begin
@@ -1254,6 +1291,17 @@ begin
       not (AInput.Parent is TNyxLCLTimeField) and
       not (AInput.Parent is TNyxLCLColorField) then
     begin
+      { Nyx allocates this themed face and its editor together. A single-line
+        edit's default AutoSize otherwise competes with ArrangeInput: LCL can
+        restore its preferred font height during the parent's sizing pass and
+        repeatedly reject our allocated height with ELayoutException. Native
+        editing, selection and IME remain in the ordinary LCL widget. Grouped
+        pickers keep their own internal editor geometry above. }
+
+      if AInput is TCustomEdit then
+      begin
+        TEdit(AInput).AutoSize := False;
+      end;
       AInput.Parent := LInputSurface;
       AInput.SetBounds(12, 10, 276, 20);
       AInput.Anchors := [akLeft, akTop, akRight];
@@ -1723,8 +1771,6 @@ var
   LIndex: Integer;
   LWidth: Integer;
   LHeight: Integer;
-  LWrap: Boolean;
-  LWrapLength: Integer;
   LVisible: Integer;
   LSum: Double;
   LFrame: TRect;
@@ -1797,16 +1843,23 @@ begin
   if LControl is TLabel then
   begin
     LLabel := TLabel(LControl);
-    LWrap := LLabel.WordWrap;
-    LWrapLength := LLabel.WordWrapLength;
-    try
-      LLabel.WordWrap := False;
-      LLabel.WordWrapLength := 0;
-      LLabel.GetPreferredSize(LWidth, LHeight, True, False);
-    finally
-      LLabel.WordWrap := LWrap;
-      LLabel.WordWrapLength := LWrapLength;
+    { Changing a visible label's WordWrap invalidates all ancestor preferred
+      sizes. LCL may be querying those very sizes through a split resize, making
+      that mutation recursive and raising ELayoutException. Detached measurement
+      has the same widgetset/font/text semantics and no ancestor invalidation. }
+
+    if FMeasurementLabel = nil then
+    begin
+      FMeasurementLabel := TNyxIntrinsicLabel.Create(nil);
+      FMeasurementLabel.Visible := False;
+      FMeasurementLabel.AutoSize := False;
+      FMeasurementLabel.WordWrap := False;
     end;
+    FMeasurementLabel.Font.Assign(LLabel.Font);
+    FMeasurementLabel.Caption := LLabel.Caption;
+    FMeasurementLabel.ShowAccelChar := LLabel.ShowAccelChar;
+    FMeasurementLabel.BiDiMode := LLabel.BiDiMode;
+    TNyxIntrinsicLabel(FMeasurementLabel).UnwrappedSize(LWidth, LHeight);
   end
   else
   begin

@@ -39,6 +39,9 @@ param(
   # Explicit qualification against a freshly owned runtime started by the
   # Pascal test server. Empty only compiles tools/wrappers; it starts no server.
   [string]$ResourceRuntimeHome,
+  # Explicit semantic execution qualification in an independently owned runtime.
+  # It requests exact successful jobs through MCP; no operator Run substitutes.
+  [switch]$VerifySemanticLaunch,
   # Stage browser artifacts independently while an older LAN instance is live.
   [string]$BrowserOutput,
   # Release preparation creates a NEW frozen compiler-source/artifact bundle.
@@ -387,7 +390,9 @@ try {
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxLifetimeWeb 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/index.html') -Destination $nyxLifetimeWeb
     if ($ResourceRuntimeHome) {
-      & (Join-Path $nyxLifetimeBin 'nyx_compiled_studio_lifetime.exe') $HttpURL $ResourceRuntimeHome $nyxLocalConfig
+      $nyxLifetimeRun = @($HttpURL, $ResourceRuntimeHome, $nyxLocalConfig)
+      if ($VerifySemanticLaunch) { $nyxLifetimeRun += 'semantic' }
+      & (Join-Path $nyxLifetimeBin 'nyx_compiled_studio_lifetime.exe') @nyxLifetimeRun
       if ($LASTEXITCODE -ne 0) { throw 'Ordinary compiled Studio lifetime qualification failed' }
     }
     exit 0
@@ -734,7 +739,11 @@ try {
         $nyxCompilerSource, $nyxCompilerArtifacts, $HttpURL)
 
       if ($nyxCompilerFixture) {
+        if ($VerifySemanticLaunch) { throw 'Choose semantic launches or compiler-fixture controls for this journey.' }
         $nyxCompilerRunArguments += @('build-controls', $nyxCompilerFixture)
+      }
+      elseif ($VerifySemanticLaunch) {
+        $nyxCompilerRunArguments += 'semantic-launch'
       }
       & (Join-Path $nyxStudioNative 'nyx_native_build_tests.exe') @nyxCompilerRunArguments
 

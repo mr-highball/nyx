@@ -53,7 +53,7 @@ uses
 type
   TNyxNativeStudio = class;
   TNyxNativeBuildStage = (nbsIdle, nbsProfile, nbsOutputs, nbsRequest, nbsPolling,
-    nbsPreviewInspect, nbsPreviewDownload, nbsPreviewActivate, nbsTerminal);
+    nbsPreviewInspect, nbsPreviewDownload, nbsPreviewActivate, nbsTerminal, nbsLaunchInspect);
 
   { Private native context owns one portable mirror and its immutable service
     bridge. Owner is borrowed. Views remain owned by Studio; this record retains
@@ -103,6 +103,13 @@ type
     BuildMessage: TNyxText;
     BuildOutputSnapshot: TNyxText;
     CompiledPreview: TNyxLCLCompiledPreview;
+    { Each observer consumes a transient semantic sequence once. Hidden projects
+      retain intent but never start an executable until they are observed. }
+    ConsumedLaunchSequence: Integer;
+    { One admitted backend endpoint owns the sequence domain; reconnect cannot
+      reuse the previous backend's high-water mark. Contains no credential. }
+    ConsumedLaunchEndpoint: TNyxText;
+    LaunchPending: TNyxCompilerLaunch;
     procedure PreviewPrepared(ASucceeded: Boolean; const AError: TNyxText);
     procedure PollBuild(ASender: TObject);
     procedure Refresh(AContentChanged: Boolean);
@@ -240,6 +247,7 @@ type
     function GetCompiledPreviewProcessID: Integer;
     procedure ReadOutputs(AProject: TNyxNativeStudioProject; ABuild: Boolean);
     procedure ProjectBuildReply(AProject: TNyxNativeStudioProject);
+    procedure ConsumeCompilerLaunch(AProject: TNyxNativeStudioProject);
     procedure RecordLocal;
     procedure CaptureProject;
     procedure AdmitProject(AProject: TNyxNativeStudioProject);
@@ -497,6 +505,7 @@ begin
   if Owner <> nil then
   begin
     Owner.ProjectBuildReply(Self);
+    Owner.ConsumeCompilerLaunch(Self);
   end;
 
   if (Owner <> nil) and (Owner.FPendingProject = Self) then
@@ -529,7 +538,7 @@ begin
 
     if Bridge.State.CanReportRuntime then
     begin
-      Bridge.PreviewGrant(AcceptedBuildJob);
+      Bridge.PreviewGrant(AcceptedBuildJob, LaunchPending.Sequence);
     end
     else
     begin
@@ -541,6 +550,14 @@ begin
       BuildStage := nbsTerminal;
       BuildMessage := LException.Message;
       State.Status := BuildMessage;
+
+      if LaunchPending.Sequence > 0 then
+      begin
+        Bridge.ReportLaunch(LaunchPending, btNativeLCL, clrRefused,
+          'Native artifact preparation failed');
+        ConsumedLaunchSequence := LaunchPending.Sequence;
+        LaunchPending := Default(TNyxCompilerLaunch);
+      end;
 
       if Owner.FCurrentProject = Self then
       begin
@@ -902,7 +919,7 @@ begin
   LProject := FCurrentProject;
 
   if LProject.BuildStage in [nbsProfile, nbsOutputs, nbsRequest, nbsPolling,
-    nbsPreviewInspect, nbsPreviewDownload, nbsPreviewActivate] then
+    nbsPreviewInspect, nbsPreviewDownload, nbsPreviewActivate, nbsLaunchInspect] then
   begin
     raise ENyxModel.Create('A build is already active for this project');
   end;
@@ -1007,7 +1024,7 @@ begin
     Exit;
   end;
 
-  if LView.BuildReplyKind = coJobs then
+  if LView.BuildReplyKind in [coJobs, coLaunchResult] then
   begin
     Exit;
   end;
@@ -1018,6 +1035,27 @@ begin
       raise ENyxModel.Create(LReply.Field('error').AsText);
     end;
     case AProject.BuildStage of
+      nbsLaunchInspect:
+        begin
+
+          if (LReply.Field('job').AsText <> AProject.LaunchPending.Job.ID) or
+            (LView.CompilerLaunch.Sequence <> AProject.LaunchPending.Sequence) or
+            not LReply.Field('currentSource').AsBoolean or
+            not LReply.Field('currentOutput').AsBoolean or
+            not AProject.Bridge.SourceSynchronized or
+            (EncodeNyxProject(AProject.Session.ProjectSnapshot) <> AProject.BuildPair) or
+            (FOutputs.Encode <> AProject.BuildOutputSnapshot) then
+          begin
+            raise ENyxModel.Create('Semantic launch changed before native preparation');
+          end;
+          AdmitNyxCompiledArtifact(LReply);
+          AProject.BuildArtifact := LReply.Field('artifact').AsText;
+          AProject.AcceptedBuildJob := AProject.LaunchPending.Job;
+          AProject.AcceptedBuildPair := AProject.BuildPair;
+          AProject.AcceptedBuildOutput := AProject.BuildOutputSnapshot;
+          AProject.BuildStage := nbsTerminal;
+          BeginCompiledPreview(AProject);
+        end;
       nbsProfile:
         begin
           FOutputLoading := False;
@@ -1203,6 +1241,12 @@ begin
           AdmitNyxCompiledArtifact(LReply);
           AProject.BuildResult := LReply.Copy;
 
+          if (AProject.LaunchPending.Sequence > 0) and
+            (LView.CompilerLaunch.Sequence <> AProject.LaunchPending.Sequence) then
+          begin
+            raise ENyxModel.Create('Native semantic launch was replaced before activation');
+          end;
+
           if AProject.BuildStage = nbsPreviewInspect then
           begin
 
@@ -1228,10 +1272,23 @@ begin
                 AProject.CompiledPreview.Launch;
               end;
               AProject.BuildMessage := 'Compiled preview running';
+
+              if AProject.LaunchPending.Sequence > 0 then
+              begin
+                AProject.Bridge.ReportLaunch(AProject.LaunchPending, btNativeLCL, clrMounted);
+                AProject.LaunchPending := Default(TNyxCompilerLaunch);
+              end;
             end
             else
             begin
               AProject.BuildMessage := 'Compiled preview ready / return to this project to run';
+
+              if AProject.LaunchPending.Sequence > 0 then
+              begin
+                AProject.Bridge.ReportLaunch(AProject.LaunchPending, btNativeLCL, clrRefused,
+                  'Observer left the project before native activation');
+                AProject.LaunchPending := Default(TNyxCompilerLaunch);
+              end;
             end;
           end;
         end;
@@ -1252,6 +1309,14 @@ begin
       AProject.BuildStage := nbsTerminal;
       AProject.BuildMessage := LException.Message;
 
+      if AProject.LaunchPending.Sequence > 0 then
+      begin
+        AProject.ConsumedLaunchSequence := AProject.LaunchPending.Sequence;
+        AProject.Bridge.ReportLaunch(AProject.LaunchPending, btNativeLCL, clrRefused,
+          'Native preview preparation or exact-context admission failed');
+        AProject.LaunchPending := Default(TNyxCompilerLaunch);
+      end;
+
       if AProject.BuildTimer <> nil then
       begin
         AProject.BuildTimer.Enabled := False;
@@ -1265,6 +1330,66 @@ begin
     FState.Status := AProject.BuildMessage;
     RequestRefresh;
   end;
+end;
+
+procedure TNyxNativeStudio.ConsumeCompilerLaunch(AProject: TNyxNativeStudioProject);
+var
+  LLaunch: TNyxCompilerLaunch;
+begin
+
+  if AProject.Bridge.State.Endpoint <> AProject.ConsumedLaunchEndpoint then
+  begin
+    AProject.ConsumedLaunchEndpoint := AProject.Bridge.State.Endpoint;
+    AProject.ConsumedLaunchSequence := 0;
+  end;
+  LLaunch := AProject.Bridge.State.CompilerLaunch;
+
+  if (FCurrentProject <> AProject) or
+    (LLaunch.Sequence <= AProject.ConsumedLaunchSequence) or
+    not (AProject.BuildStage in [nbsIdle, nbsTerminal]) or
+    AProject.SourceCommands.Busy or (FOutputChanged <> []) or
+    not AProject.Bridge.SourceSynchronized then
+  begin
+    Exit;
+  end;
+
+  if LLaunch.Target <> btNativeLCL then
+  begin
+    AProject.ConsumedLaunchSequence := LLaunch.Sequence;
+    AProject.Bridge.ReportLaunch(LLaunch, btNativeLCL, clrUnavailable,
+      'A browser compiled artifact requires a browser Studio observer');
+    Exit;
+  end;
+
+  if not FOutputLoaded then
+  begin
+    { Agent execution is not contingent on the operator first opening Outputs.
+      Load the private profile through the same guarded asynchronous UI seam.
+      Do not retain execution intent during this preliminary read: it may be
+      retired or replaced meanwhile. The next observation reacquires the
+      current intent after the profile arrives, before owning any artifact. }
+    ReadOutputs(AProject, False);
+    Exit;
+  end;
+  AProject.ConsumedLaunchSequence := LLaunch.Sequence;
+
+  if (LLaunch.Revision <> AProject.Bridge.State.Revision) or
+    ((LLaunch.Scope <> bsApplication) and (LLaunch.Root.ID <> AProject.Session.ActiveViewID)) then
+  begin
+    AProject.Bridge.ReportLaunch(LLaunch, btNativeLCL, clrRefused,
+      'The observing editor has a different revision or active view');
+    Exit;
+  end;
+  AProject.LaunchPending := LLaunch;
+  AProject.BuildPair := EncodeNyxProject(AProject.Session.ProjectSnapshot);
+  AProject.BuildOutputSnapshot := FOutputs.Encode;
+  AProject.BuildScope := LLaunch.Scope;
+  AProject.BuildTarget := LLaunch.Target;
+  AProject.BuildRoot := LLaunch.Root;
+  AProject.BuildJob := LLaunch.Job;
+  AProject.BuildStage := nbsLaunchInspect;
+  AProject.BuildMessage := LLaunch.Actor + ' requested a compiled preview';
+  AProject.Bridge.BuildStatus(LLaunch.Job);
 end;
 
 procedure TNyxNativeStudio.ConnectService(const ABaseURL: TNyxText;
