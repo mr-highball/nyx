@@ -32,6 +32,7 @@ uses
   nyx.events, nyx.viewport, nyx.projection.refresh, nyx.callbacks, nyx.studio.collections,
   nyx.hostspace, nyx.hostspace.lcl,
   nyx.content.editor,
+  nyx.theme.editor, nyx.studio.theme,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.lcl,
   nyx.menu, nyx.menu.lcl, nyx.menu.button, nyx.controls, nyx.studio.menu,
@@ -1491,6 +1492,7 @@ begin
   FState.QueryEditorDraft.Clear;
   FState.TimeDomainEditorDraft.Clear;
   FState.ContentEditorDraft.Clear;
+  FState.ThemeEditorDraft.Clear;
   FBoundProject := '';
   FProjectRevision := '';
   FSavedPair := EncodeNyxProject(FSession.ProjectSnapshot);
@@ -1573,6 +1575,7 @@ begin
     FState.QueryEditorDraft.Capture('inspector-collection-query', FShellView.Root);
     FState.TimeDomainEditorDraft.Capture('inspector-time-domain', FShellView.Root);
     FState.ContentEditorDraft.Capture('inspector-content', FShellView.Root);
+    FState.ThemeEditorDraft.Capture('studio-theme-editor', FShellView.Root);
   end;
   LNode := FShellView.Root.Find('studio-split');
 
@@ -1625,6 +1628,7 @@ begin
   FState.QueryEditorDraft.Restore(Result.Pages[0]);
   FState.TimeDomainEditorDraft.Restore(Result.Pages[0]);
   FState.ContentEditorDraft.Restore(Result.Pages[0]);
+  FState.ThemeEditorDraft.Restore(Result.Pages[0]);
   Result.Pages[0].Configure.Height(FHost.ClientHeight).Done;
 end;
 
@@ -2572,6 +2576,7 @@ var
   LBackupRemote: TNyxText;
   LHierarchyChanged: Boolean;
   LContentDraft: TNyxContentEditorDraft;
+  LThemeDraft: TNyxThemeEditorDraft;
   LContentFocus: TWinControl;
 begin
 
@@ -2661,6 +2666,26 @@ begin
       begin
         LContentFocus.SetFocus;
       end;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-theme-toggle') then
+    begin
+      FState.ThemeVisible := not FState.ThemeVisible;
+      RequestRefresh;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and PrepareNyxStudioThemePreset(FSession,
+      ANode, FShellView.Root, LThemeDraft) then
+    begin
+      FState.ThemeEditorDraft := LThemeDraft;
+
+      if not FState.ThemeEditorDraft.Restore(FShellView.Root) then
+      begin
+        raise ENyxModel.Create('Theme form changed before the palette could be loaded');
+      end;
+      FShellView.Sync;
       Exit;
     end;
 

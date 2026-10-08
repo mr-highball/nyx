@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -2609,6 +2609,53 @@ try {
       '-Fusrc', '-Futests', '-Fustudio', "-FE$nyxTreeBrowser") + $nyxTreeSourceFlags + @('tests/nyx_tree_hierarchy_tests.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxTreeBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/tree-hierarchy.html') -Destination $nyxTreeBrowser
+    exit 0
+  }
+
+  if ($Target -eq 'theme-authoring') {
+    # The Pascal consumers own theme/source/history/UI assertions. Require the
+    # exact bounded English semantic export; keep its generated enrichment local.
+    $nyxThemeRoot = Join-Path $nyxRoot 'build/theme-authoring'
+    $nyxThemeSeed = Join-Path $nyxThemeRoot 'seed'
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxThemeSeed 'nyx.generated.view.pas'))) {
+      throw 'Export the English Theme workshop through a temporary MCP review before this check'
+    }
+    $nyxThemeNative = Join-Path $nyxThemeRoot 'maintained/native'
+    $nyxThemeBrowser = Join-Path $nyxThemeRoot 'maintained/browser'
+    $nyxThemeGenerated = Join-Path $nyxThemeRoot 'maintained/generated'
+    New-Item -ItemType Directory -Force -Path $nyxThemeNative, $nyxThemeBrowser, $nyxThemeGenerated | Out-Null
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxThemePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxThemeFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxThemeSeed",
+      "-Fu$nyxLazarus/lcl/units/$nyxThemePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxThemePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxThemePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxThemePlatform",
+      "-FU$nyxThemeNative", "-FE$nyxThemeNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxThemeFlags + @('tests/nyx_theme_authoring_controls.lpr'))
+    & (Join-Path $nyxThemeNative 'nyx_theme_authoring_controls.exe') `
+      (Join-Path $nyxThemeGenerated 'nyx.generated.theme.pas') `
+      (Join-Path $nyxThemeGenerated 'theme-desktop.png') `
+      (Join-Path $nyxThemeGenerated 'theme-compact.png')
+    if ($LASTEXITCODE -ne 0) { throw 'Native theme authoring failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxThemeFlags + @("-Fu$nyxThemeGenerated", 'tests/nyx_theme_generated.lpr'))
+    & (Join-Path $nyxThemeNative 'nyx_theme_generated.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Exact emitted theme execution failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxThemeSeed", "-FE$nyxThemeBrowser",
+      'tests/nyx_theme_authoring_controls.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-Fu$nyxThemeGenerated", "-FE$nyxThemeBrowser",
+      'tests/nyx_theme_generated.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxThemeBrowser 'rtl.js')
+    foreach ($nyxThemeHost in @('theme-authoring.html', 'theme-generated.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxThemeHost") -Destination $nyxThemeBrowser
+    }
+    Write-Host 'Theme consumers staged. Browser execution and observing rollout remain separate.'
     exit 0
   }
 

@@ -478,7 +478,8 @@ uses
   nyx.popover.types,
   nyx.typeahead,
   nyx.root.types,
-  nyx.controls;
+  nyx.controls,
+  nyx.design.tokens;
 
 type
   { Source tables use the same exact-text lookup as fresh document admission.
@@ -560,7 +561,7 @@ type
     vkMenuDefinition, vkMenuOptions, vkMenuBarDefinition, vkMenuBarOptions,
     vkPopoverOptions, vkTypeAheadOptions,
     vkMenuOpening, vkPopoverSide, vkPopoverAlignment, vkPopoverSizing,
-    vkPopoverDismissal, vkTypeAheadMatch);
+    vkPopoverDismissal, vkTypeAheadMatch, vkThemeTokens, vkThemePreset);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -591,6 +592,7 @@ type
     CalendarDate: TNyxCalendarDate;
     ClockTime: TNyxClockTime;
     RGBColor: TNyxRGBColor;
+    ThemeTokens: TNyxThemeTokens;
     TimeDomain: TNyxTimeDomain;
     ValueDomain: TNyxValueDomain;
     RootRef: TNyxRootRef;
@@ -672,6 +674,7 @@ type
       domains. No locale text, callback execution or renderer state is evaluated. }
     function ClockValue(const AName: TNyxText): TValue;
     function ClockDomain: TValue;
+    function ThemeTokens(const AName: TNyxText): TValue;
     function DataConstructor(const AName: TNyxText): TValue;
     function LocalIndex(const AName: TNyxText): Integer;
     function StateIndex(const AName: TNyxText): Integer;
@@ -1285,6 +1288,8 @@ begin
   RegisterEnum(vkPopoverDismissal, Ord(npdOutsidePress), 'npdOutsidePress');
   RegisterEnum(vkTypeAheadMatch, Ord(ntmFolded), 'ntmFolded');
   RegisterEnum(vkTypeAheadMatch, Ord(ntmExact), 'ntmExact');
+  RegisterEnum(vkThemePreset, Ord(ntpLight), 'ntpLight');
+  RegisterEnum(vkThemePreset, Ord(ntpDark), 'ntpDark');
   for LLayout := Low(TNyxLayoutMode) to High(TNyxLayoutMode) do
   begin
 
@@ -1866,6 +1871,7 @@ end;
 {$I nyx.source.query.inc}
 {$I nyx.source.menus.inc}
 {$I nyx.source.times.inc}
+{$I nyx.source.themes.inc}
 
 function TConfigurationReader.DataConstructor(const AName: TNyxText): TValue;
 var
@@ -2100,6 +2106,11 @@ begin
     tkWord:
       begin
         LName := LowerCase(LToken.Text);
+
+        if (LName = 'nyxthemetokens') or (LName = 'nyxthemepreset') then
+        begin
+          Exit(ThemeTokens(LName));
+        end;
 
         if (LName = 'nyxtime') or (LName = 'nyxnotime') then
         begin
@@ -5005,6 +5016,7 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.dates');
     LPrefix := WithNyxImport(LPrefix, 'nyx.times');
     LPrefix := WithNyxImport(LPrefix, 'nyx.colors');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.design.tokens');
 
     if LNeedsTypeAhead then
     begin

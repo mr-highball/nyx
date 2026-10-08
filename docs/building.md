@@ -7,6 +7,14 @@ Pascal. PowerShell only selects tools, passes compiler arguments and stages
 matched target artifacts. No Node, npm, Python, CSS framework or remote font is
 required.
 
+`theme-authoring` consumes an exact English semantic MCP export at
+`build/theme-authoring/seed/nyx.generated.view.pas`. It executes typed palette,
+source/history, reusable form and ordinary native Studio checks, then compiles
+and executes the exact emitted Pascal. Matching browser consumers and HTML hosts
+are staged for separate execution. It starts no listener or browser and changes
+no active project. See [semantic themes](themes.md) for the contract and remaining
+browser/phone qualification.
+
 `color-fields` executes typed RGB admission/source/history and ordinary native
 picker controls against an exact MCP-exported English seed. It compiles both
 Studios, backend, browser consumers and source worker; both compilers must refuse

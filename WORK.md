@@ -7,6 +7,107 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: typed theme authoring — 2026-10-07
+
+This goal turn is **progress** against original Studio criterion 2 and the NS-1
+crafted authoring requirement. The previous mobile preservation recheck was
+**no progress** and earned no closure credit. Baseline `37cf316` remains verified
+on remote; the full Nyx/Studio goal and original acceptance criteria stay open.
+Authoring is the sole no-closure owner for this integrated packet: 34→35 once.
+Workflow/renderer/codegen/delivery remain 20/18/28/2.
+
+Preregistered outcome: consume existing application semantic colors/metrics through
+strong Pascal authoring, crafted source and one public Nyx-built theme editor in
+both ordinary Studio controllers. Include proposals, explicit apply/inherited
+reset, independent lifetime, paired history and stale/pending-draft refusal.
+Preserve the fifteen protected processes, nine complete pairs and 229 LAN files;
+do not retry rejected browser/backend launches or primary replacement.
+
+Delivered:
+- Immutable `TNyxThemeTokens` uses seven typed RGB roles, three Integer metrics
+  and closed light/dark presets. Exact replacement retains partial presence,
+  ordering and admitted hexadecimal case; reset removes the declaration and
+  reveals the renderer's independent base. The deployed token merge API remains
+  a separate compatibility boundary.
+- Generated Pascal uses fluent roles and typed RGB constructors instead of token
+  extension JSON. The managed reader admits that same contract and closed
+  presets; imported extension-based source remains supported. Unknown roles,
+  wrong types, absent colors and invalid ranges refuse.
+- Public `NewNyxThemeEditor` composes specialized Color, Spin and Checkbox
+  controls in a normal Nyx card. Override switches distinguish inheritance;
+  light/dark buttons change only a disposable proposal. Preset buttons wrap in
+  narrow columns. Both Studios consume this library form.
+- Apply/reset travel through the ordinary candidate processor, exact captured
+  baseline and one paired design/Pascal Undo step. Pending Pascal drafts refuse.
+  Value-only proposals survive source/panel/compact refreshes; changed contexts
+  retire them. Version-six per-workspace presentation retains theme visibility
+  and copied input, with exact migration from versions two through five.
+  Application tokens reach the canvas; Studio chrome keeps its own palette.
+- Semantic `theme` transactions replace an exact partial declaration or remove
+  it with null. Current discovery advertises ten closed roles; legacy `tokens`
+  continues merging. This is source/in-process qualification, not a live endpoint
+  upgrade. Bounded local-versus-effective inspection and current authenticated
+  deployment remain with the existing workflow owner.
+
+Semantic evidence: native MCP handles composed an independent English
+`review-5` seed in one eight-operation transaction at revision 2. Two bounded
+source windows exported the exact builder. One paired Undo/Redo restored the
+accepted tokens at revisions 3/4. The owned review was discarded at revision 4
+with receipt `scooty-theme-review-dispose-20261007`; primary stays at revision 2
+with its complete design/source/draft/navigation/history unchanged. Safe root-
+argument refusals preceded publication and changed no accepted state.
+
+Maintained evidence under ignored `build/theme-authoring/`:
+- `qualified-current.log`: `tools/build.ps1 -Target theme-authoring` exits 0.
+  Checked shared/ordinary Win32 Studio qualification passes **83** and the exact
+  emitted Pascal executes **five** checks; both report zero unfreed allocations.
+  The native journey edits actual RGB and Spin controls, retains unsubmitted
+  proposals, applies through the paired processor, verifies canvas font/action
+  color and independent chrome, exercises Undo/Redo, palette prefill, compact
+  retention and inherited reset/Undo. Actual MCP discovery, typed semantic
+  replacement, exact pair/history refusal and handwritten preset admission run
+  without starting a service.
+- `maintained/generated/theme-desktop.png` and `theme-compact.png` are inspected
+  ordinary Win32 captures at 1240×820 and a 390-pixel native host. Palette buttons
+  wrap; the large test radius/font are deliberate domain checks, not default
+  aesthetic approval. Native compact execution is not phone qualification.
+- `current-callers/workspace/run.log`: **248** concurrent project ownership/
+  presentation checks pass, including versions 2–5 migration, zero leaks.
+  Current native Studio/backend, browser Studio, embedded-RTL module worker and
+  workspace counterpart compile. Matching form/generated browser consumers
+  compile and stage; each browser compiler run reports seven installed RTL
+  warnings, zero owned warnings. Native owned warnings are zero.
+- Earlier integration logs retain the relevant core, LCL and Studio regressions;
+  final targeted checks cover the changed preference layout and callers.
+  All owned build/test handles are terminal. No test listener remains.
+
+Preparation corrections are bounded: Spin initialization uses its Integer
+overload and full declared bounds; checkbox values use the actual Boolean value
+contract; pas2js browser event construction uses a Pascal external class. The
+first schema/refusal run expected an HTTP error response from the in-process API;
+the API correctly raises. A backtrace identified `ENyxJSON` as the strict scalar
+refusal. The fixture now checks that exact exception plus unchanged revision,
+complete pair and Undo/Redo, without weakening admission. No product publication
+bug was inferred from that harness error.
+
+Readonly `preservation.log` at 2026-10-08T01:35:02Z verifies all fifteen exact
+process identities, nine complete pairs, the retained 147,033-byte checkpoint,
+229 frozen files and HTTP-200 matching index/application/worker/RTL bytes.
+The primary LAN release remains `6fc231ed7268a89a93bfbc9e4f083fcbbedfb00b`;
+neither its files/process nor the user's active pair is replaced. Earlier
+automatic approval review rejected browser/backend launch and primary replacement,
+stating only "blocked by policy"; no equivalent action was retried.
+
+No original full criterion, milestone or product closes. End this integrated
+theme-authoring boundary. Current browser/observing execution, physical-phone
+input, hardware/IME/accessibility, other widgetsets, contrast/visual/performance
+budgets, assets and full authoring/parity/application delivery retain their
+original owners. Public usage is [semantic themes](docs/themes.md); original
+acceptance remains [Studio authoring](TODO/NS-4_studio-authoring_01.md).
+The remote checkpoint receipt belongs to ignored
+`build/theme-authoring/remote-checkpoint.json`; it records the exact implementation
+and remote SHA plus final worktree state after publication.
+
 ## Current return path: native focus regression — 2026-10-07
 
 Previous goal turn is **progress**: typed RGB value/domain/source/ordinary controls
@@ -267,6 +368,20 @@ services/pairs/LAN payload remain exact; final preservation and authorized
 remote checkpoint receipts belong under ignored `build/typeahead-workflow/`.
 
 ## Latest user steering: mobile canvas space recheck — 2026-10-07
+
+Latest screenshot follow-up at 2026-10-08T01:05:33Z: direct named semantic MCP
+authenticates the unchanged primary revision 2/selection/home with no pending
+draft or Undo/Redo. Fresh read-only verification preserves fifteen service
+identities, nine complete pairs and 229 sealed LAN files, with LAN/loopback
+bindings and served asset hashes exact. Receipt:
+`build/mobile-space-review/preservation-current.log`. Inspected retained normal
+and expanded phone captures: the already delivered blend is readable and allocates
+62%/92% in its earlier CSS 390×640 browser journey. The supplied screenshot still
+shows the superseded stacked toolbar. A fresh LAN request with a cache-busting
+query returns HTTP 200, no-store and device-width viewport. No new physical-phone
+or browser execution is claimed. No duplicate UI implementation, protected
+replacement or acceptance credit is warranted. Resume the typed theme return
+path above after this mobile follow-up; only its preregistration is pending.
 
 Latest follow-up: the direct named MCP read still authenticates revision 2 with
 the same selection and no pending draft/history. Fresh 2026-10-08T00:06:26Z

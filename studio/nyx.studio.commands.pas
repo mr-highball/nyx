@@ -68,7 +68,8 @@ uses
   nyx.state,
   nyx.binding.types,
   nyx.studio.authoring,
-  nyx.studio.collections;
+  nyx.studio.collections,
+  nyx.theme.editor;
 
 function RouteNyxStudioSource(ASession: TNyxStudioSession; ANode: TNyxNode;
   AEvent: TNyxTrigger): Boolean;
@@ -145,6 +146,7 @@ var
   LProjection: TNyxNode;
   LSpec: TNyxBindingSpec;
   LInherit: Boolean;
+  LThemeChange: TNyxThemeEditorChange;
 begin
   Result := sacNone;
   AEdit := Default(TNyxStudioDesignEdit);
@@ -156,6 +158,20 @@ begin
 
   AEdit.Selection := ASession.SelectedID;
   AEdit.View := ASession.ActiveViewID;
+
+  if (AEvent = ntClick) and CaptureNyxThemeEditor(ANode, AShellRoot, LThemeChange) then
+  begin
+
+    if NyxThemeEditorBaseline(ASession.Document) <> LThemeChange.Baseline then
+    begin
+      raise ENyxModel.Create('Theme changed; review the current palette before applying');
+    end;
+    AEdit.Action := sdaTheme;
+    AEdit.Theme := LThemeChange.Tokens;
+    AEdit.ThemeReset := LThemeChange.Reset;
+    AEdit.ThemeBaseline := LThemeChange.Baseline;
+    Exit(sacEdit);
+  end;
 
   if ANode.Prop(NyxStudioStateCommandKey) <> '' then
   begin

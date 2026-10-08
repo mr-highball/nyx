@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Application themes now use immutable fluent RGB/Integer roles, crafted source
+and a public Nyx-built editor consumed by both Studios. Proposals, explicit
+Apply/inherited reset, paired history and independent canvas/chrome are exercised
+by 83 shared/ordinary Win32 checks; exact emitted Pascal passes five and workspace
+regression 248, leak-free. Both Studios/backend, browser consumers and worker
+compile with zero owned warnings. Browser/phone execution and rollout remain open;
+the frozen LAN service retains its earlier API. See
+[the packet](WORK.md#current-return-path-typed-theme-authoring--2026-10-07)
+and [public authoring](docs/themes.md).
+
 The native clock focus regression is resolved: actual post-handler LCL focus
 qualifies native notifications before updating Nyx's transition baseline. A
 synthetic kill/set reaffirmation no longer invents a second returning callback.

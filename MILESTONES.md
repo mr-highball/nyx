@@ -3,6 +3,17 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current theme integration (2026-10-07): immutable fluent palette/metrics and
+crafted source reach both ordinary Studios through one public Nyx theme form.
+Proposals, exact Apply/inherited reset, paired history and independent canvas/
+chrome pass 83 shared/actual Win32 checks; exact emitted Pascal five and workspace
+regression 248, leak-free. Both Studios/backend and browser consumers/worker
+compile with zero owned warnings. No original full criterion closes: authoring
+alone advances no-closure 34→35; workflow/renderer/codegen/delivery stay 20/18/28/2.
+End this integrated theme boundary; assets, full both-target authoring/parity,
+current browser/phone/observing execution and delivery retain their original
+owners. See [the packet](WORK.md#current-return-path-typed-theme-authoring--2026-10-07).
+
 Current native focus repair (2026-10-07): actual post-handler LCL focus qualifies
 native notifications; synthetic kill/set reaffirmation cannot duplicate entry.
 Ordinary Win32 clock/calendar/RGB checks pass 85/94/34 and catalog focus/key checks

@@ -15,6 +15,15 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Theme inspection/deployment gap (2026-10-07): the authoring packet adds a closed
+exact-replacement `theme` operation and in-process discovery/refusal evidence.
+The protected authenticated endpoint keeps its earlier `tokens` merge API.
+`nyx_tokens` still returns the effective palette; bounded local-versus-effective
+declaration inspection is not yet exposed. This existing workflow task owns that
+semantic inspection and current authenticated/observing journey, without new
+closure credit. See
+[the authoring packet](../WORK.md#current-return-path-typed-theme-authoring--2026-10-07).
+
 Current saved-search workflow (2026-10-07): existing `nyx_collections` advertises
 the closed version-four binding, bounded local/effective/restorable scalar options
 and typed policy-only set/library-default reset. Lists/trees report capability;

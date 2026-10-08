@@ -36,6 +36,7 @@ uses
   nyx.data,
   nyx.hostspace, nyx.hostspace.browser,
   nyx.content.editor,
+  nyx.theme.editor, nyx.studio.theme,
   Classes,
   SysUtils,
   JS,
@@ -688,6 +689,8 @@ begin
   LState.QueryEditorDraft := FViewState.QueryEditorDraft;
   LState.TimeDomainEditorDraft := FViewState.TimeDomainEditorDraft;
   LState.ContentEditorDraft := FViewState.ContentEditorDraft;
+  LState.ThemeVisible := FViewState.ThemeVisible;
+  LState.ThemeEditorDraft := FViewState.ThemeEditorDraft;
   LState.CallbackRemoval := FCallbackRemoval;
 
   if FRootRemoval <> nil then
@@ -712,6 +715,7 @@ begin
   FViewState.QueryEditorDraft.Restore(Result.Pages[0]);
   FViewState.TimeDomainEditorDraft.Restore(Result.Pages[0]);
   FViewState.ContentEditorDraft.Restore(Result.Pages[0]);
+  FViewState.ThemeEditorDraft.Restore(Result.Pages[0]);
 end;
 
 procedure TNyxStudio.SourceModalDismiss;
@@ -781,6 +785,7 @@ begin
     FViewState.QueryEditorDraft.Clear;
     FViewState.TimeDomainEditorDraft.Clear;
     FViewState.ContentEditorDraft.Clear;
+    FViewState.ThemeEditorDraft.Clear;
     Exit;
   end;
   LEditor := FShellRenderer.Root.Find('inspector-menu');
@@ -846,6 +851,7 @@ begin
   FViewState.QueryEditorDraft.Capture('inspector-collection-query', FShellRenderer.Root);
   FViewState.TimeDomainEditorDraft.Capture('inspector-time-domain', FShellRenderer.Root);
   FViewState.ContentEditorDraft.Capture('inspector-content', FShellRenderer.Root);
+  FViewState.ThemeEditorDraft.Capture('studio-theme-editor', FShellRenderer.Root);
 end;
 
 procedure TNyxStudio.Refresh(ARetainCanvas, APreserveDraft: Boolean);
@@ -1912,6 +1918,7 @@ var
   LCompilerIndex: Integer;
   LHierarchyChanged: Boolean;
   LContentDraft: TNyxContentEditorDraft;
+  LThemeDraft: TNyxThemeEditorDraft;
   LContentFocus: TJSHTMLElement;
 begin
 
@@ -2003,6 +2010,26 @@ begin
       begin
         LContentFocus.focus;
       end;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-theme-toggle') then
+    begin
+      FViewState.ThemeVisible := not FViewState.ThemeVisible;
+      Refresh(True, True);
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and PrepareNyxStudioThemePreset(FSession,
+      ANode, FShellRenderer.Root, LThemeDraft) then
+    begin
+      FViewState.ThemeEditorDraft := LThemeDraft;
+
+      if not FViewState.ThemeEditorDraft.Restore(FShellRenderer.Root) then
+      begin
+        raise ENyxModel.Create('Theme form changed before the palette could be loaded');
+      end;
+      FShellRenderer.Sync;
       Exit;
     end;
 
@@ -3571,6 +3598,7 @@ var
   LPane: TJSHTMLElement;
 begin
   CaptureNewStateDraft;
+  CaptureMenuDraft;
   LValue := DefaultNyxStudioPresentation;
   LValue.CodeVisible := FCodeVisible;
   LValue.SourceTab := FSourceTab;
@@ -3597,6 +3625,8 @@ begin
   LValue.OutputVisible := FOutputVisible;
   LValue.OutputTarget := FOutputTarget;
   LValue.FilesVisible := FFilesVisible;
+  LValue.ThemeVisible := FViewState.ThemeVisible;
+  LValue.ThemeDraft := FViewState.ThemeEditorDraft;
   { Read the live mounted panes at departure. The cached positions reflect the
     preceding shell refresh and may precede the operator's most recent scroll. }
   LPane := MountedStudioElement(FShellRenderer, 'studio-left');
@@ -3662,6 +3692,9 @@ begin
   FViewState.QueryEditorDraft.Clear;
   FViewState.TimeDomainEditorDraft.Clear;
   FViewState.ContentEditorDraft.Clear;
+  FViewState.ThemeEditorDraft.Clear;
+
+  FViewState.ThemeVisible := False;
 
   if not FRecoveryEnabled then
   begin
@@ -3702,6 +3735,8 @@ begin
     FOutputVisible := LValue.OutputVisible;
     FOutputTarget := LValue.OutputTarget;
     FFilesVisible := LValue.FilesVisible;
+    FViewState.ThemeVisible := LValue.ThemeVisible;
+    FViewState.ThemeEditorDraft := LValue.ThemeDraft;
     FLeftScroll := LValue.LeftScroll;
     FRightScroll := LValue.RightScroll;
     FAgentsScroll := LValue.AgentsScroll;

@@ -33,6 +33,7 @@ uses
   nyx.dates,
   nyx.times,
   nyx.colors,
+  nyx.design.tokens,
   nyx.data,
   nyx.contract,
   nyx.types,
@@ -1404,6 +1405,11 @@ var
     LData: TJSONData;
     LObject: TJSONObject;
     LFieldIndex: Integer;
+    LTokens: TNyxThemeTokens;
+    LValues: TNyxDataValue;
+    LTokenIndex: Integer;
+    LMethod: TNyxText;
+    LArgument: TNyxText;
   begin
 
     if AExtensions.Count = 0 then
@@ -1417,7 +1423,46 @@ var
       for LFieldIndex := 0 to LObject.Count - 1 do
       begin
 
-        if (AExtensions.Scope = nesNode) and
+        if (AExtensions.Scope = nesDocument) and
+          (LObject.Names[LFieldIndex] = NyxDesignTokensKey) then
+        begin
+          LTokens := TNyxThemeTokens.FromData(
+            TNyxDataValue.ParseJSON(LObject.Items[LFieldIndex].AsJSON));
+          LValues := LTokens.ToData;
+          LLines.Add('    { Semantic palette and logical metrics for every application view. }');
+          LArgument := '    SetNyxThemeTokens(' + AOwner + ', NyxThemeTokens';
+
+          if LValues.Count = 0 then
+          begin
+            LLines.Add(LArgument + ');');
+          end
+          else
+          begin
+            LLines.Add(LArgument);
+            for LTokenIndex := 0 to LValues.Count - 1 do
+            begin
+              LMethod := LValues.Key(LTokenIndex);
+              LMethod := UpperCase(Copy(LMethod, 1, 1)) + Copy(LMethod, 2, MaxInt);
+
+              if LValues.Field(LValues.Key(LTokenIndex)).Kind = ndText then
+              begin
+                LArgument := PascalRGB(LValues.Field(LValues.Key(LTokenIndex)).AsText);
+              end
+              else
+              begin
+                LArgument := IntToStr(LValues.Field(LValues.Key(LTokenIndex)).AsInteger);
+              end;
+              LArgument := '      .' + LMethod + '(' + LArgument + ')';
+
+              if LTokenIndex = LValues.Count - 1 then
+              begin
+                LArgument := LArgument + ');';
+              end;
+              LLines.Add(LArgument);
+            end;
+          end;
+        end
+        else if (AExtensions.Scope = nesNode) and
           (LObject.Names[LFieldIndex] = NyxContractKey) then
         begin
           EmitContract(TNyxDataValue.ParseJSON(LObject.Items[LFieldIndex].AsJSON), AOwner);
@@ -1932,6 +1977,7 @@ begin
     LLines.Add('  nyx.dates,');
     LLines.Add('  nyx.times,');
     LLines.Add('  nyx.colors,');
+    LLines.Add('  nyx.design.tokens,');
     LLines.Add('  nyx.types,');
     LLines.Add('  nyx.responsive,');
     LLines.Add('  nyx.presentations,');

@@ -1623,6 +1623,17 @@ begin
     '{"type":"object","properties":{"op":{"const":"delete"},"id":{"type":"string"}},"required":["op","id"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"title"},"value":{"type":"string"}},"required":["op","value"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"tokens"},"values":{"type":"object"}},"required":["op","values"],"additionalProperties":false},' +
+    '{"type":"object","properties":{"op":{"const":"theme"},"values":{"oneOf":[{"type":"null"},{"type":"object","properties":{' +
+    '"background":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
+    '"surface":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
+    '"text":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
+    '"muted":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
+    '"border":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
+    '"accent":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
+    '"accentText":{"type":"string","pattern":"^#[0-9a-fA-F]{6}$"},' +
+    '"radius":{"type":"integer","minimum":0,"maximum":1000},' +
+    '"controlRadius":{"type":"integer","minimum":0,"maximum":1000},' +
+    '"fontSize":{"type":"integer","minimum":1,"maximum":256}},"additionalProperties":false}]}},"required":["op","values"],"additionalProperties":false},' +
     ContentOperationSchema.ToJSON + ',' +
     MenuDefinitionOperationSchema.ToJSON + ',' +
     LMenuBarOperation.ToJSON + ',' +
@@ -1685,7 +1696,7 @@ begin
         NyxField('offset', IntSchema(0, 64)), NyxField('limit', IntSchema(1, 16)),
         NyxField('itemOffset', IntSchema(0, 256)), NyxField('itemLimit', IntSchema(1, 16)),
         NyxField('textOffset', IntSchema(0, 1000000)), NyxField('textLimit', IntSchema(1, 1024))]), []), True),
-    Tool('nyx_tokens', 'Read effective semantic theme colors and typed logical-pixel metrics. Change through a grouped tokens operation.', Schema(NyxObject([]), []), True),
+    Tool('nyx_tokens', 'Read effective semantic theme colors and typed logical-pixel metrics. Use a grouped theme operation for exact declarations/inherited reset, or tokens for compatibility merge.', Schema(NyxObject([]), []), True),
     Tool('nyx_presentations', 'Inspect one exact named presentation or at most 16 definitions per page (default 8). Names are exact, case-sensitive Unicode application references; max 64 per document. Automatic definitions combine logical width, height and orientation. An optional exact container name selects the nearest eligible measured ancestor content box; omission measures the whole view. Width containment supports width rules; size containment also supports height/orientation. Missing boxes stay inactive. Manual definitions require activation manual, all bounds zero, orientation any and no container; one manual choice may be previewed alongside automatic rules. Controls use typed WhenPresentation scopes. In nyx_transaction, presentation-define creates/replaces a shared definition; presentation-use initializes a supported override; presentation-set upserts one typed scalar. presentation-reset removes one exact override; presentation-remove refuses remaining references. Group related edits as one paired Undo step. Queries preserve navigation/history; no document dump.',
       Schema(NyxObject([NyxField('name', TextSchema('Optional exact presentation name; excludes pagination')),
         NyxField('offset', IntSchema(0, 64)), NyxField('limit', IntSchema(1, 16))]), []), True),

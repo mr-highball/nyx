@@ -576,6 +576,28 @@ var
   LDocument: Boolean;
 begin
 
+  if At('SetNyxThemeTokens') then
+  begin
+    Inc(FCursor);
+    Expect('(');
+    Expect('Result');
+    Expect(',');
+    LValue := Expression;
+
+    if LValue.Kind <> vkThemeTokens then
+    begin
+      Fail('SetNyxThemeTokens requires a typed fluent palette');
+    end;
+    Expect(')');
+    Expect(';');
+
+    if FApply then
+    begin
+      SetNyxThemeTokens(FDocument, LValue.ThemeTokens);
+    end;
+    Exit;
+  end;
+
   if At('NyxCallbacks') then
   begin
     Callbacks;

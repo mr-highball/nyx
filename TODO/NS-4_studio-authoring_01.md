@@ -40,6 +40,27 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Typed application themes — 2026-10-07
+
+Original criterion 2 consumes strongly typed RGB/Integer semantic roles and
+crafted source through one reusable public Nyx theme form in both ordinary Studio
+controllers. Override switches retain inheritance; presets are unsubmitted
+proposals. Exact Apply/inherited reset use the ordinary candidate processor,
+captured baseline and paired Undo/Redo. Copied input survives source/panel/compact
+refreshes and per-workspace preferences; stale contexts/pending Pascal refuse.
+Application tokens affect the canvas while Studio chrome stays independent.
+
+Checked shared/actual Win32 checks pass 83, exact emitted Pascal five and workspace
+regression 248, leak-free. Both Studios/backend, browser counterparts and source
+worker compile with zero owned warnings. Current semantic replacement/discovery
+executes in-process; the frozen authenticated endpoint retains its earlier API.
+Browser/observing execution, physical-phone input, assets, accessibility, other
+widgetsets, contrast/visual/performance and full application/parity criteria stay
+open. No original criterion closes: authoring no-closure advances 34→35 once,
+workflow/renderer/codegen/delivery remain 20/18/28/2. End this integrated boundary.
+See [usage](../docs/themes.md) and
+[evidence](../WORK.md#current-return-path-typed-theme-authoring--2026-10-07).
+
 ## Revising recipe choices — 2026-10-07
 
 Original criteria 1/2/6 now consume a public value-only content form draft and

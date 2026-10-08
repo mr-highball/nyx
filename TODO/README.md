@@ -44,6 +44,17 @@ remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
+Latest integrated themes (2026-10-07): strongly typed palette/metrics and crafted
+source feed a public Nyx form in both ordinary Studio controllers. Proposals,
+exact Apply/inherited reset, paired history and independent canvas/chrome pass
+83 shared/actual Win32 checks; exact emitted Pascal five and workspace regression
+248, leak-free. Both Studios/backend, browser consumers and worker compile with
+zero owned warnings. No full criterion closes: authoring alone advances 34→35;
+workflow/renderer/codegen/delivery remain 20/18/28/2. End this boundary; browser/
+phone/observing execution, assets and full authoring/parity/delivery retain the
+[original owner](NS-4_studio-authoring_01.md) and
+[evidence](../WORK.md#current-return-path-typed-theme-authoring--2026-10-07).
+
 Latest native focus repair (2026-10-07): post-handler actual focus rejects stale
 native reaffirmation without changing creator logical slots. Unchanged ordinary
 clock/calendar/RGB checks pass 85/94/34 and catalog focus/key checks 30,637 across

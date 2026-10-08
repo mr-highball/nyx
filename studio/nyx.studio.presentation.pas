@@ -27,7 +27,8 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.model, nyx.binding.types, nyx.presentations,
-  nyx.studio.view, nyx.studio.inspector, nyx.studio.authoring, nyx.studio.palette;
+  nyx.studio.view, nyx.studio.inspector, nyx.studio.authoring, nyx.studio.palette,
+  nyx.theme.editor;
 
 type
   { Owned editor presentation, independent of a document pair and its history.
@@ -66,6 +67,9 @@ type
     OutputVisible: Boolean;
     OutputTarget: TNyxText;
     FilesVisible: Boolean;
+    { Per-workspace theme proposal, copied without documents or controls. }
+    ThemeVisible: Boolean;
+    ThemeDraft: TNyxThemeEditorDraft;
     LeftScroll: Integer;
     RightScroll: Integer;
     AgentsScroll: Integer;
@@ -122,6 +126,8 @@ end;
 
 function DefaultNyxStudioPresentation: TNyxStudioPresentation;
 begin
+  { Initialize new scalar preferences deliberately on native record returns. }
+  Result := Default(TNyxStudioPresentation);
   Result.CodeVisible := False;
   Result.SourceTab := nstSource;
   Result.SourceExpanded := False;
@@ -172,7 +178,7 @@ begin
     LPresentation := NyxData(AValue.PresentationSelection.Reference.Name);
   end;
   Result := NyxObject([
-    NyxField('version', NyxData(5)),
+    NyxField('version', NyxData(6)),
     NyxField('codeVisible', NyxData(AValue.CodeVisible)),
     NyxField('sourceTab', NyxData(Ord(AValue.SourceTab))),
     NyxField('sourceExpanded', NyxData(AValue.SourceExpanded)),
@@ -198,6 +204,8 @@ begin
     NyxField('outputVisible', NyxData(AValue.OutputVisible)),
     NyxField('outputTarget', NyxData(AValue.OutputTarget)),
     NyxField('filesVisible', NyxData(AValue.FilesVisible)),
+    NyxField('themeVisible', NyxData(AValue.ThemeVisible)),
+    NyxField('themeDraft', AValue.ThemeDraft.ToData),
     NyxField('leftScroll', NyxData(AValue.LeftScroll)),
     NyxField('rightScroll', NyxData(AValue.RightScroll)),
     NyxField('agentsScroll', NyxData(AValue.AgentsScroll)),
@@ -231,17 +239,18 @@ var
   LVersion: Integer;
   LPresentation: TNyxDataValue;
 const
-  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
+  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
 begin
   Result := DefaultNyxStudioPresentation;
   LValue := TNyxDataValue.ParseJSON(AText);
 
   if (LValue.Kind <> ndObject) or
-    not (LValue.Field('version').AsInteger in [2, 3, 4, 5]) or
+    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6]) or
     ((LValue.Field('version').AsInteger = 2) and (LValue.Count <> 32)) or
     ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) or
     ((LValue.Field('version').AsInteger = 4) and (LValue.Count <> 35)) or
-    ((LValue.Field('version').AsInteger = 5) and (LValue.Count <> 39)) then
+    ((LValue.Field('version').AsInteger = 5) and (LValue.Count <> 39)) or
+    ((LValue.Field('version').AsInteger = 6) and (LValue.Count <> 41)) then
   begin
     raise ENyxModel.Create('Unsupported editor presentation packet');
   end;
@@ -252,6 +261,8 @@ begin
     if (Pos('|', LValue.Key(LIndex)) > 0) or
       (Pos('|' + LValue.Key(LIndex) + '|', CKeys) = 0) or
       ((LVersion < 4) and (LValue.Key(LIndex) = 'presentation')) or
+      ((LVersion < 6) and ((LValue.Key(LIndex) = 'themeVisible') or
+        (LValue.Key(LIndex) = 'themeDraft'))) or
       ((LVersion < 5) and ((LValue.Key(LIndex) = 'detailsPercent') or
         (LValue.Key(LIndex) = 'detailsExpanded') or
         (LValue.Key(LIndex) = 'canvasToolsVisible') or
@@ -316,6 +327,12 @@ begin
   Result.OutputVisible := LValue.Field('outputVisible').AsBoolean;
   Result.OutputTarget := LValue.Field('outputTarget').AsText;
   Result.FilesVisible := LValue.Field('filesVisible').AsBoolean;
+
+  if LVersion >= 6 then
+  begin
+    Result.ThemeVisible := LValue.Field('themeVisible').AsBoolean;
+    Result.ThemeDraft := TNyxThemeEditorDraft.FromData(LValue.Field('themeDraft'));
+  end;
   Result.LeftScroll := IntegerValue(LValue, 'leftScroll', 0, 2147483647);
   Result.RightScroll := IntegerValue(LValue, 'rightScroll', 0, 2147483647);
   Result.AgentsScroll := IntegerValue(LValue, 'agentsScroll', 0, 2147483647);

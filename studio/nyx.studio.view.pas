@@ -38,6 +38,7 @@ uses
   nyx.collections.query.editor,
   nyx.times.editor,
   nyx.content.editor,
+  nyx.theme.editor,
   nyx.contract,
   nyx.schema,
   nyx.types,
@@ -138,6 +139,10 @@ type
     TimeDomainEditorDraft: TNyxTimeDomainEditorDraft;
     { Copied recipe proposal survives inspector parking and shell transitions. }
     ContentEditorDraft: TNyxContentEditorDraft;
+    { Theme visibility/proposal belongs to this project's editor presentation.
+      Changing it never edits a document or the independent Studio chrome theme. }
+    ThemeVisible: Boolean;
+    ThemeEditorDraft: TNyxThemeEditorDraft;
     CallbackRemoval: TNyxCallbackRemoval;
     { Copied confirmation metadata, not an interface or borrowed model. }
     RootRemoval: TNyxDataValue;
@@ -1036,6 +1041,13 @@ begin
   LViews.Add(Button(NyxStudioReviewRootID, 'Remove active view').Configure
     .Enabled(ASession.ActiveViewID <> '').Done);
   AddStatePanel(LLeft, ASession, AState);
+  LLeft.Add(NewNyxButton('action-theme-toggle').Configure.Text('Theme')
+    .Hint('Edit the application palette and logical metrics.').Done);
+
+  if AState.ThemeVisible then
+  begin
+    LLeft.Add(NewNyxThemeEditor('studio-theme-editor', ASession.Document));
+  end;
   AddNyxCollectionDefaultsPanel(LLeft, ASession, AState.StateVisible, AState.PendingDesign);
   AddNyxStudioPalette(LLeft, ASession.Catalog, AState.Palette);
   LCenter := TNyxNode.Create('column', 'studio-center');

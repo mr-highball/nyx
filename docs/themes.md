@@ -2,6 +2,54 @@
 
 [Components](components.md) · [Architecture](architecture.md) · [Builds](building.md)
 
+Use `nyx.design.tokens` for application authoring. `TNyxThemeTokens` is an
+immutable fluent value with seven typed RGB roles and three integer metrics.
+An omitted role inherits the renderer's independent base. For example:
+
+```pascal
+SetNyxThemeTokens(LDocument, NyxThemeTokens
+  .Accent(NyxRGB(53, 195, 165))
+  .AccentText(NyxRGB(22, 19, 36))
+  .Radius(18)
+  .ControlRadius(10)
+  .FontSize(16));
+```
+
+`NyxThemePreset(ntpLight)` and `NyxThemePreset(ntpDark)` return complete copied
+palettes which can be enriched through the same fluent methods. Partial values
+retain exact presence, ordering and imported hexadecimal case. `ColorValue` and
+`MetricValue` require a declared role; `NyxDesignTokens` returns the effective
+palette instead. `FromData` is the strict persistence boundary, rejecting unknown
+roles, absent colors, wrong scalar types and values outside the ranges below.
+
+`SetNyxThemeTokens` replaces the exact document declaration after validation;
+`ResetNyxThemeTokens` removes it and reveals inherited colors/metrics. These
+functions borrow the document and never own or mutate a renderer's base theme.
+Generated Pascal uses these public typed calls rather than extension JSON. Source
+admission supports the fluent role methods and closed light/dark preset factory;
+existing extension-based source remains an explicit compatibility boundary.
+
+Studio's **Project → Theme** consumes `NewNyxThemeEditor` from `nyx.theme.editor`.
+Its RGB fields and integer spinners are ordinary specialized Nyx controls. Each
+role has an override switch. Light/Dark buttons prefill a disposable proposal;
+only **Apply theme** publishes it. **Restore inherited theme** removes the local
+declaration. Both actions use one ordinary paired design/Pascal Undo step. A
+pending Pascal draft refuses mutation; a changed theme refuses stale forms.
+The canvas consumes application tokens while Studio chrome retains its own theme.
+
+`TNyxThemeEditorDraft` owns only copied input and exact local/effective context.
+Collapsing the form and switching compact panels retain it. Changed declarations,
+base palettes, field kinds or explicit project replacement retire it. The browser
+stores it per workspace in version-6 editor preferences; versions 2–5 migrate
+without importing a theme proposal. It never enters exported designs or history.
+
+`tools/build.ps1 -Target theme-authoring` consumes an English MCP review export
+at `build/theme-authoring/seed/nyx.generated.view.pas`, executes shared/actual
+native Studio checks, then executes the exact emitted Pascal. Matching browser
+consumers are staged separately. Browser execution, physical-phone input and
+observing rollout remain open; native success and compilation do not establish
+those outcomes. See [current evidence](../WORK.md#current-return-path-typed-theme-authoring--2026-10-07).
+
 `TNyxTheme` is a portable palette in `nyx.theme`. Its fields have the same meaning
 in the browser and Lazarus adapters. `Create` selects the light defaults;
 `Create(True)` selects dark defaults. A renderer creates and owns its default

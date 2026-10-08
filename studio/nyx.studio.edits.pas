@@ -29,7 +29,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.catalog, nyx.designer.resize,
   nyx.responsive, nyx.presentations, nyx.content, nyx.root.types, nyx.designer.move,
-  nyx.contract, nyx.menu.declarations, nyx.menu.bar.declarations;
+  nyx.contract, nyx.menu.declarations, nyx.menu.bar.declarations, nyx.design.tokens;
 
 type
   { Closed semantic operation vocabulary. JSON names are admitted once at the
@@ -40,7 +40,7 @@ type
     doPresentationDefine, doPresentationRemove, doPresentationUse, doPresentationReset,
     doPresentationSet, doContentSet, doValueDomainSet, doValueDomainInherit,
     doMenuDefine, doMenuRemove, doMenuAttach, doMenuInherit,
-    doMenuBarSet, doMenuBarInherit);
+    doMenuBarSet, doMenuBarInherit, doTheme);
 
   { Immutable copied menu intent. Definition replaces one registry entry;
     attachment sets one exact local invoker reference (NoMenu explicitly masks
@@ -227,6 +227,10 @@ function NyxDesignChanges(const APatch: INyxDesignPatch): INyxDesignChanges;
   type; unknown fields/operations fail. IDs and custom kind names are user data.
   Schema/property/document admission also runs on the complete detached result. }
 function ReadNyxDesignPatch(const AOperations: TNyxDataValue): INyxDesignPatch;
+{ One immutable exact theme command. Reset restores inheritance; it requires an
+  empty proposal and cannot accidentally merge explicit default colors. }
+function NyxThemePatch(const ATokens: TNyxThemeTokens;
+  AReset: Boolean = False): INyxDesignPatch;
 
 { Typed authoring never supplies raw operation spellings. Nil definitions and
   uninitialized names refuse before intent is retained. Menu edits are values,
@@ -345,7 +349,7 @@ procedure ValidateNyxPositionOwner(ADocument: TNyxDocument; const AControl: TNyx
 implementation
 
 uses
-  nyx.schema, nyx.design.tokens, nyx.composition, nyx.binding.types;
+  nyx.schema, nyx.composition, nyx.binding.types;
 
 function NyxPositionControl(const AControl: TNyxControlRef;
   const APosition: TNyxMovePosition): TNyxPositionChange;
@@ -1751,6 +1755,19 @@ begin
       CheckFields(LWire, '|op|values|');
       LOperation.Properties := LWire.Field('values');
     end
+    else if LName = 'theme' then
+    begin
+      { Exact replacement/removal complements the deployed merge-token boundary.
+        Null restores inherited base; an empty object is a declared empty theme. }
+      LOperation.Operation := doTheme;
+      CheckFields(LWire, '|op|values|');
+      LOperation.Properties := LWire.Field('values');
+
+      if LOperation.Properties.Kind <> ndNull then
+      begin
+        TNyxThemeTokens.FromData(LOperation.Properties);
+      end;
+    end
     else
     begin
       raise ENyxModel.Create('Unknown semantic operation: ' + LName);
@@ -1771,12 +1788,32 @@ begin
       LOperation.Properties := LWire.Field('properties');
     end;
 
-    if LOperation.Properties.Kind <> ndObject then
+    if (LOperation.Properties.Kind <> ndObject) and
+      not ((LOperation.Operation = doTheme) and (LOperation.Properties.Kind = ndNull)) then
     begin
       raise ENyxModel.Create('Properties/tokens require typed object values');
     end;
     LOwner.FOperations[LIndex] := LOperation;
   end;
+end;
+
+function NyxThemePatch(const ATokens: TNyxThemeTokens; AReset: Boolean): INyxDesignPatch;
+var
+  LValue: TNyxDataValue;
+begin
+  LValue := ATokens.ToData;
+
+  if AReset then
+  begin
+
+    if LValue.Count <> 0 then
+    begin
+      raise ENyxModel.Create('Theme reset cannot also set colors or metrics');
+    end;
+    LValue := NyxNull;
+  end;
+  Result := ReadNyxDesignPatch(NyxArray([NyxObject([
+    NyxField('op', NyxData('theme')), NyxField('values', LValue)])]));
 end;
 
 { Shared scalar admission for ordinary and named properties. Spelling conversion
@@ -2357,6 +2394,18 @@ begin
             LNode.SetContent(NyxContentFromData(LOperation.Content.FValue));
           end;
         doTokens: SetNyxDesignTokens(Result, LOperation.Properties);
+        doTheme:
+          begin
+
+            if LOperation.Properties.Kind = ndNull then
+            begin
+              ResetNyxThemeTokens(Result);
+            end
+            else
+            begin
+              SetNyxThemeTokens(Result, TNyxThemeTokens.FromData(LOperation.Properties));
+            end;
+          end;
         doPresentationDefine:
           begin
             Result.Presentations.Define(LOperation.Presentation.FReference,

@@ -495,6 +495,20 @@ authenticated deployment and broader editor/creator parity remain open in WORK.m
 
 ## Edits and history
 
+The source candidate also accepts an exact document palette operation:
+`{"op":"theme","values":{"accent":"#35c3a5","fontSize":16}}`. Its seven
+color roles require defined `#RRGGBB` values; radii are integers 0–1000 and font
+size is an integer 1–256. Unknown roles and implicit scalar conversions refuse.
+Unlike the existing `tokens` merge boundary, `theme` replaces the whole local
+declaration: omitted roles inherit the independent host base. `values:null`
+removes it; an empty object remains an explicitly empty declaration. Group it
+with related edits in one revision-aware transaction and paired Undo operation.
+Discovery advertises the closed role schema. The protected observing server
+retains its prior API until an admitted rollout; the connected English review
+seed therefore used its existing `tokens` operation. This candidate's exact
+operation is exercised through the Pascal semantic dispatcher without claiming
+an upgraded live endpoint. Studio consumes the [same typed theme contract](themes.md).
+
 Every mutation supplies the revision it read and a unique `operationId`.
 
 ```json

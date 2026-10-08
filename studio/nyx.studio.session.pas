@@ -41,6 +41,7 @@ uses
   nyx.codec,
   nyx.catalog,
   nyx.controls,
+  nyx.design.tokens,
   nyx.designer.resize,
   nyx.codegen,
   nyx.source,
@@ -84,7 +85,7 @@ type
     sdaCanvasValue, sdaSetStateDefault, sdaCreateStateDefault,
     sdaRenameStateDefault, sdaRemoveStateDefault, sdaSetBinding, sdaInheritBinding,
     sdaEvent, sdaCollection, sdaPlacement, sdaResize, sdaPresentation, sdaPosition,
-    sdaContent, sdaValueDomain, sdaMenu);
+    sdaContent, sdaValueDomain, sdaMenu, sdaTheme);
   { Callback operations carry exact typed event/registration references. Removal
     includes the handler the user reviewed; IDs alone cannot authorize replacing
     a registration. Empty references belong only to add/policy intent. }
@@ -159,6 +160,11 @@ type
       Contains no document, control, renderer or mutable authoring facade. }
     Menu: TNyxMenuEdit;
     MenuBaseline: TNyxText;
+    { Copied palette proposal with exact absent/local declaration baseline.
+      Reset reveals the independent host base. No renderer or theme is retained. }
+    Theme: TNyxThemeTokens;
+    ThemeReset: Boolean;
+    ThemeBaseline: TNyxText;
     { Immutable origin of a canvas capture. Queue admission uses this mounted
       session/load identity even when the caller retains intent before enqueue. }
     property CanvasContext: TNyxStudioCommandContext read FCanvasContext;

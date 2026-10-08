@@ -474,7 +474,7 @@ begin
       NyxField('position', LPosition)]);
   LVersion := 9;
 
-  if FEdit.Action in [sdaContent, sdaValueDomain, sdaMenu] then
+  if FEdit.Action in [sdaContent, sdaValueDomain, sdaMenu, sdaTheme] then
   begin
     { Existing operations retain their deployed v9 shape. Appended recipe,
       value-policy and menu intents need new envelopes; old helpers stay compatible. }
@@ -488,7 +488,15 @@ begin
       LFields[LIndex] := NyxField(LEdit.Key(LIndex), LEdit.Field(LEdit.Key(LIndex)));
     end;
 
-    if FEdit.Action = sdaMenu then
+    if FEdit.Action = sdaTheme then
+    begin
+      LVersion := 13;
+      LFields[LCount] := NyxField('theme', NyxObject([
+        NyxField('values', FEdit.Theme.ToData),
+        NyxField('reset', NyxData(FEdit.ThemeReset)),
+        NyxField('baseline', NyxData(FEdit.ThemeBaseline))]));
+    end
+    else if FEdit.Action = sdaMenu then
     begin
       { Only the new menu intent needs v12; deployed envelopes keep their shape. }
       LVersion := 12;
@@ -576,6 +584,13 @@ begin
       (FEdit.ContentBaseline = AOther.FEdit.ContentBaseline);
   end;
 
+  if Result and (FEdit.Action = sdaTheme) then
+  begin
+    Result := (FEdit.Theme.ToData.ToJSON = AOther.FEdit.Theme.ToData.ToJSON) and
+      (FEdit.ThemeReset = AOther.FEdit.ThemeReset) and
+      (FEdit.ThemeBaseline = AOther.FEdit.ThemeBaseline);
+  end;
+
   if Result and (FEdit.Action = sdaValueDomain) then
   begin
     Result := FEdit.ValueDomain.Same(AOther.FEdit.ValueDomain) and
@@ -611,7 +626,8 @@ begin
 
   if (AData.Kind <> ndObject) or (AData.Count <> 7) or
     ((LVersion <> 5) and (LVersion <> 6) and (LVersion <> 7) and (LVersion <> 8) and
-    (LVersion <> 9) and (LVersion <> 10) and (LVersion <> 11) and (LVersion <> 12)) then
+    (LVersion <> 9) and (LVersion <> 10) and (LVersion <> 11) and (LVersion <> 12) and
+    (LVersion <> 13)) then
   begin
     raise ENyxModel.Create('Design processor requires its exact versioned ticket');
   end;
@@ -630,7 +646,7 @@ begin
     ((LVersion = 7) and (LEdit.Count <> 13)) or
     ((LVersion = 8) and (LEdit.Count <> 14)) or
     ((LVersion = 9) and (LEdit.Count <> 15)) or
-    ((LVersion in [10, 11, 12]) and (LEdit.Count <> 16)) then
+    ((LVersion in [10, 11, 12, 13]) and (LEdit.Count <> 16)) then
   begin
     raise ENyxModel.Create('Design processor ticket has invalid identity or intent');
   end;
@@ -645,7 +661,8 @@ begin
     ((LVersion = 9) and (LAction > Ord(sdaPosition))) or
     ((LVersion = 10) and (LAction > Ord(sdaContent))) or
     ((LVersion = 11) and (LAction <> Ord(sdaValueDomain))) or
-    ((LVersion = 12) and (LAction <> Ord(sdaMenu))) then
+    ((LVersion = 12) and (LAction <> Ord(sdaMenu))) or
+    ((LVersion = 13) and (LAction <> Ord(sdaTheme))) then
   begin
     raise ENyxModel.Create('Design processor action is outside its closed contract');
   end;
@@ -912,6 +929,25 @@ begin
       raise ENyxModel.Create('Menu intent requires its captured owner and baseline');
     end;
   end;
+
+  if Result.FEdit.Action = sdaTheme then
+  begin
+    LContent := LEdit.Field('theme');
+
+    if (LContent.Kind <> ndObject) or (LContent.Count <> 3) then
+    begin
+      raise ENyxModel.Create('Theme intent requires exact values, reset and baseline');
+    end;
+    Result.FEdit.Theme := TNyxThemeTokens.FromData(LContent.Field('values'));
+    Result.FEdit.ThemeReset := LContent.Field('reset').AsBoolean;
+    Result.FEdit.ThemeBaseline := LContent.Field('baseline').AsText;
+
+    if (Result.FEdit.ThemeBaseline = '') or
+      (Result.FEdit.ThemeReset and (Result.FEdit.Theme.ToData.Count <> 0)) then
+    begin
+      raise ENyxModel.Create('Theme intent requires a baseline and unambiguous reset');
+    end;
+  end;
 end;
 
 destructor TPreparedDesign.Destroy;
@@ -990,6 +1026,15 @@ begin
             raise ENyxModel.Create('Content choices changed since this editor was captured');
           end;
           LSession.ApplyPatch(ReadNyxDesignPatch(NyxArray([FRequest.FEdit.Content.ToData])));
+        end;
+      sdaTheme:
+        begin
+
+          if NyxThemeDeclaration(LSession.Document).ToJSON <> FRequest.FEdit.ThemeBaseline then
+          begin
+            raise ENyxModel.Create('Theme changed since this editor was captured');
+          end;
+          LSession.ApplyPatch(NyxThemePatch(FRequest.FEdit.Theme, FRequest.FEdit.ThemeReset));
         end;
       sdaValueDomain:
         begin
@@ -1331,6 +1376,17 @@ begin
       independent processor compares the mounted baseline against its fresh
       pair and returns a normal rejected diagnostic; staleness is not a failed
       scheduler/worker transport and must not be reported as one. }
+  end;
+
+  if AEdit.Action = sdaTheme then
+  begin
+    TNyxThemeTokens.FromData(AEdit.Theme.ToData);
+
+    if (AEdit.ThemeBaseline = '') or
+      (AEdit.ThemeReset and (AEdit.Theme.ToData.Count <> 0)) then
+    begin
+      raise ENyxModel.Create('Theme intent requires its exact baseline and proposal');
+    end;
   end;
 
   if AEdit.Action = sdaMenu then
