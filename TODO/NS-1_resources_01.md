@@ -16,6 +16,20 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Discovered raster validation gap — 2026-10-08
+
+Current image admission establishes framing/dimensions, not CRCs or decoded
+pixel integrity. Real browser replacement requests accept a damaged PNG and paint
+transparent sample pixels; native refuses the same bytes. This precise failure
+belongs to original resource admission/loading criteria, consumed by NS-2 parity.
+Preserve caller freedom through a typed validation policy with documented
+guarantees, while retaining atomic failures, independent ownership, persistence/
+source history and both-target execution. Keep cache policy separate from image
+validation; the existing caller cache override remains available. Do not swap
+fixtures until host decoding appears strict or claim portable integrity from load.
+No criterion closes. See
+[the failing regression](../WORK.md#current-return-path-decoded-browser-media--2026-10-08).
+
 **Acceptance Criteria:**
 
 - Named immutable resources retain exact bytes, Unicode text, numeric JSON tokens

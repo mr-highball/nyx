@@ -87,6 +87,9 @@ param(
   # Exact English review companion exported through bounded authenticated MCP.
   # Current typed RGB policies are explicitly enriched by the Pascal fixture.
   [string]$ColorSourceDirectory = 'build/color-fields/seed',
+  # Exact English image workshop exported from an owned semantic MCP review.
+  # Preserve the existing seed by default; qualification can select a fresh one.
+  [string]$ImageSourceDirectory = 'build/image-presentation/seed',
   # Exact English bound-table source composed/exported through authenticated MCP.
   [string]$GridSourceDirectory = 'build/grid-navigation/source',
   # Full-catalog source is composed/exported by the Pascal semantic MCP consumer.
@@ -3156,7 +3159,7 @@ try {
     # typed candidate enrichment, decoding, assertions and exact source output.
     # Browser artifacts stage only; no listener or browser is launched.
     $nyxImageRoot = Join-Path $nyxRoot 'build/image-presentation'
-    $nyxImageSeed = Join-Path $nyxImageRoot 'seed'
+    $nyxImageSeed = [IO.Path]::GetFullPath($ImageSourceDirectory)
     if (-not (Test-Path -LiteralPath (Join-Path $nyxImageSeed 'nyx.generated.view.pas'))) {
       throw 'Export the English Image workshop through a temporary MCP review before this check'
     }

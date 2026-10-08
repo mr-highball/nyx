@@ -45,6 +45,32 @@ begin
   Inc(GChecks);
 end;
 
+{ Keep a complete, admitted PNG frame but invalidate its compressed pixel stream.
+  The Pascal raster writer emits IHDR, a nine-byte pHYs and then IDAT. Check that
+  exact fixture layout before changing its first DEFLATE block; a writer change
+  must fail visibly instead of corrupting an unrelated byte. Block type 3 is
+  reserved by RFC 1951 section 3.2.3. The changed byte also invalidates IDAT's
+  original CRC. Both physical decoders receive exactly this damaged input;
+  neither this fixture nor a host load establishes which checks the host uses.
+  The current browser reports load and paints transparent pixels; its required
+  refusal assertion deliberately remains red until portable validation exists. }
+function BrokenPNG: TNyxImageSource;
+const
+  CFirstIDATData = 62;
+var
+  LBytes: TNyxImageBytes;
+begin
+  LBytes := NyxEmbeddedImage(nimPNG, ImagePNG).Bytes;
+  Check(Length(LBytes) > CFirstIDATData + 2, 'broken-pixel fixture has a complete stream');
+  Check((LBytes[CFirstIDATData - 4] = Ord('I')) and
+    (LBytes[CFirstIDATData - 3] = Ord('D')) and
+    (LBytes[CFirstIDATData - 2] = Ord('A')) and
+    (LBytes[CFirstIDATData - 1] = Ord('T')) and
+    ((LBytes[CFirstIDATData] and $0F) = 8), 'broken-pixel fixture identifies the IDAT zlib header');
+  LBytes[CFirstIDATData + 2] := $07;
+  Result := NyxEmbeddedImageBytes(nimPNG, LBytes);
+end;
+
 procedure Shared;
 var
   LDocument: TNyxDocument;
@@ -302,6 +328,7 @@ var
   LOriginalBounds: TRect;
   LRefused: Boolean;
   LBroken: TNyxImageBytes;
+  LFailure: Integer;
   LBitmap: TBitmap;
   LCapture: TLazIntfImage;
 
@@ -382,29 +409,42 @@ begin
     Check(TImage(LView.ControlFor(LPart.ID)).Picture.Width = 100,
       'reusable compound media part resolves the same portable picture');
     LBroken := NyxEmbeddedImage(nimPNG, ImagePNG).Bytes;
-    { Framing is admitted portably. A complete stream with a bad CRC exercises
-      the independent native decoder candidate rather than truncated framing. }
+    { Preserve the original CRC refusal, then exercise the same bad compressed
+      pixel stream used by the asynchronous browser journey. Neither replaces
+      the admitted physical picture/source baseline on a native failure. }
     LBroken[High(LBroken)] := LBroken[High(LBroken)] xor 1;
-    LBefore := LImage.Picture.Graphic;
-    LView.Root.Find('hero-image').Configure.Source(NyxEmbeddedImageBytes(nimPNG, LBroken)).Done;
-    LRefused := False;
-    try
-      LView.Sync;
-    except
-      on Exception do
+    for LFailure := 0 to 1 do
+    begin
+      LBefore := LImage.Picture.Graphic;
+
+      if LFailure = 0 then
       begin
-        LRefused := True;
+        LView.Root.Find('hero-image').Configure.Source(NyxEmbeddedImageBytes(nimPNG, LBroken)).Done;
+      end
+      else
+      begin
+        LView.Root.Find('hero-image').Configure.Source(BrokenPNG).Done;
       end;
+      LRefused := False;
+      try
+        LView.Sync;
+      except
+        on Exception do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused and (LImage.Picture.Graphic = LBefore) and
+        (LView.ControlFor('hero-image') = LControl),
+        'ordinary Sync decoder failure retains the exact physical picture and face');
     end;
-    Check(LRefused and (LImage.Picture.Graphic = LBefore) and
-      (LView.ControlFor('hero-image') = LControl),
-      'ordinary Sync decoder failure retains the exact physical picture and face');
     LView.Root.Find('hero-image').Configure.Source(NyxEmbeddedImage(nimJPEG, ImageJPEG)).Done;
     LView.Sync;
     Check(LImage.Picture.Graphic = LBefore, 'return to accepted source retains its exact decoding baseline');
     { Geometry probes temporarily position the physical control. Restore its
       ordinary arranged rectangle before the visual acceptance captures. }
     LImage.BoundsRect := LOriginalBounds;
+
     if ParamCount > 1 then
     begin
       Capture(ParamStr(2));
@@ -428,13 +468,196 @@ begin
   end;
 end;
 {$else}
-procedure BrowserControls;
+{ Await actual host decoding with a real five-second deadline. The timer owns
+  only its Promise rejection callback; it never borrows a document or renderer.
+  Clear it on every outcome so successful decodes leave no delayed work behind. }
+function DecodeImage(AImage: TJSHTMLImageElement): JSValue; async;
+var
+  LTimer: NativeInt;
+
+  procedure Deadline(AResolve, AReject: TJSPromiseResolver);
+
+    procedure Expired;
+    begin
+      AReject(TJSError.new('Image decoding exceeded its five-second deadline'));
+    end;
+
+  begin
+    LTimer := window.setTimeout(@Expired, 5000);
+  end;
+
+begin
+  Result := Undefined;
+  LTimer := 0;
+  try
+    await(TJSPromise.race([AImage.decode, TJSPromise.new(@Deadline)]));
+  finally
+    window.clearTimeout(LTimer);
+  end;
+end;
+
+{ The host can keep its previous completely available request while a replacement
+  is pending. decode() alone can therefore succeed for the previous pixels. Own
+  load/error listeners across the typed source publication, then qualify request
+  identity before decoding. This is a target-input harness, not a second image
+  component or proof of the still-open portable image callback contract. }
+function ChangeImageSource(AView: TNyxBrowserRenderer; AImage: TJSHTMLImageElement;
+  const ASource: TNyxImageSource): JSValue; async;
+var
+  LTimer: NativeInt;
+  LLoaded: TJSRawEventHandler;
+  LFailed: TJSRawEventHandler;
+  LResolve: TJSPromiseResolver;
+  LReady: TJSPromise;
+  LSuccess: Boolean;
+
+  procedure Loaded(AEvent: TJSEvent);
+  begin
+    LResolve(True);
+  end;
+
+  procedure Failed(AEvent: TJSEvent);
+  begin
+    LResolve(False);
+  end;
+
+  procedure Start(AResolve, AReject: TJSPromiseResolver);
+
+    procedure Expired;
+    begin
+      AReject(TJSError.new('Image source change exceeded its five-second deadline'));
+    end;
+
+  begin
+    LResolve := AResolve;
+    LTimer := window.setTimeout(@Expired, 5000);
+  end;
+
+begin
+  LTimer := 0;
+  LLoaded := @Loaded;
+  LFailed := @Failed;
+  LReady := TJSPromise.new(@Start);
+  try
+    AImage.addEventListener('load', LLoaded);
+    AImage.addEventListener('error', LFailed);
+    AView.Root.Find('hero-image').Configure.Source(ASource).Done;
+    AView.Sync;
+    Check(AImage.getAttribute('src') = ASource.ToWire,
+      'the typed replacement reaches the actual browser source attribute');
+    LSuccess := JSValue(await(TJSPromise.resolve(LReady))) = True;
+  finally
+    AImage.removeEventListener('load', LLoaded);
+    AImage.removeEventListener('error', LFailed);
+    window.clearTimeout(LTimer);
+  end;
+
+  if LSuccess then
+  begin
+    Check(AImage.currentSrc = ASource.ToWire, 'the loaded host request is the typed replacement');
+    await(DecodeImage(AImage));
+  end;
+  Result := LSuccess;
+end;
+
+{ Sample the decoded ordinary image through a detached canvas. This verifies
+  encoded pixels rather than inferring readiness from src/complete/dimensions.
+  JPEG tolerates channel quantization; neither sample touches its boundary.
+  The canvas is never a replacement component and retains no Pascal owner. }
+procedure DecodedPixels(AImage: TJSHTMLImageElement; const AFormat: TNyxText);
+var
+  LCanvas: TJSHTMLCanvasElement;
+  LContext: TJSCanvasRenderingContext2D;
+  LPixels: TJSUint8ClampedArray;
+  LRed: Integer;
+  LBlue: Integer;
+begin
+  Check(AImage.currentSrc = AImage.getAttribute('src'),
+    AFormat + ' pixels belong to the requested source');
+  Check((AImage.naturalWidth = 100) and (AImage.naturalHeight = 50),
+    AFormat + ' is actually decoded at its encoded dimensions');
+  LCanvas := TJSHTMLCanvasElement(document.createElement('canvas'));
+  LCanvas.width := 100;
+  LCanvas.height := 50;
+  try
+    LContext := LCanvas.getContextAs2DContext('2d');
+    Check(LContext <> nil, 'decoded-pixel context is available');
+    LContext.drawImage(AImage, 0, 0);
+    LPixels := LContext.getImageData(0, 0, 100, 50).data;
+    LRed := (25 * 100 + 25) * 4;
+    LBlue := (25 * 100 + 75) * 4;
+    Check((LPixels[LRed] > 240) and (LPixels[LRed + 1] < 16) and
+      (LPixels[LRed + 2] < 16) and (LPixels[LRed + 3] = 255), AFormat + ' decodes red pixels');
+    Check((LPixels[LBlue] < 16) and (LPixels[LBlue + 1] < 16) and
+      (LPixels[LBlue + 2] > 240) and (LPixels[LBlue + 3] = 255), AFormat + ' decodes blue pixels');
+  finally
+    { Release the transient pixel surface promptly rather than keeping a second
+      rendering alive until the browser eventually collects this local object. }
+    LCanvas.width := 0;
+    LCanvas.height := 0;
+  end;
+end;
+
+{ Opt-in capture uses the maintained observer's acknowledgement and a monotonic
+  deadline. Actual decoded controls stay mounted until PNG/DOM are saved. Manual
+  execution finishes directly; this handshake does not change application state. }
+function CaptureScene(const AName: TNyxText): JSValue; async;
+var
+  LStarted: Double;
+
+  function Pause: TJSPromise;
+
+    procedure Start(AResolve, AReject: TJSPromiseResolver);
+
+      procedure Complete;
+      begin
+        AResolve(Undefined);
+      end;
+
+    begin
+      window.setTimeout(@Complete, 25);
+    end;
+
+  begin
+    Result := TJSPromise.new(@Start);
+  end;
+
+begin
+  Result := Undefined;
+
+  if Pos('capture=1', window.location.search) = 0 then
+  begin
+    Exit;
+  end;
+  document.body.setAttribute('data-capture-checkpoint', AName);
+  LStarted := window.performance.now;
+  while document.body.getAttribute('data-capture-observed') <> AName do
+  begin
+    if window.performance.now - LStarted >= 30000 then
+    begin
+      raise Exception.Create('Decoded image capture was not acknowledged before its deadline');
+    end;
+    await(Pause);
+  end;
+end;
+
+function BrowserControls: JSValue; async;
 var
   LDocument: TNyxDocument;
   LView: TNyxBrowserRenderer;
   LImage: TJSHTMLImageElement;
+  LReusable: TJSHTMLImageElement;
+  LPart: TNyxNode;
   LBefore: TJSHTMLElement;
+  LPending: TJSPromise;
+  LRefused: Boolean;
+  LBrokenSource: TNyxImageSource;
+  LProbeBytes: TNyxImageBytes;
+  LProbeCanvas: TJSHTMLCanvasElement;
+  LProbePixels: TJSUint8ClampedArray;
+  LProbe: TNyxDataValue;
 begin
+  Result := Undefined;
   LDocument := BuildNyxDocument;
   LView := TNyxBrowserRenderer.Create;
   try
@@ -443,38 +666,140 @@ begin
     Check(LImage.getAttribute('src') = NyxEmbeddedImage(nimPNG, ImagePNG).ToWire,
       'ordinary browser image retains exact portable source');
     LBefore := LImage;
-    LView.Root.Find('hero-image').Configure.ImageFit(nifCover).ImageHorizontal(niaEnd).Done;
+    await(DecodeImage(LImage));
+    DecodedPixels(LImage, 'PNG');
+    LPart := LView.Root.Find(NyxQualifiedID('feature', 'feature-card'));
+    Check(LPart <> nil, 'browser reusable media root is independently mounted');
+    LPart := LPart.Part(NyxPart('media'));
+    Check(LPart <> nil, 'browser reusable media slot remains named');
+    LReusable := TJSHTMLImageElement(LView.ElementFor(LPart.ID));
+    Check(LReusable <> LImage, 'reusable image has an independent physical face');
+    await(DecodeImage(LReusable));
+    DecodedPixels(LReusable, 'Reusable PNG');
+    LView.Root.Find('hero-image').Configure.Width(100).Height(100)
+      .ImageFit(nifCover).ImageHorizontal(niaEnd).Done;
     LView.Sync;
     Check((LView.ElementFor('hero-image') = LBefore) and
       (LImage.style.getPropertyValue('object-fit') = 'cover') and
       (LImage.style.getPropertyValue('object-position') = '100% 50%'),
       'ordinary browser image retains face and applies typed crop/position');
+    Check((LImage.getBoundingClientRect.width = 100) and
+      (LImage.getBoundingClientRect.height = 100), 'crop applies inside the actual square allocation');
+    await(CaptureScene('media-crop'));
+    Check(Boolean(await(ChangeImageSource(LView, LImage, NyxEmbeddedImage(nimJPEG, ImageJPEG)))),
+      'the browser reports loading the replacement JPEG');
+    DecodedPixels(LImage, 'JPEG');
+    Check((LView.ElementFor('hero-image') = LBefore) and
+      (LReusable.getAttribute('src') = NyxEmbeddedImage(nimPNG, ImagePNG).ToWire),
+      'source replacement retains its face and independent reusable pixels');
+    LBrokenSource := BrokenPNG;
+    LRefused := not Boolean(await(ChangeImageSource(LView, LImage, LBrokenSource)));
+    LProbeBytes := LBrokenSource.Bytes;
+    LProbe := NyxNull;
+
+    if not LRefused then
+    begin
+      { Negative evidence must identify the actual bytes and painted sample,
+        not infer decoder strictness from a positive load or encoded dimensions. }
+      LProbeCanvas := TJSHTMLCanvasElement(document.createElement('canvas'));
+      LProbeCanvas.width := 100;
+      LProbeCanvas.height := 50;
+      try
+        LProbeCanvas.getContextAs2DContext('2d').drawImage(LImage, 0, 0);
+        LProbePixels := LProbeCanvas.getContextAs2DContext('2d').getImageData(25, 25, 1, 1).data;
+        LProbe := NyxArray([NyxData(Integer(LProbePixels[0])), NyxData(Integer(LProbePixels[1])),
+          NyxData(Integer(LProbePixels[2])), NyxData(Integer(LProbePixels[3]))]);
+      finally
+        LProbeCanvas.width := 0;
+        LProbeCanvas.height := 0;
+      end;
+    end;
+    { Preserve bounded host outcome even when the enclosing finally retires its
+      controls before a failure capture. No image bytes or model are exported. }
+    document.body.setAttribute('data-image-refusal', NyxObject([
+      NyxField('refused', NyxData(LRefused)),
+      NyxField('encodedDeflateByte', NyxData(Integer(LProbeBytes[64]))),
+      NyxField('paintedSample', LProbe),
+      NyxField('currentRequestMatchesSource', NyxData(LImage.currentSrc = LImage.getAttribute('src'))),
+      NyxField('width', NyxData(Double(LImage.naturalWidth))),
+      NyxField('height', NyxData(Double(LImage.naturalHeight))),
+      NyxField('complete', NyxData(LImage.complete)),
+      NyxField('retainedFace', NyxData(LView.ElementFor('hero-image') = LBefore))]).ToJSON);
+    Check(LRefused and (LView.ElementFor('hero-image') = LBefore),
+      'admitted malformed pixels report asynchronous host loading failure on the retained face');
+    LView.Root.Find('hero-image').Configure.Clear(atImageFit).Clear(atImageHorizontal).Clear(atImageVertical).Done;
+    Check(Boolean(await(ChangeImageSource(LView, LImage, NyxEmbeddedImage(nimJPEG, ImageJPEG)))),
+      'the browser reports loading the corrected JPEG');
+    DecodedPixels(LImage, 'Recovered JPEG');
+    Check((LImage.style.getPropertyValue('object-fit') = 'contain') and
+      (LImage.style.getPropertyValue('object-position') = '50% 50%') and
+      (LReusable.naturalWidth = 100), 'recovery restores defaults without affecting the reusable instance');
+    await(CaptureScene('media-recovered'));
+    LPending := LImage.decode;
     LView.Root.Find('hero-image').Configure.Source(NyxNoImage).Done;
     LView.Sync;
     Check(not LImage.hasAttribute('src'), 'empty browser source makes no surrounding-page request');
+    LRefused := False;
+    try
+      { pas2js awaits an external Promise-producing call. resolve assimilates
+        this already-started request; it does not start another image decode. }
+      await(TJSPromise.resolve(LPending));
+    except
+      LRefused := String(TJSObject(JSExceptValue).Properties['name']) = 'EncodingError';
+    end;
+    Check(LRefused and not LImage.hasAttribute('src') and
+      (LView.ElementFor('hero-image') = LBefore), 'clearing invalidates pending decoding while retaining the empty face');
   finally
     LView.Free;
     LDocument.Free;
+    document.body.setAttribute('data-image-disposed', 'true');
+  end;
+end;
+{$endif}
+
+{$ifdef PAS2JS}
+{ Keep readiness behind the complete asynchronous journey. Handle both Pascal
+  assertions and raw host Promise failures so the driver sees a useful terminal
+  failure instead of a swallowed rejection or a premature script-loaded pass. }
+function RunBrowser: JSValue; async;
+begin
+  Result := Undefined;
+  try
+    Shared;
+    await(BrowserControls);
+    WriteLn('PASS / image presentation / ', GChecks, ' checks');
+    document.body.setAttribute('data-image-checks', IntToStr(GChecks));
+    document.body.setAttribute('data-test-result', 'passed');
+  except
+    on LException: Exception do
+    begin
+      document.body.setAttribute('data-event-error', LException.Message);
+      document.body.setAttribute('data-test-result', 'failed');
+    end
+    else
+    begin
+      document.body.setAttribute('data-event-error', 'Host image review failed: ' +
+        String(TJSObject(JSExceptValue).Properties['message']));
+      document.body.setAttribute('data-test-result', 'failed');
+    end;
   end;
 end;
 {$endif}
 
 begin
+  {$ifdef PAS2JS}RunBrowser;{$else}
   try
-    {$ifndef PAS2JS}Application.Initialize;{$endif}
+    Application.Initialize;
     Shared;
-    {$ifdef PAS2JS}BrowserControls;{$else}NativeControls;{$endif}
+    NativeControls;
     WriteLn('PASS / image presentation / ', GChecks, ' checks');
-    {$ifdef PAS2JS}document.body.setAttribute('data-test-result', 'passed');{$endif}
   except
     on LException: Exception do
     begin
       WriteLn('FAIL / ', LException.Message);
-      {$ifdef PAS2JS}document.body.setAttribute('data-test-result', 'failed');
-      {$else}
       DumpExceptionBackTrace(Output);
       ExitCode := 1;
-      {$endif}
     end;
   end;
+  {$endif}
 end.

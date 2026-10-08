@@ -20,6 +20,18 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Confirmed image integrity difference — 2026-10-08
+
+Original criteria 1/3 retain a measured media gap. Native image checks pass 181
+with independent candidate refusal; actual desktop/CSS-390 valid PNG/JPEG and
+reusable pixels execute. The confirmed damaged browser replacement reports load/
+decode success and paints transparent sample pixels instead of refusing. Keep
+the regression red; full browser recovery and portable integrity are unqualified.
+Shared validation and explicit caller policy require resource admission/loading,
+managed history/source and both-target evidence. Event status/failure/retirement
+retains its original owner. No full criterion or counter advances. See
+[the partial packet](../WORK.md#current-return-path-decoded-browser-media--2026-10-08).
+
 ## Current property companion restored — 2026-10-07
 
 Updated executed scope (2026-10-08): the exact MCP companion now passes **18,061**

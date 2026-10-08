@@ -7,9 +7,12 @@ composition, paired source/history and real browser/LCL application/view builds.
 The current native checkpoint retains all nine exact pairs, full histories and
 ordinary handles through delivery. Earlier explicit disposable-test bootstrap
 and production legacy migration remain separately qualified. Launch refreshes
-project and enrolled-user Codex configuration. Cached native chat handles need
-one reconnect after credential rotation; use the authenticated semantic
-client below meanwhile. See
+project and enrolled-user Codex configuration. Native named handles are now
+authenticated in this chat: an owned image review exercises bounded composition,
+paired Undo/Redo, exact source export, browser/LCL compilation and an actual
+rendered preview. The Pascal client below remains the maintained owner for
+transport qualification. A different chat may still need to reconnect after
+credential rotation. See
 [current observing evidence](../WORK.md#installed-current-source-return--2026-10-08).
 
 Studio starts with agent access enabled and editing allowed. Open **Agents** to

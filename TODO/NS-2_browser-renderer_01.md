@@ -20,6 +20,18 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 
+## Decoded media and failing integrity gate — 2026-10-08
+
+Original criteria 1/3 now have actual desktop/CSS-390 decoded PNG/JPEG samples,
+independent reusable media and retained crop evidence from the MCP-authored
+workshop. Both journeys then fail damaged-PNG refusal: verified replacement bytes
+load/decode but paint transparent sample pixels. Native refuses the same input.
+Failure paths retire views/listeners/timers; later recovery/clear is not reached.
+Do not infer integrity from `load`, `decode` or encoded dimensions. Portable
+validation belongs with the existing resource/parity owners; public load/error/
+status remains event work. No original criterion or counter advances. See
+[the partial packet](../WORK.md#current-return-path-decoded-browser-media--2026-10-08).
+
 ## Executed full catalog property scope — 2026-10-08
 
 Current full catalog property consumer (2026-10-08) executes the unchanged

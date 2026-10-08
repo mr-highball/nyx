@@ -110,13 +110,35 @@ bounded bytes and validates its real pixel decoder before publishing a source.
 Native inline preview uses the same decoder qualification. Browser pixel/fetch
 failures remain asynchronous and require separate execution evidence.
 
-Current checked shared/Win32 qualification covers typed source/geometry,
-source/history refusal and restoration, exact emitted execution, real PNG/JPEG
-decoding, retained fit updates, decoder-error recovery and reusable media parts.
-Matching browser consumers and both Studios compile. Current browser/phone and
-observing execution, complete asset registry/import UX, asynchronous load/error events,
-orientation/color fidelity, other widgetsets/DPI and complete accessibility,
-visual and performance acceptance remain open.
+Current checked shared/Win32 qualification passes 181 assertions covering typed
+source/geometry, source/history, real PNG/JPEG decoding, retained fit updates,
+decoder-error recovery and reusable media parts. Exact emitted reconstruction
+passes seven on native and actual HTTP browser execution. The semantic workshop
+is authored through native MCP tools; both service compiler inputs exactly match
+the bounded source export, and a phone-sized semantic preview renders.
+
+The current desktop and CSS-390 browser journeys verify actual PNG/JPEG samples,
+independent reusable images and a retained square cover crop. Both then fail the
+required damaged-PNG refusal: the actual replacement request reports load/decode
+success but paints transparent sample pixels. Native refuses that same input.
+The probe verifies the encoded byte and current request, rather than accidentally
+decoding the previous image. Failure paths explicitly retire controls/listeners/
+timers; subsequent browser recovery/clear assertions are not reached. This is a
+known failing regression, not qualified portable image integrity. Current framing
+checks, host load and encoded dimensions do not establish decoded pixel validity.
+See [the partial evidence and validation gap](../WORK.md#current-return-path-decoded-browser-media--2026-10-08).
+
+Run `tools/build.ps1 -Target image-presentation -ImageSourceDirectory <directory>`
+with the exact MCP-exported `nyx.generated.view.pas` in that directory. Omitting
+the directory retains the existing seed default. The build runs native consumers
+and stages browser programs; a successful build does not mean the browser journey
+passed. Serve staged artifacts over HTTP and use the maintained ready/capture
+driver for actual execution. This target starts no server and edits no project.
+
+Complete browser/physical-phone and observing Studio execution, the asset
+registry/import UX, portable image load/error/status events and validation policy,
+orientation/color fidelity, other widgetsets/DPI and full accessibility, visual
+and performance acceptance remain open under their existing owners.
 
 Run `tools/build.ps1 -Target image-authoring` after the existing
 `image-presentation` semantic seed/raster prerequisite. It exercises the ordinary

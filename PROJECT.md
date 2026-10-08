@@ -66,7 +66,18 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current narrow capture diagnosis (2026-10-08): measured document/control widths
+Current decoded media evidence (2026-10-08): native named MCP tools compose,
+undo/redo, export, compile both targets and render an owned image review. Current
+Win32 qualification passes **181**, exact emitted reconstruction **seven** on
+both targets. Desktop/CSS-390 browsers decode valid PNG/JPEG and reusable images,
+then fail the damaged-PNG refusal: the confirmed replacement loads but paints
+transparent pixels; native refuses it. Preserve the failing regression and
+implement the portable validation policy under existing resource/parity owners.
+Later browser recovery remains unqualified. No task/counter closes or advances;
+**25/9/40/21/28/3** stay unchanged. See
+[the partial packet](WORK.md#current-return-path-decoded-browser-media--2026-10-08).
+
+Previous narrow capture diagnosis (2026-10-08): measured document/control widths
 refute the suspected horizontal overflow. The line is the demo's progress
 control; unchanged PNG bytes and a 390-pixel document/scroll width agree.
 Opt-in capture now includes bounded read-only geometry. No product correction

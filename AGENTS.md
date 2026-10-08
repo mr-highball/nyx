@@ -84,10 +84,12 @@ movement with separate row membership, current-cell editing and one browser
 cell Tab entry. Paging, cell selection and broader grid qualification remain open.
 
 Codex project and explicitly enrolled user configuration refresh on each Studio
-launch. The current observing release authenticates twenty-one tools through the
-Pascal semantic client. Cached native chat handles need one reconnect after the
-test-mode refresh retired their endpoint. Keep semantic MCP primary; use the
-current Pascal client until those handles reconnect. Missing
+launch. The observing release advertises twenty-two tools. Native named handles
+are authenticated in this chat: the owned image review uses bounded queries,
+grouped editing/history, both compiler jobs and a rendered preview. Use these
+semantic tools as the primary design workflow; the Pascal client remains available
+for maintained transport-owning qualification. Current-source additions to
+installed schemas still require their own rollout evidence. Missing
 general source/import/state/binding/review operations belong to the existing workflow
 task, not silent browser automation. No sub-agents. WORK.md owns current process,
 qualification, deployment, preservation and remote-checkpoint state; verify

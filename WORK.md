@@ -9,7 +9,119 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: narrow scroll extent — 2026-10-08
+## Current return path: decoded browser media — 2026-10-08
+
+Previous goal turn is progress at exact pushed `d9e209d`: bounded live geometry
+refutes a suspected overflow and redirects work to an actual media gap. Exact
+remote is clean, owned qualification processes are retired, and protected user
+state/services stay exact. Full goal remains active; no-closure counters stay
+**25/9/40/21/28/3** (diagnostic evidence did not advance them).
+
+Existing NS-2 browser criteria 1/3 and parity criteria 1/3 own current browser
+image consumption, a prerequisite for NS-3 media/component acceptance. Actual
+native pixels are qualified; the browser fixture currently checks only immediate
+source/style/clear and retires before decoding. Concrete deliverable: maintain
+the semantic English image workshop, qualify actual embedded PNG/JPEG decoding,
+fit/source changes, independently scoped media parts, asynchronous decode failure
+and retirement through real desktop/narrow HTTP controls. Keep declared browser
+asynchrony explicit; do not infer decoded pixels from a successful source setter.
+
+Use authenticated native MCP tools (current `nyx_session` is connected) with an
+owned review, expected revisions and one grouped semantic composition. Export
+only bounded source windows. Reuse Pascal raster fixtures and current adapters;
+selective actual target capture follows semantic authoring. Serve a fresh confined
+closure on the verified existing static host; no backend starts/replacements,
+enrollment changes or cleanup retries. Preserve the nine user pairs/fifteen
+services and frozen LAN payload. Budget: one integrated decode journey and at
+most two repairs at concrete failed boundaries, then reassess distinct gaps.
+Acceptance retains original shared/source/ownership checks and current Win32
+regression, actual desktop/CSS-390 decoding/captures and explicit retirement.
+Complete asynchronous product event contracts, hosted resolver behavior, physical
+input/accessibility, orientation/color fidelity, other widgetsets and production
+visual/performance quality remain original owner requirements, not exclusions.
+
+Native MCP composition (ten operations, revision 1→2), paired Undo/Redo (3/4),
+bounded 80-line export, both frozen-service application compilers and one actual
+CSS-390 semantic preview execute. Canonical LF export is 5,670 bytes and exactly
+matches both fetched compiler inputs; the initially Windows-framed export is
+corrected at the export boundary, without editing any authored line. The owned
+review is explicitly disposed. Current native controls pass 181 (including the
+original CRC refusal plus malformed DEFLATE), and exact generated execution seven,
+leak-free. Both browser consumers compile after local await/number-binding fixes.
+
+Actual HTTP desktop/CSS-390 controls decode valid PNG/JPEG red/blue samples,
+independent reusable PNGs and the retained square cover crop. Both then fail
+damaged-PNG refusal. The bounded probe confirms serialized DEFLATE byte 7,
+the actual replacement request, successful load/decode and transparent painted
+RGBA `[0,0,0,0]` at the known red sample. Native refuses the same framed input.
+Keep the required assertion red; subsequent browser recovery/clear is not reached.
+No browser journey check total or full parity is claimed. Exact generated-source
+reconstruction executes seven checks in an actual HTTP browser as well as native.
+
+Initial decode-only probes did not establish current-request identity, so their
+decoder-permissiveness inference was retracted. The final harness owns load/error
+listeners before typed publication, checks replacement identity and then samples
+pixels; its negative outcome qualifies the actual damaged request. The mutated
+DEFLATE block also invalidates IDAT's original CRC. This proves a host outcome,
+not which validation the native decoder performs. Listeners/deadlines retire in
+finally blocks, including failure; controls explicitly dispose before terminal
+failure capture. Detached sample canvases never replace Nyx controls. HTML image
+readiness is not a portable raster-integrity guarantee.
+
+End decoder repair attempts. Existing NS-2 parity criterion 1/3 and the NS-1
+resource admission/loading criteria own portable raster integrity/validation;
+NS-1 event criteria 1/3 retain fluent image load/error/status and retirement.
+Current admission deliberately verifies PNG framing/dimensions, not CRCs or
+decoded pixels. A common validation contract needs both-target proof, explicit
+caller policy and managed persistence/source history; merely waiting longer,
+switching corrupt fixtures until one rejects, or trusting a host load cannot
+close this gap. No new duplicate task or backend rollout workaround is created.
+
+Maintained final `image-presentation -ImageSourceDirectory build/media-decode/seed`
+passes Win32 181 and emitted reconstruction seven, with zero native leaks/owned
+warnings. Both browser programs compile; fourteen warning occurrences are the
+same seven upstream RTL warnings in two compilations. All five final browser
+artifact hashes match the actually exercised static closure, including the last
+comment/style cleanup. The ordinary build stages only and does not declare the
+known failing runtime successful. The optional directory preserves old defaults
+while accepting fresh semantic exports; no test source was handwritten into the
+active document. Native named MCP connection state in AGENTS/agent guidance is
+updated from actual authenticated calls, not inferred discovery.
+
+Evidence under `build/media-decode/`: exact `seed/nyx.generated.view.pas` and
+`compiled-browser.pas` / `compiled-lcl.pas` (5,670 bytes, SHA-256
+`EE9A457DB03488557211BAEBDDF27497BD8111D78C4F6F78CA0A3BAABDC16A0F`), review/
+transaction/history/compiler/preview/disposal receipts, `maintained-final-current.log`,
+`request-static-private.json`, desktop `byte-probe/` and `narrow-negative/` live
+media-crop PNG/DOM plus terminal failure/diagnostic/driver logs, and
+`generated-browser/` passed terminal DOM/log. Native desktop/compact captures are
+in `build/image-presentation/maintained/generated/`. Inspected actual captures
+confirm intended sample crop and independent media parts; they do not establish
+full visual quality. `qualification.json` retains bounded outcomes and evidence
+hashes without merging overlapping attempts into invented assertion totals.
+
+Final guard at 2026-10-08T19:02:07Z confirms all 299 sealed assets, nine exact user
+pairs/full 147,033-byte checkpoint and fifteen unchanged services/bindings. Owned
+browser drivers are terminal and no owned browser process remains; their logs
+report zero native leaks. Review is explicitly disposed; primary revision,
+selection and history remain exact. No backend start/replacement, enrollment
+change or profile-cleanup retry occurs. Retained profiles and frozen LAN product
+remain distinct from current source. Commit/push this bounded packet and verify
+exact remote/clean tree in `build/media-decode/remote-checkpoint.json`.
+
+Classification: progress through concrete diagnostic evidence and a maintained
+failing regression; no product repair/full criterion/credit closes and no
+no-closure counter advances. All counters stay **25/9/40/21/28/3**. The full goal
+is active. End decoder probes. Next meaningful deliverable is the existing
+resource/parity owner's portable typed raster-validation policy, with precise
+guarantees and caller choices, paired source/history and both-target refusal/
+recovery evidence. Cache override remains independently available. CRC checks
+alone must not be presented as complete decoded-pixel integrity. Image event
+status/retirement and full Studio/runtime/accessibility/delivery retain their
+original requirements; no missing external input prevents source progress.
+
+<a id="current-return-path-narrow-scroll-extent--2026-10-08"></a>
+## Previous return path: narrow scroll extent — 2026-10-08
 
 Previous turn is progress at exact pushed `67889d8`: browser retained origins
 now match native flow/grid allocation, and unchanged MCP catalog consumers pass

@@ -46,7 +46,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current narrow capture diagnosis (2026-10-08): document `clientWidth/scrollWidth`
+Current decoded media evidence (2026-10-08): native MCP image composition,
+paired history, exact source, both compiler jobs and semantic preview execute.
+Win32 passes **181**; exact emitted reconstruction passes **seven** per target.
+Desktop/CSS-390 valid pixels and independent media parts execute, then both
+browser journeys fail damaged-image refusal. The confirmed damaged replacement
+loads but paints transparent pixels while native refuses. Resource admission/
+loading and parity retain the shared validation gap; event ownership retains
+fluent load/error/status and retirement. Later browser recovery is unqualified.
+No original criterion or no-closure counter advances; **25/9/40/21/28/3** persist.
+See [the partial packet](../WORK.md#current-return-path-decoded-browser-media--2026-10-08).
+
+Previous narrow capture diagnosis (2026-10-08): document `clientWidth/scrollWidth`
 are both 390 and measured controls fit. The suspected scrollbar is the progress
 control; the prior/current PNGs have identical bytes. Opt-in capture now includes
 bounded read-only geometry. No product fix, criterion or counter closes/advances;

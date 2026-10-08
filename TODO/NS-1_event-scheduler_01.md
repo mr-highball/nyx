@@ -37,6 +37,18 @@ Pending assessment. Studio consumes this contract through NS-4 authoring.
 Return path: NS-4_studio-authoring_01 must consume the accepted contract in tabbed
 Properties / Events UI, add-handler source navigation and confirmed removal.
 
+## Image load/status contract remains open — 2026-10-08
+
+The actual media consumer brackets source replacement with owned host listeners,
+current-request checks and deadlines, then retires them on every outcome. This
+Pascal target harness is not the public fluent image event contract. A damaged
+PNG loads but paints transparent pixels on the checked browser, so load/status
+must state its guarantee separately from portable integrity validation. Original
+criteria 1/3 retain multiple fluent callbacks, cancellation, stale replacement
+and disposed-view safety across both adapters. Later browser recovery is not
+qualified by this failing journey. No criterion/counter advances. See
+[the media packet](../WORK.md#current-return-path-decoded-browser-media--2026-10-08).
+
 ## Native focus reaffirmation repaired — 2026-10-07
 
 Original criteria 1/3 now reject native focus notifications contradicted by LCL's

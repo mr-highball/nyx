@@ -4,7 +4,18 @@
 [Current work](WORK.md)
 
 
-Current narrow capture diagnosis (2026-10-08): bounded read-only geometry
+Current decoded media evidence (2026-10-08): authenticated native MCP tools
+qualify the owned semantic workshop, history, exact source, both compilers and
+a rendered preview. Win32 passes **181**, exact emitted reconstruction **seven**
+on both targets. Actual desktop/CSS-390 valid pixels and reusable images pass,
+but damaged-PNG refusal fails: confirmed replacement bytes load and paint
+transparent pixels; native refuses. Keep the regression red and return to the
+existing resource/parity validation owners; later browser recovery is unqualified.
+This diagnostic packet closes no full criterion and advances no counter:
+**25/9/40/21/28/3** remain. See
+[the partial packet](WORK.md#current-return-path-decoded-browser-media--2026-10-08).
+
+Previous narrow capture diagnosis (2026-10-08): bounded read-only geometry
 establishes matching document/scroll widths at desktop and CSS-390. The suspected
 scrollbar is the demo progress control; prior/current narrow PNG bytes agree.
 No layout correction or criterion/counter closure follows; **25/9/40/21/28/3**
