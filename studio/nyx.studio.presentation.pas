@@ -26,6 +26,7 @@ unit nyx.studio.presentation;
 interface
 
 uses
+  nyx.image.editor,
   SysUtils, nyx.text, nyx.data, nyx.model, nyx.binding.types, nyx.presentations,
   nyx.studio.view, nyx.studio.inspector, nyx.studio.authoring, nyx.studio.palette,
   nyx.theme.editor;
@@ -70,6 +71,8 @@ type
     { Per-workspace theme proposal, copied without documents or controls. }
     ThemeVisible: Boolean;
     ThemeDraft: TNyxThemeEditorDraft;
+    { Per-workspace copied image proposal; embedded bytes remain portable. }
+    ImageDraft: TNyxImageEditorDraft;
     LeftScroll: Integer;
     RightScroll: Integer;
     AgentsScroll: Integer;
@@ -178,7 +181,7 @@ begin
     LPresentation := NyxData(AValue.PresentationSelection.Reference.Name);
   end;
   Result := NyxObject([
-    NyxField('version', NyxData(6)),
+    NyxField('version', NyxData(7)),
     NyxField('codeVisible', NyxData(AValue.CodeVisible)),
     NyxField('sourceTab', NyxData(Ord(AValue.SourceTab))),
     NyxField('sourceExpanded', NyxData(AValue.SourceExpanded)),
@@ -206,6 +209,7 @@ begin
     NyxField('filesVisible', NyxData(AValue.FilesVisible)),
     NyxField('themeVisible', NyxData(AValue.ThemeVisible)),
     NyxField('themeDraft', AValue.ThemeDraft.ToData),
+    NyxField('imageDraft', AValue.ImageDraft.ToData),
     NyxField('leftScroll', NyxData(AValue.LeftScroll)),
     NyxField('rightScroll', NyxData(AValue.RightScroll)),
     NyxField('agentsScroll', NyxData(AValue.AgentsScroll)),
@@ -239,18 +243,19 @@ var
   LVersion: Integer;
   LPresentation: TNyxDataValue;
 const
-  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
+  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|imageDraft|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
 begin
   Result := DefaultNyxStudioPresentation;
   LValue := TNyxDataValue.ParseJSON(AText);
 
   if (LValue.Kind <> ndObject) or
-    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6]) or
+    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7]) or
     ((LValue.Field('version').AsInteger = 2) and (LValue.Count <> 32)) or
     ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) or
     ((LValue.Field('version').AsInteger = 4) and (LValue.Count <> 35)) or
     ((LValue.Field('version').AsInteger = 5) and (LValue.Count <> 39)) or
-    ((LValue.Field('version').AsInteger = 6) and (LValue.Count <> 41)) then
+    ((LValue.Field('version').AsInteger = 6) and (LValue.Count <> 41)) or
+    ((LValue.Field('version').AsInteger = 7) and (LValue.Count <> 42)) then
   begin
     raise ENyxModel.Create('Unsupported editor presentation packet');
   end;
@@ -261,6 +266,7 @@ begin
     if (Pos('|', LValue.Key(LIndex)) > 0) or
       (Pos('|' + LValue.Key(LIndex) + '|', CKeys) = 0) or
       ((LVersion < 4) and (LValue.Key(LIndex) = 'presentation')) or
+      ((LVersion < 7) and (LValue.Key(LIndex) = 'imageDraft')) or
       ((LVersion < 6) and ((LValue.Key(LIndex) = 'themeVisible') or
         (LValue.Key(LIndex) = 'themeDraft'))) or
       ((LVersion < 5) and ((LValue.Key(LIndex) = 'detailsPercent') or
@@ -336,6 +342,11 @@ begin
   Result.LeftScroll := IntegerValue(LValue, 'leftScroll', 0, 2147483647);
   Result.RightScroll := IntegerValue(LValue, 'rightScroll', 0, 2147483647);
   Result.AgentsScroll := IntegerValue(LValue, 'agentsScroll', 0, 2147483647);
+
+  if LVersion >= 7 then
+  begin
+    Result.ImageDraft := TNyxImageEditorDraft.FromData(LValue.Field('imageDraft'));
+  end;
   Result.CanvasScrollTop := IntegerValue(LValue, 'canvasScrollTop', 0, 2147483647);
   Result.CanvasScrollLeft := IntegerValue(LValue, 'canvasScrollLeft', 0, 2147483647);
   Result.CanvasView := LValue.Field('canvasView').AsText;

@@ -125,7 +125,7 @@ var
   begin
     Result := (AName = 'detailsPercent') or (AName = 'detailsExpanded') or
       (AName = 'canvasToolsVisible') or (AName = 'canvasExpanded') or
-      (AName = 'themeVisible') or (AName = 'themeDraft');
+      (AName = 'themeVisible') or (AName = 'themeDraft') or (AName = 'imageDraft');
   end;
 begin
   Check(NyxStudioScrollPosition(-12.5) = 0, 'Negative platform overscroll preserves a valid preference');
@@ -163,7 +163,7 @@ begin
   LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LOriginal));
   { The previous strict packet remains readable. New per-project choices use
     their defaults, while every earlier preference and Unicode value survives. }
-  SetLength(LFields, LPacket.Count - 9);
+  SetLength(LFields, LPacket.Count - 10);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -195,7 +195,7 @@ begin
   { Existing Studio installations also wrote version 3, which already owns
     source tabs and expansion. Its absent manual choice must not discard those
     fields or any other per-project preference during this migration. }
-  SetLength(LFields, LPacket.Count - 7);
+  SetLength(LFields, LPacket.Count - 8);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -223,7 +223,7 @@ begin
     'Version 3 migration retains every earlier Unicode, caret and workspace preference exactly');
   { Version 4 is the last observing release's exact packet. Its manual preview
     and all unrelated preferences survive, while new details start collapsed. }
-  SetLength(LFields, LPacket.Count - 6);
+  SetLength(LFields, LPacket.Count - 7);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -244,12 +244,13 @@ begin
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
     'Version 4 retains all preferences and supplies collapsed allocation defaults');
   { Version 5 adds the allocation preferences but predates per-project themes. }
-  SetLength(LFields, LPacket.Count - 2);
+  SetLength(LFields, LPacket.Count - 3);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
 
-    if (LPacket.Key(LIndex) <> 'themeVisible') and (LPacket.Key(LIndex) <> 'themeDraft') then
+    if (LPacket.Key(LIndex) <> 'themeVisible') and (LPacket.Key(LIndex) <> 'themeDraft') and
+      (LPacket.Key(LIndex) <> 'imageDraft') then
     begin
       LValue := LPacket.Field(LPacket.Key(LIndex));
 
@@ -264,6 +265,28 @@ begin
   LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
     'Version 5 retains every previous preference and defaults to no theme proposal');
+  { Version 6 owns theme proposals; adding images must not invalidate deployed
+    preferences or silently discard the existing source/workspace choices. }
+  SetLength(LFields, LPacket.Count - 1);
+  LCase := 0;
+  for LIndex := 0 to LPacket.Count - 1 do
+  begin
+
+    if LPacket.Key(LIndex) <> 'imageDraft' then
+    begin
+      LValue := LPacket.Field(LPacket.Key(LIndex));
+
+      if LPacket.Key(LIndex) = 'version' then
+      begin
+        LValue := NyxData(6);
+      end;
+      LFields[LCase] := NyxField(LPacket.Key(LIndex), LValue);
+      Inc(LCase);
+    end;
+  end;
+  LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
+  Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
+    'Version 6 retains theme/source/workspace preferences and defaults to no image proposal');
   LOriginal.DetailsPercent := 60;
   LOriginal.DetailsExpanded := True;
   LOriginal.CanvasToolsVisible := True;
@@ -272,10 +295,10 @@ begin
   LDecoded := DecodeNyxStudioPresentation(LPacket.ToJSON);
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
     'Current preferences independently retain all workspace allocation choices');
-  for LCase := 0 to 26 do
+  for LCase := 0 to 27 do
   begin
     LKey := 'version';
-    LValue := NyxData(7);
+    LValue := NyxData(8);
     case LCase of
       1:
       begin
@@ -406,6 +429,11 @@ begin
         begin
           LKey := 'detailsPercent';
           LValue := NyxData(32.5);
+        end;
+      27:
+        begin
+          LKey := 'imageDraft';
+          LValue := NyxData('untyped proposal');
         end;
     end;
     SetLength(LFields, LPacket.Count);

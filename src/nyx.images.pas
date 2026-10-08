@@ -512,11 +512,15 @@ class function TNyxImageSource.FromWire(const AWire: TNyxText): TNyxImageSource;
 var
   LFormat: TNyxImageFormat;
   LBytes: TNyxImageBytes;
+  LSource: TNyxImageSource;
 begin
-  Result := Default(TNyxImageSource);
+  { Managed return slots can alias the caller's current source in native FPC.
+    Build locally and publish only on success, including deliberate empty input. }
+  LSource := Default(TNyxImageSource);
 
   if AWire = '' then
   begin
+    Result := LSource;
     Exit;
   end;
 
@@ -524,18 +528,19 @@ begin
   begin
     raise ENyxImage.Create('Invalid image source text');
   end;
-  Result.FWire := AWire;
-  Result.FKind := nisLocation;
+  LSource.FWire := AWire;
+  LSource.FKind := nisLocation;
   for LFormat := Low(TNyxImageFormat) to High(TNyxImageFormat) do
   begin
 
     if LowerCase(Copy(AWire, 1, Length(CPrefixes[LFormat]))) = CPrefixes[LFormat] then
     begin
-      Result.FKind := nisEmbedded;
-      Result.FFormat := LFormat;
-      Result.FPayload := Copy(AWire, Length(CPrefixes[LFormat]) + 1, MaxInt);
-      LBytes := DecodeBase64(Result.FPayload);
-      Dimensions(LFormat, LBytes, Result.FWidth, Result.FHeight);
+      LSource.FKind := nisEmbedded;
+      LSource.FFormat := LFormat;
+      LSource.FPayload := Copy(AWire, Length(CPrefixes[LFormat]) + 1, MaxInt);
+      LBytes := DecodeBase64(LSource.FPayload);
+      Dimensions(LFormat, LBytes, LSource.FWidth, LSource.FHeight);
+      Result := LSource;
       Exit;
     end;
   end;
@@ -544,6 +549,7 @@ begin
   begin
     raise ENyxImage.Create('Embedded sources require explicit PNG/JPEG base64');
   end;
+  Result := LSource;
 end;
 
 function TNyxImageSource.ToWire: TNyxText;

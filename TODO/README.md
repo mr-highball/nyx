@@ -44,6 +44,17 @@ remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
+Latest packed image authoring (2026-10-07): the public Nyx form in both ordinary
+Studios supports imported/inline Base64 PNG/JPEG proposals, exact typed choices,
+one isolated paired Apply/history and retained workspace drafts. Actual shared/
+Win32 70, emitted six and workspace 251 pass leak-free; existing image 178/seven
+remain green. Studios/backend/browser/worker compile with zero owned warnings.
+No original full criterion closes: authoring alone advances 35→36; other counts
+remain 21/19/28/2. End this consumer boundary. Browser/phone/trusted chooser/
+observing, full assets/application/native parity and original criteria retain
+the [authoring owner](NS-4_studio-authoring_01.md) and
+[evidence](../WORK.md#current-return-path-portable-image-authoring--2026-10-07).
+
 Latest property-gate restoration (2026-10-07): an authenticated owned review
 composes all 76 catalog kinds, exact Undo/Redo and both frozen-service application
 builds, then disposes. Current checked Win32 passes 18,057 checks across 262 faces,

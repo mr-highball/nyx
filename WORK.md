@@ -7,6 +7,103 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: portable image authoring — 2026-10-07
+
+Previous turn is **progress**: property qualification is committed/pushed as
+`4491f41`; the exact clean/remote receipt is retained. All author/compiler handles
+are terminal. Workflow/authoring/renderer/codegen/delivery no-closure counts are
+21/35/19/28/2. Full Nyx/Studio scope and every original criterion remain intact.
+
+Reassessment follows original Studio authoring criteria 2/6: image rendering has
+a typed prerequisite, but its ordinary Inspector source remains a raw text field.
+Deliver a public reusable Nyx image form, portable copied proposals and bounded
+PNG/JPEG import adapters, consumed by both ordinary Studio controllers. Preview,
+alternative text, fit and anchors remain unsubmitted until one isolated paired
+Apply. Refuse stale owners/baselines, preserve proposals across chrome changes,
+retire picker callbacks with their receiver, and retain exact source/history.
+Do not substitute another image codec fixture for the ordinary authoring journey.
+
+Evidence requires shared admission/refusal, actual Win32 Studio form/queue/history
+and current browser compilation. Browser/phone/trusted file-picker execution and
+observing rollout remain held; no rejected listener/browser launch or protected
+replacement is retried. Semantic MCP supplies an independently owned English
+companion; no primary design is authored. Shared asset registry, additional
+formats and complete asset/application/parity requirements remain open.
+
+Budget: two integration/repair passes, then end this consumer boundary and
+reassess the original outcomes. Authoring is the sole no-closure owner if the
+consumer integrates. Preserve all fifteen protected process identities, nine
+complete pairs and 229 sealed LAN files. No original full criterion is accepted
+by compilation or a partial native image journey.
+
+The user's additional inline Base64 request extends this same consumer boundary:
+PNG/JPEG format choice, canonical payload or complete matching data URL, explicit
+preview and the same paired Apply. Pasted resources remain packed in projects
+and crafted typed Pascal. No additional codec/fixture family is introduced.
+
+Reassessment retained concrete failures instead of relaxing acceptance. The
+initial native fixture manually initialized a pair without its Pending bit;
+using the public pair constructor restored the legitimate pending-draft refusal.
+Real native decoding then exposed FPC managed-return aliasing: file/source
+constructors must publish only after admission, so failure cannot overwrite a
+caller's source. Both file import and the shared typed constructor now build
+local candidates before publishing. Old preference migration fixtures needed
+the new image field removed from their historical packets; original versions
+2–6 remain strict/readable. Exact emitted checks initially guessed anchor wire
+keys; they now use the closed public attribute contract and separately diagnose
+each assertion. The budget reassessment permits these specific integration
+repairs and the explicitly requested inline path, then ends this boundary.
+
+Delivered **progress**, with no original full criterion/prerequisite closed:
+authoring alone advances no-closure 35→36 once. Workflow/renderer/codegen/delivery
+remain 21/19/28/2. The public specialized Nyx image form is consumed by both
+ordinary Studio controllers; imported/inline/clear proposals, alternative text,
+fit and anchors enter one isolated paired Apply. Copied drafts retain exact
+pasted text/bytes across chrome changes and per-workspace preferences. Stale
+owner/project/baseline and pending Pascal refuse. Native import and inline
+preview qualify the real decoder before proposing; browser FileReader delivers
+copied sources and cancels borrowed receivers. Advanced source references and
+existing scoped-property editing remain available.
+
+Maintained current evidence under ignored `build/image-authoring/`:
+- `maintained-current.log`: 70 shared/actual Win32 Studio checks; six checks
+  execute the exact emitted builder, including JPEG bytes, quoted supplementary
+  Unicode and closed fit/anchors. Both executables are leak-free. This journey
+  clicks ordinary Import/Preview/Apply/Clear/history controls and edits actual
+  fields, checks invalid/stale proposals and source-pane retention. The picker
+  substitutes the OS chooser only; actual bounded UTF-8 file read/decoder and
+  Studio notification execute. Desktop and compact captures were inspected.
+- `workspace-run.log`: 251 checked concurrent ownership/preference checks,
+  leak-free, retaining exact old preference migration and malformed refusal.
+- `prerequisite-current.log`: the existing image presentation 178 and emitted
+  seven checks still pass leak-free after atomic source admission. It consumes
+  the retained exact English semantic companion; no new image fixture family.
+- Both standalone Studios, backend, source worker and matching browser form/
+  emitted counterparts compile with zero owned warnings. Each pas2js compile
+  retains seven upstream `classes.pas` case warnings; dependency source is intact.
+  Browser compilation does not establish execution, trusted picker, pixel
+  decoding, phone input, assistive technology or observing Studio acceptance.
+
+Semantic MCP remains primary: the authenticated retained English Image workshop
+seed is reused unchanged. This turn's empty review attempt refused two malformed
+operations atomically at its starting revision and was explicitly discarded;
+it did not author primary. Native `nyx_session` remains authenticated at revision
+2, selection `rating-2-part-4`, view `home`, no pending draft/Undo/Redo. The full
+property review from the previous turn remains accepted evidence, not rerun or
+silently replaced for an image form. Physical input checks use the maintained
+Pascal harness for behavior the semantic document API cannot establish.
+
+Read-only preservation at **2026-10-08T03:28:31Z** confirms fifteen exact protected
+process identities, nine complete pairs and 229 sealed LAN files, existing LAN/
+loopback bindings and HTTP 200 assets. No service/profile/frozen root was replaced.
+Earlier automatically rejected browser/backend launch and primary replacement
+are not retried. Current browser/phone/trusted chooser/observing rollout, shared
+asset registry/additional formats, full native parity, application journeys and
+complete original authoring/Inspector/visual/accessibility/performance/delivery
+criteria remain with their original owners. End this image consumer boundary;
+reassess those user outcomes next. Exact clean/remote verification is retained
+in ignored `remote-checkpoint.json` after pushing this packet.
+
 ## Current return path: maintained semantic property qualification — 2026-10-07
 
 Previous goal turn is **progress**: `e1f0b05` integrates typed portable images;

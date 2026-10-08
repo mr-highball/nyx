@@ -66,6 +66,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Packed image authoring now consumes one public Nyx form in both ordinary Studios:
+imported and pasted inline Base64 PNG/JPEG, preview, typed choices and one isolated
+paired Apply/history. Current shared/Win32 70, exact emitted six and workspace
+251 pass leak-free; existing image 178/seven remain green. Browser counterparts,
+Studios/backend/worker compile with zero owned warnings. Browser/phone/trusted
+chooser/observing, complete assets and full application/native parity remain
+open. See [the packet](WORK.md#current-return-path-portable-image-authoring--2026-10-07)
+and [packed resource usage](docs/images.md#packed-resources-and-studio).
+
 Owned semantic property qualification now restores the stale full-catalog gate:
 an authenticated review composes all 76 kinds, exact paired Undo/Redo and both
 frozen-service application builds, then disposes. Current Win32 checks pass

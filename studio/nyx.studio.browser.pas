@@ -37,6 +37,7 @@ uses
   nyx.hostspace, nyx.hostspace.browser,
   nyx.content.editor,
   nyx.theme.editor, nyx.studio.theme,
+  nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.browser,
   Classes,
   SysUtils,
   JS,
@@ -216,6 +217,10 @@ type
     FImportPacket: TNyxText;
     FImportInput: TJSHTMLInputElement;
     FImportReader: TJSFileReader;
+    FImagePicker: INyxImagePicker;
+    FImagePickContext: TNyxStudioCommandContext;
+    FImagePickOwner: TNyxText;
+    FImagePickBaseline: TNyxText;
     FImportIndex: Integer;
     FImportDesign: TNyxText;
     FImportPascal: TNyxText;
@@ -290,7 +295,12 @@ type
     procedure AcceptImport(const APacket: TNyxText; AResolution: TNyxProjectResolution);
     function KeyDown(AEvent: TJSKeyboardEvent): Boolean;
     procedure HostSpaceChanged(const AExtent: TNyxHostExtent);
+    procedure ImagePicked(AStatus: TNyxImagePickStatus;
+      const ASource: TNyxImageSource; const AError: TNyxText);
   protected
+    { The Studio consumes the public picker contract. Embedded hosts may supply
+      another local adapter without changing the reusable image form. }
+    function CreateImagePicker: INyxImagePicker; virtual;
     { Embedded hosts may provide another owned asynchronous exchange. Both
       controllers still consume the same private semantic protocol. }
     function CreateEditorExchange: TNyxStudioEditorExchange; virtual;
@@ -581,6 +591,13 @@ begin
   window.removeEventListener('pagehide', FRecoveryBoundaryHandler);
   document.removeEventListener('visibilitychange', FRecoveryBoundaryHandler);
   FSourceCommands.Free;
+  { Detach asynchronous file delivery before the borrowed Studio receiver dies. }
+
+  if FImagePicker <> nil then
+  begin
+    FImagePicker.Cancel;
+    FImagePicker := nil;
+  end;
   TNyxStudioEventTarget(document).RemoveCaptureListener('pointerdown', FPointerBeginHandler, True);
   TNyxStudioEventTarget(document).RemoveCaptureListener('pointerup', FPointerEndHandler, True);
   TNyxStudioEventTarget(document).RemoveCaptureListener('pointercancel', FPointerEndHandler, True);
@@ -691,6 +708,7 @@ begin
   LState.ContentEditorDraft := FViewState.ContentEditorDraft;
   LState.ThemeVisible := FViewState.ThemeVisible;
   LState.ThemeEditorDraft := FViewState.ThemeEditorDraft;
+  LState.ImageEditorDraft := FViewState.ImageEditorDraft;
   LState.CallbackRemoval := FCallbackRemoval;
 
   if FRootRemoval <> nil then
@@ -716,6 +734,7 @@ begin
   FViewState.TimeDomainEditorDraft.Restore(Result.Pages[0]);
   FViewState.ContentEditorDraft.Restore(Result.Pages[0]);
   FViewState.ThemeEditorDraft.Restore(Result.Pages[0]);
+  FViewState.ImageEditorDraft.Restore(Result.Pages[0]);
 end;
 
 procedure TNyxStudio.SourceModalDismiss;
@@ -786,6 +805,7 @@ begin
     FViewState.TimeDomainEditorDraft.Clear;
     FViewState.ContentEditorDraft.Clear;
     FViewState.ThemeEditorDraft.Clear;
+    FViewState.ImageEditorDraft.Clear;
     Exit;
   end;
   LEditor := FShellRenderer.Root.Find('inspector-menu');
@@ -852,6 +872,7 @@ begin
   FViewState.TimeDomainEditorDraft.Capture('inspector-time-domain', FShellRenderer.Root);
   FViewState.ContentEditorDraft.Capture('inspector-content', FShellRenderer.Root);
   FViewState.ThemeEditorDraft.Capture('studio-theme-editor', FShellRenderer.Root);
+  FViewState.ImageEditorDraft.Capture('inspector-image', FShellRenderer.Root);
 end;
 
 procedure TNyxStudio.Refresh(ARetainCanvas, APreserveDraft: Boolean);
@@ -1919,6 +1940,9 @@ var
   LHierarchyChanged: Boolean;
   LContentDraft: TNyxContentEditorDraft;
   LThemeDraft: TNyxThemeEditorDraft;
+  LImageEditor: TNyxNode;
+  LImageAction: TNyxImageEditorAction;
+  LImageSource: TNyxImageSource;
   LContentFocus: TJSHTMLElement;
 begin
 
@@ -2030,6 +2054,41 @@ begin
         raise ENyxModel.Create('Theme form changed before the palette could be loaded');
       end;
       FShellRenderer.Sync;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and
+      NyxImageEditorAction(ANode, FShellRenderer.Root, LImageEditor, LImageAction) and
+      (LImageAction in [ieaImport, ieaInline, ieaClear]) then
+    begin
+      FViewState.ImageEditorDraft.Capture('inspector-image', FShellRenderer.Root);
+
+      if FImagePicker = nil then
+      begin
+        FImagePicker := CreateImagePicker;
+      end;
+      FImagePicker.Cancel;
+
+      if LImageAction = ieaClear then
+      begin
+        FViewState.ImageEditorDraft.Propose(NyxNoImage);
+        FViewState.ImageEditorDraft.Restore(FShellRenderer.Root);
+        FShellRenderer.Sync;
+      end
+      else if LImageAction = ieaInline then
+      begin
+        LImageSource := ReadNyxImageEditorInline(LImageEditor);
+        FViewState.ImageEditorDraft.Propose(LImageSource);
+        FViewState.ImageEditorDraft.Restore(FShellRenderer.Root);
+        FShellRenderer.Sync;
+      end
+      else
+      begin
+        FImagePickContext := FSession.CommandContext;
+        FImagePickOwner := FSession.SelectedID;
+        FImagePickBaseline := NyxImageEditorContext(LImageEditor);
+        FImagePicker.Pick(@ImagePicked);
+      end;
       Exit;
     end;
 
@@ -3461,6 +3520,58 @@ begin
   end;
 end;
 
+function TNyxStudio.CreateImagePicker: INyxImagePicker;
+begin
+  Result := NewNyxBrowserImagePicker;
+end;
+
+procedure TNyxStudio.ImagePicked(AStatus: TNyxImagePickStatus;
+  const ASource: TNyxImageSource; const AError: TNyxText);
+var
+  LProjection: TNyxNode;
+begin
+  { An import may finish after project navigation, selection or another edit.
+    Check the exact captured owner and effective baseline before touching a
+    proposal. No accepted document is changed by a picker notification. }
+
+  if AStatus = ipsCancelled then
+  begin
+    Exit;
+  end;
+  try
+
+    if not FSession.MatchesCommandContext(FImagePickContext) or
+      (FSession.SelectedID <> FImagePickOwner) then
+    begin
+      raise ENyxModel.Create('Image import belongs to an earlier project or selection');
+    end;
+    LProjection := FSession.SelectedProjection;
+    try
+
+      if NyxImageEditorBaseline(FSession.Selected, LProjection) <> FImagePickBaseline then
+      begin
+        raise ENyxModel.Create('Image changed while its import was open');
+      end;
+    finally
+      LProjection.Free;
+    end;
+
+    if AStatus = ipsFailed then
+    begin
+      raise ENyxImage.Create(AError);
+    end;
+    FViewState.ImageEditorDraft.Propose(ASource);
+    FViewState.ImageEditorDraft.Restore(FShellRenderer.Root);
+    FShellRenderer.Sync;
+  except
+    on LException: Exception do
+    begin
+      FStatus := TNyxText(LException.Message);
+      Refresh(True, True);
+    end;
+  end;
+end;
+
 procedure TNyxStudio.HostSpaceChanged(const AExtent: TNyxHostExtent);
 var
   LCompact: Boolean;
@@ -3627,6 +3738,7 @@ begin
   LValue.FilesVisible := FFilesVisible;
   LValue.ThemeVisible := FViewState.ThemeVisible;
   LValue.ThemeDraft := FViewState.ThemeEditorDraft;
+  LValue.ImageDraft := FViewState.ImageEditorDraft;
   { Read the live mounted panes at departure. The cached positions reflect the
     preceding shell refresh and may precede the operator's most recent scroll. }
   LPane := MountedStudioElement(FShellRenderer, 'studio-left');
@@ -3693,6 +3805,7 @@ begin
   FViewState.TimeDomainEditorDraft.Clear;
   FViewState.ContentEditorDraft.Clear;
   FViewState.ThemeEditorDraft.Clear;
+  FViewState.ImageEditorDraft.Clear;
 
   FViewState.ThemeVisible := False;
 
@@ -3737,6 +3850,7 @@ begin
     FFilesVisible := LValue.FilesVisible;
     FViewState.ThemeVisible := LValue.ThemeVisible;
     FViewState.ThemeEditorDraft := LValue.ThemeDraft;
+    FViewState.ImageEditorDraft := LValue.ImageDraft;
     FLeftScroll := LValue.LeftScroll;
     FRightScroll := LValue.RightScroll;
     FAgentsScroll := LValue.AgentsScroll;

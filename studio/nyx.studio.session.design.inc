@@ -474,7 +474,7 @@ begin
       NyxField('position', LPosition)]);
   LVersion := 9;
 
-  if FEdit.Action in [sdaContent, sdaValueDomain, sdaMenu, sdaTheme] then
+  if FEdit.Action in [sdaContent, sdaValueDomain, sdaMenu, sdaTheme, sdaImage] then
   begin
     { Existing operations retain their deployed v9 shape. Appended recipe,
       value-policy and menu intents need new envelopes; old helpers stay compatible. }
@@ -488,7 +488,12 @@ begin
       LFields[LIndex] := NyxField(LEdit.Key(LIndex), LEdit.Field(LEdit.Key(LIndex)));
     end;
 
-    if FEdit.Action = sdaTheme then
+    if FEdit.Action = sdaImage then
+    begin
+      LVersion := 14;
+      LFields[LCount] := NyxField('image', FEdit.Image.ToData);
+    end
+    else if FEdit.Action = sdaTheme then
     begin
       LVersion := 13;
       LFields[LCount] := NyxField('theme', NyxObject([
@@ -591,6 +596,11 @@ begin
       (FEdit.ThemeBaseline = AOther.FEdit.ThemeBaseline);
   end;
 
+  if Result and (FEdit.Action = sdaImage) then
+  begin
+    Result := FEdit.Image.ToData.ToJSON = AOther.FEdit.Image.ToData.ToJSON;
+  end;
+
   if Result and (FEdit.Action = sdaValueDomain) then
   begin
     Result := FEdit.ValueDomain.Same(AOther.FEdit.ValueDomain) and
@@ -627,7 +637,7 @@ begin
   if (AData.Kind <> ndObject) or (AData.Count <> 7) or
     ((LVersion <> 5) and (LVersion <> 6) and (LVersion <> 7) and (LVersion <> 8) and
     (LVersion <> 9) and (LVersion <> 10) and (LVersion <> 11) and (LVersion <> 12) and
-    (LVersion <> 13)) then
+    (LVersion <> 13) and (LVersion <> 14)) then
   begin
     raise ENyxModel.Create('Design processor requires its exact versioned ticket');
   end;
@@ -646,7 +656,7 @@ begin
     ((LVersion = 7) and (LEdit.Count <> 13)) or
     ((LVersion = 8) and (LEdit.Count <> 14)) or
     ((LVersion = 9) and (LEdit.Count <> 15)) or
-    ((LVersion in [10, 11, 12, 13]) and (LEdit.Count <> 16)) then
+    ((LVersion in [10, 11, 12, 13, 14]) and (LEdit.Count <> 16)) then
   begin
     raise ENyxModel.Create('Design processor ticket has invalid identity or intent');
   end;
@@ -662,7 +672,8 @@ begin
     ((LVersion = 10) and (LAction > Ord(sdaContent))) or
     ((LVersion = 11) and (LAction <> Ord(sdaValueDomain))) or
     ((LVersion = 12) and (LAction <> Ord(sdaMenu))) or
-    ((LVersion = 13) and (LAction <> Ord(sdaTheme))) then
+    ((LVersion = 13) and (LAction <> Ord(sdaTheme))) or
+    ((LVersion = 14) and (LAction <> Ord(sdaImage))) then
   begin
     raise ENyxModel.Create('Design processor action is outside its closed contract');
   end;
@@ -930,6 +941,16 @@ begin
     end;
   end;
 
+  if Result.FEdit.Action = sdaImage then
+  begin
+    Result.FEdit.Image := TNyxImageEditorChange.FromData(LEdit.Field('image'));
+
+    if Result.FEdit.Image.Owner <> Result.FEdit.Selection then
+    begin
+      raise ENyxModel.Create('Image intent requires its captured selected owner');
+    end;
+  end;
+
   if Result.FEdit.Action = sdaTheme then
   begin
     LContent := LEdit.Field('theme');
@@ -962,6 +983,7 @@ var
   LSession: TNyxStudioSession;
   LStateValue: TNyxStateValue;
   LLine: Integer;
+  LImageProjection: TNyxNode;
 begin
   { Strict paired admission also verifies handwritten frame ownership. It runs
     entirely on the isolated processor, under its captured creator environment.
@@ -1026,6 +1048,30 @@ begin
             raise ENyxModel.Create('Content choices changed since this editor was captured');
           end;
           LSession.ApplyPatch(ReadNyxDesignPatch(NyxArray([FRequest.FEdit.Content.ToData])));
+        end;
+      sdaImage:
+        begin
+          LImageProjection := LSession.SelectedProjection;
+          try
+
+            if NyxImageEditorBaseline(LSession.Selected, LImageProjection) <>
+              FRequest.FEdit.Image.Baseline then
+            begin
+              raise ENyxModel.Create('Image changed since this proposal was captured');
+            end;
+          finally
+            LImageProjection.Free;
+          end;
+          { This explicit semantic property boundary composes all five typed
+            choices into one detached candidate and one paired Undo step. }
+          LSession.ApplyPatch(ReadNyxDesignPatch(NyxArray([NyxObject([
+            NyxField('op', NyxData('update')), NyxField('id', NyxData(FRequest.FEdit.Image.Owner)),
+            NyxField('properties', NyxObject([
+              NyxField(NyxAttributeName(atSource), NyxData(FRequest.FEdit.Image.Source.ToWire)),
+              NyxField(NyxAttributeName(atAlt), NyxData(FRequest.FEdit.Image.AlternativeText)),
+              NyxField(NyxAttributeName(atImageFit), NyxData(NyxImageFitName(FRequest.FEdit.Image.Fit))),
+              NyxField(NyxAttributeName(atImageHorizontal), NyxData(NyxImageAnchorName(FRequest.FEdit.Image.Horizontal))),
+              NyxField(NyxAttributeName(atImageVertical), NyxData(NyxImageAnchorName(FRequest.FEdit.Image.Vertical)))]))])])));
         end;
       sdaTheme:
         begin
@@ -1376,6 +1422,16 @@ begin
       independent processor compares the mounted baseline against its fresh
       pair and returns a normal rejected diagnostic; staleness is not a failed
       scheduler/worker transport and must not be reported as one. }
+  end;
+
+  if AEdit.Action = sdaImage then
+  begin
+    TNyxImageEditorChange.FromData(AEdit.Image.ToData);
+
+    if AEdit.Image.Owner <> AEdit.Selection then
+    begin
+      raise ENyxModel.Create('Image intent requires its captured selected owner');
+    end;
   end;
 
   if AEdit.Action = sdaTheme then

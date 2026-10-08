@@ -33,6 +33,7 @@ uses
   nyx.hostspace, nyx.hostspace.lcl,
   nyx.content.editor,
   nyx.theme.editor, nyx.studio.theme,
+  nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.lcl,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.lcl,
   nyx.menu, nyx.menu.lcl, nyx.menu.button, nyx.controls, nyx.studio.menu,
@@ -119,6 +120,10 @@ type
   private
     FHost: TWinControl;
     FHostSpace: INyxHostSpace;
+    FImagePicker: INyxImagePicker;
+    FImagePickContext: TNyxStudioCommandContext;
+    FImagePickOwner: TNyxText;
+    FImagePickBaseline: TNyxText;
     FSession: TNyxStudioSession;
     FSourceCommands: TNyxSourceCommands;
     FTheme: TNyxTheme;
@@ -187,6 +192,8 @@ type
     FOutputChanged: set of 0..5;
     FOutputIdentity: TNyxBuildOutputRef;
     procedure HostSpaceChanged(const AExtent: TNyxHostExtent);
+    procedure ImagePicked(AStatus: TNyxImagePickStatus;
+      const ASource: TNyxImageSource; const AError: TNyxText);
     procedure PaintQueued(AData: PtrInt);
     procedure Paint;
     procedure ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
@@ -234,6 +241,8 @@ type
     function ComposeShell: TNyxDocument;
     function GetPresentationPending: Boolean;
   protected
+    { Ordinary Studio consumes the public local-file picker contract. }
+    function CreateImagePicker: INyxImagePicker; virtual;
     { Owned adapter factory for embedded hosts with another private transport.
       Default uses asynchronous loopback HTTP. No receiver runs inside Post. }
     function CreateEditorExchange: TNyxStudioEditorExchange; virtual;
@@ -611,6 +620,12 @@ var
   LIndex: Integer;
 begin
   FRunning := False;
+
+  if FImagePicker <> nil then
+  begin
+    FImagePicker.Cancel;
+    FImagePicker := nil;
+  end;
 
   if FCanvasView <> nil then
   begin
@@ -1493,6 +1508,7 @@ begin
   FState.TimeDomainEditorDraft.Clear;
   FState.ContentEditorDraft.Clear;
   FState.ThemeEditorDraft.Clear;
+  FState.ImageEditorDraft.Clear;
   FBoundProject := '';
   FProjectRevision := '';
   FSavedPair := EncodeNyxProject(FSession.ProjectSnapshot);
@@ -1518,6 +1534,58 @@ begin
   end;
   FQueued := True;
   Application.QueueAsyncCall(PaintQueued, 0);
+end;
+
+function TNyxNativeStudio.CreateImagePicker: INyxImagePicker;
+begin
+  Result := NewNyxLCLImagePicker;
+end;
+
+procedure TNyxNativeStudio.ImagePicked(AStatus: TNyxImagePickStatus;
+  const ASource: TNyxImageSource; const AError: TNyxText);
+var
+  LProjection: TNyxNode;
+begin
+  { An import may finish after project navigation, selection or another edit.
+    Check the exact captured owner and effective baseline before touching a
+    proposal. No accepted document is changed by a picker notification. }
+
+  if AStatus = ipsCancelled then
+  begin
+    Exit;
+  end;
+  try
+
+    if not FSession.MatchesCommandContext(FImagePickContext) or
+      (FSession.SelectedID <> FImagePickOwner) then
+    begin
+      raise ENyxModel.Create('Image import belongs to an earlier project or selection');
+    end;
+    LProjection := FSession.SelectedProjection;
+    try
+
+      if NyxImageEditorBaseline(FSession.Selected, LProjection) <> FImagePickBaseline then
+      begin
+        raise ENyxModel.Create('Image changed while its import was open');
+      end;
+    finally
+      LProjection.Free;
+    end;
+
+    if AStatus = ipsFailed then
+    begin
+      raise ENyxImage.Create(AError);
+    end;
+    FState.ImageEditorDraft.Propose(ASource);
+    FState.ImageEditorDraft.Restore(FShellView.Root);
+    FShellView.Sync;
+  except
+    on LException: Exception do
+    begin
+      FState.Status := TNyxText(LException.Message);
+      RequestRefresh;
+    end;
+  end;
 end;
 
 procedure TNyxNativeStudio.HostSpaceChanged(const AExtent: TNyxHostExtent);
@@ -1576,6 +1644,7 @@ begin
     FState.TimeDomainEditorDraft.Capture('inspector-time-domain', FShellView.Root);
     FState.ContentEditorDraft.Capture('inspector-content', FShellView.Root);
     FState.ThemeEditorDraft.Capture('studio-theme-editor', FShellView.Root);
+    FState.ImageEditorDraft.Capture('inspector-image', FShellView.Root);
   end;
   LNode := FShellView.Root.Find('studio-split');
 
@@ -1629,6 +1698,7 @@ begin
   FState.TimeDomainEditorDraft.Restore(Result.Pages[0]);
   FState.ContentEditorDraft.Restore(Result.Pages[0]);
   FState.ThemeEditorDraft.Restore(Result.Pages[0]);
+  FState.ImageEditorDraft.Restore(Result.Pages[0]);
   Result.Pages[0].Configure.Height(FHost.ClientHeight).Done;
 end;
 
@@ -2577,6 +2647,9 @@ var
   LHierarchyChanged: Boolean;
   LContentDraft: TNyxContentEditorDraft;
   LThemeDraft: TNyxThemeEditorDraft;
+  LImageEditor: TNyxNode;
+  LImageAction: TNyxImageEditorAction;
+  LImageSource: TNyxImageSource;
   LContentFocus: TWinControl;
 begin
 
@@ -2686,6 +2759,42 @@ begin
         raise ENyxModel.Create('Theme form changed before the palette could be loaded');
       end;
       FShellView.Sync;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and
+      NyxImageEditorAction(ANode, FShellView.Root, LImageEditor, LImageAction) and
+      (LImageAction in [ieaImport, ieaInline, ieaClear]) then
+    begin
+      FState.ImageEditorDraft.Capture('inspector-image', FShellView.Root);
+
+      if FImagePicker = nil then
+      begin
+        FImagePicker := CreateImagePicker;
+      end;
+      FImagePicker.Cancel;
+
+      if LImageAction = ieaClear then
+      begin
+        FState.ImageEditorDraft.Propose(NyxNoImage);
+        FState.ImageEditorDraft.Restore(FShellView.Root);
+        FShellView.Sync;
+      end
+      else if LImageAction = ieaInline then
+      begin
+        LImageSource := ReadNyxImageEditorInline(LImageEditor);
+        ValidateNyxLCLImageSource(LImageSource);
+        FState.ImageEditorDraft.Propose(LImageSource);
+        FState.ImageEditorDraft.Restore(FShellView.Root);
+        FShellView.Sync;
+      end
+      else
+      begin
+        FImagePickContext := FSession.CommandContext;
+        FImagePickOwner := FSession.SelectedID;
+        FImagePickBaseline := NyxImageEditorContext(LImageEditor);
+        FImagePicker.Pick(ImagePicked);
+      end;
       Exit;
     end;
 

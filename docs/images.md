@@ -70,13 +70,60 @@ adapter retains existing local-file resolution; missing files produce an empty
 picture, and HTTP/network locations require a future supplied resolver.
 An exported design cannot make a machine-local file portable.
 
+## Packed resources and Studio
+
+Inline Base64 is a portable image source, not an external file reference. Both
+saved projects and generated Pascal retain the exact PNG/JPEG bytes:
+
+```pascal
+LWelcomeImage := NewNyxImage('welcome-image');
+LWelcomeImage.Configure
+  .Source(NyxEmbeddedImage(nimPNG, CWelcomeImageBase64))
+  .AlternativeText('A welcoming landscape')
+  .Done;
+```
+
+`CWelcomeImageBase64` is application-owned canonical Base64 text. Use
+`nimJPEG` for JPEG. SVG and other image formats are not yet admitted by this
+contract. Existing decoded byte/dimension limits apply equally to pasted and
+imported resources; no machine path is packed into the project.
+
+The selected image's Properties form offers **Import PNG or JPEG**, or an
+**Inline Base64** memo with a PNG/JPEG format choice. Paste canonical Base64 or
+a complete matching `data:image/...;base64,...` URL, then choose **Preview
+Base64**. Preview, alternative text, fit, anchors and **Clear image** remain
+unsubmitted proposals. **Apply image** publishes all five image properties
+through the ordinary isolated design processor as one paired Undo/Redo step.
+Incomplete/invalid choices and stale owner/baseline contexts refuse. A pending
+Pascal draft keeps the existing refusal rather than silently replacing source.
+The advanced property view retains explicit source-reference/wire editing.
+
+The public [Nyx form](../src/nyx.image.editor.pas) is built from ordinary
+specialized Nyx controls. Both Studio controllers consume copied proposals;
+chrome changes and per-workspace preferences retain pasted text and image bytes.
+The [portable picker contract](../src/nyx.image.import.pas) delivers copied
+source/status values without a file, path, document or host widget. Controllers
+capture project/selection/baseline before opening a picker and cancel borrowed
+callbacks before their receiver retires. Late delivery cannot edit another
+project or selection. Browser adapters use FileReader; the native adapter reads
+bounded bytes and validates its real pixel decoder before publishing a source.
+Native inline preview uses the same decoder qualification. Browser pixel/fetch
+failures remain asynchronous and require separate execution evidence.
+
 Current checked shared/Win32 qualification covers typed source/geometry,
 source/history refusal and restoration, exact emitted execution, real PNG/JPEG
 decoding, retained fit updates, decoder-error recovery and reusable media parts.
 Matching browser consumers and both Studios compile. Current browser/phone and
-observing execution, asset registry/import UX, asynchronous load/error events,
+observing execution, complete asset registry/import UX, asynchronous load/error events,
 orientation/color fidelity, other widgetsets/DPI and complete accessibility,
 visual and performance acceptance remain open.
+
+Run `tools/build.ps1 -Target image-authoring` after the existing
+`image-presentation` semantic seed/raster prerequisite. It exercises the ordinary
+Win32 Studio form, pasted/imported proposal, paired source/history and stale
+refusal, then compiles and executes the exact emitted builder and stages browser
+counterparts. Its picker substitutes only the OS chooser; trusted chooser,
+browser/phone/observing execution and other widgetsets remain unqualified.
 
 Fit/anchor semantics follow [CSS Images object sizing](https://www.w3.org/TR/css-images-3/#the-object-fit).
 Embedded interchange follows [RFC 2397](https://www.rfc-editor.org/rfc/rfc2397);

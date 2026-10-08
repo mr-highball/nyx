@@ -69,7 +69,8 @@ uses
   nyx.binding.types,
   nyx.studio.authoring,
   nyx.studio.collections,
-  nyx.theme.editor;
+  nyx.theme.editor,
+  nyx.image.editor;
 
 function RouteNyxStudioSource(ASession: TNyxStudioSession; ANode: TNyxNode;
   AEvent: TNyxTrigger): Boolean;
@@ -147,6 +148,7 @@ var
   LSpec: TNyxBindingSpec;
   LInherit: Boolean;
   LThemeChange: TNyxThemeEditorChange;
+  LImageChange: TNyxImageEditorChange;
 begin
   Result := sacNone;
   AEdit := Default(TNyxStudioDesignEdit);
@@ -158,6 +160,24 @@ begin
 
   AEdit.Selection := ASession.SelectedID;
   AEdit.View := ASession.ActiveViewID;
+
+  if (AEvent = ntClick) and CaptureNyxImageEditor(ANode, AShellRoot, LImageChange) then
+  begin
+    LProjection := ASession.SelectedProjection;
+    try
+
+      if (LImageChange.Owner <> ASession.SelectedID) or
+        (NyxImageEditorBaseline(ASession.Selected, LProjection) <> LImageChange.Baseline) then
+      begin
+        raise ENyxModel.Create('Image changed; review the current picture before applying');
+      end;
+    finally
+      LProjection.Free;
+    end;
+    AEdit.Action := sdaImage;
+    AEdit.Image := LImageChange;
+    Exit(sacEdit);
+  end;
 
   if (AEvent = ntClick) and CaptureNyxThemeEditor(ANode, AShellRoot, LThemeChange) then
   begin

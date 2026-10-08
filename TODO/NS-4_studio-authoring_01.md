@@ -40,6 +40,30 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Packed image authoring — 2026-10-07
+
+Original criteria 2/6 consume one public specialized Nyx image form in both
+ordinary Studio controllers. Import and pasted inline Base64 PNG/JPEG become
+copied portable proposals, never machine paths. Preview, alternative text, fit,
+anchors and Clear remain unsubmitted until one isolated paired Apply. Exact
+owner/baseline, pending Pascal and late project/selection checks preserve accepted
+work. Per-workspace preferences/chrome retain pasted text and immutable bytes;
+advanced source references/scoped editing remain available. Native decoder and
+shared constructor failures publish no partial source.
+
+Current checked shared/actual Win32 journey passes 70, exact emitted builder six
+and workspace regression 251, leak-free. Existing image presentation 178/emitted
+seven remain green. Both Studios/backend, browser counterparts and worker compile
+with zero owned warnings. The unchanged authenticated English semantic seed is
+reused; protected primary/other pairs and LAN assets remain exact. The picker
+substitutes only the OS chooser. Browser/phone/trusted chooser/observing execution,
+shared asset registry/additional formats, full multi-page/native parity and all
+original criteria remain open. No full criterion/prerequisite closes: authoring
+alone advances no-closure 35→36 once; workflow/renderer/codegen/delivery remain
+21/19/28/2. End this consumer boundary and reassess the original outcomes.
+See [usage](../docs/images.md#packed-resources-and-studio) and
+[evidence](../WORK.md#current-return-path-portable-image-authoring--2026-10-07).
+
 ## Typed application themes — 2026-10-07
 
 Original criterion 2 consumes strongly typed RGB/Integer semantic roles and

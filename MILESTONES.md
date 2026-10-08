@@ -3,6 +3,17 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current packed image authoring (2026-10-07): imported and pasted inline Base64
+PNG/JPEG remain portable proposals through a public Nyx form in both ordinary
+Studio controllers, with one isolated paired Apply/history step. Checked shared/
+actual Win32 70, exact emitted six and workspace regression 251 pass leak-free;
+existing image 178/seven remain green. Studios/backend/browser/worker compile
+with zero owned warnings. No original full criterion closes: authoring alone
+advances 35→36, with workflow/renderer/codegen/delivery at 21/19/28/2. End this
+consumer boundary. Browser/phone/trusted chooser/observing rollout, complete
+assets, application/native parity and full original production acceptance remain
+open. See [the packet](WORK.md#current-return-path-portable-image-authoring--2026-10-07).
+
 Current semantic property restoration (2026-10-07): an authenticated owned
 review composes the full 76-kind catalog, exact paired history and both frozen-
 service application compilers, then disposes. Current checked Win32 passes

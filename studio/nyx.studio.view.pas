@@ -39,6 +39,7 @@ uses
   nyx.times.editor,
   nyx.content.editor,
   nyx.theme.editor,
+  nyx.image.editor,
   nyx.contract,
   nyx.schema,
   nyx.types,
@@ -143,6 +144,9 @@ type
       Changing it never edits a document or the independent Studio chrome theme. }
     ThemeVisible: Boolean;
     ThemeEditorDraft: TNyxThemeEditorDraft;
+    { Imported pictures are independent proposals, retired when their exact
+      selected image or its effective baseline changes. }
+    ImageEditorDraft: TNyxImageEditorDraft;
     CallbackRemoval: TNyxCallbackRemoval;
     { Copied confirmation metadata, not an interface or borrowed model. }
     RootRemoval: TNyxDataValue;
@@ -1389,6 +1393,12 @@ begin
         AddBindingsPanel(LRight, ASession, LSelectedProjection, AState);
         AddNyxDateDomainInspector(LRight, ASession);
         AddNyxTimeDomainInspector(LRight, ASession);
+
+        if (LSelectedProjection <> nil) and
+          (LSelectedProjection.ProjectionKind = NyxKindName(nkImage)) then
+        begin
+          LRight.Add(NewNyxImageEditor('inspector-image', LSelected, LSelectedProjection));
+        end;
         AddNyxMenuBarInspector(LRight, ASession, LSelectedProjection);
         AddNyxMenuInspector(LRight, ASession, AState.MenuEditorReference);
 
@@ -1400,6 +1410,17 @@ begin
         AddNyxViewportInspector(LRight, LSelected.ID, ASession.Document);
         for LIndex := 0 to Length(LProperties) - 1 do
         begin
+
+          if (LSelectedProjection <> nil) and
+            (LSelectedProjection.ProjectionKind = NyxKindName(nkImage)) and
+            TryNyxAttribute(LProperties[LIndex].Key, LAttribute) and (LAttribute in
+              [atSource, atAlt, atImageFit, atImageHorizontal, atImageVertical]) and
+            ((LAttribute <> atSource) or not AState.AdvancedProperties) then
+          begin
+            { Default authoring uses the grouped typed form. Advanced properties
+              retain the explicit existing source-reference/wire boundary. }
+            Continue;
+          end;
 
           if LProperties[LIndex].Advanced and not AState.AdvancedProperties and
             not LSelected.TryPresentationRule(LProperties[LIndex].Key, LViewport, LPlatform, LAttribute) then
