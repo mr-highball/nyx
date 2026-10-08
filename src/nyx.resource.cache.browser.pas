@@ -172,7 +172,11 @@ begin
           Exit;
         end;
         LResponse := TJSResponse.new(LText);
-        LResponse.headers.set_(CSizeHeader, IntToStr(NyxUTF8ByteCount(LText)));
+        { This is a fresh private response, so its size header cannot exist yet.
+          Use the standard Headers.append binding: the installed RTL's Headers
+          set_ declaration lacks its external 'set' name and emits an invalid
+          host call. Keep this adaptation owned here, never patch the RTL. }
+        LResponse.headers.append(CSizeHeader, IntToStr(NyxUTF8ByteCount(LText)));
         await(LCache.put(LKey, LResponse));
       end
       else

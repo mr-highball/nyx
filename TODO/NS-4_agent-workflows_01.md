@@ -9,7 +9,15 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current image lifecycle source/metadata is qualified through public Pascal
+Current resource source/schema adds bounded image capability and `bind-image`
+inside the existing guarded group. Public Pascal semantic dispatch and paired
+history qualify the source; installed authenticated MCP remains primary and
+predates this family/version ten. Existing rollout ownership must expose it
+before deployed support is claimed. No screenshot-driven editor fallback or
+equivalent rejected server launch occurs; workflow count/credit stays unchanged.
+See [the binding packet](../WORK.md#current-return-path-image-resource-binding--2026-10-08).
+
+Previous image lifecycle source/metadata is qualified through public Pascal
 consumers of the exact prior MCP workshop seed. Installed authenticated MCP is
 still primary; its frozen release predates the new triggers. Current event/source
 inspection and observing UI/backend exposure need the existing guarded rollout.

@@ -9,6 +9,14 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current native Resources regression (2026-10-08) passes 123 ordinary authoring
+checks, but repeated editor rebuilds make the checked journey take several
+minutes. Flushed assertion tracing distinguishes forward progress from a stalled
+callback. Treat this as a profiling lead for the existing timing/interaction
+budgets; no measured per-gesture guarantee or comparison follows from one broad
+test's elapsed time. See
+[the consumer packet](../WORK.md#current-return-path-image-resource-binding--2026-10-08).
+
 Current scheduler production prerequisite (2026-10-07): per-owner native pools
 replace one thread per callback with typed worker/queue limits and copied load.
 Actual checked pool tests pass 118, including real worker reuse/termination,

@@ -53,9 +53,10 @@ type
     bpColumns,
     bpFlex,
     bpMinimum,
-    bpMaximum);
+    bpMaximum,
+    bpImage);
   TNyxBindingDirection = (bdFromState, bdTwoWay);
-  TNyxBindingSource = (bsState, bsResource);
+  TNyxBindingSource = (bsState, bsResource, bsResourceImage);
   { A notification failure follows an admitted commit. It must never be reported
     as rejected state or retried by restoring the old value. }
   TNyxBindingFailure = (nbfNone, nbfRejected, nbfNotificationFailed);
@@ -83,6 +84,7 @@ type
     FCleared: Boolean;
     FSource: TNyxBindingSource;
     FResource: TNyxResourceValueRef;
+    FResourceImage: TNyxResourceImageRef;
   public
     class function Bound(AProperty: TNyxBindingProperty; const AStateName: TNyxText;
       AValueKind: TNyxStateKind; ADirection: TNyxBindingDirection): TNyxBindingSpec; static;
@@ -90,6 +92,9 @@ type
     { Read-only resource projection; editing never rewrites packed file data. }
     class function Resource(AProperty: TNyxBindingProperty;
       const AValue: TNyxResourceValueRef): TNyxBindingSpec; static;
+    { Image is a distinct typed projection, never a scalar state conversion.
+      Its reserved ValueKind is not consumed; Source identifies the image family. }
+    class function Image(const AValue: TNyxResourceImageRef): TNyxBindingSpec; static;
     function Copy: TNyxBindingSpec;
     { Exact copied contract equality, including explicit clearing and direction.
       Open state names retain their precise Unicode spelling. This comparison
@@ -103,6 +108,7 @@ type
     property Cleared: Boolean read FCleared;
     property Source: TNyxBindingSource read FSource;
     property ResourceValue: TNyxResourceValueRef read FResource;
+    property ResourceImage: TNyxResourceImageRef read FResourceImage;
   end;
 
 { Enum/string mappings are persistence/schema boundaries. Authored Pascal and
@@ -121,12 +127,12 @@ const
   CPropertyNames: array[TNyxBindingProperty] of TNyxText = (
     'text', 'value', 'enabled', 'visible', 'readonly', 'pressed', 'placeholder',
     'hint', 'aria-label', 'width', 'height', 'left', 'top', 'padding', 'gap',
-    'columns', 'flex', 'min', 'max');
+    'columns', 'flex', 'min', 'max', 'src');
   CDirectionNames: array[TNyxBindingDirection] of TNyxText = ('from-state', 'two-way');
   CPropertyTitles: array[TNyxBindingProperty] of TNyxText = (
     'Text', 'Value', 'Enabled', 'Visible', 'Read only', 'Pressed', 'Placeholder',
     'Hint', 'Accessible name', 'Width', 'Height', 'Left', 'Top', 'Padding', 'Gap',
-    'Columns', 'Flex', 'Minimum', 'Maximum');
+    'Columns', 'Flex', 'Minimum', 'Maximum', 'Image');
 
 class function TNyxBindingSpec.Bound(AProperty: TNyxBindingProperty;
   const AStateName: TNyxText; AValueKind: TNyxStateKind;
@@ -161,6 +167,16 @@ begin
   Result.FCleared := FCleared;
   Result.FSource := FSource;
   Result.FResource := FResource.Copy;
+  Result.FResourceImage := FResourceImage;
+end;
+
+class function TNyxBindingSpec.Image(const AValue: TNyxResourceImageRef): TNyxBindingSpec;
+begin
+  Result := Default(TNyxBindingSpec);
+  Result.FProperty := bpImage;
+  Result.FSource := bsResourceImage;
+  Result.FResourceImage := TNyxResourceImageRef.FromData(AValue.ToData);
+  Result.Validate;
 end;
 
 class function TNyxBindingSpec.Resource(AProperty: TNyxBindingProperty;
@@ -188,6 +204,11 @@ begin
   begin
     Result := FResource.ToData.ToJSON = AOther.FResource.ToData.ToJSON;
   end;
+
+  if Result and not FCleared and (FSource = bsResourceImage) then
+  begin
+    Result := FResourceImage.ToData.ToJSON = AOther.FResourceImage.ToData.ToJSON;
+  end;
 end;
 
 procedure TNyxBindingSpec.Validate;
@@ -209,6 +230,18 @@ begin
 
   if FCleared then
   begin
+    Exit;
+  end;
+
+  if (FProperty = bpImage) or (FSource = bsResourceImage) then
+  begin
+
+    if (FProperty <> bpImage) or (FSource <> bsResourceImage) or
+      (FDirection <> bdFromState) then
+    begin
+      raise ENyxState.Create('Image binding requires a read-only typed image resource');
+    end;
+    FResourceImage.ToData;
     Exit;
   end;
   { Key admission is identical for every typed reference. This does not coerce
@@ -267,6 +300,12 @@ begin
       begin
         { Captions explicitly project any scalar; Value target-kind admission
           also checks the concrete input/compound's semantic property schema. }
+      end;
+    bpImage:
+      begin
+        { Typed image admission returned above. Never offer a scalar conversion
+          if this closed-family guard changes during later extension work. }
+        raise ENyxState.Create('Image is not a scalar binding target');
       end;
   end;
 end;

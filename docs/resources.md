@@ -42,6 +42,44 @@ files and images are obtained through their typed definition accessors.
 Resource bindings are read-only projections; editing a control does not rewrite
 its packed file. Existing typed state bindings supply writable application data.
 
+## Images from project resources
+
+Use the distinct image selector with a specialized managed image control:
+
+```pascal
+LDocument.Resources.Define(NyxResourceRef('project-cover'),
+  NyxImageResource(LPackedCover));
+
+LCoverImage := NewNyxImage('project-cover-image');
+LHomeColumn.Add(LCoverImage);
+LCoverImage.Configure.AlternativeText('Project cover').Done;
+LCoverImage.Binds
+  .Image(NyxResourceImage(NyxResourceRef('project-cover')))
+  .Done;
+```
+
+`LPackedCover` is an admitted `TNyxImageSource`; an embedded PNG/JPEG or a
+same-kind hosted resource with its authored fallback works through the same
+binding. The resource runtime performs hosted fetching and cache admission;
+the ordinary image adapter receives the resulting typed source and delivers
+its lifecycle callbacks. Building or importing a document performs no fetching.
+
+`TNyxResourceImageRef` owns immutable reference/locale names. It has no JSON path
+or scalar conversion. Both node and managed `INyxBindings` authoring expose
+`.Image`; state text and scalar resource selectors cannot fill that argument.
+`Binds.Clear(bpImage)` masks inheritance; `Binds.Inherit(bpImage)` resumes it.
+Wrong resource kinds, missing fallbacks and non-image targets refuse admission.
+Related resource changes and repairs to all their consumers can form one atomic
+Studio operation.
+
+An image selector follows the application's runtime locale by default. Calling
+`.Localize(NyxLocale('en-GB'), NyxDefaultLocale)` pins a pair explicitly.
+`.Localize(NyxDefaultLocale, NyxDefaultLocale)` pins the default variant even
+when the application's locale changes. The distinct `Localized` Boolean keeps
+that intent through copying, persistence, crafted generation and managed source
+replay. Reusable consumers and sibling applications retain independent runtime
+catalogs; loading never rewrites the document's authored defaults.
+
 ## Locale variants and view reload
 
 ```pascal
@@ -54,7 +92,7 @@ LRenderer.ReloadResources(LRuntimeResources, NyxLocale('en-GB'), NyxDefaultLocal
 
 Both renderer adapters expose the same reload method. A realized view privately
 copies catalog membership; it can outlive the source document. Reload validates
-every scalar selector and concrete property on a detached candidate, then updates
+every scalar/image selector and concrete property on a detached candidate, then updates
 existing controls. Invalid fields or values preserve the accepted projection.
 Control synchronization failures are reported after publication, as with ordinary
 state updates. Reload remains a UI-thread operation confined to that mounted view.
@@ -466,7 +504,12 @@ Callbacks borrow their receiver. Retain each job and call `Cancel` before the
 receiver is destroyed. Completion retires a callback once. A browser write
 already submitted to Cache Storage may finish after cancellation, but cannot
 publish into a document/control. Storage is bounded, without automatic eviction
-or stale pruning yet. Persistent browser storage has compile evidence only.
+or stale pruning yet. The maintained image-resource consumer now executes actual
+Cache Storage write/read and explicit server-policy override on a trustworthy
+loopback origin. It repairs an installed RTL header-name mismatch inside the
+owned adapter using standard [Headers.append](https://fetch.spec.whatwg.org/#dom-headers-append)
+on a fresh response. This does not establish browser restart persistence, LAN
+secure-context availability, arbitrary quota/security behavior or automatic eviction.
 
 ## Studio Resources and copied proposals
 
@@ -514,7 +557,12 @@ before proposing a reply. The form borrows catalog/control inputs only while
 constructing its independent owned children; it never modifies accepted work.
 The prepared semantic resource API shares this form's final candidate admission.
 Authenticated deployment and observing execution retain the MCP workflow owner.
-Saved table row mappings and image-reference bindings are not yet exposed here.
+The form offers **Image** for an image projection and hides scalar path selection
+for image resources. Its copied proposal binds the exactly opened locale variant;
+public fluent/semantic callers can instead choose runtime locale inheritance.
+Saved table row mappings use the common row editor described below. Current
+image binding form/session execution does not establish trusted input or updated
+observing deployment.
 
 ## Semantic resource authoring
 
@@ -580,7 +628,7 @@ are independently encoded Base64: concatenate the **decoded bytes**, rather
 than their padded Base64 strings. Hosted payload windows explicitly identify
 `authored-fallback`; a declaration without fallback refuses payload access.
 
-Mutation operations are `define`, `remove`, `bind`, `clear-binding`,
+Mutation operations are `define`, `remove`, `bind`, `bind-image`, `clear-binding`,
 `inherit-binding`, `define-rows` and `detach-rows`. Definitions use the existing strict embedded version 1 or
 hosted version 2 contract. Bind carries the existing five-field resource selector
 and an enum property name at this wire boundary. Pascal callers use
@@ -588,6 +636,15 @@ and an enum property name at this wire boundary. Pascal callers use
 `nyx.studio.resourceedits`, with typed references, locale, property and selector.
 Studio's copied form proposal consumes the same candidate implementation while
 retaining its exact catalog/control baseline guards.
+
+`bind-image` requires exactly `op`, `owner` and `value`; the distinct selector
+has `resource`, `locale`, `fallback` and Boolean `localized`. False inherits
+runtime locale and requires both names empty; true pins even an empty/default
+pair. `NyxBindResourceImage` constructs the public Pascal operation. Bounded
+`bindings` entries expose `resourceImage` capability with no scalar kinds for
+the `src` target. Local/effective image descriptors report `source: resource-image`.
+The scalar `bind` schema excludes image sources. Current source/harness support
+is qualified separately from the frozen installed MCP release.
 
 `define-rows` requires `collection`, a closed version-one `source` recipe and
 Boolean `replaceStatic`. The source has `version`, `resource`, structural array
@@ -764,7 +821,9 @@ workflow gap; this fixture's trusted operator buttons exercise the controller.
 ## Wire, limits and qualification
 
 Document wire version 8 carries a nonempty resource catalog and typed scalar
-selectors. Saved row recipes select version 9 and collection descriptor version
+selectors. Image bindings or their clear masks select version 10, even with an
+empty catalog. They carry a distinct `imageResource` selector alongside `src`;
+lower versions refuse this family. Saved row recipes select version 9 and collection descriptor version
 2; every entry then carries an explicit source descriptor or null. Recipe
 version 1 strictly retains resource/path/identity/ordered typed fields. An empty
 schema seed must exactly match its recipe. Older document/descriptor versions
@@ -790,6 +849,18 @@ warnings; browser controls/cache/phone execution is not established by compilati
 The subsequent common Studio Resources form supplies import/proposals/scalar
 binding choices; complete authoring and semantic resource operations remain open
 under their existing task owners.
+
+`tools/build.ps1 -Target resource-images -ImageSourceDirectory <MCP-export>`
+compiles the maintained image workshop consumer. Supplying an existing freshly
+owned static child via `-ResourceImageStage` and its base `-HttpURL` writes Pascal
+fixture bytes and executes the native journey; it starts no server. Exact emitted
+source is compiled separately. Current actual Win32 passes **43**, HTTP desktop/
+CSS-390 **44** each, and emitted reconstruction **eight** per target. Browser
+execution uses the Pascal pipe driver on an already admitted static host and
+captures live controls before explicit disposal. Public common form/local semantic
+checks establish grouped admission/source/history, with ordinary current image
+binding UI and authenticated observing deployment still required. See
+[current evidence](../WORK.md#current-return-path-image-resource-binding--2026-10-08).
 
 Run `tools/build.ps1 -Target resource-loading` against an existing Studio health
 endpoint (`-HttpURL` changes only this qualification configuration). It starts no

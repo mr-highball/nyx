@@ -148,6 +148,9 @@ procedure ApplyNyxBindings(ARoot: TNyxNode; AState: TNyxState);
 { Concrete control admission also supplies authoring choices. The node is
   borrowed, normally an independently realized selection/part. Empty means
   unsupported; returned sets/arrays own no mutable model or target references. }
+{ Image resource projections are not scalar state targets. Discovery and
+  authoring use this separate capability; real binding admission checks it too. }
+function NyxSupportsResourceImage(ANode: TNyxNode): Boolean;
 function NyxBindingKinds(ANode: TNyxNode;
   ATarget: TNyxBindingProperty): TNyxStateKinds;
 function NyxBindingTargets(ANode: TNyxNode): TNyxBindingTargetInfos;
@@ -360,6 +363,11 @@ begin
   end;
 end;
 
+function NyxSupportsResourceImage(ANode: TNyxNode): Boolean;
+begin
+  Result := (ANode <> nil) and (ANode.ProjectionKind = 'image');
+end;
+
 function ProjectionText(ANode: TNyxNode; const ASpec: TNyxBindingSpec;
   const AValue: TNyxStateValue): TNyxText;
 begin
@@ -414,6 +422,13 @@ begin
   if ANode = nil then
   begin
     raise ENyxState.Create('Binding choices require a control');
+  end;
+
+  if ATarget = bpImage then
+  begin
+    { An image never advertises scalar text-state binding merely because its
+      persisted source wire is textual. The public selector retains its type. }
+    Exit;
   end;
   { A compound exposes a declared self value or named fields; container shape
     never grants four arbitrary scalar choices. Numbers permit the integral
@@ -517,6 +532,11 @@ end;
 procedure CheckTarget(ANode: TNyxNode; const ASpec: TNyxBindingSpec);
 begin
 
+  if (ASpec.Source = bsResourceImage) and NyxSupportsResourceImage(ANode) then
+  begin
+    Exit;
+  end;
+
   if not (ASpec.ValueKind in NyxBindingKinds(ANode, ASpec.Target)) then
   begin
     raise ENyxState.Create('Binding target/kind is unsupported on ' + ANode.ID);
@@ -612,6 +632,15 @@ procedure ApplyNyxBindings(ARoot: TNyxNode; AState: TNyxState);
         Continue;
       end;
       CheckTarget(ANode, LSpec);
+      { Prepared resource reload resolves a typed source before changing the
+        candidate. Ordinary adapter synchronization then owns decoding/events;
+        no second network loader or scalar coercion is introduced here. }
+
+      if LSpec.Source = bsResourceImage then
+      begin
+        ANode.Configure.Source(ANode.ReadResourceImage(LSpec.ResourceImage)).Done;
+        Continue;
+      end;
       LValue := Value(ANode, LSpec);
 
       if LValue.Kind <> LSpec.ValueKind then
@@ -651,7 +680,13 @@ procedure ApplyNyxBindings(ARoot: TNyxNode; AState: TNyxState);
 
       if not LSpec.Cleared then
       begin
-        CheckValueRange(ANode, LSpec, Value(ANode, LSpec));
+        { Image sources have already been projected through typed admission.
+          They cannot be read as a scalar merely to inspect numeric ranges. }
+
+        if LSpec.Source <> bsResourceImage then
+        begin
+          CheckValueRange(ANode, LSpec, Value(ANode, LSpec));
+        end;
       end;
     end;
     for LIndex := 0 to ANode.Count - 1 do

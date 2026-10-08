@@ -249,6 +249,11 @@ begin
     begin
       LResource := LSpec.ResourceValue.ToData;
     end;
+
+    if not LSpec.Cleared and (LSpec.Source = bsResourceImage) then
+    begin
+      LResource := LSpec.ResourceImage.ToData;
+    end;
     LValues[LIndex] := NyxObject([
       NyxField('target', NyxData(Ord(LSpec.Target))),
       NyxField('state', NyxData(LSpec.StateName)),
@@ -630,7 +635,17 @@ begin
   Field(AEditor, refEncoding).Configure.Visible(not LHosted or
     Checked(AEditor, refFallback)).Done;
   Field(AEditor, refTarget).Configure.Visible(Checked(AEditor, refBind)).Done;
-  Field(AEditor, refPath).Configure.Visible(Checked(AEditor, refBind)).Done;
+  { Image payloads have one specialized target and no scalar path. Choose it
+    automatically when the current editable projection exposes that capability;
+    image captions from JSON/text keep their ordinary scalar target choices. }
+
+  if (NyxResourceEditorKind(AEditor) = nrkImage) and
+    (Pos(NyxBindingPropertyTitle(bpImage), Field(AEditor, refTarget).Prop('items')) > 0) then
+  begin
+    Field(AEditor, refTarget).Configure.Value(NyxBindingPropertyTitle(bpImage)).Done;
+  end;
+  Field(AEditor, refPath).Configure.Visible(Checked(AEditor, refBind) and
+    (NyxResourceEditorKind(AEditor) <> nrkImage)).Done;
 
   if not APreview then
   begin
@@ -813,7 +828,8 @@ begin
             for LTarget := Low(TNyxBindingProperty) to High(TNyxBindingProperty) do
             begin
 
-              if NyxBindingKinds(AProjection, LTarget) <> [] then
+              if (NyxBindingKinds(AProjection, LTarget) <> []) or
+                ((LTarget = bpImage) and NyxSupportsResourceImage(AProjection)) then
               begin
 
                 if LItems <> '' then
@@ -1058,6 +1074,18 @@ begin
   begin
     raise ENyxResource.Create('Choose a current selected control property');
   end;
+
+  if AChange.Binding.Target = bpImage then
+  begin
+
+    if LDefinition.Kind <> nrkImage then
+    begin
+      raise ENyxResource.Create('The selected image property requires an image resource');
+    end;
+    AChange.Binding := TNyxBindingSpec.Image(NyxResourceImage(AChange.Selection.Reference)
+      .Localize(AChange.Selection.Locale, NyxDefaultLocale));
+    Exit;
+  end;
   LPaths := ScalarPaths(LDefinition);
   LChoice := Field(LEditor, refPath).Prop('value');
   LFound := False;
@@ -1107,12 +1135,21 @@ begin
   begin
     Binding.Validate;
 
-    if Binding.Cleared or (Binding.Source <> bsResource) then
+    if Binding.Cleared or not (Binding.Source in [bsResource, bsResourceImage]) then
     begin
       raise ENyxResource.Create('Resource Apply requires a typed resource binding');
     end;
-    LBinding := NyxObject([NyxField('target', NyxData(Ord(Binding.Target))),
-      NyxField('value', Binding.ResourceValue.ToData)]);
+
+    if Binding.Source = bsResourceImage then
+    begin
+      LBinding := NyxObject([NyxField('target', NyxData(Ord(bpImage))),
+        NyxField('value', Binding.ResourceImage.ToData)]);
+    end
+    else
+    begin
+      LBinding := NyxObject([NyxField('target', NyxData(Ord(Binding.Target))),
+        NyxField('value', Binding.ResourceValue.ToData)]);
+    end;
   end;
   Result := NyxObject([NyxField('operation', NyxData(Ord(Operation))),
     NyxField('selection', Selection.ToData), NyxField('catalog', NyxData(CatalogBaseline)),
@@ -1220,14 +1257,31 @@ begin
     begin
       raise ENyxResource.Create('Resource binding target is out of range');
     end;
-    LResult.Binding := TNyxBindingSpec.Resource(TNyxBindingProperty(LTarget),
-      TNyxResourceValueRef.FromData(LBinding.Field('value')));
 
-    if (LResult.Binding.ResourceValue.Reference.Name <> LResult.Selection.Reference.Name) or
-      (LResult.Binding.ResourceValue.Locale.Name <> LResult.Selection.Locale.Name) or
-      LResult.Binding.ResourceValue.Fallback.Defined then
+    if LTarget = Ord(bpImage) then
     begin
-      raise ENyxResource.Create('Resource binding belongs to a different file or locale');
+      LResult.Binding := TNyxBindingSpec.Image(
+        TNyxResourceImageRef.FromData(LBinding.Field('value')));
+
+      if (LResult.Binding.ResourceImage.Reference.Name <> LResult.Selection.Reference.Name) or
+        (LResult.Binding.ResourceImage.Locale.Name <> LResult.Selection.Locale.Name) or
+        not LResult.Binding.ResourceImage.Localized or
+        LResult.Binding.ResourceImage.Fallback.Defined then
+      begin
+        raise ENyxResource.Create('Image binding belongs to a different file or locale');
+      end;
+    end
+    else
+    begin
+      LResult.Binding := TNyxBindingSpec.Resource(TNyxBindingProperty(LTarget),
+        TNyxResourceValueRef.FromData(LBinding.Field('value')));
+
+      if (LResult.Binding.ResourceValue.Reference.Name <> LResult.Selection.Reference.Name) or
+        (LResult.Binding.ResourceValue.Locale.Name <> LResult.Selection.Locale.Name) or
+        LResult.Binding.ResourceValue.Fallback.Defined then
+      begin
+        raise ENyxResource.Create('Resource binding belongs to a different file or locale');
+      end;
     end;
   end
   else if (LBinding.Kind <> ndNull) or (LResult.Owner <> '') or

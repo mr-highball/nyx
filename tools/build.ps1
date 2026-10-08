@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -44,6 +44,9 @@ param(
   # Explicit qualification against a freshly owned runtime started by the
   # Pascal test server. Empty only compiles tools/wrappers; it starts no server.
   [string]$ResourceRuntimeHome,
+  # A caller-owned static child on an already running HTTP host. Empty only
+  # compiles the resource/image consumer; this target starts no listener.
+  [string]$ResourceImageStage,
   # Explicit semantic execution qualification in an independently owned runtime.
   # It requests exact successful jobs through MCP; no operator Run substitutes.
   [switch]$VerifySemanticLaunch,
@@ -3100,6 +3103,63 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxResourceHost") -Destination $nyxResourceBrowser
     }
     Write-Host 'Resource counterparts staged; browser/cache/HTTP/observing execution remains separate.'
+    exit 0
+  }
+
+  if ($Target -eq 'resource-images') {
+    $nyxResourceImageRoot = Join-Path $nyxRoot 'build/resource-images'
+    $nyxResourceImageNative = Join-Path $nyxResourceImageRoot 'native'
+    $nyxResourceImageBrowser = Join-Path $nyxResourceImageRoot 'browser'
+    $nyxResourceImageGenerated = Join-Path $nyxResourceImageRoot 'generated'
+    New-Item -ItemType Directory -Force -Path $nyxResourceImageNative,
+      $nyxResourceImageBrowser, $nyxResourceImageGenerated | Out-Null
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxResourceImagePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxResourceImageFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$ImageSourceDirectory",
+      "-Fu$nyxRoot/build/image-presentation/fixtures",
+      "-Fu$nyxLazarus/lcl/units/$nyxResourceImagePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxResourceImagePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxResourceImagePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxResourceImagePlatform",
+      "-FU$nyxResourceImageNative", "-FE$nyxResourceImageNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxResourceImageFlags + @('tests/nyx_resource_image_controls.lpr'))
+    if ($ResourceImageStage -ne '') {
+      $nyxResourceImageChild = [IO.Path]::GetFullPath($ResourceImageStage)
+      $nyxResourceImageBuild = [IO.Path]::GetFullPath((Join-Path $nyxRoot 'build'))
+      if (-not $nyxResourceImageChild.StartsWith($nyxResourceImageBuild +
+          [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or
+        (Split-Path $nyxResourceImageChild -Leaf) -notmatch '^resource-images-[a-f0-9]{32}$' -or
+        -not (Test-Path -LiteralPath $nyxResourceImageChild -PathType Container)) {
+        throw 'Resource image qualification requires an explicitly owned static child under build'
+      }
+      & (Join-Path $nyxResourceImageNative 'nyx_resource_image_controls.exe') $HttpURL `
+        (Join-Path $nyxResourceImageGenerated 'nyx.generated.resource.images.pas') `
+        (Join-Path $nyxResourceImageRoot 'native.png') $nyxResourceImageChild
+      if ($LASTEXITCODE -ne 0) { throw 'Actual HTTP/native image resource controls failed' }
+      Invoke-NyxCompiler $nyxLclFpc ($nyxResourceImageFlags +
+        @("-Fu$nyxResourceImageGenerated", 'tests/nyx_resource_image_generated.lpr'))
+      & (Join-Path $nyxResourceImageNative 'nyx_resource_image_generated.exe')
+      if ($LASTEXITCODE -ne 0) { throw 'Exact compiled image resource source failed' }
+    }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$ImageSourceDirectory",
+      "-Fu$nyxRoot/build/image-presentation/fixtures", "-FE$nyxResourceImageBrowser",
+      'tests/nyx_resource_image_controls.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxResourceImageBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/resource-images.html') `
+      -Destination $nyxResourceImageBrowser
+    if ($ResourceImageStage -ne '') {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', "-Fu$nyxResourceImageGenerated", "-FE$nyxResourceImageBrowser",
+        'tests/nyx_resource_image_generated.lpr')
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/resource-images-generated.html') `
+        -Destination $nyxResourceImageBrowser
+    }
+    Write-Host 'Resource image counterpart staged; HTTP browser/observing execution is separate.'
     exit 0
   }
 

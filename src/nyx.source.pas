@@ -571,7 +571,7 @@ type
     vkImageSource, vkImageLocation, vkImageFormat, vkImageFit, vkImageAnchor, vkImageValidation,
     vkResourceRef, vkResourceLocale, vkResourceDefinition, vkBytes, vkResourceValue,
     vkResourceKind, vkResourceURL, vkResourceCache, vkResourceServerPolicy,
-    vkResourceRows, vkResourcePath);
+    vkResourceRows, vkResourcePath, vkResourceImage);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -606,6 +606,7 @@ type
     ImageValidation: TNyxImageValidationPolicy;
     ResourceDefinitionData: TNyxDataValue;
     ResourceValue: TNyxResourceValueRef;
+    ResourceImage: TNyxResourceImageRef;
     ResourceRows: TNyxResourceRows;
     ResourcePath: TNyxResourcePath;
     ResourceCache: TNyxResourceCachePolicy;
@@ -747,7 +748,7 @@ const
   CBindingMethods: array[TNyxBindingProperty] of TNyxText = (
     'Text', 'Value', 'Enabled', 'Visible', 'ReadOnly', 'Pressed', 'Placeholder',
     'Hint', 'AccessibleName', 'Width', 'Height', 'Left', 'Top', 'Padding', 'Gap',
-    'Columns', 'Flex', 'Minimum', 'Maximum');
+    'Columns', 'Flex', 'Minimum', 'Maximum', 'Image');
   CMethods: array[TNyxAttribute] of TNyxText = (
     'Text', 'Value', 'Placeholder', 'Items', 'Hint', 'AccessibleName',
     'LinkTo', 'Source', 'AlternativeText', 'Layout', 'Padding', 'Gap',
@@ -2163,7 +2164,7 @@ begin
         end;
 
         if (LName = 'nyxresourceref') or (LName = 'nyxlocale') or
-          (LName = 'nyxresourcevalue') or
+          (LName = 'nyxresourcevalue') or (LName = 'nyxresourceimage') or
           (LName = 'nyxhostedresource') or (LName = 'nyxresourceurl') or
           (LName = 'nyxresourcecache') or
           (LName = 'nyxtextresource') or (LName = 'nyxjsonresource') or
@@ -3351,6 +3352,22 @@ begin
     if (Length(LArgs) = 1) and (LArgs[0].Kind = vkResourceValue) then
     begin
       LSpec := TNyxBindingSpec.Resource(LTarget, LArgs[0].ResourceValue);
+
+      if FApply then
+      begin
+        LNode.SetBinding(LSpec);
+      end;
+      Continue;
+    end;
+
+    if (Length(LArgs) = 1) and (LArgs[0].Kind = vkResourceImage) then
+    begin
+
+      if LTarget <> bpImage then
+      begin
+        Fail('A typed image resource can only bind Image');
+      end;
+      LSpec := TNyxBindingSpec.Image(LArgs[0].ResourceImage);
 
       if FApply then
       begin

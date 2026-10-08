@@ -143,6 +143,38 @@ begin
       Exit;
     end;
 
+    if AName = 'nyxresourceimage' then
+    begin
+
+      if LArgs[0].Kind <> vkResourceRef then
+      begin
+        Fail('NyxResourceImage requires a typed resource reference');
+      end;
+      Result.Kind := vkResourceImage;
+      Result.ResourceImage := NyxResourceImage(NyxResourceRef(LArgs[0].Text));
+      while At('.') do
+      begin
+        Inc(FCursor);
+
+        if (FCursor >= Length(FTokens)) or (FTokens[FCursor].Kind <> tkWord) or
+          not SameText(FTokens[FCursor].Text, 'Localize') then
+        begin
+          Fail('Image resources support only typed Localize');
+        end;
+        Inc(FCursor);
+        LArgs := Arguments(2);
+
+        if (Length(LArgs) <> 2) or (LArgs[0].Kind <> vkResourceLocale) or
+          (LArgs[1].Kind <> vkResourceLocale) then
+        begin
+          Fail('Image Localize requires two typed locale references');
+        end;
+        Result.ResourceImage := Result.ResourceImage.Localize(
+          ResourceLocale(LArgs[0].Text), ResourceLocale(LArgs[1].Text));
+      end;
+      Exit;
+    end;
+
     if AName = 'nyxresourcevalue' then
     begin
 

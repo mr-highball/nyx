@@ -615,6 +615,12 @@ begin
   Result := Self as INyxBindings;
 end;
 
+function TNyxBindings.Image(const AResource: TNyxResourceImageRef): INyxBindings;
+begin
+  FOwner.Node.Binds.Image(AResource);
+  Result := Self as INyxBindings;
+end;
+
 function TNyxBindings.Value(const AResource: TNyxResourceValueRef): INyxBindings;
 begin
   FOwner.Node.Binds.Value(AResource);

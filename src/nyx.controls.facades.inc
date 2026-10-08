@@ -272,6 +272,9 @@
     function Flex(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function Minimum(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function Maximum(const AResource: TNyxResourceValueRef): INyxBindings; overload;
+    { Read-only image source; locale selection and image-kind admission stay
+      distinct from scalar text bindings. The facade retains its control. }
+    function Image(const AResource: TNyxResourceImageRef): INyxBindings;
     function Clear(ATarget: TNyxBindingProperty): INyxBindings;
     function Inherit(ATarget: TNyxBindingProperty): INyxBindings;
     function Collection(const ASpec: TNyxCollectionViewSpec): INyxBindings;
@@ -331,6 +334,7 @@
     function Flex(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function Minimum(const AResource: TNyxResourceValueRef): INyxBindings; overload;
     function Maximum(const AResource: TNyxResourceValueRef): INyxBindings; overload;
+    function Image(const AResource: TNyxResourceImageRef): INyxBindings;
     function Clear(ATarget: TNyxBindingProperty): INyxBindings;
     function Inherit(ATarget: TNyxBindingProperty): INyxBindings;
     function Collection(const ASpec: TNyxCollectionViewSpec): INyxBindings;

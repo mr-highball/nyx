@@ -38,7 +38,7 @@ type
     values; no document, renderer, path on disk or transport authority is owned.
     Construct every change through a typed factory below. }
   TNyxResourceChangeKind = (rckDefine, rckRemove, rckBind, rckClear, rckInherit,
-    rckRows, rckDetachRows);
+    rckRows, rckDetachRows, rckBindImage);
   TNyxResourceChange = record
   private
     FDefined: Boolean;
@@ -49,6 +49,7 @@ type
     FOwner: TNyxControlRef;
     FTarget: TNyxBindingProperty;
     FValue: TNyxResourceValueRef;
+    FImage: TNyxResourceImageRef;
     FCollection: TNyxCollectionRef;
     FRows: TNyxResourceRows;
     FReplaceStatic: Boolean;
@@ -72,6 +73,10 @@ function NyxRemoveResource(const AReference: TNyxResourceRef;
   const ALocale: TNyxLocaleRef): TNyxResourceChange;
 function NyxBindResource(const AOwner: TNyxControlRef; ATarget: TNyxBindingProperty;
   const AValue: TNyxResourceValueRef): TNyxResourceChange;
+{ Bind a named image resource through the same final-candidate/paired history
+  operation as scalar projections; no payload fetch or target handle is owned. }
+function NyxBindResourceImage(const AOwner: TNyxControlRef;
+  const AImage: TNyxResourceImageRef): TNyxResourceChange;
 { Clear masks inheritance; inherit removes a local descriptor. These use the
   same property choices as ordinary Studio binding commands. }
 function NyxClearResourceBinding(const AOwner: TNyxControlRef;
@@ -156,6 +161,13 @@ begin
   Result := BindingChange(AOwner, ATarget, rckBind);
   Result.FValue := TNyxResourceValueRef.FromData(AValue.ToData);
   TNyxBindingSpec.Resource(ATarget, Result.FValue).Validate;
+end;
+
+function NyxBindResourceImage(const AOwner: TNyxControlRef;
+  const AImage: TNyxResourceImageRef): TNyxResourceChange;
+begin
+  Result := BindingChange(AOwner, bpImage, rckBindImage);
+  Result.FImage := TNyxResourceImageRef.FromData(AImage.ToData);
 end;
 
 function NyxClearResourceBinding(const AOwner: TNyxControlRef;
@@ -281,7 +293,7 @@ begin
             LCandidate.Collections.Define(LRows.Read(LCandidate.Resources,
               LChange.FCollection, NyxDefaultLocale, NyxDefaultLocale));
           end;
-        rckBind, rckClear, rckInherit:
+        rckBind, rckClear, rckInherit, rckBindImage:
           begin
             LOwner := LCandidate.Find(LChange.FOwner.ID);
 
@@ -292,6 +304,8 @@ begin
             case LChange.FKind of
               rckBind:
                 LOwner.SetBinding(TNyxBindingSpec.Resource(LChange.FTarget, LChange.FValue));
+              rckBindImage:
+                LOwner.SetBinding(TNyxBindingSpec.Image(LChange.FImage));
               rckClear:
                 LOwner.SetBinding(TNyxBindingSpec.Clear(LChange.FTarget));
               rckInherit:
@@ -309,7 +323,7 @@ begin
     begin
       LChange := FChanges[LIndex];
 
-      if LChange.FKind <> rckBind then
+      if not (LChange.FKind in [rckBind, rckBindImage]) then
       begin
         Continue;
       end;
@@ -327,7 +341,15 @@ begin
           Continue;
         end;
 
-        if not (LBinding.ValueKind in NyxBindingKinds(LProjection, LChange.FTarget)) then
+        if LBinding.Source = bsResourceImage then
+        begin
+
+          if not NyxSupportsResourceImage(LProjection) then
+          begin
+            raise ENyxResource.Create('The final image resource requires an image control');
+          end;
+        end
+        else if not (LBinding.ValueKind in NyxBindingKinds(LProjection, LChange.FTarget)) then
         begin
           raise ENyxResource.Create('The final resource scalar is unsupported on this control property');
         end;
@@ -378,6 +400,10 @@ begin
           NyxField('owner', NyxData(LChange.FOwner.ID)),
           NyxField('target', NyxData(NyxBindingPropertyName(LChange.FTarget))),
           NyxField('value', LChange.FValue.ToData)]);
+      rckBindImage:
+        LValues[LIndex] := NyxObject([NyxField('op', NyxData('bind-image')),
+          NyxField('owner', NyxData(LChange.FOwner.ID)),
+          NyxField('value', LChange.FImage.ToData)]);
       rckClear, rckInherit:
         begin
           LOp := 'clear-binding';
@@ -483,6 +509,12 @@ begin
       Fields('|op|collection|', 2);
       LChanges[LIndex] := NyxDetachResourceRows(NyxCollection(LData.Field('collection').AsText));
     end
+    else if LOp = 'bind-image' then
+    begin
+      Fields('|op|owner|value|', 3);
+      LChanges[LIndex] := NyxBindResourceImage(NyxControl(LData.Field('owner').AsText),
+        TNyxResourceImageRef.FromData(LData.Field('value')));
+    end
     else if (LOp = 'bind') or (LOp = 'clear-binding') or (LOp = 'inherit-binding') then
     begin
 
@@ -527,20 +559,29 @@ function NyxResourceAgentSchema: TNyxDataValue;
 var
   LTarget: TNyxBindingProperty;
   LTargets: array of TNyxDataValue;
+  LScalarTargets: array of TNyxDataValue;
   LEmbedded: TNyxDataValue;
   LDefinition: TNyxDataValue;
   LChanges: TNyxDataValue;
   LPath: TNyxDataValue;
   LSelector: TNyxDataValue;
+  LImageSelector: TNyxDataValue;
   LRows: TNyxDataValue;
   LName: TNyxDataValue;
   LText: TNyxDataValue;
   LResult: TNyxText;
 begin
   SetLength(LTargets, Ord(High(TNyxBindingProperty)) + 1);
+  SetLength(LScalarTargets, 0);
   for LTarget := Low(TNyxBindingProperty) to High(TNyxBindingProperty) do
   begin
     LTargets[Ord(LTarget)] := NyxData(NyxBindingPropertyName(LTarget));
+
+    if LTarget <> bpImage then
+    begin
+      SetLength(LScalarTargets, Length(LScalarTargets) + 1);
+      LScalarTargets[High(LScalarTargets)] := LTargets[Ord(LTarget)];
+    end;
   end;
   LName := TNyxDataValue.ParseJSON('{"type":"string","minLength":1}');
   LText := TNyxDataValue.ParseJSON('{"type":"string"}');
@@ -552,6 +593,9 @@ begin
   LSelector := TNyxDataValue.ParseJSON('{"type":"object","properties":{"resource":' +
     LName.ToJSON + ',"path":' + LPath.ToJSON +
     ',"locale":{"type":"string"},"fallback":{"type":"string"},"type":{"enum":["text","boolean","integer","number"]}},"required":["resource","path","locale","fallback","type"],"additionalProperties":false}');
+  LImageSelector := TNyxDataValue.ParseJSON('{"type":"object","properties":{"resource":' +
+    LName.ToJSON + ',"locale":{"type":"string"},"fallback":{"type":"string"},' +
+    '"localized":{"type":"boolean"}},"required":["resource","locale","fallback","localized"],"additionalProperties":false}');
   LRows := TNyxDataValue.ParseJSON('{"type":"object","properties":{"version":{"const":1},"resource":' +
     LName.ToJSON + ',"path":' + LPath.ToJSON + ',"identity":' + LPath.ToJSON +
     ',"fields":{"type":"array","minItems":1,"maxItems":64,"items":{"type":"object","properties":{"name":' +
@@ -567,8 +611,11 @@ begin
     ',"source":' + LRows.ToJSON + ',"replaceStatic":{"type":"boolean"}},"required":["op","collection","source","replaceStatic"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"detach-rows"},"collection":' + LName.ToJSON +
     '},"required":["op","collection"],"additionalProperties":false},' +
+    '{"type":"object","properties":{"op":{"const":"bind-image"},"owner":' + LName.ToJSON +
+    ',"value":' + LImageSelector.ToJSON +
+    '},"required":["op","owner","value"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"bind"},"owner":' + LName.ToJSON +
-    ',"target":{"enum":' + NyxArray(LTargets).ToJSON + '},"value":' + LSelector.ToJSON +
+    ',"target":{"enum":' + NyxArray(LScalarTargets).ToJSON + '},"value":' + LSelector.ToJSON +
     '},"required":["op","owner","target","value"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"enum":["clear-binding","inherit-binding"]},"owner":' +
     LName.ToJSON + ',"target":{"enum":' + NyxArray(LTargets).ToJSON +
@@ -578,7 +625,7 @@ begin
     '{"properties":{"mode":{"const":"details"},"name":' + LName.ToJSON + ',"locale":{"type":"string"},"offset":{"type":"integer","minimum":0,"maximum":1048576},"count":{"type":"integer","minimum":1,"maximum":1024}},"required":["mode","name","locale"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"content"},"name":' + LName.ToJSON + ',"locale":{"type":"string"},"offset":{"type":"integer","minimum":0,"maximum":1048576},"count":{"type":"integer","minimum":1,"maximum":4096}},"required":["mode","name","locale"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"json"},"name":' + LName.ToJSON + ',"locale":{"type":"string"},"path":' + LPath.ToJSON + ',"offset":{"type":"integer","minimum":0,"maximum":1048576},"limit":{"type":"integer","minimum":1,"maximum":16},"textOffset":{"type":"integer","minimum":0,"maximum":1048576},"textCount":{"type":"integer","minimum":1,"maximum":4096}},"required":["mode","name","locale","path"],"additionalProperties":false},' +
-    '{"properties":{"mode":{"const":"bindings"},"owner":' + LName.ToJSON + ',"offset":{"type":"integer","minimum":0,"maximum":19},"limit":{"type":"integer","minimum":1,"maximum":20}},"required":["mode","owner"],"additionalProperties":false},' +
+    '{"properties":{"mode":{"const":"bindings"},"owner":' + LName.ToJSON + ',"offset":{"type":"integer","minimum":0,"maximum":20},"limit":{"type":"integer","minimum":1,"maximum":20}},"required":["mode","owner"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"apply"},"expectedRevision":{"type":"integer","minimum":1,"maximum":2147483647},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":' +
     LChanges.ToJSON + '},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"sources"},"offset":{"type":"integer","minimum":0,"maximum":64},"limit":{"type":"integer","minimum":1,"maximum":16},"filter":{"type":"string"}},"required":["mode"],"additionalProperties":false},' +

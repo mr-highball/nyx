@@ -45,7 +45,7 @@ uses
   nyx.model;
 
 type
-  { Version 1..9 design persistence. The format deliberately stores the portable
+  { Version 1..10 design persistence. The format deliberately stores the portable
     model, not target widget handles or generated source. All custom kinds and
     string-valued extension properties survive an encode/decode round trip.
     Unknown root/node fields retain typed nested extension data, exact strings
@@ -76,6 +76,8 @@ type
     Version nine admits saved typed resource row recipes in collection descriptor
     version two. Their empty schema seeds never contain fetched runtime rows.
     Older document versions cannot silently promote opaque source descriptors.
+    Version ten adds distinct typed image resource bindings, including explicit
+    fixed-default locale intent. Lower versions refuse that binding family.
     Decode returns ownership to its caller and frees partial trees on failure. }
   TNyxCodec = class
   public
@@ -296,6 +298,10 @@ begin
         begin
           LBinding.Add('resource', DecodeNyxJSON(LSpec.ResourceValue.ToData.ToJSON));
         end
+        else if LSpec.Source = bsResourceImage then
+        begin
+          LBinding.Add('imageResource', DecodeNyxJSON(LSpec.ResourceImage.ToData.ToJSON));
+        end
         else
         begin
           LBinding.Add('state', LSpec.StateName);
@@ -332,18 +338,55 @@ var
   LComponents: TJSONArray;
   LIndex: Integer;
   LAdmitted: TJSONData;
+  LImageBindings: Boolean;
+
+  function HasImageBinding(ANode: TNyxNode): Boolean;
+  var
+    LIndex: Integer;
+  begin
+    for LIndex := 0 to ANode.BindingCount - 1 do
+    begin
+
+      if ANode.Bindings[LIndex].Target = bpImage then
+      begin
+        Exit(True);
+      end;
+    end;
+    for LIndex := 0 to ANode.Count - 1 do
+    begin
+
+      if HasImageBinding(ANode.Children[LIndex]) then
+      begin
+        Exit(True);
+      end;
+    end;
+    Result := False;
+  end;
 begin
 
   if ADocument = nil then
     raise ENyxModel.Create('Document is required');
   ADocument.Validate;
+  LImageBindings := False;
+  for LIndex := 0 to ADocument.Count - 1 do
+  begin
+    LImageBindings := HasImageBinding(ADocument.Pages[LIndex]) or LImageBindings;
+  end;
+  for LIndex := 0 to ADocument.ComponentCount - 1 do
+  begin
+    LImageBindings := HasImageBinding(ADocument.Components[LIndex]) or LImageBindings;
+  end;
   LRoot := TJSONObject.Create;
   try
 
-    if ADocument.Resources.Count > 0 then
+    if (ADocument.Resources.Count > 0) or LImageBindings then
     begin
 
-      if NyxHasResourceCollections(ADocument.Collections) then
+      if LImageBindings then
+      begin
+        LRoot.Add('version', 10);
+      end
+      else if NyxHasResourceCollections(ADocument.Collections) then
       begin
         LRoot.Add('version', 9);
       end
@@ -421,13 +464,13 @@ begin
     begin
       LPages.Add(NodeJSON(ADocument.Pages[LIndex],
         (ADocument.Presentations.Count > 0) or ADocument.HasMenuDeclarations or
-        (ADocument.Resources.Count > 0)));
+        (ADocument.Resources.Count > 0) or LImageBindings));
     end;
     for LIndex := 0 to ADocument.ComponentCount - 1 do
     begin
       LComponents.Add(NodeJSON(ADocument.Components[LIndex],
         (ADocument.Presentations.Count > 0) or ADocument.HasMenuDeclarations or
-        (ADocument.Resources.Count > 0)));
+        (ADocument.Resources.Count > 0) or LImageBindings));
     end;
     WriteExtensions(ADocument.Extensions, LRoot);
     Result := LRoot.AsJSON;
@@ -534,7 +577,8 @@ begin
   AState.Apply(LAssignments);
 end;
 
-procedure ReadBindings(AData: TJSONData; ANode: TNyxNode; AResources: Boolean);
+procedure ReadBindings(AData: TJSONData; ANode: TNyxNode;
+  AResources, AImageResources: Boolean);
 var
   LArray: TJSONArray;
   LEntry: TJSONObject;
@@ -578,6 +622,11 @@ begin
       raise ENyxModel.Create('Unknown binding target');
     end;
 
+    if (LProperty = bpImage) and not AImageResources then
+    begin
+      raise ENyxModel.Create('Image resource bindings require design version ten');
+    end;
+
     if LProperty in LSeen then
     begin
       raise ENyxModel.Create('Duplicate binding target');
@@ -605,6 +654,18 @@ begin
       ANode.SetBinding(TNyxBindingSpec.Resource(LProperty,
         TNyxResourceValueRef.FromData(TNyxDataValue.ParseJSON(
           RequireField(LEntry, 'resource', jtObject).AsJSON))));
+      Continue;
+    end;
+
+    if AImageResources and (LEntry.Find('imageResource') <> nil) then
+    begin
+
+      if (LEntry.Count <> 2) or (LProperty <> bpImage) then
+      begin
+        raise ENyxModel.Create('Image binding requires only its source property and selector');
+      end;
+      ANode.SetBinding(TNyxBindingSpec.Image(TNyxResourceImageRef.FromData(
+        TNyxDataValue.ParseJSON(RequireField(LEntry, 'imageResource', jtObject).AsJSON))));
       Continue;
     end;
 
@@ -636,7 +697,7 @@ end;
 
 function ReadNode(AData: TJSONData; ADepth: Integer; var ACount: Integer;
   ACollectionViews, APresentations, AContentRules, AMenus, AMenuBars,
-  AResources: Boolean): TNyxNode;
+  AResources, AImageResources: Boolean): TNyxNode;
 var
   LObject: TJSONObject;
   LProps: TJSONObject;
@@ -765,7 +826,7 @@ begin
       end;
       Result.SetProp(LKeys[LIndex], LValues[LIndex]);
     end;
-    ReadBindings(LObject.Find('bindings'), Result, AResources);
+    ReadBindings(LObject.Find('bindings'), Result, AResources, AImageResources);
 
     if ACollectionViews and (LObject.Find(NyxCollectionViewWireField) <> nil) then
     begin
@@ -810,7 +871,8 @@ begin
     for LIndex := 0 to LChildren.Count - 1 do
     begin
       Result.Add(ReadNode(LChildren.Items[LIndex], ADepth + 1, ACount,
-        ACollectionViews, APresentations, AContentRules, AMenus, AMenuBars, AResources));
+        ACollectionViews, APresentations, AContentRules, AMenus, AMenuBars, AResources,
+        AImageResources));
     end;
   except
     Result.Free;
@@ -851,11 +913,12 @@ begin
 
     if (LVersion <> '1') and (LVersion <> '2') and (LVersion <> '3') and
       (LVersion <> '4') and (LVersion <> '5') and (LVersion <> '6') and
-      (LVersion <> '7') and (LVersion <> '8') and (LVersion <> '9') then
+      (LVersion <> '7') and (LVersion <> '8') and (LVersion <> '9') and
+      (LVersion <> '10') then
     begin
       raise ENyxModel.Create('Unsupported design version');
     end;
-    LHasResources := (LVersion = '8') or (LVersion = '9');
+    LHasResources := (LVersion = '8') or (LVersion = '9') or (LVersion = '10');
     LMenuBars := (LVersion = '7') or LHasResources;
     LHasMenus := (LVersion = '6') or LMenuBars;
     LContentRules := (LVersion = '5') or LHasMenus;
@@ -882,7 +945,8 @@ begin
       if LVersion <> '1' then
       begin
         LCollections := DecodeNyxCollectionDefaults(
-          RequireField(LRoot, NyxCollectionsWireField, jtObject).AsJSON, LVersion = '9');
+          RequireField(LRoot, NyxCollectionsWireField, jtObject).AsJSON,
+          (LVersion = '9') or (LVersion = '10'));
         for LIndex := 0 to LCollections.Count - 1 do
         begin
 
@@ -924,12 +988,14 @@ begin
       for LIndex := 0 to LPages.Count - 1 do
       begin
         Result.AddPage(ReadNode(LPages.Items[LIndex], 0, LCount,
-          LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars, LHasResources));
+          LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars,
+          LHasResources, LVersion = '10'));
       end;
       for LIndex := 0 to LComponents.Count - 1 do
       begin
         Result.AddComponent(ReadNode(LComponents.Items[LIndex], 0, LCount,
-          LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars, LHasResources));
+          LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars,
+          LHasResources, LVersion = '10'));
       end;
       Result.Validate;
     except

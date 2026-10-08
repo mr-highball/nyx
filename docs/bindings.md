@@ -3,6 +3,10 @@
 [State](state.md) · [Fluent API](fluent-api.md) · [Evidence](../WORK.md)
 
 A node owns binding descriptors independently of controls and runtime stores.
+Named images use a distinct typed resource selector and read-only `Binds.Image`
+projection, documented in [image resources](resources.md#images-from-project-resources).
+They never advertise scalar text-state binding merely because persisted image
+source bytes use a textual wire representation.
 Its borrowed `Binds` object is the public fluent authoring contract. Declare a
 typed reference once and reuse it for defaults, controls and commands:
 

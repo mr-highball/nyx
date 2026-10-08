@@ -9,6 +9,14 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current image resources use the common public Nyx form and guarded proposal/
+session engine: Image choices omit scalar paths, copied locale-pinned proposals
+preserve exact source and paired Undo/Redo. Both actual application targets and
+local semantic dispatch consume the typed prerequisite. Current ordinary image
+binding UI, retained controller/draft journeys and observing release stay open;
+no authoring criterion/count/credit advances. Resource owns the bounded work. See
+[the binding packet](../WORK.md#current-return-path-image-resource-binding--2026-10-08).
+
 Typed image lifecycle now consumes the original event/rendering criteria with
 four owned observational phases, ordered delivery and request-scoped cancellation.
 Actual Win32 passes **150** lifecycle checks; HTTP desktop/CSS-390 passes **121**

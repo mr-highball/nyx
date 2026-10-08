@@ -165,6 +165,29 @@ type
     property Kind: TNyxStateKind read FKind;
   end;
 
+type
+  { A distinct read-only image selector. It resolves one named image variant,
+    never a scalar JSON path or an arbitrary URL. Localize fixes the selector's
+    locale/fallback; otherwise the mounted view supplies both. Copies retain
+    only immutable names and can outlive their document and runtime catalog. }
+  TNyxResourceImageRef = record
+  private
+    FReference: TNyxResourceRef;
+    FLocale: TNyxLocaleRef;
+    FFallback: TNyxLocaleRef;
+    FLocalized: Boolean;
+  public
+    function Localize(const ALocale, AFallback: TNyxLocaleRef): TNyxResourceImageRef;
+    function Read(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef): TNyxImageSource;
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxResourceImageRef; static;
+    property Reference: TNyxResourceRef read FReference;
+    property Locale: TNyxLocaleRef read FLocale;
+    property Fallback: TNyxLocaleRef read FFallback;
+    property Localized: Boolean read FLocalized;
+  end;
+
 function NyxResourceRef(const AName: TNyxText): TNyxResourceRef;
 function NyxLocale(const AName: TNyxText): TNyxLocaleRef;
 { Empty locale selects an ordinary default; it is distinct from a missing
@@ -174,6 +197,9 @@ function NyxResourcePath: TNyxResourcePath;
 { Text is the default scalar projection. Other choices remain explicit fluent
   operations so behavior never depends on an untyped property string. }
 function NyxResourceValue(const AReference: TNyxResourceRef): TNyxResourceValueRef;
+{ The image family is deliberately separate from scalar selectors. Wrong file
+  kinds and hosted files without a loaded value/authored fallback refuse Read. }
+function NyxResourceImage(const AReference: TNyxResourceRef): TNyxResourceImageRef;
 function NyxTextResource(const AText: TNyxText): INyxResourceDefinition;
 function NyxJSONResource(const AText: TNyxText): INyxResourceDefinition; overload;
 function NyxJSONResource(const AData: TNyxDataValue): INyxResourceDefinition; overload;
@@ -1277,6 +1303,87 @@ begin
     raise ENyxResource.Create('Unknown resource scalar type');
   end;
   Result := LValue;
+end;
+
+function NyxResourceImage(const AReference: TNyxResourceRef): TNyxResourceImageRef;
+begin
+  Result := Default(TNyxResourceImageRef);
+  Result.FReference := NyxResourceRef(AReference.Name);
+end;
+
+function TNyxResourceImageRef.Localize(const ALocale,
+  AFallback: TNyxLocaleRef): TNyxResourceImageRef;
+begin
+  Result := Self;
+  Result.FLocale := ALocale;
+  Result.FFallback := AFallback;
+  Result.FLocalized := True;
+end;
+
+function TNyxResourceImageRef.Read(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef): TNyxImageSource;
+var
+  LLocale: TNyxLocaleRef;
+  LFallback: TNyxLocaleRef;
+begin
+
+  if AResources = nil then
+  begin
+    raise ENyxResource.Create('Image binding requires an admitted resource catalog');
+  end;
+  LLocale := ALocale;
+  LFallback := AFallback;
+
+  if FLocalized then
+  begin
+    LLocale := FLocale;
+    LFallback := FFallback;
+  end;
+  { Definition.Image enforces image kind and synchronous fallback availability.
+    The returned immutable source owns its wire/validation policy independently. }
+  Result := AResources.Resolve(FReference, LLocale, LFallback).Image;
+end;
+
+function TNyxResourceImageRef.ToData: TNyxDataValue;
+begin
+  NyxResourceRef(FReference.Name);
+  Result := NyxObject([NyxField('resource', NyxData(FReference.Name)),
+    NyxField('locale', NyxData(FLocale.Name)),
+    NyxField('fallback', NyxData(FFallback.Name)),
+    NyxField('localized', NyxData(FLocalized))]);
+end;
+
+class function TNyxResourceImageRef.FromData(
+  const AData: TNyxDataValue): TNyxResourceImageRef;
+var
+  LResult: TNyxResourceImageRef;
+  LName: TNyxText;
+begin
+
+  if (AData.Kind <> ndObject) or (AData.Count <> 4) then
+  begin
+    raise ENyxResource.Create('Image resource selector requires four exact fields');
+  end;
+  LResult := NyxResourceImage(NyxResourceRef(AData.Field('resource').AsText));
+  LResult.FLocalized := AData.Field('localized').AsBoolean;
+  LName := AData.Field('locale').AsText;
+
+  if LName <> '' then
+  begin
+    LResult.FLocale := NyxLocale(LName);
+  end;
+  LName := AData.Field('fallback').AsText;
+
+  if LName <> '' then
+  begin
+    LResult.FFallback := NyxLocale(LName);
+  end;
+
+  if not LResult.FLocalized and (LResult.FLocale.Defined or LResult.FFallback.Defined) then
+  begin
+    raise ENyxResource.Create('Inherited image locale cannot carry fixed locale names');
+  end;
+  Result := LResult;
 end;
 
 end.

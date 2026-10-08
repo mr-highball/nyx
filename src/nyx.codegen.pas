@@ -1713,12 +1713,35 @@ var
     raise ENyxModel.Create('Generated binding requires an admitted state reference');
   end;
 
+  function ImageReference(const AValue: TNyxResourceImageRef): TNyxText;
+    function Locale(const ALocale: TNyxLocaleRef): TNyxText;
+    begin
+
+      if ALocale.Defined then
+      begin
+        Result := 'NyxLocale(' + PascalString(ALocale.Name) + ')';
+      end
+      else
+      begin
+        Result := 'NyxDefaultLocale';
+      end;
+    end;
+  begin
+    Result := 'NyxResourceImage(NyxResourceRef(' + PascalString(AValue.Reference.Name) + '))';
+
+    if AValue.Localized then
+    begin
+      Result := Result + '.Localize(' + Locale(AValue.Locale) + ', ' +
+        Locale(AValue.Fallback) + ')';
+    end;
+  end;
+
   procedure EmitBindings(ANode: TNyxNode; const AVariable: TNyxText);
   const
     CMethods: array[TNyxBindingProperty] of TNyxText = (
       'Text', 'Value', 'Enabled', 'Visible', 'ReadOnly', 'Pressed', 'Placeholder',
       'Hint', 'AccessibleName', 'Width', 'Height', 'Left', 'Top', 'Padding', 'Gap',
-      'Columns', 'Flex', 'Minimum', 'Maximum');
+      'Columns', 'Flex', 'Minimum', 'Maximum', 'Image');
   var
     LBindingIndex: Integer;
     LSpec: TNyxBindingSpec;
@@ -1741,6 +1764,10 @@ var
       else if LSpec.Source = bsResource then
       begin
         LCall := CMethods[LSpec.Target] + '(' + PascalResourceValue(LSpec.ResourceValue) + ')';
+      end
+      else if LSpec.Source = bsResourceImage then
+      begin
+        LCall := 'Image(' + ImageReference(LSpec.ResourceImage) + ')';
       end
       else
       begin

@@ -9,7 +9,84 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: typed image lifecycle delivery — 2026-10-08
+## Current return path: image resource binding — 2026-10-08
+
+Previous turn is progress at exact pushed `593d72f`: typed image lifecycle,
+request retirement, both-target controls and exact emitted registrations execute.
+At entry the worktree and remote were exact/clean; protected projects/services
+remain exact. NS-1 resource criteria 2/3/5 own the gap: images could not bind to a named
+image resource, although hosted loading, caller cache policy and scalar/row
+publication already exist. NS-4 consumes the same typed operation in its common
+Resources form and bounded semantic source/history workflow.
+
+Deliver a distinct image selector and read-only image binding, retaining locale,
+fallback, persistence, crafted generation and source replay. Feed admitted embedded
+or hosted bytes through the existing prepared runtime resource frame and image
+adapter lifecycle. Exercise actual browser/LCL replacement, independent reusable
+consumers, failure/retirement and explicit caller cache override. Extend the public
+Resources form and semantic grouped operation; preserve atomic candidate admission,
+paired Undo and source drafts. Do not introduce a second loader or pretend a scalar
+text reference is an image. Installed MCP remains primary for bounded inspection;
+its frozen release cannot establish new source capabilities. No new backend starts
+or cleanup retries; retain all nine pairs, fifteen services and sealed LAN bytes.
+Keep the full resource/Studio/product acceptance scope open until its evidence holds.
+
+Implemented: immutable `TNyxResourceImageRef`, distinct image binding source and
+node/managed fluent `.Image` authoring consume the existing prepared resource
+publication and ordinary image lifecycle. Explicit fixed default/locale pairs
+stay distinct from runtime inheritance. Version ten preserves image selectors
+and empty-catalog clear masks; older versions refuse the new family. Crafted
+source and managed replay retain specialized controls. The common Nyx Resources
+form offers Image without scalar paths; copied proposals and semantic `bind-image`
+groups share guarded candidate admission and paired history.
+
+Checked actual Win32 passes **43** assertions; HTTP desktop/CSS-390 passes **44**
+each, including the initial asynchronous browser Ready observation. Three image
+faces, two reusable instances and independent applications exercise actual hosted
+loading, authored fallback, persistent write/read despite server `no-store` with
+explicit caller override, Respect/Bypass, corrupt PNG refusal, locale changes,
+unchanged-source callbacks and retirement. Live captures are inspected. Exact
+ordinary-session emitted source executes **eight** reconstruction checks per
+target. Shared common form/session and local semantic dispatch cover copied
+proposals, wrong-kind/wrong-control atomic refusal and exact paired Undo/Redo.
+This is not updated observing Studio, trusted input or full pixel-integrity evidence.
+
+Actual qualification repaired scalar range evaluation, Studio proposal admission
+and a missing managed binding facade method. Persistent browser storage exposed
+the installed RTL's unmapped `Headers.set_`; our adapter uses standard
+`Headers.append` on its fresh response without editing dependency source. Final
+image builds have zero owned warnings and **14** known upstream RTL warnings
+across two browser compiles. Scalar regression passes **78 + eight**, leak-free,
+with both Studios/backend/worker compilation. Ordinary native Resources authoring
+regression passes **123**, exact compiled authoring **seven**, concurrent project
+ownership **253**, all leak-free; both Studios/backend/worker compile with zero
+owned warnings. Its four browser compiles retain **28** upstream RTL warnings
+and are compilation evidence only. Opt-in flushed tracing shows progression
+through repeated editor rebuilds. The first owned run was stopped too early;
+the unchanged assertions pass on the traced run. Further native editor timing/
+profiling belongs to NS-3 performance, not a new resource criterion.
+
+Receipts: `build/resource-images/build-qualified.log`,
+`browser-{desktop,compact,generated}-current.log`, `resources-regression.log`,
+`authoring-regression.log` and the exact eight-file `closure-private.json`.
+`static-private.json` confines assets to a fresh child on the unchanged admitted
+static host. Installed native MCP bounded inspection retains revision two; the
+frozen release predates new image operations, qualified here through the public
+Pascal session. No editor automation or equivalent backend-start retry occurs.
+Preservation guard passes **nine exact pairs, fifteen services, 299 sealed files**
+and unchanged checkpoint/registry/drafts/selection/config/LAN bindings; see
+`preservation-final.log`. Current source is not deployed to LAN.
+
+No full criterion/task/credit closes. Resource alone advances no-closure **10→11**;
+aggregate **25/11/41/21/28/3**. End independent selector/cache breadth and return
+to ordinary Studio image resource authoring, retained preferences/source/controller
+journeys and the existing guarded observing rollout. Full cache revalidation,
+cross-origin/security/eviction/quota and other native systems retain their owners.
+Remote checkpoint: commit/push this reviewed packet on `hello-nyx`; exact remote
+and clean-worktree evidence belongs in `build/resource-images/remote-checkpoint.json`.
+
+<a id="current-return-path-typed-image-lifecycle-delivery--2026-10-08"></a>
+## Previous return path: typed image lifecycle delivery — 2026-10-08
 
 Previous turn is progress at exact pushed `2e4e645`: both ordinary Studio image
 policy consumers, migration, copied import/refusal and exact paired history are

@@ -16,6 +16,21 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Image resource binding — 2026-10-08
+
+Current image binding integration consumes original criteria 2/3/5: distinct
+immutable selectors preserve explicit locale intent through version ten, crafted
+managed source and paired history. Actual Win32 passes **43**, HTTP desktop/
+CSS-390 **44** each; exact emitted reconstruction executes **eight** per target.
+Real hosted images, caller persistent `no-store` override, Respect/Bypass,
+corruption/fallback, independent reusable/application consumers and retirement
+are exercised. Public form/local semantic consumers retain guarded grouped edits.
+Ordinary current image-binding UI, authenticated observing rollout, full cache/
+pixel/other-platform guarantees stay open. Resource alone advances no-closure
+**10→11**; no full criterion/credit closes. Stop standalone selector/cache
+expansion and return to ordinary Studio consumer journeys. See
+[the binding packet](../WORK.md#current-return-path-image-resource-binding--2026-10-08).
+
 ## Typed raster admission prerequisite — 2026-10-08
 
 Current consumer: public Studio policy selection, copied import requests,
@@ -59,7 +74,7 @@ No criterion closes. See
 - Versioned persistence, crafted public Pascal and managed source replay retain
   resources, typed selectors and bindings through full/page/reusable builds,
   candidate admission, paired Undo/Redo and pending-draft/stale refusal.
-- Labels, prompt text and tables bind through typed resource selectors. Real
+- Images, labels, prompt text and tables bind through typed resource selectors. Real
   browser/LCL controls exercise source changes, runtime independence, reusable
   scopes, invalid types/paths, rows/identity and subscriber retirement. Store-only
   fixtures do not establish live control behavior.

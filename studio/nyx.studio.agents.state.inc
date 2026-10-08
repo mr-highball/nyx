@@ -40,6 +40,15 @@ begin
       NyxField('target', NyxData(NyxBindingPropertyName(ASpec.Target))),
       NyxField('cleared', NyxData(True))]));
   end;
+
+  if ASpec.Source = bsResourceImage then
+  begin
+    Exit(NyxObject([
+      NyxField('target', NyxData(NyxBindingPropertyName(ASpec.Target))),
+      NyxField('cleared', NyxData(False)), NyxField('source', NyxData('resource-image')),
+      NyxField('value', ASpec.ResourceImage.ToData)]));
+  end;
+
   if ASpec.Source = bsResource then
   begin
     Exit(NyxObject([
@@ -242,7 +251,8 @@ begin
             end;
             LHasLocal := LocalBinding(LNode, LTarget, LLocal);
 
-            if (LAllowed = []) and not LHasLocal and not LHasEffective then
+            if (LAllowed = []) and not LHasLocal and not LHasEffective and
+              not ((LTarget = bpImage) and NyxSupportsResourceImage(LProjection)) then
             begin
               Continue;
             end;
@@ -274,6 +284,8 @@ begin
               SetLength(LValues, Length(LValues) + 1);
               LValues[High(LValues)] := NyxObject([
                 NyxField('target', NyxData(NyxBindingPropertyName(LTarget))),
+                NyxField('resourceImage', NyxData((LTarget = bpImage) and
+                  NyxSupportsResourceImage(LProjection))),
                 NyxField('kinds', NyxArray(LKinds)), NyxField('local', LLocalData),
                 NyxField('effective', LEffectiveData),
                 NyxField('inherited', NyxData(not LHasLocal and LHasEffective))]);

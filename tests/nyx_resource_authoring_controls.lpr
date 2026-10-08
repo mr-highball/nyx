@@ -49,6 +49,17 @@ var
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
+  {$ifndef PAS2JS}
+  { Opt-in progress stays beside the real assertion. Flush before checking so
+    a native host dialog or stuck callback leaves its precise last boundary
+    visible to the caller instead of hiding buffered diagnostic output. }
+
+  if GetEnvironmentVariable('NYX_RESOURCE_TEST_TRACE') = '1' then
+  begin
+    WriteLn('Resource check / ', GChecks + 1, ' / ', AReason);
+    Flush(Output);
+  end;
+  {$endif}
 
   if not ACondition then
   begin

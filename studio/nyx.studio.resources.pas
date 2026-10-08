@@ -38,7 +38,7 @@ function NewNyxStudioResourcePatch(
 
 implementation
 
-uses SysUtils, nyx.types, nyx.model, nyx.catalog,
+uses SysUtils, nyx.binding.types, nyx.types, nyx.model, nyx.catalog,
   nyx.resources, nyx.binding, nyx.composition, nyx.studio.resourceedits,
   nyx.resources.rows, nyx.collections, nyx.collections.codec;
 
@@ -139,7 +139,15 @@ begin
         raise ENyxResource.Create('The selected control binding changed; review before applying');
       end;
 
-      if not (FChange.Binding.ValueKind in NyxBindingKinds(LProjection, FChange.Binding.Target)) then
+      if FChange.Binding.Source = bsResourceImage then
+      begin
+
+        if not NyxSupportsResourceImage(LProjection) then
+        begin
+          raise ENyxResource.Create('An image resource requires an image component');
+        end;
+      end
+      else if not (FChange.Binding.ValueKind in NyxBindingKinds(LProjection, FChange.Binding.Target)) then
       begin
         raise ENyxResource.Create('This resource value is unsupported on the selected property');
       end;
@@ -163,8 +171,17 @@ begin
   if FChange.Bind then
   begin
     SetLength(LChanges, 2);
-    LChanges[1] := NyxBindResource(NyxControl(FChange.Owner), FChange.Binding.Target,
-      FChange.Binding.ResourceValue);
+
+    if FChange.Binding.Source = bsResourceImage then
+    begin
+      LChanges[1] := NyxBindResourceImage(NyxControl(FChange.Owner),
+        FChange.Binding.ResourceImage);
+    end
+    else
+    begin
+      LChanges[1] := NyxBindResource(NyxControl(FChange.Owner), FChange.Binding.Target,
+        FChange.Binding.ResourceValue);
+    end;
   end;
   { Editor exact catalog/control guards stay above; both entry points now share
     the same final-consumer admission, ownership and source candidate contract. }

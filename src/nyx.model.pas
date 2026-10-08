@@ -234,6 +234,9 @@ type
     procedure BindResources(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef);
     function ReadResource(const AValue: TNyxResourceValueRef): TNyxStateValue;
+    { Resolve immutable image bytes using this realized view's private catalog
+      and locale. The value owns no node, target control or mutable runtime. }
+    function ReadResourceImage(const AValue: TNyxResourceImageRef): TNyxImageSource;
     { Detached immutable runtime catalog/locale frame. Authored nodes refuse;
       changing a returned membership snapshot never changes this view. }
     function ResourceContext: INyxResourceContext;
@@ -601,6 +604,9 @@ type
     function Flex(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
     function Minimum(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
     function Maximum(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    { Read-only image resource projection, available on image faces and derived
+      recipes' named image parts. Embedded and hosted declarations share it. }
+    function Image(const AResource: TNyxResourceImageRef): TNyxNodeBindings;
     { Clear retains an explicit inherited-unbinding operation for composition. }
     function Clear(ATarget: TNyxBindingProperty): TNyxNodeBindings;
     function Inherit(ATarget: TNyxBindingProperty): TNyxNodeBindings;
@@ -957,6 +963,12 @@ end;
 function TNyxNodeBindings.Text(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
 begin
   FNode.SetBinding(TNyxBindingSpec.Resource(bpText, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Image(const AResource: TNyxResourceImageRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Image(AResource));
   Result := Self;
 end;
 
@@ -2431,6 +2443,11 @@ begin
   Result := AValue.Read(FResourceSnapshot, FResourceLocale, FResourceFallback);
 end;
 
+function TNyxNode.ReadResourceImage(const AValue: TNyxResourceImageRef): TNyxImageSource;
+begin
+  Result := AValue.Read(FResourceSnapshot, FResourceLocale, FResourceFallback);
+end;
+
 procedure TNyxNode.CopyResourceContext(ASource: TNyxNode);
 var
   LIndex: Integer;
@@ -3883,6 +3900,12 @@ var
         if LBinding.Source = bsResource then
         begin
           LBinding.ResourceValue.Read(FResources, NyxDefaultLocale, NyxDefaultLocale);
+          Continue;
+        end;
+
+        if LBinding.Source = bsResourceImage then
+        begin
+          LBinding.ResourceImage.Read(FResources, NyxDefaultLocale, NyxDefaultLocale);
           Continue;
         end;
 

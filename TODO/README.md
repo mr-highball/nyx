@@ -46,7 +46,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current typed image lifecycle (2026-10-08): four fluent streams, owned request/
+Current image resource bindings (2026-10-08): distinct fluent image selectors
+preserve runtime locale inheritance or explicit fixed pairs, version-ten wire,
+crafted managed source and paired history. Actual Win32 passes **43**, HTTP
+desktop/CSS-390 **44** each, exact emitted reconstruction **eight** per target.
+Real hosted image/cache/fallback/retirement and common form/local semantic
+consumers are exercised. Ordinary current image-binding UI and observing rollout
+remain open. Resource alone advances no-closure **10→11**; aggregate
+**25/11/41/21/28/3**, with no full criterion/credit closure. See
+[the packet](../WORK.md#current-return-path-image-resource-binding--2026-10-08).
+
+Previous typed image lifecycle (2026-10-08): four fluent streams, owned request/
 source/phase/dimension/failure snapshots and request-linked cancellation execute
 on actual Win32/HTTP browser images. Accepted-view FIFO delivery, source replacement,
 clear, reentrant siblings, queued work and retirement pass **150 native / 121 per

@@ -262,6 +262,13 @@ browser execution, host retirement and visual checkpoints remain explicit checks
 as does deployment to an observing Studio. See
 [the lifecycle packet](../WORK.md#current-return-path-typed-image-lifecycle-delivery--2026-10-08).
 
+Named project images now bind through the distinct
+`Binds.Image(NyxResourceImage(NyxResourceRef('project-cover')))` contract.
+It preserves runtime locale inheritance or explicit fixed default/locale pairs;
+hosted loading and caching use the existing resource runtime before the adapter
+receives admitted bytes. See [image resources](resources.md#images-from-project-resources)
+for typed authoring, clear/inherit behavior and wire compatibility.
+
 Fit/anchor semantics follow [CSS Images object sizing](https://www.w3.org/TR/css-images-3/#the-object-fit).
 Embedded interchange follows [RFC 2397](https://www.rfc-editor.org/rfc/rfc2397);
 PNG framing/header definitions are in [PNG Third Edition](https://www.w3.org/TR/png-3/#11IHDR).
