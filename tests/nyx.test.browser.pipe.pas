@@ -92,6 +92,10 @@ type
       the design. Missing faces fail explicitly; transformed quads are enclosed
       in their viewport-aligned border box. Call after ordinary readiness. }
     function Bounds(const ASelector: TNyxText): TNyxBrowserBox;
+    { Reveal an existing face for selective visual qualification without clicking
+      it, running application scripts or changing document state. Missing faces
+      refuse. The scroll affects only this host's independently owned profile. }
+    procedure Reveal(const ASelector: TNyxText);
     { False means absent or retired during ordinary asynchronous DOM replacement,
       distinct from a present empty field. Unknown protocol errors still raise. }
     function TryFieldValue(const ASelector: TNyxText; out AValue: TNyxText;
@@ -799,6 +803,22 @@ begin
       Exit(True);
     end;
   end;
+end;
+
+procedure TNyxBrowserPipe.Reveal(const ASelector: TNyxText);
+var
+  LNode: Integer;
+begin
+  LNode := Request('DOM.querySelector', NyxObject([
+    NyxField('nodeId', NyxData(Body)), NyxField('selector', NyxData(ASelector))]),
+    FSession).Field('nodeId').AsInteger;
+
+  if LNode = 0 then
+  begin
+    raise Exception.Create('Requested visual host face is absent');
+  end;
+  Request('DOM.scrollIntoViewIfNeeded', NyxObject([
+    NyxField('nodeId', NyxData(LNode))]), FSession);
 end;
 
 function TNyxBrowserPipe.Bounds(const ASelector: TNyxText): TNyxBrowserBox;

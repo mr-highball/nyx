@@ -1205,6 +1205,54 @@ accessibility, visual and deployment acceptance remain open; no full workflow
 criterion closes.
 
 
+## Maintained clock authoring review
+
+`tools/nyx_clock_authoring_review.lpr` uses one authenticated connection and an
+independent temporary review for an English two-page project and reusable
+appointment. It authors clock policy through `NyxSetValueDomain`, `NyxTimeDomain`
+and typed clock values at the explicit JSON tool boundary. Bounded node/choice
+queries and 80-line source windows establish context; immutable semantic preview
+packets are used selectively for exact paired history validation. Related edits
+are one transaction, including a refused late-invalid group.
+
+On Windows, compile the maintained author without connecting to any service:
+
+```powershell
+./tools/build.ps1 -Target clock-review
+```
+
+Explicit private configuration opts into the real semantic journey on an
+already-running loopback Studio. Choose a fresh output directory:
+
+```powershell
+./tools/build.ps1 -Target clock-review -ClockReviewMCPConfig .codex/config.toml -ClockReviewDirectory build/clock-review/review -HttpURL http://127.0.0.1:8088
+```
+
+The Pascal owner refuses existing output directories before connecting. It never
+starts/replaces a backend, edits enrollment/permissions or replaces the user's
+design. One connection retains review ownership through source/history and all
+six browser/LCL page/reusable/application jobs. Application compiler input is the
+entire exact accepted source; page/reusable input is the public owned projection,
+retaining reachable definitions and helpers while excluding unrelated pages.
+Receipts precede polling of the same job until terminal; an observation interval
+does not resubmit or declare a still-live compiler stopped.
+
+The actual observing Studio exposes the owned review and its changing revision;
+the Pascal browser pipe reveals its card for a meaningful capture without
+clicking it or injecting application scripts. Compiled browser input and reusable
+projection are captured separately. All browser profiles are independent. The
+review is explicitly discarded and the transport/hosts retire; portable
+`meeting-planner.nyxproject`, `design.nyx` and Pascal remain in the owned output.
+Private build/preview receipts and screenshots are ignored evidence, not exports
+of machine configuration.
+
+Current maintained execution passes **729** assertions including real-clock
+transport/status polling, with zero native leaks and six successful current
+compiler jobs. This is bounded clock authoring/build/observing evidence; complete
+native interaction, trusted picker/IME/accessibility, general source/import and
+full runtime/workspace semantics retain their original owners. See
+[the packet](../WORK.md#current-return-path-authenticated-clock-authoring--2026-10-08).
+
 ## Protected review workspaces
 
 An authenticated agent can create an independent temporary review without

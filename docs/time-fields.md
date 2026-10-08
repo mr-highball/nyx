@@ -262,12 +262,17 @@ input harness; it does not compose or replace an active user's design. The final
 journeys pass 73 desktop / 105 narrow checks; the extra 32 qualify compact routes,
 not another independent policy suite.
 
-Authenticated installed MCP discovery advertises `value-domain-set` with time
-format and step. The next semantic admission/build/observing journey can try that
-existing endpoint; successful discovery alone does not qualify those operations.
+Authenticated installed MCP now executes `value-domain-set` with typed time
+format and step in an independently owned review. Two pages and a reusable
+appointment qualify grouped publication/refusal, exact paired Undo/Redo and
+bounded choices. All six browser/LCL page/reusable/application jobs succeed;
+application input equals the accepted source and page/reusable inputs equal the
+public owned projection. Compiled browser rendering and ordinary Studio activity
+are captured. The maintained journey is described in
+[the agent guide](studio-agents.md#maintained-clock-authoring-review).
 Missing general paired import/source capabilities remain with
 [the workflow owner](../TODO/NS-4_agent-workflows_01.md). See
-[the ordinary controller packet](../WORK.md#current-return-path-ordinary-browser-policy-workflow--2026-10-08).
+[the authenticated packet](../WORK.md#current-return-path-authenticated-clock-authoring--2026-10-08).
 
 Formatted clock input is a physical draft until editing completion. Browser
 qualification sends separate `input` and bubbling `change` notifications;

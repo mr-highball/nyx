@@ -66,7 +66,19 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current ordinary browser policy workflow (2026-10-08): exact paired FileReader
+Current authenticated clock authoring (2026-10-08): semantic tools compose an
+English two-page/reusable project, publish/refuse typed overnight policy, inspect
+paged context and restore exact paired history. All six browser/LCL page/reusable/
+application compiler jobs succeed with exact full or projected source; the
+compiled browser app and ordinary installed Studio activity are captured and
+inspected. The maintained author passes **729** assertions, including polling,
+leak-free; defaults compile only and explicit configuration opts into a review.
+All protected projects/checkpoint/files/services stay exact. Workflow no-closure
+advances **23→24** once; resource/authoring/renderer/codegen/delivery stay
+**9/40/20/28/3**. Full runtime/parity/authoring and general semantic source/import
+remain open. See [the packet](WORK.md#current-return-path-authenticated-clock-authoring--2026-10-08).
+
+Previous ordinary browser policy workflow (2026-10-08): exact paired FileReader
 import, selected Inspector drafts, source-worker admission/refusal and one-step
 Undo/Redo execute at desktop and CSS-390 with **73 / 105** checks; compact command
 routes account for the difference. Source colors come from a shared typed Nyx

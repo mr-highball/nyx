@@ -15,7 +15,26 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
-Ordinary browser return (2026-10-08): the authoring-owned packet now executes
+Authenticated clock return (2026-10-08): criteria 2, 4 and 5 consume a maintained
+owned review journey through the installed endpoint: English two-page/reusable
+composition, typed domain publication/refusal, paged exact context and one-step
+paired design/Pascal/domain Undo/Redo. Six actual compiler jobs cover all three scopes
+on both targets. Full application input remains exact; page/reusable compiler
+inputs match the public owned view projection with reachable definitions and
+retained helpers. Compiled browser clock/reusable rendering and ordinary Studio
+activity are captured and inspected. Explicit review/transport/browser retirement
+and full checkpoint guard preserve all nine projects and fifteen services.
+
+The maintained command passes **729** assertions including real-clock polling,
+leak-free. Default compiles only; explicit configuration executes against an
+existing service with fresh outputs. The earlier 794-assertion result overlaps.
+No new backend/configuration/permission or rejected cleanup action occurs.
+The authenticated clock gap closes; complete criteria remain open for general
+paired source/import and full runtime/workspace/reusable/resource requirements.
+Workflow no-closure advances **23→24** once; other owners **9/40/20/28/3** stay.
+See [the packet](../WORK.md#current-return-path-authenticated-clock-authoring--2026-10-08).
+
+Previous ordinary browser return (2026-10-08): the authoring-owned packet now executes
 paired FileReader import/export, retained clock Inspector proposals, refused and
 corrected source-worker publication, paired history and draft retirement at
 desktop/CSS-390. Authenticated read-only discovery through the Pascal MCP client

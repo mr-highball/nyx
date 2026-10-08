@@ -4,7 +4,19 @@
 [Current work](WORK.md)
 
 
-Current ordinary browser policy workflow (2026-10-08): real paired-file import,
+Current authenticated clock authoring (2026-10-08): an independently owned
+English two-page/reusable review now qualifies semantic typed policy admission/
+refusal, bounded context, exact paired history and six browser/LCL compiler jobs
+covering all three scopes. Exact full/projected inputs, compiled browser rendering
+and ordinary Studio review activity have inspected captures. The maintained
+author passes **729** polling-inclusive assertions, leak-free; explicit config
+opts into execution while default compiles only. All protected state/services
+remain exact. No original full criterion closes: workflow advances no-closure
+**23→24** once; resource/authoring/renderer/codegen/delivery stay **9/40/20/28/3**.
+End clock fixtures and return to general source/import and full runtime/workspace
+outcomes. See [the packet](WORK.md#current-return-path-authenticated-clock-authoring--2026-10-08).
+
+Previous ordinary browser policy workflow (2026-10-08): real paired-file import,
 selected Inspector drafts, retained Pascal/source-worker publication and exact
 Undo/Redo execute at desktop and CSS-390. A captured source color conflict is
 repaired through one shared owned Nyx document and typed palette on both adapters.
@@ -1295,6 +1307,18 @@ production component outcomes retain their owners.
 Current task and return path are maintained in [WORK.md](WORK.md).
 
 ## Reassessment record
+
+- 2026-10-08: installed authenticated clock composition/edit/history/observing
+  now executes in an owned two-page/reusable review. Six compiler jobs cover
+  browser/LCL page/reusable/application, with exact full or public-projected
+  inputs and actual compiled browser rendering. Maintained execution passes
+  729 polling-inclusive assertions, leak-free; default compile-only behavior
+  and explicit opt-in configuration are qualified. Selective card Reveal fixes
+  an offscreen capture; scope checking corrects a harness assumption without
+  weakening input correspondence. Protected pairs/checkpoint/files/services stay
+  exact. No full criterion closes; workflow alone advances no-closure 23→24,
+  others stay 9/40/20/28/3. End clock fixtures; general paired source/import,
+  reusable/resource and full runtime/workspace outcomes retain their owners.
 
 - 2026-10-08: ordinary browser Studio now executes exact paired FileReader import,
   all unfinished clock policy fields, refusal/corrected source-worker publication,

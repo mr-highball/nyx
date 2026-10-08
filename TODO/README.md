@@ -46,7 +46,19 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current ordinary browser policy workflow (2026-10-08): exact FileReader paired
+Current authenticated clock authoring (2026-10-08): bounded MCP composition,
+typed policy/refusal, exact paired Undo/Redo and ordinary observing activity
+execute in an owned two-page/reusable review. Six actual compiler jobs cover
+both targets and all three scopes; exact full/projected inputs and compiled
+browser rendering qualify, with **729** polling-inclusive assertions and zero
+native leaks. Explicit configuration opts into the maintained review command;
+default compiles only. Protected LAN/projects/checkpoint/services remain exact.
+No full criterion closes: workflow advances no-closure **23→24**, others stay
+resource/authoring/renderer/codegen/delivery **9/40/20/28/3**. End clock fixtures;
+general source/import and full runtime/workspaces retain their owners. See
+[the packet](../WORK.md#current-return-path-authenticated-clock-authoring--2026-10-08).
+
+Previous ordinary browser policy workflow (2026-10-08): exact FileReader paired
 import/export, all unfinished clock policy fields, refused/corrected Apply,
 retained source and Undo/Redo execute at desktop/CSS-390. A shared typed source
 palette repairs the captured browser appearance conflict; browser journeys pass

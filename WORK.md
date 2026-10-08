@@ -9,7 +9,119 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: ordinary browser policy workflow — 2026-10-08
+## Current return path: authenticated clock authoring — 2026-10-08
+
+Previous turn is progress: ordinary browser paired import/policy/source/history
+executes, the shared typed source palette repairs both controllers, and exact
+remote `d90cf9a` is verified clean. Full goal stays active. Workflow/resource/
+authoring/renderer/codegen/delivery no-closure is **23/9/40/20/28/3**; no previous
+qualification handle is live. The preserving guard passes again before work.
+
+Reassessment changes the next action to NS-4_agent-workflows_01 criteria 2, 4 and
+5: use the installed advertised clock operations through one authenticated
+transport and independently owned temporary review. Concrete deliverable is an
+English multi-page/reusable clock project composed by semantic tools, typed
+domain publication/refusal, exact paired history/source, browser/LCL builds for
+application/page/reusable scopes and selective actual observing/rendered evidence.
+No active user pair is replaced and no private controller/source hook is added.
+
+Acceptance requires bounded node/domain/source inspection at one revision,
+grouped operations and one-step exact source/domain Undo/Redo, exact compiler
+input/source correspondence, terminal current jobs, observing revision changes,
+explicit review/transport retirement and unchanged protected pairs/checkpoint/
+services. Ordinary browser input observation qualifies only what document tools
+cannot establish. Reuse existing clients/browser pipes and typed edit builders;
+do not rerun the accepted clock foundation or invent another transport/toolkit.
+Budget is one integrated review journey and at most one repair per failed
+boundary, then stop clock fixture expansion and reassess full remaining outcomes.
+
+Initial read-only discovery uses an incorrect singular tool name and refuses;
+the actual advertised lifecycle tool is `nyx_reviews`. CLI tools are newline-
+delimited JSON, not one aggregate JSON object. Both corrections precede any
+mutation. The owned client must keep one authenticated transport throughout;
+separate CLI calls cannot retain ownership of ephemeral reviews. Existing review
+semantics separate these owners from durable user projects. New backend startup
+and optional profile cleanup retain their earlier "blocked by policy" rejection;
+neither equivalent action is retried. Configuration/toolchain stays unchanged.
+
+The first complete review journey already passes all six compiler jobs, exact scoped
+input correspondence, paired history and compiled browser projection, leak-free.
+The first Agents screenshot is above its owned review card despite correct
+bounded revision reads. Complete that visual boundary once through the existing
+Pascal browser pipe's read/reveal contract, with no click or injected script on
+the card; assert physical viewport bounds and inspect the final screenshot.
+Maintain a compile-only `clock-review` target with explicit opt-in configuration,
+fresh outputs and exported portable paired seed. Do not expand unrelated clock
+fixtures or repeat accepted foundation/type-refusal/control suites.
+
+Delivered: `tools/nyx_clock_authoring_review.lpr` uses one authenticated MCP
+transport to create an independently owned empty review, compose an English
+two-page project and reusable appointment with named parts, publish an overnight
+clock policy, inspect one paged exact choice, reject an invalid related group,
+and restore exact design/Pascal/domain through one Undo/Redo. Source uses
+`INyxTime`, `NewNyxTime`, `NyxTime`, `NyxTimeDomain` and `StepMilliseconds`.
+Immutable semantic preview packets establish exact paired design bytes only for
+history validation; routine understanding stays in bounded node/source queries.
+
+The ordinary installed Studio observes the review's changing revisions without
+replacing its user design. The final capture reveals the owned review card
+through the existing Pascal browser pipe, without a card click or injected
+script, and checks physical activity-label bounds. All three scopes succeed on
+both actual compilers: **browser/LCL × page/reusable/application = six jobs**.
+Exact retries return the same admitted job. Application compiler input equals
+the entire accepted source; page/reusable inputs equal the public owned view
+projection and companion preparation, retaining reachable definitions and helpers
+while excluding unrelated pages. The compiled browser application mounts the
+authored clock reading and reusable appointment; its inspected capture also
+shows both page navigation buttons. This is rendered browser evidence, not
+native executable interaction or trusted clock-picker/hardware/accessibility.
+
+The final maintained journey passes **729 assertions**, including transport
+admission and real-clock status polling; the earlier 794-assertion journey
+overlaps and is not added as independent behavior or credit. All six receipts
+are terminal/currentSource/currentOutput with zero reported compiler errors.
+The checked native author has zero leaks and zero compiler warnings, with
+15 notes retained. Frozen compiler warning totals are not inferred from the
+error-filtered status windows. The current maintained default compiles only;
+explicit `ClockReviewMCPConfig` opts into the owned semantic journey. Neither
+mode starts/replaces a backend or changes enrollment/permissions. The tool
+refuses an existing output directory before connecting and exports the exact
+portable paired seed, design and Pascal for later consumers.
+
+Retained failures: singular review discovery and aggregate NDJSON assumptions
+precede mutations. The first review refuses a preview-prefix check because the
+explicit editor base has a trailing slash; that process releases its transport,
+and the tool now normalizes the base once. The next successful page compiler
+reveals the harness's incorrect whole-application source equality. Existing
+public scope projection is now required exactly, with saved actual scoped bytes;
+no compiler/product behavior or assertion is weakened. The first successful
+observer reads the correct row offscreen; selective Reveal completes the actual
+capture boundary. Guard receipts after each retired failure retain all protected
+state. No equivalent rejected service/profile-cleanup action is attempted.
+
+Current receipts remain ignored under `build/clock-semantic/`: maintained
+compile-only/run logs, six admission/terminal build pairs, exact accepted/scoped
+Pascal, `meeting-planner.nyxproject`, `clock-domain.json`, the two final PNG/DOM
+captures and SHA-256/length inventory in `maintained-manifest-private.json`.
+The review is explicitly discarded; the transport and owned browser hosts retire.
+No compiler/input handle remains live. The final guard passes at
+**2026-10-08T16:54:13.3447511Z**, retaining all 299 sealed files, nine exact pairs/
+full checkpoint/history/registry and fifteen service identities. Build script
+AST and diff whitespace pass. Remote verification after commit belongs to
+`build/clock-semantic/remote-checkpoint.json`.
+
+This closes the authenticated clock compose/edit/history/build/observing gap,
+not the complete original workflow criteria. Workflow no-closure advances
+**23→24** once; resource/authoring/renderer/codegen/delivery remain **9/40/20/28/3**.
+Full goal and credit assessment remain open. End clock fixtures. Return to
+general paired source/import, reusable/resource authoring and full ordinary
+runtime/workspace journeys under their existing owners; inspect installed
+capabilities first. Uninstalled feature rollout keeps its separate earlier
+"blocked by policy" gate; installed supported capabilities are usable now.
+
+<a id="current-return-path-ordinary-browser-policy-workflow--2026-10-08"></a>
+
+## Previous return path: ordinary browser policy workflow — 2026-10-08
 
 Previous turn is progress: actual native/browser clock consumers, public browser
 Inspector/source worker and exact policy replay are qualified and pushed as
