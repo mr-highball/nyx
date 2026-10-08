@@ -9,7 +9,17 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current image resources use the common public Nyx form and guarded proposal/
+Current ordinary image Resources authoring consumes criterion 2 through both
+real Studio controllers: typed locale intent, copied import, strict draft/preference
+migration, source admission and exact paired Undo/Redo. Actual JPEG replacement
+reaches the canvas; current live captures precede explicit retirement. Win32 passes
+55, shared migration 13 per browser width, exact emitted reconstruction six per
+target. Synthetic input does not qualify physical phone/OS chooser/accessibility.
+Full common Resources UX, native timing and observing rollout stay open. Authoring
+alone advances no-closure 41→42; no full criterion or credit closes. See
+[the consumer packet](../WORK.md#current-return-path-ordinary-studio-image-resources--2026-10-08).
+
+Previous image resources use the common public Nyx form and guarded proposal/
 session engine: Image choices omit scalar paths, copied locale-pinned proposals
 preserve exact source and paired Undo/Redo. Both actual application targets and
 local semantic dispatch consume the typed prerequisite. Current ordinary image

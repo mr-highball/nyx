@@ -4,7 +4,16 @@
 [Current work](WORK.md)
 
 
-Current image resource bindings (2026-10-08): distinct fluent image selectors
+Current ordinary Studio image Resources (2026-10-08): both controllers consume
+typed runtime/pinned locale choices, copied imports, strict draft migration and
+exact paired source/history. Win32 passes **55**, browser **13 shared + 150 desktop /
+226 CSS-390**, exact emitted reconstruction **six** per target. Live captures and
+actual JPEG canvas replacement qualify this bounded consumer; full common UX,
+trusted input, native timing and observing rollout remain open. Authoring alone
+advances no-closure **41→42**; aggregate **25/11/42/21/28/3**, no full closure. See
+[the packet](WORK.md#current-return-path-ordinary-studio-image-resources--2026-10-08).
+
+Previous image resource bindings (2026-10-08): distinct fluent image selectors
 preserve runtime locale inheritance or explicit fixed pairs, version-ten wire,
 crafted managed source and paired history. Actual Win32 passes **43**, HTTP
 desktop/CSS-390 **44** each, exact emitted reconstruction **eight** per target.

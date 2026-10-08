@@ -350,7 +350,7 @@ begin
   for LCase := 0 to 27 do
   begin
     LKey := 'version';
-    LValue := NyxData(10);
+    LValue := NyxData(11);
     case LCase of
       1:
       begin

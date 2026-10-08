@@ -9,7 +9,82 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: image resource binding — 2026-10-08
+## Current return path: ordinary Studio image resources — 2026-10-08
+
+Previous packet is progress at exact pushed `bce0f98`: typed image resource
+selectors, actual hosted/cache consumers, source replay and paired history execute.
+NS-4 authoring criterion 2 now consumes that NS-1 prerequisite in both ordinary
+Studio controllers. Preserve full original scope; no complete Resources/editor/
+product acceptance follows from this bounded consumer.
+
+Deliver visible image-locale intent in the common public Nyx Resources form:
+use the edited variant (including explicit default) or follow application locale.
+Preserve existing runtime intent when reopening its bound resource. Retain copied
+imports, unfinished drafts and exact paired Apply/Undo/Redo through ordinary source
+preparation. Strict version-two resource drafts and version-ten editor preferences
+migrate the historical unversioned eighteen-field draft only to its pinned meaning.
+Current packets must carry the new closed choice. Keep portable design version ten
+and the existing source-command/image-selector contract unchanged.
+
+Qualify the unchanged native-MCP Image workshop companion through public Pascal
+forms and actual Win32/HTTP browser Studio controllers, including CSS-390 and live
+captures before retirement. Compiler reconstruction remains separate evidence.
+Installed MCP is primary/read-only for current context: the frozen release predates
+the new image family, so these maintained Pascal input consumers qualify controller
+wiring rather than replacing missing semantic operations with editor automation.
+The existing workflow owner retains deployed operations/observing rollout. No new
+backend launch, service replacement or cleanup retry; preserve all nine pairs,
+fifteen service identities and sealed LAN bytes.
+
+Implemented: the public form uses a closed Pascal locale-choice enum and captures
+the existing fluent image selector, preserving runtime inheritance when reopening
+a matching binding. Version-two drafts/version-ten preferences retain unfinished
+input and migrate legacy pinning strictly; missing/unknown current choices refuse.
+No second editor toolkit, selector or loader is introduced.
+
+Final Win32 ordinary Studio qualification passes **55** checks, including its
+**13** shared form/migration assertions; emitted compiler reconstruction passes
+**six**. The actual JPEG import replaces the original PNG canvas source, and both
+locale modes survive chrome rebuilds, ordinary source admission and exact paired
+Undo/Redo. Native selector geometry is checked before live capture; controller
+teardown is leak-free. HTTP browser consumes the same original MCP companion and
+public Resources UI at desktop/CSS-390. Shared migration assertions pass **13**
+per width; ordinary controllers pass **150 desktop / 226 CSS-390**, including
+input routing and readiness polls rather than comparable performance workloads.
+The narrow stronger source assertion initially read a retired canvas; the harness
+now opens Design through the visible ordinary route before inspecting its image,
+then returns to Resources. This fixes qualification, not product behavior.
+
+Regression: **78** native resource controls plus **eight** exact emitted resource
+checks, and **253** concurrent-project/preference ownership checks pass leak-free.
+Both Studio controllers, backend and source worker compile. Main three browser
+compiles retain **21** upstream RTL warnings; the corrected browser-only harness
+compile retains **seven**. All affected owned code compiles without warnings.
+The exact original MCP seed is unchanged; final authoring source is separately
+compiled/executed on both targets. Synthetic inputs qualify controller/FileReader
+wiring and CSS-390, not trusted phone/OS chooser/assistive technology input.
+
+Receipts are in `build/resource-image-authoring/`: `build-final.log`,
+`browser-qualified-compile.log`, `browser-{desktop,compact}-qualified.log`,
+`browser-generated-qualified.log`, `resources-regression.log`,
+`workspace-regression.log`, `backend-compile.log` and `qualification-private.json`.
+The six-file fresh static closure and exact source/capture fingerprints are recorded
+privately. Preservation guard passes **nine exact pairs, fifteen services and
+299 sealed files**; checkpoint, registry, drafts, selection/config/LAN remain exact.
+Installed MCP read-only context stays revision two and resources empty. Current
+source is not deployed to LAN; the earlier automatic backend-start review rejection
+reported only **blocked by policy**. No equivalent retry occurred.
+
+No full criterion/task/credit closes. Authoring alone advances its bounded-consumer
+no-closure **41→42**, aggregate **25/11/42/21/28/3**; resource receives no duplicate
+credit. Return to the complete common Resources workflow: ordinary JSON/text/row
+browser authoring and source/history consumers, with native retained-refresh timing
+under the existing performance owner. Stop independent image-selector expansion.
+Trusted input, full resource/cache breadth and guarded observing rollout remain
+open. Remote checkpoint belongs in `remote-checkpoint.json` beside these receipts.
+
+<a id="current-return-path-image-resource-binding--2026-10-08"></a>
+## Previous return path: image resource binding — 2026-10-08
 
 Previous turn is progress at exact pushed `593d72f`: typed image lifecycle,
 request retirement, both-target controls and exact emitted registrations execute.

@@ -9,6 +9,14 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Current ordinary image-resource input qualification consumes the unchanged MCP
+workshop seed; installed native tools inspect bounded revision/selection only.
+The frozen release still lacks current image-family source exposure, so rollout
+and observing support remain this owner's gap. Actual Pascal browser/LCL input
+harnesses establish form/controller wiring and exact paired history, with no
+active-user mutation, browser editor automation or equivalent backend-start retry.
+See [the authoring packet](../WORK.md#current-return-path-ordinary-studio-image-resources--2026-10-08).
+
 Current resource source/schema adds bounded image capability and `bind-image`
 inside the existing guarded group. Public Pascal semantic dispatch and paired
 history qualify the source; installed authenticated MCP remains primary and

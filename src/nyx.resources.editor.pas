@@ -36,8 +36,12 @@ type
     open application names, creator help or file contents, never executable code. }
   TNyxResourceEditorField = (refName, refLocale, refTitle, refDescription, refKind,
     refSource, refURL, refCache, refFresh, refStale, refMaximum, refServer,
-    refContent, refEncoding, refFallback, refBind, refTarget, refPath);
+    refContent, refEncoding, refFallback, refBind, refTarget, refPath, refImageLocale);
   TNyxResourceEditorEncoding = (reeUTF8, reeJSONString, reeBase64);
+  { Image binding intent is independent of the variant currently being edited.
+    Selected pins that exact variant, including default; Runtime follows the
+    application locale. Existing unversioned drafts migrate to Selected. }
+  TNyxResourceEditorImageLocale = (reilSelected, reilRuntime);
   TNyxResourceEditorAction = (reaNew, reaOpen, reaImport, reaPreview, reaApply, reaRemove);
   TNyxResourceEditorOperation = (reoDefine, reoRemove, reoRows, reoDetachRows);
 
@@ -52,8 +56,8 @@ type
 
   { Copied complete proposal, including the exact catalog/control context seen
     by the user. DefinitionData contains immutable wire values, avoiding managed
-    interfaces in records on pas2js. An optional scalar binding shares Apply and
-    Undo with its file; removing a file never silently removes its consumers. }
+    interfaces in records on pas2js. An optional scalar/image binding shares
+    Apply and Undo with its file; removing a file never silently removes consumers. }
   TNyxResourceEditorChange = record
     Operation: TNyxResourceEditorOperation;
     Selection: TNyxResourceEditorSelection;
@@ -129,6 +133,11 @@ function NyxResourceEditorInput(ANode, AShellRoot: TNyxNode;
   Refusal preserves fields and accepted work; metadata is applied after admission. }
 function ReadNyxResourceEditor(AEditor: TNyxNode): INyxResourceDefinition;
 function NyxResourceEditorKind(AEditor: TNyxNode): TNyxResourceKind;
+{ Closed input boundary; unknown choices refuse without changing a proposal.
+  These helpers borrow the mounted form and own no target/controller lifetime. }
+function ReadNyxResourceEditorImageLocale(AEditor: TNyxNode): TNyxResourceEditorImageLocale;
+procedure SetNyxResourceEditorImageLocale(AEditor: TNyxNode;
+  AValue: TNyxResourceEditorImageLocale);
 { Imported immutable content changes a proposal only. Import into a hosted form
   supplies fallback bytes and retains its URL/cache choices. No path is persisted. }
 procedure ProposeNyxResourceEditor(AEditor: TNyxNode;
@@ -157,7 +166,7 @@ const
   CEntry = 'nyx.resource-editor.entry';
   CFields: array[TNyxResourceEditorField] of TNyxText = ('name', 'locale', 'title',
     'description', 'kind', 'source', 'url', 'cache', 'fresh', 'stale', 'maximum',
-    'server', 'content', 'encoding', 'fallback', 'bind', 'target', 'path');
+    'server', 'content', 'encoding', 'fallback', 'bind', 'target', 'path', 'image-locale');
   CEncodings: array[TNyxResourceEditorEncoding] of TNyxText =
     ('UTF-8 text', 'Escaped JSON string', 'Base64 bytes');
   CKinds: array[TNyxResourceKind] of TNyxText = ('Image', 'JSON', 'Text', 'Binary');
@@ -165,6 +174,8 @@ const
   CCaches: array[TNyxResourceCacheMode] of TNyxText = ('Bypass', 'Memory', 'Persistent');
   CServers: array[TNyxResourceServerPolicy] of TNyxText =
     ('Respect server directives', 'Override in private Nyx cache');
+  CImageLocales: array[TNyxResourceEditorImageLocale] of TNyxText =
+    ('Use this variant', 'Follow application locale');
   CActions: array[TNyxResourceEditorAction] of TNyxText =
     ('new', 'open', 'import', 'preview', 'apply', 'remove');
 
@@ -303,7 +314,8 @@ begin
   begin
     LKind := nkInput;
 
-    if LField in [refKind, refSource, refCache, refServer, refEncoding, refTarget, refPath] then
+    if LField in [refKind, refSource, refCache, refServer, refEncoding, refTarget,
+      refPath, refImageLocale] then
     begin
       LKind := nkSelect;
     end
@@ -390,6 +402,23 @@ end;
 function NyxResourceEditorKind(AEditor: TNyxNode): TNyxResourceKind;
 begin
   Result := TNyxResourceKind(Choice(AEditor, refKind, CKinds));
+end;
+
+function ReadNyxResourceEditorImageLocale(AEditor: TNyxNode): TNyxResourceEditorImageLocale;
+begin
+  Result := TNyxResourceEditorImageLocale(Choice(AEditor, refImageLocale, CImageLocales));
+end;
+
+procedure SetNyxResourceEditorImageLocale(AEditor: TNyxNode;
+  AValue: TNyxResourceEditorImageLocale);
+begin
+
+  if (Ord(AValue) < Ord(Low(TNyxResourceEditorImageLocale))) or
+    (Ord(AValue) > Ord(High(TNyxResourceEditorImageLocale))) then
+  begin
+    raise ENyxResource.Create('Unsupported image binding locale choice');
+  end;
+  Field(AEditor, refImageLocale).Configure.Value(CImageLocales[AValue]).Done;
 end;
 
 function ReadNyxResourceEditor(AEditor: TNyxNode): INyxResourceDefinition;
@@ -646,6 +675,9 @@ begin
   end;
   Field(AEditor, refPath).Configure.Visible(Checked(AEditor, refBind) and
     (NyxResourceEditorKind(AEditor) <> nrkImage)).Done;
+  Field(AEditor, refImageLocale).Configure.Visible(Checked(AEditor, refBind) and
+    (NyxResourceEditorKind(AEditor) = nrkImage) and
+    (Field(AEditor, refTarget).Prop('value') = NyxBindingPropertyTitle(bpImage))).Done;
 
   if not APreview then
   begin
@@ -719,7 +751,7 @@ const
     'Source', 'Public HTTP(S) URL', 'Private cache', 'Fresh for (seconds)',
     'Stale fallback window (seconds)', 'Maximum payload (bytes)', 'Server directives',
     'File contents / hosted fallback', 'Content notation', 'Include embedded fallback',
-    'Bind to selected control on Apply', 'Control property', 'Data value');
+    'Bind to selected control on Apply', 'Control property', 'Data value', 'Image binding locale');
 var
   LField: TNyxResourceEditorField;
   LAction: TNyxResourceEditorAction;
@@ -734,6 +766,7 @@ var
   LKind: TNyxResourceKind;
   LSelection: TNyxResourceEditorSelection;
   LCapturedSelection: TNyxResourceEditorSelection;
+  LBinding: TNyxBindingSpec;
 begin
 
   if ACatalog = nil then
@@ -820,6 +853,8 @@ begin
       refServer: LItems := CServers[rcspRespect] + TNyxText(#10) + CServers[rcspOverride];
       refEncoding: LItems := CEncodings[reeUTF8] + TNyxText(#10) + CEncodings[reeJSONString] +
         TNyxText(#10) + CEncodings[reeBase64];
+      refImageLocale: LItems := CImageLocales[reilSelected] + TNyxText(#10) +
+        CImageLocales[reilRuntime];
       refTarget:
         begin
 
@@ -847,7 +882,8 @@ begin
       end;
     end;
 
-    if LField in [refKind, refSource, refCache, refServer, refEncoding, refTarget, refPath] then
+    if LField in [refKind, refSource, refCache, refServer, refEncoding, refTarget,
+      refPath, refImageLocale] then
     begin
       LInput := NewNyxSelect(NyxResourceEditorFieldID(AID, LField));
       LInput.Configure.Items(LItems).Done;
@@ -894,6 +930,20 @@ begin
   Field(Result.Node, refServer).Configure.Value(CServers[LPolicy.Server]).Done;
   Field(Result.Node, refBind).Configure.Enabled(AProjection <> nil).Done;
   Field(Result.Node, refEncoding).Configure.Value(CEncodings[reeUTF8]).Done;
+  SetNyxResourceEditorImageLocale(Result.Node, reilSelected);
+  { Opening an existing runtime-locale binding must not silently pin it on the
+    next Apply. Other resources and older drafts keep the original pinned default. }
+
+  if (AProjection <> nil) and AProjection.FindBinding(bpImage, LBinding) and
+    (LBinding.Source = bsResourceImage) and
+    (LBinding.ResourceImage.Reference.Name = LCapturedSelection.Reference.Name) and
+    not LBinding.ResourceImage.Localized then
+  begin
+    SetNyxResourceEditorImageLocale(Result.Node, reilRuntime);
+  end;
+  Field(Result.Node, refImageLocale).Configure.Hint(
+    'Use this variant pins the edited locale, including the default. ' +
+    TNyxText('Follow application locale resolves each runtime independently.')).Done;
 
   if LContent <> nil then
   begin
@@ -1009,6 +1059,7 @@ var
   LPaths: TNyxDataValue;
   LPath: TNyxResourcePath;
   LValue: TNyxResourceValueRef;
+  LImage: TNyxResourceImageRef;
   LChoice: TNyxText;
   LTarget: TNyxBindingProperty;
   LIndex: Integer;
@@ -1082,8 +1133,13 @@ begin
     begin
       raise ENyxResource.Create('The selected image property requires an image resource');
     end;
-    AChange.Binding := TNyxBindingSpec.Image(NyxResourceImage(AChange.Selection.Reference)
-      .Localize(AChange.Selection.Locale, NyxDefaultLocale));
+    LImage := NyxResourceImage(AChange.Selection.Reference);
+
+    if ReadNyxResourceEditorImageLocale(LEditor) = reilSelected then
+    begin
+      LImage := LImage.Localize(AChange.Selection.Locale, NyxDefaultLocale);
+    end;
+    AChange.Binding := TNyxBindingSpec.Image(LImage);
     Exit;
   end;
   LPaths := ScalarPaths(LDefinition);
@@ -1264,9 +1320,9 @@ begin
         TNyxResourceImageRef.FromData(LBinding.Field('value')));
 
       if (LResult.Binding.ResourceImage.Reference.Name <> LResult.Selection.Reference.Name) or
-        (LResult.Binding.ResourceImage.Locale.Name <> LResult.Selection.Locale.Name) or
-        not LResult.Binding.ResourceImage.Localized or
-        LResult.Binding.ResourceImage.Fallback.Defined then
+        (LResult.Binding.ResourceImage.Localized and
+        ((LResult.Binding.ResourceImage.Locale.Name <> LResult.Selection.Locale.Name) or
+        LResult.Binding.ResourceImage.Fallback.Defined)) then
       begin
         raise ENyxResource.Create('Image binding belongs to a different file or locale');
       end;
@@ -1411,7 +1467,7 @@ begin
   begin
     LValues[Ord(LField)] := NyxData(FValues[LField]);
   end;
-  Result := NyxObject([NyxField('editor', NyxData(FEditor)),
+  Result := NyxObject([NyxField('version', NyxData(2)), NyxField('editor', NyxData(FEditor)),
     NyxField('context', NyxData(FContext)), NyxField('paths', FPaths),
     NyxField('values', NyxArray(LValues))]);
 end;
@@ -1425,6 +1481,8 @@ var
   LIndex: Integer;
   LEntry: TNyxDataValue;
   LKind: Integer;
+  LLegacy: Boolean;
+  LCount: Integer;
 
   procedure RequireChoice(const AValue: TNyxText; const ANames: array of TNyxText);
   var
@@ -1448,7 +1506,29 @@ begin
     Exit(LDraft);
   end;
 
-  if (AData.Kind <> ndObject) or (AData.Count <> 4) then
+  LLegacy := True;
+
+  if AData.Kind = ndObject then
+  begin
+    for LIndex := 0 to AData.Count - 1 do
+    begin
+
+      if AData.Key(LIndex) = 'version' then
+      begin
+        LLegacy := False;
+      end;
+    end;
+  end;
+  LCount := Ord(High(TNyxResourceEditorField)) + 1;
+
+  if LLegacy then
+  begin
+    Dec(LCount);
+  end;
+
+  if (AData.Kind <> ndObject) or
+    (LLegacy and (AData.Count <> 4)) or
+    (not LLegacy and ((AData.Count <> 5) or (AData.Field('version').AsInteger <> 2))) then
   begin
     raise ENyxResource.Create('Resource draft requires its exact context and fields');
   end;
@@ -1458,13 +1538,22 @@ begin
   LValues := AData.Field('values');
 
   if (LDraft.FEditor = '') or (LDraft.FContext = '') or
-    (LValues.Kind <> ndArray) or (LValues.Count <> Ord(High(TNyxResourceEditorField)) + 1) or
+    (LValues.Kind <> ndArray) or (LValues.Count <> LCount) or
     (LDraft.FPaths.Kind <> ndArray) or (LDraft.FPaths.Count > 256) then
   begin
     raise ENyxResource.Create('Resource draft has an invalid context or field count');
   end;
   for LField := Low(TNyxResourceEditorField) to High(TNyxResourceEditorField) do
   begin
+    { The unversioned eighteen-field form always pinned the edited variant.
+      Migration supplies only that historical meaning; new packets must carry
+      the explicit choice and cannot accidentally acquire a different default. }
+
+    if LLegacy and (LField = refImageLocale) then
+    begin
+      LDraft.FValues[LField] := CImageLocales[reilSelected];
+      Continue;
+    end;
     LDraft.FValues[LField] := LValues.Item(Ord(LField)).AsText;
 
     if (LField in [refBind, refFallback]) and
@@ -1480,6 +1569,7 @@ begin
   RequireChoice(LDraft.FValues[refCache], CCaches);
   RequireChoice(LDraft.FValues[refServer], CServers);
   RequireChoice(LDraft.FValues[refEncoding], CEncodings);
+  RequireChoice(LDraft.FValues[refImageLocale], CImageLocales);
   for LIndex := 0 to LDraft.FPaths.Count - 1 do
   begin
     LEntry := LDraft.FPaths.Item(LIndex);

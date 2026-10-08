@@ -30,13 +30,16 @@ interface
   physical chooser or trusted mobile input. The public result marker is written
   only after captures and explicit controller/listener retirement. }
 procedure RunNyxImageStudioQualification;
+{ Exercises the same ordinary Studio with its public Resources form. Keeps the
+  unchanged semantic seed, imports via FileReader and observes paired history. }
+procedure RunNyxResourceImageStudioQualification;
 
 implementation
 
 uses
   SysUtils, JS, Web, nyx.text, nyx.types, nyx.model, nyx.images, nyx.image.editor,
   nyx.image.fixtures, nyx.codegen, nyx.codec, nyx.studio.projects,
-  nyx.studio.browser, nyx.generated.view;
+  nyx.studio.browser, nyx.generated.view, nyx.resources.editor, nyx.binding.types;
 
 type
   TImageTransfer = class external name 'DataTransfer'(TJSDataTransfer)
@@ -358,5 +361,227 @@ procedure RunNyxImageStudioQualification;
 begin
   Journey;
 end;
+
+
+{ These input helpers qualify the actual adapter/controller. Semantic context
+  remains the unchanged MCP companion; no document mutation is hidden here. }
+procedure ResourceChange(AField: TNyxResourceEditorField; const AValue: TNyxText);
+var
+  LInput: TJSHTMLElement;
+  LOptions: TJSObject;
+begin
+  LInput := Find(NyxResourceEditorFieldID('studio-resource-editor', AField));
+
+  if not ((LInput is TJSHTMLInputElement) or (LInput is TJSHTMLTextAreaElement) or
+    (LInput is TJSHTMLSelectElement)) then
+  begin
+    LInput := TJSHTMLElement(LInput.querySelector('input,textarea,select'));
+  end;
+  Check(LInput <> nil, 'ordinary resource input exists');
+
+  if AField in [refBind, refFallback] then
+  begin
+    TJSHTMLInputElement(LInput).checked := AValue = 'true';
+  end
+  else
+  begin
+    TJSHTMLInputElement(LInput).value := AValue;
+  end;
+  LOptions := TJSObject.new;
+  LOptions['bubbles'] := True;
+  LInput.dispatchEvent(TImageEvent.new('input', LOptions));
+  LInput.dispatchEvent(TImageEvent.new('change', LOptions));
+end;
+
+function ResourceSnapshot: TNyxText;
+begin
+  Result := Snapshot;
+  Panel('project');
+end;
+
+procedure ResourceWait; async;
+var
+  LStarted: Double;
+begin
+  LStarted := window.performance.now;
+  repeat
+    await(TJSPromise.resolve(Pause));
+    Check(window.performance.now - LStarted < 30000, 'resource source/import readiness remains bounded');
+  until not GStudio.SourceBusy and
+    (document.querySelector('input[type="file"]:not([accept])') = nil);
+end;
+
+procedure ResourceCapture; async;
+var
+  LImage: TImageFace;
+  LStarted: Double;
+begin
+  LImage := TImageFace(Find('studio-resource-editor-image-preview'));
+  await(LImage.decode);
+  Check((LImage.naturalWidth = 100) and (LImage.naturalHeight = 50),
+    'ordinary Resources preview reaches decoded image dimensions');
+  Find(NyxResourceEditorFieldID('studio-resource-editor', refImageLocale)).scrollIntoView;
+  document.body.setAttribute('data-capture-checkpoint', 'resource-image-studio');
+  LStarted := window.performance.now;
+  repeat
+    await(TJSPromise.resolve(Pause));
+    Check(window.performance.now - LStarted < 30000, 'resource live capture remains bounded');
+  until document.body.getAttribute('data-capture-observed') = 'resource-image-studio';
+end;
+
+procedure ResourceJourney; async;
+const
+  CResourceEditor = 'studio-resource-editor';
+var
+  LDocument: TNyxDocument;
+  LPair: TNyxProjectPair;
+  LTransfer: TImageTransfer;
+  LBefore: TNyxText;
+  LRuntime: TNyxText;
+  LPinned: TNyxText;
+  LStarted: Double;
+  LBytes: TNyxImageBytes;
+  LBuffer: TJSUint8Array;
+  LIndex: Integer;
+  LBinding: TNyxBindingSpec;
+  LStatus: TJSHTMLElement;
+begin
+  try
+    GChecks := 0;
+    LDocument := BuildNyxDocument;
+    try
+      LPair := NyxProjectPair(TNyxCodec.Encode(LDocument), TNyxCodegen.Generate(LDocument));
+    finally
+      LDocument.Free;
+    end;
+    document.addEventListener('click', @Exported);
+    GStudio := TNyxStudio.Create;
+    GStudio.Run(False);
+    await(TJSPromise.resolve(Pause));
+    Files;
+    Click('action-project-import');
+    LTransfer := TImageTransfer.new;
+    LTransfer.items.add(TJSHTMLFile.new(TJSArray.new(LPair.Source), 'nyx.generated.view.pas'));
+    LTransfer.items.add(TJSHTMLFile.new(TJSArray.new(LPair.Design), 'design.nyx'));
+    SupplyFiles(TJSHTMLInputElement(document.querySelector('[data-nyx-project-picker]')), LTransfer);
+    LStarted := window.performance.now;
+    repeat
+      await(TJSPromise.resolve(Pause));
+      Check(window.performance.now - LStarted < 30000, 'resource paired import remains bounded');
+    until TJSHTMLInputElement(Find('project-title').querySelector('input')).value = 'Image workshop';
+    Panel('design');
+    TJSHTMLElement(Find('studio-canvas').querySelector('[data-node="hero-image"]')).click;
+    Panel('project');
+    LBefore := ResourceSnapshot;
+    Check(LBefore = EncodeNyxProject(LPair), 'ordinary import retains exact semantic seed');
+    Click('action-resources-toggle');
+    ResourceChange(refName, 'cover');
+    ResourceChange(refKind, 'Image');
+    Click(NyxResourceEditorActionID(CResourceEditor, reaImport));
+    LTransfer := TImageTransfer.new;
+    LBytes := NyxEmbeddedImage(nimJPEG, ImageJPEG).Bytes;
+    LBuffer := TJSUint8Array.new(Length(LBytes));
+    for LIndex := 0 to High(LBytes) do
+    begin
+      LBuffer[LIndex] := LBytes[LIndex];
+    end;
+    LTransfer.items.add(TJSHTMLFile.new(TJSArray.new(LBuffer), 'cover.dat'));
+    SupplyFiles(TJSHTMLInputElement(document.querySelector('input[type="file"]:not([accept])')), LTransfer);
+    await(ResourceWait);
+    Check(TJSHTMLImageElement(Find(CResourceEditor+'-image-preview')).getAttribute('src') =
+      NyxEmbeddedImage(nimJPEG, ImageJPEG).ToWire, 'FileReader paints exact packed JPEG proposal');
+    Check(ResourceSnapshot = LBefore, 'copied import does not edit the accepted pair');
+    ResourceChange(refBind, 'true');
+    ResourceChange(refImageLocale, 'Follow application locale');
+    Action('action-code', 'view', 'code');
+    await(ResourceWait);
+    Panel('project');
+    Check(TJSHTMLSelectElement(Find(NyxResourceEditorFieldID(CResourceEditor, refImageLocale))
+      .querySelector('select')).value = 'Follow application locale', 'chrome rebuild retains locale draft');
+    Click(NyxResourceEditorActionID(CResourceEditor, reaApply));
+    await(ResourceWait);
+    LRuntime := ResourceSnapshot;
+    LPair := DecodeNyxProject(LRuntime);
+    LDocument := TNyxCodec.Decode(LPair.Design);
+    try
+      Check(LDocument.Find('hero-image').FindBinding(bpImage, LBinding) and
+        not LBinding.ResourceImage.Localized, 'ordinary source worker admits runtime image binding');
+      Check(LDocument.Resources.Count = 1, 'ordinary Apply publishes exactly one packed resource');
+    finally
+      LDocument.Free;
+    end;
+    Check(Pos('.Image(NyxResourceImage(', LPair.Source) > 0, 'crafted source uses specialized image selector');
+    { Compact Studio retires its inactive canvas. Reveal Design through the
+      ordinary panel route before inspecting the real bound image, then return
+      to the Resources proposal rather than reading an unmounted control. }
+    Panel('design');
+    Check(TJSHTMLImageElement(Find('studio-canvas').querySelector('[data-node="hero-image"]'))
+      .getAttribute('src') = NyxEmbeddedImage(nimJPEG, ImageJPEG).ToWire,
+      'bound browser canvas replaces its original PNG source');
+    Panel('project');
+    Action('action-undo', 'edit', 'undo');
+    await(ResourceWait);
+    Check(ResourceSnapshot = LBefore, 'one Undo restores original complete semantic pair');
+    Action('action-redo', 'edit', 'redo');
+    await(ResourceWait);
+    Check(ResourceSnapshot = LRuntime, 'Redo restores exact runtime-bound pair');
+    Click(CResourceEditor+'-entry-0');
+    Check(TJSHTMLSelectElement(Find(NyxResourceEditorFieldID(CResourceEditor, refImageLocale))
+      .querySelector('select')).value = 'Follow application locale', 'reopened form respects current runtime binding');
+    ResourceChange(refBind, 'true');
+    ResourceChange(refImageLocale, 'Use this variant');
+    Action('action-code', 'view', 'code');
+    await(ResourceWait);
+    Panel('project');
+    Check(TJSHTMLSelectElement(Find(NyxResourceEditorFieldID(CResourceEditor, refImageLocale))
+      .querySelector('select')).value = 'Use this variant', 'explicit default pin survives second chrome rebuild');
+    Click(NyxResourceEditorActionID(CResourceEditor, reaApply));
+    await(ResourceWait);
+    LPinned := ResourceSnapshot;
+    LPair := DecodeNyxProject(LPinned);
+    LDocument := TNyxCodec.Decode(LPair.Design);
+    try
+      Check(LDocument.Find('hero-image').FindBinding(bpImage, LBinding) and
+        LBinding.ResourceImage.Localized and not LBinding.ResourceImage.Locale.Defined,
+        'explicit default pin remains distinct after source admission');
+    finally
+      LDocument.Free;
+    end;
+    Action('action-undo', 'edit', 'undo');
+    await(ResourceWait);
+    Check(ResourceSnapshot = LRuntime, 'pin Undo restores exact runtime locale pair');
+    Action('action-redo', 'edit', 'redo');
+    await(ResourceWait);
+    Check(ResourceSnapshot = LPinned, 'pin Redo restores exact explicitly localized pair');
+    Click(CResourceEditor+'-entry-0');
+    ResourceChange(refBind, 'true');
+    await(ResourceCapture);
+    document.removeEventListener('click', @Exported);
+    FreeAndNil(GStudio);
+    Check(document.querySelector('[data-node="studio-shell"]') = nil, 'ordinary browser controller retires owned views');
+    document.body.setAttribute('data-resource-image-studio-checks', IntToStr(GChecks));
+    document.body.setAttribute('data-test-result', 'passed');
+  except
+    on LException: Exception do
+    begin
+      LStatus := TJSHTMLElement(document.querySelector('[data-node="studio-status"]'));
+
+      if LStatus <> nil then
+      begin
+        document.body.setAttribute('data-resource-image-last-status', Copy(LStatus.textContent, 1, 500));
+      end;
+      document.removeEventListener('click', @Exported);
+      FreeAndNil(GStudio);
+      document.body.setAttribute('data-event-error', LException.Message);
+      document.body.setAttribute('data-test-result', 'failed');
+    end;
+  end;
+end;
+
+procedure RunNyxResourceImageStudioQualification;
+begin
+  ResourceJourney;
+end;
+
 
 end.

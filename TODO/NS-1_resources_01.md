@@ -18,6 +18,13 @@ evidence. Existing packed PNG/JPEG and typed scalar/collection engines are input
 
 ## Image resource binding — 2026-10-08
 
+Current NS-4 consumer qualifies ordinary browser/native Resources import/binding,
+runtime-versus-pinned locale choice, strict presentation migration, actual JPEG
+canvas replacement and exact paired source/history. This consumes the image
+prerequisite without new resource credit or full criterion closure; resource stays
+11. Complete common UX, cache breadth and observing rollout retain their owners.
+See [the authoring packet](../WORK.md#current-return-path-ordinary-studio-image-resources--2026-10-08).
+
 Current image binding integration consumes original criteria 2/3/5: distinct
 immutable selectors preserve explicit locale intent through version ten, crafted
 managed source and paired history. Actual Win32 passes **43**, HTTP desktop/

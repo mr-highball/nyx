@@ -80,6 +80,21 @@ that intent through copying, persistence, crafted generation and managed source
 replay. Reusable consumers and sibling applications retain independent runtime
 catalogs; loading never rewrites the document's authored defaults.
 
+Studio's Resources form exposes this image binding intent beside the selected
+control's **Image** property. **Use this variant** pins the exact edited variant,
+including default. **Follow application locale** keeps runtime inheritance.
+Reopening a matching runtime binding retains that choice; new forms and migrated
+older drafts keep the historical pinned default. Imported files remain proposals
+until **Apply resource** admits the file and optional binding together as one
+paired Undo step. The same public Nyx form serves browser and native Studio.
+
+Pending Resources values use version-two drafts inside version-ten editor
+preferences. Unfinished contents are retained exactly. Older unversioned drafts
+migrate their eighteen original fields without changing catalog/control baselines;
+current packets require the explicit nineteenth locale-choice field. Unknown or
+missing current choices refuse before restoration writes any field. Editor
+preferences are private presentation data, separate from portable design version.
+
 ## Locale variants and view reload
 
 ```pascal
@@ -861,6 +876,16 @@ captures live controls before explicit disposal. Public common form/local semant
 checks establish grouped admission/source/history, with ordinary current image
 binding UI and authenticated observing deployment still required. See
 [current evidence](../WORK.md#current-return-path-image-resource-binding--2026-10-08).
+
+`tools/build.ps1 -Target resource-image-authoring -ImageSourceDirectory <MCP-export>`
+qualifies the ordinary native Resources journey and strict draft migration, then
+compiles its exact emitted builder and browser/source-worker counterparts. Browser
+execution is a separate Pascal input-harness journey on an existing static host,
+with live captures before retirement. Current native Studio passes **55** checks;
+shared migration passes **13** per browser width, and exact emitted reconstruction
+passes **six** per target. The imported JPEG replaces the seed's PNG on the actual
+canvas. Trusted physical input and observing LAN rollout remain open. See
+[the ordinary consumer evidence](../WORK.md#current-return-path-ordinary-studio-image-resources--2026-10-08).
 
 Run `tools/build.ps1 -Target resource-loading` against an existing Studio health
 endpoint (`-HttpURL` changes only this qualification configuration). It starts no
