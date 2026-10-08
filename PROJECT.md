@@ -66,14 +66,24 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Owned semantic property qualification now restores the stale full-catalog gate:
+an authenticated review composes all 76 kinds, exact paired Undo/Redo and both
+frozen-service application builds, then disposes. Current Win32 checks pass
+18,057 across 262 physical faces, leak-free; matching browser artifacts compile
+with zero owned warnings. Current browser/phone/observing, authenticated current
+library and complete mobile Studio/matrix acceptance remain open. See
+[the packet](WORK.md#current-return-path-maintained-semantic-property-qualification--2026-10-07)
+and [the maintained workflow](docs/studio-agents.md#maintained-full-catalog-property-review).
+
+
 Portable typed PNG/JPEG images now share fit/position, specialized interfaces,
 crafted source and responsive/platform scopes through both ordinary adapters.
 Checked shared/Win32 qualification passes 178, exact emitted execution seven
 and workspace regression 248, leak-free; both Studios/backend and browser
 consumers/worker compile with zero owned warnings. Native decoder failures retain
 the accepted picture. Current browser/phone, assets and full media/mobile Studio
-acceptance remain open. The broader property journey has a stale semantic seed
-and failed; it is not qualified by this packet. See
+acceptance remain open. Its earlier property-seed failure is restored by the
+subsequent owned semantic qualification above. See
 [the packet](WORK.md#current-return-path-portable-image-presentation--2026-10-07)
 and [images](docs/images.md).
 

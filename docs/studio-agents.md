@@ -1085,6 +1085,44 @@ HTTP route still serializes its own delegated builds, which can delay browser
 observations; a global scheduler remains separate service work. Full native
 Studio and production-scale rendering retain their product owners.
 
+## Maintained full-catalog property review
+
+The Pascal catalog author can qualify a shared service through its explicit
+`review-properties` mode. One authenticated transport creates an accepted-base
+review, composes all catalog sample/page/neighbor families, adds the numeric
+property-review input, exports accepted Pascal in 80-line windows, checks exact
+paired Undo/Redo and requests both application compilers. It explicitly disposes
+the review before retiring its transport. Legacy compose/properties modes remain
+for explicitly disposable services; inspect remains read-only.
+
+Use an already configured service and a fresh output directory:
+
+```powershell
+./tools/build.ps1 -Target properties -PropertyMCPConfig .codex/config.toml -PropertySourceDirectory build/property-concordance/review-source -BrowserOutput build/property-concordance/review-browser
+```
+
+The enrolled configuration stays private. Existing output directories refuse
+before connecting; the author never overwrites an older seed. Omit
+`PropertyMCPConfig` to compile/consume an already exported companion with the
+same source-directory argument. The command stages the matching browser harness
+and RTL; it launches no listener or browser and does not alter Studio permissions.
+
+A shared review uses one four-operation transaction per catalog family. The
+source reconciler has its own bounded edit-distance/memory budget, so the
+protocol's maximum 64 leaves does not guarantee that a large expanded recipe
+group fits. Related page/sample/neighbors remain one paired Undo operation.
+Compiler admission receipts are saved before bounded status polling.
+
+The refreshed packet passes actual authenticated composition of 76 kinds,
+exact Undo/Redo and both frozen-service application compilers, followed by
+18,057 current-source Win32 property checks over 262 physical faces. All native
+traces are leak-free and maintained consumers have zero owned warnings. The
+frozen server's library snapshot is distinct from current-source native/browser
+consumers. Current browser/phone/observing execution and complete matrix,
+accessibility, visual and deployment acceptance remain open; no full workflow
+criterion closes.
+
+
 ## Protected review workspaces
 
 An authenticated agent can create an independent temporary review without

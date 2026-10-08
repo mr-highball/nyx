@@ -20,6 +20,22 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Current property companion restored — 2026-10-07
+
+Original matrix/interaction criteria consume the complete authenticated
+76-kind companion with its required numeric review input. Current checked Win32
+passes 18,057 checks over 262 physical faces, leak-free; common/family transitions,
+declared support, literals/attachments, numeric drafts/layout and retained hosts
+are qualified. The matching browser stages only. See
+[property concordance](../docs/property-concordance.md#current-full-catalog-qualification)
+and [the packet](../WORK.md#current-return-path-maintained-semantic-property-qualification--2026-10-07).
+
+No full parity criterion closes or historical count is established. Workflow
+alone advances 20→21, with other counts 35/19/28/2 unchanged. Stop fixture repair;
+current browser/phone/observing, all advertised effects, trusted accessibility,
+visual/performance and other widgetsets/DPI remain original requirements.
+
+
 ## Numeric slider contract — 2026-10-07
 
 Criterion 2 now has a shared numeric range/choice scale consumed by both real

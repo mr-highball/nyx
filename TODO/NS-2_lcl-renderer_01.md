@@ -23,6 +23,22 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   prerequisite for replacing the time-field text fallback. Other native input
   and full renderer criteria remain required; this allocates no extra credit.
 
+## Full property gate restored — 2026-10-07
+
+The prior missing-numeric-input seed is retained. An authenticated owned review
+now supplies the complete 76-kind companion, with exact paired history, both
+frozen-service compiler jobs and disposal. Current checked Win32 qualification
+passes 18,057 property checks over 262 physical faces, leak-free, and zero owned
+warnings; its matching browser compiles only. Existing declared support and
+common/family effects remain the scope, not complete production matrix acceptance.
+See [the packet](../WORK.md#current-return-path-maintained-semantic-property-qualification--2026-10-07).
+
+No renderer/full criterion closes or count advances here. Workflow alone owns
+20→21; renderer stays 19, with authoring/codegen/delivery 35/28/2 unchanged.
+Stop property fixtures; current browser/phone/observing, all unimplemented effects,
+trusted accessibility/widgetsets/DPI, mobile Studio and full parity remain open.
+
+
 ## Portable embedded image integration — 2026-10-07
 
 Original criteria 1–3 now consume typed PNG/JPEG, shared fit/position and crafted

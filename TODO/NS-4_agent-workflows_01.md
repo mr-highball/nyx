@@ -15,14 +15,30 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
-Property qualification seed refresh (2026-10-07): the portable image packet
-exposed an older maintained semantic seed without required `property-numeric`.
-`-Target properties` stops at that initial assertion and remains failed; image
-checks do not accept general property/Inspector concordance. Refresh the full
-fixture through explicit owned reviews and bounded exact export when the current
-API is available. Never replace a protected user design or silently rewrite the
-seed. This adds no closure count. See
-[the evidence](../WORK.md#current-return-path-portable-image-presentation--2026-10-07).
+Current semantic property restoration (2026-10-07): the existing Pascal author
+now has an explicit transport-owned review mode. It scopes every query/edit/build,
+exports bounded exact source, checks paired Undo/Redo, disposes and retires its
+transport, and refuses an existing output before connection. One complete catalog
+family stays one four-operation group to fit source reconciliation. The optional
+build enrollment orchestrates that mode without starting a listener or browser.
+
+Actual authenticated review-8 composes all 76 kinds in 78 paired groups, restores
+exact source at revisions 80/81 and finishes both frozen-service application
+compilers before disposal, leak-free. Current-source Win32 qualification passes
+18,057 property checks over 262 physical faces; the matching browser compiles.
+Maintained consumers have zero owned warnings. The old numeric-input seed and
+first source-budget refusal remain preserved; no test/support grade was weakened.
+See [the workflow](../docs/studio-agents.md#maintained-full-catalog-property-review)
+and [the packet](../WORK.md#current-return-path-maintained-semantic-property-qualification--2026-10-07).
+
+No original full criterion closes. Workflow alone advances 20→21; authoring,
+renderer, codegen and delivery stay 35/19/28/2. Stop property fixture expansion.
+Current-library authenticated/observing deployment, browser/phone execution,
+mobile Studio and complete workflow/source/parity still require their original
+evidence. Compiler waiting-window extension is compiled; the >180-second branch
+is not exercised by this successful packet and is not timing qualification.
+
+
 
 Theme inspection/deployment gap (2026-10-07): the authoring packet adds a closed
 exact-replacement `theme` operation and in-process discovery/refusal evidence.

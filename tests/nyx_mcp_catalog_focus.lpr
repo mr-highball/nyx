@@ -27,11 +27,18 @@ uses
   Classes, SysUtils, nyx.studio.builds, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.catalog,
   nyx.test.mcp.client;
 
+type
+  { Command-line choices are parsed once. Review mode keeps all authoring/build
+    operations inside a transport-owned copy of the accepted primary project. }
+  TCatalogAuthorMode = (camCompose, camInspect, camProperties, camReviewProperties);
+
 var
   GClient: TNyxMCPTestClient;
   GRevision: Integer;
   GDirectory: TNyxText;
-  GProperties: Boolean;
+  GMode: TCatalogAuthorMode;
+  GReview: TNyxText;
+  GExactSource: TNyxText;
 
 { TNyxText is UTF-8 on this native boundary. Write its bytes directly, avoiding
   ANSI TStringList conversion of the generated companion or catalog metadata. }
@@ -52,14 +59,33 @@ begin
 end;
 
 { Requests are explicit protocol data. One persistent initialized client authors
-  only the supplied disposable service; this program never claims/replaces a
-  project through the operator API or discovers credentials from a remote URL. }
+  the explicitly supplied disposable service in legacy modes. Review mode uses
+  an independent owned review on a shared service; it never authors the primary.
+  This program never claims/replaces a project through the operator API or
+  discovers credentials from a remote URL. }
 function Call(const ATool: TNyxText; const AArguments: TNyxDataValue): TNyxDataValue;
 var
   LResponse: TNyxDataValue;
+  LArguments: TNyxDataValue;
+  LFields: array of TNyxDataField;
   LIndex: Integer;
 begin
-  LResponse := GClient.Tool(ATool, AArguments);
+  LArguments := AArguments;
+
+  if (GReview <> '') and (ATool <> 'nyx_reviews') then
+  begin
+    { Append exact context to every bounded query, mutation and build. Only the
+      lifecycle tool is unscoped; its explicit review argument stays caller-owned. }
+    SetLength(LFields, AArguments.Count + 1);
+    for LIndex := 0 to AArguments.Count - 1 do
+    begin
+      LFields[LIndex] := NyxField(AArguments.Key(LIndex),
+        AArguments.Field(AArguments.Key(LIndex)));
+    end;
+    LFields[High(LFields)] := NyxField('review', NyxData(GReview));
+    LArguments := NyxObject(LFields);
+  end;
+  LResponse := GClient.Tool(ATool, LArguments);
 
   if LResponse.Field('isError').AsBoolean then
   begin
@@ -151,7 +177,8 @@ begin
       end;
       Inc(LLine, LValue.Field('lines').Count);
     until LLine > LValue.Field('totalLines').AsInteger;
-    Save('nyx.generated.view.pas', LLines.Text);
+    GExactSource := LLines.Text;
+    Save('nyx.generated.view.pas', GExactSource);
   finally
     LLines.Free;
   end;
@@ -169,6 +196,9 @@ begin
     NyxField('operationId', NyxData('catalog-focus-build-' + ATarget)),
     NyxField('outputID', NyxData(AOutput)), NyxField('target', NyxData(ATarget)),
     NyxField('scope', NyxData('application'))]));
+  { Admission is distinct from completion. Retain the exact job handle before
+    polling, including when a transport observation fails or exceeds its wait. }
+  Save(ATarget + '-receipt.json', LReceipt.ToJSON);
   LStarted := GetTickCount64;
   repeat
     LStatus := Call('nyx_build', NyxObject([
@@ -182,7 +212,13 @@ begin
 
     if GetTickCount64 - LStarted > 180000 then
     begin
-      raise Exception.Create('Catalog compiler remains running; retain its receipt');
+      { An observation window is not a compiler deadline. Preserve this exact
+        admitted job, review and transport while the service still reports live
+        work; only a terminal state or actual transport failure ends the wait. }
+      Save(ATarget + '-waiting.json', LStatus.ToJSON);
+      WriteLn('WAIT actual MCP ', ATarget, ' compiler remains ',
+        LStatus.Field('state').AsText, ' / same admitted job');
+      LStarted := GetTickCount64;
     end;
     Sleep(100);
   until False;
@@ -276,6 +312,9 @@ var
   LIndex: Integer;
   LBatch: Integer;
   LCount: Integer;
+  LBeforeSource: TNyxText;
+  LPages: Integer;
+  LUndoRevision: Integer;
 begin
   GClient := nil;
   LCatalog := nil;
@@ -283,16 +322,60 @@ begin
   SetLength(LOps, 0);
   try
 
-    if (ParamCount <> 2) and not ((ParamCount = 3) and
-      ((ParamStr(3) = 'inspect') or (ParamStr(3) = 'properties'))) then
+    if (ParamCount <> 2) and (ParamCount <> 3) then
     begin
-      raise Exception.Create('Supply disposable MCP config, owned source directory and optional inspect/properties');
+      raise Exception.Create('Supply MCP config, owned output directory and optional inspect/properties/review-properties');
+    end;
+    GMode := camCompose;
+
+    if ParamCount = 3 then
+    begin
+
+      if ParamStr(3) = 'inspect' then
+      begin
+        GMode := camInspect;
+      end
+      else if ParamStr(3) = 'properties' then
+      begin
+        GMode := camProperties;
+      end
+      else if ParamStr(3) = 'review-properties' then
+      begin
+        GMode := camReviewProperties;
+      end
+      else
+      begin
+        raise Exception.Create('Unknown catalog author mode');
+      end;
     end;
     GDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
-    GProperties := (ParamCount = 3) and (ParamStr(3) = 'properties');
+
+    if (GMode = camReviewProperties) and DirectoryExists(GDirectory) then
+    begin
+      raise Exception.Create('Owned review export requires a fresh output directory');
+    end;
     ForceDirectories(GDirectory);
     GClient := TNyxMCPTestClient.Create(ParamStr(1), 'Scooty catalog focus qualification');
     LValue := Call('nyx_session', NyxObject([]));
+
+    if GMode = camReviewProperties then
+    begin
+      { Creation and every subsequent call share this authenticated transport.
+        An accepted copy retains reusable definitions but excludes pending drafts. }
+      LValue := Call('nyx_reviews', NyxObject([
+        NyxField('mode', NyxData('create')), NyxField('base', NyxData('accepted')),
+        NyxField('label', NyxData('Full property qualification')),
+        NyxField('expectedRevision', NyxData(GRevision)),
+        NyxField('operationId', NyxData('catalog-properties-owned-review'))]));
+      GReview := LValue.Field('review').AsText;
+
+      if GReview = '' then
+      begin
+        raise Exception.Create('Owned review creation returned no context');
+      end;
+      Save('review-created.json', LValue.ToJSON);
+      Call('nyx_session', NyxObject([]));
+    end;
     LCatalog := TNyxCatalog.Create;
     LOffset := 0;
     repeat
@@ -314,7 +397,7 @@ begin
     LBatch := 0;
     { Inspect is read-only and never retries composition on an existing service. }
 
-    if (ParamCount = 2) or GProperties then
+    if GMode <> camInspect then
     begin
       for LIndex := 0 to High(LEntries) do
       begin
@@ -336,7 +419,13 @@ begin
         LOps[LCount + 3] := CreateControl('button', LPage + '-after', LPage,
           NyxObject([NyxField('text', NyxData('After the sample'))]));
 
-        if (Length(LOps) = 64) or (LIndex = High(LEntries)) then
+        { Shared-review source reconciliation is independently bounded. Keep
+          each sample/page/neighbor family atomic instead of assuming that 64
+          protocol leaves also fit the source edit-distance budget. Legacy
+          disposable composition keeps its original batching contract. }
+
+        if ((GMode = camReviewProperties) and (Length(LOps) = 4)) or
+          (Length(LOps) = 64) or (LIndex = High(LEntries)) then
         begin
           Inc(LBatch);
           Call('nyx_transaction', NyxObject([
@@ -362,7 +451,7 @@ begin
           CreateControl('button', 'radio-after', 'catalog-radio-peers', NyxObject([]))]))]));
       Inc(LBatch);
 
-      if GProperties then
+      if GMode in [camProperties, camReviewProperties] then
       begin
         CreatePropertyReview;
         Inc(LBatch);
@@ -383,15 +472,45 @@ begin
     Save('metadata.json', NyxArray(LMetadata).ToJSON);
     ExportSource;
 
-    if (ParamCount = 2) or GProperties then
+    if GMode = camReviewProperties then
+    begin
+      { Only the complete property-review group is undone. Its redo must restore
+        the exact accepted builder; no local reconstruction can satisfy this check. }
+      LBeforeSource := GExactSource;
+      LPages := Call('nyx_session', NyxObject([])).Field('pages').AsInteger;
+      Call('nyx_history', NyxObject([
+        NyxField('direction', NyxData('undo')), NyxField('expectedRevision', NyxData(GRevision)),
+        NyxField('operationId', NyxData('catalog-properties-owned-undo'))]));
+      LUndoRevision := GRevision;
+      LValue := Call('nyx_session', NyxObject([]));
+
+      if (LValue.Field('pages').AsInteger <> LPages - 1) or
+        not LValue.Field('canRedo').AsBoolean then
+      begin
+        raise Exception.Create('Owned property Undo did not remove its one complete root group');
+      end;
+      Call('nyx_history', NyxObject([
+        NyxField('direction', NyxData('redo')), NyxField('expectedRevision', NyxData(GRevision)),
+        NyxField('operationId', NyxData('catalog-properties-owned-redo'))]));
+      ExportSource;
+
+      if GExactSource <> LBeforeSource then
+      begin
+        raise Exception.Create('Owned property Redo did not restore exact accepted Pascal');
+      end;
+      Save('history-receipt.json', NyxObject([
+        NyxField('review', NyxData(GReview)), NyxField('undoRevision', NyxData(LUndoRevision)),
+        NyxField('redoRevision', NyxData(GRevision)), NyxField('exactSource', NyxData(True))]).ToJSON);
+      WriteLn('PASS owned semantic property Undo/Redo with exact source');
+    end;
+
+    if GMode <> camInspect then
     begin
       LValue := Call('nyx_build', NyxObject([NyxField('mode', NyxData('outputs'))]));
       Compile('browser', LValue.Field('outputID').AsText);
       Compile('lcl', LValue.Field('outputID').AsText);
     end;
-    GClient.Close;
-
-    if (ParamCount = 2) or GProperties then
+    if GMode <> camInspect then
     begin
       WriteLn('PASS semantic composition, bounded metadata/source and both compilers / ',
         Length(LEntries), ' catalog kinds / ', LBatch, ' paired transactions');
@@ -405,6 +524,44 @@ begin
     on LException: Exception do
     begin
       WriteLn(StdErr, 'FAIL ', LException.Message);
+      ExitCode := 1;
+    end;
+  end;
+  { Cleanup still runs after a refused query or failed build. Never retire a
+    foreign review or silently fall back to the primary. Close the transport
+    after explicit disposal so shared Studio can observe the review lifetime. }
+  try
+
+    if GReview <> '' then
+    begin
+      LValue := Call('nyx_reviews', NyxObject([
+        NyxField('mode', NyxData('discard')), NyxField('review', NyxData(GReview)),
+        NyxField('expectedRevision', NyxData(GRevision)),
+        NyxField('operationId', NyxData('catalog-properties-owned-dispose'))]));
+      Save('review-disposed.json', LValue.ToJSON);
+      GReview := '';
+      WriteLn('PASS explicit owned review disposal');
+    end;
+
+  except
+    on LException: Exception do
+    begin
+      WriteLn(StdErr, 'FAIL semantic cleanup: ', LException.Message);
+      ExitCode := 1;
+    end;
+  end;
+  { A disposal refusal must not skip transport retirement. Server-side session
+    retirement also owns any remaining review leases; no context falls back. }
+  try
+
+    if GClient <> nil then
+    begin
+      GClient.Close;
+    end;
+  except
+    on LException: Exception do
+    begin
+      WriteLn(StdErr, 'FAIL transport cleanup: ', LException.Message);
       ExitCode := 1;
     end;
   end;

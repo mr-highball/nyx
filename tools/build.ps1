@@ -82,6 +82,9 @@ param(
   [string]$CatalogFocusSourceDirectory = 'build/catalog-focus/source',
   # Property mutations consume an unchanged MCP-authored catalog/review pair.
   [string]$PropertySourceDirectory = 'build/property-concordance/source',
+  # Optional explicit enrollment composes/compiles/retires an owned review on
+  # the existing service. Its source directory must be fresh; no server starts.
+  [string]$PropertyMCPConfig,
   # Proportional/hidden layout consumes bounded MCP-exported accepted source.
   [string]$LayoutSourceDirectory = 'build/layout-concordance/source',
   # Optional unchanged companion exported through bounded semantic MCP windows.
@@ -1023,7 +1026,8 @@ try {
   if ($Target -eq 'properties') {
     $nyxPropertySource = [IO.Path]::GetFullPath($PropertySourceDirectory)
 
-    if (-not (Test-Path -LiteralPath (Join-Path $nyxPropertySource 'nyx.generated.view.pas'))) {
+    if (-not $PropertyMCPConfig -and
+      -not (Test-Path -LiteralPath (Join-Path $nyxPropertySource 'nyx.generated.view.pas'))) {
       throw 'Export the MCP-authored catalog and property-review page first'
     }
     $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
@@ -1034,6 +1038,12 @@ try {
     New-Item -ItemType Directory -Force $nyxPropertyAuthor | Out-Null
     Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxPropertyAuthor", "-FE$nyxPropertyAuthor", 'tests/nyx_mcp_catalog_focus.lpr')
+
+    if ($PropertyMCPConfig) {
+      & (Join-Path $nyxPropertyAuthor 'nyx_mcp_catalog_focus.exe') `
+        ([IO.Path]::GetFullPath($PropertyMCPConfig)) $nyxPropertySource 'review-properties'
+      if ($LASTEXITCODE -ne 0) { throw 'Owned semantic property qualification failed' }
+    }
     $nyxPropertyPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
     Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
       '-Fusrc', '-Futests', "-Fu$nyxPropertySource",

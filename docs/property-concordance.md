@@ -10,6 +10,26 @@ not establish a rendered effect. The 35 compound recipes inherit the physical
 properties of their expanded parts; a caption on a layout root does not become
 a visible caption merely because a child has one.
 
+## Current full-catalog qualification
+
+The stale numeric-review seed was retained and a fresh full companion was
+composed through an authenticated owned MCP review. Current checked Win32
+qualification passes **18,057** checks across **76** catalog kinds and **262**
+physical faces, with zero unfreed allocations and zero owned compiler warnings.
+It covers declared support completeness and the implemented common/family
+property transitions, literals/attachments, dynamic numeric/text admission,
+layout transitions and physical identity. It is not proof that every declared
+property has a complete production effect.
+
+The semantic author used 78 related paired transactions, bounded metadata/source,
+exact property-group Undo/Redo and both actual frozen-service application
+compilers. Its review was disposed and the primary pair remained unchanged.
+Matching current-source browser artifacts compile with the matched RTL; current
+execution is still open. See [the owned review workflow](studio-agents.md#maintained-full-catalog-property-review)
+and [current evidence](../WORK.md#current-return-path-maintained-semantic-property-qualification--2026-10-07).
+Earlier browser results below retain their original source/qualification scope.
+
+
 | Attributes | Required observable boundary | Current evidence / remaining work |
 | --- | --- | --- |
 | Text | Captions, group legend, code text and source-editor accessible name update without replacing the control | Native group legends and literal code now synchronize; existing editor/caption packets remain applicable |

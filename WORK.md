@@ -7,6 +7,128 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: maintained semantic property qualification — 2026-10-07
+
+Previous goal turn is **progress**: `e1f0b05` integrates typed portable images;
+the exact remote/clean receipt and 178/7/248 leak-free checks are retained.
+No full criterion closes. Known no-closure counts are 20/35/19/28/2. All previous
+test/build handles are terminal; the full Nyx/Studio objective remains intact.
+
+Reassessment changes the next action: restore the broader failed property gate,
+rather than extend image fixtures. Original workflow criteria 2/4/5 require
+maintained bounded semantic composition, exact paired builds and owned review
+cleanup; the original parity matrix consumes real control/property evidence.
+Extend the existing Pascal catalog author with an explicit owned-review mode.
+It must create its review within the same authenticated transport, scope every
+query/edit/build, retain exact revisions, compose the complete catalog and numeric
+review input, export bounded accepted source, exercise paired Undo/Redo and
+dispose the review before closing that transport. Preserve primary and all other
+protected pairs; never hand-edit the old seed or replace a user's project.
+
+Consume that exact companion through the maintained full property journey on
+ordinary Win32 controls and compile its matching browser program. Retain capability
+differences and concrete failures; tidy existing non-exhaustive fixture dispatch
+without suppressing compiler warnings. Compiler requests use the already running
+semantic service; no service/browser launch or frozen-root replacement occurs.
+The frozen server's own application builds do not qualify the current library's
+authenticated deployment. Current browser/phone/observing and full parity remain
+original requirements.
+
+Budget: two integration/repair passes, then reassess any specific failure and end
+this restored qualification boundary. Workflow is the sole no-closure owner if
+integrated; no criterion is narrowed or earns credit from fixture repair alone.
+Keep the fifteen protected process identities, nine complete pairs and 229
+frozen LAN files exact. Earlier rejected launch/replacement actions are not retried.
+
+
+
+This turn is **progress** against the original maintained semantic/property
+journey. Workflow is the sole no-closure owner: 20→21 once. Other known counts
+stay authoring 35, renderer 19, codegen 28 and delivery 2. No original full
+criterion closes; this does not qualify current-library authenticated deployment
+or complete matrix/Inspector/browser/mobile acceptance.
+
+Delivered:
+- The existing Pascal catalog author has a closed explicit `review-properties`
+  mode. One authenticated transport owns review creation, all bounded queries,
+  transactions, history, compiler jobs and disposal. Accepted-base copies retain
+  reusable definitions without taking a user's pending draft. No context is
+  inferred from a node ID or falls back to the primary.
+- Each catalog sample/page/before/after family is one four-operation paired
+  transaction; complete numeric/layout property review is one group. Protocol
+  leaf and source-reconciliation budgets remain distinct. Exact accepted Pascal
+  exports in 80-line windows; the property group's Undo removes its one root and
+  Redo restores the identical complete source.
+- An existing output directory refuses before connection, retaining exact source
+  bytes. Compiler admission receipts are retained before status polling in the
+  maintained author. Explicit review disposal and transport retirement run even
+  after failure; a disposal error cannot skip transport cleanup. Legacy modes
+  keep their explicitly disposable-service/read-only contracts.
+- A compiler still reported live at the end of a 180-second observation window
+  retains its exact admitted job/review/transport and begins another window.
+  It is not restarted or treated as terminal. This branch compiles but was not
+  exercised by the successful current jobs; no long-wait qualification is claimed.
+- `-Target properties` accepts optional explicit `PropertyMCPConfig`, which
+  invokes owned authoring before consuming its fresh export. Without the option
+  it consumes the selected existing source directory. Browser staging stays
+  independent; no service or browser is launched. The original stale seed is
+  retained, never patched by hand.
+- Four native fixture dispatch warnings now have explicit branches: unsupported
+  literal fixture kinds fail, and unrelated catalog families retain their
+  mandatory common support/text/name/hint/identity checks. No warning suppression
+  or reduced support grade was introduced.
+
+Maintained evidence under ignored `build/property-catalog-current/`:
+- `semantic-restored.log` exits 0. Actual authenticated `review-8` composes all
+  **76** catalog kinds in **78** related paired transactions. The required numeric
+  input is present. Bounded metadata/source publication is checked; property-group
+  Undo/Redo uses revisions **80/81** and restores the exact **184,572-byte** builder.
+  Its SHA-256 is `597ED2286A991B507813CFDEF60AD2D92D527C787A2B0AB0318A426696DBD521`.
+- Both semantic application compiler jobs finish `succeeded/currentSource=true`
+  at revision 81. Exact terminal receipts are `source-restored/browser-build.json`
+  and `lcl-build.json`. These execute the protected frozen service's compiler
+  snapshot, not a current-library backend upgrade.
+- `source-restored/review-disposed.json` records explicit disposal at revision 81
+  under the same transport. The author then closes its session and reports zero
+  unfreed allocations. `history-receipt.json` retains paired restoration.
+- `property-current.log`: the maintained command with
+  `-PropertySourceDirectory build/property-catalog-current/source-restored`
+  and an independent browser output exits 0. Current checked Win32 qualification
+  passes **18,057** property checks over **76** kinds and **262** physical faces;
+  all allocations free. Its matching current-source browser program and RTL stage
+  successfully. The author/native/browser consumers have zero owned warnings;
+  pas2js retains seven upstream RTL warnings.
+- `existing-source-refusal.log` exits 1 before connecting. The explicit
+  `source-refusal-receipt.json` confirms the existing builder's SHA-256 is
+  unchanged and the negative invocation is leak-free. This preserves an actual
+  accepted artifact rather than asserting only the guard's implementation.
+
+The first integration attempt is retained in `semantic-current.log`: `review-7`
+refused a 64-leaf expanded group at revision 3 because its source reconciliation
+exceeded the edit budget. It changed no accepted pair and disposed explicitly,
+leak-free. The second pass changed the semantic grouping to one complete family;
+the full catalog, exact history, both compiler jobs and current native consumer
+then pass. End this qualification boundary; do not expand another fixture family
+or silently replace the failed old seed.
+
+Read-only preservation at **2026-10-08T02:26:48Z** confirms all fifteen protected
+process identities, nine exact complete pairs/navigation/history states and
+229 frozen LAN files; bindings remain LAN plus loopback and primary assets answer
+HTTP 200. Primary is revision 2 with `rating-2-part-4` selected and `home` active,
+no pending draft/Undo/Redo. Semantic review activity changes the roster sequence
+without changing that pair. No existing process/root/profile was replaced.
+See `preservation-current.log`; the earlier rejected browser/backend launch and
+primary replacement were not retried.
+
+Retained requirements: current browser/physical phone/observing execution,
+current-library authenticated deployment, the user's cramped mobile Studio
+screen-space behavior, all unimplemented property effects, complete event/matrix/
+accessibility/visual/performance and full component/authoring/delivery outcomes.
+Reassess the original Studio adaptive-chrome/reusable authoring outcomes next;
+fixture repair alone earns no criterion/completion credit. Remote verification
+is recorded in ignored `remote-checkpoint.json` after pushing this packet.
+
+
 ## Current return path: portable image presentation — 2026-10-07
 
 Previous goal turn is **progress**: `1c746e6` integrates typed themes and a public

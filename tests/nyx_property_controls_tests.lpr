@@ -194,6 +194,10 @@ begin
         Check(LGrid.Cells[2, 1] = '', 'native trailing cell empty');
         Check(LGrid.Cells[1, 2] = '', 'native ragged retained cells cleared');
       end;
+    else
+      begin
+        raise Exception.Create('Literal fixture requires a Select, List, Tree or Table face');
+      end;
   end;
   {$endif}
   LFocus := GRenderer.FocusFor(ANode.ID, niRuntime);
@@ -244,6 +248,10 @@ begin
     nkTree: Check(TTreeView(LFace).Items.Count = 0, 'empty native tree');
     nkTable: Check((TStringGrid(LFace).RowCount = 1) and
       (TStringGrid(LFace).Cells[0, 0] = ''), 'empty native physical sentinel has no data');
+  else
+    begin
+      raise Exception.Create('Literal clear fixture requires a collection face');
+    end;
   end;
   {$endif}
 
@@ -285,6 +293,10 @@ begin
         'bound native tree not clobbered');
       nkTable: Check(TStringGrid(LFace).Cells[0, 0] <> 'This must not replace the bound dataset',
         'bound native table not clobbered');
+    else
+      begin
+        raise Exception.Create('Bound literal fixture requires a List, Tree or Table face');
+      end;
     end;
     {$endif}
     LMount := nil;
@@ -482,6 +494,12 @@ begin
           Check(LFace.AccessibleDescription = '', 'cleared alternative description');
           {$endif}
         end;
+    else
+      begin
+        { Other catalog faces have no additional family-specific fixture here.
+          Their declared property support, text/name/hint and identity checks
+          above remain required; this does not claim unimplemented effects. }
+      end;
     end;
   end;
   Check(Face(ANode) = LFace, 'all property updates retain the physical face');

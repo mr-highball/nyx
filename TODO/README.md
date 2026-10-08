@@ -44,6 +44,17 @@ remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
+Latest property-gate restoration (2026-10-07): an authenticated owned review
+composes all 76 catalog kinds, exact Undo/Redo and both frozen-service application
+builds, then disposes. Current checked Win32 passes 18,057 checks across 262 faces,
+leak-free; the matching browser compiles with zero owned warnings. No full
+criterion closes: workflow alone advances 20→21; other counts remain 35/19/28/2.
+Stop fixture expansion. Current browser/phone/observing, authenticated current
+library and full mobile Studio/matrix/parity retain the
+[original owner](NS-4_agent-workflows_01.md) and
+[evidence](../WORK.md#current-return-path-maintained-semantic-property-qualification--2026-10-07).
+
+
 Latest portable images (2026-10-07): immutable PNG/JPEG sources, closed fit/anchor,
 specialized managed configuration and exact source feed both ordinary adapters
 and reusable media parts. Checked shared/Win32 178, emitted execution seven and

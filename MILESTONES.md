@@ -3,6 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current semantic property restoration (2026-10-07): an authenticated owned
+review composes the full 76-kind catalog, exact paired history and both frozen-
+service application compilers, then disposes. Current checked Win32 passes
+18,057 property checks across 262 physical faces, leak-free; browser counterparts
+compile with zero owned warnings. No original full criterion closes: workflow
+alone advances 20→21; authoring/renderer/codegen/delivery stay 35/19/28/2. End this
+restored gate; current browser/phone/observing, current-library authenticated
+deployment, mobile Studio and complete matrix/parity/production requirements
+remain original scope. See
+[the packet](WORK.md#current-return-path-maintained-semantic-property-qualification--2026-10-07).
+
+
 Current portable media integration (2026-10-07): typed PNG/JPEG, fit/position and
 specialized source authoring reach ordinary adapters and independent reusable
 media parts. Checked shared/Win32 checks pass 178, exact emitted execution seven
