@@ -3816,7 +3816,7 @@ begin
       else
       begin
         LCandidate.FCollectionBindings := NewNyxCollectionBindings(LCandidate.FRoot,
-          NewNyxCollectionContext(ADocument.Collections));
+          NewNyxCollectionContext(ADocument.Collections, LCandidate.FRoot.ResourceContext));
       end;
       { Hidden passes share one runtime store/context. Candidate teardown removes
         staged validators and controls without freeing borrowed accepted data. }
@@ -4541,6 +4541,8 @@ begin
 
   if Result then
   begin
+    ValidateNyxCollectionBindingResources(FCollectionBindings, AContext.Snapshot,
+      AContext.Locale, AContext.Fallback);
     FLiveBindings.ValidateResourceReload(AContext.Snapshot,
       AContext.Locale, AContext.Fallback);
   end;
@@ -4563,6 +4565,7 @@ begin
   begin
     raise ENyxState.Create('Resource reload requires a mounted runtime view');
   end;
+  ValidateNyxCollectionBindingResources(FCollectionBindings, AResources, ALocale, AFallback);
   try
     FLiveBindings.ReloadResources(AResources, ALocale, AFallback);
   finally

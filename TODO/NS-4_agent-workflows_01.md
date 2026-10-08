@@ -15,6 +15,19 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Saved resource row gap (2026-10-08): public source recipes now survive persistence,
+full/page/reusable builders and actual initial table/instance consumers. The
+mapping gate uses the actual suspended dispatcher for bounded JSON and grouped
+resource replacement/paired Undo; current semantic regressions remain 54/7.
+Those resource operations retain a recipe but do not inspect/edit its typed
+schema, identity, source paths or lifecycle. This original owner still needs
+bounded source-aware collection context and typed define/remove groups, shared
+Studio candidate/history and exact runtime/application observation authority.
+Do not report an empty authored schema seed as loaded runtime rows. No workflow
+closure/count/allocation changes; resource no-closure alone advances 4→5.
+No whole-project replacement or browser automation substitutes for this gap.
+See [the packet](../WORK.md#current-return-path-saved-resource-row-contracts--2026-10-08).
+
 Coordinated resource row gap (2026-10-08): public prepared groups now qualify
 related native runtime tables before store/view publication. The existing
 semantic engine/resource builder regression remains 54/7, leak-free. MCP still

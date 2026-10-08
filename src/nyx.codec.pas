@@ -45,7 +45,7 @@ uses
   nyx.model;
 
 type
-  { Version 1/2/3/4/5/6/7 design persistence. The format deliberately stores the portable
+  { Version 1..9 design persistence. The format deliberately stores the portable
     model, not target widget handles or generated source. All custom kinds and
     string-valued extension properties survive an encode/decode round trip.
     Unknown root/node fields retain typed nested extension data, exact strings
@@ -73,6 +73,9 @@ type
     Earlier opaque resources fields retain extension meaning. Embedded/hosted
     definitions have their own strict versions; machine cache data stays outside
     designs. Decode never fetches a hosted URL or opens an external file.
+    Version nine admits saved typed resource row recipes in collection descriptor
+    version two. Their empty schema seeds never contain fetched runtime rows.
+    Older document versions cannot silently promote opaque source descriptors.
     Decode returns ownership to its caller and frees partial trees on failure. }
   TNyxCodec = class
   public
@@ -84,6 +87,7 @@ implementation
 
 uses
   nyx.json,
+  nyx.resources.rows,
   nyx.collections.codec;
 
 procedure WriteExtensions(AExtensions: TNyxExtensions; AObject: TJSONObject);
@@ -338,7 +342,15 @@ begin
 
     if ADocument.Resources.Count > 0 then
     begin
-      LRoot.Add('version', 8);
+
+      if NyxHasResourceCollections(ADocument.Collections) then
+      begin
+        LRoot.Add('version', 9);
+      end
+      else
+      begin
+        LRoot.Add('version', 8);
+      end;
       LRoot.Add(NyxResourcesWireField, DecodeNyxJSON(ADocument.Resources.ToData.ToJSON));
       LRoot.Add(NyxMenusWireField, DecodeNyxJSON(ADocument.Menus.ToData.ToJSON));
       LRoot.Add(NyxPresentationsWireField,
@@ -825,6 +837,8 @@ var
   LContentRules: Boolean;
   LHasPresentations: Boolean;
   LCollectionViews: Boolean;
+  LHasResources: Boolean;
+  LRowSource: TNyxResourceRows;
 begin
   LData := DecodeNyxJSON(ASource);
   try
@@ -837,11 +851,12 @@ begin
 
     if (LVersion <> '1') and (LVersion <> '2') and (LVersion <> '3') and
       (LVersion <> '4') and (LVersion <> '5') and (LVersion <> '6') and
-      (LVersion <> '7') and (LVersion <> '8') then
+      (LVersion <> '7') and (LVersion <> '8') and (LVersion <> '9') then
     begin
       raise ENyxModel.Create('Unsupported design version');
     end;
-    LMenuBars := (LVersion = '7') or (LVersion = '8');
+    LHasResources := (LVersion = '8') or (LVersion = '9');
+    LMenuBars := (LVersion = '7') or LHasResources;
     LHasMenus := (LVersion = '6') or LMenuBars;
     LContentRules := (LVersion = '5') or LHasMenus;
     LHasPresentations := (LVersion = '4') or LContentRules;
@@ -853,7 +868,7 @@ begin
       Result.Title := RequireField(LRoot, 'title', jtString).AsString;
       ReadState(LRoot.Find('state'), Result.State);
 
-      if LVersion = '8' then
+      if LHasResources then
       begin
         LResources := NyxResourcesFromData(TNyxDataValue.ParseJSON(
           RequireField(LRoot, NyxResourcesWireField, jtObject).AsJSON));
@@ -867,10 +882,18 @@ begin
       if LVersion <> '1' then
       begin
         LCollections := DecodeNyxCollectionDefaults(
-          RequireField(LRoot, NyxCollectionsWireField, jtObject).AsJSON);
+          RequireField(LRoot, NyxCollectionsWireField, jtObject).AsJSON, LVersion = '9');
         for LIndex := 0 to LCollections.Count - 1 do
         begin
-          Result.Collections.Define(LCollections.Snapshot(LCollections.Key(LIndex)));
+
+          if NyxCollectionResourceSource(LCollections, LCollections.Key(LIndex), LRowSource) then
+          begin
+            Result.ResourceCollections.Define(LCollections.Key(LIndex), LRowSource);
+          end
+          else
+          begin
+            Result.Collections.Define(LCollections.Snapshot(LCollections.Key(LIndex)));
+          end;
         end;
       end;
 
@@ -896,17 +919,17 @@ begin
         end;
       end;
       ReadExtensions(LRoot, Result.Extensions, LVersion <> '1', False,
-        LHasPresentations, False, False, LHasMenus, LMenuBars, LVersion = '8');
+        LHasPresentations, False, False, LHasMenus, LMenuBars, LHasResources);
       LCount := 0;
       for LIndex := 0 to LPages.Count - 1 do
       begin
         Result.AddPage(ReadNode(LPages.Items[LIndex], 0, LCount,
-          LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars, LVersion = '8'));
+          LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars, LHasResources));
       end;
       for LIndex := 0 to LComponents.Count - 1 do
       begin
         Result.AddComponent(ReadNode(LComponents.Items[LIndex], 0, LCount,
-          LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars, LVersion = '8'));
+          LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars, LHasResources));
       end;
       Result.Validate;
     except

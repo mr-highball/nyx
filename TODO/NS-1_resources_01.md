@@ -54,6 +54,26 @@ Browser/phone/trusted chooser/observing rollout currently needs the documented
 launch/deployment blocker resolved. Until then compile/native evidence remains
 partial and this task stays open. See the [return path](../WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).
 
+## Saved row consumer boundary — 2026-10-08
+
+Criteria 2/3/4 now have copied typed recipes beside empty schema seeds, strict
+v9/v2 persistence, crafted source and independent application/reusable initial
+stores. Both hosts and ordinary adapters honor their explicit initial locale;
+navigation and runtime edits retain independence. Scalar-only reload refuses
+changed source datasets until joint prepared publication is integrated. Ordinary
+static editors cannot silently erase saved recipes.
+
+Maintained resource-mappings passes 60 checked shared/actual Win32/source/semantic
+assertions and three exact emitted full/page/reusable builders pass eight each,
+leak-free. Affected regressions pass 30/1801, 149, 252, 78, 43, 39 and 54/7.
+Both Studios/backend/worker and browser consumers compile with zero owned warnings.
+Browser/phone/observing execution, joint loading and complete parity remain open.
+No full criterion closes: resource no-closure alone advances 4→5; other owners
+stay 22/37/19/28/2. End mapping fixtures and return to prepared application context/
+scalar/row publication, then original Studio/MCP row authoring/runtime surfaces.
+See [the packet](../WORK.md#current-return-path-saved-resource-row-contracts--2026-10-08)
+and [usage](../docs/resources.md#saved-row-recipes).
+
 ## Coordinated row consumer boundary — 2026-10-08
 
 Criterion 3 now has explicit prepared row groups and optional coordinated runtime

@@ -29,6 +29,7 @@ interface
 
 uses
   nyx.text,
+  nyx.resources,
   nyx.types,
   nyx.state,
   nyx.collections.registry,
@@ -58,13 +59,19 @@ type
     FSubscription: TNyxStateSubscription;
     FResourceSubscription: INyxResourceSubscription;
     FResourceContext: INyxResourceContext;
+    procedure Initialize(ADocument: TNyxDocument; APlatform: TNyxPlatform;
+      const ALocale, AFallback: TNyxLocaleRef);
     procedure ValidateCandidate(ACandidate: TNyxState; AChanges: TNyxStateChanges);
     function ValidateResources(const AContext: INyxResourceContext): Boolean;
     procedure ResourcesChanged(const AContext: INyxResourceContext);
   public
     { npfAny preserves portable host-neutral validation. Concrete application
       hosts supply their target so hidden pages retain its typed overrides. }
-    constructor Create(ADocument: TNyxDocument; APlatform: TNyxPlatform = npfAny);
+    constructor Create(ADocument: TNyxDocument; APlatform: TNyxPlatform = npfAny); overload;
+    { Hosts seed saved resource rows at their configured initial locale before
+      attaching validators. Later locale/source changes need joint publication. }
+    constructor Create(ADocument: TNyxDocument; APlatform: TNyxPlatform;
+      const ALocale, AFallback: TNyxLocaleRef); overload;
     destructor Destroy; override;
     property State: TNyxState read FState;
     { Managed runtime stores are independent of saved defaults and sibling
@@ -88,10 +95,23 @@ uses
   nyx.binding;
 
 constructor TNyxApplicationState.Create(ADocument: TNyxDocument; APlatform: TNyxPlatform);
+begin
+  inherited Create;
+  Initialize(ADocument, APlatform, NyxDefaultLocale, NyxDefaultLocale);
+end;
+
+constructor TNyxApplicationState.Create(ADocument: TNyxDocument; APlatform: TNyxPlatform;
+  const ALocale, AFallback: TNyxLocaleRef);
+begin
+  inherited Create;
+  Initialize(ADocument, APlatform, ALocale, AFallback);
+end;
+
+procedure TNyxApplicationState.Initialize(ADocument: TNyxDocument; APlatform: TNyxPlatform;
+  const ALocale, AFallback: TNyxLocaleRef);
 var
   LIndex: Integer;
 begin
-  inherited Create;
 
   if (ADocument = nil) or (ADocument.Count = 0) then
   begin
@@ -99,7 +119,8 @@ begin
   end;
   ADocument.Validate;
   FState := ADocument.State.Clone;
-  FCollectionContext := NewNyxCollectionContext(ADocument.Collections);
+  FCollectionContext := NewNyxCollectionContext(ADocument.Collections, ADocument.Resources,
+    ALocale, AFallback);
   FCollections := FCollectionContext.Collections;
   SetLength(FPages, ADocument.Count);
   SetLength(FPageCollections, ADocument.Count);
@@ -173,6 +194,8 @@ begin
   begin
     Exit;
   end;
+  ValidateNyxCollectionContextResources(FCollectionContext, AContext.Snapshot,
+    AContext.Locale, AContext.Fallback);
   for LIndex := 0 to Length(FPages) - 1 do
   begin
     LPage := FPages[LIndex].Clone;

@@ -37,7 +37,8 @@ uses
   only a complete candidate. Neither function mutates its caller's defaults.
   JSON byte/depth/member limits remain the existing shared admission rules. }
 function EncodeNyxCollectionDefaults(const ADefaults: INyxCollectionDefaults): TNyxText;
-function DecodeNyxCollectionDefaults(const ASource: TNyxText): INyxCollectionDefaults;
+function DecodeNyxCollectionDefaults(const ASource: TNyxText;
+  AResourceSources: Boolean = False): INyxCollectionDefaults;
 
 implementation
 
@@ -47,6 +48,7 @@ uses
   nyx.data,
   nyx.state,
   nyx.contract,
+  nyx.resources.rows,
   nyx.collections;
 
 function RequireObject(AData: TJSONData; AFields: Integer): TJSONObject;
@@ -182,13 +184,24 @@ var
   LFieldIndex: Integer;
   LItemIndex: Integer;
   LAdmitted: TJSONData;
+  LHasSources: Boolean;
+  LSource: TNyxResourceRows;
 begin
   { Materialization re-admits a foreign registry before encoding. It also
     prevents borrowed alternative arrays/index/byte claims crossing the wire. }
   LRuntime := NewNyxCollections(ADefaults);
+  LHasSources := NyxHasResourceCollections(ADefaults);
   LRoot := TJSONObject.Create;
   try
-    LRoot.Add('version', 1);
+
+    if LHasSources then
+    begin
+      LRoot.Add('version', 2);
+    end
+    else
+    begin
+      LRoot.Add('version', 1);
+    end;
     LDefinitions := TJSONArray.Create;
     LRoot.Add('definitions', LDefinitions);
     for LCollection := 0 to LRuntime.Count - 1 do
@@ -198,6 +211,24 @@ begin
       LDefinitionJSON := TJSONObject.Create;
       LDefinitions.Add(LDefinitionJSON);
       LDefinitionJSON.Add('key', LDefinition.Key.Name);
+
+      if LHasSources then
+      begin
+
+        if NyxCollectionResourceSource(ADefaults, LDefinition.Key, LSource) then
+        begin
+
+          if (LDefinition.Count <> 0) or not LDefinition.Schema.SameSchema(LSource.Schema) then
+          begin
+            raise ENyxCollection.Create('Resource recipe conflicts with its empty schema seed');
+          end;
+          LDefinitionJSON.Add('source', DecodeNyxJSON(LSource.ToData.ToJSON));
+        end
+        else
+        begin
+          LDefinitionJSON.Add('source', TJSONNull.Create);
+        end;
+      end;
       LFields := TJSONArray.Create;
       LDefinitionJSON.Add('schema', LFields);
       for LFieldIndex := 0 to LSchema.Count - 1 do
@@ -238,7 +269,8 @@ begin
   end;
 end;
 
-function DecodeNyxCollectionDefaults(const ASource: TNyxText): INyxCollectionDefaults;
+function DecodeNyxCollectionDefaults(const ASource: TNyxText;
+  AResourceSources: Boolean): INyxCollectionDefaults;
 var
   LData: TJSONData;
   LRoot: TJSONObject;
@@ -261,12 +293,17 @@ var
   LFieldIndex: Integer;
   LItemIndex: Integer;
   LName: TNyxText;
+  LVersion: TNyxText;
+  LSource: TNyxResourceRows;
+  LSourceData: TJSONData;
 begin
   LData := DecodeNyxJSON(ASource);
   try
     LRoot := RequireObject(LData, 2);
 
-    if RequireField(LRoot, 'version', jtNumber).AsJSON <> '1' then
+    LVersion := RequireField(LRoot, 'version', jtNumber).AsJSON;
+
+    if (LVersion <> '1') and ((LVersion <> '2') or not AResourceSources) then
     begin
       raise ENyxCollection.Create('Unsupported collection descriptor version');
     end;
@@ -279,7 +316,15 @@ begin
     LDefaults := NewNyxCollectionDefaults;
     for LCollection := 0 to LDefinitions.Count - 1 do
     begin
-      LDefinition := RequireObject(LDefinitions.Items[LCollection], 3);
+
+      if LVersion = '2' then
+      begin
+        LDefinition := RequireObject(LDefinitions.Items[LCollection], 4);
+      end
+      else
+      begin
+        LDefinition := RequireObject(LDefinitions.Items[LCollection], 3);
+      end;
       LKey := NyxCollection(RequireField(LDefinition, 'key', jtString).AsString);
 
       if LDefaults.Has(LKey) then
@@ -350,7 +395,27 @@ begin
           end;
         end;
       end;
-      LDefaults.Define(LKey, LSchema, LRows);
+      LSourceData := LDefinition.Find('source');
+
+      if (LVersion = '2') and (LSourceData = nil) then
+      begin
+        raise ENyxCollection.Create('Resource-capable collection requires explicit source or null');
+      end;
+
+      if (LVersion = '2') and (LSourceData.JSONType <> jtNull) then
+      begin
+        LSource := TNyxResourceRows.FromData(TNyxDataValue.ParseJSON(LSourceData.AsJSON));
+
+        if (Length(LRows) <> 0) or not LSchema.SameSchema(LSource.Schema) then
+        begin
+          raise ENyxCollection.Create('Resource source must match its empty typed schema seed');
+        end;
+        NyxResourceCollections(LDefaults).Define(LKey, LSource);
+      end
+      else
+      begin
+        LDefaults.Define(LKey, LSchema, LRows);
+      end;
     end;
     Result := LDefaults;
   finally
@@ -359,4 +424,3 @@ begin
 end;
 
 end.
-

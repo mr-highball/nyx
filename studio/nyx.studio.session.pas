@@ -1782,6 +1782,11 @@ procedure TNyxStudioSession.DefineCollection(const AKey: TNyxCollectionRef;
 var
   LCandidate: TNyxDocument;
 begin
+
+  if FDocument.ResourceCollections.HasSource(AKey) then
+  begin
+    raise ENyxCollection.Create('Edit this collection through its resource row recipe');
+  end;
   LCandidate := FDocument.Clone;
   try
     LCandidate.Collections.Define(AKey, ASchema, AItems);

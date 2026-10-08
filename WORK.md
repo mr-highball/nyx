@@ -9,6 +9,86 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: saved resource row contracts — 2026-10-08
+
+The previous turn is **progress**, exactly pushed as `bf36651`. This continuation
+returns to resource criteria 2/3/4: save a typed row recipe, replay crafted full/
+page/reusable Pascal, and seed actual application/instance consumers without
+copying runtime rows into a design. It introduces no task or credit allocation.
+Execution remains solo. Rejected listener/browser/replacement/temporary-cleanup
+actions stay held; no equivalent retry or active-project replacement occurred.
+
+`Document.ResourceCollections.Define` is an optional managed capability on the
+original authored defaults registry; its interface/GUID remains unchanged.
+Recipes retain exact structural array/field paths, text identities and all four
+scalar families beside empty schema seeds. Clones own membership independently;
+static Define explicitly removes a relationship and Remove retires seed/source
+together. Aggregate admission charges source metadata; alternative facade counts
+must match bounded registry membership. No document/catalog backreference or
+transport belongs to a recipe. Document validation admits resolved rows and
+collection projections before accepting the detached complete candidate.
+
+Document version **9** opts into collection descriptor **2**, with explicit
+source-or-null entries. Static designs retain existing versions/descriptor 1;
+older roots cannot promote source metadata. Strict recipe version 1 rejects
+missing/unknown fields, incompatible families/schema, paths and identities.
+Generated Pascal uses fluent typed objects and omits redundant implicit paths.
+Managed replay/reconciliation, independent full/page/reusable builds and ordinary
+paired history retain the same relationship and exact resource numeric spelling.
+
+Both ordinary renderers/popovers and full application hosts seed independent
+runtime stores from the accepted catalog and explicit initial locale. Navigation
+retains application/instance data; sibling applications/defaults remain exact.
+Optional context/binding admission currently refuses source or locale changes
+that alter those initial datasets before any scalar publication. Unrelated
+resource updates remain usable. **This is initialization plus an explicit
+safe refusal boundary, not automatic saved row loading.** Joint prepared scalar/
+catalog/row publication must replace that guard next. Source-backed defaults
+cannot be silently converted by ordinary static collection editor operations.
+
+Maintained `tools/build.ps1 -Target resource-mappings` passes **60 checked shared/
+actual Win32/source/semantic assertions**, leak-free. Exact emitted **full/page/
+reusable** builders each compile and pass **eight** actual table checks,
+leak-free. It qualifies four scalar families, literal dotted fields/array paths,
+schema/wire refusal, independent recipe/registry clones, paired history,
+Unicode locales, reusable stores, target retirement, ordinary navigation and
+one grouped resource operation through the actual suspended MCP dispatcher.
+That fixture reads bounded JSON and restores its exact pair with one Undo in a
+fresh private runtime; it never Start-ed a listener. Browser counterparts, both
+Studios, backend and worker compile/stage with **zero owned warnings**. Seven
+browser compiler invocations retain **49 upstream classes.pas warnings**;
+dependency source is untouched. Browser/phone/observing execution remains open.
+Evidence: ignored `build/resource-mappings/maintained-final.log`, maintained
+artifacts `build/resource-mappings/maintained/`. End this mapping fixture family.
+
+Affected checked regressions pass core **30/1801**, typed collections **149**,
+project ownership **252**, resource controls **78**, coordinated controls **43**,
+current actual application resources **39** and suspended actual semantic engine/
+exact builder **54/7**, leak-free. Logs live below
+`build/resource-mappings/regression/`. The HTTP invocation initially supplied
+a full health path where the existing fixture expects a base URL; its double-path
+failure remains in `application-final/run.log`. The corrected invocation passes
+39 in `run-corrected.log`; no product admission/check was weakened.
+
+No full criterion/task/percentage closes: resource no-closure alone advances
+**4→5**; workflow/authoring/renderer/codegen/delivery stay **22/37/19/28/2**.
+The next original deliverable is prepared context/scalar participants and
+application/instance dataset publication, including hidden pages, late scopes,
+locale, failed admission and retirement. Studio/MCP still needs bounded saved
+recipe/schema/source inspection and typed definition/removal edits; existing
+resource queries/transactions retain a recipe but do not author it. Runtime
+observation/media, current-source authentication/browser/phone/observing,
+performance and complete application/Studio/parity remain original outcomes.
+
+The authenticated primary remains revision 2, original selection/view, no draft/
+history, activity 500. Protected **15 exact process identities / 9 complete pairs /
+229 sealed files** remain guarded by `build/menu-bar-editor/guard.ps1`; this
+packet's ignored preservation log and exact remote/clean checkpoint belong to
+`build/resource-mappings/preservation.log` and `remote-checkpoint.json`.
+All gate handles are terminal before checkpoint. This source packet does not
+replace the LAN product. Earlier automatic approval review supplied only
+"blocked by policy" for held actions; none was retried.
+
 ## Current return path: coordinated resource datasets — 2026-10-08
 
 The previous turn is **progress**, exactly pushed as `fe0d245`. This continuation

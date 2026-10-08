@@ -28,6 +28,7 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.state, nyx.contract, nyx.collections,
+  nyx.collections.registry,
   nyx.collections.view.types, nyx.collections.selection, nyx.collections.query,
   nyx.typeahead,
   nyx.studio.authoring,
@@ -555,6 +556,14 @@ begin
           end;
       else
         begin
+          { Editing materialized resource rows must not silently replace their
+            saved recipe with a static seed. Source editing belongs to Resources
+            authoring; runtime stores remain independently editable. }
+
+          if NyxResourceCollections(LSession.Document.Collections).HasSource(LChange.FKey) then
+          begin
+            raise ENyxCollection.Create('Edit this collection through its resource row recipe');
+          end;
           LData := LSession.Document.Collections.Snapshot(LChange.FKey);
           LSchema := LData.Schema;
           SetLength(LItems, LData.Count);

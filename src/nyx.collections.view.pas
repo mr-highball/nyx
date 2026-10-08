@@ -29,6 +29,9 @@ interface
 uses
   SysUtils,
   nyx.text,
+  nyx.resources,
+  nyx.resource.context,
+  nyx.resources.rows,
   nyx.state,
   nyx.data,
   nyx.contract,
@@ -164,6 +167,21 @@ type
     property Collections: INyxCollections read GetCollections;
   end;
 
+type
+  { Source-aware admission capability. Initial resource rows are captured
+    independently. Until coordinated application row publication is connected,
+    a changed source refuses scalar-only reload rather than leaving stale rows
+    under an accepted new catalog. This is an explicit implementation boundary,
+    not an automatic/live resource loader or a restriction on runtime edits. }
+  INyxResourceCollectionContext = interface
+    ['{312BB128-932D-46A5-815B-62A80DD392F5}']
+    procedure ValidateResources(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef);
+  end;
+
+procedure ValidateNyxCollectionContextResources(const AContext: INyxCollectionContext;
+  const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef);
+
 function NewNyxCollectionView(const AStore: INyxCollection;
   const ASpec: TNyxCollectionViewSpec;
   AProjection: TNyxCollectionProjection): INyxCollectionView;
@@ -171,7 +189,15 @@ function NewNyxCollectionView(const AStore: INyxCollection;
   existing collection interface remains unchanged for alternative implementations. }
 function NyxTreeHierarchy(const AView: INyxCollectionView): INyxTreeHierarchy;
 function NewNyxCollectionContext(
-  const ADefaults: INyxCollectionDefaults): INyxCollectionContext;
+  const ADefaults: INyxCollectionDefaults): INyxCollectionContext; overload;
+{ Resource-backed seeds resolve into independent application/instance stores at
+  the explicit locale. This initialization does not attach a loading service. }
+function NewNyxCollectionContext(const ADefaults: INyxCollectionDefaults;
+  const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef): INyxCollectionContext; overload;
+{ Capture one accepted immutable frame, including explicit initial locale.
+  Nil refuses; materialization retains no frame/document backreference. }
+function NewNyxCollectionContext(const ADefaults: INyxCollectionDefaults;
+  const AContext: INyxResourceContext): INyxCollectionContext; overload;
 { Admit a saved/default projection without constructing a mutable store or
   attaching a subscription. The same dataset validator serves live views. }
 procedure ValidateNyxCollectionViewSnapshot(const ASnapshot: INyxCollectionSnapshot;
@@ -280,21 +306,32 @@ type
     function VisibleItems: TNyxItemRefs;
   end;
 
-  TContext = class(TInterfacedObject, INyxCollectionContext)
+  TContext = class(TInterfacedObject, INyxCollectionContext, INyxResourceCollectionContext)
   private
     FDefaults: INyxCollectionDefaults;
     FCollections: INyxCollections;
     FOwners: array of TNyxText;
     FKeys: array of TNyxText;
     FStores: array of INyxCollection;
+    FSourceKeys: array of TNyxCollectionRef;
+    FSourceRows: array of TNyxResourceRows;
   public
-    constructor Create(const ADefaults: INyxCollectionDefaults);
+    constructor Create(const ADefaults: INyxCollectionDefaults;
+      const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef);
     function Resolve(const ASpec: TNyxCollectionViewSpec;
       const AInstanceID: TNyxText): INyxCollection;
     function GetCollections: INyxCollections;
+    procedure ValidateResources(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef);
   end;
 
-constructor TContext.Create(const ADefaults: INyxCollectionDefaults);
+constructor TContext.Create(const ADefaults: INyxCollectionDefaults;
+  const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef);
+var
+  LDefaults: INyxCollectionDefaults;
+  LIndex: Integer;
+  LSource: TNyxResourceRows;
+  LNext: Integer;
 begin
   inherited Create;
 
@@ -304,12 +341,78 @@ begin
   end;
   { Materialization re-admits alternative registries/snapshots. Capture our own
     immutable defaults so later authored edits cannot alter new instance seeds. }
-  FCollections := NewNyxCollections(ADefaults);
+  LDefaults := ADefaults;
+
+  if NyxHasResourceCollections(ADefaults) then
+  begin
+    LDefaults := MaterializeNyxCollectionDefaults(ADefaults, AResources, ALocale, AFallback);
+  end;
+  FCollections := NewNyxCollections(LDefaults);
+  for LIndex := 0 to FCollections.Count - 1 do
+  begin
+
+    if NyxCollectionResourceSource(ADefaults, FCollections.Key(LIndex), LSource) then
+    begin
+      LNext := Length(FSourceKeys);
+      SetLength(FSourceKeys, LNext + 1);
+      SetLength(FSourceRows, LNext + 1);
+      FSourceKeys[LNext] := FCollections.Key(LIndex);
+      FSourceRows[LNext] := LSource;
+    end;
+  end;
   FDefaults := NewNyxCollectionDefaults;
   while FDefaults.Count < FCollections.Count do
   begin
     FDefaults.Define(FCollections.Collection(
       FCollections.Key(FDefaults.Count)).Snapshot);
+  end;
+end;
+
+procedure ValidateNyxCollectionContextResources(const AContext: INyxCollectionContext;
+  const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef);
+var
+  LContext: INyxResourceCollectionContext;
+begin
+
+  if (AContext <> nil) and Supports(AContext, INyxResourceCollectionContext, LContext) then
+  begin
+    LContext.ValidateResources(AResources, ALocale, AFallback);
+  end;
+end;
+
+procedure TContext.ValidateResources(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef);
+var
+  LIndex: Integer;
+  LRow: Integer;
+  LSeed: INyxCollectionSnapshot;
+  LCandidate: INyxCollectionSnapshot;
+  LSame: Boolean;
+begin
+  for LIndex := 0 to High(FSourceKeys) do
+  begin
+    LSeed := FDefaults.Snapshot(FSourceKeys[LIndex]);
+    LCandidate := FSourceRows[LIndex].Read(AResources, FSourceKeys[LIndex], ALocale, AFallback);
+    LSame := LSeed.Count = LCandidate.Count;
+
+    if LSame then
+    begin
+      for LRow := 0 to LSeed.Count - 1 do
+      begin
+
+        if not LSeed.ItemAt(LRow).SameItem(LCandidate.ItemAt(LRow)) then
+        begin
+          LSame := False;
+          Break;
+        end;
+      end;
+    end;
+
+    if not LSame then
+    begin
+      raise ENyxCollection.Create('Changed resource rows require coordinated application publication: ' +
+        FSourceKeys[LIndex].Name);
+    end;
   end;
 end;
 
@@ -367,7 +470,24 @@ end;
 function NewNyxCollectionContext(
   const ADefaults: INyxCollectionDefaults): INyxCollectionContext;
 begin
-  Result := TContext.Create(ADefaults);
+  Result := TContext.Create(ADefaults, nil, NyxDefaultLocale, NyxDefaultLocale);
+end;
+
+function NewNyxCollectionContext(const ADefaults: INyxCollectionDefaults;
+  const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef): INyxCollectionContext;
+begin
+  Result := TContext.Create(ADefaults, AResources, ALocale, AFallback);
+end;
+
+function NewNyxCollectionContext(const ADefaults: INyxCollectionDefaults;
+  const AContext: INyxResourceContext): INyxCollectionContext;
+begin
+
+  if AContext = nil then
+  begin
+    raise ENyxCollection.Create('Collection materialization requires a resource frame');
+  end;
+  Result := TContext.Create(ADefaults, AContext.Snapshot, AContext.Locale, AContext.Fallback);
 end;
 
 destructor TViewSubscription.Destroy;

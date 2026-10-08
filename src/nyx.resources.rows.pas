@@ -46,8 +46,20 @@ type
     FFields: array of TNyxResourcePath;
     function Add(const AName: TNyxText; const ADefault: TNyxStateValue;
       const APath: TNyxResourcePath): TNyxResourceRows;
+    function GetSchema: TNyxCollectionSchema;
   public
     function Copy: TNyxResourceRows;
+    { Structural admission does not resolve a resource or fetch a URL. Returned
+      paths/schema are independent immutable values; field order is preserved.
+      ToData/FromData are the closed version-one persistence boundary. }
+    procedure Validate;
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxResourceRows; static;
+    function FieldPath(AIndex: System.Integer): TNyxResourcePath;
+    property Reference: TNyxResourceRef read FReference;
+    property Path: TNyxResourcePath read FPath;
+    property IdentityPath: TNyxResourcePath read FIdentity;
+    property Schema: TNyxCollectionSchema read GetSchema;
     function Field(const AName: TNyxText): TNyxResourceRows;
     function Item(AIndex: System.Integer): TNyxResourceRows;
     function Identity(const APath: TNyxResourcePath): TNyxResourceRows;
@@ -83,6 +95,117 @@ type
 function NyxResourceRows(const AReference: TNyxResourceRef): TNyxResourceRows;
 
 implementation
+
+procedure TNyxResourceRows.Validate;
+var
+  LStore: INyxCollection;
+  LReference: TNyxResourceRef;
+begin
+  LReference := NyxResourceRef(FReference.Name);
+
+  if not FHasIdentity or (FSchema.Count = 0) or (Length(FFields) <> FSchema.Count) then
+  begin
+    raise ENyxResource.Create('Resource rows require identity and ordered typed fields');
+  end;
+  { Ordinary collection admission owns the same field/domain/count rules.
+    This empty detached store invokes no receiver and resolves no resource. }
+  LStore := NewNyxCollection(NyxCollection(LReference.Name), FSchema, []);
+end;
+
+function TNyxResourceRows.GetSchema: TNyxCollectionSchema;
+begin
+  Result := FSchema.Copy;
+end;
+
+function TNyxResourceRows.FieldPath(AIndex: System.Integer): TNyxResourcePath;
+begin
+
+  if (AIndex < 0) or (AIndex >= Length(FFields)) then
+  begin
+    raise ENyxResource.Create('Resource row field index is outside its range');
+  end;
+  Result := FFields[AIndex].Copy;
+end;
+
+function TNyxResourceRows.ToData: TNyxDataValue;
+var
+  LFields: array of TNyxDataValue;
+  LField: TNyxCollectionField;
+  LIndex: System.Integer;
+begin
+  Validate;
+  SetLength(LFields, FSchema.Count);
+  for LIndex := 0 to High(LFields) do
+  begin
+    LField := FSchema.FieldAt(LIndex);
+    LFields[LIndex] := NyxObject([NyxField('name', NyxData(LField.Name)),
+      NyxField('type', NyxData(NyxStateKindName(LField.Kind))),
+      NyxField('path', FFields[LIndex].ToData)]);
+  end;
+  Result := NyxObject([NyxField('version', NyxData(1)),
+    NyxField('resource', NyxData(FReference.Name)), NyxField('path', FPath.ToData),
+    NyxField('identity', FIdentity.ToData), NyxField('fields', NyxArray(LFields))]);
+end;
+
+class function TNyxResourceRows.FromData(const AData: TNyxDataValue): TNyxResourceRows;
+var
+  LFields: TNyxDataValue;
+  LField: TNyxDataValue;
+  LPath: TNyxResourcePath;
+  LName: TNyxText;
+  LKind: TNyxText;
+  LIndex: System.Integer;
+begin
+
+  if (AData.Kind <> ndObject) or (AData.Count <> 5) or
+    (AData.Field('version').ToJSON <> '1') then
+  begin
+    raise ENyxResource.Create('Resource row recipe requires a closed version-one descriptor');
+  end;
+  Result := NyxResourceRows(NyxResourceRef(AData.Field('resource').AsText));
+  Result.FPath := TNyxResourcePath.FromData(AData.Field('path'));
+  Result := Result.Identity(TNyxResourcePath.FromData(AData.Field('identity')));
+  LFields := AData.Field('fields');
+
+  if (LFields.Kind <> ndArray) or (LFields.Count > NyxMaximumCollectionFields) then
+  begin
+    raise ENyxResource.Create('Resource row fields require a bounded ordered array');
+  end;
+  for LIndex := 0 to LFields.Count - 1 do
+  begin
+    LField := LFields.Item(LIndex);
+
+    if (LField.Kind <> ndObject) or (LField.Count <> 3) then
+    begin
+      raise ENyxResource.Create('Resource row field requires name, type and path');
+    end;
+    LName := LField.Field('name').AsText;
+    LKind := LField.Field('type').AsText;
+    LPath := TNyxResourcePath.FromData(LField.Field('path'));
+
+    if LKind = NyxStateKindName(nskText) then
+    begin
+      Result := Result.Text(NyxTextField(LName), LPath);
+    end
+    else if LKind = NyxStateKindName(nskBoolean) then
+    begin
+      Result := Result.Boolean(NyxBooleanField(LName), LPath);
+    end
+    else if LKind = NyxStateKindName(nskInteger) then
+    begin
+      Result := Result.Integer(NyxIntegerField(LName), LPath);
+    end
+    else if LKind = NyxStateKindName(nskNumber) then
+    begin
+      Result := Result.Number(NyxNumberField(LName), LPath);
+    end
+    else
+    begin
+      raise ENyxResource.Create('Unknown resource row field family');
+    end;
+  end;
+  Result.Validate;
+end;
 
 function NyxResourceRows(const AReference: TNyxResourceRef): TNyxResourceRows;
 begin

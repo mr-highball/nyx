@@ -670,6 +670,10 @@ begin
   begin
     CollectionDefaults;
   end
+  else if LDocument and SameText(LMethod, 'ResourceCollections') then
+  begin
+    ResourceCollectionDefaults;
+  end
   else if LDocument and SameText(LMethod, 'Presentations') then
   begin
     PresentationDefaults;

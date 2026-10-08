@@ -36,6 +36,7 @@ uses
   nyx.images,
   nyx.bytes,
   nyx.resources,
+  nyx.resources.rows,
   nyx.resource.sources,
   nyx.types,
   nyx.layout.policy,
@@ -466,6 +467,7 @@ uses
   nyx.data,
   nyx.state,
   nyx.collections,
+  nyx.collections.registry,
   nyx.collections.view.types,
   nyx.collections.query,
   nyx.collections.selection,
@@ -568,7 +570,8 @@ type
     vkPopoverDismissal, vkTypeAheadMatch, vkThemeTokens, vkThemePreset,
     vkImageSource, vkImageLocation, vkImageFormat, vkImageFit, vkImageAnchor,
     vkResourceRef, vkResourceLocale, vkResourceDefinition, vkBytes, vkResourceValue,
-    vkResourceKind, vkResourceURL, vkResourceCache, vkResourceServerPolicy);
+    vkResourceKind, vkResourceURL, vkResourceCache, vkResourceServerPolicy,
+    vkResourceRows, vkResourcePath);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -602,6 +605,8 @@ type
     ImageSource: TNyxImageSource;
     ResourceDefinitionData: TNyxDataValue;
     ResourceValue: TNyxResourceValueRef;
+    ResourceRows: TNyxResourceRows;
+    ResourcePath: TNyxResourcePath;
     ResourceCache: TNyxResourceCachePolicy;
     Bytes: TNyxBytes;
     ThemeTokens: TNyxThemeTokens;
@@ -705,6 +710,8 @@ type
       from a machine path or mutable runtime state/control handles. }
     function ResourceConstructor(const AName: TNyxText): TValue;
     procedure ResourceDefaults;
+    function ResourceRowsConstructor(const AName: TNyxText): TValue;
+    procedure ResourceCollectionDefaults;
     function CollectionScalar(const AValue: TValue; AKind: TNyxStateKind): TNyxStateValue;
     procedure PresentationDefaults;
     procedure CollectionDefaults;
@@ -2147,6 +2154,11 @@ begin
           Result.Kind := vkResourceLocale;
           Result.Text := '';
           Exit;
+        end;
+
+        if (LName = 'nyxresourcerows') or (LName = 'nyxresourcepath') then
+        begin
+          Exit(ResourceRowsConstructor(LName));
         end;
 
         if (LName = 'nyxresourceref') or (LName = 'nyxlocale') or
@@ -5175,6 +5187,11 @@ begin
       LPrefix := WithNyxImport(LPrefix, 'nyx.resources');
       LPrefix := WithNyxImport(LPrefix, 'nyx.resource.sources');
       LPrefix := WithNyxImport(LPrefix, 'nyx.bytes');
+    end;
+
+    if NyxHasResourceCollections(ADocument.Collections) then
+    begin
+      LPrefix := WithNyxImport(LPrefix, 'nyx.resources.rows');
     end;
     LPrefix := WithNyxImport(LPrefix, 'nyx.design.tokens');
 

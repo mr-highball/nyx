@@ -150,7 +150,8 @@ begin
     raise ENyxModel.Create('Application requires a host and can only be mounted once');
   end;
   BindNyxCallbacks(ADocument, FRenderer.Events);
-  FRuntime := TNyxApplicationState.Create(ADocument, npfBrowser);
+  FRuntime := TNyxApplicationState.Create(ADocument, npfBrowser,
+    FResourceOptions.Locale, FResourceOptions.Fallback);
   FDocument := ADocument;
   LContainer := TJSHTMLElement(document.createElement('div'));
   try

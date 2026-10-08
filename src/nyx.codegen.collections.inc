@@ -212,6 +212,65 @@
     schema default are spelled again in rows; normalization materializes the
     rest in schema order. Existing typed domain expressions retain their exact
     family/choices/range, including unconstrained family domains. }
+
+  function ResourcePathExpression(const APath: TNyxResourcePath;
+    const AHead: TNyxText): TNyxText;
+  var
+    LSteps: TNyxDataValue;
+    LStep: TNyxDataValue;
+    LIndex: Integer;
+  begin
+    Result := AHead;
+    LSteps := APath.ToData;
+    for LIndex := 0 to LSteps.Count - 1 do
+    begin
+      LStep := LSteps.Item(LIndex);
+
+      if LStep.Kind = ndText then
+      begin
+        Result := Result + '.Field(' + PascalString(LStep.AsText) + ')';
+      end
+      else
+      begin
+        Result := Result + '.Item(' + IntToStr(LStep.AsInteger) + ')';
+      end;
+    end;
+  end;
+
+  procedure EmitResourceCollection(const AKey: TNyxCollectionRef;
+    const ASource: TNyxResourceRows);
+  const
+    CMethods: array[TNyxStateKind] of TNyxText = ('Text', 'Boolean', 'Integer', 'Number');
+    CFields: array[TNyxStateKind] of TNyxText =
+      ('NyxTextField', 'NyxBooleanField', 'NyxIntegerField', 'NyxNumberField');
+  var
+    LIndex: Integer;
+    LField: TNyxCollectionField;
+    LLine: TNyxText;
+  begin
+    LLines.Add('    Result.ResourceCollections.Define(');
+    LLines.Add('      NyxCollection(' + PascalString(AKey.Name) + '),');
+    LLines.Add('      ' + ResourcePathExpression(ASource.Path,
+      'NyxResourceRows(NyxResourceRef(' + PascalString(ASource.Reference.Name) + '))'));
+    LLines.Add('        .Identity(' + ResourcePathExpression(ASource.IdentityPath, 'NyxResourcePath') + ')');
+    for LIndex := 0 to ASource.Schema.Count - 1 do
+    begin
+      LField := ASource.Schema.FieldAt(LIndex);
+      LLine := '        .' + CMethods[LField.Kind] + '(' + CFields[LField.Kind] + '(' +
+        PascalString(LField.Name) + ')';
+      { The public shorthand selects the exact field name. Spell a structural
+        path only when it contributes meaning to the crafted source. }
+
+      if ASource.FieldPath(LIndex).ToData.ToJSON <>
+        NyxResourcePath.Field(LField.Name).ToData.ToJSON then
+      begin
+        LLine := LLine + ', ' + ResourcePathExpression(ASource.FieldPath(LIndex), 'NyxResourcePath');
+      end;
+      LLines.Add(LLine + ')');
+    end;
+    LLines.Add('    );');
+  end;
+
   procedure EmitCollections;
   const
     CMethods: array[TNyxStateKind] of TNyxText =
@@ -228,6 +287,7 @@
     LRow: TNyxCollectionItem;
     LLine: TNyxText;
     LKey: TNyxText;
+    LSource: TNyxResourceRows;
 
     function Literal(const AValue: TNyxStateValue): TNyxText;
     begin
@@ -272,6 +332,12 @@
     for LCollectionIndex := 0 to ADocument.Collections.Count - 1 do
     begin
       LDefinition := ADocument.Collections.Snapshot(ADocument.Collections.Key(LCollectionIndex));
+
+      if NyxCollectionResourceSource(ADocument.Collections, LDefinition.Key, LSource) then
+      begin
+        EmitResourceCollection(LDefinition.Key, LSource);
+        Continue;
+      end;
       LSchema := LDefinition.Schema;
       LKey := 'NyxCollection(' + PascalString(LDefinition.Key.Name) + ')';
       LLines.Add('    Result.Collections.Define(');

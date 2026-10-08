@@ -27,7 +27,9 @@ unit nyx.collections.bindings;
 interface
 
 uses
+  SysUtils,
   nyx.text,
+  nyx.resources,
   nyx.model,
   nyx.content.mount,
   nyx.collections.view,
@@ -54,6 +56,21 @@ type
     property Count: Integer read GetCount;
   end;
 
+  { Optional source admission preserves the original view-set interface/GUID.
+    Built-in sets delegate to their independent runtime context. Until prepared
+    scalar and row publication share one application commit, changing a saved
+    dataset refuses rather than publishing new captions beside stale tables. }
+  INyxResourceCollectionBindings = interface
+    ['{48BCD751-B2A8-4F68-BA96-45436F46B271}']
+    procedure ValidateResources(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef);
+  end;
+
+{ Qualify a proposed resource frame before any scalar publication. Alternative
+  static binding sets retain their original behavior without this capability. }
+procedure ValidateNyxCollectionBindingResources(const ABindings: INyxCollectionBindings;
+  const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef);
+
 { Shared primitive admission; custom semantic kinds use their realized
   ProjectionKind. Unsupported physical projections fail with the control ID. }
 function NyxCollectionProjectionForNode(ANode: TNyxNode): TNyxCollectionProjection;
@@ -66,7 +83,7 @@ uses
   nyx.collections, nyx.collections.selection;
 
 type
-  TBindings = class(TInterfacedObject, INyxCollectionBindings)
+  TBindings = class(TInterfacedObject, INyxCollectionBindings, INyxResourceCollectionBindings)
   private
     FContext: INyxCollectionContext;
     FIDs: array of TNyxText;
@@ -82,7 +99,27 @@ type
     function ViewFor(const AID: TNyxText): INyxCollectionView;
     procedure ValidateRoot(ARoot: TNyxNode);
     function Recompose(ARoot: TNyxNode): INyxCollectionBindings;
+    procedure ValidateResources(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef);
   end;
+
+procedure ValidateNyxCollectionBindingResources(const ABindings: INyxCollectionBindings;
+  const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef);
+var
+  LBindings: INyxResourceCollectionBindings;
+begin
+
+  if (ABindings <> nil) and Supports(ABindings, INyxResourceCollectionBindings, LBindings) then
+  begin
+    LBindings.ValidateResources(AResources, ALocale, AFallback);
+  end;
+end;
+
+procedure TBindings.ValidateResources(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef);
+begin
+  ValidateNyxCollectionContextResources(FContext, AResources, ALocale, AFallback);
+end;
 
 function NyxCollectionProjectionForNode(ANode: TNyxNode): TNyxCollectionProjection;
 begin

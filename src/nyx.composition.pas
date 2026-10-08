@@ -37,6 +37,8 @@ uses
   nyx.containers,
   nyx.content,
   nyx.resources,
+  nyx.resources.rows,
+  nyx.collections.registry,
   nyx.model;
 
 type
@@ -800,6 +802,7 @@ function CloneNyxViewDocument(ADocument: TNyxDocument; ARoot: TNyxNode): TNyxDoc
 var
   LCandidate: TNyxDocument;
   LIndex: Integer;
+  LSource: TNyxResourceRows;
 
   procedure CollectDefinitions(ANode: TNyxNode); forward;
 
@@ -937,7 +940,15 @@ begin
       them into the isolated document; it never copies runtime subscriptions. }
     for LIndex := 0 to ADocument.Collections.Count - 1 do
     begin
-      LCandidate.Collections.Define(ADocument.Collections.Snapshot(ADocument.Collections.Key(LIndex)));
+
+      if NyxCollectionResourceSource(ADocument.Collections, ADocument.Collections.Key(LIndex), LSource) then
+      begin
+        LCandidate.ResourceCollections.Define(ADocument.Collections.Key(LIndex), LSource);
+      end
+      else
+      begin
+        LCandidate.Collections.Define(ADocument.Collections.Snapshot(ADocument.Collections.Key(LIndex)));
+      end;
     end;
     LCandidate.Extensions.Assign(ADocument.Extensions);
     for LIndex := 0 to ADocument.Presentations.Count - 1 do

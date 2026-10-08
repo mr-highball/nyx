@@ -28,7 +28,10 @@ unit nyx.collections.registry;
 interface
 
 uses
+  SysUtils,
   nyx.text,
+  nyx.resources,
+  nyx.resources.rows,
   nyx.collections;
 
 const
@@ -65,6 +68,22 @@ type
     property DataBytes: Integer read GetDataBytes;
   end;
 
+  { Optional source capability on authored defaults. Define owns a copied recipe
+    and an empty schema seed, never a resource catalog or document. Static Define
+    on the original interface explicitly replaces/removes a source relationship.
+    Snapshot remains the empty authored seed; materialization resolves rows from
+    a supplied runtime catalog without changing this registry. Clone preserves
+    recipes; Remove removes seed and recipe. No constructor fetches URLs. }
+  INyxResourceCollectionDefaults = interface
+    ['{95A9556F-6A88-4AA5-B5B1-C4D2A4F08E09}']
+    function Define(const AKey: TNyxCollectionRef;
+      const ASource: TNyxResourceRows): INyxResourceCollectionDefaults;
+    function HasSource(const AKey: TNyxCollectionRef): Boolean;
+    function Source(const AKey: TNyxCollectionRef): TNyxResourceRows;
+    function GetSourceCount: Integer;
+    property Count: Integer read GetSourceCount;
+  end;
+
   { Managed runtime registry. Keys are fixed from admitted authored definitions;
     each returned specialized collection is independently mutable. Registries
     and returned stores can outlive their application owner without borrowing its
@@ -82,25 +101,51 @@ type
   end;
 
 function NewNyxCollectionDefaults: INyxCollectionDefaults;
+{ Copies authored snapshots, including empty resource schema seeds. This raw
+  snapshot boundary has no catalog/locale to resolve sources. Application hosts
+  use NewNyxCollectionContext or MaterializeNyxCollectionDefaults first. }
 function NewNyxCollections(const ADefaults: INyxCollectionDefaults): INyxCollections;
+{ The typed authoring facade refuses unsupported alternative registries. Source
+  queries treat absence of the optional capability as ordinary static data. }
+function NyxResourceCollections(const ADefaults: INyxCollectionDefaults): INyxResourceCollectionDefaults;
+function NyxCollectionResourceSource(const ADefaults: INyxCollectionDefaults;
+  const AKey: TNyxCollectionRef; out ASource: TNyxResourceRows): Boolean;
+function NyxHasResourceCollections(const ADefaults: INyxCollectionDefaults): Boolean;
+{ Produces independent static definitions from all source/static defaults at an
+  explicit locale/fallback. Source rows must match their empty schema seed.
+  Missing/malformed rows refuse the entire detached result; no URL is fetched. }
+function MaterializeNyxCollectionDefaults(const ADefaults: INyxCollectionDefaults;
+  const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef): INyxCollectionDefaults;
 
 implementation
+
+uses nyx.bytes;
 
 type
   TCollectionDefaultArray = array of INyxCollectionSnapshot;
   TCollectionStoreArray = array of INyxCollection;
+  TResourceRecipeArray = array of TNyxResourceRows;
+  TSourceFlagArray = array of Boolean;
 
-  TCollectionDefaults = class(TInterfacedObject, INyxCollectionDefaults)
+  TCollectionDefaults = class(TInterfacedObject, INyxCollectionDefaults, INyxResourceCollectionDefaults)
   private
     FDefinitions: TCollectionDefaultArray;
+    FSources: TResourceRecipeArray;
+    FHasSources: TSourceFlagArray;
     FDataBytes: Integer;
     function IndexOf(const AKey: TNyxCollectionRef): Integer;
-    function Admit(const ADefinition: INyxCollectionSnapshot): INyxCollectionDefaults;
+    function Admit(const ADefinition: INyxCollectionSnapshot; AHasSource: Boolean;
+      const ASource: TNyxResourceRows): INyxCollectionDefaults;
   public
     function Define(const AKey: TNyxCollectionRef;
       const ASchema: TNyxCollectionSchema;
       const AItems: array of TNyxCollectionItem): INyxCollectionDefaults; overload;
     function Define(const ADefinition: INyxCollectionSnapshot): INyxCollectionDefaults; overload;
+    function Define(const AKey: TNyxCollectionRef;
+      const ASource: TNyxResourceRows): INyxResourceCollectionDefaults; overload;
+    function HasSource(const AKey: TNyxCollectionRef): Boolean;
+    function Source(const AKey: TNyxCollectionRef): TNyxResourceRows;
+    function GetSourceCount: Integer;
     function Remove(const AKey: TNyxCollectionRef): INyxCollectionDefaults;
     function Snapshot(const AKey: TNyxCollectionRef): INyxCollectionSnapshot;
     function Key(AIndex: Integer): TNyxCollectionRef;
@@ -145,6 +190,154 @@ begin
   Result := TCollections.Create(ADefaults);
 end;
 
+function NyxResourceCollections(const ADefaults: INyxCollectionDefaults): INyxResourceCollectionDefaults;
+begin
+
+  if (ADefaults = nil) or not Supports(ADefaults, INyxResourceCollectionDefaults, Result) then
+  begin
+    raise ENyxCollection.Create('Collection defaults do not support typed resource sources');
+  end;
+end;
+
+function NyxCollectionResourceSource(const ADefaults: INyxCollectionDefaults;
+  const AKey: TNyxCollectionRef; out ASource: TNyxResourceRows): Boolean;
+var
+  LSources: INyxResourceCollectionDefaults;
+begin
+  ASource := Default(TNyxResourceRows);
+  Result := (ADefaults <> nil) and Supports(ADefaults, INyxResourceCollectionDefaults, LSources);
+
+  if Result then
+  begin
+    Result := LSources.HasSource(AKey);
+
+    if Result then
+    begin
+      ASource := TNyxResourceRows.FromData(LSources.Source(AKey).ToData);
+    end;
+  end;
+end;
+
+function NyxHasResourceCollections(const ADefaults: INyxCollectionDefaults): Boolean;
+var
+  LSources: INyxResourceCollectionDefaults;
+  LCount: Integer;
+  LFound: Integer;
+  LIndex: Integer;
+  LKeys: Integer;
+begin
+  Result := (ADefaults <> nil) and Supports(ADefaults, INyxResourceCollectionDefaults, LSources);
+
+  if Result then
+  begin
+    LCount := LSources.Count;
+    LKeys := ADefaults.Count;
+
+    if (LKeys < 0) or (LKeys > NyxMaximumCollections) or (LCount < 0) or (LCount > LKeys) then
+    begin
+      raise ENyxCollection.Create('Invalid resource collection source count');
+    end;
+    { A foreign optional facade cannot hide recipes by reporting zero. Check
+      membership before choosing persistence/materialization versions. }
+    LFound := 0;
+    for LIndex := 0 to LKeys - 1 do
+    begin
+
+      if LSources.HasSource(ADefaults.Key(LIndex)) then
+      begin
+        Inc(LFound);
+      end;
+    end;
+
+    if LFound <> LCount then
+    begin
+      raise ENyxCollection.Create('Resource source count differs from registry membership');
+    end;
+    Result := LCount > 0;
+  end;
+end;
+
+function TCollectionDefaults.Define(const AKey: TNyxCollectionRef;
+  const ASource: TNyxResourceRows): INyxResourceCollectionDefaults;
+var
+  LSource: TNyxResourceRows;
+  LSeed: INyxCollection;
+  LAdmitted: INyxCollectionDefaults;
+begin
+  LSource := TNyxResourceRows.FromData(ASource.ToData);
+  LSeed := NewNyxCollection(AKey, LSource.Schema, []);
+  LAdmitted := Admit(LSeed.Snapshot, True, LSource);
+  Result := Self;
+end;
+
+function TCollectionDefaults.HasSource(const AKey: TNyxCollectionRef): Boolean;
+var
+  LIndex: Integer;
+begin
+  LIndex := IndexOf(AKey);
+  Result := (LIndex >= 0) and FHasSources[LIndex];
+end;
+
+function TCollectionDefaults.Source(const AKey: TNyxCollectionRef): TNyxResourceRows;
+var
+  LIndex: Integer;
+begin
+  LIndex := IndexOf(AKey);
+
+  if (LIndex < 0) or not FHasSources[LIndex] then
+  begin
+    raise ENyxCollection.Create('Collection has no resource row source: ' + AKey.Name);
+  end;
+  Result := FSources[LIndex].Copy;
+end;
+
+function TCollectionDefaults.GetSourceCount: Integer;
+var
+  LIndex: Integer;
+begin
+  Result := 0;
+  for LIndex := 0 to High(FHasSources) do
+  begin
+
+    if FHasSources[LIndex] then
+    begin
+      Inc(Result);
+    end;
+  end;
+end;
+
+function MaterializeNyxCollectionDefaults(const ADefaults: INyxCollectionDefaults;
+  const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef): INyxCollectionDefaults;
+var
+  LIndex: Integer;
+  LDefinition: INyxCollectionSnapshot;
+  LSource: TNyxResourceRows;
+  LNormalized: INyxCollections;
+  LResult: INyxCollectionDefaults;
+begin
+  { Re-admit foreign registry/snapshot values before resolving any source. The
+    resulting registry owns only immutable materialized rows, never recipes or
+    catalogs. Runtime contexts preserve their separate original source defaults. }
+  LNormalized := NewNyxCollections(ADefaults);
+  LResult := NewNyxCollectionDefaults;
+  for LIndex := 0 to LNormalized.Count - 1 do
+  begin
+    LDefinition := LNormalized.Collection(LNormalized.Key(LIndex)).Snapshot;
+
+    if NyxCollectionResourceSource(ADefaults, LDefinition.Key, LSource) then
+    begin
+
+      if (LDefinition.Count <> 0) or not LDefinition.Schema.SameSchema(LSource.Schema) then
+      begin
+        raise ENyxCollection.Create('Resource row source must match its empty schema seed');
+      end;
+      LDefinition := LSource.Read(AResources, LDefinition.Key, ALocale, AFallback);
+    end;
+    LResult.Define(LDefinition);
+  end;
+  Result := LResult;
+end;
+
 function TCollectionDefaults.IndexOf(const AKey: TNyxCollectionRef): Integer;
 var
   LIndex: Integer;
@@ -162,17 +355,32 @@ begin
   Result := -1;
 end;
 
-function TCollectionDefaults.Admit(const ADefinition: INyxCollectionSnapshot): INyxCollectionDefaults;
+function TCollectionDefaults.Admit(const ADefinition: INyxCollectionSnapshot;
+  AHasSource: Boolean; const ASource: TNyxResourceRows): INyxCollectionDefaults;
 var
   LIndex: Integer;
   LBytes: Integer;
+  LCount: Integer;
+  LDefinitions: TCollectionDefaultArray;
+  LSources: TResourceRecipeArray;
+  LFlags: TSourceFlagArray;
 begin
   LIndex := IndexOf(ADefinition.Key);
   LBytes := FDataBytes + ADefinition.DataBytes;
 
+  if AHasSource then
+  begin
+    Inc(LBytes, NyxUTF8ByteCount(ASource.ToData.ToJSON));
+  end;
+
   if LIndex >= 0 then
   begin
     Dec(LBytes, FDefinitions[LIndex].DataBytes);
+
+    if FHasSources[LIndex] then
+    begin
+      Dec(LBytes, NyxUTF8ByteCount(FSources[LIndex].ToData.ToJSON));
+    end;
   end;
 
   if (LBytes > NyxMaximumCollectionDefaultsBytes) or
@@ -180,15 +388,27 @@ begin
   begin
     raise ENyxCollection.Create('Collection defaults exceed their aggregate payload/count budget');
   end;
-  { Allocation is the final possible failure before replacement. Retained
-    snapshots are immutable; no caller or receiver can observe a partial row. }
+  { Allocate every parallel vector before replacing accepted members. The
+    bounded registry shares only immutable rows/recipe payloads; no callbacks. }
+  LCount := Length(FDefinitions);
 
   if LIndex < 0 then
   begin
-    LIndex := Length(FDefinitions);
-    SetLength(FDefinitions, LIndex + 1);
+    LIndex := LCount;
+    Inc(LCount);
   end;
-  FDefinitions[LIndex] := ADefinition;
+  LDefinitions := Copy(FDefinitions, 0, Length(FDefinitions));
+  LSources := Copy(FSources, 0, Length(FSources));
+  LFlags := Copy(FHasSources, 0, Length(FHasSources));
+  SetLength(LDefinitions, LCount);
+  SetLength(LSources, LCount);
+  SetLength(LFlags, LCount);
+  LDefinitions[LIndex] := ADefinition;
+  LSources[LIndex] := ASource;
+  LFlags[LIndex] := AHasSource;
+  FDefinitions := LDefinitions;
+  FSources := LSources;
+  FHasSources := LFlags;
   FDataBytes := LBytes;
   Result := Self;
 end;
@@ -200,18 +420,19 @@ var
   LStore: INyxCollection;
 begin
   LStore := NewNyxCollection(AKey, ASchema, AItems);
-  Result := Admit(LStore.Snapshot);
+  Result := Admit(LStore.Snapshot, False, Default(TNyxResourceRows));
 end;
 
 function TCollectionDefaults.Define(const ADefinition: INyxCollectionSnapshot): INyxCollectionDefaults;
 begin
-  Result := Admit(CopyDefinition(ADefinition));
+  Result := Admit(CopyDefinition(ADefinition), False, Default(TNyxResourceRows));
 end;
 
 function TCollectionDefaults.Remove(const AKey: TNyxCollectionRef): INyxCollectionDefaults;
 var
   LIndex: Integer;
   LNext: Integer;
+  LBytes: Integer;
 begin
   LIndex := IndexOf(AKey);
 
@@ -219,12 +440,23 @@ begin
   begin
     raise ENyxCollection.Create('Cannot remove an unknown collection definition');
   end;
-  Dec(FDataBytes, FDefinitions[LIndex].DataBytes);
+  { Compute the immutable recipe charge before touching accepted vectors. }
+  LBytes := FDefinitions[LIndex].DataBytes;
+
+  if FHasSources[LIndex] then
+  begin
+    Inc(LBytes, NyxUTF8ByteCount(FSources[LIndex].ToData.ToJSON));
+  end;
+  Dec(FDataBytes, LBytes);
   for LNext := LIndex to High(FDefinitions) - 1 do
   begin
     FDefinitions[LNext] := FDefinitions[LNext + 1];
+    FSources[LNext] := FSources[LNext + 1];
+    FHasSources[LNext] := FHasSources[LNext + 1];
   end;
   SetLength(FDefinitions, Length(FDefinitions) - 1);
+  SetLength(FSources, Length(FDefinitions));
+  SetLength(FHasSources, Length(FDefinitions));
   Result := Self;
 end;
 
@@ -274,6 +506,8 @@ begin
   Result := LCopy;
   { Fork the mutable registry vector; immutable admitted snapshots can share. }
   LCopy.FDefinitions := Copy(FDefinitions, 0, Length(FDefinitions));
+  LCopy.FSources := Copy(FSources, 0, Length(FSources));
+  LCopy.FHasSources := Copy(FHasSources, 0, Length(FHasSources));
   LCopy.FDataBytes := FDataBytes;
 end;
 

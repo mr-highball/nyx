@@ -173,7 +173,8 @@ begin
     raise ENyxModel.Create('Native application can only be mounted once');
   end;
   BindNyxCallbacks(ADocument, FRenderer.Events);
-  FRuntime := TNyxApplicationState.Create(ADocument, npfNativeLCL);
+  FRuntime := TNyxApplicationState.Create(ADocument, npfNativeLCL,
+    FResourceOptions.Locale, FResourceOptions.Fallback);
   FDocument := ADocument;
   try
     PrepareResources(ADocument);

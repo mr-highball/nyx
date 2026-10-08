@@ -311,6 +311,150 @@ begin
   Result.ResourceDefinitionData := LDefinition.ToData;
 end;
 
+function TConfigurationReader.ResourceRowsConstructor(const AName: TNyxText): TValue;
+var
+  LArgs: TValues;
+  LMethod: TNyxText;
+  LPath: TNyxResourcePath;
+  LFamily: TNyxStateKind;
+  LIndex: Integer;
+begin
+  Result := Default(TValue);
+
+  if AName = 'nyxresourcerows' then
+  begin
+    LArgs := Arguments(1);
+
+    if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkResourceRef) then
+    begin
+      Fail('Resource rows require a typed resource reference');
+    end;
+    Result.Kind := vkResourceRows;
+    Result.ResourceRows := NyxResourceRows(NyxResourceRef(LArgs[0].Text));
+  end
+  else
+  begin
+    Result.Kind := vkResourcePath;
+    Result.ResourcePath := NyxResourcePath;
+  end;
+  while At('.') do
+  begin
+    Expect('.');
+
+    if (FCursor >= Length(FTokens)) or (FTokens[FCursor].Kind <> tkWord) then
+    begin
+      Fail('Expected a typed resource row or path operation');
+    end;
+    LMethod := LowerCase(FTokens[FCursor].Text);
+    Inc(FCursor);
+    LArgs := Arguments(2);
+
+    if (LMethod = 'field') and (Length(LArgs) = 1) and (LArgs[0].Kind = vkText) then
+    begin
+
+      if Result.Kind = vkResourcePath then
+      begin
+        Result.ResourcePath := Result.ResourcePath.Field(LArgs[0].Text);
+      end
+      else
+      begin
+        Result.ResourceRows := Result.ResourceRows.Field(LArgs[0].Text);
+      end;
+    end
+    else if (LMethod = 'item') and (Length(LArgs) = 1) and
+      (LArgs[0].Kind = vkInteger) and TryNyxStateInteger(LArgs[0].Text, LIndex) then
+    begin
+
+      if Result.Kind = vkResourcePath then
+      begin
+        Result.ResourcePath := Result.ResourcePath.Item(LIndex);
+      end
+      else
+      begin
+        Result.ResourceRows := Result.ResourceRows.Item(LIndex);
+      end;
+    end
+    else if (Result.Kind = vkResourceRows) and (LMethod = 'identity') and
+      (Length(LArgs) = 1) and (LArgs[0].Kind = vkResourcePath) then
+    begin
+      Result.ResourceRows := Result.ResourceRows.Identity(LArgs[0].ResourcePath);
+    end
+    else if (Result.Kind = vkResourceRows) and (Length(LArgs) in [1, 2]) and
+      (LArgs[0].Kind = vkCollectionField) then
+    begin
+      LFamily := TNyxStateKind(LArgs[0].Ordinal);
+
+      if LMethod <> LowerCase(NyxStateKindName(LFamily)) then
+      begin
+        Fail('Resource row field method must match its strong Pascal family');
+      end;
+      LPath := NyxResourcePath.Field(LArgs[0].Text);
+
+      if Length(LArgs) = 2 then
+      begin
+
+        if LArgs[1].Kind <> vkResourcePath then
+        begin
+          Fail('Resource row field requires a typed structural path');
+        end;
+        LPath := LArgs[1].ResourcePath;
+      end;
+      case LFamily of
+        nskText:
+          begin
+            Result.ResourceRows := Result.ResourceRows.Text(NyxTextField(LArgs[0].Text), LPath);
+          end;
+        nskBoolean:
+          begin
+            Result.ResourceRows := Result.ResourceRows.Boolean(NyxBooleanField(LArgs[0].Text), LPath);
+          end;
+        nskInteger:
+          begin
+            Result.ResourceRows := Result.ResourceRows.Integer(NyxIntegerField(LArgs[0].Text), LPath);
+          end;
+        nskNumber:
+          begin
+            Result.ResourceRows := Result.ResourceRows.Number(NyxNumberField(LArgs[0].Text), LPath);
+          end;
+      end;
+    end
+    else
+    begin
+      Fail('Unsupported resource row/path operation or argument family');
+    end;
+  end;
+end;
+
+procedure TConfigurationReader.ResourceCollectionDefaults;
+var
+  LArgs: TValues;
+  LKey: TNyxCollectionRef;
+begin
+  Inc(FCursor, 3);
+  Expect('.');
+  Expect('Define');
+  LArgs := Arguments(2);
+  Expect(';');
+
+  if (Length(LArgs) <> 2) or (LArgs[0].Kind <> vkCollectionKey) or
+    (LArgs[1].Kind <> vkResourceRows) then
+  begin
+    Fail('ResourceCollections.Define requires a typed collection key and row recipe');
+  end;
+  LArgs[1].ResourceRows.Validate;
+
+  if FApply then
+  begin
+    LKey := NyxCollection(LArgs[0].Text);
+
+    if FDocument.Collections.Has(LKey) then
+    begin
+      Fail('Define each static or resource-backed collection once in the managed builder');
+    end;
+    FDocument.ResourceCollections.Define(LKey, LArgs[1].ResourceRows);
+  end;
+end;
+
 procedure TConfigurationReader.ResourceDefaults;
 var
   LArgs: TValues;

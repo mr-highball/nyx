@@ -35,6 +35,7 @@ uses
   nyx.colors,
   nyx.images,
   nyx.resources,
+  nyx.resources.rows,
   nyx.resource.sources,
   nyx.design.tokens,
   nyx.data,
@@ -52,6 +53,7 @@ uses
   nyx.containers,
   nyx.state,
   nyx.collections,
+  nyx.collections.registry,
   nyx.collections.view.types,
   nyx.collections.query,
   nyx.collections.selection,
@@ -2194,6 +2196,11 @@ begin
     begin
       LLines.Add('  nyx.collections,');
       LLines.Add('  nyx.collections.registry,');
+    end;
+
+    if NyxHasResourceCollections(ADocument.Collections) then
+    begin
+      LLines.Add('  nyx.resources.rows,');
     end;
     LLines.Add('  nyx.binding.types,');
     LLines.Add('  nyx.behavior,');

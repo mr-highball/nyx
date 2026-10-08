@@ -128,8 +128,9 @@ Maintained `tools/build.ps1 -Target application-resources` qualifies actual
 Win32 application controls, hidden pages, reusable scopes, state validation,
 locale/navigation, synchronous/deferred replies, bounded/replaced requests,
 retirement, observer errors and the default real HTTP path. Browser counterparts
-compile/stage without execution evidence. Saved automatic JSON row mappings,
-combined scalar/table publication and Studio/MCP runtime load-status surfaces
+compile/stage without execution evidence. Saved recipes now seed independent
+runtime tables; automatic row loading, combined scalar/table publication and
+Studio/MCP runtime load-status surfaces
 remain open; this application lifecycle does not establish those outcomes.
 
 ## JSON rows and ordinary tables
@@ -163,10 +164,85 @@ the complete row candidate. Stable row identities retain table selection;
 notifications use the ordinary collection engine. Keep the mount token for the
 control's lifetime and disconnect it before destroying its receiver.
 
-`Read` and `Reload` are explicit runtime operations. Automatic saved row recipes,
-generated recipe replay, reusable mapping scopes and a combined scalar/table
-transaction are still open. Generated collection defaults currently preserve
-their materialized rows, without inventing an automatic resource relationship.
+`Read` and `Reload` are explicit runtime operations. Static collection defaults
+preserve materialized rows without inventing a resource relationship. Use the
+saved recipe contract below when the project should retain its source mapping.
+
+## Saved row recipes
+
+Declare the relationship on the document, then bind an ordinary specialized
+table through its typed collection view. Import `nyx.resources.rows` alongside
+`nyx.resources`, `nyx.controls`, `nyx.collections` and
+`nyx.collections.view.types`:
+
+```pascal
+LDocument.Resources.Define(NyxResourceRef('team-data'),
+  NyxJSONResource('{"people":[{"id":"ada","name":"Ada","score":9}]}'));
+
+LDocument.ResourceCollections.Define(
+  NyxCollection('people'),
+  NyxResourceRows(NyxResourceRef('team-data')).Field('people')
+    .Identity(NyxResourcePath.Field('id'))
+    .Text(NyxTextField('name'))
+    .Integer(NyxIntegerField('score')));
+
+LPeopleTable := NewNyxTable('people-table');
+LPeopleTable.Binds
+  .Collection(NyxCollectionView(NyxCollection('people'))
+    .Column(NyxTextField('name'), 'Name', cmEditable)
+    .Column(NyxIntegerField('score'), 'Score'))
+  .Done;
+LHomeColumn.Add(LPeopleTable);
+```
+
+The managed source facade shares the document's owned collection registry. It
+owns a copied immutable recipe and an **empty typed schema seed**, without a
+catalog/document backreference. `Collections.Snapshot` describes that authored
+seed; it does not report runtime rows. `ResourceCollections.Source` returns an
+independent recipe. Ordinary static `Collections.Define` explicitly clears a
+source relationship; Remove retires both seed and recipe. Clone preserves source
+membership independently. A default Studio collection edit refuses a saved
+recipe rather than silently converting it to static data.
+
+Document validation resolves every recipe against authored resource data and
+admits all collection projections. Missing/null/wrong-kind paths, nontext or
+duplicate identities and invalid schemas/hierarchies refuse the complete
+candidate. Structural `.Field`/`.Item` steps retain literal dotted names and
+array identities. The four field methods enforce text/Boolean/Integer/Number
+families; exact JSON number spelling remains in the resource while `.Number`
+requests an explicit Double projection.
+
+Both application hosts and standalone renderers initialize independent stores
+from the accepted resource frame and explicit initial locale. Configure an
+application's locale before mounting, or supply a standalone renderer's immutable
+`ResourceContext` before rendering. Ordinary reusable `.Scoped(csInstance)`
+bindings start independently from the captured resolved seed. Runtime editing
+does not rewrite the resource file or another instance; navigation retains edits.
+Full/page/reusable generated builders retain the recipe rather than emitting
+copied rows. No constructor fetches URLs; initial hosted sources need fallback.
+
+Manual hosts can call `NewNyxCollectionContext(defaults, resources, locale,
+fallback)` or its immutable resource-frame overload. `MaterializeNyxCollectionDefaults`
+returns independent static resolved seeds at an explicit locale. The raw
+`NewNyxCollections(defaults)` snapshot factory has no catalog/locale and therefore
+copies authored seeds, including empty source seeds; application code uses the
+context/materialization path to resolve them.
+
+**Automatic row refresh is still open.** Source-aware application/binding
+validators currently refuse catalog or locale changes that alter the captured
+initial datasets before any scalar publication. Unrelated resources and source
+changes producing the same rows remain usable. Runtime row edits remain writable
+and independent. This guard must be replaced by joint prepared context/scalar/row
+publication; it does not establish live hosted row loading. Studio/MCP row recipe
+inspection/editing and runtime load diagnostics remain original open requirements.
+
+Run `tools/build.ps1 -Target resource-mappings`: 60 checked shared/actual Win32/
+source/semantic assertions and three exact compiled full/page/reusable builders
+with eight table checks each pass leak-free. Matching browser consumers, Studios,
+backend and worker compile with zero owned warnings. Browser/phone/observing
+execution remains unqualified. Semantic resource replacement uses a fresh actual
+suspended dispatcher with expected revision and one paired Undo, preserving the
+active project. See [current evidence](../WORK.md#current-return-path-saved-resource-row-contracts--2026-10-08).
 
 ## Coordinated runtime row publication
 
@@ -473,7 +549,12 @@ current-source authenticated/observing execution remain open.
 ## Wire, limits and qualification
 
 Document wire version 8 carries a nonempty resource catalog and typed scalar
-selectors. Empty catalogs retain the existing version selection. Embedded
+selectors. Saved row recipes select version 9 and collection descriptor version
+2; every entry then carries an explicit source descriptor or null. Recipe
+version 1 strictly retains resource/path/identity/ordered typed fields. An empty
+schema seed must exactly match its recipe. Older document/descriptor versions
+cannot silently admit source metadata. Static designs and empty catalogs retain
+the existing version selection. Embedded
 definitions use strict version 1; hosted definitions use version 2. Older opaque
 `resources` extensions retain their meaning and refuse conflicting promotion.
 Machine cache locations and cache contents are never exported with a design.
@@ -482,6 +563,10 @@ Resources admit at most 1 MiB of packed content per file and 128 named/locale
 entries under a 3 MiB catalog wire budget. Text/JSON require strict UTF-8;
 binary bytes, supplementary Unicode, embedded NUL and original numeric JSON
 spellings survive persistence. A control's own text restrictions still apply.
+Source recipes share the existing 64-collection/64-field admission and aggregate
+8 MiB collection-default payload budget, including their serialized metadata.
+Resource paths retain the existing maximum 32 structural steps. Overall document
+JSON admission remains bounded independently.
 
 Run `tools/build.ps1 -Target resources`. Checked shared/actual Win32 qualification
 passes 78 checks and the exact emitted builder passes eight, leak-free. Both

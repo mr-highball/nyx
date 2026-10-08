@@ -28,7 +28,7 @@ interface
 
 uses
   nyx.text, nyx.types, nyx.root.types, nyx.model, nyx.controls, nyx.popover.types,
-  nyx.state, nyx.behavior, nyx.events, nyx.collections.view, nyx.collections.bindings;
+  nyx.state, nyx.resources, nyx.behavior, nyx.events, nyx.collections.view, nyx.collections.bindings;
 
 const
   npsBelow = nyx.popover.types.npsBelow;
@@ -235,7 +235,7 @@ begin
   LPrototype := RealizeNyxView(FDocument, FContent.Node);
   try
     FCollections := NewNyxCollectionBindings(LPrototype,
-      NewNyxCollectionContext(FDocument.Collections));
+      NewNyxCollectionContext(FDocument.Collections, LPrototype.ResourceContext));
   finally
     LPrototype.Free;
   end;

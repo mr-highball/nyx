@@ -627,6 +627,7 @@ type
     FComponents: array of TNyxNode;
     FPageReferences: array of INyxNode;
     FComponentReferences: array of INyxNode;
+    function GetResourceCollections: INyxResourceCollectionDefaults;
     function GetCount: Integer;
     function GetPage(AIndex: Integer): TNyxNode;
     function GetComponentCount: Integer;
@@ -670,6 +671,10 @@ type
       applications materialize independent mutable stores. Retained registry or
       snapshot interfaces can safely outlive this document without backreferences. }
     property Collections: INyxCollectionDefaults read FCollections;
+    { Typed source recipes share the owned collection registry. Each source owns
+      an empty schema seed; validation/runtime initialization resolve independent
+      rows from resource data. This facade owns no document or loading service. }
+    property ResourceCollections: INyxResourceCollectionDefaults read GetResourceCollections;
     { Managed named host conditions, independent of output targets. Cloning and
       isolated view builds copy definitions; realized views capture a readonly
       snapshot. Document validation refuses dangling control references. }
@@ -3223,6 +3228,11 @@ begin
   end;
 end;
 
+function TNyxDocument.GetResourceCollections: INyxResourceCollectionDefaults;
+begin
+  Result := NyxResourceCollections(FCollections);
+end;
+
 constructor TNyxDocument.Create;
 begin
   inherited Create;
@@ -3691,6 +3701,7 @@ var
   LHasContentRules: Boolean;
   LHasMenus: Boolean;
   LHasMenuBars: Boolean;
+  LCollections: INyxCollectionDefaults;
 
   procedure Visit(ANode: TNyxNode; ADepth: Integer);
   var
@@ -3830,7 +3841,7 @@ var
         begin
           raise ENyxModel.Create('Collection binding requires a list, table or tree on ' + ANode.ID);
         end;
-        ValidateNyxCollectionViewSnapshot(FCollections.Snapshot(LViewSpec.Key), LViewSpec, LProjection);
+        ValidateNyxCollectionViewSnapshot(LCollections.Snapshot(LViewSpec.Key), LViewSpec, LProjection);
       end;
     end;
     for LBindingIndex := 0 to ANode.BindingCount - 1 do
@@ -4004,6 +4015,13 @@ var
 begin
   FState.Validate;
   FCollections.Validate;
+  LCollections := FCollections;
+
+  if NyxHasResourceCollections(FCollections) then
+  begin
+    LCollections := MaterializeNyxCollectionDefaults(FCollections, FResources,
+      NyxDefaultLocale, NyxDefaultLocale);
+  end;
 
   if (FResources.Count > 0) and FExtensions.Has(NyxExtension(NyxResourcesWireField)) then
   begin

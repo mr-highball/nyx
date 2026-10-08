@@ -28,6 +28,15 @@ Declare `LTasksTable: INyxTable` and import `nyx.controls`, `nyx.collections` an
 removes the local descriptor, restoring a reusable definition's binding. These
 choices are distinct in clones, part overrides, source and paired history.
 
+Saved JSON-backed definitions use `LDocument.ResourceCollections.Define` with
+a typed `TNyxResourceRows` recipe. Authored snapshots then contain empty schema
+seeds; both hosts/renderers resolve independent application/instance stores at
+their explicit initial resource locale. The same ordinary `Binds.Collection`
+contract mounts their tables. Static collection editors refuse these recipes
+until source authoring is supplied, and changed datasets refuse scalar-only
+resource reload pending joint publication. See [saved row recipes](resources.md#saved-row-recipes)
+for crafted source, ownership, materialization and current qualification limits.
+
 ## Typed construction
 
 ```pascal

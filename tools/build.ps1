@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'application-resources', 'resource-publication', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -2625,6 +2625,72 @@ try {
 
 
 
+
+  if ($Target -eq 'resource-mappings') {
+    # Pascal owns saved/source admission, ordinary tables and semantic edits.
+    # Fresh suspended runtime and independent outputs never launch listeners,
+    # refresh enrollment or replace the observing Studio.
+    $nyxMappingRoot = Join-Path $nyxRoot 'build/resource-mappings/maintained'
+    foreach ($nyxMappingDirectory in @('native', 'browser', 'source', 'studio-native',
+      'backend', 'studio-browser', 'worker')) {
+      New-Item -ItemType Directory -Force (Join-Path $nyxMappingRoot $nyxMappingDirectory) | Out-Null
+    }
+    $nyxMappingSource = Join-Path $nyxMappingRoot 'source'
+    $nyxMappingNative = Join-Path $nyxMappingRoot 'native'
+    $nyxMappingBrowser = Join-Path $nyxMappingRoot 'browser'
+    $nyxMappingRuntime = Join-Path $nyxMappingRoot ('runtime-' + [Guid]::NewGuid().ToString('N'))
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxMappingPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxMappingFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests',
+      "-Fu$nyxLazarus/lcl/units/$nyxMappingPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxMappingPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxMappingPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxMappingPlatform")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxMappingFlags +
+      @("-FU$nyxMappingNative", "-FE$nyxMappingNative", 'tests/nyx_resource_mapping_controls.lpr'))
+    & (Join-Path $nyxMappingNative 'nyx_resource_mapping_controls.exe') $nyxMappingSource $nyxMappingRuntime
+    if ($LASTEXITCODE -ne 0) { throw 'Saved resource mapping/control/semantic checks failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxMappingBrowser",
+      'tests/nyx_resource_mapping_controls.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxMappingBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/resource-mappings.html') -Destination $nyxMappingBrowser
+    foreach ($nyxMappingScope in @('full', 'page', 'reusable')) {
+      $nyxMappingEmitted = Join-Path $nyxMappingSource $nyxMappingScope
+      $nyxMappingCompiled = Join-Path $nyxMappingRoot "generated-$nyxMappingScope"
+      $nyxMappingWeb = Join-Path $nyxMappingCompiled 'browser'
+      New-Item -ItemType Directory -Force $nyxMappingCompiled, $nyxMappingWeb | Out-Null
+      Invoke-NyxCompiler $nyxLclFpc ($nyxMappingFlags +
+        @("-FU$nyxMappingCompiled", "-FE$nyxMappingCompiled", "-Fu$nyxMappingEmitted",
+        'tests/nyx_resource_mapping_generated.lpr'))
+      & (Join-Path $nyxMappingCompiled 'nyx_resource_mapping_generated.exe')
+      if ($LASTEXITCODE -ne 0) { throw "Exact $nyxMappingScope resource builder/control checks failed" }
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', "-Fu$nyxMappingEmitted", "-FE$nyxMappingWeb",
+        'tests/nyx_resource_mapping_generated.lpr')
+      Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxMappingWeb 'rtl.js')
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/resource-mappings-generated.html') -Destination $nyxMappingWeb
+    }
+    $nyxMappingStudio = Join-Path $nyxMappingRoot 'studio-native'
+    Invoke-NyxCompiler $nyxLclFpc ($nyxMappingFlags +
+      @("-FU$nyxMappingStudio", "-FE$nyxMappingStudio", 'studio/nyx_studio_native.lpr'))
+    $nyxMappingBackend = Join-Path $nyxMappingRoot 'backend'
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', "-FU$nyxMappingBackend", "-FE$nyxMappingBackend", 'studio/nyx_studio_server.lpr')
+    foreach ($nyxMappingBuild in @(
+      @{Output='worker'; Program='studio/nyx_source_worker.lpr'},
+      @{Output='studio-browser'; Program='studio/nyx_studio.lpr'})) {
+      $nyxMappingOutput = Join-Path $nyxMappingRoot $nyxMappingBuild.Output
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', "-FE$nyxMappingOutput", $nyxMappingBuild.Program)
+    }
+    Write-Host 'Saved mappings/native/source/semantic checks passed; browser execution and joint loading remain separate.'
+    exit 0
+  }
 
   if ($Target -eq 'resource-publication') {
     # Pascal qualifies prepared resource datasets and mounted tables. Isolated

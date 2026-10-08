@@ -66,12 +66,24 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Current saved resource mappings (2026-10-08): typed recipes and empty schema
+seeds survive strict v9/v2 persistence, crafted full/page/reusable source and
+paired history. Checked shared/actual Win32/source/semantic checks pass **60**;
+three exact emitted builders pass **eight each**, leak-free. Both Studios,
+backend/worker and browser consumers compile with zero owned warnings. Initial
+locale, navigation and independent reusable stores are qualified. Changed
+datasets refuse pending joint scalar/catalog/row publication; automatic loading
+and Studio/MCP row authoring remain open. No full criterion/percentage closes:
+resource no-closure alone advances **4→5**, other owners stay **22/37/19/28/2**.
+End mapping fixtures and return to that joint application consumer. See
+[the packet](WORK.md#current-return-path-saved-resource-row-contracts--2026-10-08).
+
 Related resource datasets now use a portable prepared-publication group. Built-in
 tables/trees admit complete projections before any store changes; observers read
 all accepted revisions. Checked shared/actual Win32 grouped-control checks pass
 43, leak-free; affected core/collection/query/selection/hierarchy/resource and
 semantic regressions pass. Both Studios/backend/worker and browser consumer
-compile with zero owned warnings. Saved row mappings and combined scalar/table
+compile with zero owned warnings. Automatic row refresh and combined scalar/table
 loading remain open; browser/observing parity is not claimed. See
 [the packet](WORK.md#current-return-path-coordinated-resource-datasets--2026-10-08).
 
