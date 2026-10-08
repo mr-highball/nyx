@@ -7,6 +7,98 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: common resources and direct bindings — 2026-10-07
+
+Previous goal turn is **progress**: packed image authoring is committed/pushed
+as `299d3af`, with exact remote/clean receipt and 70/6/251 leak-free checks.
+All earlier compiler/test handles are terminal. Current known no-closure counts
+are workflow 21, authoring 36, renderer 19, codegen 28 and delivery 2.
+
+The user's new steering broadens original Studio criterion 2's resource workflow:
+one common Resources area and tooling for images, JSON, UTF-8 text and arbitrary
+bytes, with direct typed bindings to tables, labels and prompt text; localization
+must fit the same contract. Do not deliver an image-only registry or call a
+store-only fixture live binding. Preserve all original outcomes. The portable
+resource prerequisite is tracked in [NS-1_resources_01](TODO/NS-1_resources_01.md),
+consumed by the existing authoring and semantic-workflow owners.
+
+Next batch defines document-owned immutable resources and typed structural data
+selectors, then integrates persistence/source, scalar/collection/control binding
+and the common Nyx-built Studio workflow. Runtime applications own independent
+state/collections; authored files remain immutable defaults. Raw file contents
+and open resource/field/locale names are data boundaries, not behavioral strings.
+Exact bytes, Unicode, numeric JSON tokens and candidate/history failure survive.
+The existing scalar/collection engines supply typing, scopes and live updates.
+
+Evidence must include actual labels/prompt/table consumers, paired source/history,
+common Studio controls and both-target wire/generation. Browser/phone/trusted
+chooser/observing deployment remain held; do not retry rejected launches or
+replace protected processes. Native tests and compile artifacts remain isolated.
+Budget two integration/repair passes per boundary; reassess concrete failures or
+new user steering, then end that boundary without widening fixture families.
+Full bindings/localization/Studio/parity acceptance remains unproven until the
+required consumers execute. Resource foundations alone earn no authoring closure.
+
+Delivered prerequisite **progress** on 2026-10-08: strict Pascal Base64/UTF-8 byte
+boundaries and managed immutable image/JSON/text/binary definitions retain exact
+bytes, original JSON numeric spelling, Unicode/NUL files and creator metadata.
+Independent catalog membership, exact locale/fallback and structural scalar paths
+feed ordinary specialized fluent bindings, document wire version 8 and crafted
+source/replay. Realized views privately own copied catalogs. Scalar reload stages
+all caption/prompt properties before publication. Explicit typed JSON row recipes
+use existing independent collection stores and actual table mounts, retaining
+stable selection and refusing invalid/duplicate/stale rows. Ordinary source-pair
+admission and one paired Undo/Redo retain resources exactly.
+
+The user's additional hosted/cache steering extends the same prerequisite:
+HTTP(S) source references, same-kind embedded fallbacks and immutable caller
+policies survive wire/source. Respect is default; deliberate `rcspOverride`
+substitutes caller freshness and permits storage despite no-store in Nyx's
+private cache. Pure cache envelopes/fresh/stale/bypass/byte qualification,
+memory storage and native user-temp/atomic-file storage are implemented and
+checked, including independent policy derivation, restart and quota refusal.
+An async browser Cache Storage adapter compiles; unavailable/corrupt/quota storage
+reports errors rather than pretending to persist. Raw storage does not apply
+request policy: the forthcoming resolver must enforce `CanStore`/`StateAt`.
+
+Concrete repairs retained the original admission/ownership requirements:
+pas2js cannot carry managed interfaces in records, so catalog entries are owned
+classes and source atoms carry copied wire values. Native managed results publish
+after candidate qualification. Replay now parses signed Integer text rather than
+an unrelated ordinal field; this restores emitted cache budgets and item indices.
+The table fixture uses its actual name column. Crafted resource source separates
+cache choices and meaningful metadata into readable fluent lines.
+
+Current evidence: `tools/build.ps1 -Target resources` passes 78 shared/actual
+Win32 resource/control/cache checks and eight exact emitted-builder checks,
+zero leaks; `nyx_workspace_tests` passes 251 checked regression checks, zero leaks.
+Both Studios, backend, worker and browser counterparts compile with zero owned
+warnings. Each browser build retains seven upstream matched `classes.pas` warnings;
+no dependency source is edited. Evidence is under `build/resources/maintained-final.log`,
+`consumers-final/` and the inspected `desktop.png`. Its hosted caption is the
+explicit fallback, not a completed network request. Source/wire policy and
+native storage are qualified; current browser controls/cache/phone/observing
+execution is not. Primary semantic session inspection remains read-only at
+revision 2 with its existing selection/history/draft intact.
+
+No full criterion/task/percentage closes. Resource prerequisite no-closure is
+1; original workflow/authoring/renderer/codegen/delivery remain 21/36/19/28/2.
+End foundation fixtures. Next deliver a cancellable hosted resolver/ordinary
+consumer with bounded transport, explicit cache fallback and stale-result refusal,
+then the common Nyx-built Resources/import/binding form and bounded semantic
+operations owned by existing Studio/workflow tasks. Automatic HTTP loading,
+complete HTTP revalidation, combined scalar/table publication, persisted row
+mapping/scopes, application navigation/locale lifecycle and all original both-target
+authoring/parity evidence remain open. The existing launch/replacement rejection
+is still held; do not retry it. See [usage](docs/resources.md) and the task owner.
+
+Final read-only preservation receipt at 2026-10-08T04:38:52Z confirms all fifteen
+protected process identities, nine complete project/source/draft pairs and 229
+sealed LAN files unchanged, including original listener bindings and checkpoint
+bytes. `build/resources/preservation-final.log` and the existing guard's receipt
+retain exact evidence. All current compiler/test/guard handles are terminal.
+This source checkpoint does not replace a running service or enroll a new host.
+
 ## Current return path: portable image authoring — 2026-10-07
 
 Previous turn is **progress**: property qualification is committed/pushed as

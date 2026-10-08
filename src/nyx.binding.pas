@@ -35,6 +35,7 @@ uses
   nyx.contract,
   nyx.sliders,
   nyx.state,
+  nyx.resources,
   nyx.binding.types,
   nyx.model,
   nyx.behavior;
@@ -75,6 +76,12 @@ type
     constructor Create(ARoot: TNyxNode; AState: TNyxState);
     destructor Destroy; override;
     procedure Activate;
+    { UI-thread resource/locale reload. All selectors and concrete properties
+      validate on an independent candidate before existing controls synchronize.
+      Invalid data retains accepted values/context. A sync exception follows
+      publication. Input events never write a packed file. }
+    procedure ReloadResources(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef);
     { Explicit DOM/LCL wire boundary. Scalar decoding and payload capture happen
       in the detached candidate before publication; handwritten application
       state writes use typed references/arguments on TNyxState instead. }
@@ -426,6 +433,16 @@ end;
 
 procedure ApplyNyxBindings(ARoot: TNyxNode; AState: TNyxState);
 
+  function Value(ANode: TNyxNode; const ASpec: TNyxBindingSpec): TNyxStateValue;
+  begin
+
+    if ASpec.Source = bsResource then
+    begin
+      Exit(ANode.ReadResource(ASpec.ResourceValue));
+    end;
+    Result := AState.Value(ASpec.StateName);
+  end;
+
   procedure Project(ANode: TNyxNode);
   var
     LIndex: Integer;
@@ -443,7 +460,7 @@ procedure ApplyNyxBindings(ARoot: TNyxNode; AState: TNyxState);
         Continue;
       end;
       CheckTarget(ANode, LSpec);
-      LValue := AState.Value(LSpec.StateName);
+      LValue := Value(ANode, LSpec);
 
       if LValue.Kind <> LSpec.ValueKind then
       begin
@@ -482,7 +499,7 @@ procedure ApplyNyxBindings(ARoot: TNyxNode; AState: TNyxState);
 
       if not LSpec.Cleared then
       begin
-        CheckValueRange(ANode, LSpec, AState.Value(LSpec.StateName));
+        CheckValueRange(ANode, LSpec, Value(ANode, LSpec));
       end;
     end;
     for LIndex := 0 to ANode.Count - 1 do
@@ -543,6 +560,28 @@ destructor TNyxLiveBindings.Destroy;
 begin
   FSubscription.Free;
   inherited Destroy;
+end;
+
+procedure TNyxLiveBindings.ReloadResources(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef);
+var
+  LCandidate: TNyxNode;
+begin
+
+  if not RefreshReady then
+  begin
+    raise ENyxState.Create('Resource reload refuses a busy view');
+  end;
+  LCandidate := FRoot.Clone;
+  try
+    LCandidate.BindResources(AResources, ALocale, AFallback);
+    ApplyNyxBindings(LCandidate, FState);
+    FRoot.CopyResourceContext(LCandidate);
+    CopyProjection(FRoot, LCandidate);
+  finally
+    LCandidate.Free;
+  end;
+  Synchronize;
 end;
 
 procedure TNyxLiveBindings.Activate;

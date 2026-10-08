@@ -36,6 +36,7 @@ uses
   nyx.presentations,
   nyx.containers,
   nyx.content,
+  nyx.resources,
   nyx.model;
 
 type
@@ -787,6 +788,7 @@ begin
   Result := Expand(ARoot, '', '', 0);
   try
     Result.BindPresentations(LPresentations);
+    Result.BindResources(ADocument.Resources, NyxDefaultLocale, NyxDefaultLocale);
     PrepareNyxBehavior(Result);
   except
     Result.Free;
@@ -923,6 +925,14 @@ begin
     { Standalone page/component builds need the same authored state defaults as
       the application. Copy values, never subscriptions or a shared mutable store. }
     LCandidate.State.Assign(ADocument.State);
+    { Resource definitions are immutable values. Isolated page/component builds
+      retain all variants without a borrowed registry/document cycle. }
+    for LIndex := 0 to ADocument.Resources.Count - 1 do
+    begin
+      LCandidate.Resources.Define(ADocument.Resources.Reference(LIndex),
+        ADocument.Resources.Locale(LIndex), ADocument.Resources.Definition(
+          ADocument.Resources.Reference(LIndex), ADocument.Resources.Locale(LIndex)));
+    end;
     { Collection definitions are immutable owned snapshots. Define re-admits
       them into the isolated document; it never copies runtime subscriptions. }
     for LIndex := 0 to ADocument.Collections.Count - 1 do

@@ -29,7 +29,8 @@ interface
 
 uses
   nyx.text,
-  nyx.state;
+  nyx.state,
+  nyx.resources;
 
 type
   { Only Value is writable from a control. Other targets are projections from
@@ -54,6 +55,7 @@ type
     bpMinimum,
     bpMaximum);
   TNyxBindingDirection = (bdFromState, bdTwoWay);
+  TNyxBindingSource = (bsState, bsResource);
   { A notification failure follows an admitted commit. It must never be reported
     as rejected state or retried by restoring the old value. }
   TNyxBindingFailure = (nbfNone, nbfRejected, nbfNotificationFailed);
@@ -79,10 +81,15 @@ type
     FValueKind: TNyxStateKind;
     FDirection: TNyxBindingDirection;
     FCleared: Boolean;
+    FSource: TNyxBindingSource;
+    FResource: TNyxResourceValueRef;
   public
     class function Bound(AProperty: TNyxBindingProperty; const AStateName: TNyxText;
       AValueKind: TNyxStateKind; ADirection: TNyxBindingDirection): TNyxBindingSpec; static;
     class function Clear(AProperty: TNyxBindingProperty): TNyxBindingSpec; static;
+    { Read-only resource projection; editing never rewrites packed file data. }
+    class function Resource(AProperty: TNyxBindingProperty;
+      const AValue: TNyxResourceValueRef): TNyxBindingSpec; static;
     function Copy: TNyxBindingSpec;
     { Exact copied contract equality, including explicit clearing and direction.
       Open state names retain their precise Unicode spelling. This comparison
@@ -94,6 +101,8 @@ type
     property ValueKind: TNyxStateKind read FValueKind;
     property Direction: TNyxBindingDirection read FDirection;
     property Cleared: Boolean read FCleared;
+    property Source: TNyxBindingSource read FSource;
+    property ResourceValue: TNyxResourceValueRef read FResource;
   end;
 
 { Enum/string mappings are persistence/schema boundaries. Authored Pascal and
@@ -123,6 +132,7 @@ class function TNyxBindingSpec.Bound(AProperty: TNyxBindingProperty;
   const AStateName: TNyxText; AValueKind: TNyxStateKind;
   ADirection: TNyxBindingDirection): TNyxBindingSpec;
 begin
+  Result := Default(TNyxBindingSpec);
   Result.FProperty := AProperty;
   Result.FStateName := AStateName;
   Result.FValueKind := AValueKind;
@@ -133,6 +143,7 @@ end;
 
 class function TNyxBindingSpec.Clear(AProperty: TNyxBindingProperty): TNyxBindingSpec;
 begin
+  Result := Default(TNyxBindingSpec);
   Result.FProperty := AProperty;
   Result.FStateName := '';
   Result.FValueKind := nskText;
@@ -148,13 +159,35 @@ begin
   Result.FValueKind := FValueKind;
   Result.FDirection := FDirection;
   Result.FCleared := FCleared;
+  Result.FSource := FSource;
+  Result.FResource := FResource.Copy;
+end;
+
+class function TNyxBindingSpec.Resource(AProperty: TNyxBindingProperty;
+  const AValue: TNyxResourceValueRef): TNyxBindingSpec;
+var
+  LCandidate: TNyxBindingSpec;
+begin
+  LCandidate := Default(TNyxBindingSpec);
+  LCandidate.FProperty := AProperty;
+  LCandidate.FSource := bsResource;
+  LCandidate.FResource := AValue.Copy;
+  LCandidate.FValueKind := AValue.Kind;
+  LCandidate.Validate;
+  Result := LCandidate;
 end;
 
 function TNyxBindingSpec.Same(const AOther: TNyxBindingSpec): Boolean;
 begin
   Result := (FProperty = AOther.FProperty) and
     (FStateName = AOther.FStateName) and (FValueKind = AOther.FValueKind) and
-    (FDirection = AOther.FDirection) and (FCleared = AOther.FCleared);
+    (FDirection = AOther.FDirection) and (FCleared = AOther.FCleared) and
+    (FSource = AOther.FSource);
+
+  if Result and not FCleared and (FSource = bsResource) then
+  begin
+    Result := FResource.ToData.ToJSON = AOther.FResource.ToData.ToJSON;
+  end;
 end;
 
 procedure TNyxBindingSpec.Validate;
@@ -167,7 +200,9 @@ begin
     (Ord(FDirection) < Ord(Low(TNyxBindingDirection))) or
     (Ord(FDirection) > Ord(High(TNyxBindingDirection))) or
     (Ord(FValueKind) < Ord(Low(TNyxStateKind))) or
-    (Ord(FValueKind) > Ord(High(TNyxStateKind))) then
+    (Ord(FValueKind) > Ord(High(TNyxStateKind))) or
+    (Ord(FSource) < Ord(Low(TNyxBindingSource))) or
+    (Ord(FSource) > Ord(High(TNyxBindingSource))) then
   begin
     raise ENyxState.Create('Binding contains an unknown enum choice');
   end;
@@ -178,11 +213,24 @@ begin
   end;
   { Key admission is identical for every typed reference. This does not coerce
     its stored kind; the document/runtime store checks exact kind membership. }
-  LReference := NyxTextState(FStateName);
 
-  if LReference.Name <> FStateName then
+  if FSource = bsResource then
   begin
-    raise ENyxState.Create('Binding key admission changed its name');
+    FResource.ToData;
+
+    if FDirection <> bdFromState then
+    begin
+      raise ENyxState.Create('Resource bindings are read-only projections');
+    end;
+  end
+  else
+  begin
+    LReference := NyxTextState(FStateName);
+
+    if LReference.Name <> FStateName then
+    begin
+      raise ENyxState.Create('Binding key admission changed its name');
+    end;
   end;
 
   if (FDirection = bdTwoWay) and (FProperty <> bpValue) then

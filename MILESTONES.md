@@ -3,6 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current resource prerequisite (2026-10-08): named immutable image/JSON/text/binary
+files, explicit hosted fallback/cache policy, structural bindings/locale and
+versioned crafted source/history feed ordinary adapters. Shared/actual Win32
+resource/cache/control checks pass 78, exact emitted builder eight and workspace
+regression 251, leak-free; both Studios/backend/worker and browser counterparts
+compile with zero owned warnings. This foundation accepts no full criterion or
+percentage credit. Its no-closure boundary is 1; existing workflow/authoring/
+renderer/codegen/delivery stay 21/36/19/28/2. End foundation fixtures. Automatic
+HTTP resolution, saved row mapping/runtime lifecycle, common Studio Resources
+authoring/semantic tooling and actual browser/cache/phone/observing execution
+remain open under [portable resources](TODO/NS-1_resources_01.md) and the original
+Studio/workflow owners. See [the packet](WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).
+
 Current packed image authoring (2026-10-07): imported and pasted inline Base64
 PNG/JPEG remain portable proposals through a public Nyx form in both ordinary
 Studio controllers, with one isolated paired Apply/history step. Checked shared/
@@ -1048,6 +1061,12 @@ structured state is accepted under [NS-1_state-collections_01](TODO/DONE/NS-1_st
 production data controls consume it. Indexing, broader property schemas and
 source synchronization retain their existing owners. No credit has been allocated
 or added by creating this follow-up.
+
+The user's common resource/binding/hosted-cache steering has the open
+[NS-1_resources_01](TODO/NS-1_resources_01.md) prerequisite. Its portable model,
+resolver and consumer contract feed existing Studio authoring criterion 2 and
+the existing semantic-workflow owner; panel/tool integration and complete parity
+retain those original outcomes. No duplicate completion allocation is created.
 
 ## Next meaningful milestones
 

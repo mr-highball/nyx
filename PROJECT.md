@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Portable named image/JSON/text/binary resources, hosted declarations with explicit
+fallback/cache policy, typed scalar selectors and locale lookup now retain exact
+wire/source/history. Actual Win32 captions/prompts and JSON-derived table updates
+pass 78 shared/control/cache checks; exact emitted Pascal passes eight and workspace
+regression 251, leak-free. Both Studios/backend/worker and browser counterparts
+compile with zero owned warnings. Automatic HTTP resolution, common Studio Resources
+authoring/semantic tooling, saved row mappings and browser/cache/phone/observing
+execution remain open. See [the packet](WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07)
+and [resources](docs/resources.md). No new full criterion is accepted.
+
 Packed image authoring now consumes one public Nyx form in both ordinary Studios:
 imported and pasted inline Base64 PNG/JPEG, preview, typed choices and one isolated
 paired Apply/history. Current shared/Win32 70, exact emitted six and workspace

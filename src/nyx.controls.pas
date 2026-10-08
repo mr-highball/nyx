@@ -45,6 +45,7 @@ uses
   nyx.data,
   nyx.contract,
   nyx.state,
+  nyx.resources,
   nyx.binding.types,
   nyx.collections.view.types,
   nyx.model;

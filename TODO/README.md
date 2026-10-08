@@ -14,6 +14,7 @@ blockers rather than filename order.
 | NS-1 | [Portable runtime identity](DONE/NS-1_identity_01.md) | Accepted Unicode admission and qualified reusable identity | Pending assessment |
 | NS-1 | [Persistence and state](DONE/NS-1_persistence-state_01.md) | Accepted version-1 data, scalar bindings and commands | Pending assessment |
 | NS-1 | [Observable structured state](DONE/NS-1_state-collections_01.md) | Accepted typed stores, persisted/source bindings, runtime scopes and Studio/control consumers | Pending assessment |
+| NS-1 | [Portable resources and bindings](NS-1_resources_01.md) | Common image/JSON/text/data resources, typed selectors, localization and actual control/Studio consumers | Pending assessment |
 | NS-1 | [Specialized component interfaces](DONE/NS-1_component-interfaces_01.md) | Accepted managed specialized controls, factories and generated authoring | Pending assessment |
 | NS-1 | [Events and scheduler](NS-1_event-scheduler_01.md) | Typed multiple callbacks, execution policies and target schedulers | Pending assessment |
 | NS-1 | [Typed clock-time prerequisite](NS-1_time-values_01.md) | Exact time values/domains and typed authoring for native/browser pickers | Pending assessment |
@@ -43,6 +44,18 @@ workflows are integrated; complete event capabilities and source synchronization
 remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
+
+Latest resource prerequisite (2026-10-08): immutable files/locale selectors,
+hosted declarations/fallback/cache policy, versioned crafted source/history and
+actual native caption/prompt/table updates pass 78 checks plus eight exact
+emitted-builder checks; workspace regression passes 251, all leak-free. Both
+Studios/backend/worker and browser counterparts compile with zero owned warnings.
+No full criterion closes: resource prerequisite no-closure is 1; existing original
+owner counts remain 21/36/19/28/2. End foundation fixtures. Automatic HTTP resolution,
+common Studio Resources/import/binding/semantic tooling, persisted row mappings
+and actual browser/cache/phone/observing evidence remain with the
+[resource prerequisite](NS-1_resources_01.md) and original Studio/workflow owners.
+See [the packet](../WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).
 
 Latest packed image authoring (2026-10-07): the public Nyx form in both ordinary
 Studios supports imported/inline Base64 PNG/JPEG proposals, exact typed choices,

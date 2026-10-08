@@ -34,6 +34,8 @@ uses
   nyx.times,
   nyx.colors,
   nyx.images,
+  nyx.resources,
+  nyx.resource.sources,
   nyx.design.tokens,
   nyx.data,
   nyx.contract,
@@ -250,6 +252,120 @@ begin
           Result := 'TNyxImageSource.FromWire(' + PascalString(AText) + ')';
         end;
       end;
+  end;
+end;
+
+function PascalResourceValue(const AValue: TNyxResourceValueRef): TNyxText;
+const
+  CMethods: array[TNyxStateKind] of TNyxText =
+    ('AsText', 'AsBoolean', 'AsInteger', 'AsNumber');
+var
+  LSteps: TNyxDataValue;
+  LStep: TNyxDataValue;
+  LIndex: Integer;
+
+  function Locale(const ALocale: TNyxLocaleRef): TNyxText;
+  begin
+
+    if not ALocale.Defined then
+    begin
+      Exit('NyxDefaultLocale');
+    end;
+    Result := 'NyxLocale(' + PascalString(ALocale.Name) + ')';
+  end;
+
+begin
+  Result := 'NyxResourceValue(NyxResourceRef(' + PascalString(AValue.Reference.Name) + '))';
+  LSteps := AValue.Path.ToData;
+  for LIndex := 0 to LSteps.Count - 1 do
+  begin
+    LStep := LSteps.Item(LIndex);
+
+    if LStep.Kind = ndText then
+    begin
+      Result := Result + '.Field(' + PascalString(LStep.AsText) + ')';
+    end
+    else
+    begin
+      Result := Result + '.Item(' + TNyxText(IntToStr(LStep.AsInteger)) + ')';
+    end;
+  end;
+
+  if AValue.Locale.Defined then
+  begin
+    Result := Result + '.Localize(' + Locale(AValue.Locale) + ', ' + Locale(AValue.Fallback) + ')';
+  end;
+  Result := Result + '.' + CMethods[AValue.Kind];
+end;
+
+function PascalResourceCache(const APolicy: TNyxResourceCachePolicy;
+  const AIndent: TNyxText): TNyxText;
+const
+  CModes: array[TNyxResourceCacheMode] of TNyxText = ('Bypass', 'Memory', 'Persistent');
+  CServers: array[TNyxResourceServerPolicy] of TNyxText = ('rcspRespect', 'rcspOverride');
+begin
+  APolicy.Validate;
+  { Each choice has its own readable line. These are ordinary fluent calls;
+    neither replay nor application behavior depends on whitespace. }
+  Result := 'NyxResourceCache' + #10 + AIndent + '  .' + CModes[APolicy.Mode] +
+    #10 + AIndent + '  .FreshFor(' + TNyxText(IntToStr(APolicy.FreshSeconds)) + ')' +
+    #10 + AIndent + '  .StaleFor(' + TNyxText(IntToStr(APolicy.StaleSeconds)) + ')' +
+    #10 + AIndent + '  .MaximumBytes(' + TNyxText(IntToStr(APolicy.ByteLimit)) + ')' +
+    #10 + AIndent + '  .ServerPolicy(' + CServers[APolicy.Server] + ')';
+end;
+
+function PascalResource(const ADefinition: INyxResourceDefinition;
+  const AIndent: TNyxText): TNyxText;
+const
+  CKinds: array[TNyxResourceKind] of TNyxText = ('nrkImage', 'nrkJSON', 'nrkText', 'nrkBinary');
+var
+  LContent: TNyxText;
+begin
+
+  if ADefinition.Source.Kind = rskHosted then
+  begin
+    Result := 'NyxHostedResource(' + CKinds[ADefinition.Kind] + ', NyxResourceURL(' +
+      PascalString(ADefinition.Source.URL.Address) + '))' +
+      #10 + AIndent + '  .Cache(' +
+        PascalResourceCache(ADefinition.Source.CachePolicy, AIndent + '  ') + ')';
+
+    if ADefinition.FallbackDefinition <> nil then
+    begin
+      Result := Result + #10 + AIndent + '  .Fallback(' +
+        PascalResource(ADefinition.FallbackDefinition, AIndent + '  ') + ')';
+    end;
+
+    if (ADefinition.Title <> '') or (ADefinition.Description <> '') then
+    begin
+      Result := Result + #10 + AIndent + '  .Describe(' + PascalString(ADefinition.Title) + ',' +
+        #10 + AIndent + '    ' + PascalString(ADefinition.Description) + ')';
+    end;
+    Exit;
+  end;
+  LContent := ADefinition.ToData.Field('content').AsText;
+  case ADefinition.Kind of
+    nrkImage:
+      begin
+        Result := 'NyxImageResource(' + PascalImage(LContent) + ')';
+      end;
+    nrkJSON:
+      begin
+        Result := 'NyxJSONResource(' + PascalString(LContent) + ')';
+      end;
+    nrkText:
+      begin
+        Result := 'NyxTextResource(' + PascalString(LContent) + ')';
+      end;
+    nrkBinary:
+      begin
+        Result := 'NyxBinaryResource(NyxDecodeBase64(' + PascalString(LContent) + '))';
+      end;
+  end;
+
+  if (ADefinition.Title <> '') or (ADefinition.Description <> '') then
+  begin
+    Result := Result + #10 + AIndent + '  .Describe(' + PascalString(ADefinition.Title) + ',' +
+      #10 + AIndent + '    ' + PascalString(ADefinition.Description) + ')';
   end;
 end;
 
@@ -1613,6 +1729,10 @@ var
       begin
         LCall := 'Clear(bp' + CMethods[LSpec.Target] + ')';
       end
+      else if LSpec.Source = bsResource then
+      begin
+        LCall := CMethods[LSpec.Target] + '(' + PascalResourceValue(LSpec.ResourceValue) + ')';
+      end
       else
       begin
         LCall := CMethods[LSpec.Target] + '(' + StateVariable(LSpec.StateName);
@@ -2026,6 +2146,13 @@ begin
     LLines.Add('  nyx.times,');
     LLines.Add('  nyx.colors,');
     LLines.Add('  nyx.images,');
+
+    if ADocument.Resources.Count > 0 then
+    begin
+      LLines.Add('  nyx.bytes,');
+      LLines.Add('  nyx.resources,');
+      LLines.Add('  nyx.resource.sources,');
+    end;
     LLines.Add('  nyx.design.tokens,');
     LLines.Add('  nyx.types,');
     LLines.Add('  nyx.responsive,');
@@ -2114,6 +2241,19 @@ begin
     EmitExtensions(ADocument.Extensions, 'Result');
     EmitState;
     EmitCollections;
+    for LIndex := 0 to ADocument.Resources.Count - 1 do
+    begin
+      LLines.Add('');
+      LLines.Add('    Result.Resources.Define(NyxResourceRef(' +
+        PascalString(ADocument.Resources.Reference(LIndex).Name) + '),');
+
+      if ADocument.Resources.Locale(LIndex).Defined then
+      begin
+        LLines.Add('      NyxLocale(' + PascalString(ADocument.Resources.Locale(LIndex).Name) + '),');
+      end;
+      LLines.Add('      ' + PascalResource(ADocument.Resources.Definition(
+        ADocument.Resources.Reference(LIndex), ADocument.Resources.Locale(LIndex)), '      ') + ');');
+    end;
     for LIndex := 0 to ADocument.Presentations.Count - 1 do
     begin
       LLines.Add('');

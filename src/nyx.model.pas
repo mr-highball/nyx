@@ -35,6 +35,7 @@ uses
   nyx.times,
   nyx.colors,
   nyx.images,
+  nyx.resources,
   nyx.root.types,
   nyx.data,
   nyx.contract,
@@ -117,6 +118,9 @@ type
     FViewportConfigure: array of TNyxNodeConfig;
     FViewportValues: TNyxStrings;
     FPresentationSnapshot: INyxPresentationSnapshot;
+    FResourceSnapshot: INyxResources;
+    FResourceLocale: TNyxLocaleRef;
+    FResourceFallback: TNyxLocaleRef;
     FContent: INyxContent;
     FHasMenu: Boolean;
     FMenuReference: TNyxMenuRef;
@@ -223,6 +227,16 @@ type
       snapshot among descendants. It has no document/tree backreference. Binding
       is allowed only on realized nodes; retained views can outlive their source. }
     procedure BindPresentations(const ASnapshot: INyxPresentationSnapshot);
+    { Realized views copy a catalog once and share private immutable membership
+      among descendants. Reload stages another copy; no source document or
+      mutable external registry is retained. Authored nodes reject this call. }
+    procedure BindResources(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef);
+    function ReadResource(const AValue: TNyxResourceValueRef): TNyxStateValue;
+    { Internal projection publication copies the already admitted private
+      context, without consulting foreign registries a second time. Both trees
+      must be realized, with the same shape/identity as the staged projection. }
+    procedure CopyResourceContext(ASource: TNyxNode);
     { Authored membership reads the owning registry; realized nodes read their
       independent immutable snapshot. Detached authored nodes return nil. }
     property PresentationSnapshot: INyxPresentationSnapshot read GetPresentationSnapshot;
@@ -541,23 +555,42 @@ type
       ADirection: TNyxBindingDirection = bdTwoWay): TNyxNodeBindings; overload;
     function Value(const AState: TNyxNumberStateRef;
       ADirection: TNyxBindingDirection = bdTwoWay): TNyxNodeBindings; overload;
-    function Enabled(const AState: TNyxBooleanStateRef): TNyxNodeBindings;
-    function Visible(const AState: TNyxBooleanStateRef): TNyxNodeBindings;
-    function ReadOnly(const AState: TNyxBooleanStateRef): TNyxNodeBindings;
-    function Pressed(const AState: TNyxBooleanStateRef): TNyxNodeBindings;
-    function Placeholder(const AState: TNyxTextStateRef): TNyxNodeBindings;
-    function Hint(const AState: TNyxTextStateRef): TNyxNodeBindings;
-    function AccessibleName(const AState: TNyxTextStateRef): TNyxNodeBindings;
-    function Width(const AState: TNyxIntegerStateRef): TNyxNodeBindings;
-    function Height(const AState: TNyxIntegerStateRef): TNyxNodeBindings;
-    function Left(const AState: TNyxIntegerStateRef): TNyxNodeBindings;
-    function Top(const AState: TNyxIntegerStateRef): TNyxNodeBindings;
-    function Padding(const AState: TNyxIntegerStateRef): TNyxNodeBindings;
-    function Gap(const AState: TNyxIntegerStateRef): TNyxNodeBindings;
-    function Columns(const AState: TNyxIntegerStateRef): TNyxNodeBindings;
-    function Flex(const AState: TNyxIntegerStateRef): TNyxNodeBindings;
-    function Minimum(const AState: TNyxIntegerStateRef): TNyxNodeBindings;
-    function Maximum(const AState: TNyxIntegerStateRef): TNyxNodeBindings;
+    function Enabled(const AState: TNyxBooleanStateRef): TNyxNodeBindings; overload;
+    function Visible(const AState: TNyxBooleanStateRef): TNyxNodeBindings; overload;
+    function ReadOnly(const AState: TNyxBooleanStateRef): TNyxNodeBindings; overload;
+    function Pressed(const AState: TNyxBooleanStateRef): TNyxNodeBindings; overload;
+    function Placeholder(const AState: TNyxTextStateRef): TNyxNodeBindings; overload;
+    function Hint(const AState: TNyxTextStateRef): TNyxNodeBindings; overload;
+    function AccessibleName(const AState: TNyxTextStateRef): TNyxNodeBindings; overload;
+    function Width(const AState: TNyxIntegerStateRef): TNyxNodeBindings; overload;
+    function Height(const AState: TNyxIntegerStateRef): TNyxNodeBindings; overload;
+    function Left(const AState: TNyxIntegerStateRef): TNyxNodeBindings; overload;
+    function Top(const AState: TNyxIntegerStateRef): TNyxNodeBindings; overload;
+    function Padding(const AState: TNyxIntegerStateRef): TNyxNodeBindings; overload;
+    function Gap(const AState: TNyxIntegerStateRef): TNyxNodeBindings; overload;
+    function Columns(const AState: TNyxIntegerStateRef): TNyxNodeBindings; overload;
+    function Flex(const AState: TNyxIntegerStateRef): TNyxNodeBindings; overload;
+    function Minimum(const AState: TNyxIntegerStateRef): TNyxNodeBindings; overload;
+    function Maximum(const AState: TNyxIntegerStateRef): TNyxNodeBindings; overload;
+    function Text(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Value(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Enabled(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Visible(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function ReadOnly(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Pressed(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Placeholder(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Hint(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function AccessibleName(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Width(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Height(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Left(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Top(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Padding(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Gap(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Columns(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Flex(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Minimum(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
+    function Maximum(const AResource: TNyxResourceValueRef): TNyxNodeBindings; overload;
     { Clear retains an explicit inherited-unbinding operation for composition. }
     function Clear(ATarget: TNyxBindingProperty): TNyxNodeBindings;
     function Inherit(ATarget: TNyxBindingProperty): TNyxNodeBindings;
@@ -584,6 +617,7 @@ type
     FCollections: INyxCollectionDefaults;
     FPresentations: INyxPresentations;
     FMenus: INyxMenuDeclarations;
+    FResources: INyxResources;
     FExtensions: TNyxExtensions;
     FPages: array of TNyxNode;
     FComponents: array of TNyxNode;
@@ -640,6 +674,10 @@ type
       roots; this document owns those trees. Clone creates a separate registry
       and renderer lifetimes never retain this document through the plans. }
     property Menus: INyxMenuDeclarations read FMenus;
+    { Managed immutable image/JSON/text/binary defaults and locale variants.
+      Membership is owned here; retained definitions/catalog clones contain no
+      backreference to this document or its independently owned roots. }
+    property Resources: INyxResources read FResources;
     property HasMenuDeclarations: Boolean read GetHasMenuDeclarations;
     property HasMenuBars: Boolean read GetHasMenuBars;
     { Includes deliberate clear descriptors; selects version-3 node semantics. }
@@ -899,6 +937,120 @@ constructor TNyxNodeBindings.Create(ANode: TNyxNode);
 begin
   inherited Create;
   FNode := ANode;
+end;
+
+function TNyxNodeBindings.Text(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpText, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Value(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpValue, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Enabled(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpEnabled, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Visible(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpVisible, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.ReadOnly(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpReadOnly, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Pressed(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpPressed, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Placeholder(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpPlaceholder, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Hint(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpHint, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.AccessibleName(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpAccessibleName, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Width(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpWidth, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Height(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpHeight, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Left(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpLeft, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Top(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpTop, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Padding(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpPadding, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Gap(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpGap, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Columns(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpColumns, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Flex(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpFlex, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Minimum(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpMinimum, AResource));
+  Result := Self;
+end;
+
+function TNyxNodeBindings.Maximum(const AResource: TNyxResourceValueRef): TNyxNodeBindings;
+begin
+  FNode.SetBinding(TNyxBindingSpec.Resource(bpMaximum, AResource));
+  Result := Self;
 end;
 
 function TNyxNodeBindings.Put(ATarget: TNyxBindingProperty; const AKey: TNyxText;
@@ -2221,6 +2373,58 @@ begin
   Result := FNode;
 end;
 
+procedure TNyxNode.BindResources(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef);
+var
+  LSnapshot: INyxResources;
+
+  procedure Bind(ANode: TNyxNode);
+  var
+    LIndex: Integer;
+  begin
+    ANode.FResourceSnapshot := LSnapshot;
+    ANode.FResourceLocale := ALocale;
+    ANode.FResourceFallback := AFallback;
+    for LIndex := 0 to ANode.Count - 1 do
+    begin
+      Bind(ANode.Children[LIndex]);
+    end;
+  end;
+
+begin
+
+  if not IsRealized or (AResources = nil) then
+  begin
+    raise ENyxModel.Create('Resources require a realized view and catalog');
+  end;
+  LSnapshot := AResources.Clone;
+  Bind(Self);
+end;
+
+function TNyxNode.ReadResource(const AValue: TNyxResourceValueRef): TNyxStateValue;
+begin
+  Result := AValue.Read(FResourceSnapshot, FResourceLocale, FResourceFallback);
+end;
+
+procedure TNyxNode.CopyResourceContext(ASource: TNyxNode);
+var
+  LIndex: Integer;
+begin
+
+  if not IsRealized or (ASource = nil) or not ASource.IsRealized or
+    (Count <> ASource.Count) or (ID <> ASource.ID) then
+  begin
+    raise ENyxModel.Create('Resource context publication requires matching realized trees');
+  end;
+  FResourceSnapshot := ASource.FResourceSnapshot;
+  FResourceLocale := ASource.FResourceLocale;
+  FResourceFallback := ASource.FResourceFallback;
+  for LIndex := 0 to Count - 1 do
+  begin
+    Children[LIndex].CopyResourceContext(ASource.Children[LIndex]);
+  end;
+end;
+
 function TNyxNode.GetProjectionKind: TNyxText;
 begin
   Result := Prop('projection-kind', FKind);
@@ -2853,6 +3057,9 @@ begin
     Result.FInstanceScopeID := FInstanceScopeID;
     Result.FRecipeOwner := FRecipeOwner;
     Result.FPresentationSnapshot := FPresentationSnapshot;
+    Result.FResourceSnapshot := FResourceSnapshot;
+    Result.FResourceLocale := FResourceLocale;
+    Result.FResourceFallback := FResourceFallback;
     Result.SetContent(FContent);
 
     if FHasMenu then
@@ -3009,6 +3216,7 @@ begin
   FCollections := NewNyxCollectionDefaults;
   FPresentations := NewNyxPresentations;
   FMenus := NewNyxMenuDeclarations;
+  FResources := NewNyxResources;
   FExtensions := TNyxExtensions.Create(nesDocument);
   FTitle := 'Untitled Nyx application';
 end;
@@ -3033,6 +3241,7 @@ begin
   FCollections := nil;
   FPresentations := nil;
   FMenus := nil;
+  FResources := nil;
   FExtensions.Free;
   inherited Destroy;
 end;
@@ -3254,6 +3463,7 @@ begin
     Result.FCollections := FCollections.Clone;
     Result.FPresentations := FPresentations.Clone;
     Result.FMenus := FMenus.Clone;
+    Result.FResources := FResources.Clone;
     for LIndex := 0 to Count - 1 do
     begin
       Result.AddPage(FPages[LIndex].Clone);
@@ -3617,6 +3827,12 @@ var
       if not LBinding.Cleared then
       begin
 
+        if LBinding.Source = bsResource then
+        begin
+          LBinding.ResourceValue.Read(FResources, NyxDefaultLocale, NyxDefaultLocale);
+          Continue;
+        end;
+
         if not FState.Has(LBinding.StateName) then
         begin
           raise ENyxModel.Create('Binding default is missing on ' + ANode.ID +
@@ -3774,6 +3990,11 @@ var
 begin
   FState.Validate;
   FCollections.Validate;
+
+  if (FResources.Count > 0) and FExtensions.Has(NyxExtension(NyxResourcesWireField)) then
+  begin
+    raise ENyxModel.Create('Typed resources conflict with an older opaque resources extension');
+  end;
   FMenus.Validate;
   LHasMenus := HasMenuDeclarations;
   LHasMenuBars := HasMenuBars;

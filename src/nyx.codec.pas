@@ -39,6 +39,7 @@ uses
   nyx.content,
   nyx.menu.declarations,
   nyx.menu.bar.declarations,
+  nyx.resources,
   nyx.binding.types,
   nyx.collections.view.types,
   nyx.model;
@@ -68,6 +69,10 @@ type
     Older opaque menu/menus fields stay extensions; promotion refuses collisions.
     Version seven adds node-local typed menu-bar grouping and policy. Earlier
     opaque menuBar fields retain extension meaning; promotion refuses collisions.
+    Version eight adds immutable named resources and typed scalar selectors.
+    Earlier opaque resources fields retain extension meaning. Embedded/hosted
+    definitions have their own strict versions; machine cache data stays outside
+    designs. Decode never fetches a hosted URL or opens an external file.
     Decode returns ownership to its caller and frees partial trees on failure. }
   TNyxCodec = class
   public
@@ -108,7 +113,7 @@ procedure ReadExtensions(AObject: TJSONObject; AExtensions: TNyxExtensions;
   ACollections: Boolean = False; ACollectionViews: Boolean = False;
   APresentations: Boolean = False; APresentationRules: Boolean = False;
   AContentRules: Boolean = False; AMenus: Boolean = False;
-  AMenuBars: Boolean = False);
+  AMenuBars: Boolean = False; AResources: Boolean = False);
 var
   LFields: TJSONObject;
   LIndex: Integer;
@@ -124,6 +129,8 @@ begin
         (not APresentations or (AObject.Names[LIndex] <> NyxPresentationsWireField)) and
         (not APresentationRules or (AObject.Names[LIndex] <> NyxPresentationRulesWireField)) and
         (not AContentRules or (AObject.Names[LIndex] <> NyxContentRulesWireField)) and
+        (not AResources or (AExtensions.Scope <> nesDocument) or
+          (AObject.Names[LIndex] <> NyxResourcesWireField)) and
         (not AMenuBars or (AExtensions.Scope <> nesNode) or
           (AObject.Names[LIndex] <> NyxMenuBarWireField)) and
         (not AMenus or
@@ -281,6 +288,10 @@ begin
         begin
           LBinding.Add('clear', True);
         end
+        else if LSpec.Source = bsResource then
+        begin
+          LBinding.Add('resource', DecodeNyxJSON(LSpec.ResourceValue.ToData.ToJSON));
+        end
         else
         begin
           LBinding.Add('state', LSpec.StateName);
@@ -325,7 +336,17 @@ begin
   LRoot := TJSONObject.Create;
   try
 
-    if ADocument.HasMenuDeclarations then
+    if ADocument.Resources.Count > 0 then
+    begin
+      LRoot.Add('version', 8);
+      LRoot.Add(NyxResourcesWireField, DecodeNyxJSON(ADocument.Resources.ToData.ToJSON));
+      LRoot.Add(NyxMenusWireField, DecodeNyxJSON(ADocument.Menus.ToData.ToJSON));
+      LRoot.Add(NyxPresentationsWireField,
+        DecodeNyxJSON(ADocument.Presentations.ToData.ToJSON));
+      LRoot.Add(NyxCollectionsWireField,
+        DecodeNyxJSON(EncodeNyxCollectionDefaults(ADocument.Collections)));
+    end
+    else if ADocument.HasMenuDeclarations then
     begin
 
       if ADocument.HasMenuBars then
@@ -387,12 +408,14 @@ begin
     for LIndex := 0 to ADocument.Count - 1 do
     begin
       LPages.Add(NodeJSON(ADocument.Pages[LIndex],
-        (ADocument.Presentations.Count > 0) or ADocument.HasMenuDeclarations));
+        (ADocument.Presentations.Count > 0) or ADocument.HasMenuDeclarations or
+        (ADocument.Resources.Count > 0)));
     end;
     for LIndex := 0 to ADocument.ComponentCount - 1 do
     begin
       LComponents.Add(NodeJSON(ADocument.Components[LIndex],
-        (ADocument.Presentations.Count > 0) or ADocument.HasMenuDeclarations));
+        (ADocument.Presentations.Count > 0) or ADocument.HasMenuDeclarations or
+        (ADocument.Resources.Count > 0)));
     end;
     WriteExtensions(ADocument.Extensions, LRoot);
     Result := LRoot.AsJSON;
@@ -499,7 +522,7 @@ begin
   AState.Apply(LAssignments);
 end;
 
-procedure ReadBindings(AData: TJSONData; ANode: TNyxNode);
+procedure ReadBindings(AData: TJSONData; ANode: TNyxNode; AResources: Boolean);
 var
   LArray: TJSONArray;
   LEntry: TJSONObject;
@@ -560,6 +583,19 @@ begin
       Continue;
     end;
 
+    if AResources and (LEntry.Find('resource') <> nil) then
+    begin
+
+      if LEntry.Count <> 2 then
+      begin
+        raise ENyxModel.Create('Resource binding requires property and resource');
+      end;
+      ANode.SetBinding(TNyxBindingSpec.Resource(LProperty,
+        TNyxResourceValueRef.FromData(TNyxDataValue.ParseJSON(
+          RequireField(LEntry, 'resource', jtObject).AsJSON))));
+      Continue;
+    end;
+
     if LEntry.Count <> 4 then
     begin
       raise ENyxModel.Create('Binding requires property, state, type and direction');
@@ -587,7 +623,8 @@ begin
 end;
 
 function ReadNode(AData: TJSONData; ADepth: Integer; var ACount: Integer;
-  ACollectionViews, APresentations, AContentRules, AMenus, AMenuBars: Boolean): TNyxNode;
+  ACollectionViews, APresentations, AContentRules, AMenus, AMenuBars,
+  AResources: Boolean): TNyxNode;
 var
   LObject: TJSONObject;
   LProps: TJSONObject;
@@ -716,7 +753,7 @@ begin
       end;
       Result.SetProp(LKeys[LIndex], LValues[LIndex]);
     end;
-    ReadBindings(LObject.Find('bindings'), Result);
+    ReadBindings(LObject.Find('bindings'), Result, AResources);
 
     if ACollectionViews and (LObject.Find(NyxCollectionViewWireField) <> nil) then
     begin
@@ -761,7 +798,7 @@ begin
     for LIndex := 0 to LChildren.Count - 1 do
     begin
       Result.Add(ReadNode(LChildren.Items[LIndex], ADepth + 1, ACount,
-        ACollectionViews, APresentations, AContentRules, AMenus, AMenuBars));
+        ACollectionViews, APresentations, AContentRules, AMenus, AMenuBars, AResources));
     end;
   except
     Result.Free;
@@ -780,6 +817,7 @@ var
   LCount: Integer;
   LVersion: TNyxText;
   LCollections: INyxCollectionDefaults;
+  LResources: INyxResources;
   LPresentations: INyxPresentations;
   LMenus: INyxMenuDeclarations;
   LMenuBars: Boolean;
@@ -799,11 +837,11 @@ begin
 
     if (LVersion <> '1') and (LVersion <> '2') and (LVersion <> '3') and
       (LVersion <> '4') and (LVersion <> '5') and (LVersion <> '6') and
-      (LVersion <> '7') then
+      (LVersion <> '7') and (LVersion <> '8') then
     begin
       raise ENyxModel.Create('Unsupported design version');
     end;
-    LMenuBars := LVersion = '7';
+    LMenuBars := (LVersion = '7') or (LVersion = '8');
     LHasMenus := (LVersion = '6') or LMenuBars;
     LContentRules := (LVersion = '5') or LHasMenus;
     LHasPresentations := (LVersion = '4') or LContentRules;
@@ -814,6 +852,17 @@ begin
     try
       Result.Title := RequireField(LRoot, 'title', jtString).AsString;
       ReadState(LRoot.Find('state'), Result.State);
+
+      if LVersion = '8' then
+      begin
+        LResources := NyxResourcesFromData(TNyxDataValue.ParseJSON(
+          RequireField(LRoot, NyxResourcesWireField, jtObject).AsJSON));
+        for LIndex := 0 to LResources.Count - 1 do
+        begin
+          Result.Resources.Define(LResources.Reference(LIndex), LResources.Locale(LIndex),
+            LResources.Definition(LResources.Reference(LIndex), LResources.Locale(LIndex)));
+        end;
+      end;
 
       if LVersion <> '1' then
       begin
@@ -847,17 +896,17 @@ begin
         end;
       end;
       ReadExtensions(LRoot, Result.Extensions, LVersion <> '1', False,
-        LHasPresentations, False, False, LHasMenus, LMenuBars);
+        LHasPresentations, False, False, LHasMenus, LMenuBars, LVersion = '8');
       LCount := 0;
       for LIndex := 0 to LPages.Count - 1 do
       begin
         Result.AddPage(ReadNode(LPages.Items[LIndex], 0, LCount,
-          LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars));
+          LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars, LVersion = '8'));
       end;
       for LIndex := 0 to LComponents.Count - 1 do
       begin
         Result.AddComponent(ReadNode(LComponents.Items[LIndex], 0, LCount,
-          LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars));
+          LCollectionViews, LHasPresentations, LContentRules, LHasMenus, LMenuBars, LVersion = '8'));
       end;
       Result.Validate;
     except

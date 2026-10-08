@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'image-presentation', 'image-authoring', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'image-presentation', 'image-authoring', 'resources', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -2622,6 +2622,46 @@ try {
     exit 0
   }
 
+
+  if ($Target -eq 'resources') {
+    # Pascal owns qualification data, cache policy/storage checks, real controls,
+    # exact source output and assertions. This gate stages browser artifacts.
+    # It never launches a listener/browser or authors an active MCP project.
+    $nyxResourceRoot = Join-Path $nyxRoot 'build/resources'
+    $nyxResourceNative = Join-Path $nyxResourceRoot 'native'
+    $nyxResourceBrowser = Join-Path $nyxResourceRoot 'browser'
+    $nyxResourceGenerated = Join-Path $nyxResourceRoot 'generated'
+    New-Item -ItemType Directory -Force -Path $nyxResourceNative, $nyxResourceBrowser, $nyxResourceGenerated | Out-Null
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxResourcePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxResourceFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests',
+      "-Fu$nyxLazarus/lcl/units/$nyxResourcePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxResourcePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxResourcePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxResourcePlatform",
+      "-FU$nyxResourceNative", "-FE$nyxResourceNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxResourceFlags + @('tests/nyx_resource_controls.lpr'))
+    & (Join-Path $nyxResourceNative 'nyx_resource_controls.exe') `
+      (Join-Path $nyxResourceGenerated 'nyx.generated.view.pas') (Join-Path $nyxResourceRoot 'desktop.png')
+    if ($LASTEXITCODE -ne 0) { throw 'Resource binding/cache/native controls failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxResourceFlags + @("-Fu$nyxResourceGenerated", 'tests/nyx_resource_generated.lpr'))
+    & (Join-Path $nyxResourceNative 'nyx_resource_generated.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Exact compiled resource source failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxResourceBrowser", 'tests/nyx_resource_controls.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', "-Fu$nyxResourceGenerated", "-FE$nyxResourceBrowser", 'tests/nyx_resource_generated.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxResourceBrowser 'rtl.js')
+    foreach ($nyxResourceHost in @('resource-bindings.html', 'resource-generated.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxResourceHost") -Destination $nyxResourceBrowser
+    }
+    Write-Host 'Resource counterparts staged; browser/cache/HTTP/observing execution remains separate.'
+    exit 0
+  }
 
   if ($Target -eq 'image-authoring') {
     # Reuse the exact authenticated English image companion. Pascal owns file

@@ -66,6 +66,7 @@ uses
   nyx.viewport,
   nyx.event.emitter,
   nyx.state,
+  nyx.resources,
   nyx.binding,
   nyx.binding.types,
   nyx.collections.view,
@@ -487,6 +488,10 @@ type
       cannot mount designer input adornments or emit designer mutations. }
     property DesignMode: Boolean read FDesignMode;
     property State: TNyxState read FState;
+    { Reload copied resource values/locale in this mounted view. No saved
+      defaults or sibling runtime is changed; invalid data preserves controls. }
+    procedure ReloadResources(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef);
     property OnBindingError: TNyxBrowserBindingError read FOnBindingError write FOnBindingError;
     property LastBindingError: TNyxText read FLastBindingError;
     property LastBindingFailure: TNyxBindingFailure read FLastBindingFailure;
@@ -2655,6 +2660,17 @@ begin
     ReleaseNyxNode(LPrevious);
     ReleaseNyxNode(LCandidate);
   end;
+end;
+
+procedure TNyxBrowserRenderer.ReloadResources(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef);
+begin
+
+  if FLiveBindings = nil then
+  begin
+    raise ENyxState.Create('Resource reload requires a mounted runtime view');
+  end;
+  FLiveBindings.ReloadResources(AResources, ALocale, AFallback);
 end;
 
 procedure TNyxBrowserRenderer.Unmount;

@@ -34,6 +34,9 @@ uses
   nyx.times,
   nyx.colors,
   nyx.images,
+  nyx.bytes,
+  nyx.resources,
+  nyx.resource.sources,
   nyx.types,
   nyx.layout.policy,
   nyx.responsive,
@@ -563,7 +566,9 @@ type
     vkPopoverOptions, vkTypeAheadOptions,
     vkMenuOpening, vkPopoverSide, vkPopoverAlignment, vkPopoverSizing,
     vkPopoverDismissal, vkTypeAheadMatch, vkThemeTokens, vkThemePreset,
-    vkImageSource, vkImageLocation, vkImageFormat, vkImageFit, vkImageAnchor);
+    vkImageSource, vkImageLocation, vkImageFormat, vkImageFit, vkImageAnchor,
+    vkResourceRef, vkResourceLocale, vkResourceDefinition, vkBytes, vkResourceValue,
+    vkResourceKind, vkResourceURL, vkResourceCache, vkResourceServerPolicy);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -595,6 +600,10 @@ type
     ClockTime: TNyxClockTime;
     RGBColor: TNyxRGBColor;
     ImageSource: TNyxImageSource;
+    ResourceDefinitionData: TNyxDataValue;
+    ResourceValue: TNyxResourceValueRef;
+    ResourceCache: TNyxResourceCachePolicy;
+    Bytes: TNyxBytes;
     ThemeTokens: TNyxThemeTokens;
     TimeDomain: TNyxTimeDomain;
     ValueDomain: TNyxValueDomain;
@@ -692,6 +701,10 @@ type
     { Declarative menu expressions retain immutable plans, never runtime hosts. }
     function MenuConstructor(const AName: TNyxText): TValue;
     procedure MenuDefaults;
+    { Declarative resource values contain copied file data/help, never imports
+      from a machine path or mutable runtime state/control handles. }
+    function ResourceConstructor(const AName: TNyxText): TValue;
+    procedure ResourceDefaults;
     function CollectionScalar(const AValue: TValue; AKind: TNyxStateKind): TNyxStateValue;
     procedure PresentationDefaults;
     procedure CollectionDefaults;
@@ -1209,6 +1222,12 @@ begin
   RegisterEnum(vkConstruction, Ord(ncoDefault), 'ncoDefault');
   RegisterEnum(vkImageFormat, Ord(nimPNG), 'nimPNG');
   RegisterEnum(vkImageFormat, Ord(nimJPEG), 'nimJPEG');
+  RegisterEnum(vkResourceKind, Ord(nrkImage), 'nrkImage');
+  RegisterEnum(vkResourceKind, Ord(nrkJSON), 'nrkJSON');
+  RegisterEnum(vkResourceKind, Ord(nrkText), 'nrkText');
+  RegisterEnum(vkResourceKind, Ord(nrkBinary), 'nrkBinary');
+  RegisterEnum(vkResourceServerPolicy, Ord(rcspRespect), 'rcspRespect');
+  RegisterEnum(vkResourceServerPolicy, Ord(rcspOverride), 'rcspOverride');
   RegisterEnum(vkImageFit, Ord(nifContain), 'nifContain');
   RegisterEnum(vkImageFit, Ord(nifCover), 'nifCover');
   RegisterEnum(vkImageFit, Ord(nifStretch), 'nifStretch');
@@ -1885,6 +1904,7 @@ end;
 {$I nyx.source.collections.inc}
 {$I nyx.source.query.inc}
 {$I nyx.source.menus.inc}
+{$I nyx.source.resources.inc}
 {$I nyx.source.times.inc}
 {$I nyx.source.themes.inc}
 
@@ -2121,6 +2141,24 @@ begin
     tkWord:
       begin
         LName := LowerCase(LToken.Text);
+
+        if LName = 'nyxdefaultlocale' then
+        begin
+          Result.Kind := vkResourceLocale;
+          Result.Text := '';
+          Exit;
+        end;
+
+        if (LName = 'nyxresourceref') or (LName = 'nyxlocale') or
+          (LName = 'nyxresourcevalue') or
+          (LName = 'nyxhostedresource') or (LName = 'nyxresourceurl') or
+          (LName = 'nyxresourcecache') or
+          (LName = 'nyxtextresource') or (LName = 'nyxjsonresource') or
+          (LName = 'nyximageresource') or (LName = 'nyxbinaryresource') or
+          (LName = 'nyxdecodebase64') then
+        begin
+          Exit(ResourceConstructor(LName));
+        end;
 
         if (LName = 'nyxthemetokens') or (LName = 'nyxthemepreset') then
         begin
@@ -3236,6 +3274,17 @@ begin
     if not LFound then
     begin
       Fail('Unsupported Binds method ' + LMethod);
+    end;
+
+    if (Length(LArgs) = 1) and (LArgs[0].Kind = vkResourceValue) then
+    begin
+      LSpec := TNyxBindingSpec.Resource(LTarget, LArgs[0].ResourceValue);
+
+      if FApply then
+      begin
+        LNode.SetBinding(LSpec);
+      end;
+      Continue;
     end;
 
     if (Length(LArgs) < 1) or (Length(LArgs) > 2) or
@@ -5120,6 +5169,13 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.times');
     LPrefix := WithNyxImport(LPrefix, 'nyx.colors');
     LPrefix := WithNyxImport(LPrefix, 'nyx.images');
+
+    if ADocument.Resources.Count > 0 then
+    begin
+      LPrefix := WithNyxImport(LPrefix, 'nyx.resources');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.resource.sources');
+      LPrefix := WithNyxImport(LPrefix, 'nyx.bytes');
+    end;
     LPrefix := WithNyxImport(LPrefix, 'nyx.design.tokens');
 
     if LNeedsTypeAhead then

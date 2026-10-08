@@ -598,6 +598,11 @@ begin
     vkStateRef: LPayload := IntToStr(AValue.Ordinal) + ':' + AValue.Text;
     vkCollectionField: LPayload := IntToStr(AValue.Ordinal) + ':' + AValue.Text;
     vkCollectionView: LPayload := AValue.CollectionView.ToData.ToJSON;
+    vkResourceValue: LPayload := AValue.ResourceValue.ToData.ToJSON;
+    vkResourceDefinition: LPayload := AValue.ResourceDefinitionData.ToJSON;
+    vkResourceCache: LPayload := AValue.ResourceCache.ToData.ToJSON;
+    vkResourceKind, vkResourceServerPolicy: LPayload := IntToStr(AValue.Ordinal);
+    vkBytes: LPayload := NyxEncodeBase64(AValue.Bytes);
     vkData: LPayload := AValue.Data.ToJSON;
     vkDataField: LPayload := JoinSourceFrame([AValue.Text, ':', AValue.Data.ToJSON]);
     vkDecimal: LPayload := AValue.Text;

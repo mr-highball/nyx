@@ -15,6 +15,18 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Resource workflow gap (2026-10-08): the new portable catalog/selectors and hosted
+cache declarations are not yet exposed by a resource-specific semantic operation.
+This existing owner must supply bounded metadata/variant listings, exact payload
+windows and structural binding/row context, plus revision-aware grouped resource
+and binding changes as one paired Undo step. Explicit hosted-resolution/cache
+diagnostics and cancellation must be distinguishable from authored fallback data.
+Do not substitute raw property strings, whole-project replacement or browser
+editor automation. The frozen authenticated primary remains read-only; current
+tool source and observing execution require later integration/deployment evidence.
+The prerequisite remains [portable resources](NS-1_resources_01.md); this gap
+earns no workflow closure or added allocation.
+
 Current semantic property restoration (2026-10-07): the existing Pascal author
 now has an explicit transport-owned review mode. It scopes every query/edit/build,
 exports bounded exact source, checks paired Undo/Redo, disposes and retires its

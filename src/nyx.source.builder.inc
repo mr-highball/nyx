@@ -678,6 +678,10 @@ begin
   begin
     MenuDefaults;
   end
+  else if LDocument and SameText(LMethod, 'Resources') then
+  begin
+    ResourceDefaults;
+  end
   else if SameText(LMethod, 'Extensions') then
   begin
     Extensions(LLocal);
