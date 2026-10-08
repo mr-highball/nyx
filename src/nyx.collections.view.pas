@@ -195,6 +195,8 @@ type
   TView = class(TInterfacedObject, INyxCollectionView, INyxTreeHierarchy)
   private
     FStore: INyxCollection;
+    FAtomic: INyxAtomicCollection;
+    FPrepared: TView; { detached, privately owned projection; never subscribed }
     FSource: INyxCollectionSnapshot;
     FSnapshot: INyxCollectionSnapshot;
     FQuery: TNyxCollectionQuery;
@@ -217,6 +219,12 @@ type
       out AParents: TParentIndexes);
     procedure ValidateCandidate(const AData: INyxCollectionSnapshot;
       const AChanges: INyxCollectionChanges);
+    procedure PrepareCandidate(const AData: INyxCollectionSnapshot;
+      const AChanges: INyxCollectionChanges);
+    procedure InstallCandidate(const AData: INyxCollectionSnapshot;
+      const AChanges: INyxCollectionChanges);
+    procedure RetireCandidate;
+    procedure ProjectChanges(const AChanges: INyxCollectionChanges);
     procedure StoreChanged(const AStore: INyxCollection;
       const AChanges: INyxCollectionChanges);
     procedure Notify(const AChanges: INyxCollectionChanges);
@@ -420,13 +428,25 @@ begin
   BuildHierarchy;
   FSelection := NewNyxCollectionSelection(FSource, [],
     Default(TNyxItemRef), Default(TNyxItemRef));
-  FStoreToken := FStore.Subscribe(StoreChanged, ValidateCandidate);
+
+  if Supports(FStore, INyxAtomicCollection, FAtomic) then
+  begin
+    FStoreToken := FAtomic.SubscribePrepared(StoreChanged, PrepareCandidate,
+      InstallCandidate, RetireCandidate);
+  end
+  else
+  begin
+    { An alternative store may retain the original single-store contract. It
+      cannot join a coordinated publication without the optional capability. }
+    FStoreToken := FStore.Subscribe(StoreChanged, ValidateCandidate);
+  end;
 end;
 
 destructor TView.Destroy;
 var
   LIndex: Integer;
 begin
+  RetireCandidate;
 
   if FStoreToken <> nil then
   begin
@@ -440,6 +460,7 @@ begin
   FTokens := nil;
   FSnapshot := nil;
   FSource := nil;
+  FAtomic := nil;
   FStore := nil;
   inherited Destroy;
 end;
@@ -491,7 +512,7 @@ end;
 procedure TView.Writable;
 begin
 
-  if FNotifying then
+  if FNotifying or ((FAtomic <> nil) and FAtomic.Busy) then
   begin
     raise ENyxCollection.Create('Reentrant collection view mutation is not supported');
   end;
@@ -626,6 +647,63 @@ end;
 
 procedure TView.StoreChanged(const AStore: INyxCollection;
   const AChanges: INyxCollectionChanges);
+begin
+
+  if FAtomic = nil then
+  begin
+    ProjectChanges(AChanges);
+  end;
+  { Built-in stores already installed every prepared view before the first
+    observer. Notifications perform target synchronization, never admission. }
+  Notify(AChanges);
+end;
+
+procedure TView.PrepareCandidate(const AData: INyxCollectionSnapshot;
+  const AChanges: INyxCollectionChanges);
+var
+  LCandidate: TView;
+  LKeepAlive: INyxCollectionView;
+begin
+  { Query predicates may be alternative implementations. Retain this receiver
+    through admission even when application code retires its rendered host. }
+  LKeepAlive := Self as INyxCollectionView;
+  RetireCandidate;
+  LCandidate := TView.CreateValidator(FSpec, FProjection);
+  try
+    LCandidate.FQuery := FQuery;
+    LCandidate.FSource := FSource;
+    LCandidate.FSnapshot := FSnapshot;
+    LCandidate.FSelection := FSelection;
+    LCandidate.FExpanded := Copy(FExpanded, 0, Length(FExpanded));
+    LCandidate.ProjectChanges(AChanges);
+    FPrepared := LCandidate;
+  except
+    LCandidate.Free;
+    raise;
+  end;
+end;
+
+procedure TView.InstallCandidate(const AData: INyxCollectionSnapshot;
+  const AChanges: INyxCollectionChanges);
+begin
+  { Private installation is a nonallocating adoption of immutable references
+    and detached vectors. No user callback, query or selection command runs. }
+  FSource := FPrepared.FSource;
+  FSnapshot := FPrepared.FSnapshot;
+  FParents := FPrepared.FParents;
+  FSelection := FPrepared.FSelection;
+  FExpanded := FPrepared.FExpanded;
+  FFirstChild := FPrepared.FFirstChild;
+  FNextSibling := FPrepared.FNextSibling;
+  RetireCandidate;
+end;
+
+procedure TView.RetireCandidate;
+begin
+  FreeAndNil(FPrepared);
+end;
+
+procedure TView.ProjectChanges(const AChanges: INyxCollectionChanges);
 var
   LParents: TParentIndexes;
   LResultParents: TParentIndexes;
@@ -677,7 +755,6 @@ begin
   FExpanded := LExpanded;
   BuildHierarchy;
   ReconcileTreeFocus;
-  Notify(AChanges);
 end;
 
 function TView.ReconcileSelection(const ASource, AResult,

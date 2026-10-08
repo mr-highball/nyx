@@ -15,6 +15,16 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Coordinated resource row gap (2026-10-08): public prepared groups now qualify
+related native runtime tables before store/view publication. The existing
+semantic engine/resource builder regression remains 54/7, leak-free. MCP still
+needs bounded saved row-recipe/source context and edits, instance routing and
+exact runtime observation authority; an explicit runtime group is not a saved
+binding operation. This remains this workflow owner's original gap, with no new
+task, allocation or workflow closure. Resource prerequisite alone advances 3→4.
+Do not substitute whole-project replacement or browser UI automation. See
+[the packet](../WORK.md#current-return-path-coordinated-resource-datasets--2026-10-08).
+
 Application runtime resource gap (2026-10-08): both full application hosts now
 consume one portable owner for automatic/on-demand loading, immutable locale/
 catalog frames, typed load/cache/notification diagnostics and safe retirement.

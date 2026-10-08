@@ -37,6 +37,7 @@ type
   end;
   TCollectionSteps = array of TCollectionStep;
   TCollectionStore = class;
+  TPreparedCollection = class;
 
   TCollectionSnapshot = class(TInterfacedObject, INyxCollectionSnapshot)
   private
@@ -87,12 +88,14 @@ type
     Serial: Integer;
     Validator: TNyxCollectionValidator;
     Observer: TNyxCollectionObserver;
+    Installation: TNyxCollectionValidator;
+    Retirement: TNyxCollectionRetirement;
     destructor Destroy; override;
     function GetConnected: Boolean;
     procedure Disconnect;
   end;
 
-  TCollectionStore = class(TInterfacedObject, INyxCollection)
+  TCollectionStore = class(TInterfacedObject, INyxCollection, INyxAtomicCollection)
   private
     FKey: TNyxCollectionRef;
     FSchema: TNyxCollectionSchema;
@@ -101,6 +104,7 @@ type
     FSubscriptions: array of TCollectionSubscription;
     FSerial: Integer;
     FBusy: Boolean;
+    FPreparation: TPreparedCollection; { weak, token owns the model lease }
     procedure CheckWritable(AExpectedRevision: Integer);
     function Normalize(const AItem: TNyxCollectionItem;
       const ABase: TNyxCollectionItem; AUpdate: Boolean): TNyxCollectionItem;
@@ -108,6 +112,8 @@ type
     function Connection(ASerial: Integer): TCollectionSubscription;
     procedure Disconnect(AToken: TCollectionSubscription);
     procedure Publish(const AItems: TCollectionItems; const ASteps: TCollectionSteps);
+    function PrepareItems(const AItems: TCollectionItems;
+      const ASteps: TCollectionSteps): INyxPreparedPublication;
   public
     constructor Create(const AKey: TNyxCollectionRef; const ASchema: TNyxCollectionSchema;
       const AItems: array of TNyxCollectionItem);
@@ -124,7 +130,41 @@ type
     function Clone: INyxCollection;
     function Subscribe(AObserver: TNyxCollectionObserver;
       AValidator: TNyxCollectionValidator = nil): INyxCollectionSubscription;
+    function PrepareAssign(const ASource: INyxCollectionSnapshot;
+      AExpectedRevision: Integer = -1): INyxPreparedPublication;
+    function SubscribePrepared(AObserver: TNyxCollectionObserver;
+      AValidator, AInstallation: TNyxCollectionValidator;
+      ARetirement: TNyxCollectionRetirement): INyxCollectionSubscription;
+    function GetBusy: Boolean;
   end;
+
+  TPreparedCollection = class(TInterfacedObject, INyxPreparedPublication)
+  private
+    FOwner: TCollectionStore; { retained through FLease, no cycle back from store }
+    FLease: INyxCollection;
+    FItems: TCollectionItems;
+    FBefore: INyxCollectionSnapshot;
+    FAfter: INyxCollectionSnapshot;
+    FChanges: INyxCollectionChanges;
+    FSerials: array of Integer;
+    FActive: Boolean;
+    FValidationAttempted: Boolean;
+    FDispatching: Boolean;
+    FRetirementRequested: Boolean;
+    FValidated: Boolean;
+    FInstalled: Boolean;
+    FNotified: Boolean;
+    procedure RequireActive;
+  public
+    constructor Create(AOwner: TCollectionStore; const AItems: TCollectionItems;
+      const ASteps: TCollectionSteps);
+    destructor Destroy; override;
+    procedure Validate;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
+
 
 function NameBytes(const AName: TNyxText; AReference: Boolean): Integer;
 var
@@ -1335,77 +1375,270 @@ begin
   {$ENDIF}
 end;
 
+function TCollectionStore.PrepareItems(const AItems: TCollectionItems;
+  const ASteps: TCollectionSteps): INyxPreparedPublication;
+begin
+  CheckWritable(-1);
+  Result := TPreparedCollection.Create(Self, AItems, ASteps);
+end;
+
 procedure TCollectionStore.Publish(const AItems: TCollectionItems;
   const ASteps: TCollectionSteps);
 var
-  LAfter: INyxCollectionSnapshot;
-  LChanges: INyxCollectionChanges;
-  LSerials: array of Integer;
+  LPrepared: INyxPreparedPublication;
+begin
+  LPrepared := PrepareItems(AItems, ASteps);
+  try
+    LPrepared.Validate;
+    LPrepared.Install;
+    LPrepared.Notify;
+  finally
+    LPrepared.Retire;
+  end;
+end;
+
+function TCollectionStore.GetBusy: Boolean;
+begin
+  Result := FBusy;
+end;
+
+function TCollectionStore.SubscribePrepared(AObserver: TNyxCollectionObserver;
+  AValidator, AInstallation: TNyxCollectionValidator;
+  ARetirement: TNyxCollectionRetirement): INyxCollectionSubscription;
+var
+  LToken: TCollectionSubscription;
+begin
+  CheckWritable(-1);
+  Result := Subscribe(AObserver, AValidator);
+  LToken := Connection(FSerial);
+  LToken.Installation := AInstallation;
+  LToken.Retirement := ARetirement;
+end;
+
+constructor TPreparedCollection.Create(AOwner: TCollectionStore;
+  const AItems: TCollectionItems; const ASteps: TCollectionSteps);
+var
+  LIndex: Integer;
+begin
+  inherited Create;
+  FOwner := AOwner;
+  FLease := AOwner;
+  FBefore := AOwner.FCurrent;
+  FItems := Copy(AItems, 0, Length(AItems));
+
+  if Length(ASteps) > 0 then
+  begin
+
+    if FBefore.Revision = High(Integer) then
+    begin
+      raise ENyxCollection.Create('Collection revision budget is exhausted');
+    end;
+    FAfter := TCollectionSnapshot.Create(AOwner.FKey, AOwner.FSchema, FItems,
+      FBefore.Revision + 1, AOwner.DatasetBytes(FItems));
+    FChanges := TCollectionChanges.Create(FBefore, FAfter, ASteps);
+  end
+  else
+  begin
+    FAfter := FBefore;
+  end;
+  SetLength(FSerials, Length(AOwner.FSubscriptions));
+  for LIndex := 0 to High(FSerials) do
+  begin
+    FSerials[LIndex] := AOwner.FSubscriptions[LIndex].Serial;
+  end;
+  AOwner.CheckWritable(FBefore.Revision);
+  AOwner.FBusy := True;
+  AOwner.FPreparation := Self;
+  FActive := True;
+end;
+
+destructor TPreparedCollection.Destroy;
+begin
+  Retire;
+  inherited Destroy;
+end;
+
+procedure TPreparedCollection.RequireActive;
+begin
+
+  if not FActive or FRetirementRequested or (FOwner.FPreparation <> Self) then
+  begin
+    raise ENyxCollection.Create('Prepared collection publication has retired');
+  end;
+end;
+
+procedure TPreparedCollection.Validate;
+var
+  LIndex: Integer;
+  LToken: TCollectionSubscription;
+  LKeepAlive: INyxPreparedPublication;
+begin
+  LKeepAlive := Self;
+  RequireActive;
+
+  if FValidationAttempted or FInstalled then
+  begin
+    raise ENyxCollection.Create('Prepared collection validates once');
+  end;
+
+  FValidationAttempted := True;
+  FDispatching := True;
+  try
+
+    if FChanges <> nil then
+    begin
+      for LIndex := 0 to High(FSerials) do
+      begin
+        LToken := FOwner.Connection(FSerials[LIndex]);
+
+        if (LToken <> nil) and Assigned(LToken.Validator) then
+        begin
+          LToken.Validator(FAfter, FChanges);
+          RequireActive;
+        end;
+      end;
+    end;
+    FValidated := True;
+  finally
+    FDispatching := False;
+
+    if FRetirementRequested then
+    begin
+      Retire;
+    end;
+  end;
+end;
+
+procedure TPreparedCollection.Install;
+var
+  LIndex: Integer;
+  LToken: TCollectionSubscription;
+begin
+  RequireActive;
+
+  if not FValidated or FInstalled then
+  begin
+    raise ENyxCollection.Create('Prepared collection requires admitted, single publication');
+  end;
+  { All allocations and validation happened before this phase. Immutable
+    vectors/snapshots are adopted directly; observers see them only afterward. }
+  FOwner.FItems := FItems;
+  FOwner.FCurrent := FAfter;
+  FInstalled := True;
+
+  if FChanges <> nil then
+  begin
+    for LIndex := 0 to High(FSerials) do
+    begin
+      LToken := FOwner.Connection(FSerials[LIndex]);
+
+      if (LToken <> nil) and Assigned(LToken.Installation) then
+      begin
+        LToken.Installation(FAfter, FChanges);
+      end;
+    end;
+  end;
+end;
+
+procedure TPreparedCollection.Notify;
+var
   LIndex: Integer;
   LToken: TCollectionSubscription;
   LError: TNyxText;
-  LFailed: Boolean;
+  LHasError: Boolean;
+  LKeepAlive: INyxPreparedPublication;
 begin
+  LKeepAlive := Self;
+  RequireActive;
 
-  if FCurrent.Revision = High(Integer) then
+  if not FInstalled or FNotified then
   begin
-    raise ENyxCollection.Create('Collection revision budget is exhausted');
+    raise ENyxCollection.Create('Prepared collection notifies once after publication');
   end;
-  LAfter := TCollectionSnapshot.Create(FKey, FSchema, AItems,
-    FCurrent.Revision + 1, DatasetBytes(AItems));
-  LChanges := TCollectionChanges.Create(FCurrent, LAfter, ASteps);
-  SetLength(LSerials, Length(FSubscriptions));
-  for LIndex := 0 to Length(FSubscriptions) - 1 do
-  begin
-    LSerials[LIndex] := FSubscriptions[LIndex].Serial;
-  end;
-  FBusy := True;
+  FNotified := True;
+  LError := '';
+  LHasError := False;
+  FDispatching := True;
   try
-    { Serial snapshots survive receivers releasing their own/other managed token
-      during a callback. Never retain a dangling concrete token for the next call. }
-    for LIndex := 0 to Length(LSerials) - 1 do
+
+    if FChanges <> nil then
     begin
-      LToken := Connection(LSerials[LIndex]);
-
-      if (LToken <> nil) and Assigned(LToken.Validator) then
+      for LIndex := 0 to High(FSerials) do
       begin
-        LToken.Validator(LAfter, LChanges);
-      end;
-    end;
-    FItems := Copy(AItems, 0, Length(AItems));
-    FCurrent := LAfter;
-    LFailed := False;
-    LError := '';
-    for LIndex := 0 to Length(LSerials) - 1 do
-    begin
-      LToken := Connection(LSerials[LIndex]);
 
-      if (LToken <> nil) and Assigned(LToken.Observer) then
-      begin
-        try
-          LToken.Observer(Self, LChanges);
-        except
-          on LException: Exception do
-          begin
+        if FRetirementRequested then
+        begin
+          Break;
+        end;
+        LToken := FOwner.Connection(FSerials[LIndex]);
 
-            if not LFailed then
+        if (LToken <> nil) and Assigned(LToken.Observer) then
+        begin
+          try
+            LToken.Observer(FLease, FChanges);
+          except
+            on LException: Exception do
             begin
-              LFailed := True;
-              LError := ExceptionText(LException);
+
+              if not LHasError then
+              begin
+                LHasError := True;
+                LError := ExceptionText(LException);
+              end;
             end;
           end;
         end;
       end;
     end;
-
-    if LFailed then
-    begin
-      raise ENyxCollectionNotification.Create('Collection committed; observer failed: ' + LError);
-    end;
   finally
-    FBusy := False;
+    FDispatching := False;
+    { The caller/coordinator retires after notification. Keep the reservation
+      until that boundary even if this receiver requested cancellation. }
+  end;
+
+  if LHasError then
+  begin
+    raise ENyxCollectionNotification.Create('Collection committed; observer failed: ' + LError);
   end;
 end;
+
+procedure TPreparedCollection.Retire;
+var
+  LIndex: Integer;
+  LToken: TCollectionSubscription;
+begin
+
+  if not FActive then
+  begin
+    Exit;
+  end;
+
+  if FDispatching then
+  begin
+    { An explicit cancellation inside a borrowed receiver defers release until
+      that receiver returns. Validation then refuses; committed notification
+      stops. A local interface lease also protects last-reference retirement. }
+    FRetirementRequested := True;
+    Exit;
+  end;
+  FActive := False;
+  { Retirement callbacks only discard adapter-owned prepared data. They must
+    neither notify nor throw, including after a later participant rejects. }
+  for LIndex := 0 to High(FSerials) do
+  begin
+    LToken := FOwner.Connection(FSerials[LIndex]);
+
+    if (LToken <> nil) and Assigned(LToken.Retirement) then
+    begin
+      LToken.Retirement;
+    end;
+  end;
+  FOwner.FPreparation := nil;
+  FOwner.FBusy := False;
+  FLease := nil;
+  FOwner := nil;
+end;
+
 
 function ItemIndex(const AItems: TCollectionItems; const ARef: TNyxItemRef): Integer;
 var
@@ -1627,7 +1860,8 @@ begin
   Apply([NyxReplace(AItem)]);
 end;
 
-procedure TCollectionStore.Assign(const ASource: INyxCollectionSnapshot; AExpectedRevision: Integer);
+function TCollectionStore.PrepareAssign(const ASource: INyxCollectionSnapshot;
+  AExpectedRevision: Integer): INyxPreparedPublication;
 var
   LItems: TCollectionItems;
   LSteps: TCollectionSteps;
@@ -1635,8 +1869,13 @@ var
   LStep: Integer;
   LSame: Boolean;
   LKeepAlive: INyxCollection;
+  LRevision: Integer;
 begin
+  { A foreign snapshot may invoke application code while supplying its fields.
+    Retain this model before the first such read, including schema admission. }
+  LKeepAlive := Self;
   CheckWritable(AExpectedRevision);
+  LRevision := FCurrent.Revision;
 
   if (ASource = nil) or (ASource.Key.Name <> FKey.Name) or
     not FSchema.SameSchema(ASource.Schema) then
@@ -1648,7 +1887,6 @@ begin
   begin
     raise ENyxCollection.Create('Assigned collection exceeds its item budget');
   end;
-  LKeepAlive := Self;
   SetLength(LItems, ASource.Count);
   for LIndex := 0 to Length(LItems) - 1 do
   begin
@@ -1669,9 +1907,11 @@ begin
     end;
   end;
 
+  CheckWritable(LRevision);
+
   if LSame then
   begin
-    Exit;
+    Exit(PrepareItems(LItems, nil));
   end;
   { Full dataset replacement has an explicit incremental replay: remove old rows
     from the end, then insert the admitted new order. Ordinary updates use Apply
@@ -1696,7 +1936,22 @@ begin
     LSteps[LStep].AfterItem := LItems[LIndex];
     Inc(LStep);
   end;
-  Publish(LItems, LSteps);
+  Result := PrepareItems(LItems, LSteps);
+end;
+
+procedure TCollectionStore.Assign(const ASource: INyxCollectionSnapshot;
+  AExpectedRevision: Integer);
+var
+  LPrepared: INyxPreparedPublication;
+begin
+  LPrepared := PrepareAssign(ASource, AExpectedRevision);
+  try
+    LPrepared.Validate;
+    LPrepared.Install;
+    LPrepared.Notify;
+  finally
+    LPrepared.Retire;
+  end;
 end;
 
 function TCollectionStore.Clone: INyxCollection;

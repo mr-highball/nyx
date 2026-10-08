@@ -46,7 +46,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current application resource lifecycle (2026-10-08): both hosts own independent
+Current coordinated resource datasets (2026-10-08): public prepared groups and
+optional runtime stores admit all query/selection/hierarchy projections before
+publication. Checked shared/actual Win32 controls pass 43; affected collection,
+core, selection/tree/resource and semantic 54/7 regressions pass leak-free. Both
+Studios/backend/worker and browser consumer compile with zero owned warnings.
+Saved row/source mappings, joint scalar/table loading, runtime/semantic authoring
+and browser/phone/observing parity remain open. No full criterion/percentage
+closes: resource no-closure alone advances 3→4, other owners stay 22/37/19/28/2.
+End group fixtures and return directly to saved mappings and those consumers.
+See [the packet](../WORK.md#current-return-path-coordinated-resource-datasets--2026-10-08).
+
+Previous application resource lifecycle (2026-10-08): both hosts own independent
 catalog/loading/locale contexts, hidden-page and mounted-target admission,
 bounded deferred completion and disposal. Checked actual Win32 full application
 controls pass 39, including real default HTTP loading, navigation/reusables,

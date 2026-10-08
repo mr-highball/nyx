@@ -9,6 +9,72 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: coordinated resource datasets — 2026-10-08
+
+The previous turn is **progress**, exactly pushed as `fe0d245`. This continuation
+returns to resource criterion 3: related resource-backed tables need shared
+admission before saved mappings can safely join scalar loading. It introduces no
+task or credit allocation. Execution remains solo; rejected listener/browser/
+replacement/temporary-cleanup actions stay held, with no equivalent retry.
+
+Public `nyx.publication` captures managed single-use prepared participants,
+validates all, installs all, notifies all and retires adopted work on success or
+refusal. Optional `INyxAtomicCollection` preserves the original collection
+interface/GUID. Built-in stores reserve revisions and retain their model without
+owning receivers. `TNyxResourceRows.PrepareReload` supplies typed detached
+datasets. Existing Assign/Apply use the same preparation internally and retain
+their notification exception contract; no-ops fabricate no revisions/notifications.
+
+Built-in views prepare query results, selection and hierarchy before installation.
+A later invalid view rejects every candidate; the first observer reads all
+accepted store/view revisions. Reserved views refuse competing selection/query/
+subscription commands. Serial-based borrowed installers retire on disconnect;
+abandonment and validation cancellation release reservations. Managed leases
+protect foreign snapshot/query admission. Receiver failures, including empty
+messages and supplementary Unicode, report after commit without skipping another
+participant. A private managed vector survives release of the caller's entire
+group. Extension installers/retirement remain trusted nonthrowing adoption/discard
+contracts; callers may not manually retire another active group participant.
+
+Maintained `tools/build.ps1 -Target resource-publication` passes **43 checked
+shared/actual Win32 assertions**, leak-free, zero owned warnings. Two mounted
+tables retain physical identities and selected rows, synchronize once after
+accepted replacement, and remain exact on a later invalid tree. It also qualifies
+reserved/reentrant commands, abandoned/duplicate/missing/stale participants,
+prepared-view retirement, nested validation and callback cancellation. Browser
+consumer, both ordinary Studios, backend and worker compile/stage. Four browser
+compiler invocations retain **28 upstream classes.pas warnings**; dependency
+source remains untouched. Browser execution, observing/phone and full parity stay
+unqualified. Final log: ignored `build/resource-rows/maintained-final.log`;
+maintained outputs: `build/resource-publication/maintained/`. End this fixture family.
+
+Affected checked regressions pass core **30/1801**, typed collections **149**,
+views **32**, typed query **56**, actual native collection controls/refresh
+**27/27**, selection **155**, tree hierarchy **83** and resource controls **78**,
+leak-free. The actual suspended semantic resource engine/exact emitted builder
+remain **54/7**, with public dispatch in a fresh private runtime. No listener or
+active design mutation was substituted. Logs live below
+`build/resource-rows/{regression,controls,semantic}/`.
+
+No full criterion/task/percentage closes: resource prerequisite no-closure alone
+advances **3→4**; workflow/authoring/renderer/codegen/delivery stay
+**22/37/19/28/2**. Return directly to saved JSON row mappings, crafted full/page/
+reusable source replay, instance routing and prepared scalar/context participants
+for joint application loading. Explicit runtime groups do not establish automatic
+saved bindings or simultaneous physical paint. Assign retains its remove/insert
+tree-disclosure semantics. Studio/MCP row authoring, runtime status/media,
+current-source authenticated/browser/phone/observing, performance and full
+application/Studio/parity retain their original owners.
+
+Read-only authenticated MCP remains revision 2, original selection/view, no draft/
+history and activity 499. All gate handles are terminal. Protected **15 exact
+process identities / 9 complete pairs / 229 sealed files** remain guarded by
+`build/menu-bar-editor/guard.ps1`. This packet's preservation log and exact remote/
+clean checkpoint belong to ignored `build/resource-rows/preservation.log` and
+`remote-checkpoint.json`. This source packet does not replace the LAN product.
+Earlier automatic approval review supplied only "blocked by policy" for held
+actions; none was retried.
+
 ## Current return path: application resources and lifetime — 2026-10-08
 
 The previous turn is **progress**, exactly pushed as `a921a33`. This continuation

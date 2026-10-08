@@ -25,7 +25,8 @@ unit nyx.resources.rows;
 
 interface
 
-uses nyx.text, nyx.data, nyx.state, nyx.resources, nyx.collections, nyx.contract;
+uses SysUtils, nyx.text, nyx.data, nyx.state, nyx.resources, nyx.collections, nyx.contract,
+  nyx.publication;
 
 type
   { Immutable JSON-to-collection recipe. An explicit text identity path supplies
@@ -56,6 +57,15 @@ type
       Notification failure follows commit, matching INyxCollection.Assign. }
     procedure Reload(const ACollection: INyxCollection; const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef; AExpectedRevision: System.Integer = -1);
+    { Reads a detached dataset and reserves a coordinated-capable runtime store.
+      No receiver runs until publication. Combine independent preparations with
+      PublishNyxGroup; release/Retire on abandonment. Unsupported custom stores,
+      busy/stale revisions and malformed data refuse without changing any rows.
+      Selection/query admission also happens before every group participant
+      installs. This explicit operation does not register a saved/live binding. }
+    function PrepareReload(const ACollection: INyxCollection; const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef;
+      AExpectedRevision: System.Integer = -1): INyxPreparedPublication;
     function Text(const AField: TNyxTextFieldRef): TNyxResourceRows; overload;
     function Text(const AField: TNyxTextFieldRef;
       const APath: TNyxResourcePath): TNyxResourceRows; overload;
@@ -241,6 +251,31 @@ begin
   end;
   LCandidate := Read(AResources, ACollection.Snapshot.Key, ALocale, AFallback);
   ACollection.Assign(LCandidate, AExpectedRevision);
+end;
+
+function TNyxResourceRows.PrepareReload(const ACollection: INyxCollection;
+  const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef;
+  AExpectedRevision: System.Integer): INyxPreparedPublication;
+var
+  LAtomic: INyxAtomicCollection;
+  LCandidate: INyxCollectionSnapshot;
+  LRevision: System.Integer;
+begin
+
+  if (ACollection = nil) or not Supports(ACollection, INyxAtomicCollection, LAtomic) then
+  begin
+    raise ENyxResource.Create('Grouped resource reload requires a coordinated collection');
+  end;
+  LRevision := ACollection.Snapshot.Revision;
+
+  if LAtomic.Busy or ((AExpectedRevision >= 0) and (AExpectedRevision <> LRevision)) then
+  begin
+    raise ENyxResource.Create('Grouped resource reload requires an idle, current collection');
+  end;
+  LCandidate := Read(AResources, ACollection.Snapshot.Key, ALocale, AFallback);
+  { Recheck the captured revision after reads from a possibly foreign catalog.
+    Omitting an expected revision still cannot admit an intervening mutation. }
+  Result := LAtomic.PrepareAssign(LCandidate, LRevision);
 end;
 
 end.

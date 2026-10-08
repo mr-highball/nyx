@@ -30,6 +30,7 @@ interface
 uses
   SysUtils,
   nyx.text,
+  nyx.publication,
   nyx.state,
   nyx.contract;
 
@@ -316,6 +317,28 @@ type
     function Clone: INyxCollection;
     function Subscribe(AObserver: TNyxCollectionObserver;
       AValidator: TNyxCollectionValidator = nil): INyxCollectionSubscription;
+  end;
+
+  { Optional coordinated publication capability. Original collection interface/
+    GUID remains unchanged. Built-in stores implement it; alternative stores may
+    opt in and must preserve the reservation/install contract.
+    PrepareAssign owns an immutable admitted proposal and reserves the store
+    until its token retires. It invokes no receivers; Validate runs validators.
+    Busy also covers ordinary commands/notifications. Prepared subscriptions
+    are for projection adapters: their validator allocates its complete candidate,
+    Installation adopts it without callbacks/allocations, Retirement discards
+    any abandoned candidate. Install/Retire callbacks must never throw or notify
+    user code. Those receivers are borrowed like Subscribe. }
+  TNyxCollectionRetirement = procedure of object;
+  INyxAtomicCollection = interface
+    ['{B66FAF17-EF45-46A7-9E43-88AD8C95198E}']
+    function PrepareAssign(const ASource: INyxCollectionSnapshot;
+      AExpectedRevision: Integer = -1): INyxPreparedPublication;
+    function SubscribePrepared(AObserver: TNyxCollectionObserver;
+      AValidator, AInstallation: TNyxCollectionValidator;
+      ARetirement: TNyxCollectionRetirement): INyxCollectionSubscription;
+    function GetBusy: Boolean;
+    property Busy: Boolean read GetBusy;
   end;
 
 { Typed identity/value/schema factories. Names require 1..128 valid Unicode

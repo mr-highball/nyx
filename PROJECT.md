@@ -66,6 +66,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Related resource datasets now use a portable prepared-publication group. Built-in
+tables/trees admit complete projections before any store changes; observers read
+all accepted revisions. Checked shared/actual Win32 grouped-control checks pass
+43, leak-free; affected core/collection/query/selection/hierarchy/resource and
+semantic regressions pass. Both Studios/backend/worker and browser consumer
+compile with zero owned warnings. Saved row mappings and combined scalar/table
+loading remain open; browser/observing parity is not claimed. See
+[the packet](WORK.md#current-return-path-coordinated-resource-datasets--2026-10-08).
+
 Both application hosts now own bounded resource loading, immutable runtime
 contexts and explicit locale/navigation lifetime. Hidden pages and the mounted
 target validate before publication. Actual Win32 application/control checks pass

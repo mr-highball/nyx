@@ -168,6 +168,82 @@ generated recipe replay, reusable mapping scopes and a combined scalar/table
 transaction are still open. Generated collection defaults currently preserve
 their materialized rows, without inventing an automatic resource relationship.
 
+## Coordinated runtime row publication
+
+Related datasets can prepare independently and publish through one portable
+`nyx.publication` group. `TNyxResourceRows.PrepareReload` reads and normalizes the
+resource into a detached snapshot, then reserves the runtime store at the
+captured revision. Creating the preparation invokes no receivers. Callers retain
+the returned `INyxPreparedPublication`; release or explicitly Retire abandoned
+work, including when a later preparation fails.
+
+```pascal
+LTeamUpdate := nil;
+LReviewUpdate := nil;
+try
+  LTeamUpdate := LRows.PrepareReload(LTeamStore, LRuntimeResources,
+    NyxDefaultLocale, NyxDefaultLocale, LTeamStore.Snapshot.Revision);
+  LReviewUpdate := LRows.PrepareReload(LReviewStore, LRuntimeResources,
+    NyxDefaultLocale, NyxDefaultLocale, LReviewStore.Snapshot.Revision);
+  PublishNyxGroup([LTeamUpdate, LReviewUpdate]);
+finally
+
+  if LTeamUpdate <> nil then
+  begin
+    LTeamUpdate.Retire;
+  end;
+
+  if LReviewUpdate <> nil then
+  begin
+    LReviewUpdate.Retire;
+  end;
+end;
+```
+
+The group captures its own managed participant vector, validates **every**
+candidate, installs every accepted model, then notifies every participant.
+Built-in collection views prepare complete query/selection/hierarchy projections
+before installation. An invalid later tree or table preserves all stores/views
+and synchronizes no mounted control. The first observer can read every accepted
+store/view, including another participant. Competing dataset, selection, query
+and subscription commands refuse while a store is reserved; defer them until
+the group retires. Tokens remain borrowed and can disconnect during callbacks.
+
+`INyxAtomicCollection` is an optional capability; the original collection GUID
+and interface remain unchanged. Alternative stores may opt in, and ordinary
+single-store stores remain supported by the original view path. Prepared adapter
+subscriptions allocate/admit in their validator, adopt references without user
+callbacks or allocation in their installer, and discard abandoned candidates in
+their nonthrowing retirement callback. Custom participants must honor this same
+contract: the coordinator cannot undo an extension's throwing installer.
+Properly ordered Install is adoption only; out-of-order/repeated phase calls
+refuse. Preparations are single-use, UI-thread-only and retain their model,
+without owning documents, renderers or callback receivers. Groups accept 1..2048
+distinct nonnil participants; oversized groups are not adopted. Callers must not
+manually retire another participant or invoke its phases inside an active group.
+
+Receiver failures occur after commit. The coordinator continues independent
+notifications and raises `ENyxPublicationNotification`; ordinary collection
+commands retain `ENyxCollectionNotification`. Empty error messages still count
+as failures. Unchanged assignments reserve safely but produce no new revision
+or notification. Stable row identities retain table selection; Assign remains
+an explicit remove/insert replacement, so tree disclosure follows its existing
+replacement rules rather than a new identity-preserving refresh policy.
+
+Target controls synchronize during notifications after complete model admission;
+this is not a promise of simultaneous physical painting. This explicit row group
+does not save an automatic recipe, publish scalar resource contexts, or register
+an application loader. Saved mapping/source replay, reusable-instance routing and
+joint scalar/table publication retain the resource task's original scope.
+
+`tools/build.ps1 -Target resource-publication` passes 43 checked shared/actual
+Win32 assertions, leak-free. It covers grouped table updates, later tree refusal,
+selection/control identity, cross-view revision visibility, reservation/reentry,
+abandonment/retirement, Unicode/empty observer errors and release of the caller's
+entire participant vector during notification. Browser counterparts, both
+Studios, backend and worker compile with zero owned warnings; browser execution
+and observing Studio remain separate qualification requirements.
+
 ## Hosted declarations and caller cache policy
 
 Use `nyx.resource.sources` to declare an absolute HTTP(S) location:

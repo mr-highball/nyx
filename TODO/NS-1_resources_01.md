@@ -54,6 +54,24 @@ Browser/phone/trusted chooser/observing rollout currently needs the documented
 launch/deployment blocker resolved. Until then compile/native evidence remains
 partial and this task stays open. See the [return path](../WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).
 
+## Coordinated row consumer boundary — 2026-10-08
+
+Criterion 3 now has explicit prepared row groups and optional coordinated runtime
+stores. Complete query/selection/tree projections admit before installation;
+later invalid views preserve every store/control. First notifications read all
+accepted models; managed preparation/token retirement preserves independent
+ownership. Checked shared/actual Win32 table assertions pass 43, leak-free; affected
+core/collection/query/selection/hierarchy/resource and semantic regressions pass.
+Both Studios/backend/worker and browser consumer compile with zero owned warnings.
+
+This is a prerequisite for saved row/source mappings and joint scalar/table
+application loading, not their completion. No full criterion closes; resource
+no-closure alone advances 3→4, other owner counts remain 22/37/19/28/2. End group
+fixtures and return directly to those original consumers. Browser/observing/phone,
+runtime status/media and full parity remain open. See
+[the packet](../WORK.md#current-return-path-coordinated-resource-datasets--2026-10-08)
+and [the contract](../docs/resources.md#coordinated-runtime-row-publication).
+
 ## Application lifecycle consumer boundary — 2026-10-08
 
 Criteria 3/4/5 now have full application hosts consuming one managed portable

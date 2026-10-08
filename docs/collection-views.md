@@ -200,6 +200,19 @@ application/instance stores and each view's selected item. A standalone renderer
 creates an independent context. Supplied controllers must match the realized
 IDs, scopes, specs and projections before replacing accepted controls.
 
+## Prepared model publication
+
+Built-in stores offer optional `INyxAtomicCollection`; the original collection
+interface/GUID is unchanged. Views prepare complete query, selection and
+hierarchy candidates before installation, including for ordinary Assign/Apply.
+Reserved models reject competing dataset/view/subscription commands. Independent
+prepared stores can join `PublishNyxGroup` so a later invalid view preserves all
+models and the first notification reads every accepted store/view. Borrowed
+projection installers adopt preallocated data; target mounts synchronize during
+notification. Extension installers/retirement must be nonthrowing. This does not
+promise simultaneous physical paint. See [the resource group contract](resources.md#coordinated-runtime-row-publication)
+for ownership, refusal and explicit resource-backed table usage.
+
 ## Ownership and target behavior
 
 Views retain their stores and accepted snapshots. Their store subscription and
