@@ -31,6 +31,7 @@ interface
 uses
   nyx.types,
   nyx.text,
+  nyx.images.browser,
   Classes,
   SysUtils,
   Math,
@@ -1276,8 +1277,14 @@ begin
     begin
       raise ENyxModel.Create('Unsupported image URL');
     end;
-    TJSHTMLImageElement(Result).src := LURL;
+    { An absent source must not request the surrounding application page. }
+
+    if LURL <> '' then
+    begin
+      TJSHTMLImageElement(Result).src := LURL;
+    end;
     TJSHTMLImageElement(Result).alt := ANode.Prop('alt', ANode.Prop('text'));
+    ApplyNyxBrowserImage(ANode, TJSHTMLImageElement(Result));
   end
   else if LKind = 'list' then
   begin
@@ -5855,6 +5862,7 @@ begin
           LControl.setAttribute('src', LValue);
         end;
         TJSHTMLImageElement(LControl).alt := LNode.Prop('alt', LNode.Prop('text'));
+        ApplyNyxBrowserImage(LNode, TJSHTMLImageElement(LControl));
       end;
 
       if LNode.Prop('aria-label') <> '' then

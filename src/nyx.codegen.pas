@@ -33,6 +33,7 @@ uses
   nyx.dates,
   nyx.times,
   nyx.colors,
+  nyx.images,
   nyx.design.tokens,
   nyx.data,
   nyx.contract,
@@ -231,6 +232,27 @@ begin
     TNyxText(IntToStr(LColor.Green)) + ', ' + TNyxText(IntToStr(LColor.Blue)) + ')';
 end;
 
+function PascalImage(const AText: TNyxText): TNyxText;
+var
+  LImage: TNyxImageSource;
+begin
+  LImage := TNyxImageSource.FromWire(AText);
+  case LImage.Kind of
+    nisEmpty: Result := 'NyxNoImage';
+    nisLocation: Result := 'NyxImage(NyxImageLocation(' + PascalString(AText) + '))';
+    nisEmbedded:
+      begin
+        Result := 'NyxEmbeddedImage(' + NyxImageFormatSymbol(LImage.Format) + ', ' +
+          PascalString(LImage.Encoded) + ')';
+
+        if NyxEmbeddedImage(LImage.Format, LImage.Encoded).ToWire <> AText then
+        begin
+          Result := 'TNyxImageSource.FromWire(' + PascalString(AText) + ')';
+        end;
+      end;
+  end;
+end;
+
 function PascalTime(const AText: TNyxText): TNyxText;
 var
   LTime: TNyxClockTime;
@@ -311,7 +333,8 @@ const
     'atDragSource', 'atDropTarget', 'atTouchBehavior', 'atFlowWrap',
     'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing',
     'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight',
-    'atQueryContainer', 'atContainerContainment', 'atSliderIntervals');
+    'atQueryContainer', 'atContainerContainment', 'atSliderIntervals',
+    'atImageFit', 'atImageHorizontal', 'atImageVertical');
   CTouchSymbols: array[TNyxTouchBehavior] of TNyxText =
     ('ntbAutomatic', 'ntbNone', 'ntbPanX', 'ntbPanY', 'ntbManipulation');
   CWrapSymbols: array[TNyxFlowWrap] of TNyxText = ('nfwAutomatic', 'nfwNoWrap', 'nfwWrap');
@@ -429,7 +452,32 @@ begin
     atHint: LMethod := 'Hint';
     atAccessibleName: LMethod := 'AccessibleName';
     atHref: LMethod := 'LinkTo';
-    atSource: LMethod := 'Source';
+    atSource:
+      begin
+        Exit('Source(' + PascalImage(AValue) + ')');
+      end;
+    atImageFit:
+      begin
+
+        if AValue <> '' then
+        begin
+          Exit('ImageFit(' + NyxImageFitSymbol(ReadNyxImageFit(AValue)) + ')');
+        end;
+      end;
+    atImageHorizontal, atImageVertical:
+      begin
+
+        if AValue <> '' then
+        begin
+          LMethod := 'ImageHorizontal';
+
+          if LAttribute = atImageVertical then
+          begin
+            LMethod := 'ImageVertical';
+          end;
+          Exit(LMethod + '(' + NyxImageAnchorSymbol(ReadNyxImageAnchor(AValue)) + ')');
+        end;
+      end;
     atAlt: LMethod := 'AlternativeText';
     else
       begin
@@ -1977,6 +2025,7 @@ begin
     LLines.Add('  nyx.dates,');
     LLines.Add('  nyx.times,');
     LLines.Add('  nyx.colors,');
+    LLines.Add('  nyx.images,');
     LLines.Add('  nyx.design.tokens,');
     LLines.Add('  nyx.types,');
     LLines.Add('  nyx.responsive,');

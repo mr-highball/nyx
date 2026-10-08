@@ -46,7 +46,13 @@
     function Hint(const AValue: TNyxText): INyxConfiguration;
     function AccessibleName(const AValue: TNyxText): INyxConfiguration;
     function LinkTo(const AValue: TNyxText): INyxConfiguration;
-    function Source(const AValue: TNyxText): INyxConfiguration;
+    function Source(const AValue: TNyxText): INyxConfiguration; overload;
+    { Portable source is copied; fit/anchors remain closed Pascal choices across
+      default, platform and responsive scopes. No decoder or host is retained. }
+    function Source(const AValue: TNyxImageSource): INyxConfiguration; overload;
+    function ImageFit(AValue: TNyxImageFit): INyxConfiguration;
+    function ImageHorizontal(AValue: TNyxImageAnchor): INyxConfiguration;
+    function ImageVertical(AValue: TNyxImageAnchor): INyxConfiguration;
     function AlternativeText(const AValue: TNyxText): INyxConfiguration;
     function Option(const AValue: TNyxText): INyxConfiguration; overload;
     function Option(AValue: Integer): INyxConfiguration; overload;
@@ -147,7 +153,11 @@
     function Hint(const AValue: TNyxText): INyxConfiguration;
     function AccessibleName(const AValue: TNyxText): INyxConfiguration;
     function LinkTo(const AValue: TNyxText): INyxConfiguration;
-    function Source(const AValue: TNyxText): INyxConfiguration;
+    function Source(const AValue: TNyxText): INyxConfiguration; overload;
+    function Source(const AValue: TNyxImageSource): INyxConfiguration; overload;
+    function ImageFit(AValue: TNyxImageFit): INyxConfiguration;
+    function ImageHorizontal(AValue: TNyxImageAnchor): INyxConfiguration;
+    function ImageVertical(AValue: TNyxImageAnchor): INyxConfiguration;
     function AlternativeText(const AValue: TNyxText): INyxConfiguration;
     function Option(const AValue: TNyxText): INyxConfiguration; overload;
     function Option(AValue: Integer): INyxConfiguration; overload;

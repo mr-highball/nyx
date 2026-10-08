@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'image-presentation', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -2609,6 +2609,61 @@ try {
       '-Fusrc', '-Futests', '-Fustudio', "-FE$nyxTreeBrowser") + $nyxTreeSourceFlags + @('tests/nyx_tree_hierarchy_tests.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxTreeBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/tree-hierarchy.html') -Destination $nyxTreeBrowser
+    exit 0
+  }
+
+
+  if ($Target -eq 'image-presentation') {
+    # Require the unchanged bounded semantic seed. Pascal owns byte fixtures,
+    # typed candidate enrichment, decoding, assertions and exact source output.
+    # Browser artifacts stage only; no listener or browser is launched.
+    $nyxImageRoot = Join-Path $nyxRoot 'build/image-presentation'
+    $nyxImageSeed = Join-Path $nyxImageRoot 'seed'
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxImageSeed 'nyx.generated.view.pas'))) {
+      throw 'Export the English Image workshop through a temporary MCP review before this check'
+    }
+    $nyxImageFixtures = Join-Path $nyxImageRoot 'fixtures'
+    $nyxImageTool = Join-Path $nyxImageRoot 'maintained/tool'
+    $nyxImageNative = Join-Path $nyxImageRoot 'maintained/native'
+    $nyxImageBrowser = Join-Path $nyxImageRoot 'maintained/browser'
+    $nyxImageGenerated = Join-Path $nyxImageRoot 'maintained/generated'
+    New-Item -ItemType Directory -Force -Path $nyxImageFixtures, $nyxImageTool, $nyxImageNative, $nyxImageBrowser, $nyxImageGenerated | Out-Null
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', "-FU$nyxImageTool", "-FE$nyxImageTool", 'tests/nyx_image_fixtures.lpr')
+    & (Join-Path $nyxImageTool 'nyx_image_fixtures.exe') $nyxImageFixtures
+    if ($LASTEXITCODE -ne 0) { throw 'Pascal image fixture generation failed' }
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxImagePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxImageFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxImageSeed", "-Fu$nyxImageFixtures",
+      "-Fu$nyxLazarus/lcl/units/$nyxImagePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxImagePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxImagePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxImagePlatform",
+      "-FU$nyxImageNative", "-FE$nyxImageNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxImageFlags + @('tests/nyx_image_presentation_tests.lpr'))
+    & (Join-Path $nyxImageNative 'nyx_image_presentation_tests.exe') `
+      (Join-Path $nyxImageGenerated 'nyx.generated.images.pas') `
+      (Join-Path $nyxImageGenerated 'images-desktop.png') `
+      (Join-Path $nyxImageGenerated 'images-compact.png')
+    if ($LASTEXITCODE -ne 0) { throw 'Native image presentation failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxImageFlags + @("-Fu$nyxImageGenerated", 'tests/nyx_image_generated.lpr'))
+    & (Join-Path $nyxImageNative 'nyx_image_generated.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Exact emitted image execution failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxImageSeed", "-Fu$nyxImageFixtures",
+      "-FE$nyxImageBrowser", 'tests/nyx_image_presentation_tests.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', "-Fu$nyxImageGenerated", "-Fu$nyxImageFixtures",
+      "-FE$nyxImageBrowser", 'tests/nyx_image_generated.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxImageBrowser 'rtl.js')
+    foreach ($nyxImageHost in @('image-presentation.html', 'image-generated.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxImageHost") -Destination $nyxImageBrowser
+    }
+    Write-Host 'Image consumers staged. Browser execution and observing rollout remain separate.'
     exit 0
   }
 

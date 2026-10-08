@@ -36,6 +36,7 @@ uses
   nyx.times.lcl,
   nyx.colors,
   nyx.colors.lcl,
+  nyx.images, nyx.images.lcl,
   nyx.sliders,
   nyx.sliders.lcl,
   Classes,
@@ -1302,7 +1303,7 @@ begin
   end
   else if LKind = 'image' then
   begin
-    Result := TImage.Create(FPanel);
+    Result := TNyxLCLImage.Create(FPanel);
     TImage(Result).Proportional := True;
     TImage(Result).Center := True;
 
@@ -6800,22 +6801,24 @@ begin
     Exit;
   end;
   FControl.AccessibleDescription := FNode.Prop('alt');
+  { Policy changes retain the source cache and physical LCL image. }
+
+  if FControl is TNyxLCLImage then
+  begin
+    TNyxLCLImage(FControl).ConfigureImage(
+      ReadNyxImageFit(FNode.Prop('image-fit', 'contain')),
+      ReadNyxImageAnchor(FNode.Prop('image-position-x', 'center')),
+      ReadNyxImageAnchor(FNode.Prop('image-position-y', 'center')));
+  end;
   LSource := FNode.Prop('src');
 
   if FHasSourceBaseline and (FLastSource = LSource) then
   begin
     Exit;
   end;
-  LPicture := TPicture.Create;
+  LPicture := NewNyxLCLPicture(TNyxImageSource.FromWire(LSource));
   try
-    { Standard native images resolve local files. Network/portable asset
-      providers remain a separate required adapter boundary. A missing file
-      clears the old picture; a decoding failure preserves the admitted one. }
-
-    if FileExists(LSource) then
-    begin
-      LPicture.LoadFromFile(LSource);
-    end;
+    { Decode on an independent picture before changing this accepted face. }
     TImage(FControl).Picture.Assign(LPicture);
     FLastSource := LSource;
     FHasSourceBaseline := True;

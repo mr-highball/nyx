@@ -26,6 +26,22 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   time pickers. Full picker/component criteria retain this task's ownership;
   the shared NS-1 prerequisite creates no extra completion credit.
 
+## Portable media prerequisite — 2026-10-07
+
+Original criteria 1/2 consume immutable PNG/JPEG, specialized Image interfaces,
+closed fit/position and exact responsive/platform source through the ordinary
+image control and independently owned media-card parts. Checked shared/Win32
+checks pass 178, exact emitted execution seven and workspace regression 248,
+leak-free; matching browser and both Studios compile. See [images](../docs/images.md)
+and [the packet](../WORK.md#current-return-path-portable-image-presentation--2026-10-07).
+
+No component/full criterion closes or historical count is invented. Renderer
+alone owns 18→19; workflow/authoring/codegen/delivery remain 20/35/28/2. Stop this
+image boundary. Current browser/phone/observing execution, asset workflows,
+asynchronous media events, orientation/color fidelity and complete production
+component/parity/accessibility/budgets retain their original requirements.
+
+
 ## RGB picker breadth prerequisite — 2026-10-07
 
 Original input/picker and reusable criteria now include specialized typed Color,

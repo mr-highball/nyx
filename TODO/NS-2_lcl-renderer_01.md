@@ -23,6 +23,26 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   prerequisite for replacing the time-field text fallback. Other native input
   and full renderer criteria remain required; this allocates no extra credit.
 
+## Portable embedded image integration — 2026-10-07
+
+Original criteria 1–3 now consume typed PNG/JPEG, shared fit/position and crafted
+source through ordinary LCL images and independent reusable media parts.
+Checked shared/Win32 178, exact emitted execution seven and workspace regression
+248 pass leak-free; both Studios/backend/browser consumers and worker compile
+with zero owned warnings. Actual Sync decoder refusal retains the precise
+picture/face/source baseline. Explicit Clear and NoImage restore defaults/empty.
+See [images](../docs/images.md) and
+[the packet](../WORK.md#current-return-path-portable-image-presentation--2026-10-07).
+
+No original full criterion closes. Renderer alone advances 18→19 once; known
+workflow/authoring/codegen/delivery counts remain 20/35/28/2. The broader property
+journey fails before image checks because its old semantic seed lacks a required
+numeric input; retain that failed evidence and workflow-owned refresh. Stop
+image fixtures. Executed browser/phone/observing, media lifecycle/orientation,
+network/asset resolution, trusted accessibility/widgetsets/DPI and production
+visual/performance/full parity requirements remain unchanged.
+
+
 ## Native focus regression repaired — 2026-10-07
 
 Original criteria 1/2 consume actual post-handler LCL focus when qualifying native

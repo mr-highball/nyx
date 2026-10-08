@@ -191,6 +191,30 @@ begin
   Result := Self as INyxConfiguration;
 end;
 
+function TNyxConfiguration.Source(const AValue: TNyxImageSource): INyxConfiguration;
+begin
+  ConfigurationScope.Source(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.ImageFit(AValue: TNyxImageFit): INyxConfiguration;
+begin
+  ConfigurationScope.ImageFit(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.ImageHorizontal(AValue: TNyxImageAnchor): INyxConfiguration;
+begin
+  ConfigurationScope.ImageHorizontal(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
+function TNyxConfiguration.ImageVertical(AValue: TNyxImageAnchor): INyxConfiguration;
+begin
+  ConfigurationScope.ImageVertical(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
 function TNyxConfiguration.AlternativeText(const AValue: TNyxText): INyxConfiguration;
 begin
   ConfigurationScope.AlternativeText(AValue);

@@ -3,6 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current portable media integration (2026-10-07): typed PNG/JPEG, fit/position and
+specialized source authoring reach ordinary adapters and independent reusable
+media parts. Checked shared/Win32 checks pass 178, exact emitted execution seven
+and workspace regression 248, leak-free; current Studios/backend/browser and
+worker compile. No full criterion closes: renderer alone advances 18→19, with
+workflow/authoring/codegen/delivery at 20/35/28/2. The broader property journey
+fails on an older seed missing its numeric input. End this image boundary;
+current browser/phone/observing, assets, complete media/mobile Studio/parity and
+production quality remain with original owners. See
+[the packet](WORK.md#current-return-path-portable-image-presentation--2026-10-07).
+
+
 Current theme integration (2026-10-07): immutable fluent palette/metrics and
 crafted source reach both ordinary Studios through one public Nyx theme form.
 Proposals, exact Apply/inherited reset, paired history and independent canvas/

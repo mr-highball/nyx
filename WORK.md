@@ -7,6 +7,117 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: portable image presentation — 2026-10-07
+
+Previous goal turn is **progress**: `1c746e6` integrates typed themes and a public
+Nyx-built Studio form. Exact remote/clean receipt is retained; shared/ordinary
+native checks pass 83, exact emitted Pascal five and workspace regression 248.
+No full criterion closes; known counts are 20/35/18/28/2. All previous handles
+are terminal. The full Nyx/Studio objective and original acceptance stay intact.
+
+Reassessment finds a concrete media gap under original NS-3 component criterion 1
+and NS-2 parity: browser images accept embedded PNG/JPEG, while ordinary native
+images resolve only local files. Deliver a portable immutable typed image source,
+closed fit/position choices and shared sizing consumed by both ordinary adapters.
+Use the specialized Image interface/configuration, crafted source reader/generator,
+schema/Inspector, existing responsive/platform scopes and compound media parts.
+Do not add a second toolkit or substitute machine paths for portable resources.
+
+Compose an independent English seed through bounded semantic MCP and one grouped
+transaction. Qualify typed data/source/history refusals, exact emitted compilation/
+execution, ordinary native decoding/fit/retention and image-bearing compound parts;
+compile the matching browser consumer, both Studios/backend and source worker.
+Use PNG/JPEG/base64 interchange and CSS object sizing primary specifications.
+Actual browser/phone/observing execution, broader asset registry/import/workspace
+UX, asynchronous media events, color/orientation fidelity and complete parity/
+accessibility/visual/performance requirements retain their original owners.
+
+Preserve all fifteen process identities, nine complete pairs and 229 frozen LAN
+files. No rejected browser/backend launch or primary replacement is retried.
+Renderer is the sole no-closure owner if integrated; do not invent criterion
+credit. Two integration/repair passes then reassess concrete failures and end
+this integrated media boundary, retaining complete original component outcomes.
+
+
+This turn is **progress** against the original component/parity requirements.
+Integrated portable media now uses immutable sources, specialized Image
+interfaces and both ordinary adapters. No full criterion closes: renderer alone
+advances 18→19 once; workflow/authoring/codegen/delivery remain 20/35/28/2.
+
+Delivered:
+- Typed embedded PNG/JPEG, distinct open locations, deliberate NoImage and
+  closed contain/cover/stretch/natural/shrink plus start/center/end anchors.
+  Source values own only immutable text; byte reads are independent copies.
+  Admission bounds base64, raster headers, PNG container framing and pixel/byte
+  allocation dimensions before publication. CRC/pixel decoding stays with hosts.
+- Shared fractional sizing and ordinary browser CSS/LCL TImage projection.
+  Native pictures decode as independent candidates; actual Sync decoder failure
+  retains the accepted physical picture, face and source baseline. Policy-only
+  updates retain decoded content. Explicit Clear restores shared defaults;
+  NoImage clears the native picture and removes the browser source attribute.
+- Specialized managed configuration, exact crafted generator/reader, appended
+  stable attribute identities and schema/Inspector choices consume the same
+  contract. Existing platform, viewport and named presentation scopes support
+  these choices. Ordinary compound media parts and reusable instances decode the
+  same portable image. The public catalog reference was regenerated for 76 kinds.
+  No asset registry/import UI or asynchronous media lifecycle is implied.
+
+Semantic evidence: authenticated native MCP handles composed the independent
+English `review-6` seed in one seven-operation transaction at revision 2 and
+updated its three named media parts as one group at revision 3. Three bounded
+source windows exported the exact 166-line builder. Paired Undo/Redo advanced
+to revisions 4/5 and restored identical accepted source. Disposal at revision 5
+uses receipt `scooty-image-review-dispose-20261007`. New fit/source contracts
+are explicitly enriched locally because the protected running server is older;
+this does not qualify a live semantic API upgrade or change the primary pair.
+
+Maintained evidence under ignored `build/image-presentation/`:
+- `qualified-current.log`: `tools/build.ps1 -Target image-presentation` exits 0.
+  Checked shared/ordinary Win32 qualification passes **178**, exact emitted
+  builder execution **seven**, with zero unfreed allocations. Pascal produces
+  the original 382-byte PNG/930-byte JPEG fixture. Both browser counterparts and
+  matched RTL stage successfully; their execution remains unqualified.
+- `maintained/generated/images-desktop.png` and `images-compact.png` were
+  visually inspected at 900/390 native client widths. The English page and
+  independently owned media card retain decoded content and ordinary layout.
+  These are native captures, not browser/phone or production aesthetics evidence.
+- Both ordinary Studios, backend and browser source worker compile from current
+  source under `callers/`; maintained consumers and those callers have zero
+  owned warnings. Each pas2js run retains seven upstream RTL warnings. Checked
+  workspace regression in `core/run.log` passes **248**, leak-free.
+- Broader `properties-regression.log` remains **failed**: its earlier semantic
+  seed omits required `property-numeric`, so the maintained journey stops at its
+  initial layout-review assertion. Its four existing non-exhaustive test cases
+  also warn. Do not count this as property/Inspector acceptance or rewrite the
+  seed silently; current semantic fixture refresh belongs to the existing
+  workflow owner. The image packet's own history/source/native checks pass.
+
+Reassessment after the declared integration passes kept concrete failures in
+scope: truncated PNG input reached an upstream reader that ignores short chunk
+headers and failed allocation cleanup (runtime 204). Portable bounded framing
+now refuses that input before decoding, without editing dependency source.
+Exact emitted compilation exposed the missing managed facade overload; explicit
+Clear exposed a missing empty-wire default. Both product gaps were corrected.
+The geometry harness also needed to restore/establish its physical probe bounds
+after ordinary relayout; final captures use the arranged layout. End image
+fixtures here rather than expand another isolated test family.
+
+Read-only preservation at **2026-10-08T02:06:35Z** retains all fifteen process
+identities, nine complete pairs/navigation/history states and 229 frozen LAN
+files; primary assets answer HTTP 200. See `preservation-final.log`.
+No existing process, service root or source checkpoint was replaced. Earlier
+automatic approval review rejected browser/backend launch and primary replacement,
+giving only “blocked by policy”; no equivalent launch/replacement was retried.
+
+Remaining original requirements: current browser/physical phone/observing
+execution, Studio mobile screen-space behavior, asset registry/import and
+network resolution, asynchronous media events, orientation/color fidelity,
+trusted accessibility, other widgetsets/DPI, production styling/budgets, full
+component/authoring/parity and delivery. Do not claim this media boundary resolves
+the user's cramped mobile Studio screenshot. Reassess the complete original
+Studio/component outcomes next; this packet earns no criterion/completion credit.
+Exact remote and clean-tree receipt will be `remote-checkpoint.json`.
+
 ## Current return path: typed theme authoring — 2026-10-07
 
 This goal turn is **progress** against original Studio criterion 2 and the NS-1

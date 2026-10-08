@@ -15,6 +15,15 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Property qualification seed refresh (2026-10-07): the portable image packet
+exposed an older maintained semantic seed without required `property-numeric`.
+`-Target properties` stops at that initial assertion and remains failed; image
+checks do not accept general property/Inspector concordance. Refresh the full
+fixture through explicit owned reviews and bounded exact export when the current
+API is available. Never replace a protected user design or silently rewrite the
+seed. This adds no closure count. See
+[the evidence](../WORK.md#current-return-path-portable-image-presentation--2026-10-07).
+
 Theme inspection/deployment gap (2026-10-07): the authoring packet adds a closed
 exact-replacement `theme` operation and in-process discovery/refusal evidence.
 The protected authenticated endpoint keeps its earlier `tokens` merge API.

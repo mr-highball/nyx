@@ -33,6 +33,7 @@ uses
   nyx.dates,
   nyx.times,
   nyx.colors,
+  nyx.images,
   nyx.types,
   nyx.responsive,
   nyx.presentations,
@@ -178,6 +179,20 @@ type
 
   INyxImageControl = interface(INyxCaptionControl)
     ['{737A7921-4621-4C6F-8C01-010000000008}']
+    { Typed portable source and closed adaptive placement. Legacy Source text
+      remains an explicit compatibility boundary. Values own no image/widget. }
+    function GetImage: TNyxImageSource;
+    procedure SetImage(const AValue: TNyxImageSource);
+    function GetImageFit: TNyxImageFit;
+    procedure SetImageFit(AValue: TNyxImageFit);
+    function GetImageHorizontal: TNyxImageAnchor;
+    procedure SetImageHorizontal(AValue: TNyxImageAnchor);
+    function GetImageVertical: TNyxImageAnchor;
+    procedure SetImageVertical(AValue: TNyxImageAnchor);
+    property Image: TNyxImageSource read GetImage write SetImage;
+    property ImageFit: TNyxImageFit read GetImageFit write SetImageFit;
+    property ImageHorizontal: TNyxImageAnchor read GetImageHorizontal write SetImageHorizontal;
+    property ImageVertical: TNyxImageAnchor read GetImageVertical write SetImageVertical;
     function GetSource: TNyxText;
     procedure SetSource(const AValue: TNyxText);
     function GetAlternativeText: TNyxText;
@@ -311,6 +326,18 @@ type
 
   TNyxImageControl = class(TNyxCaptionControl, INyxImageControl)
   public
+    function GetImage: TNyxImageSource;
+    procedure SetImage(const AValue: TNyxImageSource);
+    function GetImageFit: TNyxImageFit;
+    procedure SetImageFit(AValue: TNyxImageFit);
+    function GetImageHorizontal: TNyxImageAnchor;
+    procedure SetImageHorizontal(AValue: TNyxImageAnchor);
+    function GetImageVertical: TNyxImageAnchor;
+    procedure SetImageVertical(AValue: TNyxImageAnchor);
+    property Image: TNyxImageSource read GetImage write SetImage;
+    property ImageFit: TNyxImageFit read GetImageFit write SetImageFit;
+    property ImageHorizontal: TNyxImageAnchor read GetImageHorizontal write SetImageHorizontal;
+    property ImageVertical: TNyxImageAnchor read GetImageVertical write SetImageVertical;
     function GetSource: TNyxText;
     procedure SetSource(const AValue: TNyxText);
     function GetAlternativeText: TNyxText;
@@ -699,6 +726,46 @@ end;
 procedure TNyxIntegerInput.SetMaximum(AValue: Integer);
 begin
   ValueNode.Configure.Maximum(AValue);
+end;
+
+function TNyxImageControl.GetImage: TNyxImageSource;
+begin
+  Result := TNyxImageSource.FromWire(GetSource);
+end;
+
+procedure TNyxImageControl.SetImage(const AValue: TNyxImageSource);
+begin
+  Node.Configure.Source(AValue);
+end;
+
+function TNyxImageControl.GetImageFit: TNyxImageFit;
+begin
+  Result := ReadNyxImageFit(Node.Prop(NyxAttributeName(atImageFit), 'contain'));
+end;
+
+procedure TNyxImageControl.SetImageFit(AValue: TNyxImageFit);
+begin
+  Node.Configure.ImageFit(AValue);
+end;
+
+function TNyxImageControl.GetImageHorizontal: TNyxImageAnchor;
+begin
+  Result := ReadNyxImageAnchor(Node.Prop(NyxAttributeName(atImageHorizontal), 'center'));
+end;
+
+procedure TNyxImageControl.SetImageHorizontal(AValue: TNyxImageAnchor);
+begin
+  Node.Configure.ImageHorizontal(AValue);
+end;
+
+function TNyxImageControl.GetImageVertical: TNyxImageAnchor;
+begin
+  Result := ReadNyxImageAnchor(Node.Prop(NyxAttributeName(atImageVertical), 'center'));
+end;
+
+procedure TNyxImageControl.SetImageVertical(AValue: TNyxImageAnchor);
+begin
+  Node.Configure.ImageVertical(AValue);
 end;
 
 function TNyxImageControl.GetSource: TNyxText;

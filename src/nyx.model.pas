@@ -34,6 +34,7 @@ uses
   nyx.dates,
   nyx.times,
   nyx.colors,
+  nyx.images,
   nyx.root.types,
   nyx.data,
   nyx.contract,
@@ -409,7 +410,13 @@ type
     function Hint(const AValue: TNyxText): TNyxNodeConfig;
     function AccessibleName(const AValue: TNyxText): TNyxNodeConfig;
     function LinkTo(const AValue: TNyxText): TNyxNodeConfig;
-    function Source(const AValue: TNyxText): TNyxNodeConfig;
+    { Typed image source/fit work in presentation and platform scopes too.
+      The text overload is the explicit legacy resource/persistence boundary. }
+    function Source(const AValue: TNyxText): TNyxNodeConfig; overload;
+    function Source(const AValue: TNyxImageSource): TNyxNodeConfig; overload;
+    function ImageFit(AValue: TNyxImageFit): TNyxNodeConfig;
+    function ImageHorizontal(AValue: TNyxImageAnchor): TNyxNodeConfig;
+    function ImageVertical(AValue: TNyxImageAnchor): TNyxNodeConfig;
     function AlternativeText(const AValue: TNyxText): TNyxNodeConfig;
     function Option(const AValue: TNyxText): TNyxNodeConfig; overload;
     function Option(AValue: Integer): TNyxNodeConfig; overload;
@@ -1674,6 +1681,26 @@ end;
 function TNyxNodeConfig.Source(const AValue: TNyxText): TNyxNodeConfig;
 begin
   Result := Put(atSource, AValue);
+end;
+
+function TNyxNodeConfig.Source(const AValue: TNyxImageSource): TNyxNodeConfig;
+begin
+  Result := Put(atSource, AValue.ToWire);
+end;
+
+function TNyxNodeConfig.ImageFit(AValue: TNyxImageFit): TNyxNodeConfig;
+begin
+  Result := Put(atImageFit, NyxImageFitName(AValue));
+end;
+
+function TNyxNodeConfig.ImageHorizontal(AValue: TNyxImageAnchor): TNyxNodeConfig;
+begin
+  Result := Put(atImageHorizontal, NyxImageAnchorName(AValue));
+end;
+
+function TNyxNodeConfig.ImageVertical(AValue: TNyxImageAnchor): TNyxNodeConfig;
+begin
+  Result := Put(atImageVertical, NyxImageAnchorName(AValue));
 end;
 
 function TNyxNodeConfig.AlternativeText(const AValue: TNyxText): TNyxNodeConfig;

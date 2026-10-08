@@ -33,6 +33,7 @@ uses
   nyx.dates,
   nyx.times,
   nyx.colors,
+  nyx.images,
   nyx.types,
   nyx.layout.policy,
   nyx.responsive,
@@ -561,7 +562,8 @@ type
     vkMenuDefinition, vkMenuOptions, vkMenuBarDefinition, vkMenuBarOptions,
     vkPopoverOptions, vkTypeAheadOptions,
     vkMenuOpening, vkPopoverSide, vkPopoverAlignment, vkPopoverSizing,
-    vkPopoverDismissal, vkTypeAheadMatch, vkThemeTokens, vkThemePreset);
+    vkPopoverDismissal, vkTypeAheadMatch, vkThemeTokens, vkThemePreset,
+    vkImageSource, vkImageLocation, vkImageFormat, vkImageFit, vkImageAnchor);
   TValue = record
     Kind: TValueKind;
     Text: TNyxText;
@@ -592,6 +594,7 @@ type
     CalendarDate: TNyxCalendarDate;
     ClockTime: TNyxClockTime;
     RGBColor: TNyxRGBColor;
+    ImageSource: TNyxImageSource;
     ThemeTokens: TNyxThemeTokens;
     TimeDomain: TNyxTimeDomain;
     ValueDomain: TNyxValueDomain;
@@ -734,7 +737,8 @@ const
     'SplitOrientation', 'SplitPosition', 'SplitMinimum', 'SplitMaximum', 'SplitResizable',
     'DragSource', 'DropTarget', 'TouchBehavior', 'Wrap', 'Align', 'Justify',
     'WidthSizing', 'HeightSizing', 'MinimumWidth', 'MaximumWidth',
-    'MinimumHeight', 'MaximumHeight', 'QueryContainer', 'Containment', 'SliderIntervals');
+    'MinimumHeight', 'MaximumHeight', 'QueryContainer', 'Containment', 'SliderIntervals',
+    'ImageFit', 'ImageHorizontal', 'ImageVertical');
   CAttributes: array[TNyxAttribute] of TNyxText = (
     'atText', 'atValue', 'atPlaceholder', 'atItems', 'atHint', 'atAccessibleName',
     'atHref', 'atSource', 'atAlt', 'atLayout', 'atPadding', 'atGap', 'atColumns',
@@ -747,7 +751,8 @@ const
     'atDragSource', 'atDropTarget', 'atTouchBehavior', 'atFlowWrap',
     'atCrossAlignment', 'atJustification', 'atWidthSizing', 'atHeightSizing',
     'atMinimumWidth', 'atMaximumWidth', 'atMinimumHeight', 'atMaximumHeight',
-    'atQueryContainer', 'atContainerContainment', 'atSliderIntervals');
+    'atQueryContainer', 'atContainerContainment', 'atSliderIntervals',
+    'atImageFit', 'atImageHorizontal', 'atImageVertical');
 
 var
   { Built-in names are a finite immutable vocabulary. Initialize once at unit
@@ -1202,6 +1207,16 @@ begin
   RegisterEnum(vkCollectionCellMode, Ord(cmEditable), 'cmEditable');
 
   RegisterEnum(vkConstruction, Ord(ncoDefault), 'ncoDefault');
+  RegisterEnum(vkImageFormat, Ord(nimPNG), 'nimPNG');
+  RegisterEnum(vkImageFormat, Ord(nimJPEG), 'nimJPEG');
+  RegisterEnum(vkImageFit, Ord(nifContain), 'nifContain');
+  RegisterEnum(vkImageFit, Ord(nifCover), 'nifCover');
+  RegisterEnum(vkImageFit, Ord(nifStretch), 'nifStretch');
+  RegisterEnum(vkImageFit, Ord(nifNatural), 'nifNatural');
+  RegisterEnum(vkImageFit, Ord(nifShrink), 'nifShrink');
+  RegisterEnum(vkImageAnchor, Ord(niaStart), 'niaStart');
+  RegisterEnum(vkImageAnchor, Ord(niaCenter), 'niaCenter');
+  RegisterEnum(vkImageAnchor, Ord(niaEnd), 'niaEnd');
   RegisterEnum(vkConstruction, Ord(ncoDescriptor), 'ncoDescriptor');
 
   RegisterEnum(vkPolicy, Ord(neSequential), 'neSequential');
@@ -2153,6 +2168,70 @@ begin
             else if Length(LArgs) <> 0 then
             begin
               Fail('NyxNoColor takes no arguments');
+            end;
+          end;
+          Exit;
+        end;
+
+        if LName = 'nyximagelocation' then
+        begin
+          LArgs := Arguments(1);
+
+          if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkText) then
+          begin
+            Fail('NyxImageLocation requires exact resource text');
+          end;
+          Result := Default(TValue);
+          Result.Kind := vkImageLocation;
+          Result.Text := NyxImageLocation(LArgs[0].Text).Name;
+          Exit;
+        end;
+
+        if (LName = 'nyximage') or (LName = 'nyxembeddedimage') or
+          (LName = 'nyxnoimage') or (LName = 'tnyximagesource') then
+        begin
+          Result := Default(TValue);
+          Result.Kind := vkImageSource;
+          Result.ImageSource := NyxNoImage;
+
+          if LName = 'tnyximagesource' then
+          begin
+            Expect('.');
+            Expect('FromWire');
+            LArgs := Arguments(1);
+
+            if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkText) then
+            begin
+              Fail('TNyxImageSource.FromWire requires exact boundary text');
+            end;
+            Result.ImageSource := TNyxImageSource.FromWire(LArgs[0].Text);
+          end
+          else if (LName <> 'nyxnoimage') or At('(') then
+          begin
+            LArgs := Arguments;
+
+            if LName = 'nyximage' then
+            begin
+
+              if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkImageLocation) then
+              begin
+                Fail('NyxImage requires a distinct resource location');
+              end;
+              Result.ImageSource := NyxImage(NyxImageLocation(LArgs[0].Text));
+            end
+            else if LName = 'nyxembeddedimage' then
+            begin
+
+              if (Length(LArgs) <> 2) or (LArgs[0].Kind <> vkImageFormat) or
+                (LArgs[1].Kind <> vkText) then
+              begin
+                Fail('NyxEmbeddedImage requires a closed format and base64 text');
+              end;
+              Result.ImageSource := NyxEmbeddedImage(TNyxImageFormat(LArgs[0].Ordinal), LArgs[1].Text);
+            end
+            else if Length(LArgs) <> 0 then
+            begin
+              Fail('NyxNoImage takes no arguments');
             end;
           end;
           Exit;
@@ -3652,7 +3731,15 @@ begin
     atText..atAlt:
       begin
 
-        if LAttribute <> atValue then
+        if LAttribute = atSource then
+        begin
+
+          if not (LValue.Kind in [vkText, vkImageSource]) then
+          begin
+            Fail('Source requires a typed image or explicit legacy resource text');
+          end;
+        end
+        else if LAttribute <> atValue then
         begin
           Require(vkText);
         end;
@@ -3671,6 +3758,8 @@ begin
     atQueryContainer: Require(vkContainerRef);
     atContainerContainment: Require(vkContainerContainment);
     atSliderIntervals: Require(vkInteger);
+    atImageFit: Require(vkImageFit);
+    atImageHorizontal, atImageVertical: Require(vkImageAnchor);
     atCrossAlignment: Require(vkCrossAlignment);
     atJustification: Require(vkJustification);
     atWidthSizing, atHeightSizing: Require(vkSizing);
@@ -3714,7 +3803,21 @@ begin
     atHint: LConfigure.Hint(LValue.Text);
     atAccessibleName: LConfigure.AccessibleName(LValue.Text);
     atHref: LConfigure.LinkTo(LValue.Text);
-    atSource: LConfigure.Source(LValue.Text);
+    atSource:
+      begin
+
+        if LValue.Kind = vkImageSource then
+        begin
+          LConfigure.Source(LValue.ImageSource);
+        end
+        else
+        begin
+          LConfigure.Source(LValue.Text);
+        end;
+      end;
+    atImageFit: LConfigure.ImageFit(TNyxImageFit(LValue.Ordinal));
+    atImageHorizontal: LConfigure.ImageHorizontal(TNyxImageAnchor(LValue.Ordinal));
+    atImageVertical: LConfigure.ImageVertical(TNyxImageAnchor(LValue.Ordinal));
     atAlt: LConfigure.AlternativeText(LValue.Text);
     atValue, atOption:
       begin
@@ -5016,6 +5119,7 @@ begin
     LPrefix := WithNyxImport(LPrefix, 'nyx.dates');
     LPrefix := WithNyxImport(LPrefix, 'nyx.times');
     LPrefix := WithNyxImport(LPrefix, 'nyx.colors');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.images');
     LPrefix := WithNyxImport(LPrefix, 'nyx.design.tokens');
 
     if LNeedsTypeAhead then

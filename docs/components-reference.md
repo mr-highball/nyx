@@ -86,6 +86,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -181,6 +185,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -276,6 +284,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -371,6 +383,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -466,6 +482,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -561,6 +581,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -656,6 +680,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -751,6 +779,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -846,6 +878,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -943,6 +979,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1038,6 +1078,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1134,6 +1178,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1230,6 +1278,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1325,6 +1377,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1431,6 +1487,10 @@ Root projection — Browser: Available. LCL: Text fallback.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1538,6 +1598,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1654,6 +1718,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1772,6 +1840,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1880,6 +1952,10 @@ Root projection — Browser: Available. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -1988,6 +2064,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2096,6 +2176,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2147,9 +2231,9 @@ Root projection — Browser: Available. LCL: Available.
 | Property | Type | Factory default | Constraint | Meaning | Browser | LCL | Effect/help |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | text | Text | Number field |  | Presentation | Available | Available | Applies to the selected standard projection. |
-| value | Integer | 50 | -1000000..1000000 | Presentation | Available | Available | Applies to the selected standard projection. |
-| min | Integer | 0 | -1000000..1000000 | Presentation | Available | Available | Applies to the selected standard projection. |
-| max | Integer | 100 | -1000000..1000000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| value | Integer | 50 | -2147483648..2147483647 | Presentation | Available | Available | Applies to the selected standard projection. |
+| min | Integer | 0 | -2147483648..2147483647 | Presentation | Available | Available | Applies to the selected standard projection. |
+| max | Integer | 100 | -2147483648..2147483647 | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min-width | Integer |  | 0..100000 | Presentation | Available | Available | Optional nonnegative logical-pixel bounds apply after sizing. A blank value clears a bound; zero is an explicit bound. Weighted siblings redistribute space within bounds. An explicit minimum can overflow the parent; content stays reachable at its leading edge. |
@@ -2204,6 +2288,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2254,7 +2342,7 @@ Root projection — Browser: Available. LCL: Available.
 
 | Property | Type | Factory default | Constraint | Meaning | Browser | LCL | Effect/help |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| value | Integer | 50 | -1000000..1000000 | Presentation | Available | Available | Applies to the selected standard projection. |
+| value | Integer | 50 | -2147483648..2147483647 | Presentation | Available | Available | Applies to the selected standard projection. |
 | min | Integer | 0 | -1000000..1000000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | max | Integer | 100 | -1000000..1000000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
@@ -2312,6 +2400,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Available | Available | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2420,6 +2512,10 @@ Root projection — Browser: Available. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2536,6 +2632,10 @@ Root projection — Browser: Available. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2582,7 +2682,7 @@ Let a user choose a color value.
 Palette group: Inputs.
 Search labels: Choice, Color.
 
-Root projection — Browser: Available. LCL: Text fallback.
+Root projection — Browser: Basic support. LCL: Basic support.
 
 | Property | Type | Factory default | Constraint | Meaning | Browser | LCL | Effect/help |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -2644,6 +2744,10 @@ Root projection — Browser: Available. LCL: Text fallback.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2752,6 +2856,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2861,6 +2969,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -2970,6 +3082,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3020,7 +3136,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 
 | Property | Type | Factory default | Constraint | Meaning | Browser | LCL | Effect/help |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| src | Text |  |  | Presentation | Available | Basic support | Browser image URL; standard LCL pictures resolve local files. Native network/portable asset resolution requires a supplied adapter. |
+| src | Text |  |  | Presentation | Available | Basic support | Portable embedded PNG/JPEG or a target resource location. Native network locations require a supplied resolver. |
+| image-fit | Choice | contain | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Available | Available | Typed image fit and remaining-space position, shared by both adapters. |
+| image-position-x | Choice | center | start<br>center<br>end | Presentation | Available | Available | Typed image fit and remaining-space position, shared by both adapters. |
+| image-position-y | Choice | center | start<br>center<br>end | Presentation | Available | Available | Typed image fit and remaining-space position, shared by both adapters. |
 | alt | Text |  |  | Presentation | Available | Available | Browser alternative text and native accessible description. Empty text deliberately describes a decorative image. |
 | width | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
 | height | Integer |  | 0..100000 | Presentation | Available | Available | Applies to the selected standard projection. |
@@ -3078,6 +3197,7 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3174,6 +3294,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3270,6 +3394,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3366,6 +3494,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3462,6 +3594,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3557,6 +3693,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3652,6 +3792,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3748,6 +3892,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3857,6 +4005,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -3975,6 +4127,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4071,6 +4227,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4166,6 +4326,10 @@ Root projection — Browser: Available. LCL: Available.
 | option | Text |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
 | path | Reference |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
 | design-id | Text |  |  | Shared contract | Available | Available | Shared composition/routing metadata; meaning follows its declared context. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4274,6 +4438,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4395,6 +4563,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4523,6 +4695,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4665,6 +4841,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4793,6 +4973,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -4932,6 +5116,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5063,6 +5251,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5192,6 +5384,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5326,6 +5522,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5450,6 +5650,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5578,6 +5782,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5722,6 +5930,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -5866,6 +6078,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6001,6 +6217,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6131,6 +6351,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6268,6 +6492,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6394,6 +6622,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6519,6 +6751,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6644,6 +6880,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6779,6 +7019,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6895,6 +7139,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -6999,6 +7247,10 @@ Root projection — Browser: Basic support. LCL: Basic support.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7118,6 +7370,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7241,6 +7497,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7372,6 +7632,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7496,6 +7760,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7625,6 +7893,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7771,6 +8043,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -7897,6 +8173,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8029,6 +8309,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8161,6 +8445,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8267,6 +8555,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8413,6 +8705,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8549,6 +8845,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |
@@ -8700,6 +9000,10 @@ Root projection — Browser: Available. LCL: Available.
 | split-minimum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-maximum | Integer |  | 0..100 | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
 | split-resizable | Boolean |  |  | Presentation | Unavailable | Unavailable | Pane sizing belongs to the split-view projection. |
+| slider-intervals | Integer | 1000 | 1..1000000 | Presentation | Unavailable | Unavailable | Physical intervals for Number or large Integer sliders. Exact choices and small Integer ranges keep one tick per value. Application values stay exact between ticks until the thumb moves. |
+| image-fit | Choice |  | contain<br>cover<br>fill<br>none<br>scale-down | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-x | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
+| image-position-y | Choice |  | start<br>center<br>end | Presentation | Unavailable | Unavailable | Image source/alternative text requires an image projection. |
 
 | Event | Browser | LCL | Meaning |
 | --- | --- | --- | --- |

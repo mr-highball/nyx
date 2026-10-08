@@ -44,6 +44,17 @@ remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
+Latest portable images (2026-10-07): immutable PNG/JPEG sources, closed fit/anchor,
+specialized managed configuration and exact source feed both ordinary adapters
+and reusable media parts. Checked shared/Win32 178, emitted execution seven and
+workspace regression 248 pass leak-free; Studios/backend/browser/worker compile.
+No full criterion closes: renderer alone advances 18→19, with other counts
+20/35/28/2 unchanged. The broader property journey remains failed on its stale
+semantic seed. Stop image fixtures; browser/phone/observing execution, full media,
+assets and mobile Studio outcomes retain the [original owner](NS-2_lcl-renderer_01.md)
+and [evidence](../WORK.md#current-return-path-portable-image-presentation--2026-10-07).
+
+
 Latest integrated themes (2026-10-07): strongly typed palette/metrics and crafted
 source feed a public Nyx form in both ordinary Studio controllers. Proposals,
 exact Apply/inherited reset, paired history and independent canvas/chrome pass

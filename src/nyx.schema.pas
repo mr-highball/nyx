@@ -32,6 +32,7 @@ uses
   nyx.text,
   nyx.data,
   nyx.types,
+  nyx.images,
   nyx.responsive,
   nyx.presentations,
   nyx.containers,
@@ -1011,7 +1012,7 @@ begin
           LDescription := 'A link destination requires a link projection.';
         end;
       end;
-    atSource, atAlt:
+    atSource, atAlt, atImageFit, atImageHorizontal, atImageVertical:
       begin
 
         if AKind = 'image' then
@@ -1020,13 +1021,17 @@ begin
           if AAttribute = atSource then
           begin
             LNative := ncBasic;
-            LDescription := 'Browser image URL; standard LCL pictures resolve local ' +
-              'files. Native network/portable asset resolution requires a supplied adapter.';
+            LDescription := 'Portable embedded PNG/JPEG or a target resource location. ' +
+              'Native network locations require a supplied resolver.';
           end
-          else
+          else if AAttribute = atAlt then
           begin
             LDescription := 'Browser alternative text and native accessible ' +
               'description. Empty text deliberately describes a decorative image.';
+          end
+          else
+          begin
+            LDescription := 'Typed image fit and remaining-space position, shared by both adapters.';
           end;
         end
         else
@@ -1526,6 +1531,12 @@ begin
   if LKind = 'image' then
   begin
     Add('src', 'Image source', npText);
+    Add('image-fit', 'Image fit', npChoice, 'contain',
+      'contain' + #10 + 'cover' + #10 + 'fill' + #10 + 'none' + #10 + 'scale-down');
+    Add('image-position-x', 'Horizontal image position', npChoice, 'center',
+      'start' + #10 + 'center' + #10 + 'end');
+    Add('image-position-y', 'Vertical image position', npChoice, 'center',
+      'start' + #10 + 'center' + #10 + 'end');
     Add('alt', 'Alternative text', npText);
   end;
 
@@ -1597,6 +1608,16 @@ begin
     LTitle := NyxAttributeName(LAttribute);
     case LAttribute of
       atText: LTitle := 'Text';
+      atImageFit:
+        begin
+          LAttributeType := npChoice;
+          LChoiceNames := 'contain' + #10 + 'cover' + #10 + 'fill' + #10 + 'none' + #10 + 'scale-down';
+        end;
+      atImageHorizontal, atImageVertical:
+        begin
+          LAttributeType := npChoice;
+          LChoiceNames := 'start' + #10 + 'center' + #10 + 'end';
+        end;
       atValue: LTitle := 'Value';
       atItems: LAttributeType := npLines;
       atPadding, atGap, atColumns, atWidth, atHeight, atLeft, atTop,
@@ -2914,6 +2935,13 @@ begin
             and opaque extension data still retain exact NUL/Unicode values;
             this check belongs only to recognized control properties. }
           LValid := Pos(#0, LValue) = 0;
+
+          if LValid and (LProperties[LIndex].Key = 'src') and
+            (ANode.ProjectionKind = 'image') then
+          begin
+            { Strict header/byte admission precedes target pixel decoding. }
+            TNyxImageSource.FromWire(LValue);
+          end;
 
           if (LProperties[LIndex].Key = 'value') and
             KindIn(ANode.ProjectionKind, 'input|select|date|time|color') then

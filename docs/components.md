@@ -28,6 +28,11 @@ Specialized calendar and clock controls also have immutable typed values and
 fluent domains; see [calendar fields](date-fields.md) and [clock fields](time-fields.md).
 Typed authoring does not by itself qualify every target's picker implementation.
 
+Image controls and reusable media parts accept [portable typed PNG/JPEG sources](images.md),
+shared fit/position and responsive/platform policies. Checked ordinary Win32
+decoding and exact emitted source are qualified; current browser execution,
+asset import/resolution and full media parity remain open.
+
 Text APIs use `TNyxText` from `nyx.text`: native UTF-8 and browser Unicode. Source
 units declare `{$codepage utf8}`. `Props` is an owned `TNyxStrings` collection;
 it preserves property order, empty values and case-sensitive keys. UTF-8 captions
