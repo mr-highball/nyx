@@ -1014,8 +1014,16 @@ begin
     if AButton.ID = NyxResourceEditorActionID(AEditor.ID, LAction) then
     begin
       AAction := LAction;
-      ASelection := TNyxResourceEditorSelection.FromData(
-        TNyxDataValue.ParseJSON(AEditor.Prop(CSelection)));
+      { New starts an independent proposal even while an existing variant is
+        open. Retaining that selection keeps its name locked and can turn an
+        intended import into a replacement of the old file. Other commands
+        continue to use the exact currently opened variant. }
+
+      if LAction <> reaNew then
+      begin
+        ASelection := TNyxResourceEditorSelection.FromData(
+          TNyxDataValue.ParseJSON(AEditor.Prop(CSelection)));
+      end;
       Exit(True);
     end;
   end;

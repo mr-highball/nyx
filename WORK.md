@@ -9,7 +9,112 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: ordinary Studio image resources — 2026-10-08
+## Current return path: common Resources authoring — 2026-10-08
+
+Previous turn is progress at exact pushed `7f674c7`: ordinary image binding intent,
+strict migration, actual both-target controllers and exact source/history execute.
+Remote and worktree are exact/clean at entry. Reassess after the previous two
+bounded packets: image selector/form acceptance is useful but does not close the
+complete Resources outcome. Return to original NS-1 criterion 6 and NS-4 criterion
+2, with the common JSON/text/binary/table workflow rather than another selector.
+
+Deliver one integrated consumer: compose an English workbench through installed
+native MCP in an independent owned review, inspect bounded resources/paths/rows,
+group caption/prompt/text/binary/row changes with explicit existing-collection
+consent, refuse bad retained types, preserve paired Undo/Redo and export exact
+accepted companions. Compile both outputs through the ordinary semantic compiler
+service. Actual current native/browser Studio must import the unchanged seed,
+use the public Resources form/picker and row editor, publish matching typed bindings
+and live table rows, retain drafts across chrome/panel changes, and preserve exact
+paired history. Compile the exact UI-emitted builder separately. Inspect live
+desktop/CSS-390 captures and retire controllers/pickers explicitly.
+
+This packet consumes all common file kinds with previous ordinary image evidence;
+binary has no scalar coercion or invented control binding. Correct the row editor's
+static-default consent wording so it also makes sense for an empty collection.
+Budget: one common-controller consumer packet; reassess after two concrete product
+boundary repairs before extending further features. No new backend/listener,
+config/enrollment change, rejected-start/cleanup retry or active-user mutation.
+Preserve nine pairs, fifteen services and sealed LAN bytes. Current observing
+deployment, physical-input/accessibility and full resource/cache breadth remain
+required. No full criterion/count/credit advances from an unexecuted plan.
+
+Reassessment at the boundary-repair budget: clearer static-default consent and
+closed-kind accessor diagnostics are in place. Ordinary journeys then expose a
+blocking common-form defect: New resource returns the opened variant instead of
+an empty selection. Its locked name makes intended text imports replace JSON,
+and the row consumer correctly refuses. This is the same consumer's acceptance
+repair, not another feature packet. Correct shared New intent, retain the refusal
+and execute the unchanged complete journey; stop unrelated selector/cache growth.
+Temporary Pascal-generated call-stack instrumentation localized row admission and
+is removed from maintained source before final qualification. Existing pure
+builders/source/proposal checks passing did not establish this ordinary journey.
+
+Executed installed native MCP: independent review, English page and empty typed
+table defaults; one seven-change resource group supplies exact JSON, literal-key
+caption, prompt, text, arbitrary binary and explicit row mapping. Bounded reads,
+atomic retained-type refusal and paired Undo/Redo execute at expected revisions.
+Both ordinary semantic application compiler jobs succeed at the same frozen pair;
+their success establishes compilation. An inspected semantic rendered view shows
+the real caption/prompt/two rows/text. Exact seed and accepted companions remain
+unchanged; the owned review is explicitly discarded after qualification.
+
+Implemented shared New intent: an opened variant no longer leaks into an independent
+proposal. The existing-variant name stays locked; New unlocks its separate name.
+Closed-kind accessor diagnostics name actual/required kinds without exposing
+content. Row consent now says **Replace existing collection defaults**, correctly
+covering an empty authored schema as well as populated defaults. Both Studio
+controllers consume these public Nyx forms; no second editor/loader is introduced.
+
+Actual checked Win32 Studio passes **133** assertions and retires leak-free. HTTP
+browser Studio passes **447 desktop / 634 CSS-390**, including readiness polls and
+input/panel helpers, not comparable performance workloads. Actual FileReader/native
+file admission remains a copied proposal until ordinary Apply. Caption, input
+prompt, two typed numeric/text table rows and packed text reach real target controls.
+Row discovery/mapping, refused replacement without consent, draft retention across
+source chrome, exact paired history and detach/Undo execute. Binary retains exact
+0/1/255 bytes without an invented scalar binding. Live desktop/narrow/native captures
+precede explicit controller/picker/listener retirement and are inspected.
+
+All three ordinary journeys emit identical Pascal. Its unedited compiled builder
+passes **34** reconstruction/source/form/queued-addition assertions natively and in
+HTTP browser. The unchanged semantic companion independently passes the same
+**34** native assertions. The generated checks include New from an opened JSON
+resource and queued text addition beside a retained row relationship; pure complete
+builders alone had missed the actual controller bug. Native receipts have zero
+unfreed blocks. The maintained staging run passes native/main-browser stages, then
+hits a missing Studio unit path in its already-loaded script version; the corrected
+remaining emitted-browser/worker stages compile separately without repeating the
+passed native journey. Current orchestration includes that required path. Backend,
+both controllers and source worker compile; owned warnings are zero and each of
+the three browser compiles retains seven known upstream RTL warnings.
+
+Evidence lives in `build/resource-workbench/`: `mcp-private.json`,
+`build-qualified.log`, `browser-{desktop,compact}-fixed.log`,
+`browser-generated-fixed.log`, `semantic-qualified.log`, current compile receipts,
+exact emitted companions and live captures. `qualification-private.json` records
+sources/closures/results; no private host, token or machine profile is committed.
+Final preservation guard passes **nine exact pairs, fifteen exact services and
+299 sealed files**; checkpoint, history, registry, drafts, selection/config and
+served LAN bytes remain unchanged. No new listener/service/cleanup retry occurs.
+LAN remains on its earlier build: automatic backend-start review previously rejected
+replacement with only **blocked by policy**. Current source is not deployed there.
+
+Assessment: this qualifies the common ordinary authoring consumer of original
+NS-1 criterion 6 / NS-4 criterion 2, not the complete Resources/editor/product.
+Authoring alone advances bounded-consumer no-closure **42→43**; aggregate
+**25/11/43/21/28/3**, resource receives no duplicate credit and no full criterion,
+task, credit or DONE movement closes. Stop independent selector/cache expansion.
+Return to original full common UX/localization/hosted-cache and complete application/
+reusable outcomes, native retained-refresh timing under its existing performance
+owner, trusted physical input/accessibility and guarded observing rollout. Checked
+native rebuilds still take several minutes; no per-gesture timing guarantee follows.
+The narrow fixture's default single-line notes label can clip with selection grips;
+this consumer proves values/history, not full visual acceptance. Remote checkpoint
+belongs in `remote-checkpoint.json` beside these receipts.
+
+<a id="current-return-path-ordinary-studio-image-resources--2026-10-08"></a>
+## Previous return path: ordinary Studio image resources — 2026-10-08
 
 Previous packet is progress at exact pushed `bce0f98`: typed image resource
 selectors, actual hosted/cache consumers, source replay and paired history execute.

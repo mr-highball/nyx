@@ -85,7 +85,8 @@ const
     'dataset', 'identity', 'field-name', 'field-type', 'field-path', 'mapped', 'replace-static');
   CLabels: array[TNyxResourceRowsField] of TNyxText = ('Saved relationship', 'Collection name',
     'JSON resource', 'Rows array', 'Text identity in each row', 'Field name',
-    'Pascal field type', 'Value in each row', 'Mapped fields', 'Convert existing static rows');
+    'Pascal field type', 'Value in each row', 'Mapped fields',
+    'Replace existing collection defaults');
   CActionNames: array[TNyxResourceRowsAction] of TNyxText = ('new', 'load', 'discover',
     'inspect', 'set-field', 'edit-field', 'remove-field', 'apply', 'detach');
   CActionLabels: array[TNyxResourceRowsAction] of TNyxText = ('+ New relationship',
@@ -659,7 +660,11 @@ begin
     if LField = rrReplaceStatic then
     begin
       LInput := NewNyxCheckbox(NyxResourceRowsFieldID(AID, LField));
-      LInput.Configure.Value(False).Done;
+      { Existing empty schemas are still authored defaults. Consent applies to
+        replacing that definition, not only to deleting nonempty static rows. }
+      LInput.Configure.Value(False)
+        .Hint('Replace the existing schema and defaults with this resource relationship. Runtime application data stays independent.')
+        .Done;
     end
     else if LField in [rrName, rrFieldName] then
     begin

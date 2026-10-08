@@ -465,7 +465,10 @@ begin
 
   if FKind <> AKind then
   begin
-    raise ENyxResource.Create('Resource payload has another kind');
+    { Name both closed kinds at the failure boundary. This also keeps Studio's
+      isolated source diagnostics useful without exposing content or paths. }
+    raise ENyxResource.Create('Resource payload is ' + NyxResourceKindName(FKind) +
+      TNyxText('; this accessor requires ') + NyxResourceKindName(AKind));
   end;
 end;
 

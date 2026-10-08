@@ -42,6 +42,40 @@ files and images are obtained through their typed definition accessors.
 Resource bindings are read-only projections; editing a control does not rewrite
 its packed file. Existing typed state bindings supply writable application data.
 
+## The common Studio Resources workflow
+
+Open **Resources** in the Project panel. Select a control before choosing its
+binding, or import a file first and open it again when the control is selected.
+**New resource** starts an independent named proposal even if another file is
+open. Opening an existing variant locks its identity; its contents and creator
+title/help remain editable. Importing previews copied bytes. **Apply resource**
+admits the file and optional binding together, with one Undo for design and Pascal.
+
+JSON files expose structural scalar choices for captions and prompts; literal
+dots in a key are preserved. Text files expose **File text / text** at their root.
+Binary files retain exact bytes without scalar coercion. Images use their separate
+typed image binding and locale choice described below.
+
+The adjacent **Resource data collections** editor discovers JSON arrays and row
+values, then maps an explicit text identity and ordered Pascal fields. Choose the
+named collection in a table/list/tree binding. **Replace existing collection
+defaults** is explicit consent to replace an existing schema/default definition,
+including an empty one. Runtime application stores remain independent. **Keep rows
+and detach** materializes current authored resource rows as static defaults; one
+paired Undo restores the relationship. Missing paths, invalid types or duplicate
+identities refuse the complete candidate.
+
+The maintained `resource-workbench` qualification consumes an unchanged English
+companion exported through an owned semantic MCP review. Its ordinary Studio
+journeys cover copied JSON/text/binary imports, caption/prompt/table consumers,
+draft retention and paired history. `tools/build.ps1 -Target resource-workbench
+-ResourceSourceDirectory <MCP-export>` runs the native consumer and compiles the
+exact emitted builder plus browser/source-worker artifacts. Serve those staged
+artifacts on an existing admitted host for the separate desktop/narrow Pascal
+input journeys. This build target starts no listener or browser. Current accepted
+evidence and remaining limits belong to
+[WORK.md](../WORK.md#current-return-path-common-resources-authoring--2026-10-08).
+
 ## Images from project resources
 
 Use the distinct image selector with a specialized managed image control:

@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -93,6 +93,8 @@ param(
   # Exact English image workshop exported from an owned semantic MCP review.
   # Preserve the existing seed by default; qualification can select a fresh one.
   [string]$ImageSourceDirectory = 'build/image-presentation/seed',
+  # Exact paired Resource workbench companion exported through an owned MCP review.
+  [string]$ResourceSourceDirectory = 'build/resource-workbench/seed',
   # Exact English bound-table source composed/exported through authenticated MCP.
   [string]$GridSourceDirectory = 'build/grid-navigation/source',
   # Full-catalog source is composed/exported by the Pascal semantic MCP consumer.
@@ -3160,6 +3162,60 @@ try {
         -Destination $nyxResourceImageBrowser
     }
     Write-Host 'Resource image counterpart staged; HTTP browser/observing execution is separate.'
+    exit 0
+  }
+
+  if ($Target -eq 'resource-workbench') {
+    # Reuse the authenticated English companion. Pascal owns the common form's
+    # real Studio import/binding, paired history and source checks.
+    # Independent artifacts stage only; no service/browser/OS chooser launches.
+    $nyxResourceRoot = Join-Path $nyxRoot 'build/resource-workbench'
+    $nyxResourceSeed = [IO.Path]::GetFullPath($ResourceSourceDirectory)
+
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxResourceSeed 'nyx.generated.view.pas'))) {
+      throw 'Export the English Resource workbench through an owned MCP review first'
+    }
+    $nyxResourceNative = Join-Path $nyxResourceRoot 'native'
+    $nyxResourceBrowser = Join-Path $nyxResourceRoot 'browser'
+    $nyxResourceGenerated = Join-Path $nyxResourceRoot 'generated'
+    New-Item -ItemType Directory -Force -Path $nyxResourceNative, $nyxResourceBrowser, $nyxResourceGenerated | Out-Null
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxResourcePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxResourceFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests',
+      "-Fu$nyxLazarus/lcl/units/$nyxResourcePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxResourcePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxResourcePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxResourcePlatform",
+      "-FU$nyxResourceNative", "-FE$nyxResourceNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxResourceFlags + @("-Fu$nyxResourceSeed", 'tests/nyx_resource_workbench_controls.lpr'))
+    & (Join-Path $nyxResourceNative 'nyx_resource_workbench_controls.exe') `
+      (Join-Path $nyxResourceGenerated 'nyx.generated.view.pas') `
+      (Join-Path $nyxResourceRoot 'desktop.png')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Native resource workbench authoring failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxResourceFlags + @("-Fu$nyxResourceGenerated", 'tests/nyx_resource_workbench_generated.lpr'))
+    & (Join-Path $nyxResourceNative 'nyx_resource_workbench_generated.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Exact emitted resource workbench authoring failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxResourceSeed",
+      "-FE$nyxResourceBrowser", 'tests/nyx_resource_workbench_browser.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxResourceGenerated", "-FE$nyxResourceBrowser",
+      'tests/nyx_resource_workbench_generated.lpr')
+    # The ordinary browser controller prepares Apply/Undo through this Pascal
+    # worker. Stage its current matched closure, not only the visible test page.
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxResourceBrowser", 'studio/nyx_source_worker.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxResourceBrowser 'rtl.js')
+    foreach ($nyxResourceHost in @('resource-workbench.html', 'resource-workbench-generated.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxResourceHost") -Destination $nyxResourceBrowser
+    }
+    Write-Host 'Resource workbench authoring staged; browser/trusted chooser execution remains separate.'
     exit 0
   }
 

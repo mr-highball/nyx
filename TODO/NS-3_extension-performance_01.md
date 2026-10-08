@@ -9,7 +9,16 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current native Resources regression (2026-10-08) passes 123 ordinary authoring
+Current common Resources consumer (2026-10-08) passes 133 checked ordinary Win32
+assertions, with exact both-target source and live controls. Rebuild-heavy native
+journeys still take several minutes; assertion tracing proves progress, not an
+accepted latency budget. HTTP browser counts include readiness polls and differ
+by viewport routes, so they do not measure a native/browser speed comparison.
+Retained-refresh profiling and optimized same-workload timing remain under this
+existing owner; no performance criterion/count advances. See
+[the common consumer packet](../WORK.md#current-return-path-common-resources-authoring--2026-10-08).
+
+Previous native Resources regression (2026-10-08) passes 123 ordinary authoring
 checks, but repeated editor rebuilds make the checked journey take several
 minutes. Flushed assertion tracing distinguishes forward progress from a stalled
 callback. Treat this as a profiling lead for the existing timing/interaction

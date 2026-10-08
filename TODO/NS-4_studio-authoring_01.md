@@ -9,7 +9,19 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current ordinary image Resources authoring consumes criterion 2 through both
+Current common Resources authoring consumes criterion 2 through both ordinary
+controllers and installed native semantic MCP. Exact JSON/text/binary files,
+captions, prompts and live table rows pass copied import, structural discovery,
+explicit default-replacement consent, detach, draft retention and paired history.
+Shared New now starts an independent proposal rather than replacing the opened
+variant. Win32 passes 133; HTTP desktop/CSS-390 passes 447/634 (polling included).
+Identical UI-emitted Pascal executes 34 checks per target; live captures precede
+explicit retirement. Full common UX/localization/hosted-cache breadth, native
+timing, trusted input/accessibility and observing rollout remain required.
+Authoring alone advances no-closure 42→43; no full criterion/credit closes. See
+[the consumer packet](../WORK.md#current-return-path-common-resources-authoring--2026-10-08).
+
+Previous ordinary image Resources authoring consumes criterion 2 through both
 real Studio controllers: typed locale intent, copied import, strict draft/preference
 migration, source admission and exact paired Undo/Redo. Actual JPEG replacement
 reaches the canvas; current live captures precede explicit retirement. Win32 passes

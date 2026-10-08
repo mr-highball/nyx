@@ -16,9 +16,23 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Common Studio resource consumer — 2026-10-08
+
+Original criterion 6 now has a common ordinary-controller consumer: independent
+New, copied JSON/text/binary imports, caption/prompt/table binding, creator metadata,
+explicit row-default replacement, detach and exact paired source/history execute
+on actual Win32/HTTP browser Studio. Installed MCP owns semantic composition,
+bounded inspection, grouped edits, revision/history and both compiler jobs.
+All ordinary journeys emit identical Pascal; exact reconstruction executes on
+both targets. This advances NS-4's bounded authoring consumer alone; resource stays
+11 and no full criterion/credit closes. Complete common UX, localization, hosted/
+cache guarantees, performance, trusted input and observing rollout retain their
+existing owners. Stop independent selector/cache expansion. See
+[the authoring packet](../WORK.md#current-return-path-common-resources-authoring--2026-10-08).
+
 ## Image resource binding — 2026-10-08
 
-Current NS-4 consumer qualifies ordinary browser/native Resources import/binding,
+Previous NS-4 consumer qualifies ordinary browser/native Resources import/binding,
 runtime-versus-pinned locale choice, strict presentation migration, actual JPEG
 canvas replacement and exact paired source/history. This consumes the image
 prerequisite without new resource credit or full criterion closure; resource stays

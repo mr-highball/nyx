@@ -4,7 +4,20 @@
 [Current work](WORK.md)
 
 
-Current ordinary Studio image Resources (2026-10-08): both controllers consume
+Current common Resources authoring (2026-10-08): installed native MCP composes
+an owned English workbench, groups seven resource/binding/row edits, preserves
+paired history and compiles both outputs. Ordinary Studio controllers import
+JSON/text/binary, display live captions/prompts/table rows, retain drafts and
+exercise explicit row consent/detach/history. New resource now starts an independent
+proposal while a file is open. Win32 passes **133**, HTTP browser **447 desktop /
+634 CSS-390** (polling included); identical emitted Pascal passes **34** per
+target. Inspected live captures and exact preservation qualify this bounded
+consumer. Full UX, hosted/cache/localization breadth, native timing, trusted input
+and observing rollout remain open. Authoring alone advances **42→43**, aggregate
+**25/11/43/21/28/3**; no full criterion/credit closes. See
+[the packet](WORK.md#current-return-path-common-resources-authoring--2026-10-08).
+
+Previous ordinary Studio image Resources (2026-10-08): both controllers consume
 typed runtime/pinned locale choices, copied imports, strict draft migration and
 exact paired source/history. Win32 passes **55**, browser **13 shared + 150 desktop /
 226 CSS-390**, exact emitted reconstruction **six** per target. Live captures and
