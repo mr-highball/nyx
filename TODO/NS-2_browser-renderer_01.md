@@ -20,6 +20,23 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 
+## Executed clock consumer scope — 2026-10-08
+
+Existing value/input/readiness criteria now consume the accepted typed clock
+prerequisite through actual HTTP controls: **22** assertions at desktop/CSS-390
+cover retained draft/focus identity, completion, exact refusal, ordered callbacks
+and retirement. Public clock Inspector/source-worker checks pass **35** at both
+widths; exact accepted policy reconstruction passes **five**. Inspected captures
+precede explicit disposal. Native controls/ordinary Studio pass **85/51**,
+leak-free; affected builds have zero owned warnings.
+
+No original full criterion closes or duplicate credit is assigned. The shared
+renderer checkpoint advances **19→20** once under the LCL task; other owners
+stay **23/9/39/28/3**. End clock fixtures. Ordinary browser Studio's project/source/
+policy workflow, browser picker chrome, trusted input/accessibility and full
+production/runtime/parity retain their owners. The protected LAN/pairs/services
+are unchanged. See [the packet](../WORK.md#current-return-path-clock-control-consumers--2026-10-08).
+
 ## Bound grid navigation — 2026-10-07
 
 Existing input/retained-focus criteria now include shared typed cell movement,

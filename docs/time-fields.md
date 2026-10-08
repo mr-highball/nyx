@@ -1,7 +1,7 @@
 # Typed clock fields
 
 [Components](components.md) · [Contracts](contracts.md) · [Calendar fields](date-fields.md) ·
-[Current native evidence](../WORK.md#current-return-path-native-clock-field-preparation--2026-10-07)
+[Executed control evidence](../WORK.md#current-return-path-clock-control-consumers--2026-10-08)
 
 The [portable clock prerequisite](../TODO/DONE/NS-1_time-values_01.md) is accepted
 from checked native and executed browser value/domain/authoring suites and exact
@@ -210,7 +210,10 @@ when a popup closes. Native focus observations share logical LCL Enter/Exit's
 transition baseline, so the returning callback sees the committed state once.
 Destroyed/disconnected/unfocusable targets refuse; change or focus callbacks may
 retire the view safely. The maintained Win32 clock consumer passes 85 checks,
-leak-free, including these paths. Browser execution retains its separate gate.
+leak-free, including these paths. Its actual HTTP browser counterpart passes 22
+checks at desktop and CSS-390, including bound-state completion, ordered
+callbacks, retained draft/focus identity, exact range/step/choice refusal,
+empty versus midnight, inherited read-only/disabled policy and retirement.
 
 Each field owns its popup. Domain changes and inherited hidden/read-only/disabled
 policy revoke the old popup context. Retirement disconnects borrowed callbacks
@@ -218,7 +221,7 @@ before freeing controls; an accepted callback may retire its own view safely.
 The native capability is Basic support. Current evidence qualifies Win32 control
 drafts, retained keyboard/arrow action routes, millisecond admission and lifetime;
 printed images are diagnostics, not displayed-pixel or hardware evidence.
-Executed browser controls, other widgetsets/DPI, hardware/IME/accessibility,
+Browser picker chrome, other widgetsets/DPI, hardware/IME/accessibility,
 production styling and full authenticated/observing Studio/MCP domain authoring
 retain their original task owners. Compiling the adapters does not qualify those
 behaviors; the local/native policy form evidence is described above.
@@ -235,3 +238,29 @@ public-Pascal companion through the ordinary LCL renderer, and stages the matchi
 pas2js control consumer at `build/time-fields/maintained/web/time-controls.html`.
 It neither edits an active MCP design nor starts a browser/service. Execute the
 staged host through an admitted HTTP path to establish browser control evidence.
+
+Current consumer qualification (2026-10-08) executes those controls and the
+public clock Inspector through an admitted static HTTP host. The Inspector's
+browser source worker passes 35 checks at both widths, including atomic paired
+Apply/Restore/Undo/Redo and explicit queue/view/host retirement. The complete
+ordinary native Studio journey passes 51 checks, including the public form's
+34 assertions; these counts overlap. The accepted policy's exact compiled
+reconstruction passes five assertions on both targets. Full ordinary browser
+Studio and authenticated current-backend observation remain open.
+
+Formatted clock input is a physical draft until editing completion. Browser
+qualification sends separate `input` and bubbling `change` notifications;
+unrelated Sync retains a draft, and refused completion restores the accepted
+reading without a successful callback. This follows the distinction described
+in the [HTML common event behavior](https://html.spec.whatwg.org/multipage/input.html#common-event-behaviors)
+and [Time state](https://html.spec.whatwg.org/multipage/input.html#time-state-(type=time)),
+checked 2026-10-08. Authored wire precision remains separate from the browser's
+localized visible clock representation.
+
+The maintained browser control/policy programs use the existing Pascal
+`nyx_browser_ready_capture` observer: checkpoint acknowledgment separates
+navigation, meaningful mounted captures and explicit disposal. Their fixture
+hosts require that observation protocol to publish a terminal pass; loading
+the HTML alone does not establish completed qualification. Captures and DOM
+markers are retained before the controls retire. These synthetic handler routes
+and CSS viewport checks do not establish trusted hardware or accessibility.

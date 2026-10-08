@@ -66,7 +66,20 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current accepted clock prerequisite (2026-10-08): all four original portable
+Current clock consumers (2026-10-08): actual Win32 controls pass **85** and HTTP
+browser controls **22** at desktop/CSS-390. Public browser Inspector/source-worker
+checks pass **35** at both widths; ordinary native Studio passes **51**, including
+its **34** public-form checks. Exact accepted policy reconstruction passes **five**
+on both targets. Draft/completion, exact refusal, paired history and explicit
+retirement execute; inspected captures precede disposal. Native receipts are
+leak-free and affected builds have zero owned warnings. Full ordinary browser
+Studio, authenticated current-backend observation and hardware/accessibility/full
+parity remain open. Renderer alone advances no-closure **19→20**; other owners
+remain workflow/resource/authoring/codegen/delivery **23/9/39/28/3**. Installed
+LAN/pairs/services stay exact. End clock fixtures and return to ordinary browser
+project/source/policy workflows. See [the packet](WORK.md#current-return-path-clock-control-consumers--2026-10-08).
+
+Previous accepted clock prerequisite (2026-10-08): all four original portable
 clock-value/domain/authoring criteria are accepted. Checked native and actual
 HTTP browser execution each pass **1,613** clock checks plus **49** unchanged
 calendar regressions; exact emitted source executes on both targets and all

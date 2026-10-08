@@ -103,7 +103,8 @@ begin
       (LBranch.Field('required').Count = 3),
       'Setting requires an exact owner and typed domain');
     LVariants := LBranch.Field('properties').Field('domain').Field('oneOf');
-    Check(LVariants.Count = 6, 'All scalar families, Gregorian and clock formats are discoverable');
+    Check(LVariants.Count = 7,
+      'All scalar families, Gregorian, clock and RGB formats are discoverable');
     for LIndex := 0 to LVariants.Count - 1 do
     begin
       LBranch := LVariants.Item(LIndex);
@@ -132,6 +133,12 @@ begin
       (LProperties.Field('step').Field('oneOf').Item(0).Field('maximum').AsInteger = High(Integer)) and
       (LProperties.Field('step').Field('oneOf').Item(1).Field('const').AsText = 'any'),
       'Clock steps use exact positive milliseconds or the explicit Any boundary');
+    LProperties := LVariants.Item(6).Field('properties');
+    Check((LProperties.Field('format').Field('const').AsText = 'rgb') and
+      not NyxAgentHas(LVariants.Item(6), 'anyOf') and
+      (LProperties.Field('choices').Field('items').Field('pattern').AsText =
+        '^$|^#[0-9a-fA-F]{6}$'),
+      'RGB discovery retains its independent optional exact color boundary');
     WriteLn('PASS ', LChecks, ' offline value-domain MCP schema checks');
   except
     on LException: Exception do

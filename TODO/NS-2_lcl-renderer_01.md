@@ -23,6 +23,26 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   prerequisite for replacing the time-field text fallback. Other native input
   and full renderer criteria remain required; this allocates no extra credit.
 
+## Executed clock consumers — 2026-10-08
+
+Original criteria 1–3 consume the accepted clock prerequisite through checked
+Win32 controls/pickers and actual HTTP browser completion/refusal/retirement.
+Native passes **85**, leak-free; browser passes **22** at desktop/CSS-390 with
+mounted captures before disposal. The public browser Inspector/source worker
+passes **35** at both widths, ordinary native Studio **51**, and exact accepted
+policy reconstruction **five** on both targets. Affected builds have zero owned
+warnings. Harness navigation, completion and seventh-family schema checks are
+corrected without changing product admission or discarding existing assertions.
+
+No original full criterion closes. Renderer alone advances no-closure **19→20**;
+workflow/resource/authoring/codegen/delivery stay **23/9/39/28/3**. End clock
+fixtures. Reassessment changes the next action to the ordinary browser Studio
+project/source/policy workflow under its existing authoring/workflow owners;
+full ordinary browser Studio, authenticated current-backend observation,
+hardware/IME/accessibility, other widgetsets/DPI and production/full parity
+remain required. Installed LAN/pairs/services stay exact. See
+[the packet](../WORK.md#current-return-path-clock-control-consumers--2026-10-08).
+
 ## Full property gate restored — 2026-10-07
 
 The prior missing-numeric-input seed is retained. An authenticated owned review

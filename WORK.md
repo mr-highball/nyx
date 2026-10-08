@@ -9,7 +9,103 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: executed clock prerequisite — 2026-10-08
+## Current return path: clock control consumers — 2026-10-08
+
+The preceding turn accepted the complete portable clock prerequisite and pushed
+exact remote `f8f9975`; its two-batch foundation checkpoint is closed. The full
+goal remains open, with workflow/resource/authoring/renderer/codegen/delivery
+no-closure counts 23/9/39/19/28/3. All preceding owned handles are terminal.
+
+Return to NS-2_lcl-renderer_01 criteria 1–3: exercise the accepted typed clock
+contract through actual native/browser inputs, bound state, ordered callbacks,
+refusals and callback-driven disposal. NS-4_studio-authoring_01 criterion 2
+consumes the public clock Inspector, paired source queue and ordinary native
+Studio history. Concrete deliverable: executed browser consumers beside their
+checked native counterparts, with any discovered adapter defect repaired at its
+ownership boundary. Exact authored precision must survive independently of the
+HTML input's permitted physical representation.
+
+Evidence requires current compiled controls, desktop/narrow HTTP execution,
+exact source-policy reconstruction, retained invalid drafts, atomic paired
+Apply/Undo/Redo and leak-free native disposal. Inspect representative captures;
+do not infer trusted hardware, browser picker chrome, accessibility or complete
+ordinary browser Studio parity from synthetic control or standalone Inspector
+checks. Budget: one complete consumer qualification and at most one diagnosis/
+repair per failed boundary; then stop clock fixtures and return to the original
+full consumer outcomes. No repeat of unchanged accepted value/type-refusal tests.
+
+Use only fresh unique fixture directories on the identity-verified admitted
+static host. No service replacement, user pair mutation, enrollment or setup
+change is needed. The earlier automatic review rejected new-backend startup with
+only "blocked by policy"; current-source HTTP rollout keeps that separate gate.
+
+Delivered bounded result: actual clock consumers execute against the accepted
+exact public-Pascal companion, including browser completion/refusal and explicit
+retirement. The public clock Inspector executes its independent browser source
+worker, paired Apply/Restore/Undo/Redo and explicit queue/view/host disposal.
+Ordinary native Studio additionally retains unfinished proposals through panel
+and viewport changes, refused Apply and corrected paired publication.
+
+| Consumer | Current execution |
+| --- | --- |
+| Checked Win32 clock controls/pickers | 85 checks; zero unfreed allocations |
+| HTTP browser clock controls | 22 checks at desktop and CSS-390; mounted captures precede retirement |
+| Offline MCP value-domain discovery | 18 checks, including the existing seventh RGB family |
+| Local semantic clock policy | 32 checks; atomic admission/refusal and paired history |
+| Checked Win32 public Inspector / ordinary Studio | 34 public-form checks within 51 total controller checks; zero leaks |
+| HTTP browser public Inspector/source worker | 35 checks at desktop and CSS-390; explicit disposal follows a saved form capture |
+| Exact accepted policy's compiled reconstruction | Five checks on checked native and actual HTTP browser |
+
+The retained failures identify harness gaps, not repaired product algorithms.
+Schema qualification still expected six domain families after RGB added a
+seventh; it now checks RGB's independent closed choice boundary too. Both initial
+browser clock journeys hit the navigation deadline. The unchanged previously
+passing reconstruction still executes and exact assets return HTTP 200. A
+capture acknowledgment now separates navigation, mounting and mutation; no
+deadline is inflated or assertion discarded. The first reached control failure
+reveals an incorrect input-only commit route. The actual formatted control keeps
+that draft until change; the fixture now sends the standard bubbling completion
+event and checks draft/focus retention, off-step/overnight/choice refusal,
+empty versus midnight, read-only/disabled policy and callback-driven retirement.
+
+HTML Time-state and common-event clauses are checked against the primary Living
+Standard on 2026-10-08; docs/time-fields.md links them. Captures show usable
+standalone fields and the public Inspector at both widths. These are CSS viewport
+and synthetic input-route qualifications. Browser picker chrome, physical phone,
+hardware/IME/assistive technology, other widgetsets/DPI and production aesthetic
+approval remain unqualified. Native PaintTo files remain diagnostic prints.
+The browser public form is not the complete ordinary browser Studio controller.
+No actual HTTP MCP admission is inferred from offline/local semantic checks.
+
+Current-source native recompilation also passes after the browser-only fixture
+changes; the unchanged native behavior is not rerun solely for those branches.
+All owned qualification/compiler handles are terminal. Disposable browser
+profile cleanup is separately rejected before execution by automatic approval
+review with only "blocked by policy", despite explicit resolved-root/GUID and
+live-process guards. No files are removed and no equivalent cleanup is retried;
+ignored profiles, failed logs and all captures remain retained. This optional
+artifact cleanup does not change the earlier new-backend startup gate.
+
+Evidence is ignored build/clock-consumers/: current native/compiler receipts,
+policy-maintained-current.log, final browser control/policy/reconstruction logs,
+exact DOM markers and checkpoint captures. All failed receipts are retained.
+Only ten explicit fixture files occupy a fresh admitted static subdirectory;
+its original assets/runtime and the protected LAN are unchanged. Final guard
+passes 2026-10-08T15:25:13Z: sealed 299 files, nine exact pairs/full history,
+147,033-byte checkpoint and all fifteen service identities stay exact.
+
+No original full renderer/Studio criterion or percentage closes. Renderer alone
+advances its no-closure count 19→20 once; workflow/resource/authoring/codegen/
+delivery stay 23/9/39/28/3. End clock consumer fixtures. Reassessment changes the
+next action to ordinary browser Studio's paired project-import/source/policy
+workflow, owned by the existing authoring/workflow tasks, with explicit owned
+input-harness isolation and no user pair replacement. Broader source/import,
+authenticated current-backend observation and full runtime/delivery remain open;
+do not return to standalone clock preparation or treat this as full parity.
+
+<a id="current-return-path-executed-clock-prerequisite--2026-10-08"></a>
+
+## Previous return path: executed clock prerequisite — 2026-10-08
 
 Previous goal turn is progress: public constrained split allocation, actual
 both-target Studio/source journeys and exact remote `111c4e7` are published.

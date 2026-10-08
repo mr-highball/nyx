@@ -76,6 +76,7 @@ var
   {$ifdef PAS2JS}
   GRequest: TJSXMLHttpRequest;
   GStarted: Double;
+  GFinished: Boolean;
   {$endif}
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
@@ -594,11 +595,25 @@ begin
       raise Exception.Create('Clock Inspector qualification timed out');
     end;
 
-    if GReview.Step then
+    if GFinished then
     begin
-      document.body.setAttribute('data-time-policy', 'passed');
-      document.body.setAttribute('data-time-policy-checks', IntToStr(GChecks));
-      Exit;
+
+      if document.body.getAttribute('data-capture-observed') = 'clock-policy' then
+      begin
+        { Keep a meaningful public Inspector capture, then qualify its explicit
+          queue/worker/view ownership before admitting terminal readiness. }
+        FreeAndNil(GReview);
+        Check(document.querySelector('[data-node="inspector-time-domain"]') = nil,
+          'explicit retirement removes the browser clock Inspector and its host');
+        document.body.setAttribute('data-time-policy', 'passed');
+        document.body.setAttribute('data-time-policy-checks', IntToStr(GChecks));
+        Exit;
+      end;
+    end
+    else if GReview.Step then
+    begin
+      GFinished := True;
+      document.body.setAttribute('data-capture-checkpoint', 'clock-policy');
     end;
     window.setTimeout(@Tick, 10);
   except
@@ -606,6 +621,7 @@ begin
     begin
       document.body.setAttribute('data-time-policy', 'failed');
       document.body.setAttribute('data-time-policy-error', LException.Message);
+      document.body.setAttribute('data-event-error', LException.Message);
     end;
   end;
 end;
@@ -639,6 +655,7 @@ begin
         begin
           document.body.setAttribute('data-time-policy', 'failed');
           document.body.setAttribute('data-time-policy-error', LException.Message);
+          document.body.setAttribute('data-event-error', LException.Message);
         end;
       end;
     end;

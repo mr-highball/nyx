@@ -15,6 +15,16 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Clock consumer return (2026-10-08): the renderer-owned packet executes actual
+browser/native fields and the public browser Inspector/source worker; its local
+semantic policy/schema checks do not establish authenticated HTTP admission.
+Full ordinary browser project import, source editing and policy/history
+observation remain with this task and the authoring owner. Frozen installed
+schemas and the current-backend startup gate remain explicit; no user pair or
+backend is replaced for these input fixtures. Workflow no-closure stays **23**;
+renderer alone advances **19→20**, others remain **9/39/28/3**. End standalone
+clock fixtures. See [the packet](../WORK.md#current-return-path-clock-control-consumers--2026-10-08).
+
 Semantic compiled editor launch progress (2026-10-08): `nyx_build` now requests
 an exact successful current job in an ordinary observing project. Bounded status
 separates accepted intent from browser/native placement acknowledgment. Exact

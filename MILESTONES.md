@@ -4,7 +4,20 @@
 [Current work](WORK.md)
 
 
-Current accepted clock prerequisite (2026-10-08): all four original portable
+Current clock consumers (2026-10-08): accepted typed values reach executed native
+and browser controls, the public Inspector/source queue and ordinary native
+Studio. Checked Win32 passes **85** control and **51** total Studio checks;
+browser passes **22** control and **35** Inspector checks at desktop/CSS-390.
+Exact accepted policy reconstruction passes **five** on both targets; native
+ownership is leak-free and affected builds have zero owned warnings. Inspected
+captures precede explicit retirement. No original full criterion or allocation
+closes: renderer no-closure alone advances **19→20**, other owners remain
+workflow/resource/authoring/codegen/delivery **23/9/39/28/3**. Installed LAN/pairs/
+services remain exact. End clock fixtures; ordinary browser project/source/policy
+workflows, authenticated current-backend observation and full parity/runtime/
+delivery retain their original requirements. See [the packet](WORK.md#current-return-path-clock-control-consumers--2026-10-08).
+
+Previous accepted clock prerequisite (2026-10-08): all four original portable
 value/domain/authoring criteria now have checked native and actual HTTP browser
 evidence. Each shared suite passes **1,613** clock assertions plus **49** calendar
 regressions; exact emitted-source execution passes on both targets, and all
@@ -1268,6 +1281,16 @@ production component outcomes retain their owners.
 Current task and return path are maintained in [WORK.md](WORK.md).
 
 ## Reassessment record
+
+- 2026-10-08: executed actual clock-control and public Inspector/source-worker
+  consumers against the accepted clock prerequisite. Native controls/ordinary
+  Studio pass 85/51; browser controls/Inspector pass 22/35 at desktop and CSS-390;
+  exact accepted policy reconstruction passes five on both targets. Harness
+  navigation/commit/schema gaps are repaired without changing product admission
+  or weakening assertions. No full renderer/Studio criterion closes. Renderer
+  alone advances 19→20; other owners stay 23/9/39/28/3. Stop clock fixtures and
+  change the next action to ordinary browser project/source/policy workflows.
+  Protected LAN/pairs/services remain unchanged; allocation stays pending.
 
 - 2026-10-08: accepted all four original criteria of
   [typed clock-time prerequisites](TODO/DONE/NS-1_time-values_01.md) after actual

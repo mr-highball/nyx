@@ -40,6 +40,25 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Executed clock policy consumer — 2026-10-08
+
+Criterion 2 consumes actual public clock Inspector/source-worker Apply/Restore/
+Undo/Redo and explicit disposal: **35** browser checks at desktop/CSS-390.
+Ordinary native Studio passes **51**, including **34** public-form checks,
+covering unfinished proposals, panel/viewport retention, refused Apply,
+corrected typed source and exact paired history. Accepted policy reconstruction
+passes **five** on both targets. Native receipts are leak-free; affected builds
+have zero owned warnings and representative captures are inspected.
+
+This public browser form is not the complete ordinary browser Studio controller.
+No full authoring criterion closes, and authoring no-closure stays **39**; the
+renderer alone owns **19→20**, with workflow/resource/codegen/delivery **23/9/28/3**.
+Stop standalone clock fixtures and return to the ordinary browser project-import/
+source/policy workflow. Authenticated current-backend observation, native full
+Studio, trusted accessibility/input and complete authoring/runtime parity remain
+open. Installed LAN/pairs/services stay exact. See
+[the packet](../WORK.md#current-return-path-clock-control-consumers--2026-10-08).
+
 ## Native source-pane allocation follow-up — 2026-10-08
 
 The observed cramped native source allocation is corrected through the public

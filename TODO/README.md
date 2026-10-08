@@ -46,7 +46,19 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current accepted clock prerequisite (2026-10-08): the retained browser-execution
+Current clock consumers (2026-10-08): actual Win32 controls pass **85**, browser
+controls **22** and browser Inspector/source worker **35** at desktop/CSS-390.
+Ordinary native Studio passes **51**, including **34** public-form checks; exact
+accepted policy reconstruction passes **five** on both targets. Native ownership
+is leak-free and affected builds have zero owned warnings. Captures precede
+explicit disposal. No full criterion closes; renderer alone advances no-closure
+**19→20**, others stay workflow/resource/authoring/codegen/delivery **23/9/39/28/3**.
+Installed LAN/pairs/services are unchanged. End standalone clock fixtures and
+return to ordinary browser project/source/policy workflows. Browser picker chrome,
+trusted input/accessibility and full observing/runtime/parity retain their owners.
+See [the packet](../WORK.md#current-return-path-clock-control-consumers--2026-10-08).
+
+Previous accepted clock prerequisite (2026-10-08): the retained browser-execution
 gap is closed by **1,613** actual shared clock assertions plus **49** calendar
 regressions, exact emitted-source execution on both targets and **twelve** intended
 type refusals. All four original portable criteria and their accepted blockers

@@ -77,6 +77,8 @@ var
   {$ifdef PAS2JS}
   GView: TNyxBrowserRenderer;
   GHost: TJSHTMLElement;
+  GStage: Integer;
+  GStarted: Double;
   {$else}
   GView: TNyxLCLRenderer;
   GHost: TForm;
@@ -177,6 +179,20 @@ begin
   Pump;
 end;
 
+{$ifdef PAS2JS}
+procedure Commit(const AID: TNyxText);
+var
+  LOptions: TJSObject;
+begin
+  { Formatted fields publish on editing completion. An input notification owns
+    only a physical draft; it must not imitate a completed platform change. }
+  LOptions := TJSObject.new;
+  LOptions['bubbles'] := True;
+  GView.InputFor(AID, niRuntime).dispatchEvent(TClockInputEvent.new('change', LOptions));
+  Pump;
+end;
+{$endif}
+
 {$ifndef PAS2JS}
 procedure TClockEditAccess.Complete;
 begin
@@ -269,20 +285,9 @@ begin
 end;
 {$endif}
 
-procedure Journey;
-var
-  LRoot: TNyxNode;
-  LBefore: TNyxText;
-  {$ifdef PAS2JS}
-  LInput: TJSHTMLInputElement;
-  {$else}
-  LStart: TNyxLCLTimeField;
-  LEarliest: TNyxLCLTimeField;
-  LLatest: TNyxLCLTimeField;
-  LChoice: TNyxLCLTimeField;
-  LKey: Word;
-  LEnterBefore: Integer;
-  {$endif}
+{ Mount and observation are separate from mutation. Browser qualification can
+  publish a real field capture before callback-driven retirement removes it. }
+procedure Mount;
 begin
   { This is the exact previously compiled public-Pascal companion, not an active
     MCP design or a claim that the frozen MCP schema admits new clock policies. }
@@ -310,6 +315,23 @@ begin
   GView.Events.On(NyxControlEvents('start-time', niRuntime), ntAfterEnter)
     .Subscribe(TClockFocusObserver.Create);
   {$endif}
+end;
+
+procedure Journey;
+var
+  LRoot: TNyxNode;
+  LBefore: TNyxText;
+  {$ifdef PAS2JS}
+  LInput: TJSHTMLInputElement;
+  {$else}
+  LStart: TNyxLCLTimeField;
+  LEarliest: TNyxLCLTimeField;
+  LLatest: TNyxLCLTimeField;
+  LChoice: TNyxLCLTimeField;
+  LKey: Word;
+  LEnterBefore: Integer;
+  {$endif}
+begin
   Check(InputValue('start-time') = '00:30:00.000', 'bound exact precision reaches the actual input');
   {$ifndef PAS2JS}
   TCustomEdit(GView.InputFor('start-time', niRuntime)).SetFocus;
@@ -337,10 +359,25 @@ begin
     (LInput.getAttribute('step') = '0.125'), 'one-sided bounds and fractional steps project exactly');
   Check(TJSHTMLInputElement(GView.InputFor('latest-time', niRuntime)).getAttribute('step') = 'any',
     'the browser never substitutes its default minute step');
+  LInput := TJSHTMLInputElement(GView.InputFor('start-time', niRuntime));
+  LInput.focus;
+  Edit('start-time', '01:00:00.1');
+  Check((InputValue('start-time') = '01:00:00.1') and
+    (GView.State.GetValue(NyxTextState('reminder')) = '00:30:00.000') and
+    (GOrder = ''), 'browser input retains a draft without publishing a clock');
+  GView.Sync;
+  Check((InputValue('start-time') = '01:00:00.1') and
+    (GView.InputFor('start-time', niRuntime) = LInput) and
+    (document.activeElement = LInput),
+    'unrelated browser sync retains the exact draft, input identity and focus');
+  Commit('start-time');
+  Check((InputValue('start-time') = '00:30:00.000') and
+    (GView.LastBindingError <> '') and (GOrder = ''),
+    'browser completion refuses an off-step draft without a successful callback');
   {$endif}
   GOrder := '';
   Edit('start-time', '01:00:00.000');
-  {$ifndef PAS2JS}Commit('start-time');{$endif}
+  Commit('start-time');
   Check((GView.State.GetValue(NyxTextState('reminder')) = '01:00:00.000') and
     (GOrder = '12'), 'an accepted physical clock commits exact state and two ordered callbacks');
   Check(GSnapshot.HasValue and (GSnapshot.Value.AsText = '01:00:00.000'),
@@ -481,15 +518,49 @@ begin
     'narrow resizing retains the same usable exact clock editor');
   Capture(GHost, 'narrow');
   {$else}
+  { Admission also protects domains the HTML control cannot express, notably
+    exact choice membership and a choice list that excludes an empty reading. }
+  GOrder := '';
+  Edit('start-time', '10:00');
+  Commit('start-time');
+  Check((InputValue('start-time') = '23:00:00.000') and
+    (GView.State.GetValue(NyxTextState('reminder')) = '23:00:00.000') and
+    (GOrder = ''), 'browser overnight refusal preserves state and callback silence');
+  Edit('earliest-time', '08:30:00.126');
+  Commit('earliest-time');
+  Check((InputValue('earliest-time') = '08:30:00.25') and
+    (GView.LastBindingError <> ''), 'browser fractional steps never round an off-step proposal');
+  Edit('choice-time', '09:00:00.2');
+  Commit('choice-time');
+  Check(InputValue('choice-time') = '09:00:00.1',
+    'browser completion refuses a clock outside the portable choice set');
+  GView.Root.Find('choice-time').Contract.Value(NyxTimeDomain.Choices([
+    NyxTime(9, 0, 0, 100).WithPrecision(ntpTenth)]));
+  GView.Sync;
+  Edit('choice-time', '');
+  Commit('choice-time');
+  Check(InputValue('choice-time') = '09:00:00.1',
+    'a browser choice list may exclude empty without coercing a replacement');
+  Edit('latest-time', '');
+  Commit('latest-time');
+  Check(InputValue('latest-time') = '', 'browser completion preserves an optional empty clock');
+  Edit('latest-time', '00:00');
+  Commit('latest-time');
+  Check(InputValue('latest-time') = '00:00', 'browser midnight remains distinct from empty');
   LRoot := GView.Root;
   LBefore := InputValue('start-time');
   LRoot.Configure.ReadOnly(True).Done;
   GView.Sync;
   Check(TJSHTMLInputElement(GView.InputFor('start-time', niRuntime)).readOnly,
     'inherited read-only reaches the actual browser clock input');
+  Edit('start-time', '23:00:01.500');
+  Commit('start-time');
+  Check((InputValue('start-time') = LBefore) and (GOrder = ''),
+    'read-only browser completion cannot publish a clock or successful callback');
   LRoot.Configure.ReadOnly(False).Enabled(False).Done;
   GView.Sync;
   Edit('start-time', '00:00');
+  Commit('start-time');
   Check(InputValue('start-time') = LBefore, 'disabled browser proposals preserve the accepted reading');
   LRoot.Configure.Enabled(True).Done;
   GView.Sync;
@@ -501,6 +572,7 @@ begin
   Pick(LStart, 23, 0, 3, 0);
   {$else}
   Edit('start-time', '23:00:03.000');
+  Commit('start-time');
   {$endif}
   Check(GView.Root = nil, 'an accepted callback retires its own native/browser view safely');
   Check(GSnapshot.Value.AsText = '23:00:03.000', 'the last callback value outlives its controls');
@@ -537,8 +609,14 @@ begin
   {$endif}
 end;
 
+{ Browser qualification starts after the navigation response. The unchanged
+  actual-control journey can perform synchronous layout and callbacks without
+  making host readiness depend on a debugger navigation deadline. Native hosts
+  call the same journey directly; only the completed assertions admit a pass. }
+procedure Qualify;
 begin
   try
+    {$ifndef PAS2JS}Mount;{$endif}
     Journey;
     Retire;
     {$ifdef PAS2JS}
@@ -553,6 +631,7 @@ begin
       {$ifdef PAS2JS}
       document.body.setAttribute('data-time-controls', 'failed');
       document.body.setAttribute('data-time-error', LException.Message);
+      document.body.setAttribute('data-event-error', LException.Message);
       {$else}
       WriteLn('FAIL after ', GChecks, ' checks / ', LException.Message);
       DumpExceptionBackTrace(Output);
@@ -561,4 +640,61 @@ begin
       {$endif}
     end;
   end;
+end;
+
+{$ifdef PAS2JS}
+{ Wait for an actual host observation instead of racing navigation with a
+  synchronous renderer journey. The driver only acknowledges saved captures;
+  no editor commands or state mutations come from its debugger connection. }
+procedure Observe;
+begin
+  try
+
+    if window.performance.now - GStarted > 180000 then
+    begin
+      raise Exception.Create('Clock control observation did not complete');
+    end;
+    case GStage of
+      0:
+        begin
+
+          if document.body.getAttribute('data-capture-observed') = 'clock-host' then
+          begin
+            document.body.setAttribute('data-time-phase', 'mount');
+            Mount;
+            document.body.setAttribute('data-capture-checkpoint', 'clock-fields');
+            GStage := 1;
+          end;
+        end;
+      1:
+        begin
+
+          if document.body.getAttribute('data-capture-observed') = 'clock-fields' then
+          begin
+            document.body.setAttribute('data-time-phase', 'journey');
+            Qualify;
+            Exit;
+          end;
+        end;
+    end;
+    window.setTimeout(@Observe, 50);
+  except
+    on LException: Exception do
+    begin
+      document.body.setAttribute('data-time-controls', 'failed');
+      document.body.setAttribute('data-time-error', LException.Message);
+      document.body.setAttribute('data-event-error', LException.Message);
+    end;
+  end;
+end;
+{$endif}
+
+begin
+  {$ifdef PAS2JS}
+  GStarted := window.performance.now;
+  document.body.setAttribute('data-capture-checkpoint', 'clock-host');
+  window.setTimeout(@Observe, 100);
+  {$else}
+  Qualify;
+  {$endif}
 end.
