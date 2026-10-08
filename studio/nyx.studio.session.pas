@@ -43,6 +43,8 @@ uses
   nyx.controls,
   nyx.design.tokens,
   nyx.image.editor,
+  nyx.resources.editor,
+  nyx.studio.resources,
   nyx.images,
   nyx.designer.resize,
   nyx.codegen,
@@ -87,7 +89,7 @@ type
     sdaCanvasValue, sdaSetStateDefault, sdaCreateStateDefault,
     sdaRenameStateDefault, sdaRemoveStateDefault, sdaSetBinding, sdaInheritBinding,
     sdaEvent, sdaCollection, sdaPlacement, sdaResize, sdaPresentation, sdaPosition,
-    sdaContent, sdaValueDomain, sdaMenu, sdaTheme, sdaImage);
+    sdaContent, sdaValueDomain, sdaMenu, sdaTheme, sdaImage, sdaResource);
   { Callback operations carry exact typed event/registration references. Removal
     includes the handler the user reviewed; IDs alone cannot authorize replacing
     a registration. Empty references belong only to add/policy intent. }
@@ -170,6 +172,9 @@ type
     { One copied complete image proposal. Imported bytes remain portable;
       source, alternative text and sizing share one paired admission/history. }
     Image: TNyxImageEditorChange;
+    { Whole resource proposal and optional scalar binding travel through one
+      independent paired processor. Values contain no file/provider/UI handle. }
+    Resource: TNyxResourceEditorChange;
     { Immutable origin of a canvas capture. Queue admission uses this mounted
       session/load identity even when the caller retains intent before enqueue. }
     property CanvasContext: TNyxStudioCommandContext read FCanvasContext;

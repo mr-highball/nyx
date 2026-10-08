@@ -29,6 +29,15 @@ tool source and observing execution require later integration/deployment evidenc
 The prerequisite remains [portable resources](NS-1_resources_01.md); this gap
 earns no workflow closure or added allocation.
 
+The common form now feeds both ordinary controllers through the copied
+`NewNyxStudioResourcePatch` candidate and v15 isolated processor envelope. The
+existing semantic owner must consume the same resource/binding admission while
+adding permission, actor, expected-revision and bounded payload-window guards.
+Do not advertise those internal UI tickets as deployed MCP tools. Native form
+qualification passes 78/7/252 leak-free; no new semantic/authenticated/observing
+journey is claimed, and workflow remains 21. The next boundary is the bounded
+resource API, not another form fixture family. See [the authoring packet](../WORK.md#current-return-path-common-studio-resources-authoring--2026-10-08).
+
 Current semantic property restoration (2026-10-07): the existing Pascal author
 now has an explicit transport-owned review mode. It scopes every query/edit/build,
 exports bounded exact source, checks paired Undo/Redo, disposes and retires its

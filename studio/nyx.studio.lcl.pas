@@ -34,6 +34,7 @@ uses
   nyx.content.editor,
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.lcl,
+  nyx.resources, nyx.resources.editor, nyx.resources.import, nyx.resources.import.lcl,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.lcl,
   nyx.menu, nyx.menu.lcl, nyx.menu.button, nyx.controls, nyx.studio.menu,
@@ -121,6 +122,9 @@ type
     FHost: TWinControl;
     FHostSpace: INyxHostSpace;
     FImagePicker: INyxImagePicker;
+    FResourcePicker: INyxResourcePicker;
+    FResourcePickContext: TNyxStudioCommandContext;
+    FResourcePickDraft: TNyxDataValue;
     FImagePickContext: TNyxStudioCommandContext;
     FImagePickOwner: TNyxText;
     FImagePickBaseline: TNyxText;
@@ -194,6 +198,8 @@ type
     procedure HostSpaceChanged(const AExtent: TNyxHostExtent);
     procedure ImagePicked(AStatus: TNyxImagePickStatus;
       const ASource: TNyxImageSource; const AError: TNyxText);
+    procedure ResourcePicked(AStatus: TNyxResourcePickStatus;
+      const ADefinition: INyxResourceDefinition; const AError: TNyxText);
     procedure PaintQueued(AData: PtrInt);
     procedure Paint;
     procedure ShellEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
@@ -243,6 +249,9 @@ type
   protected
     { Ordinary Studio consumes the public local-file picker contract. }
     function CreateImagePicker: INyxImagePicker; virtual;
+    { Own the replaceable byte-only picker; cancel its borrowed reply before
+      retirement. The shared resource form remains independent of LCL dialogs. }
+    function CreateResourcePicker: INyxResourcePicker; virtual;
     { Owned adapter factory for embedded hosts with another private transport.
       Default uses asynchronous loopback HTTP. No receiver runs inside Post. }
     function CreateEditorExchange: TNyxStudioEditorExchange; virtual;
@@ -625,6 +634,12 @@ begin
   begin
     FImagePicker.Cancel;
     FImagePicker := nil;
+  end;
+
+  if FResourcePicker <> nil then
+  begin
+    FResourcePicker.Cancel;
+    FResourcePicker := nil;
   end;
 
   if FCanvasView <> nil then
@@ -1509,6 +1524,8 @@ begin
   FState.ContentEditorDraft.Clear;
   FState.ThemeEditorDraft.Clear;
   FState.ImageEditorDraft.Clear;
+  FState.ResourceEditorDraft.Clear;
+  FState.ResourceSelection := NyxNewResourceSelection;
   FBoundProject := '';
   FProjectRevision := '';
   FSavedPair := EncodeNyxProject(FSession.ProjectSnapshot);
@@ -1534,6 +1551,71 @@ begin
   end;
   FQueued := True;
   Application.QueueAsyncCall(PaintQueued, 0);
+end;
+
+function TNyxNativeStudio.CreateResourcePicker: INyxResourcePicker;
+begin
+  Result := NewNyxLCLResourcePicker;
+end;
+
+procedure TNyxNativeStudio.ResourcePicked(AStatus: TNyxResourcePickStatus;
+  const ADefinition: INyxResourceDefinition; const AError: TNyxText);
+var
+  LEditor: TNyxNode;
+  LCurrent: TNyxResourceEditorDraft;
+  LProjection: TNyxNode;
+begin
+
+  if AStatus = rpsCancelled then
+  begin
+    Exit;
+  end;
+  try
+
+    if not FSession.MatchesCommandContext(FResourcePickContext) then
+    begin
+      raise ENyxResource.Create('Resource import belongs to an earlier project');
+    end;
+    LEditor := FShellView.Root.Find('studio-resource-editor');
+
+    if LEditor = nil then
+    begin
+      raise ENyxResource.Create('Resource import form has closed');
+    end;
+    LProjection := FSession.SelectedProjection;
+    try
+
+      if not NyxResourceEditorContextMatches(LEditor, FSession.Document.Resources,
+        FSession.Selected, LProjection) then
+      begin
+        raise ENyxResource.Create('Resource catalog or selected control changed while importing');
+      end;
+    finally
+      LProjection.Free;
+    end;
+    LCurrent := Default(TNyxResourceEditorDraft);
+    LCurrent.Capture('studio-resource-editor', FShellView.Root);
+
+    if LCurrent.ToData.ToJSON <> FResourcePickDraft.ToJSON then
+    begin
+      raise ENyxResource.Create('Resource proposal changed while the file picker was open');
+    end;
+
+    if AStatus = rpsFailed then
+    begin
+      raise ENyxResource.Create(AError);
+    end;
+    ProposeNyxResourceEditor(LEditor, ADefinition);
+    FState.ResourceEditorDraft.Capture('studio-resource-editor', FShellView.Root);
+    FShellView.Sync;
+
+  except
+    on LException: Exception do
+    begin
+      FState.Status := LException.Message;
+      RequestRefresh;
+    end;
+  end;
 end;
 
 function TNyxNativeStudio.CreateImagePicker: INyxImagePicker;
@@ -1645,6 +1727,7 @@ begin
     FState.ContentEditorDraft.Capture('inspector-content', FShellView.Root);
     FState.ThemeEditorDraft.Capture('studio-theme-editor', FShellView.Root);
     FState.ImageEditorDraft.Capture('inspector-image', FShellView.Root);
+    FState.ResourceEditorDraft.Capture('studio-resource-editor', FShellView.Root);
   end;
   LNode := FShellView.Root.Find('studio-split');
 
@@ -1699,6 +1782,12 @@ begin
   FState.ContentEditorDraft.Restore(Result.Pages[0]);
   FState.ThemeEditorDraft.Restore(Result.Pages[0]);
   FState.ImageEditorDraft.Restore(Result.Pages[0]);
+
+  if not FState.ResourceEditorDraft.Restore(Result.Pages[0]) and
+    (Result.Pages[0].Find('studio-resource-editor') <> nil) then
+  begin
+    FState.ResourceEditorDraft.Clear;
+  end;
   Result.Pages[0].Configure.Height(FHost.ClientHeight).Done;
 end;
 
@@ -2136,7 +2225,10 @@ begin
     FDesignerResize.Connect(FShellView.Events, FShellView.Root, FShellCommandContext);
     FDesignerMove.Connect(FShellView.Events, FShellView.Root, FShellCommandContext);
 
-    if FCanvasView.DesignMode then
+    { A parked canvas retains its former face. Reconnect guides only after the
+      visible mount above has synchronized the current authored selection. }
+
+    if FCanvasView.DesignMode and (LCanvasHost <> nil) then
     begin
       FCanvasView.AttachResizeGrips(FDesignerResize.CanvasGrips);
       FCanvasView.AttachMoveGrip(FDesignerMove.CanvasGrip);
@@ -2650,6 +2742,9 @@ var
   LImageEditor: TNyxNode;
   LImageAction: TNyxImageEditorAction;
   LImageSource: TNyxImageSource;
+  LResourceEditor: TNyxNode;
+  LResourceAction: TNyxResourceEditorAction;
+  LResourceSelection: TNyxResourceEditorSelection;
   LContentFocus: TWinControl;
 begin
 
@@ -2738,6 +2833,65 @@ begin
       if (LContentFocus <> nil) and LContentFocus.CanFocus then
       begin
         LContentFocus.SetFocus;
+      end;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-resources-toggle') then
+    begin
+      FState.ResourcesVisible := not FState.ResourcesVisible;
+      RequestRefresh;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntChange) and
+      NyxResourceEditorInput(ANode, FShellView.Root, LResourceEditor) then
+    begin
+      RefreshNyxResourceEditor(LResourceEditor, False);
+      FState.ResourceEditorDraft.Capture('studio-resource-editor', FShellView.Root);
+      FShellView.Sync;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and
+      NyxResourceEditorAction(ANode, FShellView.Root, LResourceEditor,
+        LResourceAction, LResourceSelection) and
+      (LResourceAction in [reaNew, reaOpen, reaImport, reaPreview]) then
+    begin
+
+      if FResourcePicker <> nil then
+      begin
+        FResourcePicker.Cancel;
+      end;
+      case LResourceAction of
+        reaNew, reaOpen:
+          begin
+            FState.ResourceEditorDraft.Clear;
+            FState.ResourceSelection := LResourceSelection;
+            RequestRefresh;
+          end;
+        reaPreview:
+          begin
+            RefreshNyxResourceEditor(LResourceEditor, True);
+            FState.ResourceEditorDraft.Capture('studio-resource-editor', FShellView.Root);
+            FShellView.Sync;
+          end;
+        reaImport:
+          begin
+
+            if FResourcePicker = nil then
+            begin
+              FResourcePicker := CreateResourcePicker;
+            end;
+            FState.ResourceEditorDraft.Capture('studio-resource-editor', FShellView.Root);
+            FResourcePickDraft := FState.ResourceEditorDraft.ToData;
+            FResourcePickContext := FSession.CommandContext;
+            FResourcePicker.Pick(NyxResourceEditorKind(LResourceEditor), ResourcePicked);
+          end;
+        reaApply, reaRemove:
+          begin
+            { The ordinary isolated source command owns these admissions. }
+          end;
       end;
       Exit;
     end;

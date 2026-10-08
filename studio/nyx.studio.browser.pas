@@ -38,6 +38,7 @@ uses
   nyx.content.editor,
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.browser,
+  nyx.resources, nyx.resources.editor, nyx.resources.import, nyx.resources.import.browser,
   Classes,
   SysUtils,
   JS,
@@ -218,6 +219,9 @@ type
     FImportInput: TJSHTMLInputElement;
     FImportReader: TJSFileReader;
     FImagePicker: INyxImagePicker;
+    FResourcePicker: INyxResourcePicker;
+    FResourcePickContext: TNyxStudioCommandContext;
+    FResourcePickDraft: TNyxDataValue;
     FImagePickContext: TNyxStudioCommandContext;
     FImagePickOwner: TNyxText;
     FImagePickBaseline: TNyxText;
@@ -297,10 +301,15 @@ type
     procedure HostSpaceChanged(const AExtent: TNyxHostExtent);
     procedure ImagePicked(AStatus: TNyxImagePickStatus;
       const ASource: TNyxImageSource; const AError: TNyxText);
+    procedure ResourcePicked(AStatus: TNyxResourcePickStatus;
+      const ADefinition: INyxResourceDefinition; const AError: TNyxText);
   protected
     { The Studio consumes the public picker contract. Embedded hosts may supply
       another local adapter without changing the reusable image form. }
     function CreateImagePicker: INyxImagePicker; virtual;
+    { Own the replaceable byte-only picker; cancel its borrowed reply before
+      retirement. The shared resource form remains independent of browser APIs. }
+    function CreateResourcePicker: INyxResourcePicker; virtual;
     { Embedded hosts may provide another owned asynchronous exchange. Both
       controllers still consume the same private semantic protocol. }
     function CreateEditorExchange: TNyxStudioEditorExchange; virtual;
@@ -598,6 +607,12 @@ begin
     FImagePicker.Cancel;
     FImagePicker := nil;
   end;
+
+  if FResourcePicker <> nil then
+  begin
+    FResourcePicker.Cancel;
+    FResourcePicker := nil;
+  end;
   TNyxStudioEventTarget(document).RemoveCaptureListener('pointerdown', FPointerBeginHandler, True);
   TNyxStudioEventTarget(document).RemoveCaptureListener('pointerup', FPointerEndHandler, True);
   TNyxStudioEventTarget(document).RemoveCaptureListener('pointercancel', FPointerEndHandler, True);
@@ -709,6 +724,9 @@ begin
   LState.ThemeVisible := FViewState.ThemeVisible;
   LState.ThemeEditorDraft := FViewState.ThemeEditorDraft;
   LState.ImageEditorDraft := FViewState.ImageEditorDraft;
+  LState.ResourcesVisible := FViewState.ResourcesVisible;
+  LState.ResourceSelection := FViewState.ResourceSelection;
+  LState.ResourceEditorDraft := FViewState.ResourceEditorDraft;
   LState.CallbackRemoval := FCallbackRemoval;
 
   if FRootRemoval <> nil then
@@ -735,6 +753,12 @@ begin
   FViewState.ContentEditorDraft.Restore(Result.Pages[0]);
   FViewState.ThemeEditorDraft.Restore(Result.Pages[0]);
   FViewState.ImageEditorDraft.Restore(Result.Pages[0]);
+
+  if not FViewState.ResourceEditorDraft.Restore(Result.Pages[0]) and
+    (Result.Pages[0].Find('studio-resource-editor') <> nil) then
+  begin
+    FViewState.ResourceEditorDraft.Clear;
+  end;
 end;
 
 procedure TNyxStudio.SourceModalDismiss;
@@ -873,6 +897,7 @@ begin
   FViewState.ContentEditorDraft.Capture('inspector-content', FShellRenderer.Root);
   FViewState.ThemeEditorDraft.Capture('studio-theme-editor', FShellRenderer.Root);
   FViewState.ImageEditorDraft.Capture('inspector-image', FShellRenderer.Root);
+  FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.Root);
 end;
 
 procedure TNyxStudio.Refresh(ARetainCanvas, APreserveDraft: Boolean);
@@ -1354,7 +1379,10 @@ begin
   FDesignerResize.Connect(FShellRenderer.Events, FShellRenderer.Root, FShellCommandContext);
   FDesignerMove.Connect(FShellRenderer.Events, FShellRenderer.Root, FShellCommandContext);
 
-  if FCanvasRenderer.DesignMode then
+  { Hidden compact panels retain their canvas independently. Attach guides only
+    when the current shell actually mounts that authored design face. }
+
+  if FCanvasRenderer.DesignMode and (FShell.Find('studio-canvas') <> nil) then
   begin
     FCanvasRenderer.AttachResizeGrips(FDesignerResize.CanvasGrips);
     FCanvasRenderer.AttachMoveGrip(FDesignerMove.CanvasGrip);
@@ -1943,6 +1971,9 @@ var
   LImageEditor: TNyxNode;
   LImageAction: TNyxImageEditorAction;
   LImageSource: TNyxImageSource;
+  LResourceEditor: TNyxNode;
+  LResourceAction: TNyxResourceEditorAction;
+  LResourceSelection: TNyxResourceEditorSelection;
   LContentFocus: TJSHTMLElement;
 begin
 
@@ -2033,6 +2064,66 @@ begin
       if LContentFocus <> nil then
       begin
         LContentFocus.focus;
+      end;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-resources-toggle') then
+    begin
+      FViewState.ResourcesVisible := not FViewState.ResourcesVisible;
+      Refresh(True, True);
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntChange) and
+      NyxResourceEditorInput(ANode, FShellRenderer.Root, LResourceEditor) then
+    begin
+      RefreshNyxResourceEditor(LResourceEditor, False);
+      FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.Root);
+      FShellRenderer.Sync;
+      SavePresentation;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and
+      NyxResourceEditorAction(ANode, FShellRenderer.Root, LResourceEditor,
+        LResourceAction, LResourceSelection) and
+      (LResourceAction in [reaNew, reaOpen, reaImport, reaPreview]) then
+    begin
+
+      if FResourcePicker <> nil then
+      begin
+        FResourcePicker.Cancel;
+      end;
+      case LResourceAction of
+        reaNew, reaOpen:
+          begin
+            FViewState.ResourceEditorDraft.Clear;
+            FViewState.ResourceSelection := LResourceSelection;
+            Refresh(True, True);
+          end;
+        reaPreview:
+          begin
+            RefreshNyxResourceEditor(LResourceEditor, True);
+            FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.Root);
+            FShellRenderer.Sync;
+          end;
+        reaImport:
+          begin
+
+            if FResourcePicker = nil then
+            begin
+              FResourcePicker := CreateResourcePicker;
+            end;
+            FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.Root);
+            FResourcePickDraft := FViewState.ResourceEditorDraft.ToData;
+            FResourcePickContext := FSession.CommandContext;
+            FResourcePicker.Pick(NyxResourceEditorKind(LResourceEditor), @ResourcePicked);
+          end;
+        reaApply, reaRemove:
+          begin
+            { The ordinary isolated source command owns these admissions. }
+          end;
       end;
       Exit;
     end;
@@ -3520,6 +3611,71 @@ begin
   end;
 end;
 
+function TNyxStudio.CreateResourcePicker: INyxResourcePicker;
+begin
+  Result := NewNyxBrowserResourcePicker;
+end;
+
+procedure TNyxStudio.ResourcePicked(AStatus: TNyxResourcePickStatus;
+  const ADefinition: INyxResourceDefinition; const AError: TNyxText);
+var
+  LEditor: TNyxNode;
+  LCurrent: TNyxResourceEditorDraft;
+  LProjection: TNyxNode;
+begin
+
+  if AStatus = rpsCancelled then
+  begin
+    Exit;
+  end;
+  try
+
+    if not FSession.MatchesCommandContext(FResourcePickContext) then
+    begin
+      raise ENyxResource.Create('Resource import belongs to an earlier project');
+    end;
+    LEditor := FShellRenderer.Root.Find('studio-resource-editor');
+
+    if LEditor = nil then
+    begin
+      raise ENyxResource.Create('Resource import form has closed');
+    end;
+    LProjection := FSession.SelectedProjection;
+    try
+
+      if not NyxResourceEditorContextMatches(LEditor, FSession.Document.Resources,
+        FSession.Selected, LProjection) then
+      begin
+        raise ENyxResource.Create('Resource catalog or selected control changed while importing');
+      end;
+    finally
+      LProjection.Free;
+    end;
+    LCurrent := Default(TNyxResourceEditorDraft);
+    LCurrent.Capture('studio-resource-editor', FShellRenderer.Root);
+
+    if LCurrent.ToData.ToJSON <> FResourcePickDraft.ToJSON then
+    begin
+      raise ENyxResource.Create('Resource proposal changed while the file picker was open');
+    end;
+
+    if AStatus = rpsFailed then
+    begin
+      raise ENyxResource.Create(AError);
+    end;
+    ProposeNyxResourceEditor(LEditor, ADefinition);
+    FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.Root);
+    FShellRenderer.Sync;
+    SavePresentation;
+  except
+    on LException: Exception do
+    begin
+      FStatus := LException.Message;
+      Refresh(True, True);
+    end;
+  end;
+end;
+
 function TNyxStudio.CreateImagePicker: INyxImagePicker;
 begin
   Result := NewNyxBrowserImagePicker;
@@ -3739,6 +3895,9 @@ begin
   LValue.ThemeVisible := FViewState.ThemeVisible;
   LValue.ThemeDraft := FViewState.ThemeEditorDraft;
   LValue.ImageDraft := FViewState.ImageEditorDraft;
+  LValue.ResourcesVisible := FViewState.ResourcesVisible;
+  LValue.ResourceSelection := FViewState.ResourceSelection;
+  LValue.ResourceDraft := FViewState.ResourceEditorDraft;
   { Read the live mounted panes at departure. The cached positions reflect the
     preceding shell refresh and may precede the operator's most recent scroll. }
   LPane := MountedStudioElement(FShellRenderer, 'studio-left');
@@ -3808,6 +3967,9 @@ begin
   FViewState.ImageEditorDraft.Clear;
 
   FViewState.ThemeVisible := False;
+  FViewState.ResourcesVisible := False;
+  FViewState.ResourceSelection := NyxNewResourceSelection;
+  FViewState.ResourceEditorDraft.Clear;
 
   if not FRecoveryEnabled then
   begin
@@ -3851,6 +4013,9 @@ begin
     FViewState.ThemeVisible := LValue.ThemeVisible;
     FViewState.ThemeEditorDraft := LValue.ThemeDraft;
     FViewState.ImageEditorDraft := LValue.ImageDraft;
+    FViewState.ResourcesVisible := LValue.ResourcesVisible;
+    FViewState.ResourceSelection := LValue.ResourceSelection;
+    FViewState.ResourceEditorDraft := LValue.ResourceDraft;
     FLeftScroll := LValue.LeftScroll;
     FRightScroll := LValue.RightScroll;
     FAgentsScroll := LValue.AgentsScroll;

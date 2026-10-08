@@ -121,11 +121,18 @@ var
   LValue: TNyxDataValue;
   LRefused: Boolean;
 
+  function ResourceField(const AName: TNyxText): Boolean;
+  begin
+    Result := (AName = 'resourcesVisible') or (AName = 'resourceSelection') or
+      (AName = 'resourceDraft');
+  end;
+
   function AllocationField(const AName: TNyxText): Boolean;
   begin
     Result := (AName = 'detailsPercent') or (AName = 'detailsExpanded') or
       (AName = 'canvasToolsVisible') or (AName = 'canvasExpanded') or
-      (AName = 'themeVisible') or (AName = 'themeDraft') or (AName = 'imageDraft');
+      (AName = 'themeVisible') or (AName = 'themeDraft') or (AName = 'imageDraft') or
+      ResourceField(AName);
   end;
 begin
   Check(NyxStudioScrollPosition(-12.5) = 0, 'Negative platform overscroll preserves a valid preference');
@@ -163,7 +170,7 @@ begin
   LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LOriginal));
   { The previous strict packet remains readable. New per-project choices use
     their defaults, while every earlier preference and Unicode value survives. }
-  SetLength(LFields, LPacket.Count - 10);
+  SetLength(LFields, LPacket.Count - 13);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -195,7 +202,7 @@ begin
   { Existing Studio installations also wrote version 3, which already owns
     source tabs and expansion. Its absent manual choice must not discard those
     fields or any other per-project preference during this migration. }
-  SetLength(LFields, LPacket.Count - 8);
+  SetLength(LFields, LPacket.Count - 11);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -223,7 +230,7 @@ begin
     'Version 3 migration retains every earlier Unicode, caret and workspace preference exactly');
   { Version 4 is the last observing release's exact packet. Its manual preview
     and all unrelated preferences survive, while new details start collapsed. }
-  SetLength(LFields, LPacket.Count - 7);
+  SetLength(LFields, LPacket.Count - 10);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -244,13 +251,13 @@ begin
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
     'Version 4 retains all preferences and supplies collapsed allocation defaults');
   { Version 5 adds the allocation preferences but predates per-project themes. }
-  SetLength(LFields, LPacket.Count - 3);
+  SetLength(LFields, LPacket.Count - 6);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
 
     if (LPacket.Key(LIndex) <> 'themeVisible') and (LPacket.Key(LIndex) <> 'themeDraft') and
-      (LPacket.Key(LIndex) <> 'imageDraft') then
+      (LPacket.Key(LIndex) <> 'imageDraft') and not ResourceField(LPacket.Key(LIndex)) then
     begin
       LValue := LPacket.Field(LPacket.Key(LIndex));
 
@@ -267,12 +274,12 @@ begin
     'Version 5 retains every previous preference and defaults to no theme proposal');
   { Version 6 owns theme proposals; adding images must not invalidate deployed
     preferences or silently discard the existing source/workspace choices. }
-  SetLength(LFields, LPacket.Count - 1);
+  SetLength(LFields, LPacket.Count - 4);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
 
-    if LPacket.Key(LIndex) <> 'imageDraft' then
+    if (LPacket.Key(LIndex) <> 'imageDraft') and not ResourceField(LPacket.Key(LIndex)) then
     begin
       LValue := LPacket.Field(LPacket.Key(LIndex));
 
@@ -287,6 +294,28 @@ begin
   LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
     'Version 6 retains theme/source/workspace preferences and defaults to no image proposal');
+  { Version 7 retains packed image proposals. The common resource editor adds
+    only private per-project preferences, preserving every earlier field. }
+  SetLength(LFields, LPacket.Count - 3);
+  LCase := 0;
+  for LIndex := 0 to LPacket.Count - 1 do
+  begin
+
+    if not ResourceField(LPacket.Key(LIndex)) then
+    begin
+      LValue := LPacket.Field(LPacket.Key(LIndex));
+
+      if LPacket.Key(LIndex) = 'version' then
+      begin
+        LValue := NyxData(7);
+      end;
+      LFields[LCase] := NyxField(LPacket.Key(LIndex), LValue);
+      Inc(LCase);
+    end;
+  end;
+  LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
+  Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
+    'Version 7 retains every preference and defaults to no resource proposal');
   LOriginal.DetailsPercent := 60;
   LOriginal.DetailsExpanded := True;
   LOriginal.CanvasToolsVisible := True;
@@ -298,7 +327,7 @@ begin
   for LCase := 0 to 27 do
   begin
     LKey := 'version';
-    LValue := NyxData(8);
+    LValue := NyxData(9);
     case LCase of
       1:
       begin

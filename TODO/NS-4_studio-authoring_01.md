@@ -40,7 +40,7 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
-## Common Resources integration gap — 2026-10-08
+## Common Resources authoring — 2026-10-08
 
 Original criterion 2 consumes the [portable resource prerequisite](NS-1_resources_01.md):
 one public Nyx-built Resources area for image/JSON/text/binary files, creator help,
@@ -51,12 +51,23 @@ Resources/host/cache/locale diagnostics must distinguish authored fallbacks from
 successful loading and retain drafts/runtime isolation on failure. Semantic
 inspection/grouped changes remain with the existing workflow owner.
 
-Current foundation and explicit HTTP/native-control qualification are useful
-prerequisite progress (31 checked loader assertions, zero leaks/owned warnings);
-there is no common Studio panel/import/binding-picker execution yet. Browser,
-phone, trusted input, observing and full application/native parity remain required.
-No authoring criterion closes and authoring's no-closure count stays 36 for this
-prerequisite-only boundary. See [the resource packet](../WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).
+Both ordinary controllers now consume the same public resource card and portable
+byte-only pickers. Import/paste, creator metadata, locale variants, hosted
+fallback/cache and structural scalar choices remain proposals until one isolated
+paired Apply. Exact catalog/control context, pending Pascal and late raw/project/
+selection replies refuse; per-project preferences migrate and retain partial
+input. Current shared/actual Win32 checks pass 78, exact emitted Pascal seven and
+workspace regression 252, leak-free. The compact selection check also repairs
+parked-canvas guides in both controllers. Both Studios/backend/worker and browser
+counterparts compile with zero owned warnings. Native chooser substitution does
+not establish a trusted chooser, browser/phone or observing journey.
+
+No full original criterion closes: authoring alone advances no-closure 36→37;
+workflow/renderer/codegen/delivery remain 21/19/28/2, resource prerequisite 2.
+End this consumer boundary. Semantic resource operations, saved row mappings,
+image-reference bindings, automatic loading/locale/navigation/scopes and complete
+application/native/browser parity remain required. See [the authoring packet](../WORK.md#current-return-path-common-studio-resources-authoring--2026-10-08)
+and [usage](../docs/resources.md#studio-resources-and-copied-proposals).
 
 ## Packed image authoring — 2026-10-07
 

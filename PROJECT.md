@@ -66,6 +66,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The common public Nyx Resources form now feeds both ordinary Studios: four file
+families, metadata/locale, hosted cache/fallback and structural scalar binding
+choices use copied proposals and one isolated paired Apply. Shared/actual Win32
+authoring checks pass 78, exact emitted Pascal seven and workspace regression
+252, leak-free. Both Studios/backend/worker and browser counterparts compile
+with zero owned warnings. Actual browser/trusted chooser/phone/observing,
+semantic resource operations and complete application/row/media authoring remain
+open. See [the packet](WORK.md#current-return-path-common-studio-resources-authoring--2026-10-08).
+
 Portable named image/JSON/text/binary resources, hosted declarations with explicit
 fallback/cache policy, typed scalar selectors and locale lookup now retain exact
 wire/source/history. Actual Win32 captions/prompts and JSON-derived table updates

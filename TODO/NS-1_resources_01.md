@@ -54,6 +54,25 @@ Browser/phone/trusted chooser/observing rollout currently needs the documented
 launch/deployment blocker resolved. Until then compile/native evidence remains
 partial and this task stays open. See the [return path](../WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).
 
+## Common Studio consumer boundary — 2026-10-08
+
+Criterion 6 now has one public Nyx resource card consumed by both ordinary
+controllers, with four file kinds, creator metadata/locale, hosted fallback/cache
+and structural scalar choices. Portable import returns immutable bytes without
+paths. Copied drafts, v8 preference migration and v15 isolated paired Apply/history
+retain accepted work. Stale/pending/late context and referenced removals refuse;
+native compact return reconnects parked canvas guides correctly.
+
+Checked shared/actual Win32 authoring passes 78, exact emitted Pascal seven and
+workspace regression 252, leak-free. Both Studios/backend/worker and browser
+counterparts compile with zero owned warnings. The native chooser is substituted;
+browser/trusted chooser/phone/observing execution remains open. Semantic resource
+windows/groups, saved row/media bindings and application loading/scopes/locale/
+navigation remain original acceptance. No full criterion closes: this consumer
+packet belongs to original authoring (36→37), leaving resource prerequisite 2 and
+other owner counts unchanged. See [the packet](../WORK.md#current-return-path-common-studio-resources-authoring--2026-10-08)
+and [usage](../docs/resources.md#studio-resources-and-copied-proposals).
+
 ## Foundation and direct consumer boundary — 2026-10-08
 
 Immutable resources, structural scalar selectors, explicit locale lookup,

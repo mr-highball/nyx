@@ -69,7 +69,9 @@ uses
   nyx.binding.types,
   nyx.studio.authoring,
   nyx.studio.collections,
+  nyx.studio.resources,
   nyx.theme.editor,
+  nyx.resources.editor,
   nyx.image.editor;
 
 function RouteNyxStudioSource(ASession: TNyxStudioSession; ANode: TNyxNode;
@@ -149,6 +151,7 @@ var
   LInherit: Boolean;
   LThemeChange: TNyxThemeEditorChange;
   LImageChange: TNyxImageEditorChange;
+  LResourceChange: TNyxResourceEditorChange;
 begin
   Result := sacNone;
   AEdit := Default(TNyxStudioDesignEdit);
@@ -160,6 +163,23 @@ begin
 
   AEdit.Selection := ASession.SelectedID;
   AEdit.View := ASession.ActiveViewID;
+
+  if (AEvent = ntClick) and CaptureNyxResourceEditor(ANode, AShellRoot, LResourceChange) then
+  begin
+
+    if ASession.ProjectSnapshot.Pending then
+    begin
+      raise ENyxModel.Create('Resolve the pending Pascal draft before applying resources');
+    end;
+
+    if LResourceChange.Bind and (LResourceChange.Owner <> ASession.SelectedID) then
+    begin
+      raise ENyxModel.Create('Resource binding belongs to an earlier selection');
+    end;
+    AEdit.Action := sdaResource;
+    AEdit.Resource := LResourceChange;
+    Exit(sacEdit);
+  end;
 
   if (AEvent = ntClick) and CaptureNyxImageEditor(ANode, AShellRoot, LImageChange) then
   begin
@@ -413,6 +433,10 @@ begin
     end;
   end;
   case LEdit.Action of
+    sdaResource:
+      begin
+        ASession.ApplyPatch(NewNyxStudioResourcePatch(LEdit.Resource));
+      end;
     sdaSetStateDefault:
       begin
         ASession.SetStateValues([NyxStateAssign(LEdit.Name,

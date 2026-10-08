@@ -45,7 +45,18 @@ remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
-Latest resource prerequisite (2026-10-08): immutable files/locale selectors,
+Latest common Resources authoring (2026-10-08): both ordinary Studios consume
+one public Nyx form for images/JSON/text/binary, metadata/locale and hosted
+fallback/cache choices. Structural scalar bindings share one isolated paired
+Apply/history. Checked shared/actual Win32 78, exact emitted seven and workspace
+regression 252 pass leak-free; both Studios/backend/worker and browser counterparts
+compile with zero owned warnings. No full criterion closes: authoring alone
+advances 36→37, others stay 21/19/28/2; resource prerequisite remains 2. End this
+consumer boundary. Semantic resource windows/groups, actual browser/trusted
+chooser/phone/observing, saved row/media bindings and full application/parity
+remain original scope. See [the packet](../WORK.md#current-return-path-common-studio-resources-authoring--2026-10-08).
+
+Previous resource prerequisite (2026-10-08): immutable files/locale selectors,
 hosted declarations/fallback/cache policy, versioned crafted source/history and
 actual native caption/prompt/table updates pass 78 checks plus eight exact
 emitted-builder checks; workspace regression passes 251, all leak-free. Both

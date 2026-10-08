@@ -224,6 +224,53 @@ already submitted to Cache Storage may finish after cancellation, but cannot
 publish into a document/control. Storage is bounded, without automatic eviction
 or stale pruning yet. Persistent browser storage has compile evidence only.
 
+## Studio Resources and copied proposals
+
+Open **Resources** in Studio's Project area. The common public form is built
+from ordinary Nyx controls and is consumed by both Studio controllers. Choose
+New resource, an application name, a default or named locale, and one of Image,
+JSON, Text or Binary. Creator title and description stay with the file. Opening
+an existing variant fixes its name and locale; New creates another variant.
+
+Import reads bounded bytes using the caller-selected kind. File extensions and
+MIME never silently change that kind, and machine filenames do not enter a
+design. Native import uses UTF-8 filenames and admits decoded image candidates;
+browser import uses ArrayBuffer bytes and strict portable text/data admission.
+Text and JSON can also be pasted. Base64 admits binary/images; an escaped JSON
+string notation keeps embedded NUL text editable without losing bytes.
+
+Preview validates proposed content and discovers structural scalar values from
+JSON fields and array items. Literal dots remain part of field names. Discovery
+stops at 256 choices, 2,048 visited values and depth 16. Select a supported
+property on the currently selected control and a discovered value to apply the
+file and its binding together. Apply rediscovers from current contents; saved
+choice labels never authorize a missing or changed path. Resource bindings stay
+read-only; writable state bindings retain their ordinary independent behavior.
+
+Hosted URL mode exposes freshness, stale-on-failure, payload limit, memory or
+persistent storage, and Respect/Override server policy. Import into this mode
+sets an explicit same-kind fallback while keeping URL/cache choices. Preview
+shows authored fallback bytes and says that network loading has not run.
+Automatic application loading and runtime locale/navigation remain separate
+from authoring a declaration.
+
+Imports, previews and partial input remain copied proposals. One isolated Apply
+validates the complete candidate and synchronizes crafted Pascal; one Undo
+restores their pair. Exact catalog/control context guards old forms and queued
+edits. Referenced removals or replacements with invalid consumer paths refuse.
+Pending application Pascal must be resolved first. Private per-project
+preferences retain unsubmitted content through chrome rebuilds and migrate older
+versions. Late chooser replies refuse changed projects or changed form input.
+
+Library hosts use `NewNyxResourceEditor`, typed field/action roles,
+`TNyxResourceEditorDraft` and `CaptureNyxResourceEditor` from
+`nyx.resources.editor`. `INyxResourcePicker` separates local file selection from
+the portable form. Hosts own cancellation and check their captured context
+before proposing a reply. The form borrows catalog/control inputs only while
+constructing its independent owned children; it never modifies accepted work.
+Semantic resource operations remain with the existing MCP workflow owner.
+Saved table row mappings and image-reference bindings are not yet exposed here.
+
 ## Wire, limits and qualification
 
 Document wire version 8 carries a nonempty resource catalog and typed scalar
@@ -241,8 +288,9 @@ Run `tools/build.ps1 -Target resources`. Checked shared/actual Win32 qualificati
 passes 78 checks and the exact emitted builder passes eight, leak-free. Both
 browser counterparts and ordinary Studios/backend/worker compile with zero owned
 warnings; browser controls/cache/phone execution is not established by compilation.
-The common Studio Resources area, import adapters, binding picker and semantic
-resource operations remain open under their existing task owners.
+The subsequent common Studio Resources form supplies import/proposals/scalar
+binding choices; complete authoring and semantic resource operations remain open
+under their existing task owners.
 
 Run `tools/build.ps1 -Target resource-loading` against an existing Studio health
 endpoint (`-HttpURL` changes only this qualification configuration). It starts no
@@ -255,3 +303,13 @@ in-flight native cancellation timing, negative TLS fixtures, redirects/compresse
 responses and other native systems remain unqualified. Existing foundation
 evidence remains applicable. The request deadline covers HTTP transport, including
 worker queuing; cache-provider work has no whole-load timeout yet.
+
+Run `tools/build.ps1 -Target resource-authoring` for the common form and ordinary
+native Studio consumer. Current shared/Win32 checks pass 78, exact emitted Pascal
+seven and workspace regression 252, leak-free. Both Studios/backend/worker and
+matching browser counterparts compile with zero owned warnings. Desktop and
+390-pixel native captures were inspected. These are independent public-library
+fixtures: the deployed MCP still lacks resource operations. Actual browser,
+trusted chooser, phone and observing execution remain required; compilation and
+native synthetic input do not establish them. Complete resource authoring,
+application loading and both-target parity retain their existing task owners.

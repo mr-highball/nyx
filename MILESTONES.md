@@ -3,7 +3,21 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current resource prerequisite (2026-10-08): named immutable image/JSON/text/binary
+Current common Resources authoring (2026-10-08): both ordinary Studios consume
+one public Nyx form for four file families, metadata/locale, hosted fallback/cache
+and structural scalar binding choices. Copied proposals use one isolated paired
+Apply/history; stale/pending/late input refuses. Checked shared/actual Win32 78,
+exact emitted seven and workspace regression 252 pass leak-free. Both Studios,
+backend/worker and browser counterparts compile with zero owned warnings. The
+compact selection journey also repairs parked-canvas guide attachment on both
+controllers. No full criterion/percentage closes: authoring alone advances 36→37;
+workflow/renderer/codegen/delivery remain 21/19/28/2, resource prerequisite 2.
+End form fixtures and return to semantic resource windows/grouped operations.
+Browser/trusted chooser/phone/observing, saved rows/media bindings, application
+loading/locale/navigation and complete Studio/parity remain original outcomes.
+See [the packet](WORK.md#current-return-path-common-studio-resources-authoring--2026-10-08).
+
+Previous resource prerequisite (2026-10-08): named immutable image/JSON/text/binary
 files, explicit hosted fallback/cache policy, structural bindings/locale and
 versioned crafted source/history feed ordinary adapters. Shared/actual Win32
 resource/cache/control checks pass 78, exact emitted builder eight and workspace

@@ -474,7 +474,7 @@ begin
       NyxField('position', LPosition)]);
   LVersion := 9;
 
-  if FEdit.Action in [sdaContent, sdaValueDomain, sdaMenu, sdaTheme, sdaImage] then
+  if FEdit.Action in [sdaContent, sdaValueDomain, sdaMenu, sdaTheme, sdaImage, sdaResource] then
   begin
     { Existing operations retain their deployed v9 shape. Appended recipe,
       value-policy and menu intents need new envelopes; old helpers stay compatible. }
@@ -488,7 +488,12 @@ begin
       LFields[LIndex] := NyxField(LEdit.Key(LIndex), LEdit.Field(LEdit.Key(LIndex)));
     end;
 
-    if FEdit.Action = sdaImage then
+    if FEdit.Action = sdaResource then
+    begin
+      LVersion := 15;
+      LFields[LCount] := NyxField('resource', FEdit.Resource.ToData);
+    end
+    else if FEdit.Action = sdaImage then
     begin
       LVersion := 14;
       LFields[LCount] := NyxField('image', FEdit.Image.ToData);
@@ -601,6 +606,11 @@ begin
     Result := FEdit.Image.ToData.ToJSON = AOther.FEdit.Image.ToData.ToJSON;
   end;
 
+  if Result and (FEdit.Action = sdaResource) then
+  begin
+    Result := FEdit.Resource.ToData.ToJSON = AOther.FEdit.Resource.ToData.ToJSON;
+  end;
+
   if Result and (FEdit.Action = sdaValueDomain) then
   begin
     Result := FEdit.ValueDomain.Same(AOther.FEdit.ValueDomain) and
@@ -637,7 +647,7 @@ begin
   if (AData.Kind <> ndObject) or (AData.Count <> 7) or
     ((LVersion <> 5) and (LVersion <> 6) and (LVersion <> 7) and (LVersion <> 8) and
     (LVersion <> 9) and (LVersion <> 10) and (LVersion <> 11) and (LVersion <> 12) and
-    (LVersion <> 13) and (LVersion <> 14)) then
+    (LVersion <> 13) and (LVersion <> 14) and (LVersion <> 15)) then
   begin
     raise ENyxModel.Create('Design processor requires its exact versioned ticket');
   end;
@@ -656,7 +666,7 @@ begin
     ((LVersion = 7) and (LEdit.Count <> 13)) or
     ((LVersion = 8) and (LEdit.Count <> 14)) or
     ((LVersion = 9) and (LEdit.Count <> 15)) or
-    ((LVersion in [10, 11, 12, 13, 14]) and (LEdit.Count <> 16)) then
+    ((LVersion in [10, 11, 12, 13, 14, 15]) and (LEdit.Count <> 16)) then
   begin
     raise ENyxModel.Create('Design processor ticket has invalid identity or intent');
   end;
@@ -673,7 +683,8 @@ begin
     ((LVersion = 11) and (LAction <> Ord(sdaValueDomain))) or
     ((LVersion = 12) and (LAction <> Ord(sdaMenu))) or
     ((LVersion = 13) and (LAction <> Ord(sdaTheme))) or
-    ((LVersion = 14) and (LAction <> Ord(sdaImage))) then
+    ((LVersion = 14) and (LAction <> Ord(sdaImage))) or
+    ((LVersion = 15) and (LAction <> Ord(sdaResource))) then
   begin
     raise ENyxModel.Create('Design processor action is outside its closed contract');
   end;
@@ -941,6 +952,17 @@ begin
     end;
   end;
 
+  if Result.FEdit.Action = sdaResource then
+  begin
+    Result.FEdit.Resource := TNyxResourceEditorChange.FromData(LEdit.Field('resource'));
+
+    if Result.FEdit.Resource.Bind and
+      (Result.FEdit.Resource.Owner <> Result.FEdit.Selection) then
+    begin
+      raise ENyxModel.Create('Resource binding requires its captured selected owner');
+    end;
+  end;
+
   if Result.FEdit.Action = sdaImage then
   begin
     Result.FEdit.Image := TNyxImageEditorChange.FromData(LEdit.Field('image'));
@@ -991,6 +1013,11 @@ begin
     accepted session or weakening file/source admission. }
   LSession := TNyxStudioSession.Create(FRequest.FPair);
   try
+
+    if (FRequest.FEdit.Action = sdaResource) and FRequest.FPair.Pending then
+    begin
+      raise ENyxModel.Create('Resolve the pending Pascal draft before applying resources');
+    end;
     LSession.FNextID := FRequest.FNextID;
 
     if FRequest.FEdit.View <> '' then
@@ -1048,6 +1075,10 @@ begin
             raise ENyxModel.Create('Content choices changed since this editor was captured');
           end;
           LSession.ApplyPatch(ReadNyxDesignPatch(NyxArray([FRequest.FEdit.Content.ToData])));
+        end;
+      sdaResource:
+        begin
+          LSession.ApplyPatch(NewNyxStudioResourcePatch(FRequest.FEdit.Resource));
         end;
       sdaImage:
         begin
@@ -1361,6 +1392,13 @@ end;
 function TNyxStudioSession.PrepareDesignRequest(const AEdit: TNyxStudioDesignEdit;
   ASchemaRevision: Integer): TNyxStudioDesignRequest;
 begin
+  { Resource changes can affect many existing consumers. Require an accepted
+    application pair; a handwritten draft must remain untouched until resolved. }
+
+  if (AEdit.Action = sdaResource) and ProjectSnapshot.Pending then
+  begin
+    raise ENyxModel.Create('Resolve the pending Pascal draft before applying resources');
+  end;
 
   if (AEdit.Action in [sdaCanvasValue, sdaPlacement, sdaResize, sdaPosition]) and
     not MatchesCommandContext(AEdit.CanvasContext) then
@@ -1422,6 +1460,16 @@ begin
       independent processor compares the mounted baseline against its fresh
       pair and returns a normal rejected diagnostic; staleness is not a failed
       scheduler/worker transport and must not be reported as one. }
+  end;
+
+  if AEdit.Action = sdaResource then
+  begin
+    TNyxResourceEditorChange.FromData(AEdit.Resource.ToData);
+
+    if AEdit.Resource.Bind and (AEdit.Resource.Owner <> AEdit.Selection) then
+    begin
+      raise ENyxModel.Create('Resource binding requires its captured selected owner');
+    end;
   end;
 
   if AEdit.Action = sdaImage then

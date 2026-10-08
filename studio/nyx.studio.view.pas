@@ -40,6 +40,7 @@ uses
   nyx.content.editor,
   nyx.theme.editor,
   nyx.image.editor,
+  nyx.resources.editor,
   nyx.contract,
   nyx.schema,
   nyx.types,
@@ -147,6 +148,10 @@ type
     { Imported pictures are independent proposals, retired when their exact
       selected image or its effective baseline changes. }
     ImageEditorDraft: TNyxImageEditorDraft;
+    { Common file authoring is presentation until explicit paired Apply. }
+    ResourcesVisible: Boolean;
+    ResourceSelection: TNyxResourceEditorSelection;
+    ResourceEditorDraft: TNyxResourceEditorDraft;
     CallbackRemoval: TNyxCallbackRemoval;
     { Copied confirmation metadata, not an interface or borrowed model. }
     RootRemoval: TNyxDataValue;
@@ -1051,6 +1056,18 @@ begin
   if AState.ThemeVisible then
   begin
     LLeft.Add(NewNyxThemeEditor('studio-theme-editor', ASession.Document));
+  end;
+  LLeft.Add(NewNyxButton('action-resources-toggle').WithText('Resources'));
+
+  if AState.ResourcesVisible then
+  begin
+    LSelectedProjection := ASession.SelectedProjection;
+    try
+      LLeft.Add(NewNyxResourceEditor('studio-resource-editor', ASession.Document.Resources,
+        AState.ResourceSelection, ASession.Selected, LSelectedProjection));
+    finally
+      LSelectedProjection.Free;
+    end;
   end;
   AddNyxCollectionDefaultsPanel(LLeft, ASession, AState.StateVisible, AState.PendingDesign);
   AddNyxStudioPalette(LLeft, ASession.Catalog, AState.Palette);

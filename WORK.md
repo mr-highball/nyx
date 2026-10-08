@@ -7,6 +7,82 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: common Studio Resources authoring — 2026-10-08
+
+The previous goal turn is **progress**: explicit hosted loading is clean and
+exactly pushed as `63b699b`; its ignored checkpoint records 31 checked assertions,
+zero leaks/owned warnings and exact protected state. All handles are terminal.
+This bounded consumer packet returns to original Studio criterion 2 and resource
+criterion 6: a common public Nyx-built resource form for all four file families,
+embedded/hosted sources, creator metadata, locale variants and typed scalar data
+choices. Both ordinary controllers must consume copied proposals through one
+isolated paired Apply/Undo step. Portable file import owns bytes, never machine
+paths; pending drafts and changed project/resource/control context refuse.
+Keep semantic MCP primary wherever the deployed tool exists; current resource
+operations are absent, with their gap already owned by NS-4_agent-workflows_01.
+Budget two integration/repair passes, actual native form/control/history input
+and affected browser/worker compilation, then end this consumer boundary.
+No new listener/browser/replacement retry. Saved row mappings, image-reference
+binding, application resolution/lifecycle and complete browser/phone/observing
+parity remain original outcomes, not acceptance granted by a form fixture.
+
++This continuation delivers **progress** against original Studio criterion 2 and
+resource criterion 6. Both ordinary controllers consume `nyx.resources.editor`:
+one public Nyx card for four file families, metadata/locale, embedded or hosted
+source, explicit fallback and typed cache policy. Portable pickers supply bounded
+bytes; filenames remain private. JSON choices use actual Field/Item paths with
+256-choice/2,048-visit/depth-16 limits. Apply rediscovers current scalar values,
+validates all retained consumers and publishes resource/binding/Pascal together.
+The appended v15 processor ticket keeps older operation shapes unchanged.
+
+Copied private proposals survive chrome rebuilds and preference v2–v7 migration
+to v8. Pending Pascal, stale catalog/bindings, referenced removals and invalid
+complete input refuse. Late imports check project generation, current catalog/
+selected control and exact raw draft; refusals visibly update status. A compact
+selection timing check exposed parked-canvas grip attachment. Both controllers
+now reconnect guides only when their canvas is mounted. Actual native return to
+Design and retained source/history pass. Integration repairs also normalized the
+default locale, retained JSON through exact UTF-8 bytes and restored checkboxes
+with Boolean arguments. The two planned integration rounds needed an additional
+timing repair and fixture-only desktop routing correction; no new fixture family
+or acceptance scope was added. End this consumer boundary now.
+
+Maintained `tools/build.ps1 -Target resource-authoring` passes **78** shared/
+actual Win32 assertions, **7** exact emitted-builder checks and **252** workspace
+checks, all with zero leaks. Twenty-nine shared and 49 native assertions cover
+all file proposals, NUL/supplementary bytes, structural selectors, metadata,
+hosted override/fallback, paired Apply/Undo/Redo, actual label/prompt input,
+late raw/project/selection replies and compact guide return. Native chooser
+substitution replaces only the OS dialog; real UTF-8 file read and ordinary
+Studio controls/source processor run. Current browser form/picker counterparts,
+both Studios, backend and worker compile with zero owned warnings; matched
+upstream classes.pas retains seven warnings per browser invocation (35 total in
+this gate). No dependency source was edited. Evidence: ignored
+`build/resource-editor/maintained.log`, inspected `desktop.png` and
+`compact-native.png`, plus staged browser hosts. The compact capture is native
+at 390 pixels, not browser/phone evidence. No performance grade is inferred.
+
+All compiler/test/guard handles are terminal. Read-only authenticated MCP remains
+revision 2, original selection/view, no draft/history, activity 494. The guard
+confirms **15 process identities / 9 complete pairs / 229 sealed files** exact
+at 2026-10-08T05:56:31Z. Its ignored receipt/log are
+`build/menu-bar-editor/preservation.json` and `build/resource-editor/preservation.log`.
+The earlier automatic review's listener/browser/replacement rejection remains
+held with only "blocked by policy"; no retry occurred. The frozen primary retains
+its earlier API and LAN assets. Resources-specific semantic operations are still
+absent, explicitly owned by NS-4_agent-workflows_01; these independent library/
+native fixtures are not an authenticated semantic demo or observing rollout.
+
+No full criterion/task/percentage closes. Original authoring no-closure alone
+advances **36→37**; workflow/renderer/codegen/delivery remain **21/19/28/2**, and
+resource prerequisite remains 2. Next return to bounded semantic resource
+metadata/payload windows and grouped resource/binding operations through the
+existing workflow owner, consuming this same candidate boundary. Actual browser/
+trusted chooser/phone/observing, saved row mappings, image-reference bindings,
+application loading/navigation/scopes/locale and complete Studio/parity remain
+original required outcomes. The exact remote/clean checkpoint is owned by the
+ignored `build/resource-editor/remote-checkpoint.json` receipt after this packet's push.
+
 ## Current return path: common resources and direct bindings — 2026-10-07
 
 Current continuation (2026-10-08) delivers **progress** against resource criterion
