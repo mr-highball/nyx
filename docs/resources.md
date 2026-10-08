@@ -121,8 +121,71 @@ LDocument.Resources.Define(NyxResourceRef('remote-copy'),
 Embedded fallback data has the same kind and supports immediate synchronous
 binding. A hosted definition without a fallback refuses synchronous content
 access until loaded. Current declarations, policy logic and storage adapters
-are implemented; automatic HTTP transport/resolution and mounted publication
-remain the next integration boundary. This example does not fetch its URL.
+are implemented. A resolver explicitly loads the declaration; decoding/replaying
+this example still does not fetch its URL. Automatic application-wide resolution,
+navigation/scopes and the common Studio workflow remain open.
+
+## Loading and publishing
+
+`nyx.resources.loader` supplies replaceable transport, UTC-clock and resolver
+interfaces. A resolver owns private providers; it never retains a document or
+widget. Both public-file adapters accept bounded HTTP(S) bytes, refuse redirects
+and ambient credentials, and report failed loading rather than substituting an
+opaque browser image or unqualified native string.
+
+```pascal
+// Native construction uses the existing bounded Nyx scheduler.
+LScheduler := NewNyxScheduler;
+LResolver := NewNyxResourceResolver(
+  NewNyxNativeResourceTransport(LScheduler), nil, NewNyxFileResourceCache);
+
+FLoad := LResolver.Load(FHostedDefinition,
+  NyxResourceLoadOptions.WholeRequest(15000), ResourceLoaded);
+```
+
+The native factory lives in `nyx.resources.http.lcl`; the current implementation
+is Win32 WinHTTP, including system certificate verification and TLS 1.2/1.3 where
+supported. It uses asynchronous request handles on Nyx's bounded worker pool,
+counts queued time toward the deadline and posts delivery with the parent's
+cancellation token. Native callback state/read buffers remain alive through the
+final closing notification; no UI thread joins network work. Other native systems
+still need an adapter. See [WinHTTP concurrency](https://learn.microsoft.com/windows/win32/winhttp/concurrency-in-winhttp)
+and [handle lifetime](https://learn.microsoft.com/windows/win32/api/winhttp/nf-winhttp-winhttpclosehandle).
+
+For browser construction use `NewNyxBrowserResourceTransport` from
+`nyx.resources.http.browser` and optionally `NewNyxBrowserResourceCache` as the
+persistent provider. Abortable streaming fetch checks decoded payload bytes
+before copying chunks. Nullable headers, native promise rejection and unavailable
+Cache Storage become bounded diagnostics. CORS/mixed-content remain host policy.
+When CORS hides `Age`, Respect conservatively fetches again; explicit Override
+uses caller freshness. A host can expose `Age` for ordinary private-cache reuse.
+See the [Fetch response-header rules](https://fetch.spec.whatwg.org/#cors-safelisted-response-header-name).
+
+The callback receives a copied `TNyxResourceLoadResult`. Its enum distinguishes
+embedded, network, fresh cache, stale-on-failure cache, authored fallback and
+failure. `Succeeded` and `Definition` never mistake an empty/failed result for
+admitted content. Error remains visible when fallback/stale content succeeds;
+CacheWarning reports persistent/quota failure while valid network content remains
+usable. Every cache hit/store is qualified against the requesting policy. A
+failed persistent write can populate memory, and subsequent loads check that copy
+before fetching again. Providers may complete inline; tokens remain stage-correct.
+
+The receiver owns publication and request retirement. For example, inside its
+`ResourceLoaded` method after checking the active view and `Succeeded`:
+
+```pascal
+LCandidate := FRuntimeResources.Clone;
+LCandidate.Define(FResourceReference, AResult.Definition);
+FRenderer.ReloadResources(LCandidate, FLocale, FFallbackLocale);
+FRuntimeResources := LCandidate;
+```
+
+Existing selector/control admission runs before accepting the candidate catalog.
+Call `FLoad.Cancel` before replacing its receiver/view or freeing it; a late
+reply cannot then reach that receiver. Keep scheduling/control publication on
+the UI thread. A successful file load is not a successful application build or
+automatic admission of every table/label mapping. Saved declarations/fallbacks
+remain independent of loaded runtime bytes and machine cache contents.
 
 The default policy is persistent, fresh for 300 seconds, no stale reuse, at most
 1 MiB, and respectful of server cache restrictions. `.Memory` selects private
@@ -141,7 +204,8 @@ from `INyxResourceCacheStorage`. A loader must check `CanStore` before writing
 and `StateAt` before reuse; raw storage intentionally has no request policy.
 The current header boundary qualifies `no-store`, `no-cache`, `must-revalidate`,
 `max-age` and `Age`. It is not a complete HTTP freshness/revalidation engine:
-Date/Expires, Vary, validators/304 and transport-error selection remain open.
+Date/Expires, Vary and validators/304 remain open; the resolver already selects
+explicit stale-on-failure or authored fallback without inventing HTTP validation.
 
 `NewNyxMemoryResourceCache` completes inline. Native
 `NewNyxFileResourceCache` in `nyx.resource.cache.lcl` uses a versioned user-temp
@@ -179,3 +243,15 @@ browser counterparts and ordinary Studios/backend/worker compile with zero owned
 warnings; browser controls/cache/phone execution is not established by compilation.
 The common Studio Resources area, import adapters, binding picker and semantic
 resource operations remain open under their existing task owners.
+
+Run `tools/build.ps1 -Target resource-loading` against an existing Studio health
+endpoint (`-HttpURL` changes only this qualification configuration). It starts no
+listener/browser and edits no active project. Current shared/actual Win32 checks
+pass 31, leak-free: real HTTP/HTTPS bytes, caption/prompt publication, persisted
+cache restart/quota fallback, queued deadline, cancellation and worker retirement.
+The matching browser program stages an actual same-origin/control/cache journey,
+without claiming execution. Current browser/CORS/persistent-cache/phone execution,
+in-flight native cancellation timing, negative TLS fixtures, redirects/compressed
+responses and other native systems remain unqualified. Existing foundation
+evidence remains applicable. The request deadline covers HTTP transport, including
+worker queuing; cache-provider work has no whole-load timeout yet.

@@ -8,10 +8,14 @@ files, explicit hosted fallback/cache policy, structural bindings/locale and
 versioned crafted source/history feed ordinary adapters. Shared/actual Win32
 resource/cache/control checks pass 78, exact emitted builder eight and workspace
 regression 251, leak-free; both Studios/backend/worker and browser counterparts
-compile with zero owned warnings. This foundation accepts no full criterion or
-percentage credit. Its no-closure boundary is 1; existing workflow/authoring/
-renderer/codegen/delivery stay 21/36/19/28/2. End foundation fixtures. Automatic
-HTTP resolution, saved row mapping/runtime lifecycle, common Studio Resources
+compile with zero owned warnings. The explicit hosted resolver now passes 31
+checked shared/actual Win32 assertions: HTTP/HTTPS files, existing captions/prompts,
+fresh/stale/fallback/override, cache restart/quota recovery and queued deadlines.
+The abortable browser/control counterpart compiles without execution evidence.
+This prerequisite accepts no full criterion or percentage credit; its no-closure
+boundary advances 1→2. Existing workflow/authoring/renderer/codegen/delivery stay
+21/36/19/28/2. End transport fixtures and return to the common Studio Resources
+area. Automatic application loading, saved row mapping/runtime lifecycle,
 authoring/semantic tooling and actual browser/cache/phone/observing execution
 remain open under [portable resources](TODO/NS-1_resources_01.md) and the original
 Studio/workflow owners. See [the packet](WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).

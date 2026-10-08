@@ -71,9 +71,13 @@ fallback/cache policy, typed scalar selectors and locale lookup now retain exact
 wire/source/history. Actual Win32 captions/prompts and JSON-derived table updates
 pass 78 shared/control/cache checks; exact emitted Pascal passes eight and workspace
 regression 251, leak-free. Both Studios/backend/worker and browser counterparts
-compile with zero owned warnings. Automatic HTTP resolution, common Studio Resources
-authoring/semantic tooling, saved row mappings and browser/cache/phone/observing
-execution remain open. See [the packet](WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07)
+compile with zero owned warnings. The explicit cancellable resolver now loads
+real native HTTP/HTTPS files, qualifies cache reuse/fallback and publishes existing
+captions/prompts: 31 checked shared/Win32 assertions pass leak-free. Its browser
+transport/control journey compiles with zero owned warnings, without execution
+evidence. Common Studio Resources authoring/semantic tooling, automatic application
+loading, saved row mappings and browser/cache/phone/observing execution remain open.
+See [the packet](WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07)
 and [resources](docs/resources.md). No new full criterion is accepted.
 
 Packed image authoring now consumes one public Nyx form in both ordinary Studios:

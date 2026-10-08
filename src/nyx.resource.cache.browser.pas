@@ -75,6 +75,19 @@ var
     a concurrent write avoids racing quota checks; reads remain independent. }
   GWriting: Boolean;
 
+function CacheSize(AResponse: TJSResponse; out ASize: Integer): Boolean;
+var
+  LValue: JSValue;
+begin
+  LValue := AResponse.headers.get(CSizeHeader);
+  Result := isString(LValue);
+
+  if Result then
+  begin
+    Result := TryNyxStateInteger(String(LValue), ASize);
+  end;
+end;
+
 function TBrowserCacheJob.Run: JSValue; async;
 var
   LStorage: TJSCacheStorage;
@@ -100,7 +113,7 @@ begin
     try
       LStorage := TJSCacheStorage(TJSObject(window).Properties['caches']);
 
-      if LStorage = nil then
+      if (LStorage = nil) or isUndefined(LStorage) then
       begin
         raise ENyxResource.Create('Browser Cache Storage is unavailable; use a memory cache');
       end;
@@ -140,7 +153,7 @@ begin
           end;
           LResponse := TJSResponse(await(LCache.match(LRequest)));
 
-          if (LResponse = nil) or not TryNyxStateInteger(LResponse.headers.get(CSizeHeader), LSize) or
+          if (LResponse = nil) or isUndefined(LResponse) or not CacheSize(LResponse, LSize) or
             (LSize < 1) or (LSize > 2 * NyxMaximumPackedBytes + 16384) then
           begin
             raise ENyxResource.Create('Browser cache contains an invalid size envelope');
@@ -166,10 +179,10 @@ begin
       begin
         LResponse := TJSResponse(await(LCache.match(LKey)));
 
-        if LResponse <> nil then
+        if (LResponse <> nil) and not isUndefined(LResponse) then
         begin
 
-          if not TryNyxStateInteger(LResponse.headers.get(CSizeHeader), LSize) or
+          if not CacheSize(LResponse, LSize) or
             (LSize < 1) or (LSize > 2 * NyxMaximumPackedBytes + 16384) then
           begin
             raise ENyxResource.Create('Browser cache envelope exceeds its byte budget');
@@ -193,6 +206,13 @@ begin
       on LException: Exception do
       begin
         LError := LException.Message;
+      end;
+      else
+      begin
+        { Quota/security/unavailable API rejections are ordinary JS errors,
+          not Pascal exceptions. Retire the job and let the resolver select
+          memory fallback instead of leaving its borrowed receiver waiting. }
+        LError := 'Browser resource storage failed; use memory or check storage access';
       end;
     end;
 

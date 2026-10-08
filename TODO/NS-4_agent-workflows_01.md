@@ -15,8 +15,10 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
-Resource workflow gap (2026-10-08): the new portable catalog/selectors and hosted
-cache declarations are not yet exposed by a resource-specific semantic operation.
+Resource workflow gap (2026-10-08): the new portable catalog/selectors, explicit
+hosted resolver and cache declarations are not yet exposed by a resource-specific
+semantic operation. Native HTTP/cache/control qualification is prerequisite
+evidence; the deployed MCP does not acquire resource tools from a library build.
 This existing owner must supply bounded metadata/variant listings, exact payload
 windows and structural binding/row context, plus revision-aware grouped resource
 and binding changes as one paired Undo step. Explicit hosted-resolution/cache

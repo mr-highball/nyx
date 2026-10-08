@@ -50,10 +50,14 @@ hosted declarations/fallback/cache policy, versioned crafted source/history and
 actual native caption/prompt/table updates pass 78 checks plus eight exact
 emitted-builder checks; workspace regression passes 251, all leak-free. Both
 Studios/backend/worker and browser counterparts compile with zero owned warnings.
-No full criterion closes: resource prerequisite no-closure is 1; existing original
-owner counts remain 21/36/19/28/2. End foundation fixtures. Automatic HTTP resolution,
-common Studio Resources/import/binding/semantic tooling, persisted row mappings
-and actual browser/cache/phone/observing evidence remain with the
+The explicit cancellable resolver additionally passes 31 checked shared/actual
+Win32 assertions for real HTTP/HTTPS, existing caption/prompt publication, cache
+restart/quota fallback and queued deadlines, leak-free. Its browser/control
+counterpart compiles with zero owned warnings but remains unexecuted. No full
+criterion closes: resource prerequisite no-closure advances 1→2; existing original
+owner counts remain 21/36/19/28/2. End transport fixtures. Common Studio
+Resources/import/binding/semantic tooling, automatic application loading,
+persisted row mappings and actual browser/cache/phone/observing evidence remain with the
 [resource prerequisite](NS-1_resources_01.md) and original Studio/workflow owners.
 See [the packet](../WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).
 

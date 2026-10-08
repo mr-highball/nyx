@@ -9,6 +9,71 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 ## Current return path: common resources and direct bindings — 2026-10-07
 
+Current continuation (2026-10-08) delivers **progress** against resource criterion
+5, starting from the exact pushed `bcd9873` foundation. The portable resolver now
+loads immutable hosted definitions through replaceable byte-only transports.
+Request options and result origins are typed; bytes/cache policy/catalogs never
+borrow a document or control. Win32 async WinHTTP uses existing bounded Nyx
+workers, system TLS verification and a monotonic deadline including worker
+queuing. Async callback state/read buffers live through the final closing
+notification. Browser abortable streaming fetch bounds decoded chunks and
+retains its operation through promise retirement. Borrowed replies disconnect
+before cancellation; a late result cannot reach a retired receiver.
+
+The resolver qualifies policy on every cache hit/store, distinguishes network,
+fresh/stale cache, embedded fallback and failure, and retains loading/cache
+diagnostics. Persistent-storage failure falls back to reusable private memory.
+Stale content is selected only after network failure within the explicit caller
+window. Loaded definitions are independently admitted; candidate catalog reload
+updates existing captions/prompts without rewriting authored hosted defaults.
+Complete application loading/scopes/navigation are not supplied by this explicit
+receiver-owned operation.
+
+Concrete integration repairs: a failed persistent write's memory copy is now
+queried on subsequent loads; native zero-query URL extraction avoids checked
+pointer overflow; Cache Storage misses/unavailable APIs handle JavaScript
+undefined as well as null, nullable size headers are normalized, and raw rejected
+fetch/cache promises produce bounded errors instead of leaving a receiver waiting.
+Browser CORS-hidden Age conservatively refetches under Respect; Override remains
+an explicit private-cache choice. Existing HTTP-header qualification is not full
+Date/Expires/Vary/validator/304 support.
+
+Maintained `tools/build.ps1 -Target resource-loading` passes **31** checked shared/
+actual Win32 assertions, zero leaks and zero owned warnings. Its 15 shared checks
+cover embedded/network/fresh/stale/fallback/no-store/override, provider refusal,
+invalid payload and borrowed receiver retirement. Its 16 native checks exercise
+actual existing-service HTTP and public HTTPS, Boolean admission, existing
+caption/prompt publication, wrong selector retention, payload limits, persistent
+restart, quota fallback plus subsequent memory reuse, deterministic queued
+deadline and cancelled request/worker retirement. Evidence:
+`build/resource-loader/maintained.log`, inspected `desktop.png` and matching
+`browser/` artifacts. The repaired browser cache and existing resource-control
+counterpart also compile with zero owned warnings; matched upstream classes.pas
+still emits seven warnings per browser build. No dependency source was edited.
+
+The browser host stages a same-origin fetch/control/memory-cache journey without
+claiming execution. Browser/CORS/persistent-cache/phone/observing execution,
+in-flight native cancellation timing, negative TLS, redirects/compressed responses
+and other native systems remain unqualified. The deadline covers HTTP transport;
+cache-provider work has no whole-load timeout. All compiler/test/guard handles are
+terminal. The read-only authenticated MCP remains revision 2, original selection,
+no pending draft/history (latest activity 491). The read-only guard confirms
+**15 process identities / 9 complete pairs / 229 sealed files** exact at
+2026-10-08T05:03:06Z; ignored receipt/log live under `build/menu-bar-editor/` and
+`build/resource-loader/preservation.log`. No listener, browser or replacement
+launch occurred. Earlier automatic review rejected those actions with only
+"blocked by policy"; that rejection remains held.
+
+No full criterion/task/percentage closes. Resource prerequisite no-closure
+advances **1→2**; original workflow/authoring/renderer/codegen/delivery remain
+**21/36/19/28/2**. End transport fixtures after this bounded integration/repair
+packet. Next return to the common public Nyx-built Resources/import/binding form
+consumed by both ordinary Studios, with bounded semantic resource operations
+owned by the existing workflow task. Actual resource MCP operations are absent
+on the frozen primary; do not silently substitute browser editor automation.
+Saved row mappings, combined scalar/table publication, runtime navigation/locale
+lifecycle and complete both-target Studio/parity still retain original scope.
+
 Previous goal turn is **progress**: packed image authoring is committed/pushed
 as `299d3af`, with exact remote/clean receipt and 70/6/251 leak-free checks.
 All earlier compiler/test handles are terminal. Current known no-closure counts
@@ -59,7 +124,7 @@ memory storage and native user-temp/atomic-file storage are implemented and
 checked, including independent policy derivation, restart and quota refusal.
 An async browser Cache Storage adapter compiles; unavailable/corrupt/quota storage
 reports errors rather than pretending to persist. Raw storage does not apply
-request policy: the forthcoming resolver must enforce `CanStore`/`StateAt`.
+request policy: the subsequent resolver above enforces `CanStore`/`StateAt`.
 
 Concrete repairs retained the original admission/ownership requirements:
 pas2js cannot carry managed interfaces in records, so catalog entries are owned
@@ -81,12 +146,12 @@ native storage are qualified; current browser controls/cache/phone/observing
 execution is not. Primary semantic session inspection remains read-only at
 revision 2 with its existing selection/history/draft intact.
 
-No full criterion/task/percentage closes. Resource prerequisite no-closure is
-1; original workflow/authoring/renderer/codegen/delivery remain 21/36/19/28/2.
-End foundation fixtures. Next deliver a cancellable hosted resolver/ordinary
-consumer with bounded transport, explicit cache fallback and stale-result refusal,
-then the common Nyx-built Resources/import/binding form and bounded semantic
-operations owned by existing Studio/workflow tasks. Automatic HTTP loading,
+This preceding foundation closed no full criterion/task/percentage. Resource
+prerequisite no-closure was 1; original workflow/authoring/renderer/codegen/delivery
+were 21/36/19/28/2. The subsequent explicit hosted packet above ends transport
+fixtures and returns to the common Nyx-built Resources/import/binding form and
+bounded semantic operations owned by existing Studio/workflow tasks.
+Automatic application loading,
 complete HTTP revalidation, combined scalar/table publication, persisted row
 mapping/scopes, application navigation/locale lifecycle and all original both-target
 authoring/parity evidence remain open. The existing launch/replacement rejection

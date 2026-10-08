@@ -70,11 +70,39 @@ and workspace regression passes 251, leak-free. Both Studios/backend/worker and
 browser counterparts compile with zero owned warnings. The unchanged authenticated
 primary is inspected read-only; current resource operations are absent there.
 
-No criterion closes. This prerequisite's first no-closure boundary is 1; existing
-workflow/authoring/renderer/codegen/delivery counts remain 21/36/19/28/2. End
-foundation fixtures. Next implement the cancellable hosted resolver and its
-ordinary consumer, then the common Nyx-built Resources/import/binding panel and
-bounded semantic tooling. Automatic HTTP/validation/cache fallback/publication,
+This foundation closed no full criterion; its first no-closure boundary was 1.
+Existing workflow/authoring/renderer/codegen/delivery counts remain 21/36/19/28/2.
+The subsequent hosted packet below advances the prerequisite and returns work
+to the common Nyx-built Resources/import/binding panel and bounded semantic tools.
+Automatic application loading, complete HTTP validation,
 saved row mappings, combined scalar/table commits, runtime navigation/scopes and
 actual browser/phone/observing journeys remain open. See [usage](../docs/resources.md)
 and the linked work packet; a fallback caption is not a successful hosted fetch.
+
+## Explicit hosted loading and ordinary consumers — 2026-10-08
+
+Criterion 5 now has an explicit portable resolver, immutable request options and
+replaceable byte-only transports. Win32 uses async WinHTTP on Nyx's bounded
+workers; browser uses abortable streaming fetch. Both enforce decoded byte budgets
+and retire borrowed callbacks before cancellation completes. Every cache hit/store
+applies caller policy; persistent failures fall back to reusable private memory.
+Network failure can select explicitly eligible stale content or the authored
+same-kind fallback, retaining diagnostics. Publication remains an explicit
+candidate catalog/ordinary renderer operation, independent of saved defaults.
+
+Maintained `resource-loading` passes 31 checked shared/actual Win32 assertions,
+leak-free, with zero owned warnings. Fifteen shared checks cover resolver policy,
+failure and receiver retirement; sixteen actual native checks cover HTTP/HTTPS,
+existing caption/prompt updates, invalid-selector refusal, persistent restart,
+quota-to-memory reuse, queued deadline and worker retirement. Browser transport,
+control journey and repaired Cache Storage boundary compile without execution.
+The read-only authenticated primary and protected services/pairs remain exact.
+
+No full criterion closes; resource no-closure advances 1→2 only. Stop transport
+fixtures. Common Studio Resources/import/binding tools and bounded semantic
+operations are the next consumer boundary. Browser/CORS/cache/phone/observing,
+in-flight native cancellation timing, negative TLS, redirects/compression and
+other native systems remain unqualified. Full HTTP validation, cache-operation
+deadlines, automatic application loading, row mappings and runtime lifecycle
+retain their original acceptance requirements. See [usage](../docs/resources.md)
+and the linked work packet; native qualification does not establish browser parity.

@@ -51,7 +51,8 @@ Resources/host/cache/locale diagnostics must distinguish authored fallbacks from
 successful loading and retain drafts/runtime isolation on failure. Semantic
 inspection/grouped changes remain with the existing workflow owner.
 
-Current foundation/native-control qualification is useful prerequisite progress;
+Current foundation and explicit HTTP/native-control qualification are useful
+prerequisite progress (31 checked loader assertions, zero leaks/owned warnings);
 there is no common Studio panel/import/binding-picker execution yet. Browser,
 phone, trusted input, observing and full application/native parity remain required.
 No authoring criterion closes and authoring's no-closure count stays 36 for this
