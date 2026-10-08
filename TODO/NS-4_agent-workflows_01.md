@@ -15,7 +15,23 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
-Clock consumer return (2026-10-08): the renderer-owned packet executes actual
+Ordinary browser return (2026-10-08): the authoring-owned packet now executes
+paired FileReader import/export, retained clock Inspector proposals, refused and
+corrected source-worker publication, paired history and draft retirement at
+desktop/CSS-390. Authenticated read-only discovery through the Pascal MCP client
+finds the installed `nyx_transaction` schema already advertises `value-domain-set`
+with time format and step. Correct repository-root configuration is used;
+runtime-root discovery refuses its missing configuration without mutations.
+Frozen installed discovery is not authenticated mutation/build/observing proof.
+Next qualify that semantic journey in an owned review on the existing endpoint,
+using expected revisions and one grouped operation. Starting a new backend is
+not a prerequisite for trying already advertised clock operations. General
+paired source/import workflows and uninstalled features keep their existing
+owners and gate. No protected pair/service/configuration changes. Workflow stays
+**23**; authoring alone advances **39→40**, others **9/20/28/3**. See
+[the packet](../WORK.md#current-return-path-ordinary-browser-policy-workflow--2026-10-08).
+
+Previous clock consumer return (2026-10-08): the renderer-owned packet executes actual
 browser/native fields and the public browser Inspector/source worker; its local
 semantic policy/schema checks do not establish authenticated HTTP admission.
 Full ordinary browser project import, source editing and policy/history

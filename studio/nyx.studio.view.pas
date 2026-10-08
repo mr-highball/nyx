@@ -33,6 +33,8 @@ uses
   nyx.data,
   nyx.model,
   nyx.controls,
+  nyx.colors,
+  nyx.design.tokens,
   nyx.menu.editor,
   nyx.menu.bar.editor,
   nyx.collections.query.editor,
@@ -189,6 +191,12 @@ function RouteNyxStudioWorkspace(var AState: TNyxStudioViewState;
 { Managed ordinary Nyx code editor, shared by inline and retained hosted views.
   The caller retains its interface or transfers ownership into a Nyx document. }
 function NewNyxStudioCodeEditor(const ASource: TNyxText): INyxCodeEditor;
+{ Owned source document with an independent readable semantic palette. Both
+  adapters consume these typed tokens, including when the retained editor moves
+  between inline and modal hosts. The caller owns/frees the document and may
+  replace its tokens through SetNyxThemeTokens; project and shell themes remain
+  independent. Allocation/composition failure frees the candidate before raising. }
+function NewNyxStudioCodeDocument(const ASource: TNyxText): TNyxDocument;
 { Owned reusable source workspace. Its mutually exclusive source/messages views
   prevent compiler output from consuming editor height. Controllers may mount it
   independently and move the same Nyx view into a public modal host. Session and
@@ -323,6 +331,24 @@ begin
   Result.Configure.Text('Pascal source').ReadOnly(False).Flex(1)
     .Hint('Edit typed configuration, defaults, bindings, contracts and data, then Apply Pascal. Keep application helpers outside nyx:views.')
     .Value(ASource).Done;
+end;
+
+function NewNyxStudioCodeDocument(const ASource: TNyxText): TNyxDocument;
+begin
+  Result := TNyxDocument.Create;
+  try
+    { A source pane is its own Nyx view. Its palette belongs to that view rather
+      than unscoped browser chrome, which cannot override an isolated theme and
+      would leave the native adapter with different colors. Complete defaults
+      retain the other semantic roles beside the source-specific colors. }
+    SetNyxThemeTokens(Result, NyxThemePreset(ntpDark)
+      .Surface(NyxRGB(23, 27, 41)).Text(NyxRGB(203, 213, 237))
+      .Border(NyxRGB(52, 58, 78)));
+    Result.AddPage(NewNyxStudioCodeEditor(ASource));
+  except
+    Result.Free;
+    raise;
+  end;
 end;
 
 function DefaultNyxStudioViewState: TNyxStudioViewState;

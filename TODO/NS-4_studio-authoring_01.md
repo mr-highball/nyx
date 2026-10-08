@@ -42,6 +42,25 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Executed clock policy consumer — 2026-10-08
 
+Follow-up: criterion 2 now consumes the ordinary browser controller too. Exact
+paired files pass through FileReader; all five unfinished policy fields survive
+Properties/Events/source navigation, invalid Apply preserves the pair, corrected
+Apply publishes typed source, and one Undo/Redo restores each exact pair.
+Selection and same-named project replacement retire stale drafts. Desktop and
+CSS-390 captures precede explicit disposal. A captured source color conflict is
+repaired with a shared owned Nyx document and typed palette; browser journeys pass
+**73 desktop / 105 narrow** checks, including compact routes. Both controllers
+consume that palette and **33** native retained source-workspace checks pass, leak-free.
+
+This closes that bounded consumer gap, not the original complete criterion.
+Authoring no-closure advances **39→40** once; workflow/resource/renderer/codegen/
+delivery remain **23/9/20/28/3**. Installed authenticated MCP advertises clock
+policies; next qualify owned semantic admission/build/observation through that
+existing endpoint. Full authoring, native parity and accessibility stay open.
+See [the current packet](../WORK.md#current-return-path-ordinary-browser-policy-workflow--2026-10-08).
+
+Previous standalone/native packet:
+
 Criterion 2 consumes actual public clock Inspector/source-worker Apply/Restore/
 Undo/Redo and explicit disposal: **35** browser checks at desktop/CSS-390.
 Ordinary native Studio passes **51**, including **34** public-form checks,

@@ -9,7 +9,125 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: clock control consumers — 2026-10-08
+## Current return path: ordinary browser policy workflow — 2026-10-08
+
+Previous turn is progress: actual native/browser clock consumers, public browser
+Inspector/source worker and exact policy replay are qualified and pushed as
+`4f4731f`; the authoritative worktree is clean. Full goal remains active, with
+workflow/resource/authoring/renderer/codegen/delivery no-closure 23/9/39/20/28/3.
+All prior owned qualification handles are terminal. Protected LAN/pairs/services
+remain unchanged; no rejected service or profile-cleanup action is retried.
+
+Reassessment changes the next action to NS-4_studio-authoring_01 criterion 2:
+ordinary browser Studio's project-file import, real selected Inspector, retained
+Pascal pane, draft navigation and paired policy/history. Existing public-form
+proof cannot qualify the complete controller. Concrete deliverable: execute the
+ordinary controller with an independently owned exact public-Pascal project,
+through FileReader import and ordinary Nyx controls, and repair any discovered
+controller defect without private-field access or a second UI toolkit.
+
+Acceptance evidence needs exact paired import/export snapshots, all unfinished
+policy fields retained through Properties/Events/source navigation, refused
+Apply, corrected typed source, one-step Undo/Redo and changed-selection/project
+draft retirement. Qualify desktop and narrow HTTP consumers with meaningful
+captures and explicit controller disposal. Reuse the unchanged native ordinary
+Studio evidence instead of rerunning value/picker/standalone-form tests.
+Budget: one integrated journey and at most one repair per failed boundary; end
+this consumer boundary afterward and reassess the next full authoring outcome.
+
+Captured ordinary Studio exposes a product appearance defect: the independently
+scoped Nyx code-editor theme wins over the older unscoped dark-source CSS. Repair
+this boundary once through a shared owned source-document factory and typed
+semantic theme tokens, consumed by both controllers. Keep the accepted scoped
+theme isolation. Validate actual browser computed colors and native memo colors,
+plus retained editor/draft/history and representative desktop/narrow captures;
+do not create another theme API or repeat the accepted clock prerequisite.
+
+Semantic MCP remains primary for authored demos and active designs. This input
+harness qualifies FileReader and mounted editor behavior that document tools
+cannot establish, using the existing test File/DataTransfer boundary and exact
+already-qualified Pascal seed. Recovery/agent connection are disabled; no shared
+project or protected HTTP backend is mutated. Missing general paired project/
+source workflow capabilities retain NS-4_agent-workflows_01 ownership. Use only a
+fresh unique directory on the identity-verified existing static host. New
+current-source backend startup/rollout retains the earlier automatic rejection
+with only "blocked by policy"; optional profile cleanup has its separate rejected
+action and neither is repeated.
+
+Delivered bounded result: `tests/nyx_time_studio_browser.lpr` drives the ordinary
+controller through its actual file picker and public Nyx controls. Exact original
+clock Pascal/design files are read by FileReader and exported by the ordinary
+backup command; no private session/load/source hook is added. All five unfinished
+policy inputs survive Properties/Events/source navigation. Invalid Apply retains
+the exact accepted pair and proposals; corrected Apply publishes typed Pascal
+through the real source worker. One Undo/Redo restores each exact pair. Changed
+selection and replacement with the same-named imported project retire stale
+drafts. Meaningful captures precede explicit controller/view retirement.
+
+The captured source surface proves the old unscoped CSS no longer owns its colors:
+the isolated Nyx view's light theme wins. `NewNyxStudioCodeDocument` now composes
+the ordinary specialized editor with an independent typed dark palette. Both
+controllers consume the same public factory; caller replacement of tokens stays
+available. Browser chrome retains geometry only, while surface/text/border
+roles belong to the owned document. Accepted theme isolation is preserved.
+
+| Current consumer | Executed result |
+| --- | --- |
+| Ordinary HTTP browser Studio, 1280×900 | **73** checks, including physical source computed colors |
+| Ordinary HTTP browser Studio, CSS 390×844 | **105** checks; 32 additional compact command/visibility assertions overlap the same journey |
+| Ordinary checked native source workspace | **33** checks, including memo colors, retained draft/caret, modal/Outputs sizing and paired source refusal/admission; zero leaks |
+| Ordinary native clock policy | Unchanged **51** total, including its **34** public-form checks; reused without rerun or duplicate credit |
+
+Retained harness failures are explicit. The first narrow journey waits for a
+canvas node while Compact Project deliberately parks that canvas; readiness now
+waits for the imported title, then opens Design before physical selection. The
+first palette check uses CSS members not exposed by matched pas2js Web; it uses
+the existing `getPropertyValue` contract instead. One observer invocation passes
+a result expression rather than an attribute name; it times out with a terminal
+**73-check passed** fixture in its saved DOM. The corrected runner receives
+`data-time-studio`. No product assertion is discarded, deadline extended, worker
+clock injected or profile/server replaced. These initial receipts remain ignored
+under `build/clock-studio/` beside the final qualification.
+
+Authenticated read-only Pascal MCP discovery changes the next decision: the
+installed `nyx_transaction` already advertises `value-domain-set`, time format
+and step. Discovery against the runtime directory first refuses its missing
+Codex configuration; the correct repository-root invocation authenticates.
+Private schema/log receipts stay in `build/clock-studio/`. This establishes the
+advertised operation, not HTTP mutation/build/observing parity. End clock input
+fixtures. Next use that existing endpoint in an independently owned review for
+revision-aware grouped clock policy admission, exact paired build and ordinary
+Studio observation. Missing general paired import/source/review lifecycle remains
+with NS-4_agent-workflows_01. No rejected new-backend startup is prerequisite for
+trying installed advertised capabilities; uninstalled features keep their gate.
+
+Original full authoring criterion 2 and the complete goal stay open. Authoring
+no-closure advances **39→40** once; workflow/resource/renderer/codegen/delivery
+stay **23/9/20/28/3**. Credit allocation remains pending assessment. Physical
+phone/IME/accessibility, full native authoring, complete runtime/parity and delivery
+retain their original owners. No demo composition or user project mutation occurs.
+The preserving guard passes again at **2026-10-08T16:10:41.2469803Z**: all 299 sealed
+files, nine exact pairs/history/registry, checkpoint bytes and fifteen service
+identities stay unchanged. `-Target time-policy` stages the new consumer beside
+the original seed/worker without launching a server/browser. Script AST parsing
+and diff whitespace checks pass; affected compilers have zero owned warnings,
+with seven upstream pas2js RTL warnings retained and native notes unsuppressed.
+
+Final receipts: `build/clock-studio/browser-{desktop,narrow}-palette-verified.log`
+and their `clock-studio.png`/DOM checkpoints and terminal `capture.dom.html`;
+`native-source-{compile,run}.log`, `browser-palette-repaired-compile.log`,
+`installed-transaction-schema-current-private.json` and
+`preservation-palette-final.log`. All owned compiler/input handles are terminal;
+captures are inspected. The five-file static closure has exact compiled/served
+bundle equality, bytes and SHA-256 in `closure-palette-private.json`; terminal
+counts are checked in `consumer-receipt.json`. All failed receipts and temporary
+browser profiles remain retained; rejected optional cleanup is not retried.
+After committing, verify the exact remote branch and clean worktree in
+`build/clock-studio/remote-checkpoint.json`. No additional fixture scope is opened.
+
+<a id="current-return-path-clock-control-consumers--2026-10-08"></a>
+
+## Previous return path: clock control consumers — 2026-10-08
 
 The preceding turn accepted the complete portable clock prerequisite and pushed
 exact remote `f8f9975`; its two-batch foundation checkpoint is closed. The full

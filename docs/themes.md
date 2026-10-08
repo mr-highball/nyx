@@ -37,6 +37,14 @@ declaration. Both actions use one ordinary paired design/Pascal Undo step. A
 pending Pascal draft refuses mutation; a changed theme refuses stale forms.
 The canvas consumes application tokens while Studio chrome retains its own theme.
 
+Studio's Pascal editor has an independently owned source document too.
+`NewNyxStudioCodeDocument` in `nyx.studio.view` gives both controllers the same
+typed dark palette; the ordinary Nyx code editor consumes its surface/text roles
+through each adapter. The caller owns the returned document and can replace its
+tokens through `SetNyxThemeTokens`. Inline/modal host moves retain that document
+and its editor. Source colors do not depend on unscoped browser chrome selectors
+and do not change the application or shell palette.
+
 `TNyxThemeEditorDraft` owns only copied input and exact local/effective context.
 Collapsing the form and switching compact panels retain it. Changed declarations,
 base palettes, field kinds or explicit project replacement retire it. The browser

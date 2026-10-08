@@ -157,6 +157,9 @@ begin
     Pump;
     Click('action-code');
     LSource := TMemo(GStudio.CodeView.InputFor('studio-code'));
+    Check((ColorToRGB(LSource.Color) = RGBToColor(23, 27, 41)) and
+      (ColorToRGB(LSource.Font.Color) = RGBToColor(203, 213, 237)),
+      'ordinary native source consumes its independent typed readable palette');
     LNormalHeight := LSource.Height;
     WriteLn('Source viewport / memo ', LSource.Width, ' x ', LNormalHeight,
       ' / split ', GStudio.ShellView.ControlFor('studio-split').Height,

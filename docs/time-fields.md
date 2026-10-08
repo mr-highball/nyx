@@ -245,8 +245,29 @@ browser source worker passes 35 checks at both widths, including atomic paired
 Apply/Restore/Undo/Redo and explicit queue/view/host retirement. The complete
 ordinary native Studio journey passes 51 checks, including the public form's
 34 assertions; these counts overlap. The accepted policy's exact compiled
-reconstruction passes five assertions on both targets. Full ordinary browser
-Studio and authenticated current-backend observation remain open.
+reconstruction passes five assertions on both targets. The ordinary browser
+clock-policy controller journey is now executed below; complete Studio authoring
+and authenticated clock mutation/build/observation remain open.
+
+`tools/build.ps1 -Target time-policy` also stages the ordinary browser controller
+fixture at `time-studio-browser.html` beside the exact original Pascal seed and
+source worker. Real FileReader import/export qualifies the complete paired
+project boundary. Actual selected Inspector fields retain every unfinished
+policy input through Properties/Events/source navigation; invalid Apply preserves
+the exact pair, corrected Apply publishes typed Pascal, and Undo/Redo restores
+both exact pairs. Changed selection and replacement of the same-named project
+retire stale proposals. Desktop/CSS-390 execution captures the mounted ordinary
+Studio before explicit disposal. Recovery/agents are disabled for this independent
+input harness; it does not compose or replace an active user's design. The final
+journeys pass 73 desktop / 105 narrow checks; the extra 32 qualify compact routes,
+not another independent policy suite.
+
+Authenticated installed MCP discovery advertises `value-domain-set` with time
+format and step. The next semantic admission/build/observing journey can try that
+existing endpoint; successful discovery alone does not qualify those operations.
+Missing general paired import/source capabilities remain with
+[the workflow owner](../TODO/NS-4_agent-workflows_01.md). See
+[the ordinary controller packet](../WORK.md#current-return-path-ordinary-browser-policy-workflow--2026-10-08).
 
 Formatted clock input is a physical draft until editing completion. Browser
 qualification sends separate `input` and bubbling `change` notifications;

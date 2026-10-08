@@ -66,7 +66,20 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current clock consumers (2026-10-08): actual Win32 controls pass **85** and HTTP
+Current ordinary browser policy workflow (2026-10-08): exact paired FileReader
+import, selected Inspector drafts, source-worker admission/refusal and one-step
+Undo/Redo execute at desktop and CSS-390 with **73 / 105** checks; compact command
+routes account for the difference. Source colors come from a shared typed Nyx
+document palette on both adapters; the retained native source workspace
+passes **33** leak-free checks. Installed authenticated MCP discovery advertises
+clock policies, changing the next semantic action to that existing endpoint;
+discovery does not prove admission/build/observation. Complete authoring/parity
+remain open; authoring no-closure advances **39→40** once, others remain
+workflow/resource/renderer/codegen/delivery **23/9/20/28/3**. Installed LAN, nine
+pairs/history and all protected services remain exact. See
+[the packet](WORK.md#current-return-path-ordinary-browser-policy-workflow--2026-10-08).
+
+Previous clock consumers (2026-10-08): actual Win32 controls pass **85** and HTTP
 browser controls **22** at desktop/CSS-390. Public browser Inspector/source-worker
 checks pass **35** at both widths; ordinary native Studio passes **51**, including
 its **34** public-form checks. Exact accepted policy reconstruction passes **five**

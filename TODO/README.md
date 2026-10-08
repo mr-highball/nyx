@@ -46,7 +46,19 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current clock consumers (2026-10-08): actual Win32 controls pass **85**, browser
+Current ordinary browser policy workflow (2026-10-08): exact FileReader paired
+import/export, all unfinished clock policy fields, refused/corrected Apply,
+retained source and Undo/Redo execute at desktop/CSS-390. A shared typed source
+palette repairs the captured browser appearance conflict; browser journeys pass
+**73 desktop / 105 narrow** checks, including compact routes. The palette is
+consumed by both adapters; the actual native source workspace passes **33**, leak-free.
+Installed authenticated MCP discovery includes clock policies; next use that
+endpoint for owned semantic admission/build/observation, still unqualified.
+No full authoring criterion closes: authoring advances no-closure **39→40** once;
+workflow/resource/renderer/codegen/delivery stay **23/9/20/28/3**. LAN/pairs/services
+remain exact. See [the packet](../WORK.md#current-return-path-ordinary-browser-policy-workflow--2026-10-08).
+
+Previous clock consumers (2026-10-08): actual Win32 controls pass **85**, browser
 controls **22** and browser Inspector/source worker **35** at desktop/CSS-390.
 Ordinary native Studio passes **51**, including **34** public-form checks; exact
 accepted policy reconstruction passes **five** on both targets. Native ownership

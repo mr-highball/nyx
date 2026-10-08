@@ -423,8 +423,7 @@ begin
     'flex-shrink:0;background:#fafbfe;border-top:1px solid #dfe3ec;}' +
     '[data-node=studio-code-actions] .nyx-button{font-size:11px;padding:6px 10px;}' +
     '[data-node=studio-code]{font:12px/1.7 Consolas,monospace;' +
-    'background:#171b29;color:#cbd5ed;' +
-    'border:0;border-top:1px solid #343a4e;resize:none;height:0;padding:12px 18px;' +
+    'border:0;border-top:1px solid var(--nyx-border);resize:none;height:0;padding:12px 18px;' +
     'white-space:pre;tab-size:2;outline-offset:-3px;box-sizing:border-box;flex:1;min-height:0;min-width:0;}' +
     '[data-node=studio-source-pane]{overflow:hidden;min-height:0;padding:0!important;gap:0!important;}' +
     '[data-node=studio-source-pane]>:not([data-node=studio-code]):not([data-node=studio-code-host]){flex-shrink:0;}' +
@@ -1244,8 +1243,7 @@ begin
     if FCodeRenderer.Root = nil then
     begin
       FreeAndNil(FCodeDocument);
-      FCodeDocument := TNyxDocument.Create;
-      FCodeDocument.AddPage(NewNyxStudioCodeEditor(FSession.DraftSource));
+      FCodeDocument := NewNyxStudioCodeDocument(FSession.DraftSource);
       FCodeRenderer.Render(FCodeDocument, FCodeDocument.Pages[0], LCodeHost);
     end
     else

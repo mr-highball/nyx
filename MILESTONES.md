@@ -4,7 +4,21 @@
 [Current work](WORK.md)
 
 
-Current clock consumers (2026-10-08): accepted typed values reach executed native
+Current ordinary browser policy workflow (2026-10-08): real paired-file import,
+selected Inspector drafts, retained Pascal/source-worker publication and exact
+Undo/Redo execute at desktop and CSS-390. A captured source color conflict is
+repaired through one shared owned Nyx document and typed palette on both adapters.
+Browser journeys pass **73 desktop / 105 narrow**, including compact routes;
+actual native source workspace checks pass **33**, leak-free.
+Authenticated installed MCP discovery already advertises clock policies; next
+qualify owned semantic admission/build/observation on that existing endpoint.
+No original full criterion closes: authoring no-closure advances **39→40** once,
+workflow/resource/renderer/codegen/delivery stay **23/9/20/28/3**. LAN/nine pairs/
+services remain exact; complete Studio, accessibility and full runtime/parity/
+delivery retain their original owners. See
+[the packet](WORK.md#current-return-path-ordinary-browser-policy-workflow--2026-10-08).
+
+Previous clock consumers (2026-10-08): accepted typed values reach executed native
 and browser controls, the public Inspector/source queue and ordinary native
 Studio. Checked Win32 passes **85** control and **51** total Studio checks;
 browser passes **22** control and **35** Inspector checks at desktop/CSS-390.
@@ -1281,6 +1295,19 @@ production component outcomes retain their owners.
 Current task and return path are maintained in [WORK.md](WORK.md).
 
 ## Reassessment record
+
+- 2026-10-08: ordinary browser Studio now executes exact paired FileReader import,
+  all unfinished clock policy fields, refusal/corrected source-worker publication,
+  one-step Undo/Redo and selection/project draft retirement at desktop/CSS-390.
+  Browser journeys pass 73 desktop / 105 narrow checks, including compact routes.
+  Captures expose an independently scoped theme conflict; a shared typed source
+  document repairs browser/native source colors, with 33 actual native retained
+  workspace checks and zero leaks. Installed authenticated MCP schema already
+  advertises time policies: next use the existing endpoint for owned semantic
+  admission/build/observation, without retrying rejected backend startup. No full
+  criterion closes; authoring advances no-closure 39→40 once and other counts
+  stay workflow/resource/renderer/codegen/delivery 23/9/20/28/3. Protected LAN/
+  pairs/services remain exact. Full authoring/runtime/parity retain their owners.
 
 - 2026-10-08: executed actual clock-control and public Inspector/source-worker
   consumers against the accepted clock prerequisite. Native controls/ordinary

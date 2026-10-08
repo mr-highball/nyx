@@ -1434,6 +1434,8 @@ try {
       '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxTimePolicyWeb")
     Invoke-NyxCompiler $nyxPas2js ($nyxTimePolicyWebFlags + @(
       "-Fu$nyxTimePolicySource", 'tests/nyx_time_policy_controls.lpr'))
+    Invoke-NyxCompiler $nyxPas2js ($nyxTimePolicyWebFlags + @(
+      "-Fu$nyxTimePolicySource", 'tests/nyx_time_studio_browser.lpr'))
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule', '-Jirtl.js',
       '-Fusrc', '-Fustudio', "-FE$nyxTimePolicyWeb", 'studio/nyx_source_worker.lpr')
     Invoke-NyxCompiler $nyxPas2js ($nyxTimePolicyWebFlags + @(
@@ -1442,6 +1444,7 @@ try {
     Copy-Item -LiteralPath $nyxTimePolicySeed -Destination (Join-Path $nyxTimePolicyWeb 'seed.pas.txt') -Force
     Copy-Item -LiteralPath (Join-Path $nyxTimePolicyResult 'design.nyx.json'),
       (Join-Path $nyxRoot 'studio/web/time-policy-controls.html'),
+      (Join-Path $nyxRoot 'studio/web/time-studio-browser.html'),
       (Join-Path $nyxRoot 'studio/web/time-policy-generated.html') -Destination $nyxTimePolicyWeb -Force
     Write-Host 'Clock Inspector/queue and compiled pair qualified natively. Browser controls/worker/replay staged, not executed.'
     exit 0

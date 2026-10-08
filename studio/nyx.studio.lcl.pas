@@ -2272,8 +2272,7 @@ begin
       if FCodeView.Root = nil then
       begin
         FreeAndNil(FCodeDocument);
-        FCodeDocument := TNyxDocument.Create;
-        FCodeDocument.AddPage(NewNyxStudioCodeEditor(FSession.DraftSource));
+        FCodeDocument := NewNyxStudioCodeDocument(FSession.DraftSource);
         FCodeDocument.Pages[0].Configure.HeightSizing(nsFill).Done;
         FCodeView.Render(FCodeDocument, FCodeDocument.Pages[0], LCodeHost);
       end
