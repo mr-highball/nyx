@@ -135,6 +135,25 @@ order require separate qualification. The actual ordinary journey passes 29
 checks with zero leaks. It does not authorize replacing a user runtime without
 the full retained checkpoint and observing baseline checks below.
 
+The subsequent frozen `960134f` candidate passes 29 integrity/refusal, 41 integrated
+real build/runtime and 106 complete retained-checkpoint checks. It is installed
+on the existing firewall-covered LAN executable path with original runtime and
+enrollment. All nine exact pairs/full history/checkpoint and the effective machine
+output profile remain intact; fourteen other services and the old pristine
+payload remain unchanged. The ordinary installed observer reads the exact
+accepted companion and switches modal/compact/desktop presentation without
+authoring. Fresh MCP clients initialize/discover all 22 tools.
+
+The preserved deployment checker and ordinary observer are Pascal programs built
+by the same focused target. The checker admits a complete exact baseline, refuses
+active compiler jobs and verifies rotated observing authority without printing
+credentials. Its private output-profile receipt supports independent byte
+comparison. The observer's whole-source DOM snapshot is physical qualification,
+not agent document context or a replacement for bounded semantic queries.
+The existing desktop chat may still hold a retired per-launch endpoint; use the
+fresh semantic client until that connection refreshes. Physical phone and the
+complete supported-platform matrix remain separate checks.
+
 ## Runtime session recovery
 
 Current native hosts automatically maintain `.local/studio-session.nyx` beneath

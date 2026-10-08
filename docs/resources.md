@@ -747,8 +747,15 @@ retires the old frame/authority; a new application build starts a new document
 from authored defaults. This qualifies page/application launches inside the real
 browser editor, extending the separate six-producer qualification above.
 
-Installed LAN/enrollment refresh, physical phone, persistent browser cache/CORS/
-security contexts, background restoration, transformed mount geometry,
+Frozen `960134f` is subsequently installed through the existing LAN executable/
+runtime/enrollment, with all nine exact pairs/full history intact and 22 actual
+authenticated MCP tools. Semantic runtime queries work on that installed service;
+the ordinary observer reads its exact companion and switches modal/compact/
+desktop presentation without modifying the primary. Same-host LAN bytes match
+the 299-file sealed payload.
+
+Physical phone, persistent browser cache/CORS/security contexts, background
+restoration, transformed mount geometry,
 accessibility/tab order and full runtime reload/cancel remain unqualified under
 their original owners. A small observing journey does not establish complete
 editor/parity quality. Semantic exact-job editor launch/adopt remains a recorded

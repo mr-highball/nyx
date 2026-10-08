@@ -57,7 +57,10 @@ child that does not exist.
 This ends standalone producer-fixture expansion and returns to frozen candidate
 recovery and current-source LAN delivery. No full criterion closes; authoring
 no-closure alone advances **37→38**, workflow/resource/renderer/codegen/delivery
-remain **22/9/19/28/2**. Native full Studio, physical phone, accessibility/tab order,
+remain **22/9/19/28/2** before the separate preserving delivery return. Frozen
+`960134f` is subsequently installed with all nine pairs/full history exact,
+22 authenticated tools and ordinary installed modal/compact/source observation;
+delivery alone advances **2→3**. Native full Studio, physical phone, accessibility/tab order,
 transformed mounts and full reload/cancel remain acceptance requirements.
 See [the packet](../WORK.md#current-return-path-ordinary-compiled-studio-lifetime--2026-10-08).
 

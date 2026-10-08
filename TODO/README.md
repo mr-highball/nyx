@@ -53,9 +53,14 @@ page/application builds, private grants, trusted input, polling/modal/compact
 panel transitions and desktop return. A paired semantic edit retires the old
 frame/authority; a fresh application build starts with authored defaults.
 Three captures are inspected, both Studios/backend/worker compile with zero owned
-warnings. The protected LAN/pairs remain unchanged. No full criterion closes:
-authoring no-closure alone advances **37→38**, other owners stay
-**22/9/19/28/2**. Return to frozen recovery and current-source LAN qualification;
+warnings. Frozen `960134f` is now installed on the preserved LAN: 299-file
+integrity passes 29, integrated actual build/runtime 41 and full retained
+checkpoint 106 checks. Fresh MCP clients authenticate 22 tools. The ordinary
+installed observer reads exact source and exercises modal/compact/desktop
+presentation; four captures are inspected. Nine exact pairs/full history and
+fourteen other services remain unchanged. No full criterion closes: authoring
+advances **37→38**, delivery **2→3**, other owners stay **22/9/19/28**.
+Return to native/browser runtime lifecycle and primary semantic editor launch;
 semantic observing-editor launch/adopt remains with the existing workflow owner.
 See [the packet](../WORK.md#current-return-path-ordinary-compiled-studio-lifetime--2026-10-08).
 

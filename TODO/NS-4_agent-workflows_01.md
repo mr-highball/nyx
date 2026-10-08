@@ -23,6 +23,15 @@ paired semantic edits retire the old frame and new application builds replace it
 The maintained journey passes **29** checks, leak-free. Public API access still
 cannot mint preview authority.
 
+Installed return: frozen `960134f` now serves the protected LAN/runtime with all
+nine exact pairs, full checkpoint/history and fourteen other services preserved.
+Fresh actual initialized clients discover 22 tools and semantic resources work.
+The ordinary observer reads exact retained source and exercises modal/compact/
+desktop presentation. This chat's old named handles return initialize HTTP 404
+after endpoint rotation; use the current authenticated Pascal semantic client
+until the desktop connection refreshes. Installed project/enrolled-user config
+are current. Only delivery advances **2→3**, workflow stays **22**.
+
 Semantic gap retained here: an agent can build/inspect a successful artifact but
 cannot request that an observing ordinary editor adopt/launch that exact job.
 Operator input in this fixture qualifies that controller lifetime; do not silently

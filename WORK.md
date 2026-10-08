@@ -57,8 +57,9 @@ MCP remains primary for composition/accepted edits and bounded runtime queries.
 The existing workflow owner retains the missing semantic observing-editor
 compiled-preview adopt/launch operation: trusted operator buttons here qualify
 the ordinary controller, not a replacement browser authoring/build workflow.
-The installed fifteen actual MCP tools still answer the protected primary;
-current isolated initialization does not update desktop enrollment or LAN.
+Before replacement, actual initialized discovery found **21** tools on the
+protected primary (the earlier fifteen-tool handoff was stale). Fresh discovery
+after installation finds **22**, including semantic resources.
 
 Evidence: ignored `build/compiled-preview-lifetime/lifetime-final.log`,
 `maintained-build-final.log`, target compile logs and private browser receipts.
@@ -72,11 +73,64 @@ remain **22/9/19/28/2**. Full native Studio, phone/hardware/accessibility, trans
 mount geometry, persistent browser cache/CORS/background restoration and full
 reload/cancel remain original acceptance work.
 
-Next action: prepare a frozen current-source payload and qualify its complete
-retained checkpoint against copied storage and exact observing baselines before
-the already authorized LAN replacement. Keep the firewall-covered executable path,
-runtime/enrollment and rollback bytes; do not substitute an isolated demo for
-deployment or overwrite the user's pair.
+### Installed current-source return — 2026-10-08
+
+The pushed product checkpoint is **960134fe50b99508e6a7ad336b9e8fbc350d8ae2**.
+Its frozen 299-file payload passes **29** integrity/refusal checks and **41**
+integrated runtime checks, including actual browser/Win32 application builds and
+native mounting. Copied retained checkpoint admission passes **106**, leak-free:
+all nine complete pairs, full history/counters/registry and navigation remain
+exact. The two staged-web value/release-refusal assertions execute in that gate.
+
+The already authorized primary replacement succeeds. Current LAN **PID 39860**
+serves this frozen payload through the existing firewall-covered executable path,
+with the original runtime and enrollment. Editor listens on all interfaces at
+8088; MCP remains loopback-only at 8089. All nine exact pairs/handles/labels/
+navigation/drafts/permissions/history and the entire 147,033-byte checkpoint
+remain unchanged. The actual private machine output profile is retained
+independently. Fourteen other exact processes and the previous pristine 229-file
+payload remain unchanged. New credentials/enrollment are refreshed by the normal
+backend; fresh real MCP clients initialize/discover **22** tools and query
+`nyx_resources` successfully on the installed service.
+
+The actual ordinary installed observer joins the preserved primary, reads its
+entire exact accepted companion through the source modal, closes it, switches
+CSS-390 Design/Inspector and returns to desktop, without authoring/building.
+Its final run is leak-free with no runtime exception; four captures are inspected.
+The first observer used an incorrect descendant selector for the public code
+editor, which is itself a textarea; correcting the physical host selector fixed
+the qualification. No project was changed to make it pass. Same-host LAN byte
+delivery is verified; this is not physical-phone confirmation.
+
+**Use the new private guard**
+`build/compiled-preview-lifetime/deployment/guard.ps1` from now on. The old
+`build/menu-bar-editor/guard.ps1` intentionally names the retired primary and
+old payload. The new final receipt is **2026-10-08T12:34:27Z**: 299 sealed files,
+nine exact pairs, fifteen current identities and fourteen unchanged other
+services. Exact process identity, rollback executable/checkpoint/config copies,
+served hashes and operator receipts belong to that ignored deployment directory.
+The standalone isolated server remains stopped.
+
+The maintained focused build also compiles both preserving deployment programs
+without starting a listener or observing browser. Its final rebuild succeeds
+with zero owned warnings; upstream advisories remain visible in
+`build/compiled-preview-lifetime/maintained-build-deployed-final.log`.
+
+This existing chat's named native handles still use the retired per-launch MCP
+endpoint and actually return initialize HTTP 404. Project and explicitly enrolled
+user configuration are current; a freshly initialized Pascal semantic client
+authenticates normally. Continue semantic work through
+`build/compiled-preview-lifetime/bin/nyx_studio_mcp.exe` until this desktop
+connection refreshes. The OpenAI Docs check documents desktop MCP server Restart
+under Settings, but no in-chat refresh tool is available here; no desktop process
+was stopped or configuration protection weakened to bypass it.
+
+No full original delivery/service/workflow criterion closes. This deployment
+advances delivery no-closure **2→3**; other owners stay workflow/resource/authoring/
+renderer/codegen **22/9/38/19/28**. End rollout/observer expansion. Next action:
+return to the original primary workflow's bounded exact-job editor adopt/launch
+operation and native/browser runtime reload/cancel; do not add another screenshot
+fixture or replace the preserved primary to build demos.
 
 ## Previous return path: authenticated preview resource producers — 2026-10-08
 

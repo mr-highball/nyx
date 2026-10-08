@@ -378,6 +378,8 @@ try {
       '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxLifetimeUnits", "-FE$nyxLifetimeBin")
     Invoke-NyxCompiler $nyxFpc ($nyxLifetimeFlags + @('tests/nyx_resource_runtime_server.lpr'))
     Invoke-NyxCompiler $nyxFpc ($nyxLifetimeFlags + @('tests/nyx_compiled_studio_lifetime.lpr'))
+    Invoke-NyxCompiler $nyxFpc ($nyxLifetimeFlags + @('tests/nyx_studio_deployment_check.lpr'))
+    Invoke-NyxCompiler $nyxFpc ($nyxLifetimeFlags + @('tests/nyx_studio_deployment_observer.lpr'))
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Fusrc', '-Fustudio',

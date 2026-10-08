@@ -66,7 +66,29 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current launched resource reports (2026-10-08): private successful-build grants
+Current ordinary compiled Studio and preserving delivery (2026-10-08): the public
+browser persistent mount keeps compiled documents connected through chrome,
+source-modal and compact-panel changes. The ordinary editor journey passes **29**
+checked assertions with actual child-document identity, typed input and active
+producer authority retained; accepted edits and new builds explicitly replace
+the old runtime. Both Studios, backend and source worker compile with zero owned
+warnings. Frozen pushed product `960134f` passes **29** integrity/refusal,
+**41** integrated actual build/runtime and **106** retained-checkpoint checks.
+Its 299-file payload is installed on the preserved LAN with all nine exact pairs,
+full history and machine output profile intact. Fresh MCP clients authenticate
+**22** tools. The ordinary installed observer reads exact source and exercises
+modal/compact/desktop presentation; physical-phone confirmation remains separate.
+
+No full criterion/credit/percentage closes: authoring no-closure advances
+**37→38**, delivery **2→3**, other owners stay workflow/resource/renderer/codegen
+**22/9/19/28**. Full native Studio, hardware/accessibility, transformed mount
+geometry, persistent browser cache/CORS/background restoration and full runtime
+reload/cancel remain open. Existing desktop chat handles require a connection
+refresh after endpoint rotation; fresh Pascal semantic clients work now. Return
+to exact-job semantic observing-editor launch/adopt and runtime lifecycle.
+See [the current packet](WORK.md#current-return-path-ordinary-compiled-studio-lifetime--2026-10-08).
+
+Previous launched resource reports (2026-10-08): private successful-build grants
 connect ordinary Studio preview wrappers to bounded revision-aware observations.
 Authenticated HTTP qualification passes **55** checks across separately launched
 browser/Win32 application, page and reusable previews, including actual hosted
@@ -79,7 +101,7 @@ unchanged. Studio iframe remount/observer UI, physical phone, persistent browser
 cache and current-source rollout remain open. Resource no-closure alone advances
 **8→9**; no full criterion/credit/percentage closes, other owners remain
 **22/37/19/28/2**. Return to those original deployment/parity outcomes.
-See [the packet](WORK.md#current-return-path-authenticated-preview-resource-producers--2026-10-08).
+See [the previous packet](WORK.md#previous-return-path-authenticated-preview-resource-producers--2026-10-08).
 
 
 Previous saved row authoring (2026-10-08): common Nyx-built Resources forms now

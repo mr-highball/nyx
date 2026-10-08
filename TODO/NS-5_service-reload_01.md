@@ -15,6 +15,20 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - Cache reuse, stale-result refusal, fast view reload and full application execution preserve accepted work.
 - Projects/includes/assets, structured diagnostic locations and compiler failures are integrated into Studio.
 
+Current preserving service return (2026-10-08): ordinary compiled browser Studio
+passes 29 checks through input, polling/heartbeats, modal/compact hiding/return
+and new-build replacement. Frozen pushed `960134f` passes 29 integrity, 41 actual
+build/runtime and 106 complete retained-checkpoint checks, then installs on the
+existing LAN executable/runtime with all nine pairs and full history exact.
+Fresh actual MCP discovery authenticates 22 tools; current resource queries work.
+The ordinary installed observer reads exact accepted source and switches modal/
+compact/desktop presentation without changing the protected primary. Same-host
+served bytes match 299 sealed files. No original service criterion/counter closes;
+delivery alone advances 2→3. Return to semantic exact-job editor launch/adopt,
+native/browser reload/cancel and original stale-result/retention/worker outcomes.
+Physical phone and full parity remain separate requirements. See
+[the installed packet](../WORK.md#installed-current-source-return--2026-10-08).
+
 **Blockers**
 
 Current bar candidate (2026-10-07): frozen `0ce846f` passes full ordinary browser

@@ -19,6 +19,27 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   remain tested; dependency warnings stay visible and separately attributed.
   Intentional compiler advisories require narrowly scoped documented exceptions.
 
+Current preserving delivery (2026-10-08): frozen pushed product `960134f`
+passes 29 integrity/refusal, 41 actual integrated build/runtime and 106 complete
+retained checkpoint candidate checks, leak-free. Its 299-file payload is installed
+through the existing firewall-covered executable path with original runtime and
+enrollment. All nine exact pairs/handles/labels/navigation/drafts/permissions/
+history, complete checkpoint and effective machine output profile remain exact;
+fourteen other services and the previous pristine payload remain unchanged.
+Fresh actual MCP discovery authenticates 22 tools and semantic resource queries.
+The ordinary installed observer reads the exact retained companion and exercises
+modal/compact/desktop presentation without modifying the protected project.
+Four captures are inspected; same-host LAN bytes match the sealed payload.
+
+No full original criterion closes: delivery no-closure **2→3**, other owners
+workflow/resource/authoring/renderer/codegen remain **22/9/38/19/28**.
+End repeated rollout fixtures and return to exact-job semantic editor launch/adopt,
+runtime lifecycle and original independent-use/CI outcomes. Native chat handles
+are stale after credential/endpoint rotation; fresh Pascal MCP clients work.
+Physical phone, full native Studio and the complete OS/widgetset CI matrix remain
+acceptance requirements. See
+[the installed packet](../WORK.md#installed-current-source-return--2026-10-08).
+
 Warning-cleanup evidence (2026-10-04): the installed checked FPC 3.2.0 core,
 generated consumers and server report zero warnings; actual FPC 3.3.1/win32 LCL
 layout/Agents consumers and current MCP native application compile do too.
