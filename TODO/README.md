@@ -46,12 +46,19 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current full catalog browser properties (2026-10-08): exact MCP export now executes
+Current narrow capture diagnosis (2026-10-08): document `clientWidth/scrollWidth`
+are both 390 and measured controls fit. The suspected scrollbar is the progress
+control; the prior/current PNGs have identical bytes. Opt-in capture now includes
+bounded read-only geometry. No product fix, criterion or counter closes/advances;
+**25/9/40/21/28/3** stay unchanged. Full responsive/visual work remains open. See
+[the measurements](../WORK.md#current-return-path-narrow-scroll-extent--2026-10-08).
+
+Previous full catalog browser properties (2026-10-08): exact MCP export now executes
 **18,203 desktop / 18,204 CSS-390 browser** and **18,061 Win32** checks across
 76 kinds/262 faces, leak-free. A failed-before-fix geometry check qualifies
 retained-origin flow/cleared-layout correction and live capture/retirement.
 No full criterion closes: renderer alone advances **20→21**, others remain
-**25/9/40/28/3**. Residual scroll extent and full visual/accessibility/production/
+**25/9/40/28/3**. Full visual/accessibility/production/
 deployment stay open. Protected user state/services remain exact. See
 [the packet](../WORK.md#current-return-path-full-catalog-browser-properties--2026-10-08).
 

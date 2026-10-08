@@ -25,7 +25,7 @@ program nyx_property_controls_tests;
 {$mode delphi}{$H+}{$codepage utf8}
 
 uses
-  SysUtils, Math, nyx.text, nyx.types, nyx.model, nyx.schema, nyx.catalog,
+  SysUtils, Math, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema, nyx.catalog,
   nyx.behavior, nyx.contract, nyx.state, nyx.generated.view, nyx.collections, nyx.collections.view,
   nyx.collections.view.types, nyx.collections.mount, nyx.test.collections.view,
   {$ifdef PAS2JS}JS, Web, nyx.render.browser;
@@ -667,6 +667,52 @@ begin
 end;
 
 {$ifdef PAS2JS}
+{ Read-only physical diagnostics for the final property review, capped at
+  sixteen boxes. Viewport and containing widths distinguish real horizontal
+  overflow from a visual interpretation without changing styles. The report
+  contains dimensions, computed styles and fixture identities, never user text
+  or the design model. It is emitted only during explicit live capture. }
+function ReviewGeometry: TNyxDataValue;
+var
+  LBoxes: array of TNyxDataValue;
+  LPage: TNyxNode;
+  LIndex: Integer;
+
+  function Box(const AName: TNyxText; AElement: TJSHTMLElement): TNyxDataValue;
+  var
+    LRect: TJSDOMRect;
+    LStyle: TJSCSSStyleDeclaration;
+  begin
+    LRect := AElement.getBoundingClientRect;
+    LStyle := window.getComputedStyle(AElement);
+    Result := NyxObject([
+      NyxField('id', NyxData(AName)), NyxField('left', NyxData(LRect.left)),
+      NyxField('right', NyxData(LRect.right)), NyxField('width', NyxData(LRect.width)),
+      NyxField('clientWidth', NyxData(AElement.clientWidth)),
+      NyxField('scrollWidth', NyxData(AElement.scrollWidth)),
+      NyxField('boxSizing', NyxData(LStyle.getPropertyValue('box-sizing'))),
+      NyxField('paddingLeft', NyxData(LStyle.getPropertyValue('padding-left'))),
+      NyxField('paddingRight', NyxData(LStyle.getPropertyValue('padding-right'))),
+      NyxField('overflowX', NyxData(LStyle.getPropertyValue('overflow-x')))]);
+  end;
+
+begin
+  LPage := GRenderer.Root;
+  SetLength(LBoxes, Min(LPage.Count, 11) + 5);
+  LBoxes[0] := Box('html', TJSHTMLElement(document.documentElement));
+  LBoxes[1] := Box('body', TJSHTMLElement(document.body));
+  LBoxes[2] := Box('host', GHost);
+  LBoxes[3] := Box(LPage.ID, Face(LPage));
+  LBoxes[4] := Box('property-right', Face(LPage.Find('property-right')));
+  for LIndex := 5 to High(LBoxes) do
+  begin
+    LBoxes[LIndex] := Box(LPage.Children[LIndex - 5].ID, Face(LPage.Children[LIndex - 5]));
+  end;
+  Result := NyxObject([NyxField('innerWidth', NyxData(window.innerWidth)),
+    NyxField('innerHeight', NyxData(window.innerHeight)),
+    NyxField('boxes', NyxArray(LBoxes))]);
+end;
+
 procedure FinishCapture;
 var
   LObserved: Boolean;
@@ -755,6 +801,7 @@ begin
       begin
         GAwaitCapture := True;
         GCaptureStarted := window.performance.now;
+        document.body.setAttribute('data-property-geometry', ReviewGeometry.ToJSON);
         document.body.setAttribute('data-capture-checkpoint', 'catalog-properties');
         window.setTimeout(@FinishCapture, 25);
       end

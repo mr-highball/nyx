@@ -1255,7 +1255,11 @@ disposal and expose the corrected retained-origin flow geometry. After serving
 the staged host, the maintained Pascal ready/capture driver can inspect
 `data-property-tests` at `properties.html?capture=1` (desktop) or
 `properties.html?frame=1&capture=1` (390px viewport); a checkpoint is acknowledged
-only after PNG/DOM capture. Default manual completion remains synchronous.
+only after PNG/DOM capture. `data-property-geometry` includes bounded read-only
+viewport/containing/control widths and computed styles, at most sixteen boxes,
+without user text or a design export. Current desktop/CSS-390 measurements match
+document and scroll widths; the suspected scrollbar is the progress control.
+Default manual completion remains synchronous.
 These target consumers retain the original implemented-property scope. Physical
 phone/assistive input, complete matrix/visual/scroll-extent quality and observing
 deployment remain open; no full workflow criterion closes. See

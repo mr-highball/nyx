@@ -4,13 +4,20 @@
 [Current work](WORK.md)
 
 
-Current full catalog browser properties (2026-10-08): unchanged MCP companion
+Current narrow capture diagnosis (2026-10-08): bounded read-only geometry
+establishes matching document/scroll widths at desktop and CSS-390. The suspected
+scrollbar is the demo progress control; prior/current narrow PNG bytes agree.
+No layout correction or criterion/counter closure follows; **25/9/40/21/28/3**
+stay unchanged and full responsive/visual requirements remain open. See
+[the measurements](WORK.md#current-return-path-narrow-scroll-extent--2026-10-08).
+
+Previous full catalog browser properties (2026-10-08): unchanged MCP companion
 qualifies **18,203 desktop / 18,204 CSS-390 HTTP browser** and **18,061 Win32**
 checks over 76 kinds/262 faces, leak-free. Real geometry failures expose and
 qualify the browser retained-origin flow transition correction; live captures
 precede explicit disposal. Protected projects/checkpoint/services remain exact.
 No original criterion closes: renderer alone advances **20→21**, others stay
-**25/9/40/28/3**. Residual scroll extent, full effects/visuals/accessibility and
+**25/9/40/28/3**. Full effects/visuals/accessibility and
 observing deployment remain open. See
 [the packet](WORK.md#current-return-path-full-catalog-browser-properties--2026-10-08).
 

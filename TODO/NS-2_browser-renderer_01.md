@@ -29,8 +29,10 @@ disposal. A failed-before-fix geometry regression qualifies the browser repair:
 retained Left/Top origins now wait for an absolute parent and do not translate
 flow/grid controls; clearing restores natural flow geometry. Native shared
 qualification passes **18,061**, leak-free, with zero owned warnings. Original
-implemented-property scope remains explicit. The narrow scene's residual
-horizontal scroll extent, full production effects/visuals, hardware/accessibility
+implemented-property scope remains explicit. Subsequent bounded geometry refutes
+the suspected narrow overflow: document client/scroll widths both equal 390 and
+the apparent line is the progress control, with unchanged capture bytes. Full
+production effects/visuals, hardware/accessibility
 and observing deployment remain open. No full criterion closes; renderer alone
 owns no-closure **20→21**. See
 [the packet](../WORK.md#current-return-path-full-catalog-browser-properties--2026-10-08).

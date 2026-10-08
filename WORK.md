@@ -9,7 +9,75 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: full catalog browser properties — 2026-10-08
+## Current return path: narrow scroll extent — 2026-10-08
+
+Previous turn is progress at exact pushed `67889d8`: browser retained origins
+now match native flow/grid allocation, and unchanged MCP catalog consumers pass
+18,061 Win32 / 18,203 desktop / 18,204 CSS-390 checks. Exact remote is clean,
+all qualification handles terminal, and all protected user state/services remain
+unchanged. Full goal stays active. No-closure is **25/9/40/21/28/3**.
+
+Existing NS-2_browser-renderer_01 criterion 3 / parity criterion 3 owns the next
+observable outcome: diagnose the remaining narrow horizontal extent from live
+viewport/host/control bounds. The captured scrollbar alone cannot distinguish a
+library defect, authored fixed geometry or host/capture behavior. Add a bounded
+read-only geometry packet to the existing opt-in capture checkpoint (at most
+sixteen faces, no full design/user text). Reuse the exact MCP-authored companion
+and existing target harness/verified static host. Primary document authoring
+stays semantic; rendered coordinates require this actual target consumer.
+
+Acceptance: actual measured cause and source/closure receipts, precise correction
+if product behavior is wrong, desktop/narrow live rendering and explicit owner
+retirement, both-target evidence for any shared layout change, and unchanged nine
+pairs/checkpoint/fifteen services. Budget: one measurement journey, at most two
+repairs at the diagnosed boundary, then stop/reassess distinct remaining gaps.
+Do not replace a design or hide overflow to obtain a screenshot. No original
+criterion/full product closes from this packet alone. Do not retry the previously
+rejected backend startup or optional browser-profile cleanup.
+
+Measured result corrects the suspected finding: the CSS-390 document has
+`clientWidth = scrollWidth = 390`; its containing boxes and each measured control
+fit. The apparent horizontal line is the actual `property-progress` control,
+not a scrollbar. The new and previous narrow PNGs are byte-for-byte identical
+at 390×844. No product or capture correction is warranted. The old packet's
+claim of a residual scrollbar was a visual misinterpretation, not a demonstrated
+layout defect. The optional harness now records at most sixteen read-only
+geometry boxes (ten in this scene), containing no user text or design export.
+Complete responsive/visual qualification remains open independently of this
+refuted finding; no no-closure counter advances for diagnostic evidence alone.
+
+Maintained `properties` build executes **18,061 Win32** assertions over the
+unchanged **76 kinds / 262 faces**, with zero native leaks/owned warnings and
+seven existing upstream pas2js RTL warnings. Actual HTTP desktop/CSS-390 consumers
+pass **18,203/18,204**; their ten-box reports establish document/scroll widths
+of **1280/390** respectively. Both live PNG/DOM checkpoints are inspected before
+explicit renderer disposal, and both drivers retire leak-free. Final maintained
+browser output matches the measured stage's exact SHA-256. These are diagnostic
+results from the existing consumer, not new unique control behaviors to add to
+the prior totals. Initial probe compilation corrected the local Web binding's
+body cast; the successful probe/build receipts supersede that failure.
+
+Evidence under `build/narrow-scroll/`: `probe-build-final.log`,
+`maintained-final.log`, measured three-file `static-private.json`,
+`geometry-desktop.json` / `geometry-narrow.json`, each `measured-*/` live/terminal
+PNG/DOM and real-clock driver log. The final preservation guard at
+2026-10-08T17:57:38Z confirms all 299 sealed assets, nine exact pairs and full
+147,033-byte checkpoint, plus fifteen unchanged service identities and existing
+LAN bindings. No backend starts/replacements, enrollment changes or optional
+profile cleanup occur. Qualification handles are terminal; profiles remain
+retained after the earlier cleanup rejection. Installed LAN remains the frozen
+product, distinct from current source. No goal/task/criterion is marked complete.
+
+End scroll diagnosis. Next reassess existing NS-2 browser/parity media consumers:
+the current image browser fixture checks source/style/clear and immediately
+disposes; it has no actual asynchronous pixel-decoding evidence. NS-3 media
+criteria retain their original parity prerequisite. Follow that concrete consumer
+gap using semantic authoring plus a selective actual target journey, preserving
+the documented asynchronous browser/native decoder distinction. No duplicate
+image task, further geometry fixture expansion or deployment workaround is added.
+
+<a id="current-return-path-full-catalog-browser-properties--2026-10-08"></a>
+## Previous return path: full catalog browser properties — 2026-10-08
 
 Previous turn is progress at exact pushed `f4a7681`: guarded semantic builder
 editing, native/HTTP shared admission and exact compiled target controls. Its

@@ -66,13 +66,20 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current full catalog browser properties (2026-10-08): the unchanged MCP companion
+Current narrow capture diagnosis (2026-10-08): measured document/control widths
+refute the suspected horizontal overflow. The line is the demo's progress
+control; unchanged PNG bytes and a 390-pixel document/scroll width agree.
+Opt-in capture now includes bounded read-only geometry. No product correction
+or task closure follows; counters remain **25/9/40/21/28/3**. See
+[the measurements](WORK.md#current-return-path-narrow-scroll-extent--2026-10-08).
+
+Previous full catalog browser properties (2026-10-08): the unchanged MCP companion
 executes **18,203 desktop / 18,204 CSS-390 HTTP browser** and **18,061 Win32**
 checks across **76 kinds / 262 faces**, leak-free. A geometry failure caught in
 live captures is fixed: retained Left/Top values apply under an absolute parent
 and wait during flow/grid layout. Exact source and protected projects/services
 remain unchanged. No full criterion closes: renderer no-closure **20→21**, others
-stay **25/9/40/28/3**. Remaining scroll extent, full effects/visual/accessibility
+stay **25/9/40/28/3**. Full effects/visual/accessibility
 and observing deployment stay open. See
 [the packet](WORK.md#current-return-path-full-catalog-browser-properties--2026-10-08).
 

@@ -31,7 +31,13 @@ stored origins remain available for absolute layout without shifting flow faces.
 Optional `?capture=1` (desktop) / `?frame=1&capture=1` (390px viewport) pauses at
 a live rendered checkpoint until the maintained observer saves PNG/DOM, then
 explicitly disposes before terminal readiness. Ordinary/manual completion stays
-synchronous. These are software viewport/target checks, not physical-phone or
+synchronous. Explicit live capture also writes `data-property-geometry`: viewport
+dimensions and at most sixteen containing/control boxes with bounds, client/scroll
+widths and relevant computed styles, without user text or design export. Actual
+CSS-390 measurements establish a 390-pixel document/scroll width and fitting
+controls; the previously suspected scrollbar is the demo's progress control.
+Previous/current PNG bytes agree. This finding requires no layout change.
+These are software viewport/target checks, not physical-phone or
 assistive-technology evidence. Complete production effects, visual/scroll-extent
 quality and observing deployment remain open. See
 [the owned review workflow](studio-agents.md#maintained-full-catalog-property-review)
