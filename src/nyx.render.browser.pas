@@ -1452,6 +1452,15 @@ begin
     if (LValue = 'width') or (LValue = 'height') or (LValue = 'gap') or
       (LValue = 'padding') or (LValue = 'left') or (LValue = 'top') then
     begin
+      { Origins belong to the parent's absolute layout. Keep authored coordinates
+        in the model for a later absolute transition, without turning them into
+        relative CSS translations in a row, column or grid. }
+
+      if ((LValue = 'left') or (LValue = 'top')) and
+        ((ANode.Parent = nil) or (NyxLayout(ANode.Parent) <> 'absolute')) then
+      begin
+        Continue;
+      end;
 
       if ANode.Prop(LValue) = '' then
       begin
@@ -1466,7 +1475,7 @@ begin
     Result.style.setProperty('display', 'block');
   end;
 
-  if (ANode.Parent <> nil) and (ANode.Parent.Prop('layout') = 'absolute') then
+  if (ANode.Parent <> nil) and (NyxLayout(ANode.Parent) = 'absolute') then
   begin
     Result.style.setProperty('position', 'absolute');
   end;
@@ -5872,6 +5881,16 @@ begin
       for LMetricIndex := 0 to High(CMetricKeys) do
       begin
         LValue := LNode.Prop(CMetricKeys[LMetricIndex]);
+        { Match native allocation and initial mounting: only an absolute parent
+          consumes its child's origin. Removing stale inline offsets is necessary
+          because ordinary Nyx faces remain relatively positioned CSS elements. }
+
+        if ((CMetricKeys[LMetricIndex] = 'left') or
+          (CMetricKeys[LMetricIndex] = 'top')) and
+          ((LNode.Parent = nil) or (NyxLayout(LNode.Parent) <> 'absolute')) then
+        begin
+          LValue := '';
+        end;
 
         if LValue = '' then
         begin

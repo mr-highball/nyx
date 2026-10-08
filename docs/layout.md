@@ -103,6 +103,15 @@ source candidates require the matching built server; the protected observing
 release has not been replaced.
 
 Rows use actual caption/content widths rather than unspecified equal cells.
+Authored `Left`/`Top` origins take effect when a control's parent uses
+`nlAbsolute`. Row, column and grid allocation retain those values for a later
+absolute transition and place controls through flow/grid geometry. Clearing a
+parent layout restores its primitive's natural layout with the same rule. Both
+browser initial mounts and live synchronization remove residual CSS offsets;
+the native allocator already follows this contract. The full catalog property
+journey checks actual child coordinates across these transitions and preserves
+the control identities.
+
 Both adapters collect line membership before distributing zero-basis positive
 weights on each line. Wrapped lines retain natural cross sizes; a non-wrapping
 definite row can center/end/stretch within its full height. Content sizing and

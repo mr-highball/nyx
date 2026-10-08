@@ -1246,12 +1246,20 @@ Compiler admission receipts are saved before bounded status polling.
 
 The refreshed packet passes actual authenticated composition of 76 kinds,
 exact Undo/Redo and both frozen-service application compilers, followed by
-18,057 current-source Win32 property checks over 262 physical faces. All native
+18,061 current-source Win32 property checks over 262 physical faces. All native
 traces are leak-free and maintained consumers have zero owned warnings. The
 frozen server's library snapshot is distinct from current-source native/browser
-consumers. Current browser/phone/observing execution and complete matrix,
-accessibility, visual and deployment acceptance remain open; no full workflow
-criterion closes.
+consumers. Its unchanged exported source now also passes 18,203 desktop / 18,204
+CSS-390 HTTP browser property checks. Live checkpoints precede explicit renderer
+disposal and expose the corrected retained-origin flow geometry. After serving
+the staged host, the maintained Pascal ready/capture driver can inspect
+`data-property-tests` at `properties.html?capture=1` (desktop) or
+`properties.html?frame=1&capture=1` (390px viewport); a checkpoint is acknowledged
+only after PNG/DOM capture. Default manual completion remains synchronous.
+These target consumers retain the original implemented-property scope. Physical
+phone/assistive input, complete matrix/visual/scroll-extent quality and observing
+deployment remain open; no full workflow criterion closes. See
+[current qualification](property-concordance.md#current-full-catalog-qualification).
 
 
 ## Maintained clock authoring review

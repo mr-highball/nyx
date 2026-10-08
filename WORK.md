@@ -9,7 +9,96 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: guarded semantic view source — 2026-10-08
+## Current return path: full catalog browser properties — 2026-10-08
+
+Previous turn is progress at exact pushed `f4a7681`: guarded semantic builder
+editing, native/HTTP shared admission and exact compiled target controls. Its
+remote receipt is clean; installed discovery explicitly lacks the new modes.
+All handles are terminal and the full goal stays active. No-closure remains
+workflow/resource/authoring/renderer/codegen/delivery **25/9/40/20/28/3**.
+
+Reassessment follows the NS-3 component prerequisite into existing NS-2 browser
+criteria 1–3 / parity matrix criterion 1. The maintained complete catalog was
+authored through an authenticated MCP review and consumed by Win32, but its
+matching current-source browser journey is still staged-only. Concrete deliverable:
+execute the unchanged exported companion through the ordinary property harness
+on current Win32 and actual desktop/CSS-390 HTTP browser; preserve original
+mandatory effects, capability grades, focus/identity and failure reporting.
+
+Reuse `build/property-catalog-current/source-restored/nyx.generated.view.pas`
+only after its exact SHA-256 matches the recorded semantic export. Rebuild the
+current consumers through `-Target properties` without reauthoring that accepted
+seed. Static serving uses a verified existing host and a fresh confined child,
+with measured exact closure; no backend/profile/enrollment or original asset is
+replaced. Primary semantic design work remains MCP; these actual target consumers
+qualify behavior the document API cannot establish.
+
+Acceptance for this packet: complete original catalog traversal and supported
+property transitions at both browser widths, exact source/closure receipts,
+explicit owned browser teardown, current native leak-free regression, and the
+unchanged protected nine pairs/checkpoint/fifteen services. Preserve failure
+evidence. Budget: two integration/repair passes at concrete failed boundaries,
+then stop broad fixture expansion and hand off any distinct unresolved product
+gap. Trusted hardware/assistive technology, complete production effects/visuals,
+other widgetsets/DPI, observing deployment and full original criteria remain open.
+Never repeat the previously rejected backend startup or optional profile cleanup.
+
+Initial unchanged current consumers pass 18,057 native and 18,199 desktop browser
+checks across all 76 kinds/262 faces. The original browser harness disposes before
+capture, so explicit optional capture mode now retains its actual mount until
+the maintained observer acknowledges a checkpoint, then retires owners before
+terminal readiness. Desktop/CSS-390 captures reveal a concrete parity defect:
+retained absolute Left/Top values still shift browser children after returning
+to row/column/grid or clearing the layout. LCL flow correctly ignores these
+retained coordinates. The existing position-style assertion did not inspect
+actual flow geometry. Tighten the unchanged companion's shared geometry checks,
+retain an actual failing browser receipt, then fix coordinate application at
+the browser parent-layout boundary. This is the second bounded integration pass;
+no broader fixture/visual-style expansion follows it.
+
+Result: the actual HTTP regression fails before the correction at `MCP-authored
+layout review: column starts at padding and ignores retained absolute Top`.
+The driver stores negative capture as `failure.dom.html`, not `capture.dom.html`;
+the orchestration receipt-path assumption is corrected without rerunning it.
+Browser initial mounting and Sync now consume Left/Top only beneath an absolute
+parent, removing stale inline offsets in flow while retaining model values for
+the next absolute transition. Shared geometry checks qualify column/row/grid,
+absolute coordinates and clearing back to the primitive's natural layout.
+
+Final maintained `properties` command passes **18,061** checked Win32 assertions
+over **76 kinds / 262 faces**, zero native leaks. Actual HTTP browser passes
+**18,203 desktop / 18,204 CSS-390** with the exact unchanged 184,572-byte MCP
+companion. The extra narrow assertion establishes its real CSS viewport. Do not
+aggregate initial/capture/final traversals as unique behaviors. Both inspected
+live PNGs show corrected flow positions; terminal DOM records explicit disposal,
+and both owned browser transports close leak-free. Optional capture uses a
+30-second monotonic deadline; success/retirement execute, while its unacknowledged
+timeout branch is not separately exercised. Default manual behavior is retained.
+The narrow scene still shows a horizontal scrollbar: its remaining scroll extent
+has not been diagnosed/qualified here and stays with original layout/visual gates.
+
+Evidence under `build/property-browser-current/`: exact `source-private.json`,
+`final-build.log`, `regression-failed/failure.dom.html`, `regression-confirmed.json`,
+`desktop-final/` and `narrow-final/` live/terminal PNG/DOM, final measured three-file
+closure and preservation receipt. Owned compilation has zero warnings; the browser
+build retains seven existing upstream RTL warnings. The final guard verifies all
+299 sealed assets, nine exact pairs/history/registry and 147,033-byte checkpoint
+SHA-256 `24635EFCCA9041BF4700CEB4A14226232FF41E61E4440A19F28C25D3DE6D01C9`,
+with all fifteen services unchanged. Original static assets, enrollment, output
+profiles and LAN deployment are retained. No rejected action is retried; profiles
+and logs remain. No qualification handle remains live.
+
+This moves original NS-2 renderer/parity evidence and fixes a concrete public
+layout defect, but no full criterion/task or duplicate workflow credit closes.
+Renderer alone advances no-closure **20→21** once; workflow/resource/authoring/
+codegen/delivery stay **25/9/40/28/3**. End this broad property packet. Next is the
+remaining narrow host/scroll extent through the existing layout/renderer owner;
+full production effects, trusted accessibility/widgetsets/DPI, observing delivery
+and full Nyx/Studio end-state remain unfulfilled. Exact remote/clean checkpoint is
+recorded after the push; the original active goal remains intact.
+
+<a id="current-return-path-guarded-semantic-view-source--2026-10-08"></a>
+## Previous return path: guarded semantic view source — 2026-10-08
 
 Previous turn is verified progress at exact pushed `1290357`: one authenticated
 owned clock review, six real browser/LCL compiler jobs, paired history and actual

@@ -66,7 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current semantic view source preparation (2026-10-08): bounded `nyx_pascal` builder
+Current full catalog browser properties (2026-10-08): the unchanged MCP companion
+executes **18,203 desktop / 18,204 CSS-390 HTTP browser** and **18,061 Win32**
+checks across **76 kinds / 262 faces**, leak-free. A geometry failure caught in
+live captures is fixed: retained Left/Top values apply under an absolute parent
+and wait during flow/grid layout. Exact source and protected projects/services
+remain unchanged. No full criterion closes: renderer no-closure **20→21**, others
+stay **25/9/40/28/3**. Remaining scroll extent, full effects/visual/accessibility
+and observing deployment stay open. See
+[the packet](WORK.md#current-return-path-full-catalog-browser-properties--2026-10-08).
+
+Previous semantic view source preparation (2026-10-08): bounded `nyx_pascal` builder
 inspection/replacement reuses ordinary typed source admission and paired history,
 preserving markers/imports/helpers/drafts. **83** shared checks execute natively
 and in an HTTP browser; exact compiled source reconstructs and renders on both

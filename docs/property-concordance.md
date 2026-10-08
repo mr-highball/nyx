@@ -14,7 +14,7 @@ a visible caption merely because a child has one.
 
 The stale numeric-review seed was retained and a fresh full companion was
 composed through an authenticated owned MCP review. Current checked Win32
-qualification passes **18,057** checks across **76** catalog kinds and **262**
+qualification passes **18,061** checks across **76** catalog kinds and **262**
 physical faces, with zero unfreed allocations and zero owned compiler warnings.
 It covers declared support completeness and the implemented common/family
 property transitions, literals/attachments, dynamic numeric/text admission,
@@ -24,9 +24,18 @@ property has a complete production effect.
 The semantic author used 78 related paired transactions, bounded metadata/source,
 exact property-group Undo/Redo and both actual frozen-service application
 compilers. Its review was disposed and the primary pair remained unchanged.
-Matching current-source browser artifacts compile with the matched RTL; current
-execution is still open. See [the owned review workflow](studio-agents.md#maintained-full-catalog-property-review)
-and [current evidence](../WORK.md#current-return-path-maintained-semantic-property-qualification--2026-10-07).
+The unchanged semantic export now executes through current-source HTTP browser
+consumers with **18,203 desktop / 18,204 CSS-390 checks**. Actual child geometry
+exposes and qualifies the repaired absolute-to-flow/cleared-layout transition;
+stored origins remain available for absolute layout without shifting flow faces.
+Optional `?capture=1` (desktop) / `?frame=1&capture=1` (390px viewport) pauses at
+a live rendered checkpoint until the maintained observer saves PNG/DOM, then
+explicitly disposes before terminal readiness. Ordinary/manual completion stays
+synchronous. These are software viewport/target checks, not physical-phone or
+assistive-technology evidence. Complete production effects, visual/scroll-extent
+quality and observing deployment remain open. See
+[the owned review workflow](studio-agents.md#maintained-full-catalog-property-review)
+and [current evidence](../WORK.md#current-return-path-full-catalog-browser-properties--2026-10-08).
 Earlier browser results below retain their original source/qualification scope.
 
 

@@ -20,6 +20,21 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 
+## Executed full catalog property scope — 2026-10-08
+
+Current full catalog property consumer (2026-10-08) executes the unchanged
+authenticated MCP export over actual HTTP at desktop/CSS-390. **18,203/18,204**
+checks traverse all **76 kinds / 262 faces** with live captures before explicit
+disposal. A failed-before-fix geometry regression qualifies the browser repair:
+retained Left/Top origins now wait for an absolute parent and do not translate
+flow/grid controls; clearing restores natural flow geometry. Native shared
+qualification passes **18,061**, leak-free, with zero owned warnings. Original
+implemented-property scope remains explicit. The narrow scene's residual
+horizontal scroll extent, full production effects/visuals, hardware/accessibility
+and observing deployment remain open. No full criterion closes; renderer alone
+owns no-closure **20→21**. See
+[the packet](../WORK.md#current-return-path-full-catalog-browser-properties--2026-10-08).
+
 ## Executed clock consumer scope — 2026-10-08
 
 Existing value/input/readiness criteria now consume the accepted typed clock

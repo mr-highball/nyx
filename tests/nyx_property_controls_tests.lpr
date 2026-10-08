@@ -57,6 +57,8 @@ var
   GContext: TNyxText;
   {$ifdef PAS2JS}GHost: TJSHTMLElement;
   GFrame: TJSHTMLIFrameElement;
+  GAwaitCapture: Boolean;
+  GCaptureStarted: Double;
   {$else}GHost: TForm;
   GFirstPicture: TNyxText;
   GSecondPicture: TNyxText;{$endif}
@@ -561,6 +563,15 @@ begin
     begin
       Check(LFirst.style.getPropertyValue('position') = '', 'flow transition clears absolute position');
 
+      if LMode = nlColumn then
+      begin
+        Check(LFirst.offsetTop = 16, 'column starts at padding and ignores retained absolute Top');
+      end
+      else
+      begin
+        Check(LFirst.offsetLeft = 16, 'row/grid starts at padding and ignores retained absolute Left');
+      end;
+
       if LMode in [nlColumn, nlRow] then
       begin
         Check(LFace.style.getPropertyValue('flex-direction') = NyxLayoutName(LMode), 'live flex direction');
@@ -574,10 +585,12 @@ begin
     end
     else if LMode = nlColumn then
     begin
+      Check(LFirst.Top = 16, 'native column ignores retained absolute Top');
       Check(LSecond.Top > LFirst.Top, 'native column stacks children');
     end
     else
     begin
+      Check(LFirst.Left = 16, 'native row/grid ignores retained absolute Left');
       Check(LSecond.Left > LFirst.Left, 'native row/grid places children beside one another');
     end;
     {$endif}
@@ -586,8 +599,12 @@ begin
   end;
   LLayout.Configure.Clear(atLayout).Surface(True);
   SilentSync;
+  {$ifndef PAS2JS}
+  Check(LFirst.Left = 16, 'cleared native layout restores natural flow geometry');
+  {$endif}
   {$ifdef PAS2JS}
   Check(LFace.style.getPropertyValue('flex-direction') = 'row', 'clear returns to natural row layout');
+  Check(LFirst.offsetLeft = 16, 'cleared layout restores natural flow geometry');
   Check(LFace.classList.contains('nyx-card'), 'extra surface is applied');
   LLayout.Configure.Surface(False);
   SilentSync;
@@ -630,6 +647,55 @@ begin
 end;
 {$endif}
 
+{ Shared retirement order releases renderer callbacks before their observer and
+  borrowed document. Browser capture briefly retains the exact live mount, then
+  calls this same boundary explicitly; native execution remains synchronous. }
+procedure Retire;
+begin
+  GRenderer.Free;
+  GRenderer := nil;
+  GObserver.Free;
+  GObserver := nil;
+  {$ifndef PAS2JS}
+  GHost.Free;
+  GHost := nil;
+  {$endif}
+  GCatalog.Free;
+  GCatalog := nil;
+  GDocument.Free;
+  GDocument := nil;
+end;
+
+{$ifdef PAS2JS}
+procedure FinishCapture;
+var
+  LObserved: Boolean;
+begin
+  LObserved := document.body.getAttribute('data-capture-observed') = 'catalog-properties';
+
+  if not LObserved and (window.performance.now - GCaptureStarted < 30000) then
+  begin
+    window.setTimeout(@FinishCapture, 25);
+    Exit;
+  end;
+  { A real-clock deadline fails rather than turning an uncaptured/retained mount
+    into a successful qualification. Teardown occurs on success and timeout. }
+  Retire;
+  GAwaitCapture := False;
+  document.body.setAttribute('data-property-disposed', 'true');
+
+  if LObserved then
+  begin
+    document.body.setAttribute('data-property-tests', 'passed');
+  end
+  else
+  begin
+    document.body.setAttribute('data-property-tests', 'failed');
+    document.body.setAttribute('data-property-error', 'Live catalog capture was not observed before its deadline');
+  end;
+end;
+{$endif}
+
 procedure Run;
 var
   LIndex: Integer;
@@ -647,8 +713,11 @@ begin
     Application.Initialize;
     PreparePictures;
     {$else}
+    GAwaitCapture := False;
+    document.body.setAttribute('data-property-tests', 'running');
 
-    if window.location.search = '?frame=1' then
+    if (window.location.search = '?frame=1') or
+      (window.location.search = '?frame=1&capture=1') then
     begin
       Check(window.innerWidth = 390, 'phone fixture has an actual 390-pixel viewport');
     end;
@@ -675,21 +744,35 @@ begin
       end;
       LayoutReview;
       {$ifdef PAS2JS}
-      document.body.setAttribute('data-property-tests', 'passed');
       document.body.setAttribute('data-property-checks', IntToStr(GChecks));
       document.body.setAttribute('data-property-kinds', IntToStr(GKinds));
       document.body.setAttribute('data-property-faces', IntToStr(GFaces));
+      { Capture is explicit so the ordinary/manual harness keeps its existing
+        synchronous completion. The maintained driver opts into the live mount. }
+
+      if (window.location.search = '?capture=1') or
+        (window.location.search = '?frame=1&capture=1') then
+      begin
+        GAwaitCapture := True;
+        GCaptureStarted := window.performance.now;
+        document.body.setAttribute('data-capture-checkpoint', 'catalog-properties');
+        window.setTimeout(@FinishCapture, 25);
+      end
+      else
+      begin
+        document.body.setAttribute('data-property-tests', 'passed');
+      end;
       {$else}WriteLn('PASS ', GChecks, ' property checks / ', GKinds, ' kinds / ', GFaces, ' faces');{$endif}
     finally
-      GRenderer.Free;
-      GRenderer := nil;
-      GObserver.Free;
-      GObserver := nil;
-      {$ifndef PAS2JS}GHost.Free;{$endif}
-      GCatalog.Free;
-      GCatalog := nil;
-      GDocument.Free;
-      GDocument := nil;
+      {$ifdef PAS2JS}
+
+      if not GAwaitCapture then
+      begin
+        Retire;
+      end;
+      {$else}
+      Retire;
+      {$endif}
     end;
   except
     on LException: Exception do

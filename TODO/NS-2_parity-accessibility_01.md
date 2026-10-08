@@ -22,6 +22,16 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Current property companion restored — 2026-10-07
 
+Updated executed scope (2026-10-08): the exact MCP companion now passes **18,061**
+Win32 and **18,203 desktop / 18,204 CSS-390 HTTP browser** property checks over
+76 kinds/262 faces, leak-free. Actual geometry catches and qualifies retained
+absolute origins incorrectly translating browser flow children. Live captures
+precede explicit disposal. This strengthens matrix/interaction evidence without
+claiming every declared property effect, full accessibility/visual/scroll-extent
+quality or deployment. Renderer alone owns **20→21**; this task's historical
+count remains unestablished and no full criterion closes. See
+[current evidence](../WORK.md#current-return-path-full-catalog-browser-properties--2026-10-08).
+
 Original matrix/interaction criteria consume the complete authenticated
 76-kind companion with its required numeric review input. Current checked Win32
 passes 18,057 checks over 262 physical faces, leak-free; common/family transitions,
