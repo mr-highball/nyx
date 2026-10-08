@@ -268,8 +268,64 @@ Library hosts use `NewNyxResourceEditor`, typed field/action roles,
 the portable form. Hosts own cancellation and check their captured context
 before proposing a reply. The form borrows catalog/control inputs only while
 constructing its independent owned children; it never modifies accepted work.
-Semantic resource operations remain with the existing MCP workflow owner.
+The prepared semantic resource API shares this form's final candidate admission.
+Authenticated deployment and observing execution retain the MCP workflow owner.
 Saved table row mappings and image-reference bindings are not yet exposed here.
+
+## Semantic resource authoring
+
+Current source exposes `nyx_resources` through the ordinary MCP dispatcher.
+Queries preserve selection, accepted source and history. Every response includes
+the revision; exact variant queries require both `name` and `locale` (empty
+locale means the default variant). They never fetch a URL or inspect runtime
+cache contents.
+
+| Mode | Bounded context |
+| --- | --- |
+| `list` | 8 variants by default, at most 16; metadata/title previews without payloads; case-sensitive search of names, titles and creator help |
+| `details` | Exact kind, hosted URL/cache declaration, fallback presence and title/help windows of at most 1,024 Unicode scalars |
+| `content` | Text/JSON source windows of at most 4,096 Unicode scalars, or image/binary windows of at most 4,096 bytes |
+| `json` | Exact structural path; at most 16 immediate children with 80-scalar previews, or one exact scalar/text window |
+| `bindings` | Supported properties and local/effective descriptors for an authored owner, including resource selectors and inheritance |
+| `apply` | 1..32 typed resource/binding changes, one final paired publication and Undo checkpoint |
+
+JSON field names are literal array steps: `["literal.dot", 0]` addresses that
+field and its first item. Child pages return usable structural paths, without
+dumping descendants. Numeric leaves preserve their original decimal token;
+text windows preserve supplementary characters and NUL. Binary/image windows
+are independently encoded Base64: concatenate the **decoded bytes**, rather
+than their padded Base64 strings. Hosted payload windows explicitly identify
+`authored-fallback`; a declaration without fallback refuses payload access.
+
+Mutation operations are `define`, `remove`, `bind`, `clear-binding` and
+`inherit-binding`. Definitions use the existing strict embedded version 1 or
+hosted version 2 contract. Bind carries the existing five-field resource selector
+and an enum property name at this wire boundary. Pascal callers use
+`NyxDefineResource`, `NyxBindResource` and `NyxResourcePatch` from
+`nyx.studio.resourceedits`, with typed references, locale, property and selector.
+Studio's copied form proposal consumes the same candidate implementation while
+retaining its exact catalog/control baseline guards.
+
+Put file replacements and all dependent selector repairs in one group. Its
+final retained consumers must admit; an invalid final path, missing owner or
+unsupported scalar/property refuses the complete group. Independent definition
+budgets still apply as operations run. Clear masks reusable inheritance; inherit
+removes the local descriptor. MCP additionally requires Allow edits, current
+`expectedRevision`, a transport-scoped `operationId`, and no pending Pascal.
+Success/refusal appears in ordinary activity; exact retries return their receipt.
+
+An `op: "resources"` group also participates in `nyx_transaction` beside
+design, state and collection groups. The transaction retains its 64 total leaf
+limit and one paired Undo step. Each ordered group must admit before the next;
+resource changes within one group validate their final consumers together.
+Workspace/review routing, authority and recovery use the ordinary MCP engine.
+
+The maintained `resource-workflow` gate qualifies its **suspended** actual
+engine through public semantic dispatch in a new private runtime, plus exact
+compiled emitted source and browser compilation. It starts no listener and
+does not authenticate HTTP or deploy tools into the protected running server.
+Runtime loading/cancellation/cache diagnostics, saved row/media bindings and
+current-source authenticated/observing execution remain open.
 
 ## Wire, limits and qualification
 

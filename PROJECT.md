@@ -66,6 +66,15 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Prepared Resources MCP now shares the Studio form candidate: bounded metadata,
+exact Unicode/byte/JSON windows and grouped file/scalar binding edits. Checked
+suspended actual-engine 54 and exact compiled emitted-builder seven pass
+leak-free; affected authoring/workspace 78/7/252 and transaction 41/8 regressions
+remain green. Both targets/backend/worker compile with zero owned warnings.
+Authenticated current-source rollout and browser/phone/observing remain open;
+the protected deployed endpoint is unchanged. See
+[the packet](WORK.md#current-return-path-semantic-resource-authoring--2026-10-08).
+
 The common public Nyx Resources form now feeds both ordinary Studios: four file
 families, metadata/locale, hosted cache/fallback and structural scalar binding
 choices use copied proposals and one isolated paired Apply. Shared/actual Win32

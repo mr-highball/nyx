@@ -28,7 +28,7 @@ interface
 
 uses
   nyx.data, nyx.studio.projects, nyx.studio.edits,
-  nyx.studio.stateedits, nyx.studio.collectionedits;
+  nyx.studio.stateedits, nyx.studio.collectionedits, nyx.studio.resourceedits;
 
 const
   { Count every design operation and every nested data change. Domain wrappers
@@ -39,7 +39,7 @@ type
   { Closed domains describe ordered authoring steps, never arbitrary dispatch
     names. A step owns only copied immutable wire values, with no document,
     catalog, widget or COM-interface fields (also valid under pas2js). }
-  TNyxTransactionDomain = (ntdDesign, ntdState, ntdCollections);
+  TNyxTransactionDomain = (ntdDesign, ntdState, ntdCollections, ntdResources);
 
   TNyxTransactionStep = record
   private
@@ -75,14 +75,15 @@ type
 function NyxDesignStep(const APatch: INyxDesignPatch): TNyxTransactionStep;
 function NyxStateStep(const APatch: INyxStateBindingPatch): TNyxTransactionStep;
 function NyxCollectionStep(const APatch: INyxCollectionPatch): TNyxTransactionStep;
+function NyxResourceStep(const APatch: INyxResourcePatch): TNyxTransactionStep;
 
 { Requires constructed steps and 1..64 total leaf changes, including nested
-  state/collection groups. Each data group retains its own 1..32 limit. }
+  state/collection/resource groups. Each data group retains its own 1..32 limit. }
 function NyxProjectTransaction(const ASteps: array of TNyxTransactionStep):
   INyxProjectTransaction;
 
 { Strict external boundary: existing design operations stay flat; op state or
-  collections carries exactly changes, using the corresponding existing decoder.
+  collections/resources carries exactly changes, using its strict typed decoder.
   Consecutive design operations retain ordinary grouped admission. No nested
   transaction, source editing, permission change or root-review bypass exists. }
 function ReadNyxProjectTransaction(const AOperations: TNyxDataValue):
@@ -148,6 +149,19 @@ begin
   Result := Default(TNyxTransactionStep);
   Result.FDomain := ntdCollections;
   Result.FChanges := ReadNyxCollectionPatch(APatch.ToData).ToData;
+  Result.FDefined := True;
+end;
+
+function NyxResourceStep(const APatch: INyxResourcePatch): TNyxTransactionStep;
+begin
+
+  if APatch = nil then
+  begin
+    raise ENyxModel.Create('Construct the resource patch before composing a transaction');
+  end;
+  Result := Default(TNyxTransactionStep);
+  Result.FDomain := ntdResources;
+  Result.FChanges := ReadNyxResourcePatch(APatch.ToData).ToData;
   Result.FDefined := True;
 end;
 
@@ -261,13 +275,23 @@ begin
         begin
           Result := ReadNyxCollectionPatch(FSteps[LIndex].FChanges).Candidate(Result);
         end;
+      ntdResources:
+        begin
+          LSession := TNyxStudioSession.Create(Result);
+          try
+            LSession.ApplyPatch(ReadNyxResourcePatch(FSteps[LIndex].FChanges));
+            Result := LSession.ProjectSnapshot;
+          finally
+            LSession.Free;
+          end;
+        end;
     end;
   end;
 end;
 
 function TProjectTransaction.ToData: TNyxDataValue;
 const
-  CNames: array[TNyxTransactionDomain] of TNyxText = ('', 'state', 'collections');
+  CNames: array[TNyxTransactionDomain] of TNyxText = ('', 'state', 'collections', 'resources');
 var
   LValues: array of TNyxDataValue;
   LIndex: Integer;
@@ -340,7 +364,7 @@ begin
     LWire := AOperations.Item(LIndex);
     LName := LWire.Field('op').AsText;
 
-    if (LName = 'state') or (LName = 'collections') then
+    if (LName = 'state') or (LName = 'collections') or (LName = 'resources') then
     begin
 
       if (LWire.Kind <> ndObject) or (LWire.Count <> 2) then
@@ -353,9 +377,13 @@ begin
       begin
         AddStep(NyxStateStep(ReadNyxStateBindingPatch(LWire.Field('changes'))));
       end
-      else
+      else if LName = 'collections' then
       begin
         AddStep(NyxCollectionStep(ReadNyxCollectionPatch(LWire.Field('changes'))));
+      end
+      else
+      begin
+        AddStep(NyxResourceStep(ReadNyxResourcePatch(LWire.Field('changes'))));
       end;
     end
     else
@@ -407,13 +435,14 @@ var
 begin
   LCollection := NyxCollectionAgentSchema;
   LAlternatives := ADesignOperations.Field('items').Field('oneOf');
-  SetLength(LBranches, LAlternatives.Count + 2);
+  SetLength(LBranches, LAlternatives.Count + 3);
   for LIndex := 0 to LAlternatives.Count - 1 do
   begin
     LBranches[LIndex] := LAlternatives.Item(LIndex);
   end;
   LBranches[LAlternatives.Count] := Group('state', Changes(NyxStateAgentSchema));
   LBranches[LAlternatives.Count + 1] := Group('collections', Changes(LCollection));
+  LBranches[LAlternatives.Count + 2] := Group('resources', Changes(NyxResourceAgentSchema));
   Result := NyxObject([NyxField('type', NyxData('object')),
     NyxField('$defs', LCollection.Field('$defs')),
     NyxField('properties', NyxObject([

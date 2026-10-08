@@ -100,6 +100,7 @@ type
     { Paged document collection/schema/row/domain and exact authored view context;
       one typed grouped candidate uses the same guarded paired publication. }
     function Collections(const AArguments: TNyxDataValue): TNyxDataValue;
+    function Resources(const AArguments: TNyxDataValue): TNyxDataValue;
     { Bounded exact-section import context and one typed paired source edit. }
     function Imports(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
     { Bounded helper discovery/text and guarded grouped implementation editing. }
@@ -192,7 +193,8 @@ uses
   nyx.binding.types, nyx.contract, nyx.collections, nyx.collections.view.types,
   nyx.collections.selection, nyx.collections.query,
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.studio.importedits,
-  nyx.studio.routineedits, nyx.studio.declarationedits, nyx.times;
+  nyx.studio.routineedits, nyx.studio.declarationedits, nyx.times,
+  nyx.resources, nyx.resource.sources, nyx.bytes, nyx.studio.resourceedits;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
 var
@@ -2102,6 +2104,7 @@ end;
 
 {$I nyx.studio.agents.state.inc}
 {$I nyx.studio.agents.collections.inc}
+{$I nyx.studio.agents.resources.inc}
 
 function TNyxAgentSession.Call(const ATool, AActor: TNyxText;
   const AArguments: TNyxDataValue; const ARequestOwner: TNyxText): TNyxDataValue;
@@ -2129,6 +2132,8 @@ var
   LStateResults: TNyxDataValue;
   LCollectionApply: Boolean;
   LCollectionResults: TNyxDataValue;
+  LResourceApply: Boolean;
+  LResourceResults: TNyxDataValue;
   LAuthority: TNyxText;
   LTransaction: INyxProjectTransaction;
   LDesignPatch: INyxDesignPatch;
@@ -2155,6 +2160,8 @@ begin
   LStateResults := NyxNull;
   LCollectionApply := False;
   LCollectionResults := NyxNull;
+  LResourceApply := False;
+  LResourceResults := NyxNull;
 
   try
 
@@ -2189,9 +2196,14 @@ begin
     begin
       LCollectionApply := TextArgument(AArguments, 'mode') = 'apply';
     end;
+    if ATool = 'nyx_resources' then
+    begin
+      LResourceApply := TextArgument(AArguments, 'mode') = 'apply';
+    end;
     LMutation := (ATool = 'nyx_transaction') or (ATool = 'nyx_select') or
       (ATool = 'nyx_history') or LCallbackApply or LHandlerApply or LRootApply or
-      LStateApply or LCollectionApply or LImportApply or LRoutineApply or LDeclarationApply;
+      LStateApply or LCollectionApply or LResourceApply or
+      LImportApply or LRoutineApply or LDeclarationApply;
 
     if LMutation and (FPermission <> apEdit) then
     begin
@@ -2292,6 +2304,11 @@ begin
     begin
       Result := Collections(AArguments);
       LCollectionResults := Result;
+    end
+    else if ATool = 'nyx_resources' then
+    begin
+      Result := Resources(AArguments);
+      LResourceResults := Result;
     end
     else if ATool = 'nyx_callbacks' then
     begin
@@ -2443,6 +2460,11 @@ begin
       if LCollectionApply then
       begin
         Result := WithResults(Result, LCollectionResults, 'collections');
+      end;
+
+      if LResourceApply then
+      begin
+        Result := WithResults(Result, LResourceResults, 'resources');
       end;
 
       if Length(FReceiptKeys) = 64 then

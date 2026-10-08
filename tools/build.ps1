@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -2623,6 +2623,69 @@ try {
   }
 
 
+
+
+  if ($Target -eq 'resource-workflow') {
+    # Pascal owns semantic mutations, bounded queries, exact emitted source and
+    # history. The actual MCP engine stays suspended in a NEW owned runtime.
+    # This gate neither starts a listener/browser nor enrolls a client.
+    $nyxResourceFlowRoot = Join-Path $nyxRoot 'build/resource-workflow/maintained'
+    $nyxResourceFlowNative = Join-Path $nyxResourceFlowRoot 'native'
+    $nyxResourceFlowBrowser = Join-Path $nyxResourceFlowRoot 'browser'
+    $nyxResourceFlowSource = Join-Path $nyxResourceFlowRoot 'source'
+    New-Item -ItemType Directory -Force -Path $nyxResourceFlowNative,
+      $nyxResourceFlowBrowser, $nyxResourceFlowSource | Out-Null
+    $nyxResourceFlowRuntime = Join-Path $nyxResourceFlowRoot ('runtime-' + [Guid]::NewGuid().ToString('N'))
+    $nyxResourceFlowFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxResourceFlowNative", "-FE$nyxResourceFlowNative")
+    Invoke-NyxCompiler $nyxFpc ($nyxResourceFlowFlags + @('tests/nyx_agent_resource_tests.lpr'))
+    & (Join-Path $nyxResourceFlowNative 'nyx_agent_resource_tests.exe') $nyxResourceFlowRuntime `
+      (Join-Path $nyxResourceFlowSource 'nyx.generated.view.pas')
+    if ($LASTEXITCODE -ne 0) { throw 'Semantic Resources qualification failed' }
+    Invoke-NyxCompiler $nyxFpc ($nyxResourceFlowFlags +
+      @("-Fu$nyxResourceFlowSource", 'tests/nyx_agent_resource_generated.lpr'))
+    & (Join-Path $nyxResourceFlowNative 'nyx_agent_resource_generated.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Exact semantic Resources builder failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxResourceFlowProgram in @('tests/nyx_agent_resource_tests.lpr',
+      'tests/nyx_agent_resource_generated.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxResourceFlowSource",
+        "-FE$nyxResourceFlowBrowser", $nyxResourceFlowProgram)
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxResourceFlowBrowser 'rtl.js')
+    foreach ($nyxResourceFlowHost in @('resource-workflow.html', 'resource-workflow-generated.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxResourceFlowHost") `
+        -Destination $nyxResourceFlowBrowser
+    }
+    # Rebuild ordinary consumers of the public typed patch. Keep their unit and
+    # executable directories separate from the suspended-engine qualification.
+    $nyxResourceFlowLCL = Join-Path $nyxResourceFlowRoot 'studio-native'
+    $nyxResourceFlowBackend = Join-Path $nyxResourceFlowRoot 'backend'
+    $nyxResourceFlowStudio = Join-Path $nyxResourceFlowRoot 'studio-browser'
+    $nyxResourceFlowWorker = Join-Path $nyxResourceFlowRoot 'worker'
+    New-Item -ItemType Directory -Force -Path $nyxResourceFlowLCL,
+      $nyxResourceFlowBackend, $nyxResourceFlowStudio, $nyxResourceFlowWorker | Out-Null
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxResourceFlowPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', "-Fu$nyxLazarus/lcl/units/$nyxResourceFlowPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxResourceFlowPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxResourceFlowPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxResourceFlowPlatform",
+      "-FU$nyxResourceFlowLCL", "-FE$nyxResourceFlowLCL", 'studio/nyx_studio_native.lpr')
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', "-FU$nyxResourceFlowBackend", "-FE$nyxResourceFlowBackend",
+      'studio/nyx_studio_server.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxResourceFlowWorker", 'studio/nyx_source_worker.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxResourceFlowStudio", 'studio/nyx_studio.lpr')
+    Write-Host 'Resource semantic/source checks passed; authenticated HTTP/browser/observing qualification remains separate.'
+    exit 0
+  }
 
   if ($Target -eq 'resource-authoring') {
     # Public Pascal fixtures own file contents, ordinary native Studio input,

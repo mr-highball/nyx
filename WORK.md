@@ -7,6 +7,81 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+
+## Current return path: semantic resource authoring — 2026-10-08
+
+The previous turn is **progress**, exactly pushed as `4a46de9`. This bounded
+continuation returns to the existing workflow owner's resource gap: metadata and
+payload windows, structural selectors and grouped file/binding edits through the
+same candidate boundary as the public Studio Resources form. It creates no new
+task or acceptance allocation. Execution remains solo; no listener/browser/server
+replacement is retried. The protected running endpoint retains its earlier API.
+
+Current source adds `nyx_resources` with six closed modes: list, details,
+content, JSON, bindings and apply. List returns at most 16 variant summaries;
+content returns at most 4,096 Unicode scalars or independently encoded byte
+windows. JSON discovery returns immediate child paths/previews or one exact leaf,
+preserving literal dotted names and numeric tokens. Metadata carries creator
+intent and hosted cache declarations. Hosted payload queries explicitly identify
+authored fallback and never fetch a URL or claim runtime cache state.
+
+Public typed `nyx.studio.resourceedits` factories produce immutable copied
+define/remove/bind/clear/inherit changes. The common form now delegates after its
+exact catalog/control guards to this same candidate. A 1..32-change resource group
+validates final retained consumers together, allowing file replacements and
+multiple dependent selector repairs in one pair. Existing definition budgets
+remain ordered. Original design interface/GUID stays intact. Resource groups
+interleave with design/state/collections in `nyx_transaction`, counting every
+leaf toward 64. Ordinary session source reconciliation/history, permission,
+revision, actor-scoped receipts, draft refusal, activity, workspace/review routing
+and durable rollback remain authoritative. Binding discovery now distinguishes
+resource selectors from state names.
+
+Maintained `tools/build.ps1 -Target resource-workflow` passes **54** checked
+semantic assertions through the **suspended actual MCP engine** in a new private
+runtime, plus **7** exact compiled emitted-builder checks, leak-free. It covers
+all four kinds, locales, metadata filtering, Unicode/NUL/byte windows, exact JSON
+numbers/paths, inherited masks/restoration, grouped replacement/repair, paired
+Undo/Redo, actor retry/conflicts, late failures, bounded/typed input, permissions,
+pending drafts and independent workspace/review authority. Browser counterparts
+compile/stage with zero owned warnings; they are not executed. Fixtures required
+API-name/import and typed Boolean/schema assertion corrections; a supported
+placeholder was replaced with an actually unsupported value target. No admission,
+type check, test budget or policy was weakened. Public owner arguments also use
+distinct `TNyxControlRef` values, with string decoding confined to the wire
+boundary. End this semantic fixture family.
+
+Affected maintained regressions pass **78** common-form/actual Win32 Studio,
+**7** exact form builder and **252** workspace assertions; combined transactions
+remain **41/8**, all leak-free. Both Studios, backend and worker plus matching
+browser paths compile with zero owned warnings. Matched upstream classes.pas
+retains seven warnings per browser invocation: 35 in resource workflow, 35 in
+authoring and 14 in combined transactions. Dependencies were not edited.
+Evidence is ignored `build/resource-workflow/maintained.log`,
+`authoring-regression.log` and `transaction-regression.log`.
+
+All compiler/test/guard handles are terminal. Authenticated native MCP remains
+revision 2, original selection/view and no draft/history, activity 496. The
+read-only guard confirms **15 process identities / 9 exact pairs / 229 sealed
+files** at 2026-10-08T06:28:29Z; receipt/log are
+`build/menu-bar-editor/preservation.json` and
+`build/resource-workflow/preservation.log`. Actual current-backend HTTP
+authentication/tool discovery, browser/phone/input and observing Studio are
+unqualified. Public in-process dispatch does not establish them. The earlier
+automatic review rejection remains held with only "blocked by policy."
+
+No full criterion/task/percentage closes. Workflow no-closure advances **21→22**
+once; authoring/renderer/codegen/delivery stay **37/19/28/2**, resource prerequisite
+2. Stop local resource-window fixtures now. Runtime resolution/cache/cancellation
+diagnostics, saved row/media bindings and authenticated current-source observing
+delivery remain with original workflow/resource/Studio owners. Return to complete
+application resource loading/lifetime/localization and saved control bindings;
+compile-only or store-only fixtures cannot discharge those outcomes. Existing
+rejected launches remain held while meaningful implementation work is available.
+Exact remote/clean checkpoint belongs to ignored
+`build/resource-workflow/remote-checkpoint.json` after this packet's push.
+
+
 ## Current return path: common Studio Resources authoring — 2026-10-08
 
 The previous goal turn is **progress**: explicit hosted loading is clean and
@@ -26,7 +101,7 @@ No new listener/browser/replacement retry. Saved row mappings, image-reference
 binding, application resolution/lifecycle and complete browser/phone/observing
 parity remain original outcomes, not acceptance granted by a form fixture.
 
-+This continuation delivers **progress** against original Studio criterion 2 and
+This continuation delivers **progress** against original Studio criterion 2 and
 resource criterion 6. Both ordinary controllers consume `nyx.resources.editor`:
 one public Nyx card for four file families, metadata/locale, embedded or hosted
 source, explicit fallback and typed cache policy. Portable pickers supply bounded

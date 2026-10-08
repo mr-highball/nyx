@@ -16,12 +16,22 @@ Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
 Resource workflow gap (2026-10-08): the new portable catalog/selectors, explicit
-hosted resolver and cache declarations are not yet exposed by a resource-specific
-semantic operation. Native HTTP/cache/control qualification is prerequisite
-evidence; the deployed MCP does not acquire resource tools from a library build.
-This existing owner must supply bounded metadata/variant listings, exact payload
-windows and structural binding/row context, plus revision-aware grouped resource
-and binding changes as one paired Undo step. Explicit hosted-resolution/cache
+hosted resolver and cache declarations now have a prepared resource-specific
+semantic operation; authenticated deployment remains absent. Native HTTP/cache/
+control qualification is prerequisite evidence; the deployed MCP does not
+acquire resource tools from a library build.
+Prepared `nyx_resources` supplies bounded metadata/variant listings, exact
+Unicode/byte windows, structural JSON and local/effective scalar binding context.
+Its typed 1..32-change group shares final candidate admission with the common
+Studio form; an `op: "resources"` transaction group counts toward the existing
+64-leaf budget. Suspended actual-engine checks and exact emitted source qualify
+history, permissions, retry authority and workspace/review isolation. Browser
+counterparts compile; authenticated HTTP and observing Studio remain unqualified.
+The maintained gate is `resource-workflow`; no active design is replaced.
+
+This existing owner still must supply structural row/media context and editing,
+current-backend authentication/discovery and the observing journey.
+Explicit hosted-resolution/cache
 diagnostics and cancellation must be distinguishable from authored fallback data.
 Do not substitute raw property strings, whole-project replacement or browser
 editor automation. The frozen authenticated primary remains read-only; current
@@ -29,14 +39,25 @@ tool source and observing execution require later integration/deployment evidenc
 The prerequisite remains [portable resources](NS-1_resources_01.md); this gap
 earns no workflow closure or added allocation.
 
-The common form now feeds both ordinary controllers through the copied
+Maintained source evidence now passes 54 suspended actual-engine assertions and
+seven exact compiled builder checks, leak-free; affected authoring/workspace
+78/7/252 and transaction 41/8 remain green. Both targets/backend/worker compile
+with zero owned warnings. This is partial semantic preparation: workflow
+no-closure alone advances 21→22, with authoring/renderer/codegen/delivery
+37/19/28/2 and resource prerequisite 2 unchanged. Stop local fixture expansion;
+the rejected current-source launch/observing actions stay held. No original full
+criterion/task/percentage closes.
+
+The earlier common form feeds both ordinary controllers through the copied
 `NewNyxStudioResourcePatch` candidate and v15 isolated processor envelope. The
-existing semantic owner must consume the same resource/binding admission while
-adding permission, actor, expected-revision and bounded payload-window guards.
+semantic continuation now consumes the same resource/binding admission with
+permission, actor, expected-revision and bounded payload-window guards.
 Do not advertise those internal UI tickets as deployed MCP tools. Native form
 qualification passes 78/7/252 leak-free; no new semantic/authenticated/observing
-journey is claimed, and workflow remains 21. The next boundary is the bounded
-resource API, not another form fixture family. See [the authoring packet](../WORK.md#current-return-path-common-studio-resources-authoring--2026-10-08).
+journey is claimed by that earlier packet. The prepared semantic continuation
+returns to this shared candidate; no full criterion closes. Stop local resource
+fixtures after its maintained gate. See [the authoring packet](../WORK.md#current-return-path-common-studio-resources-authoring--2026-10-08)
+and [the semantic packet](../WORK.md#current-return-path-semantic-resource-authoring--2026-10-08).
 
 Current semantic property restoration (2026-10-07): the existing Pascal author
 now has an explicit transport-owned review mode. It scopes every query/edit/build,

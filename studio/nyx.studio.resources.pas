@@ -38,8 +38,8 @@ function NewNyxStudioResourcePatch(
 
 implementation
 
-uses SysUtils, nyx.text, nyx.types, nyx.model, nyx.codec, nyx.catalog,
-  nyx.resources, nyx.schema, nyx.binding, nyx.composition;
+uses SysUtils, nyx.types, nyx.model, nyx.catalog,
+  nyx.resources, nyx.binding, nyx.composition, nyx.studio.resourceedits;
 
 type
   TResourcePatch = class(TInterfacedObject, INyxDesignPatch)
@@ -101,6 +101,7 @@ var
   LCandidate: TNyxDocument;
   LOwner: TNyxNode;
   LProjection: TNyxNode;
+  LChanges: array of TNyxResourceChange;
 begin
 
   if (ADocument = nil) or
@@ -128,34 +129,25 @@ begin
       LProjection.Free;
     end;
   end;
-  LCandidate := TNyxCodec.Decode(TNyxCodec.Encode(ADocument));
-  try
-    case FChange.Operation of
-      reoDefine:
-        begin
-          LCandidate.Resources.Define(FChange.Selection.Reference, FChange.Selection.Locale,
-            NyxResourceFromData(FChange.DefinitionData));
-        end;
-      reoRemove:
-        begin
-          LCandidate.Resources.Remove(FChange.Selection.Reference, FChange.Selection.Locale);
-        end;
-    end;
-
-    if FChange.Bind then
-    begin
-      LCandidate.Find(FChange.Owner).SetBinding(FChange.Binding);
-    end;
-    { Recheck every retained consumer, including reusable defaults, before the
-      session sees the candidate. Missing/wrong-kind paths block replacement or
-      removal atomically; the source processor still owns reconciliation/history. }
-    LCandidate.Validate;
-    ValidateNyxDocumentProperties(LCandidate);
-    Result := LCandidate;
-    LCandidate := nil;
-  finally
-    LCandidate.Free;
+  SetLength(LChanges, 1);
+  case FChange.Operation of
+    reoDefine:
+      LChanges[0] := NyxDefineResource(FChange.Selection.Reference, FChange.Selection.Locale,
+        NyxResourceFromData(FChange.DefinitionData));
+    reoRemove:
+      LChanges[0] := NyxRemoveResource(FChange.Selection.Reference, FChange.Selection.Locale);
   end;
+
+  if FChange.Bind then
+  begin
+    SetLength(LChanges, 2);
+    LChanges[1] := NyxBindResource(NyxControl(FChange.Owner), FChange.Binding.Target,
+      FChange.Binding.ResourceValue);
+  end;
+  { Editor exact catalog/control guards stay above; both entry points now share
+    the same final-consumer admission, ownership and source candidate contract. }
+  LCandidate := NyxResourcePatch(LChanges).Candidate(ADocument, ACatalog);
+  Result := LCandidate;
 end;
 
 function NewNyxStudioResourcePatch(

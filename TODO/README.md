@@ -45,6 +45,21 @@ remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
+
+Latest semantic Resources source (2026-10-08): bounded metadata/payload/JSON
+windows and typed grouped file/binding edits now share the common Studio
+candidate. Checked suspended actual-MCP-engine assertions pass 54 and exact
+emitted-builder checks seven, leak-free. Affected common-form/Win32 Studio and
+workspace regressions remain 78/7/252; combined transactions remain 41/8.
+Both targets/backend/worker compile with zero owned warnings. No full criterion
+closes: workflow no-closure alone advances 21→22; authoring/renderer/codegen/
+delivery stay 37/19/28/2, resource prerequisite 2. End semantic fixture expansion.
+Current-source authenticated HTTP/browser/phone/observing, runtime cache/loading
+diagnostics, saved rows/media bindings and complete application/Studio/parity
+remain original outcomes. The protected deployed endpoint is unchanged.
+See [the packet](../WORK.md#current-return-path-semantic-resource-authoring--2026-10-08).
+
+
 Latest common Resources authoring (2026-10-08): both ordinary Studios consume
 one public Nyx form for images/JSON/text/binary, metadata/locale and hosted
 fallback/cache choices. Structural scalar bindings share one isolated paired

@@ -96,6 +96,17 @@ are all Pascal; browser JavaScript is compiler output.
 
 ## Semantic context
 
+Prepared resource source adds `nyx_resources`: bounded variant metadata, exact
+Unicode/byte windows, structural JSON paths and selected-owner binding context.
+Resource definitions and dependent scalar binding repairs use one paired Apply,
+or an `op: "resources"` group in `nyx_transaction`. Existing operator policy,
+transport authority, revision, retry receipts and workspace/review routing apply.
+Hosted queries identify authored fallback and perform no network loading.
+See [the contract](resources.md#semantic-resource-authoring) and run
+`tools/build.ps1 -Target resource-workflow` for suspended-engine/source checks.
+The protected deployed endpoint retains its existing tool set; local source
+qualification does not establish authenticated rollout or observing Studio.
+
 Semantic tools are the primary way agents inspect, compose and modify demos and
 active designs. Read the session first, query only needed nodes/properties/events,
 then group related edits into one undoable transaction. Preserve existing user

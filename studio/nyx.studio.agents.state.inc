@@ -40,6 +40,13 @@ begin
       NyxField('target', NyxData(NyxBindingPropertyName(ASpec.Target))),
       NyxField('cleared', NyxData(True))]));
   end;
+  if ASpec.Source = bsResource then
+  begin
+    Exit(NyxObject([
+      NyxField('target', NyxData(NyxBindingPropertyName(ASpec.Target))),
+      NyxField('cleared', NyxData(False)), NyxField('source', NyxData('resource')),
+      NyxField('value', ASpec.ResourceValue.ToData)]));
+  end;
   Result := NyxObject([
     NyxField('target', NyxData(NyxBindingPropertyName(ASpec.Target))),
     NyxField('cleared', NyxData(False)), NyxField('name', NyxData(ASpec.StateName)),
