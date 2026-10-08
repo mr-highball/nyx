@@ -3,6 +3,13 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Typed clock-time values and domains](NS-1_time-values_01.md) was accepted on
+2026-10-08 from 1,613 checked native/executed-browser clock checks, 49 calendar
+regressions, exact emitted source execution on both targets, twelve intended type
+refusals, independent stores/descriptors and paired source/history evidence.
+The actual HTTP execution closes the retained prerequisite gap. Broader physical
+pickers, Studio authoring, accessibility and parity remain open with their owners.
+
 [Portable owned document tree](NS-1_model_01.md) was accepted on 2026-10-02
 from shared native/browser fixtures and zero-leak native heap evidence.
 All broader outcomes remain in the open catalog until their criteria pass.

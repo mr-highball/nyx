@@ -1326,5 +1326,5 @@ Use the established candidate/history authority rather than raw extension fields
 or screenshot-driven editor automation. This implementation packet edits no active
 design and creates no workflow credit/count change. Foundation browser execution,
 physical pickers and full parity retain their prerequisite/renderer owners.
-See [the prerequisite](NS-1_time-values_01.md) and
+See [the prerequisite](DONE/NS-1_time-values_01.md) and
 [evidence](../WORK.md#current-return-path-typed-time-field-prerequisite--2026-10-07).

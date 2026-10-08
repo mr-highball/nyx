@@ -19,7 +19,7 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
-- [Typed clock-time contracts](NS-1_time-values_01.md) supply the required
+- [Typed clock-time contracts](DONE/NS-1_time-values_01.md) supply the accepted
   prerequisite for replacing the time-field text fallback. Other native input
   and full renderer criteria remain required; this allocates no extra credit.
 

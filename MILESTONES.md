@@ -4,7 +4,20 @@
 [Current work](WORK.md)
 
 
-Current useful source allocation (2026-10-08): the original authoring owner
+Current accepted clock prerequisite (2026-10-08): all four original portable
+value/domain/authoring criteria now have checked native and actual HTTP browser
+evidence. Each shared suite passes **1,613** clock assertions plus **49** calendar
+regressions; exact emitted-source execution passes on both targets, and all
+**twelve** intended compiler type refusals pass. Native ownership receipts report
+zero unfreed allocations; affected builds have zero owned warnings. The accepted
+NS-1 task moves to DONE without transferring picker/Studio/parity/component credit.
+Completion allocation remains pending assessment. Its prerequisite checkpoint is
+resolved; other owners retain no-closure counts **23/9/39/19/28/3**. Installed LAN,
+nine exact pairs/history and service identities remain unchanged. Return to actual
+picker/Studio consumers and full runtime/parity/delivery requirements. See
+[the acceptance packet](WORK.md#current-return-path-executed-clock-prerequisite--2026-10-08).
+
+Previous useful source allocation (2026-10-08): the original authoring owner
 consumes typed split pane minima to retain readable source beside Outputs.
 Requested proportions, constrained gestures and mounted editor ownership survive
 host resize/modal return. Shared geometry passes **152** on FPC and actual browser
@@ -362,7 +375,7 @@ or protected service replacement is retried. See
 
 Current reassessment (2026-10-07): end the two native geometry packets and follow
 the native time-field text fallback through its strong-typing prerequisite.
-[NS-1_time-values_01](TODO/NS-1_time-values_01.md) owns exact clock values, domains
+[NS-1_time-values_01](TODO/DONE/NS-1_time-values_01.md) owns exact clock values, domains
 and generated/source contracts; original NS-2/NS-3 owners retain physical time
 pickers, accessibility, visuals and both-target qualification. Scope/credit is
 redistributed from those unfinished inputs, with no added or earned credit and
@@ -1192,7 +1205,7 @@ broader product outcomes remain open.
 
 | Goal ID and north star | 100% acceptance | Current status | Remaining outcome |
 | --- | --- | --- | --- |
-| NS-1 — One portable UI contract | Document, component, state, event, layout, theme, serialization, and generated-Pascal contracts are stable, documented, and exercised on native and browser targets | Owned model, catalog/theme, identity, scalar/structured state and managed interfaces accepted; scheduler and persisted callback companions exercised | Complete property/event capabilities, broader event families and source synchronization |
+| NS-1 — One portable UI contract | Document, component, state, event, layout, theme, serialization, and generated-Pascal contracts are stable, documented, and exercised on native and browser targets | Owned model, catalog/theme, identity, scalar/structured state, managed interfaces and exact clock-value/domain prerequisites accepted; scheduler and persisted callback companions exercised | Complete property/event capabilities, broader event families and source synchronization |
 | NS-2 — Beautiful parity renderers | Supported controls, layouts, input, focus, accessibility, responsive behavior, and themes have equivalent documented semantics in pas2js/DOM and LCL | Browser/LCL projections and representative actions evaluated | Capability parity, responsive/theming depth, accessibility and visuals |
 | NS-3 — Exhaustive extensible component system | A broad production catalog is coherent, virtualized where needed, composable, themeable, and extendable without forking Nyx internals | 41 primitive/layout/authoring kinds and 35 compound recipes defined | Advanced behavior, virtualization, extension SDK and performance |
 | NS-4 — Nyx Studio | WYSIWYG and split-code workflows support applications, pages, reusable components, selection, layout, properties, history, preview, optional output configuration and deterministic generation; Studio itself is built with Nyx | Shared Nyx shell, 49 DOM journeys, Properties/Events tabs, typed source edits and handler workflows evaluated | Complete custom/inherited event UI coverage, drag/drop, constraints, broader source synchronization, responsive project UX and complete native controller |
@@ -1255,6 +1268,15 @@ production component outcomes retain their owners.
 Current task and return path are maintained in [WORK.md](WORK.md).
 
 ## Reassessment record
+
+- 2026-10-08: accepted all four original criteria of
+  [typed clock-time prerequisites](TODO/DONE/NS-1_time-values_01.md) after actual
+  HTTP pas2js execution supplies the retained missing evidence. Checked native
+  and browser each pass 1,613 clock assertions plus 49 calendar regressions;
+  emitted-source execution and twelve intended type refusals pass. This resolves
+  the prerequisite's two-batch checkpoint, preserves its scope/credit ownership
+  and returns to physical picker/Studio/parity consumers. Other owner counts stay
+  23/9/39/19/28/3 and completion allocation remains pending assessment.
 
 - 2026-10-05: typed whole-request transport and stalled receiver retirement pass
   66 actual native and 20 actual real-clock browser checks; current compiled

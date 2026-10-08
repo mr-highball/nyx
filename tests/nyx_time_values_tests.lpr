@@ -366,10 +366,17 @@ begin
 end;
 {$endif}
 
+{ Run the complete checked suite unchanged on both compilers. Browser startup
+  defers this work until navigation can finish; success still requires every
+  assertion, not script download or an intermediate phase marker. }
+procedure Qualify;
 begin
   try
+    {$ifdef PAS2JS}document.body.setAttribute('data-time-phase', 'values');{$endif}
     Run;
+    {$ifdef PAS2JS}document.body.setAttribute('data-time-phase', 'domains');{$endif}
     RunDomains;
+    {$ifdef PAS2JS}document.body.setAttribute('data-time-phase', 'authoring');{$endif}
     Inc(GChecks, RunNyxTimeAuthoringTests);
     GDateChecks := RunNyxDateTests;
     {$ifndef PAS2JS}
@@ -393,6 +400,7 @@ begin
       {$ifdef PAS2JS}
       document.body.setAttribute('data-time-values', 'failed');
       document.body.setAttribute('data-time-error', LException.Message);
+      document.body.setAttribute('data-event-error', LException.Message);
       {$else}
       WriteLn('FAIL ', LException.Message);
       DumpExceptionBackTrace(Output);
@@ -400,4 +408,15 @@ begin
       {$endif}
     end;
   end;
+end;
+
+begin
+  {$ifdef PAS2JS}
+  { Give the normal HTTP document/navigation turn a chance to finish. This uses
+    the browser's real clock and leaves all checked value/domain/source work in
+    the maintained Pascal consumer. }
+  window.setTimeout(@Qualify, 100);
+  {$else}
+  Qualify;
+  {$endif}
 end.

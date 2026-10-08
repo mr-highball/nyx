@@ -3,6 +3,13 @@
 [Components](components.md) · [Contracts](contracts.md) · [Calendar fields](date-fields.md) ·
 [Current native evidence](../WORK.md#current-return-path-native-clock-field-preparation--2026-10-07)
 
+The [portable clock prerequisite](../TODO/DONE/NS-1_time-values_01.md) is accepted
+from checked native and executed browser value/domain/authoring suites and exact
+emitted-source reconstruction. This establishes its typed contract; physical
+picker, hardware/IME, accessibility and complete Studio/parity requirements retain
+their own consumer evidence. The [acceptance packet](../WORK.md#current-return-path-executed-clock-prerequisite--2026-10-08)
+records the unchanged 1,613 shared assertions and twelve intended type refusals.
+
 `nyx.times` supplies immutable local clock readings. `NyxTime(Hour, Minute,
 Second, Millisecond)` accepts hours 0..23, minutes/seconds 0..59 and milliseconds
 0..999. Seconds and milliseconds are optional. `NyxNoTime` means an empty field;

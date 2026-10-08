@@ -22,7 +22,7 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
-- [Typed clock-time contracts](NS-1_time-values_01.md) precede actual native/browser
+- [Typed clock-time contracts](DONE/NS-1_time-values_01.md) precede actual native/browser
   time pickers. Full picker/component criteria retain this task's ownership;
   the shared NS-1 prerequisite creates no extra completion credit.
 

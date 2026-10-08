@@ -17,7 +17,7 @@ blockers rather than filename order.
 | NS-1 | [Portable resources and bindings](NS-1_resources_01.md) | Common image/JSON/text/data resources, typed selectors, localization and actual control/Studio consumers | Pending assessment |
 | NS-1 | [Specialized component interfaces](DONE/NS-1_component-interfaces_01.md) | Accepted managed specialized controls, factories and generated authoring | Pending assessment |
 | NS-1 | [Events and scheduler](NS-1_event-scheduler_01.md) | Typed multiple callbacks, execution policies and target schedulers | Pending assessment |
-| NS-1 | [Typed clock-time prerequisite](NS-1_time-values_01.md) | Exact time values/domains and typed authoring for native/browser pickers | Pending assessment |
+| NS-1 | [Typed clock-time prerequisite](DONE/NS-1_time-values_01.md) | Accepted exact time values/domains and typed authoring for native/browser pickers | Pending assessment |
 | NS-1 | [Pascal generation](NS-1_codegen_01.md) | Deterministic adjacent Delphi-dialect source | Pending assessment |
 | NS-2 | [Browser renderer slice](NS-2_browser-renderer_01.md) | Incremental DOM projection for M1 | Pending assessment |
 | NS-2 | [LCL renderer slice](NS-2_lcl-renderer_01.md) | Incremental native projection for M1 | Pending assessment |
@@ -46,7 +46,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current useful source allocation (2026-10-08): authoring criterion 2 consumes
+Current accepted clock prerequisite (2026-10-08): the retained browser-execution
+gap is closed by **1,613** actual shared clock assertions plus **49** calendar
+regressions, exact emitted-source execution on both targets and **twelve** intended
+type refusals. All four original portable criteria and their accepted blockers
+are audited; the task is in DONE. Native receipts are leak-free and affected
+builds have zero owned warnings. Original picker/Studio/parity/component consumers
+remain open. Installed LAN/pairs/service identities are unchanged. Other owners'
+no-closure counts remain **23/9/39/19/28/3** in workflow/resource/authoring/renderer/
+codegen/delivery order; no duplicate picker completion allocation is added. See
+[the acceptance packet](../WORK.md#current-return-path-executed-clock-prerequisite--2026-10-08).
+
+Previous useful source allocation (2026-10-08): authoring criterion 2 consumes
 the public split contract's typed pane minima. Passive resize preserves requested
 proportions; constrained gestures and modal return retain editors/drafts/ranges.
 Shared geometry passes **152** on FPC and actual browser execution, actual controls

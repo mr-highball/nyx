@@ -66,7 +66,20 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current useful source allocation (2026-10-08): ordinary native/browser splits
+Current accepted clock prerequisite (2026-10-08): all four original portable
+clock-value/domain/authoring criteria are accepted. Checked native and actual
+HTTP browser execution each pass **1,613** clock checks plus **49** unchanged
+calendar regressions; exact emitted source executes on both targets and all
+**twelve** intended argument-family compiler refusals pass. Native ownership
+receipts have zero unfreed allocations and affected builds have zero owned
+warnings. The task moves to DONE and dependent links use the accepted foundation.
+Physical picker, Studio, accessibility and full parity/runtime/delivery outcomes
+remain open. Installed LAN/pairs/service identities stay unchanged. Other owners'
+no-closure counts remain workflow/resource/authoring/renderer/codegen/delivery
+**23/9/39/19/28/3**; no duplicate picker credit or percentage is invented. See
+[the acceptance packet](WORK.md#current-return-path-executed-clock-prerequisite--2026-10-08).
+
+Previous useful source allocation (2026-10-08): ordinary native/browser splits
 honor typed child minima while retaining the requested proportion and mounted
 editors. Studio reserves a readable source pane beside Outputs. Shared geometry
 passes **152** on FPC and actual browser execution; controls pass **39 native /

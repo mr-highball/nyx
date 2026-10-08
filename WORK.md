@@ -9,7 +9,79 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: useful source allocation — 2026-10-08
+## Current return path: executed clock prerequisite — 2026-10-08
+
+Previous goal turn is progress: public constrained split allocation, actual
+both-target Studio/source journeys and exact remote `111c4e7` are published.
+Authoring no-closure remains 39; other counters remain 23/9/19/28/3. The full
+Nyx/Studio goal remains open. All owned qualification handles are terminal.
+
+Reassessment changes the next action to the concrete hard prerequisite
+NS-1_time-values_01, criterion 4. Its immutable values/domains, atomic descriptors,
+managed authoring, persistence/history and exact emitted source have checked
+native evidence; pas2js was staged rather than executed. The task's retained
+two-batch checkpoint explicitly requires execution before more picker preparation.
+Use the maintained `time-values` command, then execute its unchanged shared and
+emitted companion through a fresh static fixture directory on the admitted host.
+No new backend, user design, configuration, compiler installation or rejected
+service action is required.
+
+Acceptance needs actual pas2js precision/admission/ownership/source assertions,
+exact compiled reconstruction, the native checked counterpart and intended wrong
+argument-family refusals on both compilers. Audit all four original criteria and
+accepted blockers before moving the prerequisite to DONE. Budget: one complete
+qualification and at most one diagnosis/repair if it fails; then end this contract
+boundary and return to original native/browser picker, parity/component and Studio
+consumers. No fixture-only result can accept those larger outcomes or duplicate
+their completion allocation.
+
+Accepted result: all four original NS-1_time-values_01 criteria and three accepted
+blockers are audited in its unchanged task scope. The task moves to TODO/DONE;
+its retained two-partial-batch checkpoint resolves through actual acceptance.
+Other owner counts stay workflow/resource/authoring/renderer/codegen/delivery
+23/9/39/19/28/3. Full product completion and numerical allocation remain unproven;
+no picker/Studio/parity acceptance or duplicate credit is inferred.
+
+Maintained `time-values` exits 0 with 1,613 clock checks, 49 unchanged calendar
+regressions, exact compiled reconstruction and all twelve intended wrong-family
+compiler refusals. Current-source native invocation after the fixture startup
+change reports the identical counts, zero owned warnings and zero unfreed blocks.
+Actual HTTP browser execution reports 1,613/49 and exact emitted-source
+reconstruction passes. Six native and six browser rejection logs identify the
+expected ClockTime/Precision/Integer/ValueDomain type families, rather than a
+missing compiler/unit failure. Upstream pas2js RTL warnings remain visible.
+
+The first actual browser navigation timed out; its exact owned handle is terminal,
+files return HTTP 200 with expected byte lengths/MIME, and the smaller exact
+reconstruction independently passes. The maintained shared program now defers
+its full unchanged suite to the ordinary browser event loop after navigation.
+Diagnostic phase markers expose value/domain/authoring progress; only completing
+every assertion admits readiness. The repaired actual browser run passes, and
+failed receipts remain retained. No product algorithm or assertion is weakened.
+
+Evidence is ignored `build/time-prerequisite-execution/`: `maintained.log`,
+`values-native-final-compile.log`, `values-native-final.log`,
+`values-browser-compile.log`, `values-browser-deferred.log`,
+`reconstruction-browser.log`, exact terminal DOM captures and
+`preservation-final.log`. HTML clock syntax and Time-state clauses are checked
+against the primary Living Standard on 2026-10-08; the accepted contract preserves
+authored precision and does not promise the browser's visible locale/spelling.
+
+No semantic design mutation or new service startup occurs. Five static fixture
+files are admitted in one fresh directory on the identity-verified existing host;
+its runtime/older assets and all protected services remain unchanged. Final guard
+passes 2026-10-08T15:03:37Z: sealed 299-file LAN payload, nine exact pairs/full
+history, 147,033-byte checkpoint and all fifteen service identities stay exact.
+The earlier automatic review rejected current-backend startup with only "blocked
+by policy"; no equivalent action is retried. Current-source HTTP rollout retains
+that gate. End clock-value fixtures. The next originating deliverable is actual
+browser/native picker and ordinary Studio time-policy behavior, consuming this
+accepted prerequisite; hardware/IME/accessibility and full parity/runtime/delivery
+remain original requirements.
+
+<a id="current-return-path-useful-source-allocation--2026-10-08"></a>
+
+## Previous return path: useful source allocation — 2026-10-08
 
 Previous goal turn made progress: semantic launch implementation, qualified
 browser/native/shared input and exact remote checkpoint `85a3e2b` are published.
