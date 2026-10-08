@@ -32,6 +32,7 @@ uses
   nyx.text,
   nyx.dates,
   nyx.times,
+  nyx.colors,
   nyx.types,
   nyx.layout.policy,
   nyx.responsive,
@@ -554,7 +555,7 @@ type
     vkCrossAlignment, vkJustification, vkSizing, vkLayoutPolicy, vkSizeRange,
     vkSizeConstraints, vkViewportWidth, vkViewportCondition, vkViewportOrientation,
     vkPresentationRef, vkPresentationCondition, vkContainerRef, vkContainerContainment,
-    vkCalendarDate, vkClockTime, vkTimePrecision, vkClockDomain, vkValueDomain,
+    vkCalendarDate, vkClockTime, vkRGBColor, vkTimePrecision, vkClockDomain, vkValueDomain,
     vkMenuRef, vkMenuCommand, vkMenuGroup, vkRootRef,
     vkMenuDefinition, vkMenuOptions, vkMenuBarDefinition, vkMenuBarOptions,
     vkPopoverOptions, vkTypeAheadOptions,
@@ -589,6 +590,7 @@ type
     PresentationCondition: TNyxPresentationCondition;
     CalendarDate: TNyxCalendarDate;
     ClockTime: TNyxClockTime;
+    RGBColor: TNyxRGBColor;
     TimeDomain: TNyxTimeDomain;
     ValueDomain: TNyxValueDomain;
     RootRef: TNyxRootRef;
@@ -664,7 +666,8 @@ type
     function Arguments(AMaximum: Integer = 3): TValues;
     function ArrayArguments(AMaximum: Integer): TValues;
     function Numeric(const AValue: TValue): Double;
-    function Domain(AKind: TNyxStateKind; ACalendar: Boolean = False): TValue;
+    function Domain(AKind: TNyxStateKind; ACalendar: Boolean = False;
+      ARGB: Boolean = False): TValue;
     { Closed clock constructors retain exact readings/precision and distinct
       domains. No locale text, callback execution or renderer state is evaluated. }
     function ClockValue(const AName: TNyxText): TValue;
@@ -1590,7 +1593,8 @@ begin
   end;
 end;
 
-function TConfigurationReader.Domain(AKind: TNyxStateKind; ACalendar: Boolean): TValue;
+function TConfigurationReader.Domain(AKind: TNyxStateKind; ACalendar: Boolean;
+  ARGB: Boolean): TValue;
 var
   LMethod: TNyxText;
   LArgs: TValues;
@@ -1600,6 +1604,7 @@ var
   LIntegers: array of Integer;
   LNumbers: array of Double;
   LDates: array of TNyxCalendarDate;
+  LColors: array of TNyxRGBColor;
 begin
   Result.Kind := vkDomain;
   Result.Ordinal := Ord(AKind);
@@ -1615,6 +1620,11 @@ begin
     Result.TextDomain := NyxDateDomain;
   end;
 
+  if ARGB then
+  begin
+    Result.TextDomain := NyxRGBDomain;
+  end;
+
   if At('(') then
   begin
     LArgs := Arguments;
@@ -1622,12 +1632,29 @@ begin
     if Length(LArgs) <> 0 then
     begin
 
-      if not ACalendar or (Length(LArgs) <> 1) or
-        (LArgs[0].Kind <> vkDomain) or (LArgs[0].Ordinal <> Ord(nskText)) then
+      if not (ACalendar or ARGB) or (Length(LArgs) <> 1) then
       begin
-        Fail('A domain factory takes no arguments or one Text domain for date enrichment');
+        Fail('A domain factory takes no arguments or one text definition for enrichment');
       end;
-      Result.TextDomain := NyxDateDomain(LArgs[0].TextDomain.Definition);
+      if ARGB then
+      begin
+
+        if (LArgs[0].Kind <> vkValueDomain) or
+          (LArgs[0].ValueDomain.Kind <> nskText) then
+        begin
+          Fail('NyxRGBDomain enrichment requires an explicit text Definition');
+        end;
+        Result.TextDomain := NyxRGBDomain(LArgs[0].ValueDomain);
+      end
+      else
+      begin
+
+        if (LArgs[0].Kind <> vkDomain) or (LArgs[0].Ordinal <> Ord(nskText)) then
+        begin
+          Fail('A date enrichment requires a text domain');
+        end;
+        Result.TextDomain := NyxDateDomain(LArgs[0].TextDomain.Definition);
+      end;
     end;
   end;
   while At('.') do
@@ -1689,6 +1716,22 @@ begin
           begin
             { A date domain accepts its typed overload as one homogeneous array.
               Text choices remain an explicit canonical wire-boundary overload. }
+
+            if (Length(LArgs) > 0) and (LArgs[0].Kind = vkRGBColor) then
+            begin
+              SetLength(LColors, Length(LArgs));
+              for LIndex := 0 to Length(LArgs) - 1 do
+              begin
+
+                if LArgs[LIndex].Kind <> vkRGBColor then
+                begin
+                  Fail('RGB Choices requires homogeneous typed colors');
+                end;
+                LColors[LIndex] := LArgs[LIndex].RGBColor;
+              end;
+              Result.TextDomain := Result.TextDomain.Choices(LColors);
+              Continue;
+            end;
 
             if (Length(LArgs) > 0) and (LArgs[0].Kind = vkCalendarDate) then
             begin
@@ -1755,6 +1798,15 @@ begin
             Result.NumberDomain := Result.NumberDomain.Choices(LNumbers);
           end;
       end;
+    end
+    else if SameText(LMethod, 'RGBColor') then
+    begin
+
+      if AKind <> nskText then
+      begin
+        Fail('RGBColor requires a text domain');
+      end;
+      Result.TextDomain := Result.TextDomain.RGBColor;
     end
     else if SameText(LMethod, 'Definition') then
     begin
@@ -2052,6 +2104,52 @@ begin
         if (LName = 'nyxtime') or (LName = 'nyxnotime') then
         begin
           Exit(ClockValue(LName));
+        end;
+
+        if (LName = 'nyxrgb') or (LName = 'nyxnocolor') or
+          (LName = 'tnyxrgbcolor') then
+        begin
+          Result.Kind := vkRGBColor;
+          Result.RGBColor := NyxNoColor;
+
+          if LName = 'tnyxrgbcolor' then
+          begin
+            Expect('.');
+            Expect('FromText');
+            LArgs := Arguments;
+
+            if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkText) then
+            begin
+              Fail('TNyxRGBColor.FromText requires exact text');
+            end;
+            Result.RGBColor := TNyxRGBColor.FromText(LArgs[0].Text);
+          end
+          else if (LName = 'nyxrgb') or At('(') then
+          begin
+            LArgs := Arguments;
+
+            if LName = 'nyxrgb' then
+            begin
+
+              if (Length(LArgs) <> 3) or (LArgs[0].Kind <> vkInteger) or
+                (LArgs[1].Kind <> vkInteger) or (LArgs[2].Kind <> vkInteger) then
+              begin
+                Fail('NyxRGB requires three Integer channels');
+              end;
+              Result.RGBColor := NyxRGB(StrToInt(LArgs[0].Text),
+                StrToInt(LArgs[1].Text), StrToInt(LArgs[2].Text));
+            end
+            else if Length(LArgs) <> 0 then
+            begin
+              Fail('NyxNoColor takes no arguments');
+            end;
+          end;
+          Exit;
+        end;
+
+        if LName = 'nyxrgbdomain' then
+        begin
+          Exit(Domain(nskText, False, True));
         end;
 
         if LName = 'nyxtimedomain' then
@@ -3610,6 +3708,15 @@ begin
     atValue, atOption:
       begin
         case LValue.Kind of
+          vkRGBColor:
+            begin
+
+              if LAttribute <> atValue then
+              begin
+                Fail('RGB colors are typed Value arguments, never Option');
+              end;
+              LConfigure.Value(LValue.RGBColor);
+            end;
           vkClockTime:
             begin
 
@@ -4897,6 +5004,7 @@ begin
       comments and import order through the existing admitted import boundary. }
     LPrefix := WithNyxImport(LPrefix, 'nyx.dates');
     LPrefix := WithNyxImport(LPrefix, 'nyx.times');
+    LPrefix := WithNyxImport(LPrefix, 'nyx.colors');
 
     if LNeedsTypeAhead then
     begin

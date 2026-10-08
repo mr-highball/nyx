@@ -1477,13 +1477,14 @@ var
   LRequired: TNyxText;
   LBoundRule: TNyxText;
 const
-  CTypes: array[0..5] of TNyxText = ('text', 'boolean', 'integer', 'number', 'text', 'text');
+  CTypes: array[0..6] of TNyxText =
+    ('text', 'boolean', 'integer', 'number', 'text', 'text', 'text');
 begin
   { JSON is the explicit external boundary. Every branch keeps native scalar
     types and closed fields; strict Pascal admission also checks Gregorian days,
     ascending bounds, exact choices and candidate dependencies. }
-  SetLength(LDomains, 6);
-  for LKind := 0 to 5 do
+  SetLength(LDomains, 7);
+  for LKind := 0 to 6 do
   begin
     LType := CTypes[LKind];
     LScalar := '{"type":"' + LType + '"}';
@@ -1523,6 +1524,15 @@ begin
       LRequired := LRequired + ',"format"';
       LBounds := ',"min":{"type":"string","minLength":5,"maxLength":12},' +
         '"max":{"type":"string","minLength":5,"maxLength":12}';
+      LBoundRule := '';
+    end
+    else if LKind = 6 then
+    begin
+      { Optional RGB keeps exact text storage. Wire parsing additionally checks
+        strict ASCII and color-equivalent choice uniqueness without coercion. }
+      LScalar := '{"type":"string","pattern":"^$|^#[0-9a-fA-F]{6}$"}';
+      LExtra := ',"format":{"const":"rgb"}';
+      LRequired := LRequired + ',"format"';
       LBoundRule := '';
     end
     else if LKind in [2, 3] then

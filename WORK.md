@@ -7,6 +7,100 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: typed RGB color fields — 2026-10-07
+
+The immediately preceding goal turn is **no progress** toward new acceptance:
+it reverified the delivered mobile allocation and checkpointed that evidence.
+The worktree starts clean at `afa947d`; no live process awaits completion.
+Resume original renderer criteria 1–3 and component input/picker breadth: browser
+color currently uses a native color input, while LCL silently falls back to TEdit.
+
+Preregistered deliverable: a portable immutable typed RGB value with explicit
+empty versus black, exact strict hexadecimal persistence and numeric authoring;
+specialized managed Color access, crafted generation/source admission and a
+reusable owned LCL color picker. Both ordinary adapters must retain empty and
+invalid drafts rather than silently coercing them to black. Native popup edits
+are proposals until explicit acceptance; Cancel, interaction revocation and
+retirement preserve accepted data. Browser and LCL share the descriptor contract,
+not target control types. Existing domains, bindings and copied event payloads
+remain authoritative. Alpha/wide-gamut colors are not silently mapped to RGB.
+
+Evidence/stop: use an independent English semantic review seed on the existing
+authenticated endpoint, preserve all active pairs/services/LAN bytes, qualify
+strict shared values/source/history and actual native picker/input/lifetime,
+execute exact emitted source and compile both Studios, browser controls and
+source worker. Current browser execution/phone/accessibility/rollout stay gated;
+do not retry a previously rejected launch. Two integration/repair passes, then
+reassess concrete failures. Renderer is the sole no-closure owner; original full
+criteria and goal stay open. Known counts begin 20/34/16/28/2 for workflow,
+authoring/renderer/codegen/delivery. Do not expand another Inspector form or
+present compiled browser controls as executed evidence.
+
+Implemented typed optional RGB values/domains, specialized managed Color access,
+typed configuration/choices, exact crafted generation/source admission, intrinsic
+and named-slot policy enrichment, and the two ordinary adapters. The reusable
+native field owns its LCL palette/channel popup and requires explicit acceptance;
+the browser retains an exact editor beside its native proposal chooser. Absence
+never silently becomes black. Imported wire case, independent reusable overrides,
+invalid drafts, revocation and callback retirement preserve their contracts. The
+existing semantic domain operation/discovery and bounded context expose RGB;
+no additional tool or Inspector form is introduced. Public contract and seed/build
+instructions are in [colors](docs/colors.md).
+
+The existing authenticated tools created independent English `review-4` at primary
+revision two, composed/exported the three-field workshop as one transaction,
+checked paired Undo/Redo, then discarded only that owned review. Initial incomplete
+root requests refused atomically. The frozen service still exposes its earlier
+format surface; current typed policy enrichment is explicitly local. Checked
+in-process semantic execution publishes two RGB policies together and restores
+the exact pair with Undo/Redo; this is not new authenticated HTTP/observing evidence.
+
+Qualification passes **84 shared/native checks** (including one native backend
+discovery check) and **34 exact compiled-builder/actual Win32 control checks**,
+zero leaks and owned warnings. Maintained integration first passed 81/34; three
+additional semantic grouped-history assertions pass in the final values run.
+Evidence: `build/color-fields/maintained-build-pass2.log`, `values-final-*.log`,
+the exact emitted `maintained/generated/nyx.generated.colors.pas` and fixture.
+Both Studios/backend compile; final browser values/control/Studio/source-worker
+compilation passes. All six wrong-channel-family compiler cases refuse the
+specified Integer type, not a missing dependency. Seven unchanged installed
+Classes warnings remain unsuppressed per pas2js compile. Both English browser
+hosts and matched RTL are staged; none is executed here.
+
+The preregistered integration reassessment retains the first browser fixture
+failure: a shared test imported server-only MCP discovery and therefore SyncObjs.
+That discovery check is now native-only; common semantic/candidate behavior still
+compiles for both targets. Review also protects an unchanged browser chooser
+proposal from synchronization; the strengthened consumer is compiled, not run.
+No rejected browser/backend launch is retried.
+
+Broader core regression passes **30 core / 1795 composition / 55 scheduler /
+60 paired-recovery** checks plus exact emitted companion and collection execution
+(`core-regression.log`). Clock/date prerequisite checks pass **1613 / 49** and
+exact compiled clock reconstruction. Actual clock focus remains a hard failed
+gate: an incidental grouped-clock geometry change was removed, but the unchanged
+assertion still fails. The previously qualified `build/picker-focus/time` binary
+reproduces the same assertion failure in this session. Current diagnostics show
+the correct native focused editor and accepted `23:00:01.500`, but callback count
+three versus expected two. Preserve the assertion and its added diagnostics;
+do not weaken it or attribute successful clock execution to prerequisite passes.
+Traces: `time-regression-pass1/2.log`, `clock-diagnostic-*.log`,
+`clock-original-baseline-run.log`. Focus/event qualification retains the original
+renderer/event owners; this packet does not close that gate.
+
+No original full criterion closes. Renderer alone advances its no-closure count
+**16→17** once; workflow/authoring/codegen/delivery remain **20/34/28/2**. End this
+RGB breadth boundary. Current browser/phone/trusted chooser/IME/accessibility,
+other widgetsets/DPI, production visuals/budgets, full parity and observing rollout
+remain open. The maintained reference still describes 77 kinds; improving Color
+does not add a catalog kind. The latest protected guard verifies fifteen exact
+process identities, nine complete pairs and all 229 frozen LAN files; named MCP
+inspection preserves primary revision two, selection/home, no draft or history
+(`build/color-fields/preservation-final.log`). The authorized branch checkpoint
+receipt belongs in ignored `build/color-fields/remote-checkpoint.json`; final
+handoff verifies the exact remote revision and clean worktree. No active service/
+root is replaced.
+
 ## Current return path: semantic saved-search workflow — 2026-10-07
 
 The immediately preceding goal turn is **no progress** toward new acceptance:

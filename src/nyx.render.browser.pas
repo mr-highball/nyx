@@ -55,6 +55,8 @@ uses
   nyx.schema,
   nyx.contract,
   nyx.sliders,
+  nyx.colors,
+  nyx.colors.browser,
   nyx.theme,
   nyx.design.tokens,
   nyx.behavior,
@@ -137,6 +139,8 @@ type
       APhase: TNyxEditingPhase): Boolean;
     FCollectionMount: INyxCollectionMount;
     FSplit: TNyxBrowserSplit;
+    FColorField: TNyxBrowserColorField;
+    procedure ColorChanged(const AValue: TNyxRGBColor);
     procedure SplitChanged(ASplit: TNyxBrowserSplit);
     function Click(AEvent: TJSMouseEvent): Boolean;
     function Change(AEvent: TEventListenerEvent): Boolean;
@@ -1170,6 +1174,13 @@ begin
     (LKind = 'spin') or (LKind = 'date') or (LKind = 'time') or (LKind = 'color') then
   begin
     Result := Element('label', 'nyx-field');
+
+    if LKind = 'color' then
+    begin
+      { The group has two separately named inputs. A label cannot contain a
+        second labelable control; explicit names retain both keyboard targets. }
+      Result := Element('div', 'nyx-field');
+    end;
     LCaption := Element('span', 'nyx-field-caption');
     LCaption.textContent := ANode.Prop('text');
     Result.appendChild(LCaption);
@@ -1206,7 +1217,7 @@ begin
         LInput._type := 'number';
       end;
 
-      if (LKind = 'date') or (LKind = 'time') or (LKind = 'color') then
+      if (LKind = 'date') or (LKind = 'time') then
       begin
         LInput._type := LKind;
       end;
@@ -1454,6 +1465,12 @@ begin
   LBinding.FElement := Result;
   LBinding.FInput := LInput;
   LBinding.FCustom := FactoryIndex(ANode) >= 0;
+
+  if (ANode.ProjectionKind = 'color') and not LBinding.FCustom then
+  begin
+    LBinding.FColorField := TNyxBrowserColorField.Create(
+      TJSHTMLInputElement(LInput), LBinding.ColorChanged);
+  end;
 
   if LBinding.FCustom then
   begin
@@ -3951,6 +3968,12 @@ begin
   Result := EditingEvent(AEvent, ntTextSelectionChange, nepSelectionChange);
 end;
 
+procedure TNyxBrowserBinding.ColorChanged(const AValue: TNyxRGBColor);
+begin
+  TJSHTMLInputElement(FInput).value := AValue.ToText;
+  Change(nil);
+end;
+
 function TNyxBrowserBinding.Change(AEvent: TEventListenerEvent): Boolean;
 var
   LValue: TNyxText;
@@ -3965,6 +3988,13 @@ begin
 
   if FRenderer.FUpdating then
   begin
+    Exit;
+  end;
+
+  if (FColorField <> nil) and (AEvent <> nil) and (AEvent._type = 'input') then
+  begin
+    { Hex text remains a draft until completion, including empty/pasted/IME
+      input. No native color sanitizer substitutes black during typing. }
     Exit;
   end;
 
@@ -4776,6 +4806,7 @@ var
   LIndex: Integer;
   LPointerID: Integer;
 begin
+  FreeAndNil(FColorField);
   { Detach the exact focus surface before disposing a split behavior. A caller
     may still hold its old DOM element after navigation; it must have no live
     Pascal event sink. Remove both capture modes used by default/custom faces. }
@@ -5857,6 +5888,13 @@ begin
         LControl.title := LNode.Prop('hint');
         LControl.setAttribute('placeholder', LNode.Prop('placeholder'));
         LControl.setAttribute('aria-label', LNode.Prop('aria-label', LNode.Prop('text', LNode.ID)));
+
+        if LBinding.FColorField <> nil then
+        begin
+          LBinding.FColorField.Sync(TNyxRGBColor.FromText(LNode.Prop('value')),
+            NyxNodeValueDomain(LNode), LEnabled, LReadOnly, LPolicy.Visible,
+            LNode.Prop('aria-label', LNode.Prop('text', LNode.ID)));
+        end;
 
         if not LBinding.FCustom and not LBinding.FComposing and
           (LNode.ProjectionKind = 'input') then

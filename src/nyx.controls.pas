@@ -32,6 +32,7 @@ uses
   nyx.text,
   nyx.dates,
   nyx.times,
+  nyx.colors,
   nyx.types,
   nyx.responsive,
   nyx.presentations,

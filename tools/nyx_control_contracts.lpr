@@ -239,6 +239,15 @@ begin
         GTypes.Add('    property TimeValue: TNyxClockTime read GetTimeValue write SetTimeValue;');
       end;
 
+      if LKind = nkColor then
+      begin
+        GTypes.Add('    { Typed optional RGB; Value is the exact hexadecimal persistence boundary. }');
+        GTypes.Add('    function GetColorValue: TNyxRGBColor;');
+        GTypes.Add('    procedure SetColorValue(const AValue: TNyxRGBColor);');
+        GTypes.Add('    function WithColor(const AValue: TNyxRGBColor): INyxColor;');
+        GTypes.Add('    property ColorValue: TNyxRGBColor read GetColorValue write SetColorValue;');
+      end;
+
       if LRecipe <> nil then
       begin
         EmitParts(LRecipe, '', True, False);
@@ -276,6 +285,14 @@ begin
         GTypes.Add('    procedure SetTimeValue(const AValue: TNyxClockTime);');
         GTypes.Add('    function WithTime(const AValue: TNyxClockTime): INyxTime;');
         GTypes.Add('    property TimeValue: TNyxClockTime read GetTimeValue write SetTimeValue;');
+      end;
+
+      if LKind = nkColor then
+      begin
+        GTypes.Add('    function GetColorValue: TNyxRGBColor;');
+        GTypes.Add('    procedure SetColorValue(const AValue: TNyxRGBColor);');
+        GTypes.Add('    function WithColor(const AValue: TNyxRGBColor): INyxColor;');
+        GTypes.Add('    property ColorValue: TNyxRGBColor read GetColorValue write SetColorValue;');
       end;
 
       if LRecipe <> nil then
@@ -372,6 +389,26 @@ begin
       if LRecipe <> nil then
       begin
         EmitParts(LRecipe, '', False, True);
+      end;
+
+      if LKind = nkColor then
+      begin
+        GImplementation.Add('function TNyxColor.GetColorValue: TNyxRGBColor;');
+        GImplementation.Add('begin');
+        GImplementation.Add('  Result := TNyxRGBColor.FromText(Value);');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+        GImplementation.Add('procedure TNyxColor.SetColorValue(const AValue: TNyxRGBColor);');
+        GImplementation.Add('begin');
+        GImplementation.Add('  GetConfigure.Value(AValue);');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
+        GImplementation.Add('function TNyxColor.WithColor(const AValue: TNyxRGBColor): INyxColor;');
+        GImplementation.Add('begin');
+        GImplementation.Add('  SetColorValue(AValue);');
+        GImplementation.Add('  Result := Self as INyxColor;');
+        GImplementation.Add('end;');
+        GImplementation.Add('');
       end;
     end;
     GImplementation.Add('function NewNyxBuiltinControl(AKind: TNyxKind; const AID: TNyxText;');
@@ -567,6 +604,11 @@ begin
       if (AMember = 'Configure') and (Pos('TNyxClockTime', LSignature) > 0) then
       begin
         GFacadeTypes.Add('    { Retains exact clock precision; no time is distinct from midnight. }');
+      end;
+
+      if (AMember = 'Configure') and (Pos('TNyxRGBColor', LSignature) > 0) then
+      begin
+        GFacadeTypes.Add('    { Retains exact optional RGB; absence is distinct from black. }');
       end;
 
       if (AMember = 'Contract') and (Pos('function Value(', LSignature) = 1) and

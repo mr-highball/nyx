@@ -32,6 +32,7 @@ uses
   nyx.text,
   nyx.dates,
   nyx.times,
+  nyx.colors,
   nyx.types,
   nyx.data,
   nyx.state;
@@ -62,6 +63,7 @@ type
     function GetKind: TNyxStateKind;
     function GetCalendarDate: Boolean;
     function GetClockTime: Boolean;
+    function GetRGBColor: Boolean;
     function GetTimeStepMilliseconds: Integer;
   public
     class function FromData(const AData: TNyxDataValue): TNyxValueDomain; static;
@@ -81,6 +83,8 @@ type
     { Clock domains retain exact text stores; reading admission uses immutable
       time values. Zero step means any millisecond, not the HTML default minute. }
     property ClockTime: Boolean read GetClockTime;
+    { Optional RGB is still exact text state, with strict #rrggbb admission. }
+    property RGBColor: Boolean read GetRGBColor;
     property TimeStepMilliseconds: Integer read GetTimeStepMilliseconds;
   end;
 
@@ -94,9 +98,14 @@ type
     { Typed date choices require CalendarDate/NyxDateDomain; a no-date entry is
       an explicit optional choice. Every value is copied into the specification. }
     function Choices(const AValues: array of TNyxCalendarDate): TNyxTextDomain; overload;
+    { Typed RGB choices retain exact imported spelling; equivalent channel
+      readings count as duplicates even when their letter case differs. }
+    function Choices(const AValues: array of TNyxRGBColor): TNyxTextDomain; overload;
     { Return a new canonical calendar specification. Empty is an optional date;
       choices and date ranges still admit only actual Gregorian days. }
     function CalendarDate: TNyxTextDomain;
+    { Return independent strict optional RGB admission, preserving choices. }
+    function RGBColor: TNyxTextDomain;
     { Inclusive bounds require defined dates in ascending order. Empty values
       remain admitted; required-value policy belongs to application validation. }
     function Range(const AMinimum, AMaximum: TNyxCalendarDate): TNyxTextDomain;
@@ -252,6 +261,9 @@ function NyxDateDomain: TNyxTextDomain; overload;
 { Enrich an existing text specification without dropping choices or bounds.
   Physical date projections also use this for legacy text declarations. }
 function NyxDateDomain(const ABase: TNyxValueDomain): TNyxTextDomain; overload;
+{ RGB enrichment refuses nontext/date/time domains and invalid existing choices. }
+function NyxRGBDomain: TNyxTextDomain; overload;
+function NyxRGBDomain(const ABase: TNyxValueDomain): TNyxTextDomain; overload;
 function NyxTimeDomain: TNyxTimeDomain; overload;
 { Enrich admitted text while retaining constraints. Invalid existing choices/
   bounds refuse atomically; numeric/calendar specifications cannot become clocks. }
@@ -376,6 +388,12 @@ begin
     (FData.Field('format').AsText = 'time');
 end;
 
+function TNyxValueDomain.GetRGBColor: Boolean;
+begin
+  Result := Defined and HasField(FData, 'format') and
+    (FData.Field('format').AsText = 'rgb');
+end;
+
 function TNyxValueDomain.GetTimeStepMilliseconds: Integer;
 begin
 
@@ -466,6 +484,12 @@ var
   LRight: TNyxClockTime;
 begin
 
+  if ADomain.RGBColor then
+  begin
+    Exit(TNyxRGBColor.FromText(ALeft.AsText).SameColor(
+      TNyxRGBColor.FromText(ARight.AsText)));
+  end;
+
   if (ADomain.Kind <> nskText) or not ADomain.ClockTime then
   begin
     Exit(SameDomainScalar(ADomain.Kind, ALeft, ARight));
@@ -503,9 +527,10 @@ begin
 
   if HasField(FData, 'format') and
     ((LKind <> nskText) or ((FData.Field('format').AsText <> 'date') and
-    (FData.Field('format').AsText <> 'time'))) then
+    (FData.Field('format').AsText <> 'time') and
+    (FData.Field('format').AsText <> 'rgb'))) then
   begin
-    raise ENyxContract.Create('Only text domains support the date/time formats');
+    raise ENyxContract.Create('Only text domains support date/time/RGB formats');
   end;
 
   if HasField(FData, 'step') then
@@ -608,6 +633,7 @@ var
   LNumber: Double;
   LDate: TNyxCalendarDate;
   LTime: TNyxClockTime;
+  LColor: TNyxRGBColor;
   LMinimumTime: Integer;
   LMaximumTime: Integer;
   LStep: Integer;
@@ -628,6 +654,11 @@ begin
         if ClockTime and not TryNyxTime(AValue.AsText, LTime) then
         begin
           raise ENyxContract.Create('Value requires a valid clock time');
+        end;
+
+        if RGBColor and not TryNyxRGB(AValue.AsText, LColor) then
+        begin
+          raise ENyxContract.Create('Value requires empty or exactly #rrggbb');
         end;
       end;
     nskBoolean:
@@ -1355,6 +1386,46 @@ function NyxDateDomain(const ABase: TNyxValueDomain): TNyxTextDomain;
 begin
   Result.FDomain := ABase.Copy;
   Result := Result.CalendarDate;
+end;
+
+function NyxRGBDomain: TNyxTextDomain;
+begin
+  Result := NyxTextDomain.RGBColor;
+end;
+
+function NyxRGBDomain(const ABase: TNyxValueDomain): TNyxTextDomain;
+begin
+  Result.FDomain := ABase.Copy;
+  Result := Result.RGBColor;
+end;
+
+function TNyxTextDomain.RGBColor: TNyxTextDomain;
+begin
+
+  if (FDomain.Kind <> nskText) or FDomain.CalendarDate or FDomain.ClockTime then
+  begin
+    raise ENyxContract.Create('RGB format requires a compatible text domain');
+  end;
+  Result.FDomain := TNyxValueDomain.FromData(ReplaceField(
+    FDomain.ToData, 'format', NyxData('rgb')));
+end;
+
+function TNyxTextDomain.Choices(const AValues: array of TNyxRGBColor): TNyxTextDomain;
+var
+  LValues: array of TNyxText;
+  LIndex: Integer;
+begin
+
+  if not FDomain.RGBColor then
+  begin
+    raise ENyxContract.Create('Typed RGB choices require an RGB domain');
+  end;
+  SetLength(LValues, Length(AValues));
+  for LIndex := 0 to Length(AValues) - 1 do
+  begin
+    LValues[LIndex] := AValues[LIndex].ToText;
+  end;
+  Result := Choices(LValues);
 end;
 
 function TNyxTextDomain.CalendarDate: TNyxTextDomain;

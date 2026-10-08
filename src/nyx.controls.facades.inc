@@ -56,6 +56,8 @@
     function Value(const AValue: TNyxCalendarDate): INyxConfiguration; overload;
     { Retains exact clock precision; no time is distinct from midnight. }
     function Value(const AValue: TNyxClockTime): INyxConfiguration; overload;
+    { Retains exact optional RGB; absence is distinct from black. }
+    function Value(const AValue: TNyxRGBColor): INyxConfiguration; overload;
     function Value(AValue: Integer): INyxConfiguration; overload;
     function Value(AValue: Boolean): INyxConfiguration; overload;
     function Value(AValue: Double): INyxConfiguration; overload;
@@ -154,6 +156,7 @@
     function Value(const AValue: TNyxText): INyxConfiguration; overload;
     function Value(const AValue: TNyxCalendarDate): INyxConfiguration; overload;
     function Value(const AValue: TNyxClockTime): INyxConfiguration; overload;
+    function Value(const AValue: TNyxRGBColor): INyxConfiguration; overload;
     function Value(AValue: Integer): INyxConfiguration; overload;
     function Value(AValue: Boolean): INyxConfiguration; overload;
     function Value(AValue: Double): INyxConfiguration; overload;

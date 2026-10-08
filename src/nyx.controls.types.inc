@@ -534,6 +534,11 @@
   INyxColor = interface(INyxTextInput)
     ['{737A7921-4621-4C6F-8C01-02003D7E6258}']
     function WithText(const AText: TNyxText): INyxColor;
+    { Typed optional RGB; Value is the exact hexadecimal persistence boundary. }
+    function GetColorValue: TNyxRGBColor;
+    procedure SetColorValue(const AValue: TNyxRGBColor);
+    function WithColor(const AValue: TNyxRGBColor): INyxColor;
+    property ColorValue: TNyxRGBColor read GetColorValue write SetColorValue;
   end;
 
   { Default managed color implementation. Subclass for behavior or implement the interface
@@ -543,6 +548,10 @@
     constructor Create(const AID: TNyxText = '';
       AConstruction: TNyxConstruction = ncoDefault); reintroduce;
     function WithText(const AText: TNyxText): INyxColor;
+    function GetColorValue: TNyxRGBColor;
+    procedure SetColorValue(const AValue: TNyxRGBColor);
+    function WithColor(const AValue: TNyxRGBColor): INyxColor;
+    property ColorValue: TNyxRGBColor read GetColorValue write SetColorValue;
   end;
 
   { Specialized list contract; inherited properties retain the CaptionControl family.

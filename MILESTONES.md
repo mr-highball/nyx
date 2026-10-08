@@ -3,6 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current RGB prerequisite (2026-10-07): immutable optional color values/domains,
+specialized interfaces, exact crafted source/history and native palette/channel
+pickers pass 84 shared/native and 34 exact compiled-builder/actual Win32 checks,
+leak-free. Semantic RGB groups/Undo/Redo execute in-process; both Studios/backend
+and browser consumers/worker compile with zero owned warnings. No original full
+criterion closes: renderer alone advances 16→17, with workflow/authoring/codegen/
+delivery 20/34/28/2 unchanged. End this RGB breadth boundary. Current browser/
+phone/trusted input/accessibility/widgetsets/visual/budget/parity and observing
+rollout remain open. Clock focus still fails its preserved assertion in the
+previously qualified binary as well as the current consumer; retain that gate.
+See [the packet](WORK.md#current-return-path-typed-rgb-color-fields--2026-10-07).
+
 Current saved-search prerequisite (2026-10-07): typed collection bindings retain
 typeahead through persistence, crafted generation/source history and ordinary
 browser/native mount initialization. Local overrides stay separate; Inspector

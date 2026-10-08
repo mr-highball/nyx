@@ -1112,6 +1112,11 @@ begin
       LFormat := 'time';
     end;
 
+    if LDomain.RGBColor then
+    begin
+      LFormat := 'rgb';
+    end;
+
     if NyxAgentHas(LData, 'choices') then
     begin
       LChoices := LData.Field('choices');

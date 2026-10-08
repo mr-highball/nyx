@@ -26,6 +26,21 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   time pickers. Full picker/component criteria retain this task's ownership;
   the shared NS-1 prerequisite creates no extra completion credit.
 
+## RGB picker breadth prerequisite — 2026-10-07
+
+Original input/picker and reusable criteria now include specialized typed Color,
+an owned native palette/channel popup, exact browser text/chooser proposal
+semantics, copied choices and independent named-slot overrides. Native/shared
+checks pass 84 and exact compiled-builder/actual Win32 checks 34, leak-free.
+Both Studios/browser counterparts compile; current browser execution remains open.
+See [colors](../docs/colors.md) and
+[the packet](../WORK.md#current-return-path-typed-rgb-color-fields--2026-10-07).
+
+No component/full criterion closes or historical count is invented. Renderer
+alone owns 16→17. The existing kind count stays 77. Full production component
+breadth/style/budgets, parity, trusted accessibility and observing delivery retain
+the original owners, including the currently failed clock-focus gate.
+
 ## Saved list/tree search prerequisite — 2026-10-07
 
 Original input/data criteria 1/3 now have typed saved typeahead with persistence,

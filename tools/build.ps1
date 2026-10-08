@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -73,6 +73,9 @@ param(
   # Exact public-Pascal clock companion produced by the prerequisite build.
   # This form/semantic consumer does not re-run its foundation or edit Studio.
   [string]$TimePolicySourceDirectory = 'build/time-fields/maintained/source',
+  # Exact English review companion exported through bounded authenticated MCP.
+  # Current typed RGB policies are explicitly enriched by the Pascal fixture.
+  [string]$ColorSourceDirectory = 'build/color-fields/seed',
   # Exact English bound-table source composed/exported through authenticated MCP.
   [string]$GridSourceDirectory = 'build/grid-navigation/source',
   # Full-catalog source is composed/exported by the Pascal semantic MCP consumer.
@@ -1160,6 +1163,81 @@ try {
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxLegacyWeb 'rtl.js') -Force
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/legacy-snapshot.html') -Destination $nyxLegacyWeb -Force
     Write-Host 'Legacy bootstrap built; runtime seeding requires an explicit policy and fresh destination.'
+    exit 0
+  }
+
+  if ($Target -eq 'color-fields') {
+    # Pascal owns admission, source/history and actual native picker behavior.
+    # Shell only compiles/runs consumers and stages matching browser artifacts.
+    # Nothing starts a listener/browser or replaces an operator project.
+    $nyxColorRoot = Join-Path $nyxRoot 'build/color-fields/maintained'
+    $nyxColorSeed = [IO.Path]::GetFullPath($ColorSourceDirectory)
+
+    if (-not (Test-Path -LiteralPath (Join-Path $nyxColorSeed 'nyx.generated.view.pas'))) {
+      throw 'Supply the exact MCP-exported English color workshop; see docs/colors.md'
+    }
+    $nyxColorValues = Join-Path $nyxColorRoot 'values'
+    $nyxColorNative = Join-Path $nyxColorRoot 'native'
+    $nyxColorGenerated = Join-Path $nyxColorRoot 'generated'
+    $nyxColorBrowser = Join-Path $nyxColorRoot 'browser'
+    New-Item -ItemType Directory -Force $nyxColorValues, $nyxColorNative,
+      $nyxColorGenerated, $nyxColorBrowser | Out-Null
+    $nyxColorUnits = @('-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxColorSeed")
+    $nyxColorChecks = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh')
+    $nyxColorValueFlags = $nyxColorChecks + $nyxColorUnits +
+      @("-FU$nyxColorValues", "-FE$nyxColorValues")
+    Invoke-NyxCompiler $nyxFpc ($nyxColorValueFlags + @('tests/nyx_color_values_tests.lpr'))
+    & (Join-Path $nyxColorValues 'nyx_color_values_tests.exe') $nyxColorGenerated
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'RGB value/source/history/semantic checks failed'
+    }
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxColorPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxColorNativeFlags = $nyxColorChecks + $nyxColorUnits + @(
+      "-Fu$nyxColorGenerated", "-FU$nyxColorNative", "-FE$nyxColorNative",
+      "-Fu$nyxLazarus/lcl/units/$nyxColorPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxColorPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxColorPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxColorPlatform")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxColorNativeFlags + @('tests/nyx_color_controls.lpr'))
+    & (Join-Path $nyxColorNative 'nyx_color_controls.exe')
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Actual native RGB picker controls failed'
+    }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxColorNativeFlags + @('studio/nyx_studio_native.lpr'))
+    Invoke-NyxCompiler $nyxFpc ($nyxColorValueFlags + @('studio/nyx_studio_server.lpr'))
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    $nyxColorBrowserFlags = @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js') +
+      $nyxColorUnits + @("-Fu$nyxColorGenerated", "-FE$nyxColorBrowser")
+    foreach ($nyxColorProgram in @('tests/nyx_color_values_tests.lpr',
+      'tests/nyx_color_controls.lpr', 'studio/nyx_studio.lpr')) {
+      Invoke-NyxCompiler $nyxPas2js ($nyxColorBrowserFlags + @($nyxColorProgram))
+    }
+    foreach ($nyxColorFamily in @('text', 'boolean', 'number')) {
+      $nyxColorFailure = "tests/compile_fail/nyx_invalid_rgb_$nyxColorFamily.lpr"
+      $nyxColorNativeLog = Join-Path $nyxColorRoot "refused-native-$nyxColorFamily.log"
+      & $nyxFpc @nyxColorValueFlags $nyxColorFailure *> $nyxColorNativeLog
+
+      if ($LASTEXITCODE -eq 0 -or -not (Select-String -LiteralPath $nyxColorNativeLog `
+        -Pattern 'Error:.*Incompatible type.*expected.*(Integer|LongInt)' -Quiet)) {
+        throw "Native compiler failed to refuse RGB $nyxColorFamily channel"
+      }
+      $nyxColorBrowserLog = Join-Path $nyxColorRoot "refused-browser-$nyxColorFamily.log"
+      & $nyxPas2js @nyxColorBrowserFlags $nyxColorFailure *> $nyxColorBrowserLog
+
+      if ($LASTEXITCODE -eq 0 -or -not (Select-String -LiteralPath $nyxColorBrowserLog `
+        -Pattern 'Error:.*Incompatible type.*expected.*(Integer|LongInt)' -Quiet)) {
+        throw "Browser compiler failed to refuse RGB $nyxColorFamily channel"
+      }
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxColorBrowser 'rtl.js')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/color-fields.html') -Destination $nyxColorBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/color-values.html') -Destination $nyxColorBrowser
+    Write-Host 'RGB source/native controls qualified; browser consumers staged without execution.'
     exit 0
   }
 

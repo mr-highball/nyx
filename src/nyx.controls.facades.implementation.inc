@@ -239,6 +239,12 @@ begin
   Result := Self as INyxConfiguration;
 end;
 
+function TNyxConfiguration.Value(const AValue: TNyxRGBColor): INyxConfiguration;
+begin
+  ConfigurationScope.Value(AValue);
+  Result := Self as INyxConfiguration;
+end;
+
 function TNyxConfiguration.Value(AValue: Integer): INyxConfiguration;
 begin
   ConfigurationScope.Value(AValue);

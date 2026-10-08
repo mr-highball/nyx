@@ -23,6 +23,23 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   prerequisite for replacing the time-field text fallback. Other native input
   and full renderer criteria remain required; this allocates no extra credit.
 
+## Typed RGB picker prerequisite — 2026-10-07
+
+Original criteria 1–3 now consume optional typed RGB values/domains, specialized
+Color interfaces, exact generated/source history and reusable native palette/
+channel pickers through ordinary controls. Shared/native checks pass 84 and exact
+compiled-builder/actual Win32 checks 34, leak-free; current semantic RGB policy
+groups and paired Undo/Redo execute in-process. Both Studios/backend and browser
+consumers/worker compile. See [the contract](../docs/colors.md) and
+[the packet](../WORK.md#current-return-path-typed-rgb-color-fields--2026-10-07).
+
+No original full criterion closes. Renderer alone advances 16→17 once; other
+known counts remain 20/34/28/2. Stop this color breadth boundary. Executed browser,
+trusted input/accessibility/widgetsets/DPI, production visuals/budgets and full
+parity retain the original requirements. The clock focus regression currently
+fails the preserved assertion in both current and previously qualified binaries;
+that gate remains open and is not supplied by passing clock-value tests.
+
 ## Saved list/tree search prerequisite — 2026-10-07
 
 Original criteria 1/2 now consume authored typed typeahead on both mount adapters.

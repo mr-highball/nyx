@@ -33,6 +33,7 @@ uses
   nyx.errors,
   nyx.dates,
   nyx.times,
+  nyx.colors,
   nyx.root.types,
   nyx.data,
   nyx.contract,
@@ -419,6 +420,8 @@ type
     function Value(const AValue: TNyxCalendarDate): TNyxNodeConfig; overload;
     { Clock values retain their exact optional reading and wire precision. }
     function Value(const AValue: TNyxClockTime): TNyxNodeConfig; overload;
+    { Optional RGB retains exact channels and imported hexadecimal spelling. }
+    function Value(const AValue: TNyxRGBColor): TNyxNodeConfig; overload;
     function Value(AValue: Integer): TNyxNodeConfig; overload;
     function Value(AValue: Boolean): TNyxNodeConfig; overload;
     function Value(AValue: Double): TNyxNodeConfig; overload;
@@ -1768,6 +1771,11 @@ begin
 end;
 
 function TNyxNodeConfig.Value(const AValue: TNyxClockTime): TNyxNodeConfig;
+begin
+  Result := Value(AValue.ToText);
+end;
+
+function TNyxNodeConfig.Value(const AValue: TNyxRGBColor): TNyxNodeConfig;
 begin
   Result := Value(AValue.ToText);
 end;

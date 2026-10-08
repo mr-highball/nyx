@@ -538,6 +538,22 @@ begin
   Result := TNyxColor.Create(AID, AConstruction);
 end;
 
+function TNyxColor.GetColorValue: TNyxRGBColor;
+begin
+  Result := TNyxRGBColor.FromText(Value);
+end;
+
+procedure TNyxColor.SetColorValue(const AValue: TNyxRGBColor);
+begin
+  GetConfigure.Value(AValue);
+end;
+
+function TNyxColor.WithColor(const AValue: TNyxRGBColor): INyxColor;
+begin
+  SetColorValue(AValue);
+  Result := Self as INyxColor;
+end;
+
 constructor TNyxList.Create(const AID: TNyxText;
   AConstruction: TNyxConstruction);
 begin

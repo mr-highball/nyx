@@ -32,6 +32,7 @@ uses
   nyx.text,
   nyx.dates,
   nyx.times,
+  nyx.colors,
   nyx.data,
   nyx.contract,
   nyx.types,
@@ -208,6 +209,27 @@ begin
     TNyxText(IntToStr(LDate.Month)) + ', ' + TNyxText(IntToStr(LDate.Day)) + ')';
 end;
 
+function PascalRGB(const AText: TNyxText): TNyxText;
+var
+  LColor: TNyxRGBColor;
+begin
+  LColor := TNyxRGBColor.FromText(AText);
+
+  if not LColor.Defined then
+  begin
+    Exit('NyxNoColor');
+  end;
+  { Ordinary numeric authoring is readable and canonical. Imported mixed/upper
+    case remains an explicit typed wire constructor, never a lossy rewrite. }
+
+  if NyxRGB(LColor.Red, LColor.Green, LColor.Blue).ToText <> AText then
+  begin
+    Exit('TNyxRGBColor.FromText(' + PascalString(AText) + ')');
+  end;
+  Result := 'NyxRGB(' + TNyxText(IntToStr(LColor.Red)) + ', ' +
+    TNyxText(IntToStr(LColor.Green)) + ', ' + TNyxText(IntToStr(LColor.Blue)) + ')';
+end;
+
 function PascalTime(const AText: TNyxText): TNyxText;
 var
   LTime: TNyxClockTime;
@@ -273,7 +295,8 @@ begin
 end;
 
 function ConfigurationCall(ANode: TNyxNode; const AKey, AValue: TNyxText;
-  ACalendarValue: Boolean = False; AClockValue: Boolean = False): TNyxText;
+  ACalendarValue: Boolean = False; AClockValue: Boolean = False;
+  ARGBValue: Boolean = False): TNyxText;
 const
   CAttributeSymbols: array[TNyxAttribute] of TNyxText = (
     'atText', 'atValue', 'atPlaceholder', 'atItems', 'atHint', 'atAccessibleName',
@@ -427,6 +450,12 @@ begin
   if LAttribute = atValue then
   begin
     LDomain := NyxNodeValueDomain(ANode);
+
+    if (ANode.ProjectionKind = 'color') or ARGBValue or
+      (LDomain.Defined and LDomain.RGBColor) then
+    begin
+      Exit('Value(' + PascalRGB(AValue) + ')');
+    end;
 
     if (ANode.ProjectionKind = 'time') or AClockValue or
       (LDomain.Defined and LDomain.ClockTime) then
@@ -894,6 +923,11 @@ var
             begin
               Result := PascalTime(AValue.AsText);
             end;
+
+            if ADomain.RGBColor then
+            begin
+              Result := PascalRGB(AValue.AsText);
+            end;
           end;
         nskBoolean:
           begin
@@ -921,6 +955,11 @@ var
     if ADomain.ClockTime then
     begin
       Result := 'NyxTimeDomain';
+    end;
+
+    if ADomain.RGBColor then
+    begin
+      Result := 'NyxRGBDomain';
     end;
     for LIndex := 0 to LData.Count - 1 do
     begin
@@ -1099,7 +1138,7 @@ var
     { Canonical domain data must retain format during authored fingerprinting;
       otherwise a date would collapse to unconstrained text after generation. }
 
-    if ADomain.CalendarDate then
+    if ADomain.CalendarDate or ADomain.RGBColor then
     begin
       Add('format', LData.Field('format'));
     end;
@@ -1662,6 +1701,7 @@ var
     LContentIndex: Integer;
     LCalendarValue: Boolean;
     LClockValue: Boolean;
+    LRGBValue: Boolean;
     LEarlyExtensions: Boolean;
     LContext: TNyxNode;
     LProjection: TNyxNode;
@@ -1735,6 +1775,7 @@ var
     EmitMenuBar(ANode);
     LCalendarValue := False;
     LClockValue := False;
+    LRGBValue := False;
 
     if (ANode.Kind = 'slot-override') and
       (ANode.Props.IndexOfName('value') >= 0) and (ANode.Prop('mode') <> 'remove') then
@@ -1746,6 +1787,7 @@ var
       try
         LCalendarValue := (LProjection <> nil) and (LProjection.ProjectionKind = 'date');
         LClockValue := (LProjection <> nil) and (LProjection.ProjectionKind = 'time');
+        LRGBValue := (LProjection <> nil) and (LProjection.ProjectionKind = 'color');
       finally
         LContext.Free;
       end;
@@ -1797,7 +1839,7 @@ var
         LScope := LPlatform;
       end;
       LLines.Add('      .' + ConfigurationCall(ANode, LKey, ANode.Prop(LWireKey),
-        LCalendarValue, LClockValue));
+        LCalendarValue, LClockValue, LRGBValue));
     end;
 
     if (ANode.Props.Count > 0) or ANode.HasMenu or ANode.HasMenuBar then
@@ -1889,6 +1931,7 @@ begin
     LLines.Add('  nyx.text,');
     LLines.Add('  nyx.dates,');
     LLines.Add('  nyx.times,');
+    LLines.Add('  nyx.colors,');
     LLines.Add('  nyx.types,');
     LLines.Add('  nyx.responsive,');
     LLines.Add('  nyx.presentations,');

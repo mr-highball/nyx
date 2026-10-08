@@ -673,7 +673,7 @@ const
     (Kind:'time'; Title:'Time field'; Category:'Inputs'; Container:False;
       Browser:ncAvailable; Native:ncBasic),
     (Kind:'color'; Title:'Color field'; Category:'Inputs'; Container:False;
-      Browser:ncAvailable; Native:ncText),
+      Browser:ncBasic; Native:ncBasic),
     (Kind:'list'; Title:'List'; Category:'Data'; Container:False;
       Browser:ncBasic; Native:ncBasic),
     (Kind:'table'; Title:'Table'; Category:'Data'; Container:False;
@@ -2592,6 +2592,11 @@ begin
     Exit(NyxTimeDomain.Definition);
   end;
 
+  if LKind = 'color' then
+  begin
+    Exit(NyxRGBDomain.Definition);
+  end;
+
   if KindIn(LKind, 'input|memo|select|color|code-editor') then
   begin
     Exit(NyxTextDomain.Definition);
@@ -2628,6 +2633,11 @@ begin
         format. Malformed values and incompatible domains refuse admission. }
       Result := NyxTimeDomain(Result).Definition;
     end;
+
+    if ANode.ProjectionKind = 'color' then
+    begin
+      Result := NyxRGBDomain(Result).Definition;
+    end;
     Exit;
   end;
   LOwner := ANode.Parent;
@@ -2660,6 +2670,11 @@ begin
         if ANode.ProjectionKind = 'time' then
         begin
           Result := NyxTimeDomain(Result).Definition;
+        end;
+
+        if ANode.ProjectionKind = 'color' then
+        begin
+          Result := NyxRGBDomain(Result).Definition;
         end;
         Exit;
       end;

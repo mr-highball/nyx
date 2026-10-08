@@ -365,7 +365,11 @@ begin
     'native clock acceptance returns focus to the exact editor');
   Check((LCLIntf.GetFocus = LStart.Editor.Handle) and (GFocusValue = '23:00:01.500') and
     (GFocusCount = LEnterBefore + 1),
-    'the native focus handle and after-enter callback observe the committed clock');
+    'the native focus handle and after-enter callback observe the committed clock' +
+    ' (focus ' + TNyxText(IntToStr(LCLIntf.GetFocus)) + '/' +
+    TNyxText(IntToStr(LStart.Editor.Handle)) + ', value ' + GFocusValue +
+    ', registrations ' + TNyxText(IntToStr(GFocusCount)) + '/' +
+    TNyxText(IntToStr(LEnterBefore + 1)) + ')');
   LEarliest := Field('earliest-time');
   GRedirectChange := True;
   OpenPicker(LStart);

@@ -34,6 +34,8 @@ uses
   nyx.dates.lcl,
   nyx.times,
   nyx.times.lcl,
+  nyx.colors,
+  nyx.colors.lcl,
   nyx.sliders,
   nyx.sliders.lcl,
   Classes,
@@ -140,6 +142,7 @@ type
     FDateField: TNyxLCLDateField;
     { Borrowed clock host owns its exact grouped editor and picker window. }
     FTimeField: TNyxLCLTimeField;
+    FColorField: TNyxLCLColorField;
     FCaption: TLabel;
     { Value-owned layout and projection. The parent binding is borrowed from the
       same preorder renderer array, never a reference-counted tree back edge. }
@@ -857,6 +860,11 @@ begin
     begin
       FBindings[LIndex].FTimeField.Disconnect;
     end;
+
+    if FBindings[LIndex].FColorField <> nil then
+    begin
+      FBindings[LIndex].FColorField.Disconnect;
+    end;
     FBindings[LIndex].DisconnectControl(FBindings[LIndex].FControl);
 
     if FBindings[LIndex].FInput <> FBindings[LIndex].FControl then
@@ -1043,6 +1051,7 @@ var
   LInputSurface: TNyxLCLSurface;
   LDateField: TNyxLCLDateField;
   LTimeField: TNyxLCLTimeField;
+  LColorField: TNyxLCLColorField;
   LInfo: TNyxPrimitiveInfo;
   LFactoryIndex: Integer;
 begin
@@ -1176,6 +1185,18 @@ begin
       LTimeField.Font.Color := ThemeColor(FTheme.Text);
       AInput := LTimeField.Editor;
     end
+    else if LKind = 'color' then
+    begin
+      LColorField := TNyxLCLColorField.Create(FPanel);
+      LColorField.Parent := LInputSurface;
+      LColorField.AutoSize := False;
+      LColorField.BorderStyle := bsNone;
+      LColorField.SetBounds(12, 5, 276, 30);
+      LColorField.Text := ANode.Prop('value');
+      LColorField.Font.Height := -FTheme.FontSize;
+      LColorField.Font.Color := ThemeColor(FTheme.Text);
+      AInput := LColorField.Editor;
+    end
     else if LKind = 'spin' then
     begin
       AInput := TSpinEdit.Create(FPanel);
@@ -1197,7 +1218,8 @@ begin
     end;
 
     if not (AInput.Parent is TNyxLCLDateField) and
-      not (AInput.Parent is TNyxLCLTimeField) then
+      not (AInput.Parent is TNyxLCLTimeField) and
+      not (AInput.Parent is TNyxLCLColorField) then
     begin
       AInput.Parent := LInputSurface;
       AInput.SetBounds(12, 10, 276, 20);
@@ -1414,6 +1436,11 @@ begin
     LBinding.FTimeField := TNyxLCLTimeField(LInput.Parent);
   end;
 
+  if (LInput <> nil) and (LInput.Parent is TNyxLCLColorField) then
+  begin
+    LBinding.FColorField := TNyxLCLColorField(LInput.Parent);
+  end;
+
   if ANode.Parent <> nil then
   begin
     LBinding.FLogicalParent := Binding(ANode.Parent);
@@ -1431,6 +1458,12 @@ begin
     LBinding.FTimeField.SetDomain(LValueDomain);
     LBinding.FTimeField.SetAcceptedValue(TNyxClockTime.FromText(ANode.Prop('value')));
   end;
+
+  if LBinding.FColorField <> nil then
+  begin
+    LBinding.FColorField.SetDomain(LValueDomain);
+    LBinding.FColorField.SetAcceptedValue(TNyxRGBColor.FromText(ANode.Prop('value')));
+  end;
   { Numeric and native clock drafts need an editing-complete boundary even
     without a state binding. Subsecond clock steps must not reject an unfinished
     fractional draft before its final digit can be entered. }
@@ -1440,7 +1473,7 @@ begin
   if LBinding.FDeferredValue then
   begin
     LBinding.FDeferredValue := (LValueDomain.Kind in [nskInteger, nskNumber]) or
-      (LBinding.FTimeField <> nil);
+      (LBinding.FTimeField <> nil) or (LBinding.FColorField <> nil);
   end;
   LBinding.FCustom := FactoryIndex(ANode) >= 0;
 
@@ -1517,6 +1550,11 @@ begin
     { The real grouped input keeps its forwarding/keyboard/focus/IME hooks. }
     LBinding.FTimeField.OnChange := LBinding.Change;
     LBinding.FTimeField.OnEditingDone := LBinding.CommitValue;
+  end
+  else if LBinding.FColorField <> nil then
+  begin
+    LBinding.FColorField.OnChange := LBinding.Change;
+    LBinding.FColorField.OnEditingDone := LBinding.CommitValue;
   end
   else if LInput is TCustomEdit then
   begin
@@ -6892,6 +6930,15 @@ begin
           LBinding.FTimeField.SetAcceptedValue(
             TNyxClockTime.FromText(LNode.Prop('value')));
           LBinding.FTimeField.SetInteraction(LEnabled, LReadOnly,
+            LBinding.FControl.IsVisible);
+        end;
+
+        if LBinding.FColorField <> nil then
+        begin
+          LValueDomain := NyxNodeValueDomain(LNode);
+          LBinding.FColorField.SetDomain(LValueDomain);
+          LBinding.FColorField.SetAcceptedValue(TNyxRGBColor.FromText(LNode.Prop('value')));
+          LBinding.FColorField.SetInteraction(LEnabled, LReadOnly,
             LBinding.FControl.IsVisible);
         end;
 

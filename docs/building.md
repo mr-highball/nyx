@@ -7,6 +7,13 @@ Pascal. PowerShell only selects tools, passes compiler arguments and stages
 matched target artifacts. No Node, npm, Python, CSS framework or remote font is
 required.
 
+`color-fields` executes typed RGB admission/source/history and ordinary native
+picker controls against an exact MCP-exported English seed. It compiles both
+Studios, backend, browser consumers and source worker; both compilers must refuse
+string, Boolean and fractional channels. It starts no listener/browser and edits
+no active project. See [typed color fields](colors.md) for seed preparation and
+remaining target qualification.
+
 `host-space` executes the checked portable geometry/admission and actual native
 resize/lifetime consumer, then stages its Pascal browser counterpart and matched
 RTL. It starts no listener/browser and changes no active project. See
