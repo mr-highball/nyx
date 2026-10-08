@@ -66,7 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current typed image admission (2026-10-08): immutable fluent policy requires PNG
+Current image policy authoring (2026-10-08): public Nyx selector, copied imports,
+selected-policy Apply, draft migration and exact paired history execute in both
+ordinary Studio controllers. Win32 passes **105**, shared/browser form **59**,
+ordinary HTTP Studio **94 desktop / 126 CSS-390** (including readiness polling),
+exact emitted reconstruction **seven** per target. Inspected captures show the
+selector and decoded preview. Trusted physical input, public image lifecycle,
+complete Resources UX and observing rollout remain open. No full criterion closes:
+authoring alone advances **40→41**, aggregate **25/10/41/21/28/3**. See
+[the packet](WORK.md#current-return-path-image-policy-authoring-and-readiness--2026-10-08).
+
+Previous typed image admission (2026-10-08): immutable fluent policy requires PNG
 chunk checksums by default and retains an explicit framing-only caller choice
 through wire/resources/source/history. Actual Win32 passes **199**, HTTP desktop/
 CSS-390 **231** each, exact emitted reconstruction **eight** per target. Ordinary

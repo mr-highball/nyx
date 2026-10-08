@@ -29,7 +29,9 @@ uses Classes, SysUtils, Dialogs, nyx.text, nyx.images, nyx.image.import;
 
 { Local UTF-8 filename is borrowed for this bounded byte read, never persisted.
   File/header/decoder failures propagate; no accepted picture is modified. }
-function ReadNyxImageFile(const AFileName: TNyxText): TNyxImageSource;
+function ReadNyxImageFile(const AFileName: TNyxText): TNyxImageSource; overload;
+function ReadNyxImageFile(const AFileName: TNyxText;
+  const AValidation: TNyxImageValidationPolicy): TNyxImageSource; overload;
 { Decodes a detached candidate before a file or inline proposal is published.
   No widget/result slot is modified on failure. The temporary picture is owned
   here; immutable source bytes remain the caller's copied value. }
@@ -47,11 +49,19 @@ type
     FGeneration: Integer;
     FPicking: Boolean;
   public
-    procedure Pick(AReply: TNyxImagePickReply);
+    procedure Pick(AReply: TNyxImagePickReply); overload;
+    procedure Pick(AReply: TNyxImagePickReply;
+      const AValidation: TNyxImageValidationPolicy); overload;
     procedure Cancel;
   end;
 
 function ReadNyxImageFile(const AFileName: TNyxText): TNyxImageSource;
+begin
+  Result := ReadNyxImageFile(AFileName, NyxImageValidation);
+end;
+
+function ReadNyxImageFile(const AFileName: TNyxText;
+  const AValidation: TNyxImageValidationPolicy): TNyxImageSource;
 var
   LFile: TFileStream;
   LBytes: TNyxImageBytes;
@@ -66,7 +76,7 @@ begin
     end;
     SetLength(LBytes, Integer(LFile.Size));
     LFile.ReadBuffer(LBytes[0], Length(LBytes));
-    LSource := NyxImportedImage(LBytes);
+    LSource := NyxImportedImage(LBytes, AValidation);
   finally
     LFile.Free;
   end;
@@ -91,6 +101,12 @@ begin
 end;
 
 procedure TImagePicker.Pick(AReply: TNyxImagePickReply);
+begin
+  Pick(AReply, NyxImageValidation);
+end;
+
+procedure TImagePicker.Pick(AReply: TNyxImagePickReply;
+  const AValidation: TNyxImageValidationPolicy);
 var
   LDialog: TOpenDialog;
   LStatus: TNyxImagePickStatus;
@@ -99,6 +115,7 @@ var
   LReply: TNyxImagePickReply;
   LGeneration: Integer;
   LKeepAlive: INyxImagePicker;
+  LValidation: TNyxImageValidationPolicy;
 begin
 
   if FPicking then
@@ -106,6 +123,9 @@ begin
     raise ENyxImage.Create('A native image picker is already open');
   end;
   LKeepAlive := Self;
+  { The modal chooser pumps reentrant UI messages. Copy the request before
+    opening it rather than borrowing a caller's policy until file selection. }
+  LValidation := AValidation;
   Cancel;
   FReply := AReply;
   LGeneration := FGeneration;
@@ -122,7 +142,7 @@ begin
 
       if LDialog.Execute then
       begin
-        LSource := ReadNyxImageFile(TNyxText(LDialog.FileName));
+        LSource := ReadNyxImageFile(TNyxText(LDialog.FileName), LValidation);
         LStatus := ipsSelected;
       end;
     except

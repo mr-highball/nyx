@@ -2281,13 +2281,26 @@ begin
           begin
             Expect('.');
             Expect('FromWire');
-            LArgs := Arguments(1);
+            LArgs := Arguments;
 
-            if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkText) then
+            if not (Length(LArgs) in [1, 2]) or (LArgs[0].Kind <> vkText) then
             begin
               Fail('TNyxImageSource.FromWire requires exact boundary text');
             end;
-            Result.ImageSource := TNyxImageSource.FromWire(LArgs[0].Text);
+
+            if Length(LArgs) = 2 then
+            begin
+
+              if LArgs[1].Kind <> vkImageValidation then
+              begin
+                Fail('Image wire override requires typed NyxImageValidation');
+              end;
+              Result.ImageSource := TNyxImageSource.FromWire(LArgs[0].Text, LArgs[1].ImageValidation);
+            end
+            else
+            begin
+              Result.ImageSource := TNyxImageSource.FromWire(LArgs[0].Text);
+            end;
           end
           else if (LName <> 'nyxnoimage') or At('(') then
           begin

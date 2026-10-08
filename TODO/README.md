@@ -46,7 +46,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current typed image admission (2026-10-08): fluent immutable default checksums and
+Current image policy authoring (2026-10-08): public Nyx selector, copied imports,
+re-admission on Apply, draft migration and exact paired history execute in both
+ordinary Studio controllers. Win32 passes **105**, shared/browser form **59**,
+ordinary HTTP Studio **94 desktop / 126 CSS-390** (polling included), exact emitted
+reconstruction **seven** per target. Inspected desktop/narrow captures qualify
+the changed control; trusted physical input, image events/full resources and
+observing deployment remain open. No full criterion closes: authoring alone
+advances **40→41**, aggregate **25/10/41/21/28/3**. See
+[the packet](../WORK.md#current-return-path-image-policy-authoring-and-readiness--2026-10-08).
+
+Previous typed image admission (2026-10-08): fluent immutable default checksums and
 explicit caller framing-only choice retain source wire/resources/generation/
 paired history. Actual Win32 passes **199**, desktop/CSS-390 **231** each, emitted
 reconstruction **eight** per target. Standard corruption refuses before source

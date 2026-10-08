@@ -75,6 +75,13 @@ The optional third constructor argument works for Base64 and byte input. Framing
 format and byte/dimension budgets remain mandatory for both choices. An unknown
 wire policy or a string in place of the Boolean refuses.
 
+At an explicit import boundary, `TNyxImageSource.FromWire(AWire, AValidation)`
+re-admits recognized embedded bytes using the caller's selected policy and
+canonicalizes the header. This can strengthen or relax a previously recognized
+choice; unknown metadata still refuses. Empty/location values keep their ordinary
+meaning. Typed import helpers and `INyxImagePicker.Pick(AReply, AValidation)`
+copy that same policy for one request; the argument-free overloads use defaults.
+
 Framing-only wire retains `nyx-validation=framing` as an exact data-URL media
 parameter beside unchanged raster bytes. Saved designs/resources, paired history,
 specialized `Image` values, generated fluent Pascal and managed replay retain it.
@@ -164,12 +171,21 @@ and stages browser programs; a successful build does not mean the browser journe
 passed. Serve staged artifacts over HTTP and use the maintained ready/capture
 driver for actual execution. This target starts no server and edits no project.
 
-The ordinary image authoring and resource regressions execute natively and
-compile their browser counterparts. A Studio form selector for the new policy
-remains pending; new picker/Base64 input uses standard admission, while typed
-Pascal and generated source can retain the explicit choice. Complete
-browser/physical-phone and observing Studio execution, the asset
-registry/import UX, portable image load/error/status events and validation policy,
+Studio's public Nyx image form now exposes **Verify PNG checksums** and
+**Framing only**. Plain Base64, pasted complete URLs and file imports use the
+selected policy. Apply re-admits the current preview when that choice changes,
+without requiring another paste. A late import refuses a changed project,
+selection, image baseline or current policy. Drafts retain incomplete choices
+through chrome rebuilds/parked panels; version-1 preferences migrate their six
+original fields and derive the added choice from their admitted source. Clear
+preserves the unsubmitted choice. Only Apply publishes a paired, undoable edit.
+
+Actual Win32 and ordinary HTTP desktop/CSS-390 Studio consumers exercise this
+workflow, typed source, exact paired Undo/Redo and explicit retirement. Browser
+file injection uses real FileReader with synthetic input; native substitutes
+only the OS chooser. These checks do not qualify trusted physical chooser/phone
+behavior. Complete observing Studio rollout, the common asset
+registry/import UX, portable image load/error/status events, complete validation,
 orientation/color fidelity, other widgetsets/DPI and full accessibility, visual
 and performance acceptance remain open under their existing owners.
 
@@ -177,8 +193,13 @@ Run `tools/build.ps1 -Target image-authoring` after the existing
 `image-presentation` semantic seed/raster prerequisite. It exercises the ordinary
 Win32 Studio form, pasted/imported proposal, paired source/history and stale
 refusal, then compiles and executes the exact emitted builder and stages browser
-counterparts. Its picker substitutes only the OS chooser; trusted chooser,
-browser/phone/observing execution and other widgetsets remain unqualified.
+counterparts, including Studio's Pascal source worker. The optional
+`-ImageSourceDirectory <directory>` consumes the exact semantic workshop export.
+Serve the browser closure over HTTP and use the ready/capture driver: the
+ordinary browser journey requests one live capture acknowledgement before
+disposing. Trusted chooser/physical phone, observing deployment and other
+widgetsets remain unqualified. See
+[the authoring evidence](../WORK.md#current-return-path-image-policy-authoring-and-readiness--2026-10-08).
 
 Fit/anchor semantics follow [CSS Images object sizing](https://www.w3.org/TR/css-images-3/#the-object-fit).
 Embedded interchange follows [RFC 2397](https://www.rfc-editor.org/rfc/rfc2397);

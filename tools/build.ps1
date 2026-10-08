@@ -3146,6 +3146,10 @@ try {
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', "-Fu$nyxImageGenerated", "-Fu$nyxImageFixtures", "-FE$nyxImageBrowser",
       'tests/nyx_image_authoring_generated.lpr')
+    # The ordinary browser controller prepares Apply/Undo through this Pascal
+    # worker. Stage its current matched closure, not only the visible test page.
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', "-FE$nyxImageBrowser", 'studio/nyx_source_worker.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxImageBrowser 'rtl.js')
     foreach ($nyxImageHost in @('image-authoring.html', 'image-authoring-generated.html')) {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxImageHost") -Destination $nyxImageBrowser

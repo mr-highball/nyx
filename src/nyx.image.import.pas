@@ -40,21 +40,35 @@ type
     across notification. Repeated Pick cancels the preceding local delivery. }
   INyxImagePicker = interface
     ['{8B37D606-1B21-4526-91C5-104B1D4FDD78}']
-    procedure Pick(AReply: TNyxImagePickReply);
+    procedure Pick(AReply: TNyxImagePickReply); overload;
+    { Copies the caller's embedded admission choice for this one delivery.
+      Native pixel-decoder qualification remains independent and mandatory. }
+    procedure Pick(AReply: TNyxImagePickReply;
+      const AValidation: TNyxImageValidationPolicy); overload;
     procedure Cancel;
   end;
 
 { Detect encoded raster headers, independent of file extension/MIME. Borrowed
   input is copied into an immutable embedded source. Empty/oversized/unsupported
   bytes refuse before any target decoder or accepted document is touched. }
-function NyxImportedImage(const ABytes: TNyxImageBytes): TNyxImageSource;
+function NyxImportedImage(const ABytes: TNyxImageBytes): TNyxImageSource; overload;
+function NyxImportedImage(const ABytes: TNyxImageBytes;
+  const AValidation: TNyxImageValidationPolicy): TNyxImageSource; overload;
 { Browser FileReader data URLs may have an empty/incorrect MIME declaration.
   The canonical base64 payload is admitted using actual PNG/JPEG headers. }
-function NyxImportedImageBase64(const ABase64: TNyxText): TNyxImageSource;
+function NyxImportedImageBase64(const ABase64: TNyxText): TNyxImageSource; overload;
+function NyxImportedImageBase64(const ABase64: TNyxText;
+  const AValidation: TNyxImageValidationPolicy): TNyxImageSource; overload;
 
 implementation
 
 function NyxImportedImage(const ABytes: TNyxImageBytes): TNyxImageSource;
+begin
+  Result := NyxImportedImage(ABytes, NyxImageValidation);
+end;
+
+function NyxImportedImage(const ABytes: TNyxImageBytes;
+  const AValidation: TNyxImageValidationPolicy): TNyxImageSource;
 var
   LFormat: TNyxImageFormat;
 begin
@@ -69,17 +83,23 @@ begin
   begin
     LFormat := nimJPEG;
   end;
-  Result := NyxEmbeddedImageBytes(LFormat, ABytes);
+  Result := NyxEmbeddedImageBytes(LFormat, ABytes, AValidation);
 end;
 
 function NyxImportedImageBase64(const ABase64: TNyxText): TNyxImageSource;
 begin
+  Result := NyxImportedImageBase64(ABase64, NyxImageValidation);
+end;
+
+function NyxImportedImageBase64(const ABase64: TNyxText;
+  const AValidation: TNyxImageValidationPolicy): TNyxImageSource;
+begin
   try
-    Result := NyxEmbeddedImage(nimPNG, ABase64);
+    Result := NyxEmbeddedImage(nimPNG, ABase64, AValidation);
   except
     on ENyxImage do
     begin
-      Result := NyxEmbeddedImage(nimJPEG, ABase64);
+      Result := NyxEmbeddedImage(nimJPEG, ABase64, AValidation);
     end;
   end;
 end;

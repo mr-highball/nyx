@@ -77,8 +77,15 @@ type
     FHeight: Integer;
     FPayload: TNyxText;
     FValidation: TNyxImageValidationPolicy;
+    class function AdmitWire(const AWire: TNyxText;
+      const AValidation: TNyxImageValidationPolicy; AOverridePolicy: Boolean): TNyxImageSource; static;
   public
-    class function FromWire(const AWire: TNyxText): TNyxImageSource; static;
+    class function FromWire(const AWire: TNyxText): TNyxImageSource; static; overload;
+    { Explicit caller policy takes precedence over recognized embedded metadata.
+      Re-admission canonicalizes that header and validates before publication.
+      Unknown wire choices still refuse; empty/locations retain ordinary meaning. }
+    class function FromWire(const AWire: TNyxText;
+      const AValidation: TNyxImageValidationPolicy): TNyxImageSource; static; overload;
     function ToWire: TNyxText;
     { Bytes/Format/Width/Height require an embedded source and raise ENyxImage
       otherwise. Dimensions describe encoded pixels, independent of metadata. }
@@ -609,6 +616,18 @@ begin
 end;
 
 class function TNyxImageSource.FromWire(const AWire: TNyxText): TNyxImageSource;
+begin
+  Result := AdmitWire(AWire, NyxImageValidation, False);
+end;
+
+class function TNyxImageSource.FromWire(const AWire: TNyxText;
+  const AValidation: TNyxImageValidationPolicy): TNyxImageSource;
+begin
+  Result := AdmitWire(AWire, AValidation, True);
+end;
+
+class function TNyxImageSource.AdmitWire(const AWire: TNyxText;
+  const AValidation: TNyxImageValidationPolicy; AOverridePolicy: Boolean): TNyxImageSource;
 var
   LFormat: TNyxImageFormat;
   LBytes: TNyxImageBytes;
@@ -650,6 +669,18 @@ begin
       LSource.FKind := nisEmbedded;
       LSource.FFormat := LFormat;
       LSource.FPayload := Copy(AWire, Length(LPrefix) + 1, MaxInt);
+
+      if AOverridePolicy then
+      begin
+        LSource.FValidation := AValidation;
+        LPrefix := CPrefixes[LFormat];
+
+        if not AValidation.ChecksumsRequired then
+        begin
+          LPrefix := CFramingPrefixes[LFormat];
+        end;
+        LSource.FWire := LPrefix + LSource.FPayload;
+      end;
       LBytes := DecodeBase64(LSource.FPayload);
       Dimensions(LFormat, LBytes, LSource.FValidation, LSource.FWidth, LSource.FHeight);
       Result := LSource;

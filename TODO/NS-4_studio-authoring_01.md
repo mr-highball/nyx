@@ -9,15 +9,18 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current image policy prerequisite (2026-10-08) exposes an immutable public fluent
-choice retained by source wire/resources/generated replay and paired history.
-The ordinary native image form regression passes 70, but a visible policy
-selector and preservation/editing during new inline/import proposals remain
-original asset/property criteria. The current form uses standard admission for
-new input; do not claim policy UI from constructor-only evidence. NS-1 events
-retains fluent load/error/status and cancellation; NS-4 consumes that contract.
-No authoring criterion/counter advances or shares resource credit. See
-[the policy packet](../WORK.md#current-return-path-typed-image-admission-policy--2026-10-08).
+Current image policy authoring (2026-10-08) consumes the immutable fluent
+prerequisite in the public Nyx form and both ordinary Studio controllers. Inline
+and imported proposals use the visible selection; Apply re-admits bytes, drafts
+retain pending choices and migrate old preferences, and late imports refuse a
+changed policy. Typed source and exact paired Undo/Redo execute through the
+ordinary source processor. Actual desktop/CSS-390 browser journeys capture the
+decoded preview and selector before explicit retirement; native evidence is in
+the packet. This advances the bounded asset/property consumer, not full authoring.
+Authoring no-closure advances 40→41 once; no resource credit is shared. NS-1 events
+retains public fluent load/error/status and cancellation; deployment, trusted
+physical input and full Resources UX remain required. See
+[the authoring packet](../WORK.md#current-return-path-image-policy-authoring-and-readiness--2026-10-08).
 
 **Acceptance Criteria:**
 

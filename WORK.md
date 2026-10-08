@@ -9,7 +9,93 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: typed image admission policy — 2026-10-08
+## Current return path: image policy authoring and readiness — 2026-10-08
+
+Previous turn is progress at exact pushed `d3ed7cd`: default PNG checksums and
+explicit fluent caller choice retain wire/resources/source/history; actual
+199 native / 231 desktop / 231 CSS-390 checks and emitted execution qualify.
+Remote is exact/clean, protected LAN state/services remain exact. This turn
+consumes that prerequisite under original NS-4 asset/property criteria and NS-1
+resource criteria 2/6, with image lifecycle under existing event criteria 1/3.
+
+Concrete authoring deliverable: public Nyx-built policy selector, selected-policy
+admission for plain Base64/full URLs/imported bytes, preserved proposal/preferences,
+atomic Apply and paired history on both controllers. Import requests carry copied
+typed policy; late delivery cannot overwrite a changed owner/selection/policy.
+Retain old disposable draft preferences with a checked migration, not silent
+input loss. Use the exact MCP workshop seed; target harnesses qualify actual
+controls and physical callback boundaries. Inspect the existing event/router
+bridge for image readiness/failure/retirement without claiming host load proves
+pixels. Public ordered callbacks/scheduler remain the intended event contract.
+
+Budget: one integrated authoring consumer, at most two repairs at concrete failed
+boundaries before reassessing image lifecycle as its own substantial integration.
+Keep all original criteria; no complete Studio/media/event task follows from a
+selector. No backend starts/replacements, enrollment changes or cleanup retries.
+Preserve nine pairs/fifteen services/sealed LAN; native MCP stays primary for
+bounded context and the existing semantic seed, not editor browser automation.
+
+Implemented: public Nyx image selector defaults to required PNG checksums and
+retains the caller's explicit framing-only choice. Typed wire/import overloads
+re-admit/canonicalize recognized embedded bytes; unknown choices still refuse.
+Apply re-admits a prior preview under a newly selected policy. Copied picker
+requests and both controller reply guards reject later policy changes alongside
+existing project/selection/baseline guards. Version-2 proposal preferences retain
+all seven fields; checked version-1 migration preserves the original six and
+derives only the missing choice. Clear preserves an unsubmitted choice; invalid
+choices remain draft text and cannot influence accepted behavior.
+
+Checked Win32 ordinary Studio passes **105**, exact emitted reconstruction
+**seven**, zero leaks. Shared/browser form passes **59**; actual ordinary HTTP
+Studio passes **94 desktop / 126 CSS-390**, including bounded readiness/capture
+polling. Exact emitted browser reconstruction passes **seven**. Actual FileReader,
+selected-policy preview decode, chrome/panel retention, refused late delivery,
+typed Apply, exact paired Undo/Redo and explicit retirement execute. Desktop and
+narrow browser/native captures are inspected with the selector visible. Browser
+file events are synthetic; native substitutes the OS chooser only. Trusted
+physical chooser/phone and other widgetsets remain unqualified.
+
+Qualification corrected a formerly compile-only browser form that mixed detached
+authoring/view nodes, then a missing Pascal source-worker staging dependency.
+Reassessment kept image events as their own substantial integration; the compact
+consumer then needed the visible Inspector route after source-menu navigation.
+An initially unbuffered native fixture was terminated by verified owned identity;
+progress tracing established slow repaint progress, not a product deadlock.
+Native visual checks also exposed nonvirtual Reveal's outer-panel-only behavior:
+the harness uses actual Inspector LCL ScrollInView and verifies visible bounds.
+Nested normal-container Reveal remains recorded with NS-2 LCL criteria 1/2.
+No failing integrity fixture or product criterion was removed to obtain a pass.
+
+Evidence: `build/image-policy-editor/visual-acceptance-build.log`,
+`browser-acceptance-desktop.log`, `browser-acceptance-compact.log`,
+`browser-generated.log`, their live `image-policy-studio` captures and final DOMs;
+`build/image-authoring/{desktop,compact}.png` are native captures. Three final
+browser compilations retain seven known upstream RTL warnings each, zero owned
+warnings; native compilation has zero warnings. Source/raster prerequisites use
+the unchanged exact MCP workshop export. Native named session/catalog queries
+remain authenticated and bounded. The frozen installed backend predates the new
+policy; semantic policy tooling/observing rollout remain NS-4 workflow/NS-6
+delivery work. No editor automation replaces missing semantic operations.
+
+This is progress, not a completed resource/authoring/event/product criterion.
+Only authoring's bounded-consumer no-closure count advances **40→41** once;
+workflow/resource/renderer/codegen/delivery remain **25/10/21/28/3**, aggregate
+**25/10/41/21/28/3**. No credit or DONE move follows. The full goal remains active.
+Next authorized integration: typed image request/status snapshots and public
+ordered callbacks through the existing event/router/scheduler contract. Browser
+source assignment needs owned generation/listener retirement; native synchronous
+candidate decoding needs the equivalent documented phases. Replacement, clear,
+reentrant delivery and disposed views must invalidate old callbacks. A host load
+or decode notification must describe its guarantee separately from pixel integrity.
+
+Final preservation guard is `build/image-policy-editor/preservation-final.log`:
+nine exact durable pairs, fifteen exact services, original checkpoint and all
+299 sealed files remain unchanged. No backend start/replacement or cleanup retry.
+Remote checkpoint/working-tree outcome is recorded in the packet receipt after
+the exact branch push; no current image-policy changes are deployed to LAN.
+
+<a id="current-return-path-typed-image-admission-policy--2026-10-08"></a>
+## Previous return path: typed image admission policy — 2026-10-08
 
 Previous turn is progress at exact pushed `8fc200f`: actual replacement bytes
 establish damaged PNG load/transparent pixels on browser versus native refusal.

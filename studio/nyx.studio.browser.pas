@@ -2220,7 +2220,7 @@ begin
         FImagePickContext := FSession.CommandContext;
         FImagePickOwner := FSession.SelectedID;
         FImagePickBaseline := NyxImageEditorContext(LImageEditor);
-        FImagePicker.Pick(@ImagePicked);
+        FImagePicker.Pick(@ImagePicked, ReadNyxImageEditorValidation(LImageEditor));
       end;
       Exit;
     end;
@@ -3847,6 +3847,15 @@ begin
     if AStatus = ipsFailed then
     begin
       raise ENyxImage.Create(AError);
+    end;
+    { Visible fields may change after opening the chooser. Capture them before
+      delivery; an earlier request cannot overwrite the later policy choice.
+      Parked forms keep their copied draft choice. }
+    FViewState.ImageEditorDraft.Capture('inspector-image', FShellRenderer.Root);
+
+    if FViewState.ImageEditorDraft.Validation.ChecksumsRequired <> ASource.Validation.ChecksumsRequired then
+    begin
+      raise ENyxImage.Create('Image validation changed while its import was open');
     end;
     FViewState.ImageEditorDraft.Propose(ASource);
     FViewState.ImageEditorDraft.Restore(FShellRenderer.Root);

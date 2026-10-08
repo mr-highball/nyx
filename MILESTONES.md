@@ -4,7 +4,17 @@
 [Current work](WORK.md)
 
 
-Current typed image admission (2026-10-08): immutable fluent default PNG checksums
+Current image policy authoring (2026-10-08): both ordinary Studio controllers
+consume the public Nyx policy selector, copied imports, re-admission on Apply,
+draft migration and exact paired history. Win32 passes **105**, shared/browser
+form **59**, ordinary HTTP Studio **94 desktop / 126 CSS-390** (polling included),
+exact emitted reconstruction **seven** per target. Inspected captures qualify
+the changed controls. Full image lifecycle/resources/authoring, trusted physical
+input and observing deployment retain their owners. No full criterion/credit/DONE
+closure follows: authoring alone advances **40→41**, aggregate **25/10/41/21/28/3**.
+See [the packet](WORK.md#current-return-path-image-policy-authoring-and-readiness--2026-10-08).
+
+Previous typed image admission (2026-10-08): immutable fluent default PNG checksums
 and explicit caller framing-only choice retain wire/resources/source/history.
 Actual Win32 passes **199**, HTTP desktop/CSS-390 **231** each, exact emitted
 reconstruction **eight** per target; ordinary native image/resource regressions

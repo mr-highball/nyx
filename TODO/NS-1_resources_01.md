@@ -18,6 +18,13 @@ evidence. Existing packed PNG/JPEG and typed scalar/collection engines are input
 
 ## Typed raster admission prerequisite — 2026-10-08
 
+Current consumer: public Studio policy selection, copied import requests,
+re-admission on Apply, versioned draft migration and paired history now execute
+in both ordinary controllers. This consumes criteria 2/6 without closing the
+common Resources area, hosted loading or complete validation. The authoring owner
+alone advances its bounded-consumer count; resource stays 10. See
+[the authoring packet](../WORK.md#current-return-path-image-policy-authoring-and-readiness--2026-10-08).
+
 Original criteria 1/2 now consume immutable fluent checksum policy with explicit
 caller framing-only choice. Standard PNG checksums refuse atomically before
 publication; resources, source wire, generation/managed replay and paired history

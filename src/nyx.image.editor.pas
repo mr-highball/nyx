@@ -32,7 +32,7 @@ type
   { Closed roles/actions of an ordinary reusable Nyx form. Import, Inline and Clear
     change a proposal; only Apply produces an accepted design command. }
   TNyxImageEditorField = (iefAlternative, iefFit, iefHorizontal, iefVertical,
-    iefInlineFormat, iefInlineBase64);
+    iefInlineFormat, iefInlineBase64, iefValidation);
   TNyxImageEditorAction = (ieaImport, ieaInline, ieaClear, ieaApply);
 
   { Copied exact-owner proposal. No document, renderer, mutable array or widget
@@ -65,6 +65,8 @@ type
     function Restore(AShellRoot: TNyxNode): Boolean;
     { Retains captured context/other fields for qualified imported/inline bytes. }
     procedure Propose(const ASource: TNyxImageSource);
+    { Copied selected policy for an asynchronous import request/reply guard. }
+    function Validation: TNyxImageValidationPolicy;
     { Strict disposable preference boundary; null means no parked proposal. }
     function ToData: TNyxDataValue;
     class function FromData(const AData: TNyxDataValue): TNyxImageEditorDraft; static;
@@ -98,6 +100,11 @@ procedure ProposeNyxImageEditorSource(AEditor: TNyxNode;
   closed format must match the payload. Refusal leaves the mounted preview and
   accepted pair untouched; the target may also qualify its actual pixel decoder. }
 function ReadNyxImageEditorInline(AEditor: TNyxNode): TNyxImageSource;
+{ Closed policy selection. Set changes only the unsubmitted field; Read refuses
+  unknown choices. Preview/Apply re-admit bytes before modifying their proposal. }
+function ReadNyxImageEditorValidation(AEditor: TNyxNode): TNyxImageValidationPolicy;
+procedure SetNyxImageEditorValidation(AEditor: TNyxNode;
+  const AValidation: TNyxImageValidationPolicy);
 { False means another command. Invalid complete choices raise without changing
   any accepted model/history; the controller rechecks Baseline during admission. }
 function CaptureNyxImageEditor(AButton, AShellRoot: TNyxNode;
@@ -112,12 +119,45 @@ const
   COwner = 'nyx.image-editor.owner';
   CBaseline = 'nyx.image-editor.baseline';
   CFields: array[TNyxImageEditorField] of TNyxText =
-    ('alternative', 'fit', 'horizontal', 'vertical', 'inline-format', 'inline-base64');
+    ('alternative', 'fit', 'horizontal', 'vertical', 'inline-format', 'inline-base64', 'validation');
   CFormats: array[TNyxImageFormat] of TNyxText = ('PNG', 'JPEG');
+  CValidationChoices: array[Boolean] of TNyxText = ('Framing only', 'Verify PNG checksums');
   CAttributes: array[0..4] of TNyxAttribute =
     (atSource, atAlt, atImageFit, atImageHorizontal, atImageVertical);
 
 function Complete(AEditor: TNyxNode): Boolean; forward;
+
+function ReadValidation(const AChoice: TNyxText): TNyxImageValidationPolicy;
+begin
+
+  if (AChoice <> CValidationChoices[False]) and (AChoice <> CValidationChoices[True]) then
+  begin
+    raise ENyxImage.Create('Choose a supported image validation policy');
+  end;
+  Result := NyxImageValidation.ContainerChecksums(AChoice = CValidationChoices[True]);
+end;
+
+function ReadNyxImageEditorValidation(AEditor: TNyxNode): TNyxImageValidationPolicy;
+begin
+
+  if not Complete(AEditor) then
+  begin
+    raise ENyxModel.Create('Image validation requires the complete current form');
+  end;
+  Result := ReadValidation(AEditor.Find(NyxImageEditorFieldID(AEditor.ID, iefValidation)).Prop('value'));
+end;
+
+procedure SetNyxImageEditorValidation(AEditor: TNyxNode;
+  const AValidation: TNyxImageValidationPolicy);
+begin
+
+  if not Complete(AEditor) then
+  begin
+    raise ENyxModel.Create('Image validation requires the complete current form');
+  end;
+  AEditor.Find(NyxImageEditorFieldID(AEditor.ID, iefValidation)).Configure
+    .Value(CValidationChoices[AValidation.ChecksumsRequired]).Done;
+end;
 
 function NyxImageEditorFieldID(const AID: TNyxText;
   AField: TNyxImageEditorField): TNyxText;
@@ -244,6 +284,11 @@ begin
   end;
   AEditor.Find(AEditor.ID + TNyxText('-preview')).Configure.Source(ASource).Done;
   AEditor.Find(AEditor.ID + TNyxText('-source-summary')).Configure.Text(LSummary).Done;
+
+  if ASource.Kind <> nisEmpty then
+  begin
+    SetNyxImageEditorValidation(AEditor, ASource.Validation);
+  end;
 end;
 
 function ReadNyxImageEditorInline(AEditor: TNyxNode): TNyxImageSource;
@@ -276,11 +321,11 @@ begin
 
   if Copy(LPayload, 1, 5) = 'data:' then
   begin
-    LSource := TNyxImageSource.FromWire(LPayload);
+    LSource := TNyxImageSource.FromWire(LPayload, ReadNyxImageEditorValidation(AEditor));
   end
   else
   begin
-    LSource := NyxEmbeddedImage(LFormat, LPayload);
+    LSource := NyxEmbeddedImage(LFormat, LPayload, ReadNyxImageEditorValidation(AEditor));
   end;
 
   if (LSource.Kind <> nisEmbedded) or (LSource.Format <> LFormat) then
@@ -295,7 +340,7 @@ function NewNyxImageEditor(const AID: TNyxText;
 const
   CLabels: array[TNyxImageEditorField] of TNyxText =
     ('Alternative text', 'Image fit', 'Horizontal anchor', 'Vertical anchor',
-      'Inline image format', 'Inline Base64');
+      'Inline image format', 'Inline Base64', 'Image validation');
   CCaptions: array[TNyxImageEditorAction] of TNyxText =
     ('Import PNG or JPEG', 'Preview Base64', 'Clear image', 'Apply image');
 var
@@ -339,6 +384,10 @@ begin
       if LField = iefInlineFormat then
       begin
         LItems := CFormats[nimPNG] + TNyxText(#10) + CFormats[nimJPEG];
+      end
+      else if LField = iefValidation then
+      begin
+        LItems := CValidationChoices[True] + TNyxText(#10) + CValidationChoices[False];
       end
       else if LField = iefFit then
       begin
@@ -393,6 +442,11 @@ begin
         iefInlineBase64:
           begin
             { Its multiline input was constructed by the branch above. }
+          end;
+        iefValidation:
+          begin
+            LInput.Configure.Value(CValidationChoices[True])
+              .Hint('PNG checksums protect chunk integrity, not decoded pixels. Framing only delegates damaged pixels to the host.').Done;
           end;
       end;
     end;
@@ -457,7 +511,8 @@ begin
   AChange.Owner := LEditor.Prop(COwner);
   AChange.Baseline := LEditor.Prop(CBaseline);
   AChange.Source := TNyxImageSource.FromWire(
-    LEditor.Find(LEditor.ID + TNyxText('-preview')).Prop(NyxAttributeName(atSource)));
+    LEditor.Find(LEditor.ID + TNyxText('-preview')).Prop(NyxAttributeName(atSource)),
+    ReadNyxImageEditorValidation(LEditor));
   AChange.AlternativeText := LEditor.Find(
     NyxImageEditorFieldID(LEditor.ID, iefAlternative)).Prop('value');
   AChange.Fit := ReadNyxImageFit(LEditor.Find(
@@ -520,7 +575,7 @@ begin
   begin
     LFields[LField] := NyxField(CFields[LField], NyxData(FValues[LField]));
   end;
-  Result := NyxObject([NyxField('version', NyxData(1)), NyxField('editor', NyxData(FEditor)),
+  Result := NyxObject([NyxField('version', NyxData(2)), NyxField('editor', NyxData(FEditor)),
     NyxField('baseline', NyxData(FBaseline)), NyxField('source', NyxData(FSource.ToWire)),
     NyxField('values', NyxObject(LFields))]);
 end;
@@ -529,6 +584,7 @@ class function TNyxImageEditorDraft.FromData(const AData: TNyxDataValue): TNyxIm
 var
   LField: TNyxImageEditorField;
   LValues: TNyxDataValue;
+  LVersion: Integer;
 begin
   Result := Default(TNyxImageEditorDraft);
 
@@ -537,11 +593,13 @@ begin
     Exit;
   end;
   LValues := AData.Field('values');
+  LVersion := AData.Field('version').AsInteger;
 
   if (AData.Kind <> ndObject) or (AData.Count <> 5) or
-    (AData.Field('version').AsInteger <> 1) or
+    not (LVersion in [1, 2]) or
     (LValues.Kind <> ndObject) or
-    (LValues.Count <> Ord(High(TNyxImageEditorField)) + 1) then
+    ((LVersion = 2) and (LValues.Count <> Ord(High(TNyxImageEditorField)) + 1)) or
+    ((LVersion = 1) and (LValues.Count <> Ord(iefValidation))) then
   begin
     raise ENyxModel.Create('Unsupported image proposal preference');
   end;
@@ -550,7 +608,17 @@ begin
   Result.FSource := TNyxImageSource.FromWire(AData.Field('source').AsText);
   for LField := Low(TNyxImageEditorField) to High(TNyxImageEditorField) do
   begin
-    Result.FValues[LField] := LValues.Field(CFields[LField]).AsText;
+
+    if (LVersion = 1) and (LField = iefValidation) then
+    begin
+      { Old disposable preferences had six fields. Derive only the new choice
+        from their admitted source; retain every original authored value. }
+      Result.FValues[LField] := CValidationChoices[Result.FSource.Validation.ChecksumsRequired];
+    end
+    else
+    begin
+      Result.FValues[LField] := LValues.Field(CFields[LField]).AsText;
+    end;
   end;
 
   if (Result.FEditor = '') or (Result.FBaseline = '') then
@@ -572,6 +640,21 @@ begin
     raise ENyxModel.Create('Image import requires a captured form proposal');
   end;
   FSource := ASource;
+
+  if ASource.Kind <> nisEmpty then
+  begin
+    FValues[iefValidation] := CValidationChoices[ASource.Validation.ChecksumsRequired];
+  end;
+end;
+
+function TNyxImageEditorDraft.Validation: TNyxImageValidationPolicy;
+begin
+
+  if not Defined then
+  begin
+    raise ENyxModel.Create('Image validation requires a captured form proposal');
+  end;
+  Result := ReadValidation(FValues[iefValidation]);
 end;
 
 procedure TNyxImageEditorDraft.Capture(const AID: TNyxText; AShellRoot: TNyxNode);

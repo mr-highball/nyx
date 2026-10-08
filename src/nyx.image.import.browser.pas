@@ -39,6 +39,7 @@ type
     FInput: TJSHTMLInputElement;
     FReader: TJSFileReader;
     FReply: TNyxImagePickReply;
+    FValidation: TNyxImageValidationPolicy;
     function Chosen(AEvent: TJSEvent): Boolean;
     function Read(AEvent: TJSEvent): Boolean;
     function Cancelled(AEvent: TJSEvent): Boolean;
@@ -46,7 +47,9 @@ type
       const ASource: TNyxImageSource; const AError: TNyxText);
   public
     destructor Destroy; override;
-    procedure Pick(AReply: TNyxImagePickReply);
+    procedure Pick(AReply: TNyxImagePickReply); overload;
+    procedure Pick(AReply: TNyxImagePickReply;
+      const AValidation: TNyxImageValidationPolicy); overload;
     procedure Cancel;
   end;
 
@@ -79,8 +82,15 @@ end;
 
 procedure TImagePicker.Pick(AReply: TNyxImagePickReply);
 begin
+  Pick(AReply, NyxImageValidation);
+end;
+
+procedure TImagePicker.Pick(AReply: TNyxImagePickReply;
+  const AValidation: TNyxImageValidationPolicy);
+begin
   Cancel;
   FReply := AReply;
+  FValidation := AValidation;
   FInput := TJSHTMLInputElement(document.createElement('input'));
   FInput.setAttribute('type', 'file');
   FInput.setAttribute('accept', 'image/png,image/jpeg');
@@ -163,7 +173,7 @@ begin
     begin
       raise ENyxImage.Create('Image reader did not return an encoded raster');
     end;
-    LSource := NyxImportedImageBase64(Copy(LText, LComma + 1, MaxInt));
+    LSource := NyxImportedImageBase64(Copy(LText, LComma + 1, MaxInt), FValidation);
   except
     on LException: Exception do
     begin

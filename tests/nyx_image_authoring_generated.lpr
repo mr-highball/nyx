@@ -46,14 +46,17 @@ begin
       LImage := LDocument.Find('hero-image');
       Check((LDocument.Title = 'Image workshop') and (LImage <> nil),
         'Compiled image builder lost its semantic seed');
-      Check(LImage.Prop(NyxAttributeName(atSource)) = NyxEmbeddedImage(nimJPEG, ImageJPEG).ToWire,
+      Check(LImage.Prop(NyxAttributeName(atSource)) = NyxEmbeddedImage(nimJPEG, ImageJPEG,
+        NyxImageValidation.ContainerChecksums(False)).ToWire,
         'Compiled image lost exact JPEG bytes');
       Check(LImage.Prop(NyxAttributeName(atAlt)) = TNyxText('A colorful banner / 🌙 / ''quoted'''),
         'Compiled image lost exact Unicode alternative text');
       Check(LImage.Prop(NyxAttributeName(atImageFit)) = NyxImageFitName(nifCover), 'Compiled image lost cover fit');
       Check(LImage.Prop(NyxAttributeName(atImageHorizontal)) = NyxImageAnchorName(niaEnd), 'Compiled image lost end anchor');
       Check(LImage.Prop(NyxAttributeName(atImageVertical)) = NyxImageAnchorName(niaCenter), 'Compiled image lost center anchor');
-      WriteLn('PASS / compiled image authoring / 6 checks');
+      Check(not TNyxImageSource.FromWire(LImage.Prop(NyxAttributeName(atSource))).Validation.ChecksumsRequired,
+        'Compiled image lost selected validation policy');
+      WriteLn('PASS / compiled image authoring / 7 checks');
       {$ifdef PAS2JS}document.body.setAttribute('data-test-result', 'passed');{$endif}
     finally
       LDocument.Free;

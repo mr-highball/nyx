@@ -11,6 +11,14 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 **Acceptance Criteria:**
 
+Discovered during current image-policy visual qualification: nonvirtual `Reveal`
+calls only the outer panel's `ScrollInView`; nested normal Inspector scroll scopes
+are not revealed. Focus also leaves the selector below the captured fold. The
+target harness must use the actual Inspector's ordinary LCL `ScrollInView` and
+check visible bounds. Original criteria 1/2 retain nested normal-container reveal
+and safe lifetime qualification; virtual-layout evidence does not close this gap.
+See [the authoring packet](../WORK.md#current-return-path-image-policy-authoring-and-readiness--2026-10-08).
+
 - The same document and compounds project to LCL controls with equivalent values/events/layout semantics.
 - Native control interaction, ownership teardown and resize behavior are exercised.
 - Target capability differences are explicit; unsupported kinds do not silently substitute misleading controls.

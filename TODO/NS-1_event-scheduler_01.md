@@ -39,6 +39,17 @@ Properties / Events UI, add-handler source navigation and confirmed removal.
 
 ## Image load/status contract remains open — 2026-10-08
 
+Current policy authoring now qualifies actual ordinary Studio import/Apply/history
+on both targets, including a decoded browser preview. It adds no image trigger,
+public status payload or scheduler callback. Inspection confirms browser source
+assignment still lacks an owned image generation/listener bridge; native picture
+admission is synchronous. Next integrate typed request/status snapshots into the
+existing ordered registrations and guarded scheduler: replacement, clear,
+reentrant callbacks and disposed views must invalidate old delivery. Load/decode
+must describe its host guarantee separately from complete pixel integrity. This
+remains original criteria 1/3, with no event criterion/count closure. See
+[the current packet](../WORK.md#current-return-path-image-policy-authoring-and-readiness--2026-10-08).
+
 The actual media consumer brackets source replacement with owned host listeners,
 current-request checks and deadlines, then retires them on every outcome. This
 Pascal target harness is not the public fluent image event contract. A damaged

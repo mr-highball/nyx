@@ -1801,6 +1801,15 @@ begin
     begin
       raise ENyxImage.Create(AError);
     end;
+    { Refresh the mounted proposal before delivery. A user may change validation
+      without changing the accepted owner baseline; retain that later choice
+      instead of letting an earlier file request replace it. }
+    FState.ImageEditorDraft.Capture('inspector-image', FShellView.Root);
+
+    if FState.ImageEditorDraft.Validation.ChecksumsRequired <> ASource.Validation.ChecksumsRequired then
+    begin
+      raise ENyxImage.Create('Image validation changed while its import was open');
+    end;
     FState.ImageEditorDraft.Propose(ASource);
     FState.ImageEditorDraft.Restore(FShellView.Root);
     FShellView.Sync;
@@ -3107,7 +3116,7 @@ begin
         FImagePickContext := FSession.CommandContext;
         FImagePickOwner := FSession.SelectedID;
         FImagePickBaseline := NyxImageEditorContext(LImageEditor);
-        FImagePicker.Pick(ImagePicked);
+        FImagePicker.Pick(ImagePicked, ReadNyxImageEditorValidation(LImageEditor));
       end;
       Exit;
     end;

@@ -30,8 +30,9 @@ uses
   nyx.codegen, nyx.source, nyx.schema, nyx.events, nyx.image.fixtures,
   nyx.studio.session, nyx.studio.commands, nyx.studio.projects,
   nyx.studio.sourcejobs, nyx.studio.presentation, nyx.generated.view,
-  {$ifdef PAS2JS}JS, Web, nyx.render.browser, nyx.image.import.browser;
-  {$else}Interfaces, Forms, Controls, StdCtrls, Graphics, IntfGraphics,
+  {$ifdef PAS2JS}JS, Web, nyx.render.browser, nyx.image.import.browser,
+    nyx.test.image.studio.browser;
+  {$else}Interfaces, Forms, Controls, StdCtrls, Graphics, IntfGraphics, Types,
     FPWritePNG, nyx.studio.lcl, nyx.image.import.lcl;{$endif}
 
 const
@@ -48,6 +49,163 @@ begin
     raise Exception.Create('Image authoring: ' + AReason);
   end;
   Inc(GChecks);
+  {$ifndef PAS2JS}
+  WriteLn('CHECK / ', GChecks, ' / ', AReason);
+  Flush(Output);
+  {$endif}
+end;
+
+{ Qualify caller overrides and migration before using the same public form in
+  ordinary target controls. An unsubmitted policy may differ from its preview;
+  Apply must re-admit the bytes rather than trusting that earlier preview. }
+procedure PolicyProposal;
+var
+  LDocument: TNyxDocument;
+  LForm: INyxCard;
+  LFresh: INyxCard;
+  LSource: TNyxImageSource;
+  LWeak: TNyxImageValidationPolicy;
+  LBytes: TNyxImageBytes;
+  LDraft: TNyxImageEditorDraft;
+  LCopy: TNyxImageEditorDraft;
+  LChange: TNyxImageEditorChange;
+  LData: TNyxDataValue;
+  LValues: TNyxDataValue;
+  LLegacy: TNyxDataValue;
+  LBefore: TNyxText;
+  LRefused: Boolean;
+  LText: TNyxText;
+  LRead: TNyxDocument;
+  LWorkspace: TNyxSourceWorkspace;
+begin
+  LDocument := BuildNyxDocument;
+  LRead := nil;
+  LWorkspace := nil;
+  try
+    LBefore := TNyxCodec.Encode(LDocument);
+    LForm := NewNyxImageEditor(CEditor, LDocument.Find('hero-image'), LDocument.Find('hero-image'));
+    Check(ReadNyxImageEditorValidation(LForm.Node).ChecksumsRequired, 'new form defaults to checksums');
+    LWeak := NyxImageValidation.ContainerChecksums(False);
+    SetNyxImageEditorValidation(LForm.Node, LWeak);
+    LForm.Node.Find(NyxImageEditorFieldID(CEditor, iefInlineBase64)).Configure.Value(ImagePNG).Done;
+    LSource := ReadNyxImageEditorInline(LForm.Node);
+    Check(not LSource.Validation.ChecksumsRequired, 'plain Base64 uses selected caller policy');
+    Check(TNyxImageSource.FromWire(LSource.ToWire, NyxImageValidation).Validation.ChecksumsRequired,
+      'typed wire override strengthens a recognized weaker source');
+    Check(not TNyxImageSource.FromWire(NyxEmbeddedImage(nimPNG, ImagePNG).ToWire,
+      LWeak).Validation.ChecksumsRequired, 'typed wire override relaxes a recognized standard source');
+    LForm.Node.Find(NyxImageEditorFieldID(CEditor, iefInlineBase64)).Configure
+      .Value(NyxEmbeddedImage(nimPNG, ImagePNG).ToWire).Done;
+    Check(ReadNyxImageEditorInline(LForm.Node).ToWire = LSource.ToWire,
+      'pasted complete URL honors the visible choice');
+    ProposeNyxImageEditorSource(LForm.Node, LSource);
+    SetNyxImageEditorValidation(LForm.Node, NyxImageValidation);
+    Check(CaptureNyxImageEditor(LForm.Node.Find(NyxImageEditorActionID(CEditor, ieaApply)),
+      LForm.Node, LChange) and LChange.Source.Validation.ChecksumsRequired,
+      'Apply re-admits a preview with the newly selected policy');
+    LDraft.Capture(CEditor, LForm.Node);
+    LCopy := TNyxImageEditorDraft.FromData(LDraft.ToData);
+    LFresh := NewNyxImageEditor(CEditor, LDocument.Find('hero-image'), LDocument.Find('hero-image'));
+    Check(LCopy.Restore(LFresh.Node) and ReadNyxImageEditorValidation(LFresh.Node).ChecksumsRequired,
+      'draft retains a pending policy different from the earlier preview');
+    Check(LFresh.Node.Find(CEditor+'-preview').Prop('src') = LSource.ToWire,
+      'restoring a policy does not silently replace its previous preview');
+    LDraft.Capture(CEditor, nil);
+    Check(LDraft.ToData.ToJSON = LCopy.ToData.ToJSON, 'parked form retains exact policy draft');
+    LData := LDraft.ToData;
+    LValues := LData.Field('values');
+    LLegacy := NyxObject([NyxField('version', NyxData(1)),
+      NyxField('editor', LData.Field('editor')), NyxField('baseline', LData.Field('baseline')),
+      NyxField('source', LData.Field('source')), NyxField('values', NyxObject([
+        NyxField('alternative', LValues.Field('alternative')), NyxField('fit', LValues.Field('fit')),
+        NyxField('horizontal', LValues.Field('horizontal')), NyxField('vertical', LValues.Field('vertical')),
+        NyxField('inline-format', LValues.Field('inline-format')),
+        NyxField('inline-base64', LValues.Field('inline-base64'))]))]);
+    LCopy := TNyxImageEditorDraft.FromData(LLegacy);
+    Check(not LCopy.Validation.ChecksumsRequired, 'legacy draft derives its absent policy from admitted source');
+    Check(LCopy.Restore(LFresh.Node) and
+      (LFresh.Node.Find(NyxImageEditorFieldID(CEditor, iefInlineBase64)).Prop('value') =
+      LValues.Field('inline-base64').AsText), 'legacy migration retains original unsubmitted input');
+    LRefused := False;
+    try
+      TNyxImageEditorDraft.FromData(NyxObject([NyxField('version', NyxData(2)),
+        NyxField('editor', LLegacy.Field('editor')), NyxField('baseline', LLegacy.Field('baseline')),
+        NyxField('source', LLegacy.Field('source')), NyxField('values', LLegacy.Field('values'))]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'current preferences refuse a missing policy field');
+    LBytes := NyxEmbeddedImage(nimPNG, ImagePNG).Bytes;
+    LBytes[High(LBytes)] := LBytes[High(LBytes)] xor 1;
+    LSource := NyxEmbeddedImageBytes(nimPNG, LBytes, LWeak);
+    Check(NyxImportedImage(LBytes, LWeak).ToWire = LSource.ToWire, 'byte import retains explicit framing policy');
+    Check(NyxImportedImageBase64(LSource.Encoded, LWeak).ToWire = LSource.ToWire,
+      'Base64 import retains explicit framing policy');
+    ProposeNyxImageEditorSource(LForm.Node, LSource);
+    SetNyxImageEditorValidation(LForm.Node, NyxImageValidation);
+    LRefused := False;
+    try
+      CaptureNyxImageEditor(LForm.Node.Find(NyxImageEditorActionID(CEditor, ieaApply)), LForm.Node, LChange);
+    except
+      on ENyxImage do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (TNyxCodec.Encode(LDocument) = LBefore) and
+      (LForm.Node.Find(CEditor+'-preview').Prop('src') = LSource.ToWire),
+      'strengthening damaged preview refuses atomically without changing preview or design');
+    SetNyxImageEditorValidation(LForm.Node, LWeak);
+    ProposeNyxImageEditorSource(LForm.Node, NyxNoImage);
+    Check(not ReadNyxImageEditorValidation(LForm.Node).ChecksumsRequired,
+      'Clear preserves caller choice for the next image');
+    LForm.Node.Find(NyxImageEditorFieldID(CEditor, iefValidation)).Configure.Value('unknown').Done;
+    LDraft.Capture(CEditor, LForm.Node);
+    LCopy := TNyxImageEditorDraft.FromData(LDraft.ToData);
+    Check(LCopy.Restore(LFresh.Node), 'invalid unsubmitted choice survives draft restoration');
+    LRefused := False;
+    try
+      CaptureNyxImageEditor(LFresh.Node.Find(NyxImageEditorActionID(CEditor, ieaApply)), LFresh.Node, LChange);
+    except
+      on ENyxImage do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (TNyxCodec.Encode(LDocument) = LBefore), 'unknown policy cannot influence accepted behavior');
+    { The managed reader must accept the same typed overload a caller compiles.
+      Replacing constructor expressions leaves the MCP-authored tree untouched. }
+    LText := StringReplace(TNyxCodegen.Generate(LDocument),
+      'NyxEmbeddedImage(nimPNG, '+TNyxText(#39)+ImagePNG+TNyxText(#39)+')',
+      'TNyxImageSource.FromWire('+TNyxText(#39)+NyxEmbeddedImage(nimPNG, ImagePNG, LWeak).ToWire+
+      TNyxText(#39)+', NyxImageValidation.ContainerChecksums(True))', [rfReplaceAll]);
+    Check(Pos('TNyxImageSource.FromWire(', LText) > 0, 'replay exercises the explicit typed wire overload');
+    LRead := TNyxSourceWorkspace.PrepareDraft(LText, LWorkspace);
+    Check(TNyxCodec.Encode(LRead) = LBefore, 'managed typed override reconstructs the exact semantic seed');
+    FreeAndNil(LRead);
+    FreeAndNil(LWorkspace);
+    LText := StringReplace(LText, 'NyxImageValidation.ContainerChecksums(True)',
+      TNyxText(#39)+'True'+TNyxText(#39), [rfReplaceAll]);
+    LRefused := False;
+    try
+      LRead := TNyxSourceWorkspace.PrepareDraft(LText, LWorkspace);
+    except
+      on ENyxSource do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'managed wire override refuses string-driven policy');
+  finally
+    LRead.Free;
+    LWorkspace.Free;
+    LForm := nil;
+    LFresh := nil;
+    LDocument.Free;
+  end;
 end;
 
 procedure Shared;
@@ -140,6 +298,9 @@ begin
     LForm.Node.Find(NyxImageEditorFieldID(CEditor, iefFit)).Configure.Value(NyxImageFitName(nifCover)).Done;
     LForm.Node.Find(NyxImageEditorFieldID(CEditor, iefHorizontal)).Configure.Value(NyxImageAnchorName(niaEnd)).Done;
     Check(TNyxCodec.Encode(LDocument) = LBefore, 'preview and choices create no design/history');
+    SetNyxImageEditorValidation(LForm.Node, NyxImageValidation.ContainerChecksums(False));
+    LSource := TNyxImageSource.FromWire(LSource.ToWire, ReadNyxImageEditorValidation(LForm.Node));
+    ProposeNyxImageEditorSource(LForm.Node, LSource);
     LDraft.Capture(CEditor, LForm.Node);
     LCopy := TNyxImageEditorDraft.FromData(LDraft.ToData);
     LPreference := DefaultNyxStudioPresentation;
@@ -184,6 +345,8 @@ begin
     LAfter := EncodeNyxProject(LSession.ProjectSnapshot);
     Check(Pos('nimJPEG', LSession.Source) > 0, 'crafted source uses a typed image constructor');
     Check(Pos('nifCover', LSession.Source) > 0, 'crafted source retains closed fit enum');
+    Check(Pos('NyxImageValidation.ContainerChecksums(False)', LSession.Source) > 0,
+      'crafted source retains selected fluent caller policy');
     LSession.Undo;
     Check(LSession.Save = LBefore, 'one Undo restores complete original image design');
     LSession.Redo;
@@ -227,8 +390,11 @@ type
   TFilePicker = class(TInterfacedObject, INyxImagePicker)
   private
     FReply: TNyxImagePickReply;
+    FValidation: TNyxImageValidationPolicy;
   public
-    procedure Pick(AReply: TNyxImagePickReply);
+    procedure Pick(AReply: TNyxImagePickReply); overload;
+    procedure Pick(AReply: TNyxImagePickReply;
+      const AValidation: TNyxImageValidationPolicy); overload;
     procedure Cancel;
     procedure Deliver(const AFileName: TNyxText);
   end;
@@ -243,7 +409,14 @@ var
 
 procedure TFilePicker.Pick(AReply: TNyxImagePickReply);
 begin
+  Pick(AReply, NyxImageValidation);
+end;
+
+procedure TFilePicker.Pick(AReply: TNyxImagePickReply;
+  const AValidation: TNyxImageValidationPolicy);
+begin
   FReply := AReply;
+  FValidation := AValidation;
 end;
 
 procedure TFilePicker.Cancel;
@@ -256,7 +429,7 @@ var
   LReply: TNyxImagePickReply;
   LSource: TNyxImageSource;
 begin
-  LSource := ReadNyxImageFile(AFileName);
+  LSource := ReadNyxImageFile(AFileName, FValidation);
   LReply := FReply;
   FReply := nil;
 
@@ -315,11 +488,41 @@ var
     Ready;
   end;
 
+  procedure Validation(ARequired: Boolean);
+  var
+    LInput: TComboBox;
+  begin
+    LInput := TComboBox(LStudio.ShellView.InputFor(NyxImageEditorFieldID(CEditor, iefValidation)));
+    Check((LInput <> nil) and (LInput.Items.Count = 2), 'ordinary validation selector is mounted');
+    LInput.ItemIndex := Ord(not ARequired);
+    LInput.OnChange(LInput);
+    Check(ReadNyxImageEditorValidation(LStudio.ShellView.Root.Find(CEditor)).ChecksumsRequired = ARequired,
+      'native selection callback reaches the typed image policy');
+  end;
+
   procedure Capture(const APath: String);
   var
     LBitmap: TBitmap;
     LImage: TLazIntfImage;
+    LValidationInput: TWinControl;
+    LInspector: TControl;
+    LPoint: TPoint;
   begin
+    { Use the ordinary Inspector's actual LCL scrolling container. The renderer
+      Reveal contract currently handles the nonvirtual outer view only; nested
+      normal-container reveal remains with its renderer owner. }
+    LValidationInput := TWinControl(LStudio.ShellView.InputFor(
+      NyxImageEditorFieldID(CEditor, iefValidation)));
+
+    if LValidationInput <> nil then
+    begin
+      LInspector := LStudio.ShellView.ControlFor('studio-right');
+      Check(LInspector is TScrollBox, 'ordinary native Inspector owns its scrolling container');
+      TScrollBox(LInspector).ScrollInView(LValidationInput);
+      LPoint := LValidationInput.ClientToParent(Point(0, 0), TWinControl(LInspector));
+      Check((LPoint.Y >= 0) and (LPoint.Y + LValidationInput.Height <= LInspector.ClientHeight),
+        'actual native policy selector is inside its viewport before capture');
+    end;
     Ready;
     LWindow.Repaint;
     LBitmap := TBitmap.Create;
@@ -371,17 +574,33 @@ begin
       'actual Import callback updates only the reusable proposal preview');
     Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore,
       'ordinary imported preview makes no document/history edit');
+    Click(NyxImageEditorActionID(CEditor, ieaImport));
+    Validation(False);
+    GPicker.Deliver(LPath);
+    Ready;
+    Check((Pos('validation changed', LStudio.Status) > 0) and
+      not ReadNyxImageEditorValidation(LStudio.ShellView.Root.Find(CEditor)).ChecksumsRequired and
+      (EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore),
+      'late native import refuses changed policy without losing the newer selection');
+    Click(NyxImageEditorActionID(CEditor, ieaImport));
+    GPicker.Deliver(LPath);
+    Ready;
+    LSource := NyxEmbeddedImage(nimJPEG, ImageJPEG, NyxImageValidation.ContainerChecksums(False));
+    Check(LStudio.ShellView.Root.Find(CEditor+'-preview').Prop('src') = LSource.ToWire,
+      'replacement native import carries its copied caller policy');
     LField := TCustomEdit(LStudio.ShellView.InputFor(NyxImageEditorFieldID(CEditor, iefInlineBase64)));
     Check(LField <> nil, 'real pasted Base64 memo exists');
     LField.Text := ImagePNG;
     Click(NyxImageEditorActionID(CEditor, ieaInline));
     Check(LStudio.ShellView.Root.Find(CEditor+'-preview').Prop('src') =
-      NyxEmbeddedImage(nimPNG, ImagePNG).ToWire, 'ordinary pasted Base64 preview uses native decoded PNG');
+      NyxEmbeddedImage(nimPNG, ImagePNG, NyxImageValidation.ContainerChecksums(False)).ToWire,
+      'ordinary pasted Base64 preview uses native decoded PNG and selected policy');
     LField.Text := 'invalid Base64';
     Click(NyxImageEditorActionID(CEditor, ieaInline));
     Check((EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore) and
       (LStudio.ShellView.Root.Find(CEditor+'-preview').Prop('src') =
-      NyxEmbeddedImage(nimPNG, ImagePNG).ToWire), 'invalid pasted resource retains prior preview and accepted pair');
+      NyxEmbeddedImage(nimPNG, ImagePNG, NyxImageValidation.ContainerChecksums(False)).ToWire),
+      'invalid pasted resource retains prior preview and accepted pair');
     { Refusal may rebuild the form. Reacquire actual controls after that repaint. }
     LField := TCustomEdit(LStudio.ShellView.InputFor(NyxImageEditorFieldID(CEditor, iefInlineBase64)));
     LField.Text := LSource.ToWire;
@@ -403,6 +622,8 @@ begin
       'source pane refresh retains unsubmitted imported bytes');
     Check(LStudio.ShellView.Root.Find(NyxImageEditorFieldID(CEditor, iefAlternative)).Prop('value') =
       TNyxText('A new banner / 🌙'), 'chrome refresh retains exact proposed text');
+    Check(not ReadNyxImageEditorValidation(LStudio.ShellView.Root.Find(CEditor)).ChecksumsRequired,
+      'native chrome refresh retains the unsubmitted policy');
     Click(NyxImageEditorActionID(CEditor, ieaApply));
     Check(LStudio.SourceCommands.State = nssApplied,
       'ordinary Apply reaches isolated paired queue: ' + LStudio.Status);
@@ -410,6 +631,8 @@ begin
     Check(LAfter <> LBefore, 'accepted image pair changes');
     Check(LStudio.Session.Document.Find('hero-image').Prop('src') = LSource.ToWire, 'accepted image retains exact imported source');
     Check(Pos('nimJPEG', LStudio.Session.Source) > 0, 'actual Studio source uses specialized image authoring');
+    Check(Pos('NyxImageValidation.ContainerChecksums(False)', LStudio.Session.Source) > 0,
+      'actual native Studio source retains selected fluent policy');
     if ParamCount > 1 then
     begin
       Capture(ParamStr(2));
@@ -462,6 +685,16 @@ begin
       end;
     end;
     Check(LRefused and (LSource.Kind = nisEmpty), 'native decoder refusal publishes no source');
+    LRefused := False;
+    try
+      LSource := ReadNyxImageFile(LPath, NyxImageValidation.ContainerChecksums(False));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LSource.Kind = nisEmpty), 'framing-only file import still requires native pixel decoding');
   finally
     LStudio.Free;
     GPickerLease := nil;
@@ -483,7 +716,9 @@ var
   LPage: INyxPage;
   LForm: INyxCard;
   LView: TNyxBrowserRenderer;
+  LMounted: TNyxNode;
   LInput: TJSHTMLInputElement;
+  LChoice: TJSHTMLSelectElement;
   LOptions: TJSObject;
   LChange: TNyxImageEditorChange;
   LPicker: INyxImagePicker;
@@ -497,7 +732,10 @@ begin
     LForm := NewNyxImageEditor(CEditor, LSeed.Find('hero-image'), LSeed.Find('hero-image'));
     LPage.Add(LForm);
     LView.Render(LShell, LShell.Pages[0], TJSHTMLElement(document.body));
-    ProposeNyxImageEditorSource(LForm.Node, NyxEmbeddedImage(nimJPEG, ImageJPEG));
+    { Renderers own a detached view. Capture/actions must borrow that mounted
+      form, not mix an authoring button with the view's independently owned tree. }
+    LMounted := LView.Root.Find(CEditor);
+    ProposeNyxImageEditorSource(LMounted, NyxEmbeddedImage(nimJPEG, ImageJPEG));
     LView.Sync;
     LInput := TJSHTMLInputElement(LView.InputFor(NyxImageEditorFieldID(CEditor, iefAlternative)));
     LInput.value := 'A browser banner / 🌙';
@@ -505,11 +743,20 @@ begin
     LOptions['bubbles'] := True;
     LInput.dispatchEvent(TImageInputEvent.new('input', LOptions));
     LInput.dispatchEvent(TImageInputEvent.new('change', LOptions));
-    Check(CaptureNyxImageEditor(LForm.Node.Find(NyxImageEditorActionID(CEditor, ieaApply)),
+    Check(CaptureNyxImageEditor(LMounted.Find(NyxImageEditorActionID(CEditor, ieaApply)),
       LView.Root, LChange) and (LChange.AlternativeText = 'A browser banner / 🌙'),
       'browser control input reaches typed image capture');
     Check(LView.ElementFor(CEditor+'-preview') is TJSHTMLImageElement,
       'ordinary browser preview owns its image element');
+    LChoice := TJSHTMLSelectElement(LView.InputFor(NyxImageEditorFieldID(CEditor, iefValidation)));
+    Check(LChoice <> nil, 'ordinary browser validation selector is mounted');
+    LChoice.selectedIndex := 1;
+    LChoice.dispatchEvent(TImageInputEvent.new('change', LOptions));
+    Check(not ReadNyxImageEditorValidation(LMounted).ChecksumsRequired,
+      'browser select callback reaches the typed policy');
+    Check(CaptureNyxImageEditor(LMounted.Find(NyxImageEditorActionID(CEditor, ieaApply)),
+      LView.Root, LChange) and not LChange.Source.Validation.ChecksumsRequired,
+      'browser Apply re-admits current preview without repasting');
     LPicker := NewNyxBrowserImagePicker;
     LPicker.Cancel;
     LPicker := nil;
@@ -526,15 +773,22 @@ end;
 begin
   try
     {$ifndef PAS2JS}Application.Initialize;{$endif}
+    PolicyProposal;
     Shared;
     {$ifdef PAS2JS}BrowserControls;{$else}NativeStudio;{$endif}
     WriteLn('PASS / image authoring / ',GChecks,' checks');
-    {$ifdef PAS2JS}document.body.setAttribute('data-test-result','passed');{$endif}
+    {$ifdef PAS2JS}
+    document.body.setAttribute('data-image-form-checks', IntToStr(GChecks));
+    RunNyxImageStudioQualification;
+    {$endif}
   except
     on LException: Exception do
     begin
       WriteLn('FAIL / ',LException.Message);
-      {$ifdef PAS2JS}document.body.setAttribute('data-test-result','failed');{$else}
+      {$ifdef PAS2JS}
+      document.body.setAttribute('data-event-error', LException.Message);
+      document.body.setAttribute('data-test-result','failed');
+      {$else}
       DumpExceptionBackTrace(Output);
       ExitCode := 1;
       {$endif}
