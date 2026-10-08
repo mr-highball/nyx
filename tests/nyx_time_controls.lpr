@@ -129,6 +129,10 @@ procedure TClockFocusObserver.Invoke(const AEvent: TNyxEventInfo;
 begin
   Inc(GFocusCount);
   GFocusValue := GView.State.GetValue(NyxTextState('reminder'));
+  {$ifdef NYX_FOCUS_TRACE}
+  WriteLn('FOCUS clock callback ', GFocusCount, ' value=', GFocusValue,
+    ' native=', LCLIntf.GetFocus);
+  {$endif}
 
   if GRetireOnFocus then
   begin

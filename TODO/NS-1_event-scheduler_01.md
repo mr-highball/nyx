@@ -37,6 +37,20 @@ Pending assessment. Studio consumes this contract through NS-4 authoring.
 Return path: NS-4_studio-authoring_01 must consume the accepted contract in tabbed
 Properties / Events UI, add-handler source navigation and confirmed removal.
 
+## Native focus reaffirmation repaired — 2026-10-07
+
+Original criteria 1/3 now reject native focus notifications contradicted by LCL's
+actual post-handler focus. Synthetic kill/set reaffirmation cannot reset the Nyx
+baseline and duplicate entry callbacks. Original clock acceptance/redirect/
+retirement assertions pass; ordinary clock/calendar/RGB totals are 85/94/34 and
+catalog focus/key checks 30,637 across 103 faces, leak-free. Creator-owned logical
+slots remain intact. Both Studios and affected browser consumers compile only.
+See [the repair](../WORK.md#current-return-path-native-focus-regression--2026-10-07).
+
+No event/full criterion closes or historical event count is invented. Renderer
+alone owns 17→18. Complete event scope, executed browser, hardware/IME/accessibility,
+other widgetsets and all remaining original criteria persist.
+
 ## Actual native focus producer — 2026-10-07
 
 Original native/parity criteria now integrate physical LM_SETFOCUS/LM_KILLFOCUS

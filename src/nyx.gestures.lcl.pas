@@ -70,7 +70,7 @@ procedure ReleaseNyxLCLPointer(AControl: TControl);
 
 implementation
 
-uses Forms;
+uses Forms{$ifdef NYX_FOCUS_TRACE}, LCLIntf{$endif};
 
 type
   TNyxControlAccess = class(TControl);
@@ -558,6 +558,16 @@ begin
   LFrame := FFrame;
   LPrevious := FPrevious;
   LMessageID := AMessage.Msg;
+  { Optional diagnostics distinguish native messages from logical slot delivery.
+    They sample handles only; no widget allocation or focus assignment occurs. }
+  {$ifdef NYX_FOCUS_TRACE}
+
+  if FObserveFocus and ((LMessageID = LM_SETFOCUS) or (LMessageID = LM_KILLFOCUS)) then
+  begin
+    WriteLn('FOCUS begin ', FOriginID, ' message=', LMessageID,
+      ' other=', AMessage.WParam, ' native=', LCLIntf.GetFocus);
+  end;
+  {$endif}
   LFrame.Enter;
   try
     case LMessageID of
@@ -606,6 +616,14 @@ begin
 
     if FObserveFocus then
     begin
+      {$ifdef NYX_FOCUS_TRACE}
+
+      if (LMessageID = LM_SETFOCUS) or (LMessageID = LM_KILLFOCUS) then
+      begin
+        WriteLn('FOCUS end ', FOriginID, ' message=', LMessageID,
+          ' native=', LCLIntf.GetFocus);
+      end;
+      {$endif}
       case LMessageID of
         LM_SETFOCUS:
           begin

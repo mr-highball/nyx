@@ -3,6 +3,17 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current native focus repair (2026-10-07): actual post-handler LCL focus qualifies
+native notifications; synthetic kill/set reaffirmation cannot duplicate entry.
+Ordinary Win32 clock/calendar/RGB checks pass 85/94/34 and catalog focus/key checks
+30,637 across 103 faces, leak-free, with original clock assertions intact. Both
+Studios/backend and browser consumers/worker compile with zero owned warnings.
+This restores the clock gate discovered during RGB integration. No original full
+criterion closes: renderer alone advances 17→18, with other counts 20/34/28/2
+unchanged. End focus fixtures; full event/parity/browser/phone/hardware/IME/
+accessibility/widgetset/visual/budget and observing delivery requirements persist.
+See [the repair](WORK.md#current-return-path-native-focus-regression--2026-10-07).
+
 Current RGB prerequisite (2026-10-07): immutable optional color values/domains,
 specialized interfaces, exact crafted source/history and native palette/channel
 pickers pass 84 shared/native and 34 exact compiled-builder/actual Win32 checks,
@@ -11,8 +22,9 @@ and browser consumers/worker compile with zero owned warnings. No original full
 criterion closes: renderer alone advances 16→17, with workflow/authoring/codegen/
 delivery 20/34/28/2 unchanged. End this RGB breadth boundary. Current browser/
 phone/trusted input/accessibility/widgetsets/visual/budget/parity and observing
-rollout remain open. Clock focus still fails its preserved assertion in the
-previously qualified binary as well as the current consumer; retain that gate.
+rollout remain open. Clock focus failed its preserved assertion in the previously
+qualified binary as well as the current consumer; the later repair above restores
+that gate through actual controls.
 See [the packet](WORK.md#current-return-path-typed-rgb-color-fields--2026-10-07).
 
 Current saved-search prerequisite (2026-10-07): typed collection bindings retain

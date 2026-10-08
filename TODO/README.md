@@ -44,13 +44,23 @@ remain active contract work. Structured state is an accepted prerequisite for
 production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
+Latest native focus repair (2026-10-07): post-handler actual focus rejects stale
+native reaffirmation without changing creator logical slots. Unchanged ordinary
+clock/calendar/RGB checks pass 85/94/34 and catalog focus/key checks 30,637 across
+103 faces, leak-free. Both Studios/backend and browser consumers/worker compile.
+The clock gate is restored; no full criterion closes. Renderer alone advances
+17→18, with other counts 20/34/28/2 unchanged. End this boundary; original
+[owner](NS-2_lcl-renderer_01.md) and
+[evidence](../WORK.md#current-return-path-native-focus-regression--2026-10-07)
+retain broader browser/event/parity/rollout qualification.
+
 Latest RGB prerequisite (2026-10-07): optional immutable colors, specialized
 interfaces, crafted source/history and native palette/channel controls pass 84
 shared/native and 34 exact compiled-builder/actual Win32 checks, leak-free.
 Grouped semantic policies/Undo/Redo execute in-process; both Studios/backend and
 browser consumers/worker compile. No original full criterion closes: renderer
 alone advances 16→17, with other counts 20/34/28/2 unchanged. Stop this boundary;
-browser/rollout and current clock-focus failure retain the
+browser/rollout retain the
 [original owner](NS-2_lcl-renderer_01.md) and
 [evidence](../WORK.md#current-return-path-typed-rgb-color-fields--2026-10-07).
 

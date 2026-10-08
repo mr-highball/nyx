@@ -23,6 +23,21 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   prerequisite for replacing the time-field text fallback. Other native input
   and full renderer criteria remain required; this allocates no extra credit.
 
+## Native focus regression repaired — 2026-10-07
+
+Original criteria 1/2 consume actual post-handler LCL focus when qualifying native
+notifications. Synthetic kill/set reaffirmation no longer invents another return;
+creator logical slots and deferred retirement remain intact. Unchanged ordinary
+clock/calendar/RGB checks pass 85/94/34 and catalog focus/key checks 30,637 across
+103 faces, leak-free. Both Studios/backend and browser consumers/worker compile
+with zero owned warnings. This resolves the clock gate in the RGB packet. See
+[the repair](../WORK.md#current-return-path-native-focus-regression--2026-10-07).
+
+No original full criterion closes. Renderer alone advances 17→18 once; other
+known counts stay 20/34/28/2. Stop focus fixtures. Executed browser/phone, hardware/
+IME/accessibility, other widgetsets/DPI, production visuals/budgets, full parity
+and observing delivery retain the original requirements.
+
 ## Typed RGB picker prerequisite — 2026-10-07
 
 Original criteria 1–3 now consume optional typed RGB values/domains, specialized
@@ -36,9 +51,9 @@ consumers/worker compile. See [the contract](../docs/colors.md) and
 No original full criterion closes. Renderer alone advances 16→17 once; other
 known counts remain 20/34/28/2. Stop this color breadth boundary. Executed browser,
 trusted input/accessibility/widgetsets/DPI, production visuals/budgets and full
-parity retain the original requirements. The clock focus regression currently
-fails the preserved assertion in both current and previously qualified binaries;
-that gate remains open and is not supplied by passing clock-value tests.
+parity retain the original requirements. The clock focus regression discovered
+here failed both current and previously qualified binaries; the later repair
+above restores that gate through actual controls, preserving its assertion.
 
 ## Saved list/tree search prerequisite — 2026-10-07
 

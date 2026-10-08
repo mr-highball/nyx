@@ -39,7 +39,8 @@ See [colors](../docs/colors.md) and
 No component/full criterion closes or historical count is invented. Renderer
 alone owns 16→17. The existing kind count stays 77. Full production component
 breadth/style/budgets, parity, trusted accessibility and observing delivery retain
-the original owners, including the currently failed clock-focus gate.
+the original owners. The clock-focus gate discovered here is restored by the
+[subsequent native repair](../WORK.md#current-return-path-native-focus-regression--2026-10-07).
 
 ## Saved list/tree search prerequisite — 2026-10-07
 

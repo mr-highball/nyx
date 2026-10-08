@@ -6340,12 +6340,18 @@ begin
   end;
 end;
 
+{ Opt-in NYX_FOCUS_TRACE samples before dispatch, which can retire this binding.
+  Ordinary builds contain no diagnostic output or additional focus operation. }
 procedure TNyxLCLBinding.Enter(ASender: TObject);
 var
   LEvents: INyxEvents;
   LRevision: Integer;
   LChanged: Boolean;
 begin
+  {$ifdef NYX_FOCUS_TRACE}
+  WriteLn('FOCUS logical enter ', FNode.ID, ' before=', FHasFocus,
+    ' native=', LCLIntf.GetFocus, ' updating=', FRenderer.FUpdating);
+  {$endif}
   LChanged := not FHasFocus;
   FHasFocus := True;
 
@@ -6385,6 +6391,10 @@ var
   LIndex: Integer;
   LChanged: Boolean;
 begin
+  {$ifdef NYX_FOCUS_TRACE}
+  WriteLn('FOCUS logical exit ', FNode.ID, ' before=', FHasFocus,
+    ' native=', LCLIntf.GetFocus, ' updating=', FRenderer.FUpdating);
+  {$endif}
   LChanged := FHasFocus;
   FHasFocus := False;
   for LIndex := Low(FPressedKeys) to High(FPressedKeys) do
@@ -6422,6 +6432,22 @@ var
   LIndex: Integer;
 begin
   LEntered := ATrigger = ntAfterEnter;
+  {$ifdef NYX_FOCUS_TRACE}
+  WriteLn('FOCUS native ', FNode.ID, ' enter=', LEntered, ' before=', FHasFocus,
+    ' native=', LCLIntf.GetFocus, ' updating=', FRenderer.FUpdating);
+  {$endif}
+
+  if (FFocusControl = nil) or (FFocusControl.Focused <> LEntered) then
+  begin
+    { Native/default handling may have already redirected or restored focus.
+      LCL also reaffirms the active editor with a synthetic kill/set pair whose
+      kill message names that same editor as the next target. Only the admitted
+      keyboard surface's actual post-handler focus may change our baseline;
+      otherwise that stale exit would fabricate a second returning callback.
+      Focused resolves widgetset-owned inner handles through LCL, preserving
+      composite controls without assuming a Win32 HWND or disturbing focus. }
+    Exit;
+  end;
 
   if FHasFocus = LEntered then
   begin

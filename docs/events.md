@@ -200,6 +200,14 @@ observations capture the typed Nyx focus payload after default native handling
 and editing completion. Native focus callbacks share the deferred-control lifetime
 guard used by physical input and may retire their own view safely.
 
+Native observation checks LCL's actual post-handler `Focused` state before changing
+that transition baseline. A synthetic kill/set reaffirmation that leaves the
+editor focused cannot invent another exit/entry or registration invocation.
+Real picker departures/returns and explicit application focus redirection still
+use the ordinary contract. `NYX_FOCUS_TRACE` enables diagnostic logical/native
+message ordering in checked native builds; it is compiled out by default and
+does not define application behavior.
+
 Focus observations never execute a click action, change state or clone a view.
 Contract.On can declare their scalar
 payload; Contract.Signal declares a signal without a payload. Those declarations

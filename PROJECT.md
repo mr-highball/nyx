@@ -66,15 +66,24 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+The native clock focus regression is resolved: actual post-handler LCL focus
+qualifies native notifications before updating Nyx's transition baseline. A
+synthetic kill/set reaffirmation no longer invents a second returning callback.
+Ordinary Win32 clock/calendar/RGB checks pass 85/94/34; catalog focus/key checks
+pass 30,637 across 103 faces, leak-free. Both Studios/backend and browser consumers/
+worker compile with zero owned warnings. Full event/parity/browser/observing
+acceptance remains open. See
+[the repair](WORK.md#current-return-path-native-focus-regression--2026-10-07).
+
 Typed optional RGB values, specialized Color interfaces, crafted source and
 ordinary browser/native picker adapters now replace the native color text
 fallback. Checked shared/native qualification passes 84 and exact emitted-builder/
 actual Win32 controls 34, leak-free; both Studios/backend and browser consumers/
 worker compile with zero owned warnings. Semantic grouped RGB policy Undo/Redo is
 qualified in-process against the unchanged authenticated English seed. Browser
-execution and rollout remain open. The current clock focus regression also fails
-in its previously qualified binary; it remains an explicit gate, not a passed
-dependency. See [the packet](WORK.md#current-return-path-typed-rgb-color-fields--2026-10-07)
+execution and rollout remain open. The clock failure discovered in this packet
+is resolved by the later native focus repair above. See
+[the packet](WORK.md#current-return-path-typed-rgb-color-fields--2026-10-07)
 and [the contract](docs/colors.md).
 
 The existing collection MCP contract now inspects bounded saved/default search

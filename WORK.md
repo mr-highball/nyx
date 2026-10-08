@@ -7,6 +7,72 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: native focus regression — 2026-10-07
+
+Previous goal turn is **progress**: typed RGB value/domain/source/ordinary controls
+are checkpointed through `627d5a9`, verified exact on remote with a clean worktree.
+Shared/native checks pass 84 and actual Win32/compiled-source checks 34. No full
+criterion closes; known workflow/authoring/renderer/codegen/delivery counts are
+20/34/17/28/2. All earlier test handles are terminal; no wait is being resumed.
+
+Resume the original renderer/event focus prerequisite before new input breadth.
+The actual clock acceptance assertion fails in both current and previously
+qualified binaries: current editor handle and committed value are correct, but
+registration count is three versus two. Do not weaken or resample that assertion
+to hide a real extra transition. First trace application/popup actions against
+physical native and logical focus routes, then repair the demonstrated cause.
+
+Preregistered evidence: unchanged native clock/calendar assertions, input/value
+and change/focus callback retirement, native catalog focus and affected RGB
+controls; compile both Studios and browser consumers/worker. Keep event semantics,
+authored pairs/defaults and creator-owned LCL slots intact. Preserve all fifteen
+protected services/nine complete pairs/229 LAN files and inspect primary through
+the authenticated named MCP tools. No rejected launch, active design replacement
+or extra Inspector form. Two diagnosis/repair passes, then reassess the actual
+failure. Renderer is the sole no-closure owner; full browser/IME/accessibility/
+widgetset/visual/budget/parity/observing requirements remain open.
+
+Diagnosis/reassessment: the first clock trace reproduces the extra native exit
+while the editor already owns focus. The fuller native trace first needed its
+diagnostic-only LCLIntf import; this fixture failure is retained, not a product
+regression. Corrected tracing proves a non-nested synthetic kill/set reaffirmation:
+the kill names the editor itself as its next target and the real focus never
+leaves. Check LCL's post-handler Focused contract before changing Nyx's native
+baseline; keep creator logical slots untouched. The repaired traced clock journey
+passes 82 checks without capture (85 with its three image-capture assertions),
+leak-free, with the original acceptance/retirement assertions intact. Continue
+the preregistered ordinary non-tracing and catalog regressions, not more fixtures.
+
+The ordinary non-tracing maintained builds now pass **85 clock / 94 calendar /
+34 RGB control checks**, plus **84 RGB shared/semantic** checks and **30,637 catalog
+focus/key assertions across 103 faces**, all leak-free. The calendar 94 includes
+its 49 shared date checks. Clock value prerequisite 1613, date regression 49 and
+exact compiled calendar/clock reconstruction also pass; those shared cases are
+not separate physical-input evidence. Native radio policy and independent ordered
+registrations remain covered. The unchanged clock assertion observes the exact
+native focus handle, one returning callback and accepted value; redirect and both
+change/focus retirement routes pass. Evidence:
+`build/focus-regression/{time,date,color,catalog}-maintained.log`. This resolves the
+clock gate recorded in the preceding RGB packet rather than hiding its failures.
+
+Both Studios/backend, source worker and browser calendar/clock/RGB/catalog
+consumers compile with zero owned warnings; the seven installed Classes warnings
+per pas2js compile remain visible. No browser execution, hardware/IME/assistive
+technology, other-widgetset or production visual/budget acceptance is claimed.
+Diagnostic native traces are opt-in and compiled out in these ordinary builds;
+creator-installed logical handlers retain ownership. Public semantics are in
+[events](docs/events.md); the trace and repaired-trace logs preserve the cause.
+
+No original full criterion closes. Renderer alone advances **17→18** once;
+workflow/authoring/codegen/delivery remain **20/34/28/2**, with no invented event
+count. Stop this focus regression boundary. Full original event/parity/rendering,
+current browser/phone and observing rollout remain open. Direct named MCP read
+preserves primary revision two, selection/home, no draft or history. The fresh
+guard verifies all fifteen process identities/nine complete pairs/229 frozen LAN
+files (`preservation-final.log`). Authorized checkpoint evidence belongs in ignored
+`build/focus-regression/remote-checkpoint.json`; verify exact remote and clean
+worktree before handoff. No active service/root is replaced.
+
 ## Current return path: typed RGB color fields — 2026-10-07
 
 The immediately preceding goal turn is **no progress** toward new acceptance:
