@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -4915,6 +4915,59 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxSourceEditorHost") -Destination $nyxSourceEditorBrowser
     }
     Write-Host 'Source editor consumers staged; browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'pascal-views') {
+    # Pascal owns semantic admission/refusal/history and exact compiler output.
+    # No backend, enrollment, observing project or compiler profile is changed.
+    $nyxViewsRoot = Join-Path $nyxRoot 'build/views-source'
+    $nyxViewsNative = Join-Path $nyxViewsRoot 'native'
+    $nyxViewsExport = Join-Path $nyxViewsRoot 'export'
+    $nyxViewsLcl = Join-Path $nyxViewsRoot 'lcl'
+    $nyxViewsBrowser = Join-Path $nyxViewsRoot 'browser'
+
+    if ($BrowserOutput) { $nyxViewsBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxViewsNative, $nyxViewsExport,
+      $nyxViewsLcl, $nyxViewsBrowser | Out-Null
+    $nyxViewsFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxViewsNative", "-FE$nyxViewsNative")
+    Invoke-NyxCompiler $nyxFpc ($nyxViewsFlags + @('tests/nyx_views_tests.lpr'))
+    & (Join-Path $nyxViewsNative 'nyx_views_tests.exe') $nyxViewsExport
+
+    if ($LASTEXITCODE -ne 0) { throw 'Semantic view source qualification failed' }
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxViewsPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxViewsControlFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxViewsExport", "-Fi$nyxViewsExport",
+      "-Fu$nyxLazarus/lcl/units/$nyxViewsPlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxViewsPlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxViewsPlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxViewsPlatform",
+      "-FU$nyxViewsLcl", "-FE$nyxViewsLcl")
+    foreach ($nyxViewsSchema in @('nyx_import_schema', 'nyx_routine_schema', 'nyx_declaration_schema')) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxViewsControlFlags + @("tests/$nyxViewsSchema.lpr"))
+      & (Join-Path $nyxViewsLcl "$nyxViewsSchema.exe")
+
+      if ($LASTEXITCODE -ne 0) { throw 'Current Pascal discovery qualification failed' }
+    }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxViewsControlFlags + @('tests/nyx_views_controls.lpr'))
+    & (Join-Path $nyxViewsLcl 'nyx_views_controls.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Exact compiled native view source failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxViewsProgram in @('nyx_views_tests', 'nyx_views_controls')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests',
+        '-Jirtl.js', "-Fu$nyxViewsExport", "-Fi$nyxViewsExport", "-FE$nyxViewsBrowser",
+        "tests/$nyxViewsProgram.lpr")
+    }
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxViewsBrowser 'rtl.js')
+    foreach ($nyxViewsHost in @('views-edits.html', 'views-controls.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxViewsHost") -Destination $nyxViewsBrowser
+    }
+    Write-Host 'Semantic view source consumers staged; browser execution needs an admitted HTTP host.'
     exit 0
   }
 

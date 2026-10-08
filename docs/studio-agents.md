@@ -1017,6 +1017,55 @@ still need the ordinary compiler result. Class/full-unit authoring, updated
 authenticated observing deployment and complete source quality retain their
 original open owners.
 
+### Typed view builder source
+
+Current source adds two focused modes to `nyx_pascal`. They use the same
+permission, exact revision, private transport owner, project/review routing and
+retry receipts as other source edits. Discover the installed schema first:
+an older running Studio may not advertise these modes yet.
+
+`views` returns only a Unicode-scalar window of accepted text between the
+`nyx:views` markers. Whitespace and comments belong to that text; the markers
+do not. The response includes revision, starting line, total, nextOffset and
+pendingDraft. Default count is 2048; maximum is 4096. Concatenate windows only
+when their revisions match. A line points to the start of the complete body;
+offsets count scalars, not native UTF-8 bytes or browser UTF-16 code units.
+
+```json
+{"mode":"views","offset":0,"count":2048}
+```
+
+`edit-views` supplies that complete exact body as `expected` and a typed Pascal
+builder as `builder`, with expectedRevision and a unique operationId. Each text
+permits 262144 Unicode scalars. An immutable public Pascal command is available
+to other controllers as well:
+
+```pascal
+LPatch := NyxViewsPatch(LAcceptedBuilder, LProposedBuilder);
+LPair := LPatch.Candidate(LAcceptedPair);
+LSession.AdoptProject(LPair);
+```
+
+Import `nyx.studio.viewsedits` for the command. Candidate stages ordinary source
+Apply on an independent session; the controller publishes once through its
+existing paired Undo boundary. It retains application helpers, import sections
+and both markers exactly. Pending drafts, mismatched expected text, no-op
+proposals, malformed/oversized text, duplicate/escaped boundaries, directives
+and unsupported fluent Pascal refuse before publication. Related builder changes
+share one Undo/Redo step. The compact receipt includes no complete source/design.
+This operation changes the admitted portable design beside its authored source;
+it does not execute code or prove compiler correctness. Use `nyx_build` afterward.
+Whole-unit/class editing and project-file import remain separate open outcomes.
+
+`./tools/build.ps1 -Target pascal-views` runs the native semantic journey and
+current discovery checks, executes the exact emitted companion against an actual
+Win32 label, and stages the equivalent browser journey/compiled consumer under
+`build/views-source/browser`. Serve the staged files over an admitted HTTP host
+and observe `data-nyx-views` / `data-nyx-views-controls` becoming `passed`.
+This target launches no backend and changes no editor project or configuration.
+Browser execution, installed-tool availability and observing deployment are
+distinct evidence from compilation.
+
 ## Maintained authored-input review
 
 Build `agents`, then run the Pascal coordinator against a disposable service:

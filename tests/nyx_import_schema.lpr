@@ -51,7 +51,7 @@ begin
   try
     { Actual discovery builder only: no server/configuration constructor. }
     LTools := NyxStudioMCPTools.Field('tools');
-    Check(LTools.Count = 20, 'Catalog inventory includes presentations');
+    Check(LTools.Count = 22, 'Current catalog retains the focused tool inventory');
     LFound := False;
     for LIndex := 0 to LTools.Count - 1 do
     begin
@@ -65,7 +65,7 @@ begin
     end;
     Check(LFound, 'Existing Pascal tool advertises imports');
     LVariants := LTool.Field('inputSchema').Field('oneOf');
-    Check(LVariants.Count = 9, 'Nine focused Pascal modes retain imports');
+    Check(LVariants.Count = 11, 'Focused Pascal modes retain imports and add managed views');
     for LIndex := 0 to LVariants.Count - 1 do
     begin
       LVariant := LVariants.Item(LIndex);
@@ -96,6 +96,19 @@ begin
       'Action and section choices are closed');
     Check(LChange.Field('properties').Field('unit').Field('maxLength').AsInteger = 120,
       'Unit namespace has the compiler admission budget');
+    LVariant := LVariants.Item(9);
+    Check(LVariant.Field('properties').Field('mode').Field('const').AsText = 'views',
+      'Managed builder inspection retains existing mode ordering');
+    Check(LVariant.Field('properties').Field('count').Field('maximum').AsInteger = 4096,
+      'Builder context has a bounded scalar window');
+    LVariant := LVariants.Item(10);
+    Check(LVariant.Field('properties').Field('mode').Field('const').AsText = 'edit-views',
+      'Guarded builder publication is discoverable');
+    Check((LVariant.Field('properties').Field('expected').Field('maxLength').AsInteger = 262144) and
+      (LVariant.Field('properties').Field('builder').Field('maxLength').AsInteger = 262144),
+      'Exact proposal texts have matching Unicode budgets');
+    Check(LVariant.Field('required').Count = 5,
+      'Publication requires mode, revision, operation identity and both exact texts');
     WriteLn('PASS ', LChecks, ' actual Pascal import discovery checks');
   except
     on LException: Exception do

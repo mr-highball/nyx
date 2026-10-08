@@ -50,7 +50,7 @@ begin
   try
     { Actual transport discovery builder; no listener or configuration refresh. }
     LTools := NyxStudioMCPTools.Field('tools');
-    Check(LTools.Count = 20, 'Focused routine modes extend the twenty advertised tools');
+    Check(LTools.Count = 22, 'Focused declaration modes retain the current tool inventory');
     LFound := False;
     for LIndex := 0 to LTools.Count - 1 do
     begin
@@ -64,7 +64,7 @@ begin
     end;
     Check(LFound, 'The actual Pascal tool contains routine capabilities');
     LModes := LTool.Field('inputSchema').Field('oneOf');
-    Check(LModes.Count = 9, 'Existing modes plus declaration counterparts and grouped authoring');
+    Check(LModes.Count = 11, 'Existing source modes plus bounded managed views');
     for LIndex := 0 to LModes.Count - 1 do
     begin
       LMode := LModes.Item(LIndex);

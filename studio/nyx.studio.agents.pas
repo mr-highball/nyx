@@ -143,6 +143,9 @@ type
     function Routines(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
     { Exact interface counterpart context and one grouped declaration edit. }
     function Declarations(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
+    { Bounded exact managed-builder text and one guarded paired source command.
+      Application helpers/imports remain outside its immutable edit boundary. }
+    function Views(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
     function EditCallbacks(const AArguments: TNyxDataValue;
       const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
     function RemoveRoots(const AArguments: TNyxDataValue;
@@ -249,7 +252,7 @@ uses
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.studio.importedits,
   nyx.studio.routineedits, nyx.studio.declarationedits, nyx.times,
   nyx.resources, nyx.resource.sources, nyx.bytes, nyx.studio.resourceedits,
-  nyx.resources.rows, nyx.collections.registry;
+  nyx.resources.rows, nyx.collections.registry, nyx.studio.viewsedits;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
 var
@@ -1974,6 +1977,64 @@ begin
     NyxField('pendingDraft', NyxData(FSession.DraftSource <> FSession.Source))]);
 end;
 
+function TNyxAgentSession.Views(const AArguments: TNyxDataValue;
+  AApply: Boolean): TNyxDataValue;
+var
+  LPatch: INyxViewsPatch;
+  LPair: TNyxProjectPair;
+  LPrefix: TNyxText;
+  LBuilder: TNyxText;
+  LSuffix: TNyxText;
+  LText: TNyxText;
+  LOffset: Integer;
+  LCount: Integer;
+  LTotal: Integer;
+  LLine: Integer;
+  LIndex: Integer;
+begin
+
+  if AApply then
+  begin
+    NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|expected|builder|');
+    RequireRevision(AArguments);
+    LPatch := NyxViewsPatch(TextArgument(AArguments, 'expected'),
+      TextArgument(AArguments, 'builder'));
+    LPair := LPatch.Candidate(FSession.ProjectSnapshot);
+    { Bound the receipt before the sole accepted-session publication. Returned
+      text is deliberately absent: nyx_source/views provide focused inspection. }
+    Result := NyxObject([NyxField('replaced', NyxData(True))]);
+    BoundContext(WithResults(Summary, Result, 'views', True));
+    FSession.AdoptProject(LPair);
+    Exit;
+  end;
+  NyxAgentFields(AArguments, '|mode|offset|count|');
+  SplitNyxSourceFrame(FSession.Source, LPrefix, LBuilder, LSuffix);
+  LOffset := IntegerArgument(AArguments, 'offset', 0, 0, 4 * 1024 * 1024);
+  LCount := IntegerArgument(AArguments, 'count', 2048, 1, 4096);
+  LText := TextSpan(LBuilder, LOffset, LCount, LTotal);
+
+  if LOffset > LTotal then
+  begin
+    raise ENyxModel.Create('Views text offset is beyond the accepted builder');
+  end;
+  LLine := 1;
+  for LIndex := 1 to Length(LPrefix) do
+  begin
+
+    if LPrefix[LIndex] = #10 then
+    begin
+      Inc(LLine);
+    end;
+  end;
+  Result := NyxObject([
+    NyxField('revision', NyxData(FRevision)), NyxField('line', NyxData(LLine)),
+    NyxField('offset', NyxData(LOffset)), NyxField('total', NyxData(LTotal)),
+    NyxField('nextOffset', NyxData(Min(LOffset + LCount, LTotal))),
+    NyxField('text', NyxData(LText)),
+    NyxField('maximumEditCharacters', NyxData(NyxMaximumViewsCharacters)),
+    NyxField('pendingDraft', NyxData(FSession.SourceDraftPending))]);
+end;
+
 function TNyxAgentSession.Imports(const AArguments: TNyxDataValue;
   AApply: Boolean): TNyxDataValue;
 var
@@ -2202,6 +2263,8 @@ var
   LResourceApply: Boolean;
   LResourceResults: TNyxDataValue;
   LAuthority: TNyxText;
+  LViewsApply: Boolean;
+  LViewsResults: TNyxDataValue;
   LTransaction: INyxProjectTransaction;
   LDesignPatch: INyxDesignPatch;
 begin
@@ -2229,6 +2292,8 @@ begin
   LCollectionResults := NyxNull;
   LResourceApply := False;
   LResourceResults := NyxNull;
+  LViewsApply := False;
+  LViewsResults := NyxNull;
 
   try
 
@@ -2248,6 +2313,7 @@ begin
       LImportApply := TextArgument(AArguments, 'mode') = 'edit-imports';
       LRoutineApply := TextArgument(AArguments, 'mode') = 'edit-routines';
       LDeclarationApply := TextArgument(AArguments, 'mode') = 'edit-declarations';
+      LViewsApply := TextArgument(AArguments, 'mode') = 'edit-views';
     end;
     if ATool = 'nyx_roots' then
     begin
@@ -2270,7 +2336,7 @@ begin
     LMutation := (ATool = 'nyx_transaction') or (ATool = 'nyx_select') or
       (ATool = 'nyx_history') or LCallbackApply or LHandlerApply or LRootApply or
       LStateApply or LCollectionApply or LResourceApply or
-      LImportApply or LRoutineApply or LDeclarationApply;
+      LImportApply or LRoutineApply or LDeclarationApply or LViewsApply;
 
     if LMutation and (FPermission <> apEdit) then
     begin
@@ -2390,7 +2456,12 @@ begin
     else if ATool = 'nyx_pascal' then
     begin
 
-      if LDeclarationApply or (TextArgument(AArguments, 'mode') = 'declaration') then
+      if LViewsApply or (TextArgument(AArguments, 'mode') = 'views') then
+      begin
+        Result := Views(AArguments, LViewsApply);
+        LViewsResults := Result;
+      end
+      else if LDeclarationApply or (TextArgument(AArguments, 'mode') = 'declaration') then
       begin
         Result := Declarations(AArguments, LDeclarationApply);
         LDeclarationResults := Result;
@@ -2512,6 +2583,11 @@ begin
       if LDeclarationApply then
       begin
         Result := WithResults(Result, LDeclarationResults, 'declarations');
+      end;
+
+      if LViewsApply then
+      begin
+        Result := WithResults(Result, LViewsResults, 'views');
       end;
 
       if LRootApply then

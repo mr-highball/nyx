@@ -9,6 +9,19 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Current managed-view source preparation (2026-10-08) extends this owner rather
+than creating another workflow task. `nyx_pascal` has bounded accepted builder
+windows and exact expected replacement through the public immutable views patch,
+ordinary source Apply and paired Undo. **83** shared checks execute natively and
+in HTTP browser; exact compiled source/actual target heading checks pass **4**
+per target, with retained handwritten helpers and zero native leaks. Current
+discovery passes **48/43/56** source schema checks and retains old mode ordering.
+Authenticated installed discovery explicitly lacks these new modes. No full
+criterion closes: workflow no-closure **24→25**, other owners unchanged. Keep
+deployment/observing and complete source/import/runtime outcomes open; stop local
+builder fixture expansion. Protected user projects/services remain exact. See
+[the packet](../WORK.md#current-return-path-guarded-semantic-view-source--2026-10-08).
+
 Starting evidence: eleven initialized tools; actual desktop/user-scope Codex
 discovery; real selected-design queries; 55 HTTP/MCP checks; explicit registration
 and credential rotation with 22 preservation/refusal checks and zero leaks.

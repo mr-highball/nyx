@@ -9,7 +9,79 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: authenticated clock authoring — 2026-10-08
+## Current return path: guarded semantic view source — 2026-10-08
+
+Previous turn is verified progress at exact pushed `1290357`: one authenticated
+owned clock review, six real browser/LCL compiler jobs, paired history and actual
+observing/rendered browser evidence. Protected checkpoint/services remain exact.
+Full goal remains active; no-closure is **24/9/40/20/28/3**. Reuse that evidence;
+clock fixture expansion ends here.
+
+The next existing NS-4_agent-workflows_01 criteria 2/5 boundary is semantic
+managed-view source authoring. Callback/import/helper editing already exists;
+agents still cannot inspect and replace the exact typed views builder through
+the ordinary source admission boundary. Deliver bounded Unicode-scalar builder
+windows and one exact-expected immutable replacement, preserving markers,
+imports/helpers, pending drafts, independent context/owner receipts, and paired
+Undo/Redo. Reuse SplitNyxSourceFrame, detached ordinary source Apply and
+AdoptProject; no new document model, transport or editor toolkit.
+
+Acceptance for this preparation packet requires native and actual HTTP browser
+shared semantic execution, refusal/receipt/history cases, current closed MCP
+schema, and compiled exact emitted source on both targets. No UI chrome changes
+are planned. Budget: one managed-builder command, one maintained cross-target
+journey, at most one repair per failed boundary; then reassess integration.
+The installed server cannot acquire new source capabilities without deployment.
+Do not repeat the previously rejected backend launch or optional profile cleanup;
+current-source qualification must be distinguished from authenticated installed
+availability. Preserve all nine user pairs and fifteen service identities.
+
+Current-source result: `nyx_pascal` adds `views` and `edit-views`, using one
+public immutable `INyxViewsPatch`/`NyxViewsPatch` and the ordinary detached
+Apply/AdoptProject boundary. The lexer partitions exact marker ownership; source
+expected text, pending drafts, Unicode budgets and unchanged proposals are
+guarded. Permission/revision/private-owner receipts and durable publication
+classification include the new mode. Read windows default to 2048/max 4096
+scalars; one explicit proposal permits 262144. Imports/helpers stay exact.
+
+`./tools/build.ps1 -Target pascal-views` passes **83** shared semantic checks
+natively and in an actual HTTP browser. These include paged context checks,
+typed text/layout admission, exact owner retry despite display rename,
+permission/stale/expected/no-op/directive/marker/unsupported refusal, pending
+draft protection, scalar budget/malformed encoding and exact one-step paired
+Undo/Redo. Actual current discovery passes **48/43/56** import/routine/declaration
+checks; old mode ordering is retained. Exact emitted companion compilation and
+execution pass **4** checks on Win32 and **4** in the HTTP browser: canonical
+design equality, retained handwritten Unicode helper, target heading text and
+layout. All native programs/owned browser drivers report zero leaks. Owned
+compilation has zero warnings; pas2js emits 14 existing dependency warnings from
+its RTL across the two browser builds. Dependency source is unchanged.
+
+Initial fixture compilation used guessed quote/permission APIs; these are
+corrected to the actual public permission contract and an exact typed fixture
+quote. A read-only comparison initially tried the edit-only review seed; the
+fixture now uses ordinary trusted editor observation solely for full-pair
+invariants. No accepted user data was involved. Final fixtures execute once after
+the meaningful receipt/budget additions. Evidence: `build/views-source/`
+`maintained-final.log`, `browser-edits/capture.dom.html`,
+`browser-controls/capture.dom.html`, portable `export/workshop.nyxproject`, exact
+compiled inputs and private closure/preservation receipts. A verified existing
+static host serves only a fresh child with five exact assets; original assets,
+backend identities and enrollment are retained. Owned browser transports close;
+their disposable profiles/logs remain. No rejected cleanup/launch is retried.
+
+Authenticated installed discovery still advertises the nine older Pascal modes;
+`views`/`edit-views` are explicitly absent. Current-source shared execution and
+discovery are preparation, not installed semantic/observing rollout. No full
+original criterion or task closes: workflow no-closure advances **24→25** once;
+resource/authoring/renderer/codegen/delivery remain **9/40/20/28/3**. Stop builder
+fixture expansion. Next workflow outcome is admitted current-source deployment
+and authenticated builder edit/build/observing integration; whole-project import,
+class/full-unit authoring and complete runtime/workspace behavior remain open.
+Do not repeat the previously rejected backend-start action under another launcher.
+
+<a id="current-return-path-authenticated-clock-authoring--2026-10-08"></a>
+## Previous return path: authenticated clock authoring — 2026-10-08
 
 Previous turn is progress: ordinary browser paired import/policy/source/history
 executes, the shared typed source palette repairs both controllers, and exact

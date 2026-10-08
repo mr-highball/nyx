@@ -66,7 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current authenticated clock authoring (2026-10-08): semantic tools compose an
+Current semantic view source preparation (2026-10-08): bounded `nyx_pascal` builder
+inspection/replacement reuses ordinary typed source admission and paired history,
+preserving markers/imports/helpers/drafts. **83** shared checks execute natively
+and in an HTTP browser; exact compiled source reconstructs and renders on both
+targets (**4** each), leak-free. Current discovery qualifies; installed discovery
+still lacks the two new modes. No full criterion closes: workflow no-closure
+advances **24→25**, others stay **9/40/20/28/3**. Protected user state/services
+remain exact. Deployment, full runtime/workspaces and broader source/import stay
+open. See [the packet](WORK.md#current-return-path-guarded-semantic-view-source--2026-10-08).
+
+Previous authenticated clock authoring (2026-10-08): semantic tools compose an
 English two-page/reusable project, publish/refuse typed overnight policy, inspect
 paged context and restore exact paired history. All six browser/LCL page/reusable/
 application compiler jobs succeed with exact full or projected source; the

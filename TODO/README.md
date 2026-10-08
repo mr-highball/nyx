@@ -46,7 +46,16 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current authenticated clock authoring (2026-10-08): bounded MCP composition,
+Current semantic view source preparation (2026-10-08): bounded builder context
+and one guarded paired replacement execute through ordinary source admission.
+**83** shared checks run on native/HTTP browser; exact compiled companions and
+actual target headings pass **4** each. Installed tools still lack the new modes;
+authenticated observing rollout remains open. No full criterion closes: workflow
+no-closure advances **24→25**, others stay **9/40/20/28/3**. Protected pairs and
+services remain exact. See
+[the packet](../WORK.md#current-return-path-guarded-semantic-view-source--2026-10-08).
+
+Previous authenticated clock authoring (2026-10-08): bounded MCP composition,
 typed policy/refusal, exact paired Undo/Redo and ordinary observing activity
 execute in an owned two-page/reusable review. Six actual compiler jobs cover
 both targets and all three scopes; exact full/projected inputs and compiled

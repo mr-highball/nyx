@@ -4,7 +4,18 @@
 [Current work](WORK.md)
 
 
-Current authenticated clock authoring (2026-10-08): an independently owned
+Current semantic view source preparation (2026-10-08): bounded managed-builder
+inspection and exact expected replacement retain imports/helpers/drafts and
+one-step paired history through ordinary source admission. Shared execution
+passes **83** native and HTTP-browser checks; exact compiled source/target
+headings pass **4** per target, leak-free. Current discovery passes, while the
+installed server explicitly lacks these new modes. No full criterion closes:
+workflow no-closure advances **24→25**, others stay **9/40/20/28/3**. Protected
+user state/services stay exact. Authenticated observing deployment and full
+runtime/workspace/source-import outcomes remain open. See
+[the packet](WORK.md#current-return-path-guarded-semantic-view-source--2026-10-08).
+
+Previous authenticated clock authoring (2026-10-08): an independently owned
 English two-page/reusable review now qualifies semantic typed policy admission/
 refusal, bounded context, exact paired history and six browser/LCL compiler jobs
 covering all three scopes. Exact full/projected inputs, compiled browser rendering
