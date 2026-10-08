@@ -29,12 +29,41 @@ interface
 uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema,
   nyx.studio.session, nyx.studio.projects, nyx.studio.compiler, nyx.studio.builds,
-  nyx.studio.rootedits, nyx.presentations, nyx.menu.declarations, nyx.root.types;
+  nyx.studio.rootedits, nyx.presentations, nyx.menu.declarations, nyx.root.types,
+  nyx.application.resources;
 
 type
   { Operator permissions are closed, session-local and never part of a design.
     Only the editor exchange can change them. MCP cannot grant itself access. }
   TNyxAgentPermission = (apDisabled, apReadOnly, apEdit);
+
+  { Open application-run names use distinct references. Scope separates a full
+    application, one mounted view and a resource-only preview. A resource preview
+    cannot establish successful control publication in a full application. }
+  TNyxStudioRuntimeScope = (srsApplication, srsView, srsResources);
+  TNyxStudioRuntimeRef = record
+  private
+    FName: TNyxText;
+  public
+    property Name: TNyxText read FName;
+  end;
+  { Trusted host capability, deliberately without a wire codec or public token
+    property. An agent query never grants publication/reload/cancellation. Exact
+    design revision, runtime identity and catalog bind this transient authority;
+    paired edits, recovery and explicit retirement revoke it. }
+  TNyxStudioResourceObservation = record
+  private
+    FIdentity: TNyxText;
+  end;
+  TNyxStudioResourceRun = record
+    Reference: TNyxStudioRuntimeRef;
+    Scope: TNyxStudioRuntimeScope;
+    View: TNyxText;
+    Target: TNyxPlatform;
+    Authority: TNyxText;
+    Sequence: Integer;
+    Active: Boolean;
+  end;
 
   { Private host recovery contains authoring state and operator permission only.
     Transport credentials, receipts, removal-review tickets, activity and compiler
@@ -60,6 +89,10 @@ type
     FActivitySerial: Integer;
     FReport: INyxCompilerReport;
     FCompilerSequence: Integer;
+    FResourceRuns: array of TNyxStudioResourceRun;
+    { Separate managed storage: pas2js does not support COM interfaces inside
+      records. Metadata arrays are detached on rollback; snapshots are immutable. }
+    FResourceSnapshots: array of INyxResourceRuntimeSnapshot;
     FReceiptKeys: array of TNyxText;
     FReceiptRequests: array of TNyxText;
     FReceiptResults: array of TNyxDataValue;
@@ -72,6 +105,8 @@ type
     FRootReviews: array of TNyxDataValue;
     FRootRemovals: array of INyxRootRemoval;
     FRootReviewSerial: Integer;
+    function ResourceRuntimeReports: TNyxDataValue;
+    function ResourceRuntimeQuery(const AArguments: TNyxDataValue): TNyxDataValue;
     procedure Changed;
     procedure RequireRevision(const AArguments: TNyxDataValue);
     procedure Log(const AActor, AOperation, AOutcome: TNyxText);
@@ -167,6 +202,21 @@ type
       Pending drafts make diagnostics stale even if the accepted source matches. }
     function CurrentPair(const APair: TNyxProjectPair): Boolean;
     procedure PublishCompilerReport(const AReport: INyxCompilerReport);
+    { Trusted runtime host boundary, never an MCP/editor exchange operation.
+      Capture snapshots on the application's UI thread, then publish under the
+      Studio host lock. Snapshot data owns no borrowed runtime/control pointers.
+      Admission requires current revision, no pending draft, exact declarations
+      and a concrete target. Eight observations bound membership. In-process
+      rollback copies preserve capabilities; durable recovery does not. }
+    function ObserveResourceRuntime(AExpected: Integer;
+      const AReference: TNyxStudioRuntimeRef; AScope: TNyxStudioRuntimeScope;
+      ATarget: TNyxPlatform; const AView: TNyxText;
+      const ASnapshot: INyxResourceRuntimeSnapshot): TNyxStudioResourceObservation;
+    procedure PublishResourceRuntime(const AObservation: TNyxStudioResourceObservation;
+      const ASnapshot: INyxResourceRuntimeSnapshot);
+    { Retains the last copied report as explicitly inactive. Does not cancel a
+      borrowed application; its host owns Stop and final snapshot capture. }
+    procedure RetireResourceRuntime(const AObservation: TNyxStudioResourceObservation);
     { Trusted workspace-owner boundary. Returns independent accepted text at an
       exact revision, excluding any pending editor draft. It never changes the
       source baseline, selection or either history stack. }
@@ -183,6 +233,7 @@ type
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
 procedure NyxAgentFields(const AValue: TNyxDataValue; const AAllowed: TNyxText);
 function NyxAgentPermissionName(AValue: TNyxAgentPermission): TNyxText;
+function NyxStudioRuntime(const AName: TNyxText): TNyxStudioRuntimeRef;
 
 implementation
 
@@ -418,6 +469,8 @@ begin
 end;
 
 constructor TNyxAgentSession.CreateCopy(AOrigin: TNyxAgentSession);
+var
+  LIndex: Integer;
 begin
   inherited Create;
 
@@ -433,6 +486,12 @@ begin
   FActivitySerial := AOrigin.FActivitySerial;
   FReport := AOrigin.FReport;
   FCompilerSequence := AOrigin.FCompilerSequence;
+  SetLength(FResourceRuns, Length(AOrigin.FResourceRuns));
+  for LIndex := 0 to High(FResourceRuns) do
+  begin
+    FResourceRuns[LIndex] := AOrigin.FResourceRuns[LIndex];
+  end;
+  FResourceSnapshots := Copy(AOrigin.FResourceSnapshots);
   FReceiptKeys := Copy(AOrigin.FReceiptKeys);
   FReceiptRequests := Copy(AOrigin.FReceiptRequests);
   FReceiptResults := Copy(AOrigin.FReceiptResults);
@@ -477,6 +536,8 @@ begin
     raise ENyxModel.Create('Session revision budget exhausted; reconnect a new session');
   end;
   Inc(FRevision);
+  FResourceRuns := nil;
+  FResourceSnapshots := nil;
   FClaimed := True;
 end;
 
@@ -534,15 +595,16 @@ function TNyxAgentSession.EditorState(AAfter: Integer): TNyxDataValue;
 var
   LFields: array of TNyxDataField;
 begin
-  SetLength(LFields, 3);
+  SetLength(LFields, 4);
   LFields[0] := NyxField('session', Summary);
   LFields[1] := NyxField('activity', NyxArray(FActivity));
   LFields[2] := NyxField('compiler', CompilerSnapshot);
+  LFields[3] := NyxField('resourceRuntimes', ResourceRuntimeReports);
 
   if AAfter <> FRevision then
   begin
-    SetLength(LFields, 4);
-    LFields[3] := NyxField('project', NyxData(EncodeNyxProject(FSession.ProjectSnapshot)));
+    SetLength(LFields, 5);
+    LFields[4] := NyxField('project', NyxData(EncodeNyxProject(FSession.ProjectSnapshot)));
   end;
   Result := NyxObject(LFields);
 end;
@@ -2106,6 +2168,7 @@ end;
 {$I nyx.studio.agents.state.inc}
 {$I nyx.studio.agents.collections.inc}
 {$I nyx.studio.agents.resources.inc}
+{$I nyx.studio.agents.resourceruntimes.inc}
 
 function TNyxAgentSession.Call(const ATool, AActor: TNyxText;
   const AArguments: TNyxDataValue; const ARequestOwner: TNyxText): TNyxDataValue;

@@ -34,6 +34,14 @@ uses
   nyx.controls,
   nyx.state,
   nyx.codec,
+  nyx.data,
+  nyx.codegen,
+  nyx.studio.agents,
+  nyx.studio.projects,
+  nyx.studio.session,
+  nyx.studio.agentview,
+  nyx.studio.view,
+  nyx.resources.runtime.view,
   nyx.binding.types,
   nyx.resources,
   nyx.resource.sources,
@@ -42,9 +50,10 @@ uses
   nyx.application.resources,
   nyx.resource.context,
   {$ifdef PAS2JS}
-  JS, Web, nyx.application.browser
+  JS, Web, nyx.application.browser, nyx.render.browser
   {$else}
-  Interfaces, Forms, StdCtrls, nyx.application.lcl
+  Interfaces, Forms, StdCtrls, Controls, Graphics, IntfGraphics, FPWritePNG, LCLIntf,
+  nyx.application.lcl, nyx.render.lcl
   {$endif};
 
 type
@@ -88,6 +97,14 @@ type
     FChecks: Integer;
     FStartedAt: {$ifdef PAS2JS}Double{$else}QWord{$endif};
     FFinished: Boolean;
+    FRuntimeAgent: TNyxAgentSession;
+    FObservation: TNyxStudioResourceObservation;
+    FInitialRuntime: INyxResourceRuntimeSnapshot;
+    function RuntimePage: TNyxDataValue;
+    procedure ReportRuntime;
+    procedure StartObservation;
+    procedure CheckObservationRetirement;
+    procedure ShowRuntimeObserver;
     procedure StartConcurrency;
     procedure StartHosted;
     procedure Check(ACondition: Boolean; const AReason: TNyxText);
@@ -209,6 +226,10 @@ end;
 
 procedure TJourney.Changed(const AContext: INyxResourceContext);
 begin
+  { Locale-only notifications also use this receiver after the first load. The
+    installed-load fact must already agree with the published runtime context. }
+  Check(NyxApplicationResourceDiagnostics(FResources).CaptureRuntime.Entry(0).HasPublishedLoad,
+    'resource Changed callback sees installed-load evidence before notification');
   Inc(FChanged);
 end;
 
@@ -262,6 +283,322 @@ begin
   {$endif}
 end;
 
+{ Exercise the actual application owner, copied trusted-host publication and
+  normal semantic dispatcher together. This is an in-process observing journey;
+  HTTP authentication and cross-process enrollment need their separate rollout. }
+function TJourney.RuntimePage: TNyxDataValue;
+var
+  LReports: TNyxDataValue;
+  LSequence: Integer;
+begin
+  LReports := FRuntimeAgent.Call('nyx_resources', 'Runtime reviewer', NyxObject([
+    NyxField('mode', NyxData('runtimes')),
+    NyxField('expectedRevision', NyxData(FRuntimeAgent.Revision))]));
+  LSequence := LReports.Field('items').Item(0).Field('sequence').AsInteger;
+  Result := FRuntimeAgent.Call('nyx_resources', 'Runtime reviewer', NyxObject([
+    NyxField('mode', NyxData('runtime')), NyxField('expectedRevision', NyxData(FRuntimeAgent.Revision)),
+    NyxField('run', NyxData('workshop-run')), NyxField('expectedSequence', NyxData(LSequence)),
+    NyxField('limit', NyxData(1))])).Field('page');
+end;
+
+procedure TJourney.ReportRuntime;
+begin
+  FRuntimeAgent.PublishResourceRuntime(FObservation,
+    NyxApplicationResourceDiagnostics(FResources).CaptureRuntime);
+end;
+
+procedure TJourney.StartObservation;
+var
+  LOther: TNyxAgentSession;
+  LForeign: TNyxDocument;
+  LLastObservation: TNyxStudioResourceObservation;
+  LIndex: Integer;
+  LRejected: Boolean;
+  LBefore: TNyxText;
+  LPage: TNyxDataValue;
+begin
+  FRuntimeAgent := TNyxAgentSession.Create(NyxProjectPair(FBefore, TNyxCodegen.Generate(FDocument)));
+  FInitialRuntime := NyxApplicationResourceDiagnostics(FResources).CaptureRuntime;
+  LBefore := EncodeNyxProject(FRuntimeAgent.ReviewSeed(FRuntimeAgent.Revision));
+  FObservation := FRuntimeAgent.ObserveResourceRuntime(FRuntimeAgent.Revision,
+    NyxStudioRuntime('workshop-run'), srsApplication,
+    {$ifdef PAS2JS}npfBrowser{$else}npfNativeLCL{$endif}, '', FInitialRuntime);
+  LPage := RuntimePage;
+  Check((LPage.Field('items').Count = 1) and (LPage.Field('total').AsInteger = 4) and
+    (LPage.Field('items').Item(0).Field('phase').AsText = 'queued') and
+    (LPage.Field('items').Item(0).Field('publishedOrigin').Kind = ndNull),
+    'bounded report distinguishes authored fallback from an uncompleted request');
+  Check(EncodeNyxProject(FRuntimeAgent.ReviewSeed(FRuntimeAgent.Revision)) = LBefore,
+    'runtime enrollment/query preserves exact authoring pair and history');
+  LOther := FRuntimeAgent.Clone;
+  try
+    LOther.RetireResourceRuntime(FObservation);
+    Check(FRuntimeAgent.Call('nyx_resources', 'Runtime reviewer', NyxObject([
+      NyxField('mode', NyxData('runtimes')), NyxField('expectedRevision', NyxData(1))]))
+      .Field('items').Item(0).Field('active').AsBoolean,
+      'rollback copies retain independent runtime metadata and shared immutable snapshots');
+  finally
+    LOther.Free;
+  end;
+  LOther := TNyxAgentSession.CreateRecovered(FRuntimeAgent.RecoveryFrame);
+  try
+    LRejected := False;
+    try
+      LOther.PublishResourceRuntime(FObservation, FInitialRuntime);
+    except
+      on ENyxResource do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'durable recovery cannot inherit runtime publication authority');
+  finally
+    LOther.Free;
+  end;
+  LRejected := False;
+  try
+    FRuntimeAgent.Call('nyx_resources', 'Runtime reviewer', NyxObject([
+      NyxField('mode', NyxData('runtime')), NyxField('expectedRevision', NyxData(1)),
+      NyxField('run', NyxData('workshop-run')), NyxField('expectedSequence', NyxData(2))]));
+  except
+    on ENyxResource do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'runtime query refuses a stale observation sequence');
+  LRejected := False;
+  try
+    FInitialRuntime.Page(0, 17);
+  except
+    on ENyxResource do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'runtime page refuses more than sixteen entries');
+  LOther := FRuntimeAgent.Clone;
+  try
+    for LIndex := 1 to 7 do
+    begin
+      LLastObservation := LOther.ObserveResourceRuntime(1,
+        NyxStudioRuntime('additional-' + TNyxText(IntToStr(LIndex))), srsResources,
+        {$ifdef PAS2JS}npfBrowser{$else}npfNativeLCL{$endif}, '', FInitialRuntime);
+    end;
+    LRejected := False;
+    try
+      LOther.ObserveResourceRuntime(1, NyxStudioRuntime('ninth'), srsResources,
+        {$ifdef PAS2JS}npfBrowser{$else}npfNativeLCL{$endif}, '', FInitialRuntime);
+    except
+      on ENyxResource do
+      begin
+        LRejected := True;
+      end;
+    end;
+    Check(LRejected, 'eight active observations bound runtime membership');
+    LOther.RetireResourceRuntime(LLastObservation);
+    LOther.ObserveResourceRuntime(1, NyxStudioRuntime('replacement'), srsResources,
+      {$ifdef PAS2JS}npfBrowser{$else}npfNativeLCL{$endif}, '', FInitialRuntime);
+    Check(LOther.Call('nyx_resources', 'Runtime reviewer', NyxObject([
+      NyxField('mode', NyxData('runtimes')), NyxField('expectedRevision', NyxData(1))]))
+      .Field('items').Count = 8, 'retired evidence yields capacity without requiring a design edit');
+  finally
+    LOther.Free;
+  end;
+  LForeign := FDocument.Clone;
+  try
+    LForeign.Resources.Define(NyxResourceRef('copy'), LForeign.Resources.Definition(
+      NyxResourceRef('copy'), NyxDefaultLocale).Describe('Other run catalog', 'Different metadata'));
+    LOther := TNyxAgentSession.Create(NyxProjectPair(TNyxCodec.Encode(LForeign),
+      TNyxCodegen.Generate(LForeign)));
+    try
+      LRejected := False;
+      try
+        LOther.ObserveResourceRuntime(1, NyxStudioRuntime('foreign-run'), srsApplication,
+          {$ifdef PAS2JS}npfBrowser{$else}npfNativeLCL{$endif}, '', FInitialRuntime);
+      except
+        on ENyxResource do
+        begin
+          LRejected := True;
+        end;
+      end;
+      Check(LRejected, 'runtime enrollment compares exact declarations including metadata');
+    finally
+      LOther.Free;
+    end;
+  finally
+    LForeign.Free;
+  end;
+end;
+
+procedure TJourney.CheckObservationRetirement;
+var
+  LSnapshot: INyxResourceRuntimeSnapshot;
+  LRejected: Boolean;
+  LPair: TNyxProjectPair;
+begin
+  LSnapshot := NyxApplicationResourceDiagnostics(FResources).CaptureRuntime;
+  FRuntimeAgent.PublishResourceRuntime(FObservation, LSnapshot);
+  Check(LSnapshot.Stopped and not FInitialRuntime.Stopped,
+    'stopped and retained initial snapshots are independent of the retired host');
+  Check(not FRuntimeAgent.Call('nyx_resources', 'Runtime reviewer', NyxObject([
+    NyxField('mode', NyxData('runtimes')), NyxField('expectedRevision', NyxData(1))]))
+    .Field('items').Item(0).Field('active').AsBoolean,
+    'final stopped snapshot retires publication authority');
+  LRejected := False;
+  try
+    FRuntimeAgent.PublishResourceRuntime(FObservation, FInitialRuntime);
+  except
+    on ENyxResource do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'a retained capability cannot revive a stopped run');
+  LPair := FRuntimeAgent.ReviewSeed(1);
+  FRuntimeAgent.Exchange(NyxObject([NyxField('op', NyxData('commit')),
+    NyxField('expectedRevision', NyxData(1)), NyxField('project', NyxData(EncodeNyxProject(LPair))),
+    NyxField('selection', NyxData('home')), NyxField('view', NyxData('home'))]));
+  Check(FRuntimeAgent.Call('nyx_resources', 'Runtime reviewer', NyxObject([
+    NyxField('mode', NyxData('runtimes')), NyxField('expectedRevision', NyxData(2))]))
+    .Field('items').Count = 0,
+    'accepted design revision revokes previous runtime context');
+  LRejected := False;
+  try
+    FRuntimeAgent.PublishResourceRuntime(FObservation, LSnapshot);
+  except
+    on ENyxResource do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'paired revision invalidates the exact old publication ticket');
+end;
+
+{ Compose the real common Studio view from the engine's observing packet. This
+  checks its public Nyx runtime card on target controls, rather than maintaining
+  a separate diagnostic widget or interpreting an authored resource as a run. }
+procedure TJourney.ShowRuntimeObserver;
+var
+  LSession: TNyxStudioSession;
+  LState: TNyxStudioViewState;
+  LShell: TNyxDocument;
+  LFrame: TNyxDataValue;
+  LPass: Integer;
+  {$ifdef PAS2JS}
+  LRenderer: TNyxBrowserRenderer;
+  LHost: TJSHTMLElement;
+  {$else}
+  LRenderer: TNyxLCLRenderer;
+  LWindow: TForm;
+  LBitmap: TBitmap;
+  LImage: TLazIntfImage;
+  LPath: String;
+  LTarget: TControl;
+  LAncestor: TWinControl;
+  LLocation: TPoint;
+  LBounds: TRect;
+  {$endif}
+begin
+  LFrame := FRuntimeAgent.Exchange(NyxObject([NyxField('op', NyxData('observe')),
+    NyxField('after', NyxData(FRuntimeAgent.Revision))]));
+  LSession := TNyxStudioSession.Create(FRuntimeAgent.ReviewSeed(FRuntimeAgent.Revision));
+  try
+    for LPass := 0 to 1 do
+    begin
+      LState := DefaultNyxStudioViewState;
+      LState.ResourcesVisible := True;
+      LState.CodeVisible := False;
+      LState.Compact := LPass = 1;
+      LState.Panel := nspProject;
+      LState.Agents := DefaultNyxStudioAgentView;
+      LState.Agents.ResourceRuntimes := LFrame.Field('resourceRuntimes');
+      LShell := BuildNyxStudioView(LSession, LState);
+      {$ifdef PAS2JS}
+      LRenderer := TNyxBrowserRenderer.Create;
+      LHost := TJSHTMLElement(document.createElement('section'));
+      document.body.appendChild(LHost);
+      try
+        LRenderer.Render(LShell, LShell.Pages[0], LHost);
+        Check(LRenderer.ElementFor('studio-resource-runtime-0-status-published').textContent =
+          'Published loads: 1 / Resource variants: 4', 'common Studio browser controls paint actual run summary');
+      finally
+        LRenderer.Free;
+        LHost.remove;
+        LShell.Free;
+      end;
+      {$else}
+      LWindow := TForm.CreateNew(nil);
+      LRenderer := TNyxLCLRenderer.Create;
+      try
+
+        if LPass = 0 then
+        begin
+          LWindow.ClientWidth := 1240;
+          LWindow.ClientHeight := 820;
+        end
+        else
+        begin
+          LWindow.ClientWidth := 390;
+          LWindow.ClientHeight := 700;
+        end;
+        LRenderer.Render(LShell, LShell.Pages[0], LWindow);
+        LWindow.Show;
+        Application.ProcessMessages;
+        LTarget := LRenderer.ControlFor('studio-resource-runtime-0-status-cache-writes');
+        LAncestor := LTarget.Parent;
+        while LAncestor <> nil do
+        begin
+
+          if LAncestor is TScrollingWinControl then
+          begin
+            TScrollingWinControl(LAncestor).ScrollInView(LTarget);
+          end;
+          LAncestor := LAncestor.Parent;
+        end;
+        Application.ProcessMessages;
+        LLocation := LWindow.ScreenToClient(LTarget.ClientToScreen(Point(0, 0)));
+        Check((LLocation.Y >= 0) and
+          (LLocation.Y + LTarget.Height <= LWindow.ClientHeight),
+          'runtime observer capture includes the complete cache status row');
+        Check(TNyxText(RawByteString(TLabel(LRenderer.ControlFor(
+          'studio-resource-runtime-0-status-published')).Caption)) =
+          'Published loads: 1 / Resource variants: 4',
+          'common Studio native controls paint actual run summary');
+        LBitmap := TBitmap.Create;
+        LImage := nil;
+        try
+          { Win32 PaintTo includes native decorations. LCL form dimensions may
+            describe the client allocation, so use the actual outer rectangle
+            to retain every visible row rather than cropping beneath its title. }
+          Check(GetWindowRect(LWindow.Handle, LBounds) <> 0,
+            'runtime observer capture obtains actual outer window bounds');
+          LBitmap.SetSize(LBounds.Right - LBounds.Left, LBounds.Bottom - LBounds.Top);
+          LWindow.PaintTo(LBitmap.Canvas, 0, 0);
+          LImage := LBitmap.CreateIntfImage;
+          LPath := 'build/resource-runtime/desktop.png';
+
+          if LPass = 1 then
+          begin
+            LPath := 'build/resource-runtime/compact-native.png';
+          end;
+          LImage.SaveToFile(LPath);
+        finally
+          LImage.Free;
+          LBitmap.Free;
+        end;
+      finally
+        LRenderer.Free;
+        LWindow.Free;
+        LShell.Free;
+      end;
+      {$endif}
+    end;
+  finally
+    LSession.Free;
+  end;
+end;
+
 procedure TJourney.Start;
 var
   LResolver: INyxResourceResolver;
@@ -276,6 +613,7 @@ begin
   Mount(FApplication);
   FResources := FApplication.Resources;
   FToken := FResources.Subscribe(Validate, Changed);
+  StartObservation;
   Check((FTransport.Calls = 0) and (Caption('first-card/headline') = 'Ready to create'),
     'automatic requests are deferred until after complete mount');
   Check(Prompt('first-card/name') = 'Project name', 'authored prompt paints before loading');
@@ -324,6 +662,10 @@ begin
           end;
           Check(FResources.Status(NyxResourceRef('copy'), NyxDefaultLocale).Phase = nrpLoading,
             'typed loading status precedes publication');
+          ReportRuntime;
+          Check((RuntimePage.Field('items').Item(0).Field('phase').AsText = 'loading') and
+            (FInitialRuntime.Entry(0).Status.Phase = nrpQueued),
+            'real loading report advances without mutating retained snapshots');
           FApplication.ShowPage('details');
           FTransport.Send(0, '{"headline":"Loaded workshop","prompt":"Your next project","detail":"Loaded details","maximum":20}');
           FStage := 2;
@@ -340,6 +682,10 @@ begin
             'application accepts loaded catalog with typed network origin');
           Check(Caption('detail') = 'Loaded details', 'current page receives completion after navigation');
           Check(Caption('second-card/headline') = 'Loaded workshop', 'reusable consumer receives application data');
+          ReportRuntime;
+          Check((RuntimePage.Field('items').Item(0).Field('publishedOrigin').AsText = 'network') and
+            (RuntimePage.Field('items').Item(0).Field('cacheWrite').AsText = 'none'),
+            'successful actual control publication reports network origin and bypass storage');
           FApplication.ShowPage('home');
           Check((Caption('first-card/headline') = 'Loaded workshop') and
             (Prompt('first-card/name') = 'Your next project'), 'return navigation retains loaded caption and prompt');
@@ -403,6 +749,10 @@ begin
           Check(FResources.Context.Snapshot.Definition(NyxResourceRef('copy'),
             NyxDefaultLocale).Data.Field('detail').AsText = 'Loaded details',
             'rejected completion preserves accepted hidden data');
+          ReportRuntime;
+          Check((RuntimePage.Field('items').Item(0).Field('phase').AsText = 'rejected') and
+            (RuntimePage.Field('items').Item(0).Field('publishedOrigin').AsText = 'network'),
+            'rejected reload reports its failure while retaining previous installed-load evidence');
           FTransport.CompleteInline := True;
           FTransport.Value := '{"headline":"Inline completion","prompt":"Still deferred","detail":"Inline detail","maximum":20}';
           FBusy := True;
@@ -424,6 +774,9 @@ begin
           end;
           Check(Caption('first-card/headline') = 'Loaded workshop',
             'busy receiver retains loaded result without early publication');
+          ReportRuntime;
+          Check(RuntimePage.Field('items').Item(0).Field('phase').AsText = 'waiting',
+            'busy actual target reports waiting rather than successful new publication');
           FBusy := False;
           FResources.Wake;
           FStage := 6;
@@ -456,6 +809,10 @@ begin
           Check((FChanged = LPrevious) and (Caption('first-card/headline') = 'Inline completion') and
             (FResources.Status(NyxResourceRef('copy'), NyxDefaultLocale).Phase = nrpCancelled),
             'cancel disconnects pending borrowed receiver before late completion');
+          ReportRuntime;
+          Check((RuntimePage.Field('items').Item(0).Field('phase').AsText = 'cancelled') and
+            (RuntimePage.Field('items').Item(0).Field('publishedOrigin').AsText = 'network'),
+            'cancelled attempt preserves previous installed-load origin');
           FToken.Disconnect;
           FToken := nil;
           FRejectToken := FResources.Subscribe(nil, FailedObserver);
@@ -476,6 +833,11 @@ begin
             (LStatus.NotificationError = TNyxText('Observer 🌙 failed after publication')) and
             (Caption('first-card/headline') = 'Published despite observer'),
             'post-publication observer failure reports separately and keeps accepted controls');
+          ReportRuntime;
+          Check(RuntimePage.Field('items').Item(0).Field('notificationError').AsText =
+            TNyxText('Observer 🌙 failed after publication'),
+            'bounded semantic diagnostics retain supplementary Unicode observer failures');
+          ShowRuntimeObserver;
           FRejectToken.Disconnect;
           FRejectToken := nil;
           FTransport.CompleteInline := False;
@@ -503,6 +865,7 @@ begin
             end;
           end;
           Check(LRefused, 'retained stopped owner refuses new work');
+          CheckObservationRetirement;
           Check(TNyxCodec.Encode(FDocument) = FBefore, 'runtime loading/locales/state preserve exact saved document');
           StartConcurrency;
           FStage := 10;
@@ -581,6 +944,34 @@ begin
           FApplication.ShowPage('home');
           Check(Caption('service') = 'nyx-studio-server', 'real loaded data survives application remount');
           Check(TNyxCodec.Encode(FDocument) = FBefore, 'real automatic loading preserves authored fallback and URL');
+          FreeAndNil(FRuntimeAgent);
+          FRuntimeAgent := TNyxAgentSession.Create(NyxProjectPair(FBefore,
+            TNyxCodegen.Generate(FDocument)));
+          FObservation := FRuntimeAgent.ObserveResourceRuntime(1, NyxStudioRuntime('workshop-run'),
+            srsApplication, {$ifdef PAS2JS}npfBrowser{$else}npfNativeLCL{$endif}, '',
+            NyxApplicationResourceDiagnostics(FResources).CaptureRuntime);
+          Check((RuntimePage.Field('items').Item(0).Field('publishedOrigin').AsText = 'network') and
+            (RuntimePage.Field('items').Item(0).Field('publishedCacheWrite').AsText = 'memory'),
+            'real automatic HTTP publication exposes actual memory storage through semantic observation');
+          FResources.Reload(NyxResourceRef('service'), NyxDefaultLocale);
+          ReportRuntime;
+          Check((RuntimePage.Field('items').Item(0).Field('phase').AsText = 'queued') and
+            (RuntimePage.Field('items').Item(0).Field('publishedCacheWrite').AsText = 'memory'),
+            'queued reload retains previous installed cache-tier evidence');
+          FStage := 15;
+        end;
+      15:
+        begin
+
+          if FResources.Status(NyxResourceRef('service'), NyxDefaultLocale).Phase <> nrpReady then
+          begin
+            Exit;
+          end;
+          ReportRuntime;
+          Check((RuntimePage.Field('items').Item(0).Field('publishedOrigin').AsText = 'fresh-cache') and
+            (RuntimePage.Field('items').Item(0).Field('publishedCacheRead').AsText = 'memory') and
+            (Caption('service') = 'nyx-studio-server'),
+            'actual application cache hit agrees with semantic installed-origin and ordinary caption');
           FToken := FResources.Subscribe(nil, RetireHost);
           FResources.Localize(NyxDefaultLocale, NyxDefaultLocale);
           Check((FApplication = nil) and
@@ -627,7 +1018,7 @@ begin
   {$endif}
   FDocument.Resources.Define(NyxResourceRef('service'),
     NyxHostedResource(nrkJSON, NyxResourceURL(LURL))
-      .Cache(NyxResourceCache.Bypass)
+      .Cache(NyxResourceCache.Memory.FreshFor(60).ServerPolicy(rcspOverride))
       .Fallback(NyxJSONResource('{"service":"Ready while loading"}')));
   LPage := NewNyxColumn('home');
   LPage.Add(NewNyxLabel('service').Binds.Text(
@@ -695,6 +1086,7 @@ begin
     FRejectToken.Disconnect;
   end;
   FApplication.Free;
+  FRuntimeAgent.Free;
   FOther.Free;
   FResources := nil;
   FRetained := nil;

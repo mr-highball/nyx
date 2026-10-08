@@ -44,6 +44,9 @@ type
     Activity: TNyxDataValue;
     { Bounded compiler observer metadata, with no duplicated Pascal source. }
     Compiler: TNyxDataValue;
+    { At most eight trusted runtime summaries, without payloads or authority.
+      Empty means no host has enrolled; authored defaults are not observations. }
+    ResourceRuntimes: TNyxDataValue;
     { Operator-only bounded review summaries; no transport owner credentials or
       user document buffers. Preview links show independent, live review views. }
     Reviews: TNyxDataValue;
@@ -113,6 +116,7 @@ begin
   Result.Status := 'Connecting agent session';
   Result.Activity := NyxArray([]);
   Result.Compiler := NyxNull;
+  Result.ResourceRuntimes := NyxArray([]);
   Result.Reviews := NyxArray([]);
   Result.Workspace := NyxPrimaryWorkspace;
   Result.Workspaces := NyxArray([]);

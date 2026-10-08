@@ -30,6 +30,8 @@ interface
 uses
   SysUtils,
   nyx.text,
+  nyx.data,
+  nyx.bytes,
   nyx.state,
   nyx.resources,
   nyx.resource.sources,
@@ -78,6 +80,52 @@ type
     Error: TNyxText;
     CacheWarning: TNyxText;
     NotificationError: TNyxText;
+    CacheRead: TNyxResourceCacheUse;
+    CacheWrite: TNyxResourceCacheUse;
+  end;
+
+  { A runtime attempt and the last installed load are distinct. Queued, failed,
+    rejected and cancelled reloads can leave an earlier publication installed.
+    HasPublishedLoad is False for initial authored defaults/fallbacks; callers
+    must not present those defaults as a completed hosted request. }
+  TNyxResourceRuntimeEntry = record
+    Reference: TNyxResourceRef;
+    Locale: TNyxLocaleRef;
+    Kind: TNyxResourceKind;
+    Hosted: Boolean;
+    Policy: TNyxResourceCachePolicy;
+    Status: TNyxApplicationResourceStatus;
+    HasPublishedLoad: Boolean;
+    PublishedOrigin: TNyxResourceLoadOrigin;
+    PublishedCacheRead: TNyxResourceCacheUse;
+    PublishedCacheWrite: TNyxResourceCacheUse;
+  end;
+
+  { Immutable diagnostic membership, captured on the owner's UI thread. Entries
+    and metadata outlive the owner without retaining a document, scheduler,
+    resolver or control. No payload or transport authority is exported. Adapter
+    diagnostics may mention addresses/paths. Page returns at most sixteen entries
+    within 40 KiB of item JSON and clips each diagnostic at 512 Unicode scalars.
+    MatchesDeclarations compares exact immutable authored
+    values at a trusted enrollment/publication boundary, not a lossy hash. }
+  INyxResourceRuntimeSnapshot = interface
+    ['{5D579E29-3A3C-4666-A2B7-7099E0C9D222}']
+    function GetCount: Integer;
+    function GetStopped: Boolean;
+    function Entry(AIndex: Integer): TNyxResourceRuntimeEntry;
+    function MatchesDeclarations(const AResources: INyxResources): Boolean;
+    function Summary: TNyxDataValue;
+    function Page(AOffset: Integer; ALimit: Integer = 8): TNyxDataValue;
+    property Count: Integer read GetCount;
+    property Stopped: Boolean read GetStopped;
+  end;
+
+  { Optional capability preserves the original application interface/GUID.
+    Capturing is read-only, including after Stop. It neither starts a transport
+    nor grants an agent permission to reload/cancel the application. }
+  INyxApplicationResourceDiagnostics = interface
+    ['{BF13183B-905B-44A0-955E-2A61F073330E}']
+    function CaptureRuntime: INyxResourceRuntimeSnapshot;
   end;
 
   { Validators are ordered, borrowed UI-thread method receivers: True accepts,
@@ -141,6 +189,11 @@ type
   end;
 
 function NyxApplicationResourceOptions: TNyxApplicationResourceOptions;
+function NyxApplicationResourceDiagnostics(
+  const AResources: INyxApplicationResources): INyxApplicationResourceDiagnostics;
+function NyxResourcePhaseName(AValue: TNyxApplicationResourcePhase): TNyxText;
+function NyxResourceOriginName(AValue: TNyxResourceLoadOrigin): TNyxText;
+function NyxResourceCacheUseName(AValue: TNyxResourceCacheUse): TNyxText;
 { Refuses an alternative owner without coordinated publication support. }
 function NyxPreparedApplicationResources(const AResources: INyxApplicationResources): INyxPreparedApplicationResources;
 function NewNyxApplicationResources(const ADeclarations: INyxResources;
@@ -208,11 +261,16 @@ type
     JobObject: TResourceJob; { borrowed from Job, exact identity guards late replies }
     Result: TNyxResourceLoadResult;
     HaveResult: Boolean;
+    HasPublishedLoad: Boolean;
+    PublishedOrigin: TNyxResourceLoadOrigin;
+    PublishedCacheRead: TNyxResourceCacheUse;
+    PublishedCacheWrite: TNyxResourceCacheUse;
     destructor Destroy; override;
   end;
 
   TApplicationResources = class(TInterfacedObject, INyxResourceUpdateQueue,
-    INyxApplicationResources, INyxPreparedApplicationResources)
+    INyxApplicationResources, INyxPreparedApplicationResources,
+    INyxApplicationResourceDiagnostics)
   private
     FDeclarations: INyxResources;
     FContext: INyxResourceContext;
@@ -236,7 +294,8 @@ type
     function IndexOf(const AReference: TNyxResourceRef; const ALocale: TNyxLocaleRef): Integer;
     procedure Disconnect(AToken: TResourceSubscription);
     procedure Received(AJob: TResourceJob; AIndex: Integer; const AResult: TNyxResourceLoadResult);
-    function Publish(const AContext: INyxResourceContext; out ANotificationError: TNyxText): Boolean;
+    function Publish(const AContext: INyxResourceContext; out ANotificationError: TNyxText;
+      ALoadIndex: Integer = -1; AOrigin: TNyxResourceLoadOrigin = rloFailed): Boolean;
     procedure Pump;
     procedure Queue(AIndex: Integer);
     procedure CancelPending;
@@ -246,6 +305,7 @@ type
       const AResolver: INyxResourceResolver);
     destructor Destroy; override;
     function GetContext: INyxResourceContext;
+    function CaptureRuntime: INyxResourceRuntimeSnapshot;
     procedure Wake;
     function Declaration(const AReference: TNyxResourceRef;
       const ALocale: TNyxLocaleRef): INyxResourceDefinition;
@@ -271,14 +331,19 @@ type
     FPrevious: INyxResourceContext;
     FTokens: TSubscriptions;
     FObjects: TSubscriptionObjects;
+    FLoadIndex: Integer;
+    FOrigin: TNyxResourceLoadOrigin;
   public
     constructor Create(AOwner: TApplicationResources; const AContext: INyxResourceContext;
-      const ATokens: TSubscriptions; const AObjects: TSubscriptionObjects);
+      const ATokens: TSubscriptions; const AObjects: TSubscriptionObjects;
+      ALoadIndex: Integer; AOrigin: TNyxResourceLoadOrigin);
     procedure Validate;
     procedure Install;
     procedure Notify;
     procedure Retire;
   end;
+
+{$I nyx.application.resources.diagnostics.inc}
 
 function NyxPreparedApplicationResources(const AResources: INyxApplicationResources): INyxPreparedApplicationResources;
 begin
@@ -291,7 +356,7 @@ end;
 
 constructor TResourceFramePreparation.Create(AOwner: TApplicationResources;
   const AContext: INyxResourceContext; const ATokens: TSubscriptions;
-  const AObjects: TSubscriptionObjects);
+  const AObjects: TSubscriptionObjects; ALoadIndex: Integer; AOrigin: TNyxResourceLoadOrigin);
 begin
   inherited Create;
   FOwner := AOwner;
@@ -300,6 +365,8 @@ begin
   FPrevious := AOwner.FContext;
   FTokens := Copy(ATokens);
   FObjects := Copy(AObjects);
+  FLoadIndex := ALoadIndex;
+  FOrigin := AOrigin;
 end;
 
 procedure TResourceFramePreparation.Validate;
@@ -314,6 +381,18 @@ end;
 procedure TResourceFramePreparation.Install;
 begin
   FOwner.FContext := FContext;
+
+  if FLoadIndex >= 0 then
+  begin
+    { Accepted catalog and installed-load evidence are model state. Exchange
+      both before any Changed/control/store observer runs, including one that
+      captures a runtime report or destroys the application from that callback. }
+    FOwner.FSlots[FLoadIndex].HasPublishedLoad := True;
+    FOwner.FSlots[FLoadIndex].PublishedOrigin := FOrigin;
+    FOwner.FSlots[FLoadIndex].PublishedCacheRead := FOwner.FSlots[FLoadIndex].Status.CacheRead;
+    FOwner.FSlots[FLoadIndex].PublishedCacheWrite := FOwner.FSlots[FLoadIndex].Status.CacheWrite;
+    FOwner.FSlots[FLoadIndex].Status.Phase := nrpReady;
+  end;
 end;
 
 procedure TResourceFramePreparation.Notify;
@@ -649,7 +728,8 @@ begin
 end;
 
 function TApplicationResources.Publish(const AContext: INyxResourceContext;
-  out ANotificationError: TNyxText): Boolean;
+  out ANotificationError: TNyxText; ALoadIndex: Integer;
+  AOrigin: TNyxResourceLoadOrigin): Boolean;
 var
   LTokens: TSubscriptions;
   LObjects: TSubscriptionObjects;
@@ -672,7 +752,8 @@ begin
       end;
     end;
     SetLength(LPrepared, 1);
-    LPrepared[0] := TResourceFramePreparation.Create(Self, AContext, LTokens, LObjects);
+    LPrepared[0] := TResourceFramePreparation.Create(Self, AContext, LTokens, LObjects,
+      ALoadIndex, AOrigin);
     for LIndex := 0 to Length(LTokens) - 1 do
     begin
       LStage := nil;
@@ -883,6 +964,8 @@ begin
   LSlot.Status.Origin := AResult.Origin;
   LSlot.Status.Error := AResult.Error;
   LSlot.Status.CacheWarning := AResult.CacheWarning;
+  LSlot.Status.CacheRead := AResult.CacheRead;
+  LSlot.Status.CacheWrite := AResult.CacheWrite;
   LSlot.Status.Phase := nrpWaiting;
   LSlot.Job.Cancel;
   LSlot.Job := nil;
@@ -963,6 +1046,7 @@ var
   LCandidate: INyxResourceContext;
   LJob: TResourceJob;
   LError: TNyxText;
+  LOrigin: TNyxResourceLoadOrigin;
 begin
   FScheduler.RequireUI;
   FExecution := nil;
@@ -996,12 +1080,12 @@ begin
         LResources := FContext.Snapshot;
         LResources.Define(LSlot.Reference, LSlot.Locale, LSlot.Result.Definition);
         LCandidate := NewNyxResourceContext(LResources, FContext.Locale, FContext.Fallback);
+        LOrigin := LSlot.Result.Origin;
 
-        if not Publish(LCandidate, LError) then
+        if not Publish(LCandidate, LError, LIndex, LOrigin) then
         begin
           Continue;
         end;
-        LSlot.Status.Phase := nrpReady;
         LSlot.Status.NotificationError := LError;
       except
         on LException: Exception do

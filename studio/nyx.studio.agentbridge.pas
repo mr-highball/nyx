@@ -748,6 +748,12 @@ begin
         raise Exception.Create('Invalid agent permission response');
       end;
       FView.Activity := LState.Field('activity').Copy;
+      FView.ResourceRuntimes := NyxArray([]);
+
+      if NyxAgentHas(LState, 'resourceRuntimes') then
+      begin
+        FView.ResourceRuntimes := LState.Field('resourceRuntimes').Copy;
+      end;
       FView.CanCloseWorkspace := False;
       FView.CanBuild := False;
       FView.CanControlBuilds := False;

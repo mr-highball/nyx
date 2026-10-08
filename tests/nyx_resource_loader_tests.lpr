@@ -172,14 +172,19 @@ begin
     Check((LProbe.ResultValue.Origin = rloNetwork) and LProbe.ResultValue.Succeeded,
       'network resolves admitted kind');
     Check(LProbe.ResultValue.Definition.Title = 'Copy', 'caller metadata survives resolution');
+    Check((LProbe.ResultValue.CacheWrite = rcuMemory) and
+      (LProbe.ResultValue.CacheRead = rcuNone), 'network completion reports successful memory storage');
     LLoad := LResolver.Load(LDefinition, NyxResourceLoadOptions, LProbe.Loaded);
     Check((LProbe.ResultValue.Origin = rloFreshCache) and (LTransport.Calls = 1),
       'fresh cache avoids transport');
+    Check((LProbe.ResultValue.CacheRead = rcuMemory) and
+      (LProbe.ResultValue.CacheWrite = rcuNone), 'fresh memory hit does not claim a new cache write');
     LClock.Seconds := 1010;
     LTransport.Response.Error := 'Network offline';
     LLoad := LResolver.Load(LDefinition, NyxResourceLoadOptions, LProbe.Loaded);
     Check((LProbe.ResultValue.Origin = rloStaleCache) and
       (LProbe.ResultValue.Error = 'Network offline'), 'stale is explicit failure fallback');
+    Check(LProbe.ResultValue.CacheRead = rcuMemory, 'eligible stale origin retains the actual cache tier');
     LClock.Seconds := 1030;
     LLoad := LResolver.Load(LDefinition.Fallback(NyxJSONResource('{"headline":"Offline"}')),
       NyxResourceLoadOptions, LProbe.Loaded);
@@ -197,9 +202,11 @@ begin
     LLoad := LResolver.Load(LDefinition, NyxResourceLoadOptions, LProbe.Loaded);
     LLoad := LResolver.Load(LDefinition, NyxResourceLoadOptions, LProbe.Loaded);
     Check(LTransport.Calls = LBefore + 2, 'Respect never stores no-store responses');
+    Check(LProbe.ResultValue.CacheWrite = rcuNone, 'respected no-store reports no successful write');
     LDefinition := LDefinition.Cache(NyxResourceCache.Persistent.ServerPolicy(rcspOverride));
     LLoad := LResolver.Load(LDefinition, NyxResourceLoadOptions, LProbe.Loaded);
     Check(LProbe.ResultValue.CacheWarning <> '', 'missing persistent storage reports memory fallback');
+    Check(LProbe.ResultValue.CacheWrite = rcuMemory, 'missing persistent provider reports the actual fallback write');
     LBefore := LTransport.Calls;
     LLoad := LResolver.Load(LDefinition, NyxResourceLoadOptions, LProbe.Loaded);
     Check((LProbe.ResultValue.Origin = rloFreshCache) and (LTransport.Calls = LBefore),
@@ -402,6 +409,7 @@ begin
       .ServerPolicy(rcspOverride)), NyxResourceLoadOptions, LProbe.Loaded);
     Check((LProbe.Calls = 6) and (LProbe.ResultValue.Origin = rloFreshCache),
       'fresh file cache survives resolver/provider restart without HTTP');
+    Check(LProbe.ResultValue.CacheRead = rcuPersistent, 'real file-cache restart reports persistent read evidence');
     LCopyResolver := NewNyxResourceResolver(LTransport, nil,
       NewNyxFileResourceCache('build/resource-loader/quota-cache', 1, 1));
     LLoad := LCopyResolver.Load(LDefinition.Cache(NyxResourceCache.Persistent
@@ -409,10 +417,12 @@ begin
     Pump(LScheduler, LProbe, 7);
     Check((LProbe.ResultValue.Origin = rloNetwork) and (LProbe.ResultValue.CacheWarning <> ''),
       'actual file quota refusal keeps accepted network bytes with explicit memory fallback');
+    Check(LProbe.ResultValue.CacheWrite = rcuMemory, 'real file quota failure reports memory storage rather than requested persistent');
     LLoad := LCopyResolver.Load(LDefinition.Cache(NyxResourceCache.Persistent
       .ServerPolicy(rcspOverride)), NyxResourceLoadOptions, LProbe.Loaded);
     Check((LProbe.Calls = 8) and (LProbe.ResultValue.Origin = rloFreshCache),
       'memory copy after failed persistent write is reused before new HTTP');
+    Check(LProbe.ResultValue.CacheRead = rcuMemory, 'real fallback hit reports the memory tier actually consumed');
     LGate1 := TDeadlineGate.Create;
     LGateLease1 := LGate1;
     LGate2 := TDeadlineGate.Create;

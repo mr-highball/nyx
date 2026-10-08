@@ -42,6 +42,33 @@ evidence. Existing packed PNG/JPEG and typed scalar/collection engines are input
   visible paired operations retain user work; rendered/trusted-input evidence is
   reported separately from document API and compiler success.
 
+## Typed runtime observation consumer — 2026-10-08
+
+Criterion 5 now has immutable optional application diagnostics, latest-attempt
+versus installed-load evidence and actual successful memory/persistent cache
+tiers. Prepared installation makes the evidence consistent before callbacks.
+Existing criteria 3/6 consume trusted revision-bound host reports through bounded
+read-only semantic modes and a public Nyx card in the common Studio Resources
+view. No public tool can create observation authority or start/cancel a runtime.
+
+The maintained application gate passes 73 checked actual Win32 application,
+semantic dispatcher and common Studio assertions, including real default HTTP
+and a fresh memory-cache reload, leak-free. Loader checks pass 39, workflow 55/7,
+mappings 81, joint live frames 112 and exact builders eight each. Desktop/narrow
+native captures include the complete status row. Matching browser consumers and
+both Studios/backend/worker compile with zero owned warnings; actual browser/
+phone/observing and automatic launched-application reports remain unqualified.
+
+No full criterion/task/credit/percentage closes. Resource no-closure alone
+advances 7→8; other owners remain 22/37/19/28/2. End in-process report fixtures and
+return to automatic authenticated exact-run producer enrollment, streaming and
+expiry/retirement, then original held deployment/parity outcomes. Runtime
+reload/cancel, hosted media, richer manual row paths and full performance/Studio
+parity remain open. See
+[current evidence](../WORK.md#current-return-path-typed-runtime-resource-observations--2026-10-08)
+and [the contract](../docs/resources.md#runtime-resource-observations).
+
+
 ## Common saved row authoring — 2026-10-08
 
 Criterion 6 now has the common public Nyx form in both controllers, normal paired

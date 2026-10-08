@@ -66,7 +66,22 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current saved row authoring (2026-10-08): common Nyx-built Resources forms now
+Current runtime resource observations (2026-10-08): optional typed snapshots
+distinguish latest attempts from installed values and record actual memory/
+persistent cache use. Trusted revision-bound host capabilities expose bounded
+read-only MCP reports; both Studio views consume a public Nyx summary card.
+Checked native application/semantic/common-view assertions pass **73**, loader
+**39**, workflow **55/7**, mappings **81** and live frames **112**, leak-free.
+Matching browser consumers and both Studios/backend/worker compile with zero
+owned warnings. Automatic cross-process enrollment/streaming, browser/phone/
+observing execution and current-source rollout remain open. Resource no-closure
+alone advances **7→8**; no full criterion/credit/percentage closes, other owners
+remain **22/37/19/28/2**. End report fixtures and return to authenticated exact-run
+producer enrollment/expiry and the original held deployment/parity outcomes.
+See [the packet](WORK.md#current-return-path-typed-runtime-resource-observations--2026-10-08).
+
+
+Previous saved row authoring (2026-10-08): common Nyx-built Resources forms now
 inspect/edit typed recipes through both Studio controllers and the ordinary paired
 source processor. Bounded MCP sources/rows queries and define/detach groups retain
 exact revisions, schema/path context and paired Undo. Explicit static conversion

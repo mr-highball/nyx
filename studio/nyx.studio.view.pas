@@ -42,6 +42,7 @@ uses
   nyx.image.editor,
   nyx.resources.editor,
   nyx.resources.rows.editor,
+  nyx.resources.runtime.view,
   nyx.contract,
   nyx.schema,
   nyx.types,
@@ -210,6 +211,48 @@ implementation
 uses
   nyx.binding,
   nyx.composition, nyx.studio.rootview, nyx.studio.buildview;
+
+{ Runtime reports arrive as bounded copied transport values. Ordinary Nyx cards
+  paint the same summary on both targets, independently of authored resources.
+  No report grants this view a handle to start or cancel an application. }
+procedure AddResourceRuntimeViews(AParent: TNyxNode; const AReports: TNyxDataValue);
+var
+  LIndex: Integer;
+  LReport: TNyxDataValue;
+  LGroup: INyxColumn;
+  LID: TNyxText;
+begin
+  AParent.Add(NewNyxHeading('studio-resource-runtime-title').WithText('Runtime observations'));
+
+  if not AReports.Defined or (AReports.Kind = ndNull) or (AReports.Count = 0) then
+  begin
+    AParent.Add(NewNyxLabel('studio-resource-runtime-empty').WithText(
+      'No application host has shared a resource report. Authored defaults remain available above.'));
+    Exit;
+  end;
+
+  if (AReports.Kind <> ndArray) or (AReports.Count > 8) then
+  begin
+    raise ENyxModel.Create('Resource runtime observer requires at most eight reports');
+  end;
+  for LIndex := 0 to AReports.Count - 1 do
+  begin
+    LReport := AReports.Item(LIndex);
+    LID := 'studio-resource-runtime-' + TNyxText(IntToStr(LIndex));
+    LGroup := NewNyxColumn(LID);
+    LGroup.Configure.Gap(8).Done;
+    LGroup.Add(NewNyxLabel(LID + '-identity').WithText(LReport.Field('run').AsText +
+      ' / ' + LReport.Field('scope').AsText + ' / ' + LReport.Field('target').AsText));
+
+    if not LReport.Field('active').AsBoolean then
+    begin
+      LGroup.Add(NewNyxBadge(LID + '-retired').WithText('Observation retired'));
+    end;
+    LGroup.Add(NewNyxResourceRuntimeView(LID + '-status',
+      TNyxResourceRuntimeSummary.FromData(LReport.Field('summary'))));
+    AParent.Add(LGroup);
+  end;
+end;
 
 const
   CCompactWidth = 961;
@@ -1069,6 +1112,7 @@ begin
         AState.ResourceSelection, ASession.Selected, LSelectedProjection));
       LLeft.Add(NewNyxResourceRowsEditor('studio-resource-rows', ASession.Document.Resources,
         ASession.Document.Collections));
+      AddResourceRuntimeViews(LLeft, AState.Agents.ResourceRuntimes);
     finally
       LSelectedProjection.Free;
     end;

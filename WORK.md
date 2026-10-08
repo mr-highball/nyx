@@ -9,7 +9,96 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: typed runtime resource observations — 2026-10-08
+
+Previous `3926bf4` is exactly pushed. This solo continuation delivers **progress**
+on resource criterion 5 with criteria 3/6 consumers, plus preparation consumed by
+the existing semantic workflow owner. No full criterion/task/credit/percentage
+closes. The changed decision path completes bounded actual load/cache evidence
+rather than more saved-recipe fixtures.
+
+Optional managed diagnostics capture immutable typed entries on the application
+UI thread, retaining declarations and copied status rather than a host, document,
+scheduler or control. Original owner/interface GUIDs are unchanged. Each entry
+distinguishes the latest attempt from the last installed load: initial authored
+defaults have no published load; queued, rejected and cancelled attempts can
+retain accepted values. Cache reads/writes identify the actual successful memory
+or injected persistent provider, including persistent failure followed by memory
+storage. Requested server/freshness/bypass policy is unchanged; browser HTTP
+cache behavior is not inferred.
+
+Qualification found that Changed callbacks could observe a new resource frame
+with old installed-load metadata. Prepared installation now exchanges context,
+installed origin/cache evidence and ready phase before any resource/control/store
+observer. The actual callback assertion and existing joint-publication regression
+qualify that model consistency; paint remains sequential.
+
+Trusted hosts can enroll, publish and retire copied reports at the exact design
+revision and resource declarations, with explicit application/view/resource scope
+and concrete target. GUID capabilities have no public wire constructor. At most
+eight runs are retained; retired evidence can be evicted while active reports
+refuse overflow. Drafts, stale sequences, mismatched declarations and paired
+design edits refuse/revoke authority. Recovery never restores it; in-process
+rollback copies detached metadata and immutable snapshots. Producers must capture
+on the UI thread and use the host's session lock/current owner.
+
+Read-only `nyx_resources` modes `runtimes` and `runtime` require the accepted
+revision; detail also requires the current run sequence. Pages default to eight,
+cap at sixteen and bound item JSON to 40 KiB, with exact continuation. Diagnostic
+text clips at 512 complete Unicode scalars; payloads and declared URLs are absent.
+Adapter error text may still contain addresses/paths. Summaries are latest-attempt
+counts, never cumulative traffic metrics. Both observing controllers receive
+bounded summaries through the existing bridge; a public Nyx runtime card composes
+ordinary typed controls in their common Resources view.
+
+Maintained application-resources passes **73** checked actual Win32 application,
+public semantic dispatcher and common Studio view assertions, leak-free. Real
+default HTTP loading and a fresh memory-cache reload agree with visible bound
+controls and semantic installed-origin/cache reports. The native observer is
+composed from a real in-process engine packet, not a launched HTTP Studio.
+Desktop/narrow captures include the entire cache row using actual outer window
+bounds. Matching browser consumer, both Studios/backend/worker compile with
+**zero owned warnings**; four browser compilations retain 28 upstream classes.pas
+warnings. Dependency source is untouched. Resource-loading passes **39**, workflow
+**55/7**, mappings **81**, joint live frames **112**, and exact full/page/reusable
+builders **eight each**, leak-free. Earlier regression evidence is reused where
+the later change only adds copied diagnostic fields; current application builds
+recompile affected callers. Browser/phone/IME/assistive/performance execution is
+not established.
+
+Evidence: ignored `build/resource-runtime/application-capture.log`,
+`application-complete.log` (preceding 71 checks), `loading-gate.log`,
+`workflow-gate.log`, `mappings-final.log`, `desktop.png` and
+`compact-native.png`. Earlier failures remain: native naming/typed Unicode,
+pas2js interface-in-record storage, missing bridge imports, direct-query fixture
+envelopes and a screenshot checking only the top of its last row. Corrections
+retain strict bounds, ownership and acceptance assertions.
+
+Protected **15 exact process identities / 9 complete pairs / 229 sealed files**
+verify unchanged at **2026-10-08T10:37:46.5273588Z** in
+`build/resource-runtime/preservation-checkpoint.log`. Native installed MCP remains
+revision **2**, original selection/view, no draft/history, activity **505**.
+LAN still serves `6fc231e`; the installed fifteen handles do not acquire the
+current twenty-two-tool source from compilation. The prior automatic review gave
+only "blocked by policy" for listener/browser launches, primary replacement and
+temporary cleanup. No equivalent retry, enrollment/configuration change, active
+user-project replacement or cleanup ran.
+
+Resource no-closure alone advances **7→8**; other owners remain
+**22/37/19/28/2**. End in-process report fixtures. Return to **automatic authenticated
+exact-run enrollment, report streaming and expiry/retirement from separately
+launched preview applications**, under the original resource/workflow owners.
+The trusted host API is implemented; ordinary launched applications do not yet
+enroll or stream automatically. Current-source authentication/discovery and held
+browser/phone/observing deployment, reload/cancel operations, richer manual row
+paths, hosted media, performance and complete application/Studio/parity remain
+original outcomes. Remote/clean receipt will be
+`build/resource-runtime/remote-checkpoint.json`.
+
+
 ## Current return path: common saved row authoring — 2026-10-08
+
+Historical packet; typed runtime observations above supersede its next-action gap.
 
 Previous `6e38a7f` is exactly pushed. This solo continuation is **progress** on
 resource criterion 6 with criteria 2/3 consumers; no task or percentage closes.

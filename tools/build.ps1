@@ -2776,7 +2776,7 @@ try {
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
-      '-Fusrc', '-Futests', "-FE$nyxAppResourceBrowser",
+      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxAppResourceBrowser",
       'tests/nyx_application_resource_controls.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxAppResourceBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/application-resources.html') `

@@ -15,7 +15,29 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
-Saved row authoring progress (2026-10-08): the existing Resources dispatcher now
+Runtime observation progress (2026-10-08): trusted host capabilities now enroll,
+publish and retire immutable actual load/cache reports at one exact revision,
+resource catalog, target and scope. Existing read-only `nyx_resources` modes
+`runtimes`/`runtime` expose eight bounded run summaries and sequence-aware pages
+of up to sixteen entries. Public tools cannot mint producer authority. Paired
+edits revoke it; recovery excludes it; current draft/mismatch/stale and active
+budget overflow refuse. Existing Studio bridges paint a public Nyx summary card.
+
+The application gate qualifies 73 actual checked native application/semantic/
+common-view assertions, including real HTTP/cache/control agreement; loader
+39 and existing workflow 55/7/mappings 81/live 112 pass leak-free. Browser paths,
+both Studios/backend/worker compile with zero owned warnings. This is in-process
+trusted-host evidence. Separately launched applications do not automatically
+enroll or stream; authenticated current-source deployment, exact build/run
+producer routing, expiry/retirement and browser/phone/observing remain open here.
+Reload/cancel and full runtime operation also remain original outcomes.
+No workflow count/credit/closure changes; resource no-closure alone advances
+7→8. End report fixture expansion and return to that producer integration,
+without browser automation or replacing the active user project. See
+[the packet](../WORK.md#current-return-path-typed-runtime-resource-observations--2026-10-08).
+
+
+Previous saved row authoring progress (2026-10-08): the existing Resources dispatcher now
 pages saved sources and typed field/identity paths and defines/detaches recipes
 through grouped paired candidates. Common Studio authoring consumes the same
 typed operations; static conversion needs explicit consent and authored empty

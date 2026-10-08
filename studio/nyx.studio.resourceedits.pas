@@ -582,7 +582,9 @@ begin
     '{"properties":{"mode":{"const":"apply"},"expectedRevision":{"type":"integer","minimum":1,"maximum":2147483647},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":' +
     LChanges.ToJSON + '},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"sources"},"offset":{"type":"integer","minimum":0,"maximum":64},"limit":{"type":"integer","minimum":1,"maximum":16},"filter":{"type":"string"}},"required":["mode"],"additionalProperties":false},' +
-    '{"properties":{"mode":{"const":"rows"},"collection":' + LName.ToJSON + ',"offset":{"type":"integer","minimum":0,"maximum":64},"limit":{"type":"integer","minimum":1,"maximum":16}},"required":["mode","collection"],"additionalProperties":false}]}';
+    '{"properties":{"mode":{"const":"rows"},"collection":' + LName.ToJSON + ',"offset":{"type":"integer","minimum":0,"maximum":64},"limit":{"type":"integer","minimum":1,"maximum":16}},"required":["mode","collection"],"additionalProperties":false},' +
+    '{"properties":{"mode":{"const":"runtimes"},"expectedRevision":{"type":"integer","minimum":1,"maximum":2147483647}},"required":["mode","expectedRevision"],"additionalProperties":false},' +
+    '{"properties":{"mode":{"const":"runtime"},"expectedRevision":{"type":"integer","minimum":1,"maximum":2147483647},"run":{"type":"string","minLength":1,"maxLength":80},"expectedSequence":{"type":"integer","minimum":1,"maximum":2147483647},"offset":{"type":"integer","minimum":0,"maximum":128},"limit":{"type":"integer","minimum":1,"maximum":16}},"required":["mode","expectedRevision","run","expectedSequence"],"additionalProperties":false}]}';
   Result := TNyxDataValue.ParseJSON(LResult);
 end;
 

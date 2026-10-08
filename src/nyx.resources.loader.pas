@@ -93,6 +93,12 @@ type
   TNyxResourceLoadOrigin = (rloFailed, rloEmbedded, rloNetwork, rloFreshCache,
     rloStaleCache, rloFallback);
 
+  { Evidence of a successful Nyx-managed cache operation, rather than the
+    caller's requested tier. None includes bypass, refused server storage and
+    unsuccessful writes. Persistent identifies the injected persistent provider;
+    it does not promise that a browser's separate HTTP cache was involved. }
+  TNyxResourceCacheUse = (rcuNone, rcuMemory, rcuPersistent);
+
   { Copied result data contains no project, control, store or managed interface
     in a record. Definition returns an independently admitted immutable value.
     Fallback/stale success retains the original loading error for diagnostics;
@@ -103,12 +109,16 @@ type
     FData: TNyxDataValue;
     FError: TNyxText;
     FCacheWarning: TNyxText;
+    FCacheRead: TNyxResourceCacheUse;
+    FCacheWrite: TNyxResourceCacheUse;
   public
     function Succeeded: Boolean;
     function Definition: INyxResourceDefinition;
     property Origin: TNyxResourceLoadOrigin read FOrigin;
     property Error: TNyxText read FError;
     property CacheWarning: TNyxText read FCacheWarning;
+    property CacheRead: TNyxResourceCacheUse read FCacheRead;
+    property CacheWrite: TNyxResourceCacheUse read FCacheWrite;
   end;
   TNyxResourceLoadReply = procedure(const AResult: TNyxResourceLoadResult) of object;
 
@@ -164,6 +174,8 @@ type
     FLease: INyxResourceLoad;
     FEntry: TNyxResourceCacheEntry;
     FHaveEntry: Boolean;
+    FEntryUse: TNyxResourceCacheUse;
+    FStoredUse: TNyxResourceCacheUse;
     FResolved: INyxResourceDefinition;
     FWarning: TNyxText;
     FStage: TResourceLoadStage;
@@ -318,6 +330,12 @@ begin
   LResult.FOrigin := AOrigin;
   LResult.FError := AError;
   LResult.FCacheWarning := FWarning;
+  LResult.FCacheWrite := FStoredUse;
+
+  if AOrigin in [rloFreshCache, rloStaleCache] then
+  begin
+    LResult.FCacheRead := FEntryUse;
+  end;
 
   if ADefinition <> nil then
   begin
@@ -424,6 +442,12 @@ begin
         raise ENyxResource.Create('Cache reply belongs to another resource');
       end;
       FHaveEntry := True;
+      FEntryUse := rcuPersistent;
+
+      if FCache = FMemory then
+      begin
+        FEntryUse := rcuMemory;
+      end;
       LState := FEntry.StateAt(FDefinition.Source.CachePolicy, FClock.UTCSeconds);
 
       if LState = rcsFresh then
@@ -583,6 +607,16 @@ begin
       FWriteCache := FMemory;
       Store;
       Exit;
+    end;
+  end;
+
+  if ASuccess then
+  begin
+    FStoredUse := rcuPersistent;
+
+    if FCache = FMemory then
+    begin
+      FStoredUse := rcuMemory;
     end;
   end;
   Finish(rloNetwork, FResolved, '');

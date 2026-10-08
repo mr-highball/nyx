@@ -557,8 +557,9 @@ change the previous context. Retained refresh still checks document context.
 Current source exposes `nyx_resources` through the ordinary MCP dispatcher.
 Queries preserve selection, accepted source and history. Every response includes
 the revision; exact variant queries require both `name` and `locale` (empty
-locale means the default variant). They never fetch a URL or inspect runtime
-cache contents.
+locale means the default variant). Authored modes never fetch a URL or inspect
+runtime cache contents. Runtime modes below inspect separately enrolled copied
+reports; they do not read cache payloads or acquire application handles.
 
 | Mode | Bounded context |
 | --- | --- |
@@ -617,8 +618,80 @@ The maintained `resource-workflow` gate qualifies its **suspended** actual
 engine through public semantic dispatch in a new private runtime, plus exact
 compiled emitted source and browser compilation. It starts no listener and
 does not authenticate HTTP or deploy tools into the protected running server.
-Runtime loading/cancellation/cache diagnostics, hosted media consumers and
-current-source authenticated/observing execution remain open.
+Automatic cross-process runtime observation and reload/cancellation, hosted media
+consumers and current-source authenticated/observing execution remain open.
+
+## Runtime resource observations
+
+Authored declarations and application reports have separate lifetimes.
+`NyxApplicationResourceDiagnostics(Application.Resources).CaptureRuntime` captures
+immutable typed entries on the application's UI thread. The optional capability
+preserves the original resource-owner interface. Snapshots safely outlive that
+owner, retain exact declaration identity, and contain no scheduler, transport,
+control or document reference. Reading a snapshot never initiates I/O.
+
+Each entry separates the latest attempt's phase/origin/cache read/write/error
+from `HasPublishedLoad`, `PublishedOrigin` and the installed cache read/write
+tiers. Initial authored defaults and embedded fallbacks have no published load.
+A rejected, queued or cancelled reload can retain a previous installed load.
+Installed evidence exchanges with the catalog before resource/control/store
+observers run. Notification errors describe a receiver failure after publication.
+Summary cache counters count variants' latest attempts, not cumulative I/O.
+
+`TNyxResourceCacheUse` records successful Nyx-managed operations: none, memory or
+the injected persistent provider. Requested policy is reported separately.
+Persistent failure followed by a successful memory write reports memory plus
+the warning. Respected server `no-store` reports no write; explicit caller override
+still uses the existing policy. The browser's independent HTTP cache is never
+inferred from these fields. No freshness/storage policy was changed by reporting.
+
+The trusted Studio host can enroll an exact run through
+`ObserveResourceRuntime`, publish copied snapshots through
+`PublishResourceRuntime`, and retire it through `RetireResourceRuntime`.
+Distinct `TNyxStudioRuntimeRef` names and the typed application/view/resource-only
+scope identify the consumer. Enrollment requires an exact accepted design
+revision, matching complete authored declarations, a concrete target and no
+pending draft. A view scope must name one root; other scopes omit a view.
+The returned observation record has no wire codec or public token property.
+It retains no application and grants no reload/cancel operation.
+
+Eight runs bound membership. An inactive report can yield capacity to a new
+distinct run without changing the design. A stopped final snapshot retires its
+publication authority; explicit retirement keeps the last report inactive.
+A paired design revision revokes all reports/tickets. In-process rollback copies
+preserve detached metadata and immutable snapshots; durable recovery never
+inherits runtime authority. Publishers must reacquire the current session owner
+under its lock after a host rollback, and capture on the application's UI thread
+before publishing. Trusted publishers attest the mounted scope; the broker does
+not infer a successful full application from a resource-only preview.
+
+`nyx_resources` adds two read-only modes:
+
+| Mode | Context and authority |
+| --- | --- |
+| `runtimes` | Current `expectedRevision`; at most eight thin run/scope/target/sequence/active summaries |
+| `runtime` | Current `expectedRevision`, exact `run` and `expectedSequence`; 8 entries by default, at most 16; exact `nextOffset` |
+
+Pages exclude resource payloads and hosted URLs. Adapter diagnostics can contain
+addresses or paths; each is clipped at 512 complete Unicode scalars. A 40 KiB
+item-JSON budget can shorten a requested page, preserving progress and exact
+pagination. A stale report sequence refuses rather than mix observations from
+different captures. Public MCP can neither fabricate enrollment nor acquire a
+runtime mutation handle.
+
+Private editor observation carries only bounded summaries. The Resources area
+in both Studios consumes the public `NewNyxResourceRuntimeView` compound card
+through a strict typed summary codec. Empty reports visibly mean no host has
+shared evidence; they never imply successfully loaded authored resources.
+
+Current evidence is **in-process**: real Win32 application controls, trusted
+publication, ordinary semantic dispatch and common Studio report cards.
+Separate launched preview/application processes do **not yet** enroll or stream
+reports automatically over authenticated HTTP. That exact-run cross-process
+producer/retirement bridge, installed current-source discovery, browser/cache/
+phone/observing execution and runtime reload/cancel tools remain open under the
+existing resource and primary-workflow owners. No listener or active project was
+replaced to produce these checks.
 
 ## Wire, limits and qualification
 

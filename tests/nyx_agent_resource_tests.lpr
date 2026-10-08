@@ -467,7 +467,7 @@ begin
   GAccepted := PairText;
 
   LSchema := NyxResourceAgentSchema;
-  Check((LSchema.Field('oneOf').Count = 8) and
+  Check((LSchema.Field('oneOf').Count = 10) and
     (LSchema.Field('oneOf').Item(2).Field('properties').Field('count')
       .Field('maximum').AsInteger = 4096), 'published schema closes and bounds every mode');
   Check((LSchema.Field('oneOf').Item(7).Field('properties').Field('mode').Field('const').AsText = 'rows') and

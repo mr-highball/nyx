@@ -26,11 +26,12 @@
 
 type
   TNyxAgentResourceMode = (armList, armDetails, armContent, armJSON, armBindings, armApply,
-    armSources, armRows);
+    armSources, armRows, armRuntimes, armRuntime);
 
 const
   CResourceModes: array[TNyxAgentResourceMode] of TNyxText =
-    ('list', 'details', 'content', 'json', 'bindings', 'apply', 'sources', 'rows');
+    ('list', 'details', 'content', 'json', 'bindings', 'apply', 'sources', 'rows',
+      'runtimes', 'runtime');
   CResourceDataKinds: array[TNyxDataKind] of TNyxText =
     ('null', 'text', 'boolean', 'number', 'object', 'array');
 
@@ -127,6 +128,11 @@ begin
   if not LFound then
   begin
     raise ENyxResource.Create('Unknown resource query/apply mode');
+  end;
+
+  if LMode in [armRuntimes, armRuntime] then
+  begin
+    Exit(ResourceRuntimeQuery(AArguments));
   end;
 
   if LMode = armApply then
