@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -36,6 +36,9 @@ param(
   [ValidateSet('checked', 'release')]
   [string]$NativeStudioConfiguration = 'checked',
   [string]$HttpURL = 'http://127.0.0.1:8088',
+  # Explicit qualification against a freshly owned runtime started by the
+  # Pascal test server. Empty only compiles tools/wrappers; it starts no server.
+  [string]$ResourceRuntimeHome,
   # Stage browser artifacts independently while an older LAN instance is live.
   [string]$BrowserOutput,
   # Release preparation creates a NEW frozen compiler-source/artifact bundle.
@@ -2796,6 +2799,41 @@ try {
         '-Fusrc', '-Fustudio', "-FE$nyxAppResourceOutput", $nyxAppResourceBuild.Program)
     }
     Write-Host 'Application/native checks passed; browser/cache/observing execution remains separate.'
+    exit 0
+  }
+
+  if ($Target -eq 'resource-runtime') {
+    # Compile the actual producer wrappers and reusable HTTP qualification.
+    # The Pascal tools own all semantic, protocol, process and expiry behavior.
+    $nyxProducerRoot = Join-Path $nyxRoot 'build/resource-runtime/maintained'
+    $nyxProducerBackend = Join-Path $nyxProducerRoot 'backend'
+    $nyxProducerClient = Join-Path $nyxProducerRoot 'http-client'
+    $nyxProducerWrapper = Join-Path $nyxProducerRoot 'wrappers'
+    New-Item -ItemType Directory -Force -Path $nyxProducerBackend,
+      $nyxProducerClient, $nyxProducerWrapper | Out-Null
+    $nyxProducerFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests')
+    Invoke-NyxCompiler $nyxFpc ($nyxProducerFlags + @("-FU$nyxProducerBackend",
+      "-FE$nyxProducerBackend", 'tests/nyx_resource_runtime_server.lpr'))
+    Invoke-NyxCompiler $nyxFpc ($nyxProducerFlags + @("-FU$nyxProducerWrapper",
+      "-FE$nyxProducerWrapper", 'tests/nyx_resource_preview_builds.lpr'))
+    $nyxProducerNewRuntime = Join-Path $nyxProducerRoot ('wrapper-' + [Guid]::NewGuid().ToString('N'))
+    & (Join-Path $nyxProducerWrapper 'nyx_resource_preview_builds.exe') $nyxRoot `
+      (Join-Path $nyxRoot '.local/toolchain.json') $nyxProducerNewRuntime 'i386-win32'
+    if ($LASTEXITCODE -ne 0) { throw 'Actual resource producer wrappers failed compilation' }
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    Invoke-NyxCompiler $nyxLclFpc ($nyxProducerFlags + @("-FU$nyxProducerClient",
+      "-FE$nyxProducerClient", "-Fu$nyxLazarus/lcl/units/i386-win32",
+      "-Fu$nyxLazarus/lcl/units/i386-win32/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/i386-win32",
+      "-Fu$nyxLazarus/packager/units/i386-win32", 'tests/nyx_resource_runtime_http.lpr'))
+    if ($ResourceRuntimeHome) {
+      & (Join-Path $nyxProducerClient 'nyx_resource_runtime_http.exe') $HttpURL `
+        $ResourceRuntimeHome (Join-Path $nyxRoot '.local/toolchain.json')
+      if ($LASTEXITCODE -ne 0) { throw 'Authenticated resource producer qualification failed' }
+    }
+    Write-Host 'Resource producer tools and wrappers passed; HTTP execution requires an explicit isolated runtime.'
     exit 0
   }
 

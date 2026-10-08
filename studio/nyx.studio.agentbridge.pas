@@ -118,6 +118,8 @@ type
       const AExpected: TNyxBuildOutputRef);
     procedure RequestBuild(const ARequest: INyxCompilerRequest);
     procedure BuildStatus(const AJob: TNyxBuildJobRef; AOffset: Integer = 0);
+    { Private launch admission rechecks current compiler context. }
+    procedure PreviewGrant(const AJob: TNyxBuildJobRef);
     procedure CompilerJobs(AFilter: TNyxCompilerJobFilter = cjfActive;
       AOffset: Integer = 0; ALimit: Integer = 10);
     { Does not cancel the transport request: asks the service to retire exactly
@@ -757,6 +759,12 @@ begin
       FView.CanCloseWorkspace := False;
       FView.CanBuild := False;
       FView.CanControlBuilds := False;
+      FView.CanReportRuntime := False;
+
+      if NyxAgentHas(LState, 'resourceRuntimeReporting') then
+      begin
+        FView.CanReportRuntime := LState.Field('resourceRuntimeReporting').AsBoolean;
+      end;
 
       if NyxAgentHas(LState, 'editorBuilds') then
       begin
@@ -959,6 +967,17 @@ begin
   end;
   Queue(NyxObject([NyxField('op', NyxData('build')),
     NyxField('build', NyxCompilerStatus(AJob, AOffset))]));
+end;
+
+procedure TNyxStudioAgentBridge.PreviewGrant(const AJob: TNyxBuildJobRef);
+begin
+
+  if not SourceSynchronized or not FView.CanBuild or not FView.CanReportRuntime then
+  begin
+    raise ENyxModel.Create('Preview reporting requires the exact connected project');
+  end;
+  Queue(NyxObject([NyxField('op', NyxData('build')),
+    NyxField('build', NyxCompilerPreview(AJob, FView.Revision))]));
 end;
 
 procedure TNyxStudioAgentBridge.CancelBuild(const AJob: TNyxBuildJobRef;

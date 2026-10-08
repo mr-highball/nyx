@@ -618,8 +618,9 @@ The maintained `resource-workflow` gate qualifies its **suspended** actual
 engine through public semantic dispatch in a new private runtime, plus exact
 compiled emitted source and browser compilation. It starts no listener and
 does not authenticate HTTP or deploy tools into the protected running server.
-Automatic cross-process runtime observation and reload/cancellation, hosted media
-consumers and current-source authenticated/observing execution remain open.
+Automatic cross-process observation has separate actual HTTP qualification below.
+Runtime reload/cancellation, hosted media and deployed ordinary Studio/phone
+qualification remain open.
 
 ## Runtime resource observations
 
@@ -684,14 +685,66 @@ in both Studios consumes the public `NewNyxResourceRuntimeView` compound card
 through a strict typed summary codec. Empty reports visibly mean no host has
 shared evidence; they never imply successfully loaded authored resources.
 
-Current evidence is **in-process**: real Win32 application controls, trusted
-publication, ordinary semantic dispatch and common Studio report cards.
-Separate launched preview/application processes do **not yet** enroll or stream
-reports automatically over authenticated HTTP. That exact-run cross-process
-producer/retirement bridge, installed current-source discovery, browser/cache/
-phone/observing execution and runtime reload/cancel tools remain open under the
-existing resource and primary-workflow owners. No listener or active project was
-replaced to produce these checks.
+### Automatically launched Studio previews
+
+The ordinary preview controllers request a private grant after rechecking a
+successful current compiler job, accepted pair, output profile and revision.
+They negotiate this capability; an older server retains ordinary preview launch.
+Grants bind one exact workspace/job/target/application or page/reusable root and
+do not enter public MCP status, exported companions or design properties.
+Browsers receive context in the fragment; native launch changes only its owned
+child environment. The Studio-generated wrapper consumes
+`ObserveNyxStudioResources(Application.Resources)`; ordinary exported programs
+retain no reporter dependency or credential. Refused optional reporter context
+leaves the application usable.
+
+`EncodeNyxResourceRuntime` and `DecodeNyxResourceRuntime` define a bounded
+version-one status wire. Decoding requires complete exact trusted declarations;
+the sender cannot substitute a source, policy, kind or variant membership.
+Snapshots exclude resource bytes and declared URLs. The producer request ceiling
+is 2 MiB, distinct from small paged semantic responses. Adapter diagnostic text
+can still contain addresses/paths.
+
+The UI thread captures state. Each adapter retains one exact in-flight request
+until its matching acknowledgement; unchanged accepted captures send only a
+heartbeat. The locked host reacquires current workspace owners and treats exact
+delivery retries idempotently. Heartbeats extend liveness without changing the
+semantic resource sequence or generating activity for an unchanged resource.
+The native byte worker has bounded transport/cancellation; the browser uses
+same-origin XHR with a private header. No global credentials or cache policy
+change is needed.
+
+The current host expires authority after sixty seconds without an accepted
+delivery. Explicit retirement is best effort during shutdown; expiry covers
+abrupt process loss. A design revision, pending draft or closed workspace
+revokes/refuses the old context. At most sixteen grants exist globally, eight
+live per project. Retired receipt tombstones keep their global slots until
+expiry so an exact retirement retry remains safe. Producer retries do not extend
+an expired lease. Durable recovery never restores these grants.
+
+Run `tools/build.ps1 -Target resource-runtime` to compile the maintained Pascal
+server/HTTP tools and both real compiler wrappers without starting a listener.
+Actual HTTP qualification additionally takes `-ResourceRuntimeHome` and
+`-HttpURL` for an explicitly owned isolated server started by
+`nyx_resource_runtime_server`. It writes an origin-bound qualification marker;
+the client refuses ordinary Studio homes before any claim/commit. Keep its
+runtime and enrollment separate from user projects. The test uses semantic MCP
+for composition/builds and read-only DOM protocol for rendered validation.
+
+Actual HTTP qualification passes **55** checked assertions, leak-free, across
+six separately launched browser/Win32 application, page and reusable previews.
+It qualifies real hosted binding/cache evidence, unchanged heartbeats, observing
+editor packets, real lost-process expiry and both-target nonfatal diagnostic
+refusal. Existing application/common Studio checks pass **81**; suspended
+semantic/protocol and exact-source checks pass **76/7**. Both Studios/backend/
+worker compile with zero owned warnings; upstream warnings remain untouched.
+
+This is isolated current-source discovery and standalone preview execution.
+Ordinary observing Studio UI, compiled iframe detachment/remount with the old
+grant, installed LAN/enrollment refresh, physical phone, persistent browser
+cache/CORS/security contexts, background restoration and runtime reload/cancel
+remain unqualified under the original resource/workflow owners. A browser label
+and thin observing packet do not establish complete editor/parity quality.
 
 ## Wire, limits and qualification
 

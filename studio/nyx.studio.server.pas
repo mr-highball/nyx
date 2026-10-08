@@ -43,6 +43,7 @@ uses
   nyx.source,
   nyx.callbacks,
   nyx.scheduler,
+  nyx.application.resources,
   nyx.studio.builds,
   nyx.studio.buildexecutor,
   nyx.studio.compiler,
@@ -452,6 +453,29 @@ begin
     begin
       AResponse.Code := 403;
       AResponse.Content := 'Origin does not match the Studio service address';
+      Exit;
+    end;
+
+    if LPath = '/api/resource-runtime' then
+    begin
+
+      if ARequest.Method <> 'POST' then
+      begin
+        AResponse.Code := 405;
+        AResponse.Content := 'Runtime reports require POST';
+        Exit;
+      end;
+
+      if Length(ARequest.Content) > NyxMaximumRuntimeReportBytes then
+      begin
+        AResponse.Code := 413;
+        AResponse.Content := 'Runtime reports require bounded POST data';
+        Exit;
+      end;
+      LMessage := TNyxDataValue.ParseJSON(RequestText(ARequest));
+      LMessage := FMCP.ResourceRuntimeExchange(ARequest.GetFieldByName('X-Nyx-Runtime'), LMessage);
+      RespondUTF8(AResponse, LMessage.ToJSON);
+      AResponse.ContentType := 'application/json; charset=utf-8';
       Exit;
     end;
 

@@ -46,19 +46,20 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current runtime resource observations (2026-10-08): optional typed snapshots
-distinguish latest attempts from installed values and record actual memory/
-persistent cache use. Trusted revision-bound host capabilities expose bounded
-read-only MCP reports; both Studio views consume a public Nyx summary card.
-Checked native application/semantic/common-view assertions pass **73**, loader
-**39**, workflow **55/7**, mappings **81** and live frames **112**, leak-free.
-Matching browser consumers and both Studios/backend/worker compile with zero
-owned warnings. Automatic cross-process enrollment/streaming, browser/phone/
-observing execution and current-source rollout remain open. Resource no-closure
-alone advances **7→8**; no full criterion/credit/percentage closes, other owners
-remain **22/37/19/28/2**. End report fixtures and return to authenticated exact-run
-producer enrollment/expiry and the original held deployment/parity outcomes.
-See [the packet](../WORK.md#current-return-path-typed-runtime-resource-observations--2026-10-08).
+Current launched resource reports (2026-10-08): private successful-build grants
+connect ordinary Studio preview wrappers to bounded revision-aware observations.
+Authenticated HTTP qualification passes **55** checks across separately launched
+browser/Win32 application, page and reusable previews, including actual hosted
+binding, cache override, unchanged heartbeats, real lease expiry and nonfatal
+diagnostic refusal. Native application checks pass **81**; semantic/protocol and
+exact-source checks pass **76/7**, leak-free. Both Studios/backend/worker compile
+with zero owned warnings. Current-source MCP discovery and observing protocol
+are qualified on an isolated host; installed LAN and desktop enrollment stay
+unchanged. Studio iframe remount/observer UI, physical phone, persistent browser
+cache and current-source rollout remain open. Resource no-closure alone advances
+**8→9**; no full criterion/credit/percentage closes, other owners remain
+**22/37/19/28/2**. Return to those original deployment/parity outcomes.
+See [the packet](../WORK.md#current-return-path-authenticated-preview-resource-producers--2026-10-08).
 
 
 Previous saved row authoring (2026-10-08): common Nyx-built Resources forms now

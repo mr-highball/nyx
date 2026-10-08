@@ -53,11 +53,32 @@ type
   resource names, malformed GUIDs/fingerprints and downloads over 32 MiB. Caller
   must also compare its local accepted pair/profile before preparing and launching. }
 function AdmitNyxCompiledArtifact(const AResult: TNyxDataValue): TNyxCompiledArtifact;
+{ Private browser launch context stays in the fragment, outside HTTP requests,
+  artifact manifests and portable designs. Encode bytes without target ANSI loss. }
+function NyxStudioRuntimeFragment(const AConfiguration: TNyxDataValue): TNyxText;
 
 implementation
 
 uses
-  SysUtils;
+  SysUtils, nyx.bytes;
+
+function NyxStudioRuntimeFragment(const AConfiguration: TNyxDataValue): TNyxText;
+var
+  LBytes: TNyxBytes;
+  LIndex: Integer;
+begin
+  LBytes := NyxEncodeUTF8(AConfiguration.ToJSON);
+
+  if Length(LBytes) > 4096 then
+  begin
+    raise Exception.Create('Private runtime launch context exceeds four KiB');
+  end;
+  Result := '#nyx-runtime=';
+  for LIndex := 0 to High(LBytes) do
+  begin
+    Result := Result + '%' + TNyxText(IntToHex(LBytes[LIndex], 2));
+  end;
+end;
 
 function AdmitNyxCompiledArtifact(const AResult: TNyxDataValue): TNyxCompiledArtifact;
 var

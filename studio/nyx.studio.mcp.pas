@@ -30,7 +30,7 @@ uses
   Classes, SysUtils, SyncObjs, fphttpserver, httpdefs, Process, base64,
   nyx.text, nyx.data, nyx.studio.agents, nyx.studio.projects, nyx.studio.buildjobs,
   nyx.studio.reviews, nyx.studio.workspaces, nyx.presentations, nyx.studio.directories,
-  nyx.studio.recovery;
+  nyx.studio.recovery, nyx.studio.resourceruns;
 
 type
   { Authority is supplied by the authenticated transport, never client JSON.
@@ -59,6 +59,7 @@ type
     FWorkspaces: TNyxStudioWorkspaces;
     FRecovery: TNyxStudioRuntimeStore;
     FBuilds: TNyxBuildJobs;
+    FResourceRuns: TNyxResourceRuntimeBroker;
     FID: TNyxText;
     FToken: TNyxText;
     FEditorToken: TNyxText;
@@ -76,6 +77,7 @@ type
     FFailure: TNyxText;
     FConfigurationIssue: TNyxText;
     FOnOperatorProfileChange: TNyxOperatorProfileChange;
+    function RuntimeSession(const AWorkspace: TNyxWorkspaceRef): TNyxAgentSession;
     procedure Request(ASender: TObject; var ARequest: TFPHTTPConnectionRequest;
       var AResponse: TFPHTTPConnectionResponse);
     procedure WriteCodexConfiguration;
@@ -128,6 +130,11 @@ type
     function InvokeBuild(const AOwner, AActor: TNyxText;
       const AArguments: TNyxDataValue): TNyxDataValue;
     function PreviewData(const AToken: TNyxText): TNyxText;
+    { Separate producer capability; no editor/MCP credential is accepted here.
+      Authenticated launch admission fixes exact project/build/pair/revision.
+      The server has already admitted origin, method and byte budget. }
+    function ResourceRuntimeExchange(const AToken: TNyxText;
+      const AMessage: TNyxDataValue): TNyxDataValue;
     { Read-only operator observation of accepted review design. Unchanged
       revisions return metadata only. Retired capabilities return empty text;
       neither Pascal source nor pending editor drafts are exposed here. }
@@ -312,6 +319,7 @@ begin
     FWorkspaces := LRestoredWorkspaces;
   end;
   FReviews := TNyxReviewWorkspaces.Create(FCore);
+  FResourceRuns := TNyxResourceRuntimeBroker.Create;
   FHTTP := TNyxMCPHTTP.Create(nil);
   FHTTP.Address := '127.0.0.1';
   FHTTP.Port := FPort;
@@ -334,6 +342,7 @@ begin
   Stop;
   FHTTP.Free;
   FBuilds.Free;
+  FResourceRuns.Free;
   FReviews.Free;
   FWorkspaces.Free;
   FCore.Free;
@@ -712,6 +721,8 @@ begin
     SetLength(LFields, LState.Count + 7);
     LFields[LState.Count + 6] := NyxField('buildReply', LBuild);
   end;
+  SetLength(LFields, Length(LFields) + 1);
+  LFields[High(LFields)] := NyxField('resourceRuntimeReporting', NyxData(True));
   Result := NyxWithWorkspace(NyxObject(LFields), LWorkspace);
 end;
 
@@ -942,6 +953,26 @@ begin
   end;
 end;
 
+function TNyxStudioMCP.RuntimeSession(const AWorkspace: TNyxWorkspaceRef): TNyxAgentSession;
+begin
+  Result := FWorkspaces.Find(AWorkspace);
+end;
+
+function TNyxStudioMCP.ResourceRuntimeExchange(const AToken: TNyxText;
+  const AMessage: TNyxDataValue): TNyxDataValue;
+var
+  LWorkspace: TNyxWorkspaceRef;
+begin
+  FGuard.Acquire;
+  try
+    FResourceRuns.Expire(RuntimeSession);
+    LWorkspace := FResourceRuns.Workspace(AToken);
+    Result := FResourceRuns.Exchange(AToken, RuntimeSession(LWorkspace), AMessage);
+  finally
+    FGuard.Release;
+  end;
+end;
+
 procedure TNyxStudioMCP.PollBuilds;
 const
   CEarlierDesign: TNyxText = ' · earlier design';
@@ -956,6 +987,7 @@ var
   LWorkspace: TNyxWorkspaceRef;
   LCurrentOutput: Boolean;
 begin
+  FResourceRuns.Expire(RuntimeSession);
   while FBuilds.TakeCompletion(LActor, LOutcome, LPair, LReport, LReview,
     LWorkspace, LCurrentOutput) do
   begin
@@ -1105,8 +1137,25 @@ begin
     Exit;
   end;
 
-  if LMode = 'status' then
+  if (LMode = 'status') or (LMode = 'preview') then
   begin
+
+    if LMode = 'preview' then
+    begin
+
+      if AAuthority <> baEditor then
+      begin
+        raise ENyxProjectConflict.Create('Runtime launch grants require the private editor connection');
+      end;
+      NyxAgentFields(AArguments, '|mode|job|expectedRevision|');
+
+      if AArguments.Field('expectedRevision').AsInteger <> LSession.Revision then
+      begin
+        raise ENyxProjectConflict.Create('Runtime launch revision changed; inspect the current build');
+      end;
+      AArguments := NyxObject([NyxField('mode', NyxData('status')),
+        NyxField('job', AArguments.Field('job')), NyxField('limit', NyxData(1))]);
+    end;
 
     if (FBuilds.Context(AArguments.Field('job').AsText).ID <> LReview.ID) or
       (FBuilds.WorkspaceContext(AArguments.Field('job').AsText).ID <> LWorkspace.ID) then
@@ -1151,6 +1200,14 @@ begin
     LFields[LIndex + 1] := NyxField('currentRevision', NyxData(LSession.Revision));
     LFields[LIndex + 2] := NyxField('currentOutput', NyxData(LCurrentOutput));
     Result := NyxObject(LFields);
+
+    if LMode = 'preview' then
+    begin
+      SetLength(LFields, Length(LFields) + 1);
+      LFields[High(LFields)] := NyxField('runtime',
+        FResourceRuns.Issue(LSession, LWorkspace, LPair, Result));
+      Result := NyxObject(LFields);
+    end;
     Result := NyxWithWorkspace(NyxWithReview(Result, LReview), LWorkspace);
 
     if Length(Result.ToJSON) > 48 * 1024 then

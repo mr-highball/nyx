@@ -618,6 +618,9 @@ begin
       a same-named dependency, so navigation requires this fixed option. }
     LArguments.Add('-vb');
     LArguments.Add('-Fu' + FDirectories.CompilerUnits);
+    { Studio instrumentation is optional private launch behavior. Exported
+      companion source and the portable library retain no reporting context. }
+    LArguments.Add('-Fu' + FDirectories.SourceRoot + PathDelim + 'studio');
     LArguments.Add('-Fu' + LDirectory);
     LArguments.Add('-FE' + LDirectory);
 
@@ -628,13 +631,21 @@ begin
 
       LSource := 'program nyx_preview;' + #10 + '{$mode delphi}{$H+}' + #10 +
         '{$codepage utf8}' + #10 +
-        'uses Web, nyx.model, nyx.application.browser, ' + LUnitName + ';' + #10 +
-        'var LDocument: TNyxDocument; LApplication: TNyxBrowserApplication;' + #10 +
+        'uses Web, nyx.model, nyx.application.browser, nyx.studio.runtimeclient, ' + LUnitName + ';' + #10 +
+        'var' + #10 + '  LDocument: TNyxDocument;' + #10 +
+        '  LApplication: TNyxBrowserApplication;' + #10 +
+        '  LReporter: TNyxStudioRuntimeReporter;' + #10 +
         'begin' + #10 +
         '  LDocument := BuildNyxDocument;' + #10 +
         '  LApplication := TNyxBrowserApplication.Create;' + #10 +
         '  LApplication.Run(LDocument, TJSHTMLElement(document.body));' + #10 +
         '  document.body.setAttribute(''data-nyx-ready'', ''true'');' + #10 +
+        '  { Optional Studio diagnostics must never prevent an application from running. }' + #10 +
+        '  try' + #10 +
+        '    LReporter := ObserveNyxStudioResources(LApplication.Resources);' + #10 +
+        '  except' + #10 +
+        '    document.body.setAttribute(''data-nyx-resource-reporting'', ''unavailable'');' + #10 +
+        '  end;' + #10 +
         'end.' + #10;
       WriteFile(LDirectory + 'nyx_preview.lpr', LSource);
       LArguments.Add(LDirectory + 'nyx_preview.lpr');
@@ -657,14 +668,23 @@ begin
       LArguments.Add('-Fu' + LLazarus + 'packager/units/' + LPlatform);
       LSource := 'program nyx_native;' + #10 + '{$mode delphi}{$H+}' + #10 +
         '{$codepage utf8}' + #10 +
-        'uses Interfaces, Forms, nyx.model, nyx.application.lcl, ' + LUnitName + ';' + #10 +
-        'var LDocument: TNyxDocument; LApplication: TNyxLCLApplication;' + #10 +
+        'uses Interfaces, Forms, nyx.model, nyx.application.lcl, nyx.studio.runtimeclient, ' + LUnitName + ';' + #10 +
+        'var' + #10 + '  LDocument: TNyxDocument;' + #10 +
+        '  LApplication: TNyxLCLApplication;' + #10 +
+        '  LReporter: TNyxStudioRuntimeReporter;' + #10 +
         'begin' + #10 + '  Application.Initialize;' + #10 +
         '  LDocument := BuildNyxDocument;' + #10 +
         '  LApplication := TNyxLCLApplication.Create;' + #10 +
-        '  try' + #10 +
-        '    LApplication.Run(LDocument);' + #10 +
-        '  finally' + #10 + '    LApplication.Free;' + #10 +
+        '  LReporter := nil;' + #10 + '  try' + #10 +
+        '    LApplication.Mount(LDocument);' + #10 +
+        '    { A refused diagnostic context leaves ordinary application interaction usable. }' + #10 +
+        '    try' + #10 +
+        '      LReporter := ObserveNyxStudioResources(LApplication.Resources);' + #10 +
+        '    except' + #10 +
+        '      LReporter := nil;' + #10 +
+        '    end;' + #10 +
+        '    Application.Run;' + #10 +
+        '  finally' + #10 + '    LReporter.Free;' + #10 + '    LApplication.Free;' + #10 +
         '    LDocument.Free;' + #10 +
         '  end;' + #10 + 'end.' + #10;
       WriteFile(LDirectory + 'nyx_native.lpr', LSource);

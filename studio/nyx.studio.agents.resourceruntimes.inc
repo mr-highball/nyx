@@ -23,6 +23,11 @@
 { Included by nyx.studio.agents. Only a trusted host can publish copied runtime
   evidence. Public semantic tools inspect it without borrowing live receivers. }
 
+function TNyxAgentSession.GetPendingDraft: Boolean;
+begin
+  Result := FSession.DraftSource <> FSession.Source;
+end;
+
 function NyxStudioRuntime(const AName: TNyxText): TNyxStudioRuntimeRef;
 var
   LIndex: Integer;

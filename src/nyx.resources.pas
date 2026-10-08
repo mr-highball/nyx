@@ -1039,19 +1039,24 @@ var
   LSteps: array of TNyxDataValue;
   LIndex: Integer;
   LData: TNyxDataValue;
+  LCount: Integer;
 begin
   LData := APath.ToData;
+  LCount := LData.Count;
 
-  if LData.Count >= 32 then
+  if LCount >= 32 then
   begin
     raise ENyxResource.Create('Resource selector exceeds 32 steps');
   end;
-  SetLength(LSteps, LData.Count + 1);
-  for LIndex := 0 to LData.Count - 1 do
+  { Materialize the length before indexing. The supported pas2js compiler can
+    emit a parameterless record method as a function reference in this index,
+    even though it calls that method correctly in an arithmetic expression. }
+  SetLength(LSteps, LCount + 1);
+  for LIndex := 0 to LCount - 1 do
   begin
     LSteps[LIndex] := LData.Item(LIndex);
   end;
-  LSteps[LData.Count] := AStep;
+  LSteps[LCount] := AStep;
   Result.FSteps := NyxArray(LSteps);
 end;
 

@@ -9,7 +9,100 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: authenticated preview resource producers — 2026-10-08
+
+Previous `317343d` is exactly pushed. This solo continuation is **progress** on
+resource criterion 5, consumed by criteria 3/6 and the existing primary semantic
+workflow owner. No full criterion/task/credit/percentage closes. It returns from
+in-process report fixtures to real automatically launched consumers.
+
+Successful current builds admit private per-launch credentials, bound to exact
+project/pair/revision/job/target/application or root scope. Public MCP status and
+tool schemas cannot mint or expose them. Browser launch context uses a fragment;
+native context uses only its owned child environment. Exported companions and
+global process environment retain no credential. The ordinary controllers
+negotiate reporting capability; older servers keep ordinary previews.
+
+A status-only version-one wire covers all trusted variants, excluding file bytes
+and declared URLs, with strict membership/metadata/enum/Unicode admission and a
+2 MiB producer ceiling. Semantic queries retain their separate 40 KiB page limit.
+Sampling stays on the application UI thread. One in-flight byte transport retains
+exact retry text; accepted unchanged samples become small heartbeats without
+incrementing semantic resource sequences or logging fake changes. Native delivery
+uses cancellable bounded workers; browser delivery uses same-origin XHR.
+
+The locked broker reacquires current workspace owners, retains at most sixteen
+grants globally/eight live per project and expires after sixty seconds without an
+accepted delivery. Exact previous receipts are idempotent and do not refresh
+expiry. Retirement tombstones allow exact retries until expiry; their global
+capacity is not immediately reused. Paired revisions, drafts, closed contexts and
+declaration mismatch revoke/refuse reporting. Optional reporter startup failure
+leaves ordinary application execution usable.
+
+Actual authenticated HTTP passes **55** checked assertions, leak-free: current
+MCP initialize/discovery, semantic grouped control/resource composition, real
+compiler jobs and byte-manifest native preparation, and six separately launched
+application/page/reusable producers across Win32 and browser. Real hosted JSON
+updates a browser label; reporting agrees with the installed origin and actual
+memory write under explicit caller override. Server no-store initially prevented
+storage as intended. Thin observing editor packets contain both targets. Actual
+unchanged heartbeats preserve report sequences; stopped processes expire under
+the real clock. Expired credentials and later paired revisions refuse, retaining
+inactive reports until the design changes. Both wrappers survive malformed
+optional context without inventing authority. Browser uses ordinary clocks,
+an isolated Chromium profile and read-only DOM protocol validation, not scripts
+or editor automation. A 390 CSS-pixel capture is inspected; it is a small
+binding/transport qualification, not a Studio aesthetics or physical-phone pass.
+
+The browser journey uncovered a shared fluent selector compiler defect:
+`LSteps[LData.Count]` emitted a method reference as the JavaScript index.
+Materializing the integer fixes actual generated browser execution while retaining
+native behavior, path bounds and independent ownership. Earlier fixture failures
+are retained in ignored logs: missing imports/fallback, duplicate IDs on an
+uncommitted reset, an empty application-view argument, reading an absent member,
+wrong expected origin/cache policy and a legitimate sequence race. Bounded detail
+queries reacquire only the documented sequence conflict, never weaken admission.
+
+Maintained application-resources now passes **81** native/control/semantic/common
+view assertions; resource-workflow passes **76/7**, including 21 broker protocol
+checks. Both Studios/backend/worker and matching browser consumers compile with
+**zero owned warnings**; upstream classes.pas warnings remain untouched (28 and
+35 respectively). The new `resource-runtime` gate compiles reusable Pascal
+server/client tools and two actual wrappers; HTTP execution requires an explicitly
+owned test home. Origin-bound markers refuse ordinary Studio roots before test
+claim/commit or enrollment. Development writable-runtime and enrollment roots
+stay separate from borrowed current compiler sources.
+
+Evidence: ignored `build/resource-runtime-producer/application-final.log`,
+`workflow-final.log`, `producer-final.log`, `http-20261008-072117.log` (51 checks),
+`http-20261008-072632.log` (55 checks), and private runtime qualification captures.
+The exact maintained host identity and runtime are in `server-process.json`.
+Protected preservation records are kept privately beside the existing guard.
+
+Current permissions allowed a fresh isolated listener and browser after the
+historical automatic-review refusal; no new rejection occurred. This was tested
+with separate storage/enrollment, not primary replacement. The installed LAN
+still serves `6fc231e`; its fifteen actual handles do not become current source
+from this isolated authentication. No user enrollment, active project pair,
+primary process or cleanup changed. Protected **15 exact process identities /
+9 complete pairs / 229 sealed files** passed at **2026-10-08T11:31:31.6559152Z**;
+the isolated test host was retired by exact recorded identity beforehand.
+
+Resource no-closure alone advances **8→9**, other owners stay **22/37/19/28/2**.
+End stand-alone producer expansion. Return to **ordinary observing Studio and
+compiled iframe lifetime across chrome/compact refresh**, then current-source
+LAN/phone rollout under the original resource/workflow/deployment owners.
+Current compiled-frame MoveHost may detach/reload an iframe and restart sequence
+one using the old grant; this lifecycle remains unqualified and needs an explicit
+solution. Persistent browser cache/CORS/security-context execution, background/
+restore behavior, runtime reload/cancel, hosted media, richer manual row paths,
+other native systems, performance and complete product/parity remain open.
+No accepted breadth/parity task moves to DONE. Exact push/clean receipt:
+`build/resource-runtime-producer/remote-checkpoint.json`.
+
 ## Current return path: typed runtime resource observations — 2026-10-08
+
+Historical packet; authenticated preview producers above supersede its next action.
 
 Previous `3926bf4` is exactly pushed. This solo continuation delivers **progress**
 on resource criterion 5 with criteria 3/6 consumers, plus preparation consumed by

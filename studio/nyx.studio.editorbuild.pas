@@ -33,7 +33,7 @@ type
   { Closed query scope and reply purpose, independent of target widgets. A
     cancellation receipt must never be mistaken for a status/result reply. }
   TNyxCompilerJobFilter = (cjfActive, cjfAll);
-  TNyxCompilerOperation = (coNone, coOutputs, coProfile, coRequest, coStatus, coCancel, coJobs);
+  TNyxCompilerOperation = (coNone, coOutputs, coProfile, coRequest, coStatus, coCancel, coJobs, coPreview);
   { Distinct open identities prevent accidental use of a document root as an
     output profile, operation receipt or compiler job. Empty records mean unset.
     Factories validate text; the service still rechecks identity and currentness. }
@@ -95,6 +95,9 @@ function NyxCompilerJobs(AFilter: TNyxCompilerJobFilter = cjfActive;
   uninitialized observer value rather than an accepted serialized operation. }
 function ParseNyxCompilerOperation(const AMode: TNyxText): TNyxCompilerOperation;
 function NyxCompilerStatus(const AJob: TNyxBuildJobRef; AOffset: Integer = 0): TNyxDataValue;
+{ Private editor launch admission, deliberately absent from public MCP schema.
+  Returns current compiler metadata plus a transient producer configuration. }
+function NyxCompilerPreview(const AJob: TNyxBuildJobRef; ARevision: Integer): TNyxDataValue;
 { Strongly typed cancellation authoring. It changes execution only, never the
   accepted pair or Undo history. Revision belongs to the current project, so a
   deliberately cancelled earlier-source job still requires fresh context. }
@@ -268,11 +271,11 @@ end;
 function ParseNyxCompilerOperation(const AMode: TNyxText): TNyxCompilerOperation;
 const
   CModes: array[TNyxCompilerOperation] of TNyxText =
-    ('', 'outputs', 'profile', 'request', 'status', 'cancel', 'jobs');
+    ('', 'outputs', 'profile', 'request', 'status', 'cancel', 'jobs', 'preview');
 var
   LOperation: TNyxCompilerOperation;
 begin
-  for LOperation := coOutputs to coJobs do
+  for LOperation := coOutputs to coPreview do
   begin
 
     if CModes[LOperation] = AMode then
@@ -307,6 +310,17 @@ begin
   Result := NyxObject([NyxField('mode', NyxData('status')),
     NyxField('job', NyxData(AJob.ID)), NyxField('offset', NyxData(AOffset)),
     NyxField('limit', NyxData(20))]);
+end;
+
+function NyxCompilerPreview(const AJob: TNyxBuildJobRef; ARevision: Integer): TNyxDataValue;
+begin
+
+  if (AJob.ID = '') or (ARevision < 1) then
+  begin
+    raise ENyxModel.Create('Preview admission requires its exact job and revision');
+  end;
+  Result := NyxObject([NyxField('mode', NyxData('preview')),
+    NyxField('job', NyxData(AJob.ID)), NyxField('expectedRevision', NyxData(ARevision))]);
 end;
 
 function NyxCompilerCancel(const AJob: TNyxBuildJobRef; ARevision: Integer;

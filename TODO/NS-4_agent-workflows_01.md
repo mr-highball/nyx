@@ -15,7 +15,24 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
-Runtime observation progress (2026-10-08): trusted host capabilities now enroll,
+Launched runtime progress (2026-10-08): current-source isolated MCP initialization,
+discovery, grouped semantic composition, real build jobs and private operator
+launch admission now exercise six browser/Win32 application/page/reusable
+producers. Status-only wire, bounded retries, thin unchanged heartbeats and real
+lease expiry qualify automatic transport; public tools cannot mint/expose private
+credentials. Actual HTTP passes 55 checks, leak-free, including observed editor
+packets and nonfatal diagnostic refusal. Application checks pass 81, suspended
+semantic/protocol and exact-source checks 76/7. Both Studios/backend/worker
+compile with zero owned warnings; the active LAN/enrollment/pairs remain intact.
+
+No workflow closure/count/credit changes; resource no-closure alone advances
+8→9. Return to ordinary observing Studio/compiled iframe refresh lifetime and
+current-source LAN/phone rollout. A retained frame can detach/reload and restart
+with its old grant; this is not qualified by standalone preview execution.
+Persistent browser caching, runtime reload/cancel and full parity remain original
+outcomes. See [the packet](../WORK.md#current-return-path-authenticated-preview-resource-producers--2026-10-08).
+
+Previous runtime observation progress (2026-10-08): trusted host capabilities now enroll,
 publish and retire immutable actual load/cache reports at one exact revision,
 resource catalog, target and scope. Existing read-only `nyx_resources` modes
 `runtimes`/`runtime` expose eight bounded run summaries and sequence-aware pages

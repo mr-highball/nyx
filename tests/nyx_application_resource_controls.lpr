@@ -41,6 +41,7 @@ uses
   nyx.studio.session,
   nyx.studio.agentview,
   nyx.studio.view,
+  nyx.studio.runtimeclient,
   nyx.resources.runtime.view,
   nyx.binding.types,
   nyx.resources,
@@ -302,9 +303,16 @@ begin
 end;
 
 procedure TJourney.ReportRuntime;
+var
+  LOriginal: INyxResourceRuntimeSnapshot;
+  LDecoded: INyxResourceRuntimeSnapshot;
 begin
-  FRuntimeAgent.PublishResourceRuntime(FObservation,
-    NyxApplicationResourceDiagnostics(FResources).CaptureRuntime);
+  LOriginal := NyxApplicationResourceDiagnostics(FResources).CaptureRuntime;
+  LDecoded := DecodeNyxResourceRuntime(EncodeNyxResourceRuntime(LOriginal), FDocument.Resources);
+  Check((LDecoded.Page(0, 1).ToJSON = LOriginal.Page(0, 1).ToJSON) and
+    LDecoded.MatchesDeclarations(FDocument.Resources),
+    'private runtime wire preserves actual control load/cache and exact variant declarations');
+  FRuntimeAgent.PublishResourceRuntime(FObservation, LDecoded);
 end;
 
 procedure TJourney.StartObservation;

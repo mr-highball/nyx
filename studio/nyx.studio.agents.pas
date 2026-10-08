@@ -106,6 +106,7 @@ type
     FRootRemovals: array of INyxRootRemoval;
     FRootReviewSerial: Integer;
     function ResourceRuntimeReports: TNyxDataValue;
+    function GetPendingDraft: Boolean;
     function ResourceRuntimeQuery(const AArguments: TNyxDataValue): TNyxDataValue;
     procedure Changed;
     procedure RequireRevision(const AArguments: TNyxDataValue);
@@ -225,6 +226,8 @@ type
       This is not a semantic tool or editor command and creates no revision/history. }
     procedure InheritPermission(AValue: TNyxAgentPermission);
     property Revision: Integer read FRevision;
+    { Exact source-pair draft state, read without logging a semantic operation. }
+    property PendingDraft: Boolean read GetPendingDraft;
     property Permission: TNyxAgentPermission read FPermission;
   end;
 

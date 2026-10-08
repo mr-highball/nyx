@@ -526,7 +526,15 @@ begin
     { A successful download still requires another exact-context currentness
       query. This callback never authorizes execution from an older snapshot. }
     BuildStage := nbsPreviewActivate;
-    Bridge.BuildStatus(AcceptedBuildJob);
+
+    if Bridge.State.CanReportRuntime then
+    begin
+      Bridge.PreviewGrant(AcceptedBuildJob);
+    end
+    else
+    begin
+      Bridge.BuildStatus(AcceptedBuildJob);
+    end;
   except
     on LException: Exception do
     begin
@@ -1211,7 +1219,14 @@ begin
 
             if FCurrentProject = AProject then
             begin
-              AProject.CompiledPreview.Launch;
+              if NyxAgentHas(LReply, 'runtime') then
+              begin
+                AProject.CompiledPreview.Launch(LReply.Field('runtime'));
+              end
+              else
+              begin
+                AProject.CompiledPreview.Launch;
+              end;
               AProject.BuildMessage := 'Compiled preview running';
             end
             else

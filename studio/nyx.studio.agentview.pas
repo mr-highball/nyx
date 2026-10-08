@@ -31,8 +31,9 @@ uses
   nyx.studio.workspaces, nyx.studio.editorbuild;
 
 type
-  { Immutable-by-copy observer presentation. No transport credentials, borrowed
-    widgets or references to the active document appear in this record. }
+  { Immutable-by-copy private editor presentation. No editor/MCP credential,
+    borrowed widget or document reference is retained. A private BuildReply may
+    carry a transient producer grant; never export this record as design data. }
   TNyxStudioAgentView = record
     Connected: Boolean;
     Busy: Boolean;
@@ -47,6 +48,9 @@ type
     { At most eight trusted runtime summaries, without payloads or authority.
       Empty means no host has enrolled; authored defaults are not observations. }
     ResourceRuntimes: TNyxDataValue;
+    { Negotiated with the connected service; older servers keep ordinary preview
+      execution without requesting a reporting operation they do not expose. }
+    CanReportRuntime: Boolean;
     { Operator-only bounded review summaries; no transport owner credentials or
       user document buffers. Preview links show independent, live review views. }
     Reviews: TNyxDataValue;

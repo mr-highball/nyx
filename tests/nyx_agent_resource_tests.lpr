@@ -31,7 +31,7 @@ uses SysUtils, nyx.text, nyx.data, nyx.bytes, nyx.types, nyx.controls,
   nyx.studio.projects, nyx.studio.agents, nyx.studio.resourceedits,
   nyx.studio.transactions, nyx.studio.edits
   {$ifdef PAS2JS}, Web{$else}, Classes, nyx.studio.mcp, nyx.studio.directories,
-  nyx.studio.outputs, nyx.studio.workspaces{$endif};
+  nyx.studio.outputs, nyx.studio.workspaces, nyx.test.resource.runtime{$endif};
 
 const
   COriginal: TNyxText = '{ "literal.dot": "Ready 🌙", "prompt": "Your project", "price": 9007199254740993.1250, "items": [true, null] }';
@@ -588,6 +588,9 @@ begin
     {$endif}
     try
       Run;
+      {$ifndef PAS2JS}
+      Inc(GChecks, RunNyxResourceRuntimeProtocol);
+      {$endif}
       WriteLn('PASS ', GChecks, ' resource semantic checks');
       {$ifdef PAS2JS}document.body.setAttribute('data-test-result', 'passed');{$endif}
     finally

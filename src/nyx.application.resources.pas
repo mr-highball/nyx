@@ -188,12 +188,23 @@ type
     procedure Localize(const ALocale, AFallback: TNyxLocaleRef);
   end;
 
+const
+  { Complete status-only reports allow worst-case JSON diagnostic escaping for
+    all 128 variants; semantic query pages retain their separate 40-KiB budget. }
+  NyxMaximumRuntimeReportBytes = 2 * 1024 * 1024;
+
 function NyxApplicationResourceOptions: TNyxApplicationResourceOptions;
 function NyxApplicationResourceDiagnostics(
   const AResources: INyxApplicationResources): INyxApplicationResourceDiagnostics;
 function NyxResourcePhaseName(AValue: TNyxApplicationResourcePhase): TNyxText;
 function NyxResourceOriginName(AValue: TNyxResourceLoadOrigin): TNyxText;
 function NyxResourceCacheUseName(AValue: TNyxResourceCacheUse): TNyxText;
+{ Explicit private reporting boundary. Payloads never cross this wire. Decode
+  requires the complete trusted declaration catalog and exact variant membership;
+  diagnostic text uses the same bounded Unicode windows as semantic pages. }
+function EncodeNyxResourceRuntime(const ASnapshot: INyxResourceRuntimeSnapshot): TNyxDataValue;
+function DecodeNyxResourceRuntime(const AData: TNyxDataValue;
+  const ADeclarations: INyxResources): INyxResourceRuntimeSnapshot;
 { Refuses an alternative owner without coordinated publication support. }
 function NyxPreparedApplicationResources(const AResources: INyxApplicationResources): INyxPreparedApplicationResources;
 function NewNyxApplicationResources(const ADeclarations: INyxResources;
@@ -201,6 +212,8 @@ function NewNyxApplicationResources(const ADeclarations: INyxResources;
   const AResolver: INyxResourceResolver = nil): INyxApplicationResources;
 
 implementation
+
+uses nyx.editing;
 
 type
   TApplicationResources = class;

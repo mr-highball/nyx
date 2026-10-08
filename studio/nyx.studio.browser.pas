@@ -84,7 +84,7 @@ uses
 type
   { Transport operation is closed and independent of application build targets. }
   TNyxProjectOperation = (npoOpen, npoSave);
-  TNyxBrowserBuildStage = (bbsIdle, bbsOutputs, bbsRequest, bbsPolling, bbsTerminal);
+  TNyxBrowserBuildStage = (bbsIdle, bbsOutputs, bbsRequest, bbsPolling, bbsPreviewGrant, bbsTerminal);
   { Browser shell for the portable Studio session. The shell itself is a Nyx
     document: palette, hierarchy, properties and actions are built with the same
     fluent controls it designs. The canvas and editor are reusable Nyx authoring
@@ -2831,7 +2831,7 @@ begin
     Exit;
   end;
 
-  if FBuildStage in [bbsOutputs, bbsRequest, bbsPolling] then
+  if FBuildStage in [bbsOutputs, bbsRequest, bbsPolling, bbsPreviewGrant] then
   begin
     FStatus := 'A build is already running';
     Refresh;
@@ -3043,7 +3043,15 @@ begin
 
               if LArtifact.Target = btBrowser then
               begin
-                FCompiledURL := LReply.Field('artifact').AsText;
+                if LState.CanReportRuntime then
+                begin
+                  FBuildStage := bbsPreviewGrant;
+                  FAgents.PreviewGrant(FBuildJob);
+                end
+                else
+                begin
+                  FCompiledURL := LArtifact.RelativePath;
+                end;
               end
               else
               begin
@@ -3058,6 +3066,19 @@ begin
               FSourceTab := nstMessages;
             end;
           end;
+        end;
+      bbsPreviewGrant:
+        begin
+
+          if (LState.BuildReplyKind <> coPreview) or not FAgents.SourceSynchronized or
+            (FPendingDesign <> FSession.Save) or (FPendingSource <> FSession.Source) or
+            (FBuildOutput <> FOutputs.Encode) then
+          begin
+            raise ENyxModel.Create('Project changed before compiled preview launch');
+          end;
+          LArtifact := AdmitNyxCompiledArtifact(LReply);
+          FCompiledURL := LArtifact.RelativePath + NyxStudioRuntimeFragment(LReply.Field('runtime'));
+          FBuildStage := bbsTerminal;
         end;
       bbsIdle, bbsTerminal:
         begin

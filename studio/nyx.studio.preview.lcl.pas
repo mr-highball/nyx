@@ -27,7 +27,7 @@ unit nyx.studio.preview.lcl;
 interface
 
 uses
-  Classes, ExtCtrls, Process, nyx.text, nyx.studio.preview, nyx.studio.transport;
+  Classes, ExtCtrls, Process, nyx.text, nyx.data, nyx.studio.preview, nyx.studio.transport;
 
 type
   TNyxPreviewPrepared = procedure(ASucceeded: Boolean; const AError: TNyxText) of object;
@@ -70,7 +70,10 @@ type
     procedure Cancel;
     { Requires a successful preparation. Arguments/shell commands are absent.
       Launch failure retains the previous owned native process. }
-    procedure Launch;
+    procedure Launch; overload;
+    { Private observation context is supplied only after fresh editor admission.
+      Browser uses a fragment; native uses only its owned child's environment. }
+    procedure Launch(const AObservation: TNyxDataValue); overload;
     { Stops only the process handle this adapter created. Never touches another
       Studio, compiler server or independently launched user application. }
     procedure Stop;
@@ -355,8 +358,16 @@ begin
 end;
 
 procedure TNyxLCLCompiledPreview.Launch;
+begin
+  Launch(NyxNull);
+end;
+
+procedure TNyxLCLCompiledPreview.Launch(const AObservation: TNyxDataValue);
 var
   LCandidate: TProcess;
+  LURL: TNyxText;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
 begin
 
   if not FReady then
@@ -366,8 +377,14 @@ begin
 
   if FArtifact.Target = btBrowser then
   begin
+    LURL := FBase + '/' + FArtifact.RelativePath;
 
-    if not OpenURL(FBase + '/' + FArtifact.RelativePath) then
+    if AObservation.Kind <> ndNull then
+    begin
+      LURL := LURL + NyxStudioRuntimeFragment(AObservation);
+    end;
+
+    if not OpenURL(LURL) then
     begin
       raise Exception.Create('The system browser could not open the compiled preview');
     end;
@@ -379,6 +396,24 @@ begin
     LCandidate.Executable := FFile;
     LCandidate.CurrentDirectory := ExtractFileDir(FFile);
     LCandidate.Options := [poNoConsole];
+
+    if AObservation.Kind <> ndNull then
+    begin
+      SetLength(LFields, AObservation.Count + 1);
+      for LIndex := 0 to AObservation.Count - 1 do
+      begin
+        LFields[LIndex] := NyxField(AObservation.Key(LIndex),
+          AObservation.Field(AObservation.Key(LIndex)));
+      end;
+      LFields[High(LFields)] := NyxField('origin', NyxData(FBase));
+      { Preserve normal inherited process environment. Never change the Studio
+        host's global environment or pass a capability as a shell argument. }
+      for LIndex := 1 to GetEnvironmentVariableCount do
+      begin
+        LCandidate.Environment.Add(GetEnvironmentString(LIndex));
+      end;
+      LCandidate.Environment.Values['NYX_STUDIO_RESOURCE_REPORT'] := NyxObject(LFields).ToJSON;
+    end;
     LCandidate.Execute;
     Stop;
     FProcess := LCandidate;

@@ -65,6 +65,10 @@ type
       containing development repository is allowed when those locations are outside
       its build/release subtree. Returns a copy; prior jobs retain their roots. }
     function EnrollingProject(const AProject: TNyxText): TNyxStudioDirectories;
+    { Copied host configuration separates development sources from private job,
+      project and recovery storage too. No paths are created. Release callers
+      retain their stricter disjoint-root admission. }
+    function RunningIn(const ARuntime: TNyxText): TNyxStudioDirectories;
     { Recheck role separation and ordinary release/runtime/enrollment ancestors
       before a host creates files. Does not rehash a release or change any path. }
     procedure Validate;
@@ -147,6 +151,13 @@ function TNyxStudioDirectories.EnrollingProject(const AProject: TNyxText): TNyxS
 begin
   Result := Self;
   Result.FEnrollmentRoot := NormalizeDirectory(AProject);
+  Result.Validate;
+end;
+
+function TNyxStudioDirectories.RunningIn(const ARuntime: TNyxText): TNyxStudioDirectories;
+begin
+  Result := Self;
+  Result.FRuntimeRoot := NormalizeDirectory(ARuntime);
   Result.Validate;
 end;
 

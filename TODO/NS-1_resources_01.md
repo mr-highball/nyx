@@ -42,6 +42,32 @@ evidence. Existing packed PNG/JPEG and typed scalar/collection engines are input
   visible paired operations retain user work; rendered/trusted-input evidence is
   reported separately from document API and compiler success.
 
+## Authenticated launched producers — 2026-10-08
+
+Criterion 5 now has private exact-build launch grants, status-only typed wire,
+automatic browser/native wrapper sampling, bounded transport/retries/heartbeats
+and real monotonic expiry. Existing criteria 3/6 consume the reports through
+semantic queries and the observing editor protocol. Public tools do not grant
+producer authority. Original interfaces, ownership and semantic page budgets
+remain retained; drafts and paired revisions revoke/refuse reporting.
+
+Actual HTTP qualification passes 55 checks, leak-free, across six separately
+launched application/page/reusable consumers on Win32 and browser. It uses MCP
+composition/builds, actual hosted binding/cache evidence, unchanged heartbeats,
+real stopped-process expiry, observing packets and both-target nonfatal reporter
+refusal. A fluent resource selector fix resolves an actual generated browser
+failure. Application checks pass 81; semantic/protocol and source checks 76/7.
+Both Studios/backend/worker compile with zero owned warnings. Isolated current
+MCP discovery is qualified; existing LAN/enrollment/project pairs are unchanged.
+
+No full criterion/task/credit/percentage closes. Resource no-closure alone
+advances 8→9, other owners remain 22/37/19/28/2. End standalone producer expansion
+and return to ordinary observing Studio/compiled-frame refresh lifetime, then
+current-source deployment/phone parity. Iframe detachment may restart an old
+grant's sequence; persistent browser cache, reload/cancel, hosted media, richer
+manual row paths, other native systems and complete performance/parity remain
+open. See [the packet](../WORK.md#current-return-path-authenticated-preview-resource-producers--2026-10-08).
+
 ## Typed runtime observation consumer — 2026-10-08
 
 Criterion 5 now has immutable optional application diagnostics, latest-attempt
