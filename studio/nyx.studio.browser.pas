@@ -38,7 +38,9 @@ uses
   nyx.content.editor,
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.browser,
-  nyx.resources, nyx.resources.editor, nyx.resources.import, nyx.resources.import.browser,
+  nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
+  nyx.resource.context,
+  nyx.resources.import, nyx.resources.import.browser,
   Classes,
   SysUtils,
   JS,
@@ -727,6 +729,7 @@ begin
   LState.ResourcesVisible := FViewState.ResourcesVisible;
   LState.ResourceSelection := FViewState.ResourceSelection;
   LState.ResourceEditorDraft := FViewState.ResourceEditorDraft;
+  LState.ResourceRowsDraft := FViewState.ResourceRowsDraft;
   LState.CallbackRemoval := FCallbackRemoval;
 
   if FRootRemoval <> nil then
@@ -753,6 +756,12 @@ begin
   FViewState.ContentEditorDraft.Restore(Result.Pages[0]);
   FViewState.ThemeEditorDraft.Restore(Result.Pages[0]);
   FViewState.ImageEditorDraft.Restore(Result.Pages[0]);
+
+  if not FViewState.ResourceRowsDraft.Restore(Result.Pages[0]) and
+    (Result.Pages[0].Find('studio-resource-rows') <> nil) then
+  begin
+    FViewState.ResourceRowsDraft.Clear;
+  end;
 
   if not FViewState.ResourceEditorDraft.Restore(Result.Pages[0]) and
     (Result.Pages[0].Find('studio-resource-editor') <> nil) then
@@ -898,6 +907,7 @@ begin
   FViewState.ThemeEditorDraft.Capture('studio-theme-editor', FShellRenderer.Root);
   FViewState.ImageEditorDraft.Capture('inspector-image', FShellRenderer.Root);
   FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.Root);
+  FViewState.ResourceRowsDraft.Capture('studio-resource-rows', FShellRenderer.Root);
 end;
 
 procedure TNyxStudio.Refresh(ARetainCanvas, APreserveDraft: Boolean);
@@ -1136,7 +1146,8 @@ begin
       not FCanvasRenderer.TryRefresh(FSession.Document, FSession.ActiveView,
         not FPreview, FCanvasRestores) then
     begin
-      FCanvasRenderer.Render(FSession.Document, FSession.ActiveView, LCanvas, not FPreview);
+      FCanvasRenderer.Render(FSession.Document, FSession.ActiveView, LCanvas,
+        not FPreview, nil, nil, nrmAuthoredDefaults);
     end;
     FCanvasRenderer.Select(FSession.SelectedID);
   end
@@ -1146,7 +1157,8 @@ begin
   end
   else if (LCanvas <> nil) and (FSession.ActiveView <> nil) then
   begin
-    FCanvasRenderer.Render(FSession.Document, FSession.ActiveView, LCanvas, not FPreview);
+    FCanvasRenderer.Render(FSession.Document, FSession.ActiveView, LCanvas,
+      not FPreview, nil, nil, nrmAuthoredDefaults);
     FCanvasRenderer.Select(FSession.SelectedID);
   end;
 
@@ -2072,6 +2084,16 @@ begin
     begin
       FViewState.ResourcesVisible := not FViewState.ResourcesVisible;
       Refresh(True, True);
+      Exit;
+    end;
+
+    if ((AEvent.Trigger = ntChange) and
+      NyxResourceRowsInput(ANode, FShellRenderer.Root, LResourceEditor)) or
+      ((AEvent.Trigger = ntClick) and HandleNyxResourceRowsEditor(ANode, FShellRenderer.Root)) then
+    begin
+      FViewState.ResourceRowsDraft.Capture('studio-resource-rows', FShellRenderer.Root);
+      FShellRenderer.Sync;
+      SavePresentation;
       Exit;
     end;
 
@@ -3898,6 +3920,7 @@ begin
   LValue.ResourcesVisible := FViewState.ResourcesVisible;
   LValue.ResourceSelection := FViewState.ResourceSelection;
   LValue.ResourceDraft := FViewState.ResourceEditorDraft;
+  LValue.ResourceRowsDraft := FViewState.ResourceRowsDraft;
   { Read the live mounted panes at departure. The cached positions reflect the
     preceding shell refresh and may precede the operator's most recent scroll. }
   LPane := MountedStudioElement(FShellRenderer, 'studio-left');
@@ -3970,6 +3993,7 @@ begin
   FViewState.ResourcesVisible := False;
   FViewState.ResourceSelection := NyxNewResourceSelection;
   FViewState.ResourceEditorDraft.Clear;
+  FViewState.ResourceRowsDraft.Clear;
 
   if not FRecoveryEnabled then
   begin
@@ -4016,6 +4040,7 @@ begin
     FViewState.ResourcesVisible := LValue.ResourcesVisible;
     FViewState.ResourceSelection := LValue.ResourceSelection;
     FViewState.ResourceEditorDraft := LValue.ResourceDraft;
+    FViewState.ResourceRowsDraft := LValue.ResourceRowsDraft;
     FLeftScroll := LValue.LeftScroll;
     FRightScroll := LValue.RightScroll;
     FAgentsScroll := LValue.AgentsScroll;

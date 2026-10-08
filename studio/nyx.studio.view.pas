@@ -41,6 +41,7 @@ uses
   nyx.theme.editor,
   nyx.image.editor,
   nyx.resources.editor,
+  nyx.resources.rows.editor,
   nyx.contract,
   nyx.schema,
   nyx.types,
@@ -152,6 +153,7 @@ type
     ResourcesVisible: Boolean;
     ResourceSelection: TNyxResourceEditorSelection;
     ResourceEditorDraft: TNyxResourceEditorDraft;
+    ResourceRowsDraft: TNyxResourceRowsDraft;
     CallbackRemoval: TNyxCallbackRemoval;
     { Copied confirmation metadata, not an interface or borrowed model. }
     RootRemoval: TNyxDataValue;
@@ -1065,6 +1067,8 @@ begin
     try
       LLeft.Add(NewNyxResourceEditor('studio-resource-editor', ASession.Document.Resources,
         AState.ResourceSelection, ASession.Selected, LSelectedProjection));
+      LLeft.Add(NewNyxResourceRowsEditor('studio-resource-rows', ASession.Document.Resources,
+        ASession.Document.Collections));
     finally
       LSelectedProjection.Free;
     end;

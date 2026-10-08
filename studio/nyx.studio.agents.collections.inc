@@ -275,6 +275,7 @@ var
   LOther: Integer;
   LCount: Integer;
   LChoice: Integer;
+  LResourceRows: TNyxResourceRows;
   LNode: TNyxNode;
   LRoot: TNyxNode;
   LProjection: TNyxNode;
@@ -339,6 +340,14 @@ begin
         SetLength(LValues, Length(LValues) + 1);
         LValues[High(LValues)] := NyxObject([NyxField('key', NyxData(LKey.Name)),
           NyxField('fields', NyxData(LData.Schema.Count)), NyxField('rows', NyxData(LData.Count))]);
+
+        if NyxCollectionResourceSource(FSession.Document.Collections, LKey, LResourceRows) then
+        begin
+          LValues[High(LValues)] := WithResults(LValues[High(LValues)],
+            NyxData('resource-schema-seed'), 'origin');
+          LValues[High(LValues)] := WithResults(LValues[High(LValues)],
+            NyxData(LResourceRows.Reference.Name), 'resource');
+        end;
       end;
       Inc(LTotal);
     end;
@@ -671,4 +680,10 @@ begin
     NyxField('key', NyxData(LKey.Name)), NyxField('offset', NyxData(LOffset)),
     NyxField('nextOffset', NyxData(Min(LOffset + LCount, LTotal))),
     NyxField('total', NyxData(LTotal)), NyxField(LName, NyxArray(LValues))]);
+
+  if NyxCollectionResourceSource(FSession.Document.Collections, LKey, LResourceRows) then
+  begin
+    Result := WithResults(Result, NyxData('resource-schema-seed'), 'origin');
+    Result := WithResults(Result, NyxData(LResourceRows.Reference.Name), 'resource');
+  end;
 end;

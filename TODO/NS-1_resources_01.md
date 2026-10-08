@@ -42,6 +42,25 @@ evidence. Existing packed PNG/JPEG and typed scalar/collection engines are input
   visible paired operations retain user work; rendered/trusted-input evidence is
   reported separately from document API and compiler success.
 
+## Common saved row authoring — 2026-10-08
+
+Criterion 6 now has the common public Nyx form in both controllers, normal paired
+source admission, exact baseline/draft handling, bounded semantic source/schema
+queries and typed define/detach groups. Static conversion is explicit; detach
+retains authored rows and bindings. State/MCP contexts identify empty source seeds.
+Native ordinary Studio passes 123, exact source 7, ownership/migration 253,
+semantic 55/7, mappings 81, live frames 112 and exact full/page/reusable builders
+eight each, leak-free. Desktop/narrow native captures are inspected. Browser
+consumers and both Studios/backend/worker compile with zero owned warnings;
+current-source browser/phone/observing parity is still unqualified.
+
+No full criterion/task/credit/percentage closes. Resource no-closure alone
+advances 6→7; other owners remain 22/37/19/28/2. End saved-recipe fixtures and
+return to bounded actual load/cache diagnostics with explicit observation
+authority. Richer manual paths, hosted media, deployment and complete parity/
+performance remain open. See
+[current evidence](../WORK.md#current-return-path-common-saved-row-authoring--2026-10-08).
+
 ## Joint live application frames — 2026-10-08
 
 Criteria 3/4/5 now have both hosts and standalone renderers consuming prepared

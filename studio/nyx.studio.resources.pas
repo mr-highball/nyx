@@ -39,7 +39,8 @@ function NewNyxStudioResourcePatch(
 implementation
 
 uses SysUtils, nyx.types, nyx.model, nyx.catalog,
-  nyx.resources, nyx.binding, nyx.composition, nyx.studio.resourceedits;
+  nyx.resources, nyx.binding, nyx.composition, nyx.studio.resourceedits,
+  nyx.resources.rows, nyx.collections, nyx.collections.codec;
 
 type
   TResourcePatch = class(TInterfacedObject, INyxDesignPatch)
@@ -110,6 +111,23 @@ begin
     raise ENyxResource.Create('Resources changed; review the current files before applying');
   end;
 
+  if FChange.Operation in [reoRows, reoDetachRows] then
+  begin
+
+    if EncodeNyxCollectionDefaults(ADocument.Collections) <> FChange.CollectionBaseline then
+    begin
+      raise ENyxResource.Create('Collections changed; review the resource relationship before applying');
+    end;
+
+    if FChange.Operation = reoRows then
+    begin
+      Exit(NyxResourcePatch([NyxDefineResourceRows(NyxCollection(FChange.CollectionName),
+        TNyxResourceRows.FromData(FChange.RowsData), FChange.ReplaceStatic)]).Candidate(ADocument, ACatalog));
+    end;
+    Exit(NyxResourcePatch([NyxDetachResourceRows(NyxCollection(FChange.CollectionName))])
+      .Candidate(ADocument, ACatalog));
+  end;
+
   if FChange.Bind then
   begin
     LOwner := ADocument.Find(FChange.Owner);
@@ -136,6 +154,10 @@ begin
         NyxResourceFromData(FChange.DefinitionData));
     reoRemove:
       LChanges[0] := NyxRemoveResource(FChange.Selection.Reference, FChange.Selection.Locale);
+    reoRows, reoDetachRows:
+      begin
+        raise ENyxResource.Create('Saved row proposal must use its guarded collection branch');
+      end;
   end;
 
   if FChange.Bind then

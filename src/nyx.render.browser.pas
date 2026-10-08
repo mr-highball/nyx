@@ -251,7 +251,8 @@ type
       AHost: TJSHTMLElement; ADesignMode: Boolean; AState: TNyxState;
       const ACollections: INyxCollectionBindings; const AFrame: TNyxViewFrame;
       const AMeasurements: INyxContainerSnapshot; AKeepPresentation: Boolean;
-      const AStates: TNyxContentFaceStates);
+      const AStates: TNyxContentFaceStates;
+      AResourceMode: TNyxResourceRenderMode = nrmConfigured);
     function ReadPresentationSelection: TNyxPresentationSelection;
     function GetPresentationView: INyxPresentationView;
     procedure SetResourceContext(const AContext: INyxResourceContext);
@@ -348,7 +349,8 @@ type
     function Capability(ANode: TNyxNode): TNyxCapability;
     procedure Render(ADocument: TNyxDocument; ARoot: TNyxNode;
       AHost: TJSHTMLElement; ADesignMode: Boolean = False; AState: TNyxState = nil;
-      const ACollections: INyxCollectionBindings = nil);
+      const ACollections: INyxCollectionBindings = nil;
+      AResourceMode: TNyxResourceRenderMode = nrmConfigured);
     { Same portable retained-projection guard as LCL. Stage independent current
       context/root/theme; only supported scalar presentation may reuse DOM,
       bindings and event scopes. False changes nothing and requests Render.
@@ -1892,7 +1894,7 @@ end;
 
 procedure TNyxBrowserRenderer.Render(ADocument: TNyxDocument; ARoot: TNyxNode;
   AHost: TJSHTMLElement; ADesignMode: Boolean; AState: TNyxState;
-  const ACollections: INyxCollectionBindings);
+  const ACollections: INyxCollectionBindings; AResourceMode: TNyxResourceRenderMode);
 begin
 
   if (FLiveBindings <> nil) and FLiveBindings.ResourcePublicationBusy then
@@ -1915,7 +1917,7 @@ begin
   try
     RenderFrame(ADocument, ARoot, AHost, ADesignMode, AState, ACollections,
       TNyxViewFrame.At(AHost.clientWidth, AHost.clientHeight, npfBrowser),
-      nil, False, nil);
+      nil, False, nil, AResourceMode);
   finally
     FPublishingContent := False;
   end;
@@ -1926,7 +1928,7 @@ procedure TNyxBrowserRenderer.RenderFrame(ADocument: TNyxDocument; ARoot: TNyxNo
   AHost: TJSHTMLElement; ADesignMode: Boolean; AState: TNyxState;
   const ACollections: INyxCollectionBindings; const AFrame: TNyxViewFrame;
   const AMeasurements: INyxContainerSnapshot; AKeepPresentation: Boolean;
-  const AStates: TNyxContentFaceStates);
+  const AStates: TNyxContentFaceStates; AResourceMode: TNyxResourceRenderMode);
 var
   LCandidate: TNyxBrowserRenderer;
   LStyle: TJSHTMLElement;
@@ -1997,7 +1999,11 @@ begin
     end;
     repeat
       LCandidate := TNyxBrowserRenderer.Create(FTheme);
-      LCandidate.FResourceContext := FResourceContext;
+
+      if AResourceMode = nrmConfigured then
+      begin
+        LCandidate.FResourceContext := FResourceContext;
+      end;
       LCandidate.FPublishingContent := True;
       LCandidate.FDetachedCandidate := True;
       LCandidate.FStagingMeasurements := LMeasurements;
@@ -2029,7 +2035,7 @@ begin
       LCandidate.FPresentationSelection := AFrame.Selection;
       LCandidate.FRoot := RealizeNyxView(ADocument, ARoot, AFrame, LMeasurements);
 
-      if FResourceContext <> nil then
+      if (AResourceMode = nrmConfigured) and (FResourceContext <> nil) then
       begin
         LCandidate.FRoot.BindResources(FResourceContext.Snapshot,
           FResourceContext.Locale, FResourceContext.Fallback);
@@ -2134,7 +2140,7 @@ begin
       LAllocated := LCandidate.MeasureAllocatedContainers;
       LMeasuredRoot := RealizeNyxView(ADocument, ARoot, AFrame, LAllocated);
 
-      if FResourceContext <> nil then
+      if (AResourceMode = nrmConfigured) and (FResourceContext <> nil) then
       begin
         LMeasuredRoot.BindResources(FResourceContext.Snapshot,
           FResourceContext.Locale, FResourceContext.Fallback);

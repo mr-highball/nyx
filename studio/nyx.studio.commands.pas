@@ -72,6 +72,7 @@ uses
   nyx.studio.resources,
   nyx.theme.editor,
   nyx.resources.editor,
+  nyx.resources.rows.editor,
   nyx.image.editor;
 
 function RouteNyxStudioSource(ASession: TNyxStudioSession; ANode: TNyxNode;
@@ -164,7 +165,9 @@ begin
   AEdit.Selection := ASession.SelectedID;
   AEdit.View := ASession.ActiveViewID;
 
-  if (AEvent = ntClick) and CaptureNyxResourceEditor(ANode, AShellRoot, LResourceChange) then
+  if (AEvent = ntClick) and
+    (CaptureNyxResourceRowsEditor(ANode, AShellRoot, LResourceChange) or
+      CaptureNyxResourceEditor(ANode, AShellRoot, LResourceChange)) then
   begin
 
     if ASession.ProjectSnapshot.Pending then

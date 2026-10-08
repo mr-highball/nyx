@@ -30,6 +30,12 @@ interface
 uses nyx.resources;
 
 type
+  { Full view replacement chooses resource lifetime explicitly. Runtime hosts
+    retain their accepted catalog/locale; designers replay current document
+    defaults. Candidate staging honors the choice without retiring a mounted
+    view or changing its accepted frame when construction fails. }
+  TNyxResourceRenderMode = (nrmConfigured, nrmAuthoredDefaults);
+
   { Immutable portable runtime context. The retained interface owns catalog
     membership and locale choices, never an application/document/view. Snapshot
     returns independent mutable membership; changing it cannot alter this frame.

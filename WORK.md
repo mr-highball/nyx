@@ -9,7 +9,87 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: common saved row authoring — 2026-10-08
+
+Previous `6e38a7f` is exactly pushed. This solo continuation is **progress** on
+resource criterion 6 with criteria 2/3 consumers; no task or percentage closes.
+The concrete deliverable is a common Nyx form plus bounded semantic source
+inspection/mutation and normal paired source/history, rather than more isolated
+live-frame experiments. Native/trusted-control and exact source evidence are
+separate from browser compilation and suspended MCP dispatch.
+
+`NewNyxResourceRowsEditor` uses ordinary public controls and enum roles/actions.
+It copies resource/collection context, discovers bounded structural array/value
+paths, retains saved paths for empty arrays, and edits up to 64 named fields with
+four explicit Pascal families. Opening, new proposals, field edits/removal and
+per-project partial drafts are presentation; Apply/Detach use the same isolated
+resource command as ordinary file/scalar authoring. Catalog and collection
+baselines guard stale admission. Presentation v9 reads strict v2..v8 predecessors;
+row proposals have their own closed v2 descriptor. Source-backed State definitions
+identify their origin and disable static mutations. Existing binding inspectors
+consume the named typed schema. Manual new-empty-array paths and paths outside
+bounded first-row discovery remain fluent/MCP-only pending richer UI authoring.
+
+MCP `nyx_resources` now pages `sources` summaries and `rows` source/identity/schema
+context (8 default, at most 16). Existing collection queries identify empty source
+seeds rather than pretend they are runtime rows. `define-rows`/`detach-rows` use
+typed copied changes and final retained-consumer admission inside the existing
+1..32 group/64 transaction budget. Static conversion needs explicit Boolean
+consent. Detach materializes authored default/fallback rows, retaining schema/key/
+control bindings; it neither fetches a URL nor copies live edits. Related recipes
+and files can appear in either order within one group. Ordinary session revision,
+draft, operator policy, receipts, source reconciliation and paired Undo still own
+publication; no original interface GUID or active design was replaced.
+
+Native common authoring passes **123**, exact emitted file-authoring builder **7**
+and project ownership/migration **253**, leak-free. Actual suspended MCP/resource
+regressions pass **55/7**; maintained mappings pass **81**, joint live consumers
+**112**, and exact full/page/reusable builders **eight each**, leak-free.
+Matching browser consumers, both Studios, backend and worker compile with **zero
+owned warnings**. Mapping/browser gate retains 56 upstream classes.pas warnings;
+semantic workflow retains 35 across five invocations. Dependency source is
+untouched. Native desktop/narrow captures are inspected; they are not browser/
+phone/assistive technology/performance evidence.
+
+Qualification found the real canvas replacement retained an old resource frame
+after new authored bindings. Both renderers now offer typed
+`TNyxResourceRenderMode`: default configured runtime versus explicit authored
+defaults used by both Studio canvases. Hidden candidate preparation honors the
+choice before retiring a mount; the normal document-context refresh guard stays.
+The existing exact caption assertion passes unchanged. Early qualification also
+caught an absent draft needing explicit NyxNull, one missing source enum import,
+a pas2js local helper name collision, and two migration/schema fixtures needing
+the newly declared packet/modes. Failures are retained; strict historical packet
+shapes and context budgets were not weakened.
+
+Evidence: ignored `build/resource-row-editor/native-current.log`,
+`maintained-authoring.log` (123/7; initial migration failure retained),
+`workspace-run.log` (corrected 253), `maintained-workflow2.log`,
+`maintained-mappings.log` and browser compile logs. The authoring gate's remaining
+consumer builds are covered by the complete current workflow/mapping gates;
+physical input is not needlessly repeated after metadata-only fixture changes.
+Native captures: `build/resource-editor/desktop-rows.png` and
+`compact-native-rows.png`. Current protected receipt/log verifies **15 exact
+process identities / 9 complete pairs / 229 sealed files** at
+**2026-10-08T09:47:30.4861833Z**. Native MCP stays revision **2**, original selection/
+view, no draft/history, activity **504**. LAN still serves `6fc231e`.
+The prior automatic review supplied only "blocked by policy" for listener/browser
+launches, primary replacement and temporary cleanup. No equivalent retry,
+enrollment change, active-project replacement or cleanup ran. Suspended public
+dispatch supplies neither current-source HTTP authentication nor observing rollout.
+
+Resource no-closure alone advances **6→7**; other owners remain
+**22/37/19/28/2**. The changed decision path delivered common authoring rather than
+a third live-frame experiment, but whole criteria still require browser/observing
+evidence. End saved-recipe fixtures. Return to **bounded actual runtime loading/
+cache diagnostics with explicit observation authority**, while manual path UI,
+hosted media, release deployment, browser/phone/observing parity, performance and
+complete application/Studio outcomes remain under their existing owners.
+Remote/clean checkpoint receipt will be `build/resource-row-editor/remote-checkpoint.json`.
+
 ## Current return path: joint live resource frames — 2026-10-08
+
+Historical packet; common saved row authoring above supersedes its next-action gap.
 
 Previous **4fcc19a** is exactly pushed. This solo continuation is **progress** on
 resource criteria 3/4/5, not task acceptance. No listener/browser launch, primary

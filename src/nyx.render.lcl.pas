@@ -285,7 +285,8 @@ type
       AHost: TWinControl; ADesignMode: Boolean; AState: TNyxState;
       const ACollections: INyxCollectionBindings; const AFrame: TNyxViewFrame;
       const AMeasurements: INyxContainerSnapshot; AKeepPresentation: Boolean;
-      const AStates: TNyxContentFaceStates);
+      const AStates: TNyxContentFaceStates;
+      AResourceMode: TNyxResourceRenderMode = nrmConfigured);
   private
     FPanel: TNyxLogicalScrollBox;
     FVirtualLayout: Boolean;
@@ -443,7 +444,8 @@ type
       document through an undoable command. Runtime rendering remains default. }
     procedure Render(ADocument: TNyxDocument; ARoot: TNyxNode; AHost: TWinControl;
       ADesignMode: Boolean; AState: TNyxState = nil;
-      const ACollections: INyxCollectionBindings = nil); overload;
+      const ACollections: INyxCollectionBindings = nil;
+      AResourceMode: TNyxResourceRenderMode = nrmConfigured); overload;
     { Stage/validate an independent realized view, then retain native controls
       when only shared supported scalar presentation differs. False changes
       nothing and asks the caller to Render normally. Structure, metadata,
@@ -3642,7 +3644,7 @@ end;
 
 procedure TNyxLCLRenderer.Render(ADocument: TNyxDocument; ARoot: TNyxNode;
   AHost: TWinControl; ADesignMode: Boolean; AState: TNyxState;
-  const ACollections: INyxCollectionBindings);
+  const ACollections: INyxCollectionBindings; AResourceMode: TNyxResourceRenderMode);
 begin
 
   if (FLiveBindings <> nil) and FLiveBindings.ResourcePublicationBusy then
@@ -3665,7 +3667,7 @@ begin
   try
     RenderFrame(ADocument, ARoot, AHost, ADesignMode, AState, ACollections,
       TNyxViewFrame.At(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight), npfNativeLCL),
-      nil, False, nil);
+      nil, False, nil, AResourceMode);
   finally
     FPublishingContent := False;
   end;
@@ -3676,7 +3678,7 @@ procedure TNyxLCLRenderer.RenderFrame(ADocument: TNyxDocument; ARoot: TNyxNode;
   AHost: TWinControl; ADesignMode: Boolean; AState: TNyxState;
   const ACollections: INyxCollectionBindings; const AFrame: TNyxViewFrame;
   const AMeasurements: INyxContainerSnapshot; AKeepPresentation: Boolean;
-  const AStates: TNyxContentFaceStates);
+  const AStates: TNyxContentFaceStates; AResourceMode: TNyxResourceRenderMode);
 var
   LCandidate: TNyxLCLRenderer;
   LIndex: Integer;
@@ -3766,7 +3768,11 @@ begin
     end;
     repeat
       LCandidate := TNyxLCLRenderer.Create(FTheme);
-      LCandidate.FResourceContext := FResourceContext;
+
+      if AResourceMode = nrmConfigured then
+      begin
+        LCandidate.FResourceContext := FResourceContext;
+      end;
       LCandidate.FStagingContent := LBlueprint <> nil;
       LCandidate.FStagingMeasurements := LMeasurements;
 
@@ -3803,7 +3809,7 @@ begin
       LCandidate.FPresentationSelection := AFrame.Selection;
       LCandidate.FRoot := RealizeNyxView(ADocument, ARoot, AFrame, LMeasurements);
 
-      if FResourceContext <> nil then
+      if (AResourceMode = nrmConfigured) and (FResourceContext <> nil) then
       begin
         LCandidate.FRoot.BindResources(FResourceContext.Snapshot,
           FResourceContext.Locale, FResourceContext.Fallback);
@@ -3872,7 +3878,7 @@ begin
       LAllocated := LCandidate.MeasureContainers;
       LMeasuredRoot := RealizeNyxView(ADocument, ARoot, AFrame, LAllocated);
 
-      if FResourceContext <> nil then
+      if (AResourceMode = nrmConfigured) and (FResourceContext <> nil) then
       begin
         LMeasuredRoot.BindResources(FResourceContext.Snapshot,
           FResourceContext.Locale, FResourceContext.Fallback);

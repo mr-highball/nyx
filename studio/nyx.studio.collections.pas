@@ -105,6 +105,8 @@ uses
   nyx.state,
   nyx.contract,
   nyx.collections,
+  nyx.resources.rows,
+  nyx.controls,
   nyx.collections.view.types,
   nyx.collections.selection,
   nyx.collections.query.editor,
@@ -210,6 +212,8 @@ var
   LPending: TNyxStudioCollectionIntent;
   LItemRef: TNyxItemRef;
   LLocked: Boolean;
+  LResourceRows: TNyxResourceRows;
+  LSourceBacked: Boolean;
 
   function PendingEditor(const AID, ATitle, AField: TNyxText;
     const AItem: TNyxItemRef; const AValue: TNyxStateValue;
@@ -257,11 +261,20 @@ begin
     LKey := ASession.Document.Collections.Key(LCollection).Name;
     LData := ASession.Document.Collections.Snapshot(NyxCollection(LKey));
     LSchema := LData.Schema;
-    LLocked := APending.CollectionLocked(NyxCollection(LKey));
+    LSourceBacked := ASession.Document.ResourceCollections.HasSource(NyxCollection(LKey));
+    LLocked := APending.CollectionLocked(NyxCollection(LKey)) or LSourceBacked;
     LPrefix := 'collection-' + IntToStr(LCollection);
     LCard := TNyxNode.Create(nkPanel, LPrefix).Configure.Surface(True).Padding(12).Gap(8).Done;
     LPanel.Add(LCard);
     LCard.Add(TNyxNode.Create(nkHeading, LPrefix + '-title').Configure.Text(LKey).Done);
+
+    if LSourceBacked then
+    begin
+      LResourceRows := ASession.Document.ResourceCollections.Source(NyxCollection(LKey));
+      LCard.Add(NewNyxLabel(LPrefix + TNyxText('-source')).WithText(
+        'Resource: ' + LResourceRows.Reference.Name + TNyxText('. Schema only; rows load at runtime. ')
+        + TNyxText('Use Resources to edit or keep the authored rows and detach.')).Node);
+    end;
     LCard.Add(Command(nkButton, LPrefix + '-remove', 'Remove collection', LKey, scaRemove)
       .Configure.Enabled(not LLocked).Done);
     for LIndex := 0 to LSchema.Count - 1 do

@@ -25,11 +25,12 @@
   a URL or reports an independent runtime cache as document state. }
 
 type
-  TNyxAgentResourceMode = (armList, armDetails, armContent, armJSON, armBindings, armApply);
+  TNyxAgentResourceMode = (armList, armDetails, armContent, armJSON, armBindings, armApply,
+    armSources, armRows);
 
 const
   CResourceModes: array[TNyxAgentResourceMode] of TNyxText =
-    ('list', 'details', 'content', 'json', 'bindings', 'apply');
+    ('list', 'details', 'content', 'json', 'bindings', 'apply', 'sources', 'rows');
   CResourceDataKinds: array[TNyxDataKind] of TNyxText =
     ('null', 'text', 'boolean', 'number', 'object', 'array');
 
@@ -107,6 +108,10 @@ var
   LTotal: Integer;
   LIndex: Integer;
   LCount: Integer;
+  LCollection: TNyxCollectionRef;
+  LRows: TNyxResourceRows;
+  LSchema: TNyxCollectionSchema;
+  LField: TNyxCollectionField;
 begin
   LFound := False;
   for LMode := Low(TNyxAgentResourceMode) to High(TNyxAgentResourceMode) do
@@ -145,6 +150,72 @@ begin
     Exit;
   end;
   LResources := FSession.Document.Resources;
+
+  if LMode = armSources then
+  begin
+    NyxAgentFields(AArguments, '|mode|offset|limit|filter|');
+    LOffset := IntegerArgument(AArguments, 'offset', 0, 0, NyxMaximumCollections);
+    LLimit := IntegerArgument(AArguments, 'limit', 8, 1, 16);
+    LFilter := TextArgument(AArguments, 'filter');
+    LValues := nil;
+    LTotal := 0;
+    for LIndex := 0 to FSession.Document.Collections.Count - 1 do
+    begin
+      LCollection := FSession.Document.Collections.Key(LIndex);
+
+      if not NyxCollectionResourceSource(FSession.Document.Collections, LCollection, LRows) or
+        ((LFilter <> '') and (Pos(LFilter, LCollection.Name) = 0) and
+          (Pos(LFilter, LRows.Reference.Name) = 0)) then
+      begin
+        Continue;
+      end;
+
+      if (LTotal >= LOffset) and (Length(LValues) < LLimit) then
+      begin
+        LCount := Length(LValues);
+        SetLength(LValues, LCount + 1);
+        LValues[LCount] := NyxObject([NyxField('collection', NyxData(LCollection.Name)),
+          NyxField('resource', NyxData(LRows.Reference.Name)),
+          NyxField('fields', NyxData(LRows.Schema.Count))]);
+      end;
+      Inc(LTotal);
+    end;
+    Exit(NyxObject([NyxField('origin', NyxData('saved-resource-relationships')),
+      NyxField('total', NyxData(LTotal)), NyxField('offset', NyxData(LOffset)),
+      NyxField('nextOffset', NyxData(Min(LOffset + Length(LValues), LTotal))),
+      NyxField('sources', NyxArray(LValues))]));
+  end;
+
+  if LMode = armRows then
+  begin
+    NyxAgentFields(AArguments, '|mode|collection|offset|limit|');
+    LCollection := NyxCollection(TextArgument(AArguments, 'collection'));
+
+    if not NyxCollectionResourceSource(FSession.Document.Collections, LCollection, LRows) then
+    begin
+      raise ENyxResource.Create('The collection has no saved resource relationship');
+    end;
+    LSchema := LRows.Schema;
+    LOffset := IntegerArgument(AArguments, 'offset', 0, 0, LSchema.Count);
+    LLimit := IntegerArgument(AArguments, 'limit', 8, 1, 16);
+    SetLength(LValues, Min(LLimit, LSchema.Count - LOffset));
+    for LIndex := 0 to High(LValues) do
+    begin
+      LField := LSchema.FieldAt(LOffset + LIndex);
+      LValues[LIndex] := NyxObject([NyxField('name', NyxData(LField.Name)),
+        NyxField('type', NyxData(NyxStateKindName(LField.Kind))),
+        NyxField('path', LRows.FieldPath(LOffset + LIndex).ToData)]);
+    end;
+    { Recipes/schema seeds describe authored intent, not loaded runtime rows.
+      Source data is queried separately through the existing bounded JSON mode. }
+    Exit(NyxObject([NyxField('origin', NyxData('saved-resource-relationship')),
+      NyxField('collection', NyxData(LCollection.Name)),
+      NyxField('resource', NyxData(LRows.Reference.Name)), NyxField('path', LRows.Path.ToData),
+      NyxField('identity', LRows.IdentityPath.ToData), NyxField('fieldCount', NyxData(LSchema.Count)),
+      NyxField('offset', NyxData(LOffset)),
+      NyxField('nextOffset', NyxData(LOffset + Length(LValues))),
+      NyxField('fields', NyxArray(LValues)), NyxField('runtimeRowsIncluded', NyxData(False))]));
+  end;
 
   if LMode = armList then
   begin

@@ -194,7 +194,8 @@ uses
   nyx.collections.selection, nyx.collections.query,
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.studio.importedits,
   nyx.studio.routineedits, nyx.studio.declarationedits, nyx.times,
-  nyx.resources, nyx.resource.sources, nyx.bytes, nyx.studio.resourceedits;
+  nyx.resources, nyx.resource.sources, nyx.bytes, nyx.studio.resourceedits,
+  nyx.resources.rows, nyx.collections.registry;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
 var

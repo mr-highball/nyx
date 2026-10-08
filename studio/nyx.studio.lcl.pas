@@ -34,7 +34,9 @@ uses
   nyx.content.editor,
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.lcl,
-  nyx.resources, nyx.resources.editor, nyx.resources.import, nyx.resources.import.lcl,
+  nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
+  nyx.resource.context,
+  nyx.resources.import, nyx.resources.import.lcl,
   nyx.studio.help, nyx.component.help, nyx.root.types,
   nyx.popover, nyx.popover.lcl,
   nyx.menu, nyx.menu.lcl, nyx.menu.button, nyx.controls, nyx.studio.menu,
@@ -1525,6 +1527,7 @@ begin
   FState.ThemeEditorDraft.Clear;
   FState.ImageEditorDraft.Clear;
   FState.ResourceEditorDraft.Clear;
+  FState.ResourceRowsDraft.Clear;
   FState.ResourceSelection := NyxNewResourceSelection;
   FBoundProject := '';
   FProjectRevision := '';
@@ -1728,6 +1731,7 @@ begin
     FState.ThemeEditorDraft.Capture('studio-theme-editor', FShellView.Root);
     FState.ImageEditorDraft.Capture('inspector-image', FShellView.Root);
     FState.ResourceEditorDraft.Capture('studio-resource-editor', FShellView.Root);
+    FState.ResourceRowsDraft.Capture('studio-resource-rows', FShellView.Root);
   end;
   LNode := FShellView.Root.Find('studio-split');
 
@@ -1782,6 +1786,12 @@ begin
   FState.ContentEditorDraft.Restore(Result.Pages[0]);
   FState.ThemeEditorDraft.Restore(Result.Pages[0]);
   FState.ImageEditorDraft.Restore(Result.Pages[0]);
+
+  if not FState.ResourceRowsDraft.Restore(Result.Pages[0]) and
+    (Result.Pages[0].Find('studio-resource-rows') <> nil) then
+  begin
+    FState.ResourceRowsDraft.Clear;
+  end;
 
   if not FState.ResourceEditorDraft.Restore(Result.Pages[0]) and
     (Result.Pages[0].Find('studio-resource-editor') <> nil) then
@@ -1997,12 +2007,14 @@ begin
           not FCanvasView.TryRefresh(FSession.Document, FSession.ActiveView,
             not FPreview, FCanvasRestores) then
         begin
-          FCanvasView.Render(FSession.Document, FSession.ActiveView, LCanvasHost, not FPreview);
+          FCanvasView.Render(FSession.Document, FSession.ActiveView, LCanvasHost,
+            not FPreview, nil, nil, nrmAuthoredDefaults);
         end;
       end
       else
       begin
-        FCanvasView.Render(FSession.Document, FSession.ActiveView, LCanvasHost, not FPreview);
+        FCanvasView.Render(FSession.Document, FSession.ActiveView, LCanvasHost,
+          not FPreview, nil, nil, nrmAuthoredDefaults);
       end;
 
       if FPreview and (FCanvasMenus = nil) then
@@ -2841,6 +2853,15 @@ begin
     begin
       FState.ResourcesVisible := not FState.ResourcesVisible;
       RequestRefresh;
+      Exit;
+    end;
+
+    if ((AEvent.Trigger = ntChange) and
+      NyxResourceRowsInput(ANode, FShellView.Root, LResourceEditor)) or
+      ((AEvent.Trigger = ntClick) and HandleNyxResourceRowsEditor(ANode, FShellView.Root)) then
+    begin
+      FState.ResourceRowsDraft.Capture('studio-resource-rows', FShellView.Root);
+      FShellView.Sync;
       Exit;
     end;
 

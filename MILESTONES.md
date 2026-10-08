@@ -4,7 +4,21 @@
 [Current work](WORK.md)
 
 
-Current joint resource frames (2026-10-08): both application hosts and standalone
+Current saved row authoring (2026-10-08): common Nyx-built Resources forms now
+inspect/edit typed recipes through both Studio controllers and the ordinary paired
+source processor. Bounded MCP sources/rows queries and define/detach groups retain
+exact revisions, schema/path context and paired Undo. Explicit static conversion
+consent preserves caller choice; detach keeps authored default/fallback rows and
+control bindings. Native Studio passes **123**, source **7**, ownership **253**,
+semantic **55/7**, mappings **81**, live frames **112**, and exact full/page/reusable
+builders **eight each**, leak-free. Matching browser consumers and both Studios/
+backend/worker compile with zero owned warnings; browser/phone/observing execution
+remains unqualified. Resource no-closure alone advances **6→7**; no full criterion/
+credit/percentage closes, other owners remain **22/37/19/28/2**. Return to bounded
+actual runtime load/cache diagnostics and the original held deployment/parity
+outcomes. See [the packet](WORK.md#current-return-path-common-saved-row-authoring--2026-10-08).
+
+Previous joint resource frames (2026-10-08): both application hosts and standalone
 renderers prepare catalog/scalar/source-row publication before notifying. Changed
 source rows update shared and resolved reusable stores; unchanged rows retain local
 edits, and late scopes receive installed seeds. Hidden scalar constraints, later

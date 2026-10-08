@@ -39,7 +39,7 @@ type
     refContent, refEncoding, refFallback, refBind, refTarget, refPath);
   TNyxResourceEditorEncoding = (reeUTF8, reeJSONString, reeBase64);
   TNyxResourceEditorAction = (reaNew, reaOpen, reaImport, reaPreview, reaApply, reaRemove);
-  TNyxResourceEditorOperation = (reoDefine, reoRemove);
+  TNyxResourceEditorOperation = (reoDefine, reoRemove, reoRows, reoDetachRows);
 
   { Empty Reference means a new file. Locale is always explicit; empty selects
     the ordinary default. No catalog/document/widget survives in this value. }
@@ -63,6 +63,12 @@ type
     Owner: TNyxText;
     OwnerBaseline: TNyxText;
     Binding: TNyxBindingSpec;
+    { Row authoring carries its independent collection baseline and immutable
+      recipe. These members are absent from ordinary file/scalar proposals. }
+    CollectionBaseline: TNyxText;
+    CollectionName: TNyxText;
+    RowsData: TNyxDataValue;
+    ReplaceStatic: Boolean;
     function ToData: TNyxDataValue;
     class function FromData(const AData: TNyxDataValue): TNyxResourceEditorChange; static;
   end;
@@ -138,7 +144,8 @@ function CaptureNyxResourceEditor(AButton, AShellRoot: TNyxNode;
 
 implementation
 
-uses nyx.bytes, nyx.images, nyx.binding, nyx.layout.policy;
+uses nyx.bytes, nyx.images, nyx.binding, nyx.layout.policy,
+  nyx.resources.rows, nyx.collections, nyx.collections.codec;
 
 const
   CEditor = 'nyx.resource-editor';
@@ -1085,6 +1092,15 @@ function TNyxResourceEditorChange.ToData: TNyxDataValue;
 var
   LBinding: TNyxDataValue;
 begin
+
+  if Operation in [reoRows, reoDetachRows] then
+  begin
+    Exit(NyxObject([NyxField('version', NyxData(2)),
+      NyxField('operation', NyxData(Ord(Operation))), NyxField('catalog', NyxData(CatalogBaseline)),
+      NyxField('collections', NyxData(CollectionBaseline)),
+      NyxField('collection', NyxData(CollectionName)), NyxField('rows', RowsData),
+      NyxField('replaceStatic', NyxData(ReplaceStatic))]));
+  end;
   LBinding := NyxNull;
 
   if Bind then
@@ -1112,7 +1128,47 @@ var
   LOperation: Integer;
   LTarget: Integer;
   LBinding: TNyxDataValue;
+  LIndex: Integer;
 begin
+
+  if (AData.Kind = ndObject) and (AData.Count = 7) then
+  begin
+    for LIndex := 0 to AData.Count - 1 do
+    begin
+
+      if Pos('|' + AData.Key(LIndex) + '|',
+        '|version|operation|catalog|collections|collection|rows|replaceStatic|') = 0 then
+      begin
+        raise ENyxResource.Create('Unknown saved-row proposal member');
+      end;
+    end;
+    LOperation := AData.Field('operation').AsInteger;
+
+    if (AData.Field('version').AsInteger <> 2) or
+      not (LOperation in [Ord(reoRows), Ord(reoDetachRows)]) then
+    begin
+      raise ENyxResource.Create('Unknown saved-row proposal operation/version');
+    end;
+    Result := Default(TNyxResourceEditorChange);
+    Result.Operation := TNyxResourceEditorOperation(LOperation);
+    Result.CatalogBaseline := AData.Field('catalog').AsText;
+    Result.CollectionBaseline := AData.Field('collections').AsText;
+    Result.CollectionName := NyxCollection(AData.Field('collection').AsText).Name;
+    Result.RowsData := AData.Field('rows').Copy;
+    Result.ReplaceStatic := AData.Field('replaceStatic').AsBoolean;
+    NyxResourcesFromData(TNyxDataValue.ParseJSON(Result.CatalogBaseline));
+    DecodeNyxCollectionDefaults(Result.CollectionBaseline, True);
+
+    if Result.Operation = reoRows then
+    begin
+      TNyxResourceRows.FromData(Result.RowsData);
+    end
+    else if (Result.RowsData.Kind <> ndNull) or Result.ReplaceStatic then
+    begin
+      raise ENyxResource.Create('Detach cannot define a recipe or replace static rows');
+    end;
+    Exit;
+  end;
 
   if (AData.Kind <> ndObject) or (AData.Count <> 8) then
   begin

@@ -532,6 +532,10 @@ var
   LResult: TNyxDataValue;
   LRevision: Integer;
   LOriginal: TNyxText;
+  LResultRevision: Integer;
+  LImportedRows: TNyxResourceRows;
+  LDescriptor: TNyxDataValue;
+  LRefused: Boolean;
   {$ifdef PAS2JS}
   LAgent: TNyxAgentSession;
   {$else}
@@ -628,6 +632,109 @@ begin
     LResult := Call('nyx_history', NyxObject([NyxField('direction', NyxData('undo')),
       NyxField('expectedRevision', NyxData(LRevision)), NyxField('operationId', NyxData('undo-team'))]));
     Check(EncodeNyxProject(Pair) = LOriginal, 'semantic paired Undo restores exact source and design');
+    LResultRevision := LResult.Field('revision').AsInteger;
+    LDescriptor := NyxMappingRecipe.ToData;
+    LImportedRows := TNyxResourceRows.FromData(NyxObject([NyxField('version', NyxData(1)),
+      NyxField('resource', NyxData('imported-team')), NyxField('path', LDescriptor.Field('path')),
+      NyxField('identity', LDescriptor.Field('identity')), NyxField('fields', LDescriptor.Field('fields'))]));
+
+    LResult := Call('nyx_resources', NyxObject([NyxField('mode', NyxData('sources')),
+      NyxField('filter', NyxData('people')), NyxField('limit', NyxData(1))]));
+    Check((LResult.Field('total').AsInteger = 1) and (LResult.Field('sources').Count = 1),
+      'semantic relationship list is filtered and bounded');
+    LResult := Call('nyx_resources', NyxObject([NyxField('mode', NyxData('rows')),
+      NyxField('collection', NyxData('people')), NyxField('offset', NyxData(1)),
+      NyxField('limit', NyxData(1))]));
+    Check((LResult.Field('fields').Count = 1) and (LResult.Field('nextOffset').AsInteger = 2) and
+      (LResult.Field('fields').Item(0).Field('type').AsText = 'integer') and
+      not LResult.Field('runtimeRowsIncluded').AsBoolean,
+      'semantic schema page keeps exact family/path and distinguishes runtime data');
+
+    LResult := Call('nyx_resources', NyxObject([NyxField('mode', NyxData('apply')),
+      NyxField('expectedRevision', NyxData(LResultRevision)), NyxField('operationId', NyxData('admit-linked-source')),
+      NyxField('changes', NyxResourcePatch([
+        NyxDefineResourceRows(NyxCollection('people'), LImportedRows),
+        NyxDefineResource(NyxResourceRef('imported-team'), NyxDefaultLocale, NyxJSONResource(NyxMappingUpdated))
+      ]).ToData)]));
+    LResultRevision := LResult.Field('revision').AsInteger;
+    LDocument := TNyxCodec.Decode(Pair.Design);
+    try
+      Check((LDocument.ResourceCollections.Source(NyxCollection('people')).Reference.Name = 'imported-team') and
+        (LDocument.Collections.Snapshot(NyxCollection('people')).Count = 0),
+        'one semantic group admits a recipe before its related resource without copying runtime rows');
+      Check(LDocument.Find('people-table').HasCollectionView,
+        'semantic source replacement retains the original table contract');
+    finally
+      LDocument.Free;
+    end;
+    LResult := Call('nyx_history', NyxObject([NyxField('direction', NyxData('undo')),
+      NyxField('expectedRevision', NyxData(LResultRevision)), NyxField('operationId', NyxData('undo-linked-source'))]));
+    LResultRevision := LResult.Field('revision').AsInteger;
+    Check(EncodeNyxProject(Pair) = LOriginal, 'linked source group has one exact paired Undo');
+
+    LResult := Call('nyx_resources', NyxObject([NyxField('mode', NyxData('apply')),
+      NyxField('expectedRevision', NyxData(LResultRevision)), NyxField('operationId', NyxData('detach-people')),
+      NyxField('changes', NyxResourcePatch([NyxDetachResourceRows(NyxCollection('people'))]).ToData)]));
+    LResultRevision := LResult.Field('revision').AsInteger;
+    LDocument := TNyxCodec.Decode(Pair.Design);
+    try
+      Check(not LDocument.ResourceCollections.HasSource(NyxCollection('people')) and
+        (LDocument.Collections.Snapshot(NyxCollection('people')).Count = 2) and
+        (LDocument.Collections.Snapshot(NyxCollection('people')).ItemAt(0).Ref.ID = 'ada'),
+        'semantic detach preserves authored default rows and identities');
+      Check(LDocument.Find('people-table').HasCollectionView and LDocument.Find('card-table').HasCollectionView,
+        'semantic detach keeps application and reusable control bindings');
+    finally
+      LDocument.Free;
+    end;
+    LResult := Call('nyx_history', NyxObject([NyxField('direction', NyxData('undo')),
+      NyxField('expectedRevision', NyxData(LResultRevision)), NyxField('operationId', NyxData('undo-detach-people'))]));
+    LResultRevision := LResult.Field('revision').AsInteger;
+    Check(EncodeNyxProject(Pair) = LOriginal, 'one paired Undo restores the exact saved relationship');
+
+    LRefused := False;
+    try
+      Call('nyx_resources', NyxObject([NyxField('mode', NyxData('apply')),
+        NyxField('expectedRevision', NyxData(LResultRevision)), NyxField('operationId', NyxData('static-refusal')),
+        NyxField('changes', NyxResourcePatch([NyxDefineResourceRows(NyxCollection('choices'),
+          NyxMappingRecipe)]).ToData)]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (EncodeNyxProject(Pair) = LOriginal),
+      'static conversion refuses without explicit consent and preserves source/design');
+    LResult := Call('nyx_resources', NyxObject([NyxField('mode', NyxData('apply')),
+      NyxField('expectedRevision', NyxData(LResultRevision)), NyxField('operationId', NyxData('static-conversion')),
+      NyxField('changes', NyxResourcePatch([NyxDefineResourceRows(NyxCollection('choices'),
+        NyxMappingRecipe, True)]).ToData)]));
+    LResultRevision := LResult.Field('revision').AsInteger;
+    LDocument := TNyxCodec.Decode(Pair.Design);
+    try
+      Check(LDocument.ResourceCollections.HasSource(NyxCollection('choices')),
+        'explicit Boolean consent converts an existing static collection');
+    finally
+      LDocument.Free;
+    end;
+    LResult := Call('nyx_history', NyxObject([NyxField('direction', NyxData('undo')),
+      NyxField('expectedRevision', NyxData(LResultRevision)), NyxField('operationId', NyxData('undo-static-conversion'))]));
+    LResultRevision := LResult.Field('revision').AsInteger;
+    Check(EncodeNyxProject(Pair) = LOriginal, 'static conversion preserves paired rollback');
+
+    LRefused := False;
+    try
+      Call('nyx_resources', NyxObject([NyxField('mode', NyxData('apply')),
+        NyxField('expectedRevision', NyxData(LResultRevision - 1)), NyxField('operationId', NyxData('stale-source')),
+        NyxField('changes', NyxResourcePatch([NyxDetachResourceRows(NyxCollection('people'))]).ToData)]));
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (EncodeNyxProject(Pair) = LOriginal), 'stale source mutation refuses atomically');
   finally
     {$ifdef PAS2JS}LAgent.Free;{$else}LEngine.Free;{$endif}
   end;

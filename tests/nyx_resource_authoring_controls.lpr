@@ -28,7 +28,9 @@ program nyx_resource_authoring_controls;
 
 uses
   SysUtils, Classes, nyx.text, nyx.types, nyx.bytes, nyx.data, nyx.images,
-  nyx.resources, nyx.resources.editor, nyx.resources.import, nyx.resource.sources,
+  nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
+  nyx.resources.rows, nyx.collections, nyx.collections.registry,
+  nyx.resources.import, nyx.resource.sources,
   nyx.model, nyx.controls, nyx.codec, nyx.codegen, nyx.schema, nyx.events,
   nyx.binding.types, nyx.binding, nyx.studio.session, nyx.studio.commands,
   nyx.studio.projects, nyx.studio.sourcejobs, nyx.studio.presentation
@@ -38,7 +40,7 @@ uses
 
 const
   CEditor = 'studio-resource-editor';
-  CData = '{"literal.dot":"Your resource workshop 🌙","prompt":"Choose a name","rows":[{"value":3.125}],"ready":true}';
+  CData = '{"literal.dot":"Your resource workshop 🌙","prompt":"Choose a name","rows":[{"id":"row-one","value":3.125}],"ready":true}';
   { Small Pascal-created PNG retained from the maintained image prerequisite. }
   CPNG = 'iVBORw0KGgoAAAANSUhEUgAAAGQAAAAyEAIAAAB1xzWqAAAACXBIWXMAAAAAAAAAAACdYiYyAAABMElEQVR4nO3OsQ0AIAzAsP7/dOEEtsgSGTxnduf2fbE/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDxwO6T+sr8laFkAAAAABJRU5ErkJggg==';
 
@@ -269,6 +271,97 @@ begin
   end;
 end;
 
+
+procedure RowDrafts;
+const
+  CRowEditor = 'studio-resource-rows';
+var
+  LDocument: TNyxDocument;
+  LForm: INyxCard;
+  LFresh: INyxCard;
+  LDraft: TNyxResourceRowsDraft;
+  LPresentation: TNyxStudioPresentation;
+  LCopy: TNyxStudioPresentation;
+  LRows: TNyxResourceRows;
+  LChange: TNyxResourceEditorChange;
+  LBefore: TNyxText;
+  LRefused: Boolean;
+
+  procedure PutRow(AField: TNyxResourceRowsField; const AValue: TNyxText);
+  begin
+    LForm.Node.Find(NyxResourceRowsFieldID(CRowEditor, AField)).Configure.Value(AValue).Done;
+  end;
+
+  procedure Click(AAction: TNyxResourceRowsAction);
+  begin
+    Check(HandleNyxResourceRowsEditor(LForm.Node.Find(
+      NyxResourceRowsActionID(CRowEditor, AAction)), LForm.Node), 'shared form handles copied row presentation');
+  end;
+
+begin
+  LDocument := Workshop;
+  LForm := nil;
+  LFresh := nil;
+  try
+    LDocument.Resources.Define(NyxResourceRef('copy'), NyxJSONResource(CData));
+    LRows := NyxResourceRows(NyxResourceRef('copy')).Field('rows')
+      .Identity(NyxResourcePath.Field('id')).Number(NyxNumberField('amount'), NyxResourcePath.Field('value'));
+    LDocument.ResourceCollections.Define(NyxCollection('saved'), LRows);
+    LBefore := TNyxCodec.Encode(LDocument);
+    LForm := NewNyxResourceRowsEditor(CRowEditor, LDocument.Resources, LDocument.Collections);
+    Check(CaptureNyxResourceRowsEditor(LForm.Node.Find(
+      NyxResourceRowsActionID(CRowEditor, raApply)), LForm.Node, LChange),
+      'opening saved relationship captures the shared paired command');
+    Check((LChange.CollectionName = 'saved') and (LChange.RowsData.ToJSON = LRows.ToData.ToJSON),
+      'saved source retains exact structural paths and numeric family');
+    Check(TNyxResourceEditorChange.FromData(LChange.ToData).ToData.ToJSON = LChange.ToData.ToJSON,
+      'saved row command crosses the ordinary isolated worker codec');
+    PutRow(rrFieldName, 'partially authored 🌙');
+    Click(raEditField);
+    Check(LForm.Node.Find(NyxResourceRowsFieldID(CRowEditor, rrFieldType)).Prop('value') = 'Number',
+      'editing a saved field retains its explicit Pascal numeric family');
+    PutRow(rrName, 'draft name 🌙');
+    LDraft.Capture(CRowEditor, LForm.Node);
+    LPresentation := DefaultNyxStudioPresentation;
+    LPresentation.ResourceRowsDraft := LDraft;
+    LCopy := DecodeNyxStudioPresentation(EncodeNyxStudioPresentation(LPresentation));
+    LFresh := NewNyxResourceRowsEditor(CRowEditor, LDocument.Resources, LDocument.Collections);
+    Check(LCopy.ResourceRowsDraft.Restore(LFresh.Node) and
+      (LFresh.Node.Find(NyxResourceRowsFieldID(CRowEditor, rrName)).Prop('value') = TNyxText('draft name 🌙')),
+      'per-project presentation preserves an unsubmitted Unicode row name');
+    Check(TNyxCodec.Encode(LDocument) = LBefore, 'draft/discovery leaves the entire design unchanged');
+    Click(raDiscover);
+    PutRow(rrDataset, NyxResourcePath.Field('rows').ToData.ToJSON);
+    Click(raInspect);
+    PutRow(rrIdentity, NyxResourcePath.Field('id').ToData.ToJSON);
+    PutRow(rrFieldName, 'extra');
+    PutRow(rrFieldType, 'Text');
+    PutRow(rrFieldPath, NyxResourcePath.Field('id').ToData.ToJSON);
+    Click(raSetField);
+    Click(raRemoveField);
+    Check(TNyxCodec.Encode(LDocument) = LBefore, 'mapping edits/removal remain presentation until Apply');
+    LRefused := False;
+    PutRow(rrFieldType, 'Imaginary');
+    try
+      Click(raSetField);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (TNyxCodec.Encode(LDocument) = LBefore),
+      'unknown field family refuses without changing the saved design');
+    LDocument.Resources.Define(NyxResourceRef('other'), NyxTextResource('Changed context'));
+    LFresh := NewNyxResourceRowsEditor(CRowEditor, LDocument.Resources, LDocument.Collections);
+    Check(not LDraft.Restore(LFresh.Node), 'changed catalog refuses stale draft restoration before writing fields');
+  finally
+    LFresh := nil;
+    LForm := nil;
+    LDocument.Free;
+  end;
+end;
+
 {$ifndef PAS2JS}
 type
   TControlAccess = class(TControl);
@@ -336,6 +429,7 @@ var
   LHandle: THandle;
   LBytes: TNyxBytes;
   LBox: TCheckBox;
+  LBinding: TNyxBindingSpec;
 
   procedure Ready;
   var
@@ -381,6 +475,30 @@ var
     LChoice := TComboBox(LStudio.ShellView.InputFor(NyxResourceEditorFieldID(CEditor, AField)));
     LChoice.ItemIndex := LChoice.Items.IndexOf(AValue);
     Check(LChoice.ItemIndex >= 0, 'ordinary choice exists: ' + AValue);
+    LChoice.OnChange(LChoice);
+    Ready;
+  end;
+
+  procedure RowText(AField: TNyxResourceRowsField; const AValue: TNyxText);
+  var
+    LEdit: TCustomEdit;
+  begin
+    LEdit := TCustomEdit(LStudio.ShellView.InputFor(
+      NyxResourceRowsFieldID('studio-resource-rows', AField)));
+    Check(LEdit <> nil, 'ordinary row-authoring text control exists');
+    LEdit.Text := AValue;
+    Ready;
+  end;
+
+  procedure RowChoice(AField: TNyxResourceRowsField; const AValue: TNyxText);
+  var
+    LChoice: TComboBox;
+  begin
+    LChoice := TComboBox(LStudio.ShellView.InputFor(
+      NyxResourceRowsFieldID('studio-resource-rows', AField)));
+    Check(LChoice <> nil, 'ordinary row-authoring choice control exists');
+    LChoice.ItemIndex := LChoice.Items.IndexOf(AValue);
+    Check(LChoice.ItemIndex >= 0, 'row choice exists: ' + AValue);
     LChoice.OnChange(LChoice);
     Ready;
   end;
@@ -457,8 +575,11 @@ begin
     LAfter := EncodeNyxProject(LStudio.Session.ProjectSnapshot);
     Check(LStudio.Session.Document.Resources.Definition(NyxResourceRef('copy'), NyxDefaultLocale).Title =
       TNyxText('Workshop copy 🌙'), 'actual accepted catalog retains creator metadata');
+    Check(LStudio.Session.Document.Find('workshop-headline').FindBinding(bpText, LBinding),
+      'actual accepted caption has its authored resource binding');
     Check(TLabel(LStudio.CanvasView.ControlFor('workshop-headline')).Caption =
-      TNyxText('Your resource workshop 🌙'), 'ordinary existing native caption reads accepted resource');
+      TNyxText('Your resource workshop 🌙'), 'ordinary existing native caption reads accepted resource: ' +
+      NyxData(TNyxText(TLabel(LStudio.CanvasView.ControlFor('workshop-headline')).Caption)).ToJSON);
     Click('action-undo');
     Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore, 'ordinary one Undo restores original pair');
     Click('action-redo');
@@ -483,6 +604,46 @@ begin
     Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore, 'prompt binding has one paired Undo');
     Click('action-redo');
     Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LAfter, 'prompt binding has one paired Redo');
+    RowText(rrName, 'workshop-rows');
+    RowChoice(rrResource, NyxData('copy').ToJSON);
+    Click(NyxResourceRowsActionID('studio-resource-rows', raDiscover));
+    RowChoice(rrDataset, NyxResourcePath.Field('rows').ToData.ToJSON);
+    Click(NyxResourceRowsActionID('studio-resource-rows', raInspect));
+    RowChoice(rrIdentity, NyxResourcePath.Field('id').ToData.ToJSON);
+    RowText(rrFieldName, 'amount');
+    RowChoice(rrFieldType, 'Number');
+    RowChoice(rrFieldPath, NyxResourcePath.Field('value').ToData.ToJSON);
+    Click(NyxResourceRowsActionID('studio-resource-rows', raSetField));
+    Click('action-code');
+    Check(LStudio.ShellView.Root.Find(NyxResourceRowsFieldID('studio-resource-rows', rrName))
+      .Prop('value') = 'workshop-rows', 'actual chrome rebuild retains unsubmitted row proposal');
+    LBefore := LAfter;
+    Click(NyxResourceRowsActionID('studio-resource-rows', raApply));
+    Check(LStudio.SourceCommands.State = nssApplied, 'ordinary row Apply uses the isolated source processor');
+    Check(LStudio.Session.Document.ResourceCollections.HasSource(NyxCollection('workshop-rows')),
+      'ordinary Studio stores the typed relationship beside its empty schema');
+    Check(Pos('ResourceCollections.Define', LStudio.Session.Source) > 0,
+      'ordinary Studio crafts typed row authoring beside the design');
+    LAfter := EncodeNyxProject(LStudio.Session.ProjectSnapshot);
+    Click('action-undo');
+    Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore, 'row Apply is one paired Undo');
+    Click('action-redo');
+    Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LAfter, 'row Apply is one exact paired Redo');
+    Click(NyxResourceRowsActionID('studio-resource-rows', raLoad));
+    Click(NyxResourceRowsActionID('studio-resource-rows', raDetach));
+    Check(not LStudio.Session.Document.ResourceCollections.HasSource(NyxCollection('workshop-rows')) and
+      (LStudio.Session.Document.Collections.Snapshot(NyxCollection('workshop-rows')).Count = 1),
+      'ordinary detach keeps authored data as static rows');
+    Click('action-undo');
+    Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LAfter,
+      'one paired Undo restores the exact relationship after detach');
+    TScrollBox(LStudio.ShellView.ControlFor('studio-left')).ScrollInView(
+      LStudio.ShellView.InputFor(NyxResourceRowsFieldID('studio-resource-rows', rrFieldType)));
+
+    if ParamCount > 1 then
+    begin
+      Capture(ChangeFileExt(ParamStr(2), '-rows.png'));
+    end;
     TScrollBox(LStudio.ShellView.ControlFor('studio-left')).ScrollInView(
       LStudio.ShellView.InputFor(NyxResourceEditorFieldID(CEditor, refContent)));
 
@@ -494,6 +655,13 @@ begin
     Ready;
     Click('action-panel-project');
     Check(LStudio.ShellView.Root.Find(CEditor) <> nil, 'native compact Project uses same reusable form');
+    TScrollBox(LStudio.ShellView.ControlFor('studio-left')).ScrollInView(
+      LStudio.ShellView.InputFor(NyxResourceRowsFieldID('studio-resource-rows', rrFieldType)));
+
+    if ParamCount > 2 then
+    begin
+      Capture(ChangeFileExt(ParamStr(3), '-rows.png'));
+    end;
     TScrollBox(LStudio.ShellView.ControlFor('studio-left')).ScrollInView(
       LStudio.ShellView.InputFor(NyxResourceEditorFieldID(CEditor, refContent)));
 
@@ -593,6 +761,7 @@ begin
   try
     {$ifndef PAS2JS}Application.Initialize;{$endif}
     Shared;
+    RowDrafts;
     {$ifdef PAS2JS}BrowserControls;{$else}NativeStudio;{$endif}
     WriteLn('PASS / resource authoring / ', GChecks, ' checks');
     {$ifdef PAS2JS}document.body.setAttribute('data-test-result', 'passed');{$endif}

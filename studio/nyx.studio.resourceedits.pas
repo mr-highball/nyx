@@ -28,7 +28,7 @@ unit nyx.studio.resourceedits;
 interface
 
 uses nyx.text, nyx.data, nyx.types, nyx.model, nyx.catalog, nyx.resources,
-  nyx.binding.types, nyx.studio.edits;
+  nyx.resources.rows, nyx.collections, nyx.binding.types, nyx.studio.edits;
 
 const
   NyxMaximumResourceChanges = 32;
@@ -37,7 +37,8 @@ type
   { A closed candidate operation. Definitions/selectors are copied immutable
     values; no document, renderer, path on disk or transport authority is owned.
     Construct every change through a typed factory below. }
-  TNyxResourceChangeKind = (rckDefine, rckRemove, rckBind, rckClear, rckInherit);
+  TNyxResourceChangeKind = (rckDefine, rckRemove, rckBind, rckClear, rckInherit,
+    rckRows, rckDetachRows);
   TNyxResourceChange = record
   private
     FDefined: Boolean;
@@ -48,6 +49,9 @@ type
     FOwner: TNyxControlRef;
     FTarget: TNyxBindingProperty;
     FValue: TNyxResourceValueRef;
+    FCollection: TNyxCollectionRef;
+    FRows: TNyxResourceRows;
+    FReplaceStatic: Boolean;
   end;
 
   { Candidate-only extension of the existing design contract; its original GUID
@@ -74,6 +78,13 @@ function NyxClearResourceBinding(const AOwner: TNyxControlRef;
   ATarget: TNyxBindingProperty): TNyxResourceChange;
 function NyxInheritResourceBinding(const AOwner: TNyxControlRef;
   ATarget: TNyxBindingProperty): TNyxResourceChange;
+{ Saved relationships share the final resource candidate boundary. A static
+  dataset requires explicit conversion consent; existing source recipes may be
+  replaced. Detach materializes authored default-locale/fallback rows, retaining
+  schema, key and control bindings. It never fetches a URL or copies live edits. }
+function NyxDefineResourceRows(const ACollection: TNyxCollectionRef;
+  const ARows: TNyxResourceRows; AReplaceStatic: Boolean = False): TNyxResourceChange;
+function NyxDetachResourceRows(const ACollection: TNyxCollectionRef): TNyxResourceChange;
 function NyxResourcePatch(const AChanges: array of TNyxResourceChange): INyxResourcePatch;
 { Strict MCP/persistence boundary: exact shapes, canonical resource definitions,
   structural selector arrays, and no Boolean/numeric string coercion. }
@@ -82,7 +93,8 @@ function NyxResourceAgentSchema: TNyxDataValue;
 
 implementation
 
-uses nyx.codec, nyx.schema, nyx.bytes, nyx.composition, nyx.binding;
+uses nyx.codec, nyx.schema, nyx.bytes, nyx.composition, nyx.binding,
+  nyx.collections.registry;
 
 type
   TResourceChanges = class(TInterfacedObject, INyxDesignPatch, INyxResourcePatch)
@@ -158,6 +170,25 @@ begin
   Result := BindingChange(AOwner, ATarget, rckInherit);
 end;
 
+function NyxDefineResourceRows(const ACollection: TNyxCollectionRef;
+  const ARows: TNyxResourceRows; AReplaceStatic: Boolean): TNyxResourceChange;
+begin
+  Result := Default(TNyxResourceChange);
+  Result.FCollection := NyxCollection(ACollection.Name);
+  Result.FRows := TNyxResourceRows.FromData(ARows.ToData);
+  Result.FReplaceStatic := AReplaceStatic;
+  Result.FKind := rckRows;
+  Result.FDefined := True;
+end;
+
+function NyxDetachResourceRows(const ACollection: TNyxCollectionRef): TNyxResourceChange;
+begin
+  Result := Default(TNyxResourceChange);
+  Result.FCollection := NyxCollection(ACollection.Name);
+  Result.FKind := rckDetachRows;
+  Result.FDefined := True;
+end;
+
 constructor TResourceChanges.Create(const AChanges: array of TNyxResourceChange);
 var
   LIndex: Integer;
@@ -187,6 +218,11 @@ begin
     begin
       FChanges[LIndex].FValue := AChanges[LIndex].FValue.Copy;
     end;
+
+    if AChanges[LIndex].FKind = rckRows then
+    begin
+      FChanges[LIndex].FRows := AChanges[LIndex].FRows.Copy;
+    end;
   end;
 end;
 
@@ -204,6 +240,7 @@ var
   LProjection: TNyxNode;
   LBinding: TNyxBindingSpec;
   LChange: TNyxResourceChange;
+  LRows: TNyxResourceRows;
   LIndex: Integer;
 begin
 
@@ -222,6 +259,28 @@ begin
             NyxResourceFromData(LChange.FDefinition));
         rckRemove:
           LCandidate.Resources.Remove(LChange.FReference, LChange.FLocale);
+        rckRows:
+          begin
+
+            if LCandidate.Collections.Has(LChange.FCollection) and
+              not LCandidate.ResourceCollections.HasSource(LChange.FCollection) and
+              not LChange.FReplaceStatic then
+            begin
+              raise ENyxResource.Create('Replacing static rows requires explicit consent');
+            end;
+            LCandidate.ResourceCollections.Define(LChange.FCollection, LChange.FRows);
+          end;
+        rckDetachRows:
+          begin
+
+            if not NyxCollectionResourceSource(LCandidate.Collections,
+              LChange.FCollection, LRows) then
+            begin
+              raise ENyxResource.Create('Detach requires an existing saved resource relationship');
+            end;
+            LCandidate.Collections.Define(LRows.Read(LCandidate.Resources,
+              LChange.FCollection, NyxDefaultLocale, NyxDefaultLocale));
+          end;
         rckBind, rckClear, rckInherit:
           begin
             LOwner := LCandidate.Find(LChange.FOwner.ID);
@@ -306,6 +365,14 @@ begin
         LValues[LIndex] := NyxObject([NyxField('op', NyxData('remove')),
           NyxField('name', NyxData(LChange.FReference.Name)),
           NyxField('locale', NyxData(LChange.FLocale.Name))]);
+      rckRows:
+        LValues[LIndex] := NyxObject([NyxField('op', NyxData('define-rows')),
+          NyxField('collection', NyxData(LChange.FCollection.Name)),
+          NyxField('source', LChange.FRows.ToData),
+          NyxField('replaceStatic', NyxData(LChange.FReplaceStatic))]);
+      rckDetachRows:
+        LValues[LIndex] := NyxObject([NyxField('op', NyxData('detach-rows')),
+          NyxField('collection', NyxData(LChange.FCollection.Name))]);
       rckBind:
         LValues[LIndex] := NyxObject([NyxField('op', NyxData('bind')),
           NyxField('owner', NyxData(LChange.FOwner.ID)),
@@ -404,6 +471,18 @@ begin
         LChanges[LIndex] := NyxRemoveResource(NyxResourceRef(LData.Field('name').AsText), LLocale);
       end;
     end
+    else if LOp = 'define-rows' then
+    begin
+      Fields('|op|collection|source|replaceStatic|', 4);
+      LChanges[LIndex] := NyxDefineResourceRows(
+        NyxCollection(LData.Field('collection').AsText),
+        TNyxResourceRows.FromData(LData.Field('source')), LData.Field('replaceStatic').AsBoolean);
+    end
+    else if LOp = 'detach-rows' then
+    begin
+      Fields('|op|collection|', 2);
+      LChanges[LIndex] := NyxDetachResourceRows(NyxCollection(LData.Field('collection').AsText));
+    end
     else if (LOp = 'bind') or (LOp = 'clear-binding') or (LOp = 'inherit-binding') then
     begin
 
@@ -453,6 +532,7 @@ var
   LChanges: TNyxDataValue;
   LPath: TNyxDataValue;
   LSelector: TNyxDataValue;
+  LRows: TNyxDataValue;
   LName: TNyxDataValue;
   LText: TNyxDataValue;
   LResult: TNyxText;
@@ -472,12 +552,21 @@ begin
   LSelector := TNyxDataValue.ParseJSON('{"type":"object","properties":{"resource":' +
     LName.ToJSON + ',"path":' + LPath.ToJSON +
     ',"locale":{"type":"string"},"fallback":{"type":"string"},"type":{"enum":["text","boolean","integer","number"]}},"required":["resource","path","locale","fallback","type"],"additionalProperties":false}');
+  LRows := TNyxDataValue.ParseJSON('{"type":"object","properties":{"version":{"const":1},"resource":' +
+    LName.ToJSON + ',"path":' + LPath.ToJSON + ',"identity":' + LPath.ToJSON +
+    ',"fields":{"type":"array","minItems":1,"maxItems":64,"items":{"type":"object","properties":{"name":' +
+    LName.ToJSON + ',"type":{"enum":["text","boolean","integer","number"]},"path":' + LPath.ToJSON +
+    '},"required":["name","type","path"],"additionalProperties":false}}},"required":["version","resource","path","identity","fields"],"additionalProperties":false}');
   LChanges := TNyxDataValue.ParseJSON('{"type":"array","minItems":1,"maxItems":32,"items":{"oneOf":[' +
     '{"type":"object","properties":{"op":{"const":"define"},"name":' + LName.ToJSON +
     ',"locale":' + LText.ToJSON + ',"definition":' + LDefinition.ToJSON +
     '},"required":["op","name","locale","definition"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"remove"},"name":' + LName.ToJSON +
     ',"locale":' + LText.ToJSON + '},"required":["op","name","locale"],"additionalProperties":false},' +
+    '{"type":"object","properties":{"op":{"const":"define-rows"},"collection":' + LName.ToJSON +
+    ',"source":' + LRows.ToJSON + ',"replaceStatic":{"type":"boolean"}},"required":["op","collection","source","replaceStatic"],"additionalProperties":false},' +
+    '{"type":"object","properties":{"op":{"const":"detach-rows"},"collection":' + LName.ToJSON +
+    '},"required":["op","collection"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"const":"bind"},"owner":' + LName.ToJSON +
     ',"target":{"enum":' + NyxArray(LTargets).ToJSON + '},"value":' + LSelector.ToJSON +
     '},"required":["op","owner","target","value"],"additionalProperties":false},' +
@@ -491,7 +580,9 @@ begin
     '{"properties":{"mode":{"const":"json"},"name":' + LName.ToJSON + ',"locale":{"type":"string"},"path":' + LPath.ToJSON + ',"offset":{"type":"integer","minimum":0,"maximum":1048576},"limit":{"type":"integer","minimum":1,"maximum":16},"textOffset":{"type":"integer","minimum":0,"maximum":1048576},"textCount":{"type":"integer","minimum":1,"maximum":4096}},"required":["mode","name","locale","path"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"bindings"},"owner":' + LName.ToJSON + ',"offset":{"type":"integer","minimum":0,"maximum":19},"limit":{"type":"integer","minimum":1,"maximum":20}},"required":["mode","owner"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"apply"},"expectedRevision":{"type":"integer","minimum":1,"maximum":2147483647},"operationId":{"type":"string","minLength":1,"maxLength":120},"changes":' +
-    LChanges.ToJSON + '},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false}]}';
+    LChanges.ToJSON + '},"required":["mode","expectedRevision","operationId","changes"],"additionalProperties":false},' +
+    '{"properties":{"mode":{"const":"sources"},"offset":{"type":"integer","minimum":0,"maximum":64},"limit":{"type":"integer","minimum":1,"maximum":16},"filter":{"type":"string"}},"required":["mode"],"additionalProperties":false},' +
+    '{"properties":{"mode":{"const":"rows"},"collection":' + LName.ToJSON + ',"offset":{"type":"integer","minimum":0,"maximum":64},"limit":{"type":"integer","minimum":1,"maximum":16}},"required":["mode","collection"],"additionalProperties":false}]}';
   Result := TNyxDataValue.ParseJSON(LResult);
 end;
 

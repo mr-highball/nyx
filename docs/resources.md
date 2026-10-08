@@ -518,6 +518,42 @@ Saved table row mappings and image-reference bindings are not yet exposed here.
 
 ## Semantic resource authoring
 
+The common Resources area includes `NewNyxResourceRowsEditor`, consumed by both
+ordinary Studio controllers. Open a saved relationship or enter a collection
+name, choose a JSON resource, discover an array and inspect its first row. Choose
+a structural text identity and add named Text/Boolean/Integer/Number fields.
+Mapped fields can be edited or removed before Apply. Paths are copied descriptors;
+literal dots, brackets and Unicode in JSON keys never become path expressions.
+The existing collection binding inspector then attaches the named schema to a
+table/list/tree. Source-backed definitions in the State panel are visibly schema
+seeds with their resource origin; static editing is disabled there.
+
+Discovery reads authored default JSON or a hosted embedded fallback, never the
+network. It visits at most 2,048 values and offers at most 256 paths of up to 32
+steps. First-row discovery is a convenience, not dataset admission: Apply checks
+every row, identity, scalar family and retained consumer on an independent
+candidate. Opening a saved recipe retains its paths even for an empty dataset.
+New empty-array schemas and paths outside bounded discovery can currently be
+authored through the fluent API/MCP and then opened in the form; a richer manual
+path builder remains open. No discovery count is a performance qualification.
+
+Per-project presentation version 9 retains unsubmitted mappings and partial text;
+older versions retain their original strict shapes. Changed catalog/collection
+context refuses restoration before writing fields. Apply uses the ordinary
+isolated paired source processor, pending-draft guard and Undo/Redo. Static rows
+require the explicit conversion checkbox. **Keep rows and detach** materializes
+authored default/fallback data, retaining schema/key/control bindings; it does not
+copy application edits or delete the resource. Both actions restore with one
+paired Undo. The form proposal is copied through the existing resource command;
+its row branch has a closed version-2 descriptor and exact baselines.
+
+Studio's full canvas replacement explicitly requests `nrmAuthoredDefaults` from
+`TNyxResourceRenderMode`. Runtime renderer calls default to `nrmConfigured` and
+keep their accepted catalog/locale. Both adapters stage the chosen context before
+retiring a mount. This fixes stale design captions after authoring while retaining
+running application resource lifetime; an admission/constructor failure does not
+change the previous context. Retained refresh still checks document context.
+
 Current source exposes `nyx_resources` through the ordinary MCP dispatcher.
 Queries preserve selection, accepted source and history. Every response includes
 the revision; exact variant queries require both `name` and `locale` (empty
@@ -531,7 +567,9 @@ cache contents.
 | `content` | Text/JSON source windows of at most 4,096 Unicode scalars, or image/binary windows of at most 4,096 bytes |
 | `json` | Exact structural path; at most 16 immediate children with 80-scalar previews, or one exact scalar/text window |
 | `bindings` | Supported properties and local/effective descriptors for an authored owner, including resource selectors and inheritance |
-| `apply` | 1..32 typed resource/binding changes, one final paired publication and Undo checkpoint |
+| `sources` | 8 saved collection/resource relationships by default, at most 16; case-sensitive collection/resource filtering without payloads |
+| `rows` | Exact collection source/array/identity plus a page of typed field names/families/paths (8 default, at most 16); runtime rows excluded |
+| `apply` | 1..32 typed resource/binding/row-source changes, one final paired publication and Undo checkpoint |
 
 JSON field names are literal array steps: `["literal.dot", 0]` addresses that
 field and its first item. Child pages return usable structural paths, without
@@ -541,14 +579,25 @@ are independently encoded Base64: concatenate the **decoded bytes**, rather
 than their padded Base64 strings. Hosted payload windows explicitly identify
 `authored-fallback`; a declaration without fallback refuses payload access.
 
-Mutation operations are `define`, `remove`, `bind`, `clear-binding` and
-`inherit-binding`. Definitions use the existing strict embedded version 1 or
+Mutation operations are `define`, `remove`, `bind`, `clear-binding`,
+`inherit-binding`, `define-rows` and `detach-rows`. Definitions use the existing strict embedded version 1 or
 hosted version 2 contract. Bind carries the existing five-field resource selector
 and an enum property name at this wire boundary. Pascal callers use
 `NyxDefineResource`, `NyxBindResource` and `NyxResourcePatch` from
 `nyx.studio.resourceedits`, with typed references, locale, property and selector.
 Studio's copied form proposal consumes the same candidate implementation while
 retaining its exact catalog/control baseline guards.
+
+`define-rows` requires `collection`, a closed version-one `source` recipe and
+Boolean `replaceStatic`. The source has `version`, `resource`, structural array
+`path`, text `identity` path and 1..64 ordered `{name,type,path}` fields. Existing
+static collections require explicit true consent; saved sources can be updated.
+Pascal callers use `NyxDefineResourceRows` with `TNyxResourceRows` and typed
+collection references. `detach-rows` requires only `collection`; Pascal uses
+`NyxDetachResourceRows`. Define the related file and recipe in one group, including
+when the recipe appears first. Final consumer admission owns the complete group.
+`nyx_collections` marks source-backed authored queries `resource-schema-seed`
+with their resource key; zero seed rows are never reported as loaded runtime data.
 
 Put file replacements and all dependent selector repairs in one group. Its
 final retained consumers must admit; an invalid final path, missing owner or
@@ -568,7 +617,7 @@ The maintained `resource-workflow` gate qualifies its **suspended** actual
 engine through public semantic dispatch in a new private runtime, plus exact
 compiled emitted source and browser compilation. It starts no listener and
 does not authenticate HTTP or deploy tools into the protected running server.
-Runtime loading/cancellation/cache diagnostics, saved row/media bindings and
+Runtime loading/cancellation/cache diagnostics, hosted media consumers and
 current-source authenticated/observing execution remain open.
 
 ## Wire, limits and qualification
