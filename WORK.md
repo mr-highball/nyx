@@ -9,7 +9,82 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: semantic compiled editor launch — 2026-10-08
+## Current return path: useful source allocation — 2026-10-08
+
+Previous goal turn made progress: semantic launch implementation, qualified
+browser/native/shared input and exact remote checkpoint `85a3e2b` are published.
+Reassessment after the retained no-closure sequence changes the next action to
+Studio authoring criterion 2's observed native source allocation defect, consuming
+the existing portable minimum-size and accepted split-view contracts. An inspected
+1280-by-900 Outputs/source capture leaves only a line of source: the split adapters
+ignore their children's explicit axis minima. Expanded source already retains its
+editor, draft and caret; percentage-only allocation is the missing boundary.
+
+Delivered bounded result: shared constrained split geometry and both ordinary
+adapters honor typed child MinimumHeight/MinimumWidth, preserve requested
+proportions through passive host resize and start gestures at the visible divider.
+The source pane reserves 280 logical pixels and the canvas 96 through that public
+contract. Infeasible minima compress proportionally within split-owned tracks;
+ordinary layout minimum semantics stay independent. Outward commands that change
+no pixels retain the preference; cancellation restores its original value.
+Both separators report the physical allocation to accessibility. Browser splits
+observe their own host and coalesce painting; teardown disconnects the observer,
+exact window callback and queued frame before releasing borrowed children.
+
+Maintained `split` checks pass **152** on FPC and actual pas2js execution, including
+infeasible/tiny hosts, maximum admitted minima, integer-limit extents, immediate
+constrained drag/keyboard motion and cancellation. Compiled reconstruction passes.
+Actual native controls pass **39**; browser controls pass **38**. The additional
+native case reads its physical AccessibleValue. `source-editor` passes **253**
+workspace checks on both native compiler entries and **32** actual native source
+workspace checks, including Outputs, Apply refusal, paired history, modal resize,
+Close/Escape and retained Unicode/draft/ranges. Ordinary native Studio and the
+affected MCP workspace harness compile with zero owned warnings. Two native
+Unicode comparison warnings are corrected with explicit portable text types;
+upstream pas2js RTL warnings remain visible (seven per affected browser build).
+
+Actual browser Studio split journeys pass **20** at desktop and CSS-390, plus
+**nine** narrow/wide/narrow/short-host checks. The source workspace passes **46**
+at each size with Outputs, tabs, expanded return, exact editor/draft/range and
+automatic 444/204-pixel host resizing without renderer Sync or Studio repaint.
+Native Outputs and expanded desktop/narrow captures, browser source-modal
+desktop/narrow and inline narrow split captures are inspected. Synthesized DOM
+events and native hooks qualify adapter behavior; hardware, IME, assistive
+technology, physical-phone and complete native Studio acceptance remain open.
+
+Evidence is ignored `build/source-allocation/`: `split-build-clean.log`,
+`source-editor-build.log`, actual `*-browser-serial.log`,
+`studio-browser-narrow-menu.log`, `studio-browser-resize-menu.log`,
+`source-browser-narrow.log` and bounded captures. Initial concurrent navigation
+timed out against an older single-threaded static host; terminal owners retired,
+HTTP timing and host code identified the contention, and serial runs passed.
+The maintained narrow fixture also attempted hidden header controls after compact
+Actions menus had landed. It now takes the ordinary managed-menu route and
+propagates child failure markers instead of masking them as readiness timeouts.
+Failed receipts remain retained. No product default is weakened to pass a fixture.
+
+Only a fresh owned static-fixture subdirectory is added to an existing admitted
+host. Its process/runtime/existing assets, the installed frozen LAN, all nine
+exact pairs/history and fourteen other services are retained. No backend launch,
+enrollment, configuration, compiler installation or user-project mutation occurs.
+The earlier automatic review rejected a new isolated current-backend start with
+only "blocked by policy"; this packet neither retries nor bypasses that action.
+Current-source HTTP startup and preserving rollout remain unqualified.
+
+Final preservation guard passes at 2026-10-08T14:50:50Z: the sealed 299-file LAN
+payload, nine exact pairs/full history, 147,033-byte checkpoint and all fifteen
+service identities are unchanged. `preservation-final.log` retains the private
+receipt. Actual browser compiled split reconstruction also passes.
+
+This closes the observed source-allocation defect within authoring criterion 2,
+not the full criterion/task/product. Authoring no-closure advances **38→39** once;
+workflow/resource/renderer/codegen/delivery remain **23/9/19/28/3**. Stop split
+expansion and return to original full native/browser Studio, runtime lifecycle and
+preserving delivery owners. No duplicate prerequisite credit or percentage closes.
+
+<a id="current-return-path-semantic-compiled-editor-launch--2026-10-08"></a>
+
+## Previous return path: semantic compiled editor launch — 2026-10-08
 
 Solo batch contract: the existing primary workflow owner supplies the missing
 bounded exact-job observing-editor launch. Consume successful immutable compiler

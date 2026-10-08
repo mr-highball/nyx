@@ -42,13 +42,24 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 
 ## Native source-pane allocation follow-up — 2026-10-08
 
-The semantic launch/compiler diagnostic journey reaches the real native source
-editor and its exact Unicode caret, but the inspected 1280-by-900 capture can
-leave very little source height when details and canvas are both visible.
-Criterion 2 retains usable default native split allocation and expanded-source
-presentation as authoring work; callback/navigation success does not establish
-comfortable editing or complete native visual parity. See
-[the active evidence](../WORK.md#current-return-path-semantic-compiled-editor-launch--2026-10-08).
+The observed cramped native source allocation is corrected through the public
+split's typed child minima. Source reserves 280 logical pixels and canvas 96;
+passive resize retains the requested proportion, and infeasible hosts compress
+the split's own tracks. Shared checks pass **152** on FPC/actual browser; controls
+pass **39 native / 38 browser**. Actual source workspace checks pass **32 native /
+46 browser** at desktop and CSS-390, covering Outputs, modal/tab return and exact
+editor/draft/caret ownership. Browser split passes **20** at both sizes plus
+**nine** viewport transitions. Inspected Outputs/modal/narrow captures support
+the bounded result. Hidden compact actions are exercised through their ordinary
+Nyx menu, not a hidden-button shortcut. Affected builds have zero owned warnings.
+
+Criterion 2 and the full task remain open: this fixes one observed allocation
+defect without accepting complete authoring/source synchronization or native
+visual parity. Authoring no-closure advances **38→39** once; workflow/resource/
+renderer/codegen/delivery remain **23/9/19/28/3**. Installed LAN/pairs are unchanged;
+current-source HTTP startup/rollout, physical-phone/accessibility and full native
+Studio retain their original owners. See
+[the active evidence](../WORK.md#current-return-path-useful-source-allocation--2026-10-08).
 
 ## Ordinary compiled preview lifetime — 2026-10-08
 

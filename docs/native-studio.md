@@ -363,6 +363,14 @@ host, and **Close** or Escape returns it. Apply Pascal, Restore accepted and
 Save draft remain ordinary Nyx actions in either location. Diagnostic navigation
 selects Source before moving the caret.
 
+The ordinary source pane now asks the public split contract for 280 logical
+pixels, while the canvas asks for 96. These explicit child minima preserve a
+readable source area beside Outputs or Agents without rewriting the chosen
+split proportion. In infeasible hosts the panes compress proportionally; Expand
+remains available for concentrated editing. Actual native and browser input
+fixtures check retained drafts, caret and editor identity through constrained
+allocation and modal return; physical-phone usability remains a separate check.
+
 `BuildNyxStudioSourcePane` creates an owned ordinary Nyx tree. Controllers retain
 that view and the independent public code editor; moving the platform host does
 not create another editor or spend document history. Native root height sizing

@@ -42,6 +42,9 @@ var
   GChecks: Integer;
   GFrame: TJSHTMLIFrameElement;
   GPolls: Integer;
+  GSplit: TJSHTMLElement;
+  GSplitHeight: TNyxText;
+  GSplitFlex: TNyxText;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -63,6 +66,25 @@ begin
   end;
 end;
 
+{ Narrow header actions use the ordinary managed menu. Hidden buttons refuse
+  activation, so source/Outputs qualification must take the same route available
+  to an operator. No application design is authored through this harness. }
+procedure WorkspaceAction(const AID, ABranch, ACommand: TNyxText);
+var
+  LFace: TJSHTMLElement;
+begin
+  LFace := Find(AID);
+
+  if LFace.getBoundingClientRect.height > 0 then
+  begin
+    LFace.click;
+    Exit;
+  end;
+  Find('action-actions').click;
+  Find('studio-menu-' + ABranch).click;
+  Find('studio-menu-' + ACommand).click;
+end;
+
 procedure RetainedInput;
 begin
   Check(Find('studio-code') = GInput, 'same real textarea survives presentation changes');
@@ -77,6 +99,68 @@ begin
   document.body.setAttribute('data-source-editor-error', AMessage);
 end;
 
+procedure FinishAllocation;
+begin
+  try
+    RetainedInput;
+    Check(GInput.getBoundingClientRect.height >= 100,
+      'restoring the host restores a readable source viewport');
+    Find('action-expand-source').click;
+    document.body.setAttribute('data-source-editor', 'passed');
+    document.body.setAttribute('data-source-editor-checks', IntToStr(GChecks));
+  except
+    on LException: Exception do
+    begin
+      Failed(LException.Message);
+    end;
+  end;
+end;
+
+procedure AfterSmallAllocation;
+var
+  LFirst: TJSHTMLElement;
+  LSecond: TJSHTMLElement;
+  LGrip: TJSHTMLElement;
+begin
+  try
+    LFirst := TJSHTMLElement(GSplit.children[0]);
+    LSecond := TJSHTMLElement(GSplit.children[2]);
+    LGrip := TJSHTMLElement(GSplit.children[1]);
+    Check(LFirst.getBoundingClientRect.height + LSecond.getBoundingClientRect.height +
+      LGrip.getBoundingClientRect.height <= GSplit.clientHeight + 1,
+      'automatic small-host observation bounds both panes and the divider');
+    RetainedInput;
+    GSplit.style.setProperty('height', GSplitHeight);
+    GSplit.style.setProperty('flex', GSplitFlex);
+    window.setTimeout(@FinishAllocation, 200);
+  except
+    on LException: Exception do
+    begin
+      Failed(LException.Message);
+    end;
+  end;
+end;
+
+procedure AfterAllocation;
+var
+  LSecond: TJSHTMLElement;
+begin
+  try
+    LSecond := TJSHTMLElement(GSplit.children[2]);
+    Check((LSecond.getBoundingClientRect.height >= 279) and
+      (GInput.getBoundingClientRect.height >= 100),
+      'automatic host resize reserves the public source-pane minimum');
+    RetainedInput;
+    GSplit.style.setProperty('height', '204px');
+    window.setTimeout(@AfterSmallAllocation, 200);
+  except
+    on LException: Exception do
+    begin
+      Failed(LException.Message);
+    end;
+  end;
+end;
+
 procedure Journey;
 var
   LDialog: TJSHTMLElement;
@@ -86,7 +170,7 @@ var
   LOptions: TJSObject;
 begin
   try
-    Find('action-code').click;
+    WorkspaceAction('action-code', 'view', 'code');
     GInput := TJSHTMLTextAreaElement(Find('studio-code'));
     LHeight := GInput.getBoundingClientRect.height;
     Check(LHeight > 60, 'split source has a usable physical face');
@@ -100,6 +184,10 @@ begin
     GInput.focus;
     GInput.selectionStart := 13;
     GInput.selectionEnd := 61;
+    WorkspaceAction('action-outputs', 'project', 'outputs');
+    RetainedInput;
+    Check(GInput.getBoundingClientRect.height >= 100,
+      'source stays readable with Outputs in the shared center');
 
     Find('action-messages-tab').click;
     Check(Find('studio-source-messages').getBoundingClientRect.height > 0,
@@ -141,13 +229,19 @@ begin
     RetainedInput;
     Check(document.activeElement = GInput, 'cancellation returns focus to the same editor');
 
-    { Keep the qualified expanded view painted for selective capture. This
+    { Exercise the split's own allocation observer without a renderer Sync or
+      Studio repaint. The delayed stages retain the same editor while the host
+      shrinks below its requested minima, then returns to its ordinary space.
+      Keep the qualified expanded view painted for selective capture. This
       isolated harness opts out of recovery and agent connection; it never edits
       the observing project or its browser storage. Synthesized callbacks qualify
       the DOM path, not trusted hardware, mobile keyboard or assistive technology. }
-    Find('action-expand-source').click;
-    document.body.setAttribute('data-source-editor', 'passed');
-    document.body.setAttribute('data-source-editor-checks', IntToStr(GChecks));
+    GSplit := Find('studio-split');
+    GSplitHeight := GSplit.style.getPropertyValue('height');
+    GSplitFlex := GSplit.style.getPropertyValue('flex');
+    GSplit.style.setProperty('flex', 'none');
+    GSplit.style.setProperty('height', '444px');
+    window.setTimeout(@AfterAllocation, 200);
   except
     on LException: Exception do
     begin

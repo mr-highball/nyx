@@ -51,3 +51,15 @@ scope. Disjoint namespace probes now preserve it. The original 141 split/platfor
 checks pass again under both native compilers; actual layout-policy browser
 reconstruction also passes. This restores accepted behavior rather than adding
 credit or changing the original criteria. WORK.md owns the reproduction and fix.
+
+Maintenance integration (2026-10-08): explicit realized child axis minima now
+constrain both adapters through shared geometry without rewriting the requested
+percentage. Infeasible split tracks compress proportionally; gestures start at
+the physical divider, outward no-op movement retains the preference, cancellation
+restores it, and passive browser allocation has an owned observer. Shared checks
+pass 152 on FPC and actual browser; controls pass 39 native/38 browser. Studio
+consumes the contract for readable source beside Outputs, with 20 checks at both
+browser sizes and nine viewport transitions. Source modal/input evidence belongs
+to the original authoring owner. This neither duplicates accepted prerequisite
+credit nor accepts full native Studio/accessibility. See
+[the integration packet](../../WORK.md#current-return-path-useful-source-allocation--2026-10-08).

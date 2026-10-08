@@ -680,7 +680,7 @@ begin
   GBrowser.WaitText('[data-node="studio-agents-status"]', 'Agents edit');
   GBrowser.Click('action-code');
   GBrowser.ResizeSource('Home', 36);
-  GBrowser.WaitText('[data-node="studio-split"] .nyx-split-divider', 'aria-valuenow="10"');
+  GBrowser.WaitText('[data-node="studio-split"] .nyx-split-divider', 'data-requested-position="10"');
   GBrowser.AppendDraft(CPrimaryDraft);
   WaitDraft(NyxPrimaryWorkspace, CPrimaryDraft);
   LPrimaryDraft := GBrowser.Value(CCode);
@@ -732,7 +732,7 @@ begin
   end;
   GBrowser.Click('action-code');
   GBrowser.ResizeSource('End', 35);
-  GBrowser.WaitText('[data-node="studio-split"] .nyx-split-divider', 'aria-valuenow="90"');
+  GBrowser.WaitText('[data-node="studio-split"] .nyx-split-divider', 'data-requested-position="90"');
   Check(GBrowser.Value(CCode) <> LPrimaryDraft,
     'Project A has its own live public Pascal control/source');
   GBrowser.AppendDraft(CProjectDraft);
@@ -748,7 +748,7 @@ begin
   GBrowser.Click(JumpID(NyxPrimaryWorkspace));
   GBrowser.WaitText('[data-node="studio-subtitle"]', 'Untitled project');
   GBrowser.WaitText('[data-node="studio-agents-status"]', 'Agents edit');
-  GBrowser.WaitText('[data-node="studio-split"] .nyx-split-divider', 'aria-valuenow="10"');
+  GBrowser.WaitText('[data-node="studio-split"] .nyx-split-divider', 'data-requested-position="10"');
   Check(GBrowser.Value(CCode) = LPrimaryDraft,
     'Returning restores exact primary pending Unicode source and visible split');
   EqualFrame(GBaseline, Observe(NyxPrimaryWorkspace));
@@ -767,7 +767,7 @@ begin
   GBrowser.Click(JumpID(LFirst));
   GBrowser.WaitText('[data-node="studio-subtitle"]', 'First project');
   GBrowser.WaitText('[data-node="studio-agents-status"]', 'Agents edit');
-  GBrowser.WaitText('[data-node="studio-split"] .nyx-split-divider', 'aria-valuenow="90"');
+  GBrowser.WaitText('[data-node="studio-split"] .nyx-split-divider', 'data-requested-position="90"');
   Check(GBrowser.Value(CCode) = LProjectDraft,
     'Second jump restores Project A independent draft and presentation');
   EqualFrame(LFirstFrame, Observe(LFirst));

@@ -240,7 +240,8 @@ begin
     LPoint := LGrip.ScreenToClient(Point(LStart.X - 96, LStart.Y));
     LGrip.MouseUp(mbLeft, [], LPoint.X, LPoint.Y);
     Check((LSink.Renderer.InputFor('second-pane') = LInput) and
-      (LInput.Text = 'Keep exact edit / 🌙漢字'), 'native drag retains actual memo and Unicode draft');
+      (TNyxText(LInput.Text) = TNyxText('Keep exact edit / 🌙漢字')),
+      'native drag retains actual memo and Unicode draft');
     Check((LInput.SelStart = 5) and (LInput.SelLength = 5), 'native drag retains caret');
     Check(LSplit.Panes[1].Width > LWidth, 'native second pane gains space');
     LBefore := LSplit.State.Position;
@@ -323,6 +324,59 @@ begin
     {$endif}
     Check(LSink.Count = 4, 'permission cancellation does not dispatch a completed change');
     LSink.Renderer.Root.Configure.ReadOnly(False);
+    LSink.Renderer.Sync;
+    { Apply public child size constraints to the already mounted view. A forced
+      allocation must retain the input while the divider follows physical space. }
+    LSink.Renderer.Root.Find('first-pane').Configure.MinimumHeight(80).MinimumWidth(80);
+    LSink.Renderer.Root.Find('second-pane').Configure.MinimumHeight(240).MinimumWidth(240);
+    LSink.Renderer.Sync;
+    {$ifdef PAS2JS}
+    Check(LSink.Renderer.ElementFor('second-pane').getBoundingClientRect.height >= 239,
+      'browser split honors the second pane minimum height');
+    Check(LGrip.getAttribute('aria-valuenow') <> '90',
+      'browser accessibility describes the physical constrained divider');
+    LX := LGrip.getBoundingClientRect.left + 12;
+    LY := LGrip.getBoundingClientRect.top + 12;
+    LHeight := LGrip.getBoundingClientRect.top;
+    Pointer(LGrip, 'pointerdown', LX, LY);
+    Pointer(LGrip, 'pointermove', LX, LY - 24);
+    Check(LGrip.getBoundingClientRect.top < LHeight - 10,
+      'browser drag responds immediately from a minimum-constrained edge');
+    Pointer(LGrip, 'pointercancel', LX, LY - 24);
+    Check(Abs(LGrip.getBoundingClientRect.top - LHeight) < 1,
+      'browser cancellation restores the constrained physical allocation');
+    LSink.Renderer.Root.Find('work-split').Configure.Height(204);
+    LSink.Renderer.Sync;
+    Check(TJSHTMLElement(LSplit.children[0]).getBoundingClientRect.height +
+      LGrip.getBoundingClientRect.height + TJSHTMLElement(LSplit.children[2]).getBoundingClientRect.height <=
+        LSplit.clientHeight + 1, 'infeasible browser minima do not enlarge the split host');
+    Check((LSink.Renderer.ElementFor('second-pane').querySelector('textarea') = LInput) and
+      (LInput.value = 'Keep exact edit / 🌙漢字') and (LInput.selectionStart = 5),
+      'constrained browser resize retains the same input, Unicode draft and range');
+    {$else}
+    Check(LSplit.Panes[1].Width >= 240, 'native split honors the second pane minimum width');
+    Check((LSplit.State.Position = 90) and (LSplit.State.EffectivePosition <> 90),
+      'native constrained allocation retains the requested preference');
+    Check(LGrip.AccessibleValue = IntToStr(LSplit.State.EffectivePosition),
+      'native accessibility reports the physical constrained divider');
+    LWidth := LSplit.Panes[0].Width;
+    LGrip.MouseDown(mbLeft, [], 12, 12);
+    LGrip.MouseMove([ssLeft], -12, 12);
+    Check(LSplit.Panes[0].Width < LWidth - 10,
+      'native drag responds immediately from a minimum-constrained edge');
+    LGrip.MouseCapture := False;
+    Check(LSplit.Panes[0].Width = LWidth,
+      'native cancellation restores the constrained physical allocation');
+    LSink.Renderer.Root.Find('work-split').Configure.Width(204);
+    LSink.Renderer.Sync;
+    Check(LSplit.Panes[0].Width + LGrip.Width + LSplit.Panes[1].Width = LSplit.ClientWidth,
+      'infeasible native minima do not enlarge the split host');
+    Check((LSink.Renderer.InputFor('second-pane') = LInput) and
+      (TNyxText(LInput.Text) = TNyxText('Keep exact edit / 🌙漢字')) and (LInput.SelStart = 5),
+      'constrained native resize retains the same input, Unicode draft and range');
+    {$endif}
+    LSink.Renderer.Root.Find('first-pane').Configure.Clear(atMinimumHeight).Clear(atMinimumWidth);
+    LSink.Renderer.Root.Find('second-pane').Configure.Clear(atMinimumHeight).Clear(atMinimumWidth);
     LSink.Renderer.Sync;
     LSink.Navigate := True;
     {$ifdef PAS2JS}

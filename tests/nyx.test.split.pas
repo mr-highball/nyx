@@ -36,7 +36,7 @@ implementation
 uses
   SysUtils, nyx.text, nyx.types, nyx.controls, nyx.schema, nyx.codec,
   nyx.codegen, nyx.source, nyx.composition, nyx.platform, nyx.split,
-  nyx.behavior, nyx.data, nyx.state, nyx.studio.session;
+  nyx.behavior, nyx.data, nyx.state, nyx.studio.session, nyx.layout.constraints;
 
 function CreateNyxSplitFixture: TNyxDocument;
 var
@@ -263,6 +263,66 @@ begin
         (LSnapshot.Value.AsInteger = 80) and LSnapshot.HasValue, 'owned integer resize event');
     finally
       LState.Free;
+    end;
+    { Constrained allocation is passive: the author's requested percentage
+      survives a small host, while input starts at the actual visible divider. }
+    LRuntime := TNyxNode.Create(nkSplitView, 'minimum-workspace');
+    try
+      LRuntime.Configure.SplitPosition(80).SplitMinimum(10).SplitMaximum(90);
+      LRuntime.Add(NewNyxColumn('minimum-first').Configure.MinimumHeight(80).Done);
+      LRuntime.Add(NewNyxColumn('minimum-second').Configure.MinimumHeight(240).Done);
+      LState := TNyxSplitState.Create(LRuntime);
+      try
+        LGeometry := LState.Geometry(444, 44);
+        Check((LGeometry.FirstExtent = 160) and (LGeometry.SecondExtent = 240) and
+          (LState.Position = 80) and (LState.EffectivePosition = 40),
+          'child minima constrain physical space without changing requested position');
+        LState.BeginDrag(100, 400);
+        Check(not LState.Drag(100) and (LState.Position = 80),
+          'constrained pointer-down does not rewrite the saved preference');
+        Check(LState.Drag(92) and (LState.Position = 38),
+          'inward drag starts immediately at the visible constrained divider');
+        LState.EndDrag(True);
+        Check((LState.Position = 80) and (LState.EffectivePosition = 40),
+          'constrained cancellation restores requested and visible positions');
+        Check(not LState.Key(nkDownKey) and (LState.Position = 80),
+          'outward keyboard movement cannot accumulate invisible changes');
+        Check(LState.Key(nkUpKey) and (LState.Position = 39),
+          'inward keyboard movement starts at the visible constrained divider');
+        LState.SetPosition(80);
+        LGeometry := LState.Geometry(1244, 44);
+        Check((LGeometry.FirstExtent = 960) and (LGeometry.SecondExtent = 240) and
+          (LState.Position = 80), 'large host restores the requested proportion');
+        LGeometry := LState.Geometry(204, 44);
+        Check((LGeometry.FirstExtent = 40) and (LGeometry.SecondExtent = 120),
+          'infeasible child minima compress proportionally without overflow');
+        LGeometry := LState.Geometry(20, 44);
+        Check((LGeometry.FirstExtent = 0) and (LGeometry.SecondExtent = 0) and
+          (LGeometry.DividerExtent = 20), 'tiny constrained hosts bound all three extents');
+        LRuntime.Children[0].Configure.MinimumHeight(MaximumNyxLayoutBound);
+        LRuntime.Children[1].Configure.MinimumHeight(MaximumNyxLayoutBound);
+        LState.ConfigurePanes(LRuntime);
+        LGeometry := LState.Geometry(High(Integer), 44);
+        Check((LGeometry.FirstExtent >= 0) and (LGeometry.SecondExtent >= 0) and
+          (Double(LGeometry.FirstExtent) + LGeometry.SecondExtent +
+            LGeometry.DividerExtent = High(Integer)),
+          'maximum admitted minima and integer host extent have no overflowing intermediate');
+      finally
+        LState.Free;
+      end;
+      LRuntime.Configure.SplitOrientation(nsoSideBySide);
+      LRuntime.Children[0].Configure.MinimumWidth(80);
+      LRuntime.Children[1].Configure.MinimumWidth(240);
+      LState := TNyxSplitState.Create(LRuntime);
+      try
+        LGeometry := LState.Geometry(444, 44);
+        Check((LGeometry.FirstExtent = 160) and (LGeometry.SecondExtent = 240),
+          'side-by-side panes consume width minima rather than height minima');
+      finally
+        LState.Free;
+      end;
+    finally
+      LRuntime.Free;
     end;
     LScoped := nil;
     LBase := nil;

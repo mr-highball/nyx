@@ -27,7 +27,7 @@ unit nyx.split.browser;
 interface
 
 uses
-  SysUtils, JS, Web, nyx.text, nyx.types, nyx.model, nyx.split, nyx.interaction;
+  SysUtils, Math, JS, Web, nyx.text, nyx.types, nyx.model, nyx.split, nyx.interaction;
 
 type
   TNyxBrowserSplit = class;
@@ -49,6 +49,18 @@ type
     FClosed: Boolean;
     FDesignMode: Boolean;
     FOnChanged: TNyxBrowserSplitChanged;
+    { Constrained tracks use shared pixel geometry. Observe this host's own
+      content allocation, coalescing one paint, so nested splits and modal
+      reparenting update without rebuilding child controls. }
+    FObserver: TJSHTMLResizeObserver;
+    FResize: TJSEventHandler;
+    FFrame: NativeInt;
+    FQueued: Boolean;
+    procedure BoundsChanged(AEntries: TJSHTMLResizeObserverEntryArray;
+      AObserver: TJSHTMLResizeObserver);
+    function HostResized(AEvent: TJSEvent): Boolean;
+    procedure Queue;
+    procedure Paint(ATime: Double);
     function CanResize: Boolean;
     function Coordinate(AEvent: TJSPointerEvent): Double;
     function Down(AEvent: TJSPointerEvent): Boolean;
@@ -134,12 +146,35 @@ begin
     FHost.appendChild(LPane);
   end;
   Update;
+  { The observer owns no descriptor or application; disconnect before the
+    borrowed view is released. Window resize is a fallback on older engines. }
+
+  if Assigned(window['ResizeObserver']) then
+  begin
+    FObserver := TJSHTMLResizeObserver.new(@BoundsChanged);
+    FObserver.observe(FHost);
+  end;
+  FResize := @HostResized;
+  window.addEventListener('resize', FResize);
 end;
 
 destructor TNyxBrowserSplit.Destroy;
 begin
   FClosed := True;
   FOnChanged := nil;
+
+  if FObserver <> nil then
+  begin
+    FObserver.disconnect;
+    FObserver := nil;
+  end;
+  window.removeEventListener('resize', FResize);
+
+  if FQueued then
+  begin
+    window.cancelAnimationFrame(FFrame);
+    FQueued := False;
+  end;
 
   if FDivider <> nil then
   begin
@@ -154,6 +189,35 @@ begin
   end;
   FState.Free;
   inherited Destroy;
+end;
+
+procedure TNyxBrowserSplit.BoundsChanged(AEntries: TJSHTMLResizeObserverEntryArray;
+  AObserver: TJSHTMLResizeObserver);
+begin
+  Queue;
+end;
+
+function TNyxBrowserSplit.HostResized(AEvent: TJSEvent): Boolean;
+begin
+  Queue;
+  Result := True;
+end;
+
+procedure TNyxBrowserSplit.Queue;
+begin
+
+  if FClosed or FQueued then
+  begin
+    Exit;
+  end;
+  FQueued := True;
+  FFrame := window.requestAnimationFrame(@Paint);
+end;
+
+procedure TNyxBrowserSplit.Paint(ATime: Double);
+begin
+  FQueued := False;
+  Update;
 end;
 
 function TNyxBrowserSplit.CanResize: Boolean;
@@ -175,6 +239,10 @@ var
   LTracks: TNyxText;
   LIndex: Integer;
   LPolicy: TNyxInteractionPolicy;
+  LExtent: Integer;
+  LGeometry: TNyxSplitGeometry;
+  LConstrained: Boolean;
+  LAxisKey: TNyxText;
 begin
   { Runtime state may change enablement during a captured gesture. Cancel that
     gesture immediately during in-place synchronization, preserving its baseline. }
@@ -215,6 +283,27 @@ begin
   end;
   LTracks := 'minmax(0,' + IntToStr(FState.Position) + 'fr) minmax(0,44px) minmax(0,' +
     IntToStr(100 - FState.Position) + 'fr)';
+  FState.ConfigurePanes(FNode);
+  LAxisKey := 'min-height';
+  LExtent := FHost.clientHeight;
+
+  if FState.Orientation = nsoSideBySide then
+  begin
+    LAxisKey := 'min-width';
+    LExtent := FHost.clientWidth;
+  end;
+  LConstrained := False;
+  for LIndex := 0 to FNode.Count - 1 do
+  begin
+    LConstrained := LConstrained or (StrToIntDef(FNode.Children[LIndex].Prop(LAxisKey), 0) > 0);
+  end;
+  LGeometry := FState.Geometry(LExtent, 44);
+
+  if LConstrained then
+  begin
+    LTracks := IntToStr(LGeometry.FirstExtent) + 'px ' +
+      IntToStr(LGeometry.DividerExtent) + 'px ' + IntToStr(LGeometry.SecondExtent) + 'px';
+  end;
 
   if FState.Orientation = nsoStacked then
   begin
@@ -230,9 +319,15 @@ begin
     FDivider.setAttribute('aria-orientation', 'vertical');
     FDivider.style.setProperty('cursor', 'col-resize');
   end;
-  FDivider.setAttribute('aria-valuemin', IntToStr(FState.Minimum));
-  FDivider.setAttribute('aria-valuemax', IntToStr(FState.Maximum));
-  FDivider.setAttribute('aria-valuenow', IntToStr(FState.Position));
+  { Child minima can constrain an allocation beyond the requested percentage
+    limits. Expose the physical value and include it in the reported range;
+    resizing still admits requested positions only within the authored bounds. }
+  FDivider.setAttribute('aria-valuemin', IntToStr(Math.Min(FState.Minimum, FState.EffectivePosition)));
+  FDivider.setAttribute('aria-valuemax', IntToStr(Math.Max(FState.Maximum, FState.EffectivePosition)));
+  FDivider.setAttribute('aria-valuenow', IntToStr(FState.EffectivePosition));
+  { Requested preference is separate from the currently constrained physical
+    value. Host consumers can inspect both without guessing from screen pixels. }
+  FDivider.setAttribute('data-requested-position', IntToStr(FState.Position));
 
   { Inspecting a read-only/fixed separator must not require a pointer. Its
     focused hooks remain available, while CanResize alone owns default sizing. }

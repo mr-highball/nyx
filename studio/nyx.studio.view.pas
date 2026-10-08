@@ -1288,6 +1288,10 @@ begin
   LViewbar.Configure.Visible(not AState.CanvasExpanded).Done;
   LCanvas := TNyxNode.Create('column', 'studio-canvas-wrap');
   LCanvas.Configure.ForPlatform(npfNativeLCL).Flex(1).Padding(0).Gap(0).Done;
+  { Explicit pane minima reserve an editable workspace when Outputs or Agents
+    share the center. Both split adapters consume this ordinary typed contract;
+    the divider still adjusts in place and tiny hosts compress boundedly. }
+  LCanvas.Configure.MinimumHeight(96).Done;
 
   if AState.CodeVisible and not AState.CanvasExpanded then
   begin
@@ -1323,6 +1327,7 @@ begin
     begin
       LCodePane := BuildNyxStudioSourcePane(ASession, AState, AReport);
     end;
+    LCodePane.Configure.MinimumHeight(280).Done;
     LSplit.Add(LCodePane);
   end;
   LRight := TNyxNode.Create(nkScroll, 'studio-right').Configure.Layout(nlColumn).Done;

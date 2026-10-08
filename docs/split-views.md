@@ -33,10 +33,30 @@ may be zero, one or two children; a missing child leaves an empty pane. A third
 child is rejected. A split without an explicit height or flex allocation uses
 320 logical pixels; use `Height` or `Flex` to allocate workspace space.
 
+An explicit child `.MinimumHeight(280)` constrains a stacked pane; side-by-side
+panes use `.MinimumWidth`. The adapters copy the realized platform/viewport
+configuration, so a caller can tune these through the same fluent scopes as
+other layout settings. Passive resizing preserves the requested percentage.
+When enough space returns, the original proportion returns too. The separator's
+accessible value describes its physical allocation; `TNyxSplitState.Position`
+retains the preference and `EffectivePosition` describes the realized percentage.
+
+If both minima cannot fit, split-owned tracks compress in proportion to those
+minima and consume the available axis exactly. This is the bounded allocation
+policy of a split, rather than a change to ordinary layout minimum constraints.
+Pane contents may need their own scrolling at such sizes. The 44-pixel divider
+shrinks when the whole host is smaller. Nested browser splits observe their own
+host allocation; native splits follow ordinary LCL resize. Neither path replaces
+mounted children or writes a passive resize into document history.
+
 The divider has a 44-pixel target, reduced only when the entire allocation is
 smaller. Drag it with a pointer or touch. Arrow keys follow the split orientation,
 Shift changes ten percentage points, and Home/End select the bounds. Escape,
 pointer cancellation and capture loss restore the gesture's starting position.
+At a constrained edge, arrows and dragging start from the visible divider.
+Outward movement that changes no pixels does not accumulate a hidden preference
+or emit a completed resize. Cancellation restores the original requested value,
+including a proportion that was temporarily constrained by pane minima.
 Disabled, read-only or non-resizable splits reject resize gestures. A completed
 change emits `OnChange` with an owned integer percentage; normal multiple
 registrations and execution policies apply.

@@ -164,6 +164,11 @@ begin
     Capture(GForm, 'source-sizing');
     Check(LNormalHeight > 120,
       'ordinary source gains useful space from the viewport instead of a fixed desktop split');
+    Click('action-outputs');
+    Check((LSource.Height >= 120) and
+      (GStudio.SourceView.ControlFor('studio-source-pane').Height >= 280),
+      'source remains readable beside open Outputs through public pane minima');
+    Capture(GForm, 'source-with-outputs');
     LDraft := LPair.Source + #10 + '{ This draft belongs to the same retained editor. }' + #10;
     LSource.Text := LDraft;
     Pump;

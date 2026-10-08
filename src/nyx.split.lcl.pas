@@ -331,6 +331,7 @@ begin
   end;
   FArranging := True;
   try
+    FState.ConfigurePanes(FNode);
 
     if FState.Orientation = nsoStacked then
     begin
@@ -348,6 +349,10 @@ begin
       FPanes[1].SetBounds(LGeometry.FirstExtent + LGeometry.DividerExtent, 0,
         LGeometry.SecondExtent, ClientHeight);
     end;
+    { Passive host resizing can constrain the visible divider without changing
+      its requested preference. Native accessibility reports the physical value,
+      just as the browser separator does. }
+    FGrip.AccessibleValue := IntToStr(FState.EffectivePosition);
 
     if Assigned(FOnLayout) then
     begin
@@ -374,7 +379,6 @@ procedure TNyxLCLSplitView.Publish;
 begin
   FNode.Configure.SplitPosition(FState.Position);
   Arrange;
-  FGrip.AccessibleValue := IntToStr(FState.Position);
 end;
 
 procedure TNyxLCLSplitView.Notify;

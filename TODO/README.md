@@ -46,7 +46,21 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current semantic compiled editor launch (2026-10-08): the existing workflow owner
+Current useful source allocation (2026-10-08): authoring criterion 2 consumes
+the public split contract's typed pane minima. Passive resize preserves requested
+proportions; constrained gestures and modal return retain editors/drafts/ranges.
+Shared geometry passes **152** on FPC and actual browser execution, actual controls
+**39 native / 38 browser**, source workspace **32 native / 46 browser** and Studio
+split **20** at each browser size plus **nine** viewport transitions. Workspace
+regression passes **253** on both native compiler entries. Captures are inspected,
+affected builds have zero owned warnings, and installed LAN/nine exact pairs and
+service identities remain unchanged. Full native Studio, hardware/accessibility,
+current-backend HTTP startup and preserving delivery remain open. No full criterion
+closes: authoring no-closure advances **38→39** once; workflow/resource/renderer/
+codegen/delivery stay **23/9/19/28/3**. See
+[the active packet](../WORK.md#current-return-path-useful-source-allocation--2026-10-08).
+
+Previous semantic compiled editor launch (2026-10-08): the existing workflow owner
 adds exact-job `nyx_build` launch/status through ordinary Studio, without rebuild,
 navigation, source/history changes or public producer credentials. Browser
 semantic builds/mounts/input/retries/relaunch pass **56** checked assertions,

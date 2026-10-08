@@ -4,7 +4,22 @@
 [Current work](WORK.md)
 
 
-Current semantic compiled editor launch (2026-10-08): the original primary
+Current useful source allocation (2026-10-08): the original authoring owner
+consumes typed split pane minima to retain readable source beside Outputs.
+Requested proportions, constrained gestures and mounted editor ownership survive
+host resize/modal return. Shared geometry passes **152** on FPC and actual browser
+execution, actual controls **39 native / 38 browser**, source workspace **32 native /
+46 browser** and Studio split **20** at both browser sizes plus **nine** viewport
+transitions. Workspace regression passes **253** on both native compiler entries.
+Captures are inspected and affected builds have zero owned warnings. Existing
+LAN/pairs/service identities are preserved; full native Studio, physical-phone/
+accessibility and current-backend HTTP delivery remain open. No full criterion
+or completion credit closes: authoring no-closure advances **38→39** once; other
+owners stay workflow/resource/renderer/codegen/delivery **23/9/19/28/3**. Return to
+original Studio/runtime/delivery outcomes. See
+[the active packet](WORK.md#current-return-path-useful-source-allocation--2026-10-08).
+
+Previous semantic compiled editor launch (2026-10-08): the original primary
 workflow owner adds bounded exact-job launch/status through ordinary Studio.
 Requests never rebuild or navigate, expose no runtime credential and retain
 paired source/history. Actual browser semantic page/application input, lifetime,

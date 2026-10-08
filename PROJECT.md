@@ -66,7 +66,21 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current semantic preview source (2026-10-08): `nyx_build` adds exact-job launch and
+Current useful source allocation (2026-10-08): ordinary native/browser splits
+honor typed child minima while retaining the requested proportion and mounted
+editors. Studio reserves a readable source pane beside Outputs. Shared geometry
+passes **152** on FPC and actual browser execution; controls pass **39 native /
+38 browser**. Actual source workspace passes **32 native / 46 browser** (browser
+at desktop and CSS-390), and Studio split passes **20** at each browser size plus
+**nine** viewport transitions. Workspace regression passes **253** on both native
+compiler entries; affected builds have zero owned warnings. Captures are inspected.
+Full native Studio, physical-phone/accessibility and current-backend HTTP rollout
+remain open. Existing LAN/pairs and service identities are preserved. No full
+criterion closes: authoring no-closure advances **38→39** once; other owners remain
+workflow/resource/renderer/codegen/delivery **23/9/19/28/3**. See
+[the active packet](WORK.md#current-return-path-useful-source-allocation--2026-10-08).
+
+Previous semantic preview source (2026-10-08): `nyx_build` adds exact-job launch and
 bounded launch status through ordinary observing Studios. Requests never rebuild
 or navigate, expose no runtime credential and preserve accepted history. Exact
 retries retain execution; different operations deliberately relaunch. The actual
