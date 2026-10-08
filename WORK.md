@@ -9,7 +9,77 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: common Resources authoring — 2026-10-08
+## Current return path: native Resources refresh performance — 2026-10-08
+
+Previous turn is progress at exact pushed `bf745e0`: ordinary both-target common
+Resources authoring, exact emitted Pascal and paired history execute; remote and
+worktree are exact/clean at entry. Full original outcomes remain required.
+Installed MCP confirms the preserved primary revision/selection without mutation.
+NS-3 performance criteria 2/3 own the known native rebuild cost, consumed by NS-4's
+full usable authoring requirement. The bounded investigation must decide where a
+native refresh repair belongs; it cannot close a performance criterion from tracing.
+
+Executed the unchanged English MCP companion through actual optimized checked Win32
+Studio without heap tracing. Full ordinary Resources authoring passes **133** in
+**292262 ms**, emitting the exact previously qualified Pascal SHA-256
+`F2580A8DBEF478CD561D57994CDB8F68C439D33CA32EC05244AC72073ACF7DBC`.
+The inspected native capture retains the real caption, prompt, two numeric/text
+table rows, text resource and public form. Native sidebar clipping and full
+aesthetics remain open; this capture is not a new full visual-quality acceptance.
+
+Conditional per-candidate totals separate validation, construction, parenting,
+binding and completion before collection mounting. A 260-node Resources shell
+constructs in **31–32 ms**. Collection mount's `HandleNeeded` then takes
+**4297–4422 ms**, compared with **2812–2813 ms** for the initial 206-node shell.
+Configuration takes zero sampled milliseconds; activation takes **0–16 ms**.
+Handle creation includes native ancestors/descendants, not just the collection.
+Validation is nested inside creation; counters overlap. Coarse elapsed clocks and
+instrumentation overhead limit small measurements. The broad `retire` phase also
+contains preparation/layout/synchronization before Clear; it is not a teardown-only
+measurement. No underlying Windows/widget cause or per-gesture budget is proved.
+
+Two bounded experiments fail to remove that cost: deferring split layout while
+building the candidate, and suppressing construction notifications. Both product
+changes are removed. The first full experimental journey is intentionally stopped
+after its trace disproves the hypothesis; its executable/path/creation are verified
+before stopping only that owned UI consumer. It is **not** a completed after sample.
+Temporary per-window probes corroborate repeated lifecycle cost and are removed
+from maintained widgets; aggregate profiler output remains opt-in with fixed names/
+numbers and no authored content. Production renderer behavior is unchanged.
+
+Maintained `resource-workbench` now honors checked/release configuration and opt-in
+`open`/`full` profiles, keeping profile outputs separate from the ordinary qualified
+closure. Executed release first-open passes **four** real presentation/retirement
+checks. It emits no new source/capture and does not qualify the full authoring journey.
+Normal checked split-control regression passes **39**, with **zero unfreed blocks**.
+Current native compiles have zero warnings. Only native diagnostics/orchestration
+change; prior unchanged browser runtime evidence remains applicable and is not
+rerun or counted as a new browser qualification. Script syntax and whitespace pass.
+
+Reassessment: the hypothesis budget is exhausted; no speedup is accepted. Stop
+low-level speculative fixes and profiler variants. Next meaningful deliverable is
+retained native shell/control refresh under the existing performance/authoring
+owners, avoiding unnecessary native window recreation while preserving atomic
+admission, event routes, collections, focus, independent ownership and exact source/
+history. Use the same full workload and checks for a measured before/after; qualify
+browser behavior only where the shared contract actually changes. Full component,
+Resources/localization/cache, application/reusable, accessibility and delivery
+outcomes remain intact. **25/11/43/21/28/3** stay unchanged; no criterion/count/credit
+or DONE status advances from this diagnostic decision.
+
+Installed native semantic MCP confirms the preserved primary revision/selection
+without design mutation. Final guard verifies **nine exact pairs, fifteen exact
+service identities, 147033 checkpoint bytes/hash, 299 sealed files, served LAN bytes
+and LAN/loopback bindings**. No server, configuration/enrollment, protected user pair
+or cleanup changes. LAN still runs earlier frozen `960134f`; automatic approval
+review previously rejected backend replacement with only **“blocked by policy”**.
+No equivalent retry occurs. Private logs/capture/receipts remain under
+`build/resource-refresh/`; maintained first-open outputs are under
+`build/resource-workbench/profile-open/`. Commit/push and exact remote/worktree
+verification follow the executed gates; private checkpoint receipt owns the result.
+
+<a id="current-return-path-common-resources-authoring--2026-10-08"></a>
+## Previous return path: common Resources authoring — 2026-10-08
 
 Previous turn is progress at exact pushed `7f674c7`: ordinary image binding intent,
 strict migration, actual both-target controllers and exact source/history execute.

@@ -301,6 +301,18 @@ type
     FMeasurementLabel: TLabel;
     FVirtualLayout: Boolean;
     FLayouting: Boolean;
+    {$ifdef NYX_STUDIO_PROFILE}
+    { Per-candidate construction totals locate widget/schema/parenting costs.
+      Recursive children contribute once to these fixed stages; no authored
+      identity, content or borrowed control escapes through the profiler.
+      Validation is nested inside creation; do not sum those two totals. }
+    FBuildNodes: QWord;
+    FBuildValidationMilliseconds: QWord;
+    FBuildCreationMilliseconds: QWord;
+    FBuildParentMilliseconds: QWord;
+    FBuildBindingMilliseconds: QWord;
+    FBuildCompletionMilliseconds: QWord;
+    {$endif}
     {$ifdef NYX_LCL_LAYOUT_PROFILE}
     { Optional checked-workload counters; normal builds have no measurement
       logging or clocks. Counts describe traversals, never authored user text. }
@@ -1137,11 +1149,16 @@ var
   LColorField: TNyxLCLColorField;
   LInfo: TNyxPrimitiveInfo;
   LFactoryIndex: Integer;
+  {$ifdef NYX_STUDIO_PROFILE}LValidationStarted: QWord;{$endif}
 begin
   AInput := nil;
   ACaption := nil;
   LKind := ANode.ProjectionKind;
+  {$ifdef NYX_STUDIO_PROFILE}LValidationStarted := GetTickCount64;{$endif}
   ValidateNyxProperties(ANode);
+  {$ifdef NYX_STUDIO_PROFILE}
+  Inc(FBuildValidationMilliseconds, GetTickCount64 - LValidationStarted);
+  {$endif}
   LFactoryIndex := FactoryIndex(ANode);
 
   if LFactoryIndex >= 0 then
@@ -1501,9 +1518,22 @@ var
   LBinding: TNyxLCLBinding;
   LIndex: Integer;
   LValueDomain: TNyxValueDomain;
+  {$ifdef NYX_STUDIO_PROFILE}LBuildStarted: QWord;{$endif}
 begin
+  {$ifdef NYX_STUDIO_PROFILE}
+  Inc(FBuildNodes);
+  LBuildStarted := GetTickCount64;
+  {$endif}
   Result := CreateControl(ANode, LInput, LCaption);
+  {$ifdef NYX_STUDIO_PROFILE}
+  Inc(FBuildCreationMilliseconds, GetTickCount64 - LBuildStarted);
+  LBuildStarted := GetTickCount64;
+  {$endif}
   Result.Parent := AParent;
+  {$ifdef NYX_STUDIO_PROFILE}
+  Inc(FBuildParentMilliseconds, GetTickCount64 - LBuildStarted);
+  LBuildStarted := GetTickCount64;
+  {$endif}
   Result.Hint := ANode.Prop('hint');
   Result.ShowHint := Result.Hint <> '';
   Result.Visible := ANode.Prop('visible', 'true') <> 'false';
@@ -1680,6 +1710,9 @@ begin
   begin
     raise ENyxModel.Create('Native leaf control cannot contain child controls');
   end;
+  {$ifdef NYX_STUDIO_PROFILE}
+  Inc(FBuildBindingMilliseconds, GetTickCount64 - LBuildStarted);
+  {$endif}
   for LIndex := 0 to ANode.Count - 1 do
   begin
 
@@ -1693,6 +1726,8 @@ begin
     end;
   end;
 
+  {$ifdef NYX_STUDIO_PROFILE}LBuildStarted := GetTickCount64;{$endif}
+
   if Result is TNyxLCLSplitView then
   begin
     TNyxLCLSplitView(Result).OnLayout := LBinding.SplitLayout;
@@ -1700,6 +1735,9 @@ begin
     TNyxLCLSplitView(Result).Ready;
   end;
   Result.Tag := Length(FBindings);
+  {$ifdef NYX_STUDIO_PROFILE}
+  Inc(FBuildCompletionMilliseconds, GetTickCount64 - LBuildStarted);
+  {$endif}
 end;
 
 function TNyxLCLRenderer.Binding(ANode: TNyxNode): TNyxLCLBinding;
@@ -3927,6 +3965,16 @@ begin
       LCandidate.FPanel.Font.Color := ThemeColor(LCandidate.FTheme.Text);
       {$ifdef NYX_STUDIO_PROFILE}RecordPhase('realize');{$endif}
       LCandidate.Build(LCandidate.FRoot, LCandidate.FPanel);
+      {$ifdef NYX_STUDIO_PROFILE}
+      WriteLn('native-build,nodes,', LCandidate.FBuildNodes,
+        ',validation,', LCandidate.FBuildValidationMilliseconds,
+        ',creation,', LCandidate.FBuildCreationMilliseconds,
+        ',parent,', LCandidate.FBuildParentMilliseconds,
+        ',binding,', LCandidate.FBuildBindingMilliseconds,
+        ',completion,', LCandidate.FBuildCompletionMilliseconds,
+        ',total,', GetTickCount64 - LPhaseStarted,
+        ',collections,', LCandidate.FCollectionBindings.Count);
+      {$endif}
       for LIndex := 0 to LCandidate.FCollectionBindings.Count - 1 do
       begin
         LCandidate.BindCollection(LCandidate.FCollectionBindings.ID(LIndex),

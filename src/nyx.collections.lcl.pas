@@ -132,6 +132,7 @@ type
 constructor TNativeMount.Create(AControl: TControl; const AView: INyxCollectionView);
 var
   LIndex: Integer;
+  {$ifdef NYX_STUDIO_PROFILE}LHandleStarted: QWord;{$endif}
 begin
   inherited Create(AView);
   { LCL may establish its initial cell/cursor while creating a widget handle.
@@ -139,10 +140,19 @@ begin
     must not turn an empty portable selection into a user selection. The mounted
     control already belongs to its host, including a hidden renderer candidate. }
 
+  {$ifdef NYX_STUDIO_PROFILE}LHandleStarted := GetTickCount64;{$endif}
+
   if AControl is TWinControl then
   begin
     TWinControl(AControl).HandleNeeded;
   end;
+  {$ifdef NYX_STUDIO_PROFILE}
+  { HandleNeeded may initialize the surrounding native tree as well as this
+    collection. This is inclusive elapsed time, not one widget's CPU cost.
+    Report fixed adapter phases only, without control identity or user data. }
+  WriteLn('native-mount,handle,', GetTickCount64 - LHandleStarted);
+  LHandleStarted := GetTickCount64;
+  {$endif}
   case AView.Projection of
     cpList:
       begin
@@ -227,6 +237,9 @@ begin
         FTree.MultiSelectStyle := [msControlSelect, msShiftSelect, msVisibleOnly];
       end;
   end;
+  {$ifdef NYX_STUDIO_PROFILE}
+  WriteLn('native-mount,configure,', GetTickCount64 - LHandleStarted);
+  {$endif}
 end;
 
 function TNativeMount.DisplayText(const AValue: TNyxText): TNyxText;
@@ -1165,10 +1178,15 @@ function MountNyxLCLCollection(AControl: TControl;
   const AView: INyxCollectionView): INyxCollectionMount;
 var
   LMount: TNativeMount;
+  {$ifdef NYX_STUDIO_PROFILE}LActivateStarted: QWord;{$endif}
 begin
   LMount := TNativeMount.Create(AControl, AView);
   Result := LMount;
+  {$ifdef NYX_STUDIO_PROFILE}LActivateStarted := GetTickCount64;{$endif}
   LMount.Activate;
+  {$ifdef NYX_STUDIO_PROFILE}
+  WriteLn('native-mount,activate,', GetTickCount64 - LActivateStarted);
+  {$endif}
 end;
 
 end.

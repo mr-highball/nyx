@@ -95,6 +95,10 @@ param(
   [string]$ImageSourceDirectory = 'build/image-presentation/seed',
   # Exact paired Resource workbench companion exported through an owned MCP review.
   [string]$ResourceSourceDirectory = 'build/resource-workbench/seed',
+  # Opt-in native timing with the same semantic companion. Open isolates the
+  # first Resources presentation; full retains the complete authoring journey.
+  [ValidateSet('none', 'open', 'full')]
+  [string]$ResourceWorkbenchProfile = 'none',
   # Exact English bound-table source composed/exported through authenticated MCP.
   [string]$GridSourceDirectory = 'build/grid-navigation/source',
   # Full-catalog source is composed/exported by the Pascal semantic MCP consumer.
@@ -3170,19 +3174,36 @@ try {
     # real Studio import/binding, paired history and source checks.
     # Independent artifacts stage only; no service/browser/OS chooser launches.
     $nyxResourceRoot = Join-Path $nyxRoot 'build/resource-workbench'
+    # Profile runs never overwrite the qualified normal source/capture closure.
+    # This directory and mode affect orchestration only; Pascal owns the workload.
+
+    if ($ResourceWorkbenchProfile -ne 'none') {
+      $nyxResourceRoot = Join-Path $nyxResourceRoot ('profile-' + $ResourceWorkbenchProfile)
+    }
     $nyxResourceSeed = [IO.Path]::GetFullPath($ResourceSourceDirectory)
 
     if (-not (Test-Path -LiteralPath (Join-Path $nyxResourceSeed 'nyx.generated.view.pas'))) {
       throw 'Export the English Resource workbench through an owned MCP review first'
     }
-    $nyxResourceNative = Join-Path $nyxResourceRoot 'native'
+    $nyxResourceNativeName = 'native'
+    $nyxResourceBuildFlags = @('-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh')
+
+    if ($NativeStudioConfiguration -eq 'release') {
+      $nyxResourceNativeName = 'native-release'
+      $nyxResourceBuildFlags = @('-Sa', '-Cr', '-Co', '-Ci', '-O2', '-Xs')
+    }
+
+    if ($ResourceWorkbenchProfile -ne 'none') {
+      $nyxResourceBuildFlags += '-dNYX_STUDIO_PROFILE'
+    }
+    $nyxResourceNative = Join-Path $nyxResourceRoot $nyxResourceNativeName
     $nyxResourceBrowser = Join-Path $nyxResourceRoot 'browser'
     $nyxResourceGenerated = Join-Path $nyxResourceRoot 'generated'
     New-Item -ItemType Directory -Force -Path $nyxResourceNative, $nyxResourceBrowser, $nyxResourceGenerated | Out-Null
     $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
     $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
     $nyxResourcePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
-    $nyxResourceFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+    $nyxResourceFlags = @('-B', '-Mdelphi') + $nyxResourceBuildFlags + @(
       '-Fusrc', '-Fustudio', '-Futests',
       "-Fu$nyxLazarus/lcl/units/$nyxResourcePlatform",
       "-Fu$nyxLazarus/lcl/units/$nyxResourcePlatform/$Widgetset",
@@ -3190,11 +3211,20 @@ try {
       "-Fu$nyxLazarus/packager/units/$nyxResourcePlatform",
       "-FU$nyxResourceNative", "-FE$nyxResourceNative")
     Invoke-NyxCompiler $nyxLclFpc ($nyxResourceFlags + @("-Fu$nyxResourceSeed", 'tests/nyx_resource_workbench_controls.lpr'))
-    & (Join-Path $nyxResourceNative 'nyx_resource_workbench_controls.exe') `
-      (Join-Path $nyxResourceGenerated 'nyx.generated.view.pas') `
-      (Join-Path $nyxResourceRoot 'desktop.png')
+    $nyxResourceRun = @((Join-Path $nyxResourceGenerated 'nyx.generated.view.pas'),
+      (Join-Path $nyxResourceRoot 'desktop.png'))
+
+    if ($ResourceWorkbenchProfile -eq 'open') {
+      $nyxResourceRun += '--profile-open'
+    }
+    & (Join-Path $nyxResourceNative 'nyx_resource_workbench_controls.exe') $nyxResourceRun
 
     if ($LASTEXITCODE -ne 0) { throw 'Native resource workbench authoring failed' }
+
+    if ($ResourceWorkbenchProfile -eq 'open') {
+      Write-Host 'Native first-open timing completed. Full authoring/source and browser qualification are separate.'
+      exit 0
+    }
     Invoke-NyxCompiler $nyxLclFpc ($nyxResourceFlags + @("-Fu$nyxResourceGenerated", 'tests/nyx_resource_workbench_generated.lpr'))
     & (Join-Path $nyxResourceNative 'nyx_resource_workbench_generated.exe')
 

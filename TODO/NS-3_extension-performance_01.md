@@ -9,7 +9,19 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current common Resources consumer (2026-10-08) passes 133 checked ordinary Win32
+Current native Resources timing (2026-10-08): the unchanged semantic companion
+passes all 133 ordinary Win32 checks in 292.262 seconds with optimization/checks
+and no heap tracing. The Resources shell's Pascal construction takes 31–32 ms;
+collection HandleNeeded takes 4297–4422 ms, including surrounding native windows.
+Opt-in maintained first-open qualification passes four checks; normal checked
+split/retirement regression passes 39, leak-free. Layout deferral and construction
+notification experiments did not remove the cost and are rolled back. Stop
+speculative low-level fixes; next investigate retained shell/control refresh under
+criteria 2/3 while preserving candidate admission, ownership and events. No
+speedup, per-gesture budget, browser comparison or criterion/count advances. See
+[the measured packet](../WORK.md#current-return-path-native-resources-refresh-performance--2026-10-08).
+
+Previous common Resources consumer (2026-10-08) passes 133 checked ordinary Win32
 assertions, with exact both-target source and live controls. Rebuild-heavy native
 journeys still take several minutes; assertion tracing proves progress, not an
 accepted latency budget. HTTP browser counts include readiness polls and differ

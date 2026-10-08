@@ -76,6 +76,31 @@ input journeys. This build target starts no listener or browser. Current accepte
 evidence and remaining limits belong to
 [WORK.md](../WORK.md#current-return-path-common-resources-authoring--2026-10-08).
 
+Native refresh timing reuses that unchanged semantic companion:
+
+```powershell
+tools/build.ps1 -Target resource-workbench -NativeStudioConfiguration release `
+  -ResourceWorkbenchProfile open -ResourceSourceDirectory <MCP-export>
+```
+
+`open` checks the real Resources presentation and controller retirement only
+(four assertions); it emits no new Pascal or capture. `full` keeps the normal
+complete authoring/source journey and browser staging. Profile outputs live in
+separate `build/resource-workbench/profile-open` or `profile-full` directories,
+preserving ordinary artifacts. The default `none` has no profiling. Checked
+configuration retains heap tracing; release retains assertions/range/overflow/
+I/O checks with optimization and no heap tracing. Choose the same configuration,
+seed and workload for any before/after comparison.
+
+`NYX_STUDIO_PROFILE` emits fixed stage names, counts and elapsed milliseconds,
+without authored content. Creation includes validation, so those totals overlap.
+Collection `handle` includes native ancestor/descendant initialization;
+`native-view,retire` also includes preparation/layout/synchronization before
+retirement. Coarse clocks and diagnostic overhead limit small measurements.
+These are profiling leads, not accepted frame or per-gesture budgets. Current
+[measurements](../WORK.md#current-return-path-native-resources-refresh-performance--2026-10-08)
+identify expensive handle creation; no performance fix is accepted yet.
+
 ## Images from project resources
 
 Use the distinct image selector with a specialized managed image control:

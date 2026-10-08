@@ -9,7 +9,16 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current common Resources authoring consumes criterion 2 through both ordinary
+Current native Resources timing consumes the existing NS-3 criteria 2/3 through
+criterion 2's usable authoring requirement: optimized full qualification passes
+133 but takes 292.262 seconds. Maintained first-open profiling localizes seconds
+in native handle initialization; two unsuccessful experiments are removed.
+Retained shell/control refresh is the next bounded repair. No authoring behavior,
+latency budget or no-closure count advances; both-target acceptance and all
+original outcomes remain required. See
+[the measured packet](../WORK.md#current-return-path-native-resources-refresh-performance--2026-10-08).
+
+Previous common Resources authoring consumes criterion 2 through both ordinary
 controllers and installed native semantic MCP. Exact JSON/text/binary files,
 captions, prompts and live table rows pass copied import, structural discovery,
 explicit default-replacement consent, detach, draft retention and paired history.

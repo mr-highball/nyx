@@ -36,6 +36,9 @@ uses SysUtils, Classes, Interfaces, Forms, Controls, StdCtrls, Grids, Graphics,
 const
   CEditor = 'studio-resource-editor';
   CRowEditor = 'studio-resource-rows';
+  { An opt-in first-open workload isolates the ordinary Resources presentation.
+    The normal invocation still exercises the complete paired authoring journey. }
+  CProfileOpen = '--profile-open';
 
 var
   GChecks: Integer;
@@ -273,6 +276,13 @@ begin
     Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = EncodeNyxProject(LPair),
       'ordinary Studio retains the unchanged MCP seed');
     Click('action-resources-toggle');
+
+    if ParamStr(3) = CProfileOpen then
+    begin
+      Check(LStudio.ShellView.Root.Find(CEditor) <> nil,
+        'profiling opens the real public Resources form');
+      Exit;
+    end;
     ImportFile('copy', 'JSON', WorkbenchCopyTitle, WorkbenchCopyHelp, NyxEncodeUTF8(WorkbenchJSON));
     Bind;
     Choice(refTarget, NyxBindingPropertyTitle(bpText));

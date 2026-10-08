@@ -66,7 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current common Resources authoring (2026-10-08): installed native MCP composes
+Current native Resources profiling (2026-10-08): the unchanged optimized/checks
+workbench passes **133** in **292.262 seconds**. A 260-node Pascal shell builds
+in **31–32 ms**; native handle initialization takes **4297–4422 ms**. Maintained
+first-open profiling passes **four**; normal checked split regression passes
+**39**, leak-free. Two ineffective experiments are removed; no speedup is accepted.
+Next repair is retained native refresh under existing performance/authoring owners.
+Counters remain **25/11/43/21/28/3**; all full outcomes remain open. See
+[the measurements](WORK.md#current-return-path-native-resources-refresh-performance--2026-10-08).
+
+Previous common Resources authoring (2026-10-08): installed native MCP composes
 an owned English workbench, groups seven resource/binding/row edits, preserves
 paired history and compiles both outputs. Ordinary Studio controllers import
 JSON/text/binary, display live captions/prompts/table rows, retain drafts and
