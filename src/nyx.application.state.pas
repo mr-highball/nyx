@@ -32,6 +32,7 @@ uses
   nyx.resources,
   nyx.types,
   nyx.state,
+  nyx.publication,
   nyx.collections.registry,
   nyx.collections.view,
   nyx.collections.bindings,
@@ -59,21 +60,28 @@ type
     FSubscription: TNyxStateSubscription;
     FResourceSubscription: INyxResourceSubscription;
     FResourceContext: INyxResourceContext;
+    FResourcePort: IInterface; { revocable weak receiver retained by preparations }
+    FResourcePreparation: TObject;
+    function GetResourcePublicationBusy: Boolean;
     procedure Initialize(ADocument: TNyxDocument; APlatform: TNyxPlatform;
       const ALocale, AFallback: TNyxLocaleRef);
     procedure ValidateCandidate(ACandidate: TNyxState; AChanges: TNyxStateChanges);
     function ValidateResources(const AContext: INyxResourceContext): Boolean;
-    procedure ResourcesChanged(const AContext: INyxResourceContext);
+    function PrepareResources(const AContext: INyxResourceContext;
+      out APrepared: INyxPreparedPublication): Boolean;
   public
     { npfAny preserves portable host-neutral validation. Concrete application
       hosts supply their target so hidden pages retain its typed overrides. }
     constructor Create(ADocument: TNyxDocument; APlatform: TNyxPlatform = npfAny); overload;
     { Hosts seed saved resource rows at their configured initial locale before
-      attaching validators. Later locale/source changes need joint publication. }
+      attaching validators. Later locale/source changes use joint publication. }
     constructor Create(ADocument: TNyxDocument; APlatform: TNyxPlatform;
       const ALocale, AFallback: TNyxLocaleRef); overload;
     destructor Destroy; override;
     property State: TNyxState read FState;
+    { Navigation/recomposition refuses while the application's prepared resource
+      frame is held. Stores remain readable; destructor revokes borrowed stages. }
+    property ResourcePublicationBusy: Boolean read GetResourcePublicationBusy;
     { Managed runtime stores are independent of saved defaults and sibling
       applications. Keep the same registry through navigation. A retained store
       contains no application/document/renderer reference and can outlive us. }
@@ -90,9 +98,162 @@ type
 implementation
 
 uses
+  SysUtils,
   nyx.composition,
   nyx.platform,
   nyx.binding;
+
+type
+  IApplicationResourcePort = interface
+    ['{ECA03873-89E0-47E7-A514-CC19A10E24D5}']
+    function Owner: TNyxApplicationState;
+    procedure Revoke;
+  end;
+  TApplicationResourcePort = class(TInterfacedObject, IApplicationResourcePort)
+  private
+    FOwner: TNyxApplicationState;
+  public
+    constructor Create(AOwner: TNyxApplicationState);
+    function Owner: TNyxApplicationState;
+    procedure Revoke;
+  end;
+  TApplicationResourcePreparation = class(TInterfacedObject, INyxPreparedPublication)
+  private
+    FPort: IApplicationResourcePort;
+    FHold: INyxStateSnapshotHold;
+    FContext: INyxResourceContext;
+    FPrevious: INyxResourceContext;
+    FRows: INyxPreparedPublication;
+    FValidated: Boolean;
+    FInstalled: Boolean;
+    FRetired: Boolean;
+  public
+    constructor Create(AOwner: TNyxApplicationState; const AContext: INyxResourceContext);
+    destructor Destroy; override;
+    procedure Validate;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
+
+constructor TApplicationResourcePort.Create(AOwner: TNyxApplicationState);
+begin
+  inherited Create;
+  FOwner := AOwner;
+end;
+
+function TApplicationResourcePort.Owner: TNyxApplicationState;
+begin
+  Result := FOwner;
+end;
+
+procedure TApplicationResourcePort.Revoke;
+begin
+  FOwner := nil;
+end;
+
+constructor TApplicationResourcePreparation.Create(AOwner: TNyxApplicationState;
+  const AContext: INyxResourceContext);
+var
+  LIndex: Integer;
+  LPage: TNyxNode;
+begin
+  inherited Create;
+
+  if AOwner.FResourcePreparation <> nil then
+  begin
+    raise ENyxState.Create('Application resource publication is already prepared');
+  end;
+  FHold := AOwner.FState.HoldSnapshot;
+  FPort := AOwner.FResourcePort as IApplicationResourcePort;
+  AOwner.FResourcePreparation := Self;
+  FContext := AContext;
+  FPrevious := AOwner.FResourceContext;
+  { Repeat hidden-page scalar admission against the held state; earlier ordered
+    readiness validators may legitimately have changed state before this hold. }
+  for LIndex := 0 to High(AOwner.FPages) do
+  begin
+    LPage := AOwner.FPages[LIndex].Clone;
+    try
+      LPage.BindResources(AContext.Snapshot, AContext.Locale, AContext.Fallback);
+      ApplyNyxBindings(LPage, AOwner.FState);
+    finally
+      LPage.Free;
+    end;
+  end;
+  FRows := PrepareNyxCollectionContextResources(AOwner.FCollectionContext,
+    AContext.Snapshot, AContext.Locale, AContext.Fallback);
+end;
+
+destructor TApplicationResourcePreparation.Destroy;
+begin
+  Retire;
+  inherited Destroy;
+end;
+
+procedure TApplicationResourcePreparation.Validate;
+begin
+
+  if FRetired or FValidated or (FPort.Owner = nil) then
+  begin
+    raise ENyxState.Create('Application resource preparation is retired or already admitted');
+  end;
+  FRows.Validate;
+  FValidated := True;
+end;
+
+procedure TApplicationResourcePreparation.Install;
+begin
+
+  if FPort.Owner <> nil then
+  begin
+    FPort.Owner.FResourceContext := FContext;
+  end;
+  FRows.Install;
+  FInstalled := True;
+end;
+
+procedure TApplicationResourcePreparation.Notify;
+begin
+
+  if not FInstalled or FRetired then
+  begin
+    raise ENyxState.Create('Application resource notification requires installed data');
+  end;
+  FRows.Notify;
+end;
+
+procedure TApplicationResourcePreparation.Retire;
+var
+  LOwner: TNyxApplicationState;
+begin
+
+  if FRetired then
+  begin
+    Exit;
+  end;
+  FRetired := True;
+
+  if FRows <> nil then
+  begin
+    FRows.Retire;
+    FRows := nil;
+  end;
+
+  if FPort <> nil then
+  begin
+    LOwner := FPort.Owner;
+
+    if (LOwner <> nil) and (LOwner.FResourcePreparation = Self) then
+    begin
+      LOwner.FResourcePreparation := nil;
+    end;
+  end;
+  FHold := nil;
+  FContext := nil;
+  FPrevious := nil;
+  FPort := nil;
+end;
 
 constructor TNyxApplicationState.Create(ADocument: TNyxDocument; APlatform: TNyxPlatform);
 begin
@@ -118,6 +279,7 @@ begin
     raise ENyxState.Create('An application requires at least one page');
   end;
   ADocument.Validate;
+  FResourcePort := TApplicationResourcePort.Create(Self);
   FState := ADocument.State.Clone;
   FCollectionContext := NewNyxCollectionContext(ADocument.Collections, ADocument.Resources,
     ALocale, AFallback);
@@ -127,6 +289,7 @@ begin
   for LIndex := 0 to ADocument.Count - 1 do
   begin
     FPages[LIndex] := RealizeNyxView(ADocument, ADocument.Pages[LIndex]);
+    FPages[LIndex].BindResources(ADocument.Resources, ALocale, AFallback);
 
     if APlatform <> npfAny then
     begin
@@ -142,6 +305,11 @@ destructor TNyxApplicationState.Destroy;
 var
   LIndex: Integer;
 begin
+
+  if FResourcePort <> nil then
+  begin
+    (FResourcePort as IApplicationResourcePort).Revoke;
+  end;
 
   if FResourceSubscription <> nil then
   begin
@@ -194,8 +362,6 @@ begin
   begin
     Exit;
   end;
-  ValidateNyxCollectionContextResources(FCollectionContext, AContext.Snapshot,
-    AContext.Locale, AContext.Fallback);
   for LIndex := 0 to Length(FPages) - 1 do
   begin
     LPage := FPages[LIndex].Clone;
@@ -208,16 +374,25 @@ begin
   end;
 end;
 
-procedure TNyxApplicationState.ResourcesChanged(const AContext: INyxResourceContext);
+function TNyxApplicationState.GetResourcePublicationBusy: Boolean;
 begin
-  { The immutable frame is enough: future validation clones prototypes and binds
-    this frame without rewriting retained collection scopes or defaults. }
-  FResourceContext := AContext;
+  Result := (FResourcePreparation <> nil) or FState.Busy;
+end;
+
+function TNyxApplicationState.PrepareResources(const AContext: INyxResourceContext;
+  out APrepared: INyxPreparedPublication): Boolean;
+begin
+  APrepared := TApplicationResourcePreparation.Create(Self, AContext);
+  Result := True;
 end;
 
 procedure TNyxApplicationState.AttachResources(const AResources: INyxApplicationResources);
 var
   LToken: INyxResourceSubscription;
+  LStage: TApplicationResourcePreparation;
+  LPrepared: INyxPreparedPublication;
+  LOwner: TNyxApplicationState;
+  LPort: IApplicationResourcePort;
 begin
 
   if (AResources = nil) or (FResourceSubscription <> nil) then
@@ -229,9 +404,39 @@ begin
   begin
     raise ENyxState.Create('Application state is busy');
   end;
-  LToken := AResources.Subscribe(ValidateResources, ResourcesChanged);
-  FResourceContext := AResources.Context;
-  FResourceSubscription := LToken;
+  { An embedding caller may supply a different initial locale from Create.
+    Prepare its source rows as well as scalar admission before subscribing.
+    Install the borrowed token before notification so disposal can revoke it. }
+  LStage := TApplicationResourcePreparation.Create(Self, AResources.Context);
+  LPrepared := LStage;
+  LPort := LStage.FPort;
+  try
+    LToken := NyxPreparedApplicationResources(AResources).SubscribePrepared(
+      ValidateResources, PrepareResources);
+    FResourceSubscription := LToken;
+    try
+      PublishNyxGroup([LPrepared]);
+    except
+      on ENyxPublicationNotification do
+      begin
+        { Accepted frame and live subscription survive an observer failure. }
+        raise;
+      end;
+      on Exception do
+      begin
+        LToken.Disconnect;
+        LOwner := LPort.Owner;
+
+        if LOwner <> nil then
+        begin
+          LOwner.FResourceSubscription := nil;
+        end;
+        raise;
+      end;
+    end;
+  finally
+    LPrepared.Retire;
+  end;
 end;
 
 function TNyxApplicationState.PageCollections(const APageID: TNyxText): INyxCollectionBindings;

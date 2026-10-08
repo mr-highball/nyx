@@ -46,7 +46,20 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current saved resource mappings (2026-10-08): typed recipes and empty schema
+Current joint resource frames (2026-10-08): both application hosts and standalone
+renderers prepare catalog/scalar/source-row publication before notifying. Changed
+source rows update shared and resolved reusable stores; unchanged rows retain local
+edits, and late scopes receive installed seeds. Hidden scalar constraints, later
+instance rejection, busy waiting and receiver disposal retain accepted ownership.
+The maintained gate passes **69** saved/source/semantic checks, **112** live checked
+Win32 checks and **eight** for each exact full/page/reusable builder, leak-free.
+Matching browser consumers and Studios/backend/worker compile; actual browser,
+phone and observing execution remain unqualified. Resource no-closure alone
+advances **5→6**; no full criterion/credit/percentage closes and other owners
+remain **22/37/19/28/2**. Return to common Studio/MCP saved-source authoring and
+bounded runtime diagnostics. See [the packet](../WORK.md#current-return-path-joint-live-resource-frames--2026-10-08).
+
+Previous saved resource mappings (2026-10-08): typed recipes and empty schema
 seeds survive strict v9/v2 persistence, crafted full/page/reusable source and
 paired history. Checked shared/actual Win32/source/semantic checks pass **60**;
 three exact emitted builders pass **eight each**, leak-free. Both Studios,

@@ -49,6 +49,21 @@ type
 
   TNyxState = class;
 
+  { UI-thread snapshot hold for coordinated model admission. Retain this token
+    through every install/notification; all writes and new subscriptions refuse
+    until the last hold is released. Multiple readers share one hold. It owns no
+    store: destruction of the store revokes the token before freeing data. }
+  INyxStateSnapshotHold = interface
+    ['{88418859-5EA1-4A3E-AE24-6ABD5735CB77}']
+  end;
+  { Implementation token; obtain it through HoldSnapshot, never construct it. }
+  TNyxStateSnapshotHold = class(TInterfacedObject, INyxStateSnapshotHold)
+  private
+    Owner: TNyxState;
+  public
+    destructor Destroy; override;
+  end;
+
   TNyxStateKind = (nskText, nskBoolean, nskInteger, nskNumber);
 
   { Immutable scalar value. Getters refuse a different kind instead of coercing
@@ -204,6 +219,8 @@ type
     FSerial: Integer;
     FBusy: Boolean;
     FReadOnly: Boolean;
+    FSnapshotHold: TNyxStateSnapshotHold; { weak; token revokes on release }
+    function GetBusy: Boolean;
     function IndexOf(const AKey: TNyxText): Integer;
     function GetCount: Integer;
     procedure Put(const AKey: TNyxText; const AValue: TNyxStateValue; AExists: Boolean);
@@ -214,6 +231,9 @@ type
     procedure Publish(ACandidate: TNyxState; AChanges: TNyxStateChanges);
   public
     destructor Destroy; override;
+    { Requires an idle mutable store, but joins an existing snapshot hold. No
+      callbacks execute and no revision changes. A held state remains readable. }
+    function HoldSnapshot: INyxStateSnapshotHold;
     function Has(const AKey: TNyxText): Boolean;
     function Value(const AKey: TNyxText): TNyxStateValue;
     function GetValue(const ARef: TNyxTextStateRef): TNyxText; overload;
@@ -240,10 +260,10 @@ type
     property Count: Integer read GetCount;
     property Revision: Integer read FRevision;
     property ReadOnly: Boolean read FReadOnly;
-    { A candidate commit/notification is active. View publication must not
+    { A candidate commit/notification or snapshot hold is active. View publication must not
       reenter that transaction or replace its validation context. Observation
       is not a cross-thread lock; applications still serialize store access. }
-    property Busy: Boolean read FBusy;
+    property Busy: Boolean read GetBusy;
   end;
 
 { References and typed batch helpers. NyxStateAssign is the explicit codec/bulk
@@ -271,6 +291,41 @@ function TryNyxStateInteger(const AText: TNyxText; out AValue: Integer): Boolean
 function NyxStateKindName(AKind: TNyxStateKind): TNyxText;
 
 implementation
+
+destructor TNyxStateSnapshotHold.Destroy;
+begin
+
+  if Owner <> nil then
+  begin
+    Owner.FSnapshotHold := nil;
+  end;
+  inherited Destroy;
+end;
+
+function TNyxState.GetBusy: Boolean;
+begin
+  Result := FBusy or (FSnapshotHold <> nil);
+end;
+
+function TNyxState.HoldSnapshot: INyxStateSnapshotHold;
+var
+  LHold: TNyxStateSnapshotHold;
+begin
+
+  if FBusy or FReadOnly then
+  begin
+    raise ENyxState.Create('State snapshot requires an idle mutable store');
+  end;
+
+  if FSnapshotHold <> nil then
+  begin
+    Exit(FSnapshotHold);
+  end;
+  LHold := TNyxStateSnapshotHold.Create;
+  Result := LHold;
+  LHold.Owner := Self;
+  FSnapshotHold := LHold;
+end;
 
 function TryNyxStateInteger(const AText: TNyxText; out AValue: Integer): Boolean;
 var
@@ -918,6 +973,11 @@ destructor TNyxState.Destroy;
 var
   LIndex: Integer;
 begin
+
+  if FSnapshotHold <> nil then
+  begin
+    FSnapshotHold.Owner := nil;
+  end;
   for LIndex := 0 to Length(FSubscriptions) - 1 do
   begin
     FSubscriptions[LIndex].FState := nil;
@@ -1021,7 +1081,7 @@ begin
     raise ENyxState.Create('Proposed state snapshot is read-only');
   end;
 
-  if FBusy then
+  if Busy then
   begin
     raise ENyxState.Create('State callbacks cannot mutate state; use one Apply batch');
   end;

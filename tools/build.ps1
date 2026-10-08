@@ -2652,6 +2652,10 @@ try {
       @("-FU$nyxMappingNative", "-FE$nyxMappingNative", 'tests/nyx_resource_mapping_controls.lpr'))
     & (Join-Path $nyxMappingNative 'nyx_resource_mapping_controls.exe') $nyxMappingSource $nyxMappingRuntime
     if ($LASTEXITCODE -ne 0) { throw 'Saved resource mapping/control/semantic checks failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxMappingFlags +
+      @("-FU$nyxMappingNative", "-FE$nyxMappingNative", 'tests/nyx_resource_live_controls.lpr'))
+    & (Join-Path $nyxMappingNative 'nyx_resource_live_controls.exe')
+    if ($LASTEXITCODE -ne 0) { throw 'Coordinated application resource/control journey failed' }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
@@ -2659,6 +2663,9 @@ try {
       'tests/nyx_resource_mapping_controls.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxMappingBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/resource-mappings.html') -Destination $nyxMappingBrowser
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Futests', "-FE$nyxMappingBrowser", 'tests/nyx_resource_live_controls.lpr')
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/resource-live.html') -Destination $nyxMappingBrowser
     foreach ($nyxMappingScope in @('full', 'page', 'reusable')) {
       $nyxMappingEmitted = Join-Path $nyxMappingSource $nyxMappingScope
       $nyxMappingCompiled = Join-Path $nyxMappingRoot "generated-$nyxMappingScope"
@@ -2688,7 +2695,7 @@ try {
       Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
         '-Fusrc', '-Fustudio', "-FE$nyxMappingOutput", $nyxMappingBuild.Program)
     }
-    Write-Host 'Saved mappings/native/source/semantic checks passed; browser execution and joint loading remain separate.'
+    Write-Host 'Saved mappings/joint native loading/source/semantic checks passed; browser execution remains separate.'
     exit 0
   }
 

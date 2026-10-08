@@ -42,6 +42,31 @@ evidence. Existing packed PNG/JPEG and typed scalar/collection engines are input
   visible paired operations retain user work; rendered/trusted-input evidence is
   reported separately from document API and compiler success.
 
+## Joint live application frames — 2026-10-08
+
+Criteria 3/4/5 now have both hosts and standalone renderers consuming prepared
+catalog/scalar/shared-row/reusable-row frames. Hidden scalar constraints and a
+later instance validator refuse before any model installs. Readiness waits for
+Wake; unchanged source rows preserve local edits, while changed rows replace all
+mapped scopes and advance future seeds. State/view/navigation reentry refuses;
+revocable weak ports and managed model leases retire safely after host disposal.
+Painting remains sequential; callbacks qualify complete accepted model snapshots.
+
+Maintained resource-mappings passes 69 saved/source/semantic assertions, 112 live
+checked Win32 assertions and eight for each exact full/page/reusable builder,
+leak-free. The live journey uses the real resolver and UI courier with a controlled
+byte transport; the separate application regression covers the default real HTTP
+adapter. Browser consumers/Studios/backend/worker compile, with actual browser,
+cache/phone/observing execution still unqualified. Model-only late-scope and
+initial-attachment checks do not establish another mounted target.
+
+No full criterion/task/credit/percentage closes. Resource no-closure alone advances
+5→6, other owner counts stay 22/37/19/28/2. End live-frame fixtures and return to
+common Studio/MCP recipe/schema/source inspection, typed authoring/removal and
+bounded runtime loading/cache diagnostics under the original task owners.
+Hosted media, complete application/Studio/parity and performance remain open.
+See [current evidence](../WORK.md#current-return-path-joint-live-resource-frames--2026-10-08).
+
 **Blockers**
 
 - [NS-1_model_01](DONE/NS-1_model_01.md) supplies accepted explicit ownership.

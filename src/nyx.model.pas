@@ -241,6 +241,12 @@ type
       context, without consulting foreign registries a second time. Both trees
       must be realized, with the same shape/identity as the staged projection. }
     procedure CopyResourceContext(ASource: TNyxNode);
+    { Trusted prepared-publication installer. Caller must have admitted an
+      independent clone with exactly this realized tree's shape and identities.
+      Exchanges only property storage and immutable resource context, preserving
+      node/control pointers. No validation, allocation or callbacks occur here;
+      the candidate retains displaced values until the group retires. }
+    procedure ExchangeResourceProjection(ACandidate: TNyxNode);
     { Authored membership reads the owning registry; realized nodes read their
       independent immutable snapshot. Detached authored nodes return nil. }
     property PresentationSnapshot: INyxPresentationSnapshot read GetPresentationSnapshot;
@@ -2441,6 +2447,28 @@ begin
   for LIndex := 0 to Count - 1 do
   begin
     Children[LIndex].CopyResourceContext(ASource.Children[LIndex]);
+  end;
+end;
+
+procedure TNyxNode.ExchangeResourceProjection(ACandidate: TNyxNode);
+var
+  LIndex: Integer;
+  LSnapshot: INyxResources;
+  LLocale: TNyxLocaleRef;
+begin
+  FProps.ExchangeStorage(ACandidate.FProps);
+  LSnapshot := FResourceSnapshot;
+  FResourceSnapshot := ACandidate.FResourceSnapshot;
+  ACandidate.FResourceSnapshot := LSnapshot;
+  LLocale := FResourceLocale;
+  FResourceLocale := ACandidate.FResourceLocale;
+  ACandidate.FResourceLocale := LLocale;
+  LLocale := FResourceFallback;
+  FResourceFallback := ACandidate.FResourceFallback;
+  ACandidate.FResourceFallback := LLocale;
+  for LIndex := 0 to Count - 1 do
+  begin
+    Children[LIndex].ExchangeResourceProjection(ACandidate.Children[LIndex]);
   end;
 end;
 

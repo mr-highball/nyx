@@ -33,8 +33,10 @@ a typed `TNyxResourceRows` recipe. Authored snapshots then contain empty schema
 seeds; both hosts/renderers resolve independent application/instance stores at
 their explicit initial resource locale. The same ordinary `Binds.Collection`
 contract mounts their tables. Static collection editors refuse these recipes
-until source authoring is supplied, and changed datasets refuse scalar-only
-resource reload pending joint publication. See [saved row recipes](resources.md#saved-row-recipes)
+until source authoring is supplied. Changed resource datasets now prepare shared
+and resolved reusable rows together with scalar/catalog updates; equivalent
+source rows preserve local edits, and later scopes use the installed seed.
+See [saved row recipes](resources.md#saved-row-recipes)
 for crafted source, ownership, materialization and current qualification limits.
 
 ## Typed construction

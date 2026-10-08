@@ -404,24 +404,25 @@ begin
     Cell(LRenderer, 'second-card/card-table', 'Ada');
     Check((LView.Store <> LFirst.Store) and (LFirst.Store <> LSecond.Store),
       'saved recipes seed independent application and reusable scopes');
-    LFirst.Edit(NyxItem(NyxCollection('people'), 'ada'), 0, TNyxStateValue.FromText('Ada 🌙'));
-    Cell(LRenderer, 'first-card/card-table', 'Ada 🌙');
+    LFirst.Edit(NyxItem(NyxCollection('people'), 'ada'), 0, TNyxStateValue.FromText('Local reusable edit'));
+    Cell(LRenderer, 'first-card/card-table', 'Local reusable edit');
     Cell(LRenderer, 'second-card/card-table', 'Ada');
     Cell(LRenderer, 'people-table', 'Ada');
     LRetained := LFirst.Store;
     LResources := LDocument.Resources.Clone;
-    LResources.Define(NyxResourceRef('team'), NyxJSONResource(NyxMappingUpdated));
+    LResources.Define(NyxResourceRef('team'), NyxJSONResource(
+      '{"batches":[{"people":[{"key":["ada"],"literal.name":"Rejected","score":10,"ready":"false","ratio":1.5}]}]}'));
     LResources.Define(NyxResourceRef('copy'), NyxTextResource('Must not publish'));
     LRefused := False;
     try
       LRenderer.ReloadResources(LResources, NyxDefaultLocale, NyxDefaultLocale);
     except
-      on ENyxCollection do
+      on Exception do
       begin
         LRefused := True;
       end;
     end;
-    Check(LRefused, 'source-changing scalar-only reload refuses until coordinated application publication');
+    Check(LRefused, 'wrong typed row family refuses the whole prepared frame');
     Cell(LRenderer, 'people-table', 'Ada');
     {$ifdef PAS2JS}
     Check(LRenderer.ElementFor('headline').textContent = 'Build for tomorrow',
@@ -434,7 +435,7 @@ begin
     LResources.Define(NyxResourceRef('copy'), NyxTextResource('Ready for tomorrow 🌙'));
     GPhase := 'unchanged source reload';
     LRenderer.ReloadResources(LResources, NyxDefaultLocale, NyxDefaultLocale);
-    Cell(LRenderer, 'first-card/card-table', 'Ada 🌙');
+    Cell(LRenderer, 'first-card/card-table', 'Local reusable edit');
     {$ifdef PAS2JS}
     Check(LRenderer.ElementFor('headline').textContent = 'Ready for tomorrow 🌙',
       'unrelated resource replacement remains usable');
@@ -442,6 +443,14 @@ begin
     Check(TNyxText(RawByteString(TLabel(LRenderer.ControlFor('headline')).Caption)) =
       TNyxText('Ready for tomorrow 🌙'), 'unrelated resource replacement remains usable');
     {$endif}
+    LResources.Define(NyxResourceRef('team'), NyxJSONResource(NyxMappingUpdated));
+    LRenderer.ReloadResources(LResources, NyxDefaultLocale, NyxDefaultLocale);
+    Cell(LRenderer, 'people-table', 'Ada 🌙');
+    Cell(LRenderer, 'first-card/card-table', 'Ada 🌙');
+    Cell(LRenderer, 'second-card/card-table', 'Ada 🌙');
+    Check((LView.Store = LRenderer.CollectionView('people-table').Store) and
+      (LFirst.Store = LRenderer.CollectionView('first-card/card-table').Store),
+      'changed source publication retains existing stores and control bindings');
     LRenderer.Unmount;
     Check(LRetained.Snapshot.ItemAt(0).GetValue(NyxTextField('name')) = TNyxText('Ada 🌙'),
       'runtime store survives target/token retirement independently');
@@ -478,19 +487,18 @@ begin
     LApp.ShowPage('home');
     Cell(LApp.View, 'people-table', 'Ada 🌙');
     Cell(LApp.View, 'first-card/card-table', 'Ada');
-    LRefused := False;
-    GPhase := 'application locale refusal';
-    try
-      LApp.Resources.Localize(NyxLocale('en-GB'), NyxDefaultLocale);
-    except
-      on ENyxResource do
-      begin
-        LRefused := True;
-      end;
-    end;
-    Check(LRefused and (LApp.Resources.Context.Locale.Name = NyxDefaultLocale.Name),
-      'locale changes that alter source rows refuse the whole application frame');
+    GPhase := 'coordinated application locale';
+    LApp.Resources.Localize(NyxLocale('en-GB'), NyxDefaultLocale);
+    Check(LApp.Resources.Context.Locale.Name = 'en-GB',
+      'locale and saved source rows share the accepted application frame');
     Cell(LApp.View, 'people-table', 'Ada 🌙');
+    Cell(LApp.View, 'first-card/card-table', 'Ada 🌙');
+    Cell(LApp.View, 'second-card/card-table', 'Ada 🌙');
+    Check(LApp.Collections.Collection(NyxCollection('people')).Snapshot.ItemAt(0)
+      .GetValue(NyxIntegerField('score')) = 10, 'mapped numeric row values reload with the locale');
+    Cell(LOther.View, 'people-table', 'Ada');
+    LApp.ShowPage('details');
+    Cell(LApp.View, 'detail-table', 'Ada 🌙');
     LLocalized := TTestApplication.Create;
     LLocalized.ConfigureResources(NyxApplicationResourceOptions.Loading(nrlOnDemand)
       .Localize(NyxLocale('en-GB'), NyxDefaultLocale));

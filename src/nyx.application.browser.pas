@@ -30,6 +30,7 @@ interface
 uses
   nyx.behavior,
   nyx.text,
+  nyx.publication,
   SysUtils,
   Web,
   nyx.model,
@@ -68,7 +69,8 @@ type
     function GetResources: INyxApplicationResources;
     procedure PrepareResources(ADocument: TNyxDocument);
     function ValidateResources(const AContext: INyxResourceContext): Boolean;
-    procedure ResourcesChanged(const AContext: INyxResourceContext);
+    function PrepareResourcePublication(const AContext: INyxResourceContext;
+      out APrepared: INyxPreparedPublication): Boolean;
     procedure Navigate(ANode: TNyxNode; const AEvent: TNyxEventInfo);
   public
     constructor Create;
@@ -258,7 +260,8 @@ begin
   FResources := NewNyxApplicationResources(ADocument.Resources,
     FRenderer.Events.Scheduler, FResourceOptions, LResolver);
   FRuntime.AttachResources(FResources);
-  FResourceSubscription := FResources.Subscribe(ValidateResources, ResourcesChanged);
+  FResourceSubscription := NyxPreparedApplicationResources(FResources).SubscribePrepared(
+    ValidateResources, PrepareResourcePublication);
   FRenderer.ResourceUpdates := FResources;
 end;
 
@@ -277,9 +280,13 @@ begin
   Result := FRenderer.CanReloadResources(AContext);
 end;
 
-procedure TNyxBrowserApplication.ResourcesChanged(const AContext: INyxResourceContext);
+function TNyxBrowserApplication.PrepareResourcePublication(const AContext: INyxResourceContext;
+  out APrepared: INyxPreparedPublication): Boolean;
 begin
-  FRenderer.ReloadResources(AContext.Snapshot, AContext.Locale, AContext.Fallback);
+  { Runtime preparation owns shared/hidden/instance rows. This mounted receiver
+    contributes scalar properties only, against the same held state snapshot. }
+  APrepared := FRenderer.PrepareResourcePublication(AContext);
+  Result := True;
 end;
 
 function TNyxBrowserApplication.GetCollections: INyxCollections;
@@ -296,6 +303,11 @@ procedure TNyxBrowserApplication.ShowPage(const AID: TNyxText);
 var
   LIndex: Integer;
 begin
+
+  if (FRuntime <> nil) and FRuntime.ResourcePublicationBusy then
+  begin
+    raise ENyxState.Create('Navigation refuses during application model publication');
+  end;
 
   if FDocument = nil then
   begin

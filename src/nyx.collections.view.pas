@@ -33,6 +33,7 @@ uses
   nyx.resource.context,
   nyx.resources.rows,
   nyx.state,
+  nyx.publication,
   nyx.data,
   nyx.contract,
   nyx.collections,
@@ -168,16 +169,25 @@ type
   end;
 
 type
-  { Source-aware admission capability. Initial resource rows are captured
-    independently. Until coordinated application row publication is connected,
-    a changed source refuses scalar-only reload rather than leaving stale rows
-    under an accepted new catalog. This is an explicit implementation boundary,
-    not an automatic/live resource loader or a restriction on runtime edits. }
+  { Source-aware detached admission, preserving the original interface/GUID. }
   INyxResourceCollectionContext = interface
     ['{312BB128-932D-46A5-815B-62A80DD392F5}']
     procedure ValidateResources(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef);
   end;
+
+  { Optional coordinated reload capability. Changed mapped datasets update the
+    application store and every already resolved instance/key pair together.
+    Unchanged source rows preserve runtime edits. New instance seeds advance in
+    the same install phase; new scope creation refuses until retirement. }
+  INyxPreparedResourceCollectionContext = interface
+    ['{67D1210C-0A8A-4B6B-9BFC-EA1CF0FA653D}']
+    function PrepareResources(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
+  end;
+
+function PrepareNyxCollectionContextResources(const AContext: INyxCollectionContext;
+  const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
 
 procedure ValidateNyxCollectionContextResources(const AContext: INyxCollectionContext;
   const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef);
@@ -306,7 +316,9 @@ type
     function VisibleItems: TNyxItemRefs;
   end;
 
-  TContext = class(TInterfacedObject, INyxCollectionContext, INyxResourceCollectionContext)
+  TContextPreparation = class;
+  TContext = class(TInterfacedObject, INyxCollectionContext, INyxResourceCollectionContext,
+    INyxPreparedResourceCollectionContext)
   private
     FDefaults: INyxCollectionDefaults;
     FCollections: INyxCollections;
@@ -315,6 +327,7 @@ type
     FStores: array of INyxCollection;
     FSourceKeys: array of TNyxCollectionRef;
     FSourceRows: array of TNyxResourceRows;
+    FPreparation: TContextPreparation; { weak; stage retains this independent context }
   public
     constructor Create(const ADefaults: INyxCollectionDefaults;
       const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef);
@@ -323,7 +336,217 @@ type
     function GetCollections: INyxCollections;
     procedure ValidateResources(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef);
+    function PrepareResources(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
   end;
+
+  TContextPreparation = class(TInterfacedObject, INyxPreparedPublication)
+  private
+    FOwner: TContext;
+    FLease: INyxCollectionContext;
+    FDefaults: INyxCollectionDefaults;
+    FRows: INyxPreparedPublication;
+    FValidated: Boolean;
+    FInstalled: Boolean;
+    FRetired: Boolean;
+  public
+    constructor Create(AOwner: TContext; const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef);
+    destructor Destroy; override;
+    procedure Validate;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
+
+function PrepareNyxCollectionContextResources(const AContext: INyxCollectionContext;
+  const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
+var
+  LPrepared: INyxPreparedResourceCollectionContext;
+begin
+
+  if (AContext = nil) or not Supports(AContext, INyxPreparedResourceCollectionContext, LPrepared) then
+  begin
+    raise ENyxCollection.Create('Collection context does not support coordinated resource publication');
+  end;
+  Result := LPrepared.PrepareResources(AResources, ALocale, AFallback);
+end;
+
+constructor TContextPreparation.Create(AOwner: TContext; const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef);
+var
+  LIndex: Integer;
+  LRow: Integer;
+  LStore: Integer;
+  LSeed, LCandidate: INyxCollectionSnapshot;
+  LSame: Boolean;
+  LItems: TNyxPreparedPublications;
+
+  procedure PrepareStore(const AStore: INyxCollection);
+  var
+    LAtomic: INyxAtomicCollection;
+    LNext: Integer;
+  begin
+
+    if not Supports(AStore, INyxAtomicCollection, LAtomic) then
+    begin
+      raise ENyxCollection.Create('Resource rows require a prepared collection store');
+    end;
+    LNext := Length(LItems);
+    SetLength(LItems, LNext + 1);
+    LItems[LNext] := LAtomic.PrepareAssign(LCandidate, AStore.Snapshot.Revision);
+  end;
+
+begin
+  inherited Create;
+
+  if AOwner.FPreparation <> nil then
+  begin
+    raise ENyxCollection.Create('Collection resource publication is already prepared');
+  end;
+  FLease := AOwner;
+  FOwner := AOwner;
+  FOwner.FPreparation := Self;
+  try
+    FDefaults := FOwner.FDefaults;
+    for LIndex := 0 to High(FOwner.FSourceKeys) do
+    begin
+      LSeed := FOwner.FDefaults.Snapshot(FOwner.FSourceKeys[LIndex]);
+      LCandidate := FOwner.FSourceRows[LIndex].Read(AResources,
+        FOwner.FSourceKeys[LIndex], ALocale, AFallback);
+      LSame := LSeed.Count = LCandidate.Count;
+      for LRow := 0 to LSeed.Count - 1 do
+      begin
+
+        if not LSame then
+        begin
+          Break;
+        end;
+        LSame := LSeed.ItemAt(LRow).SameItem(LCandidate.ItemAt(LRow));
+      end;
+
+      if LSame then
+      begin
+        Continue;
+      end;
+
+      if FDefaults = FOwner.FDefaults then
+      begin
+        FDefaults := FOwner.FDefaults.Clone;
+      end;
+      FDefaults.Define(LCandidate);
+      PrepareStore(FOwner.FCollections.Collection(FOwner.FSourceKeys[LIndex]));
+      for LStore := 0 to High(FOwner.FStores) do
+      begin
+
+        if FOwner.FKeys[LStore] = FOwner.FSourceKeys[LIndex].Name then
+        begin
+          PrepareStore(FOwner.FStores[LStore]);
+        end;
+      end;
+    end;
+
+    if Length(LItems) > 0 then
+    begin
+      FRows := PrepareNyxGroup(LItems);
+    end;
+  finally
+    { A later recipe can fail after earlier stores reserved. Retire that local
+      prefix explicitly on both targets, before constructor cleanup releases it. }
+
+    if FRows = nil then
+    begin
+      for LIndex := 0 to High(LItems) do
+      begin
+
+        if LItems[LIndex] <> nil then
+        begin
+          LItems[LIndex].Retire;
+        end;
+      end;
+    end;
+  end;
+end;
+
+destructor TContextPreparation.Destroy;
+begin
+  Retire;
+  inherited Destroy;
+end;
+
+procedure TContextPreparation.Validate;
+begin
+
+  if FRetired or FValidated then
+  begin
+    raise ENyxCollection.Create('Collection resource preparation is single-use');
+  end;
+
+  if FRows <> nil then
+  begin
+    FRows.Validate;
+  end;
+  FValidated := True;
+end;
+
+procedure TContextPreparation.Install;
+var
+  LPrevious: INyxCollectionDefaults;
+begin
+  LPrevious := FOwner.FDefaults;
+  FOwner.FDefaults := FDefaults;
+  FDefaults := LPrevious;
+
+  if FRows <> nil then
+  begin
+    FRows.Install;
+  end;
+  FInstalled := True;
+end;
+
+procedure TContextPreparation.Notify;
+begin
+
+  if not FInstalled or FRetired then
+  begin
+    raise ENyxCollection.Create('Collection resource notification requires installed data');
+  end;
+
+  if FRows <> nil then
+  begin
+    FRows.Notify;
+  end;
+end;
+
+procedure TContextPreparation.Retire;
+begin
+
+  if FRetired then
+  begin
+    Exit;
+  end;
+  FRetired := True;
+
+  if FRows <> nil then
+  begin
+    FRows.Retire;
+    FRows := nil;
+  end;
+
+  if FOwner <> nil then
+  begin
+    FOwner.FPreparation := nil;
+    FOwner := nil;
+  end;
+  FDefaults := nil;
+  FLease := nil;
+end;
+
+function TContext.PrepareResources(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
+begin
+  Result := TContextPreparation.Create(Self, AResources, ALocale, AFallback);
+end;
 
 constructor TContext.Create(const ADefaults: INyxCollectionDefaults;
   const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef);
@@ -383,36 +606,13 @@ end;
 procedure TContext.ValidateResources(const AResources: INyxResources;
   const ALocale, AFallback: TNyxLocaleRef);
 var
-  LIndex: Integer;
-  LRow: Integer;
-  LSeed: INyxCollectionSnapshot;
-  LCandidate: INyxCollectionSnapshot;
-  LSame: Boolean;
+  LPrepared: INyxPreparedPublication;
 begin
-  for LIndex := 0 to High(FSourceKeys) do
-  begin
-    LSeed := FDefaults.Snapshot(FSourceKeys[LIndex]);
-    LCandidate := FSourceRows[LIndex].Read(AResources, FSourceKeys[LIndex], ALocale, AFallback);
-    LSame := LSeed.Count = LCandidate.Count;
-
-    if LSame then
-    begin
-      for LRow := 0 to LSeed.Count - 1 do
-      begin
-
-        if not LSeed.ItemAt(LRow).SameItem(LCandidate.ItemAt(LRow)) then
-        begin
-          LSame := False;
-          Break;
-        end;
-      end;
-    end;
-
-    if not LSame then
-    begin
-      raise ENyxCollection.Create('Changed resource rows require coordinated application publication: ' +
-        FSourceKeys[LIndex].Name);
-    end;
+  LPrepared := PrepareResources(AResources, ALocale, AFallback);
+  try
+    LPrepared.Validate;
+  finally
+    LPrepared.Retire;
   end;
 end;
 
@@ -450,6 +650,11 @@ begin
     begin
       Exit(FStores[LIndex]);
     end;
+  end;
+
+  if FPreparation <> nil then
+  begin
+    raise ENyxCollection.Create('New instance scopes refuse during resource publication');
   end;
 
   if Length(FStores) >= NyxMaximumCollectionViewInstances then

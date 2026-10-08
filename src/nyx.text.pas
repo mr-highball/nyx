@@ -74,6 +74,10 @@ type
     procedure Delete(AIndex: Integer);
     procedure Clear;
     procedure Assign(ASource: TNyxStrings);
+    { Exchange owned storage without allocation or text conversion. Both objects
+      must exist. Prepared model installers use this only after admission; the
+      displaced strings remain owned by the detached candidate until retirement. }
+    procedure ExchangeStorage(AOther: TNyxStrings);
     function IndexOf(const AValue: TNyxText): Integer;
     { Exact first name match, without allocating candidate name substrings for
       ordinary nonempty names. Equality compares native UTF-8 bytes / browser
@@ -115,6 +119,19 @@ implementation
 uses
   JS;
 {$ENDIF}
+
+procedure TNyxStrings.ExchangeStorage(AOther: TNyxStrings);
+var
+  LItems: array of TNyxText;
+  LCount: Integer;
+begin
+  LItems := FItems;
+  FItems := AOther.FItems;
+  AOther.FItems := LItems;
+  LCount := FCount;
+  FCount := AOther.FCount;
+  AOther.FCount := LCount;
+end;
 
 function NyxTextPosition(const AText: TNyxText; ALine, AColumn: Integer): Integer;
 var

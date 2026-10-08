@@ -36,6 +36,7 @@ uses
   nyx.contract,
   nyx.sliders,
   nyx.state,
+  nyx.publication,
   nyx.resources,
   nyx.binding.types,
   nyx.model,
@@ -64,7 +65,10 @@ type
     FOnSync: TNyxBindingSync;
     FCommandRoot: TNyxNode;
     FCommandProjected: Boolean;
+    FResourcePort: IInterface; { managed revocable weak receiver, never owns this view }
+    FResourcePreparation: TObject; { weak; one single-use stage }
     function GetRefreshReady: Boolean;
+    function GetResourcePublicationBusy: Boolean;
     function GetHasBindings: Boolean;
     procedure ValidateCandidate(ACandidate: TNyxState; AChanges: TNyxStateChanges);
     procedure StateChanged(AState: TNyxState; AChanges: TNyxStateChanges);
@@ -85,6 +89,12 @@ type
       publication. Input events never write a packed file. }
     procedure ReloadResources(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef);
+    { Contribute scalar/context adoption to a coordinated application commit.
+      Holds the state snapshot, owns a detached clone and revokes its borrowed
+      root/receiver when this coordinator is destroyed. Install only exchanges
+      already allocated storage; target synchronization occurs during Notify. }
+    function PrepareResourcePublication(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
     { Explicit DOM/LCL wire boundary. Scalar decoding and payload capture happen
       in the detached candidate before publication; handwritten application
       state writes use typed references/arguments on TNyxState instead. }
@@ -120,6 +130,7 @@ type
     { Fresh UI-thread observations, never cached admission. Unbound views avoid
       extra projection clones but must still refuse command/notification reentry. }
     property RefreshReady: Boolean read GetRefreshReady;
+    property ResourcePublicationBusy: Boolean read GetResourcePublicationBusy;
     { Detached admission for application-wide validators. No resources,
       properties, subscribers or target handles are published by this check. }
     procedure ValidateResourceReload(const AResources: INyxResources;
@@ -147,6 +158,140 @@ uses
   nyx.schema,
   nyx.interaction,
   nyx.projection.refresh;
+
+type
+  IBindingResourcePort = interface
+    ['{BE01BE99-9604-42D3-B844-F5380C273AC2}']
+    function Owner: TNyxLiveBindings;
+    procedure Revoke;
+  end;
+  TBindingResourcePort = class(TInterfacedObject, IBindingResourcePort)
+  private
+    FOwner: TNyxLiveBindings;
+  public
+    constructor Create(AOwner: TNyxLiveBindings);
+    function Owner: TNyxLiveBindings;
+    procedure Revoke;
+  end;
+  TBindingResourcePreparation = class(TInterfacedObject, INyxPreparedPublication)
+  private
+    FPort: IBindingResourcePort;
+    FHold: INyxStateSnapshotHold;
+    FCandidate: TNyxNode;
+    FValidated: Boolean;
+    FInstalled: Boolean;
+    FRetired: Boolean;
+  public
+    constructor Create(AOwner: TNyxLiveBindings; const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef);
+    destructor Destroy; override;
+    procedure Validate;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
+
+constructor TBindingResourcePort.Create(AOwner: TNyxLiveBindings);
+begin
+  inherited Create;
+  FOwner := AOwner;
+end;
+
+function TBindingResourcePort.Owner: TNyxLiveBindings;
+begin
+  Result := FOwner;
+end;
+
+procedure TBindingResourcePort.Revoke;
+begin
+  FOwner := nil;
+end;
+
+constructor TBindingResourcePreparation.Create(AOwner: TNyxLiveBindings;
+  const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef);
+begin
+  inherited Create;
+
+  if (AOwner.FSubscription = nil) or not AOwner.FSubscription.Connected or
+    (AOwner.FCommandRoot <> nil) or (AOwner.FResourcePreparation <> nil) then
+  begin
+    raise ENyxState.Create('Resource publication requires active idle bindings');
+  end;
+  FHold := AOwner.FState.HoldSnapshot;
+  FPort := AOwner.FResourcePort as IBindingResourcePort;
+  AOwner.FResourcePreparation := Self;
+  FCandidate := AOwner.FRoot.Clone;
+  FCandidate.BindResources(AResources, ALocale, AFallback);
+  ApplyNyxBindings(FCandidate, AOwner.FState);
+end;
+
+destructor TBindingResourcePreparation.Destroy;
+begin
+  Retire;
+  inherited Destroy;
+end;
+
+procedure TBindingResourcePreparation.Validate;
+begin
+
+  if FRetired or FValidated or (FPort.Owner = nil) then
+  begin
+    raise ENyxState.Create('Resource scalar preparation is retired or already admitted');
+  end;
+  FValidated := True;
+end;
+
+procedure TBindingResourcePreparation.Install;
+begin
+
+  if FPort.Owner <> nil then
+  begin
+    FPort.Owner.FRoot.ExchangeResourceProjection(FCandidate);
+  end;
+  FInstalled := True;
+end;
+
+procedure TBindingResourcePreparation.Notify;
+var
+  LOwner: TNyxLiveBindings;
+begin
+
+  if not FInstalled or FRetired then
+  begin
+    raise ENyxState.Create('Resource scalar notification requires installed data');
+  end;
+  LOwner := FPort.Owner;
+
+  if LOwner <> nil then
+  begin
+    LOwner.Synchronize;
+  end;
+end;
+
+procedure TBindingResourcePreparation.Retire;
+var
+  LOwner: TNyxLiveBindings;
+begin
+
+  if FRetired then
+  begin
+    Exit;
+  end;
+  FRetired := True;
+
+  if FPort <> nil then
+  begin
+    LOwner := FPort.Owner;
+
+    if (LOwner <> nil) and (LOwner.FResourcePreparation = Self) then
+    begin
+      LOwner.FResourcePreparation := nil;
+    end;
+  end;
+  FreeAndNil(FCandidate);
+  FHold := nil;
+  FPort := nil;
+end;
 
 function ScalarText(const AValue: TNyxStateValue): TNyxText;
 begin
@@ -549,6 +694,7 @@ begin
   inherited Create;
   FRoot := ARoot;
   FState := AState;
+  FResourcePort := TBindingResourcePort.Create(Self);
 
   if (FRoot = nil) or (FState = nil) then
   begin
@@ -565,6 +711,11 @@ end;
 
 destructor TNyxLiveBindings.Destroy;
 begin
+
+  if FResourcePort <> nil then
+  begin
+    (FResourcePort as IBindingResourcePort).Revoke;
+  end;
   FSubscription.Free;
   inherited Destroy;
 end;
@@ -599,16 +750,16 @@ end;
 procedure TNyxLiveBindings.ReloadResources(const AResources: INyxResources;
   const ALocale, AFallback: TNyxLocaleRef);
 var
-  LCandidate: TNyxNode;
+  LPrepared: INyxPreparedPublication;
 begin
-  LCandidate := PrepareResourceReload(AResources, ALocale, AFallback);
-  try
-    FRoot.CopyResourceContext(LCandidate);
-    CopyProjection(FRoot, LCandidate);
-  finally
-    LCandidate.Free;
-  end;
-  Synchronize;
+  LPrepared := PrepareResourcePublication(AResources, ALocale, AFallback);
+  PublishNyxGroup([LPrepared]);
+end;
+
+function TNyxLiveBindings.PrepareResourcePublication(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
+begin
+  Result := TBindingResourcePreparation.Create(Self, AResources, ALocale, AFallback);
 end;
 
 procedure TNyxLiveBindings.Activate;
@@ -624,7 +775,12 @@ end;
 function TNyxLiveBindings.GetRefreshReady: Boolean;
 begin
   Result := (FSubscription <> nil) and FSubscription.Connected and
-    (FCommandRoot = nil) and not FState.Busy;
+    (FCommandRoot = nil) and (FResourcePreparation = nil) and not FState.Busy;
+end;
+
+function TNyxLiveBindings.GetResourcePublicationBusy: Boolean;
+begin
+  Result := FResourcePreparation <> nil;
 end;
 
 function TNyxLiveBindings.GetHasBindings: Boolean;
@@ -873,7 +1029,7 @@ var
 begin
 
   if (FSubscription = nil) or not FSubscription.Connected or
-    (FCommandRoot <> nil) then
+    (FCommandRoot <> nil) or (FResourcePreparation <> nil) or FState.Busy then
   begin
     raise ENyxState.Create('Control command requires active, idle bindings');
   end;

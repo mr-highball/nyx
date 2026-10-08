@@ -31,6 +31,7 @@ interface
 uses
   nyx.types,
   nyx.text,
+  nyx.publication,
   nyx.images.browser,
   Classes,
   SysUtils,
@@ -254,6 +255,7 @@ type
     function ReadPresentationSelection: TNyxPresentationSelection;
     function GetPresentationView: INyxPresentationView;
     procedure SetResourceContext(const AContext: INyxResourceContext);
+    function GetResourceContext: INyxResourceContext;
     procedure SetResourceUpdates(const AQueue: INyxResourceUpdateQueue);
     procedure WakeResources;
     procedure SetPresentationSelection(const AValue: TNyxPresentationSelection);
@@ -499,14 +501,20 @@ type
     { Explicit immutable application context persists across Render/navigation
       and responsive rebuilds. Configure while unmounted; mounted updates use
       ReloadResources, whose accepted publication also advances this context. }
-    property ResourceContext: INyxResourceContext read FResourceContext write SetResourceContext;
+    property ResourceContext: INyxResourceContext read GetResourceContext write SetResourceContext;
     { Install while unmounted. The port owns no renderer; the application must
       stop it before destroying receivers. Deferred Wake cannot publish here. }
     property ResourceUpdates: INyxResourceUpdateQueue read FResourceUpdates write SetResourceUpdates;
     function ResourceReady: Boolean;
     { False means busy; invalid selected values raise before publication.
       The detached check includes the currently mounted target projection. }
+    { Readiness and mounted scalar preflight. Source rows/hidden scopes admit in
+      the context's prepared phase; True is not evidence of full publication. }
     function CanReloadResources(const AContext: INyxResourceContext): Boolean;
+    { Scalar/context participant for an application that separately prepares its
+      shared row context. Standalone callers use ReloadResources, which prepares
+      both. No target synchronization occurs before the group installs. }
+    function PrepareResourcePublication(const AContext: INyxResourceContext): INyxPreparedPublication;
     procedure ReloadResources(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef);
     property OnBindingError: TNyxBrowserBindingError read FOnBindingError write FOnBindingError;
@@ -1887,6 +1895,11 @@ procedure TNyxBrowserRenderer.Render(ADocument: TNyxDocument; ARoot: TNyxNode;
   const ACollections: INyxCollectionBindings);
 begin
 
+  if (FLiveBindings <> nil) and FLiveBindings.ResourcePublicationBusy then
+  begin
+    raise ENyxState.Create('View replacement refuses during resource publication');
+  end;
+
   if AHost = nil then
   begin
     raise ENyxModel.Create('Browser host is required');
@@ -2727,6 +2740,27 @@ begin
   FResourceContext := LContext;
 end;
 
+function TNyxBrowserRenderer.GetResourceContext: INyxResourceContext;
+begin
+  Result := FResourceContext;
+
+  if FRoot <> nil then
+  begin
+    Result := FRoot.ResourceContext;
+  end;
+end;
+
+function TNyxBrowserRenderer.PrepareResourcePublication(const AContext: INyxResourceContext): INyxPreparedPublication;
+begin
+
+  if (FLiveBindings = nil) or FPublishingContent or (AContext = nil) then
+  begin
+    raise ENyxState.Create('Resource publication requires an idle mounted view and context');
+  end;
+  Result := FLiveBindings.PrepareResourcePublication(AContext.Snapshot,
+    AContext.Locale, AContext.Fallback);
+end;
+
 function TNyxBrowserRenderer.ResourceReady: Boolean;
 begin
   Result := (FLiveBindings <> nil) and not FPublishingContent;
@@ -2758,8 +2792,6 @@ begin
 
   if Result then
   begin
-    ValidateNyxCollectionBindingResources(FCollectionBindings, AContext.Snapshot,
-      AContext.Locale, AContext.Fallback);
     FLiveBindings.ValidateResourceReload(AContext.Snapshot,
       AContext.Locale, AContext.Fallback);
   end;
@@ -2776,16 +2808,33 @@ end;
 
 procedure TNyxBrowserRenderer.ReloadResources(const AResources: INyxResources;
   const ALocale, AFallback: TNyxLocaleRef);
+var
+  LRows, LScalar: INyxPreparedPublication;
 begin
 
   if FLiveBindings = nil then
   begin
     raise ENyxState.Create('Resource reload requires a mounted runtime view');
   end;
-  ValidateNyxCollectionBindingResources(FCollectionBindings, AResources, ALocale, AFallback);
+  LRows := PrepareNyxCollectionBindingResources(FCollectionBindings, AResources, ALocale, AFallback);
   try
-    FLiveBindings.ReloadResources(AResources, ALocale, AFallback);
+    LScalar := FLiveBindings.PrepareResourcePublication(AResources, ALocale, AFallback);
+
+    if LRows <> nil then
+    begin
+      PublishNyxGroup([LRows, LScalar]);
+    end
+    else
+    begin
+      PublishNyxGroup([LScalar]);
+    end;
   finally
+    { Retire also when scalar preparation refused before the group adopted rows. }
+
+    if LRows <> nil then
+    begin
+      LRows.Retire;
+    end;
     { Synchronization can fail AFTER ordinary binding publication. Preserve the
       actual accepted frame in that case too; never revert it to authored data.
       Existing view-only callers retain their original scope contract. }
@@ -5609,6 +5658,13 @@ var
   end;
 
 begin
+  { Resource model adoption precedes row/scalar notifications. Capture its frame
+    for later navigation/responsive preparation before updating target controls. }
+
+  if FRoot <> nil then
+  begin
+    FResourceContext := FRoot.ResourceContext;
+  end;
 
   if FUpdating then
   begin

@@ -30,6 +30,7 @@ uses
   SysUtils,
   nyx.text,
   nyx.resources,
+  nyx.publication,
   nyx.model,
   nyx.content.mount,
   nyx.collections.view,
@@ -56,15 +57,26 @@ type
     property Count: Integer read GetCount;
   end;
 
-  { Optional source admission preserves the original view-set interface/GUID.
-    Built-in sets delegate to their independent runtime context. Until prepared
-    scalar and row publication share one application commit, changing a saved
-    dataset refuses rather than publishing new captions beside stale tables. }
+  { Optional source admission preserves the original view-set interface/GUID. }
   INyxResourceCollectionBindings = interface
     ['{48BCD751-B2A8-4F68-BA96-45436F46B271}']
     procedure ValidateResources(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef);
   end;
+
+  { Optional preparation delegates to the retained scope context. Application
+    hosts prepare their shared context once; a standalone renderer uses this
+    capability to coordinate its own scalar and row projections. }
+  INyxPreparedResourceCollectionBindings = interface
+    ['{6B2C6181-7203-4105-BDBC-53A80680629B}']
+    function PrepareResources(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
+  end;
+
+{ Nil for a static alternative without this optional capability. An alternative
+  source-aware implementation must provide preparation for coordinated reload. }
+function PrepareNyxCollectionBindingResources(const ABindings: INyxCollectionBindings;
+  const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
 
 { Qualify a proposed resource frame before any scalar publication. Alternative
   static binding sets retain their original behavior without this capability. }
@@ -83,7 +95,8 @@ uses
   nyx.collections, nyx.collections.selection;
 
 type
-  TBindings = class(TInterfacedObject, INyxCollectionBindings, INyxResourceCollectionBindings)
+  TBindings = class(TInterfacedObject, INyxCollectionBindings, INyxResourceCollectionBindings,
+    INyxPreparedResourceCollectionBindings)
   private
     FContext: INyxCollectionContext;
     FIDs: array of TNyxText;
@@ -101,7 +114,39 @@ type
     function Recompose(ARoot: TNyxNode): INyxCollectionBindings;
     procedure ValidateResources(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef);
+    function PrepareResources(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
   end;
+
+function PrepareNyxCollectionBindingResources(const ABindings: INyxCollectionBindings;
+  const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
+var
+  LPrepared: INyxPreparedResourceCollectionBindings;
+  LSource: INyxResourceCollectionBindings;
+begin
+  Result := nil;
+
+  if ABindings = nil then
+  begin
+    Exit;
+  end;
+
+  if Supports(ABindings, INyxPreparedResourceCollectionBindings, LPrepared) then
+  begin
+    Exit(LPrepared.PrepareResources(AResources, ALocale, AFallback));
+  end;
+
+  if Supports(ABindings, INyxResourceCollectionBindings, LSource) then
+  begin
+    raise ENyxCollection.Create('Source-aware binding sets require prepared resource publication');
+  end;
+end;
+
+function TBindings.PrepareResources(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef): INyxPreparedPublication;
+begin
+  Result := PrepareNyxCollectionContextResources(FContext, AResources, ALocale, AFallback);
+end;
 
 procedure ValidateNyxCollectionBindingResources(const ABindings: INyxCollectionBindings;
   const AResources: INyxResources; const ALocale, AFallback: TNyxLocaleRef);

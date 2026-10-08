@@ -15,7 +15,18 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
-Saved resource row gap (2026-10-08): public source recipes now survive persistence,
+Joint live resource gap (2026-10-08): application/standalone prepared frames now
+qualify shared rows, resolved reusable scopes, scalar properties and resource
+catalogs together, with 112 live checked Win32 assertions. The suspended actual
+MCP mapping journey retains its bounded revision-aware paired resource operation.
+This does not supply source recipe/schema/path definition or removal, nor runtime
+observation authority. Return directly to that existing semantic/common Studio
+authoring gap; never substitute an entire document dump, project replacement or
+browser UI automation. No workflow count/credit/closure changes; resource
+no-closure alone advances 5→6. See
+[the packet](../WORK.md#current-return-path-joint-live-resource-frames--2026-10-08).
+
+Previous saved resource row gap (2026-10-08): public source recipes now survive persistence,
 full/page/reusable builders and actual initial table/instance consumers. The
 mapping gate uses the actual suspended dispatcher for bounded JSON and grouped
 resource replacement/paired Undo; current semantic regressions remain 54/7.

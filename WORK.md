@@ -9,7 +9,76 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: joint live resource frames — 2026-10-08
+
+Previous **4fcc19a** is exactly pushed. This solo continuation is **progress** on
+resource criteria 3/4/5, not task acceptance. No listener/browser launch, primary
+replacement, enrollment change, cleanup retry or active-project replacement ran.
+
+Application resources now accept optional prepared subscribers without changing
+the original owner/collection/view-set interface GUIDs. Catalog, mounted scalar
+properties, application rows, resolved reusable rows and future instance seeds
+install before any resource/store/view observer. Nonthrowing installers exchange
+preallocated storage; managed stages retain independent models and revoke borrowed
+receivers. Snapshot holds reject state/subscription writes; view replacement,
+navigation and new scopes refuse until retirement. Physical paint is sequential,
+not an atomic-pixel promise. A failing later instance or hidden scalar constraint
+preserves the accepted frame. Busy readiness waits for Wake. Equivalent source rows
+preserve local edits; changed datasets replace mapped rows and reconcile queries/
+selection. Initial runtime attachment admits a different configured locale too.
+
+The maintained `tools/build.ps1 -Target resource-mappings` now passes **69** saved/
+actual Win32/source/semantic assertions, **112** live resource assertions and
+**eight each** for exact emitted full/page/reusable builders, leak-free. The live
+journey exercises both hosts' shared implementation on actual Win32 controls,
+using the real resolver/UI courier with a controlled byte transport: locales,
+queries/selection, later rejection, hidden ranges, waiting, notification failure,
+reentry and disposal before row/paint notifications. Late-scope seed and initial
+runtime-attachment assertions are explicitly model oracles, not additional
+mounted-target evidence. Matching browser consumers, both Studios, backend and
+worker compile with **zero owned warnings**; eight browser invocations retain
+**56 upstream classes.pas warnings**. Dependency source is untouched.
+
+The current actual suspended MCP dispatcher inspects bounded JSON, applies a
+revision-aware related resource group and restores its exact paired source/design
+with one Undo in a fresh private runtime. It never starts a listener and does not
+qualify current-source HTTP/authentication/observing. Primary native MCP remains
+connected at revision **2**, original selection/view, no draft/history, activity
+**502**; protected **15 process identities / 9 complete pairs / 229 sealed files**
+verify at **2026-10-08T09:05:28.9783600Z**. LAN still serves source `6fc231e`.
+The original automatic review supplied only "blocked by policy" for held launches,
+replacement and temporary cleanup; none was retried.
+
+Affected regressions pass core **30/1801**, collections **149**, grouped controls
+**43**, current application/real HTTP **39**, scalar resource controls **78** and
+project ownership **252**, leak-free. Qualification caught an unwanted prefix on
+the exact Unicode observer diagnostic; publication now retains the original
+receiver message as typed data, including a distinguishable empty-error case.
+The original 39 assertions pass unchanged. An early browser harness host argument
+needed its proper HTMLElement type; matching compilation now passes. Failed
+qualification logs remain beside the corrected records.
+
+Evidence: ignored `build/resource-live/maintained-final2.log`, current cleanup
+handoff checks and regressions under `build/resource-live/regression/`, protected
+receipt/log `build/menu-bar-editor/preservation.json` /
+`build/resource-live/preservation-final.log`. Current out-stage cleanup retires
+an extension handoff even if its preparer raises before vector adoption; final
+consumer compilation/checks precede checkpoint. Remote/clean receipt is
+`build/resource-live/remote-checkpoint.json`.
+Final post-handoff source consumers pass 112 leak-free native assertions in
+`build/resource-live/native/run-checkpoint.log`; the matching browser program
+compiles in `build/resource-live/browser-early/compile-checkpoint.log`.
+
+No full criterion/task/credit/percentage closes. Resource no-closure alone
+advances **5→6**, other owners remain **22/37/19/28/2**. End live-frame fixtures and
+return to **common Studio/MCP bounded saved-recipe/schema/source context, typed
+definition/removal and paired authoring**, then exact runtime load/cache diagnostics.
+Hosted media, current-source authentication/browser/phone/observing, performance
+and complete application/Studio/parity remain original open outcomes.
+
 ## Current return path: saved resource row contracts — 2026-10-08
+
+Historical packet; the joint live-frame return path above supersedes its reload guard.
 
 The previous turn is **progress**, exactly pushed as `bf36651`. This continuation
 returns to resource criteria 2/3/4: save a typed row recipe, replay crafted full/

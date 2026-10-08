@@ -30,11 +30,13 @@ interface
 uses
   SysUtils,
   nyx.text,
+  nyx.state,
   nyx.resources,
   nyx.resource.sources,
   nyx.resource.context,
   nyx.resources.loader,
-  nyx.scheduler;
+  nyx.scheduler,
+  nyx.publication;
 
 type
   { Automatic begins after the host has mounted; on-demand never starts a
@@ -88,9 +90,26 @@ type
   TNyxResourceContextValidator = function(
     const AContext: INyxResourceContext): Boolean of object;
   TNyxResourceContextChanged = procedure(const AContext: INyxResourceContext) of object;
+  { True supplies a nonnil single-use model preparation; False waits without
+    publication. The owner retires every supplied stage on refusal, failure or
+    completion. Prepare runs after ordered readiness validators, before any
+    install. A receiver must disconnect before destruction; its stage must revoke
+    borrowed target/model pointers independently. }
+  TNyxResourceContextPrepare = function(const AContext: INyxResourceContext;
+    out APrepared: INyxPreparedPublication): Boolean of object;
   INyxResourceSubscription = interface
     ['{A7B3C98D-A747-4181-8514-465522EACF21}']
     procedure Disconnect;
+  end;
+
+  { Optional capability leaves the original resource owner interface/GUID
+    unchanged. Catalog, scalar projections and all source-backed row scopes
+    install before any Changed/store/view observer executes. Physical target
+    painting remains sequential notification work. }
+  INyxPreparedApplicationResources = interface
+    ['{66E4D889-C67E-44C3-A1E2-873148554CA2}']
+    function SubscribePrepared(AValidator: TNyxResourceContextValidator;
+      APrepare: TNyxResourceContextPrepare): INyxResourceSubscription;
   end;
 
   { An independent application catalog and bounded loader, never a document or
@@ -122,6 +141,8 @@ type
   end;
 
 function NyxApplicationResourceOptions: TNyxApplicationResourceOptions;
+{ Refuses an alternative owner without coordinated publication support. }
+function NyxPreparedApplicationResources(const AResources: INyxApplicationResources): INyxPreparedApplicationResources;
 function NewNyxApplicationResources(const ADeclarations: INyxResources;
   const AScheduler: INyxScheduler; const AOptions: TNyxApplicationResourceOptions;
   const AResolver: INyxResourceResolver = nil): INyxApplicationResources;
@@ -136,10 +157,13 @@ type
     FOwner: TApplicationResources; { weak, revoked before owner disposal }
     FValidator: TNyxResourceContextValidator;
     FChanged: TNyxResourceContextChanged;
+    FPrepare: TNyxResourceContextPrepare;
   public
     procedure Disconnect;
     function Validate(const AContext: INyxResourceContext): Boolean;
     procedure Changed(const AContext: INyxResourceContext);
+    function Prepare(const AContext: INyxResourceContext;
+      out APrepared: INyxPreparedPublication): Boolean;
   end;
   TSubscriptions = array of INyxResourceSubscription;
   TSubscriptionObjects = array of TResourceSubscription;
@@ -188,7 +212,7 @@ type
   end;
 
   TApplicationResources = class(TInterfacedObject, INyxResourceUpdateQueue,
-    INyxApplicationResources)
+    INyxApplicationResources, INyxPreparedApplicationResources)
   private
     FDeclarations: INyxResources;
     FContext: INyxResourceContext;
@@ -207,6 +231,8 @@ type
     FStarted: Boolean;
     FWakeRequested: Boolean;
     procedure RequireOpen;
+    function AddSubscription(AValidator: TNyxResourceContextValidator;
+      AChanged: TNyxResourceContextChanged; APrepare: TNyxResourceContextPrepare): INyxResourceSubscription;
     function IndexOf(const AReference: TNyxResourceRef; const ALocale: TNyxLocaleRef): Integer;
     procedure Disconnect(AToken: TResourceSubscription);
     procedure Received(AJob: TResourceJob; AIndex: Integer; const AResult: TNyxResourceLoadResult);
@@ -227,6 +253,8 @@ type
       const ALocale: TNyxLocaleRef): TNyxApplicationResourceStatus;
     function Subscribe(AValidator: TNyxResourceContextValidator;
       AChanged: TNyxResourceContextChanged): INyxResourceSubscription;
+    function SubscribePrepared(AValidator: TNyxResourceContextValidator;
+      APrepare: TNyxResourceContextPrepare): INyxResourceSubscription;
     procedure Start;
     procedure Reload; overload;
     procedure Reload(const AReference: TNyxResourceRef; const ALocale: TNyxLocaleRef); overload;
@@ -234,6 +262,113 @@ type
     procedure Stop;
     procedure Localize(const ALocale, AFallback: TNyxLocaleRef);
   end;
+
+  TResourceFramePreparation = class(TInterfacedObject, INyxPreparedPublication)
+  private
+    FOwner: TApplicationResources;
+    FLease: INyxApplicationResources;
+    FContext: INyxResourceContext;
+    FPrevious: INyxResourceContext;
+    FTokens: TSubscriptions;
+    FObjects: TSubscriptionObjects;
+  public
+    constructor Create(AOwner: TApplicationResources; const AContext: INyxResourceContext;
+      const ATokens: TSubscriptions; const AObjects: TSubscriptionObjects);
+    procedure Validate;
+    procedure Install;
+    procedure Notify;
+    procedure Retire;
+  end;
+
+function NyxPreparedApplicationResources(const AResources: INyxApplicationResources): INyxPreparedApplicationResources;
+begin
+
+  if (AResources = nil) or not Supports(AResources, INyxPreparedApplicationResources, Result) then
+  begin
+    raise ENyxResource.Create('Application resources require coordinated publication support');
+  end;
+end;
+
+constructor TResourceFramePreparation.Create(AOwner: TApplicationResources;
+  const AContext: INyxResourceContext; const ATokens: TSubscriptions;
+  const AObjects: TSubscriptionObjects);
+begin
+  inherited Create;
+  FOwner := AOwner;
+  FLease := AOwner;
+  FContext := AContext;
+  FPrevious := AOwner.FContext;
+  FTokens := Copy(ATokens);
+  FObjects := Copy(AObjects);
+end;
+
+procedure TResourceFramePreparation.Validate;
+begin
+
+  if FOwner.FStopped then
+  begin
+    raise ENyxResource.Create('Application resource publication was stopped');
+  end;
+end;
+
+procedure TResourceFramePreparation.Install;
+begin
+  FOwner.FContext := FContext;
+end;
+
+procedure TResourceFramePreparation.Notify;
+var
+  LIndex: Integer;
+  LError: TNyxText;
+  LFailed: Boolean;
+begin
+  LError := '';
+  LFailed := False;
+  for LIndex := 0 to High(FObjects) do
+  begin
+    try
+      FObjects[LIndex].Changed(FContext);
+    except
+      on LException: Exception do
+      begin
+
+        if not LFailed then
+        begin
+          LFailed := True;
+          {$IFDEF PAS2JS}
+          LError := LException.Message;
+          {$ELSE}
+
+          if LException is ENyxState then
+          begin
+            LError := RawByteString(LException.Message);
+            SetCodePage(RawByteString(LError), CP_UTF8, False);
+          end
+          else
+          begin
+            LError := TNyxText(LException.Message);
+          end;
+          {$ENDIF}
+        end;
+      end;
+    end;
+  end;
+
+  if LFailed then
+  begin
+    raise ENyxPublicationNotification.CreateReceiverFailure(LError);
+  end;
+end;
+
+procedure TResourceFramePreparation.Retire;
+begin
+  FTokens := nil;
+  FObjects := nil;
+  FContext := nil;
+  FPrevious := nil;
+  FOwner := nil;
+  FLease := nil;
+end;
 
 class function TNyxApplicationResourceOptions.Defaults: TNyxApplicationResourceOptions;
 begin
@@ -388,15 +523,15 @@ begin
   Result := FSlots[IndexOf(AReference, ALocale)].Status;
 end;
 
-function TApplicationResources.Subscribe(AValidator: TNyxResourceContextValidator;
-  AChanged: TNyxResourceContextChanged): INyxResourceSubscription;
+function TApplicationResources.AddSubscription(AValidator: TNyxResourceContextValidator;
+  AChanged: TNyxResourceContextChanged; APrepare: TNyxResourceContextPrepare): INyxResourceSubscription;
 var
   LToken: TResourceSubscription;
   LIndex: Integer;
 begin
   RequireOpen;
 
-  if (not Assigned(AValidator)) and (not Assigned(AChanged)) then
+  if (not Assigned(AValidator)) and (not Assigned(AChanged)) and (not Assigned(APrepare)) then
   begin
     raise ENyxResource.Create('A resource subscription requires a receiver');
   end;
@@ -410,11 +545,29 @@ begin
   LToken.FOwner := Self;
   LToken.FValidator := AValidator;
   LToken.FChanged := AChanged;
+  LToken.FPrepare := APrepare;
   LIndex := Length(FTokens);
   SetLength(FTokens, LIndex + 1);
   SetLength(FTokenObjects, LIndex + 1);
   FTokens[LIndex] := Result;
   FTokenObjects[LIndex] := LToken;
+end;
+
+function TApplicationResources.Subscribe(AValidator: TNyxResourceContextValidator;
+  AChanged: TNyxResourceContextChanged): INyxResourceSubscription;
+begin
+  Result := AddSubscription(AValidator, AChanged, nil);
+end;
+
+function TApplicationResources.SubscribePrepared(AValidator: TNyxResourceContextValidator;
+  APrepare: TNyxResourceContextPrepare): INyxResourceSubscription;
+begin
+
+  if not Assigned(APrepare) then
+  begin
+    raise ENyxResource.Create('Prepared resource subscription requires a preparer');
+  end;
+  Result := AddSubscription(AValidator, nil, APrepare);
 end;
 
 procedure TApplicationResources.Disconnect(AToken: TResourceSubscription);
@@ -454,6 +607,7 @@ begin
     FOwner := nil;
     FValidator := nil;
     FChanged := nil;
+    FPrepare := nil;
     LOwner.Disconnect(Self);
   end;
 end;
@@ -477,12 +631,32 @@ begin
   end;
 end;
 
+function TResourceSubscription.Prepare(const AContext: INyxResourceContext;
+  out APrepared: INyxPreparedPublication): Boolean;
+begin
+  APrepared := nil;
+  Result := True;
+
+  if (FOwner <> nil) and Assigned(FPrepare) then
+  begin
+    Result := FPrepare(AContext, APrepared);
+
+    if Result and (APrepared = nil) then
+    begin
+      raise ENyxResource.Create('Accepted resource preparation is missing');
+    end;
+  end;
+end;
+
 function TApplicationResources.Publish(const AContext: INyxResourceContext;
   out ANotificationError: TNyxText): Boolean;
 var
   LTokens: TSubscriptions;
   LObjects: TSubscriptionObjects;
   LIndex: Integer;
+  LNext: Integer;
+  LPrepared: TNyxPreparedPublications;
+  LStage: INyxPreparedPublication;
 begin
   ANotificationError := '';
   LTokens := Copy(FTokens);
@@ -497,26 +671,59 @@ begin
         Exit(False);
       end;
     end;
-    FContext := AContext;
+    SetLength(LPrepared, 1);
+    LPrepared[0] := TResourceFramePreparation.Create(Self, AContext, LTokens, LObjects);
     for LIndex := 0 to Length(LTokens) - 1 do
     begin
-      try
-        LObjects[LIndex].Changed(AContext);
-      except
-        on LError: Exception do
-        begin
-          { Continue independent receivers after publication. Data is already
-            accepted; expose the first failure rather than pretend rollback. }
+      LStage := nil;
 
-          if ANotificationError = '' then
-          begin
-            ANotificationError := LError.Message;
-          end;
+      if not LObjects[LIndex].Prepare(AContext, LStage) or FStopped then
+      begin
+
+        if LStage <> nil then
+        begin
+          LStage.Retire;
+        end;
+        Exit(False);
+      end;
+
+      if LStage <> nil then
+      begin
+        LNext := Length(LPrepared);
+        SetLength(LPrepared, LNext + 1);
+        LPrepared[LNext] := LStage;
+      end;
+    end;
+    try
+      PublishNyxGroup(LPrepared);
+    except
+      on LError: ENyxPublicationNotification do
+      begin
+        ANotificationError := LError.ReceiverMessage;
+
+        if ANotificationError = '' then
+        begin
+          ANotificationError := 'Receiver supplied no diagnostic text';
         end;
       end;
     end;
     Result := True;
   finally
+    { A failing extension may have supplied an out stage before raising, so it
+      has not yet entered the owned vector. Retire that last handoff explicitly. }
+
+    if LStage <> nil then
+    begin
+      LStage.Retire;
+    end;
+    for LIndex := 0 to High(LPrepared) do
+    begin
+
+      if LPrepared[LIndex] <> nil then
+      begin
+        LPrepared[LIndex].Retire;
+      end;
+    end;
     FDispatching := False;
   end;
 end;

@@ -228,21 +228,46 @@ returns independent static resolved seeds at an explicit locale. The raw
 copies authored seeds, including empty source seeds; application code uses the
 context/materialization path to resolve them.
 
-**Automatic row refresh is still open.** Source-aware application/binding
-validators currently refuse catalog or locale changes that alter the captured
-initial datasets before any scalar publication. Unrelated resources and source
-changes producing the same rows remain usable. Runtime row edits remain writable
-and independent. This guard must be replaced by joint prepared context/scalar/row
-publication; it does not establish live hosted row loading. Studio/MCP row recipe
-inspection/editing and runtime load diagnostics remain original open requirements.
+Automatic/on-demand hosted completion and explicit localization now prepare one
+joint resource frame in both application hosts. The catalog, mounted scalar
+properties, shared rows, all resolved reusable rows and future instance seeds
+install before any resource/store/view observer. A later invalid table receiver,
+wrong row family or hidden-page scalar constraint rejects the complete candidate.
+Busy readiness waits for Wake; a failed preparation releases all earlier holds.
+Target painting is sequential notification work, so observers should query
+accepted model/view snapshots rather than infer that every physical pixel has
+already repainted. A receiver failure reports committed data separately; remaining
+receivers still run, and destruction revokes borrowed target pointers.
 
-Run `tools/build.ps1 -Target resource-mappings`: 60 checked shared/actual Win32/
-source/semantic assertions and three exact compiled full/page/reusable builders
+Reload changes rows only when the resolved source dataset differs from its last
+accepted seed. An unrelated resource, repeated locale or equivalent source
+preserves local row edits. A changed source replaces its mapped runtime rows in
+every scope, with normal query/selection reconciliation; it does not merge local
+edits into the resource file. All stores/control identities remain retained.
+New scopes refuse during the group and start from its installed seed afterward.
+State writes, mounted view replacement and application navigation refuse until
+the complete resource publication retires. Independent applications remain private.
+
+Optional `INyxPreparedApplicationResources.SubscribePrepared` allows an embedding
+host to contribute its own `INyxPreparedPublication`, with a readiness validator
+and typed immutable context. Preserve nonthrowing Install and idempotent Retire;
+never keep borrowed node/receiver pointers without a revocation mechanism.
+`PrepareNyxCollectionContextResources` contributes a complete scope context;
+`PrepareNyxGroup` composes its children without notifying early. Original owner,
+collection and view-set interface GUIDs stay unchanged. Source-aware alternatives
+must opt into prepared publication; static alternatives retain their contract.
+Studio/MCP row recipe inspection/editing and runtime load diagnostics remain open.
+
+Run `tools/build.ps1 -Target resource-mappings`: 69 checked shared/actual Win32/
+source/semantic assertions, 112 live application assertions, and three exact compiled full/page/reusable builders
 with eight table checks each pass leak-free. Matching browser consumers, Studios,
 backend and worker compile with zero owned warnings. Browser/phone/observing
 execution remains unqualified. Semantic resource replacement uses a fresh actual
 suspended dispatcher with expected revision and one paired Undo, preserving the
-active project. See [current evidence](../WORK.md#current-return-path-saved-resource-row-contracts--2026-10-08).
+active project. Late-scope seed and differently localized runtime attachment
+checks are model oracles beside the actual mounted application journey, not
+additional target/phone evidence. See
+[current evidence](../WORK.md#current-return-path-joint-live-resource-frames--2026-10-08).
 
 ## Coordinated runtime row publication
 
