@@ -68,6 +68,7 @@ type
       const ASession: TNyxText): TNyxDataValue;
     procedure Save(const AName: String; const ABytes: RawByteString);
     function Body: Integer;
+    function QueryRoot(const AFrame: TNyxText): Integer;
   public
     { URL must name a loopback HTTP fixture. Directory receives a fresh profile,
       bounded diagnostics and captures. Width accepts 320..4096 CSS pixels.
@@ -93,10 +94,15 @@ type
     function Bounds(const ASelector: TNyxText): TNyxBrowserBox;
     { False means absent or retired during ordinary asynchronous DOM replacement,
       distinct from a present empty field. Unknown protocol errors still raise. }
-    function TryFieldValue(const ASelector: TNyxText; out AValue: TNyxText): Boolean;
+    function TryFieldValue(const ASelector: TNyxText; out AValue: TNyxText;
+      const AFrame: TNyxText = ''): Boolean;
+    { Actual child-document backend identity, obtained through DOM protocol.
+      Zero means the selected frame/document is absent or not ready. This proves
+      document retention independently of matching iframe attributes or reports. }
+    function FrameDocumentIdentity(const AFrame: TNyxText): Integer;
     { Exercise one visible editor host control through ordinary pointer input.
       Callers must use semantic MCP for composition and accepted design edits. }
-    procedure Click(const ASelector: TNyxText);
+    procedure Click(const ASelector: TNyxText; const AFrame: TNyxText = '');
     { Physical Chromium Tab down/up, including the browser's focus traversal.
       This qualifies host defaults that synthetic DOM events cannot establish;
       it does not claim hardware, IME or assistive-technology input. }
@@ -122,6 +128,10 @@ type
     { Save exact current outer HTML and PNG, using a simple artifact name. This
       does not infer readiness; the caller first observes a terminal fixture mark. }
     procedure Capture(const AName: String);
+    { Preserve exact Pascal exception properties and its native JS error stack
+      in private receipts. Reads own debugger properties without evaluating
+      source; launch context remains in the ignored qualification directory. }
+    procedure CaptureRuntimeError;
     { Last actual Runtime exception packet, independent of readiness markers. }
     property RuntimeError: TNyxText read FRuntimeError;
   end;
@@ -477,6 +487,40 @@ begin
   FBody := Result;
 end;
 
+procedure TNyxBrowserPipe.CaptureRuntimeError;
+var
+  LError: TNyxDataValue;
+  LProperties: TNyxDataValue;
+  LProperty: TNyxDataValue;
+  LIndex: Integer;
+begin
+
+  if FRuntimeError = '' then
+  begin
+    Exit;
+  end;
+  LError := TNyxDataValue.ParseJSON(FRuntimeError).Field('params')
+    .Field('exceptionDetails').Field('exception');
+  LProperties := Request('Runtime.getProperties', NyxObject([
+    NyxField('objectId', LError.Field('objectId')),
+    NyxField('ownProperties', NyxData(True))]), FSession).Field('result');
+  Save('runtime-properties.json', LProperties.ToJSON);
+  for LIndex := 0 to LProperties.Count - 1 do
+  begin
+    LProperty := LProperties.Item(LIndex);
+
+    if (LProperty.Field('name').AsText = 'FJSError') and
+      HasField(LProperty.Field('value'), 'objectId') then
+    begin
+      LProperties := Request('Runtime.getProperties', NyxObject([
+        NyxField('objectId', LProperty.Field('value').Field('objectId')),
+        NyxField('ownProperties', NyxData(True))]), FSession).Field('result');
+      Save('runtime-native-error.json', LProperties.ToJSON);
+      Break;
+    end;
+  end;
+end;
+
 function TNyxBrowserPipe.Attribute(const AName: TNyxText): TNyxText;
 var
   LAttributes: TNyxDataValue;
@@ -494,6 +538,56 @@ begin
       Exit(LAttributes.Item(LIndex + 1).AsText);
     end;
     Inc(LIndex, 2);
+  end;
+end;
+
+function TNyxBrowserPipe.QueryRoot(const AFrame: TNyxText): Integer;
+var
+  LNode: Integer;
+  LFace: TNyxDataValue;
+begin
+
+  if AFrame = '' then
+  begin
+    Exit(Body);
+  end;
+  Result := 0;
+  LNode := Request('DOM.querySelector', NyxObject([
+    NyxField('nodeId', NyxData(Body)), NyxField('selector', NyxData(AFrame))]),
+    FSession).Field('nodeId').AsInteger;
+
+  if LNode = 0 then
+  begin
+    Exit;
+  end;
+  LFace := Request('DOM.describeNode', NyxObject([
+    NyxField('nodeId', NyxData(LNode)), NyxField('depth', NyxData(1)),
+    NyxField('pierce', NyxData(True))]), FSession).Field('node');
+
+  if not HasField(LFace, 'contentDocument') then
+  begin
+    Exit;
+  end;
+  { Backend IDs survive a debugger tree refresh; push only this one document
+    into the frontend tree instead of returning the entire application DOM. }
+  Result := Request('DOM.pushNodesByBackendIdsToFrontend', NyxObject([
+    NyxField('backendNodeIds', NyxArray([
+      LFace.Field('contentDocument').Field('backendNodeId')]))]),
+    FSession).Field('nodeIds').Item(0).AsInteger;
+end;
+
+function TNyxBrowserPipe.FrameDocumentIdentity(const AFrame: TNyxText): Integer;
+var
+  LNode: Integer;
+begin
+  Result := 0;
+  LNode := QueryRoot(AFrame);
+
+  if LNode <> 0 then
+  begin
+    Result := Request('DOM.describeNode', NyxObject([
+      NyxField('nodeId', NyxData(LNode))]), FSession).Field('node')
+      .Field('backendNodeId').AsInteger;
   end;
 end;
 
@@ -542,7 +636,7 @@ begin
 end;
 
 function TNyxBrowserPipe.TryFieldValue(const ASelector: TNyxText;
-  out AValue: TNyxText): Boolean;
+  out AValue: TNyxText; const AFrame: TNyxText): Boolean;
 var
   LNode: Integer;
   LBackend: Integer;
@@ -557,11 +651,20 @@ var
   LIndex: Integer;
   LValueIndex: Integer;
   LFace: TNyxDataValue;
+  LRoot: Integer;
+  LDocument: Integer;
+  LFound: Boolean;
 begin
   Result := False;
   AValue := '';
+  LRoot := QueryRoot(AFrame);
+
+  if LRoot = 0 then
+  begin
+    Exit;
+  end;
   LNode := Request('DOM.querySelector', NyxObject([
-    NyxField('nodeId', NyxData(Body)), NyxField('selector', NyxData(ASelector))]),
+    NyxField('nodeId', NyxData(LRoot)), NyxField('selector', NyxData(ASelector))]),
     FSession).Field('nodeId').AsInteger;
 
   if LNode = 0 then
@@ -608,7 +711,31 @@ begin
   LSnapshot := Request('DOMSnapshot.captureSnapshot', NyxObject([
     NyxField('computedStyles', NyxArray([]))]), FSession);
   LStrings := LSnapshot.Field('strings');
-  LNodes := LSnapshot.Field('documents').Item(0).Field('nodes');
+  LFound := False;
+  for LDocument := 0 to LSnapshot.Field('documents').Count - 1 do
+  begin
+    LNodes := LSnapshot.Field('documents').Item(LDocument).Field('nodes');
+    LBackends := LNodes.Field('backendNodeId');
+    for LIndex := 0 to LBackends.Count - 1 do
+    begin
+
+      if LBackends.Item(LIndex).AsInteger = LBackend then
+      begin
+        LFound := True;
+        Break;
+      end;
+    end;
+
+    if LFound then
+    begin
+      Break;
+    end;
+  end;
+
+  if not LFound then
+  begin
+    Exit;
+  end;
   { Field returns a detached owned value. Cache each table once; copying a full
     node table inside every indexed iteration makes observation quadratic. }
   LBackends := LNodes.Field('backendNodeId');
@@ -700,7 +827,7 @@ begin
   Result.Height := LBottom - Result.Top;
 end;
 
-procedure TNyxBrowserPipe.Click(const ASelector: TNyxText);
+procedure TNyxBrowserPipe.Click(const ASelector: TNyxText; const AFrame: TNyxText);
 var
   LNode: Integer;
   LQuad: TNyxDataValue;
@@ -708,13 +835,15 @@ var
   LY: Double;
   LPrepared: Boolean;
   LStarted: QWord;
+  LRoot: Integer;
 begin
   LStarted := GetTickCount64;
   repeat
     LPrepared := False;
     try
+      LRoot := QueryRoot(AFrame);
       LNode := Request('DOM.querySelector', NyxObject([
-        NyxField('nodeId', NyxData(Body)), NyxField('selector', NyxData(ASelector))]),
+        NyxField('nodeId', NyxData(LRoot)), NyxField('selector', NyxData(ASelector))]),
         FSession).Field('nodeId').AsInteger;
 
       if LNode <> 0 then

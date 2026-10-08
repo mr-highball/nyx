@@ -46,7 +46,20 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current launched resource reports (2026-10-08): private successful-build grants
+Current ordinary compiled Studio lifetime (2026-10-08): the public browser mount
+keeps a live compiled document connected independently of volatile editor
+placement. The ordinary controller passes **29** leak-free checks through actual
+page/application builds, private grants, trusted input, polling/modal/compact
+panel transitions and desktop return. A paired semantic edit retires the old
+frame/authority; a fresh application build starts with authored defaults.
+Three captures are inspected, both Studios/backend/worker compile with zero owned
+warnings. The protected LAN/pairs remain unchanged. No full criterion closes:
+authoring no-closure alone advances **37→38**, other owners stay
+**22/9/19/28/2**. Return to frozen recovery and current-source LAN qualification;
+semantic observing-editor launch/adopt remains with the existing workflow owner.
+See [the packet](../WORK.md#current-return-path-ordinary-compiled-studio-lifetime--2026-10-08).
+
+Previous launched resource reports (2026-10-08): private successful-build grants
 connect ordinary Studio preview wrappers to bounded revision-aware observations.
 Authenticated HTTP qualification passes **55** checks across separately launched
 browser/Win32 application, page and reusable previews, including actual hosted

@@ -739,12 +739,20 @@ refusal. Existing application/common Studio checks pass **81**; suspended
 semantic/protocol and exact-source checks pass **76/7**. Both Studios/backend/
 worker compile with zero owned warnings; upstream warnings remain untouched.
 
-This is isolated current-source discovery and standalone preview execution.
-Ordinary observing Studio UI, compiled iframe detachment/remount with the old
-grant, installed LAN/enrollment refresh, physical phone, persistent browser
-cache/CORS/security contexts, background restoration and runtime reload/cancel
-remain unqualified under the original resource/workflow owners. A browser label
-and thin observing packet do not establish complete editor/parity quality.
+The subsequent ordinary Studio lifetime journey passes **29** leak-free checks.
+The public browser persistent mount retains the actual compiled child document,
+typed input and exact active reporting run through editor polling, source modal,
+compact panel hiding/return and desktop restoration. An accepted semantic edit
+retires the old frame/authority; a new application build starts a new document
+from authored defaults. This qualifies page/application launches inside the real
+browser editor, extending the separate six-producer qualification above.
+
+Installed LAN/enrollment refresh, physical phone, persistent browser cache/CORS/
+security contexts, background restoration, transformed mount geometry,
+accessibility/tab order and full runtime reload/cancel remain unqualified under
+their original owners. A small observing journey does not establish complete
+editor/parity quality. Semantic exact-job editor launch/adopt remains a recorded
+workflow gap; this fixture's trusted operator buttons exercise the controller.
 
 ## Wire, limits and qualification
 

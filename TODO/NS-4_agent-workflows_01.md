@@ -15,6 +15,23 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Ordinary compiled Studio progress (2026-10-08): authenticated semantic composition
+and bounded runtime queries now qualify the ordinary browser controller with
+actual child-document identity/input retained across polling, modal and compact
+panel transitions. Page/application operator builds negotiate private grants;
+paired semantic edits retire the old frame and new application builds replace it.
+The maintained journey passes **29** checks, leak-free. Public API access still
+cannot mint preview authority.
+
+Semantic gap retained here: an agent can build/inspect a successful artifact but
+cannot request that an observing ordinary editor adopt/launch that exact job.
+Operator input in this fixture qualifies that controller lifetime; do not silently
+use it as the primary demo/build workflow. Return to a bounded exact-job adopt
+operation, current-source preserved LAN delivery and the original runtime lifecycle.
+Workflow no-closure remains **22**; only authoring advances **37→38**, resources
+remain **9**. Installed enrollment/primary state stay intact. See
+[the packet](../WORK.md#current-return-path-ordinary-compiled-studio-lifetime--2026-10-08).
+
 Launched runtime progress (2026-10-08): current-source isolated MCP initialization,
 discovery, grouped semantic composition, real build jobs and private operator
 launch admission now exercise six browser/Win32 application/page/reusable

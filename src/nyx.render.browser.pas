@@ -33,6 +33,7 @@ uses
   nyx.text,
   nyx.publication,
   nyx.images.browser,
+  nyx.mount.browser,
   Classes,
   SysUtils,
   Math,
@@ -216,6 +217,11 @@ type
     FResourceContext: INyxResourceContext;
     FResourceUpdates: INyxResourceUpdateQueue;
     FHost: TJSHTMLElement;
+    { A compiled document owns a connected browser mount independently of its
+      volatile editor placement. The exact artifact includes private launch
+      context; it is compared locally and never exposed as a diagnostic. }
+    FCompiledMount: TNyxBrowserPersistentMount;
+    FCompiledArtifact: TNyxText;
     { Only views with authored viewport scopes observe available host width.
       The observer borrows this renderer and disconnects before mount teardown. }
     FViewportObserver: TJSHTMLResizeObserver;
@@ -430,6 +436,9 @@ type
       URL is a relative service artifact. Renderer owns the mounted frame;
       a later normal Render replaces it through the same ownership boundary. }
     procedure RenderCompiled(const AArtifact: TNyxText; AHost: TJSHTMLElement);
+    { True only for this exact live compiler artifact/launch. Authored projections
+      have Root; compiled projections have independent mount ownership instead. }
+    function IsCompiled(const AArtifact: TNyxText): Boolean;
     { Release the mounted view before disposing/replacing a containing Nyx host.
       The host remains caller-owned; no stale event bindings are retained. }
     procedure Unmount;
@@ -919,6 +928,10 @@ procedure TNyxBrowserRenderer.Clear(AKeepPresentation: Boolean);
 var
   LIndex: Integer;
 begin
+  { Retire the live document before its borrowed placement is cleared. Pending
+    allocation callbacks must never retain a disposed renderer or mount. }
+  FreeAndNil(FCompiledMount);
+  FCompiledArtifact := '';
 
   if not AKeepPresentation and (FPresentationView <> nil) then
   begin
@@ -3016,6 +3029,13 @@ begin
     raise ENyxModel.Create('Mounted view and replacement browser host are required');
   end;
 
+  if FCompiledMount <> nil then
+  begin
+    FCompiledMount.MoveHost(AHost);
+    FHost := AHost;
+    Exit;
+  end;
+
   if AHost = FHost then
   begin
     Exit;
@@ -3334,7 +3354,14 @@ begin
   Clear;
   FHost := AHost;
   FHost.textContent := '';
-  FHost.appendChild(LFrame);
+  FCompiledMount := TNyxBrowserPersistentMount.Create(LFrame, FHost, 620);
+  FCompiledArtifact := AArtifact;
+end;
+
+function TNyxBrowserRenderer.IsCompiled(const AArtifact: TNyxText): Boolean;
+begin
+  Result := (FCompiledMount <> nil) and (AArtifact <> '') and
+    (AArtifact = FCompiledArtifact);
 end;
 
 procedure TNyxBrowserRenderer.Select(const ADesignID: TNyxText);

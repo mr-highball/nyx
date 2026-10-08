@@ -40,6 +40,27 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_parity-accessibility_01](NS-2_parity-accessibility_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_event-scheduler_01](NS-1_event-scheduler_01.md) supplies the callback and scheduler contract.
 
+## Ordinary compiled preview lifetime — 2026-10-08
+
+Original criterion 2 now consumes a public Nyx browser mount that keeps live
+compiled content connected while its placement moves or temporarily disappears.
+Exact launch identity retains compiled content without a Pascal Root; accepted
+paired edits, different views and fresh builds explicitly retire/replace it.
+The actual ordinary controller passes **29** leak-free checks: semantic grouped
+composition, page/application builds and private grants, physical text input,
+polling/heartbeats, source modal open/close, CSS-390 panel hiding/return, desktop
+return and resumed editing. Child-document identity, text and active run remain
+exact. Three final captures are inspected. Host-allocation source focus now
+resolves its independently owned source renderer instead of requiring a shell
+child that does not exist.
+
+This ends standalone producer-fixture expansion and returns to frozen candidate
+recovery and current-source LAN delivery. No full criterion closes; authoring
+no-closure alone advances **37→38**, workflow/resource/renderer/codegen/delivery
+remain **22/9/19/28/2**. Native full Studio, physical phone, accessibility/tab order,
+transformed mounts and full reload/cancel remain acceptance requirements.
+See [the packet](../WORK.md#current-return-path-ordinary-compiled-studio-lifetime--2026-10-08).
+
 ## Common Resources authoring — 2026-10-08
 
 Original criterion 2 consumes the [portable resource prerequisite](NS-1_resources_01.md):

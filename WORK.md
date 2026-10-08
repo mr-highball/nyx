@@ -9,7 +9,78 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: authenticated preview resource producers — 2026-10-08
+## Current return path: ordinary compiled Studio lifetime — 2026-10-08
+
+Solo batch contract: original Studio authoring criterion 2 consumes browser
+renderer ownership and service reload; preserve a compiled document through
+ordinary chrome/compact refresh and explicitly replace it after accepted edits
+or a new build. Evidence must use the ordinary controller, actual child-document
+identity, physical input and active producer authority. Stop fixture expansion
+after that journey; return to frozen recovery qualification and current-source
+LAN delivery. Earlier standalone producers advanced integration but left the
+ordinary editor lifetime open. This reassessment changes the consumer and result.
+
+Nyx's public browser persistent mount now owns a connected body-level clipping
+layer and live content independently of its borrowed placement host. Only the
+placeholder moves when Studio rebuilds or temporarily hides a panel. Scroll,
+resize and ancestor allocation coalesce one paint; detached/hidden placement
+hides the layer without reconnecting the browsing context. Exact artifact/launch
+comparison retains compiled content even without a Pascal Root. Paired changes,
+different views and different builds retain explicit teardown. No document,
+renderer or application reference cycle is introduced.
+
+The actual ordinary Studio journey passes **29** checked assertions, leak-free:
+authenticated semantic grouped composition, operator page/application builds,
+private preview-grant negotiation, real typed memo input, polling/heartbeats,
+source modal expansion/close, CSS-390 compact Project/Inspector hiding and Design
+return, desktop restoration and resumed physical editing. The child document's
+backend identity, input and exact active reporting run stay stable. A semantic
+paired edit removes the old frame/authority; a new application build owns a new
+document with authored defaults. Three inspected desktop/narrow/hidden-panel
+captures establish that the clipping layer does not cover the Project panel.
+
+The journey found a separate existing host-allocation defect: source-focus
+restoration queried studio-code through the shell renderer although source is a
+separately owned Nyx view. It now resolves the actual source owner and tolerates
+optional absent shell fields. Failed attempts and private exception/stack receipts
+remain in ignored output; the final run has no runtime exception or native leaks.
+
+Repository directory values admit a copied staged-web root, independent of
+compiler/runtime/enrollment paths. Sealed releases refuse that override.
+Both Studios, source worker, backend and maintained host tools compile with zero
+owned warnings; upstream warnings remain untouched. The focused maintained entry
+point is `tools/build.ps1 -Target compiled-preview-lifetime`; it stages separately
+and starts no listener. Optional explicit isolated runtime/origin runs the actual
+journey. Its marker refuses ordinary user homes before claim or mutation.
+
+MCP remains primary for composition/accepted edits and bounded runtime queries.
+The existing workflow owner retains the missing semantic observing-editor
+compiled-preview adopt/launch operation: trusted operator buttons here qualify
+the ordinary controller, not a replacement browser authoring/build workflow.
+The installed fifteen actual MCP tools still answer the protected primary;
+current isolated initialization does not update desktop enrollment or LAN.
+
+Evidence: ignored `build/compiled-preview-lifetime/lifetime-final.log`,
+`maintained-build-final.log`, target compile logs and private browser receipts.
+The isolated server was stopped by recorded PID/path/start/command identity.
+The protected primary, all nine exact pairs and fourteen other services remain
+outside this batch. Preservation passes at **2026-10-08T11:57:56Z**: fifteen exact
+process identities, nine complete pairs and 229 sealed files remain unchanged;
+the isolated listener is stopped. No complete criterion/task/credit/percentage closes: Studio
+authoring no-closure advances **37→38**; workflow/resource/renderer/codegen/delivery
+remain **22/9/19/28/2**. Full native Studio, phone/hardware/accessibility, transformed
+mount geometry, persistent browser cache/CORS/background restoration and full
+reload/cancel remain original acceptance work.
+
+Next action: prepare a frozen current-source payload and qualify its complete
+retained checkpoint against copied storage and exact observing baselines before
+the already authorized LAN replacement. Keep the firewall-covered executable path,
+runtime/enrollment and rollback bytes; do not substitute an isolated demo for
+deployment or overwrite the user's pair.
+
+## Previous return path: authenticated preview resource producers — 2026-10-08
+
+Historical packet; ordinary compiled Studio lifetime above supersedes its next action.
 
 Previous `317343d` is exactly pushed. This solo continuation is **progress** on
 resource criterion 5, consumed by criteria 3/6 and the existing primary semantic

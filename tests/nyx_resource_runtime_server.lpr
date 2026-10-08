@@ -36,9 +36,9 @@ var
   LAdmission: TNyxDataValue;
 begin
 
-  if ParamCount <> 3 then
+  if (ParamCount < 3) or (ParamCount > 4) then
   begin
-    raise Exception.Create('Supply source root, newly owned runtime home and isolated loopback port');
+    raise Exception.Create('Supply source root, owned runtime home, loopback port and optional staged web root');
   end;
   LPort := StrToInt(ParamStr(3));
 
@@ -50,6 +50,11 @@ begin
     borrowed from the current source tree; all writable output belongs here. }
   LDirectories := TNyxStudioDirectories.ForRepository(ParamStr(1))
     .RunningIn(ParamStr(2)).EnrollingProject(ParamStr(2));
+
+  if ParamCount = 4 then
+  begin
+    LDirectories := LDirectories.ServingFrom(ParamStr(4));
+  end;
 
   if LDirectories.RuntimeRoot = LDirectories.SourceRoot then
   begin

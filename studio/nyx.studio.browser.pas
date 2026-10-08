@@ -1081,7 +1081,12 @@ begin
     existing projection still owns independent input, selection and listeners.
     Reuse it on return, and admit compatible worker/history updates while hidden.
     A different view or an explicit replacement retains the normal teardown. }
-  ARetainCanvas := ARetainCanvas and (FCanvasRenderer.Root <> nil) and LSameView;
+  { Chrome refreshes must retain an exact compiled launch even when no authored
+    Pascal Root exists. New build URLs/grants, paired edits and view switches
+    retire it normally; a matching URL is never remounted with its old grant. }
+  ARetainCanvas := LSameView and
+    ((ARetainCanvas and (FCanvasRenderer.Root <> nil)) or
+    (not FReplaceCanvas and FCanvasRenderer.IsCompiled(FCompiledURL)));
 
   if not ARetainCanvas or FReplaceCanvas then
   begin
@@ -3857,7 +3862,21 @@ begin
 
   if LID <> '' then
   begin
-    LReplacement := FShellRenderer.ElementFor(LID);
+    { Source is an independently retained public Nyx view, not a shell child.
+      Compact panels can also omit the former shell field. Resolve through its
+      actual owner and never turn an optional focus restoration into a required
+      lookup against a different renderer. }
+    LReplacement := nil;
+
+    if (LID = 'studio-code') and (FCodeRenderer.Root <> nil) then
+    begin
+      LReplacement := FCodeRenderer.InputFor(LID);
+    end
+    else if (FShellRenderer.Root <> nil) and
+      (FShellRenderer.Root.Find(LID) <> nil) then
+    begin
+      LReplacement := FShellRenderer.ElementFor(LID);
+    end;
 
     if (LReplacement <> nil) and not (LReplacement is TJSHTMLTextAreaElement) then
     begin

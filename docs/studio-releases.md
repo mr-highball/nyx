@@ -103,6 +103,38 @@ and an owned producer terminated before graceful shutdown, followed by a fresh
 recovery process. Shared ownership checks execute natively; the maintained browser
 fixture separately executes the same portable recovery/clone contract.
 
+## Ordinary compiled editor qualification
+
+`tools/build.ps1 -Target compiled-preview-lifetime` builds the Pascal isolated
+server, maintained physical-input journey and current browser Studio/worker
+under separate output. Repository host configuration can fluently use
+`ServingFrom(AStagedWebRoot)` without altering compiler/runtime/enrollment roots.
+This copied override creates no files; release mode refuses it because its web
+artifacts belong to the verified payload.
+
+The isolated server tool accepts source root, new owned runtime, loopback port
+and optional staged-web root. It creates an origin-bound marker and refuses an
+ordinary runtime. Start it only in explicitly owned test storage. The build's
+optional `-ResourceRuntimeHome` and `-HttpURL` then run the journey against that
+host; compilation alone starts no listener or browser.
+
+Design composition/accepted edits and runtime inspection use authenticated,
+bounded semantic MCP operations. Trusted operator buttons exercise ordinary
+page/application compilation and private preview-grant negotiation, because
+semantic observing-editor exact-job adopt/launch is still an open workflow gap.
+The browser driver injects no scripts. Actual child-document backend identity,
+text input and reporting authority survive polling, source modal, compact panel
+hiding/return and desktop restoration. A paired edit retires the old content;
+a fresh build owns a new document initialized from authored defaults.
+
+The public browser mount owns connected content and a body-level clipping layer,
+borrowing only its placement. Ancestor scroll/resize/allocation coalesce one
+paint; hidden/detached placement hides the layer without restarting execution.
+Transforms, hardware/phone, background restoration and full accessibility/tab
+order require separate qualification. The actual ordinary journey passes 29
+checks with zero leaks. It does not authorize replacing a user runtime without
+the full retained checkpoint and observing baseline checks below.
+
 ## Runtime session recovery
 
 Current native hosts automatically maintain `.local/studio-session.nyx` beneath

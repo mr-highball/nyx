@@ -318,6 +318,24 @@ begin
     Check((LLegacy.SourceRoot = LLegacy.RuntimeRoot) and
       (LLegacy.WebRoot = LLegacy.SourceRoot + 'build' + PathDelim + 'browser' + PathDelim),
       'Repository launches retain their established layout');
+    LOriginalDirectories := LLegacy;
+    LLegacy := LLegacy.ServingFrom(LRuntime + 'staged-web');
+    Check((LLegacy.WebRoot = LRuntime + 'staged-web' + PathDelim) and
+      (LOriginalDirectories.WebRoot <> LLegacy.WebRoot) and
+      (LLegacy.RuntimeRoot = LOriginalDirectories.RuntimeRoot) and
+      (LLegacy.CompilerUnits = LOriginalDirectories.CompilerUnits),
+      'Staged development web is copied independently of source and runtime roles');
+    LRefused := False;
+    try
+      LDirectories.ServingFrom(LRuntime + 'staged-web');
+    except
+      on ENyxStudioRelease do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LDirectories.WebRoot = LRelease + 'web' + PathDelim),
+      'Sealed release web refuses development override without changing its value');
     LRefused := False;
     try
       LUnused.Validate;

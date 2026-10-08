@@ -45,6 +45,7 @@ type
     FSourceRoot: TNyxText;
     FRuntimeRoot: TNyxText;
     FEnrollmentRoot: TNyxText;
+    FDevelopmentWeb: TNyxText;
     function GetCompilerUnits: TNyxText;
     function GetWebRoot: TNyxText;
     function GetJobs: TNyxText;
@@ -69,6 +70,10 @@ type
       project and recovery storage too. No paths are created. Release callers
       retain their stricter disjoint-root admission. }
     function RunningIn(const ARuntime: TNyxText): TNyxStudioDirectories;
+    { Repository hosts may serve a separately staged browser build without
+      rewriting another running host's files. Release payloads stay manifest
+      owned and refuse this override. This copied choice creates no files. }
+    function ServingFrom(const AWebRoot: TNyxText): TNyxStudioDirectories;
     { Recheck role separation and ordinary release/runtime/enrollment ancestors
       before a host creates files. Does not rehash a release or change any path. }
     procedure Validate;
@@ -134,6 +139,7 @@ begin
   Result.FSourceRoot := NormalizeDirectory(ARepository);
   Result.FRuntimeRoot := Result.FSourceRoot;
   Result.FEnrollmentRoot := Result.FSourceRoot;
+  Result.FDevelopmentWeb := '';
 end;
 
 class function TNyxStudioDirectories.ForRelease(
@@ -143,6 +149,7 @@ begin
   Result.FSourceRoot := NormalizeDirectory(ARelease);
   Result.FRuntimeRoot := NormalizeDirectory(ARuntime);
   Result.FEnrollmentRoot := Result.FRuntimeRoot;
+  Result.FDevelopmentWeb := '';
   Result.Validate;
   VerifyNyxStudioRelease(Result.FSourceRoot);
 end;
@@ -171,6 +178,11 @@ begin
 
   if FMode = nsdmRelease then
   begin
+
+    if FDevelopmentWeb <> '' then
+    begin
+      raise ENyxStudioRelease.Create('Release web sources belong to the sealed payload');
+    end;
     RequireDisjoint(FSourceRoot, FRuntimeRoot);
     RequireDisjoint(FSourceRoot, FEnrollmentRoot + '.codex' + PathDelim);
     RequireDisjoint(FSourceRoot, FEnrollmentRoot + '.local' + PathDelim);
@@ -193,8 +205,26 @@ begin
   Result := FSourceRoot + 'src';
 end;
 
+function TNyxStudioDirectories.ServingFrom(const AWebRoot: TNyxText): TNyxStudioDirectories;
+begin
+  Validate;
+
+  if FMode <> nsdmRepository then
+  begin
+    raise ENyxStudioRelease.Create('Only repository hosts admit staged web sources');
+  end;
+  Result := Self;
+  Result.FDevelopmentWeb := NormalizeDirectory(AWebRoot);
+  Result.Validate;
+end;
+
 function TNyxStudioDirectories.GetWebRoot: TNyxText;
 begin
+
+  if FDevelopmentWeb <> '' then
+  begin
+    Exit(FDevelopmentWeb);
+  end;
 
   if FMode = nsdmRelease then
   begin
