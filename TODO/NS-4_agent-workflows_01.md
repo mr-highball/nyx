@@ -15,6 +15,21 @@ and credential rotation with 22 preservation/refusal checks and zero leaks.
 Native Codex handles in an already-running chat require client reconnection on
 the present Windows installation; the Pascal semantic client is usable immediately.
 
+Application runtime resource gap (2026-10-08): both full application hosts now
+consume one portable owner for automatic/on-demand loading, immutable locale/
+catalog frames, typed load/cache/notification diagnostics and safe retirement.
+Actual Win32 application consumers pass 39 leak-free checks, including the
+default real HTTP path; the browser counterpart compiles without execution.
+This library integration supplies a consumer for the existing diagnostics gap:
+`nyx_resources` still reports authored declarations/fallback, never actual
+runtime loading/cache origin or cancellation. A future runtime observation/
+operation must identify the exact application/project context and accepted
+design revision, retire its observation authority and remain bounded. Current
+source authentication/observing, row/media operations and that runtime surface
+remain this original owner's scope. No workflow count or allocation changes;
+resource prerequisite alone advances 2→3. See
+[the packet](../WORK.md#current-return-path-application-resources-and-lifetime--2026-10-08).
+
 Resource workflow gap (2026-10-08): the new portable catalog/selectors, explicit
 hosted resolver and cache declarations now have a prepared resource-specific
 semantic operation; authenticated deployment remains absent. Native HTTP/cache/

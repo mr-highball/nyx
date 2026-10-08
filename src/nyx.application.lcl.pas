@@ -40,6 +40,11 @@ uses
   nyx.state,
   nyx.collections.registry,
   nyx.application.state,
+  nyx.application.resources,
+  nyx.resource.context,
+  nyx.resources,
+  nyx.resource.sources,
+  nyx.resources.loader,
   nyx.render.lcl,
   nyx.menu.button;
 
@@ -63,8 +68,16 @@ type
     FViewHost: TPanel;
     FRuntime: TNyxApplicationState;
     FMenus: INyxMenuBindings;
+    FResources: INyxApplicationResources;
+    FResourceOptions: TNyxApplicationResourceOptions;
+    FResourceResolver: INyxResourceResolver;
+    FResourceSubscription: INyxResourceSubscription;
     function GetState: TNyxState;
     function GetCollections: INyxCollections;
+    function GetResources: INyxApplicationResources;
+    procedure PrepareResources(ADocument: TNyxDocument);
+    function ValidateResources(const AContext: INyxResourceContext): Boolean;
+    procedure ResourcesChanged(const AContext: INyxResourceContext);
     procedure Navigate(ANode: TNyxNode; const AEvent: TNyxEventInfo);
   public
     constructor Create;
@@ -79,6 +92,12 @@ type
     property State: TNyxState read GetState;
     { Independent runtime collection stores persist across ShowPage. }
     property Collections: INyxCollections read GetCollections;
+    { Private application catalog/load diagnostics survive navigation. Configure
+      before mounting; supplying a resolver replaces the target HTTP/cache path.
+      Stop retires requests before controls and borrowed callbacks are freed. }
+    function ConfigureResources(const AOptions: TNyxApplicationResourceOptions;
+      const AResolver: INyxResourceResolver = nil): TNyxLCLApplication;
+    property Resources: INyxApplicationResources read GetResources;
     property View: TNyxLCLRenderer read FRenderer;
     { Retained observations must retire before page changes/window disposal. }
     property Menus: INyxMenuBindings read FMenus;
@@ -89,6 +108,8 @@ implementation
 
 uses
   nyx.callbacks,
+  nyx.resources.http.lcl,
+  nyx.resource.cache.lcl,
   nyx.menu.lcl;
 
 constructor TNyxApplicationForm.Create(AOwner: TComponent);
@@ -102,10 +123,22 @@ begin
   FRenderer := TNyxLCLRenderer.Create;
   FNavigator := TNyxLCLRenderer.Create;
   FNavigator.OnEvent := Navigate;
+  FResourceOptions := NyxApplicationResourceOptions;
 end;
 
 destructor TNyxLCLApplication.Destroy;
 begin
+
+  if FResources <> nil then
+  begin
+    FResources.Stop;
+  end;
+
+  if FResourceSubscription <> nil then
+  begin
+    FResourceSubscription.Disconnect;
+    FResourceSubscription := nil;
+  end;
   FMenus := nil;
   FRenderer.Free;
   FNavigator.Free;
@@ -140,9 +173,10 @@ begin
     raise ENyxModel.Create('Native application can only be mounted once');
   end;
   BindNyxCallbacks(ADocument, FRenderer.Events);
-  FRuntime := TNyxApplicationState.Create(ADocument);
+  FRuntime := TNyxApplicationState.Create(ADocument, npfNativeLCL);
   FDocument := ADocument;
   try
+    PrepareResources(ADocument);
     Application.CreateForm(TNyxApplicationForm, FForm);
     FForm.Caption := ADocument.Title;
     FForm.SetBounds(100, 100, 840, 720);
@@ -172,9 +206,19 @@ begin
     FViewHost.Align := alClient;
     FViewHost.BevelOuter := bvNone;
     ShowPage(ADocument.Pages[0].ID);
+    FResources.Start;
   except
+
+    if FResources <> nil then
+    begin
+      FResources.Stop;
+    end;
+    FResourceSubscription := nil;
     FMenus := nil;
     FRenderer.Unmount;
+    FRenderer.ResourceUpdates := nil;
+    FRenderer.ResourceContext := nil;
+    FResources := nil;
     FNavigator.Unmount;
     FreeAndNil(FNavigation);
     FreeAndNil(FRuntime);
@@ -193,6 +237,68 @@ begin
     raise ENyxState.Create('Application state requires a mounted application');
   end;
   Result := FRuntime.State;
+end;
+
+function TNyxLCLApplication.ConfigureResources(const AOptions: TNyxApplicationResourceOptions;
+  const AResolver: INyxResourceResolver): TNyxLCLApplication;
+begin
+
+  if FRuntime <> nil then
+  begin
+    raise ENyxResource.Create('Configure application resources before mounting');
+  end;
+  AOptions.Validate;
+  FResourceOptions := AOptions;
+  FResourceResolver := AResolver;
+  Result := Self;
+end;
+
+procedure TNyxLCLApplication.PrepareResources(ADocument: TNyxDocument);
+var
+  LResolver: INyxResourceResolver;
+  LIndex: Integer;
+begin
+  LResolver := FResourceResolver;
+
+  if LResolver = nil then
+  begin
+    for LIndex := 0 to ADocument.Resources.Count - 1 do
+    begin
+
+      if ADocument.Resources.Definition(ADocument.Resources.Reference(LIndex),
+        ADocument.Resources.Locale(LIndex)).Source.Kind = rskHosted then
+      begin
+        LResolver := NewNyxResourceResolver(NewNyxNativeResourceTransport(FRenderer.Events.Scheduler),
+          nil, NewNyxFileResourceCache);
+        Break;
+      end;
+    end;
+  end;
+  FResources := NewNyxApplicationResources(ADocument.Resources,
+    FRenderer.Events.Scheduler, FResourceOptions, LResolver);
+  FRuntime.AttachResources(FResources);
+  FResourceSubscription := FResources.Subscribe(ValidateResources, ResourcesChanged);
+  FRenderer.ResourceUpdates := FResources;
+end;
+
+function TNyxLCLApplication.GetResources: INyxApplicationResources;
+begin
+
+  if FResources = nil then
+  begin
+    raise ENyxResource.Create('Application resources require a mounted application');
+  end;
+  Result := FResources;
+end;
+
+function TNyxLCLApplication.ValidateResources(const AContext: INyxResourceContext): Boolean;
+begin
+  Result := FRenderer.CanReloadResources(AContext);
+end;
+
+procedure TNyxLCLApplication.ResourcesChanged(const AContext: INyxResourceContext);
+begin
+  FRenderer.ReloadResources(AContext.Snapshot, AContext.Locale, AContext.Fallback);
 end;
 
 function TNyxLCLApplication.GetCollections: INyxCollections;

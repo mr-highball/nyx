@@ -54,6 +54,32 @@ Browser/phone/trusted chooser/observing rollout currently needs the documented
 launch/deployment blocker resolved. Until then compile/native evidence remains
 partial and this task stays open. See the [return path](../WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).
 
+## Application lifecycle consumer boundary — 2026-10-08
+
+Criteria 3/4/5 now have full application hosts consuming one managed portable
+owner for independent immutable runtime catalogs, bounded automatic/on-demand
+loading, typed diagnostics and explicit locale/fallback. Hidden pages and the
+mounted target preflight candidate values; busy publication waits for idle Wake.
+Retained arrangements, responsive remounts and page navigation retain accepted
+data. Cancellation/disposal revoke borrowed callbacks and queued weak ports
+without retaining retired nodes or shutting down a borrowed scheduler.
+
+Maintained application-resources passes 39 actual checked Win32 application/
+control assertions, leak-free, including the default real HTTP adapter.
+Resource/source 78/8, core 30/1801, semantic engine/source 54/7 and arrangements
+34/92/61 remain green. Browser counterparts/Studios/backend/worker compile with
+zero owned warnings; browser execution remains open. Initial bound hosted files
+still require an admitted authored fallback for synchronous mounting.
+
+No full criterion closes; resource prerequisite no-closure advances 2→3 only.
+Workflow/authoring/renderer/codegen/delivery remain 22/37/19/28/2. End lifecycle
+fixtures; saved JSON row mappings and combined scalar/table publication are the
+next original consumer boundary. Studio/MCP runtime loading/cache/cancellation
+diagnostics, hosted media references, authenticated current-source/browser/
+phone/observing, performance and complete parity retain their original owners.
+See [the packet](../WORK.md#current-return-path-application-resources-and-lifetime--2026-10-08)
+and [usage](../docs/resources.md#application-loading-and-lifetime).
+
 ## Common Studio consumer boundary — 2026-10-08
 
 Criterion 6 now has one public Nyx resource card consumed by both ordinary

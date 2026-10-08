@@ -37,6 +37,11 @@ uses
   nyx.state,
   nyx.collections.registry,
   nyx.application.state,
+  nyx.application.resources,
+  nyx.resource.context,
+  nyx.resources,
+  nyx.resource.sources,
+  nyx.resources.loader,
   nyx.render.browser,
   nyx.menu.button;
 
@@ -54,8 +59,16 @@ type
     FViewHost: TJSHTMLElement;
     FRuntime: TNyxApplicationState;
     FMenus: INyxMenuBindings;
+    FResources: INyxApplicationResources;
+    FResourceOptions: TNyxApplicationResourceOptions;
+    FResourceResolver: INyxResourceResolver;
+    FResourceSubscription: INyxResourceSubscription;
     function GetState: TNyxState;
     function GetCollections: INyxCollections;
+    function GetResources: INyxApplicationResources;
+    procedure PrepareResources(ADocument: TNyxDocument);
+    function ValidateResources(const AContext: INyxResourceContext): Boolean;
+    procedure ResourcesChanged(const AContext: INyxResourceContext);
     procedure Navigate(ANode: TNyxNode; const AEvent: TNyxEventInfo);
   public
     constructor Create;
@@ -68,6 +81,12 @@ type
     property State: TNyxState read GetState;
     { Independent runtime collection stores persist across ShowPage. }
     property Collections: INyxCollections read GetCollections;
+    { Private application catalog/load diagnostics survive navigation. Configure
+      before mounting; supplying a resolver replaces the target HTTP/cache path.
+      Stop retires requests before controls and borrowed callbacks are freed. }
+    function ConfigureResources(const AOptions: TNyxApplicationResourceOptions;
+      const AResolver: INyxResourceResolver = nil): TNyxBrowserApplication;
+    property Resources: INyxApplicationResources read GetResources;
     property View: TNyxBrowserRenderer read FRenderer;
     { Mounted menu context. Release any retained menus/bindings before changing
       pages or destroying the application; target anchors are borrowed. }
@@ -78,6 +97,8 @@ implementation
 
 uses
   nyx.callbacks,
+  nyx.resources.http.browser,
+  nyx.resource.cache.browser,
   nyx.menu.browser;
 
 constructor TNyxBrowserApplication.Create;
@@ -86,10 +107,22 @@ begin
   FRenderer := TNyxBrowserRenderer.Create;
   FNavigator := TNyxBrowserRenderer.Create;
   FNavigator.OnEvent := Navigate;
+  FResourceOptions := NyxApplicationResourceOptions;
 end;
 
 destructor TNyxBrowserApplication.Destroy;
 begin
+
+  if FResources <> nil then
+  begin
+    FResources.Stop;
+  end;
+
+  if FResourceSubscription <> nil then
+  begin
+    FResourceSubscription.Disconnect;
+    FResourceSubscription := nil;
+  end;
   FMenus := nil;
   FRenderer.Free;
   FNavigator.Free;
@@ -117,10 +150,11 @@ begin
     raise ENyxModel.Create('Application requires a host and can only be mounted once');
   end;
   BindNyxCallbacks(ADocument, FRenderer.Events);
-  FRuntime := TNyxApplicationState.Create(ADocument);
+  FRuntime := TNyxApplicationState.Create(ADocument, npfBrowser);
   FDocument := ADocument;
   LContainer := TJSHTMLElement(document.createElement('div'));
   try
+    PrepareResources(ADocument);
 
     if ADocument.Count > 1 then
     begin
@@ -153,9 +187,19 @@ begin
       AHost.appendChild(LContainer.firstChild);
     end;
     document.title := FDocument.Title;
+    FResources.Start;
   except
+
+    if FResources <> nil then
+    begin
+      FResources.Stop;
+    end;
+    FResourceSubscription := nil;
     FMenus := nil;
     FRenderer.Unmount;
+    FRenderer.ResourceUpdates := nil;
+    FRenderer.ResourceContext := nil;
+    FResources := nil;
     FNavigator.Unmount;
     FreeAndNil(FNavigation);
     FreeAndNil(FRuntime);
@@ -173,6 +217,68 @@ begin
     raise ENyxState.Create('Application state requires a mounted application');
   end;
   Result := FRuntime.State;
+end;
+
+function TNyxBrowserApplication.ConfigureResources(const AOptions: TNyxApplicationResourceOptions;
+  const AResolver: INyxResourceResolver): TNyxBrowserApplication;
+begin
+
+  if FRuntime <> nil then
+  begin
+    raise ENyxResource.Create('Configure application resources before mounting');
+  end;
+  AOptions.Validate;
+  FResourceOptions := AOptions;
+  FResourceResolver := AResolver;
+  Result := Self;
+end;
+
+procedure TNyxBrowserApplication.PrepareResources(ADocument: TNyxDocument);
+var
+  LResolver: INyxResourceResolver;
+  LIndex: Integer;
+begin
+  LResolver := FResourceResolver;
+
+  if LResolver = nil then
+  begin
+    for LIndex := 0 to ADocument.Resources.Count - 1 do
+    begin
+
+      if ADocument.Resources.Definition(ADocument.Resources.Reference(LIndex),
+        ADocument.Resources.Locale(LIndex)).Source.Kind = rskHosted then
+      begin
+        LResolver := NewNyxResourceResolver(NewNyxBrowserResourceTransport,
+          nil, NewNyxBrowserResourceCache);
+        Break;
+      end;
+    end;
+  end;
+  FResources := NewNyxApplicationResources(ADocument.Resources,
+    FRenderer.Events.Scheduler, FResourceOptions, LResolver);
+  FRuntime.AttachResources(FResources);
+  FResourceSubscription := FResources.Subscribe(ValidateResources, ResourcesChanged);
+  FRenderer.ResourceUpdates := FResources;
+end;
+
+function TNyxBrowserApplication.GetResources: INyxApplicationResources;
+begin
+
+  if FResources = nil then
+  begin
+    raise ENyxResource.Create('Application resources require a mounted application');
+  end;
+  Result := FResources;
+end;
+
+function TNyxBrowserApplication.ValidateResources(const AContext: INyxResourceContext): Boolean;
+begin
+  Result := FRenderer.CanReloadResources(AContext);
+end;
+
+procedure TNyxBrowserApplication.ResourcesChanged(const AContext: INyxResourceContext);
+begin
+  FRenderer.ReloadResources(AContext.Snapshot, AContext.Locale, AContext.Fallback);
 end;
 
 function TNyxBrowserApplication.GetCollections: INyxCollections;

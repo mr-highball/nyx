@@ -36,6 +36,7 @@ uses
   nyx.colors,
   nyx.images,
   nyx.resources,
+  nyx.resource.context,
   nyx.root.types,
   nyx.data,
   nyx.contract,
@@ -233,6 +234,9 @@ type
     procedure BindResources(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef);
     function ReadResource(const AValue: TNyxResourceValueRef): TNyxStateValue;
+    { Detached immutable runtime catalog/locale frame. Authored nodes refuse;
+      changing a returned membership snapshot never changes this view. }
+    function ResourceContext: INyxResourceContext;
     { Internal projection publication copies the already admitted private
       context, without consulting foreign registries a second time. Both trees
       must be realized, with the same shape/identity as the staged projection. }
@@ -2399,6 +2403,16 @@ begin
   end;
   LSnapshot := AResources.Clone;
   Bind(Self);
+end;
+
+function TNyxNode.ResourceContext: INyxResourceContext;
+begin
+
+  if not IsRealized then
+  begin
+    raise ENyxResource.Create('Resource contexts require a realized view');
+  end;
+  Result := NewNyxResourceContext(FResourceSnapshot, FResourceLocale, FResourceFallback);
 end;
 
 function TNyxNode.ReadResource(const AValue: TNyxResourceValueRef): TNyxStateValue;

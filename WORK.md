@@ -8,6 +8,90 @@ lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
 
+
+## Current return path: application resources and lifetime — 2026-10-08
+
+The previous turn is **progress**, exactly pushed as `a921a33`. This continuation
+returns to resource criteria 3/4/5: application-owned loading, hidden-page
+admission, navigation/locale retention and request retirement. It adds no task or
+completion allocation. Execution remains solo. Earlier listener/browser/server
+replacement rejection stays held; current endpoints/pairs remain protected.
+
+Both full application hosts now consume public `nyx.application.resources`.
+Typed immutable options select automatic/on-demand loading, 1..8 concurrency,
+whole-request deadline and explicit locale/fallback; callers may inject a
+resolver. Defaults load after complete mount through the existing browser
+fetch/cache or native WinHTTP/private-temp cache adapters. Immutable declarations
+retain original URLs/policies for retry; runtime catalogs stay independent of
+documents and sibling applications. No document decoding/builder fetches URLs.
+
+Managed immutable resource contexts persist through navigation, measured/full
+responsive remounts and retained arrangement. Application state prototypes retain
+concrete platform overrides and validate hidden pages against accepted resources.
+Mounted target preflight uses the same detached binding admission as publication.
+Invalid paths/types refuse the entire candidate; UI-busy receivers retain results
+until deferred idle Wake. Bounded coalesced UI work, revocable weak ports and
+exact job identities protect synchronous replies, replacement, cancellation and
+host disposal without owning retired nodes or shutting down a borrowed scheduler.
+Ordered subscriptions retire before their receivers. Typed status distinguishes
+queued/loading/waiting/ready/failed/rejected/cancelled, resolver origin, loading/
+cache warnings and post-publication receiver failures. Explicit locale changes
+are synchronous and refuse busy/invalid receivers.
+
+Maintained `tools/build.ps1 -Target application-resources` passes **39 actual
+Win32 application/control checks**, leak-free, with zero owned warnings. It
+covers existing captions/prompts, two pages/reusable scopes, accepted hidden-page
+state validation, independent applications/snapshots, English fallback and exact
+supplementary Unicode, failed locale/path admission, retained arrangement,
+deferred/inline completion, idle wake, bounded/replaced requests, late replies,
+disposal (including destruction inside a changed callback) and exact Unicode
+observer diagnostics. The default application adapter
+also fetches the existing read-only HTTP health endpoint and retains the loaded
+controls through remount. This is actual application integration, not a store-only
+or fallback-only fixture. Qualification repaired parser/API spelling, public
+error normalization and cancelled UI-courier draining; no guard was weakened.
+End this application fixture family.
+
+Browser counterpart, both ordinary Studios, backend and worker compile/stage
+with zero owned warnings. Four browser compiler invocations retain **28** upstream
+classes.pas warnings; dependency source remains untouched. Browser execution,
+CORS/Cache Storage/input/phone/observing and other native HTTP systems remain
+unqualified. Evidence is ignored `build/application-resources/maintained.log`.
+
+Affected checked regressions pass resource controls/source **78/8**, core
+**30/1801**, suspended actual MCP engine/exact builder **54/7**, owned arrangement
+**34** on each compiler role and actual native projection/bound arrangement
+**92/61**, leak-free. A final bound admission run retains 61 after the shared
+preflight extraction. Logs live below `build/application-resources/`. Semantic
+MCP remains primary for authoring; its read-only primary session is unchanged,
+and the actual suspended-engine fixture uses a fresh private runtime. Physical
+control qualification cannot be established by the document API.
+
+No full criterion/task/percentage closes. Resource prerequisite no-closure alone
+advances **2→3**; workflow/authoring/renderer/codegen/delivery remain
+**22/37/19/28/2**. Stop loader/lifecycle fixtures now. Saved JSON row mappings and
+combined scalar/table publication are the next original resource consumer
+boundary. Runtime load/cache/cancellation diagnostics in Studio/MCP, hosted media
+references, current-source authenticated/browser/phone/observing delivery,
+performance and complete both-target application/Studio/parity remain open with
+their original resource/workflow/Studio/production owners. Initial synchronous
+bound hosted values still require an admitted authored fallback.
+
+All gate/guard handles are terminal. Protected **15 exact
+process identities / 9 complete pairs / 229 sealed files** remain independently
+guarded in `build/menu-bar-editor/preservation.json`, with this packet's log
+`build/application-resources/preservation.log`. Earlier automatic approval
+review rejected listener/browser launches and primary replacement, supplying
+only "blocked by policy"; no equivalent action was retried. Exact remote/clean
+checkpoint belongs to ignored `build/application-resources/remote-checkpoint.json`
+after push; this source packet does not update the running LAN product.
+The final read-only preservation receipt is 2026-10-08T07:14:27Z. Authenticated
+native MCP remains revision 2 with its original selection/view, no draft/history
+and activity 498.
+Automatic review also rejected removal of this packet's temporary probe folders,
+again supplying only "blocked by policy." The command never ran; those ignored
+artifacts remain in place, and no equivalent deletion was retried.
+
 ## Current return path: semantic resource authoring — 2026-10-08
 
 The previous turn is **progress**, exactly pushed as `4a46de9`. This bounded

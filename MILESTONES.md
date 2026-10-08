@@ -4,6 +4,22 @@
 [Current work](WORK.md)
 
 
+Current application resource lifecycle (2026-10-08): both hosts own independent
+catalog/loading/locale contexts, hidden-page and mounted-target admission,
+bounded deferred completion and disposal. Checked actual Win32 full application
+controls pass 39, including real default HTTP loading, navigation/reusables,
+locale/state/arrangement and cancellation, leak-free. Resource controls/source
+78/8, core 30/1801, semantic engine/source 54/7 and arrangement 34/92/61 remain
+green. Both targets/Studios/backend/worker compile with zero owned warnings.
+Browser execution remains open. No full criterion/percentage closes: resource
+no-closure alone advances 2→3; workflow/authoring/renderer/codegen/delivery stay
+22/37/19/28/2. End lifecycle fixtures and return to saved resource row mappings
+and combined scalar/table consumers. Runtime Studio/MCP diagnostics, media,
+current-source authenticated/browser/phone/observing, performance and complete
+parity remain original outcomes. The protected deployed endpoint is unchanged.
+See [the packet](WORK.md#current-return-path-application-resources-and-lifetime--2026-10-08).
+
+
 Current semantic Resources source (2026-10-08): bounded metadata/payload/JSON
 windows and typed grouped file/binding edits now share the common Studio
 candidate. Checked suspended actual-MCP-engine assertions pass 54 and exact

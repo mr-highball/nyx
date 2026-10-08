@@ -85,6 +85,7 @@ uses
   nyx.event.emitter,
   nyx.state,
   nyx.resources,
+  nyx.resource.context,
   nyx.binding,
   nyx.binding.types,
   nyx.collections.view,
@@ -255,6 +256,8 @@ type
       Effective document overlays never mutate it or accumulate into its base. }
     FBorrowedTheme: TNyxTheme;
     FRoot: TNyxNode;
+    FResourceContext: INyxResourceContext;
+    FResourceUpdates: INyxResourceUpdateQueue;
     FPresentationSelection: TNyxPresentationSelection;
     FPresentationView: INyxPresentationViewOwner;
     { Independently owned recipes outlive the source document. Queued work
@@ -397,6 +400,9 @@ type
     procedure SetPresentationSelection(const AValue: TNyxPresentationSelection);
     function ReadPresentationSelection: TNyxPresentationSelection;
     function GetPresentationView: INyxPresentationView;
+    procedure SetResourceContext(const AContext: INyxResourceContext);
+    procedure SetResourceUpdates(const AQueue: INyxResourceUpdateQueue);
+    procedure WakeResources;
     procedure Resize(ASender: TObject);
     procedure ProjectViewport(ASender: TObject);
     procedure ArrangeInput(ABinding: TNyxLCLBinding; AWidth, AHeight: Integer);
@@ -585,6 +591,17 @@ type
     property State: TNyxState read FState;
     { Reload copied resource values/locale in this mounted view. No saved
       defaults or sibling runtime is changed; invalid data preserves controls. }
+    { Explicit immutable application context persists across Render/navigation
+      and responsive rebuilds. Configure while unmounted; mounted updates use
+      ReloadResources, whose accepted publication also advances this context. }
+    property ResourceContext: INyxResourceContext read FResourceContext write SetResourceContext;
+    { Install while unmounted. The port owns no renderer; the application must
+      stop it before destroying receivers. Deferred Wake cannot publish here. }
+    property ResourceUpdates: INyxResourceUpdateQueue read FResourceUpdates write SetResourceUpdates;
+    function ResourceReady: Boolean;
+    { False means busy; invalid selected values raise before publication.
+      The detached check includes the currently mounted target projection. }
+    function CanReloadResources(const AContext: INyxResourceContext): Boolean;
     procedure ReloadResources(const AResources: INyxResources;
       const ALocale, AFallback: TNyxLocaleRef);
     property OnBindingError: TNyxLCLBindingError read FOnBindingError write FOnBindingError;
@@ -3463,6 +3480,7 @@ end;
 
 procedure TNyxLCLRenderer.QueueContent;
 begin
+  WakeResources;
 
   if (FContentBlueprint = nil) or FPublishingContent then
   begin
@@ -3558,6 +3576,12 @@ begin
     try
       LCandidate := FContentBlueprint.Realize(LFrame, LMeasurements);
 
+      if FResourceContext <> nil then
+      begin
+        LCandidate.BindResources(FResourceContext.Snapshot,
+          FResourceContext.Locale, FResourceContext.Fallback);
+      end;
+
       if not SameNyxContentStructure(FRoot, LCandidate) then
       begin
         LStates := CaptureContentFaces;
@@ -3568,6 +3592,7 @@ begin
           LKey := FContentMeasurementKey;
         finally
           FPublishingContent := False;
+          WakeResources;
         end;
       end
       else
@@ -3585,6 +3610,7 @@ begin
           end;
         finally
           FPublishingContent := False;
+          WakeResources;
         end;
       end;
       FContentFrame := LFrame;
@@ -3727,6 +3753,7 @@ begin
     end;
     repeat
       LCandidate := TNyxLCLRenderer.Create(FTheme);
+      LCandidate.FResourceContext := FResourceContext;
       LCandidate.FStagingContent := LBlueprint <> nil;
       LCandidate.FStagingMeasurements := LMeasurements;
 
@@ -3762,6 +3789,12 @@ begin
       LCandidate.FProjectionSchemaRevision := NyxSchemaRevision;
       LCandidate.FPresentationSelection := AFrame.Selection;
       LCandidate.FRoot := RealizeNyxView(ADocument, ARoot, AFrame, LMeasurements);
+
+      if FResourceContext <> nil then
+      begin
+        LCandidate.FRoot.BindResources(FResourceContext.Snapshot,
+          FResourceContext.Locale, FResourceContext.Fallback);
+      end;
       ApplyNyxPlatform(LCandidate.FRoot, npfNativeLCL);
       LCandidate.FRoot.ApplyViewport(Max(0, AHost.ClientWidth), Max(0, AHost.ClientHeight),
         npfNativeLCL, AFrame.Selection, LMeasurements);
@@ -3825,6 +3858,12 @@ begin
       end;
       LAllocated := LCandidate.MeasureContainers;
       LMeasuredRoot := RealizeNyxView(ADocument, ARoot, AFrame, LAllocated);
+
+      if FResourceContext <> nil then
+      begin
+        LMeasuredRoot.BindResources(FResourceContext.Snapshot,
+          FResourceContext.Locale, FResourceContext.Fallback);
+      end;
       ApplyNyxPlatform(LMeasuredRoot, npfNativeLCL);
       LMeasuredRoot.ApplyViewport(AFrame.Width, AFrame.Height,
         npfNativeLCL, AFrame.Selection, LAllocated);
@@ -4028,6 +4067,7 @@ begin
     FLastBindingError := '';
     FLastBindingFailure := nbfNone;
     FRoot := LCandidate.FRoot;
+    FResourceContext := LCandidate.FResourceContext;
     LCandidate.FRoot := nil;
     FContentBlueprint := LCandidate.FContentBlueprint;
     LCandidate.FContentBlueprint := nil;
@@ -4364,6 +4404,12 @@ begin
     end;
     LMeasurements := MeasureContainers;
     LCandidate := RealizeNyxView(ADocument, ARoot, LFrame, LMeasurements);
+
+    if FResourceContext <> nil then
+    begin
+      LCandidate.BindResources(FResourceContext.Snapshot,
+        FResourceContext.Locale, FResourceContext.Fallback);
+    end;
     LContentBlueprint := NewNyxContentBlueprint(ADocument, ARoot);
     ApplyNyxPlatform(LCandidate, npfNativeLCL);
 
@@ -4445,6 +4491,70 @@ begin
   end;
 end;
 
+procedure TNyxLCLRenderer.SetResourceContext(const AContext: INyxResourceContext);
+var
+  LContext: INyxResourceContext;
+begin
+
+  if FRoot <> nil then
+  begin
+    raise ENyxResource.Create('Configure a renderer resource context before mounting');
+  end;
+  LContext := nil;
+
+  if AContext <> nil then
+  begin
+    LContext := NewNyxResourceContext(AContext.Snapshot,
+      AContext.Locale, AContext.Fallback);
+  end;
+  FResourceContext := LContext;
+end;
+
+function TNyxLCLRenderer.ResourceReady: Boolean;
+begin
+  Result := (FLiveBindings <> nil) and not FPublishingContent;
+
+  if Result then
+  begin
+    Result := FLiveBindings.RefreshReady;
+  end;
+end;
+
+procedure TNyxLCLRenderer.SetResourceUpdates(const AQueue: INyxResourceUpdateQueue);
+begin
+
+  if FRoot <> nil then
+  begin
+    raise ENyxModel.Create('Install application resource updates before mounting');
+  end;
+
+  if AQueue <> nil then
+  begin
+    SetResourceContext(AQueue.Context);
+  end;
+  FResourceUpdates := AQueue;
+end;
+
+function TNyxLCLRenderer.CanReloadResources(const AContext: INyxResourceContext): Boolean;
+begin
+  Result := ResourceReady;
+
+  if Result then
+  begin
+    FLiveBindings.ValidateResourceReload(AContext.Snapshot,
+      AContext.Locale, AContext.Fallback);
+  end;
+end;
+
+procedure TNyxLCLRenderer.WakeResources;
+begin
+
+  if (FResourceUpdates <> nil) and (not FPublishingContent) then
+  begin
+    FResourceUpdates.Wake;
+  end;
+end;
+
 procedure TNyxLCLRenderer.ReloadResources(const AResources: INyxResources;
   const ALocale, AFallback: TNyxLocaleRef);
 begin
@@ -4453,7 +4563,18 @@ begin
   begin
     raise ENyxState.Create('Resource reload requires a mounted runtime view');
   end;
-  FLiveBindings.ReloadResources(AResources, ALocale, AFallback);
+  try
+    FLiveBindings.ReloadResources(AResources, ALocale, AFallback);
+  finally
+    { Synchronization can fail AFTER ordinary binding publication. Preserve the
+      actual accepted frame in that case too; never revert it to authored data.
+      Existing view-only callers retain their original scope contract. }
+
+    if (FResourceContext <> nil) and (FRoot <> nil) then
+    begin
+      FResourceContext := FRoot.ResourceContext;
+    end;
+  end;
 end;
 
 procedure TNyxLCLRenderer.Unmount;

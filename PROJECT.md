@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Both application hosts now own bounded resource loading, immutable runtime
+contexts and explicit locale/navigation lifetime. Hidden pages and the mounted
+target validate before publication. Actual Win32 application/control checks pass
+39, including the default real HTTP adapter, leak-free. Resource/source 78/8,
+core 30/1801, semantic engine/source 54/7 and arrangements 34/92/61 remain green;
+both targets/Studios/backend/worker compile with zero owned warnings. Browser
+execution, saved row/media bindings, runtime Studio/MCP diagnostics and complete
+parity remain open. See
+[the packet](WORK.md#current-return-path-application-resources-and-lifetime--2026-10-08).
+
 Prepared Resources MCP now shares the Studio form candidate: bounded metadata,
 exact Unicode/byte/JSON windows and grouped file/scalar binding edits. Checked
 suspended actual-engine 54 and exact compiled emitted-builder seven pass

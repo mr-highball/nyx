@@ -29,10 +29,13 @@ interface
 
 uses
   nyx.text,
+  nyx.types,
   nyx.state,
   nyx.collections.registry,
   nyx.collections.view,
   nyx.collections.bindings,
+  nyx.resource.context,
+  nyx.application.resources,
   nyx.model;
 
 type
@@ -53,9 +56,15 @@ type
     FPageCollections: array of INyxCollectionBindings;
     FPages: array of TNyxNode;
     FSubscription: TNyxStateSubscription;
+    FResourceSubscription: INyxResourceSubscription;
+    FResourceContext: INyxResourceContext;
     procedure ValidateCandidate(ACandidate: TNyxState; AChanges: TNyxStateChanges);
+    function ValidateResources(const AContext: INyxResourceContext): Boolean;
+    procedure ResourcesChanged(const AContext: INyxResourceContext);
   public
-    constructor Create(ADocument: TNyxDocument);
+    { npfAny preserves portable host-neutral validation. Concrete application
+      hosts supply their target so hidden pages retain its typed overrides. }
+    constructor Create(ADocument: TNyxDocument; APlatform: TNyxPlatform = npfAny);
     destructor Destroy; override;
     property State: TNyxState read FState;
     { Managed runtime stores are independent of saved defaults and sibling
@@ -65,15 +74,20 @@ type
     { Retained page bindings share one context and keep hidden-page validation,
       instance data and selection alive through navigation. Unknown IDs reject. }
     function PageCollections(const APageID: TNyxText): INyxCollectionBindings;
+    { Install before rendering. All hidden-page validators then use accepted
+      runtime resources/locales, never the document's original fallback data.
+      Disconnects its borrowed receivers before prototype/store destruction. }
+    procedure AttachResources(const AResources: INyxApplicationResources);
   end;
 
 implementation
 
 uses
   nyx.composition,
+  nyx.platform,
   nyx.binding;
 
-constructor TNyxApplicationState.Create(ADocument: TNyxDocument);
+constructor TNyxApplicationState.Create(ADocument: TNyxDocument; APlatform: TNyxPlatform);
 var
   LIndex: Integer;
 begin
@@ -92,6 +106,11 @@ begin
   for LIndex := 0 to ADocument.Count - 1 do
   begin
     FPages[LIndex] := RealizeNyxView(ADocument, ADocument.Pages[LIndex]);
+
+    if APlatform <> npfAny then
+    begin
+      ApplyNyxPlatform(FPages[LIndex], APlatform);
+    end;
     ApplyNyxBindings(FPages[LIndex], FState);
     FPageCollections[LIndex] := NewNyxCollectionBindings(FPages[LIndex], FCollectionContext);
   end;
@@ -102,6 +121,12 @@ destructor TNyxApplicationState.Destroy;
 var
   LIndex: Integer;
 begin
+
+  if FResourceSubscription <> nil then
+  begin
+    FResourceSubscription.Disconnect;
+    FResourceSubscription := nil;
+  end;
   FSubscription.Free;
   FPageCollections := nil;
   for LIndex := 0 to Length(FPages) - 1 do
@@ -124,11 +149,66 @@ begin
   begin
     LPage := FPages[LIndex].Clone;
     try
+
+      if FResourceContext <> nil then
+      begin
+        LPage.BindResources(FResourceContext.Snapshot,
+          FResourceContext.Locale, FResourceContext.Fallback);
+      end;
       ApplyNyxBindings(LPage, ACandidate);
     finally
       LPage.Free;
     end;
   end;
+end;
+
+function TNyxApplicationState.ValidateResources(const AContext: INyxResourceContext): Boolean;
+var
+  LIndex: Integer;
+  LPage: TNyxNode;
+begin
+  Result := not FState.Busy;
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  for LIndex := 0 to Length(FPages) - 1 do
+  begin
+    LPage := FPages[LIndex].Clone;
+    try
+      LPage.BindResources(AContext.Snapshot, AContext.Locale, AContext.Fallback);
+      ApplyNyxBindings(LPage, FState);
+    finally
+      LPage.Free;
+    end;
+  end;
+end;
+
+procedure TNyxApplicationState.ResourcesChanged(const AContext: INyxResourceContext);
+begin
+  { The immutable frame is enough: future validation clones prototypes and binds
+    this frame without rewriting retained collection scopes or defaults. }
+  FResourceContext := AContext;
+end;
+
+procedure TNyxApplicationState.AttachResources(const AResources: INyxApplicationResources);
+var
+  LToken: INyxResourceSubscription;
+begin
+
+  if (AResources = nil) or (FResourceSubscription <> nil) then
+  begin
+    raise ENyxState.Create('Application resource validation must be installed once');
+  end;
+
+  if not ValidateResources(AResources.Context) then
+  begin
+    raise ENyxState.Create('Application state is busy');
+  end;
+  LToken := AResources.Subscribe(ValidateResources, ResourcesChanged);
+  FResourceContext := AResources.Context;
+  FResourceSubscription := LToken;
 end;
 
 function TNyxApplicationState.PageCollections(const APageID: TNyxText): INyxCollectionBindings;

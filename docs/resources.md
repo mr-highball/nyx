@@ -63,8 +63,74 @@ Lookup tries the exact selected locale, the explicit fallback locale and then
 the unlocalized default. Missing resources refuse. A selector can fix its own
 locale with `.Localize(NyxLocale('en-GB'), NyxDefaultLocale)`; otherwise it uses
 the view's explicit runtime locale. No operating-system locale is selected
-implicitly. Application navigation/remount retention and application-wide locale
-publication still need integration; view reload alone does not establish them.
+implicitly. Full application hosts retain their own accepted catalog and locale
+through navigation/remounts; view-only reload remains confined to that view.
+
+## Application loading and lifetime
+
+Both application hosts expose the same portable managed runtime contract from
+`nyx.application.resources`. Embedded files are immediately available. Hosted
+variants start automatically after a complete mount, with at most four concurrent
+requests by default. Configure before mounting to change loading, concurrency,
+whole-request deadline or explicit initial locale:
+
+```pascal
+LApplication.ConfigureResources(NyxApplicationResourceOptions
+  .ConcurrentRequests(2)
+  .Request(NyxResourceLoadOptions.WholeRequest(10000))
+  .Localize(NyxLocale('en-GB'), NyxDefaultLocale));
+
+// Use Loading(nrlOnDemand) to defer transport until the caller requests it.
+LApplication.Resources.Reload(NyxResourceRef('workshop-copy'), NyxDefaultLocale);
+LApplication.Resources.Localize(NyxLocale('en-GB'), NyxDefaultLocale);
+LStatus := LApplication.Resources.Status(NyxResourceRef('workshop-copy'), NyxDefaultLocale);
+```
+
+The default browser adapter uses fetch and browser Cache Storage; the current
+native adapter uses WinHTTP and a bounded private temporary cache. Each resource's
+typed cache policy still controls every hit/store, including caller override.
+Supply a replacement `INyxResourceResolver` as ConfigureResources' second
+argument to replace that path. No DOM/LCL/HTTP types enter the portable contract.
+Decoding a document or constructing its source builder never performs loading.
+Bound hosted values currently need an admitted same-kind authored fallback to
+support the first synchronous mount; unbound files can load without one.
+
+`Resources.Context` is an immutable snapshot frame: Snapshot returns independent
+catalog membership, with read-only locale/fallback. Loading replaces private
+runtime entries; Declaration retains the original immutable URL/policy for retry.
+Sibling applications and saved defaults stay independent. Embedded Reload is a
+no-op. Loading phases distinguish queued/loading/waiting/ready/failed/rejected/
+cancelled; Origin distinguishes network/cache/embedded/fallback. Error,
+CacheWarning and NotificationError report separate boundaries. Ready with
+fallback origin retains the original loading error.
+
+Results publish through Nyx's deferred UI scheduler, after all application page
+prototypes and the current target projection accept the candidate. Hidden pages
+use their concrete platform overrides and the accepted catalog during later
+state validation. Wrong paths/types preserve the previous entire catalog.
+A busy receiver retains its result until Wake; renderer completion/input queues
+supply that wake. Ordered borrowed validator/change subscriptions must Disconnect
+before their objects are freed; Stop/Disconnect can also retire receivers inside
+a callback. Loading/locale reentry refuses. A custom busy receiver supplies its
+own idle Wake.
+Localize is synchronous and refuses busy/invalid candidates. Notification failures
+occur after accepted publication and are reported separately, as with state updates.
+
+Application loads span page navigation and apply to the current mounted view,
+without retaining retired nodes. Cancel retires requests/pending results; Stop
+also revokes subscriptions and queued weak ports before host destruction. Neither
+shuts down a borrowed scheduler. Retained stopped owners remain inspectable and
+refuse new work; retained immutable frames remain independent. These are
+UI-thread operations. Different resource variants publish individually; related
+authored file/binding changes use Studio's grouped paired transaction.
+
+Maintained `tools/build.ps1 -Target application-resources` qualifies actual
+Win32 application controls, hidden pages, reusable scopes, state validation,
+locale/navigation, synchronous/deferred replies, bounded/replaced requests,
+retirement, observer errors and the default real HTTP path. Browser counterparts
+compile/stage without execution evidence. Saved automatic JSON row mappings,
+combined scalar/table publication and Studio/MCP runtime load-status surfaces
+remain open; this application lifecycle does not establish those outcomes.
 
 ## JSON rows and ordinary tables
 
@@ -122,8 +188,9 @@ Embedded fallback data has the same kind and supports immediate synchronous
 binding. A hosted definition without a fallback refuses synchronous content
 access until loaded. Current declarations, policy logic and storage adapters
 are implemented. A resolver explicitly loads the declaration; decoding/replaying
-this example still does not fetch its URL. Automatic application-wide resolution,
-navigation/scopes and the common Studio workflow remain open.
+this example still does not fetch its URL. Application hosts supply the automatic
+runtime lifecycle above; the common Studio authoring and semantic tools manage
+declarations rather than fetching preview resources.
 
 ## Loading and publishing
 

@@ -30,6 +30,7 @@ interface
 uses
   SysUtils,
   nyx.text,
+  nyx.resource.context,
   nyx.types,
   nyx.data,
   nyx.contract,
@@ -68,6 +69,8 @@ type
     procedure ValidateCandidate(ACandidate: TNyxState; AChanges: TNyxStateChanges);
     procedure StateChanged(AState: TNyxState; AChanges: TNyxStateChanges);
     procedure Synchronize;
+    function PrepareResourceReload(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef): TNyxNode;
     procedure CaptureEventValue(AOrigin: TNyxNode; const ADispatch: TNyxDispatch;
       var AInfo: TNyxEventInfo);
     function Command(ANode: TNyxNode; ATrigger: TNyxTrigger; const AValue: TNyxText;
@@ -117,6 +120,10 @@ type
     { Fresh UI-thread observations, never cached admission. Unbound views avoid
       extra projection clones but must still refuse command/notification reentry. }
     property RefreshReady: Boolean read GetRefreshReady;
+    { Detached admission for application-wide validators. No resources,
+      properties, subscribers or target handles are published by this check. }
+    procedure ValidateResourceReload(const AResources: INyxResources;
+      const ALocale, AFallback: TNyxLocaleRef);
     property HasBindings: Boolean read GetHasBindings;
     property OnSync: TNyxBindingSync read FOnSync write FOnSync;
   end;
@@ -562,20 +569,40 @@ begin
   inherited Destroy;
 end;
 
-procedure TNyxLiveBindings.ReloadResources(const AResources: INyxResources;
-  const ALocale, AFallback: TNyxLocaleRef);
-var
-  LCandidate: TNyxNode;
+function TNyxLiveBindings.PrepareResourceReload(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef): TNyxNode;
 begin
 
   if not RefreshReady then
   begin
     raise ENyxState.Create('Resource reload refuses a busy view');
   end;
-  LCandidate := FRoot.Clone;
+  Result := FRoot.Clone;
   try
-    LCandidate.BindResources(AResources, ALocale, AFallback);
-    ApplyNyxBindings(LCandidate, FState);
+    Result.BindResources(AResources, ALocale, AFallback);
+    ApplyNyxBindings(Result, FState);
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
+end;
+
+procedure TNyxLiveBindings.ValidateResourceReload(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef);
+var
+  LCandidate: TNyxNode;
+begin
+  LCandidate := PrepareResourceReload(AResources, ALocale, AFallback);
+  LCandidate.Free;
+end;
+
+procedure TNyxLiveBindings.ReloadResources(const AResources: INyxResources;
+  const ALocale, AFallback: TNyxLocaleRef);
+var
+  LCandidate: TNyxNode;
+begin
+  LCandidate := PrepareResourceReload(AResources, ALocale, AFallback);
+  try
     FRoot.CopyResourceContext(LCandidate);
     CopyProjection(FRoot, LCandidate);
   finally
@@ -630,6 +657,7 @@ function TNyxLiveBindings.TryPrepareRefresh(ACandidate, ABaseline: TNyxNode;
   out AProjectedCandidate, AProjectedBaseline: TNyxNode): Boolean;
 var
   LRevision: Integer;
+  LResources: INyxResourceContext;
 begin
   Result := False;
   AProjectedCandidate := nil;
@@ -649,6 +677,12 @@ begin
   try
     AProjectedCandidate := ACandidate.Clone;
     AProjectedBaseline := ABaseline.Clone;
+    { Responsive/layout candidates originate from authored defaults. Their
+      binding contracts already match, so retain the accepted runtime resource
+      catalog/locale before comparing current projections. }
+    LResources := FRoot.ResourceContext;
+    AProjectedCandidate.BindResources(LResources.Snapshot, LResources.Locale, LResources.Fallback);
+    AProjectedBaseline.BindResources(LResources.Snapshot, LResources.Locale, LResources.Fallback);
     { Project BOTH copies. Comparing a live value with the original document
       default could otherwise make a layout refresh overwrite accepted state.
       No subscriber is replaced: its validator continues borrowing FRoot, whose
