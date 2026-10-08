@@ -20,7 +20,19 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
-## Confirmed image integrity difference — 2026-10-08
+## Consumed image checksum prerequisite — 2026-10-08
+
+Portable standard admission now refuses damaged PNG chunks on both targets,
+retaining the explicit caller policy through wire/resources/source/history.
+Actual native checks pass 199, desktop/CSS-390 browsers 231 each, emitted source
+eight per target. Recovery/clear and independently owned media execute; explicit
+framing-only hosts still differ, so full pixel validation is not claimed. Public
+image status/events, Studio policy selection, accessibility and full visual
+acceptance remain original requirements. Resource owns the single no-closure
+9→10 advancement; no parity criterion/counter closes. See
+[the packet](../WORK.md#current-return-path-typed-image-admission-policy--2026-10-08).
+
+## Previously confirmed image integrity difference — 2026-10-08
 
 Original criteria 1/3 retain a measured media gap. Native image checks pass 181
 with independent candidate refusal; actual desktop/CSS-390 valid PNG/JPEG and

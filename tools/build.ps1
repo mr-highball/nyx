@@ -3108,7 +3108,7 @@ try {
     # admission, ordinary Studio interaction, history and emitted-source checks.
     # Independent artifacts stage only; no service/browser/OS chooser launches.
     $nyxImageRoot = Join-Path $nyxRoot 'build/image-authoring'
-    $nyxImageSeed = Join-Path $nyxRoot 'build/image-presentation/seed'
+    $nyxImageSeed = [IO.Path]::GetFullPath($ImageSourceDirectory)
     $nyxImageFixtures = Join-Path $nyxRoot 'build/image-presentation/fixtures'
     if (-not (Test-Path -LiteralPath (Join-Path $nyxImageSeed 'nyx.generated.view.pas'))) {
       throw 'Export the English Image workshop through an owned MCP review first'

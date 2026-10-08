@@ -568,7 +568,7 @@ type
     vkPopoverOptions, vkTypeAheadOptions,
     vkMenuOpening, vkPopoverSide, vkPopoverAlignment, vkPopoverSizing,
     vkPopoverDismissal, vkTypeAheadMatch, vkThemeTokens, vkThemePreset,
-    vkImageSource, vkImageLocation, vkImageFormat, vkImageFit, vkImageAnchor,
+    vkImageSource, vkImageLocation, vkImageFormat, vkImageFit, vkImageAnchor, vkImageValidation,
     vkResourceRef, vkResourceLocale, vkResourceDefinition, vkBytes, vkResourceValue,
     vkResourceKind, vkResourceURL, vkResourceCache, vkResourceServerPolicy,
     vkResourceRows, vkResourcePath);
@@ -603,6 +603,7 @@ type
     ClockTime: TNyxClockTime;
     RGBColor: TNyxRGBColor;
     ImageSource: TNyxImageSource;
+    ImageValidation: TNyxImageValidationPolicy;
     ResourceDefinitionData: TNyxDataValue;
     ResourceValue: TNyxResourceValueRef;
     ResourceRows: TNyxResourceRows;
@@ -2237,6 +2238,38 @@ begin
           Exit;
         end;
 
+        if LName = 'nyximagevalidation' then
+        begin
+          { Evaluate only this public scalar policy; no executable Pascal call,
+            borrowed host decoder or raw string can substitute for a Boolean. }
+          Result := Default(TValue);
+          Result.Kind := vkImageValidation;
+          Result.ImageValidation := NyxImageValidation;
+
+          if At('(') then
+          begin
+            LArgs := Arguments;
+
+            if Length(LArgs) <> 0 then
+            begin
+              Fail('NyxImageValidation takes no arguments');
+            end;
+          end;
+          while At('.') do
+          begin
+            Inc(FCursor);
+            Expect('ContainerChecksums');
+            LArgs := Arguments(1);
+
+            if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkBoolean) then
+            begin
+              Fail('ContainerChecksums requires one Boolean');
+            end;
+            Result.ImageValidation := Result.ImageValidation.ContainerChecksums(LArgs[0].Ordinal <> 0);
+          end;
+          Exit;
+        end;
+
         if (LName = 'nyximage') or (LName = 'nyxembeddedimage') or
           (LName = 'nyxnoimage') or (LName = 'tnyximagesource') then
         begin
@@ -2272,12 +2305,26 @@ begin
             else if LName = 'nyxembeddedimage' then
             begin
 
-              if (Length(LArgs) <> 2) or (LArgs[0].Kind <> vkImageFormat) or
+              if not (Length(LArgs) in [2, 3]) or (LArgs[0].Kind <> vkImageFormat) or
                 (LArgs[1].Kind <> vkText) then
               begin
-                Fail('NyxEmbeddedImage requires a closed format and base64 text');
+                Fail('NyxEmbeddedImage requires a closed format, base64 text and optional typed validation');
               end;
-              Result.ImageSource := NyxEmbeddedImage(TNyxImageFormat(LArgs[0].Ordinal), LArgs[1].Text);
+
+              if Length(LArgs) = 3 then
+              begin
+
+                if LArgs[2].Kind <> vkImageValidation then
+                begin
+                  Fail('Embedded image validation requires NyxImageValidation');
+                end;
+                Result.ImageSource := NyxEmbeddedImage(TNyxImageFormat(LArgs[0].Ordinal),
+                  LArgs[1].Text, LArgs[2].ImageValidation);
+              end
+              else
+              begin
+                Result.ImageSource := NyxEmbeddedImage(TNyxImageFormat(LArgs[0].Ordinal), LArgs[1].Text);
+              end;
             end
             else if Length(LArgs) <> 0 then
             begin

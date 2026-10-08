@@ -4,7 +4,18 @@
 [Current work](WORK.md)
 
 
-Current decoded media evidence (2026-10-08): authenticated native MCP tools
+Current typed image admission (2026-10-08): immutable fluent default PNG checksums
+and explicit caller framing-only choice retain wire/resources/source/history.
+Actual Win32 passes **199**, HTTP desktop/CSS-390 **231** each, exact emitted
+reconstruction **eight** per target; ordinary native image/resource regressions
+pass. Standard damaged chunks refuse before publication; unchecked host
+differences remain explicit. Complete pixel validation, policy UI/events and
+observing rollout retain their original owners. No full criterion closes or
+credit is assigned: resource alone advances **9→10**, aggregate
+**25/10/40/21/28/3**. See
+[the packet](WORK.md#current-return-path-typed-image-admission-policy--2026-10-08).
+
+Previous decoded media evidence (2026-10-08): authenticated native MCP tools
 qualify the owned semantic workshop, history, exact source, both compilers and
 a rendered preview. Win32 passes **181**, exact emitted reconstruction **seven**
 on both targets. Actual desktop/CSS-390 valid pixels and reusable images pass,

@@ -9,7 +9,17 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current managed-view source preparation (2026-10-08) extends this owner rather
+Current image validation prerequisite (2026-10-08) consumes the exact native-MCP
+workshop export with public-Pascal qualification enrichment. Source wire and
+managed generation now retain a fluent validation policy; the frozen installed
+service predates that contract. Current semantic policy operations/observing
+deployment stay with this existing workflow/delivery owner. Current target
+consumers qualify through the maintained Pascal harness, not browser editor
+automation or an equivalent retry of rejected backend startup. No workflow
+criterion/counter closes or receives duplicate resource credit. See
+[the packet](../WORK.md#current-return-path-typed-image-admission-policy--2026-10-08).
+
+Previous managed-view source preparation (2026-10-08) extends this owner rather
 than creating another workflow task. `nyx_pascal` has bounded accepted builder
 windows and exact expected replacement through the public immutable views patch,
 ordinary source Apply and paired Undo. **83** shared checks execute natively and

@@ -9,6 +9,16 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current image policy prerequisite (2026-10-08) exposes an immutable public fluent
+choice retained by source wire/resources/generated replay and paired history.
+The ordinary native image form regression passes 70, but a visible policy
+selector and preservation/editing during new inline/import proposals remain
+original asset/property criteria. The current form uses standard admission for
+new input; do not claim policy UI from constructor-only evidence. NS-1 events
+retains fluent load/error/status and cancellation; NS-4 consumes that contract.
+No authoring criterion/counter advances or shares resource credit. See
+[the policy packet](../WORK.md#current-return-path-typed-image-admission-policy--2026-10-08).
+
 **Acceptance Criteria:**
 
 - WYSIWYG supports drag/drop, resizing, constraints, snapping, nested components and responsive variants.

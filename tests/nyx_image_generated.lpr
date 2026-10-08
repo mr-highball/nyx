@@ -46,12 +46,14 @@ begin
       (LImage.Prop('image-position-x') <> 'center') or
       (LDocument.Find('typed-image').Prop('src') <>
         NyxEmbeddedImage(nimJPEG, ImageJPEG).ToWire) or
+      (LDocument.Find('typed-policy-image').Prop('src') <>
+        NyxEmbeddedImage(nimPNG, ImagePNG, NyxImageValidation.ContainerChecksums(False)).ToWire) or
       (LImage.Prop(NyxViewportKey(TNyxViewportWidth.Below(420), npfAny, atImageFit)) <> 'cover') or
       (LImage.Prop(NyxPlatformKey(npfNativeLCL, atImageHorizontal)) <> 'end') then
     begin
       raise Exception.Create('Compiled image builder differs from its exact typed candidate');
     end;
-    WriteLn('PASS / compiled images / 7 checks');
+    WriteLn('PASS / compiled images / 8 checks');
     {$ifdef PAS2JS}document.body.setAttribute('data-test-result', 'passed');{$endif}
   finally
     LDocument.Free;

@@ -54,7 +54,35 @@ headers and positive dimensions, within 1 MiB decoded bytes, 4096 pixels per
 dimension and 16,777,216 pixels. PNG additionally requires bounded complete chunk
 framing, pixel data and a terminal empty IEND. JPEG requires SOI/final EOI and a
 supported eight-bit frame header. These checks raise `ENyxImage` before
-publishing a value. They do not establish valid CRCs or decoded pixels.
+publishing a value. Standard admission also verifies every PNG chunk checksum,
+including ancillary chunks and empty IEND. JPEG has no such container checksum.
+Checksums establish chunk integrity, not decoded pixels or authenticity.
+
+Validation is an immutable fluent value. The default below requires checksums;
+derive an explicit framing-only policy when the caller wants host decoding to
+decide what happens to damaged chunks:
+
+```pascal
+LValidation := NyxImageValidation.ContainerChecksums(False);
+LWelcomeImage.Configure
+  .Source(NyxEmbeddedImage(nimPNG, CWelcomeImageBase64, LValidation))
+  .Done;
+```
+
+Declare `LValidation: TNyxImageValidationPolicy`. Derivation leaves the original
+value unchanged; `Default(TNyxImageValidationPolicy)` requires checksums too.
+The optional third constructor argument works for Base64 and byte input. Framing,
+format and byte/dimension budgets remain mandatory for both choices. An unknown
+wire policy or a string in place of the Boolean refuses.
+
+Framing-only wire retains `nyx-validation=framing` as an exact data-URL media
+parameter beside unchanged raster bytes. Saved designs/resources, paired history,
+specialized `Image` values, generated fluent Pascal and managed replay retain it.
+Ordinary standard URLs stay unchanged. The browser adapter validates this exact
+portable boundary rather than maintaining a second literal prefix whitelist.
+This setting covers embedded byte admission; a location validates no bytes until
+its resolver loads them. It neither changes resource caching nor guarantees that
+a host will decode a checksummed but malformed compressed stream.
 
 Ordinary adapters delegate decoding to the browser or LCL. Native decoding uses
 an independently owned candidate picture before replacing the accepted one;
@@ -110,23 +138,24 @@ bounded bytes and validates its real pixel decoder before publishing a source.
 Native inline preview uses the same decoder qualification. Browser pixel/fetch
 failures remain asynchronous and require separate execution evidence.
 
-Current checked shared/Win32 qualification passes 181 assertions covering typed
+Current checked shared/Win32 qualification passes 199 assertions covering typed
 source/geometry, source/history, real PNG/JPEG decoding, retained fit updates,
 decoder-error recovery and reusable media parts. Exact emitted reconstruction
-passes seven on native and actual HTTP browser execution. The semantic workshop
+passes eight on native and actual HTTP browser execution. The semantic workshop
 is authored through native MCP tools; both service compiler inputs exactly match
 the bounded source export, and a phone-sized semantic preview renders.
 
-The current desktop and CSS-390 browser journeys verify actual PNG/JPEG samples,
-independent reusable images and a retained square cover crop. Both then fail the
-required damaged-PNG refusal: the actual replacement request reports load/decode
-success but paints transparent sample pixels. Native refuses that same input.
-The probe verifies the encoded byte and current request, rather than accidentally
-decoding the previous image. Failure paths explicitly retire controls/listeners/
-timers; subsequent browser recovery/clear assertions are not reached. This is a
-known failing regression, not qualified portable image integrity. Current framing
-checks, host load and encoded dimensions do not establish decoded pixel validity.
-See [the partial evidence and validation gap](../WORK.md#current-return-path-decoded-browser-media--2026-10-08).
+The current desktop and CSS-390 browser journeys pass 231 assertions each,
+including actual PNG/JPEG samples, independent reusable images, the retained
+square crop, the explicit policy data URL, default checksum refusal before source
+replacement, correction and pending-decode invalidation on clear. Owned target
+listeners/timers and views explicitly retire. A deliberately framing-only damaged
+request still loads/decodes and paints transparent sample pixels on the checked
+browser; the probe retains that outcome and verifies replacement identity. Native
+refuses those same unchecked bytes. The old default corruption regression is
+repaired by shared checksum admission, not by assuming the host is strict.
+Checksummed malformed codecs and full decoded-pixel integrity remain open.
+See [the policy evidence and remaining limits](../WORK.md#current-return-path-typed-image-admission-policy--2026-10-08).
 
 Run `tools/build.ps1 -Target image-presentation -ImageSourceDirectory <directory>`
 with the exact MCP-exported `nyx.generated.view.pas` in that directory. Omitting
@@ -135,7 +164,11 @@ and stages browser programs; a successful build does not mean the browser journe
 passed. Serve staged artifacts over HTTP and use the maintained ready/capture
 driver for actual execution. This target starts no server and edits no project.
 
-Complete browser/physical-phone and observing Studio execution, the asset
+The ordinary image authoring and resource regressions execute natively and
+compile their browser counterparts. A Studio form selector for the new policy
+remains pending; new picker/Base64 input uses standard admission, while typed
+Pascal and generated source can retain the explicit choice. Complete
+browser/physical-phone and observing Studio execution, the asset
 registry/import UX, portable image load/error/status events and validation policy,
 orientation/color fidelity, other widgetsets/DPI and full accessibility, visual
 and performance acceptance remain open under their existing owners.

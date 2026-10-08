@@ -47,11 +47,26 @@ type
 
   TNyxImageBytes = array of Byte;
 
+  { Immutable admission choices. Default and NyxImageValidation require every
+    PNG chunk checksum. ContainerChecksums(False) deliberately retains bounded
+    framing admission only; derive it without changing the original policy.
+    Neither choice proves pixel decoding. JPEG has no PNG-style chunk checksum.
+    Policies own scalar values only and never retain callers or target objects. }
+  TNyxImageValidationPolicy = record
+  private
+    FSkipContainerChecksums: Boolean;
+    function GetChecksumsRequired: Boolean;
+  public
+    function ContainerChecksums(ARequired: Boolean): TNyxImageValidationPolicy;
+    property ChecksumsRequired: Boolean read GetChecksumsRequired;
+  end;
+
   { Immutable image source. FromWire is the explicit legacy/persistence boundary;
     authored code uses NyxImage/NyxEmbeddedImage. Embedded admission checks strict
     base64, matching raster headers, PNG chunk framing and allocation dimensions
-    before publishing.
-    It does not decode pixels: target decoders own corrupt/unsupported image errors.
+    before publishing. Standard admission also verifies PNG chunk checksums;
+    explicit framing-only policy is retained by a data-URL media parameter.
+    It does not decode pixels: checksummed malformed codecs remain possible.
     Every Bytes read returns an independently owned array. Default means no image. }
   TNyxImageSource = record
   private
@@ -61,6 +76,7 @@ type
     FWidth: Integer;
     FHeight: Integer;
     FPayload: TNyxText;
+    FValidation: TNyxImageValidationPolicy;
   public
     class function FromWire(const AWire: TNyxText): TNyxImageSource; static;
     function ToWire: TNyxText;
@@ -72,6 +88,10 @@ type
     function Height: Integer;
     function Encoded: TNyxText;
     property Kind: TNyxImageSourceKind read FKind;
+    { Embedded sources retain their exact authored policy through wire/history.
+      Empty/location values expose the standard policy but validate no fetched
+      bytes: target/resource resolvers own that separate admission boundary. }
+    property Validation: TNyxImageValidationPolicy read FValidation;
   end;
 
   { Fractional logical destination within a control's content box. Cover/natural
@@ -95,12 +115,20 @@ const
 function NyxImageLocation(const AName: TNyxText): TNyxImageLocation;
 function NyxImage(const ALocation: TNyxImageLocation): TNyxImageSource;
 function NyxNoImage: TNyxImageSource;
+{ Standard checksum admission. A default-initialized policy means the same.
+  Derive ContainerChecksums(False) explicitly to delegate corrupt-pixel behavior
+  to each host after mandatory framing/byte/dimension admission. }
+function NyxImageValidation: TNyxImageValidationPolicy;
 function NyxEmbeddedImage(AFormat: TNyxImageFormat;
-  const ABase64: TNyxText): TNyxImageSource;
+  const ABase64: TNyxText): TNyxImageSource; overload;
+function NyxEmbeddedImage(AFormat: TNyxImageFormat; const ABase64: TNyxText;
+  const AValidation: TNyxImageValidationPolicy): TNyxImageSource; overload;
 { Byte interchange, useful for Pascal resource/import adapters. Input is borrowed
   during this call; the resulting value retains only copied immutable text. }
 function NyxEmbeddedImageBytes(AFormat: TNyxImageFormat;
-  const ABytes: TNyxImageBytes): TNyxImageSource;
+  const ABytes: TNyxImageBytes): TNyxImageSource; overload;
+function NyxEmbeddedImageBytes(AFormat: TNyxImageFormat; const ABytes: TNyxImageBytes;
+  const AValidation: TNyxImageValidationPolicy): TNyxImageSource; overload;
 function NyxImageFitName(AFit: TNyxImageFit): TNyxText;
 function NyxImageAnchorName(AAnchor: TNyxImageAnchor): TNyxText;
 function NyxImageFormatSymbol(AFormat: TNyxImageFormat): TNyxText;
@@ -123,9 +151,32 @@ const
   CAlphabet: TNyxText = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
   CPrefixes: array[TNyxImageFormat] of TNyxText =
     ('data:image/png;base64,', 'data:image/jpeg;base64,');
+  { Policy travels beside unchanged Base64 bytes, using RFC 2397's media-parameter
+    boundary. Recognize only this exact version-1 choice; unknown/duplicated
+    parameters refuse instead of quietly downgrading admission. Browsers decode
+    the same raster; native readers consume Bytes, not a filesystem URL. }
+  CFramingPrefixes: array[TNyxImageFormat] of TNyxText =
+    ('data:image/png;nyx-validation=framing;base64,',
+     'data:image/jpeg;nyx-validation=framing;base64,');
   CFitNames: array[TNyxImageFit] of TNyxText =
     ('contain', 'cover', 'fill', 'none', 'scale-down');
   CAnchorNames: array[TNyxImageAnchor] of TNyxText = ('start', 'center', 'end');
+
+function NyxImageValidation: TNyxImageValidationPolicy;
+begin
+  Result := Default(TNyxImageValidationPolicy);
+end;
+
+function TNyxImageValidationPolicy.GetChecksumsRequired: Boolean;
+begin
+  Result := not FSkipContainerChecksums;
+end;
+
+function TNyxImageValidationPolicy.ContainerChecksums(ARequired: Boolean): TNyxImageValidationPolicy;
+begin
+  Result := Self;
+  Result.FSkipContainerChecksums := not ARequired;
+end;
 
 function NyxImageFitName(AFit: TNyxImageFit): TNyxText;
 begin
@@ -347,7 +398,38 @@ begin
   end;
 end;
 
+{ PNG's reflected CRC-32 covers the four type bytes and chunk data, excluding
+  length and stored CRC. Fixed unsigned shifts/XOR keep native checked arithmetic
+  and pas2js within the same 32-bit domain; no table/global mutable state survives.
+  The caller has already bounded this span against the complete byte stream. }
+function PNGChecksum(const ABytes: TNyxImageBytes; AStart, ACount: Integer): LongWord;
+var
+  LCRC: LongWord;
+  LIndex: Integer;
+  LBit: Integer;
+begin
+  LCRC := $FFFFFFFF;
+  for LIndex := AStart to AStart + ACount - 1 do
+  begin
+    LCRC := LCRC xor ABytes[LIndex];
+    for LBit := 0 to 7 do
+    begin
+
+      if (LCRC and 1) <> 0 then
+      begin
+        LCRC := (LCRC shr 1) xor $EDB88320;
+      end
+      else
+      begin
+        LCRC := LCRC shr 1;
+      end;
+    end;
+  end;
+  Result := LCRC xor $FFFFFFFF;
+end;
+
 procedure Dimensions(AFormat: TNyxImageFormat; const ABytes: TNyxImageBytes;
+  const AValidation: TNyxImageValidationPolicy;
   out AWidth, AHeight: Integer);
 const
   CSignature: array[0..7] of Byte = (137, 80, 78, 71, 13, 10, 26, 10);
@@ -360,6 +442,8 @@ var
   LChunkLength: Double;
   LHasPixels: Boolean;
   LHasEnd: Boolean;
+  LCRCStart: Integer;
+  LStoredCRC: Double;
 begin
   AWidth := 0;
   AHeight := 0;
@@ -396,7 +480,8 @@ begin
     { Check framing before either decoder sees bytes. Some native readers ignore
       short chunk-header reads; letting truncated input reach them can fail in
       allocation cleanup rather than produce a recoverable decoding exception.
-      This is bounded container admission, not CRC or pixel-codec validation. }
+      Mandatory framing bounds checksum reads. Checksums establish chunk
+      integrity only; pixel-codec validation remains a separate guarantee. }
     LIndex := 8;
     LHasPixels := False;
     LHasEnd := False;
@@ -414,6 +499,21 @@ begin
       if LChunkLength > Length(ABytes) - LIndex - 12 then
       begin
         raise ENyxImage.Create('PNG chunk exceeds the admitted byte stream');
+      end;
+
+      if AValidation.ChecksumsRequired then
+      begin
+        LCRCStart := LIndex + 8 + Trunc(LChunkLength);
+        { Double holds every unsigned 32-bit stored value exactly on both targets
+          without a native Integer multiply overflowing under checked builds. }
+        LStoredCRC := ABytes[LCRCStart] * 16777216.0 +
+          ABytes[LCRCStart + 1] * 65536.0 + ABytes[LCRCStart + 2] * 256.0 +
+          ABytes[LCRCStart + 3];
+
+        if PNGChecksum(ABytes, LIndex + 4, Trunc(LChunkLength) + 4) <> LStoredCRC then
+        begin
+          raise ENyxImage.Create('Embedded PNG chunk checksum does not match its type and data');
+        end;
       end;
       LHasPixels := LHasPixels or ((ABytes[LIndex + 4] = 73) and
         (ABytes[LIndex + 5] = 68) and (ABytes[LIndex + 6] = 65) and
@@ -513,6 +613,7 @@ var
   LFormat: TNyxImageFormat;
   LBytes: TNyxImageBytes;
   LSource: TNyxImageSource;
+  LPrefix: TNyxText;
 begin
   { Managed return slots can alias the caller's current source in native FPC.
     Build locally and publish only on success, including deliberate empty input. }
@@ -532,14 +633,25 @@ begin
   LSource.FKind := nisLocation;
   for LFormat := Low(TNyxImageFormat) to High(TNyxImageFormat) do
   begin
+    LPrefix := '';
 
     if LowerCase(Copy(AWire, 1, Length(CPrefixes[LFormat]))) = CPrefixes[LFormat] then
     begin
+      LPrefix := CPrefixes[LFormat];
+    end
+    else if LowerCase(Copy(AWire, 1, Length(CFramingPrefixes[LFormat]))) = CFramingPrefixes[LFormat] then
+    begin
+      LPrefix := CFramingPrefixes[LFormat];
+      LSource.FValidation := NyxImageValidation.ContainerChecksums(False);
+    end;
+
+    if LPrefix <> '' then
+    begin
       LSource.FKind := nisEmbedded;
       LSource.FFormat := LFormat;
-      LSource.FPayload := Copy(AWire, Length(CPrefixes[LFormat]) + 1, MaxInt);
+      LSource.FPayload := Copy(AWire, Length(LPrefix) + 1, MaxInt);
       LBytes := DecodeBase64(LSource.FPayload);
-      Dimensions(LFormat, LBytes, LSource.FWidth, LSource.FHeight);
+      Dimensions(LFormat, LBytes, LSource.FValidation, LSource.FWidth, LSource.FHeight);
       Result := LSource;
       Exit;
     end;
@@ -620,13 +732,33 @@ end;
 function NyxEmbeddedImage(AFormat: TNyxImageFormat;
   const ABase64: TNyxText): TNyxImageSource;
 begin
-  Result := TNyxImageSource.FromWire(CPrefixes[AFormat] + ABase64);
+  Result := NyxEmbeddedImage(AFormat, ABase64, NyxImageValidation);
+end;
+
+function NyxEmbeddedImage(AFormat: TNyxImageFormat; const ABase64: TNyxText;
+  const AValidation: TNyxImageValidationPolicy): TNyxImageSource;
+var
+  LPrefix: TNyxText;
+begin
+  LPrefix := CPrefixes[AFormat];
+
+  if not AValidation.ChecksumsRequired then
+  begin
+    LPrefix := CFramingPrefixes[AFormat];
+  end;
+  Result := TNyxImageSource.FromWire(LPrefix + ABase64);
 end;
 
 function NyxEmbeddedImageBytes(AFormat: TNyxImageFormat;
   const ABytes: TNyxImageBytes): TNyxImageSource;
 begin
-  Result := NyxEmbeddedImage(AFormat, EncodeBase64(ABytes));
+  Result := NyxEmbeddedImageBytes(AFormat, ABytes, NyxImageValidation);
+end;
+
+function NyxEmbeddedImageBytes(AFormat: TNyxImageFormat; const ABytes: TNyxImageBytes;
+  const AValidation: TNyxImageValidationPolicy): TNyxImageSource;
+begin
+  Result := NyxEmbeddedImage(AFormat, EncodeBase64(ABytes), AValidation);
 end;
 
 function NyxImageRectangle(ASourceWidth, ASourceHeight, ABoxWidth,

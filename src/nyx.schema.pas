@@ -2939,7 +2939,9 @@ begin
           if LValid and (LProperties[LIndex].Key = 'src') and
             (ANode.ProjectionKind = 'image') then
           begin
-            { Strict header/byte admission precedes target pixel decoding. }
+            { Bounded framing and the authored checksum policy precede host
+              decoding. The wire explicitly retains a caller framing-only
+              choice; successful admission still does not establish pixels. }
             TNyxImageSource.FromWire(LValue);
           end;
 

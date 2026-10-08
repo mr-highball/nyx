@@ -26,7 +26,7 @@ program nyx_image_presentation_tests;
 
 uses
   SysUtils, Classes, Math, nyx.text, nyx.types, nyx.images, nyx.data, nyx.codec,
-  nyx.model, nyx.controls, nyx.codegen, nyx.source, nyx.schema, nyx.responsive,
+  nyx.model, nyx.controls, nyx.codegen, nyx.source, nyx.schema, nyx.responsive, nyx.resources,
   nyx.studio.session, nyx.studio.edits, nyx.studio.projects, nyx.generated.view, nyx.image.fixtures,
   {$ifdef PAS2JS}JS, Web, nyx.render.browser;
   {$else}Interfaces, Forms, Controls, Graphics, ExtCtrls, Types, IntfGraphics,
@@ -52,8 +52,9 @@ end;
   reserved by RFC 1951 section 3.2.3. The changed byte also invalidates IDAT's
   original CRC. Both physical decoders receive exactly this damaged input;
   neither this fixture nor a host load establishes which checks the host uses.
-  The current browser reports load and paints transparent pixels; its required
-  refusal assertion deliberately remains red until portable validation exists. }
+  Default admission now refuses its checksum. Framing-only admission remains
+  explicit so the native host's independent decoder refusal is still exercised;
+  a caller choosing it cannot assume host load establishes pixel integrity. }
 function BrokenPNG: TNyxImageSource;
 const
   CFirstIDATData = 62;
@@ -68,7 +69,7 @@ begin
     (LBytes[CFirstIDATData - 1] = Ord('T')) and
     ((LBytes[CFirstIDATData] and $0F) = 8), 'broken-pixel fixture identifies the IDAT zlib header');
   LBytes[CFirstIDATData + 2] := $07;
-  Result := NyxEmbeddedImageBytes(nimPNG, LBytes);
+  Result := NyxEmbeddedImageBytes(nimPNG, LBytes, NyxImageValidation.ContainerChecksums(False));
 end;
 
 procedure Shared;
@@ -93,16 +94,85 @@ var
   LHorizontal: TNyxImageAnchor;
   LVertical: TNyxImageAnchor;
   LRect: TNyxImageRectangle;
+  LPolicy: TNyxImageValidationPolicy;
+  LResource: INyxResourceDefinition;
+  LChunkLength: Integer;
+  LChunkIndex: Integer;
   {$ifndef PAS2JS}LFile: TFileStream;{$endif}
 begin
   LDocument := BuildNyxDocument;
   LRead := nil;
   LWorkspace := nil;
   LSession := nil;
+  LResource := nil;
   try
     Check(LDocument.Title = 'Image workshop', 'exact English semantic seed');
     LPNG := NyxEmbeddedImage(nimPNG, ImagePNG);
     LJPEG := NyxEmbeddedImage(nimJPEG, ImageJPEG);
+    LPolicy := Default(TNyxImageValidationPolicy);
+    Check(LPolicy.ChecksumsRequired and LPNG.Validation.ChecksumsRequired,
+      'default and standard values require container checksums');
+    LPolicy := LPolicy.ContainerChecksums(False);
+    LCopy := NyxEmbeddedImage(nimPNG, ImagePNG, LPolicy);
+    Check(not LCopy.Validation.ChecksumsRequired and LPNG.Validation.ChecksumsRequired,
+      'fluent policy derivation retains the independent default baseline');
+    Check(LPolicy.ContainerChecksums(True).ChecksumsRequired and not LPolicy.ChecksumsRequired,
+      're-enabling checksums derives a new value without changing the caller choice');
+    Check(TNyxImageSource.FromWire(LCopy.ToWire).ToWire = LCopy.ToWire,
+      'wire retains the exact explicit caller policy');
+    LResource := NyxResourceFromData(NyxImageResource(LCopy).ToData);
+    Check((LResource.Image.ToWire = LCopy.ToWire) and not LResource.Image.Validation.ChecksumsRequired,
+      'packed resource persistence retains the image policy');
+    LResource := nil;
+    LBefore := LCopy.ToWire;
+    LBytes := LPNG.Bytes;
+    LChunkIndex := 8;
+    while LChunkIndex < Length(LBytes) do
+    begin
+      { The independent Pascal raster writer supplies the known-good CRCs.
+        Change each stored checksum separately, including ancillary and empty
+        terminal chunks; never calculate expected CRCs with the product helper. }
+      LChunkLength := LBytes[LChunkIndex] * 16777216 + LBytes[LChunkIndex + 1] * 65536 +
+        LBytes[LChunkIndex + 2] * 256 + LBytes[LChunkIndex + 3];
+      LBytes[LChunkIndex + 8 + LChunkLength] := LBytes[LChunkIndex + 8 + LChunkLength] xor 1;
+      LRefused := False;
+      try
+        LCopy := NyxEmbeddedImageBytes(nimPNG, LBytes);
+      except
+        on ENyxImage do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused and (LCopy.ToWire = LBefore) and not LCopy.Validation.ChecksumsRequired,
+        'every damaged chunk checksum refuses before overwriting the caller source');
+      LResource := NyxImageResource(NyxEmbeddedImageBytes(nimPNG, LBytes, LPolicy));
+      Check(not LResource.Image.Validation.ChecksumsRequired,
+        'explicit framing-only caller choice retains even checksum-damaged bytes');
+      LResource := nil;
+      LBytes[LChunkIndex + 8 + LChunkLength] := LBytes[LChunkIndex + 8 + LChunkLength] xor 1;
+      Inc(LChunkIndex, LChunkLength + 12);
+    end;
+    for LCase := 0 to 2 do
+    begin
+      case LCase of
+        0: LBad := StringReplace(LCopy.ToWire, 'nyx-validation=framing', 'nyx-validation=unchecked', []);
+        1: LBad := StringReplace(LCopy.ToWire, 'nyx-validation=framing',
+          'nyx-validation=framing;nyx-validation=framing', []);
+        2: LBad := StringReplace(LCopy.ToWire, ';base64,', ';base64;nyx-validation=framing,', []);
+      end;
+      LRefused := False;
+      try
+        LCopy := TNyxImageSource.FromWire(LBad);
+      except
+        on ENyxImage do
+        begin
+          LRefused := True;
+        end;
+      end;
+      Check(LRefused and (LCopy.ToWire = LBefore),
+        'unknown, duplicated or misplaced wire policy refuses atomically');
+    end;
     Check((LPNG.Width = 100) and (LPNG.Height = 50) and
       (LJPEG.Width = 100) and (LJPEG.Height = 50), 'PNG/JPEG encoded dimensions');
     Check(LDocument.Find('hero-image').Prop('src') = LPNG.ToWire,
@@ -236,6 +306,10 @@ begin
     Check((LImage.ImageFit = nifContain) and (LImage.ImageHorizontal = niaCenter) and
       (LImage.ImageVertical = niaCenter), 'explicit Clear restores specialized image defaults');
     LDocument.Pages[0].Add(LImage);
+    LImage := NewNyxImage('typed-policy-image');
+    LImage.Configure.Source(NyxEmbeddedImage(nimPNG, ImagePNG, LPolicy))
+      .AlternativeText('A banner with an explicit admission policy').Width(100).Height(50).Done;
+    LDocument.Pages[0].Add(LImage);
     LDocument.Find('hero-image').Configure.ImageFit(nifContain).ImageHorizontal(niaCenter)
       .ImageVertical(niaCenter).WhenViewport(TNyxViewportWidth.Below(420))
       .ImageFit(nifCover).Done;
@@ -245,7 +319,9 @@ begin
     LSource := TNyxCodegen.Generate(LDocument);
     Check((Pos('NyxEmbeddedImage(nimPNG', LSource) > 0) and
       (Pos('NyxEmbeddedImage(nimJPEG', LSource) > 0) and
-      (Pos('.ImageFit(nifCover)', LSource) > 0), 'crafted source uses typed resources and fit');
+      (Pos('.ImageFit(nifCover)', LSource) > 0) and
+      (Pos('NyxImageValidation.ContainerChecksums(False)', LSource) > 0),
+      'crafted source uses typed resources, fit and explicit fluent policy');
     LRead := TNyxSourceWorkspace.PrepareDraft(LSource, LWorkspace);
     Check(TNyxCodec.Encode(LRead) = LBefore, 'exact source reconstructs image bytes/scopes/tree');
     LRead.Free;
@@ -267,12 +343,27 @@ begin
     LRead := nil;
     LWorkspace.Free;
     LWorkspace := nil;
+    LBad := StringReplace(LSource, 'ContainerChecksums(False)', 'ContainerChecksums(''False'')', []);
+    LRefused := False;
+    try
+      LRead := TNyxSourceWorkspace.PrepareDraft(LBad, LWorkspace);
+    except
+      on ENyxSource do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'managed source refuses a string instead of the typed policy Boolean');
+    LRead.Free;
+    LRead := nil;
+    LWorkspace.Free;
+    LWorkspace := nil;
     LSession := TNyxStudioSession.Create;
     LSession.Load(LBefore);
     LSession.ApplyPatch(ReadNyxDesignPatch(NyxArray([NyxObject([
       NyxField('op', NyxData('update')), NyxField('id', NyxData('hero-image')),
       NyxField('properties', NyxObject([NyxField('image-fit', NyxData('fill')),
-        NyxField('src', NyxData(LJPEG.ToWire))]))])])));
+        NyxField('src', NyxData(NyxEmbeddedImage(nimJPEG, ImageJPEG, LPolicy).ToWire))]))])])));
     LAfter := EncodeNyxProject(LSession.ProjectSnapshot);
     LSession.Undo;
     Check(TNyxCodec.Encode(LSession.Document) = LBefore, 'one Undo restores exact image resources');
@@ -306,6 +397,7 @@ begin
     {$endif}
   finally
     LImage := nil;
+    LResource := nil;
     LSession.Free;
     LWorkspace.Free;
     LRead.Free;
@@ -361,6 +453,12 @@ begin
     Check((LImage.Picture.Width = 100) and (LImage.Picture.Height = 50),
       'ordinary native image decodes the exact semantic PNG');
     Check(LImage.AccessibleDescription = 'Red and blue sample banner', 'native alternative text is retained');
+    LView.Root.Find('hero-image').Configure.Source(
+      NyxEmbeddedImage(nimPNG, ImagePNG, NyxImageValidation.ContainerChecksums(False))).Done;
+    LView.Sync;
+    Check((LImage.Picture.Width = 100) and
+      not TNyxImageSource.FromWire(LView.Root.Find('hero-image').Prop('src')).Validation.ChecksumsRequired,
+      'ordinary native decoding consumes the persisted explicit policy');
     LControl := LImage;
     LBefore := LImage.Picture.Graphic;
     for LFit := Low(TNyxImageFit) to High(TNyxImageFit) do
@@ -419,7 +517,8 @@ begin
 
       if LFailure = 0 then
       begin
-        LView.Root.Find('hero-image').Configure.Source(NyxEmbeddedImageBytes(nimPNG, LBroken)).Done;
+        LView.Root.Find('hero-image').Configure.Source(NyxEmbeddedImageBytes(nimPNG, LBroken,
+          NyxImageValidation.ContainerChecksums(False))).Done;
       end
       else
       begin
@@ -652,6 +751,8 @@ var
   LPending: TJSPromise;
   LRefused: Boolean;
   LBrokenSource: TNyxImageSource;
+  LAcceptedSource: TNyxText;
+  LAdmissionRefused: Boolean;
   LProbeBytes: TNyxImageBytes;
   LProbeCanvas: TJSHTMLCanvasElement;
   LProbePixels: TJSUint8ClampedArray;
@@ -686,6 +787,12 @@ begin
     Check((LImage.getBoundingClientRect.width = 100) and
       (LImage.getBoundingClientRect.height = 100), 'crop applies inside the actual square allocation');
     await(CaptureScene('media-crop'));
+    Check(Boolean(await(ChangeImageSource(LView, LImage,
+      NyxEmbeddedImage(nimPNG, ImagePNG, NyxImageValidation.ContainerChecksums(False))))),
+      'the ordinary browser loads the explicit caller policy data URL');
+    DecodedPixels(LImage, 'Explicit framing PNG');
+    Check(not TNyxImageSource.FromWire(LView.Root.Find('hero-image').Prop('src')).Validation.ChecksumsRequired,
+      'the actual browser source retains its explicit policy');
     Check(Boolean(await(ChangeImageSource(LView, LImage, NyxEmbeddedImage(nimJPEG, ImageJPEG)))),
       'the browser reports loading the replacement JPEG');
     DecodedPixels(LImage, 'JPEG');
@@ -693,6 +800,27 @@ begin
       (LReusable.getAttribute('src') = NyxEmbeddedImage(nimPNG, ImagePNG).ToWire),
       'source replacement retains its face and independent reusable pixels');
     LBrokenSource := BrokenPNG;
+    LAcceptedSource := LView.Root.Find('hero-image').Prop('src');
+    LAdmissionRefused := False;
+    try
+      LView.Root.Find('hero-image').Configure.Source(
+        NyxEmbeddedImageBytes(nimPNG, LBrokenSource.Bytes)).Done;
+    except
+      on ENyxImage do
+      begin
+        LAdmissionRefused := True;
+      end;
+    end;
+    Check(LAdmissionRefused and
+      (LView.Root.Find('hero-image').Prop('src') = LAcceptedSource) and
+      (LImage.currentSrc = LAcceptedSource) and (LView.ElementFor('hero-image') = LBefore),
+      'standard admission refuses damaged bytes before replacing the accepted document/control source');
+    DecodedPixels(LImage, 'Retained JPEG after admission refusal');
+    { The caller can deliberately relax checksum admission. Qualify its host
+      outcome without asserting that load means valid pixels; native and browser
+      decoders may refuse, partially paint or accept the same damaged stream.
+      The old default failure is repaired at shared admission, not hidden by
+      treating this explicitly unchecked request as portable integrity proof. }
     LRefused := not Boolean(await(ChangeImageSource(LView, LImage, LBrokenSource)));
     LProbeBytes := LBrokenSource.Bytes;
     LProbe := NyxNull;
@@ -718,6 +846,8 @@ begin
       controls before a failure capture. No image bytes or model are exported. }
     document.body.setAttribute('data-image-refusal', NyxObject([
       NyxField('refused', NyxData(LRefused)),
+      NyxField('standardAdmissionRefused', NyxData(LAdmissionRefused)),
+      NyxField('hostContainerChecksumsRequired', NyxData(LBrokenSource.Validation.ChecksumsRequired)),
       NyxField('encodedDeflateByte', NyxData(Integer(LProbeBytes[64]))),
       NyxField('paintedSample', LProbe),
       NyxField('currentRequestMatchesSource', NyxData(LImage.currentSrc = LImage.getAttribute('src'))),
@@ -725,8 +855,9 @@ begin
       NyxField('height', NyxData(Double(LImage.naturalHeight))),
       NyxField('complete', NyxData(LImage.complete)),
       NyxField('retainedFace', NyxData(LView.ElementFor('hero-image') = LBefore))]).ToJSON);
-    Check(LRefused and (LView.ElementFor('hero-image') = LBefore),
-      'admitted malformed pixels report asynchronous host loading failure on the retained face');
+    Check((LView.ElementFor('hero-image') = LBefore) and
+      not LBrokenSource.Validation.ChecksumsRequired,
+      'caller framing-only choice retains its face without promising host integrity');
     LView.Root.Find('hero-image').Configure.Clear(atImageFit).Clear(atImageHorizontal).Clear(atImageVertical).Done;
     Check(Boolean(await(ChangeImageSource(LView, LImage, NyxEmbeddedImage(nimJPEG, ImageJPEG)))),
       'the browser reports loading the corrected JPEG');

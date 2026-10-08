@@ -9,7 +9,106 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: decoded browser media — 2026-10-08
+## Current return path: typed image admission policy — 2026-10-08
+
+Previous turn is progress at exact pushed `8fc200f`: actual replacement bytes
+establish damaged PNG load/transparent pixels on browser versus native refusal.
+The failing regression changes the next action from decoder probes to portable
+admission. Remote checkpoint is exact/clean and protected LAN/user state is exact.
+Existing NS-1 resource criteria 1/2 and NS-2 parity criteria 1/3 own this prerequisite.
+No external input blocks authorized source work; execution stays solo.
+
+Concrete deliverable: immutable fluent image validation value, default PNG chunk
+checksums plus explicit caller framing-only choice, retained within source wire/
+persistence/resources/crafted generation/managed replay. PNG checksums cover chunk
+type/data, not length or decoded pixels. JPEG has no such container checksum.
+Keep byte/dimension budgets and explicit decoder limits. Require atomic refusal,
+independent copied policies, both-target exact replay/history and real ordinary
+controls using the same MCP-authored workshop. The explicit policy wire uses a
+bounded data-URL media parameter, never a DOM/LCL type or separate design toolkit.
+Exercise its actual host decoding rather than assuming interoperability.
+
+Budget: one shared policy integration and one desktop/CSS-390 consumer journey,
+at most two concrete repairs before reassessment. Use native semantic MCP for
+current session/context; retain the exact owned review export as the authored
+seed and put qualification enrichment only in Pascal. Serve a fresh confined
+closure on the unchanged verified host. No backend start/replacement or cleanup
+retry. Preserve all nine pairs/fifteen services/sealed LAN bytes. Do not claim
+complete raster integrity from CRCs or convert unchecked host permissiveness
+into evidence of full parity. Portable pixel validation, public image events,
+complete Studio/media/runtime/accessibility/delivery remain existing owner work.
+
+Implemented policy uses a scalar copy with checksum-required zero/default state.
+Constructors publish locally on success; source wire retains framing-only through
+an exact media parameter. Code generation emits the public fluent choice and the
+managed reader requires Boolean arguments. Shared tests mutate each independently
+written PNG checksum (including ancillary/IEND), verify exact caller alias
+preservation and explicit opt-out, reject unknown/duplicated/misplaced wire flags,
+round-trip packed resources and retain policy with complete paired Undo/Redo.
+No independent pixel-codec guarantee is invented; JPEG has no PNG-style CRC.
+
+Checked Win32 passes **199** image assertions and exact emitted execution **eight**,
+zero leaks/owned warnings. Actual final HTTP desktop/CSS-390 passes **231** each,
+with two inspected live checkpoints before disposal. Both qualify PNG/JPEG samples,
+independent reusable media, explicit framing-only URL decoding, standard admission
+refusal before replacing the accepted model/control, correction and pending-decode
+invalidation on clear. Exact emitted reconstruction executes **eight** in HTTP.
+The first browser run exposed a stale literal URL whitelist; the adapter now
+delegates embedded admission to the same portable parser. One repair at that
+actual boundary qualifies, rather than broadening arbitrary data media.
+
+The explicitly unchecked damaged request still confirms byte 7, replacement
+identity, successful load and transparent sample `[0,0,0,0]` while native refuses.
+The default regression is repaired by shared checksum admission. Its weaker
+caller-selected policy deliberately promises framing only; retained diagnostics
+do not turn this host difference into decoded-pixel integrity evidence. All
+listeners/timers/borrowed canvases/controls and owned drivers explicitly retire.
+Original negative packet remains preserved. Subsequent tests add only policy
+restoration/strict wire-flag/alias cases; no decoder fixture is swapped until green.
+
+Affected ordinary native image authoring passes **70**, exact emitted authoring
+**six**; resource controls **78**, exact resource execution **eight**, zero leaks.
+Their browser counterparts compile only. Both image build targets consume the
+same optional semantic source directory while preserving old defaults. Six
+browser compilations report the seven known upstream RTL warnings each; owned
+units have zero warnings. Native MCP queries confirm unchanged primary state;
+the exact previous native-MCP workshop export supplies the seed, with qualification
+enrichment in public Pascal only. The installed frozen service does not include
+the new validation contract; current semantic policy operation/observing rollout
+remains with NS-4 workflow and NS-6 delivery, not hidden browser editor automation.
+
+The library policy is authored/generated today. A visible Studio form selector
+and preserving/editing the choice during new inline/import proposals remain
+NS-4 authoring/resource criteria; current picker/Base64 input uses standard
+admission. Public image load/error/status and cancellation remain NS-1 events.
+Full malformed-codec/pixel integrity, hosted policy integration, other widgetsets,
+physical-phone/input/accessibility, production visuals/performance and the full
+Nyx/Studio outcome retain their original owners. End CRC/decoder fixture expansion;
+next integrate policy and readiness/status through the public Nyx image form and
+event contract, with actual browser/LCL consumers and managed history evidence.
+
+Evidence under `build/image-policy/`: `maintained-final.log`,
+`authoring-regression.log`, `resources-regression.log`, exact five-file
+`repaired-static-private.json`, final desktop/narrow live media-crop/recovered
+PNG/DOM plus passed terminal DOM/logs, and `final-generated/` passed DOM/log.
+Canonical semantic seed remains 5,670 bytes with SHA-256
+`EE9A457DB03488557211BAEBDDF27497BD8111D78C4F6F78CA0A3BAABDC16A0F`.
+No new backend, enrollment change or optional cleanup retry occurs. Final
+guard at 2026-10-08T19:27:39Z confirms all 299 sealed assets, nine exact pairs/
+full 147,033-byte checkpoint and fifteen service identities/bindings. Current
+five-file hashes exactly match the exercised closure. Owned handles are terminal,
+native/driver leak reports are zero, retained profiles remain untouched. Private
+`qualification.json` retains bounded outcomes and evidence hashes; commit/push
+and verify exact remote/clean tree in `remote-checkpoint.json` before this return.
+
+Classification: progress through a failed-before-fix portable admission repair
+and actual both-target consumers. No original full criterion/task/product or
+credit closes. Resource alone advances no-closure **9→10** once; other owners
+stay workflow/authoring/renderer/codegen/delivery **25/40/21/28/3**. Aggregate
+**25/10/40/21/28/3**. Full goal remains active; source work is available.
+
+<a id="current-return-path-decoded-browser-media--2026-10-08"></a>
+## Previous return path: decoded browser media — 2026-10-08
 
 Previous goal turn is progress at exact pushed `d9e209d`: bounded live geometry
 refutes a suspected overflow and redirects work to an actual media gap. Exact

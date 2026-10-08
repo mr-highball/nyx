@@ -46,7 +46,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current decoded media evidence (2026-10-08): native MCP image composition,
+Current typed image admission (2026-10-08): fluent immutable default checksums and
+explicit caller framing-only choice retain source wire/resources/generation/
+paired history. Actual Win32 passes **199**, desktop/CSS-390 **231** each, emitted
+reconstruction **eight** per target. Standard corruption refuses before source
+replacement; unchecked host differences remain measured. Ordinary image/resource
+native regressions pass; full pixel integrity, policy UI/events and current
+observing rollout remain existing requirements. No full criterion closes:
+resource alone advances **9→10**, aggregate **25/10/40/21/28/3**. See
+[the packet](../WORK.md#current-return-path-typed-image-admission-policy--2026-10-08).
+
+Previous decoded media evidence (2026-10-08): native MCP image composition,
 paired history, exact source, both compiler jobs and semantic preview execute.
 Win32 passes **181**; exact emitted reconstruction passes **seven** per target.
 Desktop/CSS-390 valid pixels and independent media parts execute, then both

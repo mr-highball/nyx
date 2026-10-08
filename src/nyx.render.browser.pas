@@ -32,6 +32,7 @@ uses
   nyx.types,
   nyx.text,
   nyx.publication,
+  nyx.images,
   nyx.images.browser,
   nyx.mount.browser,
   Classes,
@@ -873,8 +874,21 @@ begin
 
   if AImage then
   begin
-    Result := Result or (Pos('data:image/png;base64,', LValue) = 1) or
-      (Pos('data:image/jpeg;base64,', LValue) = 1);
+
+    if Pos('data:', LValue) = 1 then
+    begin
+      { Use the portable admission boundary, including the exact authored policy
+        parameter. A broader data: prefix would also admit unsupported/scriptable
+        media. No literal-prefix duplicate may drop an explicit caller choice. }
+      try
+        Result := TNyxImageSource.FromWire(AValue).Kind = nisEmbedded;
+      except
+        on ENyxImage do
+        begin
+          Result := False;
+        end;
+      end;
+    end;
   end
   else
   begin

@@ -66,7 +66,18 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current decoded media evidence (2026-10-08): native named MCP tools compose,
+Current typed image admission (2026-10-08): immutable fluent policy requires PNG
+chunk checksums by default and retains an explicit framing-only caller choice
+through wire/resources/source/history. Actual Win32 passes **199**, HTTP desktop/
+CSS-390 **231** each, exact emitted reconstruction **eight** per target. Ordinary
+image authoring/resource native regressions remain green. Standard corruption
+refuses before source replacement; unchecked host differences remain explicit.
+Full pixel integrity, Studio policy selection/events and observing rollout stay
+open. No full criterion closes: resource alone advances **9→10**; aggregate
+**25/10/40/21/28/3**. See
+[the packet](WORK.md#current-return-path-typed-image-admission-policy--2026-10-08).
+
+Previous decoded media evidence (2026-10-08): native named MCP tools compose,
 undo/redo, export, compile both targets and render an owned image review. Current
 Win32 qualification passes **181**, exact emitted reconstruction **seven** on
 both targets. Desktop/CSS-390 browsers decode valid PNG/JPEG and reusable images,

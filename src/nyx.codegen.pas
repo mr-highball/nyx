@@ -239,6 +239,7 @@ end;
 function PascalImage(const AText: TNyxText): TNyxText;
 var
   LImage: TNyxImageSource;
+  LPolicy: TNyxText;
 begin
   LImage := TNyxImageSource.FromWire(AText);
   case LImage.Kind of
@@ -246,10 +247,16 @@ begin
     nisLocation: Result := 'NyxImage(NyxImageLocation(' + PascalString(AText) + '))';
     nisEmbedded:
       begin
-        Result := 'NyxEmbeddedImage(' + NyxImageFormatSymbol(LImage.Format) + ', ' +
-          PascalString(LImage.Encoded) + ')';
+        LPolicy := '';
 
-        if NyxEmbeddedImage(LImage.Format, LImage.Encoded).ToWire <> AText then
+        if not LImage.Validation.ChecksumsRequired then
+        begin
+          LPolicy := ', NyxImageValidation.ContainerChecksums(False)';
+        end;
+        Result := 'NyxEmbeddedImage(' + NyxImageFormatSymbol(LImage.Format) + ', ' +
+          PascalString(LImage.Encoded) + LPolicy + ')';
+
+        if NyxEmbeddedImage(LImage.Format, LImage.Encoded, LImage.Validation).ToWire <> AText then
         begin
           Result := 'TNyxImageSource.FromWire(' + PascalString(AText) + ')';
         end;

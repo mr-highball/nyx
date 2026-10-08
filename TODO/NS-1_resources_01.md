@@ -16,9 +16,23 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
-## Discovered raster validation gap — 2026-10-08
+## Typed raster admission prerequisite — 2026-10-08
 
-Current image admission establishes framing/dimensions, not CRCs or decoded
+Original criteria 1/2 now consume immutable fluent checksum policy with explicit
+caller framing-only choice. Standard PNG checksums refuse atomically before
+publication; resources, source wire, generation/managed replay and paired history
+retain the choice. Actual native passes 199 image checks; HTTP desktop/CSS-390
+passes 231 each, and exact emitted reconstruction eight per target. Native image
+authoring/resource regressions remain green. CRCs establish chunk integrity, not
+complete decoding/authenticity: an explicitly unchecked browser request still
+paints transparent pixels while native refuses. Broader pixel validation, hosted
+policy integration and public Studio policy selection remain required. No full
+criterion closes; resource alone advances no-closure 9→10 once. See
+[the policy packet](../WORK.md#current-return-path-typed-image-admission-policy--2026-10-08).
+
+## Previously discovered raster validation gap — 2026-10-08
+
+Previous image admission establishes framing/dimensions, not CRCs or decoded
 pixel integrity. Real browser replacement requests accept a damaged PNG and paint
 transparent sample pixels; native refuses the same bytes. This precise failure
 belongs to original resource admission/loading criteria, consumed by NS-2 parity.

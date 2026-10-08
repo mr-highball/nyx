@@ -20,7 +20,20 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 
-## Decoded media and failing integrity gate — 2026-10-08
+## Consumed typed image admission policy — 2026-10-08
+
+Actual desktop/CSS-390 consumers pass 231 each after the shared checksum policy
+repair. Default damaged chunks refuse before document/control replacement;
+explicit policy URLs, decoded pixels, correction and pending-decode clearing
+execute, with two live captures and explicit retirement. The adapter delegates
+embedded URL admission to the portable parser, preserving the caller choice.
+Unchecked host permissiveness is retained as a measured limit, not pixel
+integrity proof. Exact generated reconstruction passes eight on both targets.
+No browser criterion/counter closes or receives duplicate resource credit. Public
+image events, complete pixel validation/accessibility and observing rollout remain
+open. See [the packet](../WORK.md#current-return-path-typed-image-admission-policy--2026-10-08).
+
+## Previous decoded media and failing integrity gate — 2026-10-08
 
 Original criteria 1/3 now have actual desktop/CSS-390 decoded PNG/JPEG samples,
 independent reusable media and retained crop evidence from the MCP-authored
