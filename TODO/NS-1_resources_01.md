@@ -112,6 +112,12 @@ No criterion closes. See
   consumed by both ordinary controllers. Bounded semantic inspection/mutation and
   visible paired operations retain user work; rendered/trusted-input evidence is
   reported separately from document API and compiler success.
+- The dedicated Resources workspace and compact Project picker share useful
+  built-in categories and creator-defined labels/tags. Multiple labels per
+  resource support exact tag filtering alongside search and categories. Portable
+  persistence, crafted Pascal, managed replay and paired history retain those
+  annotations; both actual target consumers qualify editing/filtering, stale
+  selection refusal and unfinished-draft preservation.
 
 ## Authenticated launched producers — 2026-10-08
 

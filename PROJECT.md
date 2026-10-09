@@ -66,6 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Resource catalog prerequisite (2026-10-09): portable metadata/query/publication
+checks pass **40** each on native FPC and HTTP pas2js. Actual list consumers through
+the public Studio section facade pass **14** each on Win32 and HTTP desktop/
+CSS-390, retaining unfinished notes and exact scoped selection without changing
+authored defaults. This qualifies the provider/facade foundation. The user chose
+a dedicated Resources workspace with a compact Project picker and saved creator
+labels/tags; persistence/generation/history and ordinary-controller integration
+remain next. Counts stay **25/11/47/21/28/3**; no full criterion, performance budget
+or product outcome closes. See
+[the packet](WORK.md#current-return-path-retained-resource-catalog--2026-10-09).
+
 Current Studio section recovery (2026-10-08): a demonstrated uncommitted-draft
 loss is repaired through typed copied renderer continuity and actual retained/
 staged Studio ownership. Custom factory preparation and second physical preview

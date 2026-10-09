@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -3109,6 +3109,49 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxResourceHost") -Destination $nyxResourceBrowser
     }
     Write-Host 'Resource counterparts staged; browser/cache/HTTP/observing execution remains separate.'
+    exit 0
+  }
+
+  if ($Target -eq 'resource-catalog') {
+    # Pascal owns provider/query/lifetime and actual section-adapter assertions.
+    # This stages counterparts only; browser runtime and visual review are separate.
+    $nyxCatalogRoot = Join-Path $nyxRoot 'build/resource-catalog/qualification'
+    $nyxCatalogCore = Join-Path $nyxCatalogRoot 'core'
+    $nyxCatalogNative = Join-Path $nyxCatalogRoot 'native'
+    $nyxCatalogBrowser = Join-Path $nyxCatalogRoot 'browser'
+
+    if ($BrowserOutput) { $nyxCatalogBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force -Path $nyxCatalogCore, $nyxCatalogNative, $nyxCatalogBrowser | Out-Null
+    $nyxCatalogFpc = Resolve-NyxTool $Fpc 'FPC' 'fpc'
+    $nyxCatalogChecks = @('-B', '-Mdelphi', '-O2', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh', '-Fusrc')
+    Invoke-NyxCompiler $nyxCatalogFpc ($nyxCatalogChecks + @(
+      "-FU$nyxCatalogCore", "-FE$nyxCatalogCore", 'tests/nyx_resource_catalog_tests.lpr'))
+    & (Join-Path $nyxCatalogCore 'nyx_resource_catalog_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Portable resource catalog checks failed' }
+    $nyxCatalogLcl = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxCatalogLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxCatalogPlatform = "$((& $nyxCatalogLcl '-iTP').Trim())-$((& $nyxCatalogLcl '-iTO').Trim())"
+    Invoke-NyxCompiler $nyxCatalogLcl ($nyxCatalogChecks + @('-Fustudio', '-Futests',
+      "-Fu$nyxCatalogLazarus/lcl/units/$nyxCatalogPlatform",
+      "-Fu$nyxCatalogLazarus/lcl/units/$nyxCatalogPlatform/$Widgetset",
+      "-Fu$nyxCatalogLazarus/components/lazutils/lib/$nyxCatalogPlatform",
+      "-Fu$nyxCatalogLazarus/packager/units/$nyxCatalogPlatform",
+      "-FU$nyxCatalogNative", "-FE$nyxCatalogNative", 'tests/nyx_resource_catalog_controls.lpr'))
+    & (Join-Path $nyxCatalogNative 'nyx_resource_catalog_controls.exe') (Join-Path $nyxCatalogRoot 'native.png')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native resource catalog controls failed' }
+    $nyxCatalogPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxCatalogRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxCatalogProgram in @('nyx_resource_catalog_tests', 'nyx_resource_catalog_controls')) {
+      Invoke-NyxCompiler $nyxCatalogPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxCatalogBrowser", "tests/$nyxCatalogProgram.lpr")
+    }
+    Copy-Item -LiteralPath $nyxCatalogRuntime -Destination (Join-Path $nyxCatalogBrowser 'rtl.js')
+    foreach ($nyxCatalogPage in @('resource-catalog.html', 'resource-catalog-controls.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxCatalogPage") -Destination $nyxCatalogBrowser
+    }
+    Write-Host 'Resource catalog counterparts staged; browser runtime/visual qualification remains separate.'
     exit 0
   }
 

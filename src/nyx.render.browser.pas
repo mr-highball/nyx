@@ -3106,7 +3106,21 @@ begin
 end;
 
 function TNyxBrowserRenderer.CollectionView(const AID: TNyxText): INyxCollectionView;
+var
+  LIndex: Integer;
 begin
+  { Query the actual connected runtime provider without persisting it into the
+    document. Authored-default views retain their existing fallback contract. }
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if (FBindings[LIndex].FNode.ID = AID) and
+      (FBindings[LIndex].FCollectionMount <> nil) and
+      FBindings[LIndex].FCollectionMount.Connected then
+    begin
+      Exit(FBindings[LIndex].FCollectionMount.View);
+    end;
+  end;
 
   if FCollectionBindings = nil then
   begin

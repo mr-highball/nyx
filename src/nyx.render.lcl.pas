@@ -4969,7 +4969,21 @@ begin
 end;
 
 function TNyxLCLRenderer.CollectionView(const AID: TNyxText): INyxCollectionView;
+var
+  LIndex: Integer;
 begin
+  { Manual runtime attachments are public views too. Keep authored-default lookup
+    as the fallback; observing a provider never writes a descriptor/default. }
+  for LIndex := 0 to High(FBindings) do
+  begin
+
+    if (FBindings[LIndex].FNode.ID = AID) and
+      (FBindings[LIndex].FCollectionMount <> nil) and
+      FBindings[LIndex].FCollectionMount.Connected then
+    begin
+      Exit(FBindings[LIndex].FCollectionMount.View);
+    end;
+  end;
 
   if FCollectionBindings = nil then
   begin

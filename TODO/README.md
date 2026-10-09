@@ -47,7 +47,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current native Studio allocation (2026-10-08): typed toolbar wrapping and actual
+Current resource catalog prerequisite (2026-10-09): independent typed metadata
+passes **40** native/HTTP; actual section-facade list consumers pass **14** each
+on Win32 and HTTP desktop/CSS-390, with retained drafts, exact selection and safe
+retirement. Captures are inspected; physical input and visual quality remain
+separate. The user selected a dedicated Resources workspace plus compact Project
+picker, with built-in categories and saved creator labels/tags. Persist those
+annotations next, then integrate both ordinary controllers and qualify exact
+source/history and the full workload. This prerequisite advances no full
+criterion, performance budget or owner count; aggregate stays **25/11/47/21/28/3**.
+See [the packet](../WORK.md#current-return-path-retained-resource-catalog--2026-10-09).
+
+Previous native Studio allocation (2026-10-08): typed toolbar wrapping and actual
 native scrollbar/client allocation repair demonstrated clipping. Ordinary
 Resources passes Win32 **146** and HTTP desktop/CSS-390 **620/985** (polling
 included); unchanged emitted Pascal executes **48** each. Native layout/large-

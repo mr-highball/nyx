@@ -145,6 +145,12 @@ physical input and full Resources UX remain required. See
 
 - WYSIWYG supports drag/drop, resizing, constraints, snapping, nested components and responsive variants.
 - Project files, page/component management, asset/theming workflows, history and code editing/synchronization are usable.
+- A dedicated Nyx-built Resources workspace and compact Project picker share
+  searchable categories and creator labels/tags. Multiple intents, resource
+  previews, data inspection, localization and caller cache settings remain
+  discoverable. Both ordinary controllers retain unfinished edits, exact paired
+  source/history and selections through resource membership/filter changes;
+  portable annotations are owned by the resource contract.
 - Targets are optional: select/configure outputs at any time in a Nyx-built section;
   missing output tools do not block Studio startup or design. Machine compiler
   paths remain separate from portable project content.

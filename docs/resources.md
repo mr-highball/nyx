@@ -657,6 +657,59 @@ Saved table row mappings use the common row editor described below. Current
 image binding form/session execution does not establish trusted input or updated
 observing deployment.
 
+## Live resource catalog
+
+`nyx.resources.catalog` supplies an independent metadata view for ordinary Nyx
+list controls. It keeps exact resource/locale identities and creator help,
+without retaining payload bytes or writing runtime rows into document defaults.
+The caller supplies a collection scope for each independent project/provider.
+
+```pascal
+LResourceCatalog := NewNyxResourceCatalog(NyxCollection('project-resources'),
+  LDocument.Resources);
+LResourceMount := LViews.BindCollection('resource-picker', LResourceCatalog.View);
+
+LResourceCatalog.Filter(NyxResourceCatalogQuery
+  .Kinds([nrkJSON, nrkText])
+  .Sources(rcsEmbedded)
+  .Search('help'));
+```
+
+Search covers resource names, display titles, creator descriptions and locale
+names. It defaults to ASCII case-insensitive matching; `nqtExact` selects exact
+scalar matching. Kind alternatives combine with search, locale and source
+restrictions. `Locales(rclLocalized)` finds named locale variants;
+`Locales(rclDefault)` finds unlocalized resources. Setters replace their own
+restriction. `Kinds([])` deliberately matches no kinds; `AnyKind` clears it.
+The unconfigured `NyxResourceCatalogQuery` restores the full list.
+
+After accepted resource membership or metadata changes, `Refresh` updates the
+runtime dataset. Equal metadata produces no revision or notification. Stable
+row IDs survive insertion/removal/reappearance in that provider's lifetime;
+labels and list positions never authorize a choice. Resolve copied selection
+through `Choice(Item, Selection.DataRevision)` before opening an editor. Missing,
+foreign, stale or externally changed row identities refuse. Filtering retains
+hidden selected membership; removing that resource prunes it.
+The revision covers metadata rows. A source/binding edit must also verify the
+owning project's accepted revision/context; unchanged metadata alone does not
+prove that payload contents are unchanged.
+
+`Prepare` integrates with `PublishNyxGroup` when several runtime providers must
+publish together. Abandoned/invalid candidates preserve accepted rows and
+identities; notification failure explicitly reports already-published data.
+The provider retains historical identity metadata until release, without an
+unbounded payload cache. A retained mount disconnects when its renderer/view
+retires, while the independently owned catalog remains usable.
+
+Both renderers and the Studio section facade expose the actual manually mounted
+`CollectionView` and `CollectionMount`; authored-default views retain their
+fallback lookup. `tools/build.ps1 -Target resource-catalog` runs native provider
+and actual-control checks and stages browser counterparts. Execute their hosted
+pages separately to qualify the browser. This prerequisite does not establish
+the dedicated Resources workspace, portable creator tags, ordinary-controller
+integration, performance budgets or physical-device/accessibility behavior.
+Those remain owned by the resource and authoring tasks.
+
 ## Semantic resource authoring
 
 The common Resources area includes `NewNyxResourceRowsEditor`, consumed by both

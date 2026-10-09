@@ -27,7 +27,8 @@ interface
 
 uses
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.theme, nyx.state, nyx.behavior,
-  nyx.events, nyx.gestures, nyx.designer.resize, nyx.collections.view, nyx.view.sections,
+  nyx.events, nyx.gestures, nyx.designer.resize, nyx.collections.view,
+  nyx.collections.mount, nyx.view.sections,
   nyx.studio.sections, nyx.studio.drag, nyx.studio.session, nyx.content.mount
   {$ifdef PAS2JS}, Web, nyx.render.browser, nyx.view.sections.browser
   {$else}, Controls, ExtCtrls, nyx.render.lcl, nyx.view.sections.lcl{$endif};
@@ -127,6 +128,13 @@ type
     function FocusFor(const AID: TNyxText;
       AIdentity: TNyxIdentityKind = niAutomatic): TNyxStudioSectionFocus;
     function CollectionView(const AID: TNyxText): INyxCollectionView;
+    { Mount an independently owned runtime collection through the ordinary
+      section adapter. The actual renderer owns/disconnects the returned mount;
+      retaining its interface cannot keep the target control alive. No document
+      default or model-node ownership changes. Already connected IDs refuse. }
+    function BindCollection(const AID: TNyxText;
+      const AView: INyxCollectionView): INyxCollectionMount;
+    function CollectionMount(const AID: TNyxText): INyxCollectionMount;
     { Convert a copied pointer through its real owning target view. No host
       input object or model root is retained by the returned value. }
     function ScreenPointFor(const AID: TNyxText;
@@ -773,6 +781,17 @@ end;
 function TNyxStudioSectionViews.CollectionView(const AID: TNyxText): INyxCollectionView;
 begin
   Result := ViewFor(AID).CollectionView(AID);
+end;
+
+function TNyxStudioSectionViews.BindCollection(const AID: TNyxText;
+  const AView: INyxCollectionView): INyxCollectionMount;
+begin
+  Result := ViewFor(AID).BindCollection(AID, AView);
+end;
+
+function TNyxStudioSectionViews.CollectionMount(const AID: TNyxText): INyxCollectionMount;
+begin
+  Result := ViewFor(AID).CollectionMount(AID);
 end;
 
 function TNyxStudioSectionViews.ScreenPointFor(const AID: TNyxText;

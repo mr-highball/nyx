@@ -9,6 +9,87 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Retained resource catalog — 2026-10-09
+
+Previous turn is progress at exact pushed `53a5b5f`; entry is clean. Installed
+native MCP reads the unchanged primary revision 2. Work remains solo; no service,
+configuration, enrollment or protected design replacement is authorized here.
+
+Follow NS-4 authoring criterion 2 and NS-3 performance criteria 2/3 from the full
+308.629-second trace. Resource entries are physical child buttons; adding/removing
+one changes the Project topology and stages the entire form. Pascal construction
+takes milliseconds, while initial layout/physical publication takes seconds.
+Do not repeat low-level handle/notification experiments or first-open variants.
+
+Build a public typed resource catalog backed by an independent live collection
+store and the existing list adapters. Keep metadata separate from asset bytes,
+stable scoped identities, exact resource/locale choices, candidate publication,
+selection guards and explicit observer failure semantics. Preserve the public
+button presentation for existing creators; let Studio consume the catalog view
+through public collection mounting. Mutable document defaults are not a shortcut
+for editor runtime state. Retain exact drafts/source/history and unrelated faces.
+
+Qualify the public provider and actual browser/LCL consumers, then the complete
+ordinary Resources and exact emitted-source journeys. Compare a full optimized
+workload only after correctness; record any route differences honestly. Keep the
+nine pairs/fifteen protected identities/sealed LAN bytes exact. Counts stay
+25/11/47/21/28/3 until accepted evidence; all full criteria and budgets remain open.
+
+User direction confirmed in this return: Resources belongs in a dedicated
+workspace, with a compact Project picker. Built-in categories and creator-owned
+labels/tags must support useful filtering and multiple intents. Persist those
+annotations in the portable project, rather than renderer-only rows. The live
+catalog is the shared prerequisite; dedicated workspace integration, editing
+labels, exact persistence/generation/history and both-target filtering remain
+required under NS-1 resources and NS-4 authoring. No workspace/tagging acceptance
+is claimed.
+
+The public provider prerequisite now passes **40** on checked native FPC and
+actual HTTP pas2js. It owns metadata rows only, preserves exact scoped resource/
+locale identities across insertion/removal/reappearance, and supports typed
+kind, locale, source and creator-help search policies. Empty kind sets, derived
+query independence, foreign/stale/tampered choice refusal, abandoned/invalid
+publication, committed observer failure and preparation/provider lifetimes are
+exercised. Metadata revision does not authorize unchanged payload contents;
+source/binding consumers must also guard their accepted project context.
+
+Actual list controls through the public Studio section facade pass **14** on
+Win32 and HTTP desktop/CSS-390 each. Live insertions retain list/editor/section
+identity and unfinished notes; typed filtering retains hidden selection, removal
+prunes membership, authored source/defaults stay exact, and facade retirement
+disconnects mounts/callbacks while the independent provider remains usable.
+Both live browser captures are inspected. Native print is a redraw diagnostic,
+not proof of displayed pixels/visual quality. Inputs are programmatic adapter
+callbacks, not physical keyboard/touch or assistive-technology qualification.
+
+Initial qualification found two errors: default locales cannot be copied through
+the named-locale constructor; initial publication cannot lease/release Self
+inside the pas2js constructor before a managed owner exists. Public factories
+now acquire that owner before publication. Cross-interface atomic support uses
+`Supports` on both compilers. The first test incorrectly shared mutable resource
+membership; its independent candidates now clone that registry. These failed
+logs remain private and are not accepted runtime evidence.
+
+The maintained `resource-catalog` build target runs both native gates leak-free
+and stages exact browser counterparts. Final HTTP provider passes 40; the final
+control artifact matches the inspected desktop/narrow bytes by SHA-256. Native
+owned builds have zero warnings; existing notes and seven upstream pas2js
+`classes.pas` warnings per build remain. Relevant evidence is under ignored
+`build/resource-catalog/`, including build/runtime logs, stage manifests, live
+captures and preservation receipt. Installed MCP still reads primary revision 2.
+
+The read-only preservation guard verifies all nine exact pairs, fifteen protected
+process identities and 299 sealed/served LAN files. No listener, backend,
+configuration, enrollment or protected project was replaced. This is an accepted
+provider/facade prerequisite only: ordinary Studio still uses its existing
+resource form/presentation. No full Resources/source journey or new optimized
+timing is claimed. Counts remain **25/11/47/21/28/3**, and all full tasks/budgets
+remain open. Next persist strongly typed creator labels/tags through definitions,
+loading, wire, crafted generation/replay and paired history; then consume the
+catalog in the dedicated workspace and compact Project picker, preserving exact
+drafts and guarding project context. Qualify the ordinary both-target journeys
+before the next full workload comparison or authoring acceptance advancement.
+
 ## Current return path: Native Studio allocation — 2026-10-08
 
 Entry is clean at exact pushed `ee5f201`; execution is solo. Native semantic MCP
