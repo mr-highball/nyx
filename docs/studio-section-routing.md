@@ -1,13 +1,15 @@
 # Studio mounted section routing
 
 [Architecture](architecture.md) · [Independent view sections](view-sections.md) ·
-[Current evidence](../WORK.md#current-return-path-studio-section-routing--2026-10-08)
+[Current evidence](../WORK.md#current-return-path-studio-section-recovery--2026-10-08)
 
 Studio still composes its chrome with `BuildNyxStudioView` and the public Nyx
 components. `nyx.studio.sections` copies that composition into independent
 Chrome, Project and Inspector documents. `nyx.studio.section.views` mounts them
 through the ordinary browser/LCL renderers and public managed view sections.
-Canvas and Pascal source already have separate view owners.
+Canvas and Pascal source already have separate view owners. The borrowed lookup
+forest is rebuilt after each successful admission; resolve it again after refresh.
+Real model roots and controls follow their owning section's lifetime instead.
 
 The surrounding Chrome owns empty Nyx panel ports at the original side-panel
 positions. Each side document owns its actual scroll root and descendants. The
@@ -59,10 +61,30 @@ target contract.
 
 Retained changes made before a grouped refusal replay their previous source
 baseline and restore the captured runtime property/resource projection. Recovery
-attempts every changed role once and reports failure; a target extension that
-cannot restore its own physical state cannot promise atomic rollback. Combined
-Studio extension-failure qualification remains separate from the accepted public
-section-publication rollback fixture.
+then restores copied physical continuity: an uncommitted numeric draft can differ
+from the restored accepted model value. Both ordinary renderers expose typed
+`CaptureInteraction` / `RestoreInteraction` operations using
+`TNyxContentFaceStates`. These copies contain text, Unicode scalar selections,
+logical identity, domain/binding context and target scroll/focus observations;
+they retain no view, model, widget or store. An idle mounted view is required.
+Ambiguous copied identities raise before touching any face. Changed contracts or
+accepted values do not admit a stale draft; restoration never edits history or
+dispatches an input command. Browser textarea content scroll and native control
+scroll boxes use their adapter observations; native memo scroll, hardware/IME
+composition and assistive technology are not qualified by this gate. Native
+TCustomEdit faces are covered; composite date/time/color editor draft bridges
+remain open under the Studio authoring owner.
+
+Recovery attempts every touched retained role once, including a retained refresh
+whose target synchronization raised, and reports failures. Source/model replay
+precedes physical continuity. A creator's custom editor requires its own adapter
+continuity contract; an extension unable to restore its physical state cannot
+promise atomic rollback. The actual shared Studio shell/facade now qualifies a
+later Inspector preparation refusal and a second physical publication refusal
+after Project preview, with original roots, drafts, ranges and callback tokens
+preserved, followed by successful grouped refresh. This is distinct from the
+accepted public section-publication fixture. Full-frame controller recovery and
+wider custom/editor/context cases remain separate gates.
 
 Browser refresh queues past borrowed shell, live input and designer callbacks.
 Multiple requests coalesce, with explicit reset choices taking precedence. The

@@ -356,6 +356,11 @@ type
     procedure ConnectAgents;
   end;
 
+{ Ordinary target shell styles for hosts consuming the shared Nyx composition.
+  This is copied trusted adapter CSS, never authored design input. The stock
+  controller and actual section qualification consume the same presentation. }
+function NyxStudioBrowserCSS: TNyxText;
+
 implementation
 
 uses
@@ -391,7 +396,7 @@ type
       ACapture: Boolean); external name 'removeEventListener';
   end;
 
-function StudioCSS: TNyxText;
+function NyxStudioBrowserCSS: TNyxText;
 begin
   { Shell recipes target stable design identities rather than browser-only model
     state. Responsive panels remain reachable on narrow screens; canvas width
@@ -1214,7 +1219,7 @@ begin
   begin
     LStyle := TJSHTMLElement(document.createElement('style'));
     LStyle.id := 'nyx-studio-style';
-    LStyle.textContent := StudioCSS;
+    LStyle.textContent := NyxStudioBrowserCSS;
     document.head.appendChild(LStyle);
   end;
   LCanvas := nil;

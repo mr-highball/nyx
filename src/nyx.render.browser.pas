@@ -376,6 +376,18 @@ type
       stale/mismatched restore groups refuse before any mutation. }
     function TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
       ADesignMode: Boolean; const ARestores: TNyxProjectionValueRestores = nil): Boolean;
+    { Copied physical continuity, independent of accepted model values. Capture
+      and restore require an idle mounted view; False changes nothing. Records
+      retain no renderer, control, model or store. Restore matches exact logical
+      identity/domain/bindings and accepted value before reusing a text draft.
+      Replay the model/source baseline first. This never edits that model or
+      history, admits a value, dispatches input or reserves a publication turn.
+      Compatible views may reuse these copies; changed contracts skip drafts.
+      Ambiguous identities raise before touching faces; target errors propagate.
+      Extension-owned editors require their own adapter continuity contract. }
+    function CaptureInteraction(out AStates: TNyxContentFaceStates): Boolean;
+    function RestoreInteraction(const AStates: TNyxContentFaceStates;
+      AFocus: Boolean = True): Boolean;
     { A supplied runtime store is borrowed and must outlive this mounted view.
       Otherwise the renderer owns a fresh copy of document defaults. Design mode
       projects that copy but does not subscribe or write application state.
@@ -1715,6 +1727,8 @@ begin
     if LBinding.FInput <> nil then
     begin
       Result[LIndex].Selection := CaptureNyxBrowserSelection(LBinding.FInput);
+      Result[LIndex].InputScrollLeft := LBinding.FInput.scrollLeft;
+      Result[LIndex].InputScrollTop := LBinding.FInput.scrollTop;
       Result[LIndex].HasText := (LBinding.FInput is TJSHTMLInputElement) or
         (LBinding.FInput is TJSHTMLTextAreaElement);
 
@@ -1777,10 +1791,47 @@ begin
       end;
       LBinding.FElement.scrollLeft := Round(AStates[LSaved].ScrollLeft);
       LBinding.FElement.scrollTop := Round(AStates[LSaved].ScrollTop);
+
+      if LBinding.FInput <> nil then
+      begin
+        LBinding.FInput.scrollLeft := Round(AStates[LSaved].InputScrollLeft);
+        LBinding.FInput.scrollTop := Round(AStates[LSaved].InputScrollTop);
+      end;
     end;
   finally
     FUpdating := LUpdating;
   end;
+end;
+
+function TNyxBrowserRenderer.CaptureInteraction(
+  out AStates: TNyxContentFaceStates): Boolean;
+begin
+  AStates := nil;
+  Result := SectionPublicationReady;
+
+  if Result then
+  begin
+    AStates := CaptureContentFaces;
+  end;
+end;
+
+function TNyxBrowserRenderer.RestoreInteraction(
+  const AStates: TNyxContentFaceStates; AFocus: Boolean): Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := SectionPublicationReady;
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  { Refuse ambiguous copied identities before touching any physical face. }
+  for LIndex := 0 to High(FBindings) do
+  begin
+    NyxContentFaceIndex(FBindings[LIndex].FNode, AStates);
+  end;
+  RestoreContentFaces(AStates, AFocus);
 end;
 
 procedure TNyxBrowserRenderer.QueueContent;

@@ -28,7 +28,7 @@ interface
 uses
   SysUtils, nyx.text, nyx.types, nyx.model, nyx.theme, nyx.state, nyx.behavior,
   nyx.events, nyx.gestures, nyx.designer.resize, nyx.collections.view, nyx.view.sections,
-  nyx.studio.sections, nyx.studio.drag, nyx.studio.session
+  nyx.studio.sections, nyx.studio.drag, nyx.studio.session, nyx.content.mount
   {$ifdef PAS2JS}, Web, nyx.render.browser, nyx.view.sections.browser
   {$else}, Controls, ExtCtrls, nyx.render.lcl, nyx.view.sections.lcl{$endif};
 
@@ -89,6 +89,9 @@ type
     { Borrowed callback receiver. Neither receiver nor this view owner may be
       destroyed before the synchronous call returns. }
     property OnEvent: TNyxEventHandler read FOnEvent write FOnEvent;
+    { Borrowed lookup forest, rebuilt after each successful admission even when
+      all real roots are retained. Resolve it again after refresh; actual model
+      roots/controls instead follow their owning section's lifetime. }
     property Root: TNyxStudioSectionRoots read GetRoot;
     { Chrome router only, available after mounting. Use ViewFor for section
       registrations. An unmounted lookup raises rather than losing callbacks. }
@@ -460,6 +463,7 @@ var
   LView: TNyxStudioSectionRenderer;
   LChanges: array of INyxViewSectionChange;
   LBefore: array[TNyxStudioSection] of TNyxNode;
+  LInputs: array[TNyxStudioSection] of TNyxContentFaceStates;
   LRetained: array[TNyxStudioSection] of Boolean;
   LPublished: Boolean;
 
@@ -494,6 +498,14 @@ var
           tree; trusted exchange performs no callbacks/allocation. }
         LOwner.Root.ExchangeResourceProjection(LBefore[LRole]);
         LOwner.Sync;
+        { Physical drafts can differ from that restored accepted value. Apply
+          the copied adapter continuity only after source/model replay, while
+          the exact retained controls and their event scopes still belong here. }
+
+        if not LOwner.RestoreInteraction(LInputs[LRole]) then
+        begin
+          raise ENyxModel.Create('Retained rollback input boundary became busy');
+        end;
       except
         on LException: Exception do
         begin
@@ -524,6 +536,7 @@ begin
   for LSection := Low(TNyxStudioSection) to High(TNyxStudioSection) do
   begin
     LBefore[LSection] := nil;
+    LInputs[LSection] := nil;
     LRetained[LSection] := False;
   end;
   try
@@ -546,6 +559,11 @@ begin
         Exit;
       end;
       LBefore[LSection] := LView.Root.Clone;
+
+      if not LView.CaptureInteraction(LInputs[LSection]) then
+      begin
+        Exit;
+      end;
     end;
     try
       for LSection := Low(TNyxStudioSection) to High(TNyxStudioSection) do
@@ -557,11 +575,21 @@ begin
           Continue;
         end;
 
+        { Even a target Sync exception can have touched the physical draft.
+          Ordinary TryRefresh recovers its model; the outer owner must also
+          restore continuity for this attempted retained role. }
+        LRetained[LSection] := True;
+
         if LView.TryRefresh(LDocuments[LSection], LDocuments[LSection].Pages[0], False) then
         begin
-          LRetained[LSection] := True;
+          Continue;
         end
-        else if LSection = nssChrome then
+        else
+        begin
+          LRetained[LSection] := False; { False promises no admitted changes. }
+        end;
+
+        if LSection = nssChrome then
         begin
           RestoreRetained;
           Exit;
@@ -599,6 +627,7 @@ begin
     for LSection := Low(TNyxStudioSection) to High(TNyxStudioSection) do
     begin
       LBefore[LSection].Free;
+      LInputs[LSection] := nil;
     end;
   end;
 end;

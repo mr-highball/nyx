@@ -9,7 +9,22 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current bounded section consumption follows criterion 2 through both ordinary
+Current combined recovery consumes criterion 2 through the actual shared Studio
+shell/facade. Both-target unfinished-draft loss after a later factory refusal is
+repaired through typed copied interaction continuity, following exact source/model
+replay. Preparation and second physical preview failure preserve roots, drafts,
+focused ranges and event tokens; later success and custom theme/configurer reuse
+pass 29 checks per target. Ordinary Resources passes native 143, HTTP desktop/
+CSS-390 609/978 (polling included); unchanged emitted source executes 48 each.
+Inspected captures and exact preservation accept this bounded behavior. Authoring
+alone advances no-closure 45→46; no original criterion or full credit closes.
+Native clipping/layout cost, wider context/membership, full-frame/custom editor
+failures, composite native date/time/color drafts, native memo scroll,
+physical input/accessibility and observing rollout
+remain open. See
+[the packet](../WORK.md#current-return-path-studio-section-recovery--2026-10-08).
+
+Previous bounded section consumption follows criterion 2 through both ordinary
 Studio controllers. Independent Nyx-owned Chrome/Project/Inspector views route
 lookups, drafts and hierarchy/designer subscriptions to their actual owners.
 Compatible refresh retains controls; side replacements stage as a group, and

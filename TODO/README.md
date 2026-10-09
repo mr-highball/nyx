@@ -47,7 +47,20 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current ordinary Studio section routing (2026-10-08): independent Nyx-owned
+Current Studio section recovery (2026-10-08): a demonstrated uncommitted-draft
+loss is repaired through typed copied renderer continuity and actual retained/
+staged Studio ownership. Custom factory preparation and second physical preview
+refusals preserve exact roots, drafts, focused ranges and event tokens; a later
+grouped refresh succeeds. The actual shared shell passes **29** on Win32 and
+HTTP desktop/CSS-390 each. Ordinary Resources passes **143** native, **609/978**
+browser (polling included); unchanged emitted Pascal executes **48** per target.
+Inspected captures and exact preservation qualify this bounded consumer. Authoring
+alone advances **45→46**, aggregate **25/11/46/21/28/3**; no full criterion or
+credit closes. Native clipping/layout cost, wider context/editor failures,
+physical input/accessibility and observing rollout remain open. See
+[the packet](../WORK.md#current-return-path-studio-section-recovery--2026-10-08).
+
+Previous ordinary Studio section routing (2026-10-08): independent Nyx-owned
 Chrome/Project/Inspector views retain compatible controls and route drafts/events
 to their actual roots. Checked Win32 Resources passes **143**, HTTP desktop/
 CSS-390 **609/988** (polling included), exact emitted Pascal **48** per target,

@@ -479,6 +479,18 @@ type
       before mutation. Call on the owning UI thread with the mounted host alive. }
     function TryRefresh(ADocument: TNyxDocument; ARoot: TNyxNode;
       ADesignMode: Boolean; const ARestores: TNyxProjectionValueRestores = nil): Boolean;
+    { Copied physical continuity, independent of accepted model values. Capture
+      and restore require an idle mounted view; False changes nothing. Records
+      retain no renderer, control, model or store. Restore matches exact logical
+      identity/domain/bindings and accepted value before reusing a text draft.
+      Replay the model/source baseline first. This never edits that model or
+      history, admits a value, dispatches input or reserves a publication turn.
+      Compatible views may reuse these copies; changed contracts skip drafts.
+      Ambiguous identities raise before touching faces; target errors propagate.
+      Extension-owned editors require their own adapter continuity contract. }
+    function CaptureInteraction(out AStates: TNyxContentFaceStates): Boolean;
+    function RestoreInteraction(const AStates: TNyxContentFaceStates;
+      AFocus: Boolean = True): Boolean;
     { Move the same mounted view to a different borrowed host, retaining control
       objects, state/subscriptions, focused text range and containing scroll.
       Both hosts must outlive their respective parentage; after successful move
@@ -3523,6 +3535,12 @@ begin
     Result[LIndex].Focused := (Screen.ActiveControl = LBinding.FInput) or
       (Screen.ActiveControl = LBinding.FControl);
 
+    if LBinding.FControl is TScrollBox then
+    begin
+      Result[LIndex].ScrollLeft := TScrollBox(LBinding.FControl).HorzScrollBar.Position;
+      Result[LIndex].ScrollTop := TScrollBox(LBinding.FControl).VertScrollBar.Position;
+    end;
+
     if LBinding.FInput is TWinControl then
     begin
       Result[LIndex].Selection := CaptureNyxLCLSelection(TWinControl(LBinding.FInput));
@@ -3591,10 +3609,47 @@ begin
           SelectNyxLCLText(LFocus, AStates[LSaved].Selection);
         end;
       end;
+
+      if LBinding.FControl is TScrollBox then
+      begin
+        TScrollBox(LBinding.FControl).HorzScrollBar.Position := Round(AStates[LSaved].ScrollLeft);
+        TScrollBox(LBinding.FControl).VertScrollBar.Position := Round(AStates[LSaved].ScrollTop);
+      end;
     end;
   finally
     FUpdating := LUpdating;
   end;
+end;
+
+function TNyxLCLRenderer.CaptureInteraction(
+  out AStates: TNyxContentFaceStates): Boolean;
+begin
+  AStates := nil;
+  Result := SectionPublicationReady;
+
+  if Result then
+  begin
+    AStates := CaptureContentFaces;
+  end;
+end;
+
+function TNyxLCLRenderer.RestoreInteraction(
+  const AStates: TNyxContentFaceStates; AFocus: Boolean): Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := SectionPublicationReady;
+
+  if not Result then
+  begin
+    Exit;
+  end;
+  { Refuse ambiguous copied identities before touching any physical face. }
+  for LIndex := 0 to High(FBindings) do
+  begin
+    NyxContentFaceIndex(FBindings[LIndex].FNode, AStates);
+  end;
+  RestoreContentFaces(AStates, AFocus);
 end;
 
 procedure TNyxLCLRenderer.QueueContent;

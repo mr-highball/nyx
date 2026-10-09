@@ -9,7 +9,22 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current ordinary section integration consumes the independent ownership
+Current combined Studio extension recovery qualifies a creator factory/theme
+consumer on both targets: unfinished input survives later preparation and second
+physical preview refusals, with exact roots/ranges/tokens and later grouped
+success. Typed copied adapter continuity retains no view/model/widget/store and
+refuses busy input, ambiguous identities and stale accepted-value draft reuse.
+Actual shared shell passes 29 each; ordinary Resources passes Win32 143 and HTTP
+desktop/CSS-390 609/978 (polling included), with identical emitted source executing
+48 per target. This bounded authoring gate belongs to NS-4; NS-3's historical
+count and all original criteria remain unchanged. No performance sample or
+speedup is inferred. Next address measured native layout/synchronization cost
+and visible toolbar/side-row clipping; stop recovery fixture variants. Wider
+context/full-frame/custom editor, native memo scroll, physical input/accessibility
+and observing rollout remain open. See
+[the packet](../WORK.md#current-return-path-studio-section-recovery--2026-10-08).
+
+Previous ordinary section integration consumes the independent ownership
 prerequisite: retained Chrome/Project/Inspector views, staged side replacement,
 exact draft/source/history routing and idle callback boundaries now execute in
 both ordinary Studio controllers. Checked Win32 Resources passes 143 and HTTP

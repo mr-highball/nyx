@@ -88,6 +88,10 @@ type
     Focused: Boolean;
     ScrollLeft: Double;
     ScrollTop: Double;
+    { Browser textarea content scroll is independent of its outer field face.
+      Native adapters leave these observations zero until their bridge exists. }
+    InputScrollLeft: Double;
+    InputScrollTop: Double;
   end;
   TNyxContentFaceStates = array of TNyxContentFaceState;
 

@@ -430,6 +430,15 @@ end;
 
 begin
   try
+    { Both exact source export and physical capture are required evidence.
+      Refuse a missing artifact path before the several-minute UI journey;
+      some image writers silently ignore an empty destination. }
+
+    if (ParamCount < 2) or (ParamCount > 3) or (ParamStr(1) = '') or
+      (ParamStr(2) = '') then
+    begin
+      raise Exception.Create('Supply Pascal export, PNG capture and optional --profile-open');
+    end;
     Application.Initialize;
     NativeStudio;
     WriteLn('PASS / ordinary resource workbench / ', GChecks, ' checks');

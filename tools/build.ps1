@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -4288,33 +4288,39 @@ try {
     exit 0
   }
 
-  if ($Target -eq 'view-sections') {
+  if ($Target -in @('view-sections', 'studio-section-recovery')) {
     # Pascal owns grouped publication, rollback, real controls and lifetime
     # assertions. This orchestration stages artifacts; it launches no listener.
-    $nyxSectionRoot = Join-Path $nyxRoot 'build/view-sections/maintained'
+    $nyxSectionProgram = 'nyx_view_section_controls'
+    $nyxSectionHtml = 'view-sections.html'
+    if ($Target -eq 'studio-section-recovery') {
+      $nyxSectionProgram = 'nyx_studio_section_controls'
+      $nyxSectionHtml = 'studio-section-recovery.html'
+    }
+    $nyxSectionRoot = Join-Path $nyxRoot "build/$Target/maintained"
     $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
     $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
     $nyxSectionPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
     $nyxSectionNative = Join-Path $nyxSectionRoot 'native'
     New-Item -ItemType Directory -Force $nyxSectionNative | Out-Null
     Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-O2', '-Sa', '-Cr', '-Co', '-Ci',
-      '-gl', '-gh', '-Fusrc', '-Futests',
+      '-gl', '-gh', '-Fusrc', '-Fustudio', '-Futests',
       "-Fu$nyxLazarus/lcl/units/$nyxSectionPlatform",
       "-Fu$nyxLazarus/lcl/units/$nyxSectionPlatform/$Widgetset",
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxSectionPlatform",
       "-Fu$nyxLazarus/packager/units/$nyxSectionPlatform",
-      "-FU$nyxSectionNative", "-FE$nyxSectionNative", 'tests/nyx_view_section_controls.lpr')
-    & (Join-Path $nyxSectionNative 'nyx_view_section_controls.exe') (Join-Path $nyxSectionRoot 'native-live.png')
+      "-FU$nyxSectionNative", "-FE$nyxSectionNative", "tests/$nyxSectionProgram.lpr")
+    & (Join-Path $nyxSectionNative "$nyxSectionProgram.exe") (Join-Path $nyxSectionRoot 'native-live.png')
     if ($LASTEXITCODE -ne 0) { throw 'Actual native section publication failed' }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     $nyxSectionBrowser = Join-Path $nyxSectionRoot 'web'
     if ($BrowserOutput) { $nyxSectionBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
     New-Item -ItemType Directory -Force $nyxSectionBrowser | Out-Null
-    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Futests',
-      "-FE$nyxSectionBrowser", 'tests/nyx_view_section_controls.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js', '-Fusrc', '-Fustudio', '-Futests',
+      "-FE$nyxSectionBrowser", "tests/$nyxSectionProgram.lpr")
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxSectionBrowser 'rtl.js') -Force
-    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/view-sections.html') -Destination $nyxSectionBrowser -Force
+    Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxSectionHtml") -Destination $nyxSectionBrowser -Force
     Write-Host 'Native sections pass. Execute browser artifacts on an independently admitted existing HTTP host.'
     exit 0
   }

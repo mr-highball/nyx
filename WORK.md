@@ -9,6 +9,122 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Studio section recovery — 2026-10-08
+
+Entry is clean at exact pushed `1fdc25c`. Independent ordinary Studio sections
+are integrated; combined extension failure recovery and custom theme/configurer
+qualification remain open under NS-4 authoring criterion 2 and NS-3 extension
+criteria 2/3. Installed native MCP reads the preserved primary revision 2 without
+changing its document, Pascal, history or selection. Execution remains solo.
+
+Next bounded gate uses the actual shared `BuildNyxStudioView` and section facade
+on browser and LCL. Refuse a later Inspector factory after earlier retained
+updates, and refuse grouped side publication after an earlier candidate preview.
+Check exact retained input drafts/ranges, roots, event tokens, source baseline,
+subsequent successful refresh and borrowed custom theme/configurer behavior.
+Investigate recovery of a physical unfinished edit independently of accepted
+model text; existing per-renderer content face recovery may provide the adapter
+boundary. Full-frame source/canvas parking requires ordinary controller evidence
+and cannot be claimed from this facade fixture alone.
+
+Implement and qualify any demonstrated defect before advancing acceptance.
+Use existing admitted HTTP staging only: no new listener, backend replacement,
+enrollment/configuration change, protected design mutation or cleanup. Preserve
+nine durable pairs, fifteen service identities and sealed LAN bytes. Counters
+remain 25/11/45/21/28/3 at entry; production timing, native clipping, full parity
+and delivery remain open. Record failure and terminal evidence below.
+
+
+### Demonstrated defect and implementation
+
+The actual Studio shell/facade consumer demonstrated loss of an uncommitted
+numeric draft after a later Inspector factory refusal on **both targets**.
+Exact controls and restored model values alone did not preserve physical input.
+The initial native failure stops after six checks; the corrected browser driver
+records the same refusal in its failed DOM. Those are failures, not accepted
+evidence.
+
+Both ordinary renderers now expose typed copied interaction continuity over the
+existing content-face adapter contract. Records retain no widget/view/model/store.
+Idle capture and restore refuse active input; ambiguous identities preflight before
+any face changes. Exact identity, domain/bindings and accepted value guard draft
+reuse. Source/model replay happens first, followed by physical text/range/focus.
+Browser input scroll and native control scroll boxes use their adapter observations.
+Custom editor internals, composite native date/time/color edit drafts, native
+memo scroll and hardware/IME/AT are not claimed. Native capture/restore currently
+covers TCustomEdit faces; those composite editor bridges remain under NS-4
+criterion 2 rather than silently implying complete field coverage.
+
+Studio captures continuity before retained updates and restores every touched role
+once after preparation/publication refusal, including a retained Sync exception.
+The actual shared shell fixture stages a custom Inspector factory refusal after
+Chrome/Project retention and a second physical preview refusal after Project
+publication. Exact roots, drafts, ranges and callback tokens remain usable; later
+successful grouped refresh admits the authored value and retires only side owners.
+The borrowed configurator/theme are exercised on replacement renderers. The stock
+browser controller and fixture share exported adapter CSS, rather than divergent
+fixture styles. Full-frame canvas/source rollback remains a separate controller
+qualification; the facade fixture deliberately mounts all three roles even at
+CSS-390 and does not qualify compact Studio UX by itself.
+
+The full Resources regression consumes the unchanged previously MCP-authored
+English seed through both ordinary controllers. The installed native MCP remains
+the read-only primary context path; target input/extension failure is behavior the
+document API cannot establish. No fallback document mutation or missing semantic
+operation is disguised as browser automation.
+
+### Executed evidence
+
+| Gate | Executed evidence |
+| --- | --- |
+| Actual shared Studio facade, checked Win32 | **29** checks, zero unfreed blocks; `build/studio-recovery/maintained-final-build.log`, live `build/studio-section-recovery/maintained/native-live.png`. |
+| Same facade, HTTP desktop/CSS-390 | **29 each**, terminal passed, real-clock driver and inspected live PNG/DOM; `build/studio-recovery/browser-current-desktop` and `browser-current-narrow`. Includes preparation refusal, second preview failure, copied-draft ambiguity/busy/stale guards, focused range, live tokens, later success and borrowed theme. |
+| Ordinary browser Resources | **609/978** (readiness polling included), terminal passed; `resources-browser-desktop` / `resources-browser-narrow` under the same packet. Two actual live checkpoints each (editor and canvas); editor captures inspected. |
+| Ordinary Win32 Resources | Corrected two-path run passes **143**, zero unfreed blocks; `resources-native-final-run.log` and inspected `resources-native-final.png` under the packet. The earlier 143 omitted capture and is not complete artifact evidence. |
+| Exact emitted Pascal | SHA-256 **F2580A8DBEF478CD561D57994CDB8F68C439D33CA32EC05244AC72073ACF7DBC** matches the previous accepted source. The unchanged **48**-check suite compiles/executes on both targets; native `generated-native-run.log`, HTTP `generated-browser-final`, terminal passed. |
+| Native evidence fail-fast | Missing capture argument now refuses before creating the Studio, with an actionable path diagnostic and zero unfreed blocks; `missing-capture-refusal.log`. |
+| Preservation | Maintained read-only guard passes nine exact pairs, fifteen identities, checkpoint and all sealed LAN bytes; `preservation-final.log`. Installed native MCP still reads primary revision 2. No service replacement/new listener/configuration change. |
+
+The first browser driver was given a value expression instead of an attribute
+name and timed out; the corrected driver captures the actual draft-loss failure.
+Early fixture domain declarations conflicted with the numeric control family;
+the fixture now uses typed numeric input/domain/value admission. An initial live
+browser capture used insufficient fixture CSS and was blank; the fixture now
+consumes ordinary Studio adapter CSS, and inspected live captures show its controls.
+The native regression's missing second output exposed a silently ignored image
+destination. Its maintained Pascal owner now refuses missing paths immediately;
+a proper two-path full run is required. These orchestration/fixture corrections
+do not count as successful product gates or speedups.
+
+### Assessment and next action
+
+This accepts bounded combined Studio extension recovery and the borrowed theme/
+factory consumer under NS-4 criterion 2. Authoring alone advances no-closure
+**45→46**, aggregate **25/11/46/21/28/3**. Other owners' counters and NS-3's
+historical count remain unchanged; no original criterion or full credit closes.
+Browser counts include readiness polling and establish no latency improvement.
+The native facade/full-workbench/emitted consumers and browser-pipe owners are
+leak-free; pipe-owner heap evidence is not browser JavaScript heap qualification.
+Current native builds have no warnings (59/61 existing notes); browser retains
+seven upstream RTL warnings, with no dependency source edits.
+
+No production timing sample is added or inferred from this recovery workload.
+Original native toolbar/side-row clipping remains visible in the inspected
+ordinary capture. Next reassess measured native layout/synchronization cost and
+that sizing defect under the same NS-3/NS-4 owners; stop recovery fixture variants.
+Wider context/membership, full-frame custom editor failures, composite native
+date/time/color edit drafts, native memo scroll,
+physical input/accessibility and observing rollout remain open. The earlier
+optimized full workload's 323.889 seconds is still the latest measured sample;
+no speedup or production budget is accepted.
+
+LAN remains the frozen `960134f` product with its sealed 299-file payload and
+unchanged primary process. Its earlier backend replacement was rejected by
+automatic approval review (only “blocked by policy”); this packet performs no
+equivalent retry. Keep the active user pair/source/history/navigation/checkpoint,
+configuration/enrollment and all fifteen service identities intact. The bounded
+source checkpoint and exact remote verification are recorded privately after push.
+
 ## Current return path: Studio section routing — 2026-10-08
 
 Previous turn is progress at exact pushed `e525ffd`: the public staged section
