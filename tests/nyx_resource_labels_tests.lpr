@@ -180,6 +180,7 @@ end;
   Mounted target callbacks are exercised by the ordinary authoring consumer. }
 procedure LabelEditorChecks;
 var
+  LCase: Integer;
   LForm: INyxCard;
   LFresh: INyxCard;
   LEditor: TNyxNode;
@@ -244,22 +245,30 @@ begin
   LPreference := DefaultNyxStudioPresentation;
   LPreference.ResourceDraft := LDraft;
   LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LPreference));
-  Check(LPacket.Field('version').AsInteger = 11,
+  Check(LPacket.Field('version').AsInteger = 12,
     'outer preferences declare their broader draft contract explicitly');
   LLoaded := DecodeNyxStudioPresentation(LPacket.ToJSON);
   LFresh := NewNyxResourceEditor(LForm.Node.ID, LResources, NyxNewResourceSelection);
   Check(LLoaded.ResourceDraft.Restore(LFresh.Node) and
     (ReadNyxResourceLabelsEditor(LFresh.Node.Find(LTags.ID)).ToData.ToJSON = LBefore),
     'ordinary enclosing preferences retain exact tags, selection and incomplete text');
-  SetLength(LFields, LPacket.Count);
+  SetLength(LFields, LPacket.Count - 2);
+  LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
-    LFields[LIndex] := NyxField(LPacket.Key(LIndex), LPacket.Field(LPacket.Key(LIndex)));
+
+    if (LPacket.Key(LIndex) = 'resourceBrowser') or
+      (LPacket.Key(LIndex) = 'resourcesScroll') then
+    begin
+      Continue;
+    end;
+    LFields[LCase] := NyxField(LPacket.Key(LIndex), LPacket.Field(LPacket.Key(LIndex)));
 
     if LPacket.Key(LIndex) = 'version' then
     begin
-      LFields[LIndex].Value := NyxData(10);
+      LFields[LCase].Value := NyxData(10);
     end;
+    Inc(LCase);
   end;
   LRejected := False;
   try
@@ -304,6 +313,75 @@ begin
     'version eleven also admits the previously refused labelled version-three draft');
 end;
 
+{ Qualify the demonstrated nonempty proposal loss. A different selected owner
+  is an explicit handoff, not permission to reuse stale catalog/binding context. }
+procedure OwnerSelectionDraftChecks;
+var
+  LResources: INyxResources;
+  LFirst: INyxLabel;
+  LSecond: INyxLabel;
+  LChanged: INyxInput;
+  LForm: INyxCard;
+  LFresh: INyxCard;
+  LRefused: INyxCard;
+  LDraft: TNyxResourceEditorDraft;
+  LOriginal: TNyxResourceEditorDraft;
+  LBefore: TNyxText;
+  LInput: TNyxText;
+begin
+  LResources := NewNyxResources;
+  LResources.Define(NyxResourceRef('notes'), NyxTextResource('Accepted notes'));
+  LResources.Define(NyxResourceRef('copy'), NyxJSONResource('{"prompt":"Accepted prompt"}'));
+  LFirst := NewNyxLabel('first-owner');
+  LSecond := NewNyxLabel('second-owner');
+  LForm := NewNyxResourceEditor('owner-proposal', LResources, NyxNewResourceSelection,
+    LFirst.Node, LFirst.Node);
+  LInput := TNyxText('{"unfinished": 🌙');
+  LForm.Node.Find(NyxResourceEditorFieldID(LForm.Node.ID, refKind)).Configure.Value('JSON').Done;
+  LForm.Node.Find(NyxResourceEditorFieldID(LForm.Node.ID, refContent)).Configure.Value(LInput).Done;
+  LForm.Node.Find(NyxResourceEditorFieldID(LForm.Node.ID, refBind)).Configure.Value(True).Done;
+  SetNyxResourceEditorLabels(LForm.Node, NyxResourceLabels.Add(NyxResourceLabel('Unsubmitted')));
+  LForm.Node.Find(NyxResourceLabelsEditorFieldID(NyxResourceEditorLabelsID(LForm.Node.ID),
+    rlefInput)).Configure.Value('Incomplete tag...').Done;
+  LDraft.Capture(LForm.Node.ID, LForm.Node);
+  LOriginal := LDraft;
+  LBefore := LOriginal.ToData.ToJSON;
+  LFresh := NewNyxResourceEditor(LForm.Node.ID, LResources, NyxNewResourceSelection,
+    LSecond.Node, LSecond.Node);
+  Check(not LDraft.Restore(LFresh.Node), 'ordinary strict restore still refuses a changed owner');
+  Check(LDraft.RestoreForOwnerSelection(LFresh.Node) and
+    (LFresh.Node.Find(NyxResourceEditorFieldID(LForm.Node.ID, refContent)).Prop('value') = LInput) and
+    (NyxResourceEditorLabels(LFresh.Node).Count = 1) and
+    (ReadNyxResourceLabelsEditor(LFresh.Node.Find(NyxResourceEditorLabelsID(LForm.Node.ID))).Input =
+      'Incomplete tag...'), 'explicit handoff preserves partial JSON, tags and unfinished input');
+  Check((LFresh.Node.Find(NyxResourceEditorFieldID(LForm.Node.ID, refBind)).Prop('value') = 'false') and
+    (LForm.Node.Find(NyxResourceEditorFieldID(LForm.Node.ID, refBind)).Prop('value') = 'true') and
+    (LOriginal.ToData.ToJSON = LBefore), 'handoff clears proposed binding without aliasing the former form/draft');
+  LChanged := NewNyxInput(LSecond.Node.ID);
+  LRefused := NewNyxResourceEditor(LForm.Node.ID, LResources, NyxNewResourceSelection,
+    LChanged.Node, LChanged.Node);
+  Check(not LDraft.RestoreForOwnerSelection(LRefused.Node) and
+    (LRefused.Node.Find(NyxResourceEditorFieldID(LForm.Node.ID, refContent)).Prop('value') = ''),
+    'changed contract on the same owner refuses before writing fields');
+  LRefused := NewNyxResourceEditor(LForm.Node.ID, LResources,
+    NyxResourceSelection(NyxResourceRef('notes'), NyxDefaultLocale), LFirst.Node, LFirst.Node);
+  Check(not LDraft.RestoreForOwnerSelection(LRefused.Node) and
+    (LRefused.Node.Find(NyxResourceEditorFieldID(LForm.Node.ID, refContent)).Prop('value') = 'Accepted notes'),
+    'a different resource selection cannot acquire the previous proposal');
+  Check(TrySelectNyxResourceEditor(LFresh.Node, LResources,
+    NyxResourceSelection(NyxResourceRef('copy'), NyxDefaultLocale), LSecond.Node, LSecond.Node) and
+    (ReadNyxResourceEditor(LFresh.Node).Kind = nrkJSON) and
+    (Pos(TNyxText('Root["prompt"] / text'),
+      LFresh.Node.Find(NyxResourceEditorFieldID(LForm.Node.ID, refPath)).Prop('items')) > 0),
+    'explicit Open replaces the handed-off proposal and discovers accepted JSON paths');
+  LResources.Define(NyxResourceRef('notes'), NyxTextResource('Changed accepted notes'));
+  LRefused := NewNyxResourceEditor(LForm.Node.ID, LResources, NyxNewResourceSelection,
+    LFirst.Node, LFirst.Node);
+  Check(not LDraft.RestoreForOwnerSelection(LRefused.Node) and
+    (LRefused.Node.Find(NyxResourceEditorFieldID(LForm.Node.ID, refContent)).Prop('value') = ''),
+    'changed accepted catalog refuses before writing the candidate form');
+end;
+
 procedure Run;
 var
   LLabels: TNyxResourceLabels;
@@ -332,6 +410,7 @@ var
   {$endif}
 begin
   LabelEditorChecks;
+  OwnerSelectionDraftChecks;
   LLabels := NyxResourceLabels.Add(NyxResourceLabel('Help'))
     .Add(NyxResourceLabel('Docs, "quick" | 🌙'));
   LDerived := LLabels.Remove(NyxResourceLabel('Help')).Add(NyxResourceLabel('Data'));

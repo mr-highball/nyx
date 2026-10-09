@@ -609,11 +609,32 @@ secure-context availability, arbitrary quota/security behavior or automatic evic
 
 ## Studio Resources and copied proposals
 
-Open **Resources** in Studio's Project area. The common public form is built
-from ordinary Nyx controls and is consumed by both Studio controllers. Choose
+Open **Resources** in Studio's Project area, or choose **Manage resources** in
+the compact Project picker. The dedicated workspace uses an independently owned
+Nyx section, with a catalog beside the proposal form on desktop and stacked
+content at the compact presentation. Both ordinary Studio controllers consume
+the same public Nyx compounds and metadata provider. Choose
 New resource, an application name, a default or named locale, and one of Image,
 JSON, Text or Binary. Creator title and description stay with the file. Opening
 an existing variant fixes its name and locale; New creates another variant.
+
+Search matches names, titles, descriptions/intent, locales and creator tags.
+The category checkboxes combine Image, JSON, Text and Data file alternatives;
+source and locale selectors narrow them further. Tag filters support exact
+all/any matching. **Reset filters** clears discovery choices. Selection alone
+preserves the current proposal; **Open resource** explicitly loads the chosen
+visible variant. A hidden selected member remains in the runtime catalog but
+cannot be opened while it is outside the displayed results. Closing/reopening
+the workspace or changing filters preserves unfinished proposal/filter input.
+Explicit New/Open starts another proposal. These navigation/filter operations
+never modify resources, application Pascal or paired Undo history.
+
+Changing the selected design control also preserves unfinished file contents,
+creator tags and partial input in the same project. An explicit copied-draft
+handoff clears the old proposed binding and uses the new control's default
+target; binding the file requires fresh consent. The exact accepted catalog and
+edited resource/locale must remain unchanged. A changed catalog, edited variant,
+project load or the same control's binding contract refuses this handoff.
 
 Import reads bounded bytes using the caller-selected kind. File extensions and
 MIME never silently change that kind, and machine filenames do not enter a
@@ -629,6 +650,9 @@ property on the currently selected control and a discovered value to apply the
 file and its binding together. Apply rediscovers from current contents; saved
 choice labels never authorize a missing or changed path. Resource bindings stay
 read-only; writable state bindings retain their ordinary independent behavior.
+An unfinished form reports a proposal until Preview validates it; navigation
+does not silently parse incomplete JSON or retain a previous file's validation
+summary.
 
 Hosted URL mode exposes freshness, stale-on-failure, payload limit, memory or
 persistent storage, and Respect/Override server policy. Import into this mode
@@ -650,7 +674,10 @@ Library hosts use `NewNyxResourceEditor`, typed field/action roles,
 `nyx.resources.editor`. `INyxResourcePicker` separates local file selection from
 the portable form. Hosts own cancellation and check their captured context
 before proposing a reply. The form borrows catalog/control inputs only while
-constructing its controls. It owns a reusable tag editor from
+constructing its controls. Its optional `TNyxResourceEditorCatalog` parameter
+defaults to compatible `recButtons`; `recExternal` suppresses entry buttons when
+a host supplies a live picker, and retained New/Open preserves that choice.
+It owns a reusable tag editor from
 `nyx.resources.labels.editor`: exact names are added as one tag, never split on
 commas or punctuation. **Remove tag** acts on the selected exact member.
 Add/Remove edit the proposal; **Apply resource** accepts those labels alongside
@@ -732,9 +759,10 @@ The shared resource form exposes `NyxResourceEditorLabels` and
 retaining labels. Existing Apply requests and paired history admit annotations
 with the resource/source pair; changed context and pending application drafts
 refuse. Both ordinary Studio controllers consume the visible reusable tag
-editor; version-eleven private preferences preserve its incomplete input and
-selection. The dedicated Resources workspace, compact Project picker, visible
-catalog filtering and semantic label operations still require integration.
+editor. Version-twelve private preferences retain the dedicated workspace's
+typed query, incomplete filter tags and scroll position as well as resource
+proposals; exact historical packets, including version eleven, remain readable.
+Semantic label operations and observing deployment still require integration.
 
 `tools/build.ps1 -Target resource-labels -HttpURL <existing-test-host>` runs
 checked native wire/source/history, exact exported Pascal, actual mounted list
@@ -792,14 +820,33 @@ The provider retains historical identity metadata until release, without an
 unbounded payload cache. A retained mount disconnects when its renderer/view
 retires, while the independently owned catalog remains usable.
 
+`nyx.resources.browser` provides `NewNyxResourceBrowser` in typed `rbmWorkspace`
+or `rbmCompact` mode. Its copied `TNyxResourceBrowserState` contains the query,
+unfinished filter-tag text and optional exact selected tag. The compound owns
+fixed ordinary controls, retaining descendant identity/style on restoration;
+it retains no provider, resource definitions, session or target. Bind its list
+through `NyxResourceBrowserListID` and the public collection contract. Hosts
+publish admitted queries, synchronize controls and handle explicit Open intent.
+Observe selection through the list's typed `ntSelectionChange` event stream;
+the native compatibility callback does not forward that family. Studio owns
+managed subscriptions whose receivers borrow its section facade, and clears
+those pointers before retirement. A selected visible member enables Open;
+changing selection still leaves the file proposal untouched.
+`PrepareNyxResourceBrowserAction` validates Add/Remove/Reset on a detached
+candidate before changing mounted fields; invalid tags or a combined query over
+the ordinary predicate budget refuse. Strict version-one state/query packets
+are an editor preference boundary, never part of an exported application.
+
 Both renderers and the Studio section facade expose the actual manually mounted
 `CollectionView` and `CollectionMount`; authored-default views retain their
 fallback lookup. `tools/build.ps1 -Target resource-catalog` runs native provider
 and actual-control checks and stages browser counterparts. Execute their hosted
-pages separately to qualify the browser. This prerequisite does not establish
-the dedicated Resources workspace, visible tag editing, ordinary-controller
-integration, performance budgets or physical-device/accessibility behavior.
-Those remain owned by the resource and authoring tasks.
+pages separately to qualify the browser. The maintained `resource-workbench`
+journey consumes the dedicated workspace and picker through ordinary Studio
+controllers, checks visible filters and draft preservation, then compiles the
+same emitted Pascal on both targets. Physical-device/accessibility behavior,
+performance budgets, broader hosted/localization UX and updated observing
+deployment remain owned by the resource and authoring tasks.
 
 ## Semantic resource authoring
 

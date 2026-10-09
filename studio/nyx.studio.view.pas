@@ -43,6 +43,7 @@ uses
   nyx.theme.editor,
   nyx.image.editor,
   nyx.resources.editor,
+  nyx.resources.browser,
   nyx.resources.rows.editor,
   nyx.resources.runtime.view,
   nyx.contract,
@@ -156,6 +157,8 @@ type
     ResourcesVisible: Boolean;
     ResourceSelection: TNyxResourceEditorSelection;
     ResourceEditorDraft: TNyxResourceEditorDraft;
+    ResourceBrowser: TNyxResourceBrowserState;
+    ResourcesScroll: Integer;
     ResourceRowsDraft: TNyxResourceRowsDraft;
     CallbackRemoval: TNyxCallbackRemoval;
     { Copied confirmation metadata, not an interface or borrowed model. }
@@ -364,6 +367,7 @@ begin
   Result.DetailsPercent := 32;
   Result.Phone := False;
   Result.Palette := DefaultNyxStudioPaletteState;
+  Result.ResourceBrowser := NyxResourceBrowserState;
   Result.Log := '';
   Result.Status := 'Ready to design';
   Result.OutputVisible := False;
@@ -913,6 +917,9 @@ var
   LDetailSplit: TNyxNode;
   LSummary: TNyxNode;
   LRight: TNyxNode;
+  LResources: TNyxNode;
+  LResourceBody: TNyxNode;
+  LResourceForm: TNyxNode;
   LViews: TNyxNode;
   LViewbar: TNyxNode;
   LCanvas: TNyxNode;
@@ -1130,16 +1137,35 @@ begin
     LLeft.Add(NewNyxThemeEditor('studio-theme-editor', ASession.Document));
   end;
   LLeft.Add(NewNyxButton('action-resources-toggle').WithText('Resources'));
+  LLeft.Add(NewNyxResourceBrowser('studio-resource-picker', AState.ResourceBrowser, rbmCompact));
 
   if AState.ResourcesVisible then
   begin
+    LResources := TNyxNode.Create(nkScroll, 'studio-resources').Configure
+      .Layout(TNyxLayoutPolicy.Column).Padding(16).Gap(16).Flex(1).Done;
+    LResources.Configure.ForPlatform(npfNativeLCL).Flex(1).Done;
+    LWorkspace.Add(LResources);
+    LResources.Add(NewNyxHeading('studio-resources-heading').WithText('Resources'));
+    LResources.Add(NewNyxLabel('studio-resources-help').WithText(
+      'Find project files by category, intent or tag. Changes stay proposals until you apply them.'));
+    LResources.Add(NewNyxButton('action-resources-close').WithText('Back to design'));
+    LResourceBody := TNyxNode.Create(nkRow, 'studio-resources-body').Configure
+      .Layout(TNyxLayoutPolicy.Row.Wrap(nfwNoWrap).Align(ncaStart)).Gap(16).Done;
+    LResources.Add(LResourceBody);
+    LResourceBody.Add(NewNyxResourceBrowser('studio-resource-browser', AState.ResourceBrowser));
+    LResourceBody.Children[0].Configure.Width(300)
+      .WhenPresentation(NyxPresentation('compact')).Clear(atWidth).WidthSizing(nsFill).Done;
+    LResourceBody.Configure.WhenPresentation(NyxPresentation('compact')).Layout(nlColumn).Done;
+    LResourceForm := TNyxNode.Create(nkColumn, 'studio-resource-form').Configure
+      .Layout(TNyxLayoutPolicy.Column).Gap(16).Flex(1).Done;
+    LResourceBody.Add(LResourceForm);
     LSelectedProjection := ASession.SelectedProjection;
     try
-      LLeft.Add(NewNyxResourceEditor('studio-resource-editor', ASession.Document.Resources,
-        AState.ResourceSelection, ASession.Selected, LSelectedProjection));
-      LLeft.Add(NewNyxResourceRowsEditor('studio-resource-rows', ASession.Document.Resources,
+      LResourceForm.Add(NewNyxResourceEditor('studio-resource-editor', ASession.Document.Resources,
+        AState.ResourceSelection, ASession.Selected, LSelectedProjection, recExternal));
+      LResourceForm.Add(NewNyxResourceRowsEditor('studio-resource-rows', ASession.Document.Resources,
         ASession.Document.Collections));
-      AddResourceRuntimeViews(LLeft, AState.Agents.ResourceRuntimes);
+      AddResourceRuntimeViews(LResourceForm, AState.Agents.ResourceRuntimes);
     finally
       LSelectedProjection.Free;
     end;
@@ -1720,6 +1746,13 @@ begin
   LFooter.Add(Caption('studio-status', AState.Status));
   LFooter.Children[0].Configure.Hint(AState.Status).Done;
   LFooter.Configure.Visible(not AState.CanvasExpanded).Done;
+  { The resources section owns its broad host. Keep already mounted design
+    contexts hidden on desktop so ordinary binding consumers and the optional
+    source workspace can retain their independent lifetimes. Compact navigation
+    still omits inactive panels through the existing policy below. }
+  LLeft.Configure.Visible(not AState.ResourcesVisible).Done;
+  LCenter.Configure.Visible(not AState.ResourcesVisible).Done;
+  LRight.Configure.Visible(not AState.ResourcesVisible).Done;
   { Each compact panel remains the same public Nyx composition as its desktop
     counterpart. Omit inactive roots so both adapters give the active panel its
     full host width rather than reserving space for invisible siblings. }

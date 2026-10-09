@@ -28,6 +28,7 @@ program nyx_resource_workbench_controls;
 uses SysUtils, Classes, Interfaces, Forms, Controls, StdCtrls, Grids, Graphics,
   IntfGraphics, FPWritePNG, nyx.text, nyx.types, nyx.bytes, nyx.data,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor, nyx.resources.labels.editor,
+  nyx.resources.browser,
   nyx.resources.import, nyx.resources.import.lcl, nyx.collections,
   nyx.binding.types, nyx.model, nyx.codec, nyx.codegen, nyx.studio.projects,
   nyx.studio.lcl, nyx.studio.sourcejobs, nyx.generated.view,
@@ -231,7 +232,7 @@ var
     LRetainedRoot := nil;
 
     if (AID = NyxResourceEditorActionID(CEditor, reaNew)) or
-      (Pos(CEditor + '-entry-', AID) = 1) then
+      (AID = NyxResourceBrowserActionID('studio-resource-browser', rbaOpen)) then
     begin
       LRetainedInput := LStudio.ShellView.InputFor(NyxResourceEditorFieldID(CEditor, refContent));
       LRetainedRoot := LStudio.ShellView.RootFor(CEditor);
@@ -280,6 +281,104 @@ var
     LInput.Checked := True;
     LInput.OnChange(LInput);
     Ready;
+  end;
+
+  { Exercise the actual dedicated workspace, not a standalone provider fixture.
+    Filtering and returning to design must leave the ordinary accepted pair
+    and the current resource proposal untouched. }
+  procedure Browse;
+  const
+    CBrowser = 'studio-resource-browser';
+  var
+    LPair: TNyxText;
+    LProposal: TNyxText;
+    LCategory: TCheckBox;
+    LList: TListBox;
+
+    procedure Value(const AID, AValue: TNyxText);
+    var
+      LInput: TControl;
+    begin
+      LInput := LStudio.ShellView.InputFor(AID);
+
+      if LInput is TComboBox then
+      begin
+        TComboBox(LInput).ItemIndex := TComboBox(LInput).Items.IndexOf(AValue);
+        Check(TComboBox(LInput).ItemIndex >= 0, 'visible catalog filter choice');
+        TComboBox(LInput).OnChange(LInput);
+      end
+      else
+      begin
+        TCustomEdit(LInput).Text := AValue;
+      end;
+      Ready;
+    end;
+
+    procedure Rows(ACount: Integer);
+    begin
+      LList := TListBox(LStudio.ShellView.ControlFor(NyxResourceBrowserListID(CBrowser)));
+      Check(LList.Items.Count = ACount, 'actual resource catalog row count');
+
+      if ACount = 0 then
+      begin
+        Check(not LStudio.ShellView.ControlFor(NyxResourceBrowserActionID(CBrowser, rbaOpen)).Enabled,
+          'an empty displayed result cannot open hidden selection');
+      end;
+    end;
+
+  begin
+    LPair := EncodeNyxProject(LStudio.Session.ProjectSnapshot);
+    TextField(refContent, 'Unsubmitted resource draft');
+    LProposal := TCustomEdit(LStudio.ShellView.InputFor(
+      NyxResourceEditorFieldID(CEditor, refContent))).Text;
+    Check(LStudio.ShellView.ControlFor('studio-resources').Width > LWindow.ClientWidth div 2,
+      'dedicated Resources uses the workspace width');
+    Rows(1);
+    Value(NyxResourceBrowserFieldID(CBrowser, rbfSearch), 'COPY');
+    Rows(1);
+    Value(NyxResourceBrowserFieldID(CBrowser, rbfSources), 'Hosted');
+    Rows(0);
+    Value(NyxResourceBrowserFieldID(CBrowser, rbfSources), 'Embedded');
+    Rows(1);
+    Value(NyxResourceBrowserFieldID(CBrowser, rbfLocales), 'Localized');
+    Rows(0);
+    Value(NyxResourceBrowserFieldID(CBrowser, rbfLocales), 'Default locale');
+    LCategory := TCheckBox(LStudio.ShellView.InputFor(NyxResourceBrowserKindID(CBrowser, nrkJSON)));
+    LCategory.Checked := False;
+    LCategory.OnChange(LCategory);
+    Ready;
+    Rows(0);
+    LCategory.Checked := True;
+    LCategory.OnChange(LCategory);
+    Ready;
+    Rows(1);
+    Value(NyxResourceLabelsEditorFieldID(NyxResourceBrowserTagsID(CBrowser), rlefInput), 'Onboarding');
+    Click(NyxResourceLabelsEditorActionID(NyxResourceBrowserTagsID(CBrowser), rleaAdd));
+    Rows(1);
+    Value(NyxResourceLabelsEditorFieldID(NyxResourceBrowserTagsID(CBrowser), rlefInput), 'Missing');
+    Click(NyxResourceLabelsEditorActionID(NyxResourceBrowserTagsID(CBrowser), rleaAdd));
+    Rows(0);
+    Value(NyxResourceBrowserFieldID(CBrowser, rbfLabelMatch), 'Any selected tag');
+    Rows(1);
+    Value(NyxResourceLabelsEditorFieldID(NyxResourceBrowserTagsID(CBrowser), rlefInput), 'Unfinished filter...');
+    Click('action-resources-close');
+    Check(TCustomEdit(LStudio.ShellView.InputFor(NyxResourceBrowserFieldID(
+      'studio-resource-picker', rbfSearch))).Text = 'COPY',
+      'compact Project picker shares the accepted filter');
+    Click(NyxResourceBrowserActionID('studio-resource-picker', rbaOpen));
+    Rows(1);
+    Check(ReadNyxResourceBrowser(LStudio.ShellView.Root.Find(CBrowser)).TagInput = 'Unfinished filter...',
+      'workspace navigation retains unfinished filter tags');
+    Check(TCustomEdit(LStudio.ShellView.InputFor(
+      NyxResourceEditorFieldID(CEditor, refContent))).Text = LProposal,
+      'catalog filters/navigation preserve the unfinished resource proposal');
+    Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LPair,
+      'catalog filters/navigation change no accepted source, resources or history');
+    TScrollBox(LStudio.ShellView.ControlFor('studio-resources')).VertScrollBar.Position := 0;
+    LWindow.Repaint;
+    SaveNyxNativeCapture(LWindow, TNyxText(ParamStr(2)) + TNyxText('.browse.png'), ncmPrint);
+    Click(NyxResourceBrowserActionID(CBrowser, rbaReset));
+    Rows(1);
   end;
 
 
@@ -431,7 +530,7 @@ begin
     Check((ReadNyxResourceLabelsEditor(LTags).Input = 'Later...') and
       (ReadNyxResourceLabelsEditor(LTags).Labels.Count = 1),
       'ordinary native chrome retains incomplete tag input and accepted proposal tags');
-    TScrollBox(LStudio.ShellView.ControlFor('studio-left')).ScrollInView(
+    TScrollBox(LStudio.ShellView.ControlFor('studio-resources')).ScrollInView(
       LStudio.ShellView.InputFor(NyxResourceLabelsEditorFieldID(LTags.ID, rlefInput)));
     LWindow.Repaint;
     SaveNyxNativeCapture(LWindow, TNyxText(ParamStr(2)) + TNyxText('.tags.png'), ncmPrint);
@@ -443,8 +542,20 @@ begin
       NyxResourceRef('copy'), NyxDefaultLocale)).Contains(NyxResourceLabel('Onboarding')),
       'ordinary native Apply accepts creator tags with exact generated source');
     History(LBefore);
+    Browse;
     Select('project-name');
-    Click(CEditor + '-entry-0');
+    TListBox(LStudio.ShellView.ControlFor(
+      NyxResourceBrowserListID('studio-resource-browser'))).ItemIndex := 0;
+    TListBox(LStudio.ShellView.ControlFor(
+      NyxResourceBrowserListID('studio-resource-browser'))).OnSelectionChange(
+        LStudio.ShellView.ControlFor(NyxResourceBrowserListID('studio-resource-browser')), True);
+    Check(LStudio.ShellView.ControlFor(NyxResourceBrowserActionID(
+      'studio-resource-browser', rbaOpen)).Enabled,
+      'actual catalog selection enables explicit Open');
+    Click(NyxResourceBrowserActionID('studio-resource-browser', rbaOpen));
+    Check((LStudio.ShellView.Root.Find(NyxResourceEditorFieldID(CEditor, refKind)).Prop('value') = 'JSON') and
+      (LStudio.ShellView.Root.Find(NyxResourceEditorFieldID(CEditor, refContent)).Prop('value') = WorkbenchJSON),
+      'explicit catalog Open restores accepted JSON: ' + LStudio.Status);
     Bind;
     Choice(refTarget, NyxBindingPropertyTitle(bpPlaceholder));
     Choice(refPath, 'Root["prompt"] / text');

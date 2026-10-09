@@ -25,7 +25,7 @@ unit nyx.resources.catalog;
 
 interface
 
-uses nyx.text, nyx.resources, nyx.collections, nyx.collections.view, nyx.collections.query,
+uses nyx.text, nyx.data, nyx.resources, nyx.collections, nyx.collections.view, nyx.collections.query,
   nyx.publication;
 
 type
@@ -66,6 +66,19 @@ type
     { Convert to the ordinary typed collection policy at its explicit extension
       boundary. Adapters still use the same query/selection/keyboard contracts. }
     function ToQuery: TNyxCollectionQuery;
+    { Strict copied editor preference boundary. Predicate admission remains
+      authoritative: a valid wire shape cannot bypass query work budgets.
+      This retains discovery policy only, never rows, payloads or a provider. }
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxResourceCatalogQuery; static;
+    property SearchText: TNyxText read FSearch;
+    property Comparison: TNyxQueryTextComparison read FComparison;
+    property KindFilter: Boolean read FKindFilter;
+    property KindValues: TNyxResourceCatalogKinds read FKinds;
+    property LocaleValues: TNyxResourceCatalogLocales read FLocales;
+    property SourceValues: TNyxResourceCatalogSources read FSources;
+    property LabelValues: TNyxResourceLabels read FLabels;
+    property LabelMatch: TNyxResourceLabelMatch read FLabelMatch;
   end;
 
   { A copied resource/locale identity, independent of list order and labels.
@@ -381,6 +394,105 @@ begin
   begin
     Result := Result.Where(LFilter);
   end;
+end;
+
+function TNyxResourceCatalogQuery.ToData: TNyxDataValue;
+var
+  LKind: TNyxResourceKind;
+  LValues: array of TNyxDataValue;
+  LCount: Integer;
+begin
+  { Validate enum casts and the complete composed predicate before producing a
+    packet. Unfiltered kinds have one canonical empty representation. }
+  Search(FSearch, FComparison).Locales(FLocales).Sources(FSources)
+    .Labels(FLabels, FLabelMatch).ToQuery;
+  SetLength(LValues, 4);
+  LCount := 0;
+
+  if FKindFilter then
+  begin
+    for LKind := Low(TNyxResourceKind) to High(TNyxResourceKind) do
+    begin
+
+      if LKind in FKinds then
+      begin
+        LValues[LCount] := NyxData(Ord(LKind));
+        Inc(LCount);
+      end;
+    end;
+  end;
+  SetLength(LValues, LCount);
+  Result := NyxObject([NyxField('version', NyxData(1)), NyxField('search', NyxData(FSearch)),
+    NyxField('comparison', NyxData(Ord(FComparison))), NyxField('kindFilter', NyxData(FKindFilter)),
+    NyxField('kinds', NyxArray(LValues)), NyxField('locales', NyxData(Ord(FLocales))),
+    NyxField('sources', NyxData(Ord(FSources))), NyxField('labels', FLabels.ToData),
+    NyxField('labelMatch', NyxData(Ord(FLabelMatch)))]);
+end;
+
+class function TNyxResourceCatalogQuery.FromData(
+  const AData: TNyxDataValue): TNyxResourceCatalogQuery;
+var
+  LResult: TNyxResourceCatalogQuery;
+  LValues: TNyxDataValue;
+  LIndex: Integer;
+  LKind: Integer;
+  LKinds: TNyxResourceCatalogKinds;
+
+  function Choice(const AName: TNyxText; ALast: Integer): Integer;
+  begin
+    Result := AData.Field(AName).AsInteger;
+
+    if (Result < 0) or (Result > ALast) then
+    begin
+      raise ENyxResource.Create('Resource filter has an unsupported closed choice');
+    end;
+  end;
+begin
+
+  if (AData.Kind <> ndObject) or (AData.Count <> 9) or
+    (AData.Field('version').AsInteger <> 1) then
+  begin
+    raise ENyxResource.Create('Resource filter requires its exact version and fields');
+  end;
+  LResult := NyxResourceCatalogQuery.Search(AData.Field('search').AsText,
+    TNyxQueryTextComparison(Choice('comparison', Ord(High(TNyxQueryTextComparison)))))
+    .Locales(TNyxResourceCatalogLocales(Choice('locales', Ord(High(TNyxResourceCatalogLocales)))))
+    .Sources(TNyxResourceCatalogSources(Choice('sources', Ord(High(TNyxResourceCatalogSources)))))
+    .Labels(TNyxResourceLabels.FromData(AData.Field('labels')),
+      TNyxResourceLabelMatch(Choice('labelMatch', Ord(High(TNyxResourceLabelMatch)))));
+  LValues := AData.Field('kinds');
+
+  if (LValues.Kind <> ndArray) or (LValues.Count > 4) then
+  begin
+    raise ENyxResource.Create('Resource categories require a bounded typed array');
+  end;
+  LKinds := [];
+  for LIndex := 0 to LValues.Count - 1 do
+  begin
+    LKind := LValues.Item(LIndex).AsInteger;
+
+    if (LKind < Ord(Low(TNyxResourceKind))) or (LKind > Ord(High(TNyxResourceKind))) then
+    begin
+      raise ENyxResource.Create('Unknown resource category');
+    end;
+
+    if TNyxResourceKind(LKind) in LKinds then
+    begin
+      raise ENyxResource.Create('Duplicate resource category');
+    end;
+    Include(LKinds, TNyxResourceKind(LKind));
+  end;
+
+  if AData.Field('kindFilter').AsBoolean then
+  begin
+    LResult := LResult.Kinds(LKinds);
+  end
+  else if LValues.Count <> 0 then
+  begin
+    raise ENyxResource.Create('Unfiltered resource categories must be empty');
+  end;
+  LResult.ToQuery;
+  Result := LResult;
 end;
 
 { The empty locale is a valid default identity, rather than a named locale.

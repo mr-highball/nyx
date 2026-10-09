@@ -44,6 +44,10 @@ type
   TNyxResourceEditorImageLocale = (reilSelected, reilRuntime);
   TNyxResourceEditorAction = (reaNew, reaOpen, reaImport, reaPreview, reaApply, reaRemove);
   TNyxResourceEditorOperation = (reoDefine, reoRemove, reoRows, reoDetachRows);
+  { Standalone forms keep their existing entry buttons. A host with a public
+    live catalog can own navigation separately without allocating a button for
+    every asset. The chosen presentation survives retained New/Open. }
+  TNyxResourceEditorCatalog = (recButtons, recExternal);
 
   { Synchronous target synchronization of a borrowed mounted form. A receiver
     must keep the form/shape alive for this call; it owns no lasting lease.
@@ -99,6 +103,14 @@ type
   public
     procedure Capture(const AID: TNyxText; AShellRoot: TNyxNode);
     function Restore(AShellRoot: TNyxNode): Boolean;
+    { Explicit proposal handoff after the host verifies the same project/load.
+      Only a different selected owner may change: the exact accepted catalog
+      and edited resource/locale selection must remain unchanged. Preserve file
+      fields/tags/partial input, clear the old proposed binding and use the new
+      owner's default target. Changes to the same owner's binding still refuse.
+      Validate on a detached clone before touching the form. On success this
+      copied draft adopts the new context; no resource, source or history changes. }
+    function RestoreForOwnerSelection(AShellRoot: TNyxNode): Boolean;
     function ToData: TNyxDataValue;
     class function FromData(const AData: TNyxDataValue): TNyxResourceEditorDraft; static;
     procedure Clear;
@@ -126,7 +138,8 @@ function NyxResourceEditorContextMatches(AEditor: TNyxNode;
   construction. The accepted catalog and control bindings are never changed. }
 function NewNyxResourceEditor(const AID: TNyxText; const ACatalog: INyxResources;
   const ASelection: TNyxResourceEditorSelection;
-  AOwner: TNyxNode = nil; AProjection: TNyxNode = nil): INyxCard;
+  AOwner: TNyxNode = nil; AProjection: TNyxNode = nil;
+  ACatalogPresentation: TNyxResourceEditorCatalog = recButtons): INyxCard;
 { Navigate New/Open without replacing a compatible compound form. Exact catalog
   and selected-owner context are required; False changes nothing and asks the
   caller to use normal staged composition. Invalid selections raise before
@@ -197,6 +210,7 @@ const
   CPaths = 'nyx.resource-editor.paths';
   CEntry = 'nyx.resource-editor.entry';
   CLabelProposal = 'nyx.resource-editor.labels';
+  CCatalogPresentation = 'nyx.resource-editor.catalog-presentation';
   CFields: array[TNyxResourceEditorField] of TNyxText = ('name', 'locale', 'title',
     'description', 'kind', 'source', 'url', 'cache', 'fresh', 'stale', 'maximum',
     'server', 'content', 'encoding', 'fallback', 'bind', 'target', 'path', 'image-locale');
@@ -789,6 +803,17 @@ begin
 
   if not APreview then
   begin
+    { Raw incomplete text is deliberately not parsed here. A retained draft or
+      a kind/content edit must not keep another proposal's "Admitted" summary.
+      Explicit Preview remains responsible for validation, paths and pixels. }
+    LItems := CKinds[NyxResourceEditorKind(AEditor)] +
+      TNyxText(' proposal / choose Preview to validate');
+
+    if LHosted then
+    begin
+      LItems := TNyxText('Hosted ') + LItems;
+    end;
+    AEditor.Find(AEditor.ID + TNyxText('-summary')).Configure.Text(LItems).Done;
     Exit;
   end;
   LDefinition := ReadNyxResourceEditor(AEditor);
@@ -852,7 +877,8 @@ end;
 
 function NewNyxResourceEditor(const AID: TNyxText; const ACatalog: INyxResources;
   const ASelection: TNyxResourceEditorSelection;
-  AOwner: TNyxNode; AProjection: TNyxNode): INyxCard;
+  AOwner: TNyxNode; AProjection: TNyxNode;
+  ACatalogPresentation: TNyxResourceEditorCatalog): INyxCard;
 const
   CLabels: array[TNyxResourceEditorField] of TNyxText = ('Resource name',
     'Locale (empty for default)', 'Title', 'Description and intent', 'File kind',
@@ -889,6 +915,11 @@ var
   end;
 begin
 
+  if not (Ord(ACatalogPresentation) in [Ord(recButtons), Ord(recExternal)]) then
+  begin
+    raise ENyxResource.Create('Unsupported resource catalog presentation');
+  end;
+
   if ACatalog = nil then
   begin
     raise ENyxResource.Create('Resource authoring requires its catalog');
@@ -912,6 +943,7 @@ begin
   Result.Node.SetProp(CEditor, AID).SetProp(CCatalog, ACatalog.ToData.ToJSON)
     .SetProp(CSelection, LSelection.ToData.ToJSON)
     .SetProp(CLabelProposal, NyxResourceLabelsOf(LDefinition).ToData.ToJSON)
+    .SetProp(CCatalogPresentation, NyxData(Ord(ACatalogPresentation)).ToJSON)
     .SetProp(COwnerBaseline, NyxResourceEditorOwnerBaseline(AOwner, AProjection));
 
   if AOwner <> nil then
@@ -923,6 +955,11 @@ begin
     'Keep images, JSON, text and data with your project, or declare a hosted file.'));
   for LIndex := 0 to ACatalog.Count - 1 do
   begin
+
+    if ACatalogPresentation = recExternal then
+    begin
+      Break;
+    end;
     LSelection := NyxResourceSelection(ACatalog.Reference(LIndex), ACatalog.Locale(LIndex));
     LItems := LSelection.Reference.Name;
 
@@ -1116,6 +1153,8 @@ var
   LPrepared: TNyxNode;
   LField: TNyxResourceEditorField;
   LAttributeIndex: Integer;
+  LCatalogPresentation: TNyxResourceEditorCatalog;
+  LPresentation: Integer;
 
   procedure CopyAttribute(AFrom, ATo: TNyxNode; AKey: TNyxAttribute);
   begin
@@ -1162,7 +1201,20 @@ begin
   begin
     Exit;
   end;
-  LFresh := NewNyxResourceEditor(AEditor.ID, ACatalog, LSelection, AOwner, AProjection);
+  LCatalogPresentation := recButtons;
+
+  if AEditor.Props.IndexOfName(CCatalogPresentation) >= 0 then
+  begin
+    LPresentation := TNyxDataValue.ParseJSON(AEditor.Prop(CCatalogPresentation)).AsInteger;
+
+    if not (LPresentation in [Ord(recButtons), Ord(recExternal)]) then
+    begin
+      raise ENyxResource.Create('Unsupported resource catalog presentation');
+    end;
+    LCatalogPresentation := TNyxResourceEditorCatalog(LPresentation);
+  end;
+  LFresh := NewNyxResourceEditor(AEditor.ID, ACatalog, LSelection, AOwner, AProjection,
+    LCatalogPresentation);
   LPrepared := AEditor.Clone;
   try
     { Copy only owned proposal/disclosure fields. Fresh constructor defaults
@@ -1755,6 +1807,89 @@ begin
     or Apply, avoiding partial JSON becoming an unintended refresh failure. }
   RefreshNyxResourceEditor(LEditor, False);
   Result := True;
+end;
+
+function TNyxResourceEditorDraft.RestoreForOwnerSelection(AShellRoot: TNyxNode): Boolean;
+var
+  LEditor: TNyxNode;
+  LProbe: TNyxNode;
+  LPrevious: TNyxDataValue;
+  LCurrent: TNyxDataValue;
+  LCandidate: TNyxResourceEditorDraft;
+  LContext: TNyxText;
+
+  function OwnerID(const AContext: TNyxDataValue): TNyxText;
+  var
+    LOwner: TNyxDataValue;
+    LText: TNyxText;
+  begin
+    Result := '';
+    LText := AContext.Field('owner').AsText;
+
+    if LText <> '' then
+    begin
+      LOwner := TNyxDataValue.ParseJSON(LText);
+
+      if (LOwner.Kind <> ndObject) or (LOwner.Count <> 5) then
+      begin
+        raise ENyxResource.Create('Resource proposal owner context is incomplete');
+      end;
+      Result := LOwner.Field('owner').AsText;
+    end;
+  end;
+
+begin
+  Result := False;
+
+  if not Defined or (AShellRoot = nil) then
+  begin
+    Exit;
+  end;
+  LEditor := AShellRoot.Find(FEditor);
+
+  if not Complete(LEditor) then
+  begin
+    Exit;
+  end;
+  LContext := Context(LEditor);
+  try
+    LPrevious := TNyxDataValue.ParseJSON(FContext);
+    LCurrent := TNyxDataValue.ParseJSON(LContext);
+
+    if (LPrevious.Kind <> ndObject) or (LPrevious.Count <> 3) or
+      (LPrevious.Field('catalog').AsText <> LCurrent.Field('catalog').AsText) or
+      (LPrevious.Field('selection').AsText <> LCurrent.Field('selection').AsText) or
+      (OwnerID(LPrevious) = OwnerID(LCurrent)) then
+    begin
+      Exit;
+    end;
+  except
+    on Exception do
+    begin
+      { Historical opaque/invalid context is not permission to rebase it. }
+      Exit;
+    end;
+  end;
+  LCandidate := Self;
+  LCandidate.FContext := LContext;
+  LCandidate.FValues[refBind] := 'false';
+  LCandidate.FValues[refTarget] := Field(LEditor, refTarget).Prop('value');
+  LProbe := LEditor.Clone;
+  try
+
+    if not LCandidate.Restore(LProbe) then
+    begin
+      Exit;
+    end;
+  finally
+    LProbe.Free;
+  end;
+  Result := LCandidate.Restore(AShellRoot);
+
+  if Result then
+  begin
+    Self := LCandidate;
+  end;
 end;
 
 function TNyxResourceEditorDraft.ToData: TNyxDataValue;

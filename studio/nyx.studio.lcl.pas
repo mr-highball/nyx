@@ -36,6 +36,7 @@ uses
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.lcl,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
+  nyx.resources.browser, nyx.studio.resource.browser, nyx.publication,
   nyx.resource.context,
   nyx.resources.import, nyx.resources.import.lcl,
   nyx.studio.help, nyx.component.help, nyx.root.types,
@@ -149,6 +150,7 @@ type
     FSourceModal: INyxLCLModalHost;
     FSourceFocusPending: Boolean;
     FShellView: TNyxStudioSectionViews;
+    FResourceBrowser: TNyxStudioResourceBrowser;
     { Public managed Nyx presentation owns cloned component help content. }
     FComponentHelp: INyxLCLPopover;
     FActionMenu: INyxLCLMenu;
@@ -620,6 +622,7 @@ begin
   FState.CodePresentation := ncpPaneHosted;
   FState.Outputs := FOutputs;
   FShellView := TNyxStudioSectionViews.Create(FTheme, nscEditorOwnedHierarchy);
+  FResourceBrowser := TNyxStudioResourceBrowser.Create;
   FCanvasView := TNyxLCLRenderer.Create(FTheme);
   FCanvasView.DesignerInput := NyxDesignerInput.Drops(True);
   FCanvasView.OnDesignerGesture := DesignerGesture;
@@ -732,6 +735,7 @@ begin
   FActionMenu := nil;
   FCanvasMenus := nil;
   FComponentHelp := nil;
+  FResourceBrowser.Free;
   FShellView.Free;
   FCanvasParking.Free;
   FCodeParking.Free;
@@ -1886,6 +1890,13 @@ begin
     FState.ImageEditorDraft.Capture('inspector-image', FShellView.RootFor('inspector-image'));
     FState.ResourceEditorDraft.Capture('studio-resource-editor', FShellView.RootFor('studio-resource-editor'));
     FState.ResourceRowsDraft.Capture('studio-resource-rows', FShellView.RootFor('studio-resource-rows'));
+    FResourceBrowser.Capture(FShellView, FState.ResourceBrowser);
+
+    if FShellView.Root.Find('studio-resources') <> nil then
+    begin
+      FState.ResourcesScroll := NativeScrollTop(FShellView.SectionView(nssResources),
+        'studio-resources');
+    end;
   end;
   LNode := FShellView.Root.Find('studio-split');
 
@@ -1948,6 +1959,8 @@ begin
   end;
 
   if not FState.ResourceEditorDraft.Restore(Result.Pages[0]) and
+    not (FSession.MatchesCommandContext(FShellCommandContext) and
+      FState.ResourceEditorDraft.RestoreForOwnerSelection(Result.Pages[0])) and
     (Result.Pages[0].Find('studio-resource-editor') <> nil) then
   begin
     FState.ResourceEditorDraft.Clear;
@@ -1977,6 +1990,8 @@ var
   LChromeEventTrigger: TNyxText;
   LChromeEventName: TNyxText;
   LChromeCollection: TNyxStudioCollectionChromeIdentity;
+  LResourcePrepared: INyxPreparedPublication;
+  LResourceCompatible: Boolean;
   {$ifdef NYX_STUDIO_PROFILE}
   LPhaseStarted: QWord;
 
@@ -2100,10 +2115,13 @@ begin
 
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-capture');{$endif}
     LShell := ComposeShell;
+    LResourceCompatible := FResourceBrowser.Compatible(FSession);
+    LResourcePrepared := FResourceBrowser.Prepare(FSession);
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-compose');{$endif}
     try
 
-      if not FShellView.TryRefresh(LShell, LShell.Pages[0], False) then
+      if not LResourceCompatible or
+        not FShellView.TryRefresh(LShell, LShell.Pages[0], False) then
       begin
         { A compatible shell owns the same borrowed hosts. Keep independent
           canvas/source views mounted there: parking would reparent and lay out
@@ -2153,6 +2171,14 @@ begin
     FShell.Free;
     FShell := LShell;
     LShell := nil;
+    FResourceBrowser.Mount(FShellView, LResourcePrepared,
+      FState.ResourceBrowser, FState.ResourceSelection);
+
+    if FShellView.Root.Find('studio-resources') <> nil then
+    begin
+      TScrollBox(FShellView.ControlFor('studio-resources')).VertScrollBar.Position :=
+        FState.ResourcesScroll;
+    end;
     { Compact Project/Design panels do not mount the Inspector hierarchy. Restore
       selection only when this shell actually owns the public tree binding. }
 
@@ -2951,6 +2977,7 @@ var
   LResourceSelection: TNyxResourceEditorSelection;
   LResourceProjection: TNyxNode;
   LRetainedResourceSelection: Boolean;
+  LResourceIntent: TNyxStudioResourceBrowseIntent;
   LContentFocus: TWinControl;
 begin
 
@@ -3043,9 +3070,68 @@ begin
       Exit;
     end;
 
+    if FResourceBrowser.Handle(ANode, AEvent, FShellView, FSession,
+      FState.ResourceBrowser, LResourceIntent, LResourceSelection) then
+    begin
+      case LResourceIntent of
+        rbiWorkspace:
+          begin
+            FState.ResourcesVisible := True;
+            FState.CanvasExpanded := False;
+            RequestRefresh;
+          end;
+        rbiOpen:
+          begin
+            { Catalog Open has the same proposal lifetime as the public form's
+              New/Open commands. Cancel the previous import before replacing
+              fields; native picker replies retain their exact guards too. }
+
+            if FResourcePicker <> nil then
+            begin
+              FResourcePicker.Cancel;
+            end;
+            LResourceEditor := FShellView.Root.Find('studio-resource-editor');
+            LResourceProjection := FSession.SelectedProjection;
+            try
+              LRetainedResourceSelection := TrySelectNyxResourceEditor(LResourceEditor,
+                FSession.Document.Resources, LResourceSelection, FSession.Selected,
+                LResourceProjection, FShellView.Sync);
+            finally
+              LResourceProjection.Free;
+            end;
+            FState.ResourceEditorDraft.Clear;
+            FState.ResourceSelection := LResourceSelection;
+
+            if LRetainedResourceSelection then
+            begin
+              FState.ResourceEditorDraft.Capture('studio-resource-editor',
+                FShellView.RootFor('studio-resource-editor'));
+            end
+            else
+            begin
+              RequestRefresh;
+            end;
+          end;
+        rbiNone:
+          begin
+            { Runtime filtering/selection already synchronized its owned views. }
+          end;
+      end;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-resources-close') then
+    begin
+      FState.ResourcesVisible := False;
+      FState.Panel := nspDesign;
+      RequestRefresh;
+      Exit;
+    end;
+
     if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-resources-toggle') then
     begin
       FState.ResourcesVisible := not FState.ResourcesVisible;
+      FState.CanvasExpanded := False;
       RequestRefresh;
       Exit;
     end;
@@ -3529,15 +3615,18 @@ begin
             end;
           ncDesignPanel:
             begin
+              FState.ResourcesVisible := False;
               FState.Panel := nspDesign;
             end;
           ncProjectPanel:
             begin
+              FState.ResourcesVisible := False;
               FState.Panel := nspProject;
               FState.CanvasExpanded := False;
             end;
           ncInspectorPanel:
             begin
+              FState.ResourcesVisible := False;
               FState.Panel := nspInspector;
               FState.CanvasExpanded := False;
             end;

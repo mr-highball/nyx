@@ -9,7 +9,17 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current creator-tag consumer (2026-10-09) uses the maintained MCP-authored
+Current dedicated Resources integration (2026-10-09) shares the public typed
+catalog/browser compounds across ordinary Studio controllers, with category,
+source, locale and exact all/any creator-tag filters. Installed native MCP stays
+primary for bounded context and the maintained authored seed. The current frozen
+endpoint still predates these query/label contracts: bounded discovery, exact tag
+inspection/mutation and observing rollout remain this owner's gap. Query changes
+are editor presentation, while resource changes require revision-aware paired
+admission. Do not infer deployed support from local controller/input qualification.
+No workflow criterion or counter closes from this partial workspace consumer.
+
+Previous creator-tag consumer (2026-10-09) uses the maintained MCP-authored
 workbench seed and actual Pascal browser/LCL controller callbacks. The reusable
 public form edits typed label proposals; private version-eleven preferences
 retain incomplete tag input. Bounded semantic tag inspection/mutation and

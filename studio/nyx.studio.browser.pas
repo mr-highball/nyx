@@ -40,6 +40,7 @@ uses
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.browser,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
+  nyx.resources.browser, nyx.studio.resource.browser, nyx.publication,
   nyx.resource.context,
   nyx.resources.import, nyx.resources.import.browser,
   Classes,
@@ -109,6 +110,7 @@ type
     FShellCommandContext: TNyxStudioCommandContext;
     FShell: TNyxDocument;
     FShellRenderer: TNyxStudioSectionViews;
+    FResourceBrowser: TNyxStudioResourceBrowser;
     { Coalesce input-time refreshes after borrowed views return to idle. False
       dominates retention/reset choices; disposal cancels the borrowed timer. }
     FSectionRefreshTimer: NativeInt;
@@ -417,6 +419,13 @@ begin
     '[data-node=studio-panelbar] .nyx-button{flex:1;min-height:40px;padding:8px;font-size:12px;}' +
     '[data-node=studio-project-mount]{width:230px;flex-shrink:0;min-height:0;}' +
     '[data-node=studio-inspector-mount]{width:265px;flex-shrink:0;min-height:0;}' +
+    '[data-node=studio-resources-mount]{flex:1;min-width:0;min-height:0;}' +
+    '[data-node=studio-resources]{width:100%;height:100%;min-height:0;min-width:0;' +
+    'box-sizing:border-box;overflow:auto;background:#fafbfe;}' +
+    '[data-node=studio-resource-form]{min-width:0;flex:1;}' +
+    '[data-nyx-studio-resources=true] [data-node=studio-project-mount],' +
+    '[data-nyx-studio-resources=true] [data-node=studio-inspector-mount],' +
+    '[data-nyx-studio-resources=true] [data-node=studio-center]{display:none!important;}' +
     '[data-node=studio-left]{width:100%;height:100%;min-height:0;box-sizing:border-box;overflow:auto;padding:16px!important;' +
     'background:#fff;border-right:1px solid #dfe3ec;gap:12px!important;}' +
     '[data-node=studio-right]{width:100%;height:100%;min-height:0;box-sizing:border-box;overflow:auto;padding:16px!important;' +
@@ -556,6 +565,8 @@ begin
   FAgents.OnProjectCaptured := @ProjectCaptured;
   FOutputs := TNyxOutputConfiguration.Create;
   FShellRenderer := TNyxStudioSectionViews.Create(nil, nscEditorOwnedHierarchy);
+  FResourceBrowser := TNyxStudioResourceBrowser.Create;
+  FViewState.ResourceBrowser := NyxResourceBrowserState;
   FSectionRefreshTimer := -1;
   FShellRenderer.OnEvent := HandleShell;
   FShellHost := TJSHTMLElement(document.createElement('div'));
@@ -714,6 +725,7 @@ begin
   FActionButton := nil;
   FActionMenu := nil;
   FComponentHelp := nil;
+  FResourceBrowser.Free;
   FShellRenderer.Free;
 
   if FShellHost <> nil then
@@ -775,6 +787,8 @@ begin
   LState.ResourceSelection := FViewState.ResourceSelection;
   LState.ResourceEditorDraft := FViewState.ResourceEditorDraft;
   LState.ResourceRowsDraft := FViewState.ResourceRowsDraft;
+  LState.ResourceBrowser := FViewState.ResourceBrowser;
+  LState.ResourcesScroll := FViewState.ResourcesScroll;
   LState.CallbackRemoval := FCallbackRemoval;
 
   if FRootRemoval <> nil then
@@ -809,6 +823,8 @@ begin
   end;
 
   if not FViewState.ResourceEditorDraft.Restore(Result.Pages[0]) and
+    not (FSession.MatchesCommandContext(FShellCommandContext) and
+      FViewState.ResourceEditorDraft.RestoreForOwnerSelection(Result.Pages[0])) and
     (Result.Pages[0].Find('studio-resource-editor') <> nil) then
   begin
     FViewState.ResourceEditorDraft.Clear;
@@ -953,6 +969,14 @@ begin
   FViewState.ImageEditorDraft.Capture('inspector-image', FShellRenderer.RootFor('inspector-image'));
   FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.RootFor('studio-resource-editor'));
   FViewState.ResourceRowsDraft.Capture('studio-resource-rows', FShellRenderer.RootFor('studio-resource-rows'));
+  FResourceBrowser.Capture(FShellRenderer, FViewState.ResourceBrowser);
+  LEditor := FShellRenderer.Root.Find('studio-resources');
+
+  if LEditor <> nil then
+  begin
+    FViewState.ResourcesScroll := NyxStudioScrollPosition(
+      FShellRenderer.ElementFor('studio-resources').scrollTop);
+  end;
 end;
 
 procedure TNyxStudio.FlushSectionRefresh;
@@ -1009,6 +1033,9 @@ var
   LCanvasFocusID: TNyxText;
   LCanvasSelection: TNyxTextSelection;
   LPendingDesign: TNyxStudioPendingDesign;
+  LResourcePrepared: INyxPreparedPublication;
+  LResourceCompatible: Boolean;
+  LShellCandidate: TNyxDocument;
 begin
 
   if FShellRenderer.Dispatching or (FCanvasInputDepth <> 0) or
@@ -1193,13 +1220,27 @@ begin
     LActive := nil;
   end;
   CaptureMenuDraft;
-  FShell.Free;
-  FShell := CreateShell;
+  LResourceCompatible := FResourceBrowser.Compatible(FSession);
+  LResourcePrepared := FResourceBrowser.Prepare(FSession);
+  LShellCandidate := CreateShell;
+  try
 
-  if not FShellRenderer.TryRefresh(FShell, FShell.Pages[0], False) then
-  begin
-    FShellRenderer.Render(FShell, FShell.Pages[0], FShellHost);
+    if not LResourceCompatible or
+      not FShellRenderer.TryRefresh(LShellCandidate, LShellCandidate.Pages[0], False) then
+    begin
+      FShellRenderer.Render(LShellCandidate, LShellCandidate.Pages[0], FShellHost);
+    end;
+    { Keep the previous logical shell owned through candidate admission, as
+      the native controller already does. A factory/renderer refusal must not
+      leave a freed shell pointer for the next queued refresh or disposal. }
+    FShell.Free;
+    FShell := LShellCandidate;
+    LShellCandidate := nil;
+  finally
+    LShellCandidate.Free;
   end;
+  FResourceBrowser.Mount(FShellRenderer, LResourcePrepared,
+    FViewState.ResourceBrowser, FViewState.ResourceSelection);
   { Compact Project/Design panels do not mount the Inspector hierarchy. Restore
     selection only when this shell actually owns the public tree binding. }
 
@@ -1209,6 +1250,13 @@ begin
   end;
   FShellRenderer.ElementFor('studio-shell').setAttribute('data-nyx-studio-compact',
     LowerCase(BoolToStr(FCompact, True)));
+  FShellRenderer.ElementFor('studio-shell').setAttribute('data-nyx-studio-resources',
+    LowerCase(BoolToStr(FViewState.ResourcesVisible, True)));
+
+  if FShellRenderer.Root.Find('studio-resources') <> nil then
+  begin
+    FShellRenderer.ElementFor('studio-resources').scrollTop := FViewState.ResourcesScroll;
+  end;
   { Size only the editor host. Application typography, preview scale, authored
     layout and project/history remain unchanged. Reapply after shell fallback. }
   FShellHost.style.setProperty('--nyx-host-height',
@@ -2121,6 +2169,7 @@ var
   LResourceSelection: TNyxResourceEditorSelection;
   LResourceProjection: TNyxNode;
   LRetainedResourceSelection: Boolean;
+  LResourceIntent: TNyxStudioResourceBrowseIntent;
   LContentFocus: TJSHTMLElement;
 begin
 
@@ -2215,9 +2264,69 @@ begin
       Exit;
     end;
 
+    if FResourceBrowser.Handle(ANode, AEvent, FShellRenderer, FSession,
+      FViewState.ResourceBrowser, LResourceIntent, LResourceSelection) then
+    begin
+      case LResourceIntent of
+        rbiWorkspace:
+          begin
+            FViewState.ResourcesVisible := True;
+            FCanvasExpanded := False;
+            Refresh(True, True);
+          end;
+        rbiOpen:
+          begin
+            { Explicit catalog navigation ends the old chooser proposal, just
+              like the form's New/Open actions. A late import cannot replace
+              the newly opened file, even if its fields happen to match. }
+
+            if FResourcePicker <> nil then
+            begin
+              FResourcePicker.Cancel;
+            end;
+            LResourceEditor := FShellRenderer.Root.Find('studio-resource-editor');
+            LResourceProjection := FSession.SelectedProjection;
+            try
+              LRetainedResourceSelection := TrySelectNyxResourceEditor(LResourceEditor,
+                FSession.Document.Resources, LResourceSelection, FSession.Selected,
+                LResourceProjection, @FShellRenderer.Sync);
+            finally
+              LResourceProjection.Free;
+            end;
+            FViewState.ResourceEditorDraft.Clear;
+            FViewState.ResourceSelection := LResourceSelection;
+
+            if LRetainedResourceSelection then
+            begin
+              FViewState.ResourceEditorDraft.Capture('studio-resource-editor',
+                FShellRenderer.RootFor('studio-resource-editor'));
+            end
+            else
+            begin
+              Refresh(True, True);
+            end;
+          end;
+        rbiNone:
+          begin
+            { Runtime filtering/selection already synchronized its owned views. }
+          end;
+      end;
+      SavePresentation;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-resources-close') then
+    begin
+      FViewState.ResourcesVisible := False;
+      FPanel := nspDesign;
+      Refresh(True, True);
+      Exit;
+    end;
+
     if (AEvent.Trigger = ntClick) and (ANode.ID = 'action-resources-toggle') then
     begin
       FViewState.ResourcesVisible := not FViewState.ResourcesVisible;
+      FCanvasExpanded := False;
       Refresh(True, True);
       Exit;
     end;
@@ -2771,17 +2880,20 @@ begin
           'action-component': FSession.CreateComponent;
           'action-panel-project':
             begin
+              FViewState.ResourcesVisible := False;
               FPanel := nspProject;
               FCanvasExpanded := False;
               LRetainCanvas := True;
             end;
           'action-panel-design':
             begin
+              FViewState.ResourcesVisible := False;
               FPanel := nspDesign;
               LRetainCanvas := True;
             end;
           'action-panel-inspector':
             begin
+              FViewState.ResourcesVisible := False;
               FPanel := nspInspector;
               FCanvasExpanded := False;
               LRetainCanvas := True;
@@ -4210,6 +4322,14 @@ begin
   LValue.ResourceSelection := FViewState.ResourceSelection;
   LValue.ResourceDraft := FViewState.ResourceEditorDraft;
   LValue.ResourceRowsDraft := FViewState.ResourceRowsDraft;
+  LValue.ResourceBrowser := FViewState.ResourceBrowser;
+  LPane := MountedStudioElement(FShellRenderer, 'studio-resources');
+
+  if LPane <> nil then
+  begin
+    FViewState.ResourcesScroll := NyxStudioScrollPosition(LPane.scrollTop);
+  end;
+  LValue.ResourcesScroll := FViewState.ResourcesScroll;
   { Read the live mounted panes at departure. The cached positions reflect the
     preceding shell refresh and may precede the operator's most recent scroll. }
   LPane := MountedStudioElement(FShellRenderer, 'studio-left');
@@ -4284,6 +4404,9 @@ begin
   FViewState.ResourceEditorDraft.Clear;
   FViewState.ResourceRowsDraft.Clear;
 
+  FViewState.ResourceBrowser := NyxResourceBrowserState;
+  FViewState.ResourcesScroll := 0;
+
   if not FRecoveryEnabled then
   begin
     Exit;
@@ -4330,6 +4453,8 @@ begin
     FViewState.ResourceSelection := LValue.ResourceSelection;
     FViewState.ResourceEditorDraft := LValue.ResourceDraft;
     FViewState.ResourceRowsDraft := LValue.ResourceRowsDraft;
+    FViewState.ResourceBrowser := LValue.ResourceBrowser;
+    FViewState.ResourcesScroll := LValue.ResourcesScroll;
     FLeftScroll := LValue.LeftScroll;
     FRightScroll := LValue.RightScroll;
     FAgentsScroll := LValue.AgentsScroll;

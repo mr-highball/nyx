@@ -281,7 +281,7 @@ begin
   end;
   Core.OnEvent := {$ifdef PAS2JS}@{$endif}Observer.Changed;
   Core.Render(Documents[nssChrome], Documents[nssChrome].Pages[0], Host);
-  for LSection := nssProject to nssInspector do
+  for LSection := nssProject to High(TNyxStudioSection) do
   begin
 
     if Documents[LSection] = nil then
@@ -325,7 +325,7 @@ begin
   Roots.Free;
   { Children borrow core-owned mount parents. Retire their views and dedicated
     hosts before destroying the surrounding chrome and its physical children. }
-  for LSection := nssProject to nssInspector do
+  for LSection := nssProject to High(TNyxStudioSection) do
   begin
 
     if Ord(LSection) < Length(Sections) then

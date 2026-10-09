@@ -37,6 +37,7 @@ implementation
 uses SysUtils, JS, Web, nyx.text, nyx.bytes, nyx.data, nyx.model,
   nyx.codec, nyx.codegen, nyx.studio.projects, nyx.studio.browser,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor, nyx.resources.labels.editor,
+  nyx.resources.browser,
   nyx.collections, nyx.binding.types, nyx.behavior, nyx.studio.sections, nyx.generated.view,
   nyx.test.resource.workbench;
 
@@ -147,7 +148,7 @@ begin
   LRetainedInput := nil;
 
   if (AID = NyxResourceEditorActionID(CEditor, reaNew)) or
-    (Pos(CEditor + '-entry-', AID) = 1) then
+    (AID = NyxResourceBrowserActionID('studio-resource-browser', rbaOpen)) then
   begin
     LRetainedInput := TJSHTMLElement(Find(NyxResourceEditorFieldID(CEditor, refContent))
       .querySelector('textarea'));
@@ -178,6 +179,12 @@ procedure Panel(const AName: TNyxText); async;
 var
   LFace: TJSHTMLElement;
 begin
+  { The dedicated workspace has explicit Back navigation on every viewport. }
+
+  if document.querySelector('[data-node="action-resources-close"]') <> nil then
+  begin
+    await(Click('action-resources-close'));
+  end;
   LFace := TJSHTMLElement(document.querySelector('[data-node="action-panel-' + AName + '"]'));
 
   if (LFace <> nil) and (LFace.getBoundingClientRect.height > 0) then
@@ -197,6 +204,16 @@ begin
   await(Click('action-actions'));
   await(Click('studio-menu-' + ABranch));
   await(Click('studio-menu-' + ACommand));
+end;
+
+procedure Resources; async;
+begin
+
+  if GStudio.ShellView.Root.Find('studio-resources') = nil then
+  begin
+    await(Panel('project'));
+    await(Click('action-resources-toggle'));
+  end;
 end;
 
 procedure Files; async;
@@ -288,9 +305,131 @@ begin
 end;
 
 function ResourceSnapshot: TNyxText; async;
+var
+  LResources: Boolean;
+  LResourceDraft: TNyxText;
 begin
+  LResources := GStudio.ShellView.Root.Find('studio-resources') <> nil;
+  LResourceDraft := '';
+
+  if LResources then
+  begin
+    LResourceDraft := TJSHTMLTextAreaElement(Find(NyxResourceEditorFieldID(CEditor, refContent))
+      .querySelector('textarea')).value;
+  end;
   Result := await(Snapshot);
   await(Panel('project'));
+
+  if LResources then
+  begin
+    await(Click('action-resources-toggle'));
+    Check(TJSHTMLTextAreaElement(Find(NyxResourceEditorFieldID(CEditor, refContent))
+      .querySelector('textarea')).value = LResourceDraft,
+      'project export and navigation preserve the actual unfinished resource proposal');
+  end;
+end;
+
+procedure Capture(const AName: TNyxText); async; forward;
+
+{ Ordinary DOM inputs qualify the shared catalog through both real controllers.
+  These explicitly synthetic inputs do not establish hardware/IME behavior. }
+procedure Browse; async;
+const
+  CBrowser = 'studio-resource-browser';
+var
+  LPair: TNyxText;
+  LProposal: TNyxText;
+  LRow: TJSHTMLElement;
+
+  procedure Value(const AID, AValue: TNyxText);
+  var
+    LInput: TJSHTMLElement;
+    LOptions: TJSObject;
+  begin
+    LInput := Find(AID);
+
+    if not ((LInput is TJSHTMLInputElement) or (LInput is TJSHTMLSelectElement)) then
+    begin
+      LInput := TJSHTMLElement(LInput.querySelector('input,select'));
+    end;
+    Check(LInput <> nil, 'actual catalog filter input');
+
+    if (LInput is TJSHTMLInputElement) and (LInput.getAttribute('type') = 'checkbox') then
+    begin
+      TJSHTMLInputElement(LInput).checked := AValue = 'true';
+    end
+    else
+    begin
+      TJSHTMLInputElement(LInput).value := AValue;
+    end;
+    LOptions := TJSObject.new;
+    LOptions['bubbles'] := True;
+    LInput.dispatchEvent(TImageEvent.new('input', LOptions));
+    LInput.dispatchEvent(TImageEvent.new('change', LOptions));
+  end;
+
+  procedure Rows(ACount: Integer);
+  begin
+    Check(Find(NyxResourceBrowserListID(CBrowser)).querySelectorAll('[data-nyx-item]').length = ACount,
+      'actual resource catalog row count');
+
+    if ACount = 0 then
+    begin
+      Check(TJSHTMLButtonElement(Find(NyxResourceBrowserActionID(CBrowser, rbaOpen))).disabled,
+        'an empty displayed result cannot open hidden selection');
+    end;
+  end;
+
+begin
+  LPair := await(ResourceSnapshot);
+  ResourceChange(refContent, 'Unsubmitted resource draft');
+  LProposal := TJSHTMLTextAreaElement(Find(NyxResourceEditorFieldID(CEditor, refContent))
+    .querySelector('textarea')).value;
+  Check(Find('studio-resources').getBoundingClientRect.width > window.innerWidth / 2,
+    'dedicated Resources uses the workspace width');
+  Rows(1);
+  Value(NyxResourceBrowserFieldID(CBrowser, rbfSearch), 'COPY');
+  Rows(1);
+  Value(NyxResourceBrowserFieldID(CBrowser, rbfSources), 'Hosted');
+  Rows(0);
+  Value(NyxResourceBrowserFieldID(CBrowser, rbfSources), 'Embedded');
+  Rows(1);
+  Value(NyxResourceBrowserFieldID(CBrowser, rbfLocales), 'Localized');
+  Rows(0);
+  Value(NyxResourceBrowserFieldID(CBrowser, rbfLocales), 'Default locale');
+  Value(NyxResourceBrowserKindID(CBrowser, nrkJSON), 'false');
+  Rows(0);
+  Value(NyxResourceBrowserKindID(CBrowser, nrkJSON), 'true');
+  Rows(1);
+  Value(NyxResourceLabelsEditorFieldID(NyxResourceBrowserTagsID(CBrowser), rlefInput), 'Onboarding');
+  await(Click(NyxResourceLabelsEditorActionID(NyxResourceBrowserTagsID(CBrowser), rleaAdd)));
+  Rows(1);
+  Value(NyxResourceLabelsEditorFieldID(NyxResourceBrowserTagsID(CBrowser), rlefInput), 'Missing');
+  await(Click(NyxResourceLabelsEditorActionID(NyxResourceBrowserTagsID(CBrowser), rleaAdd)));
+  Rows(0);
+  Value(NyxResourceBrowserFieldID(CBrowser, rbfLabelMatch), 'Any selected tag');
+  Rows(1);
+  Value(NyxResourceLabelsEditorFieldID(NyxResourceBrowserTagsID(CBrowser), rlefInput), 'Unfinished filter...');
+  await(Click('action-resources-close'));
+  await(Panel('project'));
+  Check(TJSHTMLInputElement(Find(NyxResourceBrowserFieldID('studio-resource-picker', rbfSearch))
+    .querySelector('input')).value = 'COPY', 'compact Project picker shares the accepted filter');
+  await(Click(NyxResourceBrowserActionID('studio-resource-picker', rbaOpen)));
+  Rows(1);
+  Check(ReadNyxResourceBrowser(GStudio.ShellView.Root.Find(CBrowser)).TagInput = 'Unfinished filter...',
+    'workspace navigation retains unfinished filter tags');
+  Check(TJSHTMLTextAreaElement(Find(NyxResourceEditorFieldID(CEditor, refContent))
+    .querySelector('textarea')).value = LProposal,
+    'catalog filters/navigation preserve the unfinished resource proposal');
+  Check(await(ResourceSnapshot) = LPair, 'catalog filters/navigation change no accepted pair or history');
+  LRow := TJSHTMLElement(Find(NyxResourceBrowserListID(CBrowser)).querySelector('[data-nyx-item]'));
+  LRow.click;
+  Check(TJSHTMLTextAreaElement(Find(NyxResourceEditorFieldID(CEditor, refContent))
+    .querySelector('textarea')).value = LProposal, 'row selection alone preserves the proposal');
+  Find('studio-resources').scrollTop := 0;
+  await(Capture('resource-catalog-live'));
+  await(Click(NyxResourceBrowserActionID(CBrowser, rbaReset)));
+  Rows(1);
 end;
 
 procedure ResourceWait; async;
@@ -354,9 +493,20 @@ procedure Select(const AID: TNyxText); async;
 var
   LChrome: TJSHTMLElement;
   LCode: TJSHTMLElement;
+  LResources: Boolean;
+  LResourceDraft: TNyxText;
 begin
+  LResources := GStudio.ShellView.Root.Find('studio-resources') <> nil;
+  LResourceDraft := '';
+
+  if LResources then
+  begin
+    LResourceDraft := TJSHTMLTextAreaElement(Find(NyxResourceEditorFieldID(CEditor, refContent))
+      .querySelector('textarea')).value;
+  end;
   LChrome := nil;
   LCode := nil;
+  await(Panel('design'));
 
   if (GStudio.ShellView.SectionRoot(nssProject) <> nil) and
     (GStudio.ShellView.SectionRoot(nssInspector) <> nil) then
@@ -364,10 +514,8 @@ begin
     LChrome := GStudio.ShellView.ElementFor('action-undo');
     LCode := TJSHTMLElement(document.querySelector('[data-node="studio-code"]'));
   end;
-  await(Panel('design'));
   TJSHTMLElement(Find('studio-canvas').querySelector('[data-node="' + AID + '"]')).click;
   await(TJSPromise.resolve(Pause));
-  await(Panel('project'));
 
   if LChrome <> nil then
   begin
@@ -379,6 +527,15 @@ begin
   begin
     Check(document.querySelector('[data-node="studio-code"]') = LCode,
       'changed Inspector retains the independent Pascal input');
+  end;
+  await(Panel('project'));
+
+  if LResources then
+  begin
+    await(Click('action-resources-toggle'));
+    Check(TJSHTMLTextAreaElement(Find(NyxResourceEditorFieldID(CEditor, refContent))
+      .querySelector('textarea')).value = LResourceDraft,
+      'changed selected owner preserves the actual unfinished resource proposal');
   end;
 end;
 
@@ -421,6 +578,7 @@ begin
   await(Action('action-redo', 'edit', 'redo'));
   await(ResourceWait);
   Check(await(ResourceSnapshot) = AAccepted, 'one Redo restores exact design and Pascal');
+  await(Resources);
 end;
 
 { Capture the live mounted consumer before retirement. The owning Pascal capture
@@ -518,7 +676,7 @@ begin
     TagInput('Later...');
     await(Action('action-code', 'view', 'code'));
     await(ResourceWait);
-    await(Panel('project'));
+    await(Resources);
     Check(TJSHTMLInputElement(Find(NyxResourceEditorFieldID(CEditor, refDescription)).querySelector('input,textarea'))
       .value = WorkbenchCopyHelp, 'imported creator help survives source chrome');
     LTags := GStudio.ShellView.Root.Find(NyxResourceEditorLabelsID(CEditor));
@@ -542,10 +700,13 @@ begin
     CheckToolbarBounds;
     Check(Find('studio-canvas').querySelector('[data-node="workshop-headline"]').textContent =
       'Your resource workbench', 'actual browser caption reads accepted JSON');
-    await(Panel('project'));
+    await(Resources);
     await(History(LBefore, LAfter));
+    await(Browse);
     await(Select('project-name'));
-    await(Click(CEditor + '-entry-0'));
+    TJSHTMLElement(Find(NyxResourceBrowserListID('studio-resource-browser'))
+      .querySelector('[data-nyx-item]')).click;
+    await(Click(NyxResourceBrowserActionID('studio-resource-browser', rbaOpen)));
     ResourceChange(refBind, 'true');
     ResourceChange(refTarget, NyxBindingPropertyTitle(bpPlaceholder));
     ResourceChange(refPath, 'Root["prompt"] / text');
@@ -556,7 +717,7 @@ begin
     await(Panel('design'));
     Check(TJSHTMLInputElement(Find('studio-canvas').querySelector('[data-node="project-name"] input'))
       .placeholder = 'Choose a project name', 'actual browser input reads the JSON prompt');
-    await(Panel('project'));
+    await(Resources);
     await(History(LBefore, LAfter));
     RowValue(rrName, 'workshop-rows');
     RowValue(rrResource, NyxData('copy').ToJSON);
@@ -579,7 +740,7 @@ begin
     RowValue(rrReplaceStatic, 'true');
     await(Action('action-code', 'view', 'code'));
     await(ResourceWait);
-    await(Panel('project'));
+    await(Resources);
     Check(TJSHTMLInputElement(Find(NyxResourceRowsFieldID(CRowEditor, rrReplaceStatic)).querySelector('input'))
       .checked, 'row consent survives source chrome');
     Find(NyxResourceRowsFieldID(CRowEditor, rrReplaceStatic)).scrollIntoView;
@@ -593,7 +754,7 @@ begin
     Check((Pos('Canvas', LTable.textContent) > 0) and (Pos('Studio', LTable.textContent) > 0) and
       (Pos('3.125', LTable.textContent) > 0) and (Pos('6.5', LTable.textContent) > 0),
       'actual browser cells read both typed fields');
-    await(Panel('project'));
+    await(Resources);
     await(History(LBefore, LAfter));
     await(Click(NyxResourceRowsActionID(CRowEditor, raLoad)));
     await(Click(NyxResourceRowsActionID(CRowEditor, raDetach)));
@@ -622,7 +783,7 @@ begin
     await(Panel('design'));
     Check(Find('studio-canvas').querySelector('[data-node="workshop-notes"]').textContent =
       WorkbenchNotes, 'actual browser label reads packed plain text');
-    await(Panel('project'));
+    await(Resources);
     await(History(LBefore, LAfter));
     SetLength(LBytes, 3);
     LBytes[0] := 0;

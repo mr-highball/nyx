@@ -25,6 +25,7 @@ program nyx_workspace_tests;
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.model, nyx.codec, nyx.codegen, nyx.presentations,
+  nyx.resources, nyx.resources.catalog,
   nyx.studio.projects, nyx.studio.agents,
   nyx.studio.workspaces, nyx.studio.presentation, nyx.studio.palette,
   nyx.studio.view, nyx.studio.inspector, nyx.studio.authoring
@@ -124,7 +125,8 @@ var
   function ResourceField(const AName: TNyxText): Boolean;
   begin
     Result := (AName = 'resourcesVisible') or (AName = 'resourceSelection') or
-      (AName = 'resourceDraft') or (AName = 'resourceRowsDraft');
+      (AName = 'resourceDraft') or (AName = 'resourceRowsDraft') or
+      (AName = 'resourceBrowser') or (AName = 'resourcesScroll');
   end;
 
   function AllocationField(const AName: TNyxText): Boolean;
@@ -170,7 +172,7 @@ begin
   LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LOriginal));
   { The previous strict packet remains readable. New per-project choices use
     their defaults, while every earlier preference and Unicode value survives. }
-  SetLength(LFields, LPacket.Count - 14);
+  SetLength(LFields, LPacket.Count - 16);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -202,7 +204,7 @@ begin
   { Existing Studio installations also wrote version 3, which already owns
     source tabs and expansion. Its absent manual choice must not discard those
     fields or any other per-project preference during this migration. }
-  SetLength(LFields, LPacket.Count - 12);
+  SetLength(LFields, LPacket.Count - 14);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -230,7 +232,7 @@ begin
     'Version 3 migration retains every earlier Unicode, caret and workspace preference exactly');
   { Version 4 is the last observing release's exact packet. Its manual preview
     and all unrelated preferences survive, while new details start collapsed. }
-  SetLength(LFields, LPacket.Count - 11);
+  SetLength(LFields, LPacket.Count - 13);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -251,7 +253,7 @@ begin
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
     'Version 4 retains all preferences and supplies collapsed allocation defaults');
   { Version 5 adds the allocation preferences but predates per-project themes. }
-  SetLength(LFields, LPacket.Count - 7);
+  SetLength(LFields, LPacket.Count - 9);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -274,7 +276,7 @@ begin
     'Version 5 retains every previous preference and defaults to no theme proposal');
   { Version 6 owns theme proposals; adding images must not invalidate deployed
     preferences or silently discard the existing source/workspace choices. }
-  SetLength(LFields, LPacket.Count - 5);
+  SetLength(LFields, LPacket.Count - 7);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -296,7 +298,7 @@ begin
     'Version 6 retains theme/source/workspace preferences and defaults to no image proposal');
   { Version 7 retains packed image proposals. The common resource editor adds
     only private per-project preferences, preserving every earlier field. }
-  SetLength(LFields, LPacket.Count - 4);
+  SetLength(LFields, LPacket.Count - 6);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -319,12 +321,14 @@ begin
   { Version 8 retains the complete common file proposal but has no row draft.
     Its exact 45-field packet must migrate without accepting version 9's new
     member under an older version tag. }
-  SetLength(LFields, LPacket.Count - 1);
+  SetLength(LFields, LPacket.Count - 3);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
 
-    if LPacket.Key(LIndex) <> 'resourceRowsDraft' then
+    if (LPacket.Key(LIndex) <> 'resourceRowsDraft') and
+      (LPacket.Key(LIndex) <> 'resourceBrowser') and
+      (LPacket.Key(LIndex) <> 'resourcesScroll') then
     begin
       LValue := LPacket.Field(LPacket.Key(LIndex));
 
@@ -339,18 +343,48 @@ begin
   LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
     'Version 8 retains every file/workspace preference and defaults to no row proposal');
+  { Nine through eleven keep the same exact outer shape. Discovery cannot be
+    smuggled into those historical versions under an unrelated key. }
+  SetLength(LFields, LPacket.Count - 2);
+  LCase := 0;
+  for LIndex := 0 to LPacket.Count - 1 do
+  begin
+
+    if (LPacket.Key(LIndex) = 'resourceBrowser') or
+      (LPacket.Key(LIndex) = 'resourcesScroll') then
+    begin
+      Continue;
+    end;
+    LValue := LPacket.Field(LPacket.Key(LIndex));
+
+    if LPacket.Key(LIndex) = 'version' then
+    begin
+      LValue := NyxData(11);
+    end;
+    LFields[LCase] := NyxField(LPacket.Key(LIndex), LValue);
+    Inc(LCase);
+  end;
+  LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
+  Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
+    'Version eleven retains every proposal and defaults the independent discovery state');
   LOriginal.DetailsPercent := 60;
   LOriginal.DetailsExpanded := True;
   LOriginal.CanvasToolsVisible := True;
   LOriginal.CanvasExpanded := True;
+  LOriginal.ResourceBrowser.Query := NyxResourceCatalogQuery.Kinds([nrkImage, nrkText])
+    .Search('Intent 🌙').Sources(rcsHosted).Locales(rclLocalized)
+    .Labels(NyxResourceLabels.Add(NyxResourceLabel('Docs, "quick" 🌙')), rlmAny);
+  LOriginal.ResourceBrowser.TagInput := 'Unfinished' + TNyxText(#10) + 'tag';
+  LOriginal.ResourceBrowser.TagSelection := NyxResourceLabel('Docs, "quick" 🌙');
+  LOriginal.ResourcesScroll := 2147483647;
   LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LOriginal));
   LDecoded := DecodeNyxStudioPresentation(LPacket.ToJSON);
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
-    'Current preferences independently retain all workspace allocation choices');
-  for LCase := 0 to 27 do
+    'Current preferences retain allocation, exact typed discovery and unfinished Unicode tags');
+  for LCase := 0 to 31 do
   begin
     LKey := 'version';
-    LValue := NyxData(12);
+    LValue := NyxData(13);
     case LCase of
       1:
       begin
@@ -486,6 +520,30 @@ begin
         begin
           LKey := 'imageDraft';
           LValue := NyxData('untyped proposal');
+        end;
+      28:
+        begin
+          LKey := 'resourceBrowser';
+          LValue := NyxNull;
+        end;
+      29:
+        begin
+          LKey := 'resourcesScroll';
+          LValue := NyxData(-1);
+        end;
+      30:
+        begin
+          LKey := 'resourcesScroll';
+          LValue := NyxData(1.5);
+        end;
+      31:
+        begin
+          LKey := 'resourceBrowser';
+          LValue := NyxObject([NyxField('version', NyxData(1)),
+            NyxField('query', LOriginal.ResourceBrowser.Query.ToData),
+            NyxField('tagEditor', NyxObject([NyxField('version', NyxData(1)),
+              NyxField('labels', NyxArray([])), NyxField('input', NyxData('')),
+              NyxField('selection', NyxNull)]))]);
         end;
     end;
     SetLength(LFields, LPacket.Count);

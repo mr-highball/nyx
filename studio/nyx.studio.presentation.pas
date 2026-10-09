@@ -29,6 +29,7 @@ uses
   nyx.image.editor,
   nyx.resources.editor,
   nyx.resources.rows.editor,
+  nyx.resources.browser,
   SysUtils, nyx.text, nyx.data, nyx.model, nyx.binding.types, nyx.presentations,
   nyx.studio.view, nyx.studio.inspector, nyx.studio.authoring, nyx.studio.palette,
   nyx.theme.editor;
@@ -79,6 +80,8 @@ type
     ResourceSelection: TNyxResourceEditorSelection;
     ResourceDraft: TNyxResourceEditorDraft;
     ResourceRowsDraft: TNyxResourceRowsDraft;
+    ResourceBrowser: TNyxResourceBrowserState;
+    ResourcesScroll: Integer;
     LeftScroll: Integer;
     RightScroll: Integer;
     AgentsScroll: Integer;
@@ -137,6 +140,7 @@ function DefaultNyxStudioPresentation: TNyxStudioPresentation;
 begin
   { Initialize new scalar preferences deliberately on native record returns. }
   Result := Default(TNyxStudioPresentation);
+  Result.ResourceBrowser := NyxResourceBrowserState;
   Result.CodeVisible := False;
   Result.SourceTab := nstSource;
   Result.SourceExpanded := False;
@@ -187,7 +191,7 @@ begin
     LPresentation := NyxData(AValue.PresentationSelection.Reference.Name);
   end;
   Result := NyxObject([
-    NyxField('version', NyxData(11)),
+    NyxField('version', NyxData(12)),
     NyxField('codeVisible', NyxData(AValue.CodeVisible)),
     NyxField('sourceTab', NyxData(Ord(AValue.SourceTab))),
     NyxField('sourceExpanded', NyxData(AValue.SourceExpanded)),
@@ -220,6 +224,8 @@ begin
     NyxField('resourceSelection', AValue.ResourceSelection.ToData),
     NyxField('resourceDraft', AValue.ResourceDraft.ToData),
     NyxField('resourceRowsDraft', AValue.ResourceRowsDraft.ToData),
+    NyxField('resourceBrowser', AValue.ResourceBrowser.ToData),
+    NyxField('resourcesScroll', NyxData(AValue.ResourcesScroll)),
     NyxField('leftScroll', NyxData(AValue.LeftScroll)),
     NyxField('rightScroll', NyxData(AValue.RightScroll)),
     NyxField('agentsScroll', NyxData(AValue.AgentsScroll)),
@@ -254,13 +260,13 @@ var
   LPresentation: TNyxDataValue;
   LResourceDraft: TNyxDataValue;
 const
-  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|imageDraft|resourcesVisible|resourceSelection|resourceDraft|resourceRowsDraft|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
+  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|imageDraft|resourcesVisible|resourceSelection|resourceDraft|resourceRowsDraft|resourceBrowser|resourcesScroll|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
 begin
   Result := DefaultNyxStudioPresentation;
   LValue := TNyxDataValue.ParseJSON(AText);
 
   if (LValue.Kind <> ndObject) or
-    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) or
+    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) or
     ((LValue.Field('version').AsInteger = 2) and (LValue.Count <> 32)) or
     ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) or
     ((LValue.Field('version').AsInteger = 4) and (LValue.Count <> 35)) or
@@ -268,7 +274,8 @@ begin
     ((LValue.Field('version').AsInteger = 6) and (LValue.Count <> 41)) or
     ((LValue.Field('version').AsInteger = 7) and (LValue.Count <> 42)) or
     ((LValue.Field('version').AsInteger = 8) and (LValue.Count <> 45)) or
-    ((LValue.Field('version').AsInteger in [9, 10, 11]) and (LValue.Count <> 46)) then
+    ((LValue.Field('version').AsInteger in [9, 10, 11]) and (LValue.Count <> 46)) or
+    ((LValue.Field('version').AsInteger = 12) and (LValue.Count <> 48)) then
   begin
     raise ENyxModel.Create('Unsupported editor presentation packet');
   end;
@@ -278,6 +285,8 @@ begin
 
     if (Pos('|', LValue.Key(LIndex)) > 0) or
       (Pos('|' + LValue.Key(LIndex) + '|', CKeys) = 0) or
+      ((LVersion < 12) and ((LValue.Key(LIndex) = 'resourceBrowser') or
+        (LValue.Key(LIndex) = 'resourcesScroll'))) or
       ((LVersion < 9) and (LValue.Key(LIndex) = 'resourceRowsDraft')) or
       ((LVersion < 4) and (LValue.Key(LIndex) = 'presentation')) or
       ((LVersion < 7) and (LValue.Key(LIndex) = 'imageDraft')) or
@@ -377,7 +386,7 @@ begin
       (((LVersion < 10) and (LResourceDraft.Count <> 4)) or
       ((LVersion = 10) and ((LResourceDraft.Count <> 5) or
       (LResourceDraft.Field('version').AsInteger <> 2))) or
-      ((LVersion = 11) and not (LResourceDraft.Field('version').AsInteger in [2, 3, 4]))) then
+      ((LVersion >= 11) and not (LResourceDraft.Field('version').AsInteger in [2, 3, 4]))) then
     begin
       raise ENyxModel.Create('Resource draft does not match its presentation version');
     end;
@@ -387,6 +396,14 @@ begin
   if LVersion >= 9 then
   begin
     Result.ResourceRowsDraft := TNyxResourceRowsDraft.FromData(LValue.Field('resourceRowsDraft'));
+  end;
+
+  if LVersion >= 12 then
+  begin
+    { Twelve adds discovery only. Earlier exact packets start with the public
+      default query; filter tags are independent of a resource's assigned tags. }
+    Result.ResourceBrowser := TNyxResourceBrowserState.FromData(LValue.Field('resourceBrowser'));
+    Result.ResourcesScroll := IntegerValue(LValue, 'resourcesScroll', 0, 2147483647);
   end;
   Result.CanvasScrollTop := IntegerValue(LValue, 'canvasScrollTop', 0, 2147483647);
   Result.CanvasScrollLeft := IntegerValue(LValue, 'canvasScrollLeft', 0, 2147483647);

@@ -9,6 +9,95 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Resources workspace and discovery — 2026-10-09
+
+Entry was clean at exact pushed `7f020b3`. The user's accepted direction is a
+dedicated Resources workspace with useful built-in categories and creator
+labels/tags. Execute solo. This packet consumes the original resource metadata,
+form/source/history and ordinary Studio workspace criteria; it closes no full
+criterion/task/credit. Aggregate remains **25/11/47/21/28/3**.
+
+`nyx.resources.browser` composes ordinary public Nyx controls in typed full and
+compact modes. Copied query state retains search, category/source/locale choices,
+exact all/any tag matching, incomplete filter-tag input and its selected member.
+Strict version-one query/state wire admits closed choices and predicate budgets.
+Outer private preferences version twelve retains this state and workspace scroll;
+historical exact packets, including eleven, remain readable. Exported application
+contracts and machine/compiler configuration are unchanged.
+
+Both ordinary controllers consume an independently owned Resources section,
+with catalog beside the form on desktop and stacked compact content. A compact
+Project picker shares the independent runtime metadata catalog. Selection alone
+never replaces a proposal; explicit Open validates scoped metadata and the latest
+accepted exact resource/locale. Hidden membership cannot open outside displayed
+results. Reset and navigation retain incomplete proposals, source and history.
+Standalone forms keep compatible entry buttons; Studio uses external navigation.
+
+Strengthening the journey with nonempty proposal contents exposed real loss when
+the selected design owner changed. Explicit copied-draft handoff repairs it only
+within the same project/load and exact catalog/edited-variant context. It retains
+raw partial JSON, file fields, tags and incomplete input, clears old binding
+consent and adopts the new default target. Same-owner contract changes and changed
+catalog/variant refuse before fields are written. Ordinary strict Restore still
+refuses changed owners. Proposal status no longer claims another file's admission;
+Preview remains the explicit content validator. Browser shell composition also
+retains its former owned shell until candidate admission succeeds.
+
+A native input discrepancy exposed a second integration gap. The harness first
+used a generic list click; the corrected selection hook then showed that the
+native compatibility callback omits the typed selection family. Managed public
+`ntSelectionChange` subscriptions now drive Open disclosure. Receivers borrow the
+helper/facade, their tokens retire with views, and the owner clears borrowed
+pointers before cancellation/disposal. Catalog Open also cancels the old chooser.
+The final native journey checks selection enables Open and reloads accepted JSON.
+
+Checked portable proposal/source/history tests pass **70** native and HTTP;
+native complete workspace regression **262**, changed HTTP presentation-only
+boundary **83**, and native section recovery **31**. The browser full synchronous
+workspace lifetime loop twice exceeded the driver's navigation bound; its failure
+logs remain. Use the existing presentation-only scope for this changed boundary,
+and do not report that as 262 browser workspace checks. Final ordinary Win32 Studio
+passes **188**, HTTP desktop/CSS-390 **1116/1500** (polling included), with actual
+catalog filters, creator tags, nonempty draft handoff, caption/prompt/table binding,
+text/binary imports, paired Undo/Redo and explicit retirement.
+
+All three ordinary controllers emit identical **4814-byte** Pascal, checked by
+the Pascal UTF-8 artifact consumer without regeneration or normalization. SHA-256
+`277b759ec30fd4b3ab90085da80fefafd55e73e447b78e7cd886a4bdeeeb2c0a`
+matches the unchanged builder already executed with **50** native checks; its
+HTTP execution passes too. Current browser Studio/worker and Pascal backend
+compile. Checked native gates and owning browser drivers report zero leaks and
+zero owned warnings. Browser logs retain seven upstream RTL warnings each;
+dependency source is unchanged. The expanded workload is not a speed comparison.
+
+Evidence is under `build/resource-catalog-workspace/`: `qualification-private.json`,
+native `selection.log`, portable `core/open.log`, workspace/section logs,
+`browser-open-labels`, `browser-open-preferences`, final
+`browser-selection-desktop`/`browser-selection-narrow`, generated execution and
+`evidence/run.log`. Actual desktop/narrow catalog and native print captures were
+inspected. Fresh exact file closures use only the existing admitted static host;
+private identity/hash receipts include `stage-selection-private.json`.
+
+Preservation confirms nine exact project pairs, fifteen service identities and
+299 sealed LAN files, with unchanged checkpoint
+`24635efcca9041bf4700ceb4a14226232ff41e61e4440a19f28c25d3de6d01c9`.
+Installed semantic MCP remains connected at revision 2 without draft/Undo; it is
+primary for bounded context and the maintained authored seed. The frozen endpoint
+predates these query/tag contracts. Current semantic discovery/mutation and
+observing rollout stay with NS-4 workflows; no listener, enrollment, active pair
+or protected deployment changed. Exact remote checkpoint evidence follows final
+qualification in this packet's ignored receipt directory.
+
+Next refine the integrated workspace: keep catalog rows/Open reachable alongside
+detailed filters, add useful compact filter disclosure and consider independent
+desktop pane scrolling. Current common scrolling moves the filter card away in
+deep forms, and initial narrow captures show filters ahead of rows. Do not call
+this final workspace aesthetics or complete compact native authoring. Broader
+membership/project-switch/notification-failure recovery, physical input/IME,
+accessibility, other widgetsets and performance budgets retain their original
+owners. Stop independent metadata/cache/profiler variants; improve the ordinary
+consumer and expose bounded current semantic operations through the existing owner.
+
 ## Current return path: Dedicated Resources workspace — 2026-10-09
 
 Entry was clean at exact pushed `eab4e82`. Solo execution used installed semantic
