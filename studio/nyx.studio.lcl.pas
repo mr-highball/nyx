@@ -2241,7 +2241,9 @@ begin
         { Source/code already belong to their independent workspace, parked
           above or mounted in the modal. Retiring chrome cannot free them. }
         {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-park');{$endif}
-        FShellView.Render(LShell, LShell.Pages[0], FHost);
+        FShellView.Render(LShell, LShell.Pages[0], FHost, False, nil,
+          NyxStudioResourceContinuity(FSession.MatchesCommandContext(FShellCommandContext),
+            FShellView.SectionRoot(nssResources), LShell.Pages[0]));
       end;
     except
       { Candidate shell admission retains old chrome. Put its borrowed views

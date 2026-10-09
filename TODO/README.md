@@ -47,7 +47,20 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current workspace activity continuity (2026-10-09) consumes NS-4 authoring
+Current complete-frame continuity (2026-10-09) consumes NS-4 authoring criterion
+two through the accepted section prerequisite and both ordinary controllers.
+Typed opt-in and exact proposal/session ownership preserve eligible Unicode
+text/range across actual split/mount changes; native/direct desktop qualify
+focus, compact menu intent differs. Safe default discard, changed-context/value
+refusal and later complete candidate failure retain exact pairs/event scopes.
+[The packet](../WORK.md#current-return-path-complete-frame-continuity--2026-10-09)
+records 97/90/90 ordinary and 49 shared recovery checks per target with original
+limits. Authoring alone advances unfinished 49→50, aggregate 25/16/50/21/28/3;
+no full criterion/task/credit closes. Stop frame variants; reassess integrated
+authoring and remaining composite/source recovery. Full parity/performance and
+authenticated observing keep their original owners.
+
+Previous workspace activity continuity (2026-10-09) consumes NS-4 authoring
 criterion two through the accepted grouped-section prerequisite. Details gains
 its own owner while native/desktop Resources/Chrome and focused Unicode drafts
 remain exact through real publication/retirement. Compact navigation shows latest

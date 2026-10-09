@@ -27,7 +27,7 @@ interface
 
 uses
   nyx.text, nyx.types, nyx.model, nyx.controls, nyx.root.types, nyx.collections,
-  nyx.studio.hierarchy;
+  nyx.studio.hierarchy, nyx.resources.editor;
 
 type
   { These are editor presentation roles, never application output targets.
@@ -38,6 +38,9 @@ type
     Within a composed Design area, its stable details root keeps membership
     stable during activity. Inactive compact Design areas can still be omitted. }
   TNyxStudioSection = (nssChrome, nssProject, nssInspector, nssResources, nssDetails);
+  { Explicit physical-input continuity for complete frame replacement. Empty
+    is the safe default: identical control IDs do not establish semantic owners. }
+  TNyxStudioSectionSet = set of TNyxStudioSection;
   { Complete preserves every creator context by default. The stock composer
     explicitly declares its editor-only hierarchy dependency; custom composers
     using that default from callbacks/recipes can retain the complete context. }
@@ -91,8 +94,39 @@ const
   frame, so it has no child mount ID; undefined role values raise. }
 function NyxStudioSectionRootID(ASection: TNyxStudioSection): TNyxText;
 function NyxStudioSectionMountID(ASection: TNyxStudioSection): TNyxText;
+{ Stock Studio opts in Resources only after its host qualifies the same
+  session/load and these borrowed forms share the exact public proposal context.
+  Absent/incomplete forms and changed resource/catalog/owner contracts discard
+  old physical input. No tree, widget, draft value or session is retained. }
+function NyxStudioResourceContinuity(ASameSession: Boolean;
+  ABeforeRoot, AAfterRoot: TNyxNode): TNyxStudioSectionSet;
 
 implementation
+
+function NyxStudioResourceContinuity(ASameSession: Boolean;
+  ABeforeRoot, AAfterRoot: TNyxNode): TNyxStudioSectionSet;
+const
+  CResourceEditorID = 'studio-resource-editor';
+var
+  LBefore: TNyxResourceEditorDraft;
+  LAfter: TNyxResourceEditorDraft;
+begin
+  Result := [];
+
+  if not ASameSession or (ABeforeRoot = nil) or (AAfterRoot = nil) then
+  begin
+    Exit;
+  end;
+  LBefore := Default(TNyxResourceEditorDraft);
+  LAfter := Default(TNyxResourceEditorDraft);
+  LBefore.Capture(CResourceEditorID, ABeforeRoot);
+  LAfter.Capture(CResourceEditorID, AAfterRoot);
+
+  if LBefore.SameContext(LAfter) then
+  begin
+    Result := [nssResources];
+  end;
+end;
 
 procedure RequireSection(AOrdinal: Integer);
 begin

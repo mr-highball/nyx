@@ -67,6 +67,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Complete-frame continuity (2026-10-09) adds explicit typed role opt-in and safe
+rollback. Both ordinary Studio controllers preserve eligible resource text/range
+through real Pascal split/mount changes, only within exact project/resource
+contexts. Native/direct desktop also qualify focus; compact menu intent differs.
+[The packet](WORK.md#current-return-path-complete-frame-continuity--2026-10-09)
+records 97/90/90 ordinary and 49 shared recovery checks per target, deadlines,
+failed receipts and exact byte/protection gates. Ledger is **25/16/50/21/28/3**;
+no full criterion/task/credit closes. Stop frame variants; integrated authoring,
+composite/source recovery, full parity/performance and observing remain open.
+The protected LAN product keeps its existing version.
+
 Workspace activity continuity (2026-10-09) puts existing Details in its own
 public Nyx section. Native/desktop activity updates retain Resources/Chrome roots,
 Unicode inputs, focus/caret and pairs; compact navigation returns to latest visible

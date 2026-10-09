@@ -105,6 +105,12 @@ type
     function GetDefined: Boolean;
   public
     procedure Capture(const AID: TNyxText; AShellRoot: TNyxNode);
+    { Compare semantic proposal ownership, independently of unfinished field
+      values. Both drafts must be defined and describe the same editor,
+      accepted catalog, resource/locale and exact local/effective owner binding
+      contract. This grants neither a document edit nor project identity: the
+      host must separately qualify its session/load before transferring input. }
+    function SameContext(const AOther: TNyxResourceEditorDraft): Boolean;
     function Restore(AShellRoot: TNyxNode): Boolean;
     { Explicit proposal handoff after the host verifies the same project/load.
       Only a different selected owner may change: the exact accepted catalog
@@ -1805,6 +1811,13 @@ begin
     LDraft.FValues[LField] := Field(LEditor, LField).Prop('value');
   end;
   Self := LDraft;
+end;
+
+function TNyxResourceEditorDraft.SameContext(
+  const AOther: TNyxResourceEditorDraft): Boolean;
+begin
+  Result := Defined and AOther.Defined and (FEditor = AOther.FEditor) and
+    (FContext = AOther.FContext);
 end;
 
 function TNyxResourceEditorDraft.Restore(AShellRoot: TNyxNode): Boolean;

@@ -68,11 +68,13 @@ type
     FPreludeReplies: Integer;
     FFinished: Boolean;
     FStarted: {$ifdef PAS2JS}Double{$else}QWord{$endif};
+    FFrameStarted: {$ifdef PAS2JS}Double{$else}QWord{$endif};
     FRetained: {$ifdef PAS2JS}TJSHTMLElement{$else}TControl{$endif};
     { Borrowed identities only: compare these pointers after publication, never
       dereference a retired root/control. The controller remains their owner. }
     FChromeRoot: TNyxNode;
     FResourceRoot: TNyxNode;
+    FProposalDraft: TNyxResourceEditorDraft;
     FDetailsRoot: TNyxNode;
     FActivityCount: Integer;
     FCompact: Boolean;
@@ -90,6 +92,7 @@ type
     function Text(const AID: TNyxText): TNyxText;
     function Visible(const AID: TNyxText): Boolean;
     procedure SetProposal;
+    procedure FocusProposal;
     procedure CheckContinuity(const AOutcome: TNyxText);
     procedure QualifyQueries;
     procedure QualifyLegacy;
@@ -193,20 +196,16 @@ begin
   Check(FRetained <> nil, 'ordinary content input');
   TJSHTMLTextAreaElement(FRetained).value := 'Unfinished proposal 🌙';
   FRetained.dispatchEvent(TJSEvent.new('input'));
-  FRetained.focus;
-  TJSHTMLTextAreaElement(FRetained).selectionStart := 4;
-  TJSHTMLTextAreaElement(FRetained).selectionEnd := 10;
   {$else}
   FRetained := FStudio.ShellView.InputFor(NyxResourceEditorFieldID(
     'studio-resource-editor', refContent));
   Check(FRetained is TCustomMemo, 'ordinary content input');
   TCustomMemo(FRetained).Text := 'Unfinished proposal 🌙';
-  TWinControl(FRetained).SetFocus;
-  TCustomMemo(FRetained).SelStart := 4;
-  TCustomMemo(FRetained).SelLength := 6;
   {$endif}
+  FocusProposal;
   FChromeRoot := FStudio.ShellView.SectionRoot(nssChrome);
   FResourceRoot := FStudio.ShellView.SectionRoot(nssResources);
+  FProposalDraft.Capture('studio-resource-editor', FResourceRoot);
   FDetailsRoot := FStudio.ShellView.RootFor('studio-agents');
   FActivityCount := 0;
 
@@ -217,6 +216,28 @@ begin
   Check((FChromeRoot <> nil) and (FResourceRoot <> nil) and
     ((FDetailsRoot <> nil) or FCompact),
     'ordinary resources retain the enabled desktop or compact Agents intent');
+end;
+
+procedure TJourney.FocusProposal;
+begin
+  { Menus normally own focus while open. Return this synthetic input scenario
+    to its existing field before the queued full replacement; never rewrite
+    its text or resolve a new field to conceal failed preservation. }
+  {$ifdef PAS2JS}
+  Check(FRetained = document.querySelector(
+    '[data-node="studio-resource-editor-content"] textarea'),
+    'focused proposal still belongs to the current physical frame');
+  FRetained.focus;
+  TJSHTMLTextAreaElement(FRetained).selectionStart := 4;
+  TJSHTMLTextAreaElement(FRetained).selectionEnd := 10;
+  {$else}
+  Check(FRetained = FStudio.ShellView.InputFor(NyxResourceEditorFieldID(
+    'studio-resource-editor', refContent)),
+    'focused proposal still belongs to the current physical frame');
+  TWinControl(FRetained).SetFocus;
+  TCustomMemo(FRetained).SelStart := 4;
+  TCustomMemo(FRetained).SelLength := 6;
+  {$endif}
 end;
 
 procedure TJourney.CheckContinuity(const AOutcome: TNyxText);
@@ -506,6 +527,8 @@ end;
 procedure TJourney.Next;
 var
   LBody: TNyxDataValue;
+  LProposal: TNyxResourceEditorDraft;
+  LNow: {$ifdef PAS2JS}Double{$else}QWord{$endif};
 begin
   {$ifdef PAS2JS}
   try
@@ -516,7 +539,13 @@ begin
       Exit;
     end;
 
-    if {$ifdef PAS2JS}TJSDate.now{$else}GetTickCount64{$endif} - FStarted > 120000 then
+    { Preserve the original observation journey's 120-second guard. The added
+      complete-frame/selection/navigation phase has its own 60-second guard;
+      expanding the journey must not silently relax the original status gate. }
+    LNow := {$ifdef PAS2JS}TJSDate.now{$else}GetTickCount64{$endif};
+
+    if ((FFrameStarted = 0) and (LNow - FStarted > 120000)) or
+      ((FFrameStarted <> 0) and (LNow - FFrameStarted > 60000)) then
     begin
       raise Exception.Create('Selected-resource controller journey timed out at ' + IntToStr(FStage));
     end;
@@ -733,6 +762,131 @@ begin
           Check(EncodeNyxProject(FCore.ReviewSeed(1)) = FBefore,
             'selection, proposal and runtime refresh create no paired editor history');
           QualifyLegacy;
+          Check(NyxStudioResourceContinuity(True, FResourceRoot, FResourceRoot) = [nssResources],
+            'same exact resource context permits only typed Resources continuity');
+          Check(NyxStudioResourceContinuity(False, FResourceRoot, FResourceRoot) = [],
+            'another session/load refuses continuity despite identical form IDs');
+          FFrameStarted := LNow;
+          { The ordinary Pascal command changes Chrome's split/mount hierarchy.
+            Synthetic clicks intentionally keep the resource field focused while
+            queued painting runs; this qualifies adapter behavior, not trusted
+            pointer/keyboard input or an observing production deployment. }
+          {$ifdef PAS2JS}
+
+          if TJSHTMLElement(document.querySelector('[data-node="action-code"]'))
+            .getBoundingClientRect.height = 0 then
+          begin
+            Click('action-actions');
+            FStage := 1001;
+            window.setTimeout(@Next, 20);
+            Exit;
+          end;
+          {$endif}
+          Click('action-code');
+          FocusProposal;
+          FStage := 101;
+        end;
+      {$ifdef PAS2JS}
+      1001:
+        begin
+          ClickMenu('studio-menu-view');
+          FStage := 1002;
+        end;
+      1002:
+        begin
+          { Popup commands dispatch synchronously outside the shell callback
+            scope and own focus. Do not dereference the old field after this
+            command or pretend that menu intent preserved editor focus. The
+            following stage resolves the admitted field and qualifies its text
+            and range; direct shell/native commands also qualify focus. }
+          ClickMenu('studio-menu-code');
+          FStage := 101;
+        end;
+      {$endif}
+      101:
+        begin
+          Check((FStudio.ShellView.SectionRoot(nssChrome) <> FChromeRoot) and
+            (FStudio.ShellView.SectionRoot(nssResources) <> FResourceRoot),
+            'ordinary Pascal command admits genuinely new complete frame owners');
+          {$ifdef PAS2JS}
+          FRetained := TJSHTMLElement(document.querySelector(
+            '[data-node="studio-resource-editor-content"] textarea'));
+          Check((FRetained <> nil) and
+            (TJSHTMLTextAreaElement(FRetained).value = 'Unfinished proposal 🌙'),
+            'complete ordinary browser frame transfers incomplete Unicode content');
+          Check((TJSHTMLTextAreaElement(FRetained).selectionStart = 4) and
+            (TJSHTMLTextAreaElement(FRetained).selectionEnd = 10),
+            'complete ordinary browser frame transfers the physical text range');
+
+          if not FCompact then
+          begin
+            Check(document.activeElement = FRetained,
+              'complete ordinary desktop browser frame transfers focus');
+          end;
+          {$else}
+          FRetained := FStudio.ShellView.InputFor(NyxResourceEditorFieldID(
+            'studio-resource-editor', refContent));
+          Check((FRetained is TCustomMemo) and
+            (TNyxText(RawByteString(TCustomMemo(FRetained).Text)) = TNyxText('Unfinished proposal 🌙')),
+            'complete ordinary native frame transfers incomplete Unicode content');
+          Check((FWindow.ActiveControl = FRetained) and
+            (TCustomMemo(FRetained).SelStart = 4) and (TCustomMemo(FRetained).SelLength = 6),
+            'complete ordinary native frame transfers focus and caret');
+          Check(EncodeNyxProject(FStudio.Session.ProjectSnapshot) = FBefore,
+            'complete ordinary frame preserves the exact local accepted/source/draft pair');
+          {$endif}
+          LProposal := Default(TNyxResourceEditorDraft);
+          LProposal.Capture('studio-resource-editor', FStudio.ShellView.SectionRoot(nssResources));
+          Check(FProposalDraft.SameContext(LProposal),
+            'complete ordinary frame preserves the exact semantic proposal owner');
+          Check(EncodeNyxProject(FCore.ReviewSeed(1)) = FBefore,
+            'complete ordinary frame creates no semantic paired history');
+          { The source split can compress the public resource workspace into
+            its single-pane presentation even at a desktop outer viewport.
+            Hidden collection rows refuse clicks: use its visible Files action
+            before qualifying a changed locale, as in the earlier journey. }
+          FStage := 1015;
+          {$ifdef PAS2JS}
+
+          if TJSHTMLElement(document.querySelector('[data-node="' +
+            NyxResourceWorkspaceActionID('studio-resource-workspace', rwpFiles) + '"]'))
+            .getBoundingClientRect.height > 0 then
+          begin
+            Click(NyxResourceWorkspaceActionID('studio-resource-workspace', rwpFiles));
+          end;
+          {$endif}
+        end;
+      1015:
+        begin
+          SelectRow(0);
+          FStage := 1016;
+        end;
+      1016:
+        begin
+          Click(NyxResourceBrowserActionID('studio-resource-browser', rbaOpen));
+          FStage := 102;
+        end;
+      102:
+        begin
+          LProposal := Default(TNyxResourceEditorDraft);
+          LProposal.Capture('studio-resource-editor', FStudio.ShellView.SectionRoot(nssResources));
+          Check(not FProposalDraft.SameContext(LProposal),
+            'different resource locale refuses the previous proposal context');
+          {$ifdef PAS2JS}
+          FRetained := TJSHTMLElement(document.querySelector(
+            '[data-node="studio-resource-editor-content"] textarea'));
+          Check((FRetained <> nil) and
+            (TJSHTMLTextAreaElement(FRetained).value <> 'Unfinished proposal 🌙'),
+            'changed ordinary resource selection discards unqualified physical text');
+          {$else}
+          FRetained := FStudio.ShellView.InputFor(NyxResourceEditorFieldID(
+            'studio-resource-editor', refContent));
+          Check((FRetained is TCustomMemo) and
+            (TNyxText(RawByteString(TCustomMemo(FRetained).Text)) <> TNyxText('Unfinished proposal 🌙')),
+            'changed ordinary resource selection discards unqualified physical text');
+          {$endif}
+          Check(EncodeNyxProject(FCore.ReviewSeed(1)) = FBefore,
+            'different presentation selection still creates no paired editor history');
           {$ifdef PAS2JS}
           TJSHTMLElement(document.querySelector(
             '[data-node="studio-resource-runtime-0-selection"]')).scrollIntoView;

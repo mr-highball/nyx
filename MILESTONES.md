@@ -3,7 +3,21 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current workspace activity continuity (2026-10-09) repairs the demonstrated
+Current complete-frame continuity (2026-10-09) consumes original NS-4 authoring
+criterion two through both ordinary Studio controllers. Typed role opt-in,
+copied physical state and exact resource/session contexts retain eligible
+Unicode drafts and ranges across a real Pascal split/mount replacement; direct
+native/desktop paths retain focus, while compact menu intent is qualified
+separately. Default discard, changed resource/value refusal, complete candidate
+failure and retired/fresh scopes remain safe. [The packet](WORK.md#current-return-path-complete-frame-continuity--2026-10-09)
+records 97/90/90 ordinary target checks, 49 shared recovery checks per target,
+retained failures/deadlines and exact byte/protection gates. Authoring alone
+advances unfinished batches **49→50**, aggregate **25/16/50/21/28/3**; no full
+criterion/task/credit closes. Stop frame variants; reassess integrated authoring
+and remaining composite/source recovery under their original owners. Complete
+visual/input/performance parity and authenticated observing delivery remain open.
+
+Previous workspace activity continuity (2026-10-09) repairs the demonstrated
 NS-4 criterion-two ownership boundary: the existing Details root publishes its
 own Nyx section while activity grows, preserving native/desktop Resources and
 Chrome roots, Unicode inputs, focus/caret and paired state. Compact navigation

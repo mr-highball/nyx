@@ -9,6 +9,112 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Complete frame continuity — 2026-10-09
+
+Entry is clean at pushed `ee58299`. Previous turn is progress: independent Details
+ownership changes both ordinary Studio consumers and qualified activity behavior.
+Full goal remains active; ledger stays 25/16/49/21/28/3 until evidence changes it.
+Return to original NS-4 authoring criterion two's genuine full-frame boundary,
+following accepted staged sections and existing typed physical continuity.
+
+The two preceding authoring batches integrate useful behavior without closing
+an original criterion. Reassessment chooses this bounded ordinary-consumer
+repair using those accepted prerequisites, rather than another card/activity
+variant or a newly invented task. Complete authoring/parity criteria stay intact.
+
+Deliver explicit typed section opt-in for full-frame interaction transfer and
+rollback through the shared Studio view owner. Default complete admission discards
+old physical state; an opted-in caller must establish the same semantic owner.
+Studio Resources can opt in only within the same session/load and exact resource
+proposal context, using its public compound contract rather than ID guessing.
+New target controls may replace old ones; preserve supported copied text/range/
+focus without retaining retired widget pointers or granting document/history edits.
+
+Acceptance needs a real structural Chrome replacement and later candidate refusal
+through the shared full shell on native/HTTP browser, plus ordinary controller
+resource editing/navigation. Verify current context preservation, changed-context
+refusal, explicit default discard, copied Unicode text/ranges, candidate failure
+recovery and retired event scopes. Preserve exact pairs, selection/history,
+existing services and sealed release bytes. One ownership/continuity repair,
+then stop frame/fixture variants; broader composite fields, native memo scrolling,
+Canvas/source-host failure recovery, full parity/performance and authenticated
+observing keep their original owners. No backend/configuration replacement or
+equivalent retry of previously rejected operations.
+
+Result: complete-frame `Render` accepts an explicit typed role set, defaulting
+to no forward continuity. It captures copied target interaction before candidate
+creation, restores opted-in text/ranges/scroll while detached and focus after
+revelation, then retires the old owner/event scopes. Failure retires only the
+candidate and restores every prior role once, reporting any recovery refusal;
+the previous borrowed host is retained. Public resource-draft `SameContext`
+compares semantic proposal ownership independently of unfinished values. Both
+ordinary controllers opt in Resources only within the same session/load and
+exact catalog/resource/locale/local-and-effective owner-binding context.
+There is no new tree owner, document edit, transport authority or toolkit.
+
+The corrected native baseline (`before-corrected/native/run.log`, pushed source
+snapshots) loses the numeric draft on structural Chrome admission. The earlier
+receipt exposed a fixture's expired Project-input pointer after its prior
+independent replacement; it is retained as a fixture error, not product evidence.
+Initial current failure separates the immediately admitted string model from
+the deferred numeric draft: a candidate explicitly resetting its accepted string
+correctly refuses stale restoration. The fixture now forwards that baseline,
+while retaining separate default-discard and changed-value assertions.
+
+Current shared shell executes **49** native checks and **49/49** HTTP desktop/
+CSS-390 checks with its live-capture handshake. Later Inspector factory refusal
+preserves exact prior roots, controls, physical drafts/focus/range and callback
+scope; complete success preserves eligible drafts while changing owners and
+revoking old callbacks. Fresh callbacks execute once. Default admission discards
+unqualified text, and changed accepted values still supersede copied drafts.
+
+Ordinary native Resources executes **97** checks: the actual Pascal command
+changes Chrome's split/mount hierarchy; new controls retain incomplete
+supplementary Unicode content and physical focus/caret without changing exact
+local/semantic accepted-source-draft pairs or history. Different locale/Open
+refuses the former proposal context/text; original activity/navigation remains.
+The expanded first native attempt reached those successful preservation checks,
+then exceeded its original 120-second total guard at the added locale phase.
+The maintained journey keeps that original observation guard and gives the
+additional full-frame/selection/navigation phase a separate 60-second guard;
+the final run passes both. This does not establish production timing/performance.
+
+Final HTTP ordinary desktop/CSS-390 pass **90/90**, exercising the same real command and changed-resource
+refusal. Fixture receipts retain two wrong selection attempts without Open and
+a hidden compact Chrome click. Compact now uses the visible Actions/View/Pascal
+menu. Popup commands dispatch synchronously outside the shell callback scope:
+their old control pointers expire at the call, and menu focus intent differs.
+Compact qualifies transferred text/range; native/direct desktop also qualify
+focus. The fixture never rewrites text after replacement to conceal a failure.
+Early three-file browser children remain immutable; final admission includes
+the freshly compiled matching source worker and runtime. All old/source/staged
+bytes, screenshots, diagnostics and final protection receipts stay under ignored
+`build/frame-continuity/`. No hardware/IME/AT, another widgetset, complete visual
+or performance parity is inferred. Independent Canvas/source physical failure
+recovery, composite editors and reveal/focus extension refusal remain open.
+
+All completed native consumers and Pascal browser drivers free their traced
+allocations; driver heap evidence does not measure JavaScript heaps. Owned code
+has no warnings; seven existing upstream pas2js RTL warnings remain visible.
+Actual desktop/compact and native captures are inspected for this behavior,
+without accepting complete aesthetics or geometry. The final source/staged/HTTP
+byte gate verifies all **seven** qualified files and preserves all **55** prior/
+new immutable child files. Protection verifies nine exact paired projects, all
+15 original process identities, 299 sealed release files and the unchanged
+147033-byte checkpoint. Installed semantic inspection remains revision two,
+original selection, no pending draft and no Undo/Redo work. Its LAN/loopback
+product version stays protected; no backend/configuration/service is replaced.
+
+Authoring alone advances unfinished batches **49→50**, aggregate
+**25/16/50/21/28/3**; no complete criterion/task or credit closes. Stop complete-
+frame fixture variants. Return to original integrated authoring/native-parity
+outcomes and assess the remaining composite form/source-workspace recovery
+contexts before selecting the next meaningful deliverable. Resource storage/
+security/performance, full event/component breadth and authenticated observing
+delivery retain their existing owners. Source push/ref and clean-worktree
+evidence is recorded in `build/frame-continuity/remote-checkpoint.log`;
+this is source progress, not a LAN refresh or whole-goal closure.
+
 ## Current return path: Workspace activity continuity — 2026-10-09
 
 Entry is clean at pushed `f4384a7`. The previous turn is progress: selected

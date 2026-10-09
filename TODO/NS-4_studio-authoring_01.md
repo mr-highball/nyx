@@ -9,7 +9,20 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current workspace activity continuity follows criterion two and the accepted
+Current complete-frame continuity follows criterion two and the accepted
+section-publication prerequisite. Typed role opt-in/default discard and copied
+adapter state preserve eligible resource input across a real Pascal split/mount
+replacement, only within the same session/load and exact proposal context.
+Changed resource/value refusal and later candidate failure retain safe ownership
+and exact pairs; fresh event scopes replace retired scopes. Ordinary native/HTTP
+desktop/CSS-390 pass 97/90/90; shared recovery passes 49 each. Direct native/
+desktop focus and compact menu text/range are distinct qualifications. [The packet](../WORK.md#current-return-path-complete-frame-continuity--2026-10-09)
+retains failures, expanded phase deadlines and limits. Authoring advances
+unfinished 49→50, aggregate 25/16/50/21/28/3; no full criterion/task/credit closes.
+Stop frame variants; reassess integrated authoring and composite/source recovery.
+Complete physical input/visual/performance parity and observing remain required.
+
+Previous workspace activity continuity follows criterion two and the accepted
 section-publication prerequisite. Existing Details becomes an independent Nyx
 owner; real activity growth/retirement preserves native/desktop Resources and
 Chrome roots, Unicode input identity, focus/caret and exact pairs. Compact policy

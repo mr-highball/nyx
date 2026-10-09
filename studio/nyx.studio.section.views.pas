@@ -77,10 +77,16 @@ type
       Host must be attached/live and remain borrowed through retirement. This
       editor-only owner refuses design mode, an external store and dispatch-time
       replacement. Candidate failure leaves the prior frame owned and mounted;
-      physical extension failures propagate through ordinary target admission. }
+      physical extension failures propagate through ordinary target admission.
+      Continuity is opt-in per role after the caller qualifies its semantic
+      owner; IDs alone are insufficient. Supported copied text/ranges/scroll
+      and focus transfer through public target adapters, never old widget
+      pointers. Changed value/domain/binding contracts qualify each field again.
+      Failure restores all prior roles regardless of the forward policy and
+      reports recovery failures rather than silently claiming a rollback. }
     procedure Render(ADocument: TNyxDocument; ARoot: TNyxNode;
       AHost: TNyxStudioSectionHost; ADesignMode: Boolean = False;
-      AState: TNyxState = nil);
+      AState: TNyxState = nil; AContinuity: TNyxStudioSectionSet = []);
     { True admits compatible retained changes and grouped independent replacements,
       including dynamically growing workspace details. Unmentioned/compatible
       Resources inputs retain their physical ownership and event scope.
@@ -438,10 +444,78 @@ begin
 end;
 
 procedure TNyxStudioSectionViews.Render(ADocument: TNyxDocument; ARoot: TNyxNode;
-  AHost: TNyxStudioSectionHost; ADesignMode: Boolean; AState: TNyxState);
+  AHost: TNyxStudioSectionHost; ADesignMode: Boolean; AState: TNyxState;
+  AContinuity: TNyxStudioSectionSet);
 var
   LNext: TSectionFrame;
-  LPrevious: TObject;
+  LPrevious: TSectionFrame;
+  LPreviousHost: TNyxStudioSectionHost;
+  LInputs: array[TNyxStudioSection] of TNyxContentFaceStates;
+  LSection: TNyxStudioSection;
+  LView: TNyxStudioSectionRenderer;
+  LAdmitted: Boolean;
+
+  procedure RestoreCandidate(AFocus: Boolean);
+  var
+    LRole: TNyxStudioSection;
+    LOwner: TNyxStudioSectionRenderer;
+  begin
+    for LRole := Low(TNyxStudioSection) to High(TNyxStudioSection) do
+    begin
+
+      if not (LRole in AContinuity) then
+      begin
+        Continue;
+      end;
+      LOwner := LNext.View(LRole);
+
+      if (LOwner <> nil) and not LOwner.RestoreInteraction(LInputs[LRole], AFocus) then
+      begin
+        raise ENyxModel.Create('Studio candidate input boundary became busy');
+      end;
+    end;
+  end;
+
+  procedure RestorePrevious(const AFailure: TNyxText);
+  var
+    LRole: TNyxStudioSection;
+    LOwner: TNyxStudioSectionRenderer;
+    LFailure: TNyxText;
+  begin
+
+    if LPrevious = nil then
+    begin
+      Exit;
+    end;
+    LFailure := '';
+    for LRole := Low(TNyxStudioSection) to High(TNyxStudioSection) do
+    begin
+      LOwner := LPrevious.View(LRole);
+
+      if LOwner = nil then
+      begin
+        Continue;
+      end;
+      try
+
+        if not LOwner.RestoreInteraction(LInputs[LRole]) then
+        begin
+          raise ENyxModel.Create('Prior frame input boundary became busy');
+        end;
+      except
+        on LException: Exception do
+        begin
+          LFailure := LFailure + ' / ' + NyxStudioSectionRootID(LRole) + ': ' +
+            LException.Message;
+        end;
+      end;
+    end;
+
+    if LFailure <> '' then
+    begin
+      raise ENyxModel.Create(AFailure + ' / Studio frame recovery failed' + LFailure);
+    end;
+  end;
 begin
 
   if Dispatching or ADesignMode or (AState <> nil) or (ADocument = nil) or
@@ -449,18 +523,57 @@ begin
   begin
     raise ENyxModel.Create('Studio shell frames require an idle owning host and shared shell document');
   end;
+  LPrevious := TSectionFrame(FFrame);
+  LPreviousHost := FHost;
+  LNext := nil;
+  LAdmitted := False;
+  for LSection := Low(TNyxStudioSection) to High(TNyxStudioSection) do
+  begin
+    LInputs[LSection] := nil;
+
+    if LPrevious = nil then
+    begin
+      Continue;
+    end;
+    LView := LPrevious.View(LSection);
+
+    if (LView <> nil) and not LView.CaptureInteraction(LInputs[LSection]) then
+    begin
+      raise ENyxModel.Create('Studio prior frame input boundary became busy');
+    end;
+  end;
   FHost := AHost;
-  LNext := TSectionFrame.Create(Self, ADocument);
   try
-    { Candidate controls/compounds have admitted before any accepted host leaves
-      the display. The surrounding renderer owns only public Nyx chrome. }
-    RevealFrame(LNext, FHost);
-    LPrevious := FFrame;
+    try
+      LNext := TSectionFrame.Create(Self, ADocument);
+      { Restore copies while detached, then focus only once the complete
+        candidate is visible. Target adapters suppress ordinary input callbacks
+        during replay. The old frame remains owned until every step succeeds. }
+      RestoreCandidate(False);
+      RevealFrame(LNext, FHost);
+      RestoreCandidate(True);
+    except
+      on LException: Exception do
+      begin
+        FreeAndNil(LNext);
+        FHost := LPreviousHost;
+        { Candidate revelation/focus can change the old physical selection even
+          though no old model was edited. Retire the candidate before recovery. }
+        RestorePrevious(LException.Message);
+        raise;
+      end;
+    end;
     FFrame := LNext;
     LNext := nil;
+    LAdmitted := True;
     LPrevious.Free;
   finally
     LNext.Free;
+
+    if not LAdmitted then
+    begin
+      FHost := LPreviousHost;
+    end;
   end;
 end;
 

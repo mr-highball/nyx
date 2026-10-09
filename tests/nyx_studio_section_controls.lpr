@@ -249,6 +249,7 @@ var
   LViews: TNyxStudioSectionViews;
   LBase: TNyxDocument;
   LNext: TNyxDocument;
+  LFull: TNyxDocument;
   LScenario: TScenario;
   LLease: INyxEventCallback;
   LToken: INyxEventSubscription;
@@ -284,6 +285,7 @@ begin
   LScenario.Views := LViews;
   LBase := nil;
   LNext := nil;
+  LFull := nil;
   {$ifdef PAS2JS}
   LHost := TJSHTMLElement(document.getElementById('studio-sections'));
   LStyle := TJSHTMLElement(document.createElement('style'));
@@ -468,6 +470,106 @@ begin
       (InputText(LInput) = '11') and
       (LViews.Root.Find('recovery-budget').Prop('value') = '11'),
       'stale copied draft cannot override a newly admitted authored value');
+    { Exercise the complete owner, rather than only independent section swaps.
+      A new Chrome descendant changes membership of its physical hierarchy. }
+    LTitle := LViews.InputFor('project-title');
+    Draft(LInput, '11.75');
+    Draft(LTitle, TNyxText('A complete-frame thought / 🌙'));
+    LTitleText := InputText(LTitle);
+    {$ifdef PAS2JS}
+    LTitle.focus;
+    TJSHTMLInputElement(LTitle).setSelectionRange(2, 7);
+    {$else}
+    TCustomEdit(LTitle).SetFocus;
+    TCustomEdit(LTitle).SelStart := 2;
+    TCustomEdit(LTitle).SelLength := 5;
+    {$endif}
+    {$ifdef PAS2JS}await(Idle(LViews));{$else}Idle(LViews);{$endif}
+    LFull := LNext.Clone;
+    { The ordinary string field admits input to its private model immediately;
+      the numeric domain above defers admission. Forward the accepted string
+      baseline as a real composer would, rather than request an explicit reset. }
+    LFull.Pages[0].Find('project-title').SetProp('value',
+      LViews.Root.Find('project-title').Prop('value'));
+    LFull.Pages[0].Add(NewNyxButton('recovery-new-chrome').WithText('New chrome'));
+    Check(not LViews.TryRefresh(LFull, LFull.Pages[0]),
+      'structural Chrome change requests complete frame admission');
+    for LRole := Low(TNyxStudioSection) to High(TNyxStudioSection) do
+    begin
+      LRoots[LRole] := LViews.SectionRoot(LRole);
+    end;
+    LRefused := False;
+    GFailBuild := True;
+    try
+      LViews.Render(LFull, LFull.Pages[0], LHost);
+    except
+      on LException: Exception do
+      begin
+        LRefused := True;
+        LMessage := LException.Message;
+      end;
+    end;
+    GFailBuild := False;
+    Check(LRefused and (Pos('Intentional Studio Inspector factory refusal', LMessage) > 0),
+      'later complete-frame factory failure refuses before old ownership retires');
+    for LRole := Low(TNyxStudioSection) to High(TNyxStudioSection) do
+    begin
+      Check(LViews.SectionRoot(LRole) = LRoots[LRole],
+        'complete refusal preserves exact root / ' + NyxStudioSectionRootID(LRole));
+    end;
+    Check((LViews.InputFor('recovery-budget') = LInput) and
+      (LViews.InputFor('project-title') = LTitle) and LToken.Active and
+      (InputText(LInput) = '11.75') and (InputText(LTitle) = LTitleText),
+      'complete refusal recovers original controls, drafts and callback scope');
+    {$ifdef PAS2JS}
+    Check((document.activeElement = LTitle) and
+      (TJSHTMLInputElement(LTitle).selectionStart = 2) and
+      (TJSHTMLInputElement(LTitle).selectionEnd = 7),
+      'complete refusal recovers physical focus and range');
+    {$else}
+    Check(TCustomEdit(LTitle).Focused and (TCustomEdit(LTitle).SelStart = 2) and
+      (TCustomEdit(LTitle).SelLength = 5),
+      'complete refusal recovers physical focus and range');
+    {$endif}
+    LViews.Render(LFull, LFull.Pages[0], LHost, False, nil,
+      [nssChrome, nssProject, nssInspector]);
+    LInput := LViews.InputFor('recovery-budget');
+    LTitle := LViews.InputFor('project-title');
+    Check(InputText(LInput) = '11.75',
+      'complete frame retains explicitly selected numeric draft / actual=' + InputText(LInput));
+    Check(InputText(LTitle) = LTitleText,
+      'complete frame retains explicitly selected Unicode draft / actual=' + InputText(LTitle));
+    Check((LViews.SectionRoot(nssChrome) <> LRoots[nssChrome]) and
+      (LViews.ControlFor('recovery-new-chrome') <> nil) and not LToken.Active and
+      (LViews.Root.Find('recovery-budget').Prop('value') = '11'),
+      'complete admission changes physical owners and revokes old callbacks without editing model values');
+    {$ifdef PAS2JS}
+    Check((document.activeElement = LTitle) and
+      (TJSHTMLInputElement(LTitle).selectionStart = 2) and
+      (TJSHTMLInputElement(LTitle).selectionEnd = 7),
+      'complete admission transfers physical focus and range');
+    {$else}
+    Check(TCustomEdit(LTitle).Focused and (TCustomEdit(LTitle).SelStart = 2) and
+      (TCustomEdit(LTitle).SelLength = 5),
+      'complete admission transfers physical focus and range');
+    {$endif}
+    LViews.Render(LFull, LFull.Pages[0], LHost);
+    LInput := LViews.InputFor('recovery-budget');
+    LTitle := LViews.InputFor('project-title');
+    Check((InputText(LInput) = '11') and
+      (InputText(LTitle) = LFull.Pages[0].Find('project-title').Prop('value')),
+      'default complete admission discards unqualified physical drafts');
+    Draft(LInput, '11.875');
+    LFull.Pages[0].Find('recovery-budget').SetProp('value', '13');
+    LViews.Render(LFull, LFull.Pages[0], LHost, False, nil, [nssChrome]);
+    LInput := LViews.InputFor('recovery-budget');
+    Check(InputText(LInput) = '13',
+      'forward continuity cannot overwrite a changed accepted value');
+    LToken := LViews.Events.On(NyxControlEvents('recovery-action', niRuntime),
+      ntClick).Subscribe(LLease);
+    Click(LViews.ControlFor('recovery-action'));
+    Check(LToken.Active and (LScenario.Clicks = 4),
+      'new complete-frame callback scope executes once');
     {$ifdef PAS2JS}
     document.body.setAttribute('data-capture-checkpoint', 'studio-recovery-live');
     LStarted := window.performance.now;
@@ -506,6 +608,7 @@ begin
     LScenario.Views := nil;
     LViews.Free;
     LLease := nil;
+    LFull.Free;
     LNext.Free;
     LBase.Free;
     LTheme.Free;

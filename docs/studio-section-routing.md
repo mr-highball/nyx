@@ -1,7 +1,7 @@
 # Studio mounted section routing
 
 [Architecture](architecture.md) · [Independent view sections](view-sections.md) ·
-[Current evidence](../WORK.md#current-return-path-workspace-activity-continuity--2026-10-09)
+[Current evidence](../WORK.md#current-return-path-complete-frame-continuity--2026-10-09)
 
 Studio still composes its chrome with `BuildNyxStudioView` and the public Nyx
 components. `nyx.studio.sections` copies that composition into independent
@@ -68,6 +68,28 @@ ports in place. A resource form whose selected binding target changes may requir
 a new event scope: preserving its draft does not authorize retaining a stale
 target contract.
 
+Complete `Render` defaults to discarding prior physical input. Its optional
+`TNyxStudioSectionSet` declares precisely which roles may transfer supported
+interaction state. The caller must establish the same semantic owner before
+opting in: an identical control ID does not identify the same project or
+resource. Stock browser/native Studio qualifies its session/load with
+`MatchesCommandContext`, then uses `NyxStudioResourceContinuity` to compare the
+public resource proposal contexts. That helper permits only Resources, only
+when both complete forms describe the same accepted catalog, resource/locale
+and exact local/effective owner-binding contract. `TNyxResourceEditorDraft.SameContext`
+compares ownership independently of unfinished field values. Absent/incomplete
+forms or changed contexts refuse without carrying text into another owner.
+
+The complete view owner captures immutable adapter observations before creating
+its hidden candidate. Opted-in roles receive text/ranges/scroll before revelation
+and focus afterward; their field domain, bindings and accepted value still
+qualify restoration. Only then does the candidate replace the old frame and
+retire its event scopes. Resolve new controls afterward: copied continuity does
+not preserve widget pointers. Candidate admission failure destroys the candidate
+and restores all prior mounted roles, independently of the forward opt-in set.
+Recovery attempts each role once and reports a recovery refusal. This operation
+does not edit document/history or emit an input command.
+
 Retained changes made before a grouped refusal replay their previous source
 baseline and restore the captured runtime property/resource projection. Recovery
 then restores copied physical continuity: an uncommitted numeric draft can differ
@@ -92,8 +114,13 @@ promise atomic rollback. The actual shared Studio shell/facade now qualifies a
 later Inspector preparation refusal and a second physical publication refusal
 after Project preview, with original roots, drafts, ranges and callback tokens
 preserved, followed by successful grouped refresh. This is distinct from the
-accepted public section-publication fixture. Full-frame controller recovery and
-wider custom/editor/context cases remain separate gates.
+accepted public section-publication fixture. The complete-frame journey also
+qualifies a later Inspector factory refusal, exact prior roots/drafts/focus,
+explicit forward continuity, safe default discard and retired/new callback scopes.
+Ordinary Resources consumers exercise a real Pascal split/mount change and
+different-resource refusal. Full independent Canvas/source physical recovery,
+wider custom/composite editors and reveal/focus extension failures remain separate
+gates; the maintained factory refusal does not establish all those failures.
 
 Browser refresh queues past borrowed shell, live input and designer callbacks.
 Multiple requests coalesce, with explicit reset choices taking precedence. The

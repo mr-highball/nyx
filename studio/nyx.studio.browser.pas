@@ -1244,7 +1244,9 @@ begin
     if not LResourceCompatible or
       not FShellRenderer.TryRefresh(LShellCandidate, LShellCandidate.Pages[0], False) then
     begin
-      FShellRenderer.Render(LShellCandidate, LShellCandidate.Pages[0], FShellHost);
+      FShellRenderer.Render(LShellCandidate, LShellCandidate.Pages[0], FShellHost, False, nil,
+        NyxStudioResourceContinuity(FSession.MatchesCommandContext(FShellCommandContext),
+          FShellRenderer.SectionRoot(nssResources), LShellCandidate.Pages[0]));
     end;
     { Keep the previous logical shell owned through candidate admission, as
       the native controller already does. A factory/renderer refusal must not
