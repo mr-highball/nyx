@@ -38,6 +38,9 @@ const
   WorkbenchNotesHelp = 'Plain text packed with the design.';
   WorkbenchPackedTitle = 'Packed data';
   WorkbenchPackedHelp = 'Three exact binary bytes kept with the project.';
+  WorkbenchHostedURL = 'https://example.com/workbench-en-gb.json';
+  WorkbenchHostedTitle = 'English (UK) copy';
+  WorkbenchHostedHelp = 'Hosted English copy with packed fallback and caller-controlled caching.';
 
 { Checks the reconstructed authored contract, separately from actual controls.
   The unchanged MCP companion and UI-emitted builders consume the same checks.
@@ -50,7 +53,7 @@ function CheckNyxResourceSelection(ADocument: TNyxDocument): Integer;
 
 implementation
 
-uses SysUtils, nyx.bytes, nyx.resources, nyx.resources.rows,
+uses SysUtils, nyx.bytes, nyx.resources, nyx.resources.rows, nyx.resource.sources,
   nyx.collections, nyx.binding.types, nyx.resources.editor, nyx.controls,
   nyx.codec;
 
@@ -184,6 +187,7 @@ var
   LBinding: TNyxBindingSpec;
   LBytes: TNyxBytes;
   LRows: INyxCollectionSnapshot;
+  LHosted: INyxResourceDefinition;
 
   procedure Check(ACondition: Boolean; const AReason: TNyxText);
   begin
@@ -198,7 +202,20 @@ var
 begin
   Result := 0;
   Check(ADocument.Title = 'Resource workbench', 'project identity');
-  Check(ADocument.Resources.Count = 3, 'three common file kinds');
+  Check(ADocument.Resources.Count = 4, 'three common files and one localized hosted variant');
+  LHosted := ADocument.Resources.Definition(NyxResourceRef('copy'), NyxLocale('en-GB'));
+  Check((LHosted.Source.Kind = rskHosted) and (LHosted.Source.URL.Address = WorkbenchHostedURL),
+    'localized variant retains its portable hosted declaration');
+  Check((LHosted.Source.CachePolicy.Mode = rcmPersistent) and
+    (LHosted.Source.CachePolicy.FreshSeconds = 600) and
+    (LHosted.Source.CachePolicy.StaleSeconds = 90) and
+    (LHosted.Source.CachePolicy.ByteLimit = 65536) and
+    (LHosted.Source.CachePolicy.Server = rcspOverride), 'caller cache policy retains all exact choices');
+  Check((LHosted.FallbackDefinition <> nil) and
+    (NyxDecodeUTF8(LHosted.FallbackDefinition.Bytes) = WorkbenchJSON),
+    'hosted variant retains exact packed JSON fallback bytes');
+  Check((LHosted.Title = WorkbenchHostedTitle) and (LHosted.Description = WorkbenchHostedHelp),
+    'hosted localized creator intent stays with the design');
   Check(NyxResourceLabelsOf(ADocument.Resources.Definition(NyxResourceRef('copy'),
     NyxDefaultLocale)).Contains(NyxResourceLabel('Onboarding')),
     'creator tag authored through the ordinary controllers');
@@ -215,6 +232,7 @@ begin
   Check((Length(LBytes) = 3) and (LBytes[0] = 0) and (LBytes[1] = 1) and
     (LBytes[2] = 255), 'exact arbitrary binary bytes');
   Check(ADocument.Find('workshop-headline').FindBinding(bpText, LBinding), 'caption binding');
+  Check(not LBinding.ResourceValue.Localized, 'caption follows runtime locale rather than the editor variant');
   Check(LBinding.ResourceValue.Path.ToData.ToJSON = NyxResourcePath.Field('literal.dot').ToData.ToJSON,
     'literal dotted key stays structural');
   Check(ADocument.Find('project-name').FindBinding(bpPlaceholder, LBinding), 'prompt binding');

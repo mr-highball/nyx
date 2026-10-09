@@ -9,7 +9,14 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current dedicated Resources integration (2026-10-09) shares the public typed
+Current scalar default-pin schema (2026-10-09) uses the same revision-aware
+paired candidate/Undo path. Suspended public semantic checks pass 133 native and
+106 shared HTTP; the installed frozen endpoint is inspected read-only and gains
+no new support from compilation. Authenticated installed/observing rollout remains
+this owner's gate. See
+[the packet](../WORK.md#current-return-path-resource-locale-authoring--2026-10-09).
+
+Previous dedicated Resources integration (2026-10-09) shares the public typed
 catalog/browser compounds across ordinary Studio controllers, with category,
 source, locale and exact all/any creator-tag filters. Filter disclosure is copied
 editor presentation and retains the active query/selection/proposals. Installed

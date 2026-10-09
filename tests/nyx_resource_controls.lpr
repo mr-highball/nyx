@@ -98,6 +98,9 @@ begin
     LPage.Add(NewNyxLabel('notes-label').Binds.Text(NyxResourceValue(NyxResourceRef('guide'))).Done);
     LPage.Add(NewNyxLabel('hosted-label').Binds.Text(
       NyxResourceValue(NyxResourceRef('hosted-copy')).Field('caption')).Done);
+    LPage.Add(NewNyxLabel('pinned-headline').Binds.Text(
+      NyxResourceValue(NyxResourceRef('copy')).Field('headline')
+        .Localize(NyxDefaultLocale, NyxDefaultLocale)).Done);
     LDocument.Validate;
     Result := LDocument;
   except
@@ -245,6 +248,9 @@ var
   LSource: TNyxText;
   LSelector: TNyxResourceValueRef;
   LBranch: TNyxResourceValueRef;
+  LPacket: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
   LBytes: TNyxBytes;
   LRefused: Boolean;
   LStore: INyxCollection;
@@ -263,8 +269,8 @@ begin
   LSession := nil;
   try
     LBefore := TNyxCodec.Encode(LDocument);
-    Check(TNyxDataValue.ParseJSON(LBefore).Field('version').AsInteger = 8,
-      'resources select explicit document version eight');
+    Check(TNyxDataValue.ParseJSON(LBefore).Field('version').AsInteger = 11,
+      'resource default pin selects explicit document version eleven');
     LDecoded := TNyxCodec.Decode(LBefore);
     Check(TNyxCodec.Encode(LDecoded) = LBefore, 'exact resource/selector persistence');
     LDefinition := LDecoded.Resources.Definition(NyxResourceRef('hosted-copy'), NyxDefaultLocale);
@@ -342,6 +348,72 @@ begin
       NyxDefaultLocale, NyxDefaultLocale).BooleanValue, 'explicit Boolean field admission');
     Check(LSelector.Field('headline').Read(LDocument.Resources, NyxLocale('missing'),
       NyxLocale('en-GB')).TextValue = 'Your resource workbench', 'explicit locale fallback');
+    LBranch := LSelector.Field('headline').Localize(NyxDefaultLocale, NyxDefaultLocale);
+    Check(LBranch.Localized and not LBranch.Locale.Defined and
+      (LBranch.Read(LDocument.Resources, NyxLocale('en-GB'), NyxLocale('en-GB')).TextValue =
+      'Your resource workshop'), 'explicit default pin overrides both runtime choices');
+    Check(not LSelector.Localized and LBranch.Copy.AsText.Localized,
+      'locale intent survives independent fluent branches');
+    LBranch := TNyxResourceValueRef.FromData(LBranch.ToData);
+    Check(LBranch.Localized and (LBranch.ToData.Count = 6), 'default pin has an exact wire discriminator');
+    LPacket := LSelector.Field('headline').ToData;
+    Check((LPacket.Count = 5) and not TNyxResourceValueRef.FromData(LPacket).Localized,
+      'historical empty-locale selector retains runtime inheritance');
+    LPacket := LBranch.ToData;
+    SetLength(LFields, LPacket.Count);
+    for LIndex := 0 to LPacket.Count - 1 do
+    begin
+      LFields[LIndex] := NyxField(LPacket.Key(LIndex), LPacket.Field(LPacket.Key(LIndex)));
+
+      if LPacket.Key(LIndex) = 'localized' then
+      begin
+        LFields[LIndex] := NyxField('localized', NyxData(False));
+      end;
+    end;
+    LRefused := False;
+    try
+      TNyxResourceValueRef.FromData(NyxObject(LFields));
+    except
+      on ENyxResource do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'six fields cannot disguise runtime inheritance as an explicit pin');
+    LDecoded.Find('workshop-headline').Binds.Text(LBranch).Done;
+    LPacket := TNyxDataValue.ParseJSON(TNyxCodec.Encode(LDecoded));
+    Check(LPacket.Field('version').AsInteger = 11, 'explicit default scalar pin selects version eleven');
+    SetLength(LFields, LPacket.Count);
+    for LIndex := 0 to LPacket.Count - 1 do
+    begin
+      LFields[LIndex] := NyxField(LPacket.Key(LIndex), LPacket.Field(LPacket.Key(LIndex)));
+
+      if LPacket.Key(LIndex) = 'version' then
+      begin
+        LFields[LIndex] := NyxField('version', NyxData(10));
+      end;
+    end;
+    LRefused := False;
+    try
+      LCandidate := TNyxCodec.Decode(NyxObject(LFields).ToJSON);
+      FreeAndNil(LCandidate);
+    except
+      on ENyxModel do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'historical design refuses the new locale discriminator');
+    LCandidate := TNyxCodec.Decode(TNyxCodec.Encode(LDecoded));
+    Check(TNyxCodec.Encode(LCandidate) = TNyxCodec.Encode(LDecoded), 'version eleven reconstructs exact default pin');
+    FreeAndNil(LCandidate);
+    LSource := TNyxCodegen.Generate(LDecoded);
+    Check(Pos('.Localize(NyxDefaultLocale, NyxDefaultLocale)', LSource) > 0,
+      'crafted scalar source spells explicit default locale intent');
+    LCandidate := TNyxSourceWorkspace.PrepareDraft(LSource, LCompanion);
+    Check(TNyxCodec.Encode(LCandidate) = TNyxCodec.Encode(LDecoded), 'source replay retains exact default scalar pin');
+    FreeAndNil(LCandidate);
+    FreeAndNil(LCompanion);
     LRefused := False;
     try
       LSelector.Field('count').Read(LDocument.Resources, NyxDefaultLocale, NyxDefaultLocale);
@@ -538,6 +610,13 @@ begin
     LRenderer.ReloadResources(LCopy, NyxLocale('en-GB'), NyxDefaultLocale);
     Caption('Your resource workbench');
     Prompt('Choose a programme name');
+    {$ifdef PAS2JS}
+    Check(LRenderer.ElementFor('pinned-headline').textContent = 'Your resource workshop',
+      'actual browser default pin remains independent of runtime locale');
+    {$else}
+    Check(TNyxText(TLabel(LRenderer.ControlFor('pinned-headline')).Caption) = 'Your resource workshop',
+      'actual native default pin remains independent of runtime locale');
+    {$endif}
     Check(LSiblingRenderer.Root.Find('workshop-headline').Prop('text') = 'Your resource workshop',
       'runtime locale reload leaves sibling view independent');
     LCopy.Define(NyxResourceRef('copy'), NyxJSONResource(

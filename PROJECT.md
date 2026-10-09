@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Resource locale authoring (2026-10-09) distinguishes explicit scalar default pins
+from runtime inheritance, with exact historical selector migration and crafted
+source. Both Studios share locale/fallback controls; copied version-fifteen
+preferences retain unfinished inputs. Ordinary hosted English/fallback/caller-cache
+authoring, shared semantic groups and exact emitted execution are qualified in
+[the packet](WORK.md#current-return-path-resource-locale-authoring--2026-10-09).
+Complete combined-workload timing, application fetching/browser-cache/lifecycle,
+physical input/accessibility and installed observing rollout remain open.
+Aggregate stays **25/11/47/21/28/3**; no full criterion/count/credit closes.
+
 Resources pane navigation (2026-10-09) consumes the dedicated workspace criterion
 through a reusable public Nyx compound and both ordinary Studio controllers.
 Desktop catalog/editor scroll independently; compact Files/Edit keeps the panes

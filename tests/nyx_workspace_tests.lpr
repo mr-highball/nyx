@@ -525,7 +525,7 @@ begin
       end)));
     {$endif}
     LKey := 'version';
-    LValue := NyxData(15);
+    LValue := NyxData(16);
     case LCase of
       1:
       begin

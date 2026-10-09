@@ -704,7 +704,7 @@ begin
     '"additionalProperties":false}');
   LSelector := TNyxDataValue.ParseJSON('{"type":"object","properties":{"resource":' +
     LName.ToJSON + ',"path":' + LPath.ToJSON +
-    ',"locale":{"type":"string"},"fallback":{"type":"string"},"type":{"enum":["text","boolean","integer","number"]}},"required":["resource","path","locale","fallback","type"],"additionalProperties":false}');
+    ',"locale":{"type":"string"},"fallback":{"type":"string"},"type":{"enum":["text","boolean","integer","number"]},"localized":{"const":true}},"required":["resource","path","locale","fallback","type"],"additionalProperties":false,"allOf":[{"if":{"required":["localized"]},"then":{"properties":{"locale":{"const":""}}}}]}');
   LImageSelector := TNyxDataValue.ParseJSON('{"type":"object","properties":{"resource":' +
     LName.ToJSON + ',"locale":{"type":"string"},"fallback":{"type":"string"},' +
     '"localized":{"type":"boolean"}},"required":["resource","locale","fallback","localized"],"additionalProperties":false}');

@@ -9,7 +9,17 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current Resources pane navigation returns to those original authoring/workspace
+Current resource locale authoring consumes the original Resources/localization/
+caller-policy criterion. The shared public form exposes explicit scalar/image
+locale intent and caller fallback; strict copied preferences retain incomplete
+input. Ordinary hosted English data/fallback/cache proposals preserve exact paired
+source/Undo. Scoped actual targets and emitted execution are qualified in
+[the packet](../WORK.md#current-return-path-resource-locale-authoring--2026-10-09).
+Complete combined-workload timing, application fetching/browser-cache/lifetime,
+physical input/accessibility and observing rollout remain open. No full criterion/
+task/count/credit closes; aggregate stays 25/11/47/21/28/3.
+
+Previous Resources pane navigation returns to those original authoring/workspace
 criteria. Both ordinary controllers consume the public Nyx compound: desktop
 panes scroll independently, compact Files/Edit retains mounted controls, and
 copied version-fourteen preferences retain separate positions while migrating

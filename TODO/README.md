@@ -47,7 +47,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current Resources pane navigation (2026-10-09) returns to the existing authoring
+Current resource locale authoring (2026-10-09) follows the scalar default-pin
+prerequisite and returns to the existing Resources/localization/caller-policy
+authoring owner. Shared controls, strict historical migration, ordinary hosted
+English/fallback/cache proposals and paired source/history are qualified in
+[the packet](../WORK.md#current-return-path-resource-locale-authoring--2026-10-09).
+Full application/browser-cache/lifecycle, combined-workload performance and
+observing rollout retain their owners. No full criterion/count/credit closes;
+aggregate stays 25/11/47/21/28/3. Stop form/filter variants and follow the actual
+browser application-resource gate next.
+
+Previous Resources pane navigation (2026-10-09) returns to the existing authoring
 owner's usable workspace criterion. A public Nyx compound gives both ordinary
 controllers independent desktop scrolling and retained compact Files/Edit panes.
 Version-fourteen copied preferences migrate earlier queries/drafts and retain

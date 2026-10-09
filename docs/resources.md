@@ -54,7 +54,7 @@ admits the file and optional binding together, with one Undo for design and Pasc
 JSON files expose structural scalar choices for captions and prompts; literal
 dots in a key are preserved. Text files expose **File text / text** at their root.
 Binary files retain exact bytes without scalar coercion. Images use their separate
-typed image binding and locale choice described below.
+typed image binding with the shared locale/fallback choice described below.
 
 The adjacent **Resource data collections** editor discovers JSON arrays and row
 values, then maps an explicit text identity and ordered Pascal fields. Choose the
@@ -158,9 +158,13 @@ that intent through copying, persistence, crafted generation and managed source
 replay. Reusable consumers and sibling applications retain independent runtime
 catalogs; loading never rewrites the document's authored defaults.
 
-Studio's Resources form exposes this image binding intent beside the selected
-control's **Image** property. **Use this variant** pins the exact edited variant,
+Studio's Resources form exposes the same binding intent for scalar properties
+such as captions/prompts and the selected control's **Image** property.
+**Use this variant** pins the exact edited variant,
 including default. **Follow application locale** keeps runtime inheritance.
+Pinned bindings also expose **Fallback locale**; an empty value means default.
+Runtime bindings inherit both locale and fallback from the application owner.
+Switching choices retains the unfinished fallback while hiding its input.
 Reopening a matching runtime binding retains that choice; new forms and migrated
 older drafts keep the historical pinned default. Imported files remain proposals
 until **Apply resource** admits the file and optional binding together as one
@@ -171,8 +175,12 @@ labels are present. Version four also retains the tag editor's incomplete input
 and exact selected tag. Version-eleven editor preferences admit all three forms;
 historical version ten retains its strict version-two contract. Unfinished
 contents and exact label proposals are retained. Older unversioned drafts
-migrate their eighteen original fields without changing catalog/control baselines;
-current packets require the explicit nineteenth locale-choice field. Unknown or
+migrate their eighteen original fields without changing catalog/control baselines.
+The nineteenth locale-choice field is shared by image/scalar authoring. A
+nonempty caller fallback uses version-five drafts with twenty fields and exact
+tag-editor state; version-fifteen preferences admit them. Earlier preference
+versions retain their exact older draft contracts. Empty fallback drafts retain
+the compatible version-two/three/four form. Unknown or
 missing current choices refuse before restoration writes any field. Editor
 preferences are private presentation data, separate from portable design version.
 
@@ -199,6 +207,23 @@ locale with `.Localize(NyxLocale('en-GB'), NyxDefaultLocale)`; otherwise it uses
 the view's explicit runtime locale. No operating-system locale is selected
 implicitly. Full application hosts retain their own accepted catalog and locale
 through navigation/remounts; view-only reload remains confined to that view.
+
+Scalar and image selectors both distinguish an explicit default pin from
+inheritance. For example, this caption always reads the default variant even
+when another view follows `en-GB`:
+
+```pascal
+LHeadline.Binds.Text(
+  NyxResourceValue(NyxResourceRef('workshop-copy')).Field('headline')
+    .Localize(NyxDefaultLocale, NyxDefaultLocale)).Done;
+```
+
+The copied scalar selector's `Localized` Boolean reports that choice. Historical
+five-field selectors with an empty locale continue to inherit runtime values;
+nonempty historical locales remain pinned. Only an explicit default pin adds
+the strict sixth `localized: true` field. It requires design version eleven;
+earlier versions refuse the new discriminator. Generated Pascal emits the
+ordinary typed `.Localize` call and source replay retains its exact meaning.
 
 ## Application loading and lifetime
 
@@ -1187,6 +1212,8 @@ the existing version selection. Embedded
 definitions use strict version 1; hosted definitions use version 2. Older opaque
 `resources` extensions retain their meaning and refuse conflicting promotion.
 Machine cache locations and cache contents are never exported with a design.
+Explicit default scalar pins select version 11. Existing five-field selectors
+keep their earlier wire shape and version selection.
 
 Resources admit at most 1 MiB of packed content per file and 128 named/locale
 entries under a 3 MiB catalog wire budget. Text/JSON require strict UTF-8;

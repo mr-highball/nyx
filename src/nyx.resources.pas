@@ -182,8 +182,9 @@ type
     property Count: Integer read GetCount;
   end;
 
-  { A copied, strongly typed scalar selector. Localize fixes an explicit locale;
-    otherwise the runtime view's locale/fallback selects a variant. Field and
+  { A copied, strongly typed scalar selector. Localize fixes an explicit locale,
+    including NyxDefaultLocale; Localized distinguishes that pin from inheritance.
+    Otherwise the runtime view's locale/fallback selects a variant. Field and
     Item preserve JSON structure, including literal dots in field names. Reading
     an absent/null/wrong-kind value raises; no default caption hides bad data.
     Number deliberately requests a Double, while the resource retains its exact
@@ -195,6 +196,7 @@ type
     FLocale: TNyxLocaleRef;
     FFallback: TNyxLocaleRef;
     FKind: TNyxStateKind;
+    FLocalized: Boolean;
   public
     function Field(const AName: TNyxText): TNyxResourceValueRef;
     function Item(AIndex: Integer): TNyxResourceValueRef;
@@ -213,6 +215,7 @@ type
     property Locale: TNyxLocaleRef read FLocale;
     property Fallback: TNyxLocaleRef read FFallback;
     property Kind: TNyxStateKind read FKind;
+    property Localized: Boolean read FLocalized;
   end;
 
 type
@@ -1466,6 +1469,7 @@ begin
   Result.FLocale := FLocale;
   Result.FFallback := FFallback;
   Result.FKind := FKind;
+  Result.FLocalized := FLocalized;
 end;
 
 function TNyxResourceValueRef.Field(const AName: TNyxText): TNyxResourceValueRef;
@@ -1485,6 +1489,7 @@ begin
   Result := Copy;
   Result.FLocale := ALocale;
   Result.FFallback := AFallback;
+  Result.FLocalized := True;
 end;
 
 function TNyxResourceValueRef.AsText: TNyxResourceValueRef;
@@ -1527,7 +1532,7 @@ begin
   LLocale := ALocale;
   LFallback := AFallback;
 
-  if FLocale.Defined then
+  if FLocalized then
   begin
     LLocale := FLocale;
     LFallback := FFallback;
@@ -1567,6 +1572,20 @@ end;
 function TNyxResourceValueRef.ToData: TNyxDataValue;
 begin
   NyxResourceRef(FReference.Name);
+  { Keep historical five-field packets byte-stable where they already express
+    the same meaning. Only an explicit default pin needs the sixth discriminator.
+    An older unlocalized fallback is retained as inert historical metadata. }
+
+  if FLocalized and not FLocale.Defined then
+  begin
+    Exit(NyxObject([
+      NyxField('resource', NyxData(FReference.Name)),
+      NyxField('path', FPath.ToData),
+      NyxField('locale', NyxData(FLocale.Name)),
+      NyxField('fallback', NyxData(FFallback.Name)),
+      NyxField('type', NyxData(NyxStateKindName(FKind))),
+      NyxField('localized', NyxData(True))]));
+  end;
   Result := NyxObject([
     NyxField('resource', NyxData(FReference.Name)),
     NyxField('path', FPath.ToData),
@@ -1583,9 +1602,9 @@ var
   LName: TNyxText;
 begin
 
-  if (AData.Kind <> ndObject) or (AData.Count <> 5) then
+  if (AData.Kind <> ndObject) or not (AData.Count in [5, 6]) then
   begin
-    raise ENyxResource.Create('Resource selector requires five exact fields');
+    raise ENyxResource.Create('Resource selector requires its exact locale contract');
   end;
   LValue := NyxResourceValue(NyxResourceRef(AData.Field('resource').AsText));
   LValue.FPath := TNyxResourcePath.FromData(AData.Field('path'));
@@ -1594,6 +1613,19 @@ begin
   if LName <> '' then
   begin
     LValue.FLocale := NyxLocale(LName);
+  end;
+  LValue.FLocalized := LValue.FLocale.Defined;
+
+  if AData.Count = 6 then
+  begin
+    { Five fields historically inherit when locale is empty. The new field is
+      exclusively an explicit default pin, never a disguised nondefault packet. }
+
+    if not AData.Field('localized').AsBoolean or LValue.FLocale.Defined then
+    begin
+      raise ENyxResource.Create('Explicit scalar default pin requires localized=True and empty locale');
+    end;
+    LValue.FLocalized := True;
   end;
   LName := AData.Field('fallback').AsText;
 

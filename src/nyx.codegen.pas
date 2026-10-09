@@ -300,7 +300,7 @@ begin
     end;
   end;
 
-  if AValue.Locale.Defined then
+  if AValue.Localized then
   begin
     Result := Result + '.Localize(' + Locale(AValue.Locale) + ', ' + Locale(AValue.Fallback) + ')';
   end;

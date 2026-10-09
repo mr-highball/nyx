@@ -16,6 +16,20 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Explicit scalar locale consumer — 2026-10-09
+
+The portable prerequisite now distinguishes runtime inheritance from explicit
+default-locale scalar pins. Historical selectors remain exact; strict design
+version eleven and crafted source replay preserve new pins. Both ordinary Studios
+share scalar/image locale and caller-fallback authoring, strict copied draft/
+preference migration and hosted English/fallback/cache-policy proposals.
+Qualification, exact emitted execution, retained failures and preservation are in
+[the packet](../WORK.md#current-return-path-resource-locale-authoring--2026-10-09).
+No full criterion/task/count/credit closes; aggregate stays 25/11/47/21/28/3.
+Next use the existing actual browser application-loading/cache/lifetime gate,
+not more form/filter variants. Complete workload, physical input/accessibility
+and authenticated installed/observing rollout retain their existing owners.
+
 ## Retained Resources pane consumer — 2026-10-09
 
 The existing NS-4 authoring owner consumes this resource contract through a

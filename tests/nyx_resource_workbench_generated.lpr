@@ -133,7 +133,12 @@ begin
             LForm := nil;
           end;
 
-          if LSession.Document.Resources.Count <> 2 then
+          { The default copy and its hosted English variant both remain after
+            the packed resource is removed and notes are recreated. Adding a
+            different file must not discard an existing localized sibling. }
+
+          if (LSession.Document.Resources.Count <> 3) or
+            not LSession.Document.Resources.Contains(NyxResourceRef('copy'), NyxLocale('en-GB')) then
           begin
             raise Exception.Create('Incremental text publication lost catalog membership');
           end;

@@ -115,6 +115,7 @@ var
   LWindow: TForm;
   LStudio: TTestStudio;
   LSeed: TNyxDocument;
+  LBinding: TNyxBindingSpec;
   LPair: TNyxProjectPair;
   LBefore: TNyxText;
   LAfter: TNyxText;
@@ -660,6 +661,46 @@ begin
       'ordinary native Apply accepts creator tags with exact generated source');
     History(LBefore);
     Browse;
+    Click(NyxResourceBrowserActionID('studio-resource-browser', rbaOpen));
+    LBefore := LAfter;
+    Bind;
+    TextField(refBindingFallback, 'en-GB 🌙' + TNyxText(#127));
+    Choice(refBindingLocale, 'Follow application locale');
+    Click('action-code');
+    Check((ReadNyxResourceEditorBindingLocale(LStudio.ShellView.Root.Find(CEditor)) = reblRuntime) and
+      (LStudio.ShellView.Root.Find(NyxResourceEditorFieldID(CEditor, refBindingFallback)).Prop('value') =
+      TNyxText('en-GB 🌙') + TNyxText(#127)), 'scalar locale intent and incomplete fallback survive navigation');
+    Choice(refBindingLocale, 'Use this variant');
+    Click(NyxResourceEditorActionID(CEditor, reaApply));
+    Check(EncodeNyxProject(LStudio.Session.ProjectSnapshot) = LBefore,
+      'invalid fallback locale refuses the complete resource/source pair');
+    TextField(refBindingFallback, 'en-GB');
+    Click(NyxResourceEditorActionID(CEditor, reaApply));
+    Check(LStudio.Session.Document.Find('workshop-headline').FindBinding(bpText, LBinding) and
+      LBinding.ResourceValue.Localized and not LBinding.ResourceValue.Locale.Defined and
+      (LBinding.ResourceValue.Fallback.Name = 'en-GB'),
+      'ordinary native scalar Apply retains pin and caller fallback: ' + LStudio.Status);
+    History(LBefore);
+    LBefore := LAfter;
+    Bind;
+    Choice(refBindingLocale, 'Follow application locale');
+    Click(NyxResourceEditorActionID(CEditor, reaApply));
+    Check(LStudio.Session.Document.Find('workshop-headline').FindBinding(bpText, LBinding) and
+      not LBinding.ResourceValue.Localized, 'ordinary native scalar Apply follows the application locale');
+    History(LBefore);
+    LBefore := LAfter;
+    Bind;
+    Choice(refBindingLocale, 'Use this variant');
+    TextField(refBindingFallback, '');
+    TScrollBox(LStudio.ShellView.ControlFor(NyxResourceWorkspaceScrollID(
+      'studio-resource-workspace', rwpEditor))).ScrollInView(
+      LStudio.ShellView.InputFor(NyxResourceEditorFieldID(CEditor, refBindingLocale)));
+    SaveNyxNativeCapture(LWindow, TNyxText(ParamStr(2)) + TNyxText('.locales.png'), ncmPrint);
+    Click(NyxResourceEditorActionID(CEditor, reaApply));
+    Check(LStudio.Session.Document.Find('workshop-headline').FindBinding(bpText, LBinding) and
+      LBinding.ResourceValue.Localized and not LBinding.ResourceValue.Fallback.Defined,
+      'ordinary native return to the default variant remains an explicit pin');
+    History(LBefore);
     Select('project-name');
     TListBox(LStudio.ShellView.ControlFor(
       NyxResourceBrowserListID('studio-resource-browser'))).ItemIndex := 0;
@@ -735,6 +776,34 @@ begin
     ImportFile('packed', 'Binary', WorkbenchPackedTitle, WorkbenchPackedHelp, LBytes);
     Click(NyxResourceEditorActionID(CEditor, reaApply));
     Check(LStudio.SourceCommands.State = nssApplied, 'arbitrary bytes admit without an invented scalar binding');
+    History(LBefore);
+    Select('workshop-headline');
+    ImportFile('copy', 'JSON', WorkbenchHostedTitle, WorkbenchHostedHelp, NyxEncodeUTF8(WorkbenchJSON));
+    TextField(refLocale, 'en-GB');
+    Choice(refSource, 'Hosted URL');
+    TextField(refURL, WorkbenchHostedURL);
+    Choice(refCache, 'Persistent');
+    TextField(refFresh, '600');
+    TextField(refStale, '90');
+    TextField(refMaximum, '65536');
+    Choice(refServer, 'Override in private Nyx cache');
+    Click(NyxResourceEditorActionID(CEditor, reaImport));
+    GPicker.Deliver(LPath);
+    Ready;
+    Bind;
+    Choice(refTarget, NyxBindingPropertyTitle(bpText));
+    Choice(refPath, 'Root["literal.dot"] / text');
+    Choice(refBindingLocale, 'Follow application locale');
+    Click(NyxResourceEditorActionID(CEditor, reaPreview));
+    Check(Pos('network loading has not run', LStudio.ShellView.Root.Find(CEditor + '-summary').Prop('text')) > 0,
+      'ordinary hosted preview explicitly identifies authored fallback');
+    TScrollBox(LStudio.ShellView.ControlFor(NyxResourceWorkspaceScrollID(
+      'studio-resource-workspace', rwpEditor))).ScrollInView(
+      LStudio.ShellView.InputFor(NyxResourceEditorFieldID(CEditor, refCache)));
+    SaveNyxNativeCapture(LWindow, TNyxText(ParamStr(2)) + TNyxText('.hosted.png'), ncmPrint);
+    Click(NyxResourceEditorActionID(CEditor, reaApply));
+    Check(LStudio.SourceCommands.State = nssApplied,
+      'ordinary native authoring admits the complete hosted/localized/cache proposal: ' + LStudio.Status);
     History(LBefore);
     Inc(GChecks, CheckNyxResourceWorkbench(LStudio.Session.Document));
     LBytes := NyxEncodeUTF8(LStudio.Session.Source);

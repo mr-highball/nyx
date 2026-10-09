@@ -195,7 +195,7 @@ begin
     LPresentation := NyxData(AValue.PresentationSelection.Reference.Name);
   end;
   Result := NyxObject([
-    NyxField('version', NyxData(14)),
+    NyxField('version', NyxData(15)),
     NyxField('codeVisible', NyxData(AValue.CodeVisible)),
     NyxField('sourceTab', NyxData(Ord(AValue.SourceTab))),
     NyxField('sourceExpanded', NyxData(AValue.SourceExpanded)),
@@ -273,7 +273,7 @@ begin
   LValue := TNyxDataValue.ParseJSON(AText);
 
   if (LValue.Kind <> ndObject) or
-    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]) or
+    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]) or
     ((LValue.Field('version').AsInteger = 2) and (LValue.Count <> 32)) or
     ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) or
     ((LValue.Field('version').AsInteger = 4) and (LValue.Count <> 35)) or
@@ -283,7 +283,7 @@ begin
     ((LValue.Field('version').AsInteger = 8) and (LValue.Count <> 45)) or
     ((LValue.Field('version').AsInteger in [9, 10, 11]) and (LValue.Count <> 46)) or
     ((LValue.Field('version').AsInteger in [12, 13]) and (LValue.Count <> 48)) or
-    ((LValue.Field('version').AsInteger = 14) and (LValue.Count <> 51)) then
+    ((LValue.Field('version').AsInteger in [14, 15]) and (LValue.Count <> 51)) then
   begin
     raise ENyxModel.Create('Unsupported editor presentation packet');
   end;
@@ -390,14 +390,17 @@ begin
     Result.ResourceSelection := TNyxResourceEditorSelection.FromData(LValue.Field('resourceSelection'));
     LResourceDraft := LValue.Field('resourceDraft');
     { Ten requires explicit image-locale choice. Eleven also admits typed tags
-      and incomplete tag-editor state. Preserve each historical packet's exact
-      contract instead of silently widening ten or losing a newer proposal. }
+      and incomplete tag-editor state. Fifteen admits the independent caller
+      fallback draft. Preserve each historical packet's exact contract instead
+      of widening older versions or losing a newer unfinished proposal. }
 
     if (LResourceDraft.Kind <> ndNull) and
       (((LVersion < 10) and (LResourceDraft.Count <> 4)) or
       ((LVersion = 10) and ((LResourceDraft.Count <> 5) or
       (LResourceDraft.Field('version').AsInteger <> 2))) or
-      ((LVersion >= 11) and not (LResourceDraft.Field('version').AsInteger in [2, 3, 4]))) then
+      ((LVersion in [11, 12, 13, 14]) and
+      not (LResourceDraft.Field('version').AsInteger in [2, 3, 4])) or
+      ((LVersion = 15) and not (LResourceDraft.Field('version').AsInteger in [2, 3, 4, 5]))) then
     begin
       raise ENyxModel.Create('Resource draft does not match its presentation version');
     end;
@@ -418,7 +421,7 @@ begin
 
     if ((LVersion = 12) and
       (LValue.Field('resourceBrowser').Field('version').AsInteger <> 1)) or
-      ((LVersion in [13, 14]) and
+      ((LVersion in [13, 14, 15]) and
       (LValue.Field('resourceBrowser').Field('version').AsInteger <> 2)) then
     begin
       raise ENyxModel.Create('Resource browser does not match its presentation version');

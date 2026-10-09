@@ -424,6 +424,7 @@ var
   LBefore: TNyxText;
   LInitial: TNyxText;
   LPolicy: TNyxResourceCachePolicy;
+  LBinding: TNyxBindingSpec;
   {$ifndef PAS2JS}
   LStream: TFileStream;
   LWorkspace: TNyxWorkspaceRef;
@@ -573,6 +574,24 @@ begin
   Check((PairText = LBefore) and
     (LResult.Field('title').Field('text').AsText = ''),
     'metadata tail windows clamp shorter titles and preserve the accepted pair');
+  Apply('pin-default-resource-locale', [
+    NyxBindResource(NyxControl('headline'), bpText,
+      NyxResourceValue(NyxResourceRef('copy')).Field('title')
+        .Localize(NyxDefaultLocale, NyxLocale('en-GB')))]);
+  LPair := DecodeNyxProject(PairText);
+  LDocument := TNyxCodec.Decode(LPair.Design);
+  try
+    Check(LDocument.Find('headline').FindBinding(bpText, LBinding) and
+      LBinding.ResourceValue.Localized and not LBinding.ResourceValue.Locale.Defined and
+      (LBinding.ResourceValue.Fallback.Name = 'en-GB'),
+      'public semantic group admits an explicit default scalar pin and caller fallback');
+    Check(Pos('.Localize(NyxDefaultLocale, NyxLocale(''en-GB''))', LPair.Source) > 0,
+      'semantic locale intent appears in crafted ordinary Pascal');
+  finally
+    LDocument.Free;
+  end;
+  History('undo', 'undo-default-resource-locale');
+  Check(PairText = LBefore, 'one semantic Undo restores the exact locale binding/source pair');
 
   Refuses('nyx_resources', Arguments('wrong-scalar', NyxResourcePatch([
     NyxBindResource(NyxControl('headline'), bpText, NyxResourceValue(NyxResourceRef('copy')).Field('price'))]).ToData),

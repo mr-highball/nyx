@@ -724,6 +724,7 @@ var
   LStatus: TJSHTMLElement;
   LTable: TJSHTMLElement;
   LTags: TNyxNode;
+  LBinding: TNyxBindingSpec;
 begin
   GStudio := nil;
   window.addEventListener('error', @RuntimeFailure);
@@ -798,7 +799,79 @@ begin
       'Your resource workbench', 'actual browser caption reads accepted JSON');
     await(Resources);
     await(History(LBefore, LAfter));
+    {$ifndef NYX_RESOURCE_LOCALE_JOURNEY}
     await(Browse);
+    {$else}
+    { This bounded consumer retains the ordinary imports, locale/fallback edits,
+      hosted policy, generated source and paired history checks. Dedicated catalog
+      navigation has its own accepted packet; the unchanged complete journey
+      above still runs by default and keeps its original driver time limit. }
+    {$endif}
+    await(ResourcePane(rwpFiles));
+    {$ifdef NYX_RESOURCE_LOCALE_JOURNEY}
+    TJSHTMLElement(Find(NyxResourceBrowserListID('studio-resource-browser'))
+      .querySelector('[data-nyx-item]')).click;
+    {$endif}
+    await(Click(NyxResourceBrowserActionID('studio-resource-browser', rbaOpen)));
+    LBefore := LAfter;
+    ResourceChange(refBind, 'true');
+    ResourceChange(refBindingFallback, 'en-GB 🌙' + TNyxText(#127));
+    ResourceChange(refBindingLocale, 'Follow application locale');
+    await(Action('action-code', 'view', 'code'));
+    await(ResourceWait);
+    await(Resources);
+    Check((ReadNyxResourceEditorBindingLocale(GStudio.ShellView.Root.Find(CEditor)) = reblRuntime) and
+      (GStudio.ShellView.Root.Find(NyxResourceEditorFieldID(CEditor, refBindingFallback)).Prop('value') =
+      TNyxText('en-GB 🌙') + TNyxText(#127)), 'scalar locale intent and incomplete fallback survive navigation');
+    ResourceChange(refBindingLocale, 'Use this variant');
+    await(Click(NyxResourceEditorActionID(CEditor, reaApply)));
+    await(ResourceWait);
+    Check(await(ResourceSnapshot) = LBefore, 'invalid fallback refuses the complete resource/source pair');
+    ResourceChange(refBindingFallback, 'en-GB');
+    await(Click(NyxResourceEditorActionID(CEditor, reaApply)));
+    await(ResourceWait);
+    LAfter := await(ResourceSnapshot);
+    LDocument := TNyxCodec.Decode(DecodeNyxProject(LAfter).Design);
+    try
+      Check(LDocument.Find('workshop-headline').FindBinding(bpText, LBinding) and
+        LBinding.ResourceValue.Localized and not LBinding.ResourceValue.Locale.Defined and
+        (LBinding.ResourceValue.Fallback.Name = 'en-GB'), 'ordinary browser scalar Apply retains pin and caller fallback');
+    finally
+      LDocument.Free;
+    end;
+    await(History(LBefore, LAfter));
+    LBefore := LAfter;
+    ResourceChange(refBind, 'true');
+    ResourceChange(refBindingLocale, 'Follow application locale');
+    await(Click(NyxResourceEditorActionID(CEditor, reaApply)));
+    await(ResourceWait);
+    LAfter := await(ResourceSnapshot);
+    LDocument := TNyxCodec.Decode(DecodeNyxProject(LAfter).Design);
+    try
+      Check(LDocument.Find('workshop-headline').FindBinding(bpText, LBinding) and
+        not LBinding.ResourceValue.Localized, 'ordinary browser scalar Apply follows application locale');
+    finally
+      LDocument.Free;
+    end;
+    await(History(LBefore, LAfter));
+    LBefore := LAfter;
+    ResourceChange(refBind, 'true');
+    ResourceChange(refBindingLocale, 'Use this variant');
+    ResourceChange(refBindingFallback, '');
+    Find(NyxResourceEditorFieldID(CEditor, refBindingLocale)).scrollIntoView;
+    await(Capture('resource-locales-live'));
+    await(Click(NyxResourceEditorActionID(CEditor, reaApply)));
+    await(ResourceWait);
+    LAfter := await(ResourceSnapshot);
+    LDocument := TNyxCodec.Decode(DecodeNyxProject(LAfter).Design);
+    try
+      Check(LDocument.Find('workshop-headline').FindBinding(bpText, LBinding) and
+        LBinding.ResourceValue.Localized and not LBinding.ResourceValue.Fallback.Defined,
+        'ordinary browser return to default variant remains an explicit pin');
+    finally
+      LDocument.Free;
+    end;
+    await(History(LBefore, LAfter));
     await(Select('project-name'));
     await(ResourcePane(rwpFiles));
     TJSHTMLElement(Find(NyxResourceBrowserListID('studio-resource-browser'))
@@ -888,6 +961,35 @@ begin
     LBytes[2] := 255;
     LBefore := LAfter;
     await(ImportFile('packed', 'Binary', WorkbenchPackedTitle, WorkbenchPackedHelp, LBytes));
+    await(Click(NyxResourceEditorActionID(CEditor, reaApply)));
+    await(ResourceWait);
+    LAfter := await(ResourceSnapshot);
+    await(History(LBefore, LAfter));
+    await(Select('workshop-headline'));
+    LBefore := LAfter;
+    await(ImportFile('copy', 'JSON', WorkbenchHostedTitle, WorkbenchHostedHelp, NyxEncodeUTF8(WorkbenchJSON)));
+    ResourceChange(refLocale, 'en-GB');
+    ResourceChange(refSource, 'Hosted URL');
+    ResourceChange(refURL, WorkbenchHostedURL);
+    ResourceChange(refCache, 'Persistent');
+    ResourceChange(refFresh, '600');
+    ResourceChange(refStale, '90');
+    ResourceChange(refMaximum, '65536');
+    ResourceChange(refServer, 'Override in private Nyx cache');
+    await(Click(NyxResourceEditorActionID(CEditor, reaImport)));
+    LTransfer := TImageTransfer.new;
+    LTransfer.items.add(TJSHTMLFile.new(TJSArray.new(WorkbenchJSON), 'copy.dat'));
+    SupplyFiles(TJSHTMLInputElement(document.querySelector('input[type="file"]:not([accept])')), LTransfer);
+    await(ResourceWait);
+    ResourceChange(refBind, 'true');
+    ResourceChange(refTarget, NyxBindingPropertyTitle(bpText));
+    ResourceChange(refPath, 'Root["literal.dot"] / text');
+    ResourceChange(refBindingLocale, 'Follow application locale');
+    await(Click(NyxResourceEditorActionID(CEditor, reaPreview)));
+    Check(Pos('network loading has not run', GStudio.ShellView.Root.Find(CEditor + '-summary').Prop('text')) > 0,
+      'ordinary hosted preview explicitly identifies authored fallback');
+    Find(NyxResourceEditorFieldID(CEditor, refCache)).scrollIntoView;
+    await(Capture('resource-hosted-live'));
     await(Click(NyxResourceEditorActionID(CEditor, reaApply)));
     await(ResourceWait);
     LAfter := await(ResourceSnapshot);

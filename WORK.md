@@ -9,6 +9,80 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Resource locale authoring — 2026-10-09
+
+Entry was clean at pushed `dfd3dcc`. The previous turn is progress: the public
+workspace, ordinary controllers, responsive-command repair and both-target
+interaction evidence changed authoritative state. This batch follows the recorded
+return to NS-4's Resources/localization/caller-policy authoring criterion.
+Inspection found a concrete prerequisite: scalar selectors cannot distinguish an
+explicit default-locale pin from runtime inheritance, and the common form exposes
+locale intent only for images. Follow that NS-1 contract gap, then return to the
+ordinary Resources consumer; do not start more workspace/filter variants.
+
+The portable scalar selector now distinguishes runtime inheritance from an
+explicit default-locale pin. Historical five-field selectors retain their exact
+meaning; only a new default pin carries `localized=True` and selects design
+version eleven. Crafted `.Localize` generation/source replay preserves the pin.
+Both ordinary controllers consume the public scalar/image locale choice and
+caller fallback. Existing image aliases/field identities remain compatible.
+Strict draft version five preserves incomplete fallback text and tag-editor
+state; outer preferences version fifteen migrates earlier exact drafts without
+widening their formats. Empty fallback still emits the historical draft shape.
+
+The maintained MCP-authored English workbench now exercises ordinary locale
+navigation, invalid fallback refusal, explicit default/runtime selection, hosted
+English JSON with packed fallback, caller cache/override choices and exact paired
+Apply/Undo/Redo. Native ordinary Studio passes **298**, shared form/migration
+**49**, actual resource bindings **89**, semantic candidate groups **133** and
+preferences **287**, all checked and leak-free. Shared HTTP semantic checks pass
+**106**; actual browser binding and full shared/form-memo consumers pass their
+HTTP gates. The latter repairs a stale harness assumption: typing changes the
+independent rendered projection, while authored defaults remain unchanged.
+
+Focused HTTP desktop completes **1518** checks (polling included), publishes
+`data-test-result=passed` and retires its views. Its capture driver was mistakenly
+asked for a nonexistent marker and reported a timeout after fixture success;
+that failed receipt remains. HTTP CSS-390 completes **2081** checks (polling
+included), with five live checkpoints and a passing driver using the correct
+result marker. Both desktop/narrow actual fixtures retire their views.
+`NYX_RESOURCE_LOCALE_JOURNEY` skips only the already-qualified catalog navigation
+journey; it retains actual imports, locale/fallback/hosted policies, table/plain
+text/binary consumers, source and paired history. The original complete fixture
+remains the default with unchanged assertions and driver bounds. Expanded full
+desktop attempts did not reach their terminal state within that existing
+180-second bound; complete combined workload/performance qualification stays open.
+The separate legacy native form's first-open 15-second timeout is also retained;
+the ordinary 298-check consumer is not a pass for that legacy scope.
+
+Native and focused desktop/narrow emit identical **5602-byte** Pascal, SHA-256
+`356a10a38376a25a194a469496e50a59072e705aa316879e27f1ff9f1e890884`.
+This exact builder executes **60** natively and passes HTTP compilation/execution.
+Its incremental import check preserves the newly authored localized sibling.
+Both ordinary Studios, backend and worker compile with zero owned warnings;
+seven unchanged upstream RTL warnings per browser compile remain. Dependencies
+and installed toolchains are untouched. Live native/HTTP locale and hosted-control
+captures were inspected; synthetic input/CSS widths do not establish phone,
+trusted chooser, IME, assistive-technology or another native widgetset behavior.
+
+Private receipts/logs/captures are under `build/resource-locale-authoring/`.
+Fixture-order failures and a retired-service guard baseline refusal remain there;
+corrected current identity/preservation guards supersede that baseline. Installed
+MCP is read-only at revision two; suspended fresh public candidates exercise the
+new grouped selector schema. Final guards retain nine exact project pairs,
+fifteen service identities, 299 sealed files, the unchanged 147033-byte checkpoint
+and exact served LAN assets. Frozen installed discovery does not gain these new
+contracts by compiling source. No listeners/configurations are replaced; LAN
+continues serving its earlier sealed build.
+
+This is progress against the original NS-1 prerequisite and NS-4 Resources
+authoring criterion, not full criterion/task/product acceptance. Aggregate
+**25/11/47/21/28/3** and credits remain unchanged. Stop catalog/form/filter fixture
+variants. Next follow the existing actual browser application-resource loading,
+locale/cache/lifetime gate; observing deployment and measured complete Studio
+workload remain with their original owners. Hosted declaration/fallback authoring
+does not prove a hosted network fetch or browser-cache policy execution.
+
 ## Current return path: Resource pane navigation — 2026-10-09
 
 Entry was clean at pushed `8af7114`. This returns to the existing NS-4 authoring

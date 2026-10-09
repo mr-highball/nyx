@@ -9,7 +9,16 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current native Studio allocation follows criteria 2/3 through the ordinary
+Current resource locale authoring (2026-10-09) preserves the complete default
+browser fixture, whose expanded combined journey has not reached its terminal
+state within the unchanged 180-second driver bound. A focused ordinary resource
+consumer reuses prior catalog-navigation qualification; it is not a combined
+workload performance pass. Native ordinary authoring passes 298 checked/leak-free,
+without claiming a gesture/frame/update/memory budget. Remaining measured cost
+stays under criteria 2/3; no NS-3 count or credit changes. See
+[the packet](../WORK.md#current-return-path-resource-locale-authoring--2026-10-09).
+
+Previous native Studio allocation follows criteria 2/3 through the ordinary
 consumer: typed toolbar wrap, native scrollbar/client allocation and detached
 label measurement repair demonstrated clipping while retaining edits and
 logical projection. Native Resources/layout/large-viewport/recovery passes

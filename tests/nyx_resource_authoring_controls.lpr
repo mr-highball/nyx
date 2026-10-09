@@ -122,6 +122,9 @@ var
   LAfter: TNyxText;
   LKind: TNyxResourceKind;
   LRefused: Boolean;
+  LPacket: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
   {$ifndef PAS2JS}
   LOutput: TFileStream;
   LText: TNyxText;
@@ -162,7 +165,15 @@ begin
     Put(LForm.Node, refBind, 'true');
     Put(LForm.Node, refTarget, NyxBindingPropertyTitle(bpText));
     Put(LForm.Node, refPath, 'Root["literal.dot"] / text');
+    SetNyxResourceEditorBindingLocale(LForm.Node, reblRuntime);
+    Check(CaptureNyxResourceEditor(LForm.Node.Find(NyxResourceEditorActionID(CEditor, reaApply)),
+      LForm.Node, LChange) and not LChange.Binding.ResourceValue.Localized,
+      'scalar form explicitly follows runtime locale');
+    SetNyxResourceEditorBindingLocale(LForm.Node, reblSelected);
+    Put(LForm.Node, refBindingFallback, 'en-GB 🌙' + TNyxText(#127));
     LDraft.Capture(CEditor, LForm.Node);
+    Check((LDraft.ToData.Field('version').AsInteger = 5) and
+      (LDraft.ToData.Field('values').Count = 20), 'caller fallback uses a strict twenty-field draft');
     LCopy := TNyxResourceEditorDraft.FromData(LDraft.ToData);
     LPreference := DefaultNyxStudioPresentation;
     LPreference.ResourcesVisible := True;
@@ -173,10 +184,48 @@ begin
     LFresh := NewNyxResourceEditor(CEditor, LDocument.Resources, NyxNewResourceSelection,
       LDocument.Find('workshop-headline'), LDocument.Find('workshop-headline'));
     Check(LCopy.Restore(LFresh.Node), 'independent chrome restores discovered structural choices');
+    Check(LFresh.Node.Find(NyxResourceEditorFieldID(CEditor, refBindingFallback)).Prop('value') =
+      TNyxText('en-GB 🌙') + TNyxText(#127), 'copied preferences retain exact incomplete Unicode fallback');
+    LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LPreference));
+    SetLength(LFields, LPacket.Count);
+    for LIndex := 0 to LPacket.Count - 1 do
+    begin
+      LFields[LIndex] := NyxField(LPacket.Key(LIndex), LPacket.Field(LPacket.Key(LIndex)));
+
+      if LPacket.Key(LIndex) = 'version' then
+      begin
+        LFields[LIndex] := NyxField('version', NyxData(14));
+      end;
+    end;
+    LRefused := False;
+    try
+      LLoaded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'version fourteen refuses the future fallback draft');
+    LRefused := False;
+    try
+      CaptureNyxResourceEditor(LFresh.Node.Find(NyxResourceEditorActionID(CEditor, reaApply)),
+        LFresh.Node, LChange);
+    except
+      on ENyxResource do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (TNyxCodec.Encode(LDocument) = LBefore),
+      'invalid caller locale refuses before accepted design changes');
+    Put(LFresh.Node, refBindingFallback, 'en-GB');
     Check(CaptureNyxResourceEditor(LFresh.Node.Find(NyxResourceEditorActionID(CEditor, reaApply)),
       LFresh.Node, LChange), 'Apply captures a typed file and scalar binding');
     Check(LChange.Binding.ResourceValue.Path.ToData.ToJSON =
       NyxResourcePath.Field('literal.dot').ToData.ToJSON, 'literal dotted key remains structural');
+    Check(LChange.Binding.ResourceValue.Localized and not LChange.Binding.ResourceValue.Locale.Defined and
+      (LChange.Binding.ResourceValue.Fallback.Name = 'en-GB'), 'scalar default pin keeps caller fallback');
     Check(TNyxResourceEditorChange.FromData(LChange.ToData).ToData.ToJSON = LChange.ToData.ToJSON,
       'immutable complete processor descriptor round-trips exactly');
     LSession.Load(LBefore);
@@ -753,8 +802,12 @@ begin
     LOptions['bubbles'] := True;
     LInput.dispatchEvent(TResourceInputEvent.new('input', LOptions));
     LInput.dispatchEvent(TResourceInputEvent.new('change', LOptions));
-    Check(ReadNyxResourceEditor(LForm.Node).Text = TNyxText('Your browser resource workshop'),
+    { Input belongs to the independently owned rendered projection. Reading the
+      authored document here would wrongly require typing to mutate defaults. }
+    Check(ReadNyxResourceEditor(LView.Root.Find(CEditor)).Text = TNyxText('Your browser resource workshop'),
       'ordinary browser memo feeds typed resource capture');
+    Check(ReadNyxResourceEditor(LForm.Node).Text = '',
+      'ordinary browser typing preserves authored resource defaults');
     LPicker := NewNyxBrowserResourcePicker;
     LPicker.Cancel;
     LPicker := nil;
@@ -773,14 +826,29 @@ begin
     {$ifndef PAS2JS}Application.Initialize;{$endif}
     Shared;
     RowDrafts;
+    {$ifndef NYX_RESOURCE_FORM_ONLY}
     {$ifdef PAS2JS}BrowserControls;{$else}NativeStudio;{$endif}
+    {$endif}
+    {$ifdef NYX_RESOURCE_FORM_ONLY}
+    { Portable proposal/migration scope is qualified independently. The ordinary
+      maintained workbench exercises real Studio controllers; this flag does not
+      change any assertion or time bound in the complete legacy journey. }
+    WriteLn('PASS / shared resource form / ', GChecks, ' checks');
+    {$else}
     WriteLn('PASS / resource authoring / ', GChecks, ' checks');
+    {$endif}
     {$ifdef PAS2JS}document.body.setAttribute('data-test-result', 'passed');{$endif}
   except
     on LException: Exception do
     begin
       WriteLn('FAIL / ', LException.Message);
-      {$ifdef PAS2JS}document.body.setAttribute('data-test-result', 'failed');{$else}
+      {$ifdef PAS2JS}
+      { Keep the precise refusal beside the result marker. The maintained HTTP
+        driver captures this bounded diagnostic without collecting a browser
+        profile or depending on console output. }
+      document.body.setAttribute('data-event-error', LException.Message);
+      document.body.setAttribute('data-test-result', 'failed');
+      {$else}
       DumpExceptionBackTrace(Output);
       ExitCode := 1;
       {$endif}

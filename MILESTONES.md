@@ -4,7 +4,18 @@
 [Current work](WORK.md)
 
 
-Current Resources pane navigation (2026-10-09) consumes the original usable
+Current resource locale authoring (2026-10-09) consumes the original localization/
+caller-policy authoring criterion. Explicit scalar default pins preserve older
+selector meaning, crafted source and shared scalar/image locale/fallback controls.
+Strict copied preferences retain incomplete input. Ordinary hosted English data,
+fallback/cache policy and paired history have integrated consumers; exact scope,
+remaining combined-workload limits and preservation are in
+[the packet](WORK.md#current-return-path-resource-locale-authoring--2026-10-09).
+Actual browser application loading/cache/lifetime is the next existing gate;
+physical input/accessibility, performance and observing rollout remain open.
+Aggregate **25/11/47/21/28/3** is unchanged; no full criterion/count/credit closes.
+
+Previous Resources pane navigation (2026-10-09) consumes the original usable
 workspace criterion through a public Nyx compound in both ordinary controllers.
 Desktop panes scroll independently; compact Files/Edit retains mounted controls,
 unfinished inputs and per-project positions. Strict version-fourteen preferences
