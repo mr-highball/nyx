@@ -9,7 +9,16 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current dedicated Resources integration consumes the original authoring and
+Current Resources pane navigation returns to those original authoring/workspace
+criteria. Both ordinary controllers consume the public Nyx compound: desktop
+panes scroll independently, compact Files/Edit retains mounted controls, and
+copied version-fourteen preferences retain separate positions while migrating
+historical queries/drafts. Qualification and the shared responsive-command repair
+are in [the packet](../WORK.md#current-return-path-resource-pane-navigation--2026-10-09).
+Full workspace journeys, physical input/accessibility, performance and observing
+rollout remain required. Aggregate stays 25/11/47/21/28/3; no full criterion closes.
+
+Previous dedicated Resources integration consumes the original authoring and
 workspace criteria through a public Nyx section and compact Project picker.
 Both ordinary controllers share the catalog/filter compounds and independently
 owned mounts. Typed category/source/locale/all-any-tag queries and copied

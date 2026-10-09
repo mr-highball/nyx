@@ -36,7 +36,7 @@ uses
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.lcl,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
-  nyx.resources.browser, nyx.studio.resource.browser, nyx.publication,
+  nyx.resources.browser, nyx.resources.workspace, nyx.studio.resource.browser, nyx.publication,
   nyx.resource.context,
   nyx.resources.import, nyx.resources.import.lcl,
   nyx.studio.help, nyx.component.help, nyx.root.types,
@@ -239,6 +239,11 @@ type
     procedure OpenProject;
     procedure AcceptRemote;
     procedure CapturePresentation;
+    { Target widgets remain borrowed; only visible pane positions enter copied
+      presentation. Compact switching never owns a second resource proposal. }
+    procedure CaptureResourcePaneScroll;
+    procedure RestoreResourcePaneScroll;
+    procedure SelectResourcePane(APane: TNyxResourceWorkspacePane);
     procedure SourceModalDismiss;
     { Update independent source/status controls without replacing the title field
       that is currently notifying. Guard programmatic source feedback. }
@@ -1705,6 +1710,86 @@ begin
   Application.QueueAsyncCall(PaintQueued, 0);
 end;
 
+procedure TNyxNativeStudio.CaptureResourcePaneScroll;
+var
+  LPane: TNyxResourceWorkspacePane;
+  LControl: TControl;
+  LPosition: Integer;
+begin
+  for LPane := Low(TNyxResourceWorkspacePane) to High(TNyxResourceWorkspacePane) do
+  begin
+
+    if FShellView.Root.Find(NyxResourceWorkspaceScrollID(
+      NyxStudioResourceWorkspaceID, LPane)) = nil then
+    begin
+      Continue;
+    end;
+    LControl := FShellView.ControlFor(NyxResourceWorkspaceScrollID(
+      NyxStudioResourceWorkspaceID, LPane));
+
+    if not (LControl is TScrollBox) or not LControl.Visible then
+    begin
+      Continue;
+    end;
+    LPosition := TScrollBox(LControl).VertScrollBar.Position;
+
+    if LPane = rwpFiles then
+    begin
+      FState.ResourceCatalogScroll := LPosition;
+    end
+    else
+    begin
+      FState.ResourceEditorScroll := LPosition;
+    end;
+  end;
+end;
+
+procedure TNyxNativeStudio.RestoreResourcePaneScroll;
+var
+  LPane: TNyxResourceWorkspacePane;
+  LControl: TControl;
+  LPosition: Integer;
+begin
+  for LPane := Low(TNyxResourceWorkspacePane) to High(TNyxResourceWorkspacePane) do
+  begin
+
+    if FShellView.Root.Find(NyxResourceWorkspaceScrollID(
+      NyxStudioResourceWorkspaceID, LPane)) = nil then
+    begin
+      Continue;
+    end;
+    LControl := FShellView.ControlFor(NyxResourceWorkspaceScrollID(
+      NyxStudioResourceWorkspaceID, LPane));
+    LPosition := FState.ResourceEditorScroll;
+
+    if LPane = rwpFiles then
+    begin
+      LPosition := FState.ResourceCatalogScroll;
+    end;
+
+    if (LControl is TScrollBox) and LControl.Visible then
+    begin
+      TScrollBox(LControl).VertScrollBar.Position := LPosition;
+    end;
+  end;
+end;
+
+procedure TNyxNativeStudio.SelectResourcePane(APane: TNyxResourceWorkspacePane);
+var
+  LWorkspace: TNyxNode;
+begin
+  CaptureResourcePaneScroll;
+  FState.ResourcePane := APane;
+  LWorkspace := FShellView.Root.Find(NyxStudioResourceWorkspaceID);
+
+  if LWorkspace <> nil then
+  begin
+    RestoreNyxResourceWorkspace(LWorkspace, NyxPresentation('compact'), APane);
+    FShellView.Sync;
+    RestoreResourcePaneScroll;
+  end;
+end;
+
 function TNyxNativeStudio.CreateResourcePicker: INyxResourcePicker;
 begin
   Result := NewNyxLCLResourcePicker;
@@ -1891,6 +1976,7 @@ begin
     FState.ResourceEditorDraft.Capture('studio-resource-editor', FShellView.RootFor('studio-resource-editor'));
     FState.ResourceRowsDraft.Capture('studio-resource-rows', FShellView.RootFor('studio-resource-rows'));
     FResourceBrowser.Capture(FShellView, FState.ResourceBrowser);
+    CaptureResourcePaneScroll;
 
     if FShellView.Root.Find('studio-resources') <> nil then
     begin
@@ -2178,6 +2264,7 @@ begin
     begin
       TScrollBox(FShellView.ControlFor('studio-resources')).VertScrollBar.Position :=
         FState.ResourcesScroll;
+      RestoreResourcePaneScroll;
     end;
     { Compact Project/Design panels do not mount the Inspector hierarchy. Restore
       selection only when this shell actually owns the public tree binding. }
@@ -2978,6 +3065,7 @@ var
   LResourceProjection: TNyxNode;
   LRetainedResourceSelection: Boolean;
   LResourceIntent: TNyxStudioResourceBrowseIntent;
+  LResourcePane: TNyxResourceWorkspacePane;
   LContentFocus: TWinControl;
 begin
 
@@ -3077,6 +3165,7 @@ begin
         rbiWorkspace:
           begin
             FState.ResourcesVisible := True;
+            FState.ResourcePane := rwpFiles;
             FState.CanvasExpanded := False;
             RequestRefresh;
           end;
@@ -3101,6 +3190,7 @@ begin
             end;
             FState.ResourceEditorDraft.Clear;
             FState.ResourceSelection := LResourceSelection;
+            SelectResourcePane(rwpEditor);
 
             if LRetainedResourceSelection then
             begin
@@ -3117,6 +3207,13 @@ begin
             { Runtime filtering/selection already synchronized its owned views. }
           end;
       end;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and NyxResourceWorkspaceAction(ANode,
+      NyxStudioResourceWorkspaceID, LResourcePane) then
+    begin
+      SelectResourcePane(LResourcePane);
       Exit;
     end;
 

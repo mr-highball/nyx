@@ -1084,7 +1084,10 @@ begin
     raise ENyxState.Create('Read-only control cannot be edited');
   end;
   LRevision := FState.Revision;
-  FCommandRoot := FRoot.Clone;
+  { Commands execute against the same applied presentation as their origin.
+    A stored-only clone would silently suppress a responsive visible control
+    whose default scope is hidden, or lose a responsive read-only restriction. }
+  FCommandRoot := FRoot.CloneRuntimeProjection;
   FCommandProjected := False;
   try
     LNode := FCommandRoot.Find(ANode.ID);

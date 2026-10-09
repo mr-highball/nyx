@@ -9,6 +9,87 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Resource pane navigation — 2026-10-09
+
+Entry was clean at pushed `8af7114`. This returns to the existing NS-4 authoring
+owner's usable Resources workspace criterion after accepted semantic discovery.
+The user's dedicated space/category/creator-label direction is preserved; no new
+metadata or filter variant is needed. The concrete deliverable is a public Nyx
+compound with independently scrolling desktop catalog/editor panes and compact
+Files/Edit navigation that keeps both controls mounted. Both ordinary Studio
+controllers consume it. Copied per-project preferences retain pane choice and
+separate scroll offsets, with strict historical migration.
+
+Acceptance for this bounded consumer uses actual Win32 and HTTP desktop/narrow
+navigation, retained unfinished queries/proposals, exact selection/source/history,
+independent scroll geometry, and unchanged emitted Pascal. Compile alone does not
+accept interaction or visual parity. First evaluate the maintained ordinary
+workbench, repair any demonstrated allocation gap, then finish the changed
+journey; stop adding local component variants. The full criteria and aggregate
+**25/11/47/21/28/3** remain unchanged. Installed semantic context remains bounded
+and read-only; its frozen endpoint lacks current discovery operations. Current
+public MCP-authored seed and actual control harnesses qualify the consumer.
+
+The ordinary Win32 journey passes **211**, including a real compact host resize,
+retained input/control identity, independent positions, selected membership,
+unfinished filter/resource proposals and exact paired Undo/Redo. HTTP desktop/
+CSS-390 passes **1183/1595** (polling included); five live checkpoints per width
+were inspected, alongside native desktop/compact prints. Useful pane allocation
+and fixed Back navigation are exercised. Synthetic control inputs and CSS-width
+emulation establish neither physical phone/IME nor assistive-technology behavior.
+Complete visual/native widgetset quality and performance stay open.
+
+Those compact checks demonstrated a shared binding defect: stored-only command
+clones lost active viewport policy and silently dropped a button inside a
+default-hidden responsive scope. Commands now use an independently owned
+`CloneRuntimeProjection`, retaining applied overlays without changing ordinary
+stored clones or authored defaults. Maintained shared binding checks exercise
+delivery, independent overlays and hidden-command refusal for both platform
+projections. Full native core passes **30/1809**; HTTP shared/actual binding
+journey **104**. Strict preferences pass **287** native and **108** HTTP
+presentation-only. No full browser workspace-lifetime claim follows from that
+scope. All checked native owners and browser drivers retire leak-free.
+
+The artifact consumer compares all three emitted Pascal files without
+normalization: **4814 bytes**, SHA-256
+`277b759ec30fd4b3ab90085da80fefafd55e73e447b78e7cd886a4bdeeeb2c0a`.
+This exact unchanged builder's existing **50** native checks and HTTP execution
+from the preceding usability packet are reused. Current ordinary Studio,
+backend and worker compile with zero owned warnings. Seven unchanged upstream
+RTL warnings per browser compile remain; dependencies were not edited.
+
+Initial preference admission refused a stale fixture baseline; corrected
+encoding precedes malformed checks. Expanded synchronous HTTP preferences
+exceeded navigation bounds; the presentation-only maintained fixture now yields
+between complete refusal cases, reducing no assertions or driver limits. Its
+initial Promise spelling compile refusal remains recorded. Initial native/compact
+HTTP navigation refusals led to the shared runtime-copy repair above. A later
+test source worker omitted embedded RTL; corrected orchestration passed. Failure
+logs remain beside successful receipts, with no production-warning suppression.
+
+Evidence is under `build/resource-pane-navigation/`: `native-repaired/run.log`,
+native compact/desktop captures, `browser-qualified-desktop`/`browser-qualified-narrow`,
+`core/run.log`, `preferences-qualified/run.log`, `browser-qualified-binding`,
+`browser-qualified-preferences`, `evidence/run.log` and
+`generated-evidence-private.json`. The exact fresh eight-file closure uses only
+the identity-checked existing static host (`stage-qualified-private.json`).
+Before/final preservation guards retain nine exact user pairs, fifteen process
+identities, 299 sealed LAN files and checkpoint SHA
+`24635efcca9041bf4700ceb4a14226232ff41e61e4440a19f28c25d3de6d01c9`.
+No listener/restart/configuration/enrollment or observing rollout occurred.
+
+Checkpoint source/evidence together to `origin/hello-nyx`; the exact remote and
+clean-worktree receipt stays private beneath this packet. This qualifies a
+bounded consumer, with no full task/criterion/credit or aggregate count change.
+Reassessment: discovery metadata, labels, pane scrolling and compact navigation
+are now qualified inputs. Stop local workspace/filter/profiler variants. Return
+to the original resource/authoring owners' ordinary hosted/localized resource,
+fallback and caller-cache authoring journey through these existing contracts;
+qualify actual controls, exact semantic source/history and both targets.
+Authenticated current observing rollout retains its workflow/delivery owners.
+Physical input, broader native visual/accessibility quality, performance and the
+complete Nyx/Studio outcome remain open and the goal stays active.
+
 ## Current return path: Semantic resource discovery — 2026-10-09
 
 Entry was clean at pushed `b2f69fc`. This consumes the existing NS-4 workflow

@@ -40,7 +40,7 @@ uses
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.browser,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
-  nyx.resources.browser, nyx.studio.resource.browser, nyx.publication,
+  nyx.resources.browser, nyx.resources.workspace, nyx.studio.resource.browser, nyx.publication,
   nyx.resource.context,
   nyx.resources.import, nyx.resources.import.browser,
   Classes,
@@ -260,6 +260,11 @@ type
     function RecoveryKey: TNyxText;
     function PresentationKey: TNyxText;
     procedure SavePresentation;
+    { Capture only visible target panes; hidden controls may report zero extent.
+      Copied positions survive compact switching and project/frame transitions. }
+    procedure CaptureResourcePaneScroll;
+    procedure RestoreResourcePaneScroll;
+    procedure SelectResourcePane(APane: TNyxResourceWorkspacePane);
     procedure LoadPresentation;
     { Capture incomplete menu form input before presentation replaces chrome. }
     procedure CaptureMenuDraft;
@@ -421,7 +426,12 @@ begin
     '[data-node=studio-inspector-mount]{width:265px;flex-shrink:0;min-height:0;}' +
     '[data-node=studio-resources-mount]{flex:1;min-width:0;min-height:0;}' +
     '[data-node=studio-resources]{width:100%;height:100%;min-height:0;min-width:0;' +
-    'box-sizing:border-box;overflow:auto;background:#fafbfe;}' +
+    'box-sizing:border-box;overflow:hidden;background:#fafbfe;}' +
+    '[data-node=studio-resource-workspace]{flex:1;min-height:0;min-width:0;overflow:hidden;}' +
+    '[data-node=studio-resource-workspace-body]{flex:1;min-height:0;min-width:0;overflow:hidden;}' +
+    '[data-node=studio-resource-workspace-files-scroll]{min-height:0;min-width:0;overflow:auto;flex-shrink:0;}' +
+    '[data-node=studio-resource-workspace-editor-scroll]{flex:1;min-height:0;min-width:0;overflow:auto;}' +
+    '[data-node=studio-resource-workspace-navigation]{flex-shrink:0;}' +
     '[data-node=studio-resource-form]{min-width:0;flex:1;}' +
     '[data-nyx-studio-resources=true] [data-node=studio-project-mount],' +
     '[data-nyx-studio-resources=true] [data-node=studio-inspector-mount],' +
@@ -789,6 +799,9 @@ begin
   LState.ResourceRowsDraft := FViewState.ResourceRowsDraft;
   LState.ResourceBrowser := FViewState.ResourceBrowser;
   LState.ResourcesScroll := FViewState.ResourcesScroll;
+  LState.ResourcePane := FViewState.ResourcePane;
+  LState.ResourceCatalogScroll := FViewState.ResourceCatalogScroll;
+  LState.ResourceEditorScroll := FViewState.ResourceEditorScroll;
   LState.CallbackRemoval := FCallbackRemoval;
 
   if FRootRemoval <> nil then
@@ -970,6 +983,7 @@ begin
   FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.RootFor('studio-resource-editor'));
   FViewState.ResourceRowsDraft.Capture('studio-resource-rows', FShellRenderer.RootFor('studio-resource-rows'));
   FResourceBrowser.Capture(FShellRenderer, FViewState.ResourceBrowser);
+  CaptureResourcePaneScroll;
   LEditor := FShellRenderer.Root.Find('studio-resources');
 
   if LEditor <> nil then
@@ -1256,6 +1270,7 @@ begin
   if FShellRenderer.Root.Find('studio-resources') <> nil then
   begin
     FShellRenderer.ElementFor('studio-resources').scrollTop := FViewState.ResourcesScroll;
+    RestoreResourcePaneScroll;
   end;
   { Size only the editor host. Application typography, preview scale, authored
     layout and project/history remain unchanged. Reapply after shell fallback. }
@@ -2170,6 +2185,7 @@ var
   LResourceProjection: TNyxNode;
   LRetainedResourceSelection: Boolean;
   LResourceIntent: TNyxStudioResourceBrowseIntent;
+  LResourcePane: TNyxResourceWorkspacePane;
   LContentFocus: TJSHTMLElement;
 begin
 
@@ -2271,6 +2287,7 @@ begin
         rbiWorkspace:
           begin
             FViewState.ResourcesVisible := True;
+            FViewState.ResourcePane := rwpFiles;
             FCanvasExpanded := False;
             Refresh(True, True);
           end;
@@ -2295,6 +2312,7 @@ begin
             end;
             FViewState.ResourceEditorDraft.Clear;
             FViewState.ResourceSelection := LResourceSelection;
+            SelectResourcePane(rwpEditor);
 
             if LRetainedResourceSelection then
             begin
@@ -2311,6 +2329,14 @@ begin
             { Runtime filtering/selection already synchronized its owned views. }
           end;
       end;
+      SavePresentation;
+      Exit;
+    end;
+
+    if (AEvent.Trigger = ntClick) and NyxResourceWorkspaceAction(ANode,
+      NyxStudioResourceWorkspaceID, LResourcePane) then
+    begin
+      SelectResourcePane(LResourcePane);
       SavePresentation;
       Exit;
     end;
@@ -4281,6 +4307,86 @@ begin
   end;
 end;
 
+procedure TNyxStudio.CaptureResourcePaneScroll;
+var
+  LPane: TNyxResourceWorkspacePane;
+  LElement: TJSHTMLElement;
+  LPosition: Integer;
+begin
+  for LPane := Low(TNyxResourceWorkspacePane) to High(TNyxResourceWorkspacePane) do
+  begin
+
+    if FShellRenderer.Root.Find(NyxResourceWorkspaceScrollID(
+      NyxStudioResourceWorkspaceID, LPane)) = nil then
+    begin
+      Continue;
+    end;
+    LElement := FShellRenderer.ElementFor(NyxResourceWorkspaceScrollID(
+      NyxStudioResourceWorkspaceID, LPane));
+
+    if LElement.getBoundingClientRect.height <= 0 then
+    begin
+      Continue;
+    end;
+    LPosition := NyxStudioScrollPosition(LElement.scrollTop);
+
+    if LPane = rwpFiles then
+    begin
+      FViewState.ResourceCatalogScroll := LPosition;
+    end
+    else
+    begin
+      FViewState.ResourceEditorScroll := LPosition;
+    end;
+  end;
+end;
+
+procedure TNyxStudio.RestoreResourcePaneScroll;
+var
+  LPane: TNyxResourceWorkspacePane;
+  LElement: TJSHTMLElement;
+  LPosition: Integer;
+begin
+  for LPane := Low(TNyxResourceWorkspacePane) to High(TNyxResourceWorkspacePane) do
+  begin
+
+    if FShellRenderer.Root.Find(NyxResourceWorkspaceScrollID(
+      NyxStudioResourceWorkspaceID, LPane)) = nil then
+    begin
+      Continue;
+    end;
+    LElement := FShellRenderer.ElementFor(NyxResourceWorkspaceScrollID(
+      NyxStudioResourceWorkspaceID, LPane));
+    LPosition := FViewState.ResourceEditorScroll;
+
+    if LPane = rwpFiles then
+    begin
+      LPosition := FViewState.ResourceCatalogScroll;
+    end;
+
+    if LElement.getBoundingClientRect.height > 0 then
+    begin
+      LElement.scrollTop := LPosition;
+    end;
+  end;
+end;
+
+procedure TNyxStudio.SelectResourcePane(APane: TNyxResourceWorkspacePane);
+var
+  LWorkspace: TNyxNode;
+begin
+  CaptureResourcePaneScroll;
+  FViewState.ResourcePane := APane;
+  LWorkspace := FShellRenderer.Root.Find(NyxStudioResourceWorkspaceID);
+
+  if LWorkspace <> nil then
+  begin
+    RestoreNyxResourceWorkspace(LWorkspace, NyxPresentation('compact'), APane);
+    FShellRenderer.Sync;
+    RestoreResourcePaneScroll;
+  end;
+end;
+
 procedure TNyxStudio.SavePresentation;
 var
   LValue: TNyxStudioPresentation;
@@ -4323,6 +4429,10 @@ begin
   LValue.ResourceDraft := FViewState.ResourceEditorDraft;
   LValue.ResourceRowsDraft := FViewState.ResourceRowsDraft;
   LValue.ResourceBrowser := FViewState.ResourceBrowser;
+  CaptureResourcePaneScroll;
+  LValue.ResourcePane := FViewState.ResourcePane;
+  LValue.ResourceCatalogScroll := FViewState.ResourceCatalogScroll;
+  LValue.ResourceEditorScroll := FViewState.ResourceEditorScroll;
   LPane := MountedStudioElement(FShellRenderer, 'studio-resources');
 
   if LPane <> nil then
@@ -4406,6 +4516,9 @@ begin
 
   FViewState.ResourceBrowser := NyxResourceBrowserState;
   FViewState.ResourcesScroll := 0;
+  FViewState.ResourcePane := rwpFiles;
+  FViewState.ResourceCatalogScroll := 0;
+  FViewState.ResourceEditorScroll := 0;
 
   if not FRecoveryEnabled then
   begin
@@ -4455,6 +4568,9 @@ begin
     FViewState.ResourceRowsDraft := LValue.ResourceRowsDraft;
     FViewState.ResourceBrowser := LValue.ResourceBrowser;
     FViewState.ResourcesScroll := LValue.ResourcesScroll;
+    FViewState.ResourcePane := LValue.ResourcePane;
+    FViewState.ResourceCatalogScroll := LValue.ResourceCatalogScroll;
+    FViewState.ResourceEditorScroll := LValue.ResourceEditorScroll;
     FLeftScroll := LValue.LeftScroll;
     FRightScroll := LValue.RightScroll;
     FAgentsScroll := LValue.AgentsScroll;

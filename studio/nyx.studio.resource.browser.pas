@@ -76,6 +76,7 @@ type
 const
   NyxStudioResourcePickerID = 'studio-resource-picker';
   NyxStudioResourceBrowserID = 'studio-resource-browser';
+  NyxStudioResourceWorkspaceID = 'studio-resource-workspace';
 
 implementation
 

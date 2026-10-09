@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Resources pane navigation (2026-10-09) consumes the dedicated workspace criterion
+through a reusable public Nyx compound and both ordinary Studio controllers.
+Desktop catalog/editor scroll independently; compact Files/Edit keeps the panes
+mounted. Version-fourteen preferences retain choice/positions and migrate exact
+historical discovery/drafts. Qualification and the shared responsive-command
+repair are recorded in [the current packet](WORK.md#current-return-path-resource-pane-navigation--2026-10-09).
+Physical input, complete visual/accessibility parity, performance and observing
+rollout retain their owners. Aggregate remains **25/11/47/21/28/3**; no full
+criterion or product closes.
+
 Semantic resource discovery (2026-10-09): the shared category/source/locale/
 search/tag query and payload-free exact variant annotation operation use the
 existing paired candidate/Undo path. Suspended public MCP checks pass **130**

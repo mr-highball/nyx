@@ -47,7 +47,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current semantic resource discovery (2026-10-09) extends the existing workflow
+Current Resources pane navigation (2026-10-09) returns to the existing authoring
+owner's usable workspace criterion. A public Nyx compound gives both ordinary
+controllers independent desktop scrolling and retained compact Files/Edit panes.
+Version-fourteen copied preferences migrate earlier queries/drafts and retain
+separate positions. Qualification and the responsive-command policy repair are
+in [the packet](../WORK.md#current-return-path-resource-pane-navigation--2026-10-09).
+Broader resource/authoring UX, physical input/accessibility, performance and
+observing rollout remain open; no full criterion/count/credit closes. Aggregate
+stays 25/11/47/21/28/3.
+
+Previous semantic resource discovery (2026-10-09) extends the existing workflow
 owner with shared category/source/locale/search/tag queries, exact bounded label
 pages and payload-free paired `set-labels`. Current source passes native public
 MCP 130/shared HTTP browser 103, exact emitted builders 10 each and actual catalog

@@ -25,11 +25,11 @@ program nyx_workspace_tests;
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.model, nyx.codec, nyx.codegen, nyx.presentations,
-  nyx.resources, nyx.resources.catalog, nyx.resources.browser,
+  nyx.resources, nyx.resources.catalog, nyx.resources.browser, nyx.resources.workspace,
   nyx.studio.projects, nyx.studio.agents,
   nyx.studio.workspaces, nyx.studio.presentation, nyx.studio.palette,
   nyx.studio.view, nyx.studio.inspector, nyx.studio.authoring
-  {$ifdef PAS2JS}, Web{$endif};
+  {$ifdef PAS2JS}, JS, Web{$endif};
 
 var
   GChecks: Integer;
@@ -110,6 +110,7 @@ begin
 end;
 
 procedure PresentationChecks;
+  {$if defined(PAS2JS) and defined(NYX_PRESENTATION_ONLY)}async;{$endif}
 var
   LOriginal: TNyxStudioPresentation;
   LDecoded: TNyxStudioPresentation;
@@ -126,7 +127,15 @@ var
   begin
     Result := (AName = 'resourcesVisible') or (AName = 'resourceSelection') or
       (AName = 'resourceDraft') or (AName = 'resourceRowsDraft') or
-      (AName = 'resourceBrowser') or (AName = 'resourcesScroll');
+      (AName = 'resourceBrowser') or (AName = 'resourcesScroll') or
+      (AName = 'resourcePane') or (AName = 'resourceCatalogScroll') or
+      (AName = 'resourceEditorScroll');
+  end;
+
+  function PaneField(const AName: TNyxText): Boolean;
+  begin
+    Result := (AName = 'resourcePane') or (AName = 'resourceCatalogScroll') or
+      (AName = 'resourceEditorScroll');
   end;
 
   function AllocationField(const AName: TNyxText): Boolean;
@@ -172,7 +181,7 @@ begin
   LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LOriginal));
   { The previous strict packet remains readable. New per-project choices use
     their defaults, while every earlier preference and Unicode value survives. }
-  SetLength(LFields, LPacket.Count - 16);
+  SetLength(LFields, 32);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -204,7 +213,7 @@ begin
   { Existing Studio installations also wrote version 3, which already owns
     source tabs and expansion. Its absent manual choice must not discard those
     fields or any other per-project preference during this migration. }
-  SetLength(LFields, LPacket.Count - 14);
+  SetLength(LFields, 34);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -232,7 +241,7 @@ begin
     'Version 3 migration retains every earlier Unicode, caret and workspace preference exactly');
   { Version 4 is the last observing release's exact packet. Its manual preview
     and all unrelated preferences survive, while new details start collapsed. }
-  SetLength(LFields, LPacket.Count - 13);
+  SetLength(LFields, 35);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -253,7 +262,7 @@ begin
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
     'Version 4 retains all preferences and supplies collapsed allocation defaults');
   { Version 5 adds the allocation preferences but predates per-project themes. }
-  SetLength(LFields, LPacket.Count - 9);
+  SetLength(LFields, 39);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -276,7 +285,7 @@ begin
     'Version 5 retains every previous preference and defaults to no theme proposal');
   { Version 6 owns theme proposals; adding images must not invalidate deployed
     preferences or silently discard the existing source/workspace choices. }
-  SetLength(LFields, LPacket.Count - 7);
+  SetLength(LFields, 41);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -298,7 +307,7 @@ begin
     'Version 6 retains theme/source/workspace preferences and defaults to no image proposal');
   { Version 7 retains packed image proposals. The common resource editor adds
     only private per-project preferences, preserving every earlier field. }
-  SetLength(LFields, LPacket.Count - 6);
+  SetLength(LFields, 42);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
@@ -321,14 +330,14 @@ begin
   { Version 8 retains the complete common file proposal but has no row draft.
     Its exact 45-field packet must migrate without accepting version 9's new
     member under an older version tag. }
-  SetLength(LFields, LPacket.Count - 3);
+  SetLength(LFields, 45);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
 
     if (LPacket.Key(LIndex) <> 'resourceRowsDraft') and
       (LPacket.Key(LIndex) <> 'resourceBrowser') and
-      (LPacket.Key(LIndex) <> 'resourcesScroll') then
+      (LPacket.Key(LIndex) <> 'resourcesScroll') and not PaneField(LPacket.Key(LIndex)) then
     begin
       LValue := LPacket.Field(LPacket.Key(LIndex));
 
@@ -345,13 +354,13 @@ begin
     'Version 8 retains every file/workspace preference and defaults to no row proposal');
   { Nine through eleven keep the same exact outer shape. Discovery cannot be
     smuggled into those historical versions under an unrelated key. }
-  SetLength(LFields, LPacket.Count - 2);
+  SetLength(LFields, 46);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
 
     if (LPacket.Key(LIndex) = 'resourceBrowser') or
-      (LPacket.Key(LIndex) = 'resourcesScroll') then
+      (LPacket.Key(LIndex) = 'resourcesScroll') or PaneField(LPacket.Key(LIndex)) then
     begin
       Continue;
     end;
@@ -370,10 +379,16 @@ begin
   { Twelve already owns discovery. Migrate its exact nested version-one packet
     without changing predicates or partial text, and refuse a newer nested
     shape masquerading as that historical outer contract. }
-  SetLength(LFields, LPacket.Count);
+  SetLength(LFields, 48);
+  LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
     LKey := LPacket.Key(LIndex);
+
+    if PaneField(LKey) then
+    begin
+      Continue;
+    end;
     LValue := LPacket.Field(LKey);
 
     if LKey = 'version' then
@@ -386,7 +401,8 @@ begin
       LValue := NyxObject([NyxField('version', NyxData(1)),
         NyxField('query', LValue.Field('query')), NyxField('tagEditor', LValue.Field('tagEditor'))]);
     end;
-    LFields[LIndex] := NyxField(LKey, LValue);
+    LFields[LCase] := NyxField(LKey, LValue);
+    Inc(LCase);
   end;
   LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
@@ -402,13 +418,20 @@ begin
   LOriginal.ResourceBrowser.TagSelection := NyxResourceLabel('Docs, "quick" 🌙');
   LOriginal.ResourceBrowser := LOriginal.ResourceBrowser.Filters(rfdExpanded);
   LOriginal.ResourcesScroll := 2147483647;
+  LOriginal.ResourceEditorScroll := LOriginal.ResourcesScroll;
   LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LOriginal));
   LDecoded := DecodeNyxStudioPresentation(LPacket.ToJSON);
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
     'Current preferences retain allocation, exact typed discovery and unfinished Unicode tags');
+  LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
     LKey := LPacket.Key(LIndex);
+
+    if PaneField(LKey) then
+    begin
+      Continue;
+    end;
     LValue := LPacket.Field(LKey);
 
     if LKey = 'version' then
@@ -421,7 +444,8 @@ begin
       LValue := NyxObject([NyxField('version', NyxData(1)),
         NyxField('query', LValue.Field('query')), NyxField('tagEditor', LValue.Field('tagEditor'))]);
     end;
-    LFields[LIndex] := NyxField(LKey, LValue);
+    LFields[LCase] := NyxField(LKey, LValue);
+    Inc(LCase);
   end;
   LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
   Check((LDecoded.ResourceBrowser.FilterDisclosure = rfdCollapsed) and
@@ -432,10 +456,76 @@ begin
   LDecoded.ResourceBrowser := LDecoded.ResourceBrowser.Filters(rfdExpanded);
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
     'Fluent disclosure changes only the copied presentation choice');
-  for LCase := 0 to 36 do
+  Check((LDecoded.ResourcePane = rwpFiles) and (LDecoded.ResourceCatalogScroll = 0) and
+    (LDecoded.ResourceEditorScroll = LOriginal.ResourcesScroll),
+    'historical common scroll becomes an editor position without hiding catalog navigation');
+  { Thirteen already owns version-two discovery. Check its exact old outer
+    cardinality, not a current packet merely relabelled with an older version. }
+  LCase := 0;
+  for LIndex := 0 to LPacket.Count - 1 do
   begin
+    LKey := LPacket.Key(LIndex);
+
+    if PaneField(LKey) then
+    begin
+      Continue;
+    end;
+    LValue := LPacket.Field(LKey);
+
+    if LKey = 'version' then
+    begin
+      LValue := NyxData(13);
+    end;
+    LFields[LCase] := NyxField(LKey, LValue);
+    Inc(LCase);
+  end;
+  LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
+  Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
+    'exact version thirteen retains discovery, proposals and migrated editor scroll');
+  for LIndex := 0 to High(LFields) do
+  begin
+
+    if LFields[LIndex].Name = 'resourceBrowser' then
+    begin
+      LValue := LFields[LIndex].Value;
+      LFields[LIndex] := NyxField('resourceBrowser', NyxObject([
+        NyxField('version', NyxData(1)), NyxField('query', LValue.Field('query')),
+        NyxField('tagEditor', LValue.Field('tagEditor'))]));
+    end;
+  end;
+  LRefused := False;
+  try
+    DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
+  except
+    on ENyxModel do
+    begin
+      LRefused := True;
+    end;
+  end;
+  Check(LRefused, 'exact version thirteen refuses mismatched historical discovery');
+  LOriginal.ResourcePane := rwpEditor;
+  LOriginal.ResourceCatalogScroll := 47;
+  LOriginal.ResourceEditorScroll := 12345;
+  LDecoded := DecodeNyxStudioPresentation(EncodeNyxStudioPresentation(LOriginal));
+  Check((LDecoded.ResourcePane = rwpEditor) and (LDecoded.ResourceCatalogScroll = 47) and
+    (LDecoded.ResourceEditorScroll = 12345), 'current preferences retain independent pane positions');
+  LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LOriginal));
+  SetLength(LFields, LPacket.Count);
+  for LCase := 0 to 40 do
+  begin
+    {$if defined(PAS2JS) and defined(NYX_PRESENTATION_ONLY)}
+    { Each refusal is complete before yielding. Keep the large strict migration
+      journey responsive without reducing assertions or raising driver bounds. }
+    await(TJSPromise.resolve(TJSPromise.new(procedure(AResolve, AReject: TJSPromiseResolver)
+      begin
+        window.setTimeout(procedure
+          begin
+            AResolve(True);
+          end, 0);
+      end)));
+    {$endif}
     LKey := 'version';
-    LValue := NyxData(14);
+    LValue := NyxData(15);
     case LCase of
       1:
       begin
@@ -625,6 +715,26 @@ begin
           LValue := NyxObject([NyxField('version', NyxData(2)),
             NyxField('query', LBad.Field('query')), NyxField('tagEditor', LBad.Field('tagEditor')),
             NyxField('filterDisclosure', LValue)]);
+        end;
+      37:
+        begin
+          LKey := 'resourcePane';
+          LValue := NyxData(2);
+        end;
+      38:
+        begin
+          LKey := 'resourceCatalogScroll';
+          LValue := NyxData(1.5);
+        end;
+      39:
+        begin
+          LKey := 'resourceEditorScroll';
+          LValue := NyxData(-1);
+        end;
+      40:
+        begin
+          LKey := 'version';
+          LValue := NyxData(13);
         end;
     end;
     SetLength(LFields, LPacket.Count);
@@ -972,10 +1082,14 @@ begin
   Preserved;
 end;
 
+procedure Execute;
+  {$if defined(PAS2JS) and defined(NYX_PRESENTATION_ONLY)}async;{$endif}
 begin
   try
     try
-      {$ifdef NYX_PRESENTATION_ONLY}
+      {$if defined(PAS2JS) and defined(NYX_PRESENTATION_ONLY)}
+      await(PresentationChecks);
+      {$elseif defined(NYX_PRESENTATION_ONLY)}
       { Browser UI qualification needs the changed strict preference boundary,
         independent of this fixture's large workspace lifetime-budget loop. }
       PresentationChecks;
@@ -1007,4 +1121,8 @@ begin
       {$endif}
     end;
   end;
+end;
+
+begin
+  Execute;
 end.

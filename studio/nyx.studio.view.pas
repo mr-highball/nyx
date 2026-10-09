@@ -44,6 +44,7 @@ uses
   nyx.image.editor,
   nyx.resources.editor,
   nyx.resources.browser,
+  nyx.resources.workspace,
   nyx.resources.rows.editor,
   nyx.resources.runtime.view,
   nyx.contract,
@@ -159,6 +160,11 @@ type
     ResourceEditorDraft: TNyxResourceEditorDraft;
     ResourceBrowser: TNyxResourceBrowserState;
     ResourcesScroll: Integer;
+    { Independent retained pane positions; compact navigation changes only
+      presentation, preserving the complete file/row proposals and selection. }
+    ResourcePane: TNyxResourceWorkspacePane;
+    ResourceCatalogScroll: Integer;
+    ResourceEditorScroll: Integer;
     ResourceRowsDraft: TNyxResourceRowsDraft;
     CallbackRemoval: TNyxCallbackRemoval;
     { Copied confirmation metadata, not an interface or borrowed model. }
@@ -918,8 +924,7 @@ var
   LSummary: TNyxNode;
   LRight: TNyxNode;
   LResources: TNyxNode;
-  LResourceBody: TNyxNode;
-  LResourceForm: TNyxNode;
+  LResourceForm: INyxColumn;
   LViews: TNyxNode;
   LViewbar: TNyxNode;
   LCanvas: TNyxNode;
@@ -1149,26 +1154,21 @@ begin
     LResources.Add(NewNyxLabel('studio-resources-help').WithText(
       'Find project files by category, intent or tag. Changes stay proposals until you apply them.'));
     LResources.Add(NewNyxButton('action-resources-close').WithText('Back to design'));
-    LResourceBody := TNyxNode.Create(nkRow, 'studio-resources-body').Configure
-      .Layout(TNyxLayoutPolicy.Row.Wrap(nfwNoWrap).Align(ncaStart)).Gap(16).Done;
-    LResources.Add(LResourceBody);
-    LResourceBody.Add(NewNyxResourceBrowser('studio-resource-browser', AState.ResourceBrowser));
-    LResourceBody.Children[0].Configure.Width(300)
-      .WhenPresentation(NyxPresentation('compact')).Clear(atWidth).WidthSizing(nsFill).Done;
-    LResourceBody.Configure.WhenPresentation(NyxPresentation('compact')).Layout(nlColumn).Done;
-    LResourceForm := TNyxNode.Create(nkColumn, 'studio-resource-form').Configure
-      .Layout(TNyxLayoutPolicy.Column).Gap(16).Flex(1).Done;
-    LResourceBody.Add(LResourceForm);
+    LResourceForm := NewNyxColumn('studio-resource-form');
+    LResourceForm.Configure.Layout(TNyxLayoutPolicy.Column).Gap(16).Done;
     LSelectedProjection := ASession.SelectedProjection;
     try
       LResourceForm.Add(NewNyxResourceEditor('studio-resource-editor', ASession.Document.Resources,
         AState.ResourceSelection, ASession.Selected, LSelectedProjection, recExternal));
       LResourceForm.Add(NewNyxResourceRowsEditor('studio-resource-rows', ASession.Document.Resources,
         ASession.Document.Collections));
-      AddResourceRuntimeViews(LResourceForm, AState.Agents.ResourceRuntimes);
+      AddResourceRuntimeViews(LResourceForm.Node, AState.Agents.ResourceRuntimes);
     finally
       LSelectedProjection.Free;
     end;
+    LResources.Add(NewNyxResourceWorkspace('studio-resource-workspace',
+      NewNyxResourceBrowser('studio-resource-browser', AState.ResourceBrowser),
+      LResourceForm, NyxPresentation('compact'), AState.ResourcePane));
   end;
   AddNyxCollectionDefaultsPanel(LLeft, ASession, AState.StateVisible, AState.PendingDesign);
   AddNyxStudioPalette(LLeft, ASession.Catalog, AState.Palette);

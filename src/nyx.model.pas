@@ -302,6 +302,13 @@ type
     function OverridePart(const APath: TNyxPartRef;
       AMode: TNyxOverrideMode): TNyxNode; overload;
     function Clone: TNyxNode;
+    { Snapshot a realized runtime tree, including its currently applied viewport
+      overlays. Stored authoring remains separate; ordinary Clone still discards
+      these target-specific values. Command candidates need the active visibility,
+      enabled/read-only scope and geometry to match the mounted controls. All
+      overlay strings and descendants are independently owned; non-runtime roots
+      refuse before allocating a candidate. }
+    function CloneRuntimeProjection: TNyxNode;
     { Static authored attachment. An empty local reference deliberately clears
       inherited behavior; RemoveMenu restores inheritance. Runtime presenters
       retain independent recipes, never this owning node/document. }
@@ -3148,6 +3155,39 @@ begin
     begin
       Result.Add(FChildren[LIndex].Clone);
     end;
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+function TNyxNode.CloneRuntimeProjection: TNyxNode;
+
+  procedure CopyViewport(ASource, ACandidate: TNyxNode);
+  var
+    LIndex: Integer;
+  begin
+
+    if ASource.FViewportValues <> nil then
+    begin
+      ACandidate.FViewportValues := TNyxStrings.Create;
+      ACandidate.FViewportValues.Assign(ASource.FViewportValues);
+    end;
+    for LIndex := 0 to ASource.Count - 1 do
+    begin
+      CopyViewport(ASource.Children[LIndex], ACandidate.Children[LIndex]);
+    end;
+  end;
+
+begin
+
+  if not IsRealized then
+  begin
+    raise ENyxModel.Create('Runtime projection copies require a realized view');
+  end;
+  Result := Clone;
+  try
+    CopyViewport(Self, Result);
   except
     Result.Free;
     raise;

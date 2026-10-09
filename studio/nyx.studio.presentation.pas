@@ -30,6 +30,7 @@ uses
   nyx.resources.editor,
   nyx.resources.rows.editor,
   nyx.resources.browser,
+  nyx.resources.workspace,
   SysUtils, nyx.text, nyx.data, nyx.model, nyx.binding.types, nyx.presentations,
   nyx.studio.view, nyx.studio.inspector, nyx.studio.authoring, nyx.studio.palette,
   nyx.theme.editor;
@@ -82,6 +83,9 @@ type
     ResourceRowsDraft: TNyxResourceRowsDraft;
     ResourceBrowser: TNyxResourceBrowserState;
     ResourcesScroll: Integer;
+    ResourcePane: TNyxResourceWorkspacePane;
+    ResourceCatalogScroll: Integer;
+    ResourceEditorScroll: Integer;
     LeftScroll: Integer;
     RightScroll: Integer;
     AgentsScroll: Integer;
@@ -191,7 +195,7 @@ begin
     LPresentation := NyxData(AValue.PresentationSelection.Reference.Name);
   end;
   Result := NyxObject([
-    NyxField('version', NyxData(13)),
+    NyxField('version', NyxData(14)),
     NyxField('codeVisible', NyxData(AValue.CodeVisible)),
     NyxField('sourceTab', NyxData(Ord(AValue.SourceTab))),
     NyxField('sourceExpanded', NyxData(AValue.SourceExpanded)),
@@ -226,6 +230,9 @@ begin
     NyxField('resourceRowsDraft', AValue.ResourceRowsDraft.ToData),
     NyxField('resourceBrowser', AValue.ResourceBrowser.ToData),
     NyxField('resourcesScroll', NyxData(AValue.ResourcesScroll)),
+    NyxField('resourcePane', NyxData(Ord(AValue.ResourcePane))),
+    NyxField('resourceCatalogScroll', NyxData(AValue.ResourceCatalogScroll)),
+    NyxField('resourceEditorScroll', NyxData(AValue.ResourceEditorScroll)),
     NyxField('leftScroll', NyxData(AValue.LeftScroll)),
     NyxField('rightScroll', NyxData(AValue.RightScroll)),
     NyxField('agentsScroll', NyxData(AValue.AgentsScroll)),
@@ -260,13 +267,13 @@ var
   LPresentation: TNyxDataValue;
   LResourceDraft: TNyxDataValue;
 const
-  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|imageDraft|resourcesVisible|resourceSelection|resourceDraft|resourceRowsDraft|resourceBrowser|resourcesScroll|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
+  CKeys: TNyxText = '|version|codeVisible|sourceTab|sourceExpanded|canvasPercent|detailsPercent|detailsExpanded|canvasToolsVisible|canvasExpanded|phone|presentation|preview|agentsVisible|panel|advancedProperties|inspectorTab|stateVisible|bindingsVisible|bindingTarget|bindingDirection|newStateName|newStateInput|newStateValue|outputVisible|outputTarget|filesVisible|themeVisible|themeDraft|imageDraft|resourcesVisible|resourceSelection|resourceDraft|resourceRowsDraft|resourceBrowser|resourcesScroll|resourcePane|resourceCatalogScroll|resourceEditorScroll|leftScroll|rightScroll|agentsScroll|canvasScrollTop|canvasScrollLeft|canvasView|codeCaretStart|codeCaretEnd|codeScrollTop|codeScrollLeft|codeFocused|palette|search|';
 begin
   Result := DefaultNyxStudioPresentation;
   LValue := TNyxDataValue.ParseJSON(AText);
 
   if (LValue.Kind <> ndObject) or
-    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]) or
+    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]) or
     ((LValue.Field('version').AsInteger = 2) and (LValue.Count <> 32)) or
     ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) or
     ((LValue.Field('version').AsInteger = 4) and (LValue.Count <> 35)) or
@@ -275,7 +282,8 @@ begin
     ((LValue.Field('version').AsInteger = 7) and (LValue.Count <> 42)) or
     ((LValue.Field('version').AsInteger = 8) and (LValue.Count <> 45)) or
     ((LValue.Field('version').AsInteger in [9, 10, 11]) and (LValue.Count <> 46)) or
-    ((LValue.Field('version').AsInteger in [12, 13]) and (LValue.Count <> 48)) then
+    ((LValue.Field('version').AsInteger in [12, 13]) and (LValue.Count <> 48)) or
+    ((LValue.Field('version').AsInteger = 14) and (LValue.Count <> 51)) then
   begin
     raise ENyxModel.Create('Unsupported editor presentation packet');
   end;
@@ -285,6 +293,9 @@ begin
 
     if (Pos('|', LValue.Key(LIndex)) > 0) or
       (Pos('|' + LValue.Key(LIndex) + '|', CKeys) = 0) or
+      ((LVersion < 14) and ((LValue.Key(LIndex) = 'resourcePane') or
+        (LValue.Key(LIndex) = 'resourceCatalogScroll') or
+        (LValue.Key(LIndex) = 'resourceEditorScroll'))) or
       ((LVersion < 12) and ((LValue.Key(LIndex) = 'resourceBrowser') or
         (LValue.Key(LIndex) = 'resourcesScroll'))) or
       ((LVersion < 9) and (LValue.Key(LIndex) = 'resourceRowsDraft')) or
@@ -407,13 +418,24 @@ begin
 
     if ((LVersion = 12) and
       (LValue.Field('resourceBrowser').Field('version').AsInteger <> 1)) or
-      ((LVersion = 13) and
+      ((LVersion in [13, 14]) and
       (LValue.Field('resourceBrowser').Field('version').AsInteger <> 2)) then
     begin
       raise ENyxModel.Create('Resource browser does not match its presentation version');
     end;
     Result.ResourceBrowser := TNyxResourceBrowserState.FromData(LValue.Field('resourceBrowser'));
     Result.ResourcesScroll := IntegerValue(LValue, 'resourcesScroll', 0, 2147483647);
+    { A former common scroll is an editor position after migration. The catalog
+      starts at its top; no hidden pane or unrelated query is silently selected. }
+    Result.ResourceEditorScroll := Result.ResourcesScroll;
+  end;
+
+  if LVersion >= 14 then
+  begin
+    Result.ResourcePane := TNyxResourceWorkspacePane(IntegerValue(LValue, 'resourcePane',
+      Ord(Low(TNyxResourceWorkspacePane)), Ord(High(TNyxResourceWorkspacePane))));
+    Result.ResourceCatalogScroll := IntegerValue(LValue, 'resourceCatalogScroll', 0, 2147483647);
+    Result.ResourceEditorScroll := IntegerValue(LValue, 'resourceEditorScroll', 0, 2147483647);
   end;
   Result.CanvasScrollTop := IntegerValue(LValue, 'canvasScrollTop', 0, 2147483647);
   Result.CanvasScrollLeft := IntegerValue(LValue, 'canvasScrollLeft', 0, 2147483647);

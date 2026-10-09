@@ -611,8 +611,10 @@ secure-context availability, arbitrary quota/security behavior or automatic evic
 
 Open **Resources** in Studio's Project area, or choose **Manage resources** in
 the compact Project picker. The dedicated workspace uses an independently owned
-Nyx section, with a catalog beside the proposal form on desktop and stacked
-content at the compact presentation. Both ordinary Studio controllers consume
+Nyx section, with independently scrolling catalog and editor panes on desktop.
+At the compact presentation, **Files** and **Edit** select one retained pane;
+both controls stay mounted. Back navigation stays above those panes. Both
+ordinary Studio controllers consume
 the same public Nyx compounds and metadata provider. Choose
 New resource, an application name, a default or named locale, and one of Image,
 JSON, Text or Binary. Creator title and description stay with the file. Opening
@@ -628,6 +630,14 @@ cannot be opened while it is outside the displayed results. Closing/reopening
 the workspace or changing filters preserves unfinished proposal/filter input.
 Explicit New/Open starts another proposal. These navigation/filter operations
 never modify resources, application Pascal or paired Undo history.
+
+The reusable `NewNyxResourceWorkspace` takes two distinct unparented controls
+and the caller's named compact presentation. It owns them through independent
+scroll panes, without borrowing the document, controller or target handles.
+`TNyxResourceWorkspacePane` selects Files or Edit. Public action/scroll IDs and
+`RestoreNyxResourceWorkspace` let hosts synchronize existing controls and retain
+each scroll position. Studio's Open selects Edit; switching panes preserves
+unfinished filter tags, file contents, row proposals and catalog selection.
 
 Changing the selected design control also preserves unfinished file contents,
 creator tags and partial input in the same project. An explicit copied-draft
@@ -759,12 +769,16 @@ The shared resource form exposes `NyxResourceEditorLabels` and
 retaining labels. Existing Apply requests and paired history admit annotations
 with the resource/source pair; changed context and pending application drafts
 refuse. Both ordinary Studio controllers consume the visible reusable tag
-editor. Version-thirteen private preferences retain the dedicated workspace's
-typed query, filter disclosure, incomplete filter tags and scroll position as well
+editor. Version-fourteen private preferences retain the dedicated workspace's
+typed query, filter disclosure, incomplete filter tags, selected pane and independent
+catalog/editor scroll positions as well
 as resource proposals. Exact historical packets, including version twelve's
 version-one discovery state, remain readable; they acquire collapsed disclosure
-without changing their active predicates or unfinished text.
-Semantic label operations and observing deployment still require integration.
+without changing their active predicates or unfinished text. Earlier common
+scroll becomes an editor position while Files starts at its top. Preferences
+stay private to the editor; exported designs and application history are unchanged.
+Semantic label operations are qualified in current source; their installed
+transport and observing deployment remain open.
 
 `tools/build.ps1 -Target resource-labels -HttpURL <existing-test-host>` runs
 checked native wire/source/history, exact exported Pascal, actual mounted list
@@ -847,7 +861,7 @@ changing mounted fields; tag edits use a detached candidate. Invalid tags or a
 combined query over the ordinary predicate budget refuse. Strict version-two
 state preserves version-one query wire; standalone historical version-one state
 migrates to collapsed disclosure. Outer preferences twelve only admit their
-historical nested state, while thirteen requires version two. These are editor
+historical nested state, while thirteen and fourteen require version two. These are editor
 preference boundaries, never part of an exported application.
 
 Both renderers and the Studio section facade expose the actual manually mounted

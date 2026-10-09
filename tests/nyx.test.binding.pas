@@ -40,6 +40,7 @@ implementation
 uses
   SysUtils,
   nyx.types,
+  nyx.responsive,
   nyx.state,
   nyx.binding.types,
   nyx.binding,
@@ -380,11 +381,16 @@ var
   LPage: TNyxNode;
   LMemo: TNyxNode;
   LInput: TNyxNode;
+  LNavigation: TNyxNode;
+  LCommand: TNyxNode;
+  LCopy: TNyxNode;
   LRoot: TNyxNode;
   LStore: TNyxState;
   LLive: TNyxLiveBindings;
   LRevision: Integer;
   LRejected: Boolean;
+  LPlatform: TNyxPlatform;
+  LDispatch: TNyxDispatch;
 begin
   Result := 0;
   LDocument := TNyxDocument.Create;
@@ -395,12 +401,59 @@ begin
     LMemo := TNyxNode.Create(nkMemo, 'multiline-reply-memo');
     LPage.Add(LMemo);
     LMemo.Binds.Value(NyxTextState('🌙/reply')).Done;
+    LNavigation := TNyxNode.Create(nkRow, 'compact-navigation');
+    LPage.Add(LNavigation);
+    LNavigation.Configure.Visible(False)
+      .WhenViewport(TNyxViewportCondition.Any.WidthBelow(600)).Visible(True).Done;
+    LCommand := TNyxNode.Create(nkButton, 'compact-command');
+    LNavigation.Add(LCommand);
+    LCommand.Configure.Text('Continue').Done;
     LRoot := RealizeNyxView(LDocument, LPage);
     LStore := LDocument.State.Clone;
     LLive := nil;
     try
       LLive := TNyxLiveBindings.Create(LRoot, LStore);
       LLive.Activate;
+      { A real command candidate must preserve the effective ancestor policy.
+        Ordinary stored-only clones remain suitable for independent view builds. }
+      for LPlatform := npfBrowser to npfNativeLCL do
+      begin
+        LRoot.ApplyViewport(390, 844, LPlatform);
+        LRevision := LStore.Revision;
+        LDispatch := LLive.Dispatch(LRoot.Find('compact-command'), ntClick);
+        Check((LDispatch.EventName <> '') and (LDispatch.Source = LRoot.Find('compact-command')) and
+          not LDispatch.Changed and (LStore.Revision = LRevision),
+          'responsive visible command retains its mounted policy and delivers its event', Result);
+        LCopy := LRoot.CloneRuntimeProjection;
+        try
+          LRoot.ApplyViewport(1200, 844, LPlatform);
+          Check((LCopy.Find('compact-navigation').Prop('visible') = 'true') and
+            (LRoot.Find('compact-navigation').Prop('visible') = 'false'),
+            'runtime command snapshot owns independent viewport overlays', Result);
+        finally
+          LCopy.Free;
+        end;
+        LRejected := False;
+        try
+          LLive.Dispatch(LRoot.Find('compact-command'), ntClick);
+        except
+          on ENyxState do
+          begin
+            LRejected := True;
+          end;
+        end;
+        Check(LRejected and (LStore.Revision = LRevision),
+          'currently hidden command still refuses without changing runtime state', Result);
+        LRoot.ApplyViewport(390, 844, LPlatform);
+        LCopy := LRoot.Clone;
+        try
+          Check((LCopy.Find('compact-navigation').Prop('visible') = 'false') and
+            (LNavigation.Prop('visible') = 'false'),
+            'stored clone and authored defaults retain their independent presentation semantics', Result);
+        finally
+          LCopy.Free;
+        end;
+      end;
       LMemo := LRoot.Find('multiline-reply-memo');
       Check((LMemo.Prop('value') = 'First' + #10 + 'Second' + #10 + 'Third') and
         (LStore.GetValue(NyxTextState('🌙/reply')) =

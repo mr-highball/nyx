@@ -412,7 +412,7 @@ begin
   LJourney := TBrowserBindingJourney.Create;
   try
     try
-      LCount := LJourney.Run + LJourney.CustomJourney;
+      LCount := RunNyxBindingTests + LJourney.Run + LJourney.CustomJourney;
       document.body.setAttribute('data-binding-tests', 'passed');
       document.body.setAttribute('data-binding-checks', IntToStr(LCount));
     except

@@ -16,6 +16,19 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Retained Resources pane consumer — 2026-10-09
+
+The existing NS-4 authoring owner consumes this resource contract through a
+public Nyx workspace with independent desktop scrolling and compact Files/Edit
+navigation. Queries, creator tags, unfinished contents and positions remain
+copied editor presentation, outside exported resource data and paired history.
+Strict version-fourteen preferences migrate historical discovery/drafts.
+Qualification and the shared responsive-command repair are in
+[the packet](../WORK.md#current-return-path-resource-pane-navigation--2026-10-09).
+Complete Resources UX, hosted/localization/cache authoring breadth, performance,
+physical input/accessibility and observing rollout remain open. Aggregate stays
+25/11/47/21/28/3; no full resource criterion/task closes.
+
 ## Dedicated Resources discovery consumer — 2026-10-09
 
 Original metadata/source/history/form and dedicated-workspace criteria now have

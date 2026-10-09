@@ -4,7 +4,17 @@
 [Current work](WORK.md)
 
 
-Current semantic resource discovery (2026-10-09) consumes that workspace's shared
+Current Resources pane navigation (2026-10-09) consumes the original usable
+workspace criterion through a public Nyx compound in both ordinary controllers.
+Desktop panes scroll independently; compact Files/Edit retains mounted controls,
+unfinished inputs and per-project positions. Strict version-fourteen preferences
+migrate historical discovery/drafts. Actual qualification and the shared runtime
+command-policy repair are in [the packet](WORK.md#current-return-path-resource-pane-navigation--2026-10-09).
+Complete resource/authoring UX, physical input/accessibility, performance and
+observing rollout remain open. Aggregate **25/11/47/21/28/3** is unchanged; no
+full criterion/count/credit closes.
+
+Previous semantic resource discovery (2026-10-09) consumes that workspace's shared
 typed category/source/locale/search/tag query. Bounded exact label pages and
 payload-free `set-labels` use existing paired transactions. Suspended public MCP
 passes 130 native/shared HTTP browser 103, exact emitted source 10 each and actual

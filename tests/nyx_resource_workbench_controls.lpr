@@ -28,7 +28,7 @@ program nyx_resource_workbench_controls;
 uses SysUtils, Classes, Types, Interfaces, Forms, Controls, StdCtrls, Grids, Graphics,
   IntfGraphics, FPWritePNG, nyx.text, nyx.types, nyx.bytes, nyx.data,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor, nyx.resources.labels.editor,
-  nyx.resources.browser,
+  nyx.resources.browser, nyx.resources.workspace,
   nyx.resources.import, nyx.resources.import.lcl, nyx.collections,
   nyx.binding.types, nyx.model, nyx.codec, nyx.codegen, nyx.studio.projects,
   nyx.studio.lcl, nyx.studio.sourcejobs, nyx.generated.view,
@@ -242,6 +242,16 @@ var
     TControlAccess(LControl).Click;
     Ready;
 
+    if Pos('studio-resource-workspace-show-', AID) = 1 then
+    begin
+      WriteLn('PANE / ', AID, ' / status=', LStudio.Status,
+        ' / pressed=', LStudio.ShellView.Root.Find(AID).Prop('pressed'),
+        ' / files=', LStudio.ShellView.Root.Find(NyxResourceWorkspaceScrollID(
+          'studio-resource-workspace', rwpFiles)).Prop('visible'),
+        ' / editor=', LStudio.ShellView.Root.Find(NyxResourceWorkspaceScrollID(
+          'studio-resource-workspace', rwpEditor)).Prop('visible'));
+    end;
+
     if LRetainedInput <> nil then
     begin
       Check((LStudio.ShellView.RootFor(CEditor) = LRetainedRoot) and
@@ -299,6 +309,16 @@ var
     LSelected: TNyxText;
     LPane: TControl;
     LOpen: TControl;
+    LFiles: TScrollBox;
+    LEditor: TScrollBox;
+    LMemo: TControl;
+    LBackTop: Integer;
+    LWideWidth: Integer;
+
+    procedure ResourcePane(APane: TNyxResourceWorkspacePane);
+    begin
+      Click(NyxResourceWorkspaceActionID('studio-resource-workspace', APane));
+    end;
 
     procedure Value(const AID, AValue: TNyxText);
     var
@@ -387,6 +407,60 @@ var
       NyxResourceBrowserTagsID(CBrowser), rlefInput));
     LRevision := LStudio.ShellView.CollectionView(NyxResourceBrowserListID(CBrowser)).Snapshot.Revision;
     LSelected := LStudio.ShellView.CollectionView(NyxResourceBrowserListID(CBrowser)).Selected.ID;
+    { Exercise actual scrollbars and a real host resize. Compact navigation
+      must retain both mounted panes and incomplete inputs without history. }
+    LFiles := TScrollBox(LStudio.ShellView.ControlFor(NyxResourceWorkspaceScrollID(
+      'studio-resource-workspace', rwpFiles)));
+    LEditor := TScrollBox(LStudio.ShellView.ControlFor(NyxResourceWorkspaceScrollID(
+      'studio-resource-workspace', rwpEditor)));
+    LBackTop := LStudio.ShellView.ControlFor('action-resources-close').ClientToScreen(Point(0, 0)).Y;
+    Check(LFiles.Visible and LEditor.Visible and
+      (LFiles.Height >= LWindow.ClientHeight div 3) and
+      (LEditor.Height >= LWindow.ClientHeight div 3) and
+      (LFiles.Top + LFiles.Height <= LFiles.Parent.ClientHeight) and
+      (LEditor.Top + LEditor.Height <= LEditor.Parent.ClientHeight),
+      'desktop panes own useful bounded scrolling viewports');
+    LFiles.VertScrollBar.Position := 47;
+    LEditor.VertScrollBar.Position := 123;
+    Check((LFiles.VertScrollBar.Position = 47) and (LEditor.VertScrollBar.Position = 123) and
+      (LStudio.ShellView.ControlFor('action-resources-close').ClientToScreen(Point(0, 0)).Y = LBackTop),
+      'independent scrolling leaves native Back navigation fixed');
+    LWideWidth := LWindow.ClientWidth;
+    LWindow.ClientWidth := 720;
+    Ready;
+    ResourcePane(rwpFiles);
+    LFiles := TScrollBox(LStudio.ShellView.ControlFor(NyxResourceWorkspaceScrollID(
+      'studio-resource-workspace', rwpFiles)));
+    LEditor := TScrollBox(LStudio.ShellView.ControlFor(NyxResourceWorkspaceScrollID(
+      'studio-resource-workspace', rwpEditor)));
+    LMemo := LStudio.ShellView.InputFor(NyxResourceEditorFieldID(CEditor, refContent));
+    LTagInput := LStudio.ShellView.InputFor(NyxResourceLabelsEditorFieldID(
+      NyxResourceBrowserTagsID(CBrowser), rlefInput));
+    Check(LStudio.ShellView.ControlFor(NyxResourceWorkspaceActionID(
+      'studio-resource-workspace', rwpFiles)).Visible and LFiles.Visible and not LEditor.Visible and
+      (LFiles.Height >= LWindow.ClientHeight div 3),
+      'compact Files shows a useful retained catalog and reachable navigation');
+    LFiles.VertScrollBar.Position := 47;
+    ResourcePane(rwpEditor);
+    Check(not LFiles.Visible and LEditor.Visible,
+      'compact Edit chooses the retained form pane');
+    LEditor.VertScrollBar.Position := 123;
+    ResourcePane(rwpFiles);
+    Check((LFiles.VertScrollBar.Position = 47) and (LEditor.VertScrollBar.Position = 123) and
+      (LStudio.ShellView.InputFor(NyxResourceEditorFieldID(CEditor, refContent)) = LMemo) and
+      (TCustomEdit(LMemo).Text = LProposal) and (TCustomEdit(LTagInput).Text = 'Unfinished filter...'),
+      'compact navigation retains actual controls, independent positions and unfinished inputs');
+    ResourcePane(rwpEditor);
+    Check(LEditor.VertScrollBar.Position = 123, 'returning to native Edit restores its position');
+    LWindow.Repaint;
+    SaveNyxNativeCapture(LWindow, TNyxText(ParamStr(2)) + TNyxText('.compact.png'), ncmPrint);
+    LWindow.ClientWidth := LWideWidth;
+    Ready;
+    LTagInput := LStudio.ShellView.InputFor(NyxResourceLabelsEditorFieldID(
+      NyxResourceBrowserTagsID(CBrowser), rlefInput));
+    Check((TCustomEdit(LTagInput).Text = 'Unfinished filter...') and
+      (TCustomEdit(LStudio.ShellView.InputFor(NyxResourceEditorFieldID(CEditor, refContent))).Text = LProposal),
+      'returning to desktop retains incomplete filter and resource proposals');
     Click(NyxResourceBrowserActionID(CBrowser, rbaFilters));
     Rows(1);
     Check(not LStudio.ShellView.ControlFor(NyxResourceBrowserFiltersID(CBrowser)).Visible and

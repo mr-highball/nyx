@@ -38,6 +38,7 @@ uses SysUtils, JS, Web, nyx.text, nyx.bytes, nyx.data, nyx.model,
   nyx.codec, nyx.codegen, nyx.studio.projects, nyx.studio.browser,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor, nyx.resources.labels.editor,
   nyx.resources.browser,
+  nyx.resources.workspace,
   nyx.collections, nyx.binding.types, nyx.behavior, nyx.studio.sections, nyx.generated.view,
   nyx.test.resource.workbench;
 
@@ -172,6 +173,20 @@ begin
   begin
     Check(Find(NyxResourceEditorFieldID(CEditor, refContent)).querySelector('textarea') = LRetainedInput,
       'New/Open retains the actual resource input element');
+  end;
+end;
+
+{ Wide presentation keeps both panes visible. Compact tests use the public
+  navigation button that an operator uses, without altering CSS or descriptors. }
+procedure ResourcePane(APane: TNyxResourceWorkspacePane); async;
+var
+  LButton: TJSHTMLElement;
+begin
+  LButton := Find(NyxResourceWorkspaceActionID('studio-resource-workspace', APane));
+
+  if LButton.getBoundingClientRect.height > 0 then
+  begin
+    await(Click(LButton.getAttribute('data-node')));
   end;
 end;
 
@@ -343,6 +358,11 @@ var
   LTagInput: TJSHTMLElement;
   LRevision: Integer;
   LSelected: TNyxText;
+  LFiles: TJSHTMLElement;
+  LEditor: TJSHTMLElement;
+  LMemo: TJSHTMLElement;
+  LBackTop: Double;
+  LCompact: Boolean;
 
   procedure Value(const AID, AValue: TNyxText);
   var
@@ -390,6 +410,7 @@ begin
     .querySelector('textarea')).value;
   Check(Find('studio-resources').getBoundingClientRect.width > window.innerWidth / 2,
     'dedicated Resources uses the workspace width');
+  await(ResourcePane(rwpFiles));
   Rows(1);
   Find('studio-resources').scrollTop := 0;
   Check(Find(NyxResourceBrowserFiltersID(CBrowser)).getBoundingClientRect.height = 0,
@@ -429,6 +450,45 @@ begin
   LTagInput := Find(NyxResourceLabelsEditorFieldID(NyxResourceBrowserTagsID(CBrowser), rlefInput));
   LRevision := GStudio.ShellView.CollectionView(NyxResourceBrowserListID(CBrowser)).Snapshot.Revision;
   LSelected := GStudio.ShellView.CollectionView(NyxResourceBrowserListID(CBrowser)).Selected.ID;
+  { These are the ordinary mounted panes. Scroll both independently, then use
+    compact navigation without replacing their controls or committing a draft. }
+  LFiles := Find(NyxResourceWorkspaceScrollID('studio-resource-workspace', rwpFiles));
+  LEditor := Find(NyxResourceWorkspaceScrollID('studio-resource-workspace', rwpEditor));
+  LMemo := TJSHTMLElement(Find(NyxResourceEditorFieldID(CEditor, refContent)).querySelector('textarea'));
+  LCompact := Find(NyxResourceWorkspaceActionID('studio-resource-workspace', rwpFiles))
+    .getBoundingClientRect.height > 0;
+  LBackTop := Find('action-resources-close').getBoundingClientRect.top;
+  Check((LFiles.getBoundingClientRect.height >= window.innerHeight / 3) and
+    (LFiles.getBoundingClientRect.bottom <= Find('studio-resources').getBoundingClientRect.bottom),
+    'catalog owns a useful bounded scrolling viewport');
+  LFiles.scrollTop := 47;
+  Check(LFiles.scrollTop = 47, 'expanded catalog can scroll independently');
+  await(ResourcePane(rwpEditor));
+  Check((LEditor.getBoundingClientRect.height >= window.innerHeight / 3) and
+    (LEditor.getBoundingClientRect.bottom <= Find('studio-resources').getBoundingClientRect.bottom),
+    'editor owns a useful bounded scrolling viewport');
+  LEditor.scrollTop := 123;
+  Check(LEditor.scrollTop = 123, 'long editor can scroll independently');
+
+  if LCompact then
+  begin
+    Check(LFiles.getBoundingClientRect.height = 0, 'compact Edit hides the retained catalog pane');
+  end;
+  await(ResourcePane(rwpFiles));
+  Check((Find(NyxResourceWorkspaceScrollID('studio-resource-workspace', rwpFiles)) = LFiles) and
+    (LFiles.scrollTop = 47),
+    'pane navigation retains both controls and their independent positions');
+  Check((Find(NyxResourceEditorFieldID(CEditor, refContent)).querySelector('textarea') = LMemo) and
+    (TJSHTMLTextAreaElement(LMemo).value = LProposal) and
+    (Find(NyxResourceLabelsEditorFieldID(NyxResourceBrowserTagsID(CBrowser), rlefInput)) = LTagInput),
+    'pane navigation preserves actual unfinished resource and filter controls');
+  Check(Find('action-resources-close').getBoundingClientRect.top = LBackTop,
+    'scrolling panes leaves Back navigation fixed');
+  await(ResourcePane(rwpEditor));
+  Check(LEditor.scrollTop = 123, 'returning to Edit restores its saved position');
+  await(Capture('resource-panes-live'));
+  await(ResourcePane(rwpFiles));
+  LFiles.scrollTop := 0;
   await(Click(NyxResourceBrowserActionID(CBrowser, rbaFilters)));
   Rows(1);
   Check((Find(NyxResourceBrowserFiltersID(CBrowser)).getBoundingClientRect.height = 0) and
@@ -464,6 +524,7 @@ begin
   await(Capture('resource-catalog-live'));
   await(Click(NyxResourceBrowserActionID(CBrowser, rbaReset)));
   Rows(1);
+  await(ResourcePane(rwpEditor));
 end;
 
 procedure ResourceWait; async;
@@ -695,6 +756,7 @@ begin
     LBefore := await(ResourceSnapshot);
     Check(LBefore = EncodeNyxProject(LPair), 'ordinary paired import retains the unchanged MCP seed');
     await(Click('action-resources-toggle'));
+    await(ResourcePane(rwpEditor));
     await(ImportFile('copy', 'JSON', WorkbenchCopyTitle, WorkbenchCopyHelp, NyxEncodeUTF8(WorkbenchJSON)));
     ResourceChange(refBind, 'true');
     ResourceChange(refTarget, NyxBindingPropertyTitle(bpText));
@@ -738,6 +800,7 @@ begin
     await(History(LBefore, LAfter));
     await(Browse);
     await(Select('project-name'));
+    await(ResourcePane(rwpFiles));
     TJSHTMLElement(Find(NyxResourceBrowserListID('studio-resource-browser'))
       .querySelector('[data-nyx-item]')).click;
     await(Click(NyxResourceBrowserActionID('studio-resource-browser', rbaOpen)));
