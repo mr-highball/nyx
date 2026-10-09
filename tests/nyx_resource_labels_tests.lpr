@@ -245,7 +245,7 @@ begin
   LPreference := DefaultNyxStudioPresentation;
   LPreference.ResourceDraft := LDraft;
   LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LPreference));
-  Check(LPacket.Field('version').AsInteger = 12,
+  Check(LPacket.Field('version').AsInteger = 13,
     'outer preferences declare their broader draft contract explicitly');
   LLoaded := DecodeNyxStudioPresentation(LPacket.ToJSON);
   LFresh := NewNyxResourceEditor(LForm.Node.ID, LResources, NyxNewResourceSelection);

@@ -25,7 +25,7 @@ program nyx_resource_workbench_controls;
 
 {$mode delphi}{$H+}{$codepage utf8}
 
-uses SysUtils, Classes, Interfaces, Forms, Controls, StdCtrls, Grids, Graphics,
+uses SysUtils, Classes, Types, Interfaces, Forms, Controls, StdCtrls, Grids, Graphics,
   IntfGraphics, FPWritePNG, nyx.text, nyx.types, nyx.bytes, nyx.data,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor, nyx.resources.labels.editor,
   nyx.resources.browser,
@@ -294,6 +294,11 @@ var
     LProposal: TNyxText;
     LCategory: TCheckBox;
     LList: TListBox;
+    LTagInput: TControl;
+    LRevision: Integer;
+    LSelected: TNyxText;
+    LPane: TControl;
+    LOpen: TControl;
 
     procedure Value(const AID, AValue: TNyxText);
     var
@@ -334,6 +339,18 @@ var
     Check(LStudio.ShellView.ControlFor('studio-resources').Width > LWindow.ClientWidth div 2,
       'dedicated Resources uses the workspace width');
     Rows(1);
+    LPane := LStudio.ShellView.ControlFor('studio-resources');
+    TScrollBox(LPane).VertScrollBar.Position := 0;
+    LOpen := LStudio.ShellView.ControlFor(NyxResourceBrowserActionID(CBrowser, rbaOpen));
+    Check(not LStudio.ShellView.ControlFor(NyxResourceBrowserFiltersID(CBrowser)).Visible,
+      'detailed filters initially collapse without removing their fields');
+    Check((LList.ClientToScreen(Point(0, 0)).Y >= LPane.ClientToScreen(Point(0, 0)).Y) and
+      (LOpen.ClientToScreen(Point(0, LOpen.Height)).Y <=
+      LPane.ClientToScreen(Point(0, LPane.ClientHeight)).Y),
+      'catalog and Open are visible at the initial workspace scroll');
+    Click(NyxResourceBrowserActionID(CBrowser, rbaFilters));
+    Check(LStudio.ShellView.ControlFor(NyxResourceBrowserFiltersID(CBrowser)).Visible,
+      'the actual filter button exposes its owned controls');
     Value(NyxResourceBrowserFieldID(CBrowser, rbfSearch), 'COPY');
     Rows(1);
     Value(NyxResourceBrowserFieldID(CBrowser, rbfSources), 'Hosted');
@@ -361,6 +378,30 @@ var
     Value(NyxResourceBrowserFieldID(CBrowser, rbfLabelMatch), 'Any selected tag');
     Rows(1);
     Value(NyxResourceLabelsEditorFieldID(NyxResourceBrowserTagsID(CBrowser), rlefInput), 'Unfinished filter...');
+    { Selection is deliberate; an admitted resource need not be selected in an
+      independent runtime catalog. Drive the adapter's actual selection hook. }
+    LList.ItemIndex := 0;
+    LList.OnSelectionChange(LList, True);
+    Ready;
+    LTagInput := LStudio.ShellView.InputFor(NyxResourceLabelsEditorFieldID(
+      NyxResourceBrowserTagsID(CBrowser), rlefInput));
+    LRevision := LStudio.ShellView.CollectionView(NyxResourceBrowserListID(CBrowser)).Snapshot.Revision;
+    LSelected := LStudio.ShellView.CollectionView(NyxResourceBrowserListID(CBrowser)).Selected.ID;
+    Click(NyxResourceBrowserActionID(CBrowser, rbaFilters));
+    Rows(1);
+    Check(not LStudio.ShellView.ControlFor(NyxResourceBrowserFiltersID(CBrowser)).Visible and
+      (Pos('active', TButton(LStudio.ShellView.ControlFor(
+      NyxResourceBrowserActionID(CBrowser, rbaFilters))).Caption) > 0),
+      'collapsed filters disclose that their predicates remain active');
+    Check((LStudio.ShellView.CollectionView(NyxResourceBrowserListID(CBrowser)).Snapshot.Revision = LRevision) and
+      (LStudio.ShellView.CollectionView(NyxResourceBrowserListID(CBrowser)).Selected.ID = LSelected),
+      'filter disclosure preserves catalog revision and selected membership');
+    Click(NyxResourceBrowserActionID(CBrowser, rbaFilters));
+    Check((LStudio.ShellView.InputFor(NyxResourceLabelsEditorFieldID(
+      NyxResourceBrowserTagsID(CBrowser), rlefInput)) = LTagInput) and
+      (TCustomEdit(LTagInput).Text = 'Unfinished filter...'),
+      'filter disclosure retains the actual unfinished input control');
+    Click(NyxResourceBrowserActionID(CBrowser, rbaFilters));
     Click('action-resources-close');
     Check(TCustomEdit(LStudio.ShellView.InputFor(NyxResourceBrowserFieldID(
       'studio-resource-picker', rbfSearch))).Text = 'COPY',
@@ -369,6 +410,8 @@ var
     Rows(1);
     Check(ReadNyxResourceBrowser(LStudio.ShellView.Root.Find(CBrowser)).TagInput = 'Unfinished filter...',
       'workspace navigation retains unfinished filter tags');
+    Check(ReadNyxResourceBrowser(LStudio.ShellView.Root.Find(CBrowser)).FilterDisclosure = rfdCollapsed,
+      'workspace navigation retains the copied filter disclosure');
     Check(TCustomEdit(LStudio.ShellView.InputFor(
       NyxResourceEditorFieldID(CEditor, refContent))).Text = LProposal,
       'catalog filters/navigation preserve the unfinished resource proposal');

@@ -69,12 +69,15 @@ public library contract and its reusable components as the proof of capability.
 Dedicated Resources integration (2026-10-09): ordinary Studio shares a public
 Nyx workspace and compact Project picker, with category/source/locale discovery
 and exact all/any creator-tag filters. Copied preferences retain discovery and
-unfinished proposals. Explicit owner-selection handoff clears binding consent;
+unfinished proposals. Files/Open precede collapsible detailed filters; a typed
+copied preference retains disclosure and shows active predicates while hidden.
+Strict version-thirteen preferences migrate earlier discovery without losing
+queries or incomplete input. Explicit owner-selection handoff clears binding consent;
 typed collection subscriptions drive Open on both targets. The qualification
 packet separates native/HTTP execution from physical input, accessibility,
 performance, broader workspace UX and installed semantic/observing rollout.
 Counts stay **25/11/47/21/28/3**; no full criterion or product closes. See
-[the packet](WORK.md#current-return-path-resources-workspace-and-discovery--2026-10-09).
+[the current usability packet](WORK.md#current-return-path-resource-discovery-usability--2026-10-09).
 
 Previous visible creator tags (2026-10-09): the reusable public editor is consumed by both
 ordinary Studio controllers. Native/HTTP proposal and preference checks pass

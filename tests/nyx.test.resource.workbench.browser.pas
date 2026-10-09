@@ -340,6 +340,9 @@ var
   LPair: TNyxText;
   LProposal: TNyxText;
   LRow: TJSHTMLElement;
+  LTagInput: TJSHTMLElement;
+  LRevision: Integer;
+  LSelected: TNyxText;
 
   procedure Value(const AID, AValue: TNyxText);
   var
@@ -388,6 +391,17 @@ begin
   Check(Find('studio-resources').getBoundingClientRect.width > window.innerWidth / 2,
     'dedicated Resources uses the workspace width');
   Rows(1);
+  Find('studio-resources').scrollTop := 0;
+  Check(Find(NyxResourceBrowserFiltersID(CBrowser)).getBoundingClientRect.height = 0,
+    'detailed filters initially collapse without removing their fields');
+  Check((Find(NyxResourceBrowserListID(CBrowser)).getBoundingClientRect.top >=
+    Find('studio-resources').getBoundingClientRect.top) and
+    (Find(NyxResourceBrowserActionID(CBrowser, rbaOpen)).getBoundingClientRect.bottom <=
+    Find('studio-resources').getBoundingClientRect.bottom),
+    'catalog and Open are visible at the initial workspace scroll');
+  await(Click(NyxResourceBrowserActionID(CBrowser, rbaFilters)));
+  Check(Find(NyxResourceBrowserFiltersID(CBrowser)).getBoundingClientRect.height > 0,
+    'the actual filter button exposes its owned controls');
   Value(NyxResourceBrowserFieldID(CBrowser, rbfSearch), 'COPY');
   Rows(1);
   Value(NyxResourceBrowserFieldID(CBrowser, rbfSources), 'Hosted');
@@ -410,6 +424,24 @@ begin
   Value(NyxResourceBrowserFieldID(CBrowser, rbfLabelMatch), 'Any selected tag');
   Rows(1);
   Value(NyxResourceLabelsEditorFieldID(NyxResourceBrowserTagsID(CBrowser), rlefInput), 'Unfinished filter...');
+  LRow := TJSHTMLElement(Find(NyxResourceBrowserListID(CBrowser)).querySelector('[data-nyx-item]'));
+  LRow.click;
+  LTagInput := Find(NyxResourceLabelsEditorFieldID(NyxResourceBrowserTagsID(CBrowser), rlefInput));
+  LRevision := GStudio.ShellView.CollectionView(NyxResourceBrowserListID(CBrowser)).Snapshot.Revision;
+  LSelected := GStudio.ShellView.CollectionView(NyxResourceBrowserListID(CBrowser)).Selected.ID;
+  await(Click(NyxResourceBrowserActionID(CBrowser, rbaFilters)));
+  Rows(1);
+  Check((Find(NyxResourceBrowserFiltersID(CBrowser)).getBoundingClientRect.height = 0) and
+    (Pos('active', Find(NyxResourceBrowserActionID(CBrowser, rbaFilters)).textContent) > 0),
+    'collapsed filters disclose that their predicates remain active');
+  Check((GStudio.ShellView.CollectionView(NyxResourceBrowserListID(CBrowser)).Snapshot.Revision = LRevision) and
+    (GStudio.ShellView.CollectionView(NyxResourceBrowserListID(CBrowser)).Selected.ID = LSelected),
+    'filter disclosure preserves catalog revision and selected membership');
+  await(Click(NyxResourceBrowserActionID(CBrowser, rbaFilters)));
+  Check((Find(NyxResourceLabelsEditorFieldID(NyxResourceBrowserTagsID(CBrowser), rlefInput)) = LTagInput) and
+    (ReadNyxResourceBrowser(GStudio.ShellView.Root.Find(CBrowser)).TagInput = 'Unfinished filter...'),
+    'filter disclosure retains the actual unfinished input control');
+  await(Click(NyxResourceBrowserActionID(CBrowser, rbaFilters)));
   await(Click('action-resources-close'));
   await(Panel('project'));
   Check(TJSHTMLInputElement(Find(NyxResourceBrowserFieldID('studio-resource-picker', rbfSearch))
@@ -418,6 +450,8 @@ begin
   Rows(1);
   Check(ReadNyxResourceBrowser(GStudio.ShellView.Root.Find(CBrowser)).TagInput = 'Unfinished filter...',
     'workspace navigation retains unfinished filter tags');
+  Check(ReadNyxResourceBrowser(GStudio.ShellView.Root.Find(CBrowser)).FilterDisclosure = rfdCollapsed,
+    'workspace navigation retains the copied filter disclosure');
   Check(TJSHTMLTextAreaElement(Find(NyxResourceEditorFieldID(CEditor, refContent))
     .querySelector('textarea')).value = LProposal,
     'catalog filters/navigation preserve the unfinished resource proposal');

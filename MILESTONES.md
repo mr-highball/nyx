@@ -6,13 +6,15 @@
 
 Current dedicated Resources integration (2026-10-09): a public Nyx workspace and
 compact Project picker share category/source/locale discovery and exact all/any
-creator-tag filters. Independent sections, copied version-twelve preferences,
+creator-tag filters. Files/Open precede collapsible details, whose active query
+and unfinished input survive typed disclosure. Independent sections, strict
+version-thirteen copied preferences with historical discovery migration,
 explicit selected-owner draft handoff and managed typed selection subscriptions
 serve both ordinary controllers. This qualifies a bounded integrated consumer;
 full workspace UX, physical input/accessibility, performance and installed
 semantic/observing rollout remain with their original owners. No full criterion,
 credit or count closes; aggregate stays **25/11/47/21/28/3**. See
-[the packet](WORK.md#current-return-path-resources-workspace-and-discovery--2026-10-09).
+[the current usability packet](WORK.md#current-return-path-resource-discovery-usability--2026-10-09).
 
 Previous native Studio allocation (2026-10-08): the shared toolbar uses typed wrap
 at its actual row width; native side fields reserve scrollbar client space.

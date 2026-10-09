@@ -361,7 +361,13 @@ begin
     begin
       Exit(False);
     end;
-    FCatalog.Filter(LState.Query);
+    { Pure disclosure retains the mounted collection revision and selection.
+      Filtering it again would turn a presentation toggle into a data change. }
+
+    if ANode.ID <> NyxResourceBrowserActionID(LEditor.ID, rbaFilters) then
+    begin
+      FCatalog.Filter(LState.Query);
+    end;
     AState := LState;
     for LIndex := 0 to High(CEditors) do
     begin

@@ -22,13 +22,15 @@ Original metadata/source/history/form and dedicated-workspace criteria now have
 an ordinary shared consumer. Public Nyx compounds expose category/source/locale
 choices and exact all/any creator-tag filtering in the wide workspace and compact
 Project picker. Selection and explicit Open remain distinct; hidden membership
-cannot open a file outside displayed results. Copied version-twelve preferences
-retain queries and partial input. Same-project selected-owner handoff preserves
+cannot open a file outside displayed results. Files/Open precede collapsible
+details; typed disclosure retains active predicates, membership and unfinished
+input. Strict version-thirteen preferences retain queries, partial input and
+disclosure with historical discovery migration. Same-project selected-owner handoff preserves
 file proposals while clearing the old binding consent, and typed managed event
 subscriptions repair native Open disclosure. Full workspace UX, semantic exposure,
 physical input/accessibility, broader parity and performance remain open; no full
 criterion/task/count closes. Aggregate stays 25/11/47/21/28/3. See
-[the packet](../WORK.md#current-return-path-resources-workspace-and-discovery--2026-10-09).
+[the current usability packet](../WORK.md#current-return-path-resource-discovery-usability--2026-10-09).
 
 ## Previous visible creator-tag consumer — 2026-10-09
 

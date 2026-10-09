@@ -9,6 +9,83 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Resource discovery usability — 2026-10-09
+
+Entry is clean at pushed `27c1b8f`. Reassessment: the preceding label editor and
+catalog integration establish ownership and discovery, but neither establishes
+the complete workspace criteria. Initial compact captures put detailed filters
+ahead of files; common scrolling also moves navigation away during deep forms.
+These are consumer gaps, not reasons for another metadata/cache prerequisite.
+Keep the original NS-1 resources and NS-4 authoring acceptance owners and totals.
+
+The public Nyx compound now puts catalog rows and explicit Open ahead of detailed
+filters. Typed `TNyxResourceFilterDisclosure` and fluent copied `.Filters(...)`
+retain disclosure; a public toggle reports active predicate groups while hidden.
+Fixed fields remain owned. Closing retains the query, selected membership,
+unfinished tag input and independent resource proposal, without catalog filtering
+or paired history changes. Reset clears predicates while retaining disclosure.
+Strict version-two state migrates exact version-one discovery. Outer preferences
+thirteen require that new nested contract; historical twelve retains its original
+version-one requirement, rather than silently widening. Earlier active Unicode
+predicates and incomplete input survive migration to collapsed disclosure.
+
+The ordinary Win32 journey passes **200**, and HTTP desktop/CSS-390 passes
+**1148/1536** (polling included). Actual initial geometry checks put rows/Open
+inside the workspace; actual toggles preserve mounted tag input identity, exact
+unfinished text, catalog revision and deliberate selected membership. Navigation,
+imports, caption/prompt/table binding and paired Apply/Undo/Redo remain exercised.
+Four live browser checkpoints per viewport and the native print capture were
+inspected. These are synthetic adapter/control inputs, not physical mobile,
+IME or assistive-technology qualification.
+
+The first native/desktop enhanced journey refused because its fixture read
+Selected before deliberately selecting a row. Corrected actual native selection
+and DOM row inputs passed; failure logs remain. A later review kept the existing
+query/tag mismatch refusal case on the current nested version, so it still tests
+that invariant instead of merely refusing an old version. The final portable
+workspace run passes **275** native and **96** HTTP presentation-only; resource
+label/proposal regression remains **70** each. No full browser workspace lifetime
+claim comes from the presentation-only scope. All checked native owners and
+browser drivers retire with zero unfreed blocks. Main browser Studio, its worker
+and the Pascal backend compile with zero owned warnings; seven upstream RTL
+warnings per browser compile remain, with dependency sources unchanged.
+
+The exact Pascal artifact consumer compares all three current ordinary outputs
+without normalization: **4814 bytes**, SHA-256
+`277b759ec30fd4b3ab90085da80fefafd55e73e447b78e7cd886a4bdeeeb2c0a`.
+This is the exact unchanged builder whose existing **50** native checks and HTTP
+execution were qualified in the preceding packet; their byte-matched execution
+evidence is reused rather than rerun. Expanded native timing is recorded only
+as this workload's elapsed time, with no comparative speed claim.
+
+Evidence is under `build/resource-workspace-usability/`: native `run-final.log`,
+`failed-selection-setup.log`, `workspaces-final/run.log`, `core/run.log`,
+`browser-labels`, `browser-preferences-final`, `browser-final-desktop` and
+`browser-final-narrow`; `evidence/run.log` and
+`generated-evidence-private.json` carry exact source proof. Fresh hashed closures
+use only the existing admitted static host, with identity receipts in
+`stage-final-private.json` and `stage-preferences-final-private.json`.
+
+Installed semantic MCP supplies bounded context; its maintained authored seed
+remains the ordinary input. The active revision-two user pair, nine exact project
+pairs, fifteen service identities and 299 sealed LAN files remain unchanged,
+including checkpoint SHA
+`24635efcca9041bf4700ceb4a14226232ff41e61e4440a19f28c25d3de6d01c9`.
+No listener, configuration, enrollment or protected deployment changed. The code
+and this record checkpoint together to `origin/hello-nyx`; exact HEAD/remote and
+clean-worktree evidence is recorded in ignored `remote-checkpoint-private.json`.
+
+This accepts the bounded discovery usability behavior. Aggregate remains
+**25/11/47/21/28/3**, because the original complete resource/authoring criteria
+still require broader workspace quality, physical input/accessibility, hosted/
+locale UX and performance. Stop this filter/layout variant now. Next advance the
+existing NS-4 semantic-workflow owner's bounded current resource category,
+source/locale/tag queries and exact tag mutation with normal revision-aware paired
+admission. The installed frozen endpoint predates those contracts; local checks
+do not establish their deployment. Independent desktop pane scrolling remains
+with the existing authoring owner; common scrolling still moves the catalog away
+during deep form editing. No full task/criterion/credit or product closes here.
+
 ## Current return path: Resources workspace and discovery — 2026-10-09
 
 Entry was clean at exact pushed `7f020b3`. The user's accepted direction is a

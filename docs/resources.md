@@ -759,9 +759,11 @@ The shared resource form exposes `NyxResourceEditorLabels` and
 retaining labels. Existing Apply requests and paired history admit annotations
 with the resource/source pair; changed context and pending application drafts
 refuse. Both ordinary Studio controllers consume the visible reusable tag
-editor. Version-twelve private preferences retain the dedicated workspace's
-typed query, incomplete filter tags and scroll position as well as resource
-proposals; exact historical packets, including version eleven, remain readable.
+editor. Version-thirteen private preferences retain the dedicated workspace's
+typed query, filter disclosure, incomplete filter tags and scroll position as well
+as resource proposals. Exact historical packets, including version twelve's
+version-one discovery state, remain readable; they acquire collapsed disclosure
+without changing their active predicates or unfinished text.
 Semantic label operations and observing deployment still require integration.
 
 `tools/build.ps1 -Target resource-labels -HttpURL <existing-test-host>` runs
@@ -822,7 +824,9 @@ retires, while the independently owned catalog remains usable.
 
 `nyx.resources.browser` provides `NewNyxResourceBrowser` in typed `rbmWorkspace`
 or `rbmCompact` mode. Its copied `TNyxResourceBrowserState` contains the query,
-unfinished filter-tag text and optional exact selected tag. The compound owns
+unfinished filter-tag text, optional exact selected tag and typed
+`TNyxResourceFilterDisclosure`. For example, hand authoring can request expanded
+details with `NyxResourceBrowserState.Filters(rfdExpanded)`. The compound owns
 fixed ordinary controls, retaining descendant identity/style on restoration;
 it retains no provider, resource definitions, session or target. Bind its list
 through `NyxResourceBrowserListID` and the public collection contract. Hosts
@@ -832,10 +836,19 @@ the native compatibility callback does not forward that family. Studio owns
 managed subscriptions whose receivers borrow its section facade, and clears
 those pointers before retirement. A selected visible member enables Open;
 changing selection still leaves the file proposal untouched.
-`PrepareNyxResourceBrowserAction` validates Add/Remove/Reset on a detached
-candidate before changing mounted fields; invalid tags or a combined query over
-the ordinary predicate budget refuse. Strict version-one state/query packets
-are an editor preference boundary, never part of an exported application.
+The catalog and explicit Open precede detailed filters, which initially
+collapse. A toggle button reports active predicate groups even while they are
+hidden. Closing retains the owned fields and their applied query; it never
+clears selection, pending tag text or the resource proposal. Hosts restore and
+synchronize this presentation change without calling the catalog's Filter
+operation. Reset clears predicates while retaining disclosure.
+`PrepareNyxResourceBrowserAction` validates Add/Remove/Reset/disclosure before
+changing mounted fields; tag edits use a detached candidate. Invalid tags or a
+combined query over the ordinary predicate budget refuse. Strict version-two
+state preserves version-one query wire; standalone historical version-one state
+migrates to collapsed disclosure. Outer preferences twelve only admit their
+historical nested state, while thirteen requires version two. These are editor
+preference boundaries, never part of an exported application.
 
 Both renderers and the Studio section facade expose the actual manually mounted
 `CollectionView` and `CollectionMount`; authored-default views retain their

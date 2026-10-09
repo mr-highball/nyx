@@ -25,7 +25,7 @@ program nyx_workspace_tests;
 
 uses
   SysUtils, nyx.text, nyx.data, nyx.model, nyx.codec, nyx.codegen, nyx.presentations,
-  nyx.resources, nyx.resources.catalog,
+  nyx.resources, nyx.resources.catalog, nyx.resources.browser,
   nyx.studio.projects, nyx.studio.agents,
   nyx.studio.workspaces, nyx.studio.presentation, nyx.studio.palette,
   nyx.studio.view, nyx.studio.inspector, nyx.studio.authoring
@@ -367,6 +367,30 @@ begin
   LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
     'Version eleven retains every proposal and defaults the independent discovery state');
+  { Twelve already owns discovery. Migrate its exact nested version-one packet
+    without changing predicates or partial text, and refuse a newer nested
+    shape masquerading as that historical outer contract. }
+  SetLength(LFields, LPacket.Count);
+  for LIndex := 0 to LPacket.Count - 1 do
+  begin
+    LKey := LPacket.Key(LIndex);
+    LValue := LPacket.Field(LKey);
+
+    if LKey = 'version' then
+    begin
+      LValue := NyxData(12);
+    end;
+
+    if LKey = 'resourceBrowser' then
+    begin
+      LValue := NyxObject([NyxField('version', NyxData(1)),
+        NyxField('query', LValue.Field('query')), NyxField('tagEditor', LValue.Field('tagEditor'))]);
+    end;
+    LFields[LIndex] := NyxField(LKey, LValue);
+  end;
+  LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
+  Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
+    'Version twelve retains exact discovery and defaults to collapsed filters');
   LOriginal.DetailsPercent := 60;
   LOriginal.DetailsExpanded := True;
   LOriginal.CanvasToolsVisible := True;
@@ -376,15 +400,42 @@ begin
     .Labels(NyxResourceLabels.Add(NyxResourceLabel('Docs, "quick" 🌙')), rlmAny);
   LOriginal.ResourceBrowser.TagInput := 'Unfinished' + TNyxText(#10) + 'tag';
   LOriginal.ResourceBrowser.TagSelection := NyxResourceLabel('Docs, "quick" 🌙');
+  LOriginal.ResourceBrowser := LOriginal.ResourceBrowser.Filters(rfdExpanded);
   LOriginal.ResourcesScroll := 2147483647;
   LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LOriginal));
   LDecoded := DecodeNyxStudioPresentation(LPacket.ToJSON);
   Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
     'Current preferences retain allocation, exact typed discovery and unfinished Unicode tags');
-  for LCase := 0 to 31 do
+  for LIndex := 0 to LPacket.Count - 1 do
+  begin
+    LKey := LPacket.Key(LIndex);
+    LValue := LPacket.Field(LKey);
+
+    if LKey = 'version' then
+    begin
+      LValue := NyxData(12);
+    end;
+
+    if LKey = 'resourceBrowser' then
+    begin
+      LValue := NyxObject([NyxField('version', NyxData(1)),
+        NyxField('query', LValue.Field('query')), NyxField('tagEditor', LValue.Field('tagEditor'))]);
+    end;
+    LFields[LIndex] := NyxField(LKey, LValue);
+  end;
+  LDecoded := DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
+  Check((LDecoded.ResourceBrowser.FilterDisclosure = rfdCollapsed) and
+    (LDecoded.ResourceBrowser.Query.ToData.ToJSON = LOriginal.ResourceBrowser.Query.ToData.ToJSON) and
+    (LDecoded.ResourceBrowser.TagInput = LOriginal.ResourceBrowser.TagInput) and
+    (LDecoded.ResourceBrowser.TagSelection.Name = LOriginal.ResourceBrowser.TagSelection.Name),
+    'Historical discovery retains active Unicode predicates and partial input while collapsing');
+  LDecoded.ResourceBrowser := LDecoded.ResourceBrowser.Filters(rfdExpanded);
+  Check(EncodeNyxStudioPresentation(LDecoded) = LPacket.ToJSON,
+    'Fluent disclosure changes only the copied presentation choice');
+  for LCase := 0 to 36 do
   begin
     LKey := 'version';
-    LValue := NyxData(13);
+    LValue := NyxData(14);
     case LCase of
       1:
       begin
@@ -539,11 +590,41 @@ begin
       31:
         begin
           LKey := 'resourceBrowser';
-          LValue := NyxObject([NyxField('version', NyxData(1)),
+          LValue := NyxObject([NyxField('version', NyxData(2)),
             NyxField('query', LOriginal.ResourceBrowser.Query.ToData),
             NyxField('tagEditor', NyxObject([NyxField('version', NyxData(1)),
               NyxField('labels', NyxArray([])), NyxField('input', NyxData('')),
-              NyxField('selection', NyxNull)]))]);
+              NyxField('selection', NyxNull)])),
+            NyxField('filterDisclosure', NyxData(Ord(rfdCollapsed)))]);
+        end;
+      32:
+        begin
+          LKey := 'version';
+          LValue := NyxData(12);
+        end;
+      33, 34, 35, 36:
+        begin
+          LKey := 'resourceBrowser';
+          LBad := LPacket.Field(LKey);
+          LValue := NyxData(2);
+
+          if LCase = 34 then
+          begin
+            LValue := NyxData(-1);
+          end;
+
+          if LCase = 35 then
+          begin
+            LValue := NyxData('expanded');
+          end;
+
+          if LCase = 36 then
+          begin
+            LValue := NyxData(0.5);
+          end;
+          LValue := NyxObject([NyxField('version', NyxData(2)),
+            NyxField('query', LBad.Field('query')), NyxField('tagEditor', LBad.Field('tagEditor')),
+            NyxField('filterDisclosure', LValue)]);
         end;
     end;
     SetLength(LFields, LPacket.Count);

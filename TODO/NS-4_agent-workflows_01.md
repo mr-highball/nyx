@@ -11,7 +11,9 @@ credit from source, events, state, compiler service or native Studio owners.
 
 Current dedicated Resources integration (2026-10-09) shares the public typed
 catalog/browser compounds across ordinary Studio controllers, with category,
-source, locale and exact all/any creator-tag filters. Installed native MCP stays
+source, locale and exact all/any creator-tag filters. Filter disclosure is copied
+editor presentation and retains the active query/selection/proposals. Installed
+native MCP stays
 primary for bounded context and the maintained authored seed. The current frozen
 endpoint still predates these query/label contracts: bounded discovery, exact tag
 inspection/mutation and observing rollout remain this owner's gap. Query changes

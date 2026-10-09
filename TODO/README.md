@@ -50,11 +50,13 @@ still have open NS-3 owners.
 Current dedicated Resources integration (2026-10-09): the public Nyx workspace
 and compact Project picker share category/source/locale discovery and exact
 all/any creator-tag filters. Independent section ownership, copied preferences,
+files/Open before collapsible filters, typed disclosure and historical discovery
+migration,
 explicit selected-owner draft handoff and managed typed selection subscriptions
 serve both ordinary controllers. Full workspace UX, physical input/accessibility,
 performance and installed semantic/observing rollout retain their original owners.
 No full criterion or count closes; aggregate stays 25/11/47/21/28/3. See
-[the packet](../WORK.md#current-return-path-resources-workspace-and-discovery--2026-10-09).
+[the current usability packet](../WORK.md#current-return-path-resource-discovery-usability--2026-10-09).
 
 Previous visible creator-tag consumer (2026-10-09): public Nyx Add/Remove and
 copied unfinished input/selection are consumed by both ordinary controllers.

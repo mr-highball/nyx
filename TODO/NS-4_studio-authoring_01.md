@@ -13,12 +13,14 @@ Current dedicated Resources integration consumes the original authoring and
 workspace criteria through a public Nyx section and compact Project picker.
 Both ordinary controllers share the catalog/filter compounds and independently
 owned mounts. Typed category/source/locale/all-any-tag queries and copied
-version-twelve preferences retain discovery. Unfinished file proposals survive
+version-thirteen preferences retain discovery and typed disclosure, with exact
+historical migration. Files/Open precede collapsible details; hiding them keeps
+active predicates, membership and unfinished input. Unfinished file proposals survive
 selected-owner changes through an explicit handoff that clears binding consent;
 managed selection subscriptions expose Open consistently. Full workspace UX,
 physical input/accessibility, performance and installed semantic/observing rollout
 remain required. No full criterion or count closes; aggregate stays 25/11/47/21/28/3.
-See [the packet](../WORK.md#current-return-path-resources-workspace-and-discovery--2026-10-09).
+See [the current usability packet](../WORK.md#current-return-path-resource-discovery-usability--2026-10-09).
 
 Previous creator-tag consumer uses actual ordinary Studio on Win32 and HTTP
 desktop/CSS-390. The reusable public Nyx compound retains incomplete tag input,

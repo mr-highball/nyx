@@ -191,7 +191,7 @@ begin
     LPresentation := NyxData(AValue.PresentationSelection.Reference.Name);
   end;
   Result := NyxObject([
-    NyxField('version', NyxData(12)),
+    NyxField('version', NyxData(13)),
     NyxField('codeVisible', NyxData(AValue.CodeVisible)),
     NyxField('sourceTab', NyxData(Ord(AValue.SourceTab))),
     NyxField('sourceExpanded', NyxData(AValue.SourceExpanded)),
@@ -266,7 +266,7 @@ begin
   LValue := TNyxDataValue.ParseJSON(AText);
 
   if (LValue.Kind <> ndObject) or
-    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) or
+    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]) or
     ((LValue.Field('version').AsInteger = 2) and (LValue.Count <> 32)) or
     ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) or
     ((LValue.Field('version').AsInteger = 4) and (LValue.Count <> 35)) or
@@ -275,7 +275,7 @@ begin
     ((LValue.Field('version').AsInteger = 7) and (LValue.Count <> 42)) or
     ((LValue.Field('version').AsInteger = 8) and (LValue.Count <> 45)) or
     ((LValue.Field('version').AsInteger in [9, 10, 11]) and (LValue.Count <> 46)) or
-    ((LValue.Field('version').AsInteger = 12) and (LValue.Count <> 48)) then
+    ((LValue.Field('version').AsInteger in [12, 13]) and (LValue.Count <> 48)) then
   begin
     raise ENyxModel.Create('Unsupported editor presentation packet');
   end;
@@ -400,8 +400,18 @@ begin
 
   if LVersion >= 12 then
   begin
-    { Twelve adds discovery only. Earlier exact packets start with the public
-      default query; filter tags are independent of a resource's assigned tags. }
+    { Twelve owns version-one discovery. Thirteen adds copied filter disclosure
+      in version two. Keep the historical nested contract exact; neither packet
+      silently admits an unrelated future shape. Older outer packets still
+      start with the public default query and collapsed disclosure. }
+
+    if ((LVersion = 12) and
+      (LValue.Field('resourceBrowser').Field('version').AsInteger <> 1)) or
+      ((LVersion = 13) and
+      (LValue.Field('resourceBrowser').Field('version').AsInteger <> 2)) then
+    begin
+      raise ENyxModel.Create('Resource browser does not match its presentation version');
+    end;
     Result.ResourceBrowser := TNyxResourceBrowserState.FromData(LValue.Field('resourceBrowser'));
     Result.ResourcesScroll := IntegerValue(LValue, 'resourcesScroll', 0, 2147483647);
   end;
