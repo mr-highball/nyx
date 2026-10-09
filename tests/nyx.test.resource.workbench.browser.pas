@@ -36,7 +36,7 @@ implementation
 
 uses SysUtils, JS, Web, nyx.text, nyx.bytes, nyx.data, nyx.model,
   nyx.codec, nyx.codegen, nyx.studio.projects, nyx.studio.browser,
-  nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
+  nyx.resources, nyx.resources.editor, nyx.resources.rows.editor, nyx.resources.labels.editor,
   nyx.collections, nyx.binding.types, nyx.behavior, nyx.studio.sections, nyx.generated.view,
   nyx.test.resource.workbench;
 
@@ -333,6 +333,23 @@ begin
   LInput.dispatchEvent(TImageEvent.new('change', LOptions));
 end;
 
+{ Dispatch through the ordinary host input boundary. Only file picking and
+  trusted-input qualification are substituted; tag actions use mounted controls. }
+procedure TagInput(const AValue: TNyxText);
+var
+  LInput: TJSHTMLInputElement;
+  LOptions: TJSObject;
+begin
+  LInput := TJSHTMLInputElement(Find(NyxResourceLabelsEditorFieldID(
+    NyxResourceEditorLabelsID(CEditor), rlefInput)).querySelector('input'));
+  Check(LInput <> nil, 'ordinary browser tag input is mounted');
+  LInput.value := AValue;
+  LOptions := TJSObject.new;
+  LOptions['bubbles'] := True;
+  LInput.dispatchEvent(TImageEvent.new('input', LOptions));
+  LInput.dispatchEvent(TImageEvent.new('change', LOptions));
+end;
+
 procedure Select(const AID: TNyxText); async;
 var
   LChrome: TJSHTMLElement;
@@ -453,6 +470,7 @@ var
   LBytes: TNyxBytes;
   LStatus: TJSHTMLElement;
   LTable: TJSHTMLElement;
+  LTags: TNyxNode;
 begin
   GStudio := nil;
   window.addEventListener('error', @RuntimeFailure);
@@ -489,14 +507,37 @@ begin
     ResourceChange(refBind, 'true');
     ResourceChange(refTarget, NyxBindingPropertyTitle(bpText));
     ResourceChange(refPath, 'Root["literal.dot"] / text');
+    TagInput('Onboarding');
+    await(Click(NyxResourceLabelsEditorActionID(NyxResourceEditorLabelsID(CEditor), rleaAdd)));
+    TagInput('Temporary');
+    await(Click(NyxResourceLabelsEditorActionID(NyxResourceEditorLabelsID(CEditor), rleaAdd)));
+    await(Click(NyxResourceLabelsEditorActionID(NyxResourceEditorLabelsID(CEditor), rleaRemove)));
+    Check((NyxResourceEditorLabels(GStudio.ShellView.Root.Find(CEditor)).Count = 1) and
+      NyxResourceEditorLabels(GStudio.ShellView.Root.Find(CEditor)).Contains(NyxResourceLabel('Onboarding')),
+      'ordinary browser Add/Remove retains the intended exact creator tag');
+    TagInput('Later...');
     await(Action('action-code', 'view', 'code'));
     await(ResourceWait);
     await(Panel('project'));
     Check(TJSHTMLInputElement(Find(NyxResourceEditorFieldID(CEditor, refDescription)).querySelector('input,textarea'))
       .value = WorkbenchCopyHelp, 'imported creator help survives source chrome');
+    LTags := GStudio.ShellView.Root.Find(NyxResourceEditorLabelsID(CEditor));
+    Check((ReadNyxResourceLabelsEditor(LTags).Input = 'Later...') and
+      (ReadNyxResourceLabelsEditor(LTags).Labels.Count = 1),
+      'ordinary browser chrome retains incomplete tag input and exact proposal tags');
+    Find(NyxResourceLabelsEditorFieldID(LTags.ID, rlefInput)).scrollIntoView;
+    await(Capture('resource-tags-live'));
     await(Click(NyxResourceEditorActionID(CEditor, reaApply)));
     await(ResourceWait);
     LAfter := await(ResourceSnapshot);
+    LDocument := TNyxCodec.Decode(DecodeNyxProject(LAfter).Design);
+    try
+      Check(NyxResourceLabelsOf(LDocument.Resources.Definition(
+        NyxResourceRef('copy'), NyxDefaultLocale)).Contains(NyxResourceLabel('Onboarding')),
+        'ordinary browser Apply accepts creator tags with exact generated source');
+    finally
+      LDocument.Free;
+    end;
     await(Panel('design'));
     CheckToolbarBounds;
     Check(Find('studio-canvas').querySelector('[data-node="workshop-headline"]').textContent =

@@ -27,11 +27,11 @@ program nyx_resource_workbench_controls;
 
 uses SysUtils, Classes, Interfaces, Forms, Controls, StdCtrls, Grids, Graphics,
   IntfGraphics, FPWritePNG, nyx.text, nyx.types, nyx.bytes, nyx.data,
-  nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
+  nyx.resources, nyx.resources.editor, nyx.resources.rows.editor, nyx.resources.labels.editor,
   nyx.resources.import, nyx.resources.import.lcl, nyx.collections,
   nyx.binding.types, nyx.model, nyx.codec, nyx.codegen, nyx.studio.projects,
   nyx.studio.lcl, nyx.studio.sourcejobs, nyx.generated.view,
-  nyx.test.resource.workbench;
+  nyx.test.resource.workbench, nyx.test.capture.lcl;
 
 const
   CEditor = 'studio-resource-editor';
@@ -123,6 +123,8 @@ var
   LTable: TStringGrid;
   LBitmap: TBitmap;
   LImage: TLazIntfImage;
+  LTagInput: TCustomEdit;
+  LTags: TNyxNode;
 
   { Bounded physical allocation evidence for the existing first-open profile.
     Report actual control/client boxes, not inferred model widths. This observes
@@ -406,13 +408,40 @@ begin
     Bind;
     Choice(refTarget, NyxBindingPropertyTitle(bpText));
     Choice(refPath, 'Root["literal.dot"] / text');
+    LTags := LStudio.ShellView.Root.Find(NyxResourceEditorLabelsID(CEditor));
+    LTagInput := TCustomEdit(LStudio.ShellView.InputFor(
+      NyxResourceLabelsEditorFieldID(LTags.ID, rlefInput)));
+    Check(LTagInput <> nil, 'ordinary native resource tag input is mounted');
+    LTagInput.Text := 'Onboarding';
+    Ready;
+    Click(NyxResourceLabelsEditorActionID(LTags.ID, rleaAdd));
+    LTagInput.Text := 'Temporary';
+    Ready;
+    Click(NyxResourceLabelsEditorActionID(LTags.ID, rleaAdd));
+    Click(NyxResourceLabelsEditorActionID(LTags.ID, rleaRemove));
+    Check((NyxResourceEditorLabels(LStudio.ShellView.Root.Find(CEditor)).Count = 1) and
+      NyxResourceEditorLabels(LStudio.ShellView.Root.Find(CEditor)).Contains(NyxResourceLabel('Onboarding')),
+      'ordinary native Add/Remove retains the intended exact creator tag');
+    LTagInput.Text := 'Later...';
+    Ready;
     Click('action-code');
     Check(LStudio.ShellView.Root.Find(NyxResourceEditorFieldID(CEditor, refDescription))
       .Prop('value') = WorkbenchCopyHelp, 'chrome retains the imported creator help');
+    LTags := LStudio.ShellView.Root.Find(NyxResourceEditorLabelsID(CEditor));
+    Check((ReadNyxResourceLabelsEditor(LTags).Input = 'Later...') and
+      (ReadNyxResourceLabelsEditor(LTags).Labels.Count = 1),
+      'ordinary native chrome retains incomplete tag input and accepted proposal tags');
+    TScrollBox(LStudio.ShellView.ControlFor('studio-left')).ScrollInView(
+      LStudio.ShellView.InputFor(NyxResourceLabelsEditorFieldID(LTags.ID, rlefInput)));
+    LWindow.Repaint;
+    SaveNyxNativeCapture(LWindow, TNyxText(ParamStr(2)) + TNyxText('.tags.png'), ncmPrint);
     Click(NyxResourceEditorActionID(CEditor, reaApply));
     Check(LStudio.SourceCommands.State = nssApplied, 'ordinary source admission publishes JSON plus caption');
     Check(TLabel(LStudio.CanvasView.ControlFor('workshop-headline')).Caption = 'Your resource workbench',
       'actual native caption reads the resource');
+    Check(NyxResourceLabelsOf(LStudio.Session.Document.Resources.Definition(
+      NyxResourceRef('copy'), NyxDefaultLocale)).Contains(NyxResourceLabel('Onboarding')),
+      'ordinary native Apply accepts creator tags with exact generated source');
     History(LBefore);
     Select('project-name');
     Click(CEditor + '-entry-0');

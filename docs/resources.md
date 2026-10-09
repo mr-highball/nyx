@@ -167,8 +167,10 @@ until **Apply resource** admits the file and optional binding together as one
 paired Undo step. The same public Nyx form serves browser and native Studio.
 
 Pending Resources values use version-two drafts, or version three when creator
-labels are present, inside version-ten editor preferences. Unfinished contents
-and exact label proposals are retained. Older unversioned drafts
+labels are present. Version four also retains the tag editor's incomplete input
+and exact selected tag. Version-eleven editor preferences admit all three forms;
+historical version ten retains its strict version-two contract. Unfinished
+contents and exact label proposals are retained. Older unversioned drafts
 migrate their eighteen original fields without changing catalog/control baselines;
 current packets require the explicit nineteenth locale-choice field. Unknown or
 missing current choices refuse before restoration writes any field. Editor
@@ -648,7 +650,23 @@ Library hosts use `NewNyxResourceEditor`, typed field/action roles,
 `nyx.resources.editor`. `INyxResourcePicker` separates local file selection from
 the portable form. Hosts own cancellation and check their captured context
 before proposing a reply. The form borrows catalog/control inputs only while
-constructing its independent owned children; it never modifies accepted work.
+constructing its controls. It owns a reusable tag editor from
+`nyx.resources.labels.editor`: exact names are added as one tag, never split on
+commas or punctuation. **Remove tag** acts on the selected exact member.
+Add/Remove edit the proposal; **Apply resource** accepts those labels alongside
+the resource and optional binding in the ordinary paired Undo step. Typing an
+unfinished name does not add it, and chrome navigation preserves that input.
+Invalid names refuse while retaining the proposal. The fixed input, select and
+buttons retain their owned identities as tags change.
+
+Standalone hosts can use `NewNyxResourceLabelsEditor` for assignment or filtering,
+`TNyxResourceLabelsEditorState` for copied state, and
+`HandleNyxResourceLabelsEditorAction` for their mounted callbacks. Controllers
+own synchronization and event subscriptions. The compound keeps no catalog,
+resource, controller or target reference. Its strict state packet rejects a
+selection outside the proposed label set before mounted state is written.
+
+The resource form never modifies accepted work while constructing its owned children.
 The prepared semantic resource API shares this form's final candidate admission.
 Authenticated deployment and observing execution retain the MCP workflow owner.
 The form offers **Image** for an image projection and hides scalar path selection
@@ -713,9 +731,10 @@ The shared resource form exposes `NyxResourceEditorLabels` and
 `SetNyxResourceEditorLabels` for copied proposals. Imports change contents while
 retaining labels. Existing Apply requests and paired history admit annotations
 with the resource/source pair; changed context and pending application drafts
-refuse. These public contracts are the dedicated Resources workspace's
-prerequisite. The visible tag editor, compact Project picker, ordinary workspace
-controllers and semantic label operations still require integration.
+refuse. Both ordinary Studio controllers consume the visible reusable tag
+editor; version-eleven private preferences preserve its incomplete input and
+selection. The dedicated Resources workspace, compact Project picker, visible
+catalog filtering and semantic label operations still require integration.
 
 `tools/build.ps1 -Target resource-labels -HttpURL <existing-test-host>` runs
 checked native wire/source/history, exact exported Pascal, actual mounted list

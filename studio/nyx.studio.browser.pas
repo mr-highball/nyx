@@ -2232,6 +2232,16 @@ begin
       Exit;
     end;
 
+    if (AEvent.Trigger = ntClick) and HandleNyxResourceEditorLabels(ANode,
+      FShellRenderer.RootFor(ANode.ID), LResourceEditor) then
+    begin
+      FViewState.ResourceEditorDraft.Capture('studio-resource-editor',
+        FShellRenderer.RootFor('studio-resource-editor'));
+      FShellRenderer.Sync;
+      SavePresentation;
+      Exit;
+    end;
+
     if (AEvent.Trigger = ntChange) and
       NyxResourceEditorInput(ANode, FShellRenderer.RootFor(ANode.ID), LResourceEditor) then
     begin

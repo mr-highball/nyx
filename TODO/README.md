@@ -47,7 +47,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current resource catalog prerequisite (2026-10-09): independent typed metadata
+Current visible creator-tag consumer (2026-10-09): public Nyx Add/Remove and
+copied unfinished input/selection are consumed by both ordinary controllers.
+Strict version-eleven preferences repair the labelled draft migration gap.
+Native/HTTP checks pass 63 and workspace migration 253 each; ordinary Win32
+Resources passes 154 and HTTP desktop/CSS-390 652/1019 (polling included).
+Identical emitted Pascal executes natively and in HTTP. Dedicated Resources
+layout, compact Project picker, visible catalog filters and semantic exposure
+remain next; no full criterion or count closes. Aggregate stays 25/11/47/21/28/3.
+See [the packet](../WORK.md#current-return-path-dedicated-resources-workspace--2026-10-09).
+
+Previous resource catalog prerequisite (2026-10-09): independent typed metadata
 passes **40** native/HTTP; actual section-facade list consumers pass **14** each
 on Win32 and HTTP desktop/CSS-390, with retained drafts, exact selection and safe
 retirement. Captures are inspected; physical input and visual quality remain

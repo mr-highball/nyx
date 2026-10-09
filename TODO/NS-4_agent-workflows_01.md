@@ -9,6 +9,16 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Current creator-tag consumer (2026-10-09) uses the maintained MCP-authored
+workbench seed and actual Pascal browser/LCL controller callbacks. The reusable
+public form edits typed label proposals; private version-eleven preferences
+retain incomplete tag input. Bounded semantic tag inspection/mutation and
+resource kind/source/locale/tag queries remain with this existing owner, as does
+observing rollout. The installed frozen endpoint predates these resource wire
+versions; source compilation or local input fixtures do not establish deployed
+tool support. Preserve revisions and paired history when those tools are exposed.
+No workflow criterion or counter closes from this partial workspace consumer.
+
 Current ordinary image-resource input qualification consumes the unchanged MCP
 workshop seed; installed native tools inspect bounded revision/selection only.
 The frozen release still lacks current image-family source exposure, so rollout

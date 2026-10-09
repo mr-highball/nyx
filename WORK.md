@@ -9,6 +9,74 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Dedicated Resources workspace — 2026-10-09
+
+Entry was clean at exact pushed `eab4e82`. Solo execution used installed semantic
+revision/selection and the unchanged MCP-authored workbench seed; actual Pascal
+input fixtures exercise behavior the document API cannot establish. The user
+selected a dedicated Resources workspace and compact Project picker with useful
+built-in categories and exact creator tags. That complete workspace remains the
+next outcome; this turn qualifies its reusable visible tag-editor prerequisite.
+
+`nyx.resources.labels.editor` composes ordinary public Nyx controls. Typed purpose,
+field/action roles and copied state expose exact Add/Remove, raw incomplete input
+and a selected member, without a catalog/controller/target reference. Invalid
+names or foreign selections refuse before proposal changes; commas/quotes/Unicode
+remain one name. Fixed descendants survive changes and retained New/Open. Both
+ordinary Studio controllers route their callbacks through the public resource
+form; imports preserve tags and Apply includes them in the normal paired command.
+
+The demonstrated preferences gap is repaired explicitly: outer version ten
+refused the prerequisite's labelled version-three drafts. Version eleven admits
+resource drafts two/three/four; four carries incomplete tag input and selection.
+Historical packet contracts remain strict. The resource form/drafts also retain
+compatible historical tagless forms, rather than dropping a newer proposal into
+a form that cannot represent it.
+
+Checked native/HTTP label, source/history and draft/preference tests pass **63**
+each; the historical project/workspace fixture passes **253** each. Actual Win32
+ordinary Resources passes **154**, HTTP desktop/CSS-390 **652/1019** (polling
+included). These journeys edit two tags, remove one, preserve unfinished input
+through chrome, Apply, Undo/Redo and retain the accepted `Onboarding` annotation.
+All three controllers emit identical **4814-byte** Pascal, verified by a Pascal
+artifact consumer without regeneration or text normalization. SHA-256:
+`277b759ec30fd4b3ab90085da80fefafd55e73e447b78e7cd886a4bdeeeb2c0a`.
+That exact unit executes **50** native checks and passes its HTTP browser gate.
+All checked native gates and owning capture drivers report zero leaks; no owned
+warnings occur. The five browser compilation logs retain seven upstream RTL
+warnings apiece; dependency source is unchanged.
+
+Evidence is under `build/resource-workspace/`: ordinary/core/workspace/generated
+logs, exact source, native print diagnostic and actual desktop/narrow tag/editor/
+canvas PNG/DOM checkpoints. Captures were inspected. The existing side form is
+still visibly cramped on desktop; this does not qualify full workspace aesthetics,
+physical input/IME/accessibility, another widgetset or a performance budget.
+The changed journey adds tag operations, so it is not the unchanged timing sample.
+The first desktop capture hit the known `Page.navigate` timeout; a sequential
+retry passed. One workspace driver was stopped after its exact own identity was
+verified because the invocation used the wrong completion marker; its browser
+children retired. The correct `data-nyx-workspaces` invocation passed.
+
+Two fresh children on the exact existing admitted host stage six/five explicit
+matched files; private identity/hash receipts are beside the evidence. No listener,
+enrollment, frozen source or active pair changed. Preservation confirms nine exact
+pairs, fifteen service identities and 299 sealed LAN files, with unchanged
+checkpoint `24635efcca9041bf4700ceb4a14226232ff41e61e4440a19f28c25d3de6d01c9`.
+Installed semantic session remains revision 2, no draft/Undo; read-only activity
+advanced to 259. Bounded current tag/catalog operations and observing rollout stay
+with the existing workflow owner. No full criterion/task/credit closes; counts
+remain **25/11/47/21/28/3**.
+
+Next consume these qualified controls in an independently owned Resources section
+and compact Project picker. Keep the old public button presentation compatible,
+but use the live catalog for Studio navigation/filtering. Guard choices with both
+metadata revision and accepted project context; preserve incomplete proposals,
+source/history and observer retirement across navigation/refusal. Integrate
+category/source/locale/exact all/any tag filters and copied project preferences on
+both ordinary controllers, then qualify the same full workload and measure it.
+Do not repeat independent metadata/cache/first-open fixture variants or replace
+the protected deployment. Remote checkpoint evidence is recorded after pushing.
+
 ## Current return path: Portable resource labels — 2026-10-09
 
 Previous turn is progress at exact pushed `d2d1dda`; entry is clean. User direction

@@ -199,6 +199,9 @@ begin
   Result := 0;
   Check(ADocument.Title = 'Resource workbench', 'project identity');
   Check(ADocument.Resources.Count = 3, 'three common file kinds');
+  Check(NyxResourceLabelsOf(ADocument.Resources.Definition(NyxResourceRef('copy'),
+    NyxDefaultLocale)).Contains(NyxResourceLabel('Onboarding')),
+    'creator tag authored through the ordinary controllers');
   Check(ADocument.Resources.Definition(NyxResourceRef('copy'), NyxDefaultLocale)
     .ToData.Field('content').AsText =
     WorkbenchJSON, 'exact JSON source tokens');

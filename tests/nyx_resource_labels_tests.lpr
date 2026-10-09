@@ -25,8 +25,9 @@ program nyx_resource_labels_tests;
 
 uses SysUtils, Classes, nyx.text, nyx.bytes, nyx.data, nyx.model, nyx.controls,
   nyx.codec, nyx.codegen, nyx.source, nyx.collections, nyx.resources, nyx.resource.sources,
-  nyx.resources.catalog, nyx.resources.editor, nyx.collections.query,
-  nyx.schema, nyx.studio.session, nyx.studio.commands, nyx.studio.projects
+  nyx.resources.catalog, nyx.resources.editor, nyx.resources.labels.editor, nyx.collections.query,
+  nyx.schema, nyx.studio.session, nyx.studio.commands, nyx.studio.projects,
+  nyx.studio.presentation
   {$ifdef PAS2JS}, Web{$endif};
 
 var
@@ -174,6 +175,135 @@ begin
   end;
 end;
 
+{ These checks cover the public compound's proposal and strict enclosing
+  preferences, including the version-ten gap that previously refused labels.
+  Mounted target callbacks are exercised by the ordinary authoring consumer. }
+procedure LabelEditorChecks;
+var
+  LForm: INyxCard;
+  LFresh: INyxCard;
+  LEditor: TNyxNode;
+  LTags: TNyxNode;
+  LInput: TNyxNode;
+  LButton: TNyxNode;
+  LForeign: TNyxNode;
+  LResources: INyxResources;
+  LState: TNyxResourceLabelsEditorState;
+  LInvalid: TNyxResourceLabelsEditorState;
+  LDraft: TNyxResourceEditorDraft;
+  LPreference: TNyxStudioPresentation;
+  LLoaded: TNyxStudioPresentation;
+  LPacket: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LBefore: TNyxText;
+  LRejected: Boolean;
+begin
+  LResources := NewNyxResources;
+  LForm := NewNyxResourceEditor('tag-proposal', LResources, NyxNewResourceSelection);
+  LTags := LForm.Node.Find(NyxResourceEditorLabelsID(LForm.Node.ID));
+  LInput := LTags.Find(NyxResourceLabelsEditorFieldID(LTags.ID, rlefInput));
+  LButton := LTags.Find(NyxResourceLabelsEditorActionID(LTags.ID, rleaAdd));
+  LInput.Configure.Value('Docs, "quick" | 🌙').Done;
+  Check(NyxResourceEditorInput(LInput, LForm.Node, LEditor) and (LEditor = LForm.Node),
+    'owned tag input routes through the resource proposal');
+  Check(HandleNyxResourceEditorLabels(LButton, LForm.Node, LEditor),
+    'owned tag action uses the common resource controller contract');
+  LState := ReadNyxResourceLabelsEditor(LTags);
+  Check((LState.Labels.Count = 1) and (LState.Input = '') and
+    (LState.Selection.Name = TNyxText('Docs, "quick" | 🌙')),
+    'Add retains a complete exact tag and clears only its completed input');
+  Check(LTags.Find(NyxResourceLabelsEditorActionID(LTags.ID, rleaRemove)).Prop('enabled') = 'true',
+    'the selected exact tag exposes removal');
+  LInput.Configure.Value('Docs, "quick" | 🌙').Done;
+  HandleNyxResourceEditorLabels(LButton, LForm.Node, LEditor);
+  Check(NyxResourceEditorLabels(LForm.Node).Count = 1, 'duplicate UI Add is idempotent');
+  LInput.Configure.Value('Unfinished' + TNyxText(#10) + 'tag').Done;
+  LBefore := ReadNyxResourceLabelsEditor(LTags).ToData.ToJSON;
+  LRejected := False;
+  try
+    HandleNyxResourceEditorLabels(LButton, LForm.Node, LEditor);
+  except
+    on LException: Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (ReadNyxResourceLabelsEditor(LTags).ToData.ToJSON = LBefore),
+    'invalid complete tag refuses while preserving partial input and selection');
+  LForeign := LButton.Clone;
+  try
+    Check(not HandleNyxResourceEditorLabels(LForeign, LForm.Node, LEditor),
+      'a foreign node with the same action ID cannot edit tags');
+  finally
+    LForeign.Free;
+  end;
+  LDraft.Capture(LForm.Node.ID, LForm.Node);
+  Check(LDraft.ToData.Field('version').AsInteger = 4,
+    'incomplete tag text and selected tag use a strict new proposal version');
+  LPreference := DefaultNyxStudioPresentation;
+  LPreference.ResourceDraft := LDraft;
+  LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LPreference));
+  Check(LPacket.Field('version').AsInteger = 11,
+    'outer preferences declare their broader draft contract explicitly');
+  LLoaded := DecodeNyxStudioPresentation(LPacket.ToJSON);
+  LFresh := NewNyxResourceEditor(LForm.Node.ID, LResources, NyxNewResourceSelection);
+  Check(LLoaded.ResourceDraft.Restore(LFresh.Node) and
+    (ReadNyxResourceLabelsEditor(LFresh.Node.Find(LTags.ID)).ToData.ToJSON = LBefore),
+    'ordinary enclosing preferences retain exact tags, selection and incomplete text');
+  SetLength(LFields, LPacket.Count);
+  for LIndex := 0 to LPacket.Count - 1 do
+  begin
+    LFields[LIndex] := NyxField(LPacket.Key(LIndex), LPacket.Field(LPacket.Key(LIndex)));
+
+    if LPacket.Key(LIndex) = 'version' then
+    begin
+      LFields[LIndex].Value := NyxData(10);
+    end;
+  end;
+  LRejected := False;
+  try
+    DecodeNyxStudioPresentation(NyxObject(LFields).ToJSON);
+  except
+    on LException: Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected, 'historical version ten is not silently widened to new drafts');
+  LInvalid := ReadNyxResourceLabelsEditor(LTags);
+  LInvalid.Selection := NyxResourceLabel('Foreign tag');
+  LRejected := False;
+  try
+    RestoreNyxResourceLabelsEditor(LTags, LInvalid);
+  except
+    on LException: Exception do
+    begin
+      LRejected := True;
+    end;
+  end;
+  Check(LRejected and (ReadNyxResourceLabelsEditor(LTags).ToData.ToJSON = LBefore),
+    'invalid selection refuses before any mounted proposal changes');
+  HandleNyxResourceEditorLabels(LTags.Find(NyxResourceLabelsEditorActionID(LTags.ID, rleaRemove)),
+    LForm.Node, LEditor);
+  LState := ReadNyxResourceLabelsEditor(LTags);
+  Check((LState.Labels.Count = 0) and not LState.Selection.Defined and
+    (LState.Input = TNyxText('Unfinished' + TNyxText(#10) + 'tag')),
+    'Remove retains independent unfinished tag input');
+  Check(TrySelectNyxResourceEditor(LForm.Node, LResources, NyxNewResourceSelection) and
+    (LForm.Node.Find(LTags.ID) = LTags) and
+    (LForm.Node.Find(LInput.ID) = LInput) and
+    (ReadNyxResourceLabelsEditor(LTags).Input = ''),
+    'New clears the proposal without replacing tag controls');
+  SetNyxResourceEditorLabels(LForm.Node, NyxResourceLabels.Add(NyxResourceLabel('Help')));
+  LPreference.ResourceDraft.Capture(LForm.Node.ID, LForm.Node);
+  LLoaded := DecodeNyxStudioPresentation(EncodeNyxStudioPresentation(LPreference));
+  Check((LLoaded.ResourceDraft.ToData.Field('version').AsInteger = 3) and
+    LLoaded.ResourceDraft.Restore(LFresh.Node) and
+    NyxResourceEditorLabels(LFresh.Node).Contains(NyxResourceLabel('Help')),
+    'version eleven also admits the previously refused labelled version-three draft');
+end;
+
 procedure Run;
 var
   LLabels: TNyxResourceLabels;
@@ -201,6 +331,7 @@ var
   LBytes: TNyxBytes;
   {$endif}
 begin
+  LabelEditorChecks;
   LLabels := NyxResourceLabels.Add(NyxResourceLabel('Help'))
     .Add(NyxResourceLabel('Docs, "quick" | 🌙'));
   LDerived := LLabels.Remove(NyxResourceLabel('Help')).Add(NyxResourceLabel('Data'));

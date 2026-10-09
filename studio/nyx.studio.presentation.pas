@@ -187,7 +187,7 @@ begin
     LPresentation := NyxData(AValue.PresentationSelection.Reference.Name);
   end;
   Result := NyxObject([
-    NyxField('version', NyxData(10)),
+    NyxField('version', NyxData(11)),
     NyxField('codeVisible', NyxData(AValue.CodeVisible)),
     NyxField('sourceTab', NyxData(Ord(AValue.SourceTab))),
     NyxField('sourceExpanded', NyxData(AValue.SourceExpanded)),
@@ -260,7 +260,7 @@ begin
   LValue := TNyxDataValue.ParseJSON(AText);
 
   if (LValue.Kind <> ndObject) or
-    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10]) or
+    not (LValue.Field('version').AsInteger in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) or
     ((LValue.Field('version').AsInteger = 2) and (LValue.Count <> 32)) or
     ((LValue.Field('version').AsInteger = 3) and (LValue.Count <> 34)) or
     ((LValue.Field('version').AsInteger = 4) and (LValue.Count <> 35)) or
@@ -268,7 +268,7 @@ begin
     ((LValue.Field('version').AsInteger = 6) and (LValue.Count <> 41)) or
     ((LValue.Field('version').AsInteger = 7) and (LValue.Count <> 42)) or
     ((LValue.Field('version').AsInteger = 8) and (LValue.Count <> 45)) or
-    ((LValue.Field('version').AsInteger in [9, 10]) and (LValue.Count <> 46)) then
+    ((LValue.Field('version').AsInteger in [9, 10, 11]) and (LValue.Count <> 46)) then
   begin
     raise ENyxModel.Create('Unsupported editor presentation packet');
   end;
@@ -369,14 +369,15 @@ begin
     Result.ResourcesVisible := LValue.Field('resourcesVisible').AsBoolean;
     Result.ResourceSelection := TNyxResourceEditorSelection.FromData(LValue.Field('resourceSelection'));
     LResourceDraft := LValue.Field('resourceDraft');
-    { Version ten carries the explicit image-locale choice. Older presentation
-      packets can migrate only the historical unversioned draft, while current
-      packets must not hide a missing choice behind that migration default. }
+    { Ten requires explicit image-locale choice. Eleven also admits typed tags
+      and incomplete tag-editor state. Preserve each historical packet's exact
+      contract instead of silently widening ten or losing a newer proposal. }
 
     if (LResourceDraft.Kind <> ndNull) and
       (((LVersion < 10) and (LResourceDraft.Count <> 4)) or
       ((LVersion = 10) and ((LResourceDraft.Count <> 5) or
-      (LResourceDraft.Field('version').AsInteger <> 2)))) then
+      (LResourceDraft.Field('version').AsInteger <> 2))) or
+      ((LVersion = 11) and not (LResourceDraft.Field('version').AsInteger in [2, 3, 4]))) then
     begin
       raise ENyxModel.Create('Resource draft does not match its presentation version');
     end;

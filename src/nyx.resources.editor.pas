@@ -92,6 +92,8 @@ type
     FContext: TNyxText;
     FPaths: TNyxDataValue;
     FLabels: TNyxResourceLabels;
+    FLabelInput: TNyxText;
+    FLabelSelection: TNyxResourceLabelRef;
     FValues: array[TNyxResourceEditorField] of TNyxText;
     function GetDefined: Boolean;
   public
@@ -147,13 +149,19 @@ function NyxResourceEditorAction(AButton, AShellRoot: TNyxNode;
   and update disclosure without remounting or admitting partial file contents. }
 function NyxResourceEditorInput(ANode, AShellRoot: TNyxNode;
   out AEditor: TNyxNode): Boolean;
+{ Own tag actions use the same retained proposal and ordinary controller path.
+  Invalid names raise without accepting any resource/source/history change. }
+function HandleNyxResourceEditorLabels(AButton, AShellRoot: TNyxNode;
+  out AEditor: TNyxNode): Boolean;
+{ Stable public child identity for the reusable tag editor. }
+function NyxResourceEditorLabelsID(const AID: TNyxText): TNyxText;
 { Typed UI input boundary. Embedded content is UTF-8 text/JSON or canonical
   Base64 for images/binary. Hosted content is optional explicit same-kind fallback.
   Refusal preserves fields and accepted work; metadata is applied after admission. }
 function ReadNyxResourceEditor(AEditor: TNyxNode): INyxResourceDefinition;
 { Typed creator-label proposal. It changes neither accepted catalog nor payload.
   Sets are normalized before writing; read/capture/restore preserve exact labels.
-  The dedicated workspace supplies the visible editor for this public contract. }
+  The owned reusable tag editor supplies visible proposal editing. }
 function NyxResourceEditorLabels(AEditor: TNyxNode): TNyxResourceLabels;
 procedure SetNyxResourceEditorLabels(AEditor: TNyxNode; const ALabels: TNyxResourceLabels);
 function NyxResourceEditorKind(AEditor: TNyxNode): TNyxResourceKind;
@@ -178,7 +186,7 @@ function CaptureNyxResourceEditor(AButton, AShellRoot: TNyxNode;
 implementation
 
 uses nyx.bytes, nyx.images, nyx.binding, nyx.layout.policy,
-  nyx.resources.rows, nyx.collections, nyx.collections.codec;
+  nyx.resources.rows, nyx.collections, nyx.collections.codec, nyx.resources.labels.editor;
 
 const
   CEditor = 'nyx.resource-editor';
@@ -446,12 +454,25 @@ begin
   Field(AEditor, refImageLocale).Configure.Value(CImageLocales[AValue]).Done;
 end;
 
+function NyxResourceEditorLabelsID(const AID: TNyxText): TNyxText;
+begin
+  Result := AID + TNyxText('-tags');
+end;
+
 function NyxResourceEditorLabels(AEditor: TNyxNode): TNyxResourceLabels;
+var
+  LTags: TNyxNode;
 begin
 
   if not Complete(AEditor) then
   begin
     raise ENyxResource.Create('Resource labels require a complete editor');
+  end;
+  LTags := AEditor.Find(NyxResourceEditorLabelsID(AEditor.ID));
+
+  if LTags <> nil then
+  begin
+    Exit(ReadNyxResourceLabelsEditor(LTags).Labels);
   end;
   Result := NyxResourceLabels;
 
@@ -464,6 +485,8 @@ end;
 procedure SetNyxResourceEditorLabels(AEditor: TNyxNode; const ALabels: TNyxResourceLabels);
 var
   LLabels: TNyxResourceLabels;
+  LTags: TNyxNode;
+  LState: TNyxResourceLabelsEditorState;
 begin
 
   if not Complete(AEditor) then
@@ -471,6 +494,19 @@ begin
     raise ENyxResource.Create('Resource labels require a complete editor');
   end;
   LLabels := ALabels.Copy;
+  LTags := AEditor.Find(NyxResourceEditorLabelsID(AEditor.ID));
+
+  if LTags <> nil then
+  begin
+    LState := ReadNyxResourceLabelsEditor(LTags);
+    LState.Labels := LLabels;
+
+    if LState.Selection.Defined and not LLabels.Contains(LState.Selection) then
+    begin
+      LState.Selection := Default(TNyxResourceLabelRef);
+    end;
+    RestoreNyxResourceLabelsEditor(LTags, LState);
+  end;
   AEditor.SetProp(CLabelProposal, LLabels.ToData.ToJSON);
 end;
 
@@ -712,7 +748,19 @@ var
   LValue: TNyxText;
   LIndex: Integer;
   LSelected: Boolean;
+  LTags: TNyxNode;
+  LLabelState: TNyxResourceLabelsEditorState;
 begin
+  LTags := AEditor.Find(NyxResourceEditorLabelsID(AEditor.ID));
+
+  if LTags <> nil then
+  begin
+    LLabelState := ReadNyxResourceLabelsEditor(LTags);
+    { Changing selection updates the action's disclosure without replacing the
+      input's text/caret or any compound descendant. }
+    LTags.Find(NyxResourceLabelsEditorActionID(LTags.ID, rleaRemove)).Configure
+      .Enabled(LLabelState.Selection.Defined).Done;
+  end;
   LHosted := Choice(AEditor, refSource, CSources) = Ord(rskHosted);
   for LField := refURL to refServer do
   begin
@@ -827,6 +875,18 @@ var
   LSelection: TNyxResourceEditorSelection;
   LCapturedSelection: TNyxResourceEditorSelection;
   LBinding: TNyxBindingSpec;
+  LTags: INyxCard;
+
+  procedure MarkTags(ANode: TNyxNode);
+  var
+    LChild: Integer;
+  begin
+    ANode.SetProp(CEditor, AID);
+    for LChild := 0 to ANode.Count - 1 do
+    begin
+      MarkTags(ANode.Children[LChild]);
+    end;
+  end;
 begin
 
   if ACatalog = nil then
@@ -972,6 +1032,10 @@ begin
     LInput.Node.SetProp(CEditor, AID);
     Result.Add(LInput);
   end;
+  LTags := NewNyxResourceLabelsEditor(NyxResourceEditorLabelsID(AID),
+    NyxResourceLabelsOf(LDefinition));
+  MarkTags(LTags.Node);
+  Result.Add(LTags);
   Result.Add(NewNyxLabel(AID + TNyxText('-summary')));
   Result.Add(NewNyxImage(AID + TNyxText('-image-preview')).Configure
     .Height(120).ImageFit(nifContain).AlternativeText('Resource proposal preview').Done);
@@ -1106,6 +1170,12 @@ begin
     LPrepared.SetProp(CSelection, LFresh.Node.Prop(CSelection))
       .SetProp(CLabelProposal, LFresh.Node.Prop(CLabelProposal))
       .SetProp(CPaths, LFresh.Node.Prop(CPaths));
+
+    if LPrepared.Find(NyxResourceEditorLabelsID(AEditor.ID)) <> nil then
+    begin
+      RestoreNyxResourceLabelsEditor(LPrepared.Find(NyxResourceEditorLabelsID(AEditor.ID)),
+        ReadNyxResourceLabelsEditor(LFresh.Node.Find(NyxResourceEditorLabelsID(AEditor.ID))));
+    end;
     for LField := Low(TNyxResourceEditorField) to High(TNyxResourceEditorField) do
     begin
       for LAttributeIndex := Low(CStateAttributes) to High(CStateAttributes) do
@@ -1221,6 +1291,33 @@ begin
     begin
       Exit(True);
     end;
+  end;
+  Result := NyxResourceLabelsEditorInput(ANode,
+    AEditor.Find(NyxResourceEditorLabelsID(AEditor.ID)));
+end;
+
+function HandleNyxResourceEditorLabels(AButton, AShellRoot: TNyxNode;
+  out AEditor: TNyxNode): Boolean;
+begin
+  Result := False;
+  AEditor := nil;
+
+  if (AButton = nil) or (AShellRoot = nil) or (AButton.Prop(CEditor) = '') then
+  begin
+    Exit;
+  end;
+  AEditor := AShellRoot.Find(AButton.Prop(CEditor));
+
+  if not Complete(AEditor) or (AEditor.Find(AButton.ID) <> AButton) then
+  begin
+    Exit;
+  end;
+  Result := HandleNyxResourceLabelsEditorAction(AButton,
+    AEditor.Find(NyxResourceEditorLabelsID(AEditor.ID)));
+
+  if Result then
+  begin
+    AEditor.SetProp(CLabelProposal, NyxResourceEditorLabels(AEditor).ToData.ToJSON);
   end;
 end;
 
@@ -1536,6 +1633,8 @@ begin
   FContext := '';
   FPaths := NyxNull;
   FLabels := NyxResourceLabels;
+  FLabelInput := '';
+  FLabelSelection := Default(TNyxResourceLabelRef);
   { Retiring a proposal releases packed contents immediately, even while the
     enclosing per-project presentation record remains open. }
   for LField := Low(TNyxResourceEditorField) to High(TNyxResourceEditorField) do
@@ -1549,6 +1648,8 @@ var
   LEditor: TNyxNode;
   LField: TNyxResourceEditorField;
   LDraft: TNyxResourceEditorDraft;
+  LTags: TNyxNode;
+  LLabelState: TNyxResourceLabelsEditorState;
 begin
 
   if AShellRoot = nil then
@@ -1572,6 +1673,14 @@ begin
   LDraft.FContext := Context(LEditor);
   LDraft.FPaths := TNyxDataValue.ParseJSON(LEditor.Prop(CPaths));
   LDraft.FLabels := NyxResourceEditorLabels(LEditor);
+  LTags := LEditor.Find(NyxResourceEditorLabelsID(LEditor.ID));
+
+  if LTags <> nil then
+  begin
+    LLabelState := ReadNyxResourceLabelsEditor(LTags);
+    LDraft.FLabelInput := LLabelState.Input;
+    LDraft.FLabelSelection := LLabelState.Selection;
+  end;
   for LField := Low(TNyxResourceEditorField) to High(TNyxResourceEditorField) do
   begin
     LDraft.FValues[LField] := Field(LEditor, LField).Prop('value');
@@ -1585,6 +1694,8 @@ var
   LField: TNyxResourceEditorField;
   LItems: TNyxText;
   LIndex: Integer;
+  LTags: TNyxNode;
+  LLabelState: TNyxResourceLabelsEditorState;
 begin
   Result := False;
 
@@ -1598,6 +1709,18 @@ begin
   begin
     Exit;
   end;
+  LTags := LEditor.Find(NyxResourceEditorLabelsID(LEditor.ID));
+
+  if (LTags = nil) and ((FLabelInput <> '') or FLabelSelection.Defined) then
+  begin
+    { A historical custom form has nowhere to restore this newer proposal.
+      Refuse the whole draft instead of silently dropping incomplete tag input. }
+    Exit;
+  end;
+  LLabelState := Default(TNyxResourceLabelsEditorState);
+  LLabelState.Labels := FLabels;
+  LLabelState.Input := FLabelInput;
+  LLabelState.Selection := FLabelSelection;
   LItems := '';
   for LIndex := 0 to FPaths.Count - 1 do
   begin
@@ -1610,6 +1733,11 @@ begin
   end;
   LEditor.SetProp(CPaths, FPaths.ToJSON);
   SetNyxResourceEditorLabels(LEditor, FLabels);
+
+  if LTags <> nil then
+  begin
+    RestoreNyxResourceLabelsEditor(LTags, LLabelState);
+  end;
   Field(LEditor, refPath).Configure.Items(LItems).Done;
   for LField := Low(TNyxResourceEditorField) to High(TNyxResourceEditorField) do
   begin
@@ -1633,6 +1761,7 @@ function TNyxResourceEditorDraft.ToData: TNyxDataValue;
 var
   LValues: array of TNyxDataValue;
   LField: TNyxResourceEditorField;
+  LLabelState: TNyxResourceLabelsEditorState;
 begin
   Result := NyxNull;
 
@@ -1646,7 +1775,17 @@ begin
     LValues[Ord(LField)] := NyxData(FValues[LField]);
   end;
 
-  if FLabels.Count > 0 then
+  if (FLabelInput <> '') or FLabelSelection.Defined then
+  begin
+    LLabelState := Default(TNyxResourceLabelsEditorState);
+    LLabelState.Labels := FLabels;
+    LLabelState.Input := FLabelInput;
+    LLabelState.Selection := FLabelSelection;
+    Result := NyxObject([NyxField('version', NyxData(4)), NyxField('editor', NyxData(FEditor)),
+      NyxField('context', NyxData(FContext)), NyxField('paths', FPaths),
+      NyxField('values', NyxArray(LValues)), NyxField('labelEditor', LLabelState.ToData)]);
+  end
+  else if FLabels.Count > 0 then
   begin
     Result := NyxObject([NyxField('version', NyxData(3)), NyxField('editor', NyxData(FEditor)),
       NyxField('context', NyxData(FContext)), NyxField('paths', FPaths),
@@ -1672,6 +1811,7 @@ var
   LLegacy: Boolean;
   LCount: Integer;
   LVersion: Integer;
+  LLabelState: TNyxResourceLabelsEditorState;
 
   procedure RequireChoice(const AValue: TNyxText; const ANames: array of TNyxText);
   var
@@ -1724,7 +1864,7 @@ begin
   if (AData.Kind <> ndObject) or
     (LLegacy and (AData.Count <> 4)) or
     (not LLegacy and not (((AData.Count = 5) and (LVersion = 2)) or
-      ((AData.Count = 6) and (LVersion = 3)))) then
+      ((AData.Count = 6) and (LVersion in [3, 4])))) then
   begin
     raise ENyxResource.Create('Resource draft requires its exact context and fields');
   end;
@@ -1740,6 +1880,14 @@ begin
     begin
       raise ENyxResource.Create('Labelled draft requires at least one label');
     end;
+  end;
+
+  if LVersion = 4 then
+  begin
+    LLabelState := TNyxResourceLabelsEditorState.FromData(AData.Field('labelEditor'));
+    LDraft.FLabels := LLabelState.Labels;
+    LDraft.FLabelInput := LLabelState.Input;
+    LDraft.FLabelSelection := LLabelState.Selection;
   end;
   LValues := AData.Field('values');
 

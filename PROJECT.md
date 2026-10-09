@@ -66,13 +66,23 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Visible creator tags (2026-10-09): the reusable public editor is consumed by both
+ordinary Studio controllers. Native/HTTP proposal and preference checks pass
+**63** each, workspace migration **253** each, ordinary Resources **154** Win32
+and **652/1019** HTTP desktop/CSS-390 (polling included). All three emit identical
+Pascal, executed natively (**50**) and in HTTP browser. The outer preferences gap
+is repaired through strict version eleven. Dedicated Resources layout, compact
+picker, visible catalog filters, semantic exposure and performance remain next.
+Counts stay **25/11/47/21/28/3**; no full criterion or product closes. See
+[the packet](WORK.md#current-return-path-dedicated-resources-workspace--2026-10-09).
+
 Portable creator labels prerequisite (2026-10-09): typed exact metadata, strict
 wire, fluent source/replay and ordinary shared paired history pass **48** each
 native/HTTP; the same emitted Pascal executes **eight** each. Actual public
 section-facade lists pass **17** each on Win32/HTTP desktop/CSS-390 with retained
 selection/drafts; loader checks pass **46** native and **31** HTTP browser.
-Dedicated Resources workspace, compact Project picker, visible tag editing and
-ordinary-controller/semantic integration remain next. Counts stay
+Dedicated Resources workspace, compact Project picker, catalog filtering and
+semantic integration remain next. Counts stay
 **25/11/47/21/28/3**, with no full criterion or product closure. See
 [the packet](WORK.md#current-return-path-portable-resource-labels--2026-10-09).
 

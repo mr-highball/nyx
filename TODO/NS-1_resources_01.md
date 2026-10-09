@@ -16,6 +16,20 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Visible creator-tag consumer — 2026-10-09
+
+The public Nyx tag editor and copied incomplete-input/selection state now serve
+both ordinary Studio controllers. Strict outer preferences version eleven
+repairs the demonstrated refusal of labelled version-three drafts and admits
+version-four tag proposals. Checked native/HTTP tests pass 63 and workspace
+migration 253 each; actual Win32 Resources passes 154 and HTTP desktop/CSS-390
+652/1019 (polling included). Identical emitted Pascal executes 50 natively and
+passes its HTTP gate. This accepts a bounded consumer of the original metadata/
+source/history/form requirements, not the whole Resources area. Dedicated layout,
+compact picker, visible filtering, semantic exposure, broader parity and full
+workload/performance remain open. Counts stay 25/11/47/21/28/3. See
+[the packet](../WORK.md#current-return-path-dedicated-resources-workspace--2026-10-09).
+
 ## Portable creator labels prerequisite — 2026-10-09
 
 The user's dedicated Resources workspace direction now consumes original

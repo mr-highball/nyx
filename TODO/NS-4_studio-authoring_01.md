@@ -9,6 +9,18 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Current creator-tag consumer uses actual ordinary Studio on Win32 and HTTP
+desktop/CSS-390. The reusable public Nyx compound retains incomplete tag input,
+supports exact Add/Remove and includes labels in normal Apply/paired Undo.
+Strict preferences version eleven repairs the old enclosing draft refusal.
+Native/HTTP checks pass 63/253 each, ordinary workflows 154 and 652/1019
+(polling included), and identical emitted Pascal executes natively and in HTTP.
+The existing side form remains cramped; dedicated Resources layout, compact
+picker and visible catalog filtering are the next integrated outcome. This
+partial workspace prerequisite closes no full criterion or new count; aggregate
+remains 25/11/47/21/28/3. See
+[the packet](../WORK.md#current-return-path-dedicated-resources-workspace--2026-10-09).
+
 Current native allocation consumes criterion 2 through ordinary Nyx Studio:
 typed row wrapping follows the canvas width, scrollbar client space constrains
 side fields, and detached text measurement preserves live controls. Resources
