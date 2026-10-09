@@ -33,6 +33,7 @@ uses
   nyx.data,
   nyx.model,
   nyx.controls,
+  nyx.view.recovery,
   nyx.colors,
   nyx.design.tokens,
   nyx.menu.editor,
@@ -67,6 +68,10 @@ uses
   nyx.studio.diagnostics,
   nyx.studio.agentview,
   nyx.studio.outputs, nyx.studio.edits, nyx.studio.drag, nyx.studio.resize, nyx.studio.move;
+
+const
+  { Stable mount for the library recovery compound on both editor targets. }
+  NyxStudioDisplayRecoveryID = 'studio-display-recovery';
 
 type
   { Compact hosts show one ordinary Nyx workspace panel at a time. The choice
@@ -116,6 +121,9 @@ type
     { Source processor status sits beside the source actions as well as the
       global footer, so a compact host can observe preparation and refusal. }
     SourceStatus: TNyxText;
+    { Transient target display readiness; never persisted with project content
+      or treated as a source/compile result. The controller owns retry authority. }
+    DisplayRecovery: TNyxViewRecovery;
     { Copied pending values keep typing visible while the independent processor
       prepares its pair. These affect only editor fields, never project content. }
     PendingDesign: TNyxStudioPendingDesign;
@@ -1030,6 +1038,9 @@ begin
     Actions wrap by their actual captions rather than native equal-width cells. }
   LHeader.Configure.Layout(TNyxLayoutPolicy.Row.Wrap(nfwWrap).Align(ncaCenter)).Done;
   LRoot.Add(LHeader);
+  { Keep this Nyx compound mounted even while hidden. A failed target display
+    can expose Retry through the surviving Chrome without recomposing a canvas. }
+  LRoot.Add(NewNyxViewRecovery(NyxStudioDisplayRecoveryID, AState.DisplayRecovery));
   LHeader.Add(Caption('studio-logo', 'nyx'));
   LHeader.Add(Caption('studio-subtitle', 'STUDIO  /  ' + ASession.Document.Title));
   LHeader.Add(Button('action-undo', 'Undo'));

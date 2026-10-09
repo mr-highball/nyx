@@ -9,7 +9,18 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current nested source host recovery follows criterion two and accepted section/
+Current design display recovery follows criterion two's Apply Pascal/paired Undo
+journey. Public typed readiness and managed Nyx compounds separate accepted
+source from refused display; both controllers suspend stale canvas input and
+retain current-session actions/Retry without adding document history. [The packet](../WORK.md#current-return-path-design-display-recovery--2026-10-09)
+records 12 ordinary native and 14/14 HTTP desktop/CSS-390 checks, repeated retry,
+independent source status, exact paired Undo and native pair bytes while refused.
+Authoring alone advances unfinished 51→52, aggregate 25/16/52/21/28/3; no full
+criterion/task/credit closes. Stop recovery variants and return to primary
+semantic source workflows. Later physical publication rollback, all widgetsets,
+full parity/performance and installed observing remain required.
+
+Previous nested source host recovery follows criterion two and accepted section/
 input prerequisites. Native pre-shell refusal after parking restores exact
 source/canvas hosts and the independently owned editor's copied draft/focus/range;
 pair/history and callback scopes remain unchanged. Local host proposals clean

@@ -9,6 +9,15 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
+Current display recovery is editor-local typed readiness and explicit retry.
+General managed-source import/Apply and querying/retrying a target's display
+remain missing semantic operations with this workflow owner. The maintained
+ordinary source/file/menu harness qualifies physical behavior these tools cannot
+establish; it does not replace primary semantic authoring. Installed MCP stays
+read-only against its protected earlier product. No workflow counter or criterion
+closes from the local recovery consumer. See
+[the packet](../WORK.md#current-return-path-design-display-recovery--2026-10-09).
+
 Current selected-resource read schema (2026-10-09) exposes exact reference/locale
 inspection at a pinned design revision and runtime sequence. Missing membership
 returns null; paging/exact selectors are exclusive. Supporting ordinary editors

@@ -9,6 +9,91 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Design display recovery — 2026-10-09
+
+Entry was clean at exact pushed `9f25f90`. This batch returns to original NS-4
+authoring criterion two's actual Apply Pascal/paired Undo journey. The user's
+resource clarification confirms the existing dedicated workspace, meaningful
+built-in categories and user/creator labels/tags combined with search; no answer
+or choice remains pending. Full goal stays active. Authoring alone advances
+unfinished **51→52**, aggregate **25/16/52/21/28/3**; no full criterion/task/credit
+closes.
+
+**Reproduced contract and repair.** Source admission commits one portable pair
+before presentation notification. A real native heading updater refusal leaves
+the accepted Pascal/design committed, an older canvas visible and no explicit
+retry. Public `nyx.view.recovery` now supplies an immutable typed Ready/Retrying/
+Failed value and managed compound with named title/diagnostic/retry parts. Both
+ordinary controllers retain its hidden Chrome mount, distinguish source admission
+from display status, suspend stale canvas input and offer current-session retry.
+Repeated refusal retains the action; complete display success clears readiness
+without adding history. Failed notice/gesture/menu recovery retains the original
+diagnostic and reports additional refusal. Native host Enabled/browser inert do
+not edit authored properties; design routes also reject stale callbacks. No
+model/view cycle, new toolkit, target prerequisite or test-only accessor is added.
+
+Actual captures exposed stale Preparing text after accepted source; the independent
+source pane now synchronizes its current command result. Narrow physical navigation
+also exposed an Actions menu retired before canvas admission. Both controllers
+rebind surviving current-session Chrome independently of the failed canvas;
+older-load Chrome does not gain new command authority.
+
+**Qualification.** Maintained `studio-section-recovery` includes the two ordinary
+display consumers and a worker with its own matched RTL. Current native display
+passes **12** checks through actual editor Apply, custom updater refusal, disabled
+host/programmatic stale click, repeated/successful Retry, exact pair bytes before/
+after Retry and one paired Undo. Current native nested-source regression passes
+**15**, retaining Unicode draft/focus/range, exact roots/hosts/pairs/history and
+callback scope. Shared section regression passes **53 native / 53 HTTP desktop /
+53 CSS-390**. Native programs report zero unfreed blocks.
+
+Actual HTTP browser display consumers pass **14 desktop / 14 CSS-390×844** checks,
+using the ordinary source worker, real embedding-host append refusal, independent
+source status, inert canvas, restored action menu, repeated/successful Retry,
+portable backup and one exact paired Undo. Each driver captures stale and recovered
+live Studio before teardown. Browser exact source/pair is exported after recovery
+and before/after Undo; native additionally reads the exact pair while refused.
+The browser journey deliberately avoids Project navigation during a stale canvas:
+compact panel changes are distinct presentation operations. Both actual adapters
+are exercised with different refusal mechanisms. Drivers report zero unfreed
+blocks; browser JavaScript heap is not measured. Owned compiler warnings are zero;
+the matched pas2js RTL still reports seven upstream warnings.
+
+**Receipts and limits.** Ignored `build/design-display-recovery/` retains the
+`before-owned-pair` native reproduction, `chrome-recovery/native` current display,
+`current-source/native` regression, maintained build log, and `final` desktop/
+narrow live captures with `final-regression` section consumers. Earlier guessed
+seed identities, backup versus Save, missing
+worker RTL, textarea change/menu-turn and compact disclosure assumptions were
+harness failures, retained without product qualification. The corrected worker
+and actual menu journey establish the separate product menu gap. A private shared
+driver invocation used the wrong completion marker; its real 180-second timeout
+is retained as a harness error, followed by corrected terminal-marker passes.
+Recovery consumers handle Pascal adapter exceptions; foreign host JavaScript
+failures retain ordinary reporting and are not qualified as translated recovery.
+No whole-source MCP import/Apply or target-display operation exists; those remain with the existing
+workflow owner. Installed native MCP stays primary for bounded context and is
+inspected read-only. Do not infer compiler execution from admission or deployed
+behavior from local fixtures.
+
+**Protection.** Final private byte verification checks all **104** immutable
+staged files and seven exact current source/staged/HTTP artifacts (display
+application/worker/RTL/host and shared regression application/RTL/host). The
+protected gate retains all **9** exact project pairs, **15** original service
+identities, **299** sealed files and the unchanged checkpoint/installed hashes.
+Private `preservation.json`, byte receipts and remote checkpoint own those
+details; machine addresses, tokens and compiler paths remain ignored. LAN still
+runs its existing product: the earlier automatic replacement review reported
+only "blocked by policy". No equivalent service/configuration/cleanup retry is
+made. Remote checkpoint is recorded after the checked commit/push.
+
+Stop recovery/fixture variants. General source/import/review semantics, later
+physical publication rollback, all widgetsets, hardware/IME/accessibility,
+complete parity/performance and authenticated observing rollout keep their
+original owners. Preserve the protected LAN product and user pairs; no equivalent
+retry of rejected backend/configuration/cleanup actions. Next return to the missing
+primary semantic source workflow under NS-4, retaining this admission contract.
+
 ## Current return path: Nested source host recovery — 2026-10-09
 
 Entry was clean at pushed `1718253`. This bounded batch follows original NS-4

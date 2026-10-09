@@ -67,6 +67,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Design display recovery (2026-10-09) separates accepted source from target
+readiness through public typed Nyx compounds. Both ordinary controllers suspend
+stale canvas input, retain current-session editor actions and offer Retry without
+adding history. [The packet](WORK.md#current-return-path-design-display-recovery--2026-10-09)
+records 12 native and 14/14 HTTP desktop/CSS-390 checks, exact paired Undo,
+native byte preservation and scoped regressions. Ledger is **25/16/52/21/28/3**;
+no full criterion/task/credit closes. Stop recovery variants and return to primary
+semantic source workflows. Full later-publication rollback/parity/performance
+and installed observing remain open; the protected LAN keeps its earlier build.
+
 Nested source host recovery (2026-10-09) preserves native source text/focus/range
 when shell admission fails after parking its independently owned editor. Local
 candidate hosts now clean up failed insertion on both targets. [The packet](WORK.md#current-return-path-nested-source-host-recovery--2026-10-09)

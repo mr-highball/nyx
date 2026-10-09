@@ -32,7 +32,7 @@ uses
   nyx.text, nyx.types, nyx.behavior, nyx.data, nyx.model, nyx.theme, nyx.render.lcl,
   nyx.events, nyx.viewport, nyx.projection.refresh, nyx.callbacks, nyx.studio.collections,
   nyx.hostspace, nyx.hostspace.lcl,
-  nyx.content.editor, nyx.content.mount,
+  nyx.content.editor, nyx.content.mount, nyx.view.recovery,
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.lcl,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
@@ -189,6 +189,9 @@ type
     { Shell controls remain mounted until deferred painting after a project load.
       Their old identities must not submit intent into the newly accepted load. }
     FShellCommandContext: TNyxStudioCommandContext;
+    { A surviving retry belongs to the failed current load, even if an earlier
+      shell is still mounted. It cannot redirect recovery into another project. }
+    FDisplayRecoveryContext: TNyxStudioCommandContext;
     FSourceLine: Integer;
     FSourceColumn: Integer;
     FPaintCount: Integer;
@@ -235,6 +238,10 @@ type
     procedure SourceEvent(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure SourceCommandChanged(AState: TNyxSourceCommandState;
       const AMessage: TNyxText);
+    { Projection refusal is separate from accepted source admission. These
+      presentation operations retain exact files/history and retry ownership. }
+    procedure DisplayFailed(const AMessage: TNyxText);
+    procedure SyncDisplayRecovery;
     procedure SaveProject;
     procedure OpenProject;
     procedure AcceptRemote;
@@ -1934,15 +1941,97 @@ begin
   except
     on LException: Exception do
     begin
-      FState.Status := LException.Message;
-      { Report a paint failure through the surviving shell. Never let LCL open
-        a modal exception box or retry the same failed candidate indefinitely. }
+      DisplayFailed(LException.Message);
+    end;
+  end;
+end;
 
-      if (FShellView.Root <> nil) and (FShellView.Root.Find('studio-status') <> nil) then
-      begin
-        FShellView.Root.Find('studio-status').Configure.Text(FState.Status).Done;
-        FShellView.Sync;
-      end;
+procedure TNyxNativeStudio.SyncDisplayRecovery;
+var
+  LNotice: TNyxNode;
+  LCanvas: TControl;
+begin
+
+  if FCanvasView.Root <> nil then
+  begin
+    LCanvas := FCanvasView.ControlFor(FCanvasView.Root.ID);
+
+    if LCanvas.Parent <> nil then
+    begin
+      { The renderer's enclosing panel is a target host, not an authored control.
+        Suspend its old faces without overwriting any design Enabled property. }
+      LCanvas.Parent.Enabled := not FState.DisplayRecovery.BlocksInput;
+    end;
+  end;
+
+  if FShellView.Root = nil then
+  begin
+    Exit;
+  end;
+  LNotice := FShellView.Root.Find(NyxStudioDisplayRecoveryID);
+
+  if FShellView.Root.Find('studio-status') <> nil then
+  begin
+    FShellView.Root.Find('studio-status').Configure.Text(FState.Status).Done;
+    FShellView.ViewFor('studio-status').Sync;
+  end;
+
+  if LNotice <> nil then
+  begin
+    RestoreNyxViewRecovery(LNotice, FState.DisplayRecovery);
+    { Chrome alone contains this stable notice. Synchronizing another section
+      could re-enter the refused adapter while merely reporting its failure. }
+    FShellView.ViewFor(LNotice.ID).Sync;
+  end;
+
+  if (FSourcePaneView.Root <> nil) and
+    (FSourcePaneView.Root.Find('studio-source-status') <> nil) then
+  begin
+    { Source admission and target display have independent outcomes. Refresh
+      only this owned status, leaving the nested editor and its input intact. }
+    FSourcePaneView.Root.Find('studio-source-status').Configure
+      .Text(FSourceCommands.Message).Visible(FSourceCommands.Message <> '').Done;
+    FSourcePaneView.Sync;
+  end;
+end;
+
+procedure TNyxNativeStudio.DisplayFailed(const AMessage: TNyxText);
+begin
+  FState.DisplayRecovery := TNyxViewRecovery.Failed(AMessage);
+  FDisplayRecoveryContext := FSession.CommandContext;
+  FState.Status := 'Display needs attention / ' + AMessage;
+  try
+    FDesignerDrag.Cancel;
+  except
+    on LException: Exception do
+    begin
+      FState.Status := FState.Status + ' / Gesture retirement: ' + LException.Message;
+    end;
+  end;
+  try
+    SyncDisplayRecovery;
+  except
+    on LException: Exception do
+    begin
+      { Retain the exact original refusal and report a failed notice too. Never
+        queue the same failed proposal repeatedly or open a target error modal. }
+      FState.Status := FState.Status + ' / Recovery notice: ' + LException.Message;
+    end;
+  end;
+  try
+
+    if (FActionButton = nil) and (FShellView.Root <> nil) and
+      (FShellView.Root.Find(NyxStudioActionMenuID) <> nil) and
+      FSession.MatchesCommandContext(FShellCommandContext) then
+    begin
+      { The current Chrome remains usable independently of a refused canvas.
+        Its former menu was retired at the start of complete preparation. }
+      PrepareActionMenu;
+    end;
+  except
+    on LException: Exception do
+    begin
+      FState.Status := FState.Status + ' / Editor actions: ' + LException.Message;
     end;
   end;
 end;
@@ -2666,6 +2755,13 @@ begin
       FCanvasView.AttachMoveGrip(nil);
     end;
     FChangingProject := False;
+
+    if FState.DisplayRecovery.BlocksInput then
+    begin
+      FState.DisplayRecovery := TNyxViewRecovery.Ready;
+      FState.Status := 'Display refreshed / accepted files retained';
+      SyncDisplayRecovery;
+    end;
     Inc(FPaintCount);
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-finish');{$endif}
   finally
@@ -2825,7 +2921,7 @@ var
   LProposal: TNyxStudioDesignEdit;
 begin
 
-  if FPainting or FChangingProject then
+  if FPainting or FChangingProject or FState.DisplayRecovery.BlocksInput then
   begin
     Exit;
   end;
@@ -2974,7 +3070,7 @@ begin
   Result.Commands := FSourceCommands;
   Result.SourceMount := FShellCommandContext;
   Result.CanvasMount := FCanvasCommandContext;
-  Result.Designing := not FPreview;
+  Result.Designing := not FPreview and not FState.DisplayRecovery.BlocksInput;
   Result.Placement := FState.DesignerPlacement;
   Result.AutomaticPlacement := FState.DesignerAutomaticPlacement;
 end;
@@ -3178,6 +3274,21 @@ var
   LResourcePane: TNyxResourceWorkspacePane;
   LContentFocus: TWinControl;
 begin
+
+  if not FPainting and not FChangingProject and
+    (AEvent.Trigger = ntClick) and NyxViewRecoveryAction(ANode, NyxStudioDisplayRecoveryID) then
+  begin
+
+    if (FState.DisplayRecovery.Phase = nvrFailed) and
+      FSession.MatchesCommandContext(FDisplayRecoveryContext) and
+      (FShellView.Root.Find(ANode.ID) = ANode) then
+    begin
+      FState.DisplayRecovery := TNyxViewRecovery.Retrying(FState.DisplayRecovery.Diagnostic);
+      FState.Status := 'Refreshing the accepted display';
+      RequestRefresh(True);
+    end;
+    Exit;
+  end;
 
   if FPainting or FChangingProject or
     not FSession.MatchesCommandContext(FShellCommandContext) then

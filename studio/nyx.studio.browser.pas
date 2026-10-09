@@ -74,7 +74,7 @@ uses
   nyx.studio.agentbridge,
   nyx.studio.agentview,
   nyx.studio.agents,
-  nyx.studio.view,
+  nyx.studio.view, nyx.view.recovery,
   nyx.studio.builds,
   nyx.studio.editorbuild, nyx.studio.exchange, nyx.studio.preview,
   nyx.studio.outputs,
@@ -108,6 +108,7 @@ type
     FCanvasCommandContext: TNyxStudioCommandContext;
     { A shell control is qualified by the load it actually presents. }
     FShellCommandContext: TNyxStudioCommandContext;
+    FDisplayRecoveryContext: TNyxStudioCommandContext;
     FShell: TNyxDocument;
     FShellRenderer: TNyxStudioSectionViews;
     FResourceBrowser: TNyxStudioResourceBrowser;
@@ -284,6 +285,9 @@ type
       keyboard/programmatic Add actions, independently of project history. }
     procedure CaptureNewStateDraft;
     procedure Refresh(ARetainCanvas: Boolean = False; APreserveDraft: Boolean = False);
+    procedure RefreshDisplay(ARetainCanvas: Boolean; APreserveDraft: Boolean);
+    procedure DisplayFailed(const AMessage: TNyxText);
+    procedure SyncDisplayRecovery;
     procedure FlushSectionRefresh;
     procedure HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure MenuAction(AAction: TNyxStudioMenuAction);
@@ -773,6 +777,7 @@ begin
   LState.Log := FLog;
   LState.Status := FStatus;
   LState.SourceStatus := FSourceCommands.Message;
+  LState.DisplayRecovery := FViewState.DisplayRecovery;
   LState.PendingDesign := FSourceCommands.PendingDesign;
   LState.OutputVisible := FOutputVisible;
   LState.OutputTarget := FOutputTarget;
@@ -1007,21 +1012,121 @@ begin
   try
     Refresh(LRetainCanvas, LPreserveDraft);
   except
-    on LException: Exception do
+    on Exception do
     begin
-      { A safe target timer otherwise consumes an exception outside the input
-        handler. Keep the admitted frame and surface its exact refresh refusal. }
-      FStatus := LException.Message;
-
-      if FShellRenderer.RootFor('studio-status') <> nil then
-      begin
-        FShellRenderer.ElementFor('studio-status').textContent := FStatus;
-      end;
+      { Refresh retains the typed display refusal and synchronizes the surviving
+        recovery notice. Foreign host errors must still reach browser reporting. }
     end;
   end;
 end;
 
 procedure TNyxStudio.Refresh(ARetainCanvas, APreserveDraft: Boolean);
+begin
+  try
+    RefreshDisplay(ARetainCanvas, APreserveDraft);
+  except
+    on LException: Exception do
+    begin
+      DisplayFailed(LException.Message);
+      raise;
+    end;
+  end;
+end;
+
+procedure TNyxStudio.SyncDisplayRecovery;
+var
+  LNotice: TNyxNode;
+  LCanvas: TJSHTMLElement;
+begin
+
+  if FCanvasRenderer.Root <> nil then
+  begin
+    LCanvas := TJSHTMLElement(FCanvasRenderer.ElementFor(FCanvasRenderer.Root.ID).parentElement);
+
+    if LCanvas <> nil then
+    begin
+
+      if FViewState.DisplayRecovery.BlocksInput then
+      begin
+        LCanvas.setAttribute('inert', '');
+      end
+      else
+      begin
+        LCanvas.removeAttribute('inert');
+      end;
+    end;
+  end;
+
+  if FShellRenderer.Root = nil then
+  begin
+    Exit;
+  end;
+  LNotice := FShellRenderer.Root.Find(NyxStudioDisplayRecoveryID);
+
+  if FShellRenderer.Root.Find('studio-status') <> nil then
+  begin
+    FShellRenderer.Root.Find('studio-status').Configure.Text(FStatus).Done;
+    FShellRenderer.ViewFor('studio-status').Sync;
+  end;
+
+  if LNotice <> nil then
+  begin
+    RestoreNyxViewRecovery(LNotice, FViewState.DisplayRecovery);
+    FShellRenderer.ViewFor(LNotice.ID).Sync;
+  end;
+
+  if (FSourcePaneRenderer.Root <> nil) and
+    (FSourcePaneRenderer.Root.Find('studio-source-status') <> nil) then
+  begin
+    { A failed canvas must not leave the independent source pane saying that
+      admission is still preparing after its accepted command has completed. }
+    FSourcePaneRenderer.Root.Find('studio-source-status').Configure
+      .Text(FSourceCommands.Message).Visible(FSourceCommands.Message <> '').Done;
+    FSourcePaneRenderer.Sync;
+  end;
+end;
+
+procedure TNyxStudio.DisplayFailed(const AMessage: TNyxText);
+begin
+  FViewState.DisplayRecovery := TNyxViewRecovery.Failed(AMessage);
+  FDisplayRecoveryContext := FSession.CommandContext;
+  FStatus := 'Display needs attention / ' + AMessage;
+  try
+    FDesignerDrag.Cancel;
+  except
+    on LException: Exception do
+    begin
+      FStatus := FStatus + ' / Gesture retirement: ' + LException.Message;
+    end;
+  end;
+  try
+    SyncDisplayRecovery;
+  except
+    on LException: Exception do
+    begin
+      FStatus := FStatus + ' / Recovery notice: ' + LException.Message;
+    end;
+  end;
+  try
+
+    if (FActionButton = nil) and (FShellRenderer.Root <> nil) and
+      (FShellRenderer.Root.Find(NyxStudioActionMenuID) <> nil) and
+      FSession.MatchesCommandContext(FShellCommandContext) then
+    begin
+      { Full display preparation retires the old menu before canvas admission.
+        Rebind only surviving current-session Chrome so compact editor commands
+        remain reachable while its independent canvas needs a retry. }
+      PrepareActionMenu;
+    end;
+  except
+    on LException: Exception do
+    begin
+      FStatus := FStatus + ' / Editor actions: ' + LException.Message;
+    end;
+  end;
+end;
+
+procedure TNyxStudio.RefreshDisplay(ARetainCanvas, APreserveDraft: Boolean);
 var
   LCanvas: TJSHTMLElement;
   LStyle: TJSHTMLElement;
@@ -1617,6 +1722,13 @@ begin
   FAgents.RecordLocal;
   FReplaceCanvas := False;
   FCanvasRestores := nil;
+
+  if FViewState.DisplayRecovery.BlocksInput then
+  begin
+    FViewState.DisplayRecovery := TNyxViewRecovery.Ready;
+    FStatus := 'Display refreshed / accepted files retained';
+    SyncDisplayRecovery;
+  end;
 end;
 
 procedure TNyxStudio.ConnectAgents;
@@ -1777,17 +1889,10 @@ begin
   try
     Refresh(True, True);
   except
-    on LException: Exception do
+    on Exception do
     begin
-      { Source admission is renderer independent. Preserve its actual outcome
-        and the mounted recovery controls if a projection needs an adapter. }
-      FStatus := 'Design display needs attention: ' + LException.Message;
-
-      if FShellRenderer.Root <> nil then
-      begin
-        FShellRenderer.Root.Find('studio-status').Configure.Text(FStatus).Done;
-        FShellRenderer.Sync;
-      end;
+      { Refresh already retained its typed display refusal and synchronized the
+        surviving recovery notice. Source completion remains committed. }
     end;
   end;
 end;
@@ -1911,6 +2016,11 @@ procedure TNyxStudio.RouteCanvas(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
   LProposal: TNyxStudioDesignEdit;
 begin
+
+  if FViewState.DisplayRecovery.BlocksInput then
+  begin
+    Exit;
+  end;
   LProposal := Default(TNyxStudioDesignEdit);
   try
 
@@ -1983,7 +2093,7 @@ begin
   Result.Commands := FSourceCommands;
   Result.SourceMount := FShellCommandContext;
   Result.CanvasMount := FCanvasCommandContext;
-  Result.Designing := not FPreview;
+  Result.Designing := not FPreview and not FViewState.DisplayRecovery.BlocksInput;
   Result.Placement := FDesignerPlacement;
   Result.AutomaticPlacement := FDesignerAutomaticPlacement;
 end;
@@ -2192,6 +2302,29 @@ var
   LResourcePane: TNyxResourceWorkspacePane;
   LContentFocus: TJSHTMLElement;
 begin
+
+  if (AEvent.Trigger = ntClick) and NyxViewRecoveryAction(ANode, NyxStudioDisplayRecoveryID) then
+  begin
+
+    if (FViewState.DisplayRecovery.Phase = nvrFailed) and
+      FSession.MatchesCommandContext(FDisplayRecoveryContext) and
+      (FShellRenderer.Root.Find(ANode.ID) = ANode) then
+    begin
+      FViewState.DisplayRecovery := TNyxViewRecovery.Retrying(FViewState.DisplayRecovery.Diagnostic);
+      FStatus := 'Refreshing the accepted display';
+      FReplaceCanvas := True;
+      try
+        Refresh(True, True);
+      except
+        on Exception do
+        begin
+          { A repeated Pascal adapter refusal is visible through DisplayFailed.
+            Foreign host errors retain the browser's ordinary reporting path. }
+        end;
+      end;
+    end;
+    Exit;
+  end;
 
   if not FSession.MatchesCommandContext(FShellCommandContext) then
   begin

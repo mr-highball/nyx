@@ -148,6 +148,18 @@ enum symbols and distinct reference constructors. It calls the public typed
 contract on a fresh independent document, then validates the complete document and
 persistence budgets before publication.
 
+Target display happens after that admission. If an adapter refuses the accepted
+design, Studio retains the paired files and shows **Retry display** through the
+public `nyx.view.recovery` compound. `TNyxViewRecovery` distinguishes Ready,
+Retrying and Failed independently of source and compiler outcomes. Stale canvas
+input is suspended; source actions, current-session editor menus and Undo remain
+available. A repeated refusal retains Retry. Successful retry clears the notice
+without adding document history. The native consumer checks exact pair bytes
+before/after retry; browser consumers check actual source status, recovered
+controls, exported accepted source and one paired Undo. Full later-publication
+rollback, all widgetsets and physical input/accessibility remain open in
+[the authoring task](../TODO/NS-4_studio-authoring_01.md).
+
 Declared state references must be initialized before use. Their declarations,
 factories and consumers must agree on the Pascal scalar family; changing all
 three consistently can change that family. Changing a key updates every

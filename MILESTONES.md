@@ -3,7 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current nested source host recovery (2026-10-09) consumes original NS-4 authoring
+Current design display recovery (2026-10-09) consumes original NS-4 authoring
+criterion two. Public typed readiness/compound controls distinguish accepted
+source from refused display; both controllers suspend stale canvas input and
+retain current-session actions/Retry without adding history. [The packet](WORK.md#current-return-path-design-display-recovery--2026-10-09)
+records 12 native and 14/14 HTTP desktop/CSS-390 checks, exact paired Undo,
+native pair bytes and scoped ownership regressions. Authoring alone advances
+unfinished **51→52**, aggregate **25/16/52/21/28/3**; no full criterion/task/credit
+closes. Stop recovery variants; return to primary semantic source workflows.
+Later publication rollback, full parity/performance and authenticated observing
+remain original gates. LAN keeps its protected existing product.
+
+Previous nested source host recovery (2026-10-09) consumes original NS-4 authoring
 criterion two. Actual native shell refusal after source parking now preserves
 the independently owned editor's exact draft, focus/range, pair/history and
 callback scopes; locally owned host proposals clean up on both targets.

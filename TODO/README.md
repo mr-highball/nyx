@@ -47,7 +47,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current nested source host recovery consumes NS-4 authoring criterion two.
+Current design display recovery consumes NS-4 authoring criterion two. Public
+typed readiness and Nyx compounds separate source admission from target refusal;
+both controllers suspend stale canvas input and retain current-session actions/
+Retry without adding history. [The packet](../WORK.md#current-return-path-design-display-recovery--2026-10-09)
+records 12 native and 14/14 HTTP desktop/CSS-390 checks, paired Undo and native
+exact byte preservation. Authoring alone advances unfinished 51→52, aggregate
+25/16/52/21/28/3; no full criterion/task/credit closes. Stop recovery variants and
+return to primary semantic source workflows. Later publication rollback,
+complete parity/performance and installed observing keep their original owners.
+
+Previous nested source host recovery consumes NS-4 authoring criterion two.
 Native admission failure returns exact source/canvas hosts and independently
 restores the nested editor's copied focus/range without changing pair/history or
 callback scope; unassigned host proposals clean up on both targets.

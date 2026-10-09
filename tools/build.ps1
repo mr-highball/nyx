@@ -4530,6 +4530,13 @@ try {
       & (Join-Path $nyxSectionNative 'nyx_studio_source_recovery_controls.exe') `
         (Join-Path $nyxSectionRoot 'nested-source')
       if ($LASTEXITCODE -ne 0) { throw 'Actual nested source host recovery failed' }
+      # Ordinary accepted-source recovery consumes the same public section
+      # owners. Pascal proves stale-input refusal, explicit retry and paired Undo.
+      Invoke-NyxCompiler $nyxLclFpc ($nyxSectionArguments + @(
+        'tests/nyx_display_recovery_controls.lpr'))
+      & (Join-Path $nyxSectionNative 'nyx_display_recovery_controls.exe') `
+        (Join-Path $nyxSectionRoot 'display-recovery')
+      if ($LASTEXITCODE -ne 0) { throw 'Actual native display recovery failed' }
     }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
@@ -4540,6 +4547,16 @@ try {
       "-FE$nyxSectionBrowser", "tests/$nyxSectionProgram.lpr")
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxSectionBrowser 'rtl.js') -Force
     Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxSectionHtml") -Destination $nyxSectionBrowser -Force
+    if ($Target -eq 'studio-section-recovery') {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxSectionBrowser",
+        'tests/nyx_display_recovery_browser.lpr')
+      # Workers run in a separate realm and require their own matched RTL.
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tmodule', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', "-FE$nyxSectionBrowser", 'studio/nyx_source_worker.lpr')
+      Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/display-recovery.html') `
+        -Destination $nyxSectionBrowser -Force
+    }
     Write-Host 'Native sections pass. Execute browser artifacts on an independently admitted existing HTTP host.'
     exit 0
   }
