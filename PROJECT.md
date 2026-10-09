@@ -67,7 +67,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Complete-frame continuity (2026-10-09) adds explicit typed role opt-in and safe
+Nested source host recovery (2026-10-09) preserves native source text/focus/range
+when shell admission fails after parking its independently owned editor. Local
+candidate hosts now clean up failed insertion on both targets. [The packet](WORK.md#current-return-path-nested-source-host-recovery--2026-10-09)
+records 15 ordinary native checks, 53 shared native/HTTP desktop/CSS-390 checks,
+exact paired state, Undo availability and scopes, with zero native/driver leaks.
+Browser nested
+source, later publication failures and broad parity/performance remain open.
+Ledger is **25/16/51/21/28/3**; no full criterion/task/credit closes. The protected
+LAN keeps its existing version. Stop host variants; return to integrated authoring.
+
+Previous complete-frame continuity (2026-10-09) adds explicit typed role opt-in and safe
 rollback. Both ordinary Studio controllers preserve eligible resource text/range
 through real Pascal split/mount changes, only within exact project/resource
 contexts. Native/direct desktop also qualify focus; compact menu intent differs.

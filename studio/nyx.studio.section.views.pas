@@ -193,19 +193,33 @@ var
 begin
   {$ifdef PAS2JS}
   Result := TJSHTMLElement(document.createElement('div'));
-  Result.style.cssText := 'position:fixed;left:-100000px;top:0;visibility:hidden;pointer-events:none;';
-  Result.style.setProperty('width', IntToStr(AHost.clientWidth) + 'px');
-  Result.style.setProperty('height', IntToStr(AHost.clientHeight) + 'px');
-  Result.setAttribute('inert', '');
-  Result.setAttribute('data-nyx-shell-frame', '');
-  AHost.parentNode.appendChild(Result);
+  try
+    Result.style.cssText := 'position:fixed;left:-100000px;top:0;visibility:hidden;pointer-events:none;';
+    Result.style.setProperty('width', IntToStr(AHost.clientWidth) + 'px');
+    Result.style.setProperty('height', IntToStr(AHost.clientHeight) + 'px');
+    Result.setAttribute('inert', '');
+    Result.setAttribute('data-nyx-shell-frame', '');
+    AHost.parentNode.appendChild(Result);
+  except
+    { Ownership has not yet reached the frame. A host/extension refusal must
+      detach the local proposal even when insertion partially succeeded. }
+    Result.remove;
+    raise;
+  end;
   {$else}
   LPanel := TPanel.Create(nil);
-  LPanel.BevelOuter := bvNone;
-  LPanel.Visible := False;
-  LPanel.Parent := AHost;
-  LPanel.SetBounds(0, 0, AHost.ClientWidth, AHost.ClientHeight);
-  Result := LPanel;
+  try
+    LPanel.BevelOuter := bvNone;
+    LPanel.Visible := False;
+    LPanel.Parent := AHost;
+    LPanel.SetBounds(0, 0, AHost.ClientWidth, AHost.ClientHeight);
+    Result := LPanel;
+  except
+    { The failed function has not assigned TSectionFrame.Host. Parent is
+      borrowed, not the component owner, so retire this local control here. }
+    LPanel.Free;
+    raise;
+  end;
   {$endif}
 end;
 
@@ -217,14 +231,25 @@ var
 begin
   {$ifdef PAS2JS}
   Result := TJSHTMLElement(document.createElement('div'));
-  Result.style.cssText := 'width:100%;height:100%;min-width:0;min-height:0;';
-  AParent.appendChild(Result);
+  try
+    Result.style.cssText := 'width:100%;height:100%;min-width:0;min-height:0;';
+    AParent.appendChild(Result);
+  except
+    Result.remove;
+    raise;
+  end;
   {$else}
   LPanel := TPanel.Create(nil);
-  LPanel.BevelOuter := bvNone;
-  LPanel.Parent := AParent;
-  LPanel.Align := alClient;
-  Result := LPanel;
+  try
+    LPanel.BevelOuter := bvNone;
+    LPanel.Parent := AParent;
+    LPanel.Align := alClient;
+    Result := LPanel;
+  except
+    { A child host also remains locally owned until this function returns. }
+    LPanel.Free;
+    raise;
+  end;
   {$endif}
 end;
 

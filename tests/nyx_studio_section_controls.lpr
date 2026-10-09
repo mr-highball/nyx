@@ -33,6 +33,14 @@ uses
   {$ifdef PAS2JS}, JS, Web, nyx.studio.browser{$endif};
 
 type
+  {$ifndef PAS2JS}
+  { An ordinary embedding host can refuse insertion before frame ownership is
+    assigned. The local proposal must be freed, with the old frame untouched. }
+  TRefusalPanel = class(TPanel)
+  public
+    procedure InsertControl(AControl: TControl; AIndex: Integer); override;
+  end;
+  {$endif}
   { This receiver borrows no view. Its event token is canceled before the
     receiver is released; the facade/configurer is destroyed before its theme. }
   TScenario = class(TNyxEventCallback)
@@ -53,6 +61,43 @@ var
   GFailBuild: Boolean;
   GFailPreview: Boolean;
   GProjectPreviewed: Boolean;
+  GFailInsertion: Boolean;
+  GInsertionRefusals: Integer;
+  {$ifdef PAS2JS}
+  { Borrowed only during the one embedding-host refusal. Restore the original
+    method before clearing these handles; no production object retains them. }
+  GAppendParent: TJSNode;
+  GOriginalAppend: TJSFunction;
+  {$endif}
+
+{$ifdef PAS2JS}
+function AppendFrame(AChild: TJSNode): TJSNode;
+begin
+  Result := TJSNode(GOriginalAppend.call(GAppendParent, AChild));
+
+  if GFailInsertion and (AChild is TJSHTMLElement) and
+    TJSHTMLElement(AChild).hasAttribute('data-nyx-shell-frame') then
+  begin
+    GFailInsertion := False;
+    Inc(GInsertionRefusals);
+    { The browser insertion succeeded before the extension refused. Retiring
+      the unassigned candidate must remove this actual attached DOM proposal. }
+    raise ENyxModel.Create('Intentional frame host insertion refusal');
+  end;
+end;
+{$else}
+procedure TRefusalPanel.InsertControl(AControl: TControl; AIndex: Integer);
+begin
+
+  if GFailInsertion and (AControl is TPanel) then
+  begin
+    GFailInsertion := False;
+    Inc(GInsertionRefusals);
+    raise ENyxModel.Create('Intentional frame host insertion refusal');
+  end;
+  inherited InsertControl(AControl, AIndex);
+end;
+{$endif}
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -265,6 +310,8 @@ var
   LRole: TNyxStudioSection;
   LRefused: Boolean;
   LMessage: TNyxText;
+  LHostChildren: Integer;
+  LRootsRetained: Boolean;
   {$ifdef PAS2JS}
   LStarted: Double;
   LHost: TJSHTMLElement;
@@ -296,7 +343,7 @@ begin
   LWindow := TForm.CreateNew(nil);
   LWindow.Caption := 'Nyx Studio section recovery';
   LWindow.SetBounds(20, 20, 1240, 820);
-  LHost := TPanel.Create(LWindow);
+  LHost := TRefusalPanel.Create(LWindow);
   LHost.BevelOuter := bvNone;
   LHost.Parent := LWindow;
   LHost.Align := alClient;
@@ -530,6 +577,60 @@ begin
     Check(TCustomEdit(LTitle).Focused and (TCustomEdit(LTitle).SelStart = 2) and
       (TCustomEdit(LTitle).SelLength = 5),
       'complete refusal recovers physical focus and range');
+    {$endif}
+    { Refuse at the embedding host boundary, earlier than any component
+      factory. This covers locally owned allocation as well as frame recovery. }
+    {$ifdef PAS2JS}
+    GAppendParent := LHost.parentNode;
+    GOriginalAppend := TJSFunction(TJSObject(GAppendParent)['appendChild']);
+    LHostChildren := GAppendParent.childNodes.length;
+    TJSObject(GAppendParent)['appendChild'] := @AppendFrame;
+    {$else}
+    LHostChildren := LHost.ControlCount;
+    {$endif}
+    GFailInsertion := True;
+    LRefused := False;
+    try
+      try
+        LViews.Render(LFull, LFull.Pages[0], LHost);
+      except
+        on LException: Exception do
+        begin
+          LRefused := True;
+          LMessage := LException.Message;
+        end;
+      end;
+    finally
+      GFailInsertion := False;
+      {$ifdef PAS2JS}
+      TJSObject(GAppendParent)['appendChild'] := GOriginalAppend;
+      GOriginalAppend := nil;
+      GAppendParent := nil;
+      {$endif}
+    end;
+    Check(LRefused and (GInsertionRefusals = 1) and
+      (Pos('Intentional frame host insertion refusal', LMessage) > 0),
+      'embedding host refusal reaches the actual unassigned frame boundary');
+    LRootsRetained := True;
+    for LRole := Low(TNyxStudioSection) to High(TNyxStudioSection) do
+    begin
+      LRootsRetained := LRootsRetained and (LViews.SectionRoot(LRole) = LRoots[LRole]);
+    end;
+    Check(LRootsRetained and (LViews.InputFor('project-title') = LTitle) and LToken.Active,
+      'host refusal preserves exact prior roots, input and callback scope');
+    {$ifdef PAS2JS}
+    Check(LHost.parentNode.childNodes.length = LHostChildren,
+      'host refusal detaches the actual local candidate');
+    Check((document.activeElement = LTitle) and (InputText(LTitle) = LTitleText) and
+      (TJSHTMLInputElement(LTitle).selectionStart = 2) and
+      (TJSHTMLInputElement(LTitle).selectionEnd = 7),
+      'host refusal preserves physical Unicode text, focus and range');
+    {$else}
+    Check(LHost.ControlCount = LHostChildren,
+      'host refusal retains only the original host children');
+    Check(TCustomEdit(LTitle).Focused and (InputText(LTitle) = LTitleText) and
+      (TCustomEdit(LTitle).SelStart = 2) and (TCustomEdit(LTitle).SelLength = 5),
+      'host refusal preserves physical Unicode text, focus and range');
     {$endif}
     LViews.Render(LFull, LFull.Pages[0], LHost, False, nil,
       [nssChrome, nssProject, nssInspector]);

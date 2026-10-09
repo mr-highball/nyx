@@ -1,7 +1,7 @@
 # Studio mounted section routing
 
 [Architecture](architecture.md) · [Independent view sections](view-sections.md) ·
-[Current evidence](../WORK.md#current-return-path-complete-frame-continuity--2026-10-09)
+[Current evidence](../WORK.md#current-return-path-nested-source-host-recovery--2026-10-09)
 
 Studio still composes its chrome with `BuildNyxStudioView` and the public Nyx
 components. `nyx.studio.sections` copies that composition into independent
@@ -63,7 +63,14 @@ copied activity. Growing activity does not change section membership or
 manufacture extra empty activity rows.
 A changed Chrome structure or compact membership uses a fully admitted hidden
 frame. Before a full native frame retirement, Canvas and source views park; a
-failed admission restores both exact prior hosts. Retained Chrome keeps those
+failed admission restores both exact prior hosts. The source pane physically
+contains a separately owned CodeView: native Studio captures its input before
+parking, then replays its supported copied text/focus/range after the outer pane
+returns. Interacting previews also capture runtime input; design canvas bindings
+remain inactive and only their exact host is restored. Every touched owner gets
+one recovery attempt, and additional failures are reported. Allocation retains
+local host ownership until return, so refused insertion cannot leak an unassigned
+native panel or leave an attached browser proposal. Retained Chrome keeps those
 ports in place. A resource form whose selected binding target changes may require
 a new event scope: preserving its draft does not authorize retaining a stale
 target contract.
@@ -118,9 +125,13 @@ accepted public section-publication fixture. The complete-frame journey also
 qualifies a later Inspector factory refusal, exact prior roots/drafts/focus,
 explicit forward continuity, safe default discard and retired/new callback scopes.
 Ordinary Resources consumers exercise a real Pascal split/mount change and
-different-resource refusal. Full independent Canvas/source physical recovery,
-wider custom/composite editors and reveal/focus extension failures remain separate
-gates; the maintained factory refusal does not establish all those failures.
+different-resource refusal. The maintained target includes 15 actual native
+controller checks for nested source recovery after an embedding-host refusal,
+with exact text/pair/history and event scopes. Shared 53-check native/browser
+journeys additionally qualify unassigned host insertion and cleanup. These do
+not establish ordinary browser nested-source recovery, runtime-preview faults,
+full publication rollback after shell admission, wider custom/composite editors
+or reveal/focus extension failures; those remain separate gates.
 
 Browser refresh queues past borrowed shell, live input and designer callbacks.
 Multiple requests coalesce, with explicit reset choices taking precedence. The

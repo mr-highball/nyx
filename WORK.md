@@ -9,6 +9,81 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Nested source host recovery — 2026-10-09
+
+Entry was clean at pushed `1718253`. This bounded batch follows original NS-4
+authoring criterion two and the accepted section/typed-input contracts; it is
+progress, not a completed criterion/task. Full goal stays active. Authoring alone
+advances unfinished 50→51, aggregate **25/16/51/21/28/3**; no credit closes.
+The user's Resources direction remains dedicated workspace plus built-in
+categories and creator/user labels for combined filtering/search.
+
+**Reproduced boundary and repair.** Ordinary native SourceView contains an
+independently owned CodeView. Parking the pane hides its editor; MoveHost cannot
+focus hidden controls, and returning the parent loses the original focus intent.
+One real embedding-host insertion refusal after parking reproduced exact
+root/host/widget/text/pair preservation but lost source focus/range. It also
+leaked 21 blocks/2272 bytes from an unassigned candidate TPanel. Native Studio
+now captures source, nested code and interacting-preview input before parking,
+then returns exact borrowed hosts and replays copied adapter state on admission
+failure. Design canvas bindings stay inactive; those faces return to their exact
+host without runtime input admission. Recovery attempts each touched owner and
+reports additional refusals. Frame/section host allocation remains locally owned
+until returned; both adapters clean up failed insertion, including attached DOM.
+No new public accessor, renderer toolkit, backend or test-only product hook.
+
+**Qualification.** `tests/nyx_studio_source_recovery_controls.lpr` uses the actual
+native controller, public SourceView/CodeView, normal source callbacks and a real
+LCL embedding-host override. Its 15 checks retain exact incomplete Unicode
+Pascal, separately observed native line endings, roots/hosts/editor identity,
+focus/range, accepted/source/draft pair, Undo availability, selection and live
+callback scopes, with no replay change notification. Its owned semantic session
+reads the baseline; physical behavior requires the actual controls. Maintained
+`studio-section-recovery` now includes that consumer. The shared shell adds one
+host-insertion refusal to its existing recovery journey: **53 native / 53 HTTP
+desktop / 53 CSS-390** checks. The browser extension refuses after append, proving
+actual candidate detachment; native refuses before insertion, proving local
+allocation retirement through heap tracing. Both retain old roots, Unicode input,
+focus/range and event scope. Native programs and Pascal browser drivers report
+zero unfreed blocks; browser JavaScript heap is not measured. Optional native
+`NYX_STUDIO_PROFILE` compilation also passes. Owned warnings are zero; pas2js
+retains seven upstream RTL warnings. These are scoped controls/ownership checks,
+not complete mobile usability, performance or all-widgetset parity.
+
+**Receipts and material failures.** Ignored `build/source-host-recovery/` retains
+the initial `host-boundary-before` and `physical-before` failures, corrected
+`qualified` native reproduction, `maintained-source-corrected` 15-check run,
+`maintained-final-build.log` terminal success, profile compilation, HTTP
+live/terminal captures and byte/preservation receipts. The first label-bounds
+producer did not fire and was
+replaced with the real host insertion boundary. Portable draft and physical
+multiline text were split into independent exact assertions; native line endings
+are not a draft mutation. First repair blocked an inactive design canvas at the
+runtime capture gate; the diagnostic established the distinction above. Fixture
+compilation required the owning behavior unit and actual `ntChange` trigger.
+These failed setup/qualification attempts are not successful product evidence.
+HTTP live captures occur before facade retirement, and terminal markers confirm
+the remaining teardown checks; screenshots after retirement show no live shell.
+
+**Preservation and next action.** Installed semantic `nyx_session` remains a
+bounded read of original primary revision two; no active project mutation.
+Final protection verifies unchanged LAN/loopback services, nine exact accepted/
+source/draft pairs, fifteen original process identities, 147033 checkpoint bytes
+and 299 sealed files. Byte closure verifies 58 immutable staged files (55 prior
+plus three new) and all three current source/staged/HTTP files. Final maintained
+recompilation equals those qualified bytes. No source-control milestone is closed.
+No equivalent retry of rejected replacement/configuration/cleanup actions. Fresh
+immutable HTTP children use the verified existing static host; prior packets
+remain intact. Stop source-host/complete-frame fixture variants and return to
+integrated authoring. Full publication failure after shell admission, ordinary
+browser nested-source recovery, runtime-preview recovery faults, composite picker
+input, native memo scroll, hardware/IME/accessibility, broad parity/performance
+and authenticated observing rollout remain under their original owners. Next
+reassess criterion two's actual Apply Pascal publication/paired Undo journey
+through existing source-command consumers; choose its first unmet integration
+gate before editing, rather than another host fault variant. The protected LAN
+continues serving its existing product version.
+
 ## Current return path: Complete frame continuity — 2026-10-09
 
 Entry is clean at pushed `ee58299`. Previous turn is progress: independent Details

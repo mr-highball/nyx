@@ -3,7 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current complete-frame continuity (2026-10-09) consumes original NS-4 authoring
+Current nested source host recovery (2026-10-09) consumes original NS-4 authoring
+criterion two. Actual native shell refusal after source parking now preserves
+the independently owned editor's exact draft, focus/range, pair/history and
+callback scopes; locally owned host proposals clean up on both targets.
+[The packet](WORK.md#current-return-path-nested-source-host-recovery--2026-10-09)
+records 15 ordinary native and 53 shared native/HTTP desktop/CSS-390 checks,
+retained failures and protection/byte gates. Authoring alone advances unfinished
+**50→51**, aggregate **25/16/51/21/28/3**; no full criterion/task/credit closes.
+Stop host variants and return to integrated authoring. Later publication failure,
+ordinary browser nested source, composite input, full parity/performance and
+authenticated observing remain open. LAN keeps its protected existing product.
+
+Previous complete-frame continuity (2026-10-09) consumes original NS-4 authoring
 criterion two through both ordinary Studio controllers. Typed role opt-in,
 copied physical state and exact resource/session contexts retain eligible
 Unicode drafts and ranges across a real Pascal split/mount replacement; direct

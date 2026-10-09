@@ -47,7 +47,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current complete-frame continuity (2026-10-09) consumes NS-4 authoring criterion
+Current nested source host recovery consumes NS-4 authoring criterion two.
+Native admission failure returns exact source/canvas hosts and independently
+restores the nested editor's copied focus/range without changing pair/history or
+callback scope; unassigned host proposals clean up on both targets.
+[The packet](../WORK.md#current-return-path-nested-source-host-recovery--2026-10-09)
+records 15 ordinary native and 53 shared native/HTTP desktop/CSS-390 checks.
+Authoring advances unfinished 50→51, aggregate 25/16/51/21/28/3; no full criterion/
+task/credit closes. Stop host variants. Later publication, ordinary browser
+nested source, composite input and broad parity/performance/observing stay open.
+
+Previous complete-frame continuity (2026-10-09) consumes NS-4 authoring criterion
 two through the accepted section prerequisite and both ordinary controllers.
 Typed opt-in and exact proposal/session ownership preserve eligible Unicode
 text/range across actual split/mount changes; native/direct desktop qualify

@@ -4512,15 +4512,25 @@ try {
     $nyxSectionPlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
     $nyxSectionNative = Join-Path $nyxSectionRoot 'native'
     New-Item -ItemType Directory -Force $nyxSectionNative | Out-Null
-    Invoke-NyxCompiler $nyxLclFpc @('-B', '-Mdelphi', '-O2', '-Sa', '-Cr', '-Co', '-Ci',
+    $nyxSectionArguments = @('-B', '-Mdelphi', '-O2', '-Sa', '-Cr', '-Co', '-Ci',
       '-gl', '-gh', '-Fusrc', '-Fustudio', '-Futests',
       "-Fu$nyxLazarus/lcl/units/$nyxSectionPlatform",
       "-Fu$nyxLazarus/lcl/units/$nyxSectionPlatform/$Widgetset",
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxSectionPlatform",
       "-Fu$nyxLazarus/packager/units/$nyxSectionPlatform",
-      "-FU$nyxSectionNative", "-FE$nyxSectionNative", "tests/$nyxSectionProgram.lpr")
+      "-FU$nyxSectionNative", "-FE$nyxSectionNative")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxSectionArguments + @("tests/$nyxSectionProgram.lpr"))
     & (Join-Path $nyxSectionNative "$nyxSectionProgram.exe") (Join-Path $nyxSectionRoot 'native-live.png')
     if ($LASTEXITCODE -ne 0) { throw 'Actual native section publication failed' }
+    if ($Target -eq 'studio-section-recovery') {
+      # This ordinary native controller nests an independent source editor.
+      # Pascal owns the host refusal, input/history checks and teardown.
+      Invoke-NyxCompiler $nyxLclFpc ($nyxSectionArguments + @(
+        'tests/nyx_studio_source_recovery_controls.lpr'))
+      & (Join-Path $nyxSectionNative 'nyx_studio_source_recovery_controls.exe') `
+        (Join-Path $nyxSectionRoot 'nested-source')
+      if ($LASTEXITCODE -ne 0) { throw 'Actual nested source host recovery failed' }
+    }
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     $nyxSectionBrowser = Join-Path $nyxSectionRoot 'web'

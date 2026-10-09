@@ -9,7 +9,18 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current complete-frame continuity follows criterion two and the accepted
+Current nested source host recovery follows criterion two and accepted section/
+input prerequisites. Native pre-shell refusal after parking restores exact
+source/canvas hosts and the independently owned editor's copied draft/focus/range;
+pair/history and callback scopes remain unchanged. Local host proposals clean
+up failed insertion on both adapters. [The packet](../WORK.md#current-return-path-nested-source-host-recovery--2026-10-09)
+records 15 ordinary native and 53 shared native/HTTP desktop/CSS-390 checks.
+Authoring advances unfinished 50→51, aggregate 25/16/51/21/28/3; no full criterion/
+task/credit closes. Stop host variants and return to integrated authoring. Later
+publication failure, ordinary browser nested-source recovery, composite input,
+native memo scroll, full parity/performance and observing remain original gates.
+
+Previous complete-frame continuity follows criterion two and the accepted
 section-publication prerequisite. Typed role opt-in/default discard and copied
 adapter state preserve eligible resource input across a real Pascal split/mount
 replacement, only within the same session/load and exact proposal context.

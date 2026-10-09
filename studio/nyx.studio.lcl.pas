@@ -32,7 +32,7 @@ uses
   nyx.text, nyx.types, nyx.behavior, nyx.data, nyx.model, nyx.theme, nyx.render.lcl,
   nyx.events, nyx.viewport, nyx.projection.refresh, nyx.callbacks, nyx.studio.collections,
   nyx.hostspace, nyx.hostspace.lcl,
-  nyx.content.editor,
+  nyx.content.editor, nyx.content.mount,
   nyx.theme.editor, nyx.studio.theme,
   nyx.images, nyx.image.editor, nyx.image.import, nyx.image.import.lcl,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
@@ -2069,6 +2069,12 @@ var
   LSourceDocument: TNyxDocument;
   LOldCanvasHost: TWinControl;
   LOldSourceHost: TWinControl;
+  LCanvasInputs: TNyxContentFaceStates;
+  LSourceInputs: TNyxContentFaceStates;
+  LCodeInputs: TNyxContentFaceStates;
+  LCanvasCaptured: Boolean;
+  LCodeCaptured: Boolean;
+  LRecoveryFailure: TNyxText;
   LFocus: TWinControl;
   LSelection: TNyxTextSelection;
   LRetainFocus: Boolean;
@@ -2086,7 +2092,59 @@ var
   LResourceCompatible: Boolean;
   {$ifdef NYX_STUDIO_PROFILE}
   LPhaseStarted: QWord;
+  {$endif}
 
+  procedure CaptureBorrowedInput(AView: TNyxLCLRenderer;
+    out AInputs: TNyxContentFaceStates; const AName: TNyxText);
+  begin
+
+    if not AView.CaptureInteraction(AInputs) then
+    begin
+      raise ENyxModel.Create('Studio ' + AName + ' input boundary became busy');
+    end;
+  end;
+
+  procedure RecoverBorrowedView(AView: TNyxLCLRenderer; AHost: TWinControl;
+    const AInputs: TNyxContentFaceStates; const AName: TNyxText;
+    AReplayInput: Boolean = True);
+  begin
+    { Hosts are borrowed from the still-admitted shell. Restore each owner once,
+      even when another owner refuses recovery. CodeView is independently owned
+      inside SourceView: returning the outer host cannot recover focus lost while
+      its children were hidden. Copies contain no widget or session references. }
+
+    if AHost <> nil then
+    begin
+      try
+        AView.MoveHost(AHost);
+      except
+        on LException: Exception do
+        begin
+          LRecoveryFailure := LRecoveryFailure + ' / ' + AName + ' host: ' +
+            LException.Message;
+        end;
+      end;
+    end;
+
+    if not AReplayInput then
+    begin
+      Exit;
+    end;
+    try
+
+      if not AView.RestoreInteraction(AInputs) then
+      begin
+        raise ENyxModel.Create('Prior input boundary became busy');
+      end;
+    except
+      on LException: Exception do
+      begin
+        LRecoveryFailure := LRecoveryFailure + ' / ' + AName + ' input: ' +
+          LException.Message;
+      end;
+    end;
+  end;
+  {$ifdef NYX_STUDIO_PROFILE}
   procedure RecordPhase(const AName: TNyxText);
   var
     LNow: QWord;
@@ -2204,6 +2262,8 @@ begin
     end;
     LOldCanvasHost := nil;
     LOldSourceHost := nil;
+    LCanvasCaptured := False;
+    LCodeCaptured := False;
 
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-capture');{$endif}
     LShell := ComposeShell;
@@ -2220,6 +2280,31 @@ begin
           every large-view control twice without changing accepted meaning.
           Only a full shell replacement needs parking before old hosts retire.
           Its failure path still restores those exact live hosts below. }
+
+        { Capture before any hidden reparenting changes focus. In particular,
+          SourceView cannot observe the separately routed CodeView's fields.
+          A refused capture leaves all three independently owned views mounted. }
+
+        { Design canvas controls are selection faces, with bindings deliberately
+          inactive. Only an interacting preview admits runtime input snapshots;
+          design faces still return to their exact host on failure. }
+
+        if (FCanvasView.Root <> nil) and FPreview then
+        begin
+          CaptureBorrowedInput(FCanvasView, LCanvasInputs, 'canvas');
+          LCanvasCaptured := True;
+        end;
+
+        if (FSourcePaneView.Root <> nil) and not FSourceModal.IsOpen then
+        begin
+          CaptureBorrowedInput(FSourcePaneView, LSourceInputs, 'source');
+
+          if FCodeView.Root <> nil then
+          begin
+            CaptureBorrowedInput(FCodeView, LCodeInputs, 'code');
+            LCodeCaptured := True;
+          end;
+        end;
 
         if FCanvasView.Root <> nil then
         begin
@@ -2246,20 +2331,37 @@ begin
             FShellView.SectionRoot(nssResources), LShell.Pages[0]));
       end;
     except
-      { Candidate shell admission retains old chrome. Put its borrowed views
-        back before surfacing the refusal; do not leave accepted inputs parked. }
-
-      if LOldCanvasHost <> nil then
+      on LException: Exception do
       begin
-        FCanvasView.MoveHost(LOldCanvasHost);
-      end;
+        { Candidate shell admission retains old chrome. Return exact borrowed
+          hosts, then replay their copied input through adapters that suppress
+          callbacks. Recovery must not author a draft/history step or mask a
+          second owner's refusal behind the first failed host operation. }
+        LRecoveryFailure := '';
 
-      if LOldSourceHost <> nil then
-      begin
-        FSourcePaneView.MoveHost(LOldSourceHost);
-      end;
+        if LOldCanvasHost <> nil then
+        begin
+          RecoverBorrowedView(FCanvasView, LOldCanvasHost, LCanvasInputs, 'canvas',
+            LCanvasCaptured);
+        end;
 
-      raise;
+        if LOldSourceHost <> nil then
+        begin
+          RecoverBorrowedView(FSourcePaneView, LOldSourceHost, LSourceInputs, 'source');
+
+          if LCodeCaptured then
+          begin
+            RecoverBorrowedView(FCodeView, nil, LCodeInputs, 'code');
+          end;
+        end;
+
+        if LRecoveryFailure <> '' then
+        begin
+          raise ENyxModel.Create(LException.Message +
+            ' / Studio borrowed view recovery failed' + LRecoveryFailure);
+        end;
+        raise;
+      end;
     end;
     {$ifdef NYX_STUDIO_PROFILE}RecordPhase('paint-shell-render');{$endif}
     FShell.Free;
