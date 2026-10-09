@@ -9,7 +9,124 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: staged view sections — 2026-10-08
+## Current return path: Studio section routing — 2026-10-08
+
+Previous turn is progress at exact pushed `e525ffd`: the public staged section
+prerequisite is accepted from actual both-target controls, while Studio partitioning
+and workload timing remain open. Worktree is clean at entry; installed MCP reads
+the preserved revision-2 primary pair without changing design/source/history.
+Reassessment follows NS-4 criterion 2 and NS-3 criteria 2/3 into the ordinary
+controllers, rather than adding more section fixture variants.
+
+Integrate independent Chrome/Project/Inspector view ownership through the shared
+Nyx-built shell. Route mounted lookups and compound drafts to their actual owning
+root; do not invent a composite TNyxNode or attach borrowed children to a fake tree.
+Rebind hierarchy and designer registrations to the correct event scope. Compatible
+refresh retains mounted sections; structural replacements use staged publication
+and full-frame changes preserve existing canvas/source parking and rollback.
+Keep exact paired document/Pascal history and the existing source/draft boundary.
+
+Budget: one shared composition/routing implementation and ordinary native/browser
+integration, followed by the unchanged MCP-authored full Resources workload and
+both-target live captures. Compare native timing only after all correctness gates
+pass. No new listener, protected design mutation, backend replacement/rejected
+retry, enrollment/configuration change or recursive cleanup. Preserve nine pairs,
+fifteen service identities and sealed LAN bytes. Counters remain 25/11/44/21/28/3
+at entry; full UX/performance/parity/delivery acceptance remains unproven.
+
+### Implemented consumer and qualified boundary
+
+`nyx.studio.sections` now partitions the shared public Nyx composition into
+independently owned Chrome/Project/Inspector documents. The mounted facade uses
+ordinary renderers and public managed sections, with an explicit lookup forest
+and real owning-root routing for drafts/compound commands. Hierarchy and designer
+subscriptions follow their actual routers; batch drag admission refuses duplicate
+roots/routers before replacing valid registrations. No borrowed child joins a
+synthetic model tree. Context defaults preserve creator data; stock Studio opts
+into scoping its known hierarchy default. Optional theme/configurator lifetimes
+remain borrowed and are documented beside their public contracts.
+
+Compatible refresh retains actual controls. Side structural changes publish as
+one prepared group; full frame changes preserve the independent canvas/source
+hosts. Native parks those views only before real retirement and restores both
+previous hosts on failed admission. Browser coalesces refresh past borrowed
+input callbacks, with separate presentation/source readiness and canceled timers.
+The selected-control drag intent captures a typed identity at start. Its control
+remains declared with typed visibility/enabled state even for an immovable root;
+the first child selection therefore need not introduce a toolbar node.
+
+Executed evidence uses the same previously MCP-authored English Resources seed
+and complete operation sequence, with stronger retention assertions. Installed
+native MCP still reads the preserved primary revision 2; no project mutation or
+new semantic operation substitutes for the actual input/ownership qualification.
+
+| Gate | Executed evidence |
+| --- | --- |
+| Ordinary checked Win32 Resources | **143** checks, zero unfreed blocks; `build/studio-sections/native-capability-run.log`. Exact header/source controls and independent draft retention supplement the original journey. |
+| Ordinary HTTP browser Resources | **609 desktop / 988 CSS-390** checks, including readiness polls; two live editor/canvas checkpoints each, followed by explicit retirement. `browser-desktop-verified` / `browser-compact-verified` logs and captures. |
+| Exact emitted Pascal | Same SHA-256 as the prior accepted companion; the **48**-check maintained reconstruction suite passes checked native and HTTP browser. `generated-native-run.log` / `browser-generated-verified.log`. |
+| Native source workspace | **33** actual checks, zero unfreed blocks; `workspace-run.log`. Modal resize/Apply/rejection/Restore/close/Escape retain the exact editor, draft/range and paired history. |
+| Designer routing | Current native **40**, zero unfreed blocks; browser **10** including readiness polling, synthetic operation state and DOM/worker/paired-history delivery. `drag-current-native-run.log` / `browser-drag-modeled.log`. |
+| Shared duplicate/source guard | **77** per target, including refused duplicate batch preserving the prior valid lease; `drag-guards-run.log` / `browser-guards-verified.log`. |
+| Public section regression | Current checked native **31**, zero unfreed blocks; `section-native-run.log`. The accepted both-target prerequisite remains separately owned; this packet does not duplicate its credit. |
+| Ordinary programs | Both current Studio targets compile. Native has no warnings; browser retains seven known upstream RTL warnings, no new owned section hints. |
+
+Desktop/narrow live browser captures, native Resources and source-modal captures
+were inspected. Current native toolbar/side-panel rows still clip horizontally;
+that visible usability gap remains with NS-4 and native layout/parity owners.
+Retention does not accept native aesthetics or complete usability. Browser
+driver heap evidence belongs to its native pipe owner, not
+JavaScript heap tracing. No physical phone/mouse/IME/accessibility or alternate
+widgetset qualification follows. The drag review models writable operation
+state because this engine leaves script-created `effectAllowed` at None; the
+real store formats/bytes, typed source offer, target decisions and DOM events
+remain exercised. Privileged physical drag-manager authority is still open.
+
+Failures are retained separately: an initial native source-workspace invocation
+omitted its output directory; a worker build omitted `-Jirtl.js`; simultaneous
+browser launches timed out at navigation. Those are orchestration failures,
+not accepted passes. The first strengthened browser assertion exposed a real
+root-to-child toolbar membership replacement, now repaired and requalified.
+Current browser reviews run sequentially without increasing bounds. The previous
+overstrict resource-input identity assertion was corrected to preserve its exact
+draft while allowing a genuinely changed binding target to acquire a fresh scope.
+
+### Assessment and next action
+
+This accepts bounded ordinary Studio section consumption under NS-4 criterion 2,
+not complete authoring, performance, accessibility or observing deployment.
+Authoring alone advances no-closure **44→45**, aggregate **25/11/45/21/28/3**;
+resource/workflow/rendering/generation/delivery counts and NS-3's historical count
+stay unchanged. No original criterion or full credit closes. Combined Studio
+extension-failure rollback, custom theme/factory qualification, broader stable
+membership/context and production latency remain open. The public section
+fixture's rollback is not substituted for those integration gates.
+
+The final current optimized no-heap-tracing full-workload sample passes **143**
+in **323.889 seconds**, after correctness gates and without concurrent UI tests,
+using the prior profile/check flags. The prior retained-navigation sample was
+**300.165 seconds**; the earlier profiling baseline was **292.262**. The same
+operation sequence has six added retention assertions; these single samples
+accept no speedup or production budget. An earlier integrated sample before the
+first-selection repair passed 143 in **328.054 seconds**, with concurrent compiler
+work, and is retained as provisional evidence only. Final command/profile and
+exit/elapsed receipt are in `final-timing-compile.log`, `final-timing-run.log` and
+`final-timing-private.json`. Stop profiler variants. Next follow the existing
+NS-4/NS-3 owners into combined retained/staged failure
+recovery, native clipping and the measured layout/synchronization cost. Preserve all full
+resource/cache/localization breadth and original product acceptance criteria.
+
+The final preservation guard passes: **nine exact pairs, fifteen service
+identities, 299 sealed files**, unchanged checkpoint and LAN-served bytes.
+No listener/service/configuration/enrollment change or recursive cleanup occurred.
+The LAN product still comes from its earlier sealed source. Automatic approval
+review previously rejected backend replacement with only **"blocked by policy"**;
+this turn makes no equivalent retry. Current guide:
+[mounted section routing](docs/studio-section-routing.md). Private artifacts and
+source/checkpoint receipts remain under ignored `build/studio-sections/`.
+
+<a id="current-return-path-staged-view-sections--2026-10-08"></a>
+## Previous return path: staged view sections — 2026-10-08
 
 Previous turn is progress at exact pushed `6ef151d`: actual both-target New/Open
 retention and rollback execute, but the complete native journey has no aggregate

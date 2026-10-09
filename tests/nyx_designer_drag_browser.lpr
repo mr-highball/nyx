@@ -24,7 +24,7 @@ program nyx_designer_drag_browser;
 {$mode delphi}{$H+}{$codepage utf8}
 {$modeswitch externalclass}
 
-uses SysUtils, JS, Web, nyx.text, nyx.studio.browser;
+uses SysUtils, JS, Web, nyx.text, nyx.gestures, nyx.studio.browser;
 
 type
   TDragEvent = class external name 'DragEvent' (TJSDragEvent)
@@ -79,6 +79,26 @@ begin
   begin
     FreeAndNil(GStudio);
   end;
+end;
+
+function NewReviewTransfer: TJSDataTransfer;
+var
+  LDescriptor: TJSObject;
+begin
+  Result := TJSDataTransfer.new;
+  { This headless engine leaves a script-created store's effectAllowed at None
+    even after the real source bridge writes Copy. The host supplies writable
+    operation state for this explicitly synthetic review, while retaining the
+    native store's formats/bytes and actual DragEvent/DOM delivery. The adapter
+    must still write its typed offer and negotiate the target response. This
+    does not qualify the privileged physical browser drag-manager transition. }
+  LDescriptor := TJSObject.new;
+  LDescriptor['configurable'] := True;
+  LDescriptor['writable'] := True;
+  LDescriptor['value'] := 'uninitialized';
+  TJSObject.defineProperty(Result, 'effectAllowed', LDescriptor);
+  LDescriptor['value'] := NyxDropOperationName(ndoNone);
+  TJSObject.defineProperty(Result, 'dropEffect', LDescriptor);
 end;
 
 { The staged host exercises actual DOM bridges, worker publication and ordinary
@@ -145,13 +165,14 @@ begin
   end;
 end;
 
-procedure Run;
+procedure Run; async;
 var
   LSource: TJSHTMLElement;
   LTarget: TJSHTMLElement;
   LTransfer: TJSDataTransfer;
   LOptions: TJSObject;
   LEvent: TDragEvent;
+  LStarted: Double;
 begin
   GStudio := TNyxStudio.Create;
   GStudio.Run(False);
@@ -159,11 +180,24 @@ begin
     existing touch/keyboard placement alternative instead of hidden-pane drags. }
   Check(window.innerWidth >= 900, 'use a desktop-width staged host for this drag review');
   Find('action-code').click;
+  { Shell sections retire after borrowed input returns. Observe that normal
+    presentation boundary before resolving the independent source control. }
+  LStarted := window.performance.now;
+  repeat
+    await(TJSPromise.resolve(TJSPromise.new(procedure(AResolve, AReject: TJSPromiseResolver)
+      begin
+        window.setTimeout(procedure
+          begin
+            AResolve(True);
+          end, 20);
+      end)));
+    Check(window.performance.now - LStarted < 30000, 'source presentation remains bounded');
+  until not GStudio.PresentationPending;
   GEditor := Editor;
   GBefore := GEditor.value;
   LSource := Find('palette-labeled-button');
   LTarget := Find('home');
-  LTransfer := TJSDataTransfer.new;
+  LTransfer := NewReviewTransfer;
   LOptions := TJSObject.new;
   LOptions['bubbles'] := True;
   LOptions['cancelable'] := True;
@@ -171,11 +205,13 @@ begin
   LEvent := TDragEvent.new('dragstart', LOptions);
   LSource.dispatchEvent(LEvent);
   Check(not LEvent.defaultPrevented and
+    (LTransfer.effectAllowed = NyxDropOperationsName([ndoCopy])) and
     (LTransfer.getData('application/x-nyx-studio-placement') <> ''),
     'actual DOM source bridge writes an opaque local lease');
   LEvent := TDragEvent.new('dragover', LOptions);
   LTarget.dispatchEvent(LEvent);
-  Check(LEvent.defaultPrevented, 'actual designer target negotiates hover');
+  Check(LEvent.defaultPrevented, 'actual designer target negotiates hover / offered ' +
+    LTransfer.effectAllowed + ' / requested ' + LTransfer.dropEffect);
   Check(GEditor.value = GBefore, 'hover leaves adjacent Pascal unchanged');
   LEvent := TDragEvent.new('drop', LOptions);
   LTarget.dispatchEvent(LEvent);
@@ -185,13 +221,18 @@ begin
   window.setTimeout(@Poll, 25);
 end;
 
+procedure Launch; async;
 begin
   try
-    Run;
+    await(Run);
   except
     on LError: Exception do
     begin
       Failed(LError.Message);
     end;
   end;
+end;
+
+begin
+  Launch;
 end.

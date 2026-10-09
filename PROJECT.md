@@ -66,7 +66,19 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current staged section prerequisite (2026-10-08): public typed managed sections
+Current ordinary Studio section routing (2026-10-08): independent Nyx-owned
+Chrome/Project/Inspector views retain compatible controls and route drafts/events
+to their actual roots. Checked Win32 Resources passes **143**, HTTP desktop/
+CSS-390 **609/988** (polling included), exact emitted Pascal **48** per target,
+native source workspace **33**, native drag **40** and explicitly synthetic
+browser drag **10**. Inspected live captures and exact preservation qualify this
+bounded consumer. Combined extension-failure recovery, wider context/membership,
+performance, physical input/accessibility and observing rollout remain open.
+Authoring alone advances **44→45**, aggregate **25/11/45/21/28/3**; no full
+criterion or credit closes. See
+[the packet](WORK.md#current-return-path-studio-section-routing--2026-10-08).
+
+Previous staged section prerequisite (2026-10-08): public typed managed sections
 pass **31** actual control checks on checked Win32 and HTTP desktop/CSS-390,
 each. Target failures roll back exact placement; independent edits/events remain
 and busy callbacks refuse retirement. Existing native collections pass **27**;

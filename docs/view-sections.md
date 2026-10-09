@@ -109,6 +109,10 @@ renderer lifetime rules and must not reenter section publication. The specialize
 section's borrowed `Renderer` is for lookups and event subscriptions. Never call
 its `Render`, `Unmount` or `MoveHost` directly.
 
+Both target factories accept an optional borrowed theme after the observer. It
+must outlive the section and prepared change handles. Each candidate uses the
+ordinary renderer's theme admission; no section-specific styling toolkit exists.
+
 ## Target extension obligations
 
 `INyxViewSectionPublication` is the explicit adapter boundary. `Check` has no
@@ -134,7 +138,9 @@ scope retirement on both targets. Native heap evidence belongs to that consumer;
 browser-driver heap tracing is not a JavaScript heap audit. Native printed-control
 and browser desktop/narrow captures help inspect the bounded presentation.
 
-Studio partitioning, section routing, draft/history integration and complete
-workload timing remain required under the existing authoring/performance tasks.
+The ordinary Studio controllers now consume the
+[mounted routing contract](studio-section-routing.md). Its current work packet
+owns integration qualification, paired drafts/history and full workload timing;
+the independent publication fixture alone does not qualify those outcomes.
 This prerequisite establishes neither a Studio speedup nor hardware, phone,
 assistive-technology or other-widgetset qualification.

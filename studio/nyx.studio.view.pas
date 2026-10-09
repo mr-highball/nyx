@@ -920,6 +920,7 @@ var
   LButton: TNyxNode;
   LField: TNyxNode;
   LSelected: TNyxNode;
+  LCanDragSelection: Boolean;
   LMoveTools: TNyxNode;
   LHelpIndex: Integer;
   LIndex: Integer;
@@ -1283,16 +1284,18 @@ begin
     Studio hides the Inspector while designing, so a source there cannot be
     dragged onto its canvas. Authored inputs remain ordinary editable inputs. }
   LSelected := ASession.Selected;
-
-  if (LSelected <> nil) and (LSelected.Parent <> nil) and
-    (LSelected.Kind <> 'slot-override') then
-  begin
-    LViewbar.Add(Button(NyxStudioDragMoveID, 'Drag selected')
-      .Configure.DragSource(True).AccessibleName('Drag selected control')
-      .Visible(not AState.Compact or AState.CanvasToolsVisible)
-      .Hint('Drag onto the canvas using the selected drop position.').Done
-      .SetProp(NyxStudioDragControlKey, LSelected.ID));
-  end;
+  LCanDragSelection := (LSelected <> nil) and (LSelected.Parent <> nil) and
+    (LSelected.Kind <> 'slot-override');
+  { Selection changes capability, not toolbar ownership. Keep this declared
+    source in the view tree even when a root cannot move; ordinary typed
+    visibility/enabled refresh preserves the surrounding header and its inputs.
+    Drag start still validates the captured selection independently. }
+  LViewbar.Add(Button(NyxStudioDragMoveID, 'Drag selected')
+    .Configure.DragSource(True).AccessibleName('Drag selected control')
+    .Enabled(LCanDragSelection)
+    .Visible(LCanDragSelection and (not AState.Compact or AState.CanvasToolsVisible))
+    .Hint('Drag onto the canvas using the selected drop position.').Done
+    .SetProp(NyxStudioDragSelectionKey, 'true'));
 
   if AState.CompiledPreviewAvailable then
   begin

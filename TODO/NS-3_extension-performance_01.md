@@ -9,7 +9,23 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-The [public staged section prerequisite](DONE/NS-2_section-publication_01.md)
+Current ordinary section integration consumes the independent ownership
+prerequisite: retained Chrome/Project/Inspector views, staged side replacement,
+exact draft/source/history routing and idle callback boundaries now execute in
+both ordinary Studio controllers. Checked Win32 Resources passes 143 and HTTP
+desktop/CSS-390 609/988 (polling included), with actual live captures. This accepts
+the bounded authoring consumer under NS-4, not a performance budget. The final
+same-workload optimized sample passes 143 in **323.889 seconds** after correctness
+gates, without concurrent UI tests, versus the prior **300.165**. The operation
+sequence is unchanged with six added retention assertions. Earlier integrated
+timing before the first-selection repair was 328.054 seconds with concurrent
+compiler work and remains provisional. No speedup is accepted. Next qualify
+combined retained/staged extension failure and address
+measured native layout/synchronization cost; stop profiler/fixture variants.
+All original criteria and NS-3's historical count remain open/unchanged. See
+[the current packet](../WORK.md#current-return-path-studio-section-routing--2026-10-08).
+
+Previous [public staged section prerequisite](DONE/NS-2_section-publication_01.md)
 is accepted from 31 actual Win32 and HTTP desktop/CSS-390 checks each, grouped
 rollback and independent ownership/dispatch gates. It makes selective structural
 replacement available; no measured Studio speedup follows from that API alone.

@@ -26,7 +26,7 @@ unit nyx.view.sections.browser;
 interface
 
 uses
-  Web, nyx.model, nyx.state, nyx.behavior, nyx.view.sections, nyx.render.browser;
+  Web, nyx.model, nyx.state, nyx.theme, nyx.behavior, nyx.view.sections, nyx.render.browser;
 
 type
   { Configure factories only before each candidate Render. The borrowed receiver
@@ -45,10 +45,12 @@ type
 { Host is an empty dedicated attached element. Its parent must outlive all
   handles: staging/rollback use inert hidden sibling elements. Observer is managed,
   host/configurator receivers explicitly borrowed. Candidate Render copies source;
-  no Node framework or separate UI implementation is introduced. }
+  a nonnil theme is borrowed until every section/change reference is released.
+  Ordinary renderer admission snapshots it into each prepared view. }
 function NewNyxBrowserViewSection(const AReference: TNyxViewSectionRef;
   AHost: TJSHTMLElement; AConfigure: TNyxBrowserSectionConfigure = nil;
-  const AObserver: INyxViewSectionObserver = nil): INyxBrowserViewSection;
+  const AObserver: INyxViewSectionObserver = nil;
+  ATheme: TNyxTheme = nil): INyxBrowserViewSection;
 
 implementation
 
@@ -171,9 +173,9 @@ end;
 
 function NewNyxBrowserViewSection(const AReference: TNyxViewSectionRef;
   AHost: TJSHTMLElement; AConfigure: TNyxBrowserSectionConfigure;
-  const AObserver: INyxViewSectionObserver): INyxBrowserViewSection;
+  const AObserver: INyxViewSectionObserver; ATheme: TNyxTheme): INyxBrowserViewSection;
 begin
-  Result := TSection.Create(AReference, AHost, AConfigure, AObserver);
+  Result := TSection.Create(AReference, AHost, AConfigure, AObserver, ATheme);
 end;
 
 end.

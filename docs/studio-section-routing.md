@@ -1,0 +1,77 @@
+# Studio mounted section routing
+
+[Architecture](architecture.md) · [Independent view sections](view-sections.md) ·
+[Current evidence](../WORK.md#current-return-path-studio-section-routing--2026-10-08)
+
+Studio still composes its chrome with `BuildNyxStudioView` and the public Nyx
+components. `nyx.studio.sections` copies that composition into independent
+Chrome, Project and Inspector documents. `nyx.studio.section.views` mounts them
+through the ordinary browser/LCL renderers and public managed view sections.
+Canvas and Pascal source already have separate view owners.
+
+The surrounding Chrome owns empty Nyx panel ports at the original side-panel
+positions. Each side document owns its actual scroll root and descendants. The
+dedicated physical host belongs to the section owner and outlives its renderer;
+side views retire before the Chrome ports. No borrowed model children are
+attached to a synthetic root.
+
+`ShellView.Root` is a **lookup forest**, not a `TNyxNode`. `Root.Find` returns the
+exact mounted node; `RootFor(ID)` returns its real owning root, or nil when absent.
+`ViewFor(ID)` returns its renderer and raises when unmounted. Compound commands,
+draft capture and restoration use the owning root. Borrowed roots, controls and
+renderers expire when their section is replaced; hosts must not free them or call
+the managed side renderer's Render, Unmount or MoveHost directly.
+
+`Events` means the mounted Chrome router. Looking it up before mounting raises;
+early registrations must not silently disappear into an unused router. Use
+`ViewFor(ID).Events` for a specific control and `SectionEvents(Role)` for a closed
+section role. Missing compact sections return nil, allowing their consumers to
+disconnect. The hierarchy binds to its actual Inspector router. The drag broker
+connects the complete set of real routers/roots in one batch; sequential calls
+to its former single-view overload would replace earlier registrations.
+
+The stock **Drag selected** button carries a stable selected-control intent.
+Drag start resolves the current selection into a typed control reference, then
+the ordinary exact-pair lease keeps that identity through hover/drop. Selection
+refresh cancels an existing lease. The button does not need a different callback
+contract whenever the selection changes. It remains declared for an immovable
+root, with typed visibility/enabled state, so selecting the first child does not
+introduce a new toolbar node. Explicit fixed-control drag sources remain supported.
+
+The section context default is `nscComplete`: keep all creator defaults, recipes
+and resources. Stock Studio explicitly chooses `nscEditorOwnedHierarchy`, which
+omits its own hierarchy collection from sections that do not bind it. Custom
+composers whose callbacks or recipes use that collection indirectly must retain
+the complete context. This policy is not inferred for arbitrary application
+collections. The optional configurator is borrowed and runs before **every**
+fresh renderer, including replacements; it must obey ordinary factory/lifetime
+rules and must not pump queues. A supplied theme is also borrowed until the
+section owner and prepared changes retire.
+
+Compatible refresh keeps real controls and their runtime properties. Incompatible
+Project/Inspector sections prepare hidden replacements and publish as one group.
+A changed Chrome structure or compact membership uses a fully admitted hidden
+frame. Before a full native frame retirement, Canvas and source views park; a
+failed admission restores both exact prior hosts. Retained Chrome keeps those
+ports in place. A resource form whose selected binding target changes may require
+a new event scope: preserving its draft does not authorize retaining a stale
+target contract.
+
+Retained changes made before a grouped refusal replay their previous source
+baseline and restore the captured runtime property/resource projection. Recovery
+attempts every changed role once and reports failure; a target extension that
+cannot restore its own physical state cannot promise atomic rollback. Combined
+Studio extension-failure qualification remains separate from the accepted public
+section-publication rollback fixture.
+
+Browser refresh queues past borrowed shell, live input and designer callbacks.
+Multiple requests coalesce, with explicit reset choices taking precedence. The
+timer is canceled on destruction and reports asynchronous refresh refusal through
+the existing status control. Design canvases leave application bindings inactive;
+their callback depth is tracked separately from live-store publication readiness.
+`PresentationPending` and `SourceBusy` are distinct observations, neither a
+compiler-success result. Native continues to use its ordinary queued paint path.
+
+The current work packet owns executed evidence and remaining limits. Compilation,
+synthetic input and a retained control do not establish production latency,
+physical phone input, accessibility, another widgetset or observing deployment.

@@ -9,7 +9,25 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-The [public staged section prerequisite](DONE/NS-2_section-publication_01.md)
+Current bounded section consumption follows criterion 2 through both ordinary
+Studio controllers. Independent Nyx-owned Chrome/Project/Inspector views route
+lookups, drafts and hierarchy/designer subscriptions to their actual owners.
+Compatible refresh retains controls; side replacements stage as a group, and
+full native frames park/restore the independent canvas and source hosts. Browser
+retirement queues beyond borrowed input. The stable typed selected-control drag
+intent also preserves the header on first child selection. Win32 Resources passes
+143, HTTP desktop/CSS-390 609/988 (polling included); exact emitted Pascal passes
+the 48-check suite on both targets. Source workspace passes 33, native drag 40,
+explicitly synthetic browser drag 10 and shared source guards 77 per target.
+Inspected live captures and exact preservation accept this bounded integration.
+Authoring alone advances no-closure 44→45. Combined extension-failure recovery,
+custom theme/factory consumers, broader context/membership, native toolbar/side
+row clipping, performance, physical input/accessibility and observing rollout
+remain open. No original
+criterion or full credit closes. See
+[the current packet](../WORK.md#current-return-path-studio-section-routing--2026-10-08).
+
+Previous [public staged section prerequisite](DONE/NS-2_section-publication_01.md)
 is accepted from 31 actual Win32 and HTTP desktop/CSS-390 checks each, grouped
 target rollback, independent edits/events/collections, callback retirement refusal
 and inspected captures. Ordinary Studio compiles on both targets but does not yet

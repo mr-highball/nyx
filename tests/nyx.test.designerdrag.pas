@@ -80,6 +80,9 @@ var
   LGeometry: TNyxDropFrame;
   LPointerX: Double;
   LPointerY: Double;
+  LBadRouters: TNyxStudioDragRouters;
+  LBadRoots: TNyxStudioDragRoots;
+  LRefused: Boolean;
 
   procedure Check(AValue: Boolean; const AReason: TNyxText);
   begin
@@ -206,6 +209,24 @@ begin
     Check(LOffer.Offered and (LOffer.Allowed = [ndoCopy]) and
       (LOffer.Transfer.TextFor(NyxStudioPlacementFormat) <> ''),
       'registered palette event produces one copied local lease');
+    LBadRouters := nil;
+    LBadRoots := nil;
+    SetLength(LBadRouters, 2);
+    SetLength(LBadRoots, 2);
+    LBadRouters[0] := LEvents;
+    LBadRouters[1] := LEvents;
+    LBadRoots[0] := LShell;
+    LBadRoots[1] := LShell;
+    LRefused := False;
+    try
+      LBroker.ConnectSources(LBadRouters, LBadRoots, LOwner.Context.SourceMount);
+    except
+      on ENyxModel do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused, 'duplicate source views refuse before replacing registrations');
     Check(Gesture('right-layout', ndpOver, LOffer.Transfer.ProtectedCopy,
       [ndoCopy]).Accepted, 'protected hover accepts exact local container');
     Check((LOwner.LastMarked = 'right-layout') and not LOwner.Commands.Busy and

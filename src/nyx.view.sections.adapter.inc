@@ -67,12 +67,14 @@ type
     FRenderer: TSectionRenderer;
     FBorrowedState: TNyxState;
     FConfigure: TSectionConfigure;
+    FBorrowedTheme: TNyxTheme;
     FObserver: INyxViewSectionObserver;
     FBusy: Boolean;
     procedure Changed(ANode: TNyxNode; const AEvent: TNyxEventInfo);
   public
     constructor Create(const AReference: TNyxViewSectionRef; AHost: TSectionHost;
-      AConfigure: TSectionConfigure; const AObserver: INyxViewSectionObserver);
+      AConfigure: TSectionConfigure; const AObserver: INyxViewSectionObserver;
+      ATheme: TNyxTheme);
     destructor Destroy; override;
     function GetReference: TNyxViewSectionRef;
     function GetRevision: Integer;
@@ -85,7 +87,7 @@ type
 
 constructor TSection.Create(const AReference: TNyxViewSectionRef;
   AHost: TSectionHost; AConfigure: TSectionConfigure;
-  const AObserver: INyxViewSectionObserver);
+  const AObserver: INyxViewSectionObserver; ATheme: TNyxTheme);
 begin
   inherited Create;
 
@@ -96,6 +98,7 @@ begin
   FReference := AReference;
   FHost := AHost;
   FConfigure := AConfigure;
+  FBorrowedTheme := ATheme;
   FObserver := AObserver;
 end;
 
@@ -212,7 +215,7 @@ begin
   FBorrowedState := AState;
   FStageHost := NewSectionParking(AOwner.FHost);
   FPreviousHost := NewSectionParking(AOwner.FHost);
-  FCandidate := TSectionRenderer.Create;
+  FCandidate := TSectionRenderer.Create(AOwner.FBorrowedTheme);
 
   if Assigned(AOwner.FConfigure) then
   begin

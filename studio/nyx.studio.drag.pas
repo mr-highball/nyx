@@ -36,10 +36,20 @@ const
   { Private shell metadata names an authored source; it is never an application
     property or a user-facing fluent string choice. }
   NyxStudioDragControlKey = 'designer-drag-control';
+  { Closed stock intent: resolve the current selection at drag start, then
+    capture its typed identity in the normal exact-pair lease. It is never
+    re-resolved while hovering/dropping. Static authored sources retain Control. }
+  NyxStudioDragSelectionKey = 'designer-drag-selection';
   NyxStudioDropPositionID = 'studio-drop-position';
   NyxStudioAutomaticPlacement = 'automatic';
 
 type
+  { Parallel typed vectors avoid COM interfaces in records, unsupported by
+    pas2js. Roots are borrowed for ConnectSources only; cached routes contain
+    managed routers and copied revision/move identity, never model pointers. }
+  TNyxStudioDragRouters = array of INyxEvents;
+  TNyxStudioDragRoots = array of TNyxNode;
+
   { UI-thread borrowed context, used only during the capture callback. The
     broker copies pair/identity/epoch values and never retains either owner.
     Both mount contexts identify the actual source/target views, not merely a
@@ -74,10 +84,10 @@ type
     FPlacementFeedback: TNyxStudioPlacementFeedback;
     FCallbacks: array of INyxEventCallback;
     FSubscriptions: array of INyxEventSubscription;
-    FConnectedEvents: INyxEvents;
-    FConnectedRevision: Integer;
+    FConnectedRouters: TNyxStudioDragRouters;
+    FConnectedRevisions: array of Integer;
+    FConnectedMoves: array of TNyxText;
     FConnectedContext: TNyxStudioCommandContext;
-    FConnectedMove: TNyxText;
     FNonce: TNyxText;
     FSerial: Integer;
     FLease: TNyxText;
@@ -103,6 +113,8 @@ type
     procedure Mark(const ATarget: TNyxControlRef);
     function Offer(const AKind: TNyxKindRef; const AControl: TNyxControlRef;
       const AEvent: TNyxEventInfo; const AResponse: INyxGestureResponse): TNyxText;
+    function OfferSelection(const AEvent: TNyxEventInfo;
+      const AResponse: INyxGestureResponse): TNyxText;
     procedure Finish(const ALease: TNyxText);
     procedure AddSource(const AEvents: INyxEvents; ANode: TNyxNode);
   public
@@ -116,7 +128,13 @@ type
       Retained source views reuse registrations; replacement or changed move
       identity cancels the old lease. Borrow the shell for this call only. }
     procedure ConnectSources(const AEvents: INyxEvents; AShell: TNyxNode;
-      const AMount: TNyxStudioCommandContext);
+      const AMount: TNyxStudioCommandContext); overload;
+    { Connect the complete set of independent shell views in one operation.
+      A changed member retires all old registrations and any active drag lease;
+      unchanged exact router revisions preserve the existing registrations. }
+    procedure ConnectSources(const ARouters: array of INyxEvents;
+      const ARoots: array of TNyxNode;
+      const AMount: TNyxStudioCommandContext); overload;
     procedure DisconnectSources;
     { Consume copied adapter input. A readable exact local lease at drop is
       required; formats during protected hover never authorize a mutation. }
@@ -150,10 +168,11 @@ type
     FBroker: TNyxStudioDrag;
     FKind: TNyxKindRef;
     FControl: TNyxControlRef;
+    FSelection: Boolean;
     FLease: TNyxText;
   public
     constructor Create(ABroker: TNyxStudioDrag; const AKind: TNyxKindRef;
-      const AControl: TNyxControlRef);
+      const AControl: TNyxControlRef; ASelection: Boolean);
     procedure Detach;
     procedure Invoke(const AEvent: TNyxEventInfo; const AExecution: INyxExecution); override;
   end;
@@ -187,12 +206,13 @@ begin
 end;
 
 constructor TSourceCallback.Create(ABroker: TNyxStudioDrag; const AKind: TNyxKindRef;
-  const AControl: TNyxControlRef);
+  const AControl: TNyxControlRef; ASelection: Boolean);
 begin
   inherited Create;
   FBroker := ABroker;
   FKind := AKind;
   FControl := AControl;
+  FSelection := ASelection;
 end;
 
 procedure TSourceCallback.Detach;
@@ -212,7 +232,15 @@ begin
 
   if AEvent.Trigger = ntDragStart then
   begin
-    FLease := FBroker.Offer(FKind, FControl, AEvent, NyxGestureResponse(AExecution));
+
+    if FSelection then
+    begin
+      FLease := FBroker.OfferSelection(AEvent, NyxGestureResponse(AExecution));
+    end
+    else
+    begin
+      FLease := FBroker.Offer(FKind, FControl, AEvent, NyxGestureResponse(AExecution));
+    end;
   end
   else if AEvent.Trigger = ntDragEnd then
   begin
@@ -340,8 +368,9 @@ begin
   end;
   FSubscriptions := nil;
   FCallbacks := nil;
-  FConnectedEvents := nil;
-  FConnectedMove := '';
+  FConnectedRouters := nil;
+  FConnectedRevisions := nil;
+  FConnectedMoves := nil;
   Cancel;
 end;
 
@@ -350,14 +379,16 @@ var
   LCallback: INyxEventCallback;
   LKind: TNyxKindRef;
   LControl: TNyxControlRef;
+  LSelection: Boolean;
   LIndex: Integer;
 begin
   LKind := NyxCustomKind(ANode.Prop('add-kind'));
   LControl := NyxControl(ANode.Prop(NyxStudioDragControlKey));
+  LSelection := ANode.Prop(NyxStudioDragSelectionKey) = 'true';
 
-  if (LKind.Name <> '') or (LControl.ID <> '') then
+  if (LKind.Name <> '') or (LControl.ID <> '') or LSelection then
   begin
-    LCallback := TSourceCallback.Create(Self, LKind, LControl);
+    LCallback := TSourceCallback.Create(Self, LKind, LControl, LSelection);
     SetLength(FCallbacks, Length(FCallbacks) + 1);
     FCallbacks[High(FCallbacks)] := LCallback;
     SetLength(FSubscriptions, Length(FSubscriptions) + 2);
@@ -375,9 +406,8 @@ end;
 procedure TNyxStudioDrag.ConnectSources(const AEvents: INyxEvents; AShell: TNyxNode;
   const AMount: TNyxStudioCommandContext);
 var
-  LContext: TNyxStudioDragContext;
-  LMove: TNyxNode;
-  LMoveID: TNyxText;
+  LRouters: TNyxStudioDragRouters;
+  LRoots: TNyxStudioDragRoots;
 begin
 
   if (AEvents = nil) or (AShell = nil) then
@@ -385,37 +415,130 @@ begin
     DisconnectSources;
     Exit;
   end;
-  LContext := Capture;
-  LMove := AShell.Find(NyxStudioDragMoveID);
-  LMoveID := '';
+  LRouters := nil;
+  LRoots := nil;
+  SetLength(LRouters, 1);
+  SetLength(LRoots, 1);
+  LRouters[0] := AEvents;
+  LRoots[0] := AShell;
+  ConnectSources(LRouters, LRoots, AMount);
+end;
 
-  if LMove <> nil then
+procedure TNyxStudioDrag.ConnectSources(const ARouters: array of INyxEvents;
+  const ARoots: array of TNyxNode;
+  const AMount: TNyxStudioCommandContext);
+var
+  LContext: TNyxStudioDragContext;
+  LMove: TNyxNode;
+  LRevisions: array of Integer;
+  LMoves: array of TNyxText;
+  LIndex: Integer;
+  LPrior: Integer;
+  LSame: Boolean;
+begin
+
+  if Length(ARouters) <> Length(ARoots) then
   begin
-    LMoveID := LMove.Prop(NyxStudioDragControlKey);
+    raise ENyxModel.Create('Designer source routers and roots must correspond');
   end;
 
-  if (FConnectedEvents = AEvents) and
-    (FConnectedRevision = AEvents.ViewRevision) and (FConnectedMove = LMoveID) and
-    LContext.Session.MatchesCommandContext(FConnectedContext) then
+  if Length(ARoots) = 0 then
   begin
+    DisconnectSources;
     Exit;
   end;
-  DisconnectSources;
+  LContext := Capture;
 
   if not LContext.Session.MatchesCommandContext(AMount) then
   begin
     raise ENyxModel.Create('Designer drag sources belong to a retired shell');
   end;
-  FConnectedEvents := AEvents;
-  FConnectedRevision := AEvents.ViewRevision;
+  LRevisions := nil;
+  LMoves := nil;
+  SetLength(LRevisions, Length(ARoots));
+  SetLength(LMoves, Length(ARoots));
+  LSame := (Length(FConnectedRouters) = Length(ARoots)) and
+    LContext.Session.MatchesCommandContext(FConnectedContext);
+  for LIndex := 0 to High(ARoots) do
+  begin
+
+    if (ARouters[LIndex] = nil) or (ARoots[LIndex] = nil) then
+    begin
+      raise ENyxModel.Create('Designer source views require their actual root and event router');
+    end;
+    for LPrior := 0 to LIndex - 1 do
+    begin
+
+      if (ARouters[LPrior] = ARouters[LIndex]) or (ARoots[LPrior] = ARoots[LIndex]) then
+      begin
+        raise ENyxModel.Create('Designer source views must have distinct roots and routers');
+      end;
+    end;
+    LRevisions[LIndex] := ARouters[LIndex].ViewRevision;
+    LMoves[LIndex] := '';
+    LMove := ARoots[LIndex].Find(NyxStudioDragMoveID);
+
+    if LMove <> nil then
+    begin
+      LMoves[LIndex] := LMove.Prop(NyxStudioDragControlKey);
+
+      if LMove.Prop(NyxStudioDragSelectionKey) = 'true' then
+      begin
+        { Retire a started lease on selection refresh without changing this
+          mounted button's interaction contract. }
+        LMoves[LIndex] := LContext.Session.SelectedID;
+      end;
+    end;
+
+    if LSame then
+    begin
+      LSame := (FConnectedRouters[LIndex] = ARouters[LIndex]) and
+        (FConnectedRevisions[LIndex] = LRevisions[LIndex]) and
+        (FConnectedMoves[LIndex] = LMoves[LIndex]);
+    end;
+  end;
+
+  if LSame then
+  begin
+    Exit;
+  end;
+  DisconnectSources;
+  { Copy the caller's vector; later edits must not replace cached routers. }
+  SetLength(FConnectedRouters, Length(ARouters));
+  for LIndex := 0 to High(ARouters) do
+  begin
+    FConnectedRouters[LIndex] := ARouters[LIndex];
+  end;
+  FConnectedRevisions := LRevisions;
+  FConnectedMoves := LMoves;
   FConnectedContext := AMount;
-  FConnectedMove := LMoveID;
   try
-    AddSource(AEvents, AShell);
+    for LIndex := 0 to High(ARoots) do
+    begin
+      AddSource(ARouters[LIndex], ARoots[LIndex]);
+    end;
   except
     DisconnectSources;
     raise;
   end;
+end;
+
+function TNyxStudioDrag.OfferSelection(const AEvent: TNyxEventInfo;
+  const AResponse: INyxGestureResponse): TNyxText;
+var
+  LContext: TNyxStudioDragContext;
+  LSelected: TNyxNode;
+begin
+  Result := '';
+  LContext := Capture;
+  LSelected := LContext.Session.Selected;
+
+  if (LSelected = nil) or (LSelected.Parent = nil) or
+    (LSelected.Kind = 'slot-override') then
+  begin
+    Exit;
+  end;
+  Result := Offer(NyxCustomKind(''), NyxControl(LSelected.ID), AEvent, AResponse);
 end;
 
 function TNyxStudioDrag.Offer(const AKind: TNyxKindRef; const AControl: TNyxControlRef;

@@ -34,10 +34,10 @@ procedure RunNyxResourceWorkbenchStudioQualification;
 
 implementation
 
-uses SysUtils, JS, Web, nyx.text, nyx.bytes, nyx.data, nyx.types, nyx.model,
+uses SysUtils, JS, Web, nyx.text, nyx.bytes, nyx.data, nyx.model,
   nyx.codec, nyx.codegen, nyx.studio.projects, nyx.studio.browser,
   nyx.resources, nyx.resources.editor, nyx.resources.rows.editor,
-  nyx.collections, nyx.binding.types, nyx.generated.view,
+  nyx.collections, nyx.binding.types, nyx.behavior, nyx.studio.sections, nyx.generated.view,
   nyx.test.resource.workbench;
 
 type
@@ -46,6 +46,11 @@ type
   end;
   TImageEvent = class external name 'Event'(TJSEvent)
     constructor new(const AType: String; const AOptions: TJSObject); reintroduce;
+  end;
+  TWorkbenchInputObserver = class
+  public
+    Handler: TNyxEventHandler; { borrowed ordinary controller receiver }
+    procedure Changed(ANode: TNyxNode; const AEvent: TNyxEventInfo);
   end;
 
 const
@@ -56,6 +61,7 @@ var
   GStudio: TNyxStudio;
   GExport: TNyxText;
   GChecks: Integer;
+  GInputObserver: TWorkbenchInputObserver;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -84,10 +90,27 @@ begin
   Check(Result <> nil, 'mounted ' + AID);
 end;
 
-procedure Click(const AID: TNyxText);
+function Readiness: TNyxText;
+var
+  LSection: TNyxStudioSection;
+begin
+  Result := '';
+  for LSection := Low(TNyxStudioSection) to High(TNyxStudioSection) do
+  begin
+
+    if GStudio.ShellView.SectionView(LSection) <> nil then
+    begin
+      Result := Result + ' / ' + NyxStudioSectionRootID(LSection) + '=' +
+        BoolToStr(GStudio.ShellView.SectionView(LSection).SectionPublicationReady, True);
+    end;
+  end;
+end;
+
+procedure Click(const AID: TNyxText); async;
 var
   LFace: TJSHTMLElement;
   LRetainedInput: TJSHTMLElement;
+  LStarted: Double;
 begin
   LRetainedInput := nil;
 
@@ -102,6 +125,15 @@ begin
   Check(LFace.getBoundingClientRect.height > 0, 'visible ' + AID);
   LFace.scrollIntoView;
   LFace.click;
+  { View retirement is queued beyond borrowed input dispatch. Exercise the
+    same commands after that UI turn rather than demanding synchronous DOM
+    replacement inside a callback. No design or acceptance check is skipped. }
+  LStarted := window.performance.now;
+  repeat
+    await(TJSPromise.resolve(Pause));
+    Check(window.performance.now - LStarted < 30000,
+      'queued presentation remains bounded' + Readiness);
+  until not GStudio.PresentationPending;
 
   if LRetainedInput <> nil then
   begin
@@ -110,7 +142,7 @@ begin
   end;
 end;
 
-procedure Panel(const AName: TNyxText);
+procedure Panel(const AName: TNyxText); async;
 var
   LFace: TJSHTMLElement;
 begin
@@ -118,30 +150,30 @@ begin
 
   if (LFace <> nil) and (LFace.getBoundingClientRect.height > 0) then
   begin
-    Click('action-panel-' + AName);
+    await(Click('action-panel-' + AName));
   end;
 end;
 
-procedure Action(const AID, ABranch, ACommand: TNyxText);
+procedure Action(const AID, ABranch, ACommand: TNyxText); async;
 begin
 
   if Find(AID).getBoundingClientRect.height > 0 then
   begin
-    Click(AID);
+    await(Click(AID));
     Exit;
   end;
-  Click('action-actions');
-  Click('studio-menu-' + ABranch);
-  Click('studio-menu-' + ACommand);
+  await(Click('action-actions'));
+  await(Click('studio-menu-' + ABranch));
+  await(Click('studio-menu-' + ACommand));
 end;
 
-procedure Files;
+procedure Files; async;
 begin
-  Panel('project');
+  await(Panel('project'));
 
   if document.querySelector('[data-node="studio-project-files"]') = nil then
   begin
-    Action('action-import', 'project', 'open');
+    await(Action('action-import', 'project', 'open'));
   end;
 end;
 
@@ -169,14 +201,14 @@ begin
   end;
 end;
 
-function Snapshot: TNyxText;
+function Snapshot: TNyxText; async;
 begin
-  Files;
+  await(Files);
   GExport := '';
-  Click('action-project-export');
+  await(Click('action-project-export'));
   Check(GExport <> '', 'ordinary backup exposes the complete paired state');
   Result := EncodeNyxProject(DecodeNyxProject(GExport));
-  Panel('inspector');
+  await(Panel('inspector'));
 end;
 
 procedure SupplyFiles(AInput: TJSHTMLInputElement; ATransfer: TImageTransfer);
@@ -223,10 +255,10 @@ begin
   LInput.dispatchEvent(TImageEvent.new('change', LOptions));
 end;
 
-function ResourceSnapshot: TNyxText;
+function ResourceSnapshot: TNyxText; async;
 begin
-  Result := Snapshot;
-  Panel('project');
+  Result := await(Snapshot);
+  await(Panel('project'));
 end;
 
 procedure ResourceWait; async;
@@ -237,7 +269,7 @@ begin
   repeat
     await(TJSPromise.resolve(Pause));
     Check(window.performance.now - LStarted < 30000, 'resource source/import readiness remains bounded');
-  until not GStudio.SourceBusy and
+  until not GStudio.SourceBusy and not GStudio.PresentationPending and
     (document.querySelector('input[type="file"]:not([accept])') = nil);
 end;
 
@@ -269,11 +301,36 @@ begin
   LInput.dispatchEvent(TImageEvent.new('change', LOptions));
 end;
 
-procedure Select(const AID: TNyxText);
+procedure Select(const AID: TNyxText); async;
+var
+  LChrome: TJSHTMLElement;
+  LCode: TJSHTMLElement;
 begin
-  Panel('design');
+  LChrome := nil;
+  LCode := nil;
+
+  if (GStudio.ShellView.SectionRoot(nssProject) <> nil) and
+    (GStudio.ShellView.SectionRoot(nssInspector) <> nil) then
+  begin
+    LChrome := GStudio.ShellView.ElementFor('action-undo');
+    LCode := TJSHTMLElement(document.querySelector('[data-node="studio-code"]'));
+  end;
+  await(Panel('design'));
   TJSHTMLElement(Find('studio-canvas').querySelector('[data-node="' + AID + '"]')).click;
-  Panel('project');
+  await(TJSPromise.resolve(Pause));
+  await(Panel('project'));
+
+  if LChrome <> nil then
+  begin
+    Check(GStudio.ShellView.ElementFor('action-undo') = LChrome,
+      'changed Inspector retains the exact Chrome command');
+  end;
+
+  if LCode <> nil then
+  begin
+    Check(document.querySelector('[data-node="studio-code"]') = LCode,
+      'changed Inspector retains the independent Pascal input');
+  end;
 end;
 
 procedure ImportFile(const AName, AKind, ATitle, AHelp: TNyxText;
@@ -284,13 +341,13 @@ var
   LIndex: Integer;
   LBefore: TNyxText;
 begin
-  Click(NyxResourceEditorActionID(CEditor, reaNew));
+  await(Click(NyxResourceEditorActionID(CEditor, reaNew)));
   Check(not TJSHTMLInputElement(Find(NyxResourceEditorFieldID(CEditor, refName))
     .querySelector('input')).readOnly, 'New unlocks an independent resource name');
   ResourceChange(refName, AName);
   ResourceChange(refKind, AKind);
-  LBefore := ResourceSnapshot;
-  Click(NyxResourceEditorActionID(CEditor, reaImport));
+  LBefore := await(ResourceSnapshot);
+  await(Click(NyxResourceEditorActionID(CEditor, reaImport)));
   LBuffer := TJSUint8Array.new(Length(AContent));
   for LIndex := 0 to High(AContent) do
   begin
@@ -301,7 +358,7 @@ begin
   SupplyFiles(TJSHTMLInputElement(document.querySelector('input[type="file"]:not([accept])')),
     LTransfer);
   await(ResourceWait);
-  Check(ResourceSnapshot = LBefore, 'FileReader import is a copied proposal');
+  Check(await(ResourceSnapshot) = LBefore, 'FileReader import is a copied proposal');
   ResourceChange(refTitle, ATitle);
   ResourceChange(refDescription, AHelp);
 end;
@@ -309,12 +366,12 @@ end;
 procedure History(const APrevious, AAccepted: TNyxText); async;
 begin
   Check(AAccepted <> APrevious, 'Apply changes the complete paired state');
-  Action('action-undo', 'edit', 'undo');
+  await(Action('action-undo', 'edit', 'undo'));
   await(ResourceWait);
-  Check(ResourceSnapshot = APrevious, 'one Undo restores exact design and Pascal');
-  Action('action-redo', 'edit', 'redo');
+  Check(await(ResourceSnapshot) = APrevious, 'one Undo restores exact design and Pascal');
+  await(Action('action-redo', 'edit', 'redo'));
   await(ResourceWait);
-  Check(ResourceSnapshot = AAccepted, 'one Redo restores exact design and Pascal');
+  Check(await(ResourceSnapshot) = AAccepted, 'one Redo restores exact design and Pascal');
 end;
 
 { Capture the live mounted consumer before retirement. The owning Pascal capture
@@ -331,6 +388,28 @@ begin
   until document.body.getAttribute('data-capture-observed') = AName;
 end;
 
+function RuntimeFailure(AEvent: TJSEvent): Boolean;
+begin
+  Result := True;
+
+  if AEvent is TJSErrorEvent then
+  begin
+    document.body.setAttribute('data-workbench-runtime-error', TJSErrorEvent(AEvent).message);
+  end;
+end;
+
+procedure TWorkbenchInputObserver.Changed(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+begin
+  { Observe the real routed callback, preserving the ordinary controller.
+    Bounded diagnostics distinguish a silent input route from source refusal. }
+  document.body.setAttribute('data-workbench-last-input', ANode.ID);
+  Check(GStudio.ShellView.Root.Find(ANode.ID) = ANode,
+    'input arrives from the exact owning section');
+  Handler(ANode, AEvent);
+  document.body.setAttribute('data-workbench-refresh-pending',
+    BoolToStr(GStudio.PresentationPending, True));
+end;
+
 procedure Journey; async;
 var
   LDocument: TNyxDocument;
@@ -344,6 +423,7 @@ var
   LTable: TJSHTMLElement;
 begin
   GStudio := nil;
+  window.addEventListener('error', @RuntimeFailure);
   try
     LDocument := BuildNyxDocument;
     try
@@ -353,10 +433,13 @@ begin
     end;
     document.addEventListener('click', @Exported);
     GStudio := TNyxStudio.Create;
+    GInputObserver := TWorkbenchInputObserver.Create;
+    GInputObserver.Handler := GStudio.ShellView.OnEvent;
+    GStudio.ShellView.OnEvent := @GInputObserver.Changed;
     GStudio.Run(False);
     await(TJSPromise.resolve(Pause));
-    Files;
-    Click('action-project-import');
+    await(Files);
+    await(Click('action-project-import'));
     LTransfer := TImageTransfer.new;
     LTransfer.items.add(TJSHTMLFile.new(TJSArray.new(LPair.Source), 'nyx.generated.view.pas'));
     LTransfer.items.add(TJSHTMLFile.new(TJSArray.new(LPair.Design), 'design.nyx'));
@@ -366,82 +449,82 @@ begin
       await(TJSPromise.resolve(Pause));
       Check(window.performance.now - LStarted < 30000, 'paired import remains bounded');
     until TJSHTMLInputElement(Find('project-title').querySelector('input')).value = 'Resource workbench';
-    Select('workshop-headline');
-    LBefore := ResourceSnapshot;
+    await(Select('workshop-headline'));
+    LBefore := await(ResourceSnapshot);
     Check(LBefore = EncodeNyxProject(LPair), 'ordinary paired import retains the unchanged MCP seed');
-    Click('action-resources-toggle');
+    await(Click('action-resources-toggle'));
     await(ImportFile('copy', 'JSON', WorkbenchCopyTitle, WorkbenchCopyHelp, NyxEncodeUTF8(WorkbenchJSON)));
     ResourceChange(refBind, 'true');
     ResourceChange(refTarget, NyxBindingPropertyTitle(bpText));
     ResourceChange(refPath, 'Root["literal.dot"] / text');
-    Action('action-code', 'view', 'code');
+    await(Action('action-code', 'view', 'code'));
     await(ResourceWait);
-    Panel('project');
+    await(Panel('project'));
     Check(TJSHTMLInputElement(Find(NyxResourceEditorFieldID(CEditor, refDescription)).querySelector('input,textarea'))
       .value = WorkbenchCopyHelp, 'imported creator help survives source chrome');
-    Click(NyxResourceEditorActionID(CEditor, reaApply));
+    await(Click(NyxResourceEditorActionID(CEditor, reaApply)));
     await(ResourceWait);
-    LAfter := ResourceSnapshot;
-    Panel('design');
+    LAfter := await(ResourceSnapshot);
+    await(Panel('design'));
     Check(Find('studio-canvas').querySelector('[data-node="workshop-headline"]').textContent =
       'Your resource workbench', 'actual browser caption reads accepted JSON');
-    Panel('project');
+    await(Panel('project'));
     await(History(LBefore, LAfter));
-    Select('project-name');
-    Click(CEditor + '-entry-0');
+    await(Select('project-name'));
+    await(Click(CEditor + '-entry-0'));
     ResourceChange(refBind, 'true');
     ResourceChange(refTarget, NyxBindingPropertyTitle(bpPlaceholder));
     ResourceChange(refPath, 'Root["prompt"] / text');
     LBefore := LAfter;
-    Click(NyxResourceEditorActionID(CEditor, reaApply));
+    await(Click(NyxResourceEditorActionID(CEditor, reaApply)));
     await(ResourceWait);
-    LAfter := ResourceSnapshot;
-    Panel('design');
+    LAfter := await(ResourceSnapshot);
+    await(Panel('design'));
     Check(TJSHTMLInputElement(Find('studio-canvas').querySelector('[data-node="project-name"] input'))
       .placeholder = 'Choose a project name', 'actual browser input reads the JSON prompt');
-    Panel('project');
+    await(Panel('project'));
     await(History(LBefore, LAfter));
     RowValue(rrName, 'workshop-rows');
     RowValue(rrResource, NyxData('copy').ToJSON);
-    Click(NyxResourceRowsActionID(CRowEditor, raDiscover));
+    await(Click(NyxResourceRowsActionID(CRowEditor, raDiscover)));
     RowValue(rrDataset, NyxResourcePath.Field('rows').ToData.ToJSON);
-    Click(NyxResourceRowsActionID(CRowEditor, raInspect));
+    await(Click(NyxResourceRowsActionID(CRowEditor, raInspect)));
     RowValue(rrIdentity, NyxResourcePath.Field('id').ToData.ToJSON);
     RowValue(rrFieldName, 'item');
     RowValue(rrFieldType, 'Text');
     RowValue(rrFieldPath, NyxResourcePath.Field('item').ToData.ToJSON);
-    Click(NyxResourceRowsActionID(CRowEditor, raSetField));
+    await(Click(NyxResourceRowsActionID(CRowEditor, raSetField)));
     RowValue(rrFieldName, 'amount');
     RowValue(rrFieldType, 'Number');
     RowValue(rrFieldPath, NyxResourcePath.Field('amount').ToData.ToJSON);
-    Click(NyxResourceRowsActionID(CRowEditor, raSetField));
+    await(Click(NyxResourceRowsActionID(CRowEditor, raSetField)));
     LBefore := LAfter;
-    Click(NyxResourceRowsActionID(CRowEditor, raApply));
+    await(Click(NyxResourceRowsActionID(CRowEditor, raApply)));
     await(ResourceWait);
-    Check(ResourceSnapshot = LBefore, 'empty existing collection still requires explicit consent');
+    Check(await(ResourceSnapshot) = LBefore, 'empty existing collection still requires explicit consent');
     RowValue(rrReplaceStatic, 'true');
-    Action('action-code', 'view', 'code');
+    await(Action('action-code', 'view', 'code'));
     await(ResourceWait);
-    Panel('project');
+    await(Panel('project'));
     Check(TJSHTMLInputElement(Find(NyxResourceRowsFieldID(CRowEditor, rrReplaceStatic)).querySelector('input'))
       .checked, 'row consent survives source chrome');
     Find(NyxResourceRowsFieldID(CRowEditor, rrReplaceStatic)).scrollIntoView;
     await(Capture('resource-workbench-editor'));
-    Click(NyxResourceRowsActionID(CRowEditor, raApply));
+    await(Click(NyxResourceRowsActionID(CRowEditor, raApply)));
     await(ResourceWait);
-    LAfter := ResourceSnapshot;
-    Panel('design');
+    LAfter := await(ResourceSnapshot);
+    await(Panel('design'));
     LTable := TJSHTMLElement(Find('studio-canvas').querySelector('[data-node="workshop-table"]'));
     Check(LTable.querySelectorAll('tbody tr').length = 2, 'actual browser table has two runtime rows');
     Check((Pos('Canvas', LTable.textContent) > 0) and (Pos('Studio', LTable.textContent) > 0) and
       (Pos('3.125', LTable.textContent) > 0) and (Pos('6.5', LTable.textContent) > 0),
       'actual browser cells read both typed fields');
-    Panel('project');
+    await(Panel('project'));
     await(History(LBefore, LAfter));
-    Click(NyxResourceRowsActionID(CRowEditor, raLoad));
-    Click(NyxResourceRowsActionID(CRowEditor, raDetach));
+    await(Click(NyxResourceRowsActionID(CRowEditor, raLoad)));
+    await(Click(NyxResourceRowsActionID(CRowEditor, raDetach)));
     await(ResourceWait);
-    LPair := DecodeNyxProject(ResourceSnapshot);
+    LPair := DecodeNyxProject(await(ResourceSnapshot));
     LDocument := TNyxCodec.Decode(LPair.Design);
     try
       Check(not LDocument.ResourceCollections.HasSource(NyxCollection('workshop-rows')) and
@@ -450,22 +533,22 @@ begin
     finally
       LDocument.Free;
     end;
-    Action('action-undo', 'edit', 'undo');
+    await(Action('action-undo', 'edit', 'undo'));
     await(ResourceWait);
-    Check(ResourceSnapshot = LAfter, 'detach Undo restores the exact relationship');
-    Select('workshop-notes');
+    Check(await(ResourceSnapshot) = LAfter, 'detach Undo restores the exact relationship');
+    await(Select('workshop-notes'));
     LBefore := LAfter;
     await(ImportFile('notes', 'Text', WorkbenchNotesTitle, WorkbenchNotesHelp, NyxEncodeUTF8(WorkbenchNotes)));
     ResourceChange(refBind, 'true');
     ResourceChange(refTarget, NyxBindingPropertyTitle(bpText));
     ResourceChange(refPath, 'File text / text');
-    Click(NyxResourceEditorActionID(CEditor, reaApply));
+    await(Click(NyxResourceEditorActionID(CEditor, reaApply)));
     await(ResourceWait);
-    LAfter := ResourceSnapshot;
-    Panel('design');
+    LAfter := await(ResourceSnapshot);
+    await(Panel('design'));
     Check(Find('studio-canvas').querySelector('[data-node="workshop-notes"]').textContent =
       WorkbenchNotes, 'actual browser label reads packed plain text');
-    Panel('project');
+    await(Panel('project'));
     await(History(LBefore, LAfter));
     SetLength(LBytes, 3);
     LBytes[0] := 0;
@@ -473,9 +556,9 @@ begin
     LBytes[2] := 255;
     LBefore := LAfter;
     await(ImportFile('packed', 'Binary', WorkbenchPackedTitle, WorkbenchPackedHelp, LBytes));
-    Click(NyxResourceEditorActionID(CEditor, reaApply));
+    await(Click(NyxResourceEditorActionID(CEditor, reaApply)));
     await(ResourceWait);
-    LAfter := ResourceSnapshot;
+    LAfter := await(ResourceSnapshot);
     await(History(LBefore, LAfter));
     LPair := DecodeNyxProject(LAfter);
     LDocument := TNyxCodec.Decode(LPair.Design);
@@ -485,11 +568,13 @@ begin
       LDocument.Free;
     end;
     document.body.setAttribute('data-workbench-source', encodeURIComponent(LPair.Source));
-    Panel('design');
+    await(Panel('design'));
     Find('studio-canvas').scrollIntoView;
     await(Capture('resource-workbench-canvas'));
+    window.removeEventListener('error', @RuntimeFailure);
     document.removeEventListener('click', @Exported);
     FreeAndNil(GStudio);
+    FreeAndNil(GInputObserver);
     Check(document.querySelector('[data-node="studio-shell"]') = nil, 'controller retires its owned views');
     document.body.setAttribute('data-workbench-checks', IntToStr(GChecks));
     document.body.setAttribute('data-test-result', 'passed');
@@ -505,8 +590,10 @@ begin
       { Retain the last ordinary backup for diagnosis before removing views.
         This is the isolated test project, never an observing user's document. }
       document.body.setAttribute('data-workbench-last-pair', encodeURIComponent(GExport));
+      window.removeEventListener('error', @RuntimeFailure);
       document.removeEventListener('click', @Exported);
       FreeAndNil(GStudio);
+      FreeAndNil(GInputObserver);
       document.body.setAttribute('data-event-error', LException.Message);
       document.body.setAttribute('data-test-result', 'failed');
     end;

@@ -135,7 +135,10 @@ var
 
       if GetTickCount64 - LStarted > 30000 then
       begin
-        raise Exception.Create('Resource image source command did not retire: ' + LStudio.Status);
+        raise Exception.Create('Resource workbench did not retire: ' + LStudio.Status +
+          ' / presentation=' + BoolToStr(LStudio.PresentationPending, True) +
+          ' / source=' + BoolToStr(LStudio.SourceBusy, True) +
+          ' / paints=' + IntToStr(LStudio.PaintCount));
       end;
       Sleep(1);
     until not LStudio.PresentationPending and not LStudio.SourceCommands.Busy;
@@ -154,7 +157,7 @@ var
       (Pos(CEditor + '-entry-', AID) = 1) then
     begin
       LRetainedInput := LStudio.ShellView.InputFor(NyxResourceEditorFieldID(CEditor, refContent));
-      LRetainedRoot := LStudio.ShellView.Root;
+      LRetainedRoot := LStudio.ShellView.RootFor(CEditor);
     end;
     LControl := LStudio.ShellView.ControlFor(AID);
     Check(LControl <> nil, 'ordinary mounted command: ' + AID);
@@ -163,7 +166,7 @@ var
 
     if LRetainedInput <> nil then
     begin
-      Check((LStudio.ShellView.Root = LRetainedRoot) and
+      Check((LStudio.ShellView.RootFor(CEditor) = LRetainedRoot) and
         (LStudio.ShellView.InputFor(NyxResourceEditorFieldID(CEditor, refContent)) = LRetainedInput),
         'New/Open retains the actual shell and resource input');
     end;
@@ -206,10 +209,27 @@ var
   { Only adapter inputs are driven. The admitted design originates in MCP,
     Apply runs the ordinary source processor and history compares complete pairs. }
   procedure Select(const AID: TNyxText);
+  var
+    LChrome: TControl;
+    LResourceDraft: TNyxText;
+    LCode: TControl;
   begin
+    LChrome := LStudio.ShellView.ControlFor('action-undo');
+    LResourceDraft := TCustomEdit(LStudio.ShellView.InputFor(
+      NyxResourceEditorFieldID(CEditor, refContent))).Text;
+    LCode := LStudio.CodeView.InputFor('studio-code');
     LStudio.Session.Select(AID);
     LStudio.RequestRefresh;
     Ready;
+    Check(LStudio.ShellView.ControlFor('action-undo') = LChrome,
+      'changed Inspector preserves the actual Chrome command');
+    { The Resources apply target changes with selection, so its event scope may
+      need replacement. Its pending content must survive that admitted change. }
+    Check(TCustomEdit(LStudio.ShellView.InputFor(
+      NyxResourceEditorFieldID(CEditor, refContent))).Text = LResourceDraft,
+      'changed binding target preserves the exact Resources draft');
+    Check(LStudio.CodeView.InputFor('studio-code') = LCode,
+      'changed Inspector preserves the independent Pascal input');
   end;
 
   procedure RowValue(AField: TNyxResourceRowsField; const AValue: TNyxText);

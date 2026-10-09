@@ -39,6 +39,10 @@ const
   { Stable editor identity; authored component IDs remain item data. }
   NyxStudioHierarchyID = 'studio-hierarchy';
 
+{ Typed stock collection identity. Section composition may scope this explicitly
+  owned editor default; application/creator collections are never inferred here. }
+function NyxStudioHierarchyCollection: TNyxCollectionRef;
+
 { Shell-owned typed defaults and an ordinary public Nyx tree replace a separate
   native widget per component. The renderer owns one bounded tree viewport;
   collection rows retain exact IDs/parents/captions without retaining document
@@ -108,7 +112,7 @@ begin
     .Policy(neUIQueue).Subscribe(TNyxStudioHierarchyCallback.Create(AReceiver));
 end;
 
-function HierarchyKey: TNyxCollectionRef;
+function NyxStudioHierarchyCollection: TNyxCollectionRef;
 begin
   Result := NyxCollection('studioHierarchy');
 end;
@@ -136,7 +140,7 @@ var
   var
     LChild: Integer;
   begin
-    LItems[LIndex] := NyxCollectionItem(NyxItem(HierarchyKey, ANode.ID))
+    LItems[LIndex] := NyxCollectionItem(NyxItem(NyxStudioHierarchyCollection, ANode.ID))
       .WithValue(NyxTextField('caption'), TNyxText(ANode.Kind) +
         TNyxText(' / ') + ANode.ID)
       .WithValue(NyxTextField('parent'), AParent);
@@ -166,10 +170,10 @@ begin
   begin
     AppendItem(ASession.ActiveView, '');
   end;
-  AShell.Collections.Define(HierarchyKey,
+  AShell.Collections.Define(NyxStudioHierarchyCollection,
     NyxCollectionSchema.Text(NyxTextField('caption'), '')
       .Text(NyxTextField('parent'), ''), LItems);
-  LSpec := NyxCollectionView(HierarchyKey)
+  LSpec := NyxCollectionView(NyxStudioHierarchyCollection)
     .Column(NyxTextField('caption'), 'Component')
     .Parent(NyxTextField('parent'));
   Result := NewNyxTree(NyxStudioHierarchyID);
@@ -192,7 +196,7 @@ begin
   begin
     Exit;
   end;
-  LItem := NyxItem(HierarchyKey, ASession.SelectedID);
+  LItem := NyxItem(NyxStudioHierarchyCollection, ASession.SelectedID);
 
   if AView.Snapshot.IndexOf(LItem) >= 0 then
   begin
@@ -222,7 +226,7 @@ begin
   end;
   LItem := AEvent.Selection.Focus;
 
-  if (LItem.Collection.Name <> HierarchyKey.Name) or
+  if (LItem.Collection.Name <> NyxStudioHierarchyCollection.Name) or
     not AEvent.Selection.Contains(LItem) or (ASession.ActiveView = nil) or
     (ASession.ActiveView.Find(LItem.ID) = nil) then
   begin

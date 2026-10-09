@@ -29,6 +29,7 @@ unit nyx.studio.browser;
 interface
 
 uses
+  nyx.studio.sections, nyx.studio.section.views,
   nyx.types,
   nyx.behavior,
   nyx.events,
@@ -107,13 +108,20 @@ type
     { A shell control is qualified by the load it actually presents. }
     FShellCommandContext: TNyxStudioCommandContext;
     FShell: TNyxDocument;
-    FShellRenderer: TNyxBrowserRenderer;
+    FShellRenderer: TNyxStudioSectionViews;
+    { Coalesce input-time refreshes after borrowed views return to idle. False
+      dominates retention/reset choices; disposal cancels the borrowed timer. }
+    FSectionRefreshTimer: NativeInt;
+    FSectionRefreshPending: Boolean;
+    FSectionRetainCanvas: Boolean;
+    FSectionPreserveDraft: Boolean;
     { Own only shell children. Public popovers/modals are independent body
       portals; a full chrome fallback must not detach their live elements. }
     FShellHost: TJSHTMLElement;
     { Borrowed receiver registration; cancelled before any controller teardown. }
     FHierarchySubscription: INyxEventSubscription;
     FCanvasRenderer: TNyxBrowserRenderer;
+    FCanvasInputDepth: Integer;
     { Saved menu contracts use the public managed binding owner in Interact. }
     FCanvasMenus: INyxMenuBindings;
     { Keep the last host reachable while compact chrome omits the Design panel.
@@ -269,6 +277,7 @@ type
       keyboard/programmatic Add actions, independently of project history. }
     procedure CaptureNewStateDraft;
     procedure Refresh(ARetainCanvas: Boolean = False; APreserveDraft: Boolean = False);
+    procedure FlushSectionRefresh;
     procedure HandleShell(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure MenuAction(AAction: TNyxStudioMenuAction);
     procedure PrepareActionMenu;
@@ -286,6 +295,7 @@ type
       const AEvent: TNyxEventInfo; const ADecision: INyxGestureDecision);
     procedure HierarchyEvent(const AEvent: TNyxEventInfo);
     procedure HandleCanvas(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+    procedure RouteCanvas(ANode: TNyxNode; const AEvent: TNyxEventInfo);
     procedure Compile(const AScope, ATarget: TNyxText);
     procedure CompilerReply;
     procedure ConsumeCompilerLaunch;
@@ -332,6 +342,12 @@ type
       editor hosts must not infer readiness from visible message text. False means
       quiescent, not successful admission; inspect the command result separately. }
     function SourceBusy: Boolean;
+    { Presentation work may be queued after input without source work. Hosts
+      wait for both independently; idle says nothing about compiler success. }
+    function PresentationPending: Boolean;
+    { Borrowed mounted shell owner for embedded input hosts. Roots/controls
+      expire on their section replacement; this does not expose project edits. }
+    property ShellView: TNyxStudioSectionViews read FShellRenderer;
     { Recovery is enabled for ordinary use. Embedded/test hosts can opt out of
       browser storage without reading or overwriting the user's saved project. }
     procedure Run(ARecovery: Boolean = True);
@@ -353,6 +369,11 @@ uses
 function TNyxStudio.SourceBusy: Boolean;
 begin
   Result := (FSourceCommands <> nil) and FSourceCommands.Busy;
+end;
+
+function TNyxStudio.PresentationPending: Boolean;
+begin
+  Result := FSectionRefreshPending;
 end;
 
 type
@@ -389,9 +410,11 @@ begin
     '[data-node=studio-panelbar]{flex-shrink:0;padding:8px 12px!important;background:#fff;' +
     'border-bottom:1px solid #dfe3ec;gap:8px!important;flex-wrap:nowrap!important;}' +
     '[data-node=studio-panelbar] .nyx-button{flex:1;min-height:40px;padding:8px;font-size:12px;}' +
-    '[data-node=studio-left]{width:230px;flex-shrink:0;overflow:auto;padding:16px!important;' +
+    '[data-node=studio-project-mount]{width:230px;flex-shrink:0;min-height:0;}' +
+    '[data-node=studio-inspector-mount]{width:265px;flex-shrink:0;min-height:0;}' +
+    '[data-node=studio-left]{width:100%;height:100%;min-height:0;box-sizing:border-box;overflow:auto;padding:16px!important;' +
     'background:#fff;border-right:1px solid #dfe3ec;gap:12px!important;}' +
-    '[data-node=studio-right]{width:265px;flex-shrink:0;overflow:auto;padding:16px!important;' +
+    '[data-node=studio-right]{width:100%;height:100%;min-height:0;box-sizing:border-box;overflow:auto;padding:16px!important;' +
     'background:#fff;border-left:1px solid #dfe3ec;gap:10px!important;}' +
     '[data-node=studio-center]{flex:1;min-width:0;min-height:0;gap:0!important;padding:0!important;}' +
     '[data-node=studio-stage]{flex:1;min-width:0;min-height:0;gap:0!important;padding:0!important;}' +
@@ -459,11 +482,13 @@ begin
     '[data-node=studio-right] .nyx-button{overflow-wrap:anywhere;}' +
     '[data-node=studio-log]{max-height:120px;overflow:auto;font-size:11px;padding:10px;}' +
     '.studio-preview-frame{border:0;width:100%;height:620px;}' +
-    '@media(max-width:1000px){[data-node=studio-right]{width:225px;}' +
-    '[data-node=studio-left]{width:190px;}[data-node=studio-header]{gap:8px!important;}' +
+    '@media(max-width:1000px){[data-node=studio-inspector-mount]{width:225px;}' +
+    '[data-node=studio-project-mount]{width:190px;}[data-node=studio-header]{gap:8px!important;}' +
     '[data-node=studio-subtitle]{display:none;}}' +
     '[data-nyx-studio-compact=true] [data-node=studio-left],' +
     '[data-nyx-studio-compact=true] [data-node=studio-right]{width:100%;flex:1;min-height:0;border:0;}' +
+    '[data-nyx-studio-compact=true] [data-node=studio-project-mount],' +
+    '[data-nyx-studio-compact=true] [data-node=studio-inspector-mount]{width:100%;flex:1;min-height:0;}' +
     '[data-nyx-studio-compact=true] [data-node=studio-center]{width:100%;min-width:0;}' +
     '[data-nyx-studio-compact=true] [data-node=studio-header]{min-height:0;padding:6px 12px!important;gap:8px!important;}' +
     '[data-nyx-studio-compact=true] [data-node=studio-logo]{flex:1;}' +
@@ -525,12 +550,12 @@ begin
     CreateEditorExchange);
   FAgents.OnProjectCaptured := @ProjectCaptured;
   FOutputs := TNyxOutputConfiguration.Create;
-  FShellRenderer := TNyxBrowserRenderer.Create;
+  FShellRenderer := TNyxStudioSectionViews.Create(nil, nscEditorOwnedHierarchy);
+  FSectionRefreshTimer := -1;
   FShellRenderer.OnEvent := HandleShell;
   FShellHost := TJSHTMLElement(document.createElement('div'));
   FShellHost.setAttribute('data-nyx-studio-host', 'true');
   document.body.appendChild(FShellHost);
-  FHierarchySubscription := SubscribeNyxStudioHierarchy(FShellRenderer.Events, @HierarchyEvent);
   FCanvasRenderer := TNyxBrowserRenderer.Create;
   FCanvasRenderer.OnEvent := HandleCanvas;
   FCanvasRenderer.DesignerInput := NyxDesignerInput.Drops(True);
@@ -571,6 +596,13 @@ end;
 
 destructor TNyxStudio.Destroy;
 begin
+
+  if FSectionRefreshTimer >= 0 then
+  begin
+    window.clearTimeout(FSectionRefreshTimer);
+    FSectionRefreshTimer := -1;
+  end;
+  FSectionRefreshPending := False;
 
   if FHostSpace <> nil then
   begin
@@ -907,15 +939,41 @@ begin
       end;
     end;
   end;
-  FViewState.MenuEditorDraft.Capture('inspector-menu', FShellRenderer.Root);
-  FViewState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellRenderer.Root);
-  FViewState.QueryEditorDraft.Capture('inspector-collection-query', FShellRenderer.Root);
-  FViewState.TimeDomainEditorDraft.Capture('inspector-time-domain', FShellRenderer.Root);
-  FViewState.ContentEditorDraft.Capture('inspector-content', FShellRenderer.Root);
-  FViewState.ThemeEditorDraft.Capture('studio-theme-editor', FShellRenderer.Root);
-  FViewState.ImageEditorDraft.Capture('inspector-image', FShellRenderer.Root);
-  FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.Root);
-  FViewState.ResourceRowsDraft.Capture('studio-resource-rows', FShellRenderer.Root);
+  FViewState.MenuEditorDraft.Capture('inspector-menu', FShellRenderer.RootFor('inspector-menu'));
+  FViewState.MenuBarEditorDraft.Capture('inspector-menu-bar', FShellRenderer.RootFor('inspector-menu-bar'));
+  FViewState.QueryEditorDraft.Capture('inspector-collection-query', FShellRenderer.RootFor('inspector-collection-query'));
+  FViewState.TimeDomainEditorDraft.Capture('inspector-time-domain', FShellRenderer.RootFor('inspector-time-domain'));
+  FViewState.ContentEditorDraft.Capture('inspector-content', FShellRenderer.RootFor('inspector-content'));
+  FViewState.ThemeEditorDraft.Capture('studio-theme-editor', FShellRenderer.RootFor('studio-theme-editor'));
+  FViewState.ImageEditorDraft.Capture('inspector-image', FShellRenderer.RootFor('inspector-image'));
+  FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.RootFor('studio-resource-editor'));
+  FViewState.ResourceRowsDraft.Capture('studio-resource-rows', FShellRenderer.RootFor('studio-resource-rows'));
+end;
+
+procedure TNyxStudio.FlushSectionRefresh;
+var
+  LRetainCanvas: Boolean;
+  LPreserveDraft: Boolean;
+begin
+  FSectionRefreshTimer := -1;
+  LRetainCanvas := FSectionRetainCanvas;
+  LPreserveDraft := FSectionPreserveDraft;
+  FSectionRefreshPending := False;
+  try
+    Refresh(LRetainCanvas, LPreserveDraft);
+  except
+    on LException: Exception do
+    begin
+      { A safe target timer otherwise consumes an exception outside the input
+        handler. Keep the admitted frame and surface its exact refresh refusal. }
+      FStatus := LException.Message;
+
+      if FShellRenderer.RootFor('studio-status') <> nil then
+      begin
+        FShellRenderer.ElementFor('studio-status').textContent := FStatus;
+      end;
+    end;
+  end;
 end;
 
 procedure TNyxStudio.Refresh(ARetainCanvas, APreserveDraft: Boolean);
@@ -947,6 +1005,28 @@ var
   LCanvasSelection: TNyxTextSelection;
   LPendingDesign: TNyxStudioPendingDesign;
 begin
+
+  if FShellRenderer.Dispatching or (FCanvasInputDepth <> 0) or
+    ((FCanvasRenderer.Root <> nil) and not FCanvasRenderer.DesignMode and
+      not FCanvasRenderer.SectionPublicationReady) or
+    ((FCodeRenderer.Root <> nil) and not FCodeRenderer.SectionPublicationReady) or
+    ((FSourcePaneRenderer.Root <> nil) and not FSourcePaneRenderer.SectionPublicationReady) then
+  begin
+
+    if FSectionRefreshPending then
+    begin
+      FSectionRetainCanvas := FSectionRetainCanvas and ARetainCanvas;
+      FSectionPreserveDraft := FSectionPreserveDraft and APreserveDraft;
+    end
+    else
+    begin
+      FSectionRefreshPending := True;
+      FSectionRetainCanvas := ARetainCanvas;
+      FSectionPreserveDraft := APreserveDraft;
+      FSectionRefreshTimer := window.setTimeout(@FlushSectionRefresh, 0);
+    end;
+    Exit;
+  end;
   FActionButton := nil;
   FActionMenu := nil;
   FComponentHelp := nil;
@@ -1398,10 +1478,25 @@ begin
   end;
   document.body.setAttribute('data-nyx-studio-ready', 'true');
   FShellCommandContext := FSession.CommandContext;
+  { An independent Inspector publishes its own event revision. }
+
+  if FHierarchySubscription <> nil then
+  begin
+    FHierarchySubscription.Cancel;
+    FHierarchySubscription := nil;
+  end;
+
+  if FShellRenderer.RootFor(NyxStudioHierarchyID) <> nil then
+  begin
+    FHierarchySubscription := SubscribeNyxStudioHierarchy(
+      FShellRenderer.ViewFor(NyxStudioHierarchyID).Events, @HierarchyEvent);
+  end;
   PrepareActionMenu;
-  FDesignerDrag.ConnectSources(FShellRenderer.Events, FShellRenderer.Root, FShellCommandContext);
-  FDesignerResize.Connect(FShellRenderer.Events, FShellRenderer.Root, FShellCommandContext);
-  FDesignerMove.Connect(FShellRenderer.Events, FShellRenderer.Root, FShellCommandContext);
+  FShellRenderer.ConnectSources(FDesignerDrag, FShellCommandContext);
+  FDesignerResize.Connect(FShellRenderer.SectionEvents(nssInspector),
+    FShellRenderer.SectionRoot(nssInspector), FShellCommandContext);
+  FDesignerMove.Connect(FShellRenderer.SectionEvents(nssInspector),
+    FShellRenderer.SectionRoot(nssInspector), FShellCommandContext);
 
   { Hidden compact panels retain their canvas independently. Attach guides only
     when the current shell actually mounts that authored design face. }
@@ -1728,6 +1823,19 @@ begin
 end;
 
 procedure TNyxStudio.HandleCanvas(ANode: TNyxNode; const AEvent: TNyxEventInfo);
+begin
+  { Design projections intentionally do not activate application bindings, so
+    their application-publication readiness stays false. Track the borrowed
+    designer callback explicitly rather than treating it as a busy live store. }
+  Inc(FCanvasInputDepth);
+  try
+    RouteCanvas(ANode, AEvent);
+  finally
+    Dec(FCanvasInputDepth);
+  end;
+end;
+
+procedure TNyxStudio.RouteCanvas(ANode: TNyxNode; const AEvent: TNyxEventInfo);
 var
   LProposal: TNyxStudioDesignEdit;
 begin
@@ -1960,7 +2068,7 @@ begin
     FActionMenu.OnInvoke.Subscribe(NewNyxStudioMenuCallback(MenuAction));
     FActionButton := NewNyxMenuButton(RetainNyxControl(
       FShellRenderer.Root.Find(NyxStudioActionMenuID)) as INyxButton,
-      FShellRenderer.Events, FActionMenu, NyxMenu('Component actions'));
+      FShellRenderer.ViewFor(NyxStudioActionMenuID).Events, FActionMenu, NyxMenu('Component actions'));
   finally
     LContent.Free;
   end;
@@ -2081,11 +2189,11 @@ begin
     end;
 
     if (AEvent.Trigger = ntClick) and CaptureNyxContentRuleInspector(FSession,
-      ANode, FShellRenderer.Root, LContentDraft) then
+      ANode, FShellRenderer.RootFor(ANode.ID), LContentDraft) then
     begin
       FViewState.ContentEditorDraft := LContentDraft;
 
-      if not FViewState.ContentEditorDraft.Restore(FShellRenderer.Root) then
+      if not FViewState.ContentEditorDraft.Restore(FShellRenderer.RootFor('inspector-content')) then
       begin
         raise ENyxModel.Create('Recipe form changed before the selected choice could be loaded');
       end;
@@ -2110,27 +2218,27 @@ begin
     end;
 
     if ((AEvent.Trigger = ntChange) and
-      NyxResourceRowsInput(ANode, FShellRenderer.Root, LResourceEditor)) or
-      ((AEvent.Trigger = ntClick) and HandleNyxResourceRowsEditor(ANode, FShellRenderer.Root)) then
+      NyxResourceRowsInput(ANode, FShellRenderer.RootFor(ANode.ID), LResourceEditor)) or
+      ((AEvent.Trigger = ntClick) and HandleNyxResourceRowsEditor(ANode, FShellRenderer.RootFor(ANode.ID))) then
     begin
-      FViewState.ResourceRowsDraft.Capture('studio-resource-rows', FShellRenderer.Root);
+      FViewState.ResourceRowsDraft.Capture('studio-resource-rows', FShellRenderer.RootFor('studio-resource-rows'));
       FShellRenderer.Sync;
       SavePresentation;
       Exit;
     end;
 
     if (AEvent.Trigger = ntChange) and
-      NyxResourceEditorInput(ANode, FShellRenderer.Root, LResourceEditor) then
+      NyxResourceEditorInput(ANode, FShellRenderer.RootFor(ANode.ID), LResourceEditor) then
     begin
       RefreshNyxResourceEditor(LResourceEditor, False);
-      FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.Root);
+      FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.RootFor('studio-resource-editor'));
       FShellRenderer.Sync;
       SavePresentation;
       Exit;
     end;
 
     if (AEvent.Trigger = ntClick) and
-      NyxResourceEditorAction(ANode, FShellRenderer.Root, LResourceEditor,
+      NyxResourceEditorAction(ANode, FShellRenderer.RootFor(ANode.ID), LResourceEditor,
         LResourceAction, LResourceSelection) and
       (LResourceAction in [reaNew, reaOpen, reaImport, reaPreview]) then
     begin
@@ -2158,7 +2266,7 @@ begin
 
             if LRetainedResourceSelection then
             begin
-              FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.Root);
+              FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.RootFor('studio-resource-editor'));
               SavePresentation;
             end
             else
@@ -2169,7 +2277,7 @@ begin
         reaPreview:
           begin
             RefreshNyxResourceEditor(LResourceEditor, True);
-            FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.Root);
+            FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.RootFor('studio-resource-editor'));
             FShellRenderer.Sync;
           end;
         reaImport:
@@ -2179,7 +2287,7 @@ begin
             begin
               FResourcePicker := CreateResourcePicker;
             end;
-            FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.Root);
+            FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.RootFor('studio-resource-editor'));
             FResourcePickDraft := FViewState.ResourceEditorDraft.ToData;
             FResourcePickContext := FSession.CommandContext;
             FResourcePicker.Pick(NyxResourceEditorKind(LResourceEditor), @ResourcePicked);
@@ -2200,11 +2308,11 @@ begin
     end;
 
     if (AEvent.Trigger = ntClick) and PrepareNyxStudioThemePreset(FSession,
-      ANode, FShellRenderer.Root, LThemeDraft) then
+      ANode, FShellRenderer.RootFor(ANode.ID), LThemeDraft) then
     begin
       FViewState.ThemeEditorDraft := LThemeDraft;
 
-      if not FViewState.ThemeEditorDraft.Restore(FShellRenderer.Root) then
+      if not FViewState.ThemeEditorDraft.Restore(FShellRenderer.RootFor('studio-theme-editor')) then
       begin
         raise ENyxModel.Create('Theme form changed before the palette could be loaded');
       end;
@@ -2213,10 +2321,10 @@ begin
     end;
 
     if (AEvent.Trigger = ntClick) and
-      NyxImageEditorAction(ANode, FShellRenderer.Root, LImageEditor, LImageAction) and
+      NyxImageEditorAction(ANode, FShellRenderer.RootFor(ANode.ID), LImageEditor, LImageAction) and
       (LImageAction in [ieaImport, ieaInline, ieaClear]) then
     begin
-      FViewState.ImageEditorDraft.Capture('inspector-image', FShellRenderer.Root);
+      FViewState.ImageEditorDraft.Capture('inspector-image', FShellRenderer.RootFor('inspector-image'));
 
       if FImagePicker = nil then
       begin
@@ -2227,14 +2335,14 @@ begin
       if LImageAction = ieaClear then
       begin
         FViewState.ImageEditorDraft.Propose(NyxNoImage);
-        FViewState.ImageEditorDraft.Restore(FShellRenderer.Root);
+        FViewState.ImageEditorDraft.Restore(FShellRenderer.RootFor('inspector-image'));
         FShellRenderer.Sync;
       end
       else if LImageAction = ieaInline then
       begin
         LImageSource := ReadNyxImageEditorInline(LImageEditor);
         FViewState.ImageEditorDraft.Propose(LImageSource);
-        FViewState.ImageEditorDraft.Restore(FShellRenderer.Root);
+        FViewState.ImageEditorDraft.Restore(FShellRenderer.RootFor('inspector-image'));
         FShellRenderer.Sync;
       end
       else
@@ -2247,7 +2355,7 @@ begin
       Exit;
     end;
 
-    if FSourceCommands.Route(ANode, AEvent, FShellRenderer.Root) then
+    if FSourceCommands.Route(ANode, AEvent, FShellRenderer.RootFor(ANode.ID)) then
     begin
       Exit;
     end;
@@ -2304,7 +2412,7 @@ begin
     Exit;
   end;
 
-  if RouteNyxMenuInspectorChoice(FSession, ANode, FShellRenderer.Root,
+  if RouteNyxMenuInspectorChoice(FSession, ANode, FShellRenderer.RootFor(ANode.ID),
     AEvent.Trigger, FViewState.MenuEditorReference) then
   begin
     Refresh(True, True);
@@ -2379,7 +2487,7 @@ begin
       FSourceColumn := LDiagnostic.Column;
       LRetainCanvas := True;
     end
-    else if RouteNyxStudioAuthoring(FSession, ANode, AEvent.Trigger, FShellRenderer.Root) then
+    else if RouteNyxStudioAuthoring(FSession, ANode, AEvent.Trigger, FShellRenderer.RootFor(ANode.ID)) then
     begin
 
       if ANode.ID = NyxStudioAddStateID then
@@ -3806,7 +3914,7 @@ begin
       LProjection.Free;
     end;
     LCurrent := Default(TNyxResourceEditorDraft);
-    LCurrent.Capture('studio-resource-editor', FShellRenderer.Root);
+    LCurrent.Capture('studio-resource-editor', FShellRenderer.RootFor('studio-resource-editor'));
 
     if LCurrent.ToData.ToJSON <> FResourcePickDraft.ToJSON then
     begin
@@ -3818,7 +3926,7 @@ begin
       raise ENyxResource.Create(AError);
     end;
     ProposeNyxResourceEditor(LEditor, ADefinition);
-    FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.Root);
+    FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.RootFor('studio-resource-editor'));
     FShellRenderer.Sync;
     SavePresentation;
   except
@@ -3873,14 +3981,14 @@ begin
     { Visible fields may change after opening the chooser. Capture them before
       delivery; an earlier request cannot overwrite the later policy choice.
       Parked forms keep their copied draft choice. }
-    FViewState.ImageEditorDraft.Capture('inspector-image', FShellRenderer.Root);
+    FViewState.ImageEditorDraft.Capture('inspector-image', FShellRenderer.RootFor('inspector-image'));
 
     if FViewState.ImageEditorDraft.Validation.ChecksumsRequired <> ASource.Validation.ChecksumsRequired then
     begin
       raise ENyxImage.Create('Image validation changed while its import was open');
     end;
     FViewState.ImageEditorDraft.Propose(ASource);
-    FViewState.ImageEditorDraft.Restore(FShellRenderer.Root);
+    FViewState.ImageEditorDraft.Restore(FShellRenderer.RootFor('inspector-image'));
     FShellRenderer.Sync;
   except
     on LException: Exception do
@@ -4025,13 +4133,24 @@ end;
   ElementFor is a required lookup and raises on an unmounted control; first
   inspect the renderer's realized root to preserve its public failure contract. }
 function MountedStudioElement(ARenderer: TNyxBrowserRenderer;
-  const AID: TNyxText): TJSHTMLElement;
+  const AID: TNyxText): TJSHTMLElement; overload;
 begin
   Result := nil;
 
   if (ARenderer.Root <> nil) and (ARenderer.Root.Find(AID) <> nil) then
   begin
     Result := ARenderer.ElementFor(AID);
+  end;
+end;
+
+function MountedStudioElement(ARenderer: TNyxStudioSectionViews;
+  const AID: TNyxText): TJSHTMLElement; overload;
+begin
+  Result := nil;
+
+  if ARenderer.RootFor(AID) <> nil then
+  begin
+    Result := MountedStudioElement(ARenderer.ViewFor(AID), AID);
   end;
 end;
 
