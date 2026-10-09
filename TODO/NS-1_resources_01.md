@@ -16,6 +16,24 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Actual partial-body retirement consumer — 2026-10-09
+
+Criterion five now has the missing actual native body-arrival cancellation gate
+and a browser counterpart. Optional typed request snapshots copy phase/body-byte
+evidence without payload, URL, document or receiver retention; native worker/UI
+sampling is coherent and terminal samples stay stable. Real public applications
+cancel and dispose while a positive prefix is received and the tail is withheld.
+Accepted catalogs, notifications, label/prompt properties, mounted identities and
+saved defaults survive; same-URL recovery and two held socket closures pass.
+Maintained native/browser checks pass 107/356 (polling included), with leak-free
+native consumers/drivers and zero owned warnings. [The packet](../WORK.md#current-return-path-resource-transfer-retirement--2026-10-09)
+retains the mistaken idle-worker harness gate and single repair. Resource alone
+advances unfinished batches 14→15, aggregate 25/15/47/21/28/3; no full criterion/
+task/credit closes. Stop snapshot/body-fixture variants and reassess remaining
+HTTP/cache-policy application qualification. Request-level observations do not
+integrate automatic Studio/MCP progress. Full transport/security/media/cache,
+physical input, visual/accessibility parity, performance and observing remain.
+
 ## Actual hosted admission consumer — 2026-10-09
 
 Criteria five/three now have real WinHTTP/fetch application journeys through a

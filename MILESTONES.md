@@ -3,6 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
+Current resource transfer retirement (2026-10-09) supplies real partial-body
+cancellation and host-disposal consumers on Win32/LCL and HTTP browser. Complete
+accepted catalogs, controls and authored defaults survive; same-URL recovery,
+terminal copied request observations and two held socket closures pass. Native
+running/queued jobs retire before owned scheduler shutdown. [The packet](WORK.md#current-return-path-resource-transfer-retirement--2026-10-09)
+retains the repaired idle-worker harness assumption and qualified limits. Resource
+alone advances unfinished batches **14→15**, aggregate **25/15/47/21/28/3**;
+no full criterion/task/credit closes. Stop progress/body-fixture variants; reassess
+the remaining HTTP/cache-policy application boundary under its existing owner.
+Automatic Studio/MCP progress, physical input, complete visual/accessibility
+parity, performance and authenticated observing rollout remain open.
+
 
 Current hosted admission (2026-10-09) consumes the original resource failure
 boundary through actual Win32/LCL and HTTP-browser applications. One URL moves

@@ -9,6 +9,111 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Resource transfer retirement — 2026-10-09
+
+Entry is clean at pushed `6c3fe7c`. Previous turn is progress: actual native/
+browser failure admission found and repaired the missing typed diagnostic. Full
+goal remains active; resource unfinished batches remain 14 before this packet.
+Reassessment follows criterion five's unqualified native body-arrival cancellation
+and returns to real application controls. Stop error/cache/form variants.
+
+Deliverable: typed, optional copied transport snapshots on both built-in adapters
+and an actual application journey that cancels/retires while a partial response
+has arrived. Snapshots contain phase/received-byte count, no payload, URL, document
+or callback. Native cross-thread sampling must be coherent, terminal samples must
+remain stable, and polling must add no per-chunk allocation or UI notification.
+Existing request/transport interfaces and persisted/source/wire shapes remain.
+
+The existing static host cannot deliberately withhold a body. A small, read-only
+Pascal qualification producer will own an OS-assigned localhost socket and fixed
+capability-path payloads, with bounded handshakes/held-body release and exact
+thread/socket retirement. It is not a Studio backend: no compiler, editor API,
+project/session registration, enrollment, configuration or user-pair access.
+This is a distinct bounded network fixture, not an equivalent retry of rejected
+Studio backend startup/replacement. Do not retry if its launch is rejected.
+
+Acceptance requires actual positive received bytes before cancellation, an
+unfinished held body, immediate callback disconnection, eventual socket/worker
+retirement, retained complete catalog/label/prompt/control identity, same-URL
+recovery, host disposal and both-target terminal snapshots. Retain failed gates;
+one repair per concrete boundary, then stop this packet. If actual fixture launch
+refuses, retain that limitation and switch to another existing outcome rather
+than changing launchers or claiming body-arrival evidence. Full HTTP/cache/security/
+media, physical input, performance and installed observing rollout keep owners.
+
+Result: both built-in transports now expose optional
+`INyxResourceRequestProgress` with copied typed phase/decoded-body byte count.
+Existing request/transport GUIDs and document/source/wire shapes are unchanged.
+`Supports` preserves replacement transports without this capability. Native
+worker writes and UI reads synchronize private scalar data; late writes cannot
+change a terminal sample. Browser continuations share the UI event loop. These
+are transport observations, not parsed-content admission or a progress percentage.
+No payload, URL, document, receiver or per-chunk notification is added.
+
+The maintained public-application journey receives a positive prefix while the
+producer withholds the tail. Cancellation immediately disconnects the borrowed
+receiver and preserves the complete accepted catalog, notification count, mounted
+label/prompt properties and control identities. Same-URL reload recovers actual
+HTTP content, then disposing the host during a second partial response retires
+its publication path. Retained request snapshots remain independent and terminal;
+original document defaults remain exact. Two observed peer closures prove both
+held sockets retired, independently of callback disconnection.
+
+Qualification is Pascal throughout. The read-only producer binds an OS-assigned
+loopback socket and fresh capability path, serves fixed JSON, and bounds header
+reads, socket sends and held-body polling. It owns/joins its exact thread and
+closes its exact handles. Actual launches succeeded. This is the distinct fixture
+described above, with no Studio API/compiler/configuration/registration. The
+browser builder runs from an immutable child on the existing admitted static
+host; that exact process and all three served file lengths/hashes remain intact.
+The rebuilt builder matches the qualified served bytes. Drivers capture only
+the four application milestones, acknowledge them, and retire their own browser.
+
+Evidence under ignored `build/resource-transfer/`:
+
+- `maintained-final-build.log`: `tools/build.ps1 -Target resource-stream
+  -ResourceStreamPageURL <admitted immutable fixture page>` with the existing local
+  profile. Actual Win32/LCL application passes **107** checks, observing **32768**
+  bytes before each held cancellation; HTTP Chromium passes **356**, observing
+  **32792** bytes. Both close two held bodies. Counts include polling and are not
+  performance or acceptance credits. Checked native application/driver heap
+  receipts have **zero unfreed blocks**. Native worker `Running` and `Pending`
+  are both zero before final disposal; owned scheduler shutdown retires threads.
+- The first maintained gate's `maintained-build.log` retains its thirty-second
+  failure: the fixture incorrectly required `ActiveWorkers = 0` before scheduler
+  shutdown. That count includes idle pool threads. Both peer closures had already
+  occurred. The single harness repair samples running/pending jobs coherently;
+  `maintained-current-build.log` and the final current gate pass. No timeout was
+  increased and no product transport behavior was changed to satisfy this gate.
+- Initial native/browser real journeys and driver/compiler receipts remain
+  retained. `loader-native/run.log` passes **51** existing deadline/cache/byte/
+  cancellation/capacity checks leak-free. Both ordinary Studios, backend, source
+  worker and browser loader callers compile. Owned warnings are **zero**;
+  **seven upstream pas2js RTL warnings** remain visible and unchanged.
+- Final capture child `maintained/51203702bb1f4d1c83f4a6e87cdfc55c/` retains native
+  initial/cancelled/recovered and browser initial/cancelled/recovered/retired
+  PNGs plus bounded DOM evidence. Native cancellation and browser recovery were
+  inspected. These establish retained control properties/identity, not complete
+  visual parity: the native prompt is not painted in the inspected capture.
+- `preservation-before.log`/`preservation-after.log` preserve all **nine** exact
+  document/source/draft pairs, **fifteen** process identities, **299** sealed files
+  and the **147033-byte** durable checkpoint. Installed semantic session reads
+  retain revision **2**, selection `rating-2-part-4`, no pending draft/Undo/Redo.
+  No active design mutation occurred. No qualification application/driver remains.
+
+NS-1 resource criterion five gains the previously missing real native body-arrival
+retirement evidence and its browser counterpart. The full goal stays active;
+resource unfinished batches advance **14→15**, aggregate **25/15/47/21/28/3**,
+other owners unchanged. No full criterion/task/credit closes. Request-level
+snapshots do not integrate automatic Studio/MCP progress display. Full freshness/
+stale/security/media/cache matrix, physical input, broader native widgetsets,
+browser GC/background restoration, complete visual/accessibility parity,
+performance and installed observing rollout keep their existing owners. The LAN
+installation still serves its earlier frozen release; no backend replacement was
+attempted. Stop snapshot/body-fixture variants. Next reassess the remaining
+resource HTTP/cache-policy application boundary under the existing owner before
+returning to ordinary Resources and agent-visible integration.
+
 ## Current return path: Hosted resource admission — 2026-10-09
 
 Entry is clean at pushed `5da82d2`. The previous goal turn is progress: native

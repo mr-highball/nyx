@@ -47,7 +47,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current hosted admission (2026-10-09) follows NS-1 criteria five/three with actual
+Current resource transfer retirement (2026-10-09) follows NS-1 criterion five's
+missing native body-arrival gate and returns to actual browser/LCL applications.
+Typed copied observations, partial-body cancellation, same-URL recovery and host
+disposal retain complete catalogs/controls; two held socket closures and native
+running/queued job retirement pass. [The packet](../WORK.md#current-return-path-resource-transfer-retirement--2026-10-09)
+retains the single idle-worker harness repair and qualified limits. Resource
+unfinished batches advance 14→15, aggregate 25/15/47/21/28/3; no full criterion/
+task/credit closes. Stop snapshot/body-fixture variants and reassess the remaining
+HTTP/cache-policy application boundary. Automatic Studio/MCP progress, physical
+input, visual/accessibility parity, performance and observing retain their owners.
+
+Previous hosted admission (2026-10-09) follows NS-1 criteria five/three with actual
 Win32/LCL and HTTP-browser application consumers of 404, syntax, payload budget,
 partial typed-field refusal and correction at one URL. Owned resource/path/kind
 diagnostics repair the reproduced omission while retaining full catalogs,

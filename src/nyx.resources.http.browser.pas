@@ -41,8 +41,9 @@ uses SysUtils, JS, Web, WebOrWorker, nyx.text, nyx.bytes,
   nyx.resource.sources, nyx.resource.cache;
 
 type
-  TBrowserRequest = class(TNyxResourceRequest)
+  TBrowserRequest = class(TNyxResourceRequest, INyxResourceRequestProgress)
   private
+    FProgress: TNyxResourceTransferProgress;
     FURL: TNyxResourceURL;
     FOptions: TNyxResourceLoadOptions;
     FMaximum: Integer;
@@ -53,6 +54,7 @@ type
     function Run: JSValue; async;
     procedure Expired;
   public
+    function Progress: TNyxResourceTransferProgress;
     procedure Start;
     procedure Cancel; override;
   end;
@@ -85,10 +87,22 @@ procedure TBrowserRequest.Cancel;
 begin
   inherited Cancel;
 
+  if FProgress.Phase <> nrtDelivered then
+  begin
+    FProgress.Phase := nrtCancelled;
+  end;
+
   if FController <> nil then
   begin
     FController.abort;
   end;
+end;
+
+function TBrowserRequest.Progress: TNyxResourceTransferProgress;
+begin
+  { Fetch continuations and callers share the UI event loop; return an independent
+    scalar record without retaining a reader or scheduling work. }
+  Result := FProgress;
 end;
 
 procedure TBrowserRequest.Start;
@@ -133,6 +147,7 @@ begin
         Exit;
       end;
       LResult.Status := LResponse.status;
+      FProgress.Phase := nrtReceiving;
       LCacheControl := Header(LResponse, 'cache-control');
 
       if (LResponse.type_ = 'cors') and (Header(LResponse, 'age') = '') then
@@ -172,10 +187,12 @@ begin
             LBytes[LCount + LIndex] := LChunk[LIndex];
           end;
           Inc(LCount, LChunk.length);
+          FProgress.BytesReceived := LCount;
         until False;
       end;
       SetLength(LBytes, LCount);
       LResult.Bytes := LBytes;
+      FProgress.Phase := nrtAwaitingReply;
     except
       on LException: Exception do
       begin
@@ -215,6 +232,11 @@ begin
       { Keep the pending lease through callback execution, including receiver
         exceptions or platform reader cleanup failure. }
       try
+
+        if Active then
+        begin
+          FProgress.Phase := nrtDelivered;
+        end;
         Complete(LResult);
       finally
         FLease := nil;

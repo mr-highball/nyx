@@ -20,6 +20,20 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Partial-body retirement consumer — 2026-10-09
+
+The NS-1 resource owner now supplies actual Win32/LCL and HTTP-browser control
+journeys after positive response bytes arrive with their tail withheld.
+Cancellation/host disposal preserve accepted catalogs, notification count,
+label/prompt properties and mounted identity; same-URL recovery and actual held
+socket closure pass. Typed request snapshots remain independent and terminal;
+native running/queued work retires before scheduler shutdown. [The packet](../WORK.md#current-return-path-resource-transfer-retirement--2026-10-09)
+records the idle-worker harness repair and selective captures. This is behavioral
+evidence, not full visual/input/accessibility parity: the native prompt is not
+painted in the inspected capture. Other widgetsets, physical input, performance,
+browser GC/background behavior and installed observing remain open. NS-1 alone
+advances its unfinished batch; this task's criteria/count/credit do not close.
+
 ## Hosted scalar admission consumer — 2026-10-09
 
 The existing NS-1 resource owner now has actual Win32/LCL and HTTP-browser

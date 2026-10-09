@@ -701,6 +701,71 @@ networking for recovery. No transport or host API is substituted. The
 separates these queued/native and fetch/browser guarantees from unqualified
 physical networking and native cancellation during body arrival.
 
+## Typed transfer observations
+
+Built-in transport requests support the optional `INyxResourceRequestProgress`
+capability from `nyx.resources.loader`. Query it with `Supports` on the retained
+`INyxResourceRequest` returned by a transport's `Request`. Replacement transports
+keep the original interface and may omit this capability. Resolver load tokens
+and application resource status are separate contracts; they do not automatically
+expose these transport snapshots.
+
+```pascal
+// LHTTPRequest is an existing transport request; sample on the UI thread.
+LTransfer := nil;
+
+if Supports(LHTTPRequest, INyxResourceRequestProgress, LTransfer) then
+begin
+  LProgress := LTransfer.Progress;
+
+  if LProgress.Phase = nrtReceiving then
+  begin
+    LReceivedBytes := LProgress.BytesReceived;
+  end;
+end;
+```
+
+Here `LTransfer` is `INyxResourceRequestProgress`, `LProgress` is
+`TNyxResourceTransferProgress`, and `LReceivedBytes` is `Integer`. The scalar record
+is an independent copy and carries neither payload nor URL. `BytesReceived`
+counts successfully received decoded body bytes inside the caller's budget;
+headers, compressed wire size, percentages and cache-hit estimates are excluded.
+Native sampling synchronizes worker writes; browser sampling shares the UI event
+loop. Polling does not schedule a callback or publish application state.
+
+| Phase | Meaning |
+| --- | --- |
+| `nrtPending` | No admitted body read has been observed yet. |
+| `nrtReceiving` | Response-body reading is in progress. |
+| `nrtAwaitingReply` | Body I/O finished; the result awaits UI delivery. |
+| `nrtDelivered` | Transport callback delivery has begun, including a failed reply. |
+| `nrtCancelled` | The borrowed receiver is disconnected; platform cleanup can still be in flight. |
+
+Intermediate phases can be too brief to observe. Both terminal snapshots remain
+stable even if late platform work finishes. A terminal transfer does not prove
+JSON parsing, typed selection, cache writing or application candidate admission.
+Retaining the optional interface owns its request, not its borrowed receiver,
+document or controls; release it when the observation is no longer needed.
+Automatic Studio/MCP progress presentation remains separate integration work.
+
+The maintained `tools/build.ps1 -Target resource-stream` compiles both consumers
+and executes the actual native application. Supplying
+`-ResourceStreamPageURL <admitted immutable resource-stream.html URL>` also runs
+the Pascal browser driver against those exact staged builder/runtime bytes.
+Qualification owns short-lived read-only loopback producers on OS-assigned ports
+with fresh capability paths, fixed JSON and bounded socket/thread teardown. It
+does not launch or replace a Studio backend or change editor configuration.
+The browser page must be HTTP-hosted with its matched runtime already admitted;
+compilation alone does not establish browser execution.
+
+The current native/browser journeys observe positive body bytes while the tail
+is withheld, cancel without partial publication, recover the same URL, and
+dispose during a second unfinished body. Two peer closures establish actual I/O
+retirement; native running/queued jobs retire before owned scheduler shutdown.
+Selective captures establish mounted identity and property behavior, not full
+visual/input/accessibility parity. See
+[the qualification packet](../WORK.md#current-return-path-resource-transfer-retirement--2026-10-09).
+
 ## Studio Resources and copied proposals
 
 Open **Resources** in Studio's Project area, or choose **Manage resources** in

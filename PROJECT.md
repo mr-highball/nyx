@@ -67,6 +67,19 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Resource transfer retirement (2026-10-09) now has real Win32/LCL and HTTP-browser
+application consumers after positive body bytes arrive while the tail is held.
+Cancellation/host disposal preserve catalogs, notifications, controls and authored
+defaults; same-URL recovery and two actual socket closures pass. Optional typed
+request snapshots synchronize native worker evidence and remain stable after
+retirement. [The packet](WORK.md#current-return-path-resource-transfer-retirement--2026-10-09)
+retains the corrected idle-worker harness gate, checked leak-free journeys and
+protected services. Request-level observations do not integrate automatic Studio/
+MCP progress display. Full HTTP/cache/security/media, visual/input/performance and
+observing owners remain. Unfinished-batch ledger is **25/15/47/21/28/3**; no full
+criterion/task/credit closes. Stop snapshot/fixture variants and reassess the
+remaining resource application/cache-policy boundary.
+
 Hosted resource admission (2026-10-09) now has actual native/browser application
 journeys through one URL's 404, malformed JSON, oversized reply and partial typed
 failure, followed by corrected content. Mounted labels/prompts and saved defaults

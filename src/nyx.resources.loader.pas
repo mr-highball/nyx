@@ -59,6 +59,29 @@ type
     procedure Cancel;
   end;
 
+  { Copied byte-transfer evidence, independent of parsing, cache or application
+    admission. Receiving means platform I/O is still reading; AwaitingReply means
+    I/O finished and its result is waiting for UI delivery. Delivered includes
+    failed replies. Cancelled means the borrowed receiver was disconnected;
+    platform handle retirement may still be in flight. }
+  TNyxResourceTransferPhase = (nrtPending, nrtReceiving, nrtAwaitingReply,
+    nrtDelivered, nrtCancelled);
+  TNyxResourceTransferProgress = record
+    Phase: TNyxResourceTransferPhase;
+    { Successfully received body bytes within the caller's decoded byte budget.
+      No header/wire size, percentage, payload or cache-hit estimate is implied. }
+    BytesReceived: Integer;
+  end;
+  { Optional capability of the built-in requests. Poll on the UI thread; each
+    call returns independent scalar data and schedules no callback. Native
+    snapshots synchronize with worker reads. Terminal data remains stable.
+    Retaining this interface owns only its request, never a document/control or
+    borrowed receiver. Custom transports need not implement this capability. }
+  INyxResourceRequestProgress = interface
+    ['{66723762-6A52-4B2B-87BA-14D69808BB07}']
+    function Progress: TNyxResourceTransferProgress;
+  end;
+
   { Request and cancellation are UI-thread operations. Reply occurs once on
     that thread and may complete inline. A retained job never retains the
     receiver. Cancel disconnects it before platform I/O finishes retiring. }

@@ -50,6 +50,7 @@ const
   CProtocolTLS13 = $2000;
 
 type
+  TNativeRequest = class;
   { Only the worker starts/closes handles. WinHTTP's status callback owns a
     temporary managed lease until HANDLE_CLOSING, its last notification. This
     protects the async read buffer and native context after timeout/cancellation,
@@ -75,10 +76,14 @@ type
     destructor Destroy; override;
     procedure Close;
     function Fetch(const AURL: TNyxResourceURL; AMaximum, ADeadline: Integer;
-      AStarted: QWord; const AExecution: INyxExecution): TNyxResourceHTTPResult;
+      AStarted: QWord; const AExecution: INyxExecution;
+      AProgress: TNativeRequest): TNyxResourceHTTPResult;
   end;
-  TNativeRequest = class(TNyxResourceRequest)
+  TNativeRequest = class(TNyxResourceRequest, INyxResourceRequestProgress)
   private
+    FProgressLock: TRTLCriticalSection;
+    FProgressLockReady: Boolean;
+    FProgress: TNyxResourceTransferProgress;
     FScheduler: INyxScheduler;
     FExecution: INyxExecution;
     FDeadlineTimer: TTimer;
@@ -87,7 +92,12 @@ type
     FDeadlineMS: Integer;
     procedure StopDeadline;
     procedure Deadline(Sender: TObject);
+    { Worker writes only scalar evidence; terminal UI publication wins over
+      late read/completion notifications. No UI work or allocation per chunk. }
+    procedure RecordProgress(APhase: TNyxResourceTransferPhase; ABytes: Integer);
   public
+    constructor Create(AReply: TNyxResourceHTTPReply); reintroduce;
+    function Progress: TNyxResourceTransferProgress;
     { The temporary timer lease outlives dropping the caller's token. Completion,
       cancellation and expiry retire it on the UI thread. Worker work retains a
       separate lease until WinHTTP closing notifications have finished. }
@@ -293,7 +303,7 @@ end;
 
 function THTTPBridge.Fetch(const AURL: TNyxResourceURL;
   AMaximum, ADeadline: Integer; AStarted: QWord;
-  const AExecution: INyxExecution): TNyxResourceHTTPResult;
+  const AExecution: INyxExecution; AProgress: TNativeRequest): TNyxResourceHTTPResult;
 var
   LURL: UnicodeString;
   LHost: UnicodeString;
@@ -431,6 +441,7 @@ begin
   LResult.Hints := NyxResourceCacheHeaders(Header('cache-control'), Header('age'));
   SetLength(LBytes, AMaximum);
   LCount := 0;
+  AProgress.RecordProgress(nrtReceiving, 0);
   repeat
 
     if not WinHttpReadData(FRequest, @FBuffer[0], SizeOf(FBuffer), nil) then
@@ -450,10 +461,51 @@ begin
     end;
     Move(FBuffer[0], LBytes[LCount], FCount);
     Inc(LCount, FCount);
+    AProgress.RecordProgress(nrtReceiving, LCount);
   until False;
   SetLength(LBytes, LCount);
   LResult.Bytes := LBytes;
   Result := LResult;
+end;
+
+constructor TNativeRequest.Create(AReply: TNyxResourceHTTPReply);
+begin
+  inherited Create(AReply);
+  InitCriticalSection(FProgressLock);
+  FProgressLockReady := True;
+  FProgress := Default(TNyxResourceTransferProgress);
+end;
+
+function TNativeRequest.Progress: TNyxResourceTransferProgress;
+begin
+  FScheduler.RequireUI;
+  EnterCriticalSection(FProgressLock);
+  try
+    Result := FProgress;
+  finally
+    LeaveCriticalSection(FProgressLock);
+  end;
+end;
+
+procedure TNativeRequest.RecordProgress(APhase: TNyxResourceTransferPhase;
+  ABytes: Integer);
+begin
+  EnterCriticalSection(FProgressLock);
+  try
+
+    if FProgress.Phase in [nrtDelivered, nrtCancelled] then
+    begin
+      Exit;
+    end;
+    FProgress.Phase := APhase;
+
+    if ABytes >= 0 then
+    begin
+      FProgress.BytesReceived := ABytes;
+    end;
+  finally
+    LeaveCriticalSection(FProgressLock);
+  end;
 end;
 
 procedure TNativeRequest.StartDeadline(AStarted: QWord; AMilliseconds: Integer);
@@ -486,6 +538,11 @@ begin
   { Every normal terminal path already retired the timer on the UI thread.
     Construction refusal also disconnects it before releasing pending work. }
   StopDeadline;
+
+  if FProgressLockReady then
+  begin
+    DoneCriticalSection(FProgressLock);
+  end;
   inherited Destroy;
 end;
 
@@ -503,6 +560,7 @@ begin
     { Scheduler shutdown revokes callbacks too. Expiry must not turn a cancelled
       parent into a fresh delivery, even if its workers have already retired. }
     inherited Cancel;
+    RecordProgress(nrtCancelled, -1);
     StopDeadline;
     Exit;
   end;
@@ -521,6 +579,7 @@ begin
   StopDeadline;
   LResult := Default(TNyxResourceHTTPResult);
   LResult.Error := 'Whole resource request deadline expired';
+  RecordProgress(nrtDelivered, -1);
   { Complete retires the borrowed receiver before invoking it. The local lease
     protects this operation if the receiver releases or cancels its own token. }
   Complete(LResult);
@@ -533,6 +592,7 @@ begin
   FScheduler.RequireUI;
   LLease := Self;
   inherited Cancel;
+  RecordProgress(nrtCancelled, -1);
 
   if FExecution <> nil then
   begin
@@ -557,6 +617,7 @@ begin
     Exit;
   end;
   StopDeadline;
+  RecordProgress(nrtDelivered, -1);
   Complete(AResult);
 end;
 
@@ -582,7 +643,8 @@ begin
   LResult := Default(TNyxResourceHTTPResult);
   try
     try
-      LResult := LBridge.Fetch(FURL, FMaximum, FOptions.DeadlineMS, FStarted, AExecution);
+      LResult := LBridge.Fetch(FURL, FMaximum, FOptions.DeadlineMS, FStarted,
+        AExecution, FRequest);
     except
       on LException: Exception do
       begin
@@ -593,6 +655,7 @@ begin
     LBridge.Close;
     LGuard := nil;
   end;
+  FRequest.RecordProgress(nrtAwaitingReply, -1);
 
   if not AExecution.Cancelled then
   begin
