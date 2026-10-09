@@ -3,7 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current coordinated semantic Pascal editing (2026-10-09) consumes the original
+Current primary workflow restoration (2026-10-09) makes frozen product `f6d26a5`
+available on LAN Studio and authenticated loopback MCP. Its 316-file release and
+all nine retained pairs/history qualify through existing delivery gates; the full
+checkpoint stays exact. [The packet](WORK.md#current-return-path-primary-workflow-restoration--2026-10-09)
+records 22 discovered tools, 13 source modes, 16 authenticated source/Undo checks,
+both compiler jobs, selective rendering and ordinary desktop/CSS-390 observation.
+Native handles in this existing chat still await reconnection; Pascal access works.
+No extra counter/credit or full criterion closes: **25/16/52/22/28/3** is unchanged.
+Return to integrated resource authoring/independent use. Helper-expression
+reconciliation, project-file import and complete parity/performance remain open.
+
+Previous coordinated semantic Pascal editing (2026-10-09) consumes the original
 NS-4 workflow and NS-1 source synchronization criteria. Typed exact original-source
 ranges join class/helper/view authoring in one revision-aware durable paired Undo;
 bounded source-line queries avoid preceding text pages. [The packet](WORK.md#current-return-path-coordinated-semantic-pascal-editing--2026-10-09)

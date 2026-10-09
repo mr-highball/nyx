@@ -1,27 +1,15 @@
 # Agents in Nyx Studio
 
-Current-source coordinated unit editing is locally qualified on both targets.
-After the latest session interruption, the former Studio services are stopped
-and no native Nyx MCP tool is exposed in this chat. Stored checkpoint/release
-bytes remain exact. Restore and qualify the primary service through the existing
-rollout workflow before claiming installed support for new source modes. The
-following release/connection evidence predates that interruption; see
-[current state](../WORK.md#current-return-path-coordinated-semantic-pascal-editing--2026-10-09).
-
-The current observing release advertises twenty-two tools, including protected
-reviews, project workspaces, state, collections, typed value-domain policy,
-presentations and menu declarations. Authenticated Pascal MCP drives bounded
-composition, paired source/history and real browser/LCL application/view builds.
-The current native checkpoint retains all nine exact pairs, full histories and
-ordinary handles through delivery. Earlier explicit disposable-test bootstrap
-and production legacy migration remain separately qualified. Launch refreshes
-project and enrolled-user Codex configuration. Native named handles are now
-authenticated in this chat: an owned image review exercises bounded composition,
-paired Undo/Redo, exact source export, browser/LCL compilation and an actual
-rendered preview. The Pascal client below remains the maintained owner for
-transport qualification. A different chat may still need to reconnect after
-credential rotation. See
-[current observing evidence](../WORK.md#installed-current-source-return--2026-10-08).
+The restored observing release (2026-10-09, frozen product `f6d26a5`) advertises
+twenty-two tools and thirteen `nyx_pascal` modes, including coordinated unit edits.
+Authenticated Pascal MCP qualifies bounded composition, class/helper/view editing,
+paired Undo, both application compiler jobs and a selective rendered preview.
+The complete checkpoint retains all nine exact projects/history. Ordinary installed
+Studio observes the preserved companion on desktop and CSS-390; LAN bytes match
+the sealed release. Launch refreshes project and explicitly enrolled user entries.
+The existing chat currently has no native Nyx tool handles; the maintained Pascal
+client works without another agent while reconnection remains pending. See
+[current observing evidence](../WORK.md#current-return-path-primary-workflow-restoration--2026-10-09).
 
 Studio starts with agent access enabled and editing allowed. Open **Agents** to
 see the shared revision, connected endpoint and recent operations. **Read only**
@@ -1096,8 +1084,8 @@ distinct evidence from compilation.
 ### Coordinated Pascal unit edits
 
 Current source adds `unit` and `edit-unit` to the existing `nyx_pascal` tool.
-Discover the running server's schema before using them; the protected installed
-release predates these modes. Prefer focused handler/import/routine/view tools
+Discover the running server's schema before using them; the restored release
+advertises these modes. Prefer focused handler/import/routine/view tools
 for their narrower contracts. Unit edits support a coordinated class declaration,
 implementation, helper and managed view change when those boundaries must change
 together. They use ordinary source admission and one paired Undo step.
@@ -1142,8 +1130,17 @@ or design payload. The backend persists the pair and its history atomically.
 Explicit class/signature authoring can introduce compiler errors or external
 caller incompatibility. Source admission reconstructs managed design; it does
 not execute helpers or prove Pascal type correctness. Use `nyx_build` afterward.
-Complete Pascal grammar, project-file import, performance and installed observing
-deployment retain their open owners.
+Complete Pascal grammar, project-file import and performance retain their open
+owners. Installed observing rollout is recorded in the current packet above.
+
+The maintained real-transport journey is compiled by
+`tools/build.ps1 -Target mcp-client`. Run `nyx_mcp_source_workflow` with the existing
+local MCP configuration and a new private evidence directory. It owns a temporary
+review, reads a small source window, groups class/helper/heading edits, compiles
+both applications, renders one preview and restores the exact pair with Undo.
+It preserves the primary and starts no service. Managed property helper-function
+expressions remain outside the current reconciliation subset; ordinary Pascal
+helpers are retained and compiled without claiming their execution.
 
 `./tools/build.ps1 -Target pascal-source` exercises the shared semantic contract,
 actual discovery/durable wrapper, exact compiled Pascal and an ordinary native

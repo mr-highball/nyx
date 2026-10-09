@@ -19,7 +19,20 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
   remain tested; dependency warnings stay visible and separately attributed.
   Intentional compiler advisories require narrowly scoped documented exceptions.
 
-Current preserving delivery (2026-10-08): frozen pushed product `960134f`
+Current primary restoration (2026-10-09): frozen product `f6d26a5` verifies
+316 files, 29 integrity, 41 integrated runtime, 72 protocol recovery, five abrupt
+process, 14 portable ownership and 106 exact retained-checkpoint checks. The
+stopped primary restores through its existing executable/runtime/enrollment with
+private prior-byte backups; no former or auxiliary process is stopped/restarted.
+Nine pairs/history and the complete checkpoint remain exact. Real discovery
+authenticates 22 tools/13 source modes; both source-workshop compiler jobs,
+selective preview, ordinary desktop/CSS-390 observer and five exact LAN artifacts
+pass. Native chat handles await reconnect. No additional credit/counter or full
+criterion closes; aggregate 25/16/52/22/28/3 is unchanged. Return to original
+integrated authoring/independent-use outcomes and the complete supported CI matrix.
+See [the packet](../WORK.md#current-return-path-primary-workflow-restoration--2026-10-09).
+
+Previous preserving delivery (2026-10-08): frozen pushed product `960134f`
 passes 29 integrity/refusal, 41 actual integrated build/runtime and 106 complete
 retained checkpoint candidate checks, leak-free. Its 299-file payload is installed
 through the existing firewall-covered executable path with original runtime and

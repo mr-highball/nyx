@@ -7,6 +7,76 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Primary workflow restoration — 2026-10-09
+
+Entry is clean at pushed `f6d26a5`. The user's Resources direction remains a
+dedicated workspace, useful categories and creator/user tags combined with search.
+This batch returns to NS-4_agent-workflows and NS-6_delivery: make the qualified
+current editor and semantic tools usable together, rather than extending source
+fixtures. Acceptance criteria and the unfinished ledger are unchanged.
+
+**Delivered restoration.** Former services were absent and the primary ports
+unoccupied. Frozen product `f6d26a5` verifies **316** files, with **29** integrity,
+**41** integrated compiler/runtime, **72** protocol recovery, **5** abrupt-process
+and **14** portable ownership checks. Its independent copy of the full retained
+checkpoint passes **106** exact admission/round-trip checks. Native checked
+qualification reports zero unfreed blocks. Owned build warnings are zero; seven
+matched pas2js RTL warnings per compiled program remain separately attributed.
+
+The authorized primary is restored at the existing firewall-covered executable
+path with its original runtime and enrollment. No former process is terminated,
+no project is seeded/replaced and no auxiliary service is restarted. Prior
+executable/configuration/checkpoint bytes are backed up privately before launch.
+Fresh identities verify LAN editor and loopback MCP bindings. Project and
+explicitly enrolled user entries refresh to the same credentials; unrelated user
+configuration remains exact. The historical automatic review rejected replacement
+as "blocked by policy"; the changed external state allowed this stopped-service
+restoration, which executes successfully without a review rejection.
+
+**Authenticated workflow.** Real Pascal MCP discovery advertises **22** tools;
+`nyx_pascal` has **13** modes including unit/line windows and grouped unit edits.
+The maintained opt-in `nyx_mcp_source_workflow` owns a temporary authenticated
+review, composes a small English page, then groups handwritten class/helper and
+managed heading changes. Its **16** final checks qualify bounded source/node
+queries, exact retry, both application compiler jobs, a selective rendered PNG
+and one exact paired source/design Undo. The preview visibly shows the authored
+heading. The class/helper compiles on both targets; executing that helper is not
+claimed. Transport teardown retires the review. An earlier 14-check checked run
+reports a clean heap; the final maintained 16-check run does not measure its heap.
+
+Ordinary installed Studio observes the exact preserved companion, opens/closes
+the expanded source editor and returns through CSS-390/desktop presentation.
+Four live captures are inspected. Five production web artifacts served through
+the LAN address equal sealed bytes. Before/final authenticated preservation gates
+retain all **nine** complete pairs, navigation, drafts, permission and history,
+with no active compiler jobs. The original **147033-byte** checkpoint remains at
+its exact protected hash; the previous 299-file payload remains untouched.
+Physical phone, hardware/IME/accessibility and complete native Studio parity are
+not established by these browser observations. Current chat tool metadata still
+has no native Nyx handles; authenticated Pascal access works without another agent.
+
+**Discovered gap and next return.** An authored helper-call expression inside
+a managed heading property refuses atomically under the existing source subset.
+Both bare and parenthesized requests retain their private refusal receipts; the
+qualified journey uses the supported literal property while preserving helpers.
+Record arbitrary helper-expression reconciliation with existing NS-1_codegen
+criterion three and NS-4_agent-workflows, rather than silently rewriting intent or
+claiming full grammar support. General project-file import and richer review
+lifecycle remain original workflow gaps. Return to integrated resource authoring
+and independent-use outcomes using the now-current semantic endpoint; stop
+rollout/source fixture variants. No additional counter or credit is allocated
+for deploying already-counted source work: **25/16/52/22/28/3** stays unchanged,
+no full criterion/task closes and the full goal remains active.
+
+Ignored `build/primary-restore/` owns frozen release/build checks, copied checkpoint,
+prior executable/configuration backups, fresh process/credential receipts,
+authenticated discovery, retained invocation/syntax failures, final source journey,
+selective preview, ordinary observer captures, LAN byte gate and final nine-pair
+preservation. The first deployment-check invocation supplied a trailing slash in
+the Origin and received the expected 403; the exact origin passes with clean heap.
+Use this packet's current process receipt, not the stopped preceding identities.
+Remote checkpoint is recorded after the checked commit/push.
+
 
 
 ## Current return path: Coordinated semantic Pascal editing — 2026-10-09

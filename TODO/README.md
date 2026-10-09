@@ -47,7 +47,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current coordinated Pascal editing consumes the existing NS-4 workflow and
+Current primary restoration deploys the already-counted source work through
+existing NS-4 workflow/NS-6 delivery gates. The 316-file product exposes 22 tools
+and 13 source modes; nine pairs/history and the complete checkpoint stay exact.
+[The packet](../WORK.md#current-return-path-primary-workflow-restoration--2026-10-09)
+records 16 authenticated edit/paired Undo checks, both compiler jobs and ordinary
+desktop/CSS-390 observation. Pascal MCP works; native chat handles await reconnect.
+No extra counter/credit or full criterion closes; aggregate 25/16/52/22/28/3 stays
+unchanged. Return to integrated resource authoring and independent use; complete
+grammar/import/parity/performance remain original open outcomes.
+
+Previous coordinated Pascal editing consumes the existing NS-4 workflow and
 NS-1 source synchronization criteria. Typed original-source range groups join
 class/helper/view changes in one durable paired Undo; bounded line windows map
 compiler locations to scalar offsets. [The packet](../WORK.md#current-return-path-coordinated-semantic-pascal-editing--2026-10-09)

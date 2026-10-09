@@ -400,6 +400,10 @@ try {
     # Native Pascal configuration/client tooling needs neither an application
     # output compiler nor a browser. No live document mutation is implicit.
     Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tools/nyx_studio_mcp.lpr'))
+    # Compile the opt-in real transport journey. It accepts an existing MCP
+    # configuration, owns a temporary review and preserves the primary project;
+    # building this target never connects or starts a Studio service.
+    Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tests/nyx_mcp_source_workflow.lpr'))
     Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tests/nyx_mcp_config_tests.lpr'))
     & (Join-Path $nyxNativeDir 'nyx_mcp_config_tests.exe')
 

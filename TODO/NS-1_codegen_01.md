@@ -22,6 +22,18 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - Original-size native editor qualification now needs the logical viewport /
   safe widget geometry prerequisite in [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md).
 
+## Authenticated source authoring and remaining expressions — 2026-10-09
+
+The restored product exposes the qualified unit commands through real MCP.
+An owned English review passes 16 source/node, exact grouped retry and paired
+Undo checks, both application compiler jobs and a selective rendered preview.
+The handwritten class/helper is retained and compiled; its execution is not
+claimed. A helper call used directly in a managed heading property refuses
+atomically (both bare and parenthesized forms). Arbitrary helper-expression
+reconciliation therefore remains an explicit original criterion-three gap,
+shared with the workflow owner. No new source counter/credit or full criterion
+closes. See [the packet](../WORK.md#current-return-path-primary-workflow-restoration--2026-10-09).
+
 ## Coordinated semantic unit authoring — 2026-10-09
 
 Original criterion three now has a guarded unit-range command alongside focused

@@ -9,7 +9,21 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current coordinated unit authoring (2026-10-09) exposes bounded revision-pinned
+Current primary restoration (2026-10-09) qualifies real authenticated source
+editing against the installed 316-file `f6d26a5` product. Fresh discovery exposes
+22 tools and 13 source modes. A temporary English review passes 16 bounded
+source/node, grouped class/helper/view edit, exact retry and paired Undo checks,
+both application compiler jobs and a rendered preview. Ordinary Studio observes
+the retained companion on desktop/CSS-390. All nine user pairs/history and the
+complete checkpoint stay exact. Native handles in this existing chat still await
+reconnection; Pascal MCP works now. No extra credit/counter or full criterion
+closes; 25/16/52/22/28/3 stays unchanged. Managed helper-call property expressions
+refuse atomically and remain an explicit gap with NS-1_codegen criterion three;
+general project-file import/richer lifecycle retain this owner. Return to resource
+authoring/independent use, not more source/rollout fixtures.
+See [the packet](../WORK.md#current-return-path-primary-workflow-restoration--2026-10-09).
+
+Previous coordinated unit authoring (2026-10-09) exposes bounded revision-pinned
 source/line windows and one exact original-source range group through `nyx_pascal`.
 Typed immutable intent, ordinary independent Apply, existing authority/retry/
 permission/context guards and durable paired Undo qualify class/helper/view
