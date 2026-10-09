@@ -9,7 +9,18 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current retained Resources navigation consumes criterion 2 through both ordinary
+The [public staged section prerequisite](DONE/NS-2_section-publication_01.md)
+is accepted from 31 actual Win32 and HTTP desktop/CSS-390 checks each, grouped
+target rollback, independent edits/events/collections, callback retirement refusal
+and inspected captures. Ordinary Studio compiles on both targets but does not yet
+consume partitioning. Next integrate catalog/inspector structural refresh with
+stable chrome/canvas/source ownership, draft capture and lookup/event routing;
+preserve exact paired history and failure rollback, then qualify the original
+full Resources workload. No Studio speedup or full criterion/credit closes;
+authoring's existing no-closure count remains 44. See
+[the packet](../WORK.md#current-return-path-staged-view-sections--2026-10-08).
+
+Previous retained Resources navigation consumes criterion 2 through both ordinary
 Studio controllers and a public reusable Nyx form operation. New/Open preserves
 actual controls, creator presentation/additions and exact rollback; changed
 catalog/owner context retains staged composition. Win32 passes 137, HTTP desktop/

@@ -9,7 +9,88 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: retained Resources navigation — 2026-10-08
+## Current return path: staged view sections — 2026-10-08
+
+Previous turn is progress at exact pushed `6ef151d`: actual both-target New/Open
+retention and rollback execute, but the complete native journey has no aggregate
+speedup. Worktree is clean at entry. Reassessment ends navigation/profiler variants
+and follows the ownership prerequisite for NS-3 performance criteria 2/3 and NS-4
+authoring criterion 2. Existing Render stages one whole view and retires its whole
+event/collection scope. TryRefresh correctly refuses structure/context changes;
+weakening that guard would not supply independently staged sections.
+
+Implement a portable typed section-publication contract with target adapters using
+existing Nyx renderers. Prepare independent section views, preview all physical
+placements reversibly, then publish revisions before retiring former owners. A
+group refuses duplicate/stale sections before mutation and reverses partial preview
+failure. Unmentioned sections retain actual controls, runtime drafts and event
+routes. Native/browser hosts and callback lifetimes remain explicit. This is a
+concrete prerequisite for partitioning Studio, not a second toolkit or an accepted
+Studio speedup. The new section task owns its independent both-target acceptance;
+ordinary Studio partitioning, paired history, full workload timing and observing
+delivery remain under their original owners.
+
+Budget: one public publication implementation plus actual sibling-view checks on
+both targets, including staging/target failures, stale/duplicate groups, ownership
+retirement and retained input/events. No extra profiler variants, service/listener,
+configuration/enrollment, cleanup or protected project mutations. Preserve the
+existing nine pairs/fifteen services/sealed payload. Do not accept the prerequisite
+from compilation or fake publication ports alone; current consumer integration
+remains open until its own gates execute. Counters remain 25/11/44/21/28/3 at entry.
+
+Executed and accepted the independent public prerequisite: managed typed section
+references and prepared changes run through existing renderers on both targets.
+Prepare copies source; grouped placement previews roll back before any ownership
+publication. Exact revision/schema/host allocation/placement guards and renderer
+readiness refuse stale or busy views. The optional collection-readiness interface
+preserves the existing base ABI and covers selection/query notifications while
+the store is idle. Input dispatch cannot synchronously retire its borrowed view;
+idle publication afterward retires the former event scope. Unmentioned controls,
+Unicode drafts, table edits and observer routes remain live.
+
+Maintained checked optimized Win32 passes **31** with **zero unfreed blocks**.
+Current HTTP desktop **1240×820** and CSS-390 **390×820** each terminate `passed`
+with **31**; both Pascal pipe owners report zero leaks (not a JavaScript heap
+audit). Current live PNGs were inspected before explicit retirement; native
+capture prints owned controls, not a physical display/phone qualification. Existing
+native collection control regression passes **27**, leak-free. Ordinary native and
+browser Studio compile; neither controller consumes section partitioning yet.
+Native builds report zero warnings. Browser retains seven upstream RTL warnings;
+new section code/fixture have no hints. No dependency source was changed.
+
+Corrected two qualification errors without weakening acceptance: the initial
+collection probe selected an already-selected row and did not notify; it now
+clears then performs a real transition. A browser driver invocation incorrectly
+watched numeric check counts and expired its owned real-clock limit; corrected
+invocations watch `data-test-result`, record terminal `passed`/31 and current
+source/closure captures. Earlier failures remain in private logs, not counted as
+passes. No active design mutation or screenshot-driven editor automation occurred;
+actual installed MCP `nyx_session` remains the bounded inspection path. These
+adapter consumers exercise physical behavior the document API cannot establish.
+
+[The section task](TODO/DONE/NS-2_section-publication_01.md) closes only its
+unchanged independent acceptance criteria. [The public guide](docs/view-sections.md)
+and `tools/build.ps1 -Target view-sections` make the API and consumer reproducible.
+`build/view-sections/qualification-private.json` owns source/closure/capture hashes,
+logs and qualification limits; the ignored post-push checkpoint owns the exact
+remote HEAD. Final preservation rechecks all **nine exact pairs**, **fifteen service
+identities**, checkpoint bytes, bindings and **299 sealed files**. LAN remains on
+the earlier frozen build. Prior automatic backend replacement rejection remains
+in force (reason only “blocked by policy”); no equivalent retry, new listener,
+configuration/enrollment change or recursive cleanup was attempted.
+
+Reassessment: stop section-fixture variants. Next consume this accepted boundary
+in ordinary Studio catalog/inspector structural refresh, keeping shared Nyx
+composition, stable chrome/canvas/source ownership, draft capture and lookup/event
+routing. Preserve exact paired design/Pascal history and grouped rollback, then
+run the original full Resources workload on both targets and compare its native
+timing. NS-4 criterion 2 and NS-3 criteria 2/3 retain that integration/performance
+gate; observing rollout stays under delivery. **No Studio speedup, full criterion
+or north-star credit closes**, and counters remain **25/11/44/21/28/3** (NS-3's
+historical count is not invented/reset). The full goal remains active.
+
+<a id="current-return-path-retained-resources-navigation--2026-10-08"></a>
+## Previous return path: retained Resources navigation — 2026-10-08
 
 Previous turn is progress at exact pushed `0e123ed`: maintained measurements rule
 out low-level layout/notification hypotheses and locate native handle recreation.

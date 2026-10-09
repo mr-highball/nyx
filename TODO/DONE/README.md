@@ -3,6 +3,14 @@
 [Open catalog](../README.md) · [Milestones](../../MILESTONES.md) ·
 [Task flow](../../TASKFLOW.MD)
 
+[Staged independent view sections](NS-2_section-publication_01.md) was accepted
+on 2026-10-08 from 31 actual control checks on checked Win32 and HTTP desktop/
+CSS-390, target failure rollback, independent edits/events/collections, dispatch
+refusal and inspected live captures. Native ownership is leak-free; the existing
+collection regression passes 27 and ordinary Studio compiles on both targets.
+This public prerequisite leaves full Studio integration and measured performance
+with their existing owners.
+
 [Typed clock-time values and domains](NS-1_time-values_01.md) was accepted on
 2026-10-08 from 1,613 checked native/executed-browser clock checks, 49 calendar
 regressions, exact emitted source execution on both targets, twelve intended type

@@ -9,7 +9,17 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current retained Resources navigation (2026-10-08) implements a guarded compound
+The [public staged section prerequisite](DONE/NS-2_section-publication_01.md)
+is accepted from 31 actual Win32 and HTTP desktop/CSS-390 checks each, grouped
+rollback and independent ownership/dispatch gates. It makes selective structural
+replacement available; no measured Studio speedup follows from that API alone.
+Next consume the boundary in ordinary catalog/inspector refresh, preserve exact
+paired state/history and compare the original complete Resources workload on both
+targets. NS-4 retains the integration gate; criteria 2/3, original performance
+scope and NS-3's historical count remain open/unchanged. See
+[the packet](../WORK.md#current-return-path-staged-view-sections--2026-10-08).
+
+Previous retained Resources navigation (2026-10-08) implements a guarded compound
 state operation consumed by both Studio controllers. Actual shell/input identity
 survives New/Open; creator state and failure rollback remain exact. The unchanged
 optimized native journey passes 137 (original 133 plus four retention checks) in

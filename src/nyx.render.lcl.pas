@@ -625,6 +625,11 @@ type
       stop it before destroying receivers. Deferred Wake cannot publish here. }
     property ResourceUpdates: INyxResourceUpdateQueue read FResourceUpdates write SetResourceUpdates;
     function ResourceReady: Boolean;
+    { View-section publication requires an idle input/model boundary. False
+      during synchronous event/editing/gesture dispatch, scalar/collection
+      notifications or target synchronization. Queue replacement to a later
+      UI turn; this does not reserve the renderer or validate a candidate. }
+    function SectionPublicationReady: Boolean;
     { False means busy; invalid selected values raise before publication.
       The detached check includes the currently mounted target projection. }
     { Readiness and mounted scalar preflight. Source rows/hidden scopes admit in
@@ -4698,6 +4703,30 @@ begin
   end;
   Result := FLiveBindings.PrepareResourcePublication(AContext.Snapshot,
     AContext.Locale, AContext.Fallback);
+end;
+
+function TNyxLCLRenderer.SectionPublicationReady: Boolean;
+var
+  LIndex: Integer;
+begin
+  FEvents.Scheduler.RequireUI;
+  Result := (FRoot <> nil) and not FUpdating and not FPublishingContent and
+    not FContentGuard.Busy and ((FState = nil) or not FState.Busy) and
+    ((FEditingObserver = nil) or not FEditingObserver.Dispatching) and
+    ((FPhysicalFrame = nil) or not FPhysicalFrame.Dispatching) and
+    ((FLiveBindings = nil) or FLiveBindings.RefreshReady);
+
+  if Result and (FCollectionBindings <> nil) then
+  begin
+    for LIndex := 0 to FCollectionBindings.Count - 1 do
+    begin
+
+      if not NyxCollectionViewPublicationReady(FCollectionBindings.View(LIndex)) then
+      begin
+        Exit(False);
+      end;
+    end;
+  end;
 end;
 
 function TNyxLCLRenderer.ResourceReady: Boolean;

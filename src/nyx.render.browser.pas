@@ -526,6 +526,10 @@ type
       stop it before destroying receivers. Deferred Wake cannot publish here. }
     property ResourceUpdates: INyxResourceUpdateQueue read FResourceUpdates write SetResourceUpdates;
     function ResourceReady: Boolean;
+    { Same idle section-publication boundary as LCL: synchronous input dispatch,
+      target synchronization and busy scalar/collection stores refuse. A caller
+      queues replacement to another UI turn; True does not reserve or validate. }
+    function SectionPublicationReady: Boolean;
     { False means busy; invalid selected values raise before publication.
       The detached check includes the currently mounted target projection. }
     { Readiness and mounted scalar preflight. Source rows/hidden scopes admit in
@@ -2871,6 +2875,28 @@ begin
   end;
   Result := FLiveBindings.PrepareResourcePublication(AContext.Snapshot,
     AContext.Locale, AContext.Fallback);
+end;
+
+function TNyxBrowserRenderer.SectionPublicationReady: Boolean;
+var
+  LIndex: Integer;
+begin
+  FEvents.Scheduler.RequireUI;
+  Result := (FRoot <> nil) and not FUpdating and not FPublishingContent and
+    not FContentGuard.Busy and ((FState = nil) or not FState.Busy) and
+    ((FLiveBindings = nil) or FLiveBindings.RefreshReady);
+
+  if Result and (FCollectionBindings <> nil) then
+  begin
+    for LIndex := 0 to FCollectionBindings.Count - 1 do
+    begin
+
+      if not NyxCollectionViewPublicationReady(FCollectionBindings.View(LIndex)) then
+      begin
+        Exit(False);
+      end;
+    end;
+  end;
 end;
 
 function TNyxBrowserRenderer.ResourceReady: Boolean;

@@ -21,6 +21,7 @@ blockers rather than filename order.
 | NS-1 | [Pascal generation](NS-1_codegen_01.md) | Deterministic adjacent Delphi-dialect source | Pending assessment |
 | NS-2 | [Browser renderer slice](NS-2_browser-renderer_01.md) | Incremental DOM projection for M1 | Pending assessment |
 | NS-2 | [LCL renderer slice](NS-2_lcl-renderer_01.md) | Incremental native projection for M1 | Pending assessment |
+| NS-2 | [Staged view sections](DONE/NS-2_section-publication_01.md) | Accepted public grouped section ownership prerequisite; full Studio integration remains open | Pending assessment |
 | NS-2 | [Parity and accessibility](NS-2_parity-accessibility_01.md) | Shared semantics, keyboard and accessibility | Pending assessment |
 | NS-3 | [Production component catalog](NS-3_components_01.md) | Exhaustive control and layout families | Pending assessment |
 | NS-3 | [Extension and performance](NS-3_extension-performance_01.md) | Custom components, virtualization and budgets | Pending assessment |
@@ -46,7 +47,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current retained Resources navigation (2026-10-08): a guarded public Nyx form
+Current staged section prerequisite (2026-10-08): public typed managed sections
+pass **31** actual control checks on checked Win32 and HTTP desktop/CSS-390,
+each. Target failures roll back exact placement; independent edits/events remain
+and busy callbacks refuse retirement. Existing native collections pass **27**;
+ordinary Studio compiles on both targets. Live captures and exact preservation
+accept this independent prerequisite. Studio catalog/inspector partitioning,
+paired draft/history routing, full workload timing and observing rollout remain
+open. No Studio speedup or full criterion/credit closes; counters remain
+**25/11/44/21/28/3**. See
+[the packet](../WORK.md#current-return-path-staged-view-sections--2026-10-08).
+
+Previous retained Resources navigation (2026-10-08): a guarded public Nyx form
 operation keeps actual New/Open controls mounted on both targets, preserving
 creator styling/additions and rollback. Win32 passes **137**, HTTP desktop/CSS-390
 **450/638** (polling included); unchanged emitted Pascal executes the **48**-check

@@ -11,6 +11,12 @@ configuration is applied to independently realized views, preserving authored
 documents. [Interaction snapshots and phases](events.md#interaction-families-and-timing)
 share one typed registry across schema, persistence, source generation and Studio.
 
+[Independent view sections](view-sections.md) supply a portable preparation and
+grouped publication boundary over those target renderers. Structural replacement
+can retain unmentioned mounted sections; revisions and borrowed host lifetimes
+are explicit. Studio partitioning and whole-workload performance acceptance remain
+under their existing task owners.
+
 ```text
 Nyx application / generated Pascal
               |

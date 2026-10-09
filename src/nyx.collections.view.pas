@@ -48,6 +48,14 @@ const
 
 type
   INyxCollectionView = interface;
+  { Optional explicit readiness for structural view retirement. Selection/query
+    notifications can be busy even while their underlying store is idle.
+    Unknown extension views do not imply readiness; they can implement this
+    capability while preserving the existing collection-view interface ABI. }
+  INyxCollectionViewPublication = interface(IInterface)
+    ['{1B0B4B83-1B44-42C7-AEE4-9737A7BC331D}']
+    function PublicationReady: Boolean;
+  end;
   TNyxCollectionViewObserver = procedure(const AView: INyxCollectionView;
     const AChanges: INyxCollectionChanges) of object;
 
@@ -212,6 +220,9 @@ function NewNyxCollectionContext(const ADefaults: INyxCollectionDefaults;
   attaching a subscription. The same dataset validator serves live views. }
 procedure ValidateNyxCollectionViewSnapshot(const ASnapshot: INyxCollectionSnapshot;
   const ASpec: TNyxCollectionViewSpec; AProjection: TNyxCollectionProjection);
+{ False for nil/unknown views or active view/store notification. This is a
+  synchronous readiness observation, never a reservation or admission cache. }
+function NyxCollectionViewPublicationReady(const AView: INyxCollectionView): Boolean;
 
 implementation
 
@@ -228,7 +239,8 @@ type
   end;
   TParentIndexes = TNyxQueryIndexes;
 
-  TView = class(TInterfacedObject, INyxCollectionView, INyxTreeHierarchy)
+  TView = class(TInterfacedObject, INyxCollectionView, INyxTreeHierarchy,
+    INyxCollectionViewPublication)
   private
     FStore: INyxCollection;
     FAtomic: INyxAtomicCollection;
@@ -287,6 +299,7 @@ type
     function GetHasSelection: Boolean;
     function GetSelected: TNyxItemRef;
     function GetSelection: INyxCollectionSelection;
+    function PublicationReady: Boolean;
     function GetQuery: TNyxCollectionQuery;
     function ConfigureQuery(const APolicy: TNyxCollectionQuery): INyxCollectionView;
     function ParentIndex(AIndex: Integer): Integer;
@@ -1135,6 +1148,19 @@ begin
     LAnchor := LFocus;
   end;
   Result := NewNyxCollectionSelection(ASource, LItems, LFocus, LAnchor);
+end;
+
+function TView.PublicationReady: Boolean;
+begin
+  Result := not FNotifying and (FPrepared = nil) and (FAtomic <> nil) and not FAtomic.Busy;
+end;
+
+function NyxCollectionViewPublicationReady(const AView: INyxCollectionView): Boolean;
+var
+  LReadiness: INyxCollectionViewPublication;
+begin
+  Result := (AView <> nil) and Supports(AView, INyxCollectionViewPublication, LReadiness)
+    and LReadiness.PublicationReady;
 end;
 
 function TView.GetQuery: TNyxCollectionQuery;
