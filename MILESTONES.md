@@ -4,7 +4,16 @@
 [Current work](WORK.md)
 
 
-Current dedicated Resources integration (2026-10-09): a public Nyx workspace and
+Current semantic resource discovery (2026-10-09) consumes that workspace's shared
+typed category/source/locale/search/tag query. Bounded exact label pages and
+payload-free `set-labels` use existing paired transactions. Suspended public MCP
+passes 130 native/shared HTTP browser 103, exact emitted source 10 each and actual
+catalog controls 22 per target, retaining selected membership/drafts. Authenticated
+installed/observing rollout, full native visual parity, workspace UX and performance
+stay open; no full criterion/count/credit closes. Aggregate **25/11/47/21/28/3**.
+See [the packet](WORK.md#current-return-path-semantic-resource-discovery--2026-10-09).
+
+Previous dedicated Resources integration (2026-10-09): a public Nyx workspace and
 compact Project picker share category/source/locale discovery and exact all/any
 creator-tag filters. Files/Open precede collapsible details, whose active query
 and unfinished input survive typed disclosure. Independent sections, strict

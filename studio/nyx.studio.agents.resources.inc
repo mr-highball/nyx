@@ -26,14 +26,153 @@
 
 type
   TNyxAgentResourceMode = (armList, armDetails, armContent, armJSON, armBindings, armApply,
-    armSources, armRows, armRuntimes, armRuntime);
+    armSources, armRows, armRuntimes, armRuntime, armLabels);
 
 const
   CResourceModes: array[TNyxAgentResourceMode] of TNyxText =
     ('list', 'details', 'content', 'json', 'bindings', 'apply', 'sources', 'rows',
-      'runtimes', 'runtime');
+      'runtimes', 'runtime', 'labels');
   CResourceDataKinds: array[TNyxDataKind] of TNyxText =
     ('null', 'text', 'boolean', 'number', 'object', 'array');
+  CResourceDiscoveryScope: TNyxText = 'agent-resource-discovery';
+
+{ Friendly closed JSON choices adapt to the same public query used by Studio.
+  Defaults fold ASCII search only; exact labels never fold or split on commas.
+  Kinds([]) is deliberately an empty result. Work/Unicode/predicate admission
+  remains in ToQuery instead of a second semantic filtering implementation. }
+function ResourceDiscoveryQuery(const AData: TNyxDataValue): TNyxResourceCatalogQuery;
+var
+  LComparison: TNyxQueryTextComparison;
+  LKinds: TNyxResourceCatalogKinds;
+  LKind: TNyxResourceKind;
+  LIndex: Integer;
+  LText: TNyxText;
+  LFound: Boolean;
+  LLabels: TNyxResourceLabels;
+  LMatch: TNyxResourceLabelMatch;
+begin
+  NyxAgentFields(AData, '|search|comparison|kinds|sources|locales|labels|labelMatch|');
+  Result := NyxResourceCatalogQuery;
+  LComparison := nqtAsciiInsensitive;
+
+  if NyxAgentHas(AData, 'comparison') then
+  begin
+    LText := AData.Field('comparison').AsText;
+
+    if LText = 'exact' then
+    begin
+      LComparison := nqtExact;
+    end
+    else if LText <> 'ascii-insensitive' then
+    begin
+      raise ENyxResource.Create('Unknown resource search comparison');
+    end;
+  end;
+  Result := Result.Search(TextArgument(AData, 'search'), LComparison);
+
+  if NyxAgentHas(AData, 'kinds') then
+  begin
+
+    if (AData.Field('kinds').Kind <> ndArray) or (AData.Field('kinds').Count > 4) then
+    begin
+      raise ENyxResource.Create('Resource categories require at most four distinct kinds');
+    end;
+    LKinds := [];
+    for LIndex := 0 to AData.Field('kinds').Count - 1 do
+    begin
+      LText := AData.Field('kinds').Item(LIndex).AsText;
+      LFound := False;
+      for LKind := Low(TNyxResourceKind) to High(TNyxResourceKind) do
+      begin
+
+        if LText = NyxResourceKindName(LKind) then
+        begin
+
+          if LKind in LKinds then
+          begin
+            raise ENyxResource.Create('Duplicate resource category');
+          end;
+          Include(LKinds, LKind);
+          LFound := True;
+          Break;
+        end;
+      end;
+
+      if not LFound then
+      begin
+        raise ENyxResource.Create('Unknown resource category');
+      end;
+    end;
+    Result := Result.Kinds(LKinds);
+  end;
+
+  if NyxAgentHas(AData, 'sources') then
+  begin
+    LText := AData.Field('sources').AsText;
+
+    if LText = 'any' then
+    begin
+      Result := Result.Sources(rcsAny);
+    end
+    else if LText = 'embedded' then
+    begin
+      Result := Result.Sources(rcsEmbedded);
+    end
+    else if LText = 'hosted' then
+    begin
+      Result := Result.Sources(rcsHosted);
+    end
+    else
+    begin
+      raise ENyxResource.Create('Unknown resource source category');
+    end;
+  end;
+
+  if NyxAgentHas(AData, 'locales') then
+  begin
+    LText := AData.Field('locales').AsText;
+
+    if LText = 'any' then
+    begin
+      Result := Result.Locales(rclAny);
+    end
+    else if LText = 'default' then
+    begin
+      Result := Result.Locales(rclDefault);
+    end
+    else if LText = 'localized' then
+    begin
+      Result := Result.Locales(rclLocalized);
+    end
+    else
+    begin
+      raise ENyxResource.Create('Unknown resource locale category');
+    end;
+  end;
+  LLabels := NyxResourceLabels;
+  LMatch := rlmAll;
+
+  if NyxAgentHas(AData, 'labels') then
+  begin
+    LLabels := TNyxResourceLabels.FromData(AData.Field('labels'));
+  end;
+
+  if NyxAgentHas(AData, 'labelMatch') then
+  begin
+    LText := AData.Field('labelMatch').AsText;
+
+    if LText = 'any' then
+    begin
+      LMatch := rlmAny;
+    end
+    else if LText <> 'all' then
+    begin
+      raise ENyxResource.Create('Unknown resource tag matching policy');
+    end;
+  end;
+  Result := Result.Labels(LLabels, LMatch);
+  Result.ToQuery;
+end;
 
 function ResourceTextWindow(const AText: TNyxText; AOffset, ACount: Integer): TNyxDataValue;
 var
@@ -113,6 +252,9 @@ var
   LRows: TNyxResourceRows;
   LSchema: TNyxCollectionSchema;
   LField: TNyxCollectionField;
+  LDiscovery: INyxResourceCatalog;
+  LLabels: TNyxResourceLabels;
+  LQuery: TNyxResourceCatalogQuery;
 begin
   LFound := False;
   for LMode := Low(TNyxAgentResourceMode) to High(TNyxAgentResourceMode) do
@@ -156,6 +298,14 @@ begin
     Exit;
   end;
   LResources := FSession.Document.Resources;
+
+  if (LMode in [armList, armDetails, armLabels]) and
+    NyxAgentHas(AArguments, 'expectedRevision') then
+  begin
+    { Optional read pins let several bounded metadata pages share one document
+      epoch. Legacy unpinned reads keep their existing behavior and current tag. }
+    RequireRevision(AArguments);
+  end;
 
   if LMode = armSources then
   begin
@@ -225,10 +375,23 @@ begin
 
   if LMode = armList then
   begin
-    NyxAgentFields(AArguments, '|mode|offset|limit|filter|');
+    NyxAgentFields(AArguments, '|mode|offset|limit|filter|query|expectedRevision|');
     LOffset := IntegerArgument(AArguments, 'offset', 0, 0, NyxMaximumResources);
     LLimit := IntegerArgument(AArguments, 'limit', 8, 1, 16);
     LFilter := TextArgument(AArguments, 'filter');
+    LDiscovery := nil;
+
+    if NyxAgentHas(AArguments, 'query') then
+    begin
+
+      if NyxAgentHas(AArguments, 'filter') then
+      begin
+        raise ENyxResource.Create('Choose legacy resource filter or structured query, not both');
+      end;
+      LQuery := ResourceDiscoveryQuery(AArguments.Field('query'));
+      LDiscovery := NewNyxResourceCatalog(NyxCollection(CResourceDiscoveryScope), LResources);
+      LDiscovery.Filter(LQuery);
+    end;
     LValues := nil;
     LTotal := 0;
     for LIndex := 0 to LResources.Count - 1 do
@@ -236,6 +399,12 @@ begin
       LReference := LResources.Reference(LIndex);
       LLocale := LResources.Locale(LIndex);
       LDefinition := LResources.Definition(LReference, LLocale);
+
+      if (LDiscovery <> nil) and
+        not LDiscovery.View.Snapshot.Has(LDiscovery.Find(LReference, LLocale)) then
+      begin
+        Continue;
+      end;
 
       if (LFilter <> '') and (Pos(LFilter, LReference.Name) = 0) and
         (Pos(LFilter, LDefinition.Title) = 0) and
@@ -258,6 +427,7 @@ begin
           NyxField('kind', NyxData(NyxResourceKindName(LDefinition.Kind))),
           NyxField('source', NyxData(LOrigin)), NyxField('bytes', NyxData(LDefinition.ByteCount)),
           NyxField('fallback', NyxData(LDefinition.FallbackDefinition <> nil)),
+          NyxField('labelCount', NyxData(NyxResourceLabelsOf(LDefinition).Count)),
           NyxField('title', ResourceTextWindow(LDefinition.Title, 0, 80))]);
       end;
       Inc(LTotal);
@@ -269,9 +439,17 @@ begin
     Exit;
   end;
 
-  if LMode = armJSON then
+  if LMode = armLabels then
+  begin
+    NyxAgentFields(AArguments, '|mode|name|locale|offset|limit|expectedRevision|');
+  end
+  else if LMode = armJSON then
   begin
     NyxAgentFields(AArguments, '|mode|name|locale|path|offset|limit|textOffset|textCount|');
+  end
+  else if LMode = armDetails then
+  begin
+    NyxAgentFields(AArguments, '|mode|name|locale|offset|count|expectedRevision|');
   end
   else
   begin
@@ -288,6 +466,24 @@ begin
   { Exact variant lookup. An agent never accidentally edits a locale selected
     through fallback. Payload queries explicitly identify authored fallback. }
   LDefinition := LResources.Definition(LReference, LLocale);
+
+  if LMode = armLabels then
+  begin
+    LLabels := NyxResourceLabelsOf(LDefinition);
+    LOffset := IntegerArgument(AArguments, 'offset', 0, 0, NyxMaximumResourceLabels);
+    LLimit := IntegerArgument(AArguments, 'limit', 8, 1, 16);
+    LCount := Min(LLimit, Max(0, LLabels.Count - LOffset));
+    SetLength(LValues, LCount);
+    for LIndex := 0 to LCount - 1 do
+    begin
+      LValues[LIndex] := NyxData(LLabels.Item(LOffset + LIndex).Name);
+    end;
+    Exit(NyxObject([NyxField('revision', NyxData(FRevision)),
+      NyxField('name', NyxData(LReference.Name)), NyxField('locale', NyxData(LLocale.Name)),
+      NyxField('total', NyxData(LLabels.Count)), NyxField('offset', NyxData(LOffset)),
+      NyxField('nextOffset', NyxData(Min(LOffset + LCount, LLabels.Count))),
+      NyxField('labels', NyxArray(LValues))]));
+  end;
   LSource := LDefinition.Source;
   LOrigin := 'embedded';
 
@@ -320,6 +516,7 @@ begin
       NyxField('hosted', NyxData(LSource.Kind = rskHosted)),
       NyxField('source', LData), NyxField('bytes', NyxData(LDefinition.ByteCount)),
       NyxField('fallback', NyxData(LDefinition.FallbackDefinition <> nil)),
+      NyxField('labelCount', NyxData(NyxResourceLabelsOf(LDefinition).Count)),
       NyxField('title', ResourceTextWindow(LDefinition.Title,
         Min(LOffset, ResourceTextCount(LDefinition.Title)), LLimit)),
       NyxField('description', ResourceTextWindow(LDefinition.Description,

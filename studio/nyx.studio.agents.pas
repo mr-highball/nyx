@@ -252,7 +252,7 @@ uses
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.studio.importedits,
   nyx.studio.routineedits, nyx.studio.declarationedits, nyx.times,
   nyx.resources, nyx.resource.sources, nyx.bytes, nyx.studio.resourceedits,
-  nyx.resources.rows, nyx.collections.registry, nyx.studio.viewsedits;
+  nyx.resources.rows, nyx.resources.catalog, nyx.collections.registry, nyx.studio.viewsedits;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
 var

@@ -99,8 +99,12 @@ are all Pascal; browser JavaScript is compiler output.
 
 ## Semantic context
 
-Prepared resource source adds `nyx_resources`: bounded variant metadata, exact
+Prepared resource source adds `nyx_resources`: bounded variant metadata, shared
+category/source/locale/search/tag discovery, exact paged creator labels,
 Unicode/byte windows, structural JSON paths and selected-owner binding context.
+Optional revision pins keep metadata/tag pages consistent. Payload-free
+`set-labels` changes preserve the exact variant's contents/cache/fallback/help
+and use the existing paired admission path; discovery never changes editor filters.
 Resource definitions and dependent scalar binding repairs use one paired Apply,
 or an `op: "resources"` group in `nyx_transaction`. Existing operator policy,
 transport authority, revision, retry receipts and workspace/review routing apply.

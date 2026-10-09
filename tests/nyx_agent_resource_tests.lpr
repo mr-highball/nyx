@@ -30,14 +30,17 @@ uses SysUtils, nyx.text, nyx.data, nyx.bytes, nyx.types, nyx.controls,
   nyx.binding.types, nyx.resources, nyx.resource.sources, nyx.images,
   nyx.studio.projects, nyx.studio.agents, nyx.studio.resourceedits,
   nyx.studio.transactions, nyx.studio.edits
-  {$ifdef PAS2JS}, Web{$else}, Classes, nyx.studio.mcp, nyx.studio.directories,
+  {$ifdef PAS2JS}, JS, Web{$else}, Classes, nyx.studio.mcp, nyx.studio.directories,
   nyx.studio.outputs, nyx.studio.workspaces, nyx.test.resource.runtime{$endif};
 
 const
   COriginal: TNyxText = '{ "literal.dot": "Ready 🌙", "prompt": "Your project", "price": 9007199254740993.1250, "items": [true, null] }';
   CReplacement: TNyxText = '{ "title": "Tomorrow 🌙", "prompt": "Keep building", "price": 9007199254740993.1250, "items": [true, null] }';
   CExact: TNyxText = 'Hello 🌙' + #0 + ' tomorrow';
-  CPNG: TNyxText = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jB4sAAAAASUVORK5CYII=';
+  { Pascal-created PNG shared with the maintained image-authoring qualification;
+    retain real chunk checksums rather than weakening image admission for a fixture. }
+  CPNG: TNyxText = 'iVBORw0KGgoAAAANSUhEUgAAAGQAAAAyEAIAAAB1xzWqAAAACXBIWXMAAAAAAAAAAACdYiYyAAABMElEQVR4nO3OsQ0AIAzAsP7/dOEEtsgSGTxnduf2fbE/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDyHwAsj+AzAcg+wPIfACyP4DMByD7A8h8ALI/gMwHIPsDxwO6T+sr8laFkAAAAABJRU5ErkJggg==';
+  CNote: TNyxText = '{ Resource companion: retain this handwritten footer. }';
 
 var
   GChecks: Integer;
@@ -90,7 +93,8 @@ begin
     LInstance := NewNyxComponent('second-card');
     LInstance.Configure.Component(NyxComponent('welcome-card')).Done;
     LPage.Add(LInstance);
-    Result := NyxProjectPair(TNyxCodec.Encode(LDocument), TNyxCodegen.Generate(LDocument));
+    Result := NyxProjectPair(TNyxCodec.Encode(LDocument), TNyxCodegen.Generate(LDocument) +
+      TNyxText(#10) + CNote + TNyxText(#10));
   finally
     LDocument.Free;
   end;
@@ -184,6 +188,209 @@ begin
     (LState.Field('view').AsText = LAfter.Field('view').AsText), AReason);
 end;
 
+procedure History(const ADirection, AID: TNyxText); forward;
+
+{$ifdef PAS2JS}
+{ Allow the actual host to answer inspection between complete semantic phases.
+  No mutation, clock or admission is accelerated and no assertion is skipped. }
+procedure Pause(AResolve, AReject: TJSPromiseResolver);
+begin
+  window.setTimeout(
+    procedure
+    begin
+      AResolve(True);
+    end, 25);
+end;
+{$endif}
+
+{ The existing public MCP/core journey consumes metadata-only changes, then
+  checks the observing editor's complete paired value. No listener is started;
+  installed/authenticated HTTP and physical input remain separate evidence. }
+procedure DiscoveryChecks; {$ifdef PAS2JS}async;{$endif}
+const
+  CTag: TNyxText = 'Docs, "quick" 🌙';
+var
+  LBefore: TNyxText;
+  LAfter: TNyxText;
+  LResult: TNyxDataValue;
+  LArgs: TNyxDataValue;
+  LReceipt: TNyxDataValue;
+  LOldDocument: TNyxDocument;
+  LDocument: TNyxDocument;
+  LLabels: TNyxResourceLabels;
+  LIndex: Integer;
+  LQuery: TNyxDataValue;
+
+  function List(const AQuery: TNyxDataValue; AOffset: Integer = 0;
+    ALimit: Integer = 8): TNyxDataValue;
+  begin
+    Result := Call('nyx_resources', NyxObject([NyxField('mode', NyxData('list')),
+      NyxField('query', AQuery), NyxField('expectedRevision', NyxData(GRevision)),
+      NyxField('offset', NyxData(AOffset)), NyxField('limit', NyxData(ALimit))]));
+  end;
+
+begin
+  LBefore := PairText;
+  LLabels := NyxResourceLabels.Add(NyxResourceLabel('Onboarding')).Add(NyxResourceLabel(CTag));
+  LArgs := Arguments('tag-project-files', NyxResourcePatch([
+    NyxSetResourceLabels(NyxResourceRef('copy'), NyxDefaultLocale, LLabels),
+    NyxSetResourceLabels(NyxResourceRef('copy'), NyxLocale('en-US'),
+      NyxResourceLabels.Add(NyxResourceLabel('Onboarding'))),
+    NyxSetResourceLabels(NyxResourceRef('remote-copy'), NyxDefaultLocale,
+      NyxResourceLabels.Add(NyxResourceLabel('Onboarding'))),
+    NyxSetResourceLabels(NyxResourceRef('logo'), NyxDefaultLocale,
+      NyxResourceLabels.Add(NyxResourceLabel('Media')))]).ToData);
+  Check(Pos('"content"', LArgs.ToJSON) = 0,
+    'metadata-only semantic group resends no file payload');
+  LReceipt := Call('nyx_resources', LArgs);
+  GRevision := LReceipt.Field('revision').AsInteger;
+  Check(LReceipt.Field('resources').Field('changes').AsInteger = 4,
+    'one semantic operation tags exact embedded/hosted/localized/image variants');
+  LAfter := PairText;
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@Pause)));{$endif}
+  Check(Call('nyx_resources', LArgs).ToJSON = LReceipt.ToJSON,
+    'tag operation retries retain the exact actor-scoped receipt');
+  Refuses('nyx_resources', LArgs, 'another actor cannot replay tag authority', 'other-owner');
+  LOldDocument := TNyxCodec.Decode(DecodeNyxProject(LBefore).Design);
+  LDocument := TNyxCodec.Decode(DecodeNyxProject(LAfter).Design);
+  try
+    for LIndex := 0 to LDocument.Resources.Count - 1 do
+    begin
+      Check(NyxResourceDiscovery(LDocument.Resources.Definition(LDocument.Resources.Reference(LIndex),
+        LDocument.Resources.Locale(LIndex))).WithLabels(NyxResourceLabels).ToData.ToJSON =
+        LOldDocument.Resources.Definition(LOldDocument.Resources.Reference(LIndex),
+        LOldDocument.Resources.Locale(LIndex)).ToData.ToJSON,
+        'tag changes retain complete original content/source/cache/fallback/help');
+    end;
+    Check(LDocument.Find('headline').Bindings[0].Same(
+      LOldDocument.Find('headline').Bindings[0]) and
+      LDocument.Find('project-name').Bindings[0].Same(
+      LOldDocument.Find('project-name').Bindings[0]),
+      'tag-only admission retains consumer binding descriptors');
+  finally
+    LDocument.Free;
+    LOldDocument.Free;
+  end;
+  History('undo', 'tag-project-undo');
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@Pause)));{$endif}
+  Check(PairText = LBefore, 'one Undo restores exact source and all untagged variants');
+  History('redo', 'tag-project-redo');
+  Check(PairText = LAfter, 'one Redo restores the complete labelled design/source pair');
+  Check(Pos(CNote, DecodeNyxProject(LAfter).Source) > 0,
+    'tag reconciliation retains handwritten source outside the managed views');
+  LResult := List(NyxObject([NyxField('search', NyxData('ONBOARDING'))]), 0, 2);
+  Check((LResult.Field('total').AsInteger = 3) and
+    (LResult.Field('resources').Count = 2) and (LResult.Field('nextOffset').AsInteger = 2),
+    'shared folded discovery pages matching label metadata across variants');
+  Check((LResult.Field('resources').Item(0).Field('labelCount').AsInteger = 2) and
+    (Pos('"labels"', LResult.ToJSON) = 0) and (Pos('"content"', LResult.ToJSON) = 0),
+    'small discovery summaries expose counts without tag arrays or payload');
+  Check(List(NyxObject([NyxField('search', NyxData('ONBOARDING'))]), 2, 2)
+    .Field('resources').Count = 1, 'next discovery page continues in stable catalog order');
+  Check(List(NyxObject([NyxField('search', NyxData('onboarding')),
+    NyxField('comparison', NyxData('exact'))])).Field('total').AsInteger = 0,
+    'exact scalar search remains an explicit choice');
+  Check(List(NyxObject([NyxField('kinds', NyxArray([]))])).Field('total').AsInteger = 0,
+    'an explicitly empty category set matches nothing');
+  LQuery := NyxObject([NyxField('kinds', NyxArray([NyxData('json')])),
+    NyxField('sources', NyxData('hosted')), NyxField('locales', NyxData('default')),
+    NyxField('labels', NyxArray([NyxData('Onboarding')]))]);
+  LResult := List(LQuery);
+  Check((LResult.Field('total').AsInteger = 1) and
+    (LResult.Field('resources').Item(0).Field('name').AsText = 'remote-copy'),
+    'category/source/locale/tag restrictions intersect without fetching a URL');
+  Check(List(NyxObject([NyxField('locales', NyxData('localized')),
+    NyxField('labels', NyxArray([NyxData('Onboarding')]))])).Field('total').AsInteger = 1,
+    'localized category selects only the exact localized variant');
+  Check(List(NyxObject([NyxField('labels', NyxArray([NyxData('Onboarding'), NyxData(CTag)]))]))
+    .Field('total').AsInteger = 1, 'all matching uses exact independent comma/quote/Unicode tags');
+  Check(List(NyxObject([NyxField('labels', NyxArray([NyxData('Onboarding'), NyxData('Missing')])),
+    NyxField('labelMatch', NyxData('any'))])).Field('total').AsInteger = 3,
+    'any matching keeps useful alternatives');
+  LResult := Query('labels', 'copy', [NyxField('expectedRevision', NyxData(GRevision)),
+    NyxField('limit', NyxData(1))]);
+  Check((LResult.Field('total').AsInteger = 2) and (LResult.Field('nextOffset').AsInteger = 1) and
+    (LResult.Field('labels').Item(0).AsText = 'Onboarding'), 'tag inspection pages exact insertion order');
+  LResult := Query('labels', 'copy', [NyxField('expectedRevision', NyxData(GRevision)),
+    NyxField('offset', NyxData(1)), NyxField('limit', NyxData(1))]);
+  Check(LResult.Field('labels').Item(0).AsText = CTag,
+    'a bounded tag page returns a complete Unicode name without delimiter splitting');
+  Check(Query('details', 'copy', [NyxField('expectedRevision', NyxData(GRevision))])
+    .Field('labelCount').AsInteger = 2, 'exact metadata details disclose tag count');
+  LResult := Snapshot;
+  Check((LResult.Field('project').AsText = LAfter) and
+    (LResult.Field('session').Field('revision').AsInteger = GRevision),
+    'observing editor sees the latest complete tagged design/source pair');
+  Check(Pos('Scooty', LResult.Field('activity').ToJSON) > 0,
+    'operator activity visibly attributes semantic tag work');
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@Pause)));{$endif}
+  LBefore := PairText;
+  Apply('clear-one-variant-tags', [NyxSetResourceLabels(NyxResourceRef('copy'),
+    NyxLocale('en-US'), NyxResourceLabels)]);
+  Check(List(NyxObject([NyxField('labels', NyxArray([NyxData('Onboarding')]))]))
+    .Field('total').AsInteger = 2, 'clearing exact locale tags leaves other variants untouched');
+  History('undo', 'clear-one-variant-undo');
+  Check(PairText = LBefore, 'cleared annotations restore with their paired source');
+  Refuses('nyx_resources', NyxObject([NyxField('mode', NyxData('list')),
+    NyxField('expectedRevision', NyxData(GRevision - 1)), NyxField('query', NyxObject([]))]),
+    'stale metadata pages refuse after history moves the revision');
+  Refuses('nyx_resources', NyxObject([NyxField('mode', NyxData('labels')),
+    NyxField('name', NyxData('copy')), NyxField('locale', NyxData('')),
+    NyxField('expectedRevision', NyxData(GRevision - 1))]), 'stale exact tag pages refuse');
+  for LIndex := 0 to 8 do
+  begin
+    case LIndex of
+      0: LQuery := TNyxDataValue.ParseJSON('{"labels":["Onboarding","Onboarding"]}');
+      1: LQuery := TNyxDataValue.ParseJSON('{"labels":"Onboarding"}');
+      2: LQuery := TNyxDataValue.ParseJSON('{"kinds":["json","json"]}');
+      3: LQuery := TNyxDataValue.ParseJSON('{"kinds":["memo"]}');
+      4: LQuery := TNyxDataValue.ParseJSON('{"sources":true}');
+      5: LQuery := TNyxDataValue.ParseJSON('{"locales":"en-US"}');
+      6: LQuery := TNyxDataValue.ParseJSON('{"labelMatch":"perhaps"}');
+      7: LQuery := TNyxDataValue.ParseJSON('{"comparison":"fold-every-script"}');
+      8: LQuery := TNyxDataValue.ParseJSON('{"unknown":true}');
+    end;
+    Refuses('nyx_resources', NyxObject([NyxField('mode', NyxData('list')),
+      NyxField('query', LQuery)]), 'malformed or unknown structured discovery refuses unchanged');
+    {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@Pause)));{$endif}
+  end;
+  Refuses('nyx_resources', TNyxDataValue.ParseJSON('{"mode":"list","filter":"","query":{}}'),
+    'legacy and structured filter meanings cannot compete');
+  Refuses('nyx_resources', Arguments('tag-late-failure', NyxResourcePatch([
+    NyxSetResourceLabels(NyxResourceRef('copy'), NyxDefaultLocale, NyxResourceLabels),
+    NyxRemoveResource(NyxResourceRef('missing'), NyxDefaultLocale)]).ToData),
+    'a late grouped failure preserves all earlier candidate annotations and source');
+  Refuses('nyx_resources', Arguments('tag-missing-locale', NyxResourcePatch([
+    NyxSetResourceLabels(NyxResourceRef('copy'), NyxLocale('fr-FR'), LLabels)]).ToData),
+    'tag changes require an exact variant instead of editing its default fallback');
+  Refuses('nyx_resources', Arguments('tag-duplicate-wire', TNyxDataValue.ParseJSON(
+    '[{"op":"set-labels","name":"copy","locale":"","labels":["Onboarding","Onboarding"]}]')),
+    'duplicate tag wire refuses before publication');
+  LBefore := PairText;
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@Pause)));{$endif}
+  Apply('define-labelled-wire', [
+    NyxDefineResource(NyxResourceRef('tag-review-embedded'), NyxDefaultLocale,
+      NyxTextResource('Embedded review').Tagged(NyxResourceLabel(CTag))),
+    NyxDefineResource(NyxResourceRef('tag-review-hosted'), NyxDefaultLocale,
+      NyxResourceDiscovery(NyxHostedResource(nrkJSON,
+        NyxResourceURL('https://example.invalid/tag-review.json'))
+        .Fallback(NyxJSONResource(COriginal).Tagged(NyxResourceLabel('Offline'))))
+        .Tagged(NyxResourceLabel('Review')))]);
+  Check(Query('labels', 'tag-review-embedded', []).Field('labels').Item(0).AsText = CTag,
+    'define dispatch admits canonical embedded version three labels');
+  LDocument := TNyxCodec.Decode(DecodeNyxProject(PairText).Design);
+  try
+    Check(NyxResourceLabelsOf(LDocument.Resources.Definition(
+      NyxResourceRef('tag-review-hosted'), NyxDefaultLocale).FallbackDefinition)
+      .Item(0).Name = 'Offline',
+      'canonical hosted version four preserves labelled embedded fallback version three');
+  finally
+    LDocument.Free;
+  end;
+  History('undo', 'define-labelled-wire-undo');
+  Check(PairText = LBefore, 'temporary labelled definitions retire in one exact paired Undo');
+end;
+
 procedure History(const ADirection, AID: TNyxText);
 begin
   GRevision := Call('nyx_history', NyxObject([
@@ -198,7 +405,7 @@ begin
     NyxField('after', NyxData(0)), NyxField('permission', NyxData(APermission))]));
 end;
 
-procedure Run;
+procedure Run; {$ifdef PAS2JS}async;{$endif}
 var
   LArgs: TNyxDataValue;
   LResult: TNyxDataValue;
@@ -249,10 +456,12 @@ begin
   Check(LReceipt.Field('resources').Field('changes').AsInteger = 10,
     'one real MCP operation defines every file kind and binds multiple controls');
   LBefore := PairText;
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@Pause)));{$endif}
   History('undo', 'all-files-undo');
   Check(PairText = LInitial, 'one paired Undo restores the entire original project');
   History('redo', 'all-files-redo');
   Check(PairText = LBefore, 'one paired Redo restores exact file bytes, selectors and source');
+  {$ifdef PAS2JS}await(DiscoveryChecks);{$else}DiscoveryChecks;{$endif}
 
   LArgs := Arguments('idempotent', NyxResourcePatch([
     NyxDefineResource(NyxResourceRef('scratch'), NyxDefaultLocale, NyxTextResource('Later'))]).ToData);
@@ -264,6 +473,7 @@ begin
     NyxDefineResource(NyxResourceRef('scratch'), NyxDefaultLocale, NyxTextResource('Different'))]).ToData),
     'same operation identity cannot change arguments');
   Refuses('nyx_resources', LArgs, 'another authority cannot replay a stale receipt', 'other-owner');
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@Pause)));{$endif}
 
   LResult := Call('nyx_resources', NyxObject([NyxField('mode', NyxData('list')),
     NyxField('limit', NyxData(2))]));
@@ -327,6 +537,7 @@ begin
   LBindings := Call('nyx_resources', NyxObject([NyxField('mode', NyxData('bindings')),
     NyxField('owner', NyxData('first-caption'))])).Field('bindings');
   Check(LBindings.Item(0).Field('inherited').AsBoolean, 'inherit removes the local mask independently');
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@Pause)));{$endif}
 
   Refuses('nyx_resources', Arguments('referenced-remove', NyxResourcePatch([
     NyxRemoveResource(NyxResourceRef('copy'), NyxDefaultLocale)]).ToData),
@@ -339,6 +550,7 @@ begin
       NyxJSONResource(CReplacement).Describe('Project copy 🌙', 'Designed for tomorrow.')),
     NyxBindResource(NyxControl('headline'), bpText, NyxResourceValue(NyxResourceRef('copy')).Field('title')),
     NyxBindResource(NyxControl('welcome-caption'), bpText, NyxResourceValue(NyxResourceRef('copy')).Field('title'))]);
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@Pause)));{$endif}
   LPair := DecodeNyxProject(PairText);
   LDocument := TNyxCodec.Decode(LPair.Design);
   LRuntime := nil;
@@ -380,6 +592,7 @@ begin
       NyxResourceValue(NyxResourceRef('copy')).Field('items').Item(0).AsBoolean)]);
   Check(Query('content', 'copy', []).Field('revision').AsInteger = GRevision,
     'a later typed repair admits the final consumer without intermediate publication');
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@Pause)));{$endif}
 
   Refuses('nyx_resources', TNyxDataValue.ParseJSON('{"mode":"list","limit":17}'), 'oversized page refuses');
   Refuses('nyx_resources', TNyxDataValue.ParseJSON('{"mode":"list","limit":"2"}'), 'numeric string refuses');
@@ -429,14 +642,22 @@ begin
       NyxObject([NyxField('op', NyxData('title')), NyxField('value', NyxData('Resource companion'))]),
       NyxObject([NyxField('op', NyxData('resources')), NyxField('changes',
         NyxResourcePatch([NyxDefineResource(NyxResourceRef('scratch'), NyxDefaultLocale,
-          NyxTextResource('Mixed semantic edit'))]).ToData)])]))]);
+          NyxTextResource('Mixed semantic edit')),
+          NyxSetResourceLabels(NyxResourceRef('scratch'), NyxDefaultLocale,
+            NyxResourceLabels.Add(NyxResourceLabel('Experiment')))]).ToData)])]))]);
   LResult := Call('nyx_transaction', LArgs);
   GRevision := LResult.Field('revision').AsInteger;
+  Check(Query('labels', 'scratch', []).Field('labels').Item(0).AsText = 'Experiment',
+    'an interleaved design transaction uses the same typed resource annotation operation');
   History('undo', 'mixed-undo');
   Check(PairText = LBefore, 'interleaved resource/design domains publish one paired Undo');
   History('redo', 'mixed-redo');
 
   Configure('readOnly');
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@Pause)));{$endif}
+  Refuses('nyx_resources', Arguments('read-only-tags', NyxResourcePatch([
+    NyxSetResourceLabels(NyxResourceRef('scratch'), NyxDefaultLocale, NyxResourceLabels)]).ToData),
+    'read-only operator policy refuses payload-free annotation changes too');
   Refuses('nyx_resources', Arguments('read-only', NyxResourcePatch([
     NyxRemoveResource(NyxResourceRef('scratch'), NyxDefaultLocale)]).ToData),
     'read-only operator policy blocks mutations');
@@ -445,6 +666,7 @@ begin
   Configure('disabled');
   Refuses('nyx_resources', TNyxDataValue.ParseJSON('{"mode":"list"}'), 'disabled policy blocks discovery');
   Configure('edit');
+  {$ifdef PAS2JS}await(TJSPromise.resolve(TJSPromise.new(@Pause)));{$endif}
 
   LBefore := PairText;
   LPair := DecodeNyxProject(LBefore);
@@ -456,6 +678,9 @@ begin
     NyxField('project', NyxData(EncodeNyxProject(LPair))),
     NyxField('selection', NyxData('home')), NyxField('view', NyxData('home'))]));
   GRevision := Snapshot.Field('session').Field('revision').AsInteger;
+  Refuses('nyx_resources', Arguments('pending-tags', NyxResourcePatch([
+    NyxSetResourceLabels(NyxResourceRef('scratch'), NyxDefaultLocale, NyxResourceLabels)]).ToData),
+    'pending Pascal refuses tag changes without losing the retained draft');
   Refuses('nyx_resources', Arguments('pending', NyxResourcePatch([
     NyxRemoveResource(NyxResourceRef('scratch'), NyxDefaultLocale)]).ToData),
     'pending Pascal refuses resource mutations without losing the draft');
@@ -467,13 +692,24 @@ begin
   GAccepted := PairText;
 
   LSchema := NyxResourceAgentSchema;
-  Check((LSchema.Field('oneOf').Count = 10) and
+  Check((LSchema.Field('oneOf').Count = 11) and
     (LSchema.Field('oneOf').Item(2).Field('properties').Field('count')
       .Field('maximum').AsInteger = 4096), 'published schema closes and bounds every mode');
   Check((LSchema.Field('oneOf').Item(7).Field('properties').Field('mode').Field('const').AsText = 'rows') and
     (LSchema.Field('oneOf').Item(7).Field('properties').Field('limit').Field('maximum').AsInteger = 16) and
     not LSchema.Field('oneOf').Item(7).Field('additionalProperties').AsBoolean,
     'saved recipe discovery advertises a closed bounded field page');
+  Check((LSchema.Field('oneOf').Item(0).Field('properties').Field('query')
+    .Field('additionalProperties').AsBoolean = False) and
+    (LSchema.Field('oneOf').Item(10).Field('properties').Field('limit')
+    .Field('maximum').AsInteger = 16), 'MCP advertises closed discovery and bounded tag pages');
+  LResult := LSchema.Field('oneOf').Item(5).Field('properties').Field('changes')
+    .Field('items').Field('oneOf');
+  Check((LResult.Item(0).Field('properties').Field('definition').Field('oneOf').Count = 4) and
+    (LResult.Item(0).Field('properties').Field('definition').Field('oneOf').Item(1)
+      .Field('properties').Field('labels').Field('minItems').AsInteger = 1) and
+    (LResult.Item(LResult.Count - 1).Field('properties').Field('op').Field('const').AsText = 'set-labels'),
+    'definition discovery advertises canonical labelled versions and payload-free annotation edits');
   {$ifndef PAS2JS}
   LTools := NyxStudioMCPTools.Field('tools');
   LRejected := True;
@@ -578,6 +814,10 @@ begin
 end;
 {$endif}
 
+{ Browser qualification returns control to the actual host between complete
+  semantic phases, allowing navigation and result inspection. The driver still
+  owns its real-clock terminal bound and explicit browser retirement. }
+procedure Execute; {$ifdef PAS2JS}async;{$endif}
 begin
   try
     GSeed := Seed;
@@ -587,12 +827,16 @@ begin
     StartEngine;
     {$endif}
     try
-      Run;
+      {$ifdef PAS2JS}await(Run);{$else}Run;{$endif}
       {$ifndef PAS2JS}
       Inc(GChecks, RunNyxResourceRuntimeProtocol);
       {$endif}
       WriteLn('PASS ', GChecks, ' resource semantic checks');
-      {$ifdef PAS2JS}document.body.setAttribute('data-test-result', 'passed');{$endif}
+      {$ifdef PAS2JS}
+      document.body.setAttribute('data-workbench-source', encodeURIComponent(DecodeNyxProject(GAccepted).Source));
+      document.body.setAttribute('data-agent-resource-checks', IntToStr(GChecks));
+      document.body.setAttribute('data-test-result', 'passed');
+      {$endif}
     finally
       {$ifdef PAS2JS}GAgent.Free;{$else}GEngine.Free;{$endif}
     end;
@@ -600,9 +844,20 @@ begin
     on LException: Exception do
     begin
       WriteLn('FAIL ', LException.Message);
-      {$ifdef PAS2JS}document.body.setAttribute('data-test-result', 'failed');{$else}
+      {$ifdef PAS2JS}
+      document.body.setAttribute('data-agent-resource-error', LException.Message);
+      document.body.setAttribute('data-test-result', 'failed');
+      {$else}
       ExitCode := 1;
       {$endif}
     end;
   end;
+end;
+
+begin
+  {$ifdef PAS2JS}
+  window.setTimeout(@Execute, 100);
+  {$else}
+  Execute;
+  {$endif}
 end.

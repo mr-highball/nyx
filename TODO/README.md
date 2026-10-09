@@ -47,7 +47,16 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current dedicated Resources integration (2026-10-09): the public Nyx workspace
+Current semantic resource discovery (2026-10-09) extends the existing workflow
+owner with shared category/source/locale/search/tag queries, exact bounded label
+pages and payload-free paired `set-labels`. Current source passes native public
+MCP 130/shared HTTP browser 103, exact emitted builders 10 each and actual catalog
+controls 22 each, retaining selection/drafts. Frozen installed/observing rollout,
+full native visual parity and broader workspace/performance stay open. No full
+criterion/count/credit closes; aggregate remains 25/11/47/21/28/3. See
+[the packet](../WORK.md#current-return-path-semantic-resource-discovery--2026-10-09).
+
+Previous dedicated Resources integration (2026-10-09): the public Nyx workspace
 and compact Project picker share category/source/locale discovery and exact
 all/any creator-tag filters. Independent section ownership, copied preferences,
 files/Open before collapsible filters, typed disclosure and historical discovery

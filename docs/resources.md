@@ -900,16 +900,18 @@ running application resource lifetime; an admission/constructor failure does not
 change the previous context. Retained refresh still checks document context.
 
 Current source exposes `nyx_resources` through the ordinary MCP dispatcher.
-Queries preserve selection, accepted source and history. Every response includes
-the revision; exact variant queries require both `name` and `locale` (empty
-locale means the default variant). Authored modes never fetch a URL or inspect
+Queries preserve selection, accepted source and history. Variant metadata and
+payload responses include the revision; exact variant queries require both
+`name` and `locale` (empty locale means the default variant). Authored modes
+never fetch a URL or inspect
 runtime cache contents. Runtime modes below inspect separately enrolled copied
 reports; they do not read cache payloads or acquire application handles.
 
 | Mode | Bounded context |
 | --- | --- |
-| `list` | 8 variants by default, at most 16; metadata/title previews without payloads; case-sensitive search of names, titles and creator help |
-| `details` | Exact kind, hosted URL/cache declaration, fallback presence and title/help windows of at most 1,024 Unicode scalars |
+| `list` | 8 variants by default, at most 16; metadata/title previews and label counts without payloads or tag arrays; legacy `filter` or structured `query` |
+| `details` | Exact kind, label count, hosted URL/cache declaration, fallback presence and title/help windows of at most 1,024 Unicode scalars |
+| `labels` | Exact variant's complete creator names in insertion order; 8 by default, at most 16; no content/source/fallback payload |
 | `content` | Text/JSON source windows of at most 4,096 Unicode scalars, or image/binary windows of at most 4,096 bytes |
 | `json` | Exact structural path; at most 16 immediate children with 80-scalar previews, or one exact scalar/text window |
 | `bindings` | Supported properties and local/effective descriptors for an authored owner, including resource selectors and inheritance |
@@ -925,12 +927,54 @@ are independently encoded Base64: concatenate the **decoded bytes**, rather
 than their padded Base64 strings. Hosted payload windows explicitly identify
 `authored-fallback`; a declaration without fallback refuses payload access.
 
-Mutation operations are `define`, `remove`, `bind`, `bind-image`, `clear-binding`,
-`inherit-binding`, `define-rows` and `detach-rows`. Definitions use the existing strict embedded version 1 or
-hosted version 2 contract. Bind carries the existing five-field resource selector
+Structured list queries consume the same public `TNyxResourceCatalogQuery` as
+the Resources workspace. `query` accepts only the fields below; supplied
+predicates intersect. The complete shared work/text/label budgets still apply.
+Leaving out a field retains its default. A supplied empty `kinds` array matches
+nothing; an empty `labels` array removes the tag restriction.
+
+| Query field | Meaning/default |
+| --- | --- |
+| `search` | Search names, titles, creator help, locales and tags; empty matches all |
+| `comparison` | `ascii-insensitive` by default, or `exact`; other Unicode remains exact |
+| `kinds` | Distinct `image`, `json`, `text`, `binary`; all four by default |
+| `sources` | `any` by default, `embedded`, or `hosted` |
+| `locales` | `any` by default, `default`, or `localized` |
+| `labels` | Exact independent printable names, without delimiter parsing |
+| `labelMatch` | `all` by default, or `any`; applies only to tag predicates |
+
+Legacy `filter` keeps its original exact-case substring meaning over names,
+titles and help. It does not search tags or locales. Supplying both `filter`
+and `query`, even an empty filter, refuses instead of choosing a hidden meaning.
+Optional `expectedRevision` on `list`, `details` and `labels` pins reads to the
+accepted revision. Carry the returned revision through subsequent pages; a
+mutation or Undo/Redo makes an old pin refuse. Unpinned reads remain compatible.
+These are discovery reads: they change neither the editor query nor selection.
+
+For example, inspect hosted JSON tagged for onboarding without fetching a URL:
+
+```json
+{"mode":"list","query":{"kinds":["json"],"sources":"hosted","labels":["Onboarding"]},"expectedRevision":12,"limit":4}
+```
+
+Mutation operations are `define`, `remove`, `set-labels`, `bind`, `bind-image`,
+`clear-binding`, `inherit-binding`, `define-rows` and `detach-rows`. Definitions
+use strict embedded version 1 or labelled version 3, and hosted version 2 or
+labelled version 4. Hosted fallback admits an embedded version 1/3 or explicit
+null. Nonempty labels are required for versions 3/4; clearing restores the
+original unlabelled shape. Bind carries the existing five-field resource selector
 and an enum property name at this wire boundary. Pascal callers use
 `NyxDefineResource`, `NyxBindResource` and `NyxResourcePatch` from
 `nyx.studio.resourceedits`, with typed references, locale, property and selector.
+`NyxSetResourceLabels` changes only an exact existing resource/locale variant.
+At the wire boundary its fields are exactly `op: "set-labels"`, `name`, `locale`
+and `labels`; an empty array clears annotations. Payload bytes, hosted source,
+cache/fallback declarations, title/help and consumer bindings remain intact.
+Unknown variants refuse instead of changing a locale fallback. Duplicate,
+malformed or oversized tag arrays refuse before publication. The public copied
+label contract limits a set to 32 labels, 128 Unicode scalars per name and
+8,192 bytes of encoded UTF-8 label JSON. No file content needs to be resent.
+
 Studio's copied form proposal consumes the same candidate implementation while
 retaining its exact catalog/control baseline guards.
 

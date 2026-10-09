@@ -38,7 +38,7 @@ type
     values; no document, renderer, path on disk or transport authority is owned.
     Construct every change through a typed factory below. }
   TNyxResourceChangeKind = (rckDefine, rckRemove, rckBind, rckClear, rckInherit,
-    rckRows, rckDetachRows, rckBindImage);
+    rckRows, rckDetachRows, rckBindImage, rckLabels);
   TNyxResourceChange = record
   private
     FDefined: Boolean;
@@ -53,6 +53,7 @@ type
     FCollection: TNyxCollectionRef;
     FRows: TNyxResourceRows;
     FReplaceStatic: Boolean;
+    FLabels: TNyxResourceLabels;
   end;
 
   { Candidate-only extension of the existing design contract; its original GUID
@@ -71,6 +72,11 @@ function NyxDefineResource(const AReference: TNyxResourceRef;
   const ALocale: TNyxLocaleRef; const ADefinition: INyxResourceDefinition): TNyxResourceChange;
 function NyxRemoveResource(const AReference: TNyxResourceRef;
   const ALocale: TNyxLocaleRef): TNyxResourceChange;
+{ Replace only the exact variant's creator labels. The final candidate keeps
+  bytes, source/cache/fallback, help and every binding; no payload must cross
+  the semantic transport. Empty clears labels. Values are copied on admission. }
+function NyxSetResourceLabels(const AReference: TNyxResourceRef;
+  const ALocale: TNyxLocaleRef; const ALabels: TNyxResourceLabels): TNyxResourceChange;
 function NyxBindResource(const AOwner: TNyxControlRef; ATarget: TNyxBindingProperty;
   const AValue: TNyxResourceValueRef): TNyxResourceChange;
 { Bind a named image resource through the same final-candidate/paired history
@@ -136,6 +142,14 @@ begin
   Result.FLocale := ALocale;
   Result.FKind := rckRemove;
   Result.FDefined := True;
+end;
+
+function NyxSetResourceLabels(const AReference: TNyxResourceRef;
+  const ALocale: TNyxLocaleRef; const ALabels: TNyxResourceLabels): TNyxResourceChange;
+begin
+  Result := NyxRemoveResource(AReference, ALocale);
+  Result.FKind := rckLabels;
+  Result.FLabels := ALabels.Copy;
 end;
 
 function BindingChange(const AOwner: TNyxControlRef; ATarget: TNyxBindingProperty;
@@ -235,6 +249,11 @@ begin
     begin
       FChanges[LIndex].FRows := AChanges[LIndex].FRows.Copy;
     end;
+
+    if AChanges[LIndex].FKind = rckLabels then
+    begin
+      FChanges[LIndex].FLabels := AChanges[LIndex].FLabels.Copy;
+    end;
   end;
 end;
 
@@ -271,6 +290,15 @@ begin
             NyxResourceFromData(LChange.FDefinition));
         rckRemove:
           LCandidate.Resources.Remove(LChange.FReference, LChange.FLocale);
+        rckLabels:
+          begin
+            { Exact lookup refuses missing variants instead of editing a locale
+              fallback. Discovery adapts alternative base definitions without
+              modifying their existing immutable ownership contract. }
+            LCandidate.Resources.Define(LChange.FReference, LChange.FLocale,
+              NyxResourceDiscovery(LCandidate.Resources.Definition(
+                LChange.FReference, LChange.FLocale)).WithLabels(LChange.FLabels));
+          end;
         rckRows:
           begin
 
@@ -387,6 +415,11 @@ begin
         LValues[LIndex] := NyxObject([NyxField('op', NyxData('remove')),
           NyxField('name', NyxData(LChange.FReference.Name)),
           NyxField('locale', NyxData(LChange.FLocale.Name))]);
+      rckLabels:
+        LValues[LIndex] := NyxObject([NyxField('op', NyxData('set-labels')),
+          NyxField('name', NyxData(LChange.FReference.Name)),
+          NyxField('locale', NyxData(LChange.FLocale.Name)),
+          NyxField('labels', LChange.FLabels.ToData)]);
       rckRows:
         LValues[LIndex] := NyxObject([NyxField('op', NyxData('define-rows')),
           NyxField('collection', NyxData(LChange.FCollection.Name)),
@@ -468,12 +501,16 @@ begin
     LData := AChanges.Item(LIndex);
     LOp := LData.Field('op').AsText;
 
-    if (LOp = 'define') or (LOp = 'remove') then
+    if (LOp = 'define') or (LOp = 'remove') or (LOp = 'set-labels') then
     begin
 
       if LOp = 'define' then
       begin
         Fields('|op|name|locale|definition|', 4);
+      end
+      else if LOp = 'set-labels' then
+      begin
+        Fields('|op|name|locale|labels|', 4);
       end
       else
       begin
@@ -491,6 +528,11 @@ begin
       begin
         LChanges[LIndex] := NyxDefineResource(NyxResourceRef(LData.Field('name').AsText),
           LLocale, NyxResourceFromData(LData.Field('definition')));
+      end
+      else if LOp = 'set-labels' then
+      begin
+        LChanges[LIndex] := NyxSetResourceLabels(NyxResourceRef(LData.Field('name').AsText),
+          LLocale, TNyxResourceLabels.FromData(LData.Field('labels')));
       end
       else
       begin
@@ -555,12 +597,67 @@ begin
   Result := NyxResourcePatch(LChanges);
 end;
 
+function ResourceLabelsSchema(AMinimum: Integer): TNyxDataValue;
+begin
+  { Schema code points are only an outer bound. Pascal also checks printable
+    scalars, exact duplicates and the complete set's UTF-8 byte budget. }
+  Result := NyxObject([NyxField('type', NyxData('array')),
+    NyxField('minItems', NyxData(AMinimum)),
+    NyxField('maxItems', NyxData(NyxMaximumResourceLabels)),
+    NyxField('uniqueItems', NyxData(True)),
+    NyxField('items', TNyxDataValue.ParseJSON(
+      '{"type":"string","minLength":1,"maxLength":128}'))]);
+end;
+
+function LabelledResourceSchema(const ABase: TNyxDataValue;
+  AVersion: Integer): TNyxDataValue;
+var
+  LProperties: TNyxDataValue;
+  LRequired: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LNames: array of TNyxDataValue;
+  LIndex: Integer;
+  LName: TNyxText;
+  LPropertyCount: Integer;
+  LRequiredCount: Integer;
+begin
+  LProperties := ABase.Field('properties');
+  LPropertyCount := LProperties.Count;
+  SetLength(LFields, LPropertyCount + 1);
+  for LIndex := 0 to LPropertyCount - 1 do
+  begin
+    LName := LProperties.Key(LIndex);
+    LFields[LIndex] := NyxField(LName, LProperties.Field(LName));
+
+    if LName = 'version' then
+    begin
+      LFields[LIndex] := NyxField(LName, NyxObject([NyxField('const', NyxData(AVersion))]));
+    end;
+  end;
+  LFields[LPropertyCount] := NyxField('labels', ResourceLabelsSchema(1));
+  LRequired := ABase.Field('required');
+  LRequiredCount := LRequired.Count;
+  SetLength(LNames, LRequiredCount + 1);
+  for LIndex := 0 to LRequiredCount - 1 do
+  begin
+    LNames[LIndex] := LRequired.Item(LIndex);
+  end;
+  LNames[LRequiredCount] := NyxData('labels');
+  Result := NyxObject([NyxField('type', NyxData('object')),
+    NyxField('properties', NyxObject(LFields)), NyxField('required', NyxArray(LNames)),
+    NyxField('additionalProperties', NyxData(False))]);
+end;
+
 function NyxResourceAgentSchema: TNyxDataValue;
 var
   LTarget: TNyxBindingProperty;
   LTargets: array of TNyxDataValue;
   LScalarTargets: array of TNyxDataValue;
   LEmbedded: TNyxDataValue;
+  LEmbeddedLabels: TNyxDataValue;
+  LHosted: TNyxDataValue;
+  LLabels: TNyxDataValue;
+  LQuery: TNyxDataValue;
   LDefinition: TNyxDataValue;
   LChanges: TNyxDataValue;
   LPath: TNyxDataValue;
@@ -587,9 +684,24 @@ begin
   LText := TNyxDataValue.ParseJSON('{"type":"string"}');
   LPath := TNyxDataValue.ParseJSON('{"type":"array","maxItems":32,"items":{"oneOf":[{"type":"string"},{"type":"integer","minimum":0,"maximum":2147483647}]}}');
   LEmbedded := TNyxDataValue.ParseJSON('{"type":"object","properties":{"version":{"const":1},"kind":{"enum":["image","json","text","binary"]},"content":{"type":"string","maxLength":1398104},"title":{"type":"string","maxLength":512},"description":{"type":"string","maxLength":4096}},"required":["version","kind","content","title","description"],"additionalProperties":false}');
+  LEmbeddedLabels := LabelledResourceSchema(LEmbedded, 3);
+  LLabels := ResourceLabelsSchema(0);
   LDefinition := TNyxDataValue.ParseJSON('{"oneOf":[' + LEmbedded.ToJSON +
     ',{"type":"object","properties":{"version":{"const":2},"kind":{"enum":["image","json","text","binary"]},"title":{"type":"string","maxLength":512},"description":{"type":"string","maxLength":4096},"source":{"type":"object","properties":{"version":{"const":1},"url":{"type":"string","minLength":1,"maxLength":8192},"cache":{"type":"object","properties":{"version":{"const":1},"mode":{"enum":[0,1,2]},"fresh":{"type":"integer","minimum":0,"maximum":31536000},"stale":{"type":"integer","minimum":0,"maximum":31536000},"bytes":{"type":"integer","minimum":1,"maximum":1048576},"server":{"enum":[0,1]}},"required":["version","mode","fresh","stale","bytes","server"],"additionalProperties":false}},"required":["version","url","cache"],"additionalProperties":false},"fallback":{"oneOf":[{"type":"null"},' +
-    LEmbedded.ToJSON + ']}},"required":["version","kind","title","description","source","fallback"],"additionalProperties":false}]}');
+    LEmbedded.ToJSON + ',' + LEmbeddedLabels.ToJSON +
+    ']}},"required":["version","kind","title","description","source","fallback"],"additionalProperties":false}]}');
+  LHosted := LDefinition.Field('oneOf').Item(1);
+  LDefinition := NyxObject([NyxField('oneOf', NyxArray([
+    LEmbedded, LEmbeddedLabels, LHosted, LabelledResourceSchema(LHosted, 4)]))]);
+  LQuery := TNyxDataValue.ParseJSON('{"type":"object","properties":{' +
+    '"search":{"type":"string","maxLength":4096},' +
+    '"comparison":{"enum":["exact","ascii-insensitive"]},' +
+    '"kinds":{"type":"array","maxItems":4,"uniqueItems":true,' +
+    '"items":{"enum":["image","json","text","binary"]}},' +
+    '"sources":{"enum":["any","embedded","hosted"]},' +
+    '"locales":{"enum":["any","default","localized"]},' +
+    '"labels":' + LLabels.ToJSON + ',"labelMatch":{"enum":["all","any"]}},' +
+    '"additionalProperties":false}');
   LSelector := TNyxDataValue.ParseJSON('{"type":"object","properties":{"resource":' +
     LName.ToJSON + ',"path":' + LPath.ToJSON +
     ',"locale":{"type":"string"},"fallback":{"type":"string"},"type":{"enum":["text","boolean","integer","number"]}},"required":["resource","path","locale","fallback","type"],"additionalProperties":false}');
@@ -619,10 +731,13 @@ begin
     '},"required":["op","owner","target","value"],"additionalProperties":false},' +
     '{"type":"object","properties":{"op":{"enum":["clear-binding","inherit-binding"]},"owner":' +
     LName.ToJSON + ',"target":{"enum":' + NyxArray(LTargets).ToJSON +
-    '}},"required":["op","owner","target"],"additionalProperties":false}]}}');
+    '}},"required":["op","owner","target"],"additionalProperties":false},' +
+    '{"type":"object","properties":{"op":{"const":"set-labels"},"name":' + LName.ToJSON +
+    ',"locale":' + LText.ToJSON + ',"labels":' + LLabels.ToJSON +
+    '},"required":["op","name","locale","labels"],"additionalProperties":false}]}}');
   LResult := '{"type":"object","oneOf":[' +
-    '{"properties":{"mode":{"const":"list"},"offset":{"type":"integer","minimum":0,"maximum":128},"limit":{"type":"integer","minimum":1,"maximum":16},"filter":{"type":"string"}},"required":["mode"],"additionalProperties":false},' +
-    '{"properties":{"mode":{"const":"details"},"name":' + LName.ToJSON + ',"locale":{"type":"string"},"offset":{"type":"integer","minimum":0,"maximum":1048576},"count":{"type":"integer","minimum":1,"maximum":1024}},"required":["mode","name","locale"],"additionalProperties":false},' +
+    '{"properties":{"mode":{"const":"list"},"offset":{"type":"integer","minimum":0,"maximum":128},"limit":{"type":"integer","minimum":1,"maximum":16},"filter":{"type":"string"},"query":' + LQuery.ToJSON + ',"expectedRevision":{"type":"integer","minimum":1,"maximum":2147483647}},"required":["mode"],"additionalProperties":false,"not":{"required":["filter","query"]}},' +
+    '{"properties":{"mode":{"const":"details"},"name":' + LName.ToJSON + ',"locale":{"type":"string"},"offset":{"type":"integer","minimum":0,"maximum":1048576},"count":{"type":"integer","minimum":1,"maximum":1024},"expectedRevision":{"type":"integer","minimum":1,"maximum":2147483647}},"required":["mode","name","locale"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"content"},"name":' + LName.ToJSON + ',"locale":{"type":"string"},"offset":{"type":"integer","minimum":0,"maximum":1048576},"count":{"type":"integer","minimum":1,"maximum":4096}},"required":["mode","name","locale"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"json"},"name":' + LName.ToJSON + ',"locale":{"type":"string"},"path":' + LPath.ToJSON + ',"offset":{"type":"integer","minimum":0,"maximum":1048576},"limit":{"type":"integer","minimum":1,"maximum":16},"textOffset":{"type":"integer","minimum":0,"maximum":1048576},"textCount":{"type":"integer","minimum":1,"maximum":4096}},"required":["mode","name","locale","path"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"bindings"},"owner":' + LName.ToJSON + ',"offset":{"type":"integer","minimum":0,"maximum":20},"limit":{"type":"integer","minimum":1,"maximum":20}},"required":["mode","owner"],"additionalProperties":false},' +
@@ -631,7 +746,8 @@ begin
     '{"properties":{"mode":{"const":"sources"},"offset":{"type":"integer","minimum":0,"maximum":64},"limit":{"type":"integer","minimum":1,"maximum":16},"filter":{"type":"string"}},"required":["mode"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"rows"},"collection":' + LName.ToJSON + ',"offset":{"type":"integer","minimum":0,"maximum":64},"limit":{"type":"integer","minimum":1,"maximum":16}},"required":["mode","collection"],"additionalProperties":false},' +
     '{"properties":{"mode":{"const":"runtimes"},"expectedRevision":{"type":"integer","minimum":1,"maximum":2147483647}},"required":["mode","expectedRevision"],"additionalProperties":false},' +
-    '{"properties":{"mode":{"const":"runtime"},"expectedRevision":{"type":"integer","minimum":1,"maximum":2147483647},"run":{"type":"string","minLength":1,"maxLength":80},"expectedSequence":{"type":"integer","minimum":1,"maximum":2147483647},"offset":{"type":"integer","minimum":0,"maximum":128},"limit":{"type":"integer","minimum":1,"maximum":16}},"required":["mode","expectedRevision","run","expectedSequence"],"additionalProperties":false}]}';
+    '{"properties":{"mode":{"const":"runtime"},"expectedRevision":{"type":"integer","minimum":1,"maximum":2147483647},"run":{"type":"string","minLength":1,"maxLength":80},"expectedSequence":{"type":"integer","minimum":1,"maximum":2147483647},"offset":{"type":"integer","minimum":0,"maximum":128},"limit":{"type":"integer","minimum":1,"maximum":16}},"required":["mode","expectedRevision","run","expectedSequence"],"additionalProperties":false},' +
+    '{"properties":{"mode":{"const":"labels"},"name":' + LName.ToJSON + ',"locale":{"type":"string"},"offset":{"type":"integer","minimum":0,"maximum":32},"limit":{"type":"integer","minimum":1,"maximum":16},"expectedRevision":{"type":"integer","minimum":1,"maximum":2147483647}},"required":["mode","name","locale"],"additionalProperties":false}]}';
   Result := TNyxDataValue.ParseJSON(LResult);
 end;
 

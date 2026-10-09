@@ -65,6 +65,14 @@ begin
       Check((LResource.Source.CachePolicy.Server = rcspOverride) and
         (LResource.Source.CachePolicy.FreshSeconds = 120) and
         (LResource.FallbackDefinition <> nil), 'Exact builder lost hosted cache/fallback');
+      Check(NyxResourceLabelsOf(LResource).Contains(NyxResourceLabel('Onboarding')),
+        'Exact builder lost semantic hosted annotations');
+      Check(NyxResourceLabelsOf(LDocument.Resources.Definition(NyxResourceRef('logo'),
+        NyxDefaultLocale)).Contains(NyxResourceLabel('Media')),
+        'Exact builder lost semantic image annotations');
+      Check(NyxResourceLabelsOf(LDocument.Resources.Definition(NyxResourceRef('scratch'),
+        NyxDefaultLocale)).Contains(NyxResourceLabel('Experiment')),
+        'Exact builder lost interleaved transaction annotations');
       LRuntime := RealizeNyxView(LDocument, LDocument.Pages[0]);
       ApplyNyxBindings(LRuntime, LDocument.State);
       Check((LRuntime.Find('headline').Prop('text') = TNyxText('Tomorrow 🌙')) and

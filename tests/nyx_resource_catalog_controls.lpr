@@ -25,10 +25,11 @@ program nyx_resource_catalog_controls;
 
 uses
   {$ifndef PAS2JS}Interfaces, Forms, Controls, StdCtrls, nyx.test.capture.lcl,{$endif}
-  SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.codec,
+  SysUtils, nyx.text, nyx.types, nyx.model, nyx.controls, nyx.codec, nyx.catalog,
   nyx.behavior, nyx.events, nyx.scheduler, nyx.resources, nyx.resources.catalog, nyx.collections,
   nyx.collections.view, nyx.collections.mount, nyx.collections.selection,
-  nyx.collections.query, nyx.studio.sections, nyx.studio.section.views
+  nyx.collections.query, nyx.studio.sections, nyx.studio.section.views,
+  nyx.studio.resourceedits
   {$ifdef PAS2JS}, JS, Web{$endif};
 
 type
@@ -114,6 +115,9 @@ end;
 procedure Run; {$ifdef PAS2JS}async;{$endif}
 var
   LDocument: TNyxDocument;
+  LResourceDocument: TNyxDocument;
+  LCandidate: TNyxDocument;
+  LComponentCatalog: TNyxCatalog;
   LViews: TNyxStudioSectionViews;
   LResources: INyxResources;
   LCatalog: INyxResourceCatalog;
@@ -127,6 +131,7 @@ var
   LRoot: TNyxNode;
   LWire: TNyxText;
   LRefused: Boolean;
+  LIndex: Integer;
   {$ifdef PAS2JS}
   LHost: TJSHTMLElement;
   LRow: TJSHTMLElement;
@@ -135,6 +140,9 @@ var
   LHost: TForm;
   {$endif}
 begin
+  LResourceDocument := nil;
+  LCandidate := nil;
+  LComponentCatalog := nil;
   LResources := NewNyxResources.Define(NyxResourceRef('project-notes'),
     NyxTextResource('Notes').Tagged(NyxResourceLabel('Help')).Describe('Project notes', 'Help for our project'))
     .Define(NyxResourceRef('project-notes'), NyxLocale('en-US'),
@@ -225,6 +233,48 @@ begin
     {$else}
     Check(TCustomMemo(LDraft).Text = 'Unfinished notes', 'tag filtering preserves the actual native draft');
     {$endif}
+    { Consume the same strict annotation patch that semantic dispatch admits.
+      This separately owns its authored candidate; the actual mounted catalog
+      receives copied metadata and never retains a document or its payloads. }
+    LResourceDocument := TNyxDocument.Create;
+    LComponentCatalog := TNyxCatalog.Create;
+    for LIndex := 0 to LResources.Count - 1 do
+    begin
+      LResourceDocument.Resources.Define(LResources.Reference(LIndex),
+        LResources.Locale(LIndex), LResources.Definition(LResources.Reference(LIndex),
+        LResources.Locale(LIndex)));
+    end;
+    LCandidate := ReadNyxResourcePatch(NyxResourcePatch([
+      NyxSetResourceLabels(NyxResourceRef('project-notes'), NyxLocale('en-US'),
+        NyxResourceLabels.Add(NyxResourceLabel('Featured')))]).ToData)
+      .Candidate(LResourceDocument, LComponentCatalog);
+    LResources := LCandidate.Resources;
+    LCatalog.Refresh(LResources);
+    {$ifdef PAS2JS}
+    Check(LControl.querySelectorAll('[data-nyx-item]').length = 1,
+      'semantic candidate metadata refreshes the active browser tag-filtered list');
+    {$else}
+    Check(TListBox(LControl).Items.Count = 1,
+      'semantic candidate metadata refreshes the active native tag-filtered list');
+    {$endif}
+    LCatalog.Filter(NyxResourceCatalogQuery.Tagged(NyxResourceLabel('Featured')));
+    {$ifdef PAS2JS}
+    Check(LControl.querySelectorAll('[data-nyx-item]').length = 1,
+      'new semantic annotations become queryable in the actual browser rows');
+    Check(TJSHTMLTextAreaElement(LDraft).value = 'Unfinished notes',
+      'semantic metadata refresh preserves the mounted browser draft');
+    {$else}
+    Check(TListBox(LControl).Items.Count = 1,
+      'new semantic annotations become queryable in the actual native rows');
+    Check(TCustomMemo(LDraft).Text = 'Unfinished notes',
+      'semantic metadata refresh preserves the mounted native draft');
+    {$endif}
+    Check((LViews.ControlFor('resource-picker') = LControl) and
+      (LViews.InputFor('resource-draft') = LDraft) and
+      (LCatalog.View.Selected.ID = LSelection.ID),
+      'annotation publication retains adapter/control/selection identity');
+    Check(LResources.Definition(NyxResourceRef('project-notes'), NyxLocale('en-US')).Text =
+      'English notes', 'annotation publication retains the actual resource contents');
     LCatalog.Filter(NyxResourceCatalogQuery);
     LResources.Remove(NyxResourceRef('project-notes'), NyxLocale('en-US'));
     LCatalog.Refresh(LResources);
@@ -278,6 +328,10 @@ begin
     LProbe.Catalog := nil;
     LLease := nil;
     LMount := nil;
+    LResources := nil;
+    LCandidate.Free;
+    LResourceDocument.Free;
+    LComponentCatalog.Free;
     LDocument.Free;
     {$ifdef PAS2JS}LHost.remove;{$else}LHost.Free;{$endif}
   end;

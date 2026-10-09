@@ -15,10 +15,16 @@ source, locale and exact all/any creator-tag filters. Filter disclosure is copie
 editor presentation and retains the active query/selection/proposals. Installed
 native MCP stays
 primary for bounded context and the maintained authored seed. The current frozen
-endpoint still predates these query/label contracts: bounded discovery, exact tag
-inspection/mutation and observing rollout remain this owner's gap. Query changes
-are editor presentation, while resource changes require revision-aware paired
-admission. Do not infer deployed support from local controller/input qualification.
+endpoint still predates these query/label contracts. Current source exposes
+bounded shared discovery, exact tag pages, optional revision pins and payload-free
+`set-labels` through existing paired transactions. Suspended native public MCP
+checks pass **130**, shared HTTP browser semantics **103**, exact emitted Pascal
+**10** each and actual catalog controls **22** on both targets. Observing editor
+exchange sees the pair/activity; authenticated installed/observing rollout remains
+this owner's gap. Discovery reads change no editor filters/selection; resource
+changes require revision-aware paired admission. Do not infer deployed support
+from local qualification. See
+[the packet](../WORK.md#current-return-path-semantic-resource-discovery--2026-10-09).
 No workflow criterion or counter closes from this partial workspace consumer.
 
 Previous creator-tag consumer (2026-10-09) uses the maintained MCP-authored

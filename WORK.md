@@ -9,6 +9,84 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Semantic resource discovery — 2026-10-09
+
+Entry was clean at pushed `b2f69fc`. This consumes the existing NS-4 workflow
+owner's resource discovery gap and the accepted dedicated workspace/category/
+creator-tag contracts; it opens no independent task or full completion claim.
+The complete Nyx/Studio goal and original acceptance criteria stay unchanged.
+
+`nyx_resources.list` adapts strict category/source/locale/search/exact all/any tag
+choices to the public `TNyxResourceCatalogQuery`. Metadata stays paged at sixteen,
+without payloads/tag arrays. Original exact-case `filter` over names/title/help
+remains compatible; competing `filter`/`query` refuses. New `labels` pages at most
+sixteen complete insertion-ordered Unicode names. Optional revision pins on
+list/details/labels refuse stale pages. Reads change no editor query or selection.
+
+Typed `NyxSetResourceLabels` and wire `set-labels` replace exact existing variants
+without resending contents. Copied candidates retain payload/source/cache/
+fallback/help/bindings and normal permission/draft/revision/actor-retry/workspace/
+review authority. Related resources/design edits use the existing paired Undo.
+Advertised schemas include canonical labelled definitions 3/4 and labelled
+embedded fallbacks, retaining legacy branch ordering. Open creator names remain
+distinct references; closed behavior consumes typed public Pascal queries.
+
+The maintained suspended public MCP engine passes **130** native checks; the
+shared browser semantic journey passes **103** over HTTP. Native-only discovery/
+workspace/review/runtime-protocol checks explain the difference. Evidence covers
+exact variant edits, late group refusal, permission/draft guards, actor retries,
+Unicode tags, bounded discovery, paired Undo/Redo, retained handwritten source
+and canonical labelled define dispatch. Observing editor exchange sees the pair
+and actor activity; this establishes neither running observing Studio nor
+authenticated transport rollout.
+
+Both emit byte-identical **5752-byte** Pascal, SHA-256
+`0c346cb2218b5e834ba88de422ba276407ef5ffcd3fbcb78f61bf35e7ee810d1`.
+The existing artifact consumer admits one or two HTTP artifacts and still checks
+UTF-8 without normalization. The exact builder executes **10** checks natively
+and in HTTP browser, including hosted/image/transaction annotations, cache/
+fallback, exact decimal/NUL/supplementary text and realized caption/prompt binding.
+
+Existing actual public catalog/section controls consume the strict annotation
+candidate and pass **22** each on Win32, HTTP desktop and CSS-390. Publication
+updates live tag-filtered rows, retaining control/selection identity, unfinished
+notes and contents. Live captures were inspected. The native print retains the
+existing section overlap/clipping limitation; these checks establish control
+values/ownership, not complete visual parity or physical/IME/accessibility
+qualification. Geometry retains its existing authoring/parity owners.
+
+An old PNG fixture failed current checksum admission. Replaced it with the exact
+qualified Pascal-created image, retaining strict validation; the initial manual
+transcription error remains recorded too. Synchronous browser startup exceeded
+navigation and then command bounds. The maintained fixture now yields between
+complete semantic phases, skips no assertions and passes the unchanged driver
+bounds. Failure logs remain. All checked native owners/browser drivers retire
+with zero unfreed blocks. Ordinary browser/LCL Studio, worker and backend compile
+with zero owned warnings; seven unchanged upstream RTL warnings per browser
+compile remain.
+
+Evidence is under `build/resource-semantic-discovery/`: native `run-current.log`,
+`run.log`/`failed-transcribed-png.log`, browser `compile-final.log`,
+`browser-semantic-yield`, failed capture logs, `controls/run.log`,
+`browser-controls-desktop`/`browser-controls-narrow`, `generated/run.log`,
+`browser-generated`, `evidence/run.log` and `generated-evidence-private.json`.
+Fresh exact closure `stage-yield-private.json` uses only the existing
+identity-checked static host. No listener/configuration/enrollment changes.
+Before/final guards retain nine exact pairs, fifteen process identities, 299
+sealed LAN files and checkpoint SHA
+`24635efcca9041bf4700ceb4a14226232ff41e61e4440a19f28c25d3de6d01c9`.
+
+This accepts the bounded source/semantic operation, not protected installed
+rollout: that endpoint still predates these contracts. Code/evidence checkpoint
+together to `origin/hello-nyx`, with exact remote/clean-worktree receipt under the
+packet. Aggregate stays **25/11/47/21/28/3**: complete resource/workflow/authoring
+criteria still require broader workspace UX, performance, physical input/native
+visual parity and observing/authenticated rollout. Stop local metadata/filter
+variants now. Return to the existing authoring owner's independent desktop pane
+scrolling and compact Resources navigation, consuming this accepted contract;
+guarded rollout retains its workflow/delivery owners. No full task/criterion/
+credit or product closes here.
+
 ## Current return path: Resource discovery usability — 2026-10-09
 
 Entry is clean at pushed `27c1b8f`. Reassessment: the preceding label editor and

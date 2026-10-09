@@ -141,20 +141,20 @@ var
 begin
   try
 
-    if ParamCount <> 3 then
+    if (ParamCount < 2) or (ParamCount > 3) then
     begin
-      raise Exception.Create('Supply native Pascal and desktop/narrow browser DOM artifacts');
+      raise Exception.Create('Supply native Pascal and one or two browser DOM artifacts');
     end;
     LSource := ReadText(ParamStr(1));
-    for LIndex := 2 to 3 do
+    for LIndex := 2 to ParamCount do
     begin
 
       if BrowserSource(ParamStr(LIndex)) <> LSource then
       begin
-        raise Exception.Create('Ordinary controllers emitted different Pascal');
+        raise Exception.Create('Native and browser consumers emitted different Pascal');
       end;
     end;
-    WriteLn('PASS / identical ordinary native, HTTP desktop and narrow Pascal');
+    WriteLn('PASS / identical native and supplied HTTP Pascal artifacts');
   except
     on LException: Exception do
     begin

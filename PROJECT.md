@@ -66,6 +66,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Semantic resource discovery (2026-10-09): the shared category/source/locale/
+search/tag query and payload-free exact variant annotation operation use the
+existing paired candidate/Undo path. Suspended public MCP checks pass **130**
+native; shared HTTP browser semantics **103**; byte-identical emitted Pascal
+executes **10** each. Actual catalog controls pass **22** on Win32 and HTTP
+desktop/CSS-390, retaining selection/drafts. These qualify source and bounded
+consumer behavior; frozen installed transport/observing rollout, complete native
+visual parity, physical input and performance remain open. Counts remain
+**25/11/47/21/28/3**; no full criterion/product closes. See
+[the current packet](WORK.md#current-return-path-semantic-resource-discovery--2026-10-09).
+
 Dedicated Resources integration (2026-10-09): ordinary Studio shares a public
 Nyx workspace and compact Project picker, with category/source/locale discovery
 and exact all/any creator-tag filters. Copied preferences retain discovery and
