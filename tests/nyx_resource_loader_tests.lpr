@@ -349,6 +349,9 @@ var
   LGate2: TDeadlineGate;
   LGateLease1: INyxWork;
   LGateLease2: INyxWork;
+  LOverloadProbe: TProbe;
+  LOverloadLoad: INyxResourceLoad;
+  LSlot: Integer;
 begin
   LScheduler := NewNyxScheduler(TNyxSchedulerOptions.Defaults.Workers(2).PendingCapacity(8));
   LTransport := NewNyxNativeResourceTransport(LScheduler);
@@ -357,6 +360,8 @@ begin
   LDocument := TNyxDocument.Create;
   LRenderer := TNyxLCLRenderer.Create;
   LHost := TForm.CreateNew(nil);
+  LGate1 := nil;
+  LGate2 := nil;
   try
     LHost.SetBounds(0, 0, 760, 380);
     LDocument.Title := 'Hosted resource workshop';
@@ -471,7 +476,41 @@ begin
     Check(LMonitor.WorkerLoad.Running = 2, 'deadline fixture occupies the bounded workers');
     LLoad := LResolver.Load(LDefinition.Cache(NyxResourceCache.Bypass),
       NyxResourceLoadOptions.WholeRequest(1), LProbe.Loaded);
-    Sleep(25);
+    LStart := GetTickCount64;
+    repeat
+      Application.ProcessMessages;
+      CheckSynchronize(0);
+      Sleep(5);
+    until (LProbe.Calls = 9) or (GetTickCount64 - LStart > 2000);
+    Check((LProbe.Calls = 9) and (LMonitor.WorkerLoad.Running = 2),
+      'queued deadline reports while both workers remain occupied');
+    { Capacity refusal happens after the native deadline owner is constructed.
+      It must retire that temporary timer lease, not leave a second callback or
+      a self-retaining request behind. Cancelled timeout work is pruned first. }
+    for LSlot := 1 to 8 do
+    begin
+      LScheduler.Submit(LGateLease1, neThreaded);
+    end;
+    LOverloadProbe := TProbe.Create;
+    try
+      LOverloadLoad := LResolver.Load(LDefinition.Cache(NyxResourceCache.Bypass),
+        NyxResourceLoadOptions.WholeRequest(40), LOverloadProbe.Loaded);
+      Check((LOverloadProbe.Calls = 1) and
+        (LOverloadProbe.ResultValue.Origin = rloFallback) and
+        (LOverloadProbe.ResultValue.Error <> ''), 'actual pool refusal reports one explicit fallback');
+      LStart := GetTickCount64;
+      repeat
+        Application.ProcessMessages;
+        CheckSynchronize(0);
+        Sleep(5);
+      until GetTickCount64 - LStart > 80;
+      Check((LOverloadProbe.Calls = 1) and (LMonitor.WorkerLoad.Pending = 8),
+        'refused native request leaves no active deadline or adopted worker slot');
+    finally
+      LOverloadLoad.Cancel;
+      LOverloadLoad := nil;
+      LOverloadProbe.Free;
+    end;
     LGate1.Release;
     LGate2.Release;
     Pump(LScheduler, LProbe, 9);
@@ -512,7 +551,27 @@ begin
     begin
       LLoad.Cancel;
     end;
+    { An assertion failure must also release occupied workers before unwinding
+      the private fixture. The application adapter itself never joins I/O. }
+
+    if LGate1 <> nil then
+    begin
+      LGate1.Release;
+    end;
+
+    if LGate2 <> nil then
+    begin
+      LGate2.Release;
+    end;
     LScheduler.Shutdown;
+    LMonitor := LScheduler as INyxSchedulerMonitor;
+    LStart := GetTickCount64;
+    while (LMonitor.WorkerLoad.ActiveWorkers > 0) and (GetTickCount64 - LStart < 2000) do
+    begin
+      Application.ProcessMessages;
+      CheckSynchronize(0);
+      Sleep(5);
+    end;
     LRenderer.Free;
     LHost.Free;
     LDocument.Free;
@@ -627,19 +686,26 @@ end;
 
 
 begin
-  {$ifndef PAS2JS}
-  Application.Initialize;
-  {$endif}
+  {$ifdef PAS2JS}
   Shared;
-  {$ifndef PAS2JS}
-
-  if ParamCount = 2 then
-  begin
-    Native;
-  end;
-  WriteLn('PASS / resource loader / ', GChecks, ' checks');
-  {$else}
   GJourney := TBrowserJourney.Create;
   GJourney.Start;
+  {$else}
+  try
+    Application.Initialize;
+    Shared;
+
+    if ParamCount = 2 then
+    begin
+      Native;
+    end;
+    WriteLn('PASS / resource loader / ', GChecks, ' checks');
+  except
+    on LException: Exception do
+    begin
+      WriteLn('FAIL / resource loader / ', LException.Message);
+      ExitCode := 1;
+    end;
+  end;
   {$endif}
 end.

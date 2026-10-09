@@ -4,7 +4,20 @@
 [Current work](WORK.md)
 
 
-Current fresh-process resource persistence (2026-10-09) follows the original
+Current request deadlines (2026-10-09) follow a disproved native prerequisite:
+occupied workers postponed expiry notification indefinitely. An independent
+UI-loop timer now arbitrates once-only delivery and cancellation with the worker's
+monotonic origin. Actual Win32/LCL and browser applications consume fallback,
+successful HTTP recovery, retained content and retirement; native capacity refusal
+also retires the deadline owner. Qualification and remaining full transport/cache/
+performance/observing gates are in
+[the packet](WORK.md#current-return-path-resource-request-deadlines--2026-10-09).
+The corrected unfinished-batch ledger is **25/13/47/21/28/3**: resource records
+12 for the preceding persistence consumer and 13 for this deadline consumer.
+Earlier entries retain their recorded values; no full criterion/task/credit closes.
+Stop deadline variants and follow actual HTTP/typed-payload application refusal.
+
+Previous fresh-process resource persistence (2026-10-09) follows the original
 criterion-five prerequisite, with actual HTTP application/control consumers on
 native and browser targets. Independent processes read persistent bytes while
 retaining current annotations and caller locale/policy. Actual quota fallback,

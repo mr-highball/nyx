@@ -9,6 +9,16 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-2.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Actual application Deadline now consumes the existing value/lifetime boundary:
+Win32/LCL transport expiry reports while its admitted worker remains occupied.
+Mounted fallback, successful HTTP recovery, cancelled reload with retained
+content and stopped-owner retirement pass. Timer, worker and callback ownership
+also survive native capacity refusal. Browser consumers qualify actual delayed
+fetch through the same application contract. See
+[the packet](../WORK.md#current-return-path-resource-request-deadlines--2026-10-09).
+Native body-arrival cancellation, other widgetsets and full native visual/
+accessibility/performance scope remain open; no full criterion/count closes.
+
 Fresh-process resource persistence consumes the existing value/lifetime criteria
 through actual Win32 application controls and private file storage across separate
 processes. Current tags/locales/policy, real quota/corruption recovery, pending

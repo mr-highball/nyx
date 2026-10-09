@@ -47,7 +47,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current fresh-process resource persistence (2026-10-09) follows existing NS-1
+Current request deadlines (2026-10-09) follow NS-1 criterion five's disproved
+native queued-expiry prerequisite. UI-loop expiry, once-only delivery, native
+capacity refusal and temporary timer ownership now have actual native/browser
+application consumers of fallback, HTTP recovery, retained content and retirement.
+[The packet](../WORK.md#current-return-path-resource-request-deadlines--2026-10-09)
+retains the failed gate and current qualified limits. Full transport/cache,
+performance and observing owners remain open; the corrected unfinished-batch
+ledger is 25/13/47/21/28/3 (resource persistence 12, current deadline consumer 13),
+with no full criterion/task/count/credit closure. Next follow actual HTTP and typed
+payload refusal at the application admission boundary, not deadline/queue variants.
+
+Previous fresh-process resource persistence (2026-10-09) follows existing NS-1
 criterion five and returns to actual NS-2 target behavior. Real HTTP applications
 exercise private persistent reads across separate native/Chromium processes,
 current tags/locales/policy, actual quota/corruption recovery and pending

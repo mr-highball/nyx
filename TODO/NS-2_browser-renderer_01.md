@@ -20,6 +20,15 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 
+Actual application Deadline now consumes the existing runtime/recovery boundary:
+real AbortController fetch under Chromium network latency expires, admits explicit
+fallback, recovers through normal HTTP and cancels a later attempt while retaining
+installed controls. Host retirement remains stopped beyond that request's deadline.
+Native consumers use the same contract with a queued-expiry repair. See
+[the packet](../WORK.md#current-return-path-resource-request-deadlines--2026-10-09).
+Physical networking, full failure/security/cache and parity/accessibility/
+performance scope remain open; no full browser criterion/count closes.
+
 Fresh-process resource persistence consumes the existing runtime/recovery
 criteria through actual HTTP application controls. Five sequential fresh Chromium
 processes share one explicitly owned private profile; current tags, locale intent,

@@ -32,7 +32,7 @@ uses
   , JS, Web, nyx.application.browser, nyx.resource.cache.browser,
     nyx.resources.http.browser
   {$else}
-  , Interfaces, Forms, StdCtrls, Graphics, IntfGraphics, FPWritePNG,
+  , Interfaces, Forms, StdCtrls, Graphics, IntfGraphics, FPWritePNG, SyncObjs,
     nyx.application.lcl, nyx.resource.cache.lcl, nyx.resources.http.lcl
   {$endif};
 
@@ -40,11 +40,25 @@ type
   { The boundary names are closed qualification phases. Each invocation creates
     a new application/resolver. A separate Pascal driver owns process retirement
     and the fresh private cache/profile reused by Store and Restore. }
-  TPersistencePhase = (ppStore, ppRestore, ppQuota, ppCorrupt, ppRespect);
+  TPersistencePhase = (ppStore, ppRestore, ppQuota, ppCorrupt, ppRespect, ppDeadline);
   TPersistenceApplication = {$ifdef PAS2JS}TNyxBrowserApplication{$else}TNyxLCLApplication{$endif};
+  {$ifndef PAS2JS}
+  { Occupies only the fixture's own transport pool. Its owned event and worker
+    lease survive cancellation until the worker observes release/shutdown. }
+  TDeadlineGate = class(TInterfacedObject, INyxWork)
+  private
+    FRelease: TEvent;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Release;
+    procedure Execute(const AExecution: INyxExecution);
+  end;
+  {$endif}
 
 const
-  CPhaseNames: array[TPersistencePhase] of TNyxText = ('store', 'restore', 'quota', 'corrupt', 'respect');
+  CPhaseNames: array[TPersistencePhase] of TNyxText =
+    ('store', 'restore', 'quota', 'corrupt', 'respect', 'deadline');
   CLoaded: TNyxText = 'Keep creating 🌙';
   CPrompt: TNyxText = 'Project name 🌙';
   CEnglish: TNyxText = 'Your English workspace';
@@ -65,16 +79,25 @@ type
     FBusy: Boolean;
     FStage: Integer;
     FStarted: Double;
+    FRetiredAt: Double;
     FChecks: Integer;
     FFinished: Boolean;
     {$ifdef PAS2JS}
     FTimer: NativeInt;
+    {$else}
+    FGate: TDeadlineGate;
+    FGateLease: INyxWork;
     {$endif}
     procedure Check(ACondition: Boolean; const AReason: TNyxText);
     function Caption(const AID: TNyxText): TNyxText;
     function Validate(const AContext: INyxResourceContext): Boolean;
     procedure Finish;
     procedure Capture;
+    procedure DeadlineNext;
+    function Checkpoint(const AName: TNyxText): Boolean;
+    {$ifndef PAS2JS}
+    procedure OccupyTransport;
+    {$endif}
     {$ifdef PAS2JS}
     procedure CorruptAndLoad(const AURL: TNyxText); async;
     {$endif}
@@ -93,6 +116,53 @@ begin
   Result := GetTickCount64;
   {$endif}
 end;
+
+{$ifndef PAS2JS}
+constructor TDeadlineGate.Create;
+begin
+  inherited Create;
+  FRelease := TEvent.Create(nil, True, False, '');
+end;
+
+destructor TDeadlineGate.Destroy;
+begin
+  FRelease.Free;
+  inherited Destroy;
+end;
+
+procedure TDeadlineGate.Release;
+begin
+  FRelease.SetEvent;
+end;
+
+procedure TDeadlineGate.Execute(const AExecution: INyxExecution);
+begin
+  while not AExecution.Cancelled and (FRelease.WaitFor(10) <> wrSignaled) do
+  begin
+  end;
+end;
+
+procedure TJourney.OccupyTransport;
+var
+  LStarted: QWord;
+begin
+  { Admission and bounded pumping happen in this fixture, not in the product.
+    The gate is released on every test exit, including assertion failures. }
+  FGate := TDeadlineGate.Create;
+  FGateLease := FGate;
+  FScheduler.Submit(FGateLease, neThreaded);
+  LStarted := GetTickCount64;
+  while ((FScheduler as INyxSchedulerMonitor).WorkerLoad.Running <> 1) and
+    (GetTickCount64 - LStarted < 2000) do
+  begin
+    Application.ProcessMessages;
+    CheckSynchronize(0);
+    Sleep(1);
+  end;
+  Check((FScheduler as INyxSchedulerMonitor).WorkerLoad.Running = 1,
+    'private transport worker is occupied before actual application loading');
+end;
+{$endif}
 
 procedure TJourney.Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -168,6 +238,11 @@ var
   LTarget: String;
   LCount: Integer;
 begin
+
+  if APhase = ppDeadline then
+  begin
+    Exit;
+  end;
   LHome := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(3)));
 
   if APhase = ppStore then
@@ -321,6 +396,11 @@ begin
   LCopy := NyxResourceRef('copy');
   LPolicy := NyxResourceCache.Persistent.FreshFor(3600).ServerPolicy(rcspOverride);
 
+  if FPhase = ppDeadline then
+  begin
+    LPolicy := NyxResourceCache.Bypass;
+  end;
+
   if FPhase = ppRespect then
   begin
     { A previous caller deliberately stored this server's no-store response.
@@ -359,8 +439,18 @@ begin
   end;
   {$else}
   FScheduler := NewNyxScheduler;
+
+  if FPhase = ppDeadline then
+  begin
+    FScheduler := NewNyxScheduler(TNyxSchedulerOptions.Defaults.Workers(1));
+  end;
   LTransport := NewNyxNativeResourceTransport(FScheduler);
-  LCache := NewNyxFileResourceCache(TNyxText(ParamStr(3)));
+  LCache := nil;
+
+  if FPhase <> ppDeadline then
+  begin
+    LCache := NewNyxFileResourceCache(TNyxText(ParamStr(3)));
+  end;
 
   if FPhase = ppQuota then
   begin
@@ -368,7 +458,16 @@ begin
   end;
   {$endif}
   LResolver := NewNyxResourceResolver(LTransport, nil, LCache);
-  FApplication.ConfigureResources(NyxApplicationResourceOptions.Loading(nrlOnDemand), LResolver);
+
+  if FPhase = ppDeadline then
+  begin
+    FApplication.ConfigureResources(NyxApplicationResourceOptions.Loading(nrlOnDemand)
+      .Request(NyxResourceLoadOptions.WholeRequest(500)), LResolver);
+  end
+  else
+  begin
+    FApplication.ConfigureResources(NyxApplicationResourceOptions.Loading(nrlOnDemand), LResolver);
+  end;
   {$ifdef PAS2JS}
   LHost := TJSHTMLElement(document.createElement('main'));
   document.body.appendChild(LHost);
@@ -379,6 +478,14 @@ begin
   {$endif}
   FResources := FApplication.Resources;
   Check(Caption('caption') = 'Ready while loading', 'initial fallback is not a completed fetch');
+
+  if FPhase = ppDeadline then
+  begin
+    {$ifdef PAS2JS}
+    FTimer := window.setInterval(@Next, 20);
+    {$endif}
+    Exit;
+  end;
   {$ifdef PAS2JS}
 
   if FPhase = ppCorrupt then
@@ -391,6 +498,150 @@ begin
   {$ifdef PAS2JS}
   FTimer := window.setInterval(@Next, 20);
   {$endif}
+end;
+
+function TJourney.Checkpoint(const AName: TNyxText): Boolean;
+begin
+  {$ifdef PAS2JS}
+  document.body.setAttribute('data-capture-checkpoint', AName);
+  Result := document.body.getAttribute('data-capture-observed') = AName;
+  {$else}
+  Capture;
+  Result := True;
+  {$endif}
+end;
+
+procedure TJourney.DeadlineNext;
+var
+  LStatus: TNyxApplicationResourceStatus;
+begin
+  Check(Milliseconds - FStarted < 30000, 'actual deadline journey stays bounded');
+  LStatus := FResources.Status(NyxResourceRef('copy'), NyxDefaultLocale);
+  case FStage of
+    0:
+      begin
+
+        if not Checkpoint('deadline-ready') then
+        begin
+          Exit;
+        end;
+        {$ifndef PAS2JS}
+        OccupyTransport;
+        {$endif}
+        FResources.Reload(NyxResourceRef('copy'), NyxDefaultLocale);
+        FStage := 1;
+      end;
+    1:
+      begin
+
+        if LStatus.Phase in [nrpIdle, nrpQueued, nrpLoading, nrpWaiting] then
+        begin
+          Exit;
+        end;
+        Check((LStatus.Phase = nrpReady) and (LStatus.Origin = rloFallback) and
+          (Pos('deadline', LStatus.Error) > 0), 'actual request expiry publishes explicit fallback once');
+        Check((Caption('caption') = 'Ready while loading') and
+          (Caption('pinned-caption') = 'Ready while loading'),
+          'expired actual loading preserves complete fallback controls');
+        Check(TNyxCodec.Encode(FDocument) = FBefore, 'deadline cannot rewrite saved declarations');
+        {$ifndef PAS2JS}
+        Check((FScheduler as INyxSchedulerMonitor).WorkerLoad.Running = 1,
+          'application expiry reports before the occupied transport worker returns');
+        {$endif}
+
+        if not Checkpoint('deadline-expired') then
+        begin
+          Exit;
+        end;
+        {$ifndef PAS2JS}
+        FGate.Release;
+        FGate := nil;
+        FGateLease := nil;
+        {$endif}
+        FStage := 2;
+      end;
+    2:
+      begin
+        {$ifndef PAS2JS}
+
+        if (FScheduler as INyxSchedulerMonitor).WorkerLoad.Running <> 0 then
+        begin
+          Exit;
+        end;
+        {$endif}
+        FResources.Reload(NyxResourceRef('copy'), NyxDefaultLocale);
+        FStage := 3;
+      end;
+    3:
+      begin
+
+        if LStatus.Phase in [nrpQueued, nrpLoading, nrpWaiting] then
+        begin
+          Exit;
+        end;
+        Check((LStatus.Phase = nrpReady) and (LStatus.Origin = rloNetwork) and
+          (LStatus.Error = '') and (Caption('caption') = CLoaded),
+          'healthy real HTTP recovers after deadline without stale timeout delivery');
+        {$ifdef PAS2JS}
+        Check(TJSHTMLInputElement(FApplication.View.InputFor('project-name')).placeholder = CPrompt,
+          'recovered actual browser prompt consumes the complete reply');
+        {$else}
+        Check(TNyxText(RawByteString(TEdit(FApplication.View.InputFor('project-name')).TextHint)) = CPrompt,
+          'recovered actual native prompt consumes the complete reply');
+        {$endif}
+
+        if not Checkpoint('deadline-recovered') then
+        begin
+          Exit;
+        end;
+        {$ifndef PAS2JS}
+        OccupyTransport;
+        {$endif}
+        FResources.Reload(NyxResourceRef('copy'), NyxDefaultLocale);
+        FStage := 4;
+      end;
+    4:
+      begin
+
+        if LStatus.Phase = nrpQueued then
+        begin
+          Exit;
+        end;
+        Check((LStatus.Phase = nrpLoading) and (Caption('caption') = CLoaded),
+          'active queued/fetch attempt retains installed content before cancellation');
+        FResources.Cancel;
+        Check(FResources.Status(NyxResourceRef('copy'), NyxDefaultLocale).Phase = nrpCancelled,
+          'actual request cancellation retires its borrowed receiver immediately');
+        Check(NyxApplicationResourceDiagnostics(FResources).CaptureRuntime.Entry(0).HasPublishedLoad,
+          'cancel retains successful installed-load evidence');
+        Check(TNyxCodec.Encode(FDocument) = FBefore, 'request cancellation preserves saved defaults');
+        {$ifndef PAS2JS}
+        FGate.Release;
+        FGate := nil;
+        FGateLease := nil;
+        {$endif}
+        FreeAndNil(FApplication);
+        FRetiredAt := Milliseconds;
+        FStage := 5;
+      end;
+    5:
+      begin
+
+        if Milliseconds - FRetiredAt < 800 then
+        begin
+          Exit;
+        end;
+        Check(NyxApplicationResourceDiagnostics(FResources).CaptureRuntime.Stopped,
+          'retired application remains stopped beyond the cancelled request deadline');
+        Check(TNyxCodec.Encode(FDocument) = FBefore, 'late timer/transport retirement cannot change the document');
+        {$ifndef PAS2JS}
+        Check(((FScheduler as INyxSchedulerMonitor).WorkerLoad.Pending = 0) and
+          ((FScheduler as INyxSchedulerMonitor).WorkerLoad.Running = 0),
+          'cancelled native worker attempt retires without late publication');
+        {$endif}
+        Finish;
+      end;
+  end;
 end;
 
 procedure TJourney.Capture;
@@ -410,7 +661,15 @@ begin
     LBitmap.SetSize(FApplication.Window.Width, FApplication.Window.Height);
     FApplication.Window.PaintTo(LBitmap.Canvas, 0, 0);
     LImage := LBitmap.CreateIntfImage;
-    LImage.SaveToFile(ParamStr(4));
+
+    if FPhase = ppDeadline then
+    begin
+      LImage.SaveToFile(ParamStr(4) + '.' + IntToStr(FStage) + '.png');
+    end
+    else
+    begin
+      LImage.SaveToFile(ParamStr(4));
+    end;
   finally
     LImage.Free;
     LBitmap.Free;
@@ -425,6 +684,12 @@ var
   LRefused: Boolean;
 begin
   try
+
+    if FPhase = ppDeadline then
+    begin
+      DeadlineNext;
+      Exit;
+    end;
     Check(Milliseconds - FStarted < 30000, 'actual application journey stays bounded');
     LStatus := FResources.Status(NyxResourceRef('copy'), NyxDefaultLocale);
     case FStage of
@@ -565,6 +830,10 @@ begin
 end;
 
 destructor TJourney.Destroy;
+{$ifndef PAS2JS}
+var
+  LStarted: QWord;
+{$endif}
 begin
 
   if FSubscription <> nil then
@@ -577,7 +846,28 @@ begin
 
   if FScheduler <> nil then
   begin
+    {$ifndef PAS2JS}
+
+    if FGate <> nil then
+    begin
+      FGate.Release;
+      FGate := nil;
+      FGateLease := nil;
+    end;
+    {$endif}
     FScheduler.Shutdown;
+    {$ifndef PAS2JS}
+    { Only qualification waits for its own workers. Product shutdown remains
+      nonblocking and every work item owns the state needed for retirement. }
+    LStarted := GetTickCount64;
+    while ((FScheduler as INyxSchedulerMonitor).WorkerLoad.ActiveWorkers > 0) and
+      (GetTickCount64 - LStarted < 2000) do
+    begin
+      Application.ProcessMessages;
+      CheckSynchronize(0);
+      Sleep(1);
+    end;
+    {$endif}
   end;
   inherited Destroy;
 end;

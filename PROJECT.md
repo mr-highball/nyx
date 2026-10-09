@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Native resource deadlines (2026-10-09) now expire on the serviced UI loop while
+the transport pool remains occupied. Once-only delivery, capacity refusal and
+temporary timer/worker ownership preserve cancellation. Real application
+Deadline journeys qualify fallback, HTTP recovery, retained content and retirement
+on Win32/LCL and browser fetch. [The packet](WORK.md#current-return-path-resource-request-deadlines--2026-10-09)
+keeps UI-loop, queued/native versus fetch/browser, full failure/cache matrix,
+performance and observing limitations explicit. The corrected unfinished-batch
+ledger is **25/13/47/21/28/3**, with its two resource increments explained there;
+no full criterion/task/credit closes.
+
 Fresh-process resource persistence (2026-10-09) now has actual native/browser
 application consumers of HTTP, private file/Cache Storage, quota fallback and
 damaged-entry recovery. Current tags, locale intent, caller policy, pending

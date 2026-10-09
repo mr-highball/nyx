@@ -31,6 +31,8 @@ uses nyx.resources.loader, nyx.scheduler;
 
 { Current Win32 LCL adapter: system-validated HTTP(S) through asynchronous
   WinHTTP on Nyx's bounded worker pool. Queued time counts toward the deadline.
+  An independent LCL timer reports expiry on the serviced UI loop even when all
+  workers remain occupied; it cancels work without joining native handles.
   UI callbacks are posted with the parent cancellation token. No worker touches
   a control, resource catalog or borrowed receiver. Other native systems require
   another INyxResourceTransport implementation; they are not claimed qualified. }
@@ -39,7 +41,7 @@ function NewNyxNativeResourceTransport(const AScheduler: INyxScheduler): INyxRes
 implementation
 
 uses SysUtils, nyx.text, nyx.bytes, nyx.resource.sources, nyx.resource.cache
-  {$ifdef MSWINDOWS}, Windows, WinHTTP, SyncObjs{$endif};
+  {$ifdef MSWINDOWS}, Windows, WinHTTP, SyncObjs, ExtCtrls{$endif};
 
 {$ifdef MSWINDOWS}
 const
@@ -79,7 +81,18 @@ type
   private
     FScheduler: INyxScheduler;
     FExecution: INyxExecution;
+    FDeadlineTimer: TTimer;
+    FDeadlineLease: INyxResourceRequest;
+    FStarted: QWord;
+    FDeadlineMS: Integer;
+    procedure StopDeadline;
+    procedure Deadline(Sender: TObject);
   public
+    { The temporary timer lease outlives dropping the caller's token. Completion,
+      cancellation and expiry retire it on the UI thread. Worker work retains a
+      separate lease until WinHTTP closing notifications have finished. }
+    procedure StartDeadline(AStarted: QWord; AMilliseconds: Integer);
+    destructor Destroy; override;
     procedure Cancel; override;
     procedure Deliver(const AResult: TNyxResourceHTTPResult);
   end;
@@ -443,19 +456,107 @@ begin
   Result := LResult;
 end;
 
-procedure TNativeRequest.Cancel;
+procedure TNativeRequest.StartDeadline(AStarted: QWord; AMilliseconds: Integer);
 begin
+  FScheduler.RequireUI;
+  FStarted := AStarted;
+  FDeadlineMS := AMilliseconds;
+  FDeadlineLease := Self;
+  FDeadlineTimer := TTimer.Create(nil);
+  FDeadlineTimer.Enabled := False;
+  FDeadlineTimer.Interval := AMilliseconds;
+  FDeadlineTimer.OnTimer := Deadline;
+  FDeadlineTimer.Enabled := True;
+end;
+
+procedure TNativeRequest.StopDeadline;
+begin
+
+  if FDeadlineTimer <> nil then
+  begin
+    FDeadlineTimer.Enabled := False;
+    FDeadlineTimer.OnTimer := nil;
+    FreeAndNil(FDeadlineTimer);
+  end;
+  FDeadlineLease := nil;
+end;
+
+destructor TNativeRequest.Destroy;
+begin
+  { Every normal terminal path already retired the timer on the UI thread.
+    Construction refusal also disconnects it before releasing pending work. }
+  StopDeadline;
+  inherited Destroy;
+end;
+
+procedure TNativeRequest.Deadline(Sender: TObject);
+var
+  LLease: INyxResourceRequest;
+  LElapsed: QWord;
+  LResult: TNyxResourceHTTPResult;
+begin
+  FScheduler.RequireUI;
+  LLease := Self;
+
+  if not Active or ((FExecution <> nil) and FExecution.Cancelled) then
+  begin
+    { Scheduler shutdown revokes callbacks too. Expiry must not turn a cancelled
+      parent into a fresh delivery, even if its workers have already retired. }
+    inherited Cancel;
+    StopDeadline;
+    Exit;
+  end;
+  LElapsed := GetTickCount64 - FStarted;
+
+  if LElapsed < QWord(FDeadlineMS) then
+  begin
+    FDeadlineTimer.Interval := FDeadlineMS - Integer(LElapsed);
+    Exit;
+  end;
+
+  if FExecution <> nil then
+  begin
+    FExecution.Cancel;
+  end;
+  StopDeadline;
+  LResult := Default(TNyxResourceHTTPResult);
+  LResult.Error := 'Whole resource request deadline expired';
+  { Complete retires the borrowed receiver before invoking it. The local lease
+    protects this operation if the receiver releases or cancels its own token. }
+  Complete(LResult);
+end;
+
+procedure TNativeRequest.Cancel;
+var
+  LLease: INyxResourceRequest;
+begin
+  FScheduler.RequireUI;
+  LLease := Self;
   inherited Cancel;
 
   if FExecution <> nil then
   begin
     FExecution.Cancel;
   end;
+  StopDeadline;
 end;
 
 procedure TNativeRequest.Deliver(const AResult: TNyxResourceHTTPResult);
+var
+  LLease: INyxResourceRequest;
 begin
   FScheduler.RequireUI;
+  LLease := Self;
+
+  if (GetTickCount64 - FStarted >= QWord(FDeadlineMS)) or
+    ((FExecution <> nil) and FExecution.Cancelled) then
+  begin
+    { A completed HTTP reply may wait in the UI queue past the deadline.
+      Arbitration uses the same monotonic origin as the worker and timer. }
+    Deadline(nil);
+    Exit;
+  end;
+  StopDeadline;
   Complete(AResult);
 end;
 
@@ -546,7 +647,14 @@ begin
   LWork.FOptions := AOptions;
   LWork.FMaximum := AMaximumBytes;
   LWork.FStarted := GetTickCount64;
-  LRequest.FExecution := FScheduler.Submit(LLease, neThreaded);
+  try
+    LRequest.StartDeadline(LWork.FStarted, AOptions.DeadlineMS);
+    LRequest.FExecution := FScheduler.Submit(LLease, neThreaded);
+  except
+    { Capacity/admission failure cannot leave a self-retaining timer armed. }
+    LRequest.Cancel;
+    raise;
+  end;
 end;
 {$endif}
 

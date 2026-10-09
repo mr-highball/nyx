@@ -9,6 +9,107 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Resource request deadlines — 2026-10-09
+
+Entry is clean at pushed `b4e71fb`. The previous goal turn is progress: actual
+fresh-process application consumers found and repaired persistent recovery, with
+both-target control evidence. Full resource criterion five remains open; the
+consecutive no-full-closure sequence is retained. Reassessment follows its actual
+failure/retirement gate, not further storage/form variants. Inspection found a
+concrete prerequisite: native queued time counts toward expiry, but the expired
+reply cannot arrive until a worker dequeues the request. An indefinitely occupied
+pool therefore leaves an application loading past its configured deadline.
+
+Bounded deliverable: reproduce expiry while the admitted workers remain occupied,
+then make the native transport's UI-thread deadline independent of pool progress.
+Preserve once-only delivery, immediate receiver disconnection, temporary operation
+ownership and worker-side WinHTTP retirement. Return to real native/browser
+application failure/cancel consumers through existing static hosting. Existing
+browser AbortController deadline behavior stays the baseline. No new listener,
+backend/config/enrollment replacement or active design mutation is authorized by
+this packet. Stop after the consumed deadline/failure boundary; complete HTTP,
+security/media/cache matrix, performance and observing rollout retain their owners.
+
+The occupied-pool regression failed before the product fix while both workers
+remained running. Its first uncaught failure did not become terminal; after exact
+owned-process identification that qualification harness was stopped, its worker
+cleanup/error reporting repaired, and the maintained assertion then produced a
+terminal failure with zero unfreed blocks. Neither a protected service nor an
+observing editor was stopped. The failed receipts and process identity remain
+private evidence; observation timeout was not treated as process completion.
+
+The native adapter now owns one temporary LCL deadline timer per admitted
+request. Timer, WinHTTP worker and delayed UI delivery arbitrate with one
+monotonic request origin. Timeout reports once while the pool is occupied and
+cancels its execution; WinHTTP closes on its worker with retained buffer/context
+ownership. Explicit cancellation disconnects the borrowed callback and timer
+immediately. Scheduler cancellation suppresses timer delivery; capacity refusal
+retires the temporary lease before escaping admission. Local interface leases
+protect callbacks that release/cancel their token. No worker joins from the UI.
+The public transport/options interfaces and wire/source contracts stay compatible.
+
+The maintained application persistence consumer adds a Deadline journey, not
+another cache/form variant. Actual native/browser hosts mount fallback captions
+and prompts, expire a real transport attempt, recover through successful HTTP,
+then cancel another active attempt while retaining installed content. Hosts retire
+and remain stopped beyond the cancelled 500-ms request deadline. Native uses its
+own occupied transport pool; browser uses actual AbortController fetch under
+explicit Chromium latency emulation, restored to normal for successful recovery.
+The driver only observes/captures these controls and acknowledges fixture phases;
+semantic MCP remains the primary active-design workflow.
+
+Evidence is under ignored `build/resource-deadlines/`:
+
+- Checked native loader passes **51**, including expiry before either occupied
+  worker returns, once-only late retirement and actual pending-capacity refusal
+  without an armed timer/extra slot. `refusal-before.log` retains the failed
+  assertion; `pass-qualified.log` and heap tracing report zero unfreed blocks.
+  Maintained native errors now print terminal diagnostics instead of leaving
+  a nonterminal qualification process.
+- Actual application Deadline passes **107** Win32/LCL and **178** HTTP Chromium,
+  polling included. Native fallback and browser recovered captures were inspected;
+  live/retired DOM/PNG checkpoints and zero native/driver heap leaks are retained.
+  This proves queued native retirement and abortable browser fetch, not native
+  cancellation during body arrival, browser GC or physical-network timing.
+- Native Store/Restore/Quota/Corrupt/Respect regressions pass
+  **21/20/20/19/19**, each leak-free. Fresh Chromium processes retain the prior
+  actual persistence/recovery baseline, passing **53/34/33/35/34** before the
+  Deadline journey. One explicitly owned fresh profile is reused only after each
+  exact browser process retires. Counters include real polling and overlap;
+  they are not additive product acceptance credit.
+- The ordinary native Studio and maintained browser loader rebuild. No owned
+  warnings; seven existing upstream RTL warnings remain disclosed per browser
+  compile, without suppression or dependency edits. The browser transport's
+  existing deadline implementation is unchanged.
+- The exact four-file persistence builder/page/English JSON/matched runtime
+  closure lives in a new child of the existing admitted static host. Private
+  metadata records byte lengths, SHA-256 and exact live host identity. There was
+  no new listener, service restart, configuration/enrollment or active design
+  mutation. Bounded installed MCP reports revision **2**, retained selection,
+  no draft and unchanged history; current activity reflects that read alone.
+
+The resource owner's no-full-closure batch ledger was not advanced for the
+previous persistence consumer. Correct that omission transparently: its recorded
+**11** becomes **12** for `b4e71fb`, then **13** for this deadline consumer.
+Other owners are unchanged; current aggregate is **25/13/47/21/28/3**. These are
+unfinished-batch counts, not completion credit or percentages. No full criterion,
+task or credit closes, and the consecutive sequence is not reset. This follows a
+disproved prerequisite with an integrated product repair. A serviced UI loop is
+required; the deadline covers transport admission/queue/I/O/delivery, not earlier
+application-concurrency waiting or arbitrary cache operations. Actual native
+body-arrival cancellation, full HTTP/status/typed-payload/stale/CORS/TLS/media
+matrix, cache-operation lifetime, physical input, performance and authenticated
+observing rollout retain their owners. Stop deadline/queue variants; next consume
+the existing application failure/admission boundary with actual HTTP refusal and
+malformed/invalid typed payloads on both targets, preserving installed controls.
+
+Final preservation guard passes: all **nine** exact accepted/source/draft pairs,
+**15** process identities, **299** sealed files, installed hash and the unchanged
+**147,033-byte** private checkpoint. LAN and loopback health/assets remain ready.
+Before/final private receipts retain exact hashes and identities. The observing
+product remains its earlier frozen release; no rejected backend-start action was
+retried. Qualified sources and output here do not claim that installed rollout.
+
 ## Current return path: Browser resource persistence — 2026-10-09
 
 Entry is clean at pushed `e7a7ed4`. The previous turn is progress: explicit

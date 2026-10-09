@@ -103,6 +103,12 @@ type
     { Single bounded existence query, avoiding full-shell serialization and
       the two-request lifetime race when only presentation presence matters. }
     function Exists(const ASelector: TNyxText): Boolean;
+    { Qualify actual fetch deadlines/cancellation through host network latency,
+      without substituting a transport, evaluating scripts or changing a design.
+      Apply after fixture readiness and before its capture acknowledgement.
+      Zero restores normal networking; accepted delay is 0..30000 milliseconds.
+      This is Chromium emulation, not a physical-network timing qualification. }
+    procedure NetworkLatency(AMilliseconds: Integer);
     { Observe the mounted face without scrolling, evaluating scripts or changing
       the design. Missing faces fail explicitly; transformed quads are enclosed
       in their viewport-aligned border box. Call after ordinary readiness. }
@@ -668,6 +674,21 @@ procedure TNyxBrowserPipe.SetAttribute(const AName, AValue: TNyxText);
 begin
   Request('DOM.setAttributeValue', NyxObject([NyxField('nodeId', NyxData(Body)),
     NyxField('name', NyxData(AName)), NyxField('value', NyxData(AValue))]), FSession);
+end;
+
+procedure TNyxBrowserPipe.NetworkLatency(AMilliseconds: Integer);
+begin
+
+  if (AMilliseconds < 0) or (AMilliseconds > 30000) then
+  begin
+    raise Exception.Create('Qualification network latency requires 0..30000 milliseconds');
+  end;
+  Request('Network.enable', NyxObject([]), FSession);
+  Request('Network.emulateNetworkConditions', NyxObject([
+    NyxField('offline', NyxData(False)),
+    NyxField('latency', NyxData(AMilliseconds)),
+    NyxField('downloadThroughput', NyxData(-1)),
+    NyxField('uploadThroughput', NyxData(-1))]), FSession);
 end;
 
 function TNyxBrowserPipe.Exists(const ASelector: TNyxText): Boolean;

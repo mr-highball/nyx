@@ -550,7 +550,15 @@ The native factory lives in `nyx.resources.http.lcl`; the current implementation
 is Win32 WinHTTP, including system certificate verification and TLS 1.2/1.3 where
 supported. It uses asynchronous request handles on Nyx's bounded worker pool,
 counts queued time toward the deadline and posts delivery with the parent's
-cancellation token. Native callback state/read buffers remain alive through the
+cancellation token. An independent LCL timer reports expiry on the serviced UI
+loop even while every transport worker remains occupied. Timer and worker use
+the same monotonic request origin; a reply delayed in the UI queue cannot publish
+success after expiry. Expiry cancels the worker context without joining its
+handles, and explicit cancellation disconnects the receiver and timer immediately.
+Capacity refusal also retires the temporary timer lease. As with browser timers,
+a blocked UI loop delays notification; this bounds the transport request, not
+earlier application-concurrency waiting or arbitrary custom cache operations.
+Native callback state/read buffers remain alive through the
 final closing notification; no UI thread joins network work. Other native systems
 still need an adapter. See [WinHTTP concurrency](https://learn.microsoft.com/windows/win32/winhttp/concurrency-in-winhttp)
 and [handle lifetime](https://learn.microsoft.com/windows/win32/api/winhttp/nf-winhttp-winhttpclosehandle).
@@ -640,7 +648,7 @@ owned adapter using standard [Headers.append](https://fetch.spec.whatwg.org/#dom
 on a fresh response.
 
 The maintained `nyx_resource_persistence_controls` consumer additionally runs in
-separate native processes and five sequential Chromium processes sharing one
+separate native processes and sequential Chromium processes sharing one
 fresh, explicitly owned qualification profile. Its Store, Restore, Quota, Corrupt
 and Respect phases use actual HTTP and target storage. Real labels and prompts
 consume exact supplementary Unicode; a fresh application reads persistent bytes
@@ -659,6 +667,16 @@ records commands, captures and retained failures. This does not establish plain
 HTTP LAN secure-context availability, arbitrary quota/security behavior,
 in-flight transport cancellation, automatic eviction, cross-process quota
 isolation or complete HTTP revalidation.
+
+The same consumer's Deadline phase qualifies mounted application behavior:
+expiry with explicit fallback, successful real HTTP recovery, cancellation while
+keeping the installed reply, and a stopped host beyond the cancelled deadline.
+Native qualification occupies its own transport worker; browser qualification
+delays actual fetch through Chromium network emulation, restoring ordinary
+networking for recovery. No transport or host API is substituted. The
+[deadline packet](../WORK.md#current-return-path-resource-request-deadlines--2026-10-09)
+separates these queued/native and fetch/browser guarantees from unqualified
+physical networking and native cancellation during body arrival.
 
 ## Studio Resources and copied proposals
 

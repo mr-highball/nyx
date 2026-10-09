@@ -16,6 +16,25 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Consumed native request deadlines — 2026-10-09
+
+Criterion five's failure/retirement gate exposed a native prerequisite: an
+occupied pool counted queued time but could not report expiry until dequeue.
+The maintained assertion failed, then passed after independent UI-loop deadline
+arbitration. Once-only delivery, immediate callback/timer disconnection and
+capacity refusal retain explicit operation ownership. Actual Win32/LCL and
+HTTP-browser application journeys consume deadline fallback, successful recovery,
+cancelled attempts with retained content and stopped-owner retirement; current
+persistence/recovery regressions remain passing. [The packet](../WORK.md#current-return-path-resource-request-deadlines--2026-10-09)
+records failures, captures and scope. Full criterion/task/count/credit remains
+open. Correct the omitted persistence increment to 12 and count this deadline
+consumer as 13; current unfinished-batch aggregate is 25/13/47/21/28/3, without
+resetting the sequence or awarding completion credit. A serviced UI loop is required; native
+body-arrival cancellation and earlier application/cache queue deadlines remain
+unqualified. Stop deadline/queue variants and follow actual HTTP/typed-payload
+application refusal under the original owner. Full HTTP/security/media/cache,
+performance and observing gates are retained.
+
 ## Fresh-process application persistence — 2026-10-09
 
 After consecutive batches without full criterion closure, the recorded

@@ -27,7 +27,7 @@ program nyx_resource_persistence_browser;
 uses SysUtils, nyx.text, nyx.test.browser.pipe;
 
 const
-  CPhases: array[0..4] of String = ('store', 'restore', 'quota', 'corrupt', 'respect');
+  CPhases: array[0..5] of String = ('store', 'restore', 'quota', 'corrupt', 'respect', 'deadline');
 
 var
   LProfile: TNyxBrowserProfile;
@@ -86,7 +86,31 @@ begin
 
             if (LCheckpoint <> '') and (LCheckpoint <> LObserved) then
             begin
-              LHost.Capture('loaded');
+
+              if CPhases[LPhase] = 'deadline' then
+              begin
+                { Delay real fetch only after the application mounts. Timeout
+                  and cancellation use the actual AbortController adapter;
+                  healthy recovery restores ordinary networking first. }
+                if (LCheckpoint = 'deadline-ready') or
+                  (LCheckpoint = 'deadline-recovered') then
+                begin
+                  LHost.NetworkLatency(2000);
+                end
+                else if LCheckpoint = 'deadline-expired' then
+                begin
+                  LHost.NetworkLatency(0);
+                end
+                else
+                begin
+                  raise Exception.Create('Unknown deadline qualification checkpoint');
+                end;
+                LHost.Capture(String(LCheckpoint));
+              end
+              else
+              begin
+                LHost.Capture('loaded');
+              end;
               LHost.SetAttribute('data-capture-observed', LCheckpoint);
               LObserved := LCheckpoint;
             end;
