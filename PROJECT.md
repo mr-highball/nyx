@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Fresh-process resource persistence (2026-10-09) now has actual native/browser
+application consumers of HTTP, private file/Cache Storage, quota fallback and
+damaged-entry recovery. Current tags, locale intent, caller policy, pending
+publication cancellation and retirement preserve saved defaults and mounted
+controls. The shared resolver repairs the demonstrated permanent memory-write
+fallback after a damaged read. [The packet](WORK.md#current-return-path-browser-resource-persistence--2026-10-09)
+distinguishes passing consumer evidence from the remaining full transport/cache/
+physical-input/performance/observing matrix. Aggregate stays **25/11/47/21/28/3**;
+no full criterion/task/credit closes.
+
 Resource locale authoring (2026-10-09) distinguishes explicit scalar default pins
 from runtime inheritance, with exact historical selector migration and crafted
 source. Both Studios share locale/fallback controls; copied version-fifteen

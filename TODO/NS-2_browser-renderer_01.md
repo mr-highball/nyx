@@ -20,6 +20,16 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-1_model_01](DONE/NS-1_model_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-1_catalog-theme_01](DONE/NS-1_catalog-theme_01.md) has accepted evidence.
 
+Fresh-process resource persistence consumes the existing runtime/recovery
+criteria through actual HTTP application controls. Five sequential fresh Chromium
+processes share one explicitly owned private profile; current tags, locale intent,
+caller policy, real quota/corruption recovery, pending publication cancellation
+and host retirement are qualified in
+[the packet](../WORK.md#current-return-path-browser-resource-persistence--2026-10-09).
+Native consumers use the same shared contract. Physical input, secure LAN storage,
+in-flight transport retirement and the complete parity/accessibility/performance
+matrix remain open; no full browser criterion or count closes.
+
 Typed image lifecycle now consumes the original event/rendering criteria with
 four owned observational phases, ordered delivery and request-scoped cancellation.
 Actual Win32 passes **150** lifecycle checks; HTTP desktop/CSS-390 passes **121**

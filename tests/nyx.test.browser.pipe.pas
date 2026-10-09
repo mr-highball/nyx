@@ -43,7 +43,19 @@ type
     Width: Double;
     Height: Double;
   end;
-  { Owns one unique headless Chromium profile/process and anonymous debugger
+  { Owns a freshly allocated qualification profile, never an existing user
+    profile. A pipe borrows this owner, which must outlive every pipe using it.
+    Only one process may lease the profile at a time. Reuse after retirement
+    qualifies real browser persistence; files remain as private evidence. }
+  TNyxBrowserProfile = class
+  private
+    FDirectory: String;
+    FInUse: Boolean;
+  public
+    constructor Create(const ADirectory: String);
+    property Directory: String read FDirectory;
+  end;
+  { Owns one unique headless Chromium process and anonymous debugger
     pipes. No TCP listener or existing editor tab is opened. Requests are serial,
     JSON/UTF-8 packets are NUL-delimited and bounded, and no scripts are injected.
     The browser and its Pascal workers use their ordinary real clocks. }
@@ -55,6 +67,7 @@ type
     FPending: RawByteString;
     FDiagnostics: RawByteString;
     FDirectory: String;
+    FProfile: TNyxBrowserProfile;
     FSession: TNyxText;
     FRuntimeError: TNyxText;
     FSequence: Integer;
@@ -72,9 +85,11 @@ type
   public
     { URL must name a loopback HTTP fixture. Directory receives a fresh profile,
       bounded diagnostics and captures. Width accepts 320..4096 CSS pixels.
+      An optional borrowed fresh profile permits sequential process restarts;
+      its owner must outlive this pipe. Concurrent use refuses before launching.
       Failed construction retires only the process/handles owned by this host. }
     constructor Create(const AURL, ADirectory: String; AWidth: Integer = 1100;
-      AHeight: Integer = 900);
+      AHeight: Integer = 900; AProfile: TNyxBrowserProfile = nil);
     destructor Destroy; override;
     { Bounded current body observation; absent attributes return empty text.
       SetAttribute acknowledges fixture-only capture checkpoints, not editor
@@ -180,8 +195,19 @@ begin
   end;
 end;
 
+constructor TNyxBrowserProfile.Create(const ADirectory: String);
+var
+  LGuid: TGuid;
+begin
+  inherited Create;
+  CreateGUID(LGuid);
+  FDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ADirectory)) +
+    'profile-' + GUIDToString(LGuid);
+  ForceDirectories(FDirectory);
+end;
+
 constructor TNyxBrowserPipe.Create(const AURL, ADirectory: String;
-  AWidth, AHeight: Integer);
+  AWidth, AHeight: Integer; AProfile: TNyxBrowserProfile);
 var
   LSecurity: TSecurityAttributes;
   LChildInput: THandle;
@@ -201,9 +227,24 @@ begin
   end;
   FDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ADirectory));
   ForceDirectories(FDirectory);
-  CreateGUID(LGuid);
-  LProfile := FDirectory + 'profile-' + GUIDToString(LGuid);
-  ForceDirectories(LProfile);
+
+  if AProfile <> nil then
+  begin
+
+    if AProfile.FInUse then
+    begin
+      raise Exception.Create('Qualification profile already has a live browser');
+    end;
+    FProfile := AProfile;
+    FProfile.FInUse := True;
+    LProfile := FProfile.Directory;
+  end
+  else
+  begin
+    CreateGUID(LGuid);
+    LProfile := FDirectory + 'profile-' + GUIDToString(LGuid);
+    ForceDirectories(LProfile);
+  end;
   LChildInput := 0;
   LChildOutput := 0;
   LSecurity := Default(TSecurityAttributes);
@@ -1127,6 +1168,14 @@ begin
     end;
   end;
   FBrowser.Free;
+  { Browser.close/owned-process retirement precedes reuse. The profile is
+    borrowed and keeps its private storage for the next explicitly owned host. }
+
+  if FProfile <> nil then
+  begin
+    FProfile.FInUse := False;
+    FProfile := nil;
+  end;
   ClosePipe(FInput);
   ClosePipe(FOutput);
   inherited Destroy;

@@ -9,6 +9,104 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Browser resource persistence — 2026-10-09
+
+Entry is clean at pushed `e7a7ed4`. The previous turn is progress: explicit
+scalar locale intent, ordinary form consumers, exact emitted artifacts and
+both-target evidence changed authoritative state. At least two consecutive
+batches have left full criteria open; this is a reassessment, not a reset.
+Stop form/catalog/filter variants. Existing evidence already establishes hosted
+browser loading and one-process Cache Storage use. Follow the actual remaining
+NS-1 criterion-five prerequisite: a fresh application/browser process consumes
+persistent bytes, with runtime reload/cancellation preserving real controls and
+authored defaults. NS-2 remains the return path for actual target behavior.
+
+Bounded deliverable: extend the maintained browser pipe with an explicitly owned
+fresh reusable profile, then exercise the existing application/resource/cache
+contracts through actual HTTP controls before and after browser retirement.
+Retain successful baseline native/cache/lifecycle evidence. Qualify exact policy,
+locale and current annotations independently of cached bytes; corruption/quota
+refusal and cancellation must not publish partial data. Use existing admitted
+static hosting only, bounded semantic context and owned fixture bytes. Preserve
+all active pairs/identities. No service/config replacement or new listener.
+Stop at the integrated persistence consumer; complete HTTP freshness/CORS/media,
+physical input, broader performance and observing rollout retain their owners.
+Do not claim criterion five complete without its full both-target failure matrix.
+
+Actual integrated consumer now runs in five independent native applications and
+five fresh Chromium processes sharing one newly allocated private profile. Real
+HTTP/WinHTTP/fetch and file/Cache Storage providers supply captions and prompts,
+including supplementary Unicode. Fresh-process Restore uses persistent bytes
+and current creator tags, not the labels saved with the earlier envelope. Runtime
+locale inheritance, explicit default pins, page navigation and missing-locale
+fallback retain authored declarations. Cancelling a busy pending publication
+keeps installed controls and the last published load; retired hosts leave a
+stopped diagnostic owner that refuses new loading.
+
+Both actual corruption journeys first failed: a persistent read error forced all
+later writes into memory, so a successful fetch could never replace the damaged
+entry. The shared resolver now retains the original provider for one admitted,
+policy-approved write; an actual write failure still falls back to memory with a
+warning. Successful replacement retains the original read warning; an actual
+write failure reports its storage error instead. Real damaged native/browser
+envelopes now recover through HTTP and persistent replacement; real provider byte
+budgets refuse storage and report memory fallback. Current Respect refuses both
+reuse and storage of server `no-store` bytes saved by a previous Override caller.
+This is a product recovery fix, not a mocked persistence claim.
+
+Evidence is under ignored `build/resource-persistence/`:
+
+- Checked FPC/LCL native Store/Restore/Quota/Corrupt/Respect pass
+  **19/20/20/20/20**, each with **zero unfreed blocks**. Native directories are
+  fresh and origin-marked before use; corruption admits one parsed owned entry.
+- Actual HTTP Chromium processes pass **52/35/34/35/34** (real polling included).
+  Store runs at CSS-1280; fresh-process Restore at CSS-390. The Pascal driver owns
+  one fresh profile and closes/joins each exact process before sequential reuse.
+  Live and retired DOM/PNG receipts prove mounted controls and host retirement;
+  driver heap tracing reports zero unfreed blocks. Native and narrow loaded
+  captures were inspected; platform glyph/color differences are retained.
+- Shared loader regression passes **48** native and **33** HTTP browser, including
+  throwing read/write memory recovery and subsequent reuse without another fetch.
+  The ordinary default-profile browser pipe remains exercised by the rebuilt
+  ready-capture driver, leak-free. Both Studios, source worker and Pascal backend
+  rebuild; no owned warnings. Seven existing upstream pas2js RTL warnings per
+  browser build remain disclosed and unsuppressed; dependency source is untouched.
+- The owned English JSON fixture, HTML and matched runtime were staged as one
+  exact six-file closure in a fresh child of the existing admitted static host.
+  Private metadata retains hashes, byte lengths and exact host identity. Earlier
+  actual corruption failures remain beside the passing recovery logs/captures.
+  `stage-recovery-private.json`, `browser-recovery.log`, native `*-recovery.log`
+  and the compiler logs describe the current source, not the old frozen release.
+- Installed semantic MCP remains connected. Bounded `nyx_session` reads revision
+  **2**, the retained selection and unchanged history/draft state. No design
+  mutation, new service/listener, user profile, configuration or enrollment change
+  occurred. The final exact-pair/service/release guard passes: all **nine** exact
+  accepted/source/draft pairs, **15** process identities, **299** sealed files,
+  installed hash and the **147,033-byte** checkpoint remain unchanged. LAN and
+  loopback health/assets remain ready. Private before/final receipts retain the
+  exact hashes and process identities; the observing product remains frozen.
+
+Reproduction uses the existing checked local toolchain and logs its native flags
+from the retained allocation recipe, with profiling/seed flags removed and fresh
+output directories. The actual native consumer takes `<phase> <owned-HTTP-copy-url>
+<fresh-or-marked-cache-home> <png-path>`; run Store, Restore, Quota, Corrupt and
+Respect in order. The browser driver takes `<owned-loopback-fixture-url>
+<fresh-evidence-directory>` and runs those processes itself. Its six-file served
+closure contains the persistence and loader builders/pages, English JSON and
+matched `rtl.js`; host/profile/cache URLs and machine paths remain private.
+
+This advances the original criterion-five actual application/cache consumer;
+aggregate remains **25/11/47/21/28/3**, with no full criterion/task/count/credit
+closure. Completed scope is fresh-process persistence, recovery and pending
+publication cancellation, not physical input, browser heap/GC qualification or
+in-flight transport cancellation. Complete transport failure/deadline/stale/CORS/
+TLS/media behavior, full HTTP freshness/revalidation, secure LAN storage,
+cross-process quota isolation, broader performance/accessibility and authenticated
+observing rollout retain their original owners. Stop storage/form/filter variants;
+the next meaningful gate is criterion five's actual failure and in-flight
+retirement matrix through both application targets. Full-workload timing remains
+an existing separate concern. No accepted baseline or full north star is reset.
+
 ## Current return path: Resource locale authoring — 2026-10-09
 
 Entry was clean at pushed `dfd3dcc`. The previous turn is progress: the public

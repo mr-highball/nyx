@@ -573,6 +573,14 @@ usable. Every cache hit/store is qualified against the requesting policy. A
 failed persistent write can populate memory, and subsequent loads check that copy
 before fetching again. Providers may complete inline; tokens remain stage-correct.
 
+A failed persistent read does not permanently redirect later writes to memory.
+After an admitted network reply, the resolver attempts one policy-approved write
+to the original provider. This lets an atomic replacement heal a damaged entry.
+If that write also fails, memory receives the admitted bytes instead. The original
+read warning remains visible after successful replacement; a failed write reports
+its storage error instead. Neither recovery nor memory fallback hides a storage
+failure or overrides the requesting cache policy.
+
 The receiver owns publication and request retirement. For example, inside its
 `ResourceLoaded` method after checking the active view and `Succeeded`:
 
@@ -629,8 +637,28 @@ or stale pruning yet. The maintained image-resource consumer now executes actual
 Cache Storage write/read and explicit server-policy override on a trustworthy
 loopback origin. It repairs an installed RTL header-name mismatch inside the
 owned adapter using standard [Headers.append](https://fetch.spec.whatwg.org/#dom-headers-append)
-on a fresh response. This does not establish browser restart persistence, LAN
-secure-context availability, arbitrary quota/security behavior or automatic eviction.
+on a fresh response.
+
+The maintained `nyx_resource_persistence_controls` consumer additionally runs in
+separate native processes and five sequential Chromium processes sharing one
+fresh, explicitly owned qualification profile. Its Store, Restore, Quota, Corrupt
+and Respect phases use actual HTTP and target storage. Real labels and prompts
+consume exact supplementary Unicode; a fresh application reads persistent bytes
+while retaining current creator tags. Explicit locale pins, inheritance and
+fallback remain independent of the stored payload. A busy publication can be
+cancelled while keeping installed controls and authored defaults, and a retained
+resource owner refuses loading after its application retires.
+
+Actual quota refusal reports memory fallback; actual damaged envelopes recover
+through a new fetch and persistent replacement. Current Respect refuses cached
+`no-store` bytes written by a previous Override caller. The native fixture admits
+only its fresh origin-bound cache directory before damaging a parsed owned entry;
+the Pascal browser driver creates its profile and retires each owned process
+before reuse. The [qualification packet](../WORK.md#current-return-path-browser-resource-persistence--2026-10-09)
+records commands, captures and retained failures. This does not establish plain
+HTTP LAN secure-context availability, arbitrary quota/security behavior,
+in-flight transport cancellation, automatic eviction, cross-process quota
+isolation or complete HTTP revalidation.
 
 ## Studio Resources and copied proposals
 

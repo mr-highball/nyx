@@ -431,7 +431,11 @@ begin
   if AError <> '' then
   begin
     FWarning := AError;
-    FWriteCache := FMemory;
+    { A failed read can be a damaged envelope rather than unavailable storage.
+      Retain the original provider for one policy-approved write after a valid
+      network reply. This can replace that owned entry atomically. Stored still
+      falls back to memory if the actual write fails; no error-text parsing or
+      repeated persistent retry is needed. A fresh memory hit needs no write. }
   end;
 
   if AFound and (AError = '') then

@@ -16,6 +16,24 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Fresh-process application persistence — 2026-10-09
+
+After consecutive batches without full criterion closure, the recorded
+reassessment follows criterion five's actual application/browser persistence
+gate. Separate native/Chromium processes consume actual HTTP and private
+file/Cache Storage; current tags, locale intent and caller policy stay independent
+of cached payloads. Real quota failure, damaged envelopes and Respect after prior
+Override are exercised with mounted captions/prompts, pending publication cancel
+and stopped-owner retirement. Actual corruption first disproved recovery: a read
+error permanently selected memory writes. The shared resolver now tries one
+policy-approved persistent replacement after valid HTTP, retaining warnings and
+memory fallback on an actual write failure. Both target consumers and regressions
+pass in [the packet](../WORK.md#current-return-path-browser-resource-persistence--2026-10-09).
+No full criterion/task/count/credit closes; aggregate stays 25/11/47/21/28/3.
+Remaining actual failure/deadline/stale/in-flight retirement and full HTTP/security/
+media/cache matrix retain this owner; performance and observing rollout retain
+their existing owners. Stop storage/form/filter variants and follow that gate.
+
 ## Explicit scalar locale consumer — 2026-10-09
 
 The portable prerequisite now distinguishes runtime inheritance from explicit

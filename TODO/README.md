@@ -47,7 +47,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current resource locale authoring (2026-10-09) follows the scalar default-pin
+Current fresh-process resource persistence (2026-10-09) follows existing NS-1
+criterion five and returns to actual NS-2 target behavior. Real HTTP applications
+exercise private persistent reads across separate native/Chromium processes,
+current tags/locales/policy, actual quota/corruption recovery and pending
+publication cancellation/retirement. The demonstrated damaged-read recovery gap
+is repaired in the shared resolver. [The packet](../WORK.md#current-return-path-browser-resource-persistence--2026-10-09)
+retains failures, qualified controls and open full-matrix/observing limits.
+No full criterion/task/count/credit closes; aggregate stays 25/11/47/21/28/3.
+Next follow actual transport failure and in-flight retirement, not storage/form
+variants.
+
+Previous resource locale authoring (2026-10-09) follows the scalar default-pin
 prerequisite and returns to the existing Resources/localization/caller-policy
 authoring owner. Shared controls, strict historical migration, ordinary hosted
 English/fallback/cache proposals and paired source/history are qualified in

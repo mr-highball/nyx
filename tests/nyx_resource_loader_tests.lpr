@@ -229,6 +229,17 @@ begin
     LLoad := LResolver.Load(LDefinition, NyxResourceLoadOptions, LProbe.Loaded);
     Check((LProbe.ResultValue.Origin = rloFreshCache) and
       (LProbe.ResultValue.CacheWarning <> ''), 'throwing persistent provider retains cached memory data');
+    LDefinition := NyxHostedResource(nrkJSON, NyxResourceURL('https://example.com/recovery.json'))
+      .Cache(NyxResourceCache.Persistent.ServerPolicy(rcspOverride));
+    LBefore := LTransport.Calls;
+    LLoad := LResolver.Load(LDefinition, NyxResourceLoadOptions, LProbe.Loaded);
+    Check((LProbe.ResultValue.Origin = rloNetwork) and
+      (LProbe.ResultValue.CacheWrite = rcuMemory) and (LProbe.ResultValue.CacheWarning <> '') and
+      (LTransport.Calls = LBefore + 1), 'failed persistent read/write retains one admitted network reply in memory');
+    LLoad := LResolver.Load(LDefinition, NyxResourceLoadOptions, LProbe.Loaded);
+    Check((LProbe.ResultValue.Origin = rloFreshCache) and
+      (LProbe.ResultValue.CacheRead = rcuMemory) and (LTransport.Calls = LBefore + 1),
+      'unavailable persistent recovery reuses memory without another fetch');
     LDefinition := LDefinition.Cache(NyxResourceCache.Bypass);
     LTransport.Response.Bytes := NyxEncodeUTF8('{broken');
     LLoad := LResolver.Load(LDefinition, NyxResourceLoadOptions, LProbe.Loaded);

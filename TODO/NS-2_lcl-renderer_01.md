@@ -9,6 +9,15 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-2.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
+Fresh-process resource persistence consumes the existing value/lifetime criteria
+through actual Win32 application controls and private file storage across separate
+processes. Current tags/locales/policy, real quota/corruption recovery, pending
+publication cancellation and stopped-owner retirement are qualified in
+[the packet](../WORK.md#current-return-path-browser-resource-persistence--2026-10-09).
+Browser consumers exercise the same shared contract with actual Cache Storage.
+Physical input, other widgetsets, in-flight transport retirement and full native
+visual/accessibility/performance parity remain open; no full criterion/count closes.
+
 Typed image lifecycle now consumes the original event/rendering criteria with
 four owned observational phases, ordered delivery and request-scoped cancellation.
 Actual Win32 passes **150** lifecycle checks; HTTP desktop/CSS-390 passes **121**

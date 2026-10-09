@@ -80,6 +80,7 @@ lib/
 !tests/responsive-review.operations.json
 !tests/typeahead-review.operations.json
 !tests/date-field-review.operations.json
+!tests/fixtures/resource-persistence/copy.json
 *.txt
 !data/unicode/17.0.0/CaseFolding.txt
 !data/unicode/17.0.0/LICENSE.txt

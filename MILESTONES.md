@@ -4,7 +4,18 @@
 [Current work](WORK.md)
 
 
-Current resource locale authoring (2026-10-09) consumes the original localization/
+Current fresh-process resource persistence (2026-10-09) follows the original
+criterion-five prerequisite, with actual HTTP application/control consumers on
+native and browser targets. Independent processes read persistent bytes while
+retaining current annotations and caller locale/policy. Actual quota fallback,
+damaged-entry recovery, busy publication cancellation and host retirement pass;
+the shared resolver repairs the demonstrated read-error recovery gap. Evidence
+and remaining full transport/cache/performance/observing gates are in
+[the packet](WORK.md#current-return-path-browser-resource-persistence--2026-10-09).
+Aggregate **25/11/47/21/28/3** remains unchanged; no full criterion/task/credit
+closes. Stop storage/form variants and follow actual failure/in-flight retirement.
+
+Previous resource locale authoring (2026-10-09) consumes the original localization/
 caller-policy authoring criterion. Explicit scalar default pins preserve older
 selector meaning, crafted source and shared scalar/image locale/fallback controls.
 Strict copied preferences retain incomplete input. Ordinary hosted English data,
