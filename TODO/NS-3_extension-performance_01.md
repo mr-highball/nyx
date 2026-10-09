@@ -9,7 +9,19 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current native Resources timing (2026-10-08): the unchanged semantic companion
+Current retained Resources navigation (2026-10-08) implements a guarded compound
+state operation consumed by both Studio controllers. Actual shell/input identity
+survives New/Open; creator state and failure rollback remain exact. The unchanged
+optimized native journey passes 137 (original 133 plus four retention checks) in
+300.165 seconds versus 292.262 before. These single samples establish no aggregate
+speedup, gesture budget or full performance acceptance. Catalog/inspector/source
+rebuilds remain expensive. End navigation/profiler variants; next deliver public
+staged editor-section refresh that preserves unrelated controls, then qualify the
+same full workload on both targets. NS-4 owns this partial authoring implementation;
+NS-3's historical count is not invented/reset and no performance criterion/credit
+closes. See [the packet](../WORK.md#current-return-path-retained-resources-navigation--2026-10-08).
+
+Previous native Resources timing (2026-10-08): the unchanged semantic companion
 passes all 133 ordinary Win32 checks in 292.262 seconds with optimization/checks
 and no heap tracing. The Resources shell's Pascal construction takes 31–32 ms;
 collection HandleNeeded takes 4297–4422 ms, including surrounding native windows.

@@ -2905,6 +2905,8 @@ var
   LResourceEditor: TNyxNode;
   LResourceAction: TNyxResourceEditorAction;
   LResourceSelection: TNyxResourceEditorSelection;
+  LResourceProjection: TNyxNode;
+  LRetainedResourceSelection: Boolean;
   LContentFocus: TWinControl;
 begin
 
@@ -3035,9 +3037,28 @@ begin
       case LResourceAction of
         reaNew, reaOpen:
           begin
+            { Proposal navigation retains the public form and native controls.
+              A synchronization exception keeps the former draft; changed
+              context still uses ordinary staged shell replacement. }
+            LResourceProjection := FSession.SelectedProjection;
+            try
+              LRetainedResourceSelection := TrySelectNyxResourceEditor(LResourceEditor,
+                FSession.Document.Resources, LResourceSelection, FSession.Selected,
+                LResourceProjection, FShellView.Sync);
+            finally
+              LResourceProjection.Free;
+            end;
             FState.ResourceEditorDraft.Clear;
             FState.ResourceSelection := LResourceSelection;
-            RequestRefresh;
+
+            if LRetainedResourceSelection then
+            begin
+              FState.ResourceEditorDraft.Capture('studio-resource-editor', FShellView.Root);
+            end
+            else
+            begin
+              RequestRefresh;
+            end;
           end;
         reaPreview:
           begin

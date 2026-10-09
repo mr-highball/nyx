@@ -9,7 +9,98 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
-## Current return path: native Resources refresh performance — 2026-10-08
+## Current return path: retained Resources navigation — 2026-10-08
+
+Previous turn is progress at exact pushed `0e123ed`: maintained measurements rule
+out low-level layout/notification hypotheses and locate native handle recreation.
+Current worktree is clean at entry. Reassessment follows existing NS-3 performance
+criteria 2/3 and NS-4 criterion 2: ordinary New/Open resource navigation changes
+proposal state, not the catalog or the form's controls. Both controllers currently
+recompose the entire shell for that operation. Use the reusable Nyx compound form's
+own typed selection contract to retain its existing controls, rather than weakening
+general renderer admission for arbitrary metadata/constructor changes.
+
+Deliver one guarded, synchronous library operation. Prepare fresh selection state
+against the exact catalog/control context, preserve creator customization and node
+identity, then exchange admitted property storage without allocation. A target Sync
+failure restores the former proposal before reporting it. Changed context falls
+back to ordinary staged composition; catalog/structural publications retain that
+path. Both controllers consume the same public Nyx operation. Qualify fresh/New/Open,
+stale context, rollback and customization; actual native/browser commands must keep
+form/input identity and leave the exact design/source/history unchanged. Reuse the
+MCP-authored English workbench, compare its complete native workload with the measured
+baseline and compile its unchanged emitted source. Actual browser desktop/CSS-390
+journeys and live captures precede explicit retirement.
+
+Budget: one compound-state repair and its complete consumer checks; stop/switch if
+it requires weakening general admission, replacing user work, or a new listener.
+This advances the retained-refresh implementation path, not full incremental
+structural reconciliation or production performance budgets. Preserve all nine
+pairs, fifteen services and sealed LAN bytes. No backend replacement, rejected retry,
+configuration/enrollment or cleanup. Original full goal and counters remain intact;
+no full criterion/count advances from this plan.
+
+Executed the bounded repair: public `TrySelectNyxResourceEditor` prepares a detached
+proposal against the exact catalog and selected-owner context. Only owned proposal
+fields change; existing nodes, event owners, bindings, creator layout/hints and extra
+descendants remain. Synchronous target failure exchanges the exact previous
+property storage back before rollback synchronization. Missing variants/catalogs
+and changed owner/catalog context refuse unchanged. Both ordinary Studio controllers
+retain the form for New/Open and use staged composition when admission refuses.
+The operation changes no accepted design, Pascal or paired history.
+
+Actual optimized checked Win32 completes **137** assertions: the original **133**
+plus **four** proving the actual shell/input survives New/Open. Exact emitted Pascal
+still has SHA-256 `F2580A8DBEF478CD561D57994CDB8F68C439D33CA32EC05244AC72073ACF7DBC`.
+The unchanged workload/flags take **300165 ms**, against **292262 ms** before.
+These single broad samples establish **no aggregate speedup** or accepted gesture
+budget. The timed native run does not enable heap tracing; its final control
+retirement check passes. Separate checked exact-emitted reconstruction passes
+**48** (previous 34 plus 14 shared selection/context/creator/rollback checks), with
+**zero unfreed blocks**. Do not transfer that heap claim to the timed full journey.
+
+Current HTTP browser ordinary controllers execute **450 desktop / 638 CSS-390**
+checks, including viewport routes/readiness polls. New/Open retains the **actual
+textarea**, not only its wrapper. Both captures emit the identical Pascal hash.
+The exact emitted builder also executes the same 48-check suite in the browser;
+its observed terminal marker says passed, without exporting a numeric counter.
+The real-clock Pascal observer captures editor/canvas checkpoints before ordinary
+controller retirement; all three observer processes retire their owned browser
+handles and have zero unfreed blocks. Desktop, narrow and native captures are
+inspected. Captions/prompts/two typed table rows and packed text are visible; native
+sidebar clipping and complete aesthetics remain open. This packet does not newly
+qualify image pixels, hosted delivery, physical phone/OS chooser or accessibility.
+Current native compiles have zero warnings. Each browser compile retains seven
+known upstream RTL warnings and zero owned warnings; dependency source is untouched.
+
+Reassessment ends this compound-navigation packet. It delivers usable retained
+New/Open behavior on both targets but leaves native catalog/inspector/source rebuild
+costs and full performance criteria open. Stop further navigation/profiler variants.
+The next deliverable is public staged editor-section replacement that keeps stable
+chrome and unrelated controls mounted during catalog/inspector publication, with
+exact factory/context admission, rollback, event ownership and paired history on
+both targets. Measure its unchanged full consumer only after those gates execute.
+NS-4 criterion 2 owns this partial authoring implementation: no-closure alone advances
+**43→44**, aggregate **25/11/44/21/28/3**. NS-3's unrecorded historical count is neither
+invented nor reset. No full criterion, completion credit or DONE status closes;
+all original common UX/resource/localization/cache/application outcomes remain.
+
+Read-only installed native semantic MCP confirms the preserved primary revision/
+selection. Reused English seed was authored through MCP; these actual-control
+journeys qualify behavior that semantic document operations cannot establish.
+Existing static host identity is verified before staging a fresh six-file child;
+no listener/backend is launched or replaced. Final guard verifies **nine exact
+pairs, fifteen exact service identities, 147033 checkpoint bytes/hash, 299 sealed
+files, served LAN bytes and LAN/loopback bindings**. No configuration/enrollment,
+protected project or cleanup changes. LAN remains frozen at earlier `960134f`;
+automatic approval review previously rejected backend replacement with only
+**“blocked by policy”**. No equivalent retry. Private logs, captures, exact emitted
+source, staged manifest and qualification/checkpoint receipts live under
+`build/resource-selection/`; explicit commit/push and exact remote/worktree checks
+follow the gates. The full goal remains active.
+
+<a id="current-return-path-native-resources-refresh-performance--2026-10-08"></a>
+## Previous return path: native Resources refresh performance — 2026-10-08
 
 Previous turn is progress at exact pushed `bf745e0`: ordinary both-target common
 Resources authoring, exact emitted Pascal and paired history execute; remote and

@@ -53,6 +53,7 @@ begin
     LDocument := BuildNyxDocument;
     try
       LChecks := CheckNyxResourceWorkbench(LDocument);
+      Inc(LChecks, CheckNyxResourceSelection(LDocument));
       { Reconstruction checks source admission independently of the host's
         compiler. It must retain all common file kinds and their consumers. }
       LWorkspace := nil;

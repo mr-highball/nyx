@@ -9,7 +9,20 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current native Resources timing consumes the existing NS-3 criteria 2/3 through
+Current retained Resources navigation consumes criterion 2 through both ordinary
+Studio controllers and a public reusable Nyx form operation. New/Open preserves
+actual controls, creator presentation/additions and exact rollback; changed
+catalog/owner context retains staged composition. Win32 passes 137, HTTP desktop/
+CSS-390 passes 450/638 (polling included), and identical emitted Pascal executes
+the 48-check suite per target. Whole native timing is 300.165 seconds versus
+292.262 before; no overall speedup is accepted. Stop navigation/profiler variants;
+next implement public staged editor-section refresh that preserves stable chrome
+under catalog/inspector changes with both-target ownership/history/rollback gates.
+All original criteria remain open. Authoring alone advances no-closure 43→44;
+no full credit or criterion closes. See
+[the packet](../WORK.md#current-return-path-retained-resources-navigation--2026-10-08).
+
+Previous native Resources timing consumes the existing NS-3 criteria 2/3 through
 criterion 2's usable authoring requirement: optimized full qualification passes
 133 but takes 292.262 seconds. Maintained first-open profiling localizes seconds
 in native handle initialization; two unsuccessful experiments are removed.

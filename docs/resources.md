@@ -97,9 +97,28 @@ without authored content. Creation includes validation, so those totals overlap.
 Collection `handle` includes native ancestor/descendant initialization;
 `native-view,retire` also includes preparation/layout/synchronization before
 retirement. Coarse clocks and diagnostic overhead limit small measurements.
-These are profiling leads, not accepted frame or per-gesture budgets. Current
+These are profiling leads, not accepted frame or per-gesture budgets. Previous
 [measurements](../WORK.md#current-return-path-native-resources-refresh-performance--2026-10-08)
-identify expensive handle creation; no performance fix is accepted yet.
+identify expensive handle creation. The guarded New/Open operation below now
+retains actual controls on both targets, but the full native journey establishes
+no aggregate speedup. Broader staged section refresh and production budgets remain
+open; see [current evidence](../WORK.md#current-return-path-retained-resources-navigation--2026-10-08).
+
+`TrySelectNyxResourceEditor` changes an existing public Resources form's typed
+selection without replacing its controls. Pass `NyxNewResourceSelection` for a
+new proposal or `NyxResourceSelection` for an exact named/locale variant. The
+mounted catalog and selected-owner binding context must still match. False leaves
+the form intact and requires ordinary staged composition; malformed selections
+raise. Both Studio controllers use this operation for New/Open.
+
+The operation prepares independent proposal values, keeps existing nodes and
+creator presentation/additions, then exchanges owned property storage. An optional
+synchronous renderer `Sync` receiver updates the actual controls; a failure
+restores the former model and synchronizes it again before propagating. The receiver
+must keep the form and its shape alive throughout the call. Without a receiver,
+only the form model changes. Catalog publications, structural changes and target
+factories retain their normal admission path. Navigation creates no design/source
+Undo entry; applying a proposal still publishes the paired design and Pascal.
 
 ## Images from project resources
 

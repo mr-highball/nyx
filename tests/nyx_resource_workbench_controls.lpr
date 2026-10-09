@@ -144,11 +144,29 @@ var
   procedure Click(const AID: TNyxText);
   var
     LControl: TControl;
+    LRetainedInput: TControl;
+    LRetainedRoot: TNyxNode;
   begin
+    LRetainedInput := nil;
+    LRetainedRoot := nil;
+
+    if (AID = NyxResourceEditorActionID(CEditor, reaNew)) or
+      (Pos(CEditor + '-entry-', AID) = 1) then
+    begin
+      LRetainedInput := LStudio.ShellView.InputFor(NyxResourceEditorFieldID(CEditor, refContent));
+      LRetainedRoot := LStudio.ShellView.Root;
+    end;
     LControl := LStudio.ShellView.ControlFor(AID);
     Check(LControl <> nil, 'ordinary mounted command: ' + AID);
     TControlAccess(LControl).Click;
     Ready;
+
+    if LRetainedInput <> nil then
+    begin
+      Check((LStudio.ShellView.Root = LRetainedRoot) and
+        (LStudio.ShellView.InputFor(NyxResourceEditorFieldID(CEditor, refContent)) = LRetainedInput),
+        'New/Open retains the actual shell and resource input');
+    end;
   end;
 
   procedure TextField(AField: TNyxResourceEditorField; const AValue: TNyxText);

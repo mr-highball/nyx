@@ -87,11 +87,27 @@ end;
 procedure Click(const AID: TNyxText);
 var
   LFace: TJSHTMLElement;
+  LRetainedInput: TJSHTMLElement;
 begin
+  LRetainedInput := nil;
+
+  if (AID = NyxResourceEditorActionID(CEditor, reaNew)) or
+    (Pos(CEditor + '-entry-', AID) = 1) then
+  begin
+    LRetainedInput := TJSHTMLElement(Find(NyxResourceEditorFieldID(CEditor, refContent))
+      .querySelector('textarea'));
+    Check(LRetainedInput <> nil, 'actual resource memo is mounted before navigation');
+  end;
   LFace := Find(AID);
   Check(LFace.getBoundingClientRect.height > 0, 'visible ' + AID);
   LFace.scrollIntoView;
   LFace.click;
+
+  if LRetainedInput <> nil then
+  begin
+    Check(Find(NyxResourceEditorFieldID(CEditor, refContent)).querySelector('textarea') = LRetainedInput,
+      'New/Open retains the actual resource input element');
+  end;
 end;
 
 procedure Panel(const AName: TNyxText);

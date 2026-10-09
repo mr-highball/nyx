@@ -2006,6 +2006,8 @@ var
   LResourceEditor: TNyxNode;
   LResourceAction: TNyxResourceEditorAction;
   LResourceSelection: TNyxResourceEditorSelection;
+  LResourceProjection: TNyxNode;
+  LRetainedResourceSelection: Boolean;
   LContentFocus: TJSHTMLElement;
 begin
 
@@ -2140,9 +2142,29 @@ begin
       case LResourceAction of
         reaNew, reaOpen:
           begin
+            { The same public compound-state operation retains DOM controls.
+              Preserve the old draft on synchronization failure; changed context still
+              uses ordinary staged shell composition. }
+            LResourceProjection := FSession.SelectedProjection;
+            try
+              LRetainedResourceSelection := TrySelectNyxResourceEditor(LResourceEditor,
+                FSession.Document.Resources, LResourceSelection, FSession.Selected,
+                LResourceProjection, @FShellRenderer.Sync);
+            finally
+              LResourceProjection.Free;
+            end;
             FViewState.ResourceEditorDraft.Clear;
             FViewState.ResourceSelection := LResourceSelection;
-            Refresh(True, True);
+
+            if LRetainedResourceSelection then
+            begin
+              FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.Root);
+              SavePresentation;
+            end
+            else
+            begin
+              Refresh(True, True);
+            end;
           end;
         reaPreview:
           begin

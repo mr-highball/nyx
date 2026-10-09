@@ -45,6 +45,11 @@ type
   TNyxResourceEditorAction = (reaNew, reaOpen, reaImport, reaPreview, reaApply, reaRemove);
   TNyxResourceEditorOperation = (reoDefine, reoRemove, reoRows, reoDetachRows);
 
+  { Synchronous target synchronization of a borrowed mounted form. A receiver
+    must keep the form/shape alive for this call; it owns no lasting lease.
+    Ordinary renderer Sync suppresses synthetic input and preserves siblings. }
+  TNyxResourceEditorSynchronize = procedure of object;
+
   { Empty Reference means a new file. Locale is always explicit; empty selects
     the ordinary default. No catalog/document/widget survives in this value. }
   TNyxResourceEditorSelection = record
@@ -119,6 +124,19 @@ function NyxResourceEditorContextMatches(AEditor: TNyxNode;
 function NewNyxResourceEditor(const AID: TNyxText; const ACatalog: INyxResources;
   const ASelection: TNyxResourceEditorSelection;
   AOwner: TNyxNode = nil; AProjection: TNyxNode = nil): INyxCard;
+{ Navigate New/Open without replacing a compatible compound form. Exact catalog
+  and selected-owner context are required; False changes nothing and asks the
+  caller to use normal staged composition. Invalid selections raise before
+  mutation. Existing nodes, bindings, callbacks, layout and creator additions
+  remain owned by the mounted form; only this editor's proposal state changes.
+  Preparation owns detached copies. Publication exchanges already allocated
+  storage; a synchronization exception restores the previous model and invokes
+  synchronization again before propagating. Nil synchronizes the model only.
+  This changes no document resources, source or Undo history. }
+function TrySelectNyxResourceEditor(AEditor: TNyxNode;
+  const ACatalog: INyxResources; const ASelection: TNyxResourceEditorSelection;
+  AOwner: TNyxNode = nil; AProjection: TNyxNode = nil;
+  ASynchronize: TNyxResourceEditorSynchronize = nil): Boolean;
 { Recognize only a current mounted action, including exact listed entry data.
   Returns False for another command. Forged/incomplete forms raise. }
 function NyxResourceEditorAction(AButton, AShellRoot: TNyxNode;
@@ -976,6 +994,111 @@ begin
     Result.Add(LButton);
   end;
   RefreshNyxResourceEditor(Result.Node, True);
+end;
+
+function TrySelectNyxResourceEditor(AEditor: TNyxNode;
+  const ACatalog: INyxResources; const ASelection: TNyxResourceEditorSelection;
+  AOwner: TNyxNode; AProjection: TNyxNode;
+  ASynchronize: TNyxResourceEditorSynchronize): Boolean;
+const
+  CStateAttributes: array[0..4] of TNyxAttribute =
+    (atValue, atItems, atReadOnly, atEnabled, atVisible);
+var
+  LSelection: TNyxResourceEditorSelection;
+  LFresh: INyxCard;
+  LPrepared: TNyxNode;
+  LField: TNyxResourceEditorField;
+  LAttributeIndex: Integer;
+
+  procedure CopyAttribute(AFrom, ATo: TNyxNode; AKey: TNyxAttribute);
+  begin
+
+    if AFrom.Props.IndexOfName(NyxAttributeName(AKey)) < 0 then
+    begin
+      ATo.Configure.Clear(AKey).Done;
+    end
+    else
+    begin
+      ATo.SetProp(NyxAttributeName(AKey), AFrom.StoredProp(NyxAttributeName(AKey)));
+    end;
+  end;
+
+  procedure ExchangeProperties(AExisting, ACandidate: TNyxNode);
+  var
+    LChild: Integer;
+  begin
+    { Candidate is an independent clone of this exact live shape, including
+      creator descendants. Swap owned strings, never nodes or callback owners;
+      repeating the same exchange rolls back without allocation/conversion. }
+    AExisting.Props.ExchangeStorage(ACandidate.Props);
+    for LChild := 0 to AExisting.Count - 1 do
+    begin
+      ExchangeProperties(AExisting.Children[LChild], ACandidate.Children[LChild]);
+    end;
+  end;
+begin
+  Result := False;
+
+  if not NyxResourceEditorContextMatches(AEditor, ACatalog, AOwner, AProjection) then
+  begin
+    Exit;
+  end;
+
+  if AEditor.Find(NyxResourceEditorActionID(AEditor.ID, reaRemove)) = nil then
+  begin
+    Exit;
+  end;
+  LSelection := TNyxResourceEditorSelection.FromData(ASelection.ToData);
+
+  if LSelection.Reference.Defined and
+    not ACatalog.Contains(LSelection.Reference, LSelection.Locale) then
+  begin
+    Exit;
+  end;
+  LFresh := NewNyxResourceEditor(AEditor.ID, ACatalog, LSelection, AOwner, AProjection);
+  LPrepared := AEditor.Clone;
+  try
+    { Copy only owned proposal/disclosure fields. Fresh constructor defaults
+      must not overwrite a caller's styling, labels, hints or added controls. }
+    LPrepared.SetProp(CSelection, LFresh.Node.Prop(CSelection))
+      .SetProp(CPaths, LFresh.Node.Prop(CPaths));
+    for LField := Low(TNyxResourceEditorField) to High(TNyxResourceEditorField) do
+    begin
+      for LAttributeIndex := Low(CStateAttributes) to High(CStateAttributes) do
+      begin
+        CopyAttribute(Field(LFresh.Node, LField), Field(LPrepared, LField),
+          CStateAttributes[LAttributeIndex]);
+      end;
+    end;
+    CopyAttribute(LFresh.Node.Find(AEditor.ID + TNyxText('-summary')),
+      LPrepared.Find(AEditor.ID + TNyxText('-summary')), atText);
+    CopyAttribute(LFresh.Node.Find(AEditor.ID + TNyxText('-image-preview')),
+      LPrepared.Find(AEditor.ID + TNyxText('-image-preview')), atSource);
+    CopyAttribute(LFresh.Node.Find(AEditor.ID + TNyxText('-image-preview')),
+      LPrepared.Find(AEditor.ID + TNyxText('-image-preview')), atVisible);
+    CopyAttribute(LFresh.Node.Find(NyxResourceEditorActionID(AEditor.ID, reaRemove)),
+      LPrepared.Find(NyxResourceEditorActionID(AEditor.ID, reaRemove)), atEnabled);
+    ExchangeProperties(AEditor, LPrepared);
+    try
+
+      if Assigned(ASynchronize) then
+      begin
+        ASynchronize;
+      end;
+    except
+      ExchangeProperties(AEditor, LPrepared);
+
+      if Assigned(ASynchronize) then
+      begin
+        ASynchronize;
+      end;
+      raise;
+    end;
+    Result := True;
+  finally
+    LPrepared.Free;
+    LFresh := nil;
+  end;
 end;
 
 function NyxResourceEditorAction(AButton, AShellRoot: TNyxNode;

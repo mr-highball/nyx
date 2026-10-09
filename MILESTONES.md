@@ -4,7 +4,19 @@
 [Current work](WORK.md)
 
 
-Current native Resources profiling (2026-10-08): the unchanged optimized/checks
+Current retained Resources navigation (2026-10-08): a guarded public Nyx form
+operation keeps actual New/Open controls mounted on both targets, preserving
+creator styling/additions and rollback. Win32 passes **137**, HTTP desktop/CSS-390
+**450/638** (polling included); unchanged emitted Pascal executes the **48**-check
+suite on both targets. Inspected captures and exact preservation qualify this
+bounded behavior. The complete optimized native journey takes **300.165 seconds**
+versus **292.262** before: no aggregate speedup or production budget is accepted.
+Broader stable editor-section refresh is next; full UX/parity/observing rollout
+remain open. Authoring alone advances **43→44**, aggregate **25/11/44/21/28/3**;
+no full criterion/credit closes. See
+[the packet](WORK.md#current-return-path-retained-resources-navigation--2026-10-08).
+
+Previous native Resources profiling (2026-10-08): the unchanged optimized/checks
 workbench passes **133** in **292.262 seconds**. A 260-node Pascal shell builds
 in **31–32 ms**; native handle initialization takes **4297–4422 ms**. Maintained
 first-open profiling passes **four**; normal checked split regression passes

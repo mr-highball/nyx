@@ -43,11 +43,141 @@ const
   The unchanged MCP companion and UI-emitted builders consume the same checks.
   No document is mutated and no runtime store is mistaken for authored defaults. }
 function CheckNyxResourceWorkbench(ADocument: TNyxDocument): Integer;
+{ Selection-state admission and rollback reuse the exact reconstructed companion.
+  These checks exercise the common library contract on both compilers, separately
+  from ordinary controller/physical-input checks; the borrowed document stays exact. }
+function CheckNyxResourceSelection(ADocument: TNyxDocument): Integer;
 
 implementation
 
 uses SysUtils, nyx.bytes, nyx.resources, nyx.resources.rows,
-  nyx.collections, nyx.binding.types;
+  nyx.collections, nyx.binding.types, nyx.resources.editor, nyx.controls,
+  nyx.codec;
+
+type
+  TSelectionSync = class
+  public
+    Calls: Integer;
+    RefuseOnce: Boolean;
+    procedure Synchronize;
+  end;
+
+procedure TSelectionSync.Synchronize;
+begin
+  Inc(Calls);
+
+  if RefuseOnce then
+  begin
+    RefuseOnce := False;
+    raise Exception.Create('Intentional resource selection synchronization refusal');
+  end;
+end;
+
+function CheckNyxResourceSelection(ADocument: TNyxDocument): Integer;
+const
+  CForm = 'selection-form';
+var
+  LShell: TNyxDocument;
+  LChangedCatalog: TNyxDocument;
+  LForm: INyxCard;
+  LParent: INyxColumn;
+  LName: TNyxNode;
+  LAdded: TNyxNode;
+  LObserver: TSelectionSync;
+  LBefore: TNyxText;
+  LDocumentBefore: TNyxText;
+  LDraft: TNyxResourceEditorDraft;
+  LRefused: Boolean;
+  LSelection: TNyxResourceEditorSelection;
+
+  procedure Check(ACondition: Boolean; const AReason: TNyxText);
+  begin
+
+    if not ACondition then
+    begin
+      raise Exception.Create('Resource selection: ' + AReason);
+    end;
+    Inc(Result);
+  end;
+begin
+  Result := 0;
+  LShell := TNyxDocument.Create;
+  LObserver := TSelectionSync.Create;
+  try
+    LDocumentBefore := TNyxCodec.Encode(ADocument);
+    LParent := NewNyxColumn('selection-parent');
+    LShell.AddPage(LParent);
+    LForm := NewNyxResourceEditor(CForm, ADocument.Resources, NyxNewResourceSelection);
+    LParent.Add(LForm);
+    LName := LForm.Node.Find(NyxResourceEditorFieldID(CForm, refName));
+    LName.Configure.Hint('A creator-owned hint').Width(260).Done;
+    LForm.Configure.Padding(17).Done;
+    LForm.Add(NewNyxButton('selection-custom-action').WithText('Creator action'));
+    LAdded := LForm.Node.Find('selection-custom-action');
+    LSelection := NyxResourceSelection(NyxResourceRef('copy'), NyxDefaultLocale);
+    Check(TrySelectNyxResourceEditor(LForm.Node, ADocument.Resources, LSelection,
+      nil, nil, {$ifdef PAS2JS}@{$endif}LObserver.Synchronize), 'exact context admits Open');
+    Check((LObserver.Calls = 1) and
+      (LForm.Node.Find(NyxResourceEditorFieldID(CForm, refName)) = LName) and
+      (LForm.Node.Find('selection-custom-action') = LAdded), 'owned nodes and descendants are retained');
+    Check((LName.Prop('hint') = 'A creator-owned hint') and (LName.Prop('width') = '260') and
+      (LForm.Node.Prop('padding') = '17'), 'creator presentation remains independent');
+    Check((LName.Prop('value') = 'copy') and (LName.Prop('readonly') = 'true') and
+      (ReadNyxResourceEditor(LForm.Node).ToData.ToJSON =
+        ADocument.Resources.Definition(NyxResourceRef('copy'), NyxDefaultLocale).ToData.ToJSON),
+      'Open supplies the exact JSON proposal and locks existing identity');
+    LDraft.Capture(CForm, LForm.Node);
+    Check(TrySelectNyxResourceEditor(LForm.Node, ADocument.Resources, NyxNewResourceSelection),
+      'New is an independent retained proposal');
+    Check((LName.Prop('value') = '') and (LName.Prop('readonly') <> 'true') and
+      not LDraft.Restore(LForm.Node), 'New unlocks identity and refuses the former selection draft');
+    Check(TrySelectNyxResourceEditor(LForm.Node, ADocument.Resources,
+      NyxResourceSelection(NyxResourceRef('notes'), NyxDefaultLocale)) and
+      (ReadNyxResourceEditor(LForm.Node).Text = WorkbenchNotes), 'Open text preserves exact contents');
+    Check(TrySelectNyxResourceEditor(LForm.Node, ADocument.Resources,
+      NyxResourceSelection(NyxResourceRef('packed'), NyxDefaultLocale)) and
+      (ReadNyxResourceEditor(LForm.Node).ToData.ToJSON =
+        ADocument.Resources.Definition(NyxResourceRef('packed'), NyxDefaultLocale).ToData.ToJSON),
+      'Open binary preserves exact Base64 and closed kind');
+    LBefore := TNyxCodec.Encode(LShell);
+    Check(not TrySelectNyxResourceEditor(LForm.Node, ADocument.Resources,
+      NyxResourceSelection(NyxResourceRef('missing'), NyxDefaultLocale)) and
+      (TNyxCodec.Encode(LShell) = LBefore), 'missing variant refuses without partial state');
+    Check(not TrySelectNyxResourceEditor(LForm.Node, ADocument.Resources, LSelection,
+      ADocument.Find('workshop-headline'), ADocument.Find('workshop-headline')) and
+      (TNyxCodec.Encode(LShell) = LBefore), 'changed selected-owner context refuses atomically');
+    Check(not TrySelectNyxResourceEditor(LForm.Node, nil, LSelection) and
+      (TNyxCodec.Encode(LShell) = LBefore), 'missing catalog refuses atomically');
+    LChangedCatalog := ADocument.Clone;
+    try
+      LChangedCatalog.Resources.Define(NyxResourceRef('notes'), NyxTextResource('Changed notes'));
+      Check(not TrySelectNyxResourceEditor(LForm.Node, LChangedCatalog.Resources, LSelection) and
+        (TNyxCodec.Encode(LShell) = LBefore), 'changed catalog refuses before proposal mutation');
+    finally
+      LChangedCatalog.Free;
+    end;
+    LRefused := False;
+    LObserver.RefuseOnce := True;
+    try
+      TrySelectNyxResourceEditor(LForm.Node, ADocument.Resources, LSelection,
+        nil, nil, {$ifdef PAS2JS}@{$endif}LObserver.Synchronize);
+    except
+      on Exception do
+      begin
+        LRefused := True;
+      end;
+    end;
+    Check(LRefused and (LObserver.Calls = 3) and (TNyxCodec.Encode(LShell) = LBefore),
+      'target failure restores the exact proposal before rollback synchronization');
+    Check(TNyxCodec.Encode(ADocument) = LDocumentBefore,
+      'selection operations leave accepted resources and bindings exact');
+  finally
+    LObserver.Free;
+    LForm := nil;
+    LParent := nil;
+    LShell.Free;
+  end;
+end;
 
 function CheckNyxResourceWorkbench(ADocument: TNyxDocument): Integer;
 var
