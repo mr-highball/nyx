@@ -22,6 +22,23 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - Original-size native editor qualification now needs the logical viewport /
   safe widget geometry prerequisite in [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md).
 
+## Coordinated semantic unit authoring — 2026-10-09
+
+Original criterion three now has a guarded unit-range command alongside focused
+handler/import/routine/declaration/view authoring. Typed immutable exact ranges
+allow class declarations, implementations, helpers and managed view changes in
+one paired Undo; bounded pinned line queries return scalar offsets without
+preceding context. Shared semantics execute 66 checks per target; exact authored
+Pascal executes class/helper/design/control checks on both targets. Ordinary
+native/browser Studios consume the pair and paired Undo through the suspended
+editor exchange. See [the packet](../WORK.md#current-return-path-coordinated-semantic-pascal-editing--2026-10-09).
+
+No original full criterion closes; synchronization remains 28. Workflow alone
+owns 21→22 with no duplicate source credit. Complete source grammar, file import,
+performance/visual parity and restored authenticated primary operation remain
+open. Former services/native tool handles are unavailable after an interruption;
+stored checkpoint/sealed assets remain exact. Static qualification is not rollout.
+
 ## Saved list/tree search source — 2026-10-07
 
 Existing public-generation criteria 1/2 now emit typed search choices on

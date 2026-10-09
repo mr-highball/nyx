@@ -9,8 +9,22 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current display recovery is editor-local typed readiness and explicit retry.
-General managed-source import/Apply and querying/retrying a target's display
+Current coordinated unit authoring (2026-10-09) exposes bounded revision-pinned
+source/line windows and one exact original-source range group through `nyx_pascal`.
+Typed immutable intent, ordinary independent Apply, existing authority/retry/
+permission/context guards and durable paired Undo qualify class/helper/view
+changes. Shared checks pass 66 per target; actual discovery/persistence passes 27;
+exact compiled source and ordinary native/desktop/CSS-390 observers execute.
+Workflow alone advances unfinished 21→22, aggregate 25/16/52/22/28/3; no full
+criterion/task/credit closes. After an interruption all former services are stopped
+and no native Nyx tool remains exposed. Stored checkpoint/sealed bytes are exact;
+static HTTP qualification does not prove authenticated installed availability.
+Next restore/qualify the primary workflow through the existing rollout owner,
+preserving the durable user pair and rejecting stale process identities.
+See [the packet](../WORK.md#current-return-path-coordinated-semantic-pascal-editing--2026-10-09).
+
+Previous display recovery is editor-local typed readiness and explicit retry.
+Project-file import, complete source grammar and querying/retrying a target's display
 remain missing semantic operations with this workflow owner. The maintained
 ordinary source/file/menu harness qualifies physical behavior these tools cannot
 establish; it does not replace primary semantic authoring. Installed MCP stays

@@ -3,7 +3,20 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current design display recovery (2026-10-09) consumes original NS-4 authoring
+Current coordinated semantic Pascal editing (2026-10-09) consumes the original
+NS-4 workflow and NS-1 source synchronization criteria. Typed exact original-source
+ranges join class/helper/view authoring in one revision-aware durable paired Undo;
+bounded source-line queries avoid preceding text pages. [The packet](WORK.md#current-return-path-coordinated-semantic-pascal-editing--2026-10-09)
+records 66 shared native/HTTP checks, 27 actual wrapper checks, exact compiled
+both-target execution and ordinary native/desktop/CSS-390 observers. Workflow
+alone advances unfinished **21→22**, aggregate **25/16/52/22/28/3**; no full
+criterion/task/credit closes. Former services are now stopped/native MCP tools
+absent after a session interruption; stored checkpoint/sealed assets remain exact.
+Static qualification is not rollout. Stop source variants and return to primary
+authenticated workflow restoration; complete grammar/import/authoring/parity/
+performance retain original owners.
+
+Previous design display recovery (2026-10-09) consumes original NS-4 authoring
 criterion two. Public typed readiness/compound controls distinguish accepted
 source from refused display; both controllers suspend stale canvas input and
 retain current-session actions/Retry without adding history. [The packet](WORK.md#current-return-path-design-display-recovery--2026-10-09)

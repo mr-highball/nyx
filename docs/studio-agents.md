@@ -1,5 +1,13 @@
 # Agents in Nyx Studio
 
+Current-source coordinated unit editing is locally qualified on both targets.
+After the latest session interruption, the former Studio services are stopped
+and no native Nyx MCP tool is exposed in this chat. Stored checkpoint/release
+bytes remain exact. Restore and qualify the primary service through the existing
+rollout workflow before claiming installed support for new source modes. The
+following release/connection evidence predates that interruption; see
+[current state](../WORK.md#current-return-path-coordinated-semantic-pascal-editing--2026-10-09).
+
 The current observing release advertises twenty-two tools, including protected
 reviews, project workspaces, state, collections, typed value-domain policy,
 presentations and menu declarations. Authenticated Pascal MCP drives bounded
@@ -1073,7 +1081,8 @@ and unsupported fluent Pascal refuse before publication. Related builder changes
 share one Undo/Redo step. The compact receipt includes no complete source/design.
 This operation changes the admitted portable design beside its authored source;
 it does not execute code or prove compiler correctness. Use `nyx_build` afterward.
-Whole-unit/class editing and project-file import remain separate open outcomes.
+Coordinated unit/class editing uses the contract below. Project-file import
+and complete source grammar/editor quality remain separate open outcomes.
 
 `./tools/build.ps1 -Target pascal-views` runs the native semantic journey and
 current discovery checks, executes the exact emitted companion against an actual
@@ -1083,6 +1092,74 @@ and observe `data-nyx-views` / `data-nyx-views-controls` becoming `passed`.
 This target launches no backend and changes no editor project or configuration.
 Browser execution, installed-tool availability and observing deployment are
 distinct evidence from compilation.
+
+### Coordinated Pascal unit edits
+
+Current source adds `unit` and `edit-unit` to the existing `nyx_pascal` tool.
+Discover the running server's schema before using them; the protected installed
+release predates these modes. Prefer focused handler/import/routine/view tools
+for their narrower contracts. Unit edits support a coordinated class declaration,
+implementation, helper and managed view change when those boundaries must change
+together. They use ordinary source admission and one paired Undo step.
+
+`unit` returns an accepted-source window, default 2048 and maximum 4096 Unicode
+scalars. Supply either a zero-based `offset` or a one-based source `line`.
+Line queries map an existing compiler/routine location to its scalar offset
+inside the server, avoiding preceding pages. Optional `expectedRevision` pins
+the read; use it when assembling related context. The response includes revision,
+line, offset, total, nextOffset, pendingDraft and group budgets. It never reads
+the pending draft. Native UTF-8 bytes and browser UTF-16 code units are not offsets.
+
+```json
+{"mode":"unit","expectedRevision":12,"line":64,"count":1200}
+```
+
+`edit-unit` requires expectedRevision, a unique operationId and 1..16 changes.
+Each change supplies `offset`, `expected` and `replacement`. All offsets refer
+to the same original accepted source. Changes must be ascending and nonoverlapping;
+two insertions at one offset refuse. Empty expected inserts; empty replacement
+deletes. Expected and replacement totals each permit 262144 scalars per group.
+Untouched source remains exact. An immutable public Pascal contract is available
+from `nyx.studio.sourceedits`:
+
+```pascal
+LPatch := NyxSourcePatch([
+  NyxSourceEdit(LDeclarationOffset, LExpectedDeclaration, LProposedDeclaration),
+  NyxSourceEdit(LImplementationOffset, LExpectedImplementation, LProposedImplementation)
+]);
+LPair := LPatch.Candidate(LAcceptedPair);
+LSession.AdoptProject(LPair);
+```
+
+Candidate owns copied intent and stages Apply in an independent session. Drafts,
+stale revisions, missing/mismatched expected text, malformed encoding, budget
+violations, ambiguous ranges, no-op groups and unsupported source refuse before
+accepted publication. Permission, private connection ownership, operation retry
+and outer project/review routing follow existing tools. No per-change context
+override exists. The small receipt reports the number of changes, without source
+or design payload. The backend persists the pair and its history atomically.
+
+Explicit class/signature authoring can introduce compiler errors or external
+caller incompatibility. Source admission reconstructs managed design; it does
+not execute helpers or prove Pascal type correctness. Use `nyx_build` afterward.
+Complete Pascal grammar, project-file import, performance and installed observing
+deployment retain their open owners.
+
+`./tools/build.ps1 -Target pascal-source` exercises the shared semantic contract,
+actual discovery/durable wrapper, exact compiled Pascal and an ordinary native
+observing Studio. It stages equivalent browser semantic, compiled-control and
+ordinary Studio consumers with matching RTL/worker under
+`build/pascal-source/browser`. Serve them through an admitted HTTP host and
+observe `data-nyx-unit`, `data-nyx-unit-controls` and `data-nyx-unit-studio`.
+The ordinary Studio fixture requests a live capture checkpoint acknowledgment
+before Undo. This target starts no listener and touches no existing editor or
+enrollment; the suspended persistence fixture writes only its fresh owned root.
+
+The maintained target also builds `nyx_preview_host`, a read-only loopback file
+host for staged flat HTML/JavaScript/CSS/PNG artifacts. It serves the supplied
+directory with no listing, upload, compiler, editor or MCP API. Start it explicitly
+with the staged directory and an unused local port, then retire only the verified
+owned process. It does not replace a Studio service or register Codex credentials.
 
 ## Maintained authored-input review
 

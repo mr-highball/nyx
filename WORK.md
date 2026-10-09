@@ -9,6 +9,91 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Coordinated semantic Pascal editing — 2026-10-09
+
+Entry was clean at exact pushed `7399aaf`. The user confirms dedicated Resources
+with meaningful categories and creator/user labels/tags combined with search;
+that direction is already canonical and no answer remains pending. Return to
+NS-4_agent-workflows and NS-1_codegen criterion three rather than adding more
+display-recovery variants. Existing handler/import/routine/declaration/view
+operations are retained. This batch adds coordinated editing across the accepted
+Pascal unit, including handwritten class declarations, implementations, helpers
+and managed views. Workflow alone advances unfinished **21→22**, aggregate
+**25/16/52/22/28/3**; no full criterion/task/credit closes. Full goal stays active.
+
+**Delivered contract.** Public immutable `NyxSourceEdit`/`NyxSourcePatch` capture
+1..16 ascending nonoverlapping original-source ranges with scalar offsets and
+exact expected/replacement text. Capture copies intent, validates Unicode and
+cumulative 262144-scalar budgets per text side, and refuses ambiguous insertions
+and no-op changes. Candidate uses ordinary Apply in an independent owned session;
+the accepted editor publishes once through its existing paired history boundary.
+Untouched helpers/comments/source remain exact. Drafts, mismatch, out-of-range,
+unsupported source and later failure refuse without partial publication.
+
+`nyx_pascal` appends `unit` and `edit-unit` without changing existing mode order.
+Unit reads remain bounded (4096 scalars maximum), optionally revision-pinned,
+and accept either scalar offset or source line. Line queries map a compiler/
+routine location to the returned edit offset without sending preceding pages.
+One exact range group uses existing permission/private-owner/retry/context
+guards, bounded receipts, durable save/rollback and paired Undo/Redo. No compiler
+profile or pending draft is edited. Source admission never proves execution.
+
+**Qualification.** Current shared semantic fixtures pass **66 native / 66 HTTP
+browser** checks: typed class/helper/view admission, untouched Unicode text,
+scalar windows and line mapping, shape/revision/permission/owner/overlap/refusal,
+detached intent, budgets, exact retry and one exact paired Undo/Redo. Current
+native actual discovery/durable wrapper passes **27**, including recovery of
+source and its history. Existing discovery regressions pass **54/49/62** with
+unchanged prior mode positions. The exact authored class, its helper caller,
+canonical design and mounted heading execute through **5 native / 5 HTTP browser**
+checks. Native programs report zero unfreed blocks.
+
+Ordinary controllers consume the real independent semantic session through the
+maintained suspended editor exchange. Actual native passes **11**, including an
+exact session pair; actual HTTP desktop and CSS-390×844 each pass **10**. Source
+pane/canvas consume the grouped change, and one semantic Undo restores both.
+Drivers capture a live ordinary Studio checkpoint before Undo; desktop/narrow
+and native images are inspected. This qualifies controller/widget consumption,
+not sockets/authentication, hardware/IME/accessibility, another widgetset or
+complete visual parity. Driver heaps are clean; browser JS heap is not measured.
+Owned current warnings are zero; matched pas2js RTL retains seven upstream
+warnings per compile. The checked native default-Studio journey is slow; the two
+earlier 60-second harness deadlines are retained as failures, followed by the
+ordinary UI queue pump and a bounded 120-second pass. No production performance
+claim follows from that qualification. Broader performance remains open.
+
+**External state and preservation.** Installed native MCP initially supplied
+read-only bounded context. After a later session interruption, all **15** prior
+service identities are absent/reused and no Nyx tool appears in current tool
+metadata. Do not report them live, restart based on stale PIDs or infer current
+authenticated tool support. The previous replacement review's only reason was
+"blocked by policy"; no equivalent Studio/backend/enrollment retry is made.
+The complete stored checkpoint remains exactly **147033 bytes** at its protected
+hash, and the sealed release verifier still accepts **299** exact files. Nine
+live editor pairs and original bindings cannot be observed while those services
+are stopped; their earlier receipts remain historical evidence.
+
+The compiled browser driver against the missing former host has a retained real
+180-second timeout with clean heap. A new narrowly scoped public Pascal
+`nyx_preview_host` then serves only flat compiled assets on loopback, with no
+editor/compiler/MCP/upload/enrollment API. It serves the unchanged eight-file
+staging child; no prior artifacts are overwritten. This is static qualification,
+not a substitute deployed Studio. The owned host is retired only after exact
+executable/command/creation verification. Byte gate checks **112** immutable
+staged files and **8** exact current source/staged/HTTP files.
+
+**Receipts and next return.** Ignored `build/pascal-source/` owns maintained build,
+current-native/browser logs, exact export, old deadlines, stopped-host timeout,
+live desktop/narrow captures, byte verification and reset/checkpoint/sealed
+receipts. The maintained `pascal-source` target builds these consumers and a
+matched module worker, starting no listener; its suspended persistence fixture
+writes only a fresh owned test root. Remote checkpoint is recorded after push.
+Stop source fixture variants. Return to restoring/qualifying the primary Studio
+and authenticated MCP workflow under its existing rollout owner, retaining the
+stored user pair and current new schema. Full source grammar, project-file import,
+target-display querying/retry and broader authoring/parity/performance remain
+original open outcomes. No new task or duplicate source-owner credit is claimed.
+
 ## Current return path: Design display recovery — 2026-10-09
 
 Entry was clean at exact pushed `9f25f90`. This batch returns to original NS-4

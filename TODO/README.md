@@ -47,7 +47,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current design display recovery consumes NS-4 authoring criterion two. Public
+Current coordinated Pascal editing consumes the existing NS-4 workflow and
+NS-1 source synchronization criteria. Typed original-source range groups join
+class/helper/view changes in one durable paired Undo; bounded line windows map
+compiler locations to scalar offsets. [The packet](../WORK.md#current-return-path-coordinated-semantic-pascal-editing--2026-10-09)
+records 66 shared checks per target, 27 actual wrapper checks, exact compiled
+source and ordinary native/desktop/CSS-390 consumers. Workflow alone advances
+unfinished 21→22, aggregate 25/16/52/22/28/3; no full criterion/task/credit closes.
+Former services/native tool handles are unavailable; stored checkpoint/sealed
+assets remain exact. Return to primary authenticated workflow restoration rather
+than more source fixtures. Full grammar/import/parity/performance remain open.
+
+Previous design display recovery consumes NS-4 authoring criterion two. Public
 typed readiness and Nyx compounds separate source admission from target refusal;
 both controllers suspend stale canvas input and retain current-session actions/
 Retry without adding history. [The packet](../WORK.md#current-return-path-design-display-recovery--2026-10-09)

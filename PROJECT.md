@@ -67,6 +67,18 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Coordinated semantic Pascal editing (2026-10-09) adds typed immutable source
+ranges, bounded revision-pinned unit/line queries and one guarded durable paired
+Undo operation for class/helper/view changes. [The packet](WORK.md#current-return-path-coordinated-semantic-pascal-editing--2026-10-09)
+records 66 shared checks per target, 27 actual wrapper/discovery checks, exact
+compiled source on both targets and ordinary native/desktop/CSS-390 observers.
+Workflow alone advances unfinished 21→22, aggregate **25/16/52/22/28/3**; no full
+criterion/task/credit closes. The former services are now stopped and native MCP
+tools absent after a session interruption. Exact stored checkpoint/sealed assets
+remain protected; static browser qualification does not imply Studio rollout.
+Return to primary authenticated workflow restoration, retaining source/import,
+parity/performance and original complete authoring gates.
+
 Design display recovery (2026-10-09) separates accepted source from target
 readiness through public typed Nyx compounds. Both ordinary controllers suspend
 stale canvas input, retain current-session editor actions and offer Retry without

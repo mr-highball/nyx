@@ -150,6 +150,9 @@ type
     { Bounded exact managed-builder text and one guarded paired source command.
       Application helpers/imports remain outside its immutable edit boundary. }
     function Views(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
+    { Bounded accepted-unit context and exact range groups share ordinary paired
+      admission; no pending draft or compiler profile is edited through this API. }
+    function SourceUnit(const AArguments: TNyxDataValue; AApply: Boolean): TNyxDataValue;
     function EditCallbacks(const AArguments: TNyxDataValue;
       const AActor: TNyxText; AApply: Boolean): TNyxDataValue;
     function RemoveRoots(const AArguments: TNyxDataValue;
@@ -256,7 +259,8 @@ uses
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.studio.importedits,
   nyx.studio.routineedits, nyx.studio.declarationedits, nyx.times,
   nyx.resource.sources, nyx.bytes, nyx.studio.resourceedits,
-  nyx.resources.rows, nyx.resources.catalog, nyx.collections.registry, nyx.studio.viewsedits;
+  nyx.resources.rows, nyx.resources.catalog, nyx.collections.registry, nyx.studio.viewsedits,
+  nyx.studio.sourceedits;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
 var
@@ -2046,6 +2050,137 @@ begin
     NyxField('pendingDraft', NyxData(FSession.SourceDraftPending))]);
 end;
 
+function TNyxAgentSession.SourceUnit(const AArguments: TNyxDataValue;
+  AApply: Boolean): TNyxDataValue;
+var
+  LChanges: TNyxDataValue;
+  LChange: TNyxDataValue;
+  LEdits: array of TNyxSourceEdit;
+  LIndex: Integer;
+  LPair: TNyxProjectPair;
+  LOffset: Integer;
+  LCount: Integer;
+  LTotal: Integer;
+  LText: TNyxText;
+  LSource: TNyxText;
+  LLine: Integer;
+  LCursor: Integer;
+  LScalar: Integer;
+  LRequestedLine: Integer;
+  LScannedOffset: Integer;
+begin
+
+  if AApply then
+  begin
+    NyxAgentFields(AArguments, '|mode|expectedRevision|operationId|changes|');
+    RequireRevision(AArguments);
+    LChanges := AArguments.Field('changes');
+
+    if (LChanges.Kind <> ndArray) or (LChanges.Count < 1) or
+      (LChanges.Count > NyxMaximumSourceEdits) then
+    begin
+      raise ENyxModel.Create('Source edits require 1..16 changes');
+    end;
+    SetLength(LEdits, LChanges.Count);
+    for LIndex := 0 to LChanges.Count - 1 do
+    begin
+      LChange := LChanges.Item(LIndex);
+      NyxAgentFields(LChange, '|offset|expected|replacement|');
+
+      if not NyxAgentHas(LChange, 'offset') or
+        not NyxAgentHas(LChange, 'expected') or
+        not NyxAgentHas(LChange, 'replacement') then
+      begin
+        raise ENyxModel.Create('Source changes require offset, expected and replacement');
+      end;
+      LEdits[LIndex] := NyxSourceEdit(IntegerArgument(LChange, 'offset', 0,
+        0, NyxMaximumSourceCharacters), TextArgument(LChange, 'expected'),
+        TextArgument(LChange, 'replacement'));
+    end;
+    LPair := NyxSourcePatch(LEdits).Candidate(FSession.ProjectSnapshot);
+    Result := NyxObject([NyxField('changes', NyxData(Length(LEdits)))]);
+    { Preflight the bounded receipt before the sole accepted-session publication. }
+    BoundContext(WithResults(Summary, Result, 'sourceEdit', True));
+    FSession.AdoptProject(LPair);
+    Exit;
+  end;
+  NyxAgentFields(AArguments, '|mode|expectedRevision|offset|line|count|');
+
+  if NyxAgentHas(AArguments, 'offset') and NyxAgentHas(AArguments, 'line') then
+  begin
+    raise ENyxModel.Create('Choose source scalar offset or source line, not both');
+  end;
+
+  if NyxAgentHas(AArguments, 'expectedRevision') then
+  begin
+    RequireRevision(AArguments);
+  end;
+  LOffset := IntegerArgument(AArguments, 'offset', 0, 0, NyxMaximumSourceCharacters);
+  LCount := IntegerArgument(AArguments, 'count', 2048, 1, 4096);
+  LSource := FSession.Source;
+  LLine := 1;
+  LCursor := 1;
+  LRequestedLine := 0;
+  LScannedOffset := 0;
+
+  if NyxAgentHas(AArguments, 'line') then
+  begin
+    LRequestedLine := IntegerArgument(AArguments, 'line', 1, 1, 1000000);
+    LOffset := 0;
+  end;
+  { Map compiler/routine source lines to scalar offsets inside the server.
+    Callers need only the requested window, not every preceding source page. }
+  while LCursor <= Length(LSource) do
+  begin
+
+    if ((LRequestedLine > 0) and (LLine = LRequestedLine)) or
+      ((LRequestedLine = 0) and (LScannedOffset = LOffset)) then
+    begin
+      Break;
+    end;
+
+    if not NyxNextScalar(LSource, LCursor, LScalar) then
+    begin
+      raise ENyxModel.Create('Accepted source contains invalid Unicode');
+    end;
+    Inc(LScannedOffset);
+
+    if LScalar = 10 then
+    begin
+      Inc(LLine);
+    end;
+  end;
+
+  if LRequestedLine > 0 then
+  begin
+
+    if LLine <> LRequestedLine then
+    begin
+      raise ENyxModel.Create('Source line does not exist');
+    end;
+    LOffset := LScannedOffset;
+  end;
+  LText := TextSpan(LSource, LOffset, LCount, LTotal);
+
+  if LOffset > LTotal then
+  begin
+    raise ENyxModel.Create('Source unit offset is outside the accepted source');
+  end;
+
+  if LCount > LTotal - LOffset then
+  begin
+    LCount := LTotal - LOffset;
+  end;
+  Result := NyxObject([NyxField('revision', NyxData(FRevision)),
+    NyxField('offset', NyxData(LOffset)), NyxField('line', NyxData(LLine)),
+    NyxField('total', NyxData(LTotal)),
+    NyxField('nextOffset', NyxData(LOffset + LCount)),
+    NyxField('text', NyxData(LText)),
+    NyxField('maximumChanges', NyxData(NyxMaximumSourceEdits)),
+    NyxField('maximumEditCharacters', NyxData(NyxMaximumSourceEditCharacters)),
+    NyxField('pendingDraft', NyxData(FSession.SourceDraftPending))]);
+end;
+
 function TNyxAgentSession.Imports(const AArguments: TNyxDataValue;
   AApply: Boolean): TNyxDataValue;
 var
@@ -2276,6 +2411,8 @@ var
   LAuthority: TNyxText;
   LViewsApply: Boolean;
   LViewsResults: TNyxDataValue;
+  LSourceApply: Boolean;
+  LSourceResults: TNyxDataValue;
   LTransaction: INyxProjectTransaction;
   LDesignPatch: INyxDesignPatch;
 begin
@@ -2305,6 +2442,8 @@ begin
   LResourceResults := NyxNull;
   LViewsApply := False;
   LViewsResults := NyxNull;
+  LSourceApply := False;
+  LSourceResults := NyxNull;
 
   try
 
@@ -2325,6 +2464,7 @@ begin
       LRoutineApply := TextArgument(AArguments, 'mode') = 'edit-routines';
       LDeclarationApply := TextArgument(AArguments, 'mode') = 'edit-declarations';
       LViewsApply := TextArgument(AArguments, 'mode') = 'edit-views';
+      LSourceApply := TextArgument(AArguments, 'mode') = 'edit-unit';
     end;
     if ATool = 'nyx_roots' then
     begin
@@ -2347,7 +2487,7 @@ begin
     LMutation := (ATool = 'nyx_transaction') or (ATool = 'nyx_select') or
       (ATool = 'nyx_history') or LCallbackApply or LHandlerApply or LRootApply or
       LStateApply or LCollectionApply or LResourceApply or
-      LImportApply or LRoutineApply or LDeclarationApply or LViewsApply;
+      LImportApply or LRoutineApply or LDeclarationApply or LViewsApply or LSourceApply;
 
     if LMutation and (FPermission <> apEdit) then
     begin
@@ -2467,7 +2607,12 @@ begin
     else if ATool = 'nyx_pascal' then
     begin
 
-      if LViewsApply or (TextArgument(AArguments, 'mode') = 'views') then
+      if LSourceApply or (TextArgument(AArguments, 'mode') = 'unit') then
+      begin
+        Result := SourceUnit(AArguments, LSourceApply);
+        LSourceResults := Result;
+      end
+      else if LViewsApply or (TextArgument(AArguments, 'mode') = 'views') then
       begin
         Result := Views(AArguments, LViewsApply);
         LViewsResults := Result;
@@ -2599,6 +2744,11 @@ begin
       if LViewsApply then
       begin
         Result := WithResults(Result, LViewsResults, 'views');
+      end;
+
+      if LSourceApply then
+      begin
+        Result := WithResults(Result, LSourceResults, 'sourceEdit');
       end;
 
       if LRootApply then

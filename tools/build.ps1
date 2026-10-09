@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resources', 'resource-stream', 'resource-policy', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resources', 'resource-stream', 'resource-policy', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'resource-observations', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-source', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -5403,6 +5403,71 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxSourceEditorHost") -Destination $nyxSourceEditorBrowser
     }
     Write-Host 'Source editor consumers staged; browser execution requires an admitted HTTP host.'
+    exit 0
+  }
+
+  if ($Target -eq 'pascal-source') {
+    # Exact-range source authoring uses ordinary admission/history. Pascal owns
+    # semantic, discovery, persistence and compiled-control assertions. No
+    # listener or existing editor/configuration is touched by this target.
+    $nyxSourceRoot = Join-Path $nyxRoot 'build/pascal-source'
+    $nyxSourceNative = Join-Path $nyxSourceRoot 'native'
+    $nyxSourceExport = Join-Path $nyxSourceRoot 'export'
+    $nyxSourceLcl = Join-Path $nyxSourceRoot 'lcl'
+    $nyxSourceBrowser = Join-Path $nyxSourceRoot 'browser'
+
+    if ($BrowserOutput) { $nyxSourceBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force $nyxSourceNative, $nyxSourceExport,
+      $nyxSourceLcl, $nyxSourceBrowser | Out-Null
+    $nyxSourceFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxSourceNative", "-FE$nyxSourceNative")
+    Invoke-NyxCompiler $nyxFpc ($nyxSourceFlags + @('tests/nyx_unit_tests.lpr'))
+    & (Join-Path $nyxSourceNative 'nyx_unit_tests.exe') $nyxSourceExport
+
+    if ($LASTEXITCODE -ne 0) { throw 'Coordinated source qualification failed' }
+    Invoke-NyxCompiler $nyxFpc ($nyxSourceFlags + @('tools/nyx_preview_host.lpr'))
+    $nyxLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLclFpc = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxSourcePlatform = "$((& $nyxLclFpc '-iTP').Trim())-$((& $nyxLclFpc '-iTO').Trim())"
+    $nyxSourceControlFlags = @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxSourceExport", "-Fi$nyxSourceExport",
+      "-Fu$nyxLazarus/lcl/units/$nyxSourcePlatform",
+      "-Fu$nyxLazarus/lcl/units/$nyxSourcePlatform/$Widgetset",
+      "-Fu$nyxLazarus/components/lazutils/lib/$nyxSourcePlatform",
+      "-Fu$nyxLazarus/packager/units/$nyxSourcePlatform",
+      "-FU$nyxSourceLcl", "-FE$nyxSourceLcl")
+    Invoke-NyxCompiler $nyxLclFpc ($nyxSourceControlFlags + @('tests/nyx_unit_schema.lpr'))
+    & (Join-Path $nyxSourceLcl 'nyx_unit_schema.exe') (Join-Path $nyxSourceRoot ([Guid]::NewGuid().ToString('N')))
+
+    if ($LASTEXITCODE -ne 0) { throw 'Source discovery/durable wrapper qualification failed' }
+    foreach ($nyxSourceSchema in @('nyx_import_schema', 'nyx_routine_schema', 'nyx_declaration_schema')) {
+      Invoke-NyxCompiler $nyxLclFpc ($nyxSourceControlFlags + @("tests/$nyxSourceSchema.lpr"))
+      & (Join-Path $nyxSourceLcl "$nyxSourceSchema.exe")
+
+      if ($LASTEXITCODE -ne 0) { throw 'Existing Pascal discovery regression failed' }
+    }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxSourceControlFlags + @('tests/nyx_unit_controls.lpr'))
+    & (Join-Path $nyxSourceLcl 'nyx_unit_controls.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Exact compiled native source failed' }
+    Invoke-NyxCompiler $nyxLclFpc ($nyxSourceControlFlags + @('tests/nyx_unit_studio.lpr'))
+    & (Join-Path $nyxSourceLcl 'nyx_unit_studio.exe') (Join-Path $nyxSourceRoot 'native-studio.png')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Ordinary native semantic source observation failed' }
+    $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxSourceProgram in @('nyx_unit_tests', 'nyx_unit_controls', 'nyx_unit_studio')) {
+      Invoke-NyxCompiler $nyxPas2js @('-B', '-Tbrowser', '-Mdelphi', '-Fusrc', '-Fustudio', '-Futests',
+        '-Jirtl.js', "-Fu$nyxSourceExport", "-Fi$nyxSourceExport", "-FE$nyxSourceBrowser",
+        "tests/$nyxSourceProgram.lpr")
+    }
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Tmodule', '-Mdelphi', '-Fusrc', '-Fustudio',
+      '-Jirtl.js', "-FE$nyxSourceBrowser", 'studio/nyx_source_worker.lpr')
+    Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxSourceBrowser 'rtl.js')
+    foreach ($nyxSourceHost in @('unit-edits.html', 'unit-controls.html', 'unit-studio.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxSourceHost") -Destination $nyxSourceBrowser
+    }
+    Write-Host 'Semantic Pascal consumers staged; browser execution needs an admitted HTTP host.'
     exit 0
   }
 

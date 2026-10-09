@@ -65,7 +65,7 @@ begin
     end;
     Check(LFound, 'Existing Pascal tool advertises imports');
     LVariants := LTool.Field('inputSchema').Field('oneOf');
-    Check(LVariants.Count = 11, 'Focused Pascal modes retain imports and add managed views');
+    Check(LVariants.Count = 13, 'Existing Pascal modes plus managed views and coordinated unit edits');
     for LIndex := 0 to LVariants.Count - 1 do
     begin
       LVariant := LVariants.Item(LIndex);

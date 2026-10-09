@@ -64,7 +64,7 @@ begin
     end;
     Check(LFound, 'The actual Pascal tool contains routine capabilities');
     LModes := LTool.Field('inputSchema').Field('oneOf');
-    Check(LModes.Count = 11, 'Existing source modes plus bounded managed views');
+    Check(LModes.Count = 13, 'Existing source modes plus bounded views and unit editing');
     for LIndex := 0 to LModes.Count - 1 do
     begin
       LMode := LModes.Item(LIndex);
