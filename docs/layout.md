@@ -128,6 +128,20 @@ between targets; a natural caption is measured by its actual host control.
 Native themed buttons report their painted font/caption through `GetPreferredSize`.
 Natural parent height measures a child at its actual authored/allocated width.
 
+Use explicit `nfwWrap` when an embedded row must fit its own available space,
+including a desktop canvas between side panels. Studio's canvas toolbar consumes
+that same public policy; an application-wide automatic breakpoint does not
+describe the width of each individual panel.
+
+Native scroll children are allocated inside the real client viewport, reserving
+space consumed by native scrollbars without guessing a widgetset metric. Their
+authored outer bounds, padding and size constraints remain explicit. Logical
+projection uses its complete logical box rather than a temporarily clipped
+physical face. Native wrapped and intrinsic label measurements copy typography
+to an owned detached helper, preserving the live label and its ancestors during
+allocation. This is not a persistent layout cache or a claim of every DPI and
+widgetset's parity; current actual-control evidence belongs in WORK.md.
+
 Use `Configure.ForPlatform(npfBrowser/npfNativeLCL)` with these same enum methods
 for a deliberate target-specific presentation rule. Rules belong to portable
 descriptors; realization applies only the selected target to an independent tree.

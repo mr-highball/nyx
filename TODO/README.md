@@ -47,7 +47,19 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current Studio section recovery (2026-10-08): a demonstrated uncommitted-draft
+Current native Studio allocation (2026-10-08): typed toolbar wrapping and actual
+native scrollbar/client allocation repair demonstrated clipping. Ordinary
+Resources passes Win32 **146** and HTTP desktop/CSS-390 **620/985** (polling
+included); unchanged emitted Pascal executes **48** each. Native layout/large-
+viewport/recovery checks pass **2169/4158/29**, leak-free. The unchanged optimized
+full workload takes **308.629 s** versus **323.889 s** previously; one comparison
+accepts no speedup/budget. Authoring advances **46→47**, aggregate
+**25/11/47/21/28/3**; full criteria and other counts remain open/unchanged.
+Next follow measured native cost and remaining authoring/parity/rollout gates,
+without more first-open/recovery fixture variants. See
+[the packet](../WORK.md#current-return-path-native-studio-allocation--2026-10-08).
+
+Previous Studio section recovery (2026-10-08): a demonstrated uncommitted-draft
 loss is repaired through typed copied renderer continuity and actual retained/
 staged Studio ownership. Custom factory preparation and second physical preview
 refusals preserve exact roots, drafts, focused ranges and event tokens; a later

@@ -9,7 +9,21 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current combined Studio extension recovery qualifies a creator factory/theme
+Current native Studio allocation follows criteria 2/3 through the ordinary
+consumer: typed toolbar wrap, native scrollbar/client allocation and detached
+label measurement repair demonstrated clipping while retaining edits and
+logical projection. Native Resources/layout/large-viewport/recovery passes
+146/2169/4158/29, leak-free; actual HTTP Resources desktop/CSS-390 passes 620/985
+(polling included), with unchanged source executing 48 per target. The same
+optimized full workload passes 146 in 308.629 s versus 323.889 s previously.
+No general speedup, gesture/frame/update/memory budget or full criterion closes;
+NS-3's historical count remains unchanged. The bounded authoring gate belongs
+to NS-4. Follow remaining measured native synchronization cost without more
+first-open/recovery fixture variants; all original parity/performance/extension
+scope remains required. See
+[the packet](../WORK.md#current-return-path-native-studio-allocation--2026-10-08).
+
+Previous combined Studio extension recovery qualifies a creator factory/theme
 consumer on both targets: unfinished input survives later preparation and second
 physical preview refusals, with exact roots/ranges/tokens and later grouped
 success. Typed copied adapter continuity retains no view/model/widget/store and

@@ -9,6 +9,80 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Native Studio allocation — 2026-10-08
+
+Entry is clean at exact pushed `ee5f201`; execution is solo. Native semantic MCP
+still authenticates and reads primary revision 2, with unchanged selection/source/
+history and no draft. The current adapter/Studio repair follows NS-4 authoring
+criterion 2 and NS-3 performance criteria 2/3; the full user outcome remains open.
+
+The maintained first-open profile established actual clipping: a 700-pixel
+canvas row placed its final caption at 771..919; Project/Inspector fields were
+226/266 pixels wide inside 233/273 client viewports with 12-pixel padding. The
+shared Studio now consumes public `Row.Wrap(nfwWrap).Align(ncaCenter)`. Native
+content allocation reserves actual scrollbars, keeps authored outer boxes and
+constraints, and excludes temporary clipped faces from logical projection.
+Wrapped label height now uses the same detached typography helper as intrinsic
+width, avoiding live `WordWrapLength` mutation and unnecessary label-parent
+handle initialization. No persistent measurement cache or new toolkit is added.
+
+After repair, the row is 700 x 122 with every visible child inside its bounds;
+fields are 209/249 pixels wide and unintended horizontal side scrollbars vanish.
+Three physical allocation assertions add no editor operations to the unchanged
+full Resources workload. Current evidence under ignored `build/native-allocation/`:
+
+- Checked ordinary Win32 Resources passes **146**, including imports, scalar/
+  structured bindings, consent, exact paired history, source and retirement;
+  zero unfreed blocks. Its native print PNG is inspected as a redraw diagnostic,
+  not proof of displayed pixels or assistive-technology behavior.
+- Actual HTTP Resources passes **620** at 1240 x 820 and **985** at CSS-390 x 820,
+  including the visible toolbar bounds assertion and two live editor/canvas
+  checkpoints each. These totals include readiness polls, not speed measurements.
+  Both compact Project and Design captures are inspected.
+- Exact emitted Pascal retains SHA-256
+  `F2580A8DBEF478CD561D57994CDB8F68C439D33CA32EC05244AC72073ACF7DBC`.
+  Compilers resolve the actual new export, not the old seed; it executes **48**
+  checks each natively (zero leaks) and over HTTP in the browser.
+- Existing typed layout/policy controls pass **2169** Win32 checks, including
+  390/360 resizing with retained editor/draft/focus. Actual 2048-control/nested
+  logical viewport input/reveal/resize/events passes **4158**; section recovery
+  and borrowed custom theme/factory pass **29**. All retire with zero leaks.
+- Owned native builds have zero warnings; native notes and seven upstream
+  pas2js `classes.pas` warnings remain. Dependency source is untouched.
+
+The first native compile exposed one missed private helper use in the viewport
+include; it is corrected before all current gates. Its old profile log was not
+new runtime evidence. The subsequent current profile passes four checks. Private
+stage receipts verify the exact existing isolated HTTP host before fresh-child
+closure copies; no listener, backend replacement, enrollment/configuration or
+protected design mutation occurs.
+
+The final optimized same-workload run passes **146** in **308.629 s**, after
+correctness and all other UI/compiler runs retire, with the same checked flags
+and no heap tracing. Its only workload additions are three allocation assertions;
+the editor operation sequence and emitted source stay exact. The preceding sample
+was **323.889 s**. This single comparison establishes no aggregate speedup, per-
+gesture guarantee or performance budget. `timing-private.json` owns exact flags,
+terminal state and duration. Final preservation/checkpoint evidence follows below.
+
+Final read-only guard verifies all **nine** exact durable pairs, **fifteen**
+protected process identities, unchanged checkpoint and **299** sealed/served LAN
+files. Primary MCP remains revision 2; read activity does not change its project
+pair. No protected process or user source/design is replaced. The LAN still
+serves the earlier build; automatic approval review previously rejected backend
+replacement only as **blocked by policy**, and this packet does not retry it.
+`preservation-private.json`, `qualification-private.json` and the final exact
+remote `checkpoint-private.json` retain evidence without committing machine data.
+Accept this bounded authoring allocation repair only: **46→47**, aggregate
+**25/11/47/21/28/3**. NS-3's historical count is neither invented nor reset; no
+full criterion, task, performance budget, target parity or product credit closes.
+
+Next address the remaining measured native synchronization cost through its
+ordinary public consumer, without further first-open/recovery fixture variants.
+Native compact Studio's complete authoring journey, arbitrary custom host/DPI/
+widgetsets, physical IME/accessibility, wider full-frame/context failures and
+observing rollout remain unqualified by this packet. Keep semantic MCP primary.
+
 ## Current return path: Studio section recovery — 2026-10-08
 
 Entry is clean at exact pushed `1fdc25c`. Independent ordinary Studio sections

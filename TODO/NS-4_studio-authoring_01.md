@@ -9,7 +9,20 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current combined recovery consumes criterion 2 through the actual shared Studio
+Current native allocation consumes criterion 2 through ordinary Nyx Studio:
+typed row wrapping follows the canvas width, scrollbar client space constrains
+side fields, and detached text measurement preserves live controls. Resources
+passes native 146 and HTTP desktop/CSS-390 620/985 (polling included), unchanged
+exact source executes 48 each, and native layout/large-viewport/recovery checks
+pass 2169/4158/29 without leaks. Inspected captures qualify this bounded repair;
+authoring count advances 46→47, aggregate 25/11/47/21/28/3. The same optimized
+full workload takes 308.629 s versus 323.889 s; no general speedup, latency budget
+or full criterion closes. Complete native compact authoring, further native
+cost, custom host/DPI/widgetsets, physical input/accessibility and observing
+rollout remain open. See
+[the packet](../WORK.md#current-return-path-native-studio-allocation--2026-10-08).
+
+Previous combined recovery consumes criterion 2 through the actual shared Studio
 shell/facade. Both-target unfinished-draft loss after a later factory refusal is
 repaired through typed copied interaction continuity, following exact source/model
 replay. Preparation and second physical preview failure preserve roots, drafts,

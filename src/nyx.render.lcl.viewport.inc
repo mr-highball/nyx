@@ -123,7 +123,7 @@ begin
 
         if LParent.FControl is TCustomGroupBox then
         begin
-          LFrame := GroupFrameInsets(LParent.FNode);
+          LFrame := ContentInsets(LParent.FNode);
           Inc(LOriginX, LFrame.Left);
           Inc(LOriginY, LFrame.Top);
           Inc(LParentX, LFrame.Left);

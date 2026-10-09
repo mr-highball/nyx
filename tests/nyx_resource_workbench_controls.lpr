@@ -124,6 +124,45 @@ var
   LBitmap: TBitmap;
   LImage: TLazIntfImage;
 
+  { Bounded physical allocation evidence for the existing first-open profile.
+    Report actual control/client boxes, not inferred model widths. This observes
+    the ordinary retained shell and never edits its document or source. }
+  procedure Allocation(const AID: TNyxText; AChildren: Boolean);
+  var
+    LNode: TNyxNode;
+    LControl: TControl;
+    LIndex: Integer;
+  begin
+    LNode := LStudio.ShellView.Root.Find(AID);
+
+    if LNode = nil then
+    begin
+      Exit;
+    end;
+    LControl := LStudio.ShellView.ControlFor(AID);
+    WriteLn('ALLOCATION / ', AID, ' / outer=', LControl.Left, ',', LControl.Top,
+      ',', LControl.Width, ',', LControl.Height, ' / client=',
+      LControl.ClientWidth, ',', LControl.ClientHeight);
+
+    if LControl.Parent <> nil then
+    begin
+      WriteLn('ALLOCATION parent / ', AID, ' / client=',
+        LControl.Parent.ClientWidth, ',', LControl.Parent.ClientHeight);
+    end;
+
+    if AChildren then
+    begin
+      for LIndex := 0 to LNode.Count - 1 do
+      begin
+
+        if LNode.Children[LIndex].Prop('visible', 'true') <> 'false' then
+        begin
+          Allocation(LNode.Children[LIndex].ID, False);
+        end;
+      end;
+    end;
+  end;
+
   procedure Ready;
   var
     LStarted: QWord;
@@ -142,6 +181,42 @@ var
       end;
       Sleep(1);
     until not LStudio.PresentationPending and not LStudio.SourceCommands.Busy;
+  end;
+
+  { Qualify the ordinary physical shell, rather than only its authored widths.
+    A wrapped line must remain inside its row; side fields must leave their
+    declared padding inside the client viewport after scrollbars settle. These
+    assertions add no editor operations to the full performance workload. }
+  procedure CheckAllocation;
+  var
+    LRow: TNyxNode;
+    LFace: TControl;
+    LChild: TControl;
+    LIndex: Integer;
+    LFits: Boolean;
+  begin
+    LRow := LStudio.ShellView.Root.Find('studio-viewbar');
+    LFace := LStudio.ShellView.ControlFor(LRow.ID);
+    LFits := True;
+    for LIndex := 0 to LRow.Count - 1 do
+    begin
+
+      if LRow.Children[LIndex].Prop('visible', 'true') = 'false' then
+      begin
+        Continue;
+      end;
+      LChild := LStudio.ShellView.ControlFor(LRow.Children[LIndex].ID);
+      LFits := LFits and (LChild.Left >= 0) and (LChild.Top >= 0) and
+        (LChild.Left + LChild.Width <= LFace.ClientWidth) and
+        (LChild.Top + LChild.Height <= LFace.ClientHeight);
+    end;
+    Check(LFits, 'all canvas toolbar controls fit their actual wrapped row');
+    LFace := LStudio.ShellView.ControlFor('project-title');
+    Check(LFace.Left + LFace.Width <= LFace.Parent.ClientWidth - 12,
+      'project field preserves padding inside the native scroll viewport');
+    LFace := LStudio.ShellView.ControlFor('selected-label');
+    Check(LFace.Left + LFace.Width <= LFace.Parent.ClientWidth - 12,
+      'inspector caption preserves padding inside the native scroll viewport');
   end;
 
   procedure Click(const AID: TNyxText);
@@ -319,8 +394,14 @@ begin
     begin
       Check(LStudio.ShellView.Root.Find(CEditor) <> nil,
         'profiling opens the real public Resources form');
+      Allocation('studio-viewbar', True);
+      Allocation('studio-left', False);
+      Allocation('project-title', False);
+      Allocation('studio-right', False);
+      Allocation('selected-label', False);
       Exit;
     end;
+    CheckAllocation;
     ImportFile('copy', 'JSON', WorkbenchCopyTitle, WorkbenchCopyHelp, NyxEncodeUTF8(WorkbenchJSON));
     Bind;
     Choice(refTarget, NyxBindingPropertyTitle(bpText));

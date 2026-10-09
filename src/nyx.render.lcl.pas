@@ -405,7 +405,14 @@ type
     { Read native group decorations without deriving them from clamped cached
       client sizes. Insets remain measurable while a retained group is parked
       at zero area; they are local adapter geometry, not authored padding. }
-    function GroupFrameInsets(ANode: TNyxNode): TRect;
+    { Native decoration consumes content space, independently of authored outer
+      bounds. Physical scrollbars apply only to ordinary native layout; a
+      logical projection must never subtract its temporary clipped face. }
+    function ContentInsets(ANode: TNyxNode): TRect;
+    { Measure copied typography on an owned detached helper. This never changes
+      a live label's wrapping or invalidates its ancestors during allocation. }
+    procedure LabelSize(ALabel: TLabel; AWidth: Integer; AWrap: Boolean;
+      out ATextWidth, ATextHeight: Integer);
     function EffectiveWidth(ANode: TNyxNode; AAvailable: Integer;
       AAllocated: Boolean = False): Integer;
     function ColumnChildWidth(AParent, AChild: TNyxNode; AAvailable: Integer): Integer;
@@ -740,7 +747,7 @@ type
     A temporary screen context supplies its canvas only during measurement. }
   TNyxIntrinsicLabel = class(TLabel)
   public
-    procedure UnwrappedSize(out AWidth, AHeight: Integer);
+    procedure TextSize(AAvailableWidth: Integer; out AWidth, AHeight: Integer);
   end;
   { Access shared focus events without imposing a specific native input class. }
   TNyxWinControlAccess = class(TWinControl);
@@ -762,7 +769,8 @@ type
     function Live: Boolean;
   end;
 
-procedure TNyxIntrinsicLabel.UnwrappedSize(out AWidth, AHeight: Integer);
+procedure TNyxIntrinsicLabel.TextSize(AAvailableWidth: Integer;
+  out AWidth, AHeight: Integer);
 var
   LContext: HDC;
 begin
@@ -776,10 +784,10 @@ begin
     { CalculateSize preserves the canvas handle and applies LCL's font,
       Unicode, accelerator, multiline and bidi rules. Supply a handle first:
       a detached TControlCanvas cannot acquire one through a borrowed parent.
-      The wide intrinsic rectangle matches LCL's unwrapped label measurement;
-      the layout caller separately constrains the result to available space. }
+      The caller supplies either the allocated wrapping width or LCL's wide
+      intrinsic rectangle. Neither operation touches an attached control. }
     Canvas.Handle := LContext;
-    CalculateSize(10000, AWidth, AHeight);
+    CalculateSize(AAvailableWidth, AWidth, AHeight);
   finally
     Canvas.Handle := 0;
     LCLIntf.ReleaseDC(0, LContext);
@@ -1794,7 +1802,26 @@ begin
     NaturalContentWidth(ANode, AAvailable));
 end;
 
-function TNyxLCLRenderer.GroupFrameInsets(ANode: TNyxNode): TRect;
+procedure TNyxLCLRenderer.LabelSize(ALabel: TLabel; AWidth: Integer;
+  AWrap: Boolean; out ATextWidth, ATextHeight: Integer);
+begin
+
+  if FMeasurementLabel = nil then
+  begin
+    FMeasurementLabel := TNyxIntrinsicLabel.Create(nil);
+    FMeasurementLabel.Visible := False;
+    FMeasurementLabel.AutoSize := False;
+  end;
+  FMeasurementLabel.Font.Assign(ALabel.Font);
+  FMeasurementLabel.Caption := ALabel.Caption;
+  FMeasurementLabel.ShowAccelChar := ALabel.ShowAccelChar;
+  FMeasurementLabel.BiDiMode := ALabel.BiDiMode;
+  FMeasurementLabel.WordWrap := AWrap;
+  TNyxIntrinsicLabel(FMeasurementLabel).TextSize(Max(1, AWidth),
+    ATextWidth, ATextHeight);
+end;
+
+function TNyxLCLRenderer.ContentInsets(ANode: TNyxNode): TRect;
 var
   LControl: TControl;
   LGroup: TWinControl;
@@ -1802,6 +1829,21 @@ var
   LClient: TRect;
 begin
   Result := Rect(0, 0, 0, 0);
+
+  if (ANode.ProjectionKind = 'scroll') and not FVirtualLayout then
+  begin
+    LControl := Binding(ANode).FControl;
+
+    if LControl is TScrollBox then
+    begin
+      { LCL reports the real client extent after native bars consume space.
+        Keep the authored outer box, but allocate descendants inside that
+        viewport. No platform-specific scrollbar metric is guessed here. }
+      Result.Right := Max(0, LControl.Width - LControl.ClientWidth);
+      Result.Bottom := Max(0, LControl.Height - LControl.ClientHeight);
+    end;
+    Exit;
+  end;
 
   if (ANode.ProjectionKind <> 'group') and (FactoryIndex(ANode) < 0) then
   begin
@@ -1868,7 +1910,7 @@ begin
 
   if (ANode.Count > 0) and (ANode.ProjectionKind <> 'split-view') then
   begin
-    LFrame := GroupFrameInsets(ANode);
+    LFrame := ContentInsets(ANode);
     LContentAvailable := Max(0, AAvailable - LFrame.Left - LFrame.Right);
     LSum := 0;
     LVisible := 0;
@@ -1901,10 +1943,6 @@ begin
   end;
   LControl := Binding(ANode).FControl;
 
-  if LControl.Parent <> nil then
-  begin
-    LControl.Parent.HandleNeeded;
-  end;
   LWidth := 0;
   LHeight := 0;
 
@@ -1916,21 +1954,15 @@ begin
       that mutation recursive and raising ELayoutException. Detached measurement
       has the same widgetset/font/text semantics and no ancestor invalidation. }
 
-    if FMeasurementLabel = nil then
-    begin
-      FMeasurementLabel := TNyxIntrinsicLabel.Create(nil);
-      FMeasurementLabel.Visible := False;
-      FMeasurementLabel.AutoSize := False;
-      FMeasurementLabel.WordWrap := False;
-    end;
-    FMeasurementLabel.Font.Assign(LLabel.Font);
-    FMeasurementLabel.Caption := LLabel.Caption;
-    FMeasurementLabel.ShowAccelChar := LLabel.ShowAccelChar;
-    FMeasurementLabel.BiDiMode := LLabel.BiDiMode;
-    TNyxIntrinsicLabel(FMeasurementLabel).UnwrappedSize(LWidth, LHeight);
+    LabelSize(LLabel, 10000, False, LWidth, LHeight);
   end
   else
   begin
+
+    if LControl.Parent <> nil then
+    begin
+      LControl.Parent.HandleNeeded;
+    end;
     LControl.GetPreferredSize(LWidth, LHeight, True, False);
   end;
 
@@ -2010,7 +2042,7 @@ var
   LFrame: TRect;
 begin
   {$ifdef NYX_LCL_LAYOUT_PROFILE}Inc(FRowPlanCalls);{$endif}
-  LFrame := GroupFrameInsets(ANode);
+  LFrame := ContentInsets(ANode);
   LInner := Max(0, AWidth - LFrame.Left - LFrame.Right -
     2 * Metric(ANode, 'padding', 0));
   LGap := Metric(ANode, 'gap', 12);
@@ -2151,7 +2183,7 @@ begin
     Exit(Metric(ANode, 'height', 32));
   end;
 
-  LFrame := GroupFrameInsets(ANode);
+  LFrame := ContentInsets(ANode);
   LContentWidth := Max(0, AWidth - LFrame.Left - LFrame.Right);
 
   if ANode.QueryContainer.Defined and (ANode.ContainerContainment = nccSize) then
@@ -2222,16 +2254,14 @@ begin
     if Binding(ANode).FControl is TLabel then
     begin
       LLabel := TLabel(Binding(ANode).FControl);
-      LLabel.Parent.HandleNeeded;
       LTextWidth := AWidth;
 
       if LTextWidth < 1 then
       begin
         LTextWidth := 1;
       end;
-      LLabel.WordWrapLength := LTextWidth;
       LTextHeight := 0;
-      LLabel.GetPreferredSize(LTextWidth, LTextHeight, True, False);
+      LabelSize(LLabel, LTextWidth, LLabel.WordWrap, LTextWidth, LTextHeight);
 
       if LTextHeight + 4 > Result then
       begin
@@ -2376,7 +2406,7 @@ begin
   LPadding := Metric(ANode, 'padding', 0);
   { Logical outer boxes remain the authored faces. Their children are allocated
     within native usable content, independently of the current physical clip. }
-  LFrame := GroupFrameInsets(ANode);
+  LFrame := ContentInsets(ANode);
   LWidth := Max(0, LWidth - LFrame.Left - LFrame.Right);
   LHeight := Max(0, LHeight - LFrame.Top - LFrame.Bottom);
   LGap := Metric(ANode, 'gap', 12);
@@ -5211,7 +5241,7 @@ begin
 
   if LParent.FControl is TCustomGroupBox then
   begin
-    LFrame := GroupFrameInsets(LParent.FNode);
+    LFrame := ContentInsets(LParent.FNode);
     LWidth := Max(0, LWidth - LFrame.Left - LFrame.Right);
     LHeight := Max(0, LHeight - LFrame.Top - LFrame.Bottom);
   end

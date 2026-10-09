@@ -1240,6 +1240,10 @@ begin
     LDetails.Configure.Visible(False).Done;
   end;
   LViewbar := TNyxNode.Create('row', 'studio-viewbar');
+  { The canvas row can be narrower than the application window. Explicit wrap
+    therefore follows this row's allocated space on both adapters, including a
+    desktop canvas between open side panels. It preserves each control face. }
+  LViewbar.Configure.Layout(TNyxLayoutPolicy.Row.Wrap(nfwWrap).Align(ncaCenter)).Done;
   LStage.Add(LViewbar);
   { A flex caption must retain room for a useful view name when the Inspector
     narrows the canvas. Let the existing row wrap controls onto the next line. }

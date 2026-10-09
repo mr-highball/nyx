@@ -4,7 +4,20 @@
 [Current work](WORK.md)
 
 
-Current Studio section recovery (2026-10-08): a demonstrated uncommitted-draft
+Current native Studio allocation (2026-10-08): the shared toolbar uses typed wrap
+at its actual row width; native side fields reserve scrollbar client space.
+Detached text measurement preserves live labels during allocation. Ordinary
+Resources passes Win32 **146**, HTTP desktop/CSS-390 **620/985** (polling included),
+and exact unchanged emitted source **48** per target. Native layout/large-viewport/
+recovery regressions pass **2169/4158/29**, leak-free, with inspected captures.
+The unchanged optimized full journey passes 146 in **308.629 s** versus the prior
+**323.889 s**; a single comparison accepts no general speedup or budget. Authoring
+alone advances **46→47**, aggregate **25/11/47/21/28/3**; full criteria/credit remain
+open. Further native cost, complete native compact authoring, physical input/DPI/
+accessibility and observing rollout remain with their owners. See
+[the packet](WORK.md#current-return-path-native-studio-allocation--2026-10-08).
+
+Previous Studio section recovery (2026-10-08): a demonstrated uncommitted-draft
 loss is repaired through typed copied renderer continuity and actual retained/
 staged Studio ownership. Custom factory preparation and second physical preview
 refusals preserve exact roots, drafts, focused ranges and event tokens; a later

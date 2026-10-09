@@ -106,6 +106,38 @@ begin
   end;
 end;
 
+{ Read actual allocated boxes after the ordinary controller has settled. The
+  canvas toolbar can be narrower than the host window on desktop as well as
+  compact devices; every visible command must fit its own wrapped row. }
+procedure CheckToolbarBounds;
+var
+  LRow: TJSHTMLElement;
+  LChild: TJSHTMLElement;
+  LRowBox: TJSDOMRect;
+  LChildBox: TJSDOMRect;
+  LIndex: Integer;
+  LFits: Boolean;
+begin
+  LRow := Find('studio-viewbar');
+  LRowBox := LRow.getBoundingClientRect;
+  LFits := LRowBox.width > 0;
+  for LIndex := 0 to LRow.children.length - 1 do
+  begin
+    LChild := TJSHTMLElement(LRow.children[LIndex]);
+
+    if window.getComputedStyle(LChild).getPropertyValue('display') = 'none' then
+    begin
+      Continue;
+    end;
+    LChildBox := LChild.getBoundingClientRect;
+    LFits := LFits and (LChildBox.left >= LRowBox.left - 1) and
+      (LChildBox.right <= LRowBox.right + 1) and
+      (LChildBox.top >= LRowBox.top - 1) and
+      (LChildBox.bottom <= LRowBox.bottom + 1);
+  end;
+  Check(LFits, 'ordinary canvas toolbar fits its actual wrapped row');
+end;
+
 procedure Click(const AID: TNyxText); async;
 var
   LFace: TJSHTMLElement;
@@ -466,6 +498,7 @@ begin
     await(ResourceWait);
     LAfter := await(ResourceSnapshot);
     await(Panel('design'));
+    CheckToolbarBounds;
     Check(Find('studio-canvas').querySelector('[data-node="workshop-headline"]').textContent =
       'Your resource workbench', 'actual browser caption reads accepted JSON');
     await(Panel('project'));
