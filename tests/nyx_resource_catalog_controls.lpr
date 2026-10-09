@@ -136,8 +136,9 @@ var
   {$endif}
 begin
   LResources := NewNyxResources.Define(NyxResourceRef('project-notes'),
-    NyxTextResource('Notes').Describe('Project notes', 'Help for our project'))
-    .Define(NyxResourceRef('project-notes'), NyxLocale('en-US'), NyxTextResource('English notes'))
+    NyxTextResource('Notes').Tagged(NyxResourceLabel('Help')).Describe('Project notes', 'Help for our project'))
+    .Define(NyxResourceRef('project-notes'), NyxLocale('en-US'),
+      NyxTextResource('English notes').Tagged(NyxResourceLabel('Help')))
     .Define(NyxResourceRef('sample-data'), NyxJSONResource('{"ready":true}'));
   LCatalog := NewNyxResourceCatalog(NyxCollection('control-review'), LResources);
   LDocument := Shell;
@@ -208,6 +209,22 @@ begin
     {$endif}
     Check(LCatalog.View.HasSelection and (LCatalog.View.Selected.ID = LSelection.ID),
       'filtering retains hidden exact selection membership');
+    LCatalog.Filter(NyxResourceCatalogQuery.Tagged(NyxResourceLabel('Help')));
+    {$ifdef PAS2JS}
+    Check(LControl.querySelectorAll('[data-nyx-item]').length = 2,
+      'exact creator tags filter actual browser rows');
+    {$else}
+    Check(TListBox(LControl).Items.Count = 2, 'exact creator tags filter the actual native list');
+    {$endif}
+    Check((LViews.ControlFor('resource-picker') = LControl) and
+      (LViews.InputFor('resource-draft') = LDraft) and (LCatalog.View.Selected.ID = LSelection.ID),
+      'tag filtering retains mounted control identity and exact selection');
+    {$ifdef PAS2JS}
+    Check(TJSHTMLTextAreaElement(LDraft).value = 'Unfinished notes',
+      'tag filtering preserves the actual browser draft');
+    {$else}
+    Check(TCustomMemo(LDraft).Text = 'Unfinished notes', 'tag filtering preserves the actual native draft');
+    {$endif}
     LCatalog.Filter(NyxResourceCatalogQuery);
     LResources.Remove(NyxResourceRef('project-notes'), NyxLocale('en-US'));
     LCatalog.Refresh(LResources);

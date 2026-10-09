@@ -264,6 +264,18 @@ hosted resolver and cache declarations now have a prepared resource-specific
 semantic operation; authenticated deployment remains absent. Native HTTP/cache/
 control qualification is prerequisite evidence; the deployed MCP does not
 acquire resource tools from a library build.
+Creator-label discovery gap (2026-10-09): portable typed annotations and public
+catalog filters now qualify on native/HTTP, with source/history and actual list/
+loader consumers. This existing owner must expose bounded exact label metadata
+and query context, plus a revision-guarded grouped label mutation through the same
+resource candidate path. Avoid requiring whole definitions/payloads merely to
+retag a resource. Preserve caller annotations during unrelated resource edits,
+workspace/review isolation, paired Undo/Redo and observing activity. The frozen
+installed backend does not admit new labelled version-3/4 definitions; current
+source compilation is not deployment/discovery evidence. No UI automation or
+protected project replacement substitutes for this missing semantic operation.
+See [the prerequisite](../WORK.md#current-return-path-portable-resource-labels--2026-10-09).
+
 Prepared `nyx_resources` supplies bounded metadata/variant listings, exact
 Unicode/byte windows, structural JSON and local/effective scalar binding context.
 Its typed 1..32-change group shares final candidate admission with the common

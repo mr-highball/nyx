@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resources', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -3109,6 +3109,71 @@ try {
       Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxResourceHost") -Destination $nyxResourceBrowser
     }
     Write-Host 'Resource counterparts staged; browser/cache/HTTP/observing execution remains separate.'
+    exit 0
+  }
+
+  if ($Target -eq 'resource-labels') {
+    # Pascal owns typed metadata, wire/source/history, actual list and hosted
+    # loader assertions. Reuse the selected HTTP host read-only; no new listener,
+    # browser, editor session or local enrollment is created by this build gate.
+    $nyxLabelRoot = Join-Path $nyxRoot 'build/resource-labels/qualification'
+    $nyxLabelCore = Join-Path $nyxLabelRoot 'core'
+    $nyxLabelGenerated = Join-Path $nyxLabelRoot 'generated'
+    $nyxLabelGeneratedNative = Join-Path $nyxLabelRoot 'generated-native'
+    $nyxLabelNative = Join-Path $nyxLabelRoot 'native'
+    $nyxLabelBrowser = Join-Path $nyxLabelRoot 'browser'
+
+    if ($BrowserOutput) { $nyxLabelBrowser = [IO.Path]::GetFullPath($BrowserOutput) }
+    New-Item -ItemType Directory -Force -Path $nyxLabelCore, $nyxLabelGenerated,
+      $nyxLabelGeneratedNative, $nyxLabelNative, $nyxLabelBrowser | Out-Null
+    $nyxLabelFpc = Resolve-NyxTool $Fpc 'FPC' 'fpc'
+    $nyxLabelChecks = @('-B', '-Mdelphi', '-O2', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
+      '-Fusrc', '-Fustudio', '-Futests')
+    $nyxLabelSource = Join-Path $nyxLabelGenerated 'nyx.generated.labels.pas'
+    Invoke-NyxCompiler $nyxLabelFpc ($nyxLabelChecks + @(
+      "-FU$nyxLabelCore", "-FE$nyxLabelCore", 'tests/nyx_resource_labels_tests.lpr'))
+    & (Join-Path $nyxLabelCore 'nyx_resource_labels_tests.exe') $nyxLabelSource
+
+    if ($LASTEXITCODE -ne 0) { throw 'Portable resource label checks failed' }
+    Invoke-NyxCompiler $nyxLabelFpc ($nyxLabelChecks + @("-Fu$nyxLabelGenerated",
+      "-FU$nyxLabelGeneratedNative", "-FE$nyxLabelGeneratedNative", 'tests/nyx_resource_labels_generated.lpr'))
+    & (Join-Path $nyxLabelGeneratedNative 'nyx_resource_labels_generated.exe')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Exact emitted resource label checks failed' }
+    $nyxLabelLcl = Resolve-NyxTool $LclFpc 'LCL_FPC' 'fpc'
+    $nyxLabelLazarus = Resolve-NyxTool $Lazarus 'LAZARUS' ''
+    $nyxLabelPlatform = "$((& $nyxLabelLcl '-iTP').Trim())-$((& $nyxLabelLcl '-iTO').Trim())"
+    $nyxLabelLclFlags = $nyxLabelChecks + @(
+      "-Fu$nyxLabelLazarus/lcl/units/$nyxLabelPlatform",
+      "-Fu$nyxLabelLazarus/lcl/units/$nyxLabelPlatform/$Widgetset",
+      "-Fu$nyxLabelLazarus/components/lazutils/lib/$nyxLabelPlatform",
+      "-Fu$nyxLabelLazarus/packager/units/$nyxLabelPlatform",
+      "-FU$nyxLabelNative", "-FE$nyxLabelNative")
+    Invoke-NyxCompiler $nyxLabelLcl ($nyxLabelLclFlags + @('tests/nyx_resource_catalog_controls.lpr'))
+    & (Join-Path $nyxLabelNative 'nyx_resource_catalog_controls.exe') (Join-Path $nyxLabelRoot 'native.png')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Actual native resource label filtering failed' }
+    Invoke-NyxCompiler $nyxLabelLcl ($nyxLabelLclFlags + @('tests/nyx_resource_loader_tests.lpr'))
+    # The unique query avoids accepting an old fixture's persisted cache as a
+    # fresh network result. The same exact URL is retained for restart assertions.
+    $nyxLabelURL = $HttpURL.TrimEnd('/') + '/api/health?labels=' + [Guid]::NewGuid().ToString('N')
+    & (Join-Path $nyxLabelNative 'nyx_resource_loader_tests.exe') $nyxLabelURL (Join-Path $nyxLabelRoot 'loading.png')
+
+    if ($LASTEXITCODE -ne 0) { throw 'Actual hosted resource label retention failed' }
+    $nyxLabelPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
+    $nyxLabelRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
+    foreach ($nyxLabelProgram in @('nyx_resource_labels_tests', 'nyx_resource_labels_generated',
+      'nyx_resource_catalog_controls', 'nyx_resource_loader_tests')) {
+      Invoke-NyxCompiler $nyxLabelPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+        '-Fusrc', '-Fustudio', '-Futests', "-Fu$nyxLabelGenerated", "-FE$nyxLabelBrowser",
+        "tests/$nyxLabelProgram.lpr")
+    }
+    Copy-Item -LiteralPath $nyxLabelRuntime -Destination (Join-Path $nyxLabelBrowser 'rtl.js')
+    foreach ($nyxLabelPage in @('resource-labels.html', 'resource-labels-generated.html',
+      'resource-catalog-controls.html', 'resource-loading.html')) {
+      Copy-Item -LiteralPath (Join-Path $nyxRoot "studio/web/$nyxLabelPage") -Destination $nyxLabelBrowser
+    }
+    Write-Host 'Resource label counterparts staged; browser runtime/visual qualification remains separate.'
     exit 0
   }
 

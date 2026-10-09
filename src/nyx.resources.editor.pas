@@ -91,6 +91,7 @@ type
     FEditor: TNyxText;
     FContext: TNyxText;
     FPaths: TNyxDataValue;
+    FLabels: TNyxResourceLabels;
     FValues: array[TNyxResourceEditorField] of TNyxText;
     function GetDefined: Boolean;
   public
@@ -150,6 +151,11 @@ function NyxResourceEditorInput(ANode, AShellRoot: TNyxNode;
   Base64 for images/binary. Hosted content is optional explicit same-kind fallback.
   Refusal preserves fields and accepted work; metadata is applied after admission. }
 function ReadNyxResourceEditor(AEditor: TNyxNode): INyxResourceDefinition;
+{ Typed creator-label proposal. It changes neither accepted catalog nor payload.
+  Sets are normalized before writing; read/capture/restore preserve exact labels.
+  The dedicated workspace supplies the visible editor for this public contract. }
+function NyxResourceEditorLabels(AEditor: TNyxNode): TNyxResourceLabels;
+procedure SetNyxResourceEditorLabels(AEditor: TNyxNode; const ALabels: TNyxResourceLabels);
 function NyxResourceEditorKind(AEditor: TNyxNode): TNyxResourceKind;
 { Closed input boundary; unknown choices refuse without changing a proposal.
   These helpers borrow the mounted form and own no target/controller lifetime. }
@@ -182,6 +188,7 @@ const
   COwnerBaseline = 'nyx.resource-editor.owner-baseline';
   CPaths = 'nyx.resource-editor.paths';
   CEntry = 'nyx.resource-editor.entry';
+  CLabelProposal = 'nyx.resource-editor.labels';
   CFields: array[TNyxResourceEditorField] of TNyxText = ('name', 'locale', 'title',
     'description', 'kind', 'source', 'url', 'cache', 'fresh', 'stale', 'maximum',
     'server', 'content', 'encoding', 'fallback', 'bind', 'target', 'path', 'image-locale');
@@ -439,6 +446,34 @@ begin
   Field(AEditor, refImageLocale).Configure.Value(CImageLocales[AValue]).Done;
 end;
 
+function NyxResourceEditorLabels(AEditor: TNyxNode): TNyxResourceLabels;
+begin
+
+  if not Complete(AEditor) then
+  begin
+    raise ENyxResource.Create('Resource labels require a complete editor');
+  end;
+  Result := NyxResourceLabels;
+
+  if AEditor.Props.IndexOfName(CLabelProposal) >= 0 then
+  begin
+    Result := TNyxResourceLabels.FromData(TNyxDataValue.ParseJSON(AEditor.Prop(CLabelProposal)));
+  end;
+end;
+
+procedure SetNyxResourceEditorLabels(AEditor: TNyxNode; const ALabels: TNyxResourceLabels);
+var
+  LLabels: TNyxResourceLabels;
+begin
+
+  if not Complete(AEditor) then
+  begin
+    raise ENyxResource.Create('Resource labels require a complete editor');
+  end;
+  LLabels := ALabels.Copy;
+  AEditor.SetProp(CLabelProposal, LLabels.ToData.ToJSON);
+end;
+
 function ReadNyxResourceEditor(AEditor: TNyxNode): INyxResourceDefinition;
 var
   LKind: TNyxResourceKind;
@@ -451,6 +486,7 @@ var
   LEncoding: TNyxResourceEditorEncoding;
   LBytes: TNyxBytes;
   LValue: Integer;
+  LLabels: TNyxResourceLabels;
 begin
   LKind := NyxResourceEditorKind(AEditor);
   LSource := TNyxResourceSourceKind(Choice(AEditor, refSource, CSources));
@@ -517,6 +553,12 @@ begin
   end;
   Result := LDefinition.Describe(Field(AEditor, refTitle).Prop('value'),
     Field(AEditor, refDescription).Prop('value'));
+  LLabels := NyxResourceEditorLabels(AEditor);
+
+  if LLabels.Count > 0 then
+  begin
+    Result := NyxResourceDiscovery(Result).WithLabels(LLabels);
+  end;
 end;
 
 function ContentText(const ADefinition: INyxResourceDefinition): TNyxText;
@@ -809,6 +851,7 @@ begin
   Result.Configure.Layout(TNyxLayoutPolicy.Column).Gap(10).Done;
   Result.Node.SetProp(CEditor, AID).SetProp(CCatalog, ACatalog.ToData.ToJSON)
     .SetProp(CSelection, LSelection.ToData.ToJSON)
+    .SetProp(CLabelProposal, NyxResourceLabelsOf(LDefinition).ToData.ToJSON)
     .SetProp(COwnerBaseline, NyxResourceEditorOwnerBaseline(AOwner, AProjection));
 
   if AOwner <> nil then
@@ -1061,6 +1104,7 @@ begin
     { Copy only owned proposal/disclosure fields. Fresh constructor defaults
       must not overwrite a caller's styling, labels, hints or added controls. }
     LPrepared.SetProp(CSelection, LFresh.Node.Prop(CSelection))
+      .SetProp(CLabelProposal, LFresh.Node.Prop(CLabelProposal))
       .SetProp(CPaths, LFresh.Node.Prop(CPaths));
     for LField := Low(TNyxResourceEditorField) to High(TNyxResourceEditorField) do
     begin
@@ -1491,6 +1535,7 @@ begin
   FEditor := '';
   FContext := '';
   FPaths := NyxNull;
+  FLabels := NyxResourceLabels;
   { Retiring a proposal releases packed contents immediately, even while the
     enclosing per-project presentation record remains open. }
   for LField := Low(TNyxResourceEditorField) to High(TNyxResourceEditorField) do
@@ -1526,6 +1571,7 @@ begin
   LDraft.FEditor := AID;
   LDraft.FContext := Context(LEditor);
   LDraft.FPaths := TNyxDataValue.ParseJSON(LEditor.Prop(CPaths));
+  LDraft.FLabels := NyxResourceEditorLabels(LEditor);
   for LField := Low(TNyxResourceEditorField) to High(TNyxResourceEditorField) do
   begin
     LDraft.FValues[LField] := Field(LEditor, LField).Prop('value');
@@ -1563,6 +1609,7 @@ begin
     LItems := LItems + FPaths.Item(LIndex).Field('title').AsText;
   end;
   LEditor.SetProp(CPaths, FPaths.ToJSON);
+  SetNyxResourceEditorLabels(LEditor, FLabels);
   Field(LEditor, refPath).Configure.Items(LItems).Done;
   for LField := Low(TNyxResourceEditorField) to High(TNyxResourceEditorField) do
   begin
@@ -1598,9 +1645,19 @@ begin
   begin
     LValues[Ord(LField)] := NyxData(FValues[LField]);
   end;
-  Result := NyxObject([NyxField('version', NyxData(2)), NyxField('editor', NyxData(FEditor)),
-    NyxField('context', NyxData(FContext)), NyxField('paths', FPaths),
-    NyxField('values', NyxArray(LValues))]);
+
+  if FLabels.Count > 0 then
+  begin
+    Result := NyxObject([NyxField('version', NyxData(3)), NyxField('editor', NyxData(FEditor)),
+      NyxField('context', NyxData(FContext)), NyxField('paths', FPaths),
+      NyxField('values', NyxArray(LValues)), NyxField('labels', FLabels.ToData)]);
+  end
+  else
+  begin
+    Result := NyxObject([NyxField('version', NyxData(2)), NyxField('editor', NyxData(FEditor)),
+      NyxField('context', NyxData(FContext)), NyxField('paths', FPaths),
+      NyxField('values', NyxArray(LValues))]);
+  end;
 end;
 
 class function TNyxResourceEditorDraft.FromData(
@@ -1614,6 +1671,7 @@ var
   LKind: Integer;
   LLegacy: Boolean;
   LCount: Integer;
+  LVersion: Integer;
 
   procedure RequireChoice(const AValue: TNyxText; const ANames: array of TNyxText);
   var
@@ -1651,6 +1709,12 @@ begin
     end;
   end;
   LCount := Ord(High(TNyxResourceEditorField)) + 1;
+  LVersion := 0;
+
+  if not LLegacy then
+  begin
+    LVersion := AData.Field('version').AsInteger;
+  end;
 
   if LLegacy then
   begin
@@ -1659,13 +1723,24 @@ begin
 
   if (AData.Kind <> ndObject) or
     (LLegacy and (AData.Count <> 4)) or
-    (not LLegacy and ((AData.Count <> 5) or (AData.Field('version').AsInteger <> 2))) then
+    (not LLegacy and not (((AData.Count = 5) and (LVersion = 2)) or
+      ((AData.Count = 6) and (LVersion = 3)))) then
   begin
     raise ENyxResource.Create('Resource draft requires its exact context and fields');
   end;
   LDraft.FEditor := AData.Field('editor').AsText;
   LDraft.FContext := AData.Field('context').AsText;
   LDraft.FPaths := AData.Field('paths');
+
+  if LVersion = 3 then
+  begin
+    LDraft.FLabels := TNyxResourceLabels.FromData(AData.Field('labels'));
+
+    if LDraft.FLabels.Count = 0 then
+    begin
+      raise ENyxResource.Create('Labelled draft requires at least one label');
+    end;
+  end;
   LValues := AData.Field('values');
 
   if (LDraft.FEditor = '') or (LDraft.FContext = '') or

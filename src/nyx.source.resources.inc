@@ -39,6 +39,8 @@ var
   LArgs: TValues;
   LMethod: TNyxText;
   LDefinition: INyxResourceDefinition;
+  LLabels: TNyxResourceLabels;
+  LDiscoveryAvailable: Boolean;
 
   function IntegerValue(const AValue: TValue): Integer;
   begin
@@ -110,9 +112,61 @@ begin
     end;
     Exit;
   end;
-  LArgs := Arguments(2);
+  LArgs := nil;
 
-  if AName = 'nyxhostedresource' then
+  if (AName <> 'nyxresourcelabels') or At('(') then
+  begin
+    LArgs := Arguments(2);
+  end;
+
+  if AName = 'nyxresourcelabels' then
+  begin
+
+    if Length(LArgs) <> 0 then
+    begin
+      Fail('Resource labels start with an empty typed set');
+    end;
+    LLabels := NyxResourceLabels;
+    while At('.') do
+    begin
+      Inc(FCursor);
+      LMethod := LowerCase(FTokens[FCursor].Text);
+      Inc(FCursor);
+      LArgs := Arguments(1);
+
+      if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkResourceLabel) then
+      begin
+        Fail('Resource label sets require typed label references');
+      end;
+
+      if LMethod = 'add' then
+      begin
+        LLabels := LLabels.Add(NyxResourceLabel(LArgs[0].Text));
+      end
+      else if LMethod = 'remove' then
+      begin
+        LLabels := LLabels.Remove(NyxResourceLabel(LArgs[0].Text));
+      end
+      else
+      begin
+        Fail('Resource label sets support Add/Remove');
+      end;
+    end;
+    Result.Kind := vkResourceLabels;
+    Result.Data := LLabels.ToData;
+    Exit;
+  end;
+
+  if AName = 'nyxresourcediscovery' then
+  begin
+
+    if (Length(LArgs) <> 1) or (LArgs[0].Kind <> vkResourceDefinition) then
+    begin
+      Fail('Resource discovery requires an admitted typed definition');
+    end;
+    LDefinition := NyxResourceFromData(LArgs[0].ResourceDefinitionData);
+  end
+  else if AName = 'nyxhostedresource' then
   begin
 
     if (Length(LArgs) <> 2) or (LArgs[0].Kind <> vkResourceKind) or
@@ -247,7 +301,7 @@ begin
       Exit;
     end;
 
-    if (AName = 'nyxresourceref') or (AName = 'nyxlocale') or
+    if (AName = 'nyxresourceref') or (AName = 'nyxlocale') or (AName = 'nyxresourcelabel') or
       (AName = 'nyxdecodebase64') or (AName = 'nyxtextresource') then
     begin
 
@@ -267,6 +321,13 @@ begin
       begin
         Result.Kind := vkResourceLocale;
         Result.Text := NyxLocale(LArgs[0].Text).Name;
+        Exit;
+      end;
+
+      if AName = 'nyxresourcelabel' then
+      begin
+        Result.Kind := vkResourceLabel;
+        Result.Text := NyxResourceLabel(LArgs[0].Text).Name;
         Exit;
       end;
 
@@ -314,6 +375,10 @@ begin
     end;
   end;
   Result.Kind := vkResourceDefinition;
+  { Factory/adaptation results expose discovery. Base-interface configuration
+    keeps its existing return contract; a later label call must explicitly use
+    NyxResourceDiscovery, just as actual Pascal compilation requires. }
+  LDiscoveryAvailable := True;
   while At('.') do
   begin
     Inc(FCursor);
@@ -324,20 +389,34 @@ begin
     if (LMethod = 'cache') and (Length(LArgs) = 1) and (LArgs[0].Kind = vkResourceCache) then
     begin
       LDefinition := LDefinition.Cache(LArgs[0].ResourceCache);
+      LDiscoveryAvailable := False;
     end
     else if (LMethod = 'fallback') and (Length(LArgs) = 1) and
       (LArgs[0].Kind = vkResourceDefinition) then
     begin
       LDefinition := LDefinition.Fallback(NyxResourceFromData(LArgs[0].ResourceDefinitionData));
+      LDiscoveryAvailable := False;
+    end
+    else if (LMethod = 'tagged') and (Length(LArgs) = 1) and
+      (LArgs[0].Kind = vkResourceLabel) and LDiscoveryAvailable then
+    begin
+      LDefinition := NyxResourceDiscovery(LDefinition).Tagged(NyxResourceLabel(LArgs[0].Text));
+    end
+    else if (LMethod = 'withlabels') and (Length(LArgs) = 1) and
+      (LArgs[0].Kind = vkResourceLabels) and LDiscoveryAvailable then
+    begin
+      LDefinition := NyxResourceDiscovery(LDefinition).WithLabels(
+        TNyxResourceLabels.FromData(LArgs[0].Data));
     end
     else if (LMethod = 'describe') and (Length(LArgs) = 2) and
       (LArgs[0].Kind = vkText) and (LArgs[1].Kind = vkText) then
     begin
       LDefinition := LDefinition.Describe(LArgs[0].Text, LArgs[1].Text);
+      LDiscoveryAvailable := False;
     end
     else
     begin
-      Fail('Resource configuration requires typed Cache/Fallback or exact Describe text');
+      Fail('Resource configuration requires typed Cache/Fallback/labels or exact Describe text');
     end;
   end;
   Result.ResourceDefinitionData := LDefinition.ToData;

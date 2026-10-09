@@ -32,6 +32,10 @@ const
   NyxResourcesWireField = 'resources';
   NyxMaximumResources = 128;
   NyxMaximumResourceWireBytes = 3 * 1048576;
+  { Admission limits apply per definition's ordered label set. The byte limit
+    covers its complete encoded UTF-8 JSON, independently of payload budgets. }
+  NyxMaximumResourceLabels = 32;
+  NyxMaximumResourceLabelBytes = 8192;
 
 type
   { Closed payload families. JSON is preserved as exact UTF-8 source and parsed
@@ -55,6 +59,37 @@ type
   public
     property Name: TNyxText read FName;
     function Defined: Boolean;
+  end;
+
+  { An exact creator-owned discovery label. Its printable Unicode name is open
+    application data, not a payload kind, path or behavioral string switch. }
+  TNyxResourceLabelRef = record
+  private
+    FName: TNyxText;
+  public
+    property Name: TNyxText read FName;
+    function Defined: Boolean;
+  end;
+
+  { Independent immutable ordered set of exact labels. Add is idempotent and
+    retains first insertion order; Remove returns another set. Labels may contain
+    spaces, punctuation or supplementary Unicode without delimiter parsing.
+    Empty/default means no labels. Wire admission rejects duplicate labels,
+    malformed names, excessive count and aggregate UTF-8 data. No definition,
+    payload, catalog, project or target is retained. }
+  TNyxResourceLabels = record
+  private
+    FData: TNyxDataValue;
+    function GetCount: Integer;
+  public
+    function Add(const ALabel: TNyxResourceLabelRef): TNyxResourceLabels;
+    function Remove(const ALabel: TNyxResourceLabelRef): TNyxResourceLabels;
+    function Contains(const ALabel: TNyxResourceLabelRef): Boolean;
+    function Item(AIndex: Integer): TNyxResourceLabelRef;
+    function Copy: TNyxResourceLabels;
+    function ToData: TNyxDataValue;
+    class function FromData(const AData: TNyxDataValue): TNyxResourceLabels; static;
+    property Count: Integer read GetCount;
   end;
 
   { Immutable structural JSON selector. Field/Item append independent copies;
@@ -102,6 +137,21 @@ type
     property ByteCount: Integer read GetByteCount;
     property Source: TNyxResourceSource read GetSource;
     property FallbackDefinition: INyxResourceDefinition read GetFallback;
+  end;
+
+  { Optional specialized discovery capability. The original definition
+    interface/GUID stays unchanged for alternative implementations. Built-in
+    factories expose this interface; a base definition can be normalized through
+    NyxResourceDiscovery. Fluent changes return an independently owned immutable
+    definition. Help/cache/fallback copies retain these annotations but preserve
+    their original base return type: configure tags before those calls, or adapt
+    their result explicitly before configuring more labels. }
+  INyxResourceDiscovery = interface(INyxResourceDefinition)
+    ['{783229DE-E519-44FB-9627-7516672948E8}']
+    function GetLabels: TNyxResourceLabels;
+    function WithLabels(const ALabels: TNyxResourceLabels): INyxResourceDiscovery;
+    function Tagged(const ALabel: TNyxResourceLabelRef): INyxResourceDiscovery;
+    property Labels: TNyxResourceLabels read GetLabels;
   end;
 
   { Document-owned registry of immutable definitions, including optional locale
@@ -190,6 +240,13 @@ type
 
 function NyxResourceRef(const AName: TNyxText): TNyxResourceRef;
 function NyxLocale(const AName: TNyxText): TNyxLocaleRef;
+function NyxResourceLabel(const AName: TNyxText): TNyxResourceLabelRef;
+function NyxResourceLabels: TNyxResourceLabels;
+{ Retained immutable capability. A foreign base-only definition is normalized
+  through its strict wire before exposing discovery; nil/invalid definitions refuse. }
+function NyxResourceDiscovery(const ADefinition: INyxResourceDefinition): INyxResourceDiscovery;
+{ Base-only implementations have no labels. Returned sets are independently owned. }
+function NyxResourceLabelsOf(const ADefinition: INyxResourceDefinition): TNyxResourceLabels;
 { Empty locale selects an ordinary default; it is distinct from a missing
   resource name. Explicit fallback is supplied by the caller, never host locale. }
 function NyxDefaultLocale: TNyxLocaleRef;
@@ -200,13 +257,13 @@ function NyxResourceValue(const AReference: TNyxResourceRef): TNyxResourceValueR
 { The image family is deliberately separate from scalar selectors. Wrong file
   kinds and hosted files without a loaded value/authored fallback refuse Read. }
 function NyxResourceImage(const AReference: TNyxResourceRef): TNyxResourceImageRef;
-function NyxTextResource(const AText: TNyxText): INyxResourceDefinition;
-function NyxJSONResource(const AText: TNyxText): INyxResourceDefinition; overload;
-function NyxJSONResource(const AData: TNyxDataValue): INyxResourceDefinition; overload;
-function NyxImageResource(const AImage: TNyxImageSource): INyxResourceDefinition;
-function NyxBinaryResource(const ABytes: TNyxBytes): INyxResourceDefinition;
+function NyxTextResource(const AText: TNyxText): INyxResourceDiscovery;
+function NyxJSONResource(const AText: TNyxText): INyxResourceDiscovery; overload;
+function NyxJSONResource(const AData: TNyxDataValue): INyxResourceDiscovery; overload;
+function NyxImageResource(const AImage: TNyxImageSource): INyxResourceDiscovery;
+function NyxBinaryResource(const ABytes: TNyxBytes): INyxResourceDiscovery;
 function NyxHostedResource(AKind: TNyxResourceKind;
-  const AURL: TNyxResourceURL): INyxResourceDefinition;
+  const AURL: TNyxResourceURL): INyxResourceDiscovery;
 { Closed file kind is selected explicitly at import. Image headers determine the
   PNG/JPEG format; JSON/text require strict UTF-8 and preserve original bytes. }
 function NyxResourceFromBytes(AKind: TNyxResourceKind;
@@ -220,7 +277,7 @@ function NyxResourceKindName(AKind: TNyxResourceKind): TNyxText;
 implementation
 
 type
-  TResource = class(TInterfacedObject, INyxResourceDefinition)
+  TResource = class(TInterfacedObject, INyxResourceDefinition, INyxResourceDiscovery)
   private
     FKind: TNyxResourceKind;
     FTitle: TNyxText;
@@ -232,6 +289,7 @@ type
     FHosted: Boolean;
     FSource: TNyxResourceSource;
     FFallback: INyxResourceDefinition;
+    FLabels: TNyxResourceLabels;
     procedure RequireKind(AKind: TNyxResourceKind);
   public
     function GetKind: TNyxResourceKind;
@@ -248,6 +306,9 @@ type
     function Fallback(const ADefinition: INyxResourceDefinition): INyxResourceDefinition;
     function Cache(const APolicy: TNyxResourceCachePolicy): INyxResourceDefinition;
     function ToData: TNyxDataValue;
+    function GetLabels: TNyxResourceLabels;
+    function WithLabels(const ALabels: TNyxResourceLabels): INyxResourceDiscovery;
+    function Tagged(const ALabel: TNyxResourceLabelRef): INyxResourceDiscovery;
   end;
   { Owned entries use classes because pas2js cannot put managed interfaces in a
     record. Cloning allocates fresh entries and shares only immutable content. }
@@ -294,7 +355,7 @@ begin
 
   if AName = '' then
   begin
-    raise ENyxResource.Create('A resource or locale name is required');
+    raise ENyxResource.Create('A resource, locale or label name is required');
   end;
   while LIndex <= Length(AName) do
   begin
@@ -329,6 +390,175 @@ begin
   Result := Default(TNyxLocaleRef);
 end;
 
+function NyxResourceLabel(const AName: TNyxText): TNyxResourceLabelRef;
+begin
+  Name(AName);
+  Result.FName := AName;
+end;
+
+function TNyxResourceLabelRef.Defined: Boolean;
+begin
+  Result := FName <> '';
+end;
+
+function NyxResourceLabels: TNyxResourceLabels;
+begin
+  Result := Default(TNyxResourceLabels);
+end;
+
+function TNyxResourceLabels.GetCount: Integer;
+begin
+  Result := 0;
+
+  if FData.Defined then
+  begin
+    Result := FData.Count;
+  end;
+end;
+
+function TNyxResourceLabels.Item(AIndex: Integer): TNyxResourceLabelRef;
+begin
+
+  if (AIndex < 0) or (AIndex >= Count) then
+  begin
+    raise ENyxResource.Create('Resource label index is out of range');
+  end;
+  Result := NyxResourceLabel(FData.Item(AIndex).AsText);
+end;
+
+function TNyxResourceLabels.Contains(const ALabel: TNyxResourceLabelRef): Boolean;
+var
+  LIndex: Integer;
+begin
+  Result := False;
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if Item(LIndex).Name = ALabel.Name then
+    begin
+      Exit(True);
+    end;
+  end;
+end;
+
+function TNyxResourceLabels.ToData: TNyxDataValue;
+begin
+  Result := NyxArray([]);
+
+  if FData.Defined then
+  begin
+    Result := FData.Copy;
+  end;
+end;
+
+class function TNyxResourceLabels.FromData(const AData: TNyxDataValue): TNyxResourceLabels;
+var
+  LIndex: Integer;
+  LPrevious: Integer;
+  LLabel: TNyxResourceLabelRef;
+begin
+  Result := Default(TNyxResourceLabels);
+
+  if (AData.Kind <> ndArray) or (AData.Count > NyxMaximumResourceLabels) or
+    (NyxUTF8ByteCount(AData.ToJSON) > NyxMaximumResourceLabelBytes) then
+  begin
+    raise ENyxResource.Create('Resource labels exceed their count/data budget or shape');
+  end;
+  for LIndex := 0 to AData.Count - 1 do
+  begin
+    LLabel := NyxResourceLabel(AData.Item(LIndex).AsText);
+    for LPrevious := 0 to LIndex - 1 do
+    begin
+
+      if AData.Item(LPrevious).AsText = LLabel.Name then
+      begin
+        raise ENyxResource.Create('Duplicate resource label');
+      end;
+    end;
+  end;
+  Result.FData := AData.Copy;
+end;
+
+function TNyxResourceLabels.Copy: TNyxResourceLabels;
+begin
+  Result := FromData(ToData);
+end;
+
+function TNyxResourceLabels.Add(const ALabel: TNyxResourceLabelRef): TNyxResourceLabels;
+var
+  LItems: array of TNyxDataValue;
+  LIndex: Integer;
+begin
+  NyxResourceLabel(ALabel.Name);
+
+  if Contains(ALabel) then
+  begin
+    Exit(Copy);
+  end;
+  SetLength(LItems, Count + 1);
+  for LIndex := 0 to Count - 1 do
+  begin
+    LItems[LIndex] := NyxData(Item(LIndex).Name);
+  end;
+  LItems[Count] := NyxData(ALabel.Name);
+  Result := FromData(NyxArray(LItems));
+end;
+
+function TNyxResourceLabels.Remove(const ALabel: TNyxResourceLabelRef): TNyxResourceLabels;
+var
+  LItems: array of TNyxDataValue;
+  LIndex: Integer;
+  LCount: Integer;
+begin
+  SetLength(LItems, Count);
+  LCount := 0;
+  for LIndex := 0 to Count - 1 do
+  begin
+
+    if Item(LIndex).Name <> ALabel.Name then
+    begin
+      LItems[LCount] := NyxData(Item(LIndex).Name);
+      Inc(LCount);
+    end;
+  end;
+  SetLength(LItems, LCount);
+  Result := FromData(NyxArray(LItems));
+end;
+
+function NyxResourceDiscovery(const ADefinition: INyxResourceDefinition): INyxResourceDiscovery;
+var
+  LNormalized: INyxResourceDefinition;
+begin
+
+  if ADefinition = nil then
+  begin
+    raise ENyxResource.Create('Resource discovery requires a definition');
+  end;
+
+  if Supports(ADefinition, INyxResourceDiscovery, Result) then
+  begin
+    Exit;
+  end;
+  LNormalized := NyxResourceFromData(ADefinition.ToData);
+
+  if not Supports(LNormalized, INyxResourceDiscovery, Result) then
+  begin
+    raise ENyxResource.Create('Normalized resource has no discovery capability');
+  end;
+end;
+
+function NyxResourceLabelsOf(const ADefinition: INyxResourceDefinition): TNyxResourceLabels;
+var
+  LDiscovery: INyxResourceDiscovery;
+begin
+  Result := NyxResourceLabels;
+
+  if (ADefinition <> nil) and Supports(ADefinition, INyxResourceDiscovery, LDiscovery) then
+  begin
+    Result := LDiscovery.Labels.Copy;
+  end;
+end;
+
 function TNyxResourceRef.Defined: Boolean;
 begin
   Result := FName <> '';
@@ -353,11 +583,11 @@ begin
 end;
 
 function NewResource(AKind: TNyxResourceKind;
-  const AContent: TNyxText): INyxResourceDefinition;
+  const AContent: TNyxText): INyxResourceDiscovery;
 var
   LResource: TResource;
   LBytes: TNyxBytes;
-  LGuard: INyxResourceDefinition;
+  LGuard: INyxResourceDiscovery;
 begin
   NyxResourceKindName(AKind);
   LResource := TResource.Create;
@@ -398,27 +628,27 @@ begin
   Result := LGuard;
 end;
 
-function NyxTextResource(const AText: TNyxText): INyxResourceDefinition;
+function NyxTextResource(const AText: TNyxText): INyxResourceDiscovery;
 begin
   Result := NewResource(nrkText, AText);
 end;
 
-function NyxJSONResource(const AText: TNyxText): INyxResourceDefinition;
+function NyxJSONResource(const AText: TNyxText): INyxResourceDiscovery;
 begin
   Result := NewResource(nrkJSON, AText);
 end;
 
-function NyxJSONResource(const AData: TNyxDataValue): INyxResourceDefinition;
+function NyxJSONResource(const AData: TNyxDataValue): INyxResourceDiscovery;
 begin
   Result := NyxJSONResource(AData.ToJSON);
 end;
 
-function NyxImageResource(const AImage: TNyxImageSource): INyxResourceDefinition;
+function NyxImageResource(const AImage: TNyxImageSource): INyxResourceDiscovery;
 begin
   Result := NewResource(nrkImage, AImage.ToWire);
 end;
 
-function NyxBinaryResource(const ABytes: TNyxBytes): INyxResourceDefinition;
+function NyxBinaryResource(const ABytes: TNyxBytes): INyxResourceDiscovery;
 begin
   Result := NewResource(nrkBinary, NyxEncodeBase64(ABytes));
 end;
@@ -473,7 +703,7 @@ begin
 end;
 
 function NyxHostedResource(AKind: TNyxResourceKind;
-  const AURL: TNyxResourceURL): INyxResourceDefinition;
+  const AURL: TNyxResourceURL): INyxResourceDiscovery;
 var
   LResource: TResource;
   LSource: TNyxResourceSource;
@@ -654,7 +884,7 @@ end;
 function TResource.Describe(const ATitle, ADescription: TNyxText): INyxResourceDefinition;
 var
   LResource: TResource;
-  LGuard: INyxResourceDefinition;
+  LGuard: INyxResourceDiscovery;
 begin
 
   if (NyxUTF8ByteCount(ATitle) > 512) or (NyxUTF8ByteCount(ADescription) > 4096) then
@@ -675,9 +905,72 @@ begin
   LResource.FHosted := FHosted;
   LResource.FSource := FSource;
   LResource.FFallback := FFallback;
+  LResource.FLabels := FLabels.Copy;
   LResource.FTitle := ATitle;
   LResource.FDescription := ADescription;
   Result := LGuard;
+end;
+
+function TResource.GetLabels: TNyxResourceLabels;
+begin
+  Result := FLabels.Copy;
+end;
+
+function TResource.WithLabels(const ALabels: TNyxResourceLabels): INyxResourceDiscovery;
+var
+  LCopy: INyxResourceDefinition;
+  LResource: TResource;
+  LLabels: TNyxResourceLabels;
+begin
+  { Admit/copy all names before allocating a replacement definition. A refused
+    set cannot mutate a subscribed definition or its payload/fallback policy. }
+  LLabels := ALabels.Copy;
+  LCopy := Describe(FTitle, FDescription);
+  LResource := LCopy as TResource;
+  LResource.FLabels := LLabels;
+  Result := LResource;
+end;
+
+function TResource.Tagged(const ALabel: TNyxResourceLabelRef): INyxResourceDiscovery;
+begin
+  Result := WithLabels(FLabels.Add(ALabel));
+end;
+
+{ Unlabelled definitions preserve their exact original version/field order.
+  Labels add a strict new version, rather than silently extending old schemas.
+  Immutable field copies have no alias back into an admitted caller container. }
+function LabelledResourceData(const AData: TNyxDataValue;
+  const ALabels: TNyxResourceLabels): TNyxDataValue;
+var
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LCount: Integer;
+  LName: TNyxText;
+begin
+
+  if ALabels.Count = 0 then
+  begin
+    Exit(AData);
+  end;
+  { Use an explicit integer for the final slot. pas2js does not consistently
+    emit a parameterless Count call when it is itself the array subscript. }
+  LCount := AData.Count;
+  SetLength(LFields, LCount + 1);
+  for LIndex := 0 to LCount - 1 do
+  begin
+    LName := AData.Key(LIndex);
+
+    if LName = 'version' then
+    begin
+      LFields[LIndex] := NyxField(LName, NyxData(AData.Field(LName).AsInteger + 2));
+    end
+    else
+    begin
+      LFields[LIndex] := NyxField(LName, AData.Field(LName).Copy);
+    end;
+  end;
+  LFields[LCount] := NyxField('labels', ALabels.ToData);
+  Result := NyxObject(LFields);
 end;
 
 function TResource.ToData: TNyxDataValue;
@@ -693,15 +986,15 @@ begin
     begin
       LFallback := FFallback.ToData;
     end;
-    Exit(NyxObject([NyxField('version', NyxData(2)),
+    Exit(LabelledResourceData(NyxObject([NyxField('version', NyxData(2)),
       NyxField('kind', NyxData(NyxResourceKindName(FKind))),
       NyxField('source', FSource.ToData), NyxField('fallback', LFallback),
-      NyxField('title', NyxData(FTitle)), NyxField('description', NyxData(FDescription))]));
+      NyxField('title', NyxData(FTitle)), NyxField('description', NyxData(FDescription))]), FLabels));
   end;
-  Result := NyxObject([NyxField('version', NyxData(1)),
+  Result := LabelledResourceData(NyxObject([NyxField('version', NyxData(1)),
     NyxField('kind', NyxData(NyxResourceKindName(FKind))),
     NyxField('content', NyxData(FContent)), NyxField('title', NyxData(FTitle)),
-    NyxField('description', NyxData(FDescription))]);
+    NyxField('description', NyxData(FDescription))]), FLabels);
 end;
 
 function NyxResourceFromData(const AData: TNyxDataValue): INyxResourceDefinition;
@@ -710,6 +1003,7 @@ var
   LVersion: Integer;
   LSource: TNyxResourceSource;
   LDefinition: INyxResourceDefinition;
+  LLabels: TNyxResourceLabels;
 begin
 
   if AData.Kind <> ndObject then
@@ -719,9 +1013,22 @@ begin
   LVersion := AData.Field('version').AsInteger;
 
   if not (((LVersion = 1) and (AData.Count = 5)) or
-    ((LVersion = 2) and (AData.Count = 6))) then
+    ((LVersion = 2) and (AData.Count = 6)) or
+    ((LVersion = 3) and (AData.Count = 6)) or
+    ((LVersion = 4) and (AData.Count = 7))) then
   begin
     raise ENyxResource.Create('Unsupported resource definition version or fields');
+  end;
+  LLabels := NyxResourceLabels;
+
+  if LVersion in [3, 4] then
+  begin
+    LLabels := TNyxResourceLabels.FromData(AData.Field('labels'));
+
+    if LLabels.Count = 0 then
+    begin
+      raise ENyxResource.Create('Labelled resource wire requires at least one label');
+    end;
   end;
   for LKind := Low(TNyxResourceKind) to High(TNyxResourceKind) do
   begin
@@ -729,7 +1036,7 @@ begin
     if AData.Field('kind').AsText = NyxResourceKindName(LKind) then
     begin
 
-      if LVersion = 1 then
+      if LVersion in [1, 3] then
       begin
         LDefinition := NewResource(LKind, AData.Field('content').AsText);
       end
@@ -746,7 +1053,7 @@ begin
         if AData.Field('fallback').Kind <> ndNull then
         begin
 
-          if AData.Field('fallback').Field('version').AsInteger <> 1 then
+          if not (AData.Field('fallback').Field('version').AsInteger in [1, 3]) then
           begin
             raise ENyxResource.Create('Hosted fallback requires an embedded definition');
           end;
@@ -754,6 +1061,11 @@ begin
         end;
       end;
       LDefinition := LDefinition.Describe(AData.Field('title').AsText, AData.Field('description').AsText);
+
+      if LLabels.Count > 0 then
+      begin
+        LDefinition := NyxResourceDiscovery(LDefinition).WithLabels(LLabels);
+      end;
       Result := LDefinition;
       Exit;
     end;

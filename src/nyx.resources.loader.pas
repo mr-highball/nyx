@@ -339,7 +339,11 @@ begin
 
   if ADefinition <> nil then
   begin
-    LResult.FData := ADefinition.Describe(FDefinition.Title, FDefinition.Description).ToData;
+    { Discovery belongs to the current authored definition, including cache hits
+      and fallback results. Transport/cache metadata cannot replace its labels. }
+    LResult.FData := NyxResourceDiscovery(ADefinition.Describe(
+      FDefinition.Title, FDefinition.Description))
+      .WithLabels(NyxResourceLabelsOf(FDefinition)).ToData;
   end;
   LLease := Self;
   LReply := FReply;

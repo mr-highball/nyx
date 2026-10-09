@@ -329,13 +329,30 @@ const
   CKinds: array[TNyxResourceKind] of TNyxText = ('nrkImage', 'nrkJSON', 'nrkText', 'nrkBinary');
 var
   LContent: TNyxText;
+  LLabels: TNyxResourceLabels;
+
+  procedure AppendLabels;
+  var
+    LIndex: Integer;
+  begin
+    { Factories expose the specialized discovery interface. Emit exact label
+      references immediately after construction, before base-interface methods
+      such as Cache/Describe. No casts or behavioural property strings appear. }
+    LLabels := NyxResourceLabelsOf(ADefinition);
+    for LIndex := 0 to LLabels.Count - 1 do
+    begin
+      Result := Result + #10 + AIndent + '  .Tagged(NyxResourceLabel(' +
+        PascalString(LLabels.Item(LIndex).Name) + '))';
+    end;
+  end;
 begin
 
   if ADefinition.Source.Kind = rskHosted then
   begin
     Result := 'NyxHostedResource(' + CKinds[ADefinition.Kind] + ', NyxResourceURL(' +
-      PascalString(ADefinition.Source.URL.Address) + '))' +
-      #10 + AIndent + '  .Cache(' +
+      PascalString(ADefinition.Source.URL.Address) + '))';
+    AppendLabels;
+    Result := Result + #10 + AIndent + '  .Cache(' +
         PascalResourceCache(ADefinition.Source.CachePolicy, AIndent + '  ') + ')';
 
     if ADefinition.FallbackDefinition <> nil then
@@ -370,6 +387,7 @@ begin
         Result := 'NyxBinaryResource(NyxDecodeBase64(' + PascalString(LContent) + '))';
       end;
   end;
+  AppendLabels;
 
   if (ADefinition.Title <> '') or (ADefinition.Description <> '') then
   begin

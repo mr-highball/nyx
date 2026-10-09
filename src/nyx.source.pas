@@ -569,7 +569,8 @@ type
     vkMenuOpening, vkPopoverSide, vkPopoverAlignment, vkPopoverSizing,
     vkPopoverDismissal, vkTypeAheadMatch, vkThemeTokens, vkThemePreset,
     vkImageSource, vkImageLocation, vkImageFormat, vkImageFit, vkImageAnchor, vkImageValidation,
-    vkResourceRef, vkResourceLocale, vkResourceDefinition, vkBytes, vkResourceValue,
+    vkResourceRef, vkResourceLocale, vkResourceLabel, vkResourceLabels,
+    vkResourceDefinition, vkBytes, vkResourceValue,
     vkResourceKind, vkResourceURL, vkResourceCache, vkResourceServerPolicy,
     vkResourceRows, vkResourcePath, vkResourceImage);
   TValue = record
@@ -2166,7 +2167,8 @@ begin
         if (LName = 'nyxresourceref') or (LName = 'nyxlocale') or
           (LName = 'nyxresourcevalue') or (LName = 'nyxresourceimage') or
           (LName = 'nyxhostedresource') or (LName = 'nyxresourceurl') or
-          (LName = 'nyxresourcecache') or
+          (LName = 'nyxresourcecache') or (LName = 'nyxresourcelabel') or
+          (LName = 'nyxresourcelabels') or (LName = 'nyxresourcediscovery') or
           (LName = 'nyxtextresource') or (LName = 'nyxjsonresource') or
           (LName = 'nyximageresource') or (LName = 'nyxbinaryresource') or
           (LName = 'nyxdecodebase64') then

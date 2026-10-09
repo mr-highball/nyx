@@ -66,6 +66,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Portable creator labels prerequisite (2026-10-09): typed exact metadata, strict
+wire, fluent source/replay and ordinary shared paired history pass **48** each
+native/HTTP; the same emitted Pascal executes **eight** each. Actual public
+section-facade lists pass **17** each on Win32/HTTP desktop/CSS-390 with retained
+selection/drafts; loader checks pass **46** native and **31** HTTP browser.
+Dedicated Resources workspace, compact Project picker, visible tag editing and
+ordinary-controller/semantic integration remain next. Counts stay
+**25/11/47/21/28/3**, with no full criterion or product closure. See
+[the packet](WORK.md#current-return-path-portable-resource-labels--2026-10-09).
+
 Resource catalog prerequisite (2026-10-09): portable metadata/query/publication
 checks pass **40** each on native FPC and HTTP pas2js. Actual list consumers through
 the public Studio section facade pass **14** each on Win32 and HTTP desktop/

@@ -9,6 +9,89 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Portable resource labels — 2026-10-09
+
+Previous turn is progress at exact pushed `d2d1dda`; entry is clean. User direction
+is a dedicated Resources workspace, compact Project picker, built-in categories
+and creator labels/tags for filtering. Execute solo. Follow NS-1 metadata/wire/
+generation criteria and NS-4's pending ordinary workspace consumer; counts stay
+25/11/47/21/28/3 until accepted integrated evidence.
+
+Add distinct label references and independently copied fluent label sets. Preserve
+the original resource-definition interface/GUID; use an optional specialized
+discovery interface and expose it through built-in factories. Labels are immutable
+definition metadata, not payload or renderer state. Keep unlabelled version-1/2
+wire and generated output exact, add strict labelled wire, and retain labels
+through help/cache/fallback copies, actual loading, existing form proposals,
+crafted source/replay and paired history. Then extend the live catalog's typed
+exact-label filtering and text search without delimiter-based identity guesses.
+
+Qualify native/pas2js ownership, admission failures and exact generated compilation
+before dedicated workspace integration. Preserve protected pairs/processes/LAN
+bytes; do not replace a service or configure/enroll a new listener. Existing
+installed semantic tools remain primary for bounded supported context; new label
+operations require the resource/workflow owners, not browser UI substitution.
+
+The prerequisite now passes **48** checked native and actual HTTP pas2js checks:
+exact creator labels, independent sets/queries, malformed/count/byte/duplicate
+refusal, strict embedded/hosted labelled wire, document persistence, crafted
+generation, handwritten fluent replay, copied form proposals/drafts and the
+ordinary shared paired admission/Undo/Redo path. Stale Apply/draft and pending
+source refuse without losing the accepted pair. Unlabelled wire stays version
+1/2; labelled definitions use 3/4, and labelled private drafts use version 3.
+The original base interface/GUID remains unchanged; built-in factories expose
+optional `INyxResourceDiscovery`. Base-returning configuration copies labels;
+subsequent label configuration uses explicit typed adaptation.
+
+Exact emitted Pascal executes **eight** checks each on native/HTTP browser,
+including supplementary text, exact large JSON numeric tokens, packed binary,
+hosted cache choice and labelled fallback. Both targets compile the same export
+SHA-256 `0635BB6D1FFB1CD0570B6C101BEBE7482BBBA38928FD10E542CF3B35FBF5D36B`.
+Actual section-facade list consumers pass **17** each on Win32 and HTTP desktop/
+CSS-390, retaining mounted identities, exact selection and unfinished notes under
+tag/category queries. Live captures are inspected; this minimal fixture does
+not establish ordinary workspace UX, displayed native pixels, physical input,
+accessibility or performance. Generic native provider regression remains **40**.
+
+The maintained loader fixture passes **46** native checks with actual HTTP and
+**31** HTTP browser checks. Current requesting labels survive network/fresh/
+stale/fallback paths; deterministic shared cache checks prove newer caller tags
+replace cached annotations. These exercise existing loader/control paths, not
+new persistent-browser guarantees. `resource-labels` is now a maintained build
+gate: four native gates are leak-free, with actual HTTP read-only against an
+existing host, and nine explicitly staged browser files include matched RTL.
+Browser runtime qualification is separate. Both Studios/server/source worker
+compile with zero owned warnings; existing notes/upstream RTL warnings remain.
+
+Qualification caught a pas2js parameterless Count subscript emission error in
+the new wire encoder; an explicit integer slot now works on both targets. A
+test's ANSI RTL replacement initially corrupted supplementary text; typed slicing
+repairs the fixture. Replay now accepts a parameterless fluent label-set factory
+and refuses unavailable label calls after a base-returning configuration method.
+Initial browser launches timed out; sequential runs provide terminal successful
+evidence. Failed/private logs are retained and are not accepted passes.
+
+Evidence is under ignored `build/resource-labels/`: maintained build/native
+logs, exact exported source, final closure receipts, HTTP terminal DOM results,
+live desktop/narrow captures and product compile logs. This is progress, not
+dedicated workspace or full criterion acceptance. Counts remain 25/11/47/21/28/3.
+
+Return to the dedicated Resources workspace and compact Project picker through
+public Nyx components and the live provider. Expose typed kind/source/locale
+categories plus exact creator-label editing/filtering. Both ordinary controllers
+must preserve drafts/context and paired history; qualify the complete Resources
+journey and measure the unchanged full workload afterward. NS-4 semantic workflow
+owns bounded label context/filter/mutation operations and exact revision guards.
+The installed frozen service does not admit new version-3/4 labelled definitions;
+do not replace it, mutate protected designs or substitute browser automation.
+
+Installed native semantic `nyx_session` still reads primary revision 2, unchanged
+selection/view and no pending draft/Undo. The read-only preservation guard checks
+all nine exact durable pairs, fifteen protected process identities and 299 sealed/
+served LAN files, including unchanged history/navigation/config/checkpoint and
+bindings. Only fresh exact-fixture children are staged under the existing verified
+isolated host. No service, enrollment, user design or editor configuration changes.
+
 ## Current return path: Retained resource catalog — 2026-10-09
 
 Previous turn is progress at exact pushed `53a5b5f`; entry is clean. Installed

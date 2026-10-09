@@ -166,8 +166,9 @@ older drafts keep the historical pinned default. Imported files remain proposals
 until **Apply resource** admits the file and optional binding together as one
 paired Undo step. The same public Nyx form serves browser and native Studio.
 
-Pending Resources values use version-two drafts inside version-ten editor
-preferences. Unfinished contents are retained exactly. Older unversioned drafts
+Pending Resources values use version-two drafts, or version three when creator
+labels are present, inside version-ten editor preferences. Unfinished contents
+and exact label proposals are retained. Older unversioned drafts
 migrate their eighteen original fields without changing catalog/control baselines;
 current packets require the explicit nineteenth locale-choice field. Unknown or
 missing current choices refuse before restoration writes any field. Editor
@@ -657,6 +658,72 @@ Saved table row mappings use the common row editor described below. Current
 image binding form/session execution does not establish trusted input or updated
 observing deployment.
 
+## Creator labels and resource categories
+
+Resources can carry several creator-defined labels describing their intent.
+Labels are portable immutable metadata, separate from file contents, display
+titles and resource/locale identity. The closed `TNyxResourceKind` supplies file
+categories; hosted/embedded sources and localized/default variants provide
+additional typed discovery filters. Caller labels describe overlapping uses
+such as onboarding, captions, sample data or a particular feature.
+
+```pascal
+LDocument.Resources.Define(NyxResourceRef('welcome-copy'),
+  NyxJSONResource('{"headline":"Welcome","prompt":"Choose a project name"}')
+    .Tagged(NyxResourceLabel('Onboarding'))
+    .Tagged(NyxResourceLabel('Captions'))
+    .Describe('Welcome copy', 'English captions and prompts for the first page.'));
+
+LLabels := NyxResourceLabels
+  .Add(NyxResourceLabel('Onboarding'))
+  .Add(NyxResourceLabel('Captions'));
+LRevised := NyxResourceDiscovery(LExisting).WithLabels(LLabels);
+
+LResourceCatalog.Filter(NyxResourceCatalogQuery
+  .Kinds([nrkJSON, nrkText])
+  .Labels(LLabels, rlmAny));
+```
+
+`TNyxResourceLabelRef` is a distinct open name reference. Matching preserves exact
+case, punctuation, spaces and Unicode; a comma or quote inside a label does not
+create multiple tags. `TNyxResourceLabels` is an independently copied ordered
+set: `Add` is idempotent, `Remove` returns another set, and empty means no labels.
+Names require 1–128 printable Unicode scalars. A definition admits at most 32
+labels and 8192 bytes of encoded UTF-8 label JSON. Duplicate wire labels,
+malformed names and excessive count/data refuse before publication.
+
+Built-in factories return `INyxResourceDiscovery`. The original
+`INyxResourceDefinition` interface/GUID remains available to existing and
+alternative implementations. `Describe`, `Cache` and `Fallback` retain their
+original base return type and copy labels unchanged. Configure tags before
+those calls, or adapt a configured base definition through `NyxResourceDiscovery`
+to configure more labels. `NyxResourceLabelsOf` returns a detached label set;
+a base-only implementation exposes no optional labels until normalized through
+its strict wire. Definitions retain no project, catalog or target reference.
+
+Unlabelled embedded/hosted definitions keep their original exact version-1/2
+wire. Labelled definitions use strict version 3/4 with a nonempty `labels` array;
+clearing labels restores the unlabelled shape. Labelled embedded fallbacks are
+supported. Generated Pascal emits typed `.Tagged(NyxResourceLabel(...))` calls
+beside its factory, and managed replay retains the same definitions. Resolved
+network, cache and fallback contents receive the current requesting definition's
+labels; cached metadata cannot overwrite a caller's newer annotations.
+
+The shared resource form exposes `NyxResourceEditorLabels` and
+`SetNyxResourceEditorLabels` for copied proposals. Imports change contents while
+retaining labels. Existing Apply requests and paired history admit annotations
+with the resource/source pair; changed context and pending application drafts
+refuse. These public contracts are the dedicated Resources workspace's
+prerequisite. The visible tag editor, compact Project picker, ordinary workspace
+controllers and semantic label operations still require integration.
+
+`tools/build.ps1 -Target resource-labels -HttpURL <existing-test-host>` runs
+checked native wire/source/history, exact exported Pascal, actual mounted list
+filtering and hosted loader gates. It stages browser pages and the matched
+runtime; execute those pages over HTTP separately. This is metadata/consumer
+qualification, not a physical-input, accessibility, performance or full workspace
+acceptance claim.
+
 ## Live resource catalog
 
 `nyx.resources.catalog` supplies an independent metadata view for ordinary Nyx
@@ -675,13 +742,18 @@ LResourceCatalog.Filter(NyxResourceCatalogQuery
   .Search('help'));
 ```
 
-Search covers resource names, display titles, creator descriptions and locale
-names. It defaults to ASCII case-insensitive matching; `nqtExact` selects exact
+Search covers resource names, display titles, creator descriptions, locale
+names and creator labels. It defaults to ASCII case-insensitive matching; `nqtExact` selects exact
 scalar matching. Kind alternatives combine with search, locale and source
 restrictions. `Locales(rclLocalized)` finds named locale variants;
 `Locales(rclDefault)` finds unlocalized resources. Setters replace their own
 restriction. `Kinds([])` deliberately matches no kinds; `AnyKind` clears it.
-The unconfigured `NyxResourceCatalogQuery` restores the full list.
+The unconfigured `NyxResourceCatalogQuery` restores the full list. `Tagged`
+adds another required exact label; `Labels` replaces the complete label selector
+with `rlmAll` or `rlmAny`. Empty labels clear that restriction. Exact tag identity
+uses a private framed index, independently of display separators and search
+folding. The ordinary collection predicate count/depth/data budgets still apply;
+an over-budget combined query refuses rather than dropping requested filters.
 
 After accepted resource membership or metadata changes, `Refresh` updates the
 runtime dataset. Equal metadata produces no revision or notification. Stable
@@ -706,7 +778,7 @@ Both renderers and the Studio section facade expose the actual manually mounted
 fallback lookup. `tools/build.ps1 -Target resource-catalog` runs native provider
 and actual-control checks and stages browser counterparts. Execute their hosted
 pages separately to qualify the browser. This prerequisite does not establish
-the dedicated Resources workspace, portable creator tags, ordinary-controller
+the dedicated Resources workspace, visible tag editing, ordinary-controller
 integration, performance budgets or physical-device/accessibility behavior.
 Those remain owned by the resource and authoring tasks.
 

@@ -159,6 +159,7 @@ begin
   LMemory := NewNyxMemoryResourceCache;
   LResolver := NewNyxResourceResolver(LTransportLease, LMemory, nil, LClockLease);
   LDefinition := NyxHostedResource(nrkJSON, NyxResourceURL('https://example.com/copy.json'))
+    .Tagged(NyxResourceLabel('Captions'))
     .Cache(NyxResourceCache.Memory.FreshFor(10).StaleFor(20))
     .Describe('Copy', 'Loaded application captions.');
   LProbe := TProbe.Create;
@@ -172,6 +173,8 @@ begin
     Check((LProbe.ResultValue.Origin = rloNetwork) and LProbe.ResultValue.Succeeded,
       'network resolves admitted kind');
     Check(LProbe.ResultValue.Definition.Title = 'Copy', 'caller metadata survives resolution');
+    Check(NyxResourceLabelsOf(LProbe.ResultValue.Definition).Contains(NyxResourceLabel('Captions')),
+      'current creator labels survive resolved network content');
     Check((LProbe.ResultValue.CacheWrite = rcuMemory) and
       (LProbe.ResultValue.CacheRead = rcuNone), 'network completion reports successful memory storage');
     LLoad := LResolver.Load(LDefinition, NyxResourceLoadOptions, LProbe.Loaded);
@@ -179,18 +182,28 @@ begin
       'fresh cache avoids transport');
     Check((LProbe.ResultValue.CacheRead = rcuMemory) and
       (LProbe.ResultValue.CacheWrite = rcuNone), 'fresh memory hit does not claim a new cache write');
+    LLoad := LResolver.Load(NyxResourceDiscovery(LDefinition).WithLabels(
+      NyxResourceLabels.Add(NyxResourceLabel('Renamed intent'))), NyxResourceLoadOptions, LProbe.Loaded);
+    Check((LProbe.ResultValue.Origin = rloFreshCache) and (LTransport.Calls = 1) and
+      (NyxResourceLabelsOf(LProbe.ResultValue.Definition).Count = 1) and
+      NyxResourceLabelsOf(LProbe.ResultValue.Definition).Contains(NyxResourceLabel('Renamed intent')),
+      'cached bytes use current caller labels rather than cached annotations');
     LClock.Seconds := 1010;
     LTransport.Response.Error := 'Network offline';
     LLoad := LResolver.Load(LDefinition, NyxResourceLoadOptions, LProbe.Loaded);
     Check((LProbe.ResultValue.Origin = rloStaleCache) and
       (LProbe.ResultValue.Error = 'Network offline'), 'stale is explicit failure fallback');
     Check(LProbe.ResultValue.CacheRead = rcuMemory, 'eligible stale origin retains the actual cache tier');
+    Check(NyxResourceLabelsOf(LProbe.ResultValue.Definition).Contains(NyxResourceLabel('Captions')),
+      'stale cache content retains the current authored discovery');
     LClock.Seconds := 1030;
     LLoad := LResolver.Load(LDefinition.Fallback(NyxJSONResource('{"headline":"Offline"}')),
       NyxResourceLoadOptions, LProbe.Loaded);
     Check((LProbe.ResultValue.Origin = rloFallback) and
       (LProbe.ResultValue.Definition.Data.Field('headline').AsText = 'Offline'),
       'expired cache uses authored fallback');
+    Check(NyxResourceLabelsOf(LProbe.ResultValue.Definition).Contains(NyxResourceLabel('Captions')),
+      'fallback bytes keep the requesting resource labels');
     LLoad := LResolver.Load(LDefinition, NyxResourceLoadOptions, LProbe.Loaded);
     Check(not LProbe.ResultValue.Succeeded and (LProbe.ResultValue.Origin = rloFailed),
       'no stale or fallback returns explicit failure');
@@ -337,6 +350,7 @@ begin
     LHost.SetBounds(0, 0, 760, 380);
     LDocument.Title := 'Hosted resource workshop';
     LDefinition := NyxHostedResource(nrkJSON, NyxResourceURL(TNyxText(ParamStr(1))))
+      .Tagged(NyxResourceLabel('Service copy'))
       .Cache(NyxResourceCache.Memory.FreshFor(60).ServerPolicy(rcspOverride))
       .Fallback(NyxJSONResource('{"service":"Ready while loading","ok":false}'));
     LDocument.Resources.Define(NyxResourceRef('service-copy'), LDefinition);
@@ -357,6 +371,8 @@ begin
     Check(LProbe.ResultValue.Origin = rloNetwork, 'actual WinHTTP response resolves through core');
     Check(LProbe.ResultValue.Definition.Data.Field('ok').AsBoolean,
       'actual JSON bytes retain Boolean type');
+    Check(NyxResourceLabelsOf(LProbe.ResultValue.Definition).Contains(NyxResourceLabel('Service copy')),
+      'actual native HTTP completion retains current creator labels');
     LCandidate := LResources.Clone;
     LCandidate.Define(NyxResourceRef('service-copy'), LProbe.ResultValue.Definition);
     LRenderer.ReloadResources(LCandidate, NyxDefaultLocale, NyxDefaultLocale);
@@ -369,6 +385,8 @@ begin
     LLoad := LResolver.Load(LDefinition, NyxResourceLoadOptions, LProbe.Loaded);
     Check((LProbe.Calls = 2) and (LProbe.ResultValue.Origin = rloFreshCache),
       'actual loaded response is reused under caller override');
+    Check(NyxResourceLabelsOf(LProbe.ResultValue.Definition).Contains(NyxResourceLabel('Service copy')),
+      'actual native memory hit retains current creator labels');
     LCandidate := LResources.Clone;
     LCandidate.Define(NyxResourceRef('service-copy'), NyxJSONResource('{"service":42,"ok":true}'));
     LRefused := False;
@@ -392,6 +410,8 @@ begin
     Pump(LScheduler, LProbe, 3);
     Check((LProbe.ResultValue.Origin = rloFallback) and (LProbe.ResultValue.Error <> ''),
       'actual reply byte budget falls back without partial publication');
+    Check(NyxResourceLabelsOf(LProbe.ResultValue.Definition).Contains(NyxResourceLabel('Service copy')),
+      'actual native transport refusal retains authored labels with fallback');
     LLoad := LResolver.Load(NyxHostedResource(nrkText, NyxResourceURL('https://example.com/'))
       .Cache(NyxResourceCache.Bypass), NyxResourceLoadOptions, LProbe.Loaded);
     Pump(LScheduler, LProbe, 4);
@@ -532,6 +552,7 @@ begin
   FDocument.Title := 'Hosted resource workshop';
   FDefinition := NyxHostedResource(nrkJSON,
     NyxResourceURL(window.location.origin + '/api/health'))
+    .Tagged(NyxResourceLabel('Service copy'))
     .Cache(NyxResourceCache.Memory.ServerPolicy(rcspOverride))
     .Fallback(NyxJSONResource('{"service":"Ready while loading","ok":false}'));
   FDocument.Resources.Define(NyxResourceRef('service-copy'), FDefinition);
@@ -563,6 +584,8 @@ begin
     begin
       Check(AResult.Origin = rloNetwork, 'actual browser fetch resolves hosted data');
       Check(AResult.Definition.Data.Field('ok').AsBoolean, 'browser JSON retains Boolean type');
+      Check(NyxResourceLabelsOf(AResult.Definition).Contains(NyxResourceLabel('Service copy')),
+        'actual browser fetch retains current creator labels');
       LResources := FDocument.Resources.Clone;
       LResources.Define(NyxResourceRef('service-copy'), AResult.Definition);
       FRenderer.ReloadResources(LResources, NyxDefaultLocale, NyxDefaultLocale);
@@ -575,6 +598,8 @@ begin
       Exit;
     end;
     Check(AResult.Origin = rloFreshCache, 'actual browser memory hit avoids another fetch');
+    Check(NyxResourceLabelsOf(AResult.Definition).Contains(NyxResourceLabel('Service copy')),
+      'actual browser cache hit retains current creator labels');
     FStage := 3;
     document.body.setAttribute('data-nyx-result', 'passed');
     document.body.setAttribute('data-nyx-checks', IntToStr(GChecks));

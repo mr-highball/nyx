@@ -32,11 +32,12 @@ type
   TNyxResourceCatalogKinds = set of TNyxResourceKind;
   TNyxResourceCatalogLocales = (rclAny, rclDefault, rclLocalized);
   TNyxResourceCatalogSources = (rcsAny, rcsEmbedded, rcsHosted);
+  TNyxResourceLabelMatch = (rlmAll, rlmAny);
 
   { Independent runtime discovery policy. Search covers names, titles, creator
-    descriptions and locale names. Its default folds ASCII only; callers may
+    descriptions, locale names and creator labels. Its default folds ASCII only; callers may
     request exact scalar matching. Kinds combines alternatives, while search,
-    locale and source restrictions combine as intersections. Kinds([]) matches
+    locale, source and label restrictions combine as intersections. Kinds([]) matches
     nothing; AnyKind removes that restriction. Repeated setters replace their
     own restriction. No catalog, payload, document or target is retained. }
   TNyxResourceCatalogQuery = record
@@ -47,6 +48,8 @@ type
     FKindFilter: Boolean;
     FLocales: TNyxResourceCatalogLocales;
     FSources: TNyxResourceCatalogSources;
+    FLabels: TNyxResourceLabels;
+    FLabelMatch: TNyxResourceLabelMatch;
   public
     function Search(const AText: TNyxText;
       AComparison: TNyxQueryTextComparison = nqtAsciiInsensitive): TNyxResourceCatalogQuery;
@@ -54,6 +57,12 @@ type
     function AnyKind: TNyxResourceCatalogQuery;
     function Locales(ALocales: TNyxResourceCatalogLocales): TNyxResourceCatalogQuery;
     function Sources(ASources: TNyxResourceCatalogSources): TNyxResourceCatalogQuery;
+    { Tagged adds another required exact label. Labels replaces the complete
+      label selector and chooses all/any matching; an empty set clears it.
+      The ordinary collection predicate count/depth/data budgets still apply. }
+    function Tagged(const ALabel: TNyxResourceLabelRef): TNyxResourceCatalogQuery;
+    function Labels(const ALabels: TNyxResourceLabels;
+      AMatch: TNyxResourceLabelMatch = rlmAll): TNyxResourceCatalogQuery;
     { Convert to the ordinary typed collection policy at its explicit extension
       boundary. Adapters still use the same query/selection/keyboard contracts. }
     function ToQuery: TNyxCollectionQuery;
@@ -110,7 +119,7 @@ function NyxResourceCatalogQuery: TNyxResourceCatalogQuery;
 
 implementation
 
-uses SysUtils, nyx.collections.view.types, nyx.resource.sources;
+uses SysUtils, nyx.bytes, nyx.collections.view.types, nyx.resource.sources;
 
 const
   CName = 'resource';
@@ -119,6 +128,16 @@ const
   CDescription = 'description';
   CKind = 'kind';
   CHosted = 'hosted';
+  CLabels = 'labels';
+  CLabelIndex = 'label-index';
+
+{ Base64's alphabet excludes the separator. Match a complete framed UTF-8 token,
+  rather than guessing identities from display delimiters or JSON substrings.
+  This private runtime index never replaces the original portable labels. }
+function LabelToken(const ALabel: TNyxResourceLabelRef): TNyxText;
+begin
+  Result := '|' + NyxEncodeBase64(NyxEncodeUTF8(ALabel.Name)) + '|';
+end;
 
 type
   TEntry = record
@@ -222,11 +241,62 @@ begin
   Result.FSources := ASources;
 end;
 
+function TNyxResourceCatalogQuery.Tagged(
+  const ALabel: TNyxResourceLabelRef): TNyxResourceCatalogQuery;
+begin
+  Result := Self;
+  Result.FLabels := FLabels.Add(ALabel);
+  Result.FLabelMatch := rlmAll;
+end;
+
+function TNyxResourceCatalogQuery.Labels(const ALabels: TNyxResourceLabels;
+  AMatch: TNyxResourceLabelMatch): TNyxResourceCatalogQuery;
+begin
+
+  if (Ord(AMatch) < Ord(Low(TNyxResourceLabelMatch))) or
+    (Ord(AMatch) > Ord(High(TNyxResourceLabelMatch))) then
+  begin
+    raise ENyxResource.Create('Unknown resource label matching policy');
+  end;
+  Result := Self;
+  Result.FLabels := ALabels.Copy;
+  Result.FLabelMatch := AMatch;
+end;
+
 function TNyxResourceCatalogQuery.ToQuery: TNyxCollectionQuery;
 var
   LFilter: INyxCollectionPredicate;
   LAlternatives: INyxCollectionPredicate;
   LKind: TNyxResourceKind;
+  LLabels: array of INyxCollectionPredicate;
+  LIndex: Integer;
+
+  { A balanced tree admits larger sets without accumulating linear predicate
+    depth. The ordinary query engine still owns aggregate admission budgets. }
+  function JoinLabels(AFirst, ALast: Integer): INyxCollectionPredicate;
+  var
+    LMiddle: Integer;
+    LLeft: INyxCollectionPredicate;
+    LRight: INyxCollectionPredicate;
+  begin
+
+    if AFirst = ALast then
+    begin
+      Exit(LLabels[AFirst]);
+    end;
+    LMiddle := AFirst + (ALast - AFirst) div 2;
+    LLeft := JoinLabels(AFirst, LMiddle);
+    LRight := JoinLabels(LMiddle + 1, ALast);
+
+    if FLabelMatch = rlmAll then
+    begin
+      Result := LLeft.AndAlso(LRight);
+    end
+    else
+    begin
+      Result := LLeft.OrElse(LRight);
+    end;
+  end;
 
   procedure Intersect(const APredicate: INyxCollectionPredicate);
   begin
@@ -249,7 +319,8 @@ begin
     LAlternatives := NyxWhere(NyxTextField(CName)).Contains(FSearch, FComparison)
       .OrElse(NyxWhere(NyxTextField(CTitle)).Contains(FSearch, FComparison))
       .OrElse(NyxWhere(NyxTextField(CDescription)).Contains(FSearch, FComparison))
-      .OrElse(NyxWhere(NyxTextField(CLocale)).Contains(FSearch, FComparison));
+      .OrElse(NyxWhere(NyxTextField(CLocale)).Contains(FSearch, FComparison))
+      .OrElse(NyxWhere(NyxTextField(CLabels)).Contains(FSearch, FComparison));
     Intersect(LAlternatives);
   end;
 
@@ -293,6 +364,16 @@ begin
   if FSources <> rcsAny then
   begin
     Intersect(NyxWhere(NyxBooleanField(CHosted)).EqualTo(FSources = rcsHosted));
+  end;
+
+  if FLabels.Count > 0 then
+  begin
+    SetLength(LLabels, FLabels.Count);
+    for LIndex := 0 to FLabels.Count - 1 do
+    begin
+      LLabels[LIndex] := NyxWhere(NyxTextField(CLabelIndex)).Contains(LabelToken(FLabels.Item(LIndex)));
+    end;
+    Intersect(JoinLabels(0, High(LLabels)));
   end;
   Result := NyxCollectionQuery;
 
@@ -378,7 +459,8 @@ begin
   LSchema := NyxCollectionSchema.Text(NyxTextField(CName), '')
     .Text(NyxTextField(CLocale), '').Text(NyxTextField(CTitle), '')
     .Text(NyxTextField(CDescription), '').Integer(NyxIntegerField(CKind), 0)
-    .Boolean(NyxBooleanField(CHosted), False);
+    .Boolean(NyxBooleanField(CHosted), False)
+    .Text(NyxTextField(CLabels), '').Text(NyxTextField(CLabelIndex), '');
   FStore := NewNyxCollection(FKey, LSchema);
   FView := NewNyxCollectionView(FStore, NyxCollectionView(FKey)
     .Column(NyxTextField(CTitle), 'Resource'), cpList);
@@ -411,6 +493,10 @@ var
   LIndex: Integer;
   LEntry: Integer;
   LEqual: Boolean;
+  LLabels: TNyxResourceLabels;
+  LLabelNames: TNyxText;
+  LLabelIndex: TNyxText;
+  LLabel: Integer;
 begin
   Result := nil;
 
@@ -450,6 +536,14 @@ begin
         LEntries[LEntry].Item := NyxItem(FKey, 'resource-' + TNyxText(IntToStr(LEntry)));
       end;
       LDefinition := ACatalog.Definition(LReference, LLocale);
+      LLabels := NyxResourceLabelsOf(LDefinition);
+      LLabelNames := '';
+      LLabelIndex := '';
+      for LLabel := 0 to LLabels.Count - 1 do
+      begin
+        LLabelNames := LLabelNames + LLabels.Item(LLabel).Name + #10;
+        LLabelIndex := LLabelIndex + LabelToken(LLabels.Item(LLabel));
+      end;
       LTitle := LReference.Name;
 
       if LDefinition.Title <> '' then
@@ -467,7 +561,9 @@ begin
         .WithValue(NyxTextField(CTitle), LTitle)
         .WithValue(NyxTextField(CDescription), LDefinition.Description)
         .WithValue(NyxIntegerField(CKind), Ord(LDefinition.Kind))
-        .WithValue(NyxBooleanField(CHosted), LDefinition.Source.Kind = rskHosted);
+        .WithValue(NyxBooleanField(CHosted), LDefinition.Source.Kind = rskHosted)
+        .WithValue(NyxTextField(CLabels), LLabelNames)
+        .WithValue(NyxTextField(CLabelIndex), LLabelIndex);
     end;
     LBefore := FStore.Snapshot;
     LTransient := NewNyxCollection(FKey, LBefore.Schema, LRows);

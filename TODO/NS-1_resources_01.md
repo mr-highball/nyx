@@ -16,6 +16,21 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Portable creator labels prerequisite — 2026-10-09
+
+The user's dedicated Resources workspace direction now consumes original
+metadata/persistence/source/history criteria: exact typed creator labels,
+independent sets/queries, strict versioned wire, fluent generation/replay and
+existing copied proposal/paired admission pass **48** native/HTTP each. Exact
+exported Pascal executes **eight** each. Actual section-facade lists pass **17**
+on Win32/HTTP desktop/CSS-390, preserving selection/drafts; loader checks pass
+**46** native and **31** HTTP browser with current authored tags. Captures and
+compiler evidence qualify this prerequisite only. The visible dedicated
+workspace, compact Project picker, ordinary controller tag editing/filtering,
+bounded semantic operations and full workload remain required. Counts remain
+25/11/47/21/28/3; no full criterion/task/credit closes. See
+[the packet](../WORK.md#current-return-path-portable-resource-labels--2026-10-09).
+
 ## Common Studio resource consumer — 2026-10-08
 
 Original criterion 6 now has a common ordinary-controller consumer: independent
