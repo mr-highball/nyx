@@ -85,8 +85,10 @@ Installed semantic MCP remains connected at revision 2 without draft/Undo; it is
 primary for bounded context and the maintained authored seed. The frozen endpoint
 predates these query/tag contracts. Current semantic discovery/mutation and
 observing rollout stay with NS-4 workflows; no listener, enrollment, active pair
-or protected deployment changed. Exact remote checkpoint evidence follows final
-qualification in this packet's ignored receipt directory.
+or protected deployment changed. Implementation checkpoint
+`2545168d02234726a2f35aab51d3650451a4826b` is pushed to `origin/hello-nyx`, with
+exact remote SHA verified. This packet's ignored implementation/remote receipts
+record that checkpoint and the final documentation HEAD separately.
 
 Next refine the integrated workspace: keep catalog rows/Open reachable alongside
 detailed filters, add useful compact filter disclosure and consider independent
