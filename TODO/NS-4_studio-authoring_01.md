@@ -9,7 +9,19 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current design display recovery follows criterion two's Apply Pascal/paired Undo
+Current discovery reassessment follows criterion two's ordinary source/history
+consumer and the original Resources criterion. Retained New/Open preserves exact
+input construction and private proposal selection; typed existing detail cards
+show the new variant awaiting its reply. Ordinary native workbench passes 298
+plus 60 exact-source checks, and delayed observations pass 97 native/90/90 HTTP.
+Both complete browser journeys stop at export after five captured checkpoints.
+No full criterion closes: authoring alone advances unfinished 52→53, aggregate
+25/16/53/22/28/3. Stop discovery/card variants; next resolve export/deferred
+presentation in this complete journey, then finish browser source/history and
+the original discovery audit. All nine user contexts remain exact; these repairs
+are source only. See [the packet](../WORK.md#current-return-path-resource-discovery-acceptance--2026-10-09).
+
+Previous design display recovery follows criterion two's Apply Pascal/paired Undo
 journey. Public typed readiness and managed Nyx compounds separate accepted
 source from refused display; both controllers suspend stale canvas input and
 retain current-session actions/Retry without adding document history. [The packet](../WORK.md#current-return-path-design-display-recovery--2026-10-09)

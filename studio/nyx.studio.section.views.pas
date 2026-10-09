@@ -736,6 +736,10 @@ begin
         begin
           LRetained[LSection] := False; { False promises no admitted changes. }
         end;
+        {$ifdef NYX_STUDIO_PROFILE}
+        { Static role identity only; authored fields never enter timing output. }
+        WriteLn('studio-ui,section-replace,', Ord(LSection));
+        {$endif}
 
         if LSection = nssChrome then
         begin

@@ -221,6 +221,15 @@ function NewNyxStudioCodeDocument(const ASource: TNyxText): TNyxDocument;
 function BuildNyxStudioSourcePane(ASession: TNyxStudioSession;
   const AState: TNyxStudioViewState; const AReport: INyxCompilerReport): TNyxNode;
 
+{ Immediately suppress the previous variant's observation after retained
+  proposal navigation. Root is borrowed; only the eight bounded stock detail
+  cards show the new selection awaiting its reply. The controller synchronizes
+  its mounted Nyx view. Incomplete stock parts raise before stale data is shown.
+  The next exact observer reply rebuilds the matching detail presentation;
+  this operation neither fetches data nor adds document/source history. }
+procedure SuspendNyxStudioResourceSelectionViews(ARoot: TNyxNode;
+  const ASelected: TNyxResourceEditorSelection; ASupported: Boolean);
+
 { Returns an owned Nyx UI document; session is borrowed and remains unmodified.
   The shell expresses application meaning through public Nyx component kinds.
   Native/browser styling and physical host lifetime belong to their adapters. }
@@ -236,6 +245,37 @@ implementation
 uses
   nyx.binding, nyx.resources, nyx.application.resources,
   nyx.composition, nyx.studio.rootview, nyx.studio.buildview;
+
+procedure SuspendNyxStudioResourceSelectionViews(ARoot: TNyxNode;
+  const ASelected: TNyxResourceEditorSelection; ASupported: Boolean);
+var
+  LIndex: Integer;
+  LCard: TNyxNode;
+  LEntry: TNyxResourceRuntimeEntry;
+begin
+
+  if ARoot = nil then
+  begin
+    Exit;
+  end;
+  LEntry := Default(TNyxResourceRuntimeEntry);
+  LEntry.Reference := ASelected.Reference;
+  LEntry.Locale := ASelected.Locale;
+  for LIndex := 0 to 7 do
+  begin
+    LCard := ARoot.Find('studio-resource-runtime-' + TNyxText(IntToStr(LIndex)) + '-selection');
+
+    if LCard <> nil then
+    begin
+
+      if not TryRefreshNyxResourceRuntimeDetailView(LCard, LEntry, rdaAwaiting) then
+      begin
+        raise ENyxModel.Create('Selected resource observation parts changed');
+      end;
+      LCard.Configure.Visible(ASupported and ASelected.Reference.Defined).Done;
+    end;
+  end;
+end;
 
 { Runtime reports arrive as bounded copied transport values. Ordinary Nyx cards
   paint the same summary on both targets, independently of authored resources.

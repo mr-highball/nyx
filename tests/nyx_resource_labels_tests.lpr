@@ -245,20 +245,26 @@ begin
   LPreference := DefaultNyxStudioPresentation;
   LPreference.ResourceDraft := LDraft;
   LPacket := TNyxDataValue.ParseJSON(EncodeNyxStudioPresentation(LPreference));
-  Check(LPacket.Field('version').AsInteger = 13,
+  Check(LPacket.Field('version').AsInteger = 15,
     'outer preferences declare their broader draft contract explicitly');
   LLoaded := DecodeNyxStudioPresentation(LPacket.ToJSON);
   LFresh := NewNyxResourceEditor(LForm.Node.ID, LResources, NyxNewResourceSelection);
   Check(LLoaded.ResourceDraft.Restore(LFresh.Node) and
     (ReadNyxResourceLabelsEditor(LFresh.Node.Find(LTags.ID)).ToData.ToJSON = LBefore),
     'ordinary enclosing preferences retain exact tags, selection and incomplete text');
-  SetLength(LFields, LPacket.Count - 2);
+  { Reconstruct the actual version-ten enclosing shape. Later catalog and pane
+    fields must be absent so the refusal below tests the newer nested proposal,
+    rather than failing earlier on an unrelated enclosing field count. }
+  SetLength(LFields, LPacket.Count - 5);
   LCase := 0;
   for LIndex := 0 to LPacket.Count - 1 do
   begin
 
     if (LPacket.Key(LIndex) = 'resourceBrowser') or
-      (LPacket.Key(LIndex) = 'resourcesScroll') then
+      (LPacket.Key(LIndex) = 'resourcesScroll') or
+      (LPacket.Key(LIndex) = 'resourcePane') or
+      (LPacket.Key(LIndex) = 'resourceCatalogScroll') or
+      (LPacket.Key(LIndex) = 'resourceEditorScroll') then
     begin
       Continue;
     end;

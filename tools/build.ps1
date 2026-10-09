@@ -101,6 +101,9 @@ param(
   [string]$ImageSourceDirectory = 'build/image-presentation/seed',
   # Exact paired Resource workbench companion exported through an owned MCP review.
   [string]$ResourceSourceDirectory = 'build/resource-workbench/seed',
+  # Independent qualification output keeps previously accepted source/captures
+  # intact. Pascal still owns the complete ordinary controller journey.
+  [string]$ResourceWorkbenchDirectory = 'build/resource-workbench',
   # Opt-in native timing with the same semantic companion. Open isolates the
   # first Resources presentation; full retains the complete authoring journey.
   [ValidateSet('none', 'open', 'full')]
@@ -404,6 +407,7 @@ try {
     # configuration, owns a temporary review and preserves the primary project;
     # building this target never connects or starts a Studio service.
     Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tests/nyx_mcp_source_workflow.lpr'))
+    Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tools/nyx_resource_companion.lpr'))
     Invoke-NyxCompiler $nyxFpc ($nyxNativeFlags + @('tests/nyx_mcp_config_tests.lpr'))
     & (Join-Path $nyxNativeDir 'nyx_mcp_config_tests.exe')
 
@@ -3386,7 +3390,7 @@ try {
     # Reuse the authenticated English companion. Pascal owns the common form's
     # real Studio import/binding, paired history and source checks.
     # Independent artifacts stage only; no service/browser/OS chooser launches.
-    $nyxResourceRoot = Join-Path $nyxRoot 'build/resource-workbench'
+    $nyxResourceRoot = [IO.Path]::GetFullPath($ResourceWorkbenchDirectory)
     # Profile runs never overwrite the qualified normal source/capture closure.
     # This directory and mode affect orchestration only; Pascal owns the workload.
 

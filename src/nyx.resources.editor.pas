@@ -1224,15 +1224,29 @@ var
   LPresentation: Integer;
 
   procedure CopyAttribute(AFrom, ATo: TNyxNode; AKey: TNyxAttribute);
+  var
+    LKey: TNyxText;
+    LIndex: Integer;
   begin
+    LKey := NyxAttributeName(AKey);
 
-    if AFrom.Props.IndexOfName(NyxAttributeName(AKey)) < 0 then
+    if AFrom.Props.IndexOfName(LKey) < 0 then
     begin
-      ATo.Configure.Clear(AKey).Done;
+      { This is an exact internal proposal copy. Fluent Clear creates an
+        explicit empty override; it does not remove an absent property. Adding
+        empty Items to a memo/input changes its retained construction contract
+        and forces a neighbouring section to replace the focused control.
+        Preserve absence separately from an authored explicit empty value. }
+      LIndex := ATo.Props.IndexOfName(LKey);
+
+      if LIndex >= 0 then
+      begin
+        ATo.Props.Delete(LIndex);
+      end;
     end
     else
     begin
-      ATo.SetProp(NyxAttributeName(AKey), AFrom.StoredProp(NyxAttributeName(AKey)));
+      ATo.SetProp(LKey, AFrom.StoredProp(LKey));
     end;
   end;
 

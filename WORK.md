@@ -7,6 +7,85 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Resource discovery acceptance — 2026-10-09
+
+Entry is clean at pushed `221b6d2`; frozen LAN product `f6d26a5` is retained.
+The user's dedicated Resources/category/creator-tag direction needs no further
+answer. This batch reassesses original NS-1_resources criterion seven through
+the maintained ordinary Studio consumers, stopping at its complete verdict or
+a concrete failed product boundary. Accepted model/persistence/state prerequisites
+apply; full HTTP/cache/media/security and chooser requirements retain their owners.
+
+**Native semantic companion.** All 22 native Nyx handles now authenticate in this
+chat. The new Pascal `nyx_resource_companion` emits one typed transaction for an
+empty owned review; it never connects, launches a job or opens a listener.
+Native tools compose an English page with five resource variants: JSON, text,
+binary, embedded PNG and a hosted English JSON declaration with copied fallback
+and caller cache policy. Captions, prompt, image and typed table rows bind through
+the public contracts. The hosted example is not evidence of a successful fetch.
+Bounded category/source/locale/search and exact all/any-tag queries pass. A grouped
+metadata edit preserves payload/bindings; an exact retry adds no history. Two
+Undo/Redo cycles retain exact 6655/6702-byte source windows, including a comma in
+one tag identity. Stale revision reads refuse. Both immutable application compiler
+jobs succeed at matching source/design fingerprints. The native preview capture
+hits its 20-second budget; a separate real-clock Pascal driver observes the same
+preview's application-ready marker and captures its resolved text/table/image.
+Wrong completion-marker invocations are retained as driver failures, not product
+failures. No arbitrary helper execution or hosted loading is inferred.
+
+**Current ordinary consumer repair.** Fresh maintained LCL qualification first
+fails New/Open control identity. Copying an absent property with fluent Clear had
+created an explicit empty Items override. Exact internal copying now preserves
+absence, and retained navigation synchronizes its admitted proposal without
+comparing against the former private selection baseline. A public typed detail
+update retains existing Nyx controls and creator additions, preparing copied
+properties before publication. Selection shows the new variant awaiting a reply,
+rather than obsolete details or an empty gap. A hide-only attempt fails the
+existing late-reply check and is replaced before final qualification.
+
+Current optimized/checked ordinary Win32 workbench passes **298** assertions;
+the identical **5602-byte** emitted builder passes **60**. This full ordinary run
+does not measure its heap. Exact source SHA-256 is
+`356a10a38376a25a194a469496e50a59072e705aa316879e27f1ff9f1e890884`.
+Portable labels/preferences pass **70** and emitted-source **8** checks on native
+and HTTP browser. The historical version-ten preference test reconstructs its
+actual field shape, so it still tests nested proposal refusal rather than an
+unrelated enclosing field-count error. Actual delayed-observation consumers pass
+**97** native and **90/90** HTTP desktop/CSS-390 checks; checked native and capture
+drivers report zero unfreed blocks. Owned warnings are zero; seven matched pas2js
+RTL warnings per program remain separately attributed. Representative native,
+desktop and narrow catalog/editor captures are inspected; they are not hardware,
+IME, assistive-technology or full visual/performance qualification.
+
+**Failed gate and reassessment.** Both full HTTP workbench journeys capture five
+meaningful control checkpoints, then fail the unchanged 180-second deadline at
+project export. Their DOM records `action-project-export`, pending presentation
+and the acknowledged editor checkpoint, with no terminal result. This is a real
+unfinished journey; selected-observation and portable passes do not substitute
+for it. Criterion seven remains open, as do full Resources authoring/parity.
+Stop discovery/label/card variants. The next deliverable follows existing NS-4
+authoring criterion two and agent-workflows: resolve export/deferred presentation
+in this complete journey, then finish exact browser source/history and the original
+criterion-seven acceptance audit. The existing semantic capture timeout remains
+an agent-workflow gap; no timeout is enlarged to manufacture acceptance.
+
+This integrated repair belongs to authoring alone: unfinished batches **52→53**,
+aggregate **25/16/53/22/28/3**; resource remains 16. No full criterion/task/credit
+closes, no ledger is reset and the complete goal stays active. Missing general
+project-file import and helper-expression reconciliation retain their owners.
+
+**Ownership and handoff.** Owned review six is explicitly discarded after its
+jobs/history receipts are saved. The independent readonly loopback capture host
+is retired after verifying its exact identity; no primary service is stopped or
+updated. An authenticated preservation gate retains all **nine** complete pairs,
+navigation/drafts/permissions/history with no active project jobs. The protected
+147033-byte checkpoint and 316-file installed release remain exact. Current LAN
+Studio/native MCP keep the preceding release; this repair is source only.
+Ignored `build/resource-discovery/` retains semantic queries/history/jobs, final
+source, preview, initial admission/identity/driver failures, complete native run,
+portable source replay, partial browser journeys, final observation consumers,
+private host identity and nine-pair preservation. Remote receipt belongs there.
+
 ## Current return path: Primary workflow restoration — 2026-10-09
 
 Entry is clean at pushed `f6d26a5`. The user's Resources direction remains a

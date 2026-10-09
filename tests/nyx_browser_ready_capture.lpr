@@ -27,6 +27,12 @@ program nyx_browser_ready_capture;
 uses
   SysUtils, nyx.text, nyx.test.browser.pipe;
 
+type
+  { Assertion fixtures finish with "passed". Rendered application/preview
+    adapters finish with "true". Both must be observed at their real clocks;
+    accepting a loaded page alone would hide initialization failures. }
+  TNyxReadyCompletion = (nrcFixturePassed, nrcApplicationReady);
+
 var
   LHost: TNyxBrowserPipe;
   LMarker: TNyxText;
@@ -36,28 +42,47 @@ var
   LHeight: Integer;
   LStarted: QWord;
   LCaptured: Integer;
+  LCompletion: TNyxReadyCompletion;
+  LExpected: TNyxText;
 
 begin
   LHost := nil;
   try
 
-    if (ParamCount < 3) or (ParamCount > 5) then
+    if (ParamCount < 3) or (ParamCount > 6) then
     begin
-      raise Exception.Create('Supply fixture URL, owned output directory, marker and optional CSS width/height');
+      raise Exception.Create('Supply fixture URL, owned output directory, marker, optional CSS width/height and --application-ready');
     end;
     LWidth := 1100;
     LHeight := 900;
     LLastCheckpoint := '';
     LCaptured := 0;
+    LCompletion := nrcFixturePassed;
 
     if ParamCount >= 4 then
     begin
       LWidth := StrToInt(ParamStr(4));
     end;
 
-    if ParamCount = 5 then
+    if ParamCount >= 5 then
     begin
       LHeight := StrToInt(ParamStr(5));
+    end;
+
+    if ParamCount = 6 then
+    begin
+
+      if ParamStr(6) <> '--application-ready' then
+      begin
+        raise Exception.Create('Completion option is --application-ready');
+      end;
+      LCompletion := nrcApplicationReady;
+    end;
+    LExpected := 'passed';
+
+    if LCompletion = nrcApplicationReady then
+    begin
+      LExpected := 'true';
     end;
     LHost := TNyxBrowserPipe.Create(ParamStr(1), ParamStr(2), LWidth, LHeight);
     LStarted := GetTickCount64;
@@ -88,7 +113,7 @@ begin
         WriteLn('Observed actual fixture checkpoint / ', LCheckpoint);
       end;
 
-      if LMarker = 'passed' then
+      if LMarker = LExpected then
       begin
         Break;
       end;

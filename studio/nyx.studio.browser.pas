@@ -2459,9 +2459,13 @@ begin
             begin
               FViewState.ResourceEditorDraft.Capture('studio-resource-editor',
                 FShellRenderer.RootFor('studio-resource-editor'));
-              { Retain the proposal while clearing the previous variant's
-                observation. Its next exact reply may arrive after this paint. }
-              Refresh(True, True);
+              { Keep the proposal's admitted private selection and exact input
+                elements. Suppress obsolete detail cards immediately; the next
+                matching observer reply owns the ordinary detail repaint. }
+              SuspendNyxStudioResourceSelectionViews(FShellRenderer.RootFor('studio-resource-editor'),
+                FViewState.ResourceSelection, FViewState.Agents.CanInspectResourceRuntime);
+              FShellRenderer.Sync;
+              SavePresentation;
             end
             else
             begin
@@ -2563,7 +2567,9 @@ begin
             if LRetainedResourceSelection then
             begin
               FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.RootFor('studio-resource-editor'));
-              Refresh(True, True);
+              SuspendNyxStudioResourceSelectionViews(FShellRenderer.RootFor('studio-resource-editor'),
+                FViewState.ResourceSelection, FViewState.Agents.CanInspectResourceRuntime);
+              FShellRenderer.Sync;
               SavePresentation;
             end
             else

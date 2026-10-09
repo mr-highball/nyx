@@ -67,15 +67,27 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Primary workflow restoration (2026-10-09) installs frozen product `f6d26a5` with
+Resource discovery reassessment (2026-10-09) uses all 22 authenticated native
+MCP handles for an English resource/binding companion, bounded filters and exact
+paired metadata history. Retained resource navigation and waiting details pass
+97 native and 90/90 HTTP desktop/CSS-390 checks; portable labels/source replay
+pass on both targets. The full native workbench passes 298 plus 60 exact-source
+checks. Both full browser journeys stop at project export, so complete discovery
+acceptance remains open. [The packet](WORK.md#current-return-path-resource-discovery-acceptance--2026-10-09)
+records failures, source-only repairs and nine exact preserved project contexts.
+Aggregate is **25/16/53/22/28/3**, with no full criterion/task/credit closure.
+Next resolve the existing full browser export/publication boundary before more
+discovery variants; installed LAN Studio retains its qualified preceding release.
+
+Previous primary workflow restoration (2026-10-09) installs frozen product `f6d26a5` with
 316 verified files while retaining all nine exact projects/history and the complete
 checkpoint. LAN Studio and authenticated loopback MCP are available; fresh Pascal
 discovery advertises 22 tools and 13 source modes. [The packet](WORK.md#current-return-path-primary-workflow-restoration--2026-10-09)
 records 16 authenticated source-edit/paired Undo checks, both compiler jobs,
 selective rendering and ordinary desktop/CSS-390 observation. Dedicated Resources,
 categories and creator/user tags remain the intended discovery contract.
-The existing chat's native tool handles still require reconnection; Pascal MCP
-works now. No additional credit/counter or full criterion/task closes; aggregate
+At that packet's handoff native handles required reconnection; the current packet
+above authenticates them. No additional credit/counter or full criterion/task closes; aggregate
 **25/16/52/22/28/3** stays unchanged. General helper-expression reconciliation,
 project-file import, full parity/performance and independent use remain open.
 

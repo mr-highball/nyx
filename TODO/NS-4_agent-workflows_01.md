@@ -9,7 +9,21 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current primary restoration (2026-10-09) qualifies real authenticated source
+Current resource discovery journey (2026-10-09) authenticates all 22 native Nyx
+handles. An owned English review qualifies bounded category/search/all-any tags,
+grouped metadata edits, exact retry/paired history and both immutable compiler
+jobs without touching the nine retained projects. Native capture hits its
+20-second budget; an independent real-clock Pascal driver observes and captures
+the same ready application. The tool capture timeout remains this owner's gap.
+Review disposal is explicit. Complete ordinary browser export also stalls and
+belongs with authoring criterion two; do not substitute screenshot-driven demo
+editing for absent semantic operations. No workflow counter or full criterion
+closes; authoring alone advances to aggregate 25/16/53/22/28/3. Follow the failed
+complete export journey before discovery/source variants; general import and
+helper-expression reconciliation remain open. See
+[the packet](../WORK.md#current-return-path-resource-discovery-acceptance--2026-10-09).
+
+Previous primary restoration (2026-10-09) qualifies real authenticated source
 editing against the installed 316-file `f6d26a5` product. Fresh discovery exposes
 22 tools and 13 source modes. A temporary English review passes 16 bounded
 source/node, grouped class/helper/view edit, exact retry and paired Undo checks,

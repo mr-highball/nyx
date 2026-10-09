@@ -27,7 +27,7 @@ unit nyx.resources.runtime.view;
 interface
 
 uses SysUtils, nyx.text, nyx.bytes, nyx.editing, nyx.data, nyx.resources, nyx.application.resources,
-  nyx.resources.loader, nyx.resource.sources, nyx.controls;
+  nyx.resources.loader, nyx.resource.sources, nyx.controls, nyx.model, nyx.types;
 
 type
   { Presentation availability is distinct from the application's load phase.
@@ -78,6 +78,15 @@ function NewNyxResourceRuntimeView(const AID: TNyxText;
 function NewNyxResourceRuntimeDetailView(const AID: TNyxText;
   const AEntry: TNyxResourceRuntimeEntry;
   AAvailability: TNyxResourceDetailAvailability = rdaAvailable): INyxCard;
+{ Update the stock detail's named presentation parts while retaining its tree,
+  callbacks and creator additions. Card is borrowed. False means an incomplete
+  or changed part contract and changes nothing. Availability validation and
+  preparation errors raise before publication; Entry must already be admitted
+  by the runtime reporting contract. Copied properties commit without target
+  callbacks/allocation. The caller synchronizes its existing target view. }
+function TryRefreshNyxResourceRuntimeDetailView(ACard: TNyxNode;
+  const AEntry: TNyxResourceRuntimeEntry;
+  AAvailability: TNyxResourceDetailAvailability = rdaAvailable): Boolean;
 { Exact-variant read. Missing membership returns a null entry, never a fallback
   locale or another resource. The returned three-field selector/result owns its
   bounded diagnostic item and retains no snapshot, document or live owner. }
@@ -313,6 +322,75 @@ begin
     LAvailable and (AEntry.Status.CacheWarning <> ''));
   AddText('-notification-error', 'Publication callback: ' + AEntry.Status.NotificationError,
     LAvailable and (AEntry.Status.NotificationError <> ''));
+end;
+
+function TryRefreshNyxResourceRuntimeDetailView(ACard: TNyxNode;
+  const AEntry: TNyxResourceRuntimeEntry;
+  AAvailability: TNyxResourceDetailAvailability): Boolean;
+const
+  CAttributes: array[0..1] of TNyxAttribute = (atText, atVisible);
+var
+  LFresh: INyxCard;
+  LPrepared: TNyxNode;
+  LPart: TNyxNode;
+  LExisting: TNyxNode;
+  LIndex: Integer;
+  LAttributeIndex: Integer;
+  LKey: TNyxText;
+  LProperty: Integer;
+
+  procedure Exchange(AExisting, ACandidate: TNyxNode);
+  var
+    LChild: Integer;
+  begin
+    AExisting.Props.ExchangeStorage(ACandidate.Props);
+    for LChild := 0 to AExisting.Count - 1 do
+    begin
+      Exchange(AExisting.Children[LChild], ACandidate.Children[LChild]);
+    end;
+  end;
+begin
+  Result := False;
+
+  if (ACard = nil) or (ACard.Kind <> NyxKindName(nkCard)) then
+  begin
+    Exit;
+  end;
+  LFresh := NewNyxResourceRuntimeDetailView(ACard.ID, AEntry, AAvailability);
+  LPrepared := ACard.Clone;
+  try
+    for LIndex := 0 to LFresh.Node.Count - 1 do
+    begin
+      LPart := LFresh.Node.Children[LIndex];
+      LExisting := LPrepared.Find(LPart.ID);
+
+      if (LExisting = nil) or (LExisting.Kind <> LPart.Kind) then
+      begin
+        Exit;
+      end;
+      for LAttributeIndex := Low(CAttributes) to High(CAttributes) do
+      begin
+        LKey := NyxAttributeName(CAttributes[LAttributeIndex]);
+        LProperty := LExisting.Props.IndexOfName(LKey);
+
+        if LPart.Props.IndexOfName(LKey) >= 0 then
+        begin
+          LExisting.SetProp(LKey, LPart.StoredProp(LKey));
+        end
+        else if LProperty >= 0 then
+        begin
+          LExisting.Props.Delete(LProperty);
+        end;
+      end;
+    end;
+    { All required parts and copied text are prepared before the first exchange.
+      Existing control/model identities and independent creator parts survive. }
+    Exchange(ACard, LPrepared);
+    Result := True;
+  finally
+    LPrepared.Free;
+    LFresh := nil;
+  end;
 end;
 
 class function TNyxResourceRuntimeSummary.FromData(

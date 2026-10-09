@@ -16,6 +16,24 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Discovery acceptance return — 2026-10-09
+
+Original criterion seven is reassessed against current ordinary consumers and an
+English companion composed through all 22 authenticated native MCP handles.
+Bounded filters/tags, exact metadata retry/history and both immutable compiler
+jobs pass; selective rendering shows bound captions/prompt/table/embedded PNG.
+Current portable labels/source pass 70/8 on both targets. Ordinary Win32 workbench
+passes 298 plus 60 exact-source checks after retained New/Open repairs; actual
+delayed-detail consumers pass 97 native and 90/90 HTTP desktop/CSS-390.
+Both complete browser workbench journeys stop at export after five meaningful
+checkpoints. Criterion seven remains open; smaller passes do not replace it.
+Stop discovery variants and follow existing NS-4 authoring criterion two's complete
+export/deferred-presentation boundary before finishing this acceptance audit.
+Authoring alone advances unfinished 52→53, resource remains 16, aggregate
+25/16/53/22/28/3. No full criterion/task/credit closes. All nine project contexts
+remain exact; repairs are source only and LAN retains its preceding release.
+See [the packet](../WORK.md#current-return-path-resource-discovery-acceptance--2026-10-09).
+
 ## Selected-resource Studio consumer — 2026-10-09
 
 Criterion six's shared-view prerequisite now feeds both ordinary Studio
@@ -403,9 +421,11 @@ See [current evidence](../WORK.md#current-return-path-joint-live-resource-frames
 - [NS-1_state-collections_01](DONE/NS-1_state-collections_01.md) supplies typed
   independent runtime collections and bindings.
 
-Browser/phone/trusted chooser/observing rollout currently needs the documented
-launch/deployment blocker resolved. Until then compile/native evidence remains
-partial and this task stays open. See the [return path](../WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).
+Primary LAN/MCP restoration is qualified in the current work record. Complete
+browser authoring still needs the failed export journey resolved; physical phone,
+trusted chooser and full observing/current-source rollout remain unqualified.
+This task stays open. The historical launch refusal is retained in the
+[earlier return path](../WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).
 
 ## Saved row consumer boundary — 2026-10-08
 

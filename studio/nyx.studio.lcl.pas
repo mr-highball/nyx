@@ -3425,9 +3425,13 @@ begin
             begin
               FState.ResourceEditorDraft.Capture('studio-resource-editor',
                 FShellView.RootFor('studio-resource-editor'));
-              { Clear the previous variant's observation through an ordinary
-                retained paint, preserving these proposal controls. }
-              RequestRefresh;
+              { Selection metadata has already been admitted by the public
+                proposal operation. A full repaint would compare its former
+                private baseline and replace these exact live inputs. Show the
+                new variant awaiting its reply without obsolete observations. }
+              SuspendNyxStudioResourceSelectionViews(FShellView.RootFor('studio-resource-editor'),
+                FState.ResourceSelection, FState.Agents.CanInspectResourceRuntime);
+              FShellView.Sync;
             end
             else
             begin
@@ -3528,7 +3532,9 @@ begin
             if LRetainedResourceSelection then
             begin
               FState.ResourceEditorDraft.Capture('studio-resource-editor', FShellView.RootFor('studio-resource-editor'));
-              RequestRefresh;
+              SuspendNyxStudioResourceSelectionViews(FShellView.RootFor('studio-resource-editor'),
+                FState.ResourceSelection, FState.Agents.CanInspectResourceRuntime);
+              FShellView.Sync;
             end
             else
             begin

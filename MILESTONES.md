@@ -3,7 +3,19 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current primary workflow restoration (2026-10-09) makes frozen product `f6d26a5`
+Current resource discovery reassessment (2026-10-09) authenticates all 22 native
+MCP handles for an English resource/binding companion and exact paired metadata
+history. Retained navigation/waiting details pass 97 native and 90/90 HTTP checks;
+portable labels/source replay pass on both targets and the full native workbench
+passes 298 plus 60 exact-source checks. Full browser journeys stop at export,
+so original discovery criterion seven remains open. [The packet](WORK.md#current-return-path-resource-discovery-acceptance--2026-10-09)
+owns failure evidence, source-only repairs and nine preserved project contexts.
+Authoring alone advances unfinished 52→53, aggregate **25/16/53/22/28/3**;
+no full criterion/task/credit closes. Follow the complete browser export/deferred
+presentation boundary under existing authoring/workflow owners; stop discovery
+variants. LAN keeps its preceding qualified release.
+
+Previous primary workflow restoration (2026-10-09) makes frozen product `f6d26a5`
 available on LAN Studio and authenticated loopback MCP. Its 316-file release and
 all nine retained pairs/history qualify through existing delivery gates; the full
 checkpoint stays exact. [The packet](WORK.md#current-return-path-primary-workflow-restoration--2026-10-09)

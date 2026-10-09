@@ -1060,6 +1060,29 @@ deployment remain owned by the resource and authoring tasks.
 
 ## Semantic resource authoring
 
+The English [Resource library companion](../tools/nyx_resource_companion.lpr)
+emits a typed transaction's `operations` array for an empty owned MCP review.
+Build it with `tools/build.ps1 -Target mcp-client`, then run the compiled
+`nyx_resource_companion` program. It starts no service and changes no project.
+Use `nyx_reviews` to create the empty review, then pass that array to one
+`nyx_transaction` with its exact review handle, current `expectedRevision` and
+a unique `operationId`. This creates the page, resources, scalar/image bindings
+and typed table recipe as one paired Undo step.
+
+The companion contains packed PNG, JSON, text and binary resources, overlapping
+creator tags, and an English hosted locale declaration with an embedded fallback
+and caller cache policy. Its example URL is a declaration, not hosted-loading
+evidence. Query `nyx_resources` with category/source/locale predicates and exact
+labels; use `labelMatch: all` or `any` alongside search. A tag containing a comma
+remains one tag. `set-labels` can edit several variants in one paired transaction
+without replacing their payloads, bindings or hosted configuration. Use
+`nyx_build` for both targets and request a rendered preview selectively.
+
+The maintained real-clock browser capture tool accepts `--application-ready`
+after its CSS width/height when observing an application's Boolean ready marker.
+Its default completion remains the assertion fixture's `passed` marker. A loaded
+page or successful compiler job alone does not establish rendered bindings.
+
 The common Resources area includes `NewNyxResourceRowsEditor`, consumed by both
 ordinary Studio controllers. Open a saved relationship or enter a collection
 name, choose a JSON resource, discover an array and inspect its first row. Choose

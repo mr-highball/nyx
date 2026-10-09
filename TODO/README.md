@@ -47,7 +47,16 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current primary restoration deploys the already-counted source work through
+Current resource discovery reassessment uses authenticated native MCP for an
+English companion, bounded filters and exact paired metadata Undo. The full
+native workbench and both-target labels/source/delayed-observation consumers
+pass; complete browser journeys stop at export. [The packet](../WORK.md#current-return-path-resource-discovery-acceptance--2026-10-09)
+retains failures and all nine exact project contexts. No full criterion/task/credit
+closes; authoring alone advances 52→53, aggregate 25/16/53/22/28/3. Resolve the
+existing full browser export/publication boundary before more discovery variants.
+Repairs are source only; installed LAN Studio keeps its qualified prior release.
+
+Previous primary restoration deploys the already-counted source work through
 existing NS-4 workflow/NS-6 delivery gates. The 316-file product exposes 22 tools
 and 13 source modes; nine pairs/history and the complete checkpoint stay exact.
 [The packet](../WORK.md#current-return-path-primary-workflow-restoration--2026-10-09)
