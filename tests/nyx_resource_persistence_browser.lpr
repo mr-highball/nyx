@@ -24,10 +24,11 @@ program nyx_resource_persistence_browser;
 
 {$mode delphi}{$H+}{$codepage utf8}
 
-uses SysUtils, nyx.text, nyx.test.browser.pipe;
+uses SysUtils, nyx.text, nyx.test.browser.pipe, nyx.test.resource.failures;
 
 const
-  CPhases: array[0..5] of String = ('store', 'restore', 'quota', 'corrupt', 'respect', 'deadline');
+  CPhases: array[0..6] of String =
+    ('store', 'restore', 'quota', 'corrupt', 'respect', 'deadline', 'failures');
 
 var
   LProfile: TNyxBrowserProfile;
@@ -39,14 +40,19 @@ var
   LStarted: QWord;
   LPhase: Integer;
   LWidth: Integer;
+  LFailureFile: TNyxResourceFailureFile;
+  LFailure: TNyxResourceFailure;
+  LFailureName: TNyxText;
+  LFound: Boolean;
 begin
   LProfile := nil;
   LHost := nil;
+  LFailureFile := nil;
   try
 
-    if ParamCount <> 2 then
+    if (ParamCount < 2) or (ParamCount > 3) then
     begin
-      raise Exception.Create('Supply owned loopback fixture URL and fresh evidence directory');
+      raise Exception.Create('Supply owned loopback fixture URL, fresh evidence directory and optional marked failure directory');
     end;
     LDirectory := IncludeTrailingPathDelimiter(ExpandFileName(ParamStr(2)));
 
@@ -56,8 +62,19 @@ begin
     end;
     LProfile := TNyxBrowserProfile.Create(LDirectory);
     try
+
+      if ParamCount = 3 then
+      begin
+        LFailureFile := TNyxResourceFailureFile.Create(ParamStr(3),
+          TNyxText(Copy(ParamStr(1), 1, LastDelimiter('/', ParamStr(1)))) + 'copy.json');
+      end;
       for LPhase := Low(CPhases) to High(CPhases) do
       begin
+
+        if (CPhases[LPhase] = 'failures') and (LFailureFile = nil) then
+        begin
+          Continue;
+        end;
         LWidth := 1280;
 
         if LPhase = 1 then
@@ -87,7 +104,38 @@ begin
             if (LCheckpoint <> '') and (LCheckpoint <> LObserved) then
             begin
 
-              if CPhases[LPhase] = 'deadline' then
+              if CPhases[LPhase] = 'failures' then
+              begin
+                { Change one compared, origin-marked fixture file. Requests use
+                  the real server/fetch path; no transport reply is fabricated. }
+                LFound := False;
+                for LFailure := Low(TNyxResourceFailure) to High(TNyxResourceFailure) do
+                begin
+                  LFailureName := 'failure-' + NyxResourceFailureName(LFailure);
+
+                  if LCheckpoint = LFailureName then
+                  begin
+                    LFound := True;
+                    LHost.Capture(String(LFailureName));
+
+                    if LFailure = nrfCorrected then
+                    begin
+                      LFailureFile.Apply(nrfHealthy);
+                    end
+                    else
+                    begin
+                      LFailureFile.Apply(Succ(LFailure));
+                    end;
+                    Break;
+                  end;
+                end;
+
+                if not LFound then
+                begin
+                  raise Exception.Create('Unknown hosted failure checkpoint');
+                end;
+              end
+              else if CPhases[LPhase] = 'deadline' then
               begin
                 { Delay real fetch only after the application mounts. Timeout
                   and cancellation use the actual AbortController adapter;
@@ -138,6 +186,7 @@ begin
         end;
       end;
     finally
+      FreeAndNil(LFailureFile);
       FreeAndNil(LProfile);
     end;
   except

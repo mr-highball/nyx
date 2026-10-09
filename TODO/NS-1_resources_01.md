@@ -16,6 +16,25 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Actual hosted admission consumer — 2026-10-09
+
+Criteria five/three now have real WinHTTP/fetch application journeys through a
+single URL's healthy/404/malformed/wrong-type/oversized/corrected bytes. Explicit
+caller fallback retains its failure; wrong typed data refuses the full catalog
+without Changed or partial label/prompt updates. The initially failing diagnostic
+now has owned Unicode reference/structural-path/expected-kind/cause context,
+surviving catalog retirement. Native passes 52, HTTP browser 492; shared/actual
+native controls pass 124 and their HTTP counterpart passes. Counters include
+polling, not acceptance/performance credit. Original defaults, control identities,
+fixture closures and protected user pairs remain exact. Evidence and limitations
+are in [the packet](../WORK.md#current-return-path-hosted-resource-admission--2026-10-09).
+Resource alone advances unfinished batches 13→14, aggregate 25/14/47/21/28/3;
+no full criterion/task/credit closes. Stop admission/diagnostic variants and follow
+actual native body-arrival cancellation and the remaining HTTP/security/media/
+cache matrix. Physical input, performance and observing rollout retain their owners.
+The user's confirmed dedicated workspace/category/creator-tag direction remains
+the existing authoring consumer, without another form/filter prerequisite.
+
 ## Consumed native request deadlines — 2026-10-09
 
 Criterion five's failure/retirement gate exposed a native prerequisite: an

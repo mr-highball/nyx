@@ -28,6 +28,7 @@ uses
   SysUtils, Classes, nyx.text, nyx.bytes, nyx.data, nyx.model, nyx.controls, nyx.codec,
   nyx.resources, nyx.resource.sources, nyx.resource.cache, nyx.resources.loader,
   nyx.application.resources, nyx.resource.context, nyx.scheduler
+  , nyx.test.resource.failures
   {$ifdef PAS2JS}
   , JS, Web, nyx.application.browser, nyx.resource.cache.browser,
     nyx.resources.http.browser
@@ -40,7 +41,7 @@ type
   { The boundary names are closed qualification phases. Each invocation creates
     a new application/resolver. A separate Pascal driver owns process retirement
     and the fresh private cache/profile reused by Store and Restore. }
-  TPersistencePhase = (ppStore, ppRestore, ppQuota, ppCorrupt, ppRespect, ppDeadline);
+  TPersistencePhase = (ppStore, ppRestore, ppQuota, ppCorrupt, ppRespect, ppDeadline, ppFailures);
   TPersistenceApplication = {$ifdef PAS2JS}TNyxBrowserApplication{$else}TNyxLCLApplication{$endif};
   {$ifndef PAS2JS}
   { Occupies only the fixture's own transport pool. Its owned event and worker
@@ -58,7 +59,7 @@ type
 
 const
   CPhaseNames: array[TPersistencePhase] of TNyxText =
-    ('store', 'restore', 'quota', 'corrupt', 'respect', 'deadline');
+    ('store', 'restore', 'quota', 'corrupt', 'respect', 'deadline', 'failures');
   CLoaded: TNyxText = 'Keep creating 🌙';
   CPrompt: TNyxText = 'Project name 🌙';
   CEnglish: TNyxText = 'Your English workspace';
@@ -82,11 +83,20 @@ type
     FRetiredAt: Double;
     FChecks: Integer;
     FFinished: Boolean;
+    FFailure: TNyxResourceFailure;
+    FBeforeFailure: TNyxText;
+    FChanges: Integer;
+    FBeforeChanges: Integer;
     {$ifdef PAS2JS}
     FTimer: NativeInt;
+    FCaptionIdentity: TJSHTMLElement;
+    FInputIdentity: TJSHTMLElement;
     {$else}
     FGate: TDeadlineGate;
     FGateLease: INyxWork;
+    FFailureFile: TNyxResourceFailureFile;
+    FCaptionIdentity: TObject;
+    FInputIdentity: TObject;
     {$endif}
     procedure Check(ACondition: Boolean; const AReason: TNyxText);
     function Caption(const AID: TNyxText): TNyxText;
@@ -94,6 +104,8 @@ type
     procedure Finish;
     procedure Capture;
     procedure DeadlineNext;
+    procedure FailureNext;
+    procedure ResourceChanged(const AContext: INyxResourceContext);
     function Checkpoint(const AName: TNyxText): Boolean;
     {$ifndef PAS2JS}
     procedure OccupyTransport;
@@ -188,6 +200,11 @@ begin
   Result := not FBusy;
 end;
 
+procedure TJourney.ResourceChanged(const AContext: INyxResourceContext);
+begin
+  Inc(FChanges);
+end;
+
 {$ifndef PAS2JS}
 function ReadOwnedText(const APath: String; AMaximum: Integer): TNyxText;
 var
@@ -239,7 +256,7 @@ var
   LCount: Integer;
 begin
 
-  if APhase = ppDeadline then
+  if APhase in [ppDeadline, ppFailures] then
   begin
     Exit;
   end;
@@ -361,7 +378,7 @@ begin
 
   if ParamCount <> 4 then
   begin
-    raise ENyxResource.Create('Supply phase, owned HTTP file URL, private cache home and PNG path');
+    raise ENyxResource.Create('Supply phase, owned HTTP file URL, cache home (or marked failure directory), and PNG path');
   end;
   LName := TNyxText(ParamStr(1));
   LURL := TNyxText(ParamStr(2));
@@ -393,6 +410,11 @@ begin
   end;
   FDocument := TNyxDocument.Create;
   FDocument.Title := 'Persistent resource workshop';
+
+  if FPhase = ppFailures then
+  begin
+    FDocument.Title := 'Resource recovery workshop';
+  end;
   LCopy := NyxResourceRef('copy');
   LPolicy := NyxResourceCache.Persistent.FreshFor(3600).ServerPolicy(rcspOverride);
 
@@ -401,17 +423,34 @@ begin
     LPolicy := NyxResourceCache.Bypass;
   end;
 
+  if FPhase = ppFailures then
+  begin
+    LPolicy := NyxResourceCache.Bypass.MaximumBytes(128);
+  end;
+
   if FPhase = ppRespect then
   begin
     { A previous caller deliberately stored this server's no-store response.
       Current caller policy must govern reuse as well as the next write. }
     LPolicy := LPolicy.ServerPolicy(rcspRespect);
   end;
-  FDocument.Resources.Define(LCopy,
-    NyxResourceDiscovery(NyxHostedResource(nrkJSON, NyxResourceURL(LURL))
-      .Cache(LPolicy)
-      .Fallback(NyxJSONResource('{"headline":"Ready while loading","prompt":"Local project name"}')))
-      .WithLabels(LLabels));
+
+  if FPhase = ppFailures then
+  begin
+    FDocument.Resources.Define(LCopy,
+      NyxResourceDiscovery(NyxHostedResource(nrkJSON, NyxResourceURL(LURL))
+        .Cache(LPolicy).Fallback(NyxJSONResource(
+          NyxDecodeUTF8(NyxResourceFailureBytes(nrfHealthy)))))
+        .WithLabels(LLabels));
+  end
+  else
+  begin
+    FDocument.Resources.Define(LCopy,
+      NyxResourceDiscovery(NyxHostedResource(nrkJSON, NyxResourceURL(LURL))
+        .Cache(LPolicy)
+        .Fallback(NyxJSONResource('{"headline":"Ready while loading","prompt":"Local project name"}')))
+        .WithLabels(LLabels));
+  end;
   FDocument.Resources.Define(LCopy, NyxLocale('en-GB'),
     NyxJSONResource('{"headline":"Your English workspace","prompt":"Programme name"}'));
   LPage := NewNyxColumn('home');
@@ -447,7 +486,7 @@ begin
   LTransport := NewNyxNativeResourceTransport(FScheduler);
   LCache := nil;
 
-  if FPhase <> ppDeadline then
+  if not (FPhase in [ppDeadline, ppFailures]) then
   begin
     LCache := NewNyxFileResourceCache(TNyxText(ParamStr(3)));
   end;
@@ -477,6 +516,25 @@ begin
   FApplication.Window.Show;
   {$endif}
   FResources := FApplication.Resources;
+
+  if FPhase = ppFailures then
+  begin
+    FFailure := nrfHealthy;
+    FSubscription := FResources.Subscribe(nil, ResourceChanged);
+    {$ifdef PAS2JS}
+    FCaptionIdentity := FApplication.View.ElementFor('caption');
+    FInputIdentity := FApplication.View.InputFor('project-name');
+    {$else}
+    FCaptionIdentity := FApplication.View.ControlFor('caption');
+    FInputIdentity := FApplication.View.InputFor('project-name');
+    FFailureFile := TNyxResourceFailureFile.Create(ParamStr(3), LURL);
+    {$endif}
+    FResources.Reload(NyxResourceRef('copy'), NyxDefaultLocale);
+    {$ifdef PAS2JS}
+    FTimer := window.setInterval(@Next, 20);
+    {$endif}
+    Exit;
+  end;
   Check(Caption('caption') = 'Ready while loading', 'initial fallback is not a completed fetch');
 
   if FPhase = ppDeadline then
@@ -509,6 +567,115 @@ begin
   Capture;
   Result := True;
   {$endif}
+end;
+
+procedure TJourney.FailureNext;
+var
+  LStatus: TNyxApplicationResourceStatus;
+  LCaption: TNyxText;
+  LPrompt: TNyxText;
+begin
+  Check(Milliseconds - FStarted < 30000, 'actual hosted failure journey stays bounded');
+  LStatus := FResources.Status(NyxResourceRef('copy'), NyxDefaultLocale);
+
+  if LStatus.Phase in [nrpIdle, nrpQueued, nrpLoading, nrpWaiting] then
+  begin
+    Exit;
+  end;
+  LCaption := CLoaded;
+  LPrompt := CPrompt;
+
+  if FFailure = nrfCorrected then
+  begin
+    LCaption := 'Back to creating 🌙';
+    LPrompt := 'A refreshed project 🌙';
+  end;
+  Check((Caption('caption') = LCaption) and (Caption('pinned-caption') = LCaption),
+    'actual hosted failure never partially publishes a label');
+  {$ifdef PAS2JS}
+  Check((FApplication.View.ElementFor('caption') = FCaptionIdentity) and
+    (FApplication.View.InputFor('project-name') = FInputIdentity),
+    'actual browser controls retain identity across hosted failures');
+  Check(TJSHTMLInputElement(FInputIdentity).placeholder = LPrompt,
+    'actual browser prompt preserves the complete admitted value');
+  {$else}
+  Check((FApplication.View.ControlFor('caption') = FCaptionIdentity) and
+    (FApplication.View.InputFor('project-name') = FInputIdentity),
+    'actual native controls retain identity across hosted failures');
+  Check(TNyxText(RawByteString(TEdit(FInputIdentity).TextHint)) = LPrompt,
+    'actual native prompt preserves the complete admitted value');
+  {$endif}
+  Check(TNyxCodec.Encode(FDocument) = FBefore, 'HTTP failures never rewrite authored defaults');
+  case FFailure of
+    nrfHealthy, nrfCorrected:
+      begin
+        Check((LStatus.Phase = nrpReady) and (LStatus.Origin = rloNetwork) and
+          (LStatus.Error = ''), 'real healthy/corrected bytes publish successfully at the same URL');
+      end;
+    nrfNotFound, nrfMalformed, nrfOversized:
+      begin
+        Check((LStatus.Phase = nrpReady) and (LStatus.Origin = rloFallback) and
+          (LStatus.Error <> ''), 'real host failure uses explicit caller fallback with a visible error');
+
+        if FFailure = nrfNotFound then
+        begin
+          Check(Pos('404', LStatus.Error) > 0, 'actual missing file preserves its HTTP status');
+        end;
+
+        if FFailure = nrfMalformed then
+        begin
+          Check(Pos('JSON position', LStatus.Error) > 0,
+            'malformed bytes reach JSON admission rather than failing another transport operation');
+        end;
+
+        if FFailure = nrfOversized then
+        begin
+          Check(Pos('byte budget', LStatus.Error) > 0,
+            'actual oversized reply reports the caller payload limit');
+        end;
+      end;
+    nrfWrongType:
+      begin
+        Check((LStatus.Phase = nrpRejected) and (LStatus.Origin = rloNetwork),
+          'parsed HTTP JSON is still subject to typed control admission');
+        Check((FResources.Context.Snapshot.ToData.ToJSON = FBeforeFailure) and
+          (FChanges = FBeforeChanges), 'typed refusal preserves the entire catalog and skips Changed');
+        {$ifdef PAS2JS}
+        document.body.setAttribute('data-resource-diagnostic', LStatus.Error);
+        {$else}
+        WriteLn('Observed resource rejection / ', LStatus.Error);
+        {$endif}
+        Check((Pos('copy', LStatus.Error) > 0) and (Pos('prompt', LStatus.Error) > 0) and
+          (Pos('text', LStatus.Error) > 0), 'typed diagnostic names resource, selector and expected type');
+      end;
+  end;
+
+  if not Checkpoint('failure-' + NyxResourceFailureName(FFailure)) then
+  begin
+    Exit;
+  end;
+
+  if FFailure = nrfCorrected then
+  begin
+    {$ifndef PAS2JS}
+    FFailureFile.Apply(nrfHealthy);
+    {$endif}
+    FSubscription.Disconnect;
+    FSubscription := nil;
+    FreeAndNil(FApplication);
+    Check(NyxApplicationResourceDiagnostics(FResources).CaptureRuntime.Stopped,
+      'host retires after real failure and correction');
+    Finish;
+    Exit;
+  end;
+  FFailure := TNyxResourceFailure(Ord(FFailure) + 1);
+  FStage := Ord(FFailure);
+  FBeforeFailure := FResources.Context.Snapshot.ToData.ToJSON;
+  FBeforeChanges := FChanges;
+  {$ifndef PAS2JS}
+  FFailureFile.Apply(FFailure);
+  {$endif}
+  FResources.Reload(NyxResourceRef('copy'), NyxDefaultLocale);
 end;
 
 procedure TJourney.DeadlineNext;
@@ -662,7 +829,7 @@ begin
     FApplication.Window.PaintTo(LBitmap.Canvas, 0, 0);
     LImage := LBitmap.CreateIntfImage;
 
-    if FPhase = ppDeadline then
+    if FPhase in [ppDeadline, ppFailures] then
     begin
       LImage.SaveToFile(ParamStr(4) + '.' + IntToStr(FStage) + '.png');
     end
@@ -684,6 +851,12 @@ var
   LRefused: Boolean;
 begin
   try
+
+    if FPhase = ppFailures then
+    begin
+      FailureNext;
+      Exit;
+    end;
 
     if FPhase = ppDeadline then
     begin
@@ -843,6 +1016,9 @@ begin
   FApplication.Free;
   FResources := nil;
   FDocument.Free;
+  {$ifndef PAS2JS}
+  FFailureFile.Free;
+  {$endif}
 
   if FScheduler <> nil then
   begin

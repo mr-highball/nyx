@@ -107,6 +107,28 @@ type
     class function FromData(const AData: TNyxDataValue): TNyxResourcePath; static;
   end;
 
+  { Owned scalar-selection failure with strong resource/path/type context.
+    Descriptors and cause text survive catalog/document retirement; Path returns
+    a detached copy. Message adds authoring context without adding a hosted URL.
+    This remains an ENyxResource for existing resource-error handlers. }
+  ENyxResourceSelection = class(ENyxResource)
+  private
+    FReference: TNyxResourceRef;
+    FPath: TNyxResourcePath;
+    FExpectedKind: TNyxStateKind;
+    FCause: TNyxText;
+    function GetPath: TNyxResourcePath;
+  public
+    { Copies authoring descriptors and cause text; owns no source exception,
+      catalog, document or target control. }
+    constructor Create(const AReference: TNyxResourceRef; const APath: TNyxResourcePath;
+      AExpectedKind: TNyxStateKind; const ACause: TNyxText); reintroduce;
+    property Reference: TNyxResourceRef read FReference;
+    property Path: TNyxResourcePath read GetPath;
+    property ExpectedKind: TNyxStateKind read FExpectedKind;
+    property Cause: TNyxText read FCause;
+  end;
+
   { Managed immutable file content and creator help. Describe returns another
     definition rather than mutating subscribers or the original object. Bytes
     returns an independent array. Image/Text/Data require their exact kind;
@@ -186,7 +208,8 @@ type
     including NyxDefaultLocale; Localized distinguishes that pin from inheritance.
     Otherwise the runtime view's locale/fallback selects a variant. Field and
     Item preserve JSON structure, including literal dots in field names. Reading
-    an absent/null/wrong-kind value raises; no default caption hides bad data.
+    an absent/null/wrong-kind value raises ENyxResourceSelection with owned
+    reference/path/type context; no default caption hides bad data.
     Number deliberately requests a Double, while the resource retains its exact
     JSON numeric token. Selectors own no document, store or target handle. }
   TNyxResourceValueRef = record
@@ -1516,6 +1539,23 @@ begin
   Result.FKind := nskNumber;
 end;
 
+constructor ENyxResourceSelection.Create(const AReference: TNyxResourceRef;
+  const APath: TNyxResourcePath; AExpectedKind: TNyxStateKind; const ACause: TNyxText);
+begin
+  FReference := AReference;
+  FPath := APath.Copy;
+  FExpectedKind := AExpectedKind;
+  FCause := ACause;
+  inherited Create(TNyxText('Resource ') + NyxData(FReference.Name).ToJSON +
+    TNyxText(', selector ') + FPath.ToData.ToJSON + TNyxText(', expected ') +
+    NyxStateKindName(FExpectedKind) + TNyxText(': ') + FCause);
+end;
+
+function ENyxResourceSelection.GetPath: TNyxResourcePath;
+begin
+  Result := FPath.Copy;
+end;
+
 function TNyxResourceValueRef.Read(const AResources: INyxResources;
   const ALocale, AFallback: TNyxLocaleRef): TNyxStateValue;
 var
@@ -1537,35 +1577,45 @@ begin
     LLocale := FLocale;
     LFallback := FFallback;
   end;
-  LDefinition := AResources.Resolve(FReference, LLocale, LFallback);
+  try
+    LDefinition := AResources.Resolve(FReference, LLocale, LFallback);
 
-  if LDefinition.Kind = nrkText then
-  begin
-
-    if (FPath.ToData.Count <> 0) or (FKind <> nskText) then
+    if LDefinition.Kind = nrkText then
     begin
-      raise ENyxResource.Create('A text file requires a root text selector');
+
+      if (FPath.ToData.Count <> 0) or (FKind <> nskText) then
+      begin
+        raise ENyxResource.Create('A text file requires a root text selector');
+      end;
+      Exit(TNyxStateValue.FromText(LDefinition.Text));
     end;
-    Exit(TNyxStateValue.FromText(LDefinition.Text));
-  end;
-  LValue := FPath.Select(LDefinition.Data);
-  case FKind of
-    nskText:
-      begin
-        Result := TNyxStateValue.FromText(LValue.AsText);
-      end;
-    nskBoolean:
-      begin
-        Result := TNyxStateValue.FromBoolean(LValue.AsBoolean);
-      end;
-    nskInteger:
-      begin
-        Result := TNyxStateValue.FromInteger(LValue.AsInteger);
-      end;
-    nskNumber:
-      begin
-        Result := TNyxStateValue.FromNumber(LValue.AsNumber);
-      end;
+    LValue := FPath.Select(LDefinition.Data);
+    case FKind of
+      nskText:
+        begin
+          Result := TNyxStateValue.FromText(LValue.AsText);
+        end;
+      nskBoolean:
+        begin
+          Result := TNyxStateValue.FromBoolean(LValue.AsBoolean);
+        end;
+      nskInteger:
+        begin
+          Result := TNyxStateValue.FromInteger(LValue.AsInteger);
+        end;
+      nskNumber:
+        begin
+          Result := TNyxStateValue.FromNumber(LValue.AsNumber);
+        end;
+    end;
+  except
+    on LException: Exception do
+    begin
+      { Conversion helpers know the data kind but not its authoring selector.
+        Copy that context at this boundary before the temporary cause retires. }
+      raise ENyxResourceSelection.Create(FReference, FPath, FKind,
+        TNyxText(LException.Message));
+    end;
   end;
 end;
 

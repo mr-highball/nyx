@@ -42,6 +42,17 @@ files and images are obtained through their typed definition accessors.
 Resource bindings are read-only projections; editing a control does not rewrite
 its packed file. Existing typed state bindings supply writable application data.
 
+Failed scalar resolution/selection raises `ENyxResourceSelection`, an
+`ENyxResource` with typed `Reference`, structural `Path`, `ExpectedKind` and
+original `Cause` text. The message includes that authoring context, preserving
+Unicode names and literal-dot/index steps. These copied descriptors outlive
+catalog/document retirement; branching the returned path cannot change the
+diagnostic. No source exception, document, catalog or control is retained, and
+the added context does not contain the hosted URL. The original cause may still
+contain adapter details. A nil catalog retains the existing argument error.
+Reading an absent/null/wrong-kind field refuses instead of supplying a caption
+or implicitly converting another scalar kind.
+
 ## The common Studio Resources workflow
 
 Open **Resources** in the Project panel. Select a control before choosing its
@@ -274,6 +285,18 @@ a callback. Loading/locale reentry refuses. A custom busy receiver supplies its
 own idle Wake.
 Localize is synchronous and refuses busy/invalid candidates. Notification failures
 occur after accepted publication and are reported separately, as with state updates.
+
+The maintained application persistence journey also qualifies actual hosted
+failure/admission on Win32/LCL and HTTP browser. With explicit Bypass, a 128-byte
+budget and an authored same-kind fallback, one owned URL moves through healthy,
+404, malformed JSON, a valid object with an invalid second bound field, oversized
+bytes and corrected content. Transport/parse/budget failure selects the explicit
+fallback and retains its diagnostic. Typed field rejection retains the complete
+published catalog without Changed or partial label/prompt updates; recovery keeps
+the same mounted controls and authored defaults. The exact failed diagnostic gate
+and passing consumers are in [the evidence packet](../WORK.md#current-return-path-hosted-resource-admission--2026-10-09).
+This does not qualify the full HTTP/cache/security/media matrix, native cancellation
+during body arrival, physical input, performance or installed observing rollout.
 
 Application loads span page navigation and apply to the current mounted view,
 without retaining retired nodes. Cancel retires requests/pending results; Stop

@@ -20,6 +20,19 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Hosted scalar admission consumer — 2026-10-09
+
+The existing NS-1 resource owner now has actual Win32/LCL and HTTP-browser
+application/control consumers of one hosted file's 404, malformed JSON,
+payload-budget failure, partial typed-field refusal and same-URL recovery.
+Labels/prompts retain mounted identity and complete values; rejected catalogs
+skip notification and saved defaults remain exact. Shared typed Unicode/path
+diagnostics survive catalog retirement. [The packet](../WORK.md#current-return-path-hosted-resource-admission--2026-10-09)
+records failed/passing gates and selective captures. This supplies behavioral
+evidence only: other widgetsets, physical input, complete visual/accessibility
+parity, performance and installed observing rollout remain open. NS-1 alone
+advances its unfinished batch; this task's criteria/count/credit do not close.
+
 ## Consumed image checksum prerequisite — 2026-10-08
 
 Portable standard admission now refuses damaged PNG chunks on both targets,

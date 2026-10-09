@@ -47,7 +47,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current request deadlines (2026-10-09) follow NS-1 criterion five's disproved
+Current hosted admission (2026-10-09) follows NS-1 criteria five/three with actual
+Win32/LCL and HTTP-browser application consumers of 404, syntax, payload budget,
+partial typed-field refusal and correction at one URL. Owned resource/path/kind
+diagnostics repair the reproduced omission while retaining full catalogs,
+mounted controls, notifications and authored defaults. [The packet](../WORK.md#current-return-path-hosted-resource-admission--2026-10-09)
+retains failures and qualified scope. Resource unfinished batches advance 13→14,
+aggregate 25/14/47/21/28/3; no full criterion/task/credit closes. Stop diagnostic/
+admission variants and follow native body-arrival cancellation and the remaining
+transport/cache matrix; physical input, performance and observing owners remain.
+
+Previous request deadlines (2026-10-09) follow NS-1 criterion five's disproved
 native queued-expiry prerequisite. UI-loop expiry, once-only delivery, native
 capacity refusal and temporary timer ownership now have actual native/browser
 application consumers of fallback, HTTP recovery, retained content and retirement.

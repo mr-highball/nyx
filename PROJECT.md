@@ -37,6 +37,7 @@ public library contract and its reusable components as the proof of capability.
 | Current staffing | Solo execution, explicitly requested by the user |
 | Comment/style preference | Thorough comments; blank line above if blocks |
 | Public authoring | Strong Pascal types, enum choices and fluent configuration objects; generated source should feel crafted |
+| Resource discovery | Dedicated Resources workspace and compact Project picker; built-in categories plus creator-defined labels/tags combine with search |
 | Canonical records | `MILESTONES.md`, `TASKFLOW.MD`, `TODO/`, and `WORK.md` |
 
 ## Product invariants
@@ -65,6 +66,17 @@ public library contract and its reusable components as the proof of capability.
   text supplied by a client.
 
 ## Current evidence and limits
+
+Hosted resource admission (2026-10-09) now has actual native/browser application
+journeys through one URL's 404, malformed JSON, oversized reply and partial typed
+failure, followed by corrected content. Mounted labels/prompts and saved defaults
+survive; invalid typed data retains the full runtime catalog without notification.
+`ENyxResourceSelection` repairs missing resource/path/type context with owned
+Unicode descriptors. [The packet](WORK.md#current-return-path-hosted-resource-admission--2026-10-09)
+records failures, passing consumers and retained full transport/cache/parity/
+performance/observing gates. Unfinished-batch ledger is **25/14/47/21/28/3**;
+no full criterion/task/credit closes. The dedicated workspace/category/tag choice
+is confirmed; its existing consumer remains the authoring direction.
 
 Native resource deadlines (2026-10-09) now expire on the serviced UI loop while
 the transport pool remains occupied. Once-only delivery, capacity refusal and

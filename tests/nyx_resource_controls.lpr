@@ -234,6 +234,93 @@ begin
   end;
 end;
 
+{ Exercise the public diagnostic as a consumer: distinct failure families retain
+  exact Unicode authoring context, refuse mutation and survive catalog retirement.
+  Reading/branching a returned path cannot change a retained diagnostic. }
+procedure SelectorDiagnostics;
+const
+  CReference: TNyxText = 'copy 🌙';
+  CField: TNyxText = 'prompt.with.dot🌙';
+var
+  LResources: INyxResources;
+  LSelector: TNyxResourceValueRef;
+  LPath: TNyxResourcePath;
+  LExpectedPath: TNyxText;
+  LBefore: TNyxText;
+  LRefused: Boolean;
+  LIndex: Integer;
+begin
+  LResources := NewNyxResources;
+  LResources.Define(NyxResourceRef(CReference), NyxJSONResource(
+    '{"prompt.with.dot🌙":[null,123],"truth":"yes","integer":"three","number":false}'));
+  LBefore := LResources.ToData.ToJSON;
+  for LIndex := 0 to 6 do
+  begin
+    LSelector := NyxResourceValue(NyxResourceRef(CReference));
+    case LIndex of
+      0:
+        begin
+          LSelector := LSelector.Field(CField).Item(1);
+        end;
+      1:
+        begin
+          LSelector := LSelector.Field(CField).Item(0);
+        end;
+      2:
+        begin
+          LSelector := LSelector.Field('missing 🌙');
+        end;
+      3:
+        begin
+          LSelector := LSelector.Field(CField).Item(9);
+        end;
+      4:
+        begin
+          LSelector := LSelector.Field('truth').AsBoolean;
+        end;
+      5:
+        begin
+          LSelector := LSelector.Field('integer').AsInteger;
+        end;
+      6:
+        begin
+          LSelector := LSelector.Field('number').AsNumber;
+        end;
+    end;
+    LExpectedPath := LSelector.Path.ToData.ToJSON;
+    LRefused := False;
+    try
+      LSelector.Read(LResources, NyxDefaultLocale, NyxDefaultLocale);
+    except
+      on LException: ENyxResourceSelection do
+      begin
+        LRefused := True;
+        Check(LResources.ToData.ToJSON = LBefore,
+          'typed selection refusal retains the entire resource catalog');
+
+        if LIndex = 6 then
+        begin
+          LResources := nil;
+        end;
+        Check((LException.Reference.Name = CReference) and
+          (LException.Path.ToData.ToJSON = LExpectedPath) and
+          (LException.ExpectedKind = LSelector.Kind) and (LException.Cause <> ''),
+          'typed diagnostic retains resource, structural path, kind and original cause');
+        Check((Pos(CReference, TNyxText(LException.Message)) > 0) and
+          (Pos(LExpectedPath, TNyxText(LException.Message)) > 0) and
+          (Pos(NyxStateKindName(LSelector.Kind), TNyxText(LException.Message)) > 0),
+          'UTF-8 diagnostic renders exact authoring context');
+        LPath := LException.Path.Field('independent branch');
+        LSelector := LSelector.Field('reassigned selector');
+        Check((LException.Path.ToData.ToJSON = LExpectedPath) and
+          (LPath.ToData.Count = LException.Path.ToData.Count + 1),
+          'diagnostic path survives catalog retirement and independent branching');
+      end;
+    end;
+    Check(LRefused, 'every scalar failure exposes the typed diagnostic');
+  end;
+end;
+
 procedure Shared;
 var
   LDocument: TNyxDocument;
@@ -703,6 +790,7 @@ end;
 begin
   {$ifndef PAS2JS}Application.Initialize;{$endif}
   try
+    SelectorDiagnostics;
     Shared;
     CacheStorage;
     Controls;

@@ -9,6 +9,100 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Hosted resource admission — 2026-10-09
+
+Entry is clean at pushed `5da82d2`. The previous goal turn is progress: native
+deadline arbitration repairs a reproduced hang and has actual both-target
+application consumers. The resource owner's consecutive no-full-closure count is
+13; reassess without resetting it. Follow criterion five's actual HTTP/typed
+admission gate and criterion three's real scalar control consumer. Stop further
+queue/deadline/storage/form variants.
+
+Bounded deliverable: extend the maintained application journey through one owned
+hosted JSON file's real 404, syntax, byte-budget and partial typed-field failures,
+then corrected bytes at that same URL. Explicit Bypass makes each request reach
+the existing admitted static host; caller fallback remains separate from model
+rejection. Verify actual label/prompt identity, complete runtime snapshot,
+notification refusal and authored-default preservation on native/browser. Any
+failed diagnostic must name the resource/path/type without exposing hosted URLs
+or retaining a document. Mutable fixture bytes are origin-marked, compared before
+each transition and confined to one fixed file in a new child; immutable served
+builders/runtime remain untouched. No new listener, backend/config replacement
+or active-design mutation. Stop at the integrated failure/admission boundary;
+full cache/HTTP/security/media, native body-arrival cancel, physical input,
+performance and authenticated observing rollout retain their original owners.
+
+The user's reply confirms the dedicated Resources workspace with useful built-in
+categories and creator labels/tags for combined discovery. Those existing ordinary
+consumers remain the authoring direction; this loading prerequisite does not add
+another catalog/form variant or reopen the answered choice.
+
+Both actual failure journeys first refused the maintained diagnostic gate:
+`Extension value has a different data kind` omitted the resource, selector and
+expected type. Earlier assertions already retained mounted labels/prompts,
+control identity, the complete runtime catalog, notification count and saved
+defaults. `ENyxResourceSelection` now copies the reference, structural path,
+expected state kind and original cause at scalar resolution/conversion. It
+inherits the existing UTF-8 resource exception, adds no hosted address and owns
+no catalog, source exception, document or control. Returned paths branch
+independently. A nil catalog retains its existing argument failure. Public
+interfaces, identifiers, persistence and generated-source formats are unchanged.
+
+Final evidence under ignored `build/resource-admission/`:
+
+- Native actual application Failures passes **52** checks, leak-free; fresh HTTP
+  Chromium Failures passes **492** with retired controls and a leak-free Pascal
+  driver. Both traverse healthy/404/malformed/wrong-type/oversized/corrected
+  responses at the same URL through WinHTTP/fetch. Explicit Bypass and a 128-byte
+  budget distinguish actual network attempts from private cache hits. Authored
+  fallback is explicit and retains its transport/parse/budget error; valid JSON
+  with a wrong second field is rejected before the complete catalog publishes.
+  Syntax and payload-budget assertions require their specific diagnostics, so an
+  unrelated transport failure cannot qualify those cases.
+- The final browser baseline Store/Restore/Quota/Corrupt/Respect/Deadline passes
+  **72/35/35/39/34/185**. Polling contributes to all journey counters; repeated
+  waits and overlapping checks are not additive acceptance or performance credit.
+- Shared/actual Win32 resource controls pass **124**, leak-free. The maintained
+  HTTP counterpart passes its real terminal marker. Seven diagnostic families
+  contribute **35** shared assertions on both targets: wrong text, null, missing
+  field, out-of-range item, Boolean/Integer/Number refusal, exact supplementary
+  Unicode/literal-dot paths, full catalog retention and descriptors surviving
+  catalog retirement/independent branching. Its first browser navigation timed
+  out; exact hosted assets were inspected and a fresh bounded recheck passed with
+  unchanged fixture/deadline. Both receipts remain retained; no hardware claim.
+- Six live-state PNGs per target and matching browser DOM show refusal/fallback
+  and corrected caption/prompt. Selected native/browser corrected captures were
+  inspected; widgetset/font/aesthetic differences remain, so this is behavioral
+  evidence rather than full visual/accessibility parity.
+- A reusable Pascal owner changes only a marked, compared `copy.json` in a fresh
+  child of the already admitted static host. The exact three-field marker binds
+  directory to URL; each transition compares prior bytes/absence, replacements
+  are atomic and successful journeys restore the original healthy bytes. Final
+  five-file closures compare SHA-256/length, with no remaining candidate. Failed
+  pre-fix fixtures retain their reply for diagnosis. Shell only stages files.
+- Both ordinary Studios, server, source worker and application/loader counterparts
+  rebuild. No owned warnings; the same seven upstream browser RTL warnings remain
+  visible without suppression or dependency edits. Compiled callers are not an
+  installed rollout or proof of their independent runtime journeys.
+- Installed semantic session/list reads retain revision **2**, selection, no draft
+  and unchanged history; the bounded resource list is empty. No active-design
+  mutation, enrollment/configuration, listener or service replacement occurred.
+
+This follows the originally owned application admission gate, not a new error
+framework project. Resource alone advances unfinished batches **13→14**; aggregate
+is **25/14/47/21/28/3**, other owners unchanged. No full criterion/task/credit closes
+and the consecutive sequence is retained. Stop admission/diagnostic variants;
+next follow actual native body-arrival cancellation and the remaining real
+transport/cache matrix. Full HTTP freshness/validation/stale/CORS/TLS/redirects/
+compression/media, cache-operation lifetime, physical input, performance and
+authenticated observing rollout retain their original owners.
+
+Final preservation guard passes all **nine** exact accepted/source/draft pairs,
+**15** process identities, **299** sealed files and the unchanged **147,033-byte**
+checkpoint. Installed hash, LAN/loopback bindings and served bytes remain exact.
+Private before/final receipts retain identities/hashes; observing LAN still runs
+its earlier frozen product, without retrying rejected backend-start actions.
+
 ## Current return path: Resource request deadlines — 2026-10-09
 
 Entry is clean at pushed `b4e71fb`. The previous goal turn is progress: actual

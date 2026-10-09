@@ -4,6 +4,18 @@
 [Current work](WORK.md)
 
 
+Current hosted admission (2026-10-09) consumes the original resource failure
+boundary through actual Win32/LCL and HTTP-browser applications. One URL moves
+through 404, malformed JSON, payload-budget refusal, partial typed-field rejection
+and corrected content. The discovered diagnostic gap is repaired with owned
+typed resource/path/kind context; mounted controls, complete accepted catalogs,
+notifications and authored defaults retain their contracts. Passing consumer and
+failure evidence is in [the packet](WORK.md#current-return-path-hosted-resource-admission--2026-10-09).
+Resource alone advances unfinished batches 13→14, aggregate **25/14/47/21/28/3**;
+no full criterion/task/credit closes. Stop admission/diagnostic variants and follow
+actual native body-arrival cancellation and the remaining transport/cache matrix.
+Physical input, performance and authenticated observing rollout retain their owners.
+
 Current request deadlines (2026-10-09) follow a disproved native prerequisite:
 occupied workers postponed expiry notification indefinitely. An independent
 UI-loop timer now arbitrates once-only delivery and cancellation with the worker's
