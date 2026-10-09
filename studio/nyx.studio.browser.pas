@@ -3145,8 +3145,16 @@ begin
               ProjectRequest(npoSave);
               Exit;
             end;
-          'action-export-source': Download(NyxCompanionUnitName(FSession.Source) + '.pas', FSession.Source);
-          'action-export-source-draft': Download('nyx.view.draft.pas', FSession.DraftSource);
+          'action-export-source':
+            begin
+              Download(NyxCompanionUnitName(FSession.Source) + '.pas', FSession.Source);
+              Exit;
+            end;
+          'action-export-source-draft':
+            begin
+              Download('nyx.view.draft.pas', FSession.DraftSource);
+              Exit;
+            end;
           'action-import':
             begin
               FFilesVisible := not FFilesVisible;
@@ -3160,7 +3168,13 @@ begin
               Exit;
             end;
           'action-project-export':
-            Download('project.nyxproject', EncodeNyxProject(FSession.ProjectSnapshot));
+            begin
+              { Export is a copied read. Keep mounted proposal/source controls
+                and presentation queues unchanged; no authored or editor state
+                needs rebuilding after initiating an ordinary host download. }
+              Download('project.nyxproject', EncodeNyxProject(FSession.ProjectSnapshot));
+              Exit;
+            end;
           'action-project-export-files':
             begin
               Download('design.nyx', FSession.Save);
@@ -4126,8 +4140,13 @@ begin
   LAnchor.href := 'data:application/octet-stream;charset=utf-8,' + encodeURIComponent(AText);
   LAnchor.download := AName;
   document.body.appendChild(LAnchor);
-  LAnchor.click;
-  LAnchor.remove;
+  try
+    LAnchor.click;
+  finally
+    { A host or borrowed download observer may refuse. Its exception propagates,
+      but the temporary anchor never becomes an orphaned editor control. }
+    LAnchor.remove;
+  end;
 end;
 
 function TNyxStudio.KeyDown(AEvent: TJSKeyboardEvent): Boolean;

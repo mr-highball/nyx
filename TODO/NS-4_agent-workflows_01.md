@@ -9,7 +9,20 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current resource discovery journey (2026-10-09) authenticates all 22 native Nyx
+Current complete resource discovery closes its original seventh criterion using
+the existing authenticated native semantic metadata/history packet and current
+full ordinary desktop/CSS-390 consumers. Exact source comparison retains the
+native builder; no screenshot-driven demo editing replaces semantic authoring.
+The earlier overall observation timeout did not establish a download deadlock;
+full qualification discloses its corrected overall budget and preserves individual
+operation assertions. This owner's native capture 20-second timeout, general
+project-file import and helper-expression reconciliation remain open. Native MCP
+still authenticates and all nine user contexts remain exact. No workflow counter
+or full criterion closes; resource resets after actual discovery acceptance and
+authoring advances, aggregate 25/0/54/22/28/3. See
+[the packet](../WORK.md#current-return-path-complete-browser-resource-journey--2026-10-09).
+
+Previous resource discovery journey (2026-10-09) authenticates all 22 native Nyx
 handles. An owned English review qualifies bounded category/search/all-any tags,
 grouped metadata edits, exact retry/paired history and both immutable compiler
 jobs without touching the nine retained projects. Native capture hits its

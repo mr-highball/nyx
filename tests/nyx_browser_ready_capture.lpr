@@ -33,6 +33,11 @@ type
     accepting a loaded page alone would hide initialization failures. }
   TNyxReadyCompletion = (nrcFixturePassed, nrcApplicationReady);
 
+const
+  CDefaultFixtureSeconds = 180;
+  CMaximumFixtureSeconds = 600;
+  CFixtureTimeoutPrefix = '--fixture-timeout=';
+
 var
   LHost: TNyxBrowserPipe;
   LMarker: TNyxText;
@@ -44,6 +49,8 @@ var
   LCaptured: Integer;
   LCompletion: TNyxReadyCompletion;
   LExpected: TNyxText;
+  LTimeoutSeconds: Integer;
+  LTimeoutMilliseconds: QWord;
 
 begin
   LHost := nil;
@@ -51,13 +58,15 @@ begin
 
     if (ParamCount < 3) or (ParamCount > 6) then
     begin
-      raise Exception.Create('Supply fixture URL, owned output directory, marker, optional CSS width/height and --application-ready');
+      raise Exception.Create('Supply URL, owned output directory, marker, optional CSS ' +
+        'width/height and --application-ready or --fixture-timeout=<seconds>');
     end;
     LWidth := 1100;
     LHeight := 900;
     LLastCheckpoint := '';
     LCaptured := 0;
     LCompletion := nrcFixturePassed;
+    LTimeoutSeconds := CDefaultFixtureSeconds;
 
     if ParamCount >= 4 then
     begin
@@ -72,11 +81,28 @@ begin
     if ParamCount = 6 then
     begin
 
-      if ParamStr(6) <> '--application-ready' then
+      if ParamStr(6) = '--application-ready' then
       begin
-        raise Exception.Create('Completion option is --application-ready');
+        LCompletion := nrcApplicationReady;
       end;
-      LCompletion := nrcApplicationReady;
+
+      if Copy(ParamStr(6), 1, Length(CFixtureTimeoutPrefix)) = CFixtureTimeoutPrefix then
+      begin
+        { A complete multi-import/history journey can exceed a short fixture's
+          overall budget. This explicit boundary changes only its wall-clock
+          observation deadline, never browser clocks or fixture step assertions. }
+
+        if not TryStrToInt(Copy(ParamStr(6), Length(CFixtureTimeoutPrefix) + 1, MaxInt),
+          LTimeoutSeconds) or (LTimeoutSeconds < 1) or
+          (LTimeoutSeconds > CMaximumFixtureSeconds) then
+        begin
+          raise Exception.Create('Fixture timeout requires 1..600 whole seconds');
+        end;
+      end
+      else if LCompletion <> nrcApplicationReady then
+      begin
+        raise Exception.Create('Completion option is --application-ready or --fixture-timeout=<seconds>');
+      end;
     end;
     LExpected := 'passed';
 
@@ -85,6 +111,7 @@ begin
       LExpected := 'true';
     end;
     LHost := TNyxBrowserPipe.Create(ParamStr(1), ParamStr(2), LWidth, LHeight);
+    LTimeoutMilliseconds := QWord(LTimeoutSeconds) * 1000;
     LStarted := GetTickCount64;
     repeat
       LMarker := LHost.Attribute(TNyxText(ParamStr(3)));
@@ -110,7 +137,8 @@ begin
         LHost.SetAttribute('data-capture-observed', LCheckpoint);
         LLastCheckpoint := LCheckpoint;
         Inc(LCaptured);
-        WriteLn('Observed actual fixture checkpoint / ', LCheckpoint);
+        WriteLn('Observed actual fixture checkpoint / ', LCheckpoint,
+          ' / elapsed milliseconds ', GetTickCount64 - LStarted);
       end;
 
       if LMarker = LExpected then
@@ -118,16 +146,19 @@ begin
         Break;
       end;
 
-      if GetTickCount64 - LStarted > 180000 then
+      if GetTickCount64 - LStarted > LTimeoutMilliseconds then
       begin
         LHost.Capture('timeout');
-        raise Exception.Create('Real-clock fixture did not reach a terminal result within 180 seconds');
+        raise Exception.Create('Real-clock fixture did not reach a terminal result within ' +
+          IntToStr(LTimeoutSeconds) + ' seconds');
       end;
       Sleep(50);
     until False;
     LHost.Capture('capture');
     FreeAndNil(LHost);
-    WriteLn('PASS real-clock browser / ', LWidth, ' x ', LHeight, ' / checkpoints ', LCaptured);
+    WriteLn('PASS real-clock browser / ', LWidth, ' x ', LHeight, ' / checkpoints ', LCaptured,
+      ' / elapsed milliseconds ', GetTickCount64 - LStarted,
+      ' / budget seconds ', LTimeoutSeconds);
   except
     on LException: Exception do
     begin

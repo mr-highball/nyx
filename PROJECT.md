@@ -67,7 +67,20 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Resource discovery reassessment (2026-10-09) uses all 22 authenticated native
+Complete resource discovery (2026-10-09) accepts original resource criterion
+seven for Win32/LCL and pas2js HTTP: shared categories/search/exact tags, portable
+annotations, crafted source/replay, paired history and actual draft/selection
+consumers. Complete desktop/CSS-390 journeys pass 1867/2481 checks including
+polling and seven captures each, retaining exactly the native 5602-byte Pascal.
+Pure browser exports preserve controls without queuing a repaint. [The packet](WORK.md#current-return-path-complete-browser-resource-journey--2026-10-09)
+discloses the corrected 600-second overall harness budget, actual 193140/187953 ms
+and unchanged per-operation assertions; no editor performance is accepted.
+Aggregate is **25/0/54/22/28/3**. Resource criteria one through six, full authoring,
+parity/performance and delivery remain open; no full task/credit closes.
+Nine exact projects and current LAN/native MCP remain retained. Repairs are
+source only; stop discovery variants and audit the remaining original criteria.
+
+Previous resource discovery reassessment (2026-10-09) uses all 22 authenticated native
 MCP handles for an English resource/binding companion, bounded filters and exact
 paired metadata history. Retained resource navigation and waiting details pass
 97 native and 90/90 HTTP desktop/CSS-390 checks; portable labels/source replay

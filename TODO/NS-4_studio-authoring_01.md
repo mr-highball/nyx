@@ -9,7 +9,22 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current discovery reassessment follows criterion two's ordinary source/history
+Current complete resource journey follows criterion two's ordinary source/history
+consumer. Pure browser project/source downloads preserve mounted controls and
+queue no presentation; a temporary anchor retires even when its host refuses.
+Complete desktop/CSS-390 journeys pass 1867/2481 assertions including polling,
+seven captures each and exact native/browser 5602-byte source comparison.
+The overall harness limit is explicitly 600 seconds (193140/187953 ms actual);
+individual 30-second assertions are unchanged. This is functional qualification,
+not accepted gesture performance or hardware/IME/chooser evidence. Resource's
+original criterion seven closes; this owner's complete criterion two and broader
+Resources criterion remain open. Authoring advances unfinished 53→54, aggregate
+25/0/54/22/28/3, without full task/credit closure. Nine exact user contexts and the
+LAN release remain retained. Stop discovery/export variants; audit remaining
+resource requirements before selecting the next complete original outcome.
+See [the packet](../WORK.md#current-return-path-complete-browser-resource-journey--2026-10-09).
+
+Previous discovery reassessment follows criterion two's ordinary source/history
 consumer and the original Resources criterion. Retained New/Open preserves exact
 input construction and private proposal selection; typed existing detail cards
 show the new variant awaiting its reply. Ordinary native workbench passes 298

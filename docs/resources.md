@@ -1082,6 +1082,15 @@ The maintained real-clock browser capture tool accepts `--application-ready`
 after its CSS width/height when observing an application's Boolean ready marker.
 Its default completion remains the assertion fixture's `passed` marker. A loaded
 page or successful compiler job alone does not establish rendered bindings.
+The default overall observation budget is 180 seconds. A complete multi-import
+and history qualification may explicitly pass `--fixture-timeout=600` in that
+same final argument position; the admitted range is 1..600 whole seconds.
+This changes the driver's overall wall-clock deadline, never browser clocks or
+the fixture's individual operation assertions. Record the chosen budget and
+actual elapsed time; a complete functional journey is not a UI latency benchmark.
+Pure project/source downloads preserve mounted editor controls and do not queue
+a presentation rebuild. The current complete consumer and original discovery
+acceptance audit are in [WORK.md](../WORK.md#current-return-path-complete-browser-resource-journey--2026-10-09).
 
 The common Resources area includes `NewNyxResourceRowsEditor`, consumed by both
 ordinary Studio controllers. Open a saved relationship or enter a collection

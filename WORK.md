@@ -7,6 +7,86 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Complete browser resource journey — 2026-10-09
+
+Previous turn is progress: pushed `d927f48` repairs retained resource selection
+and qualifies actual consumers, but the complete browser journey exceeds its
+observation deadline. Entry is clean. Reassessment follows existing NS-4 authoring
+criterion two and the original NS-1 resource-seven acceptance audit; no narrower
+fixture replaces the complete import/edit/filter/export/paired-history journey.
+
+**Diagnosis and change.** One instrumented run preserves the 180-second failure.
+It observes exported project text and settled earlier presentations; a stale
+post-callback pending flag did not establish an export deadlock. The previous
+"export stall" diagnosis was too strong. Pure project/accepted-source/draft
+downloads now return without scheduling a presentation rebuild, and temporary
+anchors retire in a finally block even if a host observer refuses. The actual
+workbench asserts its mounted export control survives and no repaint is queued.
+Current readiness diagnostics and a failure marker before fixture retirement
+distinguish a rejected operation from a cleanup failure.
+
+The general capture tool retains its default 180-second overall deadline. Its
+explicit `--fixture-timeout=<seconds>` boundary admits 1..600 seconds, rejecting
+zero/601 before browser launch. Complete journeys opt into 600; all existing
+30-second operation/import/capture assertions remain unchanged, and browser clocks
+are never accelerated. This is a disclosed overall harness-budget correction,
+not a pass of the earlier 180-second gate or accepted UI performance evidence.
+
+**Complete consumers.** HTTP desktop **1280×960** and CSS-390 **390×844** finish
+the entire maintained journey, with **1867/2481** assertions including polling.
+Seven acknowledged live captures per target cover tags, panes, categories,
+locale proposals, relationship editing, hosted declaration/caller policy and the
+final caption/prompt/table/text canvas. Six representative tag/hosted/canvas
+captures are inspected. Actual elapsed time is **193140/187953 ms** under the
+explicit 600-second overall budgets. These totals include fixture waits, source
+worker work and debugger/capture overhead; they do not measure per-gesture latency.
+Synthetic DOM/FileReader input is reported separately from hardware/IME, physical
+phone, accessibility and trusted chooser qualification.
+
+Both controllers emit exactly the same **5602 bytes** of Pascal, verified by the
+maintained byte-preserving artifact consumer with no normalization/regeneration.
+SHA-256 remains `356a10a38376a25a194a469496e50a59072e705aa316879e27f1ff9f1e890884`.
+That exact builder passes **60** freshly checked native assertions and the
+matching HTTP execution gate.
+Checked native source/artifact consumers and all browser capture drivers report
+zero unfreed blocks. Owned warnings are zero; seven matched pas2js RTL warnings
+per program remain separately attributed. The unchanged native workbench **298**,
+portable labels/source **70/8** on both targets, current delayed observations
+**97/90/90** and authenticated semantic metadata/history packet remain applicable:
+this batch changes the browser controller/download path and test harnesses only.
+
+**Original criterion-seven audit.** The complete supported Win32/LCL and pas2js
+HTTP evidence now accepts the original discovery criterion, without accepting
+the entire resource task or reducing its scope:
+
+| Required clause | Evidence |
+| --- | --- |
+| Dedicated Resources and compact Project picker share categories/search/tags | Ordinary native Browse and complete desktop/CSS-390 Browse use both mounted consumers and copied query state |
+| Multiple exact labels compose with search/categories | Actual Add/Remove, all/any and kind/source/locale filters; portable 70 checks and native MCP comma/case collision queries |
+| Portable annotations, crafted Pascal and managed replay | Labelled embedded/hosted wire, independent sets, Unicode, enclosing preference migration, emitted 8-check labels and exact compiled 60-check workbench builder |
+| Paired history preserves annotations | Actual full Apply/Undo/Redo journeys, portable pending-draft refusal and authenticated exact metadata retry/two Undo/Redo cycles |
+| Stale selection refusal and unfinished-draft preservation on both consumers | Hidden-membership Open refusal, shared selection rollback, exact input retention, incomplete resource/tag/filter text and pane/owner/navigation checks |
+
+Resource criterion **seven closes**; its consecutive no-closure counter resets
+**16→0** only because that original criterion is proven. Criteria one through six
+remain open. The separate authoring copied-export repair advances its unfinished
+counter **53→54**; aggregate is **25/0/54/22/28/3**. No full task, completion credit
+or other criterion closes. Stop discovery/tag/export fixture variants. Next audit
+the remaining original resource criteria against existing evidence and choose the
+next complete prerequisite/consumer outcome; full HTTP/cache/media/security,
+trusted import, source grammar and performance keep their existing owners.
+
+**Ownership and handoff.** An authenticated gate retains all nine exact project
+pairs/history/navigation/drafts/permissions with no active compiler jobs. Native
+MCP is still connected; no user design is replaced and no review is created.
+The exact owned readonly capture host is retired after all three browser owners
+finish. Primary process, checkpoint and frozen 316-file release stay unchanged;
+this repair is source only. Ignored `build/resource-export/` owns the retained
+180-second diagnostic failure, checked capture/argument admission, seven live
+captures per complete target, exact source comparison/compilation, private host
+identity, preservation and remote checkpoint receipts. The complete goal remains
+active; this accepted discovery outcome is one part of it.
+
 ## Current return path: Resource discovery acceptance — 2026-10-09
 
 Entry is clean at pushed `221b6d2`; frozen LAN product `f6d26a5` is retained.

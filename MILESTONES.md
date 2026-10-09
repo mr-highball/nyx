@@ -3,7 +3,23 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current resource discovery reassessment (2026-10-09) authenticates all 22 native
+Current complete resource discovery (2026-10-09) accepts original resource
+criterion seven for Win32/LCL and pas2js HTTP: categories/search/exact tags,
+portable annotations/source/replay, paired history and actual draft/selection
+consumers. Complete desktop/CSS-390 journeys pass 1867/2481 checks including
+polling, seven captures each and exact native/browser 5602-byte source comparison.
+Pure browser exports retain controls and schedule no repaint. [The packet](WORK.md#current-return-path-complete-browser-resource-journey--2026-10-09)
+discloses the 600-second overall budget correction (193140/187953 ms actual),
+unchanged 30-second operation assertions and qualification limits. Resource's
+no-closure counter resets 16→0 only because that original criterion closes;
+authoring's separate copied-export repair advances 53→54, aggregate
+**25/0/54/22/28/3**. No full task/credit closes. Nine user contexts and installed
+LAN/native MCP remain exact. Stop discovery/export variants and audit the
+remaining resource criteria for the next complete prerequisite/consumer outcome.
+Full HTTP/cache/media/security, trusted import, source grammar, performance and
+observing/current-source delivery remain with their original owners.
+
+Previous resource discovery reassessment (2026-10-09) authenticates all 22 native
 MCP handles for an English resource/binding companion and exact paired metadata
 history. Retained navigation/waiting details pass 97 native and 90/90 HTTP checks;
 portable labels/source replay pass on both targets and the full native workbench

@@ -16,7 +16,34 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
-## Discovery acceptance return — 2026-10-09
+## Accepted original discovery criterion seven — 2026-10-09
+
+The complete supported Win32/LCL and pas2js HTTP evidence now accepts the
+original seventh criterion. The dedicated workspace and compact picker share
+typed category/search/source/locale and exact all/any label queries; actual
+controls retain incomplete file/tag/filter proposals and refuse hidden membership.
+Portable 70/8 label/source checks retain Unicode, independent annotations,
+versioned persistence/preferences, managed replay, stale/pending refusal and
+paired history. Authenticated native semantic queries and metadata retry/history
+remain applicable. Current full browser desktop/CSS-390 journeys pass 1867/2481
+checks including polling, with seven live captures each; both emit exactly the
+same 5602-byte Pascal as the unchanged 298-check native journey. The exact builder
+passes a fresh checked native 60 and matching HTTP execution gate.
+
+The previous overall 180-second timeout did not establish a download deadlock.
+The complete runs finish in 193140/187953 ms under a disclosed 600-second overall
+harness budget; unchanged 30-second individual assertions remain required. No
+per-gesture performance, hardware/IME, physical phone or trusted chooser claim
+is inferred. Criteria one through six and the full resource task remain open.
+Resource's consecutive no-closure counter resets 16→0 because criterion seven
+closes; authoring's separate copied-export repair advances 53→54, aggregate
+25/0/54/22/28/3. No task or completion credit closes/transfers. Stop discovery
+variants and audit the remaining original criteria for the next complete outcome.
+The nine user contexts and installed LAN release stay exact; source-only delivery
+and the clause-by-clause audit are in
+[WORK.md](../WORK.md#current-return-path-complete-browser-resource-journey--2026-10-09).
+
+## Previous discovery acceptance return — 2026-10-09
 
 Original criterion seven is reassessed against current ordinary consumers and an
 English companion composed through all 22 authenticated native MCP handles.
@@ -316,6 +343,10 @@ No criterion closes. See
   annotations; both actual target consumers qualify editing/filtering, stale
   selection refusal and unfinished-draft preservation.
 
+Criterion seven is **accepted 2026-10-09** for the qualified Win32/LCL and pas2js
+HTTP consumers above. Criteria one through six remain open; no full task/DONE
+move follows from that single accepted criterion.
+
 ## Authenticated launched producers — 2026-10-08
 
 Criterion 5 now has private exact-build launch grants, status-only typed wire,
@@ -421,9 +452,10 @@ See [current evidence](../WORK.md#current-return-path-joint-live-resource-frames
 - [NS-1_state-collections_01](DONE/NS-1_state-collections_01.md) supplies typed
   independent runtime collections and bindings.
 
-Primary LAN/MCP restoration is qualified in the current work record. Complete
-browser authoring still needs the failed export journey resolved; physical phone,
-trusted chooser and full observing/current-source rollout remain unqualified.
+Primary LAN/MCP restoration and complete discovery consumers are qualified in
+the current work record. Physical phone, trusted chooser and full observing/
+current-source rollout remain unqualified; complete authoring/performance and
+the remaining original resource requirements retain their existing owners.
 This task stays open. The historical launch refusal is retained in the
 [earlier return path](../WORK.md#current-return-path-common-resources-and-direct-bindings--2026-10-07).
 

@@ -47,7 +47,19 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current resource discovery reassessment uses authenticated native MCP for an
+Current complete discovery accepts original resource criterion seven for the
+qualified Win32/LCL and pas2js HTTP consumers. Shared category/search/exact tags,
+portable annotations/source/replay, paired history and actual draft/selection
+journeys pass. Complete desktop/CSS-390 checks are 1867/2481 including polling,
+with seven captures each and exact native/browser Pascal. [The packet](../WORK.md#current-return-path-complete-browser-resource-journey--2026-10-09)
+discloses the corrected overall harness budget and leaves performance unaccepted.
+Resource's no-closure counter resets 16→0; authoring's copied-export repair
+advances 53→54, aggregate 25/0/54/22/28/3. No full task/credit closes and the
+resource task stays open for criteria one through six. Nine user contexts and
+LAN/native MCP remain exact; repairs are source only. Stop discovery variants
+and audit the remaining original criteria for the next complete outcome.
+
+Previous resource discovery reassessment uses authenticated native MCP for an
 English companion, bounded filters and exact paired metadata Undo. The full
 native workbench and both-target labels/source/delayed-observation consumers
 pass; complete browser journeys stop at export. [The packet](../WORK.md#current-return-path-resource-discovery-acceptance--2026-10-09)

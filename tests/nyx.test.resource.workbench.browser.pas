@@ -96,7 +96,8 @@ function Readiness: TNyxText;
 var
   LSection: TNyxStudioSection;
 begin
-  Result := '';
+  Result := 'shell-dispatch=' + BoolToStr(GStudio.ShellView.Dispatching, True) +
+    ' / source-busy=' + BoolToStr(GStudio.SourceBusy, True);
   for LSection := Low(TNyxStudioSection) to High(TNyxStudioSection) do
   begin
 
@@ -158,6 +159,7 @@ begin
   LFace := Find(AID);
   Check(LFace.getBoundingClientRect.height > 0, 'visible ' + AID);
   LFace.scrollIntoView;
+  document.body.setAttribute('data-workbench-await', 'input / ' + AID);
   LFace.click;
   { View retirement is queued beyond borrowed input dispatch. Exercise the
     same commands after that UI turn rather than demanding synchronous DOM
@@ -165,6 +167,14 @@ begin
   LStarted := window.performance.now;
   repeat
     await(TJSPromise.resolve(Pause));
+    { Bounded current-state diagnostics distinguish a borrowed callback that
+      never returned from a deferred paint or failure during fixture retirement.
+      These observations do not invoke commands or change application state. }
+    document.body.setAttribute('data-workbench-await', 'presentation / ' + AID);
+    document.body.setAttribute('data-workbench-readiness', Readiness);
+    document.body.setAttribute('data-workbench-presentation',
+      BoolToStr(GStudio.PresentationPending, True));
+    document.body.setAttribute('data-workbench-export-code-units', IntToStr(Length(GExport)));
     Check(window.performance.now - LStarted < 30000,
       'queued presentation remains bounded' + Readiness);
   until not GStudio.PresentationPending;
@@ -266,10 +276,16 @@ begin
 end;
 
 function Snapshot: TNyxText; async;
+var
+  LCommand: TJSHTMLElement;
 begin
   await(Files);
   GExport := '';
+  LCommand := Find('action-project-export');
   await(Click('action-project-export'));
+  Check((Find('action-project-export') = LCommand) and
+    (document.body.getAttribute('data-workbench-refresh-pending') = 'False'),
+    'a copied project export retains its control and schedules no presentation');
   Check(GExport <> '', 'ordinary backup exposes the complete paired state');
   Result := EncodeNyxProject(DecodeNyxProject(GExport));
   await(Panel('inspector'));
@@ -1024,12 +1040,14 @@ begin
       { Retain the last ordinary backup for diagnosis before removing views.
         This is the isolated test project, never an observing user's document. }
       document.body.setAttribute('data-workbench-last-pair', encodeURIComponent(GExport));
+      { Publish the failed acceptance result before retirement. A second failure
+        while retiring a test host must not turn the first refusal into a timeout. }
+      document.body.setAttribute('data-event-error', LException.Message);
+      document.body.setAttribute('data-test-result', 'failed');
       window.removeEventListener('error', @RuntimeFailure);
       document.removeEventListener('click', @Exported);
       FreeAndNil(GStudio);
       FreeAndNil(GInputObserver);
-      document.body.setAttribute('data-event-error', LException.Message);
-      document.body.setAttribute('data-test-result', 'failed');
     end;
   end;
 end;
