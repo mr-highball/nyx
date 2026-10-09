@@ -67,7 +67,18 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Current immutable-resource audit (2026-10-09) follows the remaining original
+Current immutable-resource acceptance (2026-10-09) closes original criterion one:
+complete native/HTTP gates pass 70/70 at unchanged capacities and command deadlines.
+Canonical immutable entries and an owned Pascal browser string formatter remove
+repeated serialization. Complete JSON/value checks pass 114/114; exact source,
+history and actual control regressions pass. [The packet](WORK.md#current-return-path-resource-capacity-and-immutable-acceptance--2026-10-09)
+retains all failures, including the broader browser core navigation timeout.
+One and discovery seven are accepted; two through six and full performance remain
+open. Resource resets unfinished 1→0, aggregate **25/0/54/22/28/3**; no full
+task/credit closes. Next audit complete resource source/build/history criterion
+two. Nine contexts, LAN release and native MCP remain exact; repairs are source only.
+
+Previous immutable-resource audit (2026-10-09) follows the remaining original
 criterion one. Checked native contracts pass 70; HTTP pas2js completes 63 before
 the full unchanged capacity group exceeds the debugger's command deadline.
 [The packet](WORK.md#current-return-path-immutable-resource-acceptance--2026-10-09)

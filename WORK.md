@@ -7,6 +7,90 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Resource capacity and immutable acceptance — 2026-10-09
+
+Entry is pushed `d62a366`, with original resource criterion one open after one
+unfinished batch. The user's dedicated Resources/category/user-tag direction
+remains accepted under seven. This batch follows the same full immutable gate and
+NS-3's existing cost owner: one operation trace, an evidence-backed repair and the
+unchanged capacities/deadlines, then affected value/history/control consumers.
+
+**Diagnosis and repair.** Opt-in bounded debugger console packets locate the
+first large registry insert at 6603 ms. Catalog admission repeatedly serializes
+previous entries and normalizes already immutable built-in definitions. Entries
+now retain independently admitted canonical data and their original byte charge;
+foreign implementations still cross strict normalization. Clone copies private
+entry snapshots; no caller containers, document or mutable membership are shared.
+Wire order, schemas, GUIDs and all budgets remain unchanged.
+
+Caching and ASCII scalar fast paths alone still exceed the command deadline;
+their failures remain retained. The matched generated RTL string formatter creates
+a character set at every character. An owned Pascal run formatter now preserves
+its exact escape spelling and strict solidus preference without those allocations.
+Browser decoded strings and their clones use it; native uses matched fpjson.
+ASCII byte accounting avoids scalar bridges, while high units retain the strict
+decoder and complete UTF-8 budgets. No dependency source is patched. The final
+traced first insert is 189 ms; these single-run operation observations do not
+establish a general speedup, UI latency or accepted NS-3 performance budget.
+
+**Complete verdict and regressions.** Checked FPC 3.3.1/i386-win32 and actual HTTP
+pas2js use matched runtime bytes. The default maintained foundation gate passes
+all **70/70** assertions, including the unchanged one-MiB file, 512/4096-byte
+metadata, 128-entry and three-MiB catalog boundaries. The ordinary complete HTTP
+journey finishes in **6906 ms**, traced in 6266 ms; the 15-second debugger command
+and default 180-second overall deadlines stay unchanged.
+
+| Changed-boundary consumer | Native | HTTP browser |
+| --- | --- | --- |
+| Complete immutable resource ownership/admission/capacity | 70 | 70 |
+| Complete strict JSON and structured-value suites | 114 | 114 |
+| Labels, persistence, source replay and paired history | 70 | 70 |
+| Exact emitted label builder | 8 | 8 |
+| Actual caption/prompt/table resource controls | 124 | 119 |
+| Exact emitted resource builder | 8 | 8 |
+| Broad core and composition/designer runner | 30 + 1813 | Navigation deadline; not accepted |
+
+The maintained data-read gate now runs the existing complete JSON/value suites
+before separate untraced samples. Four new compatibility assertions cover every
+control character, raw supplementary/BMP text, both escape policies and a clone
+after its original value retires. The focused 114-check HTTP gate finishes in
+5797 ms with unchanged suite inputs/budgets. Exact read samples also pass on both
+targets; checksum differences reflect documented UTF-8/UTF-16 storage units.
+They do not substitute for the retained broad browser core navigation failure.
+Existing NS-3 cost ownership retains that remaining complete-run gap.
+
+Current backend, both Studios and browser source worker rebuild. Checked native
+and debugger owners report zero unfreed blocks; owned warnings are zero, with
+seven matched pas2js RTL warnings per program separately attributed. Inspected
+native control evidence shows the bound English caption and rows. The final
+browser control capture is blank after deliberate fixture retirement; assertions
+qualify its earlier live controls, not visual parity or physical/IME input.
+
+**Original criterion-one audit.** Exact binary/text/PNG bytes, JSON numeric tokens,
+Unicode/NUL/line endings and creator annotations survive independent definition,
+catalog/context lifetimes. Mutable foreign producers normalize before admission.
+Malformed Unicode/JSON/wire, decoded-key collisions, unsupported/checksum-damaged
+image containers, late duplicate/malformed catalogs and over-budget replacements
+refuse atomically. Full positive capacities and order-preserving replacement now
+pass on both targets. Portable image container admission remains distinct from
+pixel decoding/media qualification under the existing component/renderer owners.
+Original criterion **one closes**; seven remains accepted. Criteria two through
+six remain open; no full task, completion credit or percentage closes. Resource's
+unfinished count resets **1→0**, aggregate **25/0/54/22/28/3**. Stop capacity/trace
+variants. Next audit original criterion two's complete full/page/reusable source,
+candidate admission and paired history against existing integrated evidence.
+
+**Preservation and handoff.** Authenticated preflight retains all nine exact project
+pairs/history/navigation/drafts/permissions, no active jobs and 22 tools. Native
+MCP session and bounded resource reads authenticate at revision two without edits.
+Primary identity, complete checkpoint and frozen 316-file release stay exact;
+these repairs are source only. The foreground readonly capture host is retired
+through its verified owned handle after all consumers finish. Ignored
+`build/resource-capacity/` owns baseline/intermediate failures, opt-in traces,
+complete default receipts, exact builders, inspected captures, caller rebuilds,
+private identities/preservation and remote checkpoint receipts. The full goal
+remains active; this is acceptance of one original prerequisite criterion.
+
 ## Current return path: Immutable resource acceptance — 2026-10-09
 
 The user's dedicated-space/category/creator-tag decision remains accepted under

@@ -2433,6 +2433,16 @@ try {
     $nyxDataReadNative = Join-Path $nyxDataReadRoot 'native'
     $nyxDataReadBrowser = Join-Path $nyxDataReadRoot 'browser'
     New-Item -ItemType Directory -Force $nyxDataReadNative, $nyxDataReadBrowser | Out-Null
+    # Qualify complete strict JSON/value suites before taking read samples. Their
+    # checked ownership run is separate from the untraced wall-clock workload.
+    Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-O2', '-Sa', '-Cr', '-Co', '-Ci',
+      '-gl', '-gh', '-Fusrc', '-Fustudio', '-Futests', "-FU$nyxDataReadNative",
+      "-FE$nyxDataReadNative", 'tests/nyx_json_value_tests.lpr')
+    & (Join-Path $nyxDataReadNative 'nyx_json_value_tests.exe')
+
+    if ($LASTEXITCODE -ne 0) {
+      throw 'Strict JSON and structured-value qualification failed'
+    }
     Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-O2', '-Sa', '-Cr', '-Co', '-Ci',
       '-Fusrc', "-FU$nyxDataReadNative", "-FE$nyxDataReadNative",
       'tools/nyx_data_read_bench.lpr')
@@ -2444,9 +2454,14 @@ try {
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
+      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxDataReadBrowser",
+      'tests/nyx_json_value_tests.lpr')
+    Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
       '-Fusrc', "-FE$nyxDataReadBrowser", 'tools/nyx_data_read_bench.lpr')
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxDataReadBrowser 'rtl.js')
     Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/data-read.html') `
+      -Destination $nyxDataReadBrowser
+    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/json-values.html') `
       -Destination $nyxDataReadBrowser
     Write-Host 'Native read sample completed; browser sample staged without execution.'
     exit 0

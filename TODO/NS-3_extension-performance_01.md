@@ -9,7 +9,18 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current immutable-resource audit (2026-10-09) follows original resource criterion
+Current immutable-resource repair (2026-10-09) finishes the same complete 70/70
+native/HTTP gate at unchanged capacities/deadlines. Canonical admitted entries
+and an owned Pascal browser string formatter remove redundant serialization;
+single traced first-insert observations change from 6603 to 189 ms. This accepts
+original resource criterion one, not a general speedup or any NS-3 performance
+criterion/counter/credit. Complete JSON/value suites pass 114/114; broader browser
+core navigation still fails and retains existing measured-cost ownership. Stop
+capacity/trace variants and audit resource source/build/history next. Failures,
+unchanged user contexts and precise limits are in
+[the packet](../WORK.md#current-return-path-resource-capacity-and-immutable-acceptance--2026-10-09).
+
+Previous immutable-resource audit (2026-10-09) follows original resource criterion
 one and this task's measured-cost criteria 2/3. Checked native contracts pass 70;
 HTTP pas2js completes 63 ownership/admission assertions, then its unchanged full
 capacity group exceeds the existing 15-second debugger attribute deadline. Phase

@@ -74,6 +74,12 @@ type
     FWaiting: Boolean;
     FLoaded: Boolean;
     FBody: Integer;
+    {$ifdef NYX_BROWSER_CONSOLE_TRACE}
+    { Opt-in qualification receipts retain at most 64 complete console packets.
+      They stay private in the owned capture directory; ordinary hosts do not
+      collect application text. No script evaluation or document edit occurs. }
+    FConsolePackets: Integer;
+    {$endif}
     procedure DrainDiagnostics;
     function ReadPacket(out APacket: TNyxDataValue): Boolean;
     procedure Send(const ABytes: RawByteString);
@@ -426,6 +432,15 @@ begin
         FRuntimeError := APacket.ToJSON;
         Save('runtime-error.json', FRuntimeError);
       end;
+      {$ifdef NYX_BROWSER_CONSOLE_TRACE}
+
+      if (APacket.Field('method').AsText = 'Runtime.consoleAPICalled') and
+        (FConsolePackets < 64) then
+      begin
+        Inc(FConsolePackets);
+        Save('console-' + IntToStr(FConsolePackets) + '.json', APacket.ToJSON);
+      end;
+      {$endif}
     end;
     Result := True;
   end;

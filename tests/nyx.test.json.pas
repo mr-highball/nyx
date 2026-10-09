@@ -82,8 +82,55 @@ var
   LIndex: Integer;
   LText: TNyxText;
   LParts: TNyxStrings;
+  LString: TJSONString;
+  LClone: TJSONData;
+  LStrict: Boolean;
 begin
   Result := 0;
+  { Preserve fpjson's established wire spelling across all control characters,
+    mixed raw Unicode and both solidus policies. A decoded/cloned tree must use
+    the same public formatter without retaining its original reader. }
+  LParts := TNyxStrings.Create;
+  try
+    for LIndex := 0 to 31 do
+    begin
+      LParts.Add(NyxScalarText(LIndex));
+    end;
+    LText := LParts.Join + ' " / \ English 🌙 €';
+  finally
+    LParts.Free;
+  end;
+  LString := TJSONString.Create(LText);
+  LStrict := TJSONString.StrictEscaping;
+  try
+    TJSONString.StrictEscaping := False;
+    LExpected := LString.AsJSON;
+    Check(EncodeNyxJSONString(LText) = LExpected,
+      'run formatter retains existing ordinary escape spelling', Result);
+    LData := DecodeNyxJSON(LExpected);
+    try
+      Check((LData.AsString = LText) and (LData.AsJSON = LExpected),
+        'decoded string retains exact raw and escaped text', Result);
+      LClone := LData.Clone;
+      try
+        LData.Free;
+        LData := nil;
+        Check((LClone.AsString = LText) and (LClone.AsJSON = LExpected),
+          'decoded clone retains exact formatter and independent lifetime', Result);
+        TJSONString.StrictEscaping := True;
+        Check((EncodeNyxJSONString(LText, True) = LString.AsJSON) and
+          (LClone.AsJSON = LString.AsJSON),
+          'explicit and tree strict escaping retain fpjson spelling', Result);
+      finally
+        LClone.Free;
+      end;
+    finally
+      LData.Free;
+    end;
+  finally
+    TJSONString.StrictEscaping := LStrict;
+    LString.Free;
+  end;
   LData := DecodeNyxJSON(
     '"quote\" slash\/ path\\ tab\t line\n null\u0000 moon\ud83c\udf19"');
   try

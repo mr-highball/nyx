@@ -177,8 +177,9 @@ type
   end;
 
   { Document-owned registry of immutable definitions, including optional locale
-    variants. Foreign definitions are normalized at Define. Replacements retain
-    order and admit byte/catalog budgets before mutation. Clone owns independent
+    variants. Built-in immutable definitions may be shared; foreign definitions
+    are normalized at Define. Replacements retain order and admit byte/catalog
+    budgets and canonical entry data before mutation. Clone owns independent
     membership; retained definitions/registries have no cycle back to a document.
     Exact locale, explicit fallback, then the unlocalized default is the lookup
     order. Missing resources refuse; they are never substituted with empty data. }
@@ -337,11 +338,17 @@ type
     function Tagged(const ALabel: TNyxResourceLabelRef): INyxResourceDiscovery;
   end;
   { Owned entries use classes because pas2js cannot put managed interfaces in a
-    record. Cloning allocates fresh entries and shares only immutable content. }
+    record. Canonical wire data and its original definition/name byte charge are
+    admitted once beside immutable content, before membership publication. Budget
+    checks must not reformat every other payload, and ToData must not reconstruct
+    already admitted entries. Clone copies the private snapshot/index and shares
+    only immutable definition/text values, never caller containers or a document. }
   TResourceEntry = class
     Reference: TNyxResourceRef;
     Locale: TNyxLocaleRef;
     Definition: INyxResourceDefinition;
+    Data: TNyxDataValue;
+    WireBytes: Integer;
   end;
   TResources = class(TInterfacedObject, INyxResources)
   private
@@ -1130,6 +1137,9 @@ var
   LIndex: Integer;
   LTarget: Integer;
   LBytes: Integer;
+  LDefinitionData: TNyxDataValue;
+  LEntryData: TNyxDataValue;
+  LEntryBytes: Integer;
 begin
 
   if ADefinition = nil then
@@ -1137,22 +1147,35 @@ begin
     raise ENyxResource.Create('Resource definition is required');
   end;
   LTarget := IndexOf(AReference, ALocale);
-  LDefinition := NyxResourceFromData(ADefinition.ToData);
+  { The private built-in class publishes only fully admitted immutable values.
+    Re-decoding its complete payload adds no admission evidence. Alternative
+    implementations still cross the strict wire boundary once, which prevents
+    their later changes from reaching this catalog. No public GUID/capability
+    alone grants this optimization. }
+
+  if ADefinition is TResource then
+  begin
+    LDefinition := ADefinition;
+  end
+  else
+  begin
+    LDefinition := NyxResourceFromData(ADefinition.ToData);
+  end;
 
   if (LTarget < 0) and (Length(FEntries) >= NyxMaximumResources) then
   begin
     raise ENyxResource.Create('Resource catalog exceeds 128 entries');
   end;
-  LBytes := NyxUTF8ByteCount(LDefinition.ToData.ToJSON) +
+  LDefinitionData := LDefinition.ToData;
+  LEntryBytes := NyxUTF8ByteCount(LDefinitionData.ToJSON) +
     NyxUTF8ByteCount(AReference.Name) + NyxUTF8ByteCount(ALocale.Name);
+  LBytes := LEntryBytes;
   for LIndex := 0 to High(FEntries) do
   begin
 
     if LIndex <> LTarget then
     begin
-      Inc(LBytes, NyxUTF8ByteCount(FEntries[LIndex].Definition.ToData.ToJSON) +
-        NyxUTF8ByteCount(FEntries[LIndex].Reference.Name) +
-        NyxUTF8ByteCount(FEntries[LIndex].Locale.Name));
+      Inc(LBytes, FEntries[LIndex].WireBytes);
     end;
   end;
 
@@ -1160,6 +1183,13 @@ begin
   begin
     raise ENyxResource.Create('Resource catalog exceeds its packed wire budget');
   end;
+  { Retain the exact existing name/locale/definition field order. Constructing
+    this independent snapshot can fail, so finish it before touching the target
+    entry. The byte charge above keeps its historical definition/name meaning. }
+  LEntryData := NyxObject([
+    NyxField('name', NyxData(AReference.Name)),
+    NyxField('locale', NyxData(ALocale.Name)),
+    NyxField('definition', LDefinitionData)]);
 
   if LTarget < 0 then
   begin
@@ -1170,6 +1200,8 @@ begin
   FEntries[LTarget].Reference := AReference;
   FEntries[LTarget].Locale := ALocale;
   FEntries[LTarget].Definition := LDefinition;
+  FEntries[LTarget].Data := LEntryData;
+  FEntries[LTarget].WireBytes := LEntryBytes;
   Result := Self;
 end;
 
@@ -1286,6 +1318,8 @@ begin
     LCopy.FEntries[LIndex].Reference := FEntries[LIndex].Reference;
     LCopy.FEntries[LIndex].Locale := FEntries[LIndex].Locale;
     LCopy.FEntries[LIndex].Definition := FEntries[LIndex].Definition;
+    LCopy.FEntries[LIndex].Data := FEntries[LIndex].Data.Copy;
+    LCopy.FEntries[LIndex].WireBytes := FEntries[LIndex].WireBytes;
   end;
 end;
 
@@ -1297,10 +1331,7 @@ begin
   SetLength(LEntries, Length(FEntries));
   for LIndex := 0 to High(FEntries) do
   begin
-    LEntries[LIndex] := NyxObject([
-      NyxField('name', NyxData(FEntries[LIndex].Reference.Name)),
-      NyxField('locale', NyxData(FEntries[LIndex].Locale.Name)),
-      NyxField('definition', FEntries[LIndex].Definition.ToData)]);
+    LEntries[LIndex] := FEntries[LIndex].Data.Copy;
   end;
   Result := NyxObject([NyxField('version', NyxData(1)),
     NyxField('entries', NyxArray(LEntries))]);

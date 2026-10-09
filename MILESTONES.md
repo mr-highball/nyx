@@ -3,7 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current immutable-resource audit (2026-10-09) follows original resource criterion
+Current immutable-resource acceptance (2026-10-09) closes original resource
+criterion one at unchanged file/metadata/catalog limits and debugger deadlines.
+Complete checked native/HTTP gates pass 70/70, JSON/value suites 114/114, and
+source/history/live-control regressions pass. [The packet](WORK.md#current-return-path-resource-capacity-and-immutable-acceptance--2026-10-09)
+records canonical entry/owned Pascal formatter repairs and retained failures,
+including broad browser core navigation. One and seven are accepted; two through
+six, full parity/performance and delivery stay open. Resource resets unfinished
+1→0, aggregate **25/0/54/22/28/3**; no full task/credit closes. Stop capacity
+variants and audit criterion two's complete source/build/history outcome next.
+Nine contexts, native MCP and installed LAN product remain exact; source only.
+
+Previous immutable-resource audit (2026-10-09) follows original resource criterion
 one: native public contracts pass 70; actual HTTP pas2js completes 63 ownership/
 admission assertions before the unchanged capacity group exceeds the debugger's
 15-second command deadline. [The packet](WORK.md#current-return-path-immutable-resource-acceptance--2026-10-09)

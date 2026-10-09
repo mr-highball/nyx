@@ -225,27 +225,35 @@ begin
   LIndex := 1;
   while LIndex <= Length(AText) do
   begin
+    { ASCII contributes exactly one UTF-8 byte on both targets. Avoid creating
+      per-scalar var/out bridges for long Base64/JSON runs in pas2js; every high
+      code unit still crosses the unchanged strict Unicode-scalar admission. }
 
-    if not NyxNextScalar(AText, LIndex, LScalar) then
+    if Ord(AText[LIndex]) <= $7f then
     begin
-      raise ENyxBytes.Create('Resource text contains malformed Unicode');
-    end;
-
-    if LScalar < $80 then
-    begin
+      Inc(LIndex);
       Inc(Result);
-    end
-    else if LScalar < $800 then
-    begin
-      Inc(Result, 2);
-    end
-    else if LScalar < $10000 then
-    begin
-      Inc(Result, 3);
     end
     else
     begin
-      Inc(Result, 4);
+
+      if not NyxNextScalar(AText, LIndex, LScalar) then
+      begin
+        raise ENyxBytes.Create('Resource text contains malformed Unicode');
+      end;
+
+      if LScalar < $800 then
+      begin
+        Inc(Result, 2);
+      end
+      else if LScalar < $10000 then
+      begin
+        Inc(Result, 3);
+      end
+      else
+      begin
+        Inc(Result, 4);
+      end;
     end;
   end;
 end;

@@ -55,8 +55,17 @@ type
 
   An owned decoder is required because the older native JSON scanner drops
   escaped U+0000 and browser JSON.parse silently collapses duplicate keys.
-  fpjson still provides standard data containers and serialization. }
+  fpjson still provides standard data containers and numeric/container formatting. }
 function DecodeNyxJSON(const ASource: TNyxText): TJSONData;
+
+{ Quote one text value using the existing fpjson wire spelling, including short
+  control escapes and uppercase hexadecimal escapes. Strict additionally escapes
+  the solidus. Raw Unicode/storage units are retained, never normalized; this is
+  formatting, not admission. DecodeNyxJSON still validates the complete result.
+  Browser formatting copies ordinary runs without allocating a character set for
+  every character. Native formatting keeps the matched fpjson implementation. }
+function EncodeNyxJSONString(const AText: TNyxText;
+  AStrict: Boolean = False): TNyxText;
 
 implementation
 
@@ -64,6 +73,18 @@ uses
   nyx.state;
 
 type
+  {$ifdef PAS2JS}
+  { Keep standard fpjson ownership/setters, but use the run-based formatter for
+    decoded strings. Clone must retain that formatter; no tree/reader is retained
+    by a value. The inherited class-wide StrictEscaping preference still applies. }
+  TNyxJSONString = class(TJSONString)
+  protected
+    function GetAsJSON: TJSONStringType; override;
+  public
+    function Clone: TJSONData; override;
+  end;
+  {$endif}
+
   { fpjson still provides number conversion and standard object/array ownership.
     Preserve the admitted spelling until an explicit fpjson setter/clear;
     caller writes use fpjson's normal formatter, even for the same Double.
@@ -110,6 +131,95 @@ type
     constructor Create(const ASource: TNyxText);
     function Read: TJSONData;
   end;
+
+function EncodeNyxJSONString(const AText: TNyxText;
+  AStrict: Boolean): TNyxText;
+{$ifdef PAS2JS}
+var
+  LParts: TNyxStrings;
+  LIndex: Integer;
+  LStart: Integer;
+  LChar: Char;
+  LEscape: TNyxText;
+{$endif}
+begin
+  {$ifdef PAS2JS}
+  LParts := TNyxStrings.Create;
+  try
+    LParts.Add('"');
+    LStart := 1;
+    for LIndex := 1 to Length(AText) do
+    begin
+      LChar := AText[LIndex];
+
+      if (Ord(LChar) < 32) or (LChar = '"') or (LChar = '\') or
+        (AStrict and (LChar = '/')) then
+      begin
+        LParts.Add(Copy(AText, LStart, LIndex - LStart));
+        case LChar of
+          '"':
+            begin
+              LEscape := '\"';
+            end;
+          '\':
+            begin
+              LEscape := '\\';
+            end;
+          '/':
+            begin
+              LEscape := '\/';
+            end;
+          #8:
+            begin
+              LEscape := '\b';
+            end;
+          #9:
+            begin
+              LEscape := '\t';
+            end;
+          #10:
+            begin
+              LEscape := '\n';
+            end;
+          #12:
+            begin
+              LEscape := '\f';
+            end;
+          #13:
+            begin
+              LEscape := '\r';
+            end;
+          else
+            begin
+              LEscape := '\u' + IntToHex(Ord(LChar), 4);
+            end;
+        end;
+        LParts.Add(LEscape);
+        LStart := LIndex + 1;
+      end;
+    end;
+    LParts.Add(Copy(AText, LStart, Length(AText) - LStart + 1));
+    LParts.Add('"');
+    Result := LParts.Join;
+  finally
+    LParts.Free;
+  end;
+  {$else}
+  Result := '"' + StringToJSONString(TJSONStringType(AText), AStrict) + '"';
+  {$endif}
+end;
+
+{$ifdef PAS2JS}
+function TNyxJSONString.GetAsJSON: TJSONStringType;
+begin
+  Result := EncodeNyxJSONString(AsString, StrictEscaping);
+end;
+
+function TNyxJSONString.Clone: TJSONData;
+begin
+  Result := TNyxJSONString.Create(AsString);
+end;
+{$endif}
 
 constructor TNyxJSONDecimalNumber.Create(const ADecimal: TNyxText; AParsed: Double);
 begin
@@ -229,27 +339,35 @@ begin
   LBytes := 0;
   while LIndex <= Length(ASource) do
   begin
+    { Count ordinary ASCII without a scalar call/bridge for every source unit.
+      Non-ASCII still uses exactly the strict decoder, and the complete UTF-8
+      byte budget remains checked before the reader can publish any JSON tree. }
 
-    if not NyxNextScalar(ASource, LIndex, LScalar) then
+    if Ord(ASource[LIndex]) <= $7f then
     begin
-      raise ENyxJSON.Create('JSON contains malformed Unicode');
-    end;
-
-    if LScalar <= $7f then
-    begin
+      Inc(LIndex);
       Inc(LBytes);
-    end
-    else if LScalar <= $7ff then
-    begin
-      Inc(LBytes, 2);
-    end
-    else if LScalar <= $ffff then
-    begin
-      Inc(LBytes, 3);
     end
     else
     begin
-      Inc(LBytes, 4);
+
+      if not NyxNextScalar(ASource, LIndex, LScalar) then
+      begin
+        raise ENyxJSON.Create('JSON contains malformed Unicode');
+      end;
+
+      if LScalar <= $7ff then
+      begin
+        Inc(LBytes, 2);
+      end
+      else if LScalar <= $ffff then
+      begin
+        Inc(LBytes, 3);
+      end
+      else
+      begin
+        Inc(LBytes, 4);
+      end;
     end;
 
     if LBytes > NyxMaximumJSONBytes then
@@ -583,7 +701,11 @@ begin
       end;
     '"':
       begin
+        {$ifdef PAS2JS}
+        Result := TNyxJSONString.Create(ReadString);
+        {$else}
         Result := TJSONString.Create(ReadString);
+        {$endif}
       end;
     '-', '0'..'9':
       begin

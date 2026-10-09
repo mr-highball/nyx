@@ -22,7 +22,10 @@ Text retains Unicode scalars, NUL and line endings. JSON preserves original file
 bytes and decimal spelling; read `.AsDecimal.Text` for exact numeric tokens.
 Requesting an approximate number is a deliberate typed projection. Foreign
 definitions are normalized through their strict wire at registry admission, so
-later producer changes cannot alter accepted content. Invalid replacements and
+later producer changes cannot alter accepted content. Private built-in immutable
+definitions may be shared; admitted entries retain independent canonical data and
+their original budget charge, avoiding repeated serialization of other files.
+Invalid replacements and
 late malformed/conflicting catalog entries refuse before publishing a candidate.
 
 The portable file limit is one MiB. Creator titles/help allow 512/4096 UTF-8 bytes,
@@ -35,10 +38,15 @@ decoding and actual control rendering.
 `tools/build.ps1 -Target resource-foundation` runs the checked native contract gate
 and stages its HTTP counterpart. The existing Pascal ready-capture driver owns the
 three acknowledged checkpoints; the page waits for those observations. Current
-native evidence passes 70 assertions, while HTTP completes 63 before the full
-capacity group exceeds the driver's unchanged command deadline. This leaves full
-immutable-resource acceptance and capacity cost open; detailed receipts and the
-next exact-operation repair belong to [WORK](../WORK.md#current-return-path-immutable-resource-acceptance--2026-10-09).
+native and HTTP evidence passes all 70 assertions at unchanged capacities and
+command deadlines. The owned Pascal browser JSON string formatter retains exact
+escape spelling while copying ordinary runs. `tools/build.ps1 -Target data-read`
+also runs/stages complete strict JSON and structured-value suites before its
+separate read samples; `json-values.html` uses acknowledged whole-suite checkpoints.
+Original immutable resource criterion one is accepted. Full binding/source/hosted
+work and general performance retain their existing owners. Detailed receipts,
+including the broader browser core navigation failure, belong to
+[WORK](../WORK.md#current-return-path-resource-capacity-and-immutable-acceptance--2026-10-09).
 
 ## Captions and prompts
 

@@ -185,15 +185,8 @@ const
   CExtensionReferenceMarker = 'nyx.extension';
 
 function QuoteJSON(const AText: TNyxText): TNyxText;
-var
-  LString: TJSONString;
 begin
-  LString := TJSONString.Create(AText);
-  try
-    Result := LString.AsJSON;
-  finally
-    LString.Free;
-  end;
+  Result := EncodeNyxJSONString(AText, TJSONString.StrictEscaping);
 end;
 
 class function TNyxDataValue.ParseJSON(const ASource: TNyxText): TNyxDataValue;
@@ -332,27 +325,35 @@ begin
     LBytes := 0;
     while Result.FReadBudget and (LIndex <= Length(Result.FJSON)) do
     begin
+      { Repeated large resource envelopes are mostly ASCII. Count those units
+        directly instead of allocating scalar var/out bridges; high units retain
+        strict Unicode checks and the same formatted UTF-8 read-budget refusal. }
 
-      if not NyxNextScalar(Result.FJSON, LIndex, LScalar) then
+      if Ord(Result.FJSON[LIndex]) <= $7f then
       begin
-        raise ENyxJSON.Create('Snapshot formatter emitted malformed Unicode');
-      end;
-
-      if LScalar <= $7f then
-      begin
+        Inc(LIndex);
         Inc(LBytes);
-      end
-      else if LScalar <= $7ff then
-      begin
-        Inc(LBytes, 2);
-      end
-      else if LScalar <= $ffff then
-      begin
-        Inc(LBytes, 3);
       end
       else
       begin
-        Inc(LBytes, 4);
+
+        if not NyxNextScalar(Result.FJSON, LIndex, LScalar) then
+        begin
+          raise ENyxJSON.Create('Snapshot formatter emitted malformed Unicode');
+        end;
+
+        if LScalar <= $7ff then
+        begin
+          Inc(LBytes, 2);
+        end
+        else if LScalar <= $ffff then
+        begin
+          Inc(LBytes, 3);
+        end
+        else
+        begin
+          Inc(LBytes, 4);
+        end;
       end;
       Result.FReadBudget := LBytes <= NyxMaximumJSONBytes;
     end;

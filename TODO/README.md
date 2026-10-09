@@ -47,7 +47,19 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current immutable-resource audit follows original resource criterion one. Native
+Current immutable-resource acceptance closes original resource criterion one.
+Complete checked native/HTTP gates pass 70/70 at unchanged capacities/deadlines,
+JSON/value suites pass 114/114, and exact source/history/live-control regressions
+pass. [The packet](../WORK.md#current-return-path-resource-capacity-and-immutable-acceptance--2026-10-09)
+retains failures, including broad browser core navigation, and nine exact user
+contexts. Canonical entries and an owned Pascal browser formatter repair repeated
+serialization without dependency patches. One and seven are accepted; two through
+six stay open. Resource resets unfinished 1→0, aggregate 25/0/54/22/28/3; no full
+task/credit closes. Stop capacity variants; next audit complete resource source,
+full/page/reusable builds and paired history under original criterion two.
+LAN release/native MCP remain exact; current repairs are source only.
+
+Previous immutable-resource audit follows original resource criterion one. Native
 public contracts pass 70; actual HTTP pas2js completes 63 ownership/admission
 checks before the unchanged full capacity group exceeds the debugger's 15-second
 command deadline. [The packet](../WORK.md#current-return-path-immutable-resource-acceptance--2026-10-09)

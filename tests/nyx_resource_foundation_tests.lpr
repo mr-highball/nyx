@@ -66,6 +66,29 @@ type
 var
   GChecks: Integer;
   GPhase: Integer;
+  {$ifdef NYX_RESOURCE_CAPACITY_TRACE}
+  GCapacityStarted: Double;
+  {$endif}
+
+{ An opt-in real-clock trace surrounds the original capacity operations without
+  splitting execution, changing data/assertions or relaxing the driver's bound.
+  Console packets can be observed while the main thread owes a DOM response. }
+procedure CapacityStep(const AName: TNyxText);
+{$ifdef NYX_RESOURCE_CAPACITY_TRACE}
+var
+  LNow: Double;
+{$endif}
+begin
+  {$ifdef NYX_RESOURCE_CAPACITY_TRACE}
+  {$ifdef PAS2JS}
+  LNow := window.performance.now;
+  {$else}
+  LNow := GetTickCount64;
+  {$endif}
+  WriteLn('nyx-capacity / ', AName, ' / milliseconds ', Round(LNow - GCapacityStarted));
+  GCapacityStarted := LNow;
+  {$endif}
+end;
 
 procedure Check(ACondition: Boolean; const AReason: TNyxText);
 begin
@@ -458,10 +481,13 @@ var
   LIndex: Integer;
   LRejected: Boolean;
 begin
+  CapacityStep('text');
   LDefinition := NyxTextResource(RepeatText('🌙', NyxMaximumPackedBytes div 4));
   Check(LDefinition.ByteCount = NyxMaximumPackedBytes, 'text admits exactly one MiB of UTF-8');
+  CapacityStep('json');
   LDefinition := NyxJSONResource('"' + RepeatText('x', NyxMaximumPackedBytes - 2) + '"');
   Check(LDefinition.ByteCount = NyxMaximumPackedBytes, 'JSON admits the exact file-byte boundary');
+  CapacityStep('binary');
   SetLength(LBytes, NyxMaximumPackedBytes);
   for LIndex := 0 to High(LBytes) do
   begin
@@ -471,9 +497,11 @@ begin
   Check((LDefinition.ByteCount = NyxMaximumPackedBytes) and
     (NyxEncodeBase64(LDefinition.Bytes) = NyxEncodeBase64(LBytes)),
     'binary admits the exact boundary without losing zero or high bytes');
+  CapacityStep('metadata');
   LDefinition := NyxTextResource('Metadata').Describe(RepeatText('🌙', 128), RepeatText('🌙', 1024));
   Check((NyxUTF8ByteCount(LDefinition.Title) = 512) and
     (NyxUTF8ByteCount(LDefinition.Description) = 4096), 'creator metadata admits its exact UTF-8 limits');
+  CapacityStep('entry-capacity');
   LResources := NewNyxResources;
   for LIndex := 1 to NyxMaximumResources do
   begin
@@ -494,12 +522,18 @@ begin
   Check((LResources.Count = NyxMaximumResources) and (LResources.Reference(0).Name = 'File 1') and
     (LResources.Definition(NyxResourceRef('File 1'), NyxDefaultLocale).Text = 'Replacement'),
     'replacement remains legal at capacity and preserves order');
+  CapacityStep('aggregate-definition');
   LResources := NewNyxResources;
   LDefinition := NyxBinaryResource(LBytes);
-  LResources.Define(NyxResourceRef('Large first'), LDefinition)
-    .Define(NyxResourceRef('Large second'), LDefinition)
-    .Define(NyxResourceRef('Small third'), NyxTextResource('Accepted small file'));
+  CapacityStep('aggregate-first');
+  LResources.Define(NyxResourceRef('Large first'), LDefinition);
+  CapacityStep('aggregate-second');
+  LResources.Define(NyxResourceRef('Large second'), LDefinition);
+  CapacityStep('aggregate-small');
+  LResources.Define(NyxResourceRef('Small third'), NyxTextResource('Accepted small file'));
+  CapacityStep('aggregate-wire');
   LBefore := LResources.ToData.ToJSON;
+  CapacityStep('aggregate-refusal');
   LRejected := False;
   try
     LResources.Define(NyxResourceRef('Small third'), LDefinition);
@@ -511,6 +545,7 @@ begin
   end;
   Check(LRejected and (LResources.ToData.ToJSON = LBefore),
     'aggregate wire budget refuses larger replacement without partially publishing');
+  CapacityStep('complete');
 end;
 
 { The HTTP fixture yields between three complete contract groups. Startup must

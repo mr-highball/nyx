@@ -16,7 +16,30 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
-## Original immutable criterion-one audit — 2026-10-09
+## Accepted original immutable criterion one — 2026-10-09
+
+The complete native and actual HTTP gate passes **70/70** at unchanged limits:
+exact bytes/Unicode/numeric spelling/creator metadata, independent retained
+lifetimes, strict foreign normalization and atomic malformed/conflicting/oversized
+refusals. Full one-MiB files, metadata boundaries, 128 entries, replacement order
+and aggregate packed-wire refusal now finish within unchanged debugger deadlines.
+Canonical immutable entries and an owned Pascal browser string formatter avoid
+repeated admission/serialization; dependencies, schemas and budgets stay intact.
+Complete JSON/value suites pass 114/114, labels/source/history 70/8 each, actual
+bound controls 124 native/119 HTTP and exact builders eight each. Broad native
+core passes 30/1813; its browser navigation deadline remains a retained failure,
+not replaced by the focused suites. Current Studios/backend/worker rebuild.
+
+Criterion **one closes**; seven remains accepted and two through six stay open.
+Resource's no-closure counter resets 1→0, aggregate 25/0/54/22/28/3. No full
+task/DONE move, completion credit or percentage closes. Stop capacity/trace
+variants; next audit original criterion two's complete source/full/page/reusable
+build/candidate/history outcome using existing integrated evidence. Nine contexts,
+LAN release and connected native MCP remain exact; source-only receipts and
+clause-by-clause acceptance are in
+[WORK.md](../WORK.md#current-return-path-resource-capacity-and-immutable-acceptance--2026-10-09).
+
+## Previous original immutable criterion-one audit — 2026-10-09
 
 The complete maintained public-contract gate passes 70 checked native assertions,
 including retained lifetime, exact bytes/Unicode/numeric tokens/metadata, extension
@@ -359,9 +382,9 @@ No criterion closes. See
   annotations; both actual target consumers qualify editing/filtering, stale
   selection refusal and unfinished-draft preservation.
 
-Criterion seven is **accepted 2026-10-09** for the qualified Win32/LCL and pas2js
-HTTP consumers above. Criteria one through six remain open; no full task/DONE
-move follows from that single accepted criterion.
+Criteria one and seven are **accepted 2026-10-09** for the qualified native and
+pas2js HTTP consumers above. Criteria two through six remain open; no full task/
+DONE move follows from these accepted criteria.
 
 ## Authenticated launched producers — 2026-10-08
 
