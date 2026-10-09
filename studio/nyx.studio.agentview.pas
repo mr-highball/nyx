@@ -51,6 +51,9 @@ type
     { Negotiated with the connected service; older servers keep ordinary preview
       execution without requesting a reporting operation they do not expose. }
     CanReportRuntime: Boolean;
+    { Negotiated selected-variant inspection; old servers retain summaries and
+      must never receive an unrecognized optional observe selector. }
+    CanInspectResourceRuntime: Boolean;
     { Operator-only bounded review summaries; no transport owner credentials or
       user document buffers. Preview links show independent, live review views. }
     Reviews: TNyxDataValue;

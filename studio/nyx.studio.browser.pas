@@ -818,6 +818,8 @@ begin
   LState.AgentsVisible := FAgentsVisible;
   LState.BuildsVisible := FBuildsVisible;
   LState.BuildControlReady := FAgents.CanCancelBuild;
+  FAgents.ObserveResource(LState.ResourceSelection.Reference, LState.ResourceSelection.Locale,
+    LState.ResourcesVisible);
   LState.Agents := FAgents.State;
   FViewState := LState;
   Result := BuildNyxStudioView(FSession, LState, FCompilerReport);
@@ -2312,12 +2314,19 @@ begin
             end;
             FViewState.ResourceEditorDraft.Clear;
             FViewState.ResourceSelection := LResourceSelection;
+            { Open can retain the form without recomposing the shell. Publish
+              its copied selector directly so the next observer follows it. }
+            FAgents.ObserveResource(LResourceSelection.Reference, LResourceSelection.Locale,
+              FViewState.ResourcesVisible);
             SelectResourcePane(rwpEditor);
 
             if LRetainedResourceSelection then
             begin
               FViewState.ResourceEditorDraft.Capture('studio-resource-editor',
                 FShellRenderer.RootFor('studio-resource-editor'));
+              { Retain the proposal while clearing the previous variant's
+                observation. Its next exact reply may arrive after this paint. }
+              Refresh(True, True);
             end
             else
             begin
@@ -2413,10 +2422,13 @@ begin
             end;
             FViewState.ResourceEditorDraft.Clear;
             FViewState.ResourceSelection := LResourceSelection;
+            FAgents.ObserveResource(LResourceSelection.Reference, LResourceSelection.Locale,
+              FViewState.ResourcesVisible);
 
             if LRetainedResourceSelection then
             begin
               FViewState.ResourceEditorDraft.Capture('studio-resource-editor', FShellRenderer.RootFor('studio-resource-editor'));
+              Refresh(True, True);
               SavePresentation;
             end
             else

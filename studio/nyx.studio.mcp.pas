@@ -1948,7 +1948,8 @@ begin
       'Edits require Allow edits, current expectedRevision, actor-scoped operationId and no draft; activity shows success/refusal. ' +
       'Also available as op resources in nyx_transaction within its 64-leaf total. runtimes requires expectedRevision and returns ' +
       'up to eight trusted-host summaries; runtime also requires run/expectedSequence and pages up to sixteen bounded status/policy/error ' +
-      'entries. Immutable runtime observations grant no reload/cancel/publication authority; paired edits revoke them, ' +
+      'entries. Instead supply reference and optional locale for exactly one variant (selection entry is null when absent); ' +
+      'do not combine that selector with offset/limit. Immutable runtime observations grant no reload/cancel/publication authority; paired edits revoke them, ' +
       'and absence means no runtime host is enrolled.',
       NyxResourceAgentSchema, False),
     Tool('nyx_diagnostics', 'Page through compiler diagnostics. Locations are Unicode scalar coordinates in submitted source; stale locations cannot navigate.', Schema(LPage, []), True),

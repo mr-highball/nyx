@@ -16,6 +16,21 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Selected-resource Studio consumer — 2026-10-09
+
+Criterion six's shared-view prerequisite now feeds both ordinary Studio
+controllers: public typed detail/availability cards and exact bounded read-only
+variant selection separate current attempt, displayed publication, cache tiers
+and diagnostics. Scoped native/HTTP consumers qualify stale selection suppression,
+same-revision updates, incomplete input/focus/identity and older peer behavior;
+actual application detail passes 86/82. [The packet](../WORK.md#current-return-path-selected-resource-observations--2026-10-09)
+retains strict-boundary failures and qualification limits. This integrated consumer
+belongs to authoring's original Resources criterion: authoring 47→48, resource
+unchanged 16, aggregate 25/16/48/21/28/3. No full criterion/task/credit closes.
+Stop card/codec variants; combined native activity/full-frame continuity returns
+to authoring criterion two. Full resource/cache/media/security, byte-progress,
+physical input/performance and observing retain their original owners.
+
 ## Actual hosted cache-policy consumer — 2026-10-09
 
 Criterion five now has actual Win32/LCL and HTTP-browser memory-cache policy

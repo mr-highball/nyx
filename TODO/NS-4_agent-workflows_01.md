@@ -9,7 +9,19 @@ The authenticated, bounded, revision-aware document tools are accepted under
 semantic operations and maintained agent journeys; it does not transfer completion
 credit from source, events, state, compiler service or native Studio owners.
 
-Current scalar default-pin schema (2026-10-09) uses the same revision-aware
+Current selected-resource read schema (2026-10-09) exposes exact reference/locale
+inspection at a pinned design revision and runtime sequence. Missing membership
+returns null; paging/exact selectors are exclusive. Supporting ordinary editors
+negotiate the private selection capability, preserve serialized source work and
+reject stale selection painting; historical peers retain summaries. Source MCP
+regression passes 133 and exact emitted source 10; actual native/browser controllers
+qualify independent real sessions through the suspended editor exchange. Installed
+native MCP remains primary for bounded context, retaining its protected earlier
+version. Authenticated installed/observing rollout remains this owner's gap; no
+workflow counter/criterion closes. See
+[the packet](../WORK.md#current-return-path-selected-resource-observations--2026-10-09).
+
+Previous scalar default-pin schema (2026-10-09) uses the same revision-aware
 paired candidate/Undo path. Suspended public semantic checks pass 133 native and
 106 shared HTTP; the installed frozen endpoint is inspected read-only and gains
 no new support from compilation. Authenticated installed/observing rollout remains

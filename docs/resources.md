@@ -1266,7 +1266,7 @@ not infer a successful full application from a resource-only preview.
 | Mode | Context and authority |
 | --- | --- |
 | `runtimes` | Current `expectedRevision`; at most eight thin run/scope/target/sequence/active summaries |
-| `runtime` | Current `expectedRevision`, exact `run` and `expectedSequence`; 8 entries by default, at most 16; exact `nextOffset` |
+| `runtime` | Current `expectedRevision`, exact `run` and `expectedSequence`; page 8 entries by default (16 maximum), or select one exact `reference`/`locale` |
 
 Pages exclude resource payloads and hosted URLs. Adapter diagnostics can contain
 addresses or paths; each is clipped at 512 complete Unicode scalars. A 40 KiB
@@ -1275,10 +1275,37 @@ pagination. A stale report sequence refuses rather than mix observations from
 different captures. Public MCP can neither fabricate enrollment nor acquire a
 runtime mutation handle.
 
-Private editor observation carries only bounded summaries. The Resources area
-in both Studios consumes the public `NewNyxResourceRuntimeView` compound card
-through a strict typed summary codec. Empty reports visibly mean no host has
-shared evidence; they never imply successfully loaded authored resources.
+For a selected file, use an exact read rather than searching every page:
+
+```json
+{"mode":"runtime","expectedRevision":7,"run":"application-review","expectedSequence":3,"reference":"welcome","locale":"en-US"}
+```
+
+The result carries `selection: {reference, locale, entry}` alongside run sequence
+and active status. `entry` is one existing fifteen-field status item (its resource
+key remains `name`); absent exact membership returns null. No default/fallback
+locale substitution occurs. Omit locale for the default variant. Exact reads
+cannot include offset/limit; locale requires reference. These reads preserve the
+accepted pair, selection and history, and grant no runtime authority.
+
+Private editor observation negotiates `resourceRuntimeSelection`. A supporting
+observer requests one exact variant per bounded run while Resources is visible;
+older peers continue receiving ordinary summary requests. Both ordinary Studio
+controllers follow retained New/Open selection changes directly. A delayed reply
+for the previous variant displays **Waiting for this resource observation**, not
+that previous attempt/publication. Querying a selection does not log a design edit.
+
+The public `NewNyxResourceRuntimeView` and `NewNyxResourceRuntimeDetailView` compound
+cards render through ordinary Nyx controls on both targets. The detail card takes
+a copied `TNyxResourceRuntimeEntry` and typed `TNyxResourceDetailAvailability`:
+awaiting, missing or available. `TNyxResourceRuntimeDetail.FromData` is the strict
+single-item presentation boundary; trusted declaration/run admission stays with
+the reporting broker. Attempt, displayed publication, cache tiers, loading error,
+cache warning and publication callback failure remain separate. Fixed named parts
+update text/visibility without changing the card's tree shape. No card retains an
+application/document, fetches bytes or offers reload/cancel authority. Empty reports
+visibly mean no host has shared evidence; they never imply successfully loaded
+authored resources. Byte-progress application reporting remains separate work.
 
 ### Automatically launched Studio previews
 

@@ -213,12 +213,20 @@ begin
 end;
 
 function TNyxAgentSession.ResourceRuntimeReports: TNyxDataValue;
+begin
+  Result := ResourceRuntimeReports(Default(TNyxResourceRef), NyxDefaultLocale);
+end;
+
+function TNyxAgentSession.ResourceRuntimeReports(const AReference: TNyxResourceRef;
+  const ALocale: TNyxLocaleRef): TNyxDataValue;
 const
   CScopes: array[TNyxStudioRuntimeScope] of TNyxText = ('application', 'view', 'resources');
 var
   LIndex: Integer;
   LTarget: TNyxText;
   LItems: array of TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LFieldIndex: Integer;
 begin
   SetLength(LItems, Length(FResourceRuns));
   for LIndex := 0 to High(FResourceRuns) do
@@ -237,6 +245,19 @@ begin
       NyxField('sequence', NyxData(FResourceRuns[LIndex].Sequence)),
       NyxField('active', NyxData(FResourceRuns[LIndex].Active)),
       NyxField('summary', FResourceSnapshots[LIndex].Summary)]);
+
+    if AReference.Name <> '' then
+    begin
+      SetLength(LFields, LItems[LIndex].Count + 1);
+      for LFieldIndex := 0 to LItems[LIndex].Count - 1 do
+      begin
+        LFields[LFieldIndex] := NyxField(LItems[LIndex].Key(LFieldIndex),
+          LItems[LIndex].Field(LItems[LIndex].Key(LFieldIndex)));
+      end;
+      LFields[High(LFields)] := NyxField('selection',
+        NyxSelectedResourceRuntime(FResourceSnapshots[LIndex], AReference, ALocale));
+      LItems[LIndex] := NyxObject(LFields);
+    end;
   end;
   Result := NyxArray(LItems);
 end;
@@ -248,6 +269,7 @@ var
   LSequence: Integer;
   LOffset: Integer;
   LLimit: Integer;
+  LLocale: TNyxLocaleRef;
 begin
   RequireRevision(AArguments);
 
@@ -257,7 +279,7 @@ begin
     Exit(NyxObject([NyxField('origin', NyxData('trusted-runtime-observations')),
       NyxField('items', ResourceRuntimeReports)]));
   end;
-  NyxAgentFields(AArguments, '|mode|expectedRevision|run|expectedSequence|offset|limit|');
+  NyxAgentFields(AArguments, '|mode|expectedRevision|run|expectedSequence|offset|limit|reference|locale|');
   LName := NyxStudioRuntime(TextArgument(AArguments, 'run')).Name;
   LSequence := IntegerArgument(AArguments, 'expectedSequence', -1, 1, High(Integer));
   LOffset := IntegerArgument(AArguments, 'offset', 0, 0, NyxMaximumResources);
@@ -271,6 +293,30 @@ begin
       if FResourceRuns[LIndex].Sequence <> LSequence then
       begin
         raise ENyxResource.Create('Runtime observation changed; inspect its current sequence');
+      end;
+
+      if NyxAgentHas(AArguments, 'reference') then
+      begin
+
+        if NyxAgentHas(AArguments, 'offset') or NyxAgentHas(AArguments, 'limit') then
+        begin
+          raise ENyxResource.Create('Exact resource observation cannot also request a page');
+        end;
+        LLocale := NyxDefaultLocale;
+
+        if TextArgument(AArguments, 'locale', '') <> '' then
+        begin
+          LLocale := NyxLocale(TextArgument(AArguments, 'locale'));
+        end;
+        Exit(NyxObject([NyxField('run', NyxData(LName)), NyxField('sequence', NyxData(LSequence)),
+          NyxField('active', NyxData(FResourceRuns[LIndex].Active)),
+          NyxField('selection', NyxSelectedResourceRuntime(FResourceSnapshots[LIndex],
+            NyxResourceRef(TextArgument(AArguments, 'reference')), LLocale))]));
+      end;
+
+      if NyxAgentHas(AArguments, 'locale') then
+      begin
+        raise ENyxResource.Create('Resource locale observation requires an exact reference');
       end;
       Exit(NyxObject([NyxField('run', NyxData(LName)), NyxField('sequence', NyxData(LSequence)),
         NyxField('active', NyxData(FResourceRuns[LIndex].Active)),

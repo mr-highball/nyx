@@ -3,7 +3,22 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current hosted cache policy (2026-10-09) repairs a shared exhausted-age defect
+Current selected-resource observations (2026-10-09) return to common Resources
+under NS-4 authoring criterion three, following NS-1 resource-six and semantic
+workflow prerequisites. Public typed cards and exact bounded revision/sequence
+reads integrate through both ordinary controllers: late selection replies,
+same-revision status, unfinished Unicode text/focus/input identity and historical
+capability behavior pass. Checked native passes 51, HTTP desktop/CSS-390 44/47;
+actual application detail regression 86/82 and source MCP/emitted 133/10 pass.
+[The packet](WORK.md#current-return-path-selected-resource-observations--2026-10-09)
+retains failures, current bytes and qualification limits. Authoring alone advances
+unfinished batches **47→48**, aggregate **25/16/48/21/28/3**; no full criterion/
+task/credit closes. Stop card/codec variants; return to combined native Agents/
+Resources activity and full-frame continuity under the existing criterion-two
+owner. Physical input, full visual/performance parity, application byte-progress
+and installed authenticated observing rollout remain open.
+
+Previous hosted cache policy (2026-10-09) repairs a shared exhausted-age defect
 reproduced by actual native/browser applications. Server age consumes permitted
 stale time; explicit Override remains available. Eleven current policy journeys
 pass 27 actual requests each with exact catalog/control/default retention and

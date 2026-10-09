@@ -9,6 +9,125 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Selected resource observations — 2026-10-09
+
+Entry is clean at pushed `545d440`. Previous turn is progress: a both-target
+application failure changes shared cache-age behavior and has qualified recovery.
+Full goal remains active. Resource unfinished batches remain 16; authoring 47.
+Reassessment stops HTTP/header/fixture variants and returns to the original NS-4
+authoring Resources criterion, following its NS-1 resource-six shared-view and
+NS-4 semantic-workflow prerequisites. This is one integrated consumer, not another
+summary/report-only packet; no sequence is reset or completion credit invented.
+
+Current editor shows bounded run summaries but cannot inspect the selected file's
+attempt/publication/cache/errors. Deliver a public Nyx typed resource-detail card,
+an exact reference/locale read through existing revision/sequence-aware runtime
+queries, and a capability-negotiated selected-variant observer for both ordinary
+controllers. Query only one variant per bounded run; never export file payload,
+full snapshots or transport authority. Preserve queued document work, drafts,
+history, selection and control focus. Clear/refuse stale selection responses;
+older backends must retain summaries without receiving an unknown request field.
+
+Acceptance needs shared query/strict-wire ownership checks, current public MCP
+schema, both actual ordinary-control consumers and observing-protocol evidence.
+Reuse maintained Pascal fixtures and admitted static hosting; do not launch or
+replace Studio backends/configuration or retry earlier rejected operations.
+One repair per discovered boundary, then stop this packet at integrated selection
+visibility. Installed/authenticated rollout, physical input, full visual/parity,
+performance and byte-progress application reporting keep their existing owners.
+
+Result: exact semantic reads now return one existing fifteen-field status item
+under a copied reference/locale selector, or null exact membership. They preserve
+the resource wire's `name` key, revision/sequence checks and all public ownership
+contracts. Mixed paging/exact selection and locale-without-reference refuse;
+the public MCP schema exposes the same choices. No payload, URL or reload/cancel
+authority is added. The private editor protocol negotiates selection support;
+older peers keep ordinary summaries and refuse no unknown optional field.
+
+The public typed detail card separates current attempt, installed publication,
+cache tiers and three diagnostic categories. Awaiting/missing/available are typed
+presentation states, distinct from application load phase. Fixed named parts in
+summary/detail/retirement views permit ordinary retained text/visibility updates.
+Both controllers update the selector at successful retained New/Open handoff and
+paint the awaiting state before a different variant's exact reply. Copied reports
+refresh independently of document/activity changes; queued source work retains
+its existing priority and synchronization guard.
+
+Failures remain under ignored `build/resource-observation-selection/`: initial
+compile receipts expose missing/duplicate unit imports; the first native consumer
+exposes a mistaken detail decoder `reference` key, repaired to existing `name`.
+Real native/browser Open initially leaves the observer unset; direct retained
+handoff repairs it. A delayed native response retains the previous visible detail;
+the fixed typed availability/retained paint repairs that boundary. Fixture mistakes
+also remain: an embedded ready-phase origin is valid, a serialized earlier summary
+request must finish before an exact request, compact hidden catalog rows require
+Files navigation, and qualification captures must scroll the inner workspace.
+These repairs do not change transport authority, runtime wire version or policy.
+
+`tools/build.ps1 -Target resource-observations` is the maintained controller gate.
+Current checked Win32/LCL passes **51**; current real HTTP browser passes **44**
+desktop and **47** CSS-390. Exact/missing variants, strict detail rejection,
+sequence refusal, source schema, stale selection suppression, same-revision
+refresh, historical capability behavior and retired observations pass. Dedicated
+Resources preserves exact incomplete Unicode content, physical focus and input
+identity; reads/navigation/status create no paired source/history command. Native
+application regression passes **86**, real HTTP browser application **82**: actual
+rejected attempt and installed-network/callback-failure detail reach target controls.
+The synchronous static Studio capture is separated from that fixture's unchanged
+asynchronous request wait budget; original timeout receipt remains. Native
+applications and all completed Pascal browser drivers retire with zero unfreed
+blocks. Counts include fixture assertions, never task completion or performance.
+
+Current suspended public MCP/source regression passes **133**, exact emitted
+builder **10**; both ordinary Studios, backend and matching worker rebuild.
+Seven upstream pas2js RTL warnings remain visible; owned code has zero warnings.
+Three concurrent fresh browser qualifications time out at Page.navigate, all
+retire leak-free with no remaining owned browser processes; the same current
+artifacts pass sequentially. Old failed/passing builders remain immutable; current
+children are independently staged on the verified existing static host. Selective
+desktop/narrow browser and native diagnostic Print captures are inspected. These
+are synthetic callback/viewport and source-protocol qualifications, not physical
+phone/keyboard/IME/accessibility, installed authenticated rollout or complete
+visual/performance parity.
+
+Native attachment opens its separate Agents panel. Activity-list growth in that
+combined workload replaces the retained resource input; the first fixture then
+incorrectly dereferences its borrowed former pointer and reports an access
+violation, retiring leak-free. The fixture now validates identity before reading
+and closes that separate panel for this scoped Resources qualification. Text/focus
+continuity through combined activity/full-frame replacement remains the original
+NS-4 authoring criterion-two gate, not accepted by the scoped pass. Stop selected-
+card/codec/fixture variants; return next to that actual combined native continuity
+consumer and its existing section/performance prerequisites. Broader Resources,
+host/cache/media/security, byte-progress reporting and observing deployment stay
+with their resource/authoring/workflow owners.
+
+Authoring alone advances unfinished batches **47→48**, aggregate
+**25/16/48/21/28/3**; resource stays 16, no full criterion/task/credit closes.
+The full user goal remains active. Protected pair/process/release evidence and
+the source checkpoint remain separate from installed rollout.
+
+Final verification: the maintained native/controller rebuild exits successfully
+with **51** checks and zero unfreed blocks. Final desktop/narrow receipts are
+`browser-desktop-final.log` and `browser-narrow-final.log`, with DOM counts
+**44/47** and inspected captures. The final four HTML/compiled-script/runtime
+files match current maintained outputs, the immutable staged child and HTTP
+responses byte-for-byte; all **22** packet stage files remain unchanged. Existing
+static hosting is verified by executable, command and creation identity. No new
+backend/listener/configuration is launched or any protected process stopped.
+Final source review trims trailing blank lines in the three new host/launcher
+files; their executable Pascal and HTML loader semantics are unchanged.
+
+`preservation-after.log` verifies **nine** exact accepted/source/draft pairs,
+all **15** original process identities, **299** sealed release files and the
+unchanged **147033-byte** recovery checkpoint. Installed semantic inspection
+still shows revision **2**, the original selection, no pending draft and no
+Undo/Redo work. LAN/loopback bindings remain intact at the protected older product
+source; source qualification is not a refreshed phone deployment. Final Git
+checkpoint/push and exact remote-ref evidence belongs to
+`build/resource-observation-selection/remote-checkpoint.log`; source diff must
+be clean at handoff. No task is moved to DONE and no overall completion claimed.
+
 ## Current return path: Hosted resource cache policy — 2026-10-09
 
 Entry is clean at pushed `52890b3`. Previous goal turn is progress: typed transfer

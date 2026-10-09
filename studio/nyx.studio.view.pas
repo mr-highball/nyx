@@ -226,16 +226,24 @@ function BuildNyxStudioView(ASession: TNyxStudioSession;
 implementation
 
 uses
-  nyx.binding,
+  nyx.binding, nyx.resources, nyx.application.resources,
   nyx.composition, nyx.studio.rootview, nyx.studio.buildview;
 
 { Runtime reports arrive as bounded copied transport values. Ordinary Nyx cards
   paint the same summary on both targets, independently of authored resources.
   No report grants this view a handle to start or cancel an application. }
-procedure AddResourceRuntimeViews(AParent: TNyxNode; const AReports: TNyxDataValue);
+procedure AddResourceRuntimeViews(AParent: TNyxNode; const AReports: TNyxDataValue;
+  const ASelected: TNyxResourceEditorSelection; ASupportSelected: Boolean);
 var
   LIndex: Integer;
+  LFieldIndex: Integer;
   LReport: TNyxDataValue;
+  LSelection: TNyxDataValue;
+  LDetail: TNyxResourceRuntimeDetail;
+  LEntry: TNyxResourceRuntimeEntry;
+  LAvailability: TNyxResourceDetailAvailability;
+  LCard: INyxCard;
+  LRetired: INyxBadge;
   LGroup: INyxColumn;
   LID: TNyxText;
 begin
@@ -261,12 +269,52 @@ begin
     LGroup.Add(NewNyxLabel(LID + '-identity').WithText(LReport.Field('run').AsText +
       ' / ' + LReport.Field('scope').AsText + ' / ' + LReport.Field('target').AsText));
 
-    if not LReport.Field('active').AsBoolean then
-    begin
-      LGroup.Add(NewNyxBadge(LID + '-retired').WithText('Observation retired'));
-    end;
+    LRetired := NewNyxBadge(LID + '-retired').WithText('Observation retired');
+    LRetired.Configure.Visible(not LReport.Field('active').AsBoolean).Done;
+    LGroup.Add(LRetired);
     LGroup.Add(NewNyxResourceRuntimeView(LID + '-status',
       TNyxResourceRuntimeSummary.FromData(LReport.Field('summary'))));
+    LSelection := NyxNull;
+    for LFieldIndex := 0 to LReport.Count - 1 do
+    begin
+
+      if LReport.Key(LFieldIndex) = 'selection' then
+      begin
+        LSelection := LReport.Field('selection');
+      end;
+    end;
+
+    LAvailability := rdaAwaiting;
+    LEntry := Default(TNyxResourceRuntimeEntry);
+    LEntry.Reference := ASelected.Reference;
+    LEntry.Locale := ASelected.Locale;
+
+    if (LSelection.Kind = ndObject) and (LSelection.Count = 3) and
+      (ASelected.Reference.Name <> '') and
+      (LSelection.Field('reference').AsText = ASelected.Reference.Name) and
+      (LSelection.Field('locale').AsText = ASelected.Locale.Name) then
+    begin
+
+      if LSelection.Field('entry').Kind = ndNull then
+      begin
+        LAvailability := rdaMissing;
+      end
+      else
+      begin
+        LDetail := TNyxResourceRuntimeDetail.FromData(LSelection.Field('entry'));
+
+        if (LDetail.Entry.Reference.Name <> ASelected.Reference.Name) or
+          (LDetail.Entry.Locale.Name <> ASelected.Locale.Name) then
+        begin
+          raise ENyxResource.Create('Observed detail belongs to another selected resource');
+        end;
+        LEntry := LDetail.Entry;
+        LAvailability := rdaAvailable;
+      end;
+    end;
+    LCard := NewNyxResourceRuntimeDetailView(LID + '-selection', LEntry, LAvailability);
+    LCard.Configure.Visible(ASupportSelected and (ASelected.Reference.Name <> '')).Done;
+    LGroup.Add(LCard);
     AParent.Add(LGroup);
   end;
 end;
@@ -1162,7 +1210,8 @@ begin
         AState.ResourceSelection, ASession.Selected, LSelectedProjection, recExternal));
       LResourceForm.Add(NewNyxResourceRowsEditor('studio-resource-rows', ASession.Document.Resources,
         ASession.Document.Collections));
-      AddResourceRuntimeViews(LResourceForm.Node, AState.Agents.ResourceRuntimes);
+      AddResourceRuntimeViews(LResourceForm.Node, AState.Agents.ResourceRuntimes,
+        AState.ResourceSelection, AState.Agents.CanInspectResourceRuntime);
     finally
       LSelectedProjection.Free;
     end;

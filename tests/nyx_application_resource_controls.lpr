@@ -509,17 +509,21 @@ var
   {$endif}
 begin
   LFrame := FRuntimeAgent.Exchange(NyxObject([NyxField('op', NyxData('observe')),
-    NyxField('after', NyxData(FRuntimeAgent.Revision))]));
+    NyxField('after', NyxData(FRuntimeAgent.Revision)), NyxField('resource', NyxObject([
+      NyxField('reference', NyxData('copy')), NyxField('locale', NyxData(''))]))]));
   LSession := TNyxStudioSession.Create(FRuntimeAgent.ReviewSeed(FRuntimeAgent.Revision));
   try
     for LPass := 0 to 1 do
     begin
       LState := DefaultNyxStudioViewState;
       LState.ResourcesVisible := True;
+      LState.ResourceSelection.Reference := NyxResourceRef('copy');
+      LState.ResourceSelection.Locale := NyxDefaultLocale;
       LState.CodeVisible := False;
       LState.Compact := LPass = 1;
       LState.Panel := nspProject;
       LState.Agents := DefaultNyxStudioAgentView;
+      LState.Agents.CanInspectResourceRuntime := LFrame.Field('resourceRuntimeSelection').AsBoolean;
       LState.Agents.ResourceRuntimes := LFrame.Field('resourceRuntimes');
       LShell := BuildNyxStudioView(LSession, LState);
       {$ifdef PAS2JS}
@@ -530,6 +534,11 @@ begin
         LRenderer.Render(LShell, LShell.Pages[0], LHost);
         Check(LRenderer.ElementFor('studio-resource-runtime-0-status-published').textContent =
           'Published loads: 1 / Resource variants: 4', 'common Studio browser controls paint actual run summary');
+        Check(LRenderer.ElementFor('studio-resource-runtime-0-selection-displayed').textContent =
+          'Displayed content: Network', 'browser detail paints the actual installed publication');
+        Check(LRenderer.ElementFor('studio-resource-runtime-0-selection-notification-error').textContent =
+          TNyxText('Publication callback: Observer 🌙 failed after publication'),
+          'browser detail paints the actual Unicode publication callback failure');
       finally
         LRenderer.Free;
         LHost.remove;
@@ -573,6 +582,13 @@ begin
           'studio-resource-runtime-0-status-published')).Caption)) =
           'Published loads: 1 / Resource variants: 4',
           'common Studio native controls paint actual run summary');
+        Check(TNyxText(RawByteString(TLabel(LRenderer.ControlFor(
+          'studio-resource-runtime-0-selection-displayed')).Caption)) =
+          'Displayed content: Network', 'native detail paints the actual installed publication');
+        Check(TNyxText(RawByteString(TLabel(LRenderer.ControlFor(
+          'studio-resource-runtime-0-selection-notification-error')).Caption)) =
+          TNyxText('Publication callback: Observer 🌙 failed after publication'),
+          'native detail paints the actual Unicode publication callback failure');
         LBitmap := TBitmap.Create;
         LImage := nil;
         try
@@ -658,7 +674,8 @@ begin
     if GetTickCount64 - FStartedAt > 20000 then
     {$endif}
     begin
-      raise ENyxResource.Create('Application resource journey timed out');
+      raise ENyxResource.Create('Application resource journey timed out at stage ' +
+        TNyxText(IntToStr(FStage)) + ' after ' + TNyxText(IntToStr(FChecks)) + ' checks');
     end;
     case FStage of
       1:
@@ -761,6 +778,10 @@ begin
           Check((RuntimePage.Field('items').Item(0).Field('phase').AsText = 'rejected') and
             (RuntimePage.Field('items').Item(0).Field('publishedOrigin').AsText = 'network'),
             'rejected reload reports its failure while retaining previous installed-load evidence');
+          LStatus := TNyxResourceRuntimeDetail.FromData(
+            RuntimePage.Field('items').Item(0)).Entry.Status;
+          Check((LStatus.Phase = nrpRejected) and (LStatus.Error <> ''),
+            'public typed detail retains the actual rejected application attempt');
           FTransport.CompleteInline := True;
           FTransport.Value := '{"headline":"Inline completion","prompt":"Still deferred","detail":"Inline detail","maximum":20}';
           FBusy := True;
@@ -846,6 +867,10 @@ begin
             TNyxText('Observer 🌙 failed after publication'),
             'bounded semantic diagnostics retain supplementary Unicode observer failures');
           ShowRuntimeObserver;
+          { The static Studio view/capture is synchronous qualification work,
+            not application network waiting. Restart that wait budget after it
+            returns, keeping the later real resource request deadline intact. }
+          FStartedAt := {$ifdef PAS2JS}TJSDate.now{$else}GetTickCount64{$endif};
           FRejectToken.Disconnect;
           FRejectToken := nil;
           FTransport.CompleteInline := False;

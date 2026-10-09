@@ -49,6 +49,7 @@ type
     FCommits: Integer;
     FSchedules: Integer;
     FDelay: Integer;
+    FLegacyResourceObservations: Boolean;
   public
     constructor Create(ASession: TNyxAgentSession);
     destructor Destroy; override;
@@ -65,6 +66,13 @@ type
     procedure FireTick;
     function RequestPending: Boolean;
     function TickPending: Boolean;
+    { Copied bounded request inspection qualifies optional-field negotiation.
+      LegacyResourceObservations simulates a peer predating selected-resource
+      support: it omits the capability and refuses the unknown request member.
+      Modern positive replies always come from the real session protocol. }
+    function PendingBody: TNyxDataValue;
+    property LegacyResourceObservations: Boolean read FLegacyResourceObservations
+      write FLegacyResourceObservations;
     property Posts: Integer read FPosts;
     property Commits: Integer read FCommits;
     property Schedules: Integer read FSchedules;
@@ -133,6 +141,9 @@ end;
 procedure TNyxTestEditorExchange.PrepareReply(AFull: Boolean);
 var
   LState: TNyxDataValue;
+  LFields: array of TNyxDataField;
+  LIndex: Integer;
+  LCount: Integer;
 begin
 
   if not Assigned(FReply) or FPrepared then
@@ -141,6 +152,18 @@ begin
   end;
   FStatus := 200;
   try
+
+    if FLegacyResourceObservations then
+    begin
+      for LIndex := 0 to FBody.Count - 1 do
+      begin
+
+        if FBody.Key(LIndex) = 'resource' then
+        begin
+          raise Exception.Create('Historical resource observer refuses an unknown selector');
+        end;
+      end;
+    end;
     LState := FSession.Exchange(FBody);
 
     if FBody.Field('op').AsText = 'commit' then
@@ -152,6 +175,23 @@ begin
     begin
       LState := FSession.Exchange(NyxObject([
         NyxField('op', NyxData('observe')), NyxField('after', NyxData(0))]));
+    end;
+
+    if FLegacyResourceObservations then
+    begin
+      SetLength(LFields, LState.Count);
+      LCount := 0;
+      for LIndex := 0 to LState.Count - 1 do
+      begin
+
+        if LState.Key(LIndex) <> 'resourceRuntimeSelection' then
+        begin
+          LFields[LCount] := NyxField(LState.Key(LIndex), LState.Field(LState.Key(LIndex)));
+          Inc(LCount);
+        end;
+      end;
+      SetLength(LFields, LCount);
+      LState := NyxObject(LFields);
     end;
 
     if FConnect then
@@ -206,6 +246,11 @@ end;
 function TNyxTestEditorExchange.RequestPending: Boolean;
 begin
   Result := Assigned(FReply);
+end;
+
+function TNyxTestEditorExchange.PendingBody: TNyxDataValue;
+begin
+  Result := FBody.Copy;
 end;
 
 function TNyxTestEditorExchange.TickPending: Boolean;

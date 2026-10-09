@@ -9,7 +9,20 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current resource locale authoring consumes the original Resources/localization/
+Current selected-resource observations consume Resources criterion three through
+both ordinary controllers, following NS-1 resource-six and semantic prerequisites.
+Public typed cards distinguish attempt/publication/cache/diagnostics and support
+exact bounded reads. Scoped native/HTTP desktop/CSS-390 passes 51/44/47 with late
+reply suppression, same-revision refresh and retained Unicode input/focus/identity;
+real application detail passes 86/82. [The packet](../WORK.md#current-return-path-selected-resource-observations--2026-10-09)
+retains failures and current bytes. Authoring alone advances unfinished 47→48,
+aggregate 25/16/48/21/28/3; no full criterion/task/credit closes. Native combined
+Agents activity growth replaces resource controls; text/focus after that full-frame
+replacement remains criterion two's gate. Stop card/codec variants and return to
+that ordinary continuity consumer. Complete visual/input/performance parity,
+byte-progress and installed authenticated observing rollout remain open.
+
+Previous resource locale authoring consumes the original Resources/localization/
 caller-policy criterion. The shared public form exposes explicit scalar/image
 locale intent and caller fallback; strict copied preferences retain incomplete
 input. Ordinary hosted English data/fallback/cache proposals preserve exact paired

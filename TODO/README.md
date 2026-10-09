@@ -47,7 +47,19 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current hosted cache policy (2026-10-09) consumes NS-1 criterion five through
+Current selected-resource observations (2026-10-09) consume NS-4 authoring
+Resources criterion three through both ordinary controllers, following NS-1
+resource-six shared-view and semantic-workflow prerequisites. Public typed cards,
+exact bounded revision/sequence reads, stale reply suppression, copied input/focus
+continuity and historical capability behavior pass in scoped native/HTTP consumers.
+[The packet](../WORK.md#current-return-path-selected-resource-observations--2026-10-09)
+retains failures and original qualification limits. Authoring alone advances
+unfinished batches 47→48, aggregate 25/16/48/21/28/3; no full criterion/task/credit
+closes. Stop card/codec variants. Combined native Agents activity/full-frame
+Resources continuity returns to existing authoring criterion two; physical input,
+full visual/performance, byte-progress and installed observing keep their owners.
+
+Previous hosted cache policy (2026-10-09) consumes NS-1 criterion five through
 actual native/browser applications: eleven policies, 27 requests each, retained
 catalogs/controls/defaults and same-URL recovery. Both reproduced renewal of an
 exhausted stale window before the shared age calculation was repaired. Explicit

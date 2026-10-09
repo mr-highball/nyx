@@ -2014,6 +2014,12 @@ begin
   end;
   FState.Compact := NyxStudioCompactHost(FHostSpace.Extent.Width, FHostSpace.Extent.Height);
   FState.RootRemoval := NyxNull;
+
+  if CurrentBridge <> nil then
+  begin
+    CurrentBridge.ObserveResource(FState.ResourceSelection.Reference,
+      FState.ResourceSelection.Locale, FState.ResourcesVisible);
+  end;
   FState.Agents := GetAgentState;
   FState.BuildControlReady := (CurrentBridge <> nil) and
     CurrentBridge.CanCancelBuild;
@@ -3190,12 +3196,23 @@ begin
             end;
             FState.ResourceEditorDraft.Clear;
             FState.ResourceSelection := LResourceSelection;
+            { A retained form does not require a new shell composition. Keep
+              the observation selector current at this successful handoff. }
+
+            if CurrentBridge <> nil then
+            begin
+              CurrentBridge.ObserveResource(LResourceSelection.Reference,
+                LResourceSelection.Locale, FState.ResourcesVisible);
+            end;
             SelectResourcePane(rwpEditor);
 
             if LRetainedResourceSelection then
             begin
               FState.ResourceEditorDraft.Capture('studio-resource-editor',
                 FShellView.RootFor('studio-resource-editor'));
+              { Clear the previous variant's observation through an ordinary
+                retained paint, preserving these proposal controls. }
+              RequestRefresh;
             end
             else
             begin
@@ -3287,9 +3304,16 @@ begin
             FState.ResourceEditorDraft.Clear;
             FState.ResourceSelection := LResourceSelection;
 
+            if CurrentBridge <> nil then
+            begin
+              CurrentBridge.ObserveResource(LResourceSelection.Reference,
+                LResourceSelection.Locale, FState.ResourcesVisible);
+            end;
+
             if LRetainedResourceSelection then
             begin
               FState.ResourceEditorDraft.Capture('studio-resource-editor', FShellView.RootFor('studio-resource-editor'));
+              RequestRefresh;
             end
             else
             begin

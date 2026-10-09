@@ -114,6 +114,17 @@ See [the contract](resources.md#semantic-resource-authoring) and run
 The protected deployed endpoint retains its existing tool set; local source
 qualification does not establish authenticated rollout or observing Studio.
 
+Prepared runtime inspection also exposes one exact resource variant through
+`nyx_resources` mode `runtime`: expected design revision, run sequence, resource
+reference and optional locale. It returns a bounded status item or null membership,
+without payload or reload/cancel authority. Exact reads and pages are mutually
+exclusive. Supporting ordinary editors negotiate the selection capability and
+follow Resources Open/New intent, preserving queued document work; older peers
+keep summary requests. See [runtime observations](resources.md#runtime-resource-observations)
+for the wire and public typed cards. The maintained `resource-observations` target
+qualifies independent source sessions and real controllers, with separate explicit
+HTTP browser execution. It does not enroll clients or replace the installed server.
+
 Semantic tools are the primary way agents inspect, compose and modify demos and
 active designs. Read the session first, query only needed nodes/properties/events,
 then group related edits into one undoable transaction. Preserve existing user

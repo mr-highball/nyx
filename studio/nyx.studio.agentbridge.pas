@@ -30,7 +30,7 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.studio.session, nyx.studio.exchange,
   nyx.studio.projects, nyx.studio.agents, nyx.studio.agentview, nyx.studio.workspaces,
   nyx.studio.editorbuild, nyx.studio.outputs, nyx.model, nyx.types, nyx.studio.buildview,
-  nyx.studio.builds;
+  nyx.studio.builds, nyx.resources;
 
 type
   TNyxAgentRefresh = procedure(AContentChanged: Boolean) of object;
@@ -73,6 +73,9 @@ type
     FWorkspaceMetadata: TNyxText;
     FDraftCapturePending: Boolean;
     FOnProjectCaptured: TNyxProjectCaptured;
+    FResourceReference: TNyxResourceRef;
+    FResourceLocale: TNyxLocaleRef;
+    FResourceInspection: Boolean;
     procedure Initialize(ASession: TNyxStudioSession; ARefresh: TNyxAgentRefresh;
       const AWorkspace: TNyxWorkspaceRef);
     function Frame: TNyxText;
@@ -105,6 +108,11 @@ type
       remote adoption/build/navigation; it never grants an acknowledged frame. }
     procedure RecordDraft;
     procedure Configure(APermission: TNyxAgentPermission);
+    { Desired copied presentation selector, never a document edit. Requests wait
+      for capability negotiation and an acknowledged exact pair. Closing the
+      Resources pane clears inspection; late replies cannot select a file. }
+    procedure ObserveResource(const AReference: TNyxResourceRef;
+      const ALocale: TNyxLocaleRef; AEnabled: Boolean);
     procedure History(ADirection: TNyxEditorHistory);
     procedure CompilerReport(const AReport: TNyxText);
     { Operator compiler requests use the shared asynchronous job service. Query
@@ -647,14 +655,41 @@ begin
   end
   else
   begin
-    Send(NyxObject([NyxField('op', NyxData('observe')), NyxField('after', NyxData(FView.Revision))]));
+
+    if FResourceInspection and FView.CanInspectResourceRuntime and SourceSynchronized then
+    begin
+      Send(NyxObject([NyxField('op', NyxData('observe')), NyxField('after', NyxData(FView.Revision)),
+        NyxField('resource', NyxObject([NyxField('reference', NyxData(FResourceReference.Name)),
+          NyxField('locale', NyxData(FResourceLocale.Name))]))]));
+    end
+    else
+    begin
+      Send(NyxObject([NyxField('op', NyxData('observe')), NyxField('after', NyxData(FView.Revision))]));
+    end;
   end;
+end;
+
+procedure TNyxStudioAgentBridge.ObserveResource(const AReference: TNyxResourceRef;
+  const ALocale: TNyxLocaleRef; AEnabled: Boolean);
+begin
+  AEnabled := AEnabled and (AReference.Name <> '');
+
+  if (FResourceInspection = AEnabled) and
+    (FResourceReference.Name = AReference.Name) and (FResourceLocale.Name = ALocale.Name) then
+  begin
+    Exit;
+  end;
+  FResourceReference := AReference;
+  FResourceLocale := ALocale;
+  FResourceInspection := AEnabled;
+  Schedule;
 end;
 
 procedure TNyxStudioAgentBridge.Ready(AStatus: Integer; const AText: TNyxText);
 var
   LData: TNyxDataValue;
   LState: TNyxDataValue;
+  LResourceReports: TNyxDataValue;
   LSummary: TNyxDataValue;
   LPair: TNyxProjectPair;
   LRemoteFrame: TNyxText;
@@ -772,16 +807,26 @@ begin
         LRefresh := LRefresh or (FView.CompilerLaunch.Sequence <> 0);
         FView.CompilerLaunch := Default(TNyxCompilerLaunch);
       end;
-      FView.ResourceRuntimes := NyxArray([]);
+      { Selection can change independently of the activity sequence. Compare
+        bounded copied reports so a fresh exact read refreshes its ordinary view. }
+      LResourceReports := NyxArray([]);
 
       if NyxAgentHas(LState, 'resourceRuntimes') then
       begin
-        FView.ResourceRuntimes := LState.Field('resourceRuntimes').Copy;
+        LResourceReports := LState.Field('resourceRuntimes').Copy;
       end;
+      LRefresh := LRefresh or (FView.ResourceRuntimes.ToJSON <> LResourceReports.ToJSON);
+      FView.ResourceRuntimes := LResourceReports;
       FView.CanCloseWorkspace := False;
       FView.CanBuild := False;
       FView.CanControlBuilds := False;
       FView.CanReportRuntime := False;
+      FView.CanInspectResourceRuntime := False;
+
+      if NyxAgentHas(LState, 'resourceRuntimeSelection') then
+      begin
+        FView.CanInspectResourceRuntime := LState.Field('resourceRuntimeSelection').AsBoolean;
+      end;
 
       if NyxAgentHas(LState, 'resourceRuntimeReporting') then
       begin

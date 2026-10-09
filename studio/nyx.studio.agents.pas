@@ -30,7 +30,7 @@ uses
   SysUtils, nyx.text, nyx.data, nyx.types, nyx.model, nyx.schema,
   nyx.studio.session, nyx.studio.projects, nyx.studio.compiler, nyx.studio.builds,
   nyx.studio.rootedits, nyx.presentations, nyx.menu.declarations, nyx.root.types,
-  nyx.application.resources;
+  nyx.application.resources, nyx.resources, nyx.resources.runtime.view;
 
 type
   { Operator permissions are closed, session-local and never part of a design.
@@ -105,14 +105,18 @@ type
     FRootReviews: array of TNyxDataValue;
     FRootRemovals: array of INyxRootRemoval;
     FRootReviewSerial: Integer;
-    function ResourceRuntimeReports: TNyxDataValue;
+    function ResourceRuntimeReports: TNyxDataValue; overload;
+    function ResourceRuntimeReports(const AReference: TNyxResourceRef;
+      const ALocale: TNyxLocaleRef): TNyxDataValue; overload;
     function GetPendingDraft: Boolean;
     function ResourceRuntimeQuery(const AArguments: TNyxDataValue): TNyxDataValue;
     procedure Changed;
     procedure RequireRevision(const AArguments: TNyxDataValue);
     procedure Log(const AActor, AOperation, AOutcome: TNyxText);
     function Summary: TNyxDataValue;
-    function EditorState(AAfter: Integer): TNyxDataValue;
+    function EditorState(AAfter: Integer): TNyxDataValue; overload;
+    function EditorState(AAfter: Integer; const AReference: TNyxResourceRef;
+      const ALocale: TNyxLocaleRef): TNyxDataValue; overload;
     function Outline(const AArguments: TNyxDataValue): TNyxDataValue;
     function NodeDetails(const AArguments: TNyxDataValue): TNyxDataValue;
     { One requested local/effective value domain, with bounded Unicode choice
@@ -251,7 +255,7 @@ uses
   nyx.collections.selection, nyx.collections.query,
   nyx.studio.collectionedits, nyx.studio.transactions, nyx.studio.importedits,
   nyx.studio.routineedits, nyx.studio.declarationedits, nyx.times,
-  nyx.resources, nyx.resource.sources, nyx.bytes, nyx.studio.resourceedits,
+  nyx.resource.sources, nyx.bytes, nyx.studio.resourceedits,
   nyx.resources.rows, nyx.resources.catalog, nyx.collections.registry, nyx.studio.viewsedits;
 
 function NyxAgentHas(const AValue: TNyxDataValue; const AKey: TNyxText): Boolean;
@@ -598,19 +602,26 @@ begin
 end;
 
 function TNyxAgentSession.EditorState(AAfter: Integer): TNyxDataValue;
+begin
+  Result := EditorState(AAfter, Default(TNyxResourceRef), NyxDefaultLocale);
+end;
+
+function TNyxAgentSession.EditorState(AAfter: Integer;
+  const AReference: TNyxResourceRef; const ALocale: TNyxLocaleRef): TNyxDataValue;
 var
   LFields: array of TNyxDataField;
 begin
-  SetLength(LFields, 4);
+  SetLength(LFields, 5);
   LFields[0] := NyxField('session', Summary);
   LFields[1] := NyxField('activity', NyxArray(FActivity));
   LFields[2] := NyxField('compiler', CompilerSnapshot);
-  LFields[3] := NyxField('resourceRuntimes', ResourceRuntimeReports);
+  LFields[3] := NyxField('resourceRuntimes', ResourceRuntimeReports(AReference, ALocale));
+  LFields[4] := NyxField('resourceRuntimeSelection', NyxData(True));
 
   if AAfter <> FRevision then
   begin
-    SetLength(LFields, 5);
-    LFields[4] := NyxField('project', NyxData(EncodeNyxProject(FSession.ProjectSnapshot)));
+    SetLength(LFields, 6);
+    LFields[5] := NyxField('project', NyxData(EncodeNyxProject(FSession.ProjectSnapshot)));
   end;
   Result := NyxObject(LFields);
 end;
@@ -2658,13 +2669,28 @@ var
   LBefore: TNyxText;
   LPermission: TNyxText;
   LAfter: Integer;
+  LResource: TNyxResourceRef;
+  LResourceLocale: TNyxLocaleRef;
 begin
   LOperation := ARequest.Field('op').AsText;
   LAfter := IntegerArgument(ARequest, 'after', 0, 0, High(Integer));
 
   if LOperation = 'observe' then
   begin
-    NyxAgentFields(ARequest, '|op|after|');
+    NyxAgentFields(ARequest, '|op|after|resource|');
+
+    if NyxAgentHas(ARequest, 'resource') then
+    begin
+      NyxAgentFields(ARequest.Field('resource'), '|reference|locale|');
+      LResource := NyxResourceRef(ARequest.Field('resource').Field('reference').AsText);
+      LResourceLocale := NyxDefaultLocale;
+
+      if ARequest.Field('resource').Field('locale').AsText <> '' then
+      begin
+        LResourceLocale := NyxLocale(ARequest.Field('resource').Field('locale').AsText);
+      end;
+      Exit(EditorState(LAfter, LResource, LResourceLocale));
+    end;
     Exit(EditorState(LAfter));
   end;
 

@@ -67,7 +67,18 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Hosted cache-policy applications (2026-10-09) reproduce and repair renewal of an
+Selected resource observations (2026-10-09) integrate public typed cards and
+bounded exact revision/sequence reads into both ordinary Studio controllers.
+Dedicated Resources retains incomplete Unicode input/focus/identity during status
+updates, refuses stale selection painting and negotiates older peer behavior.
+[The packet](WORK.md#current-return-path-selected-resource-observations--2026-10-09)
+qualifies native/HTTP desktop/CSS-390, real application detail and source MCP.
+Ledger is **25/16/48/21/28/3**; no full criterion/task/credit closes. Stop card/
+codec variants; return to combined native Agents activity/resource continuity.
+Full visual/input/performance parity, byte-progress and authenticated observing
+rollout remain open. The installed LAN product remains its protected version.
+
+Previous hosted cache-policy applications (2026-10-09) reproduce and repair renewal of an
 already exhausted stale allowance. Server Age now consumes remaining stale time;
 explicit caller Override stays available. Actual native/browser applications pass
 eleven policies, 27 requests each, with retained controls/defaults and same-URL
