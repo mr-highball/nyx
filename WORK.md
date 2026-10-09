@@ -7,6 +7,56 @@ substantive tools are Pascal in Delphi dialect, with thorough comments and blank
 lines above if blocks. Semantic MCP is the primary demo/design/build workflow;
 actual browser/LCL consumers qualify physical behavior selectively.
 
+## Current return path: Immutable resource acceptance — 2026-10-09
+
+The user's dedicated-space/category/creator-tag decision remains accepted under
+original resource criterion seven. The next batch audits **original criterion
+one**, following accepted model/persistence/structured-state prerequisites. Its
+deliverable is one complete portable public-contract qualification at unchanged
+file/metadata/catalog capacities; stop at the complete verdict or a demonstrated
+failure, rather than accepting another smaller discovery variant.
+
+The maintained `resource-foundation` build gate now covers exact binary/text/PNG
+bytes, line endings/NUL/supplementary Unicode, JSON number spelling beyond Double,
+creator metadata and tags; definition/catalog/context snapshots survive document
+retirement independently. A mutable foreign producer is normalized once. Invalid
+UTF-8, JSON/decoded-key collisions, unsupported/checksum-damaged images, metadata/
+file budgets, nil definitions, late duplicate/malformed entries and oversized
+replacements retain complete accepted baselines. Exact one-MiB text/JSON/binary,
+metadata limits, 128-entry replacement/order and aggregate refusal remain required.
+
+**Verdict: criterion one stays open.** Checked FPC 3.3.1/i386-win32 passes **70**
+assertions with zero unfreed blocks. HTTP pas2js completes ownership and atomic
+admission (**63** assertions), but the complete capacity group prevents an actual
+debugger attribute response within its unchanged **15-second** command deadline.
+Acknowledged PNG/DOM checkpoints identify phase two at 63; they establish neither
+its terminal admission result nor the exact slow operation. No data corruption,
+deadlock or accepted performance claim follows from this observation timeout.
+
+The first native attempt caught a copied PNG fixture error, repaired using the
+unchanged project-owned sample. Initial browser load-handler work exceeded
+navigation's command deadline; yielding between complete groups permits navigation
+but the subsequent attribute timeout persists. One bounded phase-checkpoint run
+isolates capacity; no resource limit, assertion or driver deadline is weakened.
+Two implicit native test-text conversions are made explicit. Owned warnings are
+zero; seven matched pas2js RTL warnings stay separately attributed. No dependency
+or product implementation changes.
+
+Ignored `build/resource-foundation/` retains checked compiler/native receipts,
+initial fixture/navigation/attribute failures, phase captures, browser runtime
+closure and preservation. The readonly capture host is retired after exact
+identity verification. Authenticated preflight retains nine exact project pairs/
+history/navigation/drafts/permissions, no active jobs and 22 tools. Installed
+316-file release and the primary pair/process remain unchanged; MCP is connected.
+
+Resource alone advances consecutive unfinished batches **0→1**, aggregate
+**25/1/54/22/28/3**. No criterion/task/credit closes; seven remains accepted and
+one through six remain open. Stop foundation fixture variants. The next concrete
+consumer is the existing capacity group's browser serialization/admission cost:
+identify and repair its exact blocking operation, then finish the same full gate.
+Original NS-3 measured-cost criteria retain performance ownership; hosted HTTP,
+trusted import, source reconciliation and delivery retain their original owners.
+
 ## Current return path: Complete browser resource journey — 2026-10-09
 
 Previous turn is progress: pushed `d927f48` repairs retained resource selection

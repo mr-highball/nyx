@@ -3,7 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current complete resource discovery (2026-10-09) accepts original resource
+Current immutable-resource audit (2026-10-09) follows original resource criterion
+one: native public contracts pass 70; actual HTTP pas2js completes 63 ownership/
+admission assertions before the unchanged capacity group exceeds the debugger's
+15-second command deadline. [The packet](WORK.md#current-return-path-immutable-resource-acceptance--2026-10-09)
+retains failures and nine exact contexts. The full criterion stays open; seven
+remains accepted. Resource alone advances unfinished 0→1, aggregate
+**25/1/54/22/28/3**; no new criterion/task/credit closes. Next repair the precise
+browser capacity serialization/admission cost and finish the same full gate.
+NS-3 retains measured-cost ownership; all other original outcomes remain open.
+Installed LAN product/MCP and user work stay unchanged.
+
+Previous complete resource discovery (2026-10-09) accepts original resource
 criterion seven for Win32/LCL and pas2js HTTP: categories/search/exact tags,
 portable annotations/source/replay, paired history and actual draft/selection
 consumers. Complete desktop/CSS-390 journeys pass 1867/2481 checks including

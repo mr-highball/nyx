@@ -9,6 +9,37 @@ and independent catalog membership. Hosted declarations carry an HTTP(S) URL,
 typed cache policy and an optional embedded fallback through the same contract.
 Neither loading a project nor replaying its builder opens files or fetches URLs.
 
+## Immutable content and ownership
+
+Keep an `INyxResourceDefinition` when content must outlive a document. Its bytes,
+JSON data and image source remain owned independently; `Bytes` returns a detached
+array, and fluent metadata/tag/cache/fallback changes return another definition.
+`Resources.Clone` copies catalog membership while sharing immutable content.
+`NewNyxResourceContext` captures an independent frame; editing a returned `Snapshot`
+changes only that snapshot. None of these values retains a document or widget.
+
+Text retains Unicode scalars, NUL and line endings. JSON preserves original file
+bytes and decimal spelling; read `.AsDecimal.Text` for exact numeric tokens.
+Requesting an approximate number is a deliberate typed projection. Foreign
+definitions are normalized through their strict wire at registry admission, so
+later producer changes cannot alter accepted content. Invalid replacements and
+late malformed/conflicting catalog entries refuse before publishing a candidate.
+
+The portable file limit is one MiB. Creator titles/help allow 512/4096 UTF-8 bytes,
+and names allow 128 printable Unicode scalars. Catalogs allow 128 exact name/locale
+variants and a three-MiB packed definition/name budget. Replacing an existing
+variant preserves its order and remains legal at the entry limit when byte budgets
+admit it. Portable PNG/JPEG container admission is separate from target pixel
+decoding and actual control rendering.
+
+`tools/build.ps1 -Target resource-foundation` runs the checked native contract gate
+and stages its HTTP counterpart. The existing Pascal ready-capture driver owns the
+three acknowledged checkpoints; the page waits for those observations. Current
+native evidence passes 70 assertions, while HTTP completes 63 before the full
+capacity group exceeds the driver's unchanged command deadline. This leaves full
+immutable-resource acceptance and capacity cost open; detailed receipts and the
+next exact-operation repair belong to [WORK](../WORK.md#current-return-path-immutable-resource-acceptance--2026-10-09).
+
 ## Captions and prompts
 
 Use `nyx.resources` alongside the ordinary specialized controls. These examples

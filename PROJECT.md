@@ -67,7 +67,18 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Complete resource discovery (2026-10-09) accepts original resource criterion
+Current immutable-resource audit (2026-10-09) follows the remaining original
+criterion one. Checked native contracts pass 70; HTTP pas2js completes 63 before
+the full unchanged capacity group exceeds the debugger's command deadline.
+[The packet](WORK.md#current-return-path-immutable-resource-acceptance--2026-10-09)
+retains complete-gate failures, exact lifetime/data/refusal evidence and nine user
+contexts. Criterion one stays open; discovery seven stays accepted. Aggregate is
+**25/1/54/22/28/3**, with no new criterion/task/credit closure. Next repair the
+exact browser capacity serialization/admission cost and finish the same gate.
+MCP remains connected and LAN release unchanged; no product deployment follows
+from this qualification-only batch.
+
+Previous complete resource discovery (2026-10-09) accepts original resource criterion
 seven for Win32/LCL and pas2js HTTP: shared categories/search/exact tags, portable
 annotations, crafted source/replay, paired history and actual draft/selection
 consumers. Complete desktop/CSS-390 journeys pass 1867/2481 checks including

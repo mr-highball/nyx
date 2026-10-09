@@ -9,7 +9,17 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-3.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current resource locale authoring (2026-10-09) preserves the complete default
+Current immutable-resource audit (2026-10-09) follows original resource criterion
+one and this task's measured-cost criteria 2/3. Checked native contracts pass 70;
+HTTP pas2js completes 63 ownership/admission assertions, then its unchanged full
+capacity group exceeds the existing 15-second debugger attribute deadline. Phase
+captures locate the group, without identifying its exact slow operation or terminal
+admission result. No corruption, deadlock, performance budget or NS-3 counter/credit
+is inferred. Follow that exact serialization/admission operation before returning
+to the same complete gate. [The packet](../WORK.md#current-return-path-immutable-resource-acceptance--2026-10-09)
+retains failures and all user contexts; original performance/extension scope remains.
+
+Previous resource locale authoring (2026-10-09) preserves the complete default
 browser fixture, whose expanded combined journey has not reached its terminal
 state within the unchanged 180-second driver bound. A focused ordinary resource
 consumer reuses prior catalog-navigation qualification; it is not a combined

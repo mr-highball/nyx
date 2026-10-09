@@ -16,6 +16,22 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Original immutable criterion-one audit — 2026-10-09
+
+The complete maintained public-contract gate passes 70 checked native assertions,
+including retained lifetime, exact bytes/Unicode/numeric tokens/metadata, extension
+normalization, atomic late failure and unchanged capacities. Actual HTTP pas2js
+completes 63 ownership/admission checks, then the full capacity group exceeds the
+unchanged 15-second debugger attribute-response deadline. Its terminal admission
+result and precise slow operation remain unqualified; no corruption or deadlock
+is inferred. The original criterion stays open, and none of its limits are reduced.
+Resource's no-closure counter advances 0→1, aggregate 25/1/54/22/28/3; seven stays
+accepted, with no other criterion/task/credit closure. The next outcome is repair
+of the exact browser capacity serialization/admission boundary and completion of
+this same full gate, not additional foundation/discovery variants. Failures,
+ownership and nine-context preservation are retained in
+[WORK.md](../WORK.md#current-return-path-immutable-resource-acceptance--2026-10-09).
+
 ## Accepted original discovery criterion seven — 2026-10-09
 
 The complete supported Win32/LCL and pas2js HTTP evidence now accepts the

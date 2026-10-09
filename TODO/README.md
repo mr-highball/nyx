@@ -47,7 +47,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current complete discovery accepts original resource criterion seven for the
+Current immutable-resource audit follows original resource criterion one. Native
+public contracts pass 70; actual HTTP pas2js completes 63 ownership/admission
+checks before the unchanged full capacity group exceeds the debugger's 15-second
+command deadline. [The packet](../WORK.md#current-return-path-immutable-resource-acceptance--2026-10-09)
+retains failures, nine exact user contexts and the unchanged LAN/MCP. Criterion
+one stays open; discovery seven stays accepted. Resource alone advances unfinished
+0→1, aggregate 25/1/54/22/28/3; no new criterion/task/credit closes. Next identify
+and repair the exact browser capacity serialization/admission operation, then
+finish the same full gate. No more foundation/discovery fixture variants.
+
+Previous complete discovery accepts original resource criterion seven for the
 qualified Win32/LCL and pas2js HTTP consumers. Shared category/search/exact tags,
 portable annotations/source/replay, paired history and actual draft/selection
 journeys pass. Complete desktop/CSS-390 checks are 1867/2481 including polling,
