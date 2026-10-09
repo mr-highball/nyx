@@ -67,7 +67,16 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
-Selected resource observations (2026-10-09) integrate public typed cards and
+Workspace activity continuity (2026-10-09) puts existing Details in its own
+public Nyx section. Native/desktop activity updates retain Resources/Chrome roots,
+Unicode inputs, focus/caret and pairs; compact navigation returns to latest visible
+activity. [The packet](WORK.md#current-return-path-workspace-activity-continuity--2026-10-09)
+records 79/75/74 ordinary target checks, rollback regressions and precise limits.
+Ledger is **25/16/49/21/28/3**; no full criterion/task/credit closes. Stop activity
+variants and return to genuine full-frame/membership recovery. Complete parity,
+performance and installed observing remain open; LAN keeps its protected version.
+
+Previous selected resource observations (2026-10-09) integrate public typed cards and
 bounded exact revision/sequence reads into both ordinary Studio controllers.
 Dedicated Resources retains incomplete Unicode input/focus/identity during status
 updates, refuses stale selection painting and negotiates older peer behavior.

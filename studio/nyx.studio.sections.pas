@@ -33,14 +33,18 @@ type
   { These are editor presentation roles, never application output targets.
     Inactive compact panels have no document; their mounted lifetimes can be
     parked by the target adapter without retaining an authored design. }
-  TNyxStudioSection = (nssChrome, nssProject, nssInspector, nssResources);
+  { Workspace details contain agent activity, jobs and output configuration.
+    Their changing descendants must not retire another section's live inputs.
+    Within a composed Design area, its stable details root keeps membership
+    stable during activity. Inactive compact Design areas can still be omitted. }
+  TNyxStudioSection = (nssChrome, nssProject, nssInspector, nssResources, nssDetails);
   { Complete preserves every creator context by default. The stock composer
     explicitly declares its editor-only hierarchy dependency; custom composers
     using that default from callbacks/recipes can retain the complete context. }
   TNyxStudioSectionContext = (nscComplete, nscEditorOwnedHierarchy);
 
   { Owns independent copies of the existing shared Nyx shell composition.
-    Chrome substitutes empty public panel hosts for Project/Inspector/Resources
+    Chrome substitutes empty public panel hosts for Project/Inspector/Resources/Details
     roots. Other sections retain their complete compounds and private context.
     No borrowed subtree is attached to a second owner; failure releases all
     copies and leaves the caller's source document unchanged. }
@@ -81,6 +85,7 @@ const
   NyxStudioProjectMountID = 'studio-project-mount';
   NyxStudioInspectorMountID = 'studio-inspector-mount';
   NyxStudioResourcesMountID = 'studio-resources-mount';
+  NyxStudioDetailsMountID = 'studio-details-mount';
 
 { Canonical role-to-root and role-to-host mapping. Chrome is the surrounding
   frame, so it has no child mount ID; undefined role values raise. }
@@ -129,6 +134,10 @@ begin
       begin
         Result := 'studio-resources';
       end;
+    nssDetails:
+      begin
+        Result := 'studio-details';
+      end;
   end;
 end;
 
@@ -151,6 +160,10 @@ begin
     nssResources:
       begin
         Result := NyxStudioResourcesMountID;
+      end;
+    nssDetails:
+      begin
+        Result := NyxStudioDetailsMountID;
       end;
   end;
 end;

@@ -3,7 +3,20 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current selected-resource observations (2026-10-09) return to common Resources
+Current workspace activity continuity (2026-10-09) repairs the demonstrated
+NS-4 criterion-two ownership boundary: the existing Details root publishes its
+own Nyx section while activity grows, preserving native/desktop Resources and
+Chrome roots, Unicode inputs, focus/caret and paired state. Compact navigation
+retains its omitted-owner policy and returns to latest visible activity.
+[The packet](WORK.md#current-return-path-workspace-activity-continuity--2026-10-09)
+records baseline timeout, current 79/75/74 ordinary target checks, existing
+failure-recovery regression and qualification limits. Authoring alone advances
+unfinished batches **48→49**, aggregate **25/16/49/21/28/3**; no full criterion/
+task/credit closes. Stop activity variants; return to genuine full-frame Chrome/
+membership recovery under the same original owner. Full visual/input/performance,
+broader custom contexts and installed observing retain their requirements.
+
+Previous selected-resource observations (2026-10-09) return to common Resources
 under NS-4 authoring criterion three, following NS-1 resource-six and semantic
 workflow prerequisites. Public typed cards and exact bounded revision/sequence
 reads integrate through both ordinary controllers: late selection replies,

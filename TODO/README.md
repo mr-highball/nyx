@@ -47,7 +47,17 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current selected-resource observations (2026-10-09) consume NS-4 authoring
+Current workspace activity continuity (2026-10-09) consumes NS-4 authoring
+criterion two through the accepted grouped-section prerequisite. Details gains
+its own owner while native/desktop Resources/Chrome and focused Unicode drafts
+remain exact through real publication/retirement. Compact navigation shows latest
+activity on return. [The packet](../WORK.md#current-return-path-workspace-activity-continuity--2026-10-09)
+records 79/75/74 ordinary consumers, rollback regression and original limits.
+Authoring alone advances unfinished 48→49, aggregate 25/16/49/21/28/3; no full
+criterion/task/credit closes. Stop activity variants; return to genuine Chrome/
+compact membership/full-frame recovery under the same owner.
+
+Previous selected-resource observations (2026-10-09) consume NS-4 authoring
 Resources criterion three through both ordinary controllers, following NS-1
 resource-six shared-view and semantic-workflow prerequisites. Public typed cards,
 exact bounded revision/sequence reads, stale reply suppression, copied input/focus

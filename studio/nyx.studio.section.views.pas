@@ -81,7 +81,9 @@ type
     procedure Render(ADocument: TNyxDocument; ARoot: TNyxNode;
       AHost: TNyxStudioSectionHost; ADesignMode: Boolean = False;
       AState: TNyxState = nil);
-    { True admits compatible retained changes and grouped side replacements.
+    { True admits compatible retained changes and grouped independent replacements,
+      including dynamically growing workspace details. Unmentioned/compatible
+      Resources inputs retain their physical ownership and event scope.
       False requests complete-frame admission for changed membership/chrome or
       refuses busy views. Already applied retained changes are recovered before
       refusal; extension/recovery failures raise and must be reported by the host. }

@@ -9,7 +9,19 @@ Starting evidence: inherited fluent browser prototype; new units and validation
 are tracked in [WORK.md](../WORK.md). North-star owner: NS-4.
 Completion credit: pending evidence-backed assessment; no credit is earned by partial code.
 
-Current selected-resource observations consume Resources criterion three through
+Current workspace activity continuity follows criterion two and the accepted
+section-publication prerequisite. Existing Details becomes an independent Nyx
+owner; real activity growth/retirement preserves native/desktop Resources and
+Chrome roots, Unicode input identity, focus/caret and exact pairs. Compact policy
+omits inactive Design and realizes latest visible activity on return. Current
+ordinary native/HTTP desktop/CSS-390 passes 79/75/74, with maintained failure
+recovery regression. [The packet](../WORK.md#current-return-path-workspace-activity-continuity--2026-10-09)
+retains baseline timeout and precise limits. Authoring advances unfinished 48→49,
+aggregate 25/16/49/21/28/3; no full criterion/task/credit closes. Stop activity
+variants. Genuine Chrome/membership/full-frame recovery, broader custom contexts,
+complete parity/performance and installed observing retain this original scope.
+
+Previous selected-resource observations consume Resources criterion three through
 both ordinary controllers, following NS-1 resource-six and semantic prerequisites.
 Public typed cards distinguish attempt/publication/cache/diagnostics and support
 exact bounded reads. Scoped native/HTTP desktop/CSS-390 passes 51/44/47 with late

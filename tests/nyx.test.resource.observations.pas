@@ -39,7 +39,7 @@ uses SysUtils, Classes, nyx.text, nyx.types, nyx.data, nyx.model, nyx.controls, 
   nyx.resources.runtime.view, nyx.application.resources, nyx.scheduler,
   nyx.resources.workspace,
   nyx.studio.agents, nyx.studio.session, nyx.studio.projects, nyx.studio.workspaces,
-  nyx.studio.agentbridge, nyx.studio.exchange, nyx.studio.resourceedits,
+  nyx.studio.agentbridge, nyx.studio.exchange, nyx.studio.resourceedits, nyx.studio.sections,
   nyx.test.editor.exchange,
   {$ifdef PAS2JS}
   JS, Web, nyx.studio.browser
@@ -69,6 +69,17 @@ type
     FFinished: Boolean;
     FStarted: {$ifdef PAS2JS}Double{$else}QWord{$endif};
     FRetained: {$ifdef PAS2JS}TJSHTMLElement{$else}TControl{$endif};
+    { Borrowed identities only: compare these pointers after publication, never
+      dereference a retired root/control. The controller remains their owner. }
+    FChromeRoot: TNyxNode;
+    FResourceRoot: TNyxNode;
+    FDetailsRoot: TNyxNode;
+    FActivityCount: Integer;
+    FCompact: Boolean;
+    {$ifdef PAS2JS}
+    FOpenedAgents: Boolean;
+    procedure ClickMenu(const AID: TNyxText);
+    {$endif}
     {$ifndef PAS2JS}
     FWindow: TForm;
     procedure CaptureDetail;
@@ -79,6 +90,7 @@ type
     function Text(const AID: TNyxText): TNyxText;
     function Visible(const AID: TNyxText): Boolean;
     procedure SetProposal;
+    procedure CheckContinuity(const AOutcome: TNyxText);
     procedure QualifyQueries;
     procedure QualifyLegacy;
     procedure Finish;
@@ -147,6 +159,20 @@ begin
   {$endif}
 end;
 
+{$ifdef PAS2JS}
+procedure TJourney.ClickMenu(const AID: TNyxText);
+var
+  LFace: TJSHTMLElement;
+begin
+  { Action menus own a separate public Nyx popup, outside the shell lookup
+    forest. Navigate its real visible faces rather than click hidden chrome. }
+  LFace := TJSHTMLElement(document.querySelector('[data-node="' + AID + '"]'));
+  Check((LFace <> nil) and (LFace.getBoundingClientRect.height > 0),
+    'visible ordinary action menu ' + AID);
+  LFace.click;
+end;
+{$endif}
+
 function TJourney.Text(const AID: TNyxText): TNyxText;
 begin
   Check(FStudio.ShellView.Root.Find(AID) <> nil, 'mounted status ' + AID);
@@ -168,13 +194,84 @@ begin
   TJSHTMLTextAreaElement(FRetained).value := 'Unfinished proposal 🌙';
   FRetained.dispatchEvent(TJSEvent.new('input'));
   FRetained.focus;
+  TJSHTMLTextAreaElement(FRetained).selectionStart := 4;
+  TJSHTMLTextAreaElement(FRetained).selectionEnd := 10;
   {$else}
   FRetained := FStudio.ShellView.InputFor(NyxResourceEditorFieldID(
     'studio-resource-editor', refContent));
   Check(FRetained is TCustomMemo, 'ordinary content input');
   TCustomMemo(FRetained).Text := 'Unfinished proposal 🌙';
   TWinControl(FRetained).SetFocus;
+  TCustomMemo(FRetained).SelStart := 4;
+  TCustomMemo(FRetained).SelLength := 6;
   {$endif}
+  FChromeRoot := FStudio.ShellView.SectionRoot(nssChrome);
+  FResourceRoot := FStudio.ShellView.SectionRoot(nssResources);
+  FDetailsRoot := FStudio.ShellView.RootFor('studio-agents');
+  FActivityCount := 0;
+
+  if FDetailsRoot <> nil then
+  begin
+    FActivityCount := FStudio.ShellView.Root.Find('studio-agents-activity').Count;
+  end;
+  Check((FChromeRoot <> nil) and (FResourceRoot <> nil) and
+    ((FDetailsRoot <> nil) or FCompact),
+    'ordinary resources retain the enabled desktop or compact Agents intent');
+end;
+
+procedure TJourney.CheckContinuity(const AOutcome: TNyxText);
+begin
+  { Check lifetime before reading a borrowed physical input on either target. }
+  {$ifdef PAS2JS}
+  Check(FRetained = document.querySelector(
+    '[data-node="studio-resource-editor-content"] textarea'),
+    'activity growth retains actual resource input identity');
+  Check(TJSHTMLTextAreaElement(FRetained).value = 'Unfinished proposal 🌙',
+    'activity growth retains incomplete Unicode content');
+  Check(document.activeElement = FRetained, 'activity growth retains physical focus');
+  Check((TJSHTMLTextAreaElement(FRetained).selectionStart = 4) and
+    (TJSHTMLTextAreaElement(FRetained).selectionEnd = 10),
+    'activity growth retains the physical text selection');
+  {$else}
+  Check(FRetained = FStudio.ShellView.InputFor(NyxResourceEditorFieldID(
+    'studio-resource-editor', refContent)), 'activity growth retains actual resource input identity');
+  Check(TNyxText(RawByteString(TCustomMemo(FRetained).Text)) = TNyxText('Unfinished proposal 🌙'),
+    'activity growth retains incomplete Unicode content');
+  Check(FWindow.ActiveControl = FRetained, 'activity growth retains physical focus');
+  Check((TCustomMemo(FRetained).SelStart = 4) and (TCustomMemo(FRetained).SelLength = 6),
+    'activity growth retains the physical text selection');
+  {$endif}
+  Check(FStudio.ShellView.SectionRoot(nssChrome) = FChromeRoot,
+    'activity publication retains the independent outer Chrome root');
+  Check(FStudio.ShellView.SectionRoot(nssResources) = FResourceRoot,
+    'activity publication retains the independent Resources root');
+  { Compact Project navigation deliberately omits the design/details owner.
+    That absence is not a replacement or proof of visible activity. The final
+    Design navigation separately qualifies its latest real label/allocation. }
+
+  if FDetailsRoot <> nil then
+  begin
+    Check(FStudio.ShellView.RootFor('studio-agents') <> FDetailsRoot,
+      'structurally growing workspace details publish their own candidate');
+    Check(FStudio.ShellView.Root.Find('studio-agents-activity').Count > FActivityCount,
+      'new real host activity reaches observing controls');
+    Check(Pos(AOutcome, Text('studio-agent-activity-' + TNyxText(IntToStr(
+      FStudio.ShellView.Root.Find('studio-agents-activity').Count - 1)))) > 0,
+      'latest real activity reaches the actual target label');
+    FDetailsRoot := FStudio.ShellView.RootFor('studio-agents');
+    FActivityCount := FStudio.ShellView.Root.Find('studio-agents-activity').Count;
+  end
+  else
+  begin
+    Check(FCompact and (FStudio.ShellView.RootFor('studio-agents') = nil),
+      'inactive compact details remain deliberately unmounted during resource editing');
+  end;
+  {$ifndef PAS2JS}
+  Check(EncodeNyxProject(FStudio.Session.ProjectSnapshot) = FBefore,
+    'observing activity preserves the exact local accepted/source/draft pair');
+  {$endif}
+  Check(EncodeNyxProject(FCore.ReviewSeed(1)) = FBefore,
+    'observing activity preserves the exact semantic accepted/source/draft pair');
 end;
 
 {$ifndef PAS2JS}
@@ -437,6 +534,26 @@ begin
           Check(FStudio.ShellView.Root.Find('welcome-heading') = nil,
             'design and editor shell remain separate owned trees');
           {$ifdef PAS2JS}
+          FCompact := FStudio.ShellView.Root.Find('action-panel-design') <> nil;
+
+          if not FOpenedAgents then
+          begin
+
+            if TJSHTMLElement(document.querySelector('[data-node="action-agents"]'))
+              .getBoundingClientRect.height > 0 then
+            begin
+              Click('action-agents');
+              FOpenedAgents := True;
+              FStage := 11;
+            end
+            else
+            begin
+              Click('action-actions');
+              FStage := 12;
+            end;
+            window.setTimeout(@Next, 20);
+            Exit;
+          end;
 
           if FStudio.ShellView.Root.Find('action-resources-toggle') = nil then
           begin
@@ -448,15 +565,28 @@ begin
             Exit;
           end;
           {$endif}
-          {$ifndef PAS2JS}
-          { Native attachment opens the separate Agents activity panel. Close
-            that presentation before qualifying Resources status-only retention;
-            activity-list growth/full-frame recovery has its own shared owner. }
-          Click('action-agents');
-          {$endif}
+          { Native attachment already opens Agents. Keep the real panel open
+            throughout the resource-editing and asynchronous activity journey. }
           Click('action-resources-toggle');
           FStage := 2;
         end;
+      {$ifdef PAS2JS}
+      11:
+        begin
+          FStage := 1;
+        end;
+      12:
+        begin
+          ClickMenu('studio-menu-project');
+          FStage := 13;
+        end;
+      13:
+        begin
+          ClickMenu('studio-menu-agents');
+          FOpenedAgents := True;
+          FStage := 11;
+        end;
+      {$endif}
       2:
         begin
           SelectRow(0);
@@ -563,6 +693,15 @@ begin
           Check(Text('studio-resource-runtime-0-selection-locale') = 'en-US',
             'locale change refreshes detail without a document revision or activity change');
           SetProposal;
+          FCore.PublishResourceRuntime(FObservation,
+            NyxApplicationResourceDiagnostics(FRuntime).CaptureRuntime);
+          GExchange.FireTick;
+          GExchange.Deliver;
+          FStage := 91;
+        end;
+      91:
+        begin
+          CheckContinuity('updated selected-resource-run');
           FCore.RetireResourceRuntime(FObservation);
           GExchange.FireTick;
           GExchange.Deliver;
@@ -572,6 +711,7 @@ begin
         begin
           Check(Text('studio-resource-runtime-0-retired') = 'Observation retired',
             'runtime retirement refreshes the observing ordinary editor');
+          CheckContinuity('retired selected-resource-run');
           {$ifdef PAS2JS}
           Check(TJSHTMLTextAreaElement(FRetained).value = 'Unfinished proposal 🌙',
             'runtime-only refresh retains incomplete content');
@@ -596,6 +736,45 @@ begin
           {$ifdef PAS2JS}
           TJSHTMLElement(document.querySelector(
             '[data-node="studio-resource-runtime-0-selection"]')).scrollIntoView;
+          {$endif}
+          { Dedicated Resources hides the design/details area but keeps its
+            enabled panel and section mounted. Return through the ordinary
+            command to qualify the newly published activity's visible layout. }
+          Click('action-resources-close');
+          FStage := 14;
+        end;
+      14:
+        begin
+          {$ifdef PAS2JS}
+
+          if FStudio.ShellView.Root.Find('studio-agents') = nil then
+          begin
+            Click('action-panel-design');
+            window.setTimeout(@Next, 20);
+            Exit;
+          end;
+          {$endif}
+          Check(Text('studio-agents-title') = 'Agents', 'ordinary Agents view survives resource navigation');
+          Check(Pos(TNyxText('retired selected-resource-run'), Text('studio-agent-activity-' +
+            TNyxText(IntToStr(FStudio.ShellView.Root.Find('studio-agents-activity').Count - 1)))) > 0,
+            'latest activity reaches the actual label after ordinary Design navigation');
+          {$ifdef PAS2JS}
+
+          if TJSHTMLElement(document.querySelector('[data-node="studio-details"]'))
+            .getBoundingClientRect.height = 0 then
+          begin
+            Click('action-details-toggle');
+            window.setTimeout(@Next, 20);
+            Exit;
+          end;
+          Check(TJSHTMLElement(document.querySelector('[data-node="studio-details"]'))
+            .getBoundingClientRect.height > 0, 'published workspace details have visible allocation');
+          TJSHTMLElement(document.querySelector('[data-node="studio-agents-activity"]')).scrollIntoView;
+          {$else}
+          Check(FStudio.ShellView.ControlFor('studio-details').Height > 0,
+            'published workspace details have visible allocation');
+          FWindow.Repaint;
+          SaveNyxNativeCapture(FWindow, TNyxText(ChangeFileExt(ParamStr(1), '.activity.png')), ncmPrint);
           {$endif}
           Finish;
         end;

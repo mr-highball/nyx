@@ -9,6 +9,112 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Workspace activity continuity — 2026-10-09
+
+Entry is clean at pushed `f4384a7`. The previous turn is progress: selected
+resource observations integrate both ordinary controllers, revise source and
+qualify actual target consumers. Full goal remains active. Return to original
+NS-4 authoring criterion two's demonstrated combined-workload input/focus gap,
+following the accepted independent section/publication prerequisite. Ledger stays
+25/16/48/21/28/3 until evidence changes it; no prior credit is reset.
+
+Reproduce the maintained Resources journey with the real native Agents panel
+left open. Activity growth currently changes Chrome structure and admits a new
+complete frame, destroying the borrowed resource input. A copied text rescue is
+not equivalent to preserving that independently owned input/event scope. Isolate
+the existing always-composed workspace-details root as a typed Studio section
+using public Nyx grouped publication; no parallel UI toolkit or padded fake rows.
+
+Acceptance: real activity growth/retirement reaches observing controls while
+Resources preserves unfinished Unicode content, focus, caret, exact owning root
+and input identity, paired source/history and independent Chrome. Qualify ordinary
+native and HTTP desktop/compact browser paths, and rerun existing staged failure
+recovery at the changed section boundary. Preserve original complete authoring,
+visual/input/performance, context/membership and installed observing requirements.
+One repair at the demonstrated ownership boundary; stop further activity/fixture
+variants after qualified integration. No backend/configuration/service replacement
+or equivalent retry of previously rejected actions. Protected pairs/processes and
+immutable release/staged builders stay exact.
+
+Result: the existing `studio-details` root now has the closed `nssDetails` role
+and canonical mount port. Both ordinary controllers already consume that facade;
+activity/job/output descendants can stage their own ordinary Nyx section instead
+of changing Chrome structure. This changes ownership, not the composed UI or
+its public allocation/split contract. No fixed fake rows, new runtime authority,
+serialization version or alternate toolkit is introduced.
+
+The current baseline receipt is `before/native/run.log`: with Agents enabled,
+the expanded journey reaches publication stage 91 then exceeds its existing
+120-second bound, retiring leak-free before continuity assertions. It is a
+timeout, not a fresh direct identity-loss assertion. The preceding selected-
+observation packet already records that identity loss and invalid borrowed-pointer
+read. After the ownership repair, the maintained native journey passes **79**
+within the same guard and frees all allocations. No overall speedup is inferred
+from these journeys or their assertion counts.
+
+The maintained `resource-observations` target now keeps Agents enabled. A real
+host publication and later retirement grow activity independently of design
+revision. Native and HTTP desktop retain exact Resources/Chrome roots and input
+identity, incomplete supplementary-Unicode content, physical focus/caret and
+paired state; Details actually publishes a different owned root. New activity
+also reaches actual target label text. Dedicated Resources hides that desktop
+Design/details area while keeping it mounted. Compact Project navigation instead
+omits the inactive Design owner, as the existing policy requires. Ordinary menu/
+panel navigation returns to Design and shows the latest activity with positive
+allocation; it does not claim simultaneous visible compact owners.
+
+Final native/HTTP desktop/CSS-390 consumers pass **79/75/74**. The browser fixture
+uses the real visible Actions menu on compact hosts, rather than hidden chrome.
+First browser compilation receipts retain two fixture mistakes: the installed
+Web declarations omit `setSelectionRange`, and the browser controller intentionally
+exposes no mutable Session property. Typed selection properties and semantic pair
+inspection qualify the respective boundaries; native additionally checks its
+existing public local snapshot. No new product accessor is added for the test.
+The initial simpler desktop consumer passes before the final visible-label/
+navigation checks; its staged child remains unchanged.
+
+Current `studio-section-recovery` executes **33** native checks, including exact
+root rollback, draft/range/callback continuity, later factory/second preview
+refusal and retirement. Its browser descendants execute over HTTP separately
+with their real live-capture handshake. All completed native consumers/drivers
+free their traced allocations; browser-driver heap evidence is not JavaScript
+heap qualification. Seven existing upstream pas2js RTL warnings remain visible;
+owned code has no warnings. The comment-only clarification of compact membership
+does not change qualified executable behavior.
+
+Current desktop/compact activity captures and the native diagnostic Print capture
+are inspected. Native Print shows the allocated Agents header rather than the
+lower activity rows; actual label assertions establish their target text, not
+full visible native row geometry. Physical hardware/IME/accessibility, other
+widgetsets/DPI, full visual/input/performance parity, wider extension/context
+and complete full-frame recovery retain their original owners. Source-protocol
+fixtures do not establish installed authenticated rollout. Do not rerun unrelated
+store/cache/parser/codec suites for this section ownership change.
+
+Authoring alone advances unfinished batches **48→49**, aggregate
+**25/16/49/21/28/3**; no complete criterion/task or credit closes. Full goal stays
+active. Stop details/activity fixture variants. Return next to combined editor
+full-frame admission/recovery under original authoring criterion two, especially
+independent resource proposals and native focus/caret after genuine Chrome or
+compact membership changes; follow the accepted section prerequisite. Delivery,
+observing, resource progress and original production breadth keep their owners.
+Final recovery executes **33/33** HTTP desktop/CSS-390 checks, including its
+live-capture handshake before scope retirement; both captures are inspected.
+`preservation-after.log` verifies nine exact accepted/source/draft pairs, all
+15 original process identities, 299 sealed release files and the unchanged
+147033-byte recovery checkpoint. Installed semantic inspection still shows
+revision two, the original selection, no pending draft and no Undo/Redo work.
+Protected LAN/loopback bindings remain intact at their older product version.
+No Studio backend/configuration/service is launched or replaced.
+
+Final source-output/staged/HTTP byte checks pass for all **seven** qualified
+consumer/recovery files on the verified existing static host. All **33** files
+in this packet and previous selected-observation immutable children remain
+unchanged. Failed/passing receipts stay under the ignored packet directory.
+Source checkpoint uses `hello-nyx`; push, exact remote-ref and clean-worktree
+evidence is recorded in `build/resource-activity-continuity/remote-checkpoint.log`.
+That checkpoint is source progress, not a phone deployment or whole-goal closure.
+
 ## Current return path: Selected resource observations — 2026-10-09
 
 Entry is clean at pushed `545d440`. Previous turn is progress: a both-target

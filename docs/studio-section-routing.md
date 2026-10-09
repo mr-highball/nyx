@@ -1,18 +1,19 @@
 # Studio mounted section routing
 
 [Architecture](architecture.md) · [Independent view sections](view-sections.md) ·
-[Current evidence](../WORK.md#current-return-path-studio-section-recovery--2026-10-08)
+[Current evidence](../WORK.md#current-return-path-workspace-activity-continuity--2026-10-09)
 
 Studio still composes its chrome with `BuildNyxStudioView` and the public Nyx
 components. `nyx.studio.sections` copies that composition into independent
-Chrome, Project and Inspector documents. `nyx.studio.section.views` mounts them
+Chrome, Project, Inspector, Resources and workspace Details documents.
+`nyx.studio.section.views` mounts them
 through the ordinary browser/LCL renderers and public managed view sections.
 Canvas and Pascal source already have separate view owners. The borrowed lookup
 forest is rebuilt after each successful admission; resolve it again after refresh.
 Real model roots and controls follow their owning section's lifetime instead.
 
-The surrounding Chrome owns empty Nyx panel ports at the original side-panel
-positions. Each side document owns its actual scroll root and descendants. The
+The surrounding Chrome owns empty Nyx panel ports at the original section
+positions. Each independent document owns its actual scroll root and descendants. The
 dedicated physical host belongs to the section owner and outlives its renderer;
 side views retire before the Chrome ports. No borrowed model children are
 attached to a synthetic root.
@@ -51,7 +52,15 @@ rules and must not pump queues. A supplied theme is also borrowed until the
 section owner and prepared changes retire.
 
 Compatible refresh keeps real controls and their runtime properties. Incompatible
-Project/Inspector sections prepare hidden replacements and publish as one group.
+Project, Inspector, Resources and Details sections prepare hidden replacements
+and publish as one group.
+A new activity row changes only the independently owned Details descendants;
+its candidate can replace that section while Resources retains its live editor
+input, Unicode draft, physical caret/focus and event scope. Details is the
+existing stable root within the composed Design area, including while collapsed.
+Compact navigation can omit that area; returning to Design realizes its latest
+copied activity. Growing activity does not change section membership or
+manufacture extra empty activity rows.
 A changed Chrome structure or compact membership uses a fully admitted hidden
 frame. Before a full native frame retirement, Canvas and source views park; a
 failed admission restores both exact prior hosts. Retained Chrome keeps those
