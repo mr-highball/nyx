@@ -3,7 +3,18 @@
 [Project](PROJECT.md) · [Task flow](TASKFLOW.MD) · [Task catalog](TODO/README.md) ·
 [Current work](WORK.md)
 
-Current resource transfer retirement (2026-10-09) supplies real partial-body
+Current hosted cache policy (2026-10-09) repairs a shared exhausted-age defect
+reproduced by actual native/browser applications. Server age consumes permitted
+stale time; explicit Override remains available. Eleven current policy journeys
+pass 27 actual requests each with exact catalog/control/default retention and
+same-URL recovery. [The packet](WORK.md#current-return-path-hosted-resource-cache-policy--2026-10-09)
+retains failure/passing evidence and original full HTTP/cache/lifetime/security/
+media, physical input/performance and observing owners. Resource alone advances
+unfinished batches **15→16**, aggregate **25/16/47/21/28/3**; no full criterion/
+task/credit closes. Stop header/fixture variants and return to the common
+Resources/runtime observation consumer under its existing owners.
+
+Previous resource transfer retirement (2026-10-09) supplies real partial-body
 cancellation and host-disposal consumers on Win32/LCL and HTTP browser. Complete
 accepted catalogs, controls and authored defaults survive; same-URL recovery,
 terminal copied request observations and two held socket closures pass. Native

@@ -67,6 +67,17 @@ public library contract and its reusable components as the proof of capability.
 
 ## Current evidence and limits
 
+Hosted cache-policy applications (2026-10-09) reproduce and repair renewal of an
+already exhausted stale allowance. Server Age now consumes remaining stale time;
+explicit caller Override stays available. Actual native/browser applications pass
+eleven policies, 27 requests each, with retained controls/defaults and same-URL
+recovery. [The packet](WORK.md#current-return-path-hosted-resource-cache-policy--2026-10-09)
+retains failures, current qualified bytes and leak-free regressions. The current
+matrix uses memory caches; full HTTP/conditional validation, storage-operation
+lifetime, security/media, visual/input/performance and observing remain open.
+Ledger is **25/16/47/21/28/3**, with no full criterion/task/credit closure. Stop
+header/fixture variants and return to common Resources/runtime visibility.
+
 Resource transfer retirement (2026-10-09) now has real Win32/LCL and HTTP-browser
 application consumers after positive body bytes arrive while the tail is held.
 Cancellation/host disposal preserve catalogs, notifications, controls and authored

@@ -16,6 +16,24 @@ This prerequisite does not replace full Studio authoring, complete media/catalog
 or semantic-workflow requirements. North-star owner NS-1; credit pending accepted
 evidence. Existing packed PNG/JPEG and typed scalar/collection engines are inputs.
 
+## Actual hosted cache-policy consumer — 2026-10-09
+
+Criterion five now has actual Win32/LCL and HTTP-browser memory-cache policy
+consumers with independent producer counts. Eleven cases cover fresh, bypass,
+no-store Respect/Override, no-cache, must-revalidate, allowed/exhausted stale,
+age Override, caller TTL and conflicting freshness. Both targets reproduce
+renewal of an already exhausted stale allowance before the shared calculation
+is repaired. Negative remaining server freshness now consumes stale time; explicit
+Override keeps caller freedom. Current checks pass 611/660 (polling included),
+27 actual requests each, exact catalogs/controls/defaults and same-URL recovery.
+Native application/driver/loader/held-body regressions are leak-free. [The packet](../WORK.md#current-return-path-hosted-resource-cache-policy--2026-10-09)
+retains failure receipts and qualified bytes. Resource alone advances unfinished
+batches 15→16, aggregate 25/16/47/21/28/3; no full criterion/task/credit closes.
+Full conditional HTTP/Date/transit-age/security/media, persistent-policy breadth,
+cache-operation lifetime, physical input/performance and observing remain open.
+Stop header/fixture variants; return to common Resources/runtime visibility
+under its original resource/authoring/workflow owners.
+
 ## Actual partial-body retirement consumer — 2026-10-09
 
 Criterion five now has the missing actual native body-arrival cancellation gate

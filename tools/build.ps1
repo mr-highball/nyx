@@ -22,7 +22,7 @@
 #
 [CmdletBinding()]
 param(
-[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resources', 'resource-stream', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
+[ValidateSet('core', 'generated', 'collections', 'collection-views', 'collection-authoring', 'collection-inspectors', 'collection-bindings', 'collection-refresh', 'collection-query', 'collection-query-editor', 'collection-query-workflow', 'project-transactions', 'data-read', 'reusables', 'placement', 'designer-drag', 'constraints', 'resize', 'guides', 'move-snapping', 'flow-placement', 'containers', 'view-sections', 'studio-section-recovery', 'native-measurement', 'retained-arrangement', 'content-recipes', 'content-editor', 'content-revisions', 'responsive', 'presentations', 'manual-presentations', 'selection', 'tree-hierarchy', 'slider-fields', 'host-space', 'typeahead', 'typeahead-policy', 'typeahead-workflow', 'grid-navigation', 'menu', 'menu-bar', 'menu-bar-authoring', 'menu-bar-editor', 'menu-bar-workflow', 'menu-companion', 'menu-authoring', 'menu-editor', 'popover', 'popover-companion', 'confirmation', 'resource-images', 'resource-image-authoring', 'resource-workbench', 'resource-catalog', 'resource-labels', 'image-presentation', 'image-authoring', 'resources', 'resource-stream', 'resource-policy', 'resource-loading', 'resource-authoring', 'resource-workflow', 'resource-runtime', 'application-resources', 'resource-publication', 'resource-mappings', 'theme-authoring', 'color-fields', 'time-values', 'time-fields', 'time-policy', 'clock-review', 'date-fields', 'date-policy', 'legacy-snapshot', 'release-observer', 'browser-worker', 'scheduler-pool', 'native-form', 'keyboard', 'catalog-focus', 'properties', 'layout', 'layout-policy', 'designer-controls', 'native-studio', 'semantic-events', 'source-workspace', 'source-editor', 'pascal-views', 'pascal-imports', 'pascal-routines', 'pascal-declarations', 'agents', 'compiled-preview-lifetime', 'compiler-lifecycle', 'state-bindings', 'state-inspectors', 'event-inspectors', 'agent-callback-consumers', 'agent-handler-consumers', 'agent-root-consumers', 'review-workspaces', 'review-consumers', 'project-workspaces', 'mcp-client', 'studio-release', 'split', 'interactions', 'named-events', 'viewport', 'editing', 'gestures', 'catalog', 'browser', 'studio', 'lcl', 'http', 'visual', 'all')]
   [string]$Target = 'core',
   [string]$Fpc,
   [string]$Pas2js,
@@ -51,6 +51,8 @@ param(
   # Empty compiles/stages it; native qualification owns only an ephemeral
   # read-only localhost producer, never a Studio backend or editor runtime.
   [string]$ResourceStreamPageURL,
+  # The same admitted-page contract for real hosted cache-policy consumers.
+  [string]$ResourcePolicyPageURL,
   # Explicit semantic execution qualification in an independently owned runtime.
   # It requests exact successful jobs through MCP; no operator Run substitutes.
   [switch]$VerifySemanticLaunch,
@@ -2833,10 +2835,21 @@ try {
     exit 0
   }
 
-  if ($Target -eq 'resource-stream') {
+  if ($Target -in @('resource-stream', 'resource-policy')) {
     # Pascal owns body coordination, transport sampling, assertions and exact
     # socket/thread/browser retirement. Shell only compiles, stages and runs.
     $nyxStreamRoot = Join-Path $nyxRoot 'build/resource-transfer/maintained'
+    $nyxFixtureStem = 'nyx_resource_stream'
+    $nyxFixturePage = 'resource-stream.html'
+    $nyxFixtureURL = $ResourceStreamPageURL
+    $nyxFixtureLabel = 'held-body'
+    if ($Target -eq 'resource-policy') {
+      $nyxStreamRoot = Join-Path $nyxRoot 'build/resource-policy/maintained'
+      $nyxFixtureStem = 'nyx_resource_policy'
+      $nyxFixturePage = 'resource-policy.html'
+      $nyxFixtureURL = $ResourcePolicyPageURL
+      $nyxFixtureLabel = 'hosted cache-policy'
+    }
     $nyxStreamNative = Join-Path $nyxStreamRoot 'native'
     $nyxStreamBrowser = Join-Path $nyxStreamRoot 'browser'
     $nyxStreamDriver = Join-Path $nyxStreamRoot 'driver'
@@ -2851,26 +2864,26 @@ try {
       "-Fu$nyxLazarus/components/lazutils/lib/$nyxStreamPlatform",
       "-Fu$nyxLazarus/packager/units/$nyxStreamPlatform",
       "-FU$nyxStreamNative", "-FE$nyxStreamNative")
-    Invoke-NyxCompiler $nyxLclFpc ($nyxStreamFlags + @('tests/nyx_resource_stream_controls.lpr'))
+    Invoke-NyxCompiler $nyxLclFpc ($nyxStreamFlags + @('tests/' + $nyxFixtureStem + '_controls.lpr'))
     $nyxStreamRun = Join-Path $nyxStreamRoot ([Guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $nyxStreamRun | Out-Null
-    & (Join-Path $nyxStreamNative 'nyx_resource_stream_controls.exe') (Join-Path $nyxStreamRun 'native')
-    if ($LASTEXITCODE -ne 0) { throw 'Actual native held-body application failed' }
+    & (Join-Path $nyxStreamNative ($nyxFixtureStem + '_controls.exe')) (Join-Path $nyxStreamRun 'native')
+    if ($LASTEXITCODE -ne 0) { throw "Actual native $nyxFixtureLabel application failed" }
     $nyxFpc = Resolve-NyxTool $Fpc 'FPC' 'fpc'
     Invoke-NyxCompiler $nyxFpc @('-B', '-Mdelphi', '-Sa', '-Cr', '-Co', '-Ci', '-gl', '-gh',
-      '-Fusrc', '-Futests', "-FU$nyxStreamDriver", "-FE$nyxStreamDriver", 'tests/nyx_resource_stream_browser.lpr')
+      '-Fusrc', '-Futests', "-FU$nyxStreamDriver", "-FE$nyxStreamDriver", ('tests/' + $nyxFixtureStem + '_browser.lpr'))
     $nyxPas2js = Resolve-NyxTool $Pas2js 'PAS2JS' 'pas2js'
     $nyxRuntime = Resolve-NyxTool $Pas2jsRuntime 'PAS2JS_RUNTIME' ''
     Invoke-NyxCompiler $nyxPas2js @('-B', '-Mdelphi', '-Tbrowser', '-Jirtl.js',
-      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxStreamBrowser", 'tests/nyx_resource_stream_controls.lpr')
+      '-Fusrc', '-Fustudio', '-Futests', "-FE$nyxStreamBrowser", ('tests/' + $nyxFixtureStem + '_controls.lpr'))
     Copy-Item -LiteralPath $nyxRuntime -Destination (Join-Path $nyxStreamBrowser 'rtl.js')
-    Copy-Item -LiteralPath (Join-Path $nyxRoot 'studio/web/resource-stream.html') -Destination $nyxStreamBrowser
-    if ($ResourceStreamPageURL -ne '') {
-      & (Join-Path $nyxStreamDriver 'nyx_resource_stream_browser.exe') $ResourceStreamPageURL (Join-Path $nyxStreamRun 'browser')
-      if ($LASTEXITCODE -ne 0) { throw 'Actual browser held-body application failed' }
-      Write-Host 'Actual native and admitted HTTP browser held-body applications passed.'
+    Copy-Item -LiteralPath (Join-Path $nyxRoot ('studio/web/' + $nyxFixturePage)) -Destination $nyxStreamBrowser
+    if ($nyxFixtureURL -ne '') {
+      & (Join-Path $nyxStreamDriver ($nyxFixtureStem + '_browser.exe')) $nyxFixtureURL (Join-Path $nyxStreamRun 'browser')
+      if ($LASTEXITCODE -ne 0) { throw "Actual browser $nyxFixtureLabel application failed" }
+      Write-Host "Actual native and admitted HTTP browser $nyxFixtureLabel applications passed."
     } else {
-      Write-Host 'Native held-body application passed; browser execution requires an admitted static page URL.'
+      Write-Host "Native $nyxFixtureLabel application passed; browser execution requires an admitted static page URL."
     }
     exit 0
   }

@@ -47,7 +47,18 @@ production collection controls; their breadth, virtualization and performance
 still have open NS-3 owners.
 
 
-Current resource transfer retirement (2026-10-09) follows NS-1 criterion five's
+Current hosted cache policy (2026-10-09) consumes NS-1 criterion five through
+actual native/browser applications: eleven policies, 27 requests each, retained
+catalogs/controls/defaults and same-URL recovery. Both reproduced renewal of an
+exhausted stale window before the shared age calculation was repaired. Explicit
+Override remains available. [The packet](../WORK.md#current-return-path-hosted-resource-cache-policy--2026-10-09)
+retains failed/current consumers and applicable regressions. Resource unfinished
+batches advance 15→16, aggregate 25/16/47/21/28/3; no full criterion/task/credit
+closes. Full HTTP/cache-operation lifetime/security/media, physical input,
+performance and observing remain. Stop header/fixture variants and return to
+common Resources/runtime visibility under existing owners.
+
+Previous resource transfer retirement (2026-10-09) follows NS-1 criterion five's
 missing native body-arrival gate and returns to actual browser/LCL applications.
 Typed copied observations, partial-body cancellation, same-URL recovery and host
 disposal retain complete catalogs/controls; two held socket closures and native

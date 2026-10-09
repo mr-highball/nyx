@@ -551,6 +551,30 @@ this example still does not fetch its URL. Application hosts supply the automati
 runtime lifecycle above; the common Studio authoring and semantic tools manage
 declarations rather than fetching preview resources.
 
+With `Respect`, a server's `Age` consumes both remaining freshness and the
+explicit stale allowance. For `max-age=60` and `.StaleFor(30)`, a response arriving
+with `Age: 61` has at most 29 stale seconds remaining; `Age: 90` is already
+exhausted. Stale reuse still requires a loading failure. The caller's own
+freshness limit can shorten this lifetime. `Override` deliberately uses the
+caller's lifetime instead, including for no-store, validation and age restrictions
+in Nyx-managed private storage. It cannot alter browser HTTP-cache or host policy.
+The age basis follows [RFC 9111](https://www.rfc-editor.org/rfc/rfc9111.html#section-4.2.3);
+complete conditional HTTP caching and Date/transit-age accounting remain separate
+work under the resource owner.
+
+The maintained `tools/build.ps1 -Target resource-policy` runs the actual native
+application and compiles its browser counterpart/driver. Add
+`-ResourcePolicyPageURL <admitted immutable resource-policy.html URL>` to qualify
+the exact staged browser builder/runtime through the Pascal driver. Eleven cases
+cover fresh reuse, bypass, no-store Respect/Override, no-cache, must-revalidate,
+within/exhausted stale allowance, age Override, caller TTL and conflicting
+freshness. Independent read-only producer counts establish actual requests;
+declared fallback, current annotations, complete accepted catalogs, live control
+identity and same-URL recovery are checked. The current matrix uses memory caches;
+earlier persistent-cache qualification remains separately scoped. These fixtures
+own temporary loopback sockets and never replace Studio services/configuration.
+See [current failed/passing evidence](../WORK.md#current-return-path-hosted-resource-cache-policy--2026-10-09).
+
 ## Loading and publishing
 
 `nyx.resources.loader` supplies replaceable transport, UTC-clock and resolver

@@ -9,6 +9,120 @@ actual browser/LCL consumers qualify physical behavior selectively.
 
 
 
+## Current return path: Hosted resource cache policy — 2026-10-09
+
+Entry is clean at pushed `52890b3`. Previous goal turn is progress: typed transfer
+observations and actual both-target partial-body retirement change authoritative
+source/evidence. Full goal remains active; resource unfinished batches are 15.
+Reassessment follows NS-1 resource criterion five's remaining real application
+freshness/stale/bypass/server-policy gate. Stop transfer-snapshot/body variants.
+
+Concrete risk: `StateAt` clamps server remaining freshness to zero before adding
+the caller's stale allowance. Content already older than max-age plus StaleFor
+can thereby receive a new full stale window at receipt. RFC 9111 age/stale rules
+and the existing caller policy require retaining that consumed age; explicit
+Override remains the caller's choice. Reproduce against the original calculation
+before repairing it, preserving failed receipts. One repair at this boundary,
+then stop; no broader HTTP-cache rewrite or arbitrary header variants.
+
+Deliverable: a maintained actual browser/LCL application journey uses the existing
+read-only ephemeral Pascal producer for fixed cache headers and failure replies.
+Cover fresh reuse, bypass, no-store Respect/Override, no-cache, must-revalidate,
+within/exhausted stale allowance, caller TTL and duplicate freshness refusal.
+Independent producer request counts must establish actual hit/fetch decisions;
+live label/prompt identity, declared fallback, same-URL recovery, full runtime
+catalog and saved document defaults must retain their contracts. No mock transport,
+clock replacement, Studio backend/configuration or active-design mutation.
+
+Qualification producers remain exact owned read-only threads/sockets with bounded
+teardown. Existing served builders/runtime and all protected pairs/processes stay
+intact. Use a new immutable child on the verified admitted static host for browser
+execution; installed semantic reads remain primary for active design context.
+If fixture launch refuses, retain the limitation and change outcome, not launcher.
+Full security/media/conditional HTTP validation, cache-operation lifetime, physical
+input/performance and observing rollout retain existing owners. Stop once the
+actual policy application boundary passes or a concrete external gate remains.
+
+Result: both real target applications reproduced the exhausted-age failure before
+the repair. Native `run-before.log` passes seven policies then refuses the expected
+fallback. HTTP browser `browser-before.log`/`failure.dom.html` reports actual
+origin **4** (stale cache), expected **5** (fallback), with an actual HTTP **503**.
+Both failed processes retire leak-free. The initial native compile receipt also
+retains two fixture authoring mistakes, repaired to the existing contract:
+discovery tags precede base-returning configuration and Resolve uses both locales.
+No public interface was changed to accommodate the harness.
+
+The single product repair preserves negative remaining server freshness instead
+of clamping it to zero. Server Age therefore consumes the permitted stale window;
+the caller's fresh limit remains the stricter bound. Explicit Override still uses
+the caller's lifetime. Cache envelope version/fields, authored policies, GUIDs,
+source/wire shapes and callback ownership are unchanged. Exact boundary and
+persisted-envelope checks accompany actual applications; they do not substitute
+a clock in the HTTP journey. Standards basis is
+[RFC 9111 age](https://www.rfc-editor.org/rfc/rfc9111.html#section-4.2.3) and
+[stale responses](https://www.rfc-editor.org/rfc/rfc9111.html#section-4.2.4),
+not a claim that Nyx implements a complete HTTP cache.
+
+`tools/build.ps1 -Target resource-policy -ResourcePolicyPageURL <admitted immutable
+fixture page>` is the maintained current gate. It reuses the stream target's
+compiler/staging orchestration while all decisions/assertions/coordination remain
+Pascal. Each case owns a fresh document/application/resolver; actual platform
+transports and clocks remain installed. The existing producer gained closed fixed
+header/status choices and copied request counts, preserving its held-body/default
+contract. CORS explicitly exposes Age for this fixture. No response body, header,
+clock or cache result is injected into the application by the driver.
+
+Evidence under ignored `build/resource-policy/`:
+
+- `build-both-current.log`: actual Win32/LCL **611** and HTTP Chromium **660**
+  checks, each with **27 actual capability GETs** across eleven policy consumers.
+  Request counts independently establish network/memory-hit decisions. Fresh,
+  bypass, no-store Respect/Override, no-cache, must-revalidate, allowed/exhausted
+  stale reuse, age Override, caller freshness and conflicting freshness all pass.
+  Error remains visible on fallback/stale success. Every nonfresh failure recovers
+  at the same URL. Complete cached catalogs, metadata/tags, authored defaults,
+  label/prompt properties and mounted identities remain exact. Counts include
+  polling and are not performance or completion credit. Eight exact age/boundary/
+  persisted/Override checks execute inside both consumers.
+- `build-native-current.log` retains the preceding native gate (**613**, same
+  27 requests). Current application and Pascal browser-driver heap receipts show
+  **zero unfreed blocks**. Native running/queued jobs retire before owned scheduler
+  shutdown. No qualification application/driver remains. Short-lived read-only
+  producer launches succeeded; exact sockets/threads/browser are retired.
+- `loader-native/run.log`: existing actual native loader/control regression
+  **51** checks, leak-free. `stream-regression.log`: unchanged held-body application
+  **110**, two real partial-prefix cancellations/socket closures, leak-free;
+  browser counterpart/driver compile. This latter run does not claim new browser
+  held-body execution. Current policy/native/browser consumers compile with
+  **zero owned warnings**; **seven upstream pas2js RTL warnings** remain visible.
+- Current selective captures/DOM are in
+  `maintained/511a35466eec4117ae904d4be6e34053/`: expired fallback and same-URL
+  recovery were inspected across browser/native. Browser metadata now reports
+  actual/expected origin **5/5** and retains the HTTP 503. Native prompt property
+  is verified but not painted in its focused capture; full visual/input parity is
+  still owned by NS-2. No physical input or browser GC qualification is inferred.
+- Separate failed/current immutable static children retain exact three-file
+  closures. Their admitted host and the earlier stream fixture closure remain
+  intact; current rebuilt policy bytes match the successful served builder.
+  `preservation-before.log`/`preservation-after.log` preserve all **nine** paired
+  document/source/drafts, **fifteen** identities, **299** sealed files and the
+  **147033-byte** checkpoint. Installed semantic session/resource reads retain
+  revision **2**, selection `rating-2-part-4`, empty catalog and no pending
+  draft/Undo/Redo. No active document mutation or backend/configuration replacement.
+
+NS-1 criterion five gains a real application cache-policy consumer and a repaired
+shared age defect. Full goal remains active; resource unfinished batches advance
+**15→16**, aggregate **25/16/47/21/28/3**, other owners unchanged. No full criterion/
+task/credit closes. Actual private-persistent restart/quota/corruption evidence
+from earlier packets remains applicable; this current matrix uses memory caches.
+Full conditional HTTP validation, Date/transit-age accounting, Vary/credentials/
+redirect/security/media, cache-operation deadlines/retirement, physical input,
+performance and installed observing rollout retain their owners. Stop cache-header
+and fixture variants. Return next to the common Resources/runtime observation
+consumer under the existing authoring/resource/workflow owners, carrying these
+qualified choices into usable agent/editor visibility. LAN still serves its
+earlier frozen release, with all protected user pairs intact.
+
 ## Current return path: Resource transfer retirement — 2026-10-09
 
 Entry is clean at pushed `6c3fe7c`. Previous turn is progress: actual native/

@@ -34,6 +34,12 @@ const
     the meaningful JSON tail remains withheld. Browser consumes the same bytes. }
   NyxStreamPrefixBytes = 32792;
 
+type
+  { Fixed qualification replies. These are wire fixtures, not product cache
+    policies; no caller-supplied header or body is reflected over this socket. }
+  TNyxTestResourceReply = (ntrNoStore, ntrFresh, ntrValidate, ntrRevalidate,
+    ntrStale, ntrExpired, ntrConflict, ntrUnavailable);
+
 {$ifndef PAS2JS}
 type
   { Read-only qualification producer, never a Studio server. One OS-assigned
@@ -52,6 +58,8 @@ type
     FOrigin: TNyxText;
     FNextHold: Boolean;
     FNextRecovered: Boolean;
+    FNextReply: TNyxTestResourceReply;
+    FRequests: Integer;
     FClosedBodies: Integer;
     FError: TNyxText;
     function Readable(ASocket: TSocket; AMilliseconds: Integer): Boolean;
@@ -66,6 +74,10 @@ type
       A held request uses a different unadmitted caption, so partial publication
       is observable. Recovered selects the complete subsequent healthy value. }
     procedure ArmNext(AHold, ARecovered: Boolean);
+    { Select fixed cache headers/status for the next policy journey. Each valid
+      capability GET increments Requests, independently of application reports. }
+    procedure ArmPolicy(AReply: TNyxTestResourceReply; ARecovered: Boolean = False);
+    function Requests: Integer;
     function ClosedBodies: Integer;
     function Error: TNyxText;
     property URL: TNyxText read FURL;
@@ -229,6 +241,9 @@ var
   LPrefix: TNyxBytes;
   LHold: Boolean;
   LRecovered: Boolean;
+  LReply: TNyxTestResourceReply;
+  LCacheHeaders: TNyxText;
+  LStatus: TNyxText;
   LStarted: QWord;
   LByte: Byte;
   LRead: Integer;
@@ -245,6 +260,8 @@ begin
   try
     LHold := FNextHold;
     LRecovered := FNextRecovered;
+    LReply := FNextReply;
+    Inc(FRequests);
     FNextHold := False;
   finally
     LeaveCriticalSection(FLock);
@@ -262,14 +279,51 @@ begin
       TNyxText('{"headline":"Partial text must stay hidden","prompt":"Unadmitted prompt"}');
   end;
   LBytes := NyxEncodeUTF8(LBody);
-  LHeaders := TNyxText('HTTP/1.1 200 OK') + #13#10 +
-    'Content-Type: application/json' + #13#10 + 'Cache-Control: no-store' + #13#10 +
+  LStatus := 'HTTP/1.1 200 OK';
+  case LReply of
+    ntrNoStore:
+      begin
+        LCacheHeaders := 'Cache-Control: no-store';
+      end;
+    ntrFresh:
+      begin
+        LCacheHeaders := TNyxText('Cache-Control: max-age=600') + #13#10 + 'Age: 1';
+      end;
+    ntrValidate:
+      begin
+        LCacheHeaders := TNyxText('Cache-Control: no-cache, max-age=600') + #13#10 + 'Age: 0';
+      end;
+    ntrRevalidate:
+      begin
+        LCacheHeaders := TNyxText('Cache-Control: max-age=0, must-revalidate') + #13#10 + 'Age: 1';
+      end;
+    ntrStale:
+      begin
+        LCacheHeaders := TNyxText('Cache-Control: max-age=60') + #13#10 + 'Age: 61';
+      end;
+    ntrExpired:
+      begin
+        LCacheHeaders := TNyxText('Cache-Control: max-age=60') + #13#10 + 'Age: 3600';
+      end;
+    ntrConflict:
+      begin
+        LCacheHeaders := TNyxText('Cache-Control: max-age=600, max-age=0') + #13#10 + 'Age: 0';
+      end;
+    ntrUnavailable:
+      begin
+        LStatus := 'HTTP/1.1 503 Service Unavailable';
+        LCacheHeaders := 'Cache-Control: no-store';
+      end;
+  end;
+  LHeaders := LStatus + #13#10 +
+    'Content-Type: application/json' + #13#10 + LCacheHeaders + #13#10 +
     'Connection: close' + #13#10 + 'Content-Length: ' +
     TNyxText(IntToStr(Length(LBytes))) + #13#10;
 
   if FOrigin <> '' then
   begin
-    LHeaders := LHeaders + TNyxText('Access-Control-Allow-Origin: ') + FOrigin + #13#10;
+    LHeaders := LHeaders + TNyxText('Access-Control-Allow-Origin: ') + FOrigin + #13#10 +
+      'Access-Control-Expose-Headers: Age' + #13#10;
   end;
   SendBytes(ASocket, NyxEncodeUTF8(LHeaders + #13#10));
 
@@ -368,6 +422,30 @@ begin
   try
     FNextHold := AHold;
     FNextRecovered := ARecovered;
+    FNextReply := ntrNoStore;
+  finally
+    LeaveCriticalSection(FLock);
+  end;
+end;
+
+procedure TNyxResourceStreamFixture.ArmPolicy(AReply: TNyxTestResourceReply;
+  ARecovered: Boolean);
+begin
+  EnterCriticalSection(FLock);
+  try
+    FNextHold := False;
+    FNextRecovered := ARecovered;
+    FNextReply := AReply;
+  finally
+    LeaveCriticalSection(FLock);
+  end;
+end;
+
+function TNyxResourceStreamFixture.Requests: Integer;
+begin
+  EnterCriticalSection(FLock);
+  try
+    Result := FRequests;
   finally
     LeaveCriticalSection(FLock);
   end;

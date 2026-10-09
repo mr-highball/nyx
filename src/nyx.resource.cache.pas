@@ -329,7 +329,10 @@ begin
 
     if FHints.FMaximumAge >= 0 then
     begin
-      LFresh := Min(LFresh, Max(0, FHints.FMaximumAge - FHints.FAge));
+      { Keep a negative remaining server lifetime. A response can arrive already
+        stale; its consumed age must also reduce the caller's extra stale window.
+        Clamping to zero would renew that allowance on every old response. }
+      LFresh := Min(LFresh, FHints.FMaximumAge - FHints.FAge);
     end;
 
     if FHints.FMustRevalidate then

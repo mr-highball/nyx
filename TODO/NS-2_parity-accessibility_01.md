@@ -20,6 +20,19 @@ Completion credit: pending evidence-backed assessment; no credit is earned by pa
 - [NS-2_browser-renderer_01](NS-2_browser-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 - [NS-2_lcl-renderer_01](NS-2_lcl-renderer_01.md) must have accepted evidence (update link when moved to DONE).
 
+## Hosted cache-policy consumer — 2026-10-09
+
+The existing NS-1 resource owner supplies actual native/browser application
+consumers of eleven memory-cache policies, 27 requests each. An exhausted stale
+allowance defect fails on both targets before shared server-age accounting is
+repaired. Exact catalog/default retention, mounted label/prompt properties and
+same-URL recovery pass; explicit Override remains available. [The packet](../WORK.md#current-return-path-hosted-resource-cache-policy--2026-10-09)
+retains selective rendered evidence and qualified limits. Native prompt is
+verified as a property but not painted in the focused capture. Other widgetsets,
+physical input, complete visual/accessibility parity, persistent-policy breadth,
+performance and observing remain open. NS-1 alone advances its unfinished batch;
+this task's full criteria/count/credit do not close.
+
 ## Partial-body retirement consumer — 2026-10-09
 
 The NS-1 resource owner now supplies actual Win32/LCL and HTTP-browser control
